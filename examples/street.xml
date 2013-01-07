@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<!-- 
+
+This is the configuration file for the ambisonics scene generator. 
+The same configuration file will be read by the tools "tascar_scene" 
+and "tascar_draw" (in fact, "tascar_draw" is typically invoked by 
+"tascar_scene"). 
+
+-->
+<!-- 
+
+The tag "scene" defines a scene. Valid attributes are:
+
+"name": scene name
+"guiscale": width of the GUI screen in meter
+
+-->
+<scene name="Street" guiscale="200">
+  <!--
+      The tag "amb_sound" defines a background sound in first order
+      ambisonics format. Valid attributes are:
+      
+      start: start time in seconds
+      channel: first channel to be used (typically 0 = default)
+      gain: linear gain to be applied on playback
+      name: file name of sound file
+      loop: looping (0 = endless looping)
+
+  -->
+  <amb_sound name="kreuzung.wav" gain="0.16"/>
+  <!--
+      A sound source can be added to a scene with the "source"
+      tag. Its attributes are "name" and "color", which is a
+      hexadecimal color string (web format).
+
+      This entity can have children for the position ("position") and
+      sound file ("sndfile").
+
+      Independently from the sound file each source also provides a
+      jack input port.
+  -->
+  <source name="nwb1ax1" color="#0202b3">
+    <!--
+	"position" defines the trajectory of a sound source. The
+	children of this node manipulate the trajectory.
+
+        Recognized children are:
+	- load
+	- origin
+	- addpoints
+	- velocity
+	- rotate
+	- scale
+	- translate
+	- smooth
+	- resample
+	- time
+    -->
+    <position>
+      <load format="gpx" name="train.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity const="-16.5"/>
+      <time start="-60"/>
+    </position>
+    <sndfile name="nwb1.wav" channel="0" start="0" gain="3" loop="0"/>
+  </source>
+  <source name="nwb1ax2" color="#0202b3">
+    <position>
+      <load format="gpx" name="train.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity const="-16.5"/>
+      <time start="-59"/>
+    </position>
+    <sndfile name="nwb2.wav" channel="0" start="3" gain="3" loop="0"/>
+  </source>
+  <source name="nwb1ax3" color="#0202b3">
+    <position>
+      <load format="gpx" name="train.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity const="-16.5"/>
+      <time start="-58"/>
+    </position>
+    <sndfile name="nwb3.wav" channel="0" start="6" gain="3" loop="0"/>
+  </source>
+  <source name="nwb2ax1" color="#0202b3">
+    <position>
+      <load format="gpx" name="train.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity const="-16.5"/>
+      <time start="-57.7"/>
+    </position>
+    <sndfile name="nwb1.wav" channel="0" start="9" gain="3" loop="0"/>
+  </source>
+  <source name="nwb2ax2" color="#0202b3">
+    <position>
+      <load format="gpx" name="train.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity const="-16.5"/>
+      <time start="-56.7"/>
+    </position>
+    <sndfile name="nwb2.wav" channel="0" start="12" gain="3" loop="0"/>
+  </source>
+  <source name="nwb2ax3" color="#0202b3">
+    <position>
+      <load format="gpx" name="train.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity const="-16.5"/>
+      <time start="-55.7"/>
+    </position>
+    <sndfile name="nwb3.wav" channel="0" start="15" gain="3" loop="0"/>
+  </source>
+  <source name="Eisenbahnbruecke Jaegerstr." color="#000000">
+    <position>
+      <addpoints format="trkpt">
+	<trkpt lat="53.1515" lon="8.20143"/>
+	<trkpt lat="53.1515" lon="8.20143"/>
+      </addpoints>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+    </position>
+    <sndfile name="klappern.wav" channel="0" start="96.8" loop="1" gain="2"/>
+    <sndfile name="klappern.wav" channel="0" start="99.1" loop="1" gain="2"/>
+  </source>
+  <source name="Eisenbahnbruecke Melkbrink" color="#000000">
+    <position>
+      <addpoints format="trkpt">
+	<trkpt lat="53.156027" lon="8.200583"/>
+	<trkpt lat="53.156027" lon="8.200583"/>
+      </addpoints>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+    </position>
+    <sndfile name="klappern.wav" channel="0" start="128.2" loop="1" gain="2"/>
+    <sndfile name="klappern.wav" channel="0" start="130.5" loop="1" gain="2"/>
+  </source>
+  <source name="Muellauto" color="#120203">
+    <position>
+      <load format="gpx" name="muellauto.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <velocity csvfile="muell_speed.txt"/>
+      <translate x="2"/>
+      <time start="18"/>
+    </position>
+    <sndfile name="muellauto.wav" channel="0" start="22" gain="3" loop="1"/>
+  </source>
+  <xsource name="red car">
+    <position>
+      <load format="csv" name="track_0.csv"/>
+    </position>
+    <sndfile name="verynoisy.wav" channel="0" start="4"/>
+  </xsource>
+  <source name="Fahrrad" color="#773322">
+    <position>
+      <load format="gpx" name="bike_01.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <resample dt="0.5"/>
+      <smooth n="5"/>
+      <time start="-172"/>
+    </position>
+    <xsndfile name="klingel.wav" channel="0" start="14"/>
+  </source>
+  <source name="rotes Auto" color="#ff0000">
+    <position>
+      <load format="gpx" name="20120323_090852.gpx"/>
+      <origin src="trkpt" mode="tangent"><trkpt lat="53.151367" lon="8.200514"/></origin>
+      <resample dt="0.5"/>
+      <smooth n="7"/>
+      <translate x="-15" y="-20"/>
+      <time start="-90"/>
+    </position>
+    <sndfile name="120323.wav" channel="0" start="-90" gain="80" loop="1"/>
+  </source>
+</scene>
+<!--
+<?xml version="1.0"?> <scene> <source name="static"> <position> <load
+format="csv" name="track_0.csv"/> </position> <sndfile
+name="verynoisy.wav" channel="0" start="4"/> </source> <xsource
+name="bike 1"> <position> <load format="gpx" name="gpx/bike_01.gpx"/>
+<origin src="trkpt" mode="tangent"><trkpt lat="53.151367"
+lon="8.200514"/></origin> <scale x="1" y="-1" z="0"/> <resample
+dt="0.25"/> <smooth n="11"/> <time start="4"/> </position> <sndfile
+name="verynoisy.wav" channel="0" start="4"/> </xsource> <xsource
+name="bike 2"> <position> <load format="gpx" name="gpx/car_02.gpx"/>
+<origin src="trkpt" mode="tangent"><trkpt lat="53.151367"
+lon="8.200514"/></origin> <scale x="1" y="-1" z="0"/> <resample
+dt="0.25"/> <smooth n="11"/> <time start="0"/> </position> </xsource>
+</scene> -->

@@ -1,0 +1,35 @@
+digraph ap {
+  //ranksep = 2.5;
+  //splines = true;
+
+  scene [label="scene\n[name]",style="filled",fillcolor="gold"];
+  source [label="pointsource\n[name]",style="filled",fillcolor="gold"];
+  sound [label="sound\n[file]\n[start] s\n[gain] dB",style="filled",fillcolor="gold"];
+  amb_sound [label="amb_sound\n[file]\n[start] s\n[gain] dB"];
+  
+  gpx_file [label="gpx_file\n[origin] trkpoint"];
+  position [label="position\n[start] s\n[interp: cart/sphere]",style="filled",fillcolor="gold"];
+  pointlist [label="point\n[t,x,y,z]\nor\n[t,az,el,d]",style="filled",fillcolor="gold"];
+
+
+  scene -> amb_sound [label="N"];
+  scene -> center [label="1"];
+  scene -> source [label="N"];
+  source -> position [label="1"];
+  source -> sound [label="1"];
+  center -> position [style="dashed",label="same type"];
+  position -> pointlist [label="N"];
+  position -> trackfile;
+  trackfile -> gpx_file;
+  trackfile -> csv_file;
+  position -> transform;
+  position -> velocity;
+
+}
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 2
+ * End:
+ */
