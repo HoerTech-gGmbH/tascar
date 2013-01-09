@@ -2,28 +2,35 @@ digraph ap {
   //ranksep = 2.5;
   //splines = true;
 
-  scene [label="scene\n[name]",style="filled",fillcolor="gold"];
-  source [label="pointsource\n[name]",style="filled",fillcolor="gold"];
-  sound [label="sound\n[file]\n[start] s\n[gain] dB",style="filled",fillcolor="gold"];
-  amb_sound [label="amb_sound\n[file]\n[start] s\n[gain] dB"];
+  scene [label="scene\n[name]\n",style="filled",fillcolor="gold"];
+  source [label="pointsource\n[name]\n[start] s",style="filled",fillcolor="gold"];
+  sound [label="soundfile\n[filename]\n[gain] dB\n[channel]\n[loop]",style="filled",fillcolor="gold"];
+  bg_amb [label="bg_amb\n[start] s\n[filename]\n[gain] dB\n[loop]"];
+  bg_bin [label="bg_bin\n[start] s\n[filename]\n[gain] dB\n[loop]"];
+  geoloc [label="geoloc\n[az,el,h]"];
+  pointlist [style="filled",fillcolor="gold"];
   
-  gpx_file [label="gpx_file\n[origin] trkpoint"];
-  position [label="position\n[start] s\n[interp: cart/sphere]",style="filled",fillcolor="gold"];
-  pointlist [label="point\n[t,x,y,z]\nor\n[t,az,el,d]",style="filled",fillcolor="gold"];
+  //gpx_file [label="gpx_file\n[origin] trkpoint"];
+  position [label="position\n[coord: cart/sphere]\n[interp: cart/sphere]",style="filled",fillcolor="gold"];
+  //pointlist [label="pointlist\n[type: cart/sphere]",style="filled",fillcolor="gold"];
+  center [label="listener_position"];
 
 
-  scene -> amb_sound [label="N"];
+  scene -> geoloc [label="1"];
+  scene -> bg_amb [label="N"];
+  scene -> bg_bin [label="N"];
   scene -> center [label="1"];
   scene -> source [label="N"];
   source -> position [label="1"];
   source -> sound [label="1"];
   center -> position [style="dashed",label="same type"];
-  position -> pointlist [label="N"];
-  position -> trackfile;
-  trackfile -> gpx_file;
-  trackfile -> csv_file;
-  position -> transform;
-  position -> velocity;
+  position -> pointlist
+  //position -> pointlist [label="1"];
+  //position -> trackfile;
+  //trackfile -> gpx_file;
+  //trackfile -> csv_file;
+  //position -> transform;
+  //position -> velocity;
 
 }
 
