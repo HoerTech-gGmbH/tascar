@@ -2,7 +2,7 @@ digraph ap {
   //ranksep = 2.5;
   //splines = true;
 
-  scene [label="scene\n[name]\n[geo az,el,h]",style="filled",fillcolor="gold"];
+  scene [label="scene\n[name]\n[lat,lon,elev]",style="filled",fillcolor="gold"];
   source [label="src_object\n[name]\n[start] s",style="filled",fillcolor="gold"];
   //sound [label="sound\n[filename]\n[gain] dB\n[channel]\n[loop]\n[x,y,z]",style="filled",fillcolor="gold"];
   sound [label="sound\n[filename]\n[gain] dB\n[channel]\n[loop]",style="filled",fillcolor="gold"];
