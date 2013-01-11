@@ -78,7 +78,7 @@ uint32_t TASCAR::looped_sndfile_t::seekf( uint32_t frame )
   return (filepos_looped = frame);
 }
 
-TASCAR::async_file_read_t::async_file_read_t(uint32_t numchannels,uint32_t chunksize)
+TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t chunksize)
   : run_service(true),
     numchannels_(numchannels),
     chunksize_(chunksize),
@@ -99,18 +99,18 @@ TASCAR::async_file_read_t::async_file_read_t(uint32_t numchannels,uint32_t chunk
   pthread_mutex_init( &mtx_next, NULL );
   pthread_mutex_init( &mtx_wakeup, NULL );
   pthread_mutex_init( &mtx_file, NULL );
-  int err = pthread_create( &srv_thread, NULL, &TASCAR::async_file_read_t::service, this);
+  int err = pthread_create( &srv_thread, NULL, &TASCAR::async_sndfile_t::service, this);
   if( err < 0 )
     throw "pthread_create failed";
 }
 
-void * TASCAR::async_file_read_t::service(void* h)
+void * TASCAR::async_sndfile_t::service(void* h)
 {
-  ((TASCAR::async_file_read_t*)h)->service();
+  ((TASCAR::async_sndfile_t*)h)->service();
   return NULL;
 }
 
-void TASCAR::async_file_read_t::service()
+void TASCAR::async_sndfile_t::service()
 {
   while( run_service ){
     pthread_mutex_lock( &mtx_wakeup );
@@ -126,7 +126,7 @@ void TASCAR::async_file_read_t::service()
   }
 }
 
-TASCAR::async_file_read_t::~async_file_read_t()
+TASCAR::async_sndfile_t::~async_sndfile_t()
 {
   run_service = false;
   // first terminate disk thread:
@@ -156,7 +156,7 @@ TASCAR::async_file_read_t::~async_file_read_t()
   }
 }
 
-void TASCAR::async_file_read_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf )
+void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf )
 {
   if( channels != numchannels_ ){
     DEBUG(channels);
@@ -211,7 +211,7 @@ void TASCAR::async_file_read_t::request_data( uint32_t firstframe, uint32_t n, u
   }
 }
 
-void TASCAR::async_file_read_t::open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain, uint32_t loop)
+void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain, uint32_t loop)
 {
   if( pthread_mutex_lock( &mtx_file ) != 0 )
     return;
@@ -247,7 +247,7 @@ void TASCAR::async_file_read_t::open(const std::string& fname, uint32_t firstcha
   pthread_mutex_unlock( &mtx_file );
 }
 
-void TASCAR::async_file_read_t::rt_request_from_slave( uint32_t n )
+void TASCAR::async_sndfile_t::rt_request_from_slave( uint32_t n )
 {
   if( pthread_mutex_trylock( &mtx_readrequest ) == 0 ){
     requested_startframe = n;
@@ -258,7 +258,7 @@ void TASCAR::async_file_read_t::rt_request_from_slave( uint32_t n )
   pthread_mutex_unlock( &mtx_wakeup );
 }
 
-void TASCAR::async_file_read_t::slave_read_file( uint32_t firstframe )
+void TASCAR::async_sndfile_t::slave_read_file( uint32_t firstframe )
 {
   pthread_mutex_lock( &mtx_file );
   pthread_mutex_lock( &mtx_next );

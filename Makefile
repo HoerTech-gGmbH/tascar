@@ -1,6 +1,6 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_scene 
+BINFILES = tascar_renderer
 
 OBJECTS = jackclient.o coordinates.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o
 
@@ -43,7 +43,7 @@ $(JACKBIN): LDLIBS += -ljack
 
 tascar_jackio: LDLIBS += -lsndfile
 
-tascar_scene: $(OBJECTS)
+$(BINFILES): $(OBJECTS)
 
 $(GTKBIN): LDLIBS += `pkg-config --libs gtk+-2.0`
 $(GTKBIN): CXXFLAGS += `pkg-config --cflags gtk+-2.0`

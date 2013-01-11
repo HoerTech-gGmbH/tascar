@@ -39,10 +39,10 @@ namespace TASCAR {
     uint32_t filepos_looped;
   };
 
-  class async_file_read_t {
+  class async_sndfile_t {
   public:
-    async_file_read_t(uint32_t numchannels,uint32_t chunksize = (1 << 18));
-    ~async_file_read_t();
+    async_sndfile_t( uint32_t numchannels, uint32_t chunksize = (1 << 18) );
+    ~async_sndfile_t();
     /**
        \brief real-time safe, return audio data if available
 

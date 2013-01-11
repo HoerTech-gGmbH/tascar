@@ -1,11 +1,9 @@
 /**
-   \file tascar_amb33pan.cc
+   \file tascar_renderer.cc
    \ingroup apptascar
-   \brief Panning tool for 3rd order Ambisonics.
+   \brief Scene rendering tool
    \author Giso Grimm, Carl-von-Ossietzky Universitaet Oldenburg
-   Copyright (C) 2009 Fons Adriaensen <fons@kokkinizita.net>
-   and Jörn Nettingsmeier <nettings@stackingdwarves.net>
-   \date 2012
+   \date 2013
 
    \section license License (GPL)
 
