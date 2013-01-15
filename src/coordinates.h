@@ -248,6 +248,10 @@ namespace TASCAR {
        \brief set velocity from CSV file
      */
     void set_velocity_csvfile( const std::string& fname );
+    /**
+       \brief Export to xml element
+     */
+    void export_to_xml_element( xmlpp::Element* );
   };
 
   /**

@@ -460,6 +460,10 @@ void track_t::set_velocity_csvfile( const std::string& fname )
   }
 }
 
+void track_t::export_to_xml_element( xmlpp::Element* a)
+{
+  a->add_child_text(print_cart());
+}
 
 /*
  * Local Variables:

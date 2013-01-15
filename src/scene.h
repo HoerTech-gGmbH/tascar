@@ -79,7 +79,7 @@ namespace TASCAR {
   };
 
   scene_t xml_read_scene(const std::string& filename);
-  void xml_write_scene(const std::string& filename, const scene_t& scene);
+  void xml_write_scene(const std::string& filename, scene_t scene);
 
 }
 

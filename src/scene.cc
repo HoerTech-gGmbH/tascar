@@ -44,7 +44,7 @@ scene_t TASCAR::xml_read_scene(const std::string& filename)
     return s;
 }
 
-void TASCAR::xml_write_scene(const std::string& filename, const scene_t& scene)
+void TASCAR::xml_write_scene(const std::string& filename, scene_t scene)
 { 
   char ctmp[1024];
   xmlpp::Document doc;
@@ -56,6 +56,22 @@ void TASCAR::xml_write_scene(const std::string& filename, const scene_t& scene)
   root->set_attribute("lon",ctmp);
   sprintf(ctmp,"%g",scene.elev);
   root->set_attribute("elev",ctmp);
+  for( std::vector<src_object_t>::iterator src_it = scene.src.begin(); src_it != scene.src.end(); ++src_it){
+    xmlpp::Element* src_node = root->add_child("src_object");
+    src_node->set_attribute("name",src_it->name);
+    sprintf(ctmp,"%g",src_it->start);
+    src_node->set_attribute("start",ctmp);
+    xmlpp::Element* sound_node = src_node->add_child("sound");
+    sound_node->set_attribute("filename",src_it->sound.filename);
+    sprintf(ctmp,"%g",src_it->sound.gain);
+    sound_node->set_attribute("gain",ctmp);
+    sprintf(ctmp,"%d",src_it->sound.channel);
+    sound_node->set_attribute("channel",ctmp);
+    sprintf(ctmp,"%d",src_it->sound.loop);
+    sound_node->set_attribute("loop",ctmp);
+    xmlpp::Element* pos_node = src_node->add_child("position");
+    src_it->position.export_to_xml_element( pos_node );
+  }
   doc.write_to_file_formatted(filename);
 }
 
