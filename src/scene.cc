@@ -1,11 +1,13 @@
 #include "scene.h"
+#include "errorhandling.h"
 #include <libxml++/libxml++.h>
 #include <stdio.h>
 
 using namespace TASCAR;
 
 scene_t::scene_t()
-  : name(""),
+  : description(""),
+    name(""),
     lat(53.155473),
     lon(8.167249),
     elev(10)
@@ -13,6 +15,7 @@ scene_t::scene_t()
 }
 
 listener_t::listener_t()
+  : name("me")
 {
 }
 
@@ -38,41 +41,84 @@ sound_t::sound_t()
 {
 }
 
-scene_t TASCAR::xml_read_scene(const std::string& filename)
+void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value)
 {
-    scene_t s;
-    return s;
+  char ctmp[1024];
+  sprintf(ctmp,"%d",value);
+  elem->set_attribute(name,ctmp);
 }
 
-void TASCAR::xml_write_scene(const std::string& filename, scene_t scene)
-{ 
+void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value)
+{
   char ctmp[1024];
+  sprintf(ctmp,"%1.12g",value);
+  elem->set_attribute(name,ctmp);
+}
+
+void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment)
+{ 
   xmlpp::Document doc;
+  if( comment.size() )
+    doc.add_comment(comment);
   xmlpp::Element* root(doc.create_root_node("scene"));
   root->set_attribute("name",scene.name);
-  sprintf(ctmp,"%g",scene.lat);
-  root->set_attribute("lat",ctmp);
-  sprintf(ctmp,"%g",scene.lon);
-  root->set_attribute("lon",ctmp);
-  sprintf(ctmp,"%g",scene.elev);
-  root->set_attribute("elev",ctmp);
+  set_attribute_double(root,"lat",scene.lat);
+  set_attribute_double(root,"lon",scene.lon);
+  set_attribute_double(root,"elev",scene.elev);
+  if( scene.description.size()){
+    xmlpp::Element* description_node = root->add_child("description");
+    description_node->add_child_text(scene.description);
+  }
+  xmlpp::Element* listener_node = root->add_child("listener");
+  listener_node->set_attribute("name",scene.listener.name);
+  if( scene.listener.size() ){
+    xmlpp::Element* listenpos_node = listener_node->add_child("position");
+    scene.listener.export_to_xml_element( listenpos_node );
+  }
   for( std::vector<src_object_t>::iterator src_it = scene.src.begin(); src_it != scene.src.end(); ++src_it){
     xmlpp::Element* src_node = root->add_child("src_object");
     src_node->set_attribute("name",src_it->name);
-    sprintf(ctmp,"%g",src_it->start);
-    src_node->set_attribute("start",ctmp);
+    set_attribute_double(src_node,"start",src_it->start);
     xmlpp::Element* sound_node = src_node->add_child("sound");
     sound_node->set_attribute("filename",src_it->sound.filename);
-    sprintf(ctmp,"%g",src_it->sound.gain);
-    sound_node->set_attribute("gain",ctmp);
-    sprintf(ctmp,"%d",src_it->sound.channel);
-    sound_node->set_attribute("channel",ctmp);
-    sprintf(ctmp,"%d",src_it->sound.loop);
-    sound_node->set_attribute("loop",ctmp);
-    xmlpp::Element* pos_node = src_node->add_child("position");
-    src_it->position.export_to_xml_element( pos_node );
+    set_attribute_double(sound_node,"gain",src_it->sound.gain);
+    set_attribute_uint(sound_node,"channel",src_it->sound.channel);
+    set_attribute_uint(sound_node,"loop",src_it->sound.loop);
+    if( src_it->position.size() ){
+      xmlpp::Element* pos_node = src_node->add_child("position");
+      src_it->position.export_to_xml_element( pos_node );
+    }
+  }
+  for( std::vector<bg_amb_t>::iterator bg_it = scene.bg_amb.begin(); bg_it != scene.bg_amb.end(); ++bg_it){
+    xmlpp::Element* bg_node = root->add_child("bg_amb");
+    set_attribute_double(bg_node,"start",bg_it->start);
+    bg_node->set_attribute("filename",bg_it->filename);
+    set_attribute_double(bg_node,"gain",bg_it->gain);
+    set_attribute_uint(bg_node,"loop",bg_it->loop);
   }
   doc.write_to_file_formatted(filename);
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  double tmpv(strtod(attv.c_str(),&c));
+  if( c != attv.c_str() )
+    value = tmpv;
+}
+
+scene_t TASCAR::xml_read_scene(const std::string& filename)
+{
+  scene_t s;
+  xmlpp::DomParser domp(filename);
+  xmlpp::Document* doc(domp.get_document());
+  xmlpp::Element* root(doc->get_root_node());
+  s.name = root->get_attribute_value("name");
+  if( root->get_name() != "scene" )
+    throw ErrMsg("Invalid file, XML root node should be \"scene\".");
+  xmlpp::Node::NodeList subnodes = root->get_children();
+  return s;
 }
 
 /*

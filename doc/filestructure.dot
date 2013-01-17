@@ -21,6 +21,7 @@ digraph ap {
 
   //scene -> geoloc [label="1"];
   scene -> bg_amb [label="N"];
+  scene -> description [label="1"];
   //scene -> bg_bin [label="N"];
   scene -> center [label="1"];
   scene -> source [label="N"];

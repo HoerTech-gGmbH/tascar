@@ -34,20 +34,20 @@
 
 using namespace TASCAR;
 
-std::string pos_t::print_cart()
+std::string pos_t::print_cart(const std::string& delim)
 {
   std::ostringstream tmp("");
-  tmp.precision(20);
-  tmp << x << ", " << y << ", " << z;
+  tmp.precision(12);
+  tmp << x << delim << y << delim << z;
   return tmp.str();
 
 }
 
-std::string pos_t::print_sphere()
+std::string pos_t::print_sphere(const std::string& delim)
 {
   std::ostringstream tmp("");
-  tmp.precision(20);
-  tmp << norm() << ", " << RAD2DEG*azim() << ", " << RAD2DEG*elev();
+  tmp.precision(12);
+  tmp << norm() << delim << RAD2DEG*azim() << delim << RAD2DEG*elev();
   return tmp.str();
 
 }
@@ -79,22 +79,22 @@ track_t& track_t::operator-=(const pos_t& x)
   return *this;
 }
 
-std::string track_t::print_cart()
+std::string track_t::print_cart(const std::string& delim)
 {
   std::ostringstream tmp("");
-  tmp.precision(20);
+  tmp.precision(12);
   for(iterator i=begin();i!=end();++i){
-    tmp << i->first << ", " << i->second.print_cart() << "\n";
+    tmp << i->first << delim << i->second.print_cart(delim) << "\n";
   }
   return tmp.str();
 }
   
-std::string track_t::print_sphere()
+std::string track_t::print_sphere(const std::string& delim)
 {
   std::ostringstream tmp("");
-  tmp.precision(20);
+  tmp.precision(12);
   for(iterator i=begin();i!=end();++i){
-    tmp << i->first << ", " << i->second.print_sphere() << "\n";
+    tmp << i->first << delim << i->second.print_sphere(delim) << "\n";
   }
   return tmp.str();
 }
@@ -462,7 +462,7 @@ void track_t::set_velocity_csvfile( const std::string& fname )
 
 void track_t::export_to_xml_element( xmlpp::Element* a)
 {
-  a->add_child_text(print_cart());
+  a->add_child_text(print_cart(" "));
 }
 
 /*

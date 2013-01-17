@@ -63,12 +63,14 @@ namespace TASCAR {
   class listener_t : public TASCAR::track_t {
   public:
     listener_t();
+    std::string name;
     TASCAR::track_t position;
   };
 
   class scene_t {
   public:
     scene_t();
+    std::string description;
     std::string name;
     double lat;
     double lon;
@@ -79,7 +81,7 @@ namespace TASCAR {
   };
 
   scene_t xml_read_scene(const std::string& filename);
-  void xml_write_scene(const std::string& filename, scene_t scene);
+  void xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment="");
 
 }
 

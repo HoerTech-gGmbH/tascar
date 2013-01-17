@@ -101,11 +101,11 @@ namespace TASCAR {
     /**
        \brief Format as string in cartesian coordinates
      */
-    std::string print_cart();
+    std::string print_cart(const std::string& delim=", ");
     /**
        \brief Format as string in spherical coordinates
      */
-    std::string print_sphere();
+    std::string print_sphere(const std::string& delim=", ");
   };
 
   /**
@@ -195,11 +195,11 @@ namespace TASCAR {
     /**
        \brief Format as string in cartesian coordinates
      */
-    std::string print_cart();
+    std::string print_cart(const std::string& delim=", ");
     /**
        \brief Format as string in spherical coordinates
      */
-    std::string print_sphere();
+    std::string print_sphere(const std::string& delim=", ");
     /**
        \brief Tangent projection, transform origin to given point
      */
