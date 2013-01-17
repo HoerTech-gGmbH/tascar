@@ -2,6 +2,7 @@
 #include "errorhandling.h"
 #include <libxml++/libxml++.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 using namespace TASCAR;
 
@@ -117,7 +118,14 @@ scene_t TASCAR::xml_read_scene(const std::string& filename)
   s.name = root->get_attribute_value("name");
   if( root->get_name() != "scene" )
     throw ErrMsg("Invalid file, XML root node should be \"scene\".");
+  get_attribute_value(root,"lon",s.lon);
+  get_attribute_value(root,"lat",s.lat);
+  get_attribute_value(root,"elev",s.elev);
   xmlpp::Node::NodeList subnodes = root->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    if( (*sn)->get_name() == "description" ){
+    }
+  }
   return s;
 }
 
