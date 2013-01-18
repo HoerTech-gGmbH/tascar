@@ -208,12 +208,20 @@ void track_t::smooth( unsigned int n )
   *this = sm;
 }  
 
-std::string xml_get_text( xmlpp::Node* n, const std::string& child )
+std::string TASCAR::xml_get_text( xmlpp::Node* n, const std::string& child )
 {
   if( n ){
-    xmlpp::Node::NodeList ch = n->get_children( child );
-    if( ch.size() ){
-      xmlpp::NodeSet stxt = (*ch.begin())->find("text()");
+    if( child.size() ){
+      xmlpp::Node::NodeList ch = n->get_children( child );
+      if( ch.size() ){
+        xmlpp::NodeSet stxt = (*ch.begin())->find("text()");
+        xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
+        if( txt ){
+          return txt->get_content();
+        }
+      }
+    }else{
+      xmlpp::NodeSet stxt = n->find("text()");
       xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
       if( txt ){
         return txt->get_content();

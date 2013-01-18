@@ -259,6 +259,8 @@ namespace TASCAR {
   */
   pos_t xml_get_trkpt( xmlpp::Element* pt, time_t& tme );
 
+  std::string xml_get_text( xmlpp::Node* n, const std::string& child );
+
   class face_t {
   protected:
     pos_t normal;

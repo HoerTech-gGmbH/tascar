@@ -3,6 +3,7 @@
 #include <libxml++/libxml++.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 using namespace TASCAR;
 
@@ -109,6 +110,54 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& va
     value = tmpv;
 }
 
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  double tmpv(strtod(attv.c_str(),&c));
+  if( c != attv.c_str() )
+    value = tmpv;
+}
+
+src_object_t xml_read_src_object( xmlpp::Element* sne )
+{
+  src_object_t srcobj;
+  get_attribute_value(sne,"start",srcobj.start);
+  srcobj.name = sne->get_attribute_value("name");
+  xmlpp::Node::NodeList subnodes = sne->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      if( sne->get_name() == "sound"){
+        srcobj.sound.filename = sne->get_attribute_value("filename");
+        get_attribute_value(sne,"gain",srcobj.sound.gain);
+        get_attribute_value(sne,"channel",srcobj.sound.channel);
+        get_attribute_value(sne,"loop",srcobj.sound.loop);
+      }
+      if( sne->get_name() == "position"){
+        std::stringstream ptxt(xml_get_text(sne,""));
+        while( !ptxt.eof() ){
+          double t,x,y,z;
+          ptxt >> t >> x >> y >> z;
+          srcobj.position[t] = pos_t(x,y,z);
+        }
+      }
+    }
+  }
+  return srcobj;
+}
+
+bg_amb_t xml_read_bg_amb( xmlpp::Element* sne )
+{
+  bg_amb_t bg;
+  get_attribute_value(sne,"start",bg.start);
+  bg.filename = sne->get_attribute_value("filename");
+  get_attribute_value(sne,"gain",bg.gain);
+  get_attribute_value(sne,"loop",bg.loop);
+  return bg;
+}
+
 scene_t TASCAR::xml_read_scene(const std::string& filename)
 {
   scene_t s;
@@ -121,9 +170,17 @@ scene_t TASCAR::xml_read_scene(const std::string& filename)
   get_attribute_value(root,"lon",s.lon);
   get_attribute_value(root,"lat",s.lat);
   get_attribute_value(root,"elev",s.elev);
+  s.description = xml_get_text(root,"description");
   xmlpp::Node::NodeList subnodes = root->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    if( (*sn)->get_name() == "description" ){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      if( sne->get_name() == "src_object" ){
+        s.src.push_back(xml_read_src_object(sne));
+      }
+      if( sne->get_name() == "bg_amb" ){
+      s.bg_amb.push_back(xml_read_bg_amb(sne));
+      }
     }
   }
   return s;
