@@ -374,31 +374,76 @@ void usage(struct option * opt)
   }
 }
 
+void read_xml(const std::string& cfgfile, TASCAR::scene_generator_t& S, std::string& gui_jackname)
+{
+  xmlpp::DomParser parser(cfgfile);
+  xmlpp::Element* root = parser.get_document()->get_root_node();
+  if( root ){
+    gui_jackname = root->get_attribute_value("name") + ".draw";
+    //DEBUG(gui_jackname);
+    xmlpp::Node::NodeList sfilel = root->get_children("amb_sound");
+    for(xmlpp::Node::NodeList::iterator sfile_it=sfilel.begin();sfile_it!=sfilel.end();++sfile_it){
+      xmlpp::Element* sfile = dynamic_cast<xmlpp::Element*>(*sfile_it);
+      if( sfile ){
+        std::string start_str(sfile->get_attribute_value("start"));
+        uint32_t startframe(0);
+        if( start_str.size() )
+          startframe = S.get_srate()*atof(start_str.c_str());
+        uint32_t channel(atoi(sfile->get_attribute_value("channel").c_str()));
+        double gain(1.0);
+        std::string gain_str(sfile->get_attribute_value("gain"));
+        if( gain_str.size() )
+          gain = atof(gain_str.c_str());
+        std::string fname_str(sfile->get_attribute_value("name"));
+        uint32_t loop(1);
+        std::string loop_str(sfile->get_attribute_value("loop"));
+        if( loop_str.size() ){
+          loop = atoi( loop_str.c_str() );
+        }
+        S.bg_sound.open(fname_str,channel,startframe,gain,loop);
+      }
+    }
+    xmlpp::NodeSet sources = root->find("//source");
+    for(xmlpp::NodeSet::iterator sourcei=sources.begin();sourcei!=sources.end();++sourcei){
+      xmlpp::Element* src = dynamic_cast<xmlpp::Element*>(*sourcei);
+      if( src ){
+        //DEBUG(src->get_attribute_value("name"));
+        TASCAR::trackpan_amb33_t* psrc = S.add_source(src->get_attribute_value("name"));
+        //DEBUG(1);
+        xmlpp::Node::NodeList pos = src->get_children("position");
+        if( pos.begin() != pos.end() ){
+          psrc->edit((*pos.begin())->get_children());
+        }
+        xmlpp::Node::NodeList sfilel = src->get_children("sndfile");
+        for(xmlpp::Node::NodeList::iterator sfile_it=sfilel.begin();sfile_it!=sfilel.end();++sfile_it){
+          xmlpp::Element* sfile = dynamic_cast<xmlpp::Element*>(*sfile_it);
+          if( sfile ){
+            std::string start_str(sfile->get_attribute_value("start"));
+            uint32_t startframe(0);
+            if( start_str.size() )
+              startframe = S.get_srate()*atof(start_str.c_str());
+            uint32_t channel(atoi(sfile->get_attribute_value("channel").c_str()));
+            double gain(1.0);
+            std::string gain_str(sfile->get_attribute_value("gain"));
+            if( gain_str.size() )
+              gain = atof(gain_str.c_str());
+            std::string fname_str(sfile->get_attribute_value("name"));
+            uint32_t loop(1);
+            std::string loop_str(sfile->get_attribute_value("loop"));
+            if( loop_str.size() ){
+              loop = atoi( loop_str.c_str() );
+            }
+            psrc->add_sndfile(fname_str,channel,startframe,gain,loop);
+          }
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, char** argv)
 {
   try{
-    ///TASCAR::async_sndfile_t f( 512 );
-    ///float buf[1000];
-    ///sleep(1);
-    ///DEBUGMSG("everything is initialized, don't do anything");
-    ///sleep(1);
-    ///DEBUGMSG("now request data, zero-read one block starting at 292 (no file)");
-    ///f.request_data( 192, 100, buf );
-    ///sleep(1);
-    ///DEBUGMSG("open a file, should not change anything");
-    ///f.open( "verynoisy.wav", 0, 18 );
-    ///sleep(1);
-    ///DEBUGMSG("now request data, read one block starting at 292 from file");
-    ///f.request_data( 192, 100, buf );
-    ///sleep(1);
-    ///DEBUGMSG("request more data, do not read more data, everyting should be in buffer and the next also");
-    ///f.request_data( 292, 100, buf );
-    ///sleep(1);
-    ///DEBUGMSG("request more data, read more data, the next will not fit into the buffer");
-    ///f.request_data( 392, 300, buf );
-    ///sleep(1);
-    ///return 0;
-    //
     b_quit = false;
     signal(SIGABRT, &sighandler);
     signal(SIGTERM, &sighandler);
@@ -445,71 +490,10 @@ int main(int argc, char** argv)
       gui_pipe = popen( ctmp, "w" );
       sleep(1);
     }
-    xmlpp::DomParser parser(cfgfile);
     TASCAR::scene_generator_t S(jackname);
-    xmlpp::Element* root = parser.get_document()->get_root_node();
-    if( root ){
-      if( load_gui )
-        gui_jackname = root->get_attribute_value("name") + ".draw";
-      //DEBUG(gui_jackname);
-      xmlpp::Node::NodeList sfilel = root->get_children("amb_sound");
-      for(xmlpp::Node::NodeList::iterator sfile_it=sfilel.begin();sfile_it!=sfilel.end();++sfile_it){
-        xmlpp::Element* sfile = dynamic_cast<xmlpp::Element*>(*sfile_it);
-        if( sfile ){
-          std::string start_str(sfile->get_attribute_value("start"));
-          uint32_t startframe(0);
-          if( start_str.size() )
-            startframe = S.get_srate()*atof(start_str.c_str());
-          uint32_t channel(atoi(sfile->get_attribute_value("channel").c_str()));
-          double gain(1.0);
-          std::string gain_str(sfile->get_attribute_value("gain"));
-          if( gain_str.size() )
-            gain = atof(gain_str.c_str());
-          std::string fname_str(sfile->get_attribute_value("name"));
-          uint32_t loop(1);
-          std::string loop_str(sfile->get_attribute_value("loop"));
-          if( loop_str.size() ){
-            loop = atoi( loop_str.c_str() );
-          }
-          S.bg_sound.open(fname_str,channel,startframe,gain,loop);
-        }
-      }
-      xmlpp::NodeSet sources = root->find("//source");
-        for(xmlpp::NodeSet::iterator sourcei=sources.begin();sourcei!=sources.end();++sourcei){
-          xmlpp::Element* src = dynamic_cast<xmlpp::Element*>(*sourcei);
-          if( src ){
-            //DEBUG(src->get_attribute_value("name"));
-            TASCAR::trackpan_amb33_t* psrc = S.add_source(src->get_attribute_value("name"));
-            //DEBUG(1);
-            xmlpp::Node::NodeList pos = src->get_children("position");
-            if( pos.begin() != pos.end() ){
-              psrc->edit((*pos.begin())->get_children());
-            }
-            xmlpp::Node::NodeList sfilel = src->get_children("sndfile");
-            for(xmlpp::Node::NodeList::iterator sfile_it=sfilel.begin();sfile_it!=sfilel.end();++sfile_it){
-              xmlpp::Element* sfile = dynamic_cast<xmlpp::Element*>(*sfile_it);
-              if( sfile ){
-                std::string start_str(sfile->get_attribute_value("start"));
-                uint32_t startframe(0);
-                if( start_str.size() )
-                  startframe = S.get_srate()*atof(start_str.c_str());
-                uint32_t channel(atoi(sfile->get_attribute_value("channel").c_str()));
-                double gain(1.0);
-                std::string gain_str(sfile->get_attribute_value("gain"));
-                if( gain_str.size() )
-                  gain = atof(gain_str.c_str());
-                std::string fname_str(sfile->get_attribute_value("name"));
-                uint32_t loop(1);
-                std::string loop_str(sfile->get_attribute_value("loop"));
-                if( loop_str.size() ){
-                  loop = atoi( loop_str.c_str() );
-                }
-                psrc->add_sndfile(fname_str,channel,startframe,gain,loop);
-              }
-            }
-          }
-        }
-    }
+    read_xml(cfgfile,S,gui_jackname);
+    if( !load_gui )
+      gui_jackname = "";
     S.run(gui_jackname);
     if( gui_pipe )
       pclose(gui_pipe);

@@ -13,7 +13,8 @@ digraph ap {
   pointlist [label="pointlist\nt x y z",style="filled",fillcolor="gold"];
   //position [label="position\n[interp: cart/sphere]\n[orientation: global/tangent]",style="filled",fillcolor="gold"];
   position [label="position\n[interp: cart/sphere]",style="filled",fillcolor="gold"];
-  center [label="listener"];
+  listener [label="listener"];
+  eulerlist [label="ZYX-Euler list\nt z y x"];
   //reflection_object [label="reflection_object\n[name]\n[start] s\n[absorption]\n[size]"];
 
   //scene -> reflection_object [label="N"];
@@ -23,20 +24,22 @@ digraph ap {
   scene -> bg_amb [label="N"];
   scene -> description [label="1"];
   //scene -> bg_bin [label="N"];
-  scene -> center [label="1"];
+  scene -> listener [label="1"];
   scene -> source [label="N"];
   source -> position [label="1"];
   //source -> sound [label="N"];
   source -> sound [label="1"];
-  center -> position [label="1"];
+  listener -> position [label="1"];
   //reflection_object -> position [label="1"];
-  position -> pointlist
+  position -> pointlist;
   //position -> pointlist [label="1"];
   //position -> trackfile;
   //trackfile -> gpx_file;
   //trackfile -> csv_file;
   //position -> transform;
   //position -> velocity;
+  listener -> orientation [label="1"];
+  orientation -> eulerlist;
 
 }
 
