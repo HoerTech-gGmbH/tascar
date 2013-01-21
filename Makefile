@@ -1,6 +1,6 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_creator
+BINFILES = tascar_renderer tascar_creator tascar_jackio
 
 OBJECTS = jackclient.o coordinates.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o
 

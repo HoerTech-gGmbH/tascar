@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include "defs.h"
 
 using namespace TASCAR;
 
@@ -14,6 +15,13 @@ scene_t::scene_t()
     lon(8.167249),
     elev(10)
 {
+}
+
+std::string scene_t::print()
+{
+  std::string r;
+  r += "scene: " + name + "\n";
+  return r;
 }
 
 listener_t::listener_t()
@@ -120,12 +128,12 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned i
     value = tmpv;
 }
 
-src_object_t xml_read_src_object( xmlpp::Element* sne )
+src_object_t xml_read_src_object( xmlpp::Element* msne )
 {
   src_object_t srcobj;
-  get_attribute_value(sne,"start",srcobj.start);
-  srcobj.name = sne->get_attribute_value("name");
-  xmlpp::Node::NodeList subnodes = sne->get_children();
+  get_attribute_value(msne,"start",srcobj.start);
+  srcobj.name = msne->get_attribute_value("name");
+  xmlpp::Node::NodeList subnodes = msne->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
@@ -142,6 +150,10 @@ src_object_t xml_read_src_object( xmlpp::Element* sne )
           ptxt >> t >> x >> y >> z;
           srcobj.position[t] = pos_t(x,y,z);
         }
+      }
+      if( sne->get_name() == "creator"){
+        xmlpp::Node::NodeList subnodes = sne->get_children();
+        srcobj.position.edit(subnodes);
       }
     }
   }

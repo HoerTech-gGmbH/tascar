@@ -1,30 +1,80 @@
+#include <getopt.h>
 #include "scene.h"
+#include <iostream>
 
 using namespace TASCAR;
 
+void usage(struct option * opt)
+{
+  std::cout << "Usage:\n\ntascar_creator [options]\n\nOptions:\n\n";
+  while( opt->name ){
+    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
+      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
+    opt++;
+  }
+}
+
 int main(int argc,char**argv)
 {
-    scene_t scene;
-    scene.description = "dummy scene";
-    scene.src.push_back(src_object_t());
-    scene.src.push_back(src_object_t());
-    scene.bg_amb.push_back(bg_amb_t());
-    scene.bg_amb[0].start = 88;
-    scene.bg_amb[0].filename = "afile_amb.wav";
-    scene.bg_amb.push_back(bg_amb_t());
-    scene.src[0].position[0] = pos_t(1,2,3);
-    scene.src[0].position[3.7] = pos_t(4.1,5.2,6.3);
-    scene.src[0].start = 77;
-    scene.src[0].name = "an object";
-    scene.src[0].sound.filename = "soundfile.wav";
-    scene.src[0].sound.gain = -4.5;
-    scene.src[0].sound.channel = 6;
-    scene.src[0].sound.loop = 48;
-    xml_write_scene("temp.tsc",scene," created with tascar_creator ");
-    scene_t s_n = xml_read_scene("temp.tsc");
-    xml_write_scene("temp1.tsc",s_n," created with tascar_creator ");
-    
-    return 0;
+  std::string cfg_input("");
+  std::string cfg_output("");
+  bool b_list(false);
+  bool b_example(false);
+  const char *options = "i:o:lxh";
+  struct option long_options[] = { 
+    { "input",   1, 0, 'i' },
+    { "output",  1, 0, 'o' },
+    { "list",    0, 0, 'l' },
+    { "example", 0, 0, 'x' },
+    { "help",    0, 0, 'h' },
+    { 0, 0, 0, 0 }
+  };
+  int opt(0);
+  int option_index(0);
+  while( (opt = getopt_long(argc, argv, options,
+                            long_options, &option_index)) != -1){
+    switch(opt){
+    case 'i':
+      cfg_input = optarg;
+      break;
+    case 'o':
+      cfg_output = optarg;
+      break;
+    case 'h':
+      usage(long_options);
+      return -1;
+    case 'l':
+      b_list = true;
+      break;
+    case 'x':
+      b_example = true;
+      break;
+    }
+  }
+  scene_t S;
+  if( cfg_input.size() )
+    S = xml_read_scene( cfg_input );
+  if( b_example ){
+    if( !S.name.size() )
+      S.name = "Example scene";
+    if( !S.description.size() )
+      S.description = "Scene with example values";
+    if( !S.src.size() )
+      S.src.push_back(src_object_t());
+    if( !S.src[0].position.size() )
+      S.src[0].position[0] = pos_t(1,2,3);
+    if( !S.bg_amb.size() )
+      S.bg_amb.push_back(bg_amb_t());
+  }
+  if( cfg_output.size() ){
+    time_t tm(time(NULL));
+    std::string strtime(ctime(&tm));
+    strtime = "\nCreated with tascar_creator\n" + strtime;
+    xml_write_scene(cfg_output,S,strtime);
+  }
+  if( b_list )
+    std::cout << S.print();
+  return 0;
 }
 
 /*

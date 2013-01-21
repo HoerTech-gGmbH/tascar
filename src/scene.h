@@ -70,6 +70,7 @@ namespace TASCAR {
   class scene_t {
   public:
     scene_t();
+    std::string print();
     std::string description;
     std::string name;
     double lat;

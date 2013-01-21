@@ -12,3 +12,6 @@
 *.la
 *.a
 build
+
+# backup files:
+*~
