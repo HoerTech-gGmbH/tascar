@@ -22,6 +22,9 @@ void set_attribute_double(xmlpp::Element* elem,const std::string& name,double va
   elem->set_attribute(name,ctmp);
 }
 
+/*
+ * object_t
+ */
 object_t::object_t()
   : name("object"),
     starttime(0)
@@ -34,6 +37,19 @@ void object_t::read_xml(xmlpp::Element* e)
 
 void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
+//  if( help_comments )
+//    listener_node->add_child_comment(
+//      "\n"
+//      "The listener tag describes position and orientation of the\n"
+//      "listener relative to the scene center. If no listener tag is\n"
+//      "provided, then the position is in the origin and the orientation\n"
+//      "is parallel to the x-axis.\n");
+  e->set_attribute("name",name);
+  set_attribute_double(e,"starttime",starttime);
+  if( location.size() ){
+    xmlpp::Element* pos_node = e->add_child("position");
+    location.export_to_xml_element( pos_node );
+  }
 }
 
 std::string object_t::print(const std::string& prefix)
@@ -49,7 +65,14 @@ std::string object_t::print(const std::string& prefix)
   return r.str();
 }
 
+/*
+ *soundfile_t
+ */
 soundfile_t::soundfile_t()
+  : filename(""),
+    gain(0),
+    loop(1),
+    starttime(0)
 {
 }
 
@@ -59,6 +82,10 @@ void soundfile_t::read_xml(xmlpp::Element* e)
 
 void soundfile_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
+  e->set_attribute("filename",filename);
+  set_attribute_double(e,"gain",gain);
+  set_attribute_uint(e,"loop",loop);
+  set_attribute_double(e,"starttime",starttime);
 }
 
 std::string soundfile_t::print(const std::string& prefix)
@@ -70,6 +97,72 @@ std::string soundfile_t::print(const std::string& prefix)
   r << prefix << "Starttime: " << starttime << " s\n";
   return r.str();
 }
+
+/*
+ * sound_t
+ */
+sound_t::sound_t()
+  : soundfile_t(),
+    loc(0,0,0),
+    channel(0)
+{
+}
+
+void sound_t::read_xml(xmlpp::Element* e)
+{
+}
+
+void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  soundfile_t::write_xml(e,help_comments);
+  set_attribute_double(e,"x",loc.x);
+  set_attribute_double(e,"y",loc.y);
+  set_attribute_double(e,"z",loc.z);
+  set_attribute_uint(e,"channel",channel);
+}
+
+std::string sound_t::print(const std::string& prefix)
+{
+  std::stringstream r;
+  r << soundfile_t::print(prefix);
+  r << prefix << "Location: " << loc.print_cart() << "\n";
+  r << prefix << "Channel: " << channel << "\n";
+  return r.str();
+}
+
+/*
+ * src_object_t
+ */
+src_object_t::src_object_t()
+  : object_t()
+{
+}
+
+void src_object_t::read_xml(xmlpp::Element* e)
+{
+}
+
+void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  object_t::write_xml(e,help_comments);
+  bool b_first(true);
+  for(std::vector<sound_t>::iterator it=sound.begin();
+      it!=sound.end();++it){
+    it->write_xml(e->add_child("sound"),help_comments && b_first);
+    b_first = false;
+  }
+}
+
+std::string src_object_t::print(const std::string& prefix)
+{
+  std::stringstream r;
+  r << object_t::print(prefix);
+  for(std::vector<sound_t>::iterator it=sound.begin();
+      it!=sound.end();++it)
+    r << it->print(prefix+"  ");
+  return r.str();
+}
+
 
 scene_t::scene_t()
   : description(""),
@@ -116,30 +209,52 @@ listener_t::listener_t()
 //  return r.str();
 //}
 
-src_object_t::src_object_t()
-{
-}
 
-std::string src_object_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << object_t::print(prefix);
-  for( std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
-    r << prefix << "--sound--\n";
-    r << it->print(prefix+"  ");
-  }
-  return r.str();
-}
+//std::string src_object_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << object_t::print(prefix);
+//  for( std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
+//    r << prefix << "--sound--\n";
+//    r << it->print(prefix+"  ");
+//  }
+//  return r.str();
+//}
 
 bg_amb_t::bg_amb_t()
 {
 }
 
-sound_t::sound_t()
-{
-}
 
 void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
+{
+  e->set_attribute("name",name);
+  if( help_comments )
+    e->add_child_comment(
+      "\n"
+      "A scene describes the spatial and acoustical information.\n"
+      "Sub-tags are src_object, listener and bg_amb.\n");
+  set_attribute_double(e,"lat",lat);
+  set_attribute_double(e,"lon",lon);
+  set_attribute_double(e,"elev",elev);
+  if( description.size()){
+    xmlpp::Element* description_node = e->add_child("description");
+    description_node->add_child_text(description);
+  }
+  bool b_first(true);
+  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it){
+    it->write_xml(e->add_child("src_object"),help_comments && b_first);
+    b_first = false;
+  }
+  b_first = true;
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+    it->write_xml(e->add_child("bg_amb"),help_comments && b_first);
+    b_first = false;
+  }
+  listener.write_xml(e->add_child("listener"),help_comments);
+}
+
+void scene_t::read_xml(xmlpp::Element* e)
 {
 }
 
@@ -150,20 +265,6 @@ void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const s
     doc.add_comment(comment);
   xmlpp::Element* root(doc.create_root_node("scene"));
   scene.write_xml(root);
-//  root->set_attribute("name",scene.name);
-//  if( help_comments )
-//    root->add_child_comment(
-//      "\n"
-//      "A scene describes the spatial and acoustical information.\n"
-//      "Sub-tags are src_object, listener and bg_amb.\n");
-//  set_attribute_double(root,"lat",scene.lat);
-//  set_attribute_double(root,"lon",scene.lon);
-//  set_attribute_double(root,"elev",scene.elev);
-//  if( scene.description.size()){
-//    xmlpp::Element* description_node = root->add_child("description");
-//    description_node->add_child_text(scene.description);
-//  }
-//  xmlpp::Element* listener_node = root->add_child("listener");
 //  listener_node->set_attribute("name",scene.listener.name);
 //  set_attribute_double(listener_node,"start",scene.listener.start);
 //  if( help_comments )
@@ -214,7 +315,7 @@ void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const s
 //    set_attribute_double(bg_node,"gain",bg_it->gain);
 //    set_attribute_uint(bg_node,"loop",bg_it->loop);
 //  }
-//  doc.write_to_file_formatted(filename);
+  doc.write_to_file_formatted(filename);
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value)
