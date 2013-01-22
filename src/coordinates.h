@@ -204,6 +204,16 @@ namespace TASCAR {
     */
     pos_t center();
     /**
+       \brief Return length of a track.
+     */
+    double length();
+    /**
+       \brief minimum time
+     */
+    double t_min(){if( size() ) return begin()->first; else return 0; };
+    double t_max(){if( size() ) return rbegin()->first; else return 0; };
+    double duration(){return t_max()-t_min();};
+    /**
        \brief Return the interpolated position for a given time.
     */
     pos_t interp(double x);
@@ -289,6 +299,13 @@ namespace TASCAR {
     pos_t normal;
     pos_t anchor;
     pos_t dimension;
+  };
+
+  /**
+     \ingroup tascar
+     \brief List of points connected with a time.
+  */
+  class euler_track_t : public std::map<double,zyx_euler_t> {
   };
 
 }

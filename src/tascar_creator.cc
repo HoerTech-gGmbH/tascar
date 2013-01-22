@@ -61,8 +61,10 @@ int main(int argc,char**argv)
       S.description = "Scene with example values";
     if( !S.src.size() )
       S.src.push_back(src_object_t());
-    if( !S.src[0].position.size() )
-      S.src[0].position[0] = pos_t(1,2,3);
+    if( !S.src[0].position.size() ){
+      S.src[0].position[0] = pos_t(1,2,0.1);
+      S.src[0].position[10] = pos_t(2,-2,-0.1);
+    }
     if( !S.bg_amb.size() )
       S.bg_amb.push_back(bg_amb_t());
   }
@@ -70,7 +72,7 @@ int main(int argc,char**argv)
     time_t tm(time(NULL));
     std::string strtime(ctime(&tm));
     strtime = "\nCreated with tascar_creator\n" + strtime;
-    xml_write_scene(cfg_output,S,strtime);
+    xml_write_scene(cfg_output,S,strtime,b_example);
   }
   if( b_list )
     std::cout << S.print();

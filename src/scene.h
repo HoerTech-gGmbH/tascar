@@ -30,49 +30,81 @@
 #include "coordinates.h"
 #include <string>
 #include <vector>
+#include <libxml++/libxml++.h>
 
 namespace TASCAR {
 
-  class sound_t {
+  class scene_node_base_t {
+  public:
+    scene_node_base_t(){};
+    virtual void read_xml(xmlpp::Element* e) = 0;
+    virtual void write_xml(xmlpp::Element* e,bool help_comments=false) = 0;
+    virtual std::string print(const std::string& prefix="") = 0;
+    virtual ~scene_node_base_t(){};
+  };
+
+  class object_t : public scene_node_base_t {
+  public:
+    object_t();
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix="");
+    std::string name;
+    double starttime;
+    track_t location;
+    euler_track_t orientation;
+  };
+
+  class soundfile_t : public scene_node_base_t {
+  public:
+    soundfile_t();
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix="");
+    std::string filename;
+    double gain;
+    unsigned int loop;
+    double starttime;
+  };
+
+  class sound_t : public soundfile_t {
   public:
     sound_t();
-    std::string filename;
-    double gain;
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix="");
+    pos_t loc;
     unsigned int channel;
-    unsigned int loop;
   };
 
-  class bg_amb_t {
+  class bg_amb_t : public soundfile_t {
   public:
     bg_amb_t();
-    double start;
-    std::string filename;
-    double gain;
-    unsigned int loop;
   };
 
-  class src_object_t {
+  class src_object_t : public object_t {
   public:
     src_object_t();
-    std::string name;
-    double start;
-    sound_t sound;
-    TASCAR::track_t position;
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix="");
+    std::vector<sound_t> sound;
   };
 
-  class listener_t : public TASCAR::track_t {
+  class listener_t : public object_t {
   public:
     listener_t();
-    std::string name;
-    TASCAR::track_t position;
   };
 
-  class scene_t {
+  class scene_t : public scene_node_base_t {
   public:
     scene_t();
-    std::string print();
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix="");
     std::string description;
     std::string name;
+    double duration;
     double lat;
     double lon;
     double elev;
@@ -82,7 +114,7 @@ namespace TASCAR {
   };
 
   scene_t xml_read_scene(const std::string& filename);
-  void xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment="");
+  void xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment="", bool help_comments = false);
 
 }
 

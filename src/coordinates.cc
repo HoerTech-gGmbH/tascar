@@ -468,6 +468,19 @@ void track_t::set_velocity_csvfile( const std::string& fname )
   }
 }
 
+double track_t::length()
+{
+  if( !size() )
+    return 0;
+  double l(0);
+  pos_t p = begin()->second;
+  for(iterator i=begin();i!=end();++i){
+    l+=distance(p,i->second);
+    p = i->second;
+  }
+  return l;
+}
+
 void track_t::export_to_xml_element( xmlpp::Element* a)
 {
   a->add_child_text(print_cart(" "));
