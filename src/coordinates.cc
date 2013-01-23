@@ -149,7 +149,7 @@ void track_t::shift_time(double dt)
   *this = nt;
 }
 
-pos_t track_t::interp(double x)
+const pos_t track_t::interp(double x)
 {
   if( begin() == end() )
     return pos_t();
@@ -481,9 +481,45 @@ double track_t::length()
   return l;
 }
 
-void track_t::export_to_xml_element( xmlpp::Element* a)
+void track_t::write_xml( xmlpp::Element* a)
 {
   a->add_child_text(print_cart(" "));
+}
+
+void track_t::read_xml( xmlpp::Element* a )
+{
+  track_t ntrack;
+  std::stringstream ptxt(xml_get_text(a,""));
+  while( !ptxt.eof() ){
+    double t;
+    pos_t p;
+    ptxt >> t >> p.x >> p.y >> p.z;
+    ntrack[t] = p;
+  }
+  *this = ntrack;
+}
+
+
+const zyx_euler_t euler_track_t::interp(double x)
+{
+  if( begin() == end() )
+    return zyx_euler_t();
+  iterator lim2 = lower_bound(x);
+  if( lim2 == end() )
+    return rbegin()->second;
+  if( lim2 == begin() )
+    return begin()->second;
+  if( lim2->first == x )
+    return lim2->second;
+  iterator lim1 = lim2;
+  --lim1;
+  zyx_euler_t p1(lim1->second);
+  zyx_euler_t p2(lim2->second);
+  double w = (x-lim1->first)/(lim2->first-lim1->first);
+  p1 *= (1.0-w);
+  p2 *= w;
+  p1 += p2;
+  return p1;
 }
 
 /*

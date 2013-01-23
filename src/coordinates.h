@@ -120,6 +120,20 @@ namespace TASCAR {
     double x;
   };
 
+  inline zyx_euler_t& operator*=(zyx_euler_t& self,const double& scale){
+    self.x*=scale;
+    self.y*=scale;
+    self.z*=scale;
+    return self;
+  };
+
+  inline zyx_euler_t& operator+=(zyx_euler_t& self,const zyx_euler_t& other){
+    self.x+=other.x;
+    self.y+=other.y;
+    self.z+=other.z;
+    return self;
+  };
+
   /**
      \brief Apply Euler rotation
      \param r Euler rotation
@@ -128,6 +142,17 @@ namespace TASCAR {
     self.rot_z(r.z);
     self.rot_y(r.y);
     self.rot_x(r.x);
+    return self;
+  };
+
+  /**
+     \brief Apply inverse Euler rotation
+     \param r Euler rotation
+  */
+  inline pos_t& operator/=(pos_t& self,const zyx_euler_t& r){
+    self.rot_x(-r.x);
+    self.rot_y(-r.y);
+    self.rot_z(-r.z);
     return self;
   };
 
@@ -216,7 +241,7 @@ namespace TASCAR {
     /**
        \brief Return the interpolated position for a given time.
     */
-    pos_t interp(double x);
+    const pos_t interp(double x);
     /**
        \brief Shift the time by a constant value
     */
@@ -284,7 +309,8 @@ namespace TASCAR {
     /**
        \brief Export to xml element
     */
-    void export_to_xml_element( xmlpp::Element* );
+    void write_xml( xmlpp::Element* );
+    void read_xml( xmlpp::Element* );
   };
 
   /**
@@ -306,6 +332,11 @@ namespace TASCAR {
      \brief List of points connected with a time.
   */
   class euler_track_t : public std::map<double,zyx_euler_t> {
+  public:
+    /**
+       \brief Return the interpolated orientation for a given time.
+    */
+    const zyx_euler_t interp(double x);
   };
 
 }

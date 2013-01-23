@@ -15,6 +15,8 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
+CXXFLAGS += -ggdb
+
 all:
 	mkdir -p build
 	$(MAKE) -C build -f ../Makefile $(BINFILES)

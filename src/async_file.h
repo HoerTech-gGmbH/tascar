@@ -42,6 +42,7 @@ namespace TASCAR {
   class async_sndfile_t {
   public:
     async_sndfile_t( uint32_t numchannels, uint32_t chunksize = (1 << 18) );
+    async_sndfile_t( const async_sndfile_t& src );
     ~async_sndfile_t();
     /**
        \brief real-time safe, return audio data if available
@@ -53,11 +54,14 @@ namespace TASCAR {
      */
     void request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf );
     void open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain,uint32_t loop);
+    void start_service();
+    void stop_service();
   private:
     void service();
     static void * service(void* h);
     void rt_request_from_slave( uint32_t n );
     void slave_read_file( uint32_t firstframe );
+    bool service_running;
     bool run_service;
     uint32_t numchannels_;
     uint32_t chunksize_;

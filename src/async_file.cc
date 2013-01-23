@@ -9,7 +9,7 @@ TASCAR::chunk_t::chunk_t(uint32_t chunksize, uint32_t numchannels)
   : firstframe(-1),
     len(chunksize),
     channels(numchannels),
-    data(new float[chunksize*channels])
+    data(new float[std::min(chunksize*channels,1u)])
 {
 }
 
@@ -79,7 +79,8 @@ uint32_t TASCAR::looped_sndfile_t::seekf( uint32_t frame )
 }
 
 TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t chunksize)
-  : run_service(true),
+  : service_running(false),
+    run_service(true),
     numchannels_(numchannels),
     chunksize_(chunksize),
     ch1(chunksize,numchannels),
@@ -99,9 +100,68 @@ TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t chunksize
   pthread_mutex_init( &mtx_next, NULL );
   pthread_mutex_init( &mtx_wakeup, NULL );
   pthread_mutex_init( &mtx_file, NULL );
-  int err = pthread_create( &srv_thread, NULL, &TASCAR::async_sndfile_t::service, this);
-  if( err < 0 )
-    throw "pthread_create failed";
+  DEBUG(1);
+}
+
+TASCAR::async_sndfile_t::async_sndfile_t( const async_sndfile_t& src)
+  : service_running(false),
+    run_service(true),
+    numchannels_(src.numchannels_),
+    chunksize_(src.chunksize_),
+    ch1(chunksize_,numchannels_),
+    ch2(chunksize_,numchannels_),
+    current(&ch1),
+    next(&ch2),
+    requested_startframe(0),
+    need_data(false),
+    sfile(NULL),
+    file_firstchannel(0),
+    file_buffer(NULL),
+    file_frames(1),
+    file_channels(1),
+    gain_(1.0)
+{
+  pthread_mutex_init( &mtx_readrequest, NULL );
+  pthread_mutex_init( &mtx_next, NULL );
+  pthread_mutex_init( &mtx_wakeup, NULL );
+  pthread_mutex_init( &mtx_file, NULL );
+  //DEBUG(1);
+}
+
+void TASCAR::async_sndfile_t::start_service()
+{
+  //DEBUG(1);
+  if( !service_running){
+    //DEBUG(1);
+    run_service = true;
+    int err = pthread_create( &srv_thread, NULL, &TASCAR::async_sndfile_t::service, this);
+    if( err < 0 )
+      throw "pthread_create failed";
+    service_running = true;
+  }
+}
+
+void TASCAR::async_sndfile_t::stop_service()
+{
+  if( service_running){
+    //DEBUG(1);
+    run_service = false;
+    // first terminate disk thread:
+    pthread_mutex_trylock( &mtx_wakeup );
+    pthread_mutex_unlock( &mtx_wakeup);
+    pthread_join( srv_thread, NULL );
+    // then clean-up the mutexes:
+    pthread_mutex_trylock( &mtx_readrequest );
+    pthread_mutex_unlock( &mtx_readrequest);
+    //
+    pthread_mutex_trylock( &mtx_next );
+    pthread_mutex_unlock( &mtx_next);
+    //
+    pthread_mutex_trylock( &mtx_file );
+    pthread_mutex_unlock( &mtx_file);
+    service_running = false;
+    //DEBUG(1);
+  }
 }
 
 void * TASCAR::async_sndfile_t::service(void* h)
@@ -112,6 +172,7 @@ void * TASCAR::async_sndfile_t::service(void* h)
 
 void TASCAR::async_sndfile_t::service()
 {
+  //DEBUG("service1");
   while( run_service ){
     pthread_mutex_lock( &mtx_wakeup );
     if( run_service ){
@@ -124,28 +185,21 @@ void TASCAR::async_sndfile_t::service()
       }
     }
   }
+  //DEBUG("service2");
 }
 
 TASCAR::async_sndfile_t::~async_sndfile_t()
 {
-  run_service = false;
-  // first terminate disk thread:
-  pthread_mutex_trylock( &mtx_wakeup );
-  pthread_mutex_unlock( &mtx_wakeup);
-  pthread_join( srv_thread, NULL );
+  //DEBUG(1);
+  stop_service();
+  //DEBUG(1);
   // then clean-up the mutexes:
-  pthread_mutex_trylock( &mtx_readrequest );
-  pthread_mutex_unlock( &mtx_readrequest);
   pthread_mutex_destroy( &mtx_readrequest );
-  //
-  pthread_mutex_trylock( &mtx_next );
-  pthread_mutex_unlock( &mtx_next);
   pthread_mutex_destroy( &mtx_next );
   pthread_mutex_destroy( &mtx_wakeup );
   //
-  pthread_mutex_trylock( &mtx_file );
-  pthread_mutex_unlock( &mtx_file);
   pthread_mutex_destroy( &mtx_file );
+  //DEBUG(1);
   if( sfile ){
     delete  sfile;
     sfile = NULL;
@@ -154,6 +208,7 @@ TASCAR::async_sndfile_t::~async_sndfile_t()
     delete [] file_buffer;
     file_buffer = NULL;
   }
+  //DEBUG(1);
 }
 
 void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf )

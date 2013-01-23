@@ -28,6 +28,7 @@
 #define SCENE_H
 
 #include "coordinates.h"
+#include "async_file.h"
 #include <string>
 #include <vector>
 #include <libxml++/libxml++.h>
@@ -41,6 +42,7 @@ namespace TASCAR {
     virtual void write_xml(xmlpp::Element* e,bool help_comments=false) = 0;
     virtual std::string print(const std::string& prefix="") = 0;
     virtual ~scene_node_base_t(){};
+    virtual void prepare(double fs){};
   };
 
   class object_t : public scene_node_base_t {
@@ -55,16 +57,19 @@ namespace TASCAR {
     euler_track_t orientation;
   };
 
-  class soundfile_t : public scene_node_base_t {
+  class soundfile_t : public scene_node_base_t, public async_sndfile_t {
   public:
-    soundfile_t();
+    soundfile_t(unsigned int channels);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
+    void prepare(double fs);
     std::string filename;
     double gain;
     unsigned int loop;
     double starttime;
+    unsigned int firstchannel;
+    unsigned int channels;
   };
 
   class sound_t : public soundfile_t {
@@ -73,8 +78,8 @@ namespace TASCAR {
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
+    pos_t rel_pos(double t,object_t& parent,object_t& ref);
     pos_t loc;
-    unsigned int channel;
   };
 
   class bg_amb_t : public soundfile_t {
@@ -100,6 +105,7 @@ namespace TASCAR {
   public:
     scene_t();
     void read_xml(xmlpp::Element* e);
+    void read_xml(const std::string& filename);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     std::string description;

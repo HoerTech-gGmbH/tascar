@@ -24,6 +24,7 @@
 
 */
 
+#include "scene.h"
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
@@ -195,7 +196,7 @@ namespace TASCAR {
      \ingroup apptascar
      \brief Multiple panning methods
   */
-  class scene_generator_t : public jackc_transport_t {
+  class scene_generator_t : public jackc_transport_t, public scene_t {
   public:
     scene_generator_t(const std::string& name);
     ~scene_generator_t();
@@ -204,8 +205,8 @@ namespace TASCAR {
     void connect_all(const std::string& ambdec);
   private:
     std::vector<TASCAR::trackpan_amb33_t*> vSrc;
-    std::vector<TASCAR::pos_t*> vSrcPos;
-    std::vector<std::string> vSrcName;
+    //std::vector<TASCAR::pos_t*> vSrcPos;
+    //std::vector<std::string> vSrcName;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
@@ -272,10 +273,10 @@ TASCAR::trackpan_amb33_t* TASCAR::scene_generator_t::add_source(const std::strin
 {
   TASCAR::pos_t* psrc;
   TASCAR::trackpan_amb33_t* retv(new TASCAR::trackpan_amb33_t(srate, SUBSAMPLE, &psrc,fragsize));
-  vSrcPos.push_back(psrc);
+  //vSrcPos.push_back(psrc);
   vSrc.push_back(retv);
   add_input_port(name);
-  vSrcName.push_back(name);
+  //vSrcName.push_back(name);
   return retv;
 }
 
@@ -343,7 +344,7 @@ void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::
   std::string visname(get_client_name());
   visname +=".pos";
   TASCAR::scene_jpos_t vis_ports(visname);
-  vis_ports.set_pos(vSrcPos,vSrcName);
+  //vis_ports.set_pos(vSrcPos,vSrcName);
   vis_ports.activate();
   activate();
   if( draw_connect.size() ){
@@ -491,7 +492,7 @@ int main(int argc, char** argv)
       sleep(1);
     }
     TASCAR::scene_generator_t S(jackname);
-    read_xml(cfgfile,S,gui_jackname);
+    S.read_xml(cfgfile);
     if( !load_gui )
       gui_jackname = "";
     S.run(gui_jackname);
