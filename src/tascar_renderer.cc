@@ -165,7 +165,6 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
   for( unsigned int i=0;i<n;i++){
     delayline.push(vIn[i]+data[i]);
     //DEBUG(i);
-    //src.set_cart(vX[i],vY[i],vZ[i]);
     src_ = interp(tp_time+=ldt);
     //DEBUG(1);
     inct();
@@ -201,17 +200,13 @@ namespace TASCAR {
     scene_generator_t(const std::string& name);
     ~scene_generator_t();
     void run(const std::string& pos_connect, const std::string& ambdec = "ambdec");
-    TASCAR::trackpan_amb33_t* add_source(const std::string& name);
     void connect_all(const std::string& ambdec);
   private:
     std::vector<TASCAR::trackpan_amb33_t*> vSrc;
-    //std::vector<TASCAR::pos_t*> vSrcPos;
-    //std::vector<std::string> vSrcName;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
   public:
-    TASCAR::async_sndfile_t bg_sound;
   };
 
 }
@@ -268,21 +263,8 @@ int TASCAR::scene_jpos_t::process(jack_nframes_t nframes,const std::vector<float
   return 0;
 }
 
-
-TASCAR::trackpan_amb33_t* TASCAR::scene_generator_t::add_source(const std::string& name)
-{
-  TASCAR::pos_t* psrc;
-  TASCAR::trackpan_amb33_t* retv(new TASCAR::trackpan_amb33_t(srate, SUBSAMPLE, &psrc,fragsize));
-  //vSrcPos.push_back(psrc);
-  vSrc.push_back(retv);
-  add_input_port(name);
-  //vSrcName.push_back(name);
-  return retv;
-}
-
 TASCAR::scene_generator_t::scene_generator_t(const std::string& name)
-  : jackc_transport_t(name),
-    bg_sound(4) // 1st order ambisonics sound file
+  : jackc_transport_t(name)
 {
   char c_tmp[100];
   unsigned int k=0;
@@ -326,11 +308,13 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
+  // play backgrounds:
   if( tp_rolling ){
     float* amb_buf[4];
     for(unsigned int k=0;k<4; k++)
       amb_buf[k] = outBuffer[k];
-    bg_sound.request_data( tp_frame, nframes, 4, amb_buf );
+    for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+      it->request_data( tp_frame, nframes, 4, amb_buf );
   }
   //DEBUG(vSrc.size());
   for( unsigned int k=0;k<vSrc.size();k++)
@@ -372,73 +356,6 @@ void usage(struct option * opt)
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
       "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
     opt++;
-  }
-}
-
-void read_xml(const std::string& cfgfile, TASCAR::scene_generator_t& S, std::string& gui_jackname)
-{
-  xmlpp::DomParser parser(cfgfile);
-  xmlpp::Element* root = parser.get_document()->get_root_node();
-  if( root ){
-    gui_jackname = root->get_attribute_value("name") + ".draw";
-    //DEBUG(gui_jackname);
-    xmlpp::Node::NodeList sfilel = root->get_children("amb_sound");
-    for(xmlpp::Node::NodeList::iterator sfile_it=sfilel.begin();sfile_it!=sfilel.end();++sfile_it){
-      xmlpp::Element* sfile = dynamic_cast<xmlpp::Element*>(*sfile_it);
-      if( sfile ){
-        std::string start_str(sfile->get_attribute_value("start"));
-        uint32_t startframe(0);
-        if( start_str.size() )
-          startframe = S.get_srate()*atof(start_str.c_str());
-        uint32_t channel(atoi(sfile->get_attribute_value("channel").c_str()));
-        double gain(1.0);
-        std::string gain_str(sfile->get_attribute_value("gain"));
-        if( gain_str.size() )
-          gain = atof(gain_str.c_str());
-        std::string fname_str(sfile->get_attribute_value("name"));
-        uint32_t loop(1);
-        std::string loop_str(sfile->get_attribute_value("loop"));
-        if( loop_str.size() ){
-          loop = atoi( loop_str.c_str() );
-        }
-        S.bg_sound.open(fname_str,channel,startframe,gain,loop);
-      }
-    }
-    xmlpp::NodeSet sources = root->find("//source");
-    for(xmlpp::NodeSet::iterator sourcei=sources.begin();sourcei!=sources.end();++sourcei){
-      xmlpp::Element* src = dynamic_cast<xmlpp::Element*>(*sourcei);
-      if( src ){
-        //DEBUG(src->get_attribute_value("name"));
-        TASCAR::trackpan_amb33_t* psrc = S.add_source(src->get_attribute_value("name"));
-        //DEBUG(1);
-        xmlpp::Node::NodeList pos = src->get_children("position");
-        if( pos.begin() != pos.end() ){
-          psrc->edit((*pos.begin())->get_children());
-        }
-        xmlpp::Node::NodeList sfilel = src->get_children("sndfile");
-        for(xmlpp::Node::NodeList::iterator sfile_it=sfilel.begin();sfile_it!=sfilel.end();++sfile_it){
-          xmlpp::Element* sfile = dynamic_cast<xmlpp::Element*>(*sfile_it);
-          if( sfile ){
-            std::string start_str(sfile->get_attribute_value("start"));
-            uint32_t startframe(0);
-            if( start_str.size() )
-              startframe = S.get_srate()*atof(start_str.c_str());
-            uint32_t channel(atoi(sfile->get_attribute_value("channel").c_str()));
-            double gain(1.0);
-            std::string gain_str(sfile->get_attribute_value("gain"));
-            if( gain_str.size() )
-              gain = atof(gain_str.c_str());
-            std::string fname_str(sfile->get_attribute_value("name"));
-            uint32_t loop(1);
-            std::string loop_str(sfile->get_attribute_value("loop"));
-            if( loop_str.size() ){
-              loop = atoi( loop_str.c_str() );
-            }
-            psrc->add_sndfile(fname_str,channel,startframe,gain,loop);
-          }
-        }
-      }
-    }
   }
 }
 

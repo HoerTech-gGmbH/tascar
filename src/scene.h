@@ -74,12 +74,15 @@ namespace TASCAR {
 
   class sound_t : public soundfile_t {
   public:
-    sound_t();
+    sound_t(object_t* parent_,object_t* reference_);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
-    pos_t rel_pos(double t,object_t& parent,object_t& ref);
+    pos_t get_pos(double t);
+  private:
     pos_t loc;
+    object_t* parent;
+    object_t* reference;
   };
 
   class bg_amb_t : public soundfile_t {
@@ -89,11 +92,14 @@ namespace TASCAR {
 
   class src_object_t : public object_t {
   public:
-    src_object_t();
+    src_object_t(object_t* reference);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
+    sound_t* add_sound();
     std::vector<sound_t> sound;
+  private:
+    object_t* reference;
   };
 
   class listener_t : public object_t {
@@ -108,6 +114,9 @@ namespace TASCAR {
     void read_xml(const std::string& filename);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
+    src_object_t* add_source();
+    std::vector<sound_t*> linearize();
+    void prepare(double fs);
     std::string description;
     std::string name;
     double duration;
