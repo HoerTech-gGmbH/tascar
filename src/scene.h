@@ -42,7 +42,7 @@ namespace TASCAR {
     virtual void write_xml(xmlpp::Element* e,bool help_comments=false) = 0;
     virtual std::string print(const std::string& prefix="") = 0;
     virtual ~scene_node_base_t(){};
-    virtual void prepare(double fs){};
+    virtual void prepare(double fs) = 0;
   };
 
   class object_t : public scene_node_base_t {
@@ -75,6 +75,8 @@ namespace TASCAR {
   class sound_t : public soundfile_t {
   public:
     sound_t(object_t* parent_,object_t* reference_);
+    void set_reference(object_t* reference_);
+    void set_parent(object_t* parent_);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
@@ -93,10 +95,12 @@ namespace TASCAR {
   class src_object_t : public object_t {
   public:
     src_object_t(object_t* reference);
+    void set_reference(object_t* reference_);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     sound_t* add_sound();
+    void prepare(double fs);
     std::vector<sound_t> sound;
   private:
     object_t* reference;
@@ -105,6 +109,7 @@ namespace TASCAR {
   class listener_t : public object_t {
   public:
     listener_t();
+    void prepare(double fs){};
   };
 
   class scene_t : public scene_node_base_t {

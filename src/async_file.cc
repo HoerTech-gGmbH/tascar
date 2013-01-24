@@ -9,12 +9,16 @@ TASCAR::chunk_t::chunk_t(uint32_t chunksize, uint32_t numchannels)
   : firstframe(-1),
     len(chunksize),
     channels(numchannels),
-    data(new float[std::min(chunksize*channels,1u)])
+    data(new float[std::max(chunksize*channels,1u)])
 {
+  //DEBUG(this);
+  //DEBUG(data);
 }
 
 TASCAR::chunk_t::~chunk_t()
 {
+  //DEBUG(this);
+  //DEBUG(data);
   delete [] data;
 }
 
@@ -100,7 +104,10 @@ TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t chunksize
   pthread_mutex_init( &mtx_next, NULL );
   pthread_mutex_init( &mtx_wakeup, NULL );
   pthread_mutex_init( &mtx_file, NULL );
-  DEBUG(1);
+  //DEBUG(service_running);
+  //DEBUG(ch1.data);
+  //DEBUG(ch2.data);
+  //DEBUGMSG("explicit");
 }
 
 TASCAR::async_sndfile_t::async_sndfile_t( const async_sndfile_t& src)
@@ -125,7 +132,10 @@ TASCAR::async_sndfile_t::async_sndfile_t( const async_sndfile_t& src)
   pthread_mutex_init( &mtx_next, NULL );
   pthread_mutex_init( &mtx_wakeup, NULL );
   pthread_mutex_init( &mtx_file, NULL );
-  //DEBUG(1);
+  //DEBUG(src.service_running);
+  //DEBUG(ch1.data);
+  //DEBUG(ch2.data);
+  //DEBUGMSG("copy");
 }
 
 void TASCAR::async_sndfile_t::start_service()
@@ -181,7 +191,9 @@ void TASCAR::async_sndfile_t::service()
       uint32_t l_requested_startframe(requested_startframe);
       pthread_mutex_unlock( &mtx_readrequest );
       if( l_need_data ){
+        //DEBUG("pre_slave");
         slave_read_file( l_requested_startframe );
+        //DEBUG("post_slave");
       }
     }
   }
@@ -208,32 +220,38 @@ TASCAR::async_sndfile_t::~async_sndfile_t()
     delete [] file_buffer;
     file_buffer = NULL;
   }
-  //DEBUG(1);
+  //DEBUGMSG("destructor done");
 }
 
 void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf )
 {
   if( channels != numchannels_ ){
-    DEBUG(channels);
-    DEBUG(numchannels_);
+    //DEBUG(channels);
+    //DEBUG(numchannels_);
     throw "request_data channel count mismatch";
   }
+  //DEBUG(firstframe);
   uint32_t next_request(current->firstframe+current->len);
   // flag to indicate wether the buffer can be used in the next request
   bool buffer_used_up(false);
   // if the requested data is not available then try to swap buffers
   if( (firstframe < current->firstframe) || (firstframe >= current->firstframe+current->len) ){
     if( pthread_mutex_trylock( &mtx_next ) == 0 ){
+      //DEBUGMSG("swapping_buffers");
       chunk_t* newc(current);
       current = next;
       next = newc;
       next->firstframe = -1;
       pthread_mutex_unlock( &mtx_next );
+      //DEBUGMSG("swapping_buffers_done");
+    }else{
+      //DEBUGMSG("swapping_buffers_failed");
     }
   }
   // is the requested data (at least partially) available?
   if( (firstframe >= current->firstframe) && (firstframe < current->firstframe+current->len) ){
     // copy all available data
+    //DEBUGMSG("copy all available data");
     uint32_t offset = firstframe - current->firstframe;
     uint32_t len = std::min(n,current->len - offset);
     for( uint32_t ch=0;ch<numchannels_;ch++){
@@ -261,9 +279,11 @@ void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uin
   }
   // if the current buffer is used up, then request new data:
   if( buffer_used_up ){
+    //DEBUGMSG("request new data");
     next_request = firstframe;
     rt_request_from_slave( next_request );
   }
+  //DEBUGMSG("exit_request");
 }
 
 void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain, uint32_t loop)
@@ -320,7 +340,7 @@ void TASCAR::async_sndfile_t::slave_read_file( uint32_t firstframe )
   if( firstframe == next->firstframe )
     return;
   next->firstframe = firstframe;
-  //DEBUG(firstframe);
+  //DEBUG(next->data);
   memset(next->data,0,sizeof(float) * chunksize_ * numchannels_);
   //DEBUG(firstframe);
   if( sfile ){

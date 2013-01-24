@@ -135,6 +135,15 @@ std::string soundfile_t::print(const std::string& prefix)
   return r.str();
 }
 
+void soundfile_t::prepare(double fs)
+{
+  //DEBUG("pre-service");
+  start_service();
+  //DEBUG("post-service");
+  open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
+  //DEBUG("post-open");
+}
+
 /*
  * sound_t
  */
@@ -144,6 +153,16 @@ sound_t::sound_t(object_t* parent_,object_t* reference_)
     parent(parent_),
     reference(reference_)
 {
+}
+
+void sound_t::set_reference(object_t* ref)
+{
+  reference = ref;
+}
+
+void sound_t::set_parent(object_t* ref)
+{
+  parent = ref;
 }
 
 void sound_t::read_xml(xmlpp::Element* e)
@@ -187,11 +206,6 @@ pos_t sound_t::get_pos(double t)
   return rp;
 }
 
-void soundfile_t::prepare(double fs)
-{
-  start_service();
-  open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
-}
 
 /*
  * src_object_t
@@ -200,6 +214,24 @@ src_object_t::src_object_t(object_t* reference_)
   : object_t(),
     reference(reference_)
 {
+}
+
+void src_object_t::prepare(double fs)
+{
+  for(std::vector<sound_t>::iterator it=sound.begin();
+      it!=sound.end();++it){
+    it->prepare(fs);
+  }
+}
+
+void src_object_t::set_reference(object_t* ref)
+{
+  reference = ref;
+  for(std::vector<sound_t>::iterator it=sound.begin();
+      it!=sound.end();++it){
+    it->set_reference(ref);
+    it->set_parent(this);
+  }
 }
 
 void src_object_t::read_xml(xmlpp::Element* e)
@@ -353,10 +385,12 @@ void scene_t::read_xml(const std::string& filename)
 std::vector<sound_t*> scene_t::linearize()
 {
   std::vector<sound_t*> r;
-  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it)
+  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it){
+    it->set_reference(&listener);
     for(std::vector<sound_t>::iterator its=it->sound.begin();its!=it->sound.end();++its){
       r.push_back(&(*its));
     }
+  }
   return r;
 }
 

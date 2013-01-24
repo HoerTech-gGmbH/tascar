@@ -41,85 +41,77 @@ using namespace TASCAR;
 
 namespace TASCAR {
 
-  class trackpan_amb33_t : public TASCAR::track_t {
+  class trackpan_amb33_t {
   public:
-    trackpan_amb33_t(double srate, uint32_t subsampling, TASCAR::pos_t** psrc, uint32_t fragsize);
+    trackpan_amb33_t(double srate, uint32_t fragsize);
+    trackpan_amb33_t(const trackpan_amb33_t&);
     ~trackpan_amb33_t();
-    void add_sndfile(const std::string& fname_str,uint32_t channel,uint32_t startframe,double gain,uint32_t loop);
   protected:
-    std::vector<TASCAR::async_sndfile_t*> sndfile;
     varidelay_t delayline;
     double srate_;
-    uint32_t subsampling_;
-    pos_t src_;
     double dt_sample;
     double dt_update;
-    uint32_t subsamplingpos;
     uint32_t fragsize_;
     float* data_acc;
     float* data;
-    inline void inct(void) {
-      if( !subsamplingpos ){
-        subsamplingpos = subsampling_;
-        updatepar();
-      }
-      subsamplingpos--;
-    };
     // ambisonic weights:
     float _w[idx::channels];
     float w_current[idx::channels];
     float dw[idx::channels];
-    //pos_t src;
+    float d_current;
+    float dd;
   public:
-    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling);
+    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*);
   protected:
-    void updatepar();
+    void updatepar(pos_t);
   };
 
 };
-
-
-void trackpan_amb33_t::add_sndfile(const std::string& fname_str,uint32_t channel,uint32_t startframe,double gain,uint32_t loop)
-{
-  TASCAR::async_sndfile_t* sfile(new TASCAR::async_sndfile_t(1));
-  sfile->open(fname_str,channel,startframe,gain,loop);
-  sndfile.push_back(sfile);
-}
-
   
-trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t subsampling, TASCAR::pos_t** psrc,uint32_t fragsize)
+trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize)
   : delayline(3*srate,srate,340.0), 
     srate_(srate),
-    subsampling_(subsampling),
     dt_sample(1.0/srate_),
-    dt_update(1.0/(double)subsampling_),
-    subsamplingpos(0),
+    dt_update(1.0/(double)fragsize),
     fragsize_(fragsize),
     data_acc(new float[fragsize_+1]),
     data(new float[fragsize_+1])
 {
-  if( psrc )
-    *psrc = &src_;
+  //DEBUG(srate);
+  for(unsigned int k=0;k<idx::channels;k++)
+    _w[k] = w_current[k] = dw[k] = 0;
+}
+
+trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
+  : delayline(3*src.srate_,src.srate_,340.0),
+    srate_(src.srate_),
+    dt_sample(1.0/srate_),
+    dt_update(1.0/(double)(src.fragsize_)),
+    fragsize_(src.fragsize_),
+    data_acc(new float[fragsize_+1]),
+    data(new float[fragsize_+1])
+{
+  //DEBUG(srate_);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
 }
 
 trackpan_amb33_t::~trackpan_amb33_t()
 {
-  for( unsigned int k=0;k<sndfile.size();k++){
-    delete sndfile[k];
-  }
+  //DEBUG(data);
   delete [] data_acc;
   delete [] data;
 }
 
-void trackpan_amb33_t::updatepar()
+void trackpan_amb33_t::updatepar(pos_t src_)
 {
-  // this is taken from AMB plugins by Fons and Joern:
+  //DEBUG(src_.print_cart());
   float az = src_.azim();
   float el = src_.elev();
+  float nm = src_.norm();
   float t, x2, y2, z2;
-  
+  dd = (nm-d_current)*dt_update;
+  // this is taken from AMB plugins by Fons and Joern:
   _w[idx::w] = MIN3DB;
   t = cosf (el);
   _w[idx::x] = t * cosf (az);
@@ -146,50 +138,32 @@ void trackpan_amb33_t::updatepar()
     dw[k] = (_w[k] - w_current[k])*dt_update;
 }
 
-void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer,uint32_t tp_frame, double tp_time,bool tp_rolling)
+void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer,uint32_t tp_frame, double tp_time,bool tp_rolling, sound_t* snd)
 {
   if( n != fragsize_ )
-    throw "fragsize changed";
+    throw ErrMsg("fragsize changed");
   //DEBUG(dt_sample);
   double ldt(dt_sample);
   if( !tp_rolling )
     ldt = 0;
+  //pos_t srcpos = snd->get_pos(tp_time+ldt*n);
+  updatepar(snd->get_pos(tp_time+ldt*n));
   memset( data, 0, sizeof(float)*n );
   if( tp_rolling ){
-    for( unsigned int k=0;k<sndfile.size();k++){
-      sndfile[k]->request_data( tp_frame, n, 1, &data_acc );
-      for( unsigned int fr=0;fr<n;fr++)
-        data[fr] += data_acc[fr];
-    }
+    snd->request_data( tp_frame, n, 1, &data_acc );
+    for( unsigned int fr=0;fr<n;fr++)
+      data[fr] += data_acc[fr];
   }
   for( unsigned int i=0;i<n;i++){
     delayline.push(vIn[i]+data[i]);
-    //DEBUG(i);
-    src_ = interp(tp_time+=ldt);
-    //DEBUG(1);
-    inct();
-    double d = src_.norm();
-    //DEBUG(d);
+    float d = (d_current+=dd);
     for( unsigned int k=0;k<idx::channels;k++){
-      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d )/std::max(1.0,d);
+      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d/std::max(1.0f,d) );
     }
   }
-  //DEBUG(src_.x);
 }
 
-
 namespace TASCAR {
-
-  class scene_jpos_t : public jackc_t {
-  public:
-    scene_jpos_t(const std::string& jname);
-    void set_pos(const std::vector<TASCAR::pos_t*>& vSrcPos, const std::vector<std::string>& vSrcName);
-    void connect_all(const std::string& dest_name);
-  protected:
-    int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
-    std::vector<TASCAR::pos_t*> vSrcPos_;
-    std::vector<std::string> vPortNames;
-  };
 
   /**
      \ingroup apptascar
@@ -202,7 +176,8 @@ namespace TASCAR {
     void run(const std::string& pos_connect, const std::string& ambdec = "ambdec");
     void connect_all(const std::string& ambdec);
   private:
-    std::vector<TASCAR::trackpan_amb33_t*> vSrc;
+    std::vector<TASCAR::trackpan_amb33_t> panner;
+    std::vector<sound_t*> sounds;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
@@ -212,56 +187,6 @@ namespace TASCAR {
 }
 
 static bool b_quit;
-
-TASCAR::scene_jpos_t::scene_jpos_t(const std::string& jname)
-  : jackc_t(jname)
-{
-}
-
-void TASCAR::scene_jpos_t::set_pos(const std::vector<TASCAR::pos_t*>& vSrcPos, const std::vector<std::string>& vSrcName)
-{
-  vSrcPos_ = vSrcPos;
-  char cStr[] = "xyz";
-  for(unsigned int k=0;k<vSrcName.size();k++){
-    for(unsigned int dim=0; dim<3; dim++){
-      std::string p_name(vSrcName[k]);
-      p_name+=".";
-      p_name+=cStr[dim];
-      add_output_port(p_name);
-      vPortNames.push_back(p_name);
-    }
-  }
-}
-
-void TASCAR::scene_jpos_t::connect_all(const std::string& dest_name)
-{
-  
-  for( unsigned int k=0;k<vPortNames.size();k++){
-    try{
-      connect_out( k, dest_name + ":" + vPortNames[k]);
-    }
-    catch( const char* msg ){
-      std::cerr << "Warning: " << msg << std::endl;
-    }
-  }
-}
-
-int TASCAR::scene_jpos_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer)
-{
-  for(unsigned int k=0;k<vSrcPos_.size();k++){
-    float val[3];
-    val[0] = vSrcPos_[k]->x;
-    val[1] = vSrcPos_[k]->y;
-    val[2] = vSrcPos_[k]->z;
-    //DEBUG(val[0]);
-    for(unsigned int i=0;i<nframes;i++){
-      for(unsigned int dim=0;dim<3;dim++){
-        outBuffer[3*k+dim][i] = val[dim];
-      }
-    }
-  }
-  return 0;
-}
 
 TASCAR::scene_generator_t::scene_generator_t(const std::string& name)
   : jackc_transport_t(name)
@@ -281,9 +206,6 @@ TASCAR::scene_generator_t::scene_generator_t(const std::string& name)
 
 TASCAR::scene_generator_t::~scene_generator_t()
 {
-  for( unsigned int k=0;k<vSrc.size();k++){
-    delete vSrc[k];
-  }
 }
 
 void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
@@ -298,7 +220,6 @@ void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
     }
   }
 }
-
 
 int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
                                        const std::vector<float*>& inBuffer,
@@ -316,10 +237,11 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
     for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
       it->request_data( tp_frame, nframes, 4, amb_buf );
   }
-  //DEBUG(vSrc.size());
-  for( unsigned int k=0;k<vSrc.size();k++)
-    if( (vSrc[k]) && (k<inBuffer.size()) )
-      vSrc[k]->process(nframes,inBuffer[k], outBuffer,tp_frame,(double)tp_frame/(double)srate,tp_rolling);
+  //DEBUG(panner.size());
+  for( unsigned int k=0;k<std::min(panner.size(),sounds.size());k++)
+    if( (k<inBuffer.size()) && (sounds[k]) )
+      panner[k].process(nframes,inBuffer[k], outBuffer,tp_frame,
+                       (double)tp_frame/(double)srate,tp_rolling,sounds[k]);
   return 0;
 }
 
@@ -327,13 +249,17 @@ void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::
 {
   std::string visname(get_client_name());
   visname +=".pos";
-  TASCAR::scene_jpos_t vis_ports(visname);
-  //vis_ports.set_pos(vSrcPos,vSrcName);
-  vis_ports.activate();
-  activate();
-  if( draw_connect.size() ){
-    vis_ports.connect_all(draw_connect);
+  prepare(get_srate());
+  sounds = linearize();
+  panner.clear();
+  for(unsigned int k=0;k<sounds.size();k++){
+    char ctmp[1024];
+    sprintf(ctmp,"in_%d",k);
+    add_input_port(ctmp);
+    panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize()));
   }
+  //DEBUG(sounds.size());
+  activate();
   if( dest_ambdec.size() ){
     connect_all( dest_ambdec );
   }
@@ -341,7 +267,6 @@ void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::
     sleep( 1 );
   }
   deactivate();
-  vis_ports.deactivate();
 }
 
 static void sighandler(int sig)
