@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+Created with tascar_creator
+Thu Jan 24 14:47:23 2013
+-->
+<scene name="Example scene" lat="53.155473" lon="8.167249" elev="10">
+  <description>one source moving from left to right with spherical
+interpolation, another source moving back with cartesian interpolation</description>
+  <src_object name="spherical" starttime="4">
+    <position interpolation="spherical">0 50 -50 0
+10 50 50 0
+</position>
+    <sound filename="tc1.wav" gain="0" loop="2070" starttime="0" x="0" y="0" z="0" channel="0"/>
+  </src_object>
+  <src_object name="cartesian" starttime="18">
+    <position interpolation="cartesian">0 50 50 0
+10 50 -50 0
+</position>
+    <sound filename="tc1.wav" gain="0" loop="2070" starttime="0" x="0" y="0" z="0" channel="0"/>
+  </src_object>
+  <listener name="object" starttime="0"/>
+</scene>

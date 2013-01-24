@@ -113,6 +113,36 @@ namespace TASCAR {
     std::string print_sphere(const std::string& delim=", ");
   };
 
+  class sphere_t {
+  public:
+    sphere_t(double r_,double az_, double el_):r(r_),az(az_),el(el_){};
+    sphere_t():r(0),az(0),el(0){};
+    sphere_t(pos_t c){
+      double xy2 = c.x*c.x+c.y*c.y;
+      r = sqrt(xy2+c.z*c.z);
+      az = atan2(c.y,c.x);
+      el = atan2(c.z,sqrt(xy2));
+    };
+    pos_t cart(){
+      double cel(cos(el));
+      return pos_t(r*cos(az)*cel,r*sin(az)*cel,r*sin(el));
+    };
+    double r,az,el;
+  };
+
+  /**
+     \brief Scale relative to origin
+     \param d ratio
+  */
+  inline sphere_t& operator*=(sphere_t& self,double d) {
+    self.r*=d;
+    self.az*=d;
+    self.el*=d;
+    return self;
+  };
+
+
+
   class zyx_euler_t {
   public:
     double z;
@@ -224,6 +254,10 @@ namespace TASCAR {
   */
   class track_t : public std::map<double,pos_t> {
   public:
+    enum interp_t {
+      cartesian, spherical
+    };
+    track_t();
     /**
        \brief Return the center of a track.
     */
@@ -248,7 +282,6 @@ namespace TASCAR {
     void shift_time(double dt);
     track_t& operator+=(const pos_t&);
     track_t& operator-=(const pos_t&);
-    
     track_t& operator*=(const pos_t&);
     /**
        \brief Format as string in cartesian coordinates
@@ -311,6 +344,9 @@ namespace TASCAR {
     */
     void write_xml( xmlpp::Element* );
     void read_xml( xmlpp::Element* );
+    void set_interpt(interp_t p){interpt=p;};
+  private:
+    interp_t interpt;
   };
 
   /**

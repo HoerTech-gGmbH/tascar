@@ -162,13 +162,31 @@ const pos_t track_t::interp(double x)
     return lim2->second;
   iterator lim1 = lim2;
   --lim1;
-  pos_t p1(lim1->second);
-  pos_t p2(lim2->second);
-  double w = (x-lim1->first)/(lim2->first-lim1->first);
-  p1 *= (1.0-w);
-  p2 *= w;
-  p1 += p2;
-  return p1;
+  if( interpt == track_t::cartesian ){
+    // cartesian interpolation:
+    pos_t p1(lim1->second);
+    pos_t p2(lim2->second);
+    double w = (x-lim1->first)/(lim2->first-lim1->first);
+    p1 *= (1.0-w);
+    p2 *= w;
+    p1 += p2;
+    return p1;
+  }else{
+    // spherical interpolation:
+    sphere_t p1(lim1->second);
+    sphere_t p2(lim2->second);
+    double w = (x-lim1->first)/(lim2->first-lim1->first);
+    DEBUG(p1.r);
+    DEBUG(p2.r);
+    p1 *= (1.0-w);
+    p2 *= w;
+    DEBUG(p1.r);
+    DEBUG(p2.r);
+    pos_t cp1(p1.cart());
+    cp1 += p2.cart();
+    DEBUGMSG(cp1.print_sphere());
+    return cp1;
+  }
 }
 
 void track_t::smooth( unsigned int n )
@@ -481,20 +499,38 @@ double track_t::length()
   return l;
 }
 
+track_t::track_t()
+  : interpt(cartesian)
+{
+}
+
 void track_t::write_xml( xmlpp::Element* a)
 {
+  switch( interpt ){
+  case TASCAR::track_t::cartesian:
+    a->set_attribute("interpolation","cartesian");
+    break;
+  case TASCAR::track_t::spherical:
+    a->set_attribute("interpolation","spherical");
+    break;
+  }
   a->add_child_text(print_cart(" "));
 }
 
 void track_t::read_xml( xmlpp::Element* a )
 {
   track_t ntrack;
+  if( a->get_attribute_value("interpolation") == "spherical" )
+    ntrack.set_interpt(TASCAR::track_t::spherical);
   std::stringstream ptxt(xml_get_text(a,""));
   while( !ptxt.eof() ){
-    double t;
+    double t(-1);
     pos_t p;
-    ptxt >> t >> p.x >> p.y >> p.z;
-    ntrack[t] = p;
+    ptxt >> t;
+    if( !ptxt.eof() ){
+      ptxt >> p.x >> p.y >> p.z;
+      ntrack[t] = p;
+    }
   }
   *this = ntrack;
 }

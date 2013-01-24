@@ -151,8 +151,22 @@ sound_t::sound_t(object_t* parent_,object_t* reference_)
   : soundfile_t(1),
     loc(0,0,0),
     parent(parent_),
-    reference(reference_)
+    reference(reference_),
+    fs_(1)
 {
+}
+
+void sound_t::prepare(double fs)
+{
+  fs_ = fs;
+  soundfile_t::prepare(fs);
+}
+
+void sound_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf )
+{
+  if( parent )
+    firstframe -= parent->starttime*fs_;
+  soundfile_t::request_data( firstframe-starttime*fs_, n, channels, buf );
 }
 
 void sound_t::set_reference(object_t* ref)
@@ -196,6 +210,7 @@ pos_t sound_t::get_pos(double t)
 {
   pos_t rp(loc);
   if( parent ){
+    t -= parent->starttime;
     rp *= parent->orientation.interp(t);
     rp += parent->location.interp(t);
   }

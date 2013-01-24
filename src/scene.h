@@ -75,16 +75,19 @@ namespace TASCAR {
   class sound_t : public soundfile_t {
   public:
     sound_t(object_t* parent_,object_t* reference_);
+    void request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf );
     void set_reference(object_t* reference_);
     void set_parent(object_t* parent_);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     pos_t get_pos(double t);
+    void prepare(double fs);
   private:
     pos_t loc;
     object_t* parent;
     object_t* reference;
+    double fs_;
   };
 
   class bg_amb_t : public soundfile_t {
