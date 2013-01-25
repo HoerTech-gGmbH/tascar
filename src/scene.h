@@ -45,6 +45,15 @@ namespace TASCAR {
     virtual void prepare(double fs) = 0;
   };
 
+  class rgb_color_t {
+  public:
+    rgb_color_t(double r_,double g_,double b_):r(r_),g(g_),b(b_){};
+    rgb_color_t(const std::string& webc);
+    rgb_color_t():r(0),g(0),b(0){};
+    std::string str();
+    double r, g, b;
+  };
+  
   class object_t : public scene_node_base_t {
   public:
     object_t();
@@ -52,6 +61,7 @@ namespace TASCAR {
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     std::string name;
+    rgb_color_t color;
     double starttime;
     track_t location;
     euler_track_t orientation;
@@ -81,7 +91,8 @@ namespace TASCAR {
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
-    pos_t get_pos(double t);
+    pos_t get_pos(double t) const;
+    pos_t get_pos_global(double t) const;
     void prepare(double fs);
   private:
     pos_t loc;

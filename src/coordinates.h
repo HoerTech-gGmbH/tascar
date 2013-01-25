@@ -145,6 +145,7 @@ namespace TASCAR {
 
   class zyx_euler_t {
   public:
+    std::string print(const std::string& delim=", ");
     double z;
     double y;
     double x;
@@ -275,7 +276,7 @@ namespace TASCAR {
     /**
        \brief Return the interpolated position for a given time.
     */
-    const pos_t interp(double x);
+    pos_t interp(double x) const;
     /**
        \brief Shift the time by a constant value
     */
@@ -372,7 +373,10 @@ namespace TASCAR {
     /**
        \brief Return the interpolated orientation for a given time.
     */
-    const zyx_euler_t interp(double x);
+    zyx_euler_t interp(double x) const;
+    void write_xml( xmlpp::Element* );
+    void read_xml( xmlpp::Element* );
+    std::string print(const std::string& delim=", ");
   };
 
 }

@@ -149,18 +149,18 @@ void track_t::shift_time(double dt)
   *this = nt;
 }
 
-const pos_t track_t::interp(double x)
+pos_t track_t::interp(double x) const
 {
   if( begin() == end() )
     return pos_t();
-  iterator lim2 = lower_bound(x);
+  const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
   if( lim2 == begin() )
     return begin()->second;
   if( lim2->first == x )
     return lim2->second;
-  iterator lim1 = lim2;
+  const_iterator lim1 = lim2;
   --lim1;
   if( interpt == track_t::cartesian ){
     // cartesian interpolation:
@@ -176,16 +176,12 @@ const pos_t track_t::interp(double x)
     sphere_t p1(lim1->second);
     sphere_t p2(lim2->second);
     double w = (x-lim1->first)/(lim2->first-lim1->first);
-    DEBUG(p1.r);
-    DEBUG(p2.r);
     p1 *= (1.0-w);
     p2 *= w;
-    DEBUG(p1.r);
-    DEBUG(p2.r);
-    pos_t cp1(p1.cart());
-    cp1 += p2.cart();
-    DEBUGMSG(cp1.print_sphere());
-    return cp1;
+    p1.r += p2.r;
+    p1.az += p2.az;
+    p1.el += p2.el;
+    return p1.cart();
   }
 }
 
@@ -535,19 +531,18 @@ void track_t::read_xml( xmlpp::Element* a )
   *this = ntrack;
 }
 
-
-const zyx_euler_t euler_track_t::interp(double x)
+zyx_euler_t euler_track_t::interp(double x) const
 {
   if( begin() == end() )
     return zyx_euler_t();
-  iterator lim2 = lower_bound(x);
+  const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
   if( lim2 == begin() )
     return begin()->second;
   if( lim2->first == x )
     return lim2->second;
-  iterator lim1 = lim2;
+  const_iterator lim1 = lim2;
   --lim1;
   zyx_euler_t p1(lim1->second);
   zyx_euler_t p2(lim2->second);
@@ -556,6 +551,47 @@ const zyx_euler_t euler_track_t::interp(double x)
   p2 *= w;
   p1 += p2;
   return p1;
+}
+
+void euler_track_t::write_xml( xmlpp::Element* a)
+{
+  a->add_child_text(print(" "));
+}
+
+void euler_track_t::read_xml( xmlpp::Element* a )
+{
+  euler_track_t ntrack;
+  std::stringstream ptxt(xml_get_text(a,""));
+  while( !ptxt.eof() ){
+    double t(-1);
+    zyx_euler_t p;
+    ptxt >> t;
+    if( !ptxt.eof() ){
+      ptxt >> p.z >> p.y >> p.x;
+      p *= DEG2RAD;
+      ntrack[t] = p;
+    }
+  }
+  *this = ntrack;
+}
+
+std::string euler_track_t::print(const std::string& delim)
+{
+  std::ostringstream tmp("");
+  tmp.precision(12);
+  for(iterator i=begin();i!=end();++i){
+    tmp << i->first << delim << i->second.print(delim) << "\n";
+  }
+  return tmp.str();
+}
+
+std::string zyx_euler_t::print(const std::string& delim)
+{
+  std::ostringstream tmp("");
+  tmp.precision(12);
+  tmp << RAD2DEG*z << delim << RAD2DEG*y << delim << RAD2DEG*x;
+  return tmp.str();
+
 }
 
 /*

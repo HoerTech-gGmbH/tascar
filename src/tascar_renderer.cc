@@ -211,7 +211,6 @@ TASCAR::scene_generator_t::~scene_generator_t()
 
 void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
 {
-  
   for( unsigned int k=0;k<vAmbPorts.size();k++){
     try{
       connect_out( k, dest_name + ":" + vAmbPorts[k]);

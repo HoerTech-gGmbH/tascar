@@ -53,11 +53,15 @@ void object_t::read_xml(xmlpp::Element* e)
 {
   name = e->get_attribute_value("name");
   get_attribute_value(e,"starttime",starttime);
+  color = rgb_color_t(e->get_attribute_value("color"));
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "position")){
       location.read_xml(sne);
+    }
+    if( sne && ( sne->get_name() == "orientation")){
+      orientation.read_xml(sne);
     }
     if( sne && (sne->get_name() == "creator")){
       xmlpp::Node::NodeList subnodes = sne->get_children();
@@ -76,9 +80,13 @@ void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 //      "provided, then the position is in the origin and the orientation\n"
 //      "is parallel to the x-axis.\n");
   e->set_attribute("name",name);
+  e->set_attribute("color",color.str());
   set_attribute_double(e,"starttime",starttime);
   if( location.size() ){
     location.write_xml( e->add_child("position") );
+  }
+  if( orientation.size() ){
+    orientation.write_xml( e->add_child("orientation") );
   }
 }
 
@@ -206,17 +214,29 @@ std::string sound_t::print(const std::string& prefix)
   return r.str();
 }
 
-pos_t sound_t::get_pos(double t)
+pos_t sound_t::get_pos(double t) const
+{
+  pos_t rp(loc);
+  if( parent ){
+    rp *= parent->orientation.interp(t - parent->starttime);
+    rp += parent->location.interp(t - parent->starttime);
+  }
+  if( reference ){
+    rp -= reference->location.interp(t - reference->starttime);
+    rp /= reference->orientation.interp(t - reference->starttime);
+  }
+  return rp;
+}
+
+pos_t sound_t::get_pos_global(double t) const
 {
   pos_t rp(loc);
   if( parent ){
     t -= parent->starttime;
-    rp *= parent->orientation.interp(t);
+    zyx_euler_t o(parent->orientation.interp(t));
+    //DEBUG(o.print());
+    rp *= o;
     rp += parent->location.interp(t);
-  }
-  if( reference ){
-    rp -= reference->location.interp(t);
-    rp /= reference->orientation.interp(t);
   }
   return rp;
 }
@@ -433,6 +453,28 @@ scene_t TASCAR::xml_read_scene(const std::string& filename)
   xmlpp::Element* root(doc->get_root_node());
   s.read_xml(root);
   return s;
+}
+
+rgb_color_t::rgb_color_t(const std::string& webc)
+  : r(0),g(0),b(0)
+{
+  if( (webc.size() == 7) && (webc[0] == '#') ){
+    int c(0);
+    sscanf(webc.c_str(),"#%x",&c);
+    r = ((c >> 16) & 0xff)/255.0;
+    g = ((c >> 8) & 0xff)/255.0;
+    b = (c & 0xff)/255.0;
+  }
+}
+
+std::string rgb_color_t::str()
+{
+  char ctmp[64];
+  unsigned int c(((unsigned int)(r*255) << 16) + 
+                 ((unsigned int)(g*255) << 8) + 
+                 ((unsigned int)(b*255)));
+  sprintf(ctmp,"#%06x",c);
+  return ctmp;
 }
 
 /*
