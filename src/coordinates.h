@@ -113,11 +113,56 @@ namespace TASCAR {
     std::string print_sphere(const std::string& delim=", ");
   };
 
+  class sphere_t {
+  public:
+    sphere_t(double r_,double az_, double el_):r(r_),az(az_),el(el_){};
+    sphere_t():r(0),az(0),el(0){};
+    sphere_t(pos_t c){
+      double xy2 = c.x*c.x+c.y*c.y;
+      r = sqrt(xy2+c.z*c.z);
+      az = atan2(c.y,c.x);
+      el = atan2(c.z,sqrt(xy2));
+    };
+    pos_t cart(){
+      double cel(cos(el));
+      return pos_t(r*cos(az)*cel,r*sin(az)*cel,r*sin(el));
+    };
+    double r,az,el;
+  };
+
+  /**
+     \brief Scale relative to origin
+     \param d ratio
+  */
+  inline sphere_t& operator*=(sphere_t& self,double d) {
+    self.r*=d;
+    self.az*=d;
+    self.el*=d;
+    return self;
+  };
+
+
+
   class zyx_euler_t {
   public:
+    std::string print(const std::string& delim=", ");
     double z;
     double y;
     double x;
+  };
+
+  inline zyx_euler_t& operator*=(zyx_euler_t& self,const double& scale){
+    self.x*=scale;
+    self.y*=scale;
+    self.z*=scale;
+    return self;
+  };
+
+  inline zyx_euler_t& operator+=(zyx_euler_t& self,const zyx_euler_t& other){
+    self.x+=other.x;
+    self.y+=other.y;
+    self.z+=other.z;
+    return self;
   };
 
   /**
@@ -128,6 +173,17 @@ namespace TASCAR {
     self.rot_z(r.z);
     self.rot_y(r.y);
     self.rot_x(r.x);
+    return self;
+  };
+
+  /**
+     \brief Apply inverse Euler rotation
+     \param r Euler rotation
+  */
+  inline pos_t& operator/=(pos_t& self,const zyx_euler_t& r){
+    self.rot_x(-r.x);
+    self.rot_y(-r.y);
+    self.rot_z(-r.z);
     return self;
   };
 
@@ -199,21 +255,34 @@ namespace TASCAR {
   */
   class track_t : public std::map<double,pos_t> {
   public:
+    enum interp_t {
+      cartesian, spherical
+    };
+    track_t();
     /**
        \brief Return the center of a track.
     */
     pos_t center();
     /**
+       \brief Return length of a track.
+     */
+    double length();
+    /**
+       \brief minimum time
+     */
+    double t_min(){if( size() ) return begin()->first; else return 0; };
+    double t_max(){if( size() ) return rbegin()->first; else return 0; };
+    double duration(){return t_max()-t_min();};
+    /**
        \brief Return the interpolated position for a given time.
     */
-    pos_t interp(double x);
+    pos_t interp(double x) const;
     /**
        \brief Shift the time by a constant value
     */
     void shift_time(double dt);
     track_t& operator+=(const pos_t&);
     track_t& operator-=(const pos_t&);
-    
     track_t& operator*=(const pos_t&);
     /**
        \brief Format as string in cartesian coordinates
@@ -274,7 +343,11 @@ namespace TASCAR {
     /**
        \brief Export to xml element
     */
-    void export_to_xml_element( xmlpp::Element* );
+    void write_xml( xmlpp::Element* );
+    void read_xml( xmlpp::Element* );
+    void set_interpt(interp_t p){interpt=p;};
+  private:
+    interp_t interpt;
   };
 
   /**
@@ -289,6 +362,21 @@ namespace TASCAR {
     pos_t normal;
     pos_t anchor;
     pos_t dimension;
+  };
+
+  /**
+     \ingroup tascar
+     \brief List of points connected with a time.
+  */
+  class euler_track_t : public std::map<double,zyx_euler_t> {
+  public:
+    /**
+       \brief Return the interpolated orientation for a given time.
+    */
+    zyx_euler_t interp(double x) const;
+    void write_xml( xmlpp::Element* );
+    void read_xml( xmlpp::Element* );
+    std::string print(const std::string& delim=", ");
   };
 
 }

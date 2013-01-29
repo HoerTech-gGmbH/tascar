@@ -149,26 +149,40 @@ void track_t::shift_time(double dt)
   *this = nt;
 }
 
-pos_t track_t::interp(double x)
+pos_t track_t::interp(double x) const
 {
   if( begin() == end() )
     return pos_t();
-  iterator lim2 = lower_bound(x);
+  const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
   if( lim2 == begin() )
     return begin()->second;
   if( lim2->first == x )
     return lim2->second;
-  iterator lim1 = lim2;
+  const_iterator lim1 = lim2;
   --lim1;
-  pos_t p1(lim1->second);
-  pos_t p2(lim2->second);
-  double w = (x-lim1->first)/(lim2->first-lim1->first);
-  p1 *= (1.0-w);
-  p2 *= w;
-  p1 += p2;
-  return p1;
+  if( interpt == track_t::cartesian ){
+    // cartesian interpolation:
+    pos_t p1(lim1->second);
+    pos_t p2(lim2->second);
+    double w = (x-lim1->first)/(lim2->first-lim1->first);
+    p1 *= (1.0-w);
+    p2 *= w;
+    p1 += p2;
+    return p1;
+  }else{
+    // spherical interpolation:
+    sphere_t p1(lim1->second);
+    sphere_t p2(lim2->second);
+    double w = (x-lim1->first)/(lim2->first-lim1->first);
+    p1 *= (1.0-w);
+    p2 *= w;
+    p1.r += p2.r;
+    p1.az += p2.az;
+    p1.el += p2.el;
+    return p1.cart();
+  }
 }
 
 void track_t::smooth( unsigned int n )
@@ -468,9 +482,116 @@ void track_t::set_velocity_csvfile( const std::string& fname )
   }
 }
 
-void track_t::export_to_xml_element( xmlpp::Element* a)
+double track_t::length()
 {
+  if( !size() )
+    return 0;
+  double l(0);
+  pos_t p = begin()->second;
+  for(iterator i=begin();i!=end();++i){
+    l+=distance(p,i->second);
+    p = i->second;
+  }
+  return l;
+}
+
+track_t::track_t()
+  : interpt(cartesian)
+{
+}
+
+void track_t::write_xml( xmlpp::Element* a)
+{
+  switch( interpt ){
+  case TASCAR::track_t::cartesian:
+    a->set_attribute("interpolation","cartesian");
+    break;
+  case TASCAR::track_t::spherical:
+    a->set_attribute("interpolation","spherical");
+    break;
+  }
   a->add_child_text(print_cart(" "));
+}
+
+void track_t::read_xml( xmlpp::Element* a )
+{
+  track_t ntrack;
+  if( a->get_attribute_value("interpolation") == "spherical" )
+    ntrack.set_interpt(TASCAR::track_t::spherical);
+  std::stringstream ptxt(xml_get_text(a,""));
+  while( !ptxt.eof() ){
+    double t(-1);
+    pos_t p;
+    ptxt >> t;
+    if( !ptxt.eof() ){
+      ptxt >> p.x >> p.y >> p.z;
+      ntrack[t] = p;
+    }
+  }
+  *this = ntrack;
+}
+
+zyx_euler_t euler_track_t::interp(double x) const
+{
+  if( begin() == end() )
+    return zyx_euler_t();
+  const_iterator lim2 = lower_bound(x);
+  if( lim2 == end() )
+    return rbegin()->second;
+  if( lim2 == begin() )
+    return begin()->second;
+  if( lim2->first == x )
+    return lim2->second;
+  const_iterator lim1 = lim2;
+  --lim1;
+  zyx_euler_t p1(lim1->second);
+  zyx_euler_t p2(lim2->second);
+  double w = (x-lim1->first)/(lim2->first-lim1->first);
+  p1 *= (1.0-w);
+  p2 *= w;
+  p1 += p2;
+  return p1;
+}
+
+void euler_track_t::write_xml( xmlpp::Element* a)
+{
+  a->add_child_text(print(" "));
+}
+
+void euler_track_t::read_xml( xmlpp::Element* a )
+{
+  euler_track_t ntrack;
+  std::stringstream ptxt(xml_get_text(a,""));
+  while( !ptxt.eof() ){
+    double t(-1);
+    zyx_euler_t p;
+    ptxt >> t;
+    if( !ptxt.eof() ){
+      ptxt >> p.z >> p.y >> p.x;
+      p *= DEG2RAD;
+      ntrack[t] = p;
+    }
+  }
+  *this = ntrack;
+}
+
+std::string euler_track_t::print(const std::string& delim)
+{
+  std::ostringstream tmp("");
+  tmp.precision(12);
+  for(iterator i=begin();i!=end();++i){
+    tmp << i->first << delim << i->second.print(delim) << "\n";
+  }
+  return tmp.str();
+}
+
+std::string zyx_euler_t::print(const std::string& delim)
+{
+  std::ostringstream tmp("");
+  tmp.precision(12);
+  tmp << RAD2DEG*z << delim << RAD2DEG*y << delim << RAD2DEG*x;
+  return tmp.str();
+
 }
 
 /*

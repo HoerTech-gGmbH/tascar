@@ -29,6 +29,7 @@
 
 #include "jackclient.h"
 #include "multipan.h"
+#include "scene.h"
 #include "defs.h"
 #include "errorhandling.h"
 

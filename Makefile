@@ -1,6 +1,6 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_creator tascar_jackio
+BINFILES = tascar_renderer tascar_creator tascar_jackio tascar_draw
 
 OBJECTS = jackclient.o coordinates.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o
 
@@ -12,8 +12,12 @@ CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer
 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
+tascar_draw: EXTERNALS += gtkmm-2.4
+
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
+
+CXXFLAGS += -ggdb
 
 all:
 	mkdir -p build
@@ -38,18 +42,7 @@ doc:
 
 include $(wildcard *.mk)
 
-
-$(JACKBIN): LDLIBS += -ljack
-
-tascar_jackio: LDLIBS += -lsndfile
-
 $(BINFILES): $(OBJECTS)
-
-$(GTKBIN): LDLIBS += `pkg-config --libs gtk+-2.0`
-$(GTKBIN): CXXFLAGS += `pkg-config --cflags gtk+-2.0`
-
-$(GTKMMBIN): LDLIBS += `pkg-config --libs gtkmm-2.4`
-$(GTKMMBIN): CXXFLAGS += `pkg-config --cflags gtkmm-2.4`
 
 $(PREFIX)/bin/%: %
 	cp $< $@
@@ -61,13 +54,13 @@ $(PREFIX)/bin/%: %
 	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-dist: clean doc
-	svn commit -m "auto commit dist"
+#dist: clean doc
+dist: clean
 	$(MAKE) -C doc
-	$(MAKE) DISTNAME=tascar-`cat version`-r`svnversion .|sed -e 's/.*://1'` bz2
+	$(MAKE) DISTNAME=tascar-`cat version` bz2
 
 disttest:
-	$(MAKE) DISTNAME=tascar-`cat version`-r`svnversion .|sed -e 's/.*://1'` disttest2
+	$(MAKE) DISTNAME=tascar-`cat version` disttest2
 
 disttest2:
 	rm -Rf $(DISTNAME) && tar xjf $(DISTNAME).tar.bz2
