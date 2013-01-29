@@ -28,9 +28,14 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
   x = create_noise( len, nrep+1, gain );
   irs = zeros(len,numel(spk));
   for kSpk=1:numel(spk)
-    sFile = sprintf('rec_%s_%d_%d_%d.wav',sTag,spk(kSpk),len,nrep);
+    if iscell(spk(kSpk))
+        speakerName = spk{kSpk};
+    else
+        speakerName = sprintf('system:playback_%d', spk(kSpk));
+    end
+    sFile = sprintf('rec_%s_%s_%d_%d.wav',sTag,speakerName,len,nrep);
     system(sprintf(['LD_LIBRARY_PATH="" tascar_jackio wnoise.wav -o %s ' ...
-		    'system:playback_%d %s'],sFile,spk(kSpk),sIn));
+		    '%s %s'],sFile,speakerName,sIn));
     [y,fs] = wavread(sFile);
     y(1:len,:) = [];
     y = reshape( y, [len, nrep, size(y,2)] );
