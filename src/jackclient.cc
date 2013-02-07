@@ -25,6 +25,7 @@
 #include "jackclient.h"
 #include <stdio.h>
 #include <iostream>
+#include "errorhandling.h"
 
 static std::string errmsg("");
 
@@ -35,7 +36,7 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
   jack_status_t jstat;
   jc = jack_client_open(clientname.c_str(),JackUseExactName,&jstat);
   if( !jc ){
-    throw "unable to open jack client";
+    throw TASCAR::ErrMsg("unable to open jack client");
   }
   srate = jack_get_sample_rate(jc);
   fragsize = jack_get_buffer_size(jc);
@@ -80,7 +81,7 @@ void jackc_t::add_input_port(const std::string& name)
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsInput,0);
   if( !p )
-    throw "unable to register port";
+    throw TASCAR::ErrMsg("unable to register port");
   inPort.push_back(p);
   inBuffer.push_back(NULL);
 }
@@ -90,7 +91,7 @@ void jackc_t::add_output_port(const std::string& name)
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsOutput,0);
   if( !p )
-    throw "unable to register port";
+    throw TASCAR::ErrMsg("unable to register port");
   outPort.push_back(p);
   outBuffer.push_back(NULL);
 }
@@ -109,7 +110,7 @@ void jackc_t::connect_in(unsigned int port,const std::string& pname)
 {
   if( jack_connect(jc,pname.c_str(),jack_port_name(inPort[port])) != 0 ){
     errmsg = std::string("unable to connect port '")+pname + "' to '" + jack_port_name(inPort[port]) + "'.";
-    throw errmsg.c_str();
+    throw TASCAR::ErrMsg(errmsg.c_str());
   }
 }
 
@@ -117,7 +118,7 @@ void jackc_t::connect_out(unsigned int port,const std::string& pname)
 {
   if( jack_connect(jc,jack_port_name(outPort[port]),pname.c_str()) != 0 ){
     errmsg = std::string("unable to connect port '")+jack_port_name(outPort[port]) + "' to '" + pname + "'.";
-    throw errmsg.c_str();
+    throw TASCAR::ErrMsg(errmsg.c_str());
   }
 }
 

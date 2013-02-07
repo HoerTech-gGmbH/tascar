@@ -29,6 +29,7 @@
 #include <iostream>
 #include "tascar.h"
 #include <getopt.h>
+#include "errorhandling.h"
 
 /**
 \ingroup apptascar
@@ -77,7 +78,7 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     p(ports)
 {
   if( !(sf_in = sf_open(ifname.c_str(),SFM_READ,&sf_inf_in)) )
-    throw "unable to open input file";
+    throw TASCAR::ErrMsg("unable to open input file");
   sf_inf_out = sf_inf_in;
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = std::max(1,(int)(p.size()) - (int)(sf_inf_in.channels));
@@ -93,7 +94,7 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
   }
   if( ofname.size() ){
     if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) )
-      throw "unable to open output file";
+      throw TASCAR::ErrMsg("unable to open output file");
   }
   buf_in = new float[sf_inf_in.channels * sf_inf_in.frames];
   buf_out = new float[sf_inf_out.channels * sf_inf_in.frames];

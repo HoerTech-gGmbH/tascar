@@ -29,15 +29,15 @@ TASCAR::looped_sndfile_t::looped_sndfile_t(const std::string& fname,uint32_t loo
 {
   if( !sfile ){
     async_file_error = "unable to open sound file '" + fname + "'.";
-    throw async_file_error.c_str();
+    throw ErrMsg(async_file_error.c_str());
   }
   if( !(sf_inf.seekable ) ){
     async_file_error = "the sound file '" + fname + "' is not seekable.";
-    throw async_file_error.c_str();
+    throw ErrMsg(async_file_error.c_str());
   }
   if( !sf_inf.frames ){
     async_file_error = "the sound file '" + fname + "' is empty.";
-    throw async_file_error.c_str();
+    throw ErrMsg(async_file_error.c_str());
   }
 }
 
@@ -98,7 +98,8 @@ TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t chunksize
     file_buffer(NULL),
     file_frames(1),
     file_channels(1),
-    gain_(1.0)
+    gain_(1.0),
+    xrun(0)
 {
   pthread_mutex_init( &mtx_readrequest, NULL );
   pthread_mutex_init( &mtx_next, NULL );
@@ -126,7 +127,8 @@ TASCAR::async_sndfile_t::async_sndfile_t( const async_sndfile_t& src)
     file_buffer(NULL),
     file_frames(1),
     file_channels(1),
-    gain_(1.0)
+    gain_(1.0),
+    xrun(0)
 {
   pthread_mutex_init( &mtx_readrequest, NULL );
   pthread_mutex_init( &mtx_next, NULL );
@@ -146,7 +148,7 @@ void TASCAR::async_sndfile_t::start_service()
     run_service = true;
     int err = pthread_create( &srv_thread, NULL, &TASCAR::async_sndfile_t::service, this);
     if( err < 0 )
-      throw "pthread_create failed";
+      throw ErrMsg("pthread_create failed");
     service_running = true;
   }
 }
@@ -228,7 +230,7 @@ void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uin
   if( channels != numchannels_ ){
     //DEBUG(channels);
     //DEBUG(numchannels_);
-    throw "request_data channel count mismatch";
+    throw ErrMsg("request_data channel count mismatch");
   }
   //DEBUG(firstframe);
   uint32_t next_request(current->firstframe+current->len);
@@ -246,6 +248,7 @@ void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uin
       //DEBUGMSG("swapping_buffers_done");
     }else{
       //DEBUGMSG("swapping_buffers_failed");
+      xrun++;
     }
   }
   // is the requested data (at least partially) available?
@@ -265,6 +268,7 @@ void TASCAR::async_sndfile_t::request_data( uint32_t firstframe, uint32_t n, uin
         memset(&(buf[ch][len]), 0, sizeof(float)*(n-len) );
       }
       buffer_used_up = true;
+      xrun++;
     }else{
       // check if this buffer can still be used in the next cycle:
       if( firstframe + 2*n > current->firstframe+current->len ){
@@ -306,7 +310,7 @@ void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchann
     delete sfile;
     sfile = NULL;
     pthread_mutex_unlock( &mtx_file );
-    throw "the input sound file does not provide sufficient number of channels";
+    throw ErrMsg("the input sound file does not provide sufficient number of channels");
   }
   file_firstchannel = std::min(firstchannel, file_channels-numchannels_);
   file_buffer = new float[chunksize_ * file_channels];

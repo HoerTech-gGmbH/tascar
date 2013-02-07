@@ -71,6 +71,11 @@ void tascar_draw_gtkmm_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   cr->arc(p.x, p.y, msize, 0, PI2 );
   cr->fill();
+  for(unsigned int k=0;k<obj.sound.size();k++){
+    pos_t ps(obj.sound[k].get_pos_global(time));
+    cr->arc(ps.x, ps.y, 0.5*msize, 0, PI2 );
+    cr->fill();
+  }
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x + 1.1*msize, p.y );
   cr->show_text( obj.name.c_str() );

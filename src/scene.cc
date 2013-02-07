@@ -66,6 +66,15 @@ void object_t::read_xml(xmlpp::Element* e)
     if( sne && (sne->get_name() == "creator")){
       xmlpp::Node::NodeList subnodes = sne->get_children();
       location.edit(subnodes);
+      TASCAR::track_t::iterator it_old=location.end();
+      for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
+        if( it_old != location.end() ){
+          pos_t p=it_old->second;
+          p -= it->second;
+          orientation[it_old->first] = zyx_euler_t(p.azim(),0,0);
+        }
+        it_old = it;
+      }
     }
   }
 }
@@ -107,7 +116,7 @@ std::string object_t::print(const std::string& prefix)
  *soundfile_t
  */
 soundfile_t::soundfile_t(unsigned int channels_)
-  : async_sndfile_t(channels_),
+  : async_sndfile_t(channels_,1<<14),
     filename(""),
     gain(0),
     loop(1),
@@ -357,6 +366,7 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
   set_attribute_double(e,"lat",lat);
   set_attribute_double(e,"lon",lon);
   set_attribute_double(e,"elev",elev);
+  set_attribute_double(e,"guiscale",guiscale);
   if( description.size()){
     xmlpp::Element* description_node = e->add_child("description");
     description_node->add_child_text(description);
@@ -383,6 +393,7 @@ void scene_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"lat",lat);
   get_attribute_value(e,"elev",elev);
   get_attribute_value(e,"duration",duration);
+  get_attribute_value(e,"guiscale",guiscale);
   description = xml_get_text(e,"description");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -432,6 +443,8 @@ std::vector<sound_t*> scene_t::linearize()
 void scene_t::prepare(double fs)
 {
   for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it)
+    it->prepare(fs);
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
     it->prepare(fs);
 }
 

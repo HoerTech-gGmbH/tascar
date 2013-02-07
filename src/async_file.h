@@ -56,6 +56,7 @@ namespace TASCAR {
     void open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain,uint32_t loop);
     void start_service();
     void stop_service();
+    unsigned int get_xruns() {unsigned int xr(xrun);xrun=0;return xr;};
   private:
     void service();
     static void * service(void* h);
@@ -87,6 +88,7 @@ namespace TASCAR {
     double gain_;
     //
     pthread_t srv_thread;
+    unsigned int xrun;
   };
 
 };

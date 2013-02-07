@@ -9,7 +9,7 @@ namespace TASCAR {
   public:
     ErrMsg(const std::string& msg);
     virtual ~ErrMsg() throw();
-    const char* what();
+    const char* what() const throw();
   };
 
 }

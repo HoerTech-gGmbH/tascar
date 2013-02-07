@@ -215,6 +215,9 @@ void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
     try{
       connect_out( k, dest_name + ":" + vAmbPorts[k]);
     }
+    catch( const std::exception& msg ){
+      std::cerr << "Warning: " << msg.what() << std::endl;
+    }
     catch( const char* msg ){
       std::cerr << "Warning: " << msg << std::endl;
     }
@@ -230,12 +233,14 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
   // play backgrounds:
-  if( tp_rolling ){
+  if( tp_rolling && (outBuffer.size()>=4) ){
     float* amb_buf[4];
     for(unsigned int k=0;k<4; k++)
       amb_buf[k] = outBuffer[k];
-    for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+    for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
       it->request_data( tp_frame, nframes, 4, amb_buf );
+      //DEBUG(amb_buf[0][0]);
+    }
   }
   //DEBUG(panner.size());
   for( unsigned int k=0;k<std::min(panner.size(),sounds.size());k++)
@@ -265,6 +270,12 @@ void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::
   }
   while( !b_quit ){
     sleep( 1 );
+    for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+      unsigned int xr(it->get_xruns());
+      if( xr ){
+        std::cerr << "xrun " << it->filename << " " << xr << std::endl;
+      }
+    }
   }
   deactivate();
 }
@@ -340,6 +351,10 @@ int main(int argc, char** argv)
     S.run(gui_jackname);
     if( gui_pipe )
       pclose(gui_pipe);
+  }
+  catch( const std::exception& msg ){
+    std::cerr << "Error: " << msg.what() << std::endl;
+    return 1;
   }
   catch( const char* msg ){
     std::cerr << "Error: " << msg << std::endl;

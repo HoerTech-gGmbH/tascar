@@ -145,6 +145,7 @@ namespace TASCAR {
     std::vector<src_object_t> src;
     std::vector<bg_amb_t> bg_amb;
     listener_t listener;
+    double guiscale;
   };
 
   scene_t xml_read_scene(const std::string& filename);
