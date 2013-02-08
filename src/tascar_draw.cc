@@ -39,6 +39,7 @@ class tascar_draw_gtkmm_t : public Gtk::DrawingArea, public scene_t
 public:
   tascar_draw_gtkmm_t(const std::string& name);
   void set_time( double t ){time = t;};
+  void set_scale(double s){scale = s;};
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -254,6 +255,7 @@ int main(int argc, char** argv)
   tascar_draw_t c(fname);
   win.add(c);
   win.set_default_size(1024,768);
+  c.set_scale(c.guiscale);
   //win.fullscreen();
   win.show_all();
   c.jackc_t::activate();

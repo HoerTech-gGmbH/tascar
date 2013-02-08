@@ -324,7 +324,8 @@ scene_t::scene_t()
     duration(60),
     lat(53.155473),
     lon(8.167249),
-    elev(10)
+    elev(10),
+    guiscale(200)
 {
 }
 

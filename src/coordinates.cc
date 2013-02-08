@@ -107,10 +107,11 @@ void track_t::project_tangent()
 void track_t::project_tangent(pos_t c)
 {
   rot_z( -c.azim() );
-  rot_y( PI_2 - c.elev() );
+  rot_y( (PI_2 - c.elev()) );
   rot_z( -PI_2 );
   c.set_cart(0,0,-c.norm());
   operator+=(c);
+  operator*=(pos_t(1,-1,1));
 }
 
 void track_t::rot_z(double a)
