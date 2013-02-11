@@ -12,7 +12,7 @@ CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer
 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
-tascar_draw: EXTERNALS += gtkmm-2.4
+tascar_draw: EXTERNALS += gtkmm-3.0
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`

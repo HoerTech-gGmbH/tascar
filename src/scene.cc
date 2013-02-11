@@ -158,6 +158,7 @@ void soundfile_t::prepare(double fs)
   start_service();
   //DEBUG("post-service");
   open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
+  //open(filename,firstchannel,0,pow(10.0,0.05*gain),loop);
   //DEBUG("post-open");
 }
 
@@ -183,7 +184,8 @@ void sound_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, 
 {
   if( parent )
     firstframe -= parent->starttime*fs_;
-  soundfile_t::request_data( firstframe-starttime*fs_, n, channels, buf );
+  //soundfile_t::request_data( firstframe-starttime*fs_, n, channels, buf );
+  soundfile_t::request_data( firstframe, n, channels, buf );
 }
 
 void sound_t::set_reference(object_t* ref)
@@ -368,6 +370,7 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
   set_attribute_double(e,"lon",lon);
   set_attribute_double(e,"elev",elev);
   set_attribute_double(e,"guiscale",guiscale);
+  set_attribute_double(e,"duration",duration);
   if( description.size()){
     xmlpp::Element* description_node = e->add_child("description");
     description_node->add_child_text(description);

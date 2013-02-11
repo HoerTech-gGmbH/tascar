@@ -32,13 +32,15 @@
 #include <cairomm/context.h>
 #include "tascar.h"
 #include "osc_helper.h"
+#include <iostream>
 
 using namespace TASCAR;
 
-class tascar_draw_gtkmm_t : public Gtk::DrawingArea, public scene_t, public osc_server_t
+//class tascar_draw_t : public Gtk::DrawingArea, public scene_t, public osc_server_t
+class tascar_draw_t : public scene_t, public osc_server_t, public jackc_transport_t
 {
 public:
-  tascar_draw_gtkmm_t(const std::string& name);
+  tascar_draw_t(const std::string& name);
   void set_time( double t ){time = t;};
   void set_scale(double s){scale = s;};
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -46,15 +48,40 @@ public:
   void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   void set_head(double rot){headrot = rot;};
+  virtual int process(jack_nframes_t n,const std::vector<float*>& input,
+                      const std::vector<float*>& output, 
+                      uint32_t tp_frame, bool tp_rolling);
 protected:
-  virtual bool on_expose_event(GdkEventExpose* event);
+  virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
   bool on_timeout();
+  void on_time_changed();
+  void on_tp_start(){tp_start();};
+  void on_tp_stop(){tp_stop();};
+  void on_tp_rewind(){tp_locate(0.0);};
   double scale;
   double time;
   double headrot;
+  //Gtk::HBox hbox;
+  Gtk::Button m_ButtonStop;
+  Gtk::Button m_ButtonStart;
+  Gtk::Button m_ButtonRewind;
+public:
+  Gtk::DrawingArea da;
+  Gtk::VBox vbox;
+  Gtk::HBox tp_box;
+  Gtk::Scale timescale;
 };
 
-void tascar_draw_gtkmm_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_draw_t::on_time_changed()
+{
+  double ltime(timescale.get_value());
+  if( ltime != time ){
+    //DEBUG(ltime);
+    tp_locate(ltime);
+  }
+}
+
+void tascar_draw_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   cr->save();
   cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
@@ -69,7 +96,7 @@ void tascar_draw_gtkmm_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Co
   cr->restore();
 }
 
-void tascar_draw_gtkmm_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_draw_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   pos_t p(obj.location.interp(time-obj.starttime));
   cr->save();
@@ -95,7 +122,7 @@ void tascar_draw_gtkmm_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::
   cr->restore();
 }
 
-void tascar_draw_gtkmm_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_draw_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   pos_t p(obj.location.interp(time-obj.starttime));
   zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
@@ -156,9 +183,9 @@ void tascar_draw_gtkmm_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cair
   cr->restore();
 }
 
-int tascar_draw_gtkmm_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int tascar_draw_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
-    tascar_draw_gtkmm_t* h((tascar_draw_gtkmm_t*)user_data);
+    tascar_draw_t* h((tascar_draw_t*)user_data);
     if( h && (argc == 1) && (types[0] == 'f') ){
       h->set_head(DEG2RAD*(argv[0]->f));
       return 0;
@@ -166,33 +193,57 @@ int tascar_draw_gtkmm_t::set_head(const char *path, const char *types, lo_arg **
     return 1;
   }
 
-tascar_draw_gtkmm_t::tascar_draw_gtkmm_t(const std::string& name)
-  : osc_server_t("","9876",true),scale(200)
+tascar_draw_t::tascar_draw_t(const std::string& name)
+  : osc_server_t("","9876",true),
+    jackc_transport_t(name),
+    scale(200),
+    m_ButtonStop("stop"),
+    m_ButtonStart("play"),
+    m_ButtonRewind("rew"),
+    timescale(Gtk::ORIENTATION_HORIZONTAL)
 {
-  Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_draw_gtkmm_t::on_timeout), 60 );
-#ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
+  read_xml(name);
+  linearize();
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_draw_t::on_timeout), 60 );
+//#ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
   //Connect the signal handler if it isn't already a virtual method override:
-  signal_expose_event().connect(sigc::mem_fun(*this, &tascar_draw_gtkmm_t::on_expose_event), false);
-#endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
+  da.signal_draw().connect(sigc::mem_fun(*this, &tascar_draw_t::on_draw), false);
+//#endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
   osc_server_t::add_method("/headrot","f",set_head,this);
+  vbox.pack_start( da );
+  //hbox.set_homogeneous(false);
+  //hbox.set_vexpand_set(true);
+  //hbox.pack_start(timescale, Gtk::PACK_SHRINK);
+  //timescale.set_size_request( 80,30 );
+  //Gtk::VBox::add( timescale );
+  timescale.set_range(0,duration);
+  timescale.set_value(50);
+  tp_box.pack_start( m_ButtonRewind, Gtk::PACK_SHRINK );
+  tp_box.pack_start( m_ButtonStop, Gtk::PACK_SHRINK );
+  tp_box.pack_start( m_ButtonStart, Gtk::PACK_SHRINK );
+  tp_box.pack_start( timescale );
+  
+  vbox.pack_start( tp_box, Gtk::PACK_SHRINK );
+  timescale.signal_value_changed().connect(sigc::mem_fun(*this,
+                                                         &tascar_draw_t::on_time_changed));
+  m_ButtonRewind.signal_clicked().connect(sigc::mem_fun(*this,
+                                                        &tascar_draw_t::on_tp_rewind));
+  m_ButtonStop.signal_clicked().connect(sigc::mem_fun(*this,
+                                                      &tascar_draw_t::on_tp_stop));
+  m_ButtonStart.signal_clicked().connect(sigc::mem_fun(*this,
+                                                       &tascar_draw_t::on_tp_start));
 }
 
-bool tascar_draw_gtkmm_t::on_expose_event(GdkEventExpose* event)
+bool tascar_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-  Glib::RefPtr<Gdk::Window> window = get_window();
+  Glib::RefPtr<Gdk::Window> window = da.get_window();
   if(window){
-    Gtk::Allocation allocation = get_allocation();
+    Gtk::Allocation allocation = da.get_allocation();
     const int width = allocation.get_width();
     const int height = allocation.get_height();
-    Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
-    if(event){
-      // clip to the area indicated by the expose event so that we only
-      // redraw the portion of the window that needs to be redrawn
-      cr->rectangle(event->area.x, event->area.y,
-		    event->area.width, event->area.height);
-      cr->clip();
-    }
 
+    cr->rectangle(0,0,width,height);
+    cr->clip();
     cr->translate(0.5*width, 0.5*height);
     double wscale(0.5*std::min(height,width)/scale);
     double markersize(0.02*scale);
@@ -219,36 +270,21 @@ bool tascar_draw_gtkmm_t::on_expose_event(GdkEventExpose* event)
       draw_src(src[k], cr, markersize );
     }
   }
+  timescale.set_value(time);
   return true;
 }
 
-bool tascar_draw_gtkmm_t::on_timeout()
+bool tascar_draw_t::on_timeout()
 {
-  Glib::RefPtr<Gdk::Window> win = get_window();
+  Glib::RefPtr<Gdk::Window> win = da.get_window();
+  //DEBUG(win);
   if (win){
-    Gdk::Rectangle r(0, 0, 
-		     get_allocation().get_width(),
-		     get_allocation().get_height() );
-    win->invalidate_rect(r, false);
+    Gdk::Rectangle r(da.get_allocation().get_x(), da.get_allocation().get_y(), 
+		     da.get_allocation().get_width(),
+		     da.get_allocation().get_height() );
+    win->invalidate_rect(r, true);
   }
   return true;
-}
-
-class tascar_draw_t : public tascar_draw_gtkmm_t, public jackc_transport_t
-{
-public:
-  tascar_draw_t(const std::string& fname);
-  virtual int process(jack_nframes_t n,const std::vector<float*>& input,
-                      const std::vector<float*>& output, 
-                      uint32_t tp_frame, bool tp_rolling);
-};
-
-tascar_draw_t::tascar_draw_t(const std::string& fname)
-  : tascar_draw_gtkmm_t(fname),
-    jackc_transport_t(fname)
-{
-  read_xml(fname);
-  linearize();
 }
 
 int tascar_draw_t::process(jack_nframes_t nframes,
@@ -269,7 +305,7 @@ int main(int argc, char** argv)
     fname = argv[1];
   win.set_title("tascar - "+fname);
   tascar_draw_t c(fname);
-  win.add(c);
+  win.add(c.vbox);
   win.set_default_size(1024,768);
   c.set_scale(c.guiscale);
   //win.fullscreen();
