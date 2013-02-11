@@ -94,6 +94,7 @@ namespace TASCAR {
     pos_t get_pos(double t) const;
     pos_t get_pos_global(double t) const;
     void prepare(double fs);
+    std::string getlabel();
   private:
     pos_t loc;
     object_t* parent;

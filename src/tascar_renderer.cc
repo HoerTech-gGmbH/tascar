@@ -258,8 +258,11 @@ void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::
   sounds = linearize();
   panner.clear();
   for(unsigned int k=0;k<sounds.size();k++){
+    std::string label(sounds[k]->getlabel());
+    if( !label.size() )
+      label = "in";
     char ctmp[1024];
-    sprintf(ctmp,"in_%d",k);
+    sprintf(ctmp,"%s-%d",label.c_str(),k);
     add_input_port(ctmp);
     panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize()));
   }

@@ -491,6 +491,23 @@ std::string rgb_color_t::str()
   return ctmp;
 }
 
+std::string sound_t::getlabel()
+{
+  std::string r;
+  if( parent ){
+    r = parent->name;
+    if( filename.size() )
+      r += "-";
+  }
+  if( filename.size() ){
+    r += filename;
+    char ctmp[64];
+    sprintf(ctmp,"%d",firstchannel);
+    r += ctmp;
+  }
+  return r;
+}
+
 /*
  * Local Variables:
  * mode: c++

@@ -31,10 +31,11 @@
 #include <gtkmm/drawingarea.h>
 #include <cairomm/context.h>
 #include "tascar.h"
+#include "osc_helper.h"
 
 using namespace TASCAR;
 
-class tascar_draw_gtkmm_t : public Gtk::DrawingArea, public scene_t
+class tascar_draw_gtkmm_t : public Gtk::DrawingArea, public scene_t, public osc_server_t
 {
 public:
   tascar_draw_gtkmm_t(const std::string& name);
@@ -43,11 +44,14 @@ public:
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  void set_head(double rot){headrot = rot;};
 protected:
   virtual bool on_expose_event(GdkEventExpose* event);
   bool on_timeout();
   double scale;
   double time;
+  double headrot;
 };
 
 void tascar_draw_gtkmm_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
@@ -95,6 +99,7 @@ void tascar_draw_gtkmm_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cair
 {
   pos_t p(obj.location.interp(time-obj.starttime));
   zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
+  o.z -= headrot;
   pos_t p1(1.8*msize,-0.6*msize,0);
   pos_t p2(2.9*msize,0,0);
   pos_t p3(1.8*msize,0.6*msize,0);
@@ -151,14 +156,25 @@ void tascar_draw_gtkmm_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cair
   cr->restore();
 }
 
+int tascar_draw_gtkmm_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    tascar_draw_gtkmm_t* h((tascar_draw_gtkmm_t*)user_data);
+    if( h && (argc == 1) && (types[0] == 'f') ){
+      h->set_head(DEG2RAD*(argv[0]->f));
+      return 0;
+    }
+    return 1;
+  }
+
 tascar_draw_gtkmm_t::tascar_draw_gtkmm_t(const std::string& name)
-  : scale(200)
+  : osc_server_t("","9876",true),scale(200)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_draw_gtkmm_t::on_timeout), 60 );
 #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
   //Connect the signal handler if it isn't already a virtual method override:
   signal_expose_event().connect(sigc::mem_fun(*this, &tascar_draw_gtkmm_t::on_expose_event), false);
 #endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
+  osc_server_t::add_method("/headrot","f",set_head,this);
 }
 
 bool tascar_draw_gtkmm_t::on_expose_event(GdkEventExpose* event)
@@ -259,7 +275,9 @@ int main(int argc, char** argv)
   //win.fullscreen();
   win.show_all();
   c.jackc_t::activate();
+  c.osc_server_t::activate();
   Gtk::Main::run(win);
+  c.osc_server_t::deactivate();
   c.jackc_t::deactivate();
   return 0;
 }
