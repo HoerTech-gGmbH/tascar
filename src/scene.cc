@@ -116,7 +116,7 @@ std::string object_t::print(const std::string& prefix)
  *soundfile_t
  */
 soundfile_t::soundfile_t(unsigned int channels_)
-  : async_sndfile_t(channels_,1<<14),
+  : async_sndfile_t(channels_,1<<18,4096),
     filename(""),
     gain(0),
     loop(1),
@@ -180,7 +180,7 @@ void sound_t::prepare(double fs)
   soundfile_t::prepare(fs);
 }
 
-void sound_t::request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf )
+void sound_t::request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf )
 {
   if( parent )
     firstframe -= parent->starttime*fs_;

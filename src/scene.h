@@ -85,7 +85,7 @@ namespace TASCAR {
   class sound_t : public soundfile_t {
   public:
     sound_t(object_t* parent_,object_t* reference_);
-    void request_data( uint32_t firstframe, uint32_t n, uint32_t channels, float** buf );
+    void request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf );
     void set_reference(object_t* reference_);
     void set_parent(object_t* parent_);
     void read_xml(xmlpp::Element* e);

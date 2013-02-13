@@ -1,36 +1,35 @@
 #include "async_file.h"
 #include "defs.h"
 #include <iostream>
+#include <string.h>
+
+using namespace TASCAR;
 
 int main(int argc, char** argv)
 {
-    TASCAR::ringbuffer_t rb(32,1);
-    DEBUG(rb.read_skip(5));
-    DEBUG(rb.write_zeros(5));
-    DEBUG(rb.read_skip(5));
-    DEBUG(rb.read_skip(5));
-    DEBUG(rb.write_zeros(30));
-    DEBUG(rb.write_zeros(50));
-    DEBUG(rb.write_zeros(50));
-    DEBUG(rb.read_space());
-    DEBUG(rb.write_space());
-    DEBUG(rb.get_current_location());
-    DEBUG(rb.read_skip(12));
-    DEBUG(rb.get_current_location());
-    DEBUG(rb.read_space());
-    DEBUG(rb.write_space());
-    rb.set_locate( 170 );
-    DEBUG(rb.relocation_requested());
-    DEBUG(rb.get_requested_location());
-    rb.lock_relocate();
-    DEBUG(&rb);
-    DEBUG(rb.write_zeros(2));
-    DEBUG(rb.read_skip(3));
-    rb.unlock_relocate();
-    DEBUG(rb.write_zeros(2));
-    DEBUG(rb.read_skip(3));
-    DEBUG(rb.get_current_location());
-    return 0;
+  uint32_t fragsize(8);
+  async_sndfile_t s( 1, 256, fragsize );
+  s.open( "inct.wav", 0, 0, 1, 1 );
+  s.start_service();
+  float* buf(new float[fragsize]);
+  sleep(1);
+  memset(buf,0,fragsize*sizeof(float));
+  s.request_data(-64, fragsize, 1, &buf );
+  //printbuf(buf,fragsize);
+  //memset(buf,0,fragsize*sizeof(float));
+  //s.request_data(0, fragsize, 1, &buf );
+  //printbuf(buf,fragsize);
+  //memset(buf,0,fragsize*sizeof(float));
+  //s.request_data(fragsize, fragsize, 1, &buf );
+  //printbuf(buf,fragsize);
+  //memset(buf,0,fragsize*sizeof(float));
+  //s.request_data(2*fragsize, fragsize, 1, &buf );
+  //printbuf(buf,fragsize);
+  //s.request_data(64, 64, 1, &buf );
+  sleep(1);
+  s.stop_service();
+  delete [] buf;
+  return 0;
 }
 
 /*

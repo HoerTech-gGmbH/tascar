@@ -60,6 +60,7 @@ protected:
   void on_tp_rewind(){tp_locate(0.0);};
   double scale;
   double time;
+  double guitime;
   double headrot;
   //Gtk::HBox hbox;
   Gtk::Button m_ButtonStop;
@@ -75,8 +76,7 @@ public:
 void tascar_draw_t::on_time_changed()
 {
   double ltime(timescale.get_value());
-  if( ltime != time ){
-    //DEBUG(ltime);
+  if( ltime != guitime ){
     tp_locate(ltime);
   }
 }
@@ -197,6 +197,8 @@ tascar_draw_t::tascar_draw_t(const std::string& name)
   : osc_server_t("","9876",true),
     jackc_transport_t(name),
     scale(200),
+    time(0),
+    guitime(0),
     m_ButtonStop("stop"),
     m_ButtonStart("play"),
     m_ButtonRewind("rew"),
@@ -270,7 +272,8 @@ bool tascar_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       draw_src(src[k], cr, markersize );
     }
   }
-  timescale.set_value(time);
+  guitime = time;
+  timescale.set_value(guitime);
   return true;
 }
 

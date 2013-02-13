@@ -149,10 +149,13 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
   //pos_t srcpos = snd->get_pos(tp_time+ldt*n);
   updatepar(snd->get_pos(tp_time+ldt*n));
   memset( data, 0, sizeof(float)*n );
+  memset( data_acc, 0, sizeof(float)*n);
   if( tp_rolling ){
     snd->request_data( tp_frame, n, 1, &data_acc );
     for( unsigned int fr=0;fr<n;fr++)
       data[fr] += data_acc[fr];
+  }else{
+    snd->request_data( tp_frame, 0, 1, &data_acc );
   }
   for( unsigned int i=0;i<n;i++){
     delayline.push(vIn[i]+data[i]);
