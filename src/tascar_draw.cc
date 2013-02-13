@@ -58,6 +58,10 @@ protected:
   void on_tp_start(){tp_start();};
   void on_tp_stop(){tp_stop();};
   void on_tp_rewind(){tp_locate(0.0);};
+  void on_tp_time_p(){tp_locate(guitime+0.1);};
+  void on_tp_time_pp(){tp_locate(guitime+1.0);};
+  void on_tp_time_m(){tp_locate(guitime-0.1);};
+  void on_tp_time_mm(){tp_locate(guitime-1.0);};
   double scale;
   double time;
   double guitime;
@@ -66,6 +70,10 @@ protected:
   Gtk::Button m_ButtonStop;
   Gtk::Button m_ButtonStart;
   Gtk::Button m_ButtonRewind;
+  Gtk::Button m_ButtonTimep;
+  Gtk::Button m_ButtonTimepp;
+  Gtk::Button m_ButtonTimem;
+  Gtk::Button m_ButtonTimemm;
 public:
   Gtk::DrawingArea da;
   Gtk::VBox vbox;
@@ -202,6 +210,10 @@ tascar_draw_t::tascar_draw_t(const std::string& name)
     m_ButtonStop("stop"),
     m_ButtonStart("play"),
     m_ButtonRewind("rew"),
+    m_ButtonTimep("+"),
+    m_ButtonTimepp("++"),
+    m_ButtonTimem("-"),
+    m_ButtonTimemm("--"),
     timescale(Gtk::ORIENTATION_HORIZONTAL)
 {
   read_xml(name);
@@ -223,7 +235,11 @@ tascar_draw_t::tascar_draw_t(const std::string& name)
   tp_box.pack_start( m_ButtonRewind, Gtk::PACK_SHRINK );
   tp_box.pack_start( m_ButtonStop, Gtk::PACK_SHRINK );
   tp_box.pack_start( m_ButtonStart, Gtk::PACK_SHRINK );
+  tp_box.pack_start( m_ButtonTimemm, Gtk::PACK_SHRINK );
+  tp_box.pack_start( m_ButtonTimem, Gtk::PACK_SHRINK );
   tp_box.pack_start( timescale );
+  tp_box.pack_start( m_ButtonTimep, Gtk::PACK_SHRINK );
+  tp_box.pack_start( m_ButtonTimepp, Gtk::PACK_SHRINK );
   
   vbox.pack_start( tp_box, Gtk::PACK_SHRINK );
   timescale.signal_value_changed().connect(sigc::mem_fun(*this,
@@ -234,6 +250,14 @@ tascar_draw_t::tascar_draw_t(const std::string& name)
                                                       &tascar_draw_t::on_tp_stop));
   m_ButtonStart.signal_clicked().connect(sigc::mem_fun(*this,
                                                        &tascar_draw_t::on_tp_start));
+  m_ButtonTimep.signal_clicked().connect(sigc::mem_fun(*this,
+                                                       &tascar_draw_t::on_tp_time_p));
+  m_ButtonTimepp.signal_clicked().connect(sigc::mem_fun(*this,
+                                                       &tascar_draw_t::on_tp_time_pp));
+  m_ButtonTimem.signal_clicked().connect(sigc::mem_fun(*this,
+                                                       &tascar_draw_t::on_tp_time_m));
+  m_ButtonTimemm.signal_clicked().connect(sigc::mem_fun(*this,
+                                                       &tascar_draw_t::on_tp_time_mm));
 }
 
 bool tascar_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
