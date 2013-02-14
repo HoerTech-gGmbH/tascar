@@ -1,6 +1,8 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_creator tascar_jackio tascar_draw test_async_file
+BINFILES = tascar_renderer tascar_creator tascar_jackio test_async_file
+
+BINFILES += `pkg-config gtkmm-3.0 && echo tascar_draw`
 
 OBJECTS = jackclient.o coordinates.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o
 
