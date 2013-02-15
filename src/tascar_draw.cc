@@ -106,6 +106,9 @@ void tascar_draw_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context>
 
 void tascar_draw_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  bool active(obj.isactive(time));
+  if( !active )
+    msize *= 0.4;
   pos_t p(obj.location.interp(time-obj.starttime));
   cr->save();
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
@@ -116,17 +119,22 @@ void tascar_draw_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Contex
     cr->arc(ps.x, ps.y, 0.5*msize, 0, PI2 );
     cr->fill();
   }
-  cr->set_source_rgb(0, 0, 0 );
+  if( !active )
+    cr->set_source_rgb(0.5, 0.5, 0.5 );
+  else
+    cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x + 1.1*msize, p.y );
   cr->show_text( obj.name.c_str() );
-  cr->set_line_width( 0.1*msize );
-  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-  for(unsigned int k=0;k<obj.sound.size();k++){
-    cr->move_to( p.x, p.y );
-    pos_t ps(obj.sound[k].get_pos_global(time));
-    cr->line_to( ps.x, ps.y );
+  if( active ){
+    cr->set_line_width( 0.1*msize );
+    cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
+    for(unsigned int k=0;k<obj.sound.size();k++){
+      cr->move_to( p.x, p.y );
+      pos_t ps(obj.sound[k].get_pos_global(time));
+      cr->line_to( ps.x, ps.y );
+    }
+    cr->stroke();
   }
-  cr->stroke();
   cr->restore();
 }
 
@@ -192,14 +200,14 @@ void tascar_draw_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Con
 }
 
 int tascar_draw_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-  {
-    tascar_draw_t* h((tascar_draw_t*)user_data);
-    if( h && (argc == 1) && (types[0] == 'f') ){
-      h->set_head(DEG2RAD*(argv[0]->f));
-      return 0;
-    }
-    return 1;
+{
+  tascar_draw_t* h((tascar_draw_t*)user_data);
+  if( h && (argc == 1) && (types[0] == 'f') ){
+    h->set_head(DEG2RAD*(argv[0]->f));
+    return 0;
   }
+  return 1;
+}
 
 tascar_draw_t::tascar_draw_t(const std::string& name)
   : osc_server_t("","9876",true),
@@ -253,11 +261,11 @@ tascar_draw_t::tascar_draw_t(const std::string& name)
   m_ButtonTimep.signal_clicked().connect(sigc::mem_fun(*this,
                                                        &tascar_draw_t::on_tp_time_p));
   m_ButtonTimepp.signal_clicked().connect(sigc::mem_fun(*this,
-                                                       &tascar_draw_t::on_tp_time_pp));
+                                                        &tascar_draw_t::on_tp_time_pp));
   m_ButtonTimem.signal_clicked().connect(sigc::mem_fun(*this,
                                                        &tascar_draw_t::on_tp_time_m));
   m_ButtonTimemm.signal_clicked().connect(sigc::mem_fun(*this,
-                                                       &tascar_draw_t::on_tp_time_mm));
+                                                        &tascar_draw_t::on_tp_time_mm));
 }
 
 bool tascar_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)

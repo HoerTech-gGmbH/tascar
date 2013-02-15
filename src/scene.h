@@ -60,9 +60,11 @@ namespace TASCAR {
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
+    bool isactive(double time) const;
     std::string name;
     rgb_color_t color;
     double starttime;
+    double endtime;
     track_t location;
     euler_track_t orientation;
   };

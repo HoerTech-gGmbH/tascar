@@ -408,21 +408,38 @@ void track_t::edit( xmlpp::Element* cmd )
         smooth( n );
     }else if( scmd == "resample" ){
       double dt = atof(cmd->get_attribute_value("dt").c_str());
-      if( dt > 0 ){
-        TASCAR::track_t ntrack;
-        double t_begin = begin()->first;
-        double t_end = rbegin()->first;
-        for( double t = t_begin; t <= t_end; t+=dt )
-          ntrack[t] = interp(t);
-        *this = ntrack;
-      }
+      resample(dt);
     }else if( scmd == "time" ){
       // scale...
-      double starttime = atof(cmd->get_attribute_value("start").c_str());
-      shift_time(starttime - begin()->first);
+      std::string att_start(cmd->get_attribute_value("start"));
+      if( att_start.size() ){
+        double starttime = atof(att_start.c_str());
+        shift_time(starttime - begin()->first);
+      }
+      std::string att_scale(cmd->get_attribute_value("scale"));
+      if( att_scale.size() ){
+        double scaletime = atof(att_scale.c_str());
+        TASCAR::track_t ntrack;
+        for( TASCAR::track_t::iterator it=begin();it != end(); ++it){
+          ntrack[scaletime*it->first] = it->second;
+        }
+        *this = ntrack;
+      }
     }else{
       DEBUG(cmd->get_name());
     }
+  }
+}
+
+void track_t::resample( double dt )
+{
+  if( dt > 0 ){
+    TASCAR::track_t ntrack;
+    double t_begin = begin()->first;
+    double t_end = rbegin()->first;
+    for( double t = t_begin; t <= t_end; t+=dt )
+      ntrack[t] = interp(t);
+    *this = ntrack;
   }
 }
 

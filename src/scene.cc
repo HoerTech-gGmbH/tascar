@@ -45,14 +45,21 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned i
  */
 object_t::object_t()
   : name("object"),
-    starttime(0)
+    starttime(0),
+    endtime(0)
 {
+}
+
+bool object_t::isactive(double time) const
+{
+  return (time>=starttime)&&((starttime>=endtime)||(time<=endtime));
 }
 
 void object_t::read_xml(xmlpp::Element* e)
 {
   name = e->get_attribute_value("name");
-  get_attribute_value(e,"starttime",starttime);
+  get_attribute_value(e,"start",starttime);
+  get_attribute_value(e,"end",endtime);
   color = rgb_color_t(e->get_attribute_value("color"));
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -90,7 +97,8 @@ void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 //      "is parallel to the x-axis.\n");
   e->set_attribute("name",name);
   e->set_attribute("color",color.str());
-  set_attribute_double(e,"starttime",starttime);
+  set_attribute_double(e,"start",starttime);
+  set_attribute_double(e,"end",endtime);
   if( location.size() ){
     location.write_xml( e->add_child("position") );
   }
@@ -128,7 +136,7 @@ soundfile_t::soundfile_t(unsigned int channels_)
 
 void soundfile_t::read_xml(xmlpp::Element* e)
 {
-  get_attribute_value(e,"starttime",starttime);
+  get_attribute_value(e,"start",starttime);
   filename = e->get_attribute_value("filename");
   get_attribute_value(e,"gain",gain);
   get_attribute_value(e,"loop",loop);
@@ -139,7 +147,7 @@ void soundfile_t::write_xml(xmlpp::Element* e,bool help_comments)
   e->set_attribute("filename",filename);
   set_attribute_double(e,"gain",gain);
   set_attribute_uint(e,"loop",loop);
-  set_attribute_double(e,"starttime",starttime);
+  set_attribute_double(e,"start",starttime);
 }
 
 std::string soundfile_t::print(const std::string& prefix)

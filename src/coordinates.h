@@ -318,6 +318,7 @@ namespace TASCAR {
        \brief Smooth a track by convolution with a Hann-window
     */
     void smooth(unsigned int n);
+    void resample(double dt);
     /**
        \brief load a track from a gpx file
     */

@@ -161,8 +161,10 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
     delayline.push(vIn[i]+data[i]);
     float d = (d_current+=dd);
     float d1 = 1.0/std::max(1.0f,d);
-    for( unsigned int k=0;k<idx::channels;k++){
-      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d )*d1;
+    if( tp_rolling ){
+      for( unsigned int k=0;k<idx::channels;k++){
+        outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d )*d1;
+      }
     }
   }
 }
