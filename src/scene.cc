@@ -15,6 +15,14 @@ void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned in
   elem->set_attribute(name,ctmp);
 }
 
+void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value)
+{
+  if( value )
+    elem->set_attribute(name,"true");
+  else
+    elem->set_attribute(name,"false");
+}
+
 void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value)
 {
   char ctmp[1024];
@@ -40,19 +48,27 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned i
     value = tmpv;
 }
 
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,bool& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  value = (attv == "true");
+}
+
 /*
  * object_t
  */
 object_t::object_t()
   : name("object"),
     starttime(0),
-    endtime(0)
+    endtime(0),
+    muted(false)
 {
 }
 
 bool object_t::isactive(double time) const
 {
-  return (time>=starttime)&&((starttime>=endtime)||(time<=endtime));
+  return (!muted)&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
 }
 
 void object_t::read_xml(xmlpp::Element* e)
@@ -60,6 +76,7 @@ void object_t::read_xml(xmlpp::Element* e)
   name = e->get_attribute_value("name");
   get_attribute_value(e,"start",starttime);
   get_attribute_value(e,"end",endtime);
+  get_attribute_value(e,"muted",muted);
   color = rgb_color_t(e->get_attribute_value("color"));
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -105,17 +122,11 @@ void object_t::read_xml(xmlpp::Element* e)
 
 void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
-//  if( help_comments )
-//    listener_node->add_child_comment(
-//      "\n"
-//      "The listener tag describes position and orientation of the\n"
-//      "listener relative to the scene center. If no listener tag is\n"
-//      "provided, then the position is in the origin and the orientation\n"
-//      "is parallel to the x-axis.\n");
   e->set_attribute("name",name);
   e->set_attribute("color",color.str());
   set_attribute_double(e,"start",starttime);
   set_attribute_double(e,"end",endtime);
+  set_attribute_bool(e,"muted",muted);
   if( location.size() ){
     location.write_xml( e->add_child("position") );
   }

@@ -65,6 +65,7 @@ namespace TASCAR {
     rgb_color_t color;
     double starttime;
     double endtime;
+    bool muted;
     track_t location;
     euler_track_t orientation;
   };
@@ -97,6 +98,7 @@ namespace TASCAR {
     pos_t get_pos_global(double t) const;
     void prepare(double fs);
     std::string getlabel();
+    bool isactive(double t){ return parent && parent->isactive(t);};
   private:
     pos_t loc;
     object_t* parent;

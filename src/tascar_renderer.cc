@@ -146,26 +146,30 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
   double ldt(dt_sample);
   if( !tp_rolling )
     ldt = 0;
-  //pos_t srcpos = snd->get_pos(tp_time+ldt*n);
-  updatepar(snd->get_pos(tp_time+ldt*n));
-  memset( data, 0, sizeof(float)*n );
-  memset( data_acc, 0, sizeof(float)*n);
-  if( tp_rolling ){
-    snd->request_data( tp_frame, n, 1, &data_acc );
-    for( unsigned int fr=0;fr<n;fr++)
-      data[fr] += data_acc[fr];
-  }else{
-    snd->request_data( tp_frame, 0, 1, &data_acc );
-  }
-  for( unsigned int i=0;i<n;i++){
-    delayline.push(vIn[i]+data[i]);
-    float d = (d_current+=dd);
-    float d1 = 1.0/std::max(1.0f,d);
+  if( snd->isactive(tp_time) ){
+    //pos_t srcpos = snd->get_pos(tp_time+ldt*n);
+    updatepar(snd->get_pos(tp_time+ldt*n));
+    memset( data, 0, sizeof(float)*n );
+    memset( data_acc, 0, sizeof(float)*n);
     if( tp_rolling ){
-      for( unsigned int k=0;k<idx::channels;k++){
-        outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d )*d1;
+      snd->request_data( tp_frame, n, 1, &data_acc );
+      for( unsigned int fr=0;fr<n;fr++)
+        data[fr] += data_acc[fr];
+    }else{
+      snd->request_data( tp_frame, 0, 1, &data_acc );
+    }
+    for( unsigned int i=0;i<n;i++){
+      delayline.push(vIn[i]+data[i]);
+      float d = (d_current+=dd);
+      float d1 = 1.0/std::max(1.0f,d);
+      if( tp_rolling ){
+        for( unsigned int k=0;k<idx::channels;k++){
+          outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d )*d1;
+        }
       }
     }
+  }else{
+    snd->request_data( tp_frame, 0, 1, &data_acc );
   }
 }
 
@@ -248,10 +252,11 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
     }
   }
   //DEBUG(panner.size());
+  double tp_time((double)tp_frame/(double)srate);
   for( unsigned int k=0;k<std::min(panner.size(),sounds.size());k++)
     if( (k<inBuffer.size()) && (sounds[k]) )
       panner[k].process(nframes,inBuffer[k], outBuffer,tp_frame,
-                       (double)tp_frame/(double)srate,tp_rolling,sounds[k]);
+                        tp_time,tp_rolling,sounds[k]);
   return 0;
 }
 
@@ -341,7 +346,7 @@ int main(int argc, char** argv)
     }
     TASCAR::scene_generator_t S(jackname);
     S.read_xml(cfgfile);
-    S.run("");
+    S.run();
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;
