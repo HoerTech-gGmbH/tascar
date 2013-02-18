@@ -2,7 +2,17 @@ PREFIX = /usr/local
 
 BINFILES = tascar_renderer tascar_creator tascar_jackio test_async_file tascar_gpxvelocity tascar_gui
 
+ifeq "ok" "$(shell pkg-config gtkmm-3.0 && echo ok)"
+GTKDEF = "-DGTKMM30"
+GTKEXT = gtkmm-3.0
+else
+GTKDEF = "-DGTKMM24"
+GTKEXT = gtkmm-2.4
+endif
+
 #BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
+
+CXXFLAGS += $(GTKDEF)
 
 OBJECTS = jackclient.o coordinates.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o
 
@@ -14,12 +24,12 @@ CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer
 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
-tascar_gui: EXTERNALS += gtkmm-3.0
+tascar_gui: EXTERNALS += $(GTKEXT)
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
-CXXFLAGS += -ggdb
+#CXXFLAGS += -ggdb
 
 all:
 	mkdir -p build

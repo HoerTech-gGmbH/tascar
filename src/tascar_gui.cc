@@ -33,6 +33,7 @@
 #include "tascar.h"
 #include "osc_helper.h"
 #include <iostream>
+#include <getopt.h>
 
 using namespace TASCAR;
 
@@ -66,7 +67,7 @@ g_scene_t::~g_scene_t()
 class tascar_gui_t : public osc_server_t, public jackc_transport_t
 {
 public:
-  tascar_gui_t(const std::string& name);
+  tascar_gui_t(const std::string& name,const std::string& oscport);
   ~tascar_gui_t();
   void open_scene(const std::string& name);
   void set_time( double t ){time = t;};
@@ -81,6 +82,9 @@ public:
                       uint32_t tp_frame, bool tp_rolling);
 protected:
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+#ifdef GTKMM24
+  virtual bool on_expose_event(GdkEventExpose* event);
+#endif
   bool on_timeout();
   void on_time_changed();
   void on_tp_start(){tp_start();};
@@ -113,7 +117,11 @@ public:
   Gtk::VBox vbox;
   Gtk::HBox tp_box;
   Gtk::HBox ctl_box;
+#ifdef GTKMM30
   Gtk::Scale timescale;
+#else
+  Gtk::HScale timescale;
+#endif
 private:
   pthread_mutex_t mtx_scene;
   g_scene_t* scene;
@@ -289,8 +297,8 @@ int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, i
 
 #define CON_BUTTON(b) button_ ## b.signal_clicked().connect(sigc::mem_fun(*this,&tascar_gui_t::on_ ## b))
 
-tascar_gui_t::tascar_gui_t(const std::string& name)
-  : osc_server_t("","9876",true),
+tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
+  : osc_server_t("",oscport,true),
     jackc_transport_t(name),
     scale(200),
     time(0),
@@ -305,12 +313,18 @@ tascar_gui_t::tascar_gui_t(const std::string& name)
     button_reload("reload"),
     button_view_p("zoom +"),
     button_view_m("zoom -"),
+#ifdef GTKMM30
     timescale(Gtk::ORIENTATION_HORIZONTAL),
+#endif
     scene(NULL),
     filename(name)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
+#ifdef GTKMM30
   da.signal_draw().connect(sigc::mem_fun(*this, &tascar_gui_t::on_draw), false);
+#else
+  da.signal_expose_event().connect(sigc::mem_fun(*this, &tascar_gui_t::on_expose_event), false);
+#endif
   osc_server_t::add_method("/headrot","f",set_head,this);
   ctl_box.pack_start( button_reload, Gtk::PACK_SHRINK );
   ctl_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
@@ -350,6 +364,22 @@ tascar_gui_t::~tascar_gui_t()
   pthread_mutex_unlock(  &mtx_scene);
   pthread_mutex_destroy( &mtx_scene );
 }
+
+#ifdef GTKMM24
+bool tascar_gui_t::on_expose_event(GdkEventExpose* event)
+{
+  if( event ){
+    // This is where we draw on the window
+    Glib::RefPtr<Gdk::Window> window = da.get_window();
+    if(window){
+      Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
+      return on_draw(cr);
+    }
+  }
+  return true;
+}
+#endif
+
 
 bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
@@ -421,15 +451,51 @@ int tascar_gui_t::process(jack_nframes_t nframes,
   return 0;
 }
 
+void usage(struct option * opt)
+{
+  std::cout << "Usage:\n\ntascar_gui -c configfile [options]\n\nOptions:\n\n";
+  while( opt->name ){
+    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
+      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
+    opt++;
+  }
+}
+
 int main(int argc, char** argv)
 {
   Gtk::Main kit(argc, argv);
   Gtk::Window win;
-  std::string fname("");
-  if( argc > 1 )
-    fname = argv[1];
-  win.set_title("tascar - "+fname);
-  tascar_gui_t c(fname);
+  std::string cfgfile("");
+  std::string oscport("");
+  const char *options = "c:hp:";
+  struct option long_options[] = { 
+    { "config",   1, 0, 'c' },
+    { "help",     0, 0, 'h' },
+    { "oscport",  1, 0, 'p' },
+    { 0, 0, 0, 0 }
+  };
+  int opt(0);
+  int option_index(0);
+  while( (opt = getopt_long(argc, argv, options,
+                            long_options, &option_index)) != -1){
+    switch(opt){
+    case 'c':
+      cfgfile = optarg;
+      break;
+    case 'h':
+      usage(long_options);
+      return -1;
+    case 'n':
+     oscport = optarg;
+     break;
+    }
+  }
+  if( cfgfile.size() == 0 ){
+    usage(long_options);
+    return -1;
+  }
+  win.set_title("tascar - "+cfgfile);
+  tascar_gui_t c(cfgfile,oscport);
   win.add(c.vbox);
   win.set_default_size(1024,768);
   //c.set_scale(200);
