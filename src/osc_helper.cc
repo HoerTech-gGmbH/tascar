@@ -24,6 +24,7 @@
 */
 
 #include "osc_helper.h"
+#include "errorhandling.h"
 #include <iostream>
 
 using namespace TASCAR;
@@ -37,6 +38,7 @@ osc_server_t::osc_server_t(const std::string& multicast, const std::string& port
   : isactive(false),
     verbose(verbose_)
 {
+  lost = NULL;
   if( multicast.size() ){
     if( verbose )
       std::cerr << "listening on multicast address \"" << multicast << "\" port " << port << std::endl;
@@ -46,6 +48,8 @@ osc_server_t::osc_server_t(const std::string& multicast, const std::string& port
       std::cerr << "listening on port \"" << port << "\"" << std::endl;
     lost = lo_server_thread_new(port.c_str(),err_handler);
   }
+  if( !lost )
+    throw ErrMsg("liblo error");
 }
 
 osc_server_t::~osc_server_t()
