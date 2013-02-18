@@ -1,20 +1,20 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_creator tascar_jackio test_async_file tascar_gpxvelocity tascar_draw
+BINFILES = tascar_renderer tascar_creator tascar_jackio test_async_file tascar_gpxvelocity tascar_gui
 
-#BINFILES += `pkg-config gtkmm-3.0 && echo tascar_draw`
+#BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
 
 OBJECTS = jackclient.o coordinates.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 
-#GTKMMBIN = tascar_draw
+#GTKMMBIN = tascar_gui
 
 CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
-tascar_draw: EXTERNALS += gtkmm-3.0
+tascar_gui: EXTERNALS += gtkmm-3.0
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`

@@ -281,6 +281,7 @@ void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchann
   //DEBUG(loop);
   if( pthread_mutex_lock( &mtx_file ) != 0 )
     return;
+  try{
   if( sfile ){
     delete sfile;
     sfile = NULL;
@@ -303,6 +304,11 @@ void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchann
   file_buffer = new float[fragsize_ * file_channels];
   file_firstframe = first_frame;
   pthread_mutex_unlock( &mtx_file );
+  }
+  catch( ... ){
+    pthread_mutex_unlock( &mtx_file );
+    throw;
+  }
 }
 
 TASCAR::ringbuffer_t::ringbuffer_t(uint32_t size,uint32_t channels_)

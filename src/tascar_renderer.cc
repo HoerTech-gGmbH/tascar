@@ -179,7 +179,7 @@ namespace TASCAR {
   public:
     scene_generator_t(const std::string& name);
     ~scene_generator_t();
-    void run(const std::string& pos_connect, const std::string& ambdec = "ambdec");
+    void run(const std::string& ambdec = "ambdec");
     void connect_all(const std::string& ambdec);
   private:
     std::vector<TASCAR::trackpan_amb33_t> panner;
@@ -255,10 +255,8 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
   return 0;
 }
 
-void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::string& dest_ambdec)
+void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
 {
-  std::string visname(get_client_name());
-  visname +=".pos";
   prepare(get_srate());
   sounds = linearize();
   panner.clear();
@@ -271,13 +269,15 @@ void TASCAR::scene_generator_t::run(const std::string& draw_connect, const std::
     add_input_port(ctmp);
     panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize()));
   }
-  //DEBUG(sounds.size());
   activate();
   if( dest_ambdec.size() ){
     connect_all( dest_ambdec );
   }
   while( !b_quit ){
     sleep( 1 );
+    getchar();
+    if( feof( stdin ) )
+      b_quit = true;
     for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
       unsigned int xr(it->get_xruns());
       if( xr ){
@@ -310,15 +310,11 @@ int main(int argc, char** argv)
     signal(SIGABRT, &sighandler);
     signal(SIGTERM, &sighandler);
     signal(SIGINT, &sighandler);
-    FILE* gui_pipe(NULL);
-    bool load_gui(false);
-    std::string gui_jackname;
     std::string cfgfile("");
     std::string jackname("tascar_scene");
-    const char *options = "c:ghn:";
+    const char *options = "c:hn:";
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },
-      { "gui",      0, 0, 'g' },
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'n' },
       { 0, 0, 0, 0 }
@@ -334,9 +330,6 @@ int main(int argc, char** argv)
       case 'h':
         usage(long_options);
         return -1;
-      case 'g':
-        load_gui = true;
-        break;
       case 'n':
         jackname = optarg;
         break;
@@ -346,19 +339,9 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
-    if( load_gui ){
-      char ctmp[1024];
-      sprintf(ctmp,"tascar_draw %s",cfgfile.c_str());
-      gui_pipe = popen( ctmp, "w" );
-      sleep(1);
-    }
     TASCAR::scene_generator_t S(jackname);
     S.read_xml(cfgfile);
-    if( !load_gui )
-      gui_jackname = "";
-    S.run(gui_jackname);
-    if( gui_pipe )
-      pclose(gui_pipe);
+    S.run("");
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;

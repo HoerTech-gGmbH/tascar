@@ -74,15 +74,32 @@ void object_t::read_xml(xmlpp::Element* e)
       xmlpp::Node::NodeList subnodes = sne->get_children();
       location.edit(subnodes);
       TASCAR::track_t::iterator it_old=location.end();
+      double old_azim(0);
+      double new_azim(0);
       for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
         if( it_old != location.end() ){
           pos_t p=it_old->second;
           p -= it->second;
-          orientation[it_old->first] = zyx_euler_t(p.azim(),0,0);
+          new_azim = p.azim();
+          while( new_azim - old_azim > M_PI )
+            new_azim -= 2*M_PI;
+          while( new_azim - old_azim < -M_PI )
+            new_azim += 2*M_PI;
+          orientation[it_old->first] = zyx_euler_t(new_azim,0,0);
+          old_azim = new_azim;
         }
-        it_old = it;
+        if( TASCAR::distance(it->second,it_old->second) > 0 )
+          it_old = it;
       }
     }
+  }
+  if( starttime < endtime ){
+    TASCAR::track_t ntrack;
+    for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
+      if( (it->first >= 0) && (it->first <= endtime-starttime) )
+        ntrack[it->first] = it->second;
+    }
+    location = ntrack;
   }
 }
 
@@ -163,9 +180,9 @@ std::string soundfile_t::print(const std::string& prefix)
 void soundfile_t::prepare(double fs)
 {
   //DEBUG("pre-service");
+  open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
   start_service();
   //DEBUG("post-service");
-  open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
   //open(filename,firstchannel,0,pow(10.0,0.05*gain),loop);
   //DEBUG("post-open");
 }
