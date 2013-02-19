@@ -273,6 +273,10 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
     sprintf(ctmp,"%s-%d",label.c_str(),k);
     add_input_port(ctmp);
     panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize()));
+    // request initial location:
+    float f;
+    float* data_acc(&f);
+    sounds[k]->request_data( -1, 0, 1, &data_acc );
   }
   activate();
   if( dest_ambdec.size() ){

@@ -111,7 +111,7 @@ void track_t::project_tangent(pos_t c)
   rot_z( -PI_2 );
   c.set_cart(0,0,-c.norm());
   operator+=(c);
-  operator*=(pos_t(1,-1,1));
+  //operator*=(pos_t(1,-1,1));
 }
 
 void track_t::rot_z(double a)
@@ -387,8 +387,12 @@ void track_t::edit( xmlpp::Element* cmd )
         set_velocity_const( v );
       }
       std::string vel_fname(cmd->get_attribute_value("csvfile"));
+      std::string s_offset(cmd->get_attribute_value("start"));
       if( vel_fname.size() ){
-        set_velocity_csvfile( vel_fname );
+        double v_offset(0);
+        if( s_offset.size() )
+          v_offset = atof(s_offset.c_str());
+        set_velocity_csvfile( vel_fname, v_offset );
       }
     }else if( scmd == "rotate" ){
       rot_z(DEG2RAD*atof(cmd->get_attribute_value("angle").c_str()));
@@ -471,7 +475,7 @@ void track_t::set_velocity_const( double v )
   }
 }
 
-void track_t::set_velocity_csvfile( const std::string& fname )
+void track_t::set_velocity_csvfile( const std::string& fname, double offset )
 {
   std::ifstream fh(fname.c_str());
   std::string v_tm, v_x;
@@ -482,7 +486,7 @@ void track_t::set_velocity_csvfile( const std::string& fname )
     if( v_tm.size() && v_x.size() ){
       double tm = atof(v_tm.c_str());
       double x = atof(v_x.c_str());
-      vmap[tm] = pos_t(x,0,0);
+      vmap[tm-offset] = pos_t(x,0,0);
     }
   }
   fh.close();
@@ -491,7 +495,7 @@ void track_t::set_velocity_csvfile( const std::string& fname )
     double d = 0;
     double dt = 0.5;
     track_t ntrack;
-    for( double tm=vmap.begin()->first; tm <= vmap.rbegin()->first; tm += dt){
+    for( double tm=std::max(0.0,vmap.begin()->first); tm <= vmap.rbegin()->first; tm += dt){
       pos_t pv = vmap.interp( tm );
       d += dt*pv.x;
       ntrack[tm] = interp( d );

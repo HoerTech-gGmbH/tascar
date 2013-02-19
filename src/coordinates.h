@@ -342,7 +342,7 @@ namespace TASCAR {
     /**
        \brief set velocity from CSV file
     */
-    void set_velocity_csvfile( const std::string& fname );
+    void set_velocity_csvfile( const std::string& fname, double offset );
     /**
        \brief Export to xml element
     */

@@ -143,9 +143,9 @@ void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> 
   cr->set_line_width( 0.1*msize );
   for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
     if( it==obj.location.begin() )
-      cr->move_to( it->second.x, it->second.y );
+      cr->move_to( it->second.x, -it->second.y );
     else
-      cr->line_to( it->second.x, it->second.y );
+      cr->line_to( it->second.x, -it->second.y );
   }
   cr->stroke();
   cr->restore();
@@ -159,26 +159,26 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   pos_t p(obj.location.interp(time-obj.starttime));
   cr->save();
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-  cr->arc(p.x, p.y, msize, 0, PI2 );
+  cr->arc(p.x, -p.y, msize, 0, PI2 );
   cr->fill();
   for(unsigned int k=0;k<obj.sound.size();k++){
     pos_t ps(obj.sound[k].get_pos_global(time));
-    cr->arc(ps.x, ps.y, 0.5*msize, 0, PI2 );
+    cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
     cr->fill();
   }
   if( !active )
     cr->set_source_rgb(0.5, 0.5, 0.5 );
   else
     cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( p.x + 1.1*msize, p.y );
+  cr->move_to( p.x + 1.1*msize, -p.y );
   cr->show_text( obj.name.c_str() );
   if( active ){
     cr->set_line_width( 0.1*msize );
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
     for(unsigned int k=0;k<obj.sound.size();k++){
-      cr->move_to( p.x, p.y );
+      cr->move_to( p.x, -p.y );
       pos_t ps(obj.sound[k].get_pos_global(time));
-      cr->line_to( ps.x, ps.y );
+      cr->line_to( ps.x, -ps.y );
     }
     cr->stroke();
   }
@@ -228,7 +228,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
 {
   pos_t p(obj.location.interp(time-obj.starttime));
   zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
-  o.z -= headrot;
+  o.z += headrot;
   pos_t p1(1.8*msize,-0.6*msize,0);
   pos_t p2(2.9*msize,0,0);
   pos_t p3(1.8*msize,0.6*msize,0);
@@ -259,20 +259,20 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->save();
   cr->set_line_width( 0.1*msize );
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-  cr->arc(p.x, p.y, 2*msize, 0, PI2 );
-  cr->move_to( p1.x, p1.y );
-  cr->line_to( p2.x, p2.y );
-  cr->line_to( p3.x, p3.y );
-  cr->move_to( p4.x, p4.y );
-  cr->line_to( p5.x, p5.y );
-  cr->line_to( p6.x, p6.y );
-  cr->move_to( p7.x, p7.y );
-  cr->line_to( p8.x, p8.y );
-  cr->line_to( p9.x, p9.y );
+  cr->arc(p.x, -p.y, 2*msize, 0, PI2 );
+  cr->move_to( p1.x, -p1.y );
+  cr->line_to( p2.x, -p2.y );
+  cr->line_to( p3.x, -p3.y );
+  cr->move_to( p4.x, -p4.y );
+  cr->line_to( p5.x, -p5.y );
+  cr->line_to( p6.x, -p6.y );
+  cr->move_to( p7.x, -p7.y );
+  cr->line_to( p8.x, -p8.y );
+  cr->line_to( p9.x, -p9.y );
   //cr->fill();
   cr->stroke();
   cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( p.x + 3.1*msize, p.y );
+  cr->move_to( p.x + 3.1*msize, -p.y );
   cr->show_text( obj.name.c_str() );
   //cr->set_line_width( 0.1*msize );
   //cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
@@ -466,7 +466,7 @@ int main(int argc, char** argv)
   Gtk::Main kit(argc, argv);
   Gtk::Window win;
   std::string cfgfile("");
-  std::string oscport("");
+  std::string oscport("9876");
   const char *options = "c:hp:";
   struct option long_options[] = { 
     { "config",   1, 0, 'c' },
