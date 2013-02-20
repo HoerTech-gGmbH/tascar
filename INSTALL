@@ -1,0 +1,21 @@
+installation:
+
+For installation, please review the Makefile in the top level
+directory (specifically the PREFIX variable). Then type
+
+make && sudo make install
+
+dependencies:
+
+The toolbox depends on the following libraries:
+
+- libjack
+- libsndfile
+- liblo
+- gtkmm-2.4 or gtkmm-3.0
+- libxml++-2.6
+
+For de-installation, please type
+
+sudo make uninstall
+
