@@ -60,6 +60,10 @@ namespace TASCAR {
     float dw[idx::channels];
     float d_current;
     float dd;
+    float clp_current;
+    float dclp;
+    float y;
+    float dscale;
   public:
     void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*);
   protected:
@@ -75,11 +79,14 @@ trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize)
     dt_update(1.0/(double)fragsize),
     fragsize_(fragsize),
     data_acc(new float[fragsize_+1]),
-    data(new float[fragsize_+1])
+    data(new float[fragsize_+1]),
+    y(0),
+    dscale(srate/(340.0*7782.0))
 {
   //DEBUG(srate);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
+  clp_current = dclp = 0;
 }
 
 trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
@@ -89,11 +96,14 @@ trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
     dt_update(1.0/(double)(src.fragsize_)),
     fragsize_(src.fragsize_),
     data_acc(new float[fragsize_+1]),
-    data(new float[fragsize_+1])
+    data(new float[fragsize_+1]),
+    y(0),
+    dscale(src.srate_/(340.0*7782.0))
 {
   //DEBUG(srate_);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
+  clp_current = dclp = 0;
 }
 
 trackpan_amb33_t::~trackpan_amb33_t()
@@ -136,6 +146,7 @@ void trackpan_amb33_t::updatepar(pos_t src_)
   _w[idx::k] = _w[idx::z] * (5 * z2 - 3) / 2;
   for(unsigned int k=0;k<idx::channels;k++)
     dw[k] = (_w[k] - w_current[k])*dt_update;
+  dclp = (exp(-nm*dscale) - clp_current)*dt_update;
 }
 
 void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer,uint32_t tp_frame, double tp_time,bool tp_rolling, sound_t* snd)
@@ -163,8 +174,11 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
       float d = (d_current+=dd);
       float d1 = 1.0/std::max(1.0f,d);
       if( tp_rolling ){
+        float c1(clp_current+=dclp);
+        float c2(1.0f-c1);
+        y = c2*y+c1*delayline.get_dist(d)*d1;
         for( unsigned int k=0;k<idx::channels;k++){
-          outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d )*d1;
+          outBuffer[k][i] += (w_current[k] += dw[k]) * y;
         }
       }
     }
