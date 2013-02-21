@@ -33,6 +33,13 @@
 #include <libxml++/libxml++.h>
 
 namespace TASCAR {
+
+  class table1_t : public std::map<double,double> {
+  public:
+    table1_t();
+    double interp(double) const;
+  };
+
   /**
      \brief Coordinates
   */
@@ -349,8 +356,13 @@ namespace TASCAR {
     void write_xml( xmlpp::Element* );
     void read_xml( xmlpp::Element* );
     void set_interpt(interp_t p){interpt=p;};
+    double get_dist( double time ) const {return time_dist.interp(time);};
+    double get_time( double dist ) const {return dist_time.interp(dist);};
+    void prepare();
   private:
     interp_t interpt;
+    table1_t time_dist;
+    table1_t dist_time;
   };
 
   /**

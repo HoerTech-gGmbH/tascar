@@ -33,6 +33,7 @@
 #include "amb33defs.h"
 #include "async_file.h"
 #include <getopt.h>
+#include "osc_helper.h"
 
 #define SUBSAMPLE 32
 
@@ -119,6 +120,8 @@ void trackpan_amb33_t::updatepar(pos_t src_)
   float az = src_.azim();
   float el = src_.elev();
   float nm = src_.norm();
+  //DEBUG(az);
+  //DEBUG(el);
   float t, x2, y2, z2;
   dd = (nm-d_current)*dt_update;
   // this is taken from AMB plugins by Fons and Joern:
@@ -193,9 +196,9 @@ namespace TASCAR {
      \ingroup apptascar
      \brief Multiple panning methods
   */
-  class scene_generator_t : public jackc_transport_t, public scene_t {
+  class scene_generator_t : public jackc_transport_t, public scene_t, public osc_server_t {
   public:
-    scene_generator_t(const std::string& name);
+    scene_generator_t(const std::string& name, const std::string& oscport);
     ~scene_generator_t();
     void run(const std::string& ambdec = "ambdec");
     void connect_all(const std::string& ambdec);
@@ -205,6 +208,12 @@ namespace TASCAR {
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
+    static int osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    static int osc_unmuteall(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    void osc_solo(const std::string& name);
+    void osc_unmuteall();
   public:
   };
 
@@ -212,8 +221,9 @@ namespace TASCAR {
 
 static bool b_quit;
 
-TASCAR::scene_generator_t::scene_generator_t(const std::string& name)
-  : jackc_transport_t(name)
+TASCAR::scene_generator_t::scene_generator_t(const std::string& name, const std::string& oscport)
+  : jackc_transport_t(name),osc_server_t("",oscport,true)
+    
 {
   char c_tmp[100];
   unsigned int k=0;
@@ -226,10 +236,91 @@ TASCAR::scene_generator_t::scene_generator_t(const std::string& name)
       k++;
     }
   }
+  osc_server_t::add_method("/solo","s",osc_solo,this);
+  osc_server_t::add_method("/unmute","",osc_unmuteall,this);
+  osc_server_t::add_method("/listener/pos","fff",osc_listener_position,this);
+  osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
+  osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
+  osc_server_t::add_method("/listener/rot","f",osc_listener_orientation,this);
 }
 
 TASCAR::scene_generator_t::~scene_generator_t()
 {
+}
+
+int TASCAR::scene_generator_t::osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 1) && (types[0] == 's') ){
+    h->osc_solo(&(argv[0]->s));
+    return 0;
+  }
+  return 1;
+}
+
+int TASCAR::scene_generator_t::osc_unmuteall(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 0) ){
+    h->osc_unmuteall();
+    return 0;
+  }
+  return 1;
+}
+
+int TASCAR::scene_generator_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
+    zyx_euler_t r;
+    r.z = DEG2RAD*argv[0]->f;
+    r.y = DEG2RAD*argv[1]->f;
+    r.x = DEG2RAD*argv[2]->f;
+    h->listener_orientation(r);
+    return 0;
+  }
+  if( h && (argc == 1) && (types[0]=='f') ){
+    zyx_euler_t r;
+    r.z = DEG2RAD*argv[0]->f;
+    h->listener_orientation(r);
+    return 0;
+  }
+  return 1;
+}
+
+int TASCAR::scene_generator_t::osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
+    pos_t r;
+    r.x = argv[0]->f;
+    r.y = argv[1]->f;
+    r.z = argv[2]->f;
+    h->listener_position(r);
+    return 0;
+  }
+  if( h && (argc == 2) && (types[0]=='f') && (types[1]=='f') ){
+    pos_t r;
+    r.x = argv[0]->f;
+    r.y = argv[1]->f;
+    h->listener_position(r);
+    return 0;
+  }
+  return 1;
+}
+
+void TASCAR::scene_generator_t::osc_solo(const std::string& name)
+{
+  for(unsigned int k=0;k<src.size();k++){
+    src[k].muted = (src[k].name != name);
+  }
+}
+
+void TASCAR::scene_generator_t::osc_unmuteall()
+{
+  for(unsigned int k=0;k<src.size();k++){
+    src[k].muted = false;
+  }
 }
 
 void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
@@ -292,7 +383,8 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
     float* data_acc(&f);
     sounds[k]->request_data( -1, 0, 1, &data_acc );
   }
-  activate();
+  jackc_t::activate();
+  osc_server_t::activate();
   if( dest_ambdec.size() ){
     connect_all( dest_ambdec );
   }
@@ -308,7 +400,8 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
       }
     }
   }
-  deactivate();
+  osc_server_t::deactivate();
+  jackc_t::deactivate();
 }
 
 static void sighandler(int sig)
@@ -335,11 +428,13 @@ int main(int argc, char** argv)
     signal(SIGINT, &sighandler);
     std::string cfgfile("");
     std::string jackname("tascar_scene");
-    const char *options = "c:hn:";
+    std::string oscport("9877");
+    const char *options = "c:hn:p:";
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'n' },
+      { "oscport",  1, 0, 'p' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -356,13 +451,16 @@ int main(int argc, char** argv)
       case 'n':
         jackname = optarg;
         break;
+      case 'p':
+        oscport = optarg;
+        break;
       }
     }
     if( cfgfile.size() == 0 ){
       usage(long_options);
       return -1;
     }
-    TASCAR::scene_generator_t S(jackname);
+    TASCAR::scene_generator_t S(jackname,oscport);
     S.read_xml(cfgfile);
     S.run();
   }

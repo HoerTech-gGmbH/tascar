@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 #include <libxml++/libxml++.h>
+#include <iostream>
+#include "defs.h"
 
 namespace TASCAR {
 
@@ -68,6 +70,8 @@ namespace TASCAR {
     bool muted;
     track_t location;
     euler_track_t orientation;
+    pos_t dlocation;
+    zyx_euler_t dorientation;
   };
 
   class soundfile_t : public scene_node_base_t, public async_sndfile_t {
@@ -101,6 +105,7 @@ namespace TASCAR {
     bool isactive(double t){ return parent && parent->isactive(t);};
   private:
     pos_t loc;
+    double chaindist;
     object_t* parent;
     object_t* reference;
     double fs_;
@@ -151,6 +156,8 @@ namespace TASCAR {
     std::vector<bg_amb_t> bg_amb;
     listener_t listener;
     double guiscale;
+    void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
+    void listener_position(pos_t p){listener.dlocation = p;};
   };
 
   scene_t xml_read_scene(const std::string& filename);

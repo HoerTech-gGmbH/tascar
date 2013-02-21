@@ -148,6 +148,7 @@ void track_t::shift_time(double dt)
     nt[i->first+dt] = i->second;
   }
   *this = nt;
+  prepare();
 }
 
 pos_t track_t::interp(double x) const
@@ -221,6 +222,7 @@ void track_t::smooth( unsigned int n )
     sm[vt[k]] = ps;
   }
   *this = sm;
+  prepare();
 }  
 
 std::string TASCAR::xml_get_text( xmlpp::Node* n, const std::string& child )
@@ -298,6 +300,7 @@ void track_t::load_from_gpx( const std::string& fname )
     }
   }
   *this = track;
+  prepare();
 }
 
 /**
@@ -323,6 +326,7 @@ void track_t::load_from_csv( const std::string& fname )
   }
   fh.close();
   *this = track;
+  prepare();
 }
 
 void track_t::edit( xmlpp::Element* cmd )
@@ -433,6 +437,7 @@ void track_t::edit( xmlpp::Element* cmd )
       DEBUG(cmd->get_name());
     }
   }
+  prepare();
 }
 
 void track_t::resample( double dt )
@@ -445,6 +450,7 @@ void track_t::resample( double dt )
       ntrack[t] = interp(t);
     *this = ntrack;
   }
+  prepare();
 }
 
 void track_t::edit( xmlpp::Node::NodeList cmds )
@@ -453,6 +459,7 @@ void track_t::edit( xmlpp::Node::NodeList cmds )
     xmlpp::Element* cmd = dynamic_cast<xmlpp::Element*>(*icmd);
     edit( cmd );
   }
+  prepare();
 }
 
 void track_t::set_velocity_const( double v )
@@ -473,6 +480,7 @@ void track_t::set_velocity_const( double v )
     }
     *this = ntrack;
   }
+  prepare();
 }
 
 void track_t::set_velocity_csvfile( const std::string& fname, double offset )
@@ -502,6 +510,7 @@ void track_t::set_velocity_csvfile( const std::string& fname, double offset )
     }
     *this = ntrack;
   }
+  prepare();
 }
 
 double track_t::length()
@@ -551,6 +560,49 @@ void track_t::read_xml( xmlpp::Element* a )
     }
   }
   *this = ntrack;
+}
+
+table1_t::table1_t()
+{
+}
+
+double table1_t::interp( double x ) const
+{
+  if( begin() == end() )
+    return 0;
+  const_iterator lim2 = lower_bound(x);
+  if( lim2 == end() )
+    return rbegin()->second;
+  if( lim2 == begin() )
+    return begin()->second;
+  if( lim2->first == x )
+    return lim2->second;
+  const_iterator lim1 = lim2;
+  --lim1;
+  // cartesian interpolation:
+  double p1(lim1->second);
+  double p2(lim2->second);
+  double w = (x-lim1->first)/(lim2->first-lim1->first);
+  p1 *= (1.0-w);
+  p2 *= w;
+  p1 += p2;
+  return p1;
+}
+
+void track_t::prepare()
+{
+  time_dist.clear();
+  dist_time.clear();
+  if( size() ){
+    double l(0);
+    pos_t p0(begin()->second);
+    for(const_iterator it=begin();it!=end();++it){
+      l+=distance(it->second,p0);
+      time_dist[it->first] = l;
+      dist_time[l] = it->first;
+      p0 = it->second;
+    }
+  }
 }
 
 zyx_euler_t euler_track_t::interp(double x) const

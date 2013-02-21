@@ -95,8 +95,8 @@ void object_t::read_xml(xmlpp::Element* e)
       double new_azim(0);
       for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
         if( it_old != location.end() ){
-          pos_t p=it_old->second;
-          p -= it->second;
+          pos_t p=it->second;
+          p -= it_old->second;
           new_azim = p.azim();
           while( new_azim - old_azim > M_PI )
             new_azim -= 2*M_PI;
@@ -110,14 +110,14 @@ void object_t::read_xml(xmlpp::Element* e)
       }
     }
   }
-  if( starttime < endtime ){
-    TASCAR::track_t ntrack;
-    for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
-      if( (it->first >= 0) && (it->first <= endtime-starttime) )
-        ntrack[it->first] = it->second;
-    }
-    location = ntrack;
-  }
+  //if( starttime < endtime ){
+  //  TASCAR::track_t ntrack;
+  //  for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
+  //    if( (it->first >= 0) && (it->first <= endtime-starttime) )
+  //      ntrack[it->first] = it->second;
+  //  }
+  //  location = ntrack;
+  //}
 }
 
 void object_t::write_xml(xmlpp::Element* e,bool help_comments)
@@ -204,6 +204,7 @@ void soundfile_t::prepare(double fs)
 sound_t::sound_t(object_t* parent_,object_t* reference_)
   : soundfile_t(1),
     loc(0,0,0),
+    chaindist(0),
     parent(parent_),
     reference(reference_),
     fs_(1)
@@ -241,6 +242,7 @@ void sound_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"x",loc.x);
   get_attribute_value(e,"y",loc.y);
   get_attribute_value(e,"z",loc.z);
+  get_attribute_value(e,"d",chaindist);
 }
 
 void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
@@ -249,6 +251,7 @@ void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"x",loc.x);
   set_attribute_double(e,"y",loc.y);
   set_attribute_double(e,"z",loc.z);
+  set_attribute_double(e,"d",chaindist);
   set_attribute_uint(e,"channel",firstchannel);
 }
 
@@ -263,14 +266,13 @@ std::string sound_t::print(const std::string& prefix)
 
 pos_t sound_t::get_pos(double t) const
 {
-  pos_t rp(loc);
-  if( parent ){
-    rp *= parent->orientation.interp(t - parent->starttime);
-    rp += parent->location.interp(t - parent->starttime);
-  }
+  pos_t rp(get_pos_global(t));
   if( reference ){
+    rp -= reference->dlocation;
     rp -= reference->location.interp(t - reference->starttime);
-    rp /= reference->orientation.interp(t - reference->starttime);
+    zyx_euler_t o(reference->dorientation);
+    o += reference->orientation.interp(t - reference->starttime);
+    rp /= o;
   }
   return rp;
 }
@@ -279,11 +281,15 @@ pos_t sound_t::get_pos_global(double t) const
 {
   pos_t rp(loc);
   if( parent ){
-    t -= parent->starttime;
-    zyx_euler_t o(parent->orientation.interp(t));
-    //DEBUG(o.print());
+    double tp(t - parent->starttime);
+    if( chaindist != 0 ){
+      tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
+    }
+    zyx_euler_t o(parent->dorientation);
+    o += parent->orientation.interp(tp);
     rp *= o;
-    rp += parent->location.interp(t);
+    rp += parent->location.interp(tp);
+    rp += parent->dlocation;
   }
   return rp;
 }
