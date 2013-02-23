@@ -417,6 +417,22 @@ void track_t::edit( xmlpp::Element* cmd )
     }else if( scmd == "resample" ){
       double dt = atof(cmd->get_attribute_value("dt").c_str());
       resample(dt);
+    }else if( scmd == "trim" ){
+      prepare();
+      double d_start = atof(cmd->get_attribute_value("start").c_str());
+      double d_end = atof(cmd->get_attribute_value("end").c_str());
+      double t_start(get_time(d_start));
+      double t_end(get_time(length()-d_end));
+      TASCAR::track_t ntrack;
+      for( TASCAR::track_t::iterator it=begin();it != end(); ++it){
+        if( (t_start < it->first) && (t_end > it->first) ){
+          ntrack[it->first] = it->second;
+        }
+      }
+      ntrack[t_start] = interp(t_start);
+      ntrack[t_end] = interp(t_end);
+      *this = ntrack;
+      prepare();
     }else if( scmd == "time" ){
       // scale...
       std::string att_start(cmd->get_attribute_value("start"));
@@ -432,6 +448,7 @@ void track_t::edit( xmlpp::Element* cmd )
           ntrack[scaletime*it->first] = it->second;
         }
         *this = ntrack;
+        prepare();
       }
     }else{
       DEBUG(cmd->get_name());

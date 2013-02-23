@@ -278,7 +278,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   p += obj.dlocation;
   zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
   o += obj.dorientation;
-  DEBUG(o.print());
+  //DEBUG(o.print());
   o.z += headrot;
   pos_t p1(1.8*msize,-0.6*msize,0);
   pos_t p2(2.9*msize,0,0);
