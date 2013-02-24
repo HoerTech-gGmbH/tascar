@@ -105,6 +105,7 @@ namespace TASCAR {
     bool isactive(double t){ return parent && parent->isactive(t);};
   private:
     pos_t loc;
+    // std::vector<pos_t> vertices;
     double chaindist;
     object_t* parent;
     object_t* reference;

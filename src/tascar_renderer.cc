@@ -24,6 +24,15 @@
 
 */
 
+/*
+  todo: diffuse reverb for enclosed sources, damping+attenuation for
+  non-enclosed sources
+  
+  todo: directive sound sources - normal vector and size define
+  directivity, use for sources and reflected objects
+
+ */
+
 #include "scene.h"
 #include <iostream>
 #include <stdlib.h>
