@@ -10,13 +10,19 @@ interpolation, another source moving back with cartesian interpolation</descript
     <position interpolation="spherical">0 50 -50 0
 10 50 50 0
 </position>
-    <sound filename="tc1.wav" gain="0" loop="2070" starttime="0" x="0" y="0" z="0" channel="0"/>
+    <inputs>
+      <file name="0" filename="tc1.wav" gain="0" loop="2070" start="0" channel="0"/>
+    </inputs>
+    <sound name="0"/>
   </src_object>
   <src_object name="cartesian" color="#00f000" starttime="18">
     <position interpolation="cartesian">0 50 50 0
 10 50 -50 0
 </position>
-    <sound filename="tc1.wav" gain="0" loop="2070" starttime="0" x="0" y="0" z="0" channel="0"/>
+    <inputs>
+      <file name="0" filename="tc1.wav" gain="0" loop="2070" start="0" channel="0"/>
+    </inputs>
+    <sound name="0"/>
   </src_object>
   <listener name="listener" color="#0000f0" starttime="0"/>
 </scene>

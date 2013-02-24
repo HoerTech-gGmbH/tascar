@@ -2,6 +2,8 @@
 #include <string.h>
 #include <algorithm>
 #include <math.h>
+#include "defs.h"
+#include <iostream>
 
 using namespace TASCAR;
 
@@ -12,7 +14,8 @@ varidelay_t::varidelay_t(uint32_t maxdelay, double fs, double c)
     dist2sample(fs/c),
     pos(0)
 {
-  memset(dline,0,sizeof(dline[0])*dmax);
+  memset(dline,0,sizeof(float)*dmax);
+  DEBUG(dmax);
 }
 
 varidelay_t::~varidelay_t()

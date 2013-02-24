@@ -137,9 +137,9 @@ TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t buffer_le
     xrun(0),
     min_read_chunk(std::min(8192u,buffer_length_>>1))
 {
-  DEBUG(buffer_length);
-  DEBUG(numchannels);
-  DEBUG(fragsize);
+  //DEBUG(buffer_length);
+  //DEBUG(numchannels);
+  //DEBUG(fragsize);
   pthread_mutex_init( &mtx_file, NULL );
 }
 

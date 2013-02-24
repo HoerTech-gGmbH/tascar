@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "defs.h"
+#include <string.h>
 
 using namespace TASCAR;
 
@@ -149,20 +150,19 @@ std::string object_t::print(const std::string& prefix)
 }
 
 /*
- *soundfile_t
+ *bg_amb_t
  */
-soundfile_t::soundfile_t(unsigned int channels_)
-  : async_sndfile_t(channels_,1<<18,4096),
+bg_amb_t::bg_amb_t()
+  : async_sndfile_t(4,1<<18,4096),
     filename(""),
     gain(0),
     loop(1),
     starttime(0),
-    firstchannel(0),
-    channels(channels_)
+    firstchannel(0)
 {
 }
 
-void soundfile_t::read_xml(xmlpp::Element* e)
+void bg_amb_t::read_xml(xmlpp::Element* e)
 {
   get_attribute_value(e,"start",starttime);
   filename = e->get_attribute_value("filename");
@@ -170,7 +170,7 @@ void soundfile_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"loop",loop);
 }
 
-void soundfile_t::write_xml(xmlpp::Element* e,bool help_comments)
+void bg_amb_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   e->set_attribute("filename",filename);
   set_attribute_double(e,"gain",gain);
@@ -178,7 +178,7 @@ void soundfile_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"start",starttime);
 }
 
-std::string soundfile_t::print(const std::string& prefix)
+std::string bg_amb_t::print(const std::string& prefix)
 {
   std::stringstream r;
   r << prefix << "Filename: \"" << filename << "\"\n";
@@ -188,7 +188,7 @@ std::string soundfile_t::print(const std::string& prefix)
   return r.str();
 }
 
-void soundfile_t::prepare(double fs)
+void bg_amb_t::prepare(double fs, uint32_t fragsize)
 {
   //DEBUG("pre-service");
   open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
@@ -201,8 +201,8 @@ void soundfile_t::prepare(double fs)
 /*
  * sound_t
  */
-sound_t::sound_t(object_t* parent_,object_t* reference_)
-  : soundfile_t(1),
+sound_t::sound_t(src_object_t* parent_,object_t* reference_)
+  : //bg_amb_t(1),
     loc(0,0,0),
     chaindist(0),
     parent(parent_),
@@ -211,57 +211,82 @@ sound_t::sound_t(object_t* parent_,object_t* reference_)
 {
 }
 
-void sound_t::prepare(double fs)
+void sound_t::prepare(double fs, uint32_t fragsize)
 {
   fs_ = fs;
-  soundfile_t::prepare(fs);
+  //DEBUG(parent);
+  if( parent )
+    input = parent->get_input(name);
+  else
+    input = NULL;
+  //DEBUG(input);
+  //bg_amb_t::prepare(fs,fragsize);
 }
 
-void sound_t::request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf )
+//void sound_t::request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf )
+//{
+//  if( parent )
+//    firstframe -= parent->starttime*fs_;
+//  //bg_amb_t::request_data( firstframe-starttime*fs_, n, channels, buf );
+//  //bg_amb_t::request_data( firstframe, n, channels, buf );
+//}
+
+float* sound_t::get_buffer( uint32_t n )
 {
-  if( parent )
-    firstframe -= parent->starttime*fs_;
-  //soundfile_t::request_data( firstframe-starttime*fs_, n, channels, buf );
-  soundfile_t::request_data( firstframe, n, channels, buf );
+  if( input )
+    return input->get_buffer(n);
+  return NULL;
 }
 
 void sound_t::set_reference(object_t* ref)
 {
+  //DEBUG(ref);
   reference = ref;
 }
 
-void sound_t::set_parent(object_t* ref)
+void sound_t::set_parent(src_object_t* ref)
 {
+  //DEBUG(ref);
   parent = ref;
 }
 
 void sound_t::read_xml(xmlpp::Element* e)
 {
-  soundfile_t::read_xml(e);
-  get_attribute_value(e,"channel",firstchannel);
+  //bg_amb_t::read_xml(e);
+  //get_attribute_value(e,"channel",firstchannel);
   get_attribute_value(e,"x",loc.x);
   get_attribute_value(e,"y",loc.y);
   get_attribute_value(e,"z",loc.z);
   get_attribute_value(e,"d",chaindist);
+  name = e->get_attribute_value("name");
 }
 
 void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
-  soundfile_t::write_xml(e,help_comments);
-  set_attribute_double(e,"x",loc.x);
-  set_attribute_double(e,"y",loc.y);
-  set_attribute_double(e,"z",loc.z);
-  set_attribute_double(e,"d",chaindist);
-  set_attribute_uint(e,"channel",firstchannel);
+  //bg_amb_t::write_xml(e,help_comments);
+  e->set_attribute("name",name);
+  if( loc.x != 0 )
+    set_attribute_double(e,"x",loc.x);
+  if( loc.y != 0 )
+    set_attribute_double(e,"y",loc.y);
+  if( loc.z != 0 )
+    set_attribute_double(e,"z",loc.z);
+  if( chaindist != 0 )
+    set_attribute_double(e,"d",chaindist);
 }
 
 std::string sound_t::print(const std::string& prefix)
 {
   std::stringstream r;
-  r << soundfile_t::print(prefix);
+  //r << bg_amb_t::print(prefix);
   r << prefix << "Location: " << loc.print_cart() << "\n";
-  r << prefix << "Channel: " << firstchannel << "\n";
+  //r << prefix << "Channel: " << firstchannel << "\n";
   return r.str();
+}
+
+bool sound_t::isactive(double t)
+{
+  return parent && parent->isactive(t);
 }
 
 pos_t sound_t::get_pos(double t) const
@@ -300,26 +325,43 @@ pos_t sound_t::get_pos_global(double t) const
  */
 src_object_t::src_object_t(object_t* reference_)
   : object_t(),
-    reference(reference_)
+    reference(reference_),
+    startframe(0)
 {
 }
 
-void src_object_t::prepare(double fs)
+void src_object_t::prepare(double fs, uint32_t fragsize)
 {
-  for(std::vector<sound_t>::iterator it=sound.begin();
-      it!=sound.end();++it){
-    it->prepare(fs);
+  //DEBUG(this);
+  for(std::vector<Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
+    //DEBUG(*it);
+    if( *it )
+      (*it)->prepare(fs,fragsize);
   }
+  //DEBUG(this);
+  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
+    it->prepare(fs,fragsize);
+  }
+  startframe = fs*starttime;
 }
 
 void src_object_t::set_reference(object_t* ref)
 {
+  //DEBUG(ref);
   reference = ref;
-  for(std::vector<sound_t>::iterator it=sound.begin();
-      it!=sound.end();++it){
+  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
+    //DEBUGMSG("set reference/parent");
     it->set_reference(ref);
     it->set_parent(this);
   }
+}
+
+Input::base_t* src_object_t::get_input(const std::string& name)
+{
+  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it)
+    if( (*it)->name == name )
+      return *it;
+  return NULL;
 }
 
 void src_object_t::read_xml(xmlpp::Element* e)
@@ -332,12 +374,30 @@ void src_object_t::read_xml(xmlpp::Element* e)
       sound.push_back(sound_t(this,reference));
       sound.rbegin()->read_xml(sne);
     }
+    if( sne && (sne->get_name() == "inputs") ){
+      xmlpp::Node::NodeList insubnodes = sne->get_children();
+      for(xmlpp::Node::NodeList::iterator insn=insubnodes.begin();insn!=insubnodes.end();++insn){
+        xmlpp::Element* insne(dynamic_cast<xmlpp::Element*>(*insn));
+        if( insne ){
+          if( insne->get_name() == "file" ){
+            inputs.push_back(new TASCAR::Input::file_t());
+            (*inputs.rbegin())->read_xml(insne);
+          }
+        }
+      }
+    }
   }
 }
 
 void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   object_t::write_xml(e,help_comments);
+  if( inputs.size()){
+    xmlpp::Element* in_node = e->add_child("inputs");
+    for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
+      (*it)->write_xml(in_node->add_child((*it)->get_tag()));
+    }
+  }
   bool b_first(true);
   for(std::vector<sound_t>::iterator it=sound.begin();
       it!=sound.end();++it){
@@ -362,6 +422,13 @@ sound_t* src_object_t::add_sound()
   return &sound.back();
 }
 
+void src_object_t::fill(int32_t tp_firstframe, bool tp_running)
+{
+  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
+    (*it)->fill(tp_firstframe-startframe,tp_running);
+  }
+}
+
 scene_t::scene_t()
   : description(""),
     name(""),
@@ -381,9 +448,9 @@ std::string scene_t::print(const std::string& prefix)
   r << fabs(lon) << ((lon>=0)?"E, ":"W, ");
   r << fabs(elev) << ((elev>=0)?" m above":"m below");
   r << " sea level.\n";
-  r << "  " << src.size() << " source objects\n";
+  r << "  " << srcobjects.size() << " source objects\n";
   r << "  " << bg_amb.size() << " backgrounds\n";
-  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it)
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
     r << it->print(prefix+"  ");
   for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it != bg_amb.end();++it)
     r << it->print(prefix+"  ");
@@ -392,11 +459,6 @@ std::string scene_t::print(const std::string& prefix)
 }
 
 listener_t::listener_t()
-{
-}
-
-bg_amb_t::bg_amb_t()
-  : soundfile_t(4)
 {
 }
 
@@ -418,7 +480,7 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
     description_node->add_child_text(description);
   }
   bool b_first(true);
-  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it){
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
     it->write_xml(e->add_child("src_object"),help_comments && b_first);
     b_first = false;
   }
@@ -446,8 +508,8 @@ void scene_t::read_xml(xmlpp::Element* e)
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
       if( sne->get_name() == "src_object" ){
-        src.push_back(src_object_t(&listener));
-        src.rbegin()->read_xml(sne);
+        srcobjects.push_back(src_object_t(&listener));
+        srcobjects.rbegin()->read_xml(sne);
       }
       if( sne->get_name() == "bg_amb" ){
         bg_amb.push_back(bg_amb_t());
@@ -462,8 +524,8 @@ void scene_t::read_xml(xmlpp::Element* e)
 
 src_object_t* scene_t::add_source()
 {
-  src.push_back(src_object_t(&listener));
-  return &src.back();
+  srcobjects.push_back(src_object_t(&listener));
+  return &srcobjects.back();
 }
 
 void scene_t::read_xml(const std::string& filename)
@@ -474,24 +536,44 @@ void scene_t::read_xml(const std::string& filename)
   read_xml(root);
 }
 
-std::vector<sound_t*> scene_t::linearize()
+std::vector<sound_t*> scene_t::linearize_sounds()
 {
+  //DEBUGMSG("lin sounds");
   std::vector<sound_t*> r;
-  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it){
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
     it->set_reference(&listener);
     for(std::vector<sound_t>::iterator its=it->sound.begin();its!=it->sound.end();++its){
-      r.push_back(&(*its));
+      if( &(*its) )
+        r.push_back(&(*its));
     }
   }
   return r;
 }
 
-void scene_t::prepare(double fs)
+std::vector<Input::base_t*> scene_t::linearize_inputs()
 {
-  for(std::vector<src_object_t>::iterator it=src.begin();it!=src.end();++it)
-    it->prepare(fs);
+  //DEBUGMSG("lin inputs");
+  std::vector<Input::base_t*> r;
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
+    it->set_reference(&listener);
+    for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
+      if( (*its ) )
+        r.push_back((*its));
+    }
+  }
+  return r;
+}
+
+void scene_t::prepare(double fs, uint32_t fragsize)
+{
+  //DEBUG(1);
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
+    //DEBUG(it->name);
+    it->prepare(fs,fragsize);
+  }
+  //DEBUG(1);
   for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
-    it->prepare(fs);
+    it->prepare(fs,fragsize);
 }
 
 void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment, bool help_comments)
@@ -540,18 +622,114 @@ std::string sound_t::getlabel()
 {
   std::string r;
   if( parent ){
-    r = parent->name;
-    if( filename.size() )
-      r += "-";
+    r = parent->name + ".";
+  }else{
+    r = "<NULL>.";
   }
-  if( filename.size() ){
-    r += filename;
-    char ctmp[64];
-    sprintf(ctmp,"%d",firstchannel);
-    r += ctmp;
-  }
+  r += name;
   return r;
 }
+
+
+/*
+ *TASCAR::Input::file_t
+ */
+TASCAR::Input::file_t::file_t()
+  : async_sndfile_t(1,1<<18,4096),
+    filename(""),
+    gain(0),
+    loop(1),
+    starttime(0),
+    firstchannel(0)
+{
+}
+
+void TASCAR::Input::file_t::read_xml(xmlpp::Element* e)
+{
+  base_t::read_xml(e);
+  get_attribute_value(e,"start",starttime);
+  filename = e->get_attribute_value("filename");
+  get_attribute_value(e,"gain",gain);
+  get_attribute_value(e,"loop",loop);
+  get_attribute_value(e,"channel",firstchannel);
+}
+
+void TASCAR::Input::file_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  base_t::write_xml(e,help_comments);
+  e->set_attribute("filename",filename);
+  set_attribute_double(e,"gain",gain);
+  set_attribute_uint(e,"loop",loop);
+  set_attribute_double(e,"start",starttime);
+  set_attribute_uint(e,"channel",firstchannel);
+}
+
+std::string TASCAR::Input::file_t::print(const std::string& prefix)
+{
+  std::stringstream r;
+  r << prefix << "Filename: \"" << filename << "\"\n";
+  r << prefix << "Gain: " << gain << " dB\n";
+  r << prefix << "Loop: " << loop << "\n";
+  r << prefix << "Starttime: " << starttime << " s\n";
+  return r.str();
+}
+
+void TASCAR::Input::file_t::prepare(double fs, uint32_t fragsize)
+{
+  base_t::prepare(fs,fragsize);
+  open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
+  start_service();
+}
+
+void TASCAR::Input::file_t::fill(int32_t tp_firstframe, bool tp_running)
+{
+  memset( data, 0, sizeof(float)*size );
+  if( tp_running ){
+    request_data( tp_firstframe, size, 1, &data );
+  }else{
+    request_data( tp_firstframe, 0, 1, &data );
+  }
+}
+
+
+TASCAR::Input::base_t::base_t()
+  : size(0),data(NULL)
+{
+}
+
+TASCAR::Input::base_t::~base_t()
+{
+  if( data )
+    delete [] data;
+}
+
+void TASCAR::Input::base_t::prepare(double fs, uint32_t fragsize)
+{
+  if( data )
+    delete [] data;
+  data = new float[fragsize];
+  size = fragsize;
+  memset(data,0,sizeof(float)*size);
+}
+
+ 
+void TASCAR::Input::base_t::read_xml(xmlpp::Element* e)
+{
+  name = e->get_attribute_value("name");
+}
+
+void TASCAR::Input::base_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  e->set_attribute("name",name);
+}
+
+float* TASCAR::Input::base_t::get_buffer(uint32_t n)
+{
+  if( n == size )
+    return data;
+  return NULL;
+}
+
 
 /*
  * Local Variables:

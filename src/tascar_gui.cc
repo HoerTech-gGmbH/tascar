@@ -54,7 +54,8 @@ g_scene_t::g_scene_t(const std::string& n)
   h_pipe = popen( ctmp, "w" );
   if( !h_pipe )
     throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
-  linearize();
+  linearize_sounds();
+  linearize_inputs();
 }
 
 g_scene_t::~g_scene_t()
@@ -460,8 +461,8 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->paint();
       cr->restore();
       draw_track( scene->listener, cr, markersize );
-      for(unsigned int k=0;k<scene->src.size();k++){
-        draw_track(scene->src[k], cr, markersize );
+      for(unsigned int k=0;k<scene->srcobjects.size();k++){
+        draw_track(scene->srcobjects[k], cr, markersize );
       }
       draw_listener( scene->listener, cr, markersize );
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
@@ -470,8 +471,8 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->move_to( 0, -markersize );
       cr->line_to( 0,  markersize );
       cr->stroke();
-      for(unsigned int k=0;k<scene->src.size();k++){
-        draw_src(scene->src[k], cr, markersize );
+      for(unsigned int k=0;k<scene->srcobjects.size();k++){
+        draw_src(scene->srcobjects[k], cr, markersize );
       }
     }
     guitime = time;

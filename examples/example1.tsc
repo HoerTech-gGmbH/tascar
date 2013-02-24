@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <scene name="Example scene" lat="53.155473" lon="8.167249" elev="10" guiscale="2" duration="10">
   <description>one source</description>
-  <src_object name="src two seconds starting at 1" color="#f00000" start="1">
-    <position>0 0 1 0
-</position>
-    <sound filename="tc1.wav" gain="0" loop="414" start="0" x="0" y="0" z="0" channel="0"/>
+  <src_object name="dur=2 start=1" color="#f00000" start="1">
+    <position>0 0 1 0</position>
+    <inputs><file name="0" filename="tc1.wav" gain="0" loop="414" start="0" channel="0"/></inputs>
+    <sound name="0"/>
   </src_object>
-  <src_object name="src two seconds starting at 2" color="#00f000" start="2">
-    <position interpolation="cartesian">0 1 0 0
-</position>
-    <sound filename="tc1.wav" gain="0" loop="414" start="0" x="0" y="0" z="0" channel="0"/>
+  <src_object name="dur=2 start=2" color="#00f000" start="2">
+    <position interpolation="cartesian">0 1 0 0</position>
+    <position>0 0 1 0</position>
+    <inputs><file name="0" filename="tc1.wav" gain="0" loop="414" start="0" channel="0"/></inputs>
+    <sound name="0"/>
   </src_object>
   <listener name="listener" color="#0000f0" start="0"/>
 </scene>

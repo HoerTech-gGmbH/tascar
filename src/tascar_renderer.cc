@@ -62,8 +62,6 @@ namespace TASCAR {
     double dt_sample;
     double dt_update;
     uint32_t fragsize_;
-    float* data_acc;
-    float* data;
     // ambisonic weights:
     float _w[idx::channels];
     float w_current[idx::channels];
@@ -84,17 +82,18 @@ namespace TASCAR {
 };
   
 trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdist_)
-  : delayline(maxdist_/340.0*srate+2,srate,340.0), 
+  : delayline(3*srate,srate,340.0), 
+//  : delayline(maxdist_/340.0*srate+2,srate,340.0), 
     srate_(srate),
     dt_sample(1.0/srate_),
     dt_update(1.0/(double)fragsize),
     fragsize_(fragsize),
-    data_acc(new float[fragsize_+1]),
-    data(new float[fragsize_+1]),
     y(0),
     dscale(srate/(340.0*7782.0)),
     maxdist(maxdist_)
 {
+  DEBUG(this);
+  DEBUG(maxdist_/340.0*srate+2);
   //DEBUG(srate);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
@@ -102,16 +101,17 @@ trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdi
 }
 
 trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
-  : delayline(src.maxdist/340.0*src.srate_+2,src.srate_,340.0),
+: delayline(3*src.srate_,src.srate_,340.0),
+//: delayline(src.maxdist/340.0*src.srate_+2,src.srate_,340.0),
     srate_(src.srate_),
     dt_sample(1.0/srate_),
     dt_update(1.0/(double)(src.fragsize_)),
     fragsize_(src.fragsize_),
-    data_acc(new float[fragsize_+1]),
-    data(new float[fragsize_+1]),
     y(0),
     dscale(src.srate_/(340.0*7782.0))
 {
+  DEBUG(this);
+  DEBUG(src.maxdist/340.0*src.srate_+2);
   //DEBUG(srate_);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
@@ -121,8 +121,6 @@ trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
 trackpan_amb33_t::~trackpan_amb33_t()
 {
   //DEBUG(data);
-  delete [] data_acc;
-  delete [] data;
 }
 
 void trackpan_amb33_t::updatepar(pos_t src_)
@@ -171,20 +169,11 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
   double ldt(dt_sample);
   if( !tp_rolling )
     ldt = 0;
-  if( snd->isactive(tp_time) ){
-    //pos_t srcpos = snd->get_pos(tp_time+ldt*n);
+  if( snd->isactive(tp_time) && vIn ){
     updatepar(snd->get_pos(tp_time+ldt*n));
-    memset( data, 0, sizeof(float)*n );
-    memset( data_acc, 0, sizeof(float)*n);
-    if( tp_rolling ){
-      snd->request_data( tp_frame, n, 1, &data_acc );
-      for( unsigned int fr=0;fr<n;fr++)
-        data[fr] += data_acc[fr];
-    }else{
-      snd->request_data( tp_frame, 0, 1, &data_acc );
-    }
+    //DEBUG(d_current);
     for( unsigned int i=0;i<n;i++){
-      delayline.push(vIn[i]+data[i]);
+      delayline.push(vIn[i]);
       float d = (d_current+=dd);
       float d1 = 1.0/std::max(1.0f,d);
       if( tp_rolling ){
@@ -196,8 +185,6 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
         }
       }
     }
-  }else{
-    snd->request_data( tp_frame, 0, 1, &data_acc );
   }
 }
 
@@ -215,7 +202,8 @@ namespace TASCAR {
     void connect_all(const std::string& ambdec);
   private:
     std::vector<TASCAR::trackpan_amb33_t> panner;
-    std::vector<sound_t*> sounds;
+    std::vector<TASCAR::sound_t*> sounds;
+    std::vector<TASCAR::Input::base_t*> inputs;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
@@ -322,15 +310,15 @@ int TASCAR::scene_generator_t::osc_listener_position(const char *path, const cha
 
 void TASCAR::scene_generator_t::osc_solo(const std::string& name)
 {
-  for(unsigned int k=0;k<src.size();k++){
-    src[k].muted = (src[k].name != name);
+  for(unsigned int k=0;k<srcobjects.size();k++){
+    srcobjects[k].muted = (srcobjects[k].name != name);
   }
 }
 
 void TASCAR::scene_generator_t::osc_unmuteall()
 {
-  for(unsigned int k=0;k<src.size();k++){
-    src[k].muted = false;
+  for(unsigned int k=0;k<srcobjects.size();k++){
+    srcobjects[k].muted = false;
   }
 }
 
@@ -367,52 +355,73 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
       //DEBUG(amb_buf[0][0]);
     }
   }
+  if( tp_rolling ){
+    for(unsigned int k=0;k<srcobjects.size();k++){
+      srcobjects[k].fill( tp_frame, nframes );
+    }
+  }else{
+    for(unsigned int k=0;k<srcobjects.size();k++){
+      srcobjects[k].fill( tp_frame, 0 );
+    }
+  }
   //DEBUG(panner.size());
   double tp_time((double)tp_frame/(double)srate);
-  for( unsigned int k=0;k<std::min(panner.size(),sounds.size());k++)
-    if( (k<inBuffer.size()) && (sounds[k]) )
-      panner[k].process(nframes,inBuffer[k], outBuffer,tp_frame,
+  for( unsigned int k=0;k<panner.size();k++)
+    if( sounds[k] )
+      panner[k].process(nframes,sounds[k]->get_buffer(nframes), outBuffer,tp_frame,
                         tp_time,tp_rolling,sounds[k]);
   return 0;
 }
 
 void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
 {
-  DEBUGMSG("pre-prepare");
-  DEBUGMSG("preparing sounds");
-  prepare(get_srate());
-  sounds = linearize();
+  //DEBUGMSG("pre-prepare");
+  //DEBUGMSG("linearize");
+  sounds = linearize_sounds();
+  //DEBUGMSG("linearize");
+  inputs = linearize_inputs();
+  //DEBUGMSG("preparing sounds");
+  prepare(get_srate(), get_fragsize());
   panner.clear();
-  DEBUGMSG("sounds prepared");
-  sleep(15);
-  DEBUGMSG("preparing panners");
+  //DEBUGMSG("sounds prepared");
+  //sleep(15);
+  //DEBUGMSG("preparing panners");
   for(unsigned int k=0;k<sounds.size();k++){
     //DEBUG(k);
     double maxdist(0);
-    for( double t=0;t<duration;t+=1){
+    for( double t=0;t<duration;t+=2){
       pos_t p(sounds[k]->get_pos(t));
       maxdist = std::max(maxdist,p.norm());
     }
-    std::string label(sounds[k]->getlabel());
-    if( !label.size() )
-      label = "in";
-    char ctmp[1024];
-    sprintf(ctmp,"%s-%d",label.c_str(),k);
-    add_input_port(ctmp);
+    //std::string label(sounds[k]->getlabel());
+    //if( !label.size() )
+    //  label = "in";
+    //char ctmp[1024];
+    //sprintf(ctmp,"%s-%d",label.c_str(),k);
+    //add_input_port(ctmp);
     //DEBUG(label);
-    DEBUG(maxdist);
-    panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), maxdist));
+    //DEBUG(k);
+    std::cout << sounds[k]->getlabel() << " maxdist=" << maxdist << std::endl;
+    panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), maxdist+10));
+    //DEBUG(get_srate());
     // request initial location:
-    float f;
-    float* data_acc(&f);
-    sounds[k]->request_data( -1, 0, 1, &data_acc );
+    //float f;
+    //float* data_acc(&f);
+    //sounds[k]->request_data( -1, 0, 1, &data_acc );
+    //DEBUG(&(panner[k]));
   }
-  DEBUGMSG("panners prepared");
-  DEBUGMSG("activating jack server");
+  //DEBUG(panner.size());
+  //DEBUG(sounds.size());
+  //DEBUG(inputs.size());
+  for(unsigned int k=0;k<srcobjects.size();k++){
+    srcobjects[k].fill( -1, 0 );
+  }
+  //DEBUGMSG("panners prepared");
+  //DEBUGMSG("activating jack server");
   jackc_t::activate();
-  DEBUGMSG("activating osc server");
+  //DEBUGMSG("activating osc server");
   osc_server_t::activate();
-  DEBUGMSG("connecting ports");
+  //DEBUGMSG("connecting ports");
   if( dest_ambdec.size() ){
     connect_all( dest_ambdec );
   }

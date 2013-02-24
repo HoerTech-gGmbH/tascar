@@ -44,7 +44,7 @@ namespace TASCAR {
     virtual void write_xml(xmlpp::Element* e,bool help_comments=false) = 0;
     virtual std::string print(const std::string& prefix="") = 0;
     virtual ~scene_node_base_t(){};
-    virtual void prepare(double fs) = 0;
+    virtual void prepare(double fs, uint32_t fragsize) = 0;
   };
 
   class rgb_color_t {
@@ -55,7 +55,43 @@ namespace TASCAR {
     std::string str();
     double r, g, b;
   };
+
+  namespace Input {
+
+    class base_t : public scene_node_base_t  {
+    public:
+      base_t();
+      virtual ~base_t();
+      virtual void fill(int32_t tp_firstframe, bool tp_running) = 0;
+      virtual void prepare(double fs, uint32_t fragsize);
+      void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      float* get_buffer(uint32_t n);
+      virtual std::string get_tag() = 0;
+      std::string name;
+    protected:
+      uint32_t size;
+      float* data;
+    };
   
+    class file_t : public TASCAR::Input::base_t, public TASCAR::async_sndfile_t {
+    public:
+      file_t();
+      void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      std::string print(const std::string& prefix="");
+      void prepare(double fs, uint32_t fragsize);
+      void fill(int32_t tp_firstframe, bool tp_running);
+      std::string get_tag() { return "file";};
+      std::string filename;
+      double gain;
+      unsigned int loop;
+      double starttime;
+      unsigned int firstchannel;
+    };
+
+  }
+
   class object_t : public scene_node_base_t {
   public:
     object_t();
@@ -74,47 +110,46 @@ namespace TASCAR {
     zyx_euler_t dorientation;
   };
 
-  class soundfile_t : public scene_node_base_t, public async_sndfile_t {
+  class bg_amb_t : public scene_node_base_t, public async_sndfile_t {
   public:
-    soundfile_t(unsigned int channels);
+    bg_amb_t();
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
-    void prepare(double fs);
+    void prepare(double fs, uint32_t fragsize);
     std::string filename;
     double gain;
     unsigned int loop;
     double starttime;
     unsigned int firstchannel;
-    unsigned int channels;
   };
 
-  class sound_t : public soundfile_t {
+  class src_object_t;
+
+  //class sound_t : public soundfile_t {
+  class sound_t : public scene_node_base_t {
   public:
-    sound_t(object_t* parent_,object_t* reference_);
-    void request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf );
+    sound_t(src_object_t* parent_,object_t* reference_);
+    //void request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf );
+    float* get_buffer(uint32_t n);
     void set_reference(object_t* reference_);
-    void set_parent(object_t* parent_);
+    void set_parent(src_object_t* parent_);
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     pos_t get_pos(double t) const;
     pos_t get_pos_global(double t) const;
-    void prepare(double fs);
+    void prepare(double fs, uint32_t fragsize);
     std::string getlabel();
-    bool isactive(double t){ return parent && parent->isactive(t);};
+    bool isactive(double t);
   private:
     pos_t loc;
-    // std::vector<pos_t> vertices;
     double chaindist;
-    object_t* parent;
+    src_object_t* parent;
     object_t* reference;
+    std::string name;
+    TASCAR::Input::base_t* input;
     double fs_;
-  };
-
-  class bg_amb_t : public soundfile_t {
-  public:
-    bg_amb_t();
   };
 
   class src_object_t : public object_t {
@@ -125,16 +160,20 @@ namespace TASCAR {
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     sound_t* add_sound();
-    void prepare(double fs);
+    void prepare(double fs, uint32_t fragsize);
     std::vector<sound_t> sound;
+    std::vector<TASCAR::Input::base_t*> inputs;
+    TASCAR::Input::base_t* get_input(const std::string& name);
+    void fill(int32_t tp_firstframe, bool tp_running);
   private:
     object_t* reference;
+    int32_t startframe;
   };
 
   class listener_t : public object_t {
   public:
     listener_t();
-    void prepare(double fs){};
+    void prepare(double fs, uint32_t fragsize){};
   };
 
   class scene_t : public scene_node_base_t {
@@ -145,15 +184,16 @@ namespace TASCAR {
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     src_object_t* add_source();
-    std::vector<sound_t*> linearize();
-    void prepare(double fs);
+    std::vector<sound_t*> linearize_sounds();
+    std::vector<Input::base_t*> linearize_inputs();
+    void prepare(double fs, uint32_t fragsize);
     std::string description;
     std::string name;
     double duration;
     double lat;
     double lon;
     double elev;
-    std::vector<src_object_t> src;
+    std::vector<src_object_t> srcobjects;
     std::vector<bg_amb_t> bg_amb;
     listener_t listener;
     double guiscale;

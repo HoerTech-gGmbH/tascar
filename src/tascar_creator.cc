@@ -59,14 +59,14 @@ int main(int argc,char**argv)
       S.name = "Example scene";
     if( !S.description.size() )
       S.description = "Scene with example values";
-    if( !S.src.size() )
+    if( !S.srcobjects.size() )
       S.add_source();
-    if( !S.src[0].location.size() ){
-      S.src[0].location[0] = pos_t(1,2,0.1);
-      S.src[0].location[10] = pos_t(2,-2,-0.1);
+    if( !S.srcobjects[0].location.size() ){
+      S.srcobjects[0].location[0] = pos_t(1,2,0.1);
+      S.srcobjects[0].location[10] = pos_t(2,-2,-0.1);
     }
-    if( !S.src[0].sound.size() ){
-      S.src[0].add_sound();
+    if( !S.srcobjects[0].sound.size() ){
+      S.srcobjects[0].add_sound();
     }
     if( !S.bg_amb.size() )
       S.bg_amb.push_back(bg_amb_t());
