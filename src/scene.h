@@ -126,11 +126,9 @@ namespace TASCAR {
 
   class src_object_t;
 
-  //class sound_t : public soundfile_t {
   class sound_t : public scene_node_base_t {
   public:
     sound_t(src_object_t* parent_,object_t* reference_);
-    //void request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf );
     float* get_buffer(uint32_t n);
     void set_reference(object_t* reference_);
     void set_parent(src_object_t* parent_);
@@ -174,6 +172,15 @@ namespace TASCAR {
   public:
     listener_t();
     void prepare(double fs, uint32_t fragsize){};
+  };
+
+  class diffuse_reverb_t {// : public scene_node_base_t {
+  public:
+    diffuse_reverb_t();
+    double border_distance(pos_t p);
+    pos_t center;
+    pos_t size;
+    zyx_euler_t orientation;
   };
 
   class scene_t : public scene_node_base_t {

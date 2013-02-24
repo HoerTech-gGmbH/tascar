@@ -1,6 +1,6 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_creator tascar_jackio test_async_file tascar_gpxvelocity tascar_gui
+BINFILES = tascar_renderer tascar_creator tascar_jackio test_async_file tascar_gpxvelocity tascar_gui test_diffusereverb
 
 ifeq "ok" "$(shell pkg-config gtkmm-3.0 && echo ok)"
 GTKDEF = "-DGTKMM30"

@@ -731,6 +731,27 @@ float* TASCAR::Input::base_t::get_buffer(uint32_t n)
 }
 
 
+diffuse_reverb_t::diffuse_reverb_t()
+  : size(2,2,2)
+{
+}
+
+double diffuse_reverb_t::border_distance(pos_t p)
+{
+  p -= center;
+  p /= orientation;
+  p.x = fabs(p.x);
+  p.y = fabs(p.y);
+  p.z = fabs(p.z);
+  pos_t size2(size);
+  size2 *= 0.5;
+  p -= size2;
+  p.x = std::max(0.0,p.x);
+  p.y = std::max(0.0,p.y);
+  p.z = std::max(0.0,p.z);
+  return p.norm();
+}
+
 /*
  * Local Variables:
  * mode: c++

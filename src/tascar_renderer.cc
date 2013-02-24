@@ -82,8 +82,8 @@ namespace TASCAR {
 };
   
 trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdist_)
-  : delayline(3*srate,srate,340.0), 
-//  : delayline(maxdist_/340.0*srate+2,srate,340.0), 
+//  : delayline(3*srate,srate,340.0), 
+  : delayline(maxdist_/340.0*srate+2,srate,340.0), 
     srate_(srate),
     dt_sample(1.0/srate_),
     dt_update(1.0/(double)fragsize),
@@ -101,14 +101,14 @@ trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdi
 }
 
 trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
-: delayline(3*src.srate_,src.srate_,340.0),
-//: delayline(src.maxdist/340.0*src.srate_+2,src.srate_,340.0),
+  : delayline(src.maxdist/340.0*src.srate_+2,src.srate_,340.0),
     srate_(src.srate_),
     dt_sample(1.0/srate_),
     dt_update(1.0/(double)(src.fragsize_)),
     fragsize_(src.fragsize_),
     y(0),
-    dscale(src.srate_/(340.0*7782.0))
+    dscale(src.srate_/(340.0*7782.0)),
+    maxdist(src.maxdist)
 {
   DEBUG(this);
   DEBUG(src.maxdist/340.0*src.srate_+2);
