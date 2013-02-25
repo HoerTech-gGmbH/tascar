@@ -472,6 +472,8 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
         rvbline[kr][k].process(nframes,sounds[k]->get_buffer(nframes),outBuffer[first_reverb_port+kr],tp_frame,tp_time,tp_rolling,sounds[k],&reverbs[kr]);
     
   }
+  if( (duration <= tp_time) && (duration + (double)nframes/(double)srate > tp_time) )
+    tp_stop();
   return 0;
 }
 
