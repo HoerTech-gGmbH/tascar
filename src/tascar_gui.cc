@@ -63,8 +63,6 @@ g_scene_t::~g_scene_t()
   pclose( h_pipe );
 }
 
-
-//class tascar_gui_t : public Gtk::DrawingArea, public scene_t, public osc_server_t
 class tascar_gui_t : public osc_server_t, public jackc_transport_t
 {
 public:
@@ -445,10 +443,6 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
   ctl_box.pack_start( button_reload, Gtk::PACK_SHRINK );
   ctl_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
   ctl_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
-  vbox.pack_start( ctl_box, Gtk::PACK_SHRINK);
-  vbox.pack_start( da );
-  timescale.set_range(0,100);
-  timescale.set_value(50);
   tp_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
   tp_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
   tp_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
@@ -457,7 +451,11 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
   tp_box.pack_start( timescale );
   tp_box.pack_start( button_tp_time_p, Gtk::PACK_SHRINK );
   tp_box.pack_start( button_tp_time_pp, Gtk::PACK_SHRINK );
+  vbox.pack_start( ctl_box, Gtk::PACK_SHRINK);
+  vbox.pack_start( da );
   vbox.pack_start( tp_box, Gtk::PACK_SHRINK );
+  timescale.set_range(0,100);
+  timescale.set_value(50);
   timescale.signal_value_changed().connect(sigc::mem_fun(*this,
                                                          &tascar_gui_t::on_time_changed));
   CON_BUTTON(tp_rewind);
@@ -471,7 +469,8 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
   CON_BUTTON(view_p);
   CON_BUTTON(view_m);
   pthread_mutex_init( &mtx_scene, NULL );
-  open_scene(name);
+  if( name.size() )
+    open_scene(name);
 }
 
 tascar_gui_t::~tascar_gui_t()
