@@ -174,10 +174,15 @@ namespace TASCAR {
     void prepare(double fs, uint32_t fragsize){};
   };
 
-  class diffuse_reverb_t {// : public scene_node_base_t {
+  class diffuse_reverb_t : public scene_node_base_t {
   public:
     diffuse_reverb_t();
     double border_distance(pos_t p);
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    void prepare(double fs, uint32_t fragsize){};
+    std::string print(const std::string& prefix="");
+    std::string name;
     pos_t center;
     pos_t size;
     zyx_euler_t orientation;
@@ -202,6 +207,7 @@ namespace TASCAR {
     double elev;
     std::vector<src_object_t> srcobjects;
     std::vector<bg_amb_t> bg_amb;
+    std::vector<diffuse_reverb_t> reverbs;
     listener_t listener;
     double guiscale;
     void listener_orientation(zyx_euler_t o){listener.dorientation=o;};

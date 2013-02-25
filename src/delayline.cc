@@ -15,7 +15,6 @@ varidelay_t::varidelay_t(uint32_t maxdelay, double fs, double c)
     pos(0)
 {
   memset(dline,0,sizeof(float)*dmax);
-  DEBUG(dmax);
 }
 
 varidelay_t::~varidelay_t()

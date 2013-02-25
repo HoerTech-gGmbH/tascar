@@ -79,6 +79,29 @@ namespace TASCAR {
     void updatepar(pos_t);
   };
 
+  class reverb_line_t {
+  public:
+    reverb_line_t(double srate, uint32_t fragsize, double maxdist);
+    reverb_line_t(const reverb_line_t&);
+  protected:
+    varidelay_t delayline;
+    double srate_;
+    double dt_sample;
+    double dt_update;
+    uint32_t fragsize_;
+    float d_global_current;
+    float dd_global;
+    float d_border_current;
+    float dd_border;
+    float clp_current;
+    float dclp;
+    float y;
+    float dscale;
+    double maxdist;
+  public:
+    void process(uint32_t n, float* vIn, float* vOut, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*, diffuse_reverb_t* reverb);
+  };
+  
 };
   
 trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdist_)
@@ -92,9 +115,6 @@ trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdi
     dscale(srate/(340.0*7782.0)),
     maxdist(maxdist_)
 {
-  DEBUG(this);
-  DEBUG(maxdist_/340.0*srate+2);
-  //DEBUG(srate);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
   clp_current = dclp = 0;
@@ -110,9 +130,6 @@ trackpan_amb33_t::trackpan_amb33_t(const trackpan_amb33_t& src)
     dscale(src.srate_/(340.0*7782.0)),
     maxdist(src.maxdist)
 {
-  DEBUG(this);
-  DEBUG(src.maxdist/340.0*src.srate_+2);
-  //DEBUG(srate_);
   for(unsigned int k=0;k<idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
   clp_current = dclp = 0;
@@ -165,13 +182,11 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
 {
   if( n != fragsize_ )
     throw ErrMsg("fragsize changed");
-  //DEBUG(dt_sample);
   double ldt(dt_sample);
   if( !tp_rolling )
     ldt = 0;
   if( snd->isactive(tp_time) && vIn ){
     updatepar(snd->get_pos(tp_time+ldt*n));
-    //DEBUG(d_current);
     for( unsigned int i=0;i<n;i++){
       delayline.push(vIn[i]);
       float d = (d_current+=dd);
@@ -183,6 +198,71 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
         for( unsigned int k=0;k<idx::channels;k++){
           outBuffer[k][i] += (w_current[k] += dw[k]) * y;
         }
+      }
+    }
+  }
+}
+
+  
+reverb_line_t::reverb_line_t(double srate, uint32_t fragsize, double maxdist_)
+//  : delayline(3*srate,srate,340.0), 
+  : delayline(maxdist_/340.0*srate+2,srate,340.0), 
+    srate_(srate),
+    dt_sample(1.0/srate_),
+    dt_update(1.0/(double)fragsize),
+    fragsize_(fragsize),
+    d_global_current(0.0),
+    d_border_current(0.0),
+    clp_current(1.0),
+    y(0),
+    dscale(srate/(340.0*7782.0)),
+    maxdist(maxdist_)
+{
+  clp_current = dclp = 0;
+}
+
+reverb_line_t::reverb_line_t(const reverb_line_t& src)
+  : delayline(src.maxdist/340.0*src.srate_+2,src.srate_,340.0),
+    srate_(src.srate_),
+    dt_sample(1.0/srate_),
+    dt_update(1.0/(double)(src.fragsize_)),
+    fragsize_(src.fragsize_),
+    d_global_current(0.0),
+    d_border_current(0.0),
+    clp_current(1.0),
+    y(0),
+    dscale(src.srate_/(340.0*7782.0)),
+    maxdist(src.maxdist)
+{
+  clp_current = dclp = 0;
+}
+
+void reverb_line_t::process(uint32_t n, float* vIn, float* vOut,uint32_t tp_frame, double tp_time,bool tp_rolling, sound_t* snd, diffuse_reverb_t* reverb)
+{
+  if( n != fragsize_ )
+    throw ErrMsg("fragsize changed");
+  if( snd->isactive(tp_time) && vIn ){
+    double ldt(dt_sample);
+    if( !tp_rolling )
+      ldt = 0;
+    pos_t p(snd->get_pos_global(tp_time+ldt*n));
+    double d_global(p.norm());
+    double d_border(0.25*reverb->size.norm()+reverb->border_distance(p));
+    //DEBUG(d_global);
+    //DEBUG(d_border);
+    dd_global = (d_global-d_global_current)*dt_update;
+    dd_border = (d_border-d_border_current)*dt_update;
+    dclp = (exp(-d_border*dscale) - clp_current)*dt_update;
+    for( unsigned int i=0;i<n;i++){
+      delayline.push(vIn[i]);
+      d_global = (d_global_current+=dd_global);
+      d_border = (d_border_current+=dd_border);
+      float d1 = 1.0/std::max(1.0,d_border);
+      float c1(clp_current+=dclp);
+      float c2(1.0f-c1);
+      if( tp_rolling ){
+        y = c2*y+c1*delayline.get_dist(d_global)*d1;
+        vOut[i] += y;
       }
     }
   }
@@ -202,6 +282,7 @@ namespace TASCAR {
     void connect_all(const std::string& ambdec);
   private:
     std::vector<TASCAR::trackpan_amb33_t> panner;
+    std::vector<std::vector<TASCAR::reverb_line_t> > rvbline;
     std::vector<TASCAR::sound_t*> sounds;
     std::vector<TASCAR::Input::base_t*> inputs;
     // jack callback:
@@ -213,6 +294,7 @@ namespace TASCAR {
     static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     void osc_solo(const std::string& name);
     void osc_unmuteall();
+    uint32_t first_reverb_port;
   public:
   };
 
@@ -335,8 +417,18 @@ void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
       std::cerr << "Warning: " << msg << std::endl;
     }
   }
+  for( unsigned int k=0;k<reverbs.size();k++){
+    try{
+      connect_out( k+first_reverb_port, "zita-rev1:in.L" );
+    }
+    catch( const std::exception& msg ){
+      std::cerr << "Warning: " << msg.what() << std::endl;
+    }
+    catch( const char* msg ){
+      std::cerr << "Warning: " << msg << std::endl;
+    }
+  }
 }
-
 int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
                                        const std::vector<float*>& inBuffer,
                                        const std::vector<float*>& outBuffer, 
@@ -355,6 +447,7 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
       //DEBUG(amb_buf[0][0]);
     }
   }
+  // load/update inputs:
   if( tp_rolling ){
     for(unsigned int k=0;k<srcobjects.size();k++){
       srcobjects[k].fill( tp_frame, nframes );
@@ -365,63 +458,52 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
     }
   }
   //DEBUG(panner.size());
+  // process point sources:
   double tp_time((double)tp_frame/(double)srate);
   for( unsigned int k=0;k<panner.size();k++)
     if( sounds[k] )
       panner[k].process(nframes,sounds[k]->get_buffer(nframes), outBuffer,tp_frame,
                         tp_time,tp_rolling,sounds[k]);
+  // process diffuse reverb:
+  for( unsigned int kr=0;kr<reverbs.size();kr++){
+    memset(outBuffer[kr+first_reverb_port],0,nframes*sizeof(float));
+    for( unsigned int k=0;k<rvbline[kr].size();k++)
+      if( sounds[k] )
+        rvbline[kr][k].process(nframes,sounds[k]->get_buffer(nframes),outBuffer[first_reverb_port+kr],tp_frame,tp_time,tp_rolling,sounds[k],&reverbs[kr]);
+    
+  }
   return 0;
 }
 
 void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
 {
-  //DEBUGMSG("pre-prepare");
-  //DEBUGMSG("linearize");
   sounds = linearize_sounds();
-  //DEBUGMSG("linearize");
   inputs = linearize_inputs();
-  //DEBUGMSG("preparing sounds");
   prepare(get_srate(), get_fragsize());
   panner.clear();
-  //DEBUGMSG("sounds prepared");
-  //sleep(15);
-  //DEBUGMSG("preparing panners");
+  rvbline.resize(reverbs.size());
+  for(unsigned int kr=0;kr<rvbline.size();kr++)
+    rvbline[kr].clear();
   for(unsigned int k=0;k<sounds.size();k++){
-    //DEBUG(k);
     double maxdist(0);
     for( double t=0;t<duration;t+=2){
       pos_t p(sounds[k]->get_pos(t));
       maxdist = std::max(maxdist,p.norm());
     }
-    //std::string label(sounds[k]->getlabel());
-    //if( !label.size() )
-    //  label = "in";
-    //char ctmp[1024];
-    //sprintf(ctmp,"%s-%d",label.c_str(),k);
-    //add_input_port(ctmp);
-    //DEBUG(label);
-    //DEBUG(k);
     std::cout << sounds[k]->getlabel() << " maxdist=" << maxdist << std::endl;
-    panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), maxdist+10));
-    //DEBUG(get_srate());
-    // request initial location:
-    //float f;
-    //float* data_acc(&f);
-    //sounds[k]->request_data( -1, 0, 1, &data_acc );
-    //DEBUG(&(panner[k]));
+    panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), maxdist+100));
+    for(unsigned int kr=0;kr<rvbline.size();kr++)
+      rvbline[kr].push_back(reverb_line_t(get_srate(), get_fragsize(), maxdist+100));
   }
-  //DEBUG(panner.size());
-  //DEBUG(sounds.size());
-  //DEBUG(inputs.size());
   for(unsigned int k=0;k<srcobjects.size();k++){
     srcobjects[k].fill( -1, 0 );
   }
-  //DEBUGMSG("panners prepared");
-  //DEBUGMSG("activating jack server");
+  first_reverb_port = get_num_output_ports();
+  for(unsigned int kr=0;kr<reverbs.size();kr++){
+    add_output_port(reverbs[kr].name);
+  }
   jackc_t::activate();
-  //DEBUGMSG("activating osc server");
   osc_server_t::activate();
-  //DEBUGMSG("connecting ports");
   if( dest_ambdec.size() ){
     connect_all( dest_ambdec );
   }

@@ -40,6 +40,15 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& va
     value = tmpv;
 }
 
+void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  double tmpv(strtod(attv.c_str(),&c));
+  if( c != attv.c_str() )
+    value = DEG2RAD*tmpv;
+}
+
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value)
 {
   std::string attv(elem->get_attribute_value(name));
@@ -489,6 +498,11 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
     it->write_xml(e->add_child("bg_amb"),help_comments && b_first);
     b_first = false;
   }
+  b_first = true;
+  for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it){
+    it->write_xml(e->add_child("reverb"),help_comments && b_first);
+    b_first = false;
+  }
   listener.write_xml(e->add_child("listener"),help_comments);
 }
 
@@ -517,6 +531,10 @@ void scene_t::read_xml(xmlpp::Element* e)
       }
       if( sne->get_name() == "listener" ){
         listener.read_xml(sne);
+      }
+      if( sne->get_name() == "reverb" ){
+        reverbs.push_back(diffuse_reverb_t());
+        reverbs.rbegin()->read_xml(sne);
       }
     }
   }
@@ -750,6 +768,45 @@ double diffuse_reverb_t::border_distance(pos_t p)
   p.y = std::max(0.0,p.y);
   p.z = std::max(0.0,p.z);
   return p.norm();
+}
+
+void diffuse_reverb_t::read_xml(xmlpp::Element* e)
+{
+  name = e->get_attribute_value("name");
+  get_attribute_value(e,"center_x",center.x);
+  get_attribute_value(e,"center_y",center.y);
+  get_attribute_value(e,"center_z",center.z);
+  get_attribute_value(e,"size_x",size.x);
+  get_attribute_value(e,"size_y",size.y);
+  get_attribute_value(e,"size_z",size.z);
+  get_attribute_value_deg(e,"orientation_x",orientation.x);
+  get_attribute_value_deg(e,"orientation_y",orientation.y);
+  get_attribute_value_deg(e,"orientation_z",orientation.z);
+}
+
+void diffuse_reverb_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  e->set_attribute("name",name);
+  set_attribute_double(e,"center_x",center.x);
+  set_attribute_double(e,"center_y",center.y);
+  set_attribute_double(e,"center_z",center.z);
+  set_attribute_double(e,"size_x",size.x);
+  set_attribute_double(e,"size_y",size.y);
+  set_attribute_double(e,"size_z",size.z);
+  set_attribute_double(e,"orientation_x",RAD2DEG*orientation.x);
+  set_attribute_double(e,"orientation_y",RAD2DEG*orientation.y);
+  set_attribute_double(e,"orientation_z",RAD2DEG*orientation.z);
+}
+
+
+std::string diffuse_reverb_t::print(const std::string& prefix)
+{
+  std::stringstream r;
+  r << prefix << "Name: \"" << name << "\"\n";
+  r << prefix << "Center: " << center.print_cart() << " s\n";
+  r << prefix << "Size: " << size.print_cart() << " s\n";
+  r << prefix << "Orientation: " << orientation.print() << " s\n";
+  return r.str();
 }
 
 /*

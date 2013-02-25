@@ -62,6 +62,8 @@ public:
   void add_output_port(const std::string& name);
   void connect_in(unsigned int port,const std::string& pname);
   void connect_out(unsigned int port,const std::string& pname);
+  size_t get_num_input_ports() const {return inPort.size();};
+  size_t get_num_output_ports() const {return outPort.size();};
 protected:
   virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) = 0;
 private:

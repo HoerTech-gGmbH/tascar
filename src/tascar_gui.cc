@@ -76,6 +76,7 @@ public:
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_room(const diffuse_reverb_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -130,6 +131,7 @@ private:
   g_scene_t* scene;
   std::string filename;
   lo_address client_addr;
+  std::vector<TASCAR::pos_t> roomnodes;
 };
 
 int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -201,15 +203,18 @@ void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> 
 void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool active(obj.isactive(time));
-  if( !active )
+  double plot_time(time);
+  if( !active ){
     msize *= 0.4;
-  pos_t p(obj.location.interp(time-obj.starttime));
+    plot_time = std::min(std::max(plot_time,obj.starttime),obj.endtime);
+  }
+  pos_t p(obj.location.interp(plot_time-obj.starttime));
   cr->save();
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   cr->arc(p.x, -p.y, msize, 0, PI2 );
   cr->fill();
   for(unsigned int k=0;k<obj.sound.size();k++){
-    pos_t ps(obj.sound[k].get_pos_global(time));
+    pos_t ps(obj.sound[k].get_pos_global(plot_time));
     //pos_t ps(obj.sound[k].get_pos(time));
     cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
     cr->fill();
@@ -225,7 +230,7 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
     cr->move_to( p.x, -p.y );
     for(unsigned int k=0;k<obj.sound.size();k++){
-      pos_t ps(obj.sound[k].get_pos_global(time));
+      pos_t ps(obj.sound[k].get_pos_global(plot_time));
       //pos_t ps(obj.sound[k].get_pos(time));
       cr->line_to( ps.x, -ps.y );
     }
@@ -311,6 +316,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->save();
   cr->set_line_width( 0.1*msize );
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
+  cr->move_to( p.x, -p.y );
   cr->arc(p.x, -p.y, 2*msize, 0, PI2 );
   cr->move_to( p1.x, -p1.y );
   cr->line_to( p2.x, -p2.y );
@@ -334,6 +340,59 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   //  cr->line_to( ps.x, ps.y );
   //}
   //cr->stroke();
+  cr->restore();
+}
+
+void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  std::vector<pos_t> roomnodes(8,reverb.center);
+  roomnodes[0].x -= 0.5*reverb.size.x;
+  roomnodes[1].x += 0.5*reverb.size.x;
+  roomnodes[2].x += 0.5*reverb.size.x;
+  roomnodes[3].x -= 0.5*reverb.size.x;
+  roomnodes[4].x -= 0.5*reverb.size.x;
+  roomnodes[5].x += 0.5*reverb.size.x;
+  roomnodes[6].x += 0.5*reverb.size.x;
+  roomnodes[7].x -= 0.5*reverb.size.x;
+  roomnodes[0].y -= 0.5*reverb.size.y;
+  roomnodes[1].y -= 0.5*reverb.size.y;
+  roomnodes[2].y += 0.5*reverb.size.y;
+  roomnodes[3].y += 0.5*reverb.size.y;
+  roomnodes[4].y -= 0.5*reverb.size.y;
+  roomnodes[5].y -= 0.5*reverb.size.y;
+  roomnodes[6].y += 0.5*reverb.size.y;
+  roomnodes[7].y += 0.5*reverb.size.y;
+  roomnodes[0].z -= 0.5*reverb.size.z;
+  roomnodes[1].z -= 0.5*reverb.size.z;
+  roomnodes[2].z -= 0.5*reverb.size.z;
+  roomnodes[3].z -= 0.5*reverb.size.z;
+  roomnodes[4].z += 0.5*reverb.size.z;
+  roomnodes[5].z += 0.5*reverb.size.z;
+  roomnodes[6].z += 0.5*reverb.size.z;
+  roomnodes[7].z += 0.5*reverb.size.z;
+  for(unsigned int k=0;k<8;k++)
+    roomnodes[k] *= reverb.orientation;
+  cr->save();
+  cr->set_line_width( 0.1*msize );
+  cr->set_source_rgba(0,0,0,0.6);
+  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
+  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
+  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
+  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
+  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+  cr->move_to( roomnodes[4].x, -roomnodes[4].y );
+  cr->line_to( roomnodes[5].x, -roomnodes[5].y );
+  cr->line_to( roomnodes[6].x, -roomnodes[6].y );
+  cr->line_to( roomnodes[7].x, -roomnodes[7].y );
+  cr->line_to( roomnodes[4].x, -roomnodes[4].y );
+  for(unsigned int k=0;k<4;k++){
+    cr->move_to( roomnodes[k].x, -roomnodes[k].y );
+    cr->line_to( roomnodes[k+4].x, -roomnodes[k+4].y );
+  }
+  cr->stroke();
+  cr->set_source_rgb(0, 0, 0 );
+  cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
+  cr->show_text( reverb.name.c_str() );
   cr->restore();
 }
 
@@ -463,6 +522,9 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       draw_track( scene->listener, cr, markersize );
       for(unsigned int k=0;k<scene->srcobjects.size();k++){
         draw_track(scene->srcobjects[k], cr, markersize );
+      }
+      for(unsigned int k=0;k<scene->reverbs.size();k++){
+        draw_room(scene->reverbs[k], cr, markersize );
       }
       draw_listener( scene->listener, cr, markersize );
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
