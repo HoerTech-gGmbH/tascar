@@ -47,6 +47,24 @@ namespace TASCAR {
     virtual void prepare(double fs, uint32_t fragsize) = 0;
   };
 
+  class route_t : public scene_node_base_t {
+  public:
+    route_t();
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix="");
+    std::string get_name() const {return name;};
+    bool get_mute() const {return mute;};
+    bool get_solo() const {return solo;};
+    void set_name(const std::string& s) {name=s;};
+    void set_mute(bool b) {mute=b;};
+    void set_solo(bool b,uint32_t& anysolo);
+  private:
+    std::string name;
+    bool mute;
+    bool solo;
+  };
+
   class rgb_color_t {
   public:
     rgb_color_t(double r_,double g_,double b_):r(r_),g(g_),b(b_){};
@@ -92,25 +110,23 @@ namespace TASCAR {
 
   }
 
-  class object_t : public scene_node_base_t {
+  class object_t : public route_t {
   public:
     object_t();
     void read_xml(xmlpp::Element* e);
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     bool isactive(double time) const;
-    std::string name;
     rgb_color_t color;
     double starttime;
     double endtime;
-    bool muted;
     track_t location;
     euler_track_t orientation;
     pos_t dlocation;
     zyx_euler_t dorientation;
   };
 
-  class bg_amb_t : public scene_node_base_t, public async_sndfile_t {
+  class bg_amb_t : public route_t, public async_sndfile_t {
   public:
     bg_amb_t();
     void read_xml(xmlpp::Element* e);
@@ -140,6 +156,8 @@ namespace TASCAR {
     void prepare(double fs, uint32_t fragsize);
     std::string getlabel();
     bool isactive(double t);
+    bool get_mute() const;
+    bool get_solo() const;
   private:
     pos_t loc;
     double chaindist;
@@ -174,7 +192,7 @@ namespace TASCAR {
     void prepare(double fs, uint32_t fragsize){};
   };
 
-  class diffuse_reverb_t : public scene_node_base_t {
+  class diffuse_reverb_t : public route_t {
   public:
     diffuse_reverb_t();
     double border_distance(pos_t p);
@@ -182,7 +200,6 @@ namespace TASCAR {
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     void prepare(double fs, uint32_t fragsize){};
     std::string print(const std::string& prefix="");
-    std::string name;
     pos_t center;
     pos_t size;
     zyx_euler_t orientation;
@@ -212,6 +229,10 @@ namespace TASCAR {
     double guiscale;
     void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
     void listener_position(pos_t p){listener.dlocation = p;};
+    uint32_t anysolo;
+    void set_mute(const std::string& name,bool val);
+    void set_solo(const std::string& name,bool val);
+    bool get_playsound(const sound_t*);
   };
 
   scene_t xml_read_scene(const std::string& filename);

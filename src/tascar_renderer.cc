@@ -289,11 +289,9 @@ namespace TASCAR {
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
     static int osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    static int osc_unmuteall(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    static int osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    void osc_solo(const std::string& name);
-    void osc_unmuteall();
     uint32_t first_reverb_port;
   public:
   };
@@ -317,8 +315,8 @@ TASCAR::scene_generator_t::scene_generator_t(const std::string& name, const std:
       k++;
     }
   }
-  osc_server_t::add_method("/solo","s",osc_solo,this);
-  osc_server_t::add_method("/unmute","",osc_unmuteall,this);
+  osc_server_t::add_method("/solo","si",osc_solo,this);
+  osc_server_t::add_method("/mute","si",osc_mute,this);
   osc_server_t::add_method("/listener/pos","fff",osc_listener_position,this);
   osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
   osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
@@ -332,18 +330,18 @@ TASCAR::scene_generator_t::~scene_generator_t()
 int TASCAR::scene_generator_t::osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
-  if( h && (argc == 1) && (types[0] == 's') ){
-    h->osc_solo(&(argv[0]->s));
+  if( h && (argc == 2) && (types[0] == 's') && (types[1] == 'i') ){
+    h->set_solo(&(argv[0]->s),argv[1]->i);
     return 0;
   }
   return 1;
 }
 
-int TASCAR::scene_generator_t::osc_unmuteall(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::scene_generator_t::osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
-  if( h && (argc == 0) ){
-    h->osc_unmuteall();
+  if( h && (argc == 2) && (types[0] == 's') && (types[1] == 'i') ){
+    h->set_mute(&(argv[0]->s),argv[1]->i);
     return 0;
   }
   return 1;
@@ -390,20 +388,6 @@ int TASCAR::scene_generator_t::osc_listener_position(const char *path, const cha
   return 1;
 }
 
-void TASCAR::scene_generator_t::osc_solo(const std::string& name)
-{
-  for(unsigned int k=0;k<srcobjects.size();k++){
-    srcobjects[k].muted = (srcobjects[k].name != name);
-  }
-}
-
-void TASCAR::scene_generator_t::osc_unmuteall()
-{
-  for(unsigned int k=0;k<srcobjects.size();k++){
-    srcobjects[k].muted = false;
-  }
-}
-
 void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
 {
   for( unsigned int k=0;k<vAmbPorts.size();k++){
@@ -434,6 +418,7 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
                                        const std::vector<float*>& outBuffer, 
                                        uint32_t tp_frame, bool tp_rolling)
 {
+  //DEBUG(anysolo);
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
@@ -443,7 +428,8 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
     for(unsigned int k=0;k<4; k++)
       amb_buf[k] = outBuffer[k];
     for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
-      it->request_data( tp_frame, nframes, 4, amb_buf );
+      if( !it->get_mute() && ((anysolo ==0)||(it->get_solo())))
+        it->request_data( tp_frame, nframes, 4, amb_buf );
       //DEBUG(amb_buf[0][0]);
     }
   }
@@ -461,15 +447,16 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
   // process point sources:
   double tp_time((double)tp_frame/(double)srate);
   for( unsigned int k=0;k<panner.size();k++)
-    if( sounds[k] )
+    if( sounds[k] && get_playsound(sounds[k]) )
       panner[k].process(nframes,sounds[k]->get_buffer(nframes), outBuffer,tp_frame,
                         tp_time,tp_rolling,sounds[k]);
   // process diffuse reverb:
   for( unsigned int kr=0;kr<reverbs.size();kr++){
     memset(outBuffer[kr+first_reverb_port],0,nframes*sizeof(float));
-    for( unsigned int k=0;k<rvbline[kr].size();k++)
-      if( sounds[k] )
-        rvbline[kr][k].process(nframes,sounds[k]->get_buffer(nframes),outBuffer[first_reverb_port+kr],tp_frame,tp_time,tp_rolling,sounds[k],&reverbs[kr]);
+    if( !reverbs[kr].get_mute() )
+      for( unsigned int k=0;k<rvbline[kr].size();k++)
+        if( sounds[k] && get_playsound(sounds[k]) )
+          rvbline[kr][k].process(nframes,sounds[k]->get_buffer(nframes),outBuffer[first_reverb_port+kr],tp_frame,tp_time,tp_rolling,sounds[k],&reverbs[kr]);
     
   }
   if( (duration <= tp_time) && (duration + (double)nframes/(double)srate > tp_time) )
@@ -502,7 +489,7 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
   }
   first_reverb_port = get_num_output_ports();
   for(unsigned int kr=0;kr<reverbs.size();kr++){
-    add_output_port(reverbs[kr].name);
+    add_output_port(reverbs[kr].get_name());
   }
   jackc_t::activate();
   osc_server_t::activate();

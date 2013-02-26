@@ -50,7 +50,7 @@ g_scene_t::g_scene_t(const std::string& n)
 {
   read_xml(n);
   char ctmp[1024];
-  sprintf(ctmp,"tascar_renderer -c %s",n.c_str());
+  sprintf(ctmp,"tascar_renderer -c %s 2>&1",n.c_str());
   h_pipe = popen( ctmp, "w" );
   if( !h_pipe )
     throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
@@ -61,6 +61,107 @@ g_scene_t::g_scene_t(const std::string& n)
 g_scene_t::~g_scene_t()
 {
   pclose( h_pipe );
+}
+
+class source_ctl_t : public Gtk::Frame {
+public:
+  source_ctl_t(lo_address client_addr, scene_t* s, route_t* r);
+  void on_mute();
+  void on_solo();
+  Gtk::EventBox ebox;
+  Gtk::HBox box;
+  Gtk::Label label;
+  Gtk::ToggleButton mute;
+  Gtk::ToggleButton solo;
+  lo_address client_addr_;
+  std::string name_;
+  scene_t* scene_;
+  route_t* route_;
+};
+
+source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
+  : mute("M"),solo("S"),client_addr_(client_addr),name_(r->get_name()),scene_(s),route_(r)
+{
+  ebox.add( box );
+  label.set_text(r->get_name());
+  box.pack_start( label, Gtk::PACK_EXPAND_PADDING );
+  box.pack_start( mute, Gtk::PACK_SHRINK );
+  box.pack_start( solo, Gtk::PACK_SHRINK );
+  mute.set_active(r->get_mute());
+  solo.set_active(r->get_solo());
+#ifdef GTKMM30
+  Gdk::RGBA col;
+  col.set_rgba_u(244*256,232*256,58*256);
+  mute.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
+  col.set_rgba_u(219*256,18*256,18*256);
+  solo.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
+  if( object_t* o=dynamic_cast<object_t*>(r) ){
+    rgb_color_t c(o->color);
+    col.set_rgba(c.r,c.g,c.b,0.3);
+    ebox.override_background_color(col);
+  }
+#else
+  Gdk::Color col;
+  col.set_rgb(244,232,58);
+  mute.modify_bg(Gtk::STATE_ACTIVE,col);
+  col.set_rgb(244,30,30);
+  solo.modify_bg(Gtk::STATE_ACTIVE,col);
+#endif
+  add(ebox);
+  mute.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_mute));
+  solo.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_solo));
+}
+
+void source_ctl_t::on_mute()
+{
+  bool m(mute.get_active());
+  lo_send(client_addr_,"/mute","si",name_.c_str(),m);
+  scene_->set_mute(name_,m);
+}
+
+void source_ctl_t::on_solo()
+{
+  bool m(solo.get_active());
+  lo_send(client_addr_,"/solo","si",name_.c_str(),m);
+  scene_->set_solo(name_,m);
+}
+
+class source_panel_t : public Gtk::ScrolledWindow {
+public:
+  source_panel_t(lo_address client_addr);
+  void set_scene(scene_t*);
+  std::vector<source_ctl_t*> vbuttons;
+  Gtk::VBox box;
+  lo_address client_addr_;
+};
+
+source_panel_t::source_panel_t(lo_address client_addr)
+ : client_addr_(client_addr)
+{
+  set_size_request( 300, -1 );
+  add(box);
+}
+
+void source_panel_t::set_scene(scene_t* s)
+{
+  for( unsigned int k=0;k<vbuttons.size();k++){
+    box.remove(*(vbuttons[k]));
+    delete vbuttons[k];
+  }
+  vbuttons.clear();
+  if( s ){
+    //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->listener)));
+    for( unsigned int k=0;k<s->bg_amb.size();k++)
+      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->bg_amb[k])));
+    for( unsigned int k=0;k<s->srcobjects.size();k++)
+      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->srcobjects[k])));
+    for( unsigned int k=0;k<s->reverbs.size();k++)
+      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->reverbs[k])));
+  }
+  for( unsigned int k=0;k<vbuttons.size();k++){
+    box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
+  }
+  show_all();
 }
 
 class tascar_gui_t : public osc_server_t, public jackc_transport_t
@@ -114,11 +215,15 @@ protected:
   Gtk::Button button_reload;
   Gtk::Button button_view_p;
   Gtk::Button button_view_m;
+private:
+  lo_address client_addr;
 public:
-  Gtk::DrawingArea da;
-  Gtk::VBox vbox;
-  Gtk::HBox tp_box;
-  Gtk::HBox ctl_box;
+  Gtk::DrawingArea wdg_scenemap;
+  source_panel_t wdg_source;
+  Gtk::VBox wdg_vertmain;
+  Gtk::HBox wdg_source_and_map;
+  Gtk::HBox wdg_transport_box;
+  Gtk::HBox wdg_file_ui_box;
 #ifdef GTKMM30
   Gtk::Scale timescale;
 #else
@@ -128,7 +233,6 @@ private:
   pthread_mutex_t mtx_scene;
   g_scene_t* scene;
   std::string filename;
-  lo_address client_addr;
   std::vector<TASCAR::pos_t> roomnodes;
 };
 
@@ -222,7 +326,7 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   else
     cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x + 1.1*msize, -p.y );
-  cr->show_text( obj.name.c_str() );
+  cr->show_text( obj.get_name().c_str() );
   if( active ){
     cr->set_line_width( 0.1*msize );
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
@@ -248,6 +352,7 @@ void tascar_gui_t::open_scene(const std::string& name)
     timescale.set_range(0,scene->duration);
     set_scale(scene->guiscale);
   }
+  wdg_source.set_scene( scene );
   pthread_mutex_unlock( &mtx_scene );
 }
 
@@ -329,15 +434,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->stroke();
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x + 3.1*msize, -p.y );
-  cr->show_text( obj.name.c_str() );
-  //cr->set_line_width( 0.1*msize );
-  //cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-  //for(unsigned int k=0;k<obj.sound.size();k++){
-  //  cr->move_to( p.x, p.y );
-  //  pos_t ps(obj.sound[k].get_pos_global(time));
-  //  cr->line_to( ps.x, ps.y );
-  //}
-  //cr->stroke();
+  cr->show_text( obj.get_name().c_str() );
   cr->restore();
 }
 
@@ -390,7 +487,7 @@ void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
   cr->stroke();
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
-  cr->show_text( reverb.name.c_str() );
+  cr->show_text( reverb.get_name().c_str() );
   cr->restore();
 }
 
@@ -422,38 +519,43 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
     button_reload("reload"),
     button_view_p("zoom +"),
     button_view_m("zoom -"),
+    client_addr(lo_address_new("localhost","9877")),
+    wdg_source(client_addr),
 #ifdef GTKMM30
     timescale(Gtk::ORIENTATION_HORIZONTAL),
 #endif
     scene(NULL),
-    filename(name),
-    client_addr(lo_address_new("localhost","9877"))
+    filename(name)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
 #ifdef GTKMM30
-  da.signal_draw().connect(sigc::mem_fun(*this, &tascar_gui_t::on_draw), false);
+  wdg_scenemap.signal_draw().connect(sigc::mem_fun(*this, &tascar_gui_t::on_draw), false);
 #else
-  da.signal_expose_event().connect(sigc::mem_fun(*this, &tascar_gui_t::on_expose_event), false);
+  wdg_scenemap.signal_expose_event().connect(sigc::mem_fun(*this, &tascar_gui_t::on_expose_event), false);
 #endif
   osc_server_t::add_method("/headrot","f",set_head,this);
   osc_server_t::add_method("/listener/pos","fff",osc_listener_position,this);
   osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
   osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
   osc_server_t::add_method("/listener/rot","f",osc_listener_orientation,this);
-  ctl_box.pack_start( button_reload, Gtk::PACK_SHRINK );
-  ctl_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
-  ctl_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
-  tp_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
-  tp_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
-  tp_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
-  tp_box.pack_start( button_tp_time_mm, Gtk::PACK_SHRINK );
-  tp_box.pack_start( button_tp_time_m, Gtk::PACK_SHRINK );
-  tp_box.pack_start( timescale );
-  tp_box.pack_start( button_tp_time_p, Gtk::PACK_SHRINK );
-  tp_box.pack_start( button_tp_time_pp, Gtk::PACK_SHRINK );
-  vbox.pack_start( ctl_box, Gtk::PACK_SHRINK);
-  vbox.pack_start( da );
-  vbox.pack_start( tp_box, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( button_reload, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( button_tp_time_mm, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( button_tp_time_m, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( timescale );
+  wdg_transport_box.pack_start( button_tp_time_p, Gtk::PACK_SHRINK );
+  wdg_transport_box.pack_start( button_tp_time_pp, Gtk::PACK_SHRINK );
+  wdg_vertmain.pack_start( wdg_file_ui_box, Gtk::PACK_SHRINK);
+
+  wdg_source_and_map.pack_start( wdg_source, Gtk::PACK_SHRINK );
+  wdg_source_and_map.pack_start( wdg_scenemap );
+
+  wdg_vertmain.pack_start( wdg_source_and_map );
+  wdg_vertmain.pack_start( wdg_transport_box, Gtk::PACK_SHRINK );
   timescale.set_range(0,100);
   timescale.set_value(50);
   timescale.signal_value_changed().connect(sigc::mem_fun(*this,
@@ -485,7 +587,7 @@ bool tascar_gui_t::on_expose_event(GdkEventExpose* event)
 {
   if( event ){
     // This is where we draw on the window
-    Glib::RefPtr<Gdk::Window> window = da.get_window();
+    Glib::RefPtr<Gdk::Window> window = wdg_scenemap.get_window();
     if(window){
       Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
       return on_draw(cr);
@@ -500,9 +602,9 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   pthread_mutex_lock( &mtx_scene );
   try{
-    Glib::RefPtr<Gdk::Window> window = da.get_window();
+    Glib::RefPtr<Gdk::Window> window = wdg_scenemap.get_window();
     if(window && scene){
-      Gtk::Allocation allocation = da.get_allocation();
+      Gtk::Allocation allocation = wdg_scenemap.get_allocation();
       const int width = allocation.get_width();
       const int height = allocation.get_height();
       cr->rectangle(0,0,width,height);
@@ -549,12 +651,12 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 bool tascar_gui_t::on_timeout()
 {
-  Glib::RefPtr<Gdk::Window> win = da.get_window();
+  Glib::RefPtr<Gdk::Window> win = wdg_scenemap.get_window();
   //DEBUG(win);
   if (win){
-    Gdk::Rectangle r(da.get_allocation().get_x(), da.get_allocation().get_y(), 
-		     da.get_allocation().get_width(),
-		     da.get_allocation().get_height() );
+    Gdk::Rectangle r(wdg_scenemap.get_allocation().get_x(), wdg_scenemap.get_allocation().get_y(), 
+		     wdg_scenemap.get_allocation().get_width(),
+		     wdg_scenemap.get_allocation().get_height() );
     win->invalidate_rect(r, true);
   }
   return true;
@@ -614,7 +716,7 @@ int main(int argc, char** argv)
   }
   win.set_title("tascar - "+cfgfile);
   tascar_gui_t c(cfgfile,oscport);
-  win.add(c.vbox);
+  win.add(c.wdg_vertmain);
   win.set_default_size(1024,768);
   //c.set_scale(200);
   //c.set_scale(c.guiscale);

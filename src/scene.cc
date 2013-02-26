@@ -69,24 +69,21 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,bool& valu
  * object_t
  */
 object_t::object_t()
-  : name("object"),
-    starttime(0),
-    endtime(0),
-    muted(false)
+  : starttime(0),
+    endtime(0)
 {
 }
 
 bool object_t::isactive(double time) const
 {
-  return (!muted)&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
+  return (!get_mute())&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
 }
 
 void object_t::read_xml(xmlpp::Element* e)
 {
-  name = e->get_attribute_value("name");
+  route_t::read_xml(e);
   get_attribute_value(e,"start",starttime);
   get_attribute_value(e,"end",endtime);
-  get_attribute_value(e,"muted",muted);
   color = rgb_color_t(e->get_attribute_value("color"));
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -132,11 +129,10 @@ void object_t::read_xml(xmlpp::Element* e)
 
 void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
-  e->set_attribute("name",name);
+  route_t::write_xml(e,help_comments);
   e->set_attribute("color",color.str());
   set_attribute_double(e,"start",starttime);
   set_attribute_double(e,"end",endtime);
-  set_attribute_bool(e,"muted",muted);
   if( location.size() ){
     location.write_xml( e->add_child("position") );
   }
@@ -148,7 +144,7 @@ void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 std::string object_t::print(const std::string& prefix)
 {
   std::stringstream r;
-  r << prefix << "Name: \"" << name << "\"\n";
+  r << route_t::print(prefix);
   r << prefix << "Starttime: " << starttime << " s\n";
   r << prefix << "Trajectory center: " << location.center().print_cart() << " m\n";
   r << prefix << "trajectory length: " << location.length() << " m\n";
@@ -173,6 +169,7 @@ bg_amb_t::bg_amb_t()
 
 void bg_amb_t::read_xml(xmlpp::Element* e)
 {
+  route_t::read_xml(e);
   get_attribute_value(e,"start",starttime);
   filename = e->get_attribute_value("filename");
   get_attribute_value(e,"gain",gain);
@@ -181,6 +178,7 @@ void bg_amb_t::read_xml(xmlpp::Element* e)
 
 void bg_amb_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
+  route_t::write_xml(e,help_comments);
   e->set_attribute("filename",filename);
   set_attribute_double(e,"gain",gain);
   set_attribute_uint(e,"loop",loop);
@@ -445,7 +443,7 @@ scene_t::scene_t()
     lat(53.155473),
     lon(8.167249),
     elev(10),
-    guiscale(200)
+    guiscale(200),anysolo(0)
 {
 }
 
@@ -594,6 +592,36 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     it->prepare(fs,fragsize);
 }
 
+void scene_t::set_mute(const std::string& name,bool val)
+{
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
+    if( it->get_name() == name )
+      it->set_mute(val);
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+    if( it->get_name() == name )
+      it->set_mute(val);
+  for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
+    if( it->get_name() == name )
+      it->set_mute(val);
+  if( listener.get_name() == name )
+    listener.set_mute(val);
+}
+
+void scene_t::set_solo(const std::string& name,bool val)
+{
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
+    if( it->get_name() == name )
+      it->set_solo(val,anysolo);
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+    if( it->get_name() == name )
+      it->set_solo(val,anysolo);
+  for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
+    if( it->get_name() == name )
+      it->set_solo(val,anysolo);
+  if( listener.get_name() == name )
+    listener.set_solo(val,anysolo);
+}
+
 void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment, bool help_comments)
 { 
   xmlpp::Document doc;
@@ -640,7 +668,7 @@ std::string sound_t::getlabel()
 {
   std::string r;
   if( parent ){
-    r = parent->name + ".";
+    r = parent->get_name() + ".";
   }else{
     r = "<NULL>.";
   }
@@ -772,7 +800,7 @@ double diffuse_reverb_t::border_distance(pos_t p)
 
 void diffuse_reverb_t::read_xml(xmlpp::Element* e)
 {
-  name = e->get_attribute_value("name");
+  route_t::read_xml(e);
   get_attribute_value(e,"center_x",center.x);
   get_attribute_value(e,"center_y",center.y);
   get_attribute_value(e,"center_z",center.z);
@@ -786,7 +814,7 @@ void diffuse_reverb_t::read_xml(xmlpp::Element* e)
 
 void diffuse_reverb_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
-  e->set_attribute("name",name);
+  route_t::write_xml(e,help_comments);
   set_attribute_double(e,"center_x",center.x);
   set_attribute_double(e,"center_y",center.y);
   set_attribute_double(e,"center_z",center.z);
@@ -802,11 +830,73 @@ void diffuse_reverb_t::write_xml(xmlpp::Element* e,bool help_comments)
 std::string diffuse_reverb_t::print(const std::string& prefix)
 {
   std::stringstream r;
-  r << prefix << "Name: \"" << name << "\"\n";
+  r << route_t::print(prefix);
   r << prefix << "Center: " << center.print_cart() << " s\n";
   r << prefix << "Size: " << size.print_cart() << " s\n";
   r << prefix << "Orientation: " << orientation.print() << " s\n";
   return r.str();
+}
+
+route_t::route_t()
+  : mute(false),solo(false)
+{
+}
+
+void route_t::read_xml(xmlpp::Element* e)
+{
+  name = e->get_attribute_value("name");
+  get_attribute_value(e,"mute",mute);
+  get_attribute_value(e,"solo",solo);
+}
+
+void route_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  e->set_attribute("name",name);
+  set_attribute_bool(e,"mute",mute);
+  set_attribute_bool(e,"solo",solo);
+}
+
+std::string route_t::print(const std::string& prefix)
+{
+  std::stringstream r;
+  r << prefix << "Name: \"" << name << "\"\n";
+  return r.str();
+}
+
+void route_t::set_solo(bool b,uint32_t& anysolo)
+{
+  if( b != solo ){
+    if( b ){
+      anysolo++;
+    }else{
+      if( anysolo )
+        anysolo--;
+    }
+    solo=b;
+  }
+}
+
+bool sound_t::get_mute() const 
+{
+  if( parent ) 
+    return parent->get_mute();
+  return false;
+}
+
+bool sound_t::get_solo() const 
+{
+  if( parent ) 
+    return parent->get_solo();
+  return false;
+}
+
+bool scene_t::get_playsound(const sound_t* s)
+{
+  if( s->get_mute() )
+    return false;
+  if( !anysolo )
+    return true;
+  return s->get_solo();
 }
 
 /*
