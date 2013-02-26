@@ -106,6 +106,11 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
   mute.modify_bg(Gtk::STATE_ACTIVE,col);
   col.set_rgb(244,30,30);
   solo.modify_bg(Gtk::STATE_ACTIVE,col);
+  if( object_t* o=dynamic_cast<object_t*>(r) ){
+    rgb_color_t c(o->color);
+    col.set_rgb_p(0.5+0.3*c.r,0.5+0.3*c.g,0.5+0.3*c.b);
+    ebox.modify_bg(Gtk::STATE_ACTIVE,col);
+  }
 #endif
   add(ebox);
   mute.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_mute));
@@ -652,9 +657,13 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 bool tascar_gui_t::on_timeout()
 {
   Glib::RefPtr<Gdk::Window> win = wdg_scenemap.get_window();
+  //Glib::RefPtr<Gdk::Window> win = get_window();
   //DEBUG(win);
   if (win){
-    Gdk::Rectangle r(wdg_scenemap.get_allocation().get_x(), wdg_scenemap.get_allocation().get_y(), 
+    //Gdk::Rectangle r(wdg_scenemap.get_allocation().get_x(), wdg_scenemap.get_allocation().get_y(), 
+    //    	     wdg_scenemap.get_allocation().get_width(),
+    //		     wdg_scenemap.get_allocation().get_height() );
+    Gdk::Rectangle r(0,0, 
 		     wdg_scenemap.get_allocation().get_width(),
 		     wdg_scenemap.get_allocation().get_height() );
     win->invalidate_rect(r, true);
