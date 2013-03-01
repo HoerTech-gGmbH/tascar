@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<scene name="The Wall" guiscale="20" duration="12">
+  <src_object name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
+    <position interpolation="cartesian">0 0 0 0
+10 15 0 0
+    </position>
+    <inputs>
+      <file name="steps" filename="footsteps.wav" loop="3" start="-1.6" gain="-20"/>
+    </inputs>
+    <sound name="steps"/>
+    </src_object>
+  <face name="wall" mute="false" solo="false" color="#771010" start="0" end="0" width="20" height="20" reflectivity="1" damping="0">
+    <position>0 15.2 0 0</position>
+    <orientation>0 180 0 0</orientation>
+  </face>
+  <listener name="me" mute="false" solo="false" color="#000000" start="0" end="0">
+    <position>0 0 0 1.65
+10 15 0 1.65</position>
+  </listener>
+</scene>

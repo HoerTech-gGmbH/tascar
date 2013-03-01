@@ -160,6 +160,8 @@ void source_panel_t::set_scene(scene_t* s)
       vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->bg_amb[k])));
     for( unsigned int k=0;k<s->srcobjects.size();k++)
       vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->srcobjects[k])));
+    for( unsigned int k=0;k<s->faces.size();k++)
+      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->faces[k])));
     for( unsigned int k=0;k<s->reverbs.size();k++)
       vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->reverbs[k])));
   }
@@ -181,6 +183,7 @@ public:
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_room(const diffuse_reverb_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -195,7 +198,11 @@ protected:
 #endif
   bool on_timeout();
   void on_time_changed();
-  void on_tp_start(){tp_start();};
+  void on_tp_start(){
+    if( scene && (guitime >= scene->duration) )
+      tp_locate(0.0);
+    tp_start();
+  };
   void on_tp_stop(){tp_stop();};
   void on_tp_rewind(){tp_locate(0.0);};
   void on_tp_time_p(){tp_locate(guitime+0.1);};
@@ -388,6 +395,7 @@ void tascar_gui_t::on_view_m()
 
 void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  msize *= 1.5;
   pos_t p(obj.location.interp(time-obj.starttime));
   p += obj.dlocation;
   zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
@@ -422,7 +430,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   p8+=p;
   p9+=p;
   cr->save();
-  cr->set_line_width( 0.1*msize );
+  cr->set_line_width( 0.2*msize );
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   cr->move_to( p.x, -p.y );
   cr->arc(p.x, -p.y, 2*msize, 0, PI2 );
@@ -493,6 +501,44 @@ void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
   cr->show_text( reverb.get_name().c_str() );
+  cr->restore();
+}
+
+void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  
+  std::vector<pos_t> roomnodes(6);
+  roomnodes[0].y -= 0.5*face.width;
+  roomnodes[1].y -= 0.5*face.width;
+  roomnodes[2].y += 0.5*face.width;
+  roomnodes[3].y += 0.5*face.width;
+  roomnodes[0].z -= 0.5*face.height;
+  roomnodes[1].z += 0.5*face.height;
+  roomnodes[2].z -= 0.5*face.height;
+  roomnodes[3].z += 0.5*face.height;
+  roomnodes[5].x += 3*msize;
+  pos_t loc(face.get_location(time));
+  zyx_euler_t o(face.get_orientation(time));
+  for(unsigned int k=0;k<6;k++){
+    roomnodes[k] *= o;
+    roomnodes[k] += loc;
+  }
+  cr->save();
+  cr->set_line_width( 0.3*msize );
+  cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.6);
+  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
+  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
+  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
+  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
+  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+  cr->stroke();
+  cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
+  cr->move_to( roomnodes[4].x, -roomnodes[4].y );
+  cr->line_to( roomnodes[5].x, -roomnodes[5].y );
+  cr->stroke();
+  cr->set_source_rgb(0, 0, 0 );
+  cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
+  cr->show_text( face.get_name().c_str() );
   cr->restore();
 }
 
@@ -620,7 +666,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->scale( wscale, wscale );
       cr->set_line_width( 0.3*markersize );
       cr->set_font_size( 2*markersize );
-
+      double scale_len(pow(10.0,floor(log10(scale))));
       cr->save();
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
@@ -632,6 +678,9 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       for(unsigned int k=0;k<scene->reverbs.size();k++){
         draw_room(scene->reverbs[k], cr, markersize );
       }
+      for(unsigned int k=0;k<scene->faces.size();k++){
+        draw_face(scene->faces[k], cr, markersize );
+      }
       draw_listener( scene->listener, cr, markersize );
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
       cr->move_to(-markersize, 0 );
@@ -642,6 +691,18 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       for(unsigned int k=0;k<scene->srcobjects.size();k++){
         draw_src(scene->srcobjects[k], cr, markersize );
       }
+      cr->save();
+      cr->set_source_rgb( 0, 0, 0 );
+      cr->move_to( -0.9*scale,0.9*scale );
+      cr->line_to( -0.9*scale,0.95*scale );
+      cr->line_to( -0.9*scale+scale_len,0.95*scale );
+      cr->line_to( -0.9*scale+scale_len,0.9*scale );
+      cr->stroke();
+      cr->move_to( -0.88*scale,0.94*scale );
+      char cmp[1024];
+      sprintf(cmp,"%g m",scale_len);
+      cr->show_text( cmp );
+      cr->restore();
     }
     guitime = time;
     timescale.set_value(guitime);

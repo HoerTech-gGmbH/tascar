@@ -117,6 +117,8 @@ namespace TASCAR {
     void write_xml(xmlpp::Element* e,bool help_comments=false);
     std::string print(const std::string& prefix="");
     bool isactive(double time) const;
+    pos_t get_location(double time) const;
+    zyx_euler_t get_orientation(double time) const;
     rgb_color_t color;
     double starttime;
     double endtime;
@@ -124,6 +126,28 @@ namespace TASCAR {
     euler_track_t orientation;
     pos_t dlocation;
     zyx_euler_t dorientation;
+  };
+
+  class mirror_t {
+  public:
+    mirror_t():c1(0),c2(0){};
+    pos_t p;
+    double c1;
+    double c2;
+  };
+
+  class face_object_t : public object_t {
+  public:
+    face_object_t();
+    pos_t get_closest_point(double t,pos_t p);
+    mirror_t get_mirror(double t, pos_t src);
+    void prepare(double fs, uint32_t fragsize);
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    double width;
+    double height;
+    double reflectivity;
+    double damping;
   };
 
   class bg_amb_t : public route_t, public async_sndfile_t {
@@ -158,6 +182,7 @@ namespace TASCAR {
     bool isactive(double t);
     bool get_mute() const;
     bool get_solo() const;
+    const object_t* get_reference() const { return reference;};
   private:
     pos_t loc;
     double chaindist;
@@ -225,6 +250,7 @@ namespace TASCAR {
     std::vector<src_object_t> srcobjects;
     std::vector<bg_amb_t> bg_amb;
     std::vector<diffuse_reverb_t> reverbs;
+    std::vector<face_object_t> faces;
     listener_t listener;
     double guiscale;
     void listener_orientation(zyx_euler_t o){listener.dorientation=o;};

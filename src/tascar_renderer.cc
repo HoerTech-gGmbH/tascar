@@ -79,6 +79,18 @@ namespace TASCAR {
     void updatepar(pos_t);
   };
 
+  class mirror_pan_t : public trackpan_amb33_t {
+  public:
+    mirror_pan_t(double srate, uint32_t fragsize, double maxdist);
+    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*,face_object_t*);
+  private:
+    float c1_current;
+    float dc1;
+    float c2_current;
+    float dc2;
+    float my;
+  };
+
   class reverb_line_t {
   public:
     reverb_line_t(double srate, uint32_t fragsize, double maxdist);
@@ -103,6 +115,60 @@ namespace TASCAR {
   };
   
 };
+
+mirror_pan_t::mirror_pan_t(double srate, uint32_t fragsize, double maxdist_)
+  : trackpan_amb33_t(srate,fragsize,maxdist_),
+    c1_current(0),
+    dc1(0),
+    c2_current(0),
+    dc2(0),
+    my(0)
+{
+}
+
+void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t* snd,face_object_t* face)
+{
+  if( n != fragsize_ )
+    throw ErrMsg("fragsize changed");
+  double ldt(dt_sample);
+  if( !tp_rolling )
+    ldt = 0;
+  if( face->isactive(tp_time) && vIn ){
+    double nexttime(tp_time+ldt*n);
+    // first get sound position in global coordinates:
+    pos_t psnd(snd->get_pos_global(nexttime));
+    // then get mirror object:
+    mirror_t m(face->get_mirror(nexttime,psnd));
+    // now transform mirror source relative to listener:
+    m.p -= snd->get_reference()->get_location(nexttime);
+    m.p /= snd->get_reference()->get_orientation(nexttime);
+    // update panner and low pass filters:
+    updatepar(m.p);
+    dc1 = (m.c1-c1_current)*dt_update;
+    dc2 = (m.c2-c2_current)*dt_update;
+    //DEBUG(m.p.print_cart());
+    //DEBUG(m.c1);
+    //DEBUG(m.c2);
+    // iterate through fragment:
+    for( unsigned int i=0;i<n;i++){
+      delayline.push(vIn[i]);
+      float d = (d_current+=dd);
+      float d1 = 1.0/std::max(1.0f,d);
+      if( tp_rolling ){
+        float c1(clp_current+=dclp);
+        float c2(1.0f-c1);
+        float mc1(c1_current+=dc1);
+        float mc2(c2_current+=dc2);
+        y = c2*y+c1*delayline.get_dist(d)*d1;
+        my = mc2*my+mc1*y;
+        //my = y;
+        for( unsigned int k=0;k<idx::channels;k++){
+          outBuffer[k][i] += (w_current[k] += dw[k]) * my;
+        }
+      }
+    }
+  }
+}
   
 trackpan_amb33_t::trackpan_amb33_t(double srate, uint32_t fragsize, double maxdist_)
 //  : delayline(3*srate,srate,340.0), 
@@ -285,6 +351,7 @@ namespace TASCAR {
     std::vector<std::vector<TASCAR::reverb_line_t> > rvbline;
     std::vector<TASCAR::sound_t*> sounds;
     std::vector<TASCAR::Input::base_t*> inputs;
+    std::vector<std::vector<TASCAR::mirror_pan_t> > mirror;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     std::vector<std::string> vAmbPorts;
@@ -450,6 +517,18 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
     if( sounds[k] && get_playsound(sounds[k]) )
       panner[k].process(nframes,sounds[k]->get_buffer(nframes), outBuffer,tp_frame,
                         tp_time,tp_rolling,sounds[k]);
+  // process mirror sources:
+  for( unsigned int k_face=0;k_face<mirror.size();k_face++){
+    if( (!faces[k_face].get_mute()) && faces[k_face].isactive(tp_time) ){
+    //if( true ){
+      for( unsigned int k_snd=0;k_snd<mirror[k_face].size();k_snd++){
+        //if( sounds[k_snd] && get_playsound(sounds[k_snd]) ){
+        if( sounds[k_snd] ){
+          mirror[k_face][k_snd].process(nframes,sounds[k_snd]->get_buffer(nframes),outBuffer,tp_frame,tp_time,tp_rolling,sounds[k_snd],&(faces[k_face]));
+        }
+      }
+    }
+  }
   // process diffuse reverb:
   for( unsigned int kr=0;kr<reverbs.size();kr++){
     memset(outBuffer[kr+first_reverb_port],0,nframes*sizeof(float));
@@ -473,6 +552,9 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
   rvbline.resize(reverbs.size());
   for(unsigned int kr=0;kr<rvbline.size();kr++)
     rvbline[kr].clear();
+  mirror.resize(faces.size());
+  for( unsigned int k_face=0;k_face<mirror.size();k_face++)
+    mirror[k_face].clear();
   for(unsigned int k=0;k<sounds.size();k++){
     double maxdist(0);
     for( double t=0;t<duration;t+=2){
@@ -483,6 +565,8 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
     panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), maxdist+100));
     for(unsigned int kr=0;kr<rvbline.size();kr++)
       rvbline[kr].push_back(reverb_line_t(get_srate(), get_fragsize(), maxdist+100));
+    for( unsigned int k_face=0;k_face<mirror.size();k_face++)
+      mirror[k_face].push_back(mirror_pan_t(get_srate(), get_fragsize(), maxdist+100));
   }
   for(unsigned int k=0;k<srcobjects.size();k++){
     srcobjects[k].fill( -1, 0 );
@@ -491,6 +575,7 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
   for(unsigned int kr=0;kr<reverbs.size();kr++){
     add_output_port(reverbs[kr].get_name());
   }
+  //DEBUG(mirror.size());
   jackc_t::activate();
   osc_server_t::activate();
   if( dest_ambdec.size() ){

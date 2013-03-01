@@ -79,6 +79,18 @@ bool object_t::isactive(double time) const
   return (!get_mute())&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
 }
 
+pos_t object_t::get_location(double time) const
+{
+  pos_t p(location.interp(time-starttime));
+  return (p+=dlocation);
+}
+
+zyx_euler_t object_t::get_orientation(double time) const
+{
+  zyx_euler_t o(orientation.interp(time-starttime));
+  return (o+=dorientation);
+}
+
 void object_t::read_xml(xmlpp::Element* e)
 {
   route_t::read_xml(e);
@@ -501,6 +513,11 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
     it->write_xml(e->add_child("reverb"),help_comments && b_first);
     b_first = false;
   }
+  b_first = true;
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
+    it->write_xml(e->add_child("face"),help_comments && b_first);
+    b_first = false;
+  }
   listener.write_xml(e->add_child("listener"),help_comments);
 }
 
@@ -533,6 +550,10 @@ void scene_t::read_xml(xmlpp::Element* e)
       if( sne->get_name() == "reverb" ){
         reverbs.push_back(diffuse_reverb_t());
         reverbs.rbegin()->read_xml(sne);
+      }
+      if( sne->get_name() == "face" ){
+        faces.push_back(face_object_t());
+        faces.rbegin()->read_xml(sne);
       }
     }
   }
@@ -603,6 +624,9 @@ void scene_t::set_mute(const std::string& name,bool val)
   for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
     if( it->get_name() == name )
       it->set_mute(val);
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    if( it->get_name() == name )
+      it->set_mute(val);
   if( listener.get_name() == name )
     listener.set_mute(val);
 }
@@ -618,6 +642,9 @@ void scene_t::set_solo(const std::string& name,bool val)
   for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
     if( it->get_name() == name )
       it->set_solo(val,anysolo);
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    if( it->get_name() == name )
+      it->set_solo(val, anysolo);
   if( listener.get_name() == name )
     listener.set_solo(val,anysolo);
 }
@@ -897,6 +924,86 @@ bool scene_t::get_playsound(const sound_t* s)
   if( !anysolo )
     return true;
   return s->get_solo();
+}
+
+face_object_t::face_object_t()
+  : width(1.0),
+    height(1.0),
+    reflectivity(1.0),
+    damping(0.0)
+{
+}
+
+pos_t face_object_t::get_closest_point(double t, pos_t p)
+{
+  pos_t center(location.interp(t));
+  center += dlocation;
+  zyx_euler_t o(orientation.interp(t));
+  o += dorientation;
+  p -= center;
+  p /= o;
+  p.x = 0;
+  double w1(0.5*width);
+  double h1(0.5*height);
+  p.y = std::min(std::max(p.y,-w1),w1);
+  p.z = std::min(std::max(p.z,-h1),h1);
+  p *= o;
+  p += center;
+  return p;
+}
+
+mirror_t face_object_t::get_mirror(double t, pos_t src)
+{
+  pos_t cp(src);
+  pos_t center(location.interp(t));
+  center += dlocation;
+  zyx_euler_t o(orientation.interp(t));
+  o += dorientation;
+  cp -= center;
+  cp /= o;
+  double w1(0.5*width);
+  double h1(0.5*height);
+  mirror_t mirror;
+  mirror.p = cp;
+  mirror.p.x *= -1.0;
+  cp.y = std::min(std::max(cp.y,-w1),w1);
+  cp.z = std::min(std::max(cp.z,-h1),h1);
+  cp.x = 0;
+  cp *= o;
+  cp += center;
+  mirror.p *= o;
+  mirror.p += center;
+  cp -= src;
+  cp *= -1.0/cp.norm();
+  pos_t n(1,0,0);
+  n *= o;
+  mirror.c1 = std::max(n.x*cp.x+n.y*cp.y+n.z*cp.z,0.0);
+  mirror.c2 = std::min(0.9999,(1.0-(mirror.c1*(1.0-damping))));
+  mirror.c1 *= mirror.c1;
+  mirror.c1 *= reflectivity;
+  return mirror;
+}
+
+void face_object_t::prepare(double fs, uint32_t fragsize)
+{
+}
+
+void face_object_t::read_xml(xmlpp::Element* e)
+{
+  object_t::read_xml(e);
+  get_attribute_value(e,"width",width);
+  get_attribute_value(e,"height",height);
+  get_attribute_value(e,"reflectivity",reflectivity);
+  get_attribute_value(e,"damping",damping);
+}
+
+void face_object_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  object_t::write_xml(e,help_comments);
+  set_attribute_double(e,"width",width);
+  set_attribute_double(e,"height",height);
+  set_attribute_double(e,"reflectivity",reflectivity);
+  set_attribute_double(e,"damping",damping);
 }
 
 /*
