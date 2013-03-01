@@ -70,6 +70,7 @@ public:
   void on_solo();
   Gtk::EventBox ebox;
   Gtk::HBox box;
+  Gtk::Label tlabel;
   Gtk::Label label;
   Gtk::ToggleButton mute;
   Gtk::ToggleButton solo;
@@ -84,6 +85,13 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
 {
   ebox.add( box );
   label.set_text(r->get_name());
+  if( dynamic_cast<face_object_t*>(r))
+    tlabel.set_text("mir");
+  if( dynamic_cast<src_object_t*>(r))
+    tlabel.set_text("src");
+  if( dynamic_cast<diffuse_reverb_t*>(r))
+    tlabel.set_text("rvb");
+  box.pack_start( tlabel, Gtk::PACK_SHRINK );
   box.pack_start( label, Gtk::PACK_EXPAND_PADDING );
   box.pack_start( mute, Gtk::PACK_SHRINK );
   box.pack_start( solo, Gtk::PACK_SHRINK );
@@ -506,7 +514,9 @@ void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
 
 void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  
+  bool active(face.isactive(time));
+  if( !active )
+    msize*=0.5;
   std::vector<pos_t> roomnodes(6);
   roomnodes[0].y -= 0.5*face.width;
   roomnodes[1].y -= 0.5*face.width;
@@ -532,13 +542,15 @@ void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cai
   cr->line_to( roomnodes[3].x, -roomnodes[3].y );
   cr->line_to( roomnodes[0].x, -roomnodes[0].y );
   cr->stroke();
-  cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
-  cr->move_to( roomnodes[4].x, -roomnodes[4].y );
-  cr->line_to( roomnodes[5].x, -roomnodes[5].y );
-  cr->stroke();
-  cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
-  cr->show_text( face.get_name().c_str() );
+  if( active ){
+    cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
+    cr->move_to( roomnodes[4].x, -roomnodes[4].y );
+    cr->line_to( roomnodes[5].x, -roomnodes[5].y );
+    cr->stroke();
+    cr->set_source_rgb(0, 0, 0 );
+    cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
+    cr->show_text( face.get_name().c_str() );
+  }
   cr->restore();
 }
 
@@ -667,6 +679,11 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->set_line_width( 0.3*markersize );
       cr->set_font_size( 2*markersize );
       double scale_len(pow(10.0,floor(log10(scale))));
+      double scale_r(scale/scale_len);
+      if( scale_r >= 5 )
+        scale_len *=5;
+      else if( scale_r >= 2 )
+        scale_len *= 2;
       cr->save();
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
