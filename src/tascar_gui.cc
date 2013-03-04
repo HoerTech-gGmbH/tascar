@@ -110,14 +110,18 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
   }
 #else
   Gdk::Color col;
-  col.set_rgb(244,232,58);
+  col.set_rgb(244*256,232*256,58*256);
   mute.modify_bg(Gtk::STATE_ACTIVE,col);
-  col.set_rgb(244,30,30);
+  mute.modify_bg(Gtk::STATE_PRELIGHT,col);
+  mute.modify_bg(Gtk::STATE_SELECTED,col);
+  col.set_rgb(244*256,30*256,30*256);
   solo.modify_bg(Gtk::STATE_ACTIVE,col);
+  solo.modify_bg(Gtk::STATE_PRELIGHT,col);
   if( object_t* o=dynamic_cast<object_t*>(r) ){
     rgb_color_t c(o->color);
     col.set_rgb_p(0.5+0.3*c.r,0.5+0.3*c.g,0.5+0.3*c.b);
-    ebox.modify_bg(Gtk::STATE_ACTIVE,col);
+    //ebox.modify_bg(Gtk::STATE_ACTIVE,col);
+    ebox.modify_bg(Gtk::STATE_NORMAL,col);
   }
 #endif
   add(ebox);
@@ -205,6 +209,7 @@ protected:
   virtual bool on_expose_event(GdkEventExpose* event);
 #endif
   bool on_timeout();
+  bool on_timeout_blink();
   void on_time_changed();
   void on_tp_start(){
     if( scene && (guitime >= scene->duration) )
@@ -254,6 +259,7 @@ private:
   g_scene_t* scene;
   std::string filename;
   std::vector<TASCAR::pos_t> roomnodes;
+  bool blink;
 };
 
 int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -309,9 +315,24 @@ void tascar_gui_t::on_time_changed()
 
 void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  bool solo(obj.get_solo());
   cr->save();
+  if( solo && blink ){
+    cr->set_source_rgba(1,0,0,0.5);
+    cr->set_line_width( 1.2*msize );
+    for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
+      if( it==obj.location.begin() )
+        cr->move_to( it->second.x, -it->second.y );
+      else
+        cr->line_to( it->second.x, -it->second.y );
+    }
+    cr->stroke();
+  }
   cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
-  cr->set_line_width( 0.1*msize );
+  if( solo && blink )
+    cr->set_line_width( 0.3*msize );
+  else
+    cr->set_line_width( 0.1*msize );
   for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
     if( it==obj.location.begin() )
       cr->move_to( it->second.x, -it->second.y );
@@ -325,6 +346,7 @@ void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> 
 void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool active(obj.isactive(time));
+  bool solo(obj.get_solo());
   double plot_time(time);
   if( !active ){
     msize *= 0.4;
@@ -332,6 +354,11 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   }
   pos_t p(obj.location.interp(plot_time-obj.starttime));
   cr->save();
+  if( solo && blink ){
+    cr->set_source_rgba(1, 0, 0, 0.5);
+    cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
+    cr->fill();
+  }
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   cr->arc(p.x, -p.y, msize, 0, PI2 );
   cr->fill();
@@ -461,6 +488,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
 
 void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  bool solo(reverb.get_solo());
   std::vector<pos_t> roomnodes(8,reverb.center);
   roomnodes[0].x -= 0.5*reverb.size.x;
   roomnodes[1].x += 0.5*reverb.size.x;
@@ -489,7 +517,10 @@ void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
   for(unsigned int k=0;k<8;k++)
     roomnodes[k] *= reverb.orientation;
   cr->save();
-  cr->set_line_width( 0.1*msize );
+  if( solo && blink )
+    cr->set_line_width( 0.6*msize );
+  else
+    cr->set_line_width( 0.1*msize );
   cr->set_source_rgba(0,0,0,0.6);
   cr->move_to( roomnodes[0].x, -roomnodes[0].y );
   cr->line_to( roomnodes[1].x, -roomnodes[1].y );
@@ -515,6 +546,7 @@ void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
 void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool active(face.isactive(time));
+  bool solo(face.get_solo());
   if( !active )
     msize*=0.5;
   std::vector<pos_t> roomnodes(6);
@@ -534,6 +566,16 @@ void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cai
     roomnodes[k] += loc;
   }
   cr->save();
+  if( solo && blink ){
+    cr->set_line_width( 1.2*msize );
+    cr->set_source_rgba(1,0,0,0.5);
+    cr->move_to( roomnodes[0].x, -roomnodes[0].y );
+    cr->line_to( roomnodes[1].x, -roomnodes[1].y );
+    cr->line_to( roomnodes[2].x, -roomnodes[2].y );
+    cr->line_to( roomnodes[3].x, -roomnodes[3].y );
+    cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+    cr->stroke();
+  }
   cr->set_line_width( 0.3*msize );
   cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.6);
   cr->move_to( roomnodes[0].x, -roomnodes[0].y );
@@ -591,6 +633,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
     filename(name)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout_blink), 600 );
 #ifdef GTKMM30
   wdg_scenemap.signal_draw().connect(sigc::mem_fun(*this, &tascar_gui_t::on_draw), false);
 #else
@@ -746,6 +789,15 @@ bool tascar_gui_t::on_timeout()
 		     wdg_scenemap.get_allocation().get_height() );
     win->invalidate_rect(r, true);
   }
+  return true;
+}
+
+bool tascar_gui_t::on_timeout_blink()
+{
+  if( blink )
+    blink = false;
+  else
+    blink = true;
   return true;
 }
 
