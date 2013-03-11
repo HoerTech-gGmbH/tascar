@@ -350,7 +350,7 @@ namespace TASCAR {
     std::vector<TASCAR::trackpan_amb33_t> panner;
     std::vector<std::vector<TASCAR::reverb_line_t> > rvbline;
     std::vector<TASCAR::sound_t*> sounds;
-    std::vector<TASCAR::Input::base_t*> inputs;
+    std::vector<TASCAR::Input::jack_t*> jackinputs;
     std::vector<std::vector<TASCAR::mirror_pan_t> > mirror;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
@@ -500,6 +500,9 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
       //DEBUG(amb_buf[0][0]);
     }
   }
+  for( unsigned int k=0;k<jackinputs.size();k++){
+    jackinputs[k]->write(nframes,inBuffer[k]);
+  }
   // load/update inputs:
   if( tp_rolling ){
     for(unsigned int k=0;k<srcobjects.size();k++){
@@ -546,7 +549,6 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
 void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
 {
   sounds = linearize_sounds();
-  inputs = linearize_inputs();
   prepare(get_srate(), get_fragsize());
   panner.clear();
   rvbline.resize(reverbs.size());
@@ -574,6 +576,10 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
   first_reverb_port = get_num_output_ports();
   for(unsigned int kr=0;kr<reverbs.size();kr++){
     add_output_port(reverbs[kr].get_name());
+  }
+  jackinputs = get_jack_inputs();
+  for(unsigned int k=0;k<jackinputs.size();k++){
+    add_input_port(jackinputs[k]->get_port_name());
   }
   //DEBUG(mirror.size());
   jackc_t::activate();

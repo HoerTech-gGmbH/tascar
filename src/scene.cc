@@ -402,6 +402,10 @@ void src_object_t::read_xml(xmlpp::Element* e)
             inputs.push_back(new TASCAR::Input::file_t());
             (*inputs.rbegin())->read_xml(insne);
           }
+          if( insne->get_name() == "jack" ){
+            inputs.push_back(new TASCAR::Input::jack_t(get_name()));
+            (*inputs.rbegin())->read_xml(insne);
+          }
         }
       }
     }
@@ -596,6 +600,22 @@ std::vector<Input::base_t*> scene_t::linearize_inputs()
     for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
       if( (*its ) )
         r.push_back((*its));
+    }
+  }
+  return r;
+}
+
+
+std::vector<Input::jack_t*> scene_t::get_jack_inputs()
+{
+  std::vector<Input::jack_t*> r;
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
+    for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
+      if( (*its ) ){
+        Input::jack_t* ji(dynamic_cast<TASCAR::Input::jack_t*>(*its));
+        if( ji )
+          r.push_back(ji);
+      }
     }
   }
   return r;
@@ -1004,6 +1024,45 @@ void face_object_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"height",height);
   set_attribute_double(e,"reflectivity",reflectivity);
   set_attribute_double(e,"damping",damping);
+}
+
+void TASCAR::Input::jack_t::write(uint32_t n,float* b)
+{
+  memcpy(data,b,sizeof(float)*std::min(n,size));
+}
+
+void TASCAR::Input::jack_t::read_xml(xmlpp::Element* e)
+{
+  base_t::read_xml(e);
+  connections.clear();
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == "connection")){
+      connections.push_back(sne->get_attribute_value("port"));
+    }
+  }
+}
+
+void TASCAR::Input::jack_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  base_t::write_xml(e,help_comments);
+  for( std::vector<std::string>::iterator it=connections.begin();it!=connections.end();++it){
+    xmlpp::Element* se(e->add_child("connection"));
+    se->set_attribute("port",*it);
+  }
+}
+
+std::string TASCAR::Input::jack_t::print(const std::string& prefix)
+{
+  std::stringstream r;
+  r << prefix << "Name: \"" << name << "\"\n";
+  return r.str();
+}
+
+TASCAR::Input::jack_t::jack_t(const std::string& parent_name_)
+  : parent_name(parent_name_)
+{
 }
 
 /*
