@@ -56,6 +56,13 @@ g_scene_t::g_scene_t(const std::string& n)
     throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
   linearize_sounds();
   linearize_inputs();
+  for( std::vector<src_object_t>::iterator i=srcobjects.begin();i!=srcobjects.end();++i)
+    i->location.fill_gaps(0.25);
+  //std::vector<bg_amb_t> bg_amb;
+  // std::vector<diffuse_reverb_t> reverbs;
+  for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
+    i->location.fill_gaps(0.25);
+  listener.location.fill_gaps(0.25);
 }
 
 g_scene_t::~g_scene_t()
@@ -630,7 +637,8 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
     timescale(Gtk::ORIENTATION_HORIZONTAL),
 #endif
     scene(NULL),
-    filename(name)
+    filename(name),
+    blink(false)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout_blink), 600 );
@@ -663,7 +671,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
   wdg_vertmain.pack_start( wdg_source_and_map );
   wdg_vertmain.pack_start( wdg_transport_box, Gtk::PACK_SHRINK );
   timescale.set_range(0,100);
-  timescale.set_value(50);
+  timescale.set_value(0);
   timescale.signal_value_changed().connect(sigc::mem_fun(*this,
                                                          &tascar_gui_t::on_time_changed));
   CON_BUTTON(tp_rewind);

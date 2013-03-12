@@ -685,6 +685,27 @@ std::string zyx_euler_t::print(const std::string& delim)
 
 }
 
+void track_t::fill_gaps(double dt)
+{
+  if( empty() )
+    return;
+  track_t nt;
+  double lt(begin()->first);
+  for(iterator i=begin();i!=end();++i){
+    nt[i->first] = i->second;
+    double tdt(i->first-lt);
+    unsigned int n(tdt/dt);
+    if( n > 0 ){
+      double ldt = tdt/n;
+      for( double t=lt+ldt;t<i->first;t+=ldt )
+        nt[t] = interp(t);
+    }
+    lt = i->first;
+  }
+  *this = nt;
+  prepare();
+}
+
 /*
  * Local Variables:
  * mode: c++
