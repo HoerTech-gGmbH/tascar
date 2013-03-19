@@ -54,7 +54,7 @@ function x = create_noise( len, nrep, gain )
   X = realfft(x);
   vF = [1:size(X,1)]';
   vF = vF / max(vF);
-  X(:) = exp(-len*i*(2*pi)*vF.^2)./max(0.1,vF.^0.5);
+  X = exp(-len*i*(2*pi)*vF.^2)./max(0.1,vF.^0.5);
   x = realifft(X);
   x = 0.5*x/max(abs(x))*gain;
   wavwrite(repmat(x,[nrep,1]),48000,16,'wnoise.wav');
