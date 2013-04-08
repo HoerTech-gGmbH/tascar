@@ -10,11 +10,17 @@ GTKDEF = "-DGTKMM24"
 GTKEXT = gtkmm-2.4
 endif
 
+ifeq "ok" "$(shell test -e /usr/include/linuxtrack.h && echo  ok)"
+LTRDEF = "-DLINUXTRACK"
+else
+LTRDEF = ""
+endif
+
 #BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
 
-CXXFLAGS += $(GTKDEF)
+CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
-OBJECTS = jackclient.o coordinates.o delayline.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o
+OBJECTS = jackclient.o coordinates.o delayline.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o render_sinks.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 
