@@ -12,6 +12,7 @@ endif
 
 ifeq "ok" "$(shell test -e /usr/include/linuxtrack.h && echo  ok)"
 LTRDEF = "-DLINUXTRACK"
+LDLIBS += -llinuxtrack
 else
 LTRDEF = ""
 endif

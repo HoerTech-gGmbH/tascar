@@ -43,6 +43,9 @@
 #include <getopt.h>
 #include "osc_helper.h"
 #include "render_sinks.h"
+#ifdef LINUXTRACK
+#include <linuxtrack.h>
+#endif
 
 using namespace TASCAR;
 
@@ -54,7 +57,11 @@ namespace TASCAR {
   */
   class scene_generator_t : public jackc_transport_t, public scene_t, public osc_server_t {
   public:
+#ifdef LINUXTRACK
+    scene_generator_t(const std::string& name, const std::string& oscport,bool);
+#else
     scene_generator_t(const std::string& name, const std::string& oscport);
+#endif
     ~scene_generator_t();
     void run(const std::string& ambdec = "ambdec");
     void connect_all(const std::string& ambdec);
@@ -72,6 +79,10 @@ namespace TASCAR {
     static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     uint32_t first_reverb_port;
+    lo_address client_addr;
+#ifdef LINUXTRACK
+    bool use_ltr_;
+#endif
   public:
   };
 
@@ -79,9 +90,17 @@ namespace TASCAR {
 
 static bool b_quit;
 
-TASCAR::scene_generator_t::scene_generator_t(const std::string& name, const std::string& oscport)
-  : jackc_transport_t(name),osc_server_t("",oscport,true)
-    
+TASCAR::scene_generator_t::scene_generator_t(const std::string& name, 
+                                             const std::string& oscport
+#ifdef LINUXTRACK
+                                             ,bool use_ltr
+#endif
+)
+  : jackc_transport_t(name),osc_server_t("",oscport,true),  
+    client_addr(lo_address_new("localhost","9876"))
+#ifdef LINUXTRACK
+  ,use_ltr_(use_ltr)
+#endif
 {
   char c_tmp[100];
   unsigned int k=0;
@@ -197,7 +216,24 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
                                        const std::vector<float*>& outBuffer, 
                                        uint32_t tp_frame, bool tp_rolling)
 {
-  //DEBUG(anysolo);
+#ifdef LINUXTRACK
+  if( use_ltr_ ){
+    float heading, pitch, roll, x, y, z;
+    uint32_t counter;
+    ltr_get_camera_update(&heading, &pitch, &roll, &y, &z, &x, &counter);
+    pos_t r(-x,-y,z);
+    r *= 0.001;
+    listener_position(r);
+    zyx_euler_t o;
+    o.z = DEG2RAD*heading;
+    o.y = DEG2RAD*pitch;
+    //o.x = DEG2RAD*roll;
+    //DEBUG(o.print());
+    listener_orientation(o);
+    lo_send(client_addr,"/listener/pos","fff",r.x,r.y,r.z);
+    lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
+  }
+#endif
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
@@ -206,16 +242,17 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
     float* amb_buf[4];
     for(unsigned int k=0;k<4; k++)
       amb_buf[k] = outBuffer[k];
+    // todo: rotate background by listener.orientation!
     for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
       if( !it->get_mute() && ((anysolo ==0)||(it->get_solo())))
         it->request_data( tp_frame, nframes, 4, amb_buf );
-      //DEBUG(amb_buf[0][0]);
     }
   }
+  // store jack input data:
   for( unsigned int k=0;k<jackinputs.size();k++){
     jackinputs[k]->write(nframes,inBuffer[k]);
   }
-  // load/update inputs:
+  // load/update input files and jack inputs:
   if( tp_rolling ){
     for(unsigned int k=0;k<srcobjects.size();k++){
       srcobjects[k].fill( tp_frame, nframes );
@@ -225,7 +262,6 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
       srcobjects[k].fill( tp_frame, 0 );
     }
   }
-  //DEBUG(panner.size());
   // process point sources:
   double tp_time((double)tp_frame/(double)srate);
   for( unsigned int k=0;k<panner.size();k++)
@@ -235,9 +271,7 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
   // process mirror sources:
   for( unsigned int k_face=0;k_face<mirror.size();k_face++){
     if( (!faces[k_face].get_mute()) && faces[k_face].isactive(tp_time) ){
-    //if( true ){
       for( unsigned int k_snd=0;k_snd<mirror[k_face].size();k_snd++){
-        //if( sounds[k_snd] && get_playsound(sounds[k_snd]) ){
         if( sounds[k_snd] ){
           mirror[k_face][k_snd].process(nframes,sounds[k_snd]->get_buffer(nframes),outBuffer,tp_frame,tp_time,tp_rolling,sounds[k_snd],&(faces[k_face]));
         }
@@ -340,11 +374,19 @@ int main(int argc, char** argv)
     std::string cfgfile("");
     std::string jackname("tascar_scene");
     std::string oscport("9877");
+#ifdef LINUXTRACK
+    bool use_ltr(false);
+    const char *options = "c:hn:p:l";
+#else
     const char *options = "c:hn:p:";
+#endif
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'n' },
+#ifdef LINUXTRACK
+      { "linuxtrack", 0, 0, 'l'},
+#endif
       { "oscport",  1, 0, 'p' },
       { 0, 0, 0, 0 }
     };
@@ -365,15 +407,47 @@ int main(int argc, char** argv)
       case 'p':
         oscport = optarg;
         break;
+#ifdef LINUXTRACK
+      case 'l':
+        use_ltr = true;
+        break;
+#endif
       }
     }
     if( cfgfile.size() == 0 ){
       usage(long_options);
       return -1;
     }
+#ifdef LINUXTRACK
+    if( use_ltr ){
+      //Initialize the tracking using Default profile
+      ltr_init(NULL);
+      //Wait for tracker initialization
+      ltr_state_type state;
+      int timeout = 100; //10 seconds timeout (for example firmware load...)
+      while(timeout > 0){
+        state = ltr_get_tracking_state();
+        if(state != RUNNING){
+          usleep(100000); //sleep 0.1s
+        }else{
+          break;
+        }
+        --timeout;
+      };
+      if(ltr_get_tracking_state() != RUNNING){
+        throw ErrMsg("linuxtrack initialization is taking too long!\n");
+      }
+    }
+    TASCAR::scene_generator_t S(jackname,oscport,use_ltr);
+#else
     TASCAR::scene_generator_t S(jackname,oscport);
+#endif
     S.read_xml(cfgfile);
     S.run();
+#ifdef LINUXTRACK
+    if( use_ltr )
+      ltr_shutdown();
+#endif
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;

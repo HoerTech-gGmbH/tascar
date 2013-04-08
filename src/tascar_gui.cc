@@ -50,7 +50,7 @@ g_scene_t::g_scene_t(const std::string& n)
 {
   read_xml(n);
   char ctmp[1024];
-  sprintf(ctmp,"tascar_renderer -c %s 2>&1",n.c_str());
+  sprintf(ctmp,"tascar_renderer -l -c %s 2>&1",n.c_str());
   h_pipe = popen( ctmp, "w" );
   if( !h_pipe )
     throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
@@ -273,7 +273,7 @@ int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, 
 {
   tascar_gui_t* h((tascar_gui_t*)user_data);
   if( h ){
-    lo_send_message(h->client_addr,path,msg);
+    //lo_send_message(h->client_addr,path,msg);
     zyx_euler_t r;
     if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
       r.z = DEG2RAD*argv[0]->f;
@@ -294,7 +294,7 @@ int tascar_gui_t::osc_listener_position(const char *path, const char *types, lo_
 {
   tascar_gui_t* h((tascar_gui_t*)user_data);
   if( h ){
-    lo_send_message(h->client_addr,path,msg);
+    //lo_send_message(h->client_addr,path,msg);
     pos_t r;
     if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
       r.x = argv[0]->f;
