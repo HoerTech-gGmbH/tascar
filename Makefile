@@ -13,8 +13,6 @@ endif
 ifeq "ok" "$(shell test -e /usr/include/linuxtrack.h && echo  ok)"
 LTRDEF = "-DLINUXTRACK"
 LDLIBS += -llinuxtrack
-else
-LTRDEF = ""
 endif
 
 #BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
