@@ -39,18 +39,18 @@ using namespace TASCAR;
 
 class g_scene_t : public scene_t {
 public:
-  g_scene_t(const std::string& n);
+  g_scene_t(const std::string& n, const std::string& flags);
   ~g_scene_t();
 private:
   FILE* h_pipe;
 };
 
-g_scene_t::g_scene_t(const std::string& n)
+g_scene_t::g_scene_t(const std::string& n, const std::string& flags)
  : h_pipe(NULL)
 {
   read_xml(n);
   char ctmp[1024];
-  sprintf(ctmp,"tascar_renderer -l -c %s 2>&1",n.c_str());
+  sprintf(ctmp,"tascar_renderer %s -c %s 2>&1",flags.c_str(),n.c_str());
   h_pipe = popen( ctmp, "w" );
   if( !h_pipe )
     throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
@@ -193,9 +193,9 @@ void source_panel_t::set_scene(scene_t* s)
 class tascar_gui_t : public osc_server_t, public jackc_transport_t
 {
 public:
-  tascar_gui_t(const std::string& name,const std::string& oscport);
+  tascar_gui_t(const std::string& name,const std::string& oscport,const std::string& renderflags_);
   ~tascar_gui_t();
-  void open_scene(const std::string& name);
+  void open_scene(const std::string& name, const std::string& flags);
   void set_time( double t ){time = t;};
   void set_scale(double s){scale = s;};
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -265,6 +265,7 @@ private:
   pthread_mutex_t mtx_scene;
   g_scene_t* scene;
   std::string filename;
+  std::string renderflags;
   std::vector<TASCAR::pos_t> roomnodes;
   bool blink;
 };
@@ -395,14 +396,14 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   cr->restore();
 }
 
-void tascar_gui_t::open_scene(const std::string& name)
+void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
 {
   pthread_mutex_lock( &mtx_scene );
   if( scene )
     delete scene;
   scene = NULL;
   if( name.size() ){
-    scene = new g_scene_t(name);
+    scene = new g_scene_t(name, flags);
     timescale.set_range(0,scene->duration);
     set_scale(scene->guiscale);
   }
@@ -412,7 +413,7 @@ void tascar_gui_t::open_scene(const std::string& name)
 
 void tascar_gui_t::on_reload()
 {
-  open_scene( filename );
+  open_scene( filename, renderflags );
 }
 
 void tascar_gui_t::on_view_p()
@@ -615,7 +616,7 @@ int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, i
 
 #define CON_BUTTON(b) button_ ## b.signal_clicked().connect(sigc::mem_fun(*this,&tascar_gui_t::on_ ## b))
 
-tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
+tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, const std::string& renderflags_)
   : osc_server_t("",oscport,true),
     jackc_transport_t(name),
     scale(200),
@@ -638,6 +639,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
 #endif
     scene(NULL),
     filename(name),
+    renderflags(renderflags_),
     blink(false)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
@@ -686,7 +688,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport)
   CON_BUTTON(view_m);
   pthread_mutex_init( &mtx_scene, NULL );
   if( name.size() )
-    open_scene(name);
+    open_scene(name,renderflags);
 }
 
 tascar_gui_t::~tascar_gui_t()
@@ -834,11 +836,19 @@ int main(int argc, char** argv)
   Gtk::Window win;
   std::string cfgfile("");
   std::string oscport("9876");
+#ifdef LINUXTRACK
+  bool use_ltr(false);
+  const char *options = "c:hp:l";
+#else
   const char *options = "c:hp:";
+#endif
   struct option long_options[] = { 
     { "config",   1, 0, 'c' },
     { "help",     0, 0, 'h' },
     { "oscport",  1, 0, 'p' },
+#ifdef LINUXTRACK
+    { "linuxtrack", 0, 0, 'l'},
+#endif
     { 0, 0, 0, 0 }
   };
   int opt(0);
@@ -853,8 +863,13 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     case 'p':
-     oscport = optarg;
-     break;
+      oscport = optarg;
+      break;
+#ifdef LINUXTRACK
+    case 'l':
+      use_ltr = true;
+      break;
+#endif
     }
   }
   if( cfgfile.size() == 0 ){
@@ -862,12 +877,13 @@ int main(int argc, char** argv)
     return -1;
   }
   win.set_title("tascar - "+cfgfile);
-  tascar_gui_t c(cfgfile,oscport);
+#ifdef LINUXTRACK
+  tascar_gui_t c(cfgfile,oscport,use_ltr?"-l":"");
+#else
+  tascar_gui_t c(cfgfile,oscport,"");
+#endif
   win.add(c.wdg_vertmain);
   win.set_default_size(1024,768);
-  //c.set_scale(200);
-  //c.set_scale(c.guiscale);
-  //win.fullscreen();
   win.show_all();
   c.jackc_t::activate();
   c.osc_server_t::activate();
