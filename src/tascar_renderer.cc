@@ -272,7 +272,7 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
   for( unsigned int k_face=0;k_face<mirror.size();k_face++){
     if( (!faces[k_face].get_mute()) && faces[k_face].isactive(tp_time) ){
       for( unsigned int k_snd=0;k_snd<mirror[k_face].size();k_snd++){
-        if( sounds[k_snd] ){
+        if( sounds[k_snd] && get_playsound(sounds[k_snd])){
           mirror[k_face][k_snd].process(nframes,sounds[k_snd]->get_buffer(nframes),outBuffer,tp_frame,tp_time,tp_rolling,sounds[k_snd],&(faces[k_face]));
         }
       }
