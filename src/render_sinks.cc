@@ -41,7 +41,7 @@ void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& ou
     for( unsigned int i=0;i<n;i++){
       delayline.push(vIn[i]);
       float d = (d_current+=dd);
-      float d1 = 1.0/std::max(1.0f,d);
+      float d1 = 1.0/std::max(0.3f,d);
       if( tp_rolling ){
         float c1(clp_current+=dclp);
         float c2(1.0f-c1);
@@ -144,7 +144,7 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
     for( unsigned int i=0;i<n;i++){
       delayline.push(vIn[i]);
       float d = (d_current+=dd);
-      float d1 = 1.0/std::max(1.0f,d);
+      float d1 = 1.0/std::max(0.3f,d);
       if( tp_rolling ){
         float c1(clp_current+=dclp);
         float c2(1.0f-c1);
