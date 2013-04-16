@@ -244,6 +244,18 @@ namespace TASCAR {
     zyx_euler_t orientation;
   };
 
+  class range_t : public scene_node_base_t {
+  public:
+    range_t();
+    void read_xml(xmlpp::Element* e);
+    void write_xml(xmlpp::Element* e,bool help_comments=false);
+    std::string print(const std::string& prefix=""){return "";};
+    void prepare(double fs, uint32_t fragsize){};
+    std::string name;
+    double start;
+    double end;
+  };
+
   class scene_t : public scene_node_base_t {
   public:
     scene_t();
@@ -274,6 +286,7 @@ namespace TASCAR {
     void set_mute(const std::string& name,bool val);
     void set_solo(const std::string& name,bool val);
     bool get_playsound(const sound_t*);
+    std::vector<range_t> ranges;
   };
 
   scene_t xml_read_scene(const std::string& filename);

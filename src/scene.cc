@@ -522,6 +522,11 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
     it->write_xml(e->add_child("face"),help_comments && b_first);
     b_first = false;
   }
+  b_first = true;
+  for(std::vector<range_t>::iterator it=ranges.begin();it!=ranges.end();++it){
+    it->write_xml(e->add_child("range"),help_comments && b_first);
+    b_first = false;
+  }
   listener.write_xml(e->add_child("listener"),help_comments);
 }
 
@@ -558,6 +563,10 @@ void scene_t::read_xml(xmlpp::Element* e)
       if( sne->get_name() == "face" ){
         faces.push_back(face_object_t());
         faces.rbegin()->read_xml(sne);
+      }
+      if( sne->get_name() == "range" ){
+        ranges.push_back(range_t());
+        ranges.rbegin()->read_xml(sne);
       }
     }
   }
@@ -1063,6 +1072,27 @@ std::string TASCAR::Input::jack_t::print(const std::string& prefix)
 TASCAR::Input::jack_t::jack_t(const std::string& parent_name_)
   : parent_name(parent_name_)
 {
+}
+
+TASCAR::range_t::range_t()
+  : name(""),
+    start(0),
+    end(0)
+{
+}
+
+void TASCAR::range_t::read_xml(xmlpp::Element* e)
+{
+  name = e->get_attribute_value("name");
+  get_attribute_value(e,"start",start);
+  get_attribute_value(e,"end",end);
+}
+
+void TASCAR::range_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  e->set_attribute("name",name);
+  set_attribute_double(e,"start",start);
+  set_attribute_double(e,"end",end);
 }
 
 /*

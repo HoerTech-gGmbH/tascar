@@ -224,7 +224,7 @@ protected:
     tp_start();
   };
   void on_tp_stop(){tp_stop();};
-  void on_tp_rewind(){tp_locate(0.0);};
+  void on_tp_rewind();
   void on_tp_time_p(){tp_locate(guitime+0.1);};
   void on_tp_time_pp(){tp_locate(guitime+1.0);};
   void on_tp_time_m(){tp_locate(guitime-0.1);};
@@ -232,6 +232,7 @@ protected:
   void on_reload();
   void on_view_p();
   void on_view_m();
+  void on_range_selected();
   double scale;
   double time;
   double guitime;
@@ -247,6 +248,7 @@ protected:
   Gtk::Button button_reload;
   Gtk::Button button_view_p;
   Gtk::Button button_view_m;
+  Gtk::ComboBoxText rangeselector;
 private:
   lo_address client_addr;
 public:
@@ -268,7 +270,17 @@ private:
   std::string renderflags;
   std::vector<TASCAR::pos_t> roomnodes;
   bool blink;
+  int32_t selected_range;
 };
+
+void tascar_gui_t::on_tp_rewind()
+{
+  if( scene && (selected_range >= 0) && (selected_range<(int32_t)(scene->ranges.size())) ){
+    tp_locate(scene->ranges[selected_range].start);
+  }else{
+    tp_locate(0.0);
+  }
+}
 
 int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
@@ -319,6 +331,23 @@ void tascar_gui_t::on_time_changed()
   if( ltime != guitime ){
     tp_locate(ltime);
   }
+}
+
+void tascar_gui_t::on_range_selected()
+{
+  int32_t nr(-1);
+  double start_time(0);
+  if( scene ){
+    std::string rg(rangeselector.get_active_text());
+    
+    for(unsigned int k=0;k<scene->ranges.size();k++)
+      if( scene->ranges[k].name == rg ){
+        nr = k;
+        start_time = scene->ranges[k].start;
+      }
+  }
+  selected_range = nr;
+  tp_locate(start_time);
 }
 
 void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
@@ -402,9 +431,22 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
   if( scene )
     delete scene;
   scene = NULL;
+  timescale.clear_marks();
+  rangeselector.remove_all();
+  rangeselector.append("- scene -");
+  rangeselector.set_active_text("- scene -");
+  selected_range = -1;
   if( name.size() ){
     scene = new g_scene_t(name, flags);
     timescale.set_range(0,scene->duration);
+    for(unsigned int k=0;k<scene->ranges.size();k++){
+      //timescale.add_mark(scene->ranges[k].start,Gtk::POS_TOP,"<span horizontalalign=\"right\">"+scene->ranges[k].name+"</span>");
+      //timescale.add_mark(scene->ranges[k].start,Gtk::POS_TOP,"&gt;");
+      //timescale.add_mark(scene->ranges[k].end,Gtk::POS_TOP,"&lt;");
+      timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
+      timescale.add_mark(scene->ranges[k].end,Gtk::POS_BOTTOM,"");
+      rangeselector.append(scene->ranges[k].name);
+    }
     set_scale(scene->guiscale);
   }
   wdg_source.set_scene( scene );
@@ -640,7 +682,8 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
     scene(NULL),
     filename(name),
     renderflags(renderflags_),
-    blink(false)
+    blink(false),
+    selected_range(-1)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout_blink), 600 );
@@ -657,6 +700,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   wdg_file_ui_box.pack_start( button_reload, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( rangeselector, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
@@ -676,6 +720,8 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   timescale.set_value(0);
   timescale.signal_value_changed().connect(sigc::mem_fun(*this,
                                                          &tascar_gui_t::on_time_changed));
+  rangeselector.signal_changed().connect(sigc::mem_fun(*this,
+                                                        &tascar_gui_t::on_range_selected));
   CON_BUTTON(tp_rewind);
   CON_BUTTON(tp_start);
   CON_BUTTON(tp_stop);
@@ -817,6 +863,16 @@ int tascar_gui_t::process(jack_nframes_t nframes,
                           uint32_t tp_frame, bool tp_rolling)
 {
   set_time((double)tp_frame/get_srate());
+  if( scene ){
+    if( (selected_range >= 0) && (selected_range < (int32_t)(scene->ranges.size())) ){
+      if( (scene->ranges[selected_range].end <= time) && 
+          (scene->ranges[selected_range].end + (double)nframes/(double)srate > time) )
+        tp_stop();
+    }else{
+      if( (scene->duration <= time) && (scene->duration + (double)nframes/(double)srate > time) )
+        tp_stop();
+    }
+  }
   return 0;
 }
 
