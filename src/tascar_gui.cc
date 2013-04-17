@@ -347,7 +347,7 @@ void tascar_gui_t::on_range_selected()
       }
   }
   selected_range = nr;
-  tp_locate(start_time);
+  //tp_locate(start_time);
 }
 
 void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
