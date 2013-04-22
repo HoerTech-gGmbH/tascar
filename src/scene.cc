@@ -1095,6 +1095,22 @@ void TASCAR::range_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"end",end);
 }
 
+void scene_t::set_source_position_offset(const std::string& srcname,pos_t position)
+{
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it != srcobjects.end(); ++it){
+    if( srcname == it->get_name() )
+      it->dlocation = position;
+  }
+}
+
+void scene_t::set_source_orientation_offset(const std::string& srcname,zyx_euler_t orientation)
+{
+  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it != srcobjects.end(); ++it){
+    if( srcname == it->get_name() )
+      it->dorientation = orientation;
+  }
+}
+
 /*
  * Local Variables:
  * mode: c++

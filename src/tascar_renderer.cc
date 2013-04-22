@@ -78,8 +78,12 @@ namespace TASCAR {
     static int osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+    static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     uint32_t first_reverb_port;
+  public:
     lo_address client_addr;
+  private:
 #ifdef LINUXTRACK
     bool use_ltr_;
 #endif
@@ -119,6 +123,8 @@ TASCAR::scene_generator_t::scene_generator_t(const std::string& name,
   osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
   osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
   osc_server_t::add_method("/listener/rot","f",osc_listener_orientation,this);
+  osc_server_t::add_method("/srcpos","sfff",osc_set_src_position,this);
+  osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
 }
 
 TASCAR::scene_generator_t::~scene_generator_t()
@@ -160,6 +166,37 @@ int TASCAR::scene_generator_t::osc_listener_orientation(const char *path, const 
     zyx_euler_t r;
     r.z = DEG2RAD*argv[0]->f;
     h->listener_orientation(r);
+    return 0;
+  }
+  return 1;
+}
+
+int TASCAR::scene_generator_t::osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
+    zyx_euler_t r;
+    r.z = DEG2RAD*argv[1]->f;
+    r.y = DEG2RAD*argv[2]->f;
+    r.x = DEG2RAD*argv[3]->f;
+    h->set_source_orientation_offset(&(argv[0]->s),r);
+    lo_send_message(h->client_addr,path,msg);
+    return 0;
+  }
+  return 1;
+}
+
+
+int TASCAR::scene_generator_t::osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
+    pos_t r;
+    r.x = argv[1]->f;
+    r.y = argv[2]->f;
+    r.z = argv[3]->f;
+    h->set_source_position_offset(&(argv[0]->s),r);
+    lo_send_message(h->client_addr,path,msg);
     return 0;
   }
   return 1;

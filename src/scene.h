@@ -282,6 +282,8 @@ namespace TASCAR {
     double guiscale;
     void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
     void listener_position(pos_t p){listener.dlocation = p;};
+    void set_source_position_offset(const std::string& srcname,pos_t position);
+    void set_source_orientation_offset(const std::string& srcname,zyx_euler_t position);
     uint32_t anysolo;
     void set_mute(const std::string& name,bool val);
     void set_solo(const std::string& name,bool val);
