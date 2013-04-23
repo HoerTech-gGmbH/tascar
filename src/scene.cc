@@ -59,7 +59,7 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned i
 }
 
 
-void get_attribute_value(xmlpp::Element* elem,const std::string& name,bool& value)
+void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value)
 {
   std::string attv(elem->get_attribute_value(name));
   value = (attv == "true");
@@ -541,7 +541,7 @@ void scene_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"elev",elev);
   get_attribute_value(e,"duration",duration);
   get_attribute_value(e,"guiscale",guiscale);
-  get_attribute_value(e,"loop",loop);
+  get_attribute_value_bool(e,"loop",loop);
   description = xml_get_text(e,"description");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -903,8 +903,8 @@ route_t::route_t()
 void route_t::read_xml(xmlpp::Element* e)
 {
   name = e->get_attribute_value("name");
-  get_attribute_value(e,"mute",mute);
-  get_attribute_value(e,"solo",solo);
+  get_attribute_value_bool(e,"mute",mute);
+  get_attribute_value_bool(e,"solo",solo);
 }
 
 void route_t::write_xml(xmlpp::Element* e,bool help_comments)

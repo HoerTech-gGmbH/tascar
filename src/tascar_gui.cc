@@ -465,6 +465,7 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
   rangeselector.remove_all();
   rangeselector.append("- scene -");
   rangeselector.set_active_text("- scene -");
+  //button_loop.set_active(false);
   selected_range = -1;
   if( name.size() ){
     scene = new g_scene_t(name, flags);
@@ -476,9 +477,9 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
       timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
       timescale.add_mark(scene->ranges[k].end,Gtk::POS_BOTTOM,"");
       rangeselector.append(scene->ranges[k].name);
-      button_loop.set_active(scene->loop);
     }
     set_scale(scene->guiscale);
+    button_loop.set_active(scene->loop);
   }
   wdg_source.set_scene( scene );
   pthread_mutex_unlock( &mtx_scene );
@@ -491,11 +492,12 @@ void tascar_gui_t::on_reload()
 
 void tascar_gui_t::on_loop()
 {
-  pthread_mutex_lock( &mtx_scene );
-  if( scene ){
-    scene->loop = button_loop.get_active();
+  if( pthread_mutex_trylock( &mtx_scene ) == 0 ){
+    if( scene ){
+      scene->loop = button_loop.get_active();
+    }
+    pthread_mutex_unlock( &mtx_scene );
   }
-  pthread_mutex_unlock( &mtx_scene );
 }
 
 void tascar_gui_t::on_view_p()
