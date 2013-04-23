@@ -235,6 +235,7 @@ protected:
   void on_view_p();
   void on_view_m();
   void on_range_selected();
+  void on_loop();
   double scale;
   double time;
   double guitime;
@@ -251,6 +252,7 @@ protected:
   Gtk::Button button_view_p;
   Gtk::Button button_view_m;
   Gtk::ComboBoxText rangeselector;
+  Gtk::ToggleButton button_loop;
 private:
   lo_address client_addr;
 public:
@@ -474,6 +476,7 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
       timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
       timescale.add_mark(scene->ranges[k].end,Gtk::POS_BOTTOM,"");
       rangeselector.append(scene->ranges[k].name);
+      button_loop.set_active(scene->loop);
     }
     set_scale(scene->guiscale);
   }
@@ -484,6 +487,15 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
 void tascar_gui_t::on_reload()
 {
   open_scene( filename, renderflags );
+}
+
+void tascar_gui_t::on_loop()
+{
+  pthread_mutex_lock( &mtx_scene );
+  if( scene ){
+    scene->loop = button_loop.get_active();
+  }
+  pthread_mutex_unlock( &mtx_scene );
 }
 
 void tascar_gui_t::on_view_p()
@@ -702,6 +714,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
     button_reload("reload"),
     button_view_p("zoom +"),
     button_view_m("zoom -"),
+    button_loop("loop"),
     client_addr(lo_address_new("localhost","9877")),
     wdg_source(client_addr),
 #ifdef GTKMM30
@@ -731,6 +744,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   wdg_file_ui_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( rangeselector, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( button_loop, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
@@ -762,6 +776,18 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   CON_BUTTON(reload);
   CON_BUTTON(view_p);
   CON_BUTTON(view_m);
+  CON_BUTTON(loop);
+#ifdef GTKMM30
+  Gdk::RGBA col;
+  col.set_rgba_u(27*256,249*256,163*256);
+  button_loop.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
+#else
+  Gdk::Color col;
+  col.set_rgb(27*256,249*256,163*256);
+  button_loop.modify_bg(Gtk::STATE_ACTIVE,col);
+  button_loop.modify_bg(Gtk::STATE_PRELIGHT,col);
+  button_loop.modify_bg(Gtk::STATE_SELECTED,col);
+#endif
   pthread_mutex_init( &mtx_scene, NULL );
   if( name.size() )
     open_scene(name,renderflags);
@@ -896,11 +922,22 @@ int tascar_gui_t::process(jack_nframes_t nframes,
   if( scene ){
     if( (selected_range >= 0) && (selected_range < (int32_t)(scene->ranges.size())) ){
       if( (scene->ranges[selected_range].end <= time) && 
-          (scene->ranges[selected_range].end + (double)nframes/(double)srate > time) )
-        tp_stop();
+          (scene->ranges[selected_range].end + (double)nframes/(double)srate > time) ){
+        if( scene->loop ){
+          tp_locate(scene->ranges[selected_range].start);
+          //DEBUG(scene->ranges[selected_range].start);
+        }else
+          tp_stop();
+      }
     }else{
-      if( (scene->duration <= time) && (scene->duration + (double)nframes/(double)srate > time) )
-        tp_stop();
+      if( (scene->duration <= time) && (scene->duration + (double)nframes/(double)srate > time) ){
+        DEBUG(scene->loop);
+        if( scene->loop ){
+          tp_locate(0.0);
+          //DEBUG(0.0);
+        }else
+          tp_stop();
+      }
     }
   }
   return 0;

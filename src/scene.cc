@@ -459,7 +459,7 @@ scene_t::scene_t()
     lat(53.155473),
     lon(8.167249),
     elev(10),
-    guiscale(200),anysolo(0)
+    guiscale(200),anysolo(0),loop(false)
 {
 }
 
@@ -498,6 +498,7 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
   set_attribute_double(e,"elev",elev);
   set_attribute_double(e,"guiscale",guiscale);
   set_attribute_double(e,"duration",duration);
+  set_attribute_bool(e,"loop",loop);
   if( description.size()){
     xmlpp::Element* description_node = e->add_child("description");
     description_node->add_child_text(description);
@@ -540,6 +541,7 @@ void scene_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"elev",elev);
   get_attribute_value(e,"duration",duration);
   get_attribute_value(e,"guiscale",guiscale);
+  get_attribute_value(e,"loop",loop);
   description = xml_get_text(e,"description");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){

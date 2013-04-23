@@ -289,6 +289,7 @@ namespace TASCAR {
     void set_solo(const std::string& name,bool val);
     bool get_playsound(const sound_t*);
     std::vector<range_t> ranges;
+    bool loop;
   };
 
   scene_t xml_read_scene(const std::string& filename);
