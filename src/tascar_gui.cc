@@ -462,8 +462,13 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
     delete scene;
   scene = NULL;
   timescale.clear_marks();
+#ifdef GTKMM24
+  rangeselector.clear();
+  rangeselector.append_text("- scene -");
+#else
   rangeselector.remove_all();
   rangeselector.append("- scene -");
+#endif
   rangeselector.set_active_text("- scene -");
   //button_loop.set_active(false);
   selected_range = -1;
@@ -476,7 +481,11 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
       //timescale.add_mark(scene->ranges[k].end,Gtk::POS_TOP,"&lt;");
       timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
       timescale.add_mark(scene->ranges[k].end,Gtk::POS_BOTTOM,"");
+#ifdef GTKMM24
+      rangeselector.append_text(scene->ranges[k].name);
+#else
       rangeselector.append(scene->ranges[k].name);
+#endif
     }
     set_scale(scene->guiscale);
     button_loop.set_active(scene->loop);
