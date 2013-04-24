@@ -1040,11 +1040,15 @@ void face_object_t::write_xml(xmlpp::Element* e,bool help_comments)
 void TASCAR::Input::jack_t::write(uint32_t n,float* b)
 {
   memcpy(data,b,sizeof(float)*std::min(n,size));
+  for( unsigned int k=0;k<std::min(n,size);k++)
+    data[k] *= gain;
 }
 
 void TASCAR::Input::jack_t::read_xml(xmlpp::Element* e)
 {
   base_t::read_xml(e);
+  get_attribute_value(e,"gain",gain);
+  gain = pow(10.0,0.05*gain);
   connections.clear();
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -1058,6 +1062,7 @@ void TASCAR::Input::jack_t::read_xml(xmlpp::Element* e)
 void TASCAR::Input::jack_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   base_t::write_xml(e,help_comments);
+  //todo write gain
   for( std::vector<std::string>::iterator it=connections.begin();it!=connections.end();++it){
     xmlpp::Element* se(e->add_child("connection"));
     se->set_attribute("port",*it);

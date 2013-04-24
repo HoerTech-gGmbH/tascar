@@ -120,6 +120,7 @@ namespace TASCAR {
       std::string get_port_name() const { return parent_name+"."+name;};
       std::vector<std::string> connections;
       std::string parent_name;
+      double gain;
     };
 
   }
