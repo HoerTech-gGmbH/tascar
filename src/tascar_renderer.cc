@@ -73,6 +73,7 @@ namespace TASCAR {
     std::vector<std::vector<TASCAR::mirror_pan_t> > mirror;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
+    void send_listener();
     std::vector<std::string> vAmbPorts;
     static int osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -119,6 +120,7 @@ TASCAR::scene_generator_t::scene_generator_t(const std::string& name,
   }
   osc_server_t::add_method("/solo","si",osc_solo,this);
   osc_server_t::add_method("/mute","si",osc_mute,this);
+  osc_server_t::add_method("/listener/pos","ffffff",osc_listener_position,this);
   osc_server_t::add_method("/listener/pos","fff",osc_listener_position,this);
   osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
   osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
@@ -205,6 +207,21 @@ int TASCAR::scene_generator_t::osc_set_src_position(const char *path, const char
 int TASCAR::scene_generator_t::osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  if( h && (argc == 6) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f')
+      && (types[3]=='f') && (types[4]=='f') && (types[5]=='f') ){
+    pos_t r;
+    r.x = argv[0]->f;
+    r.y = argv[1]->f;
+    r.z = argv[2]->f;
+    h->listener_position(r);
+    zyx_euler_t o;
+    o.z = DEG2RAD*argv[3]->f;
+    o.y = DEG2RAD*argv[4]->f;
+    o.x = DEG2RAD*argv[5]->f;
+    h->listener_orientation(o);
+    h->send_listener();
+    return 0;
+  }
   if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
     pos_t r;
     r.x = argv[0]->f;
@@ -248,6 +265,15 @@ void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
     }
   }
 }
+
+void TASCAR::scene_generator_t::send_listener()
+{
+  pos_t r(listener.dlocation);
+  zyx_euler_t o(listener.dorientation);
+  lo_send(client_addr,"/listener/pos","fff",r.x,r.y,r.z);
+  lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
+}
+
 int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
                                        const std::vector<float*>& inBuffer,
                                        const std::vector<float*>& outBuffer, 
