@@ -19,7 +19,7 @@ endif
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
-OBJECTS = jackclient.o coordinates.o delayline.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o render_sinks.o
+OBJECTS = jackclient.o coordinates.o delayline.o speakerlayout.o multipan.o osc_helper.o async_file.o errorhandling.o scene.o render_sinks.o viewport.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 

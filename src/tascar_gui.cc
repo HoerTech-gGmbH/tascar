@@ -34,6 +34,7 @@
 #include "osc_helper.h"
 #include <iostream>
 #include <getopt.h>
+#include "viewport.h"
 
 using namespace TASCAR;
 
@@ -197,7 +198,7 @@ public:
   ~tascar_gui_t();
   void open_scene(const std::string& name, const std::string& flags);
   void set_time( double t ){time = t;};
-  void set_scale(double s){scale = s;};
+  void set_scale(double s){view.set_scale( s );};
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -236,7 +237,8 @@ protected:
   void on_view_m();
   void on_range_selected();
   void on_loop();
-  double scale;
+  viewport_t view;
+  //double scale;
   double time;
   double guitime;
   double headrot;
@@ -253,6 +255,7 @@ protected:
   Gtk::Button button_view_m;
   Gtk::ComboBoxText rangeselector;
   Gtk::ToggleButton button_loop;
+  Gtk::ToggleButton button_perspective;
 private:
   lo_address client_addr;
 public:
@@ -388,10 +391,11 @@ void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> 
     cr->set_source_rgba(1,0,0,0.5);
     cr->set_line_width( 1.2*msize );
     for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
+      pos_t p(view(it->second));
       if( it==obj.location.begin() )
-        cr->move_to( it->second.x, -it->second.y );
+        cr->move_to( p.x, -p.y );
       else
-        cr->line_to( it->second.x, -it->second.y );
+        cr->line_to( p.x, -p.y );
     }
     cr->stroke();
   }
@@ -401,10 +405,11 @@ void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> 
   else
     cr->set_line_width( 0.1*msize );
   for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
+    pos_t p(view(it->second));
     if( it==obj.location.begin() )
-      cr->move_to( it->second.x, -it->second.y );
+      cr->move_to( p.x, -p.y );
     else
-      cr->line_to( it->second.x, -it->second.y );
+      cr->line_to( p.x, -p.y );
   }
   cr->stroke();
   cr->restore();
@@ -419,7 +424,11 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
     msize *= 0.4;
     plot_time = std::min(std::max(plot_time,obj.starttime),obj.endtime);
   }
+  //pos_t p(view(obj.location.interp(plot_time-obj.starttime)));
   pos_t p(obj.location.interp(plot_time-obj.starttime));
+  //DEBUG(p.print_cart());
+  p = view(p);
+  //DEBUG(p.print_cart());
   cr->save();
   if( solo && blink ){
     cr->set_source_rgba(1, 0, 0, 0.5);
@@ -430,7 +439,7 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   cr->arc(p.x, -p.y, msize, 0, PI2 );
   cr->fill();
   for(unsigned int k=0;k<obj.sound.size();k++){
-    pos_t ps(obj.sound[k].get_pos_global(plot_time));
+    pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
     //pos_t ps(obj.sound[k].get_pos(time));
     cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
     cr->fill();
@@ -444,13 +453,24 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   if( active ){
     cr->set_line_width( 0.1*msize );
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-    cr->move_to( p.x, -p.y );
-    for(unsigned int k=0;k<obj.sound.size();k++){
-      pos_t ps(obj.sound[k].get_pos_global(plot_time));
-      //pos_t ps(obj.sound[k].get_pos(time));
-      cr->line_to( ps.x, -ps.y );
+    //cr->move_to( p.x, -p.y );
+    if( obj.sound.size()){
+      pos_t pso(view(obj.sound[0].get_pos_global(plot_time)));
+      for(unsigned int k=1;k<obj.sound.size();k++){
+        pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
+        //pos_t ps(obj.sound[k].get_pos(time));
+        bool view_x((fabs(ps.x)<1)||
+                    (fabs(pso.x)<1));
+        bool view_y((fabs(ps.y)<1)||
+                    (fabs(pso.y)<1));
+        if( view_x && view_y ){
+          cr->move_to( pso.x, -pso.y );
+          cr->line_to( ps.x, -ps.y );
+          cr->stroke();
+        }
+        pso = ps;
+      }
     }
-    cr->stroke();
   }
   cr->restore();
 }
@@ -531,6 +551,8 @@ void tascar_gui_t::on_view_m()
 
 void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  if( view.get_perspective() )
+    return;
   msize *= 1.5;
   pos_t p(obj.location.interp(time-obj.starttime));
   p += obj.dlocation;
@@ -538,15 +560,16 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   o += obj.dorientation;
   //DEBUG(o.print());
   o.z += headrot;
-  pos_t p1(1.8*msize,-0.6*msize,0);
-  pos_t p2(2.9*msize,0,0);
-  pos_t p3(1.8*msize,0.6*msize,0);
-  pos_t p4(-0.5*msize,2.3*msize,0);
-  pos_t p5(0,1.7*msize,0);
-  pos_t p6(0.5*msize,2.3*msize,0);
-  pos_t p7(-0.5*msize,-2.3*msize,0);
-  pos_t p8(0,-1.7*msize,0);
-  pos_t p9(0.5*msize,-2.3*msize,0);
+  double scale(0.5*view.get_scale());
+  pos_t p1(1.8*msize*scale,-0.6*msize*scale,0);
+  pos_t p2(2.9*msize*scale,0,0);
+  pos_t p3(1.8*msize*scale,0.6*msize*scale,0);
+  pos_t p4(-0.5*msize*scale,2.3*msize*scale,0);
+  pos_t p5(0,1.7*msize*scale,0);
+  pos_t p6(0.5*msize*scale,2.3*msize*scale,0);
+  pos_t p7(-0.5*msize*scale,-2.3*msize*scale,0);
+  pos_t p8(0,-1.7*msize*scale,0);
+  pos_t p9(0.5*msize*scale,-2.3*msize*scale,0);
   p1 *= o;
   p2 *= o;
   p3 *= o;
@@ -565,6 +588,16 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   p7+=p;
   p8+=p;
   p9+=p;
+  p = view(p);
+  p1 = view(p1);
+  p2 = view(p2);
+  p3 = view(p3);
+  p4 = view(p4);
+  p5 = view(p5);
+  p6 = view(p6);
+  p7 = view(p7);
+  p8 = view(p8);
+  p9 = view(p9);
   cr->save();
   cr->set_line_width( 0.2*msize );
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
@@ -650,48 +683,113 @@ void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cai
   bool solo(face.get_solo());
   if( !active )
     msize*=0.5;
-  std::vector<pos_t> roomnodes(6);
-  roomnodes[0].y -= 0.5*face.width;
-  roomnodes[1].y -= 0.5*face.width;
-  roomnodes[2].y += 0.5*face.width;
-  roomnodes[3].y += 0.5*face.width;
-  roomnodes[0].z -= 0.5*face.height;
+  std::vector<pos_t> roomnodes(18);
+  // width:
+  roomnodes[0].y += 0.5*face.width;
+  roomnodes[1].y += 0.25*face.width;
+  roomnodes[3].y -= 0.25*face.width;
+  roomnodes[4].y -= 0.5*face.width;
+  roomnodes[5].y -= 0.5*face.width;
+  roomnodes[6].y -= 0.5*face.width;
+  roomnodes[7].y -= 0.5*face.width;
+  roomnodes[8].y -= 0.5*face.width;
+  roomnodes[9].y -= 0.25*face.width;
+  roomnodes[11].y += 0.25*face.width;
+  roomnodes[12].y += 0.5*face.width;
+  roomnodes[13].y += 0.5*face.width;
+  roomnodes[14].y += 0.5*face.width;
+  roomnodes[15].y += 0.5*face.width;
+  // height:
+  roomnodes[0].z += 0.5*face.height;
   roomnodes[1].z += 0.5*face.height;
-  roomnodes[2].z -= 0.5*face.height;
+  roomnodes[2].z += 0.5*face.height;
   roomnodes[3].z += 0.5*face.height;
-  roomnodes[5].x += 3*msize;
+  roomnodes[4].z += 0.5*face.height;
+  roomnodes[5].z += 0.25*face.height;
+  roomnodes[7].z -= 0.25*face.height;
+  roomnodes[8].z -= 0.5*face.height;
+  roomnodes[9].z -= 0.5*face.height;
+  roomnodes[10].z -= 0.5*face.height;
+  roomnodes[11].z -= 0.5*face.height;
+  roomnodes[12].z -= 0.5*face.height;
+  roomnodes[13].z -= 0.25*face.height;
+  roomnodes[15].z += 0.25*face.height;
+  // normal:
+  roomnodes[17].x += 30*msize;
+  //
+  //roomnodes[0].y -= 0.5*face.width;
+  //roomnodes[1].y -= 0.5*face.width;
+  //roomnodes[2].y += 0.5*face.width;
+  //roomnodes[3].y += 0.5*face.width;
+  //roomnodes[0].z -= 0.5*face.height;
+  //roomnodes[1].z += 0.5*face.height;
+  //roomnodes[2].z -= 0.5*face.height;
+  //roomnodes[3].z += 0.5*face.height;
+  //roomnodes[5].x += 3*msize;
   pos_t loc(face.get_location(time));
   zyx_euler_t o(face.get_orientation(time));
-  for(unsigned int k=0;k<6;k++){
+  for(unsigned int k=0;k<roomnodes.size();k++){
     roomnodes[k] *= o;
     roomnodes[k] += loc;
+    roomnodes[k] = view(roomnodes[k]);
   }
   cr->save();
   if( solo && blink ){
+    // solo indicating:
     cr->set_line_width( 1.2*msize );
     cr->set_source_rgba(1,0,0,0.5);
     cr->move_to( roomnodes[0].x, -roomnodes[0].y );
-    cr->line_to( roomnodes[1].x, -roomnodes[1].y );
-    cr->line_to( roomnodes[2].x, -roomnodes[2].y );
-    cr->line_to( roomnodes[3].x, -roomnodes[3].y );
+    for(unsigned int k=0;k<16;k++)
+      cr->line_to( roomnodes[k].x, -roomnodes[k].y );
     cr->line_to( roomnodes[0].x, -roomnodes[0].y );
     cr->stroke();
   }
+  // outline:
   cr->set_line_width( 0.3*msize );
   cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.6);
-  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
-  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
-  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
-  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
-  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+  for(unsigned int k=0;k<16;k++){
+    unsigned int k1((k+1)&15);
+    bool view_x((fabs(roomnodes[k].x)<1)||
+                (fabs(roomnodes[k1].x)<1));
+    bool view_y((fabs(roomnodes[k].y)<1)||
+                (fabs(roomnodes[k1].y)<1));
+    if( view_x && view_y ){
+      cr->move_to( roomnodes[k].x, -roomnodes[k].y );
+      cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
+    }
+  }
   cr->stroke();
+  // fill:
   if( active ){
+    cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.3);
+    for(unsigned int k=0;k<16;k++){
+      // is at least one point in view?
+      unsigned int k1((k+1)&15);
+      bool view_x((fabs(roomnodes[16].x)<1)||
+                  (fabs(roomnodes[k].x)<1)||
+                  (fabs(roomnodes[k1].x)<1));
+      bool view_y((fabs(roomnodes[16].y)<1)||
+                  (fabs(roomnodes[k].y)<1)||
+                  (fabs(roomnodes[k1].y)<1));
+      if( view_x && view_y ){
+        cr->move_to( roomnodes[16].x, -roomnodes[16].y );
+        cr->line_to( roomnodes[k].x, -roomnodes[k].y );
+        cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
+        cr->fill();
+      }
+    }
+  }
+  if( active ){
+    // normal and name:
     cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
-    cr->move_to( roomnodes[4].x, -roomnodes[4].y );
-    cr->line_to( roomnodes[5].x, -roomnodes[5].y );
+    cr->move_to( roomnodes[16].x, -roomnodes[16].y );
+    cr->line_to( roomnodes[17].x, -roomnodes[17].y );
     cr->stroke();
+    cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.3);
+    cr->arc(roomnodes[16].x, -roomnodes[16].y, msize, 0, PI2 );
+    cr->fill();
     cr->set_source_rgb(0, 0, 0 );
-    cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
+    cr->move_to( roomnodes[16].x + 0.1*msize, -roomnodes[16].y );
     cr->show_text( face.get_name().c_str() );
   }
   cr->restore();
@@ -712,7 +810,7 @@ int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, i
 tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, const std::string& renderflags_)
   : osc_server_t("",oscport,true),
     jackc_transport_t(name),
-    scale(200),
+    //scale(200),
     time(0),
     guitime(0),
     button_tp_stop("stop"),
@@ -726,6 +824,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
     button_view_p("zoom +"),
     button_view_m("zoom -"),
     button_loop("loop"),
+    button_perspective("persp"),
     client_addr(lo_address_new("localhost","9877")),
     wdg_source(client_addr),
 #ifdef GTKMM30
@@ -756,6 +855,7 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( rangeselector, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_loop, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( button_perspective, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
@@ -792,12 +892,16 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   Gdk::RGBA col;
   col.set_rgba_u(27*256,249*256,163*256);
   button_loop.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
+  button_perspective.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
 #else
   Gdk::Color col;
   col.set_rgb(27*256,249*256,163*256);
   button_loop.modify_bg(Gtk::STATE_ACTIVE,col);
   button_loop.modify_bg(Gtk::STATE_PRELIGHT,col);
   button_loop.modify_bg(Gtk::STATE_SELECTED,col);
+  button_perspective.modify_bg(Gtk::STATE_ACTIVE,col);
+  button_perspective.modify_bg(Gtk::STATE_PRELIGHT,col);
+  button_perspective.modify_bg(Gtk::STATE_SELECTED,col);
 #endif
   pthread_mutex_init( &mtx_scene, NULL );
   if( name.size() )
@@ -833,23 +937,31 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   try{
     Glib::RefPtr<Gdk::Window> window = wdg_scenemap.get_window();
     if(window && scene){
+      view.set_perspective(button_perspective.get_active());
+      if( view.get_perspective() ){
+        view.set_ref(scene->listener.get_location(time));
+        view.set_euler(scene->listener.get_orientation(time));
+      }
       Gtk::Allocation allocation = wdg_scenemap.get_allocation();
       const int width = allocation.get_width();
       const int height = allocation.get_height();
       cr->rectangle(0,0,width,height);
       cr->clip();
       cr->translate(0.5*width, 0.5*height);
-      double wscale(0.5*std::min(height,width)/scale);
-      double markersize(0.02*scale);
+      //double wscale(0.5*std::min(height,width)/scale);
+      double wscale(0.5*std::max(height,width));
+      double markersize(0.02);
+      //cr->scale( width/wscale, height/wscale );
+      //DEBUG(wscale);
       cr->scale( wscale, wscale );
       cr->set_line_width( 0.3*markersize );
       cr->set_font_size( 2*markersize );
-      double scale_len(pow(10.0,floor(log10(scale))));
-      double scale_r(scale/scale_len);
-      if( scale_r >= 5 )
-        scale_len *=5;
-      else if( scale_r >= 2 )
-        scale_len *= 2;
+      //double scale_len(pow(10.0,floor(log10(scale))));
+      //double scale_r(scale/scale_len);
+      //if( scale_r >= 5 )
+      //  scale_len *=5;
+      //else if( scale_r >= 2 )
+      //  scale_len *= 2;
       cr->save();
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
@@ -874,18 +986,18 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       for(unsigned int k=0;k<scene->srcobjects.size();k++){
         draw_src(scene->srcobjects[k], cr, markersize );
       }
-      cr->save();
-      cr->set_source_rgb( 0, 0, 0 );
-      cr->move_to( -0.9*scale,0.9*scale );
-      cr->line_to( -0.9*scale,0.95*scale );
-      cr->line_to( -0.9*scale+scale_len,0.95*scale );
-      cr->line_to( -0.9*scale+scale_len,0.9*scale );
-      cr->stroke();
-      cr->move_to( -0.88*scale,0.94*scale );
-      char cmp[1024];
-      sprintf(cmp,"%g m",scale_len);
-      cr->show_text( cmp );
-      cr->restore();
+      //cr->save();
+      //cr->set_source_rgb( 0, 0, 0 );
+      //cr->move_to( -0.9*scale,0.9*scale );
+      //cr->line_to( -0.9*scale,0.95*scale );
+      //cr->line_to( -0.9*scale+scale_len,0.95*scale );
+      //cr->line_to( -0.9*scale+scale_len,0.9*scale );
+      //cr->stroke();
+      //cr->move_to( -0.88*scale,0.94*scale );
+      //char cmp[1024];
+      //sprintf(cmp,"%g m",scale_len);
+      //cr->show_text( cmp );
+      //cr->restore();
     }
     guitime = time;
     timescale.set_value(guitime);
@@ -942,7 +1054,7 @@ int tascar_gui_t::process(jack_nframes_t nframes,
       }
     }else{
       if( (scene->duration <= time) && (scene->duration + (double)nframes/(double)srate > time) ){
-        DEBUG(scene->loop);
+        //DEBUG(scene->loop);
         if( scene->loop ){
           tp_locate(0.0);
           //DEBUG(0.0);

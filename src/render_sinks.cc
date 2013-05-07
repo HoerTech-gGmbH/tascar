@@ -47,7 +47,9 @@ void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& ou
         float c2(1.0f-c1);
         float mc1(c1_current+=dc1);
         float mc2(c2_current+=dc2);
+        // apply air absorption:
         y = c2*y+c1*delayline.get_dist(d)*d1;
+        // apply diffusion/normal reflection:
         my = mc2*my+mc1*y;
         //my = y;
         for( unsigned int k=0;k<idx::channels;k++){
