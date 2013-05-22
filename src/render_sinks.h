@@ -5,7 +5,60 @@
 #include "scene.h"
 #include "delayline.h"
 
+/*
+
+  sources {
+
+  point sources: pos
+  
+  room sources [amb1]: pos+dimension (shoe box)
+  
+  }[internal/jack/file]
+
+
+  sink-sources {
+
+  diffuse-rev
+
+  }
+
+  acoustic-model
+
+  sinks {
+
+  amb11
+
+  amb33
+
+  amb110
+
+  point
+
+  shoe_box
+
+  [wfs/nfc_hoa/...]
+
+  }
+
+
+
+
+ */
+
 namespace TASCAR {
+
+  /*
+  class sink_base_t : public object_t {
+  public:
+    sink_base_t();
+    virtual uint32_t output_channels() = 0;
+    void connect_source(const source_base_t* src);
+    virtual void prepare() = 0;
+    virtual void process(uint32_t n, std::vector<float*> sOut) = 0;
+  protected:
+    std::vector<const source_base_t*> sources;
+  };
+  */
 
   class trackpan_amb33_t {
   public:
