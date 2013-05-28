@@ -208,6 +208,15 @@ namespace TASCAR {
   };
   /**
      \brief Translate a point
+     \param p Offset
+  */
+  inline pos_t operator+(const pos_t& a,const pos_t& b) {
+    pos_t tmp(a);
+    tmp+=b;
+    return tmp;
+  };
+  /**
+     \brief Translate a point
      \param p Inverse offset
   */
   inline pos_t& operator-=(pos_t& self,const pos_t& p) {
@@ -215,6 +224,15 @@ namespace TASCAR {
     self.y-=p.y;
     self.z-=p.z;
     return self;
+  };
+  /**
+     \brief Translate a point
+     \param p Offset
+  */
+  inline pos_t operator-(const pos_t& a,const pos_t& b) {
+    pos_t tmp(a);
+    tmp-=b;
+    return tmp;
   };
   /**
      \brief Scale relative to origin
