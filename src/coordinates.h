@@ -67,6 +67,7 @@ namespace TASCAR {
     inline double norm_xy() const {return sqrt(x*x+y*y);};
     inline double azim() const {return atan2(y,x);};
     inline double elev() const {return atan2(z,norm_xy());};
+    pos_t normal();
     /**
        \brief Rotate around z-axis
     */
@@ -277,6 +278,24 @@ namespace TASCAR {
   }
 
   /**
+     \brief Return distance between two points
+  */
+  inline double dot_prod(const pos_t& p1, const pos_t& p2)
+  {
+    return sqrt(p1.x*p2.x + 
+                p1.y*p2.y + 
+                p1.z*p2.z);
+  }
+
+  inline pos_t cross_prod(const pos_t& a,const pos_t& b)
+  {
+    return pos_t(a.y*b.z - a.z*b.y,
+                 a.z*b.x - a.x*b.z,
+                 a.x*b.y - a.y*b.x);
+  }
+
+
+  /**
      \ingroup tascar
      \brief List of points connected with a time.
   */
@@ -392,10 +411,17 @@ namespace TASCAR {
   std::string xml_get_text( xmlpp::Node* n, const std::string& child );
 
   class face_t {
+  public:
+    face_t();
+    void set(const pos_t& p0, const zyx_euler_t& o, double width, double height);
+    pos_t nearest_on_plane(const pos_t& p0) const;
+    const pos_t& get_normal() const { return normal;};
   protected:
-    pos_t normal;
+    void update();
     pos_t anchor;
-    pos_t dimension;
+    pos_t e1;
+    pos_t e2;
+    pos_t normal;
   };
 
   /**

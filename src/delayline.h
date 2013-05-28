@@ -42,6 +42,7 @@ namespace TASCAR {
        \param c Speed of sound
     */
     varidelay_t(uint32_t maxdelay, double fs, double c);
+    varidelay_t(const varidelay_t& src);
     ~varidelay_t();
     /**
        \brief Add a new input value to delay line

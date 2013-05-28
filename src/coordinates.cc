@@ -706,6 +706,45 @@ void track_t::fill_gaps(double dt)
   prepare();
 }
 
+face_t::face_t()
+{
+  set(pos_t(),zyx_euler_t(),2,1);
+}
+
+void face_t::set(const pos_t& p0, const zyx_euler_t& o, double width, double height)
+{
+  anchor = p0;
+  e1 = pos_t(0,width,0);
+  e2 = pos_t(0,0,height);
+  e1 /= o;
+  e2 /= o;
+  update();
+}
+
+void face_t::update()
+{
+  normal = cross_prod(e1,e2);
+  normal /= normal.norm();
+}
+
+pos_t face_t::nearest_on_plane( const pos_t& p0 ) const
+{
+  double plane_dist = dot_prod(normal,anchor-p0);
+  pos_t p0d = normal;
+  p0d *= plane_dist;
+  p0d += p0;
+  return p0d;
+}
+
+pos_t pos_t::normal()
+{
+  pos_t r(*this);
+  r /= norm();
+  return r;
+}
+
+
+
 /*
  * Local Variables:
  * mode: c++

@@ -12,7 +12,6 @@ namespace TASCAR {
     pos_t relative_position(const pos_t& psrc);
     void add_source(const pos_t& prel, const wave_t& chunk);
     void add_source(const pos_t& prel, const amb1wave_t& chunk);
-  private:
     wave_t audio;
     pos_t position;
   };
