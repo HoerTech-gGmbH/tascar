@@ -624,8 +624,13 @@ void track_t::prepare()
 
 zyx_euler_t euler_track_t::interp(double x) const
 {
-  if( begin() == end() )
+  //DEBUG(size());
+  if( begin() == end() ){
+    //DEBUG("exit");
     return zyx_euler_t();
+  }
+  //DEBUG(x);
+  //DEBUG(begin()->first);
   const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
