@@ -367,6 +367,24 @@ pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfna
   read_xml(scenename);
   linearize_sounds();
   prepare(44100,1024);
+  double wscale(0.5*std::max(height,width));
+  double res(wscale/72*0.0254);
+  double nscale(guiscale/res);
+  nscale = pow(10.0,ceil(log10(nscale)));
+  std::vector<double> div;
+  div.push_back(1);
+  div.push_back(2);
+  div.push_back(2.5);
+  div.push_back(10.0/3.0);
+  div.push_back(4);
+  div.push_back(5);
+  div.push_back(8);
+  uint32_t k(0);
+  while( (k < div.size()) && (nscale/div[k] >= guiscale/res) )
+    k++;
+  if( k > 0 )
+    nscale /= div[k-1];
+  view.set_scale(nscale*res);
 }
 
 pdf_export_t::~pdf_export_t()
@@ -385,25 +403,22 @@ void pdf_export_t::render_time(double t)
 void pdf_export_t::draw(view_t persp)
 {
   Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
+  view.set_ref(listener.get_location(time));
   switch( persp ){
   case p : 
     view.set_perspective(true);
-    view.set_ref(listener.get_location(time));
     view.set_euler(listener.get_orientation(time));
     break;
   case xy :
     view.set_perspective(false);
-    view.set_ref(pos_t(0,0,1));
     view.set_euler(zyx_euler_t(0,0,0));
     break;
   case xz :
     view.set_perspective(false);
-    view.set_ref(pos_t(0,1,0));
     view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
     break;
   case yz :
     view.set_perspective(false);
-    view.set_ref(pos_t(1,0,0));
     view.set_euler(zyx_euler_t(0,0.5*M_PI,0.5*M_PI));
     break;
   }
