@@ -5,16 +5,20 @@
 
 namespace TASCAR {
 
-  class sink_omni_t : public sink_t {
-  public:
-    sink_omni_t(uint32_t chunksize);
-    void clear();
-    pos_t relative_position(const pos_t& psrc);
-    void add_source(const pos_t& prel, const wave_t& chunk);
-    void add_source(const pos_t& prel, const amb1wave_t& chunk);
-    wave_t audio;
-    pos_t position;
-  };
+  namespace Render {
+
+    class sink_omni_t : public Scene::sink_t {
+    public:
+      sink_omni_t(uint32_t chunksize);
+      void clear();
+      pos_t relative_position(const pos_t& psrc);
+      void add_source(const pos_t& prel, const wave_t& chunk);
+      void add_source(const pos_t& prel, const amb1wave_t& chunk);
+      wave_t audio;
+      pos_t position;
+    };
+
+  }
 
 }
 

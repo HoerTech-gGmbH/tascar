@@ -1,5 +1,7 @@
 #include "sinks.h"
 
+using namespace TASCAR::Scene;
+using namespace TASCAR::Render;
 using namespace TASCAR;
 
 sink_omni_t::sink_omni_t(uint32_t chunksize)
