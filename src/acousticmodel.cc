@@ -3,8 +3,7 @@
 #include <iostream>
 
 using namespace TASCAR;
-using namespace TASCAR::Scene;
-using namespace TASCAR::Render;
+using namespace TASCAR::Acousticmodel;
 
 pointsource_t::pointsource_t(uint32_t chunksize)
   : audio(chunksize)
@@ -17,23 +16,35 @@ acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,con
     chunksize(audio.size()),
     dt(1.0/chunksize),
     distance(1.0),
+    gain(1.0),
+    dscale(fs/(340.0*7782.0)),
     delayline(480000,fs,340.0)
 {
   DEBUG(audio.size());
   DEBUG(dt);
-  distance = sink_->relative_position(src_->position).norm();
+  pos_t prel;
+  sink_->update_refpoint(src_->position,prel,distance,gain);
+  //distance = sink_->relative_position(src_->position).norm();
   DEBUG(distance);
+  DEBUG(gain);
 }
  
 void acoustic_model_t::process()
 {
-  pos_t prel(sink_->relative_position(src_->position));
-  double nextdistance(prel.norm());
-  double ddist((nextdistance-distance)*dt);
+  pos_t prel;
+  double nextdistance(0.0);
+  double nextgain(1.0);
+  sink_->update_refpoint(src_->position,prel,nextdistance,nextgain);
+  double next_air_absorption(exp(-nextdistance*dscale));
+  double ddistance((nextdistance-distance)*dt);
+  double dgain((nextgain-gain)*dt);
+  double dairabsorption((next_air_absorption-air_absorption)*dt);
+  // todo: air absorption
   for(uint32_t k=0;k<chunksize;k++){
-    distance+=ddist;
+    distance+=ddistance;
+    gain+=dgain;
     delayline.push(src_->audio[k]);
-    audio[k] = delayline.get_dist(distance)/std::max(0.1,distance);
+    audio[k] = delayline.get_dist(distance)*gain;
   }
   sink_->add_source(prel,audio);
 }

@@ -55,6 +55,11 @@ namespace TASCAR {
      */
     float get_dist(double dist);
     /**
+       \brief Return value delayed by the given delay in seconds
+       \param dist delay
+     */
+    float get_delayed(double d);
+    /**
        \brief Return value of a specific delay
        \param delay delay in samples
     */
@@ -63,6 +68,7 @@ namespace TASCAR {
     float* dline;
     uint32_t dmax;
     double dist2sample;
+    double delay2sample;
     uint32_t pos;
   };
 

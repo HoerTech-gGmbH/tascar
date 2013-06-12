@@ -8,8 +8,12 @@
 
 namespace TASCAR {
 
-  namespace Scene {
+  /** \brief Components relevant for the acoustic modelling
+   */
+  namespace Acousticmodel {
   
+    /** \brief Primary source (also base class for mirror sources)
+     */
     class pointsource_t {
     public:
       pointsource_t(uint32_t chunksize);
@@ -17,28 +21,22 @@ namespace TASCAR {
       pos_t position;
     };
 
+    /** \brief Base class for all audio sinks
+     */
     class sink_t {
     public:
       virtual void clear() = 0;
-      virtual pos_t relative_position(const pos_t& psrc) = 0;
+      virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain) = 0;
       virtual void add_source(const pos_t& prel, const wave_t& chunk) = 0;
       virtual void add_source(const pos_t& prel, const amb1wave_t& chunk) = 0;
     protected:
     };
-
-  }
-
-  namespace Render {
 
     class filter_coeff_t {
     public:
       filter_coeff_t() { c[0] = 1.0; c[1] = 0.0;};
       double c[2];
     };
-
-  }
-
-  namespace Scene {
 
     class obstacle_t : public face_t
     {
@@ -47,7 +45,7 @@ namespace TASCAR {
     class reflector_t : public obstacle_t
     {
     public:
-      Render::filter_coeff_t get_filter(const pos_t& psrc);
+      Acousticmodel::filter_coeff_t get_filter(const pos_t& psrc);
     };
 
     /** \brief A mirrored source.
@@ -60,7 +58,7 @@ namespace TASCAR {
     private:
       pointsource_t* src_;
       reflector_t* reflector_;
-      Render::filter_coeff_t flt_current;
+      Acousticmodel::filter_coeff_t flt_current;
       double dt;
     };
 
@@ -98,6 +96,9 @@ namespace TASCAR {
       uint32_t chunksize;
       double dt;
       double distance;
+      double gain;
+      double dscale;
+      double air_absorption;
       varidelay_t delayline;
     };
 

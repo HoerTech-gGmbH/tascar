@@ -5,6 +5,8 @@
 
 namespace TASCAR {
 
+  /** \brief Class for single-channel time-domain audio chunks
+   */
   class wave_t {
   public:
     wave_t(uint32_t chunksize);
@@ -20,6 +22,8 @@ namespace TASCAR {
     uint32_t n;
   };
 
+  /** \brief Class for first-order-Ambisonics audio chunks
+   */
   class amb1wave_t {
   public:
     amb1wave_t(uint32_t chunksize);

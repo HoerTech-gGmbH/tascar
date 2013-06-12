@@ -5,13 +5,15 @@
 
 namespace TASCAR {
 
-  namespace Render {
+  namespace Acousticmodel {
 
-    class sink_omni_t : public Scene::sink_t {
+    /** \brief Omni-directional sink (virtual point microphone)
+     */
+    class sink_omni_t : public Acousticmodel::sink_t {
     public:
       sink_omni_t(uint32_t chunksize);
       void clear();
-      pos_t relative_position(const pos_t& psrc);
+      void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk);
       void add_source(const pos_t& prel, const amb1wave_t& chunk);
       wave_t audio;

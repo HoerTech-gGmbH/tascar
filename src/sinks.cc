@@ -1,8 +1,7 @@
 #include "sinks.h"
 
-using namespace TASCAR::Scene;
-using namespace TASCAR::Render;
 using namespace TASCAR;
+using namespace TASCAR::Acousticmodel;
 
 sink_omni_t::sink_omni_t(uint32_t chunksize)
   : audio(chunksize)
@@ -14,9 +13,12 @@ void sink_omni_t::clear()
   audio.clear();
 }
 
-pos_t sink_omni_t::relative_position(const pos_t& psrc)
+void sink_omni_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
 {
-  return psrc - position;
+  prel = psrc;
+  prel -= position;
+  distance = prel.norm();
+  gain = 1.0/std::max(0.1,distance);
 }
 
 void sink_omni_t::add_source(const pos_t& prel, const wave_t& chunk)

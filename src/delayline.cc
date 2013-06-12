@@ -12,6 +12,7 @@ varidelay_t::varidelay_t(uint32_t maxdelay, double fs, double c)
   : dline(new float[maxdelay]),
     dmax(maxdelay),
     dist2sample(fs/c),
+    delay2sample(fs),
     pos(0)
 {
   memset(dline,0,sizeof(float)*dmax);
@@ -21,6 +22,7 @@ varidelay_t::varidelay_t(const varidelay_t& src)
   : dline(new float[src.dmax]),
     dmax(src.dmax),
     dist2sample(src.dist2sample),
+    delay2sample(src.delay2sample),
     pos(0)
 {
   memset(dline,0,sizeof(float)*dmax);
@@ -42,6 +44,11 @@ void varidelay_t::push(float x)
 float varidelay_t::get_dist(double dist)
 {
   return get(dist2sample*dist);
+}
+
+float varidelay_t::get_delayed(double d)
+{
+  return get(delay2sample*d);
 }
 
 float varidelay_t::get(uint32_t delay)

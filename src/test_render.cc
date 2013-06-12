@@ -4,8 +4,7 @@
 #include <iostream>
 
 using namespace TASCAR;
-using namespace TASCAR::Scene;
-using namespace TASCAR::Render;
+using namespace TASCAR::Acousticmodel;
 
 void print_audio(const wave_t& a)
 {

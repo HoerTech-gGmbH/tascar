@@ -37,6 +37,12 @@
 
 namespace TASCAR {
 
+  /** \brief Components relevant for the spatial modelling
+   */
+  namespace Scene {
+  };
+
+
   class scene_node_base_t {
   public:
     scene_node_base_t(){};
