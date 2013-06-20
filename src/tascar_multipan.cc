@@ -102,7 +102,6 @@ namespace OSC {
     }
     return 1;
   }
-  
 }
 
 void TASCAR::dynpan_t::set_mode(const std::string& m)
