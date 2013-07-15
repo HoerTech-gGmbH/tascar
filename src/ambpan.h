@@ -1,6 +1,5 @@
 /**
    \file ambpan.h
-   \ingroup apphos
    \brief Ambisonics panner
    \date 2011
 

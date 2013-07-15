@@ -40,11 +40,37 @@
    This set of applications is published under the GPL.
 */
 /**
-   \defgroup apphos Applications specific to the Harmony of the Spheres project
+   \defgroup acousticmodel The acoustic model
 
-   This set of applications is published under the GPL and free licenses.
-*/
+   Two types of sources: omnidirectional point source
+   (TASCAR::Acousticmodel::pointsource_t) and first order ambisonics
+   (not yet implemented).
 
+   Multiple types of sinks (TASCAR::Acousticmodel::sink_t):
+   omnidirectional single channel sink
+   (TASCAR::Acousticmodel::sink_omni_t), 3rd (?) order full periphonic
+   sink (not yet implemented), 11th order horizontal sink (not yet
+   implemented), Duda head model binaural sink (not yet implemented),
+   omnidirectional room sink. Each sink has a reference point, which
+   can depend on the source position.
+
+   Each pair of a source and any sink owns an acoustic model
+   (TASCAR::Acousticmodel::acoustic_model_t). Distance coding
+   (distance decay, air absorption) is processed by the acoustic
+   model, which is calculated independently of the type of sink.
+
+   Obstacles (TASCAR::Acousticmodel::obstacle_t) modify the position
+   and frequency response of a source if they intersect with the
+   direct connection between source and sink. (not yet implemented)
+
+   Reflector objects (TASCAR::Acousticmodel::reflector_t) create one
+   mirror source (TASCAR::Acousticmodel::mirrorsource_t) for each
+   primary source, which use the audio material of a parent source,
+   but have a separate position. An obstacle is placed around the
+   reflector to process the spatial limitation of the mirror (not yet
+   implemented).
+
+ */
 
 #endif
 
