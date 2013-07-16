@@ -221,6 +221,7 @@ pan_amb_basic_t::pan_amb_basic_t(speakerlayout_t& spk,varidelay_t& dline,uint32_
 void pan_amb_basic_t::set_order(unsigned int order_)
 {
   order = order_;
+  //DEBUG(order);
 }
 
 void pan_amb_basic_t::updatepar()
@@ -235,7 +236,7 @@ void pan_amb_basic_t::updatepar()
     //}
     //double nomin = sin( scale_order*az );
     double w = 0.5;
-    for(unsigned int l=1;l<=order;k++)
+    for(unsigned int l=1;l<=order;l++)
       w += cos(l*az);
     w *= 2.0;
     w /= (double)spk_.n;
