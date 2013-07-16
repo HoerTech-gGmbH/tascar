@@ -205,7 +205,7 @@ void pan_vbap_t::process(uint32_t n, float* vIn, float* vX, float* vY, float* vZ
 
 pan_amb_basic_t::pan_amb_basic_t(speakerlayout_t& spk,varidelay_t& dline,uint32_t subsampling, uint32_t maxorder)
   : pan_base_t(spk,dline,subsampling),
-    scale_order(0.5)
+    order(1)
 {
   spk_delay.resize(spk_.n);
   spk_gain.resize(spk_.n);
@@ -218,9 +218,9 @@ pan_amb_basic_t::pan_amb_basic_t(speakerlayout_t& spk,varidelay_t& dline,uint32_
   set_order( std::min( maxorder, (spk_.n-2)/2) );
 }
 
-void pan_amb_basic_t::set_order(double order)
+void pan_amb_basic_t::set_order(unsigned int order_)
 {
-  scale_order = (2.0*order+1)*0.5;
+  order = order_;
 }
 
 void pan_amb_basic_t::updatepar()
@@ -228,13 +228,16 @@ void pan_amb_basic_t::updatepar()
   double az_src = src.azim();
   for(unsigned int k=0;k<spk_.n;k++){
     double az = az_src - spk_.az[k];
-    double denom = sin( 0.5*az );
-    while( denom == 0 ){
-      az += 1.0e-10;
-      denom = sin( 0.5*az );
-    }
-    double nomin = sin( scale_order*az );
-    double w = nomin / denom;
+    //double denom = sin( 0.5*az );
+    //while( denom == 0 ){
+    //  az += 1.0e-10;
+    //  denom = sin( 0.5*az );
+    //}
+    //double nomin = sin( scale_order*az );
+    double w = 0.5;
+    for(unsigned int l=1;l<=order;k++)
+      w += cos(l*az);
+    w *= 2.0;
     w /= (double)spk_.n;
     w *= spk_gain[k];
     dw[k] = (w - w_current[k])*dt1;

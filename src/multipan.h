@@ -111,7 +111,7 @@ namespace TASCAR {
   class pan_amb_basic_t : public pan_base_t {
   public:
     pan_amb_basic_t(speakerlayout_t& spk,varidelay_t& dline,uint32_t subsampling,uint32_t max_order = 8192);
-    void set_order(double order);
+    void set_order(unsigned int order_);
   private:
     void updatepar();
     void process(uint32_t n, float* vIn, float* vX, float* vY, float* vZ, const std::vector<float*>& outBuffer);
@@ -120,7 +120,7 @@ namespace TASCAR {
     std::vector<double> spk_gain;
     std::vector<double> w_current;
     std::vector<double> dw;
-    double scale_order;
+    unsigned int order;
   };
 
   /**
