@@ -34,6 +34,7 @@
 #include "viewport.h"
 
 using namespace TASCAR;
+using namespace TASCAR::Scene;
 
 class pdf_export_t : public scene_t {
 public:
@@ -203,7 +204,7 @@ void pdf_export_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->restore();
 }
 
-void pdf_export_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void pdf_export_t::draw_room(const TASCAR::Scene::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   std::vector<pos_t> roomnodes(8,reverb.center);
   roomnodes[0].x -= 0.5*reverb.size.x;
@@ -256,7 +257,7 @@ void pdf_export_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
   cr->restore();
 }
 
-void pdf_export_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void pdf_export_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool active(face.isactive(time));
   if( !active )

@@ -51,9 +51,9 @@ int main(int argc,char**argv)
       break;
     }
   }
-  scene_t S;
+  TASCAR::Scene::scene_t S;
   if( cfg_input.size() )
-    S = xml_read_scene( cfg_input );
+    S = TASCAR::Scene::xml_read_scene( cfg_input );
   if( b_example ){
     if( !S.name.size() )
       S.name = "Example scene";
@@ -69,7 +69,7 @@ int main(int argc,char**argv)
       S.srcobjects[0].add_sound();
     }
     if( !S.bg_amb.size() )
-      S.bg_amb.push_back(bg_amb_t());
+      S.bg_amb.push_back(TASCAR::Scene::bg_amb_t());
   }
   if( cfg_output.size() ){
     time_t tm(time(NULL));

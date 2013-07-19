@@ -8,6 +8,7 @@
 #include <string.h>
 
 using namespace TASCAR;
+using namespace TASCAR::Scene;
 
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value)
 {
@@ -680,7 +681,7 @@ void scene_t::set_solo(const std::string& name,bool val)
     listener.set_solo(val,anysolo);
 }
 
-void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment, bool help_comments)
+void TASCAR::Scene::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment, bool help_comments)
 { 
   xmlpp::Document doc;
   if( comment.size() )
@@ -690,7 +691,7 @@ void TASCAR::xml_write_scene(const std::string& filename, scene_t scene, const s
   doc.write_to_file_formatted(filename);
 }
 
-scene_t TASCAR::xml_read_scene(const std::string& filename)
+scene_t TASCAR::Scene::xml_read_scene(const std::string& filename)
 {
   scene_t s;
   xmlpp::DomParser domp(filename);
@@ -1081,21 +1082,21 @@ TASCAR::Input::jack_t::jack_t(const std::string& parent_name_)
 {
 }
 
-TASCAR::range_t::range_t()
+TASCAR::Scene::range_t::range_t()
   : name(""),
     start(0),
     end(0)
 {
 }
 
-void TASCAR::range_t::read_xml(xmlpp::Element* e)
+void TASCAR::Scene::range_t::read_xml(xmlpp::Element* e)
 {
   name = e->get_attribute_value("name");
   get_attribute_value(e,"start",start);
   get_attribute_value(e,"end",end);
 }
 
-void TASCAR::range_t::write_xml(xmlpp::Element* e,bool help_comments)
+void TASCAR::Scene::range_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   e->set_attribute("name",name);
   set_attribute_double(e,"start",start);

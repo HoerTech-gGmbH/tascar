@@ -14,7 +14,7 @@ mirror_pan_t::mirror_pan_t(double srate, uint32_t fragsize, double maxdist_)
 {
 }
 
-void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t* snd,face_object_t* face)
+void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, TASCAR::Scene::sound_t* snd,TASCAR::Scene::face_object_t* face)
 {
   if( n != fragsize_ )
     throw ErrMsg("fragsize changed");
@@ -26,7 +26,7 @@ void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& ou
     // first get sound position in global coordinates:
     pos_t psnd(snd->get_pos_global(nexttime));
     // then get mirror object:
-    mirror_t m(face->get_mirror(nexttime,psnd));
+    TASCAR::Scene::mirror_t m(face->get_mirror(nexttime,psnd));
     // now transform mirror source relative to listener:
     m.p -= snd->get_reference()->get_location(nexttime);
     m.p /= snd->get_reference()->get_orientation(nexttime);
@@ -134,7 +134,7 @@ void trackpan_amb33_t::updatepar(pos_t src_)
   dclp = (exp(-nm*dscale) - clp_current)*dt_update;
 }
 
-void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer,uint32_t tp_frame, double tp_time,bool tp_rolling, sound_t* snd)
+void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer,uint32_t tp_frame, double tp_time,bool tp_rolling, TASCAR::Scene::sound_t* snd)
 {
   if( n != fragsize_ )
     throw ErrMsg("fragsize changed");
@@ -193,7 +193,7 @@ reverb_line_t::reverb_line_t(const reverb_line_t& src)
   clp_current = dclp = 0;
 }
 
-void reverb_line_t::process(uint32_t n, float* vIn, float* vOut,uint32_t tp_frame, double tp_time,bool tp_rolling, sound_t* snd, diffuse_reverb_t* reverb)
+void reverb_line_t::process(uint32_t n, float* vIn, float* vOut,uint32_t tp_frame, double tp_time,bool tp_rolling, TASCAR::Scene::sound_t* snd, TASCAR::Scene::diffuse_reverb_t* reverb)
 {
   if( n != fragsize_ )
     throw ErrMsg("fragsize changed");

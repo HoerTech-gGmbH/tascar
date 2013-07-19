@@ -83,7 +83,7 @@ namespace TASCAR {
     float dscale;
     double maxdist;
   public:
-    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*);
+    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, TASCAR::Scene::sound_t*);
   protected:
     void updatepar(pos_t);
   };
@@ -91,7 +91,7 @@ namespace TASCAR {
   class mirror_pan_t : public trackpan_amb33_t {
   public:
     mirror_pan_t(double srate, uint32_t fragsize, double maxdist);
-    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*,face_object_t*);
+    void process(uint32_t n, float* vIn, const std::vector<float*>& outBuffer, uint32_t tp_frame, double tp_time, bool tp_rolling, TASCAR::Scene::sound_t*,TASCAR::Scene::face_object_t*);
   private:
     float c1_current;
     float dc1;
@@ -120,7 +120,7 @@ namespace TASCAR {
     float dscale;
     double maxdist;
   public:
-    void process(uint32_t n, float* vIn, float* vOut, uint32_t tp_frame, double tp_time, bool tp_rolling, sound_t*, diffuse_reverb_t* reverb);
+    void process(uint32_t n, float* vIn, float* vOut, uint32_t tp_frame, double tp_time, bool tp_rolling, TASCAR::Scene::sound_t*, TASCAR::Scene::diffuse_reverb_t* reverb);
   };
   
 };

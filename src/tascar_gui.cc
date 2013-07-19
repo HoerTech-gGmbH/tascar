@@ -37,6 +37,7 @@
 #include "viewport.h"
 
 using namespace TASCAR;
+using namespace TASCAR::Scene;
 
 class g_scene_t : public scene_t {
 public:
@@ -620,7 +621,7 @@ void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->restore();
 }
 
-void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_gui_t::draw_room(const TASCAR::Scene::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool solo(reverb.get_solo());
   std::vector<pos_t> roomnodes(8,reverb.center);
@@ -677,7 +678,7 @@ void tascar_gui_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
   cr->restore();
 }
 
-void tascar_gui_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_gui_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool active(face.isactive(time));
   bool solo(face.get_solo());

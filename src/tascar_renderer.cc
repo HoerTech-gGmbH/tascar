@@ -43,11 +43,10 @@
 #include <getopt.h>
 #include "osc_helper.h"
 #include "render_sinks.h"
-#ifdef LINUXTRACK
-#include <linuxtrack.h>
-#endif
+#include "acousticmodel.h"
 
 using namespace TASCAR;
+using namespace TASCAR::Scene;
 
 namespace TASCAR {
 
@@ -55,22 +54,21 @@ namespace TASCAR {
      \ingroup apptascar
      \brief Multiple panning methods
   */
-  class scene_generator_t : public jackc_transport_t, public scene_t, public osc_server_t {
+  class renderer_t : public jackc_transport_t, public scene_t, public osc_server_t {
   public:
-#ifdef LINUXTRACK
-    scene_generator_t(const std::string& name, const std::string& oscport,bool);
-#else
-    scene_generator_t(const std::string& name, const std::string& oscport);
-#endif
-    ~scene_generator_t();
+    renderer_t(const std::string& name, const std::string& oscport);
+    ~renderer_t();
     void run(const std::string& ambdec = "ambdec");
     void connect_all(const std::string& ambdec);
   private:
     std::vector<TASCAR::trackpan_amb33_t> panner;
-    std::vector<std::vector<TASCAR::reverb_line_t> > rvbline;
-    std::vector<TASCAR::sound_t*> sounds;
+    //std::vector<std::vector<TASCAR::reverb_line_t> > rvbline;
+    std::vector<TASCAR::Scene::sound_t*> sounds;
     std::vector<TASCAR::Input::jack_t*> jackinputs;
-    std::vector<std::vector<TASCAR::mirror_pan_t> > mirror;
+    std::vector<Acousticmodel::pointsource_t*> sources;
+    std::vector<Acousticmodel::reflector_t*> reflectors;
+    std::vector<Acousticmodel::sink_t*> sinks;
+    //std::vector<std::vector<TASCAR::mirror_pan_t> > mirror;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     void send_listener();
@@ -82,30 +80,19 @@ namespace TASCAR {
     static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     uint32_t first_reverb_port;
+    Acousticmodel::world_t* world;
   public:
     lo_address client_addr;
-  private:
-#ifdef LINUXTRACK
-    bool use_ltr_;
-#endif
-  public:
   };
 
 }
 
 static bool b_quit;
 
-TASCAR::scene_generator_t::scene_generator_t(const std::string& name, 
-                                             const std::string& oscport
-#ifdef LINUXTRACK
-                                             ,bool use_ltr
-#endif
-)
+TASCAR::renderer_t::renderer_t(const std::string& name, 
+                                             const std::string& oscport)
   : jackc_transport_t(name),osc_server_t("",oscport,true),  
     client_addr(lo_address_new("localhost","9876"))
-#ifdef LINUXTRACK
-  ,use_ltr_(use_ltr)
-#endif
 {
   char c_tmp[100];
   unsigned int k=0;
@@ -129,13 +116,13 @@ TASCAR::scene_generator_t::scene_generator_t(const std::string& name,
   osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
 }
 
-TASCAR::scene_generator_t::~scene_generator_t()
+TASCAR::renderer_t::~renderer_t()
 {
 }
 
-int TASCAR::scene_generator_t::osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::renderer_t::osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  TASCAR::renderer_t* h((TASCAR::renderer_t*)user_data);
   if( h && (argc == 2) && (types[0] == 's') && (types[1] == 'i') ){
     h->set_solo(&(argv[0]->s),argv[1]->i);
     return 0;
@@ -143,9 +130,9 @@ int TASCAR::scene_generator_t::osc_solo(const char *path, const char *types, lo_
   return 1;
 }
 
-int TASCAR::scene_generator_t::osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::renderer_t::osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  TASCAR::renderer_t* h((TASCAR::renderer_t*)user_data);
   if( h && (argc == 2) && (types[0] == 's') && (types[1] == 'i') ){
     h->set_mute(&(argv[0]->s),argv[1]->i);
     return 0;
@@ -153,9 +140,9 @@ int TASCAR::scene_generator_t::osc_mute(const char *path, const char *types, lo_
   return 1;
 }
 
-int TASCAR::scene_generator_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::renderer_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  TASCAR::renderer_t* h((TASCAR::renderer_t*)user_data);
   if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
     zyx_euler_t r;
     r.z = DEG2RAD*argv[0]->f;
@@ -173,9 +160,9 @@ int TASCAR::scene_generator_t::osc_listener_orientation(const char *path, const 
   return 1;
 }
 
-int TASCAR::scene_generator_t::osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::renderer_t::osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  TASCAR::renderer_t* h((TASCAR::renderer_t*)user_data);
   if( h && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
     zyx_euler_t r;
     r.z = DEG2RAD*argv[1]->f;
@@ -189,9 +176,9 @@ int TASCAR::scene_generator_t::osc_set_src_orientation(const char *path, const c
 }
 
 
-int TASCAR::scene_generator_t::osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::renderer_t::osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  TASCAR::renderer_t* h((TASCAR::renderer_t*)user_data);
   if( h && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
     pos_t r;
     r.x = argv[1]->f;
@@ -204,9 +191,9 @@ int TASCAR::scene_generator_t::osc_set_src_position(const char *path, const char
   return 1;
 }
 
-int TASCAR::scene_generator_t::osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int TASCAR::renderer_t::osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::scene_generator_t* h((TASCAR::scene_generator_t*)user_data);
+  TASCAR::renderer_t* h((TASCAR::renderer_t*)user_data);
   if( h && (argc == 6) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f')
       && (types[3]=='f') && (types[4]=='f') && (types[5]=='f') ){
     pos_t r;
@@ -240,7 +227,7 @@ int TASCAR::scene_generator_t::osc_listener_position(const char *path, const cha
   return 1;
 }
 
-void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
+void TASCAR::renderer_t::connect_all(const std::string& dest_name)
 {
   for( unsigned int k=0;k<vAmbPorts.size();k++){
     try{
@@ -266,7 +253,7 @@ void TASCAR::scene_generator_t::connect_all(const std::string& dest_name)
   }
 }
 
-void TASCAR::scene_generator_t::send_listener()
+void TASCAR::renderer_t::send_listener()
 {
   pos_t r(listener.dlocation);
   zyx_euler_t o(listener.dorientation);
@@ -274,29 +261,11 @@ void TASCAR::scene_generator_t::send_listener()
   lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
 }
 
-int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
+int TASCAR::renderer_t::process(jack_nframes_t nframes,
                                        const std::vector<float*>& inBuffer,
                                        const std::vector<float*>& outBuffer, 
                                        uint32_t tp_frame, bool tp_rolling)
 {
-#ifdef LINUXTRACK
-  if( use_ltr_ ){
-    float heading, pitch, roll, x, y, z;
-    uint32_t counter;
-    ltr_get_camera_update(&heading, &pitch, &roll, &y, &z, &x, &counter);
-    pos_t r(-x,-y,z);
-    r *= 0.001;
-    listener_position(r);
-    zyx_euler_t o;
-    o.z = DEG2RAD*heading;
-    o.y = DEG2RAD*pitch;
-    //o.x = DEG2RAD*roll;
-    //DEBUG(o.print());
-    listener_orientation(o);
-    lo_send(client_addr,"/listener/pos","fff",r.x,r.y,r.z);
-    lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
-  }
-#endif
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
@@ -325,47 +294,49 @@ int TASCAR::scene_generator_t::process(jack_nframes_t nframes,
       srcobjects[k].fill( tp_frame, 0 );
     }
   }
+  if( world )
+    world->process();
   // process point sources:
   double tp_time((double)tp_frame/(double)srate);
   for( unsigned int k=0;k<panner.size();k++)
     if( sounds[k] && get_playsound(sounds[k]) )
       panner[k].process(nframes,sounds[k]->get_buffer(nframes), outBuffer,tp_frame,
                         tp_time,tp_rolling,sounds[k]);
-  // process mirror sources:
-  for( unsigned int k_face=0;k_face<mirror.size();k_face++){
-    if( (!faces[k_face].get_mute()) && faces[k_face].isactive(tp_time) ){
-      for( unsigned int k_snd=0;k_snd<mirror[k_face].size();k_snd++){
-        if( sounds[k_snd] && get_playsound(sounds[k_snd])){
-          mirror[k_face][k_snd].process(nframes,sounds[k_snd]->get_buffer(nframes),outBuffer,tp_frame,tp_time,tp_rolling,sounds[k_snd],&(faces[k_face]));
-        }
-      }
-    }
-  }
-  // process diffuse reverb:
-  for( unsigned int kr=0;kr<reverbs.size();kr++){
-    memset(outBuffer[kr+first_reverb_port],0,nframes*sizeof(float));
-    if( !reverbs[kr].get_mute() )
-      for( unsigned int k=0;k<rvbline[kr].size();k++)
-        if( sounds[k] && get_playsound(sounds[k]) )
-          rvbline[kr][k].process(nframes,sounds[k]->get_buffer(nframes),outBuffer[first_reverb_port+kr],tp_frame,tp_time,tp_rolling,sounds[k],&reverbs[kr]);
-    
-  }
+  //// process mirror sources:
+  //for( unsigned int k_face=0;k_face<mirror.size();k_face++){
+  //  if( (!faces[k_face].get_mute()) && faces[k_face].isactive(tp_time) ){
+  //    for( unsigned int k_snd=0;k_snd<mirror[k_face].size();k_snd++){
+  //      if( sounds[k_snd] && get_playsound(sounds[k_snd])){
+  //        mirror[k_face][k_snd].process(nframes,sounds[k_snd]->get_buffer(nframes),outBuffer,tp_frame,tp_time,tp_rolling,sounds[k_snd],&(faces[k_face]));
+  //      }
+  //    }
+  //  }
+  //}
+  //// process diffuse reverb:
+  //for( unsigned int kr=0;kr<reverbs.size();kr++){
+  //  memset(outBuffer[kr+first_reverb_port],0,nframes*sizeof(float));
+  //  if( !reverbs[kr].get_mute() )
+  //    for( unsigned int k=0;k<rvbline[kr].size();k++)
+  //      if( sounds[k] && get_playsound(sounds[k]) )
+  //        rvbline[kr][k].process(nframes,sounds[k]->get_buffer(nframes),outBuffer[first_reverb_port+kr],tp_frame,tp_time,tp_rolling,sounds[k],&reverbs[kr]);
+  //  
+  //}
   //if( (duration <= tp_time) && (duration + (double)nframes/(double)srate > tp_time) )
   //  tp_stop();
   return 0;
 }
 
-void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
+void TASCAR::renderer_t::run(const std::string& dest_ambdec)
 {
   sounds = linearize_sounds();
   prepare(get_srate(), get_fragsize());
   panner.clear();
-  rvbline.resize(reverbs.size());
-  for(unsigned int kr=0;kr<rvbline.size();kr++)
-    rvbline[kr].clear();
-  mirror.resize(faces.size());
-  for( unsigned int k_face=0;k_face<mirror.size();k_face++)
-    mirror[k_face].clear();
+  //rvbline.resize(reverbs.size());
+  //for(unsigned int kr=0;kr<rvbline.size();kr++)
+  //  rvbline[kr].clear();
+  //mirror.resize(faces.size());
+  //for( unsigned int k_face=0;k_face<mirror.size();k_face++)
+  //  mirror[k_face].clear();
   for(unsigned int k=0;k<sounds.size();k++){
     double maxdist(0);
     for( double t=0;t<duration;t+=2){
@@ -374,10 +345,10 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
     }
     std::cout << sounds[k]->getlabel() << " maxdist=" << maxdist << std::endl;
     panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), maxdist+100));
-    for(unsigned int kr=0;kr<rvbline.size();kr++)
-      rvbline[kr].push_back(reverb_line_t(get_srate(), get_fragsize(), maxdist+100));
-    for( unsigned int k_face=0;k_face<mirror.size();k_face++)
-      mirror[k_face].push_back(mirror_pan_t(get_srate(), get_fragsize(), maxdist+100));
+    //for(unsigned int kr=0;kr<rvbline.size();kr++)
+    //  rvbline[kr].push_back(reverb_line_t(get_srate(), get_fragsize(), maxdist+100));
+    //for( unsigned int k_face=0;k_face<mirror.size();k_face++)
+    //  mirror[k_face].push_back(mirror_pan_t(get_srate(), get_fragsize(), maxdist+100));
   }
   for(unsigned int k=0;k<srcobjects.size();k++){
     srcobjects[k].fill( -1, 0 );
@@ -396,6 +367,7 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
   if( dest_ambdec.size() ){
     connect_all( dest_ambdec );
   }
+  world = new Acousticmodel::world_t(get_srate(),sources,reflectors,sinks);
   while( !b_quit ){
     sleep( 1 );
     getchar();
@@ -408,6 +380,9 @@ void TASCAR::scene_generator_t::run(const std::string& dest_ambdec)
       }
     }
   }
+  if( world )
+    delete world;
+  world = NULL;
   osc_server_t::deactivate();
   jackc_t::deactivate();
 }
@@ -437,19 +412,11 @@ int main(int argc, char** argv)
     std::string cfgfile("");
     std::string jackname("tascar_scene");
     std::string oscport("9877");
-#ifdef LINUXTRACK
-    bool use_ltr(false);
-    const char *options = "c:hn:p:l";
-#else
     const char *options = "c:hn:p:";
-#endif
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'n' },
-#ifdef LINUXTRACK
-      { "linuxtrack", 0, 0, 'l'},
-#endif
       { "oscport",  1, 0, 'p' },
       { 0, 0, 0, 0 }
     };
@@ -470,47 +437,15 @@ int main(int argc, char** argv)
       case 'p':
         oscport = optarg;
         break;
-#ifdef LINUXTRACK
-      case 'l':
-        use_ltr = true;
-        break;
-#endif
       }
     }
     if( cfgfile.size() == 0 ){
       usage(long_options);
       return -1;
     }
-#ifdef LINUXTRACK
-    if( use_ltr ){
-      //Initialize the tracking using Default profile
-      ltr_init(NULL);
-      //Wait for tracker initialization
-      ltr_state_type state;
-      int timeout = 100; //10 seconds timeout (for example firmware load...)
-      while(timeout > 0){
-        state = ltr_get_tracking_state();
-        if(state != RUNNING){
-          usleep(100000); //sleep 0.1s
-        }else{
-          break;
-        }
-        --timeout;
-      };
-      if(ltr_get_tracking_state() != RUNNING){
-        throw ErrMsg("linuxtrack initialization is taking too long!\n");
-      }
-    }
-    TASCAR::scene_generator_t S(jackname,oscport,use_ltr);
-#else
-    TASCAR::scene_generator_t S(jackname,oscport);
-#endif
+    TASCAR::renderer_t S(jackname,oscport);
     S.read_xml(cfgfile);
     S.run();
-#ifdef LINUXTRACK
-    if( use_ltr )
-      ltr_shutdown();
-#endif
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;
