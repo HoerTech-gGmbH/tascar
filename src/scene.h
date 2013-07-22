@@ -160,6 +160,11 @@ namespace TASCAR {
       object_t* reference;
       std::string name;
       TASCAR::Input::base_t* input;
+      // dynamically allocated source type. Allocated in "prepare",
+      // type defined in xml_read:
+      // TASCAR::Acousticmodel::pointsource_t* source; sources should
+      // be pointsource, amb1source, for both types jack or file
+      // version. 
       double fs_;
     };
 
