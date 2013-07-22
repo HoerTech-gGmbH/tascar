@@ -39,20 +39,20 @@ namespace TASCAR {
       unsigned int firstchannel;
     };
 
-    class jack_t : public TASCAR::Input::base_t {
-    public:
-      jack_t(const std::string& parent_name_);
-      void fill(int32_t tp_firstframe, bool tp_running){};
-      std::string get_tag() { return "jack";};
-      void write(uint32_t n,float* b);
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
-      std::string print(const std::string& prefix="");
-      std::string get_port_name() const { return parent_name+"."+name;};
-      std::vector<std::string> connections;
-      std::string parent_name;
-      double gain;
-    };
+    //class jack_t : public TASCAR::Input::base_t {
+    //public:
+    //  jack_t(const std::string& parent_name_);
+    //  void fill(int32_t tp_firstframe, bool tp_running){};
+    //  std::string get_tag() { return "jack";};
+    //  void write(uint32_t n,float* b);
+    //  void read_xml(xmlpp::Element* e);
+    //  void write_xml(xmlpp::Element* e,bool help_comments=false);
+    //  std::string print(const std::string& prefix="");
+    //  std::string get_port_name() const { return parent_name+"."+name;};
+    //  std::vector<std::string> connections;
+    //  std::string parent_name;
+    //  double gain;
+    //};
 
   }
 

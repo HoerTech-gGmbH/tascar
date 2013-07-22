@@ -28,8 +28,8 @@ void mirror_pan_t::process(uint32_t n, float* vIn, const std::vector<float*>& ou
     // then get mirror object:
     TASCAR::Scene::mirror_t m(face->get_mirror(nexttime,psnd));
     // now transform mirror source relative to listener:
-    m.p -= snd->get_reference()->get_location(nexttime);
-    m.p /= snd->get_reference()->get_orientation(nexttime);
+    //m.p -= snd->get_reference()->get_location(nexttime);
+    //m.p /= snd->get_reference()->get_orientation(nexttime);
     // update panner and low pass filters:
     updatepar(m.p);
     dc1 = (m.c1-c1_current)*dt_update;
@@ -142,7 +142,7 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
   if( !tp_rolling )
     ldt = 0;
   if( snd->isactive(tp_time) && vIn ){
-    updatepar(snd->get_pos(tp_time+ldt*n));
+    //updatepar(snd->get_pos(tp_time+ldt*n));
     for( unsigned int i=0;i<n;i++){
       delayline.push(vIn[i]);
       float d = (d_current+=dd);

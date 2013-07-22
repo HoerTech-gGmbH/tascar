@@ -29,6 +29,15 @@ void wave_t::clear()
   memset(d,0,sizeof(float)*n);
 }
 
+uint32_t wave_t::copy(float* data,uint32_t cnt)
+{
+  uint32_t n_min(std::min(n,cnt));
+  memcpy(d,data,n_min*sizeof(float));
+  if( n_min < n )
+    memset(&(d[n_min]),0,sizeof(float)*(n-n_min));
+  return n_min;
+}
+
 void wave_t::operator+=(const wave_t& o)
 {
   for(uint32_t k=0;k<std::min(size(),o.size());k++)

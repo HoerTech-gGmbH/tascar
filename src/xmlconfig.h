@@ -1,6 +1,9 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 
+#include <libxml++/libxml++.h>
+#include <stdint.h>
+
 namespace TASCAR {
 
   class scene_node_base_t {
@@ -14,6 +17,14 @@ namespace TASCAR {
   };
 
 }
+
+void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value);
+void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value);
+void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);
+void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value);
+void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value);
 
 #endif
 

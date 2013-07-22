@@ -6,65 +6,10 @@
 #include <iostream>
 #include "defs.h"
 #include <string.h>
+#include "sinks.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
-
-void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value)
-{
-  char ctmp[1024];
-  sprintf(ctmp,"%d",value);
-  elem->set_attribute(name,ctmp);
-}
-
-void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value)
-{
-  if( value )
-    elem->set_attribute(name,"true");
-  else
-    elem->set_attribute(name,"false");
-}
-
-void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value)
-{
-  char ctmp[1024];
-  sprintf(ctmp,"%1.12g",value);
-  elem->set_attribute(name,ctmp);
-}
-
-void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value)
-{
-  std::string attv(elem->get_attribute_value(name));
-  char* c;
-  double tmpv(strtod(attv.c_str(),&c));
-  if( c != attv.c_str() )
-    value = tmpv;
-}
-
-void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value)
-{
-  std::string attv(elem->get_attribute_value(name));
-  char* c;
-  double tmpv(strtod(attv.c_str(),&c));
-  if( c != attv.c_str() )
-    value = DEG2RAD*tmpv;
-}
-
-void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value)
-{
-  std::string attv(elem->get_attribute_value(name));
-  char* c;
-  double tmpv(strtod(attv.c_str(),&c));
-  if( c != attv.c_str() )
-    value = tmpv;
-}
-
-
-void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value)
-{
-  std::string attv(elem->get_attribute_value(name));
-  value = (attv == "true");
-}
 
 /*
  * object_t
@@ -221,56 +166,68 @@ void bg_amb_t::prepare(double fs, uint32_t fragsize)
 /*
  * sound_t
  */
-sound_t::sound_t(src_object_t* parent_,object_t* reference_)
+sound_t::sound_t(src_object_t* parent_)
   : //bg_amb_t(1),
     loc(0,0,0),
     chaindist(0),
     parent(parent_),
-    reference(reference_),
+    source(NULL),
+    //reference(reference_),
     fs_(1)
 {
+}
+
+sound_t::~sound_t()
+{
+  if( source )
+    delete source;
 }
 
 void sound_t::prepare(double fs, uint32_t fragsize)
 {
   fs_ = fs;
-  //DEBUG(parent);
-  if( parent )
-    input = parent->get_input(name);
-  else
-    input = NULL;
+  gain_linear = pow(10.0,0.05*gain);
+  //if( parent )
+  //  input = parent->get_input(name);
+  //else
+  //  input = NULL;
   if( source )
     delete source;
   source = new TASCAR::Acousticmodel::pointsource_t(fragsize);
-  //DEBUG(input);
-  //bg_amb_t::prepare(fs,fragsize);
 }
 
-//void sound_t::request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf )
+//float* sound_t::get_buffer( uint32_t n )
 //{
-//  if( parent )
-//    firstframe -= parent->starttime*fs_;
-//  //bg_amb_t::request_data( firstframe-starttime*fs_, n, channels, buf );
-//  //bg_amb_t::request_data( firstframe, n, channels, buf );
+//  if( input )
+//    return input->get_buffer(n);
+//  return NULL;
 //}
 
-float* sound_t::get_buffer( uint32_t n )
-{
-  if( input )
-    return input->get_buffer(n);
-  return NULL;
-}
-
-void sound_t::set_reference(object_t* ref)
-{
-  //DEBUG(ref);
-  reference = ref;
-}
+//void sound_t::set_reference(object_t* ref)
+//{
+//  //DEBUG(ref);
+//  reference = ref;
+//}
 
 void sound_t::set_parent(src_object_t* ref)
 {
   //DEBUG(ref);
   parent = ref;
+}
+
+std::string sound_t::get_port_name() const
+{
+  DEBUG(parent);
+  DEBUG(name);
+  DEBUG(parent->get_name());
+  if( parent )
+    return parent->get_name() + "." + name;
+  return name;
+}
+
+void sound_t::set_portnum(uint32_t portnum_)
+{
+  portnum = portnum_;
 }
 
 void sound_t::read_xml(xmlpp::Element* e)
@@ -282,6 +239,8 @@ void sound_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"z",loc.z);
   get_attribute_value(e,"d",chaindist);
   name = e->get_attribute_value("name");
+  connect = e->get_attribute_value("connect");
+  get_attribute_value(e,"gain",gain);
 }
 
 void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
@@ -312,18 +271,18 @@ bool sound_t::isactive(double t)
   return parent && parent->isactive(t);
 }
 
-pos_t sound_t::get_pos(double t) const
-{
-  pos_t rp(get_pos_global(t));
-  if( reference ){
-    rp -= reference->dlocation;
-    rp -= reference->location.interp(t - reference->starttime);
-    zyx_euler_t o(reference->dorientation);
-    o += reference->orientation.interp(t - reference->starttime);
-    rp /= o;
-  }
-  return rp;
-}
+//pos_t sound_t::get_pos(double t) const
+//{
+//  pos_t rp(get_pos_global(t));
+//  if( reference ){
+//    rp -= reference->dlocation;
+//    rp -= reference->location.interp(t - reference->starttime);
+//    zyx_euler_t o(reference->dorientation);
+//    o += reference->orientation.interp(t - reference->starttime);
+//    rp /= o;
+//  }
+//  return rp;
+//}
 
 pos_t sound_t::get_pos_global(double t) const
 {
@@ -348,7 +307,7 @@ pos_t sound_t::get_pos_global(double t) const
  */
 src_object_t::src_object_t(object_t* reference_)
   : object_t(),
-    reference(reference_),
+    //reference(reference_),
     startframe(0)
 {
 }
@@ -368,24 +327,24 @@ void src_object_t::prepare(double fs, uint32_t fragsize)
   startframe = fs*starttime;
 }
 
-void src_object_t::set_reference(object_t* ref)
-{
-  //DEBUG(ref);
-  reference = ref;
-  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
-    //DEBUGMSG("set reference/parent");
-    it->set_reference(ref);
-    it->set_parent(this);
-  }
-}
+//void src_object_t::set_reference(object_t* ref)
+//{
+//  //DEBUG(ref);
+//  reference = ref;
+//  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
+//    //DEBUGMSG("set reference/parent");
+//    //it->set_reference(ref);
+//    it->set_parent(this);
+//  }
+//}
 
-Input::base_t* src_object_t::get_input(const std::string& name)
-{
-  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it)
-    if( (*it)->name == name )
-      return *it;
-  return NULL;
-}
+//Input::base_t* src_object_t::get_input(const std::string& name)
+//{
+//  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it)
+//    if( (*it)->name == name )
+//      return *it;
+//  return NULL;
+//}
 
 void src_object_t::read_xml(xmlpp::Element* e)
 {
@@ -394,25 +353,25 @@ void src_object_t::read_xml(xmlpp::Element* e)
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "sound" )){
-      sound.push_back(sound_t(this,reference));
+      sound.push_back(sound_t(this));
       sound.rbegin()->read_xml(sne);
     }
-    if( sne && (sne->get_name() == "inputs") ){
-      xmlpp::Node::NodeList insubnodes = sne->get_children();
-      for(xmlpp::Node::NodeList::iterator insn=insubnodes.begin();insn!=insubnodes.end();++insn){
-        xmlpp::Element* insne(dynamic_cast<xmlpp::Element*>(*insn));
-        if( insne ){
-          if( insne->get_name() == "file" ){
-            inputs.push_back(new TASCAR::Input::file_t());
-            (*inputs.rbegin())->read_xml(insne);
-          }
-          if( insne->get_name() == "jack" ){
-            inputs.push_back(new TASCAR::Input::jack_t(get_name()));
-            (*inputs.rbegin())->read_xml(insne);
-          }
-        }
-      }
-    }
+    //if( sne && (sne->get_name() == "inputs") ){
+    //  xmlpp::Node::NodeList insubnodes = sne->get_children();
+    //  for(xmlpp::Node::NodeList::iterator insn=insubnodes.begin();insn!=insubnodes.end();++insn){
+    //    xmlpp::Element* insne(dynamic_cast<xmlpp::Element*>(*insn));
+    //    if( insne ){
+    //      if( insne->get_name() == "file" ){
+    //        inputs.push_back(new TASCAR::Input::file_t());
+    //        (*inputs.rbegin())->read_xml(insne);
+    //      }
+    //      //if( insne->get_name() == "jack" ){
+    //      //  inputs.push_back(new TASCAR::Input::jack_t(get_name()));
+    //      //  (*inputs.rbegin())->read_xml(insne);
+    //      //}
+    //    }
+    //  }
+    //}
   }
 }
 
@@ -445,7 +404,7 @@ void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
 
 sound_t* src_object_t::add_sound()
 {
-  sound.push_back(sound_t(this,reference));
+  sound.push_back(sound_t(this));
   return &sound.back();
 }
 
@@ -486,7 +445,29 @@ scene_t::scene_t()
 //}
 
 listener_t::listener_t()
+  : sink(NULL)
 {
+}
+
+listener_t::~listener_t()
+{
+  if( sink )
+    delete sink;
+}
+
+void listener_t::read_xml(xmlpp::Element* e)
+{
+  object_t::read_xml(e);
+  //std::string stype(e->get_attribute_value("type"));
+  //if( stype == "point" )
+  //  
+}
+
+void listener_t::prepare(double fs, uint32_t fragsize)
+{
+  if( sink )
+    delete sink;
+  sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize);
 }
 
 void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
@@ -597,7 +578,7 @@ std::vector<sound_t*> scene_t::linearize_sounds()
   //DEBUGMSG("lin sounds");
   std::vector<sound_t*> r;
   for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
-    it->set_reference(&listener);
+    //it->set_reference(&listener);
     for(std::vector<sound_t>::iterator its=it->sound.begin();its!=it->sound.end();++its){
       if( &(*its) )
         r.push_back(&(*its));
@@ -611,7 +592,7 @@ std::vector<Input::base_t*> scene_t::linearize_inputs()
   //DEBUGMSG("lin inputs");
   std::vector<Input::base_t*> r;
   for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
-    it->set_reference(&listener);
+    //it->set_reference(&listener);
     for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
       if( (*its ) )
         r.push_back((*its));
@@ -621,20 +602,20 @@ std::vector<Input::base_t*> scene_t::linearize_inputs()
 }
 
 
-std::vector<Input::jack_t*> scene_t::get_jack_inputs()
-{
-  std::vector<Input::jack_t*> r;
-  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
-    for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
-      if( (*its ) ){
-        Input::jack_t* ji(dynamic_cast<TASCAR::Input::jack_t*>(*its));
-        if( ji )
-          r.push_back(ji);
-      }
-    }
-  }
-  return r;
-}
+//std::vector<Input::jack_t*> scene_t::get_jack_inputs()
+//{
+//  std::vector<Input::jack_t*> r;
+//  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
+//    for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
+//      if( (*its ) ){
+//        Input::jack_t* ji(dynamic_cast<TASCAR::Input::jack_t*>(*its));
+//        if( ji )
+//          r.push_back(ji);
+//      }
+//    }
+//  }
+//  return r;
+//}
 
 void scene_t::prepare(double fs, uint32_t fragsize)
 {
@@ -1041,49 +1022,49 @@ void face_object_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"damping",damping);
 }
 
-void TASCAR::Input::jack_t::write(uint32_t n,float* b)
-{
-  memcpy(data,b,sizeof(float)*std::min(n,size));
-  for( unsigned int k=0;k<std::min(n,size);k++)
-    data[k] *= gain;
-}
-
-void TASCAR::Input::jack_t::read_xml(xmlpp::Element* e)
-{
-  base_t::read_xml(e);
-  get_attribute_value(e,"gain",gain);
-  gain = pow(10.0,0.05*gain);
-  connections.clear();
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "connection")){
-      connections.push_back(sne->get_attribute_value("port"));
-    }
-  }
-}
-
-void TASCAR::Input::jack_t::write_xml(xmlpp::Element* e,bool help_comments)
-{
-  base_t::write_xml(e,help_comments);
-  //todo write gain
-  for( std::vector<std::string>::iterator it=connections.begin();it!=connections.end();++it){
-    xmlpp::Element* se(e->add_child("connection"));
-    se->set_attribute("port",*it);
-  }
-}
-
-std::string TASCAR::Input::jack_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << prefix << "Name: \"" << name << "\"\n";
-  return r.str();
-}
-
-TASCAR::Input::jack_t::jack_t(const std::string& parent_name_)
-  : parent_name(parent_name_)
-{
-}
+//void TASCAR::Input::jack_t::write(uint32_t n,float* b)
+//{
+//  memcpy(data,b,sizeof(float)*std::min(n,size));
+//  for( unsigned int k=0;k<std::min(n,size);k++)
+//    data[k] *= gain;
+//}
+//
+//void TASCAR::Input::jack_t::read_xml(xmlpp::Element* e)
+//{
+//  base_t::read_xml(e);
+//  get_attribute_value(e,"gain",gain);
+//  gain = pow(10.0,0.05*gain);
+//  connections.clear();
+//  xmlpp::Node::NodeList subnodes = e->get_children();
+//  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+//    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+//    if( sne && ( sne->get_name() == "connection")){
+//      connections.push_back(sne->get_attribute_value("port"));
+//    }
+//  }
+//}
+//
+//void TASCAR::Input::jack_t::write_xml(xmlpp::Element* e,bool help_comments)
+//{
+//  base_t::write_xml(e,help_comments);
+//  //todo write gain
+//  for( std::vector<std::string>::iterator it=connections.begin();it!=connections.end();++it){
+//    xmlpp::Element* se(e->add_child("connection"));
+//    se->set_attribute("port",*it);
+//  }
+//}
+//
+//std::string TASCAR::Input::jack_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << prefix << "Name: \"" << name << "\"\n";
+//  return r.str();
+//}
+//
+//TASCAR::Input::jack_t::jack_t(const std::string& parent_name_)
+//  : parent_name(parent_name_)
+//{
+//}
 
 TASCAR::Scene::range_t::range_t()
   : name(""),

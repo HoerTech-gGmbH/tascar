@@ -31,7 +31,6 @@
 #include "async_file.h"
 #include <string>
 #include <vector>
-#include <libxml++/libxml++.h>
 #include <iostream>
 #include "defs.h"
 #include "xmlconfig.h"
@@ -44,22 +43,11 @@ namespace TASCAR {
    */
   namespace Scene {
 
-    //class scene_node_base_t {
-    //public:
-    //  scene_node_base_t(){};
-    //  virtual void read_xml(xmlpp::Element* e) = 0;
-    //  virtual void write_xml(xmlpp::Element* e,bool help_comments=false) = 0;
-    //  virtual std::string print(const std::string& prefix="") = 0;
-    //  virtual ~scene_node_base_t(){};
-    //  virtual void prepare(double fs, uint32_t fragsize) = 0;
-    //};
-
     class route_t : public scene_node_base_t {
     public:
       route_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix="");
       std::string get_name() const {return name;};
       bool get_mute() const {return mute;};
       bool get_solo() const {return solo;};
@@ -86,7 +74,6 @@ namespace TASCAR {
       object_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix="");
       bool isactive(double time) const;
       pos_t get_location(double time) const;
       zyx_euler_t get_orientation(double time) const;
@@ -126,7 +113,6 @@ namespace TASCAR {
       bg_amb_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix="");
       void prepare(double fs, uint32_t fragsize);
       std::string filename;
       double gain;
@@ -139,28 +125,31 @@ namespace TASCAR {
 
     class sound_t : public scene_node_base_t {
     public:
-      sound_t(src_object_t* parent_,object_t* reference_);
-      float* get_buffer(uint32_t n);
-      void set_reference(object_t* reference_);
+      sound_t(src_object_t* parent_);
+      ~sound_t();
       void set_parent(src_object_t* parent_);
+      void set_portnum(uint32_t portnum_);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix="");
-      pos_t get_pos(double t) const;
       pos_t get_pos_global(double t) const;
       void prepare(double fs, uint32_t fragsize);
       std::string getlabel();
       bool isactive(double t);
       bool get_mute() const;
       bool get_solo() const;
-      const object_t* get_reference() const { return reference;};
+      std::string get_port_name() const;
+      std::string get_connection() const { return connect;};
+      TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
+      uint32_t get_portnum() const { return portnum;};
     private:
       pos_t loc;
       double chaindist;
       src_object_t* parent;
-      object_t* reference;
       std::string name;
-      TASCAR::Input::base_t* input;
+      std::string connect;
+      uint32_t portnum;
+      double gain;
+      double gain_linear;
       // dynamically allocated source type. Allocated in "prepare",
       // type defined in xml_read:
       TASCAR::Acousticmodel::pointsource_t* source; 
@@ -171,25 +160,26 @@ namespace TASCAR {
     class src_object_t : public object_t {
     public:
       src_object_t(object_t* reference);
-      void set_reference(object_t* reference_);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix="");
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
       std::vector<sound_t> sound;
       std::vector<TASCAR::Input::base_t*> inputs;
-      TASCAR::Input::base_t* get_input(const std::string& name);
       void fill(int32_t tp_firstframe, bool tp_running);
     private:
-      object_t* reference;
       int32_t startframe;
     };
 
     class listener_t : public object_t {
     public:
       listener_t();
-      void prepare(double fs, uint32_t fragsize){};
+      ~listener_t();
+      void read_xml(xmlpp::Element* e);
+      void prepare(double fs, uint32_t fragsize);
+      TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
+    private:
+      TASCAR::Acousticmodel::sink_t* sink;
     };
 
     class diffuse_reverb_t : public route_t {
@@ -199,7 +189,6 @@ namespace TASCAR {
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void prepare(double fs, uint32_t fragsize){};
-      //std::string print(const std::string& prefix="");
       pos_t center;
       pos_t size;
       zyx_euler_t orientation;
@@ -210,7 +199,6 @@ namespace TASCAR {
       range_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix=""){return "";};
       void prepare(double fs, uint32_t fragsize){};
       std::string name;
       double start;
@@ -223,18 +211,13 @@ namespace TASCAR {
       void read_xml(xmlpp::Element* e);
       void read_xml(const std::string& filename);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
-      //std::string print(const std::string& prefix="");
       src_object_t* add_source();
       std::vector<sound_t*> linearize_sounds();
       std::vector<Input::base_t*> linearize_inputs();
-      std::vector<Input::jack_t*> get_jack_inputs();
       void prepare(double fs, uint32_t fragsize);
       std::string description;
       std::string name;
       double duration;
-      //double lat;
-      //double lon;
-      //double elev;
       std::vector<src_object_t> srcobjects;
       //std::vector<bg_amb_t> bg_amb;
       //std::vector<diffuse_reverb_t> reverbs;
