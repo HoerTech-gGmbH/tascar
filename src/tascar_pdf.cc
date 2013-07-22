@@ -440,12 +440,12 @@ void pdf_export_t::draw(view_t persp)
   for(unsigned int k=0;k<srcobjects.size();k++){
     draw_track(srcobjects[k], cr, markersize );
   }
-  for(unsigned int k=0;k<reverbs.size();k++){
-    draw_room(reverbs[k], cr, markersize );
-  }
-  for(unsigned int k=0;k<faces.size();k++){
-    draw_face(faces[k], cr, markersize );
-  }
+  //for(unsigned int k=0;k<reverbs.size();k++){
+  //  draw_room(reverbs[k], cr, markersize );
+  //}
+  //for(unsigned int k=0;k<faces.size();k++){
+  //  draw_face(faces[k], cr, markersize );
+  //}
   draw_listener( listener, cr, markersize );
   cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
   cr->move_to(-markersize, 0 );

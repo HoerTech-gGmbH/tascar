@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
-<scene name="Example scene" lat="53.155473" lon="8.167249" elev="10" guiscale="3" duration="10">
+<scene name="example" lat="53.155473" lon="8.167249" elev="10" guiscale="3" duration="10">
   <description>one source</description>
   <src_object name="dur=2 start=1" color="#f00000" start="1">
     <position>0 0 2 0</position>
     <inputs><file name="0" filename="tc1.wav" gain="0" loop="414" start="0" channel="0"/></inputs>
-    <sound name="0"/>
+    <sound name="0" connect="example:one source.0" gain="0"/>
   </src_object>
   <src_object name="dur=2 start=2" color="#f0f000" start="2" mute="false">
     <position interpolation="cartesian">0 1 0 0</position>

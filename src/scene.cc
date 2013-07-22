@@ -154,18 +154,18 @@ void object_t::write_xml(xmlpp::Element* e,bool help_comments)
   }
 }
 
-std::string object_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << route_t::print(prefix);
-  r << prefix << "Starttime: " << starttime << " s\n";
-  r << prefix << "Trajectory center: " << location.center().print_cart() << " m\n";
-  r << prefix << "trajectory length: " << location.length() << " m\n";
-  r << prefix << "Trajectory duration: " << location.duration() << " s (";
-  r << location.t_min()+starttime << " - " << location.t_max()+starttime << "s)\n";
-  //euler_track_t orientation;
-  return r.str();
-}
+//std::string object_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << route_t::print(prefix);
+//  r << prefix << "Starttime: " << starttime << " s\n";
+//  r << prefix << "Trajectory center: " << location.center().print_cart() << " m\n";
+//  r << prefix << "trajectory length: " << location.length() << " m\n";
+//  r << prefix << "Trajectory duration: " << location.duration() << " s (";
+//  r << location.t_min()+starttime << " - " << location.t_max()+starttime << "s)\n";
+//  //euler_track_t orientation;
+//  return r.str();
+//}
 
 /*
  *bg_amb_t
@@ -198,15 +198,15 @@ void bg_amb_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"start",starttime);
 }
 
-std::string bg_amb_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << prefix << "Filename: \"" << filename << "\"\n";
-  r << prefix << "Gain: " << gain << " dB\n";
-  r << prefix << "Loop: " << loop << "\n";
-  r << prefix << "Starttime: " << starttime << " s\n";
-  return r.str();
-}
+//std::string bg_amb_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << prefix << "Filename: \"" << filename << "\"\n";
+//  r << prefix << "Gain: " << gain << " dB\n";
+//  r << prefix << "Loop: " << loop << "\n";
+//  r << prefix << "Starttime: " << starttime << " s\n";
+//  return r.str();
+//}
 
 void bg_amb_t::prepare(double fs, uint32_t fragsize)
 {
@@ -239,6 +239,9 @@ void sound_t::prepare(double fs, uint32_t fragsize)
     input = parent->get_input(name);
   else
     input = NULL;
+  if( source )
+    delete source;
+  source = new TASCAR::Acousticmodel::pointsource_t(fragsize);
   //DEBUG(input);
   //bg_amb_t::prepare(fs,fragsize);
 }
@@ -295,14 +298,14 @@ void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
     set_attribute_double(e,"d",chaindist);
 }
 
-std::string sound_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  //r << bg_amb_t::print(prefix);
-  r << prefix << "Location: " << loc.print_cart() << "\n";
-  //r << prefix << "Channel: " << firstchannel << "\n";
-  return r.str();
-}
+//std::string sound_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  //r << bg_amb_t::print(prefix);
+//  r << prefix << "Location: " << loc.print_cart() << "\n";
+//  //r << prefix << "Channel: " << firstchannel << "\n";
+//  return r.str();
+//}
 
 bool sound_t::isactive(double t)
 {
@@ -430,15 +433,15 @@ void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
   }
 }
 
-std::string src_object_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << object_t::print(prefix);
-  for(std::vector<sound_t>::iterator it=sound.begin();
-      it!=sound.end();++it)
-    r << it->print(prefix+"  ");
-  return r.str();
-}
+//std::string src_object_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << object_t::print(prefix);
+//  for(std::vector<sound_t>::iterator it=sound.begin();
+//      it!=sound.end();++it)
+//    r << it->print(prefix+"  ");
+//  return r.str();
+//}
 
 sound_t* src_object_t::add_sound()
 {
@@ -457,30 +460,30 @@ scene_t::scene_t()
   : description(""),
     name(""),
     duration(60),
-    lat(53.155473),
-    lon(8.167249),
-    elev(10),
+//    lat(53.155473),
+//    lon(8.167249),
+//    elev(10),
     guiscale(200),anysolo(0),loop(false)
 {
 }
 
-std::string scene_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << "scene: \"" << name << "\"\n  duration: " << duration << " s\n";
-  r << "  geo center at " << fabs(lat) << ((lat>=0)?"N ":"S ");
-  r << fabs(lon) << ((lon>=0)?"E, ":"W, ");
-  r << fabs(elev) << ((elev>=0)?" m above":"m below");
-  r << " sea level.\n";
-  r << "  " << srcobjects.size() << " source objects\n";
-  r << "  " << bg_amb.size() << " backgrounds\n";
-  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
-    r << it->print(prefix+"  ");
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it != bg_amb.end();++it)
-    r << it->print(prefix+"  ");
-  r << listener.print(prefix+"  ");
-  return r.str();
-}
+//std::string scene_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << "scene: \"" << name << "\"\n  duration: " << duration << " s\n";
+//  r << "  geo center at " << fabs(lat) << ((lat>=0)?"N ":"S ");
+//  r << fabs(lon) << ((lon>=0)?"E, ":"W, ");
+//  r << fabs(elev) << ((elev>=0)?" m above":"m below");
+//  r << " sea level.\n";
+//  r << "  " << srcobjects.size() << " source objects\n";
+//  r << "  " << bg_amb.size() << " backgrounds\n";
+//  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
+//    r << it->print(prefix+"  ");
+//  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it != bg_amb.end();++it)
+//    r << it->print(prefix+"  ");
+//  r << listener.print(prefix+"  ");
+//  return r.str();
+//}
 
 listener_t::listener_t()
 {
@@ -494,9 +497,9 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
       "\n"
       "A scene describes the spatial and acoustical information.\n"
       "Sub-tags are src_object, listener and bg_amb.\n");
-  set_attribute_double(e,"lat",lat);
-  set_attribute_double(e,"lon",lon);
-  set_attribute_double(e,"elev",elev);
+  //set_attribute_double(e,"lat",lat);
+  //set_attribute_double(e,"lon",lon);
+  //set_attribute_double(e,"elev",elev);
   set_attribute_double(e,"guiscale",guiscale);
   set_attribute_double(e,"duration",duration);
   set_attribute_bool(e,"loop",loop);
@@ -510,20 +513,20 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
     b_first = false;
   }
   b_first = true;
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
-    it->write_xml(e->add_child("bg_amb"),help_comments && b_first);
-    b_first = false;
-  }
-  b_first = true;
-  for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it){
-    it->write_xml(e->add_child("reverb"),help_comments && b_first);
-    b_first = false;
-  }
-  b_first = true;
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
-    it->write_xml(e->add_child("face"),help_comments && b_first);
-    b_first = false;
-  }
+  //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+  //  it->write_xml(e->add_child("bg_amb"),help_comments && b_first);
+  //  b_first = false;
+  //}
+  //b_first = true;
+  //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it){
+  //  it->write_xml(e->add_child("reverb"),help_comments && b_first);
+  //  b_first = false;
+  //}
+  //b_first = true;
+  //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
+  //  it->write_xml(e->add_child("face"),help_comments && b_first);
+  //  b_first = false;
+  //}
   b_first = true;
   for(std::vector<range_t>::iterator it=ranges.begin();it!=ranges.end();++it){
     it->write_xml(e->add_child("range"),help_comments && b_first);
@@ -537,9 +540,9 @@ void scene_t::read_xml(xmlpp::Element* e)
   if( e->get_name() != "scene" )
     throw ErrMsg("Invalid file, XML root node should be \"scene\".");
   name = e->get_attribute_value("name");
-  get_attribute_value(e,"lon",lon);
-  get_attribute_value(e,"lat",lat);
-  get_attribute_value(e,"elev",elev);
+  //get_attribute_value(e,"lon",lon);
+  //get_attribute_value(e,"lat",lat);
+  //get_attribute_value(e,"elev",elev);
   get_attribute_value(e,"duration",duration);
   get_attribute_value(e,"guiscale",guiscale);
   get_attribute_value_bool(e,"loop",loop);
@@ -552,21 +555,21 @@ void scene_t::read_xml(xmlpp::Element* e)
         srcobjects.push_back(src_object_t(&listener));
         srcobjects.rbegin()->read_xml(sne);
       }
-      if( sne->get_name() == "bg_amb" ){
-        bg_amb.push_back(bg_amb_t());
-        bg_amb.rbegin()->read_xml(sne);
-      }
-      if( sne->get_name() == "listener" ){
-        listener.read_xml(sne);
-      }
-      if( sne->get_name() == "reverb" ){
-        reverbs.push_back(diffuse_reverb_t());
-        reverbs.rbegin()->read_xml(sne);
-      }
-      if( sne->get_name() == "face" ){
-        faces.push_back(face_object_t());
-        faces.rbegin()->read_xml(sne);
-      }
+      //if( sne->get_name() == "bg_amb" ){
+      //  bg_amb.push_back(bg_amb_t());
+      //  bg_amb.rbegin()->read_xml(sne);
+      //}
+      //if( sne->get_name() == "listener" ){
+      //  listener.read_xml(sne);
+      //}
+      //if( sne->get_name() == "reverb" ){
+      //  reverbs.push_back(diffuse_reverb_t());
+      //  reverbs.rbegin()->read_xml(sne);
+      //}
+      //if( sne->get_name() == "face" ){
+      //  faces.push_back(face_object_t());
+      //  faces.rbegin()->read_xml(sne);
+      //}
       if( sne->get_name() == "range" ){
         ranges.push_back(range_t());
         ranges.rbegin()->read_xml(sne);
@@ -641,8 +644,8 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     it->prepare(fs,fragsize);
   }
   //DEBUG(1);
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
-    it->prepare(fs,fragsize);
+  //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+  //  it->prepare(fs,fragsize);
 }
 
 void scene_t::set_mute(const std::string& name,bool val)
@@ -650,15 +653,15 @@ void scene_t::set_mute(const std::string& name,bool val)
   for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
     if( it->get_name() == name )
       it->set_mute(val);
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
-    if( it->get_name() == name )
-      it->set_mute(val);
-  for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
-    if( it->get_name() == name )
-      it->set_mute(val);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    if( it->get_name() == name )
-      it->set_mute(val);
+  //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+  //  if( it->get_name() == name )
+  //    it->set_mute(val);
+  //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
+  //  if( it->get_name() == name )
+  //    it->set_mute(val);
+  //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+  //  if( it->get_name() == name )
+  //    it->set_mute(val);
   if( listener.get_name() == name )
     listener.set_mute(val);
 }
@@ -668,15 +671,15 @@ void scene_t::set_solo(const std::string& name,bool val)
   for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it)
     if( it->get_name() == name )
       it->set_solo(val,anysolo);
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
-    if( it->get_name() == name )
-      it->set_solo(val,anysolo);
-  for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
-    if( it->get_name() == name )
-      it->set_solo(val,anysolo);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    if( it->get_name() == name )
-      it->set_solo(val, anysolo);
+  //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it)
+  //  if( it->get_name() == name )
+  //    it->set_solo(val,anysolo);
+  //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
+  //  if( it->get_name() == name )
+  //    it->set_solo(val,anysolo);
+  //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+  //  if( it->get_name() == name )
+  //    it->set_solo(val, anysolo);
   if( listener.get_name() == name )
     listener.set_solo(val,anysolo);
 }
@@ -886,15 +889,15 @@ void diffuse_reverb_t::write_xml(xmlpp::Element* e,bool help_comments)
 }
 
 
-std::string diffuse_reverb_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << route_t::print(prefix);
-  r << prefix << "Center: " << center.print_cart() << " s\n";
-  r << prefix << "Size: " << size.print_cart() << " s\n";
-  r << prefix << "Orientation: " << orientation.print() << " s\n";
-  return r.str();
-}
+//std::string diffuse_reverb_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << route_t::print(prefix);
+//  r << prefix << "Center: " << center.print_cart() << " s\n";
+//  r << prefix << "Size: " << size.print_cart() << " s\n";
+//  r << prefix << "Orientation: " << orientation.print() << " s\n";
+//  return r.str();
+//}
 
 route_t::route_t()
   : mute(false),solo(false)
@@ -915,13 +918,13 @@ void route_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_bool(e,"solo",solo);
 }
 
-std::string route_t::print(const std::string& prefix)
-{
-  std::stringstream r;
-  r << prefix << "Name: \"" << name << "\"\n";
-  return r.str();
-}
-
+//std::string route_t::print(const std::string& prefix)
+//{
+//  std::stringstream r;
+//  r << prefix << "Name: \"" << name << "\"\n";
+//  return r.str();
+//}
+//
 void route_t::set_solo(bool b,uint32_t& anysolo)
 {
   if( b != solo ){

@@ -240,17 +240,17 @@ void TASCAR::renderer_t::connect_all(const std::string& dest_name)
       std::cerr << "Warning: " << msg << std::endl;
     }
   }
-  for( unsigned int k=0;k<reverbs.size();k++){
-    try{
-      connect_out( k+first_reverb_port, "zita-rev1:in.L" );
-    }
-    catch( const std::exception& msg ){
-      std::cerr << "Warning: " << msg.what() << std::endl;
-    }
-    catch( const char* msg ){
-      std::cerr << "Warning: " << msg << std::endl;
-    }
-  }
+  //for( unsigned int k=0;k<reverbs.size();k++){
+  //  try{
+  //    connect_out( k+first_reverb_port, "zita-rev1:in.L" );
+  //  }
+  //  catch( const std::exception& msg ){
+  //    std::cerr << "Warning: " << msg.what() << std::endl;
+  //  }
+  //  catch( const char* msg ){
+  //    std::cerr << "Warning: " << msg << std::endl;
+  //  }
+  //}
 }
 
 void TASCAR::renderer_t::send_listener()
@@ -271,14 +271,14 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     memset(outBuffer[k],0,sizeof(float)*nframes);
   // play backgrounds:
   if( tp_rolling && (outBuffer.size()>=4) ){
-    float* amb_buf[4];
-    for(unsigned int k=0;k<4; k++)
-      amb_buf[k] = outBuffer[k];
+    //float* amb_buf[4];
+    //for(unsigned int k=0;k<4; k++)
+    //  amb_buf[k] = outBuffer[k];
     // todo: rotate background by listener.orientation!
-    for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
-      if( !it->get_mute() && ((anysolo ==0)||(it->get_solo())))
-        it->request_data( tp_frame, nframes, 4, amb_buf );
-    }
+    //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+    //  if( !it->get_mute() && ((anysolo ==0)||(it->get_solo())))
+    //    it->request_data( tp_frame, nframes, 4, amb_buf );
+    //}
   }
   // store jack input data:
   for( unsigned int k=0;k<jackinputs.size();k++){
@@ -354,9 +354,9 @@ void TASCAR::renderer_t::run(const std::string& dest_ambdec)
     srcobjects[k].fill( -1, 0 );
   }
   first_reverb_port = get_num_output_ports();
-  for(unsigned int kr=0;kr<reverbs.size();kr++){
-    add_output_port(reverbs[kr].get_name());
-  }
+  //for(unsigned int kr=0;kr<reverbs.size();kr++){
+  //  add_output_port(reverbs[kr].get_name());
+  //}
   jackinputs = get_jack_inputs();
   for(unsigned int k=0;k<jackinputs.size();k++){
     add_input_port(jackinputs[k]->get_port_name());
@@ -373,12 +373,12 @@ void TASCAR::renderer_t::run(const std::string& dest_ambdec)
     getchar();
     if( feof( stdin ) )
       b_quit = true;
-    for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
-      unsigned int xr(it->get_xruns());
-      if( xr ){
-        std::cerr << "xrun " << it->filename << " " << xr << std::endl;
-      }
-    }
+    //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+    //  unsigned int xr(it->get_xruns());
+    //  if( xr ){
+    //    std::cerr << "xrun " << it->filename << " " << xr << std::endl;
+    //  }
+    //}
   }
   if( world )
     delete world;

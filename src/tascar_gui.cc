@@ -62,8 +62,8 @@ g_scene_t::g_scene_t(const std::string& n, const std::string& flags)
     i->location.fill_gaps(0.25);
   //std::vector<bg_amb_t> bg_amb;
   // std::vector<diffuse_reverb_t> reverbs;
-  for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
-    i->location.fill_gaps(0.25);
+  //for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
+  //  i->location.fill_gaps(0.25);
   listener.location.fill_gaps(0.25);
 }
 
@@ -177,14 +177,14 @@ void source_panel_t::set_scene(scene_t* s)
   vbuttons.clear();
   if( s ){
     //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->listener)));
-    for( unsigned int k=0;k<s->bg_amb.size();k++)
-      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->bg_amb[k])));
+    //for( unsigned int k=0;k<s->bg_amb.size();k++)
+    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->bg_amb[k])));
     for( unsigned int k=0;k<s->srcobjects.size();k++)
       vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->srcobjects[k])));
-    for( unsigned int k=0;k<s->faces.size();k++)
-      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->faces[k])));
-    for( unsigned int k=0;k<s->reverbs.size();k++)
-      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->reverbs[k])));
+    //for( unsigned int k=0;k<s->faces.size();k++)
+    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->faces[k])));
+    //for( unsigned int k=0;k<s->reverbs.size();k++)
+    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->reverbs[k])));
   }
   for( unsigned int k=0;k<vbuttons.size();k++){
     box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
@@ -971,12 +971,12 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       for(unsigned int k=0;k<scene->srcobjects.size();k++){
         draw_track(scene->srcobjects[k], cr, markersize );
       }
-      for(unsigned int k=0;k<scene->reverbs.size();k++){
-        draw_room(scene->reverbs[k], cr, markersize );
-      }
-      for(unsigned int k=0;k<scene->faces.size();k++){
-        draw_face(scene->faces[k], cr, markersize );
-      }
+      //for(unsigned int k=0;k<scene->reverbs.size();k++){
+      //  draw_room(scene->reverbs[k], cr, markersize );
+      //}
+      //for(unsigned int k=0;k<scene->faces.size();k++){
+      //  draw_face(scene->faces[k], cr, markersize );
+      //}
       draw_listener( scene->listener, cr, markersize );
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
       cr->move_to(-markersize, 0 );
