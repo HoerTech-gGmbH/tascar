@@ -123,12 +123,29 @@ namespace TASCAR {
 
     class src_object_t;
 
-    class sound_t : public scene_node_base_t {
+    class jack_port_t {
+    public:
+      jack_port_t();
+      void read_xml(xmlpp::Element* e);
+      void set_port_index(uint32_t port_index_);
+      uint32_t get_port_index() const { return port_index;};
+      void set_portname(const std::string& pn);
+      std::string get_portname() const { return portname;};
+      std::string get_connect() const { return connect;};
+      float get_gain() const { return gain;};
+    private:
+      std::string portname;
+      std::string connect;
+      uint32_t port_index;
+      float gain;
+    };
+
+    class sound_t : public scene_node_base_t, public jack_port_t {
     public:
       sound_t(src_object_t* parent_);
+      //sound_t(const sound_t& src);
       ~sound_t();
       void set_parent(src_object_t* parent_);
-      void set_portnum(uint32_t portnum_);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       pos_t get_pos_global(double t) const;
@@ -138,18 +155,13 @@ namespace TASCAR {
       bool get_mute() const;
       bool get_solo() const;
       std::string get_port_name() const;
-      std::string get_connection() const { return connect;};
+      //std::string get_connection() const { return connect;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
-      uint32_t get_portnum() const { return portnum;};
     private:
       pos_t loc;
       double chaindist;
       src_object_t* parent;
       std::string name;
-      std::string connect;
-      uint32_t portnum;
-      double gain;
-      double gain_linear;
       // dynamically allocated source type. Allocated in "prepare",
       // type defined in xml_read:
       TASCAR::Acousticmodel::pointsource_t* source; 
@@ -159,21 +171,22 @@ namespace TASCAR {
 
     class src_object_t : public object_t {
     public:
-      src_object_t(object_t* reference);
+      src_object_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
       std::vector<sound_t> sound;
       std::vector<TASCAR::Input::base_t*> inputs;
-      void fill(int32_t tp_firstframe, bool tp_running);
+      //void fill(int32_t tp_firstframe, bool tp_running);
     private:
       int32_t startframe;
     };
 
-    class listener_t : public object_t {
+    class listener_t : public object_t, public jack_port_t {
     public:
       listener_t();
+      //listener_t(const listener_t& src);
       ~listener_t();
       void read_xml(xmlpp::Element* e);
       void prepare(double fs, uint32_t fragsize);
@@ -213,7 +226,7 @@ namespace TASCAR {
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       src_object_t* add_source();
       std::vector<sound_t*> linearize_sounds();
-      std::vector<Input::base_t*> linearize_inputs();
+      //std::vector<Input::base_t*> linearize_inputs();
       void prepare(double fs, uint32_t fragsize);
       std::string description;
       std::string name;
@@ -222,10 +235,10 @@ namespace TASCAR {
       //std::vector<bg_amb_t> bg_amb;
       //std::vector<diffuse_reverb_t> reverbs;
       //std::vector<face_object_t> faces;
-      listener_t listener;
+      std::vector<listener_t> listener;
       double guiscale;
-      void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
-      void listener_position(pos_t p){listener.dlocation = p;};
+      //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
+      //void listener_position(pos_t p){listener.dlocation = p;};
       void set_source_position_offset(const std::string& srcname,pos_t position);
       void set_source_orientation_offset(const std::string& srcname,zyx_euler_t position);
       uint32_t anysolo;

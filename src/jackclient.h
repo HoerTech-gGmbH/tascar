@@ -60,8 +60,8 @@ public:
   virtual ~jackc_t();
   void add_input_port(const std::string& name);
   void add_output_port(const std::string& name);
-  void connect_in(unsigned int port,const std::string& pname);
-  void connect_out(unsigned int port,const std::string& pname);
+  void connect_in(unsigned int port,const std::string& pname,bool btry=false);
+  void connect_out(unsigned int port,const std::string& pname,bool btry=false);
   size_t get_num_input_ports() const {return inPort.size();};
   size_t get_num_output_ports() const {return outPort.size();};
 protected:

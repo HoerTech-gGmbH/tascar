@@ -11,5 +11,5 @@
     <inputs><file name="0" filename="tc1.wav" gain="0" loop="414" start="0" channel="0"/></inputs>
     <sound name="0"/>
   </src_object>
-  <listener name="listener" color="#0000f0" start="0"/>
+  <listener name="listener" color="#0000f0" start="0" connect="system:playback_1"/>
 </scene>

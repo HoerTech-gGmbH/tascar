@@ -4,13 +4,14 @@ using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
 sink_omni_t::sink_omni_t(uint32_t chunksize)
-  : audio(chunksize)
 {
+  outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
 
 void sink_omni_t::clear()
 {
-  audio.clear();
+  for(unsigned int ch=0;ch<outchannels.size();ch++)
+    outchannels[ch].clear();
 }
 
 void sink_omni_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
@@ -23,12 +24,12 @@ void sink_omni_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distan
 
 void sink_omni_t::add_source(const pos_t& prel, const wave_t& chunk)
 {
-  audio += chunk;
+  outchannels[0] += chunk;
 }
 
 void sink_omni_t::add_source(const pos_t& prel, const amb1wave_t& chunk)
 {
-  audio += chunk.w();
+  outchannels[0] += chunk.w();
 }
 
 /*

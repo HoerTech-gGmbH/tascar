@@ -58,10 +58,10 @@ namespace TASCAR {
   public:
     render_t(const std::string& name, const std::string& oscport);
     ~render_t();
-    void run(const std::string& ambdec = "ambdec");
-    void connect_all(const std::string& ambdec);
+    void run();
+    //void connect_all(const std::string& ambdec);
   private:
-    std::vector<TASCAR::trackpan_amb33_t> panner;
+    //std::vector<TASCAR::trackpan_amb33_t> panner;
     std::vector<TASCAR::Scene::sound_t*> sounds;
     std::vector<Acousticmodel::pointsource_t*> sources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
@@ -69,14 +69,14 @@ namespace TASCAR {
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     void send_listener();
-    std::vector<std::string> vAmbPorts;
+    //std::vector<std::string> vAmbPorts;
     static int osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    uint32_t first_reverb_port;
+    //uint32_t first_reverb_port;
     Acousticmodel::world_t* world;
   public:
     lo_address client_addr;
@@ -91,17 +91,17 @@ TASCAR::render_t::render_t(const std::string& name,
   : jackc_transport_t(name),osc_server_t("",oscport,true),  
     client_addr(lo_address_new("localhost","9876"))
 {
-  char c_tmp[100];
-  unsigned int k=0;
-  for(int ko=0;ko<=3;ko++){
-    for(int kl=-ko;kl<=ko;kl++){
-      sprintf(c_tmp,"out.%d%c",ko,AMB33::channelorder[k]);
-      add_output_port(c_tmp);
-      sprintf(c_tmp,"in.%d%c",ko,AMB33::channelorder[k]);
-      vAmbPorts.push_back(c_tmp);
-      k++;
-    }
-  }
+  //char c_tmp[100];
+  //unsigned int k=0;
+  //for(int ko=0;ko<=3;ko++){
+  //  for(int kl=-ko;kl<=ko;kl++){
+  //    sprintf(c_tmp,"out.%d%c",ko,AMB33::channelorder[k]);
+  //    add_output_port(c_tmp);
+  //    sprintf(c_tmp,"in.%d%c",ko,AMB33::channelorder[k]);
+  //    vAmbPorts.push_back(c_tmp);
+  //    k++;
+  //  }
+  //}
   osc_server_t::add_method("/solo","si",osc_solo,this);
   osc_server_t::add_method("/mute","si",osc_mute,this);
   osc_server_t::add_method("/listener/pos","ffffff",osc_listener_position,this);
@@ -145,13 +145,13 @@ int TASCAR::render_t::osc_listener_orientation(const char *path, const char *typ
     r.z = DEG2RAD*argv[0]->f;
     r.y = DEG2RAD*argv[1]->f;
     r.x = DEG2RAD*argv[2]->f;
-    h->listener_orientation(r);
+    //h->listener_orientation(r);
     return 0;
   }
   if( h && (argc == 1) && (types[0]=='f') ){
     zyx_euler_t r;
     r.z = DEG2RAD*argv[0]->f;
-    h->listener_orientation(r);
+    //h->listener_orientation(r);
     return 0;
   }
   return 1;
@@ -197,12 +197,12 @@ int TASCAR::render_t::osc_listener_position(const char *path, const char *types,
     r.x = argv[0]->f;
     r.y = argv[1]->f;
     r.z = argv[2]->f;
-    h->listener_position(r);
+    //h->listener_position(r);
     zyx_euler_t o;
     o.z = DEG2RAD*argv[3]->f;
     o.y = DEG2RAD*argv[4]->f;
     o.x = DEG2RAD*argv[5]->f;
-    h->listener_orientation(o);
+    //h->listener_orientation(o);
     h->send_listener();
     return 0;
   }
@@ -211,51 +211,51 @@ int TASCAR::render_t::osc_listener_position(const char *path, const char *types,
     r.x = argv[0]->f;
     r.y = argv[1]->f;
     r.z = argv[2]->f;
-    h->listener_position(r);
+    //h->listener_position(r);
     return 0;
   }
   if( h && (argc == 2) && (types[0]=='f') && (types[1]=='f') ){
     pos_t r;
     r.x = argv[0]->f;
     r.y = argv[1]->f;
-    h->listener_position(r);
+    //h->listener_position(r);
     return 0;
   }
   return 1;
 }
 
-void TASCAR::render_t::connect_all(const std::string& dest_name)
-{
-  for( unsigned int k=0;k<vAmbPorts.size();k++){
-    try{
-      connect_out( k, dest_name + ":" + vAmbPorts[k]);
-    }
-    catch( const std::exception& msg ){
-      std::cerr << "Warning: " << msg.what() << std::endl;
-    }
-    catch( const char* msg ){
-      std::cerr << "Warning: " << msg << std::endl;
-    }
-  }
-  //for( unsigned int k=0;k<reverbs.size();k++){
-  //  try{
-  //    connect_out( k+first_reverb_port, "zita-rev1:in.L" );
-  //  }
-  //  catch( const std::exception& msg ){
-  //    std::cerr << "Warning: " << msg.what() << std::endl;
-  //  }
-  //  catch( const char* msg ){
-  //    std::cerr << "Warning: " << msg << std::endl;
-  //  }
-  //}
-}
+//void TASCAR::render_t::connect_all(const std::string& dest_name)
+//{
+//  for( unsigned int k=0;k<vAmbPorts.size();k++){
+//    try{
+//      connect_out( k, dest_name + ":" + vAmbPorts[k]);
+//    }
+//    catch( const std::exception& msg ){
+//      std::cerr << "Warning: " << msg.what() << std::endl;
+//    }
+//    catch( const char* msg ){
+//      std::cerr << "Warning: " << msg << std::endl;
+//    }
+//  }
+//  //for( unsigned int k=0;k<reverbs.size();k++){
+//  //  try{
+//  //    connect_out( k+first_reverb_port, "zita-rev1:in.L" );
+//  //  }
+//  //  catch( const std::exception& msg ){
+//  //    std::cerr << "Warning: " << msg.what() << std::endl;
+//  //  }
+//  //  catch( const char* msg ){
+//  //    std::cerr << "Warning: " << msg << std::endl;
+//  //  }
+//  //}
+//}
 
 void TASCAR::render_t::send_listener()
 {
-  pos_t r(listener.dlocation);
-  zyx_euler_t o(listener.dorientation);
-  lo_send(client_addr,"/listener/pos","fff",r.x,r.y,r.z);
-  lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
+  //pos_t r(listener.dlocation);
+  //zyx_euler_t o(listener.dorientation);
+  //lo_send(client_addr,"/listener/pos","fff",r.x,r.y,r.z);
+  //lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
 }
 
 int TASCAR::render_t::process(jack_nframes_t nframes,
@@ -267,82 +267,53 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
-  // play backgrounds:
-  //if( tp_rolling && (outBuffer.size()>=4) ){
-  //  //float* amb_buf[4];
-  //  //for(unsigned int k=0;k<4; k++)
-  //  //  amb_buf[k] = outBuffer[k];
-  //  // todo: rotate background by listener.orientation!
-  //  //for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
-  //  //  if( !it->get_mute() && ((anysolo ==0)||(it->get_solo())))
-  //  //    it->request_data( tp_frame, nframes, 4, amb_buf );
-  //  //}
-  //}
-  // store jack input data:
-  //for( unsigned int k=0;k<jackinputs.size();k++){
-  //  jackinputs[k]->write(nframes,inBuffer[k]);
-  //}
-  // load/update input files and jack inputs:
-  if( tp_rolling ){
-    for(unsigned int k=0;k<srcobjects.size();k++){
-      srcobjects[k].fill( tp_frame, nframes );
-    }
-  }else{
-    for(unsigned int k=0;k<srcobjects.size();k++){
-      srcobjects[k].fill( tp_frame, 0 );
-    }
-  }
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
     psrc->position = sounds[k]->get_pos_global(tp_time);
-    if( tp_rolling )
-      psrc->audio.copy(inBuffer[sounds[k]->get_portnum()],nframes);
-    else
-      psrc->audio.clear();
+    psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
+  }
+  for(unsigned int k=0;k<listener.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(listener[k].get_sink());
+    psink->clear();
   }
   if( world )
     world->process();
-  // process point sources:
-  //for( unsigned int k=0;k<panner.size();k++)
-  //  if( sounds[k] && get_playsound(sounds[k]) )
-  //    panner[k].process(nframes,sounds[k]->get_buffer(nframes), outBuffer,tp_frame,
-  //                      tp_time,tp_rolling,sounds[k]);
+  for(unsigned int k=0;k<listener.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(listener[k].get_sink());
+    for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
+      psink->outchannels[ch].copy_to(outBuffer[listener[k].get_port_index()],nframes);
+  }
   return 0;
 }
 
-void TASCAR::render_t::run(const std::string& dest_ambdec)
+void TASCAR::render_t::run()
 {
+  // first prepare all nodes for audio processing:
   prepare(get_srate(), get_fragsize());
   sounds = linearize_sounds();
-  panner.clear();
+  //panner.clear();
   sources.clear();
+  for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
+    sources.push_back((*it)->get_source());
+    (*it)->set_port_index(get_num_input_ports());
+    add_input_port((*it)->get_port_name());
+  }
   sinks.clear();
-  sinks.push_back(listener.get_sink());
-  DEBUG(1);
-  for(unsigned int k=0;k<sounds.size();k++){
-    //double maxdist(0);
-    //for( double t=0;t<duration;t+=2){
-    //  //pos_t p(sounds[k]->get_pos(t));
-    //  maxdist = std::max(maxdist,p.norm());
-    //}
-    //std::cout << sounds[k]->getlabel() << " maxdist=" << maxdist << std::endl;
-    DEBUG(k);
-    panner.push_back(trackpan_amb33_t(get_srate(), get_fragsize(), 3000));
-    DEBUG(k);
-    sources.push_back(sounds[k]->get_source());
+  for(std::vector<listener_t>::iterator it=listener.begin();it!=listener.end();++it){
+    TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
+    sinks.push_back(sink);
+    DEBUG(it->get_name());
+    it->set_port_index(get_num_output_ports());
+    for(uint32_t ch=0;ch<sink->get_num_channels();ch++)
+      add_output_port(it->get_name()+sink->get_channel_postfix(ch));
   }
   DEBUG(1);
-  for(unsigned int k=0;k<srcobjects.size();k++){
-    srcobjects[k].fill( -1, 0 );
-  }
-  DEBUG(1);
-  first_reverb_port = get_num_output_ports();
+  //for(unsigned int k=0;k<srcobjects.size();k++){
+  //  srcobjects[k].fill( -1, 0 );
+  //}
+  //DEBUG(1);
+  //first_reverb_port = get_num_output_ports();
   for(unsigned int k=0;k<sounds.size();k++){
-    DEBUG(k);
-    DEBUG(sounds[k]);
-    DEBUG(sounds[k]->get_port_name());
-    add_input_port(sounds[k]->get_port_name());
-    sounds[k]->set_portnum(k);
   }
   DEBUG(1);
   // create the world, before first process callback is called:
@@ -351,24 +322,15 @@ void TASCAR::render_t::run(const std::string& dest_ambdec)
   osc_server_t::activate();
   DEBUG(1);
   for(unsigned int k=0;k<sounds.size();k++){
-    std::string cn(sounds[k]->get_connection());
-    if( cn.size() ){
-      try{
-        connect_in(k,cn);
-      }
-      catch( const std::exception& msg ){
-        std::cerr << "Warning: " << msg.what() << std::endl;
-      }
-      catch( const char* msg ){
-        std::cerr << "Warning: " << msg << std::endl;
-      }
-    }
+    std::string cn(sounds[k]->get_connect());
+    if( cn.size() )
+      connect_in(sounds[k]->get_port_index(),cn,true);
   }
-  DEBUG(1);
-  if( dest_ambdec.size() ){
-    connect_all( dest_ambdec );
+  for(unsigned int k=0;k<listener.size();k++){
+    std::string cn(listener[k].get_connect());
+    if( cn.size() )
+      connect_out(listener[k].get_port_index(),cn,true);
   }
-  DEBUG(1);
   while( !b_quit ){
     sleep( 1 );
     getchar();

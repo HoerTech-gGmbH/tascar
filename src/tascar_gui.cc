@@ -57,14 +57,15 @@ g_scene_t::g_scene_t(const std::string& n, const std::string& flags)
   if( !h_pipe )
     throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
   linearize_sounds();
-  linearize_inputs();
+  //linearize_inputs();
   for( std::vector<src_object_t>::iterator i=srcobjects.begin();i!=srcobjects.end();++i)
     i->location.fill_gaps(0.25);
   //std::vector<bg_amb_t> bg_amb;
   // std::vector<diffuse_reverb_t> reverbs;
   //for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
   //  i->location.fill_gaps(0.25);
-  listener.location.fill_gaps(0.25);
+  for( std::vector<listener_t>::iterator i=listener.begin();i!=listener.end();++i)
+    i->location.fill_gaps(0.25);
 }
 
 g_scene_t::~g_scene_t()
@@ -304,8 +305,8 @@ int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, 
     if( (argc == 1) && (types[0]=='f') ){
       r.z = DEG2RAD*argv[0]->f;
     }
-    if( h->scene )
-      h->scene->listener_orientation(r);
+    //if( h->scene )
+    //  h->scene->listener_orientation(r);
     return 0;
   }
   return 1;
@@ -326,8 +327,8 @@ int tascar_gui_t::osc_listener_position(const char *path, const char *types, lo_
       r.x = argv[0]->f;
       r.y = argv[1]->f;
     }
-    if( h->scene )
-      h->scene->listener_position(r);
+    //if( h->scene )
+    //  h->scene->listener_position(r);
     return 0;
   }
   return 1;
@@ -940,8 +941,8 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if(window && scene){
       view.set_perspective(button_perspective.get_active());
       if( view.get_perspective() ){
-        view.set_ref(scene->listener.get_location(time));
-        view.set_euler(scene->listener.get_orientation(time));
+        //view.set_ref(scene->listener.get_location(time));
+        //view.set_euler(scene->listener.get_orientation(time));
       }
       Gtk::Allocation allocation = wdg_scenemap.get_allocation();
       const int width = allocation.get_width();
@@ -967,7 +968,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
       cr->restore();
-      draw_track( scene->listener, cr, markersize );
+      //draw_track( scene->listener, cr, markersize );
       for(unsigned int k=0;k<scene->srcobjects.size();k++){
         draw_track(scene->srcobjects[k], cr, markersize );
       }
@@ -977,7 +978,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       //for(unsigned int k=0;k<scene->faces.size();k++){
       //  draw_face(scene->faces[k], cr, markersize );
       //}
-      draw_listener( scene->listener, cr, markersize );
+      //draw_listener( scene->listener, cr, markersize );
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
       cr->move_to(-markersize, 0 );
       cr->line_to( markersize, 0 );

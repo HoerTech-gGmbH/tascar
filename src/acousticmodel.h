@@ -25,11 +25,16 @@ namespace TASCAR {
      */
     class sink_t {
     public:
+      sink_t() {};
       virtual void clear() = 0;
       virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain) = 0;
       virtual void add_source(const pos_t& prel, const wave_t& chunk) = 0;
       virtual void add_source(const pos_t& prel, const amb1wave_t& chunk) = 0;
-    protected:
+      uint32_t get_num_channels() const { return outchannels.size();};
+      virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+      std::vector<wave_t> outchannels;
+      pos_t position;
+      zyx_euler_t orientation;
     };
 
     class filter_coeff_t {
