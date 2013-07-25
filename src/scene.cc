@@ -155,7 +155,7 @@ void bg_amb_t::write_xml(xmlpp::Element* e,bool help_comments)
 
 void bg_amb_t::prepare(double fs, uint32_t fragsize)
 {
-  DEBUG(fragsize);
+  //DEBUG(fragsize);
   //DEBUG("pre-service");
   open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
   start_service();
@@ -196,7 +196,7 @@ sound_t::~sound_t()
 
 void sound_t::prepare(double fs, uint32_t fragsize)
 {
-  DEBUG(fragsize);
+  //DEBUG(fragsize);
   fs_ = fs;
   //if( parent )
   //  input = parent->get_input(name);
@@ -228,9 +228,9 @@ void sound_t::set_parent(src_object_t* ref)
 
 std::string sound_t::get_port_name() const
 {
-  DEBUG(parent);
-  DEBUG(name);
-  DEBUG(parent->get_name());
+  //DEBUG(parent);
+  //DEBUG(name);
+  //DEBUG(parent->get_name());
   if( parent )
     return parent->get_name() + "." + name;
   return name;
@@ -324,16 +324,16 @@ src_object_t::src_object_t()
 
 void src_object_t::prepare(double fs, uint32_t fragsize)
 {
-  DEBUG(fragsize);
+  //DEBUG(fragsize);
   //DEBUG(this);
-  DEBUG(inputs.size());
-  for(std::vector<Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
-    //DEBUG(*it);
-    if( *it )
-      (*it)->prepare(fs,fragsize);
-  }
+  //DEBUG(inputs.size());
+  //for(std::vector<Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
+  //  //DEBUG(*it);
+  //  if( *it )
+  //    (*it)->prepare(fs,fragsize);
+  //}
   //DEBUG(this);
-  DEBUG(sound.size());
+  //DEBUG(sound.size());
   for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
     it->prepare(fs,fragsize);
   }
@@ -391,12 +391,12 @@ void src_object_t::read_xml(xmlpp::Element* e)
 void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   object_t::write_xml(e,help_comments);
-  if( inputs.size()){
-    xmlpp::Element* in_node = e->add_child("inputs");
-    for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
-      (*it)->write_xml(in_node->add_child((*it)->get_tag()));
-    }
-  }
+  //if( inputs.size()){
+  //  xmlpp::Element* in_node = e->add_child("inputs");
+  //  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
+  //    (*it)->write_xml(in_node->add_child((*it)->get_tag()));
+  //  }
+  //}
   bool b_first(true);
   for(std::vector<sound_t>::iterator it=sound.begin();
       it!=sound.end();++it){
@@ -457,19 +457,19 @@ scene_t::scene_t()
 //  return r.str();
 //}
 
-listener_t::listener_t()
+sink_object_t::sink_object_t()
   : sink(NULL)
 {
-  DEBUG("listener");
+  //DEBUG("listener");
 }
 
-listener_t::~listener_t()
+sink_object_t::~sink_object_t()
 {
   if( sink )
     delete sink;
 }
 
-void listener_t::read_xml(xmlpp::Element* e)
+void sink_object_t::read_xml(xmlpp::Element* e)
 {
   jack_port_t::read_xml(e);
   object_t::read_xml(e);
@@ -478,14 +478,18 @@ void listener_t::read_xml(xmlpp::Element* e)
     sink_type = omni;
   else if( stype == "cardioid" )
     sink_type = cardioid;
+  else if( stype == "amb3h3v" )
+    sink_type = amb3h3v;
+  else if( stype == "amb3h0v" )
+    sink_type = amb3h0v;
   else 
     throw TASCAR::ErrMsg("Unupported sink type: \""+stype+"\"");
   //  
 }
 
-void listener_t::prepare(double fs, uint32_t fragsize)
+void sink_object_t::prepare(double fs, uint32_t fragsize)
 {
-  DEBUG(fragsize);
+  //DEBUG(fragsize);
   if( sink )
     delete sink;
   switch( sink_type ){
@@ -494,6 +498,12 @@ void listener_t::prepare(double fs, uint32_t fragsize)
     break;
   case cardioid :
     sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize);
+    break;
+  case amb3h3v :
+    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize);
+    break;
+  case amb3h0v :
+    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize);
     break;
   }
 }
@@ -569,8 +579,8 @@ void scene_t::read_xml(xmlpp::Element* e)
       //  bg_amb.rbegin()->read_xml(sne);
       //}
       if( sne->get_name() == "listener" ){
-        listener.push_back(listener_t());
-        listener.rbegin()->read_xml(sne);
+        sink_objects.push_back(sink_object_t());
+        sink_objects.rbegin()->read_xml(sne);
       }
       //if( sne->get_name() == "reverb" ){
       //  reverbs.push_back(diffuse_reverb_t());
@@ -653,7 +663,7 @@ void scene_t::prepare(double fs, uint32_t fragsize)
   for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
     it->prepare(fs,fragsize);
   }
-  for(std::vector<listener_t>::iterator it=listener.begin();it!=listener.end();++it){
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     it->prepare(fs,fragsize);
   }
 }
@@ -672,7 +682,7 @@ void scene_t::set_mute(const std::string& name,bool val)
   //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
   //  if( it->get_name() == name )
   //    it->set_mute(val);
-  for(std::vector<listener_t>::iterator it=listener.begin();it!=listener.end();++it)
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     if( it->get_name() == name )
       it->set_mute(val);
 }
@@ -691,7 +701,7 @@ void scene_t::set_solo(const std::string& name,bool val)
   //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
   //  if( it->get_name() == name )
   //    it->set_solo(val, anysolo);
-  for(std::vector<listener_t>::iterator it=listener.begin();it!=listener.end();++it)
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     if( it->get_name() == name )
       it->set_solo(val,anysolo);
 }

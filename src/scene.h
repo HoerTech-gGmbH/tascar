@@ -143,7 +143,6 @@ namespace TASCAR {
     class sound_t : public scene_node_base_t, public jack_port_t {
     public:
       sound_t(src_object_t* parent_);
-      //sound_t(const sound_t& src);
       ~sound_t();
       void set_parent(src_object_t* parent_);
       void read_xml(xmlpp::Element* e);
@@ -155,7 +154,6 @@ namespace TASCAR {
       bool get_mute() const;
       bool get_solo() const;
       std::string get_port_name() const;
-      //std::string get_connection() const { return connect;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
     private:
       pos_t local_position;
@@ -177,20 +175,17 @@ namespace TASCAR {
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
       std::vector<sound_t> sound;
-      std::vector<TASCAR::Input::base_t*> inputs;
-      //void fill(int32_t tp_firstframe, bool tp_running);
     private:
       int32_t startframe;
     };
 
-    class listener_t : public object_t, public jack_port_t {
+    class sink_object_t : public object_t, public jack_port_t {
     public:
       enum sink_type_t {
-        omni, cardioid
+        omni, cardioid, amb3h3v, amb3h0v
       };
-      listener_t();
-      //listener_t(const listener_t& src);
-      ~listener_t();
+      sink_object_t();
+      ~sink_object_t();
       void read_xml(xmlpp::Element* e);
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
@@ -239,7 +234,7 @@ namespace TASCAR {
       //std::vector<bg_amb_t> bg_amb;
       //std::vector<diffuse_reverb_t> reverbs;
       //std::vector<face_object_t> faces;
-      std::vector<listener_t> listener;
+      std::vector<sink_object_t> sink_objects;
       double guiscale;
       //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
       //void listener_position(pos_t p){listener.dlocation = p;};

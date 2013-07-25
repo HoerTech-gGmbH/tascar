@@ -64,7 +64,7 @@ g_scene_t::g_scene_t(const std::string& n, const std::string& flags)
   // std::vector<diffuse_reverb_t> reverbs;
   //for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
   //  i->location.fill_gaps(0.25);
-  for( std::vector<listener_t>::iterator i=listener.begin();i!=listener.end();++i)
+  for( std::vector<sink_object_t>::iterator i=listener.begin();i!=listener.end();++i)
     i->location.fill_gaps(0.25);
 }
 
@@ -203,7 +203,7 @@ public:
   void set_scale(double s){view.set_scale( s );};
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_listener(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_room(const diffuse_reverb_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -551,7 +551,7 @@ void tascar_gui_t::on_view_m()
   pthread_mutex_unlock( &mtx_scene );
 }
 
-void tascar_gui_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_gui_t::draw_listener(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( view.get_perspective() )
     return;

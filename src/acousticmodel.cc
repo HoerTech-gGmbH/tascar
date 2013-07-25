@@ -5,8 +5,24 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
+
+void sink_t::clear()
+{
+  for(uint32_t ch=0;ch<outchannels.size();ch++)
+    outchannels[ch].clear();
+}
+
+void sink_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
+{
+  prel = psrc;
+  prel -= position;
+  prel /= orientation;
+  distance = prel.norm();
+  gain = 1.0/std::max(0.1,distance);
+}
+
 pointsource_t::pointsource_t(uint32_t chunksize)
-  : audio(chunksize)
+  : audio(chunksize), active(true)
 {
 }
 
@@ -39,27 +55,28 @@ acoustic_model_t::~acoustic_model_t()
  
 void acoustic_model_t::process()
 {
-  pos_t prel;
-  double nextdistance(0.0);
-  double nextgain(1.0);
-  // calculate relative geometry between source and sink:
-  sink_->update_refpoint(src_->position,prel,nextdistance,nextgain);
-  double next_air_absorption(exp(-nextdistance*dscale));
-  double ddistance((nextdistance-distance)*dt);
-  double dgain((nextgain-gain)*dt);
-  double dairabsorption((next_air_absorption-air_absorption)*dt);
-  // todo: air absorption
-  for(uint32_t k=0;k<chunksize;k++){
-    distance+=ddistance;
-    gain+=dgain;
-    delayline.push(src_->audio[k]);
-    float c1(air_absorption+=dairabsorption);
-    float c2(1.0f-c1);
-    // apply air absorption:
-    airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
-    audio[k] = airabsorption_state;
+  if( sink_->active && src_->active ){
+    pos_t prel;
+    double nextdistance(0.0);
+    double nextgain(1.0);
+    // calculate relative geometry between source and sink:
+    sink_->update_refpoint(src_->position,prel,nextdistance,nextgain);
+    double next_air_absorption(exp(-nextdistance*dscale));
+    double ddistance((nextdistance-distance)*dt);
+    double dgain((nextgain-gain)*dt);
+    double dairabsorption((next_air_absorption-air_absorption)*dt);
+    for(uint32_t k=0;k<chunksize;k++){
+      distance+=ddistance;
+      gain+=dgain;
+      delayline.push(src_->audio[k]);
+      float c1(air_absorption+=dairabsorption);
+      float c2(1.0f-c1);
+      // apply air absorption:
+      airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
+      audio[k] = airabsorption_state;
+    }
+    sink_->add_source(prel,audio,sink_data);
   }
-  sink_->add_source(prel,audio,sink_data);
 }
 
 

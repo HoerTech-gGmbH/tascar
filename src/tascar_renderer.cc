@@ -263,8 +263,8 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
-  for(unsigned int k=0;k<listener.size();k++){
-    TASCAR::Acousticmodel::sink_t* psink(listener[k].get_sink());
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
     psink->clear();
   }
   // fill inputs and set position of primary sources:
@@ -273,19 +273,19 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     psrc->position = sounds[k]->get_pos_global(tp_time);
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
   }
-  for(unsigned int k=0;k<listener.size();k++){
-    TASCAR::Acousticmodel::sink_t* psink(listener[k].get_sink());
-    psink->position = listener[k].get_location(tp_time);
-    psink->orientation = listener[k].get_orientation(tp_time);
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
+    psink->position = sink_objects[k].get_location(tp_time);
+    psink->orientation = sink_objects[k].get_orientation(tp_time);
   }
   // process world:
   if( world )
     world->process();
   // copy sink output:
-  for(unsigned int k=0;k<listener.size();k++){
-    TASCAR::Acousticmodel::sink_t* psink(listener[k].get_sink());
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
     for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
-      psink->outchannels[ch].copy_to(outBuffer[listener[k].get_port_index()],nframes);
+      psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()],nframes);
   }
   return 0;
 }
@@ -295,7 +295,6 @@ void TASCAR::render_t::run()
   // first prepare all nodes for audio processing:
   prepare(get_srate(), get_fragsize());
   sounds = linearize_sounds();
-  //panner.clear();
   sources.clear();
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
@@ -303,37 +302,31 @@ void TASCAR::render_t::run()
     add_input_port((*it)->get_port_name());
   }
   sinks.clear();
-  for(std::vector<listener_t>::iterator it=listener.begin();it!=listener.end();++it){
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
     sinks.push_back(sink);
-    //DEBUG(it->get_name());
     it->set_port_index(get_num_output_ports());
-    for(uint32_t ch=0;ch<sink->get_num_channels();ch++)
+    for(uint32_t ch=0;ch<sink->get_num_channels();ch++){
+      //DEBUG(it->get_name()+sink->get_channel_postfix(ch));
       add_output_port(it->get_name()+sink->get_channel_postfix(ch));
+    }
   }
-  //DEBUG(1);
-  //for(unsigned int k=0;k<srcobjects.size();k++){
-  //  srcobjects[k].fill( -1, 0 );
-  //}
-  //DEBUG(1);
-  //first_reverb_port = get_num_output_ports();
-  for(unsigned int k=0;k<sounds.size();k++){
-  }
-  //DEBUG(1);
   // create the world, before first process callback is called:
   world = new Acousticmodel::world_t(get_srate(),sources,reflectors,sinks);
   jackc_t::activate();
   osc_server_t::activate();
-  //DEBUG(1);
   for(unsigned int k=0;k<sounds.size();k++){
     std::string cn(sounds[k]->get_connect());
-    if( cn.size() )
+    if( cn.size() ){
       connect_in(sounds[k]->get_port_index(),cn,true);
+    }
   }
-  for(unsigned int k=0;k<listener.size();k++){
-    std::string cn(listener[k].get_connect());
-    if( cn.size() )
-      connect_out(listener[k].get_port_index(),cn,true);
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    std::string cn(sink_objects[k].get_connect());
+    if( cn.size() ){
+      for(uint32_t ch=0;ch<sink_objects[k].get_sink()->get_num_channels();ch++)
+        connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
+    }
   }
   while( !b_quit ){
     sleep( 1 );

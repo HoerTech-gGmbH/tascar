@@ -17,4 +17,8 @@
     <position>0 0.075 0 0</position>
     <orientation>0 55 0 0</orientation>
   </listener>
+  <listener name="amb" type="amb3h0v" color="#0000f0" connect="ambdec:in">
+    <position>0 0.075 0 0</position>
+    <orientation>0 55 0 0</orientation>
+  </listener>
 </scene>

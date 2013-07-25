@@ -19,6 +19,7 @@ namespace TASCAR {
       pointsource_t(uint32_t chunksize);
       wave_t audio;
       pos_t position;
+      bool active;
     };
 
     class sink_data_t {
@@ -30,9 +31,9 @@ namespace TASCAR {
      */
     class sink_t {
     public:
-      sink_t() {};
-      virtual void clear() = 0;
-      virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain) = 0;
+      sink_t(uint32_t chunksize) : active(true),dt(1.0/(float)chunksize) {};
+      virtual void clear();
+      virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain);
       virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
       virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
       uint32_t get_num_channels() const { return outchannels.size();};
@@ -41,6 +42,8 @@ namespace TASCAR {
       std::vector<wave_t> outchannels;
       pos_t position;
       zyx_euler_t orientation;
+      bool active;
+      float dt;
     };
 
     class filter_coeff_t {
