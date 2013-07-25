@@ -18,15 +18,23 @@ acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,con
     distance(1.0),
     gain(1.0),
     dscale(fs/(340.0*7782.0)),
-    delayline(480000,fs,340.0)
+    delayline(480000,fs,340.0),
+    airabsorption_state(0.0),
+    sink_data(sink_->create_sink_data())
 {
-  DEBUG(audio.size());
-  DEBUG(dt);
+  //DEBUG(audio.size());
+  //DEBUG(dt);
   pos_t prel;
   sink_->update_refpoint(src_->position,prel,distance,gain);
   //distance = sink_->relative_position(src_->position).norm();
-  DEBUG(distance);
-  DEBUG(gain);
+  //DEBUG(distance);
+  //DEBUG(gain);
+}
+
+acoustic_model_t::~acoustic_model_t()
+{
+  if( sink_data )
+    delete sink_data;
 }
  
 void acoustic_model_t::process()
@@ -34,6 +42,7 @@ void acoustic_model_t::process()
   pos_t prel;
   double nextdistance(0.0);
   double nextgain(1.0);
+  // calculate relative geometry between source and sink:
   sink_->update_refpoint(src_->position,prel,nextdistance,nextgain);
   double next_air_absorption(exp(-nextdistance*dscale));
   double ddistance((nextdistance-distance)*dt);
@@ -44,9 +53,13 @@ void acoustic_model_t::process()
     distance+=ddistance;
     gain+=dgain;
     delayline.push(src_->audio[k]);
-    audio[k] = delayline.get_dist(distance)*gain;
+    float c1(air_absorption+=dairabsorption);
+    float c2(1.0f-c1);
+    // apply air absorption:
+    airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
+    audio[k] = airabsorption_state;
   }
-  sink_->add_source(prel,audio);
+  sink_->add_source(prel,audio,sink_data);
 }
 
 
@@ -59,15 +72,15 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
 void mirrorsource_t::process()
 {
   pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
-  DEBUG(nearest_point.print_cart());
+  //DEBUG(nearest_point.print_cart());
   nearest_point -= src_->position;
-  DEBUG(nearest_point.print_cart());
+  //DEBUG(nearest_point.print_cart());
   //double r(dot_prod(nearest_point.normal(),reflector_->get_normal()));
   position = nearest_point;
   position *= 2.0;
   position += src_->position;
-  //DEBUG(r);
-  DEBUG(position.print_cart());
+  ////DEBUG(r);
+  //DEBUG(position.print_cart());
   // todo: add reflection (no diffraction) processing:
   for(uint32_t k=0;k<audio.size();k++)
     audio[k] = src_->audio[k];

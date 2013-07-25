@@ -114,11 +114,11 @@ namespace TASCAR {
     /**
        \brief Format as string in cartesian coordinates
     */
-    std::string print_cart(const std::string& delim=", ");
+    std::string print_cart(const std::string& delim=", ") const;
     /**
        \brief Format as string in spherical coordinates
     */
-    std::string print_sphere(const std::string& delim=", ");
+    std::string print_sphere(const std::string& delim=", ") const;
   };
 
   class sphere_t {

@@ -34,7 +34,7 @@
 
 using namespace TASCAR;
 
-std::string pos_t::print_cart(const std::string& delim)
+std::string pos_t::print_cart(const std::string& delim) const
 {
   std::ostringstream tmp("");
   tmp.precision(12);
@@ -43,7 +43,7 @@ std::string pos_t::print_cart(const std::string& delim)
 
 }
 
-std::string pos_t::print_sphere(const std::string& delim)
+std::string pos_t::print_sphere(const std::string& delim) const
 {
   std::ostringstream tmp("");
   tmp.precision(12);

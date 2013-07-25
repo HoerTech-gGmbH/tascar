@@ -168,7 +168,7 @@ void bg_amb_t::prepare(double fs, uint32_t fragsize)
  * sound_t
  */
 sound_t::sound_t(src_object_t* parent_)
-  : loc(0,0,0),
+  : local_position(0,0,0),
     chaindist(0),
     parent(parent_),
     source(NULL),
@@ -246,9 +246,9 @@ void sound_t::read_xml(xmlpp::Element* e)
   //bg_amb_t::read_xml(e);
   //get_attribute_value(e,"channel",firstchannel);
   jack_port_t::read_xml(e);
-  get_attribute_value(e,"x",loc.x);
-  get_attribute_value(e,"y",loc.y);
-  get_attribute_value(e,"z",loc.z);
+  get_attribute_value(e,"x",local_position.x);
+  get_attribute_value(e,"y",local_position.y);
+  get_attribute_value(e,"z",local_position.z);
   get_attribute_value(e,"d",chaindist);
   name = e->get_attribute_value("name");
 }
@@ -257,12 +257,12 @@ void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   //bg_amb_t::write_xml(e,help_comments);
   e->set_attribute("name",name);
-  if( loc.x != 0 )
-    set_attribute_double(e,"x",loc.x);
-  if( loc.y != 0 )
-    set_attribute_double(e,"y",loc.y);
-  if( loc.z != 0 )
-    set_attribute_double(e,"z",loc.z);
+  if( local_position.x != 0 )
+    set_attribute_double(e,"x",local_position.x);
+  if( local_position.y != 0 )
+    set_attribute_double(e,"y",local_position.y);
+  if( local_position.z != 0 )
+    set_attribute_double(e,"z",local_position.z);
   if( chaindist != 0 )
     set_attribute_double(e,"d",chaindist);
 }
@@ -296,7 +296,7 @@ bool sound_t::isactive(double t)
 
 pos_t sound_t::get_pos_global(double t) const
 {
-  pos_t rp(loc);
+  pos_t rp(local_position);
   if( parent ){
     double tp(t - parent->starttime);
     if( chaindist != 0 ){
@@ -473,8 +473,13 @@ void listener_t::read_xml(xmlpp::Element* e)
 {
   jack_port_t::read_xml(e);
   object_t::read_xml(e);
-  //std::string stype(e->get_attribute_value("type"));
-  //if( stype == "point" )
+  std::string stype(e->get_attribute_value("type"));
+  if( stype == "omni" )
+    sink_type = omni;
+  else if( stype == "cardioid" )
+    sink_type = cardioid;
+  else 
+    throw TASCAR::ErrMsg("Unupported sink type: \""+stype+"\"");
   //  
 }
 
@@ -483,7 +488,14 @@ void listener_t::prepare(double fs, uint32_t fragsize)
   DEBUG(fragsize);
   if( sink )
     delete sink;
-  sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize);
+  switch( sink_type ){
+  case omni :
+    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize);
+    break;
+  case cardioid :
+    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize);
+    break;
+  }
 }
 
 void scene_t::write_xml(xmlpp::Element* e, bool help_comments)

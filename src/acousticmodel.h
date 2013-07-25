@@ -21,6 +21,11 @@ namespace TASCAR {
       pos_t position;
     };
 
+    class sink_data_t {
+    public:
+      sink_data_t(){};
+    };
+
     /** \brief Base class for all audio sinks
      */
     class sink_t {
@@ -28,10 +33,11 @@ namespace TASCAR {
       sink_t() {};
       virtual void clear() = 0;
       virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain) = 0;
-      virtual void add_source(const pos_t& prel, const wave_t& chunk) = 0;
-      virtual void add_source(const pos_t& prel, const amb1wave_t& chunk) = 0;
+      virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
+      virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
       uint32_t get_num_channels() const { return outchannels.size();};
       virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+      virtual sink_data_t* create_sink_data() { return NULL;};
       std::vector<wave_t> outchannels;
       pos_t position;
       zyx_euler_t orientation;
@@ -90,6 +96,7 @@ namespace TASCAR {
     class acoustic_model_t {
     public:
       acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0,NULL));
+      ~acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
       void process();
@@ -105,6 +112,8 @@ namespace TASCAR {
       double dscale;
       double air_absorption;
       varidelay_t delayline;
+      float airabsorption_state;
+      sink_data_t* sink_data;
     };
 
     /** \brief The render model of an acoustic scenario.

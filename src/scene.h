@@ -158,7 +158,7 @@ namespace TASCAR {
       //std::string get_connection() const { return connect;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
     private:
-      pos_t loc;
+      pos_t local_position;
       double chaindist;
       src_object_t* parent;
       std::string name;
@@ -185,6 +185,9 @@ namespace TASCAR {
 
     class listener_t : public object_t, public jack_port_t {
     public:
+      enum sink_type_t {
+        omni, cardioid
+      };
       listener_t();
       //listener_t(const listener_t& src);
       ~listener_t();
@@ -192,6 +195,7 @@ namespace TASCAR {
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
     private:
+      sink_type_t sink_type;
       TASCAR::Acousticmodel::sink_t* sink;
     };
 

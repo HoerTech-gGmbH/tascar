@@ -158,7 +158,6 @@ void trackpan_amb33_t::process(uint32_t n, float* vIn, const std::vector<float*>
     }
   }
 }
-
   
 reverb_line_t::reverb_line_t(double srate, uint32_t fragsize, double maxdist_)
 //  : delayline(3*srate,srate,340.0), 
