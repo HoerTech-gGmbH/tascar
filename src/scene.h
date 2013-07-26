@@ -28,13 +28,13 @@
 #define SCENE_H
 
 #include "coordinates.h"
-#include "async_file.h"
+//#include "async_file.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include "defs.h"
 #include "xmlconfig.h"
-#include "inputs.h"
+//#include "inputs.h"
 #include "acousticmodel.h"
 
 namespace TASCAR {
@@ -108,25 +108,13 @@ namespace TASCAR {
       double damping;
     };
 
-    class bg_amb_t : public route_t, public async_sndfile_t {
-    public:
-      bg_amb_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
-      void prepare(double fs, uint32_t fragsize);
-      std::string filename;
-      double gain;
-      unsigned int loop;
-      double starttime;
-      unsigned int firstchannel;
-    };
-
     class src_object_t;
 
     class jack_port_t {
     public:
       jack_port_t();
       void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e);
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
       void set_portname(const std::string& pn);
@@ -140,6 +128,21 @@ namespace TASCAR {
       float gain;
     };
 
+    class bg_amb_t : public object_t, public jack_port_t {
+    //, public async_sndfile_t 
+    public:
+      bg_amb_t();
+      ~bg_amb_t();
+      void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void prepare(double fs, uint32_t fragsize);
+      void geometry_update(double t);
+      pos_t size;
+      TASCAR::Acousticmodel::diffuse_source_t* get_source() { return source;};
+    private:
+      TASCAR::Acousticmodel::diffuse_source_t* source;
+    };
+
     class sound_t : public scene_node_base_t, public jack_port_t {
     public:
       sound_t(src_object_t* parent_);
@@ -147,6 +150,7 @@ namespace TASCAR {
       void set_parent(src_object_t* parent_);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void geometry_update(double t);
       pos_t get_pos_global(double t) const;
       void prepare(double fs, uint32_t fragsize);
       std::string getlabel();
@@ -163,8 +167,6 @@ namespace TASCAR {
       // dynamically allocated source type. Allocated in "prepare",
       // type defined in xml_read:
       TASCAR::Acousticmodel::pointsource_t* source; 
-      // sources should be pointsource, amb1source
-      double fs_;
     };
 
     class src_object_t : public object_t {
@@ -174,6 +176,7 @@ namespace TASCAR {
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
+      void geometry_update(double t);
       std::vector<sound_t> sound;
     private:
       int32_t startframe;
@@ -189,6 +192,7 @@ namespace TASCAR {
       void read_xml(xmlpp::Element* e);
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
+      void geometry_update(double t);
     private:
       sink_type_t sink_type;
       TASCAR::Acousticmodel::sink_t* sink;
@@ -230,8 +234,9 @@ namespace TASCAR {
       std::string description;
       std::string name;
       double duration;
+      void geometry_update(double t);
       std::vector<src_object_t> srcobjects;
-      //std::vector<bg_amb_t> bg_amb;
+      std::vector<bg_amb_t> bg_amb;
       //std::vector<diffuse_reverb_t> reverbs;
       //std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;

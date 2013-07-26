@@ -268,16 +268,18 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
     psink->clear();
   }
-  // fill inputs and set position of primary sources:
+  geometry_update(tp_time);
+  // fill inputs:
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
-    psrc->position = sounds[k]->get_pos_global(tp_time);
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
   }
-  for(unsigned int k=0;k<sink_objects.size();k++){
-    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
-    psink->position = sink_objects[k].get_location(tp_time);
-    psink->orientation = sink_objects[k].get_orientation(tp_time);
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+    TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
+    psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes);
+    psrc->audio.x().copy(inBuffer[it->get_port_index()+1],nframes);
+    psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes);
+    psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes);
   }
   // process world:
   if( world )
@@ -297,10 +299,23 @@ void TASCAR::render_t::run()
   prepare(get_srate(), get_fragsize());
   sounds = linearize_sounds();
   sources.clear();
+  diffusesources.clear();
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(get_num_input_ports());
     add_input_port((*it)->get_port_name());
+  }
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+    diffusesources.push_back(it->get_source());
+  }
+  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+    it->set_port_index(get_num_input_ports());
+    for(uint32_t ch=0;ch<4;ch++){
+      char ctmp[32];
+      const char* stmp("wxyz");
+      sprintf(ctmp,".%d%c",(ch>0),stmp[ch]);
+      add_input_port(it->get_name()+ctmp);
+    }
   }
   sinks.clear();
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){

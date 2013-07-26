@@ -144,8 +144,13 @@ world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std:
   : mirrormodel(sources,reflectors)
 {
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
-    for(uint32_t kSink=0;kSink<sinks.size();kSink++)
+    for(uint32_t kSink=0;kSink<sinks.size();kSink++){
+      DEBUG(kSrc);
+      DEBUG(kSink);
+      DEBUG(diffusesources[kSrc]);
+      DEBUG(sinks[kSink]);
       diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,diffusesources[kSrc],sinks[kSink]));
+    }
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
       acoustic_model.push_back(new acoustic_model_t(fs,sources[kSrc],sinks[kSink]));
@@ -181,13 +186,13 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* s
     gain(1.0),
     sink_data(sink_->create_sink_data())
 {
-  //DEBUG(audio.size());
+  DEBUG(audio.size());
   //DEBUG(dt);
   pos_t prel;
   double d(1.0);
   sink_->update_refpoint(src_->center,prel,d,gain);
   //distance = sink_->relative_position(src_->position).norm();
-  //DEBUG(distance);
+  DEBUG(distance);
   //DEBUG(gain);
 }
 
