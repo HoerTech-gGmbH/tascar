@@ -439,6 +439,15 @@ namespace TASCAR {
     std::string print(const std::string& delim=", ");
   };
 
+  class shoebox_t {
+  public:
+    shoebox_t();
+    shoebox_t(const pos_t& center_,const pos_t& size_,const zyx_euler_t& orientation_);
+    pos_t nextpoint(pos_t p);
+    pos_t center;
+    pos_t size;
+    zyx_euler_t orientation;
+  };
 }
 
 #endif

@@ -22,9 +22,18 @@ namespace TASCAR {
       bool active;
     };
 
+    class diffuse_source_t : public shoebox_t {
+    public:
+      diffuse_source_t(uint32_t chunksize);
+      amb1wave_t audio;
+      double falloff;
+      bool active;
+    };
+
     class sink_data_t {
     public:
       sink_data_t(){};
+      virtual ~sink_data_t(){};
     };
 
     /** \brief Base class for all audio sinks
@@ -91,7 +100,7 @@ namespace TASCAR {
       std::vector<mirrorsource_t> mirrorsource;
     };
 
-    /** \brief A model for a sound wave propagating from a source to a sink
+    /** \brief A model for a sound wave propagating from a point source to a sink
      *
      * Processing includes delay, gain, air absorption, and optional
      * obstacles.
@@ -119,6 +128,28 @@ namespace TASCAR {
       sink_data_t* sink_data;
     };
 
+    /** \brief A model for a sound wave propagating from a point source to a sink
+     *
+     * Processing includes delay, gain, air absorption, and optional
+     * obstacles.
+     */
+    class diffuse_acoustic_model_t {
+    public:
+      diffuse_acoustic_model_t(double fs,diffuse_source_t* src,sink_t* sink);
+      ~diffuse_acoustic_model_t();
+      /** \brief Read audio from source, process and add to sink.
+       */
+      void process();
+    protected:
+      diffuse_source_t* src_;
+      sink_t* sink_;
+      amb1wave_t audio;
+      uint32_t chunksize;
+      double dt;
+      double gain;
+      sink_data_t* sink_data;
+    };
+
     /** \brief The render model of an acoustic scenario.
      *
      * A world creates a set of acoustic models, one for each
@@ -134,7 +165,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks);
+      world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */
@@ -142,6 +173,7 @@ namespace TASCAR {
     protected:
       mirror_model_t mirrormodel;
       std::vector<acoustic_model_t*> acoustic_model;
+      std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
     };
 
   }

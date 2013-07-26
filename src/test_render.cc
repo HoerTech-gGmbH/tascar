@@ -20,6 +20,7 @@ int main(int argc,char** argv)
   src.audio[0] = 1;
   src.position = pos_t(0.1,0.1,0);
   std::vector<pointsource_t*> sources(1,&src);
+  std::vector<diffuse_source_t*> dsources;
   //DEBUG(sources.size());
   reflector_t r1;
   reflector_t r2;
@@ -30,7 +31,7 @@ int main(int argc,char** argv)
   sink_omni_t sink(N);
   std::vector<sink_t*> sinks;
   sinks.push_back(&sink);
-  world_t world(fs,sources,reflectors,sinks);
+  world_t world(fs,sources,dsources,reflectors,sinks);
   //mirror_model_t mr(sources,reflectors);
   //std::vector<pointsource_t*> mirrors(mr.get_sources());
   ////DEBUG(mirrors.size());

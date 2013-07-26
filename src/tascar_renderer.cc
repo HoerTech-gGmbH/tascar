@@ -62,6 +62,7 @@ namespace TASCAR {
   private:
     std::vector<TASCAR::Scene::sound_t*> sounds;
     std::vector<Acousticmodel::pointsource_t*> sources;
+    std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
     std::vector<Acousticmodel::sink_t*> sinks;
     // jack callback:
@@ -312,7 +313,7 @@ void TASCAR::render_t::run()
     }
   }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(get_srate(),sources,reflectors,sinks);
+  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
   jackc_t::activate();
   osc_server_t::activate();
   for(unsigned int k=0;k<sounds.size();k++){

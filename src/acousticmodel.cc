@@ -26,6 +26,13 @@ pointsource_t::pointsource_t(uint32_t chunksize)
 {
 }
 
+diffuse_source_t::diffuse_source_t(uint32_t chunksize)
+  : audio(chunksize),
+    falloff(1.0),
+    active(true)
+{
+}
+
 acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles)
   : src_(src),sink_(sink),obstacles_(obstacles),
     audio(src->audio.size()),
@@ -133,9 +140,12 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks)
+world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks)
   : mirrormodel(sources,reflectors)
 {
+  for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
+    for(uint32_t kSink=0;kSink<sinks.size();kSink++)
+      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,diffusesources[kSrc],sinks[kSink]));
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
       acoustic_model.push_back(new acoustic_model_t(fs,sources[kSrc],sinks[kSink]));
@@ -149,6 +159,8 @@ world_t::~world_t()
 {
   for(unsigned int k=0;k<acoustic_model.size();k++)
     delete acoustic_model[k];
+  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
+    delete diffuse_acoustic_model[k];
 }
 
 
@@ -157,7 +169,57 @@ void world_t::process()
   mirrormodel.process();
   for(unsigned int k=0;k<acoustic_model.size();k++)
     acoustic_model[k]->process();
+  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
+    diffuse_acoustic_model[k]->process();
 }
+
+diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* src,sink_t* sink)
+  : src_(src),sink_(sink),
+    audio(src->audio.size()),
+    chunksize(audio.size()),
+    dt(1.0/chunksize),
+    gain(1.0),
+    sink_data(sink_->create_sink_data())
+{
+  //DEBUG(audio.size());
+  //DEBUG(dt);
+  pos_t prel;
+  double d(1.0);
+  sink_->update_refpoint(src_->center,prel,d,gain);
+  //distance = sink_->relative_position(src_->position).norm();
+  //DEBUG(distance);
+  //DEBUG(gain);
+}
+
+diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
+{
+  if( sink_data )
+    delete sink_data;
+}
+ 
+void diffuse_acoustic_model_t::process()
+{
+  if( sink_->active && src_->active ){
+    pos_t prel;
+    double d(0.0);
+    double nextgain(1.0);
+    // calculate relative geometry between source and sink:
+    sink_->update_refpoint(src_->center,prel,d,nextgain);
+    d = src_->nextpoint(prel).norm();
+    nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
+    double dgain((nextgain-gain)*dt);
+    for(uint32_t k=0;k<chunksize;k++){
+      gain+=dgain;
+      audio.w()[k] = gain*src_->audio.w()[k];
+      audio.x()[k] = gain*src_->audio.x()[k];
+      audio.y()[k] = gain*src_->audio.y()[k];
+      audio.z()[k] = gain*src_->audio.z()[k];
+    }
+    sink_->add_source(prel,audio,sink_data);
+  }
+}
+
+
 
 //  class mirror_model_t {
 //  public:

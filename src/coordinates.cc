@@ -748,6 +748,37 @@ pos_t pos_t::normal()
   return r;
 }
 
+shoebox_t::shoebox_t()
+{
+}
+
+shoebox_t::shoebox_t(const pos_t& center_,const pos_t& size_,const zyx_euler_t& orientation_)
+  : center(center_),
+    size(size_),
+    orientation(orientation_)
+{
+}
+
+pos_t shoebox_t::nextpoint(pos_t p)
+{
+  p -= center;
+  p /= orientation;
+  pos_t prel;
+  if( p.x > 0 )
+    prel.x = std::max(0.0,p.x-0.5*size.x);
+  else
+    prel.x = std::min(0.0,p.x+0.5*size.x);
+  if( p.y > 0 )
+    prel.y = std::max(0.0,p.y-0.5*size.y);
+  else
+    prel.y = std::min(0.0,p.y+0.5*size.y);
+  if( p.z > 0 )
+    prel.z = std::max(0.0,p.z-0.5*size.z);
+  else
+    prel.z = std::min(0.0,p.z+0.5*size.z);
+  return prel;
+}
+
 
 
 /*
