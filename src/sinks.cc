@@ -138,21 +138,20 @@ void sink_amb3h0v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_dat
   data_t* d((data_t*)sd);
   //DEBUG(src_.print_cart());
   float az = prel.azim();
-  float el = prel.elev();
+  //float el = prel.elev();
   //DEBUG(az);
   //DEBUG(el);
-  float t, x2, y2;
-  // this is taken from AMB plugins by Fons and Joern:
+  float x2, y2;
+  // this is more or less taken from AMB plugins by Fons and Joern:
   d->_w[AMB30::idx::w] = MIN3DB;
-  t = cosf (el);
-  d->_w[AMB30::idx::x] = t * cosf (az);
-  d->_w[AMB30::idx::y] = t * sinf (az);
+  d->_w[AMB30::idx::x] = cosf (az);
+  d->_w[AMB30::idx::y] = sinf (az);
   x2 = d->_w[AMB30::idx::x] * d->_w[AMB30::idx::x];
   y2 = d->_w[AMB30::idx::y] * d->_w[AMB30::idx::y];
   d->_w[AMB30::idx::u] = x2 - y2;
-  d->_w[AMB30::idx::v] = 2 * d->_w[AMB30::idx::x] * d->_w[AMB30::idx::y];
-  d->_w[AMB30::idx::p] = (x2 - 3 * y2) * d->_w[AMB30::idx::x];
-  d->_w[AMB30::idx::q] = (3 * x2 - y2) * d->_w[AMB30::idx::y];
+  d->_w[AMB30::idx::v] = 2.0f * d->_w[AMB30::idx::x] * d->_w[AMB30::idx::y];
+  d->_w[AMB30::idx::p] = (x2 - 3.0f * y2) * d->_w[AMB30::idx::x];
+  d->_w[AMB30::idx::q] = (3.0f * x2 - y2) * d->_w[AMB30::idx::y];
   for(unsigned int k=0;k<AMB30::idx::channels;k++)
     d->dw[k] = (d->_w[k] - d->w_current[k])*dt;
   for( unsigned int i=0;i<chunk.size();i++){

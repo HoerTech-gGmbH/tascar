@@ -6,11 +6,11 @@
 20 0 20 0</position>
     <sound name="0" connect="japa:pink" gain="0"/>
   </src_object>
-  <diffuse name="diffuse" size_x="10" size_y="5" size_z="10">
-  </diffuse>
-  <listener name="omni" type="omni" color="#0000f0">
+  <xdiffuse name="diffuse" size_x="10" size_y="5" size_z="10">
+  </xdiffuse>
+  <xsink name="omni" type="omni" color="#0000f0">
     <position>0 1 0 0</position>
-  </listener>
+  </xsink>
   <listener name="ortf_L" type="cardioid" color="#0000f0">
     <position>0 -0.075 0 0</position>
     <orientation>0 -55 0 0</orientation>
@@ -20,4 +20,5 @@
     <orientation>0 55 0 0</orientation>
   </listener>
   <sink name="amb" type="amb3h0v" color="#0000f0" connect="Ambdec:in"/>
+  <xsink name="amb_3d" type="amb3h3v" color="#0000f0" connect="Ambdec:in"/>
 </scene>
