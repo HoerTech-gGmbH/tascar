@@ -3,6 +3,19 @@
 
 #define MIN3DB  0.707107f
 
+namespace AMB11 {
+
+  const char channelorder[] = "wyzx";
+
+  class idx {
+  public:
+    enum {
+      w, y, z, x, channels
+    };
+  };
+
+};
+
 namespace AMB33 {
 
   const char channelorder[] = "wyzxvtrsuqomklnp";

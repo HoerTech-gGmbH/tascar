@@ -94,6 +94,20 @@ int osc_set_object_position(const char *path, const char *types, lo_arg **argv, 
     h->dlocation = r;
     return 0;
   }
+  if( h && (argc == 6) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f')
+      && (types[3]=='f') && (types[4]=='f') && (types[5]=='f') ){
+    pos_t rp;
+    rp.x = argv[0]->f;
+    rp.y = argv[1]->f;
+    rp.z = argv[2]->f;
+    h->dlocation = rp;
+    zyx_euler_t ro;
+    ro.z = DEG2RAD*argv[3]->f;
+    ro.y = DEG2RAD*argv[4]->f;
+    ro.x = DEG2RAD*argv[5]->f;
+    h->dorientation = ro;
+    return 0;
+  }
   return 1;
 }
 
@@ -177,6 +191,7 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
   }
   for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
+    //DEBUG(psrc->size.print_cart());
     psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes);
     psrc->audio.x().copy(inBuffer[it->get_port_index()+1],nframes);
     psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes);
@@ -237,14 +252,17 @@ void TASCAR::render_t::run()
   // activate repositioning services for each object:
   for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
     add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
+    add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
   }
   for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
     add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
+    add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
   }
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
+    add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
   }
 

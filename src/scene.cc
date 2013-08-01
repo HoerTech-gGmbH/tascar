@@ -128,6 +128,8 @@ void bg_amb_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"size_x",size.x);
   get_attribute_value(e,"size_y",size.y);
   get_attribute_value(e,"size_z",size.z);
+  get_attribute_value(e,"falloff",falloff);
+  //DEBUG(size.print_cart());
 }
 
 void bg_amb_t::write_xml(xmlpp::Element* e,bool help_comments)
@@ -196,6 +198,8 @@ void bg_amb_t::prepare(double fs, uint32_t fragsize)
   if( source )
     delete source;
   source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize);
+  source->size = size;
+  source->falloff = 1.0/falloff;
 }
 
 //float* sound_t::get_buffer( uint32_t n )

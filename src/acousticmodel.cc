@@ -145,10 +145,10 @@ world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std:
 {
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++){
-      DEBUG(kSrc);
-      DEBUG(kSink);
-      DEBUG(diffusesources[kSrc]);
-      DEBUG(sinks[kSink]);
+      //DEBUG(kSrc);
+      //DEBUG(kSink);
+      //DEBUG(diffusesources[kSrc]);
+      //DEBUG(sinks[kSink]);
       diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,diffusesources[kSrc],sinks[kSink]));
     }
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
@@ -186,13 +186,13 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* s
     gain(1.0),
     sink_data(sink_->create_sink_data())
 {
-  DEBUG(audio.size());
+  //DEBUG(audio.size());
   //DEBUG(dt);
   pos_t prel;
   double d(1.0);
   sink_->update_refpoint(src_->center,prel,d,gain);
   //distance = sink_->relative_position(src_->position).norm();
-  DEBUG(distance);
+  //DEBUG(distance);
   //DEBUG(gain);
 }
 
@@ -209,8 +209,10 @@ void diffuse_acoustic_model_t::process()
     double d(0.0);
     double nextgain(1.0);
     // calculate relative geometry between source and sink:
+    //DEBUG(src_->size.print_cart());
     sink_->update_refpoint(src_->center,prel,d,nextgain);
     d = src_->nextpoint(prel).norm();
+    //DEBUG(d);
     nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
     double dgain((nextgain-gain)*dt);
     for(uint32_t k=0;k<chunksize;k++){

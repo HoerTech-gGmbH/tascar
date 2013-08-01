@@ -763,6 +763,7 @@ pos_t shoebox_t::nextpoint(pos_t p)
 {
   p -= center;
   p /= orientation;
+  //DEBUG(size.print_cart());
   pos_t prel;
   if( p.x > 0 )
     prel.x = std::max(0.0,p.x-0.5*size.x);

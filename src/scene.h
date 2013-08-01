@@ -138,6 +138,7 @@ namespace TASCAR {
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
       pos_t size;
+      double falloff;
       TASCAR::Acousticmodel::diffuse_source_t* get_source() { return source;};
     private:
       TASCAR::Acousticmodel::diffuse_source_t* source;
