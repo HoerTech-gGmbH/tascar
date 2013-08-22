@@ -100,28 +100,28 @@ namespace TASCAR {
     float my;
   };
 
-  class reverb_line_t {
-  public:
-    reverb_line_t(double srate, uint32_t fragsize, double maxdist);
-    reverb_line_t(const reverb_line_t&);
-  protected:
-    varidelay_t delayline;
-    double srate_;
-    double dt_sample;
-    double dt_update;
-    uint32_t fragsize_;
-    float d_global_current;
-    float dd_global;
-    float d_border_current;
-    float dd_border;
-    float clp_current;
-    float dclp;
-    float y;
-    float dscale;
-    double maxdist;
-  public:
-    void process(uint32_t n, float* vIn, float* vOut, uint32_t tp_frame, double tp_time, bool tp_rolling, TASCAR::Scene::sound_t*, TASCAR::Scene::diffuse_reverb_t* reverb);
-  };
+  //class reverb_line_t {
+  //public:
+  //  reverb_line_t(double srate, uint32_t fragsize, double maxdist);
+  //  reverb_line_t(const reverb_line_t&);
+  //protected:
+  //  varidelay_t delayline;
+  //  double srate_;
+  //  double dt_sample;
+  //  double dt_update;
+  //  uint32_t fragsize_;
+  //  float d_global_current;
+  //  float dd_global;
+  //  float d_border_current;
+  //  float dd_border;
+  //  float clp_current;
+  //  float dclp;
+  //  float y;
+  //  float dscale;
+  //  double maxdist;
+  //public:
+  //  void process(uint32_t n, float* vIn, float* vOut, uint32_t tp_frame, double tp_time, bool tp_rolling, TASCAR::Scene::sound_t*, TASCAR::Scene::diffuse_reverb_t* reverb);
+  //};
   
 };
 

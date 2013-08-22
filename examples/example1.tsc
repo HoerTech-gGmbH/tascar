@@ -1,11 +1,19 @@
 <?xml version="1.0"?>
-<scene name="example" guiscale="3" duration="20">
+<scene name="example" guiscale="37" duration="22">
   <description>one source</description>
   <src_object name="point" color="#f00000" start="1">
     <position>0 1 -20 0
 20 1 20 0</position>
     <sound name="0" connect="japa:pink" gain="0"/>
+    <sndfile name="tc1.wav" loop="0"/>
   </src_object>
-  <diffuse name="diffuse" size_x="10" size_y="5" size_z="10" falloff="4"/>
-  <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in"/>
+  <diffuse name="diffuse" size_x="10" size_y="5" size_z="10" falloff="4">
+    <position>0 -1 0 0</position>
+    <orientation>0 21 0 0</orientation>
+    <sndfile name="footsteps.wav" loop="10"/>
+  </diffuse>
+  <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
+    <position>0 -8 13 0
+22 2 0 0</position>
+  </sink>
 </scene>

@@ -69,6 +69,21 @@ namespace TASCAR {
       double r, g, b;
     };
 
+    class sndfile_info_t : public scene_node_base_t {
+    public:
+      sndfile_info_t();
+      void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void prepare(double fs, uint32_t fragsize){};
+      std::string fname;
+      uint32_t firstchannel;
+      uint32_t channels;
+      double starttime;
+      uint32_t loopcnt;
+      double gain;
+      std::string parentname;
+    };
+
     class object_t : public route_t {
     public:
       object_t();
@@ -84,6 +99,7 @@ namespace TASCAR {
       euler_track_t orientation;
       pos_t dlocation;
       zyx_euler_t dorientation;
+      std::vector<sndfile_info_t> sndfiles;
     };
 
     class mirror_t {
@@ -128,11 +144,11 @@ namespace TASCAR {
       float gain;
     };
 
-    class bg_amb_t : public object_t, public jack_port_t {
+    class src_diffuse_t : public object_t, public jack_port_t {
     //, public async_sndfile_t 
     public:
-      bg_amb_t();
-      ~bg_amb_t();
+      src_diffuse_t();
+      ~src_diffuse_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void prepare(double fs, uint32_t fragsize);
@@ -199,17 +215,17 @@ namespace TASCAR {
       TASCAR::Acousticmodel::sink_t* sink;
     };
 
-    class diffuse_reverb_t : public route_t {
-    public:
-      diffuse_reverb_t();
-      double border_distance(pos_t p);
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
-      void prepare(double fs, uint32_t fragsize){};
-      pos_t center;
-      pos_t size;
-      zyx_euler_t orientation;
-    };
+    //class diffuse_reverb_t : public route_t {
+    //public:
+    //  diffuse_reverb_t();
+    //  double border_distance(pos_t p);
+    //  void read_xml(xmlpp::Element* e);
+    //  void write_xml(xmlpp::Element* e,bool help_comments=false);
+    //  void prepare(double fs, uint32_t fragsize){};
+    //  pos_t center;
+    //  pos_t size;
+    //  zyx_euler_t orientation;
+    //};
 
     class range_t : public scene_node_base_t {
     public:
@@ -236,8 +252,8 @@ namespace TASCAR {
       std::string name;
       double duration;
       void geometry_update(double t);
-      std::vector<src_object_t> srcobjects;
-      std::vector<bg_amb_t> bg_amb;
+      std::vector<src_object_t> object_sources;
+      std::vector<src_diffuse_t> diffuse_sources;
       //std::vector<diffuse_reverb_t> reverbs;
       //std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;

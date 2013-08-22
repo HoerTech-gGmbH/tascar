@@ -41,36 +41,39 @@ using namespace TASCAR::Scene;
 
 class g_scene_t : public scene_t {
 public:
-  g_scene_t(const std::string& n, const std::string& flags);
+  g_scene_t(const std::string& n, const std::string& flags,bool nobackend);
   ~g_scene_t();
 private:
   FILE* h_pipe;
 };
 
-g_scene_t::g_scene_t(const std::string& n, const std::string& flags)
+g_scene_t::g_scene_t(const std::string& n, const std::string& flags,bool nobackend)
  : h_pipe(NULL)
 {
   read_xml(n);
-  char ctmp[1024];
-  sprintf(ctmp,"tascar_renderer %s -c %s 2>&1",flags.c_str(),n.c_str());
-  h_pipe = popen( ctmp, "w" );
-  if( !h_pipe )
-    throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
+  if( !nobackend ){
+    char ctmp[1024];
+    sprintf(ctmp,"tascar_renderer %s -c %s 2>&1",flags.c_str(),n.c_str());
+    h_pipe = popen( ctmp, "w" );
+    if( !h_pipe )
+      throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
+  }
   linearize_sounds();
   //linearize_inputs();
-  for( std::vector<src_object_t>::iterator i=srcobjects.begin();i!=srcobjects.end();++i)
+  for( std::vector<src_object_t>::iterator i=object_sources.begin();i!=object_sources.end();++i)
     i->location.fill_gaps(0.25);
-  //std::vector<bg_amb_t> bg_amb;
+  //std::vector<src_diffuse_t> diffuse_sources;
   // std::vector<diffuse_reverb_t> reverbs;
   //for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
   //  i->location.fill_gaps(0.25);
-  for( std::vector<sink_object_t>::iterator i=listener.begin();i!=listener.end();++i)
+  for( std::vector<sink_object_t>::iterator i=sink_objects.begin();i!=sink_objects.end();++i)
     i->location.fill_gaps(0.25);
 }
 
 g_scene_t::~g_scene_t()
 {
-  pclose( h_pipe );
+  if( h_pipe )
+    pclose( h_pipe );
 }
 
 class source_ctl_t : public Gtk::Frame {
@@ -99,8 +102,8 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
     tlabel.set_text("mir");
   if( dynamic_cast<src_object_t*>(r))
     tlabel.set_text("src");
-  if( dynamic_cast<diffuse_reverb_t*>(r))
-    tlabel.set_text("rvb");
+  if( dynamic_cast<src_diffuse_t*>(r))
+    tlabel.set_text("dif");
   box.pack_start( tlabel, Gtk::PACK_SHRINK );
   box.pack_start( label, Gtk::PACK_EXPAND_PADDING );
   box.pack_start( mute, Gtk::PACK_SHRINK );
@@ -177,11 +180,11 @@ void source_panel_t::set_scene(scene_t* s)
   }
   vbuttons.clear();
   if( s ){
-    //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->listener)));
-    //for( unsigned int k=0;k<s->bg_amb.size();k++)
-    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->bg_amb[k])));
-    for( unsigned int k=0;k<s->srcobjects.size();k++)
-      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->srcobjects[k])));
+    //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->sink_objects)));
+    //for( unsigned int k=0;k<s->diffuse_sources.size();k++)
+    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->diffuse_sources[k])));
+    for( unsigned int k=0;k<s->object_sources.size();k++)
+      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->object_sources[k])));
     //for( unsigned int k=0;k<s->faces.size();k++)
     //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->faces[k])));
     //for( unsigned int k=0;k<s->reverbs.size();k++)
@@ -196,18 +199,19 @@ void source_panel_t::set_scene(scene_t* s)
 class tascar_gui_t : public osc_server_t, public jackc_transport_t
 {
 public:
-  tascar_gui_t(const std::string& name,const std::string& oscport,const std::string& renderflags_);
+  tascar_gui_t(const std::string& name,const std::string& oscport,const std::string& renderflags_,bool nobackend);
   ~tascar_gui_t();
   void open_scene(const std::string& name, const std::string& flags);
   void set_time( double t ){time = t;};
   void set_scale(double s){view.set_scale( s );};
+  void draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr);
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  void draw_listener(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  void draw_room(const diffuse_reverb_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  static int osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  static int osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -280,6 +284,7 @@ private:
   std::vector<TASCAR::pos_t> roomnodes;
   bool blink;
   int32_t selected_range;
+  bool nobackend_;
 };
 
 void tascar_gui_t::on_tp_rewind()
@@ -291,7 +296,7 @@ void tascar_gui_t::on_tp_rewind()
   }
 }
 
-int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int tascar_gui_t::osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   tascar_gui_t* h((tascar_gui_t*)user_data);
   if( h ){
@@ -306,13 +311,13 @@ int tascar_gui_t::osc_listener_orientation(const char *path, const char *types, 
       r.z = DEG2RAD*argv[0]->f;
     }
     //if( h->scene )
-    //  h->scene->listener_orientation(r);
+    //  h->scene->sink_objects_orientation(r);
     return 0;
   }
   return 1;
 }
 
-int tascar_gui_t::osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int tascar_gui_t::osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   tascar_gui_t* h((tascar_gui_t*)user_data);
   if( h ){
@@ -328,7 +333,7 @@ int tascar_gui_t::osc_listener_position(const char *path, const char *types, lo_
       r.y = argv[1]->f;
     }
     //if( h->scene )
-    //  h->scene->listener_position(r);
+    //  h->scene->sink_objects_position(r);
     return 0;
   }
   return 1;
@@ -495,7 +500,7 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
   //button_loop.set_active(false);
   selected_range = -1;
   if( name.size() ){
-    scene = new g_scene_t(name, flags);
+    scene = new g_scene_t(name, flags,nobackend_);
     timescale.set_range(0,scene->duration);
     for(unsigned int k=0;k<scene->ranges.size();k++){
       //timescale.add_mark(scene->ranges[k].start,Gtk::POS_TOP,"<span horizontalalign=\"right\">"+scene->ranges[k].name+"</span>");
@@ -551,7 +556,7 @@ void tascar_gui_t::on_view_m()
   pthread_mutex_unlock( &mtx_scene );
 }
 
-void tascar_gui_t::draw_listener(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_gui_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( view.get_perspective() )
     return;
@@ -622,42 +627,40 @@ void tascar_gui_t::draw_listener(const sink_object_t& obj,Cairo::RefPtr<Cairo::C
   cr->restore();
 }
 
-void tascar_gui_t::draw_room(const TASCAR::Scene::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void tascar_gui_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr)
 {
-  bool solo(reverb.get_solo());
-  std::vector<pos_t> roomnodes(8,reverb.center);
-  roomnodes[0].x -= 0.5*reverb.size.x;
-  roomnodes[1].x += 0.5*reverb.size.x;
-  roomnodes[2].x += 0.5*reverb.size.x;
-  roomnodes[3].x -= 0.5*reverb.size.x;
-  roomnodes[4].x -= 0.5*reverb.size.x;
-  roomnodes[5].x += 0.5*reverb.size.x;
-  roomnodes[6].x += 0.5*reverb.size.x;
-  roomnodes[7].x -= 0.5*reverb.size.x;
-  roomnodes[0].y -= 0.5*reverb.size.y;
-  roomnodes[1].y -= 0.5*reverb.size.y;
-  roomnodes[2].y += 0.5*reverb.size.y;
-  roomnodes[3].y += 0.5*reverb.size.y;
-  roomnodes[4].y -= 0.5*reverb.size.y;
-  roomnodes[5].y -= 0.5*reverb.size.y;
-  roomnodes[6].y += 0.5*reverb.size.y;
-  roomnodes[7].y += 0.5*reverb.size.y;
-  roomnodes[0].z -= 0.5*reverb.size.z;
-  roomnodes[1].z -= 0.5*reverb.size.z;
-  roomnodes[2].z -= 0.5*reverb.size.z;
-  roomnodes[3].z -= 0.5*reverb.size.z;
-  roomnodes[4].z += 0.5*reverb.size.z;
-  roomnodes[5].z += 0.5*reverb.size.z;
-  roomnodes[6].z += 0.5*reverb.size.z;
-  roomnodes[7].z += 0.5*reverb.size.z;
+  std::vector<pos_t> roomnodes(8,pos_t());
+  roomnodes[0].x -= 0.5*size.x;
+  roomnodes[1].x += 0.5*size.x;
+  roomnodes[2].x += 0.5*size.x;
+  roomnodes[3].x -= 0.5*size.x;
+  roomnodes[4].x -= 0.5*size.x;
+  roomnodes[5].x += 0.5*size.x;
+  roomnodes[6].x += 0.5*size.x;
+  roomnodes[7].x -= 0.5*size.x;
+  roomnodes[0].y -= 0.5*size.y;
+  roomnodes[1].y -= 0.5*size.y;
+  roomnodes[2].y += 0.5*size.y;
+  roomnodes[3].y += 0.5*size.y;
+  roomnodes[4].y -= 0.5*size.y;
+  roomnodes[5].y -= 0.5*size.y;
+  roomnodes[6].y += 0.5*size.y;
+  roomnodes[7].y += 0.5*size.y;
+  roomnodes[0].z -= 0.5*size.z;
+  roomnodes[1].z -= 0.5*size.z;
+  roomnodes[2].z -= 0.5*size.z;
+  roomnodes[3].z -= 0.5*size.z;
+  roomnodes[4].z += 0.5*size.z;
+  roomnodes[5].z += 0.5*size.z;
+  roomnodes[6].z += 0.5*size.z;
+  roomnodes[7].z += 0.5*size.z;
   for(unsigned int k=0;k<8;k++)
-    roomnodes[k] *= reverb.orientation;
+    roomnodes[k] *= orient;
+  for(unsigned int k=0;k<8;k++)
+    roomnodes[k] += pos;
+  for(unsigned int k=0;k<8;k++)
+    roomnodes[k] = view(roomnodes[k]);
   cr->save();
-  if( solo && blink )
-    cr->set_line_width( 0.6*msize );
-  else
-    cr->set_line_width( 0.1*msize );
-  cr->set_source_rgba(0,0,0,0.6);
   cr->move_to( roomnodes[0].x, -roomnodes[0].y );
   cr->line_to( roomnodes[1].x, -roomnodes[1].y );
   cr->line_to( roomnodes[2].x, -roomnodes[2].y );
@@ -673,9 +676,32 @@ void tascar_gui_t::draw_room(const TASCAR::Scene::diffuse_reverb_t& reverb,Cairo
     cr->line_to( roomnodes[k+4].x, -roomnodes[k+4].y );
   }
   cr->stroke();
+  cr->restore();
+}
+
+void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  bool solo(obj.get_solo());
+  pos_t p(obj.location.interp(time-obj.starttime));
+  p += obj.dlocation;
+  zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
+  o += obj.dorientation;
+  cr->save();
+  if( solo && blink )
+    cr->set_line_width( 0.6*msize );
+  else
+    cr->set_line_width( 0.1*msize );
+  cr->set_source_rgba(0,0,0,0.6);
+  draw_cube(p,o,obj.size,cr);
+  std::vector<double> dash(2);
+  dash[0] = msize;
+  dash[1] = msize;
+  cr->set_dash(dash,0);
+  draw_cube(p,o,obj.size+pos_t(obj.falloff,obj.falloff,obj.falloff),cr);
+  p = view(p);
   cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
-  cr->show_text( reverb.get_name().c_str() );
+  cr->move_to( p.x, -p.y );
+  cr->show_text( obj.get_name().c_str() );
   cr->restore();
 }
 
@@ -809,7 +835,7 @@ int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, i
 
 #define CON_BUTTON(b) button_ ## b.signal_clicked().connect(sigc::mem_fun(*this,&tascar_gui_t::on_ ## b))
 
-tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, const std::string& renderflags_)
+tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, const std::string& renderflags_,bool nobackend)
   : osc_server_t("",oscport,true),
     jackc_transport_t(name),
     //scale(200),
@@ -836,7 +862,8 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
     filename(name),
     renderflags(renderflags_),
     blink(false),
-    selected_range(-1)
+    selected_range(-1),
+    nobackend_(nobackend)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout_blink), 600 );
@@ -846,10 +873,10 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   wdg_scenemap.signal_expose_event().connect(sigc::mem_fun(*this, &tascar_gui_t::on_expose_event), false);
 #endif
   osc_server_t::add_method("/headrot","f",set_head,this);
-  osc_server_t::add_method("/listener/pos","fff",osc_listener_position,this);
-  osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
-  osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
-  osc_server_t::add_method("/listener/rot","f",osc_listener_orientation,this);
+  osc_server_t::add_method("/sink_objects/pos","fff",osc_sink_objects_position,this);
+  osc_server_t::add_method("/listener/rot","fff",osc_sink_objects_orientation,this);
+  osc_server_t::add_method("/listener/pos","ff",osc_sink_objects_position,this);
+  osc_server_t::add_method("/listener/rot","f",osc_sink_objects_orientation,this);
   osc_server_t::add_method("/srcpos","sfff",osc_set_src_position,this);
   osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
   wdg_file_ui_box.pack_start( button_reload, Gtk::PACK_SHRINK );
@@ -941,8 +968,8 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if(window && scene){
       view.set_perspective(button_perspective.get_active());
       if( view.get_perspective() ){
-        //view.set_ref(scene->listener.get_location(time));
-        //view.set_euler(scene->listener.get_orientation(time));
+        //view.set_ref(scene->sink_objects.get_location(time));
+        //view.set_euler(scene->sink_objects.get_orientation(time));
       }
       Gtk::Allocation allocation = wdg_scenemap.get_allocation();
       const int width = allocation.get_width();
@@ -968,25 +995,32 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
       cr->restore();
-      //draw_track( scene->listener, cr, markersize );
-      for(unsigned int k=0;k<scene->srcobjects.size();k++){
-        draw_track(scene->srcobjects[k], cr, markersize );
-      }
-      //for(unsigned int k=0;k<scene->reverbs.size();k++){
-      //  draw_room(scene->reverbs[k], cr, markersize );
-      //}
+      //draw_track( scene->sink_objects, cr, markersize );
       //for(unsigned int k=0;k<scene->faces.size();k++){
       //  draw_face(scene->faces[k], cr, markersize );
       //}
-      //draw_listener( scene->listener, cr, markersize );
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
       cr->move_to(-markersize, 0 );
       cr->line_to( markersize, 0 );
       cr->move_to( 0, -markersize );
       cr->line_to( 0,  markersize );
       cr->stroke();
-      for(unsigned int k=0;k<scene->srcobjects.size();k++){
-        draw_src(scene->srcobjects[k], cr, markersize );
+      // draw tracks:
+      for(unsigned int k=0;k<scene->object_sources.size();k++){
+        draw_track(scene->object_sources[k], cr, markersize );
+      }
+      for(unsigned int k=0;k<scene->sink_objects.size();k++){
+        draw_track(scene->sink_objects[k], cr, markersize );
+      }
+      // draw other objects:
+      for(unsigned int k=0;k<scene->diffuse_sources.size();k++){
+        draw_room_src(scene->diffuse_sources[k], cr, markersize );
+      }
+      for(unsigned int k=0;k<scene->object_sources.size();k++){
+        draw_src(scene->object_sources[k], cr, markersize );
+      }
+      for(unsigned int k=0;k<scene->sink_objects.size();k++){
+        draw_sink_object( scene->sink_objects[k], cr, markersize );
       }
       //cr->save();
       //cr->set_source_rgb( 0, 0, 0 );
@@ -1084,18 +1118,20 @@ int main(int argc, char** argv)
   Gtk::Window win;
   std::string cfgfile("");
   std::string oscport("9876");
+  bool nobackend(false);
 #ifdef LINUXTRACK
   bool use_ltr(false);
-  const char *options = "c:hp:l";
+  const char *options = "c:hp:ln";
 #else
-  const char *options = "c:hp:";
+  const char *options = "c:hp:n";
 #endif
   struct option long_options[] = { 
-    { "config",   1, 0, 'c' },
-    { "help",     0, 0, 'h' },
-    { "oscport",  1, 0, 'p' },
+    { "config",       1, 0, 'c' },
+    { "help",         0, 0, 'h' },
+    { "oscport",      1, 0, 'p' },
+    { "nobackend",    0, 0, 'n' },
 #ifdef LINUXTRACK
-    { "linuxtrack", 0, 0, 'l'},
+    { "linuxtrack",   0, 0, 'l'},
 #endif
     { 0, 0, 0, 0 }
   };
@@ -1113,6 +1149,9 @@ int main(int argc, char** argv)
     case 'p':
       oscport = optarg;
       break;
+    case 'n':
+      nobackend = true;
+      break;
 #ifdef LINUXTRACK
     case 'l':
       use_ltr = true;
@@ -1126,9 +1165,9 @@ int main(int argc, char** argv)
   }
   win.set_title("tascar - "+cfgfile);
 #ifdef LINUXTRACK
-  tascar_gui_t c(cfgfile,oscport,use_ltr?"-l":"");
+  tascar_gui_t c(cfgfile,oscport,use_ltr?"-l":"",nobackend);
 #else
-  tascar_gui_t c(cfgfile,oscport,"");
+  tascar_gui_t c(cfgfile,oscport,"",nobackend);
 #endif
   win.add(c.wdg_vertmain);
   win.set_default_size(1024,768);

@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "tascar.h"
-#include "async_file.h"
 #include <getopt.h>
 #include "osc_helper.h"
 #include "render_sinks.h"
@@ -189,7 +188,7 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
   }
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
     //DEBUG(psrc->size.print_cart());
     psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes);
@@ -224,10 +223,10 @@ void TASCAR::render_t::run()
     (*it)->set_port_index(get_num_input_ports());
     add_input_port((*it)->get_port_name());
   }
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     diffusesources.push_back(it->get_source());
   }
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     it->set_port_index(get_num_input_ports());
     for(uint32_t ch=0;ch<4;ch++){
       char ctmp[32];
@@ -250,12 +249,12 @@ void TASCAR::render_t::run()
   world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
   //
   // activate repositioning services for each object:
-  for(std::vector<src_object_t>::iterator it=srcobjects.begin();it!=srcobjects.end();++it){
+  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
   }
-  for(std::vector<bg_amb_t>::iterator it=bg_amb.begin();it!=bg_amb.end();++it){
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
@@ -367,6 +366,7 @@ int main(int argc, char** argv)
     std::cerr << "Error: " << msg << std::endl;
     return 1;
   }
+  return 0;
 }
 
 /*
