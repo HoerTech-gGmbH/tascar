@@ -49,6 +49,13 @@ using namespace TASCAR::Scene;
 
 namespace TASCAR {
 
+  class connection_t {
+  public:
+    connection_t(){};
+    std::string src;
+    std::string dest;
+  };
+
   /**
      \ingroup apptascar
      \brief Multiple panning methods
@@ -57,6 +64,8 @@ namespace TASCAR {
   public:
     render_t(const std::string& name, const std::string& oscport);
     ~render_t();
+    void read_xml(xmlpp::Element* e);
+    void read_xml(const std::string& filename);
     void run();
   private:
     std::vector<TASCAR::Scene::sound_t*> sounds;
@@ -64,6 +73,7 @@ namespace TASCAR {
     std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
     std::vector<Acousticmodel::sink_t*> sinks;
+    std::vector<connection_t> connections;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     //void send_listener();
@@ -159,6 +169,29 @@ TASCAR::render_t::render_t(const std::string& name,
 
 TASCAR::render_t::~render_t()
 {
+}
+
+void TASCAR::render_t::read_xml(const std::string& filename)
+{
+  TASCAR::Scene::scene_t::read_xml(filename);
+}
+
+
+void TASCAR::render_t::read_xml(xmlpp::Element* e)
+{
+  TASCAR::Scene::scene_t::read_xml(e);
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      if( sne->get_name() == "connect" ){
+        connection_t c;
+        c.src = sne->get_attribute_value("src");
+        c.dest = sne->get_attribute_value("dest");
+        connections.push_back(c);
+      }
+    }
+  }
 }
 
 //void TASCAR::render_t::send_listener()
@@ -283,6 +316,8 @@ void TASCAR::render_t::run()
         connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
     }
   }
+  for(uint32_t k=0;k<connections.size();k++)
+    connect(connections[k].src,connections[k].dest,true);
   while( !b_quit ){
     usleep( 50000 );
     getchar();

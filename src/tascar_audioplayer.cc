@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     signal(SIGTERM, &sighandler);
     signal(SIGINT, &sighandler);
     std::string cfgfile("");
-    std::string jackname("tascar_scene");
+    std::string jackname("tascar_audioplayer");
     const char *options = "c:hn:";
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },

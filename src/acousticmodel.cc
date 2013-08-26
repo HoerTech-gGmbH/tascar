@@ -26,6 +26,14 @@ pointsource_t::pointsource_t(uint32_t chunksize)
 {
 }
 
+pointsource_t::~pointsource_t()
+{
+}
+
+void pointsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
+{
+}
+
 diffuse_source_t::diffuse_source_t(uint32_t chunksize)
   : audio(chunksize),
     falloff(1.0),
@@ -67,7 +75,11 @@ void acoustic_model_t::process()
     double nextdistance(0.0);
     double nextgain(1.0);
     // calculate relative geometry between source and sink:
-    sink_->update_refpoint(src_->position,prel,nextdistance,nextgain);
+    pos_t effective_srcpos(src_->position);
+    double srcgainmod(1.0);
+    src_->update_effective_position(sink_->position,effective_srcpos,srcgainmod);
+    sink_->update_refpoint(effective_srcpos,prel,nextdistance,nextgain);
+    nextgain *= srcgainmod;
     double next_air_absorption(exp(-nextdistance*dscale));
     double ddistance((nextdistance-distance)*dt);
     double dgain((nextgain-gain)*dt);

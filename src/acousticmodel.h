@@ -17,9 +17,16 @@ namespace TASCAR {
     class pointsource_t {
     public:
       pointsource_t(uint32_t chunksize);
+      virtual ~pointsource_t();
+      virtual void update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain);
       wave_t audio;
       pos_t position;
       bool active;
+    };
+
+    class doorsource_t : public pointsource_t, public face_t {
+      doorsource_t(uint32_t chunksize);
+      double falloff;
     };
 
     class diffuse_source_t : public shoebox_t {

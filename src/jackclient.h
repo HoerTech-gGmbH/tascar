@@ -44,6 +44,7 @@ public:
   std::string get_client_name();
   int get_srate() { return srate; };
   int get_fragsize() { return fragsize; };
+  void connect(const std::string& src, const std::string& dest, bool btry=false);
 protected:
   jack_client_t* jc;
   int srate;
