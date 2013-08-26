@@ -28,13 +28,11 @@
 #define SCENE_H
 
 #include "coordinates.h"
-//#include "async_file.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include "defs.h"
 #include "xmlconfig.h"
-//#include "inputs.h"
 #include "acousticmodel.h"
 
 namespace TASCAR {
@@ -145,7 +143,6 @@ namespace TASCAR {
     };
 
     class src_diffuse_t : public object_t, public jack_port_t {
-    //, public async_sndfile_t 
     public:
       src_diffuse_t();
       ~src_diffuse_t();
@@ -158,6 +155,22 @@ namespace TASCAR {
       TASCAR::Acousticmodel::diffuse_source_t* get_source() { return source;};
     private:
       TASCAR::Acousticmodel::diffuse_source_t* source;
+    };
+
+    class src_door_t : public object_t, public jack_port_t {
+    public:
+      src_door_t();
+      ~src_door_t();
+      void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void prepare(double fs, uint32_t fragsize);
+      void geometry_update(double t);
+      double width;
+      double height;
+      double falloff;
+      TASCAR::Acousticmodel::doorsource_t* get_source() { return source;};
+    private:
+      TASCAR::Acousticmodel::doorsource_t* source;
     };
 
     class sound_t : public scene_node_base_t, public jack_port_t {
@@ -215,18 +228,6 @@ namespace TASCAR {
       TASCAR::Acousticmodel::sink_t* sink;
     };
 
-    //class diffuse_reverb_t : public route_t {
-    //public:
-    //  diffuse_reverb_t();
-    //  double border_distance(pos_t p);
-    //  void read_xml(xmlpp::Element* e);
-    //  void write_xml(xmlpp::Element* e,bool help_comments=false);
-    //  void prepare(double fs, uint32_t fragsize){};
-    //  pos_t center;
-    //  pos_t size;
-    //  zyx_euler_t orientation;
-    //};
-
     class range_t : public scene_node_base_t {
     public:
       range_t();
@@ -254,6 +255,7 @@ namespace TASCAR {
       void geometry_update(double t);
       std::vector<src_object_t> object_sources;
       std::vector<src_diffuse_t> diffuse_sources;
+      std::vector<src_door_t> door_sources;
       //std::vector<diffuse_reverb_t> reverbs;
       //std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;

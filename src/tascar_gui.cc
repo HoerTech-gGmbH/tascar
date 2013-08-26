@@ -204,10 +204,12 @@ public:
   void open_scene(const std::string& name, const std::string& flags);
   void set_time( double t ){time = t;};
   void set_scale(double s){view.set_scale( s );};
+  void draw_face(pos_t pos, zyx_euler_t orient, double width, double height, Cairo::RefPtr<Cairo::Context> cr);
   void draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr);
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_door_src(const src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   static int osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -679,6 +681,29 @@ void tascar_gui_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::Re
   cr->restore();
 }
 
+void tascar_gui_t::draw_face(pos_t pos, zyx_euler_t orient, double width, double height,Cairo::RefPtr<Cairo::Context> cr)
+{
+  std::vector<pos_t> roomnodes(4,pos_t());
+  roomnodes[1].y = width;
+  roomnodes[2].y = width;
+  roomnodes[2].z = height;
+  roomnodes[3].z = height;
+  for(unsigned int k=0;k<roomnodes.size();k++)
+    roomnodes[k] *= orient;
+  for(unsigned int k=0;k<roomnodes.size();k++)
+    roomnodes[k] += pos;
+  for(unsigned int k=0;k<roomnodes.size();k++)
+    roomnodes[k] = view(roomnodes[k]);
+  cr->save();
+  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
+  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
+  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
+  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
+  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+  cr->stroke();
+  cr->restore();
+}
+
 void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool solo(obj.get_solo());
@@ -691,13 +716,47 @@ void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::
     cr->set_line_width( 0.6*msize );
   else
     cr->set_line_width( 0.1*msize );
-  cr->set_source_rgba(0,0,0,0.6);
+  //cr->set_source_rgba(0,0,0,0.6);
+  cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
   draw_cube(p,o,obj.size,cr);
   std::vector<double> dash(2);
   dash[0] = msize;
   dash[1] = msize;
   cr->set_dash(dash,0);
-  draw_cube(p,o,obj.size+pos_t(obj.falloff,obj.falloff,obj.falloff),cr);
+  pos_t falloff(obj.falloff,obj.falloff,obj.falloff);
+  falloff *= 2.0;
+  falloff += obj.size;
+  draw_cube(p,o,falloff,cr);
+  p = view(p);
+  cr->set_source_rgb(0, 0, 0 );
+  cr->move_to( p.x, -p.y );
+  cr->show_text( obj.get_name().c_str() );
+  cr->restore();
+}
+
+void tascar_gui_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  bool solo(obj.get_solo());
+  pos_t p(obj.location.interp(time-obj.starttime));
+  p += obj.dlocation;
+  zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
+  o += obj.dorientation;
+  cr->save();
+  if( solo && blink )
+    cr->set_line_width( 1.2*msize );
+  else
+    cr->set_line_width( 0.4*msize );
+  //cr->set_source_rgba(0,0,0,0.6);
+  cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
+  draw_face(p,o,obj.width,obj.height,cr);
+  std::vector<double> dash(2);
+  dash[0] = msize;
+  dash[1] = msize;
+  cr->set_dash(dash,0);
+  pos_t pc(obj.falloff,0,0);
+  pc *= o;
+  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6 );
+  draw_face(p+pc,o,obj.width,obj.height,cr);
   p = view(p);
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x, -p.y );
@@ -1015,6 +1074,9 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       // draw other objects:
       for(unsigned int k=0;k<scene->diffuse_sources.size();k++){
         draw_room_src(scene->diffuse_sources[k], cr, markersize );
+      }
+      for(unsigned int k=0;k<scene->door_sources.size();k++){
+        draw_door_src(scene->door_sources[k], cr, markersize );
       }
       for(unsigned int k=0;k<scene->object_sources.size();k++){
         draw_src(scene->object_sources[k], cr, markersize );

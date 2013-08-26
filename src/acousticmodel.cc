@@ -30,6 +30,21 @@ pointsource_t::~pointsource_t()
 {
 }
 
+doorsource_t::doorsource_t(uint32_t chunksize)
+  : pointsource_t(chunksize),
+    falloff(1.0)
+{
+}
+
+void doorsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
+{
+  srcpos = nearest(sinkp);
+  pos_t sinkn(srcpos);
+  sinkn -= sinkp;
+  gain *= std::max(0.0,-dot_prod(sinkn.normal(),normal));
+  gain *= 0.5-0.5*cos(M_PI*std::min(1.0,distance(srcpos,sinkp)*falloff));
+}
+
 void pointsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
 {
 }

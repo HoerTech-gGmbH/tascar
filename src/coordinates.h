@@ -277,14 +277,9 @@ namespace TASCAR {
                 (p1.z-p2.z)*(p1.z-p2.z));
   }
 
-  /**
-     \brief Return distance between two points
-  */
   inline double dot_prod(const pos_t& p1, const pos_t& p2)
   {
-    return sqrt(p1.x*p2.x + 
-                p1.y*p2.y + 
-                p1.z*p2.z);
+    return p1.x*p2.x+p1.y*p2.y+p1.z*p2.z;
   }
 
   inline pos_t cross_prod(const pos_t& a,const pos_t& b)
@@ -415,6 +410,7 @@ namespace TASCAR {
     face_t();
     void set(const pos_t& p0, const zyx_euler_t& o, double width, double height);
     pos_t nearest_on_plane(const pos_t& p0) const;
+    pos_t nearest(const pos_t& p0) const;
     const pos_t& get_normal() const { return normal;};
   protected:
     void update();
@@ -422,6 +418,9 @@ namespace TASCAR {
     pos_t e1;
     pos_t e2;
     pos_t normal;
+    double width_;
+    double height_;
+    zyx_euler_t orient_;
   };
 
   /**

@@ -112,6 +112,7 @@ void object_t::write_xml(xmlpp::Element* e,bool help_comments)
  */
 src_diffuse_t::src_diffuse_t()
   : size(1,1,1),
+    falloff(1.0),
     source(NULL)
 {
 }
@@ -134,6 +135,66 @@ void src_diffuse_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"size_y",size.y);
   set_attribute_double(e,"size_z",size.z);
 }
+
+/*
+ *src_door_t
+ */
+src_door_t::src_door_t()
+  : width(1.0),
+    height(2.0),
+    falloff(1.0),
+    source(NULL)
+{
+}
+
+void src_door_t::read_xml(xmlpp::Element* e)
+{
+  object_t::read_xml(e);
+  jack_port_t::read_xml(e);
+  get_attribute_value(e,"width",width);
+  get_attribute_value(e,"height",height);
+  get_attribute_value(e,"falloff",falloff);
+}
+
+void src_door_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  object_t::write_xml(e,help_comments);
+  jack_port_t::write_xml(e);
+  set_attribute_double(e,"width",width);
+  set_attribute_double(e,"height",height);
+  set_attribute_double(e,"falloff",falloff);
+}
+
+src_door_t::~src_door_t()
+{
+  if( source )
+    delete source;
+}
+
+void src_door_t::geometry_update(double t)
+{
+  if( source ){
+    source->position = get_location(t);
+    source->set(source->position,get_orientation(t),width,height);
+  }
+}
+
+
+void src_door_t::prepare(double fs, uint32_t fragsize)
+{
+  if( source )
+    delete source;
+  source = new TASCAR::Acousticmodel::doorsource_t(fragsize);
+  source->position = get_location(0);
+  source->set(source->position,get_orientation(0),width,height);
+  source->falloff = 1.0/falloff;
+}
+
+
+
+
+
+
 
 /*
  * sound_t
@@ -570,6 +631,10 @@ void scene_t::read_xml(xmlpp::Element* e)
         object_sources.push_back(src_object_t());
         object_sources.rbegin()->read_xml(sne);
       }
+      if( sne->get_name() == "door" ){
+        door_sources.push_back(src_door_t());
+        door_sources.rbegin()->read_xml(sne);
+      }
       if( sne->get_name() == "diffuse" ){
         diffuse_sources.push_back(src_diffuse_t());
         diffuse_sources.rbegin()->read_xml(sne);
@@ -660,6 +725,9 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     it->prepare(fs,fragsize);
   }
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
+    it->prepare(fs,fragsize);
+  }
+  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     it->prepare(fs,fragsize);
   }
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){

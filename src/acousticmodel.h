@@ -25,7 +25,9 @@ namespace TASCAR {
     };
 
     class doorsource_t : public pointsource_t, public face_t {
+    public:
       doorsource_t(uint32_t chunksize);
+      virtual void update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain);
       double falloff;
     };
 

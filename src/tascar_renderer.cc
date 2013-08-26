@@ -221,6 +221,10 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
   }
+  for(uint32_t k=0;k<door_sources.size();k++){
+    TASCAR::Acousticmodel::pointsource_t* psrc(door_sources[k].get_source());
+    psrc->audio.copy(inBuffer[door_sources[k].get_port_index()],nframes);
+  }
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
     //DEBUG(psrc->size.print_cart());
@@ -255,6 +259,11 @@ void TASCAR::render_t::run()
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(get_num_input_ports());
     add_input_port((*it)->get_port_name());
+  }
+  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
+    sources.push_back(it->get_source());
+    it->set_port_index(get_num_input_ports());
+    add_input_port(it->get_name());
   }
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     diffusesources.push_back(it->get_source());
@@ -297,7 +306,6 @@ void TASCAR::render_t::run()
     add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
     add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
   }
-
   jackc_t::activate();
   osc_server_t::activate();
   // connect jack ports of point sources:
@@ -305,6 +313,13 @@ void TASCAR::render_t::run()
     std::string cn(sounds[k]->get_connect());
     if( cn.size() ){
       connect_in(sounds[k]->get_port_index(),cn,true);
+    }
+  }
+  // connect jack ports of point sources:
+  for(unsigned int k=0;k<door_sources.size();k++){
+    std::string cn(door_sources[k].get_connect());
+    if( cn.size() ){
+      connect_in(door_sources[k].get_port_index(),cn,true);
     }
   }
   // todo: connect diffuse ports.
@@ -326,10 +341,8 @@ void TASCAR::render_t::run()
   }
   osc_server_t::deactivate();
   jackc_t::deactivate();
-  //DEBUG(1);
   if( world )
     delete world;
-  //DEBUG(1);
   world = NULL;
 }
 

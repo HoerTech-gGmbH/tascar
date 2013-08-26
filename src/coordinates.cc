@@ -721,8 +721,11 @@ void face_t::set(const pos_t& p0, const zyx_euler_t& o, double width, double hei
   anchor = p0;
   e1 = pos_t(0,width,0);
   e2 = pos_t(0,0,height);
-  e1 /= o;
-  e2 /= o;
+  e1 *= o;
+  e2 *= o;
+  width_ = width;
+  height_ = height;
+  orient_ = o;
   update();
 }
 
@@ -738,6 +741,19 @@ pos_t face_t::nearest_on_plane( const pos_t& p0 ) const
   pos_t p0d = normal;
   p0d *= plane_dist;
   p0d += p0;
+  return p0d;
+}
+
+pos_t face_t::nearest( const pos_t& p0 ) const
+{
+  pos_t p0d(p0);
+  p0d -= anchor;
+  p0d /= orient_;
+  p0d.x = 0;
+  p0d.y = std::max(0.0,std::min(width_,p0d.y));
+  p0d.z = std::max(0.0,std::min(height_,p0d.z));
+  p0d *= orient_;
+  p0d += anchor;
   return p0d;
 }
 
