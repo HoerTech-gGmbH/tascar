@@ -4,10 +4,10 @@
   <src_object name="point" color="#f00000" start="1">
     <position>0 1 -20 0
 20 1 20 0</position>
-    <sound name="0" connect="tascar_audioplayer:point.0" gain="0"/>
+    <sound name="0" connect="player.example:point.0" gain="0"/>
     <sndfile name="tc1.wav" loop="0"/>
   </src_object>
-  <door name="door" falloff="4" color="#643104" connect="tascar_audioplayer:diffuse.0">
+  <door name="door" falloff="4" color="#643104" connect="player.example:diffuse.0">
     <position>0 0.3 3 0</position>
     <orientation>0 90 0 0</orientation>
   </door>
@@ -23,8 +23,18 @@
 22 0 0 0
 42 1800 0 0</orientation>
   </sink>
-  <connect src="tascar_audioplayer:diffuse.0" dest="tascar_scene:diffuse.0w"/>
-  <connect src="tascar_audioplayer:diffuse.1" dest="tascar_scene:diffuse.1x"/>
-  <connect src="tascar_audioplayer:diffuse.2" dest="tascar_scene:diffuse.1y"/>
-  <connect src="tascar_audioplayer:diffuse.3" dest="tascar_scene:diffuse.1z"/>
+  <sink name="nsp" type="nsp" color="#00f0f0">
+    <speaker az="-90" el="0"/>
+    <speaker az="90" el="0"/>
+    <position>0 8 -13 0
+40 -10 13 0</position>
+<orientation>0 0 0 0
+42 900 0 0</orientation>
+  </sink>
+  <connect src="player.example:diffuse.0" dest="tascar_scene:diffuse.0w"/>
+  <connect src="player.example:diffuse.1" dest="tascar_scene:diffuse.1x"/>
+  <connect src="player.example:diffuse.2" dest="tascar_scene:diffuse.1y"/>
+  <connect src="player.example:diffuse.3" dest="tascar_scene:diffuse.1z"/>
+  <connect src="tascar_scene:nsp.0" dest="system:playback_1"/>
+  <connect src="tascar_scene:nsp.1" dest="system:playback_2"/>
 </scene>

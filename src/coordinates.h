@@ -67,7 +67,7 @@ namespace TASCAR {
     inline double norm_xy() const {return sqrt(x*x+y*y);};
     inline double azim() const {return atan2(y,x);};
     inline double elev() const {return atan2(z,norm_xy());};
-    pos_t normal();
+    pos_t normal() const;
     /**
        \brief Rotate around z-axis
     */

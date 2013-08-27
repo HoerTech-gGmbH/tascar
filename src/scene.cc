@@ -452,38 +452,28 @@ void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
   }
 }
 
-//std::string src_object_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  r << object_t::print(prefix);
-//  for(std::vector<sound_t>::iterator it=sound.begin();
-//      it!=sound.end();++it)
-//    r << it->print(prefix+"  ");
-//  return r.str();
-//}
-
 sound_t* src_object_t::add_sound()
 {
   sound.push_back(sound_t(this));
   return &sound.back();
 }
 
-//void src_object_t::fill(int32_t tp_firstframe, bool tp_running)
-//{
-//  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
-//    (*it)->fill(tp_firstframe-startframe,tp_running);
-//  }
-//}
-
 scene_t::scene_t()
   : description(""),
     name(""),
     duration(60),
-//    lat(53.155473),
-//    lon(8.167249),
-//    elev(10),
     guiscale(200),anysolo(0),loop(false)
 {
+}
+
+scene_t::scene_t(const std::string& filename)
+  : description(""),
+    name(""),
+    duration(60),
+    guiscale(200),anysolo(0),loop(false)
+{
+  if( filename.size() )
+    read_xml(filename);
 }
 
 void scene_t::geometry_update(double t)
@@ -496,28 +486,9 @@ void scene_t::geometry_update(double t)
     it->geometry_update(t);
 }
 
-//std::string scene_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  r << "scene: \"" << name << "\"\n  duration: " << duration << " s\n";
-//  r << "  geo center at " << fabs(lat) << ((lat>=0)?"N ":"S ");
-//  r << fabs(lon) << ((lon>=0)?"E, ":"W, ");
-//  r << fabs(elev) << ((elev>=0)?" m above":"m below");
-//  r << " sea level.\n";
-//  r << "  " << object_sources.size() << " source objects\n";
-//  r << "  " << diffuse_sources.size() << " backgrounds\n";
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-//    r << it->print(prefix+"  ");
-//  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it != diffuse_sources.end();++it)
-//    r << it->print(prefix+"  ");
-//  r << listener.print(prefix+"  ");
-//  return r.str();
-//}
-
 sink_object_t::sink_object_t()
   : sink(NULL)
 {
-  //DEBUG("listener");
 }
 
 sink_object_t::~sink_object_t()
@@ -539,9 +510,26 @@ void sink_object_t::read_xml(xmlpp::Element* e)
     sink_type = amb3h3v;
   else if( stype == "amb3h0v" )
     sink_type = amb3h0v;
+  else if( stype == "nsp" )
+    sink_type = nsp;
   else 
     throw TASCAR::ErrMsg("Unupported sink type: \""+stype+"\"");
   //  
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == "speaker" )){
+      double az(0.0);
+      double elev(0.0);
+      double r(1.0);
+      get_attribute_value(sne,"az",az);
+      get_attribute_value(sne,"el",elev);
+      get_attribute_value(sne,"r",r);
+      pos_t spk;
+      spk.set_sphere(r,az*DEG2RAD,elev*DEG2RAD);
+      spkpos.push_back(spk);
+    }
+  }
 }
 
 void sink_object_t::prepare(double fs, uint32_t fragsize)
@@ -561,6 +549,9 @@ void sink_object_t::prepare(double fs, uint32_t fragsize)
     break;
   case amb3h0v :
     sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize);
+    break;
+  case nsp :
+    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,spkpos);
     break;
   }
 }

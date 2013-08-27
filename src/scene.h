@@ -215,7 +215,7 @@ namespace TASCAR {
     class sink_object_t : public object_t, public jack_port_t {
     public:
       enum sink_type_t {
-        omni, cardioid, amb3h3v, amb3h0v
+        omni, cardioid, amb3h3v, amb3h0v, nsp
       };
       sink_object_t();
       ~sink_object_t();
@@ -225,6 +225,7 @@ namespace TASCAR {
       void geometry_update(double t);
     private:
       sink_type_t sink_type;
+      std::vector<pos_t> spkpos;
       TASCAR::Acousticmodel::sink_t* sink;
     };
 
@@ -242,6 +243,7 @@ namespace TASCAR {
     class scene_t : public scene_node_base_t {
     public:
       scene_t();
+      scene_t(const std::string& filename);
       void read_xml(xmlpp::Element* e);
       void read_xml(const std::string& filename);
       void write_xml(xmlpp::Element* e,bool help_comments=false);

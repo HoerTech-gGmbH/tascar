@@ -2,6 +2,7 @@
 #include "defs.h"
 #include <iostream>
 #include <stdio.h>
+#include "errorhandling.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
@@ -70,11 +71,8 @@ sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize)
 void sink_amb3h3v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
 {
   data_t* d((data_t*)sd);
-  //DEBUG(src_.print_cart());
   float az = prel.azim();
   float el = prel.elev();
-  //DEBUG(az);
-  //DEBUG(el);
   float t, x2, y2, z2;
   // this is taken from AMB plugins by Fons and Joern:
   d->_w[AMB33::idx::w] = MIN3DB;
@@ -138,11 +136,7 @@ sink_amb3h0v_t::sink_amb3h0v_t(uint32_t chunksize)
 void sink_amb3h0v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
 {
   data_t* d((data_t*)sd);
-  //DEBUG(src_.print_cart());
   float az = prel.azim();
-  //float el = prel.elev();
-  //DEBUG(az);
-  //DEBUG(el);
   float x2, y2;
   // this is more or less taken from AMB plugins by Fons and Joern:
   d->_w[AMB30::idx::w] = MIN3DB;
@@ -166,7 +160,6 @@ void sink_amb3h0v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_dat
 void sink_amb3h0v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
 {
   data_t* d((data_t*)sd);
-  //DEBUG(src_.print_cart());
   float az = prel.azim();
   d->drotz[0] = (cos(az) - d->rotz_current[0])*dt;;
   d->drotz[1] = (sin(az) - d->rotz_current[1])*dt;
@@ -185,6 +178,88 @@ std::string sink_amb3h0v_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[32];
   sprintf(ctmp,".%g%c",floor((double)(channel+1)*0.5),AMB30::channelorder[channel]);
+  return ctmp;
+}
+
+sink_nsp_t::data_t::data_t()
+{
+  for(uint32_t k=0;k<MAX_VBAP_CHANNELS;k++)
+    w[k] = dw[k] = x[k] = y[k] = z[k] = dx[k] = dy[k] = dz[k] = 0;
+}
+ 
+sink_nsp_t::sink_nsp_t(uint32_t chunksize, const std::vector<pos_t>& spkpos_)
+  : sink_t(chunksize)
+{
+  if( spkpos_.size() > MAX_VBAP_CHANNELS )
+    throw TASCAR::ErrMsg("number of VBAP channels is to large");
+  if( !spkpos_.size() )
+    throw TASCAR::ErrMsg("at least one speaker required in nsp panning");
+  outchannels = std::vector<wave_t>(spkpos_.size(),wave_t(chunksize));
+  for(uint32_t k=0;k<spkpos_.size();k++)
+    spkpos.push_back(spkpos_[k].normal());
+}
+
+void sink_nsp_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
+{
+  data_t* d((data_t*)sd);
+  pos_t psrc(prel.normal());
+  uint32_t kmin(0);
+  double dmin(distance(psrc,spkpos[kmin]));
+  double dist(0);
+  for(unsigned int k=1;k<outchannels.size();k++)
+    if( (dist = distance(psrc,spkpos[k]))<dmin ){
+      kmin = k;
+      dmin = dist;
+    }
+  for(unsigned int k=0;k<outchannels.size();k++)
+    d->dw[k] = ((k==kmin) - d->w[k])*dt;
+  for( unsigned int i=0;i<chunk.size();i++){
+    for( unsigned int k=0;k<outchannels.size();k++){
+      outchannels[k][i] += (d->w[k] += d->dw[k]) * chunk[i];
+    }
+  }
+}
+
+void sink_nsp_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
+{
+  data_t* d((data_t*)sd);
+  pos_t psrc(prel.normal());
+  uint32_t kmin(0);
+  double dmin(distance(psrc,spkpos[kmin]));
+  double dist(0);
+  for(unsigned int k=1;k<outchannels.size();k++)
+    if( (dist = distance(psrc,spkpos[k]))<dmin ){
+      kmin = k;
+      dmin = dist;
+    }
+  pos_t px(1,0,0);
+  pos_t py(0,1,0);
+  pos_t pz(0,0,1);
+  px *= orientation;
+  py *= orientation;
+  pz *= orientation;
+  for(unsigned int k=0;k<outchannels.size();k++)
+    d->dw[k] = (0.701 - d->w[k])*dt;
+  for(unsigned int k=0;k<outchannels.size();k++)
+    d->dx[k] = (dot_prod(px,spkpos[k]) - d->x[k])*dt;
+  for(unsigned int k=0;k<outchannels.size();k++)
+    d->dy[k] = (dot_prod(py,spkpos[k]) - d->y[k])*dt;
+  for(unsigned int k=0;k<outchannels.size();k++)
+    d->dz[k] = (dot_prod(pz,spkpos[k]) - d->z[k])*dt;
+  for( unsigned int i=0;i<chunk.size();i++){
+    for( unsigned int k=0;k<outchannels.size();k++){
+      outchannels[k][i] += (d->w[k] += d->dw[k]) * chunk.w()[i];
+      outchannels[k][i] += (d->x[k] += d->dx[k]) * chunk.x()[i];
+      outchannels[k][i] += (d->y[k] += d->dy[k]) * chunk.y()[i];
+      outchannels[k][i] += (d->z[k] += d->dz[k]) * chunk.z()[i];
+    }
+  }
+}
+
+std::string sink_nsp_t::get_channel_postfix(uint32_t channel) const
+{
+  char ctmp[32];
+  sprintf(ctmp,".%d",channel);
   return ctmp;
 }
 

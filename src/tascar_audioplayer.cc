@@ -4,14 +4,18 @@
 #include <getopt.h>
 #include <string.h>
 
-//using namespace TASCAR;
-//using namespace TASCAR::Scene;
-
 static bool b_quit;
 
-class audioplayer_t : public jackc_transport_t, public TASCAR::Scene::scene_t {
+std::string jacknamer(const std::string& jackname,const std::string& scenename)
+{
+  if( jackname.size() )
+    return jackname;
+  return "player."+scenename;
+}
+
+class audioplayer_t : public TASCAR::Scene::scene_t, public jackc_transport_t  {
 public:
-  audioplayer_t(const std::string& jackname);
+  audioplayer_t(const std::string& jackname,const std::string& xmlfile="");
   ~audioplayer_t();
   void open_files();
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
@@ -20,8 +24,8 @@ public:
   std::vector<TASCAR::async_sndfile_t> files;
 };
 
-audioplayer_t::audioplayer_t(const std::string& jackname)
-  : jackc_transport_t(jackname)
+audioplayer_t::audioplayer_t(const std::string& jackname,const std::string& xmlfile)
+  : scene_t(xmlfile),jackc_transport_t(jacknamer(jackname,name))
 {
 }
 
@@ -108,7 +112,7 @@ int main(int argc, char** argv)
     signal(SIGTERM, &sighandler);
     signal(SIGINT, &sighandler);
     std::string cfgfile("");
-    std::string jackname("tascar_audioplayer");
+    std::string jackname("");
     const char *options = "c:hn:";
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },
@@ -136,8 +140,7 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
-    audioplayer_t S(jackname);
-    S.read_xml(cfgfile);
+    audioplayer_t S(jackname,cfgfile);
     S.run();
   }
   catch( const std::exception& msg ){

@@ -757,7 +757,7 @@ pos_t face_t::nearest( const pos_t& p0 ) const
   return p0d;
 }
 
-pos_t pos_t::normal()
+pos_t pos_t::normal() const
 {
   pos_t r(*this);
   r /= norm();

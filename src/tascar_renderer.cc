@@ -207,6 +207,7 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
                               const std::vector<float*>& outBuffer, 
                               uint32_t tp_frame, bool tp_rolling)
 {
+  //DEBUG(1);
   double tp_time((double)tp_frame/(double)srate);
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
@@ -233,10 +234,12 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes);
     psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes);
   }
+  //DEBUG(1);
   // process world:
   if( world )
     world->process();
   // copy sink output:
+  //DEBUG(1);
   for(unsigned int k=0;k<sink_objects.size();k++){
     TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
     //DEBUG(k);
@@ -245,29 +248,36 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
       psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes);
   }
+  //DEBUG(1);
   return 0;
 }
 
 void TASCAR::render_t::run()
 {
+  //DEBUG(1);
   // first prepare all nodes for audio processing:
   prepare(get_srate(), get_fragsize());
+  //DEBUG(1);
   sounds = linearize_sounds();
   sources.clear();
   diffusesources.clear();
+    //DEBUG(1);
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(get_num_input_ports());
     add_input_port((*it)->get_port_name());
   }
+    //DEBUG(1);
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     sources.push_back(it->get_source());
     it->set_port_index(get_num_input_ports());
     add_input_port(it->get_name());
   }
+    //DEBUG(1);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     diffusesources.push_back(it->get_source());
   }
+    //DEBUG(1);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     it->set_port_index(get_num_input_ports());
     for(uint32_t ch=0;ch<4;ch++){
@@ -277,6 +287,7 @@ void TASCAR::render_t::run()
       add_input_port(it->get_name()+ctmp);
     }
   }
+    //DEBUG(1);
   sinks.clear();
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
@@ -287,6 +298,7 @@ void TASCAR::render_t::run()
       add_output_port(it->get_name()+sink->get_channel_postfix(ch));
     }
   }
+    //DEBUG(1);
   // create the world, before first process callback is called:
   world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
   //
@@ -324,6 +336,7 @@ void TASCAR::render_t::run()
   }
   // todo: connect diffuse ports.
   // connect sink ports:
+    //DEBUG(1);
   for(unsigned int k=0;k<sink_objects.size();k++){
     std::string cn(sink_objects[k].get_connect());
     if( cn.size() ){
@@ -331,8 +344,10 @@ void TASCAR::render_t::run()
         connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
     }
   }
+    //DEBUG(1);
   for(uint32_t k=0;k<connections.size();k++)
     connect(connections[k].src,connections[k].dest,true);
+    //DEBUG(1);
   while( !b_quit ){
     usleep( 50000 );
     getchar();
@@ -403,7 +418,9 @@ int main(int argc, char** argv)
       return -1;
     }
     TASCAR::render_t S(jackname,oscport);
+    //DEBUG(1);
     S.read_xml(cfgfile);
+    //DEBUG(1);
     S.run();
   }
   catch( const std::exception& msg ){
