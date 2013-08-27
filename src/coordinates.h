@@ -411,6 +411,11 @@ namespace TASCAR {
     void set(const pos_t& p0, const zyx_euler_t& o, double width, double height);
     pos_t nearest_on_plane(const pos_t& p0) const;
     pos_t nearest(const pos_t& p0) const;
+    face_t& operator+=(const pos_t& p);
+    face_t& operator+=(double p);
+    const pos_t& get_anchor() const { return anchor;};
+    const pos_t& get_e1() const { return e1;};
+    const pos_t& get_e2() const { return e2;};
     const pos_t& get_normal() const { return normal;};
   protected:
     void update();

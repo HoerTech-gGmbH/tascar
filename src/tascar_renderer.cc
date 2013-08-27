@@ -261,23 +261,23 @@ void TASCAR::render_t::run()
   sounds = linearize_sounds();
   sources.clear();
   diffusesources.clear();
-    //DEBUG(1);
+  //DEBUG(1);
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(get_num_input_ports());
     add_input_port((*it)->get_port_name());
   }
-    //DEBUG(1);
+  //DEBUG(1);
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     sources.push_back(it->get_source());
     it->set_port_index(get_num_input_ports());
     add_input_port(it->get_name());
   }
-    //DEBUG(1);
+  //DEBUG(1);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     diffusesources.push_back(it->get_source());
   }
-    //DEBUG(1);
+  //DEBUG(1);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     it->set_port_index(get_num_input_ports());
     for(uint32_t ch=0;ch<4;ch++){
@@ -287,7 +287,7 @@ void TASCAR::render_t::run()
       add_input_port(it->get_name()+ctmp);
     }
   }
-    //DEBUG(1);
+  //DEBUG(1);
   sinks.clear();
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
@@ -298,7 +298,11 @@ void TASCAR::render_t::run()
       add_output_port(it->get_name()+sink->get_channel_postfix(ch));
     }
   }
-    //DEBUG(1);
+  reflectors.clear();
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
+    reflectors.push_back(&(*it));
+  }
+  //DEBUG(1);
   // create the world, before first process callback is called:
   world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
   //

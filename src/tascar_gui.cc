@@ -204,7 +204,7 @@ public:
   void open_scene(const std::string& name, const std::string& flags);
   void set_time( double t ){time = t;};
   void set_scale(double s){view.set_scale( s );};
-  void draw_face(pos_t pos, zyx_euler_t orient, double width, double height, Cairo::RefPtr<Cairo::Context> cr);
+  void draw_face_normal(const face_t& f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
   void draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr);
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -434,7 +434,7 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
     plot_time = std::min(std::max(plot_time,obj.starttime),obj.endtime);
   }
   //pos_t p(view(obj.location.interp(plot_time-obj.starttime)));
-  pos_t p(obj.location.interp(plot_time-obj.starttime));
+  pos_t p(obj.get_location(plot_time));
   //DEBUG(p.print_cart());
   p = view(p);
   //DEBUG(p.print_cart());
@@ -563,10 +563,8 @@ void tascar_gui_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo
   if( view.get_perspective() )
     return;
   msize *= 1.5;
-  pos_t p(obj.location.interp(time-obj.starttime));
-  p += obj.dlocation;
-  zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
-  o += obj.dorientation;
+  pos_t p(obj.get_location(time));
+  zyx_euler_t o(obj.get_orientation(time));
   //DEBUG(o.print());
   o.z += headrot;
   double scale(0.5*view.get_scale());
@@ -681,17 +679,17 @@ void tascar_gui_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::Re
   cr->restore();
 }
 
-void tascar_gui_t::draw_face(pos_t pos, zyx_euler_t orient, double width, double height,Cairo::RefPtr<Cairo::Context> cr)
+void tascar_gui_t::draw_face_normal(const face_t& f,Cairo::RefPtr<Cairo::Context> cr,double normalsize)
 {
   std::vector<pos_t> roomnodes(4,pos_t());
-  roomnodes[1].y = width;
-  roomnodes[2].y = width;
-  roomnodes[2].z = height;
-  roomnodes[3].z = height;
-  for(unsigned int k=0;k<roomnodes.size();k++)
-    roomnodes[k] *= orient;
-  for(unsigned int k=0;k<roomnodes.size();k++)
-    roomnodes[k] += pos;
+  roomnodes[0] = f.get_anchor();
+  roomnodes[1] = f.get_anchor();
+  roomnodes[1] += f.get_e1();
+  roomnodes[2] = f.get_anchor();
+  roomnodes[2] += f.get_e1();
+  roomnodes[2] += f.get_e2();
+  roomnodes[3] = f.get_anchor();
+  roomnodes[3] += f.get_e2();
   for(unsigned int k=0;k<roomnodes.size();k++)
     roomnodes[k] = view(roomnodes[k]);
   cr->save();
@@ -700,6 +698,13 @@ void tascar_gui_t::draw_face(pos_t pos, zyx_euler_t orient, double width, double
   cr->line_to( roomnodes[2].x, -roomnodes[2].y );
   cr->line_to( roomnodes[3].x, -roomnodes[3].y );
   cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+  if( normalsize >= 0 ){
+    pos_t pn(f.get_normal());
+    pn *= normalsize;
+    pn += f.get_anchor();
+    pn = view(pn);
+    cr->line_to( pn.x, -pn.y );
+  }
   cr->stroke();
   cr->restore();
 }
@@ -707,10 +712,8 @@ void tascar_gui_t::draw_face(pos_t pos, zyx_euler_t orient, double width, double
 void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool solo(obj.get_solo());
-  pos_t p(obj.location.interp(time-obj.starttime));
-  p += obj.dlocation;
-  zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
-  o += obj.dorientation;
+  pos_t p(obj.get_location(time));
+  zyx_euler_t o(obj.get_orientation(time));
   cr->save();
   if( solo && blink )
     cr->set_line_width( 0.6*msize );
@@ -737,9 +740,8 @@ void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::
 void tascar_gui_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool solo(obj.get_solo());
-  pos_t p(obj.location.interp(time-obj.starttime));
-  p += obj.dlocation;
-  zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
+  pos_t p(obj.get_location(time));
+  zyx_euler_t o(obj.get_orientation(time));
   o += obj.dorientation;
   cr->save();
   if( solo && blink )
@@ -748,15 +750,16 @@ void tascar_gui_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::Ref
     cr->set_line_width( 0.4*msize );
   //cr->set_source_rgba(0,0,0,0.6);
   cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
-  draw_face(p,o,obj.width,obj.height,cr);
+  face_t f;
+  f.set(p,o,obj.width,obj.height);
+  draw_face_normal(f,cr);
   std::vector<double> dash(2);
   dash[0] = msize;
   dash[1] = msize;
   cr->set_dash(dash,0);
-  pos_t pc(obj.falloff,0,0);
-  pc *= o;
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6 );
-  draw_face(p+pc,o,obj.width,obj.height,cr);
+  f += obj.falloff;
+  draw_face_normal(f,cr);
   p = view(p);
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x, -p.y );
@@ -770,113 +773,52 @@ void tascar_gui_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::Ref
   bool solo(face.get_solo());
   if( !active )
     msize*=0.5;
-  std::vector<pos_t> roomnodes(18);
-  // width:
-  roomnodes[0].y += 0.5*face.width;
-  roomnodes[1].y += 0.25*face.width;
-  roomnodes[3].y -= 0.25*face.width;
-  roomnodes[4].y -= 0.5*face.width;
-  roomnodes[5].y -= 0.5*face.width;
-  roomnodes[6].y -= 0.5*face.width;
-  roomnodes[7].y -= 0.5*face.width;
-  roomnodes[8].y -= 0.5*face.width;
-  roomnodes[9].y -= 0.25*face.width;
-  roomnodes[11].y += 0.25*face.width;
-  roomnodes[12].y += 0.5*face.width;
-  roomnodes[13].y += 0.5*face.width;
-  roomnodes[14].y += 0.5*face.width;
-  roomnodes[15].y += 0.5*face.width;
-  // height:
-  roomnodes[0].z += 0.5*face.height;
-  roomnodes[1].z += 0.5*face.height;
-  roomnodes[2].z += 0.5*face.height;
-  roomnodes[3].z += 0.5*face.height;
-  roomnodes[4].z += 0.5*face.height;
-  roomnodes[5].z += 0.25*face.height;
-  roomnodes[7].z -= 0.25*face.height;
-  roomnodes[8].z -= 0.5*face.height;
-  roomnodes[9].z -= 0.5*face.height;
-  roomnodes[10].z -= 0.5*face.height;
-  roomnodes[11].z -= 0.5*face.height;
-  roomnodes[12].z -= 0.5*face.height;
-  roomnodes[13].z -= 0.25*face.height;
-  roomnodes[15].z += 0.25*face.height;
-  // normal:
-  roomnodes[17].x += 30*msize;
-  //
-  //roomnodes[0].y -= 0.5*face.width;
-  //roomnodes[1].y -= 0.5*face.width;
-  //roomnodes[2].y += 0.5*face.width;
-  //roomnodes[3].y += 0.5*face.width;
-  //roomnodes[0].z -= 0.5*face.height;
-  //roomnodes[1].z += 0.5*face.height;
-  //roomnodes[2].z -= 0.5*face.height;
-  //roomnodes[3].z += 0.5*face.height;
-  //roomnodes[5].x += 3*msize;
-  pos_t loc(face.get_location(time));
-  zyx_euler_t o(face.get_orientation(time));
-  for(unsigned int k=0;k<roomnodes.size();k++){
-    roomnodes[k] *= o;
-    roomnodes[k] += loc;
-    roomnodes[k] = view(roomnodes[k]);
-  }
+  pos_t loc(view(face.get_location(time)));
   cr->save();
   if( solo && blink ){
     // solo indicating:
     cr->set_line_width( 1.2*msize );
     cr->set_source_rgba(1,0,0,0.5);
-    cr->move_to( roomnodes[0].x, -roomnodes[0].y );
-    for(unsigned int k=0;k<16;k++)
-      cr->line_to( roomnodes[k].x, -roomnodes[k].y );
-    cr->line_to( roomnodes[0].x, -roomnodes[0].y );
-    cr->stroke();
+    draw_face_normal(face,cr);
   }
   // outline:
-  cr->set_line_width( 0.3*msize );
+  cr->set_line_width( 0.2*msize );
   cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.6);
-  for(unsigned int k=0;k<16;k++){
-    unsigned int k1((k+1)&15);
-    bool view_x((fabs(roomnodes[k].x)<1)||
-                (fabs(roomnodes[k1].x)<1));
-    bool view_y((fabs(roomnodes[k].y)<1)||
-                (fabs(roomnodes[k1].y)<1));
-    if( view_x && view_y ){
-      cr->move_to( roomnodes[k].x, -roomnodes[k].y );
-      cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
-    }
-  }
-  cr->stroke();
+  draw_face_normal(face,cr,true);
   // fill:
-  if( active ){
-    cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.3);
-    for(unsigned int k=0;k<16;k++){
-      // is at least one point in view?
-      unsigned int k1((k+1)&15);
-      bool view_x((fabs(roomnodes[16].x)<1)||
-                  (fabs(roomnodes[k].x)<1)||
-                  (fabs(roomnodes[k1].x)<1));
-      bool view_y((fabs(roomnodes[16].y)<1)||
-                  (fabs(roomnodes[k].y)<1)||
-                  (fabs(roomnodes[k1].y)<1));
-      if( view_x && view_y ){
-        cr->move_to( roomnodes[16].x, -roomnodes[16].y );
-        cr->line_to( roomnodes[k].x, -roomnodes[k].y );
-        cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
-        cr->fill();
-      }
-    }
-  }
+  //if( active ){
+  //  cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.3);
+  //  for(unsigned int k=0;k<16;k++){
+  //    // is at least one point in view?
+  //    unsigned int k1((k+1)&15);
+  //    bool view_x((fabs(roomnodes[16].x)<1)||
+  //                (fabs(roomnodes[k].x)<1)||
+  //                (fabs(roomnodes[k1].x)<1));
+  //    bool view_y((fabs(roomnodes[16].y)<1)||
+  //                (fabs(roomnodes[k].y)<1)||
+  //                (fabs(roomnodes[k1].y)<1));
+  //    if( view_x && view_y ){
+  //      cr->move_to( roomnodes[16].x, -roomnodes[16].y );
+  //      cr->line_to( roomnodes[k].x, -roomnodes[k].y );
+  //      cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
+  //      cr->fill();
+  //    }
+  //  }
+  //}
   if( active ){
     // normal and name:
-    cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
-    cr->move_to( roomnodes[16].x, -roomnodes[16].y );
-    cr->line_to( roomnodes[17].x, -roomnodes[17].y );
-    cr->stroke();
+    //cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
+    //cr->move_to( roomnodes[16].x, -roomnodes[16].y );
+    //cr->line_to( roomnodes[17].x, -roomnodes[17].y );
+    //cr->stroke();
     cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.3);
-    cr->arc(roomnodes[16].x, -roomnodes[16].y, msize, 0, PI2 );
+    cr->arc(loc.x, -loc.y, msize, 0, PI2 );
     cr->fill();
+    cr->set_line_width( 0.4*msize );
+    cr->set_source_rgb(face.color.r,face.color.g,face.color.b);
+    draw_face_normal(face,cr);
     cr->set_source_rgb(0, 0, 0 );
-    cr->move_to( roomnodes[16].x + 0.1*msize, -roomnodes[16].y );
+    cr->move_to( loc.x + 0.1*msize, -loc.y );
     cr->show_text( face.get_name().c_str() );
   }
   cr->restore();
@@ -1055,9 +997,10 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->paint();
       cr->restore();
       //draw_track( scene->sink_objects, cr, markersize );
-      //for(unsigned int k=0;k<scene->faces.size();k++){
-      //  draw_face(scene->faces[k], cr, markersize );
-      //}
+      for(unsigned int k=0;k<scene->faces.size();k++){
+        scene->faces[k].geometry_update(time);
+        draw_face(scene->faces[k], cr, markersize );
+      }
       cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
       cr->move_to(-markersize, 0 );
       cr->line_to( markersize, 0 );

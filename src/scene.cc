@@ -484,6 +484,8 @@ void scene_t::geometry_update(double t)
     it->geometry_update(t);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     it->geometry_update(t);
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    it->geometry_update(t);
 }
 
 sink_object_t::sink_object_t()
@@ -638,10 +640,10 @@ void scene_t::read_xml(xmlpp::Element* e)
       //  reverbs.push_back(diffuse_reverb_t());
       //  reverbs.rbegin()->read_xml(sne);
       //}
-      //if( sne->get_name() == "face" ){
-      //  faces.push_back(face_object_t());
-      //  faces.rbegin()->read_xml(sne);
-      //}
+      if( sne->get_name() == "face" ){
+        faces.push_back(face_object_t());
+        faces.rbegin()->read_xml(sne);
+      }
       if( sne->get_name() == "range" ){
         ranges.push_back(range_t());
         ranges.rbegin()->read_xml(sne);
@@ -724,6 +726,9 @@ void scene_t::prepare(double fs, uint32_t fragsize)
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     it->prepare(fs,fragsize);
   }
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
+    it->prepare(fs,fragsize);
+  }
 }
 
 void scene_t::set_mute(const std::string& name,bool val)
@@ -737,9 +742,9 @@ void scene_t::set_mute(const std::string& name,bool val)
   //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
   //  if( it->get_name() == name )
   //    it->set_mute(val);
-  //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-  //  if( it->get_name() == name )
-  //    it->set_mute(val);
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    if( it->get_name() == name )
+      it->set_mute(val);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     if( it->get_name() == name )
       it->set_mute(val);
@@ -756,9 +761,9 @@ void scene_t::set_solo(const std::string& name,bool val)
   //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
   //  if( it->get_name() == name )
   //    it->set_solo(val,anysolo);
-  //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-  //  if( it->get_name() == name )
-  //    it->set_solo(val, anysolo);
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    if( it->get_name() == name )
+      it->set_solo(val, anysolo);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     if( it->get_name() == name )
       it->set_solo(val,anysolo);
@@ -1048,54 +1053,63 @@ face_object_t::face_object_t()
 {
 }
 
-pos_t face_object_t::get_closest_point(double t, pos_t p)
+//pos_t face_object_t::get_closest_point(double t, pos_t p)
+//{
+//  pos_t center(location.interp(t));
+//  center += dlocation;
+//  zyx_euler_t o(orientation.interp(t));
+//  o += dorientation;
+//  p -= center;
+//  p /= o;
+//  p.x = 0;
+//  double w1(0.5*width);
+//  double h1(0.5*height);
+//  p.y = std::min(std::max(p.y,-w1),w1);
+//  p.z = std::min(std::max(p.z,-h1),h1);
+//  p *= o;
+//  p += center;
+//  return p;
+//}
+//
+//mirror_t face_object_t::get_mirror(double t, pos_t src)
+//{
+//  pos_t cp(src);
+//  pos_t center(location.interp(t));
+//  center += dlocation;
+//  zyx_euler_t o(orientation.interp(t));
+//  o += dorientation;
+//  cp -= center;
+//  cp /= o;
+//  double w1(0.5*width);
+//  double h1(0.5*height);
+//  mirror_t mirror;
+//  mirror.p = cp;
+//  mirror.p.x *= -1.0;
+//  cp.y = std::min(std::max(cp.y,-w1),w1);
+//  cp.z = std::min(std::max(cp.z,-h1),h1);
+//  cp.x = 0;
+//  cp *= o;
+//  cp += center;
+//  mirror.p *= o;
+//  mirror.p += center;
+//  cp -= src;
+//  cp *= -1.0/cp.norm();
+//  pos_t n(1,0,0);
+//  n *= o;
+//  mirror.c1 = std::max(n.x*cp.x+n.y*cp.y+n.z*cp.z,0.0);
+//  mirror.c2 = std::min(0.9999,(1.0-(mirror.c1*(1.0-damping))));
+//  mirror.c1 *= mirror.c1;
+//  mirror.c1 *= reflectivity;
+//  return mirror;
+//}
+
+face_object_t::~face_object_t()
 {
-  pos_t center(location.interp(t));
-  center += dlocation;
-  zyx_euler_t o(orientation.interp(t));
-  o += dorientation;
-  p -= center;
-  p /= o;
-  p.x = 0;
-  double w1(0.5*width);
-  double h1(0.5*height);
-  p.y = std::min(std::max(p.y,-w1),w1);
-  p.z = std::min(std::max(p.z,-h1),h1);
-  p *= o;
-  p += center;
-  return p;
 }
 
-mirror_t face_object_t::get_mirror(double t, pos_t src)
+void face_object_t::geometry_update(double t)
 {
-  pos_t cp(src);
-  pos_t center(location.interp(t));
-  center += dlocation;
-  zyx_euler_t o(orientation.interp(t));
-  o += dorientation;
-  cp -= center;
-  cp /= o;
-  double w1(0.5*width);
-  double h1(0.5*height);
-  mirror_t mirror;
-  mirror.p = cp;
-  mirror.p.x *= -1.0;
-  cp.y = std::min(std::max(cp.y,-w1),w1);
-  cp.z = std::min(std::max(cp.z,-h1),h1);
-  cp.x = 0;
-  cp *= o;
-  cp += center;
-  mirror.p *= o;
-  mirror.p += center;
-  cp -= src;
-  cp *= -1.0/cp.norm();
-  pos_t n(1,0,0);
-  n *= o;
-  mirror.c1 = std::max(n.x*cp.x+n.y*cp.y+n.z*cp.z,0.0);
-  mirror.c2 = std::min(0.9999,(1.0-(mirror.c1*(1.0-damping))));
-  mirror.c1 *= mirror.c1;
-  mirror.c1 *= reflectivity;
-  return mirror;
+  set(get_location(t),get_orientation(t),width,height);
 }
 
 void face_object_t::prepare(double fs, uint32_t fragsize)

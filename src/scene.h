@@ -108,14 +108,14 @@ namespace TASCAR {
       double c2;
     };
 
-    class face_object_t : public object_t {
+    class face_object_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
     public:
       face_object_t();
-      pos_t get_closest_point(double t,pos_t p);
-      mirror_t get_mirror(double t, pos_t src);
+      ~face_object_t();
       void prepare(double fs, uint32_t fragsize);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void geometry_update(double t);
       double width;
       double height;
       double reflectivity;
@@ -259,7 +259,7 @@ namespace TASCAR {
       std::vector<src_diffuse_t> diffuse_sources;
       std::vector<src_door_t> door_sources;
       //std::vector<diffuse_reverb_t> reverbs;
-      //std::vector<face_object_t> faces;
+      std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
       double guiscale;
       //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};

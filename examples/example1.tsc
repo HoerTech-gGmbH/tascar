@@ -31,10 +31,14 @@
 <orientation>0 0 0 0
 42 900 0 0</orientation>
   </sink>
+  <face name="reflector" width="3" height="2">
+    <position>0 6 4 0</position>
+    <orientation>0 180 0 0</orientation>
+  </face>
   <connect src="player.example:diffuse.0" dest="tascar_scene:diffuse.0w"/>
   <connect src="player.example:diffuse.1" dest="tascar_scene:diffuse.1x"/>
   <connect src="player.example:diffuse.2" dest="tascar_scene:diffuse.1y"/>
   <connect src="player.example:diffuse.3" dest="tascar_scene:diffuse.1z"/>
-  <connect src="tascar_scene:nsp.0" dest="system:playback_1"/>
-  <connect src="tascar_scene:nsp.1" dest="system:playback_2"/>
+  <xconnect src="tascar_scene:nsp.0" dest="system:playback_1"/>
+  <xconnect src="tascar_scene:nsp.1" dest="system:playback_2"/>
 </scene>

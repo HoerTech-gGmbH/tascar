@@ -796,6 +796,19 @@ pos_t shoebox_t::nextpoint(pos_t p)
   return prel;
 }
 
+face_t& face_t::operator+=(const pos_t& p)
+{
+  anchor += p;
+  update();
+  return *this;
+}
+
+face_t& face_t::operator+=(double p)
+{
+  pos_t n(normal);
+  n *= p;
+  return (*this += n);
+}
 
 
 /*
