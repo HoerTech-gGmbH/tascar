@@ -24,6 +24,7 @@
 */
 #define R_EARTH 6367467.5
 
+#define DEBUGS(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << #x << "=" << x << std::endl
 
 #define DEBUG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " " << #x << "=" << x << std::endl
 //#define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << x << std::endl

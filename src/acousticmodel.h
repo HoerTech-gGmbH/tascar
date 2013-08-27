@@ -85,6 +85,7 @@ namespace TASCAR {
     class mirrorsource_t : public pointsource_t {
     public:
       mirrorsource_t(pointsource_t* src,reflector_t* reflector);
+      void update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain);
       void process();
       reflector_t* get_reflector() const { return reflector_;};
     private:
@@ -92,6 +93,7 @@ namespace TASCAR {
       reflector_t* reflector_;
       Acousticmodel::filter_coeff_t flt_current;
       double dt;
+      double g, dg;
     };
 
     /** \brief Create mirror sources from primary sources and reflectors.

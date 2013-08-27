@@ -116,7 +116,10 @@ void acoustic_model_t::process()
 
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
   : pointsource_t(src->audio.size()),
-    src_(src),reflector_(reflector)
+    src_(src),reflector_(reflector),
+    dt(1.0/src->audio.size()),
+    g(0),
+    dg(0)
 {
 }
 
@@ -130,11 +133,31 @@ void mirrorsource_t::process()
   position = nearest_point;
   position *= 2.0;
   position += src_->position;
+  if( dot_prod(nearest_point,reflector_->get_normal())>0 )
+    dg = -g*dt;
+  else
+    dg = (1.0-g)*dt;
   ////DEBUG(r);
   //DEBUG(position.print_cart());
   // todo: add reflection (no diffraction) processing:
   for(uint32_t k=0;k<audio.size();k++)
-    audio[k] = src_->audio[k];
+    audio[k] = (g+=dg)*src_->audio[k];
+}
+
+void mirrorsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
+{
+  //DEBUGS(srcpos.print_cart());
+  pos_t pcut_sink(reflector_->nearest_on_plane(sinkp));
+  double len_sink(distance(pcut_sink,sinkp));
+  pos_t pcut_src(reflector_->nearest_on_plane(srcpos));
+  double len_src(distance(pcut_src,srcpos));
+  double scale(dot_prod((pcut_sink-sinkp).normal(),(pcut_src-srcpos).normal()));
+  double ratio(len_sink/std::max(1e-6,(len_sink-scale*len_src)));
+  pos_t pcut(pcut_src-pcut_sink);
+  pcut *= ratio;
+  pcut += pcut_sink;
+  pcut = reflector_->nearest(pcut);
+  gain = (std::max(0.0,dot_prod((sinkp-pcut).normal(),(pcut-srcpos).normal())));
 }
 
 mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
