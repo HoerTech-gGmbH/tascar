@@ -11,11 +11,11 @@
     <position>0 0.3 3 0</position>
     <orientation>0 90 0 0</orientation>
   </xdoor>
-  <xdiffuse name="diffuse" size_x="10" size_y="6" size_z="10" falloff="4" mute="true">
+  <diffuse name="diffuse" size_x="10" size_y="6" size_z="10" falloff="4" mute="true">
     <position>0 -1 0 0</position>
     <orientation>0 0 0 0</orientation>
     <sndfile name="birds_oldenburg.wav" loop="0" channels="4"/>
-  </xdiffuse>
+  </diffuse>
   <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
     <position>0 -8 13 0
 22 2 0 0</position>
@@ -35,10 +35,10 @@
     <position>0 4 -1 0</position>
     <orientation>0 95 0 0</orientation>
   </face>
-  <connect src="player.example:diffuse.0" dest="tascar_scene:diffuse.0w"/>
-  <connect src="player.example:diffuse.1" dest="tascar_scene:diffuse.1x"/>
-  <connect src="player.example:diffuse.2" dest="tascar_scene:diffuse.1y"/>
-  <connect src="player.example:diffuse.3" dest="tascar_scene:diffuse.1z"/>
-  <xconnect src="tascar_scene:nsp.0" dest="system:playback_1"/>
-  <xconnect src="tascar_scene:nsp.1" dest="system:playback_2"/>
+  <connect src="player.example:diffuse.0" dest="render.example:diffuse.0w"/>
+  <connect src="player.example:diffuse.1" dest="render.example:diffuse.1x"/>
+  <connect src="player.example:diffuse.2" dest="render.example:diffuse.1y"/>
+  <connect src="player.example:diffuse.3" dest="render.example:diffuse.1z"/>
+  <connect src="tascar_scene:nsp.0" dest="system:playback_1"/>
+  <connect src="tascar_scene:nsp.1" dest="system:playback_2"/>
 </scene>

@@ -47,42 +47,34 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
-namespace TASCAR {
+std::string jacknamer(const std::string& jackname,const std::string& scenename)
+{
+  if( jackname.size() )
+    return jackname;
+  return "render."+scenename;
+}
 
-  class connection_t {
-  public:
-    connection_t(){};
-    std::string src;
-    std::string dest;
-  };
+namespace TASCAR {
 
   /**
      \ingroup apptascar
      \brief Multiple panning methods
   */
-  class render_t : public jackc_transport_t, public scene_t, public osc_server_t {
+  class render_t : public scene_t, public jackc_transport_t, public osc_server_t {
   public:
-    render_t(const std::string& name, const std::string& oscport);
+    render_t(const std::string& name, const std::string& oscport, const std::string& xmlfile="");
     ~render_t();
-    void read_xml(xmlpp::Element* e);
-    void read_xml(const std::string& filename);
     void run();
+    void add_object_methods(TASCAR::Scene::object_t* o);
+    void add_object_methods();
   private:
     std::vector<TASCAR::Scene::sound_t*> sounds;
     std::vector<Acousticmodel::pointsource_t*> sources;
     std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
     std::vector<Acousticmodel::sink_t*> sinks;
-    std::vector<connection_t> connections;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
-    //void send_listener();
-    //static int osc_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    //static int osc_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    //static int osc_listener_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    //static int osc_listener_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    //static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-    //static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
     Acousticmodel::world_t* world;
   public:
     lo_address client_addr;
@@ -140,74 +132,43 @@ int osc_set_object_orientation(const char *path, const char *types, lo_arg **arg
   return 1;
 }
 
-TASCAR::render_t::render_t(const std::string& name, 
-                           const std::string& oscport)
-  : jackc_transport_t(name),osc_server_t("",oscport,true),  
+void TASCAR::render_t::add_object_methods(TASCAR::Scene::object_t* o)
+{
+  add_method("/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
+  add_method("/"+o->get_name()+"/pos","ffffff",osc_set_object_position,o);
+  add_method("/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
+}
+
+void TASCAR::render_t::add_object_methods()
+{
+  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    add_object_methods(&(*it));
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    add_object_methods(&(*it));
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+    add_object_methods(&(*it));
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    add_object_methods(&(*it));
+}
+
+TASCAR::render_t::render_t(const std::string& jname, 
+                           const std::string& oscport,
+                           const std::string& xmlfile)
+  : scene_t(xmlfile),jackc_transport_t(jacknamer(jname,name)),osc_server_t("",oscport),  
     client_addr(lo_address_new("localhost","9876"))
 {
-  //char c_tmp[100];
-  //unsigned int k=0;
-  //for(int ko=0;ko<=3;ko++){
-  //  for(int kl=-ko;kl<=ko;kl++){
-  //    sprintf(c_tmp,"out.%d%c",ko,AMB33::channelorder[k]);
-  //    add_output_port(c_tmp);
-  //    sprintf(c_tmp,"in.%d%c",ko,AMB33::channelorder[k]);
-  //    vAmbPorts.push_back(c_tmp);
-  //    k++;
-  //  }
-  //}
-  //osc_server_t::add_method("/solo","si",osc_solo,this);
-  //osc_server_t::add_method("/mute","si",osc_mute,this);
-  //osc_server_t::add_method("/listener/pos","ffffff",osc_listener_position,this);
-  //osc_server_t::add_method("/listener/pos","fff",osc_listener_position,this);
-  //osc_server_t::add_method("/listener/rot","fff",osc_listener_orientation,this);
-  //osc_server_t::add_method("/listener/pos","ff",osc_listener_position,this);
-  //osc_server_t::add_method("/listener/rot","f",osc_listener_orientation,this);
-  //osc_server_t::add_method("/srcpos","sfff",osc_set_src_position,this);
-  //osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
 }
 
 TASCAR::render_t::~render_t()
 {
 }
 
-void TASCAR::render_t::read_xml(const std::string& filename)
-{
-  TASCAR::Scene::scene_t::read_xml(filename);
-}
-
-
-void TASCAR::render_t::read_xml(xmlpp::Element* e)
-{
-  TASCAR::Scene::scene_t::read_xml(e);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      if( sne->get_name() == "connect" ){
-        connection_t c;
-        c.src = sne->get_attribute_value("src");
-        c.dest = sne->get_attribute_value("dest");
-        connections.push_back(c);
-      }
-    }
-  }
-}
-
-//void TASCAR::render_t::send_listener()
-//{
-//  //pos_t r(listener.dlocation);
-//  //zyx_euler_t o(listener.dorientation);
-//  //lo_send(client_addr,"/listener/pos","fff",r.x,r.y,r.z);
-//  //lo_send(client_addr,"/listener/rot","fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
-//}
 
 int TASCAR::render_t::process(jack_nframes_t nframes,
                               const std::vector<float*>& inBuffer,
                               const std::vector<float*>& outBuffer, 
                               uint32_t tp_frame, bool tp_rolling)
 {
-  //DEBUG(1);
   double tp_time((double)tp_frame/(double)srate);
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
@@ -228,56 +189,43 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
   }
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
-    //DEBUG(psrc->size.print_cart());
     psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes);
     psrc->audio.x().copy(inBuffer[it->get_port_index()+1],nframes);
     psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes);
     psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes);
   }
-  //DEBUG(1);
   // process world:
   if( world )
     world->process();
   // copy sink output:
-  //DEBUG(1);
   for(unsigned int k=0;k<sink_objects.size();k++){
     TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
-    //DEBUG(k);
-    //DEBUG(psink->get_num_channels());
-    //DEBUG(sink_objects[k].get_port_index());
     for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
       psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes);
   }
-  //DEBUG(1);
   return 0;
 }
 
 void TASCAR::render_t::run()
 {
-  //DEBUG(1);
   // first prepare all nodes for audio processing:
   prepare(get_srate(), get_fragsize());
-  //DEBUG(1);
   sounds = linearize_sounds();
   sources.clear();
   diffusesources.clear();
-  //DEBUG(1);
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(get_num_input_ports());
     add_input_port((*it)->get_port_name());
   }
-  //DEBUG(1);
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     sources.push_back(it->get_source());
     it->set_port_index(get_num_input_ports());
     add_input_port(it->get_name());
   }
-  //DEBUG(1);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     diffusesources.push_back(it->get_source());
   }
-  //DEBUG(1);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     it->set_port_index(get_num_input_ports());
     for(uint32_t ch=0;ch<4;ch++){
@@ -287,14 +235,12 @@ void TASCAR::render_t::run()
       add_input_port(it->get_name()+ctmp);
     }
   }
-  //DEBUG(1);
   sinks.clear();
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
     sinks.push_back(sink);
     it->set_port_index(get_num_output_ports());
     for(uint32_t ch=0;ch<sink->get_num_channels();ch++){
-      //DEBUG(it->get_name()+sink->get_channel_postfix(ch));
       add_output_port(it->get_name()+sink->get_channel_postfix(ch));
     }
   }
@@ -302,26 +248,11 @@ void TASCAR::render_t::run()
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
     reflectors.push_back(&(*it));
   }
-  //DEBUG(1);
   // create the world, before first process callback is called:
   world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
   //
   // activate repositioning services for each object:
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
-    add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
-    add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
-    add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
-  }
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-    add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
-    add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
-    add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
-  }
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
-    add_method("/"+it->get_name()+"/pos","fff",osc_set_object_position,&(*it));
-    add_method("/"+it->get_name()+"/pos","ffffff",osc_set_object_position,&(*it));
-    add_method("/"+it->get_name()+"/zyxeuler","fff",osc_set_object_orientation,&(*it));
-  }
+  add_object_methods();
   jackc_t::activate();
   osc_server_t::activate();
   // connect jack ports of point sources:
@@ -340,7 +271,6 @@ void TASCAR::render_t::run()
   }
   // todo: connect diffuse ports.
   // connect sink ports:
-    //DEBUG(1);
   for(unsigned int k=0;k<sink_objects.size();k++){
     std::string cn(sink_objects[k].get_connect());
     if( cn.size() ){
@@ -348,10 +278,8 @@ void TASCAR::render_t::run()
         connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
     }
   }
-    //DEBUG(1);
   for(uint32_t k=0;k<connections.size();k++)
     connect(connections[k].src,connections[k].dest,true);
-    //DEBUG(1);
   while( !b_quit ){
     usleep( 50000 );
     getchar();
@@ -388,7 +316,7 @@ int main(int argc, char** argv)
     signal(SIGTERM, &sighandler);
     signal(SIGINT, &sighandler);
     std::string cfgfile("");
-    std::string jackname("tascar_scene");
+    std::string jackname("");
     std::string oscport("9877");
     const char *options = "c:hn:p:";
     struct option long_options[] = { 
@@ -421,10 +349,7 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
-    TASCAR::render_t S(jackname,oscport);
-    //DEBUG(1);
-    S.read_xml(cfgfile);
-    //DEBUG(1);
+    TASCAR::render_t S(jackname,oscport,cfgfile);
     S.run();
   }
   catch( const std::exception& msg ){

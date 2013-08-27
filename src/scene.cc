@@ -648,6 +648,12 @@ void scene_t::read_xml(xmlpp::Element* e)
         ranges.push_back(range_t());
         ranges.rbegin()->read_xml(sne);
       }
+      if( sne->get_name() == "connect" ){
+        connection_t c;
+        c.src = sne->get_attribute_value("src");
+        c.dest = sne->get_attribute_value("dest");
+        connections.push_back(c);
+      }
     }
   }
 }

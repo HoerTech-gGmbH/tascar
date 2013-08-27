@@ -124,6 +124,13 @@ namespace TASCAR {
 
     class src_object_t;
 
+  class connection_t {
+  public:
+    connection_t(){};
+    std::string src;
+    std::string dest;
+  };
+
     class jack_port_t {
     public:
       jack_port_t();
@@ -272,6 +279,7 @@ namespace TASCAR {
       bool get_playsound(const sound_t*);
       std::vector<range_t> ranges;
       bool loop;
+      std::vector<connection_t> connections;
     };
 
     scene_t xml_read_scene(const std::string& filename);
