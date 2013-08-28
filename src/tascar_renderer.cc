@@ -33,14 +33,13 @@
 
 */
 
-#include "scene.h"
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "tascar.h"
 #include <getopt.h>
-#include "osc_helper.h"
+#include "osc_scene.h"
 #include "render_sinks.h"
 #include "acousticmodel.h"
 
@@ -60,13 +59,14 @@ namespace TASCAR {
      \ingroup apptascar
      \brief Multiple panning methods
   */
-  class render_t : public scene_t, public jackc_transport_t, public osc_server_t {
+  class render_t : public osc_scene_t, public jackc_transport_t  {
   public:
-    render_t(const std::string& name, const std::string& oscport, const std::string& xmlfile="");
+    render_t(const std::string& srv_addr, 
+             const std::string& srv_port, 
+             const std::string& jack_name, 
+             const std::string& cfg_file);
     ~render_t();
     void run();
-    void add_object_methods(TASCAR::Scene::object_t* o);
-    void add_object_methods();
   private:
     std::vector<TASCAR::Scene::sound_t*> sounds;
     std::vector<Acousticmodel::pointsource_t*> sources;
@@ -77,85 +77,18 @@ namespace TASCAR {
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     Acousticmodel::world_t* world;
   public:
-    lo_address client_addr;
   };
 
 }
 
 static bool b_quit;
 
-int osc_set_object_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  TASCAR::Scene::object_t* h((TASCAR::Scene::object_t*)user_data);
-  if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
-    pos_t r;
-    r.x = argv[0]->f;
-    r.y = argv[1]->f;
-    r.z = argv[2]->f;
-    h->dlocation = r;
-    return 0;
-  }
-  if( h && (argc == 6) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f')
-      && (types[3]=='f') && (types[4]=='f') && (types[5]=='f') ){
-    pos_t rp;
-    rp.x = argv[0]->f;
-    rp.y = argv[1]->f;
-    rp.z = argv[2]->f;
-    h->dlocation = rp;
-    zyx_euler_t ro;
-    ro.z = DEG2RAD*argv[3]->f;
-    ro.y = DEG2RAD*argv[4]->f;
-    ro.x = DEG2RAD*argv[5]->f;
-    h->dorientation = ro;
-    return 0;
-  }
-  return 1;
-}
-
-int osc_set_object_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  TASCAR::Scene::object_t* h((TASCAR::Scene::object_t*)user_data);
-  if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
-    zyx_euler_t r;
-    r.z = DEG2RAD*argv[0]->f;
-    r.y = DEG2RAD*argv[1]->f;
-    r.x = DEG2RAD*argv[2]->f;
-    h->dorientation = r;
-    return 0;
-  }
-  if( h && (argc == 1) && (types[0]=='f') ){
-    zyx_euler_t r;
-    r.z = DEG2RAD*argv[0]->f;
-    h->dorientation = r;
-    return 0;
-  }
-  return 1;
-}
-
-void TASCAR::render_t::add_object_methods(TASCAR::Scene::object_t* o)
-{
-  add_method("/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
-  add_method("/"+o->get_name()+"/pos","ffffff",osc_set_object_position,o);
-  add_method("/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
-}
-
-void TASCAR::render_t::add_object_methods()
-{
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    add_object_methods(&(*it));
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    add_object_methods(&(*it));
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    add_object_methods(&(*it));
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    add_object_methods(&(*it));
-}
-
-TASCAR::render_t::render_t(const std::string& jname, 
-                           const std::string& oscport,
-                           const std::string& xmlfile)
-  : scene_t(xmlfile),jackc_transport_t(jacknamer(jname,name)),osc_server_t("",oscport),  
-    client_addr(lo_address_new("localhost","9876"))
+TASCAR::render_t::render_t(const std::string& srv_addr, 
+                           const std::string& srv_port, 
+                           const std::string& jack_name,
+                           const std::string& cfg_file)
+  : osc_scene_t(srv_addr,srv_port,cfg_file),
+    jackc_transport_t(jacknamer(jack_name,name))
 {
 }
 
@@ -317,13 +250,15 @@ int main(int argc, char** argv)
     signal(SIGINT, &sighandler);
     std::string cfgfile("");
     std::string jackname("");
-    std::string oscport("9877");
-    const char *options = "c:hn:p:";
+    std::string srv_addr("239.255.1.7");
+    std::string srv_port("9877");
+    const char *options = "c:hj:p:a:";
     struct option long_options[] = { 
       { "config",   1, 0, 'c' },
       { "help",     0, 0, 'h' },
-      { "jackname", 1, 0, 'n' },
-      { "oscport",  1, 0, 'p' },
+      { "jackname", 1, 0, 'j' },
+      { "srvaddr",  1, 0, 'a' },
+      { "srvport",  1, 0, 'p' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -337,11 +272,14 @@ int main(int argc, char** argv)
       case 'h':
         usage(long_options);
         return -1;
-      case 'n':
+      case 'j':
         jackname = optarg;
         break;
       case 'p':
-        oscport = optarg;
+        srv_port = optarg;
+        break;
+      case 'a':
+        srv_addr = optarg;
         break;
       }
     }
@@ -349,7 +287,7 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
-    TASCAR::render_t S(jackname,oscport,cfgfile);
+    TASCAR::render_t S(srv_addr, srv_port, jackname, cfgfile);
     S.run();
   }
   catch( const std::exception& msg ){

@@ -31,7 +31,7 @@
 #include <gtkmm/drawingarea.h>
 #include <cairomm/context.h>
 #include "tascar.h"
-#include "osc_helper.h"
+#include "osc_scene.h"
 #include <iostream>
 #include <getopt.h>
 #include "viewport.h"
@@ -39,21 +39,23 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
-class g_scene_t : public scene_t {
+class g_scene_t : public osc_scene_t {
 public:
-  g_scene_t(const std::string& n, const std::string& flags,bool nobackend);
+  g_scene_t(const std::string& cfg_file, const std::string& flags,bool nobackend, 
+            const std::string& srv_addr, const std::string& srv_port);
   ~g_scene_t();
 private:
   FILE* h_pipe;
 };
 
-g_scene_t::g_scene_t(const std::string& n, const std::string& flags,bool nobackend)
- : h_pipe(NULL)
+g_scene_t::g_scene_t(const std::string& cfg_file, const std::string& flags,bool nobackend, 
+                     const std::string& srv_addr, const std::string& srv_port)
+  : osc_scene_t(srv_addr,srv_port,cfg_file),
+    h_pipe(NULL)
 {
-  read_xml(n);
   if( !nobackend ){
     char ctmp[1024];
-    sprintf(ctmp,"tascar_renderer %s -c %s 2>&1",flags.c_str(),n.c_str());
+    sprintf(ctmp,"tascar_renderer %s -c %s 2>&1",flags.c_str(),cfg_file.c_str());
     h_pipe = popen( ctmp, "w" );
     if( !h_pipe )
       throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
@@ -68,10 +70,13 @@ g_scene_t::g_scene_t(const std::string& n, const std::string& flags,bool nobacke
   //  i->location.fill_gaps(0.25);
   for( std::vector<sink_object_t>::iterator i=sink_objects.begin();i!=sink_objects.end();++i)
     i->location.fill_gaps(0.25);
+  add_object_methods();
+  activate();
 }
 
 g_scene_t::~g_scene_t()
 {
+  deactivate();
   if( h_pipe )
     pclose( h_pipe );
 }
@@ -196,12 +201,15 @@ void source_panel_t::set_scene(scene_t* s)
   show_all();
 }
 
-class tascar_gui_t : public osc_server_t, public jackc_transport_t
+class tascar_gui_t : public jackc_transport_t
 {
 public:
-  tascar_gui_t(const std::string& name,const std::string& oscport,const std::string& renderflags_,bool nobackend);
+  tascar_gui_t(const std::string& srv_addr, 
+               const std::string& srv_port,
+               const std::string& cfg_file,
+               const std::string& backend_flags,bool nobackend);
   ~tascar_gui_t();
-  void open_scene(const std::string& name, const std::string& flags);
+  void open_scene();
   void set_time( double t ){time = t;};
   void set_scale(double s){view.set_scale( s );};
   void draw_face_normal(const face_t& f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
@@ -212,12 +220,12 @@ public:
   void draw_door_src(const src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  static int osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  static int osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void set_head(double rot){headrot = rot;};
+  //static int osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  //static int osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  //static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  //static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  //static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  //void set_head(double rot){headrot = rot;};
   virtual int process(jack_nframes_t n,const std::vector<float*>& input,
                       const std::vector<float*>& output, 
                       uint32_t tp_frame, bool tp_rolling);
@@ -281,8 +289,10 @@ public:
 private:
   pthread_mutex_t mtx_scene;
   g_scene_t* scene;
-  std::string filename;
-  std::string renderflags;
+  std::string srv_addr_;
+  std::string srv_port_;
+  std::string cfg_file_;
+  std::string backend_flags_;
   std::vector<TASCAR::pos_t> roomnodes;
   bool blink;
   int32_t selected_range;
@@ -298,77 +308,77 @@ void tascar_gui_t::on_tp_rewind()
   }
 }
 
-int tascar_gui_t::osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  tascar_gui_t* h((tascar_gui_t*)user_data);
-  if( h ){
-    //lo_send_message(h->client_addr,path,msg);
-    zyx_euler_t r;
-    if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
-      r.z = DEG2RAD*argv[0]->f;
-      r.y = DEG2RAD*argv[1]->f;
-      r.x = DEG2RAD*argv[2]->f;
-    }
-    if( (argc == 1) && (types[0]=='f') ){
-      r.z = DEG2RAD*argv[0]->f;
-    }
-    //if( h->scene )
-    //  h->scene->sink_objects_orientation(r);
-    return 0;
-  }
-  return 1;
-}
-
-int tascar_gui_t::osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  tascar_gui_t* h((tascar_gui_t*)user_data);
-  if( h ){
-    //lo_send_message(h->client_addr,path,msg);
-    pos_t r;
-    if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
-      r.x = argv[0]->f;
-      r.y = argv[1]->f;
-      r.z = argv[2]->f;
-    }
-    if( (argc == 2) && (types[0]=='f') && (types[1]=='f') ){
-      r.x = argv[0]->f;
-      r.y = argv[1]->f;
-    }
-    //if( h->scene )
-    //  h->scene->sink_objects_position(r);
-    return 0;
-  }
-  return 1;
-}
-
-int tascar_gui_t::osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  tascar_gui_t* h((tascar_gui_t*)user_data);
-  if( h && h->scene && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
-    zyx_euler_t r;
-    r.z = DEG2RAD*argv[1]->f;
-    r.y = DEG2RAD*argv[2]->f;
-    r.x = DEG2RAD*argv[3]->f;
-    h->scene->set_source_orientation_offset(&(argv[0]->s),r);
-    return 0;
-  }
-  return 1;
-}
-
-
-int tascar_gui_t::osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  tascar_gui_t* h((tascar_gui_t*)user_data);
-  if( h && h->scene && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
-    pos_t r;
-    r.x = argv[1]->f;
-    r.y = argv[2]->f;
-    r.z = argv[3]->f;
-    h->scene->set_source_position_offset(&(argv[0]->s),r);
-    return 0;
-  }
-  return 1;
-}
+//int tascar_gui_t::osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+//{
+//  tascar_gui_t* h((tascar_gui_t*)user_data);
+//  if( h ){
+//    //lo_send_message(h->client_addr,path,msg);
+//    zyx_euler_t r;
+//    if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
+//      r.z = DEG2RAD*argv[0]->f;
+//      r.y = DEG2RAD*argv[1]->f;
+//      r.x = DEG2RAD*argv[2]->f;
+//    }
+//    if( (argc == 1) && (types[0]=='f') ){
+//      r.z = DEG2RAD*argv[0]->f;
+//    }
+//    //if( h->scene )
+//    //  h->scene->sink_objects_orientation(r);
+//    return 0;
+//  }
+//  return 1;
+//}
+//
+//int tascar_gui_t::osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+//{
+//  tascar_gui_t* h((tascar_gui_t*)user_data);
+//  if( h ){
+//    //lo_send_message(h->client_addr,path,msg);
+//    pos_t r;
+//    if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
+//      r.x = argv[0]->f;
+//      r.y = argv[1]->f;
+//      r.z = argv[2]->f;
+//    }
+//    if( (argc == 2) && (types[0]=='f') && (types[1]=='f') ){
+//      r.x = argv[0]->f;
+//      r.y = argv[1]->f;
+//    }
+//    //if( h->scene )
+//    //  h->scene->sink_objects_position(r);
+//    return 0;
+//  }
+//  return 1;
+//}
+//
+//int tascar_gui_t::osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+//{
+//  tascar_gui_t* h((tascar_gui_t*)user_data);
+//  if( h && h->scene && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
+//    zyx_euler_t r;
+//    r.z = DEG2RAD*argv[1]->f;
+//    r.y = DEG2RAD*argv[2]->f;
+//    r.x = DEG2RAD*argv[3]->f;
+//    h->scene->set_source_orientation_offset(&(argv[0]->s),r);
+//    return 0;
+//  }
+//  return 1;
+//}
+//
+//
+//int tascar_gui_t::osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+//{
+//  tascar_gui_t* h((tascar_gui_t*)user_data);
+//  if( h && h->scene && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
+//    pos_t r;
+//    r.x = argv[1]->f;
+//    r.y = argv[2]->f;
+//    r.z = argv[3]->f;
+//    h->scene->set_source_position_offset(&(argv[0]->s),r);
+//    return 0;
+//  }
+//  return 1;
+//}
 
 void tascar_gui_t::on_time_changed()
 {
@@ -484,7 +494,7 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   cr->restore();
 }
 
-void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
+void tascar_gui_t::open_scene()
 {
   pthread_mutex_lock( &mtx_scene );
   if( scene )
@@ -501,8 +511,8 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
   rangeselector.set_active_text("- scene -");
   //button_loop.set_active(false);
   selected_range = -1;
-  if( name.size() ){
-    scene = new g_scene_t(name, flags,nobackend_);
+  if( cfg_file_.size() ){
+    scene = new g_scene_t(cfg_file_, backend_flags_,nobackend_,srv_addr_,srv_port_);
     timescale.set_range(0,scene->duration);
     for(unsigned int k=0;k<scene->ranges.size();k++){
       //timescale.add_mark(scene->ranges[k].start,Gtk::POS_TOP,"<span horizontalalign=\"right\">"+scene->ranges[k].name+"</span>");
@@ -525,7 +535,7 @@ void tascar_gui_t::open_scene(const std::string& name, const std::string& flags)
 
 void tascar_gui_t::on_reload()
 {
-  open_scene( filename, renderflags );
+  open_scene( );
 }
 
 void tascar_gui_t::on_loop()
@@ -824,21 +834,23 @@ void tascar_gui_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::Ref
   cr->restore();
 }
 
-int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  tascar_gui_t* h((tascar_gui_t*)user_data);
-  if( h && (argc == 1) && (types[0] == 'f') ){
-    h->set_head(DEG2RAD*(argv[0]->f));
-    return 0;
-  }
-  return 1;
-}
+//int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+//{
+//  tascar_gui_t* h((tascar_gui_t*)user_data);
+//  if( h && (argc == 1) && (types[0] == 'f') ){
+//    h->set_head(DEG2RAD*(argv[0]->f));
+//    return 0;
+//  }
+//  return 1;
+//}
 
 #define CON_BUTTON(b) button_ ## b.signal_clicked().connect(sigc::mem_fun(*this,&tascar_gui_t::on_ ## b))
 
-tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, const std::string& renderflags_,bool nobackend)
-  : osc_server_t("",oscport,true),
-    jackc_transport_t(name),
+tascar_gui_t::tascar_gui_t(const std::string& srv_addr, 
+                           const std::string& srv_port,
+                           const std::string& cfg_file,
+                           const std::string& backend_flags,bool nobackend)
+  : jackc_transport_t(cfg_file),
     //scale(200),
     time(0),
     guitime(0),
@@ -860,8 +872,10 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
     timescale(Gtk::ORIENTATION_HORIZONTAL),
 #endif
     scene(NULL),
-    filename(name),
-    renderflags(renderflags_),
+    srv_addr_(srv_addr),
+    srv_port_(srv_port),
+    cfg_file_(cfg_file),
+    backend_flags_(backend_flags),
     blink(false),
     selected_range(-1),
     nobackend_(nobackend)
@@ -873,13 +887,13 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
 #else
   wdg_scenemap.signal_expose_event().connect(sigc::mem_fun(*this, &tascar_gui_t::on_expose_event), false);
 #endif
-  osc_server_t::add_method("/headrot","f",set_head,this);
-  osc_server_t::add_method("/sink_objects/pos","fff",osc_sink_objects_position,this);
-  osc_server_t::add_method("/listener/rot","fff",osc_sink_objects_orientation,this);
-  osc_server_t::add_method("/listener/pos","ff",osc_sink_objects_position,this);
-  osc_server_t::add_method("/listener/rot","f",osc_sink_objects_orientation,this);
-  osc_server_t::add_method("/srcpos","sfff",osc_set_src_position,this);
-  osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
+  //osc_server_t::add_method("/headrot","f",set_head,this);
+  //osc_server_t::add_method("/sink_objects/pos","fff",osc_sink_objects_position,this);
+  //osc_server_t::add_method("/listener/rot","fff",osc_sink_objects_orientation,this);
+  //osc_server_t::add_method("/listener/pos","ff",osc_sink_objects_position,this);
+  //osc_server_t::add_method("/listener/rot","f",osc_sink_objects_orientation,this);
+  //osc_server_t::add_method("/srcpos","sfff",osc_set_src_position,this);
+  //osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
   wdg_file_ui_box.pack_start( button_reload, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
@@ -934,8 +948,8 @@ tascar_gui_t::tascar_gui_t(const std::string& name, const std::string& oscport, 
   button_perspective.modify_bg(Gtk::STATE_SELECTED,col);
 #endif
   pthread_mutex_init( &mtx_scene, NULL );
-  if( name.size() )
-    open_scene(name,renderflags);
+  if( cfg_file_.size() )
+    open_scene();
 }
 
 tascar_gui_t::~tascar_gui_t()
@@ -943,6 +957,8 @@ tascar_gui_t::~tascar_gui_t()
   pthread_mutex_trylock( &mtx_scene );
   pthread_mutex_unlock(  &mtx_scene);
   pthread_mutex_destroy( &mtx_scene );
+  if( scene )
+    delete scene;
 }
 
 #ifdef GTKMM24
@@ -1121,22 +1137,25 @@ int main(int argc, char** argv)
 {
   Gtk::Main kit(argc, argv);
   Gtk::Window win;
-  std::string cfgfile("");
-  std::string oscport("9876");
+  std::string cfg_file("");
+  std::string srv_addr("239.255.1.7");
+  std::string srv_port("9877");
   bool nobackend(false);
 #ifdef LINUXTRACK
   bool use_ltr(false);
-  const char *options = "c:hp:ln";
+  const char *options = "c:hj:p:a:nl";
 #else
-  const char *options = "c:hp:n";
+  const char *options = "c:hj:p:a:n";
 #endif
   struct option long_options[] = { 
-    { "config",       1, 0, 'c' },
-    { "help",         0, 0, 'h' },
-    { "oscport",      1, 0, 'p' },
-    { "nobackend",    0, 0, 'n' },
+      { "config",   1, 0, 'c' },
+      { "help",     0, 0, 'h' },
+      { "jackname", 1, 0, 'j' },
+      { "srvaddr",  1, 0, 'a' },
+      { "srvport",  1, 0, 'p' },
+      { "nobackend",0, 0, 'n' },
 #ifdef LINUXTRACK
-    { "linuxtrack",   0, 0, 'l'},
+    { "linuxtrack", 0, 0, 'l'},
 #endif
     { 0, 0, 0, 0 }
   };
@@ -1146,13 +1165,16 @@ int main(int argc, char** argv)
                             long_options, &option_index)) != -1){
     switch(opt){
     case 'c':
-      cfgfile = optarg;
+      cfg_file = optarg;
       break;
     case 'h':
       usage(long_options);
       return -1;
     case 'p':
-      oscport = optarg;
+      srv_port = optarg;
+      break;
+    case 'a':
+      srv_addr = optarg;
       break;
     case 'n':
       nobackend = true;
@@ -1164,24 +1186,22 @@ int main(int argc, char** argv)
 #endif
     }
   }
-  if( cfgfile.size() == 0 ){
+  if( cfg_file.size() == 0 ){
     usage(long_options);
     return -1;
   }
-  win.set_title("tascar - "+cfgfile);
+  win.set_title("tascar - "+cfg_file);
 #ifdef LINUXTRACK
-  tascar_gui_t c(cfgfile,oscport,use_ltr?"-l":"",nobackend);
+  tascar_gui_t c(srv_addr,srv_port,cfg_file,use_ltr?"-l":"",nobackend);
 #else
-  tascar_gui_t c(cfgfile,oscport,"",nobackend);
+  tascar_gui_t c(srv_addr,srv_port,cfg_file,"",nobackend);
 #endif
   win.add(c.wdg_vertmain);
   win.set_default_size(1024,768);
   win.show_all();
-  c.jackc_t::activate();
-  c.osc_server_t::activate();
+  c.activate();
   Gtk::Main::run(win);
-  c.osc_server_t::deactivate();
-  c.jackc_t::deactivate();
+  c.deactivate();
   return 0;
 }
 
