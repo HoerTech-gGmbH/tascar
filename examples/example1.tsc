@@ -7,10 +7,10 @@
     <sound name="0" connect="player.example:point.0" gain="0"/>
     <sndfile name="tc1.wav" loop="0"/>
   </src_object>
-  <xdoor name="door" falloff="4" color="#643104" connect="player.example:diffuse.0">
+  <door name="door" falloff="4" color="#643104" connect="player.example:diffuse.0">
     <position>0 0.3 3 0</position>
     <orientation>0 90 0 0</orientation>
-  </xdoor>
+  </door>
   <diffuse name="diffuse" size_x="10" size_y="6" size_z="10" falloff="4" mute="true">
     <position>0 -1 0 0</position>
     <orientation>0 0 0 0</orientation>
@@ -23,14 +23,14 @@
 22 0 0 0
 42 1800 0 0</orientation>
   </sink>
-  <xsink name="nsp" type="nsp" color="#00f0f0">
+  <sink name="nsp" type="nsp" color="#00f0f0">
     <speaker az="-90" el="0"/>
     <speaker az="90" el="0"/>
     <position>0 8 -13 0
 40 -10 13 0</position>
 <orientation>0 0 0 0
 42 900 0 0</orientation>
-  </xsink>
+  </sink>
   <face name="reflector" width="3" height="2">
     <position>0 4 -1 0</position>
     <orientation>0 95 0 0</orientation>
@@ -39,6 +39,6 @@
   <connect src="player.example:diffuse.1" dest="render.example:diffuse.1x"/>
   <connect src="player.example:diffuse.2" dest="render.example:diffuse.1y"/>
   <connect src="player.example:diffuse.3" dest="render.example:diffuse.1z"/>
-  <connect src="tascar_scene:nsp.0" dest="system:playback_1"/>
-  <connect src="tascar_scene:nsp.1" dest="system:playback_2"/>
+  <connect src="render.example:nsp.0" dest="system:playback_1"/>
+  <connect src="render.example:nsp.1" dest="system:playback_2"/>
 </scene>

@@ -488,6 +488,21 @@ void scene_t::geometry_update(double t)
     it->geometry_update(t);
 }
 
+void scene_t::process_active(double t)
+{
+  //DEBUGS(anysolo);
+  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    it->process_active(t,anysolo);
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    it->process_active(t,anysolo);
+  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
+    it->process_active(t,anysolo);
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+    it->process_active(t,anysolo);
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    it->process_active(t,anysolo);
+}
+
 sink_object_t::sink_object_t()
   : sink(NULL)
 {
@@ -703,20 +718,21 @@ std::vector<sound_t*> scene_t::linearize_sounds()
 //}
 
 
-//std::vector<Input::jack_t*> scene_t::get_jack_inputs()
-//{
-//  std::vector<Input::jack_t*> r;
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
-//    for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
-//      if( (*its ) ){
-//        Input::jack_t* ji(dynamic_cast<TASCAR::Input::jack_t*>(*its));
-//        if( ji )
-//          r.push_back(ji);
-//      }
-//    }
-//  }
-//  return r;
-//}
+std::vector<object_t*> scene_t::get_objects()
+{
+  std::vector<object_t*> r;
+  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    r.push_back(&(*it));
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    r.push_back(&(*it));
+  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
+    r.push_back(&(*it));
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+    r.push_back(&(*it));
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    r.push_back(&(*it));
+  return r;
+}
 
 void scene_t::prepare(double fs, uint32_t fragsize)
 {
@@ -1028,6 +1044,21 @@ void route_t::set_solo(bool b,uint32_t& anysolo)
   }
 }
 
+bool route_t::is_active(uint32_t anysolo)
+{
+  //DEBUGS(mute);
+  //DEBUGS(solo);
+  //DEBUGS(anysolo);
+  return ( !mute && ( (anysolo==0)||(solo) ) );    
+}
+
+
+bool object_t::is_active(uint32_t anysolo,double t)
+{
+  //DEBUGS(route_t::is_active(anysolo));
+  return (route_t::is_active(anysolo) && (t >= starttime) && ((t <= endtime)||(endtime <= starttime) ));
+}
+
 bool sound_t::get_mute() const 
 {
   if( parent ) 
@@ -1271,6 +1302,47 @@ void sndfile_info_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_uint(e,"loop",loopcnt);
   set_attribute_db(e,"gain",gain);
 }
+
+void src_object_t::process_active(double t, uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  //DEBUGS(a);
+  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it)
+    if( it->get_source() )
+      it->get_source()->active = a;
+}
+
+void src_diffuse_t::process_active(double t, uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  //DEBUGS(a);
+  if( source )
+    source->active = a;
+}
+
+void sink_object_t::process_active(double t, uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  //DEBUGS(a);
+  if( sink )
+    sink->active = a;
+}
+
+void face_object_t::process_active(double t, uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  //DEBUGS(a);
+  active = a;
+}
+
+void src_door_t::process_active(double t, uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  //DEBUGS(a);
+  if( source )
+    source->active = a;
+}
+
 
 /*
  * Local Variables:

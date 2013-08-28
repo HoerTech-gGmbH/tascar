@@ -52,6 +52,7 @@ namespace TASCAR {
       void set_name(const std::string& s) {name=s;};
       void set_mute(bool b) {mute=b;};
       void set_solo(bool b,uint32_t& anysolo);
+      bool is_active(uint32_t anysolo);
     private:
       std::string name;
       bool mute;
@@ -90,6 +91,7 @@ namespace TASCAR {
       bool isactive(double time) const;
       pos_t get_location(double time) const;
       zyx_euler_t get_orientation(double time) const;
+      bool is_active(uint32_t anysolo,double t);
       rgb_color_t color;
       double starttime;
       double endtime;
@@ -116,6 +118,7 @@ namespace TASCAR {
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
       double width;
       double height;
       double reflectivity;
@@ -157,6 +160,7 @@ namespace TASCAR {
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
       pos_t size;
       double falloff;
       TASCAR::Acousticmodel::diffuse_source_t* get_source() { return source;};
@@ -172,6 +176,7 @@ namespace TASCAR {
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
       double width;
       double height;
       double falloff;
@@ -188,6 +193,7 @@ namespace TASCAR {
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
       pos_t get_pos_global(double t) const;
       void prepare(double fs, uint32_t fragsize);
       std::string getlabel();
@@ -214,6 +220,7 @@ namespace TASCAR {
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
       std::vector<sound_t> sound;
     private:
       int32_t startframe;
@@ -230,6 +237,7 @@ namespace TASCAR {
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
     private:
       sink_type_t sink_type;
       std::vector<pos_t> spkpos;
@@ -262,6 +270,7 @@ namespace TASCAR {
       std::string name;
       double duration;
       void geometry_update(double t);
+      void process_active(double t);
       std::vector<src_object_t> object_sources;
       std::vector<src_diffuse_t> diffuse_sources;
       std::vector<src_door_t> door_sources;
@@ -277,6 +286,7 @@ namespace TASCAR {
       void set_mute(const std::string& name,bool val);
       void set_solo(const std::string& name,bool val);
       bool get_playsound(const sound_t*);
+      std::vector<object_t*> get_objects();
       std::vector<range_t> ranges;
       bool loop;
       std::vector<connection_t> connections;

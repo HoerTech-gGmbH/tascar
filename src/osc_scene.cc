@@ -52,6 +52,26 @@ int osc_set_object_orientation(const char *path, const char *types, lo_arg **arg
   return 1;
 }
 
+int osc_route_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  TASCAR::Scene::object_t* h((TASCAR::Scene::object_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='i') ){
+    h->set_mute(argv[0]->i);
+    return 0;
+  }
+  return 1;
+}
+
+int osc_route_solo(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  route_solo_p_t* h((route_solo_p_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='i') ){
+    h->route->set_solo(argv[0]->i,*(h->anysolo));
+    return 0;
+  }
+  return 1;
+}
+
 void osc_scene_t::add_object_methods(TASCAR::Scene::object_t* o)
 {
   add_method("/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
@@ -59,16 +79,24 @@ void osc_scene_t::add_object_methods(TASCAR::Scene::object_t* o)
   add_method("/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
 }
 
-void osc_scene_t::add_object_methods()
+
+void osc_scene_t::add_route_methods(TASCAR::Scene::route_t* o)
 {
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    add_object_methods(&(*it));
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    add_object_methods(&(*it));
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    add_object_methods(&(*it));
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    add_object_methods(&(*it));
+  add_method("/"+o->get_name()+"/mute","i",osc_route_mute,o);
+  route_solo_p_t* rs(new route_solo_p_t);
+  rs->route = o;
+  rs->anysolo = &anysolo;
+  vprs.push_back(rs);
+  add_method("/"+o->get_name()+"/solo","i",osc_route_solo,rs);
+}
+
+void osc_scene_t::add_child_methods()
+{
+  std::vector<object_t*> obj(get_objects());
+  for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
+    add_object_methods(*it);
+    add_route_methods(*it);
+  }
 }
 
 osc_scene_t::osc_scene_t(const std::string& srv_addr, const std::string& srv_port, const std::string& cfg_file)
@@ -77,6 +105,11 @@ osc_scene_t::osc_scene_t(const std::string& srv_addr, const std::string& srv_por
 {
 }
 
+osc_scene_t::~osc_scene_t()
+{
+  for(std::vector<route_solo_p_t*>::iterator it=vprs.begin();it!=vprs.end();++it)
+    delete *it;
+}
 
 /*
  * Local Variables:

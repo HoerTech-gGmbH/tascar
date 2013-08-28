@@ -85,30 +85,30 @@ acoustic_model_t::~acoustic_model_t()
  
 void acoustic_model_t::process()
 {
+  pos_t prel;
+  double nextdistance(0.0);
+  double nextgain(1.0);
+  // calculate relative geometry between source and sink:
+  pos_t effective_srcpos(src_->position);
+  double srcgainmod(1.0);
+  src_->update_effective_position(sink_->position,effective_srcpos,srcgainmod);
+  sink_->update_refpoint(effective_srcpos,prel,nextdistance,nextgain);
+  nextgain *= srcgainmod;
+  double next_air_absorption(exp(-nextdistance*dscale));
+  double ddistance((nextdistance-distance)*dt);
+  double dgain((nextgain-gain)*dt);
+  double dairabsorption((next_air_absorption-air_absorption)*dt);
+  for(uint32_t k=0;k<chunksize;k++){
+    distance+=ddistance;
+    gain+=dgain;
+    delayline.push(src_->audio[k]);
+    float c1(air_absorption+=dairabsorption);
+    float c2(1.0f-c1);
+    // apply air absorption:
+    airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
+    audio[k] = airabsorption_state;
+  }
   if( sink_->active && src_->active ){
-    pos_t prel;
-    double nextdistance(0.0);
-    double nextgain(1.0);
-    // calculate relative geometry between source and sink:
-    pos_t effective_srcpos(src_->position);
-    double srcgainmod(1.0);
-    src_->update_effective_position(sink_->position,effective_srcpos,srcgainmod);
-    sink_->update_refpoint(effective_srcpos,prel,nextdistance,nextgain);
-    nextgain *= srcgainmod;
-    double next_air_absorption(exp(-nextdistance*dscale));
-    double ddistance((nextdistance-distance)*dt);
-    double dgain((nextgain-gain)*dt);
-    double dairabsorption((next_air_absorption-air_absorption)*dt);
-    for(uint32_t k=0;k<chunksize;k++){
-      distance+=ddistance;
-      gain+=dgain;
-      delayline.push(src_->audio[k]);
-      float c1(air_absorption+=dairabsorption);
-      float c2(1.0f-c1);
-      // apply air absorption:
-      airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
-      audio[k] = airabsorption_state;
-    }
     sink_->add_source(prel,audio,sink_data);
   }
 }
@@ -125,23 +125,31 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
 
 void mirrorsource_t::process()
 {
-  pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
-  //DEBUG(nearest_point.print_cart());
-  nearest_point -= src_->position;
-  //DEBUG(nearest_point.print_cart());
-  //double r(dot_prod(nearest_point.normal(),reflector_->get_normal()));
-  position = nearest_point;
-  position *= 2.0;
-  position += src_->position;
-  if( dot_prod(nearest_point,reflector_->get_normal())>0 )
-    dg = -g*dt;
-  else
-    dg = (1.0-g)*dt;
-  ////DEBUG(r);
-  //DEBUG(position.print_cart());
-  // todo: add reflection (no diffraction) processing:
-  for(uint32_t k=0;k<audio.size();k++)
-    audio[k] = (g+=dg)*src_->audio[k];
+  if( reflector_->active && src_->active){
+    active = true;
+    pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
+    //DEBUG(nearest_point.print_cart());
+    nearest_point -= src_->position;
+    //DEBUG(nearest_point.print_cart());
+    //double r(dot_prod(nearest_point.normal(),reflector_->get_normal()));
+    position = nearest_point;
+    position *= 2.0;
+    position += src_->position;
+    pos_t ptmp;
+    double nextgain(1.0);
+    src_->update_effective_position(position,ptmp,nextgain);
+    if( dot_prod(nearest_point,reflector_->get_normal())>0 )
+      dg = -g*dt;
+    else
+      dg = (nextgain-g)*dt;
+    ////DEBUG(r);
+    //DEBUG(position.print_cart());
+    // todo: add reflection (no diffraction) processing:
+    for(uint32_t k=0;k<audio.size();k++)
+      audio[k] = (g+=dg)*src_->audio[k];
+  }else{
+    active = false;
+  }
 }
 
 void mirrorsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
@@ -166,6 +174,11 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
   for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
     for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
       mirrorsource.push_back(mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
+}
+
+reflector_t::reflector_t()
+  : active(true)
+{
 }
 
 void mirror_model_t::process()
@@ -254,24 +267,26 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
  
 void diffuse_acoustic_model_t::process()
 {
-  if( sink_->active && src_->active ){
-    pos_t prel;
-    double d(0.0);
-    double nextgain(1.0);
-    // calculate relative geometry between source and sink:
-    //DEBUG(src_->size.print_cart());
-    sink_->update_refpoint(src_->center,prel,d,nextgain);
-    d = src_->nextpoint(prel).norm();
-    //DEBUG(d);
-    nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
-    double dgain((nextgain-gain)*dt);
-    for(uint32_t k=0;k<chunksize;k++){
-      gain+=dgain;
+  pos_t prel;
+  double d(0.0);
+  double nextgain(1.0);
+  // calculate relative geometry between source and sink:
+  //DEBUG(src_->size.print_cart());
+  sink_->update_refpoint(src_->center,prel,d,nextgain);
+  d = src_->nextpoint(prel).norm();
+  //DEBUG(d);
+  nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
+  double dgain((nextgain-gain)*dt);
+  for(uint32_t k=0;k<chunksize;k++){
+    gain+=dgain;
+    if( sink_->active && src_->active ){
       audio.w()[k] = gain*src_->audio.w()[k];
       audio.x()[k] = gain*src_->audio.x()[k];
       audio.y()[k] = gain*src_->audio.y()[k];
       audio.z()[k] = gain*src_->audio.z()[k];
     }
+  }
+  if( sink_->active && src_->active ){
     sink_->add_source(prel,audio,sink_data);
   }
 }

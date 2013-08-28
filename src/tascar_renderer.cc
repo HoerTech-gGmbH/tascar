@@ -111,6 +111,7 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     psink->clear();
   }
   geometry_update(tp_time);
+  process_active(tp_time);
   // fill inputs:
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
@@ -185,7 +186,7 @@ void TASCAR::render_t::run()
   world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
   //
   // activate repositioning services for each object:
-  add_object_methods();
+  add_child_methods();
   jackc_t::activate();
   osc_server_t::activate();
   // connect jack ports of point sources:

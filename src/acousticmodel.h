@@ -70,14 +70,14 @@ namespace TASCAR {
       double c[2];
     };
 
-    class obstacle_t : public face_t
-    {
+    class obstacle_t : public face_t {
     };
 
-    class reflector_t : public obstacle_t
-    {
+    class reflector_t : public obstacle_t {
     public:
+      reflector_t();
       Acousticmodel::filter_coeff_t get_filter(const pos_t& psrc);
+      bool active;
     };
 
     /** \brief A mirrored source.

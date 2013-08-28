@@ -70,7 +70,7 @@ g_scene_t::g_scene_t(const std::string& cfg_file, const std::string& flags,bool 
   //  i->location.fill_gaps(0.25);
   for( std::vector<sink_object_t>::iterator i=sink_objects.begin();i!=sink_objects.end();++i)
     i->location.fill_gaps(0.25);
-  add_object_methods();
+  add_child_methods();
   activate();
 }
 
@@ -109,6 +109,10 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
     tlabel.set_text("src");
   if( dynamic_cast<src_diffuse_t*>(r))
     tlabel.set_text("dif");
+  if( dynamic_cast<sink_object_t*>(r))
+    tlabel.set_text("sink");
+  if( dynamic_cast<src_door_t*>(r))
+    tlabel.set_text("door");
   box.pack_start( tlabel, Gtk::PACK_SHRINK );
   box.pack_start( label, Gtk::PACK_EXPAND_PADDING );
   box.pack_start( mute, Gtk::PACK_SHRINK );
@@ -116,11 +120,12 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
   mute.set_active(r->get_mute());
   solo.set_active(r->get_solo());
 #ifdef GTKMM30
+  Gdk::RGBA col_yellow("f4e83a");
+  //col.set_rgba(244.0/256,232.0/256,58.0/256);
+  mute.override_background_color(col_yellow);
+  col_yellow.set_rgba_u(219*256,18*256,18*256);
+  solo.override_background_color(col_yellow,Gtk::STATE_FLAG_ACTIVE);
   Gdk::RGBA col;
-  col.set_rgba_u(244*256,232*256,58*256);
-  mute.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
-  col.set_rgba_u(219*256,18*256,18*256);
-  solo.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
   if( object_t* o=dynamic_cast<object_t*>(r) ){
     rgb_color_t c(o->color);
     col.set_rgba(c.r,c.g,c.b,0.3);
@@ -150,15 +155,17 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
 void source_ctl_t::on_mute()
 {
   bool m(mute.get_active());
-  lo_send(client_addr_,"/mute","si",name_.c_str(),m);
-  scene_->set_mute(name_,m);
+  std::string path("/"+name_+"/mute");
+  lo_send(client_addr_,path.c_str(),"i",m);
+  //scene_->set_mute(name_,m);
 }
 
 void source_ctl_t::on_solo()
 {
   bool m(solo.get_active());
-  lo_send(client_addr_,"/solo","si",name_.c_str(),m);
-  scene_->set_solo(name_,m);
+  std::string path("/"+name_+"/solo");
+  lo_send(client_addr_,path.c_str(),"i",m);
+  //scene_->set_solo(name_,m);
 }
 
 class source_panel_t : public Gtk::ScrolledWindow {
@@ -185,11 +192,14 @@ void source_panel_t::set_scene(scene_t* s)
   }
   vbuttons.clear();
   if( s ){
+    std::vector<object_t*> obj(s->get_objects());
+    for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it)
+      vbuttons.push_back(new source_ctl_t(client_addr_,s,*it));
     //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->sink_objects)));
     //for( unsigned int k=0;k<s->diffuse_sources.size();k++)
     //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->diffuse_sources[k])));
-    for( unsigned int k=0;k<s->object_sources.size();k++)
-      vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->object_sources[k])));
+    //for( unsigned int k=0;k<s->object_sources.size();k++)
+    //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->object_sources[k])));
     //for( unsigned int k=0;k<s->faces.size();k++)
     //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->faces[k])));
     //for( unsigned int k=0;k<s->reverbs.size();k++)
@@ -866,7 +876,7 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
     button_view_m("zoom -"),
     button_loop("loop"),
     button_perspective("persp"),
-    client_addr(lo_address_new("localhost","9877")),
+    client_addr(lo_address_new(srv_addr.c_str(),srv_port.c_str())),
     wdg_source(client_addr),
 #ifdef GTKMM30
     timescale(Gtk::ORIENTATION_HORIZONTAL),
