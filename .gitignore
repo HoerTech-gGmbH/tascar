@@ -15,3 +15,14 @@ build
 
 # backup files:
 *~
+
+# ardour session files and backups
+*.bak
+*.history
+*.ardour
+*.peak
+instant.xml
+temp.*
+
+# local sound files:
+birds_oldenburg.wav
