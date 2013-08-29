@@ -106,20 +106,25 @@ void jackc_portless_t::deactivate()
   jack_deactivate(jc);
 }
 
-void jackc_t::connect_in(unsigned int port,const std::string& pname)
+void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn)
 {
-  if( jack_connect(jc,pname.c_str(),jack_port_name(inPort[port])) != 0 ){
-    errmsg = std::string("unable to connect port '")+pname + "' to '" + jack_port_name(inPort[port]) + "'.";
-    throw TASCAR::ErrMsg(errmsg.c_str());
+  if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
+    errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
+    if( bwarn )
+      std::cerr << "Warning: " << errmsg << std::endl;
+    else
+      throw TASCAR::ErrMsg(errmsg.c_str());
   }
 }
 
-void jackc_t::connect_out(unsigned int port,const std::string& pname)
+void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn)
 {
-  if( jack_connect(jc,jack_port_name(outPort[port]),pname.c_str()) != 0 ){
-    errmsg = std::string("unable to connect port '")+jack_port_name(outPort[port]) + "' to '" + pname + "'.";
-    throw TASCAR::ErrMsg(errmsg.c_str());
-  }
+  connect(pname,jack_port_name(inPort[port]),bwarn);
+}
+
+void jackc_t::connect_out(unsigned int port,const std::string& pname,bool bwarn)
+{
+  connect(jack_port_name(outPort[port]),pname,bwarn);
 }
 
 jackc_transport_t::jackc_transport_t(const std::string& clientname)

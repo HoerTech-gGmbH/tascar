@@ -22,25 +22,11 @@ int main(int argc, char** argv)
   //r.orientation = zyx_euler_t(M_PI*0.25,0,0);
   //DEBUG(r.border_distance(p1));
   //DEBUG(r.border_distance(p3));
-  face_object_t face;
-  face.width = 2;
-  face.height = 1;
-  pos_t p(0,0,0);
-  DEBUG(face.get_closest_point(0,p).print_cart());
-  p.x = 1;
-  p.y = 0.5;
-  p.z = 7;
-  DEBUG(face.get_closest_point(0,p).print_cart());
-  //face.dorientation.y = DEG2RAD*45.0;
-  DEBUG(face.get_closest_point(0,p).print_cart());
-  pos_t cp(face.get_closest_point(0,p));
-  cp -= p;
-  cp *= -1.0/cp.norm();
-  DEBUG(cp.print_cart());
-  pos_t n(1,0,0);
-  n *= face.dorientation;
-  DEBUG(n.print_cart());
-  DEBUG(n.x*cp.x+n.y*cp.y+n.z*cp.z);
+  face_t face;
+  face.set(pos_t(),zyx_euler_t(0.1,0,0),1,1);
+  pos_t p(1,0.6,0.5);
+  DEBUG(face.nearest_on_plane(p).print_cart());
+  DEBUG(face.nearest(p).print_cart());
   return 0;
 }
 

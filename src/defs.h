@@ -24,6 +24,7 @@
 */
 #define R_EARTH 6367467.5
 
+#define DEBUGS(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << #x << "=" << x << std::endl
 
 #define DEBUG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " " << #x << "=" << x << std::endl
 //#define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << x << std::endl
@@ -69,6 +70,24 @@
    but have a separate position. An obstacle is placed around the
    reflector to process the spatial limitation of the mirror (not yet
    implemented).
+
+   A scene (TASCAR::Scene::scene_t) contains all spatial information.
+
+   What happens in a process cycle?
+   <ol>
+   <li>Update audio of each primary source</li>
+   <li>Update position of each primary source</li>
+   <li>Update position/orientation of all obstacles and reflectors</li>
+   <li>Update position/orientation of all sinks</li>
+   <li>Process world</li>
+   <li>Copy rendered audio from sinks to audio backend</li>
+   </ol>
+
+   Relevant name spaces:
+   <ul>
+   <li>TASCAR::Scene</li>
+   <li>TASCAR::Acousticmodel</li>
+   </ul>
 
  */
 

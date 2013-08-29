@@ -67,7 +67,7 @@ namespace TASCAR {
     inline double norm_xy() const {return sqrt(x*x+y*y);};
     inline double azim() const {return atan2(y,x);};
     inline double elev() const {return atan2(z,norm_xy());};
-    pos_t normal();
+    pos_t normal() const;
     /**
        \brief Rotate around z-axis
     */
@@ -114,11 +114,11 @@ namespace TASCAR {
     /**
        \brief Format as string in cartesian coordinates
     */
-    std::string print_cart(const std::string& delim=", ");
+    std::string print_cart(const std::string& delim=", ") const;
     /**
        \brief Format as string in spherical coordinates
     */
-    std::string print_sphere(const std::string& delim=", ");
+    std::string print_sphere(const std::string& delim=", ") const;
   };
 
   class sphere_t {
@@ -277,14 +277,9 @@ namespace TASCAR {
                 (p1.z-p2.z)*(p1.z-p2.z));
   }
 
-  /**
-     \brief Return distance between two points
-  */
   inline double dot_prod(const pos_t& p1, const pos_t& p2)
   {
-    return sqrt(p1.x*p2.x + 
-                p1.y*p2.y + 
-                p1.z*p2.z);
+    return p1.x*p2.x+p1.y*p2.y+p1.z*p2.z;
   }
 
   inline pos_t cross_prod(const pos_t& a,const pos_t& b)
@@ -415,6 +410,12 @@ namespace TASCAR {
     face_t();
     void set(const pos_t& p0, const zyx_euler_t& o, double width, double height);
     pos_t nearest_on_plane(const pos_t& p0) const;
+    pos_t nearest(const pos_t& p0) const;
+    face_t& operator+=(const pos_t& p);
+    face_t& operator+=(double p);
+    const pos_t& get_anchor() const { return anchor;};
+    const pos_t& get_e1() const { return e1;};
+    const pos_t& get_e2() const { return e2;};
     const pos_t& get_normal() const { return normal;};
   protected:
     void update();
@@ -422,6 +423,9 @@ namespace TASCAR {
     pos_t e1;
     pos_t e2;
     pos_t normal;
+    double width_;
+    double height_;
+    zyx_euler_t orient_;
   };
 
   /**
@@ -439,6 +443,15 @@ namespace TASCAR {
     std::string print(const std::string& delim=", ");
   };
 
+  class shoebox_t {
+  public:
+    shoebox_t();
+    shoebox_t(const pos_t& center_,const pos_t& size_,const zyx_euler_t& orientation_);
+    pos_t nextpoint(pos_t p);
+    pos_t center;
+    pos_t size;
+    zyx_euler_t orientation;
+  };
 }
 
 #endif

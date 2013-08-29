@@ -1,10 +1,14 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_creator tascar_jackio			\
-tascar_gpxvelocity tascar_gui tascar_pdf tascar_multipan tascar_jpos	\
-tascar_osc_jack_transport
+BINFILES = tascar_renderer tascar_gui tascar_audioplayer
+#tascar_creator tascar_jackio			\
+#tascar_gpxvelocity tascar_gui tascar_pdf tascar_multipan tascar_jpos	\
+#tascar_osc_jack_transport
 
-TEST_FILES = test_async_file test_diffusereverb test_render 
+TEST_FILES = test_render test_diffusereverb 
+#test_async_file test_diffusereverb 
+
+BINFILES += $(TEST_FILES)
 
 ifeq "ok" "$(shell pkg-config gtkmm-3.0 && echo ok)"
 GTKDEF = "-DGTKMM30"
@@ -29,8 +33,8 @@ CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
 OBJECTS = jackclient.o coordinates.o delayline.o speakerlayout.o	\
 multipan.o osc_helper.o async_file.o errorhandling.o scene.o		\
-render_sinks.o viewport.o audiochunks.o sinks.o acousticmodel.o		\
-multipan.o multipan_amb3.o hoafilt.o
+viewport.o audiochunks.o sinks.o acousticmodel.o multipan.o		\
+multipan_amb3.o hoafilt.o xmlconfig.o osc_scene.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 

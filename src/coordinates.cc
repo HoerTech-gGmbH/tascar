@@ -34,7 +34,7 @@
 
 using namespace TASCAR;
 
-std::string pos_t::print_cart(const std::string& delim)
+std::string pos_t::print_cart(const std::string& delim) const
 {
   std::ostringstream tmp("");
   tmp.precision(12);
@@ -43,7 +43,7 @@ std::string pos_t::print_cart(const std::string& delim)
 
 }
 
-std::string pos_t::print_sphere(const std::string& delim)
+std::string pos_t::print_sphere(const std::string& delim) const
 {
   std::ostringstream tmp("");
   tmp.precision(12);
@@ -721,8 +721,11 @@ void face_t::set(const pos_t& p0, const zyx_euler_t& o, double width, double hei
   anchor = p0;
   e1 = pos_t(0,width,0);
   e2 = pos_t(0,0,height);
-  e1 /= o;
-  e2 /= o;
+  e1 *= o;
+  e2 *= o;
+  width_ = width;
+  height_ = height;
+  orient_ = o;
   update();
 }
 
@@ -741,13 +744,71 @@ pos_t face_t::nearest_on_plane( const pos_t& p0 ) const
   return p0d;
 }
 
-pos_t pos_t::normal()
+pos_t face_t::nearest( const pos_t& p0 ) const
+{
+  pos_t p0d(p0);
+  p0d -= anchor;
+  p0d /= orient_;
+  p0d.x = 0;
+  p0d.y = std::max(0.0,std::min(width_,p0d.y));
+  p0d.z = std::max(0.0,std::min(height_,p0d.z));
+  p0d *= orient_;
+  p0d += anchor;
+  return p0d;
+}
+
+pos_t pos_t::normal() const
 {
   pos_t r(*this);
   r /= norm();
   return r;
 }
 
+shoebox_t::shoebox_t()
+{
+}
+
+shoebox_t::shoebox_t(const pos_t& center_,const pos_t& size_,const zyx_euler_t& orientation_)
+  : center(center_),
+    size(size_),
+    orientation(orientation_)
+{
+}
+
+pos_t shoebox_t::nextpoint(pos_t p)
+{
+  p -= center;
+  p /= orientation;
+  //DEBUG(size.print_cart());
+  pos_t prel;
+  if( p.x > 0 )
+    prel.x = std::max(0.0,p.x-0.5*size.x);
+  else
+    prel.x = std::min(0.0,p.x+0.5*size.x);
+  if( p.y > 0 )
+    prel.y = std::max(0.0,p.y-0.5*size.y);
+  else
+    prel.y = std::min(0.0,p.y+0.5*size.y);
+  if( p.z > 0 )
+    prel.z = std::max(0.0,p.z-0.5*size.z);
+  else
+    prel.z = std::min(0.0,p.z+0.5*size.z);
+  return prel;
+}
+
+face_t& face_t::operator+=(const pos_t& p)
+{
+  anchor += p;
+  update();
+  return *this;
+}
+
+face_t& face_t::operator+=(double p)
+{
+  pos_t n(normal);
+  n *= p;
+  return (*this += n);
+}
 
 
 /*

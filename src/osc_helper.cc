@@ -29,9 +29,12 @@
 
 using namespace TASCAR;
 
+static bool liblo_errflag;
+
 void err_handler(int num, const char *msg, const char *where)
 {
-  std::cout << "liblo: " << num << " " << msg << " (" << where << ")\n";
+  liblo_errflag = true;
+  std::cout << "liblo error " << num << ": " << msg << "\n(" << where << ")\n";
 }
 
 osc_server_t::osc_server_t(const std::string& multicast, const std::string& port,bool verbose_)
@@ -39,17 +42,18 @@ osc_server_t::osc_server_t(const std::string& multicast, const std::string& port
     verbose(verbose_)
 {
   lost = NULL;
+  liblo_errflag = false;
   if( multicast.size() ){
+    lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
     if( verbose )
       std::cerr << "listening on multicast address \"" << multicast << "\" port " << port << std::endl;
-    lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
   }else{
+    lost = lo_server_thread_new(port.c_str(),err_handler);
     if( verbose )
       std::cerr << "listening on port \"" << port << "\"" << std::endl;
-    lost = lo_server_thread_new(port.c_str(),err_handler);
   }
-  if( !lost )
-    throw ErrMsg("liblo error");
+  if( (!lost) || liblo_errflag )
+    throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\").");
 }
 
 osc_server_t::~osc_server_t()
@@ -76,12 +80,16 @@ void osc_server_t::activate()
 {
   lo_server_thread_start(lost);
   isactive = true;
+  if( verbose )
+    std::cerr << "server active\n";
 }
 
 void osc_server_t::deactivate()
 {
   lo_server_thread_stop(lost);
   isactive = false;
+  if( verbose )
+    std::cerr << "server inactive\n";
 }
 
 

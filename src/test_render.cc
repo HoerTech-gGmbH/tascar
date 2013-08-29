@@ -18,18 +18,20 @@ int main(int argc,char** argv)
   uint32_t N(1024);
   pointsource_t src(N);
   src.audio[0] = 1;
+  src.position = pos_t(0.1,0.1,0);
   std::vector<pointsource_t*> sources(1,&src);
+  std::vector<diffuse_source_t*> dsources;
   //DEBUG(sources.size());
   reflector_t r1;
   reflector_t r2;
   std::vector<reflector_t*> reflectors;
-  reflectors.push_back(&r1);
-  reflectors.push_back(&r2);
+  //reflectors.push_back(&r1);
+  //reflectors.push_back(&r2);
   //DEBUG(reflectors.size());
   sink_omni_t sink(N);
   std::vector<sink_t*> sinks;
   sinks.push_back(&sink);
-  world_t world(fs,sources,reflectors,sinks);
+  world_t world(fs,sources,dsources,reflectors,sinks);
   //mirror_model_t mr(sources,reflectors);
   //std::vector<pointsource_t*> mirrors(mr.get_sources());
   ////DEBUG(mirrors.size());
@@ -48,7 +50,7 @@ int main(int argc,char** argv)
   //for(uint32_t k=0;k<world.size();k++)
   //  world[k].process();
   world.process();
-  print_audio(sink.audio);
+  print_audio(sink.outchannels[0]);
   return 0;
 }
 

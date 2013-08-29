@@ -34,6 +34,7 @@
 #include "viewport.h"
 
 using namespace TASCAR;
+using namespace TASCAR::Scene;
 
 class pdf_export_t : public scene_t {
 public:
@@ -203,7 +204,7 @@ void pdf_export_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->restore();
 }
 
-void pdf_export_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void pdf_export_t::draw_room(const TASCAR::Scene::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   std::vector<pos_t> roomnodes(8,reverb.center);
   roomnodes[0].x -= 0.5*reverb.size.x;
@@ -256,7 +257,7 @@ void pdf_export_t::draw_room(const TASCAR::diffuse_reverb_t& reverb,Cairo::RefPt
   cr->restore();
 }
 
-void pdf_export_t::draw_face(const TASCAR::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void pdf_export_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool active(face.isactive(time));
   if( !active )
@@ -403,11 +404,11 @@ void pdf_export_t::render_time(double t)
 void pdf_export_t::draw(view_t persp)
 {
   Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
-  view.set_ref(listener.get_location(time));
+  //view.set_ref(listener.get_location(time));
   switch( persp ){
   case p : 
     view.set_perspective(true);
-    view.set_euler(listener.get_orientation(time));
+    //view.set_euler(listener.get_orientation(time));
     break;
   case xy :
     view.set_perspective(false);
@@ -435,17 +436,17 @@ void pdf_export_t::draw(view_t persp)
   cr->set_source_rgb( 1, 1, 1 );
   cr->paint();
   cr->restore();
-  draw_track( listener, cr, markersize );
+  //draw_track( listener, cr, markersize );
   for(unsigned int k=0;k<srcobjects.size();k++){
     draw_track(srcobjects[k], cr, markersize );
   }
-  for(unsigned int k=0;k<reverbs.size();k++){
-    draw_room(reverbs[k], cr, markersize );
-  }
-  for(unsigned int k=0;k<faces.size();k++){
-    draw_face(faces[k], cr, markersize );
-  }
-  draw_listener( listener, cr, markersize );
+  //for(unsigned int k=0;k<reverbs.size();k++){
+  //  draw_room(reverbs[k], cr, markersize );
+  //}
+  //for(unsigned int k=0;k<faces.size();k++){
+  //  draw_face(faces[k], cr, markersize );
+  //}
+  //draw_listener( listener, cr, markersize );
   cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
   cr->move_to(-markersize, 0 );
   cr->line_to( markersize, 0 );

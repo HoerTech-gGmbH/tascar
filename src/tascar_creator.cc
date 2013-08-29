@@ -18,13 +18,13 @@ int main(int argc,char**argv)
 {
   std::string cfg_input("");
   std::string cfg_output("");
-  bool b_list(false);
+  //bool b_list(false);
   bool b_example(false);
-  const char *options = "i:o:lxh";
+  const char *options = "i:o:xh";
   struct option long_options[] = { 
     { "input",   1, 0, 'i' },
     { "output",  1, 0, 'o' },
-    { "list",    0, 0, 'l' },
+    //{ "list",    0, 0, 'l' },
     { "example", 0, 0, 'x' },
     { "help",    0, 0, 'h' },
     { 0, 0, 0, 0 }
@@ -43,17 +43,17 @@ int main(int argc,char**argv)
     case 'h':
       usage(long_options);
       return -1;
-    case 'l':
-      b_list = true;
-      break;
+    //case 'l':
+    //  b_list = true;
+    //  break;
     case 'x':
       b_example = true;
       break;
     }
   }
-  scene_t S;
+  TASCAR::Scene::scene_t S;
   if( cfg_input.size() )
-    S = xml_read_scene( cfg_input );
+    S = TASCAR::Scene::xml_read_scene( cfg_input );
   if( b_example ){
     if( !S.name.size() )
       S.name = "Example scene";
@@ -68,8 +68,8 @@ int main(int argc,char**argv)
     if( !S.srcobjects[0].sound.size() ){
       S.srcobjects[0].add_sound();
     }
-    if( !S.bg_amb.size() )
-      S.bg_amb.push_back(bg_amb_t());
+    //if( !S.bg_amb.size() )
+    //  S.bg_amb.push_back(TASCAR::Scene::bg_amb_t());
   }
   if( cfg_output.size() ){
     time_t tm(time(NULL));
@@ -77,8 +77,8 @@ int main(int argc,char**argv)
     strtime = "\nCreated with tascar_creator\n" + strtime;
     xml_write_scene(cfg_output,S,strtime,b_example);
   }
-  if( b_list )
-    std::cout << S.print();
+  //if( b_list )
+  //  std::cout << S.print();
   return 0;
 }
 
