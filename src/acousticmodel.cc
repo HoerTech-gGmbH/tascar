@@ -12,13 +12,39 @@ void sink_t::clear()
     outchannels[ch].clear();
 }
 
+sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse) 
+  : size_(size),
+    falloff_(1.0/std::max(falloff,1e-10)),
+    use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0)),
+    use_falloff(falloff>=0),
+    active(true),
+    render_point(b_point),
+    render_diffuse(b_diffuse),
+    dt(1.0/(float)chunksize) 
+{
+}
+
 void sink_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
 {
-  prel = psrc;
-  prel -= position;
-  prel /= orientation;
-  distance = prel.norm();
-  gain = 1.0/std::max(0.1,distance);
+  if( use_size ){
+    prel = psrc;
+    prel -= position;
+    prel /= orientation;
+    distance = prel.norm();
+    shoebox_t box;
+    box.size = size_;
+    double d(box.nextpoint(prel).norm());
+    if( use_falloff )
+      gain = 0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_));
+    else
+      gain = 1.0/std::max(1.0,d);
+  }else{
+    prel = psrc;
+    prel -= position;
+    prel /= orientation;
+    distance = prel.norm();
+    gain = 1.0/std::max(0.1,distance);
+  }
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize)
@@ -108,7 +134,7 @@ void acoustic_model_t::process()
     airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
     audio[k] = airabsorption_state;
   }
-  if( sink_->active && src_->active && ((gain!=0)||(dgain!=0))){
+  if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0))){
     sink_->add_source(prel,audio,sink_data);
   }
 }
@@ -287,7 +313,7 @@ void diffuse_acoustic_model_t::process()
         audio.z()[k] = gain*src_->audio.z()[k];
       }
     }
-    if( sink_->active && src_->active ){
+    if( sink_->render_diffuse && sink_->active && src_->active ){
       sink_->add_source(prel,audio,sink_data);
     }
   }

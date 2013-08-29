@@ -7,8 +7,8 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
-sink_omni_t::sink_omni_t(uint32_t chunksize)
-  : sink_t(chunksize)
+sink_omni_t::sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
 {
   outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
@@ -32,8 +32,8 @@ void sink_omni_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_da
 }
 
 
-sink_cardioid_t::sink_cardioid_t(uint32_t chunksize)
-  : sink_t(chunksize)
+sink_cardioid_t::sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
 {
   outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
@@ -62,8 +62,8 @@ sink_amb3h3v_t::data_t::data_t()
     _w[k] = w_current[k] = dw[k] = 0;
 }
  
-sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize)
-  : sink_t(chunksize)
+sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
 {
   outchannels = std::vector<wave_t>(AMB33::idx::channels,wave_t(chunksize));
 }
@@ -127,8 +127,8 @@ sink_amb3h0v_t::data_t::data_t()
   rotz_current[1] = 0;
 }
  
-sink_amb3h0v_t::sink_amb3h0v_t(uint32_t chunksize)
-  : sink_t(chunksize)
+sink_amb3h0v_t::sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
 {
   outchannels = std::vector<wave_t>(AMB30::idx::channels,wave_t(chunksize));
 }
@@ -187,11 +187,8 @@ sink_nsp_t::data_t::data_t()
     w[k] = dw[k] = x[k] = y[k] = z[k] = dx[k] = dy[k] = dz[k] = 0;
 }
  
-sink_nsp_t::sink_nsp_t(uint32_t chunksize, const std::vector<pos_t>& spkpos_, pos_t size, double falloff)
-  : sink_t(chunksize),
-    size_(size),
-    falloff_(1.0/std::max(falloff,1e-10)),
-    use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0))
+sink_nsp_t::sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse, const std::vector<pos_t>& spkpos_)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
 {
   if( spkpos_.size() > MAX_VBAP_CHANNELS )
     throw TASCAR::ErrMsg("number of VBAP channels is to large");
@@ -256,30 +253,6 @@ void sink_nsp_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_dat
       outchannels[k][i] += (d->y[k] += d->dy[k]) * chunk.y()[i];
       outchannels[k][i] += (d->z[k] += d->dz[k]) * chunk.z()[i];
     }
-  }
-}
-
-void sink_nsp_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
-{
-  if( use_size ){
-    prel = psrc;
-    prel -= position;
-    prel /= orientation;
-    distance = prel.norm();
-    shoebox_t box;
-    box.size = size_;
-    double d(box.nextpoint(prel).norm());
-    if( falloff_ >= 0 )
-      gain = 0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_));
-    else
-      gain = 1.0/std::max(1.0,d);
-  }else{
-    sink_t::update_refpoint(psrc,prel,distance,gain);
-    //prel = psrc;
-    //prel -= position;
-    //prel /= orientation;
-    //distance = prel.norm();
-    //gain = 1.0/std::max(0.1,distance);
   }
 }
 

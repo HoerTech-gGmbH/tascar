@@ -49,7 +49,7 @@ namespace TASCAR {
      */
     class sink_t {
     public:
-      sink_t(uint32_t chunksize) : active(true),dt(1.0/(float)chunksize) {};
+      sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse);
       virtual void clear();
       virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain);
       virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
@@ -60,7 +60,13 @@ namespace TASCAR {
       std::vector<wave_t> outchannels;
       pos_t position;
       zyx_euler_t orientation;
+      pos_t size_;
+      double falloff_;
+      bool use_size;
+      bool use_falloff;
       bool active;
+      bool render_point;
+      bool render_diffuse;
       float dt;
     };
 

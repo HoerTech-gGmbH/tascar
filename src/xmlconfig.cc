@@ -82,7 +82,8 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned i
 void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value)
 {
   std::string attv(elem->get_attribute_value(name));
-  value = (attv == "true");
+  if( attv.size() )
+    value = (attv == "true");
 }
 
 /*

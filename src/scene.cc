@@ -506,6 +506,8 @@ void scene_t::process_active(double t)
 sink_object_t::sink_object_t()
   : sink_type(omni),
     falloff(-1.0),
+    render_point(true),
+    render_diffuse(true),
     sink(NULL)
 {
 }
@@ -523,6 +525,8 @@ void sink_object_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"size_x",size.x);
   get_attribute_value(e,"size_y",size.y);
   get_attribute_value(e,"size_z",size.z);
+  get_attribute_value_bool(e,"point",render_point);
+  get_attribute_value_bool(e,"diffuse",render_diffuse);
   get_attribute_value(e,"falloff",falloff);
   std::string stype(e->get_attribute_value("type"));
   if( stype == "omni" )
@@ -562,19 +566,19 @@ void sink_object_t::prepare(double fs, uint32_t fragsize)
     delete sink;
   switch( sink_type ){
   case omni :
-    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize);
+    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse);
     break;
   case cardioid :
-    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize);
+    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse);
     break;
   case amb3h3v :
-    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize);
+    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse);
     break;
   case amb3h0v :
-    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize);
+    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse);
     break;
   case nsp :
-    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,spkpos,size,falloff);
+    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,spkpos);
     break;
   }
 }

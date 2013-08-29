@@ -5,7 +5,7 @@ BINFILES = tascar_renderer tascar_gui tascar_audioplayer
 #tascar_gpxvelocity tascar_gui tascar_pdf tascar_multipan tascar_jpos	\
 #tascar_osc_jack_transport
 
-TEST_FILES = test_render test_diffusereverb 
+TEST_FILES = test_diffusereverb 
 #test_async_file test_diffusereverb 
 
 BINFILES += $(TEST_FILES)

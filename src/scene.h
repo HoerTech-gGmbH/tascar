@@ -242,6 +242,8 @@ namespace TASCAR {
       std::vector<pos_t> spkpos;
       pos_t size;
       double falloff;
+      bool render_point;
+      bool render_diffuse;
       TASCAR::Acousticmodel::sink_t* sink;
     };
 
