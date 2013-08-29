@@ -238,9 +238,10 @@ namespace TASCAR {
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
-    private:
       sink_type_t sink_type;
       std::vector<pos_t> spkpos;
+      pos_t size;
+      double falloff;
       TASCAR::Acousticmodel::sink_t* sink;
     };
 

@@ -583,10 +583,26 @@ void tascar_gui_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo
   if( view.get_perspective() )
     return;
   msize *= 1.5;
+  cr->save();
+  cr->set_line_width( 0.2*msize );
+  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   pos_t p(obj.get_location(time));
   zyx_euler_t o(obj.get_orientation(time));
   //DEBUG(o.print());
   o.z += headrot;
+  if( (obj.size.x!=0)&&(obj.size.y!=0)&&(obj.size.z!=0) ){
+    draw_cube(p,o,obj.size,cr);
+    if( obj.falloff > 0 ){
+      std::vector<double> dash(2);
+      dash[0] = msize;
+      dash[1] = msize;
+      cr->set_dash(dash,0);
+      draw_cube(p,o,obj.size+pos_t(2*obj.falloff,2*obj.falloff,2*obj.falloff),cr);
+      dash[0] = 1.0;
+      dash[1] = 0.0;
+      cr->set_dash(dash,0);
+    }
+  }
   double scale(0.5*view.get_scale());
   pos_t p1(1.8*msize*scale,-0.6*msize*scale,0);
   pos_t p2(2.9*msize*scale,0,0);
@@ -625,9 +641,6 @@ void tascar_gui_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo
   p7 = view(p7);
   p8 = view(p8);
   p9 = view(p9);
-  cr->save();
-  cr->set_line_width( 0.2*msize );
-  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   cr->move_to( p.x, -p.y );
   cr->arc(p.x, -p.y, 2*msize, 0, PI2 );
   cr->move_to( p1.x, -p1.y );

@@ -108,7 +108,7 @@ void acoustic_model_t::process()
     airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
     audio[k] = airabsorption_state;
   }
-  if( sink_->active && src_->active ){
+  if( sink_->active && src_->active && ((gain!=0)||(dgain!=0))){
     sink_->add_source(prel,audio,sink_data);
   }
 }
@@ -276,18 +276,20 @@ void diffuse_acoustic_model_t::process()
   d = src_->nextpoint(prel).norm();
   //DEBUG(d);
   nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
-  double dgain((nextgain-gain)*dt);
-  for(uint32_t k=0;k<chunksize;k++){
-    gain+=dgain;
-    if( sink_->active && src_->active ){
-      audio.w()[k] = gain*src_->audio.w()[k];
-      audio.x()[k] = gain*src_->audio.x()[k];
-      audio.y()[k] = gain*src_->audio.y()[k];
-      audio.z()[k] = gain*src_->audio.z()[k];
+  if( !((gain==0) && (nextgain==0))){
+    double dgain((nextgain-gain)*dt);
+    for(uint32_t k=0;k<chunksize;k++){
+      gain+=dgain;
+      if( sink_->active && src_->active ){
+        audio.w()[k] = gain*src_->audio.w()[k];
+        audio.x()[k] = gain*src_->audio.x()[k];
+        audio.y()[k] = gain*src_->audio.y()[k];
+        audio.z()[k] = gain*src_->audio.z()[k];
+      }
     }
-  }
-  if( sink_->active && src_->active ){
-    sink_->add_source(prel,audio,sink_data);
+    if( sink_->active && src_->active ){
+      sink_->add_source(prel,audio,sink_data);
+    }
   }
 }
 

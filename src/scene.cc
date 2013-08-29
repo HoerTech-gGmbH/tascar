@@ -187,7 +187,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize);
   source->position = get_location(0);
   source->set(source->position,get_orientation(0),width,height);
-  source->falloff = 1.0/falloff;
+  source->falloff = 1.0/std::max(falloff,1.0e-10);
 }
 
 
@@ -254,7 +254,7 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
     delete source;
   source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize);
   source->size = size;
-  source->falloff = 1.0/falloff;
+  source->falloff = 1.0/std::max(falloff,1.0e-10);
 }
 
 //float* sound_t::get_buffer( uint32_t n )
@@ -504,7 +504,9 @@ void scene_t::process_active(double t)
 }
 
 sink_object_t::sink_object_t()
-  : sink(NULL)
+  : sink_type(omni),
+    falloff(-1.0),
+    sink(NULL)
 {
 }
 
@@ -518,6 +520,10 @@ void sink_object_t::read_xml(xmlpp::Element* e)
 {
   jack_port_t::read_xml(e);
   object_t::read_xml(e);
+  get_attribute_value(e,"size_x",size.x);
+  get_attribute_value(e,"size_y",size.y);
+  get_attribute_value(e,"size_z",size.z);
+  get_attribute_value(e,"falloff",falloff);
   std::string stype(e->get_attribute_value("type"));
   if( stype == "omni" )
     sink_type = omni;
@@ -568,7 +574,7 @@ void sink_object_t::prepare(double fs, uint32_t fragsize)
     sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize);
     break;
   case nsp :
-    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,spkpos);
+    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,spkpos,size,falloff);
     break;
   }
 }
