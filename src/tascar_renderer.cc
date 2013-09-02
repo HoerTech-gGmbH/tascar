@@ -115,18 +115,19 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
   // fill inputs:
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
-    psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
+    psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes,sounds[k]->get_gain());
   }
   for(uint32_t k=0;k<door_sources.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(door_sources[k].get_source());
-    psrc->audio.copy(inBuffer[door_sources[k].get_port_index()],nframes);
+    psrc->audio.copy(inBuffer[door_sources[k].get_port_index()],nframes,door_sources[k].get_gain());
   }
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
-    psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes);
-    psrc->audio.x().copy(inBuffer[it->get_port_index()+1],nframes);
-    psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes);
-    psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes);
+    float gain(it->get_gain());
+    psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes,gain);
+    psrc->audio.x().copy(inBuffer[it->get_port_index()+1],nframes,gain);
+    psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes,gain);
+    psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes,gain);
   }
   // process world:
   if( world )
@@ -134,8 +135,9 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
   // copy sink output:
   for(unsigned int k=0;k<sink_objects.size();k++){
     TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
+    float gain(sink_objects[k].get_gain());
     for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
-      psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes);
+      psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes,gain);
   }
   return 0;
 }

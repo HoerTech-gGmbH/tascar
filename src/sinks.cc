@@ -7,8 +7,11 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
-sink_omni_t::sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
+sink_omni_t::sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use)
 {
   outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
@@ -32,8 +35,11 @@ void sink_omni_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_da
 }
 
 
-sink_cardioid_t::sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
+sink_cardioid_t::sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use)
 {
   outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
@@ -62,8 +68,11 @@ sink_amb3h3v_t::data_t::data_t()
     _w[k] = w_current[k] = dw[k] = 0;
 }
  
-sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
+sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use)
 {
   outchannels = std::vector<wave_t>(AMB33::idx::channels,wave_t(chunksize));
 }
@@ -127,8 +136,11 @@ sink_amb3h0v_t::data_t::data_t()
   rotz_current[1] = 0;
 }
  
-sink_amb3h0v_t::sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
+sink_amb3h0v_t::sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use)
 {
   outchannels = std::vector<wave_t>(AMB30::idx::channels,wave_t(chunksize));
 }
@@ -187,8 +199,11 @@ sink_nsp_t::data_t::data_t()
     w[k] = dw[k] = x[k] = y[k] = z[k] = dx[k] = dy[k] = dz[k] = 0;
 }
  
-sink_nsp_t::sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse, const std::vector<pos_t>& spkpos_)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse)
+sink_nsp_t::sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use, const std::vector<pos_t>& spkpos_)
+  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use)
 {
   if( spkpos_.size() > MAX_VBAP_CHANNELS )
     throw TASCAR::ErrMsg("number of VBAP channels is to large");

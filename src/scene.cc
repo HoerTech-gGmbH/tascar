@@ -78,7 +78,8 @@ void object_t::read_xml(xmlpp::Element* e)
       sndfiles.push_back(sndfile_info_t());
       sndfiles.back().read_xml(sne);
       sndfiles.back().parentname = get_name();
-      sndfiles.back().starttime = starttime;
+      sndfiles.back().starttime += starttime;
+      sndfiles.back().objectchannel = sndfiles.size()-1;
     }
   }
   //if( starttime < endtime ){
@@ -245,6 +246,10 @@ void sink_object_t::geometry_update(double t)
   if( sink ){
     sink->position = get_location(t);
     sink->orientation = get_orientation(t);
+    if( use_mask ){
+      sink->mask.center = mask.get_location(t);
+      sink->mask.orientation = mask.get_orientation(t);
+    }
   }
 }
 
@@ -508,6 +513,7 @@ sink_object_t::sink_object_t()
     falloff(-1.0),
     render_point(true),
     render_diffuse(true),
+    use_mask(false),
     sink(NULL)
 {
 }
@@ -516,6 +522,24 @@ sink_object_t::~sink_object_t()
 {
   if( sink )
     delete sink;
+}
+
+void sink_mask_t::read_xml(xmlpp::Element* e)
+{
+  object_t::read_xml(e);
+  get_attribute_value(e,"size_x",size.x);
+  get_attribute_value(e,"size_y",size.y);
+  get_attribute_value(e,"size_z",size.z);
+  get_attribute_value(e,"falloff",falloff);
+}
+
+sink_mask_t::sink_mask_t()
+  : falloff(1.0)
+{
+}
+
+void sink_mask_t::prepare(double fs, uint32_t fragsize)
+{
 }
 
 void sink_object_t::read_xml(xmlpp::Element* e)
@@ -556,6 +580,10 @@ void sink_object_t::read_xml(xmlpp::Element* e)
       spk.set_sphere(r,az*DEG2RAD,elev*DEG2RAD);
       spkpos.push_back(spk);
     }
+    if( sne && ( sne->get_name() == "mask" )){
+      use_mask = true;
+      mask.read_xml(sne);
+    }
   }
 }
 
@@ -566,19 +594,34 @@ void sink_object_t::prepare(double fs, uint32_t fragsize)
     delete sink;
   switch( sink_type ){
   case omni :
-    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse);
+    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse,
+                                                  mask.size,
+                                                  mask.falloff,
+                                                  use_mask);
     break;
   case cardioid :
-    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse);
+    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
+                                                  mask.size,
+                                                  mask.falloff,
+                                                  use_mask);
     break;
   case amb3h3v :
-    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse);
+    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
+                                                  mask.size,
+                                                  mask.falloff,
+                                                  use_mask);
     break;
   case amb3h0v :
-    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse);
+    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
+                                                  mask.size,
+                                                  mask.falloff,
+                                                  use_mask);
     break;
   case nsp :
-    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,spkpos);
+    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
+                                                  mask.size,
+                                                  mask.falloff,
+                                                  use_mask,spkpos);
     break;
   }
 }
@@ -1289,6 +1332,7 @@ sndfile_info_t::sndfile_info_t()
   : fname(""),
     firstchannel(0),
     channels(1),
+    objectchannel(0),
     starttime(0),
     loopcnt(1),
     gain(1.0)
@@ -1301,6 +1345,7 @@ void sndfile_info_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"firstchannel",firstchannel);
   get_attribute_value(e,"channels",channels);
   get_attribute_value(e,"loop",loopcnt);
+  get_attribute_value(e,"starttime",starttime);
   get_attribute_value_db(e,"gain",gain);
 }
 

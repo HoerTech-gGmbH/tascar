@@ -14,7 +14,10 @@ namespace TASCAR {
      */
     class sink_omni_t : public Acousticmodel::sink_t {
     public:
-      sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse);
+      sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+             pos_t mask_size,
+             double mask_falloff,
+             bool mask_use);
       void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -30,7 +33,10 @@ namespace TASCAR {
         float azgain;
       };
       sink_data_t* create_sink_data() { return new data_t();};
-      sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse);
+      sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -47,7 +53,10 @@ namespace TASCAR {
         float dw[AMB33::idx::channels];
       };
       sink_data_t* create_sink_data() { return new data_t();};
-      sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse);
+      sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -67,7 +76,10 @@ namespace TASCAR {
         float drotz[2];
       };
       sink_data_t* create_sink_data() { return new data_t();};
-      sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse);
+      sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -90,7 +102,10 @@ namespace TASCAR {
         float dz[MAX_VBAP_CHANNELS];
       };
       sink_data_t* create_sink_data() { return new data_t();};
-      sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,const std::vector<pos_t>& spkpos);
+      sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+                         pos_t mask_size,
+                         double mask_falloff,
+                         bool mask_use,const std::vector<pos_t>& spkpos);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);

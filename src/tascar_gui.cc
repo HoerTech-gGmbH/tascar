@@ -35,9 +35,29 @@
 #include <iostream>
 #include <getopt.h>
 #include "viewport.h"
+#include <limits>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
+
+bool has_infinity(const pos_t& p)
+{
+  if( p.x == std::numeric_limits<double>::infinity() )
+    return true;
+  if( p.y == std::numeric_limits<double>::infinity() )
+    return true;
+  if( p.z == std::numeric_limits<double>::infinity() )
+    return true;
+  return false;
+}
+
+void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
+{
+  if( !(has_infinity(p1) || has_infinity(p2)) ){
+    cr->move_to(p1.x,-p1.y);
+    cr->line_to(p2.x,-p2.y);
+  }
+}
 
 class g_scene_t : public osc_scene_t {
 public:
@@ -214,6 +234,12 @@ void source_panel_t::set_scene(scene_t* s)
 class tascar_gui_t : public jackc_transport_t
 {
 public:
+  enum viewt_t {
+    top,
+    front,
+    right,
+    perspective
+  };
   tascar_gui_t(const std::string& srv_addr, 
                const std::string& srv_port,
                const std::string& cfg_file,
@@ -262,6 +288,7 @@ protected:
   void on_view_p();
   void on_view_m();
   void on_range_selected();
+  void on_view_selected();
   void on_loop();
   viewport_t view;
   //double scale;
@@ -280,8 +307,12 @@ protected:
   Gtk::Button button_view_p;
   Gtk::Button button_view_m;
   Gtk::ComboBoxText rangeselector;
+  Gtk::ComboBoxText viewselector;
   Gtk::ToggleButton button_loop;
-  Gtk::ToggleButton button_perspective;
+  //Gtk::ToggleButton button_viewtop;
+  //Gtk::ToggleButton button_viewfront;
+  //Gtk::ToggleButton button_viewside;
+  //Gtk::ToggleButton button_viewperspective;
 private:
   lo_address client_addr;
 public:
@@ -307,6 +338,7 @@ private:
   bool blink;
   int32_t selected_range;
   bool nobackend_;
+  viewt_t viewt;
 };
 
 void tascar_gui_t::on_tp_rewind()
@@ -412,19 +444,32 @@ void tascar_gui_t::on_range_selected()
   selected_range = nr;
 }
 
+void tascar_gui_t::on_view_selected()
+{
+  std::string rg(viewselector.get_active_text());
+  if( rg == "top" )
+    viewt = top;
+  if( rg == "right" )
+    viewt = right;
+  if( rg == "front" )
+    viewt = front;
+  if( rg == "perspective" )
+    viewt = perspective;
+}
+
 void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   bool solo(obj.get_solo());
+  pos_t p0;
   cr->save();
   if( solo && blink ){
     cr->set_source_rgba(1,0,0,0.5);
     cr->set_line_width( 1.2*msize );
     for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
       pos_t p(view(it->second));
-      if( it==obj.location.begin() )
-        cr->move_to( p.x, -p.y );
-      else
-        cr->line_to( p.x, -p.y );
+      if( it != obj.location.begin() )
+        draw_edge( cr, p0,p );
+      p0 = p;
     }
     cr->stroke();
   }
@@ -435,10 +480,9 @@ void tascar_gui_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> 
     cr->set_line_width( 0.1*msize );
   for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
     pos_t p(view(it->second));
-    if( it==obj.location.begin() )
-      cr->move_to( p.x, -p.y );
-    else
-      cr->line_to( p.x, -p.y );
+    if( it != obj.location.begin() )
+      draw_edge( cr, p0,p );
+    p0 = p;
   }
   cr->stroke();
   cr->restore();
@@ -456,48 +500,56 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   //pos_t p(view(obj.location.interp(plot_time-obj.starttime)));
   pos_t p(obj.get_location(plot_time));
   //DEBUG(p.print_cart());
-  p = view(p);
-  //DEBUG(p.print_cart());
   cr->save();
-  if( solo && blink ){
-    cr->set_source_rgba(1, 0, 0, 0.5);
-    cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
+  p = view(p);
+  if( p.z != std::numeric_limits<double>::infinity()){
+    //DEBUG(p.print_cart());
+    if( solo && blink ){
+      cr->set_source_rgba(1, 0, 0, 0.5);
+      cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
+      cr->fill();
+    }
+    cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
+    cr->arc(p.x, -p.y, msize, 0, PI2 );
     cr->fill();
   }
-  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-  cr->arc(p.x, -p.y, msize, 0, PI2 );
-  cr->fill();
   for(unsigned int k=0;k<obj.sound.size();k++){
     pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
-    //pos_t ps(obj.sound[k].get_pos(time));
-    cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
-    cr->fill();
+    if( ps.z != std::numeric_limits<double>::infinity()){
+      //pos_t ps(obj.sound[k].get_pos(time));
+      cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
+      cr->fill();
+    }
   }
   if( !active )
     cr->set_source_rgb(0.5, 0.5, 0.5 );
   else
     cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( p.x + 1.1*msize, -p.y );
-  cr->show_text( obj.get_name().c_str() );
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->move_to( p.x + 1.1*msize, -p.y );
+    cr->show_text( obj.get_name().c_str() );
+  }
   if( active ){
     cr->set_line_width( 0.1*msize );
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
     //cr->move_to( p.x, -p.y );
     if( obj.sound.size()){
       pos_t pso(view(obj.sound[0].get_pos_global(plot_time)));
-      for(unsigned int k=1;k<obj.sound.size();k++){
-        pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
-        //pos_t ps(obj.sound[k].get_pos(time));
-        bool view_x((fabs(ps.x)<1)||
-                    (fabs(pso.x)<1));
-        bool view_y((fabs(ps.y)<1)||
-                    (fabs(pso.y)<1));
-        if( view_x && view_y ){
-          cr->move_to( pso.x, -pso.y );
-          cr->line_to( ps.x, -ps.y );
-          cr->stroke();
+      if( pso.z != std::numeric_limits<double>::infinity()){
+        for(unsigned int k=1;k<obj.sound.size();k++){
+          pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
+          //pos_t ps(obj.sound[k].get_pos(time));
+          bool view_x((fabs(ps.x)<1)||
+                      (fabs(pso.x)<1));
+          bool view_y((fabs(ps.y)<1)||
+                      (fabs(pso.y)<1));
+          if( view_x && view_y ){
+            cr->move_to( pso.x, -pso.y );
+            cr->line_to( ps.x, -ps.y );
+            cr->stroke();
+          }
+          pso = ps;
         }
-        pso = ps;
       }
     }
   }
@@ -694,19 +746,16 @@ void tascar_gui_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::Re
   for(unsigned int k=0;k<8;k++)
     roomnodes[k] = view(roomnodes[k]);
   cr->save();
-  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
-  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
-  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
-  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
-  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
-  cr->move_to( roomnodes[4].x, -roomnodes[4].y );
-  cr->line_to( roomnodes[5].x, -roomnodes[5].y );
-  cr->line_to( roomnodes[6].x, -roomnodes[6].y );
-  cr->line_to( roomnodes[7].x, -roomnodes[7].y );
-  cr->line_to( roomnodes[4].x, -roomnodes[4].y );
+  draw_edge(cr,roomnodes[0],roomnodes[1]);
+  draw_edge(cr,roomnodes[1],roomnodes[2]);
+  draw_edge(cr,roomnodes[2],roomnodes[3]);
+  draw_edge(cr,roomnodes[3],roomnodes[0]);
+  draw_edge(cr,roomnodes[4],roomnodes[5]);
+  draw_edge(cr,roomnodes[5],roomnodes[6]);
+  draw_edge(cr,roomnodes[6],roomnodes[7]);
+  draw_edge(cr,roomnodes[7],roomnodes[0]);
   for(unsigned int k=0;k<4;k++){
-    cr->move_to( roomnodes[k].x, -roomnodes[k].y );
-    cr->line_to( roomnodes[k+4].x, -roomnodes[k+4].y );
+    draw_edge(cr,roomnodes[k],roomnodes[k+1]);
   }
   cr->stroke();
   cr->restore();
@@ -726,17 +775,16 @@ void tascar_gui_t::draw_face_normal(const face_t& f,Cairo::RefPtr<Cairo::Context
   for(unsigned int k=0;k<roomnodes.size();k++)
     roomnodes[k] = view(roomnodes[k]);
   cr->save();
-  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
-  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
-  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
-  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
-  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
+  draw_edge(cr,roomnodes[0],roomnodes[1]);
+  draw_edge(cr,roomnodes[1],roomnodes[2]);
+  draw_edge(cr,roomnodes[2],roomnodes[3]);
+  draw_edge(cr,roomnodes[3],roomnodes[0]);
   if( normalsize >= 0 ){
     pos_t pn(f.get_normal());
     pn *= normalsize;
     pn += f.get_anchor();
     pn = view(pn);
-    cr->line_to( pn.x, -pn.y );
+    draw_edge(cr,roomnodes[0],pn);
   }
   cr->stroke();
   cr->restore();
@@ -765,8 +813,10 @@ void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::
   draw_cube(p,o,falloff,cr);
   p = view(p);
   cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( p.x, -p.y );
-  cr->show_text( obj.get_name().c_str() );
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->move_to( p.x, -p.y );
+    cr->show_text( obj.get_name().c_str() );
+  }
   cr->restore();
 }
 
@@ -795,8 +845,10 @@ void tascar_gui_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::Ref
   draw_face_normal(f,cr);
   p = view(p);
   cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( p.x, -p.y );
-  cr->show_text( obj.get_name().c_str() );
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->move_to( p.x, -p.y );
+    cr->show_text( obj.get_name().c_str() );
+  }
   cr->restore();
 }
 
@@ -845,14 +897,16 @@ void tascar_gui_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::Ref
     //cr->line_to( roomnodes[17].x, -roomnodes[17].y );
     //cr->stroke();
     cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.3);
-    cr->arc(loc.x, -loc.y, msize, 0, PI2 );
-    cr->fill();
-    cr->set_line_width( 0.4*msize );
-    cr->set_source_rgb(face.color.r,face.color.g,face.color.b);
-    draw_face_normal(face,cr);
-    cr->set_source_rgb(0, 0, 0 );
-    cr->move_to( loc.x + 0.1*msize, -loc.y );
-    cr->show_text( face.get_name().c_str() );
+    if( loc.z != std::numeric_limits<double>::infinity()){
+      cr->arc(loc.x, -loc.y, msize, 0, PI2 );
+      cr->fill();
+      cr->set_line_width( 0.4*msize );
+      cr->set_source_rgb(face.color.r,face.color.g,face.color.b);
+      draw_face_normal(face,cr);
+      cr->set_source_rgb(0, 0, 0 );
+      cr->move_to( loc.x + 0.1*msize, -loc.y );
+      cr->show_text( face.get_name().c_str() );
+    }
   }
   cr->restore();
 }
@@ -888,7 +942,10 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
     button_view_p("zoom +"),
     button_view_m("zoom -"),
     button_loop("loop"),
-    button_perspective("persp"),
+    //button_viewtop("top"),
+    //button_viewfront("front"),
+    //button_viewside("right"),
+    //button_viewperspective("persp"),
     client_addr(lo_address_new(srv_addr.c_str(),srv_port.c_str())),
     wdg_source(client_addr),
 #ifdef GTKMM30
@@ -901,7 +958,8 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
     backend_flags_(backend_flags),
     blink(false),
     selected_range(-1),
-    nobackend_(nobackend)
+    nobackend_(nobackend),
+    viewt(top)
 {
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout), 60 );
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_gui_t::on_timeout_blink), 600 );
@@ -922,7 +980,7 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
   wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( rangeselector, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_loop, Gtk::PACK_SHRINK );
-  wdg_file_ui_box.pack_start( button_perspective, Gtk::PACK_SHRINK );
+  wdg_file_ui_box.pack_start( viewselector, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_rewind, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_stop, Gtk::PACK_SHRINK );
   wdg_transport_box.pack_start( button_tp_start, Gtk::PACK_SHRINK );
@@ -944,6 +1002,8 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
                                                          &tascar_gui_t::on_time_changed));
   rangeselector.signal_changed().connect(sigc::mem_fun(*this,
                                                         &tascar_gui_t::on_range_selected));
+  viewselector.signal_changed().connect(sigc::mem_fun(*this,
+                                                      &tascar_gui_t::on_view_selected));
   CON_BUTTON(tp_rewind);
   CON_BUTTON(tp_start);
   CON_BUTTON(tp_stop);
@@ -959,20 +1019,31 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
   Gdk::RGBA col;
   col.set_rgba_u(27*256,249*256,163*256);
   button_loop.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
-  button_perspective.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
+  //button_perspective.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
 #else
   Gdk::Color col;
   col.set_rgb(27*256,249*256,163*256);
   button_loop.modify_bg(Gtk::STATE_ACTIVE,col);
   button_loop.modify_bg(Gtk::STATE_PRELIGHT,col);
   button_loop.modify_bg(Gtk::STATE_SELECTED,col);
-  button_perspective.modify_bg(Gtk::STATE_ACTIVE,col);
-  button_perspective.modify_bg(Gtk::STATE_PRELIGHT,col);
-  button_perspective.modify_bg(Gtk::STATE_SELECTED,col);
+  //button_perspective.modify_bg(Gtk::STATE_ACTIVE,col);
+  //button_perspective.modify_bg(Gtk::STATE_PRELIGHT,col);
+  //button_perspective.modify_bg(Gtk::STATE_SELECTED,col);
 #endif
   pthread_mutex_init( &mtx_scene, NULL );
   if( cfg_file_.size() )
     open_scene();
+#ifdef GTKMM24
+  viewselector.append_text("top");
+  viewselector.append_text("front");
+  viewselector.append_text("right");
+  viewselector.append_text("perspective");
+#else
+  viewselector.append("top");
+  viewselector.append("front");
+  viewselector.append("right");
+  viewselector.append("perspective");
+#endif
 }
 
 tascar_gui_t::~tascar_gui_t()
@@ -1006,10 +1077,29 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   try{
     Glib::RefPtr<Gdk::Window> window = wdg_scenemap.get_window();
     if(window && scene){
-      view.set_perspective(button_perspective.get_active());
-      if( view.get_perspective() ){
-        //view.set_ref(scene->sink_objects.get_location(time));
-        //view.set_euler(scene->sink_objects.get_orientation(time));
+      switch( viewt ){
+      case top :
+        view.set_perspective(false);
+        view.set_ref(pos_t());
+        view.set_euler(zyx_euler_t());
+        break;
+      case front :
+        view.set_perspective(false);
+        view.set_ref(pos_t());
+        view.set_euler(zyx_euler_t(0,-0.5*M_PI,0.5*M_PI));
+        break;
+      case right :
+        view.set_perspective(false);
+        view.set_ref(pos_t());
+        view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
+        break;
+      case perspective :
+        view.set_perspective(true);
+        if( scene->sink_objects.size() ){
+          view.set_ref(scene->sink_objects[0].get_location(time));
+          view.set_euler(scene->sink_objects[0].get_orientation(time));
+        }
+        break;
       }
       Gtk::Allocation allocation = wdg_scenemap.get_allocation();
       const int width = allocation.get_width();

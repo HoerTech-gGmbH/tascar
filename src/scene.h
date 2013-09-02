@@ -77,6 +77,7 @@ namespace TASCAR {
       std::string fname;
       uint32_t firstchannel;
       uint32_t channels;
+      uint32_t objectchannel;
       double starttime;
       uint32_t loopcnt;
       double gain;
@@ -226,6 +227,15 @@ namespace TASCAR {
       int32_t startframe;
     };
 
+    class sink_mask_t : public object_t {
+    public:
+      sink_mask_t();
+      void read_xml(xmlpp::Element* e);
+      void prepare(double fs, uint32_t fragsize);
+      pos_t size;
+      double falloff;
+    };
+
     class sink_object_t : public object_t, public jack_port_t {
     public:
       enum sink_type_t {
@@ -244,6 +254,8 @@ namespace TASCAR {
       double falloff;
       bool render_point;
       bool render_diffuse;
+      bool use_mask;
+      sink_mask_t mask;
       TASCAR::Acousticmodel::sink_t* sink;
     };
 

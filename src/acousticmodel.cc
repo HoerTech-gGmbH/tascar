@@ -12,7 +12,10 @@ void sink_t::clear()
     outchannels[ch].clear();
 }
 
-sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse) 
+sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+               pos_t mask_size,
+               double mask_falloff,
+               bool mask_use) 
   : size_(size),
     falloff_(1.0/std::max(falloff,1e-10)),
     use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0)),
@@ -20,7 +23,10 @@ sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, boo
     active(true),
     render_point(b_point),
     render_diffuse(b_diffuse),
-    dt(1.0/(float)chunksize) 
+    dt(1.0/(float)chunksize) ,
+    mask(pos_t(),mask_size,zyx_euler_t()),
+    mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
+    mask_use_(mask_use)
 {
 }
 
@@ -44,6 +50,10 @@ void sink_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, d
     prel /= orientation;
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
+  }
+  if( mask_use_ ){
+    double d(mask.nextpoint(position).norm());
+    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
   }
 }
 

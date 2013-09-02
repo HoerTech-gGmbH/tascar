@@ -62,9 +62,15 @@ void audioplayer_t::open_files()
   for(uint32_t k=0;k<files.size();k++){
     files[k].open(infos[k].fname,infos[k].firstchannel,infos[k].starttime*get_srate(),
                   infos[k].gain,infos[k].loopcnt);
-    for(uint32_t ch=0;ch<infos[k].channels;ch++){
+    if( infos[k].channels > 1 ){
+      for(uint32_t ch=0;ch<infos[k].channels;ch++){
+        char pname[1024];
+        sprintf(pname,"%s.%d.%d",infos[k].parentname.c_str(),infos[k].objectchannel,ch);
+        add_output_port(pname);
+      }
+    }else{
       char pname[1024];
-      sprintf(pname,"%s.%d",infos[k].parentname.c_str(),ch);
+      sprintf(pname,"%s.%d",infos[k].parentname.c_str(),infos[k].objectchannel);
       add_output_port(pname);
     }
   }

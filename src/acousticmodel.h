@@ -49,7 +49,10 @@ namespace TASCAR {
      */
     class sink_t {
     public:
-      sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse);
+      sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,      
+             pos_t mask_size,
+             double mask_falloff,
+             bool mask_use);
       virtual void clear();
       virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain);
       virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
@@ -68,6 +71,9 @@ namespace TASCAR {
       bool render_point;
       bool render_diffuse;
       float dt;
+      shoebox_t mask;
+      double mask_falloff_;
+      bool mask_use_;
     };
 
     class filter_coeff_t {

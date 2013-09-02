@@ -1,6 +1,7 @@
 #include "viewport.h"
 #include "defs.h"
 #include <iostream>
+#include <limits>
 
 viewport_t::viewport_t()
   : perspective(false),
@@ -55,13 +56,23 @@ pos_t viewport_t::operator()(pos_t x)
   x -= ref;
   x /= euler;
   if( perspective ){
+    //pos_t t;
+    //t.x = -x.azim();
+    //t.y = x.elev();
+    //t.z = x.norm();
+    //x = t;
+    //x.x /= fov;
+    //x.y /= fov;
     pos_t t;
-    t.x = -x.azim();
-    t.y = x.elev();
-    t.z = x.norm();
+    t.x = -x.y;
+    t.y = x.z;
+    t.z = x.x;
+    if( x.x < 0 )
+      t.z = std::numeric_limits<double>::infinity();
     x = t;
-    x.x /= fov;
-    x.y /= fov;
+    double d(5.0/x.norm());
+    x.x *= d;
+    x.y *= d;
   }else{
     x.x /= scale;
     x.y /= scale;
