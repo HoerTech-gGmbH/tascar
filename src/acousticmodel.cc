@@ -39,6 +39,7 @@ void sink_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, d
     distance = prel.norm();
     shoebox_t box;
     box.size = size_;
+    //DEBUGS(box.nextpoint(prel).print_sphere());
     double d(box.nextpoint(prel).norm());
     if( use_falloff )
       gain = 0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_));
@@ -242,6 +243,10 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
 world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks)
   : mirrormodel(sources,reflectors)
 {
+  DEBUGS(diffusesources.size());
+  DEBUGS(sources.size());
+  DEBUGS(reflectors.size());
+  DEBUGS(sinks.size());
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++){
       //DEBUG(kSrc);
@@ -257,6 +262,8 @@ world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std:
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
       acoustic_model.push_back(new acoustic_model_t(fs,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
+  DEBUGS(diffuse_acoustic_model.size());
+  DEBUGS(acoustic_model.size());
 }
 
 world_t::~world_t()
@@ -309,9 +316,14 @@ void diffuse_acoustic_model_t::process()
   // calculate relative geometry between source and sink:
   //DEBUG(src_->size.print_cart());
   sink_->update_refpoint(src_->center,prel,d,nextgain);
-  d = src_->nextpoint(prel).norm();
-  //DEBUG(d);
+  //DEBUGS(prel.print_cart());
+  //DEBUGS(src_->center.print_cart());
+  shoebox_t box;
+  box.size = src_->size;
+  d = box.nextpoint(prel).norm();
+  //DEBUGS(d);
   nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
+  //DEBUGS(nextgain);
   if( !((gain==0) && (nextgain==0))){
     double dgain((nextgain-gain)*dt);
     for(uint32_t k=0;k<chunksize;k++){
