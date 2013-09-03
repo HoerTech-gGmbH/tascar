@@ -18,7 +18,7 @@ namespace TASCAR {
     public:
       pointsource_t(uint32_t chunksize);
       virtual ~pointsource_t();
-      virtual void update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain);
+      virtual pos_t get_effective_position(const pos_t& sinkp,double& gain);
       wave_t audio;
       pos_t position;
       bool active;
@@ -27,8 +27,9 @@ namespace TASCAR {
     class doorsource_t : public pointsource_t, public face_t {
     public:
       doorsource_t(uint32_t chunksize);
-      virtual void update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain);
+      virtual pos_t get_effective_position(const pos_t& sinkp,double& gain);
       double falloff;
+      double distance;
     };
 
     class diffuse_source_t : public shoebox_t {
@@ -54,7 +55,7 @@ namespace TASCAR {
              double mask_falloff,
              bool mask_use);
       virtual void clear();
-      virtual void update_refpoint(const pos_t& psrc, pos_t& prel, double& distamnce, double& gain);
+      virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
       virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
       virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
       uint32_t get_num_channels() const { return outchannels.size();};
@@ -97,7 +98,7 @@ namespace TASCAR {
     class mirrorsource_t : public pointsource_t {
     public:
       mirrorsource_t(pointsource_t* src,reflector_t* reflector);
-      void update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain);
+      pos_t get_effective_position(const pos_t& sinkp,double& gain);
       void process();
       reflector_t* get_reflector() const { return reflector_;};
     private:
@@ -106,6 +107,7 @@ namespace TASCAR {
       Acousticmodel::filter_coeff_t flt_current;
       double dt;
       double g, dg;
+      pos_t mirror_position;
     };
 
     /** \brief Create mirror sources from primary sources and reflectors.

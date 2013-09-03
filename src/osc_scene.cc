@@ -74,20 +74,20 @@ int osc_route_solo(const char *path, const char *types, lo_arg **argv, int argc,
 
 void osc_scene_t::add_object_methods(TASCAR::Scene::object_t* o)
 {
-  add_method("/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
-  add_method("/"+o->get_name()+"/pos","ffffff",osc_set_object_position,o);
-  add_method("/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
+  add_method("/"+name+"/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
+  add_method("/"+name+"/"+o->get_name()+"/pos","ffffff",osc_set_object_position,o);
+  add_method("/"+name+"/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
 }
 
 
 void osc_scene_t::add_route_methods(TASCAR::Scene::route_t* o)
 {
-  add_method("/"+o->get_name()+"/mute","i",osc_route_mute,o);
+  add_method("/"+name+"/"+o->get_name()+"/mute","i",osc_route_mute,o);
   route_solo_p_t* rs(new route_solo_p_t);
   rs->route = o;
   rs->anysolo = &anysolo;
   vprs.push_back(rs);
-  add_method("/"+o->get_name()+"/solo","i",osc_route_solo,rs);
+  add_method("/"+name+"/"+o->get_name()+"/solo","i",osc_route_solo,rs);
 }
 
 void osc_scene_t::add_child_methods()

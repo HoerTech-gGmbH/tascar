@@ -122,9 +122,9 @@ void src_diffuse_t::read_xml(xmlpp::Element* e)
 {
   object_t::read_xml(e);
   jack_port_t::read_xml(e);
-  get_attribute_value(e,"size_x",size.x);
-  get_attribute_value(e,"size_y",size.y);
-  get_attribute_value(e,"size_z",size.z);
+  get_attribute_value(e,"size",size);
+  //get_attribute_value(e,"size_y",size.y);
+  //get_attribute_value(e,"size_z",size.z);
   get_attribute_value(e,"falloff",falloff);
 }
 
@@ -132,9 +132,9 @@ void src_diffuse_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   object_t::write_xml(e,help_comments);
   jack_port_t::write_xml(e);
-  set_attribute_double(e,"size_x",size.x);
-  set_attribute_double(e,"size_y",size.y);
-  set_attribute_double(e,"size_z",size.z);
+  //set_attribute_double(e,"size_x",size.x);
+  //set_attribute_double(e,"size_y",size.y);
+  //set_attribute_double(e,"size_z",size.z);
 }
 
 /*
@@ -144,6 +144,7 @@ src_door_t::src_door_t()
   : width(1.0),
     height(2.0),
     falloff(1.0),
+    distance(1.0),
     source(NULL)
 {
 }
@@ -155,6 +156,7 @@ void src_door_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"width",width);
   get_attribute_value(e,"height",height);
   get_attribute_value(e,"falloff",falloff);
+  get_attribute_value(e,"distance",distance);
 }
 
 void src_door_t::write_xml(xmlpp::Element* e,bool help_comments)
@@ -189,6 +191,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   source->position = get_location(0);
   source->set(source->position,get_orientation(0),width,height);
   source->falloff = 1.0/std::max(falloff,1.0e-10);
+  source->distance = distance;
 }
 
 
@@ -527,9 +530,9 @@ sink_object_t::~sink_object_t()
 void sink_mask_t::read_xml(xmlpp::Element* e)
 {
   object_t::read_xml(e);
-  get_attribute_value(e,"size_x",size.x);
-  get_attribute_value(e,"size_y",size.y);
-  get_attribute_value(e,"size_z",size.z);
+  get_attribute_value(e,"size",size);
+  //get_attribute_value(e,"size_y",size.y);
+  //get_attribute_value(e,"size_z",size.z);
   get_attribute_value(e,"falloff",falloff);
 }
 
@@ -546,9 +549,9 @@ void sink_object_t::read_xml(xmlpp::Element* e)
 {
   jack_port_t::read_xml(e);
   object_t::read_xml(e);
-  get_attribute_value(e,"size_x",size.x);
-  get_attribute_value(e,"size_y",size.y);
-  get_attribute_value(e,"size_z",size.z);
+  get_attribute_value(e,"size",size);
+  //get_attribute_value(e,"size_y",size.y);
+  //get_attribute_value(e,"size_z",size.z);
   get_attribute_value_bool(e,"point",render_point);
   get_attribute_value_bool(e,"diffuse",render_diffuse);
   get_attribute_value(e,"falloff",falloff);
@@ -682,6 +685,7 @@ void scene_t::read_xml(xmlpp::Element* e)
   //get_attribute_value(e,"elev",elev);
   get_attribute_value(e,"duration",duration);
   get_attribute_value(e,"guiscale",guiscale);
+  get_attribute_value(e,"guicenter",guicenter);
   get_attribute_value_bool(e,"loop",loop);
   description = xml_get_text(e,"description");
   xmlpp::Node::NodeList subnodes = e->get_children();

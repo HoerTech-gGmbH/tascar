@@ -181,6 +181,7 @@ namespace TASCAR {
       double width;
       double height;
       double falloff;
+      double distance;
       TASCAR::Acousticmodel::doorsource_t* get_source() { return source;};
     private:
       TASCAR::Acousticmodel::doorsource_t* source;
@@ -293,6 +294,7 @@ namespace TASCAR {
       std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
       double guiscale;
+      pos_t guicenter;
       //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
       //void listener_position(pos_t p){listener.dlocation = p;};
       void set_source_position_offset(const std::string& srcname,pos_t position);

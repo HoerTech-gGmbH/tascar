@@ -30,23 +30,24 @@ sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, boo
 {
 }
 
-void sink_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
+void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
 {
   if( use_size ){
-    prel = psrc;
+    prel = psrc_physical;
     prel -= position;
     prel /= orientation;
     distance = prel.norm();
     shoebox_t box;
     box.size = size_;
+    double sizedist = pow(size_.x*size_.y*size_.z,0.33333);
     //DEBUGS(box.nextpoint(prel).print_sphere());
     double d(box.nextpoint(prel).norm());
     if( use_falloff )
-      gain = 0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_));
+      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_)))/sizedist;
     else
-      gain = 1.0/std::max(1.0,d);
+      gain = 1.0/std::max(1.0,d+sizedist);
   }else{
-    prel = psrc;
+    prel = psrc_virtual;
     prel -= position;
     prel /= orientation;
     distance = prel.norm();
@@ -73,17 +74,23 @@ doorsource_t::doorsource_t(uint32_t chunksize)
 {
 }
 
-void doorsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
+pos_t doorsource_t::get_effective_position(const pos_t& sinkp,double& gain)
 {
-  srcpos = nearest(sinkp);
-  pos_t sinkn(srcpos);
+  pos_t effpos(nearest(sinkp));
+  pos_t sinkn(effpos);
   sinkn -= sinkp;
+  sinkn = sinkn.normal();
   gain *= std::max(0.0,-dot_prod(sinkn.normal(),normal));
-  gain *= 0.5-0.5*cos(M_PI*std::min(1.0,distance(srcpos,sinkp)*falloff));
+  gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,sinkp)*falloff));
+  sinkn *= distance;
+  sinkn += position;
+  //DEBUGS(sinkn.print_cart());
+  return sinkn;
 }
 
-void pointsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
+pos_t pointsource_t::get_effective_position(const pos_t& sinkp,double& gain)
 {
+  return position;
 }
 
 diffuse_source_t::diffuse_source_t(uint32_t chunksize)
@@ -108,7 +115,7 @@ acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,con
   //DEBUG(audio.size());
   //DEBUG(dt);
   pos_t prel;
-  sink_->update_refpoint(src_->position,prel,distance,gain);
+  sink_->update_refpoint(src_->position,src_->position,prel,distance,gain);
   //distance = sink_->relative_position(src_->position).norm();
   //DEBUG(distance);
   //DEBUG(gain);
@@ -126,10 +133,9 @@ void acoustic_model_t::process()
   double nextdistance(0.0);
   double nextgain(1.0);
   // calculate relative geometry between source and sink:
-  pos_t effective_srcpos(src_->position);
   double srcgainmod(1.0);
-  src_->update_effective_position(sink_->position,effective_srcpos,srcgainmod);
-  sink_->update_refpoint(effective_srcpos,prel,nextdistance,nextgain);
+  pos_t effective_srcpos(src_->get_effective_position(sink_->position,srcgainmod));
+  sink_->update_refpoint(src_->position,effective_srcpos,prel,nextdistance,nextgain);
   nextgain *= srcgainmod;
   double next_air_absorption(exp(-nextdistance*dscale));
   double ddistance((nextdistance-distance)*dt);
@@ -165,16 +171,16 @@ void mirrorsource_t::process()
   if( reflector_->active && src_->active){
     active = true;
     pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
+    position = src_->position;
     //DEBUG(nearest_point.print_cart());
     nearest_point -= src_->position;
     //DEBUG(nearest_point.print_cart());
     //double r(dot_prod(nearest_point.normal(),reflector_->get_normal()));
-    position = nearest_point;
-    position *= 2.0;
-    position += src_->position;
-    pos_t ptmp;
+    mirror_position = nearest_point;
+    mirror_position *= 2.0;
+    mirror_position += src_->position;
     double nextgain(1.0);
-    src_->update_effective_position(position,ptmp,nextgain);
+    src_->get_effective_position(position,nextgain);
     if( dot_prod(nearest_point,reflector_->get_normal())>0 )
       dg = -g*dt;
     else
@@ -189,8 +195,9 @@ void mirrorsource_t::process()
   }
 }
 
-void mirrorsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,double& gain)
+pos_t mirrorsource_t::get_effective_position(const pos_t& sinkp,double& gain)
 {
+  pos_t srcpos(mirror_position);
   //DEBUGS(srcpos.print_cart());
   pos_t pcut_sink(reflector_->nearest_on_plane(sinkp));
   double len_sink(distance(pcut_sink,sinkp));
@@ -203,6 +210,7 @@ void mirrorsource_t::update_effective_position(const pos_t& sinkp,pos_t& srcpos,
   pcut += pcut_sink;
   pcut = reflector_->nearest(pcut);
   gain = (std::max(0.0,dot_prod((sinkp-pcut).normal(),(pcut-srcpos).normal())));
+  return srcpos;
 }
 
 mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
@@ -296,7 +304,7 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* s
   //DEBUG(dt);
   pos_t prel;
   double d(1.0);
-  sink_->update_refpoint(src_->center,prel,d,gain);
+  sink_->update_refpoint(src_->center,src_->center,prel,d,gain);
   //distance = sink_->relative_position(src_->position).norm();
   //DEBUG(distance);
   //DEBUG(gain);
@@ -314,16 +322,11 @@ void diffuse_acoustic_model_t::process()
   double d(0.0);
   double nextgain(1.0);
   // calculate relative geometry between source and sink:
-  //DEBUG(src_->size.print_cart());
-  sink_->update_refpoint(src_->center,prel,d,nextgain);
-  //DEBUGS(prel.print_cart());
-  //DEBUGS(src_->center.print_cart());
+  sink_->update_refpoint(src_->center,src_->center,prel,d,nextgain);
   shoebox_t box;
   box.size = src_->size;
   d = box.nextpoint(prel).norm();
-  //DEBUGS(d);
   nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
-  //DEBUGS(nextgain);
   if( !((gain==0) && (nextgain==0))){
     double dgain((nextgain-gain)*dt);
     for(uint32_t k=0;k<chunksize;k++){
@@ -340,20 +343,6 @@ void diffuse_acoustic_model_t::process()
     }
   }
 }
-
-
-
-//  class mirror_model_t {
-//  public:
-//    mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
-//                   const std::vector<reflector_t*>& reflectors,
-//                   uint32_t order);
-//    void mirror_model_t::process();
-//    std::vector<pointsource_t*> mirror_model_t::get_mirrors();
-//  private:
-//    std::vector<mirrorsource_t> mirrorsource;
-//  };
-//
 
 /*
  * Local Variables:

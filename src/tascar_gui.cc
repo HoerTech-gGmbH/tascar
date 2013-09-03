@@ -175,7 +175,7 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
 void source_ctl_t::on_mute()
 {
   bool m(mute.get_active());
-  std::string path("/"+name_+"/mute");
+  std::string path("/"+scene_->name+"/"+name_+"/mute");
   lo_send(client_addr_,path.c_str(),"i",m);
   //scene_->set_mute(name_,m);
 }
@@ -183,7 +183,7 @@ void source_ctl_t::on_mute()
 void source_ctl_t::on_solo()
 {
   bool m(solo.get_active());
-  std::string path("/"+name_+"/solo");
+  std::string path("/"+scene_->name+"/"+name_+"/solo");
   lo_send(client_addr_,path.c_str(),"i",m);
   //scene_->set_solo(name_,m);
 }
@@ -1080,17 +1080,17 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       switch( viewt ){
       case top :
         view.set_perspective(false);
-        view.set_ref(pos_t());
+        view.set_ref(scene->guicenter);
         view.set_euler(zyx_euler_t());
         break;
       case front :
         view.set_perspective(false);
-        view.set_ref(pos_t());
+        view.set_ref(scene->guicenter);
         view.set_euler(zyx_euler_t(0,-0.5*M_PI,0.5*M_PI));
         break;
       case right :
         view.set_perspective(false);
-        view.set_ref(pos_t());
+        view.set_ref(scene->guicenter);
         view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
         break;
       case perspective :
