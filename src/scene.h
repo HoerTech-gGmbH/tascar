@@ -203,6 +203,7 @@ namespace TASCAR {
       bool get_mute() const;
       bool get_solo() const;
       std::string get_port_name() const;
+      std::string get_parent_name() const;
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
     private:
       pos_t local_position;
@@ -255,6 +256,7 @@ namespace TASCAR {
       double falloff;
       bool render_point;
       bool render_diffuse;
+      double diffusegain;
       bool use_mask;
       sink_mask_t mask;
       TASCAR::Acousticmodel::sink_t* sink;
@@ -315,6 +317,8 @@ namespace TASCAR {
   }
 
 }
+
+std::string jacknamer(const std::string& jackname,const std::string& scenename, const std::string& base);
 
 #endif
 

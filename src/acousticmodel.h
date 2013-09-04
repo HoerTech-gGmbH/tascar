@@ -71,6 +71,7 @@ namespace TASCAR {
       bool active;
       bool render_point;
       bool render_diffuse;
+      double diffusegain;
       float dt;
       shoebox_t mask;
       double mask_falloff_;

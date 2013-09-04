@@ -183,6 +183,9 @@ void sink_amb3h0v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink
     outchannels[AMB30::idx::w][i] += chunk.w()[i];
     outchannels[AMB30::idx::x][i] += x;
     outchannels[AMB30::idx::y][i] += y;
+    //outchannels[AMB30::idx::w][i] += chunk.w()[i];
+    //outchannels[AMB30::idx::x][i] += chunk.x()[i];
+    //outchannels[AMB30::idx::y][i] += chunk.y()[i];
   }
 }
 

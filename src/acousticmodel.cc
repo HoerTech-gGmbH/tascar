@@ -23,6 +23,7 @@ sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, boo
     active(true),
     render_point(b_point),
     render_diffuse(b_diffuse),
+    diffusegain(1.0),
     dt(1.0/(float)chunksize) ,
     mask(pos_t(),mask_size,zyx_euler_t()),
     mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
@@ -323,9 +324,12 @@ void diffuse_acoustic_model_t::process()
   double nextgain(1.0);
   // calculate relative geometry between source and sink:
   sink_->update_refpoint(src_->center,src_->center,prel,d,nextgain);
-  shoebox_t box;
-  box.size = src_->size;
-  d = box.nextpoint(prel).norm();
+  shoebox_t box(*src_);
+  //box.size = src_->size;
+  box.center = pos_t();
+  pos_t prel_nonrot(prel);
+  prel_nonrot *= sink_->orientation;
+  d = box.nextpoint(prel_nonrot).norm();
   nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
   if( !((gain==0) && (nextgain==0))){
     double dgain((nextgain-gain)*dt);
@@ -339,6 +343,7 @@ void diffuse_acoustic_model_t::process()
       }
     }
     if( sink_->render_diffuse && sink_->active && src_->active ){
+      audio *= sink_->diffusegain;
       sink_->add_source(prel,audio,sink_data);
     }
   }

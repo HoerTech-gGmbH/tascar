@@ -42,16 +42,10 @@
 #include "osc_scene.h"
 #include "render_sinks.h"
 #include "acousticmodel.h"
+#include "audioplayer.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
-
-std::string jacknamer(const std::string& jackname,const std::string& scenename)
-{
-  if( jackname.size() )
-    return jackname;
-  return "render."+scenename;
-}
 
 namespace TASCAR {
 
@@ -88,7 +82,7 @@ TASCAR::render_t::render_t(const std::string& srv_addr,
                            const std::string& jack_name,
                            const std::string& cfg_file)
   : osc_scene_t(srv_addr,srv_port,cfg_file),
-    jackc_transport_t(jacknamer(jack_name,name))
+    jackc_transport_t(jacknamer(jack_name,name,"render."))
 {
 }
 
@@ -140,6 +134,20 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
       psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes,gain);
   }
   return 0;
+}
+
+std::string strrep(std::string s,const std::string& pat, const std::string& rep)
+{
+  std::string out_string("");
+  std::string::size_type len = pat.size(  );
+  std::string::size_type pos;
+  while( (pos = s.find(pat)) < s.size() ){
+    out_string += s.substr(0,pos);
+    out_string += rep;
+    s.erase(0,pos+len);
+  }
+  s = out_string + s;
+  return s;
 }
 
 void TASCAR::render_t::run()
@@ -195,6 +203,7 @@ void TASCAR::render_t::run()
   for(unsigned int k=0;k<sounds.size();k++){
     std::string cn(sounds[k]->get_connect());
     if( cn.size() ){
+      cn = strrep(cn,"@","player."+name+":"+sounds[k]->get_parent_name());
       connect_in(sounds[k]->get_port_index(),cn,true);
     }
   }
@@ -202,6 +211,7 @@ void TASCAR::render_t::run()
   for(unsigned int k=0;k<door_sources.size();k++){
     std::string cn(door_sources[k].get_connect());
     if( cn.size() ){
+      cn = strrep(cn,"@","player."+name+":"+door_sources[k].get_name());
       connect_in(door_sources[k].get_port_index(),cn,true);
     }
   }
@@ -210,6 +220,7 @@ void TASCAR::render_t::run()
   for(unsigned int k=0;k<sink_objects.size();k++){
     std::string cn(sink_objects[k].get_connect());
     if( cn.size() ){
+      cn = strrep(cn,"@","player."+name+":"+sink_objects[k].get_name());
       for(uint32_t ch=0;ch<sink_objects[k].get_sink()->get_num_channels();ch++)
         connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
     }
@@ -290,8 +301,11 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
+    audioplayer_t P(jackname, cfgfile);
     TASCAR::render_t S(srv_addr, srv_port, jackname, cfgfile);
+    P.start();
     S.run();
+    P.stop();
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;

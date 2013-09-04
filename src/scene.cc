@@ -249,6 +249,7 @@ void sink_object_t::geometry_update(double t)
   if( sink ){
     sink->position = get_location(t);
     sink->orientation = get_orientation(t);
+    sink->diffusegain = diffusegain;
     if( use_mask ){
       sink->mask.center = mask.get_location(t);
       sink->mask.orientation = mask.get_orientation(t);
@@ -282,6 +283,13 @@ void sound_t::set_parent(src_object_t* ref)
 {
   //DEBUG(ref);
   parent = ref;
+}
+
+std::string sound_t::get_parent_name() const
+{
+  if( parent )
+    return parent->get_name();
+  return "";
 }
 
 std::string sound_t::get_port_name() const
@@ -516,6 +524,7 @@ sink_object_t::sink_object_t()
     falloff(-1.0),
     render_point(true),
     render_diffuse(true),
+    diffusegain(1.0),
     use_mask(false),
     sink(NULL)
 {
@@ -554,6 +563,7 @@ void sink_object_t::read_xml(xmlpp::Element* e)
   //get_attribute_value(e,"size_z",size.z);
   get_attribute_value_bool(e,"point",render_point);
   get_attribute_value_bool(e,"diffuse",render_diffuse);
+  get_attribute_value_db(e,"diffusegain",diffusegain);
   get_attribute_value(e,"falloff",falloff);
   std::string stype(e->get_attribute_value("type"));
   if( stype == "omni" )
@@ -1400,6 +1410,14 @@ void src_door_t::process_active(double t, uint32_t anysolo)
   //DEBUGS(a);
   if( source )
     source->active = a;
+}
+
+
+std::string jacknamer(const std::string& jackname,const std::string& scenename, const std::string& base)
+{
+  if( jackname.size() )
+    return jackname;
+  return base+scenename;
 }
 
 

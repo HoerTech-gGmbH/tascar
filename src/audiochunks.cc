@@ -3,19 +3,26 @@
 #include <algorithm>
 #include <iostream>
 #include "defs.h"
+#include "errorhandling.h"
 
 using namespace TASCAR;
 
 wave_t::wave_t(uint32_t chunksize)
   : d(new float[chunksize]),
-    n(chunksize)
+    n(chunksize), own_pointer(true)
 {
   clear();
 }
 
+
+wave_t::wave_t(uint32_t chunksize,float* ptr)
+  : d(ptr), n(chunksize), own_pointer(false)
+{
+}
+
 wave_t::wave_t(const wave_t& src)
   : d(new float[src.n]),
-    n(src.n)
+    n(src.n), own_pointer(true)
 {
   for(uint32_t k=0;k<n;k++)
     d[k] = src.d[k];
@@ -23,7 +30,8 @@ wave_t::wave_t(const wave_t& src)
 
 wave_t::~wave_t()
 {
-  delete [] d;
+  if( own_pointer )
+    delete [] d;
 }
 
 void wave_t::clear()
@@ -40,6 +48,12 @@ uint32_t wave_t::copy(float* data,uint32_t cnt,float gain)
   if( n_min < n )
     memset(&(d[n_min]),0,sizeof(float)*(n-n_min));
   return n_min;
+}
+
+void wave_t::operator*=(double v)
+{
+  for( uint32_t k=0;k<n;k++)
+    d[k] *= v;
 }
 
 uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
@@ -80,6 +94,49 @@ void amb1wave_t::clear()
   x_.clear();
   y_.clear();
   z_.clear();
+}
+
+void amb1wave_t::operator*=(double v)
+{
+  w_*=v;
+  x_*=v;
+  y_*=v;
+  z_*=v;
+}
+
+sndfile_handle_t::sndfile_handle_t(const std::string& fname)
+  : sfile(sf_open(fname.c_str(),SFM_READ,&sf_inf))
+{
+  if( !sfile )
+    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for reading.");
+}
+    
+sndfile_handle_t::~sndfile_handle_t()
+{
+  sf_close(sfile);
+}
+
+uint32_t sndfile_handle_t::readf_float( float* buf, uint32_t frames )
+{
+  return sf_readf_float( sfile, buf, frames );
+}
+
+sndfile_t::sndfile_t(const std::string& fname,uint32_t channel)
+  : sndfile_handle_t(fname),
+    wave_t(get_frames())
+{
+  uint32_t ch(get_channels());
+  uint32_t N(get_frames());
+  wave_t chbuf(N*ch);
+  readf_float(chbuf.d,N);
+  for(uint32_t k=0;k<N;k++)
+    d[k] = chbuf[k*ch+channel];
+}
+
+void sndfile_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk)
+{
+  for(int32_t k=std::max(start_time,chunk_time);k < std::min(start_time+(int32_t)(size()),chunk_time+(int32_t)(chunk.size()));k++)
+    chunk[k-chunk_time] += gain*d[k-start_time];
 }
 
 /*
