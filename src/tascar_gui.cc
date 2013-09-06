@@ -706,6 +706,22 @@ void tascar_gui_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo
   cr->line_to( p9.x, -p9.y );
   //cr->fill();
   cr->stroke();
+  if( obj.use_mask ){
+    cr->set_line_width( 0.1*msize );
+    pos_t p(obj.mask.get_location(time));
+    zyx_euler_t o(obj.mask.get_orientation(time));
+    draw_cube(p,o,obj.mask.size,cr);
+    if( obj.mask.falloff > 0 ){
+      std::vector<double> dash(2);
+      dash[0] = msize;
+      dash[1] = msize;
+      cr->set_dash(dash,0);
+      draw_cube(p,o,obj.mask.size+pos_t(2*obj.mask.falloff,2*obj.mask.falloff,2*obj.mask.falloff),cr);
+      dash[0] = 1.0;
+      dash[1] = 0.0;
+      cr->set_dash(dash,0);
+    }
+  }
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x + 3.1*msize, -p.y );
   cr->show_text( obj.get_name().c_str() );
