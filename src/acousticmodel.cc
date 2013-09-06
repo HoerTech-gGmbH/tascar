@@ -210,7 +210,7 @@ pos_t mirrorsource_t::get_effective_position(const pos_t& sinkp,double& gain)
   pcut *= ratio;
   pcut += pcut_sink;
   pcut = reflector_->nearest(pcut);
-  gain = (std::max(0.0,dot_prod((sinkp-pcut).normal(),(pcut-srcpos).normal())));
+  gain = pow(std::max(0.0,dot_prod((sinkp-pcut).normal(),(pcut-srcpos).normal())),2.7);
   return srcpos;
 }
 
