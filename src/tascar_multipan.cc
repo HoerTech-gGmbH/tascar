@@ -31,6 +31,7 @@
 #include "tascar.h"
 #include "osc_helper.h"
 #include <getopt.h>
+#include <unistd.h>
 
 #include "multipan_amb3.h"
 

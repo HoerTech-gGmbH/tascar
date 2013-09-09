@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #define OSC_ADDR "224.1.2.3"
 #define OSC_PORT "6978"

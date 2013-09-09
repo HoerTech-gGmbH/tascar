@@ -31,6 +31,7 @@
 #include "osc_helper.h"
 #include "tascar.h"
 #include <getopt.h>
+#include <unistd.h>
 
 //#define OSC_ADDR "224.1.2.3"
 //#define OSC_PORT "6978"

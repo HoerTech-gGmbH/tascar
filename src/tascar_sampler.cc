@@ -8,6 +8,7 @@
 #include "defs.h"
 #include <math.h>
 #include <getopt.h>
+#include <unistd.h>
 
 // loop event
 // /sampler/sound/add loopcnt gain

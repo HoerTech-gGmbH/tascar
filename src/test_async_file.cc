@@ -2,6 +2,7 @@
 #include "defs.h"
 #include <iostream>
 #include <string.h>
+#include <unistd.h>
 
 using namespace TASCAR;
 
