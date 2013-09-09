@@ -2,6 +2,8 @@
 #include "tascar.h"
 #include <string.h>
 #include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
 
 static std::string async_file_error("");
 

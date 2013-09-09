@@ -1,5 +1,6 @@
 #include "audioplayer.h"
 #include <string.h>
+#include <unistd.h>
 
 audioplayer_t::audioplayer_t(const std::string& jackname,const std::string& xmlfile)
   : scene_t(xmlfile),jackc_transport_t(jacknamer(jackname,name,"player."))
