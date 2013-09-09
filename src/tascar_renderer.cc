@@ -43,6 +43,7 @@
 #include "render_sinks.h"
 #include "acousticmodel.h"
 #include "audioplayer.h"
+#include <unistd.h>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;

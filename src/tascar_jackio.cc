@@ -30,6 +30,7 @@
 #include "tascar.h"
 #include <getopt.h>
 #include "errorhandling.h"
+#include <unistd.h>
 
 /**
 \ingroup apptascar
