@@ -7,19 +7,19 @@
 
    \section license License (GPL)
    
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; version 2 of the License.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 of the License.
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301, USA.
 
 */
 
@@ -29,9 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
-
-#define OSC_ADDR "224.1.2.3"
-#define OSC_PORT "6978"
 
 static bool b_quit;
 
@@ -142,32 +139,37 @@ int main(int argc, char** argv)
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
   
-  const char *options = "a:hp:";
+  std::string jackname("tascar_transport");
+  std::string srv_addr("239.255.1.7");
+  std::string srv_port("9877");
+  const char *options = "hj:p:a:";
   struct option long_options[] = { 
-    { "serveraddress", 1, 0, 'a' },
-    { "help",          0, 0, 'h' },
-    { "serverport",    1, 0, 'p' },
+    { "help",     0, 0, 'h' },
+    { "jackname", 1, 0, 'j' },
+    { "srvaddr",  1, 0, 'a' },
+    { "srvport",  1, 0, 'p' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
   int option_index(0);
-  std::string serveraddress(OSC_ADDR);
-  std::string serverport(OSC_PORT);
   while( (opt = getopt_long(argc, argv, options,
                             long_options, &option_index)) != -1){
     switch(opt){
-    case 'a':
-      serveraddress = optarg;
-      break;
     case 'h':
       usage(long_options);
       return -1;
+    case 'j':
+      jackname = optarg;
+      break;
     case 'p':
-      serverport = optarg;
+      srv_port = optarg;
+      break;
+    case 'a':
+      srv_addr = optarg;
       break;
     }
   }
-  TASCAR::osc_jt_t S(serveraddress,serverport);
+  TASCAR::osc_jt_t S(srv_addr,srv_port);
   S.run();
 }
 
