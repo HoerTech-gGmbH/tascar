@@ -34,15 +34,13 @@ static bool b_quit;
 
 namespace TASCAR {
 
-  class osc_jt_t : public jackc_portless_t, public TASCAR::osc_server_t {
+  class osc_jt_t : public jackc_transport_t, public TASCAR::osc_server_t {
   public:
-    osc_jt_t(const std::string& osc_addr, const std::string& osc_port);
+    osc_jt_t(const std::string& osc_addr, const std::string& osc_port, double looptime);
     void run();
-    //void tp_locate(double p);
-    //void tp_stop();
-    //void tp_start();
+    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
   protected:
-    //int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer){return 0;};
+    uint32_t loop_frame;
   };
 
 }
@@ -94,8 +92,8 @@ namespace OSC {
 
 }
 
-TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port)
-  : jackc_portless_t("tascar_osc_tp"),osc_server_t(osc_addr,osc_port)
+TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port, double looptime)
+  : jackc_transport_t("tascar_osc_tp"),osc_server_t(osc_addr,osc_port), loop_frame(srate*looptime)
 {
   osc_server_t::set_prefix("/transport");
   osc_server_t::add_method("/locate","f",OSC::_locate,this);
@@ -113,6 +111,13 @@ void TASCAR::osc_jt_t::run()
     sleep(1);
   jackc_portless_t::deactivate();
   osc_server_t::deactivate();
+}
+
+int TASCAR::osc_jt_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+{
+  if( loop_frame && (tp_frame >= loop_frame) )
+    tp_locate(0u);
+  return 0;
 }
 
 static void sighandler(int sig)
@@ -138,16 +143,17 @@ int main(int argc, char** argv)
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
-  
+  double looptime(0.0);
   std::string jackname("tascar_transport");
   std::string srv_addr("239.255.1.7");
   std::string srv_port("9877");
-  const char *options = "hj:p:a:";
+  const char *options = "hj:p:a:l:";
   struct option long_options[] = { 
     { "help",     0, 0, 'h' },
     { "jackname", 1, 0, 'j' },
     { "srvaddr",  1, 0, 'a' },
     { "srvport",  1, 0, 'p' },
+    { "looptime", 1, 0, 'l' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
@@ -164,12 +170,15 @@ int main(int argc, char** argv)
     case 'p':
       srv_port = optarg;
       break;
+    case 'l':
+      looptime = atof(optarg);
+      break;
     case 'a':
       srv_addr = optarg;
       break;
     }
   }
-  TASCAR::osc_jt_t S(srv_addr,srv_port);
+  TASCAR::osc_jt_t S(srv_addr,srv_port,looptime);
   S.run();
 }
 
