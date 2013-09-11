@@ -207,6 +207,7 @@ sound_t::sound_t(src_object_t* parent_)
   : local_position(0,0,0),
     chaindist(0),
     parent(parent_),
+    direct(true),
     source(NULL)
 {
 }
@@ -219,8 +220,10 @@ sound_t::~sound_t()
 
 void sound_t::geometry_update(double t)
 {
-  if( source )
+  if( source ){
     source->position = get_pos_global(t);
+    source->direct = direct;
+  }
 }
 
 void sound_t::prepare(double fs, uint32_t fragsize)
@@ -250,6 +253,7 @@ void sink_object_t::geometry_update(double t)
     sink->position = get_location(t);
     sink->orientation = get_orientation(t);
     sink->diffusegain = diffusegain;
+    sink->is_direct = is_direct;
     if( use_mask ){
       sink->mask.center = mask.get_location(t);
       sink->mask.orientation = mask.get_orientation(t);
@@ -316,6 +320,7 @@ void sound_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"y",local_position.y);
   get_attribute_value(e,"z",local_position.z);
   get_attribute_value(e,"d",chaindist);
+  get_attribute_value_bool(e,"direct",direct);
   name = e->get_attribute_value("name");
 }
 
@@ -524,6 +529,7 @@ sink_object_t::sink_object_t()
     falloff(-1.0),
     render_point(true),
     render_diffuse(true),
+    is_direct(true),
     diffusegain(1.0),
     use_mask(false),
     sink(NULL)
@@ -563,6 +569,7 @@ void sink_object_t::read_xml(xmlpp::Element* e)
   //get_attribute_value(e,"size_z",size.z);
   get_attribute_value_bool(e,"point",render_point);
   get_attribute_value_bool(e,"diffuse",render_diffuse);
+  get_attribute_value_bool(e,"isdirect",is_direct);
   get_attribute_value_db(e,"diffusegain",diffusegain);
   get_attribute_value(e,"falloff",falloff);
   std::string stype(e->get_attribute_value("type"));

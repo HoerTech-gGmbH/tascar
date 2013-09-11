@@ -210,6 +210,7 @@ namespace TASCAR {
       double chaindist;
       src_object_t* parent;
       std::string name;
+      bool direct;
       // dynamically allocated source type. Allocated in "prepare",
       // type defined in xml_read:
       TASCAR::Acousticmodel::pointsource_t* source; 
@@ -256,6 +257,7 @@ namespace TASCAR {
       double falloff;
       bool render_point;
       bool render_diffuse;
+      bool is_direct;
       double diffusegain;
       bool use_mask;
       sink_mask_t mask;

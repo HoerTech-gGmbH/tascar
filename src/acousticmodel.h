@@ -22,6 +22,7 @@ namespace TASCAR {
       wave_t audio;
       pos_t position;
       bool active;
+      bool direct;
     };
 
     class doorsource_t : public pointsource_t, public face_t {
@@ -71,6 +72,7 @@ namespace TASCAR {
       bool active;
       bool render_point;
       bool render_diffuse;
+      bool is_direct;
       double diffusegain;
       float dt;
       shoebox_t mask;

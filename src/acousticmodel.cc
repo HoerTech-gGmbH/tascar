@@ -23,6 +23,7 @@ sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, boo
     active(true),
     render_point(b_point),
     render_diffuse(b_diffuse),
+    is_direct(true),
     diffusegain(1.0),
     dt(1.0/(float)chunksize) ,
     mask(pos_t(),mask_size,zyx_euler_t()),
@@ -61,7 +62,7 @@ void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtu
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize)
-  : audio(chunksize), active(true)
+  : audio(chunksize), active(true), direct(true)
 {
 }
 
@@ -152,7 +153,7 @@ void acoustic_model_t::process()
     airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
     audio[k] = airabsorption_state;
   }
-  if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0))){
+  if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0)) && (src_->direct || (!sink_->is_direct)) ){
     sink_->add_source(prel,audio,sink_data);
   }
 }
