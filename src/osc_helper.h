@@ -30,6 +30,11 @@
 #include <string>
 #include <lo/lo.h>
 
+int osc_set_bool_true(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+int osc_set_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+int osc_set_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+int osc_set_int32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+
 namespace TASCAR {
 
   class osc_server_t {
@@ -38,6 +43,8 @@ namespace TASCAR {
     ~osc_server_t();
     void set_prefix(const std::string& prefix);
     void add_method(const std::string& path,const char* typespec,lo_method_handler h, void *user_data);
+    void add_float(const std::string& path,float *data);
+    void add_bool_true(const std::string& path,bool *data);
     void activate();
     void deactivate();
   private:

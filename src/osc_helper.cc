@@ -37,6 +37,34 @@ void err_handler(int num, const char *msg, const char *where)
   std::cout << "liblo error " << num << ": " << msg << "\n(" << where << ")\n";
 }
 
+int osc_set_bool_true(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data )
+    *(bool*)(user_data) = true;
+  return 0;
+}
+
+int osc_set_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'f') )
+    *(float*)(user_data) = argv[0]->f;
+  return 0;
+}
+
+int osc_set_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'f') )
+    *(double*)(user_data) = argv[0]->f;
+  return 0;
+}
+
+int osc_set_int32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'i') )
+    *(int32_t*)(user_data) = argv[0]->i;
+  return 0;
+}
+
 osc_server_t::osc_server_t(const std::string& multicast, const std::string& port,bool verbose_)
   : isactive(false),
     verbose(verbose_)
@@ -74,6 +102,16 @@ void osc_server_t::add_method(const std::string& path,const char* typespec,lo_me
   if( verbose )
     std::cerr << "added handler " << sPath << " with typespec \"" << typespec << "\"" << std::endl;
   lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
+}
+
+void osc_server_t::add_float(const std::string& path,float *data)
+{
+  add_method(path,"f",osc_set_float,data);
+}
+
+void osc_server_t::add_bool_true(const std::string& path,bool *data)
+{
+  add_method(path,"",osc_set_bool_true,data);
 }
 
 void osc_server_t::activate()
