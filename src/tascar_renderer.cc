@@ -97,6 +97,10 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
                               const std::vector<float*>& outBuffer, 
                               uint32_t tp_frame, bool tp_rolling)
 {
+  //security/stability:
+  for(uint32_t ch=0;ch<inBuffer.size();ch++)
+    for(uint32_t k=0;k<nframes;k++)
+      make_friendly_number_limited(inBuffer[ch][k]);
   double tp_time((double)tp_frame/(double)srate);
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
@@ -134,6 +138,10 @@ int TASCAR::render_t::process(jack_nframes_t nframes,
     for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
       psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes,gain);
   }
+  //security/stability:
+  for(uint32_t ch=0;ch<outBuffer.size();ch++)
+    for(uint32_t k=0;k<nframes;k++)
+      make_friendly_number_limited(outBuffer[ch][k]);
   return 0;
 }
 
