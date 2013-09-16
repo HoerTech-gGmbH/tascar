@@ -169,6 +169,7 @@ pos_t track_t::interp(double x) const
     pos_t p1(lim1->second);
     pos_t p2(lim2->second);
     double w = (x-lim1->first)/(lim2->first-lim1->first);
+    make_friendly_number(w);
     p1 *= (1.0-w);
     p2 *= w;
     p1 += p2;
@@ -178,6 +179,7 @@ pos_t track_t::interp(double x) const
     sphere_t p1(lim1->second);
     sphere_t p2(lim2->second);
     double w = (x-lim1->first)/(lim2->first-lim1->first);
+    make_friendly_number(w);
     p1 *= (1.0-w);
     p2 *= w;
     p1.r += p2.r;
@@ -209,6 +211,7 @@ void track_t::smooth( unsigned int n )
     wnd[k] = 0.5 - 0.5*cos(PI2*(k+1)/(n+1));
     wsum+=wnd[k];
   }
+  make_friendly_number(wsum);
   for(k = 0;k<n;k++){
     wnd[k]/=wsum;
   }
@@ -600,6 +603,7 @@ double table1_t::interp( double x ) const
   double p1(lim1->second);
   double p2(lim2->second);
   double w = (x-lim1->first)/(lim2->first-lim1->first);
+  make_friendly_number(w);
   p1 *= (1.0-w);
   p2 *= w;
   p1 += p2;
@@ -643,6 +647,7 @@ zyx_euler_t euler_track_t::interp(double x) const
   zyx_euler_t p1(lim1->second);
   zyx_euler_t p2(lim2->second);
   double w = (x-lim1->first)/(lim2->first-lim1->first);
+  make_friendly_number(w);
   p1 *= (1.0-w);
   p2 *= w;
   p1 += p2;

@@ -6,18 +6,6 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
-template<class T> void make_friendly_number(T& x)
-{
-  if( (0 < x) && (x < std::numeric_limits<T>::min()) )
-    x = 0;
-  if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
-    x = 0;
-  if( x == std::numeric_limits<T>::infinity() )
-    x = std::numeric_limits<T>::max();
-  if( x == -std::numeric_limits<T>::infinity() )
-    x = -std::numeric_limits<T>::max();
-}
-
 void sink_t::clear()
 {
   for(uint32_t ch=0;ch<outchannels.size();ch++)

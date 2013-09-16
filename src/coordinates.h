@@ -31,6 +31,20 @@
 #include <string>
 #include <map>
 #include <libxml++/libxml++.h>
+#include <limits>
+
+template<class T> void make_friendly_number(T& x)
+{
+  if( (0 < x) && (x < std::numeric_limits<T>::min()) )
+    x = 0;
+  if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
+    x = 0;
+  if( x == std::numeric_limits<T>::infinity() )
+    x = std::numeric_limits<T>::max();
+  if( x == -std::numeric_limits<T>::infinity() )
+    x = -std::numeric_limits<T>::max();
+}
+
 
 namespace TASCAR {
 
@@ -62,7 +76,7 @@ namespace TASCAR {
        \param theta elevation
     */
     void set_sphere(double r,double phi,double theta){ x=r*cos(phi)*cos(theta);y = r*sin(phi)*cos(theta); z=r*sin(theta);};
-    inline double norm2() const {return x*x + y*y + z*z;};
+    inline double norm2() const {return std::max(1e-10,x*x + y*y + z*z);};
     inline double norm() const {return sqrt(norm2());};
     inline double norm_xy() const {return sqrt(x*x+y*y);};
     inline double azim() const {return atan2(y,x);};
