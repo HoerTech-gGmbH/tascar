@@ -1,10 +1,22 @@
 #include "acousticmodel.h"
 #include "defs.h"
 #include <iostream>
+#include <limits>
 
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
+template<class T> void make_friendly_number(T& x)
+{
+  if( (0 < x) && (x < std::numeric_limits<T>::min()) )
+    x = 0;
+  if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
+    x = 0;
+  if( x == std::numeric_limits<T>::infinity() )
+    x = std::numeric_limits<T>::max();
+  if( x == -std::numeric_limits<T>::infinity() )
+    x = -std::numeric_limits<T>::max();
+}
 
 void sink_t::clear()
 {
@@ -25,7 +37,7 @@ sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, boo
     render_diffuse(b_diffuse),
     is_direct(true),
     diffusegain(1.0),
-    dt(1.0/(float)chunksize) ,
+    dt(1.0/std::max(1.0f,(float)chunksize)) ,
     mask(pos_t(),mask_size,zyx_euler_t()),
     mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
     mask_use_(mask_use)
@@ -45,7 +57,7 @@ void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtu
     //DEBUGS(box.nextpoint(prel).print_sphere());
     double d(box.nextpoint(prel).norm());
     if( use_falloff )
-      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_)))/sizedist;
+      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_)))/std::max(0.1,sizedist);
     else
       gain = 1.0/std::max(1.0,d+sizedist);
   }else{
@@ -59,6 +71,7 @@ void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtu
     double d(mask.nextpoint(position).norm());
     gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
   }
+  make_friendly_number(gain);
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize)
@@ -87,6 +100,7 @@ pos_t doorsource_t::get_effective_position(const pos_t& sinkp,double& gain)
   sinkn *= distance;
   sinkn += position;
   //DEBUGS(sinkn.print_cart());
+  make_friendly_number(gain);
   return sinkn;
 }
 
@@ -106,7 +120,7 @@ acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,con
   : src_(src),sink_(sink),obstacles_(obstacles),
     audio(src->audio.size()),
     chunksize(audio.size()),
-    dt(1.0/chunksize),
+    dt(1.0/std::max(1.0f,(float)chunksize)),
     distance(1.0),
     gain(1.0),
     dscale(fs/(340.0*7782.0)),
@@ -151,6 +165,7 @@ void acoustic_model_t::process()
     float c2(1.0f-c1);
     // apply air absorption:
     airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
+    make_friendly_number(airabsorption_state);
     audio[k] = airabsorption_state;
   }
   if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0)) && (src_->direct || (!sink_->is_direct)) ){
@@ -162,7 +177,7 @@ void acoustic_model_t::process()
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
   : pointsource_t(src->audio.size()),
     src_(src),reflector_(reflector),
-    dt(1.0/src->audio.size()),
+    dt(1.0/std::max(1u,src->audio.size())),
     g(0),
     dg(0)
 {
@@ -212,6 +227,7 @@ pos_t mirrorsource_t::get_effective_position(const pos_t& sinkp,double& gain)
   pcut += pcut_sink;
   pcut = reflector_->nearest(pcut);
   gain = pow(std::max(0.0,dot_prod((sinkp-pcut).normal(),(pcut-srcpos).normal())),2.7);
+  make_friendly_number(gain);
   return srcpos;
 }
 
@@ -298,7 +314,7 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* s
   : src_(src),sink_(sink),
     audio(src->audio.size()),
     chunksize(audio.size()),
-    dt(1.0/chunksize),
+    dt(1.0/std::max(1u,chunksize)),
     gain(1.0),
     sink_data(sink_->create_sink_data())
 {
