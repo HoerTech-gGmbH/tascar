@@ -55,6 +55,7 @@ namespace TASCAR {
              pos_t mask_size,
              double mask_falloff,
              bool mask_use);
+      virtual ~sink_t(){};
       virtual void clear();
       virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
       virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
