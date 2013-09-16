@@ -44,6 +44,10 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
+#EXTERNALS = jack liblo sndfile
+
+#tascar_gui tascar_renderer tascar_audioplayer: OBJECTS += /usr/lib/libxml++-2.6.a
+#tascar_gui tascar_renderer tascar_audioplayer: CXXFLAGS += -I/usr/include/libxml++-2.6/
 
 tascar_gui: EXTERNALS += $(GTKEXT)
 

@@ -46,8 +46,9 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::po
 {
   std::string attv(elem->get_attribute_value(name));
   TASCAR::pos_t tmpv;
-  if( sscanf(attv.c_str(),"%lf %lf %lf",&(tmpv.x),&(tmpv.y),&(tmpv.z))==3 )
+  if( sscanf(attv.c_str(),"%lf%lf%lf",&(tmpv.x),&(tmpv.y),&(tmpv.z))==3 ){
     value = tmpv;
+  }
 }
 
 void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value)

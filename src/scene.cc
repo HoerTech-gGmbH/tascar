@@ -7,6 +7,7 @@
 #include "defs.h"
 #include <string.h>
 #include "sinks.h"
+#include <locale.h>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -493,6 +494,7 @@ scene_t::scene_t(const std::string& filename)
     duration(60),
     guiscale(200),anysolo(0),loop(false)
 {
+  setlocale(LC_ALL,"C");
   if( filename.size() )
     read_xml(filename);
 }
