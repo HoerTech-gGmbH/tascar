@@ -47,18 +47,14 @@ template<class T> void make_friendly_number(T& x)
 
 template<class T> void make_friendly_number_limited(T& x)
 {
-  if( (0 < x) && (x < std::numeric_limits<T>::min()) )
-    x = 0;
-  if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
-    x = 0;
-  if( x > 1 )
-    x = 1;
-  if( x < -1 )
-    x = -1;
-  if( x == std::numeric_limits<T>::infinity() )
-    x = std::numeric_limits<T>::max();
-  if( x == -std::numeric_limits<T>::infinity() )
-    x = -std::numeric_limits<T>::max();
+  if( (-1 <= x) && (x <= 1 ) ){
+    if( (0 < x) && (x < std::numeric_limits<T>::min()) )
+      x = 0;
+    if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
+      x = 0;
+    return;
+  }
+  x = 0;
 }
 
 
