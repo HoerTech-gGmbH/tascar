@@ -1,6 +1,8 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include <iostream>
+
 /**
    \file defs.h
    \brief Some basic definitions

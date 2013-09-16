@@ -32,17 +32,19 @@
 #include <map>
 #include <libxml++/libxml++.h>
 #include <limits>
+#include "defs.h"
 
 template<class T> void make_friendly_number(T& x)
 {
-  if( (0 < x) && (x < std::numeric_limits<T>::min()) )
-    x = 0;
-  if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
-    x = 0;
-  if( x == std::numeric_limits<T>::infinity() )
-    x = std::numeric_limits<T>::max();
-  if( x == -std::numeric_limits<T>::infinity() )
-    x = -std::numeric_limits<T>::max();
+  if( (-std::numeric_limits<T>::max() <= x) && (x <= std::numeric_limits<T>::max() ) ){
+    if( (0 < x) && (x < std::numeric_limits<T>::min()) )
+      x = 0;
+    if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
+      x = 0;
+    return;
+  }
+  DEBUGS(x);
+  x = 0;
 }
 
 template<class T> void make_friendly_number_limited(T& x)
@@ -54,6 +56,7 @@ template<class T> void make_friendly_number_limited(T& x)
       x = 0;
     return;
   }
+  DEBUGS(x);
   x = 0;
 }
 

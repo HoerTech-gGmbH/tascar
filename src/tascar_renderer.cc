@@ -44,6 +44,7 @@
 #include "acousticmodel.h"
 #include "audioplayer.h"
 #include <unistd.h>
+#include "defs.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
