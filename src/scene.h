@@ -114,7 +114,7 @@ namespace TASCAR {
     class face_object_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
     public:
       face_object_t();
-      ~face_object_t();
+      virtual ~face_object_t();
       void prepare(double fs, uint32_t fragsize);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
@@ -156,7 +156,7 @@ namespace TASCAR {
     class src_diffuse_t : public object_t, public jack_port_t {
     public:
       src_diffuse_t();
-      ~src_diffuse_t();
+      virtual ~src_diffuse_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void prepare(double fs, uint32_t fragsize);
@@ -172,7 +172,7 @@ namespace TASCAR {
     class src_door_t : public object_t, public jack_port_t {
     public:
       src_door_t();
-      ~src_door_t();
+      virtual ~src_door_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
       void prepare(double fs, uint32_t fragsize);
@@ -190,7 +190,7 @@ namespace TASCAR {
     class sound_t : public scene_node_base_t, public jack_port_t {
     public:
       sound_t(src_object_t* parent_);
-      ~sound_t();
+      virtual ~sound_t();
       void set_parent(src_object_t* parent_);
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e,bool help_comments=false);
@@ -245,7 +245,7 @@ namespace TASCAR {
         omni, cardioid, amb3h3v, amb3h0v, nsp
       };
       sink_object_t();
-      ~sink_object_t();
+      virtual ~sink_object_t();
       void read_xml(xmlpp::Element* e);
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
