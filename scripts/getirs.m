@@ -4,17 +4,17 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
 % Usage:
 % [irs,x,y] = getirs( spk, len, nrep, sTag, gain );
 %
-% spk : vector with output speaker channels or cell string array
-%       with output jack ports
-% len : length in samples
+% spk  : vector with hardware output channel numbers or cell string 
+%        array with output jack port names
+% len  : length in samples
 % nrep : number of repetitions
 % sTag : tag to be used in output file
 % gain : linear gain of output signal (optional, default: 0.02)
-% sIn : input channel name (default: "system:capture_1")
+% sIn  : input channel name (default: "system:capture_1")
 %
-% irs : impulse response matrix
-% x : output test signal
-% y : averaged input signal
+% irs  : impulse response matrix
+% x    : output test signal
+% y    : averaged input signal
 %
 % Author: Giso Grimm
 % 3/2012
@@ -25,8 +25,21 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
   if nargin < 6
     sIn = 'system:capture_1';
   end
+  Nsrc = 1;
+  if iscell(sIn)
+    Nsrc = numel(sIn);
+    sTmp = '';
+    for k=1:Nsrc
+      sTmp = sprintf('%s %s',sTmp,sIn{k});
+    end
+    if Nsrc > 0
+      sTmp(1) = [];
+    end
+    sIn = sTmp;
+  end
+  Nsink = numel(spk);
   x = create_noise( len, nrep+1, gain );
-  irs = zeros(len,numel(spk));
+  irs = zeros(len,Nsink*Nsrc);
   for kSpk=1:numel(spk)
     if iscell(spk(kSpk))
         speakerName = spk{kSpk};
@@ -44,7 +57,7 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
     X = realfft(x);
     Y = realfft(y);
     Y = Y ./ repmat(X,[1,size(Y,2)]);
-    irs(:,kSpk) = realifft(Y);
+    irs(:,(kSpk-1)*Nsrc+[1:Nsrc]) = realifft(Y);
   end
   wavwrite(irs,fs,32,sprintf('irs_%s_%d_%d.wav',sTag,len, ...
 			     nrep));
