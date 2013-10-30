@@ -79,7 +79,7 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     p(ports)
 {
   if( !(sf_in = sf_open(ifname.c_str(),SFM_READ,&sf_inf_in)) )
-    throw TASCAR::ErrMsg("unable to open input file");
+    throw TASCAR::ErrMsg("unable to open input file \""+ifname+"\" for reading.");
   sf_inf_out = sf_inf_in;
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = std::max(1,(int)(p.size()) - (int)(sf_inf_in.channels));
@@ -177,7 +177,7 @@ void usage(struct option * opt)
 int main(int argc, char** argv)
 {
   try{
-    const char *options = "fo:ch";
+    const char *options = "fo:chu";
     struct option long_options[] = { 
       { "freewheeling", 0, 0, 'f' },
       { "output-file",  1, 0, 'o' },
