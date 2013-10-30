@@ -43,20 +43,20 @@ template<class T> void make_friendly_number(T& x)
       x = 0;
     return;
   }
-  DEBUGS(x);
+  //DEBUGS(x);
   x = 0;
 }
 
 template<class T> void make_friendly_number_limited(T& x)
 {
-  if( (-1 <= x) && (x <= 1 ) ){
+  if( (-10 <= x) && (x <= 10 ) ){
     if( (0 < x) && (x < std::numeric_limits<T>::min()) )
       x = 0;
     if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
       x = 0;
     return;
   }
-  DEBUGS(x);
+  //DEBUGS(x);
   x = 0;
 }
 
