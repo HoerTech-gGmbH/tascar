@@ -65,7 +65,7 @@ public:
   };
   pdf_export_t(const std::string& scenename,const std::string& pdfname);
   ~pdf_export_t();
-  void render_time(double time);
+  void render_time(const std::vector<double>& time);
 private:
   void draw(pdf_export_t::view_t persp);
   void draw_face_normal(const face_t& f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
@@ -487,13 +487,24 @@ pdf_export_t::~pdf_export_t()
 {
 }
 
-void pdf_export_t::render_time(double t)
+void pdf_export_t::render_time(const std::vector<double>& t)
 {
-  time = t;
-  draw(pdf_export_t::xy);
-  draw(pdf_export_t::xz);
-  draw(pdf_export_t::yz);
-  draw(pdf_export_t::p);
+  for(uint32_t k=0;k<t.size();k++){
+    time = t[k];
+    draw(pdf_export_t::xy);
+  }
+  for(uint32_t k=0;k<t.size();k++){
+    time = t[k];
+    draw(pdf_export_t::xz);
+  }
+  for(uint32_t k=0;k<t.size();k++){
+    time = t[k];
+    draw(pdf_export_t::yz);
+  }
+  for(uint32_t k=0;k<t.size();k++){
+    time = t[k];
+    draw(pdf_export_t::p);
+  }
 }
 
 void pdf_export_t::draw(view_t persp)
@@ -637,15 +648,17 @@ int main(int argc, char** argv)
 {
   std::string cfgfile("");
   std::string pdffile("");
-  const char *options = "c:o:h:";
+  const char *options = "c:o:ht:";
   struct option long_options[] = { 
     { "config",   1, 0, 'c' },
     { "output",   1, 0, 'o' },
     { "help",     0, 0, 'h' },
+    { "time",     1, 0, 't' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
   int option_index(0);
+  std::vector<double> time;
   while( (opt = getopt_long(argc, argv, options,
                             long_options, &option_index)) != -1){
     switch(opt){
@@ -654,6 +667,9 @@ int main(int argc, char** argv)
       break;
     case 'o':
       pdffile = optarg;
+      break;
+    case 't':
+      time.push_back(atof(optarg));
       break;
     case 'h':
       usage(long_options);
@@ -664,11 +680,13 @@ int main(int argc, char** argv)
     usage(long_options);
     return -1;
   }
+  if( time.empty() )
+    time.push_back(0.0);
   if( pdffile.size() == 0 ){
     pdffile = cfgfile+".pdf";
   }
   pdf_export_t c(cfgfile,pdffile);
-  c.render_time(0);
+  c.render_time(time);
   return 0;
 }
 
