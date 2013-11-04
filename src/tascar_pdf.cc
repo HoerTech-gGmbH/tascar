@@ -32,9 +32,31 @@
 #include <iostream>
 #include <getopt.h>
 #include "viewport.h"
+#include <limits>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
+
+bool has_infinity(const pos_t& p)
+{
+  if( p.x == std::numeric_limits<double>::infinity() )
+    return true;
+  if( p.y == std::numeric_limits<double>::infinity() )
+    return true;
+  if( p.z == std::numeric_limits<double>::infinity() )
+    return true;
+  return false;
+}
+
+void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
+{
+  DEBUG(p1.print_cart());
+  DEBUG(p2.print_cart());
+  if( !(has_infinity(p1) || has_infinity(p2)) ){
+    cr->move_to(p1.x,-p1.y);
+    cr->line_to(p2.x,-p2.y);
+  }
+}
 
 class pdf_export_t : public scene_t {
 public:
@@ -46,10 +68,13 @@ public:
   void render_time(double time);
 private:
   void draw(pdf_export_t::view_t persp);
+  void draw_face_normal(const face_t& f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
+  void draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr);
   void draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  void draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  void draw_room(const diffuse_reverb_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_door_src(const src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   double time;
   viewport_t view;
@@ -65,15 +90,15 @@ private:
 
 void pdf_export_t::draw_track(const object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  pos_t p0;
   cr->save();
   cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
   cr->set_line_width( 0.1*msize );
   for( TASCAR::track_t::const_iterator it=obj.location.begin();it!=obj.location.end();++it){
     pos_t p(view(it->second));
-    if( it==obj.location.begin() )
-      cr->move_to( p.x, -p.y );
-    else
-      cr->line_to( p.x, -p.y );
+    if( it != obj.location.begin() )
+      draw_edge( cr, p0,p );
+    p0 = p;
   }
   cr->stroke();
   cr->restore();
@@ -88,62 +113,80 @@ void pdf_export_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
     plot_time = std::min(std::max(plot_time,obj.starttime),obj.endtime);
   }
   //pos_t p(view(obj.location.interp(plot_time-obj.starttime)));
-  pos_t p(obj.location.interp(plot_time-obj.starttime));
-  //DEBUG(p.print_cart());
-  p = view(p);
+  pos_t p(obj.get_location(plot_time));
   //DEBUG(p.print_cart());
   cr->save();
-  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-  cr->arc(p.x, -p.y, msize, 0, PI2 );
-  cr->fill();
+  p = view(p);
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
+    cr->arc(p.x, -p.y, msize, 0, PI2 );
+    cr->fill();
+  }
   for(unsigned int k=0;k<obj.sound.size();k++){
     pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
-    //pos_t ps(obj.sound[k].get_pos(time));
-    cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
-    cr->fill();
+    if( ps.z != std::numeric_limits<double>::infinity()){
+      //pos_t ps(obj.sound[k].get_pos(time));
+      cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
+      cr->fill();
+    }
   }
   if( !active )
     cr->set_source_rgb(0.5, 0.5, 0.5 );
   else
     cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( p.x + 1.1*msize, -p.y );
-  cr->show_text( obj.get_name().c_str() );
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->move_to( p.x + 1.1*msize, -p.y );
+    cr->show_text( obj.get_name().c_str() );
+  }
   if( active ){
     cr->set_line_width( 0.1*msize );
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
     //cr->move_to( p.x, -p.y );
     if( obj.sound.size()){
       pos_t pso(view(obj.sound[0].get_pos_global(plot_time)));
-      for(unsigned int k=1;k<obj.sound.size();k++){
-        pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
-        //pos_t ps(obj.sound[k].get_pos(time));
-        bool view_x((fabs(ps.x)<1)||
-                    (fabs(pso.x)<1));
-        bool view_y((fabs(ps.y)<1)||
-                    (fabs(pso.y)<1));
-        if( view_x && view_y ){
-          cr->move_to( pso.x, -pso.y );
-          cr->line_to( ps.x, -ps.y );
-          cr->stroke();
+      if( pso.z != std::numeric_limits<double>::infinity()){
+        for(unsigned int k=1;k<obj.sound.size();k++){
+          pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
+          //pos_t ps(obj.sound[k].get_pos(time));
+          bool view_x((fabs(ps.x)<1)||
+                      (fabs(pso.x)<1));
+          bool view_y((fabs(ps.y)<1)||
+                      (fabs(pso.y)<1));
+          if( view_x && view_y ){
+            cr->move_to( pso.x, -pso.y );
+            cr->line_to( ps.x, -ps.y );
+            cr->stroke();
+          }
+          pso = ps;
         }
-        pso = ps;
       }
     }
   }
   cr->restore();
 }
 
-void pdf_export_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void pdf_export_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( view.get_perspective() )
     return;
   msize *= 1.5;
-  pos_t p(obj.location.interp(time-obj.starttime));
-  p += obj.dlocation;
-  zyx_euler_t o(obj.orientation.interp(time-obj.starttime));
-  o += obj.dorientation;
+  pos_t p(obj.get_location(time));
+  zyx_euler_t o(obj.get_orientation(time));
   //DEBUG(o.print());
   //o.z += headrot;
+  if( (obj.size.x!=0)&&(obj.size.y!=0)&&(obj.size.z!=0) ){
+    draw_cube(p,o,obj.size,cr);
+    if( obj.falloff > 0 ){
+      std::vector<double> dash(2);
+      dash[0] = msize;
+      dash[1] = msize;
+      cr->set_dash(dash,0);
+      draw_cube(p,o,obj.size+pos_t(2*obj.falloff,2*obj.falloff,2*obj.falloff),cr);
+      dash[0] = 1.0;
+      dash[1] = 0.0;
+      cr->set_dash(dash,0);
+    }
+  }
   double scale(0.5*view.get_scale());
   pos_t p1(1.8*msize*scale,-0.6*msize*scale,0);
   pos_t p2(2.9*msize*scale,0,0);
@@ -198,158 +241,210 @@ void pdf_export_t::draw_listener(const listener_t& obj,Cairo::RefPtr<Cairo::Cont
   cr->line_to( p9.x, -p9.y );
   //cr->fill();
   cr->stroke();
+  if( obj.use_mask ){
+    cr->set_line_width( 0.1*msize );
+    pos_t p(obj.mask.get_location(time));
+    zyx_euler_t o(obj.mask.get_orientation(time));
+    draw_cube(p,o,obj.mask.size,cr);
+    if( obj.mask.falloff > 0 ){
+      std::vector<double> dash(2);
+      dash[0] = msize;
+      dash[1] = msize;
+      cr->set_dash(dash,0);
+      draw_cube(p,o,obj.mask.size+pos_t(2*obj.mask.falloff,2*obj.mask.falloff,2*obj.mask.falloff),cr);
+      dash[0] = 1.0;
+      dash[1] = 0.0;
+      cr->set_dash(dash,0);
+    }
+  }
   cr->set_source_rgb(0, 0, 0 );
   cr->move_to( p.x + 3.1*msize, -p.y );
   cr->show_text( obj.get_name().c_str() );
   cr->restore();
 }
 
-void pdf_export_t::draw_room(const TASCAR::Scene::diffuse_reverb_t& reverb,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void pdf_export_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr)
 {
-  std::vector<pos_t> roomnodes(8,reverb.center);
-  roomnodes[0].x -= 0.5*reverb.size.x;
-  roomnodes[1].x += 0.5*reverb.size.x;
-  roomnodes[2].x += 0.5*reverb.size.x;
-  roomnodes[3].x -= 0.5*reverb.size.x;
-  roomnodes[4].x -= 0.5*reverb.size.x;
-  roomnodes[5].x += 0.5*reverb.size.x;
-  roomnodes[6].x += 0.5*reverb.size.x;
-  roomnodes[7].x -= 0.5*reverb.size.x;
-  roomnodes[0].y -= 0.5*reverb.size.y;
-  roomnodes[1].y -= 0.5*reverb.size.y;
-  roomnodes[2].y += 0.5*reverb.size.y;
-  roomnodes[3].y += 0.5*reverb.size.y;
-  roomnodes[4].y -= 0.5*reverb.size.y;
-  roomnodes[5].y -= 0.5*reverb.size.y;
-  roomnodes[6].y += 0.5*reverb.size.y;
-  roomnodes[7].y += 0.5*reverb.size.y;
-  roomnodes[0].z -= 0.5*reverb.size.z;
-  roomnodes[1].z -= 0.5*reverb.size.z;
-  roomnodes[2].z -= 0.5*reverb.size.z;
-  roomnodes[3].z -= 0.5*reverb.size.z;
-  roomnodes[4].z += 0.5*reverb.size.z;
-  roomnodes[5].z += 0.5*reverb.size.z;
-  roomnodes[6].z += 0.5*reverb.size.z;
-  roomnodes[7].z += 0.5*reverb.size.z;
+  DEBUG(1);
+  std::vector<pos_t> roomnodes(8,pos_t());
+  roomnodes[0].x -= 0.5*size.x;
+  roomnodes[1].x += 0.5*size.x;
+  roomnodes[2].x += 0.5*size.x;
+  roomnodes[3].x -= 0.5*size.x;
+  roomnodes[4].x -= 0.5*size.x;
+  roomnodes[5].x += 0.5*size.x;
+  roomnodes[6].x += 0.5*size.x;
+  roomnodes[7].x -= 0.5*size.x;
+  roomnodes[0].y -= 0.5*size.y;
+  roomnodes[1].y -= 0.5*size.y;
+  roomnodes[2].y += 0.5*size.y;
+  roomnodes[3].y += 0.5*size.y;
+  roomnodes[4].y -= 0.5*size.y;
+  roomnodes[5].y -= 0.5*size.y;
+  roomnodes[6].y += 0.5*size.y;
+  roomnodes[7].y += 0.5*size.y;
+  roomnodes[0].z -= 0.5*size.z;
+  roomnodes[1].z -= 0.5*size.z;
+  roomnodes[2].z -= 0.5*size.z;
+  roomnodes[3].z -= 0.5*size.z;
+  roomnodes[4].z += 0.5*size.z;
+  roomnodes[5].z += 0.5*size.z;
+  roomnodes[6].z += 0.5*size.z;
+  roomnodes[7].z += 0.5*size.z;
   for(unsigned int k=0;k<8;k++)
-    roomnodes[k] *= reverb.orientation;
+    roomnodes[k] *= orient;
+  for(unsigned int k=0;k<8;k++)
+    roomnodes[k] += pos;
+  for(unsigned int k=0;k<8;k++)
+    roomnodes[k] = view(roomnodes[k]);
   cr->save();
-  cr->set_line_width( 0.1*msize );
-  cr->set_source_rgba(0,0,0,0.6);
-  cr->move_to( roomnodes[0].x, -roomnodes[0].y );
-  cr->line_to( roomnodes[1].x, -roomnodes[1].y );
-  cr->line_to( roomnodes[2].x, -roomnodes[2].y );
-  cr->line_to( roomnodes[3].x, -roomnodes[3].y );
-  cr->line_to( roomnodes[0].x, -roomnodes[0].y );
-  cr->move_to( roomnodes[4].x, -roomnodes[4].y );
-  cr->line_to( roomnodes[5].x, -roomnodes[5].y );
-  cr->line_to( roomnodes[6].x, -roomnodes[6].y );
-  cr->line_to( roomnodes[7].x, -roomnodes[7].y );
-  cr->line_to( roomnodes[4].x, -roomnodes[4].y );
+  draw_edge(cr,roomnodes[0],roomnodes[1]);
+  draw_edge(cr,roomnodes[1],roomnodes[2]);
+  draw_edge(cr,roomnodes[2],roomnodes[3]);
+  draw_edge(cr,roomnodes[3],roomnodes[0]);
+  draw_edge(cr,roomnodes[4],roomnodes[5]);
+  draw_edge(cr,roomnodes[5],roomnodes[6]);
+  draw_edge(cr,roomnodes[6],roomnodes[7]);
+  draw_edge(cr,roomnodes[7],roomnodes[0]);
   for(unsigned int k=0;k<4;k++){
-    cr->move_to( roomnodes[k].x, -roomnodes[k].y );
-    cr->line_to( roomnodes[k+4].x, -roomnodes[k+4].y );
+    draw_edge(cr,roomnodes[k],roomnodes[k+1]);
   }
   cr->stroke();
+  cr->restore();
+}
+
+void pdf_export_t::draw_face_normal(const face_t& f,Cairo::RefPtr<Cairo::Context> cr,double normalsize)
+{
+  std::vector<pos_t> roomnodes(4,pos_t());
+  roomnodes[0] = f.get_anchor();
+  roomnodes[1] = f.get_anchor();
+  roomnodes[1] += f.get_e1();
+  roomnodes[2] = f.get_anchor();
+  roomnodes[2] += f.get_e1();
+  roomnodes[2] += f.get_e2();
+  roomnodes[3] = f.get_anchor();
+  roomnodes[3] += f.get_e2();
+  for(unsigned int k=0;k<roomnodes.size();k++)
+    roomnodes[k] = view(roomnodes[k]);
+  cr->save();
+  draw_edge(cr,roomnodes[0],roomnodes[1]);
+  draw_edge(cr,roomnodes[1],roomnodes[2]);
+  draw_edge(cr,roomnodes[2],roomnodes[3]);
+  draw_edge(cr,roomnodes[3],roomnodes[0]);
+  if( normalsize >= 0 ){
+    pos_t pn(f.get_normal());
+    pn *= normalsize;
+    pn += f.get_anchor();
+    pn = view(pn);
+    draw_edge(cr,roomnodes[0],pn);
+  }
+  cr->stroke();
+  cr->restore();
+}
+
+void pdf_export_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  pos_t p(obj.get_location(time));
+  zyx_euler_t o(obj.get_orientation(time));
+  cr->save();
+  cr->set_line_width( 0.1*msize );
+  //cr->set_source_rgba(0,0,0,0.6);
+  cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
+  draw_cube(p,o,obj.size,cr);
+  std::vector<double> dash(2);
+  dash[0] = msize;
+  dash[1] = msize;
+  cr->set_dash(dash,0);
+  pos_t falloff(obj.falloff,obj.falloff,obj.falloff);
+  falloff *= 2.0;
+  falloff += obj.size;
+  draw_cube(p,o,falloff,cr);
+  p = view(p);
   cr->set_source_rgb(0, 0, 0 );
-  cr->move_to( roomnodes[0].x + 0.1*msize, -roomnodes[0].y );
-  cr->show_text( reverb.get_name().c_str() );
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->move_to( p.x, -p.y );
+    cr->show_text( obj.get_name().c_str() );
+  }
+  cr->restore();
+}
+
+void pdf_export_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  pos_t p(obj.get_location(time));
+  zyx_euler_t o(obj.get_orientation(time));
+  o += obj.dorientation;
+  cr->save();
+  cr->set_line_width( 0.4*msize );
+  //cr->set_source_rgba(0,0,0,0.6);
+  cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
+  face_t f;
+  f.set(p,o,obj.width,obj.height);
+  draw_face_normal(f,cr);
+  std::vector<double> dash(2);
+  dash[0] = msize;
+  dash[1] = msize;
+  cr->set_dash(dash,0);
+  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6 );
+  f += obj.falloff;
+  draw_face_normal(f,cr);
+  p = view(p);
+  cr->set_source_rgb(0, 0, 0 );
+  if( p.z != std::numeric_limits<double>::infinity()){
+    cr->move_to( p.x, -p.y );
+    cr->show_text( obj.get_name().c_str() );
+  }
   cr->restore();
 }
 
 void pdf_export_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
+  DEBUGMSG("face");
   bool active(face.isactive(time));
   if( !active )
     msize*=0.5;
-  std::vector<pos_t> roomnodes(18);
-  // width:
-  roomnodes[0].y += 0.5*face.width;
-  roomnodes[1].y += 0.25*face.width;
-  roomnodes[3].y -= 0.25*face.width;
-  roomnodes[4].y -= 0.5*face.width;
-  roomnodes[5].y -= 0.5*face.width;
-  roomnodes[6].y -= 0.5*face.width;
-  roomnodes[7].y -= 0.5*face.width;
-  roomnodes[8].y -= 0.5*face.width;
-  roomnodes[9].y -= 0.25*face.width;
-  roomnodes[11].y += 0.25*face.width;
-  roomnodes[12].y += 0.5*face.width;
-  roomnodes[13].y += 0.5*face.width;
-  roomnodes[14].y += 0.5*face.width;
-  roomnodes[15].y += 0.5*face.width;
-  // height:
-  roomnodes[0].z += 0.5*face.height;
-  roomnodes[1].z += 0.5*face.height;
-  roomnodes[2].z += 0.5*face.height;
-  roomnodes[3].z += 0.5*face.height;
-  roomnodes[4].z += 0.5*face.height;
-  roomnodes[5].z += 0.25*face.height;
-  roomnodes[7].z -= 0.25*face.height;
-  roomnodes[8].z -= 0.5*face.height;
-  roomnodes[9].z -= 0.5*face.height;
-  roomnodes[10].z -= 0.5*face.height;
-  roomnodes[11].z -= 0.5*face.height;
-  roomnodes[12].z -= 0.5*face.height;
-  roomnodes[13].z -= 0.25*face.height;
-  roomnodes[15].z += 0.25*face.height;
-  // normal:
-  roomnodes[17].x += 30*msize;
-  pos_t loc(face.get_location(time));
-  zyx_euler_t o(face.get_orientation(time));
-  for(unsigned int k=0;k<roomnodes.size();k++){
-    roomnodes[k] *= o;
-    roomnodes[k] += loc;
-    roomnodes[k] = view(roomnodes[k]);
-  }
+  pos_t loc(view(face.get_location(time)));
   cr->save();
   // outline:
   cr->set_line_width( 0.3*msize );
   cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.6);
-  for(unsigned int k=0;k<16;k++){
-    unsigned int k1((k+1)&15);
-    bool view_x((fabs(roomnodes[k].x)<1)||
-                (fabs(roomnodes[k1].x)<1));
-    bool view_y((fabs(roomnodes[k].y)<1)||
-                (fabs(roomnodes[k1].y)<1));
-    if( view_x && view_y ){
-      cr->move_to( roomnodes[k].x, -roomnodes[k].y );
-      cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
-    }
-  }
-  cr->stroke();
+  draw_face_normal(face,cr,true);
   // fill:
-  if( active ){
-    cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.3);
-    for(unsigned int k=0;k<16;k++){
-      // is at least one point in view?
-      unsigned int k1((k+1)&15);
-      bool view_x((fabs(roomnodes[16].x)<1)||
-                  (fabs(roomnodes[k].x)<1)||
-                  (fabs(roomnodes[k1].x)<1));
-      bool view_y((fabs(roomnodes[16].y)<1)||
-                  (fabs(roomnodes[k].y)<1)||
-                  (fabs(roomnodes[k1].y)<1));
-      if( view_x && view_y ){
-        cr->move_to( roomnodes[16].x, -roomnodes[16].y );
-        cr->line_to( roomnodes[k].x, -roomnodes[k].y );
-        cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
-        cr->fill();
-      }
-    }
-  }
+  //if( active ){
+  //  cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.3);
+  //  for(unsigned int k=0;k<16;k++){
+  //    // is at least one point in view?
+  //    unsigned int k1((k+1)&15);
+  //    bool view_x((fabs(roomnodes[16].x)<1)||
+  //                (fabs(roomnodes[k].x)<1)||
+  //                (fabs(roomnodes[k1].x)<1));
+  //    bool view_y((fabs(roomnodes[16].y)<1)||
+  //                (fabs(roomnodes[k].y)<1)||
+  //                (fabs(roomnodes[k1].y)<1));
+  //    if( view_x && view_y ){
+  //      cr->move_to( roomnodes[16].x, -roomnodes[16].y );
+  //      cr->line_to( roomnodes[k].x, -roomnodes[k].y );
+  //      cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
+  //      cr->fill();
+  //    }
+  //  }
+  //}
   if( active ){
     // normal and name:
-    cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
-    cr->move_to( roomnodes[16].x, -roomnodes[16].y );
-    cr->line_to( roomnodes[17].x, -roomnodes[17].y );
-    cr->stroke();
+    //cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
+    //cr->move_to( roomnodes[16].x, -roomnodes[16].y );
+    //cr->line_to( roomnodes[17].x, -roomnodes[17].y );
+    //cr->stroke();
     cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.3);
-    cr->arc(roomnodes[16].x, -roomnodes[16].y, msize, 0, PI2 );
-    cr->fill();
-    cr->set_source_rgb(0, 0, 0 );
-    cr->move_to( roomnodes[16].x + 0.1*msize, -roomnodes[16].y );
-    cr->show_text( face.get_name().c_str() );
+    if( loc.z != std::numeric_limits<double>::infinity()){
+      cr->arc(loc.x, -loc.y, msize, 0, PI2 );
+      cr->fill();
+      cr->set_line_width( 0.4*msize );
+      cr->set_source_rgb(face.color.r,face.color.g,face.color.b);
+      draw_face_normal(face,cr);
+      cr->set_source_rgb(0, 0, 0 );
+      cr->move_to( loc.x + 0.1*msize, -loc.y );
+      cr->show_text( face.get_name().c_str() );
+    }
   }
   cr->restore();
 }
@@ -408,18 +503,25 @@ void pdf_export_t::draw(view_t persp)
   switch( persp ){
   case p : 
     view.set_perspective(true);
+    if( sink_objects.size() ){
+      view.set_ref(sink_objects[0].get_location(time));
+      view.set_euler(sink_objects[0].get_orientation(time));
+    }
     //view.set_euler(listener.get_orientation(time));
     break;
   case xy :
     view.set_perspective(false);
+    view.set_ref(guicenter);
     view.set_euler(zyx_euler_t(0,0,0));
     break;
   case xz :
     view.set_perspective(false);
+    view.set_ref(guicenter);
     view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
     break;
   case yz :
     view.set_perspective(false);
+    view.set_ref(guicenter);
     view.set_euler(zyx_euler_t(0,0.5*M_PI,0.5*M_PI));
     break;
   }
@@ -436,25 +538,38 @@ void pdf_export_t::draw(view_t persp)
   cr->set_source_rgb( 1, 1, 1 );
   cr->paint();
   cr->restore();
-  //draw_track( listener, cr, markersize );
-  for(unsigned int k=0;k<srcobjects.size();k++){
-    draw_track(srcobjects[k], cr, markersize );
+  for(unsigned int k=0;k<faces.size();k++){
+      faces[k].geometry_update(time);
+      draw_face(faces[k], cr, markersize );
+    }
+  // draw tracks:
+  for(unsigned int k=0; k<object_sources.size(); k++)
+    draw_track(object_sources[k], cr, markersize );
+      
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    draw_track(sink_objects[k], cr, markersize );
   }
-  //for(unsigned int k=0;k<reverbs.size();k++){
-  //  draw_room(reverbs[k], cr, markersize );
-  //}
-  //for(unsigned int k=0;k<faces.size();k++){
-  //  draw_face(faces[k], cr, markersize );
-  //}
-  //draw_listener( listener, cr, markersize );
+  // draw other objects:
+  for(unsigned int k=0;k<diffuse_sources.size();k++){
+    draw_room_src(diffuse_sources[k], cr, markersize );
+  }
+  for(unsigned int k=0;k<door_sources.size();k++){
+    draw_door_src(door_sources[k], cr, markersize );
+  }
+  for(unsigned int k=0;k<object_sources.size();k++){
+    draw_src(object_sources[k], cr, markersize );
+  }
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    draw_sink_object( sink_objects[k], cr, markersize );
+  }
   cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
   cr->move_to(-markersize, 0 );
   cr->line_to( markersize, 0 );
   cr->move_to( 0, -markersize );
   cr->line_to( 0,  markersize );
   cr->stroke();
-  for(unsigned int k=0;k<srcobjects.size();k++){
-    draw_src(srcobjects[k], cr, markersize );
+  for(unsigned int k=0;k<object_sources.size();k++){
+    draw_src(object_sources[k], cr, markersize );
   }
   cr->restore();
   double bw(50*72/25.4);

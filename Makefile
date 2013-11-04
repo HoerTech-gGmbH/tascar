@@ -1,7 +1,8 @@
 PREFIX = /usr/local
 
 BINFILES = tascar_renderer tascar_gui tascar_audioplayer		\
-tascar_sampler tascar_osc_jack_transport tascar_oscmix tascar_jackio
+tascar_sampler tascar_osc_jack_transport tascar_oscmix tascar_jackio	\
+tascar_pdf
 #tascar_creator 			\
 #tascar_gpxvelocity tascar_gui tascar_pdf tascar_multipan tascar_jpos	\
 
