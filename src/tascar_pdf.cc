@@ -50,8 +50,8 @@ bool has_infinity(const pos_t& p)
 
 void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
 {
-  DEBUG(p1.print_cart());
-  DEBUG(p2.print_cart());
+  //DEBUG(p1.print_cart());
+  //DEBUG(p2.print_cart());
   if( !(has_infinity(p1) || has_infinity(p2)) ){
     cr->move_to(p1.x,-p1.y);
     cr->line_to(p2.x,-p2.y);
@@ -265,7 +265,7 @@ void pdf_export_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo
 
 void pdf_export_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr)
 {
-  DEBUG(1);
+  //DEBUG(1);
   std::vector<pos_t> roomnodes(8,pos_t());
   roomnodes[0].x -= 0.5*size.x;
   roomnodes[1].x += 0.5*size.x;
@@ -398,7 +398,7 @@ void pdf_export_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::Ref
 
 void pdf_export_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  DEBUGMSG("face");
+  //DEBUGMSG("face");
   bool active(face.isactive(time));
   if( !active )
     msize*=0.5;
