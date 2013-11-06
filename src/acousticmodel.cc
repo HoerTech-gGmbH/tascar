@@ -185,7 +185,9 @@ void mirrorsource_t::process()
     mirror_position *= 2.0;
     mirror_position += src_->position;
     double nextgain(1.0);
-    src_->get_effective_position(position,nextgain);
+    //src_->get_effective_position(position,nextgain);
+    src_->get_effective_position(mirror_position,nextgain);
+    //DEBUGS(nextgain);
     if( dot_prod(nearest_point,reflector_->get_normal())>0 )
       dg = -g*dt;
     else
@@ -225,6 +227,7 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
   for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
     for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
       mirrorsource.push_back(mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
+  DEBUGS(mirrorsource.size());
 }
 
 reflector_t::reflector_t()
