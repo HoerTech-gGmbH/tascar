@@ -439,6 +439,7 @@ void tascar_gui_t::on_range_selected()
     for(unsigned int k=0;k<scene->ranges.size();k++)
       if( scene->ranges[k].name == rg ){
         nr = k;
+        tp_locate(scene->ranges[k].start);
       }
   }
   selected_range = nr;
