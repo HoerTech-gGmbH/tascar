@@ -50,6 +50,8 @@ namespace TASCAR {
         float _w[AMB33::idx::channels];
         float w_current[AMB33::idx::channels];
         float dw[AMB33::idx::channels];
+        float rotz_current[2];
+        float drotz[2];
       };
       sink_data_t* create_sink_data() { return new data_t();};
       sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,

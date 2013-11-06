@@ -66,6 +66,8 @@ sink_amb3h3v_t::data_t::data_t()
 {
   for(uint32_t k=0;k<AMB33::idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
+  rotz_current[0] = 0;
+  rotz_current[1] = 0;
 }
  
 sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
@@ -115,8 +117,26 @@ void sink_amb3h3v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_dat
   }
 }
 
-void sink_amb3h3v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*)
+void sink_amb3h3v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
 {
+  data_t* d((data_t*)sd);
+  float az = prel.azim();
+  d->drotz[0] = (cos(az) - d->rotz_current[0])*dt;;
+  d->drotz[1] = (sin(az) - d->rotz_current[1])*dt;
+  for( unsigned int i=0;i<chunk.size();i++){
+    d->rotz_current[0] += d->drotz[0];
+    d->rotz_current[1] += d->drotz[1];
+    float x(d->rotz_current[0]*chunk.x()[i] + d->rotz_current[1]*chunk.y()[i]);
+    float y(-d->rotz_current[1]*chunk.x()[i] + d->rotz_current[0]*chunk.y()[i]);
+    float z(chunk.z()[i]);
+    outchannels[AMB33::idx::w][i] += chunk.w()[i];
+    outchannels[AMB33::idx::x][i] += x;
+    outchannels[AMB33::idx::y][i] += y;
+    outchannels[AMB33::idx::z][i] += z;
+    //outchannels[AMB30::idx::w][i] += chunk.w()[i];
+    //outchannels[AMB30::idx::x][i] += chunk.x()[i];
+    //outchannels[AMB30::idx::y][i] += chunk.y()[i];
+  }
 }
 
 std::string sink_amb3h3v_t::get_channel_postfix(uint32_t channel) const
