@@ -30,8 +30,22 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <string.h>
+#include <fstream>
 
 static bool b_quit;
+
+std::string nice_name(std::string s)
+{
+  for( uint32_t k=0;k<s.size();k++)
+    switch( s[k] ){
+    case '/':
+    case ':':
+    case '.':
+    case ' ':
+      s[k] = '_';
+    }
+  return s+".txt";
+}
 
 namespace TASCAR {
 
@@ -42,12 +56,22 @@ namespace TASCAR {
     uint32_t size;
   };
 
+  class varwriter_t : public var_t {
+  public:
+    varwriter_t(const var_t& var,const std::string& session_name);
+    void write(const char *types, lo_arg **argv,double t);
+  private:
+    std::ofstream ofs;
+  };
+
   class session_t {
   public:
     session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables);
     ~session_t();
     void setvar(const char *path, const char *types, lo_arg **argv, int argc,double t);
   private:
+    std::vector<varwriter_t*> writer;
+    FILE* h_pipe;
   };
 
   class osc_jt_t : public jackc_portless_t, public TASCAR::osc_server_t {
@@ -121,16 +145,54 @@ namespace OSC {
 
 }
 
-TASCAR::session_t::session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables)
+TASCAR::varwriter_t::varwriter_t(const var_t& var,const std::string& session_name)
+  : var_t(var),
+    ofs(nice_name(session_name+var.path).c_str())
 {
+}
+
+void TASCAR::varwriter_t::write(const char *types, lo_arg **argv,double t)
+{
+  //DEBUGS(t);
+  for( uint32_t k=0;k<size;k++)
+    if( types[k] != 'f')
+      return;
+  ofs << t;
+  for( uint32_t k=0;k<size;k++)
+    ofs << " " << argv[k]->f;
+  ofs << std::endl;
+}
+
+TASCAR::session_t::session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables)
+  : h_pipe(NULL)
+{
+  if( !scenario.empty() ){
+    char ctmp[1024];
+    sprintf(ctmp,"tascar_renderer -c %s 2>&1",scenario.c_str());
+    h_pipe = popen( ctmp, "w" );
+    if( !h_pipe )
+      throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
+  }
+  //DEBUGS(session_name);
+  for( std::vector<var_t>::const_iterator it=variables.begin();it!=variables.end();++it)
+    writer.push_back(new varwriter_t(*it,session_name));
 }
 
 TASCAR::session_t::~session_t()
 {
+  //DEBUG("");
+  for(std::vector<varwriter_t*>::iterator it=writer.begin();it!=writer.end();++it)
+    delete *it;
+  if( h_pipe )
+    pclose(h_pipe);
 }
 
 void TASCAR::session_t::setvar(const char *path, const char *types, lo_arg **argv, int argc,double t)
 {
+  //DEBUGS(path);
+  for( std::vector<varwriter_t*>::iterator it=writer.begin();it!=writer.end();++it)
+    if( ((*it)->size == (uint32_t)argc) && (strcmp((*it)->path.c_str(),path)==0) )
+      (*it)->write(types,argv,t);
 }
 
 TASCAR::var_t::var_t(const std::string& var)
