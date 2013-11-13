@@ -10,6 +10,7 @@ static bool b_quit;
 static void sighandler(int sig)
 {
   b_quit = true;
+  fclose(stdin);
 }
 
 void usage(struct option * opt)
