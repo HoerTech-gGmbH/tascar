@@ -247,6 +247,7 @@ namespace TASCAR {
       sink_object_t();
       virtual ~sink_object_t();
       void read_xml(xmlpp::Element* e);
+      void write_xml(xmlpp::Element* e);
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
       void geometry_update(double t);

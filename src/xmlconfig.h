@@ -30,6 +30,7 @@ void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value)
 void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value);
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value);
 
 #endif
 

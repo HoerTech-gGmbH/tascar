@@ -96,9 +96,12 @@ void object_t::read_xml(xmlpp::Element* e)
 void object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   route_t::write_xml(e,help_comments);
-  e->set_attribute("color",color.str());
-  set_attribute_double(e,"start",starttime);
-  set_attribute_double(e,"end",endtime);
+  if( color.str() != "#000000" )
+    e->set_attribute("color",color.str());
+  if( !((starttime==0.0) && (endtime==0.0)) ){
+    set_attribute_double(e,"start",starttime);
+    set_attribute_double(e,"end",endtime);
+  }
   if( location.size() ){
     location.write_xml( e->add_child("position") );
   }
@@ -133,6 +136,8 @@ void src_diffuse_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   object_t::write_xml(e,help_comments);
   jack_port_t::write_xml(e);
+  set_attribute_value(e,"size",size);
+  set_attribute_double(e,"falloff",falloff);
   //set_attribute_double(e,"size_x",size.x);
   //set_attribute_double(e,"size_y",size.y);
   //set_attribute_double(e,"size_z",size.z);
@@ -337,6 +342,7 @@ void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
     set_attribute_double(e,"z",local_position.z);
   if( chaindist != 0 )
     set_attribute_double(e,"d",chaindist);
+  jack_port_t::write_xml(e);
 }
 
 //std::string sound_t::print(const std::string& prefix)
@@ -609,6 +615,71 @@ void sink_object_t::read_xml(xmlpp::Element* e)
   }
 }
 
+void sink_object_t::write_xml(xmlpp::Element* e)
+{
+  object_t::write_xml(e);
+  jack_port_t::write_xml(e);
+  if( (size.x != 0) || (size.y != 0) || (size.z != 0))
+    set_attribute_value(e,"size",size);
+  //get_attribute_value(e,"size_y",size.y);
+  //get_attribute_value(e,"size_z",size.z);
+  set_attribute_bool(e,"point",render_point);
+  set_attribute_bool(e,"diffuse",render_diffuse);
+  set_attribute_bool(e,"isdirect",is_direct);
+  if( diffusegain != 0 )
+    set_attribute_db(e,"diffusegain",diffusegain);
+  if( falloff != -1 )
+    set_attribute_double(e,"falloff",falloff);
+  switch( sink_type ){
+  case omni:
+    e->set_attribute("type", "omni");
+    break;
+  case cardioid:
+    e->set_attribute("type", "cardioid");
+    break;
+  case amb3h3v :
+    e->set_attribute("type", "amb3h3v");
+    break;
+  case amb3h0v :
+    e->set_attribute("type", "amb3h0v");
+    break;
+  case nsp :
+    e->set_attribute("type", "nsp");
+    break;
+  }
+  //
+  if( use_mask ){
+    mask.write_xml(e->add_child("mask"));
+  }
+  for( std::vector<TASCAR::pos_t>::iterator it=spkpos.begin();it!=spkpos.end();++it){
+    xmlpp::Element* sne(e->add_child("speaker"));
+    set_attribute_double(sne,"az",it->azim()*RAD2DEG);
+    set_attribute_double(sne,"el",it->elev()*RAD2DEG);
+    set_attribute_double(sne,"r",it->norm());
+  }
+  //xmlpp::Node::NodeList subnodes = e->get_children();
+  //for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+  //  xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+  //  if( sne && ( sne->get_name() == "speaker" )){
+  //    double az(0.0);
+  //    double elev(0.0);
+  //    double r(1.0);
+  //    get_attribute_value(sne,"az",az);
+  //    get_attribute_value(sne,"el",elev);
+  //    get_attribute_value(sne,"r",r);
+  //    pos_t spk;
+  //    spk.set_sphere(r,az*DEG2RAD,elev*DEG2RAD);
+  //    spkpos.push_back(spk);
+  //  }
+  //  if( sne && ( sne->get_name() == "mask" )){
+  //    use_mask = true;
+  //    mask.read_xml(sne);
+  //  }
+  //}
+}
+
+
+
 void sink_object_t::prepare(double fs, uint32_t fragsize)
 {
   //DEBUG(fragsize);
@@ -659,39 +730,44 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
   //set_attribute_double(e,"lat",lat);
   //set_attribute_double(e,"lon",lon);
   //set_attribute_double(e,"elev",elev);
-  set_attribute_double(e,"guiscale",guiscale);
   set_attribute_double(e,"duration",duration);
+  set_attribute_double(e,"guiscale",guiscale);
+  set_attribute_value(e,"guicenter",guicenter);
   set_attribute_bool(e,"loop",loop);
   if( description.size()){
     xmlpp::Element* description_node = e->add_child("description");
     description_node->add_child_text(description);
   }
   bool b_first(true);
+  for(std::vector<range_t>::iterator it=ranges.begin();it!=ranges.end();++it){
+    it->write_xml(e->add_child("range"),help_comments && b_first);
+    b_first = false;
+  }
+  b_first = true;
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     it->write_xml(e->add_child("src_object"),help_comments && b_first);
     b_first = false;
   }
   b_first = true;
-  //for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-  //  it->write_xml(e->add_child("diffuse_sources"),help_comments && b_first);
-  //  b_first = false;
-  //}
-  //b_first = true;
-  //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it){
-  //  it->write_xml(e->add_child("reverb"),help_comments && b_first);
-  //  b_first = false;
-  //}
-  //b_first = true;
-  //for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
-  //  it->write_xml(e->add_child("face"),help_comments && b_first);
-  //  b_first = false;
-  //}
-  b_first = true;
-  for(std::vector<range_t>::iterator it=ranges.begin();it!=ranges.end();++it){
-    it->write_xml(e->add_child("range"),help_comments && b_first);
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    it->write_xml(e->add_child("diffuse"),help_comments && b_first);
     b_first = false;
   }
-  //listener.write_xml(e->add_child("listener"),help_comments);
+  b_first = true;
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
+    it->write_xml(e->add_child("sink"));
+    b_first = false;
+  }
+  b_first = true;
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
+    it->write_xml(e->add_child("face"),help_comments && b_first);
+    b_first = false;
+  }
+  for(std::vector<connection_t>::iterator it=connections.begin();it!=connections.end();++it){
+    xmlpp::Element* sne(e->add_child("connect"));
+    sne->set_attribute("src",it->src.c_str());
+    sne->set_attribute("dest",it->dest.c_str());
+  }
 }
 
 void scene_t::read_xml(xmlpp::Element* e)
@@ -1338,7 +1414,8 @@ void jack_port_t::write_xml(xmlpp::Element* e)
 {
   if( connect.size() )
     e->set_attribute("connect",connect);
-  set_attribute_db(e,"gain",gain);
+  if( gain != 0.0 )
+    set_attribute_db(e,"gain",gain);
 }
 
 jack_port_t::jack_port_t()
@@ -1375,10 +1452,14 @@ void sndfile_info_t::read_xml(xmlpp::Element* e)
 void sndfile_info_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   e->set_attribute("name",fname.c_str());
-  set_attribute_uint(e,"firstchannel",firstchannel);
-  set_attribute_uint(e,"channels",channels);
-  set_attribute_uint(e,"loop",loopcnt);
-  set_attribute_db(e,"gain",gain);
+  if( firstchannel != 0 )
+    set_attribute_uint(e,"firstchannel",firstchannel);
+  if( channels != 1 )
+    set_attribute_uint(e,"channels",channels);
+  if( loopcnt != 1 )
+    set_attribute_uint(e,"loop",loopcnt);
+  if( gain != 0.0 )
+    set_attribute_db(e,"gain",gain);
 }
 
 void src_object_t::process_active(double t, uint32_t anysolo)

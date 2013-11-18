@@ -33,6 +33,14 @@ void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value)
   elem->set_attribute(name,ctmp);
 }
 
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value)
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%g %g %g",value.x, value.y, value.z);
+  elem->set_attribute(name,ctmp);
+}
+
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value)
 {
   std::string attv(elem->get_attribute_value(name));

@@ -555,7 +555,7 @@ void track_t::write_xml( xmlpp::Element* a)
 {
   switch( interpt ){
   case TASCAR::track_t::cartesian:
-    a->set_attribute("interpolation","cartesian");
+    //a->set_attribute("interpolation","cartesian");
     break;
   case TASCAR::track_t::spherical:
     a->set_attribute("interpolation","spherical");
