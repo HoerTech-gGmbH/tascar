@@ -803,10 +803,6 @@ void scene_t::read_xml(xmlpp::Element* e)
         sink_objects.push_back(sink_object_t());
         sink_objects.rbegin()->read_xml(sne);
       }
-      //if( sne->get_name() == "reverb" ){
-      //  reverbs.push_back(diffuse_reverb_t());
-      //  reverbs.rbegin()->read_xml(sne);
-      //}
       if( sne->get_name() == "face" ){
         faces.push_back(face_object_t());
         faces.rbegin()->read_xml(sne);
@@ -820,6 +816,16 @@ void scene_t::read_xml(xmlpp::Element* e)
         c.src = sne->get_attribute_value("src");
         c.dest = sne->get_attribute_value("dest");
         connections.push_back(c);
+      }
+      if( sne->get_name() == "include" ){
+        std::string fname(sne->get_attribute_value("name"));
+        scene_t inc_scene(fname);
+#define COPYOBJ(x) x.insert(x.end(),inc_scene.x.begin(),inc_scene.x.end())
+        COPYOBJ(object_sources);
+        COPYOBJ(diffuse_sources);
+        COPYOBJ(door_sources);
+        COPYOBJ(faces);
+        COPYOBJ(sink_objects);
       }
     }
   }
