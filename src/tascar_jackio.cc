@@ -68,6 +68,7 @@ private:
   uint32_t nframes_total;
   std::vector<std::string> p;
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+  bool b_cb;
 };
 
 jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
@@ -84,7 +85,8 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     use_transport(false),
     startframe(0),
     nframes_total(0),
-    p(ports)
+    p(ports),
+    b_cb(false)
 {
   if( !(sf_in = sf_open(ifname.c_str(),SFM_READ,&sf_inf_in)) )
     throw TASCAR::ErrMsg("unable to open input file \""+ifname+"\" for reading.");
@@ -176,6 +178,7 @@ jackio_t::~jackio_t()
 
 int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
 {
+  b_cb = true;
   bool record(start);
   if( use_transport )
     record &= tp_running;
@@ -223,6 +226,10 @@ void jackio_t::run()
   if( use_transport ){
     tp_stop();
     tp_locate(startframe);
+  }
+  b_cb = false;
+  while( !b_cb ){
+    usleep( 5000 );
   }
   start = true;
   if( use_transport ){
