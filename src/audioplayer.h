@@ -16,6 +16,7 @@ public:
   void stop();
   std::vector<TASCAR::Scene::sndfile_info_t> infos;
   std::vector<TASCAR::async_sndfile_t> files;
+  std::vector<uint32_t> portno;
 };
 
 #endif
