@@ -41,7 +41,7 @@ void audioplayer_t::open_files()
     files[k].open(infos[k].fname,infos[k].firstchannel,infos[k].starttime*get_srate(),
                   infos[k].gain,infos[k].loopcnt);
     portno.push_back(get_num_output_ports());
-    if( infos[k].channels > 1 ){
+    if( infos[k].channels != 1 ){
       for(uint32_t ch=0;ch<infos[k].channels;ch++){
         char pname[1024];
         sprintf(pname,"%s.%d.%d",infos[k].parentname.c_str(),infos[k].objectchannel,ch);

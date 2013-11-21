@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "errorhandling.h"
+#include <string.h>
 
 static std::string errmsg("");
 
@@ -78,6 +79,8 @@ int jackc_t::process_(jack_nframes_t nframes)
 
 void jackc_t::add_input_port(const std::string& name)
 {
+  if( (int)(strlen(jack_get_client_name(jc))+name.size()+2) >= jack_port_name_size())
+    throw TASCAR::ErrMsg(std::string("Port name "+name+" is to long."));
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsInput,0);
   if( !p )
@@ -88,6 +91,8 @@ void jackc_t::add_input_port(const std::string& name)
 
 void jackc_t::add_output_port(const std::string& name)
 {
+  if( (int)(strlen(jack_get_client_name(jc))+name.size()+2) >= jack_port_name_size())
+    throw TASCAR::ErrMsg(std::string("Port name "+name+" is to long."));
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsOutput,0);
   if( !p )
