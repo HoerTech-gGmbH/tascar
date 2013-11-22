@@ -266,8 +266,10 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
   }
   int32_t current_pos(0);
   uint32_t rframes = rb.read( read_fragment_buf, n, &current_pos );
-  if( (current_pos != firstframe) || (rframes<n) )
+  if( (current_pos != firstframe) || (rframes<n) ){
     xrun++;
+    DEBUG(xrun);
+  }
   if( current_pos == firstframe ){
     // copy and de-interlace buffer:
     for( unsigned int ch=0; ch<channels; ch++ ){
