@@ -68,7 +68,7 @@ namespace TASCAR {
   public:
     session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables);
     ~session_t();
-    void setvar(const char *path, const char *types, lo_arg **argv, int argc,double t);
+    void setvar(const char *path, const char *types, lo_arg **argv, int argc,double t,std::vector<uint32_t>& counter);
   private:
     std::vector<varwriter_t*> writer;
     FILE* h_pipe;
@@ -76,7 +76,7 @@ namespace TASCAR {
 
   class osc_jt_t : public jackc_portless_t, public TASCAR::osc_server_t {
   public:
-    osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::vector<std::string>& variables);
+    osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::string& desturl, const std::vector<std::string>& variables);
     double gettime();
     void run();
     void close_session();
@@ -84,9 +84,11 @@ namespace TASCAR {
     void setvar(const char *path, const char *types, lo_arg **argv, int argc);
   protected:
     std::vector<var_t> variables_;
+    std::vector<uint32_t> counter;
     bool running;
     pthread_mutex_t mtx_session;
     session_t* session;
+    lo_address client_addr;
   };
 
 }
@@ -169,13 +171,15 @@ TASCAR::session_t::session_t(const std::string& session_name, const std::string&
   if( !scenario.empty() ){
     char ctmp[1024];
     sprintf(ctmp,"tascar_renderer -c %s 2>&1",scenario.c_str());
+    DEBUG(ctmp);
     h_pipe = popen( ctmp, "w" );
     if( !h_pipe )
       throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
   }
   //DEBUGS(session_name);
-  for( std::vector<var_t>::const_iterator it=variables.begin();it!=variables.end();++it)
+  for( std::vector<var_t>::const_iterator it=variables.begin();it!=variables.end();++it){
     writer.push_back(new varwriter_t(*it,session_name));
+  }
 }
 
 TASCAR::session_t::~session_t()
@@ -187,12 +191,17 @@ TASCAR::session_t::~session_t()
     pclose(h_pipe);
 }
 
-void TASCAR::session_t::setvar(const char *path, const char *types, lo_arg **argv, int argc,double t)
+void TASCAR::session_t::setvar(const char *path, const char *types, lo_arg **argv, int argc,double t,std::vector<uint32_t>& counter)
 {
   //DEBUGS(path);
-  for( std::vector<varwriter_t*>::iterator it=writer.begin();it!=writer.end();++it)
-    if( ((*it)->size == (uint32_t)argc) && (strcmp((*it)->path.c_str(),path)==0) )
+  uint32_t k(0);
+  for( std::vector<varwriter_t*>::iterator it=writer.begin();it!=writer.end();++it){
+    if( ((*it)->size == (uint32_t)argc) && (strcmp((*it)->path.c_str(),path)==0) ){
       (*it)->write(types,argv,t);
+      counter[k]++;
+    }
+    k++;
+  }
 }
 
 TASCAR::var_t::var_t(const std::string& var)
@@ -208,8 +217,9 @@ TASCAR::var_t::var_t(const std::string& var)
   }
 }
 
-TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::vector<std::string>& variables)
-  : jackc_portless_t("recorder"),osc_server_t(osc_addr,osc_port),session(NULL)
+TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::string& desturl,const std::vector<std::string>& variables)
+  : jackc_portless_t("recorder"),osc_server_t(osc_addr,osc_port),session(NULL),
+    client_addr(lo_address_new_from_url(desturl.c_str()))
 {
   for(std::vector<std::string>::const_iterator it=variables.begin();it!=variables.end();++it)
     variables_.push_back(var_t(*it));
@@ -222,8 +232,10 @@ TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_p
   osc_server_t::add_method("/start","",OSC::_start,this);
   osc_server_t::add_method("/stop","",OSC::_stop,this);
   osc_server_t::add_method("/quit","",OSC::_quit,this);
-  for( std::vector<var_t>::iterator it=variables_.begin();it!=variables_.end();++it)
+  for( std::vector<var_t>::iterator it=variables_.begin();it!=variables_.end();++it){
     osc_server_t::add_method(it->path,std::string(it->size,'f').c_str(),OSC::_setvar,this);
+    counter.push_back(0);
+  }
 }
 
 void TASCAR::osc_jt_t::setvar(const char *path, const char *types, lo_arg **argv, int argc)
@@ -232,7 +244,7 @@ void TASCAR::osc_jt_t::setvar(const char *path, const char *types, lo_arg **argv
   if( session ){
     double t(gettime());
     if( running )
-      session->setvar(path,types,argv,argc,t);
+      session->setvar(path,types,argv,argc,t,counter);
   }
   pthread_mutex_unlock( &mtx_session );
 }
@@ -244,6 +256,8 @@ void TASCAR::osc_jt_t::close_session()
     delete session;
     session = NULL;
   }
+  for(uint32_t k=0;k<counter.size();k++)
+    counter[k] = 0;
   pthread_mutex_unlock( &mtx_session );
 }
 
@@ -268,8 +282,11 @@ void TASCAR::osc_jt_t::run()
 {
   osc_server_t::activate();
   jackc_portless_t::activate();
-  while(!b_quit)
+  while(!b_quit){
     sleep(1);
+    for(uint32_t k=0;k<variables_.size();k++)
+      lo_send(client_addr,variables_[k].path.c_str(),"i",counter[k]);
+  }
   jackc_portless_t::deactivate();
   osc_server_t::deactivate();
 }
@@ -300,13 +317,15 @@ int main(int argc, char** argv)
   std::string jackname("tascar_transport");
   std::string srv_addr("239.255.1.7");
   std::string srv_port("9877");
+  std::string desturl("osc.udp://localhost:9888/");
   std::vector<std::string> variables;
-  const char *options = "hj:p:a:";
+  const char *options = "hj:p:a:d:";
   struct option long_options[] = { 
     { "help",     0, 0, 'h' },
     { "jackname", 1, 0, 'j' },
     { "srvaddr",  1, 0, 'a' },
     { "srvport",  1, 0, 'p' },
+    { "desturl",  1, 0, 'd' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
@@ -326,11 +345,14 @@ int main(int argc, char** argv)
     case 'a':
       srv_addr = optarg;
       break;
+    case 'd':
+      desturl = optarg;
+      break;
     }
   }
   while( optind < argc )
     variables.push_back( argv[optind++] );
-  TASCAR::osc_jt_t S(srv_addr,srv_port,variables);
+  TASCAR::osc_jt_t S(srv_addr,srv_port,desturl,variables);
   S.run();
 }
 
