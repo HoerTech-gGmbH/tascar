@@ -46,6 +46,11 @@ double viewport_t::get_scale() const
   return 2*scale;
 }
 
+TASCAR::pos_t viewport_t::get_ref() const
+{
+  return ref;
+}
+
 double viewport_t::get_fov() const
 {
   return 2*fov*RAD2DEG;

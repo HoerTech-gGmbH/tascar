@@ -17,6 +17,7 @@ public:
   bool get_perspective() const;
   double get_scale() const;
   double get_fov() const;
+  pos_t get_ref() const;
 private:
   zyx_euler_t euler;
   pos_t ref;

@@ -1093,6 +1093,8 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   pthread_mutex_lock( &mtx_scene );
   try{
     Glib::RefPtr<Gdk::Window> window = wdg_scenemap.get_window();
+    int mp_x(0);
+    int mp_y(0);
     if(window && scene){
       switch( viewt ){
       case top :
@@ -1121,6 +1123,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       Gtk::Allocation allocation = wdg_scenemap.get_allocation();
       const int width = allocation.get_width();
       const int height = allocation.get_height();
+      wdg_scenemap.get_pointer(mp_x,mp_y);
       cr->rectangle(0,0,width,height);
       cr->clip();
       cr->translate(0.5*width, 0.5*height);
@@ -1142,6 +1145,21 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
       cr->restore();
+      if( (mp_x > 0) && (mp_x < width ) && (mp_y > 0) && (mp_y < height) ){
+        pos_t mp(mp_x,mp_y,0.0);
+        mp -= pos_t(0.5*width,0.5*height,0.0);
+        mp *= view.get_scale()/wscale;
+        mp += view.get_ref();
+        cr->save();
+        cr->move_to( -0.9,0.9 );
+        char cmp[1024];
+        sprintf(cmp,"%1.1f | %1.1f",mp.x,-mp.y);
+        //DEBUGS(cmp);
+        cr->set_source_rgb( 0, 0, 0 );
+        cr->show_text( cmp );
+        cr->stroke();
+        cr->restore();
+      }
       //draw_track( scene->sink_objects, cr, markersize );
       for(unsigned int k=0;k<scene->faces.size();k++){
         scene->faces[k].geometry_update(time);
