@@ -1148,7 +1148,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       if( (mp_x > 0) && (mp_x < width ) && (mp_y > 0) && (mp_y < height) ){
         pos_t mp(mp_x,mp_y,0.0);
         mp -= pos_t(0.5*width,0.5*height,0.0);
-        mp *= view.get_scale()/wscale;
+        mp *= 0.5*view.get_scale()/wscale;
         mp += view.get_ref();
         cr->save();
         cr->move_to( -0.9,0.9 );
