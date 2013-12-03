@@ -21,6 +21,6 @@ sudo make uninstall
 
 On debian-based systems, the dependencies may be satisfied by typing:
 
-sudo apt-get install libxml++-2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev
+sudo apt-get install libxml++2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev
 
 (untested)
