@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include "scene.h"
 #include <iostream>
+#include <fstream>
 
 using namespace TASCAR;
 
@@ -18,15 +19,17 @@ int main(int argc,char**argv)
 {
   std::string cfg_input("");
   std::string cfg_output("");
+  std::string csv_export("");
   //bool b_list(false);
   bool b_example(false);
-  const char *options = "i:o:xh";
+  const char *options = "i:o:xhc:";
   struct option long_options[] = { 
-    { "input",   1, 0, 'i' },
-    { "output",  1, 0, 'o' },
-    //{ "list",    0, 0, 'l' },
-    { "example", 0, 0, 'x' },
-    { "help",    0, 0, 'h' },
+    { "input",     1, 0, 'i' },
+    { "output",    1, 0, 'o' },
+    { "randomize", 0, 0, 'r' },
+    { "example",   0, 0, 'x' },
+    { "cvsexport", 1, 0, 'c' },
+    { "help",      0, 0, 'h' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
@@ -39,6 +42,9 @@ int main(int argc,char**argv)
       break;
     case 'o':
       cfg_output = optarg;
+      break;
+    case 'c':
+      csv_export = optarg;
       break;
     case 'h':
       usage(long_options);
@@ -76,6 +82,17 @@ int main(int argc,char**argv)
     std::string strtime(ctime(&tm));
     strtime = "\nCreated with tascar_creator\n" + strtime;
     xml_write_scene(cfg_output,S,strtime,b_example);
+  }
+  if( csv_export.size() ){
+    std::ofstream csv(csv_export.c_str());
+    csv << "\"start time\",\"duration\",\"name\"" << std::endl;
+    std::vector<TASCAR::Scene::object_t*> objects(S.get_objects());
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it=objects.begin();it!=objects.end();++it){
+      if( (*it)->starttime < (*it)->endtime )
+        csv << (*it)->starttime << "," << 
+          (*it)->endtime-(*it)->starttime << 
+          ",\"" << (*it)->get_name() << "\"" << std::endl;
+    }
   }
   //if( b_list )
   //  std::cout << S.print();
