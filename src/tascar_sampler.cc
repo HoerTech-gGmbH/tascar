@@ -195,6 +195,8 @@ int sampler_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const s
 void sampler_t::open_sounds(const std::string& fname)
 {
   std::ifstream fh(fname.c_str());
+  if( fh.fail() )
+    throw TASCAR::ErrMsg("Unable to open sound font file \""+fname+"\".");
   while(!fh.eof() ){
     char ctmp[1024];
     memset(ctmp,0,1024);
