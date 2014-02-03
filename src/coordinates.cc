@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fstream>
+#include "errorhandling.h"
 
 using namespace TASCAR;
 
@@ -313,6 +314,8 @@ void track_t::load_from_csv( const std::string& fname )
 {
   track_t track;
   std::ifstream fh(fname.c_str());
+  if( fh.fail() )
+    throw TASCAR::ErrMsg("Unable to open track csv file \""+fname+"\".");
   std::string v_tm, v_x, v_y, v_z;
   while( !fh.eof() ){
     getline(fh,v_tm,',');
@@ -506,6 +509,8 @@ void track_t::set_velocity_const( double v )
 void track_t::set_velocity_csvfile( const std::string& fname, double offset )
 {
   std::ifstream fh(fname.c_str());
+  if( fh.fail() )
+    throw TASCAR::ErrMsg("Unable to open velocity csv file \""+fname+"\".");
   std::string v_tm, v_x;
   track_t vmap;
   while( !fh.eof() ){
