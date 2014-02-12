@@ -20,9 +20,10 @@ int main(int argc,char**argv)
   std::string cfg_input("");
   std::string cfg_output("");
   std::string csv_export("");
+  std::string pos_export("");
   //bool b_list(false);
   bool b_example(false);
-  const char *options = "i:o:xhc:";
+  const char *options = "i:o:xhc:p:";
   struct option long_options[] = { 
     { "input",     1, 0, 'i' },
     { "output",    1, 0, 'o' },
@@ -30,6 +31,7 @@ int main(int argc,char**argv)
     { "example",   0, 0, 'x' },
     { "cvsexport", 1, 0, 'c' },
     { "help",      0, 0, 'h' },
+    { "posexport", 1, 0, 'p' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
@@ -45,6 +47,9 @@ int main(int argc,char**argv)
       break;
     case 'c':
       csv_export = optarg;
+      break;
+    case 'p':
+      pos_export = optarg;
       break;
     case 'h':
       usage(long_options);
@@ -93,6 +98,51 @@ int main(int argc,char**argv)
           (*it)->endtime-(*it)->starttime << 
           ",\"" << (*it)->get_name() << "\"" << std::endl;
     }
+  }
+  if( pos_export.size() ){
+    std::ofstream pf((pos_export+"_pos.m").c_str());
+    std::vector<TASCAR::Scene::object_t*> objects(S.get_objects());
+    pf << "csLabels = {";
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it=objects.begin();it!=objects.end();++it){
+      if( it!=objects.begin() )
+        pf << ",";
+      pf << "'" << (*it)->get_name()<< "'";
+    }
+    pf << "};" << std::endl;
+    pf << "vTime = [";
+    for(double t=0;t<=S.duration;t+=0.125){
+      if( t != 0 )
+        pf << ";";
+      pf << t;
+    }
+    pf << "];" << std::endl;
+    pf << "cPosition = {";
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it=objects.begin();it!=objects.end();++it){
+      if( it!=objects.begin() )
+        pf << ",";
+      pf << "[";
+      for(double t=0;t<=S.duration;t+=0.125){
+        if( t != 0 )
+          pf << ";";
+        pf << (*it)->get_location(t).print_cart();
+      }
+      pf << "]";
+    }
+    pf << "};" << std::endl;
+    pf << "cOrientation = {";
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it=objects.begin();it!=objects.end();++it){
+      if( it!=objects.begin() )
+        pf << ",";
+      pf << "[";
+      for(double t=0;t<=S.duration;t+=0.125){
+        if( t != 0 )
+          pf << ";";
+        pf << (*it)->get_orientation(t).print();
+      }
+      pf << "]";
+    }
+    pf << "};" << std::endl;
+    pf << "save('" << pos_export << "','csLabels','cPosition','cOrientation','vTime');" << std::endl;
   }
   //if( b_list )
   //  std::cout << S.print();
