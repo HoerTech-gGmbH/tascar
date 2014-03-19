@@ -46,8 +46,12 @@ public:
   void run();
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
   void update_warp(double warp);
+  void update_beam(double beam);
+  void update(double warp, double beam);
 private:
   void calc_decmatrix(double gain, double warp, float* m);
+  double next_warp;
+  double next_beam;
   uint32_t N;
   float* mDecoder;
   float* mEncoder;
@@ -63,9 +67,20 @@ int _warp(const char *path, const char *types, lo_arg **argv, int argc, lo_messa
   return 1;
 }
 
+int _beam(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( (argc == 1) && (types[0]=='f')){
+    ((ambwarp_t*)user_data)->update_beam(argv[0]->f);
+    return 0;
+    }
+  return 1;
+}
+
 ambwarp_t::ambwarp_t(uint32_t order,const std::string& srv_addr,const std::string& srv_port,const std::string& jackname)
   : jackc_t(jackname),
     TASCAR::osc_server_t(srv_addr,srv_port),
+    next_warp(0),
+    next_beam(0),
     N(2*order+1),
     mDecoder(new float[N*N]),
     mEncoder(new float[N*N]),
@@ -82,11 +97,12 @@ ambwarp_t::ambwarp_t(uint32_t order,const std::string& srv_addr,const std::strin
   }
   osc_server_t::set_prefix("/"+jackname);
   osc_server_t::add_method("/warp","f",_warp,this);
+  osc_server_t::add_method("/beam","f",_beam,this);
   memset(mDecoder,0,sizeof(float)*N*N);
   memset(mEncoder,0,sizeof(float)*N*N);
   memset(mWarping,0,sizeof(float)*N*N);
   calc_decmatrix(1.0,0.0,mDecoder);
-  update_warp(0);
+  update(0,0);
 }
 
 ambwarp_t::~ambwarp_t()
@@ -120,14 +136,31 @@ void ambwarp_t::calc_decmatrix(double gain, double warp, float* m)
 
 void ambwarp_t::update_warp(double warp)
 {
+  update(warp,next_beam);
+}
+
+
+void ambwarp_t::update_beam(double beam)
+{
+  update(next_warp,beam);
+}
+
+void ambwarp_t::update(double warp,double beam)
+{
+  next_warp = warp;
+  next_beam = beam;
   warp = std::min(0.99,std::max(-0.99,warp));
   calc_decmatrix(0.5*N,warp,mEncoder);
+  double gain[N];
+  for( uint32_t kg=0;kg<N;kg++){
+    gain[kg] = pow(0.5+0.5*cos(2.0*M_PI*(double)kg/(double)N),beam);
+  }
   for( uint32_t ki=0;ki<N;ki++){
     for( uint32_t ko=0;ko<N;ko++){
       mWarping[ki+N*ko] = 0;
       for( uint32_t k=0;k<N;k++){
         // transposed multiplication:
-        mWarping[ki+N*ko] += mEncoder[k+N*ki]*mDecoder[k+N*ko];
+        mWarping[ki+N*ko] += mEncoder[k+N*ki]*gain[k]*mDecoder[k+N*ko];
       }
     }
   }
@@ -172,7 +205,7 @@ int ambwarp_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffe
   for(uint32_t kOut=0;kOut<Nout;kOut++){
     memset(outBuffer[kOut],0,sizeof(float)*nframes);
     for(uint32_t kIn=0;kIn<Nin;kIn++){
-      float g(mWarping[kIn+Nin*kOut]);
+      float g(mWarping[kOut+Nin*kIn]);
       for(uint32_t k=0;k<nframes;k++)
         outBuffer[kOut][k] += g*inBuffer[kIn][k];
     }
