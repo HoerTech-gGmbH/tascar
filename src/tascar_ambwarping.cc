@@ -48,6 +48,7 @@ public:
   void update_warp(double warp);
   void update_beam(double beam);
   void update(double warp, double beam);
+  void set_ordergain(const std::vector<float>& og);
 private:
   void calc_decmatrix(double gain, double warp, float* m);
   double next_warp;
@@ -56,6 +57,7 @@ private:
   float* mDecoder;
   float* mEncoder;
   float* mWarping;
+  std::vector<float> ordergain;
 };
 
 int _warp(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -76,6 +78,17 @@ int _beam(const char *path, const char *types, lo_arg **argv, int argc, lo_messa
   return 1;
 }
 
+int _ordergain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  std::vector<float> og;
+  for( int k=0;k<argc;k++){
+    if( types[k] == 'f' )
+      og.push_back(argv[k]->f);
+  }
+  ((ambwarp_t*)user_data)->set_ordergain(og);
+  return 0;
+}
+
 ambwarp_t::ambwarp_t(uint32_t order,const std::string& srv_addr,const std::string& srv_port,const std::string& jackname)
   : jackc_t(jackname),
     TASCAR::osc_server_t(srv_addr,srv_port),
@@ -84,7 +97,8 @@ ambwarp_t::ambwarp_t(uint32_t order,const std::string& srv_addr,const std::strin
     N(2*order+1),
     mDecoder(new float[N*N]),
     mEncoder(new float[N*N]),
-    mWarping(new float[N*N])
+    mWarping(new float[N*N]),
+    ordergain(order+1,1.0f)
 {
   for( uint32_t k=0;k<N;k++){
     char ctmp[1024];
@@ -98,6 +112,8 @@ ambwarp_t::ambwarp_t(uint32_t order,const std::string& srv_addr,const std::strin
   osc_server_t::set_prefix("/"+jackname);
   osc_server_t::add_method("/warp","f",_warp,this);
   osc_server_t::add_method("/beam","f",_beam,this);
+  std::string owfmt(order+1,'f');
+  osc_server_t::add_method("/ordergain",owfmt.c_str(),_ordergain,this);
   memset(mDecoder,0,sizeof(float)*N*N);
   memset(mEncoder,0,sizeof(float)*N*N);
   memset(mWarping,0,sizeof(float)*N*N);
@@ -110,6 +126,15 @@ ambwarp_t::~ambwarp_t()
   delete [] mDecoder;
   delete [] mEncoder;
   delete [] mWarping;
+}
+
+void ambwarp_t::set_ordergain(const std::vector<float>& og)
+{
+  if( og.size() == ordergain.size() )
+    ordergain = og;
+  else
+    std::cerr << "Warning: invalid size of order gain (expected " << ordergain.size() << ", received " << og.size() << ").\n";
+  update(next_warp,next_beam);
 }
 
 void ambwarp_t::calc_decmatrix(double gain, double warp, float* m)
@@ -162,6 +187,8 @@ void ambwarp_t::update(double warp,double beam)
         // transposed multiplication:
         mWarping[ki+N*ko] += mEncoder[k+N*ki]*gain[k]*mDecoder[k+N*ko];
       }
+      uint32_t lorder((ki+1)/2);
+      mWarping[ki+N*ko] *= ordergain[lorder];
     }
   }
   printf("- %g -------------------------------\n",warp);
