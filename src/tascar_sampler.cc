@@ -233,12 +233,13 @@ void sampler_t::run()
 
 void usage(struct option * opt)
 {
-  std::cout << "Usage:\n\nhos_sampler [options] soundfont [ jackname ]\n\nOptions:\n\n";
+  std::cout << "Usage:\n\ntascar_sampler [options] soundfont [ jackname ]\n\nOptions:\n\n";
   while( opt->name ){
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
       "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
     opt++;
   }
+  std::cout << "\nA soundfont is a list of sound file names, one file per line.\n";
 }
 
 int main(int argc,char** argv)
