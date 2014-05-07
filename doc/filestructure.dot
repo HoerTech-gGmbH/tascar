@@ -1,46 +1,66 @@
 digraph ap {
   //ranksep = 2.5;
   //splines = true;
+  node [
+	shape = "Mrecord",
+	style = "filled",
+	fillcolor = "gold"
+	];
 
-  scene [label="scene\n[name]\n[lat,lon,elev]",style="filled",fillcolor="gold"];
-  source [label="src_object\n[name]\n[start] s",style="filled",fillcolor="gold"];
-  //sound [label="sound\n[filename]\n[gain] dB\n[channel]\n[loop]\n[x,y,z]",style="filled",fillcolor="gold"];
-  sound [label="sound\n[filename]\n[gain] dB\n[channel]\n[loop]\n[x,y,z]",style="filled",fillcolor="gold"];
-  bg_amb [label="bg_amb\n[start] s\n[filename]\n[gain] dB\n[loop]"];
-  //bg_bin [label="bg_bin\n[start] s\n[filename]\n[gain] dB\n[loop]"];
-  //geoloc [label="geoloc\n[az,el,h]"];
-  //pointlist [label="pointlist\nt x y (z alpha beta gamma)",style="filled",fillcolor="gold"];
-  pointlist [label="pointlist\nt x y z",style="filled",fillcolor="gold"];
-  //position [label="position\n[interp: cart/sphere]\n[orientation: global/tangent]",style="filled",fillcolor="gold"];
-  position [label="position\n[interp: cart/sphere]",style="filled",fillcolor="gold"];
-  listener [label="listener\n[name]\n[start] s"];
-  eulerlist [label="ZYX-Euler list\nt z y x"];
-  //reflection_object [label="reflection_object\n[name]\n[start] s\n[absorption]\n[size]"];
+  {
+    rank = "min";
+    scene;
+  }
 
-  //scene -> reflection_object [label="N"];
+  route [label="{route:|name|mute|solo}",fillcolor="gray"];
+  object [label="{object:|start|end}",fillcolor="gray"];
+  src_diffuse [label="{diffuse:|size|falloff}"];
+  src_door [label="{door:|width|height|falloff|distance}"];
+  sound [label="{sound:|x|y|z|d|direct|name}"];
+  jack_port [label="{jack_port:|connect|gain}",fillcolor="gray"];
+  sink_mask [label="{sink_mask:|size|falloff}"];
+  sink_object [label="{sink:|size|point|diffuse|isdirect|diffusegain|falloff}"];
+  speaker [label="{speaker:|az|el|r}"];
+  src_object [label="{src_object:}"];
+  scene [label="{scene:|name|duration|guiscale|guicenter|loop}"];
+  connect [label="{connect:|src|dest}"];
+  face [label="{face:|width|height|reflectivity|damping}"];
+  range [label="{range:|start|end}"];
+  sndfile [label="{sndfile:|name|firstchannel|channels|loop|starttime}"];
 
+  /*
+   * Inheritance:
+   */
+  object -> src_object;
+  route -> object;
+  object -> src_diffuse;
+  jack_port -> src_diffuse;
+  object -> src_door;
+  jack_port -> src_door;
+  jack_port -> sound;
+  object -> sink_mask;
+  object -> sink_object;
+  jack_port -> sink_object;
 
-  //scene -> geoloc [label="1"];
-  scene -> bg_amb [label="N"];
-  scene -> description [label="1"];
-  //scene -> bg_bin [label="N"];
-  scene -> listener [label="1"];
-  scene -> source [label="N"];
-  source -> position [label="1"];
-  source -> sound [label="N"];
-  //source -> sound [label="1"];
-  source -> orientation [label="1"];
-  listener -> position [label="1"];
-  //reflection_object -> position [label="1"];
-  position -> pointlist;
-  //position -> pointlist [label="1"];
-  //position -> trackfile;
-  //trackfile -> gpx_file;
-  //trackfile -> csv_file;
-  //position -> transform;
-  //position -> velocity;
-  listener -> orientation [label="1"];
-  orientation -> eulerlist;
+  /*
+   * Sub-nodes:
+   */
+  src_object -> sound [style="dashed",label="N"];
+  sink_object -> speaker [style="dashed",label="N"];
+  sink_object -> sink_mask [style="dashed",label="1"];
+  scene -> description [style="dashed",label="1"];
+  scene -> src_object [style="dashed",label="N"];
+  scene -> src_door [style="dashed",label="N"];
+  scene -> src_diffuse [style="dashed",label="N"];
+  scene -> sink_object [style="dashed",label="N"];
+  scene -> face [style="dashed",label="N"];
+  scene -> range [style="dashed",label="N"];
+  scene -> connect [style="dashed",label="N"];
+  scene -> include [style="dashed",label="N"];
+  object -> position [style="dashed",label="1"];
+  object -> orientation [style="dashed",label="1"];
+  object -> creator [style="dashed",label="1"];
+  object -> sndfile [style="dashed",label="N"];
 
 }
 
