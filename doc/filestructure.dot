@@ -7,60 +7,84 @@ digraph ap {
 	fillcolor = "gold"
 	];
 
+  edge [ penwidth = "1", style="dashed" ];
+
   {
     rank = "min";
     scene;
   }
 
+  scene [label="{scene:|name|duration|guiscale|guicenter|loop}"];
+
   route [label="{route:|name|mute|solo}",fillcolor="gray"];
   object [label="{object:|start|end}",fillcolor="gray"];
-  src_diffuse [label="{diffuse:|size|falloff}"];
-  src_door [label="{door:|width|height|falloff|distance}"];
-  sound [label="{sound:|x|y|z|d|direct|name}"];
   jack_port [label="{jack_port:|connect|gain}",fillcolor="gray"];
+
+  src_diffuse [label="{diffuse:|size|falloff}",fillcolor="salmon"];
+  src_door [label="{door:|width|height|falloff|distance}",fillcolor="salmon"];
+  src_object [label="{src_object:}",fillcolor="salmon"];
+  sink_object [label="{sink:|size|point|diffuse|isdirect|diffusegain|falloff}",fillcolor="salmon"];
+  face [label="{face:|width|height|reflectivity|damping}",fillcolor="salmon"];
+
   sink_mask [label="{sink_mask:|size|falloff}"];
-  sink_object [label="{sink:|size|point|diffuse|isdirect|diffusegain|falloff}"];
   speaker [label="{speaker:|az|el|r}"];
-  src_object [label="{src_object:}"];
-  scene [label="{scene:|name|duration|guiscale|guicenter|loop}"];
-  connect [label="{connect:|src|dest}"];
-  face [label="{face:|width|height|reflectivity|damping}"];
-  range [label="{range:|start|end}"];
   sndfile [label="{sndfile:|name|firstchannel|channels|loop|starttime}"];
+  sound [label="{sound:|x|y|z|d|direct|name}"];
+
+  range [label="{range:|start|end}"];
+  connect [label="{connect:|src|dest}"];
+
+  {
+    rank = "same";
+    src_diffuse;
+    src_door;
+    src_object;
+    sink_object;
+    face;
+  }
+
+  {
+    rank = "same";
+    sink_mask;
+    speaker;
+    sndfile;
+    sound;
+  }
 
   /*
    * Inheritance:
    */
-  object -> src_object;
   route -> object;
+  object -> src_object;
   object -> src_diffuse;
-  jack_port -> src_diffuse;
   object -> src_door;
-  jack_port -> src_door;
-  jack_port -> sound;
   object -> sink_mask;
   object -> sink_object;
+  object -> face;
+  jack_port -> src_diffuse;
+  jack_port -> src_door;
+  jack_port -> sound;
   jack_port -> sink_object;
 
   /*
    * Sub-nodes:
    */
-  src_object -> sound [style="dashed",label="N"];
-  sink_object -> speaker [style="dashed",label="N"];
-  sink_object -> sink_mask [style="dashed",label="1"];
-  scene -> description [style="dashed",label="1"];
-  scene -> src_object [style="dashed",label="N"];
-  scene -> src_door [style="dashed",label="N"];
-  scene -> src_diffuse [style="dashed",label="N"];
-  scene -> sink_object [style="dashed",label="N"];
-  scene -> face [style="dashed",label="N"];
-  scene -> range [style="dashed",label="N"];
-  scene -> connect [style="dashed",label="N"];
-  scene -> include [style="dashed",label="N"];
-  object -> position [style="dashed",label="1"];
-  object -> orientation [style="dashed",label="1"];
-  object -> creator [style="dashed",label="1"];
-  object -> sndfile [style="dashed",label="N"];
+  src_object -> sound [style="solid",label="N",penwidth="3"];
+  sink_object -> speaker [style="solid",label="N",penwidth="3"];
+  sink_object -> sink_mask [style="solid",label="1",penwidth="1"];
+  scene -> description [style="solid",label="1",penwidth="1"];
+  scene -> src_object [style="solid",label="N",penwidth="3"];
+  scene -> src_door [style="solid",label="N",penwidth="3"];
+  scene -> src_diffuse [style="solid",label="N",penwidth="3"];
+  scene -> sink_object [style="solid",label="N",penwidth="3"];
+  scene -> face [style="solid",label="N",penwidth="3"];
+  scene -> range [style="solid",label="N",penwidth="3"];
+  scene -> connect [style="solid",label="N",penwidth="3"];
+  scene -> include [style="solid",label="N",penwidth="3"];
+  object -> position [style="solid",label="1",penwidth="1"];
+  object -> orientation [style="solid",label="1",penwidth="1"];
+  object -> creator [style="solid",label="1",penwidth="1"];
+  object -> sndfile [style="solid",label="N",penwidth="3"];
 
 }
 
