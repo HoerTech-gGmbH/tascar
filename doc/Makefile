@@ -1,4 +1,4 @@
-IMG = filestructure.png fdp_render.pdf
+IMG = filestructure.png fdp_render.pdf creator.png 
 
 all: $(IMG)
 

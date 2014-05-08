@@ -1,0 +1,57 @@
+digraph ap {
+  //ranksep = 2.5;
+  //splines = true;
+  rankdir = "LR";
+  node [
+	shape = "Mrecord",
+	//style = "filled",
+	//fillcolor = "gold"
+	];
+
+  //edge [ penwidth = "1", style="dashed" ];
+
+  {
+    rank = "min";
+    creator;
+  }
+
+  creator [label="creator:"];
+  load [label="load:|name|format (gpx,csv)"];
+  origin [label="origin:|src (center,trkpt)|mode (tangent,translate)"];
+  addpoints [label="addpoints:|format (trkpt)"];
+  velocity [label="velocity:|const|csvfile|start"];
+  rotate [label="rotate:|angle"];
+  scale [label="scale:|x|y|z"];
+  translate [label="translate:|x|y|z"];
+  smooth [label="smooth:|n"];
+  resample [label="resample:|dt"];
+  trim [label="trim:|start|end"];
+  time [label="time:|start|scale"];
+
+  /*
+   * Inheritance:
+   */
+
+  /*
+   * Sub-nodes:
+   */
+  creator -> load;
+  creator -> origin;
+  creator -> addpoints;
+  creator -> velocity;
+  creator -> rotate;
+  creator -> scale;
+  creator -> translate;
+  creator -> smooth;
+  creator -> resample;
+  creator -> trim;
+  creator -> time;
+
+}
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 2
+ * End:
+ */
