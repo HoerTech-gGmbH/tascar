@@ -35,7 +35,8 @@ CXXFLAGS += $(GTKDEF) $(LTRDEF)
 OBJECTS = jackclient.o coordinates.o delayline.o speakerlayout.o	\
 multipan.o osc_helper.o async_file.o errorhandling.o scene.o		\
 viewport.o audiochunks.o sinks.o acousticmodel.o multipan.o		\
-multipan_amb3.o hoafilt.o xmlconfig.o osc_scene.o audioplayer.o
+multipan_amb3.o hoafilt.o xmlconfig.o osc_scene.o audioplayer.o		\
+ringbuffer.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 
