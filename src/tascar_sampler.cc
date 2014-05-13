@@ -113,7 +113,7 @@ void looped_sndfile_t::stop()
 
 class sampler_t : public jackc_t, public TASCAR::osc_server_t {
 public:
-  sampler_t(const std::string& jname);
+  sampler_t(const std::string& jname,const std::string& srv_addr,const std::string& srv_port);
   ~sampler_t();
   void run();
   int process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut);
@@ -129,9 +129,9 @@ private:
   bool b_quit;
 };
 
-sampler_t::sampler_t(const std::string& jname)
+sampler_t::sampler_t(const std::string& jname,const std::string& srv_addr,const std::string& srv_port)
   : jackc_t(jname),
-    osc_server_t("239.255.1.7","9877"),
+    osc_server_t(srv_addr,srv_port),
     b_quit(false)
 {
   set_prefix("/"+jname);
@@ -214,6 +214,11 @@ void sampler_t::open_sounds(const std::string& fname)
 void sampler_t::run()
 {
   for(uint32_t k=0;k<sounds.size();k++){
+    char ctmp[1024];
+    sprintf(ctmp,"%d",k+1);
+    add_method("/"+std::string(ctmp)+"/add","if",sampler_t::osc_addloop,sounds[k]);
+    add_method("/"+std::string(ctmp)+"/stop","",sampler_t::osc_stoploop,sounds[k]);
+    add_method("/"+std::string(ctmp)+"/clear","",sampler_t::osc_clearloop,sounds[k]);
     add_method("/"+soundnames[k]+"/add","if",sampler_t::osc_addloop,sounds[k]);
     add_method("/"+soundnames[k]+"/stop","",sampler_t::osc_stoploop,sounds[k]);
     add_method("/"+soundnames[k]+"/clear","",sampler_t::osc_clearloop,sounds[k]);
@@ -246,8 +251,12 @@ int main(int argc,char** argv)
 {
   std::string jname("sampler");
   std::string soundfont("");
-  const char *options = "h";
+  std::string srv_addr("239.255.1.7");
+  std::string srv_port("9877");
+  const char *options = "a:p:h";
   struct option long_options[] = { 
+    { "srvaddr",  1, 0, 'a' },
+    { "srvport",  1, 0, 'p' },
     { "help",       0, 0, 'h' },
     { 0, 0, 0, 0 }
   };
@@ -256,6 +265,12 @@ int main(int argc,char** argv)
   while( (opt = getopt_long(argc, argv, options,
                             long_options, &option_index)) != -1){
     switch(opt){
+    case 'p':
+      srv_port = optarg;
+      break;
+    case 'a':
+      srv_addr = optarg;
+      break;
     case 'h':
       usage(long_options);
       return -1;
@@ -267,7 +282,7 @@ int main(int argc,char** argv)
     jname = argv[optind++];
   if( soundfont.empty() )
     throw TASCAR::ErrMsg("soundfont filename is empty.");
-  sampler_t s(jname);
+  sampler_t s(jname,srv_addr,srv_port);
   //
   s.open_sounds(soundfont);
   //
