@@ -2,7 +2,8 @@ PREFIX = /usr/local
 
 BINFILES = tascar_renderer tascar_gui tascar_audioplayer		\
 tascar_sampler tascar_osc_jack_transport tascar_oscmix tascar_jackio	\
-tascar_pdf tascar_osc_recorder tascar_creator tascar_ambwarping
+tascar_pdf tascar_osc_recorder tascar_creator tascar_ambwarping		\
+tascar_hoadisplay
 
 #tascar_gpxvelocity \
 tascar_gui tascar_pdf tascar_multipan tascar_jpos \
@@ -49,6 +50,8 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile
 
 #tascar_gui tascar_renderer tascar_audioplayer: OBJECTS += /usr/lib/libxml++-2.6.a
 #tascar_gui tascar_renderer tascar_audioplayer: CXXFLAGS += -I/usr/include/libxml++-2.6/
+
+tascar_hoadisplay: EXTERNALS += $(GTKEXT)
 
 tascar_gui: EXTERNALS += $(GTKEXT)
 

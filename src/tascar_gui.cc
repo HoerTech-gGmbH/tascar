@@ -1,9 +1,9 @@
 /**
-   \file tascar_draw.cc
+   \file tascar_gui.cc
    \ingroup apptascar
-   \brief Draw coordinates delivered via jack
+   \brief Draw TASCAR scene
    \author Giso Grimm
-   \date 2012
+   \date 2013
 
    \section license License (GPL)
 
