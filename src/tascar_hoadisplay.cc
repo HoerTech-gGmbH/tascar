@@ -36,6 +36,103 @@
 #include "audiochunks.h"
 #include "defs.h"
 
+class interp_table_t
+{
+public:
+  interp_table_t();
+  void set_range(float x1,float x2);
+  float operator()(float x);
+  void add(float y);
+private:
+  std::vector<float> y;
+  float xmin;
+  float xmax;
+  float scale;
+};
+
+
+interp_table_t::interp_table_t()
+  : xmin(0),xmax(1),scale(1)
+{
+}
+
+void interp_table_t::add(float vy)
+{
+  y.push_back(vy);
+  set_range(xmin,xmax);
+}
+
+void interp_table_t::set_range(float x1,float x2)
+{
+  xmin = x1;
+  xmax = x2;
+  scale = (y.size()-1)/(xmax-xmin);
+}
+
+float interp_table_t::operator()(float x)
+{
+  float xs((x-xmin)*scale);
+  if( xs <= 0.0f )
+    return y.front();
+  uint32_t idx(floor(xs));
+  if( idx >= y.size()-1 )
+    return y.back();
+  float dx(xs-(float)idx);
+  return (1.0f-dx)*y[idx]+dx*y[idx+1];
+}
+
+class colormap_t {
+public:
+  colormap_t(int tp);
+  void clim(float vmin,float vmax);
+  interp_table_t r;
+  interp_table_t b;
+  interp_table_t g;
+};
+
+void colormap_t::clim(float vmin,float vmax)
+{
+  r.set_range(vmin,vmax);
+  g.set_range(vmin,vmax);
+  b.set_range(vmin,vmax);
+}
+
+colormap_t::colormap_t(int tp)
+{
+    switch( tp ){
+    case 1 : // rgb linear
+	r.add(1.0);
+	r.add(0.0);
+	r.add(0.0);
+	g.add(0.0);
+	g.add(1.0);
+	g.add(0.0);
+	b.add(0.0);
+	b.add(0.0);
+	b.add(1.0);
+	break;
+    case 2 : // gray
+	r.add(0.0);
+	r.add(1.0);
+	g.add(0.0);
+	g.add(1.0);
+	b.add(0.0);
+	b.add(1.0);
+	break;
+    default: // cos
+	b.add(0.0);
+	g.add(0.0);
+	r.add(0.0);
+	for(unsigned int k=0;k<64;k++){
+	    float phi = k/63.0*M_PI-M_PI/6.0;
+            b.add( powf(cosf(phi),2.0) );
+            g.add( powf(cosf(phi+M_PI/3.0),2.0) );
+            r.add( powf(cosf(phi+2.0*M_PI/3.0),2.0) );
+	}
+    }
+}
+
+
 class gammatone_t 
 {
 public:
@@ -89,15 +186,21 @@ achannel_t::achannel_t(float azrad,uint32_t hoa_order,uint32_t bands,float fmin,
     decoder(2*hoa_order+1),
     lpstate(bands)
 {
-  float f_ratio(pow(fmax/fmin,1.0/(double)(bands-1)));
+  float f_ratio(pow(fmax/fmin,0.5/(double)(bands-1)));
   for(uint32_t k=0;k<bands;k++){
     float fc(fmin*pow(fmax/fmin,(double)k/(double)(bands-1)));
     float bw(fc*f_ratio-fc/f_ratio);
-    fb.push_back(gammatone_t(fc, bw, fs, 2));
+    fb.push_back(gammatone_t(fc, bw, fs, 5));
   }
   for(uint32_t o=1;o<=hoa_order;o++){
-    decoder[2*o-1] = cos(o*azrad);
-    decoder[2*o] = sin(o*azrad);
+    // basic:
+    float gn(1.0);
+    // max-rE:
+    gn = cos(o*M_PI/(2.0*hoa_order+2));
+    // in-phase:
+    // gn = see (Daniel, 2001, p184)
+    decoder[2*o-1] = gn * cos(o*azrad);
+    decoder[2*o] = gn * sin(o*azrad);
   }
   decoder[0] = 1.0/sqrt(2.0);
 }
@@ -113,10 +216,16 @@ void achannel_t::process(jack_nframes_t n,const std::vector<float*>& input)
     for(uint32_t b=0;b<fb.size();b++){
       float by(cabsf(fb[b].filter(y)));
       lpstate[b] *= 0.9999;
-      by = lpstate[b] += 0.0001*by*by;
-      operator[](b) = sqrt(by);
+      operator[](b) = (lpstate[b] += 0.0001*by*by);
     }
   }
+}
+
+uint32_t maxeven(uint32_t x)
+{
+  if( x & 1 )
+    x += 1;
+  return x;
 }
 
 class hoadisplay_t : public jackc_t, public Gtk::DrawingArea
@@ -149,6 +258,7 @@ public:
 private:
   pthread_mutex_t mtx_scene;
   std::vector<achannel_t> analyzer;
+  colormap_t col;
 };
 
 hoadisplay_t::hoadisplay_t(const std::string& jackname,
@@ -163,11 +273,14 @@ hoadisplay_t::hoadisplay_t(const std::string& jackname,
     bands_per_octave(bands_per_octave_),
     fmin(fmin_),
     fmax(fmax_),
-    bands(bands_per_octave*log2(fmax/fmin)+1.0)
+    bands(bands_per_octave*log2(fmax/fmin)+1.0),
+    col(0)
 {
   for(uint32_t k=0;k<channels;k++)
     analyzer.push_back(achannel_t((double)k*PI2/(double)channels,order,bands,fmin,fmax,srate));
   image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB,false,8,channels,bands);
+  DEBUG(channels);
+  DEBUG(bands);
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &hoadisplay_t::on_timeout), 60 );
 #ifdef GTKMM30
   signal_draw().connect(sigc::mem_fun(*this, &hoadisplay_t::on_draw), false);
@@ -175,7 +288,7 @@ hoadisplay_t::hoadisplay_t(const std::string& jackname,
   signal_expose_event().connect(sigc::mem_fun(*this, &hoadisplay_t::on_expose_event), false);
 #endif
   pthread_mutex_init( &mtx_scene, NULL );
-  set_size_request(channels,bands);
+  //set_size_request(channels,bands);
   for(uint32_t k=0;k<2*order+1;k++){
     char ctmp[1024];
     uint32_t lorder((k+1)/2);
@@ -183,6 +296,7 @@ hoadisplay_t::hoadisplay_t(const std::string& jackname,
     sprintf(ctmp,"in_%d.%d",lorder,ldeg);
     add_input_port(ctmp);
   }
+  col.clim(-80,0);
 }
 
 hoadisplay_t::~hoadisplay_t()
@@ -213,18 +327,20 @@ bool hoadisplay_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   pthread_mutex_lock( &mtx_scene );
   try{
-    float vmax(1e-7);
-    for(uint32_t k=0;k<analyzer.size();k++)
-      for(uint32_t b=0;b<bands;b++)
-        vmax = std::max(vmax,analyzer[k][b]);
+    //float vmax(-1e7);
+    //for(uint32_t k=0;k<analyzer.size();k++)
+    //  for(uint32_t b=0;b<bands;b++)
+    //    vmax = std::max(vmax,10.0f*log10f(analyzer[k][b]));
+    //DEBUG(vmax);
     guint8* pixels = image->get_pixels();
     for(uint32_t k=0;k<analyzer.size();k++)
       for(uint32_t b=0;b<bands;b++){
         uint32_t pix(k+b*analyzer.size());
-        float val(analyzer[k][b]/vmax);
-        pixels[3*pix] = val*255;
-        pixels[3*pix+1] = val*255;
-        pixels[3*pix+2] = val*255;
+        //uint32_t pix(bands*k+b);
+        float val(10.0f*log10f(analyzer[k][b]));
+        pixels[3*pix] = col.r(val)*255;
+        pixels[3*pix+1] = col.g(val)*255;
+        pixels[3*pix+2] = col.b(val)*255;
       }
     Gtk::Allocation allocation = get_allocation();
     const int width = allocation.get_width();
