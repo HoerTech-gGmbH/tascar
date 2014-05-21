@@ -44,6 +44,13 @@ function [y,fs] = tascar_jackio( x, csOutputPorts, csInputPorts )
     end
     if nargin >= 2
       sNameOut = [tempname(),'.wav'];
+      if ~isempty(ver('octave'))
+	%% this is octave; warn if abs(x) > 1
+	if max(abs(x(:))) > 1
+	  warning(['Signal clipped: ', ...
+		   sNameOut]);
+	end
+      end
       wavwrite(x,fs,32,sNameOut);
       sCmd = ['tascar_jackio -u ',sNameOut];
       csOutputPorts = portname(csOutputPorts,'output');

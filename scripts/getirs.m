@@ -59,6 +59,13 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
     Y = Y ./ repmat(X,[1,size(Y,2)]);
     irs(:,(kSpk-1)*Nsrc+[1:Nsrc]) = realifft(Y);
   end
+  if ~isempty(ver('octave'))
+    %% this is octave; warn if abs(x) > 1
+    if max(abs(irs(:))) > 1
+      sNameOut = sprintf('irs_%s_%d_%d.wav',sTag,len,nrep);
+      warning(['Signal clipped: ',sNameOut]);
+    end
+  end
   wavwrite(irs,fs,32,sprintf('irs_%s_%d_%d.wav',sTag,len, ...
 			     nrep));
   
@@ -70,6 +77,12 @@ function x = create_noise( len, nrep, gain )
   X = exp(-len*i*(2*pi)*vF.^2)./max(0.1,vF.^0.5);
   x = realifft(X);
   x = 0.5*x/max(abs(x))*gain;
+  if ~isempty(ver('octave'))
+    %% this is octave; warn if abs(x) > 1
+    if max(abs(x(:))) > 1
+      warning(['Signal clipped: ','wnoise.wav']);
+    end
+  end
   wavwrite(repmat(x,[nrep,1]),48000,16,'wnoise.wav');
 
 function y = realfft( x )
