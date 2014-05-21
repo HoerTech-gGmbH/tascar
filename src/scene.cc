@@ -83,14 +83,6 @@ void object_t::read_xml(xmlpp::Element* e)
       sndfiles.back().objectchannel = sndfiles.size()-1;
     }
   }
-  //if( starttime < endtime ){
-  //  TASCAR::track_t ntrack;
-  //  for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
-  //    if( (it->first >= 0) && (it->first <= endtime-starttime) )
-  //      ntrack[it->first] = it->second;
-  //  }
-  //  location = ntrack;
-  //}
 }
 
 void object_t::write_xml(xmlpp::Element* e,bool help_comments)
@@ -127,8 +119,6 @@ void src_diffuse_t::read_xml(xmlpp::Element* e)
   object_t::read_xml(e);
   jack_port_t::read_xml(e);
   get_attribute_value(e,"size",size);
-  //get_attribute_value(e,"size_y",size.y);
-  //get_attribute_value(e,"size_z",size.z);
   get_attribute_value(e,"falloff",falloff);
 }
 
@@ -138,9 +128,6 @@ void src_diffuse_t::write_xml(xmlpp::Element* e,bool help_comments)
   jack_port_t::write_xml(e);
   set_attribute_value(e,"size",size);
   set_attribute_double(e,"falloff",falloff);
-  //set_attribute_double(e,"size_x",size.x);
-  //set_attribute_double(e,"size_y",size.y);
-  //set_attribute_double(e,"size_z",size.z);
 }
 
 /*
@@ -199,12 +186,6 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   source->distance = distance;
 }
-
-
-
-
-
-
 
 /*
  * sound_t
@@ -276,19 +257,6 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
   source->falloff = 1.0/std::max(falloff,1.0e-10);
 }
 
-//float* sound_t::get_buffer( uint32_t n )
-//{
-//  if( input )
-//    return input->get_buffer(n);
-//  return NULL;
-//}
-
-//void sound_t::set_reference(object_t* ref)
-//{
-//  //DEBUG(ref);
-//  reference = ref;
-//}
-
 void sound_t::set_parent(src_object_t* ref)
 {
   //DEBUG(ref);
@@ -304,9 +272,6 @@ std::string sound_t::get_parent_name() const
 
 std::string sound_t::get_port_name() const
 {
-  //DEBUG(parent);
-  //DEBUG(name);
-  //DEBUG(parent->get_name());
   if( parent )
     return parent->get_name() + "." + name;
   return name;
@@ -319,8 +284,6 @@ void jack_port_t::set_port_index(uint32_t port_index_)
 
 void sound_t::read_xml(xmlpp::Element* e)
 {
-  //src_diffuse_t::read_xml(e);
-  //get_attribute_value(e,"channel",firstchannel);
   jack_port_t::read_xml(e);
   get_attribute_value(e,"x",local_position.x);
   get_attribute_value(e,"y",local_position.y);
@@ -332,7 +295,6 @@ void sound_t::read_xml(xmlpp::Element* e)
 
 void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
-  //src_diffuse_t::write_xml(e,help_comments);
   e->set_attribute("name",name);
   if( local_position.x != 0 )
     set_attribute_double(e,"x",local_position.x);
@@ -345,32 +307,10 @@ void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
   jack_port_t::write_xml(e);
 }
 
-//std::string sound_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  //r << src_diffuse_t::print(prefix);
-//  r << prefix << "Location: " << loc.print_cart() << "\n";
-//  //r << prefix << "Channel: " << firstchannel << "\n";
-//  return r.str();
-//}
-
 bool sound_t::isactive(double t)
 {
   return parent && parent->isactive(t);
 }
-
-//pos_t sound_t::get_pos(double t) const
-//{
-//  pos_t rp(get_pos_global(t));
-//  if( reference ){
-//    rp -= reference->dlocation;
-//    rp -= reference->location.interp(t - reference->starttime);
-//    zyx_euler_t o(reference->dorientation);
-//    o += reference->orientation.interp(t - reference->starttime);
-//    rp /= o;
-//  }
-//  return rp;
-//}
 
 pos_t sound_t::get_pos_global(double t) const
 {
@@ -415,25 +355,6 @@ void src_object_t::prepare(double fs, uint32_t fragsize)
   startframe = fs*starttime;
 }
 
-//void src_object_t::set_reference(object_t* ref)
-//{
-//  //DEBUG(ref);
-//  reference = ref;
-//  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
-//    //DEBUGMSG("set reference/parent");
-//    //it->set_reference(ref);
-//    it->set_parent(this);
-//  }
-//}
-
-//Input::base_t* src_object_t::get_input(const std::string& name)
-//{
-//  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it)
-//    if( (*it)->name == name )
-//      return *it;
-//  return NULL;
-//}
-
 void src_object_t::read_xml(xmlpp::Element* e)
 {
   object_t::read_xml(e);
@@ -444,34 +365,12 @@ void src_object_t::read_xml(xmlpp::Element* e)
       sound.push_back(sound_t(this));
       sound.rbegin()->read_xml(sne);
     }
-    //if( sne && (sne->get_name() == "inputs") ){
-    //  xmlpp::Node::NodeList insubnodes = sne->get_children();
-    //  for(xmlpp::Node::NodeList::iterator insn=insubnodes.begin();insn!=insubnodes.end();++insn){
-    //    xmlpp::Element* insne(dynamic_cast<xmlpp::Element*>(*insn));
-    //    if( insne ){
-    //      if( insne->get_name() == "file" ){
-    //        inputs.push_back(new TASCAR::Input::file_t());
-    //        (*inputs.rbegin())->read_xml(insne);
-    //      }
-    //      //if( insne->get_name() == "jack" ){
-    //      //  inputs.push_back(new TASCAR::Input::jack_t(get_name()));
-    //      //  (*inputs.rbegin())->read_xml(insne);
-    //      //}
-    //    }
-    //  }
-    //}
   }
 }
 
 void src_object_t::write_xml(xmlpp::Element* e,bool help_comments)
 {
   object_t::write_xml(e,help_comments);
-  //if( inputs.size()){
-  //  xmlpp::Element* in_node = e->add_child("inputs");
-  //  for( std::vector<TASCAR::Input::base_t*>::iterator it=inputs.begin();it!=inputs.end();++it){
-  //    (*it)->write_xml(in_node->add_child((*it)->get_tag()));
-  //  }
-  //}
   bool b_first(true);
   for(std::vector<sound_t>::iterator it=sound.begin();
       it!=sound.end();++it){
@@ -554,8 +453,6 @@ void sink_mask_t::read_xml(xmlpp::Element* e)
 {
   object_t::read_xml(e);
   get_attribute_value(e,"size",size);
-  //get_attribute_value(e,"size_y",size.y);
-  //get_attribute_value(e,"size_z",size.z);
   get_attribute_value(e,"falloff",falloff);
 }
 
@@ -573,8 +470,6 @@ void sink_object_t::read_xml(xmlpp::Element* e)
   jack_port_t::read_xml(e);
   object_t::read_xml(e);
   get_attribute_value(e,"size",size);
-  //get_attribute_value(e,"size_y",size.y);
-  //get_attribute_value(e,"size_z",size.z);
   get_attribute_value_bool(e,"point",render_point);
   get_attribute_value_bool(e,"diffuse",render_diffuse);
   get_attribute_value_bool(e,"isdirect",is_direct);
@@ -621,8 +516,6 @@ void sink_object_t::write_xml(xmlpp::Element* e)
   jack_port_t::write_xml(e);
   if( (size.x != 0) || (size.y != 0) || (size.z != 0))
     set_attribute_value(e,"size",size);
-  //get_attribute_value(e,"size_y",size.y);
-  //get_attribute_value(e,"size_z",size.z);
   set_attribute_bool(e,"point",render_point);
   set_attribute_bool(e,"diffuse",render_diffuse);
   set_attribute_bool(e,"isdirect",is_direct);
@@ -657,28 +550,7 @@ void sink_object_t::write_xml(xmlpp::Element* e)
     set_attribute_double(sne,"el",it->elev()*RAD2DEG);
     set_attribute_double(sne,"r",it->norm());
   }
-  //xmlpp::Node::NodeList subnodes = e->get_children();
-  //for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-  //  xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-  //  if( sne && ( sne->get_name() == "speaker" )){
-  //    double az(0.0);
-  //    double elev(0.0);
-  //    double r(1.0);
-  //    get_attribute_value(sne,"az",az);
-  //    get_attribute_value(sne,"el",elev);
-  //    get_attribute_value(sne,"r",r);
-  //    pos_t spk;
-  //    spk.set_sphere(r,az*DEG2RAD,elev*DEG2RAD);
-  //    spkpos.push_back(spk);
-  //  }
-  //  if( sne && ( sne->get_name() == "mask" )){
-  //    use_mask = true;
-  //    mask.read_xml(sne);
-  //  }
-  //}
 }
-
-
 
 void sink_object_t::prepare(double fs, uint32_t fragsize)
 {
@@ -727,9 +599,6 @@ void scene_t::write_xml(xmlpp::Element* e, bool help_comments)
       "\n"
       "A scene describes the spatial and acoustical information.\n"
       "Sub-tags are src_object, listener and diffuse_sources.\n");
-  //set_attribute_double(e,"lat",lat);
-  //set_attribute_double(e,"lon",lon);
-  //set_attribute_double(e,"elev",elev);
   set_attribute_double(e,"duration",duration);
   set_attribute_double(e,"guiscale",guiscale);
   set_attribute_value(e,"guicenter",guicenter);
@@ -775,9 +644,6 @@ void scene_t::read_xml(xmlpp::Element* e)
   if( e->get_name() != "scene" )
     throw ErrMsg("Invalid file, XML root node should be \"scene\".");
   name = e->get_attribute_value("name");
-  //get_attribute_value(e,"lon",lon);
-  //get_attribute_value(e,"lat",lat);
-  //get_attribute_value(e,"elev",elev);
   get_attribute_value(e,"duration",duration);
   get_attribute_value(e,"guiscale",guiscale);
   get_attribute_value(e,"guicenter",guicenter);
@@ -861,21 +727,6 @@ std::vector<sound_t*> scene_t::linearize_sounds()
   return r;
 }
 
-//std::vector<Input::base_t*> scene_t::linearize_inputs()
-//{
-//  //DEBUGMSG("lin inputs");
-//  std::vector<Input::base_t*> r;
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
-//    //it->set_reference(&listener);
-//    for(std::vector<Input::base_t*>::iterator its=it->inputs.begin();its!=it->inputs.end();++its){
-//      if( (*its ) )
-//        r.push_back((*its));
-//    }
-//  }
-//  return r;
-//}
-
-
 std::vector<object_t*> scene_t::get_objects()
 {
   std::vector<object_t*> r;
@@ -916,12 +767,6 @@ void scene_t::set_mute(const std::string& name,bool val)
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     if( it->get_name() == name )
       it->set_mute(val);
-  //for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-  //  if( it->get_name() == name )
-  //    it->set_mute(val);
-  //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
-  //  if( it->get_name() == name )
-  //    it->set_mute(val);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     if( it->get_name() == name )
       it->set_mute(val);
@@ -935,12 +780,6 @@ void scene_t::set_solo(const std::string& name,bool val)
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     if( it->get_name() == name )
       it->set_solo(val,anysolo);
-  //for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-  //  if( it->get_name() == name )
-  //    it->set_solo(val,anysolo);
-  //for(std::vector<diffuse_reverb_t>::iterator it=reverbs.begin();it!=reverbs.end();++it)
-  //  if( it->get_name() == name )
-  //    it->set_solo(val,anysolo);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     if( it->get_name() == name )
       it->set_solo(val, anysolo);
@@ -1003,166 +842,6 @@ std::string sound_t::getlabel()
   return r;
 }
 
-
-///*
-// *TASCAR::Input::file_t
-// */
-//TASCAR::Input::file_t::file_t()
-//  : async_sndfile_t(1,1<<18,4096),
-//    filename(""),
-//    gain(0),
-//    loop(1),
-//    starttime(0),
-//    firstchannel(0)
-//{
-//}
-//
-//void TASCAR::Input::file_t::read_xml(xmlpp::Element* e)
-//{
-//  base_t::read_xml(e);
-//  get_attribute_value(e,"start",starttime);
-//  filename = e->get_attribute_value("filename");
-//  get_attribute_value(e,"gain",gain);
-//  get_attribute_value(e,"loop",loop);
-//  get_attribute_value(e,"channel",firstchannel);
-//}
-//
-//void TASCAR::Input::file_t::write_xml(xmlpp::Element* e,bool help_comments)
-//{
-//  base_t::write_xml(e,help_comments);
-//  e->set_attribute("filename",filename);
-//  set_attribute_double(e,"gain",gain);
-//  set_attribute_uint(e,"loop",loop);
-//  set_attribute_double(e,"start",starttime);
-//  set_attribute_uint(e,"channel",firstchannel);
-//}
-
-//std::string TASCAR::Input::file_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  r << prefix << "Filename: \"" << filename << "\"\n";
-//  r << prefix << "Gain: " << gain << " dB\n";
-//  r << prefix << "Loop: " << loop << "\n";
-//  r << prefix << "Starttime: " << starttime << " s\n";
-//  return r.str();
-//}
-//
-//void TASCAR::Input::file_t::prepare(double fs, uint32_t fragsize)
-//{
-//  base_t::prepare(fs,fragsize);
-//  open(filename,firstchannel,(uint32_t)(starttime*fs),pow(10.0,0.05*gain),loop);
-//  start_service();
-//}
-//
-//void TASCAR::Input::file_t::fill(int32_t tp_firstframe, bool tp_running)
-//{
-//  memset( data, 0, sizeof(float)*size );
-//  if( tp_running ){
-//    request_data( tp_firstframe, size, 1, &data );
-//  }else{
-//    request_data( tp_firstframe, 0, 1, &data );
-//  }
-//}
-
-
-//TASCAR::Input::base_t::base_t()
-//  : size(0),data(NULL)
-//{
-//}
-//
-//TASCAR::Input::base_t::~base_t()
-//{
-//  if( data )
-//    delete [] data;
-//}
-//
-//void TASCAR::Input::base_t::prepare(double fs, uint32_t fragsize)
-//{
-//  if( data )
-//    delete [] data;
-//  data = new float[fragsize];
-//  size = fragsize;
-//  memset(data,0,sizeof(float)*size);
-//}
-//
-// 
-//void TASCAR::Input::base_t::read_xml(xmlpp::Element* e)
-//{
-//  name = e->get_attribute_value("name");
-//}
-//
-//void TASCAR::Input::base_t::write_xml(xmlpp::Element* e,bool help_comments)
-//{
-//  e->set_attribute("name",name);
-//}
-//
-//float* TASCAR::Input::base_t::get_buffer(uint32_t n)
-//{
-//  if( n == size )
-//    return data;
-//  return NULL;
-//}
-
-//diffuse_reverb_t::diffuse_reverb_t()
-//  : size(2,2,2)
-//{
-//}
-//
-//double diffuse_reverb_t::border_distance(pos_t p)
-//{
-//  p -= center;
-//  p /= orientation;
-//  p.x = fabs(p.x);
-//  p.y = fabs(p.y);
-//  p.z = fabs(p.z);
-//  pos_t size2(size);
-//  size2 *= 0.5;
-//  p -= size2;
-//  p.x = std::max(0.0,p.x);
-//  p.y = std::max(0.0,p.y);
-//  p.z = std::max(0.0,p.z);
-//  return p.norm();
-//}
-//
-//void diffuse_reverb_t::read_xml(xmlpp::Element* e)
-//{
-//  route_t::read_xml(e);
-//  get_attribute_value(e,"center_x",center.x);
-//  get_attribute_value(e,"center_y",center.y);
-//  get_attribute_value(e,"center_z",center.z);
-//  get_attribute_value(e,"size_x",size.x);
-//  get_attribute_value(e,"size_y",size.y);
-//  get_attribute_value(e,"size_z",size.z);
-//  get_attribute_value_deg(e,"orientation_x",orientation.x);
-//  get_attribute_value_deg(e,"orientation_y",orientation.y);
-//  get_attribute_value_deg(e,"orientation_z",orientation.z);
-//}
-//
-//void diffuse_reverb_t::write_xml(xmlpp::Element* e,bool help_comments)
-//{
-//  route_t::write_xml(e,help_comments);
-//  set_attribute_double(e,"center_x",center.x);
-//  set_attribute_double(e,"center_y",center.y);
-//  set_attribute_double(e,"center_z",center.z);
-//  set_attribute_double(e,"size_x",size.x);
-//  set_attribute_double(e,"size_y",size.y);
-//  set_attribute_double(e,"size_z",size.z);
-//  set_attribute_double(e,"orientation_x",RAD2DEG*orientation.x);
-//  set_attribute_double(e,"orientation_y",RAD2DEG*orientation.y);
-//  set_attribute_double(e,"orientation_z",RAD2DEG*orientation.z);
-//}
-//
-
-//std::string diffuse_reverb_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  r << route_t::print(prefix);
-//  r << prefix << "Center: " << center.print_cart() << " s\n";
-//  r << prefix << "Size: " << size.print_cart() << " s\n";
-//  r << prefix << "Orientation: " << orientation.print() << " s\n";
-//  return r.str();
-//}
-
 route_t::route_t()
   : mute(false),solo(false)
 {
@@ -1182,13 +861,6 @@ void route_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_bool(e,"solo",solo);
 }
 
-//std::string route_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  r << prefix << "Name: \"" << name << "\"\n";
-//  return r.str();
-//}
-//
 void route_t::set_solo(bool b,uint32_t& anysolo)
 {
   if( b != solo ){
@@ -1204,16 +876,12 @@ void route_t::set_solo(bool b,uint32_t& anysolo)
 
 bool route_t::is_active(uint32_t anysolo)
 {
-  //DEBUGS(mute);
-  //DEBUGS(solo);
-  //DEBUGS(anysolo);
   return ( !mute && ( (anysolo==0)||(solo) ) );    
 }
 
 
 bool object_t::is_active(uint32_t anysolo,double t)
 {
-  //DEBUGS(route_t::is_active(anysolo));
   return (route_t::is_active(anysolo) && (t >= starttime) && ((t <= endtime)||(endtime <= starttime) ));
 }
 
@@ -1248,56 +916,6 @@ face_object_t::face_object_t()
 {
 }
 
-//pos_t face_object_t::get_closest_point(double t, pos_t p)
-//{
-//  pos_t center(location.interp(t));
-//  center += dlocation;
-//  zyx_euler_t o(orientation.interp(t));
-//  o += dorientation;
-//  p -= center;
-//  p /= o;
-//  p.x = 0;
-//  double w1(0.5*width);
-//  double h1(0.5*height);
-//  p.y = std::min(std::max(p.y,-w1),w1);
-//  p.z = std::min(std::max(p.z,-h1),h1);
-//  p *= o;
-//  p += center;
-//  return p;
-//}
-//
-//mirror_t face_object_t::get_mirror(double t, pos_t src)
-//{
-//  pos_t cp(src);
-//  pos_t center(location.interp(t));
-//  center += dlocation;
-//  zyx_euler_t o(orientation.interp(t));
-//  o += dorientation;
-//  cp -= center;
-//  cp /= o;
-//  double w1(0.5*width);
-//  double h1(0.5*height);
-//  mirror_t mirror;
-//  mirror.p = cp;
-//  mirror.p.x *= -1.0;
-//  cp.y = std::min(std::max(cp.y,-w1),w1);
-//  cp.z = std::min(std::max(cp.z,-h1),h1);
-//  cp.x = 0;
-//  cp *= o;
-//  cp += center;
-//  mirror.p *= o;
-//  mirror.p += center;
-//  cp -= src;
-//  cp *= -1.0/cp.norm();
-//  pos_t n(1,0,0);
-//  n *= o;
-//  mirror.c1 = std::max(n.x*cp.x+n.y*cp.y+n.z*cp.z,0.0);
-//  mirror.c2 = std::min(0.9999,(1.0-(mirror.c1*(1.0-damping))));
-//  mirror.c1 *= mirror.c1;
-//  mirror.c1 *= reflectivity;
-//  return mirror;
-//}
-
 face_object_t::~face_object_t()
 {
 }
@@ -1328,50 +946,6 @@ void face_object_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"reflectivity",reflectivity);
   set_attribute_double(e,"damping",damping);
 }
-
-//void TASCAR::Input::jack_t::write(uint32_t n,float* b)
-//{
-//  memcpy(data,b,sizeof(float)*std::min(n,size));
-//  for( unsigned int k=0;k<std::min(n,size);k++)
-//    data[k] *= gain;
-//}
-//
-//void TASCAR::Input::jack_t::read_xml(xmlpp::Element* e)
-//{
-//  base_t::read_xml(e);
-//  get_attribute_value(e,"gain",gain);
-//  gain = pow(10.0,0.05*gain);
-//  connections.clear();
-//  xmlpp::Node::NodeList subnodes = e->get_children();
-//  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-//    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-//    if( sne && ( sne->get_name() == "connection")){
-//      connections.push_back(sne->get_attribute_value("port"));
-//    }
-//  }
-//}
-//
-//void TASCAR::Input::jack_t::write_xml(xmlpp::Element* e,bool help_comments)
-//{
-//  base_t::write_xml(e,help_comments);
-//  //todo write gain
-//  for( std::vector<std::string>::iterator it=connections.begin();it!=connections.end();++it){
-//    xmlpp::Element* se(e->add_child("connection"));
-//    se->set_attribute("port",*it);
-//  }
-//}
-//
-//std::string TASCAR::Input::jack_t::print(const std::string& prefix)
-//{
-//  std::stringstream r;
-//  r << prefix << "Name: \"" << name << "\"\n";
-//  return r.str();
-//}
-//
-//TASCAR::Input::jack_t::jack_t(const std::string& parent_name_)
-//  : parent_name(parent_name_)
-//{
-//}
 
 TASCAR::Scene::range_t::range_t()
   : name(""),
