@@ -136,7 +136,7 @@ namespace TASCAR {
      */
     class acoustic_model_t {
     public:
-      acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0,NULL));
+      acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
       ~acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
