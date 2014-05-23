@@ -62,6 +62,7 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 #CXXFLAGS += -ggdb
 
+
 all:
 	mkdir -p build
 	$(MAKE) -C build -f ../Makefile $(BINFILES)
