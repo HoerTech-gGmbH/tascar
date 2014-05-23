@@ -49,6 +49,7 @@ protected:
   jack_client_t* jc;
   int srate;
   int fragsize;
+  int rtprio;
 };
 
 /**
@@ -59,8 +60,8 @@ class jackc_t : public jackc_portless_t {
 public:
   jackc_t(const std::string& clientname);
   virtual ~jackc_t();
-  void add_input_port(const std::string& name);
-  void add_output_port(const std::string& name);
+  virtual void add_input_port(const std::string& name);
+  virtual void add_output_port(const std::string& name);
   void connect_in(unsigned int port,const std::string& pname,bool btry=false);
   void connect_out(unsigned int port,const std::string& pname,bool btry=false);
   size_t get_num_input_ports() const {return inPort.size();};
@@ -75,6 +76,24 @@ private:
   std::vector<jack_port_t*> outPort;
   std::vector<float*> inBuffer;
   std::vector<float*> outBuffer;
+};
+
+class jackc_db_t : public jackc_t {
+public:
+  jackc_db_t(const std::string& clientname,jack_nframes_t fragsize);
+  virtual ~jackc_db_t();
+  virtual void add_input_port(const std::string& name);
+  virtual void add_output_port(const std::string& name);
+protected:
+  virtual int inner_process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) = 0;
+private:
+  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
+  std::vector<float*> dbinBuffer;
+  std::vector<float*> dboutBuffer;
+  jack_nframes_t inner_fragsize;
+  bool inner_is_larger;
+  uint32_t ratio;
+  jack_native_thread_t inner_thread;
 };
 
 class jackc_transport_t : public jackc_t {
