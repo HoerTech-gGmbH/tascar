@@ -57,15 +57,23 @@ tascar_gui: EXTERNALS += $(GTKEXT)
 
 tascar_pdf: EXTERNALS += cairomm-1.0
 
+LDLIBS += -ltascar
+
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 #CXXFLAGS += -ggdb
 
-
 all:
 	mkdir -p build
 	$(MAKE) -C build -f ../Makefile $(BINFILES)
+
+lib:
+	mkdir -p build
+	$(MAKE) -C build -f ../Makefile libtascar.a
+
+libtascar.a: $(OBJECTS)
+	ar rcs $@ $^
 
 install:
 	$(MAKE) -C build -f ../Makefile $(INSTBIN)
@@ -86,7 +94,7 @@ doc:
 
 include $(wildcard *.mk)
 
-$(BINFILES): $(OBJECTS)
+$(BINFILES): libtascar.a
 
 $(PREFIX)/bin/%: %
 	cp $< $@
