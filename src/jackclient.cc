@@ -172,17 +172,51 @@ std::string jackc_portless_t::get_client_name()
   return jack_get_client_name(jc);
 }
 
+void * jackc_db_t::service(void* h)
+{
+  ((jackc_db_t*)h)->service();
+  return NULL;
+}
+
+void jackc_db_t::service()
+{
+  pthread_mutex_lock( &mtx_inner_thread );
+  while( !b_exit_thread ){
+    usleep(1000);
+    for(uint32_t kb=0;kb<2;kb++){
+      if( pthread_mutex_trylock( &(mutex[kb]) ) == 0 ){
+        if( buffer_filled[kb] ){
+          inner_process(inner_fragsize, dbinBuffer[kb], dboutBuffer[kb] );
+          buffer_filled[kb] = false;
+        }
+        pthread_mutex_unlock( &(mutex[kb]) );
+      }
+    }
+  }
+  pthread_mutex_unlock( &mtx_inner_thread );
+}
+
 jackc_db_t::jackc_db_t(const std::string& clientname,jack_nframes_t infragsize)
   : jackc_t(clientname),
     inner_fragsize(infragsize),
-    inner_is_larger(inner_fragsize>(jack_nframes_t)fragsize)
+    inner_is_larger(inner_fragsize>(jack_nframes_t)fragsize),
+    current_buffer(0),
+    b_exit_thread(false),
+    inner_pos(0)
 {
+  buffer_filled[0] = false;
+  buffer_filled[1] = false;
   if( inner_is_larger ){
     // check for integer ratio:
     ratio = inner_fragsize/fragsize;
     if( ratio*(jack_nframes_t)fragsize != inner_fragsize )
       throw TASCAR::ErrMsg("Inner fragsize is not an integer multiple of fragsize.");
+    if( 0 != jack_client_create_thread(jc,&inner_thread,std::max(-1,rtprio-1),(rtprio>0),service,this) )
+      throw TASCAR::ErrMsg("Unable to create inner processing thread.");
     // create extra thread:
+    pthread_mutex_init( &mutex[0], NULL );
+    pthread_mutex_init( &mutex[1], NULL );
+    pthread_mutex_lock( &mutex[0] );
   }else{
     // check for integer ratio:
     ratio = fragsize/inner_fragsize;
@@ -194,19 +228,27 @@ jackc_db_t::jackc_db_t(const std::string& clientname,jack_nframes_t infragsize)
 
 jackc_db_t::~jackc_db_t()
 {
+  b_exit_thread = true;
   if( inner_is_larger ){
-    for(uint32_t k=0;k<dbinBuffer.size();k++)
-      delete [] dbinBuffer[k];
-    for(uint32_t k=0;k<dboutBuffer.size();k++)
-      delete [] dboutBuffer[k];
+    pthread_mutex_lock( &mtx_inner_thread );
+    pthread_mutex_unlock( &mtx_inner_thread );
+    pthread_mutex_destroy( &mtx_inner_thread );
+    for(uint32_t kb=0;kb<2;kb++){
+      pthread_mutex_destroy( &(mutex[kb]) );
+      for(uint32_t k=0;k<dbinBuffer[kb].size();k++)
+        delete [] dbinBuffer[kb][k];
+      for(uint32_t k=0;k<dboutBuffer[kb].size();k++)
+        delete [] dboutBuffer[kb][k];
+    }
   }
-}
+}  
 
 void jackc_db_t::add_input_port(const std::string& name)
 {
   if( inner_is_larger ){
     // allocate buffer:
-    dbinBuffer.push_back(new float[inner_fragsize]);
+    for(uint32_t k=0;k<2;k++)
+      dbinBuffer[k].push_back(new float[inner_fragsize]);
   }
   jackc_t::add_input_port(name);
 }
@@ -215,7 +257,8 @@ void jackc_db_t::add_output_port(const std::string& name)
 {
   if( inner_is_larger ){
     // allocate buffer:
-    dboutBuffer.push_back(new float[inner_fragsize]);
+    for(uint32_t k=0;k<2;k++)
+      dboutBuffer[k].push_back(new float[inner_fragsize]);
   }
   jackc_t::add_output_port(name);
 }
@@ -224,23 +267,33 @@ int jackc_db_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuff
 {
   int rv(0);
   if( inner_is_larger ){
+    // copy data to buffer
+    for( uint32_t k=0;k<inBuffer.size();k++)
+      memcpy(&(dbinBuffer[current_buffer][k][inner_pos]),inBuffer[k],sizeof(float)*fragsize);
+    // copy data from buffer
+    for( uint32_t k=0;k<outBuffer.size();k++)
+      memcpy(outBuffer[k],&(dboutBuffer[current_buffer][k][inner_pos]),sizeof(float)*fragsize);
+    inner_pos += fragsize;
+    // if buffer is full, lock other buffer and unlock current buffer
+    if( inner_pos >= inner_fragsize ){
+      uint32_t next_buffer((current_buffer+1)%2);
+      pthread_mutex_lock(&(mutex[next_buffer]));
+      buffer_filled[current_buffer] = true;
+      pthread_mutex_unlock(&(mutex[current_buffer]));
+      current_buffer = next_buffer;
+      inner_pos = 0;
+    }
   }else{
     for(uint32_t kr=0;kr<ratio;kr++){
       for(uint32_t k=0;k<inBuffer.size();k++)
-        dbinBuffer[k] = &(inBuffer[k][kr*fragsize]);
+        dbinBuffer[0][k] = &(inBuffer[k][kr*fragsize]);
       for(uint32_t k=0;k<outBuffer.size();k++)
-        dboutBuffer[k] = &(outBuffer[k][kr*fragsize]);
-      rv = inner_process(inner_fragsize,dbinBuffer,dboutBuffer);
+        dboutBuffer[0][k] = &(outBuffer[k][kr*fragsize]);
+      rv = inner_process(inner_fragsize,dbinBuffer[0],dboutBuffer[0]);
     }
   }
   return rv;
 }
-
-//  std::vector<float*> dbinBuffer;
-//  std::vector<float*> dboutBuffer;
-//  jack_nframes_t inner_fragsize;
-//  bool inner_is_larger;
-//  jack_native_thread_t inner_thread;
 
 /*
  * Local Variables:

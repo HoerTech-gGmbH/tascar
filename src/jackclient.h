@@ -88,12 +88,20 @@ protected:
   virtual int inner_process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) = 0;
 private:
   virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
-  std::vector<float*> dbinBuffer;
-  std::vector<float*> dboutBuffer;
+  static void * service(void* h);
+  void service();
+  std::vector<float*> dbinBuffer[2];
+  std::vector<float*> dboutBuffer[2];
   jack_nframes_t inner_fragsize;
   bool inner_is_larger;
   uint32_t ratio;
   jack_native_thread_t inner_thread;
+  pthread_mutex_t mutex[2];
+  pthread_mutex_t mtx_inner_thread;
+  bool buffer_filled[2];
+  uint32_t current_buffer;
+  bool b_exit_thread;
+  uint32_t inner_pos;
 };
 
 class jackc_transport_t : public jackc_t {
