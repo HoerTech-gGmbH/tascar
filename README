@@ -5,10 +5,28 @@ acoustic scenes in higher order Ambisonics. The toolbox is developed
 for applications in the context of hearing research and hearing aid
 evaluation.
 
+References:
+
+Grimm, G.; Wendt, T.; Hohmann, V.; Ewert, S. (2014): Implementation
+and Perceptual Evaluation of a Simulation Method for Coupled Rooms in
+Higher Order Ambisonics. in: Proc. of the EAA Joint Symposium on
+Auralization and Ambisonics, Berlin, 2014, DOI:
+http://dx.doi.org/10.14279/depositonce-6
+
+Grimm, G.; Hohmann, V. (2014): Dynamic spatial acoustic scenarios in
+multichannel loudspeaker systems for hearing aid evaluations. in:
+Proc. of the 17th annual meeting of the Deutsche Gesellschaft fuer
+Audiologie, Oldenburg, 2014.
+
+http://www.uzh.ch/orl/dga-ev/publikationen/tagungsbaende/tagungsbaende.html
+
+
+
+
 Main author:
 
 Giso Grimm
 
 g.grimm@uni-oldenburg.de
 
-Oldenburg, February 2013
+Oldenburg, February 2013 - May 2014
