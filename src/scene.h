@@ -146,6 +146,7 @@ namespace TASCAR {
       std::string get_portname() const { return portname;};
       std::string get_connect() const { return connect;};
       float get_gain() const { return gain;};
+      void set_gain_db( float g );
     private:
       std::string portname;
       std::string connect;
@@ -198,12 +199,13 @@ namespace TASCAR {
       void process_active(double t,uint32_t anysolo);
       pos_t get_pos_global(double t) const;
       void prepare(double fs, uint32_t fragsize);
-      std::string getlabel();
+      std::string getlabel() const;
       bool isactive(double t);
       bool get_mute() const;
       bool get_solo() const;
       std::string get_port_name() const;
       std::string get_parent_name() const;
+      std::string get_name() const;
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
     private:
       pos_t local_position;

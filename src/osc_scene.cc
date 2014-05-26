@@ -72,6 +72,16 @@ int osc_route_solo(const char *path, const char *types, lo_arg **argv, int argc,
   return 1;
 }
 
+int osc_set_sound_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  sound_t* h((sound_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='f') ){
+    h->set_gain_db(argv[0]->f);
+    return 0;
+  }
+  return 1;
+}
+
 void osc_scene_t::add_object_methods(TASCAR::Scene::object_t* o)
 {
   add_method("/"+name+"/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
@@ -90,12 +100,22 @@ void osc_scene_t::add_route_methods(TASCAR::Scene::route_t* o)
   add_method("/"+name+"/"+o->get_name()+"/solo","i",osc_route_solo,rs);
 }
 
+
+void osc_scene_t::add_sound_methods(TASCAR::Scene::sound_t* s)
+{
+  add_method("/"+name+"/"+s->get_parent_name()+"/"+s->get_name()+"/gain","f",osc_set_sound_gain,s);
+}
+
 void osc_scene_t::add_child_methods()
 {
   std::vector<object_t*> obj(get_objects());
   for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
     add_object_methods(*it);
     add_route_methods(*it);
+  }
+  std::vector<sound_t*> sounds(linearize_sounds());
+  for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
+    add_sound_methods(*it);
   }
 }
 
