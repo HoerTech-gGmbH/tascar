@@ -28,6 +28,7 @@
 #include "errorhandling.h"
 #include <string.h>
 #include <jack/thread.h>
+#include "defs.h"
 
 static std::string errmsg("");
 
@@ -211,12 +212,13 @@ jackc_db_t::jackc_db_t(const std::string& clientname,jack_nframes_t infragsize)
     ratio = inner_fragsize/fragsize;
     if( ratio*(jack_nframes_t)fragsize != inner_fragsize )
       throw TASCAR::ErrMsg("Inner fragsize is not an integer multiple of fragsize.");
-    if( 0 != jack_client_create_thread(jc,&inner_thread,std::max(-1,rtprio-1),(rtprio>0),service,this) )
-      throw TASCAR::ErrMsg("Unable to create inner processing thread.");
     // create extra thread:
+    pthread_mutex_init( &mtx_inner_thread, NULL );
     pthread_mutex_init( &mutex[0], NULL );
     pthread_mutex_init( &mutex[1], NULL );
     pthread_mutex_lock( &mutex[0] );
+    if( 0 != jack_client_create_thread(jc,&inner_thread,std::max(-1,rtprio-1),(rtprio>0),service,this) )
+      throw TASCAR::ErrMsg("Unable to create inner processing thread.");
   }else{
     // check for integer ratio:
     ratio = fragsize/inner_fragsize;
