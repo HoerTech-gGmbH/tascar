@@ -830,7 +830,7 @@ std::string rgb_color_t::str()
   return ctmp;
 }
 
-std::string sound_t::getlabel()
+std::string sound_t::getlabel() const
 {
   std::string r;
   if( parent ){
@@ -840,6 +840,11 @@ std::string sound_t::getlabel()
   }
   r += name;
   return r;
+}
+
+std::string sound_t::get_name() const
+{
+  return name;
 }
 
 route_t::route_t()
@@ -988,6 +993,11 @@ void jack_port_t::read_xml(xmlpp::Element* e)
 {
   connect = e->get_attribute_value("connect");
   get_attribute_value_db_float(e,"gain",gain);
+}
+
+void jack_port_t::set_gain_db( float g )
+{
+  gain = pow(10.0,0.05*g);
 }
 
 void jack_port_t::write_xml(xmlpp::Element* e)
