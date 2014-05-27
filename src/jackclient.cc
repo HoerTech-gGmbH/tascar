@@ -28,6 +28,7 @@
 #include "errorhandling.h"
 #include <string.h>
 #include <jack/thread.h>
+#include <unistd.h>
 
 static std::string errmsg("");
 
