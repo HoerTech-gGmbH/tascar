@@ -65,29 +65,21 @@ namespace TASCAR {
   private:
     void service();
     static void * service(void* h);
-    //void rt_request_from_slave( uint32_t n );
-    //void slave_read_file( uint32_t firstframe );
     bool service_running;
     bool run_service;
     uint32_t numchannels_;
     uint32_t buffer_length_;
     uint32_t fragsize_;
     ringbuffer_t rb;
-    //pthread_mutex_t mtx_readrequest;
-    //pthread_mutex_t mtx_wakeup;
     // mtx_file protects sfile, file_channel and filebuffer:
     pthread_mutex_t mtx_file;
-    int32_t requested_startframe;
-    bool need_data;
     inftime_looped_sndfile_t* sfile;
     uint32_t file_firstchannel;
     float* file_buffer;
     float* read_fragment_buf;
     float* disk_fragment_buf;
-    uint32_t file_frames;
     uint32_t file_channels;
     int32_t file_firstframe;
-    //int32_t file_lastframe;
     double gain_;
     //
     pthread_t srv_thread;

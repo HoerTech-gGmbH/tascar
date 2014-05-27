@@ -2,6 +2,12 @@
 #include <algorithm>
 #include <string.h>
 
+/**
+   \brief Default constructor
+
+   \param size Size in samples
+   \param channels_ Number of channels
+ */
 TASCAR::ringbuffer_t::ringbuffer_t(uint32_t size,uint32_t channels_)
   : data(new float[size*channels_]),
     pos(size),
@@ -22,6 +28,7 @@ TASCAR::ringbuffer_t::~ringbuffer_t()
   pthread_mutex_destroy( &mtx_read_access );
   delete [] data;
 }
+
 uint32_t TASCAR::ringbuffer_t::pos_t::rspace()
 {
   if( w >= r ) return w-r;
@@ -140,11 +147,22 @@ uint32_t TASCAR::ringbuffer_t::write( float* buf, uint32_t frames )
   return 0;
 }
 
+/**
+   \brief Write zeros to ringbuffer.
+   
+   See write() for details.
+
+*/
 uint32_t TASCAR::ringbuffer_t::write_zeros( uint32_t frames )
 {
   return write( NULL, frames );
 }
 
+/**
+   \brief Reset ringbuffer to an empty state.
+
+   Internally used in constructor and after re-location.
+ */
 void TASCAR::ringbuffer_t::reset()
 {
   pos.r = 0;
@@ -153,12 +171,22 @@ void TASCAR::ringbuffer_t::reset()
   requested_location = INVALID_LOCATION;
 }
 
+/**
+   \brief Lock the ringbuffer for relocation of the writing end.
+
+   To be called from writing end.
+ */
 void TASCAR::ringbuffer_t::lock_relocate()
 {
   pthread_mutex_lock( &mtx_read_access );
   pthread_mutex_lock( &mtx_write_access );
 }
 
+/**
+   \brief Unlock the ring buffer after relocation.
+
+   To be called from writing end.
+ */
 void TASCAR::ringbuffer_t::unlock_relocate()
 {
   uint32_t new_location(requested_location);
@@ -168,6 +196,11 @@ void TASCAR::ringbuffer_t::unlock_relocate()
   pthread_mutex_unlock( &mtx_write_access );
 }
 
+/**
+   \brief Set new location, to control writing end position
+
+   Can be called from anywhere.
+ */
 void TASCAR::ringbuffer_t::set_locate(int32_t l)
 {
   requested_location = l;

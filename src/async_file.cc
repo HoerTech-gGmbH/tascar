@@ -126,14 +126,11 @@ TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t buffer_le
     buffer_length_(buffer_length),
     fragsize_(fragsize),
     rb(buffer_length,numchannels),
-    requested_startframe(0),
-    need_data(false),
     sfile(NULL),
     file_firstchannel(0),
     file_buffer(NULL),
     read_fragment_buf(new float[numchannels*fragsize]),
     disk_fragment_buf(new float[numchannels*fragsize]),
-    file_frames(1),
     file_channels(1),
     gain_(1.0),
     xrun(0),
@@ -152,14 +149,11 @@ TASCAR::async_sndfile_t::async_sndfile_t( const async_sndfile_t& src)
     buffer_length_(src.buffer_length_),
     fragsize_(src.fragsize_),
     rb(src.buffer_length_,src.numchannels_),
-    requested_startframe(0),
-    need_data(false),
     sfile(NULL),
     file_firstchannel(0),
     file_buffer(NULL),
     read_fragment_buf(new float[numchannels_*fragsize_]),
     disk_fragment_buf(new float[numchannels_*fragsize_]),
-    file_frames(1),
     file_channels(1),
     gain_(1.0),
     xrun(0),
@@ -268,7 +262,8 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
   uint32_t rframes = rb.read( read_fragment_buf, n, &current_pos );
   if( (current_pos != firstframe) || (rframes<n) ){
     xrun++;
-    DEBUG(xrun);
+    std::cerr << "xrun(" << xrun << ") current_pos=" << current_pos << " firstframe=" << firstframe << " rframes=" << rframes << " n=" << n << std::endl;
+    //DEBUG(xrun);
   }
   if( current_pos == firstframe ){
     // copy and de-interlace buffer:
@@ -299,7 +294,7 @@ void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchann
   }
   gain_ = gain;
   sfile = new inftime_looped_sndfile_t(fname, loop );
-  file_frames = sfile->get_frames();
+  //file_frames = sfile->get_frames();
   file_channels = sfile->get_channels();
   if( file_channels < numchannels_+firstchannel ){
     delete sfile;
