@@ -74,11 +74,11 @@ osc_server_t::osc_server_t(const std::string& multicast, const std::string& port
   if( multicast.size() ){
     lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
     if( verbose )
-      std::cerr << "listening on multicast address \"" << multicast << "\" port " << port << std::endl;
+      std::cerr << "listening on multicast address \"osc.udp://" << multicast << ":"<<port << "/\"" << std::endl;
   }else{
     lost = lo_server_thread_new(port.c_str(),err_handler);
     if( verbose )
-      std::cerr << "listening on port \"" << port << "\"" << std::endl;
+      std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" << std::endl;
   }
   if( (!lost) || liblo_errflag )
     throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\").");
