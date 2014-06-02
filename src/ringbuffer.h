@@ -9,7 +9,32 @@
 namespace TASCAR {
 
   /**
-   * \brief Relocatable ring buffer
+   * \brief Relocatable ring buffer.
+   *
+   * The reading end can request a position, with the set_locate()
+   * member. The writing end can detect a relocation request with the
+   * member function relocation_requested(). read() and read_skip()
+   * will read from the ring buffer, write() and write_zeros() can be
+   * used to write to the ring buffer.
+   *
+   * Typical usage:
+   * 
+   * reading end (e.g., jack process callback):
+   * <ol>
+   * <li>set_locate()</li>
+   * <li>read()</li>
+   * </ol>
+   *
+   * writing end (e.g., disk buttler thread):
+   * <ol>
+   * <li> relocation_requested()<ul>
+   * <li> lock_relocate()</li>
+   * <li> get_requested_location()</li>
+   * <li> (read from sound file or whatever)</li>
+   * <li> unlock_relocate()</li></ul>
+   * <li> write_space()</li>
+   * <li> write()</li>
+   * </ol>
    */
   class ringbuffer_t {
   public:
@@ -21,7 +46,6 @@ namespace TASCAR {
     uint32_t write_zeros( uint32_t frames );
     uint32_t read_space();
     uint32_t write_space();
-    //void set_locate(int32_t l){requested_location = l;};
     void set_locate(int32_t l);
     bool relocation_requested(){return requested_location != INVALID_LOCATION;};
     int32_t get_requested_location(){return requested_location;};

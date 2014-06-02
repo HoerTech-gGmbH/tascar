@@ -28,6 +28,7 @@
 #include "errorhandling.h"
 #include <string.h>
 #include <jack/thread.h>
+#include <unistd.h>
 #include "defs.h"
 
 static std::string errmsg("");
@@ -251,6 +252,9 @@ void jackc_db_t::add_input_port(const std::string& name)
     // allocate buffer:
     for(uint32_t k=0;k<2;k++)
       dbinBuffer[k].push_back(new float[inner_fragsize]);
+  }else{
+    for(uint32_t k=0;k<2;k++)
+      dbinBuffer[k].push_back(NULL);
   }
   jackc_t::add_input_port(name);
 }
@@ -261,6 +265,9 @@ void jackc_db_t::add_output_port(const std::string& name)
     // allocate buffer:
     for(uint32_t k=0;k<2;k++)
       dboutBuffer[k].push_back(new float[inner_fragsize]);
+  }else{
+    for(uint32_t k=0;k<2;k++)
+      dboutBuffer[k].push_back(NULL);
   }
   jackc_t::add_output_port(name);
 }
