@@ -26,6 +26,8 @@
 #include "osc_helper.h"
 #include "errorhandling.h"
 #include <iostream>
+#include <math.h>
+#include "defs.h"
 
 using namespace TASCAR;
 
@@ -51,6 +53,20 @@ int osc_set_float(const char *path, const char *types, lo_arg **argv, int argc, 
   return 0;
 }
 
+int osc_set_float_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'f') )
+    *(float*)(user_data) = powf(10.0f,0.05*argv[0]->f);
+  return 0;
+}
+
+int osc_set_float_degree(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'f') )
+    *(float*)(user_data) = DEG2RAD * argv[0]->f;
+  return 0;
+}
+
 int osc_set_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   if( user_data && (argc == 1) && (types[0] == 'f') )
@@ -62,6 +78,13 @@ int osc_set_int32(const char *path, const char *types, lo_arg **argv, int argc, 
 {
   if( user_data && (argc == 1) && (types[0] == 'i') )
     *(int32_t*)(user_data) = argv[0]->i;
+  return 0;
+}
+
+int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'i') )
+    *(bool*)(user_data) = (argv[0]->i != 0);
   return 0;
 }
 
@@ -109,9 +132,29 @@ void osc_server_t::add_float(const std::string& path,float *data)
   add_method(path,"f",osc_set_float,data);
 }
 
+void osc_server_t::add_float_db(const std::string& path,float *data)
+{
+  add_method(path,"f",osc_set_float_db,data);
+}
+
+void osc_server_t::add_float_degree(const std::string& path,float *data)
+{
+  add_method(path,"f",osc_set_float_degree,data);
+}
+
 void osc_server_t::add_bool_true(const std::string& path,bool *data)
 {
   add_method(path,"",osc_set_bool_true,data);
+}
+
+void osc_server_t::add_bool(const std::string& path,bool *data)
+{
+  add_method(path,"i",osc_set_bool,data);
+}
+
+void osc_server_t::add_int(const std::string& path,int32_t *data)
+{
+  add_method(path,"i",osc_set_int32,data);
 }
 
 void osc_server_t::activate()
