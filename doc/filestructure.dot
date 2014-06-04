@@ -26,6 +26,8 @@ digraph ap {
   sink_object [label="{sink:|type|size|point|diffuse|isdirect|diffusegain|falloff}",fillcolor="salmon"];
   face [label="{face:|width|height|reflectivity|damping}",fillcolor="salmon"];
 
+  mask_object [label="{mask:|size|falloff|inside}",fillcolor="salmon"];
+
   sink_mask [label="{sink_mask:|size|falloff}"];
   speaker [label="{speaker:|az|el|r}"];
   sndfile [label="{sndfile:|name|firstchannel|channels|loop|starttime}"];
@@ -40,6 +42,7 @@ digraph ap {
     src_door;
     src_object;
     sink_object;
+    mask_object;
     face;
   }
 
@@ -77,6 +80,7 @@ digraph ap {
   scene -> src_door [style="solid",label="N",penwidth="3"];
   scene -> src_diffuse [style="solid",label="N",penwidth="3"];
   scene -> sink_object [style="solid",label="N",penwidth="3"];
+  scene -> mask_object [style="solid",label="N",penwidth="3"];
   scene -> face [style="solid",label="N",penwidth="3"];
   scene -> range [style="solid",label="N",penwidth="3"];
   scene -> connect [style="solid",label="N",penwidth="3"];
