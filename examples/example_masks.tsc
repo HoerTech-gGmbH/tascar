@@ -1,8 +1,4 @@
 <?xml version="1.0"?>
-<!--
-Created with tascar_creator
-Thu Jan 24 14:47:23 2013
--->
 <scene name="exmask" duration="20">
   <description>one source moving from left to right with spherical
   interpolation, another source moving back with cartesian interpolation</description>
@@ -37,8 +33,15 @@ Thu Jan 24 14:47:23 2013
     20 60 60 0
     </position>
   </sink>
-  <mask name="mask1" inside="true" size="40 10 20" falloff="7">
-    <position>10 60 -20 0
-    20 60 0 0</position>
+  <mask name="mask1" inside="false" size="60 50 20" falloff="7">
+    <position>0 60 -20 0</position>
+  </mask>
+  <mask name="mask2" inside="true" size="30 10 20" falloff="3">
+    <position>0 60 0 0</position>
+    <orientation>0 90 0 0</orientation>
+  </mask>
+  <mask name="mask3" inside="false" size="50 10 20" falloff="3">
+    <position>0 60 40 0</position>
+    <orientation>0 0 0 0</orientation>
   </mask>
 </scene>
