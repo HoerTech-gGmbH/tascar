@@ -47,6 +47,14 @@ namespace TASCAR {
       virtual ~sink_data_t(){};
     };
 
+    class mask_t : public shoebox_t {
+    public:
+      mask_t();
+      double gain(const pos_t& p);
+      double falloff;
+      bool mask_inner;
+    };
+
     /** \brief Base class for all audio sinks
      */
     class sink_t {
@@ -63,6 +71,7 @@ namespace TASCAR {
       uint32_t get_num_channels() const { return outchannels.size();};
       virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
       virtual sink_data_t* create_sink_data() { return NULL;};
+      void apply_gain(double gain);
       std::vector<wave_t> outchannels;
       pos_t position;
       zyx_euler_t orientation;
@@ -79,6 +88,8 @@ namespace TASCAR {
       shoebox_t mask;
       double mask_falloff_;
       bool mask_use_;
+      double x_gain;
+      double dx_gain;
     };
 
     class filter_coeff_t {
@@ -194,7 +205,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks);
+      world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */
@@ -203,6 +214,8 @@ namespace TASCAR {
       mirror_model_t mirrormodel;
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
+      std::vector<sink_t*> sinks_;
+      std::vector<mask_t*> masks_;
     };
 
   }

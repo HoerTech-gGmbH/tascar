@@ -69,6 +69,7 @@ namespace TASCAR {
     std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
     std::vector<Acousticmodel::sink_t*> sinks;
+    std::vector<Acousticmodel::mask_t*> pmasks;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     Acousticmodel::world_t* world;
@@ -202,8 +203,12 @@ void TASCAR::render_t::run()
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
     reflectors.push_back(&(*it));
   }
+  pmasks.clear();
+  for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it){
+    pmasks.push_back(&(*it));
+  }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks);
+  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks,pmasks);
   //
   // activate repositioning services for each object:
   add_child_methods();

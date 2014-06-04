@@ -256,6 +256,7 @@ public:
   void draw_door_src(const src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  void draw_mask(mask_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   //static int osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   //static int osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   //static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -729,6 +730,35 @@ void tascar_gui_t::draw_sink_object(const sink_object_t& obj,Cairo::RefPtr<Cairo
   cr->restore();
 }
 
+
+void tascar_gui_t::draw_mask(mask_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  if( view.get_perspective() )
+    return;
+  msize *= 1.5;
+  cr->save();
+  cr->set_line_width( 0.2*msize );
+  cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
+  obj.geometry_update(time);
+  //pos_t p(obj.get_location(time));
+  //zyx_euler_t o(obj.get_orientation(time));
+  //DEBUG(o.print());
+  if( (obj.size.x!=0)&&(obj.size.y!=0)&&(obj.size.z!=0) ){
+    draw_cube(obj.center,obj.shoebox_t::orientation,obj.size,cr);
+    if( obj.xmlfalloff > 0 ){
+      std::vector<double> dash(2);
+      dash[0] = msize;
+      dash[1] = msize;
+      cr->set_dash(dash,0);
+      draw_cube(obj.center,obj.shoebox_t::orientation,obj.size+pos_t(2*obj.xmlfalloff,2*obj.xmlfalloff,2*obj.xmlfalloff),cr);
+      dash[0] = 1.0;
+      dash[1] = 0.0;
+      cr->set_dash(dash,0);
+    }
+  }
+  cr->restore();
+}
+
 void tascar_gui_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::RefPtr<Cairo::Context> cr)
 {
   std::vector<pos_t> roomnodes(8,pos_t());
@@ -1190,6 +1220,9 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       }
       for(unsigned int k=0;k<scene->sink_objects.size();k++){
         draw_sink_object( scene->sink_objects[k], cr, markersize );
+      }
+      for(unsigned int k=0;k<scene->masks.size();k++){
+        draw_mask( scene->masks[k], cr, markersize );
       }
       //cr->save();
       //cr->set_source_rgb( 0, 0, 0 );

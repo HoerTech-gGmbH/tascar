@@ -278,6 +278,16 @@ namespace TASCAR {
       double end;
     };
 
+    class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
+    public:
+      mask_object_t();
+      void read_xml(xmlpp::Element* e);
+      void prepare(double fs, uint32_t fragsize);
+      void geometry_update(double t);
+      pos_t xmlsize;
+      double xmlfalloff;
+    };
+
     class scene_t : public scene_node_base_t {
     public:
       scene_t();
@@ -300,6 +310,7 @@ namespace TASCAR {
       //std::vector<diffuse_reverb_t> reverbs;
       std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
+      std::vector<mask_object_t> masks;
       double guiscale;
       pos_t guicenter;
       //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};

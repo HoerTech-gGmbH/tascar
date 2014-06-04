@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+Created with tascar_creator
+Thu Jan 24 14:47:23 2013
+-->
+<scene name="exmask" duration="20">
+  <description>one source moving from left to right with spherical
+  interpolation, another source moving back with cartesian interpolation</description>
+  <src_object name="rot-z" color="#f00000" starttime="4">
+    <position interpolation="spherical">0 50 -50 0
+    10 50 50 0
+    20 50 -50 0
+    </position>
+    <orientation>0 0 0 0
+    10 1800 0 0
+    20 0 -1800 0
+    </orientation>
+    <sound name="a" x="10" connect="@.0"/>
+    <sound name="b" x="-10" connect="@.0"/>
+    <sndfile name="tc1.wav" gain="0" loop="0" starttime="0" y="0" z="0" channel="0"/>
+  </src_object>
+  <src_object name="rot-y" color="#00f000" starttime="18">
+    <position interpolation="spherical">0 50 50 0
+    10 50 -50 0
+    20 50 50 0
+    </position>
+    <orientation>0 0 0 0
+    10 0 1800 0
+    20 -1800 0 0
+    </orientation>
+    <sound name="a" x="10" connect="@.0"/>
+    <sound name="b" x="-10" connect="@.0"/>
+    <sndfile name="tc1.wav" gain="0" loop="0" starttime="0" y="0" z="0" channel="0"/>
+  </src_object>
+  <sink name="out" color="#0000f0" type="amb3h0v" connect="ambdec:in">
+    <position>0 60 -60 0
+    20 60 60 0
+    </position>
+  </sink>
+  <mask name="mask1" inside="true" size="40 10 20" falloff="7">
+    <position>10 60 -20 0
+    20 60 0 0</position>
+  </mask>
+</scene>

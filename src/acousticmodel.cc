@@ -12,6 +12,21 @@ void sink_t::clear()
     outchannels[ch].clear();
 }
 
+mask_t::mask_t()
+  : falloff(1.0),mask_inner(false)
+{
+}
+
+double mask_t::gain(const pos_t& p)
+{
+  double d(nextpoint(p).norm());
+  d = 0.5+0.5*cos(M_PI*std::min(1.0,d*falloff));
+  if( mask_inner )
+    return 1.0-d;
+  return d;
+}
+
+
 sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                pos_t mask_size,
                double mask_falloff,
@@ -60,6 +75,21 @@ void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtu
     gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
   }
   make_friendly_number(gain);
+}
+
+void sink_t::apply_gain( double gain)
+{
+  dx_gain = (gain-x_gain)*dt;
+  uint32_t ch(get_num_channels());
+  if( ch > 0 ){
+    uint32_t psize(outchannels[0].size());
+    for(uint32_t k=0;k<psize;k++){
+      double g(x_gain+=dx_gain);
+      for(uint32_t c=0;c<ch;c++){
+        outchannels[c][k] *= g;
+      }
+    }
+  }
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize)
@@ -138,9 +168,11 @@ void acoustic_model_t::process()
   double nextgain(1.0);
   // calculate relative geometry between source and sink:
   double srcgainmod(1.0);
+  double mask_gain(1.0);
+  //for(std::vector<
   pos_t effective_srcpos(src_->get_effective_position(sink_->position,srcgainmod));
   sink_->update_refpoint(src_->position,effective_srcpos,prel,nextdistance,nextgain);
-  nextgain *= srcgainmod;
+  nextgain *= srcgainmod*mask_gain;
   double next_air_absorption(exp(-nextdistance*dscale));
   double ddistance((nextdistance-distance)*dt);
   double dgain((nextgain-gain)*dt);
@@ -257,8 +289,8 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks)
-  : mirrormodel(sources,reflectors)
+world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks)
+  : mirrormodel(sources,reflectors),sinks_(sinks),masks_(masks)
 {
   DEBUGS(diffusesources.size());
   DEBUGS(sources.size());
@@ -299,6 +331,26 @@ void world_t::process()
     acoustic_model[k]->process();
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
     diffuse_acoustic_model[k]->process();
+  // now apply mask gains:
+  for(uint32_t k=0;k<sinks_.size();k++){
+    uint32_t c_inner(0);
+    uint32_t c_outer(0);
+    double gain_inner(0.0);
+    double gain_outer(1.0);
+    for(uint32_t km=0;km<masks_.size();km++){
+      pos_t p(sinks_[k]->position);
+      if( masks_[km]->mask_inner ){
+        c_inner++;
+        gain_inner = std::max(gain_inner,masks_[km]->gain(p));
+      }else{
+        c_outer++;
+        gain_outer = std::min(gain_outer,masks_[km]->gain(p));
+      }
+    }
+    if( c_inner > 0 )
+      gain_outer *= gain_inner;
+    sinks_[k]->apply_gain(gain_outer);
+  }
 }
 
 diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* src,sink_t* sink)

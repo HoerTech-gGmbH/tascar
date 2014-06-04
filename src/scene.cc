@@ -414,6 +414,8 @@ void scene_t::geometry_update(double t)
     it->geometry_update(t);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->geometry_update(t);
+  for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
+    it->geometry_update(t);
 }
 
 void scene_t::process_active(double t)
@@ -463,6 +465,32 @@ sink_mask_t::sink_mask_t()
 
 void sink_mask_t::prepare(double fs, uint32_t fragsize)
 {
+}
+
+void mask_object_t::read_xml(xmlpp::Element* e)
+{
+  object_t::read_xml(e);
+  get_attribute_value(e,"size",xmlsize);
+  get_attribute_value(e,"falloff",xmlfalloff);
+  get_attribute_value_bool(e,"inside",mask_inner);
+}
+
+mask_object_t::mask_object_t()
+{
+}
+
+void mask_object_t::prepare(double fs, uint32_t fragsize)
+{
+}
+
+void mask_object_t::geometry_update(double t)
+{
+  shoebox_t::size.x = std::max(0.0,xmlsize.x-falloff);
+  shoebox_t::size.y = std::max(0.0,xmlsize.y-falloff);
+  shoebox_t::size.z = std::max(0.0,xmlsize.z-falloff);
+  shoebox_t::center = get_location(t);
+  shoebox_t::orientation = get_orientation(t);
+  falloff = 1.0/std::max(xmlfalloff,1e-10);
 }
 
 void sink_object_t::read_xml(xmlpp::Element* e)
@@ -676,6 +704,10 @@ void scene_t::read_xml(xmlpp::Element* e)
       if( sne->get_name() == "range" ){
         ranges.push_back(range_t());
         ranges.rbegin()->read_xml(sne);
+      }
+      if( sne->get_name() == "mask" ){
+        masks.push_back(mask_object_t());
+        masks.rbegin()->read_xml(sne);
       }
       if( sne->get_name() == "connect" ){
         connection_t c;
