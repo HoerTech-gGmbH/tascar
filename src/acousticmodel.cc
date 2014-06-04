@@ -335,21 +335,21 @@ void world_t::process()
   for(uint32_t k=0;k<sinks_.size();k++){
     uint32_t c_inner(0);
     uint32_t c_outer(0);
-    double gain_inner(0.0);
-    double gain_outer(1.0);
+    double gain_inner(1.0);
+    double gain_outer(0.0);
     for(uint32_t km=0;km<masks_.size();km++){
       pos_t p(sinks_[k]->position);
       if( masks_[km]->mask_inner ){
         c_inner++;
-        gain_inner = std::max(gain_inner,masks_[km]->gain(p));
+        gain_inner = std::min(gain_inner,masks_[km]->gain(p));
       }else{
         c_outer++;
-        gain_outer = std::min(gain_outer,masks_[km]->gain(p));
+        gain_outer = std::max(gain_outer,masks_[km]->gain(p));
       }
     }
-    if( c_inner > 0 )
-      gain_outer *= gain_inner;
-    sinks_[k]->apply_gain(gain_outer);
+    if( c_outer > 0 )
+      gain_inner *= gain_outer;
+    sinks_[k]->apply_gain(gain_inner);
   }
 }
 
