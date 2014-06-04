@@ -743,18 +743,26 @@ void tascar_gui_t::draw_mask(mask_object_t& obj,Cairo::RefPtr<Cairo::Context> cr
   //pos_t p(obj.get_location(time));
   //zyx_euler_t o(obj.get_orientation(time));
   //DEBUG(o.print());
-  if( (obj.size.x!=0)&&(obj.size.y!=0)&&(obj.size.z!=0) ){
+  if( obj.mask_inner ){
+    draw_cube(obj.center,obj.shoebox_t::orientation,obj.size+pos_t(2*obj.xmlfalloff,2*obj.xmlfalloff,2*obj.xmlfalloff),cr);
+    std::vector<double> dash(2);
+    dash[0] = msize;
+    dash[1] = msize;
+    cr->set_dash(dash,0);
     draw_cube(obj.center,obj.shoebox_t::orientation,obj.size,cr);
-    if( obj.xmlfalloff > 0 ){
-      std::vector<double> dash(2);
-      dash[0] = msize;
-      dash[1] = msize;
-      cr->set_dash(dash,0);
-      draw_cube(obj.center,obj.shoebox_t::orientation,obj.size+pos_t(2*obj.xmlfalloff,2*obj.xmlfalloff,2*obj.xmlfalloff),cr);
-      dash[0] = 1.0;
-      dash[1] = 0.0;
-      cr->set_dash(dash,0);
-    }
+    dash[0] = 1.0;
+    dash[1] = 0.0;
+    cr->set_dash(dash,0);
+  }else{
+    draw_cube(obj.center,obj.shoebox_t::orientation,obj.size,cr);
+    std::vector<double> dash(2);
+    dash[0] = msize;
+    dash[1] = msize;
+    cr->set_dash(dash,0);
+    draw_cube(obj.center,obj.shoebox_t::orientation,obj.size+pos_t(2*obj.xmlfalloff,2*obj.xmlfalloff,2*obj.xmlfalloff),cr);
+    dash[0] = 1.0;
+    dash[1] = 0.0;
+    cr->set_dash(dash,0);
   }
   cr->restore();
 }
@@ -800,9 +808,9 @@ void tascar_gui_t::draw_cube(pos_t pos, zyx_euler_t orient, pos_t size,Cairo::Re
   draw_edge(cr,roomnodes[4],roomnodes[5]);
   draw_edge(cr,roomnodes[5],roomnodes[6]);
   draw_edge(cr,roomnodes[6],roomnodes[7]);
-  draw_edge(cr,roomnodes[7],roomnodes[0]);
+  draw_edge(cr,roomnodes[7],roomnodes[4]);
   for(unsigned int k=0;k<4;k++){
-    draw_edge(cr,roomnodes[k],roomnodes[k+1]);
+    draw_edge(cr,roomnodes[k],roomnodes[k+4]);
   }
   cr->stroke();
   cr->restore();
