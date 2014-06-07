@@ -485,9 +485,9 @@ void mask_object_t::prepare(double fs, uint32_t fragsize)
 
 void mask_object_t::geometry_update(double t)
 {
-  shoebox_t::size.x = std::max(0.0,xmlsize.x-falloff);
-  shoebox_t::size.y = std::max(0.0,xmlsize.y-falloff);
-  shoebox_t::size.z = std::max(0.0,xmlsize.z-falloff);
+  shoebox_t::size.x = std::max(0.0,xmlsize.x-xmlfalloff);
+  shoebox_t::size.y = std::max(0.0,xmlsize.y-xmlfalloff);
+  shoebox_t::size.z = std::max(0.0,xmlsize.z-xmlfalloff);
   shoebox_t::center = get_location(t);
   shoebox_t::orientation = get_orientation(t);
   falloff = 1.0/std::max(xmlfalloff,1e-10);
