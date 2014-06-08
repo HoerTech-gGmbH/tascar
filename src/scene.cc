@@ -441,6 +441,7 @@ sink_object_t::sink_object_t()
     is_direct(true),
     diffusegain(1.0),
     use_mask(false),
+    use_global_mask(true),
     sink(NULL)
 {
 }
@@ -501,6 +502,7 @@ void sink_object_t::read_xml(xmlpp::Element* e)
   get_attribute_value_bool(e,"point",render_point);
   get_attribute_value_bool(e,"diffuse",render_diffuse);
   get_attribute_value_bool(e,"isdirect",is_direct);
+  get_attribute_value_bool(e,"globalmask",use_global_mask);
   get_attribute_value_db(e,"diffusegain",diffusegain);
   get_attribute_value(e,"falloff",falloff);
   std::string stype(e->get_attribute_value("type"));
@@ -590,31 +592,31 @@ void sink_object_t::prepare(double fs, uint32_t fragsize)
     sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse,
                                                   mask.size,
                                                   mask.falloff,
-                                                  use_mask);
+                                                  use_mask,use_global_mask);
     break;
   case cardioid :
     sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                  mask.size,
-                                                  mask.falloff,
-                                                  use_mask);
+                                                      mask.size,
+                                                      mask.falloff,
+                                                      use_mask,use_global_mask);
     break;
   case amb3h3v :
     sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                  mask.size,
-                                                  mask.falloff,
-                                                  use_mask);
+                                                     mask.size,
+                                                     mask.falloff,
+                                                     use_mask,use_global_mask);
     break;
   case amb3h0v :
     sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
                                                   mask.size,
                                                   mask.falloff,
-                                                  use_mask);
+                                                  use_mask,use_global_mask);
     break;
   case nsp :
     sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
                                                   mask.size,
                                                   mask.falloff,
-                                                  use_mask,spkpos);
+                                                  use_mask,use_global_mask,spkpos);
     break;
   }
 }

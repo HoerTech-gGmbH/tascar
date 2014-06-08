@@ -17,7 +17,7 @@ namespace TASCAR {
       sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
              pos_t mask_size,
              double mask_falloff,
-             bool mask_use);
+             bool mask_use,bool global_mask_use);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
     };
@@ -35,7 +35,7 @@ namespace TASCAR {
       sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
-                         bool mask_use);
+                         bool mask_use,bool global_mask_use);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -57,7 +57,7 @@ namespace TASCAR {
       sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
-                         bool mask_use);
+                         bool mask_use,bool global_mask_use);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -80,7 +80,7 @@ namespace TASCAR {
       sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
-                         bool mask_use);
+                         bool mask_use,bool global_mask_use);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);
@@ -106,7 +106,7 @@ namespace TASCAR {
       sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
-                         bool mask_use,const std::vector<pos_t>& spkpos);
+                         bool mask_use,bool global_mask_use,const std::vector<pos_t>& spkpos);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);

@@ -263,6 +263,7 @@ namespace TASCAR {
       bool is_direct;
       double diffusegain;
       bool use_mask;
+      bool use_global_mask;
       sink_mask_t mask;
       TASCAR::Acousticmodel::sink_t* sink;
     };

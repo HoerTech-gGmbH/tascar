@@ -23,7 +23,7 @@ digraph ap {
   src_diffuse [label="{diffuse:|size|falloff}",fillcolor="salmon"];
   src_door [label="{door:|width|height|falloff|distance}",fillcolor="salmon"];
   src_object [label="{src_object:}",fillcolor="salmon"];
-  sink_object [label="{sink:|type|size|point|diffuse|isdirect|diffusegain|falloff}",fillcolor="salmon"];
+  sink_object [label="{sink:|type|size|point|diffuse|isdirect|diffusegain|falloff|globalmask}",fillcolor="salmon"];
   face [label="{face:|width|height|reflectivity|damping}",fillcolor="salmon"];
 
   mask_object [label="{mask:|size|falloff|inside}",fillcolor="salmon"];

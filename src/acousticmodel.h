@@ -62,7 +62,8 @@ namespace TASCAR {
       sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,      
              pos_t mask_size,
              double mask_falloff,
-             bool mask_use);
+             bool mask_use,
+             bool global_mask_use);
       virtual ~sink_t(){};
       virtual void clear();
       virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
@@ -90,6 +91,7 @@ namespace TASCAR {
       bool mask_use_;
       double x_gain;
       double dx_gain;
+      bool global_mask_use_;
     };
 
     class filter_coeff_t {

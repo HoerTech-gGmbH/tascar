@@ -30,7 +30,8 @@ double mask_t::gain(const pos_t& p)
 sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                pos_t mask_size,
                double mask_falloff,
-               bool mask_use) 
+               bool mask_use,
+               bool global_mask_use) 
   : size_(size),
     falloff_(1.0/std::max(falloff,1e-10)),
     use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0)),
@@ -43,7 +44,8 @@ sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, boo
     dt(1.0/std::max(1.0f,(float)chunksize)) ,
     mask(pos_t(),mask_size,zyx_euler_t()),
     mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
-    mask_use_(mask_use)
+    mask_use_(mask_use),
+    global_mask_use_(global_mask_use)
 {
 }
 
@@ -333,6 +335,7 @@ void world_t::process()
     diffuse_acoustic_model[k]->process();
   // now apply mask gains:
   for(uint32_t k=0;k<sinks_.size();k++){
+    if( sinks_[k]->global_mask_use_ ){
     uint32_t c_inner(0);
     uint32_t c_outer(0);
     double gain_inner(1.0);
@@ -350,6 +353,7 @@ void world_t::process()
     if( c_outer > 0 )
       gain_inner *= gain_outer;
     sinks_[k]->apply_gain(gain_inner);
+    }
   }
 }
 
