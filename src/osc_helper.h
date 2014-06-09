@@ -46,6 +46,7 @@ namespace TASCAR {
     ~osc_server_t();
     void set_prefix(const std::string& prefix);
     void add_method(const std::string& path,const char* typespec,lo_method_handler h, void *user_data);
+    void add_double(const std::string& path,double *data);
     void add_float(const std::string& path,float *data);
     void add_float_db(const std::string& path,float *data);
     void add_float_degree(const std::string& path,float *data);

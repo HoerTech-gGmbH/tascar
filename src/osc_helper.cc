@@ -132,6 +132,11 @@ void osc_server_t::add_float(const std::string& path,float *data)
   add_method(path,"f",osc_set_float,data);
 }
 
+void osc_server_t::add_double(const std::string& path,double *data)
+{
+  add_method(path,"f",osc_set_double,data);
+}
+
 void osc_server_t::add_float_db(const std::string& path,float *data)
 {
   add_method(path,"f",osc_set_float_db,data);
