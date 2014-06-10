@@ -216,12 +216,19 @@ void sampler_t::run()
   for(uint32_t k=0;k<sounds.size();k++){
     char ctmp[1024];
     sprintf(ctmp,"%d",k+1);
+    std::string sname(soundnames[k]);
+    size_t p(sname.rfind("/"));
+    if( p < sname.size() )
+      sname.erase(0,p+1);
+    p = sname.rfind(".");
+    if( p < sname.size() )
+      sname.erase(p,sname.size()-p);
     add_method("/"+std::string(ctmp)+"/add","if",sampler_t::osc_addloop,sounds[k]);
     add_method("/"+std::string(ctmp)+"/stop","",sampler_t::osc_stoploop,sounds[k]);
     add_method("/"+std::string(ctmp)+"/clear","",sampler_t::osc_clearloop,sounds[k]);
-    add_method("/"+soundnames[k]+"/add","if",sampler_t::osc_addloop,sounds[k]);
-    add_method("/"+soundnames[k]+"/stop","",sampler_t::osc_stoploop,sounds[k]);
-    add_method("/"+soundnames[k]+"/clear","",sampler_t::osc_clearloop,sounds[k]);
+    add_method("/"+sname+"/add","if",sampler_t::osc_addloop,sounds[k]);
+    add_method("/"+sname+"/stop","",sampler_t::osc_stoploop,sounds[k]);
+    add_method("/"+sname+"/clear","",sampler_t::osc_clearloop,sounds[k]);
   }
   
   jackc_t::activate();
