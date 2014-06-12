@@ -47,12 +47,14 @@ public:
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
   void update_warp(double warp);
   void update_beam(double beam);
-  void update(double warp, double beam);
+  void update_rotate(double rotate);
+  void update(double warp, double beam, double rotate);
   void set_ordergain(const std::vector<float>& og);
 private:
-  void calc_decmatrix(double gain, double warp, float* m);
+  void calc_decmatrix(double gain, double warp, double rotate, float* m);
   double next_warp;
   double next_beam;
+  double next_rotate;
   uint32_t N;
   float* mDecoder;
   float* mEncoder;
@@ -73,6 +75,15 @@ int _beam(const char *path, const char *types, lo_arg **argv, int argc, lo_messa
 {
   if( (argc == 1) && (types[0]=='f')){
     ((ambwarp_t*)user_data)->update_beam(argv[0]->f);
+    return 0;
+    }
+  return 1;
+}
+
+int _rotate(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( (argc == 1) && (types[0]=='f')){
+    ((ambwarp_t*)user_data)->update_rotate(DEG2RAD*argv[0]->f);
     return 0;
     }
   return 1;
@@ -112,13 +123,14 @@ ambwarp_t::ambwarp_t(uint32_t order,const std::string& srv_addr,const std::strin
   osc_server_t::set_prefix("/"+jackname);
   osc_server_t::add_method("/warp","f",_warp,this);
   osc_server_t::add_method("/beam","f",_beam,this);
+  osc_server_t::add_method("/rotate","f",_rotate,this);
   std::string owfmt(order+1,'f');
   osc_server_t::add_method("/ordergain",owfmt.c_str(),_ordergain,this);
   memset(mDecoder,0,sizeof(float)*N*N);
   memset(mEncoder,0,sizeof(float)*N*N);
   memset(mWarping,0,sizeof(float)*N*N);
-  calc_decmatrix(1.0,0.0,mDecoder);
-  update(0,0);
+  calc_decmatrix(1.0,0.0,0.0,mDecoder);
+  update(0,0,0);
 }
 
 ambwarp_t::~ambwarp_t()
@@ -134,10 +146,10 @@ void ambwarp_t::set_ordergain(const std::vector<float>& og)
     ordergain = og;
   else
     std::cerr << "Warning: invalid size of order gain (expected " << ordergain.size() << ", received " << og.size() << ").\n";
-  update(next_warp,next_beam);
+  update(next_warp,next_beam,next_rotate);
 }
 
-void ambwarp_t::calc_decmatrix(double gain, double warp, float* m)
+void ambwarp_t::calc_decmatrix(double gain, double warp, double rotate, float* m)
 {
   warp *= -1.0;
   double N2(gain*2.0/N);
@@ -145,7 +157,7 @@ void ambwarp_t::calc_decmatrix(double gain, double warp, float* m)
   for( uint32_t ki=0;ki<N;ki++){
     uint32_t lorder((ki+1)/2);
     for( uint32_t ko=0;ko<N;ko++){
-      double az(ko*M_PI*2.0/N);
+      double az(ko*M_PI*2.0/N-rotate);
       double complex mu(cexp(I*az));
       double warped_az(carg((mu+warp)/(1.0+warp*mu)));
       if( (ki & 1) || (lorder == 0) )
@@ -161,21 +173,28 @@ void ambwarp_t::calc_decmatrix(double gain, double warp, float* m)
 
 void ambwarp_t::update_warp(double warp)
 {
-  update(warp,next_beam);
+  update(warp,next_beam,next_rotate);
+}
+
+
+void ambwarp_t::update_rotate(double rotate)
+{
+  update(next_warp,next_beam,rotate);
 }
 
 
 void ambwarp_t::update_beam(double beam)
 {
-  update(next_warp,beam);
+  update(next_warp,beam,next_rotate);
 }
 
-void ambwarp_t::update(double warp,double beam)
+void ambwarp_t::update(double warp,double beam,double rotate)
 {
   next_warp = warp;
   next_beam = beam;
+  next_rotate = rotate;
   warp = std::min(0.99,std::max(-0.99,warp));
-  calc_decmatrix(0.5*N,warp,mEncoder);
+  calc_decmatrix(0.5*N,warp,rotate,mEncoder);
   double gain[N];
   for( uint32_t kg=0;kg<N;kg++){
     gain[kg] = pow(0.5+0.5*cos(2.0*M_PI*(double)kg/(double)N),beam);
