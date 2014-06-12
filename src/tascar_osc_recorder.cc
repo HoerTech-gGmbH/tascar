@@ -66,7 +66,7 @@ namespace TASCAR {
 
   class session_t {
   public:
-    session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables);
+    session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables,const std::string& clientarg);
     ~session_t();
     void setvar(const char *path, const char *types, lo_arg **argv, int argc,double t,std::vector<uint32_t>& counter);
   private:
@@ -76,7 +76,7 @@ namespace TASCAR {
 
   class osc_jt_t : public jackc_portless_t, public TASCAR::osc_server_t {
   public:
-    osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::string& desturl, const std::vector<std::string>& variables);
+    osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::string& desturl, const std::vector<std::string>& variables,const std::string& clientarg);
     double gettime();
     void run();
     void close_session();
@@ -89,6 +89,7 @@ namespace TASCAR {
     pthread_mutex_t mtx_session;
     session_t* session;
     lo_address client_addr;
+    std::string clientarg_;
   };
 
 }
@@ -165,12 +166,12 @@ void TASCAR::varwriter_t::write(const char *types, lo_arg **argv,double t)
   ofs << std::endl;
 }
 
-TASCAR::session_t::session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables)
+TASCAR::session_t::session_t(const std::string& session_name, const std::string& scenario, const std::vector<var_t>& variables,const std::string& clientarg)
   : h_pipe(NULL)
 {
   if( !scenario.empty() ){
     char ctmp[1024];
-    sprintf(ctmp,"tascar_renderer -c %s 2>&1",scenario.c_str());
+    sprintf(ctmp,"tascar_renderer -c %s %s 2>&1",scenario.c_str(),clientarg.c_str());
     DEBUG(ctmp);
     h_pipe = popen( ctmp, "w" );
     if( !h_pipe )
@@ -217,9 +218,9 @@ TASCAR::var_t::var_t(const std::string& var)
   }
 }
 
-TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::string& desturl,const std::vector<std::string>& variables)
+TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port, const std::string& desturl,const std::vector<std::string>& variables,const std::string& clientarg)
   : jackc_portless_t("recorder"),osc_server_t(osc_addr,osc_port),session(NULL),
-    client_addr(lo_address_new_from_url(desturl.c_str()))
+    client_addr(lo_address_new_from_url(desturl.c_str())),clientarg_(clientarg)
 {
   for(std::vector<std::string>::const_iterator it=variables.begin();it!=variables.end();++it)
     variables_.push_back(var_t(*it));
@@ -265,7 +266,7 @@ void TASCAR::osc_jt_t::open_session(const std::string& session_name, const std::
 {
   pthread_mutex_lock( &mtx_session );
   if( !session )
-    session = new session_t(session_name,scenario,variables_);
+    session = new session_t(session_name,scenario,variables_,clientarg_);
   pthread_mutex_unlock( &mtx_session );
 }
 
@@ -314,18 +315,20 @@ int main(int argc, char** argv)
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
+  std::string clientarg("");
   std::string jackname("tascar_transport");
   std::string srv_addr("239.255.1.7");
   std::string srv_port("9877");
   std::string desturl("osc.udp://localhost:9888/");
   std::vector<std::string> variables;
-  const char *options = "hj:p:a:d:";
+  const char *options = "hj:p:a:d:x:";
   struct option long_options[] = { 
     { "help",     0, 0, 'h' },
     { "jackname", 1, 0, 'j' },
     { "srvaddr",  1, 0, 'a' },
     { "srvport",  1, 0, 'p' },
     { "desturl",  1, 0, 'd' },
+    { "extraarg", 1, 0, 'x' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
@@ -348,11 +351,14 @@ int main(int argc, char** argv)
     case 'd':
       desturl = optarg;
       break;
+    case 'x':
+      clientarg = optarg;
+      break;
     }
   }
   while( optind < argc )
     variables.push_back( argv[optind++] );
-  TASCAR::osc_jt_t S(srv_addr,srv_port,desturl,variables);
+  TASCAR::osc_jt_t S(srv_addr,srv_port,desturl,variables,clientarg);
   S.run();
 }
 
