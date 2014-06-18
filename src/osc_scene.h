@@ -20,6 +20,7 @@ private:
   void add_object_methods(TASCAR::Scene::object_t* o);
   void add_route_methods(TASCAR::Scene::route_t* r);
   void add_sound_methods(TASCAR::Scene::sound_t* s);
+  void add_diffuse_methods(TASCAR::Scene::src_diffuse_t* s);
   std::vector<route_solo_p_t*> vprs;
 };
 

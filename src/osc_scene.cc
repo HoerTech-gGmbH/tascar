@@ -82,6 +82,16 @@ int osc_set_sound_gain(const char *path, const char *types, lo_arg **argv, int a
   return 1;
 }
 
+int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  src_diffuse_t* h((src_diffuse_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='f') ){
+    h->set_gain_db(argv[0]->f);
+    return 0;
+  }
+  return 1;
+}
+
 void osc_scene_t::add_object_methods(TASCAR::Scene::object_t* o)
 {
   add_method("/"+name+"/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
@@ -106,12 +116,20 @@ void osc_scene_t::add_sound_methods(TASCAR::Scene::sound_t* s)
   add_method("/"+name+"/"+s->get_parent_name()+"/"+s->get_name()+"/gain","f",osc_set_sound_gain,s);
 }
 
+void osc_scene_t::add_diffuse_methods(TASCAR::Scene::src_diffuse_t* s)
+{
+  add_method("/"+name+"/"+s->get_name()+"/gain","f",osc_set_diffuse_gain,s);
+}
+
 void osc_scene_t::add_child_methods()
 {
   std::vector<object_t*> obj(get_objects());
   for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
     add_object_methods(*it);
     add_route_methods(*it);
+  }
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    add_diffuse_methods(&(*it));
   }
   std::vector<sound_t*> sounds(linearize_sounds());
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
