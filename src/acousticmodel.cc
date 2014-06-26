@@ -259,12 +259,25 @@ pos_t mirrorsource_t::get_effective_position(const pos_t& sinkp,double& gain)
 }
 
 mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
-                               const std::vector<reflector_t*>& reflectors)
+                               const std::vector<reflector_t*>& reflectors,
+                               uint32_t order)
 {
   for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
     for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
       mirrorsource.push_back(mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
   DEBUGS(mirrorsource.size());
+  uint32_t num_mirrors_start(0);
+  uint32_t num_mirrors_end(mirrorsource.size());
+  for(uint32_t korder=1;korder<order;korder++){
+    DEBUGS(korder);
+    for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;ksrc++)
+      for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
+        mirrorsource.push_back(mirrorsource_t(&(mirrorsource[ksrc]),reflectors[kmir]));
+    
+    DEBUGS(mirrorsource.size());
+    num_mirrors_start = num_mirrors_end;
+    num_mirrors_end = mirrorsource.size();
+  }
 }
 
 reflector_t::reflector_t()
@@ -296,8 +309,8 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks)
-  : mirrormodel(sources,reflectors),sinks_(sinks),masks_(masks)
+world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
+  : mirrormodel(sources,reflectors,mirror_order),sinks_(sinks),masks_(masks)
 {
   //DEBUGS(diffusesources.size());
   //DEBUGS(sources.size());

@@ -388,7 +388,7 @@ sound_t* src_object_t::add_sound()
 scene_t::scene_t()
   : description(""),
     name(""),
-    duration(60),
+    duration(60),mirrororder(1),
     guiscale(200),anysolo(0),loop(false)
 {
 }
@@ -396,7 +396,7 @@ scene_t::scene_t()
 scene_t::scene_t(const std::string& filename)
   : description(""),
     name(""),
-    duration(60),
+    duration(60),mirrororder(1),
     guiscale(200),anysolo(0),loop(false)
 {
   setlocale(LC_ALL,"C");
@@ -674,6 +674,7 @@ void scene_t::read_xml(xmlpp::Element* e)
   if( e->get_name() != "scene" )
     throw ErrMsg("Invalid file, XML root node should be \"scene\".");
   name = e->get_attribute_value("name");
+  get_attribute_value(e,"mirrororder",mirrororder);
   get_attribute_value(e,"duration",duration);
   get_attribute_value(e,"guiscale",guiscale);
   get_attribute_value(e,"guicenter",guicenter);

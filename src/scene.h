@@ -310,6 +310,7 @@ namespace TASCAR {
       std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
       std::vector<mask_object_t> masks;
+      uint32_t mirrororder;
       double guiscale;
       pos_t guicenter;
       //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};

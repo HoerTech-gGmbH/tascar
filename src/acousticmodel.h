@@ -135,7 +135,7 @@ namespace TASCAR {
     class mirror_model_t {
     public:
       mirror_model_t(const std::vector<pointsource_t*>& pointsources,
-                     const std::vector<reflector_t*>& reflectors);
+                     const std::vector<reflector_t*>& reflectors,uint32_t order);
       /** \brief Process all mirror sources
        */
       void process();
@@ -210,7 +210,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks);
+      world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */

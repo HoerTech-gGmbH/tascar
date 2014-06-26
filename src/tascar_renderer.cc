@@ -208,7 +208,7 @@ void TASCAR::render_t::run()
     pmasks.push_back(&(*it));
   }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks,pmasks);
+  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
   //
   // activate repositioning services for each object:
   add_child_methods();
