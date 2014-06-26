@@ -201,7 +201,8 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
     src_(src),reflector_(reflector),
     dt(1.0/std::max(1u,src->audio.size())),
     g(0),
-    dg(0)
+    dg(0),
+    lpstate(0.0)
 {
 }
 
@@ -229,8 +230,10 @@ void mirrorsource_t::process()
     ////DEBUG(r);
     //DEBUG(position.print_cart());
     // todo: add reflection (no diffraction) processing:
+    double c1(reflector_->reflectivity * (1.0-reflector_->damping));
+    double c2(reflector_->damping);
     for(uint32_t k=0;k<audio.size();k++)
-      audio[k] = (g+=dg)*src_->audio[k];
+      audio[k] = (lpstate = lpstate*c2 + (g+=dg)*src_->audio[k]*c1);
   }else{
     active = false;
   }
@@ -265,7 +268,9 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
 }
 
 reflector_t::reflector_t()
-  : active(true)
+  : active(true),
+    reflectivity(1.0),
+    damping(0.0)
 {
 }
 
@@ -294,10 +299,10 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
 world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks)
   : mirrormodel(sources,reflectors),sinks_(sinks),masks_(masks)
 {
-  DEBUGS(diffusesources.size());
-  DEBUGS(sources.size());
-  DEBUGS(reflectors.size());
-  DEBUGS(sinks.size());
+  //DEBUGS(diffusesources.size());
+  //DEBUGS(sources.size());
+  //DEBUGS(reflectors.size());
+  //DEBUGS(sinks.size());
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++){
       //DEBUG(kSrc);
@@ -313,8 +318,8 @@ world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std:
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
       acoustic_model.push_back(new acoustic_model_t(fs,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
-  DEBUGS(diffuse_acoustic_model.size());
-  DEBUGS(acoustic_model.size());
+  //DEBUGS(diffuse_acoustic_model.size());
+  //DEBUGS(acoustic_model.size());
 }
 
 world_t::~world_t()

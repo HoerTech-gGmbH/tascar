@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--  
+Created with tascar_creator
+Thu Jan 24 14:47:23 2013
+-->
+<scene name="example_damping" lat="53.155473" lon="8.167249" elev="10" guiscale="5">
+  <src_object name="src" color="#f00000" starttime="0">
+    <position interpolation="spherical">0 1 0 0</position>
+    <sndfile name="tc1.wav" loop="0"/>
+    <sound name="0" connect="@.0"/>
+  </src_object>
+  <sink type="nsp" name="out" color="#0000f0" gain="-10">
+    <orientation>0 90 0 0</orientation>
+    <speaker az="-90"/>
+    <speaker az="90"/>
+  </sink>
+  <face name="mirror" color="#771010" width="2" height="2" reflectivity="1" damping="0.98">
+    <position>0 -0.2 -1 -1</position>
+    <orientation>0 0 0 0</orientation>
+  </face>
+  <connect src="render.example_damping:out.0" dest="system:playback_1"/>
+  <connect src="render.example_damping:out.1" dest="system:playback_2"/>
+  <connect src="render.example_damping:out.0" dest="japa:in_1"/>
+  <connect src="render.example_damping:out.1" dest="japa:in_2"/>
+</scene>

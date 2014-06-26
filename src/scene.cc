@@ -949,9 +949,7 @@ bool scene_t::get_playsound(const sound_t* s)
 
 face_object_t::face_object_t()
   : width(1.0),
-    height(1.0),
-    reflectivity(1.0),
-    damping(0.0)
+    height(1.0)
 {
 }
 

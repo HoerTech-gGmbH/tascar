@@ -122,8 +122,6 @@ namespace TASCAR {
       void process_active(double t,uint32_t anysolo);
       double width;
       double height;
-      double reflectivity;
-      double damping;
     };
 
     class src_object_t;

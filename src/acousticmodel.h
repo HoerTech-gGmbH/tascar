@@ -106,8 +106,10 @@ namespace TASCAR {
     class reflector_t : public obstacle_t {
     public:
       reflector_t();
-      Acousticmodel::filter_coeff_t get_filter(const pos_t& psrc);
+      //Acousticmodel::filter_coeff_t get_filter(const pos_t& psrc);
       bool active;
+      double reflectivity;
+      double damping;
     };
 
     /** \brief A mirrored source.
@@ -124,6 +126,7 @@ namespace TASCAR {
       Acousticmodel::filter_coeff_t flt_current;
       double dt;
       double g, dg;
+      double lpstate;
       pos_t mirror_position;
     };
 
