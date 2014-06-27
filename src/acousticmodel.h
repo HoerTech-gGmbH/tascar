@@ -120,6 +120,7 @@ namespace TASCAR {
       pos_t get_effective_position(const pos_t& sinkp,double& gain);
       void process();
       reflector_t* get_reflector() const { return reflector_;};
+      pos_t get_mirror_position() const { return mirror_position;};
     private:
       pointsource_t* src_;
       reflector_t* reflector_;
@@ -136,13 +137,14 @@ namespace TASCAR {
     public:
       mirror_model_t(const std::vector<pointsource_t*>& pointsources,
                      const std::vector<reflector_t*>& reflectors,uint32_t order);
+      ~mirror_model_t();
       /** \brief Process all mirror sources
        */
       void process();
       std::vector<mirrorsource_t*> get_mirror_sources();
       std::vector<pointsource_t*> get_sources();
     private:
-      std::vector<mirrorsource_t> mirrorsource;
+      std::vector<mirrorsource_t*> mirrorsource;
     };
 
     /** \brief A model for a sound wave propagating from a point source to a sink

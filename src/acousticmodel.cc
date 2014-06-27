@@ -195,7 +195,6 @@ void acoustic_model_t::process()
   }
 }
 
-
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
   : pointsource_t(src->audio.size()),
     src_(src),reflector_(reflector),
@@ -204,6 +203,8 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
     dg(0),
     lpstate(0.0)
 {
+  //DEBUG(this);
+  //DEBUG(src);
 }
 
 void mirrorsource_t::process()
@@ -211,7 +212,8 @@ void mirrorsource_t::process()
   if( reflector_->active && src_->active){
     active = true;
     pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
-    position = src_->position;
+    // next line replaced by mirror_position:
+    //position = src_->position;
     //DEBUG(nearest_point.print_cart());
     nearest_point -= src_->position;
     //DEBUG(nearest_point.print_cart());
@@ -219,6 +221,8 @@ void mirrorsource_t::process()
     mirror_position = nearest_point;
     mirror_position *= 2.0;
     mirror_position += src_->position;
+    // this line added instead of src_->position:
+    position = mirror_position;
     double nextgain(1.0);
     //src_->get_effective_position(position,nextgain);
     src_->get_effective_position(mirror_position,nextgain);
@@ -264,20 +268,30 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
 {
   for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
     for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
-      mirrorsource.push_back(mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
+      mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
   DEBUGS(mirrorsource.size());
   uint32_t num_mirrors_start(0);
   uint32_t num_mirrors_end(mirrorsource.size());
   for(uint32_t korder=1;korder<order;korder++){
-    DEBUGS(korder);
+    //DEBUGS(korder);
     for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;ksrc++)
-      for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
-        mirrorsource.push_back(mirrorsource_t(&(mirrorsource[ksrc]),reflectors[kmir]));
+      for(uint32_t kmir=0;kmir<reflectors.size();kmir++){
+        //DEBUGS(mirrorsource[ksrc]->get_reflector());
+        //DEBUGS(reflectors[kmir]);
+        if( mirrorsource[ksrc]->get_reflector() != reflectors[kmir] )
+          mirrorsource.push_back(new mirrorsource_t(mirrorsource[ksrc],reflectors[kmir]));
+      }
     
     DEBUGS(mirrorsource.size());
     num_mirrors_start = num_mirrors_end;
     num_mirrors_end = mirrorsource.size();
   }
+}
+
+mirror_model_t::~mirror_model_t()
+{
+  for(uint32_t k=0;k<mirrorsource.size();k++)
+    delete mirrorsource[k];
 }
 
 reflector_t::reflector_t()
@@ -290,14 +304,14 @@ reflector_t::reflector_t()
 void mirror_model_t::process()
 {
   for(uint32_t k=0;k<mirrorsource.size();k++)
-    mirrorsource[k].process();
+    mirrorsource[k]->process();
 }
 
 std::vector<mirrorsource_t*> mirror_model_t::get_mirror_sources()
 {
   std::vector<mirrorsource_t*> r;
   for(uint32_t k=0;k<mirrorsource.size();k++)
-    r.push_back(&(mirrorsource[k]));
+    r.push_back(mirrorsource[k]);
   return r;
 }
 
@@ -305,7 +319,7 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
 {
   std::vector<pointsource_t*> r;
   for(uint32_t k=0;k<mirrorsource.size();k++)
-    r.push_back(&(mirrorsource[k]));
+    r.push_back(mirrorsource[k]);
   return r;
 }
 
