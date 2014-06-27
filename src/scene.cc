@@ -789,7 +789,10 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("Spaces in scene name are not supported (\""+name+"\")");
   if( name.find(":") != std::string::npos )
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
-
+  if( object_sources.size() == 0 )
+    throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
+  if( sink_objects.size() == 0 )
+    throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     it->prepare(fs,fragsize);
   }
