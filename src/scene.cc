@@ -255,6 +255,9 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
   source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize);
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
+  for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
+    if( it->channels != 4 )
+      throw TASCAR::ErrMsg("Diffuse sources support only 4-channel (FOA) sound files ("+it->fname+").");
 }
 
 void sound_t::set_parent(src_object_t* ref)
@@ -780,6 +783,13 @@ std::vector<object_t*> scene_t::get_objects()
 
 void scene_t::prepare(double fs, uint32_t fragsize)
 {
+  if( !name.size() )
+    throw TASCAR::ErrMsg("Invalid empty scene name.");
+  if( name.find(" ") != std::string::npos )
+    throw TASCAR::ErrMsg("Spaces in scene name are not supported (\""+name+"\")");
+  if( name.find(":") != std::string::npos )
+    throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
+
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     it->prepare(fs,fragsize);
   }
