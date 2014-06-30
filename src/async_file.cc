@@ -260,7 +260,7 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
   }
   int32_t current_pos(0);
   uint32_t rframes = rb.read( read_fragment_buf, n, &current_pos );
-  if( (current_pos != firstframe) || (rframes<n) ){
+  if( (n>0) && ((current_pos != firstframe) || (rframes<n)) ){
     xrun++;
     std::cerr << "xrun(" << xrun << ") current_pos=" << current_pos << " firstframe=" << firstframe << " rframes=" << rframes << " n=" << n << std::endl;
     //DEBUG(xrun);
