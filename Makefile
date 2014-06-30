@@ -3,7 +3,7 @@ PREFIX = /usr/local
 BINFILES = tascar_renderer tascar_gui tascar_audioplayer		\
 tascar_sampler tascar_osc_jack_transport tascar_oscmix tascar_jackio	\
 tascar_pdf tascar_osc_recorder tascar_creator tascar_ambwarping		\
-tascar_hoadisplay
+tascar_hoadisplay tascar_oscctl
 
 #tascar_gpxvelocity \
 tascar_gui tascar_pdf tascar_multipan tascar_jpos \
