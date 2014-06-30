@@ -1083,6 +1083,11 @@ void sndfile_info_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"loop",loopcnt);
   get_attribute_value(e,"starttime",starttime);
   get_attribute_value_db(e,"gain",gain);
+  // ensure that no old timimng convection was used:
+  if( e->get_attribute("start") != 0 )
+    throw TASCAR::ErrMsg("Invalid attribute \"start\" found. Did you mean \"starttime\"? ("+fname+").");
+  if( e->get_attribute("channel") != 0 )
+    throw TASCAR::ErrMsg("Invalid attribute \"channel\" found. Did you mean \"firstchannel\"? ("+fname+").");
 }
 
 void sndfile_info_t::write_xml(xmlpp::Element* e,bool help_comments)
