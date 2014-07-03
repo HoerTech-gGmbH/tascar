@@ -151,7 +151,7 @@ acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,con
   //DEBUG(audio.size());
   //DEBUG(dt);
   pos_t prel;
-  sink_->update_refpoint(src_->position,src_->position,prel,distance,gain);
+  sink_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain);
   //distance = sink_->relative_position(src_->position).norm();
   //DEBUG(distance);
   //DEBUG(gain);
@@ -173,7 +173,7 @@ void acoustic_model_t::process()
   double mask_gain(1.0);
   //for(std::vector<
   pos_t effective_srcpos(src_->get_effective_position(sink_->position,srcgainmod));
-  sink_->update_refpoint(src_->position,effective_srcpos,prel,nextdistance,nextgain);
+  sink_->update_refpoint(src_->get_physical_position(),effective_srcpos,prel,nextdistance,nextgain);
   nextgain *= srcgainmod*mask_gain;
   double next_air_absorption(exp(-nextdistance*dscale));
   double ddistance((nextdistance-distance)*dt);

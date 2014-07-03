@@ -19,6 +19,7 @@ namespace TASCAR {
       pointsource_t(uint32_t chunksize);
       virtual ~pointsource_t();
       virtual pos_t get_effective_position(const pos_t& sinkp,double& gain);
+      virtual pos_t get_physical_position() const { return position; };
       wave_t audio;
       pos_t position;
       bool active;
@@ -118,9 +119,10 @@ namespace TASCAR {
     public:
       mirrorsource_t(pointsource_t* src,reflector_t* reflector);
       pos_t get_effective_position(const pos_t& sinkp,double& gain);
+      virtual pos_t get_physical_position() const { return src_->get_physical_position();};
       void process();
       reflector_t* get_reflector() const { return reflector_;};
-      pos_t get_mirror_position() const { return mirror_position;};
+      //pos_t get_mirror_position() const { return mirror_position;};
     private:
       pointsource_t* src_;
       reflector_t* reflector_;
