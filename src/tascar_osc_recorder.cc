@@ -31,10 +31,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 static bool b_quit;
 
-std::string nice_name(std::string s)
+std::string nice_name(std::string s,bool extend=true)
 {
   for( uint32_t k=0;k<s.size();k++)
     switch( s[k] ){
@@ -44,7 +47,11 @@ std::string nice_name(std::string s)
     case ' ':
       s[k] = '_';
     }
-  return s+".txt";
+  while( s.size() && (s[0]=='_') )
+    s.erase(0,1);
+  if( extend )
+    return s+".txt";
+  return s;
 }
 
 namespace TASCAR {
@@ -61,6 +68,7 @@ namespace TASCAR {
     varwriter_t(const var_t& var,const std::string& session_name);
     void write(const char *types, lo_arg **argv,double t);
   private:
+    std::string ofname;
     std::ofstream ofs;
   };
 
@@ -150,8 +158,12 @@ namespace OSC {
 
 TASCAR::varwriter_t::varwriter_t(const var_t& var,const std::string& session_name)
   : var_t(var),
-    ofs(nice_name(session_name+var.path).c_str())
+    ofname(nice_name(session_name,false)+std::string("/")+nice_name(var.path)),
+    ofs(ofname.c_str())
 {
+  //DEBUG(ofname);
+  if( !ofs.good() )
+    throw TASCAR::ErrMsg("Unable to create file " + ofname);
 }
 
 void TASCAR::varwriter_t::write(const char *types, lo_arg **argv,double t)
@@ -177,6 +189,18 @@ TASCAR::session_t::session_t(const std::string& session_name, const std::string&
     if( !h_pipe )
       throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
   }
+  int status;
+  std::string path(session_name);
+  try{
+    status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if( (status != 0) && (errno != EEXIST) ){
+      throw TASCAR::ErrMsg("mkdir failed on \""+path+"\" ("+std::string(strerror(errno))+").");
+    }
+  }
+  catch(const std::exception& e){
+    std::cerr << "Warning: " << e.what() << std::endl;
+  }
+
   //DEBUGS(session_name);
   for( std::vector<var_t>::const_iterator it=variables.begin();it!=variables.end();++it){
     writer.push_back(new varwriter_t(*it,session_name));
@@ -311,55 +335,62 @@ void usage(struct option * opt)
 
 int main(int argc, char** argv)
 {
-  b_quit = false;
-  signal(SIGABRT, &sighandler);
-  signal(SIGTERM, &sighandler);
-  signal(SIGINT, &sighandler);
-  std::string clientarg("");
-  std::string jackname("tascar_transport");
-  std::string srv_addr("239.255.1.7");
-  std::string srv_port("9877");
-  std::string desturl("osc.udp://localhost:9888/");
-  std::vector<std::string> variables;
-  const char *options = "hj:p:a:d:x:";
-  struct option long_options[] = { 
-    { "help",     0, 0, 'h' },
-    { "jackname", 1, 0, 'j' },
-    { "srvaddr",  1, 0, 'a' },
-    { "srvport",  1, 0, 'p' },
-    { "desturl",  1, 0, 'd' },
-    { "extraarg", 1, 0, 'x' },
-    { 0, 0, 0, 0 }
-  };
-  int opt(0);
-  int option_index(0);
-  while( (opt = getopt_long(argc, argv, options,
-                            long_options, &option_index)) != -1){
-    switch(opt){
-    case 'h':
-      usage(long_options);
-      return -1;
-    case 'j':
-      jackname = optarg;
-      break;
-    case 'p':
-      srv_port = optarg;
-      break;
-    case 'a':
-      srv_addr = optarg;
-      break;
-    case 'd':
-      desturl = optarg;
-      break;
-    case 'x':
-      clientarg = optarg;
-      break;
+  try{
+    b_quit = false;
+    signal(SIGABRT, &sighandler);
+    signal(SIGTERM, &sighandler);
+    signal(SIGINT, &sighandler);
+    std::string clientarg("");
+    std::string jackname("tascar_transport");
+    std::string srv_addr("239.255.1.7");
+    std::string srv_port("9877");
+    std::string desturl("osc.udp://localhost:9888/");
+    std::vector<std::string> variables;
+    const char *options = "hj:p:a:d:x:";
+    struct option long_options[] = { 
+      { "help",     0, 0, 'h' },
+      { "jackname", 1, 0, 'j' },
+      { "srvaddr",  1, 0, 'a' },
+      { "srvport",  1, 0, 'p' },
+      { "desturl",  1, 0, 'd' },
+      { "extraarg", 1, 0, 'x' },
+      { 0, 0, 0, 0 }
+    };
+    int opt(0);
+    int option_index(0);
+    while( (opt = getopt_long(argc, argv, options,
+                              long_options, &option_index)) != -1){
+      switch(opt){
+      case 'h':
+        usage(long_options);
+        return -1;
+      case 'j':
+        jackname = optarg;
+        break;
+      case 'p':
+        srv_port = optarg;
+        break;
+      case 'a':
+        srv_addr = optarg;
+        break;
+      case 'd':
+        desturl = optarg;
+        break;
+      case 'x':
+        clientarg = optarg;
+        break;
+      }
     }
+    while( optind < argc )
+      variables.push_back( argv[optind++] );
+    TASCAR::osc_jt_t S(srv_addr,srv_port,desturl,variables,clientarg);
+    S.run();
   }
-  while( optind < argc )
-    variables.push_back( argv[optind++] );
-  TASCAR::osc_jt_t S(srv_addr,srv_port,desturl,variables,clientarg);
-  S.run();
+  catch(const std::exception& e){
+    std::cerr << "Unhandled error: " << e.what() << std::endl;
+    return 1;
+  }
+  return 0;
 }
 
 /*
