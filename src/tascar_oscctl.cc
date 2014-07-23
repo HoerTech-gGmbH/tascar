@@ -3,6 +3,7 @@
 #include "osc_helper.h"
 #include "coordinates.h"
 #include <getopt.h>
+#include <stdlib.h>
 
 static bool b_quit(false);
 
