@@ -404,7 +404,7 @@ scene_t::scene_t(const std::string& filename)
 {
   setlocale(LC_ALL,"C");
   if( filename.size() )
-    read_xml(filename);
+    read_xml(TASCAR::env_expand(filename));
 }
 
 void scene_t::geometry_update(double t)
@@ -743,7 +743,7 @@ src_object_t* scene_t::add_source()
 
 void scene_t::read_xml(const std::string& filename)
 {
-  xmlpp::DomParser domp(filename);
+  xmlpp::DomParser domp(TASCAR::env_expand(filename));
   xmlpp::Document* doc(domp.get_document());
   xmlpp::Element* root(doc->get_root_node());
   read_xml(root);
@@ -843,13 +843,13 @@ void TASCAR::Scene::xml_write_scene(const std::string& filename, scene_t scene, 
     doc.add_comment(comment);
   xmlpp::Element* root(doc.create_root_node("scene"));
   scene.write_xml(root);
-  doc.write_to_file_formatted(filename);
+  doc.write_to_file_formatted(TASCAR::env_expand(filename));
 }
 
 scene_t TASCAR::Scene::xml_read_scene(const std::string& filename)
 {
   scene_t s;
-  xmlpp::DomParser domp(filename);
+  xmlpp::DomParser domp(TASCAR::env_expand(filename));
   xmlpp::Document* doc(domp.get_document());
   xmlpp::Element* root(doc->get_root_node());
   s.read_xml(root);

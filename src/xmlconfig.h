@@ -17,6 +17,8 @@ namespace TASCAR {
     virtual void prepare(double fs, uint32_t fragsize) = 0;
   };
 
+  std::string env_expand( std::string s );
+
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);

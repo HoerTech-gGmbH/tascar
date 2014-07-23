@@ -4,6 +4,7 @@
 #include <iostream>
 #include "defs.h"
 #include "errorhandling.h"
+#include "xmlconfig.h"
 
 using namespace TASCAR;
 
@@ -105,7 +106,7 @@ void amb1wave_t::operator*=(double v)
 }
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)
-  : sfile(sf_open(fname.c_str(),SFM_READ,&sf_inf))
+  : sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf))
 {
   if( !sfile )
     throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for reading.");

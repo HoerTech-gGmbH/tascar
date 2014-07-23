@@ -4,6 +4,27 @@
 #include <stdlib.h>
 #include <math.h>
 
+std::string localgetenv(const std::string& env)
+{
+  if( char* s = getenv(env.c_str()) )
+    return s;
+  return "";
+}
+
+std::string TASCAR::env_expand( std::string s )
+{
+  size_t spos;
+  while( (spos = s.find("${")) != std::string::npos ){
+    size_t epos(s.find("}",spos));
+    if( epos == std::string::npos )
+      epos = s.size();
+    std::string env(s.substr(spos+2,epos-spos-2));
+    s.replace(spos,epos-spos+1,localgetenv(env));
+  }
+  return s;
+}
+
+
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value)
 {
   char ctmp[1024];

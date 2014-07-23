@@ -16,7 +16,7 @@ void lprintbuf(float* buf, unsigned int n)
 }
 
 TASCAR::looped_sndfile_t::looped_sndfile_t(const std::string& fname,uint32_t loopcnt)
-  : sfile(sf_open(fname.c_str(),SFM_READ,&sf_inf)),
+  : sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf)),
     loopcnt_(loopcnt),
     filepos_looped(0)
 {
