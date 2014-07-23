@@ -16,12 +16,13 @@ void lprintbuf(float* buf, unsigned int n)
 }
 
 TASCAR::looped_sndfile_t::looped_sndfile_t(const std::string& fname,uint32_t loopcnt)
-  : sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf)),
+  : efname(TASCAR::env_expand(fname)),
+    sfile(sf_open(efname.c_str(),SFM_READ,&sf_inf)),
     loopcnt_(loopcnt),
     filepos_looped(0)
 {
   if( !sfile ){
-    async_file_error = "unable to open sound file '" + fname + "'.";
+    async_file_error = "unable to open sound file '" + efname + "'.";
     throw ErrMsg(async_file_error.c_str());
   }
   if( !(sf_inf.seekable ) ){

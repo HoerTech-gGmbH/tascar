@@ -29,6 +29,7 @@ namespace TASCAR {
     uint32_t get_loopedframes() const;
     uint32_t get_channels() const {return sf_inf.channels;};
   protected:
+    std::string efname;
     SNDFILE* sfile;
     SF_INFO sf_inf;
     uint32_t loopcnt_;
