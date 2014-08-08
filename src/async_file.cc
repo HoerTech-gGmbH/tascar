@@ -7,6 +7,13 @@
 
 static std::string async_file_error("");
 
+std::string num2str(float num)
+{
+  char c_str[64];
+  sprintf(c_str,"%g",num);
+  return c_str;
+}
+
 void lprintbuf(float* buf, unsigned int n)
 {
   std::cout << "N=" << n;
@@ -17,12 +24,28 @@ void lprintbuf(float* buf, unsigned int n)
 
 TASCAR::looped_sndfile_t::looped_sndfile_t(const std::string& fname,uint32_t loopcnt)
   : efname(TASCAR::env_expand(fname)),
-    sfile(sf_open(efname.c_str(),SFM_READ,&sf_inf)),
+    sfile(NULL),
     loopcnt_(loopcnt),
     filepos_looped(0)
 {
+  memset(&sf_inf,0,sizeof(sf_inf));
+  sfile = sf_open(efname.c_str(),SFM_READ,&sf_inf);
   if( !sfile ){
-    async_file_error = "unable to open sound file '" + efname + "'.";
+    char cwd[1024];
+    std::string cwds;
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+      cwds = cwd;
+    int sf_err(sf_error(NULL));
+    std::string sf_errs("");
+    switch( sf_err ){
+    case SF_ERR_NO_ERROR : sf_errs = "No error."; break;
+    case SF_ERR_UNRECOGNISED_FORMAT : sf_errs = "Unrecognised format."; break;
+    case SF_ERR_SYSTEM : sf_errs = "System error."; break;
+    case SF_ERR_MALFORMED_FILE : sf_errs = "Malformed file."; break;
+    case SF_ERR_UNSUPPORTED_ENCODING : sf_errs = "Unsupported encoding."; break;
+    default: sf_errs = sf_error_number(sf_err);
+    }
+    async_file_error = "unable to open sound file '" + efname + "'.\n"+sf_errs+" ("+num2str(sf_err)+").\nCurrent working directory: '" + cwds + "'.";
     throw ErrMsg(async_file_error.c_str());
   }
   if( !(sf_inf.seekable ) ){
