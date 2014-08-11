@@ -81,13 +81,8 @@ g_scene_t::g_scene_t(const std::string& cfg_file, const std::string& flags,bool 
       throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
   }
   linearize_sounds();
-  //linearize_inputs();
   for( std::vector<src_object_t>::iterator i=object_sources.begin();i!=object_sources.end();++i)
     i->location.fill_gaps(0.25);
-  //std::vector<src_diffuse_t> diffuse_sources;
-  // std::vector<diffuse_reverb_t> reverbs;
-  //for( std::vector<face_object_t>::iterator i=faces.begin();i!=faces.end();++i) 
-  //  i->location.fill_gaps(0.25);
   for( std::vector<sink_object_t>::iterator i=sink_objects.begin();i!=sink_objects.end();++i)
     i->location.fill_gaps(0.25);
   add_child_methods();
@@ -163,7 +158,6 @@ source_ctl_t::source_ctl_t(lo_address client_addr, scene_t* s, route_t* r)
   if( object_t* o=dynamic_cast<object_t*>(r) ){
     rgb_color_t c(o->color);
     col.set_rgb_p(0.5+0.3*c.r,0.5+0.3*c.g,0.5+0.3*c.b);
-    //ebox.modify_bg(Gtk::STATE_ACTIVE,col);
     ebox.modify_bg(Gtk::STATE_NORMAL,col);
   }
 #endif
@@ -177,7 +171,6 @@ void source_ctl_t::on_mute()
   bool m(mute.get_active());
   std::string path("/"+scene_->name+"/"+name_+"/mute");
   lo_send(client_addr_,path.c_str(),"i",m);
-  //scene_->set_mute(name_,m);
 }
 
 void source_ctl_t::on_solo()
@@ -185,7 +178,6 @@ void source_ctl_t::on_solo()
   bool m(solo.get_active());
   std::string path("/"+scene_->name+"/"+name_+"/solo");
   lo_send(client_addr_,path.c_str(),"i",m);
-  //scene_->set_solo(name_,m);
 }
 
 class source_panel_t : public Gtk::ScrolledWindow {
@@ -215,15 +207,6 @@ void source_panel_t::set_scene(scene_t* s)
     std::vector<object_t*> obj(s->get_objects());
     for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it)
       vbuttons.push_back(new source_ctl_t(client_addr_,s,*it));
-    //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->sink_objects)));
-    //for( unsigned int k=0;k<s->diffuse_sources.size();k++)
-    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->diffuse_sources[k])));
-    //for( unsigned int k=0;k<s->object_sources.size();k++)
-    //vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->object_sources[k])));
-    //for( unsigned int k=0;k<s->faces.size();k++)
-    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->faces[k])));
-    //for( unsigned int k=0;k<s->reverbs.size();k++)
-    //  vbuttons.push_back(new source_ctl_t(client_addr_,s,&(s->reverbs[k])));
   }
   for( unsigned int k=0;k<vbuttons.size();k++){
     box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
@@ -257,12 +240,6 @@ public:
   void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   void draw_mask(mask_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  //static int osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  //static int osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  //static int set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  //static int osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  //static int osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  //void set_head(double rot){headrot = rot;};
   virtual int process(jack_nframes_t n,const std::vector<float*>& input,
                       const std::vector<float*>& output, 
                       uint32_t tp_frame, bool tp_rolling);
@@ -292,11 +269,9 @@ protected:
   void on_view_selected();
   void on_loop();
   viewport_t view;
-  //double scale;
   double time;
   double guitime;
   double headrot;
-  //Gtk::HBox hbox;
   Gtk::Button button_tp_stop;
   Gtk::Button button_tp_start;
   Gtk::Button button_tp_rewind;
@@ -310,10 +285,6 @@ protected:
   Gtk::ComboBoxText rangeselector;
   Gtk::ComboBoxText viewselector;
   Gtk::ToggleButton button_loop;
-  //Gtk::ToggleButton button_viewtop;
-  //Gtk::ToggleButton button_viewfront;
-  //Gtk::ToggleButton button_viewside;
-  //Gtk::ToggleButton button_viewperspective;
 private:
   lo_address client_addr;
 public:
@@ -350,78 +321,6 @@ void tascar_gui_t::on_tp_rewind()
     tp_locate(0.0);
   }
 }
-
-//int tascar_gui_t::osc_sink_objects_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-//{
-//  tascar_gui_t* h((tascar_gui_t*)user_data);
-//  if( h ){
-//    //lo_send_message(h->client_addr,path,msg);
-//    zyx_euler_t r;
-//    if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
-//      r.z = DEG2RAD*argv[0]->f;
-//      r.y = DEG2RAD*argv[1]->f;
-//      r.x = DEG2RAD*argv[2]->f;
-//    }
-//    if( (argc == 1) && (types[0]=='f') ){
-//      r.z = DEG2RAD*argv[0]->f;
-//    }
-//    //if( h->scene )
-//    //  h->scene->sink_objects_orientation(r);
-//    return 0;
-//  }
-//  return 1;
-//}
-//
-//int tascar_gui_t::osc_sink_objects_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-//{
-//  tascar_gui_t* h((tascar_gui_t*)user_data);
-//  if( h ){
-//    //lo_send_message(h->client_addr,path,msg);
-//    pos_t r;
-//    if( (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
-//      r.x = argv[0]->f;
-//      r.y = argv[1]->f;
-//      r.z = argv[2]->f;
-//    }
-//    if( (argc == 2) && (types[0]=='f') && (types[1]=='f') ){
-//      r.x = argv[0]->f;
-//      r.y = argv[1]->f;
-//    }
-//    //if( h->scene )
-//    //  h->scene->sink_objects_position(r);
-//    return 0;
-//  }
-//  return 1;
-//}
-//
-//int tascar_gui_t::osc_set_src_orientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-//{
-//  tascar_gui_t* h((tascar_gui_t*)user_data);
-//  if( h && h->scene && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
-//    zyx_euler_t r;
-//    r.z = DEG2RAD*argv[1]->f;
-//    r.y = DEG2RAD*argv[2]->f;
-//    r.x = DEG2RAD*argv[3]->f;
-//    h->scene->set_source_orientation_offset(&(argv[0]->s),r);
-//    return 0;
-//  }
-//  return 1;
-//}
-//
-//
-//int tascar_gui_t::osc_set_src_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-//{
-//  tascar_gui_t* h((tascar_gui_t*)user_data);
-//  if( h && h->scene && (argc == 4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') ){
-//    pos_t r;
-//    r.x = argv[1]->f;
-//    r.y = argv[2]->f;
-//    r.z = argv[3]->f;
-//    h->scene->set_source_position_offset(&(argv[0]->s),r);
-//    return 0;
-//  }
-//  return 1;
-//}
 
 void tascar_gui_t::on_time_changed()
 {
@@ -499,13 +398,10 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
     msize *= 0.4;
     plot_time = std::min(std::max(plot_time,obj.starttime),obj.endtime);
   }
-  //pos_t p(view(obj.location.interp(plot_time-obj.starttime)));
   pos_t p(obj.get_location(plot_time));
-  //DEBUG(p.print_cart());
   cr->save();
   p = view(p);
   if( p.z != std::numeric_limits<double>::infinity()){
-    //DEBUG(p.print_cart());
     if( solo && blink ){
       cr->set_source_rgba(1, 0, 0, 0.5);
       cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
@@ -518,7 +414,6 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   for(unsigned int k=0;k<obj.sound.size();k++){
     pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
     if( ps.z != std::numeric_limits<double>::infinity()){
-      //pos_t ps(obj.sound[k].get_pos(time));
       cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
       cr->fill();
     }
@@ -534,13 +429,11 @@ void tascar_gui_t::draw_src(const src_object_t& obj,Cairo::RefPtr<Cairo::Context
   if( active ){
     cr->set_line_width( 0.1*msize );
     cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
-    //cr->move_to( p.x, -p.y );
     if( obj.sound.size()){
       pos_t pso(view(obj.sound[0].get_pos_global(plot_time)));
       if( pso.z != std::numeric_limits<double>::infinity()){
         for(unsigned int k=1;k<obj.sound.size();k++){
           pos_t ps(view(obj.sound[k].get_pos_global(plot_time)));
-          //pos_t ps(obj.sound[k].get_pos(time));
           bool view_x((fabs(ps.x)<1)||
                       (fabs(pso.x)<1));
           bool view_y((fabs(ps.y)<1)||
@@ -573,15 +466,11 @@ void tascar_gui_t::open_scene()
   rangeselector.append("- scene -");
 #endif
   rangeselector.set_active_text("- scene -");
-  //button_loop.set_active(false);
   selected_range = -1;
   if( cfg_file_.size() ){
     scene = new g_scene_t(cfg_file_, backend_flags_,nobackend_,srv_addr_,srv_port_);
     timescale.set_range(0,scene->duration);
     for(unsigned int k=0;k<scene->ranges.size();k++){
-      //timescale.add_mark(scene->ranges[k].start,Gtk::POS_TOP,"<span horizontalalign=\"right\">"+scene->ranges[k].name+"</span>");
-      //timescale.add_mark(scene->ranges[k].start,Gtk::POS_TOP,"&gt;");
-      //timescale.add_mark(scene->ranges[k].end,Gtk::POS_TOP,"&lt;");
       timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
       timescale.add_mark(scene->ranges[k].end,Gtk::POS_BOTTOM,"");
 #ifdef GTKMM24
@@ -740,9 +629,6 @@ void tascar_gui_t::draw_mask(mask_object_t& obj,Cairo::RefPtr<Cairo::Context> cr
   cr->set_line_width( 0.2*msize );
   cr->set_source_rgba(obj.color.r, obj.color.g, obj.color.b, 0.6);
   obj.geometry_update(time);
-  //pos_t p(obj.get_location(time));
-  //zyx_euler_t o(obj.get_orientation(time));
-  //DEBUG(o.print());
   if( obj.mask_inner ){
     draw_cube(obj.center,obj.shoebox_t::orientation,obj.xmlsize+pos_t(2*obj.xmlfalloff,2*obj.xmlfalloff,2*obj.xmlfalloff),cr);
     std::vector<double> dash(2);
@@ -855,7 +741,6 @@ void tascar_gui_t::draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::
     cr->set_line_width( 0.6*msize );
   else
     cr->set_line_width( 0.1*msize );
-  //cr->set_source_rgba(0,0,0,0.6);
   cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
   draw_cube(p,o,obj.size,cr);
   std::vector<double> dash(2);
@@ -886,7 +771,6 @@ void tascar_gui_t::draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::Ref
     cr->set_line_width( 1.2*msize );
   else
     cr->set_line_width( 0.4*msize );
-  //cr->set_source_rgba(0,0,0,0.6);
   cr->set_source_rgb(obj.color.r, obj.color.g, obj.color.b );
   face_t f;
   f.set(p,o,obj.width,obj.height);
@@ -926,31 +810,8 @@ void tascar_gui_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::Ref
   cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.6);
   draw_face_normal(face,cr,true);
   // fill:
-  //if( active ){
-  //  cr->set_source_rgba(face.color.r,face.color.g,face.color.b,0.3);
-  //  for(unsigned int k=0;k<16;k++){
-  //    // is at least one point in view?
-  //    unsigned int k1((k+1)&15);
-  //    bool view_x((fabs(roomnodes[16].x)<1)||
-  //                (fabs(roomnodes[k].x)<1)||
-  //                (fabs(roomnodes[k1].x)<1));
-  //    bool view_y((fabs(roomnodes[16].y)<1)||
-  //                (fabs(roomnodes[k].y)<1)||
-  //                (fabs(roomnodes[k1].y)<1));
-  //    if( view_x && view_y ){
-  //      cr->move_to( roomnodes[16].x, -roomnodes[16].y );
-  //      cr->line_to( roomnodes[k].x, -roomnodes[k].y );
-  //      cr->line_to( roomnodes[k1].x, -roomnodes[k1].y );
-  //      cr->fill();
-  //    }
-  //  }
-  //}
   if( active ){
     // normal and name:
-    //cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.8);
-    //cr->move_to( roomnodes[16].x, -roomnodes[16].y );
-    //cr->line_to( roomnodes[17].x, -roomnodes[17].y );
-    //cr->stroke();
     cr->set_source_rgba(face.color.r,face.color.g,0.5+0.5*face.color.b,0.3);
     if( loc.z != std::numeric_limits<double>::infinity()){
       cr->arc(loc.x, -loc.y, msize, 0, PI2 );
@@ -965,16 +826,6 @@ void tascar_gui_t::draw_face(const TASCAR::Scene::face_object_t& face,Cairo::Ref
   }
   cr->restore();
 }
-
-//int tascar_gui_t::set_head(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-//{
-//  tascar_gui_t* h((tascar_gui_t*)user_data);
-//  if( h && (argc == 1) && (types[0] == 'f') ){
-//    h->set_head(DEG2RAD*(argv[0]->f));
-//    return 0;
-//  }
-//  return 1;
-//}
 
 #define CON_BUTTON(b) button_ ## b.signal_clicked().connect(sigc::mem_fun(*this,&tascar_gui_t::on_ ## b))
 
@@ -997,10 +848,6 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
     button_view_p("zoom +"),
     button_view_m("zoom -"),
     button_loop("loop"),
-    //button_viewtop("top"),
-    //button_viewfront("front"),
-    //button_viewside("right"),
-    //button_viewperspective("persp"),
     client_addr(lo_address_new(srv_addr.c_str(),srv_port.c_str())),
     wdg_source(client_addr),
 #ifdef GTKMM30
@@ -1023,13 +870,6 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
 #else
   wdg_scenemap.signal_expose_event().connect(sigc::mem_fun(*this, &tascar_gui_t::on_expose_event), false);
 #endif
-  //osc_server_t::add_method("/headrot","f",set_head,this);
-  //osc_server_t::add_method("/sink_objects/pos","fff",osc_sink_objects_position,this);
-  //osc_server_t::add_method("/listener/rot","fff",osc_sink_objects_orientation,this);
-  //osc_server_t::add_method("/listener/pos","ff",osc_sink_objects_position,this);
-  //osc_server_t::add_method("/listener/rot","f",osc_sink_objects_orientation,this);
-  //osc_server_t::add_method("/srcpos","sfff",osc_set_src_position,this);
-  //osc_server_t::add_method("/srcrot","sfff",osc_set_src_orientation,this);
   wdg_file_ui_box.pack_start( button_reload, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_p, Gtk::PACK_SHRINK );
   wdg_file_ui_box.pack_start( button_view_m, Gtk::PACK_SHRINK );
@@ -1074,16 +914,12 @@ tascar_gui_t::tascar_gui_t(const std::string& srv_addr,
   Gdk::RGBA col;
   col.set_rgba_u(27*256,249*256,163*256);
   button_loop.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
-  //button_perspective.override_background_color(col,Gtk::STATE_FLAG_ACTIVE);
 #else
   Gdk::Color col;
   col.set_rgb(27*256,249*256,163*256);
   button_loop.modify_bg(Gtk::STATE_ACTIVE,col);
   button_loop.modify_bg(Gtk::STATE_PRELIGHT,col);
   button_loop.modify_bg(Gtk::STATE_SELECTED,col);
-  //button_perspective.modify_bg(Gtk::STATE_ACTIVE,col);
-  //button_perspective.modify_bg(Gtk::STATE_PRELIGHT,col);
-  //button_perspective.modify_bg(Gtk::STATE_SELECTED,col);
 #endif
   pthread_mutex_init( &mtx_scene, NULL );
   if( cfg_file_.size() )
@@ -1165,20 +1001,11 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->rectangle(0,0,width,height);
       cr->clip();
       cr->translate(0.5*width, 0.5*height);
-      //double wscale(0.5*std::min(height,width)/scale);
       double wscale(0.5*std::max(height,width));
       double markersize(0.02);
-      //cr->scale( width/wscale, height/wscale );
-      //DEBUG(wscale);
       cr->scale( wscale, wscale );
       cr->set_line_width( 0.3*markersize );
       cr->set_font_size( 2*markersize );
-      //double scale_len(pow(10.0,floor(log10(scale))));
-      //double scale_r(scale/scale_len);
-      //if( scale_r >= 5 )
-      //  scale_len *=5;
-      //else if( scale_r >= 2 )
-      //  scale_len *= 2;
       cr->save();
       cr->set_source_rgb( 1, 1, 1 );
       cr->paint();
@@ -1192,13 +1019,11 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         cr->move_to( -0.9,0.9 );
         char cmp[1024];
         sprintf(cmp,"%1.1f | %1.1f",mp.x,-mp.y);
-        //DEBUGS(cmp);
         cr->set_source_rgb( 0, 0, 0 );
         cr->show_text( cmp );
         cr->stroke();
         cr->restore();
       }
-      //draw_track( scene->sink_objects, cr, markersize );
       for(unsigned int k=0;k<scene->faces.size();k++){
         scene->faces[k].geometry_update(time);
         draw_face(scene->faces[k], cr, markersize );
@@ -1232,18 +1057,6 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       for(unsigned int k=0;k<scene->masks.size();k++){
         draw_mask( scene->masks[k], cr, markersize );
       }
-      //cr->save();
-      //cr->set_source_rgb( 0, 0, 0 );
-      //cr->move_to( -0.9*scale,0.9*scale );
-      //cr->line_to( -0.9*scale,0.95*scale );
-      //cr->line_to( -0.9*scale+scale_len,0.95*scale );
-      //cr->line_to( -0.9*scale+scale_len,0.9*scale );
-      //cr->stroke();
-      //cr->move_to( -0.88*scale,0.94*scale );
-      //char cmp[1024];
-      //sprintf(cmp,"%g m",scale_len);
-      //cr->show_text( cmp );
-      //cr->restore();
     }
     guitime = time;
     timescale.set_value(guitime);
@@ -1259,12 +1072,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 bool tascar_gui_t::on_timeout()
 {
   Glib::RefPtr<Gdk::Window> win = wdg_scenemap.get_window();
-  //Glib::RefPtr<Gdk::Window> win = get_window();
-  //DEBUG(win);
   if (win){
-    //Gdk::Rectangle r(wdg_scenemap.get_allocation().get_x(), wdg_scenemap.get_allocation().get_y(), 
-    //    	     wdg_scenemap.get_allocation().get_width(),
-    //		     wdg_scenemap.get_allocation().get_height() );
     Gdk::Rectangle r(0,0, 
 		     wdg_scenemap.get_allocation().get_width(),
 		     wdg_scenemap.get_allocation().get_height() );
@@ -1294,16 +1102,13 @@ int tascar_gui_t::process(jack_nframes_t nframes,
           (scene->ranges[selected_range].end + (double)nframes/(double)srate > time) ){
         if( scene->loop ){
           tp_locate(scene->ranges[selected_range].start);
-          //DEBUG(scene->ranges[selected_range].start);
         }else
           tp_stop();
       }
     }else{
       if( (scene->duration <= time) && (scene->duration + (double)nframes/(double)srate > time) ){
-        //DEBUG(scene->loop);
         if( scene->loop ){
           tp_locate(0.0);
-          //DEBUG(0.0);
         }else
           tp_stop();
       }
