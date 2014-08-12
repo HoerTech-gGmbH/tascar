@@ -59,7 +59,7 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
-    audioplayer_t S(jackname,cfgfile);
+    TASCAR::audioplayer_t S(jackname,cfgfile);
     S.run(b_quit);
   }
   catch( const std::exception& msg ){
