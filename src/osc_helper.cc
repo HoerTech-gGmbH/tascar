@@ -1,25 +1,25 @@
 /**
-  \file osc_helper.cc
-  \ingroup libtascar
-  \brief helper classes for OSC
-  \author  Giso Grimm
-  \date 2012
+   \file osc_helper.cc
+   \ingroup libtascar
+   \brief helper classes for OSC
+   \author  Giso Grimm
+   \date 2012
   
-  \section license License (LGPL)
+   \section license License (LGPL)
   
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation; version 2 of the License.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; version 2 of the License.
   
-  This program is distributed in the hope that it will be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
   
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-  02110-1301, USA.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301, USA.
 
 */
 
@@ -89,29 +89,35 @@ int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, l
 }
 
 osc_server_t::osc_server_t(const std::string& multicast, const std::string& port,bool verbose_)
-  : isactive(false),
+  : initialized(false),
+    isactive(false),
     verbose(verbose_)
 {
   lost = NULL;
   liblo_errflag = false;
-  if( multicast.size() ){
-    lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
-    if( verbose )
-      std::cerr << "listening on multicast address \"osc.udp://" << multicast << ":"<<port << "/\"" << std::endl;
-  }else{
-    lost = lo_server_thread_new(port.c_str(),err_handler);
-    if( verbose )
-      std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" << std::endl;
+  if( port.size() ){
+    if( multicast.size() ){
+      lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
+      if( verbose )
+        std::cerr << "listening on multicast address \"osc.udp://" << multicast << ":"<<port << "/\"" << std::endl;
+      initialized = true;
+    }else{
+      lost = lo_server_thread_new(port.c_str(),err_handler);
+      if( verbose )
+        std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" << std::endl;
+      initialized = true;
+    }
+    if( (!lost) || liblo_errflag )
+      throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\").");
   }
-  if( (!lost) || liblo_errflag )
-    throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\").");
 }
 
 osc_server_t::~osc_server_t()
 {
   if( isactive )
     deactivate();
-  lo_server_thread_free(lost);
+  if( initialized )
+    lo_server_thread_free(lost);
 }
 
 void osc_server_t::set_prefix(const std::string& prefix_)
@@ -121,10 +127,12 @@ void osc_server_t::set_prefix(const std::string& prefix_)
 
 void osc_server_t::add_method(const std::string& path,const char* typespec,lo_method_handler h, void *user_data)
 {
-  std::string sPath(prefix+path);
-  if( verbose )
-    std::cerr << "added handler " << sPath << " with typespec \"" << typespec << "\"" << std::endl;
-  lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
+  if( initialized ){
+    std::string sPath(prefix+path);
+    if( verbose )
+      std::cerr << "added handler " << sPath << " with typespec \"" << typespec << "\"" << std::endl;
+    lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
+  }
 }
 
 void osc_server_t::add_float(const std::string& path,float *data)
@@ -164,18 +172,22 @@ void osc_server_t::add_int(const std::string& path,int32_t *data)
 
 void osc_server_t::activate()
 {
-  lo_server_thread_start(lost);
-  isactive = true;
-  if( verbose )
-    std::cerr << "server active\n";
+  if( initialized ){
+    lo_server_thread_start(lost);
+    isactive = true;
+    if( verbose )
+      std::cerr << "server active\n";
+  }
 }
 
 void osc_server_t::deactivate()
 {
-  lo_server_thread_stop(lost);
-  isactive = false;
-  if( verbose )
-    std::cerr << "server inactive\n";
+  if( initialized ){
+    lo_server_thread_stop(lost);
+    isactive = false;
+    if( verbose )
+      std::cerr << "server inactive\n";
+  }
 }
 
 

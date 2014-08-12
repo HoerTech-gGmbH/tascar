@@ -58,6 +58,7 @@ namespace TASCAR {
   private:
     std::string prefix;
     lo_server_thread lost;
+    bool initialized;
     bool isactive;
     bool verbose;
   };
