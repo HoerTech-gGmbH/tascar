@@ -2,16 +2,33 @@
 #include <string.h>
 #include <unistd.h>
 
-audioplayer_t::audioplayer_t(const std::string& jackname,const std::string& xmlfile)
+using namespace TASCAR;
+using namespace TASCAR::Scene;
+
+std::string strrep(std::string s,const std::string& pat, const std::string& rep)
+{
+  std::string out_string("");
+  std::string::size_type len = pat.size(  );
+  std::string::size_type pos;
+  while( (pos = s.find(pat)) < s.size() ){
+    out_string += s.substr(0,pos);
+    out_string += rep;
+    s.erase(0,pos+len);
+  }
+  s = out_string + s;
+  return s;
+}
+
+TASCAR::audioplayer_t::audioplayer_t(const std::string& jackname,const std::string& xmlfile)
   : scene_t(xmlfile),jackc_transport_t(jacknamer(jackname,name,"player."))
 {
 }
 
-audioplayer_t::~audioplayer_t()
+TASCAR::audioplayer_t::~audioplayer_t()
 {
 }
 
-int audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
 {
   for(uint32_t ch=0;ch<outBuffer.size();ch++)
     memset(outBuffer[ch],0,nframes*sizeof(float));
@@ -25,7 +42,7 @@ int audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inB
   return 0;
 }
 
-void audioplayer_t::open_files()
+void TASCAR::audioplayer_t::open_files()
 {
   for(std::vector<TASCAR::Scene::src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     infos.insert(infos.end(),it->sndfiles.begin(),it->sndfiles.end());
@@ -55,7 +72,7 @@ void audioplayer_t::open_files()
   }
 }
 
-void audioplayer_t::start()
+void TASCAR::audioplayer_t::start()
 {
   // first prepare all nodes for audio processing:
   prepare(get_srate(), get_fragsize());
@@ -66,14 +83,221 @@ void audioplayer_t::start()
 }
 
 
-void audioplayer_t::stop()
+void TASCAR::audioplayer_t::stop()
 {
   jackc_t::deactivate();
   for(uint32_t k=0;k<files.size();k++)
     files[k].stop_service();
 }
 
-void audioplayer_t::run(bool & b_quit)
+void TASCAR::audioplayer_t::run(bool & b_quit)
+{
+  start();
+  while( !b_quit ){
+    usleep( 50000 );
+    getchar();
+    if( feof( stdin ) )
+      b_quit = true;
+  }
+  stop();
+}
+
+TASCAR::renderer_t::renderer_t(const std::string& srv_addr, 
+                               const std::string& srv_port, 
+                               const std::string& jack_name,
+                               const std::string& cfg_file)
+  : osc_scene_t(srv_addr,srv_port,cfg_file),
+    jackc_transport_t(jacknamer(jack_name,name,"render."))
+{
+}
+
+TASCAR::renderer_t::~renderer_t()
+{
+  if( world )
+    delete world;
+}
+
+
+int TASCAR::renderer_t::process(jack_nframes_t nframes,
+                                const std::vector<float*>& inBuffer,
+                                const std::vector<float*>& outBuffer, 
+                                uint32_t tp_frame, bool tp_rolling)
+{
+  //security/stability:
+  for(uint32_t ch=0;ch<inBuffer.size();ch++)
+    for(uint32_t k=0;k<nframes;k++)
+      make_friendly_number_limited(inBuffer[ch][k]);
+  double tp_time((double)tp_frame/(double)srate);
+  // mute output:
+  for(unsigned int k=0;k<outBuffer.size();k++)
+    memset(outBuffer[k],0,sizeof(float)*nframes);
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
+    psink->clear();
+  }
+  geometry_update(tp_time);
+  process_active(tp_time);
+  // fill inputs:
+  for(unsigned int k=0;k<sounds.size();k++){
+    TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
+    psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes,sounds[k]->get_gain());
+  }
+  for(uint32_t k=0;k<door_sources.size();k++){
+    TASCAR::Acousticmodel::pointsource_t* psrc(door_sources[k].get_source());
+    psrc->audio.copy(inBuffer[door_sources[k].get_port_index()],nframes,door_sources[k].get_gain());
+  }
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    TASCAR::Acousticmodel::diffuse_source_t* psrc(it->get_source());
+    float gain(it->get_gain());
+    psrc->audio.w().copy(inBuffer[it->get_port_index()],nframes,gain);
+    psrc->audio.x().copy(inBuffer[it->get_port_index()+1],nframes,gain);
+    psrc->audio.y().copy(inBuffer[it->get_port_index()+2],nframes,gain);
+    psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes,gain);
+  }
+  // process world:
+  if( world )
+    world->process();
+  // copy sink output:
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
+    float gain(sink_objects[k].get_gain());
+    for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
+      psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes,gain);
+  }
+  //security/stability:
+  for(uint32_t ch=0;ch<outBuffer.size();ch++)
+    for(uint32_t k=0;k<nframes;k++)
+      make_friendly_number_limited(outBuffer[ch][k]);
+  return 0;
+}
+
+void TASCAR::renderer_t::start()
+{
+  // first prepare all nodes for audio processing:
+  prepare(get_srate(), get_fragsize());
+  sounds = linearize_sounds();
+  sources.clear();
+  diffusesources.clear();
+  for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
+    sources.push_back((*it)->get_source());
+    (*it)->set_port_index(get_num_input_ports());
+    add_input_port((*it)->get_port_name());
+  }
+  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
+    sources.push_back(it->get_source());
+    it->set_port_index(get_num_input_ports());
+    add_input_port(it->get_name());
+  }
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    diffusesources.push_back(it->get_source());
+  }
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    it->set_port_index(get_num_input_ports());
+    for(uint32_t ch=0;ch<4;ch++){
+      char ctmp[32];
+      const char* stmp("wxyz");
+      sprintf(ctmp,".%d%c",(ch>0),stmp[ch]);
+      add_input_port(it->get_name()+ctmp);
+    }
+  }
+  sinks.clear();
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
+    TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
+    sinks.push_back(sink);
+    it->set_port_index(get_num_output_ports());
+    for(uint32_t ch=0;ch<sink->get_num_channels();ch++){
+      add_output_port(it->get_name()+sink->get_channel_postfix(ch));
+    }
+  }
+  reflectors.clear();
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
+    reflectors.push_back(&(*it));
+  }
+  pmasks.clear();
+  for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it){
+    pmasks.push_back(&(*it));
+  }
+  // create the world, before first process callback is called:
+  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
+  //
+  // activate repositioning services for each object:
+  add_child_methods();
+  jackc_t::activate();
+  osc_server_t::activate();
+  // connect jack ports of point sources:
+  for(unsigned int k=0;k<sounds.size();k++){
+    std::string cn(sounds[k]->get_connect());
+    if( cn.size() ){
+      cn = strrep(cn,"@","player."+name+":"+sounds[k]->get_parent_name());
+      connect_in(sounds[k]->get_port_index(),cn,true);
+    }
+  }
+  // connect jack ports of point sources:
+  for(unsigned int k=0;k<door_sources.size();k++){
+    std::string cn(door_sources[k].get_connect());
+    if( cn.size() ){
+      cn = strrep(cn,"@","player."+name+":"+door_sources[k].get_name());
+      connect_in(door_sources[k].get_port_index(),cn,true);
+    }
+  }
+  // todo: connect diffuse ports.
+  // connect sink ports:
+  for(unsigned int k=0;k<sink_objects.size();k++){
+    std::string cn(sink_objects[k].get_connect());
+    if( cn.size() ){
+      cn = strrep(cn,"@","player."+name+":"+sink_objects[k].get_name());
+      for(uint32_t ch=0;ch<sink_objects[k].get_sink()->get_num_channels();ch++)
+        connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
+    }
+  }
+  for(uint32_t k=0;k<connections.size();k++)
+    connect(connections[k].src,connections[k].dest,true);
+}
+
+void TASCAR::renderer_t::stop()
+{
+  osc_server_t::deactivate();
+  jackc_t::deactivate();
+  if( world )
+    delete world;
+  world = NULL;
+}
+
+void TASCAR::renderer_t::run(bool& b_quit)
+{
+  start();
+  while( !b_quit ){
+    usleep( 50000 );
+    getchar();
+    if( feof( stdin ) )
+      b_quit = true;
+  }
+  stop();
+}
+
+
+TASCAR::scene_player_t::scene_player_t(const std::string& srv_addr, 
+                                       const std::string& srv_port, 
+                                       const std::string& jack_name, 
+                                       const std::string& cfg_file)
+  : audioplayer_t(jack_name,cfg_file),
+    renderer_t(srv_addr,srv_port,jack_name,cfg_file)
+{
+}
+
+void TASCAR::scene_player_t::start()
+{
+  audioplayer_t::start();
+  renderer_t::start();
+}
+
+void TASCAR::scene_player_t::stop()
+{
+  audioplayer_t::stop();
+  renderer_t::stop();
+}
+
+void TASCAR::scene_player_t::run(bool &b_quit)
 {
   start();
   while( !b_quit ){
