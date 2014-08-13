@@ -189,6 +189,7 @@ namespace TASCAR {
     class sound_t : public scene_node_base_t, public jack_port_t {
     public:
       sound_t(src_object_t* parent_);
+      sound_t(const sound_t& src);
       virtual ~sound_t();
       void set_parent(src_object_t* parent_);
       void read_xml(xmlpp::Element* e);
@@ -204,6 +205,7 @@ namespace TASCAR {
       std::string get_port_name() const;
       std::string get_parent_name() const;
       std::string get_name() const;
+      void set_name(const std::string& n) {name = n;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
     private:
       pos_t local_position;
@@ -245,6 +247,7 @@ namespace TASCAR {
         omni, cardioid, amb3h3v, amb3h0v, nsp
       };
       sink_object_t();
+      sink_object_t(const sink_object_t& src);
       virtual ~sink_object_t();
       void read_xml(xmlpp::Element* e);
       void write_xml(xmlpp::Element* e);

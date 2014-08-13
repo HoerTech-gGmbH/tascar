@@ -199,6 +199,17 @@ sound_t::sound_t(src_object_t* parent_)
 {
 }
 
+sound_t::sound_t(const sound_t& src)
+  : scene_node_base_t(src),
+    jack_port_t(src),
+    local_position(src.local_position),
+    chaindist(src.chaindist),
+    parent(NULL),
+    direct(src.direct),
+    source(NULL)
+{
+}
+
 sound_t::~sound_t()
 {
   if( source )
@@ -445,6 +456,21 @@ sink_object_t::sink_object_t()
     diffusegain(1.0),
     use_mask(false),
     use_global_mask(true),
+    sink(NULL)
+{
+}
+
+sink_object_t::sink_object_t(const sink_object_t& src)
+  : object_t(src),
+    jack_port_t(src),
+    sink_type(src.sink_type),
+    falloff(src.falloff),
+    render_point(src.render_point),
+    render_diffuse(src.render_diffuse),
+    is_direct(src.is_direct),
+    diffusegain(src.diffusegain),
+    use_mask(src.use_mask),
+    use_global_mask(src.use_global_mask),
     sink(NULL)
 {
 }
@@ -784,7 +810,7 @@ std::vector<object_t*> scene_t::get_objects()
 void scene_t::prepare(double fs, uint32_t fragsize)
 {
   if( !name.size() )
-    throw TASCAR::ErrMsg("Invalid empty scene name.");
+    throw TASCAR::ErrMsg("Invalid empty scene name (please set \"name\" attribute of scene node).");
   if( name.find(" ") != std::string::npos )
     throw TASCAR::ErrMsg("Spaces in scene name are not supported (\""+name+"\")");
   if( name.find(":") != std::string::npos )
