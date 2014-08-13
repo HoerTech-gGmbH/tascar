@@ -50,6 +50,7 @@ protected:
   int srate;
   int fragsize;
   int rtprio;
+  bool active;
 };
 
 /**

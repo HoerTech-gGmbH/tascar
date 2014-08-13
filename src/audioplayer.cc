@@ -26,6 +26,8 @@ TASCAR::audioplayer_t::audioplayer_t(const std::string& jackname,const std::stri
 
 TASCAR::audioplayer_t::~audioplayer_t()
 {
+  if( active )
+    deactivate();
 }
 
 int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
@@ -113,6 +115,8 @@ TASCAR::renderer_t::renderer_t(const std::string& srv_addr,
 
 TASCAR::renderer_t::~renderer_t()
 {
+  if( active )
+    jackc_t::deactivate();
   if( world )
     delete world;
 }

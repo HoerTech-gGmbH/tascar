@@ -33,9 +33,8 @@
 
 static std::string errmsg("");
 
-
 jackc_portless_t::jackc_portless_t(const std::string& clientname)
-  : srate(0)
+  : srate(0),active(false)
 {
   jack_status_t jstat;
   jc = jack_client_open(clientname.c_str(),JackUseExactName,&jstat);
@@ -47,6 +46,39 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
   rtprio = jack_client_real_time_priority(jc);
 }
 
+jackc_portless_t::~jackc_portless_t()
+{
+  if( active )
+    deactivate();
+  int err(0);
+  if( (err = jack_client_close(jc)) != 0 ){
+    std::cerr << "Error: jack_client_close returned " << err << std::endl;
+  }
+}
+
+void jackc_portless_t::activate()
+{
+  jack_activate(jc);
+  active = true;
+}
+
+void jackc_portless_t::deactivate()
+{
+  jack_deactivate(jc);
+  active = false;
+}
+
+void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn)
+{
+  if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
+    errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
+    if( bwarn )
+      std::cerr << "Warning: " << errmsg << std::endl;
+    else
+      throw TASCAR::ErrMsg(errmsg.c_str());
+  }
+}
+
 jackc_t::jackc_t(const std::string& clientname)
   : jackc_portless_t(clientname)
 {
@@ -55,15 +87,12 @@ jackc_t::jackc_t(const std::string& clientname)
 
 jackc_t::~jackc_t()
 {
+  if( active )
+    deactivate();
   for(unsigned int k=0;k<inPort.size();k++)
     jack_port_unregister(jc,inPort[k]);
   for(unsigned int k=0;k<outPort.size();k++)
     jack_port_unregister(jc,outPort[k]);
-}
-
-jackc_portless_t::~jackc_portless_t()
-{
-  jack_client_close(jc);
 }
 
 int jackc_t::process_(jack_nframes_t nframes, void *arg)
@@ -104,26 +133,6 @@ void jackc_t::add_output_port(const std::string& name)
   outBuffer.push_back(NULL);
 }
 
-void jackc_portless_t::activate()
-{
-  jack_activate(jc);
-}
-
-void jackc_portless_t::deactivate()
-{
-  jack_deactivate(jc);
-}
-
-void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn)
-{
-  if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
-    errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
-    if( bwarn )
-      std::cerr << "Warning: " << errmsg << std::endl;
-    else
-      throw TASCAR::ErrMsg(errmsg.c_str());
-  }
-}
 
 void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn)
 {
