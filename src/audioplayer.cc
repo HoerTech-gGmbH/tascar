@@ -109,7 +109,8 @@ TASCAR::renderer_t::renderer_t(const std::string& srv_addr,
                                const std::string& jack_name,
                                const std::string& cfg_file)
   : osc_scene_t(srv_addr,srv_port,cfg_file),
-    jackc_transport_t(jacknamer(jack_name,name,"render."))
+    jackc_transport_t(jacknamer(jack_name,name,"render.")),
+    world(NULL)
 {
 }
 

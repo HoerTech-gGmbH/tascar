@@ -345,14 +345,14 @@ world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std:
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
       acoustic_model.push_back(new acoustic_model_t(fs,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
-  //DEBUGS(diffuse_acoustic_model.size());
-  //DEBUGS(acoustic_model.size());
 }
 
 world_t::~world_t()
 {
-  for(unsigned int k=0;k<acoustic_model.size();k++)
-    delete acoustic_model[k];
+  if( acoustic_model.size() )
+    for(unsigned int k=acoustic_model.size()-1;k>0;k--)
+      if( acoustic_model[k] )
+        delete acoustic_model[k];
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
     delete diffuse_acoustic_model[k];
 }
