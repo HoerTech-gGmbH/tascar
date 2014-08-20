@@ -39,6 +39,8 @@ viewport.o audiochunks.o sinks.o acousticmodel.o multipan.o		\
 multipan_amb3.o hoafilt.o xmlconfig.o osc_scene.o audioplayer.o		\
 ringbuffer.o gammatone.o
 
+GUIOBJECTS = gui_elements.o
+
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 
 #GTKMMBIN = tascar_gui
@@ -54,6 +56,7 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile
 tascar_hoadisplay: EXTERNALS += $(GTKEXT)
 
 tascar_gui: EXTERNALS += $(GTKEXT)
+#tascar_gui: gui_elements.o
 
 tascar_pdf: EXTERNALS += cairomm-1.0
 
@@ -70,9 +73,12 @@ all:
 
 lib:
 	mkdir -p build
-	$(MAKE) -C build -f ../Makefile libtascar.a
+	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a
 
 libtascar.a: $(OBJECTS)
+	ar rcs $@ $^
+
+libtascargui.a: $(GUIOBJECTS)
 	ar rcs $@ $^
 
 install:
@@ -93,6 +99,8 @@ doc:
 	rm -Rf doc/.temp.cfg
 
 include $(wildcard *.mk)
+
+tascar_gui: libtascargui.a
 
 $(BINFILES): libtascar.a
 
