@@ -78,7 +78,7 @@ private:
   //void draw_room_src(const src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   //void draw_face(const face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   double time;
-  viewport_t view;
+  //viewport_t view;
   std::string filename;
   double height;
   double width;
@@ -483,7 +483,7 @@ pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfna
     k++;
   if( k > 0 )
     nscale /= div[k-1];
-  view.set_scale(nscale*res);
+  drawer.view.set_scale(nscale*res);
 }
 
 pdf_export_t::~pdf_export_t()
@@ -516,27 +516,27 @@ void pdf_export_t::draw(view_t persp)
   //view.set_ref(listener.get_location(time));
   switch( persp ){
   case p : 
-    view.set_perspective(true);
+    drawer.view.set_perspective(true);
     if( sink_objects.size() ){
-      view.set_ref(sink_objects[0].get_location(time));
-      view.set_euler(sink_objects[0].get_orientation(time));
+      drawer.view.set_ref(sink_objects[0].get_location(time));
+      drawer.view.set_euler(sink_objects[0].get_orientation(time));
     }
     //view.set_euler(listener.get_orientation(time));
     break;
   case xy :
-    view.set_perspective(false);
-    view.set_ref(guicenter);
-    view.set_euler(zyx_euler_t(0,0,0));
+    drawer.view.set_perspective(false);
+    drawer.view.set_ref(guicenter);
+    drawer.view.set_euler(zyx_euler_t(0,0,0));
     break;
   case xz :
-    view.set_perspective(false);
-    view.set_ref(guicenter);
-    view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
+    drawer.view.set_perspective(false);
+    drawer.view.set_ref(guicenter);
+    drawer.view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
     break;
   case yz :
-    view.set_perspective(false);
-    view.set_ref(guicenter);
-    view.set_euler(zyx_euler_t(0,0.5*M_PI,0.5*M_PI));
+    drawer.view.set_perspective(false);
+    drawer.view.set_ref(guicenter);
+    drawer.view.set_euler(zyx_euler_t(0,0.5*M_PI,0.5*M_PI));
     break;
   }
   cr->rectangle(lmargin,tmargin,width-lmargin-rmargin,height-tmargin-bmargin);
@@ -628,9 +628,9 @@ void pdf_export_t::draw(view_t persp)
   cr->move_to( bx+12, by+36 );
   cr->show_text( ctmp );
   if( persp == p )
-    sprintf(ctmp,"fov %g°",view.get_fov());
+    sprintf(ctmp,"fov %g°",drawer.view.get_fov());
   else
-    sprintf(ctmp,"scale 1:%g",view.get_scale()/(wscale/72*0.0254));
+    sprintf(ctmp,"scale 1:%g",drawer.view.get_scale()/(wscale/72*0.0254));
   cr->move_to( bx+12, by+48 );
   cr->show_text( ctmp );
   sprintf(ctmp,"time %g s",time);

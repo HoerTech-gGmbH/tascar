@@ -59,7 +59,9 @@ protected:
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   TASCAR::Scene::scene_t* scene_;
+public:
   viewport_t view;
+protected:
   double time;
   TASCAR::Scene::object_t* selection;
   double markersize;
