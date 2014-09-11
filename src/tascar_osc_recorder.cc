@@ -165,6 +165,8 @@ TASCAR::varwriter_t::varwriter_t(const var_t& var,const std::string& session_nam
   //DEBUG(ofname);
   if( !ofs.good() )
     throw TASCAR::ErrMsg("Unable to create file " + ofname);
+  if( ofs.precision() < 10 )
+    ofs.precision(10);
 }
 
 void TASCAR::varwriter_t::write(const char *types, lo_arg **argv,double t)
