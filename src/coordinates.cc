@@ -774,6 +774,17 @@ pos_t pos_t::normal() const
   return r;
 }
 
+bool pos_t::has_infinity() const
+{
+  if( x == std::numeric_limits<double>::infinity() )
+    return true;
+  if( y == std::numeric_limits<double>::infinity() )
+    return true;
+  if( z == std::numeric_limits<double>::infinity() )
+    return true;
+  return false;
+}
+
 shoebox_t::shoebox_t()
 {
 }

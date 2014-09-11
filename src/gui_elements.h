@@ -43,20 +43,27 @@ public:
   void set_scene(TASCAR::Scene::scene_t* scene);
   void select_object(TASCAR::Scene::object_t* o);
   virtual void draw(Cairo::RefPtr<Cairo::Context> cr);
+  void set_markersize(double msize);
+  void set_blink(bool blink);
 protected:
-  virtual void draw_face_normal(const TASCAR::face_t& f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
+  void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
+  void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
+  virtual void draw_face_normal(TASCAR::face_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
   virtual void draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASCAR::pos_t size,Cairo::RefPtr<Cairo::Context> cr);
-  virtual void draw_track(const TASCAR::Scene::object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_src(const TASCAR::Scene::src_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_sink_object(const TASCAR::Scene::sink_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_door_src(const TASCAR::Scene::src_door_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_room_src(const TASCAR::Scene::src_diffuse_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_face(const TASCAR::Scene::face_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_mask(TASCAR::Scene::mask_object_t& obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  // object draw functions:
+  virtual void draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_sink_object(TASCAR::Scene::sink_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   TASCAR::Scene::scene_t* scene_;
   viewport_t view;
   double time;
   TASCAR::Scene::object_t* selection;
+  double markersize;
+  bool blink;
 };
 
 #endif

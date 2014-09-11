@@ -148,6 +148,10 @@ namespace TASCAR {
        \brief Format as string in spherical coordinates
     */
     std::string print_sphere(const std::string& delim=", ") const;
+    /**
+       \brief Check for infinity in any of the elements
+    */
+    bool has_infinity() const;
   };
 
   class sphere_t {

@@ -55,10 +55,11 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile
 
 tascar_hoadisplay: EXTERNALS += $(GTKEXT)
 
-tascar_gui: EXTERNALS += $(GTKEXT)
+tascar_gui tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
+tascar_gui tascar_pdf: EXTERNALS += $(GTKEXT)
 #tascar_gui: gui_elements.o
 
-tascar_pdf: EXTERNALS += cairomm-1.0
+
 
 LDLIBS += -ltascar
 
