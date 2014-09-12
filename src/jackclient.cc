@@ -116,7 +116,7 @@ void jackc_t::add_input_port(const std::string& name)
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsInput,0);
   if( !p )
-    throw TASCAR::ErrMsg(std::string("unable to register port \""+name+"\"."));
+    throw TASCAR::ErrMsg(std::string("unable to register input port \""+name+"\"."));
   inPort.push_back(p);
   inBuffer.push_back(NULL);
 }
@@ -128,7 +128,7 @@ void jackc_t::add_output_port(const std::string& name)
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsOutput,0);
   if( !p )
-    throw TASCAR::ErrMsg(std::string("unable to register port \""+name+"\"."));
+    throw TASCAR::ErrMsg(std::string("unable to register output port \""+name+"\"."));
   outPort.push_back(p);
   outBuffer.push_back(NULL);
 }

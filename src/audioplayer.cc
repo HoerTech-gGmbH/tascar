@@ -64,11 +64,13 @@ void TASCAR::audioplayer_t::open_files()
       for(uint32_t ch=0;ch<infos[k].channels;ch++){
         char pname[1024];
         sprintf(pname,"%s.%d.%d",infos[k].parentname.c_str(),infos[k].objectchannel,ch);
+        //DEBUG(pname);
         add_output_port(pname);
       }
     }else{
       char pname[1024];
       sprintf(pname,"%s.%d",infos[k].parentname.c_str(),infos[k].objectchannel);
+      //DEBUG(pname);
       add_output_port(pname);
     }
   }
@@ -186,11 +188,13 @@ void TASCAR::renderer_t::start()
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(get_num_input_ports());
+    //DEBUG((*it)->get_port_name());
     add_input_port((*it)->get_port_name());
   }
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     sources.push_back(it->get_source());
     it->set_port_index(get_num_input_ports());
+    //DEBUG(it->get_name());
     add_input_port(it->get_name());
   }
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
@@ -202,6 +206,7 @@ void TASCAR::renderer_t::start()
       char ctmp[32];
       const char* stmp("wxyz");
       sprintf(ctmp,".%d%c",(ch>0),stmp[ch]);
+      //DEBUG(it->get_name()+ctmp);
       add_input_port(it->get_name()+ctmp);
     }
   }
@@ -211,6 +216,8 @@ void TASCAR::renderer_t::start()
     sinks.push_back(sink);
     it->set_port_index(get_num_output_ports());
     for(uint32_t ch=0;ch<sink->get_num_channels();ch++){
+      //DEBUG(ch);
+      //DEBUG(it->get_name()+sink->get_channel_postfix(ch));
       add_output_port(it->get_name()+sink->get_channel_postfix(ch));
     }
   }

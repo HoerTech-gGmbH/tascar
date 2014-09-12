@@ -205,6 +205,7 @@ sound_t::sound_t(const sound_t& src)
     local_position(src.local_position),
     chaindist(src.chaindist),
     parent(NULL),
+    name(src.name),
     direct(src.direct),
     source(NULL)
 {
@@ -305,6 +306,8 @@ void sound_t::read_xml(xmlpp::Element* e)
   get_attribute_value(e,"d",chaindist);
   get_attribute_value_bool(e,"direct",direct);
   name = e->get_attribute_value("name");
+  if( name.empty() )
+    throw TASCAR::ErrMsg("Invalid empty sound name.");
 }
 
 void sound_t::write_xml(xmlpp::Element* e,bool help_comments)
