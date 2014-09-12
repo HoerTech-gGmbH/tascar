@@ -910,6 +910,7 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         cr->stroke();
         cr->restore();
       }
+      draw.set_time(time);
       draw.draw(cr);
       //for(unsigned int k=0;k<scene->faces.size();k++){
       //  scene->faces[k].geometry_update(time);

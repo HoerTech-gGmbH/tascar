@@ -126,6 +126,7 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
 {
   if( scene_ ){
+    scene_->geometry_update(time);
     std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
     for(uint32_t k=0;k<objects.size();k++)
       draw_object(objects[k],cr);
@@ -534,7 +535,6 @@ void scene_draw_t::draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cai
     cr->save();
     cr->set_line_width( 0.2*msize );
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-    obj->geometry_update(time);
     if( obj->mask_inner ){
       draw_cube(obj->center,obj->shoebox_t::orientation,obj->xmlsize+pos_t(2*obj->xmlfalloff,2*obj->xmlfalloff,2*obj->xmlfalloff),cr);
       std::vector<double> dash(2);
@@ -568,6 +568,11 @@ void scene_draw_t::set_markersize(double msize)
 void scene_draw_t::set_blink(bool blink_)
 {
   blink = blink_;
+}
+
+void scene_draw_t::set_time(double t)
+{
+  time = t;
 }
 
 /*

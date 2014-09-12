@@ -45,6 +45,7 @@ public:
   virtual void draw(Cairo::RefPtr<Cairo::Context> cr);
   void set_markersize(double msize);
   void set_blink(bool blink);
+  void set_time(double t);
 protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
   void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
