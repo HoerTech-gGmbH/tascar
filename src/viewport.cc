@@ -85,6 +85,19 @@ pos_t viewport_t::operator()(pos_t x)
   return x;
 }
 
+pos_t viewport_t::inverse(pos_t x)
+{
+  if( perspective ){
+    x.x *= scale;
+    x.y *= scale;
+  }else{
+    x.x *= scale;
+    x.y *= scale;
+  }
+  x *= euler;
+  x += ref;
+  return x;
+}
 
 /*
  * Local Variables:

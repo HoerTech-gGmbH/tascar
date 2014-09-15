@@ -9,6 +9,7 @@ class viewport_t {
 public:
   viewport_t();
   pos_t operator()(pos_t);
+  pos_t inverse(pos_t);
   void set_perspective(bool p);
   void set_fov(double f);
   void set_scale(double s);
