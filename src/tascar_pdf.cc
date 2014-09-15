@@ -61,14 +61,11 @@ void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
 
 class pdf_export_t : public scene_t {
 public:
-  enum view_t {
-    xy, xz, yz, p
-  };
   pdf_export_t(const std::string& scenename,const std::string& pdfname);
   ~pdf_export_t();
   void render_time(const std::vector<double>& time);
 private:
-  void draw(pdf_export_t::view_t persp);
+  void draw(scene_draw_t::viewt_t persp);
   double time;
   std::string filename;
   double height;
@@ -124,51 +121,26 @@ void pdf_export_t::render_time(const std::vector<double>& t)
 {
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    draw(pdf_export_t::xy);
+    draw(scene_draw_t::xy);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    draw(pdf_export_t::xz);
+    draw(scene_draw_t::xz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    draw(pdf_export_t::yz);
+    draw(scene_draw_t::yz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    draw(pdf_export_t::p);
+    draw(scene_draw_t::p);
   }
 }
 
-void pdf_export_t::draw(view_t persp)
+void pdf_export_t::draw(scene_draw_t::viewt_t persp)
 {
   Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
   //view.set_ref(listener.get_location(time));
-  switch( persp ){
-  case p : 
-    drawer.view.set_perspective(true);
-    if( sink_objects.size() ){
-      drawer.view.set_ref(sink_objects[0].get_location(time));
-      drawer.view.set_euler(sink_objects[0].get_orientation(time));
-    }
-    //view.set_euler(listener.get_orientation(time));
-    break;
-  case xy :
-    drawer.view.set_perspective(false);
-    drawer.view.set_ref(guicenter);
-    drawer.view.set_euler(zyx_euler_t(0,0,0));
-    break;
-  case xz :
-    drawer.view.set_perspective(false);
-    drawer.view.set_ref(guicenter);
-    drawer.view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
-    break;
-  case yz :
-    drawer.view.set_perspective(false);
-    drawer.view.set_ref(guicenter);
-    drawer.view.set_euler(zyx_euler_t(0,0.5*M_PI,0.5*M_PI));
-    break;
-  }
   cr->rectangle(lmargin,tmargin,width-lmargin-rmargin,height-tmargin-bmargin);
   cr->clip();
   cr->save();
@@ -183,7 +155,7 @@ void pdf_export_t::draw(view_t persp)
   cr->paint();
   cr->restore();
   drawer.set_markersize(markersize);
-  drawer.draw(cr);
+  drawer.draw(cr,persp);
   cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
   cr->move_to(-markersize, 0 );
   cr->line_to( markersize, 0 );
@@ -215,22 +187,22 @@ void pdf_export_t::draw(view_t persp)
   cr->set_font_size( 10 );
   char ctmp[1024];
   switch( persp ){
-  case xy :
+  case scene_draw_t::xy :
     sprintf(ctmp,"top ortho");
     break;
-  case xz :
+  case scene_draw_t::xz :
     sprintf(ctmp,"front ortho");
     break;
-  case yz :
+  case scene_draw_t::yz :
     sprintf(ctmp,"left ortho");
     break;
-  case p :
+  case scene_draw_t::p :
     sprintf(ctmp,"perspective");
     break;
   }
   cr->move_to( bx+12, by+36 );
   cr->show_text( ctmp );
-  if( persp == p )
+  if( persp == scene_draw_t::p )
     sprintf(ctmp,"fov %g°",drawer.view.get_fov());
   else
     sprintf(ctmp,"scale 1:%g",drawer.view.get_scale()/(wscale/72*0.0254));

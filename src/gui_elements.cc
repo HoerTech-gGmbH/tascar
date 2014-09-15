@@ -123,9 +123,33 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
   selection = o;
 }
 
-void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
+void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr,const viewt_t& viewt)
 {
   if( scene_ ){
+    switch( viewt ){
+    case xy :
+      view.set_perspective(false);
+      view.set_ref(scene_->guicenter);
+      view.set_euler(zyx_euler_t());
+      break;
+    case xz :
+      view.set_perspective(false);
+      view.set_ref(scene_->guicenter);
+      view.set_euler(zyx_euler_t(0,-0.5*M_PI,0.5*M_PI));
+      break;
+    case yz :
+      view.set_perspective(false);
+      view.set_ref(scene_->guicenter);
+      view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
+      break;
+    case p :
+      view.set_perspective(true);
+      if( scene_->sink_objects.size() ){
+        view.set_ref(scene_->sink_objects[0].get_location(time));
+        view.set_euler(scene_->sink_objects[0].get_orientation(time));
+      }
+      break;
+    }
     scene_->geometry_update(time);
     std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
     for(uint32_t k=0;k<objects.size();k++)
