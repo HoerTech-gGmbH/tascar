@@ -44,6 +44,7 @@ namespace TASCAR {
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
     Acousticmodel::world_t* world;
   public:
+    double time;
   };
 
   class scene_player_t : private audioplayer_t, public renderer_t {

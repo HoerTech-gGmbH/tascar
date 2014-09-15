@@ -135,6 +135,7 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     for(uint32_t k=0;k<nframes;k++)
       make_friendly_number_limited(inBuffer[ch][k]);
   double tp_time((double)tp_frame/(double)srate);
+  time = tp_time;
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
