@@ -328,6 +328,7 @@ namespace TASCAR {
       std::vector<range_t> ranges;
       bool loop;
       std::vector<connection_t> connections;
+      std::string scene_path;
     };
 
     scene_t xml_read_scene(const std::string& filename);

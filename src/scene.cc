@@ -8,6 +8,8 @@
 #include <string.h>
 #include "sinks.h"
 #include <locale.h>
+#include <libgen.h>
+#include <unistd.h>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -406,7 +408,8 @@ scene_t::scene_t()
   : description(""),
     name(""),
     duration(60),mirrororder(1),
-    guiscale(200),anysolo(0),loop(false)
+    guiscale(200),anysolo(0),loop(false),
+    scene_path("")
 {
 }
 
@@ -414,7 +417,8 @@ scene_t::scene_t(const std::string& filename)
   : description(""),
     name(""),
     duration(60),mirrororder(1),
-    guiscale(200),anysolo(0),loop(false)
+    guiscale(200),anysolo(0),loop(false),
+    scene_path("")
 {
   setlocale(LC_ALL,"C");
   if( filename.size() )
@@ -772,6 +776,13 @@ src_object_t* scene_t::add_source()
 
 void scene_t::read_xml(const std::string& filename)
 {
+  char c_fname[filename.size()+1];
+  memcpy(c_fname,filename.c_str(),filename.size()+1);
+  scene_path = dirname(c_fname);
+  int echdir = chdir(scene_path.c_str());
+  if( echdir != 0 ){
+    std::cerr << "Warning: Unable to change process directory to \"" << scene_path << "\".\n";
+  }
   xmlpp::DomParser domp(TASCAR::env_expand(filename));
   xmlpp::Document* doc(domp.get_document());
   xmlpp::Element* root(doc->get_root_node());
