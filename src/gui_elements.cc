@@ -9,34 +9,46 @@ void scene_draw_t::draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p
 }
 
 source_ctl_t::source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
-  : mute("M"),solo("S"),client_addr_(client_addr),name_(r->get_name()),scene_(s),route_(r)
+  : mute("M"),solo("S"),client_addr_(client_addr),name_(r->get_name()),scene_(s),route_(r),use_osc(true)
+{
+  setup();
+}
+
+source_ctl_t::source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
+  : mute("M"),solo("S"),name_(r->get_name()),scene_(s),route_(r),use_osc(false)
+{
+  setup();
+}
+
+void source_ctl_t::setup()
 {
   ebox.add( box );
-  label.set_text(r->get_name());
-  if( dynamic_cast<TASCAR::Scene::face_object_t*>(r))
+  label.set_text(route_->get_name());
+  if( dynamic_cast<TASCAR::Scene::face_object_t*>(route_))
     tlabel.set_text("mir");
-  if( dynamic_cast<TASCAR::Scene::src_object_t*>(r))
+  if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
     tlabel.set_text("src");
-  if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(r))
+  if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
     tlabel.set_text("dif");
-  if( dynamic_cast<TASCAR::Scene::sink_object_t*>(r))
+  if( dynamic_cast<TASCAR::Scene::sink_object_t*>(route_))
     tlabel.set_text("sink");
-  if( dynamic_cast<TASCAR::Scene::src_door_t*>(r))
+  if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
     tlabel.set_text("door");
   box.pack_start( tlabel, Gtk::PACK_SHRINK );
   box.pack_start( label, Gtk::PACK_EXPAND_PADDING );
   box.pack_start( mute, Gtk::PACK_SHRINK );
   box.pack_start( solo, Gtk::PACK_SHRINK );
-  mute.set_active(r->get_mute());
-  solo.set_active(r->get_solo());
+  mute.set_active(route_->get_mute());
+  solo.set_active(route_->get_solo());
 #ifdef GTKMM30
   Gdk::RGBA col_yellow("f4e83a");
-  //col.set_rgba(244.0/256,232.0/256,58.0/256);
-  mute.override_background_color(col_yellow);
-  col_yellow.set_rgba_u(219*256,18*256,18*256);
-  solo.override_background_color(col_yellow,Gtk::STATE_FLAG_ACTIVE);
+  col_yellow.set_rgba(244.0/256,232.0/256,58.0/256,0.5);
+  //mute.override_background_color(col_yellow);
+  //mute.override_color(col_yellow);
+  //col_yellow.set_rgba_u(219*256,18*256,18*256);
+  //solo.override_background_color(col_yellow,Gtk::STATE_FLAG_ACTIVE);
   Gdk::RGBA col;
-  if( TASCAR::Scene::object_t* o=dynamic_cast<TASCAR::Scene::object_t*>(r) ){
+  if( TASCAR::Scene::object_t* o=dynamic_cast<TASCAR::Scene::object_t*>(route_) ){
     TASCAR::Scene::rgb_color_t c(o->color);
     col.set_rgba(c.r,c.g,c.b,0.3);
     ebox.override_background_color(col);
@@ -64,19 +76,36 @@ source_ctl_t::source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TA
 void source_ctl_t::on_mute()
 {
   bool m(mute.get_active());
-  std::string path("/"+scene_->name+"/"+name_+"/mute");
-  lo_send(client_addr_,path.c_str(),"i",m);
+  if( use_osc ){
+    std::string path("/"+scene_->name+"/"+name_+"/mute");
+    lo_send(client_addr_,path.c_str(),"i",m);
+  }else{
+    route_->set_mute(m);
+  }
 }
 
 void source_ctl_t::on_solo()
 {
   bool m(solo.get_active());
+  if( use_osc ){
   std::string path("/"+scene_->name+"/"+name_+"/solo");
   lo_send(client_addr_,path.c_str(),"i",m);
+  }else{
+    uint32_t anysolo(0);
+    route_->set_solo(m,anysolo);
+  }
 }
 
 source_panel_t::source_panel_t(lo_address client_addr)
-  : client_addr_(client_addr)
+  : client_addr_(client_addr),use_osc(true)
+{
+  set_size_request( 300, -1 );
+  add(box);
+}
+
+
+source_panel_t::source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
+  : Gtk::ScrolledWindow(cobject),use_osc(false)
 {
   set_size_request( 300, -1 );
   add(box);
@@ -91,8 +120,12 @@ void source_panel_t::set_scene(TASCAR::Scene::scene_t* s)
   vbuttons.clear();
   if( s ){
     std::vector<TASCAR::Scene::object_t*> obj(s->get_objects());
-    for(std::vector<TASCAR::Scene::object_t*>::iterator it=obj.begin();it!=obj.end();++it)
-      vbuttons.push_back(new source_ctl_t(client_addr_,s,*it));
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it=obj.begin();it!=obj.end();++it){
+      if( use_osc )
+        vbuttons.push_back(new source_ctl_t(client_addr_,s,*it));
+      else
+        vbuttons.push_back(new source_ctl_t(s,*it));
+    }
   }
   for( unsigned int k=0;k<vbuttons.size();k++){
     box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
@@ -159,7 +192,7 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr,const viewt_t& viewt)
 
 void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr)
 {
-  bool selected(obj==selection);
+  //bool selected(obj==selection);
   draw_track(obj,cr,markersize);
   draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
   draw_sink_object(dynamic_cast<TASCAR::Scene::sink_object_t*>(obj),cr,markersize);

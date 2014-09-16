@@ -13,6 +13,8 @@
 class source_ctl_t : public Gtk::Frame {
 public:
   source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
+  source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
+  void setup();
   void on_mute();
   void on_solo();
   Gtk::EventBox ebox;
@@ -25,15 +27,18 @@ public:
   std::string name_;
   TASCAR::Scene::scene_t* scene_;
   TASCAR::Scene::route_t* route_;
+  bool use_osc;
 };
 
 class source_panel_t : public Gtk::ScrolledWindow {
 public:
   source_panel_t(lo_address client_addr);
+  source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade);
   void set_scene(TASCAR::Scene::scene_t*);
   std::vector<source_ctl_t*> vbuttons;
   Gtk::VBox box;
   lo_address client_addr_;
+  bool use_osc;
 };
 
 class scene_draw_t {
@@ -49,6 +54,7 @@ public:
   void set_markersize(double msize);
   void set_blink(bool blink);
   void set_time(double t);
+  double get_time() const {return time;};
 protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
   void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
