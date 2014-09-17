@@ -19,8 +19,29 @@ std::string strrep(std::string s,const std::string& pat, const std::string& rep)
   return s;
 }
 
+scene_container_t::scene_container_t(const std::string& xmlfile)
+  : scene(new TASCAR::Scene::scene_t(xmlfile)),own_pointer(true)
+{
+}
+
+scene_container_t::scene_container_t(TASCAR::Scene::scene_t* scenesrc)
+  : scene(scenesrc),own_pointer(false)
+{
+}
+
+scene_container_t::~scene_container_t()
+{
+  if( own_pointer && scene )
+    delete scene;
+}
+
 TASCAR::audioplayer_t::audioplayer_t(const std::string& jackname,const std::string& xmlfile)
-  : scene_t(xmlfile),jackc_transport_t(jacknamer(jackname,name,"player."))
+  : scene_container_t(xmlfile),jackc_transport_t(jacknamer(jackname,scene->name,"player."))
+{
+}
+
+TASCAR::audioplayer_t::audioplayer_t(const std::string& jackname,TASCAR::Scene::scene_t* scenesrc)
+  : scene_container_t(scenesrc),jackc_transport_t(jacknamer(jackname,scene->name,"player."))
 {
 }
 
@@ -46,10 +67,12 @@ int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<floa
 
 void TASCAR::audioplayer_t::open_files()
 {
-  for(std::vector<TASCAR::Scene::src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
+  if( !scene )
+    throw TASCAR::ErrMsg("Invalid scene pointer");
+  for(std::vector<TASCAR::Scene::src_object_t>::iterator it=scene->object_sources.begin();it!=scene->object_sources.end();++it){
     infos.insert(infos.end(),it->sndfiles.begin(),it->sndfiles.end());
   }
-  for(std::vector<TASCAR::Scene::src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+  for(std::vector<TASCAR::Scene::src_diffuse_t>::iterator it=scene->diffuse_sources.begin();it!=scene->diffuse_sources.end();++it){
     infos.insert(infos.end(),it->sndfiles.begin(),it->sndfiles.end());
   }
   for(std::vector<TASCAR::Scene::sndfile_info_t>::iterator it=infos.begin();it!=infos.end();++it){
@@ -79,7 +102,7 @@ void TASCAR::audioplayer_t::open_files()
 void TASCAR::audioplayer_t::start()
 {
   // first prepare all nodes for audio processing:
-  prepare(get_srate(), get_fragsize());
+  scene->prepare(get_srate(), get_fragsize());
   open_files();
   for(uint32_t k=0;k<files.size();k++)
     files[k].start_service();
@@ -112,7 +135,9 @@ TASCAR::renderer_t::renderer_t(const std::string& srv_addr,
                                const std::string& cfg_file)
   : osc_scene_t(srv_addr,srv_port,cfg_file),
     jackc_transport_t(jacknamer(jack_name,name,"render.")),
-    world(NULL)
+    world(NULL),active_pointsources(0),active_diffusesources(0),
+    total_pointsources(0),
+    total_diffusesources(0)
 {
 }
 
@@ -163,8 +188,14 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     psrc->audio.z().copy(inBuffer[it->get_port_index()+3],nframes,gain);
   }
   // process world:
-  if( world )
+  if( world ){
     world->process();
+    active_pointsources = world->get_active_pointsource();
+    active_diffusesources = world->get_active_diffusesource();
+  }else{
+    active_pointsources = 0;
+    active_diffusesources = 0;
+  }
   // copy sink output:
   for(unsigned int k=0;k<sink_objects.size();k++){
     TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
@@ -232,6 +263,8 @@ void TASCAR::renderer_t::start()
   }
   // create the world, before first process callback is called:
   world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
+  total_pointsources = world->get_total_pointsource();
+  total_diffusesources = world->get_total_diffusesource();
   //
   // activate repositioning services for each object:
   add_child_methods();
@@ -293,20 +326,20 @@ TASCAR::scene_player_t::scene_player_t(const std::string& srv_addr,
                                        const std::string& srv_port, 
                                        const std::string& jack_name, 
                                        const std::string& cfg_file)
-  : audioplayer_t(jack_name,cfg_file),
-    renderer_t(srv_addr,srv_port,jack_name,cfg_file)
+  : renderer_t(srv_addr,srv_port,jack_name,cfg_file),
+    player(jack_name,dynamic_cast<TASCAR::Scene::scene_t*>(this))
 {
 }
 
 void TASCAR::scene_player_t::start()
 {
-  audioplayer_t::start();
+  player.start();
   renderer_t::start();
 }
 
 void TASCAR::scene_player_t::stop()
 {
-  audioplayer_t::stop();
+  player.stop();
   renderer_t::stop();
 }
 

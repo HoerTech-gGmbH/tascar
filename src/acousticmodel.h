@@ -160,7 +160,7 @@ namespace TASCAR {
       ~acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
-      void process();
+      uint32_t process();
     protected:
       pointsource_t* src_;
       sink_t* sink_;
@@ -188,7 +188,7 @@ namespace TASCAR {
       ~diffuse_acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
-      void process();
+      uint32_t process();
     protected:
       diffuse_source_t* src_;
       sink_t* sink_;
@@ -219,12 +219,18 @@ namespace TASCAR {
       /** \brief Process the mirror model and all acoustic models.
        */
       void process();
+      uint32_t get_active_pointsource() const {return active_pointsource;};
+      uint32_t get_active_diffusesource() const {return active_diffusesource;};
+      uint32_t get_total_pointsource() const {return acoustic_model.size();};
+      uint32_t get_total_diffusesource() const {return diffuse_acoustic_model.size();};
     protected:
       mirror_model_t mirrormodel;
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
       std::vector<sink_t*> sinks_;
       std::vector<mask_t*> masks_;
+      uint32_t active_pointsource;
+      uint32_t active_diffusesource;
     };
 
   }

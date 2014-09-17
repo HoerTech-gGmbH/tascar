@@ -163,7 +163,7 @@ acoustic_model_t::~acoustic_model_t()
     delete sink_data;
 }
  
-void acoustic_model_t::process()
+uint32_t acoustic_model_t::process()
 {
   pos_t prel;
   double nextdistance(0.0);
@@ -192,7 +192,9 @@ void acoustic_model_t::process()
   }
   if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0)) && (src_->direct || (!sink_->is_direct)) ){
     sink_->add_source(prel,audio,sink_data);
+    return 1;
   }
+  return 0;
 }
 
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
@@ -269,7 +271,7 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
   for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
     for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
       mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
-  DEBUGS(mirrorsource.size());
+  //DEBUGS(mirrorsource.size());
   uint32_t num_mirrors_start(0);
   uint32_t num_mirrors_end(mirrorsource.size());
   for(uint32_t korder=1;korder<order;korder++){
@@ -324,7 +326,7 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
 }
 
 world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
-  : mirrormodel(sources,reflectors,mirror_order),sinks_(sinks),masks_(masks)
+  : mirrormodel(sources,reflectors,mirror_order),sinks_(sinks),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
   //DEBUGS(diffusesources.size());
   //DEBUGS(sources.size());
@@ -360,11 +362,13 @@ world_t::~world_t()
 
 void world_t::process()
 {
+  uint32_t local_active_point(0);
+  uint32_t local_active_diffuse(0);
   mirrormodel.process();
   for(unsigned int k=0;k<acoustic_model.size();k++)
-    acoustic_model[k]->process();
+    local_active_point += acoustic_model[k]->process();
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
-    diffuse_acoustic_model[k]->process();
+    local_active_diffuse += diffuse_acoustic_model[k]->process();
   // now apply mask gains:
   for(uint32_t k=0;k<sinks_.size();k++){
     if( sinks_[k]->global_mask_use_ ){
@@ -387,6 +391,8 @@ void world_t::process()
     sinks_[k]->apply_gain(gain_inner);
     }
   }
+  active_pointsource = local_active_point;
+  active_diffusesource = local_active_diffuse;
 }
 
 diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* src,sink_t* sink)
@@ -413,7 +419,7 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
     delete sink_data;
 }
  
-void diffuse_acoustic_model_t::process()
+uint32_t diffuse_acoustic_model_t::process()
 {
   pos_t prel;
   double d(0.0);
@@ -441,8 +447,10 @@ void diffuse_acoustic_model_t::process()
     if( sink_->render_diffuse && sink_->active && src_->active ){
       audio *= sink_->diffusegain;
       sink_->add_source(prel,audio,sink_data);
+      return 1;
     }
   }
+  return 0;
 }
 
 /*

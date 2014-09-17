@@ -8,9 +8,20 @@
 
 namespace TASCAR {
 
-  class audioplayer_t : public TASCAR::Scene::scene_t, public jackc_transport_t  {
+  class scene_container_t {
+  public:
+    scene_container_t(const std::string& xmlfile);
+    scene_container_t(TASCAR::Scene::scene_t* scenesrc);
+    ~scene_container_t();
+  protected:
+    TASCAR::Scene::scene_t* scene;
+    bool own_pointer;
+  };    
+  
+  class audioplayer_t : public scene_container_t, public jackc_transport_t  {
   public:
     audioplayer_t(const std::string& jackname,const std::string& xmlfile="");
+    audioplayer_t(const std::string& jackname,TASCAR::Scene::scene_t*);
     virtual ~audioplayer_t();
     void run(bool &b_quit);
     void start();
@@ -45,9 +56,13 @@ namespace TASCAR {
     Acousticmodel::world_t* world;
   public:
     double time;
+    uint32_t active_pointsources;
+    uint32_t active_diffusesources;
+    uint32_t total_pointsources;
+    uint32_t total_diffusesources;
   };
 
-  class scene_player_t : private audioplayer_t, public renderer_t {
+  class scene_player_t : public renderer_t  {
   public:
     scene_player_t(const std::string& srv_addr, 
                    const std::string& srv_port, 
@@ -56,6 +71,8 @@ namespace TASCAR {
     void start();
     void stop();
     void run(bool &b_quit);
+  private:
+    audioplayer_t player;
   };
 
 }
