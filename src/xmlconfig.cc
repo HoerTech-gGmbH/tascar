@@ -4,6 +4,92 @@
 #include <stdlib.h>
 #include <math.h>
 
+TASCAR::scene_node_base_t::scene_node_base_t()
+  : p_xml_element(NULL)
+{
+}
+
+TASCAR::scene_node_base_t::~scene_node_base_t()
+{
+}
+
+void TASCAR::scene_node_base_t::read_xml(xmlpp::Element* e)
+{
+  p_xml_element = e;
+}
+
+void TASCAR::scene_node_base_t::get_value(const std::string& name,double& value)
+{
+  if( p_xml_element )
+    get_attribute_value(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::get_value(const std::string& name,unsigned int& value)
+{
+  if( p_xml_element )
+    get_attribute_value(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::get_value_bool(const std::string& name,bool& value)
+{
+  if( p_xml_element )
+    get_attribute_value_bool(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::get_value_db(const std::string& name,double& value)
+{
+  if( p_xml_element )
+    get_attribute_value_db(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::get_value_db_float(const std::string& name,float& value)
+{
+  if( p_xml_element )
+    get_attribute_value_db_float(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::get_value_deg(const std::string& name,double& value)
+{
+  if( p_xml_element )
+    get_attribute_value_deg(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::get_value(const std::string& name,TASCAR::pos_t& value)
+{
+  if( p_xml_element )
+    get_attribute_value(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::set_bool(const std::string& name,bool value)
+{
+  if( p_xml_element )
+    set_attribute_bool(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::set_db(const std::string& name,double value)
+{
+  if( p_xml_element )
+    set_attribute_db(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::set_double(const std::string& name,double value)
+{
+  if( p_xml_element )
+    set_attribute_double(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::set_uint(const std::string& name,unsigned int value)
+{
+  if( p_xml_element )
+    set_attribute_uint(p_xml_element,name,value);
+}
+
+void TASCAR::scene_node_base_t::set_value(const std::string& name,const TASCAR::pos_t& value)
+{
+  if( p_xml_element )
+    set_attribute_value(p_xml_element,name,value);
+}
+
 std::string localgetenv(const std::string& env)
 {
   if( char* s = getenv(env.c_str()) )

@@ -9,12 +9,26 @@ namespace TASCAR {
 
   class scene_node_base_t {
   public:
-    scene_node_base_t(){};
-    virtual ~scene_node_base_t(){};
-    virtual void read_xml(xmlpp::Element* e) = 0;
+    scene_node_base_t();
+    virtual ~scene_node_base_t();
+    virtual void read_xml(xmlpp::Element* e);
     virtual void write_xml(xmlpp::Element* e,bool help_comments=false) = 0;
     //virtual std::string print(const std::string& prefix="") = 0;
     virtual void prepare(double fs, uint32_t fragsize) = 0;
+    void get_value(const std::string& name,double& value);
+    void get_value(const std::string& name,unsigned int& value);
+    void get_value_bool(const std::string& name,bool& value);
+    void get_value_db(const std::string& name,double& value);
+    void get_value_db_float(const std::string& name,float& value);
+    void get_value_deg(const std::string& name,double& value);
+    void get_value(const std::string& name,TASCAR::pos_t& value);
+    void set_bool(const std::string& name,bool value);
+    void set_db(const std::string& name,double value);
+    void set_double(const std::string& name,double value);
+    void set_uint(const std::string& name,unsigned int value);
+    void set_value(const std::string& name,const TASCAR::pos_t& value);
+  protected:
+    xmlpp::Element* p_xml_element;
   };
 
   std::string env_expand( std::string s );
