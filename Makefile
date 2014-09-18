@@ -46,9 +46,10 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 #GTKMMBIN = tascar_gui
 
 CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
-
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 #EXTERNALS = jack liblo sndfile
+
+$(GUIOBJECTS): EXTERNALS += gtkmm-3.0
 
 #tascar_gui tascar_renderer tascar_audioplayer: OBJECTS += /usr/lib/libxml++-2.6.a
 #tascar_gui tascar_renderer tascar_audioplayer: CXXFLAGS += -I/usr/include/libxml++-2.6/
@@ -58,8 +59,6 @@ tascar_hoadisplay: EXTERNALS += $(GTKEXT)
 tascar_gui tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 tascar_gui tascar_pdf: EXTERNALS += $(GTKEXT)
 #tascar_gui: gui_elements.o
-
-
 
 LDLIBS += -ltascar
 
