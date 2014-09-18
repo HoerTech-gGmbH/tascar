@@ -850,31 +850,31 @@ void scene_t::prepare(double fs, uint32_t fragsize)
   }
 }
 
-void scene_t::set_mute(const std::string& name,bool val)
-{
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    if( it->get_name() == name )
-      it->set_mute(val);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    if( it->get_name() == name )
-      it->set_mute(val);
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    if( it->get_name() == name )
-      it->set_mute(val);
-}
+//void scene_t::set_mute(const std::string& name,bool val)
+//{
+//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+//    if( it->get_name() == name )
+//      it->set_mute(val);
+//  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+//    if( it->get_name() == name )
+//      it->set_mute(val);
+//  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+//    if( it->get_name() == name )
+//      it->set_mute(val);
+//}
 
-void scene_t::set_solo(const std::string& name,bool val)
-{
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    if( it->get_name() == name )
-      it->set_solo(val,anysolo);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    if( it->get_name() == name )
-      it->set_solo(val, anysolo);
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    if( it->get_name() == name )
-      it->set_solo(val,anysolo);
-}
+//void scene_t::set_solo(const std::string& name,bool val)
+//{
+//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+//    if( it->get_name() == name )
+//      it->set_solo(val,anysolo);
+//  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+//    if( it->get_name() == name )
+//      it->set_solo(val, anysolo);
+//  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+//    if( it->get_name() == name )
+//      it->set_solo(val,anysolo);
+//}
 
 void TASCAR::Scene::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment, bool help_comments)
 { 
@@ -942,6 +942,7 @@ route_t::route_t()
 
 void route_t::read_xml(xmlpp::Element* e)
 {
+  scene_node_base_t::read_xml(e);
   name = e->get_attribute_value("name");
   get_attribute_value_bool(e,"mute",mute);
   get_attribute_value_bool(e,"solo",solo);
@@ -992,14 +993,14 @@ bool sound_t::get_solo() const
   return false;
 }
 
-bool scene_t::get_playsound(const sound_t* s)
-{
-  if( s->get_mute() )
-    return false;
-  if( !anysolo )
-    return true;
-  return s->get_solo();
-}
+//bool scene_t::get_playsound(const sound_t* s)
+//{
+//  if( s->get_mute() )
+//    return false;
+//  if( !anysolo )
+//    return true;
+//  return s->get_solo();
+//}
 
 face_object_t::face_object_t()
   : width(1.0),
@@ -1059,21 +1060,21 @@ void TASCAR::Scene::range_t::write_xml(xmlpp::Element* e,bool help_comments)
   set_attribute_double(e,"end",end);
 }
 
-void scene_t::set_source_position_offset(const std::string& srcname,pos_t position)
-{
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it != object_sources.end(); ++it){
-    if( srcname == it->get_name() )
-      it->dlocation = position;
-  }
-}
+//void scene_t::set_source_position_offset(const std::string& srcname,pos_t position)
+//{
+//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it != object_sources.end(); ++it){
+//    if( srcname == it->get_name() )
+//      it->dlocation = position;
+//  }
+//}
 
-void scene_t::set_source_orientation_offset(const std::string& srcname,zyx_euler_t orientation)
-{
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it != object_sources.end(); ++it){
-    if( srcname == it->get_name() )
-      it->dorientation = orientation;
-  }
-}
+//void scene_t::set_source_orientation_offset(const std::string& srcname,zyx_euler_t orientation)
+//{
+//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it != object_sources.end(); ++it){
+//    if( srcname == it->get_name() )
+//      it->dorientation = orientation;
+//  }
+//}
 
 void jack_port_t::read_xml(xmlpp::Element* e)
 {

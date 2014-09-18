@@ -126,12 +126,12 @@ namespace TASCAR {
 
     class src_object_t;
 
-  class connection_t {
-  public:
-    connection_t(){};
-    std::string src;
-    std::string dest;
-  };
+    class connection_t {
+    public:
+      connection_t(){};
+      std::string src;
+      std::string dest;
+    };
 
     class jack_port_t {
     public:
@@ -316,14 +316,10 @@ namespace TASCAR {
       uint32_t mirrororder;
       double guiscale;
       pos_t guicenter;
-      //void listener_orientation(zyx_euler_t o){listener.dorientation=o;};
-      //void listener_position(pos_t p){listener.dlocation = p;};
-      void set_source_position_offset(const std::string& srcname,pos_t position);
-      void set_source_orientation_offset(const std::string& srcname,zyx_euler_t position);
       uint32_t anysolo;
-      void set_mute(const std::string& name,bool val);
-      void set_solo(const std::string& name,bool val);
-      bool get_playsound(const sound_t*);
+      //void set_mute(const std::string& name,bool val);
+      //void set_solo(const std::string& name,bool val);
+      //bool get_playsound(const sound_t*);
       std::vector<object_t*> get_objects();
       std::vector<range_t> ranges;
       bool loop;
