@@ -118,7 +118,7 @@ void osc_scene_t::add_sound_methods(TASCAR::Scene::sound_t* s)
 
 void osc_scene_t::add_diffuse_methods(TASCAR::Scene::src_diffuse_t* s)
 {
-  add_method("/"+name+"/"+s->get_name()+"/gain","f",osc_set_diffuse_gain,s);
+  add_method("/"+name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
 }
 
 void osc_scene_t::add_child_methods()
@@ -137,8 +137,8 @@ void osc_scene_t::add_child_methods()
   }
 }
 
-osc_scene_t::osc_scene_t(const std::string& srv_addr, const std::string& srv_port, const std::string& cfg_file)
-  : scene_t(cfg_file),
+osc_scene_t::osc_scene_t(const std::string& srv_addr, const std::string& srv_port, xmlpp::Element* xmlsrc)
+  : scene_t(xmlsrc),
     osc_server_t(srv_addr,srv_port)
 {
 }

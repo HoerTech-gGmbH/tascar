@@ -43,9 +43,8 @@ namespace TASCAR {
 
     class route_t : public scene_node_base_t {
     public:
-      route_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      route_t(xmlpp::Element*);
+      void write_xml();
       std::string get_name() const {return name;};
       bool get_mute() const {return mute;};
       bool get_solo() const {return solo;};
@@ -70,9 +69,8 @@ namespace TASCAR {
 
     class sndfile_info_t : public scene_node_base_t {
     public:
-      sndfile_info_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      sndfile_info_t(xmlpp::Element* e);
+      void write_xml();
       void prepare(double fs, uint32_t fragsize){};
       std::string fname;
       uint32_t firstchannel;
@@ -86,9 +84,8 @@ namespace TASCAR {
 
     class object_t : public route_t {
     public:
-      object_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      object_t(xmlpp::Element*);
+      void write_xml();
       bool isactive(double time) const;
       pos_t get_location(double time) const;
       zyx_euler_t get_orientation(double time) const;
@@ -101,6 +98,9 @@ namespace TASCAR {
       pos_t dlocation;
       zyx_euler_t dorientation;
       std::vector<sndfile_info_t> sndfiles;
+    private:
+      xmlpp::Element* xml_location;
+      xmlpp::Element* xml_orientation;
     };
 
     class mirror_t {
@@ -113,11 +113,10 @@ namespace TASCAR {
 
     class face_object_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
     public:
-      face_object_t();
+      face_object_t(xmlpp::Element* xmlsrc);
       virtual ~face_object_t();
       void prepare(double fs, uint32_t fragsize);
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void write_xml();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       double width;
@@ -126,18 +125,18 @@ namespace TASCAR {
 
     class src_object_t;
 
-    class connection_t {
+    class connection_t : public TASCAR::xml_element_t {
     public:
-      connection_t(){};
+      connection_t(xmlpp::Element*);
+      void write_xml();
       std::string src;
       std::string dest;
     };
 
-    class jack_port_t {
+    class jack_port_t : public TASCAR::xml_element_t {
     public:
-      jack_port_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e);
+      jack_port_t(xmlpp::Element* e);
+      void write_xml();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
       void set_portname(const std::string& pn);
@@ -154,10 +153,9 @@ namespace TASCAR {
 
     class src_diffuse_t : public object_t, public jack_port_t {
     public:
-      src_diffuse_t();
+      src_diffuse_t(xmlpp::Element* e);
       virtual ~src_diffuse_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void write_xml();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
@@ -170,10 +168,9 @@ namespace TASCAR {
 
     class src_door_t : public object_t, public jack_port_t {
     public:
-      src_door_t();
+      src_door_t(xmlpp::Element* e);
       virtual ~src_door_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void write_xml();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
@@ -186,14 +183,13 @@ namespace TASCAR {
       TASCAR::Acousticmodel::doorsource_t* source;
     };
 
-    class sound_t : public scene_node_base_t, public jack_port_t {
+    class sound_t : public jack_port_t {
     public:
-      sound_t(src_object_t* parent_);
+      sound_t(xmlpp::Element* e,src_object_t* parent_);
       sound_t(const sound_t& src);
       virtual ~sound_t();
       void set_parent(src_object_t* parent_);
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      void write_xml();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       pos_t get_pos_global(double t) const;
@@ -220,9 +216,8 @@ namespace TASCAR {
 
     class src_object_t : public object_t {
     public:
-      src_object_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      src_object_t(xmlpp::Element* e);
+      void write_xml();
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
@@ -234,11 +229,18 @@ namespace TASCAR {
 
     class sink_mask_t : public object_t {
     public:
-      sink_mask_t();
-      void read_xml(xmlpp::Element* e);
+      sink_mask_t(xmlpp::Element*);
+      //void read_xml();
       void prepare(double fs, uint32_t fragsize);
       pos_t size;
       double falloff;
+      bool active;
+    };
+
+    class spk_pos_t : public xml_element_t, public pos_t {
+    public:
+      spk_pos_t(xmlpp::Element*);
+      void write_xml();
     };
 
     class sink_object_t : public object_t, public jack_port_t {
@@ -246,24 +248,24 @@ namespace TASCAR {
       enum sink_type_t {
         omni, cardioid, amb3h3v, amb3h0v, nsp
       };
-      sink_object_t();
+      sink_object_t(xmlpp::Element* e);
       sink_object_t(const sink_object_t& src);
       virtual ~sink_object_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e);
+      void write_xml();
       void prepare(double fs, uint32_t fragsize);
       TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
+      std::vector<TASCAR::pos_t> get_spkpos() const;
       sink_type_t sink_type;
-      std::vector<pos_t> spkpos;
+      std::vector<spk_pos_t> spkpos;
       pos_t size;
       double falloff;
       bool render_point;
       bool render_diffuse;
       bool is_direct;
       double diffusegain;
-      bool use_mask;
+      //bool use_mask;
       bool use_global_mask;
       sink_mask_t mask;
       TASCAR::Acousticmodel::sink_t* sink;
@@ -271,9 +273,8 @@ namespace TASCAR {
 
     class range_t : public scene_node_base_t {
     public:
-      range_t();
-      void read_xml(xmlpp::Element* e);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      range_t(xmlpp::Element* e);
+      void write_xml();
       void prepare(double fs, uint32_t fragsize){};
       std::string name;
       double start;
@@ -282,8 +283,8 @@ namespace TASCAR {
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
     public:
-      mask_object_t();
-      void read_xml(xmlpp::Element* e);
+      mask_object_t(xmlpp::Element* e);
+      void write_xml();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
       pos_t xmlsize;
@@ -292,11 +293,11 @@ namespace TASCAR {
 
     class scene_t : public scene_node_base_t {
     public:
-      scene_t();
-      scene_t(const std::string& filename);
-      void read_xml(xmlpp::Element* e);
-      void read_xml(const std::string& filename);
-      void write_xml(xmlpp::Element* e,bool help_comments=false);
+      scene_t(xmlpp::Element* e);
+      //scene_t(const std::string& filename);
+      //void read_xml(xmlpp::Element* e);
+      //void read_xml(const std::string& filename);
+      void write_xml();
       src_object_t* add_source();
       std::vector<sound_t*> linearize_sounds();
       //std::vector<Input::base_t*> linearize_inputs();
@@ -321,14 +322,14 @@ namespace TASCAR {
       //void set_solo(const std::string& name,bool val);
       //bool get_playsound(const sound_t*);
       std::vector<object_t*> get_objects();
-      std::vector<range_t> ranges;
+      //std::vector<range_t> ranges;
       bool loop;
-      std::vector<connection_t> connections;
+      //std::vector<connection_t> connections;
       std::string scene_path;
     };
 
-    scene_t xml_read_scene(const std::string& filename);
-    void xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment="", bool help_comments = false);
+    //scene_t xml_read_scene(const std::string& filename);
+    //void xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment="", bool help_comments = false);
 
   }
 

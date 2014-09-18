@@ -104,9 +104,9 @@ namespace TASCAR {
       };
       sink_data_t* create_sink_data() { return new data_t();};
       sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
-                         pos_t mask_size,
-                         double mask_falloff,
-                         bool mask_use,bool global_mask_use,const std::vector<pos_t>& spkpos);
+                 pos_t mask_size,
+                 double mask_falloff,
+                 bool mask_use,bool global_mask_use,const std::vector<pos_t>& spkpos);
       //void update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain);
       void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*);
       void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*);

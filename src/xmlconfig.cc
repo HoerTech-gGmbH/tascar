@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "errorhandling.h"
 
-TASCAR::scene_node_base_t::scene_node_base_t()
-  : p_xml_element(NULL)
+TASCAR::scene_node_base_t::scene_node_base_t(xmlpp::Element* xmlsrc)
+  : xml_element_t(xmlsrc)
 {
 }
 
@@ -13,81 +14,92 @@ TASCAR::scene_node_base_t::~scene_node_base_t()
 {
 }
 
-void TASCAR::scene_node_base_t::read_xml(xmlpp::Element* e)
+TASCAR::xml_element_t::xml_element_t(xmlpp::Element* src)
+  : e(src)
 {
-  p_xml_element = e;
+  if( !e )
+    throw TASCAR::ErrMsg("Invalid NULL element pointer.");
 }
 
-void TASCAR::scene_node_base_t::get_value(const std::string& name,double& value)
+xmlpp::Element* TASCAR::xml_element_t::find_or_add_child(const std::string& name)
 {
-  if( p_xml_element )
-    get_attribute_value(p_xml_element,name,value);
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == name ))
+      return sne;
+  }
+  return e->add_child(name);
 }
 
-void TASCAR::scene_node_base_t::get_value(const std::string& name,unsigned int& value)
+void TASCAR::xml_element_t::get_attribute(const std::string& name,std::string& value)
 {
-  if( p_xml_element )
-    get_attribute_value(p_xml_element,name,value);
+  value = e->get_attribute_value(name);
 }
 
-void TASCAR::scene_node_base_t::get_value_bool(const std::string& name,bool& value)
+void TASCAR::xml_element_t::get_attribute(const std::string& name,double& value)
 {
-  if( p_xml_element )
-    get_attribute_value_bool(p_xml_element,name,value);
+  get_attribute_value(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::get_value_db(const std::string& name,double& value)
+void TASCAR::xml_element_t::get_attribute(const std::string& name,unsigned int& value)
 {
-  if( p_xml_element )
-    get_attribute_value_db(p_xml_element,name,value);
+  get_attribute_value(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::get_value_db_float(const std::string& name,float& value)
+void TASCAR::xml_element_t::get_attribute_bool(const std::string& name,bool& value)
 {
-  if( p_xml_element )
-    get_attribute_value_db_float(p_xml_element,name,value);
+  get_attribute_value_bool(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::get_value_deg(const std::string& name,double& value)
+void TASCAR::xml_element_t::get_attribute_db(const std::string& name,double& value)
 {
-  if( p_xml_element )
-    get_attribute_value_deg(p_xml_element,name,value);
+  get_attribute_value_db(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::get_value(const std::string& name,TASCAR::pos_t& value)
+void TASCAR::xml_element_t::get_attribute_db_float(const std::string& name,float& value)
 {
-  if( p_xml_element )
-    get_attribute_value(p_xml_element,name,value);
+  get_attribute_value_db_float(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::set_bool(const std::string& name,bool value)
+void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,double& value)
 {
-  if( p_xml_element )
-    set_attribute_bool(p_xml_element,name,value);
+  get_attribute_value_deg(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::set_db(const std::string& name,double value)
+void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::pos_t& value)
 {
-  if( p_xml_element )
-    set_attribute_db(p_xml_element,name,value);
+  get_attribute_value(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::set_double(const std::string& name,double value)
+void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool value)
 {
-  if( p_xml_element )
-    set_attribute_double(p_xml_element,name,value);
+  ::set_attribute_bool(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::set_uint(const std::string& name,unsigned int value)
+void TASCAR::xml_element_t::set_attribute_db(const std::string& name,double value)
 {
-  if( p_xml_element )
-    set_attribute_uint(p_xml_element,name,value);
+  ::set_attribute_db(e,name,value);
 }
 
-void TASCAR::scene_node_base_t::set_value(const std::string& name,const TASCAR::pos_t& value)
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::string& value)
 {
-  if( p_xml_element )
-    set_attribute_value(p_xml_element,name,value);
+  e->set_attribute(name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,double value)
+{
+  set_attribute_double(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,unsigned int value)
+{
+  set_attribute_uint(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::pos_t& value)
+{
+  set_attribute_value(e,name,value);
 }
 
 std::string localgetenv(const std::string& env)
@@ -109,7 +121,6 @@ std::string TASCAR::env_expand( std::string s )
   }
   return s;
 }
-
 
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value)
 {
@@ -139,7 +150,6 @@ void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value)
   sprintf(ctmp,"%1.12g",20.0*log10(value));
   elem->set_attribute(name,ctmp);
 }
-
 
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value)
 {
@@ -201,7 +211,6 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned i
   if( c != attv.c_str() )
     value = tmpv;
 }
-
 
 void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value)
 {
