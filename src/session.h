@@ -3,6 +3,7 @@
 
 #include "xmlconfig.h"
 #include "scene.h"
+#include "audioplayer.h"
 
 namespace TASCAR {
 
@@ -22,12 +23,16 @@ namespace TASCAR {
     TASCAR::Scene::scene_t& add_scene(xmlpp::Element* e=NULL);
     TASCAR::Scene::range_t& add_range(xmlpp::Element* e=NULL);
     TASCAR::Scene::connection_t& add_connection(xmlpp::Element* e=NULL);
+    void write_xml();
+    void start();
+    void stop();
+    void run(bool &b_quit);
   protected:
     // configuration variables:
     std::string name;
     double duration;
     bool loop;
-    std::vector<TASCAR::Scene::scene_t> scenes;
+    std::vector<TASCAR::scene_player_t> player;
     std::vector<TASCAR::Scene::range_t> ranges;
     std::vector<TASCAR::Scene::connection_t> connections;
     // derived variables:

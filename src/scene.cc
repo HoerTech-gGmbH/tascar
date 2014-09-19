@@ -500,6 +500,16 @@ spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
   set_sphere(r,az*DEG2RAD,elev*DEG2RAD);
 }
 
+void spk_pos_t::write_xml()
+{
+  if( azim() != 0.0 )
+    set_attribute("az",azim()*RAD2DEG);
+  if( elev() != 0.0 )
+    set_attribute("el",elev()*RAD2DEG);
+  if( norm() != 1.0 )
+    set_attribute("r",norm());
+}
+
 sink_object_t::sink_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc),jack_port_t(xmlsrc),sink_type(omni),
     falloff(-1.0),
@@ -581,6 +591,14 @@ mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
   get_attribute("size",xmlsize);
   get_attribute("falloff",xmlfalloff);
   get_attribute_bool("inside",mask_inner);
+}
+
+void mask_object_t::write_xml()
+{
+  object_t::write_xml();
+  set_attribute("size",xmlsize);
+  set_attribute("falloff",xmlfalloff);
+  set_attribute_bool("inside",mask_inner);
 }
 
 void mask_object_t::prepare(double fs, uint32_t fragsize)
@@ -962,26 +980,23 @@ void face_object_t::write_xml()
   set_attribute("damping",damping);
 }
 
-//TASCAR::Scene::range_t::range_t()
-//  : name(""),
-//    start(0),
-//    end(0)
-//{
-//}
-//
-//void TASCAR::Scene::range_t::read_xml(xmlpp::Element* e)
-//{
-//  name = e->get_attribute_value("name");
-//  get_attribute_value(e,"start",start);
-//  get_attribute_value(e,"end",end);
-//}
-//
-//void TASCAR::Scene::range_t::write_xml(xmlpp::Element* e,bool help_comments)
-//{
-//  e->set_attribute("name",name);
-//  set_attribute_double(e,"start",start);
-//  set_attribute_double(e,"end",end);
-//}
+TASCAR::Scene::range_t::range_t(xmlpp::Element* xmlsrc)
+  : scene_node_base_t(xmlsrc),
+    name(""),
+    start(0),
+    end(0)
+{
+  name = e->get_attribute_value("name");
+  get_attribute("start",start);
+  get_attribute("end",end);
+}
+
+void TASCAR::Scene::range_t::write_xml(xmlpp::Element* e,bool help_comments)
+{
+  e->set_attribute("name",name);
+  set_attribute_double(e,"start",start);
+  set_attribute_double(e,"end",end);
+}
 
 //void scene_t::set_source_position_offset(const std::string& srcname,pos_t position)
 //{

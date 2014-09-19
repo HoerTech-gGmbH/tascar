@@ -45,6 +45,7 @@
 #include "audioplayer.h"
 #include <unistd.h>
 #include "defs.h"
+#include "session.h"
 
 static bool b_quit;
 
@@ -111,8 +112,9 @@ int main(int argc, char** argv)
       return -1;
     }
     //TASCAR::audioplayer_t P(jackname, cfgfile);
-    TASCAR::scene_player_t S(srv_addr, srv_port, jackname, cfgfile);
-    S.run(b_quit);
+    TASCAR::session_t session(cfgfile);
+    //TASCAR::scene_player_t S(srv_addr, srv_port, jackname, cfgfile);
+    session.run(b_quit);
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;

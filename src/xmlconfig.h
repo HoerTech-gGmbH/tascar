@@ -11,7 +11,7 @@ namespace TASCAR {
   public:
     xml_element_t(xmlpp::Element*);
     virtual ~xml_element_t();
-    std::string get_name() const { return e->get_name(); };
+    std::string get_element_name() const { return e->get_name(); };
     // get attributes:
     void get_attribute(const std::string& name,std::string& value);
     void get_attribute(const std::string& name,double& value);

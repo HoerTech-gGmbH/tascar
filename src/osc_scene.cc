@@ -137,9 +137,9 @@ void osc_scene_t::add_child_methods()
   }
 }
 
-osc_scene_t::osc_scene_t(const std::string& srv_addr, const std::string& srv_port, xmlpp::Element* xmlsrc)
+osc_scene_t::osc_scene_t(xmlpp::Element* xmlsrc)
   : scene_t(xmlsrc),
-    osc_server_t(srv_addr,srv_port)
+    osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port"))
 {
 }
 

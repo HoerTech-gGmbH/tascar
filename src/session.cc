@@ -36,8 +36,8 @@ TASCAR::session_t::session_t(const std::string& filename)
   char c_respath[PATH_MAX];
   memcpy(c_fname,filename.c_str(),filename.size()+1);
   session_path = realpath(dirname(c_fname),c_respath);
-  if( get_name() != "session" )
-    throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_name()+".");
+  if( get_element_name() != "session" )
+    throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
 }
 
 TASCAR::session_t::~session_t()
@@ -48,8 +48,8 @@ TASCAR::Scene::scene_t& TASCAR::session_t::add_scene(xmlpp::Element* src)
 {
   if( !src )
     src = e->add_child("scene");
-  scenes.push_back(TASCAR::Scene::scene_t(src));
-  return scenes.back();
+  player.push_back(TASCAR::scene_player_t(src));
+  return player.back();
 }
 
 TASCAR::Scene::range_t& TASCAR::session_t::add_range(xmlpp::Element* src)
@@ -66,6 +66,37 @@ TASCAR::Scene::connection_t& TASCAR::session_t::add_connection(xmlpp::Element* s
     src = e->add_child("connection");
   connections.push_back(TASCAR::Scene::connection_t(src));
   return connections.back();
+}
+
+void TASCAR::session_t::start()
+{
+  for(std::vector<TASCAR::scene_player_t>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+    ipl->start();
+  jackc_portless_t jc(name+"_session");
+  jc.activate();
+  for(std::vector<TASCAR::Scene::connection_t>::iterator icon=connections.begin();icon!=connections.end();++icon)
+    jc.connect(icon->src,icon->dest);
+  jc.deactivate();
+  //for(uint32_t k=0;k<connections.size();k++)
+  //  connect(connections[k].src,connections[k].dest,true);
+}
+
+void TASCAR::session_t::stop()
+{
+  for(std::vector<TASCAR::scene_player_t>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+    ipl->stop();
+}
+
+void TASCAR::session_t::run(bool &b_quit)
+{
+  start();
+  while( !b_quit ){
+    usleep( 50000 );
+    getchar();
+    if( feof( stdin ) )
+      b_quit = true;
+  }
+  stop();
 }
 
 /*

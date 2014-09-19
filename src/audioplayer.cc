@@ -56,13 +56,13 @@ scene_container_t::~scene_container_t()
     delete scene;
 }
 
-TASCAR::audioplayer_t::audioplayer_t(const std::string& jackname,const std::string& xmlfile)
-  : scene_container_t(xmlfile),jackc_transport_t(jacknamer(jackname,scene->name,"player."))
+TASCAR::audioplayer_t::audioplayer_t(const std::string& xmlfile)
+  : scene_container_t(xmlfile),jackc_transport_t(jacknamer("",scene->name,"player."))
 {
 }
 
-TASCAR::audioplayer_t::audioplayer_t(const std::string& jackname,TASCAR::Scene::scene_t* scenesrc)
-  : scene_container_t(scenesrc),jackc_transport_t(jacknamer(jackname,scene->name,"player."))
+TASCAR::audioplayer_t::audioplayer_t(TASCAR::Scene::scene_t* scenesrc)
+  : scene_container_t(scenesrc),jackc_transport_t(jacknamer("",scene->name,"player."))
 {
 }
 
@@ -150,12 +150,9 @@ void TASCAR::audioplayer_t::run(bool & b_quit)
   stop();
 }
 
-TASCAR::renderer_t::renderer_t(const std::string& srv_addr, 
-                               const std::string& srv_port, 
-                               const std::string& jack_name,
-                               const std::string& cfg_file)
-  : osc_scene_t(srv_addr,srv_port,cfg_file),
-    jackc_transport_t(jacknamer(jack_name,name,"render.")),
+TASCAR::renderer_t::renderer_t(xmlpp::Element* xmlsrc)
+  : osc_scene_t(xmlsrc),
+    jackc_transport_t(jacknamer("",name,"render.")),
     world(NULL),active_pointsources(0),active_diffusesources(0),
     total_pointsources(0),
     total_diffusesources(0)
@@ -317,8 +314,8 @@ void TASCAR::renderer_t::start()
         connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
     }
   }
-  for(uint32_t k=0;k<connections.size();k++)
-    connect(connections[k].src,connections[k].dest,true);
+  //for(uint32_t k=0;k<connections.size();k++)
+  //  connect(connections[k].src,connections[k].dest,true);
 }
 
 void TASCAR::renderer_t::stop()
@@ -343,12 +340,9 @@ void TASCAR::renderer_t::run(bool& b_quit)
 }
 
 
-TASCAR::scene_player_t::scene_player_t(const std::string& srv_addr, 
-                                       const std::string& srv_port, 
-                                       const std::string& jack_name, 
-                                       const std::string& cfg_file)
-  : renderer_t(srv_addr,srv_port,jack_name,cfg_file),
-    player(jack_name,dynamic_cast<TASCAR::Scene::scene_t*>(this))
+TASCAR::scene_player_t::scene_player_t(xmlpp::Element* xmlsrc)
+  : renderer_t(xmlsrc),
+    player(dynamic_cast<TASCAR::Scene::scene_t*>(this))
 {
 }
 

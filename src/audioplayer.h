@@ -21,8 +21,8 @@ namespace TASCAR {
   
   class audioplayer_t : public scene_container_t, public jackc_transport_t  {
   public:
-    audioplayer_t(const std::string& jackname,const std::string& xmlfile="");
-    audioplayer_t(const std::string& jackname,TASCAR::Scene::scene_t*);
+    audioplayer_t(const std::string& xmlfile="");
+    audioplayer_t(TASCAR::Scene::scene_t*);
     virtual ~audioplayer_t();
     void run(bool &b_quit);
     void start();
@@ -35,12 +35,10 @@ namespace TASCAR {
     std::vector<uint32_t> portno;
   };
 
-  class renderer_t : public scene_container_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
+  //class renderer_t : public scene_container_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
+  class renderer_t : public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
   public:
-    renderer_t(const std::string& srv_addr, 
-               const std::string& srv_port, 
-               const std::string& jack_name, 
-               const std::string& cfg_file);
+    renderer_t(xmlpp::Element* xmlsrc);
     virtual ~renderer_t();
     void run(bool &b_quit);
     void start();
@@ -65,10 +63,7 @@ namespace TASCAR {
 
   class scene_player_t : public renderer_t  {
   public:
-    scene_player_t(const std::string& srv_addr, 
-                   const std::string& srv_port, 
-                   const std::string& jack_name, 
-                   const std::string& cfg_file);
+    scene_player_t(xmlpp::Element* xmlsrc);
     void start();
     void stop();
     void run(bool &b_quit);

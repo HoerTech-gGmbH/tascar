@@ -21,6 +21,10 @@ TASCAR::xml_element_t::xml_element_t(xmlpp::Element* src)
     throw TASCAR::ErrMsg("Invalid NULL element pointer.");
 }
 
+TASCAR::xml_element_t::~xml_element_t()
+{
+}
+
 xmlpp::Element* TASCAR::xml_element_t::find_or_add_child(const std::string& name)
 {
   xmlpp::Node::NodeList subnodes = e->get_children();

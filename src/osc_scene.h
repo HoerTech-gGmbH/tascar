@@ -16,7 +16,7 @@ namespace TASCAR {
 
     class osc_scene_t : public TASCAR::Scene::scene_t, public TASCAR::osc_server_t {
     public:
-      osc_scene_t(const std::string& srv_addr, const std::string& srv_port, xmlpp::Element* xmlsrc);
+      osc_scene_t(xmlpp::Element* xmlsrc);
       ~osc_scene_t();
     protected:
       void add_child_methods();
