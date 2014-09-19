@@ -20,12 +20,33 @@ std::string strrep(std::string s,const std::string& pat, const std::string& rep)
 }
 
 scene_container_t::scene_container_t(const std::string& xmlfile)
-  : scene(new TASCAR::Scene::scene_t(xmlfile)),own_pointer(true)
+  : own_pointer(true)
 {
+  xmlpp::DomParser domp(TASCAR::env_expand(xmlfile));
+  xmldoc = domp.get_document();
+  if( !xmldoc )
+    throw TASCAR::ErrMsg("Unable to parse document \""+xmlfile+"\".");
+  xmlpp::Element* scene_node(NULL);
+  xmlpp::Element* root_node(xmldoc->get_root_node());
+  if( !root_node )
+    throw TASCAR::ErrMsg("No root node in document \""+xmlfile+"\".");
+  if( root_node->get_name() != "session" )
+    throw TASCAR::ErrMsg("Expected \"session\" root node, got \""+root_node->get_name()+"\" in document \""+xmlfile+"\".");
+  xmlpp::Node::NodeList subnodes = root_node->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == "scene" )){
+      scene_node = sne;
+      break;
+    }
+  }
+  if( !scene_node )
+    throw TASCAR::ErrMsg("No \"scene\" node in document \""+xmlfile+"\".");
+  scene = new TASCAR::Scene::scene_t(scene_node);
 }
 
 scene_container_t::scene_container_t(TASCAR::Scene::scene_t* scenesrc)
-  : scene(scenesrc),own_pointer(false)
+  : xmldoc(NULL),scene(scenesrc),own_pointer(false)
 {
 }
 

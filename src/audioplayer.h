@@ -14,6 +14,7 @@ namespace TASCAR {
     scene_container_t(TASCAR::Scene::scene_t* scenesrc);
     ~scene_container_t();
   protected:
+    xmlpp::Document* xmldoc;
     TASCAR::Scene::scene_t* scene;
     bool own_pointer;
   };    
@@ -34,7 +35,7 @@ namespace TASCAR {
     std::vector<uint32_t> portno;
   };
 
-  class renderer_t : public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
+  class renderer_t : public scene_container_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
   public:
     renderer_t(const std::string& srv_addr, 
                const std::string& srv_port, 
