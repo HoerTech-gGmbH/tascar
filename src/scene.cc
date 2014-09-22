@@ -980,23 +980,6 @@ void face_object_t::write_xml()
   set_attribute("damping",damping);
 }
 
-TASCAR::Scene::range_t::range_t(xmlpp::Element* xmlsrc)
-  : scene_node_base_t(xmlsrc),
-    name(""),
-    start(0),
-    end(0)
-{
-  name = e->get_attribute_value("name");
-  get_attribute("start",start);
-  get_attribute("end",end);
-}
-
-void TASCAR::Scene::range_t::write_xml(xmlpp::Element* e,bool help_comments)
-{
-  e->set_attribute("name",name);
-  set_attribute_double(e,"start",start);
-  set_attribute_double(e,"end",end);
-}
 
 //void scene_t::set_source_position_offset(const std::string& srcname,pos_t position)
 //{

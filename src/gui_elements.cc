@@ -457,7 +457,7 @@ void scene_draw_t::draw_sink_object(TASCAR::Scene::sink_object_t* obj,Cairo::Ref
     cr->line_to( p9.x, -p9.y );
     //cr->fill();
     cr->stroke();
-    if( obj->use_mask ){
+    if( obj->mask.active ){
       cr->set_line_width( 0.1*msize );
       pos_t p(obj->mask.get_location(time));
       zyx_euler_t o(obj->mask.get_orientation(time));

@@ -37,6 +37,7 @@
 #include "viewport.h"
 #include <limits>
 #include "gui_elements.h"
+#include "session.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -58,43 +59,6 @@ void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
     cr->move_to(p1.x,-p1.y);
     cr->line_to(p2.x,-p2.y);
   }
-}
-
-class g_scene_t : public osc_scene_t {
-public:
-  g_scene_t(const std::string& cfg_file, const std::string& flags,bool nobackend, 
-            const std::string& srv_addr, const std::string& srv_port);
-  ~g_scene_t();
-private:
-  FILE* h_pipe;
-};
-
-g_scene_t::g_scene_t(const std::string& cfg_file, const std::string& flags,bool nobackend, 
-                     const std::string& srv_addr, const std::string& srv_port)
-  : osc_scene_t(srv_addr,srv_port,cfg_file),
-    h_pipe(NULL)
-{
-  if( !nobackend ){
-    char ctmp[1024];
-    sprintf(ctmp,"tascar_renderer %s -c %s 2>&1",flags.c_str(),cfg_file.c_str());
-    h_pipe = popen( ctmp, "w" );
-    if( !h_pipe )
-      throw ErrMsg("Unable to open renderer pipe (tascar_renderer -c <filename>).");
-  }
-  linearize_sounds();
-  for( std::vector<src_object_t>::iterator i=object_sources.begin();i!=object_sources.end();++i)
-    i->location.fill_gaps(0.25);
-  for( std::vector<sink_object_t>::iterator i=sink_objects.begin();i!=sink_objects.end();++i)
-    i->location.fill_gaps(0.25);
-  add_child_methods();
-  activate();
-}
-
-g_scene_t::~g_scene_t()
-{
-  deactivate();
-  if( h_pipe )
-    pclose( h_pipe );
 }
 
 class tascar_gui_t : public jackc_transport_t
@@ -120,7 +84,7 @@ protected:
   bool on_timeout_blink();
   void on_time_changed();
   void on_tp_start(){
-    if( scene && (guitime >= scene->duration) )
+    if( scene && (guitime >= scene->get_duration()) )
       tp_locate(0.0);
     tp_start();
   };
@@ -170,7 +134,7 @@ public:
 #endif
 private:
   pthread_mutex_t mtx_scene;
-  g_scene_t* scene;
+  session_t* scene;
   std::string srv_addr_;
   std::string srv_port_;
   std::string cfg_file_;
@@ -245,7 +209,9 @@ void tascar_gui_t::open_scene()
   rangeselector.set_active_text("- scene -");
   selected_range = -1;
   if( cfg_file_.size() ){
-    scene = new g_scene_t(cfg_file_, backend_flags_,nobackend_,srv_addr_,srv_port_);
+    scene = new session_t(cfg_file_);
+    if( scene->player.size() != 1 )
+      throw TASCAR::ErrMsg("This program supports only a single scene.");
     timescale.set_range(0,scene->duration);
     for(unsigned int k=0;k<scene->ranges.size();k++){
       timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
@@ -256,11 +222,11 @@ void tascar_gui_t::open_scene()
       rangeselector.append(scene->ranges[k].name);
 #endif
     }
-    set_scale(scene->guiscale);
+    set_scale(scene->player[0].guiscale);
     button_loop.set_active(scene->loop);
   }
-  wdg_source.set_scene( scene );
-  draw.set_scene(scene);
+  wdg_source.set_scene( &(scene->player[0]) );
+  draw.set_scene( &(scene->player[0]) );
   pthread_mutex_unlock( &mtx_scene );
 }
 
@@ -283,8 +249,8 @@ void tascar_gui_t::on_view_p()
 {
   pthread_mutex_lock( &mtx_scene );
   if( scene ){
-    scene->guiscale /= 1.2;
-    set_scale(scene->guiscale);
+    scene->player[0].guiscale /= 1.2;
+    set_scale(scene->player[0].guiscale);
   }
   pthread_mutex_unlock( &mtx_scene );
 }
@@ -293,8 +259,8 @@ void tascar_gui_t::on_view_m()
 {
   pthread_mutex_lock( &mtx_scene );
   if( scene ){
-    scene->guiscale *= 1.2;
-    set_scale(scene->guiscale);
+    scene->player[0].guiscale *= 1.2;
+    set_scale(scene->player[0].guiscale);
   }
   pthread_mutex_unlock( &mtx_scene );
 }

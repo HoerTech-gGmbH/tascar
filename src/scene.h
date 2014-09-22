@@ -125,14 +125,6 @@ namespace TASCAR {
 
     class src_object_t;
 
-    class connection_t : public TASCAR::xml_element_t {
-    public:
-      connection_t(xmlpp::Element*);
-      void write_xml();
-      std::string src;
-      std::string dest;
-    };
-
     class jack_port_t : public TASCAR::xml_element_t {
     public:
       jack_port_t(xmlpp::Element* e);
@@ -269,16 +261,6 @@ namespace TASCAR {
       bool use_global_mask;
       sink_mask_t mask;
       TASCAR::Acousticmodel::sink_t* sink;
-    };
-
-    class range_t : public scene_node_base_t {
-    public:
-      range_t(xmlpp::Element* e);
-      void write_xml();
-      void prepare(double fs, uint32_t fragsize){};
-      std::string name;
-      double start;
-      double end;
     };
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
