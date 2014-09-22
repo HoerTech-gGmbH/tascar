@@ -5,6 +5,47 @@
 #include <limits.h>
 #include <stdlib.h>
 #include "errorhandling.h"
+#include <dlfcn.h>
+
+TASCAR::module_t::module_t(xmlpp::Element* xmlsrc)
+  : xml_element_t(xmlsrc),lib(NULL),
+    create_cb(NULL),
+    destroy_cb(NULL),
+    write_xml_cb(NULL)
+{
+  get_attribute("name",name);
+  std::string libname("tascar_");
+  libname += name + ".so";
+  lib = dlopen(libname.c_str(), RTLD_NOW );
+  if( !lib )
+    throw TASCAR::ErrMsg("Unable to open module \""+name+"\": "+dlerror());
+  try{
+    create_cb = (module_create_t)dlsym(lib,"tascar_create");
+    if( !create_cb )
+      throw TASCAR::ErrMsg("Unable to resolve \"tascar_create\" in module \""+name+"\".");
+    destroy_cb = (module_destroy_t)dlsym(lib,"tascar_destroy");
+    if( !destroy_cb )
+      throw TASCAR::ErrMsg("Unable to resolve \"tascar_destroy\" in module \""+name+"\".");
+    write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
+    libdata = create_cb(xmlsrc);
+  }
+  catch( ... ){
+    dlclose(lib);
+    throw;
+  }
+}
+
+void TASCAR::module_t::write_xml()
+{
+  if( write_xml_cb )
+    write_xml_cb(libdata);
+}
+
+TASCAR::module_t::~module_t()
+{
+  destroy_cb(libdata);
+  dlclose(lib);
+}
 
 xmlpp::Element* assert_element(xmlpp::Element* e)
 {
@@ -89,6 +130,8 @@ void TASCAR::session_t::read_xml()
       add_range(sne);
     if( sne && ( sne->get_name() == "connection"))
       add_connection(sne);
+    if( sne && ( sne->get_name() == "module"))
+      add_module(sne);
   }
 }
 
@@ -99,6 +142,8 @@ void TASCAR::session_t::write_xml()
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
     (*it)->write_xml();
   for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
+    (*it)->write_xml();
+  for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
     (*it)->write_xml();
 }
 
@@ -134,6 +179,14 @@ TASCAR::connection_t* TASCAR::session_t::add_connection(xmlpp::Element* src)
     src = e->add_child("connection");
   connections.push_back(new TASCAR::connection_t(src));
   return connections.back();
+}
+
+TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
+{
+  if( !src )
+    src = e->add_child("module");
+  modules.push_back(new TASCAR::module_t(src));
+  return modules.back();
 }
 
 void TASCAR::session_t::start()
@@ -173,7 +226,7 @@ void TASCAR::session_t::run(bool &b_quit)
 uint32_t TASCAR::session_t::get_active_pointsources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.begin();++it)
+  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
     rv += (*it)->active_pointsources;
   return rv;
 }
@@ -181,7 +234,7 @@ uint32_t TASCAR::session_t::get_active_pointsources() const
 uint32_t TASCAR::session_t::get_total_pointsources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.begin();++it)
+  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
     rv += (*it)->total_pointsources;
   return rv;
 }
@@ -189,7 +242,7 @@ uint32_t TASCAR::session_t::get_total_pointsources() const
 uint32_t TASCAR::session_t::get_active_diffusesources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.begin();++it)
+  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
     rv += (*it)->active_diffusesources;
   return rv;
 }
@@ -197,7 +250,7 @@ uint32_t TASCAR::session_t::get_active_diffusesources() const
 uint32_t TASCAR::session_t::get_total_diffusesources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.begin();++it)
+  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
     rv += (*it)->total_diffusesources;
   return rv;
 }

@@ -7,6 +7,24 @@
 
 namespace TASCAR {
 
+  typedef void* (*module_create_t)(xmlpp::Element* xmlsrc);
+  typedef void (*module_destroy_t)(void* h);
+  typedef void (*module_write_xml_t)(void* h);
+
+  class module_t : public TASCAR::xml_element_t {
+  public:
+    module_t(xmlpp::Element* xmlsrc);
+    void write_xml();
+    virtual ~module_t();
+  private:
+    std::string name;
+    void* lib;
+    void* libdata;
+    module_create_t create_cb;
+    module_destroy_t destroy_cb;
+    module_write_xml_t write_xml_cb;
+  };
+
   class xml_doc_t {
   public:
     xml_doc_t();
@@ -46,6 +64,7 @@ namespace TASCAR {
     TASCAR::Scene::scene_t* add_scene(xmlpp::Element* e=NULL);
     TASCAR::range_t* add_range(xmlpp::Element* e=NULL);
     TASCAR::connection_t* add_connection(xmlpp::Element* e=NULL);
+    TASCAR::module_t* add_module(xmlpp::Element* e=NULL);
     void write_xml();
     void start();
     void stop();
@@ -63,6 +82,7 @@ namespace TASCAR {
     std::vector<TASCAR::scene_player_t*> player;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;
+    std::vector<TASCAR::module_t*> modules;
   protected:
     // derived variables:
     std::string session_path;

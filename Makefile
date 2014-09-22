@@ -60,7 +60,7 @@ tascar_gui tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 tascar_gui tascar_pdf: EXTERNALS += $(GTKEXT)
 #tascar_gui: gui_elements.o
 
-LDLIBS += -ltascar
+LDLIBS += -ltascar -ldl
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
