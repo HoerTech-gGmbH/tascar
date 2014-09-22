@@ -149,7 +149,7 @@ private:
 void tascar_gui_t::on_tp_rewind()
 {
   if( scene && (selected_range >= 0) && (selected_range<(int32_t)(scene->ranges.size())) ){
-    tp_locate(scene->ranges[selected_range].start);
+    tp_locate(scene->ranges[selected_range]->start);
   }else{
     tp_locate(0.0);
   }
@@ -170,9 +170,9 @@ void tascar_gui_t::on_range_selected()
     std::string rg(rangeselector.get_active_text());
     
     for(unsigned int k=0;k<scene->ranges.size();k++)
-      if( scene->ranges[k].name == rg ){
+      if( scene->ranges[k]->name == rg ){
         nr = k;
-        tp_locate(scene->ranges[k].start);
+        tp_locate(scene->ranges[k]->start);
       }
   }
   selected_range = nr;
@@ -214,19 +214,19 @@ void tascar_gui_t::open_scene()
       throw TASCAR::ErrMsg("This program supports only a single scene.");
     timescale.set_range(0,scene->duration);
     for(unsigned int k=0;k<scene->ranges.size();k++){
-      timescale.add_mark(scene->ranges[k].start,Gtk::POS_BOTTOM,"");
-      timescale.add_mark(scene->ranges[k].end,Gtk::POS_BOTTOM,"");
+      timescale.add_mark(scene->ranges[k]->start,Gtk::POS_BOTTOM,"");
+      timescale.add_mark(scene->ranges[k]->end,Gtk::POS_BOTTOM,"");
 #ifdef GTKMM24
-      rangeselector.append_text(scene->ranges[k].name);
+      rangeselector.append_text(scene->ranges[k]->name);
 #else
-      rangeselector.append(scene->ranges[k].name);
+      rangeselector.append(scene->ranges[k]->name);
 #endif
     }
-    set_scale(scene->player[0].guiscale);
+    set_scale(scene->player[0]->guiscale);
     button_loop.set_active(scene->loop);
   }
-  wdg_source.set_scene( &(scene->player[0]) );
-  draw.set_scene( &(scene->player[0]) );
+  wdg_source.set_scene( (scene->player[0]) );
+  draw.set_scene( (scene->player[0]) );
   pthread_mutex_unlock( &mtx_scene );
 }
 
@@ -249,8 +249,8 @@ void tascar_gui_t::on_view_p()
 {
   pthread_mutex_lock( &mtx_scene );
   if( scene ){
-    scene->player[0].guiscale /= 1.2;
-    set_scale(scene->player[0].guiscale);
+    scene->player[0]->guiscale /= 1.2;
+    set_scale(scene->player[0]->guiscale);
   }
   pthread_mutex_unlock( &mtx_scene );
 }
@@ -259,8 +259,8 @@ void tascar_gui_t::on_view_m()
 {
   pthread_mutex_lock( &mtx_scene );
   if( scene ){
-    scene->player[0].guiscale *= 1.2;
-    set_scale(scene->player[0].guiscale);
+    scene->player[0]->guiscale *= 1.2;
+    set_scale(scene->player[0]->guiscale);
   }
   pthread_mutex_unlock( &mtx_scene );
 }
@@ -487,10 +487,10 @@ int tascar_gui_t::process(jack_nframes_t nframes,
   set_time((double)tp_frame/get_srate());
   if( scene ){
     if( (selected_range >= 0) && (selected_range < (int32_t)(scene->ranges.size())) ){
-      if( (scene->ranges[selected_range].end <= time) && 
-          (scene->ranges[selected_range].end + (double)nframes/(double)srate > time) ){
+      if( (scene->ranges[selected_range]->end <= time) && 
+          (scene->ranges[selected_range]->end + (double)nframes/(double)srate > time) ){
         if( scene->loop ){
-          tp_locate(scene->ranges[selected_range].start);
+          tp_locate(scene->ranges[selected_range]->start);
         }else
           tp_stop();
       }

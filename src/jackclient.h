@@ -39,6 +39,8 @@ public:
   void tp_stop();
   void tp_locate(uint32_t p);
   void tp_locate(double t_sec);
+  uint32_t tp_get_frame() const;
+  double tp_get_time() const;
   void activate();
   void deactivate();
   std::string get_client_name();

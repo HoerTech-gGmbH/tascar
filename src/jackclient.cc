@@ -56,6 +56,16 @@ jackc_portless_t::~jackc_portless_t()
   }
 }
 
+uint32_t jackc_portless_t::tp_get_frame() const
+{
+  return jack_get_current_transport_frame(jc);
+}
+
+double jackc_portless_t::tp_get_time() const
+{
+  return (1.0/(double)srate)*(double)tp_get_frame();
+}
+
 void jackc_portless_t::activate()
 {
   jack_activate(jc);

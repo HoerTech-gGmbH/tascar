@@ -1098,10 +1098,10 @@ void src_door_t::process_active(double t, uint32_t anysolo)
 }
 
 
-std::string jacknamer(const std::string& jackname,const std::string& scenename, const std::string& base)
+std::string jacknamer(const std::string& scenename, const std::string& base)
 {
-  if( jackname.size() )
-    return jackname;
+  if( scenename.empty() )
+    return base+"tascar";
   return base+scenename;
 }
 

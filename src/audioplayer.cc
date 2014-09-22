@@ -57,12 +57,12 @@ scene_container_t::~scene_container_t()
 }
 
 TASCAR::audioplayer_t::audioplayer_t(const std::string& xmlfile)
-  : scene_container_t(xmlfile),jackc_transport_t(jacknamer("",scene->name,"player."))
+  : scene_container_t(xmlfile),jackc_transport_t(jacknamer(scene->name,"player."))
 {
 }
 
 TASCAR::audioplayer_t::audioplayer_t(TASCAR::Scene::scene_t* scenesrc)
-  : scene_container_t(scenesrc),jackc_transport_t(jacknamer("",scene->name,"player."))
+  : scene_container_t(scenesrc),jackc_transport_t(jacknamer(scene->name,"player."))
 {
 }
 
@@ -122,12 +122,20 @@ void TASCAR::audioplayer_t::open_files()
 
 void TASCAR::audioplayer_t::start()
 {
+  if( !scene )
+    throw TASCAR::ErrMsg("Invalid (NULL) scene pointer.");
+  DEBUG(get_srate());
+  DEBUG(get_fragsize());
+  DEBUG(scene);
   // first prepare all nodes for audio processing:
   scene->prepare(get_srate(), get_fragsize());
+  DEBUG(1);
   open_files();
+  DEBUG(1);
   for(uint32_t k=0;k<files.size();k++)
     files[k].start_service();
   jackc_t::activate();
+  DEBUG(1);
 }
 
 
@@ -152,7 +160,7 @@ void TASCAR::audioplayer_t::run(bool & b_quit)
 
 TASCAR::renderer_t::renderer_t(xmlpp::Element* xmlsrc)
   : osc_scene_t(xmlsrc),
-    jackc_transport_t(jacknamer("",name,"render.")),
+    jackc_transport_t(jacknamer(name,"render.")),
     world(NULL),active_pointsources(0),active_diffusesources(0),
     total_pointsources(0),
     total_diffusesources(0)
