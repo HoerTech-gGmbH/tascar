@@ -566,6 +566,9 @@ void track_t::write_xml( xmlpp::Element* a)
     a->set_attribute("interpolation","spherical");
     break;
   }
+  xmlpp::Node::NodeList ch = a->get_children();
+  for(xmlpp::Node::NodeList::reverse_iterator sn=ch.rbegin();sn!=ch.rend();++sn)
+    a->remove_child(*sn);
   a->add_child_text(print_cart(" "));
 }
 
