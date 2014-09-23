@@ -10,6 +10,7 @@
 #include <locale.h>
 #include <libgen.h>
 #include <unistd.h>
+#include <fnmatch.h>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -1105,6 +1106,15 @@ std::string jacknamer(const std::string& scenename, const std::string& base)
   return base+scenename;
 }
 
+std::vector<TASCAR::Scene::object_t*> TASCAR::Scene::scene_t::find_object(const std::string& pattern)
+{
+  std::vector<TASCAR::Scene::object_t*> retv;
+  std::vector<TASCAR::Scene::object_t*> objs(get_objects());
+  for(std::vector<TASCAR::Scene::object_t*>::iterator it=objs.begin();it!=objs.end();++it)
+    if( fnmatch(pattern.c_str(),(*it)->get_name().c_str(),FNM_PATHNAME) == 0 )
+      retv.push_back(*it);
+  return retv;
+}
 
 /*
  * Local Variables:

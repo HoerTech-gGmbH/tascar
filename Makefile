@@ -45,7 +45,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
 
 #GTKMMBIN = tascar_gui
 
-CXXFLAGS += -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
+CXXFLAGS += -fPIC -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 #EXTERNALS = jack liblo sndfile
 

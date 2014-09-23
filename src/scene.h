@@ -296,6 +296,7 @@ namespace TASCAR {
       std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
       std::vector<mask_object_t> masks;
+      std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;
       double guiscale;
       pos_t guicenter;

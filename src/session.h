@@ -7,19 +7,31 @@
 
 namespace TASCAR {
 
-  typedef void* (*module_create_t)(xmlpp::Element* xmlsrc);
-  typedef void (*module_destroy_t)(void* h);
-  typedef void (*module_write_xml_t)(void* h);
+  class session_t;
+
+  class module_base_t : public xml_element_t {
+  public:
+    module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session_);
+    virtual void write_xml();
+    virtual ~module_base_t();
+  protected:
+    TASCAR::session_t* session;
+  };
+
+  typedef void (*module_error_t)(std::string errmsg);
+  typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
+  typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
+  typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
 
   class module_t : public TASCAR::xml_element_t {
   public:
-    module_t(xmlpp::Element* xmlsrc);
+    module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
     void write_xml();
     virtual ~module_t();
   private:
     std::string name;
     void* lib;
-    void* libdata;
+    TASCAR::module_base_t* libdata;
     module_create_t create_cb;
     module_destroy_t destroy_cb;
     module_write_xml_t write_xml_cb;
@@ -75,6 +87,7 @@ namespace TASCAR {
     uint32_t get_total_pointsources() const;
     uint32_t get_active_diffusesources() const;
     uint32_t get_total_diffusesources() const;
+    std::vector<TASCAR::Scene::object_t*> find_objects(const std::string& pattern);
     //double get_time() const;
     // configuration variables:
     std::string name;
@@ -92,6 +105,42 @@ namespace TASCAR {
   };
 
 }
+
+#define REGISTER_MODULE(x)                                              \
+  extern "C" {                                                          \
+    TASCAR::module_base_t* tascar_create(xmlpp::Element* xmlsrc,TASCAR::session_t* session,TASCAR::module_error_t errfun) \
+    {                                                                   \
+      try {                                                             \
+        return new x(xmlsrc,session);                                   \
+      }                                                                 \
+      catch(const std::exception& e){                                   \
+        errfun(e.what());                                               \
+        return NULL;                                                    \
+      }                                                                 \
+    }                                                                   \
+    void tascar_destroy(TASCAR::module_base_t* h,TASCAR::module_error_t errfun) \
+    {                                                                   \
+      x* ptr(dynamic_cast<x*>(h));                                      \
+      if( ptr )                                                         \
+        delete ptr;                                                     \
+      else                                                              \
+        errfun("Invalid library class pointer (destroy).");             \
+    }                                                                   \
+    void tascar_write_xml(TASCAR::module_base_t* h,TASCAR::module_error_t errfun) \
+    {                                                                   \
+      x* ptr(dynamic_cast<x*>(h));                                      \
+      if( ptr ){                                                        \
+        try {                                                           \
+          ptr->write_xml();                                             \
+        }                                                               \
+        catch(const std::exception&e ){                                 \
+          errfun(e.what());                                             \
+        }                                                               \
+      }else                                                             \
+        errfun("Invalid library class pointer (write_xml).");           \
+    }                                                                   \
+  }
+
 
 #endif
 
