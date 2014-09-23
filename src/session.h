@@ -29,7 +29,7 @@ namespace TASCAR {
   public:
     xml_doc_t();
     xml_doc_t(const std::string& filename);
-    void save(const std::string& filename);
+    virtual void save(const std::string& filename);
   protected:
     xmlpp::DomParser domp;
     xmlpp::Document* doc;
@@ -65,6 +65,7 @@ namespace TASCAR {
     TASCAR::range_t* add_range(xmlpp::Element* e=NULL);
     TASCAR::connection_t* add_connection(xmlpp::Element* e=NULL);
     TASCAR::module_t* add_module(xmlpp::Element* e=NULL);
+    virtual void save(const std::string& filename);
     void write_xml();
     void start();
     void stop();

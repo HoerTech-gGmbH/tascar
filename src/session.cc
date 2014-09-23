@@ -8,7 +8,9 @@
 #include <dlfcn.h>
 
 TASCAR::module_t::module_t(xmlpp::Element* xmlsrc)
-  : xml_element_t(xmlsrc),lib(NULL),
+  : xml_element_t(xmlsrc),
+    lib(NULL),
+    libdata(NULL),
     create_cb(NULL),
     destroy_cb(NULL),
     write_xml_cb(NULL)
@@ -27,7 +29,9 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc)
     if( !destroy_cb )
       throw TASCAR::ErrMsg("Unable to resolve \"tascar_destroy\" in module \""+name+"\".");
     write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
+    DEBUG(1);
     libdata = create_cb(xmlsrc);
+    DEBUG(libdata);
   }
   catch( ... ){
     dlclose(lib);
@@ -37,12 +41,14 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc)
 
 void TASCAR::module_t::write_xml()
 {
+  DEBUG(write_xml_cb);
   if( write_xml_cb )
     write_xml_cb(libdata);
 }
 
 TASCAR::module_t::~module_t()
 {
+  DEBUG(libdata);
   destroy_cb(libdata);
   dlclose(lib);
 }
@@ -135,8 +141,16 @@ void TASCAR::session_t::read_xml()
   }
 }
 
+
+void TASCAR::session_t::save(const std::string& filename)
+{
+  write_xml();
+  xml_doc_t::save(filename);
+}
+
 void TASCAR::session_t::write_xml()
 {
+  DEBUG(1);
   for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
     (*it)->write_xml();
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
@@ -145,6 +159,7 @@ void TASCAR::session_t::write_xml()
     (*it)->write_xml();
   for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
     (*it)->write_xml();
+  DEBUG(1);
 }
 
 TASCAR::session_t::~session_t()
@@ -154,6 +169,8 @@ TASCAR::session_t::~session_t()
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
     delete (*it);
   for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
+    delete (*it);
+  for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
     delete (*it);
 }
 
