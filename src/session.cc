@@ -140,7 +140,7 @@ void TASCAR::session_t::read_xml()
       add_scene(sne);
     if( sne && ( sne->get_name() == "range"))
       add_range(sne);
-    if( sne && ( sne->get_name() == "connection"))
+    if( sne && ( sne->get_name() == "connect"))
       add_connection(sne);
     if( sne && ( sne->get_name() == "module"))
       add_module(sne);
@@ -199,7 +199,7 @@ TASCAR::range_t* TASCAR::session_t::add_range(xmlpp::Element* src)
 TASCAR::connection_t* TASCAR::session_t::add_connection(xmlpp::Element* src)
 {
   if( !src )
-    src = e->add_child("connection");
+    src = e->add_child("connect");
   connections.push_back(new TASCAR::connection_t(src));
   return connections.back();
 }
@@ -215,10 +215,16 @@ TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
 void TASCAR::session_t::start()
 {
   activate();
-  for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon)
-    connect((*icon)->src,(*icon)->dest);
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->start();
+  for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
+    try{
+      connect((*icon)->src,(*icon)->dest);
+    }
+    catch(const std::exception& e){
+      std::cerr << "Warning: " << e.what() << std::endl;
+    }
+  }
 }
 
 void TASCAR::session_t::stop()

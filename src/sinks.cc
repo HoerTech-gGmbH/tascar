@@ -229,9 +229,9 @@ sink_nsp_t::sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_po
   : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
 {
   if( spkpos_.size() > MAX_VBAP_CHANNELS )
-    throw TASCAR::ErrMsg("number of VBAP channels is to large");
+    throw TASCAR::ErrMsg("number of VBAP channels is to large.");
   if( !spkpos_.size() )
-    throw TASCAR::ErrMsg("at least one speaker required in nsp panning");
+    throw TASCAR::ErrMsg("at least one speaker required in nsp panning.");
   outchannels = std::vector<wave_t>(spkpos_.size(),wave_t(chunksize));
   for(uint32_t k=0;k<spkpos_.size();k++)
     spkpos.push_back(spkpos_[k].normal());

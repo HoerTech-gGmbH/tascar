@@ -267,9 +267,13 @@ void sink_object_t::geometry_update(double t)
 
 std::vector<TASCAR::pos_t> sink_object_t::get_spkpos() const
 {
+  DEBUG(spkpos.size());
   std::vector<TASCAR::pos_t> r;
-  for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it)
+  for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it){
+    DEBUG(it->print_cart());
     r.push_back(*it);
+  }
+  DEBUG(r.size());
   return r;
 }
 
@@ -547,8 +551,9 @@ sink_object_t::sink_object_t(xmlpp::Element* xmlsrc)
   xmlpp::Node::NodeList subnodes = object_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "speaker" ))
+    if( sne && ( sne->get_name() == "speaker" )){
       spkpos.push_back(spk_pos_t(sne));
+    }
   }
 }
 
@@ -556,6 +561,8 @@ sink_object_t::sink_object_t(const sink_object_t& src)
   : object_t(src),
     jack_port_t(src),
     sink_type(src.sink_type),
+    spkpos(src.spkpos),
+    size(src.size),
     falloff(src.falloff),
     render_point(src.render_point),
     render_diffuse(src.render_diffuse),
@@ -771,6 +778,8 @@ std::vector<object_t*> scene_t::get_objects()
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     r.push_back(&(*it));
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    r.push_back(&(*it));
+  for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
     r.push_back(&(*it));
   return r;
 }
