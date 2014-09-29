@@ -9,7 +9,7 @@
 using namespace TASCAR;
 
 wave_t::wave_t(uint32_t chunksize)
-  : d(new float[chunksize]),
+  : d(new float[std::max(1u,chunksize)]),
     n(chunksize), own_pointer(true)
 {
   clear();
@@ -22,7 +22,7 @@ wave_t::wave_t(uint32_t chunksize,float* ptr)
 }
 
 wave_t::wave_t(const wave_t& src)
-  : d(new float[src.n]),
+  : d(new float[std::max(1u,src.n)]),
     n(src.n), own_pointer(true)
 {
   for(uint32_t k=0;k<n;k++)
@@ -138,6 +138,18 @@ void sndfile_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave
 {
   for(int32_t k=std::max(start_time,chunk_time);k < std::min(start_time+(int32_t)(size()),chunk_time+(int32_t)(chunk.size()));k++)
     chunk[k-chunk_time] += gain*d[k-start_time];
+}
+
+void wave_t::copy(const wave_t& src)
+{
+  memmove(d,src.d,std::min(n,src.n)*sizeof(float));
+}
+
+void wave_t::operator*=(const wave_t& o)
+{
+  for(unsigned int k=0;k<std::min(o.n,n);k++){
+    d[k] *= o.d[k];
+  }
 }
 
 /*

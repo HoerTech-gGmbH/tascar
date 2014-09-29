@@ -19,11 +19,13 @@ namespace TASCAR {
     inline const float& operator[](uint32_t k) const {return d[k];};
     inline uint32_t size() const { return n;};
     void clear();
+    void copy(const wave_t& src);
     uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
-    void operator+=(const wave_t& o);
     float rms() const;
     void operator*=(double v);
+    void operator+=(const wave_t& o);
+    void operator*=(const wave_t& src);
     float* d;
     uint32_t n;
     bool own_pointer;
