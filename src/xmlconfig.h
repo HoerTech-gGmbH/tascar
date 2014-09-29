@@ -7,6 +7,8 @@
 
 namespace TASCAR {
 
+  std::string default_string(const std::string& src,const std::string& def);
+
   class xml_element_t {
   public:
     xml_element_t(xmlpp::Element*);
@@ -56,6 +58,9 @@ void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value)
 void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value);
+
+#define GET_ATTRIBUTE(x) get_attribute(#x,x)
+#define SET_ATTRIBUTE(x) set_attribute(#x,x)
 
 #endif
 

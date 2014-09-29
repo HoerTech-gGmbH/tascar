@@ -5,6 +5,13 @@
 #include <math.h>
 #include "errorhandling.h"
 
+std::string TASCAR::default_string(const std::string& src,const std::string& def)
+{
+  if( src.empty() )
+    return def;
+  return src;
+}
+
 TASCAR::scene_node_base_t::scene_node_base_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc)
 {

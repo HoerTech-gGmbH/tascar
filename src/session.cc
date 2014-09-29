@@ -343,6 +343,11 @@ std::vector<TASCAR::Scene::object_t*> TASCAR::session_t::find_objects(const std:
   return retv;
 }
 
+const std::string& TASCAR::session_t::get_session_path() const
+{
+  return session_path;
+}
+
 /*
  * Local Variables:
  * mode: c++

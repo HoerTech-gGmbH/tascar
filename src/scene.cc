@@ -399,16 +399,14 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),
     description(""),
     name(""),
-    duration(60),mirrororder(1),
-    guiscale(200),anysolo(0),loop(false),
+    mirrororder(1),
+    guiscale(200),anysolo(0),
     scene_path("")
 {
   get_attribute("name",name);
   get_attribute("mirrororder",mirrororder);
-  get_attribute("duration",duration);
   get_attribute("guiscale",guiscale);
   get_attribute("guicenter",guicenter);
-  get_attribute_bool("loop",loop);
   description = xml_get_text(e,"description");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -424,45 +422,33 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         sink_objects.push_back(sink_object_t(sne));
       else if( sne->get_name() == "face" )
         faces.push_back(face_object_t(sne));
-      //if( sne->get_name() == "range" )
-      //  ranges.push_back(range_t());
-      //  ranges.rbegin()->read_xml(sne);
-      //}
       else if( sne->get_name() == "mask" )
         masks.push_back(mask_object_t(sne));
       else
         std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
-      //if( sne->get_name() == "connect" ){
-      //  connection_t c;
-      //  c.src = sne->get_attribute_value("src");
-      //  c.dest = sne->get_attribute_value("dest");
-      //  connections.push_back(c);
-      //}
-//      if( sne->get_name() == "include" ){
-//        std::string fname(sne->get_attribute_value("name"));
-//        scene_t inc_scene(fname);
-//#define COPYOBJ(x) x.insert(x.end(),inc_scene.x.begin(),inc_scene.x.end())
-//        COPYOBJ(object_sources);
-//        COPYOBJ(diffuse_sources);
-//        COPYOBJ(door_sources);
-//        COPYOBJ(faces);
-//        COPYOBJ(sink_objects);
-//      }
     }
   }
 }
 
-//scene_t::scene_t(const std::string& filename)
-//  : description(""),
-//    name(""),
-//    duration(60),mirrororder(1),
-//    guiscale(200),anysolo(0),loop(false),
-//    scene_path("")
-//{
-//  setlocale(LC_ALL,"C");
-//  if( filename.size() )
-//    read_xml(TASCAR::env_expand(filename));
-//}
+void scene_t::write_xml()
+{
+  set_attribute("name",name);
+  set_attribute("mirrororder",mirrororder);
+  set_attribute("guiscale",guiscale);
+  set_attribute("guicenter",guicenter);
+  if( description.size()){
+    xmlpp::Element* description_node = find_or_add_child("description");
+    description_node->add_child_text(description);
+  }
+  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    it->write_xml();
+  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    it->write_xml();
+  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+    it->write_xml();
+  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
+    it->write_xml();
+}
 
 void scene_t::geometry_update(double t)
 {
@@ -700,35 +686,6 @@ void sink_object_t::prepare(double fs, uint32_t fragsize)
   }
 }
 
-void scene_t::write_xml()
-{
-  set_attribute("name",name);
-  set_attribute("duration",duration);
-  set_attribute("guiscale",guiscale);
-  set_attribute("guicenter",guicenter);
-  set_attribute_bool("loop",loop);
-  if( description.size()){
-    xmlpp::Element* description_node = find_or_add_child("description");
-    description_node->add_child_text(description);
-  }
-  //for(std::vector<range_t>::iterator it=ranges.begin();it!=ranges.end();++it){
-  //  it->write_xml(e->add_child("range"),help_comments && b_first);
-  //}
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    it->write_xml();
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    it->write_xml();
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    it->write_xml();
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    it->write_xml();
-  //for(std::vector<connection_t>::iterator it=connections.begin();it!=connections.end();++it)
-  //  xmlpp::Element* sne(e->add_child("connect"));
-  //  sne->set_attribute("src",it->src.c_str());
-  //  sne->set_attribute("dest",it->dest.c_str());
-  //}
-}
-
 src_object_t* scene_t::add_source()
 {
   object_sources.push_back(src_object_t(e->add_child("src_object")));
@@ -872,9 +829,9 @@ rgb_color_t::rgb_color_t(const std::string& webc)
 std::string rgb_color_t::str()
 {
   char ctmp[64];
-  unsigned int c(((unsigned int)(r*255) << 16) + 
-                 ((unsigned int)(g*255) << 8) + 
-                 ((unsigned int)(b*255)));
+  unsigned int c(((unsigned int)(round(r*255.0)) << 16) + 
+                 ((unsigned int)(round(g*255.0)) << 8) + 
+                 ((unsigned int)(round(b*255.0))));
   sprintf(ctmp,"#%06x",c);
   return ctmp;
 }

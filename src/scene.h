@@ -286,7 +286,7 @@ namespace TASCAR {
       void prepare(double fs, uint32_t fragsize);
       std::string description;
       std::string name;
-      double duration;
+      //double duration;
       void geometry_update(double t);
       void process_active(double t);
       std::vector<src_object_t> object_sources;
@@ -306,7 +306,7 @@ namespace TASCAR {
       //bool get_playsound(const sound_t*);
       std::vector<object_t*> get_objects();
       //std::vector<range_t> ranges;
-      bool loop;
+      //bool loop;
       //std::vector<connection_t> connections;
       std::string scene_path;
     };
