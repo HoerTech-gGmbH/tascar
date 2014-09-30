@@ -65,6 +65,13 @@ namespace TASCAR {
     double end;
   };
 
+  class named_object_t {
+  public:
+    named_object_t(TASCAR::Scene::object_t* o,const std::string& n) : obj(o),name(n){};
+    TASCAR::Scene::object_t* obj;
+    std::string name;
+  };
+
   class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_portless_t {
   public:
     session_t();
@@ -87,7 +94,7 @@ namespace TASCAR {
     uint32_t get_total_pointsources() const;
     uint32_t get_active_diffusesources() const;
     uint32_t get_total_diffusesources() const;
-    std::vector<TASCAR::Scene::object_t*> find_objects(const std::string& pattern);
+    std::vector<TASCAR::named_object_t> find_objects(const std::string& pattern);
     //double get_time() const;
     // configuration variables:
     std::string name;

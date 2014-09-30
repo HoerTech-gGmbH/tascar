@@ -234,10 +234,28 @@ void TASCAR::session_t::stop()
   deactivate();
 }
 
+void del_whitespace( xmlpp::Node* node )
+{
+    xmlpp::TextNode* nodeText = dynamic_cast<xmlpp::TextNode*>(node);
+    if( nodeText && nodeText->is_white_space()){
+	nodeText->get_parent()->remove_child(node);
+    }else{
+	xmlpp::Element* nodeElement = dynamic_cast<xmlpp::Element*>(node);
+	if( nodeElement ){
+	    xmlpp::Node::NodeList children = nodeElement->get_children();
+	    for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+		del_whitespace( *nita );
+	    }
+	}
+    }
+}
+
 void TASCAR::xml_doc_t::save(const std::string& filename)
 {
-  if( doc )
+  if( doc ){
+    del_whitespace( doc->get_root_node());
     doc->write_to_file_formatted(filename);
+  }
 }
 
 void TASCAR::session_t::run(bool &b_quit)
@@ -328,16 +346,16 @@ TASCAR::module_base_t::~module_base_t()
 {
 }
 
-std::vector<TASCAR::Scene::object_t*> TASCAR::session_t::find_objects(const std::string& pattern)
+std::vector<TASCAR::named_object_t> TASCAR::session_t::find_objects(const std::string& pattern)
 {
-  std::vector<TASCAR::Scene::object_t*> retv;
+  std::vector<TASCAR::named_object_t> retv;
   for(std::vector<TASCAR::scene_player_t*>::iterator sit=player.begin();sit!=player.end();++sit){
     std::vector<TASCAR::Scene::object_t*> objs((*sit)->get_objects());
     std::string base("/"+(*sit)->name+"/");
     for(std::vector<TASCAR::Scene::object_t*>::iterator it=objs.begin();it!=objs.end();++it){
       std::string name(base+(*it)->get_name());
       if( fnmatch(pattern.c_str(),name.c_str(),FNM_PATHNAME) == 0 )
-        retv.push_back(*it);
+        retv.push_back(TASCAR::named_object_t(*it,name));
     }
   }
   return retv;
