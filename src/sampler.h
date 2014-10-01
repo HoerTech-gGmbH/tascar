@@ -38,7 +38,7 @@ namespace TASCAR {
     sampler_t(const std::string& jname,const std::string& srv_addr,const std::string& srv_port);
     virtual ~sampler_t();
     int process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut);
-    void add_sound(const std::string& sound);
+    void add_sound(const std::string& sound,double gain=0);
     void open_sounds(const std::string& fname);
     void quit() { b_quit = true;};
     void start();

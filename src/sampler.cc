@@ -3,6 +3,7 @@
 #include <fstream>
 #include "errorhandling.h"
 #include <unistd.h>
+#include <math.h>
 
 TASCAR::loop_event_t::loop_event_t()
   : tsample(0),tloop(1),loopgain(1.0)
@@ -149,9 +150,13 @@ int TASCAR::sampler_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
   return 0;
 }
 
-void TASCAR::sampler_t::add_sound(const std::string& fname)
+void TASCAR::sampler_t::add_sound(const std::string& fname,double gain)
 {
   looped_sample_t* sf(new looped_sample_t(fname,0));
+  if( gain != 0 ){
+    gain = pow(10.0,0.05*gain);
+    *sf *= gain;
+  }
   sounds.push_back(sf);
   soundnames.push_back(fname);
   uint32_t k(sounds.size()-1);
