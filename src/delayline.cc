@@ -33,17 +33,6 @@ varidelay_t::~varidelay_t()
   delete [] dline;
 }
 
-void varidelay_t::push(const TASCAR::wave_t& x)
-{
-  // this might not work:
-  for(uint32_t k=0;k<x.n;k++){
-    pos++;
-    if( pos==dmax)
-      pos = 0;
-    dline[pos] = x;
-  }
-}
-
 void varidelay_t::push(float x)
 {
   pos++;
@@ -52,6 +41,15 @@ void varidelay_t::push(float x)
   dline[pos] = x;
 }
  
+float varidelay_t::get_dist_push(double dist,float x)
+{
+  pos++;
+  if( pos==dmax)
+    pos = 0;
+  dline[pos] = x;
+  return get(dist2sample*dist);
+}
+
 float varidelay_t::get_dist(double dist)
 {
   return get(dist2sample*dist);

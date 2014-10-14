@@ -182,11 +182,11 @@ uint32_t acoustic_model_t::process()
   for(uint32_t k=0;k<chunksize;k++){
     distance+=ddistance;
     gain+=dgain;
-    delayline.push(src_->audio[k]);
     float c1(air_absorption+=dairabsorption);
     float c2(1.0f-c1);
     // apply air absorption:
-    airabsorption_state = c2*airabsorption_state+c1*delayline.get_dist(distance)*gain;
+    c1 *= gain*delayline.get_dist_push(distance,src_->audio[k]);
+    airabsorption_state = c2*airabsorption_state+c1;
     make_friendly_number(airabsorption_state);
     audio[k] = airabsorption_state;
   }

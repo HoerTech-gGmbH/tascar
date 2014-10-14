@@ -49,12 +49,12 @@ namespace TASCAR {
        \param x Input value
     */
     void push(float x);
-    void push(const TASCAR::wave_t& x);
     /**
        \brief Return value based on spatial distance between input and output
        \param dist Distance
      */
     float get_dist(double dist);
+    float get_dist_push(double dist,float x);
     /**
        \brief Return value delayed by the given delay in seconds
        \param dist delay
