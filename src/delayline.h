@@ -49,6 +49,7 @@ namespace TASCAR {
        \param x Input value
     */
     void push(float x);
+    void push(const TASCAR::wave_t& x);
     /**
        \brief Return value based on spatial distance between input and output
        \param dist Distance

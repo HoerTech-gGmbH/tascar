@@ -33,6 +33,17 @@ varidelay_t::~varidelay_t()
   delete [] dline;
 }
 
+void varidelay_t::push(const TASCAR::wave_t& x)
+{
+  // this might not work:
+  for(uint32_t k=0;k<x.n;k++){
+    pos++;
+    if( pos==dmax)
+      pos = 0;
+    dline[pos] = x;
+  }
+}
+
 void varidelay_t::push(float x)
 {
   pos++;
