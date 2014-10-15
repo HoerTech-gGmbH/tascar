@@ -88,11 +88,11 @@ void source_ctl_t::on_solo()
 {
   bool m(solo.get_active());
   if( use_osc ){
-  std::string path("/"+scene_->name+"/"+name_+"/solo");
-  lo_send(client_addr_,path.c_str(),"i",m);
+    std::string path("/"+scene_->name+"/"+name_+"/solo");
+    lo_send(client_addr_,path.c_str(),"i",m);
   }else{
-    uint32_t anysolo(0);
-    route_->set_solo(m,anysolo);
+    //uint32_t anysolo(0);
+    route_->set_solo(m,scene_->anysolo);
   }
 }
 
