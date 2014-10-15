@@ -834,6 +834,11 @@ face_t& face_t::operator+=(double p)
   return (*this += n);
 }
 
+double TASCAR::drand()
+{
+  return (double)random()/(double)(RAND_MAX+1.0);
+}
+
 
 /*
  * Local Variables:

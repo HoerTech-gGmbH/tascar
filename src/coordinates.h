@@ -63,6 +63,8 @@ template<class T> void make_friendly_number_limited(T& x)
 
 namespace TASCAR {
 
+  double drand();
+
   class table1_t : public std::map<double,double> {
   public:
     table1_t();
@@ -202,6 +204,7 @@ namespace TASCAR {
   };
 
   inline zyx_euler_t& operator+=(zyx_euler_t& self,const zyx_euler_t& other){
+    // \todo this is not correct; it only works for single-axis rotations. 
     self.x+=other.x;
     self.y+=other.y;
     self.z+=other.z;
