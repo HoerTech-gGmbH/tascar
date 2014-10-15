@@ -366,6 +366,44 @@ const std::string& TASCAR::session_t::get_session_path() const
   return session_path;
 }
 
+TASCAR::actor_module_t::actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session,bool fail_on_empty)
+  : module_base_t(xmlsrc,session)
+{
+  GET_ATTRIBUTE(actor);
+  obj = session->find_objects(actor);
+  if( fail_on_empty && obj.empty() )
+    throw TASCAR::ErrMsg("No object matches actor pattern \""+actor+"\".");
+}
+
+void TASCAR::actor_module_t::write_xml()
+{
+  SET_ATTRIBUTE(actor);
+}
+
+void TASCAR::actor_module_t::set_location(const TASCAR::pos_t& l)
+{
+  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
+    it->obj->dlocation = l;
+}
+
+void TASCAR::actor_module_t::set_orientation(const TASCAR::zyx_euler_t& o)
+{
+  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
+    it->obj->dorientation = o;
+}
+
+void TASCAR::actor_module_t::add_location(const TASCAR::pos_t& l)
+{
+  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
+    it->obj->dlocation += l;
+}
+
+void TASCAR::actor_module_t::add_orientation(const TASCAR::zyx_euler_t& o)
+{
+  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
+    it->obj->dorientation += o;
+}
+
 /*
  * Local Variables:
  * mode: c++

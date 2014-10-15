@@ -112,6 +112,19 @@ namespace TASCAR {
     void read_xml();
   };
 
+  class actor_module_t : public module_base_t {
+  public:
+    actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session,bool fail_on_empty=false);
+    void write_xml();
+    void set_location(const TASCAR::pos_t& l);
+    void set_orientation(const TASCAR::zyx_euler_t& o);
+    void add_location(const TASCAR::pos_t& l);
+    void add_orientation(const TASCAR::zyx_euler_t& o);
+  protected:
+    std::string actor;
+    std::vector<TASCAR::named_object_t> obj;
+  };
+
 }
 
 #define REGISTER_MODULE(x)                                              \
