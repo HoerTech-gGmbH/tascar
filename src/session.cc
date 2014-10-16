@@ -133,17 +133,30 @@ void TASCAR::session_t::read_xml()
   get_attribute("name",name);
   get_attribute("duration",duration);
   get_attribute_bool("loop",loop);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "scene"))
-      add_scene(sne);
-    if( sne && ( sne->get_name() == "range"))
-      add_range(sne);
-    if( sne && ( sne->get_name() == "connect"))
-      add_connection(sne);
-    if( sne && ( sne->get_name() == "module"))
-      add_module(sne);
+  try{
+    xmlpp::Node::NodeList subnodes = e->get_children();
+    for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+      if( sne && ( sne->get_name() == "scene"))
+        add_scene(sne);
+      if( sne && ( sne->get_name() == "range"))
+        add_range(sne);
+      if( sne && ( sne->get_name() == "connect"))
+        add_connection(sne);
+      if( sne && ( sne->get_name() == "module"))
+        add_module(sne);
+    }
+  }
+  catch( ... ){
+    for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+      delete (*it);
+    for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
+      delete (*it);
+    for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
+      delete (*it);
+    for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
+      delete (*it);
+    throw;
   }
 }
 
