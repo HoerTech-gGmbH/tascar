@@ -7,6 +7,7 @@
 #include "errorhandling.h"
 #include <dlfcn.h>
 #include <fnmatch.h>
+#include <locale.h>
 
 static void module_error(std::string errmsg)
 {
@@ -110,6 +111,7 @@ TASCAR::session_t::session_t()
     duration(60),
     loop(false)
 {
+  setlocale(LC_ALL,"C");
   //DEBUG(1);
   char c_respath[PATH_MAX];
   session_path = getcwd(c_respath,PATH_MAX);
@@ -126,6 +128,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     duration(60),
     loop(false)
 {
+  setlocale(LC_ALL,"C");
   if( path.size() ){
     char c_fname[path.size()+1];
     char c_respath[PATH_MAX];
