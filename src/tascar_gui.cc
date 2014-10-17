@@ -209,7 +209,7 @@ void tascar_gui_t::open_scene()
   rangeselector.set_active_text("- scene -");
   selected_range = -1;
   if( cfg_file_.size() ){
-    scene = new session_t(cfg_file_);
+    scene = new session_t(cfg_file_,TASCAR::xml_doc_t::LOAD_FILE,cfg_file_);
     if( scene->player.size() != 1 )
       throw TASCAR::ErrMsg("This program supports only a single scene.");
     timescale.set_range(0,scene->duration);

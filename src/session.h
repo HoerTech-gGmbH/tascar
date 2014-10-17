@@ -76,7 +76,7 @@ namespace TASCAR {
   class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_portless_t {
   public:
     session_t();
-    session_t(const std::string& filename_or_data,load_type_t t=LOAD_FILE);
+    session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
   private:
     session_t(const session_t& src);
   public:

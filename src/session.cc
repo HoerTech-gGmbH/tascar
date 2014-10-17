@@ -118,7 +118,7 @@ TASCAR::session_t::session_t()
   read_xml();
 }
 
-TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t)
+TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : xml_doc_t(filename_or_data,t),
     xml_element_t(doc->get_root_node()),
     jackc_portless_t(jacknamer(e->get_attribute_value("name"),"session.")),
@@ -126,12 +126,14 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t)
     duration(60),
     loop(false)
 {
-  //DEBUG(1);
-  if( t == LOAD_FILE ){
-    char c_fname[filename_or_data.size()+1];
+  if( path.size() ){
+    char c_fname[path.size()+1];
     char c_respath[PATH_MAX];
-    memcpy(c_fname,filename_or_data.c_str(),filename_or_data.size()+1);
+    memcpy(c_fname,path.c_str(),path.size()+1);
     session_path = realpath(dirname(c_fname),c_respath);
+  }else{
+    char c_respath[PATH_MAX];
+    session_path = getcwd(c_respath,PATH_MAX);
   }
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");

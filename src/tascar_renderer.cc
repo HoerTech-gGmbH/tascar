@@ -112,7 +112,7 @@ int main(int argc, char** argv)
       return -1;
     }
     //TASCAR::audioplayer_t P(jackname, cfgfile);
-    TASCAR::session_t session(cfgfile);
+    TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
     //TASCAR::scene_player_t S(srv_addr, srv_port, jackname, cfgfile);
     session.run(b_quit);
   }
