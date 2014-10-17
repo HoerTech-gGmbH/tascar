@@ -83,9 +83,17 @@ TASCAR::xml_doc_t::xml_doc_t()
   //DEBUG(1);
 }
 
-TASCAR::xml_doc_t::xml_doc_t(const std::string& filename)
-  : domp(TASCAR::env_expand(filename)),doc(NULL)
+TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
+  : doc(NULL)
 {
+  switch( t ){
+  case LOAD_FILE :
+    domp.parse_file(TASCAR::env_expand(filename_or_data));
+    break;
+  case LOAD_STRING :
+    domp.parse_memory(filename_or_data);
+    break;
+  }
   //DEBUG(1);
   //DEBUG(1);
   doc = domp.get_document();
@@ -110,8 +118,8 @@ TASCAR::session_t::session_t()
   read_xml();
 }
 
-TASCAR::session_t::session_t(const std::string& filename)
-  : xml_doc_t(filename),
+TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t)
+  : xml_doc_t(filename_or_data,t),
     xml_element_t(doc->get_root_node()),
     jackc_portless_t(jacknamer(e->get_attribute_value("name"),"session.")),
     name("tascar"),
@@ -119,10 +127,12 @@ TASCAR::session_t::session_t(const std::string& filename)
     loop(false)
 {
   //DEBUG(1);
-  char c_fname[filename.size()+1];
-  char c_respath[PATH_MAX];
-  memcpy(c_fname,filename.c_str(),filename.size()+1);
-  session_path = realpath(dirname(c_fname),c_respath);
+  if( t == LOAD_FILE ){
+    char c_fname[filename_or_data.size()+1];
+    char c_respath[PATH_MAX];
+    memcpy(c_fname,filename_or_data.c_str(),filename_or_data.size()+1);
+    session_path = realpath(dirname(c_fname),c_respath);
+  }
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   read_xml();

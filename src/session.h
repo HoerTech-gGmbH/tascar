@@ -39,8 +39,9 @@ namespace TASCAR {
 
   class xml_doc_t {
   public:
+    enum load_type_t { LOAD_FILE, LOAD_STRING };
     xml_doc_t();
-    xml_doc_t(const std::string& filename);
+    xml_doc_t(const std::string& filename,load_type_t t);
     virtual void save(const std::string& filename);
   protected:
     xmlpp::DomParser domp;
@@ -75,7 +76,7 @@ namespace TASCAR {
   class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_portless_t {
   public:
     session_t();
-    session_t(const std::string& filename);
+    session_t(const std::string& filename_or_data,load_type_t t=LOAD_FILE);
   private:
     session_t(const session_t& src);
   public:
