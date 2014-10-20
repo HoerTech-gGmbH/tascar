@@ -97,10 +97,16 @@ namespace TASCAR {
       euler_track_t orientation;
       pos_t dlocation;
       zyx_euler_t dorientation;
-      std::vector<sndfile_info_t> sndfiles;
     private:
       xmlpp::Element* xml_location;
       xmlpp::Element* xml_orientation;
+    };
+
+    class sndfile_object_t : public object_t {
+    public:
+      sndfile_object_t(xmlpp::Element*);
+      void write_xml();
+      std::vector<sndfile_info_t> sndfiles;
     };
 
     class mirror_t {
@@ -143,7 +149,7 @@ namespace TASCAR {
       float gain;
     };
 
-    class src_diffuse_t : public object_t, public jack_port_t {
+    class src_diffuse_t : public sndfile_object_t, public jack_port_t {
     public:
       src_diffuse_t(xmlpp::Element* e);
       virtual ~src_diffuse_t();
@@ -206,7 +212,7 @@ namespace TASCAR {
       TASCAR::Acousticmodel::pointsource_t* source; 
     };
 
-    class src_object_t : public object_t {
+    class src_object_t : public sndfile_object_t {
     public:
       src_object_t(xmlpp::Element* e);
       void write_xml();

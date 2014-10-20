@@ -63,6 +63,15 @@ object_t::object_t(xmlpp::Element* src)
           it_old = it;
       }
     }
+  }
+}
+
+sndfile_object_t::sndfile_object_t(xmlpp::Element* xmlsrc)
+  : object_t(xmlsrc)
+{
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "sndfile")){
       sndfiles.push_back(sndfile_info_t(sne));
       sndfiles.back().parentname = get_name();
@@ -108,15 +117,21 @@ void object_t::write_xml()
       xml_orientation = e->add_child("orientation");
     orientation.write_xml( xml_orientation );
   }
+}
+
+void sndfile_object_t::write_xml()
+{
+  object_t::write_xml();
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
     it->write_xml();
 }
+
 
 /*
  *src_diffuse_t
  */
 src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),jack_port_t(xmlsrc),size(1,1,1),
+  : sndfile_object_t(xmlsrc),jack_port_t(xmlsrc),size(1,1,1),
     falloff(1.0),
     source(NULL)
 {
@@ -354,7 +369,7 @@ pos_t sound_t::get_pos_global(double t) const
  * src_object_t
  */
 src_object_t::src_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),
+  : sndfile_object_t(xmlsrc),
     //reference(reference_),
     startframe(0)
 {
