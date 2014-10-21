@@ -5,6 +5,10 @@ tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 test_render
 
+SINKS = omni
+
+SINKMODS = $(patsubst %,tascarsink_%.so,$(SINKS))
+
 #tascar_gpxvelocity \
 tascar_gui tascar_pdf tascar_multipan tascar_jpos \
 TEST_FILES = test_diffusereverb 
@@ -67,13 +71,13 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 #CXXFLAGS += -ggdb
 
-all:
+all: lib
 	mkdir -p build
 	$(MAKE) -C build -f ../Makefile $(BINFILES)
 
 lib:
 	mkdir -p build
-	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a
+	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(SINKMODS)
 
 libtascar.a: $(OBJECTS)
 	ar rcs $@ $^
@@ -135,6 +139,10 @@ bz2:
 
 
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
+
+tascarsink_%.so: sinkmod_%.cc
+	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
 
 
 # Local Variables:

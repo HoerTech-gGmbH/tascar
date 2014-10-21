@@ -8,7 +8,7 @@
       <sound name="0" connect="@.0" gain="0"/>
       <sndfile name="tc1.wav" loop="0"/>
     </src_object>
-    <sinkmod name="test" sinktype="huhu"/>
+    <sinkmod name="test" sinktype="omni"/>
     <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
       <position>0 -8 13 0
       22 2 0 0</position>

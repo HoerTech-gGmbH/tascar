@@ -290,6 +290,7 @@ namespace TASCAR {
     class scene_t : public scene_node_base_t {
     public:
       scene_t(xmlpp::Element* e);
+      ~scene_t();
       void write_xml();
       src_object_t* add_source();
       std::vector<sound_t*> linearize_sounds();
@@ -303,7 +304,7 @@ namespace TASCAR {
       std::vector<src_door_t> door_sources;
       std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
-      std::vector<sinkmod_object_t> sinkmod_objects;
+      std::vector<sinkmod_object_t*> sinkmod_objects;
       std::vector<mask_object_t> masks;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;
@@ -312,6 +313,8 @@ namespace TASCAR {
       uint32_t anysolo;
       std::vector<object_t*> get_objects();
       std::string scene_path;
+    private:
+      scene_t(const scene_t&);
     };
 
   }

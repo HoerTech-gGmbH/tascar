@@ -33,7 +33,6 @@ TASCAR::sinkmod_t::sinkmod_t(xmlpp::Element* xmlsrc)
     RESOLVE(get_channel_postfix);
     RESOLVE(create_data);
     libdata = create_cb(xmlsrc,sinkmod_error);
-    //DEBUG(libdata);
   }
   catch( ... ){
     dlclose(lib);
@@ -48,47 +47,48 @@ void TASCAR::sinkmod_t::write_xml()
     write_xml_cb(libdata,sinkmod_error);
 }
 
-void TASCAR::sinkmod_t::add_pointsource(const pos_t& prel, const wave_t& chunk, const std::vector<wave_t>& output, sinkmod_base_t::data_t* data)
+void TASCAR::sinkmod_t::add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t* data)
 {
-  if( add_pointsource_cb )
-    add_pointsource_cb(libdata,prel,chunk,output,data,sinkmod_error);
+  add_pointsource_cb(libdata,prel,chunk,output,data,sinkmod_error);
 }
 
-void TASCAR::sinkmod_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, const std::vector<wave_t>& output, sinkmod_base_t::data_t* data)
+void TASCAR::sinkmod_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t* data)
 {
-  if( add_diffusesource_cb )
-    add_diffusesource_cb(libdata,prel,chunk,output,data,sinkmod_error);
+  add_diffusesource_cb(libdata,prel,chunk,output,data,sinkmod_error);
 }
 
 uint32_t TASCAR::sinkmod_t::get_num_channels()
 {
-  if( get_num_channels_cb )
-    return get_num_channels_cb(libdata,sinkmod_error);
-  else
-    return 0;
+  return get_num_channels_cb(libdata,sinkmod_error);
 }
 
 std::string TASCAR::sinkmod_t::get_channel_postfix(uint32_t channel)
 {
-  if( get_channel_postfix_cb )
-    return get_channel_postfix_cb(libdata,channel,sinkmod_error);
-  else
-    return "";
+  return get_channel_postfix_cb(libdata,channel,sinkmod_error);
 }
 
-TASCAR::sinkmod_base_t::data_t* TASCAR::sinkmod_t::create_data()
+TASCAR::sinkmod_base_t::data_t* TASCAR::sinkmod_t::create_data(double srate,uint32_t fragsize)
 {
-  if( create_data_cb )
-    return create_data_cb(libdata,sinkmod_error);
-  else
-    return NULL;
+  return create_data_cb(libdata,srate,fragsize,sinkmod_error);
 }
 
 TASCAR::sinkmod_t::~sinkmod_t()
 {
-  //DEBUG(libdata);
   destroy_cb(libdata,sinkmod_error);
   dlclose(lib);
+}
+
+TASCAR::sinkmod_base_t::sinkmod_base_t(xmlpp::Element* xmlsrc)
+  : xml_element_t(xmlsrc)
+{
+}
+
+void TASCAR::sinkmod_base_t::write_xml()
+{
+}
+
+TASCAR::sinkmod_base_t::~sinkmod_base_t()
+{
 }
 
 

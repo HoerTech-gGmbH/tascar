@@ -282,13 +282,10 @@ void sink_object_t::geometry_update(double t)
 
 std::vector<TASCAR::pos_t> sink_object_t::get_spkpos() const
 {
-  DEBUG(spkpos.size());
   std::vector<TASCAR::pos_t> r;
   for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it){
-    DEBUG(it->print_cart());
     r.push_back(*it);
   }
-  DEBUG(r.size());
   return r;
 }
 
@@ -306,7 +303,6 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
 
 void sound_t::set_parent(src_object_t* ref)
 {
-  //DEBUG(ref);
   parent = ref;
 }
 
@@ -436,7 +432,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
       else if( sne->get_name() == "sink" )
         sink_objects.push_back(sink_object_t(sne));
       else if( sne->get_name() == "sinkmod" )
-        sinkmod_objects.push_back(sinkmod_object_t(sne));
+        sinkmod_objects.push_back(new sinkmod_object_t(sne));
       else if( sne->get_name() == "face" )
         faces.push_back(face_object_t(sne));
       else if( sne->get_name() == "mask" )
@@ -445,6 +441,12 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
     }
   }
+}
+
+scene_t::~scene_t()
+{
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    delete *it;
 }
 
 void scene_t::write_xml()
@@ -463,8 +465,8 @@ void scene_t::write_xml()
     it->write_xml();
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     it->write_xml();
-  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    it->write_xml();
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    (*it)->write_xml();
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->write_xml();
 }
@@ -477,8 +479,8 @@ void scene_t::geometry_update(double t)
     it->geometry_update(t);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     it->geometry_update(t);
-  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    it->geometry_update(t);
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    (*it)->geometry_update(t);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->geometry_update(t);
   for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
@@ -487,7 +489,6 @@ void scene_t::geometry_update(double t)
 
 void scene_t::process_active(double t)
 {
-  //DEBUGS(anysolo);
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     it->process_active(t,anysolo);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
@@ -496,8 +497,8 @@ void scene_t::process_active(double t)
     it->process_active(t,anysolo);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     it->process_active(t,anysolo);
-  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    it->process_active(t,anysolo);
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    (*it)->process_active(t,anysolo);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->process_active(t,anysolo);
 }
@@ -696,7 +697,6 @@ void sinkmod_object_t::process_active(double t,uint32_t anysolo)
 
 void sink_object_t::prepare(double fs, uint32_t fragsize)
 {
-  //DEBUG(fragsize);
   bool use_mask(mask.active);
   if( sink )
     delete sink;
@@ -742,7 +742,6 @@ src_object_t* scene_t::add_source()
 
 std::vector<sound_t*> scene_t::linearize_sounds()
 {
-  //DEBUGMSG("lin sounds");
   std::vector<sound_t*> r;
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     //it->set_reference(&listener);
@@ -767,8 +766,8 @@ std::vector<object_t*> scene_t::get_objects()
     r.push_back(&(*it));
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     r.push_back(&(*it));
-  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    r.push_back(&(*it));
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    r.push_back((*it));
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     r.push_back(&(*it));
   for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
@@ -794,8 +793,8 @@ void scene_t::prepare(double fs, uint32_t fragsize)
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     it->prepare(fs,fragsize);
   }
-  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
-    it->prepare(fs,fragsize);
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
+    (*it)->prepare(fs,fragsize);
   }
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     it->prepare(fs,fragsize);
@@ -995,7 +994,6 @@ void sndfile_info_t::write_xml()
 void src_object_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
-  //DEBUGS(a);
   for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it)
     if( it->get_source() )
       it->get_source()->active = a;
@@ -1004,7 +1002,6 @@ void src_object_t::process_active(double t, uint32_t anysolo)
 void src_diffuse_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
-  //DEBUGS(a);
   if( source )
     source->active = a;
 }
@@ -1012,7 +1009,6 @@ void src_diffuse_t::process_active(double t, uint32_t anysolo)
 void sink_object_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
-  //DEBUGS(a);
   if( sink )
     sink->active = a;
 }
@@ -1020,14 +1016,12 @@ void sink_object_t::process_active(double t, uint32_t anysolo)
 void face_object_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
-  //DEBUGS(a);
   active = a;
 }
 
 void src_door_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
-  //DEBUGS(a);
   if( source )
     source->active = a;
 }
