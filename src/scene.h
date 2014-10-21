@@ -34,6 +34,7 @@
 #include "defs.h"
 #include "xmlconfig.h"
 #include "acousticmodel.h"
+#include "sinkmod.h"
 
 namespace TASCAR {
 
@@ -228,7 +229,6 @@ namespace TASCAR {
     class sink_mask_t : public object_t {
     public:
       sink_mask_t(xmlpp::Element*);
-      //void read_xml();
       void prepare(double fs, uint32_t fragsize);
       pos_t size;
       double falloff;
@@ -239,6 +239,15 @@ namespace TASCAR {
     public:
       spk_pos_t(xmlpp::Element*);
       void write_xml();
+    };
+
+    class sinkmod_object_t : public object_t, public jack_port_t, public sinkmod_t {
+    public:
+      sinkmod_object_t(xmlpp::Element* e);
+      void write_xml();
+      void prepare(double fs, uint32_t fragsize);
+      void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
     };
 
     class sink_object_t : public object_t, public jack_port_t {
@@ -263,7 +272,6 @@ namespace TASCAR {
       bool render_diffuse;
       bool is_direct;
       double diffusegain;
-      //bool use_mask;
       bool use_global_mask;
       sink_mask_t mask;
       TASCAR::Acousticmodel::sink_t* sink;
@@ -282,43 +290,29 @@ namespace TASCAR {
     class scene_t : public scene_node_base_t {
     public:
       scene_t(xmlpp::Element* e);
-      //scene_t(const std::string& filename);
-      //void read_xml(xmlpp::Element* e);
-      //void read_xml(const std::string& filename);
       void write_xml();
       src_object_t* add_source();
       std::vector<sound_t*> linearize_sounds();
-      //std::vector<Input::base_t*> linearize_inputs();
       void prepare(double fs, uint32_t fragsize);
       std::string description;
       std::string name;
-      //double duration;
       void geometry_update(double t);
       void process_active(double t);
       std::vector<src_object_t> object_sources;
       std::vector<src_diffuse_t> diffuse_sources;
       std::vector<src_door_t> door_sources;
-      //std::vector<diffuse_reverb_t> reverbs;
       std::vector<face_object_t> faces;
       std::vector<sink_object_t> sink_objects;
+      std::vector<sinkmod_object_t> sinkmod_objects;
       std::vector<mask_object_t> masks;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;
       double guiscale;
       pos_t guicenter;
       uint32_t anysolo;
-      //void set_mute(const std::string& name,bool val);
-      //void set_solo(const std::string& name,bool val);
-      //bool get_playsound(const sound_t*);
       std::vector<object_t*> get_objects();
-      //std::vector<range_t> ranges;
-      //bool loop;
-      //std::vector<connection_t> connections;
       std::string scene_path;
     };
-
-    //scene_t xml_read_scene(const std::string& filename);
-    //void xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment="", bool help_comments = false);
 
   }
 

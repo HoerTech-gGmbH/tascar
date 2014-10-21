@@ -435,6 +435,8 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         diffuse_sources.push_back(src_diffuse_t(sne));
       else if( sne->get_name() == "sink" )
         sink_objects.push_back(sink_object_t(sne));
+      else if( sne->get_name() == "sinkmod" )
+        sinkmod_objects.push_back(sinkmod_object_t(sne));
       else if( sne->get_name() == "face" )
         faces.push_back(face_object_t(sne));
       else if( sne->get_name() == "mask" )
@@ -461,6 +463,8 @@ void scene_t::write_xml()
     it->write_xml();
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     it->write_xml();
+  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    it->write_xml();
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->write_xml();
 }
@@ -472,6 +476,8 @@ void scene_t::geometry_update(double t)
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
     it->geometry_update(t);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+    it->geometry_update(t);
+  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     it->geometry_update(t);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->geometry_update(t);
@@ -489,6 +495,8 @@ void scene_t::process_active(double t)
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     it->process_active(t,anysolo);
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+    it->process_active(t,anysolo);
+  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     it->process_active(t,anysolo);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     it->process_active(t,anysolo);
@@ -661,6 +669,31 @@ void sink_object_t::write_xml()
     it->write_xml();
 }
 
+sinkmod_object_t::sinkmod_object_t(xmlpp::Element* xmlsrc)
+  : object_t(xmlsrc), jack_port_t(xmlsrc), sinkmod_t(xmlsrc)
+{
+}
+
+void sinkmod_object_t::write_xml()
+{
+  object_t::write_xml();
+  jack_port_t::write_xml();
+  sinkmod_t::write_xml();
+}
+
+void sinkmod_object_t::prepare(double fs, uint32_t fragsize)
+{
+}
+
+void sinkmod_object_t::geometry_update(double t)
+{
+}
+
+void sinkmod_object_t::process_active(double t,uint32_t anysolo)
+{
+}
+
+
 void sink_object_t::prepare(double fs, uint32_t fragsize)
 {
   //DEBUG(fragsize);
@@ -707,21 +740,6 @@ src_object_t* scene_t::add_source()
   return &object_sources.back();
 }
 
-//void scene_t::read_xml(const std::string& filename)
-//{
-//  char c_fname[filename.size()+1];
-//  memcpy(c_fname,filename.c_str(),filename.size()+1);
-//  scene_path = dirname(c_fname);
-//  int echdir = chdir(scene_path.c_str());
-//  if( echdir != 0 ){
-//    std::cerr << "Warning: Unable to change process directory to \"" << scene_path << "\".\n";
-//  }
-//  xmlpp::DomParser domp(TASCAR::env_expand(filename));
-//  xmlpp::Document* doc(domp.get_document());
-//  xmlpp::Element* root(doc->get_root_node());
-//  read_xml(root);
-//}
-
 std::vector<sound_t*> scene_t::linearize_sounds()
 {
   //DEBUGMSG("lin sounds");
@@ -749,6 +767,8 @@ std::vector<object_t*> scene_t::get_objects()
     r.push_back(&(*it));
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
     r.push_back(&(*it));
+  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    r.push_back(&(*it));
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     r.push_back(&(*it));
   for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
@@ -774,6 +794,9 @@ void scene_t::prepare(double fs, uint32_t fragsize)
   for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
     it->prepare(fs,fragsize);
   }
+  for(std::vector<sinkmod_object_t>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
+    it->prepare(fs,fragsize);
+  }
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     it->prepare(fs,fragsize);
   }
@@ -784,50 +807,6 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     it->prepare(fs,fragsize);
   }
 }
-
-//void scene_t::set_mute(const std::string& name,bool val)
-//{
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-//    if( it->get_name() == name )
-//      it->set_mute(val);
-//  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-//    if( it->get_name() == name )
-//      it->set_mute(val);
-//  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-//    if( it->get_name() == name )
-//      it->set_mute(val);
-//}
-
-//void scene_t::set_solo(const std::string& name,bool val)
-//{
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-//    if( it->get_name() == name )
-//      it->set_solo(val,anysolo);
-//  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-//    if( it->get_name() == name )
-//      it->set_solo(val, anysolo);
-//  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-//    if( it->get_name() == name )
-//      it->set_solo(val,anysolo);
-//}
-
-//void TASCAR::Scene::xml_write_scene(const std::string& filename, scene_t scene, const std::string& comment, bool help_comments)
-//{ 
-//  xmlpp::Document doc;
-//  scene.write_xml();
-//  doc.create_root_node_by_import(scene.e);
-//  doc.write_to_file_formatted(TASCAR::env_expand(filename));
-//}
-//
-//scene_t TASCAR::Scene::xml_read_scene(const std::string& filename)
-//{
-//  xmlpp::DomParser domp(TASCAR::env_expand(filename));
-//  xmlpp::Document* doc(domp.get_document());
-//  xmlpp::Element* root(doc->get_root_node());
-//  scene_t s(root);
-//  s.read_xml(root);
-//  return s;
-//}
 
 rgb_color_t::rgb_color_t(const std::string& webc)
   : r(0),g(0),b(0)
@@ -921,15 +900,6 @@ bool sound_t::get_solo() const
   return false;
 }
 
-//bool scene_t::get_playsound(const sound_t* s)
-//{
-//  if( s->get_mute() )
-//    return false;
-//  if( !anysolo )
-//    return true;
-//  return s->get_solo();
-//}
-
 face_object_t::face_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc),width(1.0),
     height(1.0)
@@ -961,23 +931,6 @@ void face_object_t::write_xml()
   set_attribute("reflectivity",reflectivity);
   set_attribute("damping",damping);
 }
-
-
-//void scene_t::set_source_position_offset(const std::string& srcname,pos_t position)
-//{
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it != object_sources.end(); ++it){
-//    if( srcname == it->get_name() )
-//      it->dlocation = position;
-//  }
-//}
-
-//void scene_t::set_source_orientation_offset(const std::string& srcname,zyx_euler_t orientation)
-//{
-//  for(std::vector<src_object_t>::iterator it=object_sources.begin();it != object_sources.end(); ++it){
-//    if( srcname == it->get_name() )
-//      it->dorientation = orientation;
-//  }
-//}
 
 jack_port_t::jack_port_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),portname(""),

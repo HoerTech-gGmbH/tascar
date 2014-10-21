@@ -1,44 +1,28 @@
 <?xml version="1.0"?>
-<scene name="example" guiscale="37" duration="42">
+<session name="example" duration="42">
   <description>one source</description>
-  <src_object name="point" color="#f00000" start="1">
-    <position>0 1 -20 0
-20 1 20 0</position>
-    <sound name="0" connect="player.example:point.0" gain="0"/>
-    <sndfile name="tc1.wav" loop="0"/>
-  </src_object>
-  <door name="door" falloff="4" color="#643104" connect="player.example:diffuse.0">
-    <position>0 0.3 3 0</position>
-    <orientation>0 90 0 0</orientation>
-  </door>
-  <diffuse name="diffuse" size_x="10" size_y="6" size_z="10" falloff="4" mute="true">
-    <position>0 -1 0 0</position>
-    <orientation>0 0 0 0</orientation>
-    <sndfile name="birds_oldenburg.wav" loop="0" channels="4"/>
-  </diffuse>
-  <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
-    <position>0 -8 13 0
-22 2 0 0</position>
-<orientation>0 0 0 0
-22 0 0 0
-42 1800 0 0</orientation>
-  </sink>
-  <sink name="nsp" type="nsp" color="#00f0f0" size_x="20" size_y="20" size_z="20" diffuse="false">
-    <speaker az="-90" el="0"/>
-    <speaker az="90" el="0"/>
-    <position>0 8 -13 0
-40 -10 13 0</position>
-<orientation>0 0 0 0
-42 900 0 0</orientation>
-  </sink>
-  <xface name="reflector" width="3" height="2">
-    <position>0 4 -1 0</position>
-    <orientation>0 95 0 0</orientation>
-  </xface>
-  <connect src="player.example:diffuse.0" dest="render.example:diffuse.0w"/>
-  <connect src="player.example:diffuse.1" dest="render.example:diffuse.1x"/>
-  <connect src="player.example:diffuse.2" dest="render.example:diffuse.1y"/>
-  <connect src="player.example:diffuse.3" dest="render.example:diffuse.1z"/>
-  <connect src="render.example:nsp.0" dest="system:playback_1"/>
-  <connect src="render.example:nsp.1" dest="system:playback_2"/>
-</scene>
+  <scene name="scene1" guiscale="37">
+    <src_object name="point" color="#f00000" start="1">
+      <position>0 1 -20 0
+      20 1 20 0</position>
+      <sound name="0" connect="@.0" gain="0"/>
+      <sndfile name="tc1.wav" loop="0"/>
+    </src_object>
+    <sinkmod name="test" sinktype="huhu"/>
+    <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
+      <position>0 -8 13 0
+      22 2 0 0</position>
+      <orientation>0 0 0 0
+      22 0 0 0
+      42 1800 0 0</orientation>
+    </sink>
+    <sink name="nsp" type="nsp" color="#00f0f0" size_x="20" size_y="20" size_z="20" diffuse="false">
+      <speaker az="-90" el="0"/>
+      <speaker az="90" el="0"/>
+      <position>0 8 -13 0
+      40 -10 13 0</position>
+      <orientation>0 0 0 0
+      42 900 0 0</orientation>
+    </sink>
+  </scene>
+</session>

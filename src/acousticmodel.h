@@ -66,8 +66,8 @@ namespace TASCAR {
              bool mask_use,
              bool global_mask_use);
       virtual ~sink_t(){};
-      virtual void clear();
       virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
+      virtual void clear();
       virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
       virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
       uint32_t get_num_channels() const { return outchannels.size();};
