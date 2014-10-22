@@ -15,9 +15,22 @@ TASCAR::sinkmod_t::sinkmod_t(xmlpp::Element* xmlsrc)
     libdata(NULL),
     create_cb(NULL),
     destroy_cb(NULL),
-    write_xml_cb(NULL)
+    write_xml_cb(NULL),
+    render_point(true),
+    render_diffuse(true),
+    is_direct(true),
+    use_global_mask(true),
+    diffusegain(1.0),
+    falloff(-1.0)
 {
   GET_ATTRIBUTE(sinktype);
+  GET_ATTRIBUTE(size);
+  get_attribute_bool("point",render_point);
+  get_attribute_bool("diffuse",render_diffuse);
+  get_attribute_bool("isdirect",is_direct);
+  get_attribute_bool("globalmask",use_global_mask);
+  get_attribute_db("diffusegain",diffusegain);
+  GET_ATTRIBUTE(falloff);
   std::string libname("tascarsink_");
   libname += sinktype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );
@@ -43,6 +56,13 @@ TASCAR::sinkmod_t::sinkmod_t(xmlpp::Element* xmlsrc)
 void TASCAR::sinkmod_t::write_xml()
 {
   SET_ATTRIBUTE(sinktype);
+  SET_ATTRIBUTE(size);
+  set_attribute_bool("point",render_point);
+  set_attribute_bool("diffuse",render_diffuse);
+  set_attribute_bool("isdirect",is_direct);
+  set_attribute_bool("globalmask",use_global_mask);
+  set_attribute_db("diffusegain",diffusegain);
+  SET_ATTRIBUTE(falloff);
   if( write_xml_cb )
     write_xml_cb(libdata,sinkmod_error);
 }

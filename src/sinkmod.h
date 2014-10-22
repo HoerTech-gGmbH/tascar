@@ -82,6 +82,14 @@ namespace TASCAR {
     sinkmod_get_num_channels_t get_num_channels_cb;
     sinkmod_get_channel_postfix_t get_channel_postfix_cb;
     sinkmod_create_data_t create_data_cb;
+  protected:
+    TASCAR::pos_t size;
+    bool render_point;
+    bool render_diffuse;
+    bool is_direct;
+    bool use_global_mask;
+    double diffusegain;
+    double falloff;
   };
 
 }

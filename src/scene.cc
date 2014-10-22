@@ -526,7 +526,8 @@ void spk_pos_t::write_xml()
 }
 
 sink_object_t::sink_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),jack_port_t(xmlsrc),sink_type(omni),
+  : object_t(xmlsrc),jack_port_t(xmlsrc),
+    sink_type(omni),
     falloff(-1.0),
     render_point(true),
     render_diffuse(true),
