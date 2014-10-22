@@ -2,7 +2,7 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
 % GETIRS - record impulse responses
 %
 % Usage:
-% [irs,x,y] = getirs( spk, len, nrep, sTag, gain );
+% [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn );
 %
 % spk  : vector with hardware output channel numbers or cell string 
 %        array with output jack port names
@@ -13,6 +13,7 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
 % sIn  : input channel name (default: "system:capture_1")
 %
 % irs  : impulse response matrix
+% fs   : sampling rate of jack
 % x    : output test signal
 % y    : averaged input signal
 %
