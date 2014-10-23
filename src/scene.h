@@ -241,7 +241,7 @@ namespace TASCAR {
       void write_xml();
     };
 
-    class sinkmod_object_t : public object_t, public jack_port_t, public sinkmod_t {
+    class sinkmod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::newsink_t {
     public:
       sinkmod_object_t(xmlpp::Element* e);
       void write_xml();

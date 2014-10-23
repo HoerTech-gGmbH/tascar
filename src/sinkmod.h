@@ -59,7 +59,7 @@ namespace TASCAR {
   typedef std::string (*sinkmod_get_channel_postfix_t)(TASCAR::sinkmod_base_t* h,uint32_t channel,sinkmod_error_t errfun);
   typedef sinkmod_base_t::data_t* (*sinkmod_create_data_t)(TASCAR::sinkmod_base_t* h,double srate,uint32_t fragsize,sinkmod_error_t errfun);
   
-  class sinkmod_t : public TASCAR::xml_element_t {
+  class sinkmod_t : public sinkmod_base_t {
   public:
     sinkmod_t(xmlpp::Element* xmlsrc);
     void write_xml();
@@ -82,14 +82,6 @@ namespace TASCAR {
     sinkmod_get_num_channels_t get_num_channels_cb;
     sinkmod_get_channel_postfix_t get_channel_postfix_cb;
     sinkmod_create_data_t create_data_cb;
-  protected:
-    TASCAR::pos_t size;
-    bool render_point;
-    bool render_diffuse;
-    bool is_direct;
-    bool use_global_mask;
-    double diffusegain;
-    double falloff;
   };
 
 }

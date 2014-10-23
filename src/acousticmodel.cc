@@ -72,7 +72,7 @@ void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtu
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
   }
-  if( mask_use_ ){
+  if( use_mask ){
     double d(mask.nextpoint(position).norm());
     gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
   }
@@ -136,8 +136,11 @@ diffuse_source_t::diffuse_source_t(uint32_t chunksize)
 {
 }
 
-acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles)
-  : src_(src),sink_(sink),obstacles_(obstacles),
+acoustic_model_t::acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,newsink_t* sink,const std::vector<obstacle_t*>& obstacles)
+  : src_(src),
+    sink_(sink),
+    sink_data(sink_->create_data(fs,chunksize)),
+    obstacles_(obstacles),
     audio(src->audio.size()),
     chunksize(audio.size()),
     dt(1.0/std::max(1.0f,(float)chunksize)),
@@ -145,8 +148,7 @@ acoustic_model_t::acoustic_model_t(double fs,pointsource_t* src,sink_t* sink,con
     gain(1.0),
     dscale(fs/(340.0*7782.0)),
     delayline(480000,fs,340.0),
-    airabsorption_state(0.0),
-    sink_data(sink_->create_sink_data())
+    airabsorption_state(0.0)
 {
   //DEBUG(audio.size());
   //DEBUG(dt);
@@ -191,7 +193,7 @@ uint32_t acoustic_model_t::process()
     audio[k] = airabsorption_state;
   }
   if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0)) && (src_->direct || (!sink_->is_direct)) ){
-    sink_->add_source(prel,audio,sink_data);
+    sink_->add_pointsource(prel,audio,sink_data);
     return 1;
   }
   return 0;
@@ -325,7 +327,7 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
+world_t::world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<newsink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
   : mirrormodel(sources,reflectors,mirror_order),sinks_(sinks),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
   //DEBUGS(diffusesources.size());
@@ -338,15 +340,15 @@ world_t::world_t(double fs,const std::vector<pointsource_t*>& sources,const std:
       //DEBUG(kSink);
       //DEBUG(diffusesources[kSrc]);
       //DEBUG(sinks[kSink]);
-      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,diffusesources[kSrc],sinks[kSink]));
+      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],sinks[kSink]));
     }
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
-      acoustic_model.push_back(new acoustic_model_t(fs,sources[kSrc],sinks[kSink]));
+      acoustic_model.push_back(new acoustic_model_t(fs,chunksize,sources[kSrc],sinks[kSink]));
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
-      acoustic_model.push_back(new acoustic_model_t(fs,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
+      acoustic_model.push_back(new acoustic_model_t(fs,chunksize,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
 }
 
 world_t::~world_t()
@@ -371,7 +373,7 @@ void world_t::process()
     local_active_diffuse += diffuse_acoustic_model[k]->process();
   // now apply mask gains:
   for(uint32_t k=0;k<sinks_.size();k++){
-    if( sinks_[k]->global_mask_use_ ){
+    if( sinks_[k]->use_global_mask ){
     uint32_t c_inner(0);
     uint32_t c_outer(0);
     double gain_inner(1.0);
@@ -395,13 +397,14 @@ void world_t::process()
   active_diffusesource = local_active_diffuse;
 }
 
-diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,diffuse_source_t* src,sink_t* sink)
-  : src_(src),sink_(sink),
+diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,newsink_t* sink)
+  : src_(src),
+    sink_(sink),
+    sink_data(sink_->create_data(fs,chunksize)),
     audio(src->audio.size()),
     chunksize(audio.size()),
     dt(1.0/std::max(1u,chunksize)),
-    gain(1.0),
-    sink_data(sink_->create_sink_data())
+    gain(1.0)
 {
   //DEBUG(audio.size());
   //DEBUG(dt);
@@ -446,12 +449,117 @@ uint32_t diffuse_acoustic_model_t::process()
     }
     if( sink_->render_diffuse && sink_->active && src_->active ){
       audio *= sink_->diffusegain;
-      sink_->add_source(prel,audio,sink_data);
+      sink_->add_diffusesource(prel,audio,sink_data);
       return 1;
     }
   }
   return 0;
 }
+
+newsink_t::newsink_t(xmlpp::Element* xmlsrc)
+  : sinkmod_t(xmlsrc),
+    render_point(true),
+    render_diffuse(true),
+    is_direct(true),
+    use_global_mask(true),
+    diffusegain(1.0),
+    falloff(-1.0),
+    active(true),
+    x_gain(1.0),
+    dx_gain(0),
+    dt(1)
+{
+  GET_ATTRIBUTE(size);
+  get_attribute_bool("point",render_point);
+  get_attribute_bool("diffuse",render_diffuse);
+  get_attribute_bool("isdirect",is_direct);
+  get_attribute_bool("globalmask",use_global_mask);
+  get_attribute_db("diffusegain",diffusegain);
+  GET_ATTRIBUTE(falloff);
+}
+
+void newsink_t::write_xml()
+{
+  sinkmod_t::write_xml();
+  SET_ATTRIBUTE(size);
+  set_attribute_bool("point",render_point);
+  set_attribute_bool("diffuse",render_diffuse);
+  set_attribute_bool("isdirect",is_direct);
+  set_attribute_bool("globalmask",use_global_mask);
+  set_attribute_db("diffusegain",diffusegain);
+  SET_ATTRIBUTE(falloff);
+}
+
+void newsink_t::prepare(double srate, uint32_t chunksize)
+{
+  dt = 1.0/std::max(1.0f,(float)chunksize);
+  outchannels.clear();
+  for(uint32_t k=0;k<get_num_channels();k++)
+    outchannels.push_back(wave_t(chunksize));
+}
+
+void newsink_t::clear_output()
+{
+  for(uint32_t ch=0;ch<outchannels.size();ch++)
+    outchannels[ch].clear();
+}
+
+void newsink_t::add_pointsource(const pos_t& prel, const wave_t& chunk, sinkmod_base_t::data_t* data)
+{
+  sinkmod_t::add_pointsource(prel,chunk,outchannels,data);
+}
+
+void newsink_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, sinkmod_base_t::data_t* data)
+{
+  sinkmod_t::add_diffusesource(prel,chunk,outchannels,data);
+}
+
+void newsink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
+{
+  
+  if( (size.x!=0)&&(size.y!=0)&&(size.z!=0) ){
+    prel = psrc_physical;
+    prel -= position;
+    prel /= orientation;
+    distance = prel.norm();
+    shoebox_t box;
+    box.size = size;
+    double sizedist = pow(size.x*size.y*size.z,0.33333);
+    //DEBUGS(box.nextpoint(prel).print_sphere());
+    double d(box.nextpoint(prel).norm());
+    if( falloff > 0 )
+      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff)))/std::max(0.1,sizedist);
+    else
+      gain = 1.0/std::max(1.0,d+sizedist);
+  }else{
+    prel = psrc_virtual;
+    prel -= position;
+    prel /= orientation;
+    distance = prel.norm();
+    gain = 1.0/std::max(0.1,distance);
+  }
+  if( mask_use_ ){
+    double d(mask.nextpoint(position).norm());
+    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
+  }
+  make_friendly_number(gain);
+}
+
+void newsink_t::apply_gain(double gain)
+{
+  dx_gain = (gain-x_gain)*dt;
+  uint32_t ch(get_num_channels());
+  if( ch > 0 ){
+    uint32_t psize(outchannels[0].size());
+    for(uint32_t k=0;k<psize;k++){
+      double g(x_gain+=dx_gain);
+      for(uint32_t c=0;c<ch;c++){
+        outchannels[c][k] *= g;
+      }
+    }
+  }
+}
+
 
 /*
  * Local Variables:

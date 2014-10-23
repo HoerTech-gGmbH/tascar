@@ -269,14 +269,14 @@ void TASCAR::renderer_t::start()
     }
   }
   sinks.clear();
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
-    TASCAR::Acousticmodel::sink_t* sink(it->get_sink());
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
+    TASCAR::Acousticmodel::newsink_t* sink(*it);
     sinks.push_back(sink);
-    it->set_port_index(get_num_output_ports());
+    (*it)->set_port_index(get_num_output_ports());
     for(uint32_t ch=0;ch<sink->get_num_channels();ch++){
       //DEBUG(ch);
       //DEBUG(it->get_name()+sink->get_channel_postfix(ch));
-      add_output_port(it->get_name()+sink->get_channel_postfix(ch));
+      add_output_port((*it)->get_name()+sink->get_channel_postfix(ch));
     }
   }
   reflectors.clear();
@@ -288,7 +288,7 @@ void TASCAR::renderer_t::start()
     pmasks.push_back(&(*it));
   }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(get_srate(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
+  world = new Acousticmodel::world_t(get_srate(),get_fragsize(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
   total_pointsources = world->get_total_pointsource();
   total_diffusesources = world->get_total_diffusesource();
   //

@@ -48,7 +48,7 @@ namespace TASCAR {
     std::vector<Acousticmodel::pointsource_t*> sources;
     std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
-    std::vector<Acousticmodel::sink_t*> sinks;
+    std::vector<Acousticmodel::newsink_t*> sinks;
     std::vector<Acousticmodel::mask_t*> pmasks;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);

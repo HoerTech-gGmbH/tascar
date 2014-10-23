@@ -672,7 +672,7 @@ void sink_object_t::write_xml()
 }
 
 sinkmod_object_t::sinkmod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), jack_port_t(xmlsrc), sinkmod_t(xmlsrc)
+  : object_t(xmlsrc), jack_port_t(xmlsrc), newsink_t(xmlsrc)
 {
 }
 
