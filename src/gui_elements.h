@@ -63,7 +63,7 @@ protected:
   // object draw functions:
   virtual void draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_sink_object(TASCAR::Scene::sink_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_sink_object(TASCAR::Scene::sinkmod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);

@@ -134,6 +134,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     char c_respath[PATH_MAX];
     memcpy(c_fname,path.c_str(),path.size()+1);
     session_path = realpath(dirname(c_fname),c_respath);
+    if( chdir(session_path.c_str()) != 0 )
+      std::cerr << "Unable to change directory\n";
   }else{
     char c_respath[PATH_MAX];
     session_path = getcwd(c_respath,PATH_MAX);

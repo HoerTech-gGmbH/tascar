@@ -6,6 +6,7 @@
 #include "coordinates.h"
 #include "delayline.h"
 #include "sinkmod.h"
+#include "dynamicobjects.h"
 
 namespace TASCAR {
 
@@ -49,6 +50,14 @@ namespace TASCAR {
       virtual ~sink_data_t(){};
     };
 
+    class sink_mask_t : public dynobject_t {
+    public:
+      sink_mask_t(xmlpp::Element*);
+      pos_t size;
+      double falloff;
+      bool active;
+    };
+
     class mask_t : public shoebox_t {
     public:
       mask_t();
@@ -80,51 +89,51 @@ namespace TASCAR {
       pos_t position;
       zyx_euler_t orientation;
       bool active;
-      shoebox_t mask;
+      TASCAR::Acousticmodel::sink_mask_t mask;
     private:
       double x_gain;
       double dx_gain;
       float dt;
     };
 
-    /** \brief Base class for all audio sinks
-     */
-    class sink_t {
-    public:
-      sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,      
-             pos_t mask_size,
-             double mask_falloff,
-             bool mask_use,
-             bool global_mask_use);
-      virtual ~sink_t(){};
-      virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
-      virtual void clear();
-      virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
-      virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
-      uint32_t get_num_channels() const { return outchannels.size();};
-      virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
-      virtual sink_data_t* create_sink_data() { return NULL;};
-      void apply_gain(double gain);
-      std::vector<wave_t> outchannels;
-      pos_t position;
-      zyx_euler_t orientation;
-      pos_t size_;
-      double falloff_;
-      bool use_size;
-      bool use_falloff;
-      bool active;
-      bool render_point;
-      bool render_diffuse;
-      bool is_direct;
-      double diffusegain;
-      float dt;
-      shoebox_t mask;
-      double mask_falloff_;
-      bool mask_use_;
-      double x_gain;
-      double dx_gain;
-      bool global_mask_use_;
-    };
+    ///** \brief Base class for all audio sinks
+    // */
+    //class sink_t {
+    //public:
+    //  sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,      
+    //         pos_t mask_size,
+    //         double mask_falloff,
+    //         bool mask_use,
+    //         bool global_mask_use);
+    //  virtual ~sink_t(){};
+    //  virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
+    //  virtual void clear();
+    //  virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
+    //  virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
+    //  uint32_t get_num_channels() const { return outchannels.size();};
+    //  virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+    //  virtual sink_data_t* create_sink_data() { return NULL;};
+    //  void apply_gain(double gain);
+    //  std::vector<wave_t> outchannels;
+    //  pos_t position;
+    //  zyx_euler_t orientation;
+    //  pos_t size_;
+    //  double falloff_;
+    //  bool use_size;
+    //  bool use_falloff;
+    //  bool active;
+    //  bool render_point;
+    //  bool render_diffuse;
+    //  bool is_direct;
+    //  double diffusegain;
+    //  float dt;
+    //  shoebox_t mask;
+    //  double mask_falloff_;
+    //  bool mask_use_;
+    //  double x_gain;
+    //  double dx_gain;
+    //  bool global_mask_use_;
+    //};
 
     class filter_coeff_t {
     public:

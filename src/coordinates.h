@@ -29,8 +29,8 @@
 
 #include <math.h>
 #include <string>
-#include <map>
 #include <libxml++/libxml++.h>
+#include <map>
 #include <limits>
 #include "defs.h"
 
@@ -43,7 +43,6 @@ template<class T> void make_friendly_number(T& x)
       x = 0;
     return;
   }
-  //DEBUGS(x);
   x = 0;
 }
 
@@ -56,7 +55,6 @@ template<class T> void make_friendly_number_limited(T& x)
       x = 0;
     return;
   }
-  //DEBUGS(x);
   x = 0;
 }
 
@@ -249,6 +247,15 @@ namespace TASCAR {
   */
   inline pos_t operator+(const pos_t& a,const pos_t& b) {
     pos_t tmp(a);
+    tmp+=b;
+    return tmp;
+  };
+  /**
+     \brief Add rotations
+     \param p Offset
+  */
+  inline zyx_euler_t operator+(const zyx_euler_t& a,const zyx_euler_t& b) {
+    zyx_euler_t tmp(a);
     tmp+=b;
     return tmp;
   };
@@ -488,6 +495,7 @@ namespace TASCAR {
     pos_t size;
     zyx_euler_t orientation;
   };
+
 }
 
 #endif

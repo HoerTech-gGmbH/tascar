@@ -30,7 +30,7 @@ void source_ctl_t::setup()
     tlabel.set_text("src");
   if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
     tlabel.set_text("dif");
-  if( dynamic_cast<TASCAR::Scene::sink_object_t*>(route_))
+  if( dynamic_cast<TASCAR::Scene::sinkmod_object_t*>(route_))
     tlabel.set_text("sink");
   if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
     tlabel.set_text("door");
@@ -159,6 +159,7 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr,const viewt_t& viewt)
 {
   if( scene_ ){
+    scene_->geometry_update(time);
     switch( viewt ){
     case xy :
       view.set_perspective(false);
@@ -177,13 +178,12 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr,const viewt_t& viewt)
       break;
     case p :
       view.set_perspective(true);
-      if( scene_->sink_objects.size() ){
-        view.set_ref(scene_->sink_objects[0].get_location(time));
-        view.set_euler(scene_->sink_objects[0].get_orientation(time));
+      if( scene_->sinkmod_objects.size() ){
+        view.set_ref(scene_->sinkmod_objects[0]->get_location());
+        view.set_euler(scene_->sinkmod_objects[0]->get_orientation());
       }
       break;
     }
-    scene_->geometry_update(time);
     std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
     for(uint32_t k=0;k<objects.size();k++)
       draw_object(objects[k],cr);
@@ -195,7 +195,7 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   //bool selected(obj==selection);
   draw_track(obj,cr,markersize);
   draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
-  draw_sink_object(dynamic_cast<TASCAR::Scene::sink_object_t*>(obj),cr,markersize);
+  draw_sink_object(dynamic_cast<TASCAR::Scene::sinkmod_object_t*>(obj),cr,markersize);
   draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
   draw_room_src(dynamic_cast<TASCAR::Scene::src_diffuse_t*>(obj),cr,markersize);
   draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
@@ -326,7 +326,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
       msize *= 0.4;
       plot_time = std::min(std::max(plot_time,obj->starttime),obj->endtime);
     }
-    pos_t p(obj->get_location(plot_time));
+    pos_t p(obj->get_location());
     cr->save();
     p = view(p);
     if( p.z != std::numeric_limits<double>::infinity()){
@@ -380,7 +380,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
   }
 }
 
-void scene_draw_t::draw_sink_object(TASCAR::Scene::sink_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_sink_object(TASCAR::Scene::sinkmod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( obj ){
     if( view.get_perspective() )
@@ -389,8 +389,8 @@ void scene_draw_t::draw_sink_object(TASCAR::Scene::sink_object_t* obj,Cairo::Ref
     cr->save();
     cr->set_line_width( 0.2*msize );
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-    pos_t p(obj->get_location(time));
-    zyx_euler_t o(obj->get_orientation(time));
+    pos_t p(obj->get_location());
+    zyx_euler_t o(obj->get_orientation());
     //DEBUG(o.print());
     //o.z += headrot;
     if( (obj->size.x!=0)&&(obj->size.y!=0)&&(obj->size.z!=0) ){
@@ -459,8 +459,8 @@ void scene_draw_t::draw_sink_object(TASCAR::Scene::sink_object_t* obj,Cairo::Ref
     cr->stroke();
     if( obj->mask.active ){
       cr->set_line_width( 0.1*msize );
-      pos_t p(obj->mask.get_location(time));
-      zyx_euler_t o(obj->mask.get_orientation(time));
+      pos_t p(obj->mask.get_location());
+      zyx_euler_t o(obj->mask.get_orientation());
       draw_cube(p,o,obj->mask.size,cr);
       if( obj->mask.falloff > 0 ){
         std::vector<double> dash(2);
@@ -484,8 +484,8 @@ void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Ca
 {
   if( obj ){
     bool solo(obj->get_solo());
-    pos_t p(obj->get_location(time));
-    zyx_euler_t o(obj->get_orientation(time));
+    pos_t p(obj->get_location());
+    zyx_euler_t o(obj->get_orientation());
     o += obj->dorientation;
     cr->save();
     if( solo && blink )
@@ -517,8 +517,8 @@ void scene_draw_t::draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr
 {
   if( obj ){
     bool solo(obj->get_solo());
-    pos_t p(obj->get_location(time));
-    zyx_euler_t o(obj->get_orientation(time));
+    pos_t p(obj->get_location());
+    zyx_euler_t o(obj->get_orientation());
     cr->save();
     if( solo && blink )
       cr->set_line_width( 0.6*msize );
@@ -551,7 +551,7 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Ca
     bool solo(face->get_solo());
     if( !active )
       msize*=0.5;
-    pos_t loc(view(face->get_location(time)));
+    pos_t loc(view(face->get_location()));
     cr->save();
     if( solo && blink ){
       // solo indicating:

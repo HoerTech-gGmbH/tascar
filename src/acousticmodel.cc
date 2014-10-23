@@ -6,11 +6,11 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
-void sink_t::clear()
-{
-  for(uint32_t ch=0;ch<outchannels.size();ch++)
-    outchannels[ch].clear();
-}
+//void sink_t::clear()
+//{
+//  for(uint32_t ch=0;ch<outchannels.size();ch++)
+//    outchannels[ch].clear();
+//}
 
 mask_t::mask_t()
   : falloff(1.0),mask_inner(false)
@@ -27,72 +27,72 @@ double mask_t::gain(const pos_t& p)
 }
 
 
-sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
-               pos_t mask_size,
-               double mask_falloff,
-               bool mask_use,
-               bool global_mask_use) 
-  : size_(size),
-    falloff_(1.0/std::max(falloff,1e-10)),
-    use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0)),
-    use_falloff(falloff>=0),
-    active(true),
-    render_point(b_point),
-    render_diffuse(b_diffuse),
-    is_direct(true),
-    diffusegain(1.0),
-    dt(1.0/std::max(1.0f,(float)chunksize)) ,
-    mask(pos_t(),mask_size,zyx_euler_t()),
-    mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
-    mask_use_(mask_use),
-    global_mask_use_(global_mask_use)
-{
-}
-
-void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
-{
-  if( use_size ){
-    prel = psrc_physical;
-    prel -= position;
-    prel /= orientation;
-    distance = prel.norm();
-    shoebox_t box;
-    box.size = size_;
-    double sizedist = pow(size_.x*size_.y*size_.z,0.33333);
-    //DEBUGS(box.nextpoint(prel).print_sphere());
-    double d(box.nextpoint(prel).norm());
-    if( use_falloff )
-      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_)))/std::max(0.1,sizedist);
-    else
-      gain = 1.0/std::max(1.0,d+sizedist);
-  }else{
-    prel = psrc_virtual;
-    prel -= position;
-    prel /= orientation;
-    distance = prel.norm();
-    gain = 1.0/std::max(0.1,distance);
-  }
-  if( use_mask ){
-    double d(mask.nextpoint(position).norm());
-    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
-  }
-  make_friendly_number(gain);
-}
-
-void sink_t::apply_gain( double gain)
-{
-  dx_gain = (gain-x_gain)*dt;
-  uint32_t ch(get_num_channels());
-  if( ch > 0 ){
-    uint32_t psize(outchannels[0].size());
-    for(uint32_t k=0;k<psize;k++){
-      double g(x_gain+=dx_gain);
-      for(uint32_t c=0;c<ch;c++){
-        outchannels[c][k] *= g;
-      }
-    }
-  }
-}
+//sink_t::sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+//               pos_t mask_size,
+//               double mask_falloff,
+//               bool mask_use,
+//               bool global_mask_use) 
+//  : size_(size),
+//    falloff_(1.0/std::max(falloff,1e-10)),
+//    use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0)),
+//    use_falloff(falloff>=0),
+//    active(true),
+//    render_point(b_point),
+//    render_diffuse(b_diffuse),
+//    is_direct(true),
+//    diffusegain(1.0),
+//    dt(1.0/std::max(1.0f,(float)chunksize)) ,
+//    mask(pos_t(),mask_size,zyx_euler_t()),
+//    mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
+//    mask_use_(mask_use),
+//    global_mask_use_(global_mask_use)
+//{
+//}
+//
+//void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
+//{
+//  if( use_size ){
+//    prel = psrc_physical;
+//    prel -= position;
+//    prel /= orientation;
+//    distance = prel.norm();
+//    shoebox_t box;
+//    box.size = size_;
+//    double sizedist = pow(size_.x*size_.y*size_.z,0.33333);
+//    //DEBUGS(box.nextpoint(prel).print_sphere());
+//    double d(box.nextpoint(prel).norm());
+//    if( use_falloff )
+//      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_)))/std::max(0.1,sizedist);
+//    else
+//      gain = 1.0/std::max(1.0,d+sizedist);
+//  }else{
+//    prel = psrc_virtual;
+//    prel -= position;
+//    prel /= orientation;
+//    distance = prel.norm();
+//    gain = 1.0/std::max(0.1,distance);
+//  }
+//  if( mask_use_ ){
+//    double d(mask.nextpoint(position).norm());
+//    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
+//  }
+//  make_friendly_number(gain);
+//}
+//
+//void sink_t::apply_gain( double gain)
+//{
+//  dx_gain = (gain-x_gain)*dt;
+//  uint32_t ch(get_num_channels());
+//  if( ch > 0 ){
+//    uint32_t psize(outchannels[0].size());
+//    for(uint32_t k=0;k<psize;k++){
+//      double g(x_gain+=dx_gain);
+//      for(uint32_t c=0;c<ch;c++){
+//        outchannels[c][k] *= g;
+//      }
+//    }
+//  }
+//}
 
 pointsource_t::pointsource_t(uint32_t chunksize)
   : audio(chunksize), active(true), direct(true)
@@ -465,6 +465,7 @@ newsink_t::newsink_t(xmlpp::Element* xmlsrc)
     diffusegain(1.0),
     falloff(-1.0),
     active(true),
+    mask(find_or_add_child("mask")),
     x_gain(1.0),
     dx_gain(0),
     dt(1)
@@ -538,9 +539,12 @@ void newsink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_vi
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
   }
-  if( mask_use_ ){
-    double d(mask.nextpoint(position).norm());
-    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
+  if( mask.active ){
+    shoebox_t maskbox;
+    maskbox.size = mask.size;
+    mask.get_6dof(maskbox.center, maskbox.orientation);
+    double d(maskbox.nextpoint(position).norm());
+    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(mask.falloff,1e-10)));
   }
   make_friendly_number(gain);
 }
@@ -560,6 +564,13 @@ void newsink_t::apply_gain(double gain)
   }
 }
 
+TASCAR::Acousticmodel::sink_mask_t::sink_mask_t(xmlpp::Element* xmlsrc)
+  : dynobject_t(xmlsrc),falloff(1.0),active(false)
+{
+  dynobject_t::get_attribute("size",size);
+  dynobject_t::get_attribute("falloff",falloff);
+  dynobject_t::get_attribute_bool("active",active);
+}
 
 /*
  * Local Variables:

@@ -6,7 +6,7 @@
 #include <iostream>
 #include "defs.h"
 #include <string.h>
-#include "sinks.h"
+//#include "sinks.h"
 #include <locale.h>
 #include <libgen.h>
 #include <unistd.h>
@@ -19,57 +19,20 @@ using namespace TASCAR::Scene;
  * object_t
  */
 object_t::object_t(xmlpp::Element* src)
-  : route_t(src),
-    starttime(0),
-    endtime(0),
-    xml_location(NULL),
-    xml_orientation(NULL)
+  : dynobject_t(src),
+    route_t(src),
+    endtime(0)
 {
-  get_attribute("start",starttime);
-  get_attribute("end",endtime);
+  dynobject_t::get_attribute("end",endtime);
   std::string scol;
-  get_attribute("color",scol);
+  dynobject_t::get_attribute("color",scol);
   color = rgb_color_t(scol);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "position")){
-      xml_location = sne;
-      location.read_xml(sne);
-    }
-    if( sne && ( sne->get_name() == "orientation")){
-      xml_orientation = sne;
-      orientation.read_xml(sne);
-    }
-    if( sne && (sne->get_name() == "creator")){
-      xmlpp::Node::NodeList subnodes = sne->get_children();
-      location.edit(subnodes);
-      TASCAR::track_t::iterator it_old=location.end();
-      double old_azim(0);
-      double new_azim(0);
-      for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
-        if( it_old != location.end() ){
-          pos_t p=it->second;
-          p -= it_old->second;
-          new_azim = p.azim();
-          while( new_azim - old_azim > M_PI )
-            new_azim -= 2*M_PI;
-          while( new_azim - old_azim < -M_PI )
-            new_azim += 2*M_PI;
-          orientation[it_old->first] = zyx_euler_t(new_azim,0,0);
-          old_azim = new_azim;
-        }
-        if( TASCAR::distance(it->second,it_old->second) > 0 )
-          it_old = it;
-      }
-    }
-  }
 }
 
 sndfile_object_t::sndfile_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc)
 {
-  xmlpp::Node::NodeList subnodes = e->get_children();
+  xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "sndfile")){
@@ -86,37 +49,12 @@ bool object_t::isactive(double time) const
   return (!get_mute())&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
 }
 
-pos_t object_t::get_location(double time) const
-{
-  pos_t p(location.interp(time-starttime));
-  return (p+=dlocation);
-}
-
-zyx_euler_t object_t::get_orientation(double time) const
-{
-  zyx_euler_t o(orientation.interp(time-starttime));
-  return (o+=dorientation);
-}
-
 void object_t::write_xml()
 {
   route_t::write_xml();
   if( color.str() != "#000000" )
-    set_attribute("color",color.str());
-  if( !((starttime==0.0) && (endtime==0.0)) ){
-    set_attribute("start",starttime);
-    set_attribute("end",endtime);
-  }
-  if( location.size() ){
-    if( !xml_location )
-      xml_location = e->add_child("position");
-    location.write_xml( xml_location );
-  }
-  if( orientation.size() ){
-    if( !xml_orientation )
-      xml_orientation = e->add_child("orientation");
-    orientation.write_xml( xml_orientation );
-  }
+    dynobject_t::set_attribute("color",color.str());
+  dynobject_t::set_attribute("end",endtime);
 }
 
 void sndfile_object_t::write_xml()
@@ -137,16 +75,16 @@ src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
 {
   //object_t::read_xml(e);
   //jack_port_t::read_xml(e);
-  object_t::get_attribute("size",size);
-  object_t::get_attribute("falloff",falloff);
+  dynobject_t::get_attribute("size",size);
+  dynobject_t::get_attribute("falloff",falloff);
 }
 
 void src_diffuse_t::write_xml()
 {
   object_t::write_xml();
   jack_port_t::write_xml();
-  object_t::set_attribute("size",size);
-  object_t::set_attribute("falloff",falloff);
+  dynobject_t::set_attribute("size",size);
+  dynobject_t::set_attribute("falloff",falloff);
 }
 
 /*
@@ -159,19 +97,19 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
     distance(1.0),
     source(NULL)
 {
-  object_t::get_attribute("width",width);
-  object_t::get_attribute("height",height);
-  object_t::get_attribute("falloff",falloff);
-  object_t::get_attribute("distance",distance);
+  dynobject_t::get_attribute("width",width);
+  dynobject_t::get_attribute("height",height);
+  dynobject_t::get_attribute("falloff",falloff);
+  dynobject_t::get_attribute("distance",distance);
 }
 
 void src_door_t::write_xml()
 {
   object_t::write_xml();
   jack_port_t::write_xml();
-  object_t::set_attribute("width",width);
-  object_t::set_attribute("height",height);
-  object_t::set_attribute("falloff",falloff);
+  dynobject_t::set_attribute("width",width);
+  dynobject_t::set_attribute("height",height);
+  dynobject_t::set_attribute("falloff",falloff);
 }
 
 src_door_t::~src_door_t()
@@ -183,8 +121,9 @@ src_door_t::~src_door_t()
 void src_door_t::geometry_update(double t)
 {
   if( source ){
-    source->position = get_location(t);
-    source->set(source->position,get_orientation(t),width,height);
+    dynobject_t::geometry_update(t);
+    source->position = get_location();
+    source->set(source->position,get_orientation(),width,height);
   }
 }
 
@@ -194,8 +133,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   if( source )
     delete source;
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize);
-  source->position = get_location(0);
-  source->set(source->position,get_orientation(0),width,height);
+  geometry_update(0);
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   source->distance = distance;
 }
@@ -261,33 +199,33 @@ src_diffuse_t::~src_diffuse_t()
 void src_diffuse_t::geometry_update(double t)
 {
   if( source ){
-    source->center = get_location(t);
-    source->orientation = get_orientation(t);
+    dynobject_t::geometry_update(t);
+    get_6dof(source->center,source->orientation);
   }
 }
 
-void sink_object_t::geometry_update(double t)
-{
-  if( sink ){
-    sink->position = get_location(t);
-    sink->orientation = get_orientation(t);
-    sink->diffusegain = diffusegain;
-    sink->is_direct = is_direct;
-    if( mask.active ){
-      sink->mask.center = mask.get_location(t);
-      sink->mask.orientation = mask.get_orientation(t);
-    }
-  }
-}
-
-std::vector<TASCAR::pos_t> sink_object_t::get_spkpos() const
-{
-  std::vector<TASCAR::pos_t> r;
-  for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it){
-    r.push_back(*it);
-  }
-  return r;
-}
+//void sink_object_t::geometry_update(double t)
+//{
+//  if( sink ){
+//    dynobject_t::geometry_update(t);
+//    get_6dof(sink->position,sink->orientation);
+//    sink->diffusegain = diffusegain;
+//    sink->is_direct = is_direct;
+//    if( mask.active ){
+//      mask.geometry_update(t);
+//      mask.get_6dof(sink->mask.center,sink->mask.orientation);
+//    }
+//  }
+//}
+//
+//std::vector<TASCAR::pos_t> sink_object_t::get_spkpos() const
+//{
+//  std::vector<TASCAR::pos_t> r;
+//  for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it){
+//    r.push_back(*it);
+//  }
+//  return r;
+//}
 
 void src_diffuse_t::prepare(double fs, uint32_t fragsize)
 {
@@ -369,7 +307,7 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
     //reference(reference_),
     startframe(0)
 {
-  xmlpp::Node::NodeList subnodes = e->get_children();
+  xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "sound" )){
@@ -402,7 +340,7 @@ void src_object_t::write_xml()
 
 sound_t* src_object_t::add_sound()
 {
-  sound.push_back(sound_t(e->add_child("sound"),this));
+  sound.push_back(sound_t(dynobject_t::e->add_child("sound"),this));
   return &sound.back();
 }
 
@@ -429,9 +367,9 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         door_sources.push_back(src_door_t(sne));
       else if( sne->get_name() == "diffuse" )
         diffuse_sources.push_back(src_diffuse_t(sne));
+      //else if( sne->get_name() == "sink" )
+      //  sink_objects.push_back(sink_object_t(sne));
       else if( sne->get_name() == "sink" )
-        sink_objects.push_back(sink_object_t(sne));
-      else if( sne->get_name() == "sinkmod" )
         sinkmod_objects.push_back(new sinkmod_object_t(sne));
       else if( sne->get_name() == "face" )
         faces.push_back(face_object_t(sne));
@@ -463,8 +401,8 @@ void scene_t::write_xml()
     it->write_xml();
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
     it->write_xml();
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    it->write_xml();
+  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+  // it->write_xml();
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     (*it)->write_xml();
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
@@ -477,8 +415,8 @@ void scene_t::geometry_update(double t)
     it->geometry_update(t);
   for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
     it->geometry_update(t);
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    it->geometry_update(t);
+  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+  //  it->geometry_update(t);
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     (*it)->geometry_update(t);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
@@ -495,8 +433,8 @@ void scene_t::process_active(double t)
     it->process_active(t,anysolo);
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     it->process_active(t,anysolo);
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    it->process_active(t,anysolo);
+  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+  //  it->process_active(t,anysolo);
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
@@ -525,99 +463,86 @@ void spk_pos_t::write_xml()
     set_attribute("r",norm());
 }
 
-sink_object_t::sink_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),jack_port_t(xmlsrc),
-    sink_type(omni),
-    falloff(-1.0),
-    render_point(true),
-    render_diffuse(true),
-    is_direct(true),
-    diffusegain(1.0),
-    use_global_mask(true),
-    mask(object_t::find_or_add_child("mask")),
-    sink(NULL)
-{
-  object_t::get_attribute("size",size);
-  object_t::get_attribute_bool("point",render_point);
-  object_t::get_attribute_bool("diffuse",render_diffuse);
-  object_t::get_attribute_bool("isdirect",is_direct);
-  object_t::get_attribute_bool("globalmask",use_global_mask);
-  object_t::get_attribute_db("diffusegain",diffusegain);
-  object_t::get_attribute("falloff",falloff);
-  std::string stype;
-  object_t::get_attribute("type",stype);
-  if( stype == "omni" )
-    sink_type = omni;
-  else if( stype == "cardioid" )
-    sink_type = cardioid;
-  else if( stype == "amb3h3v" )
-    sink_type = amb3h3v;
-  else if( stype == "amb3h0v" )
-    sink_type = amb3h0v;
-  else if( stype == "nsp" )
-    sink_type = nsp;
-  else 
-    throw TASCAR::ErrMsg("Unupported sink type: \""+stype+"\"");
-  //  
-  xmlpp::Node::NodeList subnodes = object_t::e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "speaker" )){
-      spkpos.push_back(spk_pos_t(sne));
-    }
-  }
-}
-
-sink_object_t::sink_object_t(const sink_object_t& src)
-  : object_t(src),
-    jack_port_t(src),
-    sink_type(src.sink_type),
-    spkpos(src.spkpos),
-    size(src.size),
-    falloff(src.falloff),
-    render_point(src.render_point),
-    render_diffuse(src.render_diffuse),
-    is_direct(src.is_direct),
-    diffusegain(src.diffusegain),
-    use_global_mask(src.use_global_mask),
-    mask(src.mask),
-    sink(NULL)
-{
-}
-
-sink_object_t::~sink_object_t()
-{
-  if( sink )
-    delete sink;
-}
-
-
-sink_mask_t::sink_mask_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),falloff(1.0),active(false)
-{
-  get_attribute("size",size);
-  get_attribute("falloff",falloff);
-  get_attribute_bool("active",active);
-}
-
-void sink_mask_t::prepare(double fs, uint32_t fragsize)
-{
-}
+//sink_object_t::sink_object_t(xmlpp::Element* xmlsrc)
+//  : object_t(xmlsrc),jack_port_t(xmlsrc),
+//    sink_type(omni),
+//    falloff(-1.0),
+//    render_point(true),
+//    render_diffuse(true),
+//    is_direct(true),
+//    diffusegain(1.0),
+//    use_global_mask(true),
+//    mask(dynobject_t::find_or_add_child("mask")),
+//    sink(NULL)
+//{
+//  dynobject_t::get_attribute("size",size);
+//  dynobject_t::get_attribute_bool("point",render_point);
+//  dynobject_t::get_attribute_bool("diffuse",render_diffuse);
+//  dynobject_t::get_attribute_bool("isdirect",is_direct);
+//  dynobject_t::get_attribute_bool("globalmask",use_global_mask);
+//  dynobject_t::get_attribute_db("diffusegain",diffusegain);
+//  dynobject_t::get_attribute("falloff",falloff);
+//  std::string stype;
+//  dynobject_t::get_attribute("type",stype);
+//  if( stype == "omni" )
+//    sink_type = omni;
+//  else if( stype == "cardioid" )
+//    sink_type = cardioid;
+//  else if( stype == "amb3h3v" )
+//    sink_type = amb3h3v;
+//  else if( stype == "amb3h0v" )
+//    sink_type = amb3h0v;
+//  else if( stype == "nsp" )
+//    sink_type = nsp;
+//  else 
+//    throw TASCAR::ErrMsg("Unupported sink type: \""+stype+"\"");
+//  //  
+//  xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
+//  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+//    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+//    if( sne && ( sne->get_name() == "speaker" )){
+//      spkpos.push_back(spk_pos_t(sne));
+//    }
+//  }
+//}
+//
+//sink_object_t::sink_object_t(const sink_object_t& src)
+//  : object_t(src),
+//    jack_port_t(src),
+//    sink_type(src.sink_type),
+//    spkpos(src.spkpos),
+//    size(src.size),
+//    falloff(src.falloff),
+//    render_point(src.render_point),
+//    render_diffuse(src.render_diffuse),
+//    is_direct(src.is_direct),
+//    diffusegain(src.diffusegain),
+//    use_global_mask(src.use_global_mask),
+//    mask(src.mask),
+//    sink(NULL)
+//{
+//}
+//
+//sink_object_t::~sink_object_t()
+//{
+//  if( sink )
+//    delete sink;
+//}
 
 mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc)
 {
-  get_attribute("size",xmlsize);
-  get_attribute("falloff",xmlfalloff);
-  get_attribute_bool("inside",mask_inner);
+  dynobject_t::get_attribute("size",xmlsize);
+  dynobject_t::get_attribute("falloff",xmlfalloff);
+  dynobject_t::get_attribute_bool("inside",mask_inner);
 }
 
 void mask_object_t::write_xml()
 {
   object_t::write_xml();
-  set_attribute("size",xmlsize);
-  set_attribute("falloff",xmlfalloff);
-  set_attribute_bool("inside",mask_inner);
+  dynobject_t::set_attribute("size",xmlsize);
+  dynobject_t::set_attribute("falloff",xmlfalloff);
+  dynobject_t::set_attribute_bool("inside",mask_inner);
 }
 
 void mask_object_t::prepare(double fs, uint32_t fragsize)
@@ -629,47 +554,47 @@ void mask_object_t::geometry_update(double t)
   shoebox_t::size.x = std::max(0.0,xmlsize.x-xmlfalloff);
   shoebox_t::size.y = std::max(0.0,xmlsize.y-xmlfalloff);
   shoebox_t::size.z = std::max(0.0,xmlsize.z-xmlfalloff);
-  shoebox_t::center = get_location(t);
-  shoebox_t::orientation = get_orientation(t);
+  dynobject_t::geometry_update(t);
+  get_6dof(shoebox_t::center,shoebox_t::orientation);
   falloff = 1.0/std::max(xmlfalloff,1e-10);
 }
 
-void sink_object_t::write_xml()
-{
-  object_t::write_xml();
-  jack_port_t::write_xml();
-  if( (size.x != 0) || (size.y != 0) || (size.z != 0))
-    object_t::set_attribute("size",size);
-  object_t::set_attribute_bool("point",render_point);
-  object_t::set_attribute_bool("diffuse",render_diffuse);
-  object_t::set_attribute_bool("isdirect",is_direct);
-  if( diffusegain != 0 )
-    object_t::set_attribute_db("diffusegain",diffusegain);
-  if( falloff != -1 )
-    object_t::set_attribute("falloff",falloff);
-  switch( sink_type ){
-  case omni:
-    object_t::e->set_attribute("type", "omni");
-    break;
-  case cardioid:
-    object_t::e->set_attribute("type", "cardioid");
-    break;
-  case amb3h3v :
-    object_t::e->set_attribute("type", "amb3h3v");
-    break;
-  case amb3h0v :
-    object_t::e->set_attribute("type", "amb3h0v");
-    break;
-  case nsp :
-    object_t::e->set_attribute("type", "nsp");
-    break;
-  }
-  //
-  if( mask.active )
-    mask.write_xml();
-  for( std::vector<spk_pos_t>::iterator it=spkpos.begin();it!=spkpos.end();++it)
-    it->write_xml();
-}
+//void sink_object_t::write_xml()
+//{
+//  object_t::write_xml();
+//  jack_port_t::write_xml();
+//  if( (size.x != 0) || (size.y != 0) || (size.z != 0))
+//    dynobject_t::set_attribute("size",size);
+//  dynobject_t::set_attribute_bool("point",render_point);
+//  dynobject_t::set_attribute_bool("diffuse",render_diffuse);
+//  dynobject_t::set_attribute_bool("isdirect",is_direct);
+//  if( diffusegain != 0 )
+//    dynobject_t::set_attribute_db("diffusegain",diffusegain);
+//  if( falloff != -1 )
+//    dynobject_t::set_attribute("falloff",falloff);
+//  switch( sink_type ){
+//  case omni:
+//    dynobject_t::e->set_attribute("type", "omni");
+//    break;
+//  case cardioid:
+//    dynobject_t::e->set_attribute("type", "cardioid");
+//    break;
+//  case amb3h3v :
+//    dynobject_t::e->set_attribute("type", "amb3h3v");
+//    break;
+//  case amb3h0v :
+//    dynobject_t::e->set_attribute("type", "amb3h0v");
+//    break;
+//  case nsp :
+//    dynobject_t::e->set_attribute("type", "nsp");
+//    break;
+//  }
+//  //
+//  if( mask.active )
+//    mask.write_xml();
+//  for( std::vector<spk_pos_t>::iterator it=spkpos.begin();it!=spkpos.end();++it)
+//    it->write_xml();
+//}
 
 sinkmod_object_t::sinkmod_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc), jack_port_t(xmlsrc), newsink_t(xmlsrc)
@@ -696,44 +621,44 @@ void sinkmod_object_t::process_active(double t,uint32_t anysolo)
 }
 
 
-void sink_object_t::prepare(double fs, uint32_t fragsize)
-{
-  bool use_mask(mask.active);
-  if( sink )
-    delete sink;
-  switch( sink_type ){
-  case omni :
-    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                  mask.size,
-                                                  mask.falloff,
-                                                  use_mask,use_global_mask);
-    break;
-  case cardioid :
-    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                      mask.size,
-                                                      mask.falloff,
-                                                      use_mask,use_global_mask);
-    break;
-  case amb3h3v :
-    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                     mask.size,
-                                                     mask.falloff,
-                                                     use_mask,use_global_mask);
-    break;
-  case amb3h0v :
-    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                  mask.size,
-                                                  mask.falloff,
-                                                  use_mask,use_global_mask);
-    break;
-  case nsp :
-    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
-                                                 mask.size,
-                                                 mask.falloff,
-                                                 use_mask,use_global_mask,get_spkpos());
-    break;
-  }
-}
+//void sink_object_t::prepare(double fs, uint32_t fragsize)
+//{
+//  bool use_mask(mask.active);
+//  if( sink )
+//    delete sink;
+//  switch( sink_type ){
+//  case omni :
+//    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse,
+//                                                  mask.size,
+//                                                  mask.falloff,
+//                                                  use_mask,use_global_mask);
+//    break;
+//  case cardioid :
+//    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
+//                                                      mask.size,
+//                                                      mask.falloff,
+//                                                      use_mask,use_global_mask);
+//    break;
+//  case amb3h3v :
+//    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
+//                                                     mask.size,
+//                                                     mask.falloff,
+//                                                     use_mask,use_global_mask);
+//    break;
+//  case amb3h0v :
+//    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
+//                                                  mask.size,
+//                                                  mask.falloff,
+//                                                  use_mask,use_global_mask);
+//    break;
+//  case nsp :
+//    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
+//                                                 mask.size,
+//                                                 mask.falloff,
+//                                                 use_mask,use_global_mask,get_spkpos());
+//    break;
+//  }
+//}
 
 src_object_t* scene_t::add_source()
 {
@@ -765,10 +690,10 @@ std::vector<object_t*> scene_t::get_objects()
     r.push_back(&(*it));
   for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     r.push_back(&(*it));
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-    r.push_back(&(*it));
+  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+  //  r.push_back(&(*it));
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    r.push_back((*it));
+    r.push_back(*it);
   for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
     r.push_back(&(*it));
   for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
@@ -786,14 +711,14 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
   if( (object_sources.size() == 0) && (diffuse_sources.size() == 0) )
     throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
-  if( sink_objects.size() == 0 )
+  if( sinkmod_objects.size() == 0 )
     throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
   for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     it->prepare(fs,fragsize);
   }
-  for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
-    it->prepare(fs,fragsize);
-  }
+  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
+  //  it->prepare(fs,fragsize);
+  //}
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
     (*it)->prepare(fs,fragsize);
   }
@@ -904,10 +829,10 @@ face_object_t::face_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc),width(1.0),
     height(1.0)
 {
-  get_attribute("width",width);
-  get_attribute("height",height);
-  get_attribute("reflectivity",reflectivity);
-  get_attribute("damping",damping);
+  dynobject_t::get_attribute("width",width);
+  dynobject_t::get_attribute("height",height);
+  dynobject_t::get_attribute("reflectivity",reflectivity);
+  dynobject_t::get_attribute("damping",damping);
 }
 
 face_object_t::~face_object_t()
@@ -916,7 +841,8 @@ face_object_t::~face_object_t()
 
 void face_object_t::geometry_update(double t)
 {
-  set(get_location(t),get_orientation(t),width,height);
+  dynobject_t::geometry_update(t);
+  set(get_location(),get_orientation(),width,height);
 }
 
 void face_object_t::prepare(double fs, uint32_t fragsize)
@@ -926,10 +852,10 @@ void face_object_t::prepare(double fs, uint32_t fragsize)
 void face_object_t::write_xml()
 {
   object_t::write_xml();
-  set_attribute("width",width);
-  set_attribute("height",height);
-  set_attribute("reflectivity",reflectivity);
-  set_attribute("damping",damping);
+  dynobject_t::set_attribute("width",width);
+  dynobject_t::set_attribute("height",height);
+  dynobject_t::set_attribute("reflectivity",reflectivity);
+  dynobject_t::set_attribute("damping",damping);
 }
 
 jack_port_t::jack_port_t(xmlpp::Element* xmlsrc)
@@ -1007,12 +933,12 @@ void src_diffuse_t::process_active(double t, uint32_t anysolo)
     source->active = a;
 }
 
-void sink_object_t::process_active(double t, uint32_t anysolo)
-{
-  bool a(is_active(anysolo,t));
-  if( sink )
-    sink->active = a;
-}
+//void sink_object_t::process_active(double t, uint32_t anysolo)
+//{
+//  bool a(is_active(anysolo,t));
+//  if( sink )
+//    sink->active = a;
+//}
 
 void face_object_t::process_active(double t, uint32_t anysolo)
 {

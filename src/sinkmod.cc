@@ -17,7 +17,7 @@ TASCAR::sinkmod_t::sinkmod_t(xmlpp::Element* xmlsrc)
     destroy_cb(NULL),
     write_xml_cb(NULL)
 {
-  GET_ATTRIBUTE(sinktype);
+  get_attribute("type",sinktype);
   std::string libname("tascarsink_");
   libname += sinktype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );
@@ -42,7 +42,7 @@ TASCAR::sinkmod_t::sinkmod_t(xmlpp::Element* xmlsrc)
 
 void TASCAR::sinkmod_t::write_xml()
 {
-  SET_ATTRIBUTE(sinktype);
+  set_attribute("type",sinktype);
   if( write_xml_cb )
     write_xml_cb(libdata,sinkmod_error);
 }

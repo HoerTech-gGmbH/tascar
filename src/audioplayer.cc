@@ -190,9 +190,10 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
-  for(unsigned int k=0;k<sink_objects.size();k++){
-    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
-    psink->clear();
+  for(unsigned int k=0;k<sinkmod_objects.size();k++){
+    sinkmod_objects[k]->clear_output();
+    //TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
+    //psink->clear();
   }
   geometry_update(tp_time);
   process_active(tp_time);
@@ -223,11 +224,11 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     active_diffusesources = 0;
   }
   // copy sink output:
-  for(unsigned int k=0;k<sink_objects.size();k++){
-    TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
-    float gain(sink_objects[k].get_gain());
-    for(uint32_t ch=0;ch<psink->get_num_channels();ch++)
-      psink->outchannels[ch].copy_to(outBuffer[sink_objects[k].get_port_index()+ch],nframes,gain);
+  for(unsigned int k=0;k<sinkmod_objects.size();k++){
+    //TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
+    float gain(sinkmod_objects[k]->get_gain());
+    for(uint32_t ch=0;ch<sinkmod_objects[k]->get_num_channels();ch++)
+      sinkmod_objects[k]->outchannels[ch].copy_to(outBuffer[sinkmod_objects[k]->get_port_index()+ch],nframes,gain);
   }
   //security/stability:
   for(uint32_t ch=0;ch<outBuffer.size();ch++)
@@ -314,12 +315,12 @@ void TASCAR::renderer_t::start()
   }
   // todo: connect diffuse ports.
   // connect sink ports:
-  for(unsigned int k=0;k<sink_objects.size();k++){
-    std::string cn(sink_objects[k].get_connect());
+  for(unsigned int k=0;k<sinkmod_objects.size();k++){
+    std::string cn(sinkmod_objects[k]->get_connect());
     if( cn.size() ){
-      cn = strrep(cn,"@","player."+name+":"+sink_objects[k].get_name());
-      for(uint32_t ch=0;ch<sink_objects[k].get_sink()->get_num_channels();ch++)
-        connect_out(sink_objects[k].get_port_index()+ch,cn+sink_objects[k].get_sink()->get_channel_postfix(ch),true);
+      cn = strrep(cn,"@","player."+name+":"+sinkmod_objects[k]->get_name());
+      for(uint32_t ch=0;ch<sinkmod_objects[k]->get_num_channels();ch++)
+        connect_out(sinkmod_objects[k]->get_port_index()+ch,cn+sinkmod_objects[k]->get_channel_postfix(ch),true);
     }
   }
   //for(uint32_t k=0;k<connections.size();k++)
