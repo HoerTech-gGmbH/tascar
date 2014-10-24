@@ -496,6 +496,14 @@ namespace TASCAR {
     zyx_euler_t orientation;
   };
 
+  class c6dof_t {
+  public:
+    c6dof_t() {};
+    c6dof_t(const pos_t& psrc,const zyx_euler_t& osrc) : p(psrc), o(osrc) {};
+    pos_t p;
+    zyx_euler_t o;
+  };
+
 }
 
 #endif

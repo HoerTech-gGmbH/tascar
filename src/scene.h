@@ -54,6 +54,7 @@ namespace TASCAR {
       void set_mute(bool b) {mute=b;};
       void set_solo(bool b,uint32_t& anysolo);
       bool is_active(uint32_t anysolo);
+      virtual void prepare(double srate,uint32_t fragsize) {};
     private:
       std::string name;
       bool mute;
@@ -87,6 +88,7 @@ namespace TASCAR {
     class object_t : public dynobject_t, public route_t {
     public:
       object_t(xmlpp::Element*);
+      virtual ~object_t() {};
       void write_xml();
       bool isactive(double time) const;
       bool is_active(uint32_t anysolo,double t);
@@ -223,41 +225,13 @@ namespace TASCAR {
       void write_xml();
     };
 
-    class sinkmod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::newsink_t {
+    class sinkmod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::sink_t {
     public:
       sinkmod_object_t(xmlpp::Element* e);
       void write_xml();
       void prepare(double fs, uint32_t fragsize);
-      void geometry_update(double t);
-      void process_active(double t,uint32_t anysolo);
+      //void geometry_update(double t);
     };
-
-    //class sink_object_t : public object_t, public jack_port_t {
-    //public:
-    //  enum sink_type_t {
-    //    omni, cardioid, amb3h3v, amb3h0v, nsp
-    //  };
-    //  sink_object_t(xmlpp::Element* e);
-    //  sink_object_t(const sink_object_t& src);
-    //  virtual ~sink_object_t();
-    //  void write_xml();
-    //  void prepare(double fs, uint32_t fragsize);
-    //  TASCAR::Acousticmodel::sink_t* get_sink() { return sink;};
-    //  void geometry_update(double t);
-    //  void process_active(double t,uint32_t anysolo);
-    //  std::vector<TASCAR::pos_t> get_spkpos() const;
-    //  sink_type_t sink_type;
-    //  std::vector<spk_pos_t> spkpos;
-    //  pos_t size;
-    //  double falloff;
-    //  bool render_point;
-    //  bool render_diffuse;
-    //  bool is_direct;
-    //  double diffusegain;
-    //  bool use_global_mask;
-    //  TASCAR::Acousticmodel::sink_mask_t mask;
-    //  TASCAR::Acousticmodel::sink_t* sink;
-    //};
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
     public:
@@ -281,13 +255,12 @@ namespace TASCAR {
       std::string name;
       void geometry_update(double t);
       void process_active(double t);
-      std::vector<src_object_t> object_sources;
-      std::vector<src_diffuse_t> diffuse_sources;
-      std::vector<src_door_t> door_sources;
-      std::vector<face_object_t> faces;
-      //std::vector<sink_object_t> sink_objects;
+      std::vector<src_object_t*> object_sources;
+      std::vector<src_diffuse_t*> diffuse_sources;
+      std::vector<src_door_t*> door_sources;
+      std::vector<face_object_t*> faces;
       std::vector<sinkmod_object_t*> sinkmod_objects;
-      std::vector<mask_object_t> masks;
+      std::vector<mask_object_t*> masks;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;
       double guiscale;
@@ -296,6 +269,7 @@ namespace TASCAR {
       std::vector<object_t*> get_objects();
       std::string scene_path;
     private:
+      void clean_children();
       scene_t(const scene_t&);
     };
 

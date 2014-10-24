@@ -159,7 +159,7 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr,const viewt_t& viewt)
 {
   if( scene_ ){
-    scene_->geometry_update(time);
+    //scene_->geometry_update(time);
     switch( viewt ){
     case xy :
       view.set_perspective(false);

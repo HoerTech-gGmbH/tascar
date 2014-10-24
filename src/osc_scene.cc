@@ -128,8 +128,8 @@ void osc_scene_t::add_child_methods()
     add_object_methods(*it);
     add_route_methods(*it);
   }
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-    add_diffuse_methods(&(*it));
+  for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    add_diffuse_methods(*it);
   }
   std::vector<sound_t*> sounds(linearize_sounds());
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){

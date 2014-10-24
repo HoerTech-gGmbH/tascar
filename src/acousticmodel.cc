@@ -136,7 +136,7 @@ diffuse_source_t::diffuse_source_t(uint32_t chunksize)
 {
 }
 
-acoustic_model_t::acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,newsink_t* sink,const std::vector<obstacle_t*>& obstacles)
+acoustic_model_t::acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles)
   : src_(src),
     sink_(sink),
     sink_data(sink_->create_data(fs,chunksize)),
@@ -327,7 +327,7 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<newsink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
+world_t::world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
   : mirrormodel(sources,reflectors,mirror_order),sinks_(sinks),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
   //DEBUGS(diffusesources.size());
@@ -397,7 +397,7 @@ void world_t::process()
   active_diffusesource = local_active_diffuse;
 }
 
-diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,newsink_t* sink)
+diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,sink_t* sink)
   : src_(src),
     sink_(sink),
     sink_data(sink_->create_data(fs,chunksize)),
@@ -456,7 +456,7 @@ uint32_t diffuse_acoustic_model_t::process()
   return 0;
 }
 
-newsink_t::newsink_t(xmlpp::Element* xmlsrc)
+sink_t::sink_t(xmlpp::Element* xmlsrc)
   : sinkmod_t(xmlsrc),
     render_point(true),
     render_diffuse(true),
@@ -479,7 +479,7 @@ newsink_t::newsink_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(falloff);
 }
 
-void newsink_t::write_xml()
+void sink_t::write_xml()
 {
   sinkmod_t::write_xml();
   SET_ATTRIBUTE(size);
@@ -491,31 +491,33 @@ void newsink_t::write_xml()
   SET_ATTRIBUTE(falloff);
 }
 
-void newsink_t::prepare(double srate, uint32_t chunksize)
+void sink_t::prepare(double srate, uint32_t chunksize)
 {
+  DEBUG(srate);
+  DEBUG(chunksize);
   dt = 1.0/std::max(1.0f,(float)chunksize);
   outchannels.clear();
   for(uint32_t k=0;k<get_num_channels();k++)
     outchannels.push_back(wave_t(chunksize));
 }
 
-void newsink_t::clear_output()
+void sink_t::clear_output()
 {
   for(uint32_t ch=0;ch<outchannels.size();ch++)
     outchannels[ch].clear();
 }
 
-void newsink_t::add_pointsource(const pos_t& prel, const wave_t& chunk, sinkmod_base_t::data_t* data)
+void sink_t::add_pointsource(const pos_t& prel, const wave_t& chunk, sinkmod_base_t::data_t* data)
 {
   sinkmod_t::add_pointsource(prel,chunk,outchannels,data);
 }
 
-void newsink_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, sinkmod_base_t::data_t* data)
+void sink_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, sinkmod_base_t::data_t* data)
 {
   sinkmod_t::add_diffusesource(prel,chunk,outchannels,data);
 }
 
-void newsink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
+void sink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
 {
   
   if( (size.x!=0)&&(size.y!=0)&&(size.z!=0) ){
@@ -549,7 +551,7 @@ void newsink_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_vi
   make_friendly_number(gain);
 }
 
-void newsink_t::apply_gain(double gain)
+void sink_t::apply_gain(double gain)
 {
   dx_gain = (gain-x_gain)*dt;
   uint32_t ch(get_num_channels());

@@ -66,9 +66,9 @@ namespace TASCAR {
       bool mask_inner;
     };
 
-    class newsink_t : public sinkmod_t {
+    class sink_t : public sinkmod_t {
     public:
-      newsink_t(xmlpp::Element* xmlsrc);
+      sink_t(xmlpp::Element* xmlsrc);
       void write_xml();
       void prepare(double srate, uint32_t fragsize);
       void clear_output();
@@ -95,45 +95,6 @@ namespace TASCAR {
       double dx_gain;
       float dt;
     };
-
-    ///** \brief Base class for all audio sinks
-    // */
-    //class sink_t {
-    //public:
-    //  sink_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,      
-    //         pos_t mask_size,
-    //         double mask_falloff,
-    //         bool mask_use,
-    //         bool global_mask_use);
-    //  virtual ~sink_t(){};
-    //  virtual void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
-    //  virtual void clear();
-    //  virtual void add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*) = 0;
-    //  virtual void add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*) = 0;
-    //  uint32_t get_num_channels() const { return outchannels.size();};
-    //  virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
-    //  virtual sink_data_t* create_sink_data() { return NULL;};
-    //  void apply_gain(double gain);
-    //  std::vector<wave_t> outchannels;
-    //  pos_t position;
-    //  zyx_euler_t orientation;
-    //  pos_t size_;
-    //  double falloff_;
-    //  bool use_size;
-    //  bool use_falloff;
-    //  bool active;
-    //  bool render_point;
-    //  bool render_diffuse;
-    //  bool is_direct;
-    //  double diffusegain;
-    //  float dt;
-    //  shoebox_t mask;
-    //  double mask_falloff_;
-    //  bool mask_use_;
-    //  double x_gain;
-    //  double dx_gain;
-    //  bool global_mask_use_;
-    //};
 
     class filter_coeff_t {
     public:
@@ -196,14 +157,14 @@ namespace TASCAR {
      */
     class acoustic_model_t {
     public:
-      acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,newsink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
+      acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
       ~acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
       uint32_t process();
     protected:
       pointsource_t* src_;
-      newsink_t* sink_;
+      sink_t* sink_;
       sinkmod_base_t::data_t* sink_data;
       std::vector<obstacle_t*> obstacles_;
       wave_t audio;
@@ -224,14 +185,14 @@ namespace TASCAR {
      */
     class diffuse_acoustic_model_t {
     public:
-      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,newsink_t* sink);
+      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,sink_t* sink);
       ~diffuse_acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
       uint32_t process();
     protected:
       diffuse_source_t* src_;
-      newsink_t* sink_;
+      sink_t* sink_;
       sinkmod_base_t::data_t* sink_data;
       amb1wave_t audio;
       uint32_t chunksize;
@@ -254,7 +215,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<newsink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order);
+      world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */
@@ -267,7 +228,7 @@ namespace TASCAR {
       mirror_model_t mirrormodel;
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
-      std::vector<newsink_t*> sinks_;
+      std::vector<sink_t*> sinks_;
       std::vector<mask_t*> masks_;
       uint32_t active_pointsource;
       uint32_t active_diffusesource;

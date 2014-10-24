@@ -177,9 +177,11 @@ sound_t::~sound_t()
 
 void sound_t::geometry_update(double t)
 {
+  DEBUG(t);
   if( source ){
     source->position = get_pos_global(t);
     source->direct = direct;
+    DEBUG(source->position.print_cart());
   }
 }
 
@@ -318,6 +320,8 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
 
 void src_object_t::geometry_update(double t)
 {
+  DEBUG(t);
+  dynobject_t::geometry_update(t);
   for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
     it->geometry_update(t);
   }
@@ -352,6 +356,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     guiscale(200),anysolo(0),
     scene_path("")
 {
+  try{
   get_attribute("name",name);
   get_attribute("mirrororder",mirrororder);
   get_attribute("guiscale",guiscale);
@@ -362,29 +367,40 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
       if( sne->get_name() == "src_object" )
-        object_sources.push_back(src_object_t(sne));
+        object_sources.push_back(new src_object_t(sne));
       else if( sne->get_name() == "door" )
-        door_sources.push_back(src_door_t(sne));
+        door_sources.push_back(new src_door_t(sne));
       else if( sne->get_name() == "diffuse" )
-        diffuse_sources.push_back(src_diffuse_t(sne));
+        diffuse_sources.push_back(new src_diffuse_t(sne));
       //else if( sne->get_name() == "sink" )
       //  sink_objects.push_back(sink_object_t(sne));
       else if( sne->get_name() == "sink" )
         sinkmod_objects.push_back(new sinkmod_object_t(sne));
       else if( sne->get_name() == "face" )
-        faces.push_back(face_object_t(sne));
+        faces.push_back(new face_object_t(sne));
       else if( sne->get_name() == "mask" )
-        masks.push_back(mask_object_t(sne));
+        masks.push_back(new mask_object_t(sne));
       else
         std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
     }
   }
+  }
+  catch(...){
+    clean_children();
+    throw;
+  }
+}
+
+void scene_t::clean_children()
+{
+  std::vector<object_t*> objs(get_objects());
+  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
+    delete *it;
 }
 
 scene_t::~scene_t()
 {
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    delete *it;
+  clean_children();
 }
 
 void scene_t::write_xml()
@@ -397,48 +413,37 @@ void scene_t::write_xml()
     xmlpp::Element* description_node = find_or_add_child("description");
     description_node->add_child_text(description);
   }
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    it->write_xml();
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    it->write_xml();
-  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-  // it->write_xml();
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+  std::vector<object_t*> objs(get_objects());
+  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
     (*it)->write_xml();
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    it->write_xml();
 }
 
 void scene_t::geometry_update(double t)
 {
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    it->geometry_update(t);
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    it->geometry_update(t);
-  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-  //  it->geometry_update(t);
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-    (*it)->geometry_update(t);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    it->geometry_update(t);
-  for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
-    it->geometry_update(t);
+  std::vector<object_t*> objs(get_objects());
+  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
+    (*it)->geometry_update( t );
 }
 
 void scene_t::process_active(double t)
 {
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    it->process_active(t,anysolo);
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    it->process_active(t,anysolo);
-  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
-    it->process_active(t,anysolo);
+  for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    (*it)->process_active(t,anysolo);
+  for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    (*it)->process_active(t,anysolo);
+  for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
+    (*it)->process_active(t,anysolo);
   //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
   //  it->process_active(t,anysolo);
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+  //for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+  //  (*it)->process_active(t,anysolo);
+  for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    it->process_active(t,anysolo);
+  
+  //std::vector<object_t*> objs(get_objects());
+  //for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it){
+  //  (*it)->process_active( t, anysolo );
+  //}
 }
 
 spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
@@ -551,10 +556,10 @@ void mask_object_t::prepare(double fs, uint32_t fragsize)
 
 void mask_object_t::geometry_update(double t)
 {
+  dynobject_t::geometry_update(t);
   shoebox_t::size.x = std::max(0.0,xmlsize.x-xmlfalloff);
   shoebox_t::size.y = std::max(0.0,xmlsize.y-xmlfalloff);
   shoebox_t::size.z = std::max(0.0,xmlsize.z-xmlfalloff);
-  dynobject_t::geometry_update(t);
   get_6dof(shoebox_t::center,shoebox_t::orientation);
   falloff = 1.0/std::max(xmlfalloff,1e-10);
 }
@@ -597,7 +602,7 @@ void mask_object_t::geometry_update(double t)
 //}
 
 sinkmod_object_t::sinkmod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), jack_port_t(xmlsrc), newsink_t(xmlsrc)
+  : object_t(xmlsrc), jack_port_t(xmlsrc), sink_t(xmlsrc)
 {
 }
 
@@ -610,15 +615,16 @@ void sinkmod_object_t::write_xml()
 
 void sinkmod_object_t::prepare(double fs, uint32_t fragsize)
 {
+  TASCAR::Acousticmodel::sink_t::prepare(fs,fragsize);
 }
 
-void sinkmod_object_t::geometry_update(double t)
-{
-}
+//void sinkmod_object_t::geometry_update(double t)
+//{
+//}
 
-void sinkmod_object_t::process_active(double t,uint32_t anysolo)
-{
-}
+//void sinkmod_object_t::process_active(double t,uint32_t anysolo)
+//{
+//}
 
 
 //void sink_object_t::prepare(double fs, uint32_t fragsize)
@@ -662,18 +668,18 @@ void sinkmod_object_t::process_active(double t,uint32_t anysolo)
 
 src_object_t* scene_t::add_source()
 {
-  object_sources.push_back(src_object_t(e->add_child("src_object")));
-  return &object_sources.back();
+  object_sources.push_back(new src_object_t(e->add_child("src_object")));
+  return object_sources.back();
 }
 
 std::vector<sound_t*> scene_t::linearize_sounds()
 {
   std::vector<sound_t*> r;
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
+  for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     //it->set_reference(&listener);
-    for(std::vector<sound_t>::iterator its=it->sound.begin();its!=it->sound.end();++its){
+    for(std::vector<sound_t>::iterator its=(*it)->sound.begin();its!=(*it)->sound.end();++its){
       if( &(*its) ){
-        (&(*its))->set_parent(&(*it));
+        (&(*its))->set_parent((*it));
         r.push_back(&(*its));
       }
     }
@@ -684,20 +690,20 @@ std::vector<sound_t*> scene_t::linearize_sounds()
 std::vector<object_t*> scene_t::get_objects()
 {
   std::vector<object_t*> r;
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it)
-    r.push_back(&(*it));
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    r.push_back(&(*it));
-  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it)
-    r.push_back(&(*it));
+  for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    r.push_back(*it);
+  for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    r.push_back(*it);
+  for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
+    r.push_back(*it);
   //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
   //  r.push_back(&(*it));
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     r.push_back(*it);
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it)
-    r.push_back(&(*it));
-  for(std::vector<mask_object_t>::iterator it=masks.begin();it!=masks.end();++it)
-    r.push_back(&(*it));
+  for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
+    r.push_back(*it);
+  for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it)
+    r.push_back(*it);
   return r;
 }
 
@@ -713,24 +719,9 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
   if( sinkmod_objects.size() == 0 )
     throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
-  for(std::vector<src_object_t>::iterator it=object_sources.begin();it!=object_sources.end();++it){
-    it->prepare(fs,fragsize);
-  }
-  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it){
-  //  it->prepare(fs,fragsize);
-  //}
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
-    (*it)->prepare(fs,fragsize);
-  }
-  for(std::vector<src_door_t>::iterator it=door_sources.begin();it!=door_sources.end();++it){
-    it->prepare(fs,fragsize);
-  }
-  for(std::vector<src_diffuse_t>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-    it->prepare(fs,fragsize);
-  }
-  for(std::vector<face_object_t>::iterator it=faces.begin();it!=faces.end();++it){
-    it->prepare(fs,fragsize);
-  }
+  std::vector<object_t*> objs(get_objects());
+  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
+    (*it)->prepare( fs, fragsize );
 }
 
 rgb_color_t::rgb_color_t(const std::string& webc)
@@ -881,8 +872,6 @@ void jack_port_t::write_xml()
     set_attribute_db("gain",gain);
 }
 
-
-
 sndfile_info_t::sndfile_info_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),fname(""),
     firstchannel(0),
@@ -932,13 +921,6 @@ void src_diffuse_t::process_active(double t, uint32_t anysolo)
   if( source )
     source->active = a;
 }
-
-//void sink_object_t::process_active(double t, uint32_t anysolo)
-//{
-//  bool a(is_active(anysolo,t));
-//  if( sink )
-//    sink->active = a;
-//}
 
 void face_object_t::process_active(double t, uint32_t anysolo)
 {

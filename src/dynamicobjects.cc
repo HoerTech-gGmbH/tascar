@@ -3,7 +3,7 @@
 TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),
     starttime(0),
-    localtime_(std::numeric_limits<double>::infinity()),
+    c6dof(c6dof_),
     xml_location(NULL),
     xml_orientation(NULL)
 {
@@ -62,29 +62,26 @@ void TASCAR::dynobject_t::write_xml()
 void TASCAR::dynobject_t::geometry_update(double time)
 {
   double ltime(time-starttime);
-  if( ltime != localtime_ ){
-    localtime_ = ltime;
-    cached_pos = location.interp(ltime);
-    cached_rot = orientation.interp(ltime);
-  }
+  c6dof_.p = location.interp(ltime);
+  c6dof_.p += dlocation;
+  c6dof_.o = orientation.interp(ltime);
+  c6dof_.o += dorientation;
 }
 
 TASCAR::pos_t TASCAR::dynobject_t::get_location()
 {
-  return cached_pos + dlocation;
+  return c6dof_.p;
 }
 
 TASCAR::zyx_euler_t TASCAR::dynobject_t::get_orientation()
 {
-  return cached_rot + dorientation;
+  return c6dof_.o;
 }
 
 void TASCAR::dynobject_t::get_6dof(pos_t& p,zyx_euler_t& o)
 {
-  p = cached_pos;
-  p += dlocation;
-  o = cached_rot;
-  o += dorientation;
+  p = c6dof_.p;
+  o = c6dof_.o;
 }
 
 /*
