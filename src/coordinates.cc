@@ -777,6 +777,11 @@ pos_t pos_t::normal() const
   return r;
 }
 
+void pos_t::normalize()
+{
+  *this /= norm();
+}
+
 bool pos_t::has_infinity() const
 {
   if( x == std::numeric_limits<double>::infinity() )
