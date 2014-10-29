@@ -177,11 +177,9 @@ sound_t::~sound_t()
 
 void sound_t::geometry_update(double t)
 {
-  DEBUG(t);
   if( source ){
     source->position = get_pos_global(t);
     source->direct = direct;
-    DEBUG(source->position.print_cart());
   }
 }
 
@@ -320,7 +318,6 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
 
 void src_object_t::geometry_update(double t)
 {
-  DEBUG(t);
   dynobject_t::geometry_update(t);
   for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
     it->geometry_update(t);

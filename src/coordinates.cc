@@ -33,6 +33,15 @@
 #include <fstream>
 #include "errorhandling.h"
 
+static uint32_t cnt_interp = 0;
+
+uint32_t get_cnt_interp()
+{
+  uint32_t tmp(cnt_interp);
+  cnt_interp = 0;
+  return tmp;
+}
+
 using namespace TASCAR;
 
 std::string pos_t::print_cart(const std::string& delim) const
@@ -154,6 +163,7 @@ void track_t::shift_time(double dt)
 
 pos_t track_t::interp(double x) const
 {
+  cnt_interp++;
   if( begin() == end() )
     return pos_t();
   const_iterator lim2 = lower_bound(x);

@@ -173,6 +173,7 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
                                 const std::vector<float*>& outBuffer, 
                                 uint32_t tp_frame, bool tp_rolling)
 {
+  //DEBUG(get_cnt_interp());
   //security/stability:
   for(uint32_t ch=0;ch<inBuffer.size();ch++)
     for(uint32_t k=0;k<nframes;k++)

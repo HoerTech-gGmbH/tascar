@@ -33,6 +33,9 @@
 #include <map>
 #include <limits>
 #include "defs.h"
+#include <stdint.h>
+
+uint32_t get_cnt_interp();
 
 template<class T> void make_friendly_number(T& x)
 {

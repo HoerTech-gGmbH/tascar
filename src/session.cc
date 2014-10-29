@@ -36,9 +36,7 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     if( !destroy_cb )
       throw TASCAR::ErrMsg("Unable to resolve \"tascar_destroy\" in module \""+name+"\".");
     write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
-    //DEBUG(1);
     libdata = create_cb(xmlsrc,session,module_error);
-    //DEBUG(libdata);
   }
   catch( ... ){
     dlclose(lib);
@@ -48,21 +46,18 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
 
 void TASCAR::module_t::write_xml()
 {
-  //DEBUG(write_xml_cb);
   if( write_xml_cb )
     write_xml_cb(libdata,module_error);
 }
 
 TASCAR::module_t::~module_t()
 {
-  //DEBUG(libdata);
   destroy_cb(libdata,module_error);
   dlclose(lib);
 }
 
 xmlpp::Element* assert_element(xmlpp::Element* e)
 {
-  //DEBUG(e);
   if( !e )
     throw TASCAR::ErrMsg("NULL pointer element");
   return e;
@@ -70,18 +65,14 @@ xmlpp::Element* assert_element(xmlpp::Element* e)
 
 const std::string& debug_str(const std::string& s)
 {
-  //DEBUG(s);
   return s;
 }
 
 TASCAR::xml_doc_t::xml_doc_t()
   : doc(NULL)
 {
-  //DEBUG(1);
   doc = new xmlpp::Document();
-  //DEBUG(1);
   doc->create_root_node("session");
-  //DEBUG(1);
 }
 
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
@@ -95,13 +86,9 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
     domp.parse_memory(filename_or_data);
     break;
   }
-  //DEBUG(1);
-  //DEBUG(1);
   doc = domp.get_document();
-  //DEBUG(1);
   if( !doc )
     throw TASCAR::ErrMsg("Unable to parse document.");
-  //DEBUG(1);
 }
 
 TASCAR::session_t::session_t()
@@ -112,7 +99,6 @@ TASCAR::session_t::session_t()
     loop(false)
 {
   setlocale(LC_ALL,"C");
-  //DEBUG(1);
   char c_respath[PATH_MAX];
   session_path = getcwd(c_respath,PATH_MAX);
   if( get_element_name() != "session" )
@@ -186,7 +172,6 @@ void TASCAR::session_t::save(const std::string& filename)
 
 void TASCAR::session_t::write_xml()
 {
-  //DEBUG(1);
   for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
     (*it)->write_xml();
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
@@ -195,7 +180,6 @@ void TASCAR::session_t::write_xml()
     (*it)->write_xml();
   for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
     (*it)->write_xml();
-  //DEBUG(1);
 }
 
 TASCAR::session_t::~session_t()
