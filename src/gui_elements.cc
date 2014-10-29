@@ -140,15 +140,21 @@ scene_draw_t::scene_draw_t()
     markersize(0.02),
     blink(false)
 {
+  pthread_mutex_init( &mtx, NULL );
 }
 
 scene_draw_t::~scene_draw_t()
 {
+  pthread_mutex_trylock( &mtx );
+  pthread_mutex_unlock( &mtx );
+  pthread_mutex_destroy( &mtx );
 }
 
 void scene_draw_t::set_scene(TASCAR::Scene::scene_t* scene)
 {
+  pthread_mutex_lock( &mtx );
   scene_ = scene;
+  pthread_mutex_unlock( &mtx );
 }
 
 void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
@@ -158,35 +164,38 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 
 void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr,const viewt_t& viewt)
 {
-  if( scene_ ){
-    //scene_->geometry_update(time);
-    switch( viewt ){
-    case xy :
-      view.set_perspective(false);
-      view.set_ref(scene_->guicenter);
-      view.set_euler(zyx_euler_t());
-      break;
-    case xz :
-      view.set_perspective(false);
-      view.set_ref(scene_->guicenter);
-      view.set_euler(zyx_euler_t(0,-0.5*M_PI,0.5*M_PI));
-      break;
-    case yz :
-      view.set_perspective(false);
-      view.set_ref(scene_->guicenter);
-      view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
-      break;
-    case p :
-      view.set_perspective(true);
-      if( scene_->sinkmod_objects.size() ){
-        view.set_ref(scene_->sinkmod_objects[0]->get_location());
-        view.set_euler(scene_->sinkmod_objects[0]->get_orientation());
+  if( pthread_mutex_lock( &mtx ) == 0 ){
+    if( scene_ ){
+      //scene_->geometry_update(time);
+      switch( viewt ){
+      case xy :
+        view.set_perspective(false);
+        view.set_ref(scene_->guicenter);
+        view.set_euler(zyx_euler_t());
+        break;
+      case xz :
+        view.set_perspective(false);
+        view.set_ref(scene_->guicenter);
+        view.set_euler(zyx_euler_t(0,-0.5*M_PI,0.5*M_PI));
+        break;
+      case yz :
+        view.set_perspective(false);
+        view.set_ref(scene_->guicenter);
+        view.set_euler(zyx_euler_t(0,0,0.5*M_PI));
+        break;
+      case p :
+        view.set_perspective(true);
+        if( scene_->sinkmod_objects.size() ){
+          view.set_ref(scene_->sinkmod_objects[0]->get_location());
+          view.set_euler(scene_->sinkmod_objects[0]->get_orientation());
+        }
+        break;
       }
-      break;
+      std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
+      for(uint32_t k=0;k<objects.size();k++)
+        draw_object(objects[k],cr);
     }
-    std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
-    for(uint32_t k=0;k<objects.size();k++)
-      draw_object(objects[k],cr);
+    pthread_mutex_unlock( &mtx );
   }
 }
 

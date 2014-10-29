@@ -76,6 +76,8 @@ protected:
   TASCAR::Scene::object_t* selection;
   double markersize;
   bool blink;
+private:
+  pthread_mutex_t mtx;
 };
 
 #endif
