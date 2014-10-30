@@ -493,8 +493,8 @@ void sink_t::write_xml()
 
 void sink_t::prepare(double srate, uint32_t chunksize)
 {
-  DEBUG(srate);
-  DEBUG(chunksize);
+  //DEBUG(srate);
+  //DEBUG(chunksize);
   dt = 1.0/std::max(1.0f,(float)chunksize);
   outchannels.clear();
   for(uint32_t k=0;k<get_num_channels();k++)

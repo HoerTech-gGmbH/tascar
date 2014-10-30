@@ -58,7 +58,7 @@ public:
 protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
   void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
-  virtual void draw_face_normal(TASCAR::face_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
+  virtual void draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
   virtual void draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASCAR::pos_t size,Cairo::RefPtr<Cairo::Context> cr);
   // object draw functions:
   virtual void draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);

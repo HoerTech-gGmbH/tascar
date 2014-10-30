@@ -23,6 +23,7 @@ namespace TASCAR {
     void get_attribute_db_float(const std::string& name,float& value);
     void get_attribute_deg(const std::string& name,double& value);
     void get_attribute(const std::string& name,TASCAR::pos_t& value);
+    void get_attribute(const std::string& name,std::vector<TASCAR::pos_t>& value);
     // set attributes:
     void set_attribute_bool(const std::string& name,bool value);
     void set_attribute_db(const std::string& name,double value);
@@ -30,6 +31,7 @@ namespace TASCAR {
     void set_attribute(const std::string& name,double value);
     void set_attribute(const std::string& name,unsigned int value);
     void set_attribute(const std::string& name,const TASCAR::pos_t& value);
+    void set_attribute(const std::string& name,const std::vector<TASCAR::pos_t>& value);
     virtual void write_xml() = 0;
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
@@ -53,11 +55,14 @@ void get_attribute_value_db(xmlpp::Element* elem,const std::string& name,double&
 void get_attribute_value_db_float(xmlpp::Element* elem,const std::string& name,float& value);
 void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::pos_t& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value);
+
 void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value);
 void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value);
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value);
 
 #define GET_ATTRIBUTE(x) get_attribute(#x,x)
 #define SET_ATTRIBUTE(x) set_attribute(#x,x)

@@ -121,6 +121,7 @@ namespace TASCAR {
       void process_active(double t,uint32_t anysolo);
       double width;
       double height;
+      std::vector<TASCAR::pos_t> vertices;
     };
 
     class src_object_t;

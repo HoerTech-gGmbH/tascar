@@ -734,52 +734,44 @@ void track_t::fill_gaps(double dt)
   prepare();
 }
 
-face_t::face_t()
+void ngon_t::nonrt_set_rect(double width, double height)
 {
-  set(pos_t(),zyx_euler_t(),2,1);
+  std::vector<pos_t> nverts;
+  nverts.push_back(pos_t(0,0,0));
+  nverts.push_back(pos_t(0,width,0));
+  nverts.push_back(pos_t(0,width,height));
+  nverts.push_back(pos_t(0,0,height));
+  nonrt_set(nverts);
 }
 
-void face_t::set(const pos_t& p0, const zyx_euler_t& o, double width, double height)
-{
-  anchor = p0;
-  e1 = pos_t(0,width,0);
-  e2 = pos_t(0,0,height);
-  e1 *= o;
-  e2 *= o;
-  width_ = width;
-  height_ = height;
-  orient_ = o;
-  update();
-}
-
-void face_t::update()
-{
-  normal = cross_prod(e1,e2);
-  normal /= normal.norm();
-}
-
-pos_t face_t::nearest_on_plane( const pos_t& p0 ) const
-{
-  double plane_dist = dot_prod(normal,anchor-p0);
-  pos_t p0d = normal;
-  p0d *= plane_dist;
-  p0d += p0;
-  return p0d;
-}
-
-pos_t face_t::nearest( const pos_t& p0 ) const
-{
-  // compensate orientation and calculate on two-dimensional plane:
-  pos_t p0d(p0);
-  p0d -= anchor;
-  p0d /= orient_;
-  p0d.x = 0;
-  p0d.y = std::max(0.0,std::min(width_,p0d.y));
-  p0d.z = std::max(0.0,std::min(height_,p0d.z));
-  p0d *= orient_;
-  p0d += anchor;
-  return p0d;
-}
+//void rectangle_t::update()
+//{
+//  normal = cross_prod(e1,e2);
+//  normal /= normal.norm();
+//}
+//
+//pos_t rectangle_t::nearest_on_plane( const pos_t& p0 ) const
+//{
+//  double plane_dist = dot_prod(normal,anchor-p0);
+//  pos_t p0d = normal;
+//  p0d *= plane_dist;
+//  p0d += p0;
+//  return p0d;
+//}
+//
+//pos_t rectangle_t::nearest( const pos_t& p0 ) const
+//{
+//  // compensate orientation and calculate on two-dimensional plane:
+//  pos_t p0d(p0);
+//  p0d -= anchor;
+//  p0d /= orient_;
+//  p0d.x = 0;
+//  p0d.y = std::max(0.0,std::min(width_,p0d.y));
+//  p0d.z = std::max(0.0,std::min(height_,p0d.z));
+//  p0d *= orient_;
+//  p0d += anchor;
+//  return p0d;
+//}
 
 pos_t pos_t::normal() const
 {
@@ -836,14 +828,14 @@ pos_t shoebox_t::nextpoint(pos_t p)
   return prel;
 }
 
-face_t& face_t::operator+=(const pos_t& p)
+ngon_t& ngon_t::operator+=(const pos_t& p)
 {
-  anchor += p;
+  delta += p;
   update();
   return *this;
 }
 
-face_t& face_t::operator+=(double p)
+ngon_t& ngon_t::operator+=(double p)
 {
   pos_t n(normal);
   n *= p;
@@ -858,15 +850,10 @@ double TASCAR::drand()
 ngon_t::ngon_t()
   : N(4)
 {
-  std::vector<pos_t> nverts;
-  nverts.push_back(pos_t(0,0,0));
-  nverts.push_back(pos_t(1,0,0));
-  nverts.push_back(pos_t(1,0,2));
-  nverts.push_back(pos_t(0,0,2));
-  nonrt_set(pos_t(),zyx_euler_t(),nverts);
+  nonrt_set_rect(1,2);
 }
 
-void ngon_t::nonrt_set(const pos_t& p0, const zyx_euler_t& o, const std::vector<pos_t>& verts)
+void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
 {
   if( verts.size() < 3 )
     throw TASCAR::ErrMsg("A polygon needs at least three vertices.");
@@ -875,7 +862,8 @@ void ngon_t::nonrt_set(const pos_t& p0, const zyx_euler_t& o, const std::vector<
   verts_.resize(N);
   edges_.resize(N);
   vert_normals_.resize(N);
-  apply_rot_loc(p0,o);
+  update();
+  //apply_rot_loc(p0,o);
   //for(std::vector<pos_t>::iterator it=verts_.begin();it!=verts_.end();++it){
   //  *it *= o;
   //  *it += p0;
@@ -893,11 +881,18 @@ void ngon_t::nonrt_set(const pos_t& p0, const zyx_euler_t& o, const std::vector<
 
 void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
 {
+  orientation = o;
+  delta = p0;
+  update();
+}
+
+void ngon_t::update()
+{
   std::vector<pos_t>::iterator i_local_vert(local_verts_.begin());
   for(std::vector<pos_t>::iterator i_vert=verts_.begin();i_vert!=verts_.end();++i_vert){
     *i_vert = *i_local_vert;
-    *i_vert *= o;
-    *i_vert += p0;
+    *i_vert *= orientation;
+    *i_vert += delta;
     i_local_vert++;
   }
   std::vector<pos_t>::iterator i_vert(verts_.begin());

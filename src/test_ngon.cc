@@ -12,7 +12,7 @@ int main(int argc,char** argv)
   v.push_back(p0);
   v.push_back(p.nearest_on_plane(p0));
   v.push_back(p.nearest_on_edge(p0));
-  pd.nonrt_set(pos_t(),zyx_euler_t(),v);
+  pd.nonrt_set(v);
   std::cout << pd.print(" ") << std::endl;
   p.apply_rot_loc(pos_t(0,1,0),zyx_euler_t(DEG2RAD*45,0,0));
   std::cout << p.print(" ") << std::endl;
@@ -20,7 +20,7 @@ int main(int argc,char** argv)
   v.push_back(p0);
   v.push_back(p.nearest_on_plane(p0));
   v.push_back(p.nearest_on_edge(p0));
-  pd.nonrt_set(pos_t(),zyx_euler_t(),v);
+  pd.nonrt_set(v);
   std::cout << pd.print(" ") << std::endl;
   return 0;
 }

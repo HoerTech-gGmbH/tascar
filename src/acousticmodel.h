@@ -28,7 +28,7 @@ namespace TASCAR {
       bool direct;
     };
 
-    class doorsource_t : public pointsource_t, public face_t {
+    class doorsource_t : public pointsource_t, public ngon_t {
     public:
       doorsource_t(uint32_t chunksize);
       virtual pos_t get_effective_position(const pos_t& sinkp,double& gain);
@@ -102,7 +102,7 @@ namespace TASCAR {
       double c[2];
     };
 
-    class obstacle_t : public face_t {
+    class obstacle_t : public ngon_t {
     };
 
     class reflector_t : public obstacle_t {

@@ -22,7 +22,7 @@ int main(int argc, char** argv)
   //r.orientation = zyx_euler_t(M_PI*0.25,0,0);
   //DEBUG(r.border_distance(p1));
   //DEBUG(r.border_distance(p3));
-  face_t face;
+  rectangle_t face;
   face.set(pos_t(),zyx_euler_t(0.1,0,0),1,1);
   pos_t p(1,0.6,0.5);
   DEBUG(face.nearest_on_plane(p).print_cart());

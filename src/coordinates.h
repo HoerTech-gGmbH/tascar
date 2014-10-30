@@ -453,56 +453,35 @@ namespace TASCAR {
 
   std::string xml_get_text( xmlpp::Node* n, const std::string& child );
 
-  class face_t {
-  public:
-    face_t();
-    void set(const pos_t& p0, const zyx_euler_t& o, double width, double height);
-    pos_t nearest_on_plane(const pos_t& p0) const;
-    pos_t nearest(const pos_t& p0) const;
-    face_t& operator+=(const pos_t& p);
-    face_t& operator+=(double p);
-    const pos_t& get_anchor() const { return anchor;};
-    const pos_t& get_e1() const { return e1;};
-    const pos_t& get_e2() const { return e2;};
-    const pos_t& get_normal() const { return normal;};
-  protected:
-    void update();
-    pos_t anchor;
-    pos_t e1;
-    pos_t e2;
-    pos_t normal;
-    double width_;
-    double height_;
-    zyx_euler_t orient_;
-  };
-
   class ngon_t {
   public:
     ngon_t();
-    void nonrt_set(const pos_t& p0, const zyx_euler_t& o, const std::vector<pos_t>& verts);
+    void nonrt_set(const std::vector<pos_t>& verts);
+    void nonrt_set_rect(double width, double height);
     void apply_rot_loc(const pos_t& p0, const zyx_euler_t& o);
     pos_t nearest_on_plane(const pos_t& p0) const;
     pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
     pos_t nearest(const pos_t& p0) const;
-    //face_t& operator+=(const pos_t& p);
-    //face_t& operator+=(double p);
-    //const pos_t& get_anchor() const { return anchor;};
     const std::vector<pos_t>& get_verts() const { return verts_;};
     const pos_t& get_normal() const { return normal;};
     std::string print(const std::string& delim=", ") const;
+    ngon_t& operator+=(const pos_t& p);
+    ngon_t& operator+=(double p);
   protected:
-    //void update();
+    void update();
     uint32_t N;
     std::vector<pos_t> local_verts_;
     std::vector<pos_t> verts_;
     std::vector<pos_t> edges_;
     std::vector<pos_t> vert_normals_;
+    zyx_euler_t orientation;
+    pos_t delta;
     pos_t normal;
   };
 
   /**
      \ingroup tascar
-     \brief List of points connected with a time.
+     \brief List of Euler rotations connected with a time line.
   */
   class euler_track_t : public std::map<double,zyx_euler_t> {
   public:

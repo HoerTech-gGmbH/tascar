@@ -83,6 +83,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::pos_t&
   get_attribute_value(e,name,value);
 }
 
+void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<TASCAR::pos_t>& value)
+{
+  get_attribute_value(e,name,value);
+}
+
 void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool value)
 {
   ::set_attribute_bool(e,name,value);
@@ -109,6 +114,11 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,unsigned int v
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::pos_t& value)
+{
+  set_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<TASCAR::pos_t>& value)
 {
   set_attribute_value(e,name,value);
 }
@@ -164,9 +174,18 @@ void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value)
 
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value)
 {
-  char ctmp[1024];
-  sprintf(ctmp,"%g %g %g",value.x, value.y, value.z);
-  elem->set_attribute(name,ctmp);
+  elem->set_attribute(name,value.print_cart(" "));
+}
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value)
+{
+  std::string s;
+  for(std::vector<TASCAR::pos_t>::const_iterator i_vert=value.begin();i_vert!=value.end();++i_vert){
+    if( i_vert != value.begin() )
+      s += " ";
+    s += i_vert->print_cart(" ");
+  }
+  elem->set_attribute(name,s);
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value)
@@ -184,6 +203,24 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::po
   TASCAR::pos_t tmpv;
   if( sscanf(attv.c_str(),"%lf%lf%lf",&(tmpv.x),&(tmpv.y),&(tmpv.z))==3 ){
     value = tmpv;
+  }
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value)
+{
+  std::stringstream ptxt(elem->get_attribute_value(name));
+  while( !ptxt.eof() ){
+    TASCAR::pos_t p;
+    ptxt >> p.x;
+    if( !ptxt.eof() ){
+      ptxt >> p.y;
+      if( !ptxt.eof() ){
+        ptxt >> p.z;
+        value.push_back(p);
+        //DEBUGS(ptxt.str());
+        //DEBUGS(p.print_cart());
+      }
+    }
   }
 }
 

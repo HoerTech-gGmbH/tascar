@@ -211,31 +211,27 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   draw_mask(dynamic_cast<TASCAR::Scene::mask_object_t*>(obj),cr,markersize);
 }
 
-void scene_draw_t::draw_face_normal(TASCAR::face_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize)
+void scene_draw_t::draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize)
 {
   if( f ){
-    std::vector<pos_t> roomnodes(4,pos_t());
-    roomnodes[0] = f->get_anchor();
-    roomnodes[1] = f->get_anchor();
-    roomnodes[1] += f->get_e1();
-    roomnodes[2] = f->get_anchor();
-    roomnodes[2] += f->get_e1();
-    roomnodes[2] += f->get_e2();
-    roomnodes[3] = f->get_anchor();
-    roomnodes[3] += f->get_e2();
-    for(unsigned int k=0;k<roomnodes.size();k++)
+    std::vector<pos_t> roomnodes(f->get_verts());
+    pos_t center;
+    for(unsigned int k=0;k<roomnodes.size();k++){
+      center += roomnodes[k];
       roomnodes[k] = view(roomnodes[k]);
+    }
+    center *= 1.0/roomnodes.size();
     cr->save();
-    draw_edge(cr,roomnodes[0],roomnodes[1]);
-    draw_edge(cr,roomnodes[1],roomnodes[2]);
-    draw_edge(cr,roomnodes[2],roomnodes[3]);
-    draw_edge(cr,roomnodes[3],roomnodes[0]);
+    for(unsigned int k=0;k<roomnodes.size()-1;k++)
+      draw_edge(cr,roomnodes[k],roomnodes[k+1]);
+    draw_edge(cr,roomnodes.back(),roomnodes[0]);
     if( normalsize >= 0 ){
       pos_t pn(f->get_normal());
       pn *= normalsize;
-      pn += f->get_anchor();
+      pn += center;
       pn = view(pn);
-      draw_edge(cr,roomnodes[0],pn);
+      center = view(center);
+      draw_edge(cr,center,pn);
     }
     cr->stroke();
     cr->restore();
@@ -502,8 +498,9 @@ void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Ca
     else
       cr->set_line_width( 0.4*msize );
     cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b );
-    face_t f;
-    f.set(p,o,obj->width,obj->height);
+    ngon_t f;
+    f.nonrt_set_rect(obj->width,obj->height);
+    f.apply_rot_loc(p,o);
     draw_face_normal(&f,cr);
     std::vector<double> dash(2);
     dash[0] = msize;

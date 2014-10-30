@@ -123,7 +123,7 @@ void src_door_t::geometry_update(double t)
   if( source ){
     dynobject_t::geometry_update(t);
     source->position = get_location();
-    source->set(source->position,get_orientation(),width,height);
+    source->apply_rot_loc(source->position,get_orientation());
   }
 }
 
@@ -136,6 +136,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   geometry_update(0);
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   source->distance = distance;
+  source->nonrt_set_rect(width,height);
 }
 
 /*
@@ -821,6 +822,11 @@ face_object_t::face_object_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("height",height);
   dynobject_t::get_attribute("reflectivity",reflectivity);
   dynobject_t::get_attribute("damping",damping);
+  dynobject_t::get_attribute("vertices",vertices);
+  if( vertices.size() > 2 )
+    nonrt_set(vertices);
+  else
+    nonrt_set_rect(width,height);
 }
 
 face_object_t::~face_object_t()
@@ -830,7 +836,7 @@ face_object_t::~face_object_t()
 void face_object_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
-  set(get_location(),get_orientation(),width,height);
+  apply_rot_loc(get_location(),get_orientation());
 }
 
 void face_object_t::prepare(double fs, uint32_t fragsize)
@@ -844,6 +850,7 @@ void face_object_t::write_xml()
   dynobject_t::set_attribute("height",height);
   dynobject_t::set_attribute("reflectivity",reflectivity);
   dynobject_t::set_attribute("damping",damping);
+  dynobject_t::set_attribute("vertices",vertices);
 }
 
 jack_port_t::jack_port_t(xmlpp::Element* xmlsrc)
