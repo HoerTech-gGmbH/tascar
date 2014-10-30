@@ -244,7 +244,8 @@ namespace TASCAR {
       sinkmod_object_t(xmlpp::Element* e);
       void write_xml();
       void prepare(double fs, uint32_t fragsize);
-      //void geometry_update(double t);
+      void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
     };
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {

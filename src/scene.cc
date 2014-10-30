@@ -620,14 +620,17 @@ void sinkmod_object_t::prepare(double fs, uint32_t fragsize)
   TASCAR::Acousticmodel::sink_t::prepare(fs,fragsize);
 }
 
-//void sinkmod_object_t::geometry_update(double t)
-//{
-//}
+void sinkmod_object_t::geometry_update(double t)
+{
+  dynobject_t::geometry_update(t);
+  TASCAR::Acousticmodel::sink_t::position = c6dof.p;
+  TASCAR::Acousticmodel::sink_t::orientation = c6dof.o;
+}
 
-//void sinkmod_object_t::process_active(double t,uint32_t anysolo)
-//{
-//}
-
+void sinkmod_object_t::process_active(double t,uint32_t anysolo)
+{
+  TASCAR::Acousticmodel::sink_t::active = is_active(anysolo,t);
+}
 
 //void sink_object_t::prepare(double fs, uint32_t fragsize)
 //{
@@ -934,8 +937,7 @@ void src_diffuse_t::process_active(double t, uint32_t anysolo)
 
 void face_object_t::process_active(double t, uint32_t anysolo)
 {
-  bool a(is_active(anysolo,t));
-  active = a;
+  active = is_active(anysolo,t);
 }
 
 void src_door_t::process_active(double t, uint32_t anysolo)
@@ -973,7 +975,7 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
     std::string meshline;
     getline(txtmesh,meshline,'\n');
     if( !meshline.empty() ){
-      DEBUGS(meshline);
+      //DEBUGS(meshline);
       TASCAR::Acousticmodel::reflector_t* p_reflector(new TASCAR::Acousticmodel::reflector_t());
       p_reflector->nonrt_set(TASCAR::str2vecpos(meshline));
       reflectors.push_back(p_reflector);
