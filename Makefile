@@ -5,6 +5,8 @@ tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 test_render test_ngon
 
+#BINFILES = test_ngon
+
 SINKS = omni nsp amb3h0v
 
 SINKMODS = $(patsubst %,tascarsink_%.so,$(SINKS))

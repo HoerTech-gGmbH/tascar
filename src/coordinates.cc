@@ -901,17 +901,19 @@ void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
     i_local_vert++;
   }
   std::vector<pos_t>::iterator i_vert(verts_.begin());
-  std::vector<pos_t>::iterator i_prev_vert(verts_.end()-1);
+  std::vector<pos_t>::iterator i_next_vert(i_vert+1);
   for(std::vector<pos_t>::iterator i_edge=edges_.begin();i_edge!=edges_.end();++i_edge){
-    *i_edge = *i_vert;
-    *i_edge -= *i_prev_vert;
-    i_prev_vert = i_vert;
+    *i_edge = *i_next_vert;
+    *i_edge -= *i_vert;
+    i_next_vert++;
+    if( i_next_vert == verts_.end() )
+      i_next_vert = verts_.begin();
     i_vert++;
   }
   pos_t rot;
   std::vector<pos_t>::iterator i_prev_edge(edges_.end()-1);
   for(std::vector<pos_t>::iterator i_edge=edges_.begin();i_edge!=edges_.end();++i_edge){
-    rot += cross_prod(*i_edge,*i_prev_edge);
+    rot += cross_prod(*i_prev_edge,*i_edge);
     i_prev_edge = i_edge;
   }
   rot /= rot.norm();
@@ -921,6 +923,8 @@ void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
   std::vector<pos_t>::iterator i_edge(edges_.begin());
   for(std::vector<pos_t>::iterator i_vert_normal=vert_normals_.begin();i_vert_normal!=vert_normals_.end();++i_vert_normal){
     *i_vert_normal = cross_prod(i_edge->normal() + i_prev_edge->normal(),rot).normal();
+    i_prev_edge = i_edge;
+    i_edge++;
   }
 }
 
