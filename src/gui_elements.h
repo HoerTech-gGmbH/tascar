@@ -58,7 +58,8 @@ public:
 protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
   void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
-  virtual void draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize=0.0);
+  virtual void draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize);
+  virtual void draw_face_only(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr);
   virtual void draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASCAR::pos_t size,Cairo::RefPtr<Cairo::Context> cr);
   // object draw functions:
   virtual void draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -67,6 +68,7 @@ protected:
   virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_facegroup(TASCAR::Scene::face_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   TASCAR::Scene::scene_t* scene_;
 public:

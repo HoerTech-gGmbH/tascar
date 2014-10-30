@@ -46,6 +46,8 @@ namespace TASCAR {
 
   std::string env_expand( std::string s );
 
+  std::vector<TASCAR::pos_t> str2vecpos(const std::string& s);
+
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);

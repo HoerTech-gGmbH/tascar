@@ -376,6 +376,8 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         sinkmod_objects.push_back(new sinkmod_object_t(sne));
       else if( sne->get_name() == "face" )
         faces.push_back(new face_object_t(sne));
+      else if( sne->get_name() == "facegroup" )
+        facegroups.push_back(new face_group_t(sne));
       else if( sne->get_name() == "mask" )
         masks.push_back(new mask_object_t(sne));
       else
@@ -436,6 +438,8 @@ void scene_t::process_active(double t)
   //for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
   //  (*it)->process_active(t,anysolo);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
+    (*it)->process_active(t,anysolo);
+  for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
     (*it)->process_active(t,anysolo);
   
   //std::vector<object_t*> objs(get_objects());
@@ -700,6 +704,8 @@ std::vector<object_t*> scene_t::get_objects()
     r.push_back(*it);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     r.push_back(*it);
+  for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
+    r.push_back(*it);
   for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it)
     r.push_back(*it);
   return r;
@@ -955,6 +961,64 @@ std::vector<TASCAR::Scene::object_t*> TASCAR::Scene::scene_t::find_object(const 
     if( fnmatch(pattern.c_str(),(*it)->get_name().c_str(),FNM_PATHNAME) == 0 )
       retv.push_back(*it);
   return retv;
+}
+
+face_group_t::face_group_t(xmlpp::Element* xmlsrc)
+  : object_t(xmlsrc)
+{
+  dynobject_t::GET_ATTRIBUTE(reflectivity);
+  dynobject_t::GET_ATTRIBUTE(damping);
+  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc,""));
+  while(!txtmesh.eof() ){
+    std::string meshline;
+    getline(txtmesh,meshline,'\n');
+    if( !meshline.empty() ){
+      DEBUGS(meshline);
+      TASCAR::Acousticmodel::reflector_t* p_reflector(new TASCAR::Acousticmodel::reflector_t());
+      p_reflector->nonrt_set(TASCAR::str2vecpos(meshline));
+      reflectors.push_back(p_reflector);
+    }
+  }
+}
+
+face_group_t::~face_group_t()
+{
+  for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it)
+    delete *it;
+}
+
+void face_group_t::prepare(double fs, uint32_t fragsize)
+{
+}
+
+void face_group_t::write_xml()
+{
+  object_t::write_xml();
+  dynobject_t::SET_ATTRIBUTE(reflectivity);
+  dynobject_t::SET_ATTRIBUTE(damping);
+  std::stringstream txtmesh;
+  for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
+    txtmesh << (*it)->print(" ") << std::endl;
+  }
+  dynobject_t::e->add_child_text(txtmesh.str());
+}
+ 
+void face_group_t::geometry_update(double t)
+{
+  dynobject_t::geometry_update(t);
+  for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
+    (*it)->apply_rot_loc(c6dof.p,c6dof.o);
+    (*it)->reflectivity = reflectivity;
+    (*it)->damping = damping;
+  }
+}
+ 
+void face_group_t::process_active(double t,uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
+    (*it)->active = a;
+  }
 }
 
 /*

@@ -272,6 +272,11 @@ void TASCAR::renderer_t::start()
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it){
     reflectors.push_back(*it);
   }
+  for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it){
+    for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator rit=(*it)->reflectors.begin();
+        rit !=(*it)->reflectors.end();++rit)
+      reflectors.push_back(*rit);
+  }
   pmasks.clear();
   for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it){
     pmasks.push_back(*it);

@@ -206,15 +206,16 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::po
   }
 }
 
-void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value)
+std::vector<TASCAR::pos_t> TASCAR::str2vecpos(const std::string& s)
 {
-  std::stringstream ptxt(elem->get_attribute_value(name));
-  while( !ptxt.eof() ){
+  std::vector<TASCAR::pos_t> value;
+  std::stringstream ptxt(s);
+  while( ptxt.good() ){
     TASCAR::pos_t p;
     ptxt >> p.x;
-    if( !ptxt.eof() ){
+    if( ptxt.good() ){
       ptxt >> p.y;
-      if( !ptxt.eof() ){
+      if( ptxt.good() ){
         ptxt >> p.z;
         value.push_back(p);
         //DEBUGS(ptxt.str());
@@ -222,6 +223,12 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vecto
       }
     }
   }
+  return value;
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value)
+{
+  value = TASCAR::str2vecpos(elem->get_attribute_value(name));
 }
 
 void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value)

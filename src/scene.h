@@ -124,6 +124,19 @@ namespace TASCAR {
       std::vector<TASCAR::pos_t> vertices;
     };
 
+    class face_group_t : public object_t {
+    public:
+      face_group_t(xmlpp::Element* xmlsrc);
+      virtual ~face_group_t();
+      void prepare(double fs, uint32_t fragsize);
+      void write_xml();
+      void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
+      std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
+      double reflectivity;
+      double damping;
+    };
+
     class src_object_t;
 
     class jack_port_t : public TASCAR::xml_element_t {
@@ -260,6 +273,7 @@ namespace TASCAR {
       std::vector<src_diffuse_t*> diffuse_sources;
       std::vector<src_door_t*> door_sources;
       std::vector<face_object_t*> faces;
+      std::vector<face_group_t*> facegroups;
       std::vector<sinkmod_object_t*> sinkmod_objects;
       std::vector<mask_object_t*> masks;
       std::vector<object_t*> find_object(const std::string& pattern);

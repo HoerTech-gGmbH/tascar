@@ -25,7 +25,9 @@ void source_ctl_t::setup()
   ebox.add( box );
   label.set_text(route_->get_name());
   if( dynamic_cast<TASCAR::Scene::face_object_t*>(route_))
-    tlabel.set_text("mir");
+    tlabel.set_text("face");
+  if( dynamic_cast<TASCAR::Scene::face_group_t*>(route_))
+    tlabel.set_text("fgrp");
   if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
     tlabel.set_text("src");
   if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
@@ -208,6 +210,7 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
   draw_room_src(dynamic_cast<TASCAR::Scene::src_diffuse_t*>(obj),cr,markersize);
   draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
+  draw_facegroup(dynamic_cast<TASCAR::Scene::face_group_t*>(obj),cr,markersize);
   draw_mask(dynamic_cast<TASCAR::Scene::mask_object_t*>(obj),cr,markersize);
 }
 
@@ -222,10 +225,7 @@ void scene_draw_t::draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Cont
     }
     center *= 1.0/roomnodes.size();
     cr->save();
-    for(unsigned int k=0;k<roomnodes.size()-1;k++)
-      draw_edge(cr,roomnodes[k],roomnodes[k+1]);
-    draw_edge(cr,roomnodes.back(),roomnodes[0]);
-    if( normalsize >= 0 ){
+    if( normalsize > 0 ){
       pos_t pn(f->get_normal());
       pn *= normalsize;
       pn += center;
@@ -233,6 +233,25 @@ void scene_draw_t::draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Cont
       center = view(center);
       draw_edge(cr,center,pn);
     }
+    cr->stroke();
+    cr->restore();
+  }
+}
+
+void scene_draw_t::draw_face_only(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr)
+{
+  if( f ){
+    std::vector<pos_t> roomnodes(f->get_verts());
+    pos_t center;
+    for(unsigned int k=0;k<roomnodes.size();k++){
+      center += roomnodes[k];
+      roomnodes[k] = view(roomnodes[k]);
+    }
+    center *= 1.0/roomnodes.size();
+    cr->save();
+    for(unsigned int k=0;k<roomnodes.size()-1;k++)
+      draw_edge(cr,roomnodes[k],roomnodes[k+1]);
+    draw_edge(cr,roomnodes.back(),roomnodes[0]);
     cr->stroke();
     cr->restore();
   }
@@ -331,32 +350,47 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
       msize *= 0.4;
       plot_time = std::min(std::max(plot_time,obj->starttime),obj->endtime);
     }
-    pos_t p(obj->get_location());
-    cr->save();
+    std::vector<TASCAR::pos_t> sndpos;
+    TASCAR::pos_t p(obj->get_location());
+    TASCAR::pos_t center(p);
+    for(unsigned int k=0;k<obj->sound.size();k++){
+      TASCAR::pos_t ptmp(obj->sound[k].get_pos_global(plot_time));
+      sndpos.push_back(view(ptmp));
+      center += ptmp;
+    }
+    center *= 1.0/(1.0+sndpos.size());
+    center = view(center);
     p = view(p);
+    cr->save();
     if( p.z != std::numeric_limits<double>::infinity()){
       if( solo && blink ){
         cr->set_source_rgba(1, 0, 0, 0.5);
-        cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
+        cr->arc(p.x, -p.y, 1.5*msize, 0, PI2 );
         cr->fill();
       }
       cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
       cr->arc(p.x, -p.y, msize, 0, PI2 );
       cr->fill();
     }
-    for(unsigned int k=0;k<obj->sound.size();k++){
-      pos_t ps(view(obj->sound[k].get_pos_global(plot_time)));
-      if( ps.z != std::numeric_limits<double>::infinity()){
-        cr->arc(ps.x, -ps.y, 0.5*msize, 0, PI2 );
+    for(unsigned int k=0;k<sndpos.size();k++){
+      if( sndpos[k].z != std::numeric_limits<double>::infinity()){
+        if( solo && blink ){
+          cr->set_source_rgba(1, 0, 0, 0.5);
+          cr->arc(sndpos[k].x, -sndpos[k].y, 0.75*msize, 0, PI2 );
+          cr->fill();
+        }
+        cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
+        cr->arc(sndpos[k].x, -sndpos[k].y, 0.5*msize, 0, PI2 );
         cr->fill();
       }
     }
+    // write label:
     if( !active )
       cr->set_source_rgb(0.5, 0.5, 0.5 );
     else
       cr->set_source_rgb(0, 0, 0 );
-    if( p.z != std::numeric_limits<double>::infinity()){
-      cr->move_to( p.x + 1.1*msize, -p.y );
+    if( center.z != std::numeric_limits<double>::infinity()){
+      cr->move_to( center.x + 1.1*msize, -center.y );
       cr->show_text( obj->get_name().c_str() );
     }
     if( active ){
@@ -390,6 +424,7 @@ void scene_draw_t::draw_sink_object(TASCAR::Scene::sinkmod_object_t* obj,Cairo::
   if( obj ){
     if( view.get_perspective() )
       return;
+    bool solo(obj->get_solo());
     msize *= 1.5;
     cr->save();
     cr->set_line_width( 0.2*msize );
@@ -449,6 +484,12 @@ void scene_draw_t::draw_sink_object(TASCAR::Scene::sinkmod_object_t* obj,Cairo::
     p7 = view(p7);
     p8 = view(p8);
     p9 = view(p9);
+    if( solo && blink ){
+      cr->set_source_rgba(1, 0, 0, 0.5);
+      cr->arc(p.x, -p.y, 1.5*msize, 0, PI2 );
+      cr->fill();
+    }
+    cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     cr->move_to( p.x, -p.y );
     cr->arc(p.x, -p.y, 2*msize, 0, PI2 );
     cr->move_to( p1.x, -p1.y );
@@ -501,14 +542,14 @@ void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Ca
     ngon_t f;
     f.nonrt_set_rect(obj->width,obj->height);
     f.apply_rot_loc(p,o);
-    draw_face_normal(&f,cr);
+    draw_face_only(&f,cr);
     std::vector<double> dash(2);
     dash[0] = msize;
     dash[1] = msize;
     cr->set_dash(dash,0);
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6 );
     f += obj->falloff;
-    draw_face_normal(&f,cr);
+    draw_face_only(&f,cr);
     p = view(p);
     cr->set_source_rgb(0, 0, 0 );
     if( p.z != std::numeric_limits<double>::infinity()){
@@ -563,12 +604,16 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Ca
       // solo indicating:
       cr->set_line_width( 1.2*msize );
       cr->set_source_rgba(1,0,0,0.5);
-      draw_face_normal(face,cr);
+      draw_face_only(face,cr);
     }
     // outline:
     cr->set_line_width( 0.2*msize );
     cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
-    draw_face_normal(face,cr,true);
+    draw_face_only(face,cr);
+    cr->save();
+    cr->set_line_width( 0.1*msize );
+    draw_face_normal(face,cr,1.0);
+    cr->restore();
     // fill:
     if( active ){
       // normal and name:
@@ -578,11 +623,67 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Ca
         cr->fill();
         cr->set_line_width( 0.4*msize );
         cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
-        draw_face_normal(face,cr);
+        draw_face_only(face,cr);
         cr->set_source_rgb(0, 0, 0 );
         cr->move_to( loc.x + 0.1*msize, -loc.y );
         cr->show_text( face->get_name().c_str() );
       }
+    }
+    cr->restore();
+    
+  }
+}
+
+void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+{
+  if( face ){
+    bool active(face->isactive(time));
+    bool solo(face->get_solo());
+    if( !active )
+      msize*=0.5;
+    pos_t loc(view(face->get_location()));
+    cr->save();
+    if( solo && blink ){
+      // solo indicating:
+      cr->set_line_width( 1.5*msize );
+      cr->set_source_rgba(1,0,0,0.5);
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
+        draw_face_only(*it,cr);
+    }
+    //draw_face_normal(face,cr,true);
+    // fill:
+    //DEBUGS(active);
+    if( active ){
+      // normal and name:
+      cr->set_source_rgba(face->color.r,face->color.g,0.5+0.5*face->color.b,0.3);
+      if( loc.z != std::numeric_limits<double>::infinity()){
+        cr->arc(loc.x, -loc.y, msize, 0, PI2 );
+        cr->fill();
+        cr->set_line_width( 0.4*msize );
+        cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
+        for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
+          draw_face_only(*it,cr);
+        cr->save();
+        cr->set_line_width( 0.2*msize );
+        for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
+          draw_face_normal(*it,cr,0.2);
+        cr->restore();
+        //draw_face_normal(face,cr);
+        cr->set_source_rgb(0, 0, 0 );
+        cr->move_to( loc.x + 0.1*msize, -loc.y );
+        cr->show_text( face->get_name().c_str() );
+      }
+    }else{
+      // outline:
+      cr->set_line_width( 0.2*msize );
+      cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
+        draw_face_only(*it,cr);
+      cr->save();
+      cr->set_line_width( 0.1*msize );
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
+        draw_face_normal(*it,cr,0.2);
+      cr->restore();
     }
     cr->restore();
     
