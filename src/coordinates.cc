@@ -769,6 +769,7 @@ pos_t face_t::nearest_on_plane( const pos_t& p0 ) const
 
 pos_t face_t::nearest( const pos_t& p0 ) const
 {
+  // compensate orientation and calculate on two-dimensional plane:
   pos_t p0d(p0);
   p0d -= anchor;
   p0d /= orient_;
@@ -853,6 +854,158 @@ double TASCAR::drand()
 {
   return (double)random()/(double)(RAND_MAX+1.0);
 }
+
+ngon_t::ngon_t()
+  : N(4)
+{
+  std::vector<pos_t> nverts;
+  nverts.push_back(pos_t(0,0,0));
+  nverts.push_back(pos_t(1,0,0));
+  nverts.push_back(pos_t(1,0,2));
+  nverts.push_back(pos_t(0,0,2));
+  nonrt_set(pos_t(),zyx_euler_t(),nverts);
+}
+
+void ngon_t::nonrt_set(const pos_t& p0, const zyx_euler_t& o, const std::vector<pos_t>& verts)
+{
+  if( verts.size() < 3 )
+    throw TASCAR::ErrMsg("A polygon needs at least three vertices.");
+  local_verts_ = verts;
+  N = verts.size();
+  verts_.resize(N);
+  edges_.resize(N);
+  vert_normals_.resize(N);
+  apply_rot_loc(p0,o);
+  //for(std::vector<pos_t>::iterator it=verts_.begin();it!=verts_.end();++it){
+  //  *it *= o;
+  //  *it += p0;
+  //}
+  //anchor = p0;
+  //e1 = pos_t(0,width,0);
+  //e2 = pos_t(0,0,height);
+  //e1 *= o;
+  //e2 *= o;
+  //width_ = width;
+  //height_ = height;
+  //orient_ = o;
+  //update();
+}
+
+void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
+{
+  std::vector<pos_t>::iterator i_local_vert(local_verts_.begin());
+  for(std::vector<pos_t>::iterator i_vert=verts_.begin();i_vert!=verts_.end();++i_vert){
+    *i_vert = *i_local_vert;
+    *i_vert *= o;
+    *i_vert += p0;
+    i_local_vert++;
+  }
+  std::vector<pos_t>::iterator i_vert(verts_.begin());
+  std::vector<pos_t>::iterator i_prev_vert(verts_.end()-1);
+  for(std::vector<pos_t>::iterator i_edge=edges_.begin();i_edge!=edges_.end();++i_edge){
+    *i_edge = *i_vert;
+    *i_edge -= *i_prev_vert;
+    i_prev_vert = i_vert;
+    i_vert++;
+  }
+  pos_t rot;
+  std::vector<pos_t>::iterator i_prev_edge(edges_.end()-1);
+  for(std::vector<pos_t>::iterator i_edge=edges_.begin();i_edge!=edges_.end();++i_edge){
+    rot += cross_prod(*i_edge,*i_prev_edge);
+    i_prev_edge = i_edge;
+  }
+  rot /= rot.norm();
+  normal = rot;
+  // vertex normals, used to calculate inside/outside:
+  i_prev_edge = edges_.end()-1;
+  std::vector<pos_t>::iterator i_edge(edges_.begin());
+  for(std::vector<pos_t>::iterator i_vert_normal=vert_normals_.begin();i_vert_normal!=vert_normals_.end();++i_vert_normal){
+    *i_vert_normal = cross_prod(i_edge->normal() + i_prev_edge->normal(),rot).normal();
+  }
+}
+
+//void ngon_t::update()
+//{
+//  normal = cross_prod(e1,e2);
+//  normal /= normal.norm();
+//}
+
+pos_t ngon_t::nearest_on_plane( const pos_t& p0 ) const
+{
+  double plane_dist = dot_prod(normal,verts_[0]-p0);
+  pos_t p0d = normal;
+  p0d *= plane_dist;
+  p0d += p0;
+  return p0d;
+}
+
+pos_t edge_nearest(const pos_t& v,const pos_t& d,const pos_t& p0)
+{
+  pos_t p0p1(p0-v);
+  double l(d.norm());
+  pos_t n(d);
+  n /= l;
+  double r(0.0);
+  if( !p0p1.is_null() )
+    r = dot_prod(n,p0p1.normal())*p0p1.norm();
+  if( r < 0 )
+    return v;
+  if( r > l )
+    return v+d;
+  pos_t p0d(n);
+  p0d *= r;
+  p0d += v;
+  return p0d;
+}
+
+pos_t ngon_t::nearest_on_edge(const pos_t& p0,uint32_t* pk0) const
+{
+  pos_t ne(edge_nearest(verts_[0],edges_[0],p0));
+  double d(distance(ne,p0));
+  uint32_t k0(0);
+  for( uint32_t k=1;k<N;k++){
+    pos_t ln(edge_nearest(verts_[k],edges_[k],p0));
+    double ld;
+    if( (ld = distance(ln,p0)) < d ){
+      ne = ln;
+      d = ld;
+      k0 = k;
+    }
+  }
+  if( pk0 )
+    *pk0 = k0;
+  return ne;
+}
+
+pos_t ngon_t::nearest( const pos_t& p0 ) const
+{
+  uint32_t k0(0);
+  pos_t ne(nearest_on_edge(p0,&k0));
+  // is inside?
+  bool is_outside(false);
+  pos_t dp0(ne-p0);
+  if( dp0.is_null() )
+    is_outside = true;
+  else
+    // caclulate edge normal:
+    is_outside = (dot_prod(vert_normals_[k0],ne-p0) >= 0);
+  if( is_outside )
+    return ne;
+  return nearest_on_plane(p0);
+}
+
+std::string ngon_t::print(const std::string& delim) const
+{
+  std::ostringstream tmp("");
+  tmp.precision(12);
+  for(std::vector<pos_t>::const_iterator i_vert=verts_.begin();i_vert!=verts_.end();++i_vert){
+    if( i_vert != verts_.begin() )
+      tmp << delim;
+    tmp << i_vert->print_cart(delim);
+  }
+  return tmp.str();
+}
+
 
 /*
  * Local Variables:

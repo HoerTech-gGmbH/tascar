@@ -99,6 +99,7 @@ namespace TASCAR {
     inline double norm_xy() const {return sqrt(x*x+y*y);};
     inline double azim() const {return atan2(y,x);};
     inline double elev() const {return atan2(z,norm_xy());};
+    inline bool is_null() const {return (x==0) && (y==0) && (z==0);};
     pos_t normal() const;
     void normalize();
     /**
@@ -473,6 +474,30 @@ namespace TASCAR {
     double width_;
     double height_;
     zyx_euler_t orient_;
+  };
+
+  class ngon_t {
+  public:
+    ngon_t();
+    void nonrt_set(const pos_t& p0, const zyx_euler_t& o, const std::vector<pos_t>& verts);
+    void apply_rot_loc(const pos_t& p0, const zyx_euler_t& o);
+    pos_t nearest_on_plane(const pos_t& p0) const;
+    pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
+    pos_t nearest(const pos_t& p0) const;
+    //face_t& operator+=(const pos_t& p);
+    //face_t& operator+=(double p);
+    //const pos_t& get_anchor() const { return anchor;};
+    const std::vector<pos_t>& get_verts() const { return verts_;};
+    const pos_t& get_normal() const { return normal;};
+    std::string print(const std::string& delim=", ") const;
+  protected:
+    //void update();
+    uint32_t N;
+    std::vector<pos_t> local_verts_;
+    std::vector<pos_t> verts_;
+    std::vector<pos_t> edges_;
+    std::vector<pos_t> vert_normals_;
+    pos_t normal;
   };
 
   /**
