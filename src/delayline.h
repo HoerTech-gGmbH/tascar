@@ -28,6 +28,7 @@
 #define DELAYLINE_H
 
 #include <stdint.h>
+#include "audiochunks.h"
 
 namespace TASCAR {
 
@@ -53,18 +54,34 @@ namespace TASCAR {
        \brief Return value based on spatial distance between input and output
        \param dist Distance
      */
-    float get_dist(double dist);
-    float get_dist_push(double dist,float x);
+    inline float get_dist(double dist){
+      return get(dist2sample*dist);
+    };
+    inline float get_dist_push(double dist,float x){
+      pos++;
+      if( pos==dmax)
+        pos = 0;
+      dline[pos] = x;
+      return get(dist2sample*dist);
+    };
+
+    void add_chunk(const TASCAR::wave_t& x);
     /**
        \brief Return value delayed by the given delay in seconds
        \param dist delay
      */
-    float get_delayed(double d);
+    //float get_delayed(double d);
     /**
        \brief Return value of a specific delay
        \param delay delay in samples
     */
-    float get(uint32_t delay);
+    inline float get(uint32_t delay){
+      delay = std::min(delay,dmax);
+      uint32_t npos = pos+dmax-delay;
+      while( npos >= dmax )
+        npos -= dmax;
+      return dline[npos];
+    };
   private:
     float* dline;
     uint32_t dmax;

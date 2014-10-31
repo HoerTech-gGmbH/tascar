@@ -773,12 +773,12 @@ void ngon_t::nonrt_set_rect(double width, double height)
 //  return p0d;
 //}
 
-pos_t pos_t::normal() const
-{
-  pos_t r(*this);
-  r /= norm();
-  return r;
-}
+//pos_t pos_t::normal() const
+//{
+//  pos_t r(*this);
+//  r /= norm();
+//  return r;
+//}
 
 void pos_t::normalize()
 {

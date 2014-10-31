@@ -107,11 +107,11 @@ void pan_nearest_t::updatepar()
 void pan_nearest_t::process(uint32_t n, float* vIn, float* vX, float* vY, float* vZ, const std::vector<float*>& outBuffer)
 {
   for( unsigned int i=0;i<n;i++){
-    delayline.push(vIn[i]);
+    //delayline.push();
     src.set_cart(vX[i],vY[i],vZ[i]);
     inct();
     double d = src.norm();
-    outBuffer[k_nearest][i] += delayline.get_dist( d - spk_.d_min )/std::max(1.0,d);
+    outBuffer[k_nearest][i] += delayline.get_dist_push( d - spk_.d_min, vIn[i] )/std::max(1.0,d);
   }
 }
 
@@ -191,11 +191,11 @@ void pan_vbap_t::updatepar()
 void pan_vbap_t::process(uint32_t n, float* vIn, float* vX, float* vY, float* vZ, const std::vector<float*>& outBuffer)
 {
   for( unsigned int i=0;i<n;i++){
-    delayline.push(vIn[i]);
+    //delayline.push(vIn[i]);
     src.set_cart(vX[i],vY[i],vZ[i]);
     inct();
     double d = src.norm();
-    double v_in = delayline.get_dist( d - spk_.d_min )/std::max(1.0,d);
+    double v_in = delayline.get_dist_push( d - spk_.d_min,vIn[i] )/std::max(1.0,d);
     outBuffer[k_nearest][i] += (w_nearest += d_w_nearest) * v_in;
     outBuffer[k_next][i] += (w_next += d_w_next) * v_in;
     outBuffer[prev_k_nearest][i] += (prev_w_nearest += d_prev_w_nearest) * v_in;
@@ -248,12 +248,12 @@ void pan_amb_basic_t::updatepar()
 void pan_amb_basic_t::process(uint32_t n, float* vIn, float* vX, float* vY, float* vZ, const std::vector<float*>& outBuffer)
 {
   for( unsigned int i=0;i<n;i++){
-    delayline.push(vIn[i]);
+    //delayline.push(vIn[i]);
     src.set_cart(vX[i],vY[i],vZ[i]);
     inct();
     double d = src.norm();
     for( unsigned int k=0;k<spk_.n;k++){
-      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d + spk_delay[k] - spk_.d_min )/std::max(1.0,d);
+      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist_push( d + spk_delay[k] - spk_.d_min,vIn[i] )/std::max(1.0,d);
     }
   }
 }
@@ -297,7 +297,7 @@ void pan_amb_inphase_t::process(uint32_t n, float* vIn, float* vX, float* vY, fl
     inct();
     double d = src.norm();
     for( unsigned int k=0;k<spk_.n;k++){
-      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist( d + spk_delay[k] - spk_.d_min )/std::max(1.0,d);
+      outBuffer[k][i] += (w_current[k] += dw[k]) * delayline.get_dist_push( d + spk_delay[k] - spk_.d_min,vIn[i] )/std::max(1.0,d);
     }
   }
 }

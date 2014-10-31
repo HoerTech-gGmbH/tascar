@@ -100,7 +100,14 @@ namespace TASCAR {
     inline double azim() const {return atan2(y,x);};
     inline double elev() const {return atan2(z,norm_xy());};
     inline bool is_null() const {return (x==0) && (y==0) && (z==0);};
-    pos_t normal() const;
+    inline pos_t normal() const {
+      pos_t r(*this);
+      double n(1.0/norm());
+      r.x *= n;
+      r.y *= n;
+      r.z *= n;
+      return r;
+    };
     void normalize();
     /**
        \brief Rotate around z-axis

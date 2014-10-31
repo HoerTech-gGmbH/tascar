@@ -41,34 +41,43 @@ void varidelay_t::push(float x)
   dline[pos] = x;
 }
  
-float varidelay_t::get_dist_push(double dist,float x)
+//float varidelay_t::get_dist_push(double dist,float x)
+//{
+//  pos++;
+//  if( pos==dmax)
+//    pos = 0;
+//  dline[pos] = x;
+//  return get(dist2sample*dist);
+//}
+
+void varidelay_t::add_chunk(const TASCAR::wave_t& x)
 {
-  pos++;
-  if( pos==dmax)
-    pos = 0;
-  dline[pos] = x;
-  return get(dist2sample*dist);
+  for(uint32_t k=0;k<x.n;k++){
+    pos++;
+    if( pos==dmax)
+      pos = 0;
+    dline[pos] = x.d[k];
+  }
 }
 
-float varidelay_t::get_dist(double dist)
-{
-  return get(dist2sample*dist);
-}
+//float varidelay_t::get_dist(double dist)
+//{
+//  return get(dist2sample*dist);
+//}
+//
+//float varidelay_t::get_delayed(double d)
+//{
+//  return get(delay2sample*d);
+//}
 
-float varidelay_t::get_delayed(double d)
-{
-  return get(delay2sample*d);
-}
-
-float varidelay_t::get(uint32_t delay)
-{
-  delay = std::min(delay,dmax);
-  uint32_t npos = pos+dmax-delay;
-  while( npos >= dmax )
-    npos -= dmax;
-  return dline[npos];
-}
-
+//float varidelay_t::get(uint32_t delay)
+//{
+//  delay = std::min(delay,dmax);
+//  uint32_t npos = pos+dmax-delay;
+//  while( npos >= dmax )
+//    npos -= dmax;
+//  return dline[npos];
+//}
 
 
 /*

@@ -167,34 +167,38 @@ acoustic_model_t::~acoustic_model_t()
  
 uint32_t acoustic_model_t::process()
 {
-  pos_t prel;
-  double nextdistance(0.0);
-  double nextgain(1.0);
-  // calculate relative geometry between source and sink:
-  double srcgainmod(1.0);
-  double mask_gain(1.0);
-  //for(std::vector<
-  pos_t effective_srcpos(src_->get_effective_position(sink_->position,srcgainmod));
-  sink_->update_refpoint(src_->get_physical_position(),effective_srcpos,prel,nextdistance,nextgain);
-  nextgain *= srcgainmod*mask_gain;
-  double next_air_absorption(exp(-nextdistance*dscale));
-  double ddistance((nextdistance-distance)*dt);
-  double dgain((nextgain-gain)*dt);
-  double dairabsorption((next_air_absorption-air_absorption)*dt);
-  for(uint32_t k=0;k<chunksize;k++){
-    distance+=ddistance;
-    gain+=dgain;
-    float c1(air_absorption+=dairabsorption);
-    float c2(1.0f-c1);
-    // apply air absorption:
-    c1 *= gain*delayline.get_dist_push(distance,src_->audio[k]);
-    airabsorption_state = c2*airabsorption_state+c1;
-    make_friendly_number(airabsorption_state);
-    audio[k] = airabsorption_state;
-  }
-  if( sink_->render_point && sink_->active && src_->active && ((gain!=0)||(dgain!=0)) && (src_->direct || (!sink_->is_direct)) ){
-    sink_->add_pointsource(prel,audio,sink_data);
-    return 1;
+  if( sink_->render_point && sink_->active && src_->active && (src_->direct || (!sink_->is_direct)) ){
+    pos_t prel;
+    double nextdistance(0.0);
+    double nextgain(1.0);
+    // calculate relative geometry between source and sink:
+    double srcgainmod(1.0);
+    double mask_gain(1.0);
+    //for(std::vector<
+    pos_t effective_srcpos(src_->get_effective_position(sink_->position,srcgainmod));
+    sink_->update_refpoint(src_->get_physical_position(),effective_srcpos,prel,nextdistance,nextgain);
+    nextgain *= srcgainmod*mask_gain;
+    double next_air_absorption(exp(-nextdistance*dscale));
+    double ddistance((nextdistance-distance)*dt);
+    double dgain((nextgain-gain)*dt);
+    double dairabsorption((next_air_absorption-air_absorption)*dt);
+    for(uint32_t k=0;k<chunksize;k++){
+      distance+=ddistance;
+      gain+=dgain;
+      float c1(air_absorption+=dairabsorption);
+      float c2(1.0f-c1);
+      // apply air absorption:
+      c1 *= gain*delayline.get_dist_push(distance,src_->audio[k]);
+      airabsorption_state = c2*airabsorption_state+c1;
+      make_friendly_number(airabsorption_state);
+      audio[k] = airabsorption_state;
+    }
+    if( ((gain!=0)||(dgain!=0)) && (src_->direct || (!sink_->is_direct)) ){
+      sink_->add_pointsource(prel,audio,sink_data);
+      return 1;
+    }
+  }else{
+    delayline.add_chunk(audio);
   }
   return 0;
 }
