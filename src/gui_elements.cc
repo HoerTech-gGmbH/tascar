@@ -446,6 +446,48 @@ void scene_draw_t::draw_sink_object(TASCAR::Scene::sinkmod_object_t* obj,Cairo::
         cr->set_dash(dash,0);
       }
     }
+    if( obj->delaycomp > 0 ){
+      cr->save();
+      double dr(obj->delaycomp*scene_->c);
+      cr->set_source_rgba(1.0,0.0,0.0,0.6);
+      std::vector<double> dash(2);
+      dash[0] = msize;
+      dash[1] = msize;
+      cr->set_dash(dash,0);
+      pos_t x(p);
+      for(uint32_t k=0;k<25;k++){
+        x = p;
+        x.x += dr*cos(PI2*k/24.0);
+        x.y += dr*sin(PI2*k/24.0);
+        x = view(x);
+        if( k==0 )
+          cr->move_to(x.x,-x.y);
+        else
+          cr->line_to(x.x,-x.y);
+      }
+      for(uint32_t k=0;k<25;k++){
+        x = p;
+        x.y += dr*cos(PI2*k/24.0);
+        x.z += dr*sin(PI2*k/24.0);
+        x = view(x);
+        if( k==0 )
+          cr->move_to(x.x,-x.y);
+        else
+          cr->line_to(x.x,-x.y);
+      }
+      for(uint32_t k=0;k<25;k++){
+        x = p;
+        x.z += dr*cos(PI2*k/24.0);
+        x.x += dr*sin(PI2*k/24.0);
+        x = view(x);
+        if( k==0 )
+          cr->move_to(x.x,-x.y);
+        else
+          cr->line_to(x.x,-x.y);
+      }
+      cr->stroke();
+      cr->restore();
+    }
     double scale(0.5*view.get_scale());
     pos_t p1(1.8*msize*scale,-0.6*msize*scale,0);
     pos_t p2(2.9*msize*scale,0,0);
