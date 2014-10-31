@@ -987,7 +987,7 @@ pos_t ngon_t::nearest( const pos_t& p0 ) const
     is_outside = true;
   else
     // caclulate edge normal:
-    is_outside = (dot_prod(vert_normals_[k0],ne-p0) >= 0);
+    is_outside = (dot_prod(vert_normals_[k0],ne-p0) < 0);
   if( is_outside )
     return ne;
   return nearest_on_plane(p0);
