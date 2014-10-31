@@ -433,10 +433,10 @@ void scene_t::process_active(double t)
     (*it)->process_active(t,anysolo);
   for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     (*it)->process_active(t,anysolo);
-  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-  //  it->process_active(t,anysolo);
-  //for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
-  //  (*it)->process_active(t,anysolo);
+  //for(std::vector<sink_object_t*>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+  //(*it)->process_active(t,anysolo);
+  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+    (*it)->process_active(t,anysolo);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
