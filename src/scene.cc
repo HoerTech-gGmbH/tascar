@@ -350,15 +350,17 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),
     description(""),
     name(""),
+    c(340.0),
     mirrororder(1),
     guiscale(200),anysolo(0),
     scene_path("")
 {
   try{
-  get_attribute("name",name);
-  get_attribute("mirrororder",mirrororder);
-  get_attribute("guiscale",guiscale);
-  get_attribute("guicenter",guicenter);
+  GET_ATTRIBUTE(name);
+  GET_ATTRIBUTE(mirrororder);
+  GET_ATTRIBUTE(guiscale);
+  GET_ATTRIBUTE(guicenter);
+  GET_ATTRIBUTE(c);
   description = xml_get_text(e,"description");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -370,8 +372,6 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         door_sources.push_back(new src_door_t(sne));
       else if( sne->get_name() == "diffuse" )
         diffuse_sources.push_back(new src_diffuse_t(sne));
-      //else if( sne->get_name() == "sink" )
-      //  sink_objects.push_back(sink_object_t(sne));
       else if( sne->get_name() == "sink" )
         sinkmod_objects.push_back(new sinkmod_object_t(sne));
       else if( sne->get_name() == "face" )
@@ -433,19 +433,12 @@ void scene_t::process_active(double t)
     (*it)->process_active(t,anysolo);
   for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     (*it)->process_active(t,anysolo);
-  //for(std::vector<sink_object_t*>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
-  //(*it)->process_active(t,anysolo);
   for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
     (*it)->process_active(t,anysolo);
-  
-  //std::vector<object_t*> objs(get_objects());
-  //for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it){
-  //  (*it)->process_active( t, anysolo );
-  //}
 }
 
 spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
@@ -469,72 +462,6 @@ void spk_pos_t::write_xml()
   if( norm() != 1.0 )
     set_attribute("r",norm());
 }
-
-//sink_object_t::sink_object_t(xmlpp::Element* xmlsrc)
-//  : object_t(xmlsrc),jack_port_t(xmlsrc),
-//    sink_type(omni),
-//    falloff(-1.0),
-//    render_point(true),
-//    render_diffuse(true),
-//    is_direct(true),
-//    diffusegain(1.0),
-//    use_global_mask(true),
-//    mask(dynobject_t::find_or_add_child("mask")),
-//    sink(NULL)
-//{
-//  dynobject_t::get_attribute("size",size);
-//  dynobject_t::get_attribute_bool("point",render_point);
-//  dynobject_t::get_attribute_bool("diffuse",render_diffuse);
-//  dynobject_t::get_attribute_bool("isdirect",is_direct);
-//  dynobject_t::get_attribute_bool("globalmask",use_global_mask);
-//  dynobject_t::get_attribute_db("diffusegain",diffusegain);
-//  dynobject_t::get_attribute("falloff",falloff);
-//  std::string stype;
-//  dynobject_t::get_attribute("type",stype);
-//  if( stype == "omni" )
-//    sink_type = omni;
-//  else if( stype == "cardioid" )
-//    sink_type = cardioid;
-//  else if( stype == "amb3h3v" )
-//    sink_type = amb3h3v;
-//  else if( stype == "amb3h0v" )
-//    sink_type = amb3h0v;
-//  else if( stype == "nsp" )
-//    sink_type = nsp;
-//  else 
-//    throw TASCAR::ErrMsg("Unupported sink type: \""+stype+"\"");
-//  //  
-//  xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
-//  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-//    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-//    if( sne && ( sne->get_name() == "speaker" )){
-//      spkpos.push_back(spk_pos_t(sne));
-//    }
-//  }
-//}
-//
-//sink_object_t::sink_object_t(const sink_object_t& src)
-//  : object_t(src),
-//    jack_port_t(src),
-//    sink_type(src.sink_type),
-//    spkpos(src.spkpos),
-//    size(src.size),
-//    falloff(src.falloff),
-//    render_point(src.render_point),
-//    render_diffuse(src.render_diffuse),
-//    is_direct(src.is_direct),
-//    diffusegain(src.diffusegain),
-//    use_global_mask(src.use_global_mask),
-//    mask(src.mask),
-//    sink(NULL)
-//{
-//}
-//
-//sink_object_t::~sink_object_t()
-//{
-//  if( sink )
-//    delete sink;
-//}
 
 mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc)
@@ -565,43 +492,6 @@ void mask_object_t::geometry_update(double t)
   get_6dof(shoebox_t::center,shoebox_t::orientation);
   falloff = 1.0/std::max(xmlfalloff,1e-10);
 }
-
-//void sink_object_t::write_xml()
-//{
-//  object_t::write_xml();
-//  jack_port_t::write_xml();
-//  if( (size.x != 0) || (size.y != 0) || (size.z != 0))
-//    dynobject_t::set_attribute("size",size);
-//  dynobject_t::set_attribute_bool("point",render_point);
-//  dynobject_t::set_attribute_bool("diffuse",render_diffuse);
-//  dynobject_t::set_attribute_bool("isdirect",is_direct);
-//  if( diffusegain != 0 )
-//    dynobject_t::set_attribute_db("diffusegain",diffusegain);
-//  if( falloff != -1 )
-//    dynobject_t::set_attribute("falloff",falloff);
-//  switch( sink_type ){
-//  case omni:
-//    dynobject_t::e->set_attribute("type", "omni");
-//    break;
-//  case cardioid:
-//    dynobject_t::e->set_attribute("type", "cardioid");
-//    break;
-//  case amb3h3v :
-//    dynobject_t::e->set_attribute("type", "amb3h3v");
-//    break;
-//  case amb3h0v :
-//    dynobject_t::e->set_attribute("type", "amb3h0v");
-//    break;
-//  case nsp :
-//    dynobject_t::e->set_attribute("type", "nsp");
-//    break;
-//  }
-//  //
-//  if( mask.active )
-//    mask.write_xml();
-//  for( std::vector<spk_pos_t>::iterator it=spkpos.begin();it!=spkpos.end();++it)
-//    it->write_xml();
-//}
 
 sinkmod_object_t::sinkmod_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc), jack_port_t(xmlsrc), sink_t(xmlsrc)

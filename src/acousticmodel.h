@@ -84,6 +84,7 @@ namespace TASCAR {
       bool use_global_mask;
       double diffusegain;
       double falloff;
+      double delaycomp;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       pos_t position;
@@ -157,12 +158,13 @@ namespace TASCAR {
      */
     class acoustic_model_t {
     public:
-      acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
+      acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
       ~acoustic_model_t();
       /** \brief Read audio from source, process and add to sink.
        */
       uint32_t process();
     protected:
+      double c_;
       pointsource_t* src_;
       sink_t* sink_;
       sinkmod_base_t::data_t* sink_data;
@@ -215,7 +217,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order);
+      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */

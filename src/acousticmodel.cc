@@ -136,8 +136,9 @@ diffuse_source_t::diffuse_source_t(uint32_t chunksize)
 {
 }
 
-acoustic_model_t::acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles)
-  : src_(src),
+acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles)
+  : c_(c),
+    src_(src),
     sink_(sink),
     sink_data(sink_->create_data(fs,chunksize)),
     obstacles_(obstacles),
@@ -146,8 +147,8 @@ acoustic_model_t::acoustic_model_t(double fs,uint32_t chunksize,pointsource_t* s
     dt(1.0/std::max(1.0f,(float)chunksize)),
     distance(1.0),
     gain(1.0),
-    dscale(fs/(340.0*7782.0)),
-    delayline(480000,fs,340.0),
+    dscale(fs/(c_*7782.0)),
+    delayline(480000,fs,c_),
     airabsorption_state(0.0)
 {
   //DEBUG(audio.size());
@@ -179,7 +180,7 @@ uint32_t acoustic_model_t::process()
     sink_->update_refpoint(src_->get_physical_position(),effective_srcpos,prel,nextdistance,nextgain);
     nextgain *= srcgainmod*mask_gain;
     double next_air_absorption(exp(-nextdistance*dscale));
-    double ddistance((nextdistance-distance)*dt);
+    double ddistance((std::max(0.0,nextdistance-c_*sink_->delaycomp)-distance)*dt);
     double dgain((nextgain-gain)*dt);
     double dairabsorption((next_air_absorption-air_absorption)*dt);
     for(uint32_t k=0;k<chunksize;k++){
@@ -331,28 +332,20 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
+world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order)
   : mirrormodel(sources,reflectors,mirror_order),sinks_(sinks),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
-  //DEBUGS(diffusesources.size());
-  //DEBUGS(sources.size());
-  //DEBUGS(reflectors.size());
-  //DEBUGS(sinks.size());
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++){
-      //DEBUG(kSrc);
-      //DEBUG(kSink);
-      //DEBUG(diffusesources[kSrc]);
-      //DEBUG(sinks[kSink]);
       diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],sinks[kSink]));
     }
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
-      acoustic_model.push_back(new acoustic_model_t(fs,chunksize,sources[kSrc],sinks[kSink]));
+      acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],sinks[kSink]));
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kSink=0;kSink<sinks.size();kSink++)
-      acoustic_model.push_back(new acoustic_model_t(fs,chunksize,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
+      acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],sinks[kSink],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
 }
 
 world_t::~world_t()
@@ -468,6 +461,7 @@ sink_t::sink_t(xmlpp::Element* xmlsrc)
     use_global_mask(true),
     diffusegain(1.0),
     falloff(-1.0),
+    delaycomp(0.0),
     active(true),
     mask(find_or_add_child("mask")),
     x_gain(1.0),
@@ -481,6 +475,7 @@ sink_t::sink_t(xmlpp::Element* xmlsrc)
   get_attribute_bool("globalmask",use_global_mask);
   get_attribute_db("diffusegain",diffusegain);
   GET_ATTRIBUTE(falloff);
+  GET_ATTRIBUTE(delaycomp);
 }
 
 void sink_t::write_xml()
@@ -493,6 +488,7 @@ void sink_t::write_xml()
   set_attribute_bool("globalmask",use_global_mask);
   set_attribute_db("diffusegain",diffusegain);
   SET_ATTRIBUTE(falloff);
+  SET_ATTRIBUTE(delaycomp);
 }
 
 void sink_t::prepare(double srate, uint32_t chunksize)

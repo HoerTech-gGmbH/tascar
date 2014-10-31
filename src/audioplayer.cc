@@ -282,7 +282,7 @@ void TASCAR::renderer_t::start()
     pmasks.push_back(*it);
   }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(get_srate(),get_fragsize(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
+  world = new Acousticmodel::world_t(c,get_srate(),get_fragsize(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
   total_pointsources = world->get_total_pointsource();
   total_diffusesources = world->get_total_diffusesource();
   //

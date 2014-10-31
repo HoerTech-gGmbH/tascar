@@ -268,6 +268,7 @@ namespace TASCAR {
       void prepare(double fs, uint32_t fragsize);
       std::string description;
       std::string name;
+      double c;
       void geometry_update(double t);
       void process_active(double t);
       std::vector<src_object_t*> object_sources;
