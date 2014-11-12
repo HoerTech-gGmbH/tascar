@@ -1,9 +1,9 @@
 /**
-   \file tascar_renderer.cc
+   \file tascar_cli.cc
    \ingroup apptascar
-   \brief Scene rendering tool
+   \brief TASCAR command line interface
    \author Giso Grimm, Carl-von-Ossietzky Universitaet Oldenburg
-   \date 2013
+   \date 2013, 2014
 
    \section license License (GPL)
 
@@ -29,22 +29,11 @@
   non-enclosed sources
   
   todo: directive sound sources - normal vector and size define
-  directivity, use for sources and reflected objects
+  directivity
 
 */
 
-#include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "tascar.h"
 #include <getopt.h>
-#include "osc_scene.h"
-#include "render_sinks.h"
-#include "acousticmodel.h"
-#include "audioplayer.h"
-#include <unistd.h>
-#include "defs.h"
 #include "session.h"
 
 static bool b_quit;
@@ -57,7 +46,7 @@ static void sighandler(int sig)
 
 void usage(struct option * opt)
 {
-  std::cout << "Usage:\n\ntascar_scene -c configfile [options]\n\nOptions:\n\n";
+  std::cout << "Usage:\n\ntascar_cli [options] configfile\n\nOptions:\n\n";
   while( opt->name ){
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
       "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
@@ -74,15 +63,10 @@ int main(int argc, char** argv)
     signal(SIGINT, &sighandler);
     std::string cfgfile("");
     std::string jackname("");
-    std::string srv_addr("239.255.1.7");
-    std::string srv_port("9877");
-    const char *options = "c:hj:p:a:";
+    const char *options = "hj:";
     struct option long_options[] = { 
-      { "config",   1, 0, 'c' },
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'j' },
-      { "srvaddr",  1, 0, 'a' },
-      { "srvport",  1, 0, 'p' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -90,30 +74,21 @@ int main(int argc, char** argv)
     while( (opt = getopt_long(argc, argv, options,
                               long_options, &option_index)) != -1){
       switch(opt){
-      case 'c':
-        cfgfile = optarg;
-        break;
       case 'h':
         usage(long_options);
         return -1;
       case 'j':
         jackname = optarg;
         break;
-      case 'p':
-        srv_port = optarg;
-        break;
-      case 'a':
-        srv_addr = optarg;
-        break;
       }
     }
+    if( optind < argc )
+      cfgfile = argv[optind++];
     if( cfgfile.size() == 0 ){
       usage(long_options);
       return -1;
     }
-    //TASCAR::audioplayer_t P(jackname, cfgfile);
     TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
-    //TASCAR::scene_player_t S(srv_addr, srv_port, jackname, cfgfile);
     session.run(b_quit);
   }
   catch( const std::exception& msg ){

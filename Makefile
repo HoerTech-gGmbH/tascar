@@ -1,9 +1,11 @@
 PREFIX = /usr/local
 
-BINFILES = tascar_renderer tascar_gui tascar_sampler			\
+BINFILES = tascar_cli tascar_gui tascar_sampler				\
 tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
-test_render test_ngon
+tascar_tscupdate
+
+#test_render test_ngon
 
 #BINFILES = test_ngon
 
