@@ -1,22 +1,23 @@
-PREFIX = /usr/local
-
+#
+# main targets:
+#
 BINFILES = tascar_cli tascar_gui tascar_sampler				\
 tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 tascar_tscupdate
 
-#test_render test_ngon
-
-#BINFILES = test_ngon
-
 SINKS = omni nsp amb3h0v
 
+TASCARMODS = system pos2osc sampler
+
+#
+#
+#
 SINKMODS = $(patsubst %,tascarsink_%.so,$(SINKS))
 
-#tascar_gpxvelocity \
-tascar_gui tascar_pdf tascar_multipan tascar_jpos \
-TEST_FILES = test_diffusereverb 
-#test_async_file test_diffusereverb 
+TASCARMODDLLS = $(patsubst %,tascar_%.so,$(TASCARMODS))
+
+PREFIX = /usr/local
 
 BINFILES += $(TEST_FILES)
 
@@ -49,7 +50,9 @@ ringbuffer.o gammatone.o viewport.o sampler.o jackiowav.o
 
 GUIOBJECTS = gui_elements.o
 
-INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES))
+INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
+	$(patsubst %,$(PREFIX)/lib/%,$(SINKMODS)) \
+	$(patsubst %,$(PREFIX)/lib/%,$(TASCARMODDLLS))
 
 #GTKMMBIN = tascar_gui
 
@@ -81,7 +84,7 @@ all: lib
 
 lib:
 	mkdir -p build
-	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(SINKMODS)
+	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(SINKMODS) $(TASCARMODDLLS)
 
 libtascar.a: $(OBJECTS)
 	ar rcs $@ $^
@@ -147,6 +150,8 @@ tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 tascarsink_%.so: sinkmod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
+tascar_%.so: tascarmod_%.cc
+	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 
 # Local Variables:

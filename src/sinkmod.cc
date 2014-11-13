@@ -57,6 +57,11 @@ void TASCAR::sinkmod_t::add_diffusesource(const pos_t& prel, const amb1wave_t& c
   add_diffusesource_cb(libdata,prel,chunk,output,data,sinkmod_error);
 }
 
+void TASCAR::sinkmod_t::postproc()
+{
+  postproc_cb(libdata,sinkmod_error);
+}
+
 uint32_t TASCAR::sinkmod_t::get_num_channels()
 {
   return get_num_channels_cb(libdata,sinkmod_error);

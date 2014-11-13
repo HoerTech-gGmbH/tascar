@@ -43,6 +43,7 @@ namespace TASCAR {
     virtual ~sinkmod_base_t();
     virtual void add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t*) = 0;
     virtual void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t*) = 0;
+    virtual void postproc() {};
     virtual uint32_t get_num_channels() = 0;
     virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
     virtual sinkmod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
@@ -55,6 +56,7 @@ namespace TASCAR {
   typedef void (*sinkmod_write_xml_t)(TASCAR::sinkmod_base_t* h,sinkmod_error_t errfun);
   typedef void (*sinkmod_add_pointsource_t)(TASCAR::sinkmod_base_t* h,const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t*,sinkmod_error_t errfun);
   typedef void (*sinkmod_add_diffusesource_t)(TASCAR::sinkmod_base_t* h,const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t*,sinkmod_error_t errfun);
+  typedef void (*sinkmod_postproc_t)(TASCAR::sinkmod_base_t* h,sinkmod_error_t errfun);
   typedef uint32_t (*sinkmod_get_num_channels_t)(TASCAR::sinkmod_base_t* h,sinkmod_error_t errfun);
   typedef std::string (*sinkmod_get_channel_postfix_t)(TASCAR::sinkmod_base_t* h,uint32_t channel,sinkmod_error_t errfun);
   typedef sinkmod_base_t::data_t* (*sinkmod_create_data_t)(TASCAR::sinkmod_base_t* h,double srate,uint32_t fragsize,sinkmod_error_t errfun);
@@ -66,6 +68,7 @@ namespace TASCAR {
     virtual ~sinkmod_t();
     virtual void add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t*);
     virtual void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, sinkmod_base_t::data_t*);
+    virtual void postproc();
     virtual uint32_t get_num_channels();
     virtual std::string get_channel_postfix(uint32_t channel);
     virtual sinkmod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -79,6 +82,7 @@ namespace TASCAR {
     sinkmod_write_xml_t write_xml_cb;
     sinkmod_add_pointsource_t add_pointsource_cb;
     sinkmod_add_diffusesource_t add_diffusesource_cb;
+    sinkmod_postproc_t postproc_cb;
     sinkmod_get_num_channels_t get_num_channels_cb;
     sinkmod_get_channel_postfix_t get_channel_postfix_cb;
     sinkmod_create_data_t create_data_cb;
@@ -131,6 +135,17 @@ namespace TASCAR {
         }                                       \
       }else                                     \
         errfun("Invalid library class pointer (add_diffusesource)."); \
+    }                                           \
+    void sinkmod_postproc(TASCAR::sinkmod_base_t* h,TASCAR::sinkmod_error_t errfun) \
+    {                                           \
+      x*   ptr(dynamic_cast<x*>(h));            \
+      if( ptr ){                                \
+        try { ptr->postproc(); } \
+        catch(const std::exception&e ){         \
+          errfun(e.what());                     \
+        }                                       \
+      }else                                     \
+        errfun("Invalid library class pointer (postproc)."); \
     }                                           \
     uint32_t sinkmod_get_num_channels(TASCAR::sinkmod_base_t* h,TASCAR::sinkmod_error_t errfun) \
     {                                           \

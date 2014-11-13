@@ -173,7 +173,6 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
                                 const std::vector<float*>& outBuffer, 
                                 uint32_t tp_frame, bool tp_rolling)
 {
-  //DEBUG(get_cnt_interp());
   //security/stability:
   for(uint32_t ch=0;ch<inBuffer.size();ch++)
     for(uint32_t k=0;k<nframes;k++)
@@ -185,8 +184,6 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     memset(outBuffer[k],0,sizeof(float)*nframes);
   for(unsigned int k=0;k<sinkmod_objects.size();k++){
     sinkmod_objects[k]->clear_output();
-    //TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
-    //psink->clear();
   }
   geometry_update(tp_time);
   process_active(tp_time);
@@ -218,6 +215,7 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   }
   // copy sink output:
   for(unsigned int k=0;k<sinkmod_objects.size();k++){
+    sinkmod_objects[k]->postproc();
     //TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
     float gain(sinkmod_objects[k]->get_gain());
     for(uint32_t ch=0;ch<sinkmod_objects[k]->get_num_channels();ch++)
