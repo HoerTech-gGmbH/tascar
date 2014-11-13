@@ -34,7 +34,7 @@
 static std::string errmsg("");
 
 jackc_portless_t::jackc_portless_t(const std::string& clientname)
-  : srate(0),active(false)
+  : srate(0),active(false),xruns(0),xrun_latency(0)
 {
   jack_status_t jstat;
   jc = jack_client_open(clientname.c_str(),JackUseExactName,&jstat);
@@ -44,6 +44,7 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
   srate = jack_get_sample_rate(jc);
   fragsize = jack_get_buffer_size(jc);
   rtprio = jack_client_real_time_priority(jc);
+  jack_set_xrun_callback(jc,jackc_portless_t::xrun_callback,this);
 }
 
 jackc_portless_t::~jackc_portless_t()
@@ -129,6 +130,7 @@ void jackc_t::add_input_port(const std::string& name)
     throw TASCAR::ErrMsg(std::string("unable to register input port \""+name+"\"."));
   inPort.push_back(p);
   inBuffer.push_back(NULL);
+  input_port_names.push_back(std::string(jack_get_client_name(jc))+":"+name);
 }
 
 void jackc_t::add_output_port(const std::string& name)
@@ -141,8 +143,17 @@ void jackc_t::add_output_port(const std::string& name)
     throw TASCAR::ErrMsg(std::string("unable to register output port \""+name+"\"."));
   outPort.push_back(p);
   outBuffer.push_back(NULL);
+  output_port_names.push_back(std::string(jack_get_client_name(jc))+":"+name);
 }
 
+
+int jackc_portless_t::xrun_callback(void *arg)
+{
+  ((jackc_portless_t*)arg)->xruns++;
+  //((jackc_portless_t*)arg)->xrun_latency +=
+  //  jack_get_xrun_delayed_usecs(((jackc_portless_t*)arg)->jc);
+  return 0;
+}
 
 void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn)
 {

@@ -194,6 +194,16 @@ TASCAR::session_t::~session_t()
     delete (*it);
 }
 
+std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
+{
+  std::vector<std::string> ports;
+  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it){
+    std::vector<std::string> pports((*it)->get_output_ports());
+    ports.insert(ports.end(),pports.begin(),pports.end());
+  }
+  return ports;
+}
+
 TASCAR::Scene::scene_t* TASCAR::session_t::add_scene(xmlpp::Element* src)
 {
   if( !src )
@@ -417,6 +427,7 @@ void TASCAR::actor_module_t::add_orientation(const TASCAR::zyx_euler_t& o)
   for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
     it->obj->dorientation += o;
 }
+
 
 /*
  * Local Variables:

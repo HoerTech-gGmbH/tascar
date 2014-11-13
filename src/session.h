@@ -106,6 +106,7 @@ namespace TASCAR {
     std::vector<TASCAR::connection_t*> connections;
     std::vector<TASCAR::module_t*> modules;
     const std::string& get_session_path() const;
+    std::vector<std::string> get_render_output_ports() const;
   protected:
     // derived variables:
     std::string session_path;

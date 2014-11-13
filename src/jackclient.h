@@ -47,12 +47,18 @@ public:
   int get_srate() { return srate; };
   int get_fragsize() { return fragsize; };
   void connect(const std::string& src, const std::string& dest, bool btry=false);
+  uint32_t get_xruns() const { return xruns;};
+  uint32_t get_xrun_latency() const { return xrun_latency;};
+private:
+  static int xrun_callback(void *arg);
 protected:
   jack_client_t* jc;
   int srate;
   int fragsize;
   int rtprio;
   bool active;
+  uint32_t xruns;
+  double xrun_latency;
 };
 
 /**
@@ -69,6 +75,8 @@ public:
   void connect_out(unsigned int port,const std::string& pname,bool btry=false);
   size_t get_num_input_ports() const {return inPort.size();};
   size_t get_num_output_ports() const {return outPort.size();};
+  std::vector<std::string> get_input_ports() const { return input_port_names; };
+  std::vector<std::string> get_output_ports() const { return output_port_names; };
 protected:
   virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) = 0;
 private:
@@ -79,6 +87,8 @@ private:
   std::vector<jack_port_t*> outPort;
   std::vector<float*> inBuffer;
   std::vector<float*> outBuffer;
+  std::vector<std::string> input_port_names;
+  std::vector<std::string> output_port_names;
 };
 
 class jackc_db_t : public jackc_t {

@@ -35,6 +35,7 @@
 
 #include <getopt.h>
 #include "session.h"
+#include "jackiowav.h"
 
 static bool b_quit;
 
@@ -61,12 +62,17 @@ int main(int argc, char** argv)
     signal(SIGABRT, &sighandler);
     signal(SIGTERM, &sighandler);
     signal(SIGINT, &sighandler);
-    std::string cfgfile("");
-    std::string jackname("");
-    const char *options = "hj:";
+    std::string cfgfile;
+    std::string jackname;
+    std::string output;
+    std::string range;
+    bool use_range(false);
+    const char *options = "hj:o:r:";
     struct option long_options[] = { 
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'j' },
+      { "output",   1, 0, 'o' },
+      { "range",    1, 0, 'r' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -80,6 +86,13 @@ int main(int argc, char** argv)
       case 'j':
         jackname = optarg;
         break;
+      case 'o':
+        output = optarg;
+        break;
+      case 'r':
+        range = optarg;
+        use_range = true;
+        break;
       }
     }
     if( optind < argc )
@@ -89,7 +102,39 @@ int main(int argc, char** argv)
       return -1;
     }
     TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
-    session.run(b_quit);
+    if( range.empty() && use_range ){
+      for(uint32_t k=0;k<session.ranges.size();k++)
+        std::cout << session.ranges[k]->name << std::endl;
+      return 0;
+    }
+    if( output.empty() )
+      session.run(b_quit);
+    else{
+      double t_start(0);
+      double t_dur(session.get_duration());
+      bool range_found(false);
+      if( use_range ){
+        for(uint32_t k=0;k<session.ranges.size();k++)
+          if( session.ranges[k]->name == range ){
+            t_start = session.ranges[k]->start;
+            t_dur = session.ranges[k]->end-session.ranges[k]->start;
+            range_found = true;
+          }
+        if( !range_found )
+          throw TASCAR::ErrMsg("Range \""+range+"\" not found.");
+      }
+      session.start();
+      std::vector<std::string> ports(session.get_render_output_ports());
+      std::cout << "Recording " << ports.size() << " channels, " << t_dur << " seconds to \"" << output << "\":" << std::endl;
+      for(uint32_t k=0;k<ports.size();k++)
+        std::cout << k << " " << ports[k] << std::endl;
+      jackio_t* iow(new jackio_t(t_start, t_dur,output,ports,session.name+"jackio"));
+      iow->run();
+      std::cout << iow->get_xruns() << " xruns (total latency: " << iow->get_xrun_latency() << ")" << std::endl;
+      delete iow;
+      sleep(1);
+      session.stop();
+    }
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;
