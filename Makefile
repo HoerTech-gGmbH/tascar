@@ -36,6 +36,8 @@ endif
 
 ifeq "$(DEBUG)" "yes"
 CXXFLAGS += -g
+else
+CXXFLAGS += -O3 
 endif
 
 #BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
@@ -56,7 +58,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 
 #GTKMMBIN = tascar_gui
 
-CXXFLAGS += -fPIC -Wall -O3 -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
+CXXFLAGS += -fPIC -Wall -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 #EXTERNALS = jack liblo sndfile
 

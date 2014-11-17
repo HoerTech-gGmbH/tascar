@@ -7,7 +7,7 @@ public:
   class data_t : public TASCAR::sinkmod_base_t::data_t {
   public:
     data_t(uint32_t chunksize,uint32_t channels);
-    ~data_t();
+    virtual ~data_t();
     // ambisonic weights:
     float* w;
     float* dw;
@@ -20,6 +20,7 @@ public:
     double dt;
   };
   nsp_t(xmlpp::Element* xmlsrc);
+  virtual ~nsp_t() {};
   void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, sinkmod_base_t::data_t*);
   void add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, sinkmod_base_t::data_t*);
@@ -43,6 +44,18 @@ nsp_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
   for(uint32_t k=0;k<channels;k++)
     w[k] = dw[k] = x[k] = dx[k] = y[k] = dy[k] = z[k] = dz[k] = 0;
   dt = 1.0/std::max(1.0,(double)chunksize);
+}
+
+nsp_t::data_t::~data_t()
+{
+  delete [] w;
+  delete [] dw;
+  delete [] x;
+  delete [] dx;
+  delete [] y;
+  delete [] dy;
+  delete [] z;
+  delete [] dz;
 }
 
 nsp_t::nsp_t(xmlpp::Element* xmlsrc)

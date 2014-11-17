@@ -29,6 +29,7 @@ TASCAR::sinkmod_t::sinkmod_t(xmlpp::Element* xmlsrc)
     RESOLVE(write_xml);
     RESOLVE(add_pointsource);
     RESOLVE(add_diffusesource);
+    RESOLVE(postproc);
     RESOLVE(get_num_channels);
     RESOLVE(get_channel_postfix);
     RESOLVE(create_data);
