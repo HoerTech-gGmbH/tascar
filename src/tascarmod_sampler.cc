@@ -38,8 +38,10 @@ sampler_var_t::sampler_var_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
 {
   GET_ATTRIBUTE(multicast);
   GET_ATTRIBUTE(port);
-  if( port.empty() )
-    throw TASCAR::ErrMsg("Invalid empty port number.");
+  if( port.empty() ){
+    std::cerr << "Warning: Empty port number; using default port 9999.\n";
+    port = "9999";
+  }
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
