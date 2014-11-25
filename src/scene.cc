@@ -489,7 +489,7 @@ void mask_object_t::geometry_update(double t)
   shoebox_t::size.x = std::max(0.0,xmlsize.x-xmlfalloff);
   shoebox_t::size.y = std::max(0.0,xmlsize.y-xmlfalloff);
   shoebox_t::size.z = std::max(0.0,xmlsize.z-xmlfalloff);
-  get_6dof(shoebox_t::center,shoebox_t::orientation);
+  dynobject_t::get_6dof(shoebox_t::center,shoebox_t::orientation);
   falloff = 1.0/std::max(xmlfalloff,1e-10);
 }
 
@@ -515,6 +515,7 @@ void sinkmod_object_t::geometry_update(double t)
   dynobject_t::geometry_update(t);
   TASCAR::Acousticmodel::sink_t::position = c6dof.p;
   TASCAR::Acousticmodel::sink_t::orientation = c6dof.o;
+  mask.geometry_update(t);
 }
 
 void sinkmod_object_t::process_active(double t,uint32_t anysolo)
