@@ -424,7 +424,8 @@ bool tascar_gui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->paint();
       cr->restore();
       draw.set_time(time);
-      draw.draw(cr,viewt);
+      draw.set_viewport(viewt);
+      draw.draw(cr);
       if( (mp_x > 0) && (mp_x < width ) && (mp_y > 0) && (mp_y < height) ){
         pos_t mp(mp_x,mp_y,0.0);
         mp -= pos_t(0.5*width,0.5*height,0.0);

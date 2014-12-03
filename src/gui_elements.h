@@ -50,7 +50,8 @@ public:
   virtual ~scene_draw_t();
   void set_scene(TASCAR::Scene::scene_t* scene);
   void select_object(TASCAR::Scene::object_t* o);
-  virtual void draw(Cairo::RefPtr<Cairo::Context> cr,const scene_draw_t::viewt_t& v=xy);
+  void set_viewport(const scene_draw_t::viewt_t& v);
+  virtual void draw(Cairo::RefPtr<Cairo::Context> cr);
   void set_markersize(double msize);
   void set_blink(bool blink);
   void set_time(double t);
