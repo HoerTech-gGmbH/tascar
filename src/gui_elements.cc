@@ -32,8 +32,8 @@ void source_ctl_t::setup()
     tlabel.set_text("src");
   if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
     tlabel.set_text("dif");
-  if( dynamic_cast<TASCAR::Scene::sinkmod_object_t*>(route_))
-    tlabel.set_text("sink");
+  if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
+    tlabel.set_text("rcvr");
   if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
     tlabel.set_text("door");
   box.pack_start( tlabel, Gtk::PACK_SHRINK );
@@ -191,9 +191,9 @@ void scene_draw_t::set_viewport(const viewt_t& viewt)
     case p :
       view.set_perspective(true);
       if( scene_ ){
-        if( scene_->sinkmod_objects.size() ){
-          view.set_ref(scene_->sinkmod_objects[0]->get_location());
-          view.set_euler(scene_->sinkmod_objects[0]->get_orientation());
+        if( scene_->receivermod_objects.size() ){
+          view.set_ref(scene_->receivermod_objects[0]->get_location());
+          view.set_euler(scene_->receivermod_objects[0]->get_orientation());
         }
       }
       break;
@@ -219,7 +219,7 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   //bool selected(obj==selection);
   draw_track(obj,cr,markersize);
   draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
-  draw_sink_object(dynamic_cast<TASCAR::Scene::sinkmod_object_t*>(obj),cr,markersize);
+  draw_receiver_object(dynamic_cast<TASCAR::Scene::receivermod_object_t*>(obj),cr,markersize);
   draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
   draw_room_src(dynamic_cast<TASCAR::Scene::src_diffuse_t*>(obj),cr,markersize);
   draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
@@ -432,7 +432,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
   }
 }
 
-void scene_draw_t::draw_sink_object(TASCAR::Scene::sinkmod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( obj ){
     if( view.get_perspective() )

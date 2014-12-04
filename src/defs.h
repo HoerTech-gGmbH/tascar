@@ -49,22 +49,22 @@
    (TASCAR::Acousticmodel::pointsource_t) and first order ambisonics
    (not yet implemented).
 
-   Multiple types of sinks (TASCAR::Acousticmodel::sink_t):
-   omnidirectional single channel sink
-   (TASCAR::Acousticmodel::sink_omni_t), 3rd (?) order full periphonic
-   sink (not yet implemented), 11th order horizontal sink (not yet
-   implemented), Duda head model binaural sink (not yet implemented),
-   omnidirectional room sink. Each sink has a reference point, which
+   Multiple types of receivers (TASCAR::Acousticmodel::receiver_t):
+   omnidirectional single channel receiver
+   (TASCAR::Acousticmodel::receiver_omni_t), 3rd (?) order full periphonic
+   receiver (not yet implemented), 11th order horizontal receiver (not yet
+   implemented), Duda head model binaural receiver (not yet implemented),
+   omnidirectional room receiver. Each receiver has a reference point, which
    can depend on the source position.
 
-   Each pair of a source and any sink owns an acoustic model
+   Each pair of a source and any receiver owns an acoustic model
    (TASCAR::Acousticmodel::acoustic_model_t). Distance coding
    (distance decay, air absorption) is processed by the acoustic
-   model, which is calculated independently of the type of sink.
+   model, which is calculated independently of the type of receiver.
 
    Obstacles (TASCAR::Acousticmodel::obstacle_t) modify the position
    and frequency response of a source if they intersect with the
-   direct connection between source and sink. (not yet implemented)
+   direct connection between source and receiver. (not yet implemented)
 
    Reflector objects (TASCAR::Acousticmodel::reflector_t) create one
    mirror source (TASCAR::Acousticmodel::mirrorsource_t) for each
@@ -80,9 +80,9 @@
    <li>Update audio of each primary source</li>
    <li>Update position of each primary source</li>
    <li>Update position/orientation of all obstacles and reflectors</li>
-   <li>Update position/orientation of all sinks</li>
+   <li>Update position/orientation of all receivers</li>
    <li>Process world</li>
-   <li>Copy rendered audio from sinks to audio backend</li>
+   <li>Copy rendered audio from receivers to audio backend</li>
    </ol>
 
    Relevant name spaces:

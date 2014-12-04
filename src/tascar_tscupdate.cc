@@ -50,6 +50,9 @@ int main(int argc,char** argv)
     xmlpp::Node::NodeList children(scene->get_children());
     for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
       xmlpp::Element* nodeElement(dynamic_cast<xmlpp::Element*>(*nita));
+      if( nodeElement && (nodeElement->get_name() == "sink") ){
+        nodeElement->set_name("receiver");
+      }
       if( nodeElement && (nodeElement->get_name() == "connect") ){
         nroot->import_node(nodeElement);
         scene->remove_child(nodeElement);

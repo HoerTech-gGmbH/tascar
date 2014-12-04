@@ -5,7 +5,7 @@
 #include "audiochunks.h"
 #include "coordinates.h"
 #include "delayline.h"
-#include "sinkmod.h"
+#include "receivermod.h"
 #include "dynamicobjects.h"
 
 namespace TASCAR {
@@ -20,7 +20,7 @@ namespace TASCAR {
     public:
       pointsource_t(uint32_t chunksize);
       virtual ~pointsource_t();
-      virtual pos_t get_effective_position(const pos_t& sinkp,double& gain);
+      virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return position; };
       wave_t audio;
       pos_t position;
@@ -31,7 +31,7 @@ namespace TASCAR {
     class doorsource_t : public pointsource_t, public ngon_t {
     public:
       doorsource_t(uint32_t chunksize);
-      virtual pos_t get_effective_position(const pos_t& sinkp,double& gain);
+      virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       double falloff;
       double distance;
     };
@@ -44,15 +44,15 @@ namespace TASCAR {
       bool active;
     };
 
-    class sink_data_t {
+    class receiver_data_t {
     public:
-      sink_data_t(){};
-      virtual ~sink_data_t(){};
+      receiver_data_t(){};
+      virtual ~receiver_data_t(){};
     };
 
-    class sink_mask_t : public dynobject_t {
+    class receiver_mask_t : public dynobject_t {
     public:
-      sink_mask_t(xmlpp::Element*);
+      receiver_mask_t(xmlpp::Element*);
       pos_t size;
       double falloff;
       bool active;
@@ -66,14 +66,14 @@ namespace TASCAR {
       bool mask_inner;
     };
 
-    class sink_t : public sinkmod_t {
+    class receiver_t : public receivermod_t {
     public:
-      sink_t(xmlpp::Element* xmlsrc);
+      receiver_t(xmlpp::Element* xmlsrc);
       void write_xml();
       void prepare(double srate, uint32_t fragsize);
       void clear_output();
-      void add_pointsource(const pos_t& prel, const wave_t& chunk, sinkmod_base_t::data_t*);
-      void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, sinkmod_base_t::data_t*);
+      void add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t*);
+      void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
       void apply_gain(double gain);
       // configuration/control variables:
@@ -90,7 +90,7 @@ namespace TASCAR {
       pos_t position;
       zyx_euler_t orientation;
       bool active;
-      TASCAR::Acousticmodel::sink_mask_t mask;
+      TASCAR::Acousticmodel::receiver_mask_t mask;
     private:
       double x_gain;
       double dx_gain;
@@ -120,7 +120,7 @@ namespace TASCAR {
     class mirrorsource_t : public pointsource_t {
     public:
       mirrorsource_t(pointsource_t* src,reflector_t* reflector);
-      pos_t get_effective_position(const pos_t& sinkp,double& gain);
+      pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return src_->get_physical_position();};
       void process();
       reflector_t* get_reflector() const { return reflector_;};
@@ -151,23 +151,23 @@ namespace TASCAR {
       std::vector<mirrorsource_t*> mirrorsource;
     };
 
-    /** \brief A model for a sound wave propagating from a point source to a sink
+    /** \brief A model for a sound wave propagating from a point source to a receiver
      *
      * Processing includes delay, gain, air absorption, and optional
      * obstacles.
      */
     class acoustic_model_t {
     public:
-      acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,sink_t* sink,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
+      acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,receiver_t* receiver,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
       ~acoustic_model_t();
-      /** \brief Read audio from source, process and add to sink.
+      /** \brief Read audio from source, process and add to receiver.
        */
       uint32_t process();
     protected:
       double c_;
       pointsource_t* src_;
-      sink_t* sink_;
-      sinkmod_base_t::data_t* sink_data;
+      receiver_t* receiver_;
+      receivermod_base_t::data_t* receiver_data;
       std::vector<obstacle_t*> obstacles_;
       wave_t audio;
       uint32_t chunksize;
@@ -180,22 +180,22 @@ namespace TASCAR {
       float airabsorption_state;
     };
 
-    /** \brief A model for a sound wave propagating from a point source to a sink
+    /** \brief A model for a sound wave propagating from a point source to a receiver
      *
      * Processing includes delay, gain, air absorption, and optional
      * obstacles.
      */
     class diffuse_acoustic_model_t {
     public:
-      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,sink_t* sink);
+      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,receiver_t* receiver);
       ~diffuse_acoustic_model_t();
-      /** \brief Read audio from source, process and add to sink.
+      /** \brief Read audio from source, process and add to receiver.
        */
       uint32_t process();
     protected:
       diffuse_source_t* src_;
-      sink_t* sink_;
-      sinkmod_base_t::data_t* sink_data;
+      receiver_t* receiver_;
+      receivermod_base_t::data_t* receiver_data;
       amb1wave_t audio;
       uint32_t chunksize;
       double dt;
@@ -205,7 +205,7 @@ namespace TASCAR {
     /** \brief The render model of an acoustic scenario.
      *
      * A world creates a set of acoustic models, one for each
-     * combination of a sound source (primary or mirrored) and a sink.
+     * combination of a sound source (primary or mirrored) and a receiver.
      */
     class world_t {
     public:
@@ -213,11 +213,11 @@ namespace TASCAR {
        *
        * \param sources Pointers to primary sound sources
        * \param reflectors Pointers to reflector objects
-       * \param sinks Pointers to render sinks
+       * \param receivers Pointers to render receivers
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<sink_t*>& sinks,const std::vector<mask_t*>& masks,uint32_t mirror_order);
+      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */
@@ -230,7 +230,7 @@ namespace TASCAR {
       mirror_model_t mirrormodel;
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
-      std::vector<sink_t*> sinks_;
+      std::vector<receiver_t*> receivers_;
       std::vector<mask_t*> masks_;
       uint32_t active_pointsource;
       uint32_t active_diffusesource;

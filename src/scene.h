@@ -34,7 +34,7 @@
 #include "defs.h"
 #include "xmlconfig.h"
 #include "acousticmodel.h"
-#include "sinkmod.h"
+#include "receivermod.h"
 #include "dynamicobjects.h"
 
 namespace TASCAR {
@@ -239,9 +239,9 @@ namespace TASCAR {
       void write_xml();
     };
 
-    class sinkmod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::sink_t {
+    class receivermod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::receiver_t {
     public:
-      sinkmod_object_t(xmlpp::Element* e);
+      receivermod_object_t(xmlpp::Element* e);
       void write_xml();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
@@ -276,7 +276,7 @@ namespace TASCAR {
       std::vector<src_door_t*> door_sources;
       std::vector<face_object_t*> faces;
       std::vector<face_group_t*> facegroups;
-      std::vector<sinkmod_object_t*> sinkmod_objects;
+      std::vector<receivermod_object_t*> receivermod_objects;
       std::vector<mask_object_t*> masks;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;

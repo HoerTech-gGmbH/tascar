@@ -1,4 +1,4 @@
-#include "render_sinks.h"
+#include "render_receivers.h"
 #include "tascar.h"
 
 using namespace TASCAR;

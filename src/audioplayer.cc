@@ -182,8 +182,8 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   // mute output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
-  for(unsigned int k=0;k<sinkmod_objects.size();k++){
-    sinkmod_objects[k]->clear_output();
+  for(unsigned int k=0;k<receivermod_objects.size();k++){
+    receivermod_objects[k]->clear_output();
   }
   geometry_update(tp_time);
   process_active(tp_time);
@@ -213,13 +213,13 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     active_pointsources = 0;
     active_diffusesources = 0;
   }
-  // copy sink output:
-  for(unsigned int k=0;k<sinkmod_objects.size();k++){
-    sinkmod_objects[k]->postproc();
-    //TASCAR::Acousticmodel::sink_t* psink(sink_objects[k].get_sink());
-    float gain(sinkmod_objects[k]->get_gain());
-    for(uint32_t ch=0;ch<sinkmod_objects[k]->get_num_channels();ch++)
-      sinkmod_objects[k]->outchannels[ch].copy_to(outBuffer[sinkmod_objects[k]->get_port_index()+ch],nframes,gain);
+  // copy receiver output:
+  for(unsigned int k=0;k<receivermod_objects.size();k++){
+    receivermod_objects[k]->postproc();
+    //TASCAR::Acousticmodel::receiver_t* preceiver(receiver_objects[k].get_receiver());
+    float gain(receivermod_objects[k]->get_gain());
+    for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
+      receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
   }
   //security/stability:
   for(uint32_t ch=0;ch<outBuffer.size();ch++)
@@ -257,13 +257,13 @@ void TASCAR::renderer_t::start()
       add_input_port((*it)->get_name()+ctmp);
     }
   }
-  sinks.clear();
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it){
-    TASCAR::Acousticmodel::sink_t* sink(*it);
-    sinks.push_back(sink);
+  receivers.clear();
+  for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
+    TASCAR::Acousticmodel::receiver_t* receiver(*it);
+    receivers.push_back(receiver);
     (*it)->set_port_index(get_num_output_ports());
-    for(uint32_t ch=0;ch<sink->get_num_channels();ch++){
-      add_output_port((*it)->get_name()+sink->get_channel_postfix(ch));
+    for(uint32_t ch=0;ch<receiver->get_num_channels();ch++){
+      add_output_port((*it)->get_name()+receiver->get_channel_postfix(ch));
     }
   }
   reflectors.clear();
@@ -280,7 +280,7 @@ void TASCAR::renderer_t::start()
     pmasks.push_back(*it);
   }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(c,get_srate(),get_fragsize(),sources,diffusesources,reflectors,sinks,pmasks,mirrororder);
+  world = new Acousticmodel::world_t(c,get_srate(),get_fragsize(),sources,diffusesources,reflectors,receivers,pmasks,mirrororder);
   total_pointsources = world->get_total_pointsource();
   total_diffusesources = world->get_total_diffusesource();
   //
@@ -305,13 +305,13 @@ void TASCAR::renderer_t::start()
     }
   }
   // todo: connect diffuse ports.
-  // connect sink ports:
-  for(unsigned int k=0;k<sinkmod_objects.size();k++){
-    std::string cn(sinkmod_objects[k]->get_connect());
+  // connect receiver ports:
+  for(unsigned int k=0;k<receivermod_objects.size();k++){
+    std::string cn(receivermod_objects[k]->get_connect());
     if( cn.size() ){
-      cn = strrep(cn,"@","player."+name+":"+sinkmod_objects[k]->get_name());
-      for(uint32_t ch=0;ch<sinkmod_objects[k]->get_num_channels();ch++)
-        connect_out(sinkmod_objects[k]->get_port_index()+ch,cn+sinkmod_objects[k]->get_channel_postfix(ch),true);
+      cn = strrep(cn,"@","player."+name+":"+receivermod_objects[k]->get_name());
+      for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
+        connect_out(receivermod_objects[k]->get_port_index()+ch,cn+receivermod_objects[k]->get_channel_postfix(ch),true);
     }
   }
   //for(uint32_t k=0;k<connections.size();k++)

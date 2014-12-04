@@ -1,4 +1,4 @@
-#include "sinks.h"
+#include "receivers.h"
 #include "defs.h"
 #include <iostream>
 #include <stdio.h>
@@ -7,16 +7,16 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
-sink_omni_t::sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+receiver_omni_t::receiver_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
                          bool mask_use,bool global_mask_use)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
+  : receiver_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
 {
   outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
 
-//void sink_omni_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
+//void receiver_omni_t::update_refpoint(const pos_t& psrc, pos_t& prel, double& distance, double& gain)
 //{
 //  prel = psrc;
 //  prel -= position;
@@ -24,28 +24,28 @@ sink_omni_t::sink_omni_t(uint32_t chunksize, pos_t size, double falloff, bool b_
 //  gain = 1.0/std::max(0.1,distance);
 //}
 
-void sink_omni_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*)
+void receiver_omni_t::add_source(const pos_t& prel, const wave_t& chunk, receiver_data_t*)
 {
   outchannels[0] += chunk;
 }
 
-void sink_omni_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t*)
+void receiver_omni_t::add_source(const pos_t& prel, const amb1wave_t& chunk, receiver_data_t*)
 {
   outchannels[0] += chunk.w();
 }
 
 
-sink_cardioid_t::sink_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+receiver_cardioid_t::receiver_cardioid_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
                          bool mask_use,bool global_mask_use)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
+  : receiver_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
 {
   outchannels = std::vector<wave_t>(1,wave_t(chunksize));
 }
 
 
-void sink_cardioid_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
+void receiver_cardioid_t::add_source(const pos_t& prel, const wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   float dazgain((0.5*cos(prel.azim())+0.5 - d->azgain)*dt);
@@ -53,7 +53,7 @@ void sink_cardioid_t::add_source(const pos_t& prel, const wave_t& chunk, sink_da
     outchannels[0][k] += chunk[k]*(d->azgain+=dazgain);
 }
 
-void sink_cardioid_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
+void receiver_cardioid_t::add_source(const pos_t& prel, const amb1wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   float dazgain((0.5*cos(prel.azim())+0.5 - d->azgain)*dt);
@@ -62,7 +62,7 @@ void sink_cardioid_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sin
 }
 
 
-sink_amb3h3v_t::data_t::data_t()
+receiver_amb3h3v_t::data_t::data_t()
 {
   for(uint32_t k=0;k<AMB33::idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
@@ -70,16 +70,16 @@ sink_amb3h3v_t::data_t::data_t()
   rotz_current[1] = 0;
 }
  
-sink_amb3h3v_t::sink_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+receiver_amb3h3v_t::receiver_amb3h3v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
                          bool mask_use,bool global_mask_use)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
+  : receiver_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
 {
   outchannels = std::vector<wave_t>(AMB33::idx::channels,wave_t(chunksize));
 }
 
-void sink_amb3h3v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
+void receiver_amb3h3v_t::add_source(const pos_t& prel, const wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   float az = prel.azim();
@@ -117,7 +117,7 @@ void sink_amb3h3v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_dat
   }
 }
 
-void sink_amb3h3v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
+void receiver_amb3h3v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   float az = prel.azim();
@@ -139,7 +139,7 @@ void sink_amb3h3v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink
   }
 }
 
-std::string sink_amb3h3v_t::get_channel_postfix(uint32_t channel) const
+std::string receiver_amb3h3v_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[32];
   sprintf(ctmp,".%g%c",floor(sqrt((double)channel)),AMB33::channelorder[channel]);
@@ -148,7 +148,7 @@ std::string sink_amb3h3v_t::get_channel_postfix(uint32_t channel) const
 
 
 
-sink_amb3h0v_t::data_t::data_t()
+receiver_amb3h0v_t::data_t::data_t()
 {
   for(uint32_t k=0;k<AMB30::idx::channels;k++)
     _w[k] = w_current[k] = dw[k] = 0;
@@ -156,16 +156,16 @@ sink_amb3h0v_t::data_t::data_t()
   rotz_current[1] = 0;
 }
  
-sink_amb3h0v_t::sink_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+receiver_amb3h0v_t::receiver_amb3h0v_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
                          bool mask_use,bool global_mask_use)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
+  : receiver_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
 {
   outchannels = std::vector<wave_t>(AMB30::idx::channels,wave_t(chunksize));
 }
 
-void sink_amb3h0v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
+void receiver_amb3h0v_t::add_source(const pos_t& prel, const wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   float az = prel.azim();
@@ -189,7 +189,7 @@ void sink_amb3h0v_t::add_source(const pos_t& prel, const wave_t& chunk, sink_dat
   }
 }
 
-void sink_amb3h0v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
+void receiver_amb3h0v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   float az = prel.azim();
@@ -209,24 +209,24 @@ void sink_amb3h0v_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink
   }
 }
 
-std::string sink_amb3h0v_t::get_channel_postfix(uint32_t channel) const
+std::string receiver_amb3h0v_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[32];
   sprintf(ctmp,".%g%c",floor((double)(channel+1)*0.5),AMB30::channelorder[channel]);
   return ctmp;
 }
 
-sink_nsp_t::data_t::data_t()
+receiver_nsp_t::data_t::data_t()
 {
   for(uint32_t k=0;k<MAX_VBAP_CHANNELS;k++)
     w[k] = dw[k] = x[k] = y[k] = z[k] = dx[k] = dy[k] = dz[k] = 0;
 }
  
-sink_nsp_t::sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
+receiver_nsp_t::receiver_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
                          pos_t mask_size,
                          double mask_falloff,
                          bool mask_use,bool global_mask_use, const std::vector<pos_t>& spkpos_)
-  : sink_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
+  : receiver_t(chunksize, size, falloff, b_point, b_diffuse,mask_size,mask_falloff,mask_use,global_mask_use)
 {
   if( spkpos_.size() > MAX_VBAP_CHANNELS )
     throw TASCAR::ErrMsg("number of VBAP channels is to large.");
@@ -237,7 +237,7 @@ sink_nsp_t::sink_nsp_t(uint32_t chunksize, pos_t size, double falloff, bool b_po
     spkpos.push_back(spkpos_[k].normal());
 }
 
-void sink_nsp_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t* sd)
+void receiver_nsp_t::add_source(const pos_t& prel, const wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   pos_t psrc(prel.normal());
@@ -258,7 +258,7 @@ void sink_nsp_t::add_source(const pos_t& prel, const wave_t& chunk, sink_data_t*
   }
 }
 
-void sink_nsp_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_data_t* sd)
+void receiver_nsp_t::add_source(const pos_t& prel, const amb1wave_t& chunk, receiver_data_t* sd)
 {
   data_t* d((data_t*)sd);
   pos_t psrc(prel.normal());
@@ -294,7 +294,7 @@ void sink_nsp_t::add_source(const pos_t& prel, const amb1wave_t& chunk, sink_dat
   }
 }
 
-std::string sink_nsp_t::get_channel_postfix(uint32_t channel) const
+std::string receiver_nsp_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[32];
   sprintf(ctmp,".%d",channel);

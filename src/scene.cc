@@ -6,7 +6,7 @@
 #include <iostream>
 #include "defs.h"
 #include <string.h>
-//#include "sinks.h"
+//#include "receivers.h"
 #include <locale.h>
 #include <libgen.h>
 #include <unistd.h>
@@ -205,21 +205,21 @@ void src_diffuse_t::geometry_update(double t)
   }
 }
 
-//void sink_object_t::geometry_update(double t)
+//void receiver_object_t::geometry_update(double t)
 //{
-//  if( sink ){
+//  if( receiver ){
 //    dynobject_t::geometry_update(t);
-//    get_6dof(sink->position,sink->orientation);
-//    sink->diffusegain = diffusegain;
-//    sink->is_direct = is_direct;
+//    get_6dof(receiver->position,receiver->orientation);
+//    receiver->diffusegain = diffusegain;
+//    receiver->is_direct = is_direct;
 //    if( mask.active ){
 //      mask.geometry_update(t);
-//      mask.get_6dof(sink->mask.center,sink->mask.orientation);
+//      mask.get_6dof(receiver->mask.center,receiver->mask.orientation);
 //    }
 //  }
 //}
 //
-//std::vector<TASCAR::pos_t> sink_object_t::get_spkpos() const
+//std::vector<TASCAR::pos_t> receiver_object_t::get_spkpos() const
 //{
 //  std::vector<TASCAR::pos_t> r;
 //  for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it){
@@ -366,14 +366,18 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
+      // rename old "sink" to "receiver":
+      if( sne->get_name() == "sink" )
+        sne->set_name("receiver");
+      // parse nodes:
       if( sne->get_name() == "src_object" )
         object_sources.push_back(new src_object_t(sne));
       else if( sne->get_name() == "door" )
         door_sources.push_back(new src_door_t(sne));
       else if( sne->get_name() == "diffuse" )
         diffuse_sources.push_back(new src_diffuse_t(sne));
-      else if( sne->get_name() == "sink" )
-        sinkmod_objects.push_back(new sinkmod_object_t(sne));
+      else if( sne->get_name() == "receiver" )
+        receivermod_objects.push_back(new receivermod_object_t(sne));
       else if( sne->get_name() == "face" )
         faces.push_back(new face_object_t(sne));
       else if( sne->get_name() == "facegroup" )
@@ -433,7 +437,7 @@ void scene_t::process_active(double t)
     (*it)->process_active(t,anysolo);
   for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+  for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     (*it)->process_active(t,anysolo);
@@ -493,68 +497,68 @@ void mask_object_t::geometry_update(double t)
   falloff = 1.0/std::max(xmlfalloff,1e-10);
 }
 
-sinkmod_object_t::sinkmod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), jack_port_t(xmlsrc), sink_t(xmlsrc)
+receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
+  : object_t(xmlsrc), jack_port_t(xmlsrc), receiver_t(xmlsrc)
 {
 }
 
-void sinkmod_object_t::write_xml()
+void receivermod_object_t::write_xml()
 {
   object_t::write_xml();
   jack_port_t::write_xml();
-  sinkmod_t::write_xml();
+  receivermod_t::write_xml();
 }
 
-void sinkmod_object_t::prepare(double fs, uint32_t fragsize)
+void receivermod_object_t::prepare(double fs, uint32_t fragsize)
 {
-  TASCAR::Acousticmodel::sink_t::prepare(fs,fragsize);
+  TASCAR::Acousticmodel::receiver_t::prepare(fs,fragsize);
 }
 
-void sinkmod_object_t::geometry_update(double t)
+void receivermod_object_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
-  TASCAR::Acousticmodel::sink_t::position = c6dof.p;
-  TASCAR::Acousticmodel::sink_t::orientation = c6dof.o;
+  TASCAR::Acousticmodel::receiver_t::position = c6dof.p;
+  TASCAR::Acousticmodel::receiver_t::orientation = c6dof.o;
   mask.geometry_update(t);
 }
 
-void sinkmod_object_t::process_active(double t,uint32_t anysolo)
+void receivermod_object_t::process_active(double t,uint32_t anysolo)
 {
-  TASCAR::Acousticmodel::sink_t::active = is_active(anysolo,t);
+  TASCAR::Acousticmodel::receiver_t::active = is_active(anysolo,t);
 }
 
-//void sink_object_t::prepare(double fs, uint32_t fragsize)
+//void receiver_object_t::prepare(double fs, uint32_t fragsize)
 //{
 //  bool use_mask(mask.active);
-//  if( sink )
-//    delete sink;
-//  switch( sink_type ){
+//  if( receiver )
+//    delete receiver;
+//  switch( receiver_type ){
 //  case omni :
-//    sink = new TASCAR::Acousticmodel::sink_omni_t(fragsize,size,falloff,render_point,render_diffuse,
+//    receiver = new TASCAR::Acousticmodel::receiver_omni_t(fragsize,size,falloff,render_point,render_diffuse,
 //                                                  mask.size,
 //                                                  mask.falloff,
 //                                                  use_mask,use_global_mask);
 //    break;
 //  case cardioid :
-//    sink = new TASCAR::Acousticmodel::sink_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
+//    receiver = new TASCAR::Acousticmodel::receiver_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
 //                                                      mask.size,
 //                                                      mask.falloff,
 //                                                      use_mask,use_global_mask);
 //    break;
 //  case amb3h3v :
-//    sink = new TASCAR::Acousticmodel::sink_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
+//    receiver = new TASCAR::Acousticmodel::receiver_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
 //                                                     mask.size,
 //                                                     mask.falloff,
 //                                                     use_mask,use_global_mask);
 //    break;
 //  case amb3h0v :
-//    sink = new TASCAR::Acousticmodel::sink_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
+//    receiver = new TASCAR::Acousticmodel::receiver_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
 //                                                  mask.size,
 //                                                  mask.falloff,
 //                                                  use_mask,use_global_mask);
 //    break;
 //  case nsp :
-//    sink = new TASCAR::Acousticmodel::sink_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
+//    receiver = new TASCAR::Acousticmodel::receiver_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
 //                                                 mask.size,
 //                                                 mask.falloff,
 //                                                 use_mask,use_global_mask,get_spkpos());
@@ -592,9 +596,9 @@ std::vector<object_t*> scene_t::get_objects()
     r.push_back(*it);
   for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     r.push_back(*it);
-  //for(std::vector<sink_object_t>::iterator it=sink_objects.begin();it!=sink_objects.end();++it)
+  //for(std::vector<receiver_object_t>::iterator it=receiver_objects.begin();it!=receiver_objects.end();++it)
   //  r.push_back(&(*it));
-  for(std::vector<sinkmod_object_t*>::iterator it=sinkmod_objects.begin();it!=sinkmod_objects.end();++it)
+  for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     r.push_back(*it);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     r.push_back(*it);
@@ -615,7 +619,7 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
   if( (object_sources.size() == 0) && (diffuse_sources.size() == 0) )
     throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
-  if( sinkmod_objects.size() == 0 )
+  if( receivermod_objects.size() == 0 )
     throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
   std::vector<object_t*> objs(get_objects());
   for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)

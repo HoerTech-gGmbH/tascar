@@ -16,7 +16,7 @@
   }[internal/jack/file]
 
 
-  sink-sources {
+  receiver-sources {
 
   diffuse-rev
 
@@ -24,7 +24,7 @@
 
   acoustic-model
 
-  sinks {
+  receivers {
 
   amb11
 
@@ -48,9 +48,9 @@
 namespace TASCAR {
 
   /*
-  class sink_base_t : public object_t {
+  class receiver_base_t : public object_t {
   public:
-    sink_base_t();
+    receiver_base_t();
     virtual uint32_t output_channels() = 0;
     void connect_source(const source_base_t* src);
     virtual void prepare() = 0;

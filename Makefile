@@ -6,14 +6,14 @@ tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 tascar_tscupdate
 
-SINKS = omni nsp amb3h0v
+RECEIVERS = omni nsp amb3h0v
 
 TASCARMODS = system pos2osc sampler
 
 #
 #
 #
-SINKMODS = $(patsubst %,tascarsink_%.so,$(SINKS))
+RECEIVERMODS = $(patsubst %,tascarreceiver_%.so,$(RECEIVERS))
 
 TASCARMODDLLS = $(patsubst %,tascar_%.so,$(TASCARMODS))
 
@@ -44,7 +44,7 @@ endif
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
-OBJECTS = coordinates.o dynamicobjects.o scene.o session.o sinkmod.o	\
+OBJECTS = coordinates.o dynamicobjects.o scene.o session.o receivermod.o	\
 jackclient.o delayline.o speakerlayout.o multipan.o osc_helper.o	\
 async_file.o errorhandling.o audiochunks.o acousticmodel.o multipan.o	\
 multipan_amb3.o hoafilt.o xmlconfig.o osc_scene.o audioplayer.o		\
@@ -53,7 +53,7 @@ ringbuffer.o gammatone.o viewport.o sampler.o jackiowav.o
 GUIOBJECTS = gui_elements.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
-	$(patsubst %,$(PREFIX)/lib/%,$(SINKMODS)) \
+	$(patsubst %,$(PREFIX)/lib/%,$(RECEIVERMODS)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(TASCARMODDLLS))
 
 #GTKMMBIN = tascar_gui
@@ -86,7 +86,7 @@ all: lib
 
 lib:
 	mkdir -p build
-	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(SINKMODS) $(TASCARMODDLLS)
+	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(TASCARMODDLLS)
 
 libtascar.a: $(OBJECTS)
 	ar rcs $@ $^
@@ -149,7 +149,7 @@ bz2:
 
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 
-tascarsink_%.so: sinkmod_%.cc
+tascarreceiver_%.so: receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 tascar_%.so: tascarmod_%.cc
