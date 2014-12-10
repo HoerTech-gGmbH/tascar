@@ -26,12 +26,12 @@ cardioid_t::cardioid_t(xmlpp::Element* xmlsrc)
 {
 }
 
-void cardioid_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void cardioid_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
-  float dazgain((0.5*cos(prel.azim())+0.5 - d->azgain)*dt);
+  float dazgain((0.5*cos(prel.azim())+0.5 - d->azgain)*d->dt);
   for(uint32_t k=0;k<chunk.size();k++)
-    outchannels[0][k] += chunk[k]*(d->azgain+=dazgain);
+    output[0][k] += chunk[k]*(d->azgain+=dazgain);
 }
 
 void cardioid_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)

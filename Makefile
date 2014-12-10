@@ -6,7 +6,7 @@ tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 tascar_tscupdate
 
-RECEIVERS = omni nsp amb3h0v
+RECEIVERS = omni nsp amb3h0v cardioid
 
 TASCARMODS = system pos2osc sampler
 
