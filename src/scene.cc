@@ -865,7 +865,7 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
 {
   dynobject_t::GET_ATTRIBUTE(reflectivity);
   dynobject_t::GET_ATTRIBUTE(damping);
-  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc,""));
+  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc,"faces"));
   while(!txtmesh.eof() ){
     std::string meshline;
     getline(txtmesh,meshline,'\n');

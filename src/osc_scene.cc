@@ -99,6 +99,17 @@ void osc_scene_t::add_object_methods(TASCAR::Scene::object_t* o)
   add_method("/"+name+"/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
 }
 
+void osc_scene_t::add_face_object_methods(TASCAR::Scene::face_object_t* o)
+{
+  add_double("/"+name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
+  add_double("/"+name+"/"+o->get_name()+"/damping",&(o->damping));
+}
+
+void osc_scene_t::add_face_group_methods(TASCAR::Scene::face_group_t* o)
+{
+  add_double("/"+name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
+  add_double("/"+name+"/"+o->get_name()+"/damping",&(o->damping));
+}
 
 void osc_scene_t::add_route_methods(TASCAR::Scene::route_t* o)
 {
@@ -125,12 +136,25 @@ void osc_scene_t::add_child_methods()
 {
   std::vector<object_t*> obj(get_objects());
   for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
+    if( TASCAR::Scene::face_object_t* po=dynamic_cast<TASCAR::Scene::face_object_t*>(*it))
+      add_face_object_methods(po);
+    if( TASCAR::Scene::face_group_t* po=dynamic_cast<TASCAR::Scene::face_group_t*>(*it))
+      add_face_group_methods(po);
+    //if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
+    //tlabel.set_text("src");
+    if( TASCAR::Scene::src_diffuse_t* po=dynamic_cast<TASCAR::Scene::src_diffuse_t*>(*it))
+      add_diffuse_methods(po);
+    //tlabel.set_text("dif");
+    //if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
+    //tlabel.set_text("rcvr");
+    //if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
+    //tlabel.set_text("door");
     add_object_methods(*it);
     add_route_methods(*it);
   }
-  for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-    add_diffuse_methods(*it);
-  }
+  //for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+  //  add_diffuse_methods(*it);
+  //}
   std::vector<sound_t*> sounds(linearize_sounds());
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     add_sound_methods(*it);
