@@ -29,10 +29,11 @@ system_t::system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess)
   memset(ctmp,0,1024);
   snprintf(ctmp,1024,"sh -c \"cd %s;%s >/dev/null & echo \\$!\"",sessionpath.c_str(),command.c_str());
   h_pipe = popen( ctmp, "r" );
-  fgets(ctmp,1024,h_pipe);
-  pid = atoi(ctmp);
-  if( pid == 0 ){
-    std::cerr << "Warning: Invalid subprocess PID." << std::endl;
+  if( fgets(ctmp,1024,h_pipe) != NULL ){
+    pid = atoi(ctmp);
+    if( pid == 0 ){
+      std::cerr << "Warning: Invalid subprocess PID." << std::endl;
+    }
   }
   usleep(1000000*sleep);
 }
