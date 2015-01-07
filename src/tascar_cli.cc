@@ -45,16 +45,6 @@ static void sighandler(int sig)
   fclose(stdin);
 }
 
-void usage(struct option * opt)
-{
-  std::cout << "Usage:\n\ntascar_cli [options] configfile\n\nOptions:\n\n";
-  while( opt->name ){
-    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
-      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
-    opt++;
-  }
-}
-
 int main(int argc, char** argv)
 {
   try{
@@ -81,7 +71,7 @@ int main(int argc, char** argv)
                               long_options, &option_index)) != -1){
       switch(opt){
       case 'h':
-        usage(long_options);
+        TASCAR::app_usage("tascar_cli",long_options,"configfile");
         return -1;
       case 'j':
         jackname = optarg;
@@ -98,7 +88,7 @@ int main(int argc, char** argv)
     if( optind < argc )
       cfgfile = argv[optind++];
     if( cfgfile.size() == 0 ){
-      usage(long_options);
+      TASCAR::app_usage("tascar_cli",long_options,"configfile");
       return -1;
     }
     TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
