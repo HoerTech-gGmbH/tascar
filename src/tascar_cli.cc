@@ -36,6 +36,7 @@
 #include <getopt.h>
 #include "session.h"
 #include "jackiowav.h"
+#include "cli.h"
 
 static bool b_quit;
 

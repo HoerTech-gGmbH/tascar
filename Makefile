@@ -44,11 +44,12 @@ endif
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
-OBJECTS = coordinates.o dynamicobjects.o scene.o session.o receivermod.o	\
-jackclient.o delayline.o speakerlayout.o multipan.o osc_helper.o	\
-async_file.o errorhandling.o audiochunks.o acousticmodel.o multipan.o	\
-multipan_amb3.o hoafilt.o xmlconfig.o osc_scene.o audioplayer.o		\
-ringbuffer.o gammatone.o viewport.o sampler.o jackiowav.o
+OBJECTS = coordinates.o dynamicobjects.o scene.o session.o		\
+receivermod.o jackclient.o delayline.o speakerlayout.o multipan.o	\
+osc_helper.o async_file.o errorhandling.o audiochunks.o			\
+acousticmodel.o multipan.o multipan_amb3.o hoafilt.o xmlconfig.o	\
+osc_scene.o audioplayer.o ringbuffer.o gammatone.o viewport.o		\
+sampler.o jackiowav.o cli.o
 
 GUIOBJECTS = gui_elements.o
 

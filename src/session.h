@@ -4,7 +4,6 @@
 #include "xmlconfig.h"
 #include "scene.h"
 #include "audioplayer.h"
-#include <getopt.h>
 
 namespace TASCAR {
 
@@ -127,8 +126,6 @@ namespace TASCAR {
     std::string actor;
     std::vector<TASCAR::named_object_t> obj;
   };
-
-  void app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg="");
 
 }
 
