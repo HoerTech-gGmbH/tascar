@@ -11,6 +11,7 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <fnmatch.h>
+#include <fstream>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -865,6 +866,22 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
 {
   dynobject_t::GET_ATTRIBUTE(reflectivity);
   dynobject_t::GET_ATTRIBUTE(damping);
+  dynobject_t::GET_ATTRIBUTE(importraw);
+  if( !importraw.empty() ){
+    std::ifstream rawmesh(importraw.c_str());
+    if( !rawmesh.good() )
+      throw TASCAR::ErrMsg("Unable to open mesh file \""+importraw+"\".");
+    while(!rawmesh.eof() ){
+      std::string meshline;
+      getline(rawmesh,meshline,'\n');
+      if( !meshline.empty() ){
+        //DEBUGS(meshline);
+        TASCAR::Acousticmodel::reflector_t* p_reflector(new TASCAR::Acousticmodel::reflector_t());
+        p_reflector->nonrt_set(TASCAR::str2vecpos(meshline));
+        reflectors.push_back(p_reflector);
+      }
+    }
+  }
   std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc,"faces"));
   while(!txtmesh.eof() ){
     std::string meshline;
@@ -893,11 +910,12 @@ void face_group_t::write_xml()
   object_t::write_xml();
   dynobject_t::SET_ATTRIBUTE(reflectivity);
   dynobject_t::SET_ATTRIBUTE(damping);
-  std::stringstream txtmesh;
-  for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
-    txtmesh << (*it)->print(" ") << std::endl;
-  }
-  dynobject_t::e->add_child_text(txtmesh.str());
+  dynobject_t::SET_ATTRIBUTE(importraw);
+  //std::stringstream txtmesh;
+  //for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
+  //  txtmesh << (*it)->print(" ") << std::endl;
+  //}
+  //dynobject_t::e->add_child_text(txtmesh.str());
 }
  
 void face_group_t::geometry_update(double t)

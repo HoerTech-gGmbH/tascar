@@ -135,6 +135,7 @@ namespace TASCAR {
       std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
       double reflectivity;
       double damping;
+      std::string importraw;
     };
 
     class src_object_t;
