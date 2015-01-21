@@ -29,6 +29,7 @@
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
 #include "tascar.h"
+#include "session.h"
 #include <iostream>
 #include <getopt.h>
 #include "viewport.h"
@@ -59,11 +60,12 @@ void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
   }
 }
 
-class pdf_export_t : public scene_t {
+class pdf_export_t : public TASCAR::session_t {
 public:
   pdf_export_t(const std::string& scenename,const std::string& pdfname);
   ~pdf_export_t();
   void render_time(const std::vector<double>& time);
+  void render_time(TASCAR::Scene::scene_t* scene,const std::vector<double>& time);
 private:
   void draw(scene_draw_t::viewt_t persp);
   double time;
@@ -79,7 +81,8 @@ private:
 };
 
 pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfname)
-  : time(0),
+  : session_t(scenename,LOAD_FILE,scenename),
+    time(0),
     filename(scenename),
     height(72*210/25.4),
     width(72*297/25.4),
@@ -89,13 +92,27 @@ pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfna
     bmargin(72*12/25.4),
     surface(Cairo::PdfSurface::create(pdfname, width, height ))
 {
-  drawer.set_scene(this);
-  read_xml(scenename);
-  linearize_sounds();
-  prepare(44100,1024);
+}
+
+pdf_export_t::~pdf_export_t()
+{
+}
+
+void pdf_export_t::render_time(const std::vector<double>& t)
+{
+  for(std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+    render_time(*it,t);
+}
+
+void pdf_export_t::render_time(TASCAR::Scene::scene_t* s, const std::vector<double>& t)
+{
+  drawer.set_scene(s);
+  //read_xml(scenename);
+  //linearize_sounds();
+  //prepare(44100,1024);
   double wscale(0.5*std::max(height,width));
   double res(wscale/72*0.0254);
-  double nscale(guiscale/res);
+  double nscale(s->guiscale/res);
   nscale = pow(10.0,ceil(log10(nscale)));
   std::vector<double> div;
   div.push_back(1);
@@ -106,39 +123,36 @@ pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfna
   div.push_back(5);
   div.push_back(8);
   uint32_t k(0);
-  while( (k < div.size()) && (nscale/div[k] >= guiscale/res) )
+  while( (k < div.size()) && (nscale/div[k] >= s->guiscale/res) )
     k++;
   if( k > 0 )
     nscale /= div[k-1];
   drawer.view.set_scale(nscale*res);
-}
-
-pdf_export_t::~pdf_export_t()
-{
-}
-
-void pdf_export_t::render_time(const std::vector<double>& t)
-{
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
+    s->geometry_update(time);
     draw(scene_draw_t::xy);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
+    s->geometry_update(time);
     draw(scene_draw_t::xz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
+    s->geometry_update(time);
     draw(scene_draw_t::yz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
+    s->geometry_update(time);
     draw(scene_draw_t::p);
   }
 }
 
 void pdf_export_t::draw(scene_draw_t::viewt_t persp)
 {
+  drawer.set_viewport(persp);
   Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
   //view.set_ref(listener.get_location(time));
   cr->rectangle(lmargin,tmargin,width-lmargin-rmargin,height-tmargin-bmargin);
@@ -155,7 +169,7 @@ void pdf_export_t::draw(scene_draw_t::viewt_t persp)
   cr->paint();
   cr->restore();
   drawer.set_markersize(markersize);
-  drawer.draw(cr,persp);
+  drawer.draw(cr);
   cr->set_source_rgba(0.2, 0.2, 0.2, 0.8);
   cr->move_to(-markersize, 0 );
   cr->line_to( markersize, 0 );
@@ -266,7 +280,9 @@ int main(int argc, char** argv)
     pdffile = cfgfile+".pdf";
   }
   pdf_export_t c(cfgfile,pdffile);
+  c.start();
   c.render_time(time);
+  c.stop();
   return 0;
 }
 
