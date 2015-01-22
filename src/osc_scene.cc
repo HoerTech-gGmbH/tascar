@@ -54,9 +54,9 @@ int osc_set_object_orientation(const char *path, const char *types, lo_arg **arg
 
 int osc_route_mute(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  TASCAR::Scene::object_t* h((TASCAR::Scene::object_t*)user_data);
+  route_solo_p_t* h((route_solo_p_t*)user_data);
   if( h && (argc == 1) && (types[0]=='i') ){
-    h->set_mute(argv[0]->i);
+    h->route->set_mute(argv[0]->i);
     return 0;
   }
   return 1;
@@ -113,11 +113,11 @@ void osc_scene_t::add_face_group_methods(TASCAR::Scene::face_group_t* o)
 
 void osc_scene_t::add_route_methods(TASCAR::Scene::route_t* o)
 {
-  add_method("/"+name+"/"+o->get_name()+"/mute","i",osc_route_mute,o);
   route_solo_p_t* rs(new route_solo_p_t);
   rs->route = o;
   rs->anysolo = &anysolo;
   vprs.push_back(rs);
+  add_method("/"+name+"/"+o->get_name()+"/mute","i",osc_route_mute,rs);
   add_method("/"+name+"/"+o->get_name()+"/solo","i",osc_route_solo,rs);
 }
 
