@@ -25,6 +25,7 @@ public:
   void add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
+  std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
   std::vector<TASCAR::Scene::spk_pos_t> spkpos;
@@ -128,6 +129,14 @@ uint32_t nsp_t::get_num_channels()
 {
   return spkpos.size();
 }
+
+std::string nsp_t::get_channel_postfix(uint32_t channel) const
+{
+  char ctmp[1024];
+  sprintf(ctmp,".%d",channel);
+  return ctmp;
+}
+
 
 TASCAR::receivermod_base_t::data_t* nsp_t::create_data(double srate,uint32_t fragsize)
 {
