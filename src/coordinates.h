@@ -471,6 +471,8 @@ namespace TASCAR {
     pos_t nearest(const pos_t& p0) const;
     const std::vector<pos_t>& get_verts() const { return verts_;};
     const pos_t& get_normal() const { return normal;};
+    double get_area() const { return area;};
+    double get_aperture() const { return aperture; };
     std::string print(const std::string& delim=", ") const;
     ngon_t& operator+=(const pos_t& p);
     ngon_t& operator+=(double p);
@@ -484,6 +486,9 @@ namespace TASCAR {
     zyx_euler_t orientation;
     pos_t delta;
     pos_t normal;
+    pos_t local_normal;
+    double area;
+    double aperture;
   };
 
   /**

@@ -862,21 +862,19 @@ void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
   verts_.resize(N);
   edges_.resize(N);
   vert_normals_.resize(N);
+  // calculate area and aperture size:
+  pos_t rot;
+  std::vector<pos_t>::iterator i_prev_vert(local_verts_.end()-1);
+  for(std::vector<pos_t>::iterator i_vert=local_verts_.begin();i_vert!=local_verts_.end();++i_vert){
+    rot += cross_prod(*i_prev_vert,*i_vert);
+    i_prev_vert = i_vert;
+  }
+  local_normal = rot;
+  local_normal /= local_normal.norm();
+  area = 0.5*rot.norm();
+  aperture = 2.0*sqrt(area/M_PI);
+  // update global coordinates:
   update();
-  //apply_rot_loc(p0,o);
-  //for(std::vector<pos_t>::iterator it=verts_.begin();it!=verts_.end();++it){
-  //  *it *= o;
-  //  *it += p0;
-  //}
-  //anchor = p0;
-  //e1 = pos_t(0,width,0);
-  //e2 = pos_t(0,0,height);
-  //e1 *= o;
-  //e2 *= o;
-  //width_ = width;
-  //height_ = height;
-  //orient_ = o;
-  //update();
 }
 
 void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
@@ -888,6 +886,7 @@ void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
 
 void ngon_t::update()
 {
+  // firtst calculate vertices in global coordinate system:
   std::vector<pos_t>::iterator i_local_vert(local_verts_.begin());
   for(std::vector<pos_t>::iterator i_vert=verts_.begin();i_vert!=verts_.end();++i_vert){
     *i_vert = *i_local_vert;
@@ -905,29 +904,17 @@ void ngon_t::update()
       i_next_vert = verts_.begin();
     i_vert++;
   }
-  pos_t rot;
-  std::vector<pos_t>::iterator i_prev_edge(edges_.end()-1);
-  for(std::vector<pos_t>::iterator i_edge=edges_.begin();i_edge!=edges_.end();++i_edge){
-    rot += cross_prod(*i_prev_edge,*i_edge);
-    i_prev_edge = i_edge;
-  }
-  rot /= rot.norm();
-  normal = rot;
+  normal = local_normal;
+  normal *= orientation;
   // vertex normals, used to calculate inside/outside:
-  i_prev_edge = edges_.end()-1;
+  std::vector<pos_t>::iterator i_prev_edge(edges_.end()-1);
   std::vector<pos_t>::iterator i_edge(edges_.begin());
   for(std::vector<pos_t>::iterator i_vert_normal=vert_normals_.begin();i_vert_normal!=vert_normals_.end();++i_vert_normal){
-    *i_vert_normal = cross_prod(i_edge->normal() + i_prev_edge->normal(),rot).normal();
+    *i_vert_normal = cross_prod(i_edge->normal() + i_prev_edge->normal(),normal).normal();
     i_prev_edge = i_edge;
     i_edge++;
   }
 }
-
-//void ngon_t::update()
-//{
-//  normal = cross_prod(e1,e2);
-//  normal /= normal.norm();
-//}
 
 pos_t ngon_t::nearest_on_plane( const pos_t& p0 ) const
 {

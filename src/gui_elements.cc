@@ -45,10 +45,6 @@ void source_ctl_t::setup()
 #ifdef GTKMM30
   Gdk::RGBA col_yellow("f4e83a");
   col_yellow.set_rgba(244.0/256,232.0/256,58.0/256,0.5);
-  //mute.override_background_color(col_yellow);
-  //mute.override_color(col_yellow);
-  //col_yellow.set_rgba_u(219*256,18*256,18*256);
-  //solo.override_background_color(col_yellow,Gtk::STATE_FLAG_ACTIVE);
   Gdk::RGBA col;
   if( TASCAR::Scene::object_t* o=dynamic_cast<TASCAR::Scene::object_t*>(route_) ){
     TASCAR::Scene::rgb_color_t c(o->color);
@@ -93,7 +89,6 @@ void source_ctl_t::on_solo()
     std::string path("/"+scene_->name+"/"+name_+"/solo");
     lo_send(client_addr_,path.c_str(),"i",m);
   }else{
-    //uint32_t anysolo(0);
     route_->set_solo(m,scene_->anysolo);
   }
 }
@@ -216,7 +211,6 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
 
 void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr)
 {
-  //bool selected(obj==selection);
   draw_track(obj,cr,markersize);
   draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
   draw_receiver_object(dynamic_cast<TASCAR::Scene::receivermod_object_t*>(obj),cr,markersize);
@@ -227,14 +221,13 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   draw_mask(dynamic_cast<TASCAR::Scene::mask_object_t*>(obj),cr,markersize);
 }
 
-void scene_draw_t::draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize)
+void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize)
 {
   if( f ){
     std::vector<pos_t> roomnodes(f->get_verts());
     pos_t center;
     for(unsigned int k=0;k<roomnodes.size();k++){
       center += roomnodes[k];
-      roomnodes[k] = view(roomnodes[k]);
     }
     center *= 1.0/roomnodes.size();
     cr->save();
@@ -251,7 +244,7 @@ void scene_draw_t::draw_face_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Cont
   }
 }
 
-void scene_draw_t::draw_face_only(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr)
+void scene_draw_t::ngon_draw(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr,bool fill, bool area)
 {
   if( f ){
     std::vector<pos_t> roomnodes(f->get_verts());
@@ -261,11 +254,18 @@ void scene_draw_t::draw_face_only(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Contex
       roomnodes[k] = view(roomnodes[k]);
     }
     center *= 1.0/roomnodes.size();
+    center = view(center);
     cr->save();
     for(unsigned int k=0;k<roomnodes.size()-1;k++)
       draw_edge(cr,roomnodes[k],roomnodes[k+1]);
     draw_edge(cr,roomnodes.back(),roomnodes[0]);
     cr->stroke();
+    if( area ){
+      char ctmp[1000];
+      sprintf(ctmp,"%g m^2 (%g m)",f->get_area(),f->get_aperture());
+      cr->move_to( center.x, -center.y );
+      cr->show_text( ctmp );
+    }
     cr->restore();
   }
 }
@@ -397,7 +397,6 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
         cr->fill();
       }
     }
-    // write label:
     if( !active )
       cr->set_source_rgb(0.5, 0.5, 0.5 );
     else
@@ -444,8 +443,6 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     pos_t p(obj->get_location());
     zyx_euler_t o(obj->get_orientation());
-    //DEBUG(o.print());
-    //o.z += headrot;
     if( (obj->size.x!=0)&&(obj->size.y!=0)&&(obj->size.z!=0) ){
       draw_cube(p,o,obj->size,cr);
       if( obj->falloff > 0 ){
@@ -556,7 +553,6 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
     cr->move_to( p7.x, -p7.y );
     cr->line_to( p8.x, -p8.y );
     cr->line_to( p9.x, -p9.y );
-    //cr->fill();
     cr->stroke();
     if( obj->mask.active ){
       cr->set_line_width( 0.1*msize );
@@ -597,14 +593,14 @@ void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Ca
     ngon_t f;
     f.nonrt_set_rect(obj->width,obj->height);
     f.apply_rot_loc(p,o);
-    draw_face_only(&f,cr);
+    ngon_draw(&f,cr);
     std::vector<double> dash(2);
     dash[0] = msize;
     dash[1] = msize;
     cr->set_dash(dash,0);
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6 );
     f += obj->falloff;
-    draw_face_only(&f,cr);
+    ngon_draw(&f,cr);
     p = view(p);
     cr->set_source_rgb(0, 0, 0 );
     if( p.z != std::numeric_limits<double>::infinity()){
@@ -659,15 +655,15 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Ca
       // solo indicating:
       cr->set_line_width( 1.2*msize );
       cr->set_source_rgba(1,0,0,0.5);
-      draw_face_only(face,cr);
+      ngon_draw(face,cr);
     }
     // outline:
     cr->set_line_width( 0.2*msize );
     cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
-    draw_face_only(face,cr);
+    ngon_draw(face,cr);
     cr->save();
     cr->set_line_width( 0.1*msize );
-    draw_face_normal(face,cr,1.0);
+    ngon_draw_normal(face,cr,1.0);
     cr->restore();
     // fill:
     if( active ){
@@ -678,7 +674,7 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Ca
         cr->fill();
         cr->set_line_width( 0.4*msize );
         cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
-        draw_face_only(face,cr);
+        ngon_draw(face,cr,true);
         cr->set_source_rgb(0, 0, 0 );
         cr->move_to( loc.x + 0.1*msize, -loc.y );
         cr->show_text( face->get_name().c_str() );
@@ -703,11 +699,9 @@ void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,Cairo::RefPt
       cr->set_line_width( 1.5*msize );
       cr->set_source_rgba(1,0,0,0.5);
       for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        draw_face_only(*it,cr);
+        ngon_draw(*it,cr);
     }
-    //draw_face_normal(face,cr,true);
     // fill:
-    //DEBUGS(active);
     if( active ){
       // normal and name:
       cr->set_source_rgba(face->color.r,face->color.g,0.5+0.5*face->color.b,0.3);
@@ -717,13 +711,13 @@ void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,Cairo::RefPt
         cr->set_line_width( 0.4*msize );
         cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
         for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-          draw_face_only(*it,cr);
+          ngon_draw(*it,cr,true);
         cr->save();
         cr->set_line_width( 0.2*msize );
         for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-          draw_face_normal(*it,cr,0.2);
+          ngon_draw_normal(*it,cr,0.2);
         cr->restore();
-        //draw_face_normal(face,cr);
+        //ngon_draw_normal(face,cr);
         cr->set_source_rgb(0, 0, 0 );
         cr->move_to( loc.x + 0.1*msize, -loc.y );
         cr->show_text( face->get_name().c_str() );
@@ -733,11 +727,11 @@ void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,Cairo::RefPt
       cr->set_line_width( 0.2*msize );
       cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
       for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        draw_face_only(*it,cr);
+        ngon_draw(*it,cr);
       cr->save();
       cr->set_line_width( 0.1*msize );
       for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        draw_face_normal(*it,cr,0.2);
+        ngon_draw_normal(*it,cr,0.2);
       cr->restore();
     }
     cr->restore();
