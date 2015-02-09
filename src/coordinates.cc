@@ -973,8 +973,24 @@ pos_t ngon_t::nearest( const pos_t& p0 ) const
  */
 pos_t ngon_t::intersection( const pos_t& p0, const pos_t& p1, double* w) const
 {
-  throw TASCAR::ErrMsg("to be implemented.");
-  return p0;
+  pos_t np(nearest_on_plane(p0));
+  pos_t dpn(p1-p0);
+  double dpl(dpn.norm());
+  dpn.normalize();
+  double r(dot_prod(dpn,(np-p0).normal()));
+  double d(distance(np,p0));
+  if( (r==0) || (d==0) ){
+    if( w )
+      *w = 0;
+    return p0;
+  }
+  r = d/r;
+  dpn *= r;
+  r /= dpl;
+  if( w )
+    *w = r;
+  dpn += p0;
+  return dpn;
 }
 
 std::string ngon_t::print(const std::string& delim) const

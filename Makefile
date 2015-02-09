@@ -10,6 +10,8 @@ RECEIVERS = omni nsp amb3h0v cardioid neukom_basic
 
 TASCARMODS = system pos2osc sampler
 
+TEST_FILES = test_ngon
+
 #
 #
 #
