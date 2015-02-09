@@ -6,12 +6,6 @@
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
-//void receiver_t::clear()
-//{
-//  for(uint32_t ch=0;ch<outchannels.size();ch++)
-//    outchannels[ch].clear();
-//}
-
 mask_t::mask_t()
   : falloff(1.0),mask_inner(false)
 {
@@ -25,74 +19,6 @@ double mask_t::gain(const pos_t& p)
     return 1.0-d;
   return d;
 }
-
-
-//receiver_t::receiver_t(uint32_t chunksize, pos_t size, double falloff, bool b_point, bool b_diffuse,
-//               pos_t mask_size,
-//               double mask_falloff,
-//               bool mask_use,
-//               bool global_mask_use) 
-//  : size_(size),
-//    falloff_(1.0/std::max(falloff,1e-10)),
-//    use_size((size.x!=0)&&(size.y!=0)&&(size.z!=0)),
-//    use_falloff(falloff>=0),
-//    active(true),
-//    render_point(b_point),
-//    render_diffuse(b_diffuse),
-//    is_direct(true),
-//    diffusegain(1.0),
-//    dt(1.0/std::max(1.0f,(float)chunksize)) ,
-//    mask(pos_t(),mask_size,zyx_euler_t()),
-//    mask_falloff_(1.0/std::max(mask_falloff,1.0e-10)),
-//    mask_use_(mask_use),
-//    global_mask_use_(global_mask_use)
-//{
-//}
-//
-//void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
-//{
-//  if( use_size ){
-//    prel = psrc_physical;
-//    prel -= position;
-//    prel /= orientation;
-//    distance = prel.norm();
-//    shoebox_t box;
-//    box.size = size_;
-//    double sizedist = pow(size_.x*size_.y*size_.z,0.33333);
-//    //DEBUGS(box.nextpoint(prel).print_sphere());
-//    double d(box.nextpoint(prel).norm());
-//    if( use_falloff )
-//      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff_)))/std::max(0.1,sizedist);
-//    else
-//      gain = 1.0/std::max(1.0,d+sizedist);
-//  }else{
-//    prel = psrc_virtual;
-//    prel -= position;
-//    prel /= orientation;
-//    distance = prel.norm();
-//    gain = 1.0/std::max(0.1,distance);
-//  }
-//  if( mask_use_ ){
-//    double d(mask.nextpoint(position).norm());
-//    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d*mask_falloff_));
-//  }
-//  make_friendly_number(gain);
-//}
-//
-//void receiver_t::apply_gain( double gain)
-//{
-//  dx_gain = (gain-x_gain)*dt;
-//  uint32_t ch(get_num_channels());
-//  if( ch > 0 ){
-//    uint32_t psize(outchannels[0].size());
-//    for(uint32_t k=0;k<psize;k++){
-//      double g(x_gain+=dx_gain);
-//      for(uint32_t c=0;c<ch;c++){
-//        outchannels[c][k] *= g;
-//      }
-//    }
-//  }
-//}
 
 pointsource_t::pointsource_t(uint32_t chunksize)
   : audio(chunksize), active(true), direct(true)
@@ -151,13 +77,8 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
     delayline(480000,fs,c_),
     airabsorption_state(0.0)
 {
-  //DEBUG(audio.size());
-  //DEBUG(dt);
   pos_t prel;
   receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain);
-  //distance = receiver_->relative_position(src_->position).norm();
-  //DEBUG(distance);
-  //DEBUG(gain);
 }
 
 acoustic_model_t::~acoustic_model_t()
@@ -175,7 +96,7 @@ uint32_t acoustic_model_t::process()
     // calculate relative geometry between source and receiver:
     double srcgainmod(1.0);
     double mask_gain(1.0);
-    //for(std::vector<
+    // 
     pos_t effective_srcpos(src_->get_effective_position(receiver_->position,srcgainmod));
     receiver_->update_refpoint(src_->get_physical_position(),effective_srcpos,prel,nextdistance,nextgain);
     nextgain *= srcgainmod*mask_gain;
@@ -212,8 +133,6 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
     dg(0),
     lpstate(0.0)
 {
-  //DEBUG(this);
-  //DEBUG(src);
 }
 
 void mirrorsource_t::process()
@@ -233,7 +152,6 @@ void mirrorsource_t::process()
     // this line added instead of src_->position:
     position = mirror_position;
     double nextgain(1.0);
-    //src_->get_effective_position(position,nextgain);
     src_->get_effective_position(mirror_position,nextgain);
     //DEBUGS(nextgain);
     if( dot_prod(nearest_point,reflector_->get_normal())>0 )
@@ -252,10 +170,15 @@ void mirrorsource_t::process()
   }
 }
 
+/**
+   \brief Return effective source position for a given receiver position
+
+   Used by diffraction model.
+
+ */
 pos_t mirrorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
 {
   pos_t srcpos(mirror_position);
-  //DEBUGS(srcpos.print_cart());
   pos_t pcut_receiver(reflector_->nearest_on_plane(receiverp));
   double len_receiver(distance(pcut_receiver,receiverp));
   pos_t pcut_src(reflector_->nearest_on_plane(srcpos));
@@ -572,6 +495,10 @@ TASCAR::Acousticmodel::receiver_mask_t::receiver_mask_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("size",size);
   dynobject_t::get_attribute("falloff",falloff);
   dynobject_t::get_attribute_bool("active",active);
+}
+
+void obstacle_t::diffraction_model(const pos_t& p_src, const pos_t& p_rec, wave_t& audio)
+{
 }
 
 /*

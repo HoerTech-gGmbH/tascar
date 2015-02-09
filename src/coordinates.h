@@ -460,6 +460,9 @@ namespace TASCAR {
 
   std::string xml_get_text( xmlpp::Node* n, const std::string& child );
 
+  /**
+     \brief Polygon class for reflectors and obstacles
+   */
   class ngon_t {
   public:
     ngon_t();
@@ -469,6 +472,7 @@ namespace TASCAR {
     pos_t nearest_on_plane(const pos_t& p0) const;
     pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
     pos_t nearest(const pos_t& p0) const;
+    pos_t intersection( const pos_t& p0, const pos_t& p1, double* w=NULL) const;
     const std::vector<pos_t>& get_verts() const { return verts_;};
     const pos_t& get_normal() const { return normal;};
     double get_area() const { return area;};

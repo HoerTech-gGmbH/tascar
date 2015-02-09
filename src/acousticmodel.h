@@ -104,6 +104,8 @@ namespace TASCAR {
     };
 
     class obstacle_t : public ngon_t {
+    public:
+      void diffraction_model(const pos_t& p_src, const pos_t& p_rec, wave_t& audio);
     };
 
     class reflector_t : public obstacle_t {
