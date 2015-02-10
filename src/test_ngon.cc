@@ -4,6 +4,7 @@ using namespace TASCAR;
 
 int main(int argc,char** argv)
 {
+  /*
   ngon_t p;
   p.apply_rot_loc(pos_t(0,0,0),zyx_euler_t(-DEG2RAD*90,0,0));
   ngon_t pd;
@@ -23,6 +24,19 @@ int main(int argc,char** argv)
   v.push_back(p.nearest_on_edge(p0));
   pd.nonrt_set(v);
   std::cout << pd.print(" ") << std::endl;
+  */
+  // Test intersection:
+  ngon_t p;
+  DEBUG(p);
+  pos_t e1(-0.5,0.5,1);
+  pos_t e2(1.5,0.5,1);
+  DEBUG(e1);
+  double w;
+  pos_t e3;
+  if( p.intersection(e1,e2,e3,&w) ){
+    DEBUG(e3);
+    DEBUG(w);
+  }
   return 0;
 }
 
