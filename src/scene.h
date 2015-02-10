@@ -54,7 +54,7 @@ namespace TASCAR {
       void set_mute(bool b) {mute=b;};
       void set_solo(bool b,uint32_t& anysolo);
       bool is_active(uint32_t anysolo);
-      virtual void prepare(double srate,uint32_t fragsize) {};
+      //virtual void prepare(double srate,uint32_t fragsize) {};
     private:
       std::string name;
       bool mute;

@@ -206,29 +206,6 @@ void src_diffuse_t::geometry_update(double t)
   }
 }
 
-//void receiver_object_t::geometry_update(double t)
-//{
-//  if( receiver ){
-//    dynobject_t::geometry_update(t);
-//    get_6dof(receiver->position,receiver->orientation);
-//    receiver->diffusegain = diffusegain;
-//    receiver->is_direct = is_direct;
-//    if( mask.active ){
-//      mask.geometry_update(t);
-//      mask.get_6dof(receiver->mask.center,receiver->mask.orientation);
-//    }
-//  }
-//}
-//
-//std::vector<TASCAR::pos_t> receiver_object_t::get_spkpos() const
-//{
-//  std::vector<TASCAR::pos_t> r;
-//  for(std::vector<spk_pos_t>::const_iterator it=spkpos.begin();it!=spkpos.end();++it){
-//    r.push_back(*it);
-//  }
-//  return r;
-//}
-
 void src_diffuse_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
