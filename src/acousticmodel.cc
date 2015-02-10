@@ -268,7 +268,8 @@ world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointso
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
-      acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver],std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())));
+      acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver]));
+  //,std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())
 }
 
 world_t::~world_t()
@@ -497,8 +498,44 @@ TASCAR::Acousticmodel::receiver_mask_t::receiver_mask_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute_bool("active",active);
 }
 
-void obstacle_t::diffraction_model(const pos_t& p_src, const pos_t& p_rec, wave_t& audio)
+/**
+   \brief Apply diffraction model 
+
+   \param p_src Source position
+   \param p_is Intersection position
+   \param p_rec Receiver position
+   \param c Speed of sound
+   \param fs Sampling rate
+   \param state Diffraction filter states
+
+   \return Effective source position
+ */
+pos_t diffractor_t::process(const pos_t& p_src, const pos_t& p_is, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state)
 {
+  // calculate geometry:
+  pos_t p_is_src(p_src-p_is);
+  pos_t p_rec_is(p_is-p_rec);
+  p_rec_is.normalize();
+  double d_is_src(p_is_src.norm());
+  if( d_is_src > 0 )
+    p_is_src *= 1.0/d_is_src;
+  // calculate first zero crossing frequency:
+  double cos_theta(dot_prod(p_is_src,p_rec_is));
+  double sin_theta(sqrt(1-cos_theta*cos_theta));
+  double f0(3.8317*c/(PI2*aperture*sin_theta));
+  // calculate filter coefficient increment:
+  double dt(1.0/audio.n);
+  double dA1((exp(-M_PI*f0/fs)-state.A1)*dt);
+  // apply low pass filter to audio chunk:
+  for(uint32_t k=0;k<audio.n;k++){
+    state.A1 += dA1;
+    double B0(1.0-state.A1);
+    state.s1 = state.s1*state.A1+audio[k]*B0;
+    audio[k] = state.s2 = state.s2*state.A1+state.s1*B0;
+  }
+  // return effective source position:
+  p_rec_is *= d_is_src;
+  return p_is+p_rec_is;
 }
 
 /*

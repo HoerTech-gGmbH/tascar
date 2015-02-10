@@ -28,7 +28,22 @@ namespace TASCAR {
       bool direct;
     };
 
-    class doorsource_t : public pointsource_t, public ngon_t {
+    /**
+       \brief Diffraction model
+     */
+    class diffractor_t : public ngon_t {
+    public:
+      class state_t {
+      public:
+        double A1;
+        float s1;
+        float s2;
+        state_t() : A1(0),s1(0),s2(0) {};
+      };
+      pos_t process(const pos_t& p_src, const pos_t& p_is, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state);
+    };
+
+    class doorsource_t : public pointsource_t, public diffractor_t {
     public:
       doorsource_t(uint32_t chunksize);
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
@@ -103,15 +118,13 @@ namespace TASCAR {
       double c[2];
     };
 
-    class obstacle_t : public ngon_t {
+    class obstacle_t : public diffractor_t {
     public:
-      void diffraction_model(const pos_t& p_src, const pos_t& p_rec, wave_t& audio);
     };
 
-    class reflector_t : public obstacle_t {
+    class reflector_t : public diffractor_t {
     public:
       reflector_t();
-      //Acousticmodel::filter_coeff_t get_filter(const pos_t& psrc);
       bool active;
       double reflectivity;
       double damping;
