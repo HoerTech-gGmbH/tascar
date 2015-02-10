@@ -969,20 +969,29 @@ pos_t ngon_t::nearest( const pos_t& p0 ) const
 
    \param p0 Starting point of intersecting edge
    \param p1 End point of intersecting edge
+   \param p_is Intersection point
    \param w Optional pointer on intersecting weight, or NULL. w=0 means that the intersection is at p0, w=1 means that intersection is at p1.
+
+   \return True if the line p0-p1 is intersecting with the plane, and false otherwise.
  */
-pos_t ngon_t::intersection( const pos_t& p0, const pos_t& p1, double* w) const
+bool ngon_t::intersection( const pos_t& p0, const pos_t& p1, pos_t& p_is, double* w) const
 {
   pos_t np(nearest_on_plane(p0));
   pos_t dpn(p1-p0);
   double dpl(dpn.norm());
   dpn.normalize();
-  double r(dot_prod(dpn,(np-p0).normal()));
   double d(distance(np,p0));
-  if( (r==0) || (d==0) ){
+  if( d == 0 ){
+    // first point is intersecting:
     if( w )
       *w = 0;
-    return p0;
+    p_is = p0;
+    return true;
+  }
+  double r(dot_prod(dpn,(np-p0).normal()));
+  if( r == 0 ){
+    // the edge is parallel to the plane; no intersection.
+    return false;
   }
   r = d/r;
   dpn *= r;
@@ -990,7 +999,8 @@ pos_t ngon_t::intersection( const pos_t& p0, const pos_t& p1, double* w) const
   if( w )
     *w = r;
   dpn += p0;
-  return dpn;
+  p_is = dpn;
+  return true;
 }
 
 std::string ngon_t::print(const std::string& delim) const
@@ -1003,6 +1013,18 @@ std::string ngon_t::print(const std::string& delim) const
     tmp << i_vert->print_cart(delim);
   }
   return tmp.str();
+}
+
+std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p)
+{
+  out << p.print_cart();
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n)
+{
+  out << n.print();
+  return out;
 }
 
 

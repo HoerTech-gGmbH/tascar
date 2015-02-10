@@ -472,7 +472,7 @@ namespace TASCAR {
     pos_t nearest_on_plane(const pos_t& p0) const;
     pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
     pos_t nearest(const pos_t& p0) const;
-    pos_t intersection( const pos_t& p0, const pos_t& p1, double* w=NULL) const;
+    bool intersection( const pos_t& p0, const pos_t& p1, pos_t& p_is, double* w=NULL) const;
     const std::vector<pos_t>& get_verts() const { return verts_;};
     const pos_t& get_normal() const { return normal;};
     double get_area() const { return area;};
@@ -529,6 +529,9 @@ namespace TASCAR {
   };
 
 }
+
+std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);
+std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n);
 
 #endif
 
