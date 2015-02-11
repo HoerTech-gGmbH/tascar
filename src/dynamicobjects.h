@@ -1,7 +1,6 @@
 #ifndef DYNAMICOBJECTS_H
 #define DYNAMICOBJECTS_H
 
-#include "coordinates.h"
 #include "xmlconfig.h"
 
 namespace TASCAR {

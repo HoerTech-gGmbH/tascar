@@ -2,7 +2,6 @@
 #define AUDIOPLAYER_H
 
 #include "tascar.h"
-#include "scene.h"
 #include "async_file.h"
 #include "osc_scene.h"
 

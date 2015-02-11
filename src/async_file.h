@@ -2,7 +2,6 @@
 #define ASYNC_FILE_H
 
 #include "ringbuffer.h"
-#include <stdint.h>
 #include <string>
 #include <sndfile.h>
 

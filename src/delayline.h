@@ -27,7 +27,6 @@
 #ifndef DELAYLINE_H
 #define DELAYLINE_H
 
-#include <stdint.h>
 #include "audiochunks.h"
 
 namespace TASCAR {

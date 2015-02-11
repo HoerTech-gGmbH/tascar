@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <math.h>
 #include "defs.h"
-#include <iostream>
 
 using namespace TASCAR;
 

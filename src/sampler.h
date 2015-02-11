@@ -1,9 +1,7 @@
 #ifndef SAMPLER_H
 #define SAMPELR_H
 
-#include <stdint.h>
 #include "audiochunks.h"
-#include <vector>
 #include "jackclient.h"
 #include "osc_helper.h"
 

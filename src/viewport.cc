@@ -1,7 +1,4 @@
 #include "viewport.h"
-#include "defs.h"
-#include <iostream>
-#include <limits>
 
 viewport_t::viewport_t()
   : perspective(false),

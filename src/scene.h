@@ -27,15 +27,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "coordinates.h"
-#include <string>
 #include <vector>
-#include <iostream>
-#include "defs.h"
-#include "xmlconfig.h"
 #include "acousticmodel.h"
-#include "receivermod.h"
-#include "dynamicobjects.h"
 
 namespace TASCAR {
 

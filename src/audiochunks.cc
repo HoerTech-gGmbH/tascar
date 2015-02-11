@@ -1,8 +1,6 @@
 #include "audiochunks.h"
 #include <string.h>
 #include <algorithm>
-#include <iostream>
-#include "defs.h"
 #include "errorhandling.h"
 #include "xmlconfig.h"
 

@@ -1,4 +1,3 @@
-#include <iostream>
 #include "session.h"
 
 class pos2osc_t : public TASCAR::module_base_t, public jackc_transport_t {

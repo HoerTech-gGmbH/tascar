@@ -1,8 +1,6 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 
-#include <libxml++/libxml++.h>
-#include <stdint.h>
 #include "coordinates.h"
 
 namespace TASCAR {

@@ -1,4 +1,3 @@
-#include "receivermod.h"
 #include "errorhandling.h"
 #include "scene.h"
 

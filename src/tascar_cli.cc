@@ -33,7 +33,6 @@
 
 */
 
-#include <getopt.h>
 #include "session.h"
 #include "jackiowav.h"
 #include "cli.h"

@@ -25,7 +25,7 @@
 */
 
 #include "jackiowav.h"
-
+#include "cli.h"
 
 void usage(struct option * opt)
 {

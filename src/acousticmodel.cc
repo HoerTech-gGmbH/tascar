@@ -1,7 +1,4 @@
 #include "acousticmodel.h"
-#include "defs.h"
-#include <iostream>
-#include <limits>
 
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;

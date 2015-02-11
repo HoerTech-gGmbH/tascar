@@ -24,7 +24,6 @@
 */
 #include "jackclient.h"
 #include <stdio.h>
-#include <iostream>
 #include "errorhandling.h"
 #include <string.h>
 #include <jack/thread.h>

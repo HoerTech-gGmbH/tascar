@@ -25,8 +25,6 @@
 */
 #include "coordinates.h"
 #include <sstream>
-#include "defs.h"
-#include <iostream>
 #include <vector>
 #include <stdlib.h>
 #include <string.h>

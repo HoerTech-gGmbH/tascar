@@ -1,5 +1,4 @@
 #include "osc_scene.h"
-#include "coordinates.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;

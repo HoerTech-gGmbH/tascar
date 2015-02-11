@@ -26,13 +26,10 @@
 #ifndef JACKIOWAV_H
 #define JACKIOWAV_H
 
-#include <sndfile.h>
+#include "tascar.h"
 #include <stdlib.h>
 #include <string.h>
-#include <iostream>
-#include "tascar.h"
-#include <getopt.h>
-#include "errorhandling.h"
+//#include <getopt.h>
 #include <unistd.h>
 
 /**

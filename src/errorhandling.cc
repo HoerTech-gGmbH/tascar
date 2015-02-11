@@ -1,6 +1,5 @@
 #include "defs.h"
 #include "errorhandling.h"
-#include <iostream>
 
 TASCAR::ErrMsg::ErrMsg(const std::string& msg) 
   : std::string(msg) 

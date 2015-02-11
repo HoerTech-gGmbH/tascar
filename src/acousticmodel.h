@@ -1,9 +1,6 @@
 #ifndef ACOUSTICMODEL_H
 #define ACOUSTICMODEL_H
 
-#include <stdint.h>
-#include "audiochunks.h"
-#include "coordinates.h"
 #include "delayline.h"
 #include "receivermod.h"
 #include "dynamicobjects.h"

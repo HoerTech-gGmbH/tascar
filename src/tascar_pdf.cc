@@ -24,16 +24,8 @@
 
 */
 
-#include <libxml++/libxml++.h>
-#include <cairommconfig.h>
-#include <cairomm/context.h>
-#include <cairomm/surface.h>
-#include "tascar.h"
 #include "session.h"
-#include <iostream>
 #include <getopt.h>
-#include "viewport.h"
-#include <limits>
 #include "gui_elements.h"
 
 using namespace TASCAR;

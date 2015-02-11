@@ -1,4 +1,3 @@
-#include <iostream>
 #include "session.h"
 #include "sampler.h"
 

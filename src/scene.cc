@@ -1,12 +1,8 @@
 #include "scene.h"
 #include "errorhandling.h"
-#include <libxml++/libxml++.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
-#include "defs.h"
 #include <string.h>
-//#include "receivers.h"
 #include <locale.h>
 #include <libgen.h>
 #include <unistd.h>

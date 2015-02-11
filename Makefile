@@ -1,10 +1,13 @@
 #
 # main targets:
 #
-BINFILES = tascar_cli tascar_gui tascar_sampler				\
-tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
-tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
-tascar_tscupdate tascar_pdf
+BINFILES = tascar_cli tascar_tscupdate tascar_pdf	\
+tascar_osc_jack_transport tascar_jackio
+
+# tascar_gui tascar_sampler				\
+#tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
+#tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
+#tascar_tscupdate tascar_pdf
 
 RECEIVERS = omni nsp amb3h0v cardioid neukom_basic
 
@@ -47,11 +50,11 @@ endif
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o session.o		\
-receivermod.o jackclient.o delayline.o speakerlayout.o multipan.o	\
-osc_helper.o async_file.o errorhandling.o audiochunks.o			\
-acousticmodel.o multipan.o multipan_amb3.o hoafilt.o xmlconfig.o	\
-osc_scene.o audioplayer.o ringbuffer.o gammatone.o viewport.o		\
-sampler.o jackiowav.o cli.o
+receivermod.o jackclient.o delayline.o osc_helper.o async_file.o	\
+errorhandling.o audiochunks.o acousticmodel.o xmlconfig.o osc_scene.o	\
+audioplayer.o ringbuffer.o viewport.o sampler.o jackiowav.o cli.o
+
+#speakerlayout.o multipan.o
 
 GUIOBJECTS = gui_elements.o
 
@@ -106,7 +109,8 @@ uninstall:
 clean:
 	rm -Rf *~ src/*~ build doc/html
 
-VPATH = ../src ../src/hoafilt
+VPATH = ../src
+# ../src/hoafilt
 
 .PHONY : doc
 

@@ -1,8 +1,6 @@
-#include "defs.h"
 #include "xmlconfig.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "errorhandling.h"
 
 std::string TASCAR::default_string(const std::string& src,const std::string& def)

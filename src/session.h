@@ -1,8 +1,6 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "xmlconfig.h"
-#include "scene.h"
 #include "audioplayer.h"
 
 namespace TASCAR {
