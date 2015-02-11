@@ -80,7 +80,7 @@ int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<floa
     uint32_t numchannels(infos[k].channels);
     float* dp[numchannels];
     for(uint32_t ch=0;ch<numchannels;ch++)
-      dp[ch] = outBuffer[portno[k]+ch];
+      dp[ch] = outBuffer[jack_port_map[k]+ch];
     files[k].request_data(tp_frame,nframes*tp_running,numchannels,dp);
   }
   return 0;
@@ -99,11 +99,11 @@ void TASCAR::audioplayer_t::open_files()
   for(std::vector<TASCAR::Scene::sndfile_info_t>::iterator it=infos.begin();it!=infos.end();++it){
     files.push_back(TASCAR::async_sndfile_t(it->channels,1<<18,get_fragsize()));
   }
-  portno.clear();
+  jack_port_map.clear();
   for(uint32_t k=0;k<files.size();k++){
     files[k].open(infos[k].fname,infos[k].firstchannel,infos[k].starttime*get_srate(),
                   infos[k].gain,infos[k].loopcnt);
-    portno.push_back(get_num_output_ports());
+    jack_port_map.push_back(get_num_output_ports());
     if( infos[k].channels != 1 ){
       for(uint32_t ch=0;ch<infos[k].channels;ch++){
         char pname[1024];

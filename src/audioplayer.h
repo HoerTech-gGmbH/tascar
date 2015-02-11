@@ -31,7 +31,7 @@ namespace TASCAR {
     void open_files();
     std::vector<TASCAR::Scene::sndfile_info_t> infos;
     std::vector<TASCAR::async_sndfile_t> files;
-    std::vector<uint32_t> portno;
+    std::vector<uint32_t> jack_port_map;
   };
 
   //class renderer_t : public scene_container_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
