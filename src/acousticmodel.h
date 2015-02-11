@@ -62,9 +62,9 @@ namespace TASCAR {
       virtual ~receiver_data_t(){};
     };
 
-    class receiver_mask_t : public dynobject_t {
+    class boundingbox_t : public dynobject_t {
     public:
-      receiver_mask_t(xmlpp::Element*);
+      boundingbox_t(xmlpp::Element*);
       pos_t size;
       double falloff;
       bool active;
@@ -102,7 +102,7 @@ namespace TASCAR {
       pos_t position;
       zyx_euler_t orientation;
       bool active;
-      TASCAR::Acousticmodel::receiver_mask_t mask;
+      TASCAR::Acousticmodel::boundingbox_t mask;
     private:
       double x_gain;
       double dx_gain;

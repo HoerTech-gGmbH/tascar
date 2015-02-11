@@ -172,7 +172,7 @@ void mirrorsource_t::process()
 
    Used by diffraction model.
 
- */
+*/
 pos_t mirrorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
 {
   pos_t srcpos(mirror_position);
@@ -292,23 +292,21 @@ void world_t::process()
   // now apply mask gains:
   for(uint32_t k=0;k<receivers_.size();k++){
     if( receivers_[k]->use_global_mask ){
-    uint32_t c_inner(0);
-    uint32_t c_outer(0);
-    double gain_inner(1.0);
-    double gain_outer(0.0);
-    for(uint32_t km=0;km<masks_.size();km++){
-      pos_t p(receivers_[k]->position);
-      if( masks_[km]->mask_inner ){
-        c_inner++;
-        gain_inner = std::min(gain_inner,masks_[km]->gain(p));
-      }else{
-        c_outer++;
-        gain_outer = std::max(gain_outer,masks_[km]->gain(p));
+      uint32_t c_outer(0);
+      double gain_inner(1.0);
+      double gain_outer(0.0);
+      for(uint32_t km=0;km<masks_.size();km++){
+        pos_t p(receivers_[k]->position);
+        if( masks_[km]->mask_inner ){
+          gain_inner = std::min(gain_inner,masks_[km]->gain(p));
+        }else{
+          c_outer++;
+          gain_outer = std::max(gain_outer,masks_[km]->gain(p));
+        }
       }
-    }
-    if( c_outer > 0 )
-      gain_inner *= gain_outer;
-    receivers_[k]->apply_gain(gain_inner);
+      if( c_outer > 0 )
+        gain_inner *= gain_outer;
+      receivers_[k]->apply_gain(gain_inner);
     }
   }
   active_pointsource = local_active_point;
@@ -384,7 +382,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     falloff(-1.0),
     delaycomp(0.0),
     active(true),
-    mask(find_or_add_child("mask")),
+    mask(find_or_add_child("boundingbox")),
     x_gain(1.0),
     dx_gain(0),
     dt(1)
@@ -487,7 +485,7 @@ void receiver_t::apply_gain(double gain)
   }
 }
 
-TASCAR::Acousticmodel::receiver_mask_t::receiver_mask_t(xmlpp::Element* xmlsrc)
+TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
   : dynobject_t(xmlsrc),falloff(1.0),active(false)
 {
   dynobject_t::get_attribute("size",size);
@@ -506,7 +504,7 @@ TASCAR::Acousticmodel::receiver_mask_t::receiver_mask_t(xmlpp::Element* xmlsrc)
    \param state Diffraction filter states
 
    \return Effective source position
- */
+*/
 pos_t diffractor_t::process(const pos_t& p_src, const pos_t& p_is, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state)
 {
   // calculate geometry:
