@@ -25,7 +25,6 @@
 
 #include "tascar.h"
 #include "osc_helper.h"
-#include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
@@ -125,7 +124,6 @@ static void sighandler(int sig)
   b_quit = true;
 }
 
-
 void usage(struct option * opt)
 {
   std::cout << "Usage:\n\ntascar_osc_jack_transport [options]\n\nOptions:\n\n";
@@ -135,7 +133,6 @@ void usage(struct option * opt)
     opt++;
   }
 }
-
 
 int main(int argc, char** argv)
 {
