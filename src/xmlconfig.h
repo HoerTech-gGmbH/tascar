@@ -33,6 +33,8 @@ namespace TASCAR {
     virtual void write_xml() = 0;
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
+  protected:
+    // book keeping
   };
 
   class scene_node_base_t : public xml_element_t {
