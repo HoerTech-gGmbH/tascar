@@ -48,14 +48,14 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
     else
         speakerName = sprintf('system:playback_%d', spk(kSpk));
     end
-    [y,fs] = tascar_jackio(repmat(x,[nrep+1,1]),speakerName,sIn);
+    [y,fs,bufsize] = tascar_jackio(repmat(x,[nrep+1,1]),speakerName,sIn);
     y(1:len,:) = [];
     y = reshape( y, [len, nrep, size(y,2)] );
     y = squeeze(mean( y, 2 ));
     %addpath('tools');
     Y = realfft(y);
     Y = Y ./ repmat(X,[1,size(Y,2)]);
-    irs(:,(kSpk-1)*Nsrc+[1:Nsrc]) = realifft(Y);
+    irs(:,(kSpk-1)*Nsrc+[1:Nsrc]) = circshift(realifft(Y),-bufsize);
   end
   if ~isempty(ver('octave'))
     %% this is octave; warn if abs(x) > 1

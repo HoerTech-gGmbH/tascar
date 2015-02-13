@@ -1,4 +1,4 @@
-function [y,fs] = tascar_jackio( x, csOutputPorts, csInputPorts )
+function [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts )
 % TASCAR_JACKIO - synchonouos recording/playback via jack
 %
 % Usage:
@@ -9,7 +9,7 @@ function [y,fs] = tascar_jackio( x, csOutputPorts, csInputPorts )
 % fs = tascar_jackio( x, csOutputPorts );
 %
 % Synchronouos playback and recording of MATLAB vector:
-% [y,fs] = tascar_jackio( x, csOutputPorts, csInputPorts );
+% [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts );
 %
 % If csOutputPorts and csInputPorts are a single string, a single
 % port name is used. If they are a cell string array, the number of
