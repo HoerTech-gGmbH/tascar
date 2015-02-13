@@ -39,7 +39,8 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
     sIn = sTmp;
   end
   Nsink = numel(spk);
-  x = create_noise( len, nrep+1, gain );
+  x = create_noise( len, gain );
+  X = realfft(x);
   irs = zeros(len,Nsink*Nsrc);
   for kSpk=1:numel(spk)
     if iscell(spk(kSpk))
@@ -47,15 +48,11 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
     else
         speakerName = sprintf('system:playback_%d', spk(kSpk));
     end
-    sFile = sprintf('rec_%s_%s_%d_%d.wav',sTag,speakerName,len,nrep);
-    system(sprintf(['LD_LIBRARY_PATH="" tascar_jackio wnoise.wav -o %s ' ...
-		    '%s %s'],sFile,speakerName,sIn));
-    [y,fs] = wavread(sFile);
+    [y,fs] = tascar_jackio(repmat(x,[nrep+1,1]),speakerName,sIn);
     y(1:len,:) = [];
     y = reshape( y, [len, nrep, size(y,2)] );
     y = squeeze(mean( y, 2 ));
     %addpath('tools');
-    X = realfft(x);
     Y = realfft(y);
     Y = Y ./ repmat(X,[1,size(Y,2)]);
     irs(:,(kSpk-1)*Nsrc+[1:Nsrc]) = realifft(Y);
@@ -70,7 +67,7 @@ function [irs,fs,x,y] = getirs( spk, len, nrep, sTag, gain, sIn )
   wavwrite(irs,fs,32,sprintf('irs_%s_%d_%d.wav',sTag,len, ...
 			     nrep));
   
-function x = create_noise( len, nrep, gain )
+function x = create_noise( len, gain )
   x = (rand(len,1)-0.5)*gain;
   X = realfft(x);
   vF = [1:size(X,1)]';
@@ -78,13 +75,6 @@ function x = create_noise( len, nrep, gain )
   X = exp(-len*i*(2*pi)*vF.^2)./max(0.1,vF.^0.5);
   x = realifft(X);
   x = 0.5*x/max(abs(x))*gain;
-  if ~isempty(ver('octave'))
-    %% this is octave; warn if abs(x) > 1
-    if max(abs(x(:))) > 1
-      warning(['Signal clipped: ','wnoise.wav']);
-    end
-  end
-  wavwrite(repmat(x,[nrep,1]),48000,16,'wnoise.wav');
 
 function y = realfft( x )
 % REALFFT - FFT transform of pure real data
