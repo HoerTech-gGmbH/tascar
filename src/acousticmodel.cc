@@ -112,7 +112,7 @@ uint32_t acoustic_model_t::process()
       make_friendly_number(airabsorption_state);
       audio[k] = airabsorption_state;
     }
-    if( ((gain!=0)||(dgain!=0)) && (src_->direct || (!receiver_->is_direct)) ){
+    if( ((gain!=0)||(dgain!=0)) ){
       receiver_->add_pointsource(prel,audio,receiver_data);
       return 1;
     }
