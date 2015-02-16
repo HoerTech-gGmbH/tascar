@@ -113,7 +113,7 @@ TASCAR::receivermod_base_t::data_t* amb3h3v_t::create_data(double srate,uint32_t
 std::string amb3h3v_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[32];
-  sprintf(ctmp,".%g%c",floor((double)(channel+1)*0.5),AMB33::channelorder[channel]);
+  sprintf(ctmp,".%g%c",floor(sqrt((double)channel)),AMB33::channelorder[channel]);
   return ctmp;
 }
 
