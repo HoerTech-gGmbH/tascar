@@ -47,17 +47,31 @@ void amb3h3v_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t&
   }
   data_t* d((data_t*)sd);
   float az = prel.azim();
-  float x2, y2;
-  // this is more or less taken from AMB plugins by Fons and Joern:
+  float el = prel.elev();
+  float t, x2, y2, z2;
+  // this is taken from AMB plugins by Fons and Joern:
   d->_w[AMB33::idx::w] = MIN3DB;
-  d->_w[AMB33::idx::x] = cosf (az);
-  d->_w[AMB33::idx::y] = sinf (az);
+  t = cosf (el);
+  d->_w[AMB33::idx::x] = t * cosf (az);
+  d->_w[AMB33::idx::y] = t * sinf (az);
+  d->_w[AMB33::idx::z] = sinf (el);
   x2 = d->_w[AMB33::idx::x] * d->_w[AMB33::idx::x];
   y2 = d->_w[AMB33::idx::y] * d->_w[AMB33::idx::y];
+  z2 = d->_w[AMB33::idx::z] * d->_w[AMB33::idx::z];
   d->_w[AMB33::idx::u] = x2 - y2;
-  d->_w[AMB33::idx::v] = 2.0f * d->_w[AMB33::idx::x] * d->_w[AMB33::idx::y];
-  d->_w[AMB33::idx::p] = (x2 - 3.0f * y2) * d->_w[AMB33::idx::x];
-  d->_w[AMB33::idx::q] = (3.0f * x2 - y2) * d->_w[AMB33::idx::y];
+  d->_w[AMB33::idx::v] = 2 * d->_w[AMB33::idx::x] * d->_w[AMB33::idx::y];
+  d->_w[AMB33::idx::s] = 2 * d->_w[AMB33::idx::z] * d->_w[AMB33::idx::x];
+  d->_w[AMB33::idx::t] = 2 * d->_w[AMB33::idx::z] * d->_w[AMB33::idx::y];
+  d->_w[AMB33::idx::r] = (3 * z2 - 1) / 2;
+  d->_w[AMB33::idx::p] = (x2 - 3 * y2) * d->_w[AMB33::idx::x];
+  d->_w[AMB33::idx::q] = (3 * x2 - y2) * d->_w[AMB33::idx::y];
+  t = 2.598076f * d->_w[AMB33::idx::z]; 
+  d->_w[AMB33::idx::n] = t * d->_w[AMB33::idx::u];
+  d->_w[AMB33::idx::o] = t * d->_w[AMB33::idx::v];
+  t = 0.726184f * (5 * z2 - 1);
+  d->_w[AMB33::idx::l] = t * d->_w[AMB33::idx::x];
+  d->_w[AMB33::idx::m] = t * d->_w[AMB33::idx::y];
+  d->_w[AMB33::idx::k] = d->_w[AMB33::idx::z] * (5 * z2 - 3) / 2;
   for(unsigned int k=0;k<AMB33::idx::channels;k++)
     d->dw[k] = (d->_w[k] - d->w_current[k])*d->dt;
   for( unsigned int i=0;i<chunk.size();i++){
@@ -78,9 +92,11 @@ void amb3h3v_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1w
     d->rotz_current[1] += d->drotz[1];
     float x(d->rotz_current[0]*chunk.x()[i] + d->rotz_current[1]*chunk.y()[i]);
     float y(-d->rotz_current[1]*chunk.x()[i] + d->rotz_current[0]*chunk.y()[i]);
+    float z(chunk.z()[i]);
     output[AMB33::idx::w][i] += chunk.w()[i];
     output[AMB33::idx::x][i] += x;
     output[AMB33::idx::y][i] += y;
+    output[AMB33::idx::z][i] += z;
   }
 }
 
