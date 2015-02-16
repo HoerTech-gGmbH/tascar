@@ -92,6 +92,31 @@
    </ul>
 
  */
+/**
+   \defgroup callgraph The call-graph of audio processing
+
+   The top-level processing method is TASCAR::renderer_t::process(),
+   which renders the audio for one acoustic scene. Each scene is
+   rendered independently.
+
+   <ul>
+   <li>Geometry processing TASCAR::Scene::scene_t::geometry_update()</li>
+   <li>Activity processing TASCAR::Scene::scene_t::process_active()</li>
+   <li>Acoustic modeling TASCAR::Acousticmodel::world_t::process()</li>
+   <ul>
+   <li>Image source model TASCAR::Acousticmodel::mirror_model_t::process(), TASCAR::Acousticmodel::mirrorsource_t::process()</li>
+   <li>Point source (primary and image source) transmission model TASCAR::Acousticmodel::acoustic_model_t::process()</li>
+   <ul>
+   <li>Receiver specific panning TASCAR::Acousticmodel::receiver_t::add_pointsource()</li>
+   </ul>
+   <li>Diffuse source model TASCAR::Acousticmodel::diffuse_acoustic_model_t::process()</li>
+   <ul>
+   <li>Receiver specific FOA decoding TASCAR::Acousticmodel::receiver_t::add_diffusesource()</li>
+   </ul>
+   <li>Output gain mask processing</li>
+   </ul>
+   </ul>
+*/
 
 #endif
 

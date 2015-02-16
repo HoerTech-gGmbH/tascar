@@ -167,7 +167,9 @@ TASCAR::renderer_t::~renderer_t()
     delete world;
 }
 
-
+/**
+   \ingroup callgraph
+ */
 int TASCAR::renderer_t::process(jack_nframes_t nframes,
                                 const std::vector<float*>& inBuffer,
                                 const std::vector<float*>& outBuffer, 

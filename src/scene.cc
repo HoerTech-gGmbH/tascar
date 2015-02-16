@@ -396,6 +396,11 @@ void scene_t::write_xml()
     (*it)->write_xml();
 }
 
+/**
+   \brief Update geometry of all objects within a scene based on current transport time
+   \param t Transport time
+   \ingroup callgraph
+ */
 void scene_t::geometry_update(double t)
 {
   std::vector<object_t*> objs(get_objects());
@@ -403,6 +408,11 @@ void scene_t::geometry_update(double t)
     (*it)->geometry_update( t );
 }
 
+/**
+   \brief Update activity flags based on current transport time
+   \param t Transport time
+   \ingroup callgraph
+ */
 void scene_t::process_active(double t)
 {
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)

@@ -84,6 +84,9 @@ acoustic_model_t::~acoustic_model_t()
     delete receiver_data;
 }
  
+/**
+   \ingroup callgraph
+ */
 uint32_t acoustic_model_t::process()
 {
   if( receiver_->render_point && receiver_->active && src_->active && (src_->direct || (!receiver_->is_direct)) ){
@@ -132,6 +135,10 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
 {
 }
 
+/**
+   \brief Update image source position, copy and filter audio
+   \ingroup callgraph
+ */
 void mirrorsource_t::process()
 {
   if( reflector_->active && src_->active){
@@ -230,6 +237,10 @@ reflector_t::reflector_t()
 {
 }
 
+/**
+   \brief Update all image sources
+   \ingroup callgraph
+ */
 void mirror_model_t::process()
 {
   for(uint32_t k=0;k<mirrorsource.size();k++)
@@ -280,6 +291,9 @@ world_t::~world_t()
 }
 
 
+/**
+   \ingroup callgraph
+ */
 void world_t::process()
 {
   uint32_t local_active_point(0);
@@ -338,6 +352,9 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
     delete receiver_data;
 }
  
+/**
+   \ingroup callgraph
+ */
 uint32_t diffuse_acoustic_model_t::process()
 {
   pos_t prel;
@@ -426,11 +443,17 @@ void receiver_t::clear_output()
     outchannels[ch].clear();
 }
 
+/**
+   \ingroup callgraph
+ */
 void receiver_t::add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t* data)
 {
   receivermod_t::add_pointsource(prel,chunk,outchannels,data);
 }
 
+/**
+   \ingroup callgraph
+ */
 void receiver_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, receivermod_base_t::data_t* data)
 {
   receivermod_t::add_diffusesource(prel,chunk,outchannels,data);
@@ -504,6 +527,8 @@ TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
    \param state Diffraction filter states
 
    \return Effective source position
+
+   \ingroup callgraph
 */
 pos_t diffractor_t::process(const pos_t& p_src, const pos_t& p_is, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state)
 {
