@@ -601,7 +601,7 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("Spaces in scene name are not supported (\""+name+"\")");
   if( name.find(":") != std::string::npos )
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
-  if( (object_sources.size() == 0) && (diffuse_sources.size() == 0) )
+  if( (object_sources.size() == 0) && (diffuse_sources.size() == 0) && (door_sources.size() == 0) )
     throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
   if( receivermod_objects.size() == 0 )
     throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
