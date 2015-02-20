@@ -65,6 +65,7 @@ namespace TASCAR {
     class boundingbox_t : public dynobject_t {
     public:
       boundingbox_t(xmlpp::Element*);
+      void write_xml();
       pos_t size;
       double falloff;
       bool active;

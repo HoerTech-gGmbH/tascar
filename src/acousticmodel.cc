@@ -516,6 +516,14 @@ TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute_bool("active",active);
 }
 
+void TASCAR::Acousticmodel::boundingbox_t::write_xml()
+{
+  dynobject_t::write_xml();
+  dynobject_t::set_attribute("size",size);
+  dynobject_t::set_attribute("falloff",falloff);
+  dynobject_t::set_attribute_bool("active",active);
+}
+
 /**
    \brief Apply diffraction model 
 

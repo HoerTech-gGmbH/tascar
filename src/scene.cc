@@ -70,8 +70,6 @@ src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
     falloff(1.0),
     source(NULL)
 {
-  //object_t::read_xml(e);
-  //jack_port_t::read_xml(e);
   dynobject_t::get_attribute("size",size);
   dynobject_t::get_attribute("falloff",falloff);
 }
@@ -580,8 +578,6 @@ std::vector<object_t*> scene_t::get_objects()
     r.push_back(*it);
   for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     r.push_back(*it);
-  //for(std::vector<receiver_object_t>::iterator it=receiver_objects.begin();it!=receiver_objects.end();++it)
-  //  r.push_back(&(*it));
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     r.push_back(*it);
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
