@@ -26,6 +26,15 @@ object_t::object_t(xmlpp::Element* src)
   color = rgb_color_t(scol);
 }
 
+void object_t::write_xml()
+{
+  route_t::write_xml();
+  dynobject_t::write_xml();
+  if( color.str() != "#000000" )
+    dynobject_t::set_attribute("color",color.str());
+  dynobject_t::set_attribute("end",endtime);
+}
+
 sndfile_object_t::sndfile_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc)
 {
@@ -44,14 +53,6 @@ sndfile_object_t::sndfile_object_t(xmlpp::Element* xmlsrc)
 bool object_t::isactive(double time) const
 {
   return (!get_mute())&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
-}
-
-void object_t::write_xml()
-{
-  route_t::write_xml();
-  if( color.str() != "#000000" )
-    dynobject_t::set_attribute("color",color.str());
-  dynobject_t::set_attribute("end",endtime);
 }
 
 void sndfile_object_t::write_xml()
@@ -105,6 +106,7 @@ void src_door_t::write_xml()
   dynobject_t::set_attribute("width",width);
   dynobject_t::set_attribute("height",height);
   dynobject_t::set_attribute("falloff",falloff);
+  dynobject_t::set_attribute("distance",distance);
 }
 
 src_door_t::~src_door_t()
@@ -488,7 +490,7 @@ void receivermod_object_t::write_xml()
 {
   object_t::write_xml();
   jack_port_t::write_xml();
-  receivermod_t::write_xml();
+  receiver_t::write_xml();
 }
 
 void receivermod_object_t::prepare(double fs, uint32_t fragsize)
@@ -890,11 +892,6 @@ void face_group_t::write_xml()
   dynobject_t::SET_ATTRIBUTE(reflectivity);
   dynobject_t::SET_ATTRIBUTE(damping);
   dynobject_t::SET_ATTRIBUTE(importraw);
-  //std::stringstream txtmesh;
-  //for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
-  //  txtmesh << (*it)->print(" ") << std::endl;
-  //}
-  //dynobject_t::e->add_child_text(txtmesh.str());
 }
  
 void face_group_t::geometry_update(double t)

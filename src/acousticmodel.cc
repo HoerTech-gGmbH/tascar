@@ -42,7 +42,6 @@ pos_t doorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
   gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*falloff));
   receivern *= distance;
   receivern += position;
-  //DEBUGS(receivern.print_cart());
   make_friendly_number(gain);
   return receivern;
 }
@@ -146,10 +145,7 @@ void mirrorsource_t::process()
     pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
     // next line replaced by mirror_position:
     //position = src_->position;
-    //DEBUG(nearest_point.print_cart());
     nearest_point -= src_->position;
-    //DEBUG(nearest_point.print_cart());
-    //double r(dot_prod(nearest_point.normal(),reflector_->get_normal()));
     mirror_position = nearest_point;
     mirror_position *= 2.0;
     mirror_position += src_->position;
@@ -157,14 +153,10 @@ void mirrorsource_t::process()
     position = mirror_position;
     double nextgain(1.0);
     src_->get_effective_position(mirror_position,nextgain);
-    //DEBUGS(nextgain);
     if( dot_prod(nearest_point,reflector_->get_normal())>0 )
       dg = -g*dt;
     else
       dg = (nextgain-g)*dt;
-    ////DEBUG(r);
-    //DEBUG(position.print_cart());
-    // todo: add reflection (no diffraction) processing:
     double c1(reflector_->reflectivity * (1.0-reflector_->damping));
     double c2(reflector_->damping);
     for(uint32_t k=0;k<audio.size();k++)
@@ -205,20 +197,14 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
   for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
     for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
       mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
-  //DEBUGS(mirrorsource.size());
   uint32_t num_mirrors_start(0);
   uint32_t num_mirrors_end(mirrorsource.size());
   for(uint32_t korder=1;korder<order;korder++){
-    //DEBUGS(korder);
     for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;ksrc++)
       for(uint32_t kmir=0;kmir<reflectors.size();kmir++){
-        //DEBUGS(mirrorsource[ksrc]->get_reflector());
-        //DEBUGS(reflectors[kmir]);
         if( mirrorsource[ksrc]->get_reflector() != reflectors[kmir] )
           mirrorsource.push_back(new mirrorsource_t(mirrorsource[ksrc],reflectors[kmir]));
       }
-    
-    DEBUGS(mirrorsource.size());
     num_mirrors_start = num_mirrors_end;
     num_mirrors_end = mirrorsource.size();
   }
@@ -336,14 +322,9 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,
     dt(1.0/std::max(1u,chunksize)),
     gain(1.0)
 {
-  //DEBUG(audio.size());
-  //DEBUG(dt);
   pos_t prel;
   double d(1.0);
   receiver_->update_refpoint(src_->center,src_->center,prel,d,gain);
-  //distance = receiver_->relative_position(src_->position).norm();
-  //DEBUG(distance);
-  //DEBUG(gain);
 }
 
 diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
@@ -425,12 +406,11 @@ void receiver_t::write_xml()
   set_attribute_db("diffusegain",diffusegain);
   SET_ATTRIBUTE(falloff);
   SET_ATTRIBUTE(delaycomp);
+  mask.write_xml();
 }
 
 void receiver_t::prepare(double srate, uint32_t chunksize)
 {
-  //DEBUG(srate);
-  //DEBUG(chunksize);
   dt = 1.0/std::max(1.0f,(float)chunksize);
   outchannels.clear();
   for(uint32_t k=0;k<get_num_channels();k++)
@@ -470,7 +450,6 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     shoebox_t box;
     box.size = size;
     double sizedist = pow(size.x*size.y*size.z,0.33333);
-    //DEBUGS(box.nextpoint(prel).print_sphere());
     double d(box.nextpoint(prel).norm());
     if( falloff > 0 )
       gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff)))/std::max(0.1,sizedist);
