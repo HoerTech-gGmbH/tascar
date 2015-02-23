@@ -28,7 +28,8 @@ pointsource_t::~pointsource_t()
 
 doorsource_t::doorsource_t(uint32_t chunksize)
   : pointsource_t(chunksize),
-    falloff(1.0)
+    falloff(1.0),
+    wnd_sqrt(false)
 {
 }
 
@@ -39,7 +40,11 @@ pos_t doorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
   receivern -= receiverp;
   receivern = receivern.normal();
   gain *= std::max(0.0,-dot_prod(receivern.normal(),normal));
-  gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*falloff));
+  // gain rule: normal hanning window or sqrt
+  if( wnd_sqrt )
+    gain *= sqrt(0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*falloff)));
+  else
+    gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*falloff));
   receivern *= distance;
   receivern += position;
   make_friendly_number(gain);

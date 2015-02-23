@@ -91,12 +91,14 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
     height(2.0),
     falloff(1.0),
     distance(1.0),
+    wnd_sqrt(false),
     source(NULL)
 {
   dynobject_t::get_attribute("width",width);
   dynobject_t::get_attribute("height",height);
   dynobject_t::get_attribute("falloff",falloff);
   dynobject_t::get_attribute("distance",distance);
+  dynobject_t::get_attribute_bool("wndsqrt",wnd_sqrt);
 }
 
 void src_door_t::write_xml()
@@ -107,6 +109,7 @@ void src_door_t::write_xml()
   dynobject_t::set_attribute("height",height);
   dynobject_t::set_attribute("falloff",falloff);
   dynobject_t::set_attribute("distance",distance);
+  dynobject_t::set_attribute_bool("wndsqrt",wnd_sqrt);
 }
 
 src_door_t::~src_door_t()
@@ -119,6 +122,9 @@ void src_door_t::geometry_update(double t)
 {
   if( source ){
     dynobject_t::geometry_update(t);
+    source->falloff = 1.0/std::max(falloff,1.0e-10);
+    source->distance = distance;
+    source->wnd_sqrt = wnd_sqrt;
     source->position = get_location();
     source->apply_rot_loc(source->position,get_orientation());
   }
@@ -131,8 +137,6 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
     delete source;
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize);
   geometry_update(0);
-  source->falloff = 1.0/std::max(falloff,1.0e-10);
-  source->distance = distance;
   source->nonrt_set_rect(width,height);
 }
 

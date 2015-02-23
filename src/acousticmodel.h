@@ -46,6 +46,7 @@ namespace TASCAR {
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       double falloff;
       double distance;
+      bool wnd_sqrt;
     };
 
     class diffuse_source_t : public shoebox_t {

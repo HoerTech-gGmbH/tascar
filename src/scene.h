@@ -178,6 +178,7 @@ namespace TASCAR {
       double height;
       double falloff;
       double distance;
+      bool wnd_sqrt;
       TASCAR::Acousticmodel::doorsource_t* get_source() { return source;};
     private:
       TASCAR::Acousticmodel::doorsource_t* source;
