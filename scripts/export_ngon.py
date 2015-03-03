@@ -29,7 +29,7 @@ def faceToLine(face):
     return " ".join([("%.6f %.6f %.6f" % v) for v in face] + ["\n"])
 
 def write(obj,filepath):
-  scene = bpy.context.scene
+  #scene = bpy.context.scene
   faces = []
   me = obj.data
   if me is not None:
