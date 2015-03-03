@@ -85,6 +85,7 @@ def obj_faces(obj):
 base = os.path.basename(bpy.data.filepath)[0:-6]
 fh = open(base+'_export.tsc','w')
 rad2deg = 57.295779513082322865
+sce = bpy.context.scene
 for obj in bpy.data.objects:
   if ( obj.type =='MESH'):
     if ('reflectivity' in obj):
@@ -98,15 +99,43 @@ for obj in bpy.data.objects:
         fh.write(faceToLine(face))
       fh.write('</faces>\n</facegroup>\n')
     if ('source' in obj):
-      fh.write('<src_object name="'+obj.name+'">\n')
-      fh.write('<position>0 '+('%g %g %g' % obj.location[:])+'</position>\n')
+      fh.write('<src_object name="'+obj.name+'"')
+      if ('start' in obj):
+        fh.write(' start="%g"' % obj['start'])
+      if ('end' in obj):
+        fh.write(' end="%g"' % obj['end'])
+      fh.write('>\n');
+      if ( obj.animation_data != None ):
+        action = obj.animation_data.action
+        vFrame = []
+        for fcu in action.fcurves:
+          if fcu.data_path == 'location':
+            loc = fcu.keyframe_points
+            for k in loc:
+              vFrame.append(k.co[0])
+        vFrame = set(vFrame)
+        fh.write('<position>')
+        for frame in vFrame:
+          sce.frame_set(frame)
+          fh.write(('%g ' % (frame/25))+('%g %g %g\n' % obj.location[:]))
+        fh.write('</position>\n')
+      else:
+      #print(vFrame)
+        fh.write('<position>0 '+('%g %g %g' % obj.location[:])+'</position>\n')
       fh.write('<orientation>0 '+('%g ' % (obj.rotation_euler[2]*rad2deg))+('%g ' % (obj.rotation_euler[1]*rad2deg))+('%g ' % (obj.rotation_euler[0]*rad2deg))+'</orientation>\n')
       k = 0
+      N = len(obj.data.vertices)
       for vert in obj.data.vertices:
-        fh.write(('<sound name="%d" ' % k)+('connect="@.0.%d" ' % k))
+        if N > 1:
+          fh.write(('<sound name="%d" ' % k)+('connect="@.0.%d" ' % k))
+        else:
+          fh.write(('<sound name="%d" ' % k)+('connect="@.%d" ' % k))
         fh.write('x="%g" y="%g" z="%g"/>\n' % vert.co[:])
         k = k+1
-      fh.write('<sndfile name="'+obj['source']+('" channels="%d"' % k)+'/>\n')
+      fh.write('<sndfile name="'+obj['source']+('" channels="%d"' % k))
+      if ('loop' in obj):
+        fh.write(' loop="%d"' % obj['loop'])
+      fh.write('/>\n')
       fh.write('</src_object>\n')
     #write(base+'_'+obj.name+'.raw')
     #obj.select = False
