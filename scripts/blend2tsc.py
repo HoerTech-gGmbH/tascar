@@ -113,7 +113,7 @@ for obj in bpy.data.objects:
             loc = fcu.keyframe_points
             for k in loc:
               vFrame.append(k.co[0])
-        vFrame = set(vFrame)
+        vFrame = sorted(set(vFrame))
         fh.write('<position>')
         for frame in vFrame:
           sce.frame_set(frame)
