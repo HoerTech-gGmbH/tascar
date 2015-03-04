@@ -17,8 +17,8 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-pointsource_t::pointsource_t(uint32_t chunksize)
-  : audio(chunksize), active(true), direct(true)
+pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_)
+  : audio(chunksize), active(true), direct(true), maxdist(maxdist_)
 {
 }
 
@@ -26,8 +26,8 @@ pointsource_t::~pointsource_t()
 {
 }
 
-doorsource_t::doorsource_t(uint32_t chunksize)
-  : pointsource_t(chunksize),
+doorsource_t::doorsource_t(uint32_t chunksize,double maxdist)
+  : pointsource_t(chunksize,maxdist),
     falloff(1.0),
     wnd_sqrt(false)
 {
@@ -75,7 +75,7 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
     distance(1.0),
     gain(1.0),
     dscale(fs/(c_*7782.0)),
-    delayline(480000,fs,c_),
+    delayline((src->maxdist/c_)*fs,fs,c_),
     airabsorption_state(0.0)
 {
   pos_t prel;
@@ -130,7 +130,7 @@ uint32_t acoustic_model_t::process()
 }
 
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
-  : pointsource_t(src->audio.size()),
+  : pointsource_t(src->audio.size(),src->maxdist),
     src_(src),reflector_(reflector),
     dt(1.0/std::max(1u,src->audio.size())),
     g(0),

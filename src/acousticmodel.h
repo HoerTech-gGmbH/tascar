@@ -15,7 +15,7 @@ namespace TASCAR {
      */
     class pointsource_t {
     public:
-      pointsource_t(uint32_t chunksize);
+      pointsource_t(uint32_t chunksize,double maxdist_);
       virtual ~pointsource_t();
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return position; };
@@ -23,6 +23,7 @@ namespace TASCAR {
       pos_t position;
       bool active;
       bool direct;
+      double maxdist;
     };
 
     /**
@@ -42,7 +43,7 @@ namespace TASCAR {
 
     class doorsource_t : public pointsource_t, public diffractor_t {
     public:
-      doorsource_t(uint32_t chunksize);
+      doorsource_t(uint32_t chunksize, double maxdist);
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       double falloff;
       double distance;
