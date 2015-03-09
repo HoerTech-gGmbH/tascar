@@ -532,8 +532,8 @@ pos_t diffractor_t::process(const pos_t& p_src, const pos_t& p_is, const pos_t& 
   if( d_is_src > 0 )
     p_is_src *= 1.0/d_is_src;
   // calculate first zero crossing frequency:
-  double cos_theta(dot_prod(p_is_src,p_rec_is));
-  double sin_theta(sqrt(1-cos_theta*cos_theta));
+  double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
+  double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
   double f0(3.8317*c/(PI2*aperture*sin_theta));
   // calculate filter coefficient increment:
   double dt(1.0/audio.n);

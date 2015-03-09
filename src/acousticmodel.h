@@ -45,6 +45,7 @@ namespace TASCAR {
     public:
       doorsource_t(uint32_t chunksize, double maxdist);
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
+      //void process();
       double falloff;
       double distance;
       bool wnd_sqrt;
