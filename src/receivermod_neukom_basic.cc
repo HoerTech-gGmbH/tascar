@@ -97,13 +97,14 @@ void neukom_basic_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wa
 {
   data_t* d((data_t*)sd);
   double az_src(prel.azim());
+  double spkng(1.0/(double)spkpos.size());
   for(unsigned int k=0;k<output.size();k++){
     double az = az_src - spk_az[k];
     double w = 0.5;
     for(unsigned int l=1;l<=order;l++)
       w += cos(l*az);
-    w *= 2.0;
-    w /= (double)spkpos.size();
+    w *= 2.0 * spkng;
+    //w /= (double)spkpos.size();
     w *= spk_gain[k];
     d->dwp[k] = (w - d->wp[k])*d->dt;
   }
@@ -121,6 +122,7 @@ void neukom_basic_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::
   uint32_t kmin(0);
   double dmin(distance(psrc,spkpos[kmin]));
   double dist(0);
+  double spkng(1.0/(double)spkpos.size());
   for(unsigned int k=1;k<output.size();k++)
     if( (dist = distance(psrc,spkpos[k]))<dmin ){
       kmin = k;
@@ -130,13 +132,13 @@ void neukom_basic_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::
   TASCAR::pos_t py(0,1,0);
   TASCAR::pos_t pz(0,0,1);
   for(unsigned int k=0;k<output.size();k++)
-    d->dw[k] = (0.701 - d->w[k])*d->dt;
+    d->dw[k] = (0.701*spkng - d->w[k])*d->dt;
   for(unsigned int k=0;k<output.size();k++)
-    d->dx[k] = (dot_prod(px,spkpos[k]) - d->x[k])*d->dt;
+    d->dx[k] = (dot_prod(px,spkpos[k])*spkng - d->x[k])*d->dt;
   for(unsigned int k=0;k<output.size();k++)
-    d->dy[k] = (dot_prod(py,spkpos[k]) - d->y[k])*d->dt;
+    d->dy[k] = (dot_prod(py,spkpos[k])*spkng - d->y[k])*d->dt;
   for(unsigned int k=0;k<output.size();k++)
-    d->dz[k] = (dot_prod(pz,spkpos[k]) - d->z[k])*d->dt;
+    d->dz[k] = (dot_prod(pz,spkpos[k])*spkng - d->z[k])*d->dt;
   for( unsigned int i=0;i<chunk.size();i++){
     for( unsigned int k=0;k<output.size();k++){
       output[k][i] += (d->w[k] += d->dw[k]) * chunk.w()[i];
