@@ -1,7 +1,7 @@
 #include "errorhandling.h"
 #include "scene.h"
 
-class neukom_basic_t : public TASCAR::receivermod_base_t {
+class neukom_inphase_t : public TASCAR::receivermod_base_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
@@ -20,8 +20,8 @@ public:
     float* dz;
     double dt;
   };
-  neukom_basic_t(xmlpp::Element* xmlsrc);
-  virtual ~neukom_basic_t() {};
+  neukom_inphase_t(xmlpp::Element* xmlsrc);
+  virtual ~neukom_inphase_t() {};
   void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
@@ -32,15 +32,15 @@ private:
   std::vector<TASCAR::Scene::spk_pos_t> spkpos;
   std::vector<double> spk_az;
   std::vector<double> spk_gain;
-  uint32_t order;
+  double order;
 };
 
-void neukom_basic_t::write_xml()
+void neukom_inphase_t::write_xml()
 {
   SET_ATTRIBUTE(order);
 }
 
-neukom_basic_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
+neukom_inphase_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
 {
   wp = new float[channels];
   dwp = new float[channels];
@@ -57,7 +57,7 @@ neukom_basic_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
   dt = 1.0/std::max(1.0,(double)chunksize);
 }
 
-neukom_basic_t::data_t::~data_t()
+neukom_inphase_t::data_t::~data_t()
 {
   delete [] wp;
   delete [] dwp;
@@ -71,7 +71,7 @@ neukom_basic_t::data_t::~data_t()
   delete [] dz;
 }
 
-neukom_basic_t::neukom_basic_t(xmlpp::Element* xmlsrc)
+neukom_inphase_t::neukom_inphase_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc)
 {
   GET_ATTRIBUTE(order);
@@ -93,16 +93,13 @@ neukom_basic_t::neukom_basic_t(xmlpp::Element* xmlsrc)
   }
 }
 
-void neukom_basic_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void neukom_inphase_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   double az_src(prel.azim());
   for(unsigned int k=0;k<output.size();k++){
     double az = az_src - spk_az[k];
-    double w = 0.5;
-    for(unsigned int l=1;l<=order;l++)
-      w += cos(l*az);
-    w *= 2.0;
+    double w = pow(cos(0.5*az),order);
     w /= (double)spkpos.size();
     w *= spk_gain[k];
     d->dwp[k] = (w - d->wp[k])*d->dt;
@@ -114,7 +111,7 @@ void neukom_basic_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wa
   }
 }
 
-void neukom_basic_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void neukom_inphase_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   TASCAR::pos_t psrc(prel.normal());
@@ -147,12 +144,12 @@ void neukom_basic_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::
   }
 }
 
-uint32_t neukom_basic_t::get_num_channels()
+uint32_t neukom_inphase_t::get_num_channels()
 {
   return spkpos.size();
 }
 
-std::string neukom_basic_t::get_channel_postfix(uint32_t channel) const
+std::string neukom_inphase_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[1024];
   sprintf(ctmp,".%d",channel);
@@ -160,12 +157,12 @@ std::string neukom_basic_t::get_channel_postfix(uint32_t channel) const
 }
 
 
-TASCAR::receivermod_base_t::data_t* neukom_basic_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* neukom_inphase_t::create_data(double srate,uint32_t fragsize)
 {
   return new data_t(fragsize,spkpos.size());
 }
 
-REGISTER_RECEIVERMOD(neukom_basic_t);
+REGISTER_RECEIVERMOD(neukom_inphase_t);
 
 /*
  * Local Variables:
