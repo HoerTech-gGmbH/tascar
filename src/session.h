@@ -12,6 +12,7 @@ namespace TASCAR {
     module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session_);
     virtual void write_xml();
     virtual ~module_base_t();
+    virtual void update();
   protected:
     TASCAR::session_t* session;
   };
@@ -20,6 +21,7 @@ namespace TASCAR {
   typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
   typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
   typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
+  typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun);
 
   class module_t : public TASCAR::xml_element_t {
   public:
