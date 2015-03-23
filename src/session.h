@@ -12,7 +12,12 @@ namespace TASCAR {
     module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session_);
     virtual void write_xml();
     virtual ~module_base_t();
-    virtual void update();
+    /**
+       \brief Method to update geometry etc on each processing cycle in the session processing thread (jack).
+       \param t Transport time.
+       \param running Transport running (true) or stopped (false).
+     */
+    virtual void update(double t,bool running);
   protected:
     TASCAR::session_t* session;
   };
@@ -21,13 +26,14 @@ namespace TASCAR {
   typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
   typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
   typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
-  typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun);
+  typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun,double t,bool running);
 
   class module_t : public TASCAR::xml_element_t {
   public:
     module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
     void write_xml();
     virtual ~module_t();
+    void update(double t,bool running);
   private:
     std::string name;
     void* lib;
@@ -35,6 +41,7 @@ namespace TASCAR {
     module_create_t create_cb;
     module_destroy_t destroy_cb;
     module_write_xml_t write_xml_cb;
+    module_update_t update_cb;
   };
 
   class xml_doc_t {
@@ -73,7 +80,7 @@ namespace TASCAR {
     std::string name;
   };
 
-  class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_portless_t {
+  class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_transport_t {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
@@ -107,11 +114,14 @@ namespace TASCAR {
     std::vector<TASCAR::module_t*> modules;
     const std::string& get_session_path() const;
     std::vector<std::string> get_render_output_ports() const;
+    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+    //virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
   protected:
     // derived variables:
     std::string session_path;
   private:
     void read_xml();
+    double period_time;
   };
 
   class actor_module_t : public module_base_t {
@@ -162,6 +172,23 @@ namespace TASCAR {
       }else                                                             \
         errfun("Invalid library class pointer (write_xml).");           \
     }                                                                   \
+  }
+
+#define REGISTER_MODULE_UPDATE(x)               \
+  extern "C" {                                  \
+    void tascar_update(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,double t,bool running) \
+    {                                           \
+      x* ptr(dynamic_cast<x*>(h));              \
+      if( ptr ){                                \
+        try {                                   \
+          ptr->update(t,running);               \
+        }                                       \
+        catch(const std::exception&e ){         \
+          errfun(e.what());                     \
+        }                                       \
+      }else                                     \
+        errfun("Invalid library class pointer (update)."); \
+    }                                           \
   }
 
 

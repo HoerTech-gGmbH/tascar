@@ -20,7 +20,8 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     libdata(NULL),
     create_cb(NULL),
     destroy_cb(NULL),
-    write_xml_cb(NULL)
+    write_xml_cb(NULL),
+    update_cb(NULL)
 {
   get_attribute("name",name);
   std::string libname("tascar_");
@@ -36,6 +37,7 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     if( !destroy_cb )
       throw TASCAR::ErrMsg("Unable to resolve \"tascar_destroy\" in module \""+name+"\".");
     write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
+    update_cb = (module_update_t)dlsym(lib,"tascar_update");
     libdata = create_cb(xmlsrc,session,module_error);
   }
   catch( ... ){
@@ -48,6 +50,12 @@ void TASCAR::module_t::write_xml()
 {
   if( write_xml_cb )
     write_xml_cb(libdata,module_error);
+}
+
+void TASCAR::module_t::update(double t,bool running)
+{
+  if( update_cb )
+    update_cb(libdata,module_error,t,running);
 }
 
 TASCAR::module_t::~module_t()
@@ -93,11 +101,13 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
 
 TASCAR::session_t::session_t()
   : xml_element_t(doc->get_root_node()),
-    jackc_portless_t(jacknamer(e->get_attribute_value("name"),"session.")),
+    jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
     name("tascar"),
     duration(60),
-    loop(false)
+    loop(false),
+    period_time(1.0/(double)srate)
 {
+  // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
   char c_respath[PATH_MAX];
   session_path = getcwd(c_respath,PATH_MAX);
@@ -109,11 +119,13 @@ TASCAR::session_t::session_t()
 TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : xml_doc_t(filename_or_data,t),
     xml_element_t(doc->get_root_node()),
-    jackc_portless_t(jacknamer(e->get_attribute_value("name"),"session.")),
+    jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
     name("tascar"),
     duration(60),
-    loop(false)
+    loop(false),
+    period_time(1.0/(double)srate)
 {
+  // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
   if( path.size() ){
     char c_fname[path.size()+1];
@@ -251,6 +263,16 @@ void TASCAR::session_t::start()
   }
 }
 
+int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+{
+  double t(period_time*(double)tp_frame);
+  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
+    (*imod)->update(t,tp_running);
+  if( loop && ( t >= duration ) )
+    tp_locate(0u);
+  return 0;
+}
+
 void TASCAR::session_t::stop()
 {
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
@@ -363,6 +385,10 @@ TASCAR::module_base_t::module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* s
 }
 
 void TASCAR::module_base_t::write_xml()
+{
+}
+
+void TASCAR::module_base_t::update(double t,bool running)
 {
 }
 
