@@ -122,6 +122,7 @@ namespace TASCAR {
   private:
     void read_xml();
     double period_time;
+    bool started_;
   };
 
   class actor_module_t : public module_base_t {

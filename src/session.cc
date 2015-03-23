@@ -105,7 +105,8 @@ TASCAR::session_t::session_t()
     name("tascar"),
     duration(60),
     loop(false),
-    period_time(1.0/(double)srate)
+    period_time(1.0/(double)srate),
+    started_(false)
 {
   // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
@@ -123,7 +124,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     name("tascar"),
     duration(60),
     loop(false),
-    period_time(1.0/(double)srate)
+    period_time(1.0/(double)srate),
+    started_(false)
 {
   // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
@@ -196,6 +198,8 @@ void TASCAR::session_t::write_xml()
 
 TASCAR::session_t::~session_t()
 {
+  if( started_ )
+    stop();
   for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
     delete (*it);
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
@@ -251,6 +255,7 @@ TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
 void TASCAR::session_t::start()
 {
   activate();
+  started_ = true;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->start();
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
@@ -278,6 +283,7 @@ void TASCAR::session_t::stop()
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->stop();
   deactivate();
+  started_ = false;
 }
 
 void del_whitespace( xmlpp::Node* node )
