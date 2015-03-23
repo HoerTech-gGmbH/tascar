@@ -1,55 +1,48 @@
 #include "session.h"
 
-class pos2osc_t : public TASCAR::module_base_t, public jackc_transport_t {
+class pendulum_t : public TASCAR::module_base_t {
 public:
-  pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
-  ~pos2osc_t();
+  pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  ~pendulum_t();
   void write_xml();
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+  void update(double t, bool running);
 private:
-  std::string url;
-  std::string pattern;
-  uint32_t ttl;
-  lo_address target;
-  std::vector<TASCAR::named_object_t> obj;
+  double amplitude;
+  double frequency;
+  double decaytime;
+  double starttime;
+  TASCAR::pos_t distance;
 };
 
-pos2osc_t::pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
-    jackc_transport_t(jacknamer(session->name,"pos2osc.")),
-    ttl(1)
+pendulum_t::pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
+  : actor_module_t(xmlsrc,session),
+    amplitude(45),
+    frequency(0.5),
+    decaytime(40),
+    starttime(10),
+    distance(0,0,-2)
 {
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE(ttl);
-  if( url.empty() )
-    url = "osc.udp://localhost:9999/";
-  if( pattern.empty() )
-    pattern = "/*/*";
-  target = lo_address_new_from_url(url.c_str());
-  if( !target )
-    throw TASCAR::ErrMsg("Unable to create target adress \""+url+"\".");
-  lo_address_set_ttl(target,ttl);
-  obj = session->find_objects(pattern);
-  if( !obj.size() )
-    throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
-  activate();
+  GET_ATTRIBUTE(amplitude);
+  GET_ATTRIBUTE(frequency);
+  GET_ATTRIBUTE(decaytime);
+  GET_ATTRIBUTE(starttime);
+  GET_ATTRIBUTE(distance);
 }
 
-void pos2osc_t::write_xml()
+void pendulum_t::write_xml()
 {
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(pattern);
-  SET_ATTRIBUTE(ttl);
+  SET_ATTRIBUTE(amplitude);
+  SET_ATTRIBUTE(frequency);
+  SET_ATTRIBUTE(decaytime);
+  SET_ATTRIBUTE(starttime);
+  SET_ATTRIBUTE(distance);
 }
 
-pos2osc_t::~pos2osc_t()
+pendulum_t::~pendulum_t()
 {
-  deactivate();
-  lo_address_free(target);
 }
 
-int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+void pendulum_t::update(double time,bool running)
 {
   if( tp_running ){
     for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
@@ -66,7 +59,8 @@ int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffe
   return 0;
 }
 
-REGISTER_MODULE(pos2osc_t);
+REGISTER_MODULE(pendulum_t);
+REGISTER_MODULE_UPDATE(pendulum_t);
 
 /*
  * Local Variables:
