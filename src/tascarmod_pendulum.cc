@@ -1,6 +1,6 @@
 #include "session.h"
 
-class pendulum_t : public TASCAR::module_base_t {
+class pendulum_t : public TASCAR::actor_module_t {
 public:
   pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
   ~pendulum_t();
@@ -44,19 +44,18 @@ pendulum_t::~pendulum_t()
 
 void pendulum_t::update(double time,bool running)
 {
-  if( tp_running ){
-    for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
-      TASCAR::pos_t p;
-      TASCAR::zyx_euler_t o;
-      it->obj->get_6dof(p,o);
-      std::string path;
-      path = it->name + "/pos";
-      lo_send(target,path.c_str(),"fff",p.x,p.y,p.z);
-      path = it->name + "/rot";
-      lo_send(target,path.c_str(),"fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
-    }
+  double rx(amplitude*DEG2RAD);
+  time -= starttime;
+  if( time>0 )
+    rx = amplitude*DEG2RAD*cos(PI2*frequency*(time))*exp(-0.70711*time/decaytime);
+  for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
+    TASCAR::zyx_euler_t dr(0,0,rx);
+    TASCAR::pos_t dp(distance);
+    dp *= TASCAR::zyx_euler_t(0,0,rx);
+    dp *= TASCAR::zyx_euler_t(iobj->obj->c6dof.o.z,iobj->obj->c6dof.o.y,0);
+    iobj->obj->dorientation = dr;
+    iobj->obj->dlocation = dp;
   }
-  return 0;
 }
 
 REGISTER_MODULE(pendulum_t);
