@@ -1,14 +1,12 @@
 #include "session.h"
 
 #include "osc_helper.h"
-//#include <lo/lo.h>
-#include "defs.h"
 #include <stdlib.h>
 
 /**
-\brief Classes mainly used for artistic purposes
+   \brief Classes mainly used for artistic purposes
 
-Members are mostly dirty hacks and undocumented...
+   Members are mostly dirty hacks and undocumented...
  */
 namespace HoS {
 
@@ -43,9 +41,7 @@ namespace HoS {
   public:
     parameter_t(xmlpp::Element*);
     ~parameter_t();
-    //void set_preset();
     void locate0( float time );
-    void setelev( float time );
     void az(float az_);
     void apply( float time );
     void set_stopat( float sa ){
@@ -86,8 +82,6 @@ namespace HoS {
     float f_update;
     unsigned int t_locate; // slowly locate to position
     float locate_gain;
-    unsigned int t_elev; // slowly locate to elevation
-    float elev_gain;
     unsigned int t_apply; // slowly apply parameters
     float apply_gain;
     // control parameter for panner:
@@ -95,9 +89,6 @@ namespace HoS {
     float _rho;
     float lastphi;
   private:
-    //int osc_preset;
-    //lo_server_thread lost;
-    std::string osc_prefix;
   };
 
 };
@@ -124,7 +115,6 @@ namespace OSC {
 
   int _locate(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
-    //DEBUG(1);
     if( (argc == 1) && (types[0] == 'f') ){
       ((HoS::parameter_t*)user_data)->locate0(argv[0]->f);
       return 0;
@@ -134,7 +124,6 @@ namespace OSC {
 
   int _stopat(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
-    //DEBUG(1);
     if( (argc == 1) && (types[0] == 'f') ){
       ((HoS::parameter_t*)user_data)->set_stopat(DEG2RAD*(argv[0]->f));
       return 0;
@@ -144,7 +133,6 @@ namespace OSC {
 
   int _applyat(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
-    //DEBUG(1);
     if( (argc == 2) && (types[0] == 'f') && (types[1] == 'f') ){
       ((HoS::parameter_t*)user_data)->set_applyat(DEG2RAD*(argv[0]->f),argv[1]->f);
       return 0;
@@ -152,19 +140,8 @@ namespace OSC {
     return 1;
   }
 
-  int _setelev(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-  {
-    //DEBUG(1);
-    if( (argc == 1) && (types[0] == 'f') ){
-      ((HoS::parameter_t*)user_data)->setelev(argv[0]->f);
-      return 0;
-    }
-    return 1;
-  }
-
   int _apply(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
-    //DEBUG(1);
     if( (argc == 1) && (types[0] == 'f') ){
       ((HoS::parameter_t*)user_data)->apply(argv[0]->f);
       return 0;
@@ -174,7 +151,6 @@ namespace OSC {
 
   int _az(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
-    //DEBUG(1);
     if( (argc == 1) && (types[0] == 'f') ){
       ((HoS::parameter_t*)user_data)->az(argv[0]->f);
       return 0;
@@ -183,7 +159,6 @@ namespace OSC {
   }
 
 }
-
   
 void HoS::par_t::mix_static(float g,const par_t& p1,const par_t& p2)
 {
@@ -253,7 +228,6 @@ void HoS::parameter_t::az(float az_)
 
 void HoS::parameter_t::locate0(float time)
 {
-  //DEBUG(time);
   time *= f_update;
   t_locate = 0;
   if( time > 0 )
@@ -262,19 +236,6 @@ void HoS::parameter_t::locate0(float time)
     locate_gain = 0;
   }
   t_locate = 1+time;
-}
-
-void HoS::parameter_t::setelev(float time)
-{
-  //DEBUG(time);
-  time *= f_update;
-  t_elev = 0;
-  if( time > 0 )
-    elev_gain = 1.0f/time;
-  else{
-    elev_gain = 0;
-  }
-  t_elev = 1+time;
 }
 
 void HoS::parameter_t::apply(float time)
@@ -304,20 +265,12 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e)
     b_quit(false),
     f_update(1),
     t_locate(0),
-    t_elev(0),
     t_apply(0),
-    lastphi(0),
-    osc_prefix(path+std::string("/"))
+    lastphi(0)
 {
   lo_address_set_ttl( lo_addr, 1 );
-  //set_preset();
-  std::string s;
-  //lost = lo_server_thread_new_multicast(OSC_ADDR,OSC_PORT,OSC::lo_err_handler_cb);
-  set_prefix(osc_prefix);
+  set_prefix(path+std::string("/"));
   add_bool_true("quit",&b_quit);
-//#define REGISTER_FLOAT_VAR(x) s = osc_prefix+#x;lo_server_thread_add_method(lost,s.c_str(),"f",OSC::handler_f,&(par_osc.x))
-//#define REGISTER_FLOAT_VAR_DEGREE(x) s = osc_prefix+#x;lo_server_thread_add_method(lost,s.c_str(),"f",OSC::handler_angle_f,&(par_osc.x))
-//#define REGISTER_CALLBACK(x,fmt) s=osc_prefix+#x;lo_server_thread_add_method(lost,s.c_str(),fmt,OSC::_ ## x,this)
 #define REGISTER_FLOAT_VAR(x) add_float(#x,&(par_osc.x))
 #define REGISTER_FLOAT_VAR_DEGREE(x) add_float_degree(#x,&(par_osc.x))
 #define REGISTER_CALLBACK(x,fmt) add_method(#x,fmt,OSC::_ ## x,this)
@@ -333,22 +286,17 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e)
   REGISTER_CALLBACK(feedbackaddr,"s");
   REGISTER_CALLBACK(sendphi,"s");
   REGISTER_CALLBACK(locate,"f");
-  REGISTER_CALLBACK(setelev,"f");
   REGISTER_CALLBACK(apply,"f");
   REGISTER_CALLBACK(stopat,"f");
   REGISTER_CALLBACK(applyat,"ff");
   REGISTER_CALLBACK(az,"f");
 #undef REGISTER_FLOAT_VAR
 #undef REGISTER_CALLBACK
-  //lo_server_thread_start(lost);
   activate();
-  //set_feedback_osc_addr( OSC_ADDR );
 }
 
 HoS::parameter_t::~parameter_t()
 {
-  //lo_server_thread_stop(lost);
-  //lo_server_thread_free(lost);
 }
 
 HoS::srvvars_t::srvvars_t(xmlpp::Element* e)
@@ -372,20 +320,19 @@ class epicycles_t : public TASCAR::actor_module_t, private HoS::parameter_t {
 public:
   epicycles_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
   ~epicycles_t();
-  void update(double t, bool running);
+  void configure(double srate,uint32_t fragsize);
+  void update(uint32_t frame, bool running);
   void write_xml();
 private:
   float phi;
   float phi_epi;
-  double lt;
 };
 
 epicycles_t::epicycles_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : actor_module_t(xmlsrc,session),
     HoS::parameter_t(xmlsrc),
     phi(0),
-    phi_epi(0),
-    lt(0)
+    phi_epi(0)
 {
 }
 
@@ -413,11 +360,13 @@ bool iscrossing( double phi0, double phi, double lastphi )
            ( (pd1 < 0) && (pd2 >= 0) ) ) && (fabs(pd1)<0.5*M_PI) && (fabs(pd2)<0.5*M_PI);
 }
 
-void epicycles_t::update(double time,bool running)
+void epicycles_t::configure(double srate,uint32_t fragsize)
 {
-  if( time > lt )
-    f_update = 1.0/(time-lt);
-  lt = time;
+  f_update = srate/(double)fragsize;
+}
+
+void epicycles_t::update(uint32_t frame,bool running)
+{
   if( running ){
     // optionally apply dynamic parameters:
     if( t_apply ){
