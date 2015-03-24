@@ -4,6 +4,14 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+class at_cmd_t : public TASCAR::xml_element_t {
+public:
+  at_cmd_t(xmlpp::Element* xmlsrc);
+  double time;
+  uint32_t frame;
+  std::string command;
+};
+
 class system_t : public TASCAR::module_base_t {
 public:
   system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess);
@@ -25,14 +33,16 @@ system_t::system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess)
   std::string sessionpath(session->get_session_path());
   GET_ATTRIBUTE(command);
   GET_ATTRIBUTE(sleep);
-  char ctmp[1024];
-  memset(ctmp,0,1024);
-  snprintf(ctmp,1024,"sh -c \"cd %s;%s >/dev/null & echo \\$!\"",sessionpath.c_str(),command.c_str());
-  h_pipe = popen( ctmp, "r" );
-  if( fgets(ctmp,1024,h_pipe) != NULL ){
-    pid = atoi(ctmp);
-    if( pid == 0 ){
-      std::cerr << "Warning: Invalid subprocess PID." << std::endl;
+  if( !command.empty()){
+    char ctmp[1024];
+    memset(ctmp,0,1024);
+    snprintf(ctmp,1024,"sh -c \"cd %s;%s >/dev/null & echo \\$!\"",sessionpath.c_str(),command.c_str());
+    h_pipe = popen( ctmp, "r" );
+    if( fgets(ctmp,1024,h_pipe) != NULL ){
+      pid = atoi(ctmp);
+      if( pid == 0 ){
+        std::cerr << "Warning: Invalid subprocess PID." << std::endl;
+      }
     }
   }
   usleep(1000000*sleep);
