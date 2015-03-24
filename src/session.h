@@ -17,7 +17,8 @@ namespace TASCAR {
        \param t Transport time.
        \param running Transport running (true) or stopped (false).
      */
-    virtual void update(double t,bool running);
+    virtual void update(uint32_t frame,bool running);
+    virtual void configure(double srate,uint32_t fragsize);
   protected:
     TASCAR::session_t* session;
   };
@@ -26,14 +27,16 @@ namespace TASCAR {
   typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
   typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
   typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
-  typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun,double t,bool running);
+  typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun,uint32_t frame,bool running);
+  typedef void (*module_configure_t)(TASCAR::module_base_t* h,module_error_t errfun,double srate,uint32_t fragsize);
 
   class module_t : public TASCAR::xml_element_t {
   public:
     module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
     void write_xml();
     virtual ~module_t();
-    void update(double t,bool running);
+    void configure(double srate,uint32_t fragsize);
+    void update(uint32_t frame,bool running);
   private:
     std::string name;
     void* lib;
@@ -42,6 +45,7 @@ namespace TASCAR {
     module_destroy_t destroy_cb;
     module_write_xml_t write_xml_cb;
     module_update_t update_cb;
+    module_configure_t configure_cb;
   };
 
   class xml_doc_t {
@@ -177,18 +181,31 @@ namespace TASCAR {
 
 #define REGISTER_MODULE_UPDATE(x)               \
   extern "C" {                                  \
-    void tascar_update(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,double t,bool running) \
+    void tascar_update(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,uint32_t frame,bool running) \
     {                                           \
       x* ptr(dynamic_cast<x*>(h));              \
       if( ptr ){                                \
         try {                                   \
-          ptr->update(t,running);               \
+          ptr->update(frame,running);               \
         }                                       \
         catch(const std::exception&e ){         \
           errfun(e.what());                     \
         }                                       \
       }else                                     \
         errfun("Invalid library class pointer (update)."); \
+    }                                           \
+    void tascar_configure(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,double srate,uint32_t fragsize) \
+    {                                           \
+      x* ptr(dynamic_cast<x*>(h));              \
+      if( ptr ){                                \
+        try {                                   \
+          ptr->configure(srate,fragsize);        \
+        }                                       \
+        catch(const std::exception&e ){         \
+          errfun(e.what());                     \
+        }                                       \
+      }else                                     \
+        errfun("Invalid library class pointer (configure)."); \
     }                                           \
   }
 

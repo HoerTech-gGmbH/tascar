@@ -21,7 +21,8 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     create_cb(NULL),
     destroy_cb(NULL),
     write_xml_cb(NULL),
-    update_cb(NULL)
+    update_cb(NULL),
+    configure_cb(NULL)
 {
   get_attribute("name",name);
   std::string libname("tascar_");
@@ -38,6 +39,7 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
       throw TASCAR::ErrMsg("Unable to resolve \"tascar_destroy\" in module \""+name+"\".");
     write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
     update_cb = (module_update_t)dlsym(lib,"tascar_update");
+    configure_cb = (module_configure_t)dlsym(lib,"tascar_configure");
     libdata = create_cb(xmlsrc,session,module_error);
   }
   catch( ... ){
@@ -52,10 +54,16 @@ void TASCAR::module_t::write_xml()
     write_xml_cb(libdata,module_error);
 }
 
-void TASCAR::module_t::update(double t,bool running)
+void TASCAR::module_t::update(uint32_t frame,bool running)
 {
   if( update_cb )
-    update_cb(libdata,module_error,t,running);
+    update_cb(libdata,module_error,frame,running);
+}
+
+void TASCAR::module_t::configure(double srate,uint32_t fragsize)
+{
+  if( configure_cb )
+    configure_cb(libdata,module_error,srate,fragsize);
 }
 
 TASCAR::module_t::~module_t()
@@ -254,6 +262,8 @@ TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
 
 void TASCAR::session_t::start()
 {
+  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
+    (*imod)->configure(srate,fragsize);
   activate();
   started_ = true;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
@@ -272,7 +282,7 @@ int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>&
 {
   double t(period_time*(double)tp_frame);
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->update(t,tp_running);
+    (*imod)->update(tp_frame,tp_running);
   if( loop && ( t >= duration ) )
     tp_locate(0u);
   return 0;
@@ -394,7 +404,11 @@ void TASCAR::module_base_t::write_xml()
 {
 }
 
-void TASCAR::module_base_t::update(double t,bool running)
+void TASCAR::module_base_t::update(uint32_t frame,bool running)
+{
+}
+
+void TASCAR::module_base_t::configure(double srate,uint32_t fragsize)
 {
 }
 
