@@ -11,7 +11,7 @@ tascar_osc_jack_transport tascar_jackio
 
 RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic neukom_inphase
 
-TASCARMODS = system pos2osc sampler pendulum
+TASCARMODS = system pos2osc sampler pendulum epicycles
 
 TEST_FILES = test_ngon
 
