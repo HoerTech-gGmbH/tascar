@@ -106,7 +106,7 @@ namespace TASCAR {
       pos_t position;
       zyx_euler_t orientation;
       bool active;
-      TASCAR::Acousticmodel::boundingbox_t mask;
+      TASCAR::Acousticmodel::boundingbox_t boundingbox;
     private:
       double x_gain;
       double dx_gain;

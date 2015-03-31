@@ -296,21 +296,30 @@ void world_t::process()
     local_active_diffuse += diffuse_acoustic_model[k]->process();
   // now apply mask gains:
   for(uint32_t k=0;k<receivers_.size();k++){
-    if( receivers_[k]->use_global_mask ){
-      uint32_t c_outer(0);
+    if( receivers_[k]->use_global_mask || receivers_[k]->boundingbox.active ){
       double gain_inner(1.0);
-      double gain_outer(0.0);
-      for(uint32_t km=0;km<masks_.size();km++){
-        pos_t p(receivers_[k]->position);
-        if( masks_[km]->mask_inner ){
-          gain_inner = std::min(gain_inner,masks_[km]->gain(p));
-        }else{
-          c_outer++;
-          gain_outer = std::max(gain_outer,masks_[km]->gain(p));
-        }
+      if( receivers_[k]->boundingbox.active ){
+        shoebox_t maskbox;
+        maskbox.size = receivers_[k]->boundingbox.size;
+        receivers_[k]->boundingbox.get_6dof(maskbox.center, maskbox.orientation);
+        double d(maskbox.nextpoint(receivers_[k]->position).norm());
+        gain_inner *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
       }
-      if( c_outer > 0 )
-        gain_inner *= gain_outer;
+      if( receivers_[k]->use_global_mask ){
+        uint32_t c_outer(0);
+        double gain_outer(0.0);
+        for(uint32_t km=0;km<masks_.size();km++){
+          pos_t p(receivers_[k]->position);
+          if( masks_[km]->mask_inner ){
+            gain_inner = std::min(gain_inner,masks_[km]->gain(p));
+          }else{
+            c_outer++;
+            gain_outer = std::max(gain_outer,masks_[km]->gain(p));
+          }
+        }
+        if( c_outer > 0 )
+          gain_inner *= gain_outer;
+      }
       receivers_[k]->apply_gain(gain_inner);
     }
   }
@@ -385,7 +394,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     falloff(-1.0),
     delaycomp(0.0),
     active(true),
-    mask(find_or_add_child("boundingbox")),
+    boundingbox(find_or_add_child("boundingbox")),
     x_gain(1.0),
     dx_gain(0),
     dt(1)
@@ -411,7 +420,7 @@ void receiver_t::write_xml()
   set_attribute_db("diffusegain",diffusegain);
   SET_ATTRIBUTE(falloff);
   SET_ATTRIBUTE(delaycomp);
-  mask.write_xml();
+  boundingbox.write_xml();
 }
 
 void receiver_t::prepare(double srate, uint32_t chunksize)
@@ -467,13 +476,13 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
   }
-  if( mask.active ){
-    shoebox_t maskbox;
-    maskbox.size = mask.size;
-    mask.get_6dof(maskbox.center, maskbox.orientation);
-    double d(maskbox.nextpoint(position).norm());
-    gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(mask.falloff,1e-10)));
-  }
+  //if( boundingbox.active ){
+  //  shoebox_t maskbox;
+  //  maskbox.size = mask.size;
+  //  mask.get_6dof(maskbox.center, maskbox.orientation);
+  //  double d(maskbox.nextpoint(position).norm());
+  //  gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(mask.falloff,1e-10)));
+  //}
   make_friendly_number(gain);
 }
 
