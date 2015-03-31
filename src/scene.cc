@@ -514,52 +514,13 @@ void receivermod_object_t::geometry_update(double t)
   dynobject_t::geometry_update(t);
   TASCAR::Acousticmodel::receiver_t::position = c6dof.p;
   TASCAR::Acousticmodel::receiver_t::orientation = c6dof.o;
-  mask.geometry_update(t);
+  boundingbox.geometry_update(t);
 }
 
 void receivermod_object_t::process_active(double t,uint32_t anysolo)
 {
   TASCAR::Acousticmodel::receiver_t::active = is_active(anysolo,t);
 }
-
-//void receiver_object_t::prepare(double fs, uint32_t fragsize)
-//{
-//  bool use_mask(mask.active);
-//  if( receiver )
-//    delete receiver;
-//  switch( receiver_type ){
-//  case omni :
-//    receiver = new TASCAR::Acousticmodel::receiver_omni_t(fragsize,size,falloff,render_point,render_diffuse,
-//                                                  mask.size,
-//                                                  mask.falloff,
-//                                                  use_mask,use_global_mask);
-//    break;
-//  case cardioid :
-//    receiver = new TASCAR::Acousticmodel::receiver_cardioid_t(fragsize,size,falloff,render_point,render_diffuse,
-//                                                      mask.size,
-//                                                      mask.falloff,
-//                                                      use_mask,use_global_mask);
-//    break;
-//  case amb3h3v :
-//    receiver = new TASCAR::Acousticmodel::receiver_amb3h3v_t(fragsize,size,falloff,render_point,render_diffuse,
-//                                                     mask.size,
-//                                                     mask.falloff,
-//                                                     use_mask,use_global_mask);
-//    break;
-//  case amb3h0v :
-//    receiver = new TASCAR::Acousticmodel::receiver_amb3h0v_t(fragsize,size,falloff,render_point,render_diffuse,
-//                                                  mask.size,
-//                                                  mask.falloff,
-//                                                  use_mask,use_global_mask);
-//    break;
-//  case nsp :
-//    receiver = new TASCAR::Acousticmodel::receiver_nsp_t(fragsize,size,falloff,render_point,render_diffuse,
-//                                                 mask.size,
-//                                                 mask.falloff,
-//                                                 use_mask,use_global_mask,get_spkpos());
-//    break;
-//  }
-//}
 
 src_object_t* scene_t::add_source()
 {

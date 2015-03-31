@@ -554,17 +554,17 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
     cr->line_to( p8.x, -p8.y );
     cr->line_to( p9.x, -p9.y );
     cr->stroke();
-    if( obj->mask.active ){
+    if( obj->boundingbox.active ){
       cr->set_line_width( 0.1*msize );
-      pos_t p(obj->mask.get_location());
-      zyx_euler_t o(obj->mask.get_orientation());
-      draw_cube(p,o,obj->mask.size,cr);
-      if( obj->mask.falloff > 0 ){
+      pos_t p(obj->boundingbox.get_location());
+      zyx_euler_t o(obj->boundingbox.get_orientation());
+      draw_cube(p,o,obj->boundingbox.size,cr);
+      if( obj->boundingbox.falloff > 0 ){
         std::vector<double> dash(2);
         dash[0] = msize;
         dash[1] = msize;
         cr->set_dash(dash,0);
-        draw_cube(p,o,obj->mask.size+pos_t(2*obj->mask.falloff,2*obj->mask.falloff,2*obj->mask.falloff),cr);
+        draw_cube(p,o,obj->boundingbox.size+pos_t(2*obj->boundingbox.falloff,2*obj->boundingbox.falloff,2*obj->boundingbox.falloff),cr);
         dash[0] = 1.0;
         dash[1] = 0.0;
         cr->set_dash(dash,0);
