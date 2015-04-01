@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<session name="example" duration="42">
+  <description>one source</description>
+  <scene name="scene1" guiscale="37">
+    <src_object name="point" color="#f00000" start="1">
+      <position>0 1 -20 0
+      20 1 20 0</position>
+      <sound name="0" connect="@.0" gain="0"/>
+      <sndfile name="tc1.wav" loop="0"/>
+    </src_object>
+    <receiver name="ego" type="amb3h0v" color="#0000f0" >
+      <position>0 -8 13 0
+      22 2 0 0</position>
+      <orientation>0 0 0 0
+      22 0 0 0
+      42 1800 0 0</orientation>
+    </receiver>
+    <receiver name="nsp" type="nsp" color="#00f0f0" size_x="20" size_y="20" size_z="20" diffuse="false">
+      <speaker az="-90" el="0"/>
+      <speaker az="90" el="0"/>
+      <position>0 8 -13 0
+      40 -10 13 0</position>
+      <orientation>0 0 0 0
+      42 900 0 0</orientation>
+    </receiver>
+  </scene>
+  <module name="system" command="xterm -e 'echo 1;sleep 5'" sleep="0">
+    <at time="0" command="echo world"/>
+    <at time="5" command="echo next world"/>
+  </module>
+</session>
