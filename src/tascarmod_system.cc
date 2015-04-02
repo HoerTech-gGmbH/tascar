@@ -80,6 +80,7 @@ private:
   std::string command;
   double sleep;
   FILE* h_pipe;
+  FILE* h_atcmd;
   pid_t pid;
   fifo_t fifo;
   std::vector<at_cmd_t*> atcmds;
@@ -92,6 +93,7 @@ system_t::system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess)
   : module_base_t(xmlsrc,sess),
     sleep(0),
     h_pipe(NULL),
+    h_atcmd(NULL),
     pid(0),
     fifo(1024),
     run_service(true),
@@ -120,6 +122,11 @@ system_t::system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess)
         std::cerr << "Warning: Invalid subprocess PID." << std::endl;
       }
     }
+  }
+  if( atcmds.size() ){
+    h_atcmd = popen( "/bin/bash -i", "w" );
+    if( !h_atcmd )
+      throw TASCAR::ErrMsg("Unable to create pipe with /bin/bash");
   }
   usleep(1000000*sleep);
   run_service = true;
@@ -155,11 +162,14 @@ system_t::~system_t()
 {
   if( pid != 0 )
     kill(pid,SIGTERM);
-  fclose(h_pipe);
+  if( h_pipe )
+    fclose(h_pipe);
   run_service = false;
   pthread_join( srv_thread, NULL );
   for(std::vector<at_cmd_t*>::iterator it=atcmds.begin();it!=atcmds.end();++it)
     delete *it;
+  if( h_atcmd )
+    fclose( h_atcmd );
 }
 
 void * system_t::service(void* h)
@@ -175,9 +185,14 @@ void system_t::service()
     if( fifo.can_read() ){
       uint32_t v(fifo.read());
       //DEBUG(atcmds[v]->command);
-      int err(system(atcmds[v]->command.c_str()));
-      if( err != 0 )
-        std::cerr << "Warning: system() returned exit code " << err << std::endl;
+      if( h_atcmd ){
+        fprintf(h_atcmd,"%s\n",atcmds[v]->command.c_str());
+        fflush(h_atcmd);
+      }else
+        std::cerr << "Warning: non pipe\n";
+      //int err(system(atcmds[v]->command.c_str()));
+      //if( err != 0 )
+      //  std::cerr << "Warning: system() returned exit code " << err << std::endl;
     }
   }
 }
