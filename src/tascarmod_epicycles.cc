@@ -53,12 +53,14 @@ namespace HoS {
       applyat_time = t;
       b_applyat = true;
     };
-    void set_feedback_osc_addr(const char* s){
-      lo_addr = lo_address_new( s, "6977" );
-      lo_address_set_ttl( lo_addr, 1 );
-    }
+    //void set_feedback_osc_addr(const char* s){
+    //  lo_addr = lo_address_new( s, "6977" );
+    //  lo_address_set_ttl( lo_addr, 1 );
+    //}
     void set_par_fupdate(float f_update_){f_update=f_update_;};
     void send_phi(const char* addr){
+      //DEBUG(addr);
+      //DEBUG(_az * RAD2DEG);
       lo_send( lo_addr, addr, "f", _az * RAD2DEG );
     }
   protected:
@@ -95,14 +97,14 @@ namespace HoS {
 
 namespace OSC {
 
-  int _feedbackaddr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-  {
-    if( (argc == 1) && (types[0] == 's') ){
-      ((HoS::parameter_t*)user_data)->set_feedback_osc_addr(&(argv[0]->s));
-      return 0;
-    }
-    return 1;
-  }
+  //int _feedbackaddr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  //{
+  //  if( (argc == 1) && (types[0] == 's') ){
+  //    ((HoS::parameter_t*)user_data)->set_feedback_osc_addr(&(argv[0]->s));
+  //    return 0;
+  //  }
+  //  return 1;
+  //}
 
   int _sendphi(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
@@ -283,7 +285,7 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e)
   REGISTER_FLOAT_VAR(f_epi);
   REGISTER_FLOAT_VAR(r_epi);
   REGISTER_FLOAT_VAR_DEGREE(phi0_epi);
-  REGISTER_CALLBACK(feedbackaddr,"s");
+  //REGISTER_CALLBACK(feedbackaddr,"s");
   REGISTER_CALLBACK(sendphi,"s");
   REGISTER_CALLBACK(locate,"f");
   REGISTER_CALLBACK(apply,"f");
@@ -411,6 +413,9 @@ void epicycles_t::update(uint32_t frame,bool running)
     // add epicycles:
     float x = rho*cosf(phi) + par_current.r_epi*cosf(phi_epi);
     float y = rho*sinf(phi) + par_current.r_epi*sinf(phi_epi);
+    // calc resulting polar coordinates:
+    _az = atan2f(y,x);
+    _rho = sqrtf(x*x+y*y);
     // increment phi and phi_epi:
     phi += w_main/std::max(rho*rho,EPSf);
     while( phi > M_PI )
