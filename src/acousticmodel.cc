@@ -267,7 +267,8 @@ world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointso
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
-      acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver]));
+      if( receivers[kReceiver]->render_image )
+        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver]));
   //,std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())
 }
 
@@ -388,6 +389,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   : receivermod_t(xmlsrc),
     render_point(true),
     render_diffuse(true),
+    render_image(true),
     is_direct(true),
     use_global_mask(true),
     diffusegain(1.0),
@@ -402,6 +404,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(size);
   get_attribute_bool("point",render_point);
   get_attribute_bool("diffuse",render_diffuse);
+  get_attribute_bool("image",render_image);
   get_attribute_bool("isdirect",is_direct);
   get_attribute_bool("globalmask",use_global_mask);
   get_attribute_db("diffusegain",diffusegain);
@@ -415,6 +418,7 @@ void receiver_t::write_xml()
   SET_ATTRIBUTE(size);
   set_attribute_bool("point",render_point);
   set_attribute_bool("diffuse",render_diffuse);
+  set_attribute_bool("image",render_image);
   set_attribute_bool("isdirect",is_direct);
   set_attribute_bool("globalmask",use_global_mask);
   set_attribute_db("diffusegain",diffusegain);

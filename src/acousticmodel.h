@@ -96,6 +96,7 @@ namespace TASCAR {
       TASCAR::pos_t size;
       bool render_point;
       bool render_diffuse;
+      bool render_image;
       bool is_direct;
       bool use_global_mask;
       double diffusegain;
