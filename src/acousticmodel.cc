@@ -93,7 +93,7 @@ acoustic_model_t::~acoustic_model_t()
  */
 uint32_t acoustic_model_t::process()
 {
-  if( receiver_->render_point && receiver_->active && src_->active && (src_->direct || (!receiver_->is_direct)) ){
+  if( receiver_->render_point && receiver_->active && src_->active && (!receiver_->gain_zero) && (src_->direct || (!receiver_->is_direct)) ){
     pos_t prel;
     double nextdistance(0.0);
     double nextgain(1.0);
@@ -295,14 +295,10 @@ void world_t::process()
   uint32_t local_active_point(0);
   uint32_t local_active_diffuse(0);
   mirrormodel.process();
-  for(unsigned int k=0;k<acoustic_model.size();k++)
-    local_active_point += acoustic_model[k]->process();
-  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
-    local_active_diffuse += diffuse_acoustic_model[k]->process();
-  // now apply mask gains:
+  // calculate mask gains:
   for(uint32_t k=0;k<receivers_.size();k++){
+    double gain_inner(1.0);
     if( receivers_[k]->use_global_mask || receivers_[k]->boundingbox.active ){
-      double gain_inner(1.0);
       if( receivers_[k]->boundingbox.active ){
         shoebox_t maskbox;
         maskbox.size = receivers_[k]->boundingbox.size;
@@ -325,9 +321,17 @@ void world_t::process()
         if( c_outer > 0 )
           gain_inner *= gain_outer;
       }
-      receivers_[k]->apply_gain(gain_inner);
     }
+    receivers_[k]->set_next_gain(gain_inner);
   }
+  // calculate acoustic model:
+  for(unsigned int k=0;k<acoustic_model.size();k++)
+    local_active_point += acoustic_model[k]->process();
+  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
+    local_active_diffuse += diffuse_acoustic_model[k]->process();
+  // apply receiver gain:
+  for(uint32_t k=0;k<receivers_.size();k++)
+    receivers_[k]->apply_gain();
   active_pointsource = local_active_point;
   active_diffusesource = local_active_diffuse;
 }
@@ -380,7 +384,7 @@ uint32_t diffuse_acoustic_model_t::process()
         audio.z()[k] = gain*src_->audio.z()[k];
       }
     }
-    if( receiver_->render_diffuse && receiver_->active && src_->active ){
+    if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero) ){
       audio *= receiver_->diffusegain;
       receiver_->add_diffusesource(prel,audio,receiver_data);
       return 1;
@@ -401,9 +405,11 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     delaycomp(0.0),
     active(true),
     boundingbox(find_or_add_child("boundingbox")),
+    gain_zero(false),
     x_gain(1.0),
     dx_gain(0),
-    dt(1)
+    dt(1),
+    next_gain(1.0)
 {
   GET_ATTRIBUTE(size);
   get_attribute_bool("point",render_point);
@@ -484,19 +490,18 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
   }
-  //if( boundingbox.active ){
-  //  shoebox_t maskbox;
-  //  maskbox.size = mask.size;
-  //  mask.get_6dof(maskbox.center, maskbox.orientation);
-  //  double d(maskbox.nextpoint(position).norm());
-  //  gain *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(mask.falloff,1e-10)));
-  //}
   make_friendly_number(gain);
 }
 
-void receiver_t::apply_gain(double gain)
+void receiver_t::set_next_gain(double g)
 {
-  dx_gain = (gain-x_gain)*dt;
+  next_gain = g;
+  gain_zero = (next_gain==0) && (x_gain==0);
+}
+
+void receiver_t::apply_gain()
+{
+  dx_gain = (next_gain-x_gain)*dt;
   uint32_t ch(get_num_channels());
   if( ch > 0 ){
     uint32_t psize(outchannels[0].size());

@@ -91,7 +91,8 @@ namespace TASCAR {
       void add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t*);
       void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
-      void apply_gain(double gain);
+      void set_next_gain(double gain);
+      void apply_gain();
       // configuration/control variables:
       TASCAR::pos_t size;
       bool render_point;
@@ -108,10 +109,12 @@ namespace TASCAR {
       zyx_euler_t orientation;
       bool active;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
+      bool gain_zero;
     private:
       double x_gain;
       double dx_gain;
       float dt;
+      double next_gain;
     };
 
     class filter_coeff_t {
