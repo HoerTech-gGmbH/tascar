@@ -257,17 +257,21 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
 world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order)
   : mirrormodel(sources,reflectors,mirror_order),receivers_(receivers),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
+  // diffuse models:
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++){
       diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receivers[kReceiver]));
     }
+  // primary sources:
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
-      acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receivers[kReceiver]));
+      if( receivers[kReceiver]->render_point )
+        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receivers[kReceiver]));
+  // image sources:
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
-      if( receivers[kReceiver]->render_image )
+      if( receivers[kReceiver]->render_image && receivers[kReceiver]->render_point)
         acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver]));
   //,std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())
 }
