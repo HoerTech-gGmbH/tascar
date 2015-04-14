@@ -62,6 +62,7 @@ int main(int argc, char** argv)
     int freewheel(0);
     int autoconnect(0);
     bool b_use_transport(false);
+    bool b_use_inputfile(true);
     double start(0);
     double duration(10);
     std::vector<std::string> ports;
@@ -90,28 +91,29 @@ int main(int argc, char** argv)
       case 'd':
         duration = atof(optarg);
         b_use_transport = true;
+        b_use_inputfile = false;
         break;
       case 'h':
         usage(long_options);
         return -1;
       }
     }
-    if( !b_use_transport ){
-      if( optind < argc )
-        ifname = argv[optind++];
-    }
+    if( b_use_inputfile && (optind < argc) )
+      ifname = argv[optind++];
     while( optind < argc ){
       ports.push_back( argv[optind++] );
     }
-    if( !b_use_transport ){
-      if( ifname.size() ){
-        jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect);
-        jio.run();
-        if( b_unlink )
-          unlink(ifname.c_str());
-      }
+    if( b_use_inputfile ){
+      jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect);
+      if( b_use_transport )
+        jio.set_transport_start( start );
+      jio.run();
+      if( b_unlink )
+        unlink(ifname.c_str());
     }else{
-      jackio_t jio(start,duration,ofname,ports,jackname,freewheel,autoconnect);
+      jackio_t jio(duration,ofname,ports,jackname,freewheel,autoconnect);
+      if( b_use_transport )
+        jio.set_transport_start( start );
       jio.run();
     }
   }

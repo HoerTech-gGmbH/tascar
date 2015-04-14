@@ -53,7 +53,7 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
   }
 }
 
-jackio_t::jackio_t(double starttime, double duration,const std::string& ofname,
+jackio_t::jackio_t(double duration,const std::string& ofname,
 		   const std::vector<std::string>& ports, const std::string& jackname,int freewheel,int autoconnect)
   : jackc_transport_t(jackname),
     sf_in(NULL),
@@ -64,8 +64,8 @@ jackio_t::jackio_t(double starttime, double duration,const std::string& ofname,
     b_quit(false),
     start(false),
     freewheel_(freewheel),
-    use_transport(true),
-    startframe(get_srate()*starttime),
+    use_transport(false),
+    startframe(0),
     nframes_total(std::max(1u,uint32_t(get_srate()*duration))),
     p(ports)
 {
@@ -173,6 +173,12 @@ void jackio_t::run()
   if( freewheel_ )
     jack_set_freewheel( jc, 0 );
   deactivate();
+}
+
+void jackio_t::set_transport_start(double start)
+{
+  use_transport = true;
+  startframe = get_srate()*start;
 }
 
 /*

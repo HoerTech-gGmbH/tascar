@@ -45,8 +45,9 @@ public:
   */
   jackio_t(const std::string& ifname,const std::string& ofname,
 	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0);
-  jackio_t(double start, double duration,const std::string& ofname,
+  jackio_t(double duration,const std::string& ofname,
 	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0);
+  void set_transport_start(double start);
   ~jackio_t();
   /**
      \brief start processing
