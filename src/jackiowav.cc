@@ -17,11 +17,13 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     p(ports),
     b_cb(false)
 {
+  //DEBUG(ifname);
+  //DEBUG(ofname);
   if( !(sf_in = sf_open(ifname.c_str(),SFM_READ,&sf_inf_in)) )
     throw TASCAR::ErrMsg("unable to open input file \""+ifname+"\" for reading.");
   sf_inf_out = sf_inf_in;
   sf_inf_out.samplerate = get_srate();
-  sf_inf_out.channels = std::max(1,(int)(p.size()) - (int)(sf_inf_in.channels));
+  sf_inf_out.channels = std::max(0,(int)(p.size()) - (int)(sf_inf_in.channels));
   sf_inf_out.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT | SF_ENDIAN_FILE;
   if( autoconnect ){
     p.clear();
@@ -37,8 +39,8 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
       throw TASCAR::ErrMsg("unable to open output file");
   }
   nframes_total = sf_inf_in.frames;
-  buf_in = new float[sf_inf_in.channels * sf_inf_in.frames];
-  buf_out = new float[sf_inf_out.channels * sf_inf_in.frames];
+  buf_in = new float[std::max((sf_count_t)1,sf_inf_in.channels * sf_inf_in.frames)];
+  buf_out = new float[std::max((sf_count_t)1,sf_inf_out.channels * sf_inf_in.frames)];
   memset(buf_out,0,sizeof(float)*sf_inf_out.channels * sf_inf_in.frames);
   memset(buf_in,0,sizeof(float)*sf_inf_in.channels * sf_inf_in.frames);
   sf_readf_float(sf_in,buf_in,sf_inf_in.frames);
@@ -137,18 +139,18 @@ int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer
 void jackio_t::run()
 {
   activate();
-  if( !use_transport ){
+  //if( !use_transport ){
     for(unsigned int k=0;k<(unsigned int)sf_inf_in.channels;k++)
       if( k<p.size())
         connect_out(k,p[k]);
-  for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
-    if( k+sf_inf_in.channels < p.size() )
-      connect_in(k,p[k+sf_inf_in.channels]);
-  }else{
     for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
-      if( k < p.size() )
-        connect_in(k,p[k]);
-  }
+      if( k+sf_inf_in.channels < p.size() )
+        connect_in(k,p[k+sf_inf_in.channels]);
+  //}else{
+  //  for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
+  //    if( k < p.size() )
+  //      connect_in(k,p[k]);
+  //}
   //sleep( 1 );
   if( freewheel_ )
     jack_set_freewheel( jc, 1 );
@@ -175,10 +177,13 @@ void jackio_t::run()
   deactivate();
 }
 
-void jackio_t::set_transport_start(double start)
+void jackio_t::set_transport_start(double start_)
 {
+  //DEBUG(start_);
+  //DEBUG(startframe);
   use_transport = true;
-  startframe = get_srate()*start;
+  startframe = get_srate()*start_;
+  //DEBUG(startframe);
 }
 
 /*

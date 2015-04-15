@@ -104,7 +104,15 @@ int main(int argc, char** argv)
       ports.push_back( argv[optind++] );
     }
     if( b_use_inputfile ){
+      //DEBUG(1);
+      //DEBUG(ifname);
+      //DEBUG(ofname);
+      //DEBUG(ports.size());
+      //for(uint32_t k=0;k<ports.size();k++)
+      //  DEBUG(ports[k]);
       jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect);
+      //DEBUG(b_use_transport);
+      //DEBUG(start);
       if( b_use_transport )
         jio.set_transport_start( start );
       jio.run();
