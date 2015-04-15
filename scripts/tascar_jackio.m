@@ -76,7 +76,7 @@ function [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts, transpo
     end
   end
   sCmd = [sCmd,' ',sInPar];
-  %disp(sCmd)
+  disp(sCmd)
   [a,b] = system(['LD_LIBRARY_PATH="" ',sCmd]);
   if ~isempty(b)
     error(b);
@@ -94,9 +94,9 @@ function csPort = portname( csPort, mode )
       csNew = {};
       for k=1:numel(csPort)
 	if strcmp( mode, 'input' )
-	  csNew{k} = sprintf('system:playback_%d',csPort(k));
-	else
 	  csNew{k} = sprintf('system:capture_%d',csPort(k));
+	else
+	  csNew{k} = sprintf('system:playback_%d',csPort(k));
 	end
       end
       csPort = csNew;
