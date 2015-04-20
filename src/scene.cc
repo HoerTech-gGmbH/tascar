@@ -103,7 +103,6 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute_bool("wndsqrt",wnd_sqrt);
   dynobject_t::GET_ATTRIBUTE(maxdist);
   dynobject_t::GET_ATTRIBUTE(sincorder);
-  DEBUG(sincorder);
 }
 
 void src_door_t::write_xml()
@@ -142,7 +141,6 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
-  DEBUG(sincorder);
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,sincorder);
   geometry_update(0);
   source->nonrt_set_rect(width,height);
@@ -170,7 +168,6 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   get_attribute("name",name);
   if( name.empty() )
     throw TASCAR::ErrMsg("Invalid empty sound name.");
-  DEBUG(sincorder);
 }
 
 sound_t::sound_t(const sound_t& src)
@@ -204,7 +201,6 @@ void sound_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
-  DEBUG(sincorder);
   source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,sincorder);
 }
 
@@ -839,7 +835,6 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
       std::string meshline;
       getline(rawmesh,meshline,'\n');
       if( !meshline.empty() ){
-        //DEBUGS(meshline);
         TASCAR::Acousticmodel::reflector_t* p_reflector(new TASCAR::Acousticmodel::reflector_t());
         p_reflector->nonrt_set(TASCAR::str2vecpos(meshline));
         reflectors.push_back(p_reflector);
@@ -851,7 +846,6 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
     std::string meshline;
     getline(txtmesh,meshline,'\n');
     if( !meshline.empty() ){
-      //DEBUGS(meshline);
       TASCAR::Acousticmodel::reflector_t* p_reflector(new TASCAR::Acousticmodel::reflector_t());
       p_reflector->nonrt_set(TASCAR::str2vecpos(meshline));
       reflectors.push_back(p_reflector);
