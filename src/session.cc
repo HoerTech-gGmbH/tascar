@@ -264,6 +264,7 @@ void TASCAR::session_t::start()
 {
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
     (*imod)->configure(srate,fragsize);
+  add_output_port("sync_out");
   activate();
   started_ = true;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
@@ -271,6 +272,14 @@ void TASCAR::session_t::start()
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
       connect((*icon)->src,(*icon)->dest);
+    }
+    catch(const std::exception& e){
+      std::cerr << "Warning: " << e.what() << std::endl;
+    }
+  }
+  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl){
+    try{
+      connect(get_client_name()+":sync_out",(*ipl)->get_client_name()+":sync_in");
     }
     catch(const std::exception& e){
       std::cerr << "Warning: " << e.what() << std::endl;

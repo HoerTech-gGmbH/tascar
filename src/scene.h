@@ -180,6 +180,7 @@ namespace TASCAR {
       double distance;
       bool wnd_sqrt;
       double maxdist;
+      uint32_t sincorder;
       TASCAR::Acousticmodel::doorsource_t* get_source() { return source;};
     private:
       TASCAR::Acousticmodel::doorsource_t* source;
@@ -209,6 +210,7 @@ namespace TASCAR {
       pos_t local_position;
       double chaindist;
       double maxdist;
+      uint32_t sincorder;
       src_object_t* parent;
       std::string name;
       bool direct;

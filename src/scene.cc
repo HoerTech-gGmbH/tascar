@@ -93,6 +93,7 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
     distance(1.0),
     wnd_sqrt(false),
     maxdist(3700),
+    sincorder(0),
     source(NULL)
 {
   dynobject_t::get_attribute("width",width);
@@ -101,6 +102,8 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("distance",distance);
   dynobject_t::get_attribute_bool("wndsqrt",wnd_sqrt);
   dynobject_t::GET_ATTRIBUTE(maxdist);
+  dynobject_t::GET_ATTRIBUTE(sincorder);
+  DEBUG(sincorder);
 }
 
 void src_door_t::write_xml()
@@ -113,6 +116,7 @@ void src_door_t::write_xml()
   dynobject_t::set_attribute("distance",distance);
   dynobject_t::set_attribute_bool("wndsqrt",wnd_sqrt);
   dynobject_t::SET_ATTRIBUTE(maxdist);
+  dynobject_t::SET_ATTRIBUTE(sincorder);
 }
 
 src_door_t::~src_door_t()
@@ -138,7 +142,8 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
-  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist);
+  DEBUG(sincorder);
+  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,sincorder);
   geometry_update(0);
   source->nonrt_set_rect(width,height);
 }
@@ -150,6 +155,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   : jack_port_t(xmlsrc),local_position(0,0,0),
     chaindist(0),
     maxdist(3700),
+    sincorder(0),
     parent(parent_),
     direct(true),
     source(NULL)
@@ -159,10 +165,12 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   get_attribute("z",local_position.z);
   get_attribute("d",chaindist);
   GET_ATTRIBUTE(maxdist);
+  GET_ATTRIBUTE(sincorder);
   get_attribute_bool("direct",direct);
   get_attribute("name",name);
   if( name.empty() )
     throw TASCAR::ErrMsg("Invalid empty sound name.");
+  DEBUG(sincorder);
 }
 
 sound_t::sound_t(const sound_t& src)
@@ -170,6 +178,7 @@ sound_t::sound_t(const sound_t& src)
     local_position(src.local_position),
     chaindist(src.chaindist),
     maxdist(src.maxdist),
+    sincorder(src.sincorder),
     parent(NULL),
     name(src.name),
     direct(src.direct),
@@ -195,7 +204,8 @@ void sound_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
-  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist);
+  DEBUG(sincorder);
+  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,sincorder);
 }
 
 src_diffuse_t::~src_diffuse_t()
@@ -251,6 +261,7 @@ void jack_port_t::set_port_index(uint32_t port_index_)
 void sound_t::write_xml()
 {
   SET_ATTRIBUTE(maxdist);
+  SET_ATTRIBUTE(sincorder);
   e->set_attribute("name",name);
   if( local_position.x != 0 )
     set_attribute("x",local_position.x);

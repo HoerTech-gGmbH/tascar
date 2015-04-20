@@ -13,7 +13,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic neukom_inphase
 
 TASCARMODS = system pos2osc sampler pendulum epicycles
 
-TEST_FILES = test_ngon
+TEST_FILES = test_ngon test_sinc
 
 #
 #

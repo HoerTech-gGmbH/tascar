@@ -6,13 +6,50 @@
 
 using namespace TASCAR;
 
+sinctable_t::sinctable_t(uint32_t order, uint32_t oversampling)
+  : O(order),N(std::max(1u,(order)*oversampling)),
+    N1(N-1),
+    scale(oversampling),
+    data(new float[N])
+{
+  DEBUG(O);
+  data[0] = 1.0f;
+  for(uint32_t k=1;k<N;k++){
+    float x(M_PI*(float)k/scale);
+    data[k] = sinf(x)/x;
+  }
+  data[N1] = 0.0f;
+}
 
-varidelay_t::varidelay_t(uint32_t maxdelay, double fs, double c)
+sinctable_t::sinctable_t(const sinctable_t& src)
+  : O(src.O),
+    N(src.N),
+    N1(N-1),
+    scale(src.scale),
+    data(new float[N])
+{
+  DEBUG(O);
+  data[0] = 1.0f;
+  for(uint32_t k=1;k<N;k++){
+    float x(M_PI*(float)k/scale);
+    data[k] = sinf(x)/x;
+  }
+  data[N1] = 0.0f;
+}
+
+sinctable_t::~sinctable_t()
+{
+  delete [] data;
+}
+
+
+varidelay_t::varidelay_t(uint32_t maxdelay, double fs, double c, uint32_t order, uint32_t oversampling)
   : dline(new float[maxdelay]),
     dmax(maxdelay),
     dist2sample(fs/c),
     delay2sample(fs),
-    pos(0)
+    pos(0),
+    sinc(order,oversampling)
 {
   memset(dline,0,sizeof(float)*dmax);
 }
@@ -22,7 +59,8 @@ varidelay_t::varidelay_t(const varidelay_t& src)
     dmax(src.dmax),
     dist2sample(src.dist2sample),
     delay2sample(src.delay2sample),
-    pos(0)
+    pos(0),
+    sinc(src.sinc)
 {
   memset(dline,0,sizeof(float)*dmax);
 }

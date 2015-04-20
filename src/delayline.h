@@ -28,58 +28,94 @@
 #define DELAYLINE_H
 
 #include "audiochunks.h"
+#include <math.h>
+//#include "defs.h"
 
 namespace TASCAR {
 
-  /**
-     \brief Delay line with variable length (no subsampling)
-   */
+  class sinctable_t {
+  public:
+    sinctable_t(uint32_t order, uint32_t oversampling);
+    sinctable_t(const sinctable_t& src);
+    ~sinctable_t();
+    inline float operator()(float x) const {
+      return data[std::min((uint32_t)(fabsf(x)*scale),N1)];
+    };
+    const uint32_t O;
+  private:
+    uint32_t N;
+    uint32_t N1;
+    float scale;
+    float *data;
+  };
+
+/**
+   \brief Delay line with variable length (no subsampling)
+*/
   class varidelay_t {
   public:
-    /**
-       \param maxdelay Maximum delay in samples
-       \param fs Sampling rate
-       \param c Speed of sound
-    */
-    varidelay_t(uint32_t maxdelay, double fs, double c);
+/**
+   \param maxdelay Maximum delay in samples
+   \param fs Sampling rate
+   \param c Speed of sound
+*/
+    varidelay_t(uint32_t maxdelay, double fs, double c, uint32_t order, uint32_t oversampling);
     varidelay_t(const varidelay_t& src);
     ~varidelay_t();
-    /**
-       \brief Add a new input value to delay line
-       \param x Input value
-    */
+/**
+   \brief Add a new input value to delay line
+   \param x Input value
+*/
     void push(float x);
-    /**
-       \brief Return value based on spatial distance between input and output
-       \param dist Distance
-     */
+/**
+   \brief Return value based on spatial distance between input and output
+   \param dist Distance
+*/
     inline float get_dist(double dist){
-      return get(dist2sample*dist);
+      if( sinc.O )
+        return get_sinc(dist2sample*dist);
+      else
+        return get(dist2sample*dist);
     };
     inline float get_dist_push(double dist,float x){
       pos++;
       if( pos==dmax)
         pos = 0;
       dline[pos] = x;
-      return get(dist2sample*dist);
+      if( sinc.O )
+        return get_sinc(dist2sample*dist);
+      else
+        return get(dist2sample*dist);
     };
 
     void add_chunk(const TASCAR::wave_t& x);
-    /**
-       \brief Return value delayed by the given delay in seconds
-       \param dist delay
-     */
-    //float get_delayed(double d);
-    /**
-       \brief Return value of a specific delay
-       \param delay delay in samples
-    */
-    inline float get(uint32_t delay){
+/**
+   \brief Return value delayed by the given delay in seconds
+   \param dist delay
+*/
+//float get_delayed(double d);
+/**
+   \brief Return value of a specific delay
+   \param delay delay in samples
+*/
+    inline float get(uint32_t delay) const {
       delay = std::min(delay,dmax);
       uint32_t npos = pos+dmax-delay;
       while( npos >= dmax )
         npos -= dmax;
       return dline[npos];
+    };
+/**
+   \brief Return value of a specific delay
+   \param delay delay in samples
+*/
+    inline float get_sinc(float delay) const{
+      int32_t integerdelay(roundf(delay));
+      float subsampledelay(delay-integerdelay);
+      float rv(0.0f);
+      for(int32_t order=-sinc.O;order<=(int32_t)(sinc.O);order++)
+        rv += sinc((float)order-subsampledelay)*get(integerdelay+order);
+      return rv;
     };
   private:
     float* dline;
@@ -87,6 +123,7 @@ namespace TASCAR {
     double dist2sample;
     double delay2sample;
     uint32_t pos;
+    sinctable_t sinc;
   };
 
 }

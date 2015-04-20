@@ -316,6 +316,7 @@ void TASCAR::renderer_t::start()
         connect_out(receivermod_objects[k]->get_port_index()+ch,cn+receivermod_objects[k]->get_channel_postfix(ch),true);
     }
   }
+  add_input_port("sync_in");
   //for(uint32_t k=0;k<connections.size();k++)
   //  connect(connections[k].src,connections[k].dest,true);
 }
