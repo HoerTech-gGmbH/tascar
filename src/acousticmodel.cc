@@ -20,7 +20,6 @@ double mask_t::gain(const pos_t& p)
 pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,uint32_t sincorder_)
   : audio(chunksize), active(true), direct(true), maxdist(maxdist_), sincorder(sincorder_)
 {
-  DEBUG(sincorder_);
 }
 
 pointsource_t::~pointsource_t()
@@ -28,7 +27,7 @@ pointsource_t::~pointsource_t()
 }
 
 doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,uint32_t sincorder_)
-  : pointsource_t(chunksize,maxdist,sincorder),
+  : pointsource_t(chunksize,maxdist,sincorder_),
     falloff(1.0),
     wnd_sqrt(false)
 {
