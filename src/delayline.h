@@ -43,6 +43,7 @@ namespace TASCAR {
     };
     const uint32_t O;
   private:
+    uint32_t N0;
     uint32_t N;
     uint32_t N1;
     float scale;

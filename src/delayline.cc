@@ -7,12 +7,13 @@
 using namespace TASCAR;
 
 sinctable_t::sinctable_t(uint32_t order, uint32_t oversampling)
-  : O(order),N(std::max(1u,(order)*oversampling)),
+  : O(order),
+    N0(order*oversampling),
+    N(N0+1),
     N1(N-1),
     scale(oversampling),
     data(new float[N])
 {
-  DEBUG(O);
   data[0] = 1.0f;
   for(uint32_t k=1;k<N;k++){
     float x(M_PI*(float)k/scale);
@@ -23,12 +24,12 @@ sinctable_t::sinctable_t(uint32_t order, uint32_t oversampling)
 
 sinctable_t::sinctable_t(const sinctable_t& src)
   : O(src.O),
+    N0(src.N0),
     N(src.N),
     N1(N-1),
     scale(src.scale),
     data(new float[N])
 {
-  DEBUG(O);
   data[0] = 1.0f;
   for(uint32_t k=1;k<N;k++){
     float x(M_PI*(float)k/scale);
