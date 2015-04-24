@@ -76,7 +76,7 @@ function [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts, transpo
     end
   end
   sCmd = [sCmd,' ',sInPar];
-  disp(sCmd)
+  %disp(sCmd)
   [a,b] = system(['LD_LIBRARY_PATH="" ',sCmd]);
   if ~isempty(b)
     error(b);
