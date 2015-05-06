@@ -8,21 +8,21 @@
       <sound name="0" connect="@.0" gain="0"/>
       <sndfile name="tc1.wav" loop="0"/>
     </src_object>
-    <sinkmod name="test" sinktype="omni"/>
-    <sink name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
+    <receivermod name="test" receivertype="omni"/>
+    <receiver name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
       <position>0 -8 13 0
       22 2 0 0</position>
       <orientation>0 0 0 0
       22 0 0 0
       42 1800 0 0</orientation>
-    </sink>
-    <sink name="nsp" type="nsp" color="#00f0f0" size_x="20" size_y="20" size_z="20" diffuse="false">
+    </receiver>
+    <receiver name="nsp" type="nsp" color="#00f0f0" size_x="20" size_y="20" size_z="20" diffuse="false">
       <speaker az="-90" el="0"/>
       <speaker az="90" el="0"/>
       <position>0 8 -13 0
       40 -10 13 0</position>
       <orientation>0 0 0 0
       42 900 0 0</orientation>
-    </sink>
+    </receiver>
   </scene>
 </session>
