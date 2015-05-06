@@ -1,7 +1,7 @@
 #include "jackiowav.h"
 
 jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
-		   const std::vector<std::string>& ports, const std::string& jackname,int freewheel,int autoconnect)
+		   const std::vector<std::string>& ports, const std::string& jackname,int freewheel,int autoconnect,bool verbose)
   : jackc_transport_t(jackname),
     sf_in(NULL),
     sf_out(NULL),
@@ -15,10 +15,12 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     startframe(0),
     nframes_total(0),
     p(ports),
-    b_cb(false)
+    b_cb(false),
+    b_verbose(verbose)
 {
-  //DEBUG(ifname);
-  //DEBUG(ofname);
+  memset(&sf_inf_in,0,sizeof(sf_inf_in));
+  memset(&sf_inf_out,0,sizeof(sf_inf_out));
+  log("opening input file "+ifname);
   if( !(sf_in = sf_open(ifname.c_str(),SFM_READ,&sf_inf_in)) )
     throw TASCAR::ErrMsg("unable to open input file \""+ifname+"\" for reading.");
   sf_inf_out = sf_inf_in;
@@ -35,28 +37,34 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     p.push_back("system:capture_1");
   }
   if( ofname.size() ){
+    log("creating output file "+ofname);
     if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) )
       throw TASCAR::ErrMsg("unable to open output file");
   }
+  char c_tmp[1024];
   nframes_total = sf_inf_in.frames;
+  sprintf(c_tmp,"%d",nframes_total);
+  log("allocating memory for "+std::string(c_tmp)+" audio frames");
   buf_in = new float[std::max((sf_count_t)1,sf_inf_in.channels * sf_inf_in.frames)];
   buf_out = new float[std::max((sf_count_t)1,sf_inf_out.channels * sf_inf_in.frames)];
   memset(buf_out,0,sizeof(float)*sf_inf_out.channels * sf_inf_in.frames);
   memset(buf_in,0,sizeof(float)*sf_inf_in.channels * sf_inf_in.frames);
+  log("reading input file into memory");
   sf_readf_float(sf_in,buf_in,sf_inf_in.frames);
-  char c_tmp[100];
   for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++){
     sprintf(c_tmp,"in_%d",k+1);
+    log("adding input port "+std::string(c_tmp));
     add_input_port(c_tmp);
   }
   for(unsigned int k=0;k<(unsigned int)sf_inf_in.channels;k++){
     sprintf(c_tmp,"out_%d",k+1);
+    log("adding output port "+std::string(c_tmp));
     add_output_port(c_tmp);
   }
 }
 
 jackio_t::jackio_t(double duration,const std::string& ofname,
-		   const std::vector<std::string>& ports, const std::string& jackname,int freewheel,int autoconnect)
+		   const std::vector<std::string>& ports, const std::string& jackname,int freewheel,int autoconnect,bool verbose)
   : jackc_transport_t(jackname),
     sf_in(NULL),
     sf_out(NULL),
@@ -69,10 +77,11 @@ jackio_t::jackio_t(double duration,const std::string& ofname,
     use_transport(false),
     startframe(0),
     nframes_total(std::max(1u,uint32_t(get_srate()*duration))),
-    p(ports)
+    p(ports),
+    b_cb(false),
+    b_verbose(verbose)
 {
-  //if( !(sf_in = sf_open(ifname.c_str(),SFM_READ,&sf_inf_in)) )
-  //  throw TASCAR::ErrMsg("unable to open input file \""+ifname+"\" for reading.");
+  memset(&sf_inf_in,0,sizeof(sf_inf_in));
   memset(&sf_inf_out,0,sizeof(sf_inf_out));
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = std::max(1,(int)(p.size()));
@@ -82,28 +91,37 @@ jackio_t::jackio_t(double duration,const std::string& ofname,
     p.push_back("system:capture_1");
   }
   if( ofname.size() ){
+    log("creating output file "+ofname);
     if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) )
       throw TASCAR::ErrMsg("unable to open output file");
   }
-  //buf_in = new float[1];
+  char c_tmp[1024];
+  sprintf(c_tmp,"%d",nframes_total);
+  log("allocating memory for "+std::string(c_tmp)+" audio frames");
   buf_out = new float[sf_inf_out.channels * nframes_total];
   memset(buf_out,0,sizeof(float)*sf_inf_out.channels * nframes_total);
-  //memset(buf_in,0,sizeof(float)*sf_inf_in.channels * sf_inf_in.frames);
-  //sf_readf_float(sf_in,buf_in,sf_inf_in.frames);
-  char c_tmp[100];
   for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++){
     sprintf(c_tmp,"in_%d",k+1);
+    log("add input port "+std::string(c_tmp));
     add_input_port(c_tmp);
   }
 }
 
 jackio_t::~jackio_t()
 {
-  sf_close(sf_in);
+  log("cleaning up file handles");
+  if( sf_in ){
+    sf_close(sf_in);
+  }
   if( sf_out ){
     sf_writef_float(sf_out,buf_out,nframes_total);
     sf_close(sf_out);
   }
+  log("deallocating memory");
+  if( buf_in )
+    delete [] buf_in;
+  if( buf_out )
+    delete [] buf_out;
 }
 
 
@@ -136,25 +154,32 @@ int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer
   return 0;
 }
 
+void jackio_t::log(const std::string& msg)
+{
+  if( b_verbose )
+    std::cerr << msg << std::endl;
+}
+
 void jackio_t::run()
 {
+  log("activating jack client");
   activate();
-  //if( !use_transport ){
-    for(unsigned int k=0;k<(unsigned int)sf_inf_in.channels;k++)
-      if( k<p.size())
-        connect_out(k,p[k]);
-    for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
-      if( k+sf_inf_in.channels < p.size() )
-        connect_in(k,p[k+sf_inf_in.channels]);
-  //}else{
-  //  for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
-  //    if( k < p.size() )
-  //      connect_in(k,p[k]);
-  //}
-  //sleep( 1 );
-  if( freewheel_ )
+  for(unsigned int k=0;k<(unsigned int)sf_inf_in.channels;k++)
+    if( k<p.size()){
+      log("connecting output port to "+p[k]);
+      connect_out(k,p[k]);
+    }
+  for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
+    if( k+sf_inf_in.channels < p.size() ){
+      log("connecting input port to "+p[k+sf_inf_in.channels]);
+      connect_in(k,p[k+sf_inf_in.channels]);
+    }
+  if( freewheel_ ){
+    log("switching to freewheeling mode");
     jack_set_freewheel( jc, 1 );
+  }
   if( use_transport ){
+    log("locating to startframe");
     tp_stop();
     tp_locate(startframe);
   }
@@ -164,16 +189,22 @@ void jackio_t::run()
   }
   start = true;
   if( use_transport ){
+    log("starting transport");
     tp_start();
   }
+  log("waiting for data to complete");
   while( !b_quit ){
     usleep( 5000 );
   }
   if( use_transport ){
+    log("stopping transport");
     tp_stop();
   }
-  if( freewheel_ )
+  if( freewheel_ ){
+    log("deactivating freewheeling mode");
     jack_set_freewheel( jc, 0 );
+  }
+  log("deactivating jack client");
   deactivate();
 }
 

@@ -43,9 +43,10 @@ namespace TASCAR {
     virtual ~receivermod_base_t();
     virtual void add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
     virtual void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
-    virtual void postproc() {};
+    virtual void postproc(std::vector<wave_t>& output) {};
     virtual uint32_t get_num_channels() = 0;
     virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+    virtual void configure(double srate,uint32_t fragsize) {};
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
   protected:
   };
@@ -56,9 +57,10 @@ namespace TASCAR {
   typedef void (*receivermod_write_xml_t)(TASCAR::receivermod_base_t* h,receivermod_error_t errfun);
   typedef void (*receivermod_add_pointsource_t)(TASCAR::receivermod_base_t* h,const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*,receivermod_error_t errfun);
   typedef void (*receivermod_add_diffusesource_t)(TASCAR::receivermod_base_t* h,const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*,receivermod_error_t errfun);
-  typedef void (*receivermod_postproc_t)(TASCAR::receivermod_base_t* h,receivermod_error_t errfun);
+  typedef void (*receivermod_postproc_t)(TASCAR::receivermod_base_t* h,std::vector<wave_t>& output,receivermod_error_t errfun);
   typedef uint32_t (*receivermod_get_num_channels_t)(TASCAR::receivermod_base_t* h,receivermod_error_t errfun);
   typedef std::string (*receivermod_get_channel_postfix_t)(TASCAR::receivermod_base_t* h,uint32_t channel,receivermod_error_t errfun);
+  typedef void (*receivermod_configure_t)(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,receivermod_error_t errfun);
   typedef receivermod_base_t::data_t* (*receivermod_create_data_t)(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,receivermod_error_t errfun);
   
   class receivermod_t : public receivermod_base_t {
@@ -68,9 +70,10 @@ namespace TASCAR {
     virtual ~receivermod_t();
     virtual void add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
     virtual void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
-    virtual void postproc();
+    virtual void postproc(std::vector<wave_t>& output);
     virtual uint32_t get_num_channels();
     virtual std::string get_channel_postfix(uint32_t channel);
+    virtual void configure(double srate,uint32_t fragsize);
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   private:
     receivermod_t(const receivermod_t&);
@@ -85,6 +88,7 @@ namespace TASCAR {
     receivermod_postproc_t postproc_cb;
     receivermod_get_num_channels_t get_num_channels_cb;
     receivermod_get_channel_postfix_t get_channel_postfix_cb;
+    receivermod_configure_t configure_cb;
     receivermod_create_data_t create_data_cb;
   };
 
@@ -136,11 +140,11 @@ namespace TASCAR {
       }else                                     \
         errfun("Invalid library class pointer (add_diffusesource)."); \
     }                                           \
-    void receivermod_postproc(TASCAR::receivermod_base_t* h,TASCAR::receivermod_error_t errfun) \
+    void receivermod_postproc(TASCAR::receivermod_base_t* h,std::vector<TASCAR::wave_t>& output,TASCAR::receivermod_error_t errfun) \
     {                                           \
       x*   ptr(dynamic_cast<x*>(h));            \
       if( ptr ){                                \
-        try { ptr->postproc(); } \
+        try { ptr->postproc(output); }     \
         catch(const std::exception&e ){         \
           errfun(e.what());                     \
         }                                       \
@@ -170,6 +174,17 @@ namespace TASCAR {
       }else                                     \
         errfun("Invalid library class pointer (get_num_channel_postfix)."); \
       return "";                                \
+    }                                           \
+    void receivermod_configure(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,TASCAR::receivermod_error_t errfun) \
+    {                                           \
+      x*   ptr(dynamic_cast<x*>(h));            \
+      if( ptr ){                                \
+        try { return ptr->configure(srate,fragsize); }      \
+        catch(const std::exception&e ){         \
+          errfun(e.what());                     \
+        }                                       \
+      }else                                     \
+        errfun("Invalid library class pointer (configure)."); \
     }                                           \
     TASCAR::receivermod_base_t::data_t* receivermod_create_data(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,TASCAR::receivermod_error_t errfun) \
     {                                           \

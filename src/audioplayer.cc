@@ -217,7 +217,7 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   }
   // copy receiver output:
   for(unsigned int k=0;k<receivermod_objects.size();k++){
-    receivermod_objects[k]->postproc();
+    receivermod_objects[k]->postproc(receivermod_objects[k]->outchannels);
     //TASCAR::Acousticmodel::receiver_t* preceiver(receiver_objects[k].get_receiver());
     float gain(receivermod_objects[k]->get_gain());
     for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
@@ -262,6 +262,7 @@ void TASCAR::renderer_t::start()
   receivers.clear();
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
     TASCAR::Acousticmodel::receiver_t* receiver(*it);
+    receiver->configure(get_srate(),get_fragsize());
     receivers.push_back(receiver);
     (*it)->set_port_index(get_num_output_ports());
     for(uint32_t ch=0;ch<receiver->get_num_channels();ch++){

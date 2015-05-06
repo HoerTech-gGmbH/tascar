@@ -15,7 +15,14 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
     libdata(NULL),
     create_cb(NULL),
     destroy_cb(NULL),
-    write_xml_cb(NULL)
+    write_xml_cb(NULL),
+    add_pointsource_cb(NULL),
+    add_diffusesource_cb(NULL),
+    postproc_cb(NULL),
+    get_num_channels_cb(NULL),
+    get_channel_postfix_cb(NULL),
+    configure_cb(NULL),
+    create_data_cb(NULL)
 {
   get_attribute("type",receivertype);
   std::string libname("tascarreceiver_");
@@ -32,6 +39,7 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
     RESOLVE(postproc);
     RESOLVE(get_num_channels);
     RESOLVE(get_channel_postfix);
+    RESOLVE(configure);
     RESOLVE(create_data);
     libdata = create_cb(xmlsrc,receivermod_error);
   }
@@ -58,9 +66,9 @@ void TASCAR::receivermod_t::add_diffusesource(const pos_t& prel, const amb1wave_
   add_diffusesource_cb(libdata,prel,chunk,output,data,receivermod_error);
 }
 
-void TASCAR::receivermod_t::postproc()
+void TASCAR::receivermod_t::postproc(std::vector<wave_t>& output)
 {
-  postproc_cb(libdata,receivermod_error);
+  postproc_cb(libdata,output,receivermod_error);
 }
 
 uint32_t TASCAR::receivermod_t::get_num_channels()
@@ -71,6 +79,11 @@ uint32_t TASCAR::receivermod_t::get_num_channels()
 std::string TASCAR::receivermod_t::get_channel_postfix(uint32_t channel)
 {
   return get_channel_postfix_cb(libdata,channel,receivermod_error);
+}
+
+void TASCAR::receivermod_t::configure(double srate,uint32_t fragsize)
+{
+  configure_cb(libdata,srate,fragsize,receivermod_error);
 }
 
 TASCAR::receivermod_base_t::data_t* TASCAR::receivermod_t::create_data(double srate,uint32_t fragsize)

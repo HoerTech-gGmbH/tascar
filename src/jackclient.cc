@@ -156,11 +156,21 @@ int jackc_portless_t::xrun_callback(void *arg)
 
 void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn)
 {
+  if( inPort.size() <= port ){
+    DEBUG(port);
+    DEBUG(inPort.size());
+    throw TASCAR::ErrMsg("Input port number not available (connect_in).");
+  }
   connect(pname,jack_port_name(inPort[port]),bwarn);
 }
 
 void jackc_t::connect_out(unsigned int port,const std::string& pname,bool bwarn)
 {
+  if( outPort.size() <= port ){
+    DEBUG(port);
+    DEBUG(outPort.size());
+    throw TASCAR::ErrMsg("Output port number not available (connect_out).");
+  }
   connect(jack_port_name(outPort[port]),pname,bwarn);
 }
 

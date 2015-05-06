@@ -41,7 +41,7 @@ void usage(struct option * opt)
 int main(int argc, char** argv)
 {
   try{
-    const char *options = "fo:chus:d:";
+    const char *options = "fo:chus:d:v";
     struct option long_options[] = { 
       { "freewheeling", 0, 0, 'f' },
       { "output-file",  1, 0, 'o' },
@@ -51,6 +51,7 @@ int main(int argc, char** argv)
       { "help",         0, 0, 'h' },
       { "start",        1, 0, 's' },
       { "duration",     1, 0, 'd' },
+      { "verbose",      0, 0, 'v' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -65,6 +66,7 @@ int main(int argc, char** argv)
     bool b_use_inputfile(true);
     double start(0);
     double duration(10);
+    bool verbose(false);
     std::vector<std::string> ports;
     while( (opt = getopt_long(argc, argv, options,
                               long_options, &option_index)) != EOF){
@@ -96,6 +98,8 @@ int main(int argc, char** argv)
       case 'h':
         usage(long_options);
         return -1;
+      case 'v':
+        verbose = true;
       }
     }
     if( b_use_inputfile && (optind < argc) )
@@ -104,22 +108,14 @@ int main(int argc, char** argv)
       ports.push_back( argv[optind++] );
     }
     if( b_use_inputfile ){
-      //DEBUG(1);
-      //DEBUG(ifname);
-      //DEBUG(ofname);
-      //DEBUG(ports.size());
-      //for(uint32_t k=0;k<ports.size();k++)
-      //  DEBUG(ports[k]);
-      jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect);
-      //DEBUG(b_use_transport);
-      //DEBUG(start);
+      jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect,verbose);
       if( b_use_transport )
         jio.set_transport_start( start );
       jio.run();
       if( b_unlink )
         unlink(ifname.c_str());
     }else{
-      jackio_t jio(duration,ofname,ports,jackname,freewheel,autoconnect);
+      jackio_t jio(duration,ofname,ports,jackname,freewheel,autoconnect,verbose);
       if( b_use_transport )
         jio.set_transport_start( start );
       jio.run();

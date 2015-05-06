@@ -44,9 +44,9 @@ public:
      \param freewheel Optionally use freewheeling mode
   */
   jackio_t(const std::string& ifname,const std::string& ofname,
-	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0);
+	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0, bool verbose = false);
   jackio_t(double duration,const std::string& ofname,
-	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0);
+	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0, bool verbose = false);
   void set_transport_start(double start);
   ~jackio_t();
   /**
@@ -69,7 +69,9 @@ private:
   uint32_t nframes_total;
   std::vector<std::string> p;
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+  void log(const std::string& msg);
   bool b_cb;
+  bool b_verbose;
 };
 
 #endif

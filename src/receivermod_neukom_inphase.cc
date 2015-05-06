@@ -1,5 +1,6 @@
 #include "errorhandling.h"
 #include "scene.h"
+#include <complex.h>
 
 class neukom_inphase_t : public TASCAR::receivermod_base_t {
 public:
@@ -99,8 +100,14 @@ void neukom_inphase_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::
   double az_src(prel.azim());
   double spkng(1.0/(double)spkpos.size());
   for(unsigned int k=0;k<output.size();k++){
-    double az = az_src - spk_az[k];
-    double w = pow(cos(0.5*az),order);
+    double az(carg(cexp(I*(az_src - spk_az[k]))));
+    double w(cos(0.5*az));
+    if( w < 1e-7 )
+      w = 0;
+    else
+      w = pow(w,order);
+    //double az = az_src - spk_az[k];
+    //double w = pow(cos(0.5*az),order);
     //w /= (double)spkpos.size();
     w *= spk_gain[k]*spkng;
     d->dwp[k] = (w - d->wp[k])*d->dt;
