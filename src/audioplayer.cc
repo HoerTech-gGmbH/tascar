@@ -193,10 +193,12 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes,sounds[k]->get_gain());
+    psrc->preprocess();
   }
   for(uint32_t k=0;k<door_sources.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(door_sources[k]->get_source());
     psrc->audio.copy(inBuffer[door_sources[k]->get_port_index()],nframes,door_sources[k]->get_gain());
+    psrc->preprocess();
   }
   for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc((*it)->get_source());
@@ -205,6 +207,7 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     psrc->audio.x().copy(inBuffer[(*it)->get_port_index()+1],nframes,gain);
     psrc->audio.y().copy(inBuffer[(*it)->get_port_index()+2],nframes,gain);
     psrc->audio.z().copy(inBuffer[(*it)->get_port_index()+3],nframes,gain);
+    psrc->preprocess();
   }
   // process world:
   if( world ){

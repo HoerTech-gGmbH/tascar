@@ -9,20 +9,40 @@
 #include <lo/lo.h>
 #include "viewport.h"
 #include "tascar.h"
+#include "audioplayer.h"
 
-class source_ctl_t : public Gtk::Frame {
+class playertimeline_t : public Gtk::DrawingArea {
+public:
+  playertimeline_t();
+};
+
+class splmeter_t : public Gtk::Frame {
+public:
+  splmeter_t();
+  void update(float v);
+private:
+  Gtk::Label val;
+};
+
+class source_ctl_t : public Gtk::HBox {
 public:
   source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
   source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
   void setup();
   void on_mute();
   void on_solo();
+  void update();
+  ~source_ctl_t();
+  Gtk::Frame frame;//< frame for background
   Gtk::EventBox ebox;
-  Gtk::HBox box;
-  Gtk::Label tlabel;
-  Gtk::Label label;
+  Gtk::HBox box; //< control elements container
+  Gtk::Label tlabel; //< type label
+  Gtk::Label label; //< route label
   Gtk::ToggleButton mute;
   Gtk::ToggleButton solo;
+  Gtk::VBox meterbox;
+  std::vector<splmeter_t*> meters;
+  playertimeline_t playertimeline;
   lo_address client_addr_;
   std::string name_;
   TASCAR::Scene::scene_t* scene_;
@@ -35,6 +55,7 @@ public:
   source_panel_t(lo_address client_addr);
   source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade);
   void set_scene(TASCAR::Scene::scene_t*);
+  void update();
   std::vector<source_ctl_t*> vbuttons;
   Gtk::VBox box;
   lo_address client_addr_;
@@ -48,13 +69,16 @@ public:
   };
   scene_draw_t();
   virtual ~scene_draw_t();
-  void set_scene(TASCAR::Scene::scene_t* scene);
+  //void set_scene(TASCAR::Scene::scene_t* scene);
+  void set_scene(TASCAR::renderer_t* scene);
   void select_object(TASCAR::Scene::object_t* o);
   void set_viewport(const scene_draw_t::viewt_t& v);
   virtual void draw(Cairo::RefPtr<Cairo::Context> cr);
   void set_markersize(double msize);
   void set_blink(bool blink);
   void set_time(double t);
+  void set_print_labels(bool print_labels);
+  void set_show_acoustic_model(bool acmodel);
   double get_time() const {return time;};
 protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
@@ -71,7 +95,8 @@ protected:
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_facegroup(TASCAR::Scene::face_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  TASCAR::Scene::scene_t* scene_;
+  //TASCAR::Scene::scene_t* scene_;
+  TASCAR::renderer_t* scene_;
 public:
   viewport_t view;
 protected:
@@ -79,6 +104,8 @@ protected:
   TASCAR::Scene::object_t* selection;
   double markersize;
   bool blink;
+  bool b_print_labels;
+  bool b_acoustic_model;
 private:
   pthread_mutex_t mtx;
 };

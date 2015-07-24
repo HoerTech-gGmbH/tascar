@@ -677,6 +677,9 @@ zyx_euler_t euler_track_t::interp(double x) const
 
 void euler_track_t::write_xml( xmlpp::Element* a)
 {
+  xmlpp::Node::NodeList ch = a->get_children();
+  for(xmlpp::Node::NodeList::reverse_iterator sn=ch.rbegin();sn!=ch.rend();++sn)
+    a->remove_child(*sn);
   a->add_child_text(print(" "));
 }
 

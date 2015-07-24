@@ -8,20 +8,21 @@ using namespace TASCAR;
 
 wave_t::wave_t(uint32_t chunksize)
   : d(new float[std::max(1u,chunksize)]),
-    n(chunksize), own_pointer(true)
+    n(chunksize), own_pointer(true),
+    append_pos(0)
 {
   clear();
 }
 
 
 wave_t::wave_t(uint32_t chunksize,float* ptr)
-  : d(ptr), n(chunksize), own_pointer(false)
+  : d(ptr), n(chunksize), own_pointer(false), append_pos(0)
 {
 }
 
 wave_t::wave_t(const wave_t& src)
   : d(new float[std::max(1u,src.n)]),
-    n(src.n), own_pointer(true)
+    n(src.n), own_pointer(true), append_pos(src.append_pos)
 {
   for(uint32_t k=0;k<n;k++)
     d[k] = src.d[k];
@@ -79,7 +80,12 @@ float wave_t::rms() const
     rv += d[k]*d[k];
   if( size() > 0 )
     rv /= size();
-  return rv;
+  return sqrt(rv);
+}
+
+float wave_t::spldb() const
+{
+  return 20.0*log10(rms())-SPLREF;
 }
 
 amb1wave_t::amb1wave_t(uint32_t chunksize)
@@ -147,6 +153,22 @@ void wave_t::operator*=(const wave_t& o)
 {
   for(unsigned int k=0;k<std::min(o.n,n);k++){
     d[k] *= o.d[k];
+  }
+}
+
+void wave_t::append(const wave_t& src)
+{
+  if( src.n < n ){
+    // copy from append_pos to end:
+    uint32_t n1(std::min(n-append_pos,src.n));
+    memmove(&(d[append_pos]),src.d,n1*sizeof(float));
+    // if remainder then copy rest to beginning:
+    if( n1 < src.n )
+      memmove(d,&(src.d[n1]),(src.n-n1)*sizeof(float));
+    append_pos = (append_pos+src.n) % n;
+  }else{
+    memmove(d,&(src.d[src.n-n]),n*sizeof(float));
+    append_pos = 0;
   }
 }
 

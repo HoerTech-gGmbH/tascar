@@ -19,12 +19,15 @@ namespace TASCAR {
       virtual ~pointsource_t();
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return position; };
+      virtual void preprocess();
+      void add_rmslevel(wave_t* rmslevel_);
       wave_t audio;
       pos_t position;
       bool active;
       bool direct;
       double maxdist;
       uint32_t sincorder;
+      wave_t* rmslevel;
     };
 
     /**
@@ -54,10 +57,13 @@ namespace TASCAR {
 
     class diffuse_source_t : public shoebox_t {
     public:
-      diffuse_source_t(uint32_t chunksize);
+      diffuse_source_t(uint32_t chunksize,wave_t& rmslevel_);
+      virtual ~diffuse_source_t() {};
+      virtual void preprocess();
       amb1wave_t audio;
       double falloff;
       bool active;
+      wave_t& rmslevel;
     };
 
     class receiver_data_t {
@@ -134,6 +140,7 @@ namespace TASCAR {
       bool active;
       double reflectivity;
       double damping;
+      bool edgereflection;
     };
 
     /** \brief A mirrored source.
@@ -146,14 +153,17 @@ namespace TASCAR {
       void process();
       reflector_t* get_reflector() const { return reflector_;};
       //pos_t get_mirror_position() const { return mirror_position;};
-    private:
+    public:
       pointsource_t* src_;
       reflector_t* reflector_;
-      Acousticmodel::filter_coeff_t flt_current;
-      double dt;
-      double g, dg;
+    private:
+      //Acousticmodel::filter_coeff_t flt_current;
+      //double dt;
+      //double g, dg;
       double lpstate;
-      pos_t mirror_position;
+    public:
+      pos_t p_img;
+      pos_t p_cut;
     };
 
     /** \brief Create mirror sources from primary sources and reflectors.
@@ -186,8 +196,11 @@ namespace TASCAR {
       uint32_t process();
     protected:
       double c_;
+    public:
       pointsource_t* src_;
       receiver_t* receiver_;
+      pos_t effective_srcpos;
+    protected:
       receivermod_base_t::data_t* receiver_data;
       std::vector<obstacle_t*> obstacles_;
       wave_t audio;
@@ -249,6 +262,7 @@ namespace TASCAR {
       uint32_t get_total_diffusesource() const {return diffuse_acoustic_model.size();};
     protected:
       mirror_model_t mirrormodel;
+    public:
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
       std::vector<receiver_t*> receivers_;

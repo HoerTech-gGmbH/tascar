@@ -57,7 +57,7 @@ public:
   pdf_export_t(const std::string& scenename,const std::string& pdfname);
   ~pdf_export_t();
   void render_time(const std::vector<double>& time);
-  void render_time(TASCAR::Scene::scene_t* scene,const std::vector<double>& time);
+  void render_time(TASCAR::renderer_t* scene,const std::vector<double>& time);
 private:
   void draw(scene_draw_t::viewt_t persp);
   double time;
@@ -96,7 +96,7 @@ void pdf_export_t::render_time(const std::vector<double>& t)
     render_time(*it,t);
 }
 
-void pdf_export_t::render_time(TASCAR::Scene::scene_t* s, const std::vector<double>& t)
+void pdf_export_t::render_time(TASCAR::renderer_t* s, const std::vector<double>& t)
 {
   drawer.set_scene(s);
   //read_xml(scenename);

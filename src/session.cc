@@ -262,13 +262,13 @@ TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
 
 void TASCAR::session_t::start()
 {
-  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->configure(srate,fragsize);
   add_output_port("sync_out");
   activate();
   started_ = true;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->start();
+  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
+    (*imod)->configure(srate,fragsize);
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
       connect((*icon)->src,(*icon)->dest);

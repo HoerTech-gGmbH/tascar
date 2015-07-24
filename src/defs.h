@@ -20,6 +20,9 @@
 #define RAD2DEGf 57.29577951308232286464f
 #define EPSf 3.0e-6f
 
+#define SPLREF -93.9794
+#define SPLREFf -93.9794f
+
 
 /** 
     \brief average radius of earth in meters:

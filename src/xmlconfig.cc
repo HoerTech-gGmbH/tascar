@@ -101,6 +101,11 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::str
   e->set_attribute(name,value);
 }
 
+void TASCAR::xml_element_t::set_attribute_deg(const std::string& name,double value)
+{
+  ::set_attribute_double(e,name,value*RAD2DEG);
+}
+
 void TASCAR::xml_element_t::set_attribute(const std::string& name,double value)
 {
   set_attribute_double(e,name,value);

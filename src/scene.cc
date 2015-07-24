@@ -8,9 +8,13 @@
 #include <unistd.h>
 #include <fnmatch.h>
 #include <fstream>
+#include <complex.h>
+#include <algorithm>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
+
+#define RMSLEN 2.0
 
 /*
  * object_t
@@ -141,7 +145,10 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
+  reset_meters();
+  addmeter(RMSLEN*fs);
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,sincorder);
+  source->add_rmslevel(&(rmsmeter[0]));
   geometry_update(0);
   source->nonrt_set_rect(width,height);
 }
@@ -222,7 +229,9 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
-  source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize);
+  reset_meters();
+  addmeter(RMSLEN*fs);
+  source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize,rmsmeter[0]);
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
@@ -319,8 +328,11 @@ void src_object_t::geometry_update(double t)
 
 void src_object_t::prepare(double fs, uint32_t fragsize)
 {
+  reset_meters();
   for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
+    addmeter(RMSLEN*fs);
     it->prepare(fs,fragsize);
+    it->get_source()->add_rmslevel(&(rmsmeter.back()));
   }
   startframe = fs*starttime;
 }
@@ -448,25 +460,31 @@ void scene_t::process_active(double t)
 }
 
 spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
-  : xml_element_t(xmlsrc)
+  : xml_element_t(xmlsrc),
+    az(0.0),
+    el(0.0),
+    r(1.0),
+    gain(1.0),
+    dr(0.0)
 {
-  double az(0.0);
-  double elev(0.0);
-  double r(1.0);
-  get_attribute("az",az);
-  get_attribute("el",elev);
-  get_attribute("r",r);
-  set_sphere(r,az*DEG2RAD,elev*DEG2RAD);
+  GET_ATTRIBUTE_DEG(az);
+  GET_ATTRIBUTE_DEG(el);
+  GET_ATTRIBUTE(r);
+  GET_ATTRIBUTE(label);
+  set_sphere(r,az,el);
+  unitvector = normal();
 }
 
 void spk_pos_t::write_xml()
 {
-  if( azim() != 0.0 )
-    set_attribute("az",azim()*RAD2DEG);
-  if( elev() != 0.0 )
-    set_attribute("el",elev()*RAD2DEG);
-  if( norm() != 1.0 )
-    set_attribute("r",norm());
+  if( az != 0.0 )
+    SET_ATTRIBUTE_DEG(az);
+  if( el != 0.0 )
+    SET_ATTRIBUTE_DEG(el);
+  if( r != 1.0 )
+    SET_ATTRIBUTE(r);
+  if( !label.empty() )
+    SET_ATTRIBUTE(label);
 }
 
 mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
@@ -514,6 +532,21 @@ void receivermod_object_t::write_xml()
 void receivermod_object_t::prepare(double fs, uint32_t fragsize)
 {
   TASCAR::Acousticmodel::receiver_t::prepare(fs,fragsize);
+  reset_meters();
+  for(uint32_t k=0;k<get_num_channels();k++)
+    addmeter(RMSLEN*fs);
+}
+
+void receivermod_object_t::postproc(std::vector<wave_t>& output)
+{
+  TASCAR::Acousticmodel::receiver_t::postproc(output);
+  if( output.size() != rmsmeter.size() ){
+    DEBUG(output.size());
+    DEBUG(rmsmeter.size());
+    throw TASCAR::ErrMsg("Programming error");
+  }
+  for(uint32_t k=0;k<output.size();k++)
+    rmsmeter[k].append(output[k]);
 }
 
 void receivermod_object_t::geometry_update(double t)
@@ -626,6 +659,19 @@ std::string sound_t::get_name() const
   return name;
 }
 
+void route_t::addmeter(uint32_t frames)
+{
+  rmsmeter.push_back(wave_t(frames));
+  meterval.push_back(0);
+}
+
+const std::vector<float>& route_t::readmeter()
+{
+  for(uint32_t k=0;k<rmsmeter.size();k++)
+    meterval[k] = rmsmeter[k].spldb();
+  return meterval;
+}
+
 route_t::route_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),mute(false),solo(false)
 {
@@ -688,6 +734,7 @@ face_object_t::face_object_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("reflectivity",reflectivity);
   dynobject_t::get_attribute("damping",damping);
   dynobject_t::get_attribute("vertices",vertices);
+  dynobject_t::get_attribute_bool("edgereflection",edgereflection);
   if( vertices.size() > 2 )
     nonrt_set(vertices);
   else
@@ -716,16 +763,19 @@ void face_object_t::write_xml()
   dynobject_t::set_attribute("reflectivity",reflectivity);
   dynobject_t::set_attribute("damping",damping);
   dynobject_t::set_attribute("vertices",vertices);
+  dynobject_t::set_attribute_bool("edgereflection",edgereflection);
 }
 
 jack_port_t::jack_port_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),portname(""),
     connect(""),
     port_index(0),
-    gain(1)
+    gain(1),
+    caliblevel(50000.0)
 {
   get_attribute("connect",connect);
   get_attribute_db_float("gain",gain);
+  get_attribute_db_float("caliblevel",caliblevel);
 }
 
 void jack_port_t::set_gain_db( float g )
@@ -739,6 +789,7 @@ void jack_port_t::write_xml()
     e->set_attribute("connect",connect);
   if( gain != 0.0 )
     set_attribute_db("gain",gain);
+  set_attribute_db("caliblevel",caliblevel);
 }
 
 sndfile_info_t::sndfile_info_t(xmlpp::Element* xmlsrc)
@@ -822,11 +873,15 @@ std::vector<TASCAR::Scene::object_t*> TASCAR::Scene::scene_t::find_object(const 
 }
 
 face_group_t::face_group_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc)
+  : object_t(xmlsrc),
+    reflectivity(1.0),
+    damping(0.0),
+    edgereflection(true)
 {
   dynobject_t::GET_ATTRIBUTE(reflectivity);
   dynobject_t::GET_ATTRIBUTE(damping);
   dynobject_t::GET_ATTRIBUTE(importraw);
+  dynobject_t::get_attribute_bool("edgereflection",edgereflection);
   if( !importraw.empty() ){
     std::ifstream rawmesh(importraw.c_str());
     if( !rawmesh.good() )
@@ -869,6 +924,7 @@ void face_group_t::write_xml()
   dynobject_t::SET_ATTRIBUTE(reflectivity);
   dynobject_t::SET_ATTRIBUTE(damping);
   dynobject_t::SET_ATTRIBUTE(importraw);
+  dynobject_t::set_attribute_bool("edgereflection",edgereflection);
 }
  
 void face_group_t::geometry_update(double t)
@@ -878,6 +934,7 @@ void face_group_t::geometry_update(double t)
     (*it)->apply_rot_loc(c6dof.p,c6dof.o);
     (*it)->reflectivity = reflectivity;
     (*it)->damping = damping;
+    (*it)->edgereflection = edgereflection;
   }
 }
  
@@ -887,6 +944,85 @@ void face_group_t::process_active(double t,uint32_t anysolo)
   for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
     (*it)->active = a;
   }
+}
+
+spk_array_t::spk_array_t(xmlpp::Element* e)
+  : xml_element_t(e),
+    rmax(0),
+    rmin(0)
+{
+  read_xml(e);
+  if( !empty() ){
+    rmax = operator[](0).r;
+    rmin = rmax;
+    for(uint32_t k=1;k<size();k++){
+      if( rmax < operator[](k).r )
+        rmax = operator[](k).r;
+      if( rmin > operator[](k).r )
+        rmin = operator[](k).r;
+    }
+    for(uint32_t k=0;k<size();k++){
+      operator[](k).gain = rmax/operator[](k).r;
+      operator[](k).dr = rmax-operator[](k).r;
+    }
+  }
+  if( empty() )
+    throw TASCAR::ErrMsg("Invalid empty speaker array.");
+  didx.resize(size());
+}
+
+void spk_array_t::read_xml(xmlpp::Element* e)
+{
+  clear();
+  std::string importsrc(e->get_attribute_value("layout"));
+  if( !importsrc.empty() )
+    import_file(importsrc);
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == "speaker" )){
+      push_back(TASCAR::Scene::spk_pos_t(sne));
+    }
+  }
+}
+
+void spk_array_t::write_xml()
+{
+}
+
+void spk_array_t::import_file(const std::string& fname)
+{
+  xmlpp::DomParser domp;
+  domp.parse_file(TASCAR::env_expand(fname));
+  xmlpp::Element* r(domp.get_document()->get_root_node());
+  if( r->get_name() != "layout" )
+    throw TASCAR::ErrMsg("Invalid root node name. Expected \"layout\", got "+r->get_name()+".");
+  read_xml(r);
+}
+
+double spk_pos_t::get_rel_azim(double az_src) const
+{
+  return carg(cexp(I*(az_src - az)));
+}
+
+double spk_pos_t::get_cos_adist(pos_t src_unit) const
+{
+  return dot_prod( src_unit, unitvector );
+}
+
+bool sort_didx(const spk_array_t::didx_t& a,const spk_array_t::didx_t& b)
+{
+  return (a.d > b.d);
+}
+
+const std::vector<spk_array_t::didx_t>& spk_array_t::sort_distance(const pos_t& psrc)
+{
+  for(uint32_t k=0;k<size();++k){
+    didx[k].idx = k;
+    didx[k].d = dot_prod(psrc,operator[](k).unitvector);
+  }
+  std::sort(didx.begin(),didx.end(),sort_didx);
+  return didx;
 }
 
 /*

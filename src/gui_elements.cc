@@ -1,11 +1,35 @@
 #include "gui_elements.h"
 
+playertimeline_t::playertimeline_t()
+{
+}
+
+splmeter_t::splmeter_t()
+{
+  add(val);
+  val.set_text("-inf dB");
+  val.set_size_request( 60, -1 );
+}
+
+void splmeter_t::update(float v)
+{
+  char ctmp[256];
+  sprintf(ctmp,"%1.1f dB",v);
+  val.set_text(ctmp);
+}
+
 void scene_draw_t::draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
 {
   if( !(p1.has_infinity() || p2.has_infinity()) ){
     cr->move_to(p1.x,-p1.y);
     cr->line_to(p2.x,-p2.y);
   }
+}
+
+source_ctl_t::~source_ctl_t()
+{
+  for(uint32_t k=0;k<meters.size();k++)
+    delete meters[k];
 }
 
 source_ctl_t::source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
@@ -66,9 +90,30 @@ void source_ctl_t::setup()
     ebox.modify_bg(Gtk::STATE_NORMAL,col);
   }
 #endif
-  add(ebox);
+  frame.add(ebox);
+  frame.set_size_request( 300, -1 );
+  //add(frame);
+  pack_start( frame, Gtk::PACK_SHRINK );
+  //meterbox.set_size_request( 40, -1 );
+  //add(meterbox);
+  pack_start( meterbox, Gtk::PACK_SHRINK );
+  pack_start( playertimeline, Gtk::PACK_EXPAND_WIDGET );
+  for(uint32_t k=0;k<route_->metercnt();k++){
+    meters.push_back(new splmeter_t());
+    meterbox.add(*(meters[k]));
+  }
   mute.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_mute));
   solo.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_solo));
+}
+
+void source_ctl_t::update()
+{
+  std::vector<float> levels(route_->readmeter());
+  for(uint32_t k=0;k<meters.size();k++){
+    meters[k]->update(levels[k]);
+  }
+  mute.set_active(route_->get_mute());
+  solo.set_active(route_->get_solo());
 }
 
 void source_ctl_t::on_mute()
@@ -96,7 +141,7 @@ void source_ctl_t::on_solo()
 source_panel_t::source_panel_t(lo_address client_addr)
   : client_addr_(client_addr),use_osc(true)
 {
-  set_size_request( 300, -1 );
+  set_size_request( 600, -1 );
   add(box);
 }
 
@@ -104,8 +149,15 @@ source_panel_t::source_panel_t(lo_address client_addr)
 source_panel_t::source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
   : Gtk::ScrolledWindow(cobject),use_osc(false)
 {
-  set_size_request( 300, -1 );
+  set_size_request( 600, -1 );
   add(box);
+}
+
+void source_panel_t::update()
+{
+  for( unsigned int k=0;k<vbuttons.size();k++){
+    vbuttons[k]->update();
+  }
 }
 
 void source_panel_t::set_scene(TASCAR::Scene::scene_t* s)
@@ -135,7 +187,9 @@ scene_draw_t::scene_draw_t()
     time(0),
     selection(NULL),
     markersize(0.02),
-    blink(false)
+    blink(false),
+    b_print_labels(true),
+    b_acoustic_model(false)
 {
   pthread_mutex_init( &mtx, NULL );
 }
@@ -147,7 +201,8 @@ scene_draw_t::~scene_draw_t()
   pthread_mutex_destroy( &mtx );
 }
 
-void scene_draw_t::set_scene(TASCAR::Scene::scene_t* scene)
+//void scene_draw_t::set_scene(TASCAR::Scene::scene_t* scene)
+void scene_draw_t::set_scene(TASCAR::renderer_t* scene)
 {
   pthread_mutex_lock( &mtx );
   scene_ = scene;
@@ -204,6 +259,34 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
       std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
       for(uint32_t k=0;k<objects.size();k++)
         draw_object(objects[k],cr);
+      if( b_acoustic_model && scene_->world ){
+        cr->save();
+        cr->set_source_rgb(0,0,0);
+        cr->set_line_width( 0.1*markersize );
+        for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam=scene_->world->acoustic_model.begin();
+            iam != scene_->world->acoustic_model.end();++iam){
+          if( (*iam)->receiver_->size.is_null() && (*iam)->src_->active && (*iam)->receiver_->active){
+            //TASCAR::Acousticmodel::mirrorsource_t* mir(dynamic_cast<TASCAR::Acousticmodel::mirrorsource_t*>((*iam)->src_));
+            //pos_t psrc(view((*iam)->src_->position));
+            pos_t psrc(view((*iam)->effective_srcpos));
+            pos_t prec(view((*iam)->receiver_->position));
+            cr->save();
+            cr->set_source_rgb(0.5, 0.3, 0);
+            cr->arc(psrc.x, -psrc.y, 0.6*markersize, 0, PI2 );
+            cr->fill();
+            cr->restore();
+            //if( mir ){
+            //  pos_t pmir(view(mir->nearest_point));
+            //  draw_edge(cr,psrc,pmir);
+            //}
+            draw_edge(cr,psrc,prec);
+            //cr->move_to(psrc.x,psrc.y);
+            //cr->line_to(prec.x,prec.y);
+            cr->stroke();
+          }
+        }
+        cr->restore();
+      }
     }
     pthread_mutex_unlock( &mtx );
   }
@@ -401,9 +484,11 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
       cr->set_source_rgb(0.5, 0.5, 0.5 );
     else
       cr->set_source_rgb(0, 0, 0 );
-    if( center.z != std::numeric_limits<double>::infinity()){
-      cr->move_to( center.x + 1.1*msize, -center.y );
-      cr->show_text( obj->get_name().c_str() );
+    if( b_print_labels ){
+      if( center.z != std::numeric_limits<double>::infinity()){
+        cr->move_to( center.x + 1.1*msize, -center.y );
+        cr->show_text( obj->get_name().c_str() );
+      }
     }
     if( active ){
       cr->set_line_width( 0.1*msize );
@@ -570,9 +655,11 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
         cr->set_dash(dash,0);
       }
     }
-    cr->set_source_rgb(0, 0, 0 );
-    cr->move_to( p.x + 3.1*msize, -p.y );
-    cr->show_text( obj->get_name().c_str() );
+    if( b_print_labels ){
+      cr->set_source_rgb(0, 0, 0 );
+      cr->move_to( p.x + 3.1*msize, -p.y );
+      cr->show_text( obj->get_name().c_str() );
+    }
     cr->restore();
   }
 }
@@ -602,10 +689,12 @@ void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Ca
     f += obj->falloff;
     ngon_draw(&f,cr);
     p = view(p);
-    cr->set_source_rgb(0, 0, 0 );
-    if( p.z != std::numeric_limits<double>::infinity()){
-      cr->move_to( p.x, -p.y );
-      cr->show_text( obj->get_name().c_str() );
+    if( b_print_labels ){
+      cr->set_source_rgb(0, 0, 0 );
+      if( p.z != std::numeric_limits<double>::infinity()){
+        cr->move_to( p.x, -p.y );
+        cr->show_text( obj->get_name().c_str() );
+      }
     }
     cr->restore();
   }
@@ -633,10 +722,12 @@ void scene_draw_t::draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr
     falloff += obj->size;
     draw_cube(p,o,falloff,cr);
     p = view(p);
-    cr->set_source_rgb(0, 0, 0 );
-    if( p.z != std::numeric_limits<double>::infinity()){
-      cr->move_to( p.x, -p.y );
-      cr->show_text( obj->get_name().c_str() );
+    if( b_print_labels ){
+      cr->set_source_rgb(0, 0, 0 );
+      if( p.z != std::numeric_limits<double>::infinity()){
+        cr->move_to( p.x, -p.y );
+        cr->show_text( obj->get_name().c_str() );
+      }
     }
     cr->restore();
   }
@@ -675,9 +766,11 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Ca
         cr->set_line_width( 0.4*msize );
         cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
         ngon_draw(face,cr,true);
-        cr->set_source_rgb(0, 0, 0 );
-        cr->move_to( loc.x + 0.1*msize, -loc.y );
-        cr->show_text( face->get_name().c_str() );
+        if( b_print_labels ){
+          cr->set_source_rgb(0, 0, 0 );
+          cr->move_to( loc.x + 0.1*msize, -loc.y );
+          cr->show_text( face->get_name().c_str() );
+        }
       }
     }
     cr->restore();
@@ -718,9 +811,11 @@ void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,Cairo::RefPt
           ngon_draw_normal(*it,cr,0.2);
         cr->restore();
         //ngon_draw_normal(face,cr);
-        cr->set_source_rgb(0, 0, 0 );
-        cr->move_to( loc.x + 0.1*msize, -loc.y );
-        cr->show_text( face->get_name().c_str() );
+        if( b_print_labels ){
+          cr->set_source_rgb(0, 0, 0 );
+          cr->move_to( loc.x + 0.1*msize, -loc.y );
+          cr->show_text( face->get_name().c_str() );
+        }
       }
     }else{
       // outline:
@@ -786,6 +881,16 @@ void scene_draw_t::set_blink(bool blink_)
 void scene_draw_t::set_time(double t)
 {
   time = t;
+}
+
+void scene_draw_t::set_print_labels(bool print_labels)
+{
+  b_print_labels = print_labels;
+}
+
+void scene_draw_t::set_show_acoustic_model(bool acmodel)
+{
+  b_acoustic_model = acmodel;
 }
 
 /*

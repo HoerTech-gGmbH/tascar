@@ -80,6 +80,13 @@ int osc_set_int32(const char *path, const char *types, lo_arg **argv, int argc, 
   return 0;
 }
 
+int osc_set_uint32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'i') )
+    *(uint32_t*)(user_data) = (uint32_t)(argv[0]->i);
+  return 0;
+}
+
 int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   if( user_data && (argc == 1) && (types[0] == 'i') )
@@ -167,6 +174,11 @@ void osc_server_t::add_bool(const std::string& path,bool *data)
 void osc_server_t::add_int(const std::string& path,int32_t *data)
 {
   add_method(path,"i",osc_set_int32,data);
+}
+
+void osc_server_t::add_uint(const std::string& path,uint32_t *data)
+{
+  add_method(path,"i",osc_set_uint32,data);
 }
 
 void osc_server_t::activate()

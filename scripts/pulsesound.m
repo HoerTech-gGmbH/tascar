@@ -1,9 +1,16 @@
-function pulsesound( sInput, sOutput, vdur, bKeepLevel )
+function pulsesound( sInput, sOutput, vdur, bKeepLevel, skip )
+% PULSESOUND - create a short sound from a long one.
+%
+% Usage:
+% pulsesound( sInput, sOutput, vdur, bKeepLevel )
   if nargin < 4
     bKeepLevel = false;
   end
   if nargin < 3
     vDur = -1;
+  end
+  if nargin < 5
+    skip = 0;
   end
   y = [];
   for k=1:numel(vdur)
@@ -17,6 +24,8 @@ function pulsesound( sInput, sOutput, vdur, bKeepLevel )
     else
       dur = round(dur*fs);
     end
+    skipi = round(skip*fs);
+    x(1:skipi,:) = [];
     x(:,2:end) = [];
     x(dur+1:end) = [];
     x(end+1:dur) = 0;

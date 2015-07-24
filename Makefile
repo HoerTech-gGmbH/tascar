@@ -1,15 +1,15 @@
 #
 # main targets:
 #
-BINFILES = tascar_cli tascar_tscupdate tascar_pdf	\
-tascar_osc_jack_transport tascar_jackio
+BINFILES = tascar_cli tascar_tscupdate tascar_pdf		\
+  tascar_osc_jack_transport tascar_jackio tascar_sampler
 
 # tascar_gui tascar_sampler				\
 #tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 #tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 #tascar_tscupdate tascar_pdf
 
-RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic neukom_inphase
+RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic neukom_inphase hann vbap vbap3d
 
 TASCARMODS = system pos2osc sampler pendulum epicycles
 
@@ -56,7 +56,7 @@ audioplayer.o ringbuffer.o viewport.o sampler.o jackiowav.o cli.o
 
 #speakerlayout.o multipan.o
 
-GUIOBJECTS = gui_elements.o
+GUIOBJECTS = gui_elements.o pdfexport.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(RECEIVERMODS)) \

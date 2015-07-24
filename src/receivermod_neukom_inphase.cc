@@ -30,9 +30,7 @@ public:
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
-  std::vector<TASCAR::Scene::spk_pos_t> spkpos;
-  std::vector<double> spk_az;
-  std::vector<double> spk_gain;
+  TASCAR::Scene::spk_array_t spkpos;
   double order;
 };
 
@@ -73,25 +71,13 @@ neukom_inphase_t::data_t::~data_t()
 }
 
 neukom_inphase_t::neukom_inphase_t(xmlpp::Element* xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc)
+  : TASCAR::receivermod_base_t(xmlsrc),
+    spkpos(xmlsrc),
+    order(-1u)
 {
   GET_ATTRIBUTE(order);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "speaker" )){
-      spkpos.push_back(TASCAR::Scene::spk_pos_t(sne));
-    }
-  }
-  double maxd(0);
-  for(uint32_t k=0;k<spkpos.size();k++){
-    if( maxd < spkpos[k].norm() )
-      maxd = spkpos[k].norm();
-  }
-  for(uint32_t k=0;k<spkpos.size();k++){
-    spk_az.push_back(spkpos[k].azim());
-    spk_gain.push_back(maxd/spkpos[k].norm());
-  }
+  if( order == -1u )
+    order = 0.5*(spkpos.size()-1.0);
 }
 
 void neukom_inphase_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
@@ -100,16 +86,13 @@ void neukom_inphase_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::
   double az_src(prel.azim());
   double spkng(1.0/(double)spkpos.size());
   for(unsigned int k=0;k<output.size();k++){
-    double az(carg(cexp(I*(az_src - spk_az[k]))));
+    double az(spkpos[k].get_rel_azim(az_src));
     double w(cos(0.5*az));
     if( w < 1e-7 )
       w = 0;
     else
       w = pow(w,order);
-    //double az = az_src - spk_az[k];
-    //double w = pow(cos(0.5*az),order);
-    //w /= (double)spkpos.size();
-    w *= spk_gain[k]*spkng;
+    w *= spkpos[k].gain*spkng;
     d->dwp[k] = (w - d->wp[k])*d->dt;
   }
   for( unsigned int i=0;i<chunk.size();i++){

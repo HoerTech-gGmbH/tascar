@@ -23,12 +23,16 @@ namespace TASCAR {
     uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
     float rms() const;
+    float spldb() const;
+    void append(const wave_t& src);
     void operator*=(double v);
     void operator+=(const wave_t& o);
     void operator*=(const wave_t& src);
     float* d;
     uint32_t n;
     bool own_pointer;
+  protected:
+    uint32_t append_pos;
   };
 
   /** \brief Class for first-order-Ambisonics audio chunks
@@ -60,6 +64,7 @@ namespace TASCAR {
     ~sndfile_handle_t();
     uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_channels() const {return sf_inf.channels;};
+    uint32_t get_srate() const {return sf_inf.samplerate;};
     uint32_t readf_float( float* buf, uint32_t frames );
   private:
     SNDFILE* sfile;

@@ -7,15 +7,18 @@ public:
   public:
     data_t(uint32_t chunksize,uint32_t channels);
     virtual ~data_t();
+    // point source speaker weights:
+    float* point_w;
+    float* point_dw;
     // ambisonic weights:
-    float* w;
-    float* dw;
-    float* x;
-    float* dx;
-    float* y;
-    float* dy;
-    float* z;
-    float* dz;
+    float* diff_w;
+    float* diff_dw;
+    float* diff_x;
+    float* diff_dx;
+    float* diff_y;
+    float* diff_dy;
+    float* diff_z;
+    float* diff_dz;
     double dt;
   };
   nsp_t(xmlpp::Element* xmlsrc);
@@ -27,47 +30,46 @@ public:
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
-  std::vector<TASCAR::Scene::spk_pos_t> spkpos;
+  TASCAR::Scene::spk_array_t spkpos;
 };
 
 
 nsp_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
 {
-  w = new float[channels];
-  dw = new float[channels];
-  x = new float[channels];
-  dx = new float[channels];
-  y = new float[channels];
-  dy = new float[channels];
-  z = new float[channels];
-  dz = new float[channels];
+  point_w = new float[channels];
+  point_dw = new float[channels];
+  diff_w = new float[channels];
+  diff_dw = new float[channels];
+  diff_x = new float[channels];
+  diff_dx = new float[channels];
+  diff_y = new float[channels];
+  diff_dy = new float[channels];
+  diff_z = new float[channels];
+  diff_dz = new float[channels];
   for(uint32_t k=0;k<channels;k++)
-    w[k] = dw[k] = x[k] = dx[k] = y[k] = dy[k] = z[k] = dz[k] = 0;
+    point_w[k] = point_dw[k] = diff_w[k] = diff_dw[k] = diff_x[k] = 
+      diff_dx[k] = diff_y[k] = diff_dy[k] = diff_z[k] = diff_dz[k] = 0;
   dt = 1.0/std::max(1.0,(double)chunksize);
 }
 
 nsp_t::data_t::~data_t()
 {
-  delete [] w;
-  delete [] dw;
-  delete [] x;
-  delete [] dx;
-  delete [] y;
-  delete [] dy;
-  delete [] z;
-  delete [] dz;
+  delete [] point_w;
+  delete [] point_dw;
+  delete [] diff_w;
+  delete [] diff_dw;
+  delete [] diff_x;
+  delete [] diff_dx;
+  delete [] diff_y;
+  delete [] diff_dy;
+  delete [] diff_z;
+  delete [] diff_dz;
 }
 
 nsp_t::nsp_t(xmlpp::Element* xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc)
+  : TASCAR::receivermod_base_t(xmlsrc),
+    spkpos(xmlsrc)
 {
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "speaker" )){
-      spkpos.push_back(TASCAR::Scene::spk_pos_t(sne));
-    }
-  }
 }
 
 void nsp_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
@@ -83,10 +85,10 @@ void nsp_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chu
       dmin = dist;
     }
   for(unsigned int k=0;k<output.size();k++)
-    d->dw[k] = ((k==kmin) - d->w[k])*d->dt;
+    d->point_dw[k] = ((k==kmin) - d->point_w[k])*d->dt;
   for( unsigned int i=0;i<chunk.size();i++){
     for( unsigned int k=0;k<output.size();k++){
-      output[k][i] += (d->w[k] += d->dw[k]) * chunk[i];
+      output[k][i] += (d->point_w[k] += d->point_dw[k]) * chunk[i];
     }
   }
 }
@@ -107,19 +109,19 @@ void nsp_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_
   TASCAR::pos_t py(0,1,0);
   TASCAR::pos_t pz(0,0,1);
   for(unsigned int k=0;k<output.size();k++)
-    d->dw[k] = (0.701 - d->w[k])*d->dt;
+    d->diff_dw[k] = (0.701 - d->diff_w[k])*d->dt;
   for(unsigned int k=0;k<output.size();k++)
-    d->dx[k] = (dot_prod(px,spkpos[k]) - d->x[k])*d->dt;
+    d->diff_dx[k] = (dot_prod(px,spkpos[k]) - d->diff_x[k])*d->dt;
   for(unsigned int k=0;k<output.size();k++)
-    d->dy[k] = (dot_prod(py,spkpos[k]) - d->y[k])*d->dt;
+    d->diff_dy[k] = (dot_prod(py,spkpos[k]) - d->diff_y[k])*d->dt;
   for(unsigned int k=0;k<output.size();k++)
-    d->dz[k] = (dot_prod(pz,spkpos[k]) - d->z[k])*d->dt;
+    d->diff_dz[k] = (dot_prod(pz,spkpos[k]) - d->diff_z[k])*d->dt;
   for( unsigned int i=0;i<chunk.size();i++){
     for( unsigned int k=0;k<output.size();k++){
-      output[k][i] += (d->w[k] += d->dw[k]) * chunk.w()[i];
-      output[k][i] += (d->x[k] += d->dx[k]) * chunk.x()[i];
-      output[k][i] += (d->y[k] += d->dy[k]) * chunk.y()[i];
-      output[k][i] += (d->z[k] += d->dz[k]) * chunk.z()[i];
+      output[k][i] += (d->diff_w[k] += d->diff_dw[k]) * chunk.w()[i];
+      output[k][i] += (d->diff_x[k] += d->diff_dx[k]) * chunk.x()[i];
+      output[k][i] += (d->diff_y[k] += d->diff_dy[k]) * chunk.y()[i];
+      output[k][i] += (d->diff_z[k] += d->diff_dz[k]) * chunk.z()[i];
     }
   }
 }

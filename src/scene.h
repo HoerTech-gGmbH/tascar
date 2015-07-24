@@ -48,10 +48,17 @@ namespace TASCAR {
       void set_solo(bool b,uint32_t& anysolo);
       bool is_active(uint32_t anysolo);
       //virtual void prepare(double srate,uint32_t fragsize) {};
+      void addmeter(uint32_t frames);
+      uint32_t metercnt() const { return rmsmeter.size(); };
+      void reset_meters() { rmsmeter.clear(); };
+      const std::vector<float>& readmeter();
     private:
       std::string name;
       bool mute;
       bool solo;
+    protected:
+      std::vector<TASCAR::wave_t> rmsmeter;
+      std::vector<float> meterval;
     };
 
     class rgb_color_t {
@@ -129,6 +136,7 @@ namespace TASCAR {
       double reflectivity;
       double damping;
       std::string importraw;
+      bool edgereflection;
     };
 
     class src_object_t;
@@ -142,13 +150,14 @@ namespace TASCAR {
       void set_portname(const std::string& pn);
       std::string get_portname() const { return portname;};
       std::string get_connect() const { return connect;};
-      float get_gain() const { return gain;};
+      float get_gain() const { return gain/(2e-5f*caliblevel);};
       void set_gain_db( float g );
     private:
       std::string portname;
       std::string connect;
       uint32_t port_index;
       float gain;
+      float caliblevel;
     };
 
     class src_diffuse_t : public sndfile_object_t, public jack_port_t {
@@ -236,6 +245,37 @@ namespace TASCAR {
     public:
       spk_pos_t(xmlpp::Element*);
       void write_xml();
+      double get_rel_azim(double az_src) const;
+      double get_cos_adist(pos_t src_unit) const;
+      double az;
+      double el;
+      double r;
+      std::string label;
+      // derived parameters:
+      pos_t unitvector;
+      double gain;
+      double dr;
+    };
+
+    class spk_array_t : public xml_element_t, public std::vector<spk_pos_t> {
+    public:
+      spk_array_t(xmlpp::Element*);
+      void write_xml();
+      double get_rmax() const { return rmax;};
+      double get_rmin() const { return rmin;};
+      class didx_t {
+      public:
+        didx_t() : d(0),idx(0) {};
+        double d;
+        uint32_t idx;
+      };
+      const std::vector<didx_t>& sort_distance(const pos_t& psrc);
+    private:
+      void import_file(const std::string& fname);
+      void read_xml(xmlpp::Element* elem);
+      double rmax;
+      double rmin;
+      std::vector<didx_t> didx;
     };
 
     class receivermod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::receiver_t {
@@ -245,6 +285,7 @@ namespace TASCAR {
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
+      virtual void postproc(std::vector<wave_t>& output);
     };
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {

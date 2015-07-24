@@ -51,6 +51,7 @@ namespace TASCAR {
     std::vector<Acousticmodel::mask_t*> pmasks;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
+  public:
     Acousticmodel::world_t* world;
   public:
     double time;

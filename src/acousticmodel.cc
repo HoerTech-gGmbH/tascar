@@ -18,12 +18,23 @@ double mask_t::gain(const pos_t& p)
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,uint32_t sincorder_)
-  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), sincorder(sincorder_)
+  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), sincorder(sincorder_),rmslevel(NULL)
 {
 }
 
 pointsource_t::~pointsource_t()
 {
+}
+
+void pointsource_t::preprocess()
+{
+  if( rmslevel )
+    rmslevel->append(audio);
+}
+
+void pointsource_t::add_rmslevel(TASCAR::wave_t* r)
+{
+  rmslevel = r;
 }
 
 doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,uint32_t sincorder_)
@@ -56,11 +67,17 @@ pos_t pointsource_t::get_effective_position(const pos_t& receiverp,double& gain)
   return position;
 }
 
-diffuse_source_t::diffuse_source_t(uint32_t chunksize)
+diffuse_source_t::diffuse_source_t(uint32_t chunksize,wave_t& rmslevel_)
   : audio(chunksize),
     falloff(1.0),
-    active(true)
+    active(true),
+    rmslevel(rmslevel_)
 {
+}
+
+void diffuse_source_t::preprocess()
+{
+  rmslevel.append(audio.w());
 }
 
 acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,receiver_t* receiver,const std::vector<obstacle_t*>& obstacles)
@@ -99,11 +116,9 @@ uint32_t acoustic_model_t::process()
     double nextgain(1.0);
     // calculate relative geometry between source and receiver:
     double srcgainmod(1.0);
-    double mask_gain(1.0);
-    // 
-    pos_t effective_srcpos(src_->get_effective_position(receiver_->position,srcgainmod));
-    receiver_->update_refpoint(src_->get_physical_position(),effective_srcpos,prel,nextdistance,nextgain);
-    nextgain *= srcgainmod*mask_gain;
+    effective_srcpos = src_->get_effective_position( receiver_->position, srcgainmod );
+    receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain );
+    nextgain *= srcgainmod;
     double next_air_absorption(exp(-nextdistance*dscale));
     double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
     double dgain((nextgain-gain)*dt);
@@ -132,9 +147,9 @@ uint32_t acoustic_model_t::process()
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
   : pointsource_t(src->audio.size(),src->maxdist,src->sincorder),
     src_(src),reflector_(reflector),
-    dt(1.0/std::max(1u,src->audio.size())),
-    g(0),
-    dg(0),
+    //dt(1.0/std::max(1u,src->audio.size())),
+    //g(0),
+    //dg(0),
     lpstate(0.0)
 {
 }
@@ -147,25 +162,18 @@ void mirrorsource_t::process()
 {
   if( reflector_->active && src_->active){
     active = true;
-    pos_t nearest_point(reflector_->nearest_on_plane(src_->position));
-    // next line replaced by mirror_position:
-    //position = src_->position;
-    nearest_point -= src_->position;
-    mirror_position = nearest_point;
-    mirror_position *= 2.0;
-    mirror_position += src_->position;
-    // this line added instead of src_->position:
-    position = mirror_position;
-    double nextgain(1.0);
-    src_->get_effective_position(mirror_position,nextgain);
-    if( dot_prod(nearest_point,reflector_->get_normal())>0 )
-      dg = -g*dt;
-    else
-      dg = (nextgain-g)*dt;
+    // calculate nominal image source position:
+    p_cut = (reflector_->nearest_on_plane(src_->position));
+    p_img = p_cut;
+    p_img *= 2.0;
+    p_img -= src_->position;
+    // copy p_img to base class position:
+    position = p_img;
+    // calculate absorption/reflection:
     double c1(reflector_->reflectivity * (1.0-reflector_->damping));
     double c2(reflector_->damping);
     for(uint32_t k=0;k<audio.size();k++)
-      audio[k] = (lpstate = lpstate*c2 + (g+=dg)*src_->audio[k]*c1);
+      audio[k] = (lpstate = lpstate*c2 + src_->audio[k]*c1);
   }else{
     active = false;
   }
@@ -177,31 +185,47 @@ void mirrorsource_t::process()
    Used by diffraction model.
 
 */
-pos_t mirrorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
+pos_t mirrorsource_t::get_effective_position(const pos_t& p_rec,double& gain)
 {
-  pos_t srcpos(mirror_position);
-  pos_t pcut_receiver(reflector_->nearest_on_plane(receiverp));
-  double len_receiver(distance(pcut_receiver,receiverp));
-  pos_t pcut_src(reflector_->nearest_on_plane(srcpos));
-  double len_src(distance(pcut_src,srcpos));
-  double scale(dot_prod((pcut_receiver-receiverp).normal(),(pcut_src-srcpos).normal()));
-  double ratio(len_receiver/std::max(1e-6,(len_receiver-scale*len_src)));
-  pos_t pcut(pcut_src-pcut_receiver);
-  pcut *= ratio;
-  pcut += pcut_receiver;
-  pcut = reflector_->nearest(pcut);
-  gain = pow(std::max(0.0,dot_prod((receiverp-pcut).normal(),(pcut-srcpos).normal())),2.7);
+  // calculate orthogonal point on plane:
+  pos_t pcut_rec(reflector_->nearest_on_plane(p_rec));
+  if( dot_prod( p_rec-pcut_rec, reflector_->get_normal() ) < 0 ){
+    gain = 0;
+    return p_img;
+  }
+  if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 ){
+    gain = 0;
+    return p_img;
+  }
+  double len_receiver(distance(pcut_rec,p_rec));
+  double len_src(distance(p_cut,p_img));
+  // calculate intersection:
+  double ratio(len_receiver/std::max(1e-6,(len_receiver+len_src)));
+  pos_t p_is(p_cut-pcut_rec);
+  p_is *= ratio;
+  p_is += pcut_rec;
+  p_is = reflector_->nearest(p_is);
+  gain = pow(std::max(0.0,dot_prod((p_rec-p_is).normal(),(p_is-p_img).normal())),2.7);
   make_friendly_number(gain);
-  return srcpos;
+  if( reflector_->edgereflection ){
+    double len_img(distance(p_is,p_img));
+    pos_t p_eff((p_is-p_rec).normal());
+    p_eff *= len_img;
+    p_eff += p_is;
+    return p_eff;
+  }
+  return p_img;
 }
 
 mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
                                const std::vector<reflector_t*>& reflectors,
                                uint32_t order)
 {
-  for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
-    for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
-      mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
+  if( order > 0 ){
+    for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
+      for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
+        mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
+  }
   uint32_t num_mirrors_start(0);
   uint32_t num_mirrors_end(mirrorsource.size());
   for(uint32_t korder=1;korder<order;korder++){
@@ -224,7 +248,8 @@ mirror_model_t::~mirror_model_t()
 reflector_t::reflector_t()
   : active(true),
     reflectivity(1.0),
-    damping(0.0)
+    damping(0.0),
+    edgereflection(true)
 {
 }
 
