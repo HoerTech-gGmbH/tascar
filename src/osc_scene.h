@@ -18,15 +18,14 @@ namespace TASCAR {
     public:
       osc_scene_t(xmlpp::Element* xmlsrc);
       ~osc_scene_t();
-    protected:
-      void add_child_methods();
+      void add_child_methods(TASCAR::osc_server_t*);
     private:
-      void add_object_methods(TASCAR::Scene::object_t* o);
-      void add_route_methods(TASCAR::Scene::route_t* r);
-      void add_sound_methods(TASCAR::Scene::sound_t* s);
-      void add_diffuse_methods(TASCAR::Scene::src_diffuse_t* s);
-      void add_face_object_methods(TASCAR::Scene::face_object_t* s);
-      void add_face_group_methods(TASCAR::Scene::face_group_t* s);
+      void add_object_methods(TASCAR::osc_server_t*,TASCAR::Scene::object_t* o);
+      void add_route_methods(TASCAR::osc_server_t*,TASCAR::Scene::route_t* r);
+      void add_sound_methods(TASCAR::osc_server_t*,TASCAR::Scene::sound_t* s);
+      void add_diffuse_methods(TASCAR::osc_server_t*,TASCAR::Scene::src_diffuse_t* s);
+      void add_face_object_methods(TASCAR::osc_server_t*,TASCAR::Scene::face_object_t* s);
+      void add_face_group_methods(TASCAR::osc_server_t*,TASCAR::Scene::face_group_t* s);
       std::vector<route_solo_p_t*> vprs;
     };
 

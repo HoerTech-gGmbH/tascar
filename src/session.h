@@ -84,7 +84,7 @@ namespace TASCAR {
     std::string name;
   };
 
-  class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_transport_t {
+  class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_transport_t, public TASCAR::osc_server_t {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
@@ -120,10 +120,12 @@ namespace TASCAR {
     std::vector<std::string> get_render_output_ports() const;
     virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
     //virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
+    void unload_modules();
   protected:
     // derived variables:
     std::string session_path;
   private:
+    void add_transport_methods();
     void read_xml();
     double period_time;
     bool started_;

@@ -60,7 +60,7 @@ namespace TASCAR {
       diffuse_source_t(uint32_t chunksize,wave_t& rmslevel_);
       virtual ~diffuse_source_t() {};
       virtual void preprocess();
-      amb1wave_t audio;
+      amb1rotator_t audio;
       double falloff;
       bool active;
       wave_t& rmslevel;
@@ -96,7 +96,7 @@ namespace TASCAR {
       void prepare(double srate, uint32_t fragsize);
       void clear_output();
       void add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t*);
-      void add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, receivermod_base_t::data_t*);
+      void add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
       void set_next_gain(double gain);
       void apply_gain();
@@ -230,7 +230,7 @@ namespace TASCAR {
       diffuse_source_t* src_;
       receiver_t* receiver_;
       receivermod_base_t::data_t* receiver_data;
-      amb1wave_t audio;
+      amb1rotator_t audio;
       uint32_t chunksize;
       double dt;
       double gain;

@@ -255,6 +255,12 @@ namespace TASCAR {
       pos_t unitvector;
       double gain;
       double dr;
+      // decoder matrix:
+      void update_foa_decoder(float gain);
+      float d_w;
+      float d_x;
+      float d_y;
+      float d_z;
     };
 
     class spk_array_t : public xml_element_t, public std::vector<spk_pos_t> {
@@ -270,6 +276,7 @@ namespace TASCAR {
         uint32_t idx;
       };
       const std::vector<didx_t>& sort_distance(const pos_t& psrc);
+      void foa_decode(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output);
     private:
       void import_file(const std::string& fname);
       void read_xml(xmlpp::Element* elem);

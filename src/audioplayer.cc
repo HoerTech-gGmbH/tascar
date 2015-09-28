@@ -203,10 +203,17 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     TASCAR::Acousticmodel::diffuse_source_t* psrc((*it)->get_source());
     float gain((*it)->get_gain());
-    psrc->audio.w().copy(inBuffer[(*it)->get_port_index()],nframes,gain);
-    psrc->audio.x().copy(inBuffer[(*it)->get_port_index()+1],nframes,gain);
-    psrc->audio.y().copy(inBuffer[(*it)->get_port_index()+2],nframes,gain);
-    psrc->audio.z().copy(inBuffer[(*it)->get_port_index()+3],nframes,gain);
+    TASCAR::amb1wave_t amb1tmp(nframes,
+                               inBuffer[(*it)->get_port_index()],
+                               inBuffer[(*it)->get_port_index()+1],
+                               inBuffer[(*it)->get_port_index()+2],
+                               inBuffer[(*it)->get_port_index()+3]);
+    psrc->audio.rotate(amb1tmp,psrc->orientation,true);
+    psrc->audio *= gain;
+    //psrc->audio.w().copy(inBuffer[(*it)->get_port_index()],nframes,gain);
+    //psrc->audio.x().copy(inBuffer[(*it)->get_port_index()+1],nframes,gain);
+    //psrc->audio.y().copy(inBuffer[(*it)->get_port_index()+2],nframes,gain);
+    //psrc->audio.z().copy(inBuffer[(*it)->get_port_index()+3],nframes,gain);
     psrc->preprocess();
   }
   // process world:
@@ -291,7 +298,7 @@ void TASCAR::renderer_t::start()
   total_diffusesources = world->get_total_diffusesource();
   //
   // activate repositioning services for each object:
-  add_child_methods();
+  add_child_methods(this);
   jackc_t::activate();
   osc_server_t::activate();
   // connect jack ports of point sources:

@@ -1,5 +1,5 @@
 /**
-   \file multipan.cc
+   \file coordinates.cc
    \brief "coordinates" provide classes for coordinate handling
    \ingroup libtascar
    \author Giso Grimm

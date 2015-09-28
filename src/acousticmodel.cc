@@ -285,7 +285,8 @@ world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointso
   // diffuse models:
   for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++){
-      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receivers[kReceiver]));
+      if( receivers[kReceiver]->render_diffuse )
+        diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receivers[kReceiver]));
     }
   // primary sources:
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
@@ -399,19 +400,20 @@ uint32_t diffuse_acoustic_model_t::process()
   d = box.nextpoint(prel_nonrot).norm();
   nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
   if( !((gain==0) && (nextgain==0))){
+    audio.rotate(src_->audio,receiver_->orientation);
     double dgain((nextgain-gain)*dt);
     for(uint32_t k=0;k<chunksize;k++){
       gain+=dgain;
       if( receiver_->active && src_->active ){
-        audio.w()[k] = gain*src_->audio.w()[k];
-        audio.x()[k] = gain*src_->audio.x()[k];
-        audio.y()[k] = gain*src_->audio.y()[k];
-        audio.z()[k] = gain*src_->audio.z()[k];
+        audio.w()[k] *= gain;
+        audio.x()[k] *= gain;
+        audio.y()[k] *= gain;
+        audio.z()[k] *= gain;
       }
     }
     if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero) ){
       audio *= receiver_->diffusegain;
-      receiver_->add_diffusesource(prel,audio,receiver_data);
+      receiver_->add_diffusesource(audio,receiver_data);
       return 1;
     }
   }
@@ -487,9 +489,9 @@ void receiver_t::add_pointsource(const pos_t& prel, const wave_t& chunk, receive
 /**
    \ingroup callgraph
  */
-void receiver_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, receivermod_base_t::data_t* data)
+void receiver_t::add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t* data)
 {
-  receivermod_t::add_diffusesource(prel,chunk,outchannels,data);
+  receivermod_t::add_diffusesource(chunk,outchannels,data);
 }
 
 void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
@@ -561,6 +563,7 @@ void TASCAR::Acousticmodel::boundingbox_t::write_xml()
    \param p_src Source position
    \param p_is Intersection position
    \param p_rec Receiver position
+   \param audio Audio chunk
    \param c Speed of sound
    \param fs Sampling rate
    \param state Diffraction filter states

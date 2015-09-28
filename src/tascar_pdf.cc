@@ -1,10 +1,4 @@
 /**
-   \file tascar_draw.cc
-   \ingroup apptascar
-   \brief Draw coordinates delivered via jack
-   \author Giso Grimm
-   \date 2012
-
    \section license License (GPL)
 
    This program is free software; you can redistribute it and/or

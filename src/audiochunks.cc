@@ -93,6 +93,14 @@ amb1wave_t::amb1wave_t(uint32_t chunksize)
 {
 }
 
+amb1wave_t::amb1wave_t(uint32_t chunksize,float* pw,float* px,float* py,float* pz)
+  : w_(chunksize,pw),
+    x_(chunksize,px),
+    y_(chunksize,py),
+    z_(chunksize,pz)
+{
+}
+
 void amb1wave_t::clear()
 {
   w_.clear();
@@ -170,6 +178,95 @@ void wave_t::append(const wave_t& src)
     memmove(d,&(src.d[src.n-n]),n*sizeof(float));
     append_pos = 0;
   }
+}
+
+amb1rotator_t::amb1rotator_t(uint32_t chunksize)
+  : amb1wave_t(chunksize),
+    wxx(1), wxy(0), wxz(0), wyx(0), wyy(1), wyz(0), wzx(0), wzy(0), wzz(1), 
+    dt(1.0/(double)chunksize)
+{
+}
+
+amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,const zyx_euler_t& o,bool invert)
+{
+  float dxx;
+  float dxy;
+  float dxz;
+  float dyx;
+  float dyy;
+  float dyz;
+  float dzx;
+  float dzy;
+  float dzz;
+  if( invert ){
+    double cosy(cos(o.y));
+    double siny(sin(-o.y));
+    double cosz(cos(o.z));
+    double sinz(sin(-o.z));
+    double sinx(sin(-o.x));
+    double cosx(cos(o.x));
+    double sinxsiny(sinx*siny);
+    double cosxsiny(cosx*siny);
+    dxx = (cosz*cosy - wxx)*dt;
+    dxy = (sinz*cosy - wxy)*dt;
+    dxz = (siny - wxz)*dt;
+    dyx = (-cosz*sinxsiny-sinz*cosx - wyx)*dt;
+    dyy = (cosz*cosx-sinz*sinxsiny - wyy)*dt;
+    dyz = (cosy*sinx - wyz)*dt;
+    dzx = (-cosz*cosxsiny+sinz*sinx - wzx)*dt;
+    dzy = (-cosz*sinx-sinz*cosxsiny - wzy)*dt;
+    dzz = (cosy*cosx - wzz)*dt;
+  }else{
+    // 1, 0, 0
+    // rot_z: cosz, sinz, 0
+    // rot_y: cosy*cosz, sinz, siny*cosz
+    // rot_x: cosy*cosz, cosx*sinz-sinx*siny*cosz, cosx*siny*cosz+sinx*sinz
+
+    // 0, 1, 0
+    // rot_z: -sinz, cosz, 0
+    // rot_y: -cosy*sinz, cosz, -siny*sinz
+    // rot_x: -cosy*sinz, cosx*cosz+sinx*siny*sinz, -cosx*siny*sinz + sinx*cosz
+
+    // 0, 0, 1
+    // rot_z: 0, 0, 1
+    // rot_y: -siny, 0, cosy
+    // rot_x: -siny, -sinx*cosy, cosx*cosy
+    double cosy(cos(o.y));
+    double cosz(cos(o.z));
+    double cosx(cos(o.x));
+    double sinz(sin(o.z));
+    double siny(sin(o.y));
+    double sinx(sin(o.x));
+    double sinxsiny(sinx*siny);
+    dxx = (cosy*cosz - wxx)*dt;
+    dxy = (cosx*sinz-sinxsiny*cosz - wxy)*dt;
+    dxz = (cosx*siny*cosz+sinx*sinz - wxz)*dt;
+    dyx = (-cosy*sinz - wyx)*dt;
+    dyy = (cosx*cosz+sinxsiny*sinz - wyy)*dt;
+    dyz = (-cosx*siny*sinz+sinx*cosz - wyz)*dt;
+    dzx = (-siny - wzx)*dt;
+    dzy = (-sinx*cosy - wzy)*dt;
+    dzz = (cosx*cosy - wzz)*dt;
+  }
+  w_.copy(src.w());
+  float *p_src_x(src.x().d);
+  float *p_src_y(src.y().d);
+  float *p_src_z(src.z().d);
+  float *p_x(x_.d);
+  float *p_y(y_.d);
+  float *p_z(z_.d);
+  for(uint32_t k=0;k<w_.n;++k){
+    *p_x = *p_src_x*(wxx+=dxx) + *p_src_y*(wxy+=dxy) + *p_src_z*(wxz+=dxz);
+    *p_y = *p_src_x*(wyx+=dyx) + *p_src_y*(wyy+=dyy) + *p_src_z*(wyz+=dyz);
+    *p_z = *p_src_x*(wzx+=dzx) + *p_src_y*(wzy+=dzy) + *p_src_z*(wzz+=dzz);
+    ++p_x;
+    ++p_y;
+    ++p_z;
+    ++p_src_x;
+    ++p_src_y;
+    ++p_src_z;
+  }
+  return *this;
 }
 
 /*

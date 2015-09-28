@@ -61,9 +61,9 @@ void TASCAR::receivermod_t::add_pointsource(const pos_t& prel, const wave_t& chu
   add_pointsource_cb(libdata,prel,chunk,output,data,receivermod_error);
 }
 
-void TASCAR::receivermod_t::add_diffusesource(const pos_t& prel, const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
+void TASCAR::receivermod_t::add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
 {
-  add_diffusesource_cb(libdata,prel,chunk,output,data,receivermod_error);
+  add_diffusesource_cb(libdata,chunk,output,data,receivermod_error);
 }
 
 void TASCAR::receivermod_t::postproc(std::vector<wave_t>& output)

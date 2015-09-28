@@ -28,7 +28,7 @@ def faceValues(face, mesh, matrix):
 def faceToLine(face):
     return " ".join([("%.6f %.6f %.6f" % v) for v in face] + ["\n"])
 
-def write(obj,filepath):
+def write_mesh(obj,filepath):
   #scene = bpy.context.scene
   faces = []
   me = obj.data
@@ -43,7 +43,17 @@ def write(obj,filepath):
   # write the faces to a file
   file = open(filepath, "w")
   for face in faces:
-      file.write(faceToLine(face))
+    file.write(faceToLine(face))
+  file.close()
+
+def write_track(obj,filepath):
+  matrix = obj.matrix_world.copy()
+  file = open(filepath, "w")
+  t = 0
+  for vert in obj.data.splines[0].points:
+    co = matrix * vert.co
+    file.write( '%f,%f,%f,%f\n' % (t,co.x, co.y, co.z) )
+    t = t+1
   file.close()
 
 #
@@ -52,7 +62,9 @@ def write(obj,filepath):
 base = os.path.basename(bpy.data.filepath)[0:-6]
 for obj in bpy.data.objects:
   if ( obj.type =='MESH'):
-    write(obj,base+'_'+obj.name+'.raw')
+    write_mesh(obj,base+'_'+obj.name+'.raw')
+  if ( obj.type =='CURVE'):
+    write_track(obj,base+'_'+obj.name+'.csv')
 
 # Local Variables:
 # python-indent-offset: 2

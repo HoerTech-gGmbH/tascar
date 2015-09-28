@@ -25,7 +25,7 @@ public:
   virtual ~neukom_inphase_t() {};
   void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -102,38 +102,39 @@ void neukom_inphase_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::
   }
 }
 
-void neukom_inphase_t::add_diffusesource(const TASCAR::pos_t& prel, const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void neukom_inphase_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
-  data_t* d((data_t*)sd);
-  TASCAR::pos_t psrc(prel.normal());
-  uint32_t kmin(0);
-  double dmin(distance(psrc,spkpos[kmin]));
-  double dist(0);
-  double spkng(1.0/(double)spkpos.size());
-  for(unsigned int k=1;k<output.size();k++)
-    if( (dist = distance(psrc,spkpos[k]))<dmin ){
-      kmin = k;
-      dmin = dist;
-    }
-  TASCAR::pos_t px(1,0,0);
-  TASCAR::pos_t py(0,1,0);
-  TASCAR::pos_t pz(0,0,1);
-  for(unsigned int k=0;k<output.size();k++)
-    d->dw[k] = (0.701*spkng - d->w[k])*d->dt;
-  for(unsigned int k=0;k<output.size();k++)
-    d->dx[k] = (dot_prod(px,spkpos[k])*spkng - d->x[k])*d->dt;
-  for(unsigned int k=0;k<output.size();k++)
-    d->dy[k] = (dot_prod(py,spkpos[k])*spkng - d->y[k])*d->dt;
-  for(unsigned int k=0;k<output.size();k++)
-    d->dz[k] = (dot_prod(pz,spkpos[k])*spkng - d->z[k])*d->dt;
-  for( unsigned int i=0;i<chunk.size();i++){
-    for( unsigned int k=0;k<output.size();k++){
-      output[k][i] += (d->w[k] += d->dw[k]) * chunk.w()[i];
-      output[k][i] += (d->x[k] += d->dx[k]) * chunk.x()[i];
-      output[k][i] += (d->y[k] += d->dy[k]) * chunk.y()[i];
-      output[k][i] += (d->z[k] += d->dz[k]) * chunk.z()[i];
-    }
-  }
+  spkpos.foa_decode(chunk,output);
+  //data_t* d((data_t*)sd);
+  //TASCAR::pos_t psrc(prel.normal());
+  //uint32_t kmin(0);
+  //double dmin(distance(psrc,spkpos[kmin]));
+  //double dist(0);
+  //double spkng(1.0/(double)spkpos.size());
+  //for(unsigned int k=1;k<output.size();k++)
+  //  if( (dist = distance(psrc,spkpos[k]))<dmin ){
+  //    kmin = k;
+  //    dmin = dist;
+  //  }
+  //TASCAR::pos_t px(1,0,0);
+  //TASCAR::pos_t py(0,1,0);
+  //TASCAR::pos_t pz(0,0,1);
+  //for(unsigned int k=0;k<output.size();k++)
+  //  d->dw[k] = (0.701*spkng - d->w[k])*d->dt;
+  //for(unsigned int k=0;k<output.size();k++)
+  //  d->dx[k] = (dot_prod(px,spkpos[k])*spkng - d->x[k])*d->dt;
+  //for(unsigned int k=0;k<output.size();k++)
+  //  d->dy[k] = (dot_prod(py,spkpos[k])*spkng - d->y[k])*d->dt;
+  //for(unsigned int k=0;k<output.size();k++)
+  //  d->dz[k] = (dot_prod(pz,spkpos[k])*spkng - d->z[k])*d->dt;
+  //for( unsigned int i=0;i<chunk.size();i++){
+  //  for( unsigned int k=0;k<output.size();k++){
+  //    output[k][i] += (d->w[k] += d->dw[k]) * chunk.w()[i];
+  //    output[k][i] += (d->x[k] += d->dx[k]) * chunk.x()[i];
+  //    output[k][i] += (d->y[k] += d->dy[k]) * chunk.y()[i];
+  //    output[k][i] += (d->z[k] += d->dz[k]) * chunk.z()[i];
+  //  }
+  //}
 }
 
 uint32_t neukom_inphase_t::get_num_channels()
@@ -144,7 +145,7 @@ uint32_t neukom_inphase_t::get_num_channels()
 std::string neukom_inphase_t::get_channel_postfix(uint32_t channel) const
 {
   char ctmp[1024];
-  sprintf(ctmp,".%d",channel);
+  sprintf(ctmp,".%d%s",channel,spkpos[channel].label.c_str());
   return ctmp;
 }
 

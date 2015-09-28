@@ -40,7 +40,7 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
     update_cb = (module_update_t)dlsym(lib,"tascar_update");
     configure_cb = (module_configure_t)dlsym(lib,"tascar_configure");
-    libdata = create_cb(xmlsrc,session,module_error);
+    libdata = create_cb(xmlsrc, session, module_error);
   }
   catch( ... ){
     dlclose(lib);
@@ -110,6 +110,7 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
 TASCAR::session_t::session_t()
   : xml_element_t(doc->get_root_node()),
     jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
+    osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port")),
     name("tascar"),
     duration(60),
     loop(false),
@@ -123,12 +124,15 @@ TASCAR::session_t::session_t()
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   read_xml();
+  add_transport_methods();
+  osc_server_t::activate();
 }
 
 TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : xml_doc_t(filename_or_data,t),
     xml_element_t(doc->get_root_node()),
     jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
+    osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port")),
     name("tascar"),
     duration(60),
     loop(false),
@@ -151,6 +155,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   read_xml();
+  add_transport_methods();
+  osc_server_t::activate();
 }
 
 void TASCAR::session_t::read_xml()
@@ -204,8 +210,17 @@ void TASCAR::session_t::write_xml()
     (*it)->write_xml();
 }
 
+void TASCAR::session_t::unload_modules()
+{
+  std::vector<TASCAR::module_t*> lmodules(modules);  
+  modules.clear();
+  for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
+    delete (*it);
+}
+
 TASCAR::session_t::~session_t()
 {
+  osc_server_t::deactivate();
   if( started_ )
     stop();
   for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
@@ -233,6 +248,7 @@ TASCAR::Scene::scene_t* TASCAR::session_t::add_scene(xmlpp::Element* src)
   if( !src )
     src = e->add_child("scene");
   player.push_back(new TASCAR::scene_player_t(src));
+  player.back()->add_child_methods(this);
   return player.back();
 }
 
@@ -263,7 +279,7 @@ TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
 void TASCAR::session_t::start()
 {
   add_output_port("sync_out");
-  activate();
+  jackc_transport_t::activate();
   started_ = true;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->start();
@@ -301,7 +317,7 @@ void TASCAR::session_t::stop()
 {
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->stop();
-  deactivate();
+  jackc_transport_t::deactivate();
   started_ = false;
 }
 
@@ -481,6 +497,65 @@ void TASCAR::actor_module_t::add_orientation(const TASCAR::zyx_euler_t& o)
 {
   for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
     it->obj->dorientation += o;
+}
+
+namespace OSCSession {
+
+  int _locate(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 1) && (types[0] == 'f') ){
+      ((TASCAR::session_t*)user_data)->tp_locate(argv[0]->f);
+      return 0;
+    }
+    return 1;
+  }
+
+  int _locatei(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 1) && (types[0] == 'i') ){
+      ((TASCAR::session_t*)user_data)->tp_locate((uint32_t)(argv[0]->i));
+      return 0;
+    }
+    return 1;
+  }
+
+  int _stop(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 0) ){
+      ((TASCAR::session_t*)user_data)->tp_stop();
+      return 0;
+    }
+    return 1;
+  }
+
+  int _start(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 0) ){
+      ((TASCAR::session_t*)user_data)->tp_start();
+      return 0;
+    }
+    return 1;
+  }
+
+  int _unload_modules(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 0) ){
+      ((TASCAR::session_t*)user_data)->unload_modules();
+      return 0;
+    }
+    return 0;
+  }
+
+}
+
+
+void TASCAR::session_t::add_transport_methods()
+{
+  osc_server_t::add_method("/transport/locate","f",OSCSession::_locate,this);
+  osc_server_t::add_method("/transport/locatei","i",OSCSession::_locatei,this);
+  osc_server_t::add_method("/transport/start","",OSCSession::_start,this);
+  osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
+  osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);
 }
 
 /*

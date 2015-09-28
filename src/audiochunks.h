@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <sndfile.h>
 #include <string>
+#include "coordinates.h"
 
 namespace TASCAR {
 
@@ -40,6 +41,7 @@ namespace TASCAR {
   class amb1wave_t {
   public:
     amb1wave_t(uint32_t chunksize);
+    amb1wave_t(uint32_t chunksize,float* pw,float* px,float* py,float* pz);
     inline wave_t& w(){return w_;};
     inline wave_t& x(){return x_;};
     inline wave_t& y(){return y_;};
@@ -56,6 +58,14 @@ namespace TASCAR {
     wave_t x_;
     wave_t y_;
     wave_t z_;
+  };
+
+  class amb1rotator_t : public amb1wave_t {
+  public:
+    amb1rotator_t(uint32_t chunksize);
+    amb1rotator_t& rotate(const amb1wave_t& src,const TASCAR::zyx_euler_t& o,bool invert=false);
+  private:
+    double wxx, wxy, wxz, wyx, wyy, wyz, wzx, wzy, wzz, dt;
   };
 
   class sndfile_handle_t {

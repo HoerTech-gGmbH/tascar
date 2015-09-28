@@ -465,7 +465,11 @@ spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
     el(0.0),
     r(1.0),
     gain(1.0),
-    dr(0.0)
+    dr(0.0),      
+    d_w(0.0f),
+    d_x(0.0f),
+    d_y(0.0f),
+    d_z(0.0f)
 {
   GET_ATTRIBUTE_DEG(az);
   GET_ATTRIBUTE_DEG(el);
@@ -473,6 +477,19 @@ spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(label);
   set_sphere(r,az,el);
   unitvector = normal();
+  update_foa_decoder(1.0f);
+}
+
+void spk_pos_t::update_foa_decoder(float gain)
+{
+  // update of FOA decoder matrix:
+  TASCAR::pos_t px(1,0,0);
+  TASCAR::pos_t py(0,1,0);
+  TASCAR::pos_t pz(0,0,1);
+  d_w = sqrtf(0.5f) * gain;
+  d_x = dot_prod(px,unitvector) * gain;
+  d_y = dot_prod(py,unitvector) * gain;
+  d_z = dot_prod(pz,unitvector) * gain;
 }
 
 void spk_pos_t::write_xml()
@@ -969,6 +986,9 @@ spk_array_t::spk_array_t(xmlpp::Element* e)
   if( empty() )
     throw TASCAR::ErrMsg("Invalid empty speaker array.");
   didx.resize(size());
+  for(uint32_t k=0;k<size();k++){
+    operator[](k).update_foa_decoder(1.0f/size());
+  }
 }
 
 void spk_array_t::read_xml(xmlpp::Element* e)
@@ -1023,6 +1043,24 @@ const std::vector<spk_array_t::didx_t>& spk_array_t::sort_distance(const pos_t& 
   }
   std::sort(didx.begin(),didx.end(),sort_didx);
   return didx;
+}
+
+void spk_array_t::foa_decode(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output)
+{
+  uint32_t channels(size());
+  if( output.size() != channels ){
+    throw TASCAR::ErrMsg("Invalid size of speaker array");
+  }
+  uint32_t N(chunk.size());
+  for( uint32_t t=0; t<N; ++t ){
+    for( uint32_t ch=0; ch<channels; ++ch ){
+      output[ch][t] += operator[](ch).d_w * chunk.w()[t];
+      output[ch][t] += operator[](ch).d_x * chunk.x()[t];
+      output[ch][t] += operator[](ch).d_y * chunk.y()[t];
+      output[ch][t] += operator[](ch).d_z * chunk.z()[t];
+    }
+  }
+
 }
 
 /*
