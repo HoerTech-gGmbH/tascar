@@ -289,12 +289,18 @@ void TASCAR::renderer_t::start()
         rit !=(*it)->reflectors.end();++rit)
       reflectors.push_back(*rit);
   }
+  obstacles.clear();
+  for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it){
+    for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator rit=(*it)->obstacles.begin();
+        rit !=(*it)->obstacles.end();++rit)
+      obstacles.push_back(*rit);
+  }
   pmasks.clear();
   for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it){
     pmasks.push_back(*it);
   }
   // create the world, before first process callback is called:
-  world = new Acousticmodel::world_t(c,get_srate(),get_fragsize(),sources,diffusesources,reflectors,receivers,pmasks,mirrororder);
+  world = new Acousticmodel::world_t(c,get_srate(),get_fragsize(),sources,diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder);
   total_pointsources = world->get_total_pointsource();
   total_diffusesources = world->get_total_diffusesource();
   //

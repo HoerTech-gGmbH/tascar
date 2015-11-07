@@ -47,6 +47,7 @@ namespace TASCAR {
     std::vector<Acousticmodel::pointsource_t*> sources;
     std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;
+    std::vector<Acousticmodel::obstacle_t*> obstacles;
     std::vector<Acousticmodel::receiver_t*> receivers;
     std::vector<Acousticmodel::mask_t*> pmasks;
     // jack callback:

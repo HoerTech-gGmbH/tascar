@@ -94,6 +94,7 @@ protected:
   virtual void draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_facegroup(TASCAR::Scene::face_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   //TASCAR::Scene::scene_t* scene_;
   TASCAR::renderer_t* scene_;

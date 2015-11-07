@@ -82,6 +82,7 @@ void diffuse_source_t::preprocess()
 
 acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,receiver_t* receiver,const std::vector<obstacle_t*>& obstacles)
   : c_(c),
+    fs_(fs),
     src_(src),
     receiver_(receiver),
     receiver_data(receiver_->create_data(fs,chunksize)),
@@ -99,6 +100,7 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
   pos_t prel;
   receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain);
   gain = 1.0;
+  vstate.resize(obstacles_.size());
 }
 
 acoustic_model_t::~acoustic_model_t()
@@ -132,7 +134,7 @@ uint32_t acoustic_model_t::process()
     //  DEBUG(dairabsorption);
     //  DEBUG(srcgainmod);
     //}
-    for(uint32_t k=0;k<chunksize;k++){
+    for(uint32_t k=0;k<chunksize;++k){
       distance+=ddistance;
       gain+=dgain;
       float c1(air_absorption+=dairabsorption);
@@ -143,6 +145,15 @@ uint32_t acoustic_model_t::process()
       make_friendly_number(airabsorption_state);
       audio[k] = airabsorption_state;
     }
+    // calculate obstacles:
+    for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
+      obstacle_t* p_obj(obstacles_[kobj]);
+      if( p_obj->active ){
+        // apply diffraction model:
+        p_obj->process(effective_srcpos,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
+      }
+    }
+    // end obstacles
     if( ((gain!=0)||(dgain!=0)) ){
       //if( first ){
       //  DEBUG(audio.spldb());
@@ -193,7 +204,7 @@ void mirrorsource_t::process()
     // calculate absorption/reflection:
     double c1(reflector_->reflectivity * (1.0-reflector_->damping));
     double c2(reflector_->damping);
-    for(uint32_t k=0;k<audio.size();k++)
+    for(uint32_t k=0;k<audio.size();++k)
       audio[k] = (lpstate = lpstate*c2 + src_->audio[k]*c1);
   }else{
     active = false;
@@ -243,15 +254,15 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
                                uint32_t order)
 {
   if( order > 0 ){
-    for(uint32_t ksrc=0;ksrc<pointsources.size();ksrc++)
-      for(uint32_t kmir=0;kmir<reflectors.size();kmir++)
+    for(uint32_t ksrc=0;ksrc<pointsources.size();++ksrc)
+      for(uint32_t kmir=0;kmir<reflectors.size();++kmir)
         mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
   }
   uint32_t num_mirrors_start(0);
   uint32_t num_mirrors_end(mirrorsource.size());
-  for(uint32_t korder=1;korder<order;korder++){
-    for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;ksrc++)
-      for(uint32_t kmir=0;kmir<reflectors.size();kmir++){
+  for(uint32_t korder=1;korder<order;++korder){
+    for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;++ksrc)
+      for(uint32_t kmir=0;kmir<reflectors.size();++kmir){
         if( mirrorsource[ksrc]->get_reflector() != reflectors[kmir] )
           mirrorsource.push_back(new mirrorsource_t(mirrorsource[ksrc],reflectors[kmir]));
       }
@@ -264,6 +275,11 @@ mirror_model_t::~mirror_model_t()
 {
   for(uint32_t k=0;k<mirrorsource.size();k++)
     delete mirrorsource[k];
+}
+
+obstacle_t::obstacle_t()
+  : active(true)
+{
 }
 
 reflector_t::reflector_t()
@@ -280,14 +296,14 @@ reflector_t::reflector_t()
  */
 void mirror_model_t::process()
 {
-  for(uint32_t k=0;k<mirrorsource.size();k++)
+  for(uint32_t k=0;k<mirrorsource.size();++k)
     mirrorsource[k]->process();
 }
 
 std::vector<mirrorsource_t*> mirror_model_t::get_mirror_sources()
 {
   std::vector<mirrorsource_t*> r;
-  for(uint32_t k=0;k<mirrorsource.size();k++)
+  for(uint32_t k=0;k<mirrorsource.size();++k)
     r.push_back(mirrorsource[k]);
   return r;
 }
@@ -295,32 +311,32 @@ std::vector<mirrorsource_t*> mirror_model_t::get_mirror_sources()
 std::vector<pointsource_t*> mirror_model_t::get_sources()
 {
   std::vector<pointsource_t*> r;
-  for(uint32_t k=0;k<mirrorsource.size();k++)
+  for(uint32_t k=0;k<mirrorsource.size();++k)
     r.push_back(mirrorsource[k]);
   return r;
 }
 
-world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order)
+world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order)
   : mirrormodel(sources,reflectors,mirror_order),receivers_(receivers),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
   // diffuse models:
-  for(uint32_t kSrc=0;kSrc<diffusesources.size();kSrc++)
-    for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++){
+  for(uint32_t kSrc=0;kSrc<diffusesources.size();++kSrc)
+    for(uint32_t kReceiver=0;kReceiver<receivers.size();++kReceiver){
       if( receivers[kReceiver]->render_diffuse )
         diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receivers[kReceiver]));
     }
   // primary sources:
-  for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
-    for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
+  for(uint32_t kSrc=0;kSrc<sources.size();++kSrc)
+    for(uint32_t kReceiver=0;kReceiver<receivers.size();++kReceiver)
       if( receivers[kReceiver]->render_point ){
-        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receivers[kReceiver]));
+        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receivers[kReceiver],obstacles));
       }
   // image sources:
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
-  for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)
-    for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
+  for(uint32_t kSrc=0;kSrc<msources.size();++kSrc)
+    for(uint32_t kReceiver=0;kReceiver<receivers.size();++kReceiver)
       if( receivers[kReceiver]->render_image && receivers[kReceiver]->render_point)
-        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver]));
+        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver],obstacles));
   //,std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())
 }
 
@@ -330,7 +346,7 @@ world_t::~world_t()
     for(unsigned int k=acoustic_model.size()-1;k>0;k--)
       if( acoustic_model[k] )
         delete acoustic_model[k];
-  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
+  for(unsigned int k=0;k<diffuse_acoustic_model.size();++k)
     delete diffuse_acoustic_model[k];
 }
 
@@ -344,7 +360,7 @@ void world_t::process()
   uint32_t local_active_diffuse(0);
   mirrormodel.process();
   // calculate mask gains:
-  for(uint32_t k=0;k<receivers_.size();k++){
+  for(uint32_t k=0;k<receivers_.size();++k){
     double gain_inner(1.0);
     if( receivers_[k]->use_global_mask || receivers_[k]->boundingbox.active ){
       if( receivers_[k]->boundingbox.active ){
@@ -357,7 +373,7 @@ void world_t::process()
       if( receivers_[k]->use_global_mask ){
         uint32_t c_outer(0);
         double gain_outer(0.0);
-        for(uint32_t km=0;km<masks_.size();km++){
+        for(uint32_t km=0;km<masks_.size();++km){
           pos_t p(receivers_[k]->position);
           if( masks_[km]->mask_inner ){
             gain_inner = std::min(gain_inner,masks_[km]->gain(p));
@@ -594,32 +610,51 @@ void TASCAR::Acousticmodel::boundingbox_t::write_xml()
 
    \ingroup callgraph
 */
-pos_t diffractor_t::process(const pos_t& p_src, const pos_t& p_is, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state)
+pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet)
 {
-  // calculate geometry:
-  pos_t p_is_src(p_src-p_is);
-  pos_t p_rec_is(p_is-p_rec);
-  p_rec_is.normalize();
-  double d_is_src(p_is_src.norm());
-  if( d_is_src > 0 )
-    p_is_src *= 1.0/d_is_src;
-  // calculate first zero crossing frequency:
-  double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
-  double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
-  double f0(3.8317*c/(PI2*aperture*sin_theta));
-  // calculate filter coefficient increment:
+  // calculate intersection:
+  pos_t p_is;
+  double w(0);
+  bool is_intersect(intersection(p_src,p_rec,p_is,&w));
+  if( (w <= 0) || (w >= 1) )
+    is_intersect = false;
+  if( is_intersect ){
+    bool is_outside(false);
+    pos_t pne;
+    nearest(p_is,&is_outside,&pne);
+    p_is = pne;
+    if( is_outside )
+      is_intersect = false;
+  }
+  // calculate filter:
   double dt(1.0/audio.n);
-  double dA1((exp(-M_PI*f0/fs)-state.A1)*dt);
+  double dA1(-state.A1*dt);
+  if( is_intersect ){
+    // calculate geometry:
+    pos_t p_is_src(p_src-p_is);
+    pos_t p_rec_is(p_is-p_rec);
+    p_rec_is.normalize();
+    double d_is_src(p_is_src.norm());
+    if( d_is_src > 0 )
+      p_is_src *= 1.0/d_is_src;
+    // calculate first zero crossing frequency:
+    double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
+    double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
+    double f0(3.8317*c/(PI2*aperture*sin_theta));
+    // calculate filter coefficient increment:
+    dA1 = (exp(-M_PI*f0/fs)-state.A1)*dt;
+    // return effective source position:
+    p_rec_is *= d_is_src;
+    p_src = p_is+p_rec_is;
+  }
   // apply low pass filter to audio chunk:
   for(uint32_t k=0;k<audio.n;k++){
     state.A1 += dA1;
     double B0(1.0-state.A1);
     state.s1 = state.s1*state.A1+audio[k]*B0;
-    audio[k] = state.s2 = state.s2*state.A1+state.s1*B0;
+    audio[k] = drywet*audio[k] + (1.0f-drywet)*(state.s2 = state.s2*state.A1+state.s1*B0);
   }
-  // return effective source position:
-  p_rec_is *= d_is_src;
-  return p_is+p_rec_is;
+  return p_src;
 }
 
 /*

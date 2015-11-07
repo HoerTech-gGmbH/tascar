@@ -386,6 +386,8 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         faces.push_back(new face_object_t(sne));
       else if( sne->get_name() == "facegroup" )
         facegroups.push_back(new face_group_t(sne));
+      else if( sne->get_name() == "obstacle" )
+        obstaclegroups.push_back(new obstacle_group_t(sne));
       else if( sne->get_name() == "mask" )
         masks.push_back(new mask_object_t(sne));
       else
@@ -456,6 +458,8 @@ void scene_t::process_active(double t)
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
+    (*it)->process_active(t,anysolo);
+  for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
     (*it)->process_active(t,anysolo);
 }
 
@@ -617,6 +621,8 @@ std::vector<object_t*> scene_t::get_objects()
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
     r.push_back(*it);
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
+    r.push_back(*it);
+  for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
     r.push_back(*it);
   for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it)
     r.push_back(*it);
@@ -1021,6 +1027,78 @@ void face_group_t::process_active(double t,uint32_t anysolo)
     (*it)->active = a;
   }
 }
+
+// obstacles:
+obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
+  : object_t(xmlsrc),
+    transmission(0)
+{
+  dynobject_t::GET_ATTRIBUTE(transmission);
+  dynobject_t::GET_ATTRIBUTE(importraw);
+  if( !importraw.empty() ){
+    std::ifstream rawmesh(importraw.c_str());
+    if( !rawmesh.good() )
+      throw TASCAR::ErrMsg("Unable to open mesh file \""+importraw+"\".");
+    while(!rawmesh.eof() ){
+      std::string meshline;
+      getline(rawmesh,meshline,'\n');
+      if( !meshline.empty() ){
+        TASCAR::Acousticmodel::obstacle_t* p_obstacle(new TASCAR::Acousticmodel::obstacle_t());
+        p_obstacle->nonrt_set(TASCAR::str2vecpos(meshline));
+        obstacles.push_back(p_obstacle);
+      }
+    }
+  }
+  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc,"faces"));
+  while(!txtmesh.eof() ){
+    std::string meshline;
+    getline(txtmesh,meshline,'\n');
+    if( !meshline.empty() ){
+      TASCAR::Acousticmodel::obstacle_t* p_obstacle(new TASCAR::Acousticmodel::obstacle_t());
+      p_obstacle->nonrt_set(TASCAR::str2vecpos(meshline));
+      obstacles.push_back(p_obstacle);
+    }
+  }
+}
+
+obstacle_group_t::~obstacle_group_t()
+{
+  for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=obstacles.begin();it!=obstacles.end();++it)
+    delete *it;
+}
+
+void obstacle_group_t::prepare(double fs, uint32_t fragsize)
+{
+}
+
+void obstacle_group_t::write_xml()
+{
+  object_t::write_xml();
+  dynobject_t::SET_ATTRIBUTE(transmission);
+  dynobject_t::SET_ATTRIBUTE(importraw);
+}
+ 
+void obstacle_group_t::geometry_update(double t)
+{
+  dynobject_t::geometry_update(t);
+  for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=obstacles.begin();it!=obstacles.end();++it){
+    (*it)->apply_rot_loc(c6dof.p,c6dof.o);
+    (*it)->transmission = transmission;
+  }
+}
+ 
+void obstacle_group_t::process_active(double t,uint32_t anysolo)
+{
+  bool a(is_active(anysolo,t));
+  for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=obstacles.begin();it!=obstacles.end();++it){
+    (*it)->active = a;
+    (*it)->transmission = transmission;
+  }
+}
+
+
+
+// speaker array:
 
 spk_array_t::spk_array_t(xmlpp::Element* e)
   : xml_element_t(e),

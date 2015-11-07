@@ -42,7 +42,7 @@ namespace TASCAR {
         float s2;
         state_t() : A1(0),s1(0),s2(0) {};
       };
-      pos_t process(const pos_t& p_src, const pos_t& p_is, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state);
+      pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet);
     };
 
     class doorsource_t : public pointsource_t, public diffractor_t {
@@ -132,6 +132,9 @@ namespace TASCAR {
 
     class obstacle_t : public diffractor_t {
     public:
+      obstacle_t();
+      bool active;
+      float transmission;
     };
 
     class reflector_t : public diffractor_t {
@@ -196,6 +199,7 @@ namespace TASCAR {
       uint32_t process();
     protected:
       double c_;
+      double fs_;
     public:
       pointsource_t* src_;
       receiver_t* receiver_;
@@ -203,6 +207,7 @@ namespace TASCAR {
     protected:
       receivermod_base_t::data_t* receiver_data;
       std::vector<obstacle_t*> obstacles_;
+      std::vector<diffractor_t::state_t> vstate;
       wave_t audio;
       uint32_t chunksize;
       double dt;
@@ -252,7 +257,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order);
+      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */

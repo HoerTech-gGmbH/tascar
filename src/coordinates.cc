@@ -948,10 +948,12 @@ pos_t ngon_t::nearest_on_edge(const pos_t& p0,uint32_t* pk0) const
 /**
    \brief Return nearest point on polygon
  */
-pos_t ngon_t::nearest( const pos_t& p0 ) const
+pos_t ngon_t::nearest( const pos_t& p0, bool* is_outside_, pos_t* on_edge_ ) const
 {
   uint32_t k0(0);
   pos_t ne(nearest_on_edge(p0,&k0));
+  if( on_edge_ )
+    *on_edge_ = ne;
   // is inside?
   bool is_outside(false);
   pos_t dp0(ne-p0);
@@ -960,6 +962,8 @@ pos_t ngon_t::nearest( const pos_t& p0 ) const
   else
     // caclulate edge normal:
     is_outside = (dot_prod(vert_normals_[k0],ne-p0) < 0);
+  if( is_outside_ )
+    *is_outside_ = is_outside;
   if( is_outside )
     return ne;
   return nearest_on_plane(p0);
