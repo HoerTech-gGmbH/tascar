@@ -212,6 +212,7 @@ namespace TASCAR {
       double air_absorption;
       varidelay_t delayline;
       float airabsorption_state;
+      //bool first;
     };
 
     /** \brief A model for a sound wave propagating from a point source to a receiver

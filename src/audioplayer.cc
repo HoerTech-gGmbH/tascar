@@ -230,7 +230,8 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
     receivermod_objects[k]->postproc(receivermod_objects[k]->outchannels);
     //TASCAR::Acousticmodel::receiver_t* preceiver(receiver_objects[k].get_receiver());
     float gain(receivermod_objects[k]->get_gain());
-    for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
+    uint32_t numch(receivermod_objects[k]->get_num_channels());
+    for(uint32_t ch=0;ch<numch;ch++)
       receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
   }
   //security/stability:
@@ -325,6 +326,15 @@ void TASCAR::renderer_t::start()
       cn = strrep(cn,"@","player."+name+":"+receivermod_objects[k]->get_name());
       for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
         connect_out(receivermod_objects[k]->get_port_index()+ch,cn+receivermod_objects[k]->get_channel_postfix(ch),true);
+    }
+    //DEBUG(1);
+    std::vector<std::string> cns(receivermod_objects[k]->get_connections());
+    //DEBUG(2);
+    for(uint32_t kc=0;kc<std::min((uint32_t)(cns.size()),
+                                  receivermod_objects[k]->get_num_channels());kc++){
+      if( cns[kc].size() )
+        connect_out(receivermod_objects[k]->get_port_index()+kc,
+                    cns[kc],true);
     }
   }
   add_input_port("sync_in");

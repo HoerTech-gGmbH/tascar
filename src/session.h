@@ -19,8 +19,14 @@ namespace TASCAR {
      */
     virtual void update(uint32_t frame,bool running);
     virtual void configure(double srate,uint32_t fragsize);
+    void configure_(double srate,uint32_t fragsize);
   protected:
     TASCAR::session_t* session;
+    double f_sample;
+    double f_fragment;
+    double t_sample;
+    double t_fragment;
+    uint32_t n_fragment;
   };
 
   typedef void (*module_error_t)(std::string errmsg);
@@ -179,10 +185,6 @@ namespace TASCAR {
       }else                                                             \
         errfun("Invalid library class pointer (write_xml).");           \
     }                                                                   \
-  }
-
-#define REGISTER_MODULE_UPDATE(x)               \
-  extern "C" {                                  \
     void tascar_update(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,uint32_t frame,bool running) \
     {                                           \
       x* ptr(dynamic_cast<x*>(h));              \
@@ -201,7 +203,7 @@ namespace TASCAR {
       x* ptr(dynamic_cast<x*>(h));              \
       if( ptr ){                                \
         try {                                   \
-          ptr->configure(srate,fragsize);        \
+          ptr->configure_(srate,fragsize);        \
         }                                       \
         catch(const std::exception&e ){         \
           errfun(e.what());                     \

@@ -306,8 +306,11 @@ void TASCAR::session_t::start()
 int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
 {
   double t(period_time*(double)tp_frame);
+  uint32_t next_tp_frame(tp_frame);
+  if( tp_running )
+    next_tp_frame += fragsize;
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->update(tp_frame,tp_running);
+    (*imod)->update(next_tp_frame,tp_running);
   if( loop && ( t >= duration ) )
     tp_locate(0u);
   return 0;
@@ -421,7 +424,12 @@ void TASCAR::connection_t::write_xml()
 }
 
 TASCAR::module_base_t::module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session_)
-  : xml_element_t(xmlsrc),session(session_)
+  : xml_element_t(xmlsrc),session(session_),
+    f_sample(1),
+    f_fragment(1),
+    t_sample(1),
+    t_fragment(1),
+    n_fragment(1)
 {
 }
 
@@ -435,6 +443,16 @@ void TASCAR::module_base_t::update(uint32_t frame,bool running)
 
 void TASCAR::module_base_t::configure(double srate,uint32_t fragsize)
 {
+}
+
+void TASCAR::module_base_t::configure_(double srate,uint32_t fragsize)
+{
+  f_sample = srate;
+  f_fragment = srate/(double)fragsize;
+  t_sample = 1.0/srate;
+  t_fragment = 1.0/f_fragment;
+  n_fragment = fragsize;
+  configure(srate,fragsize);
 }
 
 TASCAR::module_base_t::~module_base_t()

@@ -2,16 +2,18 @@
 # main targets:
 #
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf		\
-  tascar_osc_jack_transport tascar_jackio tascar_sampler
+  tascar_osc_jack_transport tascar_jackio tascar_sampler	\
+  tascar_hdspmixer tascar_levelmeter
 
 # tascar_gui tascar_sampler				\
 #tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
 #tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 #tascar_tscupdate tascar_pdf
 
-RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic neukom_inphase hann vbap vbap3d
+RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic	\
+neukom_inphase hann vbap vbap3d hoa2d
 
-TASCARMODS = system pos2osc sampler pendulum epicycles
+TASCARMODS = system pos2osc sampler pendulum epicycles motionpath
 
 TEST_FILES = test_ngon test_sinc
 
@@ -74,6 +76,8 @@ $(GUIOBJECTS): EXTERNALS += gtkmm-3.0
 #tascar_gui tascar_renderer tascar_audioplayer: CXXFLAGS += -I/usr/include/libxml++-2.6/
 
 tascar_hoadisplay: EXTERNALS += $(GTKEXT)
+
+tascar_hdspmixer: EXTERNALS += alsa
 
 tascar_gui tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 tascar_gui tascar_pdf: EXTERNALS += $(GTKEXT)
@@ -155,6 +159,8 @@ bz2:
 
 
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
+
+tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
 
 tascarreceiver_%.so: receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)

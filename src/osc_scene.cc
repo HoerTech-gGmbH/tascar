@@ -132,8 +132,8 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::s
 
 void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
 {
-  DEBUG(srv);
-  DEBUG(this);
+  //DEBUG(srv);
+  //DEBUG(this);
   std::vector<object_t*> obj(get_objects());
   for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
     if( TASCAR::Scene::face_object_t* po=dynamic_cast<TASCAR::Scene::face_object_t*>(*it))

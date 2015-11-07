@@ -21,6 +21,7 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
     postproc_cb(NULL),
     get_num_channels_cb(NULL),
     get_channel_postfix_cb(NULL),
+    get_connections_cb(NULL),
     configure_cb(NULL),
     create_data_cb(NULL)
 {
@@ -39,6 +40,7 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
     RESOLVE(postproc);
     RESOLVE(get_num_channels);
     RESOLVE(get_channel_postfix);
+    RESOLVE(get_connections);
     RESOLVE(configure);
     RESOLVE(create_data);
     libdata = create_cb(xmlsrc,receivermod_error);
@@ -81,6 +83,12 @@ std::string TASCAR::receivermod_t::get_channel_postfix(uint32_t channel)
   return get_channel_postfix_cb(libdata,channel,receivermod_error);
 }
 
+std::vector<std::string> TASCAR::receivermod_t::get_connections() const
+{
+  //DEBUG(1);
+  return get_connections_cb(libdata,receivermod_error);
+}
+
 void TASCAR::receivermod_t::configure(double srate,uint32_t fragsize)
 {
   configure_cb(libdata,srate,fragsize,receivermod_error);
@@ -108,6 +116,24 @@ void TASCAR::receivermod_base_t::write_xml()
 
 TASCAR::receivermod_base_t::~receivermod_base_t()
 {
+}
+
+TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(xmlpp::Element* xmlsrc)
+  : receivermod_base_t(xmlsrc),
+    spkpos(xmlsrc)
+{
+}
+
+void TASCAR::receivermod_base_speaker_t::write_xml()
+{
+  receivermod_base_t::write_xml();
+  spkpos.write_xml();
+}
+
+std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() const
+{
+  //DEBUG(1);
+  return spkpos.connections;
 }
 
 

@@ -475,6 +475,7 @@ spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE_DEG(el);
   GET_ATTRIBUTE(r);
   GET_ATTRIBUTE(label);
+  GET_ATTRIBUTE(connect);
   set_sphere(r,az,el);
   unitvector = normal();
   update_foa_decoder(1.0f);
@@ -502,6 +503,8 @@ void spk_pos_t::write_xml()
     SET_ATTRIBUTE(r);
   if( !label.empty() )
     SET_ATTRIBUTE(label);
+  if( !connect.empty() )
+    SET_ATTRIBUTE(connect);
 }
 
 mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
@@ -899,6 +902,62 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
   dynobject_t::GET_ATTRIBUTE(damping);
   dynobject_t::GET_ATTRIBUTE(importraw);
   dynobject_t::get_attribute_bool("edgereflection",edgereflection);
+  dynobject_t::GET_ATTRIBUTE(shoebox);
+  if( !shoebox.is_null() ){
+    TASCAR::pos_t sb(shoebox);
+    sb *= 0.5;
+    std::vector<TASCAR::pos_t> verts;
+    verts.resize(4);
+    TASCAR::Acousticmodel::reflector_t* p_reflector(NULL);
+    // face1:
+    verts[0] = TASCAR::pos_t(sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(sb.x,-sb.y,sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(sb.x,sb.y,-sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face2:
+    verts[0] = TASCAR::pos_t(-sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(-sb.x,sb.y,-sb.z);
+    verts[2] = TASCAR::pos_t(-sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(-sb.x,-sb.y,sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face3:
+    verts[0] = TASCAR::pos_t(-sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(-sb.x,-sb.y,sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,-sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(sb.x,-sb.y,-sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face4:
+    verts[0] = TASCAR::pos_t(-sb.x,sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(sb.x,sb.y,-sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(-sb.x,sb.y,sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face5:
+    verts[0] = TASCAR::pos_t(-sb.x,-sb.y,sb.z);
+    verts[1] = TASCAR::pos_t(-sb.x,sb.y,sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(sb.x,-sb.y,sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face6:
+    verts[0] = TASCAR::pos_t(-sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(sb.x,-sb.y,-sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,sb.y,-sb.z);
+    verts[3] = TASCAR::pos_t(-sb.x,sb.y,-sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+  }
   if( !importraw.empty() ){
     std::ifstream rawmesh(importraw.c_str());
     if( !rawmesh.good() )
@@ -988,6 +1047,7 @@ spk_array_t::spk_array_t(xmlpp::Element* e)
   didx.resize(size());
   for(uint32_t k=0;k<size();k++){
     operator[](k).update_foa_decoder(1.0f/size());
+    connections.push_back(operator[](k).connect);
   }
 }
 
@@ -1001,7 +1061,7 @@ void spk_array_t::read_xml(xmlpp::Element* e)
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "speaker" )){
-      push_back(TASCAR::Scene::spk_pos_t(sne));
+      push_back(TASCAR::spk_pos_t(sne));
     }
   }
 }

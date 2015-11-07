@@ -32,6 +32,53 @@
 
 namespace TASCAR {
 
+    class spk_pos_t : public xml_element_t, public pos_t {
+    public:
+      spk_pos_t(xmlpp::Element*);
+      void write_xml();
+      double get_rel_azim(double az_src) const;
+      double get_cos_adist(pos_t src_unit) const;
+      double az;
+      double el;
+      double r;
+      std::string label;
+      std::string connect;
+      // derived parameters:
+      pos_t unitvector;
+      double gain;
+      double dr;
+      // decoder matrix:
+      void update_foa_decoder(float gain);
+      float d_w;
+      float d_x;
+      float d_y;
+      float d_z;
+    };
+
+    class spk_array_t : public xml_element_t, public std::vector<spk_pos_t> {
+    public:
+      spk_array_t(xmlpp::Element*);
+      void write_xml();
+      double get_rmax() const { return rmax;};
+      double get_rmin() const { return rmin;};
+      class didx_t {
+      public:
+        didx_t() : d(0),idx(0) {};
+        double d;
+        uint32_t idx;
+      };
+      const std::vector<didx_t>& sort_distance(const pos_t& psrc);
+      void foa_decode(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output);
+    private:
+      void import_file(const std::string& fname);
+      void read_xml(xmlpp::Element* elem);
+      double rmax;
+      double rmin;
+      std::vector<didx_t> didx;
+    public:
+      std::vector<std::string> connections;
+    };
+
   class receivermod_base_t : public xml_element_t {
   public:
     class data_t {
@@ -46,9 +93,19 @@ namespace TASCAR {
     virtual void postproc(std::vector<wave_t>& output) {};
     virtual uint32_t get_num_channels() = 0;
     virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+    virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
     virtual void configure(double srate,uint32_t fragsize) {};
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
   protected:
+  };
+
+  class receivermod_base_speaker_t : public receivermod_base_t {
+  public:
+    receivermod_base_speaker_t(xmlpp::Element* xmlsrc);
+    virtual void write_xml();
+    virtual std::vector<std::string> get_connections() const;
+  protected:
+    TASCAR::spk_array_t spkpos;
   };
 
   typedef void (*receivermod_error_t)(std::string errmsg);
@@ -60,6 +117,7 @@ namespace TASCAR {
   typedef void (*receivermod_postproc_t)(TASCAR::receivermod_base_t* h,std::vector<wave_t>& output,receivermod_error_t errfun);
   typedef uint32_t (*receivermod_get_num_channels_t)(TASCAR::receivermod_base_t* h,receivermod_error_t errfun);
   typedef std::string (*receivermod_get_channel_postfix_t)(TASCAR::receivermod_base_t* h,uint32_t channel,receivermod_error_t errfun);
+  typedef std::vector<std::string> (*receivermod_get_connections_t)(TASCAR::receivermod_base_t* h,receivermod_error_t errfun);
   typedef void (*receivermod_configure_t)(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,receivermod_error_t errfun);
   typedef receivermod_base_t::data_t* (*receivermod_create_data_t)(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,receivermod_error_t errfun);
   
@@ -73,6 +131,7 @@ namespace TASCAR {
     virtual void postproc(std::vector<wave_t>& output);
     virtual uint32_t get_num_channels();
     virtual std::string get_channel_postfix(uint32_t channel);
+    virtual std::vector<std::string> get_connections() const;
     virtual void configure(double srate,uint32_t fragsize);
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   private:
@@ -88,6 +147,7 @@ namespace TASCAR {
     receivermod_postproc_t postproc_cb;
     receivermod_get_num_channels_t get_num_channels_cb;
     receivermod_get_channel_postfix_t get_channel_postfix_cb;
+    receivermod_get_connections_t get_connections_cb;
     receivermod_configure_t configure_cb;
     receivermod_create_data_t create_data_cb;
   };
@@ -174,6 +234,18 @@ namespace TASCAR {
       }else                                     \
         errfun("Invalid library class pointer (get_num_channel_postfix)."); \
       return "";                                \
+    }                                           \
+    std::vector<std::string> receivermod_get_connections(TASCAR::receivermod_base_t* h,TASCAR::receivermod_error_t errfun) \
+    {                                                         \
+      x*   ptr(dynamic_cast<x*>(h));            \
+      if( ptr ){                                \
+        try { return ptr->get_connections(); } \
+        catch(const std::exception&e ){         \
+          errfun(e.what());                     \
+        }                                       \
+      }else                                     \
+        errfun("Invalid library class pointer (get_connections)."); \
+      return std::vector<std::string>();                            \
     }                                           \
     void receivermod_configure(TASCAR::receivermod_base_t* h,double srate,uint32_t fragsize,TASCAR::receivermod_error_t errfun) \
     {                                           \

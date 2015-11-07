@@ -9,23 +9,29 @@ using namespace TASCAR;
 wave_t::wave_t(uint32_t chunksize)
   : d(new float[std::max(1u,chunksize)]),
     n(chunksize), own_pointer(true),
-    append_pos(0)
+    append_pos(0),
+    rmsscale(1.0f)
 {
   clear();
+  rmsscale = 1.0f/(float)n;
 }
 
 
 wave_t::wave_t(uint32_t chunksize,float* ptr)
-  : d(ptr), n(chunksize), own_pointer(false), append_pos(0)
+  : d(ptr), n(chunksize), own_pointer(false), append_pos(0),
+    rmsscale(1.0f)
 {
+  rmsscale = 1.0f/(float)n;
 }
 
 wave_t::wave_t(const wave_t& src)
   : d(new float[std::max(1u,src.n)]),
-    n(src.n), own_pointer(true), append_pos(src.append_pos)
+    n(src.n), own_pointer(true), append_pos(src.append_pos),
+    rmsscale(1.0f)
 {
   for(uint32_t k=0;k<n;k++)
     d[k] = src.d[k];
+  rmsscale = 1.0f/(float)n;
 }
 
 wave_t::~wave_t()
@@ -78,14 +84,26 @@ float wave_t::rms() const
   float rv(0.0f);
   for(uint32_t k=0;k<size();k++)
     rv += d[k]*d[k];
-  if( size() > 0 )
-    rv /= size();
+  rv *= rmsscale;
   return sqrt(rv);
+}
+
+float wave_t::maxabs() const
+{
+  float rv(0.0f);
+  for(uint32_t k=0;k<size();++k)
+    rv = std::max(rv,fabsf(d[k]));
+  return rv;
 }
 
 float wave_t::spldb() const
 {
   return 20.0*log10(rms())-SPLREF;
+}
+
+float wave_t::maxabsdb() const
+{
+  return 20.0*log10(maxabs())-SPLREF;
 }
 
 amb1wave_t::amb1wave_t(uint32_t chunksize)

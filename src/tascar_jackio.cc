@@ -26,6 +26,7 @@
 
 #include "jackiowav.h"
 #include "cli.h"
+#include <fstream>
 
 void usage(struct option * opt)
 {
@@ -37,11 +38,21 @@ void usage(struct option * opt)
   }
 }
 
+void store_stats(const std::string& statname,jackio_t& jio)
+{
+  if( !statname.empty() ){
+    std::ofstream ofs(statname.c_str());
+    if( ofs.good() ){
+      ofs << "cpuload " << jio.cpuload << std::endl;
+      ofs << "xruns " << jio.xruns << std::endl;
+    }
+  }
+}
 
 int main(int argc, char** argv)
 {
   try{
-    const char *options = "fo:chus:d:v";
+    const char *options = "fo:chus:d:vt:";
     struct option long_options[] = { 
       { "freewheeling", 0, 0, 'f' },
       { "output-file",  1, 0, 'o' },
@@ -51,6 +62,7 @@ int main(int argc, char** argv)
       { "help",         0, 0, 'h' },
       { "start",        1, 0, 's' },
       { "duration",     1, 0, 'd' },
+      { "statistics",   1, 0, 't' },
       { "verbose",      0, 0, 'v' },
       { 0, 0, 0, 0 }
     };
@@ -67,6 +79,7 @@ int main(int argc, char** argv)
     double start(0);
     double duration(10);
     bool verbose(false);
+    std::string statname("");
     std::vector<std::string> ports;
     while( (opt = getopt_long(argc, argv, options,
                               long_options, &option_index)) != EOF){
@@ -85,6 +98,9 @@ int main(int argc, char** argv)
         break;
       case 'n':
         jackname = optarg;
+        break;
+      case 't':
+        statname = optarg;
         break;
       case 's':
         start = atof(optarg);
@@ -114,11 +130,13 @@ int main(int argc, char** argv)
       jio.run();
       if( b_unlink )
         unlink(ifname.c_str());
+      store_stats(statname,jio);
     }else{
       jackio_t jio(duration,ofname,ports,jackname,freewheel,autoconnect,verbose);
       if( b_use_transport )
         jio.set_transport_start( start );
       jio.run();
+      store_stats(statname,jio);
     }
   }
   catch( const std::exception& e ){

@@ -71,6 +71,8 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std:
 #define SET_ATTRIBUTE(x) set_attribute(#x,x)
 #define GET_ATTRIBUTE_DEG(x) get_attribute_deg(#x,x)
 #define SET_ATTRIBUTE_DEG(x) set_attribute_deg(#x,x)
+#define GET_ATTRIBUTE_BOOL(x) get_attribute_bool(#x,x)
+#define SET_ATTRIBUTE_BOOL(x) set_attribute_bool(#x,x)
 
 #endif
 

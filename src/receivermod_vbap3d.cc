@@ -2,7 +2,7 @@
 #include "scene.h"
 #include <complex.h>
 
-class rec_vbap3d_t : public TASCAR::receivermod_base_t {
+class rec_vbap3d_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
@@ -31,7 +31,7 @@ public:
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
-  TASCAR::Scene::spk_array_t spkpos;
+  //TASCAR::Scene::spk_array_t spkpos;
   //std::vector<double> spk_az;
   //std::vector<double> spk_gain;
   //std::vector<TASCAR::pos_t> spk_normal;
@@ -77,8 +77,7 @@ rec_vbap3d_t::data_t::~data_t()
 
 //???
 rec_vbap3d_t::rec_vbap3d_t(xmlpp::Element* xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc),
-    spkpos(xmlsrc)
+  : TASCAR::receivermod_base_speaker_t(xmlsrc)
 {
   if( spkpos.size() < 3 )
     throw TASCAR::ErrMsg("At least three loudspeakers are required for 3D-VBAP.");
@@ -111,7 +110,7 @@ sd     :variable of type data_t  so it contains all these wp, dwp, w,... */
   //**********************************  3D  VBAP  *************************************
 
   //-------------1.Search three nearest speakers:--------------
-  const std::vector<TASCAR::Scene::spk_array_t::didx_t>& didx(spkpos.sort_distance(psrc_normal));
+  const std::vector<TASCAR::spk_array_t::didx_t>& didx(spkpos.sort_distance(psrc_normal));
   
   // 1.a) Find the first closest loudspeaker 
   uint32_t kmin1(didx[0].idx);

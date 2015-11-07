@@ -72,6 +72,9 @@ private:
   void log(const std::string& msg);
   bool b_cb;
   bool b_verbose;
+public:
+  float cpuload;
+  uint32_t xruns;
 };
 
 #endif

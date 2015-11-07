@@ -24,7 +24,9 @@ namespace TASCAR {
     uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
     float rms() const;
+    float maxabs() const;
     float spldb() const;
+    float maxabsdb() const;
     void append(const wave_t& src);
     void operator*=(double v);
     void operator+=(const wave_t& o);
@@ -34,6 +36,7 @@ namespace TASCAR {
     bool own_pointer;
   protected:
     uint32_t append_pos;
+    float rmsscale;
   };
 
   /** \brief Class for first-order-Ambisonics audio chunks

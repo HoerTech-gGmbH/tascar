@@ -1,11 +1,11 @@
 #include "session.h"
 
-class pos2osc_t : public TASCAR::module_base_t, public jackc_transport_t {
+class pos2osc_t : public TASCAR::module_base_t {
 public:
   pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
   ~pos2osc_t();
   void write_xml();
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+  void update(uint32_t frame, bool running);
 private:
   std::string url;
   std::string pattern;
@@ -16,7 +16,6 @@ private:
 
 pos2osc_t::pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : module_base_t(xmlsrc,session),
-    jackc_transport_t(jacknamer(session->name,"pos2osc.")),
     ttl(1)
 {
   GET_ATTRIBUTE(url);
@@ -33,7 +32,6 @@ pos2osc_t::pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   obj = session->find_objects(pattern);
   if( !obj.size() )
     throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
-  activate();
 }
 
 void pos2osc_t::write_xml()
@@ -45,11 +43,11 @@ void pos2osc_t::write_xml()
 
 pos2osc_t::~pos2osc_t()
 {
-  deactivate();
   lo_address_free(target);
 }
 
-int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+//int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+void pos2osc_t::update(uint32_t tp_frame, bool tp_running)
 {
   if( tp_running ){
     for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
@@ -63,7 +61,6 @@ int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffe
       lo_send(target,path.c_str(),"fff",RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
     }
   }
-  return 0;
 }
 
 REGISTER_MODULE(pos2osc_t);

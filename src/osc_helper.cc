@@ -45,6 +45,13 @@ int osc_set_bool_true(const char *path, const char *types, lo_arg **argv, int ar
   return 0;
 }
 
+int osc_set_bool_false(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data )
+    *(bool*)(user_data) = false;
+  return 0;
+}
+
 int osc_set_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   if( user_data && (argc == 1) && (types[0] == 'f') )
@@ -164,6 +171,11 @@ void osc_server_t::add_float_degree(const std::string& path,float *data)
 void osc_server_t::add_bool_true(const std::string& path,bool *data)
 {
   add_method(path,"",osc_set_bool_true,data);
+}
+
+void osc_server_t::add_bool_false(const std::string& path,bool *data)
+{
+  add_method(path,"",osc_set_bool_false,data);
 }
 
 void osc_server_t::add_bool(const std::string& path,bool *data)

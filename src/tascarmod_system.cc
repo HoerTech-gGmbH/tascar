@@ -198,7 +198,6 @@ void system_t::service()
 }
 
 REGISTER_MODULE(system_t);
-REGISTER_MODULE_UPDATE(system_t);
 
 /*
  * Local Variables:

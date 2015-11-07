@@ -16,7 +16,7 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     nframes_total(0),
     p(ports),
     b_cb(false),
-    b_verbose(verbose)
+    b_verbose(verbose), cpuload(0), xruns(0)
 {
   memset(&sf_inf_in,0,sizeof(sf_inf_in));
   memset(&sf_inf_out,0,sizeof(sf_inf_out));
@@ -79,7 +79,7 @@ jackio_t::jackio_t(double duration,const std::string& ofname,
     nframes_total(std::max(1u,uint32_t(get_srate()*duration))),
     p(ports),
     b_cb(false),
-    b_verbose(verbose)
+    b_verbose(verbose), cpuload(0), xruns(0)
 {
   memset(&sf_inf_in,0,sizeof(sf_inf_in));
   memset(&sf_inf_out,0,sizeof(sf_inf_out));
@@ -196,6 +196,8 @@ void jackio_t::run()
   while( !b_quit ){
     usleep( 5000 );
   }
+  cpuload = get_cpu_load();
+  xruns = get_xruns();
   if( use_transport ){
     log("stopping transport");
     tp_stop();

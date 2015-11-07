@@ -2,7 +2,7 @@
 #include "scene.h"
 #include <complex.h>
 
-class rec_hann_t : public TASCAR::receivermod_base_t {
+class rec_hann_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
@@ -30,7 +30,7 @@ public:
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
-  TASCAR::Scene::spk_array_t spkpos;
+  //TASCAR::Scene::spk_array_t spkpos;
   double wexp;
 };
 
@@ -71,8 +71,8 @@ rec_hann_t::data_t::~data_t()
 }
 
 rec_hann_t::rec_hann_t(xmlpp::Element* xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc),
-    spkpos(xmlsrc),
+  : TASCAR::receivermod_base_speaker_t(xmlsrc),
+    //spkpos(xmlsrc),
     wexp(0.5)
 {
   GET_ATTRIBUTE(wexp);

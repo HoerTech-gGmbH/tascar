@@ -30,7 +30,9 @@
 #include <string>
 #include <lo/lo.h>
 
+/*
 int osc_set_bool_true(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+int osc_set_bool_false(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
 int osc_set_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
 int osc_set_float_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
 int osc_set_float_degree(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -38,6 +40,7 @@ int osc_set_double(const char *path, const char *types, lo_arg **argv, int argc,
 int osc_set_int32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
 int osc_set_uint32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
 int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+*/
 
 namespace TASCAR {
 
@@ -52,6 +55,7 @@ namespace TASCAR {
     void add_float_db(const std::string& path,float *data);
     void add_float_degree(const std::string& path,float *data);
     void add_bool_true(const std::string& path,bool *data);
+    void add_bool_false(const std::string& path,bool *data);
     void add_bool(const std::string& path,bool *data);
     void add_int(const std::string& path,int32_t *data);
     void add_uint(const std::string& path,uint32_t *data);

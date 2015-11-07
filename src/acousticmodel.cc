@@ -92,11 +92,13 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
     distance(1.0),
     gain(1.0),
     dscale(fs/(c_*7782.0)),
+    air_absorption(0.5),
     delayline((src->maxdist/c_)*fs,fs,c_,src->sincorder,64),
-    airabsorption_state(0.0)
+  airabsorption_state(0.0)
 {
   pos_t prel;
   receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain);
+  gain = 1.0;
 }
 
 acoustic_model_t::~acoustic_model_t()
@@ -123,6 +125,13 @@ uint32_t acoustic_model_t::process()
     double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
     double dgain((nextgain-gain)*dt);
     double dairabsorption((next_air_absorption-air_absorption)*dt);
+    //if( first ){
+    //  DEBUG(next_air_absorption);
+    //  DEBUG(ddistance);
+    //  DEBUG(dgain);
+    //  DEBUG(dairabsorption);
+    //  DEBUG(srcgainmod);
+    //}
     for(uint32_t k=0;k<chunksize;k++){
       distance+=ddistance;
       gain+=dgain;
@@ -135,7 +144,19 @@ uint32_t acoustic_model_t::process()
       audio[k] = airabsorption_state;
     }
     if( ((gain!=0)||(dgain!=0)) ){
+      //if( first ){
+      //  DEBUG(audio.spldb());
+      //  DEBUG(audio.maxabsdb());
+      //}
       receiver_->add_pointsource(prel,audio,receiver_data);
+      //if( first ){
+      //  for(uint32_t k=0;k<receiver_->outchannels.size();++k){
+      //    DEBUG(k);
+      //    DEBUG(receiver_->outchannels[k].spldb());
+      //    DEBUG(receiver_->outchannels[k].maxabsdb());
+      //  }
+      //}
+      //first = false;
       return 1;
     }
   }else{
@@ -291,8 +312,9 @@ world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointso
   // primary sources:
   for(uint32_t kSrc=0;kSrc<sources.size();kSrc++)
     for(uint32_t kReceiver=0;kReceiver<receivers.size();kReceiver++)
-      if( receivers[kReceiver]->render_point )
+      if( receivers[kReceiver]->render_point ){
         acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receivers[kReceiver]));
+      }
   // image sources:
   std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
   for(uint32_t kSrc=0;kSrc<msources.size();kSrc++)

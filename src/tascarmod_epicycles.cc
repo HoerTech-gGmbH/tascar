@@ -453,7 +453,6 @@ void epicycles_t::update(uint32_t frame,bool running)
 }
 
 REGISTER_MODULE(epicycles_t);
-REGISTER_MODULE_UPDATE(epicycles_t);
 
 /*
  * Local Variables:

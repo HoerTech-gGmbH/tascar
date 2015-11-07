@@ -1,4 +1,4 @@
-function [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts, transportStart)
+function [y,fs,bufsize,load,xruns] = tascar_jackio( x, csOutputPorts, csInputPorts, transportStart)
 % TASCAR_JACKIO - synchonouos recording/playback via jack
 %
 % Usage:
@@ -52,6 +52,8 @@ function [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts, transpo
   if ~isempty(transportStart)
     sCmd = [sCmd,sprintf(' -s %g',transportStart)];
   end
+  sStatname = tempname();
+  sCmd = [sCmd,' -t ',sStatname];
   if ~isempty(csInputPorts)
     sNameIn = [tempname(),'.wav'];
     sInPar = ['-o ',sNameIn];
@@ -85,6 +87,10 @@ function [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts, transpo
     y = wavread(sNameIn);
     delete(sNameIn);
   end
+  sStat = textread(sStatname);
+  load = sStat(2);
+  xruns = sStat(3);
+  delete(sStatname);
   
 function csPort = portname( csPort, mode )
   if ischar(csPort)

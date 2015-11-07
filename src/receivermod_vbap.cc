@@ -2,7 +2,7 @@
 #include "scene.h"
 #include <complex.h>
 
-class rec_vbap_t : public TASCAR::receivermod_base_t {
+class rec_vbap_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
@@ -31,7 +31,7 @@ public:
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
-  TASCAR::Scene::spk_array_t spkpos;
+  //TASCAR::Scene::spk_array_t spkpos;
 };
 
 //function definition:  write_xml
@@ -75,8 +75,7 @@ rec_vbap_t::data_t::~data_t()
 
 // constructor; mainly parsing the XML file
 rec_vbap_t::rec_vbap_t(xmlpp::Element* xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc),
-    spkpos(xmlsrc)
+  : TASCAR::receivermod_base_speaker_t(xmlsrc)
 {
   if( spkpos.size() < 2 )
     throw TASCAR::ErrMsg("At least two loudspeakers are required for 2D-VBAP.");
@@ -107,7 +106,7 @@ void rec_vbap_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t
   //**********************************  2D  VBAP  *************************************
 
   //-------------1.Search two nearest speakers:--------------
-  const std::vector<TASCAR::Scene::spk_array_t::didx_t>& didx(spkpos.sort_distance(psrc_normal));
+  const std::vector<TASCAR::spk_array_t::didx_t>& didx(spkpos.sort_distance(psrc_normal));
   
   // 1.a) Find the first closest loudspeaker 
   uint32_t kmin1(didx[0].idx);

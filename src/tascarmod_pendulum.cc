@@ -6,14 +6,12 @@ public:
   ~pendulum_t();
   void write_xml();
   void update(uint32_t frame, bool running);
-  void configure(double srate, uint32_t fragsize);
 private:
   double amplitude;
   double frequency;
   double decaytime;
   double starttime;
   TASCAR::pos_t distance;
-  double periodtime;
 };
 
 pendulum_t::pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
@@ -22,8 +20,7 @@ pendulum_t::pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     frequency(0.5),
     decaytime(40),
     starttime(10),
-    distance(0,0,-2),
-    periodtime(1)
+    distance(0,0,-2)
 {
   GET_ATTRIBUTE(amplitude);
   GET_ATTRIBUTE(frequency);
@@ -45,14 +42,9 @@ pendulum_t::~pendulum_t()
 {
 }
 
-void pendulum_t::configure(double srate,uint32_t periodsize)
-{
-  periodtime = 1.0/srate;
-}
-
 void pendulum_t::update(uint32_t frame,bool running)
 {
-  double time((double)frame*periodtime);
+  double time((double)frame*t_sample);
   double rx(amplitude*DEG2RAD);
   time -= starttime;
   if( time>0 )
@@ -68,7 +60,6 @@ void pendulum_t::update(uint32_t frame,bool running)
 }
 
 REGISTER_MODULE(pendulum_t);
-REGISTER_MODULE_UPDATE(pendulum_t);
 
 /*
  * Local Variables:

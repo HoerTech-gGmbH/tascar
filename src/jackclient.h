@@ -49,6 +49,7 @@ public:
   void connect(const std::string& src, const std::string& dest, bool btry=false);
   uint32_t get_xruns() const { return xruns;};
   uint32_t get_xrun_latency() const { return xrun_latency;};
+  float get_cpu_load() const { return jack_cpu_load(jc);};
 private:
   static int xrun_callback(void *arg);
 protected:
