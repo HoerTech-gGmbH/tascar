@@ -4,14 +4,14 @@ using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
 
 mask_t::mask_t()
-  : falloff(1.0),mask_inner(false)
+  : inv_falloff(1.0),mask_inner(false),active(true)
 {
 }
 
 double mask_t::gain(const pos_t& p)
 {
   double d(nextpoint(p).norm());
-  d = 0.5+0.5*cos(M_PI*std::min(1.0,d*falloff));
+  d = 0.5+0.5*cos(M_PI*std::min(1.0,d*inv_falloff));
   if( mask_inner )
     return 1.0-d;
   return d;
@@ -39,7 +39,7 @@ void pointsource_t::add_rmslevel(TASCAR::wave_t* r)
 
 doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,uint32_t sincorder_)
   : pointsource_t(chunksize,maxdist,sincorder_),
-    falloff(1.0),
+    inv_falloff(1.0),
     wnd_sqrt(false)
 {
 }
@@ -53,9 +53,9 @@ pos_t doorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
   gain *= std::max(0.0,-dot_prod(receivern.normal(),normal));
   // gain rule: normal hanning window or sqrt
   if( wnd_sqrt )
-    gain *= sqrt(0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*falloff)));
+    gain *= sqrt(0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*inv_falloff)));
   else
-    gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*falloff));
+    gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*inv_falloff));
   receivern *= distance;
   receivern += position;
   make_friendly_number(gain);
@@ -363,6 +363,7 @@ void world_t::process()
   for(uint32_t k=0;k<receivers_.size();++k){
     double gain_inner(1.0);
     if( receivers_[k]->use_global_mask || receivers_[k]->boundingbox.active ){
+      // first calculate attentuation based on bounding box:
       if( receivers_[k]->boundingbox.active ){
         shoebox_t maskbox;
         maskbox.size = receivers_[k]->boundingbox.size;
@@ -370,16 +371,19 @@ void world_t::process()
         double d(maskbox.nextpoint(receivers_[k]->position).norm());
         gain_inner *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
       }
+      // then calculate attenuation based on global masks:
       if( receivers_[k]->use_global_mask ){
         uint32_t c_outer(0);
         double gain_outer(0.0);
         for(uint32_t km=0;km<masks_.size();++km){
-          pos_t p(receivers_[k]->position);
-          if( masks_[km]->mask_inner ){
-            gain_inner = std::min(gain_inner,masks_[km]->gain(p));
-          }else{
-            c_outer++;
-            gain_outer = std::max(gain_outer,masks_[km]->gain(p));
+          if( masks_[km]->active ){
+            pos_t p(receivers_[k]->position);
+            if( masks_[km]->mask_inner ){
+              gain_inner = std::min(gain_inner,masks_[km]->gain(p));
+            }else{
+              c_outer++;
+              gain_outer = std::max(gain_outer,masks_[km]->gain(p));
+            }
           }
         }
         if( c_outer > 0 )
@@ -394,8 +398,10 @@ void world_t::process()
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
     local_active_diffuse += diffuse_acoustic_model[k]->process();
   // apply receiver gain:
-  for(uint32_t k=0;k<receivers_.size();k++)
+  for(uint32_t k=0;k<receivers_.size();k++){
+    receivers_[k]->post_proc();
     receivers_[k]->apply_gain();
+  }
   active_pointsource = local_active_point;
   active_diffusesource = local_active_diffuse;
 }
@@ -412,6 +418,7 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,
   pos_t prel;
   double d(1.0);
   receiver_->update_refpoint(src_->center,src_->center,prel,d,gain);
+  gain = 0;
 }
 
 diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
@@ -527,6 +534,14 @@ void receiver_t::add_pointsource(const pos_t& prel, const wave_t& chunk, receive
 /**
    \ingroup callgraph
  */
+void receiver_t::post_proc()
+{
+  postproc(outchannels);
+}
+
+/**
+   \ingroup callgraph
+ */
 void receiver_t::add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t* data)
 {
   receivermod_t::add_diffusesource(chunk,outchannels,data);
@@ -545,7 +560,7 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     double sizedist = pow(size.x*size.y*size.z,0.33333);
     double d(box.nextpoint(prel).norm());
     if( falloff > 0 )
-      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d*falloff)))/std::max(0.1,sizedist);
+      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d/falloff)))/std::max(0.1,sizedist);
     else
       gain = 1.0/std::max(1.0,d+sizedist);
   }else{

@@ -11,6 +11,9 @@ private:
   double time;
   double stoptime;
   bool running;
+  std::string id;
+  bool active;
+  bool tascartime;
   TASCAR::track_t location;
   TASCAR::euler_track_t orientation;
 };
@@ -28,9 +31,6 @@ void motionpath_t::go(double start,double end)
   stoptime = end;
   time = start;
   running = true;
-  DEBUG(start);
-  DEBUG(end);
-  DEBUG(obj.size());
 }
 
 
@@ -38,8 +38,15 @@ motionpath_t::motionpath_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : actor_module_t(xmlsrc,session),
     time(0),
     stoptime(3153600000),// 100 years from now
-    running(false)
+    running(false),
+    active(true),
+    tascartime(false)
 {
+  GET_ATTRIBUTE_BOOL(active);
+  GET_ATTRIBUTE_BOOL(tascartime);
+  GET_ATTRIBUTE(id);
+  if( id.empty() )
+    id = "motionpath";
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -74,27 +81,33 @@ motionpath_t::motionpath_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
       }
     }
   }
-  session->add_method("/motionpath/go","ff",&motionpath_t::osc_go,this);
-  session->add_bool_true("/motionpath/start",&running);
-  session->add_bool_false("/motionpath/stop",&running);
-  session->add_double("/motionpath/locate",&time);
-  session->add_double("/motionpath/stoptime",&stoptime);
+  if( !tascartime ){
+    session->add_method("/"+id+"/go","ff",&motionpath_t::osc_go,this);
+    session->add_bool_true("/"+id+"/start",&running);
+    session->add_bool_false("/"+id+"/stop",&running);
+    session->add_double("/"+id+"/locate",&time);
+    session->add_double("/"+id+"/stoptime",&stoptime);
+  }
+  session->add_bool("/"+id+"/active",&active);
 }
 
 motionpath_t::~motionpath_t()
 {
 }
 
-void motionpath_t::update(uint32_t ,bool )
+void motionpath_t::update(uint32_t tp_frame,bool tp_running)
 {
+  if( !active )
+    return;
   if( time > stoptime ){
     time = stoptime;
     running = false;
   }
-  double ltime(time);
   if( running )
     time += t_fragment;
-  //DEBUG(ltime);
+  double ltime(time);
+  if( tascartime )
+    ltime = tp_frame*t_sample;
   TASCAR::zyx_euler_t dr(orientation.interp(ltime));
   TASCAR::pos_t dp(location.interp(ltime));
   for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){

@@ -1,18 +1,28 @@
-function [y,fs,bufsize,load,xruns] = tascar_jackio( x, csOutputPorts, csInputPorts, transportStart)
+function [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, varargin )
 % TASCAR_JACKIO - synchonouos recording/playback via jack
 %
 % Usage:
-% Query jack server settings:
-% [fs,bufsize] = tascar_jackio();
+% [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, ... );
 %
-% Playback of MATLAB vector:
-% fs = tascar_jackio( x, csOutputPorts );
+% Examples:
+% 
+% Display list of valid key/value pairs:
+% tascar_jackio help
+%
+% Playback of MATLAB matrix x on hardware outputs (one column per channel):
+% tascar_jackio( x );
+%
+% Playback of MATLAB data via user defined ports:
+% tascar_jackio( x, 'output', csOutputPorts );
 %
 % Synchronouos playback and recording of MATLAB vector:
-% [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts );
+% [y,fs,bufsize] = tascar_jackio( x, 'output', csOutputPorts, 'input', csInputPorts );
 %
 % Synchronouos playback and recording, with jack transport:
-% [y,fs,bufsize] = tascar_jackio( x, csOutputPorts, csInputPorts, transportStart );
+% [y,fs,bufsize] = tascar_jackio( x, 'input', csInputPorts, 'starttime', transportStart );
+%
+% Synchronouos playback and recording, in freewheeling mode:
+% [y,fs,bufsize] = tascar_jackio( x, 'input', csInputPorts, 'freewheeling', true );
 %
 % If csOutputPorts and csInputPorts are a single string, a single
 % port name is used. If they are a cell string array, the number of
@@ -24,7 +34,32 @@ function [y,fs,bufsize,load,xruns] = tascar_jackio( x, csOutputPorts, csInputPor
 % Author: Giso Grimm
 % Date: 11/2013
 
-  
+  if nargin == 0
+    x = [];
+    varargin{end+1} = 'help';
+    disp(help(mfilename));
+  end
+  if (nargin == 1) && ischar(x) && strcmp(x,'help')
+    varargin{end+1} = 'help';
+    x = [];
+  end
+  sCfg = struct;
+  sHelp = struct;
+  sCfg.input = {};
+  sHelp.input = ['input port names, single string, cell string or' ...
+		 ' physical port numbers'];
+  sCfg.output = [1:size(x,2)];
+  sHelp.output = ['output port names, single string, cell string or' ...
+		  ' physical port numbers'];
+  sCfg.starttime = [];
+  sHelp.starttime = ['if not empty use jack transport and start from' ...
+		     ' this time'];
+  sCfg.freewheeling = false;
+  sHelp.freewheeling = ['switch to freewheeling mode'];
+  sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
+  if isempty(sCfg)
+    return;
+  end
   [err,msg] = system('LD_LIBRARY_PATH="" jack_bufsize');
   [data,narg] = sscanf(msg,'buffer size = %d sample rate = %d');
   if narg ~= 2
@@ -33,36 +68,34 @@ function [y,fs,bufsize,load,xruns] = tascar_jackio( x, csOutputPorts, csInputPor
   y = [];
   fs = data(2);
   bufsize = data(1);
-  if nargin == 0
-    y = fs;
-    fs = bufsize;
-    return
-  end
-  if nargin < 2
-    csOutputPorts = [1:size(x,2)];
-  end
-  if nargin < 3
-    csInputPorts = {};
-  end
-  if nargin < 4
-    transportStart = [];
-  end
+  %if nargin < 2
+  %  csOutputPorts = [1:size(x,2)];
+  %end
+  %if nargin < 3
+  %  csInputPorts = {};
+  %end
+  %if nargin < 4
+  %  transportStart = [];
+  %end
   sInPar = '';
   sCmd = 'tascar_jackio';
-  if ~isempty(transportStart)
-    sCmd = [sCmd,sprintf(' -s %g',transportStart)];
+  if ~isempty(sCfg.starttime)
+    sCmd = [sCmd,sprintf(' -s %g',sCfg.starttime)];
+  end
+  if sCfg.freewheeling
+    sCmd = [sCmd,' -f'];
   end
   sStatname = tempname();
   sCmd = [sCmd,' -t ',sStatname];
-  if ~isempty(csInputPorts)
+  if ~isempty(sCfg.input)
     sNameIn = [tempname(),'.wav'];
     sInPar = ['-o ',sNameIn];
-    csInputPorts = portname( csInputPorts, 'input' );
-    for k=1:numel(csInputPorts)
-      sInPar = [sInPar,' ',csInputPorts{k}];
+    sCfg.input = portname( sCfg.input, 'input' );
+    for k=1:numel(sCfg.input)
+      sInPar = [sInPar,' ',sCfg.input{k}];
     end
   end
-  if ~isempty(csOutputPorts)
+  if ~isempty(sCfg.output)
     sNameOut = [tempname(),'.wav'];
     if ~isempty(ver('octave'))
       %% this is octave; warn if abs(x) > 1
@@ -72,9 +105,9 @@ function [y,fs,bufsize,load,xruns] = tascar_jackio( x, csOutputPorts, csInputPor
     end
     wavwrite(x,fs,32,sNameOut);
     sCmd = [sCmd,' -u ',sNameOut];
-    csOutputPorts = portname(csOutputPorts,'output');
-    for k=1:numel(csOutputPorts)
-      sCmd = [sCmd,' ',csOutputPorts{k}];
+    sCfg.output = portname(sCfg.output,'output');
+    for k=1:numel(sCfg.output)
+      sCmd = [sCmd,' ',sCfg.output{k}];
     end
   end
   sCmd = [sCmd,' ',sInPar];
@@ -87,10 +120,22 @@ function [y,fs,bufsize,load,xruns] = tascar_jackio( x, csOutputPorts, csInputPor
     y = wavread(sNameIn);
     delete(sNameIn);
   end
-  sStat = textread(sStatname);
-  load = sStat(2);
-  xruns = sStat(3);
+  fh = fopen(sStatname,'r');
+  [data,cnt] = fscanf(fh,'cpuload %g xruns %g');
+  fclose(fh);
+  load = -1;
+  xruns = -1;
+  if cnt == 2
+    load = data(1);
+    xruns = data(2);
+  end
+  %sStat = textread(sStatname);
+  %load = sStat(2);
+  %xruns = sStat(3);
   delete(sStatname);
+  if nargout == 0
+    clear('y');
+  end
   
 function csPort = portname( csPort, mode )
   if ischar(csPort)

@@ -102,7 +102,9 @@ int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, l
 }
 
 osc_server_t::osc_server_t(const std::string& multicast, const std::string& port,bool verbose_)
-  : initialized(false),
+  : osc_srv_addr(multicast),
+    osc_srv_port(port),
+    initialized(false),
     isactive(false),
     verbose(verbose_)
 {
@@ -145,6 +147,10 @@ void osc_server_t::add_method(const std::string& path,const char* typespec,lo_me
     if( verbose )
       std::cerr << "added handler " << sPath << " with typespec \"" << typespec << "\"" << std::endl;
     lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
+    descriptor_t d;
+    d.path = sPath;
+    d.typespec = typespec;
+    variables.push_back(d);
   }
 }
 
@@ -211,6 +217,15 @@ void osc_server_t::deactivate()
     if( verbose )
       std::cerr << "server inactive\n";
   }
+}
+
+std::string osc_server_t::list_variables() const
+{
+  std::string rv;
+  for(std::vector<descriptor_t>::const_iterator it=variables.begin();it!=variables.end();++it){
+    rv += it->path + "  (" + it->typespec + ")\n";
+  }
+  return rv;
 }
 
 

@@ -169,6 +169,8 @@ pos_t track_t::interp(double x) const
   cnt_interp++;
   if( begin() == end() )
     return pos_t();
+  if( loop && (x >= rbegin()->first ) )
+    x = fmod(x,rbegin()->first);
   const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
@@ -256,9 +258,11 @@ std::string TASCAR::xml_get_text( xmlpp::Node* n, const std::string& child )
       }
     }else{
       xmlpp::NodeSet stxt = n->find("text()");
-      xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
-      if( txt ){
-        return txt->get_content();
+      if( stxt.begin() != stxt.end() ){
+        xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
+        if( txt ){
+          return txt->get_content();
+        }
       }
     }
   }
@@ -565,7 +569,8 @@ double track_t::length()
 }
 
 track_t::track_t()
-  : interpt(cartesian)
+  : loop(false),
+    interpt(cartesian)
 {
 }
 
@@ -587,9 +592,36 @@ void track_t::write_xml( xmlpp::Element* a)
 
 void track_t::read_xml( xmlpp::Element* a )
 {
+  std::string sloop(a->get_attribute_value("loop"));
+  if( !sloop.empty() )
+    loop = (sloop == "true");
   track_t ntrack;
+  ntrack.loop = loop;
   if( a->get_attribute_value("interpolation") == "spherical" )
     ntrack.set_interpt(TASCAR::track_t::spherical);
+  std::string importcsv(a->get_attribute_value("importcsv"));
+  if( !importcsv.empty() ){
+    // load track from CSV file:
+    std::ifstream fh(importcsv.c_str());
+    if( fh.fail() || (!fh.good()) ){
+      throw TASCAR::ErrMsg("Unable to open track csv file \""+importcsv+"\".");
+    }
+    std::string v_tm, v_x, v_y, v_z;
+    while( !fh.eof() ){
+      getline(fh,v_tm,',');
+      getline(fh,v_x,',');
+      getline(fh,v_y,',');
+      getline(fh,v_z);
+      if( v_tm.size() && v_x.size() && v_y.size() && v_z.size() ){
+        double tm = atof(v_tm.c_str());
+        double x = atof(v_x.c_str());
+        double y = atof(v_y.c_str());
+        double z = atof(v_z.c_str());
+        ntrack[tm] = pos_t(x,y,z);
+      }
+    }
+    fh.close();
+  }
   std::stringstream ptxt(xml_get_text(a,""));
   while( !ptxt.eof() ){
     double t(-1);
@@ -647,15 +679,18 @@ void track_t::prepare()
   }
 }
 
+euler_track_t::euler_track_t()
+  : loop(false)
+{
+}
+
 zyx_euler_t euler_track_t::interp(double x) const
 {
-  //DEBUG(size());
   if( begin() == end() ){
-    //DEBUG("exit");
     return zyx_euler_t();
   }
-  //DEBUG(x);
-  //DEBUG(begin()->first);
+  if( loop && (x >= rbegin()->first ) )
+    x = fmod(x,rbegin()->first);
   const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
@@ -685,7 +720,35 @@ void euler_track_t::write_xml( xmlpp::Element* a)
 
 void euler_track_t::read_xml( xmlpp::Element* a )
 {
+  std::string sloop(a->get_attribute_value("loop"));
+  if( !sloop.empty() )
+    loop = (sloop == "true");
   euler_track_t ntrack;
+  ntrack.loop = loop;
+  std::string importcsv(a->get_attribute_value("importcsv"));
+  if( !importcsv.empty() ){
+    // load track from CSV file:
+    std::ifstream fh(importcsv.c_str());
+    if( fh.fail() || (!fh.good()) )
+      throw TASCAR::ErrMsg("Unable to open Euler track csv file \""+importcsv+"\".");
+    std::string v_tm, v_x, v_y, v_z;
+    while( !fh.eof() ){
+      getline(fh,v_tm,',');
+      getline(fh,v_z,',');
+      getline(fh,v_y,',');
+      getline(fh,v_x);
+      if( v_tm.size() && v_x.size() && v_y.size() && v_z.size() ){
+        double tm = atof(v_tm.c_str());
+        zyx_euler_t p;
+        p.x = atof(v_x.c_str());
+        p.y = atof(v_y.c_str());
+        p.z = atof(v_z.c_str());
+        p *= DEG2RAD;
+        ntrack[tm] = p;
+      }
+    }
+    fh.close();
+  }
   std::stringstream ptxt(xml_get_text(a,""));
   while( !ptxt.eof() ){
     double t(-1);
@@ -771,7 +834,6 @@ pos_t shoebox_t::nextpoint(pos_t p)
 {
   p -= center;
   p /= orientation;
-  //DEBUG(size.print_cart());
   pos_t prel;
   if( p.x > 0 )
     prel.x = std::max(0.0,p.x-0.5*size.x);

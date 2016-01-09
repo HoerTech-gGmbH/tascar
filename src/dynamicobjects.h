@@ -10,9 +10,10 @@ namespace TASCAR {
     dynobject_t(xmlpp::Element*);
     void write_xml();
     virtual void geometry_update(double t);
-    pos_t get_location();
-    zyx_euler_t get_orientation();
-    void get_6dof(pos_t&,zyx_euler_t&);
+    pos_t get_location() const;
+    zyx_euler_t get_orientation() const;
+    void get_6dof(pos_t&,zyx_euler_t&) const;
+    void get_6dof_prev(pos_t&,zyx_euler_t&) const;
     double starttime;
     track_t location;
     euler_track_t orientation;
@@ -22,6 +23,7 @@ namespace TASCAR {
   private:
     dynobject_t(const dynobject_t&);
     c6dof_t c6dof_;
+    c6dof_t c6dof_prev;
     xmlpp::Element* xml_location;
     xmlpp::Element* xml_orientation;
   };

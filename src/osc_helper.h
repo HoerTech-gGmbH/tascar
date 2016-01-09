@@ -27,6 +27,7 @@
 #ifndef OSC_HELPER_H
 #define OSC_HELPER_H
 
+#include <vector>
 #include <string>
 #include <lo/lo.h>
 
@@ -46,6 +47,11 @@ namespace TASCAR {
 
   class osc_server_t {
   public:
+    class descriptor_t {
+    public:
+      std::string path;
+      std::string typespec;
+    };
     osc_server_t(const std::string& multicast, const std::string& port,bool verbose=true);
     ~osc_server_t();
     void set_prefix(const std::string& prefix);
@@ -61,6 +67,10 @@ namespace TASCAR {
     void add_uint(const std::string& path,uint32_t *data);
     void activate();
     void deactivate();
+    std::string list_variables() const;
+    std::vector<descriptor_t> variables;
+    const std::string osc_srv_addr;
+    const std::string osc_srv_port;
   private:
     std::string prefix;
     lo_server_thread lost;

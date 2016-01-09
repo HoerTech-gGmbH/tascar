@@ -271,6 +271,7 @@ namespace TASCAR {
       void write_xml();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
+      void process_active(double t,uint32_t anysolo);
       pos_t xmlsize;
       double xmlfalloff;
     };

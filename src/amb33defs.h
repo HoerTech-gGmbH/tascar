@@ -16,6 +16,19 @@ namespace AMB11 {
 
 };
 
+namespace AMB10 {
+
+  const char channelorder[] = "wyx";
+
+  class idx {
+  public:
+    enum {
+      w, y, x, channels
+    };
+  };
+
+};
+
 namespace AMB33 {
 
   const char channelorder[] = "wyzxvtrsuqomklnp";

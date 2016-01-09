@@ -29,7 +29,7 @@ wave_t::wave_t(const wave_t& src)
     n(src.n), own_pointer(true), append_pos(src.append_pos),
     rmsscale(1.0f)
 {
-  for(uint32_t k=0;k<n;k++)
+  for(uint32_t k=0;k<n;++k)
     d[k] = src.d[k];
   rmsscale = 1.0f/(float)n;
 }
@@ -48,7 +48,7 @@ void wave_t::clear()
 uint32_t wave_t::copy(float* data,uint32_t cnt,float gain)
 {
   uint32_t n_min(std::min(n,cnt));
-  for( uint32_t k=0;k<n_min;k++)
+  for( uint32_t k=0;k<n_min;++k)
     d[k] = data[k]*gain;
   //memcpy(d,data,n_min*sizeof(float));
   if( n_min < n )
@@ -58,14 +58,14 @@ uint32_t wave_t::copy(float* data,uint32_t cnt,float gain)
 
 void wave_t::operator*=(double v)
 {
-  for( uint32_t k=0;k<n;k++)
+  for( uint32_t k=0;k<n;++k)
     d[k] *= v;
 }
 
 uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
 {
   uint32_t n_min(std::min(n,cnt));
-  for( uint32_t k=0;k<n_min;k++)
+  for( uint32_t k=0;k<n_min;++k)
     data[k] = d[k]*gain;
   //memcpy(data,d,n_min*sizeof(float));
   if( n_min < cnt )
@@ -75,14 +75,14 @@ uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
 
 void wave_t::operator+=(const wave_t& o)
 {
-  for(uint32_t k=0;k<std::min(size(),o.size());k++)
+  for(uint32_t k=0;k<std::min(size(),o.size());++k)
     d[k]+=o[k];
 }
 
 float wave_t::rms() const
 {
   float rv(0.0f);
-  for(uint32_t k=0;k<size();k++)
+  for(uint32_t k=0;k<size();++k)
     rv += d[k]*d[k];
   rv *= rmsscale;
   return sqrt(rv);
@@ -154,20 +154,34 @@ uint32_t sndfile_handle_t::readf_float( float* buf, uint32_t frames )
 
 sndfile_t::sndfile_t(const std::string& fname,uint32_t channel)
   : sndfile_handle_t(fname),
-    wave_t(get_frames())
+    wave_t(get_frames()),
+    looped_t(0),
+    looped_gain(0)
 {
   uint32_t ch(get_channels());
   uint32_t N(get_frames());
   wave_t chbuf(N*ch);
   readf_float(chbuf.d,N);
-  for(uint32_t k=0;k<N;k++)
+  for(uint32_t k=0;k<N;++k)
     d[k] = chbuf[k*ch+channel];
 }
 
 void sndfile_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk)
 {
-  for(int32_t k=std::max(start_time,chunk_time);k < std::min(start_time+(int32_t)(size()),chunk_time+(int32_t)(chunk.size()));k++)
+  for(int32_t k=std::max(start_time,chunk_time);k < std::min(start_time+(int32_t)(size()),chunk_time+(int32_t)(chunk.size()));++k)
     chunk[k-chunk_time] += gain*d[k-start_time];
+}
+
+void sndfile_t::add_chunk_looped(float gain,wave_t& chunk)
+{
+  float dg((gain-looped_gain)/chunk.n);
+  float* pdN(chunk.d+chunk.n);
+  for(float* pd=chunk.d;pd<pdN;++pd){
+    *pd = (looped_gain += dg)*d[looped_t];
+    ++looped_t;
+    if( looped_t >= n )
+      looped_t = 0;
+  }
 }
 
 void wave_t::copy(const wave_t& src)
@@ -177,7 +191,7 @@ void wave_t::copy(const wave_t& src)
 
 void wave_t::operator*=(const wave_t& o)
 {
-  for(unsigned int k=0;k<std::min(o.n,n);k++){
+  for(unsigned int k=0;k<std::min(o.n,n);++k){
     d[k] *= o.d[k];
   }
 }

@@ -50,7 +50,7 @@ namespace TASCAR {
       doorsource_t(uint32_t chunksize, double maxdist,uint32_t sincorder_);
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       //void process();
-      double falloff;
+      double inv_falloff;
       double distance;
       bool wnd_sqrt;
     };
@@ -85,8 +85,9 @@ namespace TASCAR {
     public:
       mask_t();
       double gain(const pos_t& p);
-      double falloff;
+      double inv_falloff;
       bool mask_inner;
+      bool active;
     };
 
     class receiver_t : public receivermod_t {
@@ -100,6 +101,7 @@ namespace TASCAR {
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
       void set_next_gain(double gain);
       void apply_gain();
+      void post_proc();
       // configuration/control variables:
       TASCAR::pos_t size;
       bool render_point;

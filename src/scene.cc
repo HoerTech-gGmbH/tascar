@@ -132,7 +132,7 @@ void src_door_t::geometry_update(double t)
 {
   if( source ){
     dynobject_t::geometry_update(t);
-    source->falloff = 1.0/std::max(falloff,1.0e-10);
+    source->inv_falloff = 1.0/std::max(falloff,1.0e-10);
     source->distance = distance;
     source->wnd_sqrt = wnd_sqrt;
     source->position = get_location();
@@ -360,40 +360,42 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     scene_path("")
 {
   try{
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(mirrororder);
-  GET_ATTRIBUTE(guiscale);
-  GET_ATTRIBUTE(guicenter);
-  GET_ATTRIBUTE(c);
-  description = xml_get_text(e,"description");
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      // rename old "sink" to "receiver":
-      if( sne->get_name() == "sink" )
-        sne->set_name("receiver");
-      // parse nodes:
-      if( sne->get_name() == "src_object" )
-        object_sources.push_back(new src_object_t(sne));
-      else if( sne->get_name() == "door" )
-        door_sources.push_back(new src_door_t(sne));
-      else if( sne->get_name() == "diffuse" )
-        diffuse_sources.push_back(new src_diffuse_t(sne));
-      else if( sne->get_name() == "receiver" )
-        receivermod_objects.push_back(new receivermod_object_t(sne));
-      else if( sne->get_name() == "face" )
-        faces.push_back(new face_object_t(sne));
-      else if( sne->get_name() == "facegroup" )
-        facegroups.push_back(new face_group_t(sne));
-      else if( sne->get_name() == "obstacle" )
-        obstaclegroups.push_back(new obstacle_group_t(sne));
-      else if( sne->get_name() == "mask" )
-        masks.push_back(new mask_object_t(sne));
-      else
-        std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
+    GET_ATTRIBUTE(name);
+    if( name.empty() )
+      name = "scene";
+    GET_ATTRIBUTE(mirrororder);
+    GET_ATTRIBUTE(guiscale);
+    GET_ATTRIBUTE(guicenter);
+    GET_ATTRIBUTE(c);
+    description = xml_get_text(e,"description");
+    xmlpp::Node::NodeList subnodes = e->get_children();
+    for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+      if( sne ){
+        // rename old "sink" to "receiver":
+        if( sne->get_name() == "sink" )
+          sne->set_name("receiver");
+        // parse nodes:
+        if( sne->get_name() == "src_object" )
+          object_sources.push_back(new src_object_t(sne));
+        else if( sne->get_name() == "door" )
+          door_sources.push_back(new src_door_t(sne));
+        else if( sne->get_name() == "diffuse" )
+          diffuse_sources.push_back(new src_diffuse_t(sne));
+        else if( sne->get_name() == "receiver" )
+          receivermod_objects.push_back(new receivermod_object_t(sne));
+        else if( sne->get_name() == "face" )
+          faces.push_back(new face_object_t(sne));
+        else if( sne->get_name() == "facegroup" )
+          facegroups.push_back(new face_group_t(sne));
+        else if( sne->get_name() == "obstacle" )
+          obstaclegroups.push_back(new obstacle_group_t(sne));
+        else if( sne->get_name() == "mask" )
+          masks.push_back(new mask_object_t(sne));
+        else
+          std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
+      }
     }
-  }
   }
   catch(...){
     clean_children();
@@ -460,6 +462,8 @@ void scene_t::process_active(double t)
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
+    (*it)->process_active(t,anysolo);
+  for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it)
     (*it)->process_active(t,anysolo);
 }
 
@@ -538,7 +542,12 @@ void mask_object_t::geometry_update(double t)
   shoebox_t::size.y = std::max(0.0,xmlsize.y-xmlfalloff);
   shoebox_t::size.z = std::max(0.0,xmlsize.z-xmlfalloff);
   dynobject_t::get_6dof(shoebox_t::center,shoebox_t::orientation);
-  falloff = 1.0/std::max(xmlfalloff,1e-10);
+  inv_falloff = 1.0/std::max(xmlfalloff,1e-10);
+}
+
+void mask_object_t::process_active(double t,uint32_t anysolo)
+{
+  mask_object_t::active = is_active(anysolo,t);
 }
 
 receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)

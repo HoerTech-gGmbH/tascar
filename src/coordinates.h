@@ -447,6 +447,7 @@ namespace TASCAR {
     double get_time( double dist ) const {return dist_time.interp(dist);};
     void prepare();
     void fill_gaps(double dt);
+    bool loop;
   private:
     interp_t interpt;
     table1_t time_dist;
@@ -504,10 +505,12 @@ namespace TASCAR {
     /**
        \brief Return the interpolated orientation for a given time.
     */
+    euler_track_t();
     zyx_euler_t interp(double x) const;
     void write_xml( xmlpp::Element* );
     void read_xml( xmlpp::Element* );
     std::string print(const std::string& delim=", ");
+    bool loop;
   };
 
   class shoebox_t {

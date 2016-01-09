@@ -10,10 +10,10 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf		\
 #tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
 #tascar_tscupdate tascar_pdf
 
-RECEIVERS = omni nsp amb3h0v amb3h3v cardioid neukom_basic	\
-neukom_inphase hann vbap vbap3d hoa2d
+RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
+neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
 
-TASCARMODS = system pos2osc sampler pendulum epicycles motionpath
+TASCARMODS = system pos2osc sampler pendulum epicycles motionpath foa2hoadiff
 
 TEST_FILES = test_ngon test_sinc
 
@@ -126,7 +126,7 @@ include $(wildcard *.mk)
 
 tascar_gui: libtascargui.a
 
-$(BINFILES): libtascar.a
+$(BINFILES) $(RECEIVERMODS) $(TASCARMODDLLS): libtascar.a
 
 $(PREFIX)/bin/%: %
 	cp $< $@

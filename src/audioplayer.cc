@@ -227,7 +227,7 @@ int TASCAR::renderer_t::process(jack_nframes_t nframes,
   }
   // copy receiver output:
   for(unsigned int k=0;k<receivermod_objects.size();k++){
-    receivermod_objects[k]->postproc(receivermod_objects[k]->outchannels);
+    //receivermod_objects[k]->postproc(receivermod_objects[k]->outchannels);
     //TASCAR::Acousticmodel::receiver_t* preceiver(receiver_objects[k].get_receiver());
     float gain(receivermod_objects[k]->get_gain());
     uint32_t numch(receivermod_objects[k]->get_num_channels());
@@ -325,6 +325,19 @@ void TASCAR::renderer_t::start()
     }
   }
   // todo: connect diffuse ports.
+  for(std::vector<src_diffuse_t*>::iterator idiff=diffuse_sources.begin();idiff!=diffuse_sources.end();++idiff){
+    src_diffuse_t* pdiff(*idiff);
+    std::string cn(pdiff->get_connect());
+    cn = strrep(cn,"@","player."+name+":"+pdiff->get_name());
+    uint32_t pi(pdiff->get_port_index());
+    if( cn.size() ){
+      for(uint32_t k=0;k<4;++k){
+        char ctmp[1024];
+        sprintf(ctmp,"%s.%d",cn.c_str(),k);
+        connect_in(pi+k,ctmp,true);
+      }
+    }
+  }
   // connect receiver ports:
   for(unsigned int k=0;k<receivermod_objects.size();k++){
     std::string cn(receivermod_objects[k]->get_connect());

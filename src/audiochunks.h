@@ -88,6 +88,10 @@ namespace TASCAR {
   public:
     sndfile_t(const std::string& fname,uint32_t channel=0);
     void add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk);
+    void add_chunk_looped(float gain,wave_t& chunk);
+  private:
+    uint32_t looped_t;
+    float looped_gain;
   };
 
 }

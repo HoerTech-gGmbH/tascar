@@ -162,6 +162,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
 void TASCAR::session_t::read_xml()
 {
   get_attribute("name",name);
+  if( name.empty() )
+    name = "tascar";
   get_attribute("duration",duration);
   get_attribute_bool("loop",loop);
   try{
@@ -311,8 +313,12 @@ int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>&
     next_tp_frame += fragsize;
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
     (*imod)->update(next_tp_frame,tp_running);
-  if( loop && ( t >= duration ) )
-    tp_locate(0u);
+  if( t >= duration ){
+    if( loop )
+      tp_locate(0u);
+    else
+      tp_stop();
+  }
   return 0;
 }
 

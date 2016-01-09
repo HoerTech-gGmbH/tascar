@@ -22,6 +22,9 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
     if( sne && (sne->get_name() == "creator")){
       xmlpp::Node::NodeList subnodes = sne->get_children();
       location.edit(subnodes);
+      std::string sloop(sne->get_attribute_value("loop"));
+      if( !sloop.empty() )
+        location.loop = (sloop == "true");
       TASCAR::track_t::iterator it_old=location.end();
       double old_azim(0);
       double new_azim(0);
@@ -42,6 +45,8 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
       }
     }
   }
+  geometry_update(0);
+  c6dof_prev = c6dof_;
 }
 
 void TASCAR::dynobject_t::write_xml()
@@ -61,6 +66,7 @@ void TASCAR::dynobject_t::write_xml()
 
 void TASCAR::dynobject_t::geometry_update(double time)
 {
+  c6dof_prev = c6dof_;
   double ltime(time-starttime);
   c6dof_.p = location.interp(ltime);
   c6dof_.p += dlocation;
@@ -68,20 +74,26 @@ void TASCAR::dynobject_t::geometry_update(double time)
   c6dof_.o += dorientation;
 }
 
-TASCAR::pos_t TASCAR::dynobject_t::get_location()
+TASCAR::pos_t TASCAR::dynobject_t::get_location() const
 {
   return c6dof_.p;
 }
 
-TASCAR::zyx_euler_t TASCAR::dynobject_t::get_orientation()
+TASCAR::zyx_euler_t TASCAR::dynobject_t::get_orientation() const
 {
   return c6dof_.o;
 }
 
-void TASCAR::dynobject_t::get_6dof(pos_t& p,zyx_euler_t& o)
+void TASCAR::dynobject_t::get_6dof(pos_t& p,zyx_euler_t& o) const
 {
   p = c6dof_.p;
   o = c6dof_.o;
+}
+
+void TASCAR::dynobject_t::get_6dof_prev(pos_t& p,zyx_euler_t& o) const
+{
+  p = c6dof_prev.p;
+  o = c6dof_prev.o;
 }
 
 /*
