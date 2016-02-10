@@ -60,10 +60,10 @@ function [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, varargin )
   if isempty(sCfg)
     return;
   end
-  [err,msg] = system('LD_LIBRARY_PATH="" jack_bufsize');
-  [data,narg] = sscanf(msg,'buffer size = %d sample rate = %d');
+  [err,msg] = system('LD_LIBRARY_PATH="" tascar_jackpar');
+  [data,narg] = sscanf(msg,'%d %d');
   if narg ~= 2
-    error('jack_bufsize failed');
+    error('tascar_jackpar failed');
   end
   y = [];
   fs = data(2);

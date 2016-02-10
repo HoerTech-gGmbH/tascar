@@ -1,0 +1,7 @@
+*.mat
+scene.tsc
+*.pid
+results_*.m
+*.bak
+generated.tsc
+octave-workspace

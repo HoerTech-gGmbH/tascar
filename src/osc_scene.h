@@ -24,6 +24,7 @@ namespace TASCAR {
       void add_route_methods(TASCAR::osc_server_t*,TASCAR::Scene::route_t* r);
       void add_sound_methods(TASCAR::osc_server_t*,TASCAR::Scene::sound_t* s);
       void add_diffuse_methods(TASCAR::osc_server_t*,TASCAR::Scene::src_diffuse_t* s);
+      void add_receiver_methods(TASCAR::osc_server_t*,TASCAR::Scene::receivermod_object_t* s);
       void add_face_object_methods(TASCAR::osc_server_t*,TASCAR::Scene::face_object_t* s);
       void add_face_group_methods(TASCAR::osc_server_t*,TASCAR::Scene::face_group_t* s);
       std::vector<route_solo_p_t*> vprs;

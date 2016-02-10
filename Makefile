@@ -3,7 +3,7 @@
 #
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf		\
   tascar_osc_jack_transport tascar_jackio tascar_sampler	\
-  tascar_hdspmixer tascar_levelmeter
+  tascar_hdspmixer tascar_levelmeter tascar_jackpar
 
 # tascar_gui tascar_sampler				\
 #tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
@@ -13,7 +13,8 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf		\
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
 neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
 
-TASCARMODS = system pos2osc sampler pendulum epicycles motionpath foa2hoadiff
+TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
+foa2hoadiff route
 
 TEST_FILES = test_ngon test_sinc
 

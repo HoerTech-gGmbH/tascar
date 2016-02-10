@@ -91,6 +91,16 @@ int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int
   return 1;
 }
 
+int osc_set_receiver_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  receivermod_object_t* h((receivermod_object_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='f') ){
+    h->set_gain_db(argv[0]->f);
+    return 0;
+  }
+  return 1;
+}
+
 void osc_scene_t::add_object_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::object_t* o)
 {
   srv->add_method("/"+name+"/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
@@ -130,6 +140,11 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::s
   srv->add_method("/"+name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
 }
 
+void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receivermod_object_t* s)
+{
+  srv->add_method("/"+name+"/"+s->object_t::get_name()+"/gain","f",osc_set_receiver_gain,s);
+}
+
 void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
 {
   //DEBUG(srv);
@@ -144,6 +159,8 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
     //tlabel.set_text("src");
     if( TASCAR::Scene::src_diffuse_t* po=dynamic_cast<TASCAR::Scene::src_diffuse_t*>(*it))
       add_diffuse_methods(srv,po);
+    if( TASCAR::Scene::receivermod_object_t* po=dynamic_cast<TASCAR::Scene::receivermod_object_t*>(*it))
+      add_receiver_methods(srv,po);
     //tlabel.set_text("dif");
     //if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
     //tlabel.set_text("rcvr");
