@@ -14,6 +14,7 @@ The toolbox depends on the following libraries:
 - liblo
 - gtkmm-2.4 or gtkmm-3.0
 - libxml++-2.6
+- liblsl-dev
 
 For de-installation, please type
 
@@ -23,4 +24,12 @@ On debian-based systems, the dependencies may be satisfied by typing:
 
 sudo apt-get install libxml++2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev
 
-(untested)
+To build a debian package of liblsl:
+
+git clone https://github.com/gisogrimm/labstreaminglayer
+cd labstreaminglayer/Distribution
+./pack.sh
+sudo dpkg -i liblsl*.deb
+
+The original source of labstreaminglayer is
+https://github.com/sccn/labstreaminglayer

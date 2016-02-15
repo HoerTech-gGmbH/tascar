@@ -1,17 +1,16 @@
 Toolbox for Acoustic Scene Creation and Rendering (TASCAR)
 
 TASCAR is a collection of tools used for creation of spatially dynamic
-acoustic scenes in higher order Ambisonics. The toolbox is developed
-for applications in the context of hearing research and hearing aid
-evaluation.
+acoustic scenes in various render formats, e.g., higher order
+Ambisonics or VBAP. The toolbox is developed for applications in the
+context of hearing research and hearing aid evaluation.
 
 References:
 
-Grimm, G.; Wendt, T.; Hohmann, V.; Ewert, S. (2014): Implementation
-and Perceptual Evaluation of a Simulation Method for Coupled Rooms in
-Higher Order Ambisonics. in: Proc. of the EAA Joint Symposium on
-Auralization and Ambisonics, Berlin, 2014, DOI:
-http://dx.doi.org/10.14279/depositonce-6
+Grimm, G.; Luberadzka, J.; Herzke, T.; Hohmann, V. (2015): Toolbox for
+acoustic scene creation and rendering (TASCAR) - Render methods and
+research applications. in: Proceedings of the Linux Audio Conference,
+Mainz, 2015
 
 Grimm, G.; Hohmann, V. (2014): Dynamic spatial acoustic scenarios in
 multichannel loudspeaker systems for hearing aid evaluations. in:
@@ -29,4 +28,4 @@ Giso Grimm
 
 g.grimm@uni-oldenburg.de
 
-Oldenburg, February 2013 - May 2014
+Oldenburg, February 2013 - February 2016

@@ -60,7 +60,7 @@ namespace TASCAR {
     xml_doc_t();
     xml_doc_t(const std::string& filename,load_type_t t);
     virtual void save(const std::string& filename);
-  protected:
+    //protected:
     xmlpp::DomParser domp;
     xmlpp::Document* doc;
   };

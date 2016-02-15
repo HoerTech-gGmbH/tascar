@@ -1,9 +1,10 @@
 #
 # main targets:
 #
-BINFILES = tascar_cli tascar_tscupdate tascar_pdf		\
-  tascar_osc_jack_transport tascar_jackio tascar_sampler	\
-  tascar_hdspmixer tascar_levelmeter tascar_jackpar
+BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
+  tascar_osc_jack_transport tascar_jackio tascar_sampler		\
+  tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
+  tascar_lsljacktime
 
 # tascar_gui tascar_sampler				\
 #tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
@@ -14,7 +15,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
 neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-foa2hoadiff route
+foa2hoadiff route lsljacktime
 
 TEST_FILES = test_ngon test_sinc
 
@@ -67,7 +68,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 
 #GTKMMBIN = tascar_gui
 
-CXXFLAGS += -fPIC -Wall -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./
+CXXFLAGS += -fPIC -Wall -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./ 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 #EXTERNALS = jack liblo sndfile
 
@@ -162,6 +163,8 @@ bz2:
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 
 tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
+
+tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime: LDLIBS+=-llsl
 
 tascarreceiver_%.so: receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)

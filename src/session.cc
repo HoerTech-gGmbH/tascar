@@ -154,6 +154,25 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
   }
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
+  // add session-includes:
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == "include")){
+      std::string idocname(sne->get_attribute_value("name"));
+      if( !idocname.empty() ){
+        xml_doc_t idoc(idocname,LOAD_FILE);
+        xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
+        for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
+          xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
+          if( isne ){
+            e->import_node(isne);
+          }
+        }
+      }
+    }
+  }
+  // parse XML:
   read_xml();
   add_transport_methods();
   osc_server_t::activate();
