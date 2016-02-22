@@ -98,7 +98,7 @@
 /**
    \defgroup callgraph The call-graph of audio processing
 
-   The top-level processing method is TASCAR::renderer_t::process(),
+   The top-level processing method is TASCAR::render_rt_t::process(),
    which renders the audio for one acoustic scene. Each scene is
    rendered independently.
 

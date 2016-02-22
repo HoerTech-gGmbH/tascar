@@ -159,9 +159,6 @@ TASCAR::async_sndfile_t::async_sndfile_t(uint32_t numchannels,uint32_t buffer_le
     xrun(0),
     min_read_chunk(std::min(8192u,buffer_length_>>1))
 {
-  //DEBUG(buffer_length);
-  //DEBUG(numchannels);
-  //DEBUG(fragsize);
   pthread_mutex_init( &mtx_file, NULL );
 }
 
@@ -236,8 +233,6 @@ void TASCAR::async_sndfile_t::service()
         for( unsigned int ch=0;ch<numchannels_;ch++)
           for( unsigned int k=0;k<rcnt;k++)
             disk_fragment_buf[numchannels_*k+ch] = gain_*file_buffer[file_channels*k+(ch+file_firstchannel)];
-        //DEBUG(file_buffer[0]);
-        //DEBUG(file_buffer[1]);
         rb.write( disk_fragment_buf, rcnt );
       }else{
         rb.write_zeros( rb.write_space() );
@@ -245,7 +240,6 @@ void TASCAR::async_sndfile_t::service()
       pthread_mutex_unlock( &mtx_file);
     }
   }
-  //DEBUG("service2");
 }
 
 TASCAR::async_sndfile_t::~async_sndfile_t()
@@ -262,7 +256,6 @@ TASCAR::async_sndfile_t::~async_sndfile_t()
   }
   delete [] read_fragment_buf;
   delete [] disk_fragment_buf;
-  //DEBUGMSG("destructor done");
 }
 
 void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint32_t channels, float** buf )
@@ -286,7 +279,6 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
   if( (n>0) && ((current_pos != firstframe) || (rframes<n)) ){
     xrun++;
     std::cerr << "xrun(" << xrun << ") current_pos=" << current_pos << " firstframe=" << firstframe << " rframes=" << rframes << " n=" << n << std::endl;
-    //DEBUG(xrun);
   }
   if( current_pos == firstframe ){
     // copy and de-interlace buffer:
@@ -299,11 +291,6 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
 
 void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain, uint32_t loop)
 {
-  //DEBUG(fname);
-  //DEBUG(firstchannel);
-  //DEBUG(first_frame);
-  //DEBUG(gain);
-  //DEBUG(loop);
   if( pthread_mutex_lock( &mtx_file ) != 0 )
     return;
   try{

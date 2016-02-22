@@ -1,4 +1,5 @@
 #include "osc_scene.h"
+#include "errorhandling.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -103,53 +104,51 @@ int osc_set_receiver_gain(const char *path, const char *types, lo_arg **argv, in
 
 void osc_scene_t::add_object_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::object_t* o)
 {
-  srv->add_method("/"+name+"/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
-  srv->add_method("/"+name+"/"+o->get_name()+"/pos","ffffff",osc_set_object_position,o);
-  srv->add_method("/"+name+"/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
+  srv->add_method("/"+scene->name+"/"+o->get_name()+"/pos","fff",osc_set_object_position,o);
+  srv->add_method("/"+scene->name+"/"+o->get_name()+"/pos","ffffff",osc_set_object_position,o);
+  srv->add_method("/"+scene->name+"/"+o->get_name()+"/zyxeuler","fff",osc_set_object_orientation,o);
 }
 
 void osc_scene_t::add_face_object_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::face_object_t* o)
 {
-  srv->add_double("/"+name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
-  srv->add_double("/"+name+"/"+o->get_name()+"/damping",&(o->damping));
+  srv->add_double("/"+scene->name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
+  srv->add_double("/"+scene->name+"/"+o->get_name()+"/damping",&(o->damping));
 }
 
 void osc_scene_t::add_face_group_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::face_group_t* o)
 {
-  srv->add_double("/"+name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
-  srv->add_double("/"+name+"/"+o->get_name()+"/damping",&(o->damping));
+  srv->add_double("/"+scene->name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
+  srv->add_double("/"+scene->name+"/"+o->get_name()+"/damping",&(o->damping));
 }
 
 void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::route_t* o)
 {
   route_solo_p_t* rs(new route_solo_p_t);
   rs->route = o;
-  rs->anysolo = &anysolo;
+  rs->anysolo = &(scene->anysolo);
   vprs.push_back(rs);
-  srv->add_method("/"+name+"/"+o->get_name()+"/mute","i",osc_route_mute,rs);
-  srv->add_method("/"+name+"/"+o->get_name()+"/solo","i",osc_route_solo,rs);
+  srv->add_method("/"+scene->name+"/"+o->get_name()+"/mute","i",osc_route_mute,rs);
+  srv->add_method("/"+scene->name+"/"+o->get_name()+"/solo","i",osc_route_solo,rs);
 }
 
 void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sound_t* s)
 {
-  srv->add_method("/"+name+"/"+s->get_parent_name()+"/"+s->get_name()+"/gain","f",osc_set_sound_gain,s);
+  srv->add_method("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/gain","f",osc_set_sound_gain,s);
 }
 
 void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::src_diffuse_t* s)
 {
-  srv->add_method("/"+name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
+  srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
 }
 
 void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receivermod_object_t* s)
 {
-  srv->add_method("/"+name+"/"+s->object_t::get_name()+"/gain","f",osc_set_receiver_gain,s);
+  srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/gain","f",osc_set_receiver_gain,s);
 }
 
 void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
 {
-  //DEBUG(srv);
-  //DEBUG(this);
-  std::vector<object_t*> obj(get_objects());
+  std::vector<object_t*> obj(scene->get_objects());
   for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
     if( TASCAR::Scene::face_object_t* po=dynamic_cast<TASCAR::Scene::face_object_t*>(*it))
       add_face_object_methods(srv,po);
@@ -172,16 +171,18 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
   //for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
   //  add_diffuse_methods(*it);
   //}
-  std::vector<sound_t*> sounds(linearize_sounds());
+  std::vector<sound_t*> sounds(scene->linearize_sounds());
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     add_sound_methods(srv,*it);
   }
 }
 
-osc_scene_t::osc_scene_t(xmlpp::Element* xmlsrc)
-  : scene_t(xmlsrc),
-    osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port"))
+osc_scene_t::osc_scene_t(xmlpp::Element* xmlsrc, TASCAR::Scene::scene_t* scene_)
+  : osc_server_t(xmlsrc->get_attribute_value("srv_addr"),xmlsrc->get_attribute_value("srv_port")),
+    scene(scene_)
 {
+  if( !scene )
+    throw TASCAR::ErrMsg("Invalid scene pointer");
 }
 
 osc_scene_t::~osc_scene_t()

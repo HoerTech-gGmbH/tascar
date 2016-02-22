@@ -1,9 +1,7 @@
 #ifndef AUDIOCHUNKS_H
 #define AUDIOCHUNKS_H
 
-#include <stdint.h>
 #include <sndfile.h>
-#include <string>
 #include "coordinates.h"
 
 namespace TASCAR {
@@ -20,7 +18,7 @@ namespace TASCAR {
     inline const float& operator[](uint32_t k) const {return d[k];};
     inline uint32_t size() const { return n;};
     void clear();
-    void copy(const wave_t& src);
+    void copy(const wave_t& src,float gain=1.0);
     uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
     float rms() const;
@@ -29,6 +27,7 @@ namespace TASCAR {
     float maxabsdb() const;
     void append(const wave_t& src);
     void operator*=(double v);
+    void operator*=(float v);
     void operator+=(const wave_t& o);
     void operator*=(const wave_t& src);
     float* d;
@@ -74,14 +73,17 @@ namespace TASCAR {
   class sndfile_handle_t {
   public:
     sndfile_handle_t(const std::string& fname);
+    sndfile_handle_t(const std::string& fname, int samplerate, int channels);
     ~sndfile_handle_t();
     uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_channels() const {return sf_inf.channels;};
     uint32_t get_srate() const {return sf_inf.samplerate;};
     uint32_t readf_float( float* buf, uint32_t frames );
+    uint32_t writef_float( float* buf, uint32_t frames );
+    static SF_INFO sf_info_configurator(int samplerate, int channels);
   private:
-    SNDFILE* sfile;
     SF_INFO sf_inf;
+    SNDFILE* sfile;
   };
 
   class sndfile_t : public sndfile_handle_t, public wave_t {

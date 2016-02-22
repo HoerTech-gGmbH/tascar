@@ -27,6 +27,7 @@ namespace TASCAR {
       bool direct;
       double maxdist;
       uint32_t sincorder;
+      uint32_t ismorder;
       wave_t* rmslevel;
     };
 
@@ -107,6 +108,8 @@ namespace TASCAR {
       bool render_point;
       bool render_diffuse;
       bool render_image;
+      uint32_t ismmin;
+      uint32_t ismmax;
       bool is_direct;
       bool use_global_mask;
       double diffusegain;
@@ -169,6 +172,7 @@ namespace TASCAR {
     public:
       pos_t p_img;
       pos_t p_cut;
+      bool b_0_14;
     };
 
     /** \brief Create mirror sources from primary sources and reflectors.
@@ -176,7 +180,7 @@ namespace TASCAR {
     class mirror_model_t {
     public:
       mirror_model_t(const std::vector<pointsource_t*>& pointsources,
-                     const std::vector<reflector_t*>& reflectors,uint32_t order);
+                     const std::vector<reflector_t*>& reflectors,uint32_t order,bool b_0_14);
       ~mirror_model_t();
       /** \brief Process all mirror sources
        */
@@ -199,6 +203,7 @@ namespace TASCAR {
       /** \brief Read audio from source, process and add to receiver.
        */
       uint32_t process();
+      double get_gain() const { return gain;};
     protected:
       double c_;
       double fs_;
@@ -259,7 +264,7 @@ namespace TASCAR {
        *
        * A mirror model is created from the reflectors and primary sources.
        */
-      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order);
+      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order,bool b_0_14);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */

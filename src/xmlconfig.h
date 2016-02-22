@@ -49,6 +49,17 @@ namespace TASCAR {
 
   std::vector<TASCAR::pos_t> str2vecpos(const std::string& s);
 
+  class xml_doc_t {
+  public:
+    enum load_type_t { LOAD_FILE, LOAD_STRING };
+    xml_doc_t();
+    xml_doc_t(const std::string& filename,load_type_t t);
+    virtual void save(const std::string& filename);
+    //protected:
+    xmlpp::DomParser domp;
+    xmlpp::Document* doc;
+  };
+
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);

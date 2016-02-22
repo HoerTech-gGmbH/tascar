@@ -184,7 +184,6 @@ void system_t::service()
     usleep( 500 );
     if( fifo.can_read() ){
       uint32_t v(fifo.read());
-      //DEBUG(atcmds[v]->command);
       if( h_atcmd ){
         fprintf(h_atcmd,"%s\n",atcmds[v]->command.c_str());
         fflush(h_atcmd);

@@ -1,5 +1,4 @@
 #include "xmlconfig.h"
-#include "defs.h"
 #include <iostream>
 
 int main(int argc,char** argv)

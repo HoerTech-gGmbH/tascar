@@ -221,8 +221,6 @@ std::vector<TASCAR::pos_t> TASCAR::str2vecpos(const std::string& s)
       if( ptxt.good() ){
         ptxt >> p.z;
         value.push_back(p);
-        //DEBUGS(ptxt.str());
-        //DEBUGS(p.print_cart());
       }
     }
   }
@@ -276,6 +274,30 @@ void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool&
   if( attv.size() )
     value = (attv == "true");
 }
+
+TASCAR::xml_doc_t::xml_doc_t()
+  : doc(NULL)
+{
+  doc = new xmlpp::Document();
+  doc->create_root_node("session");
+}
+
+TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
+  : doc(NULL)
+{
+  switch( t ){
+  case LOAD_FILE :
+    domp.parse_file(TASCAR::env_expand(filename_or_data));
+    break;
+  case LOAD_STRING :
+    domp.parse_memory(filename_or_data);
+    break;
+  }
+  doc = domp.get_document();
+  if( !doc )
+    throw TASCAR::ErrMsg("Unable to parse document.");
+}
+
 
 /*
  * Local Variables:

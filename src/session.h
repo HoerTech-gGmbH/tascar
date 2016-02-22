@@ -1,7 +1,9 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "audioplayer.h"
+#include "jackrender.h"
+#include "session_reader.h"
+#include "osc_scene.h"
 
 namespace TASCAR {
 
@@ -54,17 +56,6 @@ namespace TASCAR {
     module_configure_t configure_cb;
   };
 
-  class xml_doc_t {
-  public:
-    enum load_type_t { LOAD_FILE, LOAD_STRING };
-    xml_doc_t();
-    xml_doc_t(const std::string& filename,load_type_t t);
-    virtual void save(const std::string& filename);
-    //protected:
-    xmlpp::DomParser domp;
-    xmlpp::Document* doc;
-  };
-
   class connection_t : public TASCAR::xml_element_t {
   public:
     connection_t(xmlpp::Element*);
@@ -90,7 +81,7 @@ namespace TASCAR {
     std::string name;
   };
 
-  class session_t : public TASCAR::xml_doc_t, public TASCAR::xml_element_t, public jackc_transport_t, public TASCAR::osc_server_t {
+  class session_t : public TASCAR::tsc_reader_t, public jackc_transport_t, public TASCAR::osc_server_t {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
@@ -98,11 +89,10 @@ namespace TASCAR {
     session_t(const session_t& src);
   public:
     virtual ~session_t();
-    TASCAR::Scene::scene_t* add_scene(xmlpp::Element* e=NULL);
-    TASCAR::range_t* add_range(xmlpp::Element* e=NULL);
-    TASCAR::connection_t* add_connection(xmlpp::Element* e=NULL);
-    TASCAR::module_t* add_module(xmlpp::Element* e=NULL);
-    virtual void save(const std::string& filename);
+    void add_scene(xmlpp::Element*);
+    void add_range(xmlpp::Element*);
+    void add_connection(xmlpp::Element*);
+    void add_module(xmlpp::Element*);
     void write_xml();
     void start();
     void stop();
@@ -113,7 +103,6 @@ namespace TASCAR {
     uint32_t get_active_diffusesources() const;
     uint32_t get_total_diffusesources() const;
     std::vector<TASCAR::named_object_t> find_objects(const std::string& pattern);
-    //double get_time() const;
     // configuration variables:
     std::string name;
     double duration;

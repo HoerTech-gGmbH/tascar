@@ -4,23 +4,22 @@
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
   tascar_osc_jack_transport tascar_jackio tascar_sampler		\
   tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
-  tascar_lsljacktime
-
-# tascar_gui tascar_sampler				\
-#tascar_osc_jack_transport tascar_oscmix tascar_jackio			\
-#tascar_osc_recorder tascar_ambwarping tascar_hoadisplay tascar_oscctl	\
-#tascar_tscupdate tascar_pdf
+  tascar_lsljacktime tascar_renderfile
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
-neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
+  neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-foa2hoadiff route lsljacktime
+  foa2hoadiff route lsljacktime
+
+OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
+  session_reader.o session.o receivermod.o jackclient.o delayline.o	\
+  osc_helper.o async_file.o errorhandling.o audiochunks.o		\
+  acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
+  sampler.o jackiowav.o cli.o irrender.o jackrender.o
 
 TEST_FILES = test_ngon test_sinc
 
-#
-#
 #
 RECEIVERMODS = $(patsubst %,tascarreceiver_%.so,$(RECEIVERS))
 
@@ -52,11 +51,6 @@ endif
 #BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
-
-OBJECTS = coordinates.o dynamicobjects.o scene.o session.o		\
-receivermod.o jackclient.o delayline.o osc_helper.o async_file.o	\
-errorhandling.o audiochunks.o acousticmodel.o xmlconfig.o osc_scene.o	\
-audioplayer.o ringbuffer.o viewport.o sampler.o jackiowav.o cli.o
 
 #speakerlayout.o multipan.o
 

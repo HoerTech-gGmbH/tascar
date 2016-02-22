@@ -18,7 +18,7 @@ double mask_t::gain(const pos_t& p)
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,uint32_t sincorder_)
-  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), sincorder(sincorder_),rmslevel(NULL)
+  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), sincorder(sincorder_),ismorder(0),rmslevel(NULL)
 {
 }
 
@@ -114,7 +114,14 @@ acoustic_model_t::~acoustic_model_t()
  */
 uint32_t acoustic_model_t::process()
 {
-  if( receiver_->render_point && receiver_->active && src_->active && (!receiver_->gain_zero) && (src_->direct || (!receiver_->is_direct)) ){
+  if( receiver_->render_point && 
+      receiver_->active && 
+      src_->active && 
+      (!receiver_->gain_zero) && 
+      (src_->direct || (!receiver_->is_direct)) && 
+      (receiver_->ismmin <= src_->ismorder) &&
+      (src_->ismorder <= receiver_->ismmax)
+      ){
     pos_t prel;
     double nextdistance(0.0);
     double nextgain(1.0);
@@ -127,13 +134,6 @@ uint32_t acoustic_model_t::process()
     double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
     double dgain((nextgain-gain)*dt);
     double dairabsorption((next_air_absorption-air_absorption)*dt);
-    //if( first ){
-    //  DEBUG(next_air_absorption);
-    //  DEBUG(ddistance);
-    //  DEBUG(dgain);
-    //  DEBUG(dairabsorption);
-    //  DEBUG(srcgainmod);
-    //}
     for(uint32_t k=0;k<chunksize;++k){
       distance+=ddistance;
       gain+=dgain;
@@ -155,19 +155,7 @@ uint32_t acoustic_model_t::process()
     }
     // end obstacles
     if( ((gain!=0)||(dgain!=0)) ){
-      //if( first ){
-      //  DEBUG(audio.spldb());
-      //  DEBUG(audio.maxabsdb());
-      //}
       receiver_->add_pointsource(prel,audio,receiver_data);
-      //if( first ){
-      //  for(uint32_t k=0;k<receiver_->outchannels.size();++k){
-      //    DEBUG(k);
-      //    DEBUG(receiver_->outchannels[k].spldb());
-      //    DEBUG(receiver_->outchannels[k].maxabsdb());
-      //  }
-      //}
-      //first = false;
       return 1;
     }
   }else{
@@ -179,11 +167,9 @@ uint32_t acoustic_model_t::process()
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
   : pointsource_t(src->audio.size(),src->maxdist,src->sincorder),
     src_(src),reflector_(reflector),
-    //dt(1.0/std::max(1u,src->audio.size())),
-    //g(0),
-    //dg(0),
-    lpstate(0.0)
+    lpstate(0.0),b_0_14(false)
 {
+  ismorder = src->ismorder+1;
 }
 
 /**
@@ -192,23 +178,42 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
  */
 void mirrorsource_t::process()
 {
-  if( reflector_->active && src_->active){
-    active = true;
-    // calculate nominal image source position:
-    p_cut = (reflector_->nearest_on_plane(src_->position));
-    p_img = p_cut;
-    p_img *= 2.0;
-    p_img -= src_->position;
-    // copy p_img to base class position:
-    position = p_img;
-    // calculate absorption/reflection:
-    double c1(reflector_->reflectivity * (1.0-reflector_->damping));
-    double c2(reflector_->damping);
-    for(uint32_t k=0;k<audio.size();++k)
-      audio[k] = (lpstate = lpstate*c2 + src_->audio[k]*c1);
-  }else{
-    active = false;
+  active = false;
+  if( !(reflector_->active && src_->active) )
+    return;
+  
+  // intersection point with reflector:
+  p_cut = reflector_->nearest_on_plane(src_->position);
+  // if this is second order image source:
+  //if( ismorder > 1 ){
+    // if intersection is behind original reflector then do not render:
+    //if( ! ((mirrorsource_t*)src_)->reflector_->is_infront( p_cut ) ){
+    //  return;
+    //}
+  //}
+  // calculate nominal image source position:
+  p_img = p_cut;
+  p_img *= 2.0;
+  p_img -= src_->position;
+  //// if image source is in front of reflector then return zero:
+  if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 )
+    return;
+  // copy p_img to base class position:
+  position = p_img;
+  // optionally reproduce version 0.14 behavior:
+  if( b_0_14 ){
+    pos_t nearest_point_0_14(p_cut);
+    nearest_point_0_14 -= src_->position;
+    if( dot_prod(nearest_point_0_14,reflector_->get_normal())>0 ){
+      return;
+    }
   }
+  // calculate absorption/reflection:
+  double c1(reflector_->reflectivity * (1.0-reflector_->damping));
+  double c2(reflector_->damping);
+  for(uint32_t k=0;k<audio.size();++k)
+    audio[k] = (lpstate = lpstate*c2 + src_->audio[k]*c1);
+  active = true;
 }
 
 /**
@@ -221,10 +226,12 @@ pos_t mirrorsource_t::get_effective_position(const pos_t& p_rec,double& gain)
 {
   // calculate orthogonal point on plane:
   pos_t pcut_rec(reflector_->nearest_on_plane(p_rec));
+  // if receiver is behind reflector then return zero:
   if( dot_prod( p_rec-pcut_rec, reflector_->get_normal() ) < 0 ){
     gain = 0;
     return p_img;
   }
+  // if image source is in front of reflector then return zero:
   if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 ){
     gain = 0;
     return p_img;
@@ -251,7 +258,7 @@ pos_t mirrorsource_t::get_effective_position(const pos_t& p_rec,double& gain)
 
 mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
                                const std::vector<reflector_t*>& reflectors,
-                               uint32_t order)
+                               uint32_t order,bool b_0_14)
 {
   if( order > 0 ){
     for(uint32_t ksrc=0;ksrc<pointsources.size();++ksrc)
@@ -269,6 +276,9 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
     num_mirrors_start = num_mirrors_end;
     num_mirrors_end = mirrorsource.size();
   }
+  if( b_0_14 )
+    for(uint32_t k=0;k<mirrorsource.size();++k)
+      mirrorsource[k]->b_0_14 = true;
 }
 
 mirror_model_t::~mirror_model_t()
@@ -316,8 +326,8 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
   return r;
 }
 
-world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order)
-  : mirrormodel(sources,reflectors,mirror_order),receivers_(receivers),masks_(masks),active_pointsource(0),active_diffusesource(0)
+world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order,bool b_0_14)
+  : mirrormodel(sources,reflectors,mirror_order,b_0_14),receivers_(receivers),masks_(masks),active_pointsource(0),active_diffusesource(0)
 {
   // diffuse models:
   for(uint32_t kSrc=0;kSrc<diffusesources.size();++kSrc)
@@ -470,6 +480,8 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     render_point(true),
     render_diffuse(true),
     render_image(true),
+    ismmin(0),
+    ismmax(2147483647),
     is_direct(true),
     use_global_mask(true),
     diffusegain(1.0),
@@ -490,6 +502,8 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   get_attribute_bool("isdirect",is_direct);
   get_attribute_bool("globalmask",use_global_mask);
   get_attribute_db("diffusegain",diffusegain);
+  GET_ATTRIBUTE(ismmin);
+  GET_ATTRIBUTE(ismmax);
   GET_ATTRIBUTE(falloff);
   GET_ATTRIBUTE(delaycomp);
 }
@@ -504,6 +518,8 @@ void receiver_t::write_xml()
   set_attribute_bool("isdirect",is_direct);
   set_attribute_bool("globalmask",use_global_mask);
   set_attribute_db("diffusegain",diffusegain);
+  SET_ATTRIBUTE(ismmin);
+  SET_ATTRIBUTE(ismmax);
   SET_ATTRIBUTE(falloff);
   SET_ATTRIBUTE(delaycomp);
   boundingbox.write_xml();
@@ -569,6 +585,9 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     prel /= orientation;
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
+    double physical_dist(TASCAR::distance(psrc_physical,position));
+    if( physical_dist > distance )
+      gain = 0.0;
   }
   make_friendly_number(gain);
 }

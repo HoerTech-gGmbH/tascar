@@ -470,6 +470,8 @@ namespace TASCAR {
     void nonrt_set(const std::vector<pos_t>& verts);
     void nonrt_set_rect(double width, double height);
     void apply_rot_loc(const pos_t& p0, const zyx_euler_t& o);
+    bool is_infront(const pos_t& p0) const;
+    bool is_behind(const pos_t& p0) const;
     pos_t nearest_on_plane(const pos_t& p0) const;
     pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
     pos_t nearest(const pos_t& p0, bool* is_outside=NULL, pos_t* on_edge_=NULL) const;

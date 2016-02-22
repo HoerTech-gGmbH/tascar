@@ -38,35 +38,37 @@ bool has_infinity(const pos_t& p)
 
 void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
 {
-  //DEBUG(p1.print_cart());
-  //DEBUG(p2.print_cart());
   if( !(has_infinity(p1) || has_infinity(p2)) ){
     cr->move_to(p1.x,-p1.y);
     cr->line_to(p2.x,-p2.y);
   }
 }
 
-class pdf_export_t : public TASCAR::session_t {
-public:
-  pdf_export_t(const std::string& scenename,const std::string& pdfname);
-  ~pdf_export_t();
-  void render_time(const std::vector<double>& time);
-  void render_time(TASCAR::renderer_t* scene,const std::vector<double>& time);
-private:
-  void draw(scene_draw_t::viewt_t persp);
-  double time;
-  std::string filename;
-  double height;
-  double width;
-  double lmargin;
-  double rmargin;
-  double tmargin;
-  double bmargin;
-  Cairo::RefPtr<Cairo::PdfSurface> surface;
-  scene_draw_t drawer;
-};
+namespace App {
 
-pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfname)
+  class pdf_export_t : public TASCAR::session_t {
+  public:
+    pdf_export_t(const std::string& scenename,const std::string& pdfname);
+    ~pdf_export_t();
+    void render_time(const std::vector<double>& time);
+    void render_time(TASCAR::render_rt_t* scene,const std::vector<double>& time);
+  private:
+    void draw(scene_draw_t::viewt_t persp);
+    double time;
+    std::string filename;
+    double height;
+    double width;
+    double lmargin;
+    double rmargin;
+    double tmargin;
+    double bmargin;
+    Cairo::RefPtr<Cairo::PdfSurface> surface;
+    scene_draw_t drawer;
+  };
+
+}
+
+App::pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfname)
   : session_t(scenename,LOAD_FILE,scenename),
     time(0),
     filename(scenename),
@@ -80,17 +82,17 @@ pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfna
 {
 }
 
-pdf_export_t::~pdf_export_t()
+App::pdf_export_t::~pdf_export_t()
 {
 }
 
-void pdf_export_t::render_time(const std::vector<double>& t)
+void App::pdf_export_t::render_time(const std::vector<double>& t)
 {
   for(std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
     render_time(*it,t);
 }
 
-void pdf_export_t::render_time(TASCAR::renderer_t* s, const std::vector<double>& t)
+void App::pdf_export_t::render_time(TASCAR::render_rt_t* s, const std::vector<double>& t)
 {
   drawer.set_scene(s);
   //read_xml(scenename);
@@ -136,7 +138,7 @@ void pdf_export_t::render_time(TASCAR::renderer_t* s, const std::vector<double>&
   }
 }
 
-void pdf_export_t::draw(scene_draw_t::viewt_t persp)
+void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
 {
   drawer.set_viewport(persp);
   Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
@@ -265,7 +267,7 @@ int main(int argc, char** argv)
   if( pdffile.size() == 0 ){
     pdffile = cfgfile+".pdf";
   }
-  pdf_export_t c(cfgfile,pdffile);
+  App::pdf_export_t c(cfgfile,pdffile);
   c.start();
   c.render_time(time);
   c.stop();

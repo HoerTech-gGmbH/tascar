@@ -19,6 +19,7 @@ int main(int argc, char** argv)
     case cft_int16 : fmt="int16"; break;
     case cft_int8 : fmt="int8"; break;
     case cft_int64 : fmt="int64"; break;
+    case cft_undefined : fmt="undefined"; break;
     }
     std::cout << lsl_get_name(buffer[kstream]) << 
       " type=" << lsl_get_type(buffer[kstream]) <<

@@ -131,11 +131,6 @@ int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer
   bool record(start);
   if( use_transport )
     record &= tp_running;
-  //DEBUGS(record);
-  //DEBUGS(tp_frame);
-  //DEBUGS(tp_running);
-  //DEBUGS(pos);
-  //DEBUGS(nframes_total);
   for(unsigned int k=0;k<nframes;k++){
     if( record && (pos < nframes_total) ){
       if( buf_in )
@@ -212,11 +207,8 @@ void jackio_t::run()
 
 void jackio_t::set_transport_start(double start_)
 {
-  //DEBUG(start_);
-  //DEBUG(startframe);
   use_transport = true;
   startframe = get_srate()*start_;
-  //DEBUG(startframe);
 }
 
 /*

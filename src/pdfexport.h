@@ -11,7 +11,7 @@ namespace TASCAR {
     pdfexport_t(TASCAR::session_t* s,const std::string& fname, bool acmodel);
   private:
     void draw(scene_draw_t::viewt_t persp);
-    void draw_views(TASCAR::renderer_t* s);
+    void draw_views(TASCAR::render_rt_t* s);
     scene_draw_t drawer;
     std::string filename;
     double height;

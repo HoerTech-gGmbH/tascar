@@ -1031,6 +1031,18 @@ pos_t ngon_t::nearest( const pos_t& p0, bool* is_outside_, pos_t* on_edge_ ) con
   return nearest_on_plane(p0);
 }
 
+bool ngon_t::is_infront(const pos_t& p0) const
+{
+  pos_t p_cut(nearest_on_plane(p0));
+  return (dot_prod( p0-p_cut, normal ) > 0);
+}
+
+bool ngon_t::is_behind(const pos_t& p0) const
+{
+  pos_t p_cut(nearest_on_plane(p0));
+  return (dot_prod( p0-p_cut, normal ) < 0);
+}
+
 /**
    \brief Return intersection point of connection line p0-p1 with infinite plane.
 

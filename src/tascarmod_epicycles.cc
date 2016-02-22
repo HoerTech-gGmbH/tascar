@@ -53,14 +53,8 @@ namespace HoS {
       applyat_time = t;
       b_applyat = true;
     };
-    //void set_feedback_osc_addr(const char* s){
-    //  lo_addr = lo_address_new( s, "6977" );
-    //  lo_address_set_ttl( lo_addr, 1 );
-    //}
     void set_par_fupdate(float f_update_){f_update=f_update_;};
     void send_phi(const char* addr){
-      //DEBUG(addr);
-      //DEBUG(_az * RAD2DEG);
       lo_send( lo_addr, addr, "f", _az * RAD2DEG );
     }
   protected:
@@ -242,7 +236,6 @@ void HoS::parameter_t::locate0(float time)
 
 void HoS::parameter_t::apply(float time)
 {
-  //DEBUG(time);
   time *= f_update;
   t_apply = 0;
   if( time > 0 )

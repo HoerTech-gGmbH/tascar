@@ -138,6 +138,7 @@ namespace TASCAR {
       std::string importraw;
       bool edgereflection;
       TASCAR::pos_t shoebox;
+      TASCAR::pos_t shoeboxwalls;
     };
 
     class obstacle_group_t : public object_t {
@@ -155,9 +156,9 @@ namespace TASCAR {
 
     class src_object_t;
 
-    class jack_port_t : public TASCAR::xml_element_t {
+    class audio_port_t : public TASCAR::xml_element_t {
     public:
-      jack_port_t(xmlpp::Element* e);
+      audio_port_t(xmlpp::Element* e);
       void write_xml();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
@@ -174,7 +175,7 @@ namespace TASCAR {
       float caliblevel;
     };
 
-    class src_diffuse_t : public sndfile_object_t, public jack_port_t {
+    class src_diffuse_t : public sndfile_object_t, public audio_port_t {
     public:
       src_diffuse_t(xmlpp::Element* e);
       virtual ~src_diffuse_t();
@@ -189,7 +190,7 @@ namespace TASCAR {
       TASCAR::Acousticmodel::diffuse_source_t* source;
     };
 
-    class src_door_t : public object_t, public jack_port_t {
+    class src_door_t : public object_t, public audio_port_t {
     public:
       src_door_t(xmlpp::Element* e);
       virtual ~src_door_t();
@@ -209,7 +210,7 @@ namespace TASCAR {
       TASCAR::Acousticmodel::doorsource_t* source;
     };
 
-    class sound_t : public jack_port_t {
+    class sound_t : public audio_port_t {
     public:
       sound_t(xmlpp::Element* e,src_object_t* parent_);
       sound_t(const sound_t& src);
@@ -232,7 +233,9 @@ namespace TASCAR {
     private:
       pos_t local_position;
       double chaindist;
+    public:
       double maxdist;
+    private:
       uint32_t sincorder;
       src_object_t* parent;
       std::string name;
@@ -255,7 +258,7 @@ namespace TASCAR {
       int32_t startframe;
     };
 
-    class receivermod_object_t : public object_t, public jack_port_t, public TASCAR::Acousticmodel::receiver_t {
+    class receivermod_object_t : public object_t, public audio_port_t, public TASCAR::Acousticmodel::receiver_t {
     public:
       receivermod_object_t(xmlpp::Element* e);
       void write_xml();
@@ -299,6 +302,7 @@ namespace TASCAR {
       std::vector<mask_object_t*> masks;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;
+      bool b_0_14;
       double guiscale;
       pos_t guicenter;
       uint32_t anysolo;

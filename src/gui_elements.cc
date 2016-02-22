@@ -203,8 +203,7 @@ scene_draw_t::~scene_draw_t()
   pthread_mutex_destroy( &mtx );
 }
 
-//void scene_draw_t::set_scene(TASCAR::Scene::scene_t* scene)
-void scene_draw_t::set_scene(TASCAR::renderer_t* scene)
+void scene_draw_t::set_scene(TASCAR::render_rt_t* scene)
 {
   pthread_mutex_lock( &mtx );
   scene_ = scene;
@@ -260,31 +259,64 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
     if( scene_ ){
       std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
       for(uint32_t k=0;k<objects.size();k++)
-        draw_object(objects[k],cr);
+        draw_object(objects[k],cr,b_acoustic_model );
       if( b_acoustic_model && scene_->world ){
+        // draw acoustic model:
         cr->save();
         cr->set_source_rgb(0,0,0);
         cr->set_line_width( 0.1*markersize );
         for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam=scene_->world->acoustic_model.begin();
             iam != scene_->world->acoustic_model.end();++iam){
           if( (*iam)->receiver_->size.is_null() && (*iam)->src_->active && (*iam)->receiver_->active){
-            //TASCAR::Acousticmodel::mirrorsource_t* mir(dynamic_cast<TASCAR::Acousticmodel::mirrorsource_t*>((*iam)->src_));
-            //pos_t psrc(view((*iam)->src_->position));
             pos_t psrc(view((*iam)->effective_srcpos));
             pos_t prec(view((*iam)->receiver_->position));
             cr->save();
-            cr->set_source_rgb(0.5, 0.3, 0);
-            cr->arc(psrc.x, -psrc.y, 0.6*markersize, 0, PI2 );
-            cr->fill();
+            if( (*iam)->get_gain() == 0 ){
+              cr->set_source_rgba(1, 0, 0, 0.5);
+              cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
+              cr->stroke();
+            }else{
+              cr->set_source_rgba(0.5, 0.3, 0, std::min(1.0,(*iam)->get_gain()));
+              cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
+              cr->move_to(psrc.x-0.7*markersize,-psrc.y+0.7*markersize);
+              cr->line_to(psrc.x+0.7*markersize,-psrc.y-0.7*markersize);
+              cr->move_to(psrc.x-0.7*markersize,-psrc.y-0.7*markersize);
+              cr->line_to(psrc.x+0.7*markersize,-psrc.y+0.7*markersize);
+              cr->stroke();
+            }
+            //cr->fill();
             cr->restore();
             //if( mir ){
             //  pos_t pmir(view(mir->nearest_point));
             //  draw_edge(cr,psrc,pmir);
             //}
+            cr->save();
+            cr->set_source_rgba(0, 0, 0, std::min(1.0,(*iam)->get_gain()));
             draw_edge(cr,psrc,prec);
-            //cr->move_to(psrc.x,psrc.y);
-            //cr->line_to(prec.x,prec.y);
             cr->stroke();
+            // image source or primary source:
+            if( (*iam)->src_->ismorder > 0 ){
+              // image source:
+              pos_t pcut(view(((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->p_cut));
+              cr->arc(pcut.x, -pcut.y, 0.6*markersize, 0, PI2 );
+              cr->fill();
+              draw_edge(cr,psrc,pcut);
+              cr->stroke();
+              cr->save();
+              char ctmp[1000];
+              sprintf(ctmp,"%d",(*iam)->src_->ismorder);
+                      //((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->reflector_->);
+              cr->set_source_rgba(0, 0, 0, 0.4);
+              cr->move_to( psrc.x+1.2*markersize, -psrc.y );
+              cr->show_text( ctmp );
+              cr->stroke();
+              cr->restore();
+            }else{
+              // primary source:
+              cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
+              cr->fill();
+            }
+            cr->restore();
           }
         }
         cr->restore();
@@ -294,10 +326,12 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
   }
 }
 
-void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr)
+void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, bool b_acoustic_model)
 {
-  draw_track(obj,cr,markersize);
-  draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
+  if( !b_acoustic_model )
+    draw_track(obj,cr,markersize);
+  if( !b_acoustic_model )
+    draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
   draw_receiver_object(dynamic_cast<TASCAR::Scene::receivermod_object_t*>(obj),cr,markersize);
   draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
   draw_room_src(dynamic_cast<TASCAR::Scene::src_diffuse_t*>(obj),cr,markersize);

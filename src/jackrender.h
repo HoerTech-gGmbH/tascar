@@ -1,8 +1,7 @@
-#ifndef AUDIOPLAYER_H
-#define AUDIOPLAYER_H
+#ifndef JACKRENDER_H
+#define JACKRENDER_H
 
-#include "tascar.h"
-#include "async_file.h"
+#include "render.h"
 #include "osc_scene.h"
 
 namespace TASCAR {
@@ -18,7 +17,7 @@ namespace TASCAR {
     bool own_pointer;
   };    
   
-  class audioplayer_t : public scene_container_t, public jackc_transport_t  {
+  class audioplayer_t : public TASCAR::scene_container_t, public jackc_transport_t  {
   public:
     audioplayer_t(const std::string& xmlfile="");
     audioplayer_t(TASCAR::Scene::scene_t*);
@@ -34,35 +33,20 @@ namespace TASCAR {
     std::vector<uint32_t> jack_port_map;
   };
 
-  //class renderer_t : public scene_container_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
-  class renderer_t : public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
+  class render_rt_t : public TASCAR::render_core_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
   public:
-    renderer_t(xmlpp::Element* xmlsrc);
-    virtual ~renderer_t();
+    render_rt_t(xmlpp::Element* xmlsrc);
+    virtual ~render_rt_t();
+    virtual void write_xml();
     void run(bool &b_quit);
     void start();
     void stop();
   private:
-    std::vector<TASCAR::Scene::sound_t*> sounds;
-    std::vector<Acousticmodel::pointsource_t*> sources;
-    std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
-    std::vector<Acousticmodel::reflector_t*> reflectors;
-    std::vector<Acousticmodel::obstacle_t*> obstacles;
-    std::vector<Acousticmodel::receiver_t*> receivers;
-    std::vector<Acousticmodel::mask_t*> pmasks;
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
-  public:
-    Acousticmodel::world_t* world;
-  public:
-    double time;
-    uint32_t active_pointsources;
-    uint32_t active_diffusesources;
-    uint32_t total_pointsources;
-    uint32_t total_diffusesources;
   };
 
-  class scene_player_t : public renderer_t  {
+  class scene_player_t : public render_rt_t  {
   public:
     scene_player_t(xmlpp::Element* xmlsrc);
     void start();

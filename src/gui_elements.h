@@ -8,8 +8,7 @@
 #include <cairomm/context.h>
 #include <lo/lo.h>
 #include "viewport.h"
-#include "tascar.h"
-#include "audioplayer.h"
+#include "jackrender.h"
 
 class playertimeline_t : public Gtk::DrawingArea {
 public:
@@ -70,7 +69,7 @@ public:
   scene_draw_t();
   virtual ~scene_draw_t();
   //void set_scene(TASCAR::Scene::scene_t* scene);
-  void set_scene(TASCAR::renderer_t* scene);
+  void set_scene(TASCAR::render_rt_t* scene);
   void select_object(TASCAR::Scene::object_t* o);
   void set_viewport(const scene_draw_t::viewt_t& v);
   virtual void draw(Cairo::RefPtr<Cairo::Context> cr);
@@ -82,7 +81,7 @@ public:
   double get_time() const {return time;};
 protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
-  void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
+  void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr,bool b_acoustic_model);
   virtual void ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize);
   virtual void ngon_draw(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr,bool fill = false, bool area = false);
   virtual void draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASCAR::pos_t size,Cairo::RefPtr<Cairo::Context> cr);
@@ -97,7 +96,7 @@ protected:
   virtual void draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   //TASCAR::Scene::scene_t* scene_;
-  TASCAR::renderer_t* scene_;
+  TASCAR::render_rt_t* scene_;
 public:
   viewport_t view;
 protected:

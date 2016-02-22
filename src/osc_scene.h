@@ -14,9 +14,10 @@ namespace TASCAR {
 
   namespace Scene {
 
-    class osc_scene_t : public TASCAR::Scene::scene_t, public TASCAR::osc_server_t {
+    //class osc_scene_t : public TASCAR::Scene::scene_t, public TASCAR::osc_server_t {
+    class osc_scene_t : public TASCAR::osc_server_t {
     public:
-      osc_scene_t(xmlpp::Element* xmlsrc);
+      osc_scene_t(xmlpp::Element* xmlsrc, TASCAR::Scene::scene_t* scene_);
       ~osc_scene_t();
       void add_child_methods(TASCAR::osc_server_t*);
     private:
@@ -27,7 +28,9 @@ namespace TASCAR {
       void add_receiver_methods(TASCAR::osc_server_t*,TASCAR::Scene::receivermod_object_t* s);
       void add_face_object_methods(TASCAR::osc_server_t*,TASCAR::Scene::face_object_t* s);
       void add_face_group_methods(TASCAR::osc_server_t*,TASCAR::Scene::face_group_t* s);
+      TASCAR::Scene::scene_t* scene;
       std::vector<route_solo_p_t*> vprs;
+      
     };
 
   }

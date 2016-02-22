@@ -71,7 +71,7 @@ void sndfile_object_t::write_xml()
  *src_diffuse_t
  */
 src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
-  : sndfile_object_t(xmlsrc),jack_port_t(xmlsrc),size(1,1,1),
+  : sndfile_object_t(xmlsrc),audio_port_t(xmlsrc),size(1,1,1),
     falloff(1.0),
     source(NULL)
 {
@@ -82,7 +82,7 @@ src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
 void src_diffuse_t::write_xml()
 {
   object_t::write_xml();
-  jack_port_t::write_xml();
+  audio_port_t::write_xml();
   dynobject_t::set_attribute("size",size);
   dynobject_t::set_attribute("falloff",falloff);
 }
@@ -91,7 +91,7 @@ void src_diffuse_t::write_xml()
  *src_door_t
  */
 src_door_t::src_door_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),jack_port_t(xmlsrc),width(1.0),
+  : object_t(xmlsrc),audio_port_t(xmlsrc),width(1.0),
     height(2.0),
     falloff(1.0),
     distance(1.0),
@@ -112,7 +112,7 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
 void src_door_t::write_xml()
 {
   object_t::write_xml();
-  jack_port_t::write_xml();
+  audio_port_t::write_xml();
   dynobject_t::set_attribute("width",width);
   dynobject_t::set_attribute("height",height);
   dynobject_t::set_attribute("falloff",falloff);
@@ -157,7 +157,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
  * sound_t
  */
 sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
-  : jack_port_t(xmlsrc),local_position(0,0,0),
+  : audio_port_t(xmlsrc),local_position(0,0,0),
     chaindist(0),
     maxdist(3700),
     sincorder(0),
@@ -178,7 +178,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
 }
 
 sound_t::sound_t(const sound_t& src)
-  : jack_port_t(src),
+  : audio_port_t(src),
     local_position(src.local_position),
     chaindist(src.chaindist),
     maxdist(src.maxdist),
@@ -258,7 +258,7 @@ std::string sound_t::get_port_name() const
   return name;
 }
 
-void jack_port_t::set_port_index(uint32_t port_index_)
+void audio_port_t::set_port_index(uint32_t port_index_)
 {
   port_index = port_index_;
 }
@@ -356,6 +356,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     name(""),
     c(340.0),
     mirrororder(1),
+    b_0_14(false),
     guiscale(200),anysolo(0),
     scene_path("")
 {
@@ -364,6 +365,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     if( name.empty() )
       name = "scene";
     GET_ATTRIBUTE(mirrororder);
+    GET_ATTRIBUTE_BOOL(b_0_14);
     GET_ATTRIBUTE(guiscale);
     GET_ATTRIBUTE(guicenter);
     GET_ATTRIBUTE(c);
@@ -551,14 +553,14 @@ void mask_object_t::process_active(double t,uint32_t anysolo)
 }
 
 receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), jack_port_t(xmlsrc), receiver_t(xmlsrc)
+  : object_t(xmlsrc), audio_port_t(xmlsrc), receiver_t(xmlsrc)
 {
 }
 
 void receivermod_object_t::write_xml()
 {
   object_t::write_xml();
-  jack_port_t::write_xml();
+  audio_port_t::write_xml();
   receiver_t::write_xml();
 }
 
@@ -801,7 +803,7 @@ void face_object_t::write_xml()
   dynobject_t::set_attribute_bool("edgereflection",edgereflection);
 }
 
-jack_port_t::jack_port_t(xmlpp::Element* xmlsrc)
+audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),portname(""),
     connect(""),
     port_index(0),
@@ -813,12 +815,12 @@ jack_port_t::jack_port_t(xmlpp::Element* xmlsrc)
   get_attribute_db_float("caliblevel",caliblevel);
 }
 
-void jack_port_t::set_gain_db( float g )
+void audio_port_t::set_gain_db( float g )
 {
   gain = pow(10.0,0.05*g);
 }
 
-void jack_port_t::write_xml()
+void audio_port_t::write_xml()
 {
   if( connect.size() )
     e->set_attribute("connect",connect);
@@ -969,6 +971,46 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
     verts[1] = TASCAR::pos_t(sb.x,-sb.y,-sb.z);
     verts[2] = TASCAR::pos_t(sb.x,sb.y,-sb.z);
     verts[3] = TASCAR::pos_t(-sb.x,sb.y,-sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+  }
+  dynobject_t::GET_ATTRIBUTE(shoeboxwalls);
+  if( !shoeboxwalls.is_null() ){
+    TASCAR::pos_t sb(shoeboxwalls);
+    sb *= 0.5;
+    std::vector<TASCAR::pos_t> verts;
+    verts.resize(4);
+    TASCAR::Acousticmodel::reflector_t* p_reflector(NULL);
+    // face1:
+    verts[0] = TASCAR::pos_t(sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(sb.x,-sb.y,sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(sb.x,sb.y,-sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face2:
+    verts[0] = TASCAR::pos_t(-sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(-sb.x,sb.y,-sb.z);
+    verts[2] = TASCAR::pos_t(-sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(-sb.x,-sb.y,sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face3:
+    verts[0] = TASCAR::pos_t(-sb.x,-sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(-sb.x,-sb.y,sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,-sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(sb.x,-sb.y,-sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+    // face4:
+    verts[0] = TASCAR::pos_t(-sb.x,sb.y,-sb.z);
+    verts[1] = TASCAR::pos_t(sb.x,sb.y,-sb.z);
+    verts[2] = TASCAR::pos_t(sb.x,sb.y,sb.z);
+    verts[3] = TASCAR::pos_t(-sb.x,sb.y,sb.z);
     p_reflector = new TASCAR::Acousticmodel::reflector_t();
     p_reflector->nonrt_set(verts);
     reflectors.push_back(p_reflector);

@@ -85,7 +85,6 @@ std::string TASCAR::receivermod_t::get_channel_postfix(uint32_t channel)
 
 std::vector<std::string> TASCAR::receivermod_t::get_connections() const
 {
-  //DEBUG(1);
   return get_connections_cb(libdata,receivermod_error);
 }
 
@@ -132,7 +131,6 @@ void TASCAR::receivermod_base_speaker_t::write_xml()
 
 std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() const
 {
-  //DEBUG(1);
   return spkpos.connections;
 }
 

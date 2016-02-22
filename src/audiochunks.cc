@@ -62,6 +62,12 @@ void wave_t::operator*=(double v)
     d[k] *= v;
 }
 
+void wave_t::operator*=(float v)
+{
+  for( uint32_t k=0;k<n;++k)
+    d[k] *= v;
+}
+
 uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
 {
   uint32_t n_min(std::min(n,cnt));
@@ -135,6 +141,26 @@ void amb1wave_t::operator*=(double v)
   z_*=v;
 }
 
+SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate,int channels)
+{
+  SF_INFO inf;
+  memset(&inf,0,sizeof(inf));
+  inf.samplerate = samplerate;
+  inf.channels = channels;
+  inf.format = SF_FORMAT_WAV|SF_FORMAT_FLOAT;
+  return inf;
+}
+
+
+sndfile_handle_t::sndfile_handle_t(const std::string& fname,int samplerate,int channels)
+  : sf_inf(sf_info_configurator(samplerate,channels)),
+    sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_WRITE,&sf_inf))
+{
+  if( !sfile )
+    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing.");
+}
+    
+
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)
   : sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf))
 {
@@ -150,6 +176,11 @@ sndfile_handle_t::~sndfile_handle_t()
 uint32_t sndfile_handle_t::readf_float( float* buf, uint32_t frames )
 {
   return sf_readf_float( sfile, buf, frames );
+}
+
+uint32_t sndfile_handle_t::writef_float( float* buf, uint32_t frames )
+{
+  return sf_writef_float( sfile, buf, frames );
 }
 
 sndfile_t::sndfile_t(const std::string& fname,uint32_t channel)
@@ -184,9 +215,11 @@ void sndfile_t::add_chunk_looped(float gain,wave_t& chunk)
   }
 }
 
-void wave_t::copy(const wave_t& src)
+void wave_t::copy(const wave_t& src,float gain)
 {
   memmove(d,src.d,std::min(n,src.n)*sizeof(float));
+  if( gain != 1.0f )
+    operator*=(gain);
 }
 
 void wave_t::operator*=(const wave_t& o)

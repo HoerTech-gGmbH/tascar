@@ -84,32 +84,8 @@ const std::string& debug_str(const std::string& s)
   return s;
 }
 
-TASCAR::xml_doc_t::xml_doc_t()
-  : doc(NULL)
-{
-  doc = new xmlpp::Document();
-  doc->create_root_node("session");
-}
-
-TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
-  : doc(NULL)
-{
-  switch( t ){
-  case LOAD_FILE :
-    domp.parse_file(TASCAR::env_expand(filename_or_data));
-    break;
-  case LOAD_STRING :
-    domp.parse_memory(filename_or_data);
-    break;
-  }
-  doc = domp.get_document();
-  if( !doc )
-    throw TASCAR::ErrMsg("Unable to parse document.");
-}
-
 TASCAR::session_t::session_t()
-  : xml_element_t(doc->get_root_node()),
-    jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
+  : jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
     osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port")),
     name("tascar"),
     duration(60),
@@ -117,20 +93,13 @@ TASCAR::session_t::session_t()
     period_time(1.0/(double)srate),
     started_(false)
 {
-  // avoid problems with number format in xml file:
-  setlocale(LC_ALL,"C");
-  char c_respath[PATH_MAX];
-  session_path = getcwd(c_respath,PATH_MAX);
-  if( get_element_name() != "session" )
-    throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   read_xml();
   add_transport_methods();
   osc_server_t::activate();
 }
 
 TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
-  : xml_doc_t(filename_or_data,t),
-    xml_element_t(doc->get_root_node()),
+  : TASCAR::tsc_reader_t(filename_or_data,t,path),
     jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
     osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port")),
     name("tascar"),
@@ -139,39 +108,6 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     period_time(1.0/(double)srate),
     started_(false)
 {
-  // avoid problems with number format in xml file:
-  setlocale(LC_ALL,"C");
-  if( path.size() ){
-    char c_fname[path.size()+1];
-    char c_respath[PATH_MAX];
-    memcpy(c_fname,path.c_str(),path.size()+1);
-    session_path = realpath(dirname(c_fname),c_respath);
-    if( chdir(session_path.c_str()) != 0 )
-      std::cerr << "Unable to change directory\n";
-  }else{
-    char c_respath[PATH_MAX];
-    session_path = getcwd(c_respath,PATH_MAX);
-  }
-  if( get_element_name() != "session" )
-    throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
-  // add session-includes:
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "include")){
-      std::string idocname(sne->get_attribute_value("name"));
-      if( !idocname.empty() ){
-        xml_doc_t idoc(idocname,LOAD_FILE);
-        xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
-        for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
-          xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
-          if( isne ){
-            e->import_node(isne);
-          }
-        }
-      }
-    }
-  }
   // parse XML:
   read_xml();
   add_transport_methods();
@@ -180,24 +116,13 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
 
 void TASCAR::session_t::read_xml()
 {
-  get_attribute("name",name);
-  if( name.empty() )
-    name = "tascar";
-  get_attribute("duration",duration);
-  get_attribute_bool("loop",loop);
   try{
-    xmlpp::Node::NodeList subnodes = e->get_children();
-    for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-      if( sne && ( sne->get_name() == "scene"))
-        add_scene(sne);
-      if( sne && ( sne->get_name() == "range"))
-        add_range(sne);
-      if( sne && ( sne->get_name() == "connect"))
-        add_connection(sne);
-      if( sne && ( sne->get_name() == "module"))
-        add_module(sne);
-    }
+    TASCAR::tsc_reader_t::read_xml();
+    get_attribute("name",name);
+    if( name.empty() )
+      name = "tascar";
+    get_attribute("duration",duration);
+    get_attribute_bool("loop",loop);
   }
   catch( ... ){
     for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
@@ -210,13 +135,6 @@ void TASCAR::session_t::read_xml()
       delete (*it);
     throw;
   }
-}
-
-
-void TASCAR::session_t::save(const std::string& filename)
-{
-  write_xml();
-  xml_doc_t::save(filename);
 }
 
 void TASCAR::session_t::write_xml()
@@ -264,37 +182,33 @@ std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
   return ports;
 }
 
-TASCAR::Scene::scene_t* TASCAR::session_t::add_scene(xmlpp::Element* src)
+void TASCAR::session_t::add_scene(xmlpp::Element* src)
 {
   if( !src )
     src = e->add_child("scene");
   player.push_back(new TASCAR::scene_player_t(src));
   player.back()->add_child_methods(this);
-  return player.back();
 }
 
-TASCAR::range_t* TASCAR::session_t::add_range(xmlpp::Element* src)
+void TASCAR::session_t::add_range(xmlpp::Element* src)
 {
   if( !src )
     src = e->add_child("range");
   ranges.push_back(new TASCAR::range_t(src));
-  return ranges.back();
 }
 
-TASCAR::connection_t* TASCAR::session_t::add_connection(xmlpp::Element* src)
+void TASCAR::session_t::add_connection(xmlpp::Element* src)
 {
   if( !src )
     src = e->add_child("connect");
   connections.push_back(new TASCAR::connection_t(src));
-  return connections.back();
 }
 
-TASCAR::module_t* TASCAR::session_t::add_module(xmlpp::Element* src)
+void TASCAR::session_t::add_module(xmlpp::Element* src)
 {
   if( !src )
     src = e->add_child("module");
   modules.push_back(new TASCAR::module_t(src,this));
-  return modules.back();
 }
 
 void TASCAR::session_t::start()

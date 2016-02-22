@@ -96,9 +96,7 @@ void hoa2d_t::configure(double srate,uint32_t fragsize)
                                 FFTW_ESTIMATE);
   memset(s_encoded,0,sizeof(float)*fragsize*nbins);
   memset(s_decoded,0,sizeof(float)*fragsize*channels);
-  //fftwf_print_plan(dec);
   ordergain.resize(nbins);
-  //DEBUG(rotation);
   for(uint32_t m=0;m<=amb_order;++m){
     ordergain[m] = fft_scale*cexpf(-(float)m*I*rotation);
     if( maxre )
