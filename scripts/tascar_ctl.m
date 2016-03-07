@@ -162,9 +162,8 @@ function tascar_ctl_createscene( varargin )
   if isempty(sCfg)
     return;
   end
-  
-  %% Parameters characteristic for this scene
 
+  %% Parameters characteristic for this scene
   % Sources equally spread on a circle:
   v_az = linspace(0,2*pi,sCfg.nrsources+1);
   c_src_positions=cell(length(v_az),1);
@@ -174,115 +173,42 @@ function tascar_ctl_createscene( varargin )
     z=0;
     c_src_positions{i}=['0 ',num2str(x),' ',num2str(y),' ',num2str(z)];
   end
-
   %Virtual loudspeakers equally spread on a circle 
   v_az = linspace(0,2*pi,sCfg.nrspeakers+1);
   v_az=v_az(1:end-1);
   v_az=v_az*180/pi-180;
-
-
   %% -------------- Creating an XML scene definition file -----------
-
-  % initialize core objects:
-  factory = javaMethod('newInstance', ...
-		       'javax.xml.parsers.DocumentBuilderFactory');
-  docBuilder = javaMethod('newDocumentBuilder',factory);
-
   %Create the document node and root element(always):
-  docNode = javaMethod('newDocument',docBuilder);
-
+  docNode = tascar_xml_doc_new();
   % session (root element):
-  n_session = javaMethod('createElement',docNode,'session');
-
-  javaMethod('appendChild',docNode,n_session); 
-  % this line seems to be additional 
-  
+  n_session = tascar_xml_add_element(docNode,docNode,'session',[]);
   [tmpPath,tmpBasename] = fileparts(sCfg.filename);
   % scene, description
-  n_scene= addElementHere(docNode,n_session,'scene',[],'name',tmpBasename);
-
+  n_scene = tascar_xml_add_element(docNode,n_session,'scene',[],'name',tmpBasename);
   % sources
   for i = 1:sCfg.nrsources
-    
     src_name=['src_',num2str(i)];
-    n_src_temp=addElementHere(docNode,n_scene,'src_object',[],'name',src_name);
+    n_src_temp = ...
+	tascar_xml_add_element(docNode, n_scene, 'src_object',[],'name',src_name);
     %position
-    n_pos_src_temp= addElementHere(docNode,n_src_temp,'position',c_src_positions{i});
+    n_pos_src_temp = ...
+	tascar_xml_add_element(docNode, n_src_temp, 'position',c_src_positions{i});
     %sound
-    n_sound_temp=addElementHere(docNode,n_src_temp,'sound',[],'name','0','maxdist',num2str(sCfg.maxdist));
+    n_sound_temp = ...
+	tascar_xml_add_element(docNode, n_src_temp, 'sound',[],...
+			       'name','0','maxdist', num2str(sCfg.maxdist));
   end
-
   % receiver:
-  n_rec= addElementHere(docNode,n_scene,'receiver',[], 'name', 'out', ...
-			'type',sCfg.rec_type);
+  n_rec = tascar_xml_add_element(docNode,n_scene,'receiver',[], 'name', 'out', ...
+				 'type',sCfg.rec_type);
   for i = 1:sCfg.nrspeakers
     spk_name=['src_',num2str(i)];
-    n_spk_temp=addElementHere(docNode,n_rec,'speaker',[],'az',num2str(v_az(i)),'el','0' );
+    n_spk_temp = ...
+	tascar_xml_add_element(docNode, n_rec, 'speaker',[], ...
+			       'az',num2str(v_az(i)),'el','0' );
   end  
-  
-  %% save xml file
-  
-  dsource = javaObject('javax.xml.transform.dom.DOMSource',docNode);
-  transformerFactory = javaMethod('newInstance','javax.xml.transform.TransformerFactory');
-  transformer = javaMethod('newTransformer',transformerFactory);
-  writer= javaObject('java.io.StringWriter');
-  result = javaObject('javax.xml.transform.stream.StreamResult',writer);
-  javaMethod('transform',transformer,dsource, result);
-  writer.close();
-  xml = char(writer.toString());
-  
-  % makes each row into a cell
-  CellArray = strcat(xml); 
-  fid = fopen(sCfg.filename,'w');
-  for r=1:size(CellArray,1)
-    fprintf(fid,'%s\n',CellArray(r,:));
-  end
-  fclose(fid);
-					       
-function h_this_node=addElementHere(h_docNode,h_higher_node,s_this_node_name,s_content,varargin) 
-%
-% This is a function to create ONE element in the xml file, which will be used as TASCAR 
-% scene definition file.
-% INPUT: 
-% docNode                handle of the document node (one for the whole xml file)
-% higher_node            handle of the parrent element of the element we want to introduce 
-% s_this_node_name       string with name of the element we want to introduce
-% s_content              string containing content of the node we want to
-%                        introduce. If the node doesnt have a content we put an empty 
-%                        matrix here:  []
-% varargin               list of attributes followed by their values
-% OUTPUT:
-% h_this_node            handle to the just introduced node 
-
-% Example usage : 
-% n_src_temp=addElementHere(docNode,n_scene,'src_object',[],'name','my_scene','color','#f00000','start','1')
-%------------------------------------------------------------------------
-
-%create a new element 
-  h_this_node = javaMethod('createElement',h_docNode,s_this_node_name);
-  % h_this_node=h_docNode.createElement(s_this_node_name);
-
-  if mod(length(varargin),2)
-    error('For each attribute there must be exactly one corresponding value')
-  end
-  
-  %set attributes of the new element   
-  if ~isempty(varargin)
-    for i = 1 : 2 : length(varargin)  
-      javaMethod('setAttribute',h_this_node,varargin{i},varargin{i+1});
-      % h_this_node.setAttribute(varargin{i},varargin{i+1});
-    end
-  end
-  
-  % specify the parrent node   
-  javaMethod('appendChild',h_higher_node,h_this_node);
-  %h_higher_node.appendChild(h_this_node);
-
-  % add content to the new node
-  if ~isempty(s_content)
-    javaMethod('appendChild',h_this_node,javaMethod('createTextNode',h_docNode, s_content));
-    %     h_this_node.appendChild(h_docNode.createTextNode(s_content));
-  end
+  %% save xml file:
+  tascar_xml_save( docNode, sCfg.filename );
 
 function pid = tascar_ctl_jackddummy_start( P )
   sCmd = ['xterm -e "jackd -P86 -p4096 -ddummy -r44100 -p', num2str(P),...

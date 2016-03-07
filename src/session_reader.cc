@@ -82,6 +82,12 @@ void TASCAR::tsc_reader_t::save(const std::string& filename)
   xml_doc_t::save(filename);
 }
 
+const std::string& TASCAR::tsc_reader_t::get_session_path() const
+{
+  return session_path;
+}
+
+
 /*
  * Local Variables:
  * mode: c++

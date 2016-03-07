@@ -31,6 +31,11 @@ void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_
   b_0_14 = b_0_14_;
 }
 
+void TASCAR::render_core_t::set_v014()
+{
+  b_0_14 = true;
+}
+
 void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
 {
   TASCAR::Scene::scene_t::prepare(fs,fragsize);

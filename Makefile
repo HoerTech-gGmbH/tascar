@@ -4,13 +4,13 @@
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
   tascar_osc_jack_transport tascar_jackio tascar_sampler		\
   tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
-  tascar_lsljacktime tascar_renderfile
+  tascar_lsljacktime tascar_renderfile tascar_renderir tascar_lipsync
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
   neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route lsljacktime
+  foa2hoadiff route lsljacktime oscevents
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\
@@ -124,6 +124,8 @@ tascar_gui: libtascargui.a
 
 $(BINFILES) $(RECEIVERMODS) $(TASCARMODDLLS): libtascar.a
 
+tascar_pdf: libtascargui.a
+
 $(PREFIX)/bin/%: %
 	cp $< $@
 
@@ -157,6 +159,7 @@ bz2:
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 
 tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
+tascar_lipsync: LDLIBS+=-lfftw3
 
 tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime: LDLIBS+=-llsl
 

@@ -12,6 +12,7 @@ namespace TASCAR {
     void read_xml();
     void write_xml();
     virtual void save(const std::string& filename);
+    const std::string& get_session_path() const;
   private:
     tsc_reader_t(const tsc_reader_t&);
   protected:

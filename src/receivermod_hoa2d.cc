@@ -53,6 +53,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     amb_order(nbins-2),
     s_encoded(NULL),
     s_decoded(NULL),
+    dec(NULL),
     chunk_size(0),
     num_channels(0),
     fft_scale(1.0),
@@ -79,7 +80,8 @@ void hoa2d_t::write_xml()
 
 hoa2d_t::~hoa2d_t()
 {
-  fftwf_destroy_plan(dec);
+  if( dec )
+    fftwf_destroy_plan(dec);
 }
 
 void hoa2d_t::configure(double srate,uint32_t fragsize)

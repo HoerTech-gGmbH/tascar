@@ -85,6 +85,7 @@ namespace TASCAR {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
+    void set_v014();
   private:
     session_t(const session_t& src);
   public:
@@ -111,7 +112,6 @@ namespace TASCAR {
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;
     std::vector<TASCAR::module_t*> modules;
-    const std::string& get_session_path() const;
     std::vector<std::string> get_render_output_ports() const;
     virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
     //virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);

@@ -98,7 +98,7 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
   airabsorption_state(0.0)
 {
   pos_t prel;
-  receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain);
+  receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain,false);
   gain = 1.0;
   vstate.resize(obstacles_.size());
 }
@@ -128,7 +128,7 @@ uint32_t acoustic_model_t::process()
     // calculate relative geometry between source and receiver:
     double srcgainmod(1.0);
     effective_srcpos = src_->get_effective_position( receiver_->position, srcgainmod );
-    receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain );
+    receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain, src_->ismorder>0 );
     nextgain *= srcgainmod;
     double next_air_absorption(exp(-nextdistance*dscale));
     double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
@@ -178,36 +178,32 @@ mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
  */
 void mirrorsource_t::process()
 {
+  // active = true : render source tree (gain may be zero)
+  // active = false : do not render source tree
   active = false;
   if( !(reflector_->active && src_->active) )
     return;
-  
+  if( b_0_14 ){
+    // if this is second order image source:
+    if( ismorder > 1 ){
+      // if intersection is behind original reflector then do not render:
+      if( ! ((mirrorsource_t*)src_)->reflector_->is_infront( p_cut ) ){
+        return;
+      }
+    }
+  }
   // intersection point with reflector:
   p_cut = reflector_->nearest_on_plane(src_->position);
-  // if this is second order image source:
-  //if( ismorder > 1 ){
-    // if intersection is behind original reflector then do not render:
-    //if( ! ((mirrorsource_t*)src_)->reflector_->is_infront( p_cut ) ){
-    //  return;
-    //}
-  //}
   // calculate nominal image source position:
   p_img = p_cut;
   p_img *= 2.0;
   p_img -= src_->position;
-  //// if image source is in front of reflector then return zero:
+  // if image source is in front of reflector then return:
   if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 )
     return;
   // copy p_img to base class position:
   position = p_img;
   // optionally reproduce version 0.14 behavior:
-  if( b_0_14 ){
-    pos_t nearest_point_0_14(p_cut);
-    nearest_point_0_14 -= src_->position;
-    if( dot_prod(nearest_point_0_14,reflector_->get_normal())>0 ){
-      return;
-    }
-  }
   // calculate absorption/reflection:
   double c1(reflector_->reflectivity * (1.0-reflector_->damping));
   double c2(reflector_->damping);
@@ -231,11 +227,11 @@ pos_t mirrorsource_t::get_effective_position(const pos_t& p_rec,double& gain)
     gain = 0;
     return p_img;
   }
-  // if image source is in front of reflector then return zero:
-  if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 ){
-    gain = 0;
-    return p_img;
-  }
+//  // if image source is in front of reflector then return zero:
+//  if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 ){
+//    gain = 0;
+//    return p_img;
+//  }
   double len_receiver(distance(pcut_rec,p_rec));
   double len_src(distance(p_cut,p_img));
   // calculate intersection:
@@ -276,9 +272,8 @@ mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
     num_mirrors_start = num_mirrors_end;
     num_mirrors_end = mirrorsource.size();
   }
-  if( b_0_14 )
-    for(uint32_t k=0;k<mirrorsource.size();++k)
-      mirrorsource[k]->b_0_14 = true;
+  for(uint32_t k=0;k<mirrorsource.size();++k)
+    mirrorsource[k]->b_0_14 = b_0_14;
 }
 
 mirror_model_t::~mirror_model_t()
@@ -327,7 +322,11 @@ std::vector<pointsource_t*> mirror_model_t::get_sources()
 }
 
 world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order,bool b_0_14)
-  : mirrormodel(sources,reflectors,mirror_order,b_0_14),receivers_(receivers),masks_(masks),active_pointsource(0),active_diffusesource(0)
+  : mirrormodel(sources,reflectors,mirror_order,b_0_14),
+    receivers_(receivers),
+    masks_(masks),
+    active_pointsource(0),
+    active_diffusesource(0)
 {
   // diffuse models:
   for(uint32_t kSrc=0;kSrc<diffusesources.size();++kSrc)
@@ -427,7 +426,7 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,
 {
   pos_t prel;
   double d(1.0);
-  receiver_->update_refpoint(src_->center,src_->center,prel,d,gain);
+  receiver_->update_refpoint(src_->center,src_->center,prel,d,gain,false);
   gain = 0;
 }
 
@@ -446,7 +445,7 @@ uint32_t diffuse_acoustic_model_t::process()
   double d(0.0);
   double nextgain(1.0);
   // calculate relative geometry between source and receiver:
-  receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain);
+  receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain,false);
   shoebox_t box(*src_);
   //box.size = src_->size;
   box.center = pos_t();
@@ -563,7 +562,7 @@ void receiver_t::add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::
   receivermod_t::add_diffusesource(chunk,outchannels,data);
 }
 
-void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain)
+void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img)
 {
   
   if( (size.x!=0)&&(size.y!=0)&&(size.z!=0) ){
@@ -586,8 +585,9 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     distance = prel.norm();
     gain = 1.0/std::max(0.1,distance);
     double physical_dist(TASCAR::distance(psrc_physical,position));
-    if( physical_dist > distance )
+    if( b_img && (physical_dist > distance) ){
       gain = 0.0;
+    }
   }
   make_friendly_number(gain);
 }

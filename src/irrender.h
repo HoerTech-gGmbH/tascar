@@ -9,14 +9,16 @@ namespace TASCAR {
 
   class wav_render_t : public TASCAR::tsc_reader_t {
   public:
-    wav_render_t(const std::string& tscname,const std::string& scene);
+    wav_render_t(const std::string& tscname,const std::string& scene, bool verbose=false);
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max, bool b_0_14=false );
     void render(uint32_t fragsize,const std::string& ifname, const std::string& ofname,double starttime, bool b_dynamic);
+    void render_ir(uint32_t len,double fs, const std::string& ofname,double starttime);
     ~wav_render_t();
   protected:
     void add_scene(xmlpp::Element* e);
     std::string scene;
     render_core_t* pscene;
+    bool verbose_;
   };
 
 }

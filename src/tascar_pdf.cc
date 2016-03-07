@@ -25,33 +25,19 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
-bool has_infinity(const pos_t& p)
-{
-  if( p.x == std::numeric_limits<double>::infinity() )
-    return true;
-  if( p.y == std::numeric_limits<double>::infinity() )
-    return true;
-  if( p.z == std::numeric_limits<double>::infinity() )
-    return true;
-  return false;
-}
-
-void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
-{
-  if( !(has_infinity(p1) || has_infinity(p2)) ){
-    cr->move_to(p1.x,-p1.y);
-    cr->line_to(p2.x,-p2.y);
-  }
-}
-
 namespace App {
 
-  class pdf_export_t : public TASCAR::session_t {
+  class pdf_export_t : public TASCAR::tsc_reader_t {
   public:
-    pdf_export_t(const std::string& scenename,const std::string& pdfname);
+    pdf_export_t(const std::string& session_filename,const std::string& pdfname);
+    void draw_acousticmodel() { drawer.set_show_acoustic_model(true); };
     ~pdf_export_t();
     void render_time(const std::vector<double>& time);
-    void render_time(TASCAR::render_rt_t* scene,const std::vector<double>& time);
+    void render_time(TASCAR::render_core_t* scene,const std::vector<double>& time);
+    //void set_v014();
+    void set_ism_order_range(uint32_t ism_min,uint32_t ism_max, bool b_0_14);
+  protected:
+    virtual void add_scene(xmlpp::Element *e);
   private:
     void draw(scene_draw_t::viewt_t persp);
     double time;
@@ -64,14 +50,15 @@ namespace App {
     double bmargin;
     Cairo::RefPtr<Cairo::PdfSurface> surface;
     scene_draw_t drawer;
+    std::vector<TASCAR::render_core_t*> scenes;
   };
 
 }
 
-App::pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& pdfname)
-  : session_t(scenename,LOAD_FILE,scenename),
+App::pdf_export_t::pdf_export_t(const std::string& session_filename,const std::string& pdfname)
+  : tsc_reader_t(session_filename,LOAD_FILE,session_filename),
     time(0),
-    filename(scenename),
+    filename(session_filename),
     height(72*210/25.4),
     width(72*297/25.4),
     lmargin(72*12/25.4),
@@ -80,24 +67,50 @@ App::pdf_export_t::pdf_export_t(const std::string& scenename,const std::string& 
     bmargin(72*12/25.4),
     surface(Cairo::PdfSurface::create(pdfname, width, height ))
 {
+  read_xml();
 }
 
 App::pdf_export_t::~pdf_export_t()
 {
+  for(std::vector<TASCAR::render_core_t*>::iterator sit=scenes.begin();sit!=scenes.end();++sit)
+    delete (*sit);
+}
+
+void App::pdf_export_t::set_ism_order_range(uint32_t ism_min,uint32_t ism_max,bool b_0_14)
+{
+  for(std::vector<TASCAR::render_core_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
+    (*ipl)->set_ism_order_range(ism_min,ism_max,b_0_14);
+}
+
+//void App::pdf_export_t::set_v014()
+//{
+//  for(std::vector<TASCAR::render_core_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
+//    (*ipl)->set_v014();
+//}
+
+void App::pdf_export_t::add_scene(xmlpp::Element* sne)
+{
+  DEBUG(1);
+  scenes.push_back(new render_core_t(sne));
 }
 
 void App::pdf_export_t::render_time(const std::vector<double>& t)
 {
-  for(std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+  DEBUG(scenes.size());
+  for(std::vector<TASCAR::render_core_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
     render_time(*it,t);
 }
 
-void App::pdf_export_t::render_time(TASCAR::render_rt_t* s, const std::vector<double>& t)
+void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<double>& t)
 {
+  DEBUG(1);
+  s->prepare(44100,1);
+  uint32_t nch_in(s->num_input_ports());
+  uint32_t nch_out(s->num_output_ports());
+  float v(0);
+  std::vector<float*> dIn(nch_in,&v);
+  std::vector<float*> dOut(nch_out,&v);
   drawer.set_scene(s);
-  //read_xml(scenename);
-  //linearize_sounds();
-  //prepare(44100,1024);
   double wscale(0.5*std::max(height,width));
   double res(wscale/72*0.0254);
   double nscale(s->guiscale/res);
@@ -118,24 +131,33 @@ void App::pdf_export_t::render_time(TASCAR::render_rt_t* s, const std::vector<do
   drawer.view.set_scale(nscale*res);
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    s->geometry_update(time);
+    // s->geometry_update(time);
+    s->process(time,1,dIn,dOut);
+    s->process(time,1,dIn,dOut);
     draw(scene_draw_t::xy);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    s->geometry_update(time);
+    //s->geometry_update(time);
+    s->process(time,1,dIn,dOut);
+    s->process(time,1,dIn,dOut);
     draw(scene_draw_t::xz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    s->geometry_update(time);
+    //s->geometry_update(time);
+    s->process(time,1,dIn,dOut);
+    s->process(time,1,dIn,dOut);
     draw(scene_draw_t::yz);
   }
-  for(uint32_t k=0;k<t.size();k++){
-    time = t[k];
-    s->geometry_update(time);
-    draw(scene_draw_t::p);
-  }
+  //for(uint32_t k=0;k<t.size();k++){
+  //  time = t[k];
+  //  //s->geometry_update(time);
+  //  s->process(time,1,dIn,dOut);
+  //  s->process(time,1,dIn,dOut);
+  //  draw(scene_draw_t::p);
+  //}
+  s->release();
 }
 
 void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
@@ -183,6 +205,7 @@ void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
   cr->stroke();
   cr->move_to( bx+12, by+15 );
   cr->show_text( filename.c_str() );
+  cr->stroke();
   cr->move_to( bx, by+22 );
   cr->line_to( bx+bw,by+22);
   cr->stroke();
@@ -204,15 +227,18 @@ void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
   }
   cr->move_to( bx+12, by+36 );
   cr->show_text( ctmp );
+  cr->stroke();
   if( persp == scene_draw_t::p )
     sprintf(ctmp,"fov %g°",drawer.view.get_fov());
   else
     sprintf(ctmp,"scale 1:%g",drawer.view.get_scale()/(wscale/72*0.0254));
   cr->move_to( bx+12, by+48 );
   cr->show_text( ctmp );
+  cr->stroke();
   sprintf(ctmp,"time %g s",time);
   cr->move_to( bx+12, by+60 );
   cr->show_text( ctmp );
+  cr->stroke();
   surface->show_page();
 }
 
@@ -230,15 +256,23 @@ int main(int argc, char** argv)
 {
   std::string cfgfile("");
   std::string pdffile("");
-  const char *options = "c:o:ht:";
+  const char *options = "c:o:ht:a40:1:";
   struct option long_options[] = { 
     { "config",   1, 0, 'c' },
     { "output",   1, 0, 'o' },
     { "help",     0, 0, 'h' },
     { "time",     1, 0, 't' },
+    { "acousticmodel", 0, 0, 'a' },
+    { "b014", 0, 0, '4' },
+    { "ismmin", 1, 0, '0' },
+    { "ismmax", 1, 0, '1' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
+  bool b_am(false);
+  bool b_0_14(false);
+  uint32_t ism_min(0);
+  uint32_t ism_max(3);
   int option_index(0);
   std::vector<double> time;
   while( (opt = getopt_long(argc, argv, options,
@@ -256,6 +290,18 @@ int main(int argc, char** argv)
     case 'h':
       usage(long_options);
       return -1;
+    case 'a':
+      b_am = true;
+      break;
+    case '4':
+      b_0_14 = true;
+      break;
+    case '0':
+      ism_min = atoi(optarg);
+      break;
+    case '1':
+      ism_max = atoi(optarg);
+      break;
     }
   }
   if( cfgfile.size() == 0 ){
@@ -268,9 +314,12 @@ int main(int argc, char** argv)
     pdffile = cfgfile+".pdf";
   }
   App::pdf_export_t c(cfgfile,pdffile);
-  c.start();
+  if( b_am )
+    c.draw_acousticmodel();
+  c.set_ism_order_range(ism_min,ism_max,b_0_14);
+  DEBUG(1);
   c.render_time(time);
-  c.stop();
+  DEBUG(2);
   return 0;
 }
 

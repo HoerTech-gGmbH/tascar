@@ -413,11 +413,6 @@ std::vector<TASCAR::named_object_t> TASCAR::session_t::find_objects(const std::s
   return retv;
 }
 
-const std::string& TASCAR::session_t::get_session_path() const
-{
-  return session_path;
-}
-
 TASCAR::actor_module_t::actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session,bool fail_on_empty)
   : module_base_t(xmlsrc,session)
 {
@@ -513,6 +508,12 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/start","",OSCSession::_start,this);
   osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
   osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);
+}
+
+void TASCAR::session_t::set_v014()
+{
+  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+    (*ipl)->set_v014();
 }
 
 /*

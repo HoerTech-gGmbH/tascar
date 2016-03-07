@@ -99,7 +99,7 @@ namespace TASCAR {
       void clear_output();
       void add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t*);
       void add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t*);
-      void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain);
+      void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain, bool b_img);
       void set_next_gain(double gain);
       void apply_gain();
       void post_proc();

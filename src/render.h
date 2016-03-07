@@ -13,6 +13,7 @@ namespace TASCAR {
     void prepare(double fs, uint32_t fragsize);
     void release();
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max, bool b_0_14=false );
+    void set_v014();
     void process(double time,
                  uint32_t nframes,
                  const std::vector<float*>& inBuffer,

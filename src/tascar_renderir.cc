@@ -9,16 +9,14 @@ int main(int argc,char** argv)
     std::string tscfile;
     // Scene name (or empty to use first scene in session file):
     std::string scene;
-    // input file name (pointing to an existing sound file):
-    std::string in_fname;
     // output sound file name, will be created/overwritten:
     std::string out_fname;
     // start time of simulation:
     double starttime(0);
-    // flag to increment time on each cycle:
-    bool dynamic(false);
-    // fragment size, or -1 to use only a single fragment:
-    uint32_t fragsize(-1);
+    // IR length:
+    uint32_t irlen(44100);
+    // sampling rate
+    double fs(44100);
     // minimum ISM order:
     uint32_t ism_min(0);
     // maximum ISM order:
@@ -28,15 +26,14 @@ int main(int argc,char** argv)
     // print statistics
     bool b_verbose(false);
     //
-    const char *options = "ht:s:i:o:x:df:0:1:4v";
+    const char *options = "hs:o:t:l:f:0:1:4v";
     struct option long_options[] = { 
       { "help",       0, 0, 'h' },
       { "scene",      1, 0, 's' },
-      { "inputfile",  1, 0, 'i' },
       { "outputfile", 1, 0, 'o' },
       { "starttime",  1, 0, 't' },
-      { "dynamic",    0, 0, 'd' },
-      { "fragsize",   1, 0, 'f' },
+      { "irlength",   1, 0, 'l' },
+      { "srate",      1, 0, 'f' },
       { "ismmin",     1, 0, '0' },
       { "ismmax",     1, 0, '1' },
       { "b014",       0, 0, '4' },
@@ -54,20 +51,17 @@ int main(int argc,char** argv)
       case 's':
         scene = optarg;
         break;
-      case 'i':
-        in_fname = optarg;
-        break;
       case 'o':
         out_fname = optarg;
         break;
       case 't':
         starttime = atof(optarg);
         break;
-      case 'd':
-        dynamic = true;
+      case 'l':
+        irlen = atoi(optarg);
         break;
       case 'f':
-        fragsize = atoi(optarg);
+        fs = atof(optarg);
         break;
       case '0':
         ism_min = atoi(optarg);
@@ -87,14 +81,12 @@ int main(int argc,char** argv)
       tscfile = argv[optind++];
     if(tscfile.empty())
       throw TASCAR::ErrMsg("Empty session file name.");
-    if(in_fname.empty())
-      throw TASCAR::ErrMsg("Empty input sound file name");
     if(out_fname.empty())
       throw TASCAR::ErrMsg("Empty output sound file name");
     TASCAR::wav_render_t r(tscfile,scene,b_verbose);
     if( ism_max != (uint32_t)(-1) )
       r.set_ism_order_range( ism_min, ism_max, b_0_14 );
-    r.render(fragsize,in_fname, out_fname, starttime, dynamic );
+    r.render_ir(irlen, fs, out_fname, starttime );
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;
