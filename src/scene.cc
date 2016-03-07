@@ -175,6 +175,15 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   get_attribute("name",name);
   if( name.empty() )
     throw TASCAR::ErrMsg("Invalid empty sound name.");
+  // parse plugins:
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      if( sne->get_name() == "plugin" )
+        plugins.push_back(new TASCAR::audioplugin_t(sne,name,(parent_?(parent_->get_name()):(""))));
+    }
+  }
 }
 
 sound_t::sound_t(const sound_t& src)
@@ -188,12 +197,28 @@ sound_t::sound_t(const sound_t& src)
     direct(src.direct),
     source(NULL)
 {
+  DEBUG("x");
 }
 
 sound_t::~sound_t()
 {
   if( source )
     delete source;
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+       p!= plugins.end();
+       ++p)
+    delete (*p);
+}
+
+void sound_t::process_plugins()
+{
+  if( source ){
+    //DEBUG(plugins.size());
+    for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+         p!= plugins.end();
+         ++p)
+      (*p)->process(source->audio);
+  }
 }
 
 void sound_t::geometry_update(double t)
@@ -208,6 +233,8 @@ void sound_t::prepare(double fs, uint32_t fragsize)
 {
   if( source )
     delete source;
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
+    (*p)->prepare(fs,fragsize);
   source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,sincorder);
 }
 
@@ -313,26 +340,32 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "sound" )){
-      sound.push_back(sound_t(sne,this));
+      sound.push_back(new sound_t(sne,this));
     }
   }
+}
+
+src_object_t::~src_object_t()
+{
+  for(std::vector<sound_t*>::iterator s=sound.begin();s!=sound.end();++s)
+    delete *s;
 }
 
 void src_object_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
-  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
-    it->geometry_update(t);
+  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
+    (*it)->geometry_update(t);
   }
 }
 
 void src_object_t::prepare(double fs, uint32_t fragsize)
 {
   reset_meters();
-  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it){
+  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
     addmeter(RMSLEN*fs);
-    it->prepare(fs,fragsize);
-    it->get_source()->add_rmslevel(&(rmsmeter.back()));
+    (*it)->prepare(fs,fragsize);
+    (*it)->get_source()->add_rmslevel(&(rmsmeter.back()));
   }
   startframe = fs*starttime;
 }
@@ -340,14 +373,14 @@ void src_object_t::prepare(double fs, uint32_t fragsize)
 void src_object_t::write_xml()
 {
   object_t::write_xml();
-  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it)
-    it->write_xml();
+  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
+    (*it)->write_xml();
 }
 
 sound_t* src_object_t::add_sound()
 {
-  sound.push_back(sound_t(dynobject_t::e->add_child("sound"),this));
-  return &sound.back();
+  sound.push_back(new sound_t(dynobject_t::e->add_child("sound"),this));
+  return sound.back();
 }
 
 scene_t::scene_t(xmlpp::Element* xmlsrc)
@@ -608,11 +641,9 @@ std::vector<sound_t*> scene_t::linearize_sounds()
   std::vector<sound_t*> r;
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){
     //it->set_reference(&listener);
-    for(std::vector<sound_t>::iterator its=(*it)->sound.begin();its!=(*it)->sound.end();++its){
-      if( &(*its) ){
-        (&(*its))->set_parent((*it));
-        r.push_back(&(*its));
-      }
+    for(std::vector<sound_t*>::iterator its=(*it)->sound.begin();its!=(*it)->sound.end();++its){
+      (*its)->set_parent( *it );
+      r.push_back( *its );
     }
   }
   return r;
@@ -867,9 +898,9 @@ void sndfile_info_t::write_xml()
 void src_object_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
-  for(std::vector<sound_t>::iterator it=sound.begin();it!=sound.end();++it)
-    if( it->get_source() )
-      it->get_source()->active = a;
+  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
+    if( (*it)->get_source() )
+      (*it)->get_source()->active = a;
 }
 
 void src_diffuse_t::process_active(double t, uint32_t anysolo)

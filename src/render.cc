@@ -129,6 +129,7 @@ void TASCAR::render_core_t::process(double time,
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes,sounds[k]->get_gain());
+    sounds[k]->process_plugins();
     psrc->preprocess();
   }
   for(uint32_t k=0;k<door_sources.size();k++){

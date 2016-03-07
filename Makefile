@@ -16,7 +16,9 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\
   osc_helper.o async_file.o errorhandling.o audiochunks.o		\
   acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
-  sampler.o jackiowav.o cli.o irrender.o jackrender.o
+  sampler.o jackiowav.o cli.o irrender.o jackrender.o audioplugin.o
+
+AUDIOPLUGINS = identity sine lipsync
 
 TEST_FILES = test_ngon test_sinc
 
@@ -24,6 +26,8 @@ TEST_FILES = test_ngon test_sinc
 RECEIVERMODS = $(patsubst %,tascarreceiver_%.so,$(RECEIVERS))
 
 TASCARMODDLLS = $(patsubst %,tascar_%.so,$(TASCARMODS))
+
+AUDIOPLUGINDLLS = $(patsubst %,tascar_ap_%.so,$(AUDIOPLUGINS))
 
 PREFIX = /usr/local
 
@@ -58,18 +62,14 @@ GUIOBJECTS = gui_elements.o pdfexport.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(RECEIVERMODS)) \
-	$(patsubst %,$(PREFIX)/lib/%,$(TASCARMODDLLS))
+	$(patsubst %,$(PREFIX)/lib/%,$(TASCARMODDLLS)) \
+	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
 
-#GTKMMBIN = tascar_gui
 
 CXXFLAGS += -fPIC -Wall -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./ 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
-#EXTERNALS = jack liblo sndfile
 
 $(GUIOBJECTS): EXTERNALS += gtkmm-3.0
-
-#tascar_gui tascar_renderer tascar_audioplayer: OBJECTS += /usr/lib/libxml++-2.6.a
-#tascar_gui tascar_renderer tascar_audioplayer: CXXFLAGS += -I/usr/include/libxml++-2.6/
 
 tascar_hoadisplay: EXTERNALS += $(GTKEXT)
 
@@ -77,14 +77,11 @@ tascar_hdspmixer: EXTERNALS += alsa
 
 tascar_gui tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 tascar_gui tascar_pdf: EXTERNALS += $(GTKEXT)
-#tascar_gui: gui_elements.o
 
 LDLIBS += -ltascar -ldl
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
-
-#CXXFLAGS += -ggdb
 
 all: lib
 	mkdir -p build
@@ -92,7 +89,7 @@ all: lib
 
 lib:
 	mkdir -p build
-	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(TASCARMODDLLS)
+	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
 
 libtascar.a: $(OBJECTS)
 	ar rcs $@ $^
@@ -122,7 +119,7 @@ include $(wildcard *.mk)
 
 tascar_gui: libtascargui.a
 
-$(BINFILES) $(RECEIVERMODS) $(TASCARMODDLLS): libtascar.a
+$(BINFILES) $(RECEIVERMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS): libtascar.a
 
 tascar_pdf: libtascargui.a
 
@@ -160,6 +157,7 @@ tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 
 tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
 tascar_lipsync: LDLIBS+=-lfftw3
+tascar_ap_lipsync.so: LDLIBS+=-lfftw3
 
 tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime: LDLIBS+=-llsl
 
@@ -167,6 +165,9 @@ tascarreceiver_%.so: receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 tascar_%.so: tascarmod_%.cc
+	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
+tascar_ap_%.so: tascar_ap_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 

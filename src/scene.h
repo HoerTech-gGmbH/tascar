@@ -29,6 +29,7 @@
 
 #include <vector>
 #include "acousticmodel.h"
+#include "audioplugin.h"
 
 namespace TASCAR {
 
@@ -213,7 +214,9 @@ namespace TASCAR {
     class sound_t : public audio_port_t {
     public:
       sound_t(xmlpp::Element* e,src_object_t* parent_);
+    private:
       sound_t(const sound_t& src);
+    public:
       virtual ~sound_t();
       void set_parent(src_object_t* parent_);
       void write_xml();
@@ -230,11 +233,13 @@ namespace TASCAR {
       std::string get_name() const;
       void set_name(const std::string& n) {name = n;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
+      void process_plugins();
     private:
       pos_t local_position;
       double chaindist;
     public:
       double maxdist;
+      std::vector<TASCAR::audioplugin_t*> plugins;
     private:
       uint32_t sincorder;
       src_object_t* parent;
@@ -248,12 +253,13 @@ namespace TASCAR {
     class src_object_t : public sndfile_object_t {
     public:
       src_object_t(xmlpp::Element* e);
+      ~src_object_t();
       void write_xml();
       sound_t* add_sound();
       void prepare(double fs, uint32_t fragsize);
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
-      std::vector<sound_t> sound;
+      std::vector<sound_t*> sound;
     private:
       int32_t startframe;
     };

@@ -534,7 +534,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
     TASCAR::pos_t p(obj->get_location());
     TASCAR::pos_t center(p);
     for(unsigned int k=0;k<obj->sound.size();k++){
-      TASCAR::pos_t ptmp(obj->sound[k].get_pos_global(plot_time));
+      TASCAR::pos_t ptmp(obj->sound[k]->get_pos_global(plot_time));
       sndpos.push_back(view(ptmp));
       center += ptmp;
     }
@@ -579,10 +579,10 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
       cr->set_line_width( 0.1*msize );
       cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
       if( obj->sound.size()){
-        pos_t pso(view(obj->sound[0].get_pos_global(plot_time)));
+        pos_t pso(view(obj->sound[0]->get_pos_global(plot_time)));
         if( pso.z != std::numeric_limits<double>::infinity()){
           for(unsigned int k=1;k<obj->sound.size();k++){
-            pos_t ps(view(obj->sound[k].get_pos_global(plot_time)));
+            pos_t ps(view(obj->sound[k]->get_pos_global(plot_time)));
             bool view_x((fabs(ps.x)<1)||
                         (fabs(pso.x)<1));
             bool view_y((fabs(ps.y)<1)||
