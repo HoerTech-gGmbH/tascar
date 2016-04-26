@@ -86,9 +86,9 @@ void TASCAR::audioplugin_t::write_xml()
     write_xml_cb(libdata,audioplugin_error);
 }
 
-void TASCAR::audioplugin_t::process(wave_t& chunk)
+void TASCAR::audioplugin_t::process(wave_t& chunk, const TASCAR::pos_t& pos)
 {
-  process_cb( libdata, chunk, audioplugin_error );
+  process_cb( libdata, chunk, pos, audioplugin_error );
 }
 
 void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)

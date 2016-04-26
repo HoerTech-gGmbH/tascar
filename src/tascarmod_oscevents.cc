@@ -48,9 +48,23 @@ public:
   std::string a0;
 };
 
+class osc_event_ss_t : public osc_event_base_t {
+public:
+  osc_event_ss_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+    GET_ATTRIBUTE(a0);
+    GET_ATTRIBUTE(a1);
+  };
+  virtual void send(const lo_address& target, const char* path)
+    {
+      lo_send(target,path,"ss",a0.c_str(),a1.c_str());
+    };
+  std::string a0;
+  std::string a1;
+};
+
 class osc_event_sf_t : public osc_event_base_t {
 public:
-  osc_event_sf_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_sf_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0){
     GET_ATTRIBUTE(a0);
     GET_ATTRIBUTE(a1);
   };
@@ -64,7 +78,7 @@ public:
 
 class osc_event_sff_t : public osc_event_base_t {
 public:
-  osc_event_sff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_sff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0){
     GET_ATTRIBUTE(a0);
     GET_ATTRIBUTE(a1);
     GET_ATTRIBUTE(a2);
@@ -80,7 +94,7 @@ public:
 
 class osc_event_sfff_t : public osc_event_base_t {
 public:
-  osc_event_sfff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_sfff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0){
     GET_ATTRIBUTE(a0);
     GET_ATTRIBUTE(a1);
     GET_ATTRIBUTE(a2);
@@ -96,9 +110,29 @@ public:
   double a3;
 };
 
+class osc_event_sffff_t : public osc_event_base_t {
+public:
+  osc_event_sffff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0),a4(0){
+    GET_ATTRIBUTE(a0);
+    GET_ATTRIBUTE(a1);
+    GET_ATTRIBUTE(a2);
+    GET_ATTRIBUTE(a3);
+    GET_ATTRIBUTE(a4);
+  };
+  virtual void send(const lo_address& target, const char* path)
+    {
+      lo_send(target,path,"sffff",a0.c_str(),a1,a2,a3,a4);
+    };
+  std::string a0;
+  double a1;
+  double a2;
+  double a3;
+  double a4;
+};
+
 class osc_event_ff_t : public osc_event_base_t {
 public:
-  osc_event_ff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_ff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0){
     GET_ATTRIBUTE(a0);
     GET_ATTRIBUTE(a1);
   };
@@ -112,7 +146,7 @@ public:
 
 class osc_event_f_t : public osc_event_base_t {
 public:
-  osc_event_f_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_f_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0){
     GET_ATTRIBUTE(a0);
   };
   virtual void send(const lo_address& target, const char* path)
@@ -124,7 +158,7 @@ public:
 
 class osc_event_fff_t : public osc_event_base_t {
 public:
-  osc_event_fff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_fff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0),a2(0){
     GET_ATTRIBUTE(a0);
     GET_ATTRIBUTE(a1);
     GET_ATTRIBUTE(a2);
@@ -173,12 +207,16 @@ oscevents_t::oscevents_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
       events.push_back(new osc_event_t(sne));
     if( sne && ( sne->get_name() == "oscs"))
       events.push_back(new osc_event_s_t(sne));
+    if( sne && ( sne->get_name() == "oscss"))
+      events.push_back(new osc_event_ss_t(sne));
     if( sne && ( sne->get_name() == "oscsf"))
       events.push_back(new osc_event_sf_t(sne));
     if( sne && ( sne->get_name() == "oscsff"))
       events.push_back(new osc_event_sff_t(sne));
     if( sne && ( sne->get_name() == "oscsfff"))
       events.push_back(new osc_event_sfff_t(sne));
+    if( sne && ( sne->get_name() == "oscsffff"))
+      events.push_back(new osc_event_sffff_t(sne));
     if( sne && ( sne->get_name() == "oscf"))
       events.push_back(new osc_event_f_t(sne));
     if( sne && ( sne->get_name() == "oscff"))

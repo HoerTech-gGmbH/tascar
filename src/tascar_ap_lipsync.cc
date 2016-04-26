@@ -1,3 +1,9 @@
+/*
+ * (C) 2016 Giso Grimm
+ * (C) 2015-2016 Gerard Llorach to
+ *
+ */
+
 #include "audioplugin.h"
 #include <lo/lo.h>
 #include <fftw3.h>
@@ -5,22 +11,22 @@
 class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
   lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
-  void process(TASCAR::wave_t& chunk);
+  void process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos);
   void prepare(double srate,uint32_t fragsize);
   void release();
   ~lipsync_t();
 private:
   lo_address lo_addr;
-  
-  double processed[512];
   double smoothing;
   float max;
   float min;
+  std::string url;
+  TASCAR::pos_t scale;
+  std::string path_;
+  double processed[512];
   fftw_complex *outFFT;
   fftw_plan plan;
   double* inFFT;
-  std::string url;
-  std::string path_;
 };
 
 lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
@@ -29,10 +35,12 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
     max(-60.0),
     min(60.0),
     url("osc.udp://localhost:9999/"),
+    scale(1,1,1),
     path_(std::string("/")+parentname)
 {
   GET_ATTRIBUTE(smoothing);
   GET_ATTRIBUTE(url);
+  GET_ATTRIBUTE(scale);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());
@@ -57,7 +65,7 @@ lipsync_t::~lipsync_t()
   lo_address_free(lo_addr);
 }
 
-void lipsync_t::process(TASCAR::wave_t& chunk)
+void lipsync_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
 {
   if (min ==-120) min = -60;
   if (min == 0) min = 60;
@@ -132,6 +140,7 @@ void lipsync_t::process(TASCAR::wave_t& chunk)
     value *= energy[1]*5.0;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
+  make_friendly_number(value);
   kissBS = value;
   
   // Jaw blend shape
@@ -139,6 +148,7 @@ void lipsync_t::process(TASCAR::wave_t& chunk)
   value = energy[1]*0.8 - energy[4]*0.8;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
+  make_friendly_number(value);
   jawB = value;
 
   
@@ -147,12 +157,12 @@ void lipsync_t::process(TASCAR::wave_t& chunk)
   value = energy[4]*3;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
+  make_friendly_number(value);
   lipsclosedBS = value;
 
 
-
   // send lipsync values to osc target:
-  lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB, lipsclosedBS );
+  lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", scale.x*kissBS, scale.y*jawB, scale.z*lipsclosedBS );
 }
 
 REGISTER_AUDIOPLUGIN(lipsync_t);

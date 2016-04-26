@@ -66,6 +66,11 @@ void TASCAR::xml_element_t::get_attribute_db(const std::string& name,double& val
   get_attribute_value_db(e,name,value);
 }
 
+void TASCAR::xml_element_t::get_attribute_dbspl(const std::string& name,double& value)
+{
+  get_attribute_value_dbspl(e,name,value);
+}
+
 void TASCAR::xml_element_t::get_attribute_db_float(const std::string& name,float& value)
 {
   get_attribute_value_db_float(e,name,value);
@@ -86,6 +91,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<TA
   get_attribute_value(e,name,value);
 }
 
+void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<std::string>& value)
+{
+  get_attribute_value(e,name,value);
+}
+
 void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool value)
 {
   ::set_attribute_bool(e,name,value);
@@ -94,6 +104,11 @@ void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool valu
 void TASCAR::xml_element_t::set_attribute_db(const std::string& name,double value)
 {
   ::set_attribute_db(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute_dbspl(const std::string& name,double value)
+{
+  ::set_attribute_dbspl(e,name,value);
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::string& value)
@@ -122,6 +137,11 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<TASCAR::pos_t>& value)
+{
+  set_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<std::string>& value)
 {
   set_attribute_value(e,name,value);
 }
@@ -175,6 +195,13 @@ void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value)
   elem->set_attribute(name,ctmp);
 }
 
+void set_attribute_dbspl(xmlpp::Element* elem,const std::string& name,double value)
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%1.12g",20.0*log10(value/2e-5));
+  elem->set_attribute(name,ctmp);
+}
+
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value)
 {
   elem->set_attribute(name,value.print_cart(" "));
@@ -187,6 +214,17 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std:
     if( i_vert != value.begin() )
       s += " ";
     s += i_vert->print_cart(" ");
+  }
+  elem->set_attribute(name,s);
+}
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<std::string>& value)
+{
+  std::string s;
+  for(std::vector<std::string>::const_iterator i_vert=value.begin();i_vert!=value.end();++i_vert){
+    if( i_vert != value.begin() )
+      s += " ";
+    s += *i_vert;
   }
   elem->set_attribute(name,s);
 }
@@ -227,9 +265,26 @@ std::vector<TASCAR::pos_t> TASCAR::str2vecpos(const std::string& s)
   return value;
 }
 
+std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
+{
+  std::vector<std::string> value;
+  std::stringstream ptxt(s);
+  while( ptxt.good() ){
+    std::string p;
+    ptxt >> p;
+    value.push_back(p);
+  }
+  return value;
+}
+
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value)
 {
   value = TASCAR::str2vecpos(elem->get_attribute_value(name));
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<std::string>& value)
+{
+  value = TASCAR::str2vecstr(elem->get_attribute_value(name));
 }
 
 void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value)
@@ -248,6 +303,15 @@ void get_attribute_value_db(xmlpp::Element* elem,const std::string& name,double&
   double tmpv(strtod(attv.c_str(),&c));
   if( c != attv.c_str() )
     value = pow(10.0,0.05*tmpv);
+}
+
+void get_attribute_value_dbspl(xmlpp::Element* elem,const std::string& name,double& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  double tmpv(strtod(attv.c_str(),&c));
+  if( c != attv.c_str() )
+    value = pow(10.0,0.05*tmpv)*2e-5;
 }
 
 void get_attribute_value_db_float(xmlpp::Element* elem,const std::string& name,float& value)

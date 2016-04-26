@@ -188,6 +188,7 @@ void TASCAR::render_rt_t::start()
     add_output_port(*iop);
   // activate repositioning services for each object:
   add_child_methods(this);
+  add_input_port("sync_in");
   jackc_t::activate();
   osc_server_t::activate();
   // connect jack ports of point sources:
@@ -236,7 +237,6 @@ void TASCAR::render_rt_t::start()
                     cns[kc],true);
     }
   }
-  add_input_port("sync_in");
 }
 
 void TASCAR::render_rt_t::stop()

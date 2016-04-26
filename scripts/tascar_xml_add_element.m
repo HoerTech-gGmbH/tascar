@@ -2,7 +2,7 @@ function cNode = tascar_xml_add_element( doc, pNode, cName, sContent, varargin )
 % tascar_xml_add_element - add an element to a node
 %
 % Usage:
-% cNode = tascar_xml_add_element( doc, pNode, cName [, attr, value, ... ] ) 
+% cNode = tascar_xml_add_element( doc, pNode, cName [, sContent [, attr, value, ... ] ]) 
 %
 % doc - document (java object)
 % pNode - parent node where to add the new element

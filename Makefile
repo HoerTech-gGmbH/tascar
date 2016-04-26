@@ -18,7 +18,7 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
   sampler.o jackiowav.o cli.o irrender.o jackrender.o audioplugin.o
 
-AUDIOPLUGINS = identity sine lipsync
+AUDIOPLUGINS = identity sine lipsync lookatme
 
 TEST_FILES = test_ngon test_sinc
 

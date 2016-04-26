@@ -18,19 +18,23 @@ namespace TASCAR {
     void get_attribute(const std::string& name,unsigned int& value);
     void get_attribute_bool(const std::string& name,bool& value);
     void get_attribute_db(const std::string& name,double& value);
+    void get_attribute_dbspl(const std::string& name,double& value);
     void get_attribute_db_float(const std::string& name,float& value);
     void get_attribute_deg(const std::string& name,double& value);
     void get_attribute(const std::string& name,TASCAR::pos_t& value);
     void get_attribute(const std::string& name,std::vector<TASCAR::pos_t>& value);
+    void get_attribute(const std::string& name,std::vector<std::string>& value);
     // set attributes:
     void set_attribute_bool(const std::string& name,bool value);
     void set_attribute_db(const std::string& name,double value);
+    void set_attribute_dbspl(const std::string& name,double value);
     void set_attribute(const std::string& name,const std::string& value);
     void set_attribute(const std::string& name,double value);
     void set_attribute_deg(const std::string& name,double value);
     void set_attribute(const std::string& name,unsigned int value);
     void set_attribute(const std::string& name,const TASCAR::pos_t& value);
     void set_attribute(const std::string& name,const std::vector<TASCAR::pos_t>& value);
+    void set_attribute(const std::string& name,const std::vector<std::string>& value);
     virtual void write_xml() = 0;
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
@@ -48,6 +52,7 @@ namespace TASCAR {
   std::string env_expand( std::string s );
 
   std::vector<TASCAR::pos_t> str2vecpos(const std::string& s);
+  std::vector<std::string> str2vecstr(const std::string& s);
 
   class xml_doc_t {
   public:
@@ -66,22 +71,28 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& va
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value);
 void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value);
 void get_attribute_value_db(xmlpp::Element* elem,const std::string& name,double& value);
+void get_attribute_value_dbspl(xmlpp::Element* elem,const std::string& name,double& value);
 void get_attribute_value_db_float(xmlpp::Element* elem,const std::string& name,float& value);
 void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::pos_t& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<std::string>& value);
 
 void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value);
 void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value);
+void set_attribute_dbspl(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value);
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<std::string>& value);
 
 #define GET_ATTRIBUTE(x) get_attribute(#x,x)
 #define SET_ATTRIBUTE(x) set_attribute(#x,x)
 #define GET_ATTRIBUTE_DB(x) get_attribute_db(#x,x)
 #define SET_ATTRIBUTE_DB(x) set_attribute_db(#x,x)
+#define GET_ATTRIBUTE_DBSPL(x) get_attribute_dbspl(#x,x)
+#define SET_ATTRIBUTE_DBSPL(x) set_attribute_dbspl(#x,x)
 #define GET_ATTRIBUTE_DEG(x) get_attribute_deg(#x,x)
 #define SET_ATTRIBUTE_DEG(x) set_attribute_deg(#x,x)
 #define GET_ATTRIBUTE_BOOL(x) get_attribute_bool(#x,x)

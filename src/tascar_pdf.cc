@@ -82,28 +82,19 @@ void App::pdf_export_t::set_ism_order_range(uint32_t ism_min,uint32_t ism_max,bo
     (*ipl)->set_ism_order_range(ism_min,ism_max,b_0_14);
 }
 
-//void App::pdf_export_t::set_v014()
-//{
-//  for(std::vector<TASCAR::render_core_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
-//    (*ipl)->set_v014();
-//}
-
 void App::pdf_export_t::add_scene(xmlpp::Element* sne)
 {
-  DEBUG(1);
   scenes.push_back(new render_core_t(sne));
 }
 
 void App::pdf_export_t::render_time(const std::vector<double>& t)
 {
-  DEBUG(scenes.size());
   for(std::vector<TASCAR::render_core_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
     render_time(*it,t);
 }
 
 void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<double>& t)
 {
-  DEBUG(1);
   s->prepare(44100,1);
   uint32_t nch_in(s->num_input_ports());
   uint32_t nch_out(s->num_output_ports());
@@ -254,11 +245,10 @@ void usage(struct option * opt)
 
 int main(int argc, char** argv)
 {
-  std::string cfgfile("");
+  std::string tscfile("");
   std::string pdffile("");
-  const char *options = "c:o:ht:a40:1:";
+  const char *options = "o:ht:a40:1:";
   struct option long_options[] = { 
-    { "config",   1, 0, 'c' },
     { "output",   1, 0, 'o' },
     { "help",     0, 0, 'h' },
     { "time",     1, 0, 't' },
@@ -278,9 +268,6 @@ int main(int argc, char** argv)
   while( (opt = getopt_long(argc, argv, options,
                             long_options, &option_index)) != -1){
     switch(opt){
-    case 'c':
-      cfgfile = optarg;
-      break;
     case 'o':
       pdffile = optarg;
       break;
@@ -304,22 +291,22 @@ int main(int argc, char** argv)
       break;
     }
   }
-  if( cfgfile.size() == 0 ){
+  if( optind < argc )
+    tscfile = argv[optind++];
+  if( tscfile.size() == 0 ){
     usage(long_options);
     return -1;
   }
   if( time.empty() )
     time.push_back(0.0);
   if( pdffile.size() == 0 ){
-    pdffile = cfgfile+".pdf";
+    pdffile = tscfile+".pdf";
   }
-  App::pdf_export_t c(cfgfile,pdffile);
+  App::pdf_export_t c(tscfile,pdffile);
   if( b_am )
     c.draw_acousticmodel();
   c.set_ism_order_range(ism_min,ism_max,b_0_14);
-  DEBUG(1);
   c.render_time(time);
-  DEBUG(2);
   return 0;
 }
 

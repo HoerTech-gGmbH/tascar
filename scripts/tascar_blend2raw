@@ -1,0 +1,2 @@
+#!/bin/bash
+blender -b $1 -P /usr/share/tascar/python/export_mesh_path.py

@@ -217,7 +217,7 @@ void sound_t::process_plugins()
     for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
          p!= plugins.end();
          ++p)
-      (*p)->process(source->audio);
+      (*p)->process(source->audio,source->position);
   }
 }
 

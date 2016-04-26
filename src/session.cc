@@ -117,12 +117,12 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
 void TASCAR::session_t::read_xml()
 {
   try{
-    TASCAR::tsc_reader_t::read_xml();
     get_attribute("name",name);
     if( name.empty() )
       name = "tascar";
     get_attribute("duration",duration);
     get_attribute_bool("loop",loop);
+    TASCAR::tsc_reader_t::read_xml();
   }
   catch( ... ){
     for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
@@ -220,6 +220,7 @@ void TASCAR::session_t::start()
     (*ipl)->start();
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
     (*imod)->configure(srate,fragsize);
+  
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
       connect((*icon)->src,(*icon)->dest);
