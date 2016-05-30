@@ -10,7 +10,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
   neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route lsljacktime oscevents
+  foa2hoadiff route lsljacktime oscevents oscjacktime
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\

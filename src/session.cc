@@ -454,6 +454,17 @@ void TASCAR::actor_module_t::add_orientation(const TASCAR::zyx_euler_t& o)
 
 namespace OSCSession {
 
+  int _addtime(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 1) && (types[0] == 'f') ){
+      double cur_time(std::max(0.0,std::min(((TASCAR::session_t*)user_data)->duration,((TASCAR::session_t*)user_data)->tp_get_time())));
+      ((TASCAR::session_t*)user_data)->tp_locate(cur_time+argv[0]->f);
+      return 0;
+    }
+    return 1;
+  }
+
+
   int _locate(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
     if( (argc == 1) && (types[0] == 'f') ){
@@ -506,6 +517,7 @@ void TASCAR::session_t::add_transport_methods()
 {
   osc_server_t::add_method("/transport/locate","f",OSCSession::_locate,this);
   osc_server_t::add_method("/transport/locatei","i",OSCSession::_locatei,this);
+  osc_server_t::add_method("/transport/addtime","f",OSCSession::_addtime,this);
   osc_server_t::add_method("/transport/start","",OSCSession::_start,this);
   osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
   osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);

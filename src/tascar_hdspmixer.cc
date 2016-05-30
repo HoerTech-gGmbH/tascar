@@ -12,7 +12,7 @@
 
 class mainmix_t {
 public:
-  mainmix_t();
+  mainmix_t(const std::string& dev, uint32_t channels);
   virtual ~mainmix_t();
   void activate(uint32_t ch_in, uint32_t ch_out,uint32_t nch);
 private:
@@ -21,7 +21,7 @@ private:
   snd_ctl_t *handle;
 };
 
-mainmix_t::mainmix_t()
+mainmix_t::mainmix_t(const std::string& device, uint32_t channels)
 {
   snd_ctl_elem_id_alloca(&id);
   snd_ctl_elem_id_set_name(id, "Mixer");
@@ -31,13 +31,14 @@ mainmix_t::mainmix_t()
   snd_ctl_elem_value_alloca(&ctl);
   snd_ctl_elem_value_set_id(ctl, id);
   int err;
-  if ((err = snd_ctl_open(&handle, "hw:DSP", SND_CTL_NONBLOCK)) < 0) {
+  if ((err = snd_ctl_open(&handle, device.c_str(), SND_CTL_NONBLOCK)) < 0) {
     std::string msg("Alsa error: ");
     msg += snd_strerror(err);
+    msg += " (device: "+device+")";
     throw TASCAR::ErrMsg(msg);
   }
-  for( uint32_t k_in=0;k_in<52;k_in++ ){
-    for( uint32_t k_out=0;k_out<26;k_out++ ){
+  for( uint32_t k_in=0;k_in<2*channels;k_in++ ){
+    for( uint32_t k_out=0;k_out<channels;k_out++ ){
       snd_ctl_elem_value_set_integer(ctl, 0, k_in);
       snd_ctl_elem_value_set_integer(ctl, 1, k_out);
       snd_ctl_elem_value_set_integer(ctl, 2, 0);
@@ -83,14 +84,18 @@ void usage(struct option * opt)
 
 int main(int argc, char** argv)
 {
-  const char *options = "hisa";
+  const char *options = "hisad:c:";
   struct option long_options[] = { 
     { "help",      0, 0, 'h' },
     { "input",      0, 0, 'i' },
     { "alsa",      0, 0, 'a' },
     { "stereo",      0, 0, 's' },
+    { "device", 1,0,'d'},
+    {"channels",1,0,'c'},
     { 0, 0, 0, 0 }
   };
+  std::string device("hw:DSP");
+  uint32_t channels(26);
   bool b_input(false);
   bool b_soft(false);
   bool b_stereo(false);
@@ -111,17 +116,23 @@ int main(int argc, char** argv)
     case 's':
       b_stereo = true;
       break;
+    case 'd':
+      device = optarg;
+      break;
+    case 'c':
+      channels = atoi(optarg);
+      break;
     }
   }
   try{
-    mainmix_t mm;
+    mainmix_t mm(device,channels);
     if( b_input )
-      mm.activate(0,0,26);
+      mm.activate(0,0,channels);
     if( b_soft )
-      mm.activate(26,0,26);
+      mm.activate(channels,0,channels);
     if( b_stereo ){
-      for(uint32_t k=0;k<13;k++){
-        mm.activate(26+2*k,24,2);
+      for(uint32_t k=0;k<(channels>>1);k++){
+        mm.activate(channels,2*k,2);
       }
     }
   }

@@ -96,6 +96,16 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<st
   get_attribute_value(e,name,value);
 }
 
+void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<double>& value)
+{
+  get_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<int32_t>& value)
+{
+  get_attribute_value(e,name,value);
+}
+
 void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool value)
 {
   ::set_attribute_bool(e,name,value);
@@ -142,6 +152,16 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vec
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<std::string>& value)
+{
+  set_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<double>& value)
+{
+  set_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<int32_t>& value)
 {
   set_attribute_value(e,name,value);
 }
@@ -229,6 +249,29 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std:
   elem->set_attribute(name,s);
 }
 
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<double>& value)
+{
+  std::stringstream s;
+  for(std::vector<double>::const_iterator i_vert=value.begin();i_vert!=value.end();++i_vert){
+    if( i_vert != value.begin() )
+      s << " ";
+    s << *i_vert;
+  }
+  elem->set_attribute(name,s.str());
+}
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<int>& value)
+{
+  std::stringstream s;
+  for(std::vector<int>::const_iterator i_vert=value.begin();i_vert!=value.end();++i_vert){
+    if( i_vert != value.begin() )
+      s << " ";
+    s << *i_vert;
+  }
+  elem->set_attribute(name,s.str());
+}
+
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value)
 {
   std::string attv(elem->get_attribute_value(name));
@@ -265,6 +308,30 @@ std::vector<TASCAR::pos_t> TASCAR::str2vecpos(const std::string& s)
   return value;
 }
 
+std::vector<double> TASCAR::str2vecdouble(const std::string& s)
+{
+  std::vector<double> value;
+  std::stringstream ptxt(s);
+  while( ptxt.good() ){
+    double p;
+    ptxt >> p;
+    value.push_back(p);
+  }
+  return value;
+}
+
+std::vector<int32_t> TASCAR::str2vecint(const std::string& s)
+{
+  std::vector<int32_t> value;
+  std::stringstream ptxt(s);
+  while( ptxt.good() ){
+    double p;
+    ptxt >> p;
+    value.push_back(p);
+  }
+  return value;
+}
+
 std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
 {
   std::vector<std::string> value;
@@ -285,6 +352,16 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vecto
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<std::string>& value)
 {
   value = TASCAR::str2vecstr(elem->get_attribute_value(name));
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<double>& value)
+{
+  value = TASCAR::str2vecdouble(elem->get_attribute_value(name));
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<int32_t>& value)
+{
+  value = TASCAR::str2vecint(elem->get_attribute_value(name));
 }
 
 void get_attribute_value_deg(xmlpp::Element* elem,const std::string& name,double& value)

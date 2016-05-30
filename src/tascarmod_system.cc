@@ -79,6 +79,7 @@ private:
   static void * service(void* h);
   std::string command;
   double sleep;
+  std::string onunload;
   FILE* h_pipe;
   FILE* h_atcmd;
   pid_t pid;
@@ -102,6 +103,7 @@ system_t::system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess)
   std::string sessionpath(session->get_session_path());
   GET_ATTRIBUTE(command);
   GET_ATTRIBUTE(sleep);
+  GET_ATTRIBUTE(onunload);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -156,6 +158,7 @@ void system_t::write_xml()
 {
   SET_ATTRIBUTE(command);
   SET_ATTRIBUTE(sleep);
+  SET_ATTRIBUTE(onunload);
 }
 
 system_t::~system_t()
@@ -170,6 +173,11 @@ system_t::~system_t()
     delete *it;
   if( h_atcmd )
     fclose( h_atcmd );
+  if( !onunload.empty() ){
+    int err(system(onunload.c_str()));
+    if( err != 0 )
+      std::cerr << "subprocess returned " << err << std::endl;
+  }
 }
 
 void * system_t::service(void* h)
