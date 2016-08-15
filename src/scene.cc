@@ -851,6 +851,11 @@ void audio_port_t::set_gain_db( float g )
   gain = pow(10.0,0.05*g);
 }
 
+void audio_port_t::set_gain_lin( float g )
+{
+  gain = g;
+}
+
 void audio_port_t::write_xml()
 {
   if( connect.size() )

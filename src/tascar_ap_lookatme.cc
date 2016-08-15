@@ -1,6 +1,5 @@
 #include "audioplugin.h"
 #include <lo/lo.h>
-#include <fftw3.h>
 
 class lookatme_t : public TASCAR::audioplugin_base_t {
 public:

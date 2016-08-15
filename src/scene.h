@@ -168,6 +168,7 @@ namespace TASCAR {
       std::string get_connect() const { return connect;};
       float get_gain() const { return gain/(2e-5f*caliblevel);};
       void set_gain_db( float g );
+      void set_gain_lin( float g );
     private:
       std::string portname;
       std::string connect;

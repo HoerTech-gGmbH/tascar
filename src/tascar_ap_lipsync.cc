@@ -138,6 +138,7 @@ void lipsync_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
   value = (0.5 - (energy[2] + energy[3]))*2;
   if (energy[1]<0.2)
     value *= energy[1]*5.0;
+  value *= scale.x;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
   make_friendly_number(value);
@@ -146,6 +147,7 @@ void lipsync_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
   // Jaw blend shape
   float jawB = 0;
   value = energy[1]*0.8 - energy[4]*0.8;
+  value *= scale.y;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
   make_friendly_number(value);
@@ -155,6 +157,7 @@ void lipsync_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
   // Lips closed blend shape
   float lipsclosedBS = 0;
   value = energy[4]*3;
+  value *= scale.z;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
   make_friendly_number(value);
@@ -162,7 +165,7 @@ void lipsync_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
 
 
   // send lipsync values to osc target:
-  lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", scale.x*kissBS, scale.y*jawB, scale.z*lipsclosedBS );
+  lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB, lipsclosedBS );
 }
 
 REGISTER_AUDIOPLUGIN(lipsync_t);

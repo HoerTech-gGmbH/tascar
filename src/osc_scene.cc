@@ -82,6 +82,16 @@ int osc_set_sound_gain(const char *path, const char *types, lo_arg **argv, int a
   return 1;
 }
 
+int osc_set_sound_gain_lin(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  sound_t* h((sound_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='f') ){
+    h->set_gain_lin(argv[0]->f);
+    return 0;
+  }
+  return 1;
+}
+
 int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   src_diffuse_t* h((src_diffuse_t*)user_data);
@@ -134,6 +144,7 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::rou
 void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sound_t* s)
 {
   srv->add_method("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/gain","f",osc_set_sound_gain,s);
+  srv->add_method("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/lingain","f",osc_set_sound_gain_lin,s);
 }
 
 void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::src_diffuse_t* s)
