@@ -40,25 +40,37 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
 {
   TASCAR::Scene::scene_t::prepare(fs,fragsize);
   sounds = linearize_sounds();
+  audioports.clear();
+  audioports_in.clear();
+  audioports_out.clear();
   sources.clear();
   diffusesources.clear();
   input_ports.clear();
   output_ports.clear();
   for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
     sources.push_back((*it)->get_source());
-    (*it)->set_port_index(input_ports.size());
+    (*it)->set_port_index( input_ports.size() );
+    //(*it)->set_port_channels( 1 );
     input_ports.push_back((*it)->get_port_name());
+    audioports.push_back(*it);
+    audioports_in.push_back(*it);
   }
   for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it){
     sources.push_back((*it)->get_source());
     (*it)->set_port_index(input_ports.size());
+    //(*it)->set_port_channels( 1 );
     input_ports.push_back((*it)->get_name());
+    audioports.push_back(*it);
+    audioports_in.push_back(*it);
   }
   for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     diffusesources.push_back((*it)->get_source());
+    audioports.push_back(*it);
+    audioports_in.push_back(*it);
   }
   for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
     (*it)->set_port_index(input_ports.size());
+    //(*it)->set_port_channels( 4 );
     for(uint32_t ch=0;ch<4;ch++){
       char ctmp[32];
       const char* stmp("wxyz");
@@ -72,9 +84,12 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
     receiver->configure(fs,fragsize);
     receivers.push_back(receiver);
     (*it)->set_port_index(output_ports.size());
+    //(*it)->set_port_channels( receiver->get_num_channels() );
     for(uint32_t ch=0;ch<receiver->get_num_channels();ch++){
       output_ports.push_back((*it)->get_name()+receiver->get_channel_postfix(ch));
     }
+    audioports.push_back(*it);
+    audioports_out.push_back(*it);
   }
   reflectors.clear();
   for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it){
@@ -117,6 +132,13 @@ void TASCAR::render_core_t::process(double time,
   for(uint32_t ch=0;ch<inBuffer.size();ch++)
     for(uint32_t k=0;k<nframes;k++)
       make_friendly_number_limited(inBuffer[ch][k]);
+  // update input audio ports:
+  //for(std::vector<audio_port_t*>::iterator it=audioports_in.begin(); it!=audioports_in.end(); ++it){
+  //  for(uint32_t ch=0;ch<(*it)->get_port_channels();++ch){
+  //    TASCAR::wave_t w(nframes,inBuffer[(*it)->get_port_index()+ch]);
+  //    (*it)->update_channel( ch, w );
+  //  }
+  //}
   // clear output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
@@ -125,6 +147,8 @@ void TASCAR::render_core_t::process(double time,
   }
   geometry_update(time);
   process_active(time);
+  // update audio ports (e.g., for level metering):
+  
   // fill inputs:
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
@@ -167,6 +191,13 @@ void TASCAR::render_core_t::process(double time,
     for(uint32_t ch=0;ch<numch;ch++)
       receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
   }
+  // update output audio ports:
+  //for(std::vector<audio_port_t*>::iterator it=audioports_out.begin(); it!=audioports_out.end(); ++it){
+  //  for(uint32_t ch=0;ch<(*it)->get_port_channels();++ch){
+  //    TASCAR::wave_t w(nframes,outBuffer[(*it)->get_port_index()+ch]);
+  //    (*it)->update_channel( ch, w );
+  //  }
+  //}
   //security/stability:
   for(uint32_t ch=0;ch<outBuffer.size();ch++)
     for(uint32_t k=0;k<nframes;k++)
@@ -174,6 +205,11 @@ void TASCAR::render_core_t::process(double time,
 }
 
 
+//void TASCAR::render_core_t::configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t w )
+//{
+//  for( std::vector<TASCAR::Scene::audio_port_t*>::iterator it=audioports.begin(); it!=audioports.end(); ++it )
+//    (*it)->configure_levelmeter( fs, tc, w );
+//}
 
 
 

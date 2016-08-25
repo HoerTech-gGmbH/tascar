@@ -14,8 +14,6 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
-#define RMSLEN 2.0
-
 /*
  * object_t
  */
@@ -146,7 +144,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   if( source )
     delete source;
   reset_meters();
-  addmeter(RMSLEN*fs);
+  addmeter(fs);
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,sincorder);
   source->add_rmslevel(&(rmsmeter[0]));
   geometry_update(0);
@@ -257,7 +255,7 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
   if( source )
     delete source;
   reset_meters();
-  addmeter(RMSLEN*fs);
+  addmeter(fs);
   source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize,rmsmeter[0]);
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
@@ -285,10 +283,54 @@ std::string sound_t::get_port_name() const
   return name;
 }
 
+//void audio_port_t::set_port_channels( uint32_t channels )
+//{
+//  port_channels = channels;
+//  levelmeters.resize(channels);
+//  for(uint32_t k=0;k<channels;++k)
+//    levelmeters[k] = NULL;
+//  update_levelmeters();
+//}
+//
+//void audio_port_t::configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t weight )
+//{
+//  levelmeter_fs = fs;
+//  levelmeter_tc = tc;
+//  levelmeter_w = weight;
+//  update_levelmeters();
+//}
+
+//void audio_port_t::update_levelmeters()
+//{
+//  for(uint32_t k=0;k<port_channels;++k){
+//    TASCAR::levelmeter_t* levelmeter(NULL);
+//    if( (levelmeter_fs > 0) && (levelmeter_tc > 0) ){
+//      levelmeter = new TASCAR::levelmeter_t(levelmeter_fs,levelmeter_tc,levelmeter_w);
+//    }
+//    if( levelmeters[k] )
+//      unused_meters.push_back(levelmeters[k]);
+//    levelmeters[k] = levelmeter;
+//  }
+//}
+
+audio_port_t::~audio_port_t()
+{
+//  for(uint32_t k=0;k<unused_meters.size();++k)
+//    delete unused_meters[k];
+//  for(uint32_t k=0;k<levelmeters.size();++k)
+//    if( levelmeters[k] )
+//      delete levelmeters[k];
+}
+
 void audio_port_t::set_port_index(uint32_t port_index_)
 {
   port_index = port_index_;
 }
+
+//void audio_port_t::update_channel( uint32_t channel, const TASCAR::wave_t& chunk )
+//{
+//  // update level meters if any:
+//}
 
 void sound_t::write_xml()
 {
@@ -363,7 +405,7 @@ void src_object_t::prepare(double fs, uint32_t fragsize)
 {
   reset_meters();
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
-    addmeter(RMSLEN*fs);
+    addmeter(fs);
     (*it)->prepare(fs,fragsize);
     (*it)->get_source()->add_rmslevel(&(rmsmeter.back()));
   }
@@ -436,6 +478,13 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     clean_children();
     throw;
   }
+}
+
+void scene_t::configure_meter( float tc, TASCAR::levelmeter_t::weight_t w )
+{
+  std::vector<object_t*> objs(get_objects());
+  for(std::vector<object_t*>::iterator it=objs.begin(); it!=objs.end(); ++it)
+    (*it)->configure_meter( tc, w );
 }
 
 void scene_t::clean_children()
@@ -602,7 +651,7 @@ void receivermod_object_t::prepare(double fs, uint32_t fragsize)
   TASCAR::Acousticmodel::receiver_t::prepare(fs,fragsize);
   reset_meters();
   for(uint32_t k=0;k<get_num_channels();k++)
-    addmeter(RMSLEN*fs);
+    addmeter(fs);
 }
 
 void receivermod_object_t::postproc(std::vector<wave_t>& output)
@@ -614,7 +663,7 @@ void receivermod_object_t::postproc(std::vector<wave_t>& output)
     throw TASCAR::ErrMsg("Programming error");
   }
   for(uint32_t k=0;k<output.size();k++)
-    rmsmeter[k].append(output[k]);
+    rmsmeter[k].update(output[k]);
 }
 
 void receivermod_object_t::geometry_update(double t)
@@ -727,10 +776,16 @@ std::string sound_t::get_name() const
   return name;
 }
 
-void route_t::addmeter(uint32_t frames)
+void route_t::addmeter( float fs )
 {
-  rmsmeter.push_back(wave_t(frames));
+  rmsmeter.push_back(TASCAR::levelmeter_t(fs,meter_tc,meter_weight));
   meterval.push_back(0);
+}
+
+void route_t::configure_meter( float tc, TASCAR::levelmeter_t::weight_t w )
+{
+  meter_tc = tc;
+  meter_weight = w;
 }
 
 const std::vector<float>& route_t::readmeter()
@@ -741,7 +796,9 @@ const std::vector<float>& route_t::readmeter()
 }
 
 route_t::route_t(xmlpp::Element* xmlsrc)
-  : scene_node_base_t(xmlsrc),mute(false),solo(false)
+  : scene_node_base_t(xmlsrc),mute(false),solo(false),
+    meter_tc(2),
+    meter_weight(TASCAR::levelmeter_t::Z)
 {
   get_attribute("name",name);
   get_attribute_bool("mute",mute);
@@ -838,8 +895,12 @@ audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),portname(""),
     connect(""),
     port_index(0),
+    //port_channels(0),
     gain(1),
     caliblevel(50000.0)
+    //levelmeter_fs(0),
+    //levelmeter_tc(2),
+    //levelmeter_w(TASCAR::levelmeter_t::Z)
 {
   get_attribute("connect",connect);
   get_attribute_db_float("gain",gain);

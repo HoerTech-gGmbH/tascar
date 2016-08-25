@@ -30,6 +30,7 @@
 #include <vector>
 #include "acousticmodel.h"
 #include "audioplugin.h"
+#include "levelmeter.h"
 
 namespace TASCAR {
 
@@ -49,7 +50,8 @@ namespace TASCAR {
       void set_solo(bool b,uint32_t& anysolo);
       bool is_active(uint32_t anysolo);
       //virtual void prepare(double srate,uint32_t fragsize) {};
-      void addmeter(uint32_t frames);
+      void addmeter(float fs);
+      void configure_meter( float tc, TASCAR::levelmeter_t::weight_t w );
       uint32_t metercnt() const { return rmsmeter.size(); };
       void reset_meters() { rmsmeter.clear(); };
       const std::vector<float>& readmeter();
@@ -57,8 +59,10 @@ namespace TASCAR {
       std::string name;
       bool mute;
       bool solo;
+      float meter_tc;
+      TASCAR::levelmeter_t::weight_t meter_weight;
     protected:
-      std::vector<TASCAR::wave_t> rmsmeter;
+      std::vector<TASCAR::levelmeter_t> rmsmeter;
       std::vector<float> meterval;
     };
 
@@ -160,21 +164,33 @@ namespace TASCAR {
     class audio_port_t : public TASCAR::xml_element_t {
     public:
       audio_port_t(xmlpp::Element* e);
+      virtual ~audio_port_t();
       void write_xml();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
+      //void set_port_channels( uint32_t cannels );
+      //uint32_t get_port_channels() const { return port_channels; };
       void set_portname(const std::string& pn);
       std::string get_portname() const { return portname;};
       std::string get_connect() const { return connect;};
       float get_gain() const { return gain/(2e-5f*caliblevel);};
       void set_gain_db( float g );
       void set_gain_lin( float g );
+      //void update_channel( uint32_t channel, const TASCAR::wave_t& chunk );
+      //void configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t weight );
     private:
+      //void update_levelmeters();
       std::string portname;
       std::string connect;
       uint32_t port_index;
+      //uint32_t port_channels;
       float gain;
       float caliblevel;
+      //std::vector<TASCAR::levelmeter_t*> levelmeters;
+      //std::vector<TASCAR::levelmeter_t*> unused_meters;
+      //float levelmeter_fs;
+      //float levelmeter_tc;
+      //TASCAR::levelmeter_t::weight_t levelmeter_w;
     };
 
     class src_diffuse_t : public sndfile_object_t, public audio_port_t {
@@ -315,6 +331,7 @@ namespace TASCAR {
       uint32_t anysolo;
       std::vector<object_t*> get_objects();
       std::string scene_path;
+      void configure_meter( float tc, TASCAR::levelmeter_t::weight_t w );
     private:
       void clean_children();
       scene_t(const scene_t&);

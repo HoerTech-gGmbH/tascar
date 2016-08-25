@@ -20,6 +20,7 @@ namespace TASCAR {
                  const std::vector<float*>& outBuffer);
     uint32_t num_input_ports() const { return input_ports.size();};
     uint32_t num_output_ports() const { return output_ports.size();};
+    //void configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t w );
   protected:
     std::vector<TASCAR::Scene::sound_t*> sounds;
     std::vector<Acousticmodel::pointsource_t*> sources;
@@ -30,6 +31,9 @@ namespace TASCAR {
     std::vector<Acousticmodel::mask_t*> pmasks;
     std::vector<std::string> input_ports;
     std::vector<std::string> output_ports;
+    std::vector<TASCAR::Scene::audio_port_t*> audioports;
+    std::vector<TASCAR::Scene::audio_port_t*> audioports_in;
+    std::vector<TASCAR::Scene::audio_port_t*> audioports_out;
   public:
     Acousticmodel::world_t* world;
   public:

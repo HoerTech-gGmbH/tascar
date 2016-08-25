@@ -90,6 +90,8 @@ TASCAR::session_t::session_t()
     name("tascar"),
     duration(60),
     loop(false),
+    levelmeter_tc(2.0),
+    levelmeter_weight(TASCAR::levelmeter_t::Z),
     period_time(1.0/(double)srate),
     started_(false)
 {
@@ -105,6 +107,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     name("tascar"),
     duration(60),
     loop(false),
+    levelmeter_tc(2.0),
+    levelmeter_weight(TASCAR::levelmeter_t::Z),
     period_time(1.0/(double)srate),
     started_(false)
 {
@@ -120,8 +124,10 @@ void TASCAR::session_t::read_xml()
     get_attribute("name",name);
     if( name.empty() )
       name = "tascar";
-    get_attribute("duration",duration);
-    get_attribute_bool("loop",loop);
+    GET_ATTRIBUTE(duration);
+    GET_ATTRIBUTE_BOOL(loop);
+    GET_ATTRIBUTE(levelmeter_tc);
+    GET_ATTRIBUTE(levelmeter_weight);
     TASCAR::tsc_reader_t::read_xml();
   }
   catch( ... ){
@@ -139,6 +145,10 @@ void TASCAR::session_t::read_xml()
 
 void TASCAR::session_t::write_xml()
 {
+  SET_ATTRIBUTE(duration);
+  SET_ATTRIBUTE_BOOL(loop);
+  SET_ATTRIBUTE(levelmeter_tc);
+  SET_ATTRIBUTE(levelmeter_weight);
   for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
     (*it)->write_xml();
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
@@ -187,6 +197,7 @@ void TASCAR::session_t::add_scene(xmlpp::Element* src)
   if( !src )
     src = e->add_child("scene");
   player.push_back(new TASCAR::scene_player_t(src));
+  player.back()->configure_meter( levelmeter_tc, levelmeter_weight );
   player.back()->add_child_methods(this);
 }
 
@@ -237,6 +248,7 @@ void TASCAR::session_t::start()
       std::cerr << "Warning: " << e.what() << std::endl;
     }
   }
+  //configure_levelmeter( srate, levelmeter_tc, levelmeter_weight );
 }
 
 int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
@@ -528,6 +540,12 @@ void TASCAR::session_t::set_v014()
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->set_v014();
 }
+
+//void TASCAR::session_t::configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t w )
+//{
+//  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+//    (*ipl)->configure_levelmeter( fs, tc, w );
+//}
 
 /*
  * Local Variables:

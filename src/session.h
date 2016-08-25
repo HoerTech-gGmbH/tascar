@@ -108,6 +108,8 @@ namespace TASCAR {
     std::string name;
     double duration;
     bool loop;
+    double levelmeter_tc;
+    TASCAR::levelmeter_t::weight_t levelmeter_weight;
     std::vector<TASCAR::scene_player_t*> player;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;

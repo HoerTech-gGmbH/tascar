@@ -51,7 +51,7 @@ template<class T> void make_friendly_number(T& x)
 
 template<class T> void make_friendly_number_limited(T& x)
 {
-  if( (-10 <= x) && (x <= 10 ) ){
+  if( (-1000000 <= x) && (x <= 1000000 ) ){
     if( (0 < x) && (x < std::numeric_limits<T>::min()) )
       x = 0;
     if( (0 > x) && (x > -std::numeric_limits<T>::min()) )

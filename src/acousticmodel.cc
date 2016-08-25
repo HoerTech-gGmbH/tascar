@@ -29,10 +29,10 @@ pointsource_t::~pointsource_t()
 void pointsource_t::preprocess()
 {
   if( rmslevel )
-    rmslevel->append(audio);
+    rmslevel->update(audio);
 }
 
-void pointsource_t::add_rmslevel(TASCAR::wave_t* r)
+void pointsource_t::add_rmslevel(TASCAR::levelmeter_t* r)
 {
   rmslevel = r;
 }
@@ -67,7 +67,7 @@ pos_t pointsource_t::get_effective_position(const pos_t& receiverp,double& gain)
   return position;
 }
 
-diffuse_source_t::diffuse_source_t(uint32_t chunksize,wave_t& rmslevel_)
+diffuse_source_t::diffuse_source_t(uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
   : audio(chunksize),
     falloff(1.0),
     active(true),
@@ -77,7 +77,7 @@ diffuse_source_t::diffuse_source_t(uint32_t chunksize,wave_t& rmslevel_)
 
 void diffuse_source_t::preprocess()
 {
-  rmslevel.append(audio.w());
+  rmslevel.update(audio.w());
 }
 
 acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,receiver_t* receiver,const std::vector<obstacle_t*>& obstacles)

@@ -20,7 +20,7 @@ namespace TASCAR {
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return position; };
       virtual void preprocess();
-      void add_rmslevel(wave_t* rmslevel_);
+      void add_rmslevel(TASCAR::levelmeter_t* rmslevel_);
       wave_t audio;
       pos_t position;
       bool active;
@@ -28,7 +28,7 @@ namespace TASCAR {
       double maxdist;
       uint32_t sincorder;
       uint32_t ismorder;
-      wave_t* rmslevel;
+      TASCAR::levelmeter_t* rmslevel;
     };
 
     /**
@@ -58,13 +58,13 @@ namespace TASCAR {
 
     class diffuse_source_t : public shoebox_t {
     public:
-      diffuse_source_t(uint32_t chunksize,wave_t& rmslevel_);
+      diffuse_source_t(uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_);
       virtual ~diffuse_source_t() {};
       virtual void preprocess();
       amb1rotator_t audio;
       double falloff;
       bool active;
-      wave_t& rmslevel;
+      TASCAR::levelmeter_t& rmslevel;
     };
 
     class receiver_data_t {

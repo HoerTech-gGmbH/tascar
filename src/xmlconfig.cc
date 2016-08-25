@@ -106,6 +106,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<in
   get_attribute_value(e,name,value);
 }
 
+void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::levelmeter_t::weight_t& value)
+{
+  get_attribute_value(e,name,value);
+}
+
 void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool value)
 {
   ::set_attribute_bool(e,name,value);
@@ -162,6 +167,11 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vec
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<int32_t>& value)
+{
+  set_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::levelmeter_t::weight_t& value)
 {
   set_attribute_value(e,name,value);
 }
@@ -225,6 +235,15 @@ void set_attribute_dbspl(xmlpp::Element* elem,const std::string& name,double val
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value)
 {
   elem->set_attribute(name,value.print_cart(" "));
+}
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::levelmeter_t::weight_t& value)
+{
+  switch( value ){
+  case TASCAR::levelmeter_t::Z :
+    elem->set_attribute(name,"Z");
+    break;
+  }
 }
 
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value)
@@ -343,6 +362,23 @@ std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
   }
   return value;
 }
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::levelmeter_t::weight_t& value)
+{
+  std::string svalue(elem->get_attribute_value(name));
+  if( svalue.size() == 0 )
+    return;
+  if( svalue.size() != 1 )
+    throw TASCAR::ErrMsg(std::string("invalid attribute value \"")+svalue+std::string("\" for attribute \"")+name+std::string("\"."));
+  switch( toupper(svalue[0]) ){
+  case 'Z':
+    value = TASCAR::levelmeter_t::Z;
+    break;
+  default:
+    throw TASCAR::ErrMsg(std::string("Unsupported weight type \"")+svalue+std::string("\" for attribute \"")+name+std::string("\"."));
+  }
+}
+
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value)
 {
