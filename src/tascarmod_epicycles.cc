@@ -14,8 +14,9 @@ namespace HoS {
   public:
     srvvars_t(xmlpp::Element*);
     void write_xml();
-    std::string srv_addr;
-    std::string srv_port;
+    std::string targetaddr;
+    //std::string srv_addr;
+    //std::string srv_port;
     std::string path;
   };
 
@@ -37,9 +38,9 @@ namespace HoS {
     float phi0_epi; // starting phase epicycle
   };
 
-  class parameter_t : public srvvars_t, public TASCAR::osc_server_t {
+  class parameter_t : public srvvars_t {
   public:
-    parameter_t(xmlpp::Element*);
+    parameter_t(xmlpp::Element*,TASCAR::osc_server_t* o);
     ~parameter_t();
     void locate0( float time );
     void az(float az_);
@@ -248,15 +249,15 @@ void HoS::parameter_t::apply(float time)
   b_applyat = false;
 }
 
-HoS::parameter_t::parameter_t(xmlpp::Element* e)
+HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
   : srvvars_t(e),
-    TASCAR::osc_server_t(srv_addr,srv_port),
+    //TASCAR::osc_server_t(srv_addr,srv_port),
     stopat(0),
     b_stopat(false),
     applyat(0),
     applyat_time(0),
     b_applyat(false),
-    lo_addr(lo_address_new(srv_addr.c_str(), srv_port.c_str())),
+    lo_addr(lo_address_new_from_url(targetaddr.c_str())),
     b_quit(false),
     f_update(1),
     t_locate(0),
@@ -264,11 +265,11 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e)
     lastphi(0)
 {
   lo_address_set_ttl( lo_addr, 1 );
-  set_prefix(path+std::string("/"));
-  add_bool_true("quit",&b_quit);
-#define REGISTER_FLOAT_VAR(x) add_float(#x,&(par_osc.x))
-#define REGISTER_FLOAT_VAR_DEGREE(x) add_float_degree(#x,&(par_osc.x))
-#define REGISTER_CALLBACK(x,fmt) add_method(#x,fmt,OSC::_ ## x,this)
+  //set_prefix(path+std::string("/"));
+  //add_bool_true("quit",&b_quit);
+#define REGISTER_FLOAT_VAR(x) o->add_float(path+"/"+#x,&(par_osc.x))
+#define REGISTER_FLOAT_VAR_DEGREE(x) o->add_float_degree(path+"/"+#x,&(par_osc.x))
+#define REGISTER_CALLBACK(x,fmt) o->add_method(path+"/"+#x,fmt,OSC::_ ## x,this)
   REGISTER_FLOAT_VAR_DEGREE(phi0);
   REGISTER_FLOAT_VAR(random);
   REGISTER_FLOAT_VAR(f);
@@ -287,7 +288,7 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e)
   REGISTER_CALLBACK(az,"f");
 #undef REGISTER_FLOAT_VAR
 #undef REGISTER_CALLBACK
-  activate();
+  //activate();
 }
 
 HoS::parameter_t::~parameter_t()
@@ -297,17 +298,14 @@ HoS::parameter_t::~parameter_t()
 HoS::srvvars_t::srvvars_t(xmlpp::Element* e)
   : xml_element_t(e)
 {
-  GET_ATTRIBUTE(srv_addr);
-  GET_ATTRIBUTE(srv_port);
+  GET_ATTRIBUTE(targetaddr);
+  //GET_ATTRIBUTE(srv_port);
   GET_ATTRIBUTE(path);
-  if( srv_port.empty() )
-    srv_port = "9999";
 }
 
 void HoS::srvvars_t::write_xml()
 {
-  SET_ATTRIBUTE(srv_addr);
-  SET_ATTRIBUTE(srv_port);
+  SET_ATTRIBUTE(targetaddr);
   SET_ATTRIBUTE(path);
 }
 
@@ -325,7 +323,7 @@ private:
 
 epicycles_t::epicycles_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : actor_module_t(xmlsrc,session),
-    HoS::parameter_t(xmlsrc),
+    HoS::parameter_t(xmlsrc,session),
     phi(0),
     phi_epi(0)
 {

@@ -15,7 +15,7 @@ function pulsesound( sInput, sOutput, vdur, bKeepLevel, skip )
   y = [];
   for k=1:numel(vdur)
     dur=vdur(k);
-    [x,fs] = wavread(sInput);
+    [x,fs] = audioread(sInput);
     if bKeepLevel
       L = sqrt(mean(x(:).^2));
     end
@@ -38,7 +38,7 @@ function pulsesound( sInput, sOutput, vdur, bKeepLevel, skip )
     end
     y = [y;x];
   end
-  wavwrite(y,fs,sOutput);
+  audiowrite(sOutput, y, fs);
   
 function y = realfft( x )
 % REALFFT - FFT transform of pure real data

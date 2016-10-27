@@ -29,55 +29,9 @@
 
 #include "xmlconfig.h"
 #include "audiochunks.h"
+#include "speakerarray.h"
 
 namespace TASCAR {
-
-    class spk_pos_t : public xml_element_t, public pos_t {
-    public:
-      spk_pos_t(xmlpp::Element*);
-      void write_xml();
-      double get_rel_azim(double az_src) const;
-      double get_cos_adist(pos_t src_unit) const;
-      double az;
-      double el;
-      double r;
-      std::string label;
-      std::string connect;
-      // derived parameters:
-      pos_t unitvector;
-      double gain;
-      double dr;
-      // decoder matrix:
-      void update_foa_decoder(float gain);
-      float d_w;
-      float d_x;
-      float d_y;
-      float d_z;
-    };
-
-    class spk_array_t : public xml_element_t, public std::vector<spk_pos_t> {
-    public:
-      spk_array_t(xmlpp::Element*);
-      void write_xml();
-      double get_rmax() const { return rmax;};
-      double get_rmin() const { return rmin;};
-      class didx_t {
-      public:
-        didx_t() : d(0),idx(0) {};
-        double d;
-        uint32_t idx;
-      };
-      const std::vector<didx_t>& sort_distance(const pos_t& psrc);
-      void foa_decode(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output);
-    private:
-      void import_file(const std::string& fname);
-      void read_xml(xmlpp::Element* elem);
-      double rmax;
-      double rmin;
-      std::vector<didx_t> didx;
-    public:
-      std::vector<std::string> connections;
-    };
 
   class receivermod_base_t : public xml_element_t {
   public:
@@ -104,6 +58,8 @@ namespace TASCAR {
     receivermod_base_speaker_t(xmlpp::Element* xmlsrc);
     virtual void write_xml();
     virtual std::vector<std::string> get_connections() const;
+    virtual void postproc(std::vector<wave_t>& output);
+    virtual void configure(double srate,uint32_t fragsize);
   protected:
     TASCAR::spk_array_t spkpos;
   };

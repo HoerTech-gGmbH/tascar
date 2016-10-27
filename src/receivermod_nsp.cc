@@ -76,10 +76,10 @@ void nsp_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chu
   data_t* d((data_t*)sd);
   TASCAR::pos_t psrc(prel.normal());
   uint32_t kmin(0);
-  double dmin(distance(psrc,spkpos[kmin]));
+  double dmin(distance(psrc,spkpos[kmin].unitvector));
   double dist(0);
   for(unsigned int k=1;k<output.size();k++)
-    if( (dist = distance(psrc,spkpos[k]))<dmin ){
+    if( (dist = distance(psrc,spkpos[k].unitvector))<dmin ){
       kmin = k;
       dmin = dist;
     }

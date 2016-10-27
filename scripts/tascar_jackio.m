@@ -103,7 +103,7 @@ function [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, varargin )
 	warning(['Signal clipped: ',sNameOut]);
       end
     end
-    wavwrite(x,fs,32,sNameOut);
+    audiowrite(sNameOut,x,fs,'BitsPerSample',32);
     sCmd = [sCmd,' -u ',sNameOut];
     sCfg.output = portname(sCfg.output,'output');
     for k=1:numel(sCfg.output)
@@ -117,7 +117,7 @@ function [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, varargin )
     error(b);
   end
   if ~isempty(sInPar)
-    y = wavread(sNameIn);
+    y = audioread(sNameIn);
     delete(sNameIn);
   end
   fh = fopen(sStatname,'r');

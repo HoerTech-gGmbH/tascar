@@ -1,0 +1,7 @@
+levelmetertc:
+
+session provides "set_levelmeter_tc(float tc)"
+
+dynamic setting of level meter buffers possible
+
+speaker based level meters have also omni meter

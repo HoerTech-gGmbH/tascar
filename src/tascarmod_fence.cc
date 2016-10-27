@@ -33,9 +33,9 @@ fence_t::fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     id = "fence";
   GET_ATTRIBUTE(importraw);
   if( !importraw.empty() ){
-    std::ifstream rawmesh(importraw.c_str());
+    std::ifstream rawmesh(TASCAR::env_expand(importraw).c_str());
     if( !rawmesh.good() )
-      throw TASCAR::ErrMsg("Unable to open mesh file \""+importraw+"\".");
+      throw TASCAR::ErrMsg("Unable to open mesh file \""+TASCAR::env_expand(importraw)+"\".");
     while(!rawmesh.eof() ){
       std::string meshline;
       getline(rawmesh,meshline,'\n');

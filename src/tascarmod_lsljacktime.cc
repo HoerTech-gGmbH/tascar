@@ -15,7 +15,7 @@ private:
 };
 
 lsl_sender_t::lsl_sender_t(double framerate)
-  : info(lsl_create_streaminfo("TASCARtime","time",1,framerate,cft_float32,"softwaredevice"))
+  : info(lsl_create_streaminfo("TASCARtime","time",1,framerate,cft_double64,"softwaredevice"))
 {
   lsl_xml_ptr desc(lsl_get_desc(info));
   lsl_append_child_value(desc,"manufacturer","HoerTech");
@@ -36,8 +36,7 @@ lsl_sender_t::~lsl_sender_t()
  
 void lsl_sender_t::send(double time)
 {
-  float stime(time);
-  lsl_push_sample_f(outlet,&stime);
+  lsl_push_sample_d(outlet,&time);
 }
 
 class lsljacktime_vars_t : public TASCAR::module_base_t {
@@ -48,14 +47,11 @@ protected:
   bool sendwhilestopped;
 };
 
-class lsljacktime_t : public lsljacktime_vars_t {
+class lsljacktime_t : public lsljacktime_vars_t, public lsl_sender_t {
 public:
   lsljacktime_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
   ~lsljacktime_t();
   virtual void update(uint32_t frame,bool running);
-  virtual void configure(double srate,uint32_t fragsize);
-private:
-  lsl_sender_t* lsl;
 };
 
 lsljacktime_vars_t::lsljacktime_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
@@ -71,29 +67,18 @@ lsljacktime_vars_t::~lsljacktime_vars_t()
 
 lsljacktime_t::lsljacktime_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : lsljacktime_vars_t(xmlsrc,session),
-    lsl(NULL)
+    lsl_sender_t(0)
 {
 }
 
 lsljacktime_t::~lsljacktime_t()
 {
-  if( lsl )
-    delete lsl;
-}
-
-void lsljacktime_t::configure(double srate,uint32_t fragsize)
-{
-  if( lsl ){
-    delete lsl;
-    lsl = NULL;
-  }
-  lsl = new lsl_sender_t(f_fragment);
 }
 
 void lsljacktime_t::update(uint32_t frame,bool running)
 {
-  if( (lsl) && (running || sendwhilestopped) )
-    lsl->send( t_sample * frame );
+  if( running || sendwhilestopped )
+    send( t_sample * frame );
 }
 
 REGISTER_MODULE(lsljacktime_t);

@@ -312,15 +312,17 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::po
 std::vector<TASCAR::pos_t> TASCAR::str2vecpos(const std::string& s)
 {
   std::vector<TASCAR::pos_t> value;
-  std::stringstream ptxt(s);
-  while( ptxt.good() ){
-    TASCAR::pos_t p;
-    ptxt >> p.x;
-    if( ptxt.good() ){
-      ptxt >> p.y;
+  if( !s.empty() ){
+    std::stringstream ptxt(s);
+    while( ptxt.good() ){
+      TASCAR::pos_t p;
+      ptxt >> p.x;
       if( ptxt.good() ){
-        ptxt >> p.z;
-        value.push_back(p);
+        ptxt >> p.y;
+        if( ptxt.good() ){
+          ptxt >> p.z;
+          value.push_back(p);
+        }
       }
     }
   }
@@ -330,11 +332,13 @@ std::vector<TASCAR::pos_t> TASCAR::str2vecpos(const std::string& s)
 std::vector<double> TASCAR::str2vecdouble(const std::string& s)
 {
   std::vector<double> value;
-  std::stringstream ptxt(s);
-  while( ptxt.good() ){
-    double p;
-    ptxt >> p;
-    value.push_back(p);
+  if( !s.empty() ){
+    std::stringstream ptxt(s);
+    while( ptxt.good() ){
+      double p;
+      ptxt >> p;
+      value.push_back(p);
+    }
   }
   return value;
 }
@@ -342,11 +346,13 @@ std::vector<double> TASCAR::str2vecdouble(const std::string& s)
 std::vector<int32_t> TASCAR::str2vecint(const std::string& s)
 {
   std::vector<int32_t> value;
-  std::stringstream ptxt(s);
-  while( ptxt.good() ){
-    double p;
-    ptxt >> p;
-    value.push_back(p);
+  if( !s.empty() ){
+    std::stringstream ptxt(s);
+    while( ptxt.good() ){
+      double p;
+      ptxt >> p;
+      value.push_back(p);
+    }
   }
   return value;
 }
@@ -354,11 +360,13 @@ std::vector<int32_t> TASCAR::str2vecint(const std::string& s)
 std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
 {
   std::vector<std::string> value;
-  std::stringstream ptxt(s);
-  while( ptxt.good() ){
-    std::string p;
-    ptxt >> p;
-    value.push_back(p);
+  if( !s.empty() ){
+    std::stringstream ptxt(s);
+    while( ptxt.good() ){
+      std::string p;
+      ptxt >> p;
+      value.push_back(p);
+    }
   }
   return value;
 }

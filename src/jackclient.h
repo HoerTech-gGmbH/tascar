@@ -52,7 +52,7 @@ public:
   float get_cpu_load() const { return jack_cpu_load(jc);};
 private:
   static int xrun_callback(void *arg);
-protected:
+public:
   jack_client_t* jc;
   int srate;
   int fragsize;

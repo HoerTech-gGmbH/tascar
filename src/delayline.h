@@ -127,6 +127,22 @@ namespace TASCAR {
     sinctable_t sinc;
   };
 
+  class static_delay_t : public TASCAR::wave_t {
+  public:
+    static_delay_t(uint32_t d);
+    inline float operator()(float x){
+      float tmp(d[pos]);
+      d[pos] = x;
+      if( !pos )
+        pos = n;
+      if( n )
+        --pos;
+      return tmp;
+    };
+    private:
+      uint32_t pos;
+  };
+
 }
 
 #endif

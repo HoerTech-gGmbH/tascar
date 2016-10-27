@@ -4,7 +4,7 @@
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
   tascar_osc_jack_transport tascar_jackio tascar_sampler		\
   tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
-  tascar_lsljacktime tascar_renderfile tascar_renderir tascar_lipsync
+  tascar_lsljacktime tascar_renderfile tascar_renderir
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
   neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector vmic
@@ -17,7 +17,7 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   osc_helper.o async_file.o errorhandling.o audiochunks.o		\
   acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
   sampler.o jackiowav.o cli.o irrender.o jackrender.o audioplugin.o	\
-  levelmeter.o
+  levelmeter.o serviceclass.o alsamidicc.o speakerarray.o filterclass.o
 
 AUDIOPLUGINS = identity sine lipsync lookatme onsetdetector delay
 
@@ -53,11 +53,8 @@ else
 CXXFLAGS += -O3 
 endif
 
-#BINFILES += `pkg-config gtkmm-3.0 && echo tascar_gui`
-
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
-
-#speakerlayout.o multipan.o
+CXXFLAGS += -fext-numeric-literals 
 
 GUIOBJECTS = gui_elements.o pdfexport.o
 
@@ -79,10 +76,10 @@ tascar_hdspmixer: EXTERNALS += alsa
 tascar_gui tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 tascar_gui tascar_pdf: EXTERNALS += $(GTKEXT)
 
-LDLIBS += -ltascar -ldl
-
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
+
+LDLIBS += -ldl
 
 all: lib
 	mkdir -p build

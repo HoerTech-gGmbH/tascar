@@ -116,6 +116,11 @@ void varidelay_t::add_chunk(const TASCAR::wave_t& x)
 //  return dline[npos];
 //}
 
+static_delay_t::static_delay_t(uint32_t d)
+  : wave_t(d), pos(0)
+{
+}
+
 
 /*
  * Local Variables:

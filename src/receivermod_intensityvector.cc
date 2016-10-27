@@ -75,6 +75,7 @@ intensityvector_t::data_t::~data_t()
 
 void intensityvector_t::configure(double srate,uint32_t fragsize)
 {
+  TASCAR::receivermod_base_t::configure(srate,fragsize);
   c1 = exp(-1.0/(tau*srate));
   c2 = 1.0-c1;
 }

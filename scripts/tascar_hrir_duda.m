@@ -76,7 +76,7 @@ function tascar_hrir_duda( varargin )
   fprintf(fh_spk,'</layout>\n');
   fclose(fh_spk);
   fclose(fh_tsc);
-  wavwrite(ir,sCfg.fs,sCfg.nbits,[sCfg.basename,'.wav']);
+  audiowrite([sCfg.basename,'.wav'],ir,sCfg.fs,'BitsPerSample',sCfg.nbits);
   
   
 function irs = duda_model( fs, fftlen, a, az, fmin, fmax )

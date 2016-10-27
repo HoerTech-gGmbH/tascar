@@ -134,6 +134,26 @@ std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() c
   return spkpos.connections;
 }
 
+void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
+{
+  if( spkpos.delaycomp.size() == spkpos.size() ){
+    for( uint32_t k=0;k<spkpos.size();++k){
+      for( uint32_t f=0;f<output[k].n;++f ){
+        output[k].d[f] = spkpos[k].gain*spkpos.delaycomp[k]( output[k].d[f] );
+      }
+    }
+  }
+  for( uint32_t k=0;k<spkpos.size();++k){
+    if( spkpos[k].comp )
+      spkpos[k].comp->filter(&(output[k]),&(output[k]));
+  }
+}
+
+void TASCAR::receivermod_base_speaker_t::configure(double srate,uint32_t fragsize)
+{
+  receivermod_base_t::configure(srate,fragsize);
+  spkpos.configure(srate,fragsize);
+}
 
 /*
  * Local Variables:

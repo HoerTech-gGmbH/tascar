@@ -14,4 +14,4 @@ vF = ([1:Nbins]'-1)/fs;
 H = fmin./max(vF,fmin) .* exp(i*2*pi*rand(Nbins,1));
 y = realifft(H);
 y = 0.5/max(abs(y(:)))*y;
-wavwrite(y,fs,fname);
+audiowrite(fname,y,fs);

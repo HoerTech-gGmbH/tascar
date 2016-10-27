@@ -18,7 +18,7 @@ function noisesound( sInput, sOutput, dur )
 % Author: Giso Grimm
 % Date: 1/2014
   ;
-  [x,fs] = wavread(sInput);
+  [x,fs] = audioread(sInput);
   dur = round(dur*fs);
   x(:,2:end) = [];
   x = buffer(x,dur);
@@ -26,7 +26,7 @@ function noisesound( sInput, sOutput, dur )
   X = X .* exp(2*pi*i*rand(size(X)));
   x = realifft(X);
   x = 0.9*x / max(abs(x(:)));
-  wavwrite(x,fs,sOutput);
+  audiowrite(sOutput,x,fs);
   
 function y = realfft( x )
 % REALFFT - FFT transform of pure real data
