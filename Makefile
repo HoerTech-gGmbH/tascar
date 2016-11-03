@@ -17,7 +17,8 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   osc_helper.o async_file.o errorhandling.o audiochunks.o		\
   acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
   sampler.o jackiowav.o cli.o irrender.o jackrender.o audioplugin.o	\
-  levelmeter.o serviceclass.o alsamidicc.o speakerarray.o filterclass.o
+  levelmeter.o serviceclass.o alsamidicc.o speakerarray.o		\
+  filterclass.o spectrum.o fft.o stft.o ola.o
 
 AUDIOPLUGINS = identity sine lipsync lookatme onsetdetector delay
 

@@ -6,7 +6,7 @@
 
 #include "audioplugin.h"
 #include <lo/lo.h>
-#include <fftw3.h>
+#include "stft.h"
 #include <string.h>
 #include "errorhandling.h"
 
@@ -18,17 +18,18 @@ public:
   void release();
   ~lipsync_t();
 private:
-  lo_address lo_addr;
+  // configuration variables:
   double smoothing;
   std::string url;
   TASCAR::pos_t scale;
   double vocalTract;
   double threshold;
+  double maxspeechlevel;
+  double dynamicrange;
+  // internal variables:
+  lo_address lo_addr;
   std::string path_;
-  fftw_complex *outFFT;
-  fftw_plan plan;
-  double* inFFT;
-  double* sWindow;
+  TASCAR::stft_t* stft;
   double* sSmoothedMag;
   double* sLogMag;
   double one_minus_smoothing;
@@ -43,7 +44,9 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
     url("osc.udp://localhost:9999/"),
     scale(1,1,1),
     vocalTract(1.0),
-  threshold(0.5),
+    threshold(0.5),
+    maxspeechlevel(-25),
+    dynamicrange(60),
     path_(std::string("/")+parentname),
     numFormants(4)
 {
@@ -52,6 +55,8 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
   GET_ATTRIBUTE(scale);
   GET_ATTRIBUTE(vocalTract);
   GET_ATTRIBUTE(threshold);
+  GET_ATTRIBUTE(maxspeechlevel);
+  GET_ATTRIBUTE(dynamicrange);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());
@@ -61,19 +66,13 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
 void lipsync_t::prepare(double srate,uint32_t fragsize)
 {
   // allocate FFT buffers:
-  outFFT = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * fragsize);
-  inFFT = new double[fragsize];
-  plan = fftw_plan_dft_r2c_1d(fragsize, inFFT, outFFT, FFTW_ESTIMATE);
-  // pre-calculate Blackman window:
-  sWindow = new double[fragsize];
-  for(uint32_t k=0;k<fragsize;++k)
-    sWindow[k] = (1-0.16)/2.0  -  0.5 * cos((2.0*M_PI*k)/fragsize)  +  0.16*0.5* cos((4.0*M_PI*k)/fragsize);
+  stft = new TASCAR::stft_t(2*fragsize,2*fragsize,fragsize,TASCAR::stft_t::WND_BLACKMAN,0);
+  uint32_t num_bins(stft->s.n_);
   // allocate buffer for processed smoothed log values:
-  uint32_t nproc(fragsize/2);
-  sSmoothedMag = new double[nproc];
-  memset(sSmoothedMag,0,nproc*sizeof(double));
-  sLogMag = new double[nproc];
-  memset(sLogMag,0,nproc*sizeof(double));
+  sSmoothedMag = new double[num_bins];
+  memset(sSmoothedMag,0,num_bins*sizeof(double));
+  sLogMag = new double[num_bins];
+  memset(sLogMag,0,num_bins*sizeof(double));
   // Edge frequencies for format energies:
   float freqBins[numFormants+1];
   if( numFormants+1 != 5)
@@ -85,17 +84,14 @@ void lipsync_t::prepare(double srate,uint32_t fragsize)
   freqBins[4] = 6000 * vocalTract;
   formantEdges = new uint32_t[numFormants+1];
   for(uint32_t k=0;k<numFormants+1;++k)
-    formantEdges[k] = std::min((uint32_t)(fragsize/2),(uint32_t)(round(freqBins[k]*fragsize/srate)));
+    formantEdges[k] = std::min(num_bins,(uint32_t)(round(freqBins[k]*fragsize/srate)));
 }
 
 void lipsync_t::release()
 {
-  fftw_destroy_plan(plan);
-  delete [] inFFT;
-  delete [] sWindow;
+  delete stft;
   delete [] sSmoothedMag;
   delete [] sLogMag;
-  fftw_free( outFFT );
 }
 
 lipsync_t::~lipsync_t()
@@ -110,37 +106,26 @@ void lipsync_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
   // FFT
   // Smooth over time
   // Conversion to dB
-  for(uint32_t k=0;k<chunk.n;++k)
-    inFFT[k] = sWindow[k] * chunk.d[k];
-  // fft
-  fftw_execute(plan);
-  // ignore values at Nyquist frequency:
-  outFFT[0][1] = 0;
-  // Process raw fft
-  for (uint32_t i=0; i<chunk.n/2; ++i){
-    // Absolute value (magnitude)
-    double fftMag = sqrt(outFFT[i][0]*outFFT[i][0] + outFFT[i][1]*outFFT[i][1]);
+  stft->process(chunk);
+  uint32_t num_bins(stft->s.n_);
+  // calculate smooth st-PSD:
+  for (uint32_t i=0; i<num_bins; ++i){
     // smoothing:
     sSmoothedMag[i] *= smoothing;
-    sSmoothedMag[i] += one_minus_smoothing*fftMag;
-    // To dB:
-    sLogMag[i] = 20.0*log10(sSmoothedMag[i] + 1e-6);
+    sSmoothedMag[i] += one_minus_smoothing*cabsf(stft->s.b[i]);
   }
-  
   float energy[numFormants];
   for (uint32_t k=0;k<numFormants;++k){
     // Sum of freq values inside bin
     energy[k] = 0;
-    for (uint32_t i = formantEdges[k]; i < formantEdges[k+1]; ++i){
-      // Range should be from 0.5 to -0.5. Data range is 45, -120
-      float value = std::max(0.0,threshold + (sLogMag[i] + 120)/165 - 1.0);
-      // TODO: This is physically wrong! Sum intensity!
-      energy[k] += value;
-    }
+    // Sum intensity:
+    for (uint32_t i = formantEdges[k]; i < formantEdges[k+1]; ++i)
+      energy[k] += sSmoothedMag[i]*sSmoothedMag[i];
     // Divide by number of sumples
     energy[k] /= (float)(formantEdges[k+1]-formantEdges[k]);
-
+    energy[k] = (10*log10f(energy[k] + 1e-6) - maxspeechlevel)/dynamicrange + 1.0f - threshold;
   }
+
   // Lipsync - Blend shape values
   float value = 0;
 
