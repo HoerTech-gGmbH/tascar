@@ -125,6 +125,7 @@ void TASCAR::render_core_t::release()
 
 void TASCAR::render_core_t::process(double time,
                                     uint32_t nframes,
+                                    bool is_running,
                                     const std::vector<float*>& inBuffer,
                                     const std::vector<float*>& outBuffer)
 {
@@ -132,13 +133,6 @@ void TASCAR::render_core_t::process(double time,
   for(uint32_t ch=0;ch<inBuffer.size();ch++)
     for(uint32_t k=0;k<nframes;k++)
       make_friendly_number_limited(inBuffer[ch][k]);
-  // update input audio ports:
-  //for(std::vector<audio_port_t*>::iterator it=audioports_in.begin(); it!=audioports_in.end(); ++it){
-  //  for(uint32_t ch=0;ch<(*it)->get_port_channels();++ch){
-  //    TASCAR::wave_t w(nframes,inBuffer[(*it)->get_port_index()+ch]);
-  //    (*it)->update_channel( ch, w );
-  //  }
-  //}
   // clear output:
   for(unsigned int k=0;k<outBuffer.size();k++)
     memset(outBuffer[k],0,sizeof(float)*nframes);
@@ -153,7 +147,7 @@ void TASCAR::render_core_t::process(double time,
   for(unsigned int k=0;k<sounds.size();k++){
     TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
     psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes,sounds[k]->get_gain());
-    sounds[k]->process_plugins();
+    sounds[k]->process_plugins(time,is_running);
     psrc->preprocess();
   }
   for(uint32_t k=0;k<door_sources.size();k++){

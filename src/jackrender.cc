@@ -69,7 +69,7 @@ TASCAR::audioplayer_t::~audioplayer_t()
     deactivate();
 }
 
-int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
   for(uint32_t ch=0;ch<outBuffer.size();ch++)
     memset(outBuffer[ch],0,nframes*sizeof(float));
@@ -78,7 +78,7 @@ int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<floa
     float* dp[numchannels];
     for(uint32_t ch=0;ch<numchannels;ch++)
       dp[ch] = outBuffer[jack_port_map[k]+ch];
-    files[k].request_data(tp_frame,nframes*tp_running,numchannels,dp);
+    files[k].request_data(tp_frame,nframes*tp_rolling,numchannels,dp);
   }
   return 0;
 }
@@ -173,7 +173,7 @@ int TASCAR::render_rt_t::process(jack_nframes_t nframes,
                                 uint32_t tp_frame, bool tp_rolling)
 {
   double tp_time((double)tp_frame/(double)srate);
-  render_core_t::process(tp_time,nframes,inBuffer,outBuffer);
+  render_core_t::process(tp_time,nframes,tp_rolling,inBuffer,outBuffer);
   return 0;
 }
 

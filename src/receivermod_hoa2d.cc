@@ -69,7 +69,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     num_channels(0),
     fft_scale(1.0),
     maxre(false),
-    rotation(0),
+    rotation(-12345),
     diffup(false),
     diffup_rot(45*DEG2RAD),
     diffup_delay(0.01),
@@ -80,6 +80,8 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     throw TASCAR::ErrMsg("At least three loudspeakers are required for HOA decoding.");
   GET_ATTRIBUTE(order);
   GET_ATTRIBUTE_DEG(rotation);
+  if( rotation == -12345 )
+    rotation = -spkpos.mean_rotation;
   GET_ATTRIBUTE_BOOL(maxre);
   GET_ATTRIBUTE_BOOL(diffup);
   GET_ATTRIBUTE_DEG(diffup_rot);

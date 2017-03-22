@@ -28,7 +28,7 @@ namespace TASCAR {
       double gain;
       double dr;
       // decoder matrix:
-      void update_foa_decoder(float gain);
+      void update_foa_decoder(float gain, double xyzgain);
       float d_w;
       float d_x;
       float d_y;
@@ -38,8 +38,10 @@ namespace TASCAR {
 
     class spk_array_t : public xml_element_t, public std::vector<spk_pos_t> {
     public:
-      spk_array_t(xmlpp::Element*);
+      spk_array_t(xmlpp::Element*, const std::string& elementname_="speaker");
+    private:
       spk_array_t(const spk_array_t&);
+    public:
       void write_xml();
       double get_rmax() const { return rmax;};
       double get_rmin() const { return rmin;};
@@ -58,9 +60,13 @@ namespace TASCAR {
       double rmax;
       double rmin;
       std::vector<didx_t> didx;
+      double xyzgain;
+      std::string elementname;
+      xmlpp::DomParser domp;
     public:
       std::vector<std::string> connections;
       std::vector<TASCAR::static_delay_t> delaycomp;
+      double mean_rotation;
     };
 
 }

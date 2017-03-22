@@ -3,7 +3,6 @@
 
 #include "jackrender.h"
 #include "session_reader.h"
-#include "osc_scene.h"
 
 namespace TASCAR {
 
@@ -48,6 +47,8 @@ namespace TASCAR {
   private:
     std::string name;
     void* lib;
+    bool is_initialized;
+    bool is_configured;
     TASCAR::module_base_t* libdata;
     module_create_t create_cb;
     module_destroy_t destroy_cb;
@@ -115,7 +116,7 @@ namespace TASCAR {
     std::vector<TASCAR::connection_t*> connections;
     std::vector<TASCAR::module_t*> modules;
     std::vector<std::string> get_render_output_ports() const;
-    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
     //virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
     void unload_modules();
   protected:
@@ -131,6 +132,7 @@ namespace TASCAR {
   class actor_module_t : public module_base_t {
   public:
     actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session,bool fail_on_empty=false);
+    virtual ~actor_module_t();
     void write_xml();
     void set_location(const TASCAR::pos_t& l);
     void set_orientation(const TASCAR::zyx_euler_t& o);

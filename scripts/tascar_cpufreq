@@ -1,0 +1,12 @@
+#!/bin/bash
+NUM_CPU=`cat /proc/cpuinfo |grep -e 'cpu cores' | sed -e 's/.*: //1' | sort -n -u`
+c=0
+if test -z "$1"; then
+    g="performance"
+else
+    g="$1"
+fi
+while test $c -lt $NUM_CPU; do
+    cpufreq-selector -c $c -g $g
+    let c=$c+1
+done

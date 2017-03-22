@@ -2,7 +2,6 @@
 #define OSC_SCENE_H
 
 #include "scene.h"
-#include "osc_helper.h"
 
 namespace TASCAR {
 

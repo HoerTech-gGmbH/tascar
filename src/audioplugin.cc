@@ -4,13 +4,14 @@
 
 using namespace TASCAR;
 
-audioplugin_base_t::audioplugin_base_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
+audioplugin_base_t::audioplugin_base_t(xmlpp::Element* xmlsrc, const std::string& name_, const std::string& parentname)
   : xml_element_t(xmlsrc),
     f_sample(1),
     f_fragment(1),
     t_sample(1),
     t_fragment(1),
     n_fragment(1),
+    name(name_),
     prepared(false)
 {
 }
@@ -56,7 +57,8 @@ TASCAR::audioplugin_t::audioplugin_t(xmlpp::Element* xmlsrc, const std::string& 
     write_xml_cb(NULL),
     process_cb(NULL),
     prepare_cb(NULL),
-    release_cb(NULL)
+    release_cb(NULL),
+    add_variables_cb(NULL)
 {
   get_attribute("type",plugintype);
   std::string libname("tascar_ap_");
@@ -71,6 +73,7 @@ TASCAR::audioplugin_t::audioplugin_t(xmlpp::Element* xmlsrc, const std::string& 
     RESOLVE(process);
     RESOLVE(prepare);
     RESOLVE(release);
+    RESOLVE(add_variables);
     libdata = create_cb(xmlsrc,name,parent_name,audioplugin_error);
   }
   catch( ... ){
@@ -86,9 +89,9 @@ void TASCAR::audioplugin_t::write_xml()
     write_xml_cb(libdata,audioplugin_error);
 }
 
-void TASCAR::audioplugin_t::process(wave_t& chunk, const TASCAR::pos_t& pos)
+void TASCAR::audioplugin_t::ap_process(wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling)
 {
-  process_cb( libdata, chunk, pos, audioplugin_error );
+  process_cb( libdata, chunk, pos, t, tp_rolling, audioplugin_error );
 }
 
 void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)
@@ -99,6 +102,11 @@ void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)
 void TASCAR::audioplugin_t::release()
 {
   release_cb(libdata,audioplugin_error);
+}
+
+void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  add_variables_cb(libdata,srv,audioplugin_error);
 }
 
 TASCAR::audioplugin_t::~audioplugin_t()

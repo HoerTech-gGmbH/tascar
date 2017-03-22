@@ -55,6 +55,7 @@ namespace TASCAR {
     osc_server_t(const std::string& multicast, const std::string& port,bool verbose=true);
     ~osc_server_t();
     void set_prefix(const std::string& prefix);
+    const std::string& get_prefix() const;
     void add_method(const std::string& path,const char* typespec,lo_method_handler h, void *user_data);
     void add_double(const std::string& path,double *data);
     void add_double_db(const std::string& path,double *data);

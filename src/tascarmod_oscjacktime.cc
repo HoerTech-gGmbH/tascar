@@ -42,8 +42,8 @@ oscjacktime_t::~oscjacktime_t()
   lo_address_free(target);
 }
 
-//int oscjacktime_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
-void oscjacktime_t::update(uint32_t tp_frame, bool tp_running)
+//int oscjacktime_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
+void oscjacktime_t::update(uint32_t tp_frame, bool tp_rolling)
 {
   lo_send(target,path.c_str(),"f",tp_frame*t_sample);
 }

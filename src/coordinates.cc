@@ -367,6 +367,10 @@ void track_t::edit( xmlpp::Element* cmd )
         DEBUG("invalid file format");
         DEBUG(filefmt);
       }
+    }else if( scmd == "save" ){
+      std::string filename = cmd->get_attribute_value("name");
+      std::ofstream ofs(filename.c_str());
+      ofs << print_cart(",");
     }else if( scmd == "origin" ){
       std::string normtype = cmd->get_attribute_value("src");
       std::string normmode = cmd->get_attribute_value("mode");

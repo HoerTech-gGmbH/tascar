@@ -4,7 +4,7 @@
 class onsetdetector_t : public TASCAR::audioplugin_base_t {
 public:
   onsetdetector_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
-  void process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos);
+  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig);
   void prepare(double srate,uint32_t fragsize);
   void release();
   ~onsetdetector_t();
@@ -74,7 +74,7 @@ onsetdetector_t::~onsetdetector_t()
   lo_address_free(lo_addr);
 }
 
-void onsetdetector_t::process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos)
+void onsetdetector_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig)
 {
   const char* this_side(side.c_str());
   uint32_t N(chunk.size());

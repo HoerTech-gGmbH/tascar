@@ -3,6 +3,7 @@
 
 #include "coordinates.h"
 #include "levelmeter.h"
+#include "osc_helper.h"
 
 namespace TASCAR {
 

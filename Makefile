@@ -4,13 +4,15 @@
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
   tascar_osc_jack_transport tascar_jackio tascar_sampler		\
   tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
-  tascar_lsljacktime tascar_renderfile tascar_renderir
+  tascar_lsljacktime tascar_renderfile tascar_renderir tascar_gpx2csv
 
-RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v cardioid neukom_basic	\
-  neukom_inphase hann vbap vbap3d hoa2d ortf intensityvector vmic
+RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
+  neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
+  intensityvector vmic
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route lsljacktime oscevents oscjacktime
+  foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
+  artnetdmx levels2osc
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\
@@ -20,7 +22,8 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   levelmeter.o serviceclass.o alsamidicc.o speakerarray.o		\
   filterclass.o spectrum.o fft.o stft.o ola.o
 
-AUDIOPLUGINS = identity sine lipsync lookatme onsetdetector delay
+AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
+onsetdetector delay
 
 TEST_FILES = test_ngon test_sinc
 
@@ -49,7 +52,7 @@ LDLIBS += -llinuxtrack
 endif
 
 ifeq "$(DEBUG)" "yes"
-CXXFLAGS += -g
+CXXFLAGS += -ggdb
 else
 CXXFLAGS += -O3 
 endif
@@ -155,10 +158,10 @@ bz2:
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 
 tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
-tascar_lipsync: LDLIBS+=-lfftw3
-tascar_ap_lipsync.so: LDLIBS+=-lfftw3
+tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
+tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 
-tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime: LDLIBS+=-llsl
+tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime tascar_levels2osc.so: LDLIBS+=-llsl
 
 tascarreceiver_%.so: receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
@@ -168,6 +171,8 @@ tascar_%.so: tascarmod_%.cc
 
 tascar_ap_%.so: tascar_ap_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
+tascar_ltcgen.so: EXTERNALS+=ltc
 
 
 # Local Variables:

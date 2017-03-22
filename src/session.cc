@@ -17,6 +17,8 @@ static void module_error(std::string errmsg)
 TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : xml_element_t(xmlsrc),
     lib(NULL),
+    is_initialized(false),
+    is_configured(false),
     libdata(NULL),
     create_cb(NULL),
     destroy_cb(NULL),
@@ -41,6 +43,7 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     update_cb = (module_update_t)dlsym(lib,"tascar_update");
     configure_cb = (module_configure_t)dlsym(lib,"tascar_configure");
     libdata = create_cb(xmlsrc, session, module_error);
+    is_initialized = true;
   }
   catch( ... ){
     dlclose(lib);
@@ -50,25 +53,27 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
 
 void TASCAR::module_t::write_xml()
 {
-  if( write_xml_cb )
+  if( write_xml_cb && is_initialized )
     write_xml_cb(libdata,module_error);
 }
 
 void TASCAR::module_t::update(uint32_t frame,bool running)
 {
-  if( update_cb )
+  if( update_cb && is_initialized && is_configured)
     update_cb(libdata,module_error,frame,running);
 }
 
 void TASCAR::module_t::configure(double srate,uint32_t fragsize)
 {
-  if( configure_cb )
+  if( configure_cb && is_initialized )
     configure_cb(libdata,module_error,srate,fragsize);
+  is_configured = true;
 }
 
 TASCAR::module_t::~module_t()
 {
-  destroy_cb(libdata,module_error);
+  if( is_initialized )
+    destroy_cb(libdata,module_error);
   dlclose(lib);
 }
 
@@ -95,6 +100,8 @@ TASCAR::session_t::session_t()
     period_time(1.0/(double)srate),
     started_(false)
 {
+  add_output_port("sync_out");
+  jackc_transport_t::activate();
   read_xml();
   add_transport_methods();
   osc_server_t::activate();
@@ -112,6 +119,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     period_time(1.0/(double)srate),
     started_(false)
 {
+  add_output_port("sync_out");
+  jackc_transport_t::activate();
   // parse XML:
   read_xml();
   add_transport_methods();
@@ -169,6 +178,7 @@ void TASCAR::session_t::unload_modules()
 
 TASCAR::session_t::~session_t()
 {
+  jackc_transport_t::deactivate();
   osc_server_t::deactivate();
   if( started_ )
     stop();
@@ -224,8 +234,6 @@ void TASCAR::session_t::add_module(xmlpp::Element* src)
 
 void TASCAR::session_t::start()
 {
-  add_output_port("sync_out");
-  jackc_transport_t::activate();
   started_ = true;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->start();
@@ -251,14 +259,14 @@ void TASCAR::session_t::start()
   //configure_levelmeter( srate, levelmeter_tc, levelmeter_weight );
 }
 
-int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
   double t(period_time*(double)tp_frame);
   uint32_t next_tp_frame(tp_frame);
-  if( tp_running )
+  if( tp_rolling )
     next_tp_frame += fragsize;
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->update(next_tp_frame,tp_running);
+    (*imod)->update(next_tp_frame,tp_rolling);
   if( t >= duration ){
     if( loop )
       tp_locate(0u);
@@ -272,7 +280,7 @@ void TASCAR::session_t::stop()
 {
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->stop();
-  jackc_transport_t::deactivate();
+  //jackc_transport_t::deactivate();
   started_ = false;
 }
 
@@ -433,6 +441,10 @@ TASCAR::actor_module_t::actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t*
   obj = session->find_objects(actor);
   if( fail_on_empty && obj.empty() )
     throw TASCAR::ErrMsg("No object matches actor pattern \""+actor+"\".");
+}
+
+TASCAR::actor_module_t::~actor_module_t()
+{
 }
 
 void TASCAR::actor_module_t::write_xml()

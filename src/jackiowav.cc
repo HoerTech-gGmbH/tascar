@@ -16,7 +16,7 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
     nframes_total(0),
     p(ports),
     b_cb(false),
-    b_verbose(verbose), cpuload(0), xruns(0)
+    b_verbose(verbose), wait_(false), cpuload(0), xruns(0)
 {
   memset(&sf_inf_in,0,sizeof(sf_inf_in));
   memset(&sf_inf_out,0,sizeof(sf_inf_out));
@@ -79,7 +79,7 @@ jackio_t::jackio_t(double duration,const std::string& ofname,
     nframes_total(std::max(1u,uint32_t(get_srate()*duration))),
     p(ports),
     b_cb(false),
-    b_verbose(verbose), cpuload(0), xruns(0)
+    b_verbose(verbose), wait_(false), cpuload(0), xruns(0)
 {
   memset(&sf_inf_in,0,sizeof(sf_inf_in));
   memset(&sf_inf_out,0,sizeof(sf_inf_out));
@@ -125,12 +125,14 @@ jackio_t::~jackio_t()
 }
 
 
-int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
   b_cb = true;
   bool record(start);
   if( use_transport )
-    record &= tp_running;
+    record &= tp_rolling;
+  if( wait_ )
+    record &= tp_frame >= startframe;
   for(unsigned int k=0;k<nframes;k++){
     if( record && (pos < nframes_total) ){
       if( buf_in )
@@ -173,7 +175,7 @@ void jackio_t::run()
     log("switching to freewheeling mode");
     jack_set_freewheel( jc, 1 );
   }
-  if( use_transport ){
+  if( use_transport && (!wait_) ){
     log("locating to startframe");
     tp_stop();
     tp_locate(startframe);
@@ -183,7 +185,7 @@ void jackio_t::run()
     usleep( 5000 );
   }
   start = true;
-  if( use_transport ){
+  if( use_transport && (!wait_) ){
     log("starting transport");
     tp_start();
   }
@@ -193,7 +195,7 @@ void jackio_t::run()
   }
   cpuload = get_cpu_load();
   xruns = get_xruns();
-  if( use_transport ){
+  if( use_transport && (!wait_) ){
     log("stopping transport");
     tp_stop();
   }
@@ -205,9 +207,10 @@ void jackio_t::run()
   deactivate();
 }
 
-void jackio_t::set_transport_start(double start_)
+void jackio_t::set_transport_start(double start_, bool wait)
 {
   use_transport = true;
+  wait_ = wait;
   startframe = get_srate()*start_;
 }
 

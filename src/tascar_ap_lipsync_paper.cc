@@ -33,7 +33,6 @@ private:
   std::string path_;
   TASCAR::stft_t* stft;
   double* sSmoothedMag;
-  double* sLogMag;
   float freqBins [5];
   uint32_t* formantEdges;
   uint32_t numFormants;
@@ -43,7 +42,7 @@ private:
 
 lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
   : audioplugin_base_t(xmlsrc,name,parentname),
-    smoothing(0.02),
+    smoothing(0.04),
     url("osc.udp://localhost:9999/"),
     scale(1,1,1),
     vocalTract(1.0),
@@ -63,6 +62,10 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
   GET_ATTRIBUTE(maxspeechlevel);
   GET_ATTRIBUTE(dynamicrange);
   GET_ATTRIBUTE(energypath);
+  std::string path;
+  GET_ATTRIBUTE(path);
+  if( !path.empty() )
+    path_ = path;
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());
@@ -70,12 +73,12 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
 
 void lipsync_t::add_variables( TASCAR::osc_server_t* srv )
 {
-  srv->add_double("/lipsync/smoothing",&smoothing);    
-  srv->add_double("/lipsync/vocalTract",&vocalTract);    
-  srv->add_double("/lipsync/threshold",&threshold);    
-  srv->add_double("/lipsync/maxspeechlevel",&maxspeechlevel);    
-  srv->add_double("/lipsync/dynamicrange",&dynamicrange);    
-  srv->add_bool("/lipsync/active",&active);    
+  srv->add_double("/lipsync_paper/smoothing",&smoothing);    
+  srv->add_double("/lipsync_paper/vocalTract",&vocalTract);    
+  srv->add_double("/lipsync_paper/threshold",&threshold);    
+  srv->add_double("/lipsync_paper/maxspeechlevel",&maxspeechlevel);    
+  srv->add_double("/lipsync_paper/dynamicrange",&dynamicrange);    
+  srv->add_bool("/lipsync_paper/active",&active);    
 }
 
 void lipsync_t::prepare(double srate,uint32_t fragsize)
@@ -86,8 +89,6 @@ void lipsync_t::prepare(double srate,uint32_t fragsize)
   // allocate buffer for processed smoothed log values:
   sSmoothedMag = new double[num_bins];
   memset(sSmoothedMag,0,num_bins*sizeof(double));
-  sLogMag = new double[num_bins];
-  memset(sLogMag,0,num_bins*sizeof(double));
   // Edge frequencies for format energies:
   float freqBins[numFormants+1];
   if( numFormants+1 != 5)
@@ -106,7 +107,6 @@ void lipsync_t::release()
 {
   delete stft;
   delete [] sSmoothedMag;
-  delete [] sLogMag;
 }
 
 lipsync_t::~lipsync_t()
@@ -139,12 +139,13 @@ void lipsync_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, doub
   for (uint32_t k=0;k<numFormants;++k){
     // Sum of freq values inside bin
     energy[k] = 0;
-    // Sum intensity:
+    // Average log-magnitude intensity:
     for (uint32_t i = formantEdges[k]; i < formantEdges[k+1]; ++i)
-      energy[k] += sSmoothedMag[i]*sSmoothedMag[i];
+      // Range should be from 0.5 to -0.5. Data range is 45, -120
+      // float value = (processed[i] + 120)/165 - 0.5;
+      energy[k] += std::max(0.0,(20.0f*log10f(sSmoothedMag[i] + 1e-6f) - maxspeechlevel)/dynamicrange + 1.0f - threshold);
     // Divide by number of sumples
     energy[k] /= (float)(formantEdges[k+1]-formantEdges[k]);
-    energy[k] = std::max(0.0,(10*log10f(energy[k] + 1e-6) - maxspeechlevel)/dynamicrange + 1.0f - threshold);
   }
 
   // Lipsync - Blend shape values

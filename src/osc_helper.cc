@@ -252,6 +252,12 @@ std::string osc_server_t::list_variables() const
   return rv;
 }
 
+const std::string& osc_server_t::get_prefix() const
+{
+  return prefix;
+}
+
+
 
 /*
  * Local Variables:

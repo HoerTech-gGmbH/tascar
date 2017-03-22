@@ -95,7 +95,7 @@ motionpath_t::~motionpath_t()
 {
 }
 
-void motionpath_t::update(uint32_t tp_frame,bool tp_running)
+void motionpath_t::update(uint32_t tp_frame,bool tp_rolling)
 {
   if( !active )
     return;

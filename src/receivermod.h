@@ -27,8 +27,6 @@
 #ifndef RECEIVERMOD_H
 #define RECEIVERMOD_H
 
-#include "xmlconfig.h"
-#include "audiochunks.h"
 #include "speakerarray.h"
 
 namespace TASCAR {

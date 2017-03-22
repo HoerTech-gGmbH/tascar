@@ -195,7 +195,6 @@ sound_t::sound_t(const sound_t& src)
     direct(src.direct),
     source(NULL)
 {
-  DEBUG("x");
 }
 
 sound_t::~sound_t()
@@ -208,14 +207,14 @@ sound_t::~sound_t()
     delete (*p);
 }
 
-void sound_t::process_plugins()
+void sound_t::process_plugins(double t,bool tp_rolling)
 {
   if( source ){
     //DEBUG(plugins.size());
     for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
          p!= plugins.end();
          ++p)
-      (*p)->process(source->audio,source->position);
+      (*p)->ap_process(source->audio,source->position,t,tp_rolling);
   }
 }
 
@@ -726,6 +725,12 @@ std::string sound_t::getlabel() const
 std::string sound_t::get_name() const
 {
   return name;
+}
+
+void route_t::reset_meters()
+{
+  rmsmeter.clear(); 
+  meterval.clear();
 }
 
 void route_t::addmeter( float fs )

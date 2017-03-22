@@ -52,7 +52,7 @@ void store_stats(const std::string& statname,jackio_t& jio)
 int main(int argc, char** argv)
 {
   try{
-    const char *options = "fo:chus:d:vt:";
+    const char *options = "fo:chus:d:vt:w";
     struct option long_options[] = { 
       { "freewheeling", 0, 0, 'f' },
       { "output-file",  1, 0, 'o' },
@@ -61,6 +61,7 @@ int main(int argc, char** argv)
       { "unlink",       0, 0, 'u' },
       { "help",         0, 0, 'h' },
       { "start",        1, 0, 's' },
+      { "wait",         0, 0, 'w' },
       { "duration",     1, 0, 'd' },
       { "statistics",   1, 0, 't' },
       { "verbose",      0, 0, 'v' },
@@ -77,6 +78,7 @@ int main(int argc, char** argv)
     bool b_use_transport(false);
     bool b_use_inputfile(true);
     double start(0);
+    bool wait(false);
     double duration(10);
     bool verbose(false);
     std::string statname("");
@@ -106,6 +108,9 @@ int main(int argc, char** argv)
         start = atof(optarg);
         b_use_transport = true;
         break;
+      case 'w':
+        wait = true;
+        break;
       case 'd':
         duration = atof(optarg);
         b_use_transport = true;
@@ -126,7 +131,7 @@ int main(int argc, char** argv)
     if( b_use_inputfile ){
       jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect,verbose);
       if( b_use_transport )
-        jio.set_transport_start( start );
+        jio.set_transport_start( start, wait );
       jio.run();
       if( b_unlink )
         unlink(ifname.c_str());
@@ -134,7 +139,7 @@ int main(int argc, char** argv)
     }else{
       jackio_t jio(duration,ofname,ports,jackname,freewheel,autoconnect,verbose);
       if( b_use_transport )
-        jio.set_transport_start( start );
+        jio.set_transport_start( start, wait );
       jio.run();
       store_stats(statname,jio);
     }

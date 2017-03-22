@@ -54,6 +54,8 @@ function [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, varargin )
   sCfg.starttime = [];
   sHelp.starttime = ['if not empty use jack transport and start from' ...
 		     ' this time'];
+  sCfg.wait = false;
+  sHelp.wait = ['instead of re-locating transport wait for start-time'];
   sCfg.freewheeling = false;
   sHelp.freewheeling = ['switch to freewheeling mode'];
   sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
@@ -84,6 +86,9 @@ function [y,fs,bufsize,load,xruns,sCfg] = tascar_jackio( x, varargin )
   end
   if sCfg.freewheeling
     sCmd = [sCmd,' -f'];
+  end
+  if sCfg.wait
+      sCmd = [sCmd,' -w'];
   end
   sStatname = tempname();
   sCmd = [sCmd,' -t ',sStatname];

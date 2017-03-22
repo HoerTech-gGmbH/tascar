@@ -37,7 +37,7 @@ namespace TASCAR {
   public:
     osc_jt_t(const std::string& osc_addr, const std::string& osc_port, double looptime);
     void run();
-    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
   protected:
     uint32_t loop_frame;
   };
@@ -112,7 +112,7 @@ void TASCAR::osc_jt_t::run()
   osc_server_t::deactivate();
 }
 
-int TASCAR::osc_jt_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
+int TASCAR::osc_jt_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
   if( loop_frame && (tp_frame >= loop_frame) )
     tp_locate(0u);

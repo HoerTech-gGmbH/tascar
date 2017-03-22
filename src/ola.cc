@@ -33,6 +33,14 @@ TASCAR::ola_t::ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windo
       for(uint32_t k=0;k<zpad2;k++)
         zwnd2[k] = sqrt(0.5+0.5*cos(k*M_PI/zpad2));
     break;
+  case WND_BLACKMAN :
+    if( zpad1 )
+      for(uint32_t k=0;k<zpad1;++k)
+        zwnd1[k] = (1.0-0.16)/2.0-0.5*cos(k*M_PI/zpad1)+0.16*0.5*cos(2.0*M_PI*k/zpad1);
+    if( zpad2 )
+      for(uint32_t k=0;k<zpad2;++k)
+        zwnd2[k] = (1.0-0.16)/2.0-0.5*cos(k*M_PI/zpad2+M_PI)+0.16*0.5*cos(2.0*M_PI*k/zpad2+2.0*M_PI);
+    break;
   }
   switch( postwnd ){
   case WND_RECT :
@@ -48,6 +56,9 @@ TASCAR::ola_t::ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windo
     for(uint32_t k=0;k<pwnd.size();k++)
       pwnd[k] = sqrt(0.5-0.5*cos(PI2*(double)k/(double)(pwnd.size())));
     break;
+  case WND_BLACKMAN :
+    for(uint32_t k=0;k<pwnd.size();k++)
+      pwnd[k] = (1.0-0.16)/2.0-0.5*cos(2.0*k*M_PI/pwnd.size())+0.16*0.5*cos(4.0*M_PI*k/pwnd.size());
   }
 }
 

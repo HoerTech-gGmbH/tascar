@@ -123,22 +123,22 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
     // s->geometry_update(time);
-    s->process(time,1,dIn,dOut);
-    s->process(time,1,dIn,dOut);
+    s->process(time,1,false,dIn,dOut);
+    s->process(time,1,false,dIn,dOut);
     draw(scene_draw_t::xy);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
     //s->geometry_update(time);
-    s->process(time,1,dIn,dOut);
-    s->process(time,1,dIn,dOut);
+    s->process(time,1,false,dIn,dOut);
+    s->process(time,1,false,dIn,dOut);
     draw(scene_draw_t::xz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
     //s->geometry_update(time);
-    s->process(time,1,dIn,dOut);
-    s->process(time,1,dIn,dOut);
+    s->process(time,1,false,dIn,dOut);
+    s->process(time,1,false,dIn,dOut);
     draw(scene_draw_t::yz);
   }
   //for(uint32_t k=0;k<t.size();k++){

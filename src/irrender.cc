@@ -69,7 +69,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
     a_out.push_back(new float[fragsize]);
     memset(a_out.back(),0,sizeof(float)*fragsize);
   }
-  pscene->process(time,fragsize,a_in,a_out);
+  pscene->process(time,fragsize,true,a_in,a_out);
   if( verbose_ )
     std::cerr << "rendering " << pscene->active_pointsources << " of " << pscene->total_pointsources << " point sources.\n";
   for(uint32_t k=0;k<num_fragments;++k){
@@ -83,7 +83,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
         else
           a_in[kc][kf] = 0.0f;
     // process audio:
-    pscene->process(time,fragsize,a_in,a_out);
+    pscene->process(time,fragsize,true,a_in,a_out);
     // save audio:
     for(uint32_t kf=0;kf<fragsize;++kf)
       for(uint32_t kc=0;kc<nch_out;++kc)
@@ -130,12 +130,12 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
     a_out.push_back(new float[len]);
     memset(a_out.back(),0,sizeof(float)*len);
   }
-  pscene->process(time,len,a_in,a_out);
+  pscene->process(time,len,false,a_in,a_out);
   if( verbose_ )
     std::cerr << "rendering " << pscene->active_pointsources << " of " << pscene->total_pointsources << " point sources.\n";
   a_in[0][0] = 1.0f;
   // process audio:
-  pscene->process(time,len,a_in,a_out);
+  pscene->process(time,len,false,a_in,a_out);
   // save audio:
   for(uint32_t kf=0;kf<len;++kf)
     for(uint32_t kc=0;kc<nch_out;++kc)

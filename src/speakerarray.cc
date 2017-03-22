@@ -7,10 +7,13 @@ using namespace TASCAR;
 
 // speaker array:
 
-spk_array_t::spk_array_t(xmlpp::Element* e)
+spk_array_t::spk_array_t(xmlpp::Element* e, const std::string& elementname_)
   : xml_element_t(e),
     rmax(0),
-    rmin(0)
+    rmin(0),
+    xyzgain(1.0),
+    elementname(elementname_),
+    mean_rotation(0)
 {
   read_xml(e);
   if( !empty() ){
@@ -23,22 +26,26 @@ spk_array_t::spk_array_t(xmlpp::Element* e)
       if( rmin > r )
         rmin = r;
     }
+    double _Complex p_xy(0);
     for(uint32_t k=0;k<size();k++){
       operator[](k).gain = operator[](k).norm()/rmax;
       operator[](k).dr = rmax-operator[](k).norm();
+      p_xy += cexp(-(double)k*PI2*I/(double)(size()))*(operator[](k).unitvector.x+I*operator[](k).unitvector.y);
     }
+    mean_rotation = carg(p_xy);
   }
   if( empty() )
     throw TASCAR::ErrMsg("Invalid empty speaker array.");
   didx.resize(size());
   for(uint32_t k=0;k<size();k++){
-    operator[](k).update_foa_decoder(1.0f/size());
+    operator[](k).update_foa_decoder(1.0f/size(), xyzgain);
     connections.push_back(operator[](k).connect);
   }
 }
 
 void spk_array_t::read_xml(xmlpp::Element* e)
 {
+  GET_ATTRIBUTE(xyzgain);
   clear();
   std::string importsrc(e->get_attribute_value("layout"));
   if( !importsrc.empty() )
@@ -46,7 +53,7 @@ void spk_array_t::read_xml(xmlpp::Element* e)
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "speaker" )){
+    if( sne && ( sne->get_name() == elementname )){
       push_back(TASCAR::spk_pos_t(sne));
     }
   }
@@ -58,9 +65,23 @@ void spk_array_t::write_xml()
 
 void spk_array_t::import_file(const std::string& fname)
 {
-  xmlpp::DomParser domp;
-  domp.parse_file(TASCAR::env_expand(fname));
+  try{
+    domp.parse_file(TASCAR::env_expand(fname));
+  }
+  catch( const xmlpp::internal_error& e){
+    throw TASCAR::ErrMsg(std::string("xml internal error: ")+e.what());
+  }
+  catch( const xmlpp::validity_error& e){
+    throw TASCAR::ErrMsg(std::string("xml validity error: ")+e.what());
+  }
+  catch( const xmlpp::parse_error& e){
+    throw TASCAR::ErrMsg(std::string("xml parse error: ")+e.what());
+  }
+  if( !domp )
+    throw TASCAR::ErrMsg("Unable to parse file \""+fname+"\".");
   xmlpp::Element* r(domp.get_document()->get_root_node());
+  if( !r )
+    throw TASCAR::ErrMsg("No root node found in document \""+fname+"\".");
   if( r->get_name() != "layout" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"layout\", got "+r->get_name()+".");
   read_xml(r);
@@ -130,7 +151,7 @@ spk_pos_t::spk_pos_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(compB);
   set_sphere(r,az,el);
   unitvector = normal();
-  update_foa_decoder(1.0f);
+  update_foa_decoder(1.0f, 1.0 );
   if( (compA.size() > 0) && (compB.size() > 0) )
     comp = new TASCAR::filter_t( compA, compB );
 }
@@ -164,16 +185,14 @@ spk_pos_t::~spk_pos_t()
     delete comp;
 }
 
-void spk_pos_t::update_foa_decoder(float gain)
+void spk_pos_t::update_foa_decoder(float gain, double xyzgain)
 {
   // update of FOA decoder matrix:
-  TASCAR::pos_t px(1,0,0);
-  TASCAR::pos_t py(0,1,0);
-  TASCAR::pos_t pz(0,0,1);
-  d_w = sqrtf(0.5f) * gain;
-  d_x = dot_prod(px,unitvector) * gain;
-  d_y = dot_prod(py,unitvector) * gain;
-  d_z = dot_prod(pz,unitvector) * gain;
+  d_w = 1.4142135623730951455f * gain;
+  gain *= xyzgain;
+  d_x = unitvector.x * gain;
+  d_y = unitvector.y * gain;
+  d_z = unitvector.z * gain;
 }
 
 void spk_pos_t::write_xml()

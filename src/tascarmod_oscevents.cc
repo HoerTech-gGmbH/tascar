@@ -241,9 +241,9 @@ oscevents_t::~oscevents_t()
   }
 }
 
-void oscevents_t::update(uint32_t tp_frame, bool tp_running)
+void oscevents_t::update(uint32_t tp_frame, bool tp_rolling)
 {
-  if( tp_running ){
+  if( tp_rolling ){
     for(std::vector<osc_event_base_t*>::iterator it=events.begin();it!=events.end();++it){
       (*it)->process_event(tp_frame*t_sample,t_fragment,target,path.c_str());
     }

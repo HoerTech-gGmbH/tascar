@@ -26,7 +26,7 @@ namespace TASCAR {
     void start();
     void stop();
   private:
-    int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running);
+    int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
     void open_files();
     std::vector<TASCAR::Scene::sndfile_info_t> infos;
     std::vector<TASCAR::async_sndfile_t> files;

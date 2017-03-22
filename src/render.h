@@ -16,6 +16,7 @@ namespace TASCAR {
     void set_v014();
     void process(double time,
                  uint32_t nframes,
+                 bool is_running,
                  const std::vector<float*>& inBuffer,
                  const std::vector<float*>& outBuffer);
     uint32_t num_input_ports() const { return input_ports.size();};

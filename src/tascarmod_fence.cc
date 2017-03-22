@@ -64,7 +64,7 @@ fence_t::~fence_t()
 {
 }
 
-void fence_t::update(uint32_t tp_frame,bool tp_running)
+void fence_t::update(uint32_t tp_frame,bool tp_rolling)
 {
   for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
     TASCAR::Scene::object_t* obj(iobj->obj);

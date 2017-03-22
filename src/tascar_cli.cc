@@ -119,7 +119,7 @@ int main(int argc, char** argv)
       for(uint32_t k=0;k<ports.size();k++)
         std::cout << k << " " << ports[k] << std::endl;
       jackio_t* iow(new jackio_t(t_dur,output,ports,session.name+"jackio"));
-      iow->set_transport_start(t_start);
+      iow->set_transport_start(t_start,false);
       iow->run();
       std::cout << iow->get_xruns() << " xruns (total latency: " << iow->get_xrun_latency() << ")" << std::endl;
       delete iow;

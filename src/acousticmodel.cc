@@ -492,7 +492,16 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     x_gain(1.0),
     dx_gain(0),
     dt(1),
-    next_gain(1.0)
+    dt_sample(1),
+    f_sample(1),
+    next_gain(1.0),
+    fade_timer(0),
+    fade_rate(1),
+    next_fade_gain(1),
+  previous_fade_gain(1),
+  prelim_next_fade_gain(1),
+  prelim_previous_fade_gain(1),
+  fade_gain(1)
 {
   GET_ATTRIBUTE(size);
   get_attribute_bool("point",render_point);
@@ -527,6 +536,8 @@ void receiver_t::write_xml()
 void receiver_t::prepare(double srate, uint32_t chunksize)
 {
   dt = 1.0/std::max(1.0f,(float)chunksize);
+  dt_sample = 1.0/srate;
+  f_sample = srate;
   outchannels.clear();
   for(uint32_t k=0;k<get_num_channels();k++)
     outchannels.push_back(wave_t(chunksize));
@@ -606,11 +617,27 @@ void receiver_t::apply_gain()
     uint32_t psize(outchannels[0].size());
     for(uint32_t k=0;k<psize;k++){
       double g(x_gain+=dx_gain);
+      if( fade_timer > 0 ){
+        --fade_timer;
+        previous_fade_gain = prelim_previous_fade_gain;
+        next_fade_gain = prelim_next_fade_gain;
+        fade_gain = previous_fade_gain + (next_fade_gain - previous_fade_gain)*(0.5+0.5*cos(fade_timer*fade_rate));
+      }
+      g *= fade_gain;
       for(uint32_t c=0;c<ch;c++){
         outchannels[c][k] *= g;
       }
     }
   }
+}
+
+void receiver_t::set_fade( double targetgain, double duration )
+{
+  fade_timer = 0;
+  prelim_previous_fade_gain = fade_gain;
+  prelim_next_fade_gain = targetgain;
+  fade_rate = M_PI*dt_sample/duration;
+  fade_timer = std::max(1u,(uint32_t)(f_sample*duration));
 }
 
 TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)

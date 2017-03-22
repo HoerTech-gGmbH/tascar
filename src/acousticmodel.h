@@ -1,7 +1,6 @@
 #ifndef ACOUSTICMODEL_H
 #define ACOUSTICMODEL_H
 
-#include "delayline.h"
 #include "receivermod.h"
 #include "dynamicobjects.h"
 
@@ -101,6 +100,7 @@ namespace TASCAR {
       void add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain, bool b_img);
       void set_next_gain(double gain);
+      void set_fade( double targetgain, double duration );
       void apply_gain();
       void post_proc();
       // configuration/control variables:
@@ -126,7 +126,22 @@ namespace TASCAR {
       double x_gain;
       double dx_gain;
       float dt;
+      float dt_sample;
+      float f_sample;
       double next_gain;
+      // fade timer, is > 0 during fade:
+      int32_t fade_timer;
+      // time constant for fade:
+      float fade_rate;
+      // target gain at end of fade:
+      float next_fade_gain;
+      // current fade gain at time of fade update:
+      float previous_fade_gain;
+      // preliminary values to have atomic operations (correct?):
+      float prelim_next_fade_gain;
+      float prelim_previous_fade_gain;
+      // current fade gain:
+      float fade_gain;
     };
 
     class filter_coeff_t {

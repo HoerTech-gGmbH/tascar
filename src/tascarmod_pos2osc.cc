@@ -54,10 +54,10 @@ pos2osc_t::~pos2osc_t()
   lo_address_free(target);
 }
 
-//int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_running)
-void pos2osc_t::update(uint32_t tp_frame, bool tp_running)
+//int pos2osc_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
+void pos2osc_t::update(uint32_t tp_frame, bool tp_rolling)
 {
-  if( tp_running || (!transport) ){
+  if( tp_rolling || (!transport) ){
     for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
       TASCAR::pos_t p;
       TASCAR::zyx_euler_t o;
@@ -77,6 +77,10 @@ void pos2osc_t::update(uint32_t tp_frame, bool tp_running)
       case 2:
         path = "/tascarpos";
         lo_send(target,path.c_str(),"sffffff",it->name.c_str(),p.x,p.y,p.z,RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
+        break;
+      case 3:
+        path = "/tascarpos";
+        lo_send(target,path.c_str(),"sffffff",it->obj->get_name().c_str(),p.x,p.y,p.z,RAD2DEG*o.z,RAD2DEG*o.y,RAD2DEG*o.x);
         break;
       }
     }
