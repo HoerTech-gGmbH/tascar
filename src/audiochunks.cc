@@ -6,6 +6,11 @@
 
 using namespace TASCAR;
 
+audiochunk_descriptor_t::audiochunk_descriptor_t(double samplingrate_,uint32_t length_,uint32_t channels_)
+  : samplingrate(samplingrate_),length(length_),channels(channels_)
+{
+}
+
 wave_t::wave_t(uint32_t chunksize)
   : d(new float[std::max(1u,chunksize)]),
     n(chunksize), own_pointer(true),
@@ -183,18 +188,70 @@ uint32_t sndfile_handle_t::writef_float( float* buf, uint32_t frames )
   return sf_writef_float( sfile, buf, frames );
 }
 
-sndfile_t::sndfile_t(const std::string& fname,uint32_t channel)
+uint64_t get_chunklen(uint64_t getframes,uint64_t start,uint64_t length)
+{
+  if( length > 0 )
+    return length;
+  return std::max(getframes,start) - start;
+}
+
+sndfile_t::sndfile_t(const std::string& fname,uint32_t channel,double start,double length)
   : sndfile_handle_t(fname),
-    wave_t(get_frames()),
+    wave_t(get_chunklen(get_frames(),get_srate()*start,get_srate()*length)),
     looped_t(0),
-    looped_gain(0)
+    looped_gain(0),
+    iposition_(0),
+    loop_(0)
 {
   uint32_t ch(get_channels());
-  uint32_t N(get_frames());
-  wave_t chbuf(N*ch);
-  readf_float(chbuf.d,N);
-  for(uint32_t k=0;k<N;++k)
-    d[k] = chbuf[k*ch+channel];
+  int64_t istart(start*get_srate());
+  int64_t ilength(length*get_srate());
+  // if no samples remain then just return zeros, otherwise:
+  if( istart < get_frames() ){
+    if( ilength == 0 )
+      ilength = get_frames()-istart;
+    // trim "start" samples:
+    if( istart > 0 ){
+      wave_t chbuf_skip(istart*ch);
+      readf_float(chbuf_skip.d,istart);
+    }
+    // this is the minimum of available and requested number of samples:
+    uint32_t N(std::min(get_frames() - istart,ilength));
+    // temporary data to read all channels:
+    wave_t chbuf(N*ch);
+    readf_float(chbuf.d,N);
+    // select requested audio channel:
+    for(uint32_t k=0;k<N;++k)
+      d[k] = chbuf[k*ch+channel];
+  }
+}
+
+void sndfile_t::set_position(double position)
+{
+  iposition_ = get_srate()*position;
+}
+
+void sndfile_t::set_iposition(int64_t position)
+{
+  iposition_ = position;
+}
+
+
+void sndfile_t::set_loop(uint32_t loop)
+{
+  loop_ = loop;
+}
+
+void sndfile_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
+{
+  for(uint32_t k=0;k<chunk.n;++k){
+    int64_t trel(chunktime+k-iposition_);
+    if( (trel > 0) && (n > 0) ){
+      div_t dv(div(trel,n));
+      if( (loop_ == 0) || (dv.quot < (int64_t)loop_) )
+        chunk.d[k] += d[dv.rem];
+    }
+  }
 }
 
 void sndfile_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk)

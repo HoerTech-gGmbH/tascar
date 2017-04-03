@@ -6,12 +6,20 @@
 
 namespace TASCAR {
 
+  class transport_t {
+  public:
+    transport_t();
+    uint64_t time_samples;
+    double time_seconds;
+    bool rolling;
+  };
+
   class audioplugin_base_t : public xml_element_t {
   public:
     audioplugin_base_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
     virtual void write_xml() {};
     virtual ~audioplugin_base_t();
-    virtual void ap_process(wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling) = 0;
+    virtual void ap_process(wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp) = 0;
     virtual void prepare(double srate,uint32_t fragsize) {};
     void prepare_(double srate,uint32_t fragsize);
     virtual void release() {};
@@ -33,7 +41,7 @@ namespace TASCAR {
   typedef TASCAR::audioplugin_base_t* (*audioplugin_create_t)(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname, audioplugin_error_t errfun);
   typedef void (*audioplugin_destroy_t)(TASCAR::audioplugin_base_t* h,audioplugin_error_t errfun);
   typedef void (*audioplugin_write_xml_t)(TASCAR::audioplugin_base_t* h,audioplugin_error_t errfun);
-  typedef void (*audioplugin_process_t)(TASCAR::audioplugin_base_t* h, wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling, audioplugin_error_t errfun);
+  typedef void (*audioplugin_process_t)(TASCAR::audioplugin_base_t* h, wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp, audioplugin_error_t errfun);
   typedef void (*audioplugin_prepare_t)(TASCAR::audioplugin_base_t* h, double srate, uint32_t fragsize, audioplugin_error_t errfun);
   typedef void (*audioplugin_release_t)(TASCAR::audioplugin_base_t* h, audioplugin_error_t errfun);
   typedef void (*audioplugin_add_variables_t)(TASCAR::audioplugin_base_t* h, TASCAR::osc_server_t* srv, audioplugin_error_t errfun);
@@ -43,7 +51,7 @@ namespace TASCAR {
     audioplugin_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
     void write_xml();
     virtual ~audioplugin_t();
-    virtual void ap_process(wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling);
+    virtual void ap_process(wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
     virtual void prepare(double srate,uint32_t fragsize);
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void release();
@@ -86,11 +94,11 @@ namespace TASCAR {
       }else                                     \
         errfun("Invalid library class pointer (write_xml)."); \
     }                                           \
-    void audioplugin_process(TASCAR::audioplugin_base_t* h, TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling, TASCAR::audioplugin_error_t errfun) \
+    void audioplugin_process(TASCAR::audioplugin_base_t* h, TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp, TASCAR::audioplugin_error_t errfun) \
     {                                           \
       x*   ptr(dynamic_cast<x*>(h));            \
       if( ptr ){                                \
-        try { ptr->ap_process(chunk, pos, t, tp_rolling ); }        \
+        try { ptr->ap_process(chunk, pos, tp ); }        \
         catch(const std::exception&e ){         \
           errfun(e.what());                     \
         }                                       \

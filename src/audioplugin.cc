@@ -4,6 +4,11 @@
 
 using namespace TASCAR;
 
+transport_t::transport_t()
+  : time_samples(0), time_seconds(0), rolling(false)
+{
+}
+
 audioplugin_base_t::audioplugin_base_t(xmlpp::Element* xmlsrc, const std::string& name_, const std::string& parentname)
   : xml_element_t(xmlsrc),
     f_sample(1),
@@ -60,7 +65,9 @@ TASCAR::audioplugin_t::audioplugin_t(xmlpp::Element* xmlsrc, const std::string& 
     release_cb(NULL),
     add_variables_cb(NULL)
 {
-  get_attribute("type",plugintype);
+  plugintype = e->get_name();
+  if( plugintype == "plugin" )
+    get_attribute("type",plugintype);
   std::string libname("tascar_ap_");
   libname += plugintype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );
@@ -89,9 +96,9 @@ void TASCAR::audioplugin_t::write_xml()
     write_xml_cb(libdata,audioplugin_error);
 }
 
-void TASCAR::audioplugin_t::ap_process(wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling)
+void TASCAR::audioplugin_t::ap_process(wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
-  process_cb( libdata, chunk, pos, t, tp_rolling, audioplugin_error );
+  process_cb( libdata, chunk, pos, tp, audioplugin_error );
 }
 
 void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)

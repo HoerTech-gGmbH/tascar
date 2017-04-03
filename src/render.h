@@ -14,9 +14,8 @@ namespace TASCAR {
     void release();
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max, bool b_0_14=false );
     void set_v014();
-    void process(double time,
-                 uint32_t nframes,
-                 bool is_running,
+    void process(uint32_t nframes,
+                 const TASCAR::transport_t& tp,
                  const std::vector<float*>& inBuffer,
                  const std::vector<float*>& outBuffer);
     uint32_t num_input_ports() const { return input_ports.size();};
@@ -35,6 +34,7 @@ namespace TASCAR {
     std::vector<TASCAR::Scene::audio_port_t*> audioports;
     std::vector<TASCAR::Scene::audio_port_t*> audioports_in;
     std::vector<TASCAR::Scene::audio_port_t*> audioports_out;
+    pthread_mutex_t mtx_world;
   public:
     Acousticmodel::world_t* world;
   public:

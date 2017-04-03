@@ -17,8 +17,8 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,uint32_t sincorder_)
-  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), sincorder(sincorder_),ismorder(0),rmslevel(NULL)
+pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_)
+  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), minlevel(minlevel_),sincorder(sincorder_),ismorder(0),rmslevel(NULL)
 {
 }
 
@@ -37,8 +37,8 @@ void pointsource_t::add_rmslevel(TASCAR::levelmeter_t* r)
   rmslevel = r;
 }
 
-doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,uint32_t sincorder_)
-  : pointsource_t(chunksize,maxdist,sincorder_),
+doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,double minlevel,uint32_t sincorder_)
+  : pointsource_t(chunksize,maxdist,minlevel,sincorder_),
     inv_falloff(1.0),
     wnd_sqrt(false)
 {
@@ -129,6 +129,8 @@ uint32_t acoustic_model_t::process()
     double srcgainmod(1.0);
     effective_srcpos = src_->get_effective_position( receiver_->position, srcgainmod );
     receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain, src_->ismorder>0 );
+    if( nextdistance > src_->maxdist )
+      return 0;
     nextgain *= srcgainmod;
     double next_air_absorption(exp(-nextdistance*dscale));
     double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
@@ -145,16 +147,20 @@ uint32_t acoustic_model_t::process()
       make_friendly_number(airabsorption_state);
       audio[k] = airabsorption_state;
     }
-    // calculate obstacles:
-    for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
-      obstacle_t* p_obj(obstacles_[kobj]);
-      if( p_obj->active ){
-        // apply diffraction model:
-        p_obj->process(effective_srcpos,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
-      }
-    }
-    // end obstacles
     if( ((gain!=0)||(dgain!=0)) ){
+      // calculate obstacles:
+      for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
+        obstacle_t* p_obj(obstacles_[kobj]);
+        if( p_obj->active ){
+          // apply diffraction model:
+          p_obj->process(effective_srcpos,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
+        }
+      }
+      // end obstacles
+      if( src_->minlevel > 0 ){
+        if( audio.rms() <= src_->minlevel )
+          return 0;
+      }
       receiver_->add_pointsource(prel,audio,receiver_data);
       return 1;
     }
@@ -165,7 +171,7 @@ uint32_t acoustic_model_t::process()
 }
 
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
-  : pointsource_t(src->audio.size(),src->maxdist,src->sincorder),
+  : pointsource_t(src->audio.size(),src->maxdist,src->minlevel,src->sincorder),
     src_(src),reflector_(reflector),
     lpstate(0.0),b_0_14(false)
 {

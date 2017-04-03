@@ -51,7 +51,22 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,double& value)
   get_attribute_value(e,name,value);
 }
 
-void TASCAR::xml_element_t::get_attribute(const std::string& name,unsigned int& value)
+void TASCAR::xml_element_t::get_attribute(const std::string& name,uint32_t& value)
+{
+  get_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,int32_t& value)
+{
+  get_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,uint64_t& value)
+{
+  get_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,int64_t& value)
 {
   get_attribute_value(e,name,value);
 }
@@ -141,9 +156,24 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,double value)
   set_attribute_double(e,name,value);
 }
 
-void TASCAR::xml_element_t::set_attribute(const std::string& name,unsigned int value)
+void TASCAR::xml_element_t::set_attribute(const std::string& name,uint32_t value)
 {
-  set_attribute_uint(e,name,value);
+  set_attribute_uint32(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,int32_t value)
+{
+  set_attribute_int32(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,uint64_t value)
+{
+  set_attribute_uint64(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,int64_t value)
+{
+  set_attribute_int64(e,name,value);
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::pos_t& value)
@@ -196,10 +226,31 @@ std::string TASCAR::env_expand( std::string s )
   return s;
 }
 
-void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value)
+void set_attribute_uint32(xmlpp::Element* elem,const std::string& name,uint32_t value)
 {
   char ctmp[1024];
   sprintf(ctmp,"%d",value);
+  elem->set_attribute(name,ctmp);
+}
+
+void set_attribute_int32(xmlpp::Element* elem,const std::string& name,int32_t value)
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%d",value);
+  elem->set_attribute(name,ctmp);
+}
+
+void set_attribute_uint64(xmlpp::Element* elem,const std::string& name,uint64_t value)
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%ld",value);
+  elem->set_attribute(name,ctmp);
+}
+
+void set_attribute_int64(xmlpp::Element* elem,const std::string& name,int64_t value)
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%ld",value);
   elem->set_attribute(name,ctmp);
 }
 
@@ -444,11 +495,38 @@ void get_attribute_value_db_float(xmlpp::Element* elem,const std::string& name,f
     value = pow(10.0,0.05*tmpv);
 }
 
-void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value)
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,uint32_t& value)
 {
   std::string attv(elem->get_attribute_value(name));
   char* c;
-  double tmpv(strtod(attv.c_str(),&c));
+  long unsigned int tmpv(strtoul(attv.c_str(),&c,10));
+  if( c != attv.c_str() )
+    value = tmpv;
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,uint64_t& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  long unsigned int tmpv(strtoul(attv.c_str(),&c,10));
+  if( c != attv.c_str() )
+    value = tmpv;
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,int32_t& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  long int tmpv(strtol(attv.c_str(),&c,10));
+  if( c != attv.c_str() )
+    value = tmpv;
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,int64_t& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  long int tmpv(strtol(attv.c_str(),&c,10));
   if( c != attv.c_str() )
     value = tmpv;
 }

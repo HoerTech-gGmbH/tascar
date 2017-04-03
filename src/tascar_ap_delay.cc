@@ -3,7 +3,7 @@
 class delay_t : public TASCAR::audioplugin_base_t {
 public:
   delay_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig);
+  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
   ~delay_t();
@@ -39,7 +39,7 @@ delay_t::~delay_t()
 {
 }
 
-void delay_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& p0, double t, bool tp_rollinig)
+void delay_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& p0, const TASCAR::transport_t& tp)
 {
   if( dline ){
     for(uint32_t k=0;k<chunk.n;++k){

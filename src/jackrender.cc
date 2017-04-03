@@ -172,8 +172,11 @@ int TASCAR::render_rt_t::process(jack_nframes_t nframes,
                                 const std::vector<float*>& outBuffer, 
                                 uint32_t tp_frame, bool tp_rolling)
 {
-  double tp_time((double)tp_frame/(double)srate);
-  render_core_t::process(tp_time,nframes,tp_rolling,inBuffer,outBuffer);
+  TASCAR::transport_t tp;
+  tp.rolling = tp_rolling;
+  tp.time_samples = tp_frame;
+  tp.time_seconds = (double)tp_frame/(double)srate;
+  render_core_t::process(nframes,tp,inBuffer,outBuffer);
   return 0;
 }
 

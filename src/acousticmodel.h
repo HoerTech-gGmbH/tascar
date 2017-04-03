@@ -4,6 +4,23 @@
 #include "receivermod.h"
 #include "dynamicobjects.h"
 
+/*
+
+  new delayline concept:
+
+  source_base_t is base class of primary_source_t and
+  image_source_t. primary_source_t owns a delayline and feeds into
+  it. In "add_pointsource" audio will be read from delayline and
+  filtered according to acoustic model.
+
+  Delay Q
+  Reflection filter R -> reflectors
+  Air absorption A -> distance
+  Radiation directivity D -> (receiver-source)/O_source orientation
+  Receiver panning P -> (source-receiver)/O_receiver orientation
+ 
+ */
+
 namespace TASCAR {
 
   /** \brief Components relevant for the acoustic modelling
@@ -14,7 +31,7 @@ namespace TASCAR {
      */
     class pointsource_t {
     public:
-      pointsource_t(uint32_t chunksize,double maxdist_,uint32_t sincorder_);
+      pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_);
       virtual ~pointsource_t();
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return position; };
@@ -25,6 +42,7 @@ namespace TASCAR {
       bool active;
       bool direct;
       double maxdist;
+      double minlevel;
       uint32_t sincorder;
       uint32_t ismorder;
       TASCAR::levelmeter_t* rmslevel;
@@ -47,7 +65,7 @@ namespace TASCAR {
 
     class doorsource_t : public pointsource_t, public diffractor_t {
     public:
-      doorsource_t(uint32_t chunksize, double maxdist,uint32_t sincorder_);
+      doorsource_t(uint32_t chunksize, double maxdist,double minlevel,uint32_t sincorder_);
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       //void process();
       double inv_falloff;

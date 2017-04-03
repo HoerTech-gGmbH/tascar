@@ -120,25 +120,30 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
   if( k > 0 )
     nscale /= div[k-1];
   drawer.view.set_scale(nscale*res);
+  TASCAR::transport_t tp;
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
+    tp.time_seconds = time;
+    tp.time_samples = time;
     // s->geometry_update(time);
-    s->process(time,1,false,dIn,dOut);
-    s->process(time,1,false,dIn,dOut);
+    s->process(1,tp,dIn,dOut);
+    s->process(1,tp,dIn,dOut);
     draw(scene_draw_t::xy);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
+    tp.time_seconds = time;
+    tp.time_samples = time;
     //s->geometry_update(time);
-    s->process(time,1,false,dIn,dOut);
-    s->process(time,1,false,dIn,dOut);
+    s->process(1,tp,dIn,dOut);
+    s->process(1,tp,dIn,dOut);
     draw(scene_draw_t::xz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
     //s->geometry_update(time);
-    s->process(time,1,false,dIn,dOut);
-    s->process(time,1,false,dIn,dOut);
+    s->process(1,tp,dIn,dOut);
+    s->process(1,tp,dIn,dOut);
     draw(scene_draw_t::yz);
   }
   //for(uint32_t k=0;k<t.size();k++){

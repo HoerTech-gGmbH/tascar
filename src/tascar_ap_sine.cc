@@ -3,7 +3,7 @@
 class sine_t : public TASCAR::audioplugin_base_t {
 public:
   sine_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig);
+  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
 private:
   double f;
   double a;
@@ -17,10 +17,10 @@ sine_t::sine_t(xmlpp::Element* xmlsrc, const std::string& name, const std::strin
     t(0)
 {
   GET_ATTRIBUTE(f);
-  GET_ATTRIBUTE_DB(a);
+  GET_ATTRIBUTE_DBSPL(a);
 }
 
-void sine_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig)
+void sine_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   for(uint32_t k=0;k<chunk.n;++k){
     chunk.d[k] += a*sin(PI2*f*t);

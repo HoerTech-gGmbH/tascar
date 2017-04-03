@@ -95,6 +95,7 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
     distance(1.0),
     wnd_sqrt(false),
     maxdist(3700),
+    minlevel(0),
     sincorder(0),
     source(NULL)
 {
@@ -104,6 +105,7 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("distance",distance);
   dynobject_t::get_attribute_bool("wndsqrt",wnd_sqrt);
   dynobject_t::GET_ATTRIBUTE(maxdist);
+  dynobject_t::GET_ATTRIBUTE_DBSPL(minlevel);
   dynobject_t::GET_ATTRIBUTE(sincorder);
 }
 
@@ -117,6 +119,7 @@ void src_door_t::write_xml()
   dynobject_t::set_attribute("distance",distance);
   dynobject_t::set_attribute_bool("wndsqrt",wnd_sqrt);
   dynobject_t::SET_ATTRIBUTE(maxdist);
+  dynobject_t::SET_ATTRIBUTE_DBSPL(minlevel);
   dynobject_t::SET_ATTRIBUTE(sincorder);
 }
 
@@ -145,7 +148,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
     delete source;
   reset_meters();
   addmeter(fs);
-  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,sincorder);
+  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder);
   source->add_rmslevel(&(rmsmeter[0]));
   geometry_update(0);
   source->nonrt_set_rect(width,height);
@@ -158,6 +161,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   : audio_port_t(xmlsrc),local_position(0,0,0),
     chaindist(0),
     maxdist(3700),
+    minlevel(0),
     sincorder(0),
     parent(parent_),
     direct(true),
@@ -168,6 +172,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   get_attribute("z",local_position.z);
   get_attribute("d",chaindist);
   GET_ATTRIBUTE(maxdist);
+  GET_ATTRIBUTE_DBSPL(minlevel);
   GET_ATTRIBUTE(sincorder);
   get_attribute_bool("direct",direct);
   get_attribute("name",name);
@@ -178,8 +183,8 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
-      if( sne->get_name() == "plugin" )
-        plugins.push_back(new TASCAR::audioplugin_t(sne,name,(parent_?(parent_->get_name()):(""))));
+      //if( sne->get_name() == "plugin" )
+      plugins.push_back(new TASCAR::audioplugin_t(sne,name,(parent_?(parent_->get_name()):(""))));
     }
   }
 }
@@ -189,6 +194,7 @@ sound_t::sound_t(const sound_t& src)
     local_position(src.local_position),
     chaindist(src.chaindist),
     maxdist(src.maxdist),
+    minlevel(src.minlevel),
     sincorder(src.sincorder),
     parent(NULL),
     name(src.name),
@@ -207,14 +213,14 @@ sound_t::~sound_t()
     delete (*p);
 }
 
-void sound_t::process_plugins(double t,bool tp_rolling)
+void sound_t::process_plugins(const TASCAR::transport_t& tp)
 {
   if( source ){
     //DEBUG(plugins.size());
     for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
          p!= plugins.end();
          ++p)
-      (*p)->ap_process(source->audio,source->position,t,tp_rolling);
+      (*p)->ap_process(source->audio,source->position,tp);
   }
 }
 
@@ -232,7 +238,7 @@ void sound_t::prepare(double fs, uint32_t fragsize)
     delete source;
   for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
     (*p)->prepare(fs,fragsize);
-  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,sincorder);
+  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,minlevel,sincorder);
 }
 
 src_diffuse_t::~src_diffuse_t()
@@ -334,6 +340,7 @@ void audio_port_t::set_port_index(uint32_t port_index_)
 void sound_t::write_xml()
 {
   SET_ATTRIBUTE(maxdist);
+  SET_ATTRIBUTE_DBSPL(minlevel);
   SET_ATTRIBUTE(sincorder);
   e->set_attribute("name",name);
   if( local_position.x != 0 )
@@ -909,11 +916,11 @@ void sndfile_info_t::write_xml()
 {
   e->set_attribute("name",fname.c_str());
   if( firstchannel != 0 )
-    set_attribute_uint(e,"firstchannel",firstchannel);
+    set_attribute_uint32(e,"firstchannel",firstchannel);
   if( channels != 1 )
-    set_attribute_uint(e,"channels",channels);
+    set_attribute_uint32(e,"channels",channels);
   if( loopcnt != 1 )
-    set_attribute_uint(e,"loop",loopcnt);
+    set_attribute_uint32(e,"loop",loopcnt);
   if( gain != 0.0 )
     set_attribute_db("gain",gain);
 }

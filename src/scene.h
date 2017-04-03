@@ -212,6 +212,7 @@ namespace TASCAR {
       double distance;
       bool wnd_sqrt;
       double maxdist;
+      double minlevel;
       uint32_t sincorder;
       TASCAR::Acousticmodel::doorsource_t* get_source() { return source;};
     private:
@@ -240,12 +241,13 @@ namespace TASCAR {
       std::string get_name() const;
       void set_name(const std::string& n) {name = n;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
-      void process_plugins(double t,bool is_running);
+      void process_plugins(const TASCAR::transport_t& tp);
     private:
       pos_t local_position;
       double chaindist;
     public:
       double maxdist;
+      double minlevel;
       std::vector<TASCAR::audioplugin_t*> plugins;
     private:
       uint32_t sincorder;

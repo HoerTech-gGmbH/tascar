@@ -6,6 +6,14 @@
 
 namespace TASCAR {
 
+  class audiochunk_descriptor_t {
+  public:
+    audiochunk_descriptor_t(double samplingrate_=1,uint32_t length_=1,uint32_t channels_=1);
+    const double samplingrate;
+    const uint32_t length;
+    const uint32_t channels;
+  };
+
   /** \brief Class for single-channel time-domain audio chunks
    */
   class wave_t {
@@ -88,12 +96,19 @@ namespace TASCAR {
 
   class sndfile_t : public sndfile_handle_t, public wave_t {
   public:
-    sndfile_t(const std::string& fname,uint32_t channel=0);
+    sndfile_t(const std::string& fname,uint32_t channel=0,double start=0,double length=0);
+    void set_position(double position);
+    void set_iposition(int64_t position);
+    void set_loop(uint32_t loop);
+    void add_to_chunk(int64_t chunktime,wave_t& chunk);
     void add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk);
     void add_chunk_looped(float gain,wave_t& chunk);
   private:
     uint32_t looped_t;
     float looped_gain;
+    // position parameters:
+    int64_t iposition_;
+    uint32_t loop_;
   };
 
 }

@@ -15,6 +15,10 @@ The toolbox depends on the following libraries:
 - gtkmm-2.4 or gtkmm-3.0
 - libxml++-2.6
 - liblsl-dev
+- libfftw3-dev
+- libfftw3-single3
+- libfftw3-double3
+
 
 For de-installation, please type
 
@@ -22,7 +26,7 @@ sudo make uninstall
 
 On debian-based systems, the dependencies may be satisfied by typing:
 
-sudo apt-get install libxml++2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev
+sudo apt-get install libxml++2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev libfftw3-dev libfftw3-single3 libfftw3-double3
 
 To build a debian package of liblsl:
 

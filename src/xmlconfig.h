@@ -17,7 +17,10 @@ namespace TASCAR {
     // get attributes:
     void get_attribute(const std::string& name,std::string& value);
     void get_attribute(const std::string& name,double& value);
-    void get_attribute(const std::string& name,unsigned int& value);
+    void get_attribute(const std::string& name,uint32_t& value);
+    void get_attribute(const std::string& name,int32_t& value);
+    void get_attribute(const std::string& name,uint64_t& value);
+    void get_attribute(const std::string& name,int64_t& value);
     void get_attribute_bool(const std::string& name,bool& value);
     void get_attribute_db(const std::string& name,double& value);
     void get_attribute_dbspl(const std::string& name,double& value);
@@ -36,14 +39,17 @@ namespace TASCAR {
     void set_attribute(const std::string& name,const std::string& value);
     void set_attribute(const std::string& name,double value);
     void set_attribute_deg(const std::string& name,double value);
-    void set_attribute(const std::string& name,unsigned int value);
+    void set_attribute(const std::string& name,int32_t value);
+    void set_attribute(const std::string& name,uint32_t value);
+    void set_attribute(const std::string& name,int64_t value);
+    void set_attribute(const std::string& name,uint64_t value);
     void set_attribute(const std::string& name,const TASCAR::pos_t& value);
     void set_attribute(const std::string& name,const TASCAR::levelmeter_t::weight_t& value);
     void set_attribute(const std::string& name,const std::vector<TASCAR::pos_t>& value);
     void set_attribute(const std::string& name,const std::vector<std::string>& value);
     void set_attribute(const std::string& name,const std::vector<double>& value);
     void set_attribute(const std::string& name,const std::vector<int32_t>& value);
-    virtual void write_xml() = 0;
+    virtual void write_xml() {};
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
   protected:
@@ -78,7 +84,10 @@ namespace TASCAR {
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);
-void get_attribute_value(xmlpp::Element* elem,const std::string& name,unsigned int& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,uint32_t& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,int32_t& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,uint64_t& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,int64_t& value);
 void get_attribute_value_bool(xmlpp::Element* elem,const std::string& name,bool& value);
 void get_attribute_value_db(xmlpp::Element* elem,const std::string& name,double& value);
 void get_attribute_value_dbspl(xmlpp::Element* elem,const std::string& name,double& value);
@@ -95,7 +104,10 @@ void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value)
 void set_attribute_db(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_dbspl(xmlpp::Element* elem,const std::string& name,double value);
 void set_attribute_double(xmlpp::Element* elem,const std::string& name,double value);
-void set_attribute_uint(xmlpp::Element* elem,const std::string& name,unsigned int value);
+void set_attribute_uint32(xmlpp::Element* elem,const std::string& name,uint32_t value);
+void set_attribute_int32(xmlpp::Element* elem,const std::string& name,int32_t value);
+void set_attribute_uint64(xmlpp::Element* elem,const std::string& name,uint64_t value);
+void set_attribute_int64(xmlpp::Element* elem,const std::string& name,int64_t value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::pos_t& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<std::string>& value);

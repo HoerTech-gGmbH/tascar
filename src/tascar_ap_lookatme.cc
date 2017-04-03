@@ -4,7 +4,7 @@
 class lookatme_t : public TASCAR::audioplugin_base_t {
 public:
   lookatme_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig);
+  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -80,7 +80,7 @@ lookatme_t::~lookatme_t()
   lo_address_free(lo_addr);
 }
 
-void lookatme_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rollinig)
+void lookatme_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   rms = lpc1*rms + (1.0-lpc1)*chunk.rms();
   if( !levelpath.empty() )

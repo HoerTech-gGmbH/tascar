@@ -12,7 +12,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
-  artnetdmx levels2osc
+  artnetdmx levels2osc nearsensor
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\
@@ -23,7 +23,7 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   filterclass.o spectrum.o fft.o stft.o ola.o
 
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
-onsetdetector delay
+onsetdetector delay sndfile
 
 TEST_FILES = test_ngon test_sinc
 

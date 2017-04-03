@@ -3,7 +3,7 @@
 class identity_t : public TASCAR::audioplugin_base_t {
 public:
   identity_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname) : audioplugin_base_t(xmlsrc,name,parentname) {};
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, double t, bool tp_rolling)  {};
+  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)  {};
 };
 
 REGISTER_AUDIOPLUGIN(identity_t);
