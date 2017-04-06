@@ -28,16 +28,6 @@
 #include "cli.h"
 #include <fstream>
 
-void usage(struct option * opt)
-{
-  std::cout << "Usage:\n\ntascar_jackio [options] input.wav [ ports [...]]\n\nOptions:\n\n";
-  while( opt->name ){
-    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
-      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
-    opt++;
-  }
-}
-
 void store_stats(const std::string& statname,jackio_t& jio)
 {
   if( !statname.empty() ){
@@ -117,7 +107,8 @@ int main(int argc, char** argv)
         b_use_inputfile = false;
         break;
       case 'h':
-        usage(long_options);
+        //usage(long_options);
+        TASCAR::app_usage("tascar_jackio",long_options,"input.wav [ ports [...]]");
         return -1;
       case 'v':
         verbose = true;

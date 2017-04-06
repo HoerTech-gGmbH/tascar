@@ -1,5 +1,6 @@
 #include "cli.h"
 #include <iostream>
+#include "../build/tascarver.h"
 
 void TASCAR::app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg)
 {
@@ -9,6 +10,7 @@ void TASCAR::app_usage(const std::string& app_name,struct option * opt,const std
       "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
     opt++;
   }
+  std::cout << std::endl << "(version: " << TASCARVER << ")" << std::endl;
 }
 
 /*

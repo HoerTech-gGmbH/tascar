@@ -1,4 +1,13 @@
 #
+# versioning:
+#
+
+GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
+COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
+FULLVERSION=$(shell cat version)-$(COMMITHASH)$(GITMODIFIED)
+DEFFULLVERSION=$(shell echo "\#define TASCARVER \\\""$(FULLVERSION)"\\\"")
+
+#
 # main targets:
 #
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
@@ -12,7 +21,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
-  artnetdmx levels2osc nearsensor
+  artnetdmx levels2osc nearsensor dirgain
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\
@@ -87,10 +96,12 @@ LDLIBS += -ldl
 
 all: lib
 	mkdir -p build
+	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
 	$(MAKE) -C build -f ../Makefile $(BINFILES)
 
 lib:
 	mkdir -p build
+	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
 	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
 
 libtascar.a: $(OBJECTS)
@@ -174,6 +185,8 @@ tascar_ap_%.so: tascar_ap_%.cc
 
 tascar_ltcgen.so: EXTERNALS+=ltc
 
+fullversion:
+	echo $(FULLVERSION) >$@
 
 # Local Variables:
 # compile-command: "make"
