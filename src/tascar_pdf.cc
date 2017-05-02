@@ -123,8 +123,10 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
   TASCAR::transport_t tp;
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    tp.time_seconds = time;
-    tp.time_samples = time;
+    tp.session_time_seconds = time;
+    tp.session_time_samples = time;
+    tp.object_time_seconds = time;
+    tp.object_time_samples = time;
     // s->geometry_update(time);
     s->process(1,tp,dIn,dOut);
     s->process(1,tp,dIn,dOut);
@@ -132,8 +134,10 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
-    tp.time_seconds = time;
-    tp.time_samples = time;
+    tp.session_time_seconds = time;
+    tp.session_time_samples = time;
+    tp.object_time_seconds = time;
+    tp.object_time_samples = time;
     //s->geometry_update(time);
     s->process(1,tp,dIn,dOut);
     s->process(1,tp,dIn,dOut);

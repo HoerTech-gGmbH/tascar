@@ -73,12 +73,12 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
 
 void lipsync_t::add_variables( TASCAR::osc_server_t* srv )
 {
-  srv->add_double("/lipsync_paper/smoothing",&smoothing);    
-  srv->add_double("/lipsync_paper/vocalTract",&vocalTract);    
-  srv->add_double("/lipsync_paper/threshold",&threshold);    
-  srv->add_double("/lipsync_paper/maxspeechlevel",&maxspeechlevel);    
-  srv->add_double("/lipsync_paper/dynamicrange",&dynamicrange);    
-  srv->add_bool("/lipsync_paper/active",&active);    
+  srv->add_double("/smoothing",&smoothing);    
+  srv->add_double("/vocalTract",&vocalTract);    
+  srv->add_double("/threshold",&threshold);    
+  srv->add_double("/maxspeechlevel",&maxspeechlevel);    
+  srv->add_double("/dynamicrange",&dynamicrange);    
+  srv->add_bool("/active",&active);    
 }
 
 void lipsync_t::prepare(double srate,uint32_t fragsize)

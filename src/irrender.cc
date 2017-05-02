@@ -70,8 +70,10 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   }
   TASCAR::transport_t tp;
   tp.rolling = true;
-  tp.time_seconds = starttime;
-  tp.time_samples = starttime*fs;
+  tp.session_time_seconds = starttime;
+  tp.session_time_samples = starttime*fs;
+  tp.object_time_seconds = starttime;
+  tp.object_time_samples = starttime*fs;
   pscene->process(fragsize,tp,a_in,a_out);
   if( verbose_ )
     std::cerr << "rendering " << pscene->active_pointsources << " of " << pscene->total_pointsources << " point sources.\n";
@@ -94,8 +96,10 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
     sf_out.writef_float(sf_out_buf,fragsize);
     // increment time:
     if( b_dynamic ){
-      tp.time_samples += fragsize;
-      tp.time_seconds = ((double)tp.time_samples)/fs;
+      tp.session_time_samples += fragsize;
+      tp.session_time_seconds = ((double)tp.session_time_samples)/fs;
+      tp.object_time_samples += fragsize;
+      tp.object_time_seconds = ((double)tp.object_time_samples)/fs;
     }
   }
   // de-allocate render audio buffer:
@@ -136,8 +140,10 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
   }
   TASCAR::transport_t tp;
   tp.rolling = false;
-  tp.time_seconds = starttime;
-  tp.time_samples = starttime*fs;
+  tp.session_time_seconds = starttime;
+  tp.session_time_samples = starttime*fs;
+  tp.object_time_seconds = starttime;
+  tp.object_time_samples = starttime*fs;
   pscene->process(len,tp,a_in,a_out);
   if( verbose_ )
     std::cerr << "rendering " << pscene->active_pointsources << " of " << pscene->total_pointsources << " point sources.\n";

@@ -1,5 +1,6 @@
 #include "session.h"
 #include "jackclient.h"
+#include <string.h>
 
 #define SQRT12 0.70710678118654757274f
 
@@ -14,6 +15,7 @@ protected:
   double az0;
   double f6db;
   double fmin;
+  bool active;
 };
 
 dirgain_vars_t::dirgain_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
@@ -22,14 +24,16 @@ dirgain_vars_t::dirgain_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session
     az(0.0),
     az0(0.0),
     f6db(1000.0),
-    fmin(60)
+    fmin(60),
+    active(true)
 {
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(channels);
-  GET_ATTRIBUTE(az);
-  GET_ATTRIBUTE(az0);
+  GET_ATTRIBUTE_DEG(az);
+  GET_ATTRIBUTE_DEG(az0);
   GET_ATTRIBUTE(f6db);
   GET_ATTRIBUTE(fmin);
+  GET_ATTRIBUTE_BOOL(active);
 }
 
 dirgain_vars_t::~dirgain_vars_t()
@@ -60,6 +64,7 @@ dirgain_t::dirgain_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   session->add_double_degree("/"+id+"/az0",&az0);
   session->add_double("/"+id+"/f6db",&f6db);
   session->add_double("/"+id+"/fmin",&fmin);
+  session->add_bool("/"+id+"/active",&(dirgain_vars_t::active));
   for(uint32_t k=0;k<channels;++k){
     char ctmp[1024];
     sprintf(ctmp,"in.%d",k);
@@ -77,18 +82,24 @@ dirgain_t::~dirgain_t()
 
 int dirgain_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut)
 {
-  double wpow(log(exp(-M_PI*f6db/srate))/log(0.5));
-  double wmin(exp(-M_PI*fmin/srate));
-  for(uint32_t ch=0;ch<channels;++ch){
-    double w(pow(0.5-0.5*cos(az-az0-ch*kazscale),wpow));
-    if( w > wmin )
-      w = wmin;
-    if( !(w > EPSf) )
-      w = EPSf;
-    float dw((w - w_[ch])*dt);
-    for(uint32_t k=0;k<n;++k){
-      sOut[ch][k] = (state_[ch] = (sIn[ch][k]*(1.0f-w_[ch]) + state_[ch]*w_[ch]));
-      w_[ch] += dw;
+  if( dirgain_vars_t::active ){
+    double wpow(log(exp(-M_PI*f6db/srate))/log(0.5));
+    double wmin(exp(-M_PI*fmin/srate));
+    for(uint32_t ch=0;ch<channels;++ch){
+      double w(pow(0.5-0.5*cos(az-az0-ch*kazscale),wpow));
+      if( w > wmin )
+        w = wmin;
+      if( !(w > EPSf) )
+        w = EPSf;
+      float dw((w - w_[ch])*dt);
+      for(uint32_t k=0;k<n;++k){
+        sOut[ch][k] = (state_[ch] = (sIn[ch][k]*(1.0f-w_[ch]) + state_[ch]*w_[ch]));
+        w_[ch] += dw;
+      }
+    }
+  }else{
+    for(uint32_t ch=0;ch<channels;++ch){
+      memcpy( sOut[ch], sIn[ch], n*sizeof(float) );
     }
   }
   return 0;

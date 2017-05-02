@@ -5,7 +5,8 @@
 using namespace TASCAR;
 
 transport_t::transport_t()
-  : time_samples(0), time_seconds(0), rolling(false)
+  : session_time_samples(0), session_time_seconds(0), 
+    object_time_samples(0), object_time_seconds(0), rolling(false)
 {
 }
 
@@ -68,6 +69,7 @@ TASCAR::audioplugin_t::audioplugin_t(xmlpp::Element* xmlsrc, const std::string& 
   plugintype = e->get_name();
   if( plugintype == "plugin" )
     get_attribute("type",plugintype);
+  modname = plugintype;
   std::string libname("tascar_ap_");
   libname += plugintype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );

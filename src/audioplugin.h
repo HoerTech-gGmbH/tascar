@@ -9,8 +9,10 @@ namespace TASCAR {
   class transport_t {
   public:
     transport_t();
-    uint64_t time_samples;
-    double time_seconds;
+    uint64_t session_time_samples;
+    double session_time_seconds;
+    uint64_t object_time_samples;
+    double object_time_seconds;
     bool rolling;
   };
 
@@ -26,6 +28,7 @@ namespace TASCAR {
     void release_();
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
     const std::string& get_name() const { return name; };
+    const std::string& get_modname() const { return modname; };
   protected:
     double f_sample;
     double f_fragment;
@@ -33,6 +36,7 @@ namespace TASCAR {
     double t_fragment;
     uint32_t n_fragment;
     std::string name;
+    std::string modname;
   private:
     bool prepared;
   };

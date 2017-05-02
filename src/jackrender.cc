@@ -174,8 +174,10 @@ int TASCAR::render_rt_t::process(jack_nframes_t nframes,
 {
   TASCAR::transport_t tp;
   tp.rolling = tp_rolling;
-  tp.time_samples = tp_frame;
-  tp.time_seconds = (double)tp_frame/(double)srate;
+  tp.session_time_samples = tp_frame;
+  tp.session_time_seconds = (double)tp_frame/(double)srate;
+  tp.object_time_samples = tp_frame;
+  tp.object_time_seconds = (double)tp_frame/(double)srate;
   render_core_t::process(nframes,tp,inBuffer,outBuffer);
   return 0;
 }

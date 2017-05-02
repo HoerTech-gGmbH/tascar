@@ -243,6 +243,7 @@ namespace TASCAR {
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
       void process_plugins(const TASCAR::transport_t& tp);
     private:
+      double fs_;
       pos_t local_position;
       double chaindist;
     public:

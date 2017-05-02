@@ -153,8 +153,8 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     for(unsigned int k=0;k<receivermod_objects.size();k++){
       receivermod_objects[k]->clear_output();
     }
-    geometry_update(tp.time_seconds);
-    process_active(tp.time_seconds);
+    geometry_update(tp.session_time_seconds);
+    process_active(tp.session_time_seconds);
     // update audio ports (e.g., for level metering):
     // fill inputs:
     for(unsigned int k=0;k<sounds.size();k++){

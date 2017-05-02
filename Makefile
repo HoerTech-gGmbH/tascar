@@ -32,7 +32,7 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   filterclass.o spectrum.o fft.o stft.o ola.o
 
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
-onsetdetector delay sndfile
+onsetdetector delay sndfile spksim	
 
 TEST_FILES = test_ngon test_sinc
 
@@ -77,7 +77,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
 
 
-CXXFLAGS += -fPIC -Wall -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./ 
+CXXFLAGS += -fPIC -Wall -Wno-deprecated-declarations -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./ 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
 $(GUIOBJECTS): EXTERNALS += gtkmm-3.0

@@ -167,9 +167,13 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sou
   srv->add_method("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/lingain","f",osc_set_sound_gain_lin,s);
   srv->add_float_db("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/caliblevel",&(s->caliblevel));
   std::string oldpref(srv->get_prefix());
+  uint32_t k=0;
   for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=s->plugins.begin();iPlug!=s->plugins.end();++iPlug){
-    srv->set_prefix("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"");
+    char ctmp[1024];
+    sprintf(ctmp,"ap%d",k);
+    srv->set_prefix("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/"+ctmp+"/"+(*iPlug)->get_modname());
     (*iPlug)->add_variables( srv );
+    ++k;
   }
   srv->set_prefix(oldpref);
 }

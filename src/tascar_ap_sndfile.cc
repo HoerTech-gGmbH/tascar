@@ -15,6 +15,7 @@ protected:
   double level;
   bool triggered;
   bool transport;
+  bool mute;
 };
 
 ap_sndfile_cfg_t::ap_sndfile_cfg_t(xmlpp::Element* xmlsrc, const std::string& name_, const std::string& parentname)
@@ -27,7 +28,8 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(xmlpp::Element* xmlsrc, const std::string& na
     levelmode("rms"),
     level(0),
     triggered(false),
-    transport(true)
+    transport(true),
+    mute(false)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(channel);
@@ -36,9 +38,14 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(xmlpp::Element* xmlsrc, const std::string& na
   GET_ATTRIBUTE(length);
   GET_ATTRIBUTE(loop);
   GET_ATTRIBUTE(levelmode);
+  if( levelmode.empty() )
+    levelmode = "rms";
   GET_ATTRIBUTE_DB(level);
   GET_ATTRIBUTE_BOOL(triggered);
   GET_ATTRIBUTE_BOOL(transport);
+  GET_ATTRIBUTE_BOOL(mute);
+  if( start < 0 )
+    throw TASCAR::ErrMsg("file start time must be positive.");
 }
 
 class ap_sndfile_t : public ap_sndfile_cfg_t, public TASCAR::sndfile_t {
@@ -69,13 +76,13 @@ ap_sndfile_t::ap_sndfile_t(xmlpp::Element* xmlsrc, const std::string& name_, con
     set_loop(loop);
   }
   if( levelmode == "rms" )
-    operator*=( level*2e-4 / rms() );
+    operator*=( level*2e-5 / rms() );
   else
     if( levelmode == "peak" )
-      operator*=( level*2e-4 / maxabs() );
+      operator*=( level*2e-5 / maxabs() );
     else
       if( levelmode == "calib" )
-        operator*=( level*2e-4 );
+        operator*=( level*2e-5 );
       else
         throw TASCAR::ErrMsg("Invalid level mode \""+levelmode+"\". (sndfile)");
 }
@@ -87,7 +94,8 @@ ap_sndfile_t::~ap_sndfile_t()
 void ap_sndfile_t::add_variables( TASCAR::osc_server_t* srv )
 {
   if( triggered )
-    srv->add_uint( "/sndfile/loop", &triggeredloop );
+    srv->add_uint( "/loop", &triggeredloop );
+  srv->add_bool( "/mute", &mute );
 }
 
 void ap_sndfile_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
@@ -95,16 +103,16 @@ void ap_sndfile_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, c
   if( transport )
     ltp = tp;
   else
-    ltp.time_samples += chunk.n;
+    ltp.object_time_samples += chunk.n;
   if( triggered ){
     if( triggeredloop ){
-      set_iposition(ltp.time_samples);
+      set_iposition(ltp.object_time_samples);
       set_loop(triggeredloop);
       triggeredloop = 0;
     }
   }
-  if( tp.rolling || (!transport) )
-    add_to_chunk( ltp.time_samples, chunk );
+  if( (!mute) && (tp.rolling || (!transport)) )
+    add_to_chunk( ltp.object_time_samples, chunk );
 }
 
 REGISTER_AUDIOPLUGIN(ap_sndfile_t);

@@ -60,8 +60,8 @@ lookatme_t::lookatme_t(xmlpp::Element* xmlsrc, const std::string& name, const st
 
 void lookatme_t::add_variables( TASCAR::osc_server_t* srv )
 {
-  srv->add_bool("/lookatme/active",&active);    
-  srv->add_bool("/lookatme/discordantLS",&discordantLS);    
+  srv->add_bool("/active",&active);    
+  srv->add_bool("/discordantLS",&discordantLS);    
 }
 
 void lookatme_t::prepare(double srate,uint32_t fragsize)

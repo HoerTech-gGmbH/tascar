@@ -158,7 +158,8 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
  * sound_t
  */
 sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
-  : audio_port_t(xmlsrc),local_position(0,0,0),
+  : audio_port_t(xmlsrc),fs_(1),
+    local_position(0,0,0),
     chaindist(0),
     maxdist(3700),
     minlevel(0),
@@ -215,12 +216,17 @@ sound_t::~sound_t()
 
 void sound_t::process_plugins(const TASCAR::transport_t& tp)
 {
+  TASCAR::transport_t ltp(tp);
   if( source ){
     //DEBUG(plugins.size());
+    if( parent ){
+      ltp.object_time_seconds = ltp.session_time_seconds - parent->starttime;
+      ltp.object_time_samples = fs_ * ltp.object_time_seconds;
+    }
     for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
          p!= plugins.end();
          ++p)
-      (*p)->ap_process(source->audio,source->position,tp);
+      (*p)->ap_process(source->audio,source->position,ltp);
   }
 }
 
@@ -234,6 +240,7 @@ void sound_t::geometry_update(double t)
 
 void sound_t::prepare(double fs, uint32_t fragsize)
 {
+  fs_ = fs;
   if( source )
     delete source;
   for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
