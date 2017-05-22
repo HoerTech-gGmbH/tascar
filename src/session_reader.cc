@@ -16,6 +16,35 @@ TASCAR::tsc_reader_t::tsc_reader_t()
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
 }
 
+void add_includes( xmlpp::Element* e )
+{
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      if( sne->get_name() == "include" ){
+        std::string idocname(sne->get_attribute_value("name"));
+        if( !idocname.empty() ){
+          DEBUG(idocname);
+          TASCAR::xml_doc_t idoc(idocname,TASCAR::xml_doc_t::LOAD_FILE);
+          if( idoc.doc->get_root_node()->get_name() != e->get_name() ){
+            throw TASCAR::ErrMsg("Invalid root node \""+idoc.doc->get_root_node()->get_name()+"\" in include file \""+idocname+"\".\nexpected \""+e->get_name()+"\".");
+          }
+          xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
+          for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
+            xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
+            if( isne ){
+              e->import_node(isne);
+            }
+          }
+        }
+      }else{
+        add_includes( sne );
+      }
+    }
+  }
+}
+
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : xml_doc_t(filename_or_data,t),
     xml_element_t(doc->get_root_node())
@@ -36,23 +65,24 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   // add session-includes:
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "include")){
-      std::string idocname(sne->get_attribute_value("name"));
-      if( !idocname.empty() ){
-        xml_doc_t idoc(idocname,LOAD_FILE);
-        xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
-        for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
-          xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
-          if( isne ){
-            e->import_node(isne);
-          }
-        }
-      }
-    }
-  }
+  add_includes( e );
+  //xmlpp::Node::NodeList subnodes = e->get_children();
+  //for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+  //  xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+  //  if( sne && ( sne->get_name() == "include")){
+  //    std::string idocname(sne->get_attribute_value("name"));
+  //    if( !idocname.empty() ){
+  //      xml_doc_t idoc(idocname,LOAD_FILE);
+  //      xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
+  //      for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
+  //        xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
+  //        if( isne ){
+  //          e->import_node(isne);
+  //        }
+  //      }
+  //    }
+  //  }
+  //}
 }
 
 void TASCAR::tsc_reader_t::read_xml()

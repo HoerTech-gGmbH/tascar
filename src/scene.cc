@@ -165,7 +165,9 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
     minlevel(0),
     sincorder(0),
     parent(parent_),
-    direct(true),
+    //direct(true),
+    ismmin(0),
+    ismmax(2147483647),
     source(NULL)
 {
   get_attribute("x",local_position.x);
@@ -175,7 +177,9 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   GET_ATTRIBUTE(maxdist);
   GET_ATTRIBUTE_DBSPL(minlevel);
   GET_ATTRIBUTE(sincorder);
-  get_attribute_bool("direct",direct);
+  //get_attribute_bool("direct",direct);
+  GET_ATTRIBUTE(ismmin);
+  GET_ATTRIBUTE(ismmax);
   get_attribute("name",name);
   if( name.empty() )
     throw TASCAR::ErrMsg("Invalid empty sound name.");
@@ -199,7 +203,9 @@ sound_t::sound_t(const sound_t& src)
     sincorder(src.sincorder),
     parent(NULL),
     name(src.name),
-    direct(src.direct),
+    //direct(src.direct),
+    ismmin(src.ismmin),
+    ismmax(src.ismmax),
     source(NULL)
 {
 }
@@ -234,7 +240,9 @@ void sound_t::geometry_update(double t)
 {
   if( source ){
     source->position = get_pos_global(t);
-    source->direct = direct;
+    //source->direct = direct;
+    source->ismmin = ismmin;
+    source->ismmax = ismmax;
   }
 }
 

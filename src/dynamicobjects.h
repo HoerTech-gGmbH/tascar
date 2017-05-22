@@ -5,9 +5,21 @@
 
 namespace TASCAR {
 
+  class navmesh_t : public xml_element_t {
+  public:
+    navmesh_t(xmlpp::Element*);
+    ~navmesh_t();
+    void update_pos(TASCAR::pos_t& p);
+  private:
+    std::vector<TASCAR::ngon_t*> mesh;
+    double maxstep;
+    double zshift;
+  };
+
   class dynobject_t : public xml_element_t {
   public:
     dynobject_t(xmlpp::Element*);
+    ~dynobject_t();
     void write_xml();
     virtual void geometry_update(double t);
     pos_t get_location() const;
@@ -26,6 +38,7 @@ namespace TASCAR {
     c6dof_t c6dof_prev;
     xmlpp::Element* xml_location;
     xmlpp::Element* xml_orientation;
+    navmesh_t* navmesh;
   };
 
 }

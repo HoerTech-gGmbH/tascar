@@ -18,7 +18,13 @@ double mask_t::gain(const pos_t& p)
 }
 
 pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_)
-  : audio(chunksize), active(true), direct(true), maxdist(maxdist_), minlevel(minlevel_),sincorder(sincorder_),ismorder(0),rmslevel(NULL)
+  : audio(chunksize), active(true), 
+    //direct(true),     
+    ismmin(0),
+    ismmax(2147483647),
+    maxdist(maxdist_), 
+    minlevel(minlevel_),
+    sincorder(sincorder_),ismorder(0),rmslevel(NULL)
 {
 }
 
@@ -118,7 +124,9 @@ uint32_t acoustic_model_t::process()
       receiver_->active && 
       src_->active && 
       (!receiver_->gain_zero) && 
-      (src_->direct || (!receiver_->is_direct)) && 
+      //(src_->direct || (!receiver_->is_direct)) && 
+      (src_->ismmin <= src_->ismorder) &&
+      (src_->ismorder <= src_->ismmax) &&
       (receiver_->ismmin <= src_->ismorder) &&
       (src_->ismorder <= receiver_->ismmax)
       ){
@@ -487,7 +495,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     render_image(true),
     ismmin(0),
     ismmax(2147483647),
-    is_direct(true),
+    //is_direct(true),
     use_global_mask(true),
     diffusegain(1.0),
     falloff(-1.0),
@@ -513,7 +521,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   get_attribute_bool("point",render_point);
   get_attribute_bool("diffuse",render_diffuse);
   get_attribute_bool("image",render_image);
-  get_attribute_bool("isdirect",is_direct);
+  //get_attribute_bool("isdirect",is_direct);
   get_attribute_bool("globalmask",use_global_mask);
   get_attribute_db("diffusegain",diffusegain);
   GET_ATTRIBUTE(ismmin);
@@ -529,7 +537,7 @@ void receiver_t::write_xml()
   set_attribute_bool("point",render_point);
   set_attribute_bool("diffuse",render_diffuse);
   set_attribute_bool("image",render_image);
-  set_attribute_bool("isdirect",is_direct);
+  //set_attribute_bool("isdirect",is_direct);
   set_attribute_bool("globalmask",use_global_mask);
   set_attribute_db("diffusegain",diffusegain);
   SET_ATTRIBUTE(ismmin);

@@ -17,7 +17,7 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic
+  intensityvector vmic chmap
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\

@@ -30,6 +30,7 @@
 #include <string.h>
 #include <fstream>
 #include "errorhandling.h"
+#include "xmlconfig.h"
 
 static uint32_t cnt_interp = 0;
 
@@ -297,7 +298,7 @@ void track_t::load_from_gpx( const std::string& fname )
 {
   double ttinc(0);
   track_t track;
-  xmlpp::DomParser parser(fname);
+  xmlpp::DomParser parser(TASCAR::env_expand(fname));
   xmlpp::Element* root = parser.get_document()->get_root_node();
   if( root ){
     xmlpp::Node::NodeList xmltrack = root->get_children("trk");
@@ -329,10 +330,11 @@ void track_t::load_from_gpx( const std::string& fname )
 */
 void track_t::load_from_csv( const std::string& fname )
 {
+  std::string lfname(TASCAR::env_expand(fname));
   track_t track;
-  std::ifstream fh(fname.c_str());
+  std::ifstream fh(lfname.c_str());
   if( fh.fail() )
-    throw TASCAR::ErrMsg("Unable to open track csv file \""+fname+"\".");
+    throw TASCAR::ErrMsg("Unable to open track csv file \""+lfname+"\".");
   std::string v_tm, v_x, v_y, v_z;
   while( !fh.eof() ){
     getline(fh,v_tm,',');
@@ -357,7 +359,7 @@ void track_t::edit( xmlpp::Element* cmd )
   if( cmd ){
     std::string scmd(cmd->get_name());
     if( scmd == "load" ){
-      std::string filename = cmd->get_attribute_value("name");
+      std::string filename = TASCAR::env_expand(cmd->get_attribute_value("name"));
       std::string filefmt = cmd->get_attribute_value("format");
       if( filefmt == "gpx" ){
         load_from_gpx(filename);
@@ -368,7 +370,7 @@ void track_t::edit( xmlpp::Element* cmd )
         DEBUG(filefmt);
       }
     }else if( scmd == "save" ){
-      std::string filename = cmd->get_attribute_value("name");
+      std::string filename = TASCAR::env_expand(cmd->get_attribute_value("name"));
       std::ofstream ofs(filename.c_str());
       ofs << print_cart(",");
     }else if( scmd == "origin" ){
@@ -417,7 +419,7 @@ void track_t::edit( xmlpp::Element* cmd )
         double v(atof(vel.c_str()));
         set_velocity_const( v );
       }
-      std::string vel_fname(cmd->get_attribute_value("csvfile"));
+      std::string vel_fname(TASCAR::env_expand(cmd->get_attribute_value("csvfile")));
       std::string s_offset(cmd->get_attribute_value("start"));
       if( vel_fname.size() ){
         double v_offset(0);
@@ -527,8 +529,9 @@ void track_t::set_velocity_const( double v )
   prepare();
 }
 
-void track_t::set_velocity_csvfile( const std::string& fname, double offset )
+void track_t::set_velocity_csvfile( const std::string& fname_, double offset )
 {
+  std::string fname(TASCAR::env_expand(fname_));
   std::ifstream fh(fname.c_str());
   if( fh.fail() )
     throw TASCAR::ErrMsg("Unable to open velocity csv file \""+fname+"\".");

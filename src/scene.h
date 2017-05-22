@@ -254,7 +254,11 @@ namespace TASCAR {
       uint32_t sincorder;
       src_object_t* parent;
       std::string name;
-      bool direct;
+      //bool direct;
+    public:
+      uint32_t ismmin;
+      uint32_t ismmax;
+    private:
       // dynamically allocated source type. Allocated in "prepare",
       // type defined in xml_read:
       TASCAR::Acousticmodel::pointsource_t* source; 

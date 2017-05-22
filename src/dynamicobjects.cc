@@ -1,11 +1,76 @@
 #include "dynamicobjects.h"
+#include <fstream>
+#include "errorhandling.h"
+
+TASCAR::navmesh_t::navmesh_t(xmlpp::Element* xmlsrc)
+  : xml_element_t(xmlsrc),
+    maxstep(0.5),
+    zshift(0)
+{
+  std::string importraw;
+  GET_ATTRIBUTE(maxstep);
+  GET_ATTRIBUTE(importraw);
+  GET_ATTRIBUTE(zshift);
+  if( !importraw.empty() ){
+    std::ifstream rawmesh( TASCAR::env_expand(importraw).c_str() );
+    if( !rawmesh.good() )
+      throw TASCAR::ErrMsg("Unable to open mesh file \""+TASCAR::env_expand(importraw)+"\".");
+    while(!rawmesh.eof() ){
+      std::string meshline;
+      getline(rawmesh,meshline,'\n');
+      if( !meshline.empty() ){
+        TASCAR::ngon_t* p_face(new TASCAR::ngon_t());
+        p_face->nonrt_set(TASCAR::str2vecpos(meshline));
+        mesh.push_back(p_face);
+      }
+    }
+  }
+  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc,"faces"));
+  while(!txtmesh.eof() ){
+    std::string meshline;
+    getline(txtmesh,meshline,'\n');
+    if( !meshline.empty() ){
+      TASCAR::ngon_t* p_face(new TASCAR::ngon_t());
+      p_face->nonrt_set(TASCAR::str2vecpos(meshline));
+      mesh.push_back(p_face);
+    }
+  }
+  for(std::vector<TASCAR::ngon_t*>::iterator it=mesh.begin();it!=mesh.end();++it)
+    *(*it) += TASCAR::pos_t(0,0,zshift);
+}
+
+void TASCAR::navmesh_t::update_pos(TASCAR::pos_t& p)
+{
+  if( mesh.empty() )
+    return;
+  //p.z -= zshift;
+  TASCAR::pos_t pnearest(mesh[0]->nearest(p));
+  double dist((p.x-pnearest.x)*(p.x-pnearest.x) + (p.y-pnearest.y)*(p.y-pnearest.y) + 1e-3*(p.z-pnearest.z)*(p.z-pnearest.z));
+  for(std::vector<TASCAR::ngon_t*>::iterator it=mesh.begin();it!=mesh.end();++it){
+    TASCAR::pos_t pnl((*it)->nearest(p));
+    double ld((p.x-pnl.x)*(p.x-pnl.x) + (p.y-pnl.y)*(p.y-pnl.y) + 1e-3*(p.z-pnl.z)*(p.z-pnl.z));
+    if( (ld < dist) && (pnl.z-p.z <= maxstep) ){
+      pnearest = pnl;
+      dist = ld;
+    }
+  }
+  p = pnearest;
+  //p.z += zshift;
+}
+
+TASCAR::navmesh_t::~navmesh_t()
+{
+  for(std::vector<TASCAR::ngon_t*>::iterator it=mesh.begin();it!=mesh.end();++it)
+    delete (*it);
+}
 
 TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),
     starttime(0),
     c6dof(c6dof_),
     xml_location(NULL),
-    xml_orientation(NULL)
+    xml_orientation(NULL),
+    navmesh(NULL)
 {
   get_attribute("start",starttime);
   xmlpp::Node::NodeList subnodes = e->get_children();
@@ -44,6 +109,9 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
           it_old = it;
       }
     }
+    if( sne && (sne->get_name() == "navmesh") ){
+      navmesh = new TASCAR::navmesh_t(sne);
+    }
   }
   geometry_update(0);
   c6dof_prev = c6dof_;
@@ -69,9 +137,15 @@ void TASCAR::dynobject_t::geometry_update(double time)
   c6dof_prev = c6dof_;
   double ltime(time-starttime);
   c6dof_.p = location.interp(ltime);
+  TASCAR::pos_t ptmp(c6dof_.p);
   c6dof_.p += dlocation;
   c6dof_.o = orientation.interp(ltime);
   c6dof_.o += dorientation;
+  if( navmesh ){
+    navmesh->update_pos( c6dof_.p );
+    dlocation = c6dof_.p;
+    dlocation -= ptmp;
+  }
 }
 
 TASCAR::pos_t TASCAR::dynobject_t::get_location() const
@@ -94,6 +168,12 @@ void TASCAR::dynobject_t::get_6dof_prev(pos_t& p,zyx_euler_t& o) const
 {
   p = c6dof_prev.p;
   o = c6dof_prev.o;
+}
+
+TASCAR::dynobject_t::~dynobject_t()
+{
+  if( navmesh )
+    delete navmesh;
 }
 
 /*

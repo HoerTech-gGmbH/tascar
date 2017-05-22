@@ -40,7 +40,9 @@ namespace TASCAR {
       wave_t audio;
       pos_t position;
       bool active;
-      bool direct;
+      //bool direct;
+      uint32_t ismmin;
+      uint32_t ismmax;
       double maxdist;
       double minlevel;
       uint32_t sincorder;
@@ -128,7 +130,7 @@ namespace TASCAR {
       bool render_image;
       uint32_t ismmin;
       uint32_t ismmax;
-      bool is_direct;
+      //bool is_direct;
       bool use_global_mask;
       double diffusegain;
       double falloff;

@@ -123,7 +123,7 @@ void hoa2d_t::configure(double srate,uint32_t fragsize)
                                 (fftwf_complex*)s_encoded,NULL,1,nbins,
                                 s_decoded,NULL,1,channels,
                                 FFTW_ESTIMATE);
-  memset(s_encoded,0,sizeof(float)*fragsize*nbins);
+  memset(s_encoded,0,sizeof(float _Complex)*fragsize*nbins);
   memset(s_decoded,0,sizeof(float)*fragsize*channels);
   ordergain.resize(nbins);
   for(uint32_t m=0;m<=amb_order;++m){

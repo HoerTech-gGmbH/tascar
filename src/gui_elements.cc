@@ -303,6 +303,8 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       iam != scene_->world->acoustic_model.end();++iam){
     if( (*iam)->receiver_->size.is_null() && (*iam)->src_->active && 
         (*iam)->receiver_->active && 
+        ((*iam)->src_->ismmin <= (*iam)->src_->ismorder) && 
+        ((*iam)->src_->ismmax >= (*iam)->src_->ismorder) &&
         ((*iam)->receiver_->ismmin <= (*iam)->src_->ismorder) && 
         ((*iam)->receiver_->ismmax >= (*iam)->src_->ismorder) ){
       pos_t psrc(view((*iam)->effective_srcpos));
