@@ -10,19 +10,19 @@ transport_t::transport_t()
 {
 }
 
-audioplugin_base_t::audioplugin_base_t(xmlpp::Element* xmlsrc, const std::string& name_, const std::string& parentname)
-  : xml_element_t(xmlsrc),
+audioplugin_base_t::audioplugin_base_t( const audioplugin_cfg_t& cfg )
+  : xml_element_t(cfg.xmlsrc),
     f_sample(1),
     f_fragment(1),
     t_sample(1),
     t_fragment(1),
     n_fragment(1),
-    name(name_),
+    name(cfg.name),
     prepared(false)
 {
 }
 
-void audioplugin_base_t::prepare_(double srate,uint32_t fragsize)
+void audioplugin_base_t::prepare_( double srate, uint32_t fragsize )
 {
   if( prepared )
     release_();
@@ -47,43 +47,24 @@ audioplugin_base_t::~audioplugin_base_t()
   release_();
 }
 
-static void audioplugin_error(std::string errmsg)
-{
-  throw TASCAR::ErrMsg("Receiver module error: "+errmsg);
-}
+TASCAR_RESOLVER( audioplugin_base_t, const audioplugin_cfg_t& )
 
-#define RESOLVE(x) x ## _cb = (audioplugin_ ## x ## _t)dlsym(lib,"audioplugin_" #x);if(!x ## _cb) throw TASCAR::ErrMsg("Unable to resolve \"audioplugin_" #x "\" in audio plugin \""+plugintype+"\".")
 
-TASCAR::audioplugin_t::audioplugin_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parent_name )
-  : audioplugin_base_t(xmlsrc,name,parent_name),
+TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     lib(NULL),
-    libdata(NULL),
-    create_cb(NULL),
-    destroy_cb(NULL),
-    write_xml_cb(NULL),
-    process_cb(NULL),
-    prepare_cb(NULL),
-    release_cb(NULL),
-    add_variables_cb(NULL)
+    libdata(NULL)
 {
   plugintype = e->get_name();
   if( plugintype == "plugin" )
     get_attribute("type",plugintype);
-  modname = plugintype;
   std::string libname("tascar_ap_");
   libname += plugintype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );
   if( !lib )
-    throw TASCAR::ErrMsg("Unable to open receiver module \""+plugintype+"\": "+dlerror());
+    throw TASCAR::ErrMsg("Unable to open module \""+plugintype+"\": "+dlerror());
   try{
-    RESOLVE(create);
-    RESOLVE(destroy);
-    RESOLVE(write_xml);
-    RESOLVE(process);
-    RESOLVE(prepare);
-    RESOLVE(release);
-    RESOLVE(add_variables);
-    libdata = create_cb(xmlsrc,name,parent_name,audioplugin_error);
+    audioplugin_base_t_resolver( &libdata, cfg, lib, libname );
   }
   catch( ... ){
     dlclose(lib);
@@ -94,33 +75,32 @@ TASCAR::audioplugin_t::audioplugin_t(xmlpp::Element* xmlsrc, const std::string& 
 void TASCAR::audioplugin_t::write_xml()
 {
   set_attribute("type",plugintype);
-  if( write_xml_cb )
-    write_xml_cb(libdata,audioplugin_error);
+  libdata->write_xml();
 }
 
-void TASCAR::audioplugin_t::ap_process(wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void TASCAR::audioplugin_t::ap_process( wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp )
 {
-  process_cb( libdata, chunk, pos, tp, audioplugin_error );
+  libdata->ap_process( chunk, pos, tp );
 }
 
 void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)
 {
-  prepare_cb(libdata,srate,fragsize,audioplugin_error);
+  libdata->prepare( srate, fragsize );
 }
 
 void TASCAR::audioplugin_t::release()
 {
-  release_cb(libdata,audioplugin_error);
+  libdata->release();
 }
 
 void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  add_variables_cb(libdata,srv,audioplugin_error);
+  libdata->add_variables( srv );
 }
 
 TASCAR::audioplugin_t::~audioplugin_t()
 {
-  destroy_cb(libdata,audioplugin_error);
+  delete libdata;
   dlclose(lib);
 }
 

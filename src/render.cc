@@ -11,15 +11,16 @@ TASCAR::render_core_t::render_core_t(xmlpp::Element* xmlsrc)
     active_pointsources(0),
     active_diffusesources(0),
     total_pointsources(0),
-    total_diffusesources(0)
+    total_diffusesources(0),
+    is_prepared(false)
 {
   pthread_mutex_init( &mtx_world, NULL );
 }
 
 TASCAR::render_core_t::~render_core_t()
 {
-  if( world )
-    delete world;
+  if( is_prepared )
+    release();
   pthread_mutex_destroy( &mtx_world );
 }
 
@@ -119,6 +120,7 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
     world = new Acousticmodel::world_t(c,fs,fragsize,sources,diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder,b_0_14);
     total_pointsources = world->get_total_pointsource();
     total_diffusesources = world->get_total_diffusesource();
+    is_prepared = true;
     pthread_mutex_unlock( &mtx_world );
   }
   catch( ... ){
@@ -134,6 +136,7 @@ void TASCAR::render_core_t::release()
   if( world )
     delete world;
   world = NULL;
+  is_prepared = false;
   pthread_mutex_unlock( &mtx_world );
 }
 

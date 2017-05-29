@@ -3,7 +3,7 @@
 
 class levels2osc_t : public TASCAR::module_base_t {
 public:
-  levels2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  levels2osc_t( const TASCAR::module_cfg_t& cfg );
   ~levels2osc_t();
   void write_xml();
   virtual void configure(double srate,uint32_t fragsize);
@@ -20,8 +20,8 @@ private:
   std::vector<lsl::stream_outlet*> voutlet;
 };
 
-levels2osc_t::levels2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+levels2osc_t::levels2osc_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     ttl(1)
 {
   GET_ATTRIBUTE(url);

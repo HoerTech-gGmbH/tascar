@@ -5,7 +5,7 @@
 
 class foa2hoa_diff_t : public TASCAR::module_base_t, public jackc_t {
 public:
-  foa2hoa_diff_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  foa2hoa_diff_t( const TASCAR::module_cfg_t& cfg );
   ~foa2hoa_diff_t();
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
 private:
@@ -19,8 +19,8 @@ private:
   TASCAR::varidelay_t dy;
 };
 
-foa2hoa_diff_t::foa2hoa_diff_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+foa2hoa_diff_t::foa2hoa_diff_t( const TASCAR::module_cfg_t& cfg  )
+  : module_base_t( cfg ),
     //jackc_t(std::string(session->name)+std::string(".foa2hoa_diff")),
     jackc_t(std::string("foa2hoa_diff")),
     order(3),

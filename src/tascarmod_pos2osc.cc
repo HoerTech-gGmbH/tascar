@@ -2,7 +2,7 @@
 
 class pos2osc_t : public TASCAR::module_base_t {
 public:
-  pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  pos2osc_t( const TASCAR::module_cfg_t& cfg );
   ~pos2osc_t();
   void write_xml();
   void update(uint32_t frame, bool running);
@@ -16,8 +16,8 @@ private:
   std::vector<TASCAR::named_object_t> obj;
 };
 
-pos2osc_t::pos2osc_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+pos2osc_t::pos2osc_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     mode(0),
     ttl(1),
     transport(true)

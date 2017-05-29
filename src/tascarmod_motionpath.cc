@@ -2,7 +2,7 @@
 
 class motionpath_t : public TASCAR::actor_module_t {
 public:
-  motionpath_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  motionpath_t( const TASCAR::module_cfg_t& cfg );
   ~motionpath_t();
   void update(uint32_t frame, bool running);
   static int osc_go(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -34,8 +34,8 @@ void motionpath_t::go(double start,double end)
 }
 
 
-motionpath_t::motionpath_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : actor_module_t(xmlsrc,session),
+motionpath_t::motionpath_t( const TASCAR::module_cfg_t& cfg )
+  : actor_module_t( cfg ),
     time(0),
     stoptime(3153600000),// 100 years from now
     running(false),

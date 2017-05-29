@@ -366,9 +366,9 @@ world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointso
 world_t::~world_t()
 {
   if( acoustic_model.size() )
-    for(unsigned int k=acoustic_model.size()-1;k>0;k--)
-      if( acoustic_model[k] )
-        delete acoustic_model[k];
+    for( std::vector<acoustic_model_t*>::reverse_iterator it=acoustic_model.rbegin();it!=acoustic_model.rend();++it){
+      delete (*it);
+    }
   for(unsigned int k=0;k<diffuse_acoustic_model.size();++k)
     delete diffuse_acoustic_model[k];
 }
@@ -515,7 +515,8 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   previous_fade_gain(1),
   prelim_next_fade_gain(1),
   prelim_previous_fade_gain(1),
-  fade_gain(1)
+  fade_gain(1),
+  is_prepared(false)
 {
   GET_ATTRIBUTE(size);
   get_attribute_bool("point",render_point);
@@ -552,9 +553,28 @@ void receiver_t::prepare(double srate, uint32_t chunksize)
   dt = 1.0/std::max(1.0f,(float)chunksize);
   dt_sample = 1.0/srate;
   f_sample = srate;
+  if( is_prepared )
+    release();
+  for(uint32_t k=0;k<get_num_channels();k++){
+    outchannelsp.push_back(new wave_t(chunksize));
+    outchannels.push_back(wave_t(*(outchannelsp.back())));
+  }
+  is_prepared = true;
+}
+
+void receiver_t::release()
+{
   outchannels.clear();
-  for(uint32_t k=0;k<get_num_channels();k++)
-    outchannels.push_back(wave_t(chunksize));
+  for( uint32_t k=0;k<outchannelsp.size();++k)
+    delete outchannelsp[k];
+  outchannelsp.clear();
+  is_prepared = false;
+}
+
+receiver_t::~receiver_t()
+{
+  if( is_prepared )
+    release();
 }
 
 void receiver_t::clear_output()
@@ -674,12 +694,12 @@ void TASCAR::Acousticmodel::boundingbox_t::write_xml()
    \brief Apply diffraction model 
 
    \param p_src Source position
-   \param p_is Intersection position
    \param p_rec Receiver position
    \param audio Audio chunk
    \param c Speed of sound
    \param fs Sampling rate
    \param state Diffraction filter states
+   \param drywet Direct-to-diffracted ratio
 
    \return Effective source position
 

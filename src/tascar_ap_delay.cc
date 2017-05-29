@@ -2,7 +2,7 @@
 
 class delay_t : public TASCAR::audioplugin_base_t {
 public:
-  delay_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  delay_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
@@ -14,8 +14,8 @@ private:
   uint32_t pos;
 };
 
-delay_t::delay_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name,parentname),
+delay_t::delay_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     delay(1),
     dline(NULL),
     pos(0)

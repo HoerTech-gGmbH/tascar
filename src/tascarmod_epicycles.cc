@@ -40,7 +40,7 @@ namespace HoS {
 
   class parameter_t : public srvvars_t {
   public:
-    parameter_t(xmlpp::Element*,TASCAR::osc_server_t* o);
+    parameter_t( xmlpp::Element*, TASCAR::osc_server_t* o );
     ~parameter_t();
     void locate0( float time );
     void az(float az_);
@@ -311,7 +311,7 @@ void HoS::srvvars_t::write_xml()
 
 class epicycles_t : public TASCAR::actor_module_t, private HoS::parameter_t {
 public:
-  epicycles_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  epicycles_t( const TASCAR::module_cfg_t& cfg );
   ~epicycles_t();
   void configure(double srate,uint32_t fragsize);
   void update(uint32_t frame, bool running);
@@ -321,9 +321,9 @@ private:
   float phi_epi;
 };
 
-epicycles_t::epicycles_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : actor_module_t(xmlsrc,session),
-    HoS::parameter_t(xmlsrc,session),
+epicycles_t::epicycles_t( const TASCAR::module_cfg_t& cfg )
+  : actor_module_t( cfg ),
+    HoS::parameter_t( cfg.xmlsrc, cfg.session ),
     phi(0),
     phi_epi(0)
 {

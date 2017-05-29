@@ -40,7 +40,6 @@ namespace TASCAR {
       wave_t audio;
       pos_t position;
       bool active;
-      //bool direct;
       uint32_t ismmin;
       uint32_t ismmax;
       double maxdist;
@@ -113,8 +112,10 @@ namespace TASCAR {
     class receiver_t : public receivermod_t {
     public:
       receiver_t(xmlpp::Element* xmlsrc);
+      ~receiver_t();
       void write_xml();
       void prepare(double srate, uint32_t fragsize);
+      void release();
       void clear_output();
       void add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t*);
       void add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t*);
@@ -130,13 +131,13 @@ namespace TASCAR {
       bool render_image;
       uint32_t ismmin;
       uint32_t ismmax;
-      //bool is_direct;
       bool use_global_mask;
       double diffusegain;
       double falloff;
       double delaycomp;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
+      std::vector<wave_t*> outchannelsp;
       pos_t position;
       zyx_euler_t orientation;
       bool active;
@@ -162,6 +163,7 @@ namespace TASCAR {
       float prelim_previous_fade_gain;
       // current fade gain:
       float fade_gain;
+      bool is_prepared;
     };
 
     class filter_coeff_t {

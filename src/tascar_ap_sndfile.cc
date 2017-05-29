@@ -3,7 +3,7 @@
 
 class ap_sndfile_cfg_t : public TASCAR::audioplugin_base_t {
 public:
-  ap_sndfile_cfg_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg );
 protected:
   std::string name;
   uint32_t channel;
@@ -18,8 +18,8 @@ protected:
   bool mute;
 };
 
-ap_sndfile_cfg_t::ap_sndfile_cfg_t(xmlpp::Element* xmlsrc, const std::string& name_, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name_,parentname),
+ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     channel(0),
     start(0),
     position(0),
@@ -50,22 +50,18 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(xmlpp::Element* xmlsrc, const std::string& na
 
 class ap_sndfile_t : public ap_sndfile_cfg_t, public TASCAR::sndfile_t {
 public:
-  ap_sndfile_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg );
   ~ap_sndfile_t();
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
 private:
-  std::string sound_name;
-  std::string parent_name;
   uint32_t triggeredloop;
   TASCAR::transport_t ltp;
 };
 
-ap_sndfile_t::ap_sndfile_t(xmlpp::Element* xmlsrc, const std::string& name_, const std::string& parentname)
-  : ap_sndfile_cfg_t(xmlsrc,name_,parentname),
+ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : ap_sndfile_cfg_t( cfg ),
     TASCAR::sndfile_t(name,channel,start,length),
-    sound_name(name_),
-    parent_name(parentname),
     triggeredloop(0)
 {
   if( triggered ){

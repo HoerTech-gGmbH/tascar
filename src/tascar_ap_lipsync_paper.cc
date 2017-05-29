@@ -12,7 +12,7 @@
 
 class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
-  lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  lipsync_t( const TASCAR::audioplugin_cfg_t& );
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
@@ -40,8 +40,8 @@ private:
   bool was_active;
 };
 
-lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name,parentname),
+lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg)
+  : audioplugin_base_t( cfg ),
     smoothing(0.04),
     url("osc.udp://localhost:9999/"),
     scale(1,1,1),
@@ -49,7 +49,7 @@ lipsync_t::lipsync_t(xmlpp::Element* xmlsrc, const std::string& name, const std:
     threshold(0.5),
     maxspeechlevel(48),
     dynamicrange(165),
-    path_(std::string("/")+parentname),
+    path_(std::string("/")+cfg.parentname),
     numFormants(4),
     active(true),
     was_active(true)
@@ -84,7 +84,7 @@ void lipsync_t::add_variables( TASCAR::osc_server_t* srv )
 void lipsync_t::prepare(double srate,uint32_t fragsize)
 {
   // allocate FFT buffers:
-  stft = new TASCAR::stft_t(2*fragsize,2*fragsize,fragsize,TASCAR::stft_t::WND_BLACKMAN,0);
+  stft = new TASCAR::stft_t( 2*fragsize, 2*fragsize, fragsize, TASCAR::stft_t::WND_BLACKMAN, 0);
   uint32_t num_bins(stft->s.n_);
   // allocate buffer for processed smoothed log values:
   sSmoothedMag = new double[num_bins];

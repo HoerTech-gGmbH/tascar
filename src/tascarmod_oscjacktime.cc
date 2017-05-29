@@ -2,7 +2,7 @@
 
 class oscjacktime_t : public TASCAR::module_base_t {
 public:
-  oscjacktime_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  oscjacktime_t( const TASCAR::module_cfg_t& cfg );
   ~oscjacktime_t();
   void write_xml();
   void update(uint32_t frame, bool running);
@@ -13,8 +13,8 @@ private:
   lo_address target;
 };
 
-oscjacktime_t::oscjacktime_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+oscjacktime_t::oscjacktime_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     ttl(1)
 {
   GET_ATTRIBUTE(url);
@@ -42,7 +42,6 @@ oscjacktime_t::~oscjacktime_t()
   lo_address_free(target);
 }
 
-//int oscjacktime_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 void oscjacktime_t::update(uint32_t tp_frame, bool tp_rolling)
 {
   lo_send(target,path.c_str(),"f",tp_frame*t_sample);

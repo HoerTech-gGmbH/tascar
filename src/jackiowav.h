@@ -42,6 +42,8 @@ public:
      \param ofname Output file name
      \param ports Output and Input ports (the first N ports are assumed to be output ports, N = number of channels in input file)
      \param freewheel Optionally use freewheeling mode
+     \param autoconnect Automatically connect to hardware ports.
+     \param verbose Show more infos on console.
   */
   jackio_t(const std::string& ifname,const std::string& ofname,
 	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0, bool verbose = false);

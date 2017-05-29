@@ -40,6 +40,7 @@ namespace TASCAR {
     class route_t : public scene_node_base_t {
     public:
       route_t(xmlpp::Element*);
+      ~route_t();
       void write_xml();
       std::string get_name() const {return name;};
       bool get_mute() const {return mute;};
@@ -62,7 +63,7 @@ namespace TASCAR {
       float meter_tc;
       TASCAR::levelmeter_t::weight_t meter_weight;
     protected:
-      std::vector<TASCAR::levelmeter_t> rmsmeter;
+      std::vector<TASCAR::levelmeter_t*> rmsmeter;
       std::vector<float> meterval;
     };
 

@@ -1,12 +1,14 @@
 #include "audioplugin.h"
 
-class identity_t : public TASCAR::audioplugin_base_t {
+using namespace TASCAR;
+
+class identity_t : public audioplugin_base_t {
 public:
-  identity_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname) : audioplugin_base_t(xmlsrc,name,parentname) {};
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)  {};
+  identity_t( const audioplugin_cfg_t& cfg) : audioplugin_base_t( cfg ) {};
+  void ap_process( wave_t& chunk, const pos_t& pos, const transport_t& tp)  {};
 };
 
-REGISTER_AUDIOPLUGIN(identity_t);
+REGISTER_AUDIOPLUGIN( identity_t );
 
 /*
  * Local Variables:

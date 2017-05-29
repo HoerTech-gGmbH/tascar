@@ -2,7 +2,7 @@
 
 class pendulum_t : public TASCAR::actor_module_t {
 public:
-  pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  pendulum_t( const TASCAR::module_cfg_t& cfg );
   ~pendulum_t();
   void write_xml();
   void update(uint32_t frame, bool running);
@@ -14,8 +14,8 @@ private:
   TASCAR::pos_t distance;
 };
 
-pendulum_t::pendulum_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : actor_module_t(xmlsrc,session),
+pendulum_t::pendulum_t( const TASCAR::module_cfg_t& cfg )
+  : actor_module_t( cfg ),
     amplitude(45),
     frequency(0.5),
     decaytime(40),

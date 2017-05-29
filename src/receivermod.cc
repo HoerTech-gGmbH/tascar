@@ -2,28 +2,14 @@
 #include "errorhandling.h"
 #include <dlfcn.h>
 
-static void receivermod_error(std::string errmsg)
-{
-  throw TASCAR::ErrMsg("Receiver module error: "+errmsg);
-}
+using namespace TASCAR;
 
-#define RESOLVE(x) x ## _cb = (receivermod_ ## x ## _t)dlsym(lib,"receivermod_" #x);if(!x ## _cb) throw TASCAR::ErrMsg("Unable to resolve \"receivermod_" #x "\" in receiver module \""+receivertype+"\".")
+TASCAR_RESOLVER( receivermod_base_t, xmlpp::Element* );
 
-TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
-  : receivermod_base_t(xmlsrc),
+TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
+  : receivermod_base_t(cfg),
     lib(NULL),
-    libdata(NULL),
-    create_cb(NULL),
-    destroy_cb(NULL),
-    write_xml_cb(NULL),
-    add_pointsource_cb(NULL),
-    add_diffusesource_cb(NULL),
-    postproc_cb(NULL),
-    get_num_channels_cb(NULL),
-    get_channel_postfix_cb(NULL),
-    get_connections_cb(NULL),
-    configure_cb(NULL),
-    create_data_cb(NULL)
+    libdata(NULL)
 {
   get_attribute("type",receivertype);
   std::string libname("tascarreceiver_");
@@ -32,18 +18,7 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
   if( !lib )
     throw TASCAR::ErrMsg("Unable to open receiver module \""+receivertype+"\": "+dlerror());
   try{
-    RESOLVE(create);
-    RESOLVE(destroy);
-    RESOLVE(write_xml);
-    RESOLVE(add_pointsource);
-    RESOLVE(add_diffusesource);
-    RESOLVE(postproc);
-    RESOLVE(get_num_channels);
-    RESOLVE(get_channel_postfix);
-    RESOLVE(get_connections);
-    RESOLVE(configure);
-    RESOLVE(create_data);
-    libdata = create_cb(xmlsrc,receivermod_error);
+    receivermod_base_t_resolver( &libdata, cfg, lib, libname );
   }
   catch( ... ){
     dlclose(lib);
@@ -54,53 +29,52 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* xmlsrc)
 void TASCAR::receivermod_t::write_xml()
 {
   set_attribute("type",receivertype);
-  if( write_xml_cb )
-    write_xml_cb(libdata,receivermod_error);
+  libdata->write_xml();
 }
 
 void TASCAR::receivermod_t::add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
 {
-  add_pointsource_cb(libdata,prel,chunk,output,data,receivermod_error);
+  libdata->add_pointsource(prel,chunk,output,data);
 }
 
 void TASCAR::receivermod_t::add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
 {
-  add_diffusesource_cb(libdata,chunk,output,data,receivermod_error);
+  libdata->add_diffusesource(chunk,output,data);
 }
 
 void TASCAR::receivermod_t::postproc(std::vector<wave_t>& output)
 {
-  postproc_cb(libdata,output,receivermod_error);
+  libdata->postproc(output);
 }
 
 uint32_t TASCAR::receivermod_t::get_num_channels()
 {
-  return get_num_channels_cb(libdata,receivermod_error);
+  return libdata->get_num_channels();
 }
 
 std::string TASCAR::receivermod_t::get_channel_postfix(uint32_t channel)
 {
-  return get_channel_postfix_cb(libdata,channel,receivermod_error);
+  return libdata->get_channel_postfix(channel);
 }
 
 std::vector<std::string> TASCAR::receivermod_t::get_connections() const
 {
-  return get_connections_cb(libdata,receivermod_error);
+  return libdata->get_connections();
 }
 
 void TASCAR::receivermod_t::configure(double srate,uint32_t fragsize)
 {
-  configure_cb(libdata,srate,fragsize,receivermod_error);
+  libdata->configure(srate,fragsize);
 }
 
 TASCAR::receivermod_base_t::data_t* TASCAR::receivermod_t::create_data(double srate,uint32_t fragsize)
 {
-  return create_data_cb(libdata,srate,fragsize,receivermod_error);
+  return libdata->create_data(srate,fragsize);
 }
 
 TASCAR::receivermod_t::~receivermod_t()
 {
-  destroy_cb(libdata,receivermod_error);
+  delete libdata;
   dlclose(lib);
 }
 

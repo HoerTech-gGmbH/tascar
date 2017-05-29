@@ -41,7 +41,7 @@ void lsl_sender_t::send(double time)
 
 class lsljacktime_vars_t : public TASCAR::module_base_t {
 public:
-  lsljacktime_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  lsljacktime_vars_t( const TASCAR::module_cfg_t& cfg );
   ~lsljacktime_vars_t();
 protected:
   bool sendwhilestopped;
@@ -49,13 +49,13 @@ protected:
 
 class lsljacktime_t : public lsljacktime_vars_t, public lsl_sender_t {
 public:
-  lsljacktime_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  lsljacktime_t( const TASCAR::module_cfg_t& cfg );
   ~lsljacktime_t();
   virtual void update(uint32_t frame,bool running);
 };
 
-lsljacktime_vars_t::lsljacktime_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+lsljacktime_vars_t::lsljacktime_vars_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     sendwhilestopped(false)
 {
   GET_ATTRIBUTE_BOOL(sendwhilestopped);
@@ -65,8 +65,8 @@ lsljacktime_vars_t::~lsljacktime_vars_t()
 {
 }
 
-lsljacktime_t::lsljacktime_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : lsljacktime_vars_t(xmlsrc,session),
+lsljacktime_t::lsljacktime_t( const TASCAR::module_cfg_t& cfg )
+  : lsljacktime_vars_t( cfg ),
     lsl_sender_t(0)
 {
 }

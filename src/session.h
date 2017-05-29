@@ -8,9 +8,16 @@ namespace TASCAR {
 
   class session_t;
 
+  class module_cfg_t {
+  public:
+    module_cfg_t(xmlpp::Element* xmlsrc, TASCAR::session_t* session_ );
+    TASCAR::session_t* session;
+    xmlpp::Element* xmlsrc;
+  };
+
   class module_base_t : public xml_element_t {
   public:
-    module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session_);
+    module_base_t( const module_cfg_t& cfg );
     virtual void write_xml();
     virtual ~module_base_t();
     /**
@@ -30,16 +37,16 @@ namespace TASCAR {
     uint32_t n_fragment;
   };
 
-  typedef void (*module_error_t)(std::string errmsg);
-  typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
-  typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
-  typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
-  typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun,uint32_t frame,bool running);
-  typedef void (*module_configure_t)(TASCAR::module_base_t* h,module_error_t errfun,double srate,uint32_t fragsize);
+  //typedef void (*module_error_t)(std::string errmsg);
+  //typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
+  //typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
+  //typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
+  //typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun,uint32_t frame,bool running);
+  //typedef void (*module_configure_t)(TASCAR::module_base_t* h,module_error_t errfun,double srate,uint32_t fragsize);
 
   class module_t : public TASCAR::xml_element_t {
   public:
-    module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+    module_t( const TASCAR::module_cfg_t& cfg );
     void write_xml();
     virtual ~module_t();
     void configure(double srate,uint32_t fragsize);
@@ -47,14 +54,13 @@ namespace TASCAR {
   private:
     std::string name;
     void* lib;
-    bool is_initialized;
-    bool is_configured;
     TASCAR::module_base_t* libdata;
-    module_create_t create_cb;
-    module_destroy_t destroy_cb;
-    module_write_xml_t write_xml_cb;
-    module_update_t update_cb;
-    module_configure_t configure_cb;
+    bool is_configured;
+    //module_create_t create_cb;
+    //module_destroy_t destroy_cb;
+    //module_write_xml_t write_xml_cb;
+    //module_update_t update_cb;
+    //module_configure_t configure_cb;
   };
 
   class connection_t : public TASCAR::xml_element_t {
@@ -131,7 +137,7 @@ namespace TASCAR {
 
   class actor_module_t : public module_base_t {
   public:
-    actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session,bool fail_on_empty=false);
+    actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty=false );
     virtual ~actor_module_t();
     void write_xml();
     void set_location(const TASCAR::pos_t& l);
@@ -145,67 +151,7 @@ namespace TASCAR {
 
 }
 
-#define REGISTER_MODULE(x)                                              \
-  extern "C" {                                                          \
-    TASCAR::module_base_t* tascar_create(xmlpp::Element* xmlsrc,TASCAR::session_t* session,TASCAR::module_error_t errfun) \
-    {                                                                   \
-      try {                                                             \
-        return new x(xmlsrc,session);                                   \
-      }                                                                 \
-      catch(const std::exception& e){                                   \
-        errfun(e.what());                                               \
-        return NULL;                                                    \
-      }                                                                 \
-    }                                                                   \
-    void tascar_destroy(TASCAR::module_base_t* h,TASCAR::module_error_t errfun) \
-    {                                                                   \
-      x* ptr(dynamic_cast<x*>(h));                                      \
-      if( ptr )                                                         \
-        delete ptr;                                                     \
-      else                                                              \
-        errfun("Invalid library class pointer (destroy).");             \
-    }                                                                   \
-    void tascar_write_xml(TASCAR::module_base_t* h,TASCAR::module_error_t errfun) \
-    {                                                                   \
-      x* ptr(dynamic_cast<x*>(h));                                      \
-      if( ptr ){                                                        \
-        try {                                                           \
-          ptr->write_xml();                                             \
-        }                                                               \
-        catch(const std::exception&e ){                                 \
-          errfun(e.what());                                             \
-        }                                                               \
-      }else                                                             \
-        errfun("Invalid library class pointer (write_xml).");           \
-    }                                                                   \
-    void tascar_update(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,uint32_t frame,bool running) \
-    {                                           \
-      x* ptr(dynamic_cast<x*>(h));              \
-      if( ptr ){                                \
-        try {                                   \
-          ptr->update(frame,running);               \
-        }                                       \
-        catch(const std::exception&e ){         \
-          errfun(e.what());                     \
-        }                                       \
-      }else                                     \
-        errfun("Invalid library class pointer (update)."); \
-    }                                           \
-    void tascar_configure(TASCAR::module_base_t* h,TASCAR::module_error_t errfun,double srate,uint32_t fragsize) \
-    {                                           \
-      x* ptr(dynamic_cast<x*>(h));              \
-      if( ptr ){                                \
-        try {                                   \
-          ptr->configure_(srate,fragsize);        \
-        }                                       \
-        catch(const std::exception&e ){         \
-          errfun(e.what());                     \
-        }                                       \
-      }else                                     \
-        errfun("Invalid library class pointer (configure)."); \
-    }                                           \
-  }
-
+#define REGISTER_MODULE(x) TASCAR_PLUGIN( module_base_t, const module_cfg_t&, x )
 
 #endif
 

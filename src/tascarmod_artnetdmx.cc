@@ -56,7 +56,7 @@ void artnetDMX_t::send(uint8_t universe, const std::vector<uint16_t>& data)
 
 class artnetdmx_vars_t : public TASCAR::actor_module_t {
 public:
-  artnetdmx_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  artnetdmx_vars_t( const TASCAR::module_cfg_t& cfg );
   virtual ~artnetdmx_vars_t();
 protected:
   // config variables:
@@ -72,11 +72,11 @@ protected:
   TASCAR::named_object_t parentobj;
 };
 
-artnetdmx_vars_t::artnetdmx_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : actor_module_t(xmlsrc,session,false), 
+artnetdmx_vars_t::artnetdmx_vars_t( const TASCAR::module_cfg_t& cfg )
+  : actor_module_t( cfg, false ), 
     fps(30),
     universe(1),
-    fixtures(xmlsrc,"fixture"),
+    fixtures(cfg.xmlsrc,"fixture"),
     channels(4),
     parentobj(NULL,"")
 {
@@ -102,7 +102,7 @@ artnetdmx_vars_t::~artnetdmx_vars_t()
 
 class mod_artnetdmx_t : public artnetdmx_vars_t, public artnetDMX_t, public TASCAR::service_t {
 public:
-  mod_artnetdmx_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  mod_artnetdmx_t( const TASCAR::module_cfg_t& cfg );
   virtual ~mod_artnetdmx_t();
   virtual void update(uint32_t frame,bool running);
   virtual void service();
@@ -150,8 +150,8 @@ int mod_artnetdmx_t::osc_setw(const char *path, const char *types, lo_arg **argv
   return 0;
 }
 
-mod_artnetdmx_t::mod_artnetdmx_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : artnetdmx_vars_t(xmlsrc,session),
+mod_artnetdmx_t::mod_artnetdmx_t( const TASCAR::module_cfg_t& cfg )
+  : artnetdmx_vars_t( cfg ),
     artnetDMX_t(hostname.c_str(), port.c_str())
 {
   if( fixtures.size() == 0 )

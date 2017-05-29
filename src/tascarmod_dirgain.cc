@@ -6,7 +6,7 @@
 
 class dirgain_vars_t : public TASCAR::module_base_t {
 public:
-  dirgain_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  dirgain_vars_t( const TASCAR::module_cfg_t& cfg );
   ~dirgain_vars_t();
 protected:
   std::string id;
@@ -18,8 +18,8 @@ protected:
   bool active;
 };
 
-dirgain_vars_t::dirgain_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+dirgain_vars_t::dirgain_vars_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     channels(1),
     az(0.0),
     az0(0.0),
@@ -42,7 +42,7 @@ dirgain_vars_t::~dirgain_vars_t()
 
 class dirgain_t : public dirgain_vars_t, public jackc_t {
 public:
-  dirgain_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  dirgain_t( const TASCAR::module_cfg_t& cfg );
   ~dirgain_t();
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
 private:
@@ -52,8 +52,8 @@ private:
   float kazscale;
 };
 
-dirgain_t::dirgain_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : dirgain_vars_t(xmlsrc,session),
+dirgain_t::dirgain_t( const TASCAR::module_cfg_t& cfg )
+  : dirgain_vars_t( cfg ),
     jackc_t(id),
     w_(channels,0.0f),
     state_(channels,0.0f),

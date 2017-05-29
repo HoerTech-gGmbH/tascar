@@ -2,22 +2,27 @@
 
 class sine_t : public TASCAR::audioplugin_base_t {
 public:
-  sine_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  sine_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  ~sine_t();
 private:
   double f;
   double a;
   double t;
 };
 
-sine_t::sine_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name,parentname),
+sine_t::sine_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     f(1000),
     a(0.001),
     t(0)
 {
   GET_ATTRIBUTE(f);
   GET_ATTRIBUTE_DBSPL(a);
+}
+
+sine_t::~sine_t()
+{
 }
 
 void sine_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)

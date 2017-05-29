@@ -25,15 +25,15 @@ void sound_var_t::write_xml()
 
 class sampler_var_t : public TASCAR::module_base_t {
 public:
-  sampler_var_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  sampler_var_t( const TASCAR::module_cfg_t& cfg );
   void write_xml();
   std::string multicast;
   std::string port;
   std::vector<sound_var_t> sounds;
 };
 
-sampler_var_t::sampler_var_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session)
+sampler_var_t::sampler_var_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg )
 {
   GET_ATTRIBUTE(multicast);
   GET_ATTRIBUTE(port);
@@ -57,12 +57,12 @@ void sampler_var_t::write_xml()
 
 class sampler_mod_t : public sampler_var_t, public TASCAR::sampler_t {
 public:
-  sampler_mod_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  sampler_mod_t( const TASCAR::module_cfg_t& cfg );
   ~sampler_mod_t();
 };
 
-sampler_mod_t::sampler_mod_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : sampler_var_t(xmlsrc,session),
+sampler_mod_t::sampler_mod_t( const TASCAR::module_cfg_t& cfg)
+  : sampler_var_t( cfg ),
     TASCAR::sampler_t(jacknamer(session->name,"sampler."),multicast,port)
 {
   for(std::vector<sound_var_t>::iterator it=sampler_var_t::sounds.begin();it!=sampler_var_t::sounds.end();++it)

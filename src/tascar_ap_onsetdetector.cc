@@ -3,7 +3,7 @@
 
 class onsetdetector_t : public TASCAR::audioplugin_base_t {
 public:
-  onsetdetector_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
@@ -30,8 +30,8 @@ private:
   double time_since_last;
 };
 
-onsetdetector_t::onsetdetector_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name,parentname),
+onsetdetector_t::onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     tau(1),
     taumin(0.05),
     fadelen(1),

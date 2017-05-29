@@ -17,7 +17,7 @@ wave_t::wave_t(uint32_t chunksize)
     append_pos(0),
     rmsscale(1.0f)
 {
-  clear();
+  memset(d,0,sizeof(float)*std::max(1u,n));
   rmsscale = 1.0f/(float)n;
 }
 
@@ -34,6 +34,7 @@ wave_t::wave_t(const wave_t& src)
     n(src.n), own_pointer(true), append_pos(src.append_pos),
     rmsscale(1.0f)
 {
+  memset(d,0,sizeof(float)*std::max(1u,src.n));
   for(uint32_t k=0;k<n;++k)
     d[k] = src.d[k];
   rmsscale = 1.0f/(float)n;
@@ -288,6 +289,8 @@ void wave_t::operator*=(const wave_t& o)
 
 void wave_t::append(const wave_t& src)
 {
+  if( (src.n == 0) || (n == 0) )
+    return;
   if( src.n < n ){
     // copy from append_pos to end:
     uint32_t n1(std::min(n-append_pos,src.n));

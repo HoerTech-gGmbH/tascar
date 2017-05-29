@@ -149,7 +149,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
   reset_meters();
   addmeter(fs);
   source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder);
-  source->add_rmslevel(&(rmsmeter[0]));
+  source->add_rmslevel(rmsmeter[0]);
   geometry_update(0);
   source->nonrt_set_rect(width,height);
 }
@@ -165,7 +165,6 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
     minlevel(0),
     sincorder(0),
     parent(parent_),
-    //direct(true),
     ismmin(0),
     ismmax(2147483647),
     source(NULL)
@@ -177,7 +176,6 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   GET_ATTRIBUTE(maxdist);
   GET_ATTRIBUTE_DBSPL(minlevel);
   GET_ATTRIBUTE(sincorder);
-  //get_attribute_bool("direct",direct);
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
   get_attribute("name",name);
@@ -189,7 +187,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
       //if( sne->get_name() == "plugin" )
-      plugins.push_back(new TASCAR::audioplugin_t(sne,name,(parent_?(parent_->get_name()):(""))));
+      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,(parent_?(parent_->get_name()):("")))));
     }
   }
 }
@@ -203,7 +201,6 @@ sound_t::sound_t(const sound_t& src)
     sincorder(src.sincorder),
     parent(NULL),
     name(src.name),
-    //direct(src.direct),
     ismmin(src.ismmin),
     ismmax(src.ismmax),
     source(NULL)
@@ -224,7 +221,6 @@ void sound_t::process_plugins(const TASCAR::transport_t& tp)
 {
   TASCAR::transport_t ltp(tp);
   if( source ){
-    //DEBUG(plugins.size());
     if( parent ){
       ltp.object_time_seconds = ltp.session_time_seconds - parent->starttime;
       ltp.object_time_samples = fs_ * ltp.object_time_seconds;
@@ -240,7 +236,6 @@ void sound_t::geometry_update(double t)
 {
   if( source ){
     source->position = get_pos_global(t);
-    //source->direct = direct;
     source->ismmin = ismmin;
     source->ismmax = ismmax;
   }
@@ -276,7 +271,7 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
     delete source;
   reset_meters();
   addmeter(fs);
-  source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize,rmsmeter[0]);
+  source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize,*(rmsmeter[0]));
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
@@ -428,7 +423,7 @@ void src_object_t::prepare(double fs, uint32_t fragsize)
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
     addmeter(fs);
     (*it)->prepare(fs,fragsize);
-    (*it)->get_source()->add_rmslevel(&(rmsmeter.back()));
+    (*it)->get_source()->add_rmslevel((rmsmeter.back()));
   }
   startframe = fs*starttime;
 }
@@ -636,7 +631,7 @@ void receivermod_object_t::postproc(std::vector<wave_t>& output)
     throw TASCAR::ErrMsg("Programming error");
   }
   for(uint32_t k=0;k<output.size();k++)
-    rmsmeter[k].update(output[k]);
+    rmsmeter[k]->update(output[k]);
 }
 
 void receivermod_object_t::geometry_update(double t)
@@ -757,8 +752,14 @@ void route_t::reset_meters()
 
 void route_t::addmeter( float fs )
 {
-  rmsmeter.push_back(TASCAR::levelmeter_t(fs,meter_tc,meter_weight));
+  rmsmeter.push_back(new TASCAR::levelmeter_t(fs,meter_tc,meter_weight));
   meterval.push_back(0);
+}
+
+route_t::~route_t()
+{
+  for(uint32_t k=0;k<rmsmeter.size();++k)
+    delete rmsmeter[k];
 }
 
 void route_t::configure_meter( float tc, TASCAR::levelmeter_t::weight_t w )
@@ -770,7 +771,7 @@ void route_t::configure_meter( float tc, TASCAR::levelmeter_t::weight_t w )
 const std::vector<float>& route_t::readmeter()
 {
   for(uint32_t k=0;k<rmsmeter.size();k++)
-    meterval[k] = rmsmeter[k].spldb();
+    meterval[k] = rmsmeter[k]->spldb();
   return meterval;
 }
 

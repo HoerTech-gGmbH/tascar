@@ -3,7 +3,7 @@
 
 class lookatme_t : public TASCAR::audioplugin_base_t {
 public:
-  lookatme_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  lookatme_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
@@ -30,13 +30,13 @@ private:
   bool discordantLS;
 };
 
-lookatme_t::lookatme_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name,parentname),
+lookatme_t::lookatme_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     tau(1),
     fadelen(1),
     threshold(0.01),
     url("osc.udp://localhost:9999/"),
-    self_(parentname),
+    self_(cfg.parentname),
     lpc1(0.0),
     rms(0.0),
     waslooking(false),

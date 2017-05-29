@@ -72,7 +72,7 @@ TASCAR::audioplayer_t::~audioplayer_t()
 int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
   for(uint32_t ch=0;ch<outBuffer.size();ch++)
-    memset(outBuffer[ch],0,nframes*sizeof(float));
+    memmove(outBuffer[ch],inBuffer[ch],nframes*sizeof(float));
   for(uint32_t k=0;k<files.size();k++){
     uint32_t numchannels(infos[k].channels);
     float* dp[numchannels];
@@ -106,11 +106,15 @@ void TASCAR::audioplayer_t::open_files()
         char pname[1024];
         sprintf(pname,"%s.%d.%d",infos[k].parentname.c_str(),infos[k].objectchannel,ch);
         add_output_port(pname);
+        sprintf(pname,"%s.%d.%d.in",infos[k].parentname.c_str(),infos[k].objectchannel,ch);
+        add_input_port(pname);
       }
     }else{
       char pname[1024];
       sprintf(pname,"%s.%d",infos[k].parentname.c_str(),infos[k].objectchannel);
       add_output_port(pname);
+      sprintf(pname,"%s.%d.in",infos[k].parentname.c_str(),infos[k].objectchannel);
+      add_input_port(pname);
     }
   }
 }

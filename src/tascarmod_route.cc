@@ -5,7 +5,7 @@
 
 class route_vars_t : public TASCAR::module_base_t {
 public:
-  route_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  route_vars_t( const TASCAR::module_cfg_t& cfg );
   ~route_vars_t();
 protected:
   std::string id;
@@ -15,14 +15,14 @@ protected:
 
 class route_t : public route_vars_t, public jackc_t {
 public:
-  route_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  route_t( const TASCAR::module_cfg_t& cfg );
   ~route_t();
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
 private:
 };
 
-route_vars_t::route_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+route_vars_t::route_vars_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     channels(1),
     gain(1.0)
 {
@@ -31,8 +31,8 @@ route_vars_t::route_vars_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   GET_ATTRIBUTE_DB(gain);
 }
 
-route_t::route_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : route_vars_t(xmlsrc,session),
+route_t::route_t( const TASCAR::module_cfg_t& cfg )
+  : route_vars_t( cfg ),
     jackc_t(id)
 {
   session->add_double_db("/"+id+"/gain",&gain);

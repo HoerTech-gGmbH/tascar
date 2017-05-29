@@ -43,6 +43,8 @@ namespace TASCAR {
     uint32_t active_diffusesources;
     uint32_t total_pointsources;
     uint32_t total_diffusesources;
+  private:
+    bool is_prepared;
   };
 
 

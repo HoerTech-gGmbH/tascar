@@ -9,22 +9,25 @@
 #include <fnmatch.h>
 #include <locale.h>
 
-static void module_error(std::string errmsg)
-{
-  throw TASCAR::ErrMsg("Submodule error: "+errmsg);
-}
+//static void module_error(std::string errmsg)
+//{
+//  throw TASCAR::ErrMsg("Submodule error: "+errmsg);
+//}
 
-TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : xml_element_t(xmlsrc),
+using namespace TASCAR;
+
+TASCAR_RESOLVER( module_base_t, const module_cfg_t& )
+
+TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
+  : xml_element_t(cfg.xmlsrc),
     lib(NULL),
-    is_initialized(false),
-    is_configured(false),
     libdata(NULL),
-    create_cb(NULL),
-    destroy_cb(NULL),
-    write_xml_cb(NULL),
-    update_cb(NULL),
-    configure_cb(NULL)
+    is_configured(false)
+    //create_cb(NULL),
+    //destroy_cb(NULL),
+    //write_xml_cb(NULL),
+    //update_cb(NULL),
+    //configure_cb(NULL)
 {
   get_attribute("name",name);
   std::string libname("tascar_");
@@ -33,17 +36,7 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   if( !lib )
     throw TASCAR::ErrMsg("Unable to open module \""+name+"\": "+dlerror());
   try{
-    create_cb = (module_create_t)dlsym(lib,"tascar_create");
-    if( !create_cb )
-      throw TASCAR::ErrMsg("Unable to resolve \"tascar_create\" in module \""+name+"\".");
-    destroy_cb = (module_destroy_t)dlsym(lib,"tascar_destroy");
-    if( !destroy_cb )
-      throw TASCAR::ErrMsg("Unable to resolve \"tascar_destroy\" in module \""+name+"\".");
-    write_xml_cb = (module_write_xml_t)dlsym(lib,"tascar_write_xml");
-    update_cb = (module_update_t)dlsym(lib,"tascar_update");
-    configure_cb = (module_configure_t)dlsym(lib,"tascar_configure");
-    libdata = create_cb(xmlsrc, session, module_error);
-    is_initialized = true;
+    module_base_t_resolver( &libdata, cfg, lib, libname );
   }
   catch( ... ){
     dlclose(lib);
@@ -53,28 +46,30 @@ TASCAR::module_t::module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
 
 void TASCAR::module_t::write_xml()
 {
-  if( write_xml_cb && is_initialized )
-    write_xml_cb(libdata,module_error);
+  libdata->write_xml();
 }
 
 void TASCAR::module_t::update(uint32_t frame,bool running)
 {
-  if( update_cb && is_initialized && is_configured)
-    update_cb(libdata,module_error,frame,running);
+  if( is_configured)
+    libdata->update( frame, running );
 }
 
 void TASCAR::module_t::configure(double srate,uint32_t fragsize)
 {
-  if( configure_cb && is_initialized )
-    configure_cb(libdata,module_error,srate,fragsize);
+  libdata->configure( srate, fragsize );
   is_configured = true;
 }
 
 TASCAR::module_t::~module_t()
 {
-  if( is_initialized )
-    destroy_cb(libdata,module_error);
+  delete libdata;
   dlclose(lib);
+}
+
+TASCAR::module_cfg_t::module_cfg_t(xmlpp::Element* xmlsrc_, TASCAR::session_t* session_ )
+  : session(session_),xmlsrc(xmlsrc_)
+{ 
 }
 
 xmlpp::Element* assert_element(xmlpp::Element* e)
@@ -229,7 +224,7 @@ void TASCAR::session_t::add_module(xmlpp::Element* src)
 {
   if( !src )
     src = e->add_child("module");
-  modules.push_back(new TASCAR::module_t(src,this));
+  modules.push_back(new TASCAR::module_t( TASCAR::module_cfg_t(src,this)));
 }
 
 void TASCAR::session_t::start()
@@ -383,8 +378,8 @@ void TASCAR::connection_t::write_xml()
   set_attribute("dest",dest);
 }
 
-TASCAR::module_base_t::module_base_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session_)
-  : xml_element_t(xmlsrc),session(session_),
+TASCAR::module_base_t::module_base_t( const TASCAR::module_cfg_t& cfg )
+  : xml_element_t(cfg.xmlsrc),session(cfg.session),
     f_sample(1),
     f_fragment(1),
     t_sample(1),
@@ -434,8 +429,8 @@ std::vector<TASCAR::named_object_t> TASCAR::session_t::find_objects(const std::s
   return retv;
 }
 
-TASCAR::actor_module_t::actor_module_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session,bool fail_on_empty)
-  : module_base_t(xmlsrc,session)
+TASCAR::actor_module_t::actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty)
+  : module_base_t( cfg )
 {
   GET_ATTRIBUTE(actor);
   obj = session->find_objects(actor);

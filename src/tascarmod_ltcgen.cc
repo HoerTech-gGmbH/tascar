@@ -4,7 +4,7 @@
 
 class ltcgen_t : public TASCAR::module_base_t, public jackc_transport_t {
 public:
-  ltcgen_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  ltcgen_t( const TASCAR::module_cfg_t& cfg );
   virtual ~ltcgen_t();
   void write_xml();
   //void update(uint32_t frame, bool running);
@@ -23,8 +23,8 @@ private:
   uint32_t lastframe;
 };
 
-ltcgen_t::ltcgen_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+ltcgen_t::ltcgen_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     jackc_transport_t("ltc."+session->name),
     fpsnum(25),
     fpsden(1),

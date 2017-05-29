@@ -3,7 +3,7 @@
 
 class spksim_t : public TASCAR::audioplugin_base_t {
 public:
-  spksim_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname);
+  spksim_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void add_variables( TASCAR::osc_server_t* srv );
@@ -21,8 +21,8 @@ private:
   double statey2;
 };
 
-spksim_t::spksim_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname)
-  : audioplugin_base_t(xmlsrc,name,parentname),
+spksim_t::spksim_t( const TASCAR::audioplugin_cfg_t& cfg )
+  : audioplugin_base_t( cfg ),
     scale(0.5), 
     fres(1200), 
     q(0.8),

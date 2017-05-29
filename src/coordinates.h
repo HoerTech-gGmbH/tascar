@@ -185,6 +185,7 @@ namespace TASCAR {
 
   /**
      \brief Scale relative to origin
+     \param self Input data
      \param d ratio
   */
   inline sphere_t& operator*=(sphere_t& self,double d) {

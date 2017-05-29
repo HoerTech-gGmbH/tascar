@@ -69,7 +69,7 @@ bool fifo_t::can_read() const
 
 class system_t : public TASCAR::module_base_t {
 public:
-  system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess);
+  system_t( const TASCAR::module_cfg_t& cfg );
   virtual ~system_t();
   virtual void write_xml();
   virtual void update(uint32_t frame,bool running);
@@ -90,8 +90,8 @@ private:
   uint32_t fragsize;
 };
 
-system_t::system_t(xmlpp::Element* xmlsrc,TASCAR::session_t* sess)
-  : module_base_t(xmlsrc,sess),
+system_t::system_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     sleep(0),
     h_pipe(NULL),
     h_atcmd(NULL),

@@ -2,7 +2,7 @@
 
 class nearsensor_t : public TASCAR::module_base_t {
 public:
-  nearsensor_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  nearsensor_t( const TASCAR::module_cfg_t& cfg );
   ~nearsensor_t();
   void write_xml();
   void update(uint32_t frame, bool running);
@@ -21,8 +21,8 @@ private:
   uint32_t hitcnt_state;
 };
 
-nearsensor_t::nearsensor_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
-  : module_base_t(xmlsrc,session),
+nearsensor_t::nearsensor_t( const TASCAR::module_cfg_t& cfg )
+  : module_base_t( cfg ),
     radius(1.0),
     mode(0),
     ttl(1),
