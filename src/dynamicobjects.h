@@ -27,6 +27,7 @@ namespace TASCAR {
     void get_6dof(pos_t&,zyx_euler_t&) const;
     void get_6dof_prev(pos_t&,zyx_euler_t&) const;
     double starttime;
+    double sampledorientation;
     track_t location;
     euler_track_t orientation;
     pos_t dlocation;

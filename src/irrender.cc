@@ -4,7 +4,7 @@
 #include <string.h>
 
 TASCAR::wav_render_t::wav_render_t( const std::string& tscname, const std::string& scene_, bool verbose )
-  : tsc_reader_t(tscname,LOAD_FILE,""),
+  : tsc_reader_t(tscname,LOAD_FILE,tscname),
     scene(scene_),
     pscene(NULL),
     verbose_(verbose)

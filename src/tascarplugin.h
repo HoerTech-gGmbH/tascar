@@ -13,8 +13,10 @@
   typedef const char* (*baseclass ## _tascar_version_t)(); \
   baseclass ## _tascar_version_t tscver((baseclass ## _tascar_version_t)dlsym(lib, #baseclass "_tascar_version"));\
   if( !tscver ) throw TASCAR::ErrMsg("Unable to resolve tascar version function\n(module: "+libname+")." );\
-  if( strncmp( TASCARVER, tscver(), std::min(strlen(TASCARVER),strlen(tscver())))!= 0) \
-      throw TASCAR::ErrMsg("Invalid plugin version "+ std::string(tscver()) + "\n(module: "+libname+", expected version "+std::string(TASCARVER)+")."); \
+  std::string cl_tscver(TASCARVER);\
+  std::string pl_tscver(tscver());\
+  if( cl_tscver != pl_tscver ) \
+      throw TASCAR::ErrMsg("Invalid plugin version "+ pl_tscver + ".\n(module: "+libname+", expected version "+cl_tscver+")."); \
   typedef baseclass* (*baseclass ## factory_t)( cfgclass, std::string& );      \
   baseclass ## factory_t factory((baseclass ## factory_t)dlsym(lib, #baseclass "_factory"));\
     if(!factory) throw TASCAR::ErrMsg("Unable to resolve factory of " + std::string(#baseclass) + "\n(module: "+libname+")." );\

@@ -29,6 +29,7 @@ namespace TASCAR {
     xmlpp::Element* xmlsrc;
     const std::string& name;
     const std::string& parentname;
+    std::string modname;
   };
 
   /**

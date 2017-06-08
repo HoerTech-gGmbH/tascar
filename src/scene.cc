@@ -376,11 +376,12 @@ pos_t sound_t::get_pos_global(double t) const
     if( chaindist != 0 ){
       tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
     }
-    zyx_euler_t o(parent->dorientation);
-    o += parent->orientation.interp(tp);
-    rp *= o;
-    rp += parent->location.interp(tp);
-    rp += parent->dlocation;
+    TASCAR::pos_t ppos;
+    TASCAR::zyx_euler_t por;
+    parent->get_6dof(ppos,por);
+    //o += parent->orientation.interp(tp);
+    rp *= por;
+    rp += ppos;
   }
   return rp;
 }

@@ -37,13 +37,6 @@ namespace TASCAR {
     uint32_t n_fragment;
   };
 
-  //typedef void (*module_error_t)(std::string errmsg);
-  //typedef TASCAR::module_base_t* (*module_create_t)(xmlpp::Element* xmlsrc,TASCAR::session_t* session,module_error_t errfun);
-  //typedef void (*module_destroy_t)(TASCAR::module_base_t* h,module_error_t errfun);
-  //typedef void (*module_write_xml_t)(TASCAR::module_base_t* h,module_error_t errfun);
-  //typedef void (*module_update_t)(TASCAR::module_base_t* h,module_error_t errfun,uint32_t frame,bool running);
-  //typedef void (*module_configure_t)(TASCAR::module_base_t* h,module_error_t errfun,double srate,uint32_t fragsize);
-
   class module_t : public TASCAR::xml_element_t {
   public:
     module_t( const TASCAR::module_cfg_t& cfg );
@@ -56,11 +49,6 @@ namespace TASCAR {
     void* lib;
     TASCAR::module_base_t* libdata;
     bool is_configured;
-    //module_create_t create_cb;
-    //module_destroy_t destroy_cb;
-    //module_write_xml_t write_xml_cb;
-    //module_update_t update_cb;
-    //module_configure_t configure_cb;
   };
 
   class connection_t : public TASCAR::xml_element_t {

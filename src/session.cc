@@ -9,11 +9,6 @@
 #include <fnmatch.h>
 #include <locale.h>
 
-//static void module_error(std::string errmsg)
-//{
-//  throw TASCAR::ErrMsg("Submodule error: "+errmsg);
-//}
-
 using namespace TASCAR;
 
 TASCAR_RESOLVER( module_base_t, const module_cfg_t& )
@@ -23,11 +18,6 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
     lib(NULL),
     libdata(NULL),
     is_configured(false)
-    //create_cb(NULL),
-    //destroy_cb(NULL),
-    //write_xml_cb(NULL),
-    //update_cb(NULL),
-    //configure_cb(NULL)
 {
   get_attribute("name",name);
   std::string libname("tascar_");
@@ -57,7 +47,7 @@ void TASCAR::module_t::update(uint32_t frame,bool running)
 
 void TASCAR::module_t::configure(double srate,uint32_t fragsize)
 {
-  libdata->configure( srate, fragsize );
+  libdata->configure_( srate, fragsize );
   is_configured = true;
 }
 
@@ -251,7 +241,6 @@ void TASCAR::session_t::start()
       std::cerr << "Warning: " << e.what() << std::endl;
     }
   }
-  //configure_levelmeter( srate, levelmeter_tc, levelmeter_weight );
 }
 
 int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
@@ -547,12 +536,6 @@ void TASCAR::session_t::set_v014()
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->set_v014();
 }
-
-//void TASCAR::session_t::configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t w )
-//{
-//  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
-//    (*ipl)->configure_levelmeter( fs, tc, w );
-//}
 
 /*
  * Local Variables:

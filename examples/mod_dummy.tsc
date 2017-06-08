@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session duration="1">
+  <scene guiscale="20">
+    <src_object name="src">
+      <sound name="0"/>
+    </src_object>
+    <receiver type="omni" name="out"/>
+  </scene>
+  <module name="dummy"/>
+</session>

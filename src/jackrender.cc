@@ -121,16 +121,11 @@ void TASCAR::audioplayer_t::open_files()
 
 void TASCAR::audioplayer_t::start()
 {
-  if( !scene )
-    throw TASCAR::ErrMsg("Invalid (NULL) scene pointer.");
-  // first prepare all nodes for audio processing:
-  scene->prepare(get_srate(), get_fragsize());
   open_files();
   for(uint32_t k=0;k<files.size();k++)
     files[k].start_service();
   jackc_t::activate();
 }
-
 
 void TASCAR::audioplayer_t::stop()
 {

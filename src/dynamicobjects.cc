@@ -67,12 +67,14 @@ TASCAR::navmesh_t::~navmesh_t()
 TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),
     starttime(0),
+    sampledorientation(0),
     c6dof(c6dof_),
     xml_location(NULL),
     xml_orientation(NULL),
     navmesh(NULL)
 {
   get_attribute("start",starttime);
+  GET_ATTRIBUTE(sampledorientation);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -87,9 +89,6 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
     if( sne && (sne->get_name() == "creator")){
       xmlpp::Node::NodeList subnodes = sne->get_children();
       location.edit(subnodes);
-      std::string sloop(sne->get_attribute_value("loop"));
-      if( !sloop.empty() )
-        location.loop = (sloop == "true");
       TASCAR::track_t::iterator it_old=location.end();
       double old_azim(0);
       double new_azim(0);
@@ -105,14 +104,22 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
           orientation[it_old->first] = zyx_euler_t(new_azim,0,0);
           old_azim = new_azim;
         }
+        
         if( TASCAR::distance(it->second,it_old->second) > 0 )
           it_old = it;
+      }
+      double loop(0);
+      get_attribute_value(sne,"loop",loop);
+      if( loop > 0 ){
+        location.loop = loop;
+        orientation.loop = loop;
       }
     }
     if( sne && (sne->get_name() == "navmesh") ){
       navmesh = new TASCAR::navmesh_t(sne);
     }
   }
+  location.prepare();
   geometry_update(0);
   c6dof_prev = c6dof_;
 }
@@ -139,7 +146,16 @@ void TASCAR::dynobject_t::geometry_update(double time)
   c6dof_.p = location.interp(ltime);
   TASCAR::pos_t ptmp(c6dof_.p);
   c6dof_.p += dlocation;
-  c6dof_.o = orientation.interp(ltime);
+  if( sampledorientation == 0 )
+    c6dof_.o = orientation.interp(ltime);
+  else{
+    double tp(location.get_time(location.get_dist(ltime)-sampledorientation));
+    TASCAR::pos_t pdt(c6dof_.p);
+    pdt -= location.interp(tp);
+    c6dof_.o.z = pdt.azim();
+    c6dof_.o.y = pdt.elev();
+    c6dof_.o.x = 0.0;
+  }
   c6dof_.o += dorientation;
   if( navmesh ){
     navmesh->update_pos( c6dof_.p );

@@ -168,7 +168,8 @@ sndfile_handle_t::sndfile_handle_t(const std::string& fname,int samplerate,int c
     
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)
-  : sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf))
+  : sf_inf(sf_info_configurator(1,1)),
+    sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf))
 {
   if( !sfile )
     throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for reading.");

@@ -170,8 +170,8 @@ pos_t track_t::interp(double x) const
   cnt_interp++;
   if( begin() == end() )
     return pos_t();
-  if( loop && (x >= rbegin()->first ) )
-    x = fmod(x,rbegin()->first);
+  if( (loop > 0) && (x >= loop) )
+    x = fmod(x,loop);
   const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
@@ -576,7 +576,7 @@ double track_t::length()
 }
 
 track_t::track_t()
-  : loop(false),
+  : loop(0),
     interpt(cartesian)
 {
 }
@@ -599,9 +599,7 @@ void track_t::write_xml( xmlpp::Element* a)
 
 void track_t::read_xml( xmlpp::Element* a )
 {
-  std::string sloop(a->get_attribute_value("loop"));
-  if( !sloop.empty() )
-    loop = (sloop == "true");
+  get_attribute_value(a,"loop",loop);
   track_t ntrack;
   ntrack.loop = loop;
   if( a->get_attribute_value("interpolation") == "spherical" )
@@ -687,7 +685,7 @@ void track_t::prepare()
 }
 
 euler_track_t::euler_track_t()
-  : loop(false)
+  : loop(0)
 {
 }
 
@@ -696,8 +694,8 @@ zyx_euler_t euler_track_t::interp(double x) const
   if( begin() == end() ){
     return zyx_euler_t();
   }
-  if( loop && (x >= rbegin()->first ) )
-    x = fmod(x,rbegin()->first);
+  if( (loop > 0) && (x >= loop ) )
+    x = fmod(x,loop);
   const_iterator lim2 = lower_bound(x);
   if( lim2 == end() )
     return rbegin()->second;
@@ -727,9 +725,7 @@ void euler_track_t::write_xml( xmlpp::Element* a)
 
 void euler_track_t::read_xml( xmlpp::Element* a )
 {
-  std::string sloop(a->get_attribute_value("loop"));
-  if( !sloop.empty() )
-    loop = (sloop == "true");
+  get_attribute_value(a,"loop",loop);
   euler_track_t ntrack;
   ntrack.loop = loop;
   std::string importcsv(a->get_attribute_value("importcsv"));
