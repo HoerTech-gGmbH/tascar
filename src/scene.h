@@ -243,8 +243,10 @@ namespace TASCAR {
       void set_name(const std::string& n) {name = n;};
       TASCAR::Acousticmodel::pointsource_t* get_source() { return source;};
       void process_plugins(const TASCAR::transport_t& tp);
+      void apply_gain();
     private:
       double fs_;
+      double dt_;
       pos_t local_position;
       double chaindist;
     public:
@@ -263,6 +265,7 @@ namespace TASCAR {
       // dynamically allocated source type. Allocated in "prepare",
       // type defined in xml_read:
       TASCAR::Acousticmodel::pointsource_t* source; 
+      double gain_;
     };
 
     class src_object_t : public sndfile_object_t {

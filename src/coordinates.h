@@ -444,8 +444,8 @@ namespace TASCAR {
     void write_xml( xmlpp::Element* );
     void read_xml( xmlpp::Element* );
     void set_interpt(interp_t p){interpt=p;};
-    double get_dist( double time ) const {return time_dist.interp(time);};
-    double get_time( double dist ) const {return dist_time.interp(dist);};
+    double get_dist( double time ) const;
+    double get_time( double dist ) const;
     void prepare();
     void fill_gaps(double dt);
     double loop;

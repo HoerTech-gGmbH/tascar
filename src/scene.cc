@@ -194,6 +194,8 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
 
 sound_t::sound_t(const sound_t& src)
   : audio_port_t(src),
+    fs_(1),
+    dt_(1),
     local_position(src.local_position),
     chaindist(src.chaindist),
     maxdist(src.maxdist),
@@ -203,7 +205,8 @@ sound_t::sound_t(const sound_t& src)
     name(src.name),
     ismmin(src.ismmin),
     ismmax(src.ismmax),
-    source(NULL)
+    source(NULL),
+    gain_(1.0)
 {
 }
 
@@ -232,6 +235,15 @@ void sound_t::process_plugins(const TASCAR::transport_t& tp)
   }
 }
 
+void sound_t::apply_gain()
+{
+  if( source ){
+    double dg((get_gain() - gain_)*dt_);
+    for(uint32_t k=0;k<source->audio.n;++k)
+      source->audio.d[k] *= (gain_+=dg);
+  }
+}
+
 void sound_t::geometry_update(double t)
 {
   if( source ){
@@ -244,6 +256,8 @@ void sound_t::geometry_update(double t)
 void sound_t::prepare(double fs, uint32_t fragsize)
 {
   fs_ = fs;
+  dt_ = 1.0/std::max(1.0,(double)fragsize);
+  gain_ = get_gain();
   if( source )
     delete source;
   for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
@@ -372,14 +386,14 @@ pos_t sound_t::get_pos_global(double t) const
 {
   pos_t rp(local_position);
   if( parent ){
-    double tp(t - parent->starttime);
-    if( chaindist != 0 ){
-      tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
-    }
     TASCAR::pos_t ppos;
     TASCAR::zyx_euler_t por;
     parent->get_6dof(ppos,por);
-    //o += parent->orientation.interp(tp);
+    if( chaindist != 0 ){
+      double tp(t - parent->starttime);
+      tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
+      ppos = parent->location.interp(tp);
+    }
     rp *= por;
     rp += ppos;
   }

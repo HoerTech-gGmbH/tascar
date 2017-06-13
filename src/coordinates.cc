@@ -581,6 +581,18 @@ track_t::track_t()
 {
 }
 
+double track_t::get_dist( double time ) const
+{
+  if( (loop > 0) && (time > loop) )
+    time = fmod(time,loop);
+  return time_dist.interp(time);
+}
+
+double track_t::get_time( double dist ) const
+{
+  return dist_time.interp(dist);
+}
+
 void track_t::write_xml( xmlpp::Element* a)
 {
   switch( interpt ){
