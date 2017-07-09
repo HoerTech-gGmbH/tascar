@@ -1,8 +1,10 @@
 #include "serviceclass.h"
 #include "errorhandling.h"
+#include <string.h>
 
 TASCAR::service_t::service_t()
-  : run_service(false),
+  : priority(-1),
+    run_service(false),
     service_running(false)
 {
 }
@@ -25,6 +27,12 @@ void TASCAR::service_t::start_service()
     int err = pthread_create( &srv_thread, NULL, &service_t::service, this);
     if( err < 0 )
       throw TASCAR::ErrMsg("pthread_create failed");
+    if( priority >= 0 ){
+	struct sched_param sp;
+	memset(&sp,0,sizeof(sp));
+	sp.sched_priority = priority;
+	pthread_setschedparam( srv_thread, SCHED_FIFO, &sp);
+    }
     service_running = true;
   }
 }

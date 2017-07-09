@@ -463,7 +463,9 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     c(340.0),
     mirrororder(1),
     b_0_14(false),
-    guiscale(200),anysolo(0),
+    guiscale(200),
+    guitrackobject(NULL),
+    anysolo(0),
     scene_path("")
 {
   try{
@@ -504,6 +506,11 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
           std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
       }
     }
+    std::string guitracking;
+    GET_ATTRIBUTE(guitracking);
+    std::vector<object_t*> objs(find_object(guitracking));
+    if( objs.size() )
+      guitrackobject = objs[0];
   }
   catch(...){
     clean_children();

@@ -3,56 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-
-class artnetDMX_t {
-public:
-  artnetDMX_t(const char* hostname, const char* port);
-  void send(uint8_t universe, const std::vector<uint16_t>& data);
-private:
-  uint8_t msg[530];
-  uint8_t* data_;
-  struct addrinfo* res;
-  int fd;
-};
-
-artnetDMX_t::artnetDMX_t(const char* hostname, const char* port)
-  : data_(&(msg[18])),
-    res(0)
-{
-  memset(msg,0,530);
-  msg[0] = 'A';
-  msg[1] = 'r';
-  msg[2] = 't';
-  msg[3] = '-';
-  msg[4] = 'N';
-  msg[5] = 'e';
-  msg[6] = 't';
-  msg[9] = 0x50;
-  msg[11] = 14;
-  struct addrinfo hints;
-  memset(&hints,0,sizeof(hints));
-  hints.ai_family=AF_UNSPEC;
-  hints.ai_socktype=SOCK_DGRAM;
-  hints.ai_protocol=0;
-  hints.ai_flags=AI_ADDRCONFIG;
-  int err(getaddrinfo( hostname, port, &hints, &res ));
-  if(err != 0)
-    throw TASCAR::ErrMsg("failed to resolve remote socket address");
-  fd = socket( res->ai_family, res->ai_socktype, res->ai_protocol );
-  if (fd == -1)
-    throw TASCAR::ErrMsg(strerror(errno));
-}
-
-void artnetDMX_t::send(uint8_t universe, const std::vector<uint16_t>& data)
-{
-  msg[14] = universe;
-  msg[16] = data.size() >> 8;
-  msg[17] = data.size() & 0xff;
-  for(uint32_t k=0;k<data.size();++k)
-    data_[k] = data[k];
-  if( sendto(fd,msg,18+data.size(),0,res->ai_addr,res->ai_addrlen) == -1 )
-    throw TASCAR::ErrMsg(strerror(errno));
-}
+#include "dmxdriver.h"
 
 class artnetdmx_vars_t : public TASCAR::actor_module_t {
 public:
@@ -100,7 +51,7 @@ artnetdmx_vars_t::~artnetdmx_vars_t()
 {
 }
 
-class mod_artnetdmx_t : public artnetdmx_vars_t, public artnetDMX_t, public TASCAR::service_t {
+class mod_artnetdmx_t : public artnetdmx_vars_t, public DMX::ArtnetDMX_t, public TASCAR::service_t {
 public:
   mod_artnetdmx_t( const TASCAR::module_cfg_t& cfg );
   virtual ~mod_artnetdmx_t();
@@ -152,7 +103,7 @@ int mod_artnetdmx_t::osc_setw(const char *path, const char *types, lo_arg **argv
 
 mod_artnetdmx_t::mod_artnetdmx_t( const TASCAR::module_cfg_t& cfg )
   : artnetdmx_vars_t( cfg ),
-    artnetDMX_t(hostname.c_str(), port.c_str())
+    DMX::ArtnetDMX_t(hostname.c_str(), port.c_str())
 {
   if( fixtures.size() == 0 )
     throw TASCAR::ErrMsg("No fixtures defined!");

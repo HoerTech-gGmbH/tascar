@@ -22,6 +22,7 @@ lsl_sender_t::lsl_sender_t()
   : jackc_t("lsljacktime"),
     info(lsl_create_streaminfo("TASCARtime","time",1,(double)(get_srate())/(double)(get_fragsize()),cft_double64,"softwaredevice"))
 {
+  add_input_port("sync");
   lsl_xml_ptr desc(lsl_get_desc(info));
   lsl_append_child_value(desc,"manufacturer","HoerTech");
   lsl_xml_ptr chns(lsl_append_child(desc,"channels"));

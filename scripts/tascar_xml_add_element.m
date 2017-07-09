@@ -10,6 +10,9 @@ function cNode = tascar_xml_add_element( doc, pNode, cName, sContent, varargin )
 % sContent - optional content, or empty matrix
 % cNode - new element
   ;
+  if nargin < 4
+    sContent = [];
+  end
   %create a new element:
   if mod(length(varargin),2)
     error('For each attribute there must be exactly one corresponding value')

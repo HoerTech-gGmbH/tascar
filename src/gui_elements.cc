@@ -363,6 +363,8 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
 {
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( scene_ ){
+      if( scene_->guitrackobject )
+        view.set_ref(scene_->guitrackobject->c6dof.p);
       std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
       for(uint32_t k=0;k<objects.size();k++)
         draw_object(objects[k],cr );

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<session duration="12" loop="true" srv_port="9999">
-  <scene guiscale="20" guitracking="out">
+<session>
+  <scene>
     <src_object name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
       <position interpolation="cartesian">0 0 0 0
       10 15 0 0
@@ -13,11 +13,18 @@
       <position>0 15.2 0 0</position>
       <orientation>0 180 0 0</orientation>
     </face>
-    <receiver type="ortf" name="out" mute="false" solo="false" color="#000000" start="0" end="0">
+    <receiver type="hoa2d_fuma" name="out" order="4">
       <position>0 0 0 1.65
       10 15 0 1.65</position>
     </receiver>
   </scene>
-  <connect src="render.scene:out_l" dest="system:playback_1"/>
-  <connect src="render.scene:out_r" dest="system:playback_2"/>
+  <module name="matrix" id="dec">
+    <speaker connect="system:playback_1" m="0.1 0.1 0"/>
+    <speaker connect="system:playback_2" m="0.1 0 0.1"/>
+    <input label=".0" connect="render.scene:out.0_0"/>
+    <input label=".1-" connect="render.scene:out.1_-1"/>
+    <input label=".1+" connect="render.scene:out.1_1"/>
+    <input label=".2-" connect="render.scene:out.2_-2"/>
+    <input label=".2+" connect="render.scene:out.2_2"/>
+  </module>
 </session>

@@ -15,6 +15,7 @@ namespace TASCAR {
   private:
     static void * service(void* h);
   protected:
+    int priority;
     bool run_service;
     bool service_running;
     pthread_t srv_thread;

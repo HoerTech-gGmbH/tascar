@@ -105,7 +105,7 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
           old_azim = new_azim;
         }
         
-        if( TASCAR::distance(it->second,it_old->second) > 0 )
+        if( (it_old == location.end()) || (TASCAR::distance(it->second,it_old->second) > 0) )
           it_old = it;
       }
       double loop(0);
@@ -152,6 +152,8 @@ void TASCAR::dynobject_t::geometry_update(double time)
     double tp(location.get_time(location.get_dist(ltime)-sampledorientation));
     TASCAR::pos_t pdt(c6dof_.p);
     pdt -= location.interp(tp);
+    if( sampledorientation < 0 )
+      pdt *= -1.0;
     c6dof_.o.z = pdt.azim();
     c6dof_.o.y = pdt.elev();
     c6dof_.o.x = 0.0;

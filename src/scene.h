@@ -329,6 +329,7 @@ namespace TASCAR {
       bool b_0_14;
       double guiscale;
       pos_t guicenter;
+      TASCAR::Scene::object_t* guitrackobject;
       uint32_t anysolo;
       std::vector<object_t*> get_objects();
       std::string scene_path;

@@ -17,11 +17,12 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic chmap
+  intensityvector vmic chmap hoa2d_fuma
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
-  artnetdmx opendmxusb levels2osc nearsensor dirgain dummy
+  artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
+  matrix hoafdnrot
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\
@@ -29,10 +30,11 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
   sampler.o jackiowav.o cli.o irrender.o jackrender.o audioplugin.o	\
   levelmeter.o serviceclass.o alsamidicc.o speakerarray.o		\
-  filterclass.o spectrum.o fft.o stft.o ola.o
+  filterclass.o spectrum.o fft.o stft.o ola.o termsetbaud.o		\
+  serialport.o dmxdriver.o
 
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
-  onsetdetector delay sndfile spksim dummy
+  onsetdetector delay sndfile spksim dummy hannenv
 
 TEST_FILES = test_ngon test_sinc
 
@@ -171,6 +173,7 @@ tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
 tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
 tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
+tascar_hoafdnrot.so: LDLIBS+=-lfftw3f
 
 tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime tascar_levels2osc.so: LDLIBS+=-llsl
 

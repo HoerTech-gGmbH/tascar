@@ -37,6 +37,7 @@ namespace TASCAR {
     class data_t {
     public:
       data_t(){};
+      virtual ~data_t(){};
     };
     receivermod_base_t(xmlpp::Element* xmlsrc);
     virtual void write_xml();

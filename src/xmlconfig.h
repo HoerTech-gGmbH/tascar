@@ -17,6 +17,7 @@ namespace TASCAR {
     // get attributes:
     void get_attribute(const std::string& name,std::string& value);
     void get_attribute(const std::string& name,double& value);
+    void get_attribute(const std::string& name,float& value);
     void get_attribute(const std::string& name,uint32_t& value);
     void get_attribute(const std::string& name,int32_t& value);
     void get_attribute(const std::string& name,uint64_t& value);
@@ -31,6 +32,7 @@ namespace TASCAR {
     void get_attribute(const std::string& name,std::vector<TASCAR::pos_t>& value);
     void get_attribute(const std::string& name,std::vector<std::string>& value);
     void get_attribute(const std::string& name,std::vector<double>& value);
+    void get_attribute(const std::string& name,std::vector<float>& value);
     void get_attribute(const std::string& name,std::vector<int32_t>& value);
     // set attributes:
     void set_attribute_bool(const std::string& name,bool value);
@@ -68,6 +70,7 @@ namespace TASCAR {
   std::vector<TASCAR::pos_t> str2vecpos(const std::string& s);
   std::vector<std::string> str2vecstr(const std::string& s);
   std::vector<double> str2vecdouble(const std::string& s);
+  std::vector<float> str2vecfloat(const std::string& s);
   std::vector<int32_t> str2vecint(const std::string& s);
 
   class xml_doc_t {
@@ -84,6 +87,7 @@ namespace TASCAR {
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,float& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,uint32_t& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,int32_t& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,uint64_t& value);
@@ -97,6 +101,7 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::po
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<std::string>& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<double>& value);
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<float>& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<int32_t>& value);
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::levelmeter_t::weight_t& value);
 

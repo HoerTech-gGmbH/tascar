@@ -16,7 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy, bgl, blf, sys, os
+import bpy, bgl, blf, sys, os, math
 from bpy import data, ops, props, types, context
 
 def faceValues(face, mesh, matrix):
@@ -47,14 +47,18 @@ def write_mesh(obj,filepath):
   file.close()
 
 def write_track(obj,filepath):
-  matrix = obj.matrix_world.copy()
-  file = open(filepath, "w")
-  t = 0
-  for vert in obj.data.splines[0].points:
-    co = matrix * vert.co
-    file.write( '%f,%f,%f,%f\n' % (t,co.x, co.y, co.z) )
-    t = t+1
-  file.close()
+  if len(obj.data.splines) > 0:
+    if len(obj.data.splines[0].points) > 0:
+      matrix = obj.matrix_world.copy()
+      file = open(filepath, "w")
+      t = 0
+      oldco = matrix * obj.data.splines[0].points[0].co
+      for vert in obj.data.splines[0].points:
+        co = matrix * vert.co
+        t = t+math.sqrt(math.pow(oldco.x-co.x,2) + math.pow(oldco.y-co.y,2) + math.pow(oldco.z-co.z,2))
+        file.write( '%f,%f,%f,%f\n' % (t,co.x, co.y, co.z) )
+        oldco = co
+      file.close()
 
 #
 # main:

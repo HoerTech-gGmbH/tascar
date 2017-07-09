@@ -78,7 +78,7 @@ lsljacktime_t::~lsljacktime_t()
 void lsljacktime_t::update(uint32_t frame,bool running)
 {
   if( running || sendwhilestopped )
-    send( t_sample * frame );
+    send( t_sample * frame - running*t_fragment );
 }
 
 REGISTER_MODULE(lsljacktime_t);

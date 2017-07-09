@@ -163,10 +163,11 @@ void TASCAR::session_t::unload_modules()
 
 TASCAR::session_t::~session_t()
 {
-  jackc_transport_t::deactivate();
-  osc_server_t::deactivate();
   if( started_ )
     stop();
+  osc_server_t::deactivate();
+  jackc_transport_t::deactivate();
+  usleep(50000);
   for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
     delete (*it);
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)

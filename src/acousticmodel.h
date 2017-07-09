@@ -85,12 +85,6 @@ namespace TASCAR {
       TASCAR::levelmeter_t& rmslevel;
     };
 
-    class receiver_data_t {
-    public:
-      receiver_data_t(){};
-      virtual ~receiver_data_t(){};
-    };
-
     class boundingbox_t : public dynobject_t {
     public:
       boundingbox_t(xmlpp::Element*);
