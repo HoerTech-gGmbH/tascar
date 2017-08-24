@@ -72,6 +72,7 @@ public:
   system_t( const TASCAR::module_cfg_t& cfg );
   virtual ~system_t();
   virtual void write_xml();
+  virtual void cleanup();
   virtual void update(uint32_t frame,bool running);
   virtual void configure(double srate,uint32_t fragsize);
 private:
@@ -161,7 +162,7 @@ void system_t::write_xml()
   SET_ATTRIBUTE(onunload);
 }
 
-system_t::~system_t()
+void system_t::cleanup()
 {
   if( pid != 0 )
     kill(pid,SIGTERM);
@@ -178,6 +179,10 @@ system_t::~system_t()
     if( err != 0 )
       std::cerr << "subprocess returned " << err << std::endl;
   }
+}
+
+system_t::~system_t()
+{
 }
 
 void * system_t::service(void* h)

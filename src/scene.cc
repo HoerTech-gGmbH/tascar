@@ -148,7 +148,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
     delete source;
   reset_meters();
   addmeter(fs);
-  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder);
+  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder,GAIN_INVR);
   source->add_rmslevel(rmsmeter[0]);
   geometry_update(0);
   source->nonrt_set_rect(width,height);
@@ -163,6 +163,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
     chaindist(0),
     maxdist(3700),
     minlevel(0),
+    gainmodel(GAIN_INVR),
     sincorder(0),
     parent(parent_),
     ismmin(0),
@@ -175,6 +176,16 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   get_attribute("d",chaindist);
   GET_ATTRIBUTE(maxdist);
   GET_ATTRIBUTE_DBSPL(minlevel);
+  std::string gr;
+  get_attribute("gainmodel",gr);
+  if( gr.empty() )
+    gr = "1/r";
+  if( gr == "1/r" )
+    gainmodel = GAIN_INVR;
+  else if( gr == "1" )
+    gainmodel = GAIN_UNITY;
+  else
+    throw TASCAR::ErrMsg("Invalid gain model "+gr+"(valid gain models: \"1/r\", \"1\").");
   GET_ATTRIBUTE(sincorder);
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
@@ -200,6 +211,7 @@ sound_t::sound_t(const sound_t& src)
     chaindist(src.chaindist),
     maxdist(src.maxdist),
     minlevel(src.minlevel),
+    gainmodel(src.gainmodel),
     sincorder(src.sincorder),
     parent(NULL),
     name(src.name),
@@ -262,7 +274,7 @@ void sound_t::prepare(double fs, uint32_t fragsize)
     delete source;
   for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
     (*p)->prepare(fs,fragsize);
-  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,minlevel,sincorder);
+  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,minlevel,sincorder,gainmodel);
 }
 
 src_diffuse_t::~src_diffuse_t()
@@ -312,43 +324,8 @@ std::string sound_t::get_port_name() const
   return name;
 }
 
-//void audio_port_t::set_port_channels( uint32_t channels )
-//{
-//  port_channels = channels;
-//  levelmeters.resize(channels);
-//  for(uint32_t k=0;k<channels;++k)
-//    levelmeters[k] = NULL;
-//  update_levelmeters();
-//}
-//
-//void audio_port_t::configure_levelmeter( float fs, float tc, TASCAR::levelmeter_t::weight_t weight )
-//{
-//  levelmeter_fs = fs;
-//  levelmeter_tc = tc;
-//  levelmeter_w = weight;
-//  update_levelmeters();
-//}
-
-//void audio_port_t::update_levelmeters()
-//{
-//  for(uint32_t k=0;k<port_channels;++k){
-//    TASCAR::levelmeter_t* levelmeter(NULL);
-//    if( (levelmeter_fs > 0) && (levelmeter_tc > 0) ){
-//      levelmeter = new TASCAR::levelmeter_t(levelmeter_fs,levelmeter_tc,levelmeter_w);
-//    }
-//    if( levelmeters[k] )
-//      unused_meters.push_back(levelmeters[k]);
-//    levelmeters[k] = levelmeter;
-//  }
-//}
-
 audio_port_t::~audio_port_t()
 {
-//  for(uint32_t k=0;k<unused_meters.size();++k)
-//    delete unused_meters[k];
-//  for(uint32_t k=0;k<levelmeters.size();++k)
-//    if( levelmeters[k] )
-//      delete levelmeters[k];
 }
 
 void audio_port_t::set_port_index(uint32_t port_index_)
@@ -356,16 +333,20 @@ void audio_port_t::set_port_index(uint32_t port_index_)
   port_index = port_index_;
 }
 
-//void audio_port_t::update_channel( uint32_t channel, const TASCAR::wave_t& chunk )
-//{
-//  // update level meters if any:
-//}
-
 void sound_t::write_xml()
 {
+  audio_port_t::write_xml();
   SET_ATTRIBUTE(maxdist);
   SET_ATTRIBUTE_DBSPL(minlevel);
   SET_ATTRIBUTE(sincorder);
+  switch( gainmodel ){
+  case GAIN_INVR :
+    e->set_attribute("gainmodel","1/r");
+    break;
+  case GAIN_UNITY :
+    e->set_attribute("gainmodel","1");
+    break;
+  }
   e->set_attribute("name",name);
   if( local_position.x != 0 )
     set_attribute("x",local_position.x);
@@ -559,8 +540,8 @@ void scene_t::write_xml()
  */
 void scene_t::geometry_update(double t)
 {
-  std::vector<object_t*> objs(get_objects());
-  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
+  //std::vector<object_t*> objs(get_objects());
+  for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->geometry_update( t );
 }
 
@@ -722,8 +703,8 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
   if( receivermod_objects.size() == 0 )
     throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
-  std::vector<object_t*> objs(get_objects());
-  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
+  all_objects = get_objects();
+  for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->prepare( fs, fragsize );
 }
 
@@ -897,12 +878,8 @@ audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),portname(""),
     connect(""),
     port_index(0),
-    //port_channels(0),
     gain(1),
     caliblevel(50000.0)
-    //levelmeter_fs(0),
-    //levelmeter_tc(2),
-    //levelmeter_w(TASCAR::levelmeter_t::Z)
 {
   get_attribute("connect",connect);
   get_attribute_db_float("gain",gain);

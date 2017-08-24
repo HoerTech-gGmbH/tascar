@@ -18,6 +18,7 @@ namespace TASCAR {
   class module_base_t : public xml_element_t {
   public:
     module_base_t( const module_cfg_t& cfg );
+    virtual void cleanup() {};
     virtual void write_xml();
     virtual ~module_base_t();
     /**
@@ -42,6 +43,7 @@ namespace TASCAR {
     module_t( const TASCAR::module_cfg_t& cfg );
     void write_xml();
     virtual ~module_t();
+    void cleanup();
     void configure(double srate,uint32_t fragsize);
     void update(uint32_t frame,bool running);
   private:

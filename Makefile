@@ -13,7 +13,8 @@ DEFFULLVERSION=$(shell echo "\#define TASCARVER \\\""$(FULLVERSION)"\\\"")
 BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
   tascar_osc_jack_transport tascar_jackio tascar_sampler		\
   tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
-  tascar_lsljacktime tascar_renderfile tascar_renderir tascar_gpx2csv
+  tascar_lsljacktime tascar_renderfile tascar_renderir tascar_gpx2csv	\
+  tascar_version
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
@@ -22,7 +23,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
   artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
-  matrix hoafdnrot
+  matrix hoafdnrot mpu6050track
 
 OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
   session_reader.o session.o receivermod.o jackclient.o delayline.o	\

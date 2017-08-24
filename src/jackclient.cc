@@ -112,6 +112,8 @@ int jackc_t::process_(jack_nframes_t nframes, void *arg)
 
 int jackc_t::process_(jack_nframes_t nframes)
 {
+  if( !active )
+    return 0;
   for(unsigned int k=0;k<inBuffer.size();k++)
     inBuffer[k] = (float*)(jack_port_get_buffer(inPort[k],nframes));
   for(unsigned int k=0;k<outBuffer.size();k++)
@@ -223,14 +225,16 @@ void jackc_db_t::service()
 {
   pthread_mutex_lock( &mtx_inner_thread );
   while( !b_exit_thread ){
-    usleep(1000);
-    for(uint32_t kb=0;kb<2;kb++){
-      if( pthread_mutex_trylock( &(mutex[kb]) ) == 0 ){
-        if( buffer_filled[kb] ){
-          inner_process(inner_fragsize, dbinBuffer[kb], dboutBuffer[kb] );
-          buffer_filled[kb] = false;
+    usleep(10);
+    if( active ){
+      for(uint32_t kb=0;kb<2;kb++){
+        if( pthread_mutex_trylock( &(mutex[kb]) ) == 0 ){
+          if( buffer_filled[kb] ){
+            inner_process(inner_fragsize, dbinBuffer[kb], dboutBuffer[kb] );
+            buffer_filled[kb] = false;
+          }
+          pthread_mutex_unlock( &(mutex[kb]) );
         }
-        pthread_mutex_unlock( &(mutex[kb]) );
       }
     }
   }
@@ -313,6 +317,8 @@ void jackc_db_t::add_output_port(const std::string& name)
 
 int jackc_db_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer)
 {
+  if( !active )
+    return 0;
   int rv(0);
   if( inner_is_larger ){
     // copy data to buffer

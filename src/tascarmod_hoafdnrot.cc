@@ -312,6 +312,15 @@ hoafdnrot_t::hoafdnrot_t( const TASCAR::module_cfg_t& cfg )
     int32_t s(o*(2*((c+1) % 2)-1));
     sprintf(ctmp,"in.%d_%d",o,s);
     add_input_port(ctmp);
+    //sprintf(ctmp,"out.%d_%d",o,s);
+    //add_output_port(ctmp);
+  }
+  for(uint32_t c=0;c<channels;++c){
+    char ctmp[1024];
+    uint32_t o((c+1)/2);
+    int32_t s(o*(2*((c+1) % 2)-1));
+    //sprintf(ctmp,"in.%d_%d",o,s);
+    //add_input_port(ctmp);
     sprintf(ctmp,"out.%d_%d",o,s);
     add_output_port(ctmp);
   }

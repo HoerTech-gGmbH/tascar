@@ -319,20 +319,24 @@ public:
 private:
   float phi;
   float phi_epi;
+  bool use_transport;
 };
 
 epicycles_t::epicycles_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t( cfg ),
     HoS::parameter_t( cfg.xmlsrc, cfg.session ),
     phi(0),
-    phi_epi(0)
+    phi_epi(0),
+    use_transport(true)
 {
+  actor_module_t::GET_ATTRIBUTE_BOOL(use_transport);
 }
 
 void epicycles_t::write_xml()
 {
   TASCAR::actor_module_t::write_xml();
   HoS::parameter_t::write_xml();
+  TASCAR::actor_module_t::SET_ATTRIBUTE_BOOL(use_transport);
 }
 
 epicycles_t::~epicycles_t()
@@ -360,7 +364,7 @@ void epicycles_t::configure(double srate,uint32_t fragsize)
 
 void epicycles_t::update(uint32_t frame,bool running)
 {
-  if( running ){
+  if( running || (!use_transport) ){
     // optionally apply dynamic parameters:
     if( t_apply ){
       t_apply--;

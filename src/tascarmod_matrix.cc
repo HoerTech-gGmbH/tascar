@@ -1,5 +1,6 @@
 #include "session.h"
 #include "jackclient.h"
+#include <complex.h>
 
 #define SQRT12 0.70710678118654757274f
 
@@ -9,12 +10,14 @@ public:
   ~matrix_vars_t();
 protected:
   std::string id;
+  std::string decoder;
 };
 
 class matrix_t : public matrix_vars_t, public jackc_t {
 public:
   matrix_t( const TASCAR::module_cfg_t& cfg );
   ~matrix_t();
+  void cleanup();
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
   void configure(double srate,uint32_t fragsize);
 private:
@@ -27,6 +30,7 @@ matrix_vars_t::matrix_vars_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg )
 {
   GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE(decoder);
 }
 
 matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
@@ -36,6 +40,25 @@ matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
     inputs( cfg.xmlsrc, "input" )
 {
   m.resize( outputs.size() );
+  for(uint32_t k=0;k<outputs.size();++k)
+    outputs[k].get_attribute( "m", m[k] );
+  if( decoder == "maxre2d" ){
+    uint32_t amborder((inputs.size()-1)/2);
+    uint32_t maxc(2*amborder+1);
+    for(uint32_t k=0;k<outputs.size();++k){
+      m[k].resize(maxc);
+      double ordergain(sqrt(0.5));
+      double channelgain(1.0/maxc);
+      m[k][0] = channelgain*ordergain;
+        for(uint32_t o=1;o<amborder+1;++o){
+          ordergain = cos(o*M_PI/(2.0*amborder+2.0));
+          double _Complex cw(cpow(cexp(-I*outputs[k].azim()),o));
+          // ACN!
+          m[k][2*o] = channelgain*ordergain*creal(cw);
+          m[k][2*o-1] = channelgain*ordergain*cimag(cw);
+        }
+    }
+  }
   for(uint32_t k=0;k<inputs.size();++k){
     char ctmp[1024];
     sprintf(ctmp,"in.%d%s",k,inputs[k].label.c_str());
@@ -45,7 +68,6 @@ matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
     char ctmp[1024];
     sprintf(ctmp,"out.%d%s",k,outputs[k].label.c_str());
     add_output_port(ctmp);
-    outputs[k].get_attribute( "m", m[k] );
   }
   activate();
 }
@@ -54,9 +76,13 @@ matrix_vars_t::~matrix_vars_t()
 {
 }
 
-matrix_t::~matrix_t()
+void matrix_t::cleanup()
 {
   deactivate();
+}
+
+matrix_t::~matrix_t()
+{
 }
 
 void matrix_t::configure(double srate,uint32_t fragsize)

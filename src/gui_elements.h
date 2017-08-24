@@ -20,10 +20,35 @@ public:
   splmeter_t();
   void update(float v);
 private:
+  Gtk::VBox box;
   Gtk::Label val;
+  Gtk::ProgressBar meter;
 };
 
-class source_ctl_t : public Gtk::HBox {
+class GainScale_t : public Gtk::Scale {
+public:
+  GainScale_t();
+  float update();
+  void set_src(TASCAR::Scene::audio_port_t* ap);
+  void on_value_changed();
+private:
+  TASCAR::Scene::audio_port_t* ap_;
+};
+
+class gainctl_t : public Gtk::Frame {
+public:
+  gainctl_t();
+  void update();
+  void set_src(TASCAR::Scene::audio_port_t* ap);
+  void on_scale_changed();
+  void on_text_changed();
+private:
+  Gtk::VBox box;
+  Gtk::Entry val;
+  GainScale_t scale;
+};
+
+class source_ctl_t : public Gtk::VBox {
 public:
   source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
   source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
@@ -34,13 +59,15 @@ public:
   ~source_ctl_t();
   Gtk::Frame frame;//< frame for background
   Gtk::EventBox ebox;
-  Gtk::HBox box; //< control elements container
+  Gtk::VBox box; //< control elements container
   Gtk::Label tlabel; //< type label
   Gtk::Label label; //< route label
   Gtk::ToggleButton mute;
   Gtk::ToggleButton solo;
-  Gtk::VBox meterbox;
+  Gtk::HBox msbox;
+  Gtk::HBox meterbox;
   std::vector<splmeter_t*> meters;
+  std::vector<gainctl_t*> gainctl;
   playertimeline_t playertimeline;
   lo_address client_addr_;
   std::string name_;
@@ -56,7 +83,7 @@ public:
   void set_scene(TASCAR::Scene::scene_t*);
   void update();
   std::vector<source_ctl_t*> vbuttons;
-  Gtk::VBox box;
+  Gtk::HBox box;
   lo_address client_addr_;
   bool use_osc;
 };

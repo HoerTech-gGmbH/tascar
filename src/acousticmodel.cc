@@ -17,14 +17,15 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_)
+pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_)
   : audio(chunksize), active(true), 
     //direct(true),     
     ismmin(0),
     ismmax(2147483647),
     maxdist(maxdist_), 
     minlevel(minlevel_),
-    sincorder(sincorder_),ismorder(0),rmslevel(NULL)
+    sincorder(sincorder_),ismorder(0),gainmodel(gainmodel_),
+    rmslevel(NULL)
 {
 }
 
@@ -43,8 +44,8 @@ void pointsource_t::add_rmslevel(TASCAR::levelmeter_t* r)
   rmslevel = r;
 }
 
-doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,double minlevel,uint32_t sincorder_)
-  : pointsource_t(chunksize,maxdist,minlevel,sincorder_),
+doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel_)
+  : pointsource_t(chunksize,maxdist,minlevel,sincorder_,gainmodel_),
     inv_falloff(1.0),
     wnd_sqrt(false)
 {
@@ -104,7 +105,7 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
   airabsorption_state(0.0)
 {
   pos_t prel;
-  receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain,false);
+  receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain,false,src_->gainmodel);
   gain = 1.0;
   vstate.resize(obstacles_.size());
 }
@@ -136,7 +137,7 @@ uint32_t acoustic_model_t::process()
     // calculate relative geometry between source and receiver:
     double srcgainmod(1.0);
     effective_srcpos = src_->get_effective_position( receiver_->position, srcgainmod );
-    receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain, src_->ismorder>0 );
+    receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain, src_->ismorder>0, src_->gainmodel );
     if( nextdistance > src_->maxdist )
       return 0;
     nextgain *= srcgainmod;
@@ -179,7 +180,7 @@ uint32_t acoustic_model_t::process()
 }
 
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
-  : pointsource_t(src->audio.size(),src->maxdist,src->minlevel,src->sincorder),
+  : pointsource_t(src->audio.size(),src->maxdist,src->minlevel,src->sincorder,src->gainmodel),
     src_(src),reflector_(reflector),
     lpstate(0.0),b_0_14(false)
 {
@@ -440,7 +441,7 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,
 {
   pos_t prel;
   double d(1.0);
-  receiver_->update_refpoint(src_->center,src_->center,prel,d,gain,false);
+  receiver_->update_refpoint(src_->center,src_->center,prel,d,gain,false,GAIN_INVR);
   gain = 0;
 }
 
@@ -459,7 +460,7 @@ uint32_t diffuse_acoustic_model_t::process()
   double d(0.0);
   double nextgain(1.0);
   // calculate relative geometry between source and receiver:
-  receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain,false);
+  receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain,false,GAIN_INVR);
   shoebox_t box(*src_);
   //box.size = src_->size;
   box.center = pos_t();
@@ -607,7 +608,7 @@ void receiver_t::add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::
   receivermod_t::add_diffusesource(chunk,outchannels,data);
 }
 
-void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img)
+void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img, gainmodel_t gainmodel )
 {
   
   if( (size.x!=0)&&(size.y!=0)&&(size.z!=0) ){
@@ -621,14 +622,29 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     double d(box.nextpoint(prel).norm());
     if( falloff > 0 )
       gain = (0.5+0.5*cos(M_PI*std::min(1.0,d/falloff)))/std::max(0.1,sizedist);
-    else
-      gain = 1.0/std::max(1.0,d+sizedist);
+    else{
+      switch( gainmodel ){
+      case GAIN_INVR :
+        gain = 1.0/std::max(1.0,d+sizedist);
+        break;
+      case GAIN_UNITY :
+        gain = 1.0/std::max(1.0,sizedist);
+        break;
+      }
+    }
   }else{
     prel = psrc_virtual;
     prel -= position;
     prel /= orientation;
     distance = prel.norm();
-    gain = 1.0/std::max(0.1,distance);
+    switch( gainmodel ){
+    case GAIN_INVR :
+      gain = 1.0/std::max(0.1,distance);
+      break;
+    case GAIN_UNITY :
+      gain = 1.0;
+      break;
+    }
     double physical_dist(TASCAR::distance(psrc_physical,position));
     if( b_img && (physical_dist > distance) ){
       gain = 0.0;

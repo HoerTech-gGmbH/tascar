@@ -35,7 +35,7 @@ function tascar_generatedecmatrix( sFileName, iOrder, vAz, sInput )
     az = vAz(c);
     
     % FuMa norm:
-    cm = exp(i*az*pi/180).^vOrder;
+    cm = exp(-i*az*pi/180).^vOrder;
     cm(1) = sqrt(0.5);
     cm = 2*cm/iOutputChannels;
     if 1 % maxre

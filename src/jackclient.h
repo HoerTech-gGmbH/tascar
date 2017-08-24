@@ -79,7 +79,7 @@ public:
   std::vector<std::string> get_input_ports() const { return input_port_names; };
   std::vector<std::string> get_output_ports() const { return output_port_names; };
 protected:
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) = 0;
+  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) { return 0; };
 private:
   static int process_(jack_nframes_t nframes, void *arg);
   int process_(jack_nframes_t nframes);
@@ -99,7 +99,7 @@ public:
   virtual void add_input_port(const std::string& name);
   virtual void add_output_port(const std::string& name);
 protected:
-  virtual int inner_process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) = 0;
+  virtual int inner_process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) { return 0; };
   virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
 private:
   static void * service(void* h);

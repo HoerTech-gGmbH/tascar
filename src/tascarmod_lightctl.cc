@@ -37,6 +37,7 @@ private:
   std::vector<float> basedmx;
   std::vector<float> objval;
   std::vector<float> objw;
+  std::vector<std::vector<float> > fixturevals;
 };
 
 lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
@@ -74,7 +75,9 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   dmxdata.resize(fixtures.size()*channels);
   basedmx.resize(fixtures.size()*channels);
   tmpdmxdata.resize(fixtures.size()*channels);
+  fixturevals.resize(fixtures.size());
   for(uint32_t k=0;k<fixtures.size();++k){
+    fixturevals[k].resize(channels);
     uint32_t startaddr(1);
     fixtures[k].get_attribute("addr",startaddr);
     std::vector<int32_t> lampdmx;
@@ -146,6 +149,10 @@ void lightscene_t::update(uint32_t frame,bool running)
     }
     break;
   }
+  for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+    for(uint32_t c=0;c<channels;++c)
+      tmpdmxdata[channels*kfix+c] += fixturevals[kfix][c];
+  }
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
 }
@@ -163,6 +170,11 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     srv->add_vector_float( "/w", &objw );
   if( basedmx.size() )
     srv->add_vector_float( "/basedmx", &basedmx );
+  for(uint32_t k=0;k<fixturevals.size();++k){
+    char ctmp[256];
+    sprintf(ctmp,"/fixture%d",k);
+    srv->add_vector_float( ctmp, &(fixturevals[k]) );
+  }
 }
 
 class lightctl_t : public TASCAR::module_base_t, public TASCAR::service_t {

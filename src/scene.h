@@ -173,6 +173,7 @@ namespace TASCAR {
       std::string get_portname() const { return portname;};
       std::string get_connect() const { return connect;};
       float get_gain() const { return gain/(2e-5f*caliblevel);};
+      float get_gain_db() const { return 20*log10(gain); };
       void set_gain_db( float g );
       void set_gain_lin( float g );
     private:
@@ -252,6 +253,7 @@ namespace TASCAR {
     public:
       double maxdist;
       double minlevel;
+      TASCAR::gainmodel_t gainmodel;
       std::vector<TASCAR::audioplugin_t*> plugins;
     private:
       uint32_t sincorder;
@@ -324,6 +326,7 @@ namespace TASCAR {
       std::vector<obstacle_group_t*> obstaclegroups;
       std::vector<receivermod_object_t*> receivermod_objects;
       std::vector<mask_object_t*> masks;
+      std::vector<object_t*> all_objects;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t mirrororder;
       bool b_0_14;

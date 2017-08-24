@@ -51,6 +51,12 @@ void TASCAR::module_t::configure(double srate,uint32_t fragsize)
   is_configured = true;
 }
 
+void TASCAR::module_t::cleanup()
+{
+  is_configured = false;
+  libdata->cleanup();
+}
+
 TASCAR::module_t::~module_t()
 {
   delete libdata;
@@ -165,6 +171,8 @@ TASCAR::session_t::~session_t()
 {
   if( started_ )
     stop();
+  for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
+    (*it)->cleanup();
   osc_server_t::deactivate();
   jackc_transport_t::deactivate();
   usleep(50000);

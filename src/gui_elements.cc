@@ -6,16 +6,107 @@ playertimeline_t::playertimeline_t()
 
 splmeter_t::splmeter_t()
 {
-  add(val);
-  val.set_text("-inf dB");
-  val.set_size_request( 60, -1 );
+  box.add(val);
+  val.set_text("-inf");
+  val.set_size_request( 32, -1 );
+  box.add(meter);
+  meter.set_inverted(true);
+  meter.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  meter.set_size_request( -1, 300 );
+  add(box);
+   //Gdk::RGBA col;  
+  //col.set_rgba(0,0,0,1);
+  //meter.override_background_color(col);
+  //meter.set_min_value(30);
+  //meter.set_max_value(85);
 }
 
 void splmeter_t::update(float v)
 {
   char ctmp[256];
-  sprintf(ctmp,"%1.1f dB",v);
+  sprintf(ctmp,"%1.1f",v);
   val.set_text(ctmp);
+  //meter.set_value(v);
+  double vmin(30);
+  double vmax(100);
+  v = std::max(0.0,std::min(1.0,(v-vmin)/(vmax-vmin)));
+  meter.set_fraction(v);
+}
+
+GainScale_t::GainScale_t()
+  : Gtk::Scale(Gtk::ORIENTATION_VERTICAL),
+    ap_(NULL)
+{
+  set_draw_value(false);
+  set_has_origin(true);
+  set_range(-30,10);
+  set_inverted(true);
+  set_increments(1,1);
+}
+
+void GainScale_t::on_value_changed()
+{
+  if( ap_ )
+    ap_->set_gain_db( get_value() );
+}
+
+float GainScale_t::update()
+{
+  double v(0);
+  if( ap_ ){
+    v = ap_->get_gain_db();
+    set_value(v);
+  }
+  return v;
+}
+
+void GainScale_t::set_src(TASCAR::Scene::audio_port_t* ap)
+{
+  ap_ = ap;
+}
+
+gainctl_t::gainctl_t()
+{
+  val.set_has_frame( false );
+  val.set_max_length( 10 );
+  val.set_width_chars( 4 );
+  val.set_size_request( 32, -1 );
+  add(box);
+  box.pack_start(val,Gtk::PACK_SHRINK);
+  box.add(scale);
+  //mute.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_mute));
+  scale.signal_value_changed().connect(sigc::mem_fun(*this,&gainctl_t::on_scale_changed));
+  val.signal_activate().connect(sigc::mem_fun(*this,&gainctl_t::on_text_changed));
+}
+
+void gainctl_t::update()
+{
+  scale.update();
+}
+
+void gainctl_t::set_src(TASCAR::Scene::audio_port_t* ap)
+{
+  scale.set_src(ap);
+  on_scale_changed();
+}
+
+void gainctl_t::on_scale_changed()
+{
+  char ctmp[256];
+  float v(scale.get_value());
+  sprintf(ctmp,"%1.1f",v);
+  val.set_text(ctmp);
+}
+
+void gainctl_t::on_text_changed()
+{
+  std::string txt(val.get_text());
+  char* endp(NULL);
+  float v(0);
+  v = strtof(txt.c_str(),&endp);
+  if( endp != txt.c_str() ){
+    scale.set_value(v);
+  }
 }
 
 void scene_draw_t::draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
@@ -30,6 +121,8 @@ source_ctl_t::~source_ctl_t()
 {
   for(uint32_t k=0;k<meters.size();k++)
     delete meters[k];
+  for(uint32_t k=0;k<gainctl.size();k++)
+    delete gainctl[k];
 }
 
 source_ctl_t::source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
@@ -62,10 +155,26 @@ void source_ctl_t::setup()
     tlabel.set_text("rcvr");
   if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
     tlabel.set_text("door");
+  TASCAR::Scene::audio_port_t* ap(dynamic_cast<TASCAR::Scene::audio_port_t*>(route_));
+  if( ap ){
+    gainctl.push_back(new gainctl_t());
+    gainctl.back()->set_src( ap );
+    meterbox.add(*(gainctl.back()));
+  }else{
+    TASCAR::Scene::src_object_t* so(dynamic_cast<TASCAR::Scene::src_object_t*>(route_));
+    if( so ){
+      for( uint32_t k=0;k<so->sound.size();++k){
+        gainctl.push_back(new gainctl_t());
+        gainctl.back()->set_src( so->sound[k] );
+        meterbox.add(*(gainctl.back()));
+      }
+    }
+  }
   box.pack_start( tlabel, Gtk::PACK_SHRINK );
-  box.pack_start( label, Gtk::PACK_EXPAND_PADDING );
-  box.pack_start( mute, Gtk::PACK_SHRINK );
-  box.pack_start( solo, Gtk::PACK_SHRINK );
+  box.pack_start( label, Gtk::PACK_SHRINK );//EXPAND_PADDING );
+  msbox.pack_start( mute, Gtk::PACK_EXPAND_WIDGET );
+  msbox.pack_start( solo, Gtk::PACK_EXPAND_WIDGET );
+  box.pack_start( msbox, Gtk::PACK_SHRINK );
   mute.set_active(route_->get_mute());
   solo.set_active(route_->get_solo());
 #ifdef GTKMM30
@@ -93,7 +202,7 @@ void source_ctl_t::setup()
   }
 #endif
   frame.add(ebox);
-  frame.set_size_request( 300, -1 );
+  //frame.set_size_request( 30, 300 );
   //add(frame);
   pack_start( frame, Gtk::PACK_SHRINK );
   //meterbox.set_size_request( 40, -1 );
@@ -113,6 +222,9 @@ void source_ctl_t::update()
   std::vector<float> levels(route_->readmeter());
   for(uint32_t k=0;k<meters.size();k++){
     meters[k]->update(levels[k]);
+  }
+  for(uint32_t k=0;k<gainctl.size();k++){
+    gainctl[k]->update();
   }
   mute.set_active(route_->get_mute());
   solo.set_active(route_->get_solo());
@@ -170,8 +282,8 @@ void source_panel_t::set_scene(TASCAR::Scene::scene_t* s)
   }
   vbuttons.clear();
   if( s ){
-    std::vector<TASCAR::Scene::object_t*> obj(s->get_objects());
-    for(std::vector<TASCAR::Scene::object_t*>::iterator it=obj.begin();it!=obj.end();++it){
+    //std::vector<TASCAR::Scene::object_t*> obj(s->get_objects());
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it=s->all_objects.begin();it!=s->all_objects.end();++it){
       if( use_osc )
         vbuttons.push_back(new source_ctl_t(client_addr_,s,*it));
       else
@@ -365,9 +477,9 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
     if( scene_ ){
       if( scene_->guitrackobject )
         view.set_ref(scene_->guitrackobject->c6dof.p);
-      std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
-      for(uint32_t k=0;k<objects.size();k++)
-        draw_object(objects[k],cr );
+      //std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
+      for(uint32_t k=0;k<scene_->all_objects.size();k++)
+        draw_object(scene_->all_objects[k],cr );
       if( b_acoustic_model && scene_->world ){
         draw_acousticmodel(cr);
       }

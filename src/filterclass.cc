@@ -57,7 +57,7 @@ TASCAR::filter_t::filter_t(const std::vector<double>& vA, const std::vector<doub
   // recursive and non-recursive coefficients need at least one entry:
   if( vA.size() == 0 )
     throw TASCAR::ErrMsg("Recursive coefficients are empty.");
-  if( vA.size() == 0 )
+  if( vB.size() == 0 )
     throw TASCAR::ErrMsg("Non-recursive coefficients are empty.");
   len = std::max(len_A,len_B);
   // allocate filter coefficient buffers and initialize to identity:
