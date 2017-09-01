@@ -12,13 +12,16 @@ public:
     virtual ~data_t();
     // point source speaker weights:
     uint32_t amb_order;
-    float _Complex* enc_w;
-    float _Complex* enc_dw;
+    float _Complex* enc_wp;
+    float _Complex* enc_wm;
+    float _Complex* enc_dwp;
+    float _Complex* enc_dwm;
     double dt;
     TASCAR::wave_t wx_1;
     TASCAR::wave_t wx_2;
     TASCAR::wave_t wy_1;
     TASCAR::wave_t wy_2;
+    TASCAR::varidelay_t delay;
     TASCAR::varidelay_t dx;
     TASCAR::varidelay_t dy;
   };
@@ -36,7 +39,6 @@ public:
   // decode HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
 private:
-  //TASCAR::spk_array_t spkpos;
   uint32_t nbins;
   uint32_t order;
   uint32_t amb_order;
@@ -55,6 +57,12 @@ private:
   double diffup_delay;
   uint32_t diffup_maxorder;
   uint32_t idelay;
+  uint32_t idelaypoint;
+  // Zotter width control:
+  //uint32_t truncofs; //< truncation offset
+  //double dispersion; //< dispersion constant (to be replaced by physical object size)
+  //double d0; //< distance at which the dispersion constant is achieved
+  double filterperiod; //< filter period time in seconds
 };
 
 hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
@@ -74,7 +82,9 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     diffup_rot(45*DEG2RAD),
     diffup_delay(0.01),
     diffup_maxorder(100),
-    idelay(0)
+    idelay(0),
+    idelaypoint(0),
+    filterperiod(0.005)
 {
   if( spkpos.size() < 3 )
     throw TASCAR::ErrMsg("At least three loudspeakers are required for HOA decoding.");
@@ -87,6 +97,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE_DEG(diffup_rot);
   GET_ATTRIBUTE(diffup_delay);
   GET_ATTRIBUTE(diffup_maxorder);
+  GET_ATTRIBUTE(filterperiod);
   //GET_ATTRIBUTE(wgain);
   if( order > 0 )
     amb_order = std::min((uint32_t)order,amb_order);
@@ -102,6 +113,7 @@ void hoa2d_t::write_xml()
   SET_ATTRIBUTE_DEG(diffup_rot);
   SET_ATTRIBUTE(diffup_delay);
   SET_ATTRIBUTE(diffup_maxorder);
+  SET_ATTRIBUTE(filterperiod);
 }
 
 hoa2d_t::~hoa2d_t()
@@ -140,28 +152,36 @@ void hoa2d_t::configure(double srate,uint32_t fragsize)
       ordergain[m] *= cosf((float)m*M_PI/(2.0f*(float)amb_order+2.0f));
   }
   idelay = diffup_delay*srate;
+  idelaypoint = filterperiod*srate;
 }
 
 hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t channels, double srate)
   : amb_order((channels-1)/2),
-    enc_w(new float _Complex[amb_order+1]),
-    enc_dw(new float _Complex[amb_order+1]),
+    enc_wp(new float _Complex[amb_order+1]),
+    enc_wm(new float _Complex[amb_order+1]),
+    enc_dwp(new float _Complex[amb_order+1]),
+    enc_dwm(new float _Complex[amb_order+1]),
     wx_1(chunksize),
     wx_2(chunksize),
     wy_1(chunksize),
     wy_2(chunksize),
+    delay(srate, srate, 340, 0, 0 ),
     dx(srate, srate, 340, 0, 0 ),
     dy(srate, srate, 340, 0, 0 )
 {
-  for(uint32_t k=0;k<=amb_order;++k)
-    enc_w[k] = enc_dw[k] = 0;
+  memset(enc_wp,0,sizeof(float _Complex)*(amb_order+1));
+  memset(enc_wm,0,sizeof(float _Complex)*(amb_order+1));
+  memset(enc_dwp,0,sizeof(float _Complex)*(amb_order+1));
+  memset(enc_dwm,0,sizeof(float _Complex)*(amb_order+1));
   dt = 1.0/std::max(1.0,(double)chunksize);
 }
 
 hoa2d_t::data_t::~data_t()
 {
-  delete [] enc_w;
-  delete [] enc_dw;
+  delete [] enc_wp;
+  delete [] enc_wm;
+  delete [] enc_dwp;
+  delete [] enc_dwm;
 }
 
 void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
@@ -170,18 +190,27 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TAS
     throw TASCAR::ErrMsg("Configure method not called or not configured properly.");
   data_t* d((data_t*)sd);
   float az(-prel.azim());
-  float _Complex ciaz(cexpf(I*az));
-  float _Complex ckiaz(ciaz);
+  float _Complex ciazp(cexpf(I*(az+width)));
+  float _Complex ciazm(cexpf(I*(az-width)));
+  float _Complex ckiazp(ciazp);
+  float _Complex ckiazm(ciazm);
   for(uint32_t ko=1;ko<=amb_order;++ko){
-    d->enc_dw[ko] = (ordergain[ko]*ckiaz - d->enc_w[ko])*d->dt;
-    ckiaz *= ciaz;
+    d->enc_dwp[ko] = (ordergain[ko]*ckiazp - d->enc_wp[ko])*d->dt;
+    ckiazp *= ciazp;
+    d->enc_dwm[ko] = (ordergain[ko]*ckiazm - d->enc_wm[ko])*d->dt;
+    ckiazm *= ciazm;
   }
-  d->enc_dw[0] = 0.0f;
-  //d->enc_w[0] = fft_scale*sqrtf(0.5f);
-  d->enc_w[0] = ordergain[0];
+  d->enc_dwp[0] = d->enc_dwm[0] = 0.0f;
+  d->enc_wp[0] = d->enc_wm[0] = ordergain[0];
   for(uint32_t kt=0;kt<chunk_size;++kt){
+    float v(chunk[kt]);
+    d->delay.push(v);
+    float vdelayed(d->delay.get(idelaypoint));
+    float vp(0.5*(v + vdelayed));
+    float vm(0.5*(v - vdelayed));
     for(uint32_t ko=0;ko<=amb_order;++ko)
-      s_encoded[kt*nbins+ko] += (d->enc_w[ko] += d->enc_dw[ko]) * chunk[kt];
+      s_encoded[kt*nbins+ko] += ((d->enc_wp[ko] += d->enc_dwp[ko]) * vp + 
+                                 (d->enc_wm[ko] += d->enc_dwm[ko]) * vm);
   }
 }
 

@@ -94,6 +94,7 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
     falloff(1.0),
     distance(1.0),
     wnd_sqrt(false),
+    size(0),
     maxdist(3700),
     minlevel(0),
     sincorder(0),
@@ -104,6 +105,7 @@ src_door_t::src_door_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("falloff",falloff);
   dynobject_t::get_attribute("distance",distance);
   dynobject_t::get_attribute_bool("wndsqrt",wnd_sqrt);
+  dynobject_t::GET_ATTRIBUTE(size);
   dynobject_t::GET_ATTRIBUTE(maxdist);
   dynobject_t::GET_ATTRIBUTE_DBSPL(minlevel);
   dynobject_t::GET_ATTRIBUTE(sincorder);
@@ -118,6 +120,7 @@ void src_door_t::write_xml()
   dynobject_t::set_attribute("falloff",falloff);
   dynobject_t::set_attribute("distance",distance);
   dynobject_t::set_attribute_bool("wndsqrt",wnd_sqrt);
+  dynobject_t::SET_ATTRIBUTE(size);
   dynobject_t::SET_ATTRIBUTE(maxdist);
   dynobject_t::SET_ATTRIBUTE_DBSPL(minlevel);
   dynobject_t::SET_ATTRIBUTE(sincorder);
@@ -135,6 +138,7 @@ void src_door_t::geometry_update(double t)
     dynobject_t::geometry_update(t);
     source->inv_falloff = 1.0/std::max(falloff,1.0e-10);
     source->distance = distance;
+    source->size = size;
     source->wnd_sqrt = wnd_sqrt;
     source->position = get_location();
     source->apply_rot_loc(source->position,get_orientation());
@@ -148,7 +152,7 @@ void src_door_t::prepare(double fs, uint32_t fragsize)
     delete source;
   reset_meters();
   addmeter(fs);
-  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder,GAIN_INVR);
+  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder,GAIN_INVR,size);
   source->add_rmslevel(rmsmeter[0]);
   geometry_update(0);
   source->nonrt_set_rect(width,height);
@@ -161,6 +165,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   : audio_port_t(xmlsrc),fs_(1),
     local_position(0,0,0),
     chaindist(0),
+    size(0),
     maxdist(3700),
     minlevel(0),
     gainmodel(GAIN_INVR),
@@ -174,6 +179,7 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   get_attribute("y",local_position.y);
   get_attribute("z",local_position.z);
   get_attribute("d",chaindist);
+  GET_ATTRIBUTE(size);
   GET_ATTRIBUTE(maxdist);
   GET_ATTRIBUTE_DBSPL(minlevel);
   std::string gr;
@@ -209,6 +215,7 @@ sound_t::sound_t(const sound_t& src)
     dt_(1),
     local_position(src.local_position),
     chaindist(src.chaindist),
+    size(src.size),
     maxdist(src.maxdist),
     minlevel(src.minlevel),
     gainmodel(src.gainmodel),
@@ -262,6 +269,7 @@ void sound_t::geometry_update(double t)
     source->position = get_pos_global(t);
     source->ismmin = ismmin;
     source->ismmax = ismmax;
+    source->size = size;
   }
 }
 
@@ -274,7 +282,7 @@ void sound_t::prepare(double fs, uint32_t fragsize)
     delete source;
   for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
     (*p)->prepare(fs,fragsize);
-  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,minlevel,sincorder,gainmodel);
+  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,minlevel,sincorder,gainmodel,size);
 }
 
 src_diffuse_t::~src_diffuse_t()
@@ -336,6 +344,7 @@ void audio_port_t::set_port_index(uint32_t port_index_)
 void sound_t::write_xml()
 {
   audio_port_t::write_xml();
+  SET_ATTRIBUTE(size);
   SET_ATTRIBUTE(maxdist);
   SET_ATTRIBUTE_DBSPL(minlevel);
   SET_ATTRIBUTE(sincorder);

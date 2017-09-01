@@ -213,6 +213,7 @@ namespace TASCAR {
       double falloff;
       double distance;
       bool wnd_sqrt;
+      double size;
       double maxdist;
       double minlevel;
       uint32_t sincorder;
@@ -251,6 +252,7 @@ namespace TASCAR {
       pos_t local_position;
       double chaindist;
     public:
+      double size;
       double maxdist;
       double minlevel;
       TASCAR::gainmodel_t gainmodel;

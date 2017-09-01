@@ -18,7 +18,7 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic chmap hoa2d_fuma
+  intensityvector vmic chmap hoa2d_fuma hoa2d_dw hoa2d_fuma_dw
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
@@ -172,6 +172,7 @@ bz2:
 tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 
 tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
+tascarreceiver_hoa2d_dw.so: LDLIBS+=-lfftw3f
 tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
 tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 tascar_hoafdnrot.so: LDLIBS+=-lfftw3f

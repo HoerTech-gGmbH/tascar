@@ -17,7 +17,7 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_)
+pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_,double size_)
   : audio(chunksize), active(true), 
     //direct(true),     
     ismmin(0),
@@ -25,6 +25,7 @@ pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_
     maxdist(maxdist_), 
     minlevel(minlevel_),
     sincorder(sincorder_),ismorder(0),gainmodel(gainmodel_),
+    size(size_),
     rmslevel(NULL)
 {
 }
@@ -44,8 +45,8 @@ void pointsource_t::add_rmslevel(TASCAR::levelmeter_t* r)
   rmslevel = r;
 }
 
-doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel_)
-  : pointsource_t(chunksize,maxdist,minlevel,sincorder_,gainmodel_),
+doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel_,double size_)
+  : pointsource_t(chunksize,maxdist,minlevel,sincorder_,gainmodel_,size_),
     inv_falloff(1.0),
     wnd_sqrt(false)
 {
@@ -170,7 +171,7 @@ uint32_t acoustic_model_t::process()
         if( audio.rms() <= src_->minlevel )
           return 0;
       }
-      receiver_->add_pointsource(prel,audio,receiver_data);
+      receiver_->add_pointsource(prel,std::min(0.5*M_PI,0.25*M_PI*src_->size/std::max(0.01,nextdistance)),audio,receiver_data);
       return 1;
     }
   }else{
@@ -180,7 +181,7 @@ uint32_t acoustic_model_t::process()
 }
 
 mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
-  : pointsource_t(src->audio.size(),src->maxdist,src->minlevel,src->sincorder,src->gainmodel),
+  : pointsource_t(src->audio.size(),src->maxdist,src->minlevel,src->sincorder,src->gainmodel,src->size),
     src_(src),reflector_(reflector),
     lpstate(0.0),b_0_14(false)
 {
@@ -587,9 +588,9 @@ void receiver_t::clear_output()
 /**
    \ingroup callgraph
  */
-void receiver_t::add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t* data)
+void receiver_t::add_pointsource(const pos_t& prel, double width, const wave_t& chunk, receivermod_base_t::data_t* data)
 {
-  receivermod_t::add_pointsource(prel,chunk,outchannels,data);
+  receivermod_t::add_pointsource(prel,width,chunk,outchannels,data);
 }
 
 /**

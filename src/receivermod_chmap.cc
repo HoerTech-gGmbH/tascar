@@ -3,7 +3,7 @@
 class chmap_t : public TASCAR::receivermod_base_t {
 public:
   chmap_t(xmlpp::Element* xmlsrc);
-  void add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
@@ -31,7 +31,7 @@ void chmap_t::postproc(std::vector<TASCAR::wave_t>& output)
 
 // will be called for every point source (primary or image) in each
 // cycle:
-void chmap_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void chmap_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
   //TASCAR::pos_t prel_norm(prel.normal());
   //prel_norm.x <- cosine of relative direction of arrival

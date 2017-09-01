@@ -91,6 +91,7 @@ TASCAR::session_t::session_t()
     period_time(1.0/(double)srate),
     started_(false)
 {
+  pthread_mutex_init( &mtx, NULL );
   add_output_port("sync_out");
   jackc_transport_t::activate();
   read_xml();
@@ -110,6 +111,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     period_time(1.0/(double)srate),
     started_(false)
 {
+  pthread_mutex_init( &mtx, NULL );
   add_output_port("sync_out");
   jackc_transport_t::activate();
   // parse XML:
@@ -131,14 +133,17 @@ void TASCAR::session_t::read_xml()
     TASCAR::tsc_reader_t::read_xml();
   }
   catch( ... ){
-    for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
-      delete (*it);
-    for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
-      delete (*it);
-    for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
-      delete (*it);
-    for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
-      delete (*it);
+    if( lock_vars() ){
+      for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+        delete (*it);
+      for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
+        delete (*it);
+      for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
+        delete (*it);
+      for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
+        delete (*it);
+      unlock_vars();
+    }
     throw;
   }
 }
@@ -161,29 +166,52 @@ void TASCAR::session_t::write_xml()
 
 void TASCAR::session_t::unload_modules()
 {
-  std::vector<TASCAR::module_t*> lmodules(modules);  
-  modules.clear();
-  for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
-    delete (*it);
+  if( started_ )
+    stop();
+  if( lock_vars() ){
+    std::vector<TASCAR::module_t*> lmodules(modules);  
+    modules.clear();
+    for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
+      (*it)->cleanup();
+    for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
+      delete (*it);
+    //usleep(50000);
+    for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+      delete (*it);
+    player.clear();
+    for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
+      delete (*it);
+    ranges.clear();
+    for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
+      delete (*it);
+    connections.clear();
+    unlock_vars();
+  }
+}
+
+bool TASCAR::session_t::lock_vars()
+{
+  return (pthread_mutex_lock( &mtx ) == 0);
+}
+
+void TASCAR::session_t::unlock_vars()
+{
+  pthread_mutex_unlock( &mtx );
+}
+
+bool TASCAR::session_t::trylock_vars()
+{
+  return (pthread_mutex_trylock( &mtx ) == 0);
 }
 
 TASCAR::session_t::~session_t()
 {
-  if( started_ )
-    stop();
-  for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
-    (*it)->cleanup();
   osc_server_t::deactivate();
   jackc_transport_t::deactivate();
-  usleep(50000);
-  for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
-    delete (*it);
-  for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
-    delete (*it);
-  for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
-    delete (*it);
-  for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
-    delete (*it);
+  unload_modules();
+  pthread_mutex_trylock( &mtx );
+  pthread_mutex_unlock( &mtx );
+  pthread_mutex_destroy( &mtx );
 }
 
 std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
@@ -258,8 +286,9 @@ int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>&
   uint32_t next_tp_frame(tp_frame);
   if( tp_rolling )
     next_tp_frame += fragsize;
-  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->update(next_tp_frame,tp_rolling);
+  if( started_ )
+    for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
+      (*imod)->update(next_tp_frame,tp_rolling);
   if( t >= duration ){
     if( loop )
       tp_locate(0u);
@@ -271,10 +300,10 @@ int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>&
 
 void TASCAR::session_t::stop()
 {
+  started_ = false;
   for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
     (*ipl)->stop();
   //jackc_transport_t::deactivate();
-  started_ = false;
 }
 
 void del_whitespace( xmlpp::Node* node )

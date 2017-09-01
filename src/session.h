@@ -115,6 +115,10 @@ namespace TASCAR {
     virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
     //virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
     void unload_modules();
+    bool lock_vars();
+    void unlock_vars();
+    bool trylock_vars();
+    bool is_running() { return started_; };
   protected:
     // derived variables:
     std::string session_path;
@@ -123,6 +127,7 @@ namespace TASCAR {
     void read_xml();
     double period_time;
     bool started_;
+    pthread_mutex_t mtx;
   };
 
   class actor_module_t : public module_base_t {

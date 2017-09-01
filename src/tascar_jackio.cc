@@ -42,7 +42,7 @@ void store_stats(const std::string& statname,jackio_t& jio)
 int main(int argc, char** argv)
 {
   try{
-    const char *options = "fo:chus:d:vt:w";
+    const char *options = "fo:chus:d:vt:wn:";
     struct option long_options[] = { 
       { "freewheeling", 0, 0, 'f' },
       { "output-file",  1, 0, 'o' },

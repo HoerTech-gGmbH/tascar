@@ -32,9 +32,9 @@ void TASCAR::receivermod_t::write_xml()
   libdata->write_xml();
 }
 
-void TASCAR::receivermod_t::add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
+void TASCAR::receivermod_t::add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
 {
-  libdata->add_pointsource(prel,chunk,output,data);
+  libdata->add_pointsource(prel,width, chunk,output,data);
 }
 
 void TASCAR::receivermod_t::add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)

@@ -42,7 +42,7 @@ namespace TASCAR {
     receivermod_base_t(xmlpp::Element* xmlsrc);
     virtual void write_xml();
     virtual ~receivermod_base_t();
-    virtual void add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
+    virtual void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
     virtual void add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
     virtual void postproc(std::vector<wave_t>& output) {};
     virtual uint32_t get_num_channels() = 0;
@@ -69,7 +69,7 @@ namespace TASCAR {
     receivermod_t(xmlpp::Element* xmlsrc);
     void write_xml();
     virtual ~receivermod_t();
-    virtual void add_pointsource(const pos_t& prel, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
+    virtual void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
     virtual void add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
     virtual void postproc(std::vector<wave_t>& output);
     virtual uint32_t get_num_channels();

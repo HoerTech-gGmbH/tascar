@@ -35,7 +35,7 @@ namespace TASCAR {
      */
     class pointsource_t {
     public:
-      pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_);
+      pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_,double size_);
       virtual ~pointsource_t();
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       virtual pos_t get_physical_position() const { return position; };
@@ -51,6 +51,7 @@ namespace TASCAR {
       uint32_t sincorder;
       uint32_t ismorder;
       gainmodel_t gainmodel;
+      double size;
       TASCAR::levelmeter_t* rmslevel;
     };
 
@@ -71,7 +72,7 @@ namespace TASCAR {
 
     class doorsource_t : public pointsource_t, public diffractor_t {
     public:
-      doorsource_t(uint32_t chunksize, double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel);
+      doorsource_t(uint32_t chunksize, double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel,double size_);
       virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
       //void process();
       double inv_falloff;
@@ -116,7 +117,7 @@ namespace TASCAR {
       void prepare(double srate, uint32_t fragsize);
       void release();
       void clear_output();
-      void add_pointsource(const pos_t& prel, const wave_t& chunk, receivermod_base_t::data_t*);
+      void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, receivermod_base_t::data_t*);
       void add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain, bool b_img, gainmodel_t gainmodel );
       void set_next_gain(double gain);

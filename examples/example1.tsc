@@ -1,28 +1,26 @@
 <?xml version="1.0"?>
-<session name="example" duration="42">
-  <description>one source</description>
-  <scene name="scene1" guiscale="37">
-    <src_object name="point" color="#f00000" start="0">
+<session name="example" duration="42" srv_port="9999">
+  <!--
+      This is an example TASCAR configuration file. It contains a
+      scene with one moving sound source and one moving and rotating
+      receiver.
+  -->
+  <scene name="scene" guiscale="37">
+    <src_object name="source">
       <position>0 1 -20 0
       20 1 20 0</position>
-      <sound name="0" connect="@.0" gain="0"/>
-      <sndfile name="tc1.wav" loop="0"/>
+      <sound name="0">
+	<sndfile name="tc1.wav" level="65" loop="0"/>
+      </sound>
     </src_object>
-    <receivermod name="test" receivertype="omni"/>
-    <receiver name="ego" type="amb3h0v" color="#0000f0" connect="Ambdec:in">
+    <receiver name="out" type="ortf">
       <position>0 -8 13 0
       22 2 0 0</position>
       <orientation>0 0 0 0
       22 0 0 0
       42 1800 0 0</orientation>
     </receiver>
-    <receiver name="nsp" type="nsp" color="#00f0f0" size_x="20" size_y="20" size_z="20" diffuse="false">
-      <speaker az="-90" el="0"/>
-      <speaker az="90" el="0"/>
-      <position>0 8 -13 0
-      40 -10 13 0</position>
-      <orientation>0 0 0 0
-      42 900 0 0</orientation>
-    </receiver>
   </scene>
+  <connect src="render.scene:out_l" dest="system:playback_1"/>
+  <connect src="render.scene:out_r" dest="system:playback_2"/>
 </session>

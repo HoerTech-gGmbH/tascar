@@ -25,7 +25,7 @@ public:
   virtual ~rec_vbap_t() {};
   void write_xml(); //fun.dec.
   //declaration add_pointsource
-  void add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);//declaration add_pointsource
+  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);//declaration add_pointsource
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
@@ -82,7 +82,7 @@ rec_vbap_t::rec_vbap_t(xmlpp::Element* xmlsrc)
 }
 
 //definition of the function add_pointsource
-void rec_vbap_t::add_pointsource(const TASCAR::pos_t& prel, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void rec_vbap_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 
 /*INPUT:
   prel   : position of the source in the receiver coordinate system (from the receiver perspective)

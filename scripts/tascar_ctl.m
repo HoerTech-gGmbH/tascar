@@ -101,7 +101,7 @@ function tascar_ctl_kill(h)
 %                                TASCAR scene from MATLAB  
 
   if isfield(h,'oscport') && isfield(h,'oschost')
-    send_osc(h.oschost,h.oscport,'/unload');
+    send_osc(h.oschost,h.oscport,'/tascargui/quit');
     pause(0.5);
   end
   [a,b] = system(sprintf('kill %d',h.pid));
