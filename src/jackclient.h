@@ -34,7 +34,7 @@
 class jackc_portless_t {
 public:
   jackc_portless_t(const std::string& clientname);
-  ~jackc_portless_t();
+  virtual ~jackc_portless_t();
   void tp_start();
   void tp_stop();
   void tp_locate(uint32_t p);
@@ -52,6 +52,7 @@ public:
   float get_cpu_load() const { return jack_cpu_load(jc);};
 private:
   static int xrun_callback(void *arg);
+  static void on_shutdown(void *arg);
 public:
   jack_client_t* jc;
   int srate;

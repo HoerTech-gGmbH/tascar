@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session srv_port="9999">
+  <scene guiscale="6">
+    <src_object name="S">
+      <sound name="0" x="1"/>
+    </src_object>
+    <src_object name="N">
+      <sound name="0" x="1"/>
+    </src_object>
+    <receiver name="out"  type="hoa2d" layout="16chdlab.spk" caliblevel="120"/>
+  </scene>
+</session>

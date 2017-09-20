@@ -64,11 +64,16 @@ def write_track(obj,filepath):
 # main:
 #
 base = os.path.basename(bpy.data.filepath)[0:-6]
+tsc = bpy.context.scene
+if 'tascar' in bpy.data.scenes:
+  tsc = bpy.data.scenes['tascar']
 for obj in bpy.data.objects:
-  if ( obj.type =='MESH'):
-    write_mesh(obj,base+'_'+obj.name+'.raw')
-  if ( obj.type =='CURVE'):
-    write_track(obj,base+'_'+obj.name+'.csv')
+  if (tsc in obj.users_scene):
+    print(obj.name)
+    if ( obj.type =='MESH' ):
+      write_mesh(obj,base+'_'+obj.name+'.raw')
+    if ( obj.type =='CURVE' ):
+      write_track(obj,base+'_'+obj.name+'.csv')
 
 # Local Variables:
 # python-indent-offset: 2

@@ -36,14 +36,36 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
   : srate(0),active(false),xruns(0),xrun_latency(0)
 {
   jack_status_t jstat;
-  jc = jack_client_open(clientname.c_str(),JackUseExactName,&jstat);
+  //jack_options_t opt(JackUseExactName |JackNoStartServer);
+  jack_options_t opt((jack_options_t)(JackNoStartServer|JackUseExactName));
+  jc = jack_client_open(clientname.c_str(),opt,&jstat);
   if( !jc ){
-    throw TASCAR::ErrMsg("unable to open jack client");
+    std::string err("unable to open jack client: ");
+    if( jstat & JackFailure )
+      err += "Overall operation failed. ";
+    if( jstat & JackInvalidOption )
+      err += "The operation contained an invalid or unsupported option. ";
+    if( jstat & JackNameNotUnique )
+      err += "The desired client name was not unique. ";
+    if( jstat & JackServerStarted )
+      err += "The JACK server was started as a result of this operation. ";
+    if( jstat & JackServerFailed )
+      err += "Unable to connect to the JACK server. ";
+    if( jstat & JackServerError )
+      err += "Communication error with the JACK server. ";
+    if( jstat & JackInitFailure )
+      err += "Unable to initialize client. ";
+    if( jstat & JackShmFailure )
+      err += "Unable to access shared memory. ";
+    if( jstat & JackVersionError )
+      err += "Client's protocol version does not match. ";
+    throw TASCAR::ErrMsg(err);
   }
   srate = jack_get_sample_rate(jc);
   fragsize = jack_get_buffer_size(jc);
   rtprio = jack_client_real_time_priority(jc);
   jack_set_xrun_callback(jc,jackc_portless_t::xrun_callback,this);
+  jack_on_shutdown(jc,jackc_portless_t::on_shutdown,this);
 }
 
 jackc_portless_t::~jackc_portless_t()
@@ -74,7 +96,8 @@ void jackc_portless_t::activate()
 
 void jackc_portless_t::deactivate()
 {
-  jack_deactivate(jc);
+  if( active )
+    jack_deactivate(jc);
   active = false;
 }
 
@@ -97,12 +120,13 @@ jackc_t::jackc_t(const std::string& clientname)
 
 jackc_t::~jackc_t()
 {
-  if( active )
+  if( active ){
     deactivate();
-  for(unsigned int k=0;k<inPort.size();k++)
-    jack_port_unregister(jc,inPort[k]);
-  for(unsigned int k=0;k<outPort.size();k++)
-    jack_port_unregister(jc,outPort[k]);
+    for(unsigned int k=0;k<inPort.size();k++)
+      jack_port_unregister(jc,inPort[k]);
+    for(unsigned int k=0;k<outPort.size();k++)
+      jack_port_unregister(jc,outPort[k]);
+  }
 }
 
 int jackc_t::process_(jack_nframes_t nframes, void *arg)
@@ -151,9 +175,12 @@ void jackc_t::add_output_port(const std::string& name)
 int jackc_portless_t::xrun_callback(void *arg)
 {
   ((jackc_portless_t*)arg)->xruns++;
-  //((jackc_portless_t*)arg)->xrun_latency +=
-  //  jack_get_xrun_delayed_usecs(((jackc_portless_t*)arg)->jc);
   return 0;
+}
+
+void jackc_portless_t::on_shutdown(void *arg)
+{
+  ((jackc_portless_t*)arg)->active = false;
 }
 
 void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn)

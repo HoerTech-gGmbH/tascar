@@ -135,13 +135,11 @@ mod_artnetdmx_t::mod_artnetdmx_t( const TASCAR::module_cfg_t& cfg )
 
 mod_artnetdmx_t::~mod_artnetdmx_t()
 {
-  //DEBUG(1);
   stop_service();
 }
 
 void mod_artnetdmx_t::service()
 {
-  //DEBUG(1);
   uint32_t waitusec(1000000/fps);
   std::vector<uint16_t> localdata;
   localdata.resize(512);
@@ -161,7 +159,6 @@ void mod_artnetdmx_t::service()
 
 void mod_artnetdmx_t::update(uint32_t frame,bool running)
 {
-  //DEBUG(1);
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     tmpdmxdata[k] = 0;
   if( parentobj.obj ){

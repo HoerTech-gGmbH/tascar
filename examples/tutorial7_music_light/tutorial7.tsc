@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<session duration="293">
+  <scene guiscale="20" mirrororder="2">
+    <src_object name="Voc" color="#0072bd">
+      <sound maxdist="200" name="0" connect="ardour:send 3/audio_send 1"/>
+    </src_object>
+    <src_object name="Trumpet" color="#d95319">
+      <sound maxdist="200" name="0" connect="ardour:send 4/audio_send 1"/>
+    </src_object>
+    <src_object name="Drumset" color="#edb120">
+      <sound maxdist="200" name="snare" connect="ardour:send 2/audio_send 1" x="0.3" y="0" z="0.65"/>
+      <sound maxdist="200" name="hi-tom" connect="ardour:send 5/audio_send 1"/>
+      <sound maxdist="200" name="floor-tom" connect="ardour:send 6/audio_send 1"/>
+      <sound maxdist="200" name="bass-drum" connect="ardour:send 7/audio_send 1"/>
+      <sound maxdist="200" name="OH-1" connect="ardour:send 8/audio_send 1"/>
+      <sound maxdist="200" name="OH-2" connect="ardour:send 9/audio_send 1"/>
+    </src_object>
+    <src_object name="Guitar" color="#7e2f8e">
+      <sound maxdist="200" name="body" connect="ardour:send 12/audio_send 1"/>
+      <sound maxdist="200" name="amp" connect="ardour:send 13/audio_send 1"/>
+    </src_object>
+    <src_object name="Bass" color="#77ac30">
+      <sound maxdist="200" name="body" connect="ardour:send 14/audio_send 1"/>
+      <sound maxdist="200" name="DI" connect="ardour:send 15/audio_send 1"/>
+    </src_object>
+    <src_object name="Keyboards" color="#4dbeee">
+      <sound maxdist="200" name="0" y="1" connect="ardour:send 10/audio_send 1"/>
+      <sound maxdist="200" name="1" y="-1" connect="ardour:send 11/audio_send 1"/>
+    </src_object>
+    <receiver name="out" type="hoa2d" layout="glpo.spk" caliblevel="130" filtershape="triald">
+      <position>0 -4 0 1.6</position>
+    </receiver>
+    <!-- add room to the band: -->
+    <!--    
+	 <facegroup importraw="w13.raw" r="1" d="0.4">
+	 <position>0 -4 0 -0.4</position>
+	 </facegroup>
+    -->
+    <!--    
+	 <receiver name="room" type="omni" image="false" size="20 20 20"/>
+    -->
+  </scene>
+  <!-- 
+       <scene name="reverb">
+       <diffuse name="reverb" size="20 20 20"/>
+       <receiver name="out" type="hoa2d" layout="glpo.spk" caliblevel="130">
+       <position>0 -4 0 1.6</position>
+       </receiver>
+       </scene>
+       <module name="system" command="jconvolver hdh.conf"/>
+       <connect src="render.scene:room" dest="jconvolver:in"/>
+       <connect src="jconvolver:out.0w" dest="render.reverb:reverb.0w"/>
+       <connect src="jconvolver:out.1x" dest="render.reverb:reverb.1x"/>
+       <connect src="jconvolver:out.1y" dest="render.reverb:reverb.1y"/>
+       <connect src="jconvolver:out.1z" dest="render.reverb:reverb.1z"/>
+  -->
+</session>

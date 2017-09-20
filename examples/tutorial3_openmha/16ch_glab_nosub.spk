@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout name="glab">
+  <speaker az="11.25"     connect="system:playback_1"/>
+  <speaker az="33.75"  connect="system:playback_2"/>
+  <speaker az="56.25"    connect="system:playback_3"/>
+  <speaker az="78.75"  connect="system:playback_4"/>
+  <speaker az="101.25"    connect="system:playback_5"/>
+  <speaker az="123.75" connect="system:playback_6"/>
+  <speaker az="146.25"   connect="system:playback_7"/>
+  <speaker az="168.75" connect="system:playback_8"/>
+  <speaker az="191.25"   connect="system:playback_9"/>
+  <speaker az="213.75" connect="system:playback_10"/>
+  <speaker az="236.25"   connect="system:playback_11"/>
+  <speaker az="258.75" connect="system:playback_12"/>
+  <speaker az="281.25"    connect="system:playback_13"/>
+  <speaker az="303.75"  connect="system:playback_14"/>
+  <speaker az="326.25"    connect="system:playback_15"/>
+  <speaker az="348.75"  connect="system:playback_16"/>
+</layout>

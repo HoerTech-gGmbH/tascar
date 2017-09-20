@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<layout>
+<speaker az="0" r="2" connect="system:playback_1"/>
+<speaker az="24" r="2" connect="system:playback_2"/>
+<speaker az="48" r="2" connect="system:playback_3"/>
+<speaker az="72" r="2" connect="system:playback_4"/>
+<speaker az="96" r="2" connect="system:playback_5"/>
+<speaker az="120" r="2" connect="system:playback_6"/>
+<speaker az="144" r="2" connect="system:playback_7"/>
+<speaker az="168" r="2" connect="system:playback_8"/>
+<speaker az="192" r="2" connect="system:playback_9"/>
+<speaker az="216" r="2" connect="system:playback_10"/>
+<speaker az="240" r="2" connect="system:playback_11"/>
+<speaker az="264" r="2" connect="system:playback_12"/>
+<speaker az="288" r="2" connect="system:playback_13"/>
+<speaker az="312" r="2" connect="system:playback_14"/>
+<speaker az="336" r="2" connect="system:playback_15"/>
+</layout>

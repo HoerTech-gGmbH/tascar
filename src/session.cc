@@ -19,7 +19,11 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
     libdata(NULL),
     is_configured(false)
 {
-  get_attribute("name",name);
+  name = e->get_name();
+  if( name == "module" ){
+    std::cerr << "Deprecated session file, line " << e->get_line() << ": Use modules within <modules>...</modules> section.\n";
+    get_attribute("name",name);
+  }
   std::string libname("tascar_");
   libname += name + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );
@@ -81,9 +85,9 @@ const std::string& debug_str(const std::string& s)
 }
 
 TASCAR::session_t::session_t()
-  : jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
-    osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port")),
-    name("tascar"),
+  : TASCAR::session_oscvars_t(tsc_reader_t::e),
+    jackc_transport_t(jacknamer(name,"session.")),
+    osc_server_t(srv_addr,srv_port),
     duration(60),
     loop(false),
     levelmeter_tc(2.0),
@@ -99,11 +103,25 @@ TASCAR::session_t::session_t()
   osc_server_t::activate();
 }
 
+TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
+  : xml_element_t(src)
+{
+  GET_ATTRIBUTE(srv_port);
+  GET_ATTRIBUTE(srv_addr);
+  GET_ATTRIBUTE(name);
+  if( name.empty() )
+    name = "tascar";
+  if( srv_port.empty() )
+    srv_port = "9877";
+  if( srv_port == "none" )
+    srv_port = "";
+}
+
 TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : TASCAR::tsc_reader_t(filename_or_data,t,path),
-    jackc_transport_t(jacknamer(e->get_attribute_value("name"),"session.")),
-    osc_server_t(e->get_attribute_value("srv_addr"),e->get_attribute_value("srv_port")),
-    name("tascar"),
+    session_oscvars_t(tsc_reader_t::e),
+    jackc_transport_t(jacknamer(name,"session.")),
+    osc_server_t(srv_addr,srv_port),
     duration(60),
     loop(false),
     levelmeter_tc(2.0),
@@ -123,18 +141,15 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
 void TASCAR::session_t::read_xml()
 {
   try{
-    get_attribute("name",name);
-    if( name.empty() )
-      name = "tascar";
-    GET_ATTRIBUTE(duration);
-    GET_ATTRIBUTE_BOOL(loop);
-    GET_ATTRIBUTE(levelmeter_tc);
-    GET_ATTRIBUTE(levelmeter_weight);
+    tsc_reader_t::GET_ATTRIBUTE(duration);
+    tsc_reader_t::GET_ATTRIBUTE_BOOL(loop);
+    tsc_reader_t::GET_ATTRIBUTE(levelmeter_tc);
+    tsc_reader_t::GET_ATTRIBUTE(levelmeter_weight);
     TASCAR::tsc_reader_t::read_xml();
   }
   catch( ... ){
     if( lock_vars() ){
-      for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+      for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
         delete (*it);
       for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
         delete (*it);
@@ -150,11 +165,11 @@ void TASCAR::session_t::read_xml()
 
 void TASCAR::session_t::write_xml()
 {
-  SET_ATTRIBUTE(duration);
-  SET_ATTRIBUTE_BOOL(loop);
-  SET_ATTRIBUTE(levelmeter_tc);
-  SET_ATTRIBUTE(levelmeter_weight);
-  for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+  tsc_reader_t::SET_ATTRIBUTE(duration);
+  tsc_reader_t::SET_ATTRIBUTE_BOOL(loop);
+  tsc_reader_t::SET_ATTRIBUTE(levelmeter_tc);
+  tsc_reader_t::SET_ATTRIBUTE(levelmeter_weight);
+  for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
     (*it)->write_xml();
   for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
     (*it)->write_xml();
@@ -175,10 +190,9 @@ void TASCAR::session_t::unload_modules()
       (*it)->cleanup();
     for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
       delete (*it);
-    //usleep(50000);
-    for( std::vector<TASCAR::scene_player_t*>::iterator it=player.begin();it!=player.end();++it)
+    for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
       delete (*it);
-    player.clear();
+    scenes.clear();
     for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
       delete (*it);
     ranges.clear();
@@ -217,7 +231,7 @@ TASCAR::session_t::~session_t()
 std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
 {
   std::vector<std::string> ports;
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it){
+  for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it){
     std::vector<std::string> pports((*it)->get_output_ports());
     ports.insert(ports.end(),pports.begin(),pports.end());
   }
@@ -227,37 +241,37 @@ std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
 void TASCAR::session_t::add_scene(xmlpp::Element* src)
 {
   if( !src )
-    src = e->add_child("scene");
-  player.push_back(new TASCAR::scene_player_t(src));
-  player.back()->configure_meter( levelmeter_tc, levelmeter_weight );
-  player.back()->add_child_methods(this);
+    src = tsc_reader_t::e->add_child("scene");
+  scenes.push_back(new TASCAR::scene_render_rt_t(src));
+  scenes.back()->configure_meter( levelmeter_tc, levelmeter_weight );
+  scenes.back()->add_child_methods(this);
 }
 
 void TASCAR::session_t::add_range(xmlpp::Element* src)
 {
   if( !src )
-    src = e->add_child("range");
+    src = tsc_reader_t::e->add_child("range");
   ranges.push_back(new TASCAR::range_t(src));
 }
 
 void TASCAR::session_t::add_connection(xmlpp::Element* src)
 {
   if( !src )
-    src = e->add_child("connect");
+    src = tsc_reader_t::e->add_child("connect");
   connections.push_back(new TASCAR::connection_t(src));
 }
 
 void TASCAR::session_t::add_module(xmlpp::Element* src)
 {
   if( !src )
-    src = e->add_child("module");
+    src = tsc_reader_t::e->add_child("module");
   modules.push_back(new TASCAR::module_t( TASCAR::module_cfg_t(src,this)));
 }
 
 void TASCAR::session_t::start()
 {
   started_ = true;
-  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
     (*ipl)->start();
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
     (*imod)->configure(srate,fragsize);
@@ -270,7 +284,7 @@ void TASCAR::session_t::start()
       std::cerr << "Warning: " << e.what() << std::endl;
     }
   }
-  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl){
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl){
     try{
       connect(get_client_name()+":sync_out",(*ipl)->get_client_name()+":sync_in");
     }
@@ -301,7 +315,7 @@ int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>&
 void TASCAR::session_t::stop()
 {
   started_ = false;
-  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
     (*ipl)->stop();
   //jackc_transport_t::deactivate();
 }
@@ -345,7 +359,7 @@ void TASCAR::session_t::run(bool &b_quit)
 uint32_t TASCAR::session_t::get_active_pointsources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
+  for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
     rv += (*it)->active_pointsources;
   return rv;
 }
@@ -353,7 +367,7 @@ uint32_t TASCAR::session_t::get_active_pointsources() const
 uint32_t TASCAR::session_t::get_total_pointsources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
+  for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
     rv += (*it)->total_pointsources;
   return rv;
 }
@@ -361,7 +375,7 @@ uint32_t TASCAR::session_t::get_total_pointsources() const
 uint32_t TASCAR::session_t::get_active_diffusesources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
+  for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
     rv += (*it)->active_diffusesources;
   return rv;
 }
@@ -369,7 +383,7 @@ uint32_t TASCAR::session_t::get_active_diffusesources() const
 uint32_t TASCAR::session_t::get_total_diffusesources() const
 {
   uint32_t rv(0);
-  for( std::vector<TASCAR::scene_player_t*>::const_iterator it=player.begin();it!=player.end();++it)
+  for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
     rv += (*it)->total_diffusesources;
   return rv;
 }
@@ -444,7 +458,7 @@ TASCAR::module_base_t::~module_base_t()
 std::vector<TASCAR::named_object_t> TASCAR::session_t::find_objects(const std::string& pattern)
 {
   std::vector<TASCAR::named_object_t> retv;
-  for(std::vector<TASCAR::scene_player_t*>::iterator sit=player.begin();sit!=player.end();++sit){
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator sit=scenes.begin();sit!=scenes.end();++sit){
     std::vector<TASCAR::Scene::object_t*> objs((*sit)->get_objects());
     std::string base("/"+(*sit)->name+"/");
     for(std::vector<TASCAR::Scene::object_t*>::iterator it=objs.begin();it!=objs.end();++it){
@@ -571,7 +585,7 @@ void TASCAR::session_t::add_transport_methods()
 
 void TASCAR::session_t::set_v014()
 {
-  for(std::vector<TASCAR::scene_player_t*>::iterator ipl=player.begin();ipl!=player.end();++ipl)
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
     (*ipl)->set_v014();
 }
 

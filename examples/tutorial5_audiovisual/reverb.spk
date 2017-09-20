@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout name="glab">
+  <speaker az="11.25" r="1.76" connect="system:playback_1"/>
+  <speaker az="56.25" r="1.76" connect="system:playback_3"/>
+  <speaker az="101.25" r="1.76" connect="system:playback_5"/>
+  <speaker az="146.25" r="1.76" connect="system:playback_7"/>
+  <speaker az="191.25" r="1.76" connect="system:playback_9"/>
+  <speaker az="236.25" r="1.76" connect="system:playback_11"/>
+  <speaker az="281.25" r="1.76" connect="system:playback_13"/>
+  <speaker az="326.25" r="1.76" connect="system:playback_15"/>
+
+  <speaker az="0" el="45" r="1.2" connect="system:playback_29"/>
+  <speaker az="60" el="45" r="1.2" connect="system:playback_30"/>
+  <speaker az="120" el="45" r="1.2" connect="system:playback_31"/>
+  <speaker az="180" el="45" r="1.2" connect="system:playback_32"/>
+  <speaker az="240" el="45" r="1.2" connect="system:playback_27"/>
+  <speaker az="300" el="45" r="1.2" connect="system:playback_28"/>
+
+  <speaker az="30" el="-45" r="2.1" connect="system:playback_23"/>
+  <speaker az="90" el="-45" r="2.1" connect="system:playback_22"/>
+  <speaker az="150" el="-45" r="2.1" connect="system:playback_21"/>
+  <speaker az="210" el="-45" r="2.1" connect="system:playback_26"/>
+  <speaker az="270" el="-45" r="2.1" connect="system:playback_25"/>
+  <speaker az="330" el="-45" r="2.1" connect="system:playback_24"/>
+
+  <speaker az="0" el="90" r="0.8" connect="system:playback_40"/>
+</layout>

@@ -66,23 +66,6 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   // add session-includes:
   add_includes( e, "" );
-  //xmlpp::Node::NodeList subnodes = e->get_children();
-  //for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-  //  xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-  //  if( sne && ( sne->get_name() == "include")){
-  //    std::string idocname(sne->get_attribute_value("name"));
-  //    if( !idocname.empty() ){
-  //      xml_doc_t idoc(idocname,LOAD_FILE);
-  //      xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
-  //      for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
-  //        xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
-  //        if( isne ){
-  //          e->import_node(isne);
-  //        }
-  //      }
-  //    }
-  //  }
-  //}
 }
 
 void TASCAR::tsc_reader_t::read_xml()
@@ -98,6 +81,14 @@ void TASCAR::tsc_reader_t::read_xml()
       add_connection(sne);
     if( sne && ( sne->get_name() == "module"))
       add_module(sne);
+    if( sne && ( sne->get_name() == "modules")){
+      xmlpp::Node::NodeList lsubnodes = sne->get_children();
+      for(xmlpp::Node::NodeList::iterator lsn=lsubnodes.begin();lsn!=lsubnodes.end();++lsn){
+        xmlpp::Element* lsne(dynamic_cast<xmlpp::Element*>(*lsn));
+        if( lsne )
+          add_module( lsne );
+      }
+    }
   }
 }
 

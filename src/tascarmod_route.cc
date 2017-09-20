@@ -29,6 +29,7 @@ route_vars_t::route_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(channels);
   GET_ATTRIBUTE_DB(gain);
+  get_attribute("lingain",gain);
 }
 
 route_t::route_t( const TASCAR::module_cfg_t& cfg )
@@ -36,6 +37,7 @@ route_t::route_t( const TASCAR::module_cfg_t& cfg )
     jackc_t(id)
 {
   session->add_double_db("/"+id+"/gain",&gain);
+  session->add_double("/"+id+"/lingain",&gain);
   for(uint32_t k=0;k<channels;++k){
     char ctmp[1024];
     sprintf(ctmp,"in.%d",k);

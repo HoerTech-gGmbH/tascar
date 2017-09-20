@@ -261,25 +261,25 @@ void TASCAR::render_rt_t::run(bool& b_quit)
   }
   stop();
 }
-TASCAR::scene_player_t::scene_player_t(xmlpp::Element* xmlsrc)
+TASCAR::scene_render_rt_t::scene_render_rt_t(xmlpp::Element* xmlsrc)
   : render_rt_t(xmlsrc),
     player(dynamic_cast<TASCAR::Scene::scene_t*>(this))
 {
 }
 
-void TASCAR::scene_player_t::start()
+void TASCAR::scene_render_rt_t::start()
 {
   player.start();
   render_rt_t::start();
 }
 
-void TASCAR::scene_player_t::stop()
+void TASCAR::scene_render_rt_t::stop()
 {
   player.stop();
   render_rt_t::stop();
 }
 
-void TASCAR::scene_player_t::run(bool &b_quit)
+void TASCAR::scene_render_rt_t::run(bool &b_quit)
 {
   start();
   while( !b_quit ){

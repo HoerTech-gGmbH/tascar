@@ -1,0 +1,73 @@
+\documentclass[11pt,a4paper,twoside]{article}
+\usepackage{tascar}
+\pagenumbering{arabic}
+\pagestyle{empty}
+\showtutorialtrue
+\begin{document}
+\setcounter{tutorial}{-1}
+\begin{tutorial}{\tascar{} basics}
+
+  \begin{learnitems}
+  \item How to create a scene
+  \end{learnitems}
+
+  \begin{appitems}
+  \item Basis for all other tutorials
+  \end{appitems}
+
+\end{tutorial}
+
+\begin{itemize}
+\item The real-time version of \tascar{} is heavily build upon the
+  jack audio connection kit (jack,
+  \url{http://www.jackaudio.org}). Familiarize yourself with jack
+  and its tools. We recommend to use the \verb!patchage! tool for
+  visualizing the signal graph.
+\item Open \textbf{user manual}
+  (\url{file:///usr/share/doc/tascar/manual.pdf}). You
+  can use the manual as a help throughout the workshop.
+
+\item Open directory with \tascar{} scenes:
+  \verb!/home/medi/tascar_scenes/! -- you will find many examples of
+  \tascar{} scenes as well as tons of sound samples there. The
+  examples from the manual can be found in
+  \verb!/usr/share/tascar/examples!.
+
+\item Open text editor (e.g., \verb!gedit!) and open the basic example
+  \verb!basic_example.tsc!. You can create your own copy, e.g.
+  \verb!Group1_Task1.tsc!. This can be your own scene-definition xml
+  file.
+
+\item Start the sound server \verb!jack! (e.g., via qjackctl).
+
+\item Load your scene into \tascar{}. Compare your scene definition
+  file with what you see in the \tascar{} window. Try to identify
+  objects in the scene, see how they are defined, what parameters do
+  they have. You can always change/add/modify things in the scene and
+  see what happens. Press the ``reload'' button.
+
+\item Visualize the audio signal flow chart with \verb!patchage!  and
+  have a look at the audio ports. Try to recognize the ports
+  corresponding to sources and receiver in the scene. Try to
+  connect/disconnect ports.
+
+\item You can decide about the content of the scene yourself. Use
+  chapter 3-5 from the \textbf{user manual} -- you will find an
+  introduction to how to create a scene there, look at other \verb!.tsc!
+  files in \verb!tascar_scenes! directory. You can put any of these
+  objects to your scene:
+  \begin{itemize}
+  \item point sources (\verb!<src_object ...><sound/></src_object>!) (5.3)
+  \item diffuse sources (\verb!<diffuse ...>!) (5.4)
+  \item receiver (\verb!<receiver .../>!) (5.5)
+  \item reflectors (\verb!<face .../>! or \verb!<facegroup .../>!) (5.6)
+  \item absorbing obstacles (\verb!<obstacle .../>!) (5.7)
+  \end{itemize}
+
+  Your objects can also move or change orientation. You can assign any
+  of the available sound samples to your sources.  You can create
+  different rooms and you can try out different receivers. Be creative
+  and have fun!
+
+\end{itemize}
+\end{document}

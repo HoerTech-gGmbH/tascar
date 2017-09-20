@@ -1,0 +1,81 @@
+\documentclass[11pt,a4paper,twoside]{article}
+\usepackage{tascar}
+\pagenumbering{arabic}
+\pagestyle{empty}
+\showtutorialtrue
+\begin{document}
+\setcounter{tutorial}{2}
+\begin{tutorial}{Headphone listening and real-time hearing aid processing}{Seminar room}
+This tutorial will teach you how to connect \tascar{} with the openMHA.
+%
+Explore a virtual acoustic environment with and without hearing aid
+support, and display the SNR as well as hearing aid benefit in
+real-time as you explore the space.
+%
+Methods of binaural reproduction are discussed, and it will be
+explained how to process the signal and noise separately for
+calculation of the SNR.
+
+  \begin{learnitems}
+  \item Binaural reproduction
+  \item Bringing openMHA and \tascar{} together
+  \end{learnitems}
+
+  \begin{appitems}
+  \item All sorts of experiments with hearing aid support
+  \item Instrumental evaluation of hearing aid algorithms in complex
+    environments
+  \end{appitems}
+
+
+\hfill{\includegraphics[width=0.2\columnwidth]{logo_openMHA}~}
+\end{tutorial}
+
+\ifshowtutorial
+
+\newpage
+
+\subsection*{Part I:Binaural rendering}
+
+\begin{itemize}
+\item Open your own copy of a file \verb!tutorial3_basic.tsc! in text
+  editor. Then load the scene in \tascar{}.
+\item Play with the \verb!simplecontroller! window. Find the place in
+  scene definition where it is activated (\verb!simplecontroller!
+  module (manual)).
+\item Headphone listening can be achieved either by using the ORTF receiver type 
+or by using a speaker-based receiver type together with the  
+\verb!hrirconv! module (see manual). Both are defined in the scene definition file. 
+
+You can activate the ORTF strategy by typing in the terminal: 
+\begin{verbatim}
+send_osc 9999 /scene*/out_hoa/mute 1;
+send_osc 9999 /scene*/out_ortf/mute 0
+\end{verbatim}
+
+And the \verb!hrirconv! strategy can be activated by typing in the terminal:
+\begin{verbatim}
+send_osc 9999 /scene*/out_hoa/mute 0;
+send_osc 9999 /scene*/out_ortf/mute 1
+\end{verbatim}
+
+\item Compare the binaural rendering achieved with both strategies. 
+
+\subsection*{Part II: Real time benefit meter for openMHA}
+
+\item Open the file \verb!tutorial3_mha.tsc!. You will see a demo with a real-time hearing aid benefit meter. It shows a benefit of a binaural coherence filter implemented in the openMHA. You can turn the algorithm on and off and listen to the output of the \tascar{} scene. Play with the demo - you can change the gain of the sources by moving the slider or mute them by pressing the \verb!M! button and see how it influences the benefit. 
+\item To be able to compute the real-time SNR we have to know the target and the noise signal separately. 
+Therefore the \tascar{} session is devided into two scenes (target and noise) .In \verb!tutorial3_mha.tsc! definition identify these scenes. 
+\item Unfortunately, processing the target and noise signal separately with an adaptive hearing aid algorithm is not valid, because this would cause a different adaptation for different signals.
+For both signals, you want the same adaptation parameters as you would get when processing the mixed signal. To achieve this, we are using the Hagerman method (you can find the original paper in the directory of this tutorial). 
+In this method the S+N and S-N signals are processed with two separate openMHA blocks. This will result in the same adaptation parameters if the hearing aid algorithm is short-time linear. 
+The S signal can then be estimated by adding them and dividing by 2: $\hat{S} = ((S+N)+(S-N))/2$ and the N signal by subtracting them and dividing by 2: $\hat{N} = ((S+N)-(S-N))/2$.
+The Hagerman method is used here to estimate the S and N signals, which are then sent to the level meter.
+\item Look at the jack signal graph (e.g., with \verb!patchage!, type
+ \verb!Ctrl-R! to reload, and \verb!Ctrl-G! to reorder). Try to understand the connections.  Which of the connections route the signals to the openMHA, which are needed for the Hagerman method and which are responsible for the playback?
+\item You can now change the complexity of the scene (by adding some objects to the scene) and see how it influences the  hearing aid benefit. 
+\item You can change the openMHA processing by modifying the configuration file \verb!mha.cfg!. For example, you can change the gain exponent parameter \verb!alpha! to a single value. 
+\end{itemize}
+
+\fi
+\end{document}

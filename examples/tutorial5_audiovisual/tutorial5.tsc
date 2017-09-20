@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<session duration="3600" loop="true">
+  <!-- main scene: -->
+  <scene guiscale="25" mirrororder="1">
+    <!-- some screams, recorded in the lab: -->
+    <src_object name="screams">
+      <sound name="0">
+      </sound>
+    </src_object>
+    <!-- target sound: -->
+    <src_object name="ghost">
+      <creator loop="20.4">
+	<load format="csv" name="dungeon_ghostpath.csv"/>
+	<velocity const="2.55"/>
+      </creator>
+      <sound name="0">
+	<sndfile name="sounds/olsae.wav" level="65" loop="0"/>
+      </sound>
+    </src_object>
+    <!-- open and close the door: -->
+    <src_object name="door">
+      <position>0 0.409268 -1.054209 0</position>
+      <sound name="0" y="1" z="1.06">
+	<sndfile name="sounds/door_open.wav" levelmode="calib" level="90" triggered="true"/>
+	<sndfile name="sounds/door_close.wav" levelmode="calib" level="90" triggered="true"/>
+      </sound>
+    </src_object>
+    <!-- reflector for image source model: -->
+    <facegroup importraw="dungeon_reflector.raw" r="1" d="0.6"/>
+    <!-- receiver -->
+    <receiver name="out" type="hoa2d" layout="glab.spk" caliblevel="120">
+      <position>0 -10 0 1.6</position>
+      <navmesh importraw="dungeon_navmesh.raw" zshift="1.6"/>
+    </receiver>
+    <!-- virtual microphone, used for convolution reverb input: --> 
+    <receiver name="room" type="omni" size="14.290183 8.490165 5.189308" falloff="1" image="false">
+      <position>0 7.625526 -0.576602 2.612056</position>
+    </receiver>
+  </scene>
+  <scene name="reverb">
+    <receiver name="out" type="hoa2d" layout="reverb.spk" caliblevel="120">
+      <position>0 -10 0 1.6</position>
+      <navmesh importraw="dungeon_navmesh.raw" zshift="1.6"/>
+    </receiver>
+    <diffuse name="reverb" size="14.290183 8.490165 5.189308" falloff="1">
+      <position>0 7.625526 -0.576602 2.612056</position>
+    </diffuse>
+  </scene>
+  
+  <module name="system" command="xterm -e 'ssh sura DISPLAY=:0 /opt/blender-2.78c-linux-glibc219-x86_64/blenderplayer -f ./lidhan/Projects/tascarworkshop/tutorial5/dungeon.blend;sleep 10'" onunload="ssh sura killall -9 blenderplayer"/>
+  <module name="pos2osc" pattern="/scene/*" url="osc.udp://sura:9000/" mode="3" transport="false"/>
+  <!-- control the door: -->
+  <module name="nearsensor" url="osc.udp://localhost:9877/" pattern="/scene/out" parent="/scene/door" radius="3" mode="0">
+    <msgapp path="/door/go"><f v="0"/><f v="2"/></msgapp>
+    <msgapp path="/scene/door/0/ap0/sndfile/loop"><i v="1"/></msgapp>
+    <msgdep path="/door/go"><f v="2"/><f v="4"/></msgdep>
+    <msgdep path="/scene/door/0/ap1/sndfile/loop"><i v="1"/></msgdep>
+  </module>
+  <!-- door animation: -->
+  <module name="motionpath" active="true" id="door" actor="/scene/door*">
+    <orientation>0 0 0 0
+    2 -130 0 0
+    4 0 0 0</orientation>
+  </module>
+  <!-- game controller -->
+  <module name="joystick" actor="/*/out" 
+	  x_ax="1" x_scale="-1" x_threshold="0.2" x_max="4" x_min="-4" 
+	  y_ax="0" y_scale="-1" y_threshold="0.2" y_max="4" y_min="-4" 
+	  r_ax="3" r_scale="-1" r_threshold="0.3" r_max="4" r_min="-4" 
+	  tilt_ax="4" tilt_scale="-0.7" tilt_threshold="0.3" 
+	  dump_events="false" maxnorm="0" url="osc.udp://sura:9000/"/>
+  
+  <module name="system" command="jconvolver diff_nuclear.conf" sleep="0.4"/>
+  <connect src="render.scene:room" dest="jconvolver:in"/>
+  <connect src="jconvolver:out.0w" dest="render.reverb:reverb.0w"/>
+  <connect src="jconvolver:out.1x" dest="render.reverb:reverb.1x"/>
+  <connect src="jconvolver:out.1y" dest="render.reverb:reverb.1y"/>
+  <connect src="jconvolver:out.1z" dest="render.reverb:reverb.1z"/>
+</session>

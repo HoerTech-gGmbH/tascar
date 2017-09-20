@@ -18,7 +18,7 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic chmap hoa2d_fuma hoa2d_dw hoa2d_fuma_dw
+  intensityvector vmic chmap hoa2d_fuma
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
@@ -37,7 +37,7 @@ OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
   onsetdetector delay sndfile spksim dummy hannenv
 
-TEST_FILES = test_ngon test_sinc
+TEST_FILES = test_ngon test_sinc test_fsplit
 
 #
 RECEIVERMODS = $(patsubst %,tascarreceiver_%.so,$(RECEIVERS))

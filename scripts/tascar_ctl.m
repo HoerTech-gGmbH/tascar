@@ -1,18 +1,21 @@
-function varargout = tascar_ctl(action,varargin)
+function varargout = tascar_ctl( action, varargin )
+% TASCAR_CTL - control TASCAR process
+%
 % This is a function which is responsible for controlling TASCAR
-% software using MATLAB. 
-% INPUT:
-% action          - a string specifing which action should be performed. 
-%                   Each action is a different function which will be
-%                   called - all the functions are included in this script.  
-%                   The following actions are available until now:
-%                ---ACTION:---     ---CORRESPONDING FUNCTION:---
-%                   'load'           h = tascar_ctl_load(name)
-%                   'kill'           tascar_ctl_kill(h)
+% software using MATLAB/GNU Octave.
+%
+% Input arguments:
+% action: a string specifing which action should be performed.  Each
+%         action is a different function which will be called - all
+%         the functions are included in this script.  The following
+%         actions are available until now: 
+%         'load', 'kill', 'createscene', 'transport'
 %
 %  Example usage:
-%  h = tascar_ctl('load','test_scene.tsc')
-%  tascar_ctl('kill','test_scene.tsc')
+%  h = tascar_ctl( 'load', 'test_scene.tsc' )
+%  tascar_ctl( 'transport', h, 'play' )
+%  tascar_ctl( 'transport', h, 'locate', 15 )
+%  tascar_ctl( 'kill', h )
 % -------------------------------------------------------------------------
 
 %Apart of the local functions in this file there are other scripts in: 
@@ -73,8 +76,8 @@ function h = tascar_ctl_load(name)
     if num ~= 2
       error('invalid number of entries in lsof output');
     end
-    h.oscport = vals(2);
-    h.oschost = 'localhost';
+    h.port = vals(2);
+    h.host = 'localhost';
   end
   
 function r = tascar_ctl_killpid( pid )
@@ -100,8 +103,8 @@ function tascar_ctl_kill(h)
 % INPUT :           h            struct with handle obtained when opening a
 %                                TASCAR scene from MATLAB  
 
-  if isfield(h,'oscport') && isfield(h,'oschost')
-    send_osc(h.oschost,h.oscport,'/tascargui/quit');
+  if isfield(h,'port') && isfield(h,'host')
+    send_osc(h,'/tascargui/quit');
     pause(0.5);
   end
   [a,b] = system(sprintf('kill %d',h.pid));
@@ -221,3 +224,6 @@ function pid = tascar_ctl_jackddummy_start( P )
   if a
     error('Uanble to create jackd process.');
   end
+
+function tascar_ctl_transport( handle, mode, varargin )
+    send_osc( handle, ['/transport/',mode], varargin{:} );

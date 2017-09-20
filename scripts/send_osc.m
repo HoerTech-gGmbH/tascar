@@ -3,6 +3,9 @@ function send_osc( host, port, addr, varargin )
 %
 % Usage:
 % send_osc( host, port, addr, ... )
+% send_osc( handle, addr, ... )
+%
+% where 'handle' is the return value of tascar_ctl('load',...)
 %
 % Works with strings and floats. Tested on Matlab R2011b and Octave
 % 3.8.1.
@@ -16,9 +19,17 @@ function send_osc( host, port, addr, varargin )
 % http://mvnrepository.com/artifact/de.sciss/netutil/1.0.0
 %
 % Installation:
-% !wget http://repo1.maven.org/maven2/de/sciss/netutil/1.0.0/netutil-1.0.0.jar
+% system('wget http://repo1.maven.org/maven2/de/sciss/netutil/1.0.0/netutil-1.0.0.jar')
 % javaaddpath netutil-1.0.0.jar 
    
+    if isstruct( host )
+        if nargin > 2
+            varargin = [{addr},varargin];
+        end
+        addr = port;
+        port = host.port;
+        host = host.host;
+    end
   dch = javaMethod('open','java.nio.channels.DatagramChannel');
   dch.configureBlocking( true );
   target = javaObject('java.net.InetSocketAddress', host, port );

@@ -16,7 +16,7 @@ TASCAR::pdfexport_t::pdfexport_t(TASCAR::session_t* s, const std::string& fname,
     drawer.set_print_labels(false);
     drawer.set_show_acoustic_model(true);
   }
-  for(std::vector<TASCAR::scene_player_t*>::iterator it=s->player.begin();it!=s->player.end();++it)
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator it=s->scenes.begin();it!=s->scenes.end();++it)
     draw_views(*it);
 }
 

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session srv_port="9999" duration="60" loop="true">
+
+  <!-- There are two scenes in this session (scene_S and scene_N). First scene contains only target source (S) 
+  and the second scene contains noise sources (N_1,N_2, etc.).Both scenes contain the same receiver type with the same name.-->
+
+  <scene name="scene_S" guiscale="6">
+
+    <src_object name="S">
+      <sound name="0" >
+       <sndfile name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" loop="0" level="75"/>
+      </sound>
+      <position>0 1 0 0</position>
+    </src_object>
+
+    <receiver type="ortf" maxre="true" name="out_ortf" layout="24ch.spk" caliblevel="120">
+      <position>0 1.3 0.2 1.5</position>
+    </receiver>
+
+  </scene>
+
+  <scene name="scene_N" guiscale="6">
+
+    <src_object name="N_1">
+      <sound name="0">
+       <sndfile name="${HOME}/tascar_scenes/sounds/daps/m1_script1_clean.wav" loop="0" level="75"/>
+      </sound>
+      <position>1 0.8 0 0</position>
+    </src_object>
+
+    <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1" connect="@.0">
+ <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>
+    </diffuse>
+
+    <receiver type="ortf" maxre="true" name="out_ortf" caliblevel="120">
+      <position>0 1.3 0.2 1.5</position>
+    </receiver>
+
+  </scene>
+
+  <!-- here we start the MHA with a binaural coherence filter configuration: -->
+  <module name="system" command="mha ?read:mha.cfg io.name=mha- port=33337 cmd=start" sleep="0"/>
+  <module name="system" command="mha ?read:mha.cfg io.name=mha+ port=33338 cmd=start" sleep="0"/>
+  <!-- here we start the MHA level meter: -->
+  <module name="system" command="mha ?read:levelmeter.cfg io.name=levelmeter port=33339 cmd=start" sleep="0"/>
+  <!-- here we start the MATLAB gui for SNR display -->
+<module name="system" command="matlab -nodesktop -nosplash -r snrdisplay"/>
+
+  <!-- connect MHA to process S+N: -->
+  <connect src="render.scene_S:out_ortf_l" dest="mha+:in_1"/>
+  <connect src="render.scene_S:out_ortf_r" dest="mha+:in_2"/>
+  <connect src="render.scene_N:out_ortf_l" dest="mha+:in_1"/>
+  <connect src="render.scene_N:out_ortf_r" dest="mha+:in_2"/>
+  <!-- connect MHA to process S-N: -->
+  <connect src="render.scene_S:out_ortf_l" dest="mha-:in_1"/>
+  <connect src="render.scene_S:out_ortf_r" dest="mha-:in_2"/>
+  <!-- module to flip the sign of the noise: -->
+  <module name="route" id="flipsign1" lingain="-1" channels="2"/>
+  <connect src="render.scene_N:out_ortf_l" dest="flipsign1:in.0"/>
+  <connect src="render.scene_N:out_ortf_r" dest="flipsign1:in.1"/>
+  <connect src="flipsign1:out.0" dest="mha-:in_1"/>
+  <connect src="flipsign1:out.1" dest="mha-:in_2"/>
+
+  <!-- split MHA output in S and N and connect to level meter: -->
+  <connect src="halfgain:out.0" dest="levelmeter:SL_proc"/>
+  <connect src="halfgain:out.1" dest="levelmeter:SR_proc"/>
+  <connect src="halfgain:out.0" dest="levelmeter:NL_proc"/>
+  <connect src="halfgain:out.1" dest="levelmeter:NR_proc"/>
+  <connect src="halfgain:out.2" dest="levelmeter:SL_proc"/>
+  <connect src="halfgain:out.3" dest="levelmeter:SR_proc"/>
+  <connect src="flipsign2:out.0" dest="levelmeter:NL_proc"/>
+  <connect src="flipsign2:out.1" dest="levelmeter:NR_proc"/>
+
+  <connect src="render.scene_S:out_ortf_l" dest="levelmeter:SL_unproc"/>
+  <connect src="render.scene_S:out_ortf_r" dest="levelmeter:SR_unproc"/>
+  <connect src="render.scene_N:out_ortf_l" dest="levelmeter:NL_unproc"/>
+  <connect src="render.scene_N:out_ortf_r" dest="levelmeter:NR_unproc"/>
+
+  
+  <!-- module to flip the sign of signals: -->
+  <module name="route" id="flipsign2" lingain="-1" channels="2"/>
+  <connect src="halfgain:out.2" dest="flipsign2:in.0"/>
+  <connect src="halfgain:out.3" dest="flipsign2:in.1"/>
+  <!-- module to divide by 2: -->
+  <module name="route" id="halfgain" lingain="0.5" channels="4"/>
+  <connect src="mha-:out_1" dest="halfgain:in.0"/>
+  <connect src="mha-:out_2" dest="halfgain:in.1"/>
+  <connect src="mha+:out_1" dest="halfgain:in.2"/>
+  <connect src="mha+:out_2" dest="halfgain:in.3"/>
+
+  <!-- Connect unprocessed and processed output to selecting module and playback: -->
+  <module name="route" id="unproc" lingain="1" channels="2"/>
+  <connect src="render.scene_S:out_ortf_l" dest="unproc:in.0"/>
+  <connect src="render.scene_S:out_ortf_r" dest="unproc:in.1"/>
+  <connect src="render.scene_N:out_ortf_l" dest="unproc:in.0"/>
+  <connect src="render.scene_N:out_ortf_r" dest="unproc:in.1"/>
+  <connect src="unproc:out.0" dest="system:playback_1"/>
+  <connect src="unproc:out.1" dest="system:playback_2"/>
+  <module name="route" id="proc" lingain="0" channels="2"/>
+  <connect src="mha+:out_1" dest="proc:in.0"/>
+  <connect src="mha+:out_2" dest="proc:in.1"/>
+  <connect src="proc:out.0" dest="system:playback_1"/>
+  <connect src="proc:out.1" dest="system:playback_2"/>
+
+ <!--module name="simplecontroller" actor="/*/out*" maxnorm="0"/-->
+
+  <!-- game controller -->
+  <module name="joystick" actor="/*/out*" 
+	  x_ax="1" x_scale="-1" x_threshold="0.2" x_max="4" x_min="-4" 
+	  y_ax="0" y_scale="-1" y_threshold="0.2" y_max="4" y_min="-4" 
+	  r_ax="3" r_scale="-1" r_threshold="0.3" r_max="4" r_min="-4" 
+	  tilt_ax="4" tilt_scale="-0.7" tilt_threshold="0.3" 
+	  dump_events="false" maxnorm="0"/>
+
+
+
+</session>

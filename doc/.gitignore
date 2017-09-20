@@ -1,1 +1,13 @@
 html
+*.aux
+*.idx
+*.log
+tutorial0.pdf
+tutorial1.pdf
+tutorial2.pdf
+tutorial3.pdf
+tutorial4.pdf
+tutorial5.pdf
+tutorial6.pdf
+tutorial7.pdf
+

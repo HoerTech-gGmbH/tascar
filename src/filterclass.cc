@@ -127,6 +127,85 @@ TASCAR::filter_t::~filter_t()
   delete [] state;
 }
 
+
+void normalize_vec( std::vector<float>& v )
+{
+  float norm(0.0f);
+  for( std::vector<float>::const_iterator it=v.begin();it!=v.end();++it)
+    norm += fabsf(*it);
+  if( norm > 0 ){
+    for( std::vector<float>::iterator it=v.begin();it!=v.end();++it)
+      *it *= 1.0f/norm;
+  }
+}
+
+TASCAR::fsplit_t::fsplit_t( uint32_t maxdelay, shape_t shape, uint32_t tau )
+  : TASCAR::wave_t(maxdelay)
+{
+  switch( shape ){
+  case none:
+    vd.resize(1);
+    w1.resize(1);
+    w2.resize(1);
+    vd[0] = d;
+    w1[0] = 1.0f;
+    w2[0] = 0.0f;
+    break;
+  case notch:
+    vd.resize(2);
+    w1.resize(2);
+    w2.resize(2);
+    vd[0] = d;
+    vd[1] = d+tau;
+    w1[0] = w2[0] = w1[1] = 1.0f;
+    w2[1] = -1.0f;
+    break;
+  case sine:
+    vd.resize(3);
+    w1.resize(3);
+    w2.resize(3);
+    vd[0] = d;
+    vd[1] = d+tau;
+    vd[2] = d+2*tau;
+    w1[0] = w1[2] = 1.0f;
+    w2[0] = w2[2] = -1.0f;
+    w1[1] = w2[1] = 2.0f;
+    break;
+  case tria:
+    vd.resize(5);
+    w1.resize(5);
+    w2.resize(5);
+    vd[0] = d;
+    vd[1] = d+2*tau;
+    vd[2] = d+3*tau;
+    vd[3] = d+4*tau;
+    vd[4] = d+6*tau;
+    w1[0] = w1[4] = 1.0f/9.0f;
+    w1[1] = w1[3] = 1.0f;
+    w1[2] = w2[2] = 2.0f+2.0f/9.0f;
+    w2[1] = w2[3] = -1.0f;
+    w2[0] = w2[4] = -1.0f/9.0f;
+    break;
+  case triald:
+    vd.resize(3);
+    w1.resize(3);
+    w2.resize(3);
+    vd[0] = d;
+    vd[1] = d+tau;
+    vd[2] = d+3*tau;
+    w1[0] = w2[0] = w1[1] = 1.0f;
+    w2[1] = -1.0f;
+    w1[2] = 1.0f/9.0f;
+    w2[2] = -1.0f/9.0f;
+    break;
+  }
+  normalize_vec(w1);
+  normalize_vec(w2);
+  for(std::vector<float*>::const_iterator it=vd.begin();it!=vd.end();++it)
+    if( (*it) >= d+n )
+      throw TASCAR::ErrMsg("Delay exceeds buffer length");
+}
+
 /*
  * Local Variables:
  * mode: c++

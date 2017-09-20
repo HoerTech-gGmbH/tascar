@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<session duration="8" loop="true">
+  <scene>
+    <src_object name="src1">
+      <position>0 -5 -5 0
+      2 -5 5 0
+      4 5 5 0
+      6 5 -5 0
+      8 -5 -5 0</position>
+      <sound name="0">
+	<!-- <sndfile name="..." level="70"/> -->
+      </sound>
+    </src_object>
+    <receiver name="out" type="hoa2d" layout="glpo.spk" caliblevel="130" filtershape="triald">
+      <position>0 -4 0 1.6</position>
+    </receiver>
+  </scene>
+  <module name="lightctl" driver="opendmxusb" device="/dev/ttyUSB0">
+    <lightscene name="ceiling" objects="/scene/src1" parent="/scene/out" channels="4" method="nearest" objval="255 0 130 0">
+      <fixture az="45" addr="33"/>
+      <fixture az="135" addr="37"/>
+      <fixture az="-135" addr="41"/>
+      <fixture az="-45" addr="45"/>
+    </lightscene>
+    <!--
+	<lightscene name="floor" objects="/scene/src1" parent="/scene/out" channels="4" method="raisedcosine" objval="0 0 255 0" objw="0.25">
+	<fixture az="22.5" addr="1" dmxval="152 0 0 0"/>
+	<fixture az="67.5" addr="5" dmxval="152 0 0 0"/>
+	<fixture az="112.5" addr="9" dmxval="152 0 0 0"/>
+	<fixture az="157.5" addr="13" dmxval="152 0 0 0"/>
+	<fixture az="-157.5" addr="17" dmxval="152 0 0 0"/>
+	<fixture az="-112.5" addr="21" dmxval="152 0 0 0"/>
+	<fixture az="-67.5" addr="25" dmxval="152 0 0 0"/>
+	<fixture az="-22.5" addr="29" dmxval="152 0 0 0"/>
+	</lightscene>
+    -->
+  </module>
+</session>

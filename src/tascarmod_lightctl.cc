@@ -90,9 +90,10 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   }
   objval.resize(channels*objects_.size());
   objw.resize(objects_.size());
-  for(uint32_t k=0;k<objw.size();++k)
-    objw[k] = 1.0f;
   //
+  for(uint32_t k=0;k<objw.size();++k)
+    if( objw[k] == 0 )
+      objw[k] = 1.0f;
 }
 
 void lightscene_t::update(uint32_t frame,bool running)

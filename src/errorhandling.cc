@@ -4,7 +4,6 @@
 TASCAR::ErrMsg::ErrMsg(const std::string& msg) 
   : std::string(msg) 
 {
-//  DEBUG(msg);
 }
 
 TASCAR::ErrMsg::~ErrMsg() throw()

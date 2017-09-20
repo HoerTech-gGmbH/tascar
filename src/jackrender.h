@@ -46,9 +46,9 @@ namespace TASCAR {
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
   };
 
-  class scene_player_t : public render_rt_t  {
+  class scene_render_rt_t : public render_rt_t  {
   public:
-    scene_player_t(xmlpp::Element* xmlsrc);
+    scene_render_rt_t(xmlpp::Element* xmlsrc);
     void start();
     void stop();
     void run(bool &b_quit);
