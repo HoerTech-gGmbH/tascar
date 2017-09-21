@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <session duration="7200">
   <scene>
-    <src_object name="sine">
+    <src_object>
       <sound name="0" x="1">
 	<sine/>
 	<hannenv t0="1" ramp1="0.5" steady="2" ramp2="0.25" period="5"/>
       </sound>
     </src_object>
-    <receiver name="out" type="omni"/>
+    <receiver type="omni"/>
   </scene>
   <connect src="render.scene:out" dest="system:playback_1"/>
 </session>

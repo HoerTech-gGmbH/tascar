@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <session duration="1">
-  <scene guiscale="20">
-    <src_object name="src">
-      <sound name="0">
+  <scene>
+    <src_object>
+      <sound>
 	<dummy/>
       </sound>
     </src_object>
-    <receiver type="omni" name="out"/>
+    <receiver type="omni"/>
   </scene>
 </session>

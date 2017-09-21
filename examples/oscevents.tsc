@@ -1,15 +1,11 @@
 <?xml version="1.0"?>
 <session duration="10">
-  <scene>
-    <src_object name="src">
-      <sound name="0"/>
-    </src_object>
-    <receiver name="rec" type="omni"/>
-  </scene>
-  <module name="oscevents" url="osc.udp://localhost:9999/" path="/xy">
-    <osc t="1"/>
-    <oscs t="2" a0="hey"/>
-    <oscsf t="4" a0="lipsync" a1="23.3"/>
-    <oscff t="4" a0="22" a1="23.3"/>
-  </module>
+  <modules>
+    <oscevents url="osc.udp://localhost:9999/" path="/xy">
+      <osc t="1"/>
+      <oscs t="2" a0="hey"/>
+      <oscsf t="4" a0="lipsync" a1="23.3"/>
+      <oscff t="4" a0="22" a1="23.3"/>
+    </oscevents>
+  </modules>
 </session>

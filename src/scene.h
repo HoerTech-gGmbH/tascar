@@ -282,6 +282,7 @@ namespace TASCAR {
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       std::vector<sound_t*> sound;
+      std::string next_sound_name() const;
     private:
       int32_t startframe;
     };

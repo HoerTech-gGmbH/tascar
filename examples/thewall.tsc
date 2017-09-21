@@ -5,7 +5,7 @@
       <position interpolation="cartesian">0 0 0 0
       10 15 0 0
       </position>
-      <sound name="0">
+      <sound>
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
     </src_object>
@@ -13,7 +13,7 @@
       <position>0 15.2 0 0</position>
       <orientation>0 180 0 0</orientation>
     </face>
-    <receiver type="ortf" name="out" mute="false" solo="false" color="#000000" start="0" end="0">
+    <receiver type="ortf">
       <position>0 0 0 1.65
       10 15 0 1.65</position>
     </receiver>

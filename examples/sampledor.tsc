@@ -8,7 +8,7 @@
       </position>
       <orientation>0 0 0 0
 10 360 0 0</orientation>
-      <sound name="0" x="-2">
+      <sound x="-2">
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
     </src_object>
@@ -19,7 +19,7 @@
       </position>
       <orientation>0 0 0 0
 10 360 0 0</orientation>
-      <sound name="0" d="2">
+      <sound d="2">
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
     </src_object>
@@ -27,7 +27,7 @@
       <position>0 15.2 0 0</position>
       <orientation>0 180 0 0</orientation>
     </face>
-    <receiver type="ortf" name="out" mute="false" solo="false" color="#000000" start="0" end="0">
+    <receiver type="ortf" mute="false" solo="false">
       <position>0 0 0 1.65
       10 15 0 1.65</position>
     </receiver>

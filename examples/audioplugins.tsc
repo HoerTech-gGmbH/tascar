@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <session duration="10">
   <scene>
-    <src_object name="src">
-      <sound name="0">
+    <src_object>
+      <sound>
 	<plugin type="sine" f="440" a="-20"/>
 	<plugin type="lipsync"/>
       </sound>
     </src_object>
-    <receiver name="rec" type="omni"/>
+    <receiver type="omni"/>
   </scene>
 </session>

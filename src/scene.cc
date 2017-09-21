@@ -10,6 +10,7 @@
 #include <fstream>
 #include <complex.h>
 #include <algorithm>
+#include <set>
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -196,8 +197,10 @@ sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
   get_attribute("name",name);
+  if( parent_ && name.empty() )
+    name = parent_->next_sound_name();
   if( name.empty() )
-    throw TASCAR::ErrMsg("Invalid empty sound name.");
+    throw TASCAR::ErrMsg("Invalid (empty) sound name.");
   // parse plugins:
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -399,6 +402,8 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
     //reference(reference_),
     startframe(0)
 {
+  if( get_name().empty() )
+    set_name("in");
   xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -412,6 +417,21 @@ src_object_t::~src_object_t()
 {
   for(std::vector<sound_t*>::iterator s=sound.begin();s!=sound.end();++s)
     delete *s;
+}
+
+std::string src_object_t::next_sound_name() const
+{
+  std::set<std::string> names;
+  for(std::vector<sound_t*>::const_iterator it=sound.begin();it!=sound.end();++it)
+    names.insert((*it)->get_name());
+  char ctmp[1024];
+  uint32_t n(0);
+  sprintf(ctmp,"%d",n);
+  while( names.find(ctmp) != names.end() ){
+    ++n;
+    sprintf(ctmp,"%d",n);
+  }
+  return ctmp;
 }
 
 void src_object_t::geometry_update(double t)
@@ -617,6 +637,8 @@ void mask_object_t::process_active(double t,uint32_t anysolo)
 receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc), audio_port_t(xmlsrc), receiver_t(xmlsrc)
 {
+  if( get_name().empty() )
+    set_name("out");
 }
 
 void receivermod_object_t::write_xml()

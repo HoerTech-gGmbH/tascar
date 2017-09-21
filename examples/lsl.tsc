@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 <session duration="10">
   <scene>
-    <src_object name="src">
-      <sound name="0"/>
+    <src_object>
+      <sound/>
     </src_object>
-    <receiver name="rec" type="omni"/>
+    <receiver type="omni"/>
   </scene>
-  <module name="lsljacktime"/>
-  <module name="datalogging">
-    <lsl predicate="type='time'"/>
-  </module>
+  <modules>
+    <lsljacktime/>
+    <datalogging>
+      <lsl predicate="type='time'"/>
+    </datalogging>
+  </modules>
 </session>

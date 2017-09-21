@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <session>
-  <scene srv_port="9888">
-    <src_object name="src">
-      <sound name="0" gainmodel="1"/>
+  <scene>
+    <src_object>
+      <sound gainmodel="1"/>
     </src_object>
-    <receiver name="out" type="hoa2d_dw" layout="16ch.spk"/>
+    <receiver type="hoa2d" layout="16ch.spk"/>
   </scene>
   <module name="simplecontroller" actor="/*/src"/>
 </session>

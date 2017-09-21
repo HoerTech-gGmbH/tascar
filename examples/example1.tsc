@@ -5,15 +5,15 @@
       scene with one moving sound source and one moving and rotating
       receiver.
   -->
-  <scene name="scene" guiscale="37">
-    <src_object name="source">
+  <scene guiscale="37">
+    <src_object>
       <position>0 1 -20 0
       20 1 20 0</position>
-      <sound name="0">
+      <sound>
 	<sndfile name="tc1.wav" level="65" loop="0"/>
       </sound>
     </src_object>
-    <receiver name="out" type="ortf">
+    <receiver type="ortf">
       <position>0 -8 13 0
       22 2 0 0</position>
       <orientation>0 0 0 0

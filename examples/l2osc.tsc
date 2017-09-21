@@ -24,8 +24,10 @@
       42 900 0 0</orientation>
     </receiver>
   </scene>
-  <module name="levels2osc" pattern="/*/out" url="osc.udp://localhost:9876/"/>
-  <module name="datalogging" port="9876" multicast="">
-    <variable path="/level/out" size="7"/>
-  </module>
+  <modules>
+    <levels2osc pattern="/*/out" url="osc.udp://localhost:9876/"/>
+    <datalogging port="9876" multicast="">
+      <variable path="/level/out" size="7"/>
+    </datalogging>
+  </modules>
 </session>
