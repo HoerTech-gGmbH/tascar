@@ -209,8 +209,9 @@ void spk_pos_t::write_xml()
     SET_ATTRIBUTE(connect);
 }
 
-void spk_array_t::configure(double srate, uint32_t fragsize)
+void spk_array_t::prepare(double srate, uint32_t fragsize)
 {
+  audiostates_t::prepare( srate, fragsize );
   delaycomp.clear();
   for(uint32_t k=0;k<size();++k)
     delaycomp.push_back(TASCAR::static_delay_t(srate*(operator[](k).dr/340.0)));

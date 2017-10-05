@@ -4,6 +4,7 @@
 #include "coordinates.h"
 #include "levelmeter.h"
 #include "osc_helper.h"
+#include "audiostates.h"
 
 namespace TASCAR {
 
@@ -58,11 +59,10 @@ namespace TASCAR {
     // book keeping
   };
 
-  class scene_node_base_t : public xml_element_t {
+  class scene_node_base_t : public xml_element_t, public audiostates_t {
   public:
     scene_node_base_t(xmlpp::Element*);
     virtual ~scene_node_base_t();
-    virtual void prepare(double fs, uint32_t fragsize) = 0;
   };
 
   std::string env_expand( std::string s );

@@ -2,7 +2,9 @@
 #define ACOUSTICMODEL_H
 
 #include "receivermod.h"
+#include "sourcemod.h"
 #include "dynamicobjects.h"
+#include "audioplugin.h"
 
 /*
 
@@ -33,27 +35,26 @@ namespace TASCAR {
   
     /** \brief Primary source (also base class for mirror sources)
      */
-    class pointsource_t {
-    public:
-      pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_,double size_);
-      virtual ~pointsource_t();
-      virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
-      virtual pos_t get_physical_position() const { return position; };
-      virtual void preprocess();
-      void add_rmslevel(TASCAR::levelmeter_t* rmslevel_);
-      wave_t audio;
-      pos_t position;
-      bool active;
-      uint32_t ismmin;
-      uint32_t ismmax;
-      double maxdist;
-      double minlevel;
-      uint32_t sincorder;
-      uint32_t ismorder;
-      gainmodel_t gainmodel;
-      double size;
-      TASCAR::levelmeter_t* rmslevel;
-    };
+    //class pointsource_t : public c6dof_t {
+    //public:
+    //  pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_,double size_);
+    //  virtual ~pointsource_t();
+    //  virtual pos_t get_effective_position(const pos_t& receiverp,double& gain) { return position;};
+    //  virtual pos_t get_physical_position() const { return position; };
+    //  virtual void preprocess();
+    //  void add_rmslevel(TASCAR::levelmeter_t* rmslevel_);
+    //  wave_t audio;
+    //  bool active;
+    //  uint32_t ismmin;
+    //  uint32_t ismmax;
+    //  double maxdist;
+    //  double minlevel;
+    //  uint32_t sincorder;
+    //  uint32_t ismorder;
+    //  gainmodel_t gainmodel;
+    //  double size;
+    //  TASCAR::levelmeter_t* rmslevel;
+    //};
 
     /**
        \brief Diffraction model
@@ -68,16 +69,6 @@ namespace TASCAR {
         state_t() : A1(0),s1(0),s2(0) {};
       };
       pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet);
-    };
-
-    class doorsource_t : public pointsource_t, public diffractor_t {
-    public:
-      doorsource_t(uint32_t chunksize, double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel,double size_);
-      virtual pos_t get_effective_position(const pos_t& receiverp,double& gain);
-      //void process();
-      double inv_falloff;
-      double distance;
-      bool wnd_sqrt;
     };
 
     class diffuse_source_t : public shoebox_t {
@@ -109,7 +100,34 @@ namespace TASCAR {
       bool active;
     };
 
-    class receiver_t : public receivermod_t {
+    class source_t : public sourcemod_t, public c6dof_t {
+    public:
+      source_t(xmlpp::Element* xmlsrc);
+      ~source_t();
+      void write_xml();
+      void prepare(double srate, uint32_t fragsize);
+      void release();
+      //virtual pos_t get_effective_position( const pos_t& receiverp, double& gain ) { return position; };
+      //virtual pos_t get_physical_position() const { return position; };
+      virtual void process_plugins(const TASCAR::transport_t& tp);
+      uint32_t ismmin;
+      uint32_t ismmax;
+      double maxdist;
+      double minlevel;
+      uint32_t sincorder;
+      gainmodel_t gainmodel;
+      double size;
+      // derived / internal / updated variables:
+      std::vector<wave_t> inchannels;
+      std::vector<wave_t*> inchannelsp;
+      bool active;
+    private:
+      bool is_prepared;
+    public:
+      std::vector<TASCAR::audioplugin_t*> plugins;
+    };
+
+    class receiver_t : public receivermod_t, public c6dof_t {
     public:
       receiver_t(xmlpp::Element* xmlsrc);
       ~receiver_t();
@@ -138,8 +156,6 @@ namespace TASCAR {
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       std::vector<wave_t*> outchannelsp;
-      pos_t position;
-      zyx_euler_t orientation;
       bool active;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
       bool gain_zero;
@@ -182,50 +198,65 @@ namespace TASCAR {
     class reflector_t : public diffractor_t {
     public:
       reflector_t();
+      void apply_reflectionfilter( TASCAR::wave_t& audio, double& lpstate ) const;
       bool active;
       double reflectivity;
       double damping;
       bool edgereflection;
     };
 
-    /** \brief A mirrored source.
-     */
-    class mirrorsource_t : public pointsource_t {
-    public:
-      mirrorsource_t(pointsource_t* src,reflector_t* reflector);
-      pos_t get_effective_position(const pos_t& receiverp,double& gain);
-      virtual pos_t get_physical_position() const { return src_->get_physical_position();};
-      void process();
-      reflector_t* get_reflector() const { return reflector_;};
-      //pos_t get_mirror_position() const { return mirror_position;};
-    public:
-      pointsource_t* src_;
-      reflector_t* reflector_;
-    private:
-      //Acousticmodel::filter_coeff_t flt_current;
-      //double dt;
-      //double g, dg;
-      double lpstate;
-    public:
-      pos_t p_img;
-      pos_t p_cut;
-      bool b_0_14;
-    };
+    ///** \brief A mirrored source.
+    // */
+    //class mirrorsource_t : public source_t {
+    //public:
+    //  mirrorsource_t(pointsource_t* src,reflector_t* reflector);
+    //  pos_t get_effective_position(const pos_t& receiverp,double& gain);
+    //  virtual pos_t get_physical_position() const { return src_->get_physical_position();};
+    //  void process();
+    //  reflector_t* get_reflector() const { return reflector_;};
+    //  //pos_t get_mirror_position() const { return mirror_position;};
+    //public:
+    //  source_t* src_;
+    //  reflector_t* reflector_;
+    //private:
+    //  //Acousticmodel::filter_coeff_t flt_current;
+    //  //double dt;
+    //  //double g, dg;
+    //  double lpstate;
+    //public:
+    //  pos_t p_img;
+    //  pos_t p_cut;
+    //};
 
-    /** \brief Create mirror sources from primary sources and reflectors.
-     */
-    class mirror_model_t {
+    ///** \brief Create mirror sources from primary sources and reflectors.
+    // */
+    //class mirror_model_t {
+    //public:
+    //  mirror_model_t(const std::vector<source_t*>& pointsources,
+    //                 const std::vector<reflector_t*>& reflectors,uint32_t order);
+    //  ~mirror_model_t();
+    //  /** \brief Process all mirror sources
+    //   */
+    //  void process();
+    //  std::vector<mirrorsource_t*> get_mirror_sources();
+    //  std::vector<pointsource_t*> get_sources();
+    //private:
+    //  std::vector<mirrorsource_t*> mirrorsource;
+    //};
+
+    class soundpath_t : public c6dof_t {
     public:
-      mirror_model_t(const std::vector<pointsource_t*>& pointsources,
-                     const std::vector<reflector_t*>& reflectors,uint32_t order,bool b_0_14);
-      ~mirror_model_t();
-      /** \brief Process all mirror sources
-       */
-      void process();
-      std::vector<mirrorsource_t*> get_mirror_sources();
-      std::vector<pointsource_t*> get_sources();
-    private:
-      std::vector<mirrorsource_t*> mirrorsource;
+      soundpath_t(const source_t* src, const soundpath_t* parent_ = NULL, const reflector_t* generator_ = NULL);//< constructor, for primary sources set parent_ to NULL
+      void update_position();//< Update image source position from parent and reflector
+      pos_t get_effective_position( const pos_t& receiverp, double& gain );//< correct perceived position and caculate gain
+      uint32_t getorder() const; //< Return image source order of sound path, 0 is direct path
+      void apply_reflectionfilter( TASCAR::wave_t& audio ); //< Apply reflection filter of all reflectors
+      const soundpath_t* parent; //< Parent sound path (or this if primary)
+      const source_t* primary; //< Primary source
+      const reflector_t* reflector;//< Reflector, which created new sound path from parent, or NULL for primary
+      std::vector<double> reflectionfilterstates;//< Filter states for first-order reflection filters
+      bool visible;
+      pos_t p_cut;
     };
 
     /** \brief A model for a sound wave propagating from a point source to a receiver
@@ -233,9 +264,13 @@ namespace TASCAR {
      * Processing includes delay, gain, air absorption, and optional
      * obstacles.
      */
-    class acoustic_model_t {
+    class acoustic_model_t : public soundpath_t {
     public:
-      acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,receiver_t* receiver,const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL));
+      acoustic_model_t(double c,double fs,uint32_t chunksize,
+                       source_t* src, receiver_t* receiver,
+                       const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL),
+                       const acoustic_model_t* parent = NULL, 
+                       const reflector_t* reflector = NULL);
       ~acoustic_model_t();
       /** \brief Read audio from source, process and add to receiver.
        */
@@ -245,11 +280,12 @@ namespace TASCAR {
       double c_;
       double fs_;
     public:
-      pointsource_t* src_;
+      source_t* src_;
       receiver_t* receiver_;
-      pos_t effective_srcpos;
+      //pos_t effective_srcpos;
     protected:
       receivermod_base_t::data_t* receiver_data;
+      sourcemod_base_t::data_t* source_data;
       std::vector<obstacle_t*> obstacles_;
       std::vector<diffractor_t::state_t> vstate;
       wave_t audio;
@@ -261,7 +297,8 @@ namespace TASCAR {
       double air_absorption;
       varidelay_t delayline;
       float airabsorption_state;
-      //bool first;
+    public:
+      uint32_t ismorder;
     };
 
     /** \brief A model for a sound wave propagating from a point source to a receiver
@@ -286,6 +323,29 @@ namespace TASCAR {
       double gain;
     };
 
+    class receiver_graph_t {
+    public:
+      /** \brief Create a graph for one receiver
+       */
+      receiver_graph_t(double c, double fs, uint32_t chunksize,
+                       const std::vector<source_t*>& sources,
+                       const std::vector<diffuse_source_t*>& diffusesources,
+                       const std::vector<reflector_t*>& reflectors,
+                       const std::vector<obstacle_t*>& obstacles,
+                       receiver_t* receiver,
+                       uint32_t mirror_order);
+      ~receiver_graph_t();
+      void process();
+      uint32_t get_active_pointsource() const {return active_pointsource;};
+      uint32_t get_active_diffusesource() const {return active_diffusesource;};
+      uint32_t get_total_pointsource() const {return acoustic_model.size();};
+      uint32_t get_total_diffusesource() const {return diffuse_acoustic_model.size();};
+      std::vector<acoustic_model_t*> acoustic_model;
+      std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
+      uint32_t active_pointsource;
+      uint32_t active_diffusesource;
+    };
+
     /** \brief The render model of an acoustic scenario.
      *
      * A world creates a set of acoustic models, one for each
@@ -300,25 +360,31 @@ namespace TASCAR {
        * \param receivers Pointers to render receivers
        *
        * A mirror model is created from the reflectors and primary sources.
+       * An instance of this class is created in TASCAR::render_core_t::prepare().
        */
-      world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order,bool b_0_14);
+      world_t( double c, double fs, uint32_t chunksize,
+               const std::vector<source_t*>& sources,
+               const std::vector<diffuse_source_t*>& diffusesources,
+               const std::vector<reflector_t*>& reflectors,
+               const std::vector<obstacle_t*>& obstacles,
+               const std::vector<receiver_t*>& receivers,
+               const std::vector<mask_t*>& masks,
+               uint32_t mirror_order);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */
       void process();
       uint32_t get_active_pointsource() const {return active_pointsource;};
       uint32_t get_active_diffusesource() const {return active_diffusesource;};
-      uint32_t get_total_pointsource() const {return acoustic_model.size();};
-      uint32_t get_total_diffusesource() const {return diffuse_acoustic_model.size();};
-    protected:
-      mirror_model_t mirrormodel;
-    public:
-      std::vector<acoustic_model_t*> acoustic_model;
-      std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
+      uint32_t get_total_pointsource() const {return total_pointsource;};
+      uint32_t get_total_diffusesource() const {return total_diffusesource;};
+      std::vector<receiver_graph_t*> receivergraphs;
       std::vector<receiver_t*> receivers_;
       std::vector<mask_t*> masks_;
       uint32_t active_pointsource;
       uint32_t active_diffusesource;
+      uint32_t total_pointsource;
+      uint32_t total_diffusesource;
     };
 
   }

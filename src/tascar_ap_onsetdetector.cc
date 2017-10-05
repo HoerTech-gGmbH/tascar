@@ -4,9 +4,8 @@
 class onsetdetector_t : public TASCAR::audioplugin_base_t {
 public:
   onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
-  void release();
   ~onsetdetector_t();
 private:
   lo_address lo_addr;
@@ -61,12 +60,9 @@ onsetdetector_t::onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg )
 
 void onsetdetector_t::prepare(double srate,uint32_t fragsize)
 {
+  audioplugin_base_t::prepare( srate, fragsize );
   lpc1 = exp(-1.0/(tau*f_sample));
   lpc11 = 1.0-lpc1;
-}
-
-void onsetdetector_t::release()
-{
 }
 
 onsetdetector_t::~onsetdetector_t()
@@ -74,14 +70,14 @@ onsetdetector_t::~onsetdetector_t()
   lo_address_free(lo_addr);
 }
 
-void onsetdetector_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void onsetdetector_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   const char* this_side(side.c_str());
   uint32_t N(chunk.size());
   float v2threshold(threshold*threshold);
   for(uint32_t k=0;k<N;++k){
     time_since_last += t_sample;
-    float v2(chunk[k]);
+    float v2(chunk[0][k]);
     v2 *= v2;
     env = lpc1*env + lpc11*std::max(v2,v2threshold);
     if( v2 > ons )

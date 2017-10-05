@@ -72,9 +72,9 @@ public:
   system_t( const TASCAR::module_cfg_t& cfg );
   virtual ~system_t();
   virtual void write_xml();
-  virtual void cleanup();
+  virtual void release();
   virtual void update(uint32_t frame,bool running);
-  virtual void configure(double srate,uint32_t fragsize);
+  virtual void prepare(double srate,uint32_t fragsize);
 private:
   void service();
   static void * service(void* h);
@@ -148,8 +148,9 @@ void system_t::update(uint32_t frame,bool running)
           fifo.write(k);
 }
 
-void system_t::configure(double srate,uint32_t fragsize_)
+void system_t::prepare(double srate,uint32_t fragsize_)
 {
+  module_base_t::prepare( srate, fragsize );
   fragsize = fragsize_;
   for(std::vector<at_cmd_t*>::iterator it=atcmds.begin();it!=atcmds.end();++it)
     (*it)->frame = (*it)->time * srate;
@@ -162,8 +163,9 @@ void system_t::write_xml()
   SET_ATTRIBUTE(onunload);
 }
 
-void system_t::cleanup()
+void system_t::release()
 {
+  module_base_t::release();
   if( pid != 0 )
     kill(pid,SIGTERM);
   if( h_pipe )

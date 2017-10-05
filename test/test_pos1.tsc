@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<session>
+  <scene mirrororder="1">
+    <face name="f1" vertices="0  1  1 
+			      0  1 -1
+			      0 -1 -1
+			      0 -1  1" edgereflection="true">
+      <position>0 3 0 0</position>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+    </face>
+    <face name="f2" vertices="0  1  1 
+			      0  1 -1
+			      0 -1 -1
+			      0 -1  1" edgereflection="true">
+      <position>0 -3 0 0</position>
+      <orientation>0 180 0 0</orientation>
+    </face>
+    <src_object>
+      <position>0 -1 0 0</position>
+      <sound/>
+    </src_object>
+    <receiver type="debugpos" sources="7"/>
+  </scene>
+</session>

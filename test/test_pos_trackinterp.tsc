@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <src_object sampledorientation="0.5">
+      <position>-1 -1 -1 0
+0 -1 0.5 0
+0.6 -1 1 0
+1 0 1 0
+2 1 1 0</position>
+      <sound/>
+      <sound x="-0.5"/>
+      <sound x="0.5"/>
+      <sound x="-0.25"/>
+      <sound x="0.25"/>
+    </src_object>
+    <receiver type="debugpos" sources="5"/>
+  </scene>
+</session>

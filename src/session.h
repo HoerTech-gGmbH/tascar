@@ -15,10 +15,9 @@ namespace TASCAR {
     xmlpp::Element* xmlsrc;
   };
 
-  class module_base_t : public xml_element_t {
+  class module_base_t : public xml_element_t, public audiostates_t {
   public:
     module_base_t( const module_cfg_t& cfg );
-    virtual void cleanup() {};
     virtual void write_xml();
     virtual ~module_base_t();
     /**
@@ -27,24 +26,18 @@ namespace TASCAR {
        \param running Transport running (true) or stopped (false).
      */
     virtual void update(uint32_t frame,bool running);
-    virtual void configure(double srate,uint32_t fragsize);
-    void configure_(double srate,uint32_t fragsize);
+    //void configure_(double srate,uint32_t fragsize);
   protected:
     TASCAR::session_t* session;
-    double f_sample;
-    double f_fragment;
-    double t_sample;
-    double t_fragment;
-    uint32_t n_fragment;
   };
 
-  class module_t : public TASCAR::xml_element_t {
+  class module_t : public module_base_t {
   public:
     module_t( const TASCAR::module_cfg_t& cfg );
     void write_xml();
     virtual ~module_t();
-    void cleanup();
-    void configure(double srate,uint32_t fragsize);
+    void prepare(double srate,uint32_t fragsize);
+    void release();
     void update(uint32_t frame,bool running);
   private:
     std::string name;
@@ -90,7 +83,6 @@ namespace TASCAR {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
-    void set_v014();
   private:
     session_t(const session_t& src);
   public:

@@ -4,7 +4,7 @@
    
    \ingroup libtascar
    \author Giso Grimm
-   \date 2014
+   \date 2014,2017
 
    \section license License (LGPL)
 
@@ -32,7 +32,7 @@
 
 namespace TASCAR {
 
-  class receivermod_base_t : public xml_element_t {
+  class receivermod_base_t : public xml_element_t, public audiostates_t {
   public:
     class data_t {
     public:
@@ -48,7 +48,6 @@ namespace TASCAR {
     virtual uint32_t get_num_channels() = 0;
     virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
-    virtual void configure(double srate,uint32_t fragsize) {};
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
   protected:
   };
@@ -59,7 +58,7 @@ namespace TASCAR {
     virtual void write_xml();
     virtual std::vector<std::string> get_connections() const;
     virtual void postproc(std::vector<wave_t>& output);
-    virtual void configure(double srate,uint32_t fragsize);
+    virtual void prepare(double srate,uint32_t fragsize);
   protected:
     TASCAR::spk_array_t spkpos;
   };
@@ -75,7 +74,8 @@ namespace TASCAR {
     virtual uint32_t get_num_channels();
     virtual std::string get_channel_postfix(uint32_t channel);
     virtual std::vector<std::string> get_connections() const;
-    virtual void configure(double srate,uint32_t fragsize);
+    void prepare(double srate,uint32_t fragsize);
+    void release();
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   private:
     receivermod_t(const receivermod_t&);

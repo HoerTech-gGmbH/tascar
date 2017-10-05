@@ -28,7 +28,6 @@
 #define TASCAR_H
 
 #include "jackclient.h"
-//#include "multipan.h"
 #include "scene.h"
 #include "errorhandling.h"
 

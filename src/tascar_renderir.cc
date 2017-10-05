@@ -4,7 +4,9 @@
 
 int main(int argc,char** argv)
 {
+#ifndef TSCDEBUG
   try{
+#endif
     // TSC configuration file:
     std::string tscfile;
     // Scene name (or empty to use first scene in session file):
@@ -21,8 +23,6 @@ int main(int argc,char** argv)
     uint32_t ism_min(0);
     // maximum ISM order:
     uint32_t ism_max(-1);
-    // reproduce ISM behavior of version 0.14:
-    bool b_0_14(false);
     // print statistics
     bool b_verbose(false);
     //
@@ -36,7 +36,6 @@ int main(int argc,char** argv)
       { "srate",      1, 0, 'f' },
       { "ismmin",     1, 0, '0' },
       { "ismmax",     1, 0, '1' },
-      { "b014",       0, 0, '4' },
       { "verbose",    0, 0, 'v' },
       { 0, 0, 0, 0 }
     };
@@ -69,9 +68,6 @@ int main(int argc,char** argv)
       case '1':
         ism_max = atoi(optarg);
         break;
-      case '4':
-        b_0_14 = true;
-        break;
       case 'v':
         b_verbose = true;
         break;
@@ -85,8 +81,9 @@ int main(int argc,char** argv)
       throw TASCAR::ErrMsg("Empty output sound file name");
     TASCAR::wav_render_t r(tscfile,scene,b_verbose);
     if( ism_max != (uint32_t)(-1) )
-      r.set_ism_order_range( ism_min, ism_max, b_0_14 );
+      r.set_ism_order_range( ism_min, ism_max );
     r.render_ir(irlen, fs, out_fname, starttime );
+#ifndef TSCDEBUG
   }
   catch( const std::exception& msg ){
     std::cerr << "Error: " << msg.what() << std::endl;
@@ -96,6 +93,7 @@ int main(int argc,char** argv)
     std::cerr << "Error: " << msg << std::endl;
     return 1;
   }
+#endif
   return 0;
 }
 

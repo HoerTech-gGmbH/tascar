@@ -4,6 +4,7 @@
 #include "xmlconfig.h"
 #include "filterclass.h"
 #include "delayline.h"
+#include "audiostates.h"
 
 namespace TASCAR {
 
@@ -36,7 +37,7 @@ namespace TASCAR {
       TASCAR::filter_t* comp;
     };
 
-    class spk_array_t : public xml_element_t, public std::vector<spk_pos_t> {
+  class spk_array_t : public xml_element_t, public std::vector<spk_pos_t>, public audiostates_t {
     public:
       spk_array_t(xmlpp::Element*, const std::string& elementname_="speaker");
     private:
@@ -53,7 +54,7 @@ namespace TASCAR {
       };
       const std::vector<didx_t>& sort_distance(const pos_t& psrc);
       void foa_decode(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output);
-      void configure(double srate, uint32_t fragsize);
+      void prepare(double srate, uint32_t fragsize);
     private:
       void import_file(const std::string& fname);
       void read_xml(xmlpp::Element* elem);

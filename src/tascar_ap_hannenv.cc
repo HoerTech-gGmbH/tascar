@@ -3,7 +3,7 @@
 class hannenv_t : public TASCAR::audioplugin_base_t {
 public:
   hannenv_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   ~hannenv_t();
 private:
   double t0;
@@ -32,7 +32,7 @@ hannenv_t::~hannenv_t()
 {
 }
 
-void hannenv_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   double t1(ramp1);
   double t2(t1+steady);
@@ -43,17 +43,17 @@ void hannenv_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, cons
   double dt(t_sample);
   if( !tp.rolling )
     dt = 0;
-  for(uint32_t k=0;k<chunk.n;++k){
+  for(uint32_t k=0;k<chunk[0].n;++k){
     t = fmod( t, period );
     if( t <= 0 )
-      chunk.d[k] = 0.0;
+      chunk[0].d[k] = 0.0;
     else if( t < t1 )
-      chunk.d[k] *= 0.5*(1.0-cos(p1*t));
+      chunk[0].d[k] *= 0.5*(1.0-cos(p1*t));
     else if( t > t2 ){
       if( t < t3 )
-        chunk.d[k] *= 0.5*(1.0+cos(p2*(t-t2)));
+        chunk[0].d[k] *= 0.5*(1.0+cos(p2*(t-t2)));
       else
-        chunk.d[k] = 0;
+        chunk[0].d[k] = 0;
     }
     t += dt;
   }

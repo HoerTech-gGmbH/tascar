@@ -18,29 +18,33 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic chmap hoa2d_fuma
+  intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos
+
+SOURCES = omni cardioidmod door
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
   artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
   matrix hoafdnrot mpu6050track
 
-OBJECTS = coordinates.o dynamicobjects.o scene.o render.o		\
-  session_reader.o session.o receivermod.o jackclient.o delayline.o	\
-  osc_helper.o async_file.o errorhandling.o audiochunks.o		\
-  acousticmodel.o xmlconfig.o osc_scene.o ringbuffer.o viewport.o	\
-  sampler.o jackiowav.o cli.o irrender.o jackrender.o audioplugin.o	\
-  levelmeter.o serviceclass.o alsamidicc.o speakerarray.o		\
-  filterclass.o spectrum.o fft.o stft.o ola.o termsetbaud.o		\
-  serialport.o dmxdriver.o
+OBJECTS = audiostates.o coordinates.o audiochunks.o xmlconfig.o		\
+  dynamicobjects.o sourcemod.o receivermod.o filterclass.o		\
+  osc_helper.o acousticmodel.o scene.o render.o session_reader.o	\
+  session.o jackclient.o delayline.o async_file.o errorhandling.o	\
+  osc_scene.o ringbuffer.o viewport.o sampler.o jackiowav.o cli.o	\
+  irrender.o jackrender.o audioplugin.o levelmeter.o serviceclass.o	\
+  alsamidicc.o speakerarray.o spectrum.o fft.o stft.o ola.o		\
+  termsetbaud.o serialport.o dmxdriver.o
 
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
   onsetdetector delay sndfile spksim dummy hannenv
 
-TEST_FILES = test_ngon test_sinc test_fsplit
+TEST_FILES = test_ngon test_sinc test_fsplit compare_sndfile
 
 #
 RECEIVERMODS = $(patsubst %,tascarreceiver_%.so,$(RECEIVERS))
+
+SOURCEMODS = $(patsubst %,tascarsource_%.so,$(SOURCES))
 
 TASCARMODDLLS = $(patsubst %,tascar_%.so,$(TASCARMODS))
 
@@ -64,7 +68,7 @@ LDLIBS += -llinuxtrack
 endif
 
 ifeq "$(DEBUG)" "yes"
-CXXFLAGS += -ggdb
+CXXFLAGS += -ggdb -DTSCDEBUG
 else
 CXXFLAGS += -O3 
 endif
@@ -76,6 +80,7 @@ GUIOBJECTS = gui_elements.o pdfexport.o
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(RECEIVERMODS)) \
+	$(patsubst %,$(PREFIX)/lib/%,$(SOURCEMODS)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(TASCARMODDLLS)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
 
@@ -97,7 +102,9 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 LDLIBS += -ldl
 
-all: lib
+all: lib bins
+
+bins:
 	mkdir -p build
 	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
 	$(MAKE) -C build -f ../Makefile $(BINFILES)
@@ -105,7 +112,7 @@ all: lib
 lib:
 	mkdir -p build
 	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
-	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
+	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
 
 libtascar.a: $(OBJECTS)
 	ar rcs $@ $^
@@ -125,7 +132,10 @@ clean:
 VPATH = ../src
 # ../src/hoafilt
 
-.PHONY : doc
+.PHONY : doc test
+
+test:
+	$(MAKE) -C test
 
 doc:
 	cd doc && sed -e 's/PROJECT.NUMBER.*=.*/&'`cat ../version`'/1' doxygen.cfg > .temp.cfg && doxygen .temp.cfg
@@ -135,7 +145,7 @@ include $(wildcard *.mk)
 
 tascar_gui: libtascargui.a
 
-$(BINFILES) $(RECEIVERMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS): libtascar.a
+$(BINFILES) $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS): libtascar.a
 
 tascar_pdf: libtascargui.a
 
@@ -180,6 +190,9 @@ tascar_hoafdnrot.so: LDLIBS+=-lfftw3f
 tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime tascar_levels2osc.so: LDLIBS+=-llsl
 
 tascarreceiver_%.so: receivermod_%.cc
+	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
+tascarsource_%.so: tascarsource_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 tascar_%.so: tascarmod_%.cc

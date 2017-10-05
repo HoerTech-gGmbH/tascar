@@ -41,6 +41,8 @@ sLib.latex_tabular = @sd_latex_tabular;
 sLib.help.latex_tabular = @help_latex_tabular;
 sLib.merge = @sd_merge;
 sLib.help.merge = @help_merge;
+sLib.merge_addpar = @sd_merge_addpar;
+sLib.help.merge_addpar = @help_merge_addpar;
 sLib.mergepar = @sd_mergepar;
 sLib.help.mergepar = @help_mergepar;
 sLib.par2col = @sd_par2col;
@@ -384,7 +386,7 @@ function s = sd_eval( s, fun, varargin )
   mdata = zeros(ncond,ndata);
   if isnumeric(sPar.display) | islogical(sPar.display)
     if sPar.display
-      h = waitbar(0,sprintf('%d conditions',ncond));
+      h = waitbar(0,sprintf('%d conditions',ncond*sPar.nrep));
       h_tic = tic;
     end
   else
@@ -455,7 +457,7 @@ function s = sd_eval( s, fun, varargin )
 	  disp_arg(end) = [];
 	  disp_arg = [disp_arg,' ',datestr(tt+now)];
 	  disp(disp_arg);
-	  waitbar(prog,h,sprintf('%d/%d conditions (ETA: %s)',ktot,ncond,datestr(tt,'HH:MM:SS')));
+	  waitbar(prog,h,sprintf('%d/%d conditions (ETA: %s)',ktot,ncond*sPar.nrep,datestr(tt,'HH:MM:SS')));
 	end
       else
 	sPar.display(ktot/(ncond*sPar.nrep));
@@ -840,6 +842,43 @@ function help_merge
 disp([' MERGE - multiple data structures into one',char(10),'',char(10),' Usage:',char(10),'  sd = libsd();',char(10),'  s = sd.merge( s, varargin );',char(10),'',char(10),' ',char(10),'  s : data structure',char(10),'  varargin : one or more other data structures',char(10),' ',char(10),'  requires field names and parameter types to be equal for all',char(10),'  structures.',char(10),'']);
 
 
+function s = sd_merge_addpar( s, varargin )
+% merge multiple data structures into one
+%
+% s : data structure
+% varargin : one or more other data structures
+%
+% requires field names and parameter types to be equal for all
+% structures.
+  s.data = [ones(size(s.data,1),1),s.data];
+  for k=1:numel(varargin)
+    so = varargin{k};
+    if ~isequal(s.fields,so.fields)
+      error('field names mismatch');
+    end
+    if numel(s.values) ~= numel(so.values)
+      error('different number of parameters');
+    end
+    for kf=1:numel(s.values)
+      if ~isequal(class(s.values{kf}),class(so.values{kf}))
+	error('parameter types mismatch');
+      end
+    end
+    for kf=1:numel(s.values)
+      so.data(:,kf) = so.data(:,kf) + numel(s.values{kf});
+      s.values{kf} = [s.values{kf},so.values{kf}];
+    end
+    so.data = [(k+1)*ones(size(so.data,1),1),so.data];
+    s.data = [s.data;so.data];
+  end
+  s.fields = [{'set'},s.fields];
+  s.values = [{unique(s.data(:,1))},s.values];
+  s = sd_compactval( s );
+
+function help_merge_addpar
+disp([' MERGE - multiple data structures into one',char(10),'',char(10),' Usage:',char(10),'  sd = libsd();',char(10),'  s = sd.merge( s, varargin );',char(10),'',char(10),' ',char(10),'  s : data structure',char(10),'  varargin : one or more other data structures',char(10),' ',char(10),'  requires field names and parameter types to be equal for all',char(10),'  structures.',char(10),'']);
+
+
 function s = sd_mergepar( s, vCol )
 % merge multiple parameter columns
 %
@@ -1109,9 +1148,9 @@ function [fh, fname, ph] = sd_plot( sData, xidx, yidx, sPlotPars, varargin )
     csLeg = sData.values{pidx}(vpar);
     csLeg = any2cell( csLeg );
     h = legend(csLeg,'Interpreter','none','Location','NorthEast');
-    set(get(h,'title'),'string',par_name,'interpreter','none',...
-		      'fontsize',sPlotPars.fontsize,'fontweight','bold',...
-		      'position',[0.5 1.02 1]);
+    %set(get(h,'title'),'string',par_name,'interpreter','none',...
+	%	      'fontsize',sPlotPars.fontsize,'fontweight','bold',...
+	%	      'position',[0.5 1.02 1]);
     set(h,'Position',[0.73 0.05 0.19 0.12]);
     set(h,'Position',[0.73 0.05 0.19 0.12]);
     set(findobj(h,'type','line'),'linewidth',0.8);

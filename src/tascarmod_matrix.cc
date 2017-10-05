@@ -17,9 +17,9 @@ class matrix_t : public matrix_vars_t, public jackc_t {
 public:
   matrix_t( const TASCAR::module_cfg_t& cfg );
   ~matrix_t();
-  void cleanup();
+  void release();
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
-  void configure(double srate,uint32_t fragsize);
+  void prepare(double srate,uint32_t fragsize);
 private:
   TASCAR::spk_array_t outputs;
   TASCAR::spk_array_t inputs;
@@ -76,8 +76,11 @@ matrix_vars_t::~matrix_vars_t()
 {
 }
 
-void matrix_t::cleanup()
+void matrix_t::release()
 {
+  module_base_t::release();
+  inputs.release();
+  outputs.release();
   deactivate();
 }
 
@@ -85,10 +88,11 @@ matrix_t::~matrix_t()
 {
 }
 
-void matrix_t::configure(double srate,uint32_t fragsize)
+void matrix_t::prepare(double srate,uint32_t fragsize)
 {
-  outputs.configure( srate, fragsize );
-  inputs.configure( srate, fragsize );
+  module_base_t::prepare( srate, fragsize );
+  outputs.prepare( srate, fragsize );
+  inputs.prepare( srate, fragsize );
   // connect output ports:
   for(uint32_t kc=0;kc<outputs.connections.size();++kc)
     if( outputs.connections[kc].size() )

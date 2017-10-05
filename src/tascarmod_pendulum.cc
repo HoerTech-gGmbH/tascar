@@ -53,7 +53,7 @@ void pendulum_t::update(uint32_t frame,bool running)
     TASCAR::zyx_euler_t dr(0,0,rx);
     TASCAR::pos_t dp(distance);
     dp *= TASCAR::zyx_euler_t(0,0,rx);
-    dp *= TASCAR::zyx_euler_t(iobj->obj->c6dof.o.z,iobj->obj->c6dof.o.y,0);
+    dp *= TASCAR::zyx_euler_t(iobj->obj->c6dof.orientation.z,iobj->obj->c6dof.orientation.y,0);
     iobj->obj->dorientation = dr;
     iobj->obj->dlocation = dp;
   }

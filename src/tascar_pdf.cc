@@ -34,8 +34,7 @@ namespace App {
     ~pdf_export_t();
     void render_time(const std::vector<double>& time);
     void render_time(TASCAR::render_core_t* scene,const std::vector<double>& time);
-    //void set_v014();
-    void set_ism_order_range(uint32_t ism_min,uint32_t ism_max, bool b_0_14);
+    void set_ism_order_range(uint32_t ism_min,uint32_t ism_max);
   protected:
     virtual void add_scene(xmlpp::Element *e);
   private:
@@ -76,10 +75,10 @@ App::pdf_export_t::~pdf_export_t()
     delete (*sit);
 }
 
-void App::pdf_export_t::set_ism_order_range(uint32_t ism_min,uint32_t ism_max,bool b_0_14)
+void App::pdf_export_t::set_ism_order_range(uint32_t ism_min,uint32_t ism_max)
 {
   for(std::vector<TASCAR::render_core_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
-    (*ipl)->set_ism_order_range(ism_min,ism_max,b_0_14);
+    (*ipl)->set_ism_order_range(ism_min,ism_max);
 }
 
 void App::pdf_export_t::add_scene(xmlpp::Element* sne)
@@ -262,14 +261,12 @@ int main(int argc, char** argv)
     { "help",     0, 0, 'h' },
     { "time",     1, 0, 't' },
     { "acousticmodel", 0, 0, 'a' },
-    { "b014", 0, 0, '4' },
     { "ismmin", 1, 0, '0' },
     { "ismmax", 1, 0, '1' },
     { 0, 0, 0, 0 }
   };
   int opt(0);
   bool b_am(false);
-  bool b_0_14(false);
   uint32_t ism_min(0);
   uint32_t ism_max(3);
   int option_index(0);
@@ -288,9 +285,6 @@ int main(int argc, char** argv)
       return -1;
     case 'a':
       b_am = true;
-      break;
-    case '4':
-      b_0_14 = true;
       break;
     case '0':
       ism_min = atoi(optarg);
@@ -314,7 +308,7 @@ int main(int argc, char** argv)
   App::pdf_export_t c(tscfile,pdffile);
   if( b_am )
     c.draw_acousticmodel();
-  c.set_ism_order_range(ism_min,ism_max,b_0_14);
+  c.set_ism_order_range(ism_min,ism_max);
   c.render_time(time);
   return 0;
 }

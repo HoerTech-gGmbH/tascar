@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<session>
+  <scene guiscale="6">
+    <door name="d">
+      <position>0 -1 0 -1</position>
+    </door>
+    <receiver type="omni">
+      <position>0 1 -2 0 1 1 2 0</position>
+    </receiver>
+  </scene>
+</session>

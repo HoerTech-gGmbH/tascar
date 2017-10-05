@@ -143,49 +143,49 @@ void TASCAR::dynobject_t::geometry_update(double time)
 {
   c6dof_prev = c6dof_;
   double ltime(time-starttime);
-  c6dof_.p = location.interp(ltime);
-  TASCAR::pos_t ptmp(c6dof_.p);
-  c6dof_.p += dlocation;
+  c6dof_.position = location.interp(ltime);
+  TASCAR::pos_t ptmp(c6dof_.position);
+  c6dof_.position += dlocation;
   if( sampledorientation == 0 )
-    c6dof_.o = orientation.interp(ltime);
+    c6dof_.orientation = orientation.interp(ltime);
   else{
     double tp(location.get_time(location.get_dist(ltime)-sampledorientation));
-    TASCAR::pos_t pdt(c6dof_.p);
+    TASCAR::pos_t pdt(c6dof_.position);
     pdt -= location.interp(tp);
     if( sampledorientation < 0 )
       pdt *= -1.0;
-    c6dof_.o.z = pdt.azim();
-    c6dof_.o.y = pdt.elev();
-    c6dof_.o.x = 0.0;
+    c6dof_.orientation.z = pdt.azim();
+    c6dof_.orientation.y = pdt.elev();
+    c6dof_.orientation.x = 0.0;
   }
-  c6dof_.o += dorientation;
+  c6dof_.orientation += dorientation;
   if( navmesh ){
-    navmesh->update_pos( c6dof_.p );
-    dlocation = c6dof_.p;
+    navmesh->update_pos( c6dof_.position );
+    dlocation = c6dof_.position;
     dlocation -= ptmp;
   }
 }
 
 TASCAR::pos_t TASCAR::dynobject_t::get_location() const
 {
-  return c6dof_.p;
+  return c6dof_.position;
 }
 
 TASCAR::zyx_euler_t TASCAR::dynobject_t::get_orientation() const
 {
-  return c6dof_.o;
+  return c6dof_.orientation;
 }
 
 void TASCAR::dynobject_t::get_6dof(pos_t& p,zyx_euler_t& o) const
 {
-  p = c6dof_.p;
-  o = c6dof_.o;
+  p = c6dof_.position;
+  o = c6dof_.orientation;
 }
 
 void TASCAR::dynobject_t::get_6dof_prev(pos_t& p,zyx_euler_t& o) const
 {
-  p = c6dof_prev.p;
-  o = c6dof_prev.o;
+  p = c6dof_prev.position;
+  o = c6dof_prev.orientation;
 }
 
 TASCAR::dynobject_t::~dynobject_t()

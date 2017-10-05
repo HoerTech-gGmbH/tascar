@@ -56,7 +56,7 @@ function tascar_hrir_duda( varargin )
   fprintf(fh_tsc,'<session name="hrir_template">\n  <scene name="example">\n');
   fprintf(fh_tsc,'    <receiver name="out" type="vbap" layout="%s.spk"/>\n',...
 	  sCfg.basename);
-  fprintf(fh_tsc,'    <src_object name="src"><sound name="0" x="1"/></src_object>\n');
+  fprintf(fh_tsc,'    <source name="src"><sound name="0" x="1"/></source>\n');
   fprintf(fh_tsc,'  </scene>\n');
   fprintf(fh_spk,'<layout label="%s">\n',sCfg.basename);
   fprintf(fh_tsc,...

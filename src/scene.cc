@@ -86,208 +86,6 @@ void src_diffuse_t::write_xml()
   dynobject_t::set_attribute("falloff",falloff);
 }
 
-/*
- *src_door_t
- */
-src_door_t::src_door_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc),audio_port_t(xmlsrc),width(1.0),
-    height(2.0),
-    falloff(1.0),
-    distance(1.0),
-    wnd_sqrt(false),
-    size(0),
-    maxdist(3700),
-    minlevel(0),
-    sincorder(0),
-    source(NULL)
-{
-  dynobject_t::get_attribute("width",width);
-  dynobject_t::get_attribute("height",height);
-  dynobject_t::get_attribute("falloff",falloff);
-  dynobject_t::get_attribute("distance",distance);
-  dynobject_t::get_attribute_bool("wndsqrt",wnd_sqrt);
-  dynobject_t::GET_ATTRIBUTE(size);
-  dynobject_t::GET_ATTRIBUTE(maxdist);
-  dynobject_t::GET_ATTRIBUTE_DBSPL(minlevel);
-  dynobject_t::GET_ATTRIBUTE(sincorder);
-}
-
-void src_door_t::write_xml()
-{
-  object_t::write_xml();
-  audio_port_t::write_xml();
-  dynobject_t::set_attribute("width",width);
-  dynobject_t::set_attribute("height",height);
-  dynobject_t::set_attribute("falloff",falloff);
-  dynobject_t::set_attribute("distance",distance);
-  dynobject_t::set_attribute_bool("wndsqrt",wnd_sqrt);
-  dynobject_t::SET_ATTRIBUTE(size);
-  dynobject_t::SET_ATTRIBUTE(maxdist);
-  dynobject_t::SET_ATTRIBUTE_DBSPL(minlevel);
-  dynobject_t::SET_ATTRIBUTE(sincorder);
-}
-
-src_door_t::~src_door_t()
-{
-  if( source )
-    delete source;
-}
-
-void src_door_t::geometry_update(double t)
-{
-  if( source ){
-    dynobject_t::geometry_update(t);
-    source->inv_falloff = 1.0/std::max(falloff,1.0e-10);
-    source->distance = distance;
-    source->size = size;
-    source->wnd_sqrt = wnd_sqrt;
-    source->position = get_location();
-    source->apply_rot_loc(source->position,get_orientation());
-  }
-}
-
-
-void src_door_t::prepare(double fs, uint32_t fragsize)
-{
-  if( source )
-    delete source;
-  reset_meters();
-  addmeter(fs);
-  source = new TASCAR::Acousticmodel::doorsource_t(fragsize,maxdist,minlevel,sincorder,GAIN_INVR,size);
-  source->add_rmslevel(rmsmeter[0]);
-  geometry_update(0);
-  source->nonrt_set_rect(width,height);
-}
-
-/*
- * sound_t
- */
-sound_t::sound_t(xmlpp::Element* xmlsrc,src_object_t* parent_)
-  : audio_port_t(xmlsrc),fs_(1),
-    local_position(0,0,0),
-    chaindist(0),
-    size(0),
-    maxdist(3700),
-    minlevel(0),
-    gainmodel(GAIN_INVR),
-    sincorder(0),
-    parent(parent_),
-    ismmin(0),
-    ismmax(2147483647),
-    source(NULL)
-{
-  get_attribute("x",local_position.x);
-  get_attribute("y",local_position.y);
-  get_attribute("z",local_position.z);
-  get_attribute("d",chaindist);
-  GET_ATTRIBUTE(size);
-  GET_ATTRIBUTE(maxdist);
-  GET_ATTRIBUTE_DBSPL(minlevel);
-  std::string gr;
-  get_attribute("gainmodel",gr);
-  if( gr.empty() )
-    gr = "1/r";
-  if( gr == "1/r" )
-    gainmodel = GAIN_INVR;
-  else if( gr == "1" )
-    gainmodel = GAIN_UNITY;
-  else
-    throw TASCAR::ErrMsg("Invalid gain model "+gr+"(valid gain models: \"1/r\", \"1\").");
-  GET_ATTRIBUTE(sincorder);
-  GET_ATTRIBUTE(ismmin);
-  GET_ATTRIBUTE(ismmax);
-  get_attribute("name",name);
-  if( parent_ && name.empty() )
-    name = parent_->next_sound_name();
-  if( name.empty() )
-    throw TASCAR::ErrMsg("Invalid (empty) sound name.");
-  // parse plugins:
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      //if( sne->get_name() == "plugin" )
-      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,(parent_?(parent_->get_name()):("")))));
-    }
-  }
-}
-
-sound_t::sound_t(const sound_t& src)
-  : audio_port_t(src),
-    fs_(1),
-    dt_(1),
-    local_position(src.local_position),
-    chaindist(src.chaindist),
-    size(src.size),
-    maxdist(src.maxdist),
-    minlevel(src.minlevel),
-    gainmodel(src.gainmodel),
-    sincorder(src.sincorder),
-    parent(NULL),
-    name(src.name),
-    ismmin(src.ismmin),
-    ismmax(src.ismmax),
-    source(NULL),
-    gain_(1.0)
-{
-}
-
-sound_t::~sound_t()
-{
-  if( source )
-    delete source;
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-       p!= plugins.end();
-       ++p)
-    delete (*p);
-}
-
-void sound_t::process_plugins(const TASCAR::transport_t& tp)
-{
-  TASCAR::transport_t ltp(tp);
-  if( source ){
-    if( parent ){
-      ltp.object_time_seconds = ltp.session_time_seconds - parent->starttime;
-      ltp.object_time_samples = fs_ * ltp.object_time_seconds;
-    }
-    for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-         p!= plugins.end();
-         ++p)
-      (*p)->ap_process(source->audio,source->position,ltp);
-  }
-}
-
-void sound_t::apply_gain()
-{
-  if( source ){
-    double dg((get_gain() - gain_)*dt_);
-    for(uint32_t k=0;k<source->audio.n;++k)
-      source->audio.d[k] *= (gain_+=dg);
-  }
-}
-
-void sound_t::geometry_update(double t)
-{
-  if( source ){
-    source->position = get_pos_global(t);
-    source->ismmin = ismmin;
-    source->ismmax = ismmax;
-    source->size = size;
-  }
-}
-
-void sound_t::prepare(double fs, uint32_t fragsize)
-{
-  fs_ = fs;
-  dt_ = 1.0/std::max(1.0,(double)fragsize);
-  gain_ = get_gain();
-  if( source )
-    delete source;
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();p!=plugins.end();++p)
-    (*p)->prepare(fs,fragsize);
-  source = new TASCAR::Acousticmodel::pointsource_t(fragsize,maxdist,minlevel,sincorder,gainmodel,size);
-}
-
 src_diffuse_t::~src_diffuse_t()
 {
   if( source )
@@ -304,6 +102,7 @@ void src_diffuse_t::geometry_update(double t)
 
 void src_diffuse_t::prepare(double fs, uint32_t fragsize)
 {
+  sndfile_object_t::prepare(fs,fragsize);
   if( source )
     delete source;
   reset_meters();
@@ -316,25 +115,6 @@ void src_diffuse_t::prepare(double fs, uint32_t fragsize)
       throw TASCAR::ErrMsg("Diffuse sources support only 4-channel (FOA) sound files ("+it->fname+").");
 }
 
-void sound_t::set_parent(src_object_t* ref)
-{
-  parent = ref;
-}
-
-std::string sound_t::get_parent_name() const
-{
-  if( parent )
-    return parent->get_name();
-  return "";
-}
-
-std::string sound_t::get_port_name() const
-{
-  if( parent )
-    return parent->get_name() + "." + name;
-  return name;
-}
-
 audio_port_t::~audio_port_t()
 {
 }
@@ -343,56 +123,6 @@ void audio_port_t::set_port_index(uint32_t port_index_)
 {
   port_index = port_index_;
 }
-
-void sound_t::write_xml()
-{
-  audio_port_t::write_xml();
-  SET_ATTRIBUTE(size);
-  SET_ATTRIBUTE(maxdist);
-  SET_ATTRIBUTE_DBSPL(minlevel);
-  SET_ATTRIBUTE(sincorder);
-  switch( gainmodel ){
-  case GAIN_INVR :
-    e->set_attribute("gainmodel","1/r");
-    break;
-  case GAIN_UNITY :
-    e->set_attribute("gainmodel","1");
-    break;
-  }
-  e->set_attribute("name",name);
-  if( local_position.x != 0 )
-    set_attribute("x",local_position.x);
-  if( local_position.y != 0 )
-    set_attribute("y",local_position.y);
-  if( local_position.z != 0 )
-    set_attribute("z",local_position.z);
-  if( chaindist != 0 )
-    set_attribute("d",chaindist);
-}
-
-bool sound_t::isactive(double t)
-{
-  return parent && parent->isactive(t);
-}
-
-pos_t sound_t::get_pos_global(double t) const
-{
-  pos_t rp(local_position);
-  if( parent ){
-    TASCAR::pos_t ppos;
-    TASCAR::zyx_euler_t por;
-    parent->get_6dof(ppos,por);
-    if( chaindist != 0 ){
-      double tp(t - parent->starttime);
-      tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
-      ppos = parent->location.interp(tp);
-    }
-    rp *= por;
-    rp += ppos;
-  }
-  return rp;
-}
-
 
 /*
  * src_object_t
@@ -407,9 +137,8 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
   xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "sound" )){
+    if( sne && ( sne->get_name() == "sound" ))
       sound.push_back(new sound_t(sne,this));
-    }
   }
 }
 
@@ -444,13 +173,24 @@ void src_object_t::geometry_update(double t)
 
 void src_object_t::prepare(double fs, uint32_t fragsize)
 {
+  sndfile_object_t::prepare(fs,fragsize);
   reset_meters();
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
-    addmeter(fs);
+    for(uint32_t k=0;k<(*it)->get_num_channels();++k){
+      addmeter(fs);
+      (*it)->add_meter(rmsmeter.back());
+    }
     (*it)->prepare(fs,fragsize);
-    (*it)->get_source()->add_rmslevel((rmsmeter.back()));
+    //(*it)->get_source()->add_rmslevel((rmsmeter.back()));
   }
   startframe = fs*starttime;
+}
+
+void src_object_t::release()
+{
+  sndfile_object_t::release();
+  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
+    (*it)->release();
 }
 
 void src_object_t::write_xml()
@@ -460,19 +200,12 @@ void src_object_t::write_xml()
     (*it)->write_xml();
 }
 
-sound_t* src_object_t::add_sound()
-{
-  sound.push_back(new sound_t(dynobject_t::e->add_child("sound"),this));
-  return sound.back();
-}
-
 scene_t::scene_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),
     description(""),
     name(""),
     c(340.0),
     mirrororder(1),
-    b_0_14(false),
     guiscale(200),
     guitrackobject(NULL),
     anysolo(0),
@@ -483,7 +216,6 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     if( name.empty() )
       name = "scene";
     GET_ATTRIBUTE(mirrororder);
-    GET_ATTRIBUTE_BOOL(b_0_14);
     GET_ATTRIBUTE(guiscale);
     GET_ATTRIBUTE(guicenter);
     GET_ATTRIBUTE(c);
@@ -496,10 +228,12 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         if( sne->get_name() == "sink" )
           sne->set_name("receiver");
         // parse nodes:
-        if( sne->get_name() == "src_object" )
+        if( sne->get_name() == "source" )
           object_sources.push_back(new src_object_t(sne));
-        else if( sne->get_name() == "door" )
-          door_sources.push_back(new src_door_t(sne));
+        else if( sne->get_name() == "src_object" )
+          object_sources.push_back(new src_object_t(sne));
+//        else if( sne->get_name() == "door" )
+//          door_sources.push_back(new src_door_t(sne));
         else if( sne->get_name() == "diffuse" )
           diffuse_sources.push_back(new src_diffuse_t(sne));
         else if( sne->get_name() == "receiver" )
@@ -514,6 +248,11 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
           masks.push_back(new mask_object_t(sne));
         else
           std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
+      }
+    }
+    for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){
+      for(std::vector<sound_t*>::iterator its=(*it)->sound.begin();its!=(*it)->sound.end();++its){
+        sounds.push_back( *its );
       }
     }
     std::string guitracking;
@@ -569,7 +308,6 @@ void scene_t::write_xml()
  */
 void scene_t::geometry_update(double t)
 {
-  //std::vector<object_t*> objs(get_objects());
   for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->geometry_update( t );
 }
@@ -584,8 +322,6 @@ void scene_t::process_active(double t)
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    (*it)->process_active(t,anysolo);
-  for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     (*it)->process_active(t,anysolo);
@@ -613,10 +349,6 @@ void mask_object_t::write_xml()
   dynobject_t::set_attribute("size",xmlsize);
   dynobject_t::set_attribute("falloff",xmlfalloff);
   dynobject_t::set_attribute_bool("inside",mask_inner);
-}
-
-void mask_object_t::prepare(double fs, uint32_t fragsize)
-{
 }
 
 void mask_object_t::geometry_update(double t)
@@ -651,9 +383,16 @@ void receivermod_object_t::write_xml()
 void receivermod_object_t::prepare(double fs, uint32_t fragsize)
 {
   TASCAR::Acousticmodel::receiver_t::prepare(fs,fragsize);
+  object_t::prepare(fs,fragsize);
   reset_meters();
   for(uint32_t k=0;k<get_num_channels();k++)
     addmeter(fs);
+}
+
+void receivermod_object_t::release()
+{
+  TASCAR::Acousticmodel::receiver_t::release();
+  object_t::release();
 }
 
 void receivermod_object_t::postproc(std::vector<wave_t>& output)
@@ -671,8 +410,7 @@ void receivermod_object_t::postproc(std::vector<wave_t>& output)
 void receivermod_object_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
-  TASCAR::Acousticmodel::receiver_t::position = c6dof.p;
-  TASCAR::Acousticmodel::receiver_t::orientation = c6dof.o;
+  *(c6dof_t*)this = c6dof;
   boundingbox.geometry_update(t);
 }
 
@@ -683,21 +421,8 @@ void receivermod_object_t::process_active(double t,uint32_t anysolo)
 
 src_object_t* scene_t::add_source()
 {
-  object_sources.push_back(new src_object_t(e->add_child("src_object")));
+  object_sources.push_back(new src_object_t(e->add_child("source")));
   return object_sources.back();
-}
-
-std::vector<sound_t*> scene_t::linearize_sounds()
-{
-  std::vector<sound_t*> r;
-  for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){
-    //it->set_reference(&listener);
-    for(std::vector<sound_t*>::iterator its=(*it)->sound.begin();its!=(*it)->sound.end();++its){
-      (*its)->set_parent( *it );
-      r.push_back( *its );
-    }
-  }
-  return r;
 }
 
 std::vector<object_t*> scene_t::get_objects()
@@ -706,8 +431,6 @@ std::vector<object_t*> scene_t::get_objects()
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     r.push_back(*it);
   for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
-    r.push_back(*it);
-  for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it)
     r.push_back(*it);
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     r.push_back(*it);
@@ -724,19 +447,24 @@ std::vector<object_t*> scene_t::get_objects()
 
 void scene_t::prepare(double fs, uint32_t fragsize)
 {
+  scene_node_base_t::prepare(fs,fragsize);
   if( !name.size() )
     throw TASCAR::ErrMsg("Invalid empty scene name (please set \"name\" attribute of scene node).");
   if( name.find(" ") != std::string::npos )
     throw TASCAR::ErrMsg("Spaces in scene name are not supported (\""+name+"\")");
   if( name.find(":") != std::string::npos )
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
-  if( (object_sources.size() == 0) && (diffuse_sources.size() == 0) && (door_sources.size() == 0) )
-    throw TASCAR::ErrMsg("No sound source in scene \""+name+"\".");
-  if( receivermod_objects.size() == 0 )
-    throw TASCAR::ErrMsg("No receiver in scene \""+name+"\".");
   all_objects = get_objects();
   for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->prepare( fs, fragsize );
+}
+
+void scene_t::release()
+{
+  scene_node_base_t::release();
+  all_objects = get_objects();
+  for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
+    (*it)->release();
 }
 
 rgb_color_t::rgb_color_t(const std::string& webc)
@@ -759,23 +487,6 @@ std::string rgb_color_t::str()
                  ((unsigned int)(round(b*255.0))));
   sprintf(ctmp,"#%06x",c);
   return ctmp;
-}
-
-std::string sound_t::getlabel() const
-{
-  std::string r;
-  if( parent ){
-    r = parent->get_name() + ".";
-  }else{
-    r = "<NULL>.";
-  }
-  r += name;
-  return r;
-}
-
-std::string sound_t::get_name() const
-{
-  return name;
 }
 
 void route_t::reset_meters()
@@ -850,20 +561,6 @@ bool object_t::is_active(uint32_t anysolo,double t)
   return (route_t::is_active(anysolo) && (t >= starttime) && ((t <= endtime)||(endtime <= starttime) ));
 }
 
-bool sound_t::get_mute() const 
-{
-  if( parent ) 
-    return parent->get_mute();
-  return false;
-}
-
-bool sound_t::get_solo() const 
-{
-  if( parent ) 
-    return parent->get_solo();
-  return false;
-}
-
 face_object_t::face_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc),width(1.0),
     height(1.0)
@@ -888,10 +585,6 @@ void face_object_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
   apply_rot_loc(get_location(),get_orientation());
-}
-
-void face_object_t::prepare(double fs, uint32_t fragsize)
-{
 }
 
 void face_object_t::write_xml()
@@ -975,8 +668,7 @@ void src_object_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
-    if( (*it)->get_source() )
-      (*it)->get_source()->active = a;
+    (*it)->active = a;
 }
 
 void src_diffuse_t::process_active(double t, uint32_t anysolo)
@@ -990,14 +682,6 @@ void face_object_t::process_active(double t, uint32_t anysolo)
 {
   active = is_active(anysolo,t);
 }
-
-void src_door_t::process_active(double t, uint32_t anysolo)
-{
-  bool a(is_active(anysolo,t));
-  if( source )
-    source->active = a;
-}
-
 
 std::string jacknamer(const std::string& scenename, const std::string& base)
 {
@@ -1154,10 +838,6 @@ face_group_t::~face_group_t()
     delete *it;
 }
 
-void face_group_t::prepare(double fs, uint32_t fragsize)
-{
-}
-
 void face_group_t::write_xml()
 {
   object_t::write_xml();
@@ -1171,7 +851,7 @@ void face_group_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
   for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=reflectors.begin();it!=reflectors.end();++it){
-    (*it)->apply_rot_loc(c6dof.p,c6dof.o);
+    (*it)->apply_rot_loc(c6dof.position,c6dof.orientation);
     (*it)->reflectivity = reflectivity;
     (*it)->damping = damping;
     (*it)->edgereflection = edgereflection;
@@ -1225,10 +905,6 @@ obstacle_group_t::~obstacle_group_t()
     delete *it;
 }
 
-void obstacle_group_t::prepare(double fs, uint32_t fragsize)
-{
-}
-
 void obstacle_group_t::write_xml()
 {
   object_t::write_xml();
@@ -1240,7 +916,7 @@ void obstacle_group_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
   for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=obstacles.begin();it!=obstacles.end();++it){
-    (*it)->apply_rot_loc(c6dof.p,c6dof.o);
+    (*it)->apply_rot_loc(c6dof.position,c6dof.orientation);
     (*it)->transmission = transmission;
   }
 }
@@ -1254,7 +930,121 @@ void obstacle_group_t::process_active(double t,uint32_t anysolo)
   }
 }
 
+sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
+  : source_t(xmlsrc),
+    audio_port_t(xmlsrc),
+    parent(parent_),
+    chaindist(0),
+    gain_(1)
+{
+  source_t::get_attribute("x",local_position.x);
+  source_t::get_attribute("y",local_position.y);
+  source_t::get_attribute("z",local_position.z);
+  source_t::get_attribute("d",chaindist);
+  source_t::get_attribute("name",name);
+  if( parent_ && name.empty() )
+    name = parent_->next_sound_name();
+  if( name.empty() )
+    throw TASCAR::ErrMsg("Invalid (empty) sound name.");
+  // parse plugins:
+  xmlpp::Node::NodeList subnodes = source_t::e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,(parent_?(parent_->get_name()):("")))));
+    }
+  }
+}
 
+sound_t::~sound_t()
+{
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+       p!= plugins.end();
+       ++p)
+    delete (*p);
+}
+
+void sound_t::geometry_update( double t )
+{
+  pos_t rp(local_position);
+  if( parent ){
+    TASCAR::pos_t ppos;
+    TASCAR::zyx_euler_t por;
+    parent->get_6dof(ppos,por);
+    if( chaindist != 0 ){
+      double tp(t - parent->starttime);
+      tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
+      ppos = parent->location.interp(tp);
+    }
+    rp *= por;
+    rp += ppos;
+    orientation = por;
+  }
+  position = rp;
+}
+
+void sound_t::process_plugins( const TASCAR::transport_t& tp )
+{
+  TASCAR::transport_t ltp(tp);
+  if( parent ){
+      ltp.object_time_seconds = ltp.session_time_seconds - parent->starttime;
+      ltp.object_time_samples = f_sample * ltp.object_time_seconds;
+  }
+  source_t::process_plugins( ltp );
+}
+
+void sound_t::add_meter( TASCAR::levelmeter_t* m )
+{
+  meter.push_back( m );
+}
+
+void sound_t::apply_gain()
+{
+  double dg((get_gain() - gain_)*t_inc);
+  uint32_t channels(inchannels.size());
+  for(uint32_t k=0;k<inchannels[0].n;++k){
+    gain_ += dg;
+    for(uint32_t c=0;c<channels;++c)
+      inchannels[c].d[k] *= gain_;
+  }
+  for(uint32_t k=0;k<get_num_channels();++k)
+    meter[k]->update(inchannels[k]);
+}
+
+void sound_t::write_xml()
+{
+  source_t::write_xml();
+  audio_port_t::write_xml();
+  source_t::SET_ATTRIBUTE(name);
+}
+
+std::string sound_t::get_parent_name() const
+{
+  if( parent )
+    return parent->get_name();
+  return "";
+}
+
+std::string sound_t::get_port_name() const
+{
+  if( parent )
+    return parent->get_name() + "." + name;
+  return name;
+}
+
+void sound_t::prepare(double fs, uint32_t fragsize)
+{
+  source_t::prepare(fs,fragsize);
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
+    (*p)->prepare( fs, fragsize );
+}
+
+void sound_t::release()
+{
+  source_t::release();
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
+    (*p)->release( );
+}
 
 
 /*

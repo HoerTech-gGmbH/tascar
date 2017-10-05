@@ -14,7 +14,7 @@ using namespace TASCAR;
 TASCAR_RESOLVER( module_base_t, const module_cfg_t& )
 
 TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
-  : xml_element_t(cfg.xmlsrc),
+  : module_base_t(cfg),
     lib(NULL),
     libdata(NULL),
     is_configured(false)
@@ -49,16 +49,18 @@ void TASCAR::module_t::update(uint32_t frame,bool running)
     libdata->update( frame, running );
 }
 
-void TASCAR::module_t::configure(double srate,uint32_t fragsize)
+void TASCAR::module_t::prepare(double srate,uint32_t fragsize)
 {
-  libdata->configure_( srate, fragsize );
+  module_base_t::prepare( srate, fragsize );
+  libdata->prepare( srate, fragsize );
   is_configured = true;
 }
 
-void TASCAR::module_t::cleanup()
+void TASCAR::module_t::release()
 {
+  module_base_t::release();
   is_configured = false;
-  libdata->cleanup();
+  libdata->release();
 }
 
 TASCAR::module_t::~module_t()
@@ -187,7 +189,7 @@ void TASCAR::session_t::unload_modules()
     std::vector<TASCAR::module_t*> lmodules(modules);  
     modules.clear();
     for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
-      (*it)->cleanup();
+      (*it)->release();
     for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
       delete (*it);
     for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
@@ -274,7 +276,7 @@ void TASCAR::session_t::start()
   for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
     (*ipl)->start();
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->configure(srate,fragsize);
+    (*imod)->prepare(srate,fragsize);
   
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
@@ -420,12 +422,7 @@ void TASCAR::connection_t::write_xml()
 }
 
 TASCAR::module_base_t::module_base_t( const TASCAR::module_cfg_t& cfg )
-  : xml_element_t(cfg.xmlsrc),session(cfg.session),
-    f_sample(1),
-    f_fragment(1),
-    t_sample(1),
-    t_fragment(1),
-    n_fragment(1)
+  : xml_element_t(cfg.xmlsrc),session(cfg.session)
 {
 }
 
@@ -435,20 +432,6 @@ void TASCAR::module_base_t::write_xml()
 
 void TASCAR::module_base_t::update(uint32_t frame,bool running)
 {
-}
-
-void TASCAR::module_base_t::configure(double srate,uint32_t fragsize)
-{
-}
-
-void TASCAR::module_base_t::configure_(double srate,uint32_t fragsize)
-{
-  f_sample = srate;
-  f_fragment = srate/(double)fragsize;
-  t_sample = 1.0/srate;
-  t_fragment = 1.0/f_fragment;
-  n_fragment = fragsize;
-  configure(srate,fragsize);
 }
 
 TASCAR::module_base_t::~module_base_t()
@@ -581,12 +564,6 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/start","",OSCSession::_start,this);
   osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
   osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);
-}
-
-void TASCAR::session_t::set_v014()
-{
-  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
-    (*ipl)->set_v014();
 }
 
 /*

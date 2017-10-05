@@ -7,7 +7,10 @@ TASCAR::wav_render_t::wav_render_t( const std::string& tscname, const std::strin
   : tsc_reader_t(tscname,LOAD_FILE,tscname),
     scene(scene_),
     pscene(NULL),
-    verbose_(verbose)
+    verbose_(verbose),
+    t0(clock()),
+    t1(clock()),
+    t2(clock())
 {
   read_xml();
   if( !pscene )
@@ -27,10 +30,10 @@ void TASCAR::wav_render_t::add_scene(xmlpp::Element* sne)
   }
 }
 
-void TASCAR::wav_render_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max, bool b_0_14 )
+void TASCAR::wav_render_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max )
 {
   if( pscene )
-    pscene->set_ism_order_range( ism_min, ism_max, b_0_14 );
+    pscene->set_ism_order_range( ism_min, ism_max );
 }
 
 void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, const std::string& ofname,double starttime, bool b_dynamic)
@@ -45,8 +48,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   uint32_t num_fragments((uint32_t)((sf_in.get_frames()-1)/fragsize)+1);
   // configure maximum delayline length:
   double maxdist((sf_in.get_frames()+1)/fs*(pscene->c));
-  std::vector<TASCAR::Scene::sound_t*> snds(pscene->linearize_sounds());
-  for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd=snds.begin();isnd!=snds.end();++isnd){
+  for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd=pscene->sounds.begin();isnd!=pscene->sounds.end();++isnd){
     (*isnd)->maxdist = maxdist;
   }
   // initialize scene:
@@ -77,6 +79,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   pscene->process(fragsize,tp,a_in,a_out);
   if( verbose_ )
     std::cerr << "rendering " << pscene->active_pointsources << " of " << pscene->total_pointsources << " point sources.\n";
+  t1 = clock();
   for(uint32_t k=0;k<num_fragments;++k){
     // load audio chunk from file
     uint32_t n_in(sf_in.readf_float(sf_in_buf,fragsize));
@@ -102,6 +105,8 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
       tp.object_time_seconds = ((double)tp.object_time_samples)/fs;
     }
   }
+  t2 = clock();
+  pscene->release();
   // de-allocate render audio buffer:
   for(uint32_t k=0;k<nch_in;++k)
     delete [] a_in[k];
@@ -116,8 +121,8 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
     throw TASCAR::ErrMsg("No scene loaded");
   // configure maximum delayline length:
   double maxdist((len+1)/fs*(pscene->c));
-  std::vector<TASCAR::Scene::sound_t*> snds(pscene->linearize_sounds());
-  for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd=snds.begin();isnd!=snds.end();++isnd){
+  //std::vector<TASCAR::Scene::sound_t*> snds(pscene->linearize_sounds());
+  for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd=pscene->sounds.begin();isnd!=pscene->sounds.end();++isnd){
     (*isnd)->maxdist = maxdist;
   }
   // initialize scene:
@@ -157,6 +162,7 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
   sf_out.writef_float(sf_out_buf,len);
   // increment time:
   // de-allocate render audio buffer:
+  pscene->release();
   for(uint32_t k=0;k<nch_in;++k)
     delete [] a_in[k];
   for(uint32_t k=0;k<nch_out;++k)

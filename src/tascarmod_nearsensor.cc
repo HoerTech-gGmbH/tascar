@@ -149,15 +149,12 @@ void nearsensor_t::update(uint32_t tp_frame, bool tp_rolling)
           TASCAR::Scene::src_object_t* srco(dynamic_cast<TASCAR::Scene::src_object_t*>(it->obj));
           if( srco ){
             for( std::vector<TASCAR::Scene::sound_t*>::iterator sit=srco->sound.begin();sit!=srco->sound.end();++sit){
-              TASCAR::Acousticmodel::pointsource_t* src((*sit)->get_source());
-              if( src ){
-                if( distance(self_pos,src->position) < radius )
-                  ++hitcnt;
-              }
+              if( distance(self_pos,(*sit)->position) < radius )
+                ++hitcnt;
             }
           }
         }
-          break;
+        break;
       }
     }
   }

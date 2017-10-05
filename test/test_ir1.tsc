@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- 
+basic test: sound propagation, 1m
+-->
+<session>
+  <scene>
+    <src_object>
+      <sound x="1"/>
+    </src_object>
+    <receiver type="omni"/>
+  </scene>
+</session>

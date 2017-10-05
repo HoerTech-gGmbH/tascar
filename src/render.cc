@@ -19,24 +19,18 @@ TASCAR::render_core_t::render_core_t(xmlpp::Element* xmlsrc)
 
 TASCAR::render_core_t::~render_core_t()
 {
-  if( is_prepared )
-    release();
+  //if( is_prepared )
+  //release();
   pthread_mutex_destroy( &mtx_world );
 }
 
-void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max, bool b_0_14_ )
+void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max )
 {
   mirrororder = ism_max;
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
     (*it)->ismmin = ism_min;
     (*it)->ismmax = ism_max;
   }
-  b_0_14 = b_0_14_;
-}
-
-void TASCAR::render_core_t::set_v014()
-{
-  b_0_14 = true;
 }
 
 void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
@@ -44,28 +38,23 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
   if( pthread_mutex_lock( &mtx_world ) != 0 )
     throw TASCAR::ErrMsg("Unable to lock process.");
   try{
-    TASCAR::Scene::scene_t::prepare(fs,fragsize);
-    sounds = linearize_sounds();
+    scene_t::prepare( fs, fragsize );
+    //TASCAR::Scene::scene_t::prepare(fs,fragsize);
     audioports.clear();
     audioports_in.clear();
     audioports_out.clear();
-    sources.clear();
     diffusesources.clear();
     input_ports.clear();
     output_ports.clear();
+    sources.clear();
     for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
-      sources.push_back((*it)->get_source());
-      (*it)->set_port_index( input_ports.size() );
-      //(*it)->set_port_channels( 1 );
-      input_ports.push_back((*it)->get_port_name());
-      audioports.push_back(*it);
-      audioports_in.push_back(*it);
-    }
-    for(std::vector<src_door_t*>::iterator it=door_sources.begin();it!=door_sources.end();++it){
-      sources.push_back((*it)->get_source());
+      TASCAR::Acousticmodel::source_t* source(*it);
+      //source->prepare(fs,fragsize);
+      sources.push_back(source);
       (*it)->set_port_index(input_ports.size());
-      //(*it)->set_port_channels( 1 );
-      input_ports.push_back((*it)->get_name());
+      for(uint32_t ch=0;ch<source->get_num_channels();ch++){
+        input_ports.push_back((*it)->get_parent_name()+"."+(*it)->get_name()+source->get_channel_postfix(ch));
+      }
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
@@ -76,7 +65,6 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
     }
     for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
       (*it)->set_port_index(input_ports.size());
-      //(*it)->set_port_channels( 4 );
       for(uint32_t ch=0;ch<4;ch++){
         char ctmp[32];
         const char* stmp("wxyz");
@@ -87,10 +75,9 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
     receivers.clear();
     for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
       TASCAR::Acousticmodel::receiver_t* receiver(*it);
-      receiver->configure(fs,fragsize);
+      //receiver->prepare(fs,fragsize);
       receivers.push_back(receiver);
       (*it)->set_port_index(output_ports.size());
-      //(*it)->set_port_channels( receiver->get_num_channels() );
       for(uint32_t ch=0;ch<receiver->get_num_channels();ch++){
         output_ports.push_back((*it)->get_name()+receiver->get_channel_postfix(ch));
       }
@@ -117,7 +104,7 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
       pmasks.push_back(*it);
     }
     // create the world, before first process callback is called:
-    world = new Acousticmodel::world_t(c,fs,fragsize,sources,diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder,b_0_14);
+    world = new Acousticmodel::world_t(c,fs,fragsize,sources,diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder);
     total_pointsources = world->get_total_pointsource();
     total_diffusesources = world->get_total_diffusesource();
     is_prepared = true;
@@ -131,6 +118,7 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
 
 void TASCAR::render_core_t::release()
 {
+  scene_t::release();
   if( pthread_mutex_lock( &mtx_world ) != 0 )
     throw TASCAR::ErrMsg("Unable to lock process.");
   if( world )
@@ -161,17 +149,12 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     // update audio ports (e.g., for level metering):
     // fill inputs:
     for(unsigned int k=0;k<sounds.size();k++){
-      TASCAR::Acousticmodel::pointsource_t* psrc(sounds[k]->get_source());
-      //psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes,sounds[k]->get_gain());
-      psrc->audio.copy(inBuffer[sounds[k]->get_port_index()],nframes);
+      float gain(sounds[k]->get_gain());
+      uint32_t numch(sounds[k]->get_num_channels());
+      for(uint32_t ch=0;ch<numch;ch++)
+        sounds[k]->inchannels[ch].copy(inBuffer[sounds[k]->get_port_index()+ch],nframes,gain);
       sounds[k]->process_plugins(tp);
       sounds[k]->apply_gain();
-      psrc->preprocess();
-    }
-    for(uint32_t k=0;k<door_sources.size();k++){
-      TASCAR::Acousticmodel::pointsource_t* psrc(door_sources[k]->get_source());
-      psrc->audio.copy(inBuffer[door_sources[k]->get_port_index()],nframes,door_sources[k]->get_gain());
-      psrc->preprocess();
     }
     for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
       TASCAR::Acousticmodel::diffuse_source_t* psrc((*it)->get_source());
@@ -196,8 +179,6 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     }
     // copy receiver output:
     for(unsigned int k=0;k<receivermod_objects.size();k++){
-      //receivermod_objects[k]->postproc(receivermod_objects[k]->outchannels);
-      //TASCAR::Acousticmodel::receiver_t* preceiver(receiver_objects[k].get_receiver());
       float gain(receivermod_objects[k]->get_gain());
       uint32_t numch(receivermod_objects[k]->get_num_channels());
       for(uint32_t ch=0;ch<numch;ch++)

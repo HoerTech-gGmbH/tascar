@@ -4,9 +4,8 @@
 class lookatme_t : public TASCAR::audioplugin_base_t {
 public:
   lookatme_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
-  void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~lookatme_t();
 private:
@@ -66,13 +65,10 @@ void lookatme_t::add_variables( TASCAR::osc_server_t* srv )
 
 void lookatme_t::prepare(double srate,uint32_t fragsize)
 {
+  audioplugin_base_t::prepare( srate, fragsize );
   lpc1 = exp(-1.0/(tau*f_fragment));
   rms = 0;
   waslooking = false;
-}
-
-void lookatme_t::release()
-{
 }
 
 lookatme_t::~lookatme_t()
@@ -80,9 +76,9 @@ lookatme_t::~lookatme_t()
   lo_address_free(lo_addr);
 }
 
-void lookatme_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void lookatme_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
-  rms = lpc1*rms + (1.0-lpc1)*chunk.rms();
+  rms = lpc1*rms + (1.0-lpc1)*chunk[0].rms();
   if( !levelpath.empty() )
     lo_send( lo_addr, levelpath.c_str(), "f",  20*log10(rms) );
   if(rms > threshold ){

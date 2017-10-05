@@ -115,7 +115,7 @@ protected:
   virtual void draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  //  virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_facegroup(TASCAR::Scene::face_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
@@ -134,7 +134,7 @@ protected:
   bool b_acoustic_model;
 private:
   pthread_mutex_t mtx;
-  void draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t rpos,TASCAR::Acousticmodel::pointsource_t* src);
+  void draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t rpos,TASCAR::Acousticmodel::source_t* src);
 };
 
 #endif

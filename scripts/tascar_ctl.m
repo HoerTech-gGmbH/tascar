@@ -192,7 +192,7 @@ function tascar_ctl_createscene( varargin )
   for i = 1:sCfg.nrsources
     src_name=['src_',num2str(i)];
     n_src_temp = ...
-	tascar_xml_add_element(docNode, n_scene, 'src_object',[],'name',src_name);
+	tascar_xml_add_element(docNode, n_scene, 'source',[],'name',src_name);
     %position
     n_pos_src_temp = ...
 	tascar_xml_add_element(docNode, n_src_temp, 'position',c_src_positions{i});

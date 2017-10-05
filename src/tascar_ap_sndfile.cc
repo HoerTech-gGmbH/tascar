@@ -52,7 +52,7 @@ class ap_sndfile_t : public ap_sndfile_cfg_t, public TASCAR::sndfile_t {
 public:
   ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg );
   ~ap_sndfile_t();
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
 private:
   uint32_t triggeredloop;
@@ -94,12 +94,12 @@ void ap_sndfile_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool( "/mute", &mute );
 }
 
-void ap_sndfile_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   if( transport )
     ltp = tp;
   else
-    ltp.object_time_samples += chunk.n;
+    ltp.object_time_samples += chunk[0].n;
   if( triggered ){
     if( triggeredloop ){
       set_iposition(ltp.object_time_samples);
@@ -108,7 +108,7 @@ void ap_sndfile_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, c
     }
   }
   if( (!mute) && (tp.rolling || (!transport)) )
-    add_to_chunk( ltp.object_time_samples, chunk );
+    add_to_chunk( ltp.object_time_samples, chunk[0] );
 }
 
 REGISTER_AUDIOPLUGIN(ap_sndfile_t);

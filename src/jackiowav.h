@@ -3,7 +3,7 @@
    \ingroup apptascar
    \brief simultaneously play a sound file and record from jack
    \author Giso Grimm
-   \date 2012,2014
+   \date 2012,2014,2017
 
    \section license License (GPL)
 

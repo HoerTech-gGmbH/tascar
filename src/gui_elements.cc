@@ -153,8 +153,8 @@ void source_ctl_t::setup()
     tlabel.set_text("dif");
   if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
     tlabel.set_text("rcvr");
-  if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
-    tlabel.set_text("door");
+//  if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
+//    tlabel.set_text("door");
   TASCAR::Scene::audio_port_t* ap(dynamic_cast<TASCAR::Scene::audio_port_t*>(route_));
   if( ap ){
     gainctl.push_back(new gainctl_t());
@@ -365,42 +365,41 @@ void scene_draw_t::set_viewport(const viewt_t& viewt)
   }
 }
 
-void scene_draw_t::draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t rpos,TASCAR::Acousticmodel::pointsource_t* src)
+void scene_draw_t::draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t rpos,TASCAR::Acousticmodel::source_t* src)
 {
   cr->save();
   // source connected with green line:
   cr->set_source_rgb(0, 0.6, 0 );
-  if( src->ismorder == 0 ){
-    draw_edge(cr,view(rpos),view(src->position));
-  }else{
-    TASCAR::Acousticmodel::mirrorsource_t* sim((TASCAR::Acousticmodel::mirrorsource_t*)src);
-    double w(0);
-    TASCAR::pos_t p_is;
-    if( sim->reflector_->intersection( rpos,src->position, p_is, &w) ){
-      bool is_outside(false);
-      TASCAR::pos_t p_e(sim->reflector_->nearest(p_is, &is_outside));
-      if( is_outside ){
-        p_is = p_e;
-        cr->set_source_rgba(0.6, 0, 0, 0.5 );
-      }else{
-        cr->set_source_rgb(0, 0.6, 0 );
-      }
-      draw_edge(cr,view(rpos),view(p_is));
-      cr->stroke();
-      cr->save();
-      std::vector<double> dash(2);
-      dash[0] = markersize;
-      dash[1] = markersize;
-      cr->set_dash(dash,0);
-      cr->set_source_rgb(0.6, 0.6, 0.6 );
-      draw_edge(cr,view(p_is),view(src->position));
-      cr->stroke();
-      cr->restore();
-      draw_source_trace(cr,p_is,sim->src_);
-    }else{
-      DEBUG("no intersection");
-    }
-  }
+  draw_edge(cr,view(rpos),view(src->position));
+  //}else{
+    //TASCAR::Acousticmodel::mirrorsource_t* sim((TASCAR::Acousticmodel::mirrorsource_t*)src);
+    //double w(0);
+    //TASCAR::pos_t p_is;
+    //if( sim->reflector_->intersection( rpos,src->position, p_is, &w) ){
+    //  bool is_outside(false);
+    //  TASCAR::pos_t p_e(sim->reflector_->nearest(p_is, &is_outside));
+    //  if( is_outside ){
+    //    p_is = p_e;
+    //    cr->set_source_rgba(0.6, 0, 0, 0.5 );
+    //  }else{
+    //    cr->set_source_rgb(0, 0.6, 0 );
+    //  }
+    //  draw_edge(cr,view(rpos),view(p_is));
+    //  cr->stroke();
+    //  cr->save();
+    //  std::vector<double> dash(2);
+    //  dash[0] = markersize;
+    //  dash[1] = markersize;
+    //  cr->set_dash(dash,0);
+    //  cr->set_source_rgb(0.6, 0.6, 0.6 );
+    //  draw_edge(cr,view(p_is),view(src->position));
+    //  cr->stroke();
+    //  cr->restore();
+    //  draw_source_trace(cr,p_is,sim->src_);
+    //}else{
+    //  DEBUG("no intersection");
+    //}
+  //}
   cr->stroke();
   cr->restore();
 }
@@ -411,15 +410,17 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
   cr->save();
   cr->set_source_rgb(0,0,0);
   cr->set_line_width( 0.2*markersize );
-  for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam=scene_->world->acoustic_model.begin();
-      iam != scene_->world->acoustic_model.end();++iam){
+  for(std::vector<TASCAR::Acousticmodel::receiver_graph_t*>::iterator irc=scene_->world->receivergraphs.begin();
+      irc!=scene_->world->receivergraphs.end();++irc)
+    for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam=(*irc)->acoustic_model.begin();
+        iam != (*irc)->acoustic_model.end();++iam){
     if( (*iam)->receiver_->size.is_null() && (*iam)->src_->active && 
         (*iam)->receiver_->active && 
-        ((*iam)->src_->ismmin <= (*iam)->src_->ismorder) && 
-        ((*iam)->src_->ismmax >= (*iam)->src_->ismorder) &&
-        ((*iam)->receiver_->ismmin <= (*iam)->src_->ismorder) && 
-        ((*iam)->receiver_->ismmax >= (*iam)->src_->ismorder) ){
-      pos_t psrc(view((*iam)->effective_srcpos));
+        ((*iam)->src_->ismmin <= (*iam)->ismorder) && 
+        ((*iam)->src_->ismmax >= (*iam)->ismorder) &&
+        ((*iam)->receiver_->ismmin <= (*iam)->ismorder) && 
+        ((*iam)->receiver_->ismmax >= (*iam)->ismorder) ){
+      pos_t psrc(view((*iam)->position));
       pos_t prec(view((*iam)->receiver_->position));
       cr->save();
       if( (*iam)->get_gain() < EPS )
@@ -444,22 +445,22 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       //draw_edge(cr,psrc,prec);
       cr->stroke();
       // image source or primary source:
-      if( (*iam)->src_->ismorder > 0 ){
+      if( (*iam)->ismorder > 0 ){
         // image source:
-        pos_t pcut(view(((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->p_cut));
-        cr->arc(pcut.x, -pcut.y, 0.6*markersize, 0, PI2 );
-        cr->fill();
-        draw_edge(cr,psrc,pcut);
-        cr->stroke();
-        cr->save();
-        char ctmp[1000];
-        sprintf(ctmp,"%d",(*iam)->src_->ismorder);
-        //((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->reflector_->);
-        cr->set_source_rgba(0, 0, 0, 0.4);
-        cr->move_to( psrc.x+1.2*markersize, -psrc.y );
-        cr->show_text( ctmp );
-        cr->stroke();
-        cr->restore();
+        //pos_t pcut(view(((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->p_cut));
+        //cr->arc(pcut.x, -pcut.y, 0.6*markersize, 0, PI2 );
+        //cr->fill();
+        //draw_edge(cr,psrc,pcut);
+        //cr->stroke();
+        //cr->save();
+        //char ctmp[1000];
+        //sprintf(ctmp,"%d",(*iam)->src_->ismorder);
+        ////((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->reflector_->);
+        //cr->set_source_rgba(0, 0, 0, 0.4);
+        //cr->move_to( psrc.x+1.2*markersize, -psrc.y );
+        //cr->show_text( ctmp );
+        //cr->stroke();
+        //cr->restore();
       }else{
         // primary source:
         cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
@@ -476,7 +477,7 @@ void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( scene_ ){
       if( scene_->guitrackobject )
-        view.set_ref(scene_->guitrackobject->c6dof.p);
+        view.set_ref(scene_->guitrackobject->c6dof.position);
       //std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
       for(uint32_t k=0;k<scene_->all_objects.size();k++)
         draw_object(scene_->all_objects[k],cr );
@@ -495,7 +496,7 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   if( !b_acoustic_model )
     draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
   draw_receiver_object(dynamic_cast<TASCAR::Scene::receivermod_object_t*>(obj),cr,markersize);
-  draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
+  //draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
   draw_room_src(dynamic_cast<TASCAR::Scene::src_diffuse_t*>(obj),cr,markersize);
   draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
   draw_facegroup(dynamic_cast<TASCAR::Scene::face_group_t*>(obj),cr,markersize);
@@ -641,16 +642,16 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
   if( obj ){
     bool active(obj->isactive(time));
     bool solo(obj->get_solo());
-    double plot_time(time);
     if( !active ){
-      msize *= 0.4;
-      plot_time = std::min(std::max(plot_time,obj->starttime),obj->endtime);
+      return;
+      //msize *= 0.4;
+      //plot_time = std::min(std::max(plot_time,obj->starttime),obj->endtime);
     }
     std::vector<TASCAR::pos_t> sndpos;
     TASCAR::pos_t p(obj->get_location());
     TASCAR::pos_t center(p);
     for(unsigned int k=0;k<obj->sound.size();k++){
-      TASCAR::pos_t ptmp(obj->sound[k]->get_pos_global(plot_time));
+      TASCAR::pos_t ptmp(obj->sound[k]->position);
       sndpos.push_back(view(ptmp));
       center += ptmp;
     }
@@ -695,10 +696,10 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
       cr->set_line_width( 0.1*msize );
       cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
       if( obj->sound.size()){
-        pos_t pso(view(obj->sound[0]->get_pos_global(plot_time)));
+        pos_t pso(view(obj->sound[0]->position));
         if( pso.z != std::numeric_limits<double>::infinity()){
           for(unsigned int k=1;k<obj->sound.size();k++){
-            pos_t ps(view(obj->sound[k]->get_pos_global(plot_time)));
+            pos_t ps(view(obj->sound[k]->position));
             bool view_x((fabs(ps.x)<1)||
                         (fabs(pso.x)<1));
             bool view_y((fabs(ps.y)<1)||
@@ -866,42 +867,42 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
   }
 }
 
-void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
-{
-  if( obj ){
-    bool solo(obj->get_solo());
-    pos_t p(obj->get_location());
-    zyx_euler_t o(obj->get_orientation());
-    o += obj->dorientation;
-    cr->save();
-    if( solo && blink )
-      cr->set_line_width( 1.2*msize );
-    else
-      cr->set_line_width( 0.4*msize );
-    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b );
-    ngon_t f;
-    f.nonrt_set_rect(obj->width,obj->height);
-    f.apply_rot_loc(p,o);
-    ngon_draw(&f,cr);
-    std::vector<double> dash(2);
-    dash[0] = msize;
-    dash[1] = msize;
-    cr->set_dash(dash,0);
-    cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6 );
-    f += obj->falloff;
-    ngon_draw(&f,cr);
-    p = view(p);
-    if( b_print_labels ){
-      cr->set_source_rgb(0, 0, 0 );
-      if( p.z != std::numeric_limits<double>::infinity()){
-        cr->move_to( p.x, -p.y );
-        cr->show_text( obj->get_name().c_str() );
-        cr->stroke();
-      }
-    }
-    cr->restore();
-  }
-}
+//void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+//{
+//  if( obj ){
+//    bool solo(obj->get_solo());
+//    pos_t p(obj->get_location());
+//    zyx_euler_t o(obj->get_orientation());
+//    o += obj->dorientation;
+//    cr->save();
+//    if( solo && blink )
+//      cr->set_line_width( 1.2*msize );
+//    else
+//      cr->set_line_width( 0.4*msize );
+//    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b );
+//    ngon_t f;
+//    f.nonrt_set_rect(obj->width,obj->height);
+//    f.apply_rot_loc(p,o);
+//    ngon_draw(&f,cr);
+//    std::vector<double> dash(2);
+//    dash[0] = msize;
+//    dash[1] = msize;
+//    cr->set_dash(dash,0);
+//    cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6 );
+//    f += obj->falloff;
+//    ngon_draw(&f,cr);
+//    p = view(p);
+//    if( b_print_labels ){
+//      cr->set_source_rgb(0, 0, 0 );
+//      if( p.z != std::numeric_limits<double>::infinity()){
+//        cr->move_to( p.x, -p.y );
+//        cr->show_text( obj->get_name().c_str() );
+//        cr->stroke();
+//      }
+//    }
+//    cr->restore();
+//  }
+//}
 
 void scene_draw_t::draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {

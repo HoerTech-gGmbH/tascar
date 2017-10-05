@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- 
+basic test: sound propagation, 1m
+-->
+<session>
+  <scene mirrororder="2">
+    <src_object>
+      <sound x="1"/>
+    </src_object>
+    <receiver type="omni"/>
+    <facegroup shoebox="5 6 7" damping="0.8" edgereflection="true"/>
+  </scene>
+</session>

@@ -13,7 +13,7 @@
 class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
   lipsync_t( const TASCAR::audioplugin_cfg_t& );
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare(double srate,uint32_t fragsize);
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -83,6 +83,7 @@ void lipsync_t::add_variables( TASCAR::osc_server_t* srv )
 
 void lipsync_t::prepare(double srate,uint32_t fragsize)
 {
+  audioplugin_base_t::prepare( srate, fragsize );
   // allocate FFT buffers:
   stft = new TASCAR::stft_t( 2*fragsize, 2*fragsize, fragsize, TASCAR::stft_t::WND_BLACKMAN, 0);
   uint32_t num_bins(stft->s.n_);
@@ -105,6 +106,7 @@ void lipsync_t::prepare(double srate,uint32_t fragsize)
 
 void lipsync_t::release()
 {
+  audioplugin_base_t::release();
   delete stft;
   delete [] sSmoothedMag;
 }
@@ -114,14 +116,14 @@ lipsync_t::~lipsync_t()
   lo_address_free(lo_addr);
 }
 
-void lipsync_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   // Following web api doc: https://webaudio.github.io/web-audio-api/#fft-windowing-and-smoothing-over-time
   // Blackman window
   // FFT
   // Smooth over time
   // Conversion to dB
-  stft->process(chunk);
+  stft->process(chunk[0]);
   double vmin(1e20);
   double vmax(-1e20);
   uint32_t num_bins(stft->s.n_);

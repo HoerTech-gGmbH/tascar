@@ -4,6 +4,9 @@
 TASCAR::ErrMsg::ErrMsg(const std::string& msg) 
   : std::string(msg) 
 {
+#ifdef TSCDEBUG
+  std::cerr << "-Error: " << msg << std::endl;
+#endif
 }
 
 TASCAR::ErrMsg::~ErrMsg() throw()

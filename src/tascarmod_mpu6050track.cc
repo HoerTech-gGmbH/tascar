@@ -5,7 +5,7 @@ class mpu6050track_t : public TASCAR::actor_module_t {
 public:
   mpu6050track_t( const TASCAR::module_cfg_t& cfg );
   ~mpu6050track_t();
-  void configure(double srate,uint32_t fragsize);
+  void prepare(double srate,uint32_t fragsize);
   void update(uint32_t frame, bool running);
   void write_xml();
   static int osc_setrot(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -22,8 +22,9 @@ private:
   bool b_calib;
 };
 
-void mpu6050track_t::configure(double srate, uint32_t fragsize)
+void mpu6050track_t::prepare(double srate, uint32_t fragsize)
 {
+  actor_module_t::prepare( srate, fragsize );
   c = exp(-1.0/(tau*f_fragment));
 }
 

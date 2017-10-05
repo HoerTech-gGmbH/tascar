@@ -35,25 +35,16 @@ namespace TASCAR {
   /**
      \brief Base class of audio processing plugins
   */
-  class audioplugin_base_t : public xml_element_t {
+  class audioplugin_base_t : public xml_element_t, public audiostates_t {
   public:
     audioplugin_base_t( const audioplugin_cfg_t& cfg );
     virtual void write_xml() {};
     virtual ~audioplugin_base_t();
-    virtual void ap_process(wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp) = 0;
-    virtual void prepare(double srate,uint32_t fragsize) {};
-    void prepare_(double srate,uint32_t fragsize);
-    virtual void release() {};
-    void release_();
+    virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp) = 0;
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
     const std::string& get_name() const { return name; };
     const std::string& get_modname() const { return modname; };
   protected:
-    double f_sample;
-    double f_fragment;
-    double t_sample;
-    double t_fragment;
-    uint32_t n_fragment;
     std::string name;
     std::string modname;
   private:
@@ -65,7 +56,7 @@ namespace TASCAR {
     audioplugin_t( const audioplugin_cfg_t& cfg );
     void write_xml();
     virtual ~audioplugin_t();
-    virtual void ap_process(wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+    virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
     virtual void prepare(double srate,uint32_t fragsize);
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void release();

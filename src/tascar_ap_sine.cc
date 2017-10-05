@@ -3,7 +3,7 @@
 class sine_t : public TASCAR::audioplugin_base_t {
 public:
   sine_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   ~sine_t();
 private:
   double f;
@@ -25,10 +25,10 @@ sine_t::~sine_t()
 {
 }
 
-void sine_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void sine_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
-  for(uint32_t k=0;k<chunk.n;++k){
-    chunk.d[k] += a*sin(PI2*f*t);
+  for(uint32_t k=0;k<chunk[0].n;++k){
+    chunk[0].d[k] += a*sin(PI2*f*t);
     t+=t_sample;
   }
 }

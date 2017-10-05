@@ -10,7 +10,6 @@ public:
   };
   lightscene_t( const TASCAR::module_cfg_t& cfg );
   void update(uint32_t frame,bool running);
-  void configure(double srate,uint32_t fragsize);
   void add_variables( TASCAR::osc_server_t* srv );
   const std::string& get_name() const {return name;};
 private:
@@ -158,10 +157,6 @@ void lightscene_t::update(uint32_t frame,bool running)
     dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
 }
 
-void lightscene_t::configure(double srate,uint32_t fragsize)
-{
-}
-
 void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_float( "/master", &master );
@@ -183,7 +178,6 @@ public:
   lightctl_t( const TASCAR::module_cfg_t& cfg );
   ~lightctl_t();
   void update(uint32_t frame,bool running);
-  void configure(double srate,uint32_t fragsize);
   void add_variables( TASCAR::osc_server_t* srv );
   virtual void service();
 private:
@@ -241,12 +235,6 @@ void lightctl_t::update(uint32_t frame,bool running)
 {
   for( std::vector<lightscene_t*>::iterator it=lightscenes.begin();it!=lightscenes.end();++it)
     (*it)->update( frame, running );
-}
-
-void lightctl_t::configure(double srate,uint32_t fragsize)
-{
-  for( std::vector<lightscene_t*>::iterator it=lightscenes.begin();it!=lightscenes.end();++it)
-    (*it)->configure( srate, fragsize );
 }
 
 void lightctl_t::add_variables( TASCAR::osc_server_t* srv )

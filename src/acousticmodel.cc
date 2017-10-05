@@ -1,4 +1,5 @@
 #include "acousticmodel.h"
+#include "errorhandling.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Acousticmodel;
@@ -17,64 +18,6 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-pointsource_t::pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_,double size_)
-  : audio(chunksize), active(true), 
-    //direct(true),     
-    ismmin(0),
-    ismmax(2147483647),
-    maxdist(maxdist_), 
-    minlevel(minlevel_),
-    sincorder(sincorder_),ismorder(0),gainmodel(gainmodel_),
-    size(size_),
-    rmslevel(NULL)
-{
-}
-
-pointsource_t::~pointsource_t()
-{
-}
-
-void pointsource_t::preprocess()
-{
-  if( rmslevel )
-    rmslevel->update(audio);
-}
-
-void pointsource_t::add_rmslevel(TASCAR::levelmeter_t* r)
-{
-  rmslevel = r;
-}
-
-doorsource_t::doorsource_t(uint32_t chunksize,double maxdist,double minlevel,uint32_t sincorder_,gainmodel_t gainmodel_,double size_)
-  : pointsource_t(chunksize,maxdist,minlevel,sincorder_,gainmodel_,size_),
-    inv_falloff(1.0),
-    wnd_sqrt(false)
-{
-}
-
-pos_t doorsource_t::get_effective_position(const pos_t& receiverp,double& gain)
-{
-  pos_t effpos(nearest(receiverp));
-  pos_t receivern(effpos);
-  receivern -= receiverp;
-  receivern = receivern.normal();
-  gain *= std::max(0.0,-dot_prod(receivern.normal(),normal));
-  // gain rule: normal hanning window or sqrt
-  if( wnd_sqrt )
-    gain *= sqrt(0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*inv_falloff)));
-  else
-    gain *= 0.5-0.5*cos(M_PI*std::min(1.0,::distance(effpos,receiverp)*inv_falloff));
-  receivern *= distance;
-  receivern += position;
-  make_friendly_number(gain);
-  return receivern;
-}
-
-pos_t pointsource_t::get_effective_position(const pos_t& receiverp,double& gain)
-{
-  return position;
-}
-
 diffuse_source_t::diffuse_source_t(uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
   : audio(chunksize),
     falloff(1.0),
@@ -88,14 +31,20 @@ void diffuse_source_t::preprocess()
   rmslevel.update(audio.w());
 }
 
-acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointsource_t* src,receiver_t* receiver,const std::vector<obstacle_t*>& obstacles)
-  : c_(c),
+acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
+                                   source_t* src, receiver_t* receiver,
+                                   const std::vector<obstacle_t*>& obstacles,
+                                   const acoustic_model_t* parent, 
+                                   const reflector_t* reflector)
+  : soundpath_t( src, parent, reflector ),
+    c_(c),
     fs_(fs),
     src_(src),
     receiver_(receiver),
     receiver_data(receiver_->create_data(fs,chunksize)),
+    source_data(src->create_data(fs,chunksize)),
     obstacles_(obstacles),
-    audio(src->audio.size()),
+    audio(chunksize),
     chunksize(audio.size()),
     dt(1.0/std::max(1.0f,(float)chunksize)),
     distance(1.0),
@@ -103,10 +52,11 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,pointso
     dscale(fs/(c_*7782.0)),
     air_absorption(0.5),
     delayline((src->maxdist/c_)*fs,fs,c_,src->sincorder,64),
-  airabsorption_state(0.0)
+  airabsorption_state(0.0),
+  ismorder(getorder())
 {
   pos_t prel;
-  receiver_->update_refpoint(src_->get_physical_position(),src_->position,prel,distance,gain,false,src_->gainmodel);
+  receiver_->update_refpoint(src_->position,src_->position,prel,distance,gain,false,src_->gainmodel);
   gain = 1.0;
   vstate.resize(obstacles_.size());
 }
@@ -115,187 +65,86 @@ acoustic_model_t::~acoustic_model_t()
 {
   if( receiver_data )
     delete receiver_data;
+  if( source_data )
+    delete source_data;
 }
  
 /**
    \ingroup callgraph
- */
+*/
 uint32_t acoustic_model_t::process()
 {
+  if( src_->active )
+    update_position();
   if( receiver_->render_point && 
       receiver_->active && 
       src_->active && 
       (!receiver_->gain_zero) && 
-      //(src_->direct || (!receiver_->is_direct)) && 
-      (src_->ismmin <= src_->ismorder) &&
-      (src_->ismorder <= src_->ismmax) &&
-      (receiver_->ismmin <= src_->ismorder) &&
-      (src_->ismorder <= receiver_->ismmax)
+      (src_->ismmin <= ismorder) &&
+      (ismorder <= src_->ismmax) &&
+      (receiver_->ismmin <= ismorder) &&
+      (ismorder <= receiver_->ismmax)
       ){
-    pos_t prel;
-    double nextdistance(0.0);
-    double nextgain(1.0);
-    // calculate relative geometry between source and receiver:
-    double srcgainmod(1.0);
-    effective_srcpos = src_->get_effective_position( receiver_->position, srcgainmod );
-    receiver_->update_refpoint( src_->get_physical_position(), effective_srcpos, prel, nextdistance, nextgain, src_->ismorder>0, src_->gainmodel );
-    if( nextdistance > src_->maxdist )
-      return 0;
-    nextgain *= srcgainmod;
-    double next_air_absorption(exp(-nextdistance*dscale));
-    double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
-    double dgain((nextgain-gain)*dt);
-    double dairabsorption((next_air_absorption-air_absorption)*dt);
-    for(uint32_t k=0;k<chunksize;++k){
-      distance+=ddistance;
-      gain+=dgain;
-      float c1(air_absorption+=dairabsorption);
-      float c2(1.0f-c1);
-      // apply air absorption:
-      c1 *= gain*delayline.get_dist_push(distance,src_->audio[k]);
-      airabsorption_state = c2*airabsorption_state+c1;
-      make_friendly_number(airabsorption_state);
-      audio[k] = airabsorption_state;
-    }
-    if( ((gain!=0)||(dgain!=0)) ){
-      // calculate obstacles:
-      for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
-        obstacle_t* p_obj(obstacles_[kobj]);
-        if( p_obj->active ){
-          // apply diffraction model:
-          p_obj->process(effective_srcpos,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
+    if( visible ){
+      pos_t prel;
+      double nextdistance(0.0);
+      double nextgain(1.0);
+      // calculate relative geometry between source and receiver:
+      double srcgainmod(1.0);
+      // update effective position/calculate ISM geometry:
+      position = get_effective_position( receiver_->position, srcgainmod );
+      // read audio from source, update radation position:
+      pos_t prelsrc(receiver_->position);
+      prelsrc -= src_->position;
+      prelsrc /= src_->orientation;
+      if( src_->read_source( prelsrc, src_->inchannels, audio, source_data ) ){
+        prelsrc *= src_->orientation;
+        prelsrc -= receiver_->position;
+        prelsrc *= -1.0;
+        position = prelsrc;
+      }
+      receiver_->update_refpoint( primary->position, position, prel, nextdistance, nextgain, ismorder>0, src_->gainmodel );
+      if( nextdistance > src_->maxdist )
+        return 0;
+      nextgain *= srcgainmod;
+      double next_air_absorption(exp(-nextdistance*dscale));
+      double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
+      double dgain((nextgain-gain)*dt);
+      double dairabsorption((next_air_absorption-air_absorption)*dt);
+      apply_reflectionfilter( audio );
+      for(uint32_t k=0;k<chunksize;++k){
+        distance+=ddistance;
+        gain+=dgain;
+        float c1(air_absorption+=dairabsorption);
+        float c2(1.0f-c1);
+        // apply air absorption:
+        c1 *= gain*delayline.get_dist_push(distance,audio[k]);
+        airabsorption_state = c2*airabsorption_state+c1;
+        make_friendly_number(airabsorption_state);
+        audio[k] = airabsorption_state;
+      }
+      if( ((gain!=0)||(dgain!=0)) ){
+        // calculate obstacles:
+        for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
+          obstacle_t* p_obj(obstacles_[kobj]);
+          if( p_obj->active ){
+            // apply diffraction model:
+            p_obj->process(position,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
+          }
         }
+        // end obstacles
+        if( src_->minlevel > 0 ){
+          if( audio.rms() <= src_->minlevel )
+            return 0;
+        }
+        receiver_->add_pointsource(prel,std::min(0.5*M_PI,0.25*M_PI*src_->size/std::max(0.01,nextdistance)),audio,receiver_data);
+        return 1;
       }
-      // end obstacles
-      if( src_->minlevel > 0 ){
-        if( audio.rms() <= src_->minlevel )
-          return 0;
-      }
-      receiver_->add_pointsource(prel,std::min(0.5*M_PI,0.25*M_PI*src_->size/std::max(0.01,nextdistance)),audio,receiver_data);
-      return 1;
-    }
+    } // of visible
   }else{
     delayline.add_chunk(audio);
   }
   return 0;
-}
-
-mirrorsource_t::mirrorsource_t(pointsource_t* src,reflector_t* reflector)
-  : pointsource_t(src->audio.size(),src->maxdist,src->minlevel,src->sincorder,src->gainmodel,src->size),
-    src_(src),reflector_(reflector),
-    lpstate(0.0),b_0_14(false)
-{
-  ismorder = src->ismorder+1;
-}
-
-/**
-   \brief Update image source position, copy and filter audio
-   \ingroup callgraph
- */
-void mirrorsource_t::process()
-{
-  // active = true : render source tree (gain may be zero)
-  // active = false : do not render source tree
-  active = false;
-  if( !(reflector_->active && src_->active) )
-    return;
-  if( b_0_14 ){
-    // if this is second order image source:
-    if( ismorder > 1 ){
-      // if intersection is behind original reflector then do not render:
-      if( ! ((mirrorsource_t*)src_)->reflector_->is_infront( p_cut ) ){
-        return;
-      }
-    }
-  }
-  // intersection point with reflector:
-  p_cut = reflector_->nearest_on_plane(src_->position);
-  // calculate nominal image source position:
-  p_img = p_cut;
-  p_img *= 2.0;
-  p_img -= src_->position;
-  // if image source is in front of reflector then return:
-  if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 )
-    return;
-  // copy p_img to base class position:
-  position = p_img;
-  // optionally reproduce version 0.14 behavior:
-  // calculate absorption/reflection:
-  double c1(reflector_->reflectivity * (1.0-reflector_->damping));
-  double c2(reflector_->damping);
-  for(uint32_t k=0;k<audio.size();++k)
-    audio[k] = (lpstate = lpstate*c2 + src_->audio[k]*c1);
-  active = true;
-}
-
-/**
-   \brief Return effective source position for a given receiver position
-
-   Used by diffraction model.
-
-*/
-pos_t mirrorsource_t::get_effective_position(const pos_t& p_rec,double& gain)
-{
-  // calculate orthogonal point on plane:
-  pos_t pcut_rec(reflector_->nearest_on_plane(p_rec));
-  // if receiver is behind reflector then return zero:
-  if( dot_prod( p_rec-pcut_rec, reflector_->get_normal() ) < 0 ){
-    gain = 0;
-    return p_img;
-  }
-//  // if image source is in front of reflector then return zero:
-//  if( dot_prod( p_img-p_cut, reflector_->get_normal() ) > 0 ){
-//    gain = 0;
-//    return p_img;
-//  }
-  double len_receiver(distance(pcut_rec,p_rec));
-  double len_src(distance(p_cut,p_img));
-  // calculate intersection:
-  double ratio(len_receiver/std::max(1e-6,(len_receiver+len_src)));
-  pos_t p_is(p_cut-pcut_rec);
-  p_is *= ratio;
-  p_is += pcut_rec;
-  p_is = reflector_->nearest(p_is);
-  gain = pow(std::max(0.0,dot_prod((p_rec-p_is).normal(),(p_is-p_img).normal())),2.7);
-  make_friendly_number(gain);
-  if( reflector_->edgereflection ){
-    double len_img(distance(p_is,p_img));
-    pos_t p_eff((p_is-p_rec).normal());
-    p_eff *= len_img;
-    p_eff += p_is;
-    return p_eff;
-  }
-  return p_img;
-}
-
-mirror_model_t::mirror_model_t(const std::vector<pointsource_t*>& pointsources,
-                               const std::vector<reflector_t*>& reflectors,
-                               uint32_t order,bool b_0_14)
-{
-  if( order > 0 ){
-    for(uint32_t ksrc=0;ksrc<pointsources.size();++ksrc)
-      for(uint32_t kmir=0;kmir<reflectors.size();++kmir)
-        mirrorsource.push_back(new mirrorsource_t(pointsources[ksrc],reflectors[kmir]));
-  }
-  uint32_t num_mirrors_start(0);
-  uint32_t num_mirrors_end(mirrorsource.size());
-  for(uint32_t korder=1;korder<order;++korder){
-    for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;++ksrc)
-      for(uint32_t kmir=0;kmir<reflectors.size();++kmir){
-        if( mirrorsource[ksrc]->get_reflector() != reflectors[kmir] )
-          mirrorsource.push_back(new mirrorsource_t(mirrorsource[ksrc],reflectors[kmir]));
-      }
-    num_mirrors_start = num_mirrors_end;
-    num_mirrors_end = mirrorsource.size();
-  }
-  for(uint32_t k=0;k<mirrorsource.size();++k)
-    mirrorsource[k]->b_0_14 = b_0_14;
-}
-
-mirror_model_t::~mirror_model_t()
-{
-  for(uint32_t k=0;k<mirrorsource.size();k++)
-    delete mirrorsource[k];
 }
 
 obstacle_t::obstacle_t()
@@ -311,70 +160,79 @@ reflector_t::reflector_t()
 {
 }
 
-/**
-   \brief Update all image sources
-   \ingroup callgraph
- */
-void mirror_model_t::process()
+void reflector_t::apply_reflectionfilter( TASCAR::wave_t& audio, double& lpstate ) const
 {
-  for(uint32_t k=0;k<mirrorsource.size();++k)
-    mirrorsource[k]->process();
+  double c1(reflectivity * (1.0-damping));
+  float* p_begin(audio.d);
+  float* p_end(p_begin+audio.n);
+  for(float* pf=p_begin;pf!=p_end;++pf)
+    *pf = (lpstate = lpstate*damping + *pf * c1);
 }
 
-std::vector<mirrorsource_t*> mirror_model_t::get_mirror_sources()
-{
-  std::vector<mirrorsource_t*> r;
-  for(uint32_t k=0;k<mirrorsource.size();++k)
-    r.push_back(mirrorsource[k]);
-  return r;
-}
-
-std::vector<pointsource_t*> mirror_model_t::get_sources()
-{
-  std::vector<pointsource_t*> r;
-  for(uint32_t k=0;k<mirrorsource.size();++k)
-    r.push_back(mirrorsource[k]);
-  return r;
-}
-
-world_t::world_t(double c,double fs,uint32_t chunksize,const std::vector<pointsource_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t mirror_order,bool b_0_14)
-  : mirrormodel(sources,reflectors,mirror_order,b_0_14),
-    receivers_(receivers),
-    masks_(masks),
-    active_pointsource(0),
+receiver_graph_t::receiver_graph_t( double c, double fs, uint32_t chunksize, 
+                                    const std::vector<source_t*>& sources,
+                                    const std::vector<diffuse_source_t*>& diffusesources,
+                                    const std::vector<reflector_t*>& reflectors,
+                                    const std::vector<obstacle_t*>& obstacles,
+                                    receiver_t* receiver,
+                                    uint32_t ism_order )
+  : active_pointsource(0),
     active_diffusesource(0)
 {
   // diffuse models:
-  for(uint32_t kSrc=0;kSrc<diffusesources.size();++kSrc)
-    for(uint32_t kReceiver=0;kReceiver<receivers.size();++kReceiver){
-      if( receivers[kReceiver]->render_diffuse )
-        diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receivers[kReceiver]));
-    }
-  // primary sources:
-  for(uint32_t kSrc=0;kSrc<sources.size();++kSrc)
-    for(uint32_t kReceiver=0;kReceiver<receivers.size();++kReceiver)
-      if( receivers[kReceiver]->render_point ){
-        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receivers[kReceiver],obstacles));
+  if( receiver->render_diffuse )
+    for(uint32_t kSrc=0;kSrc<diffusesources.size();++kSrc)
+      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receiver));
+  // all primary and image sources:
+  if( receiver->render_point ){
+    // primary sources:
+    for(uint32_t kSrc=0;kSrc<sources.size();++kSrc)
+        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receiver,obstacles));
+    if( receiver->render_image && (ism_order > 0) ){
+      uint32_t num_mirrors_start(acoustic_model.size());
+      // first order image sources:
+      for(uint32_t ksrc=0;ksrc<sources.size();++ksrc)
+        for(uint32_t kreflector=0;kreflector<reflectors.size();++kreflector)
+          acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[ksrc],receiver,obstacles,acoustic_model[ksrc],reflectors[kreflector]));
+      // now higher order image sources:
+      uint32_t num_mirrors_end(acoustic_model.size());
+      for(uint32_t korder=1;korder<ism_order;++korder){
+        for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;++ksrc)
+          for(uint32_t kreflector=0;kreflector<reflectors.size();++kreflector)
+            if( acoustic_model[ksrc]->reflector != reflectors[kreflector] )
+              acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,acoustic_model[ksrc]->src_,receiver,obstacles,acoustic_model[ksrc],reflectors[kreflector]));
+        num_mirrors_start = num_mirrors_end;
+        num_mirrors_end = acoustic_model.size();
       }
-  // image sources:
-  std::vector<mirrorsource_t*> msources(mirrormodel.get_mirror_sources());
-  for(uint32_t kSrc=0;kSrc<msources.size();++kSrc)
-    for(uint32_t kReceiver=0;kReceiver<receivers.size();++kReceiver)
-      if( receivers[kReceiver]->render_image && receivers[kReceiver]->render_point)
-        acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,msources[kSrc],receivers[kReceiver],obstacles));
-  //,std::vector<obstacle_t*>(1,msources[kSrc]->get_reflector())
+    }
+  }
+}
+
+world_t::world_t( double c, double fs, uint32_t chunksize, const std::vector<source_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t ism_order)
+  : receivers_(receivers),
+    masks_(masks),
+    active_pointsource(0),
+    active_diffusesource(0),
+    total_pointsource(0),
+    total_diffusesource(0)
+{
+  for( uint32_t krec=0;krec<receivers.size();++krec){
+    receivergraphs.push_back(new receiver_graph_t( c, fs, chunksize, 
+                                                   sources, diffusesources,
+                                                   reflectors,
+                                                   obstacles,
+                                                   receivers[krec],
+                                                   ism_order));
+    total_pointsource += receivergraphs.back()->get_total_pointsource();
+    total_diffusesource += receivergraphs.back()->get_total_diffusesource();
+  }
 }
 
 world_t::~world_t()
 {
-  if( acoustic_model.size() )
-    for( std::vector<acoustic_model_t*>::reverse_iterator it=acoustic_model.rbegin();it!=acoustic_model.rend();++it){
-      delete (*it);
-    }
-  for(unsigned int k=0;k<diffuse_acoustic_model.size();++k)
-    delete diffuse_acoustic_model[k];
+  for( std::vector<receiver_graph_t*>::reverse_iterator it=receivergraphs.rbegin();it!=receivergraphs.rend();++it)
+    delete (*it);
 }
-
 
 /**
    \ingroup callgraph
@@ -383,7 +241,7 @@ void world_t::process()
 {
   uint32_t local_active_point(0);
   uint32_t local_active_diffuse(0);
-  mirrormodel.process();
+  //mirrormodel.process();
   // calculate mask gains:
   for(uint32_t k=0;k<receivers_.size();++k){
     double gain_inner(1.0);
@@ -417,11 +275,12 @@ void world_t::process()
     }
     receivers_[k]->set_next_gain(gain_inner);
   }
-  // calculate acoustic model:
-  for(unsigned int k=0;k<acoustic_model.size();k++)
-    local_active_point += acoustic_model[k]->process();
-  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
-    local_active_diffuse += diffuse_acoustic_model[k]->process();
+  // calculate acoustic models:
+  for( std::vector<receiver_graph_t*>::iterator ig=receivergraphs.begin();ig!=receivergraphs.end();++ig){
+    (*ig)->process();
+    local_active_point += (*ig)->get_active_pointsource();
+    local_active_diffuse += (*ig)->get_active_diffusesource();
+  }
   // apply receiver gain:
   for(uint32_t k=0;k<receivers_.size();k++){
     receivers_[k]->post_proc();
@@ -429,6 +288,27 @@ void world_t::process()
   }
   active_pointsource = local_active_point;
   active_diffusesource = local_active_diffuse;
+}
+
+void receiver_graph_t::process()
+{
+  uint32_t local_active_point(0);
+  uint32_t local_active_diffuse(0);
+  // calculate acoustic model:
+  for(unsigned int k=0;k<acoustic_model.size();k++)
+    local_active_point += acoustic_model[k]->process();
+  for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
+    local_active_diffuse += diffuse_acoustic_model[k]->process();
+  active_pointsource = local_active_point;
+  active_diffusesource = local_active_diffuse;
+}
+
+receiver_graph_t::~receiver_graph_t()
+{
+  for(std::vector<acoustic_model_t*>::reverse_iterator it=acoustic_model.rbegin();it!=acoustic_model.rend();++it)
+    delete (*it);
+  for(std::vector<diffuse_acoustic_model_t*>::reverse_iterator it=diffuse_acoustic_model.rbegin();it!=diffuse_acoustic_model.rend();++it)
+    delete (*it);
 }
 
 diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,receiver_t* receiver)
@@ -524,7 +404,6 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   get_attribute_bool("point",render_point);
   get_attribute_bool("diffuse",render_diffuse);
   get_attribute_bool("image",render_image);
-  //get_attribute_bool("isdirect",is_direct);
   get_attribute_bool("globalmask",use_global_mask);
   get_attribute_db("diffusegain",diffusegain);
   GET_ATTRIBUTE(ismmin);
@@ -540,7 +419,6 @@ void receiver_t::write_xml()
   set_attribute_bool("point",render_point);
   set_attribute_bool("diffuse",render_diffuse);
   set_attribute_bool("image",render_image);
-  //set_attribute_bool("isdirect",is_direct);
   set_attribute_bool("globalmask",use_global_mask);
   set_attribute_db("diffusegain",diffusegain);
   SET_ATTRIBUTE(ismmin);
@@ -552,11 +430,10 @@ void receiver_t::write_xml()
 
 void receiver_t::prepare(double srate, uint32_t chunksize)
 {
+  receivermod_t::prepare( srate, chunksize );
   dt = 1.0/std::max(1.0f,(float)chunksize);
   dt_sample = 1.0/srate;
   f_sample = srate;
-  if( is_prepared )
-    release();
   for(uint32_t k=0;k<get_num_channels();k++){
     outchannelsp.push_back(new wave_t(chunksize));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
@@ -566,6 +443,7 @@ void receiver_t::prepare(double srate, uint32_t chunksize)
 
 void receiver_t::release()
 {
+  receivermod_t::release();
   outchannels.clear();
   for( uint32_t k=0;k<outchannelsp.size();++k)
     delete outchannelsp[k];
@@ -575,8 +453,6 @@ void receiver_t::release()
 
 receiver_t::~receiver_t()
 {
-  if( is_prepared )
-    release();
 }
 
 void receiver_t::clear_output()
@@ -767,6 +643,163 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
     audio[k] = drywet*audio[k] + (1.0f-drywet)*(state.s2 = state.s2*state.A1+state.s1*B0);
   }
   return p_src;
+}
+
+
+source_t::source_t(xmlpp::Element* xmlsrc)
+  : sourcemod_t(xmlsrc),
+    ismmin(0),
+    ismmax(2147483647),
+    maxdist(3700),
+    minlevel(0),
+    sincorder(0),
+    gainmodel(GAIN_INVR),
+    active(true),
+    is_prepared(false)
+{
+  GET_ATTRIBUTE(size);
+  GET_ATTRIBUTE(maxdist);
+  GET_ATTRIBUTE_DBSPL(minlevel);
+  std::string gr;
+  get_attribute("gainmodel",gr);
+  if( gr.empty() )
+    gr = "1/r";
+  if( gr == "1/r" )
+    gainmodel = GAIN_INVR;
+  else if( gr == "1" )
+    gainmodel = GAIN_UNITY;
+  else
+    throw TASCAR::ErrMsg("Invalid gain model "+gr+"(valid gain models: \"1/r\", \"1\").");
+  GET_ATTRIBUTE(sincorder);
+  GET_ATTRIBUTE(ismmin);
+  GET_ATTRIBUTE(ismmax);
+}
+
+source_t::~source_t()
+{
+}
+
+void source_t::write_xml()
+{
+  sourcemod_t::write_xml();
+  SET_ATTRIBUTE(sincorder);
+  SET_ATTRIBUTE(ismmin);
+  SET_ATTRIBUTE(ismmax);
+  SET_ATTRIBUTE(size);
+  SET_ATTRIBUTE(maxdist);
+  SET_ATTRIBUTE_DBSPL(minlevel);
+}
+
+void source_t::prepare( double fs, uint32_t fragsize )
+{
+  sourcemod_t::prepare( fs, fragsize );
+  for(uint32_t k=0;k<get_num_channels();k++){
+    inchannelsp.push_back(new wave_t(fragsize));
+    inchannels.push_back(wave_t(*(inchannelsp.back())));
+  }
+  is_prepared = true;
+}
+
+void source_t::release()
+{
+  sourcemod_t::release();
+  inchannels.clear();
+  for( uint32_t k=0;k<inchannelsp.size();++k)
+    delete inchannelsp[k];
+  inchannelsp.clear();
+  is_prepared = false;
+}
+
+void source_t::process_plugins( const TASCAR::transport_t& tp )
+{
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+       p!= plugins.end();
+       ++p)
+    (*p)->ap_process( inchannels, position, tp );
+}
+
+soundpath_t::soundpath_t(const source_t* src, const soundpath_t* parent_, const reflector_t* generator_)
+  : parent((parent_?parent_:this)),
+    primary((parent_?(parent_->primary):src)),
+    reflector(generator_),
+    visible(true)
+{
+  reflectionfilterstates.resize(getorder());
+  for(uint32_t k=0;k<reflectionfilterstates.size();++k)
+    reflectionfilterstates[k] = 0;
+}
+
+void soundpath_t::update_position()
+{
+  visible = true;
+  if( reflector ){
+    // calculate image position and orientation:
+    p_cut = reflector->nearest_on_plane(parent->position);
+    // calculate nominal image source position:
+    pos_t p_img(p_cut);
+    p_img *= 2.0;
+    p_img -= parent->position;
+    // if image source is in front of reflector then return:
+    if( dot_prod( p_img-p_cut, reflector->get_normal() ) > 0 )
+      visible = false;
+    position = p_img;
+    orientation = parent->orientation;
+  }else{
+    position = primary->position;
+    orientation = primary->orientation;
+  }
+}
+
+uint32_t soundpath_t::getorder() const
+{
+  if( parent != this )
+    return parent->getorder()+1;
+  else
+    return 0;
+}
+
+void soundpath_t::apply_reflectionfilter( TASCAR::wave_t& audio )
+{
+  uint32_t k(0);
+  const reflector_t* pr(reflector);
+  const soundpath_t* ps(this);
+  while( pr ){
+    pr->apply_reflectionfilter( audio, reflectionfilterstates[k] );
+    ++k;
+    ps = ps->parent;
+    pr = ps->reflector;
+  }
+}
+
+pos_t soundpath_t::get_effective_position( const pos_t& p_rec, double& gain )
+{
+  if( !reflector )
+    return position;
+  // calculate orthogonal point on plane:
+  pos_t pcut_rec(reflector->nearest_on_plane(p_rec));
+  // if receiver is behind reflector then return zero:
+  if( dot_prod( p_rec-pcut_rec, reflector->get_normal() ) < 0 ){
+    gain = 0;
+    return position;
+  }
+  double len_receiver(distance(pcut_rec,p_rec));
+  double len_src(distance( p_cut, position ));
+  // calculate intersection:
+  double ratio(len_receiver/std::max(1e-6,(len_receiver+len_src)));
+  pos_t p_is(p_cut-pcut_rec);
+  p_is *= ratio;
+  p_is += pcut_rec;
+  p_is = reflector->nearest(p_is);
+  gain = pow(std::max(0.0,dot_prod((p_rec-p_is).normal(),(p_is-position).normal())),2.7);
+  make_friendly_number(gain);
+  if( reflector->edgereflection ){
+    double len_img(distance(p_is,position));
+    pos_t p_eff((p_is-p_rec).normal());
+    p_eff *= len_img;
+    p_eff += p_is;
+    return p_eff;
+  }
+  return position;
 }
 
 /*

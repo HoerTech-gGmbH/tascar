@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <face name="fce" vertices="1  1  1 
+			       1  1 -1
+			       1.2 -1 -1
+			       1.2 -1  1" edgereflection="true"/>
+    <src_object>
+      <position>0 -1 -8 0 1 -1 8 0</position>
+      <sound/>
+    </src_object>
+    <receiver type="debugpos" sources="2">
+    </receiver>
+  </scene>
+</session>

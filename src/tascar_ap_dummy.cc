@@ -13,7 +13,7 @@
 class dummy_t : public TASCAR::audioplugin_base_t {
 public:
   dummy_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void prepare( double srate,uint32_t fragsize );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -41,6 +41,7 @@ void dummy_t::add_variables( TASCAR::osc_server_t* srv )
 
 void dummy_t::prepare(double srate,uint32_t fragsize)
 {
+  audioplugin_base_t::prepare( srate, fragsize );
   DEBUG("--prepare--");
   DEBUG(f_sample);
   DEBUG(f_fragment);
@@ -55,6 +56,7 @@ void dummy_t::prepare(double srate,uint32_t fragsize)
 
 void dummy_t::release()
 {
+  audioplugin_base_t::release();
   DEBUG("--release--");
 }
 
@@ -63,9 +65,10 @@ dummy_t::~dummy_t()
   DEBUG("--destruct--");
 }
 
-void dummy_t::ap_process(TASCAR::wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void dummy_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
-  DEBUG(chunk.n);
+  DEBUG(chunk.size());
+  DEBUG(chunk[0].n);
 }
 
 REGISTER_AUDIOPLUGIN(dummy_t);

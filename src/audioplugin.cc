@@ -12,39 +12,14 @@ transport_t::transport_t()
 
 audioplugin_base_t::audioplugin_base_t( const audioplugin_cfg_t& cfg )
   : xml_element_t(cfg.xmlsrc),
-    f_sample(1),
-    f_fragment(1),
-    t_sample(1),
-    t_fragment(1),
-    n_fragment(1),
     name(cfg.name),
     modname(cfg.modname),
     prepared(false)
 {
 }
 
-void audioplugin_base_t::prepare_( double srate, uint32_t fragsize )
-{
-  release_();
-  f_sample = srate;
-  f_fragment = srate/(double)fragsize;
-  t_sample = 1.0/srate;
-  t_fragment = 1.0/f_fragment;
-  n_fragment = fragsize;
-  prepare(srate,fragsize);
-  prepared = true;
-}
-
-void audioplugin_base_t::release_()
-{
-  if( prepared )
-    release();
-  prepared = false;
-}
-
 audioplugin_base_t::~audioplugin_base_t()
 {
-  release_();
 }
 
 TASCAR_RESOLVER( audioplugin_base_t, const audioplugin_cfg_t& )
@@ -81,19 +56,21 @@ void TASCAR::audioplugin_t::write_xml()
   libdata->write_xml();
 }
 
-void TASCAR::audioplugin_t::ap_process( wave_t& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp )
+void TASCAR::audioplugin_t::ap_process( std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp )
 {
   libdata->ap_process( chunk, pos, tp );
 }
 
 void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)
 {
-  libdata->prepare_( srate, fragsize );
+  audioplugin_base_t::prepare(srate,fragsize);
+  libdata->prepare( srate, fragsize );
 }
 
 void TASCAR::audioplugin_t::release()
 {
-  libdata->release_();
+  audioplugin_base_t::release();
+  libdata->release();
 }
 
 void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
@@ -103,7 +80,6 @@ void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
 
 TASCAR::audioplugin_t::~audioplugin_t()
 {
-  release();
   delete libdata;
   dlclose(lib);
 }

@@ -35,7 +35,7 @@ public:
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   // initialize decoder and allocate buffers:
-  void configure(double srate,uint32_t fragsize);
+  void prepare(double srate,uint32_t fragsize);
   // decode HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
 private:
@@ -142,9 +142,9 @@ hoa2d_t::~hoa2d_t()
     delete [] s_decoded;
 }
 
-void hoa2d_t::configure(double srate,uint32_t fragsize)
+void hoa2d_t::prepare(double srate,uint32_t fragsize)
 {
-  TASCAR::receivermod_base_speaker_t::configure(srate,fragsize);
+  TASCAR::receivermod_base_speaker_t::prepare(srate,fragsize);
   chunk_size = fragsize;
   int32_t channels(spkpos.size());
   num_channels = channels;

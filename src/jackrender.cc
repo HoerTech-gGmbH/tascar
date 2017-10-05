@@ -203,14 +203,14 @@ void TASCAR::render_rt_t::start()
       connect_in(sounds[k]->get_port_index(),cn,true);
     }
   }
-  // connect jack ports of point sources:
-  for(unsigned int k=0;k<door_sources.size();k++){
-    std::string cn(door_sources[k]->get_connect());
-    if( cn.size() ){
-      cn = strrep(cn,"@","player."+name+":"+door_sources[k]->get_name());
-      connect_in(door_sources[k]->get_port_index(),cn,true);
-    }
-  }
+//  // connect jack ports of point sources:
+//  for(unsigned int k=0;k<door_sources.size();k++){
+//    std::string cn(door_sources[k]->get_connect());
+//    if( cn.size() ){
+//      cn = strrep(cn,"@","player."+name+":"+door_sources[k]->get_name());
+//      connect_in(door_sources[k]->get_port_index(),cn,true);
+//    }
+//  }
   // todo: connect diffuse ports.
   for(std::vector<TASCAR::Scene::src_diffuse_t*>::iterator idiff=diffuse_sources.begin();idiff!=diffuse_sources.end();++idiff){
     TASCAR::Scene::src_diffuse_t* pdiff(*idiff);

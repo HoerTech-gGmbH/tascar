@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <src_object>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+      <!--<sound type="cardioidmod"><sine/></sound>-->
+      <sound><sine/></sound>
+    </src_object>
+    <receiver type="omni">
+      <position>0 1 0 0</position>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+    </receiver>
+  </scene>
+</session>
