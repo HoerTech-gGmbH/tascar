@@ -54,10 +54,10 @@ std::vector<std::string> sourcemod_t::get_connections() const
   return libdata->get_connections();
 }
 
-void sourcemod_t::prepare(double srate,uint32_t fragsize)
+void sourcemod_t::prepare( chunk_cfg_t& cf_ )
 {
-  sourcemod_base_t::prepare(srate,fragsize);
-  libdata->prepare(srate,fragsize);
+  sourcemod_base_t::prepare( cf_ );
+  libdata->prepare( cf_ );
 }
 
 void sourcemod_t::release()

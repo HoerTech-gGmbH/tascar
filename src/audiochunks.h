@@ -6,14 +6,6 @@
 
 namespace TASCAR {
 
-  class audiochunk_descriptor_t {
-  public:
-    audiochunk_descriptor_t(double samplingrate_=1,uint32_t length_=1,uint32_t channels_=1);
-    const double samplingrate;
-    const uint32_t length;
-    const uint32_t channels;
-  };
-
   /** \brief Class for single-channel time-domain audio chunks
    */
   class wave_t {

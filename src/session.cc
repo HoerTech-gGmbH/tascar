@@ -49,10 +49,10 @@ void TASCAR::module_t::update(uint32_t frame,bool running)
     libdata->update( frame, running );
 }
 
-void TASCAR::module_t::prepare(double srate,uint32_t fragsize)
+void TASCAR::module_t::prepare( chunk_cfg_t& cf_ )
 {
-  module_base_t::prepare( srate, fragsize );
-  libdata->prepare( srate, fragsize );
+  module_base_t::prepare( cf_ );
+  libdata->prepare( cf_ );
   is_configured = true;
 }
 
@@ -275,9 +275,10 @@ void TASCAR::session_t::start()
   started_ = true;
   for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
     (*ipl)->start();
-  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
-    (*imod)->prepare(srate,fragsize);
-  
+  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod){
+    chunk_cfg_t cf( srate, fragsize );
+    (*imod)->prepare( cf );
+  }
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
       connect((*icon)->src,(*icon)->dest);

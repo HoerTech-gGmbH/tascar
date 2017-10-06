@@ -61,10 +61,10 @@ void TASCAR::audioplugin_t::ap_process( std::vector<wave_t>& chunk, const TASCAR
   libdata->ap_process( chunk, pos, tp );
 }
 
-void TASCAR::audioplugin_t::prepare(double srate,uint32_t fragsize)
+void TASCAR::audioplugin_t::prepare( chunk_cfg_t& cf_ )
 {
-  audioplugin_base_t::prepare(srate,fragsize);
-  libdata->prepare( srate, fragsize );
+  audioplugin_base_t::prepare( cf_ );
+  libdata->prepare( cf_ );
 }
 
 void TASCAR::audioplugin_t::release()

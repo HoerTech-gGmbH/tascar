@@ -2,19 +2,29 @@
 #include "errorhandling.h"
 #include "defs.h"
 
+chunk_cfg_t::chunk_cfg_t( double f_sample_, uint32_t n_fragment_, uint32_t n_channels_ )
+  :  f_sample(f_sample_),
+     n_fragment(n_fragment_),
+     n_channels(n_channels_)
+{
+  update();
+}
+
+void chunk_cfg_t::update()
+{
+  f_fragment = f_sample/n_fragment;
+  t_sample = 1.0/std::max(EPS,f_sample);
+  t_fragment = 1.0/std::max(EPS,f_fragment);
+  t_inc = 1.0/std::max(EPS,(double)n_fragment);
+}
+
 audiostates_t::audiostates_t()
-  : f_sample(1),
-    f_fragment(1),
-    t_sample(1),
-    t_fragment(1),
-    t_inc(1),
-    n_fragment(1),
-    is_prepared_(false),
+  : is_prepared_(false),
     preparecount(0)
 {
 }
 
-void audiostates_t::prepare( double fs, uint32_t fragsize )
+void audiostates_t::prepare( chunk_cfg_t& cf_ )
 {
   preparecount++;
 #ifdef TSCDEBUG
@@ -23,12 +33,8 @@ void audiostates_t::prepare( double fs, uint32_t fragsize )
     throw TASCAR::ErrMsg("Prepare called before release");
 #endif
   is_prepared_ = true;
-  f_sample = fs;
-  f_fragment = fs/fragsize;
-  t_sample = 1.0/std::max(EPS,f_sample);
-  t_fragment = 1.0/std::max(EPS,f_fragment);
-  t_inc = 1.0/std::max(EPS,(double)fragsize);
-  n_fragment = fragsize;
+  *(chunk_cfg_t*)this = cf_;
+  update();
 }
 
 void audiostates_t::release( )

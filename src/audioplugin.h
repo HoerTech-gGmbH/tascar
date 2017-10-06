@@ -57,7 +57,7 @@ namespace TASCAR {
     void write_xml();
     virtual ~audioplugin_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
-    virtual void prepare(double srate,uint32_t fragsize);
+    virtual void prepare( chunk_cfg_t& );
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void release();
   private:

@@ -209,12 +209,12 @@ void spk_pos_t::write_xml()
     SET_ATTRIBUTE(connect);
 }
 
-void spk_array_t::prepare(double srate, uint32_t fragsize)
+void spk_array_t::prepare( chunk_cfg_t& cf_ )
 {
-  audiostates_t::prepare( srate, fragsize );
+  audiostates_t::prepare( cf_ );
   delaycomp.clear();
   for(uint32_t k=0;k<size();++k)
-    delaycomp.push_back(TASCAR::static_delay_t(srate*(operator[](k).dr/340.0)));
+    delaycomp.push_back(TASCAR::static_delay_t( f_sample*(operator[](k).dr/340.0)));
 }
 
 /*

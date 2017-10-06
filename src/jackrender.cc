@@ -183,8 +183,9 @@ int TASCAR::render_rt_t::process(jack_nframes_t nframes,
 
 void TASCAR::render_rt_t::start()
 {
+  chunk_cfg_t cf( get_srate(), get_fragsize() );
   // first prepare all nodes for audio processing:
-  prepare(get_srate(), get_fragsize());
+  prepare( cf );
   // create all ports:
   for(std::vector<std::string>::iterator iip=input_ports.begin();iip!=input_ports.end();++iip)
     add_input_port(*iip);

@@ -78,7 +78,6 @@ namespace TASCAR {
     public:
       sndfile_info_t(xmlpp::Element* e);
       void write_xml();
-      void prepare(double fs, uint32_t fragsize){};
       std::string fname;
       uint32_t firstchannel;
       uint32_t channels;
@@ -185,7 +184,7 @@ namespace TASCAR {
       src_diffuse_t(xmlpp::Element* e);
       virtual ~src_diffuse_t();
       void write_xml();
-      void prepare(double fs, uint32_t fragsize);
+      void prepare( chunk_cfg_t& );
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       pos_t size;
@@ -208,7 +207,7 @@ namespace TASCAR {
       void geometry_update(double t);
       void process_plugins(const TASCAR::transport_t& tp);
       void apply_gain();
-      void prepare(double fs, uint32_t fragsize);
+      void prepare( chunk_cfg_t& );
       void release();
       void add_meter(TASCAR::levelmeter_t*);
     private:
@@ -226,7 +225,7 @@ namespace TASCAR {
       src_object_t(xmlpp::Element* e);
       ~src_object_t();
       void write_xml();
-      void prepare(double fs, uint32_t fragsize);
+      void prepare( chunk_cfg_t& );
       void release();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
@@ -240,7 +239,7 @@ namespace TASCAR {
     public:
       receivermod_object_t(xmlpp::Element* e);
       void write_xml();
-      void prepare(double fs, uint32_t fragsize);
+      void prepare( chunk_cfg_t& );
       void release();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
@@ -263,7 +262,7 @@ namespace TASCAR {
       ~scene_t();
       void write_xml();
       src_object_t* add_source();
-      void prepare(double fs, uint32_t fragsize);
+      void prepare( chunk_cfg_t& );
       void release();
       std::string description;
       std::string name;

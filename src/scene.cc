@@ -100,14 +100,14 @@ void src_diffuse_t::geometry_update(double t)
   }
 }
 
-void src_diffuse_t::prepare(double fs, uint32_t fragsize)
+void src_diffuse_t::prepare( chunk_cfg_t& cf_ )
 {
-  sndfile_object_t::prepare(fs,fragsize);
+  sndfile_object_t::prepare( cf_ );
   if( source )
     delete source;
   reset_meters();
-  addmeter(fs);
-  source = new TASCAR::Acousticmodel::diffuse_source_t(fragsize,*(rmsmeter[0]));
+  addmeter( f_sample );
+  source = new TASCAR::Acousticmodel::diffuse_source_t( n_fragment, *(rmsmeter[0]) );
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
@@ -171,19 +171,19 @@ void src_object_t::geometry_update(double t)
   }
 }
 
-void src_object_t::prepare(double fs, uint32_t fragsize)
+void src_object_t::prepare( chunk_cfg_t& cf_ )
 {
-  sndfile_object_t::prepare(fs,fragsize);
+  sndfile_object_t::prepare( cf_ );
   reset_meters();
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
     for(uint32_t k=0;k<(*it)->get_num_channels();++k){
-      addmeter(fs);
+      addmeter( f_sample );
       (*it)->add_meter(rmsmeter.back());
     }
-    (*it)->prepare(fs,fragsize);
+    (*it)->prepare( cf_ );
     //(*it)->get_source()->add_rmslevel((rmsmeter.back()));
   }
-  startframe = fs*starttime;
+  startframe = f_sample * starttime;
 }
 
 void src_object_t::release()
@@ -380,13 +380,13 @@ void receivermod_object_t::write_xml()
   receiver_t::write_xml();
 }
 
-void receivermod_object_t::prepare(double fs, uint32_t fragsize)
+void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
 {
-  TASCAR::Acousticmodel::receiver_t::prepare(fs,fragsize);
-  object_t::prepare(fs,fragsize);
+  TASCAR::Acousticmodel::receiver_t::prepare( cf_ );
+  object_t::prepare( cf_ );
   reset_meters();
   for(uint32_t k=0;k<get_num_channels();k++)
-    addmeter(fs);
+    addmeter( TASCAR::Acousticmodel::receiver_t::f_sample );
 }
 
 void receivermod_object_t::release()
@@ -445,9 +445,9 @@ std::vector<object_t*> scene_t::get_objects()
   return r;
 }
 
-void scene_t::prepare(double fs, uint32_t fragsize)
+void scene_t::prepare( chunk_cfg_t& cf_ )
 {
-  scene_node_base_t::prepare(fs,fragsize);
+  scene_node_base_t::prepare( cf_ );
   if( !name.size() )
     throw TASCAR::ErrMsg("Invalid empty scene name (please set \"name\" attribute of scene node).");
   if( name.find(" ") != std::string::npos )
@@ -456,7 +456,7 @@ void scene_t::prepare(double fs, uint32_t fragsize)
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
   all_objects = get_objects();
   for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
-    (*it)->prepare( fs, fragsize );
+    (*it)->prepare( cf_ );
 }
 
 void scene_t::release()
@@ -1032,11 +1032,11 @@ std::string sound_t::get_port_name() const
   return name;
 }
 
-void sound_t::prepare(double fs, uint32_t fragsize)
+void sound_t::prepare( chunk_cfg_t& cf_ )
 {
-  source_t::prepare(fs,fragsize);
+  source_t::prepare( cf_ );
   for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->prepare( fs, fragsize );
+    (*p)->prepare( cf_ );
 }
 
 void sound_t::release()

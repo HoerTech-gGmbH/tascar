@@ -48,7 +48,6 @@ namespace TASCAR {
     virtual uint32_t get_num_channels() = 0;
     virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
-    //virtual void prepare(double srate,uint32_t fragsize) {};
     virtual sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
   protected:
   };
@@ -62,7 +61,7 @@ namespace TASCAR {
     virtual uint32_t get_num_channels();
     virtual std::string get_channel_postfix(uint32_t channel);
     virtual std::vector<std::string> get_connections() const;
-    virtual void prepare(double srate,uint32_t fragsize);
+    virtual void prepare( chunk_cfg_t& );
     virtual void release();
     virtual sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   private:

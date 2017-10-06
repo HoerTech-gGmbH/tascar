@@ -6,11 +6,6 @@
 
 using namespace TASCAR;
 
-audiochunk_descriptor_t::audiochunk_descriptor_t(double samplingrate_,uint32_t length_,uint32_t channels_)
-  : samplingrate(samplingrate_),length(length_),channels(channels_)
-{
-}
-
 wave_t::wave_t(uint32_t chunksize)
   : d(new float[std::max(1u,chunksize)]),
     n(chunksize), own_pointer(true),

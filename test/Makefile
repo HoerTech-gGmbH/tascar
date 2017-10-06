@@ -34,5 +34,10 @@ db_test_snd%: test_snd%.tsc expected_snd%.wav
 	LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_snd$*.wav test_snd$*.wav 1e-9
 	rm -f test_snd$*.wav
 
+leak_test_snd%: test_snd%.tsc expected_snd%.wav
+	LD_LIBRARY_PATH=../build/ valgrind --leak-check=full ../build/tascar_renderfile -i zeros.wav -o test_snd$*.wav -d -f 64 $<
+	LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_snd$*.wav test_snd$*.wav 1e-9
+	rm -f test_snd$*.wav
+
 clean:
 	rm -f *~ test*.wav gdbcmd

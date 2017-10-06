@@ -62,10 +62,10 @@ std::vector<std::string> TASCAR::receivermod_t::get_connections() const
   return libdata->get_connections();
 }
 
-void TASCAR::receivermod_t::prepare(double srate,uint32_t fragsize)
+void TASCAR::receivermod_t::prepare( chunk_cfg_t& cf_ )
 {
-  receivermod_base_t::prepare( srate, fragsize );
-  libdata->prepare(srate,fragsize);
+  receivermod_base_t::prepare( cf_ );
+  libdata->prepare( cf_ );
 }
 
 void TASCAR::receivermod_t::release()
@@ -130,10 +130,10 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
   }
 }
 
-void TASCAR::receivermod_base_speaker_t::prepare(double srate,uint32_t fragsize)
+void TASCAR::receivermod_base_speaker_t::prepare( chunk_cfg_t& cf_ )
 {
-  receivermod_base_t::prepare(srate,fragsize);
-  spkpos.prepare(srate,fragsize);
+  receivermod_base_t::prepare( cf_ );
+  spkpos.prepare( cf_ );
 }
 
 /*

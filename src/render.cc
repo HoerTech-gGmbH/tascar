@@ -33,12 +33,12 @@ void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_
   }
 }
 
-void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
+void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
 {
   if( pthread_mutex_lock( &mtx_world ) != 0 )
     throw TASCAR::ErrMsg("Unable to lock process.");
   try{
-    scene_t::prepare( fs, fragsize );
+    scene_t::prepare( cf_ );
     //TASCAR::Scene::scene_t::prepare(fs,fragsize);
     audioports.clear();
     audioports_in.clear();
@@ -104,7 +104,7 @@ void TASCAR::render_core_t::prepare(double fs, uint32_t fragsize)
       pmasks.push_back(*it);
     }
     // create the world, before first process callback is called:
-    world = new Acousticmodel::world_t(c,fs,fragsize,sources,diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder);
+    world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder);
     total_pointsources = world->get_total_pointsource();
     total_diffusesources = world->get_total_diffusesource();
     is_prepared = true;

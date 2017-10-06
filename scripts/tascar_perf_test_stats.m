@@ -5,6 +5,7 @@ function tascar_perf_test_stats( )
   [tmp,kcpu] = sd.getfield(sData,'cpu');
   [tmp,kCPU] = sd.getfield(sData,'CPUmodel');
   [tmp,kRec] = sd.getfield(sData,'ReceiverType');
+  [tmp,kPer] = sd.getfield(sData,'Period');
   sData.values{kCPU} = strrep(sData.values{kCPU},'Intel(R)Core(TM)','');
   v = ver();
   v = {v.Name};
@@ -16,7 +17,8 @@ function tascar_perf_test_stats( )
     f_anova = @anova;
   end
   for k=1:nG
-    p = f_anova(sData.data(:,kcpu),sData.data(:,k));
+      tau_p = 0.01*sData.data(:,kcpu).*sData.data(:,kPer);
+    p = f_anova(tau_p,sData.data(:,k));
     if p > 0.05
       disp([sData.fields{k},' is not a significant factor']);
     else

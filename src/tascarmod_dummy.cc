@@ -6,7 +6,7 @@ public:
   ~dummy_t();
   void write_xml();
   void update(uint32_t frame, bool running);
-  void prepare(double srate,uint32_t fragsize);
+  void prepare( chunk_cfg_t& );
 private:
 };
 
@@ -21,12 +21,10 @@ dummy_t::dummy_t( const TASCAR::module_cfg_t& cfg )
   DEBUG(n_fragment);
 }
 
-void dummy_t::prepare( double srate, uint32_t fragsize )
+void dummy_t::prepare( chunk_cfg_t& cf_ )
 {
-  actor_module_t::prepare( srate, fragsize );
+  actor_module_t::prepare( cf_ );
   DEBUG(1);
-  DEBUG(srate);
-  DEBUG(fragsize);
   DEBUG(f_sample);
   DEBUG(f_fragment);
   DEBUG(t_sample);

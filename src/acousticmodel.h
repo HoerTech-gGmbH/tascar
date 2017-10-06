@@ -105,7 +105,7 @@ namespace TASCAR {
       source_t(xmlpp::Element* xmlsrc);
       ~source_t();
       void write_xml();
-      void prepare(double srate, uint32_t fragsize);
+      void prepare( chunk_cfg_t& cf_ );
       void release();
       //virtual pos_t get_effective_position( const pos_t& receiverp, double& gain ) { return position; };
       //virtual pos_t get_physical_position() const { return position; };
@@ -132,7 +132,7 @@ namespace TASCAR {
       receiver_t(xmlpp::Element* xmlsrc);
       ~receiver_t();
       void write_xml();
-      void prepare(double srate, uint32_t fragsize);
+      void prepare( chunk_cfg_t& cf_ );
       void release();
       void clear_output();
       void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, receivermod_base_t::data_t*);
@@ -162,9 +162,6 @@ namespace TASCAR {
     private:
       double x_gain;
       double dx_gain;
-      float dt;
-      float dt_sample;
-      float f_sample;
       double next_gain;
       // fade timer, is > 0 during fade:
       int32_t fade_timer;

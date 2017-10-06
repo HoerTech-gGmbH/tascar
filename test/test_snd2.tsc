@@ -4,7 +4,7 @@
     <src_object>
       <position>0 0 0 0
 0.5 2 0 0</position>
-      <sound x="1">
+      <sound x="1" sincorder="7">
 	<sine/>
       </sound>
     </src_object>

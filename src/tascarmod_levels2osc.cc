@@ -6,7 +6,7 @@ public:
   levels2osc_t( const TASCAR::module_cfg_t& cfg );
   ~levels2osc_t();
   void write_xml();
-  virtual void prepare(double srate,uint32_t fragsize);
+  virtual void prepare( chunk_cfg_t& );
   void update(uint32_t frame, bool running);
 private:
   std::string url;
@@ -40,9 +40,9 @@ levels2osc_t::levels2osc_t( const TASCAR::module_cfg_t& cfg )
     throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
 }
 
-void levels2osc_t::prepare(double srate,uint32_t fragsize)
+void levels2osc_t::prepare( chunk_cfg_t& cf_ )
 {
-  module_base_t::prepare( srate, fragsize );
+  module_base_t::prepare( cf_ );
   for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
     vmsg.push_back(lo_message_new());
     for(uint32_t k=0;k<it->obj->metercnt();++k)

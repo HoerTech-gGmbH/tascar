@@ -387,9 +387,6 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     gain_zero(false),
     x_gain(1.0),
     dx_gain(0),
-    dt(1),
-    dt_sample(1),
-    f_sample(1),
     next_gain(1.0),
     fade_timer(0),
     fade_rate(1),
@@ -428,14 +425,14 @@ void receiver_t::write_xml()
   boundingbox.write_xml();
 }
 
-void receiver_t::prepare(double srate, uint32_t chunksize)
+void receiver_t::prepare( chunk_cfg_t& cf_ )
 {
-  receivermod_t::prepare( srate, chunksize );
-  dt = 1.0/std::max(1.0f,(float)chunksize);
-  dt_sample = 1.0/srate;
-  f_sample = srate;
-  for(uint32_t k=0;k<get_num_channels();k++){
-    outchannelsp.push_back(new wave_t(chunksize));
+  receivermod_t::prepare( cf_ );
+  n_channels = get_num_channels();
+  update();
+  cf_ = *(chunk_cfg_t*)this;
+  for(uint32_t k=0;k<n_channels;k++){
+    outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
   }
   is_prepared = true;
@@ -538,7 +535,7 @@ void receiver_t::set_next_gain(double g)
 
 void receiver_t::apply_gain()
 {
-  dx_gain = (next_gain-x_gain)*dt;
+  dx_gain = (next_gain-x_gain)*t_inc;
   uint32_t ch(get_num_channels());
   if( ch > 0 ){
     uint32_t psize(outchannels[0].size());
@@ -563,7 +560,7 @@ void receiver_t::set_fade( double targetgain, double duration )
   fade_timer = 0;
   prelim_previous_fade_gain = fade_gain;
   prelim_next_fade_gain = targetgain;
-  fade_rate = M_PI*dt_sample/duration;
+  fade_rate = M_PI*t_sample/duration;
   fade_timer = std::max(1u,(uint32_t)(f_sample*duration));
 }
 
@@ -690,11 +687,14 @@ void source_t::write_xml()
   SET_ATTRIBUTE_DBSPL(minlevel);
 }
 
-void source_t::prepare( double fs, uint32_t fragsize )
+void source_t::prepare( chunk_cfg_t& cf_ )
 {
-  sourcemod_t::prepare( fs, fragsize );
-  for(uint32_t k=0;k<get_num_channels();k++){
-    inchannelsp.push_back(new wave_t(fragsize));
+  sourcemod_t::prepare( cf_ );
+  n_channels = get_num_channels();
+  update();
+  cf_ = *(chunk_cfg_t*)this;
+  for(uint32_t k=0;k<n_channels;k++){
+    inchannelsp.push_back(new wave_t(n_fragment));
     inchannels.push_back(wave_t(*(inchannelsp.back())));
   }
   is_prepared = true;

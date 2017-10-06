@@ -14,7 +14,7 @@ class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
   lipsync_t( const TASCAR::audioplugin_cfg_t& );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
-  void prepare(double srate,uint32_t fragsize);
+  void prepare( chunk_cfg_t& cf_ );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~lipsync_t();
@@ -81,11 +81,11 @@ void lipsync_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool("/active",&active);    
 }
 
-void lipsync_t::prepare(double srate,uint32_t fragsize)
+void lipsync_t::prepare( chunk_cfg_t& cf_ )
 {
-  audioplugin_base_t::prepare( srate, fragsize );
+  audioplugin_base_t::prepare( cf_ );
   // allocate FFT buffers:
-  stft = new TASCAR::stft_t( 2*fragsize, 2*fragsize, fragsize, TASCAR::stft_t::WND_BLACKMAN, 0);
+  stft = new TASCAR::stft_t( 2*n_fragment, 2*n_fragment, n_fragment, TASCAR::stft_t::WND_BLACKMAN, 0);
   uint32_t num_bins(stft->s.n_);
   // allocate buffer for processed smoothed log values:
   sSmoothedMag = new double[num_bins];
@@ -101,7 +101,7 @@ void lipsync_t::prepare(double srate,uint32_t fragsize)
   freqBins[4] = 6000 * vocalTract;
   formantEdges = new uint32_t[numFormants+1];
   for(uint32_t k=0;k<numFormants+1;++k)
-    formantEdges[k] = std::min(num_bins,(uint32_t)(round(2*freqBins[k]*fragsize/srate)));
+    formantEdges[k] = std::min(num_bins,(uint32_t)(round(2*freqBins[k]*n_fragment/f_sample)));
 }
 
 void lipsync_t::release()

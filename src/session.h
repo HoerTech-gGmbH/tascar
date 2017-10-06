@@ -26,7 +26,6 @@ namespace TASCAR {
        \param running Transport running (true) or stopped (false).
      */
     virtual void update(uint32_t frame,bool running);
-    //void configure_(double srate,uint32_t fragsize);
   protected:
     TASCAR::session_t* session;
   };
@@ -36,7 +35,7 @@ namespace TASCAR {
     module_t( const TASCAR::module_cfg_t& cfg );
     void write_xml();
     virtual ~module_t();
-    void prepare(double srate,uint32_t fragsize);
+    void prepare( chunk_cfg_t& );
     void release();
     void update(uint32_t frame,bool running);
   private:
@@ -58,7 +57,6 @@ namespace TASCAR {
   public:
     range_t(xmlpp::Element* e);
     void write_xml();
-    void prepare(double fs, uint32_t fragsize){};
     std::string name;
     double start;
     double end;

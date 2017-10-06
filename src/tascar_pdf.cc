@@ -94,7 +94,8 @@ void App::pdf_export_t::render_time(const std::vector<double>& t)
 
 void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<double>& t)
 {
-  s->prepare(44100,1);
+  chunk_cfg_t cf(44100);
+  s->prepare( cf );
   uint32_t nch_in(s->num_input_ports());
   uint32_t nch_out(s->num_output_ports());
   float v(0);

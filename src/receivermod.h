@@ -58,7 +58,7 @@ namespace TASCAR {
     virtual void write_xml();
     virtual std::vector<std::string> get_connections() const;
     virtual void postproc(std::vector<wave_t>& output);
-    virtual void prepare(double srate,uint32_t fragsize);
+    virtual void prepare( chunk_cfg_t& );
   protected:
     TASCAR::spk_array_t spkpos;
   };
@@ -74,7 +74,7 @@ namespace TASCAR {
     virtual uint32_t get_num_channels();
     virtual std::string get_channel_postfix(uint32_t channel);
     virtual std::vector<std::string> get_connections() const;
-    void prepare(double srate,uint32_t fragsize);
+    void prepare( chunk_cfg_t& );
     void release();
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   private:

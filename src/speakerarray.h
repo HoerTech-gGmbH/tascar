@@ -54,7 +54,7 @@ namespace TASCAR {
       };
       const std::vector<didx_t>& sort_distance(const pos_t& psrc);
       void foa_decode(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output);
-      void prepare(double srate, uint32_t fragsize);
+      void prepare( chunk_cfg_t& );
     private:
       void import_file(const std::string& fname);
       void read_xml(xmlpp::Element* elem);

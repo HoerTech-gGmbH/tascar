@@ -17,7 +17,7 @@ public:
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   uint32_t get_num_channels();
-  void prepare(double srate,uint32_t fragsize);
+  void prepare( chunk_cfg_t& );
   std::string get_channel_postfix(uint32_t channel) const;
 private:
   double tau;
@@ -73,10 +73,10 @@ intensityvector_t::data_t::~data_t()
 {
 }
 
-void intensityvector_t::prepare(double srate,uint32_t fragsize)
+void intensityvector_t::prepare( chunk_cfg_t& cf_ )
 {
-  TASCAR::receivermod_base_t::prepare(srate,fragsize);
-  c1 = exp(-1.0/(tau*srate));
+  TASCAR::receivermod_base_t::prepare( cf_ );
+  c1 = exp(-1.0/(tau*f_sample));
   c2 = 1.0-c1;
 }
 

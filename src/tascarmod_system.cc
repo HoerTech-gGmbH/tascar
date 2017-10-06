@@ -74,7 +74,7 @@ public:
   virtual void write_xml();
   virtual void release();
   virtual void update(uint32_t frame,bool running);
-  virtual void prepare(double srate,uint32_t fragsize);
+  virtual void prepare( chunk_cfg_t& );
 private:
   void service();
   static void * service(void* h);
@@ -88,7 +88,6 @@ private:
   std::vector<at_cmd_t*> atcmds;
   pthread_t srv_thread;
   bool run_service;
-  uint32_t fragsize;
 };
 
 system_t::system_t( const TASCAR::module_cfg_t& cfg )
@@ -98,8 +97,7 @@ system_t::system_t( const TASCAR::module_cfg_t& cfg )
     h_atcmd(NULL),
     pid(0),
     fifo(1024),
-    run_service(true),
-    fragsize(1)
+    run_service(true)
 {
   std::string sessionpath(session->get_session_path());
   GET_ATTRIBUTE(command);
@@ -143,17 +141,16 @@ void system_t::update(uint32_t frame,bool running)
 {
   if( running )
     for(uint32_t k=0;k<atcmds.size();k++)
-      if( (frame <= atcmds[k]->frame) && (atcmds[k]->frame < frame+fragsize) )
+      if( (frame <= atcmds[k]->frame) && (atcmds[k]->frame < frame+n_fragment) )
         if( fifo.can_write() )
           fifo.write(k);
 }
 
-void system_t::prepare(double srate,uint32_t fragsize_)
+void system_t::prepare( chunk_cfg_t& cf_ )
 {
-  module_base_t::prepare( srate, fragsize );
-  fragsize = fragsize_;
+  module_base_t::prepare( cf_ );
   for(std::vector<at_cmd_t*>::iterator it=atcmds.begin();it!=atcmds.end();++it)
-    (*it)->frame = (*it)->time * srate;
+    (*it)->frame = (*it)->time * f_sample;
 }
 
 void system_t::write_xml()

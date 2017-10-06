@@ -34,17 +34,15 @@ public:
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_data(double srate,uint32_t n_fragment);
   // allocate buffers:
-  void prepare(double srate,uint32_t fragsize);
+  void prepare( chunk_cfg_t& );
   // re-order HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
 private:
   uint32_t nbins;
   uint32_t order;
   float _Complex* s_encoded;
-  uint32_t chunk_size;
-  uint32_t num_channels;
   bool diffup;
   double diffup_rot;
   double diffup_delay;
@@ -64,8 +62,6 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     nbins(0),
     order(0),
     s_encoded(NULL),
-    chunk_size(0),
-    num_channels(0),
     diffup(false),
     diffup_rot(45*DEG2RAD),
     diffup_delay(0.01),
@@ -97,7 +93,6 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
   else 
     throw TASCAR::ErrMsg("Invalid shape: "+filtershape);
   nbins = order + 2;
-  num_channels = order*2+1;
 }
 
 void hoa2d_t::write_xml()
@@ -117,16 +112,15 @@ hoa2d_t::~hoa2d_t()
     delete [] s_encoded;
 }
 
-void hoa2d_t::prepare(double srate,uint32_t fragsize)
+void hoa2d_t::prepare( chunk_cfg_t& cf_ )
 {
-  TASCAR::receivermod_base_t::prepare(srate,fragsize);
-  chunk_size = fragsize;
+  TASCAR::receivermod_base_t::prepare( cf_ );
   if( s_encoded )
     delete [] s_encoded;
-  s_encoded = new float _Complex[fragsize*nbins];
-  memset(s_encoded,0,sizeof(float _Complex)*fragsize*nbins);
-  idelay = diffup_delay*srate;
-  idelaypoint = filterperiod*srate;
+  s_encoded = new float _Complex[n_fragment*nbins];
+  memset(s_encoded,0,sizeof(float _Complex)*n_fragment*nbins);
+  idelay = diffup_delay*f_sample;
+  idelaypoint = filterperiod*f_sample;
 }
 
 hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau)
@@ -160,8 +154,6 @@ hoa2d_t::data_t::~data_t()
 
 void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
-  if( !chunk_size )
-    throw TASCAR::ErrMsg("Configure method not called or not configured properly.");
   data_t* d((data_t*)sd);
   float az(-prel.azim());
   if( shape == TASCAR::fsplit_t::none ){
@@ -200,7 +192,7 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TAS
     }
     d->enc_dwp[0] = d->enc_dwm[0] = 0.0f;
     d->enc_wp[0] = d->enc_wm[0] = 1.0f;
-    for(uint32_t kt=0;kt<chunk_size;++kt){
+    for(uint32_t kt=0;kt<n_fragment;++kt){
       d->delay.push(chunk[kt]);
       float vp, vm;
       d->delay.get(vp,vm);
@@ -213,18 +205,18 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TAS
 
 void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
 {
-  for(uint32_t kt=0;kt<chunk_size;++kt)
+  for(uint32_t kt=0;kt<n_fragment;++kt)
     output[0][kt] = MIN3DB*creal(s_encoded[kt*nbins]);
   for(uint32_t ko=1;ko<=order;++ko){
     uint32_t kc(2*ko-1);
-    for(uint32_t kt=0;kt<chunk_size;++kt)
+    for(uint32_t kt=0;kt<n_fragment;++kt)
       output[kc][kt] = cimag(s_encoded[kt*nbins+ko]);
     ++kc;
-    for(uint32_t kt=0;kt<chunk_size;++kt)
+    for(uint32_t kt=0;kt<n_fragment;++kt)
       output[kc][kt] = creal(s_encoded[kt*nbins+ko]);
   }
   //
-  memset(s_encoded,0,sizeof(float _Complex)*chunk_size*nbins);
+  memset(s_encoded,0,sizeof(float _Complex)*n_fragment*nbins);
   TASCAR::receivermod_base_t::postproc(output);  
 }
 
@@ -234,7 +226,7 @@ void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TAS
   float _Complex rot_p(cexpf(I*diffup_rot));
   float _Complex rot_m(cexpf(-I*diffup_rot));
   //spkpos.foa_decode(chunk,output);
-  for(uint32_t kt=0;kt<chunk_size;++kt){
+  for(uint32_t kt=0;kt<n_fragment;++kt){
     s_encoded[kt*nbins] += chunk.w()[kt];
     s_encoded[kt*nbins+1] += (chunk.x()[kt] + I*chunk.y()[kt]);
   }
@@ -271,7 +263,7 @@ void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TAS
 
 uint32_t hoa2d_t::get_num_channels()
 {
-  return num_channels;
+  return order*2+1;
 }
 
 std::string hoa2d_t::get_channel_postfix(uint32_t channel) const
@@ -283,9 +275,9 @@ std::string hoa2d_t::get_channel_postfix(uint32_t channel) const
   return ctmp;
 }
 
-TASCAR::receivermod_base_t::data_t* hoa2d_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* hoa2d_t::create_data(double srate,uint32_t n_fragment)
 {
-  return new data_t(fragsize,num_channels,srate, shape, filterperiod );
+  return new data_t(n_fragment,n_channels,f_sample, shape, filterperiod );
 }
 
 REGISTER_RECEIVERMOD(hoa2d_t);

@@ -5,7 +5,7 @@ class lookatme_t : public TASCAR::audioplugin_base_t {
 public:
   lookatme_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
-  void prepare(double srate,uint32_t fragsize);
+  void prepare( chunk_cfg_t& cf_ );
   void add_variables( TASCAR::osc_server_t* srv );
   ~lookatme_t();
 private:
@@ -63,9 +63,9 @@ void lookatme_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool("/discordantLS",&discordantLS);    
 }
 
-void lookatme_t::prepare(double srate,uint32_t fragsize)
+void lookatme_t::prepare( chunk_cfg_t& cf_ )
 {
-  audioplugin_base_t::prepare( srate, fragsize );
+  audioplugin_base_t::prepare( cf_ );
   lpc1 = exp(-1.0/(tau*f_fragment));
   rms = 0;
   waslooking = false;

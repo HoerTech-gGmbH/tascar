@@ -290,7 +290,7 @@ public:
   void set_par( double w, double dw, double t, double dt, double g, double damping );
   static int osc_setpar(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
-  void prepare(double srate,uint32_t fragsize);
+  void prepare( chunk_cfg_t& );
 private:
   uint32_t channels;
   fdn_t* fdn;
@@ -336,9 +336,9 @@ int hoafdnrot_t::osc_setpar(const char *path, const char *types, lo_arg **argv, 
   return 0;
 }
 
-void hoafdnrot_t::prepare(double srate,uint32_t fragsize)
+void hoafdnrot_t::prepare( chunk_cfg_t& cf_ )
 {
-  module_base_t::prepare( srate, fragsize );
+  module_base_t::prepare( cf_ );
   if( fdn )
     delete fdn;
   fdn = new fdn_t(fdnorder,amborder,f_sample);
