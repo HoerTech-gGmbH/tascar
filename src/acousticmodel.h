@@ -32,29 +32,6 @@ namespace TASCAR {
   /** \brief Components relevant for the acoustic modelling
    */
   namespace Acousticmodel {
-  
-    /** \brief Primary source (also base class for mirror sources)
-     */
-    //class pointsource_t : public c6dof_t {
-    //public:
-    //  pointsource_t(uint32_t chunksize,double maxdist_,double minlevel_,uint32_t sincorder_,gainmodel_t gainmodel_,double size_);
-    //  virtual ~pointsource_t();
-    //  virtual pos_t get_effective_position(const pos_t& receiverp,double& gain) { return position;};
-    //  virtual pos_t get_physical_position() const { return position; };
-    //  virtual void preprocess();
-    //  void add_rmslevel(TASCAR::levelmeter_t* rmslevel_);
-    //  wave_t audio;
-    //  bool active;
-    //  uint32_t ismmin;
-    //  uint32_t ismmax;
-    //  double maxdist;
-    //  double minlevel;
-    //  uint32_t sincorder;
-    //  uint32_t ismorder;
-    //  gainmodel_t gainmodel;
-    //  double size;
-    //  TASCAR::levelmeter_t* rmslevel;
-    //};
 
     /**
        \brief Diffraction model
@@ -107,11 +84,10 @@ namespace TASCAR {
       void write_xml();
       void prepare( chunk_cfg_t& cf_ );
       void release();
-      //virtual pos_t get_effective_position( const pos_t& receiverp, double& gain ) { return position; };
-      //virtual pos_t get_physical_position() const { return position; };
       virtual void process_plugins(const TASCAR::transport_t& tp);
       uint32_t ismmin;
       uint32_t ismmax;
+      uint32_t layers;
       double maxdist;
       double minlevel;
       uint32_t sincorder;
@@ -149,6 +125,7 @@ namespace TASCAR {
       bool render_image;
       uint32_t ismmin;
       uint32_t ismmax;
+      uint32_t layers;
       bool use_global_mask;
       double diffusegain;
       double falloff;
@@ -201,45 +178,6 @@ namespace TASCAR {
       double damping;
       bool edgereflection;
     };
-
-    ///** \brief A mirrored source.
-    // */
-    //class mirrorsource_t : public source_t {
-    //public:
-    //  mirrorsource_t(pointsource_t* src,reflector_t* reflector);
-    //  pos_t get_effective_position(const pos_t& receiverp,double& gain);
-    //  virtual pos_t get_physical_position() const { return src_->get_physical_position();};
-    //  void process();
-    //  reflector_t* get_reflector() const { return reflector_;};
-    //  //pos_t get_mirror_position() const { return mirror_position;};
-    //public:
-    //  source_t* src_;
-    //  reflector_t* reflector_;
-    //private:
-    //  //Acousticmodel::filter_coeff_t flt_current;
-    //  //double dt;
-    //  //double g, dg;
-    //  double lpstate;
-    //public:
-    //  pos_t p_img;
-    //  pos_t p_cut;
-    //};
-
-    ///** \brief Create mirror sources from primary sources and reflectors.
-    // */
-    //class mirror_model_t {
-    //public:
-    //  mirror_model_t(const std::vector<source_t*>& pointsources,
-    //                 const std::vector<reflector_t*>& reflectors,uint32_t order);
-    //  ~mirror_model_t();
-    //  /** \brief Process all mirror sources
-    //   */
-    //  void process();
-    //  std::vector<mirrorsource_t*> get_mirror_sources();
-    //  std::vector<pointsource_t*> get_sources();
-    //private:
-    //  std::vector<mirrorsource_t*> mirrorsource;
-    //};
 
     class soundpath_t : public c6dof_t {
     public:

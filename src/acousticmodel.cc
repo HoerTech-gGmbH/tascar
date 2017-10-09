@@ -83,7 +83,8 @@ uint32_t acoustic_model_t::process()
       (src_->ismmin <= ismorder) &&
       (ismorder <= src_->ismmax) &&
       (receiver_->ismmin <= ismorder) &&
-      (ismorder <= receiver_->ismmax)
+      (ismorder <= receiver_->ismmax) &&
+      (receiver_->layers & src_->layers)
       ){
     if( visible ){
       pos_t prel;
@@ -377,7 +378,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     render_image(true),
     ismmin(0),
     ismmax(2147483647),
-    //is_direct(true),
+    layers(0xffffffff),
     use_global_mask(true),
     diffusegain(1.0),
     falloff(-1.0),
@@ -405,6 +406,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   get_attribute_db("diffusegain",diffusegain);
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
+  GET_ATTRIBUTE_BITS(layers);
   GET_ATTRIBUTE(falloff);
   GET_ATTRIBUTE(delaycomp);
 }
@@ -647,10 +649,12 @@ source_t::source_t(xmlpp::Element* xmlsrc)
   : sourcemod_t(xmlsrc),
     ismmin(0),
     ismmax(2147483647),
+    layers(0xffffffff),
     maxdist(3700),
     minlevel(0),
     sincorder(0),
     gainmodel(GAIN_INVR),
+    size(0),
     active(true),
     is_prepared(false)
 {
@@ -670,6 +674,7 @@ source_t::source_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(sincorder);
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
+  GET_ATTRIBUTE_BITS(layers);
 }
 
 source_t::~source_t()

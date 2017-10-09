@@ -18,7 +18,8 @@ BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos
+  intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
+  hoa2d_fuma_hos
 
 SOURCES = omni cardioidmod door
 

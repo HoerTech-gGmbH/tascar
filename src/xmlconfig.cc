@@ -76,6 +76,19 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,int64_t& value
   get_attribute_value(e,name,value);
 }
 
+void TASCAR::xml_element_t::get_attribute_bits(const std::string& name,uint32_t& value)
+{
+  std::vector<int32_t> bits;
+  get_attribute(name,bits);
+  if( bits.size() ){
+    value = 0;
+    for(uint32_t k=0;k<bits.size();++k){
+      if( bits[k] < 32 )
+        value |= (1<<bits[k]);
+    }
+  }
+}
+
 void TASCAR::xml_element_t::get_attribute_bool(const std::string& name,bool& value)
 {
   get_attribute_value_bool(e,name,value);

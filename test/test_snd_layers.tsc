@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session>
+  <scene mirrororder="3">
+    <src_object>
+      <sound x="1" layers="3 7">
+	<sine/>
+      </sound>
+      <sound x="2" layers="7">
+	<sine f="100"/>
+      </sound>
+    </src_object>
+    <receiver name="l1" type="omni" layers="3"/>
+    <receiver name="l2" type="omni" layers="7"/>
+  </scene>
+</session>

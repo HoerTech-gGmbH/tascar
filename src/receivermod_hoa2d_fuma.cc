@@ -123,8 +123,8 @@ void hoa2d_t::prepare( chunk_cfg_t& cf_ )
   idelaypoint = filterperiod*f_sample;
 }
 
-hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau)
-  : amb_order((channels-1)/2),
+hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t order, double srate, TASCAR::fsplit_t::shape_t shape, double tau)
+  : amb_order(order),
     enc_wp(new float _Complex[amb_order+1]),
     enc_wm(new float _Complex[amb_order+1]),
     enc_dwp(new float _Complex[amb_order+1]),
@@ -277,7 +277,7 @@ std::string hoa2d_t::get_channel_postfix(uint32_t channel) const
 
 TASCAR::receivermod_base_t::data_t* hoa2d_t::create_data(double srate,uint32_t n_fragment)
 {
-  return new data_t(n_fragment,n_channels,f_sample, shape, filterperiod );
+  return new data_t(n_fragment,order,f_sample, shape, filterperiod );
 }
 
 REGISTER_RECEIVERMOD(hoa2d_t);

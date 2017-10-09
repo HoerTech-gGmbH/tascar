@@ -59,6 +59,7 @@ namespace TASCAR {
     virtual std::vector<std::string> get_connections() const;
     virtual void postproc(std::vector<wave_t>& output);
     virtual void prepare( chunk_cfg_t& );
+    virtual void release( );
   protected:
     TASCAR::spk_array_t spkpos;
   };

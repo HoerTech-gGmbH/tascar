@@ -168,6 +168,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sou
   srv->add_float_db("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/caliblevel",&(s->caliblevel));
   srv->add_uint("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/ismmin",&(s->ismmin));
   srv->add_uint("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/ismmax",&(s->ismmax));
+  srv->add_uint("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/layers",&(s->layers));
   srv->add_double("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/size",&(s->size));
   std::string oldpref(srv->get_prefix());
   uint32_t k=0;
@@ -195,6 +196,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::
   srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/fade","ff",osc_set_receiver_fade,s);
   srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/ismmin",&(s->ismmin));
   srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/ismmax",&(s->ismmax));
+  srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/layers",&(s->layers));
   srv->add_float_db("/"+scene->name+"/"+s->object_t::get_name()+"/caliblevel",&(s->caliblevel));
 }
 
@@ -206,24 +208,13 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
       add_face_object_methods(srv,po);
     if( TASCAR::Scene::face_group_t* po=dynamic_cast<TASCAR::Scene::face_group_t*>(*it))
       add_face_group_methods(srv,po);
-    //if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
-    //tlabel.set_text("src");
     if( TASCAR::Scene::src_diffuse_t* po=dynamic_cast<TASCAR::Scene::src_diffuse_t*>(*it))
       add_diffuse_methods(srv,po);
     if( TASCAR::Scene::receivermod_object_t* po=dynamic_cast<TASCAR::Scene::receivermod_object_t*>(*it))
       add_receiver_methods(srv,po);
-    //tlabel.set_text("dif");
-    //if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
-    //tlabel.set_text("rcvr");
-    //if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
-    //tlabel.set_text("door");
     add_object_methods(srv,*it);
     add_route_methods(srv,*it);
   }
-  //for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-  //  add_diffuse_methods(*it);
-  //}
-  //std::vector<sound_t*> sounds(scene->linearize_sounds());
   for(std::vector<sound_t*>::iterator it=scene->sounds.begin();it!=scene->sounds.end();++it){
     add_sound_methods(srv,*it);
   }

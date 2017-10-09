@@ -35,6 +35,7 @@ namespace TASCAR {
     void get_attribute(const std::string& name,std::vector<double>& value);
     void get_attribute(const std::string& name,std::vector<float>& value);
     void get_attribute(const std::string& name,std::vector<int32_t>& value);
+    void get_attribute_bits(const std::string& name,uint32_t& value);
     // set attributes:
     void set_attribute_bool(const std::string& name,bool value);
     void set_attribute_db(const std::string& name,double value);
@@ -130,6 +131,7 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASC
 #define SET_ATTRIBUTE_DEG(x) set_attribute_deg(#x,x)
 #define GET_ATTRIBUTE_BOOL(x) get_attribute_bool(#x,x)
 #define SET_ATTRIBUTE_BOOL(x) set_attribute_bool(#x,x)
+#define GET_ATTRIBUTE_BITS(x) get_attribute_bits(#x,x)
 
 #endif
 

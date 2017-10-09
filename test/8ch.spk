@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout name="glab">
+  <speaker az="0" connect="system:playback_1"/>
+  <speaker az="45" connect="system:playback_2"/>
+  <speaker az="90" connect="system:playback_3"/>
+  <speaker az="135" connect="system:playback_4"/>
+  <speaker az="180" connect="system:playback_5"/>
+  <speaker az="-135" connect="system:playback_6"/>
+  <speaker az="-90" connect="system:playback_7"/>
+  <speaker az="-45" connect="system:playback_8"/>
+</layout>

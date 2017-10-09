@@ -12,6 +12,9 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
     libdata(NULL)
 {
   get_attribute("type",receivertype);
+  if( receivertype.empty() )
+    receivertype = "omni";
+  receivertype = env_expand( receivertype );
   std::string libname("tascarreceiver_");
   libname += receivertype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );
@@ -134,6 +137,12 @@ void TASCAR::receivermod_base_speaker_t::prepare( chunk_cfg_t& cf_ )
 {
   receivermod_base_t::prepare( cf_ );
   spkpos.prepare( cf_ );
+}
+
+void TASCAR::receivermod_base_speaker_t::release()
+{
+  receivermod_base_t::release( );
+  spkpos.release( );
 }
 
 /*

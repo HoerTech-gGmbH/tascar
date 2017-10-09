@@ -253,6 +253,7 @@ protected:
   double decay;
   double damping;
   double dry;
+  double wet;
 };
 
 hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
@@ -265,7 +266,8 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
     dt(0.002),
     decay(1.0),
     damping(0.3),
-    dry(0.0)
+    dry(0.0),
+    wet(1.0)
 {
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(amborder);
@@ -277,6 +279,7 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(decay);
   GET_ATTRIBUTE(damping);
   GET_ATTRIBUTE(dry);
+  GET_ATTRIBUTE(wet);
 }
 
 hoafdnrot_vars_t::~hoafdnrot_vars_t()
@@ -326,6 +329,7 @@ hoafdnrot_t::hoafdnrot_t( const TASCAR::module_cfg_t& cfg )
   }
   session->add_method("/"+id+"/par","ffffff",&hoafdnrot_t::osc_setpar,this);
   session->add_double("/"+id+"/dry",&dry);
+  session->add_double("/"+id+"/wet",&wet);
   activate();
 }
 
@@ -376,11 +380,11 @@ int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const
           // ACN!
           fdn->inval.elem(0,0,o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
         fdn->process();
-        sOut[0][t] += creal(fdn->outval.elem(0,0,0));
+        sOut[0][t] += wet*creal(fdn->outval.elem(0,0,0));
         for(uint32_t o=1;o<o1;++o){
           // ACN!
-          sOut[2*o][t] += creal(fdn->outval.elem(0,0,o));
-          sOut[2*o-1][t] += cimag(fdn->outval.elem(0,0,o));
+          sOut[2*o][t] += wet*creal(fdn->outval.elem(0,0,o));
+          sOut[2*o-1][t] += wet*cimag(fdn->outval.elem(0,0,o));
         }
       }
     }

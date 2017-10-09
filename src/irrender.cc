@@ -43,6 +43,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   // open sound files:
   sndfile_handle_t sf_in(ifname);
   chunk_cfg_t cf( sf_in.get_srate(), std::min(fragsize,sf_in.get_frames()), sf_in.get_channels() );
+  chunk_cfg_t cffile( cf );
   uint32_t num_fragments((uint32_t)((sf_in.get_frames()-1)/cf.n_fragment)+1);
   // configure maximum delayline length:
   double maxdist((sf_in.get_frames()+1)/cf.f_sample*(pscene->c));
@@ -55,13 +56,13 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   uint32_t nch_out(pscene->num_output_ports());
   sndfile_handle_t sf_out( ofname, cf.f_sample, nch_out);
   // allocate io audio buffer:
-  float sf_in_buf[cf.n_channels*cf.n_fragment];
+  float sf_in_buf[cffile.n_channels*cffile.n_fragment];
   float sf_out_buf[nch_out*cf.n_fragment];
   // allocate render audio buffer:
   std::vector<float*> a_in;
   for(uint32_t k=0;k<nch_in;++k){
-    a_in.push_back(new float[cf.n_fragment]);
-    memset(a_in.back(),0,sizeof(float)*cf.n_fragment);
+    a_in.push_back(new float[cffile.n_fragment]);
+    memset(a_in.back(),0,sizeof(float)*cffile.n_fragment);
   }
   std::vector<float*> a_out;
   for(uint32_t k=0;k<nch_out;++k){
@@ -80,27 +81,30 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   t1 = clock();
   for(uint32_t k=0;k<num_fragments;++k){
     // load audio chunk from file
-    uint32_t n_in(sf_in.readf_float(sf_in_buf,cf.n_fragment));
-    memset(&(sf_in_buf[n_in*cf.n_channels]),0,(cf.n_fragment-n_in)*cf.n_channels*sizeof(float));
-    for(uint32_t kf=0;kf<cf.n_fragment;++kf)
-      for(uint32_t kc=0;kc<nch_in;++kc)
-        if( kc < cf.n_channels )
-          a_in[kc][kf] = sf_in_buf[kc+cf.n_channels*kf];
-        else
-          a_in[kc][kf] = 0.0f;
-    // process audio:
-    pscene->process(cf.n_fragment,tp,a_in,a_out);
-    // save audio:
-    for(uint32_t kf=0;kf<cf.n_fragment;++kf)
-      for(uint32_t kc=0;kc<nch_out;++kc)
-        sf_out_buf[kc+nch_out*kf] = a_out[kc][kf];
-    sf_out.writef_float(sf_out_buf,cf.n_fragment);
-    // increment time:
-    if( b_dynamic ){
-      tp.session_time_samples += cf.n_fragment;
-      tp.session_time_seconds = ((double)tp.session_time_samples)/cf.f_sample;
-      tp.object_time_samples += cf.n_fragment;
-      tp.object_time_seconds = ((double)tp.object_time_samples)/cf.f_sample;
+    uint32_t n_in(sf_in.readf_float(sf_in_buf,cffile.n_fragment));
+    if( n_in > 0 ){
+      if( n_in < cffile.n_fragment )
+        memset(&(sf_in_buf[n_in*cffile.n_channels]),0,(cffile.n_fragment-n_in)*cffile.n_channels*sizeof(float));
+      for(uint32_t kf=0;kf<cffile.n_fragment;++kf)
+        for(uint32_t kc=0;kc<nch_in;++kc)
+          if( kc < cffile.n_channels )
+            a_in[kc][kf] = sf_in_buf[kc+cffile.n_channels*kf];
+          else
+            a_in[kc][kf] = 0.0f;
+      // process audio:
+      pscene->process(cf.n_fragment,tp,a_in,a_out);
+      // save audio:
+      for(uint32_t kf=0;kf<cf.n_fragment;++kf)
+        for(uint32_t kc=0;kc<nch_out;++kc)
+          sf_out_buf[kc+nch_out*kf] = a_out[kc][kf];
+      sf_out.writef_float(sf_out_buf,cf.n_fragment);
+      // increment time:
+      if( b_dynamic ){
+        tp.session_time_samples += cf.n_fragment;
+        tp.session_time_seconds = ((double)tp.session_time_samples)/cf.f_sample;
+        tp.object_time_samples += cf.n_fragment;
+        tp.object_time_seconds = ((double)tp.object_time_samples)/cf.f_sample;
+      }
     }
   }
   t2 = clock();
