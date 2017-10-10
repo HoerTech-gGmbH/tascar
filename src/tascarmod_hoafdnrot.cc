@@ -18,19 +18,23 @@ public:
   cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 );
   ~cmat3_t();
   inline float _Complex& elem(uint32_t p1,uint32_t p2,uint32_t p3) { 
-    if( (p1 >= s1) || (p2 >= s2) || (p3 >= s3) ){
-      //DEBUG(this);
-      //DEBUG(p1);
-      //DEBUG(s1);
-      //DEBUG(p2);
-      //DEBUG(s2);
-      //DEBUG(p3);
-      //DEBUG(s3);
-      throw TASCAR::ErrMsg("Programming error: Index out of range!");
-    }
     return data[p1*s23+p2*s3+p3]; 
   };
-  inline const float _Complex& elem(uint32_t p1,uint32_t p2,uint32_t p3) const { return data[p1*s23+p2*s3+p3]; };
+  inline const float _Complex& elem(uint32_t p1,uint32_t p2,uint32_t p3) const { 
+    return data[p1*s23+p2*s3+p3]; 
+  };
+  inline float _Complex& elem000() { 
+    return data[0]; 
+  };
+  inline const float _Complex& elem000() const { 
+    return data[0]; 
+  };
+  inline float _Complex& elem00x(uint32_t p3) { 
+    return data[p3]; 
+  };
+  inline const float _Complex& elem00x(uint32_t p3) const { 
+    return data[p3]; 
+  };
   inline void clear() { memset(data,0,sizeof(float _Complex)*s1*s2*s3); };
 protected:
   uint32_t s1;
@@ -108,7 +112,7 @@ class fdn_t {
 public:
   fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay);
   ~fdn_t();
-  void process(); 
+  inline void process(); 
   void setpar(float az, float daz, float t, float dt, float g, float damping );
 private:
   uint32_t fdnorder_;
@@ -172,13 +176,13 @@ void fdn_t::process()
       reflection.filter(tmp,tap,o);
       tmp *= rotation.elem(tap,0,o);
       dlout.elem(tap,0,o) = tmp;
-      outval.elem(0,0,o) += tmp;
+      outval.elem00x(o) += tmp;
     }
   // put rotated+attenuated value to delayline, add input:
   for(uint32_t tap=0;tap<fdnorder_;++tap){
     // first put input into delayline:
     for(uint32_t o=0;o<amborder1;++o)
-      delayline.elem(tap,pos[tap],o) = inval.elem(0,0,o);
+      delayline.elem(tap,pos[tap],o) = inval.elem00x(o);
     // now add feedback signal:
     for(uint32_t otap=0;otap<fdnorder_;++otap)
       for(uint32_t o=0;o<amborder1;++o)
@@ -234,7 +238,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     }
   }else{
     for(uint32_t o=0;o<amborder1;++o)
-      feedbackmat.elem(0,0,o) = 1.0;
+      feedbackmat.elem00x(o) = 1.0;
   }
 }
   
@@ -375,16 +379,16 @@ int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const
         for( uint32_t t=0;t<n;t++)
           sOut[c][t] = dry*sIn[c][t];
       for( uint32_t t=0;t<n;t++){
-        fdn->inval.elem(0,0,0) = sIn[0][t];
+        fdn->inval.elem000() = sIn[0][t];
         for(uint32_t o=1;o<o1;++o)
           // ACN!
-          fdn->inval.elem(0,0,o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
+          fdn->inval.elem00x(o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
         fdn->process();
-        sOut[0][t] += wet*creal(fdn->outval.elem(0,0,0));
+        sOut[0][t] += wet*creal(fdn->outval.elem000());
         for(uint32_t o=1;o<o1;++o){
           // ACN!
-          sOut[2*o][t] += wet*creal(fdn->outval.elem(0,0,o));
-          sOut[2*o-1][t] += wet*cimag(fdn->outval.elem(0,0,o));
+          sOut[2*o][t] += wet*creal(fdn->outval.elem00x(o));
+          sOut[2*o-1][t] += wet*cimag(fdn->outval.elem00x(o));
         }
       }
     }
