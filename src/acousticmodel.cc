@@ -53,12 +53,16 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
     air_absorption(0.5),
     delayline((src->maxdist/c_)*fs,fs,c_,src->sincorder,64),
   airabsorption_state(0.0),
+  layergain(0.0),
+  dlayergain(1.0/(receiver->layerfadelen*fs)),
   ismorder(getorder())
 {
   pos_t prel;
   receiver_->update_refpoint(src_->position,src_->position,prel,distance,gain,false,src_->gainmodel);
   gain = 1.0;
   vstate.resize(obstacles_.size());
+  if(receiver_->layers & src_->layers)
+    layergain = 1.0;
 }
 
 acoustic_model_t::~acoustic_model_t()
@@ -84,8 +88,9 @@ uint32_t acoustic_model_t::process()
       (ismorder <= src_->ismmax) &&
       (receiver_->ismmin <= ismorder) &&
       (ismorder <= receiver_->ismmax) &&
-      (receiver_->layers & src_->layers)
+      ((receiver_->layers & src_->layers) || (layergain > 0))
       ){
+    bool layeractive(receiver_->layers & src_->layers);
     if( visible ){
       pos_t prel;
       double nextdistance(0.0);
@@ -119,7 +124,14 @@ uint32_t acoustic_model_t::process()
         float c1(air_absorption+=dairabsorption);
         float c2(1.0f-c1);
         // apply air absorption:
-        c1 *= gain*delayline.get_dist_push(distance,audio[k]);
+        if(layeractive){
+          if(layergain < 1.0)
+            layergain += dlayergain;
+        }else{
+          if(layergain > 0.0)
+            layergain -= dlayergain;
+        }
+        c1 *= layergain*gain*delayline.get_dist_push(distance,audio[k]);
         airabsorption_state = c2*airabsorption_state+c1;
         make_friendly_number(airabsorption_state);
         audio[k] = airabsorption_state;
@@ -383,6 +395,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     diffusegain(1.0),
     falloff(-1.0),
     delaycomp(0.0),
+    layerfadelen(1.0),
     active(true),
     boundingbox(find_or_add_child("boundingbox")),
     gain_zero(false),
@@ -409,6 +422,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE_BITS(layers);
   GET_ATTRIBUTE(falloff);
   GET_ATTRIBUTE(delaycomp);
+  GET_ATTRIBUTE(layerfadelen);
 }
 
 void receiver_t::write_xml()

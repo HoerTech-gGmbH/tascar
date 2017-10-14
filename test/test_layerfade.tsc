@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session>
+<scene>
+  <source><sound layers="1"><sine/></sound></source>
+  <receiver name="l1" layers="1"/>
+  <receiver name="l2" layers="2" layerfadelen="10"/>
+</scene>
+</session>

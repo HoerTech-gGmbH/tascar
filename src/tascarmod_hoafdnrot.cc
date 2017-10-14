@@ -7,12 +7,6 @@
 #include <limits>
 #include "fft.h"
 
-double drand_( double mu, double rg )
-{
-  double r(rand()*(1.0/RAND_MAX));
-  return 2.0*(r-0.5)*rg+mu;
-}
-
 class cmat3_t {
 public:
   cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 );
@@ -44,6 +38,57 @@ protected:
   float _Complex* data;
 };
 
+class cmat2_t {
+public:
+  cmat2_t( uint32_t d1, uint32_t d2 );
+  ~cmat2_t();
+  inline float _Complex& elem(uint32_t p1,uint32_t p2) { 
+    return data[p1*s2+p2]; 
+  };
+  inline const float _Complex& elem(uint32_t p1,uint32_t p2) const { 
+    return data[p1*s2+p2]; 
+  };
+  inline float _Complex& elem00() { 
+    return data[0]; 
+  };
+  inline const float _Complex& elem00() const { 
+    return data[0]; 
+  };
+  inline float _Complex& elem0x(uint32_t p2) { 
+    return data[p2]; 
+  };
+  inline const float _Complex& elem0x(uint32_t p2) const { 
+    return data[p2]; 
+  };
+  inline void clear() { memset(data,0,sizeof(float _Complex)*s1*s2); };
+protected:
+  uint32_t s1;
+  uint32_t s2;
+  float _Complex* data;
+};
+
+class cmat1_t {
+public:
+  cmat1_t( uint32_t d1 );
+  ~cmat1_t();
+  inline float _Complex& elem(uint32_t p1) { 
+    return data[p1]; 
+  };
+  inline const float _Complex& elem(uint32_t p1) const { 
+    return data[p1]; 
+  };
+  inline float _Complex& elem0() { 
+    return data[0]; 
+  };
+  inline const float _Complex& elem0() const { 
+    return data[0]; 
+  };
+  inline void clear() { memset(data,0,sizeof(float _Complex)*s1); };
+protected:
+  uint32_t s1;
+  float _Complex* data;
+};
+
 cmat3_t::cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 )
   : s1(d1),s2(d2),s3(d3),
     s23(s2*s3),
@@ -57,53 +102,83 @@ cmat3_t::~cmat3_t()
   delete [] data;
 }
 
+cmat2_t::cmat2_t( uint32_t d1, uint32_t d2 )
+  : s1(d1),s2(d2),
+    data(new float _Complex[s1*s2])
+{
+  clear();
+}
+
+cmat2_t::~cmat2_t()
+{
+  delete [] data;
+}
+
+
+cmat1_t::cmat1_t( uint32_t d1 )
+  : s1(d1),
+    data(new float _Complex[s1])
+{
+  clear();
+}
+
+cmat1_t::~cmat1_t()
+{
+  delete [] data;
+}
+
+//y[n] = -g x[n] + x[n-1] + g y[n-1]
 class reflectionfilter_t {
 public:
   reflectionfilter_t(uint32_t d1, uint32_t d2);
   inline void filter( float _Complex& x, uint32_t p1, uint32_t p2) {
-    float _Complex tmp(B1*x);
-    tmp += B2*sx.elem(p1,0,p2);
-    sx.elem(p1,0,p2) = x;
-    x = tmp-A2*sy.elem(p1,0,p2);
+    //float _Complex tmp(B1*x);
+    //tmp += B2*sx.elem(p1,p2);
+    //sx.elem(p1,p2) = x;
+    //x = tmp-A2*sy.elem(p1,p2);
+    x = B1*x-A2*sy.elem(p1,p2);
     //x *= A1;
-    sy.elem(p1,0,p2) = x;
+    sy.elem(p1,p2) = x;
+    // all pass section:
+    float _Complex tmp(eta[p1]*x + sapx.elem( p1, p2 ));
+    sapx.elem( p1, p2 ) = x;
+    x = tmp - eta[p1]*sapy.elem( p1, p2 );
+    sapy.elem( p1, p2 ) = x;
   };
   // to be replaced by 1st order IIR filter!
-  void set( float g );
+  //void set( float g );
   void set_lp( float g, float c );
 protected:
   float B1;
-  float B2;
-  //float A1;
+  //float B2;
   float A2;
-  cmat3_t sx;
-  cmat3_t sy;
+  std::vector<float> eta;
+  //cmat2_t sx;
+  cmat2_t sy;
+  cmat2_t sapx;
+  cmat2_t sapy;
 };
 
 reflectionfilter_t::reflectionfilter_t(uint32_t d1, uint32_t d2)
-  : B1(0),B2(0),A2(0),
-    sx(d1,1,d2),
-    sy(d1,1,d2)
+  : B1(0),A2(0),
+    //sx(d1,d2),
+    sy(d1,d2),
+    sapx(d1,d2),
+    sapy(d1,d2)
 {
-}
-
-void reflectionfilter_t::set( float g )
-{
-  sx.clear();
-  sy.clear();
-  B1 = g;
-  B2 = 0.0f;
-  //A1 = 1.0f;
-  A2 = 0.0f;
+  eta.resize(d1);
+  for(uint32_t k=0;k<d1;++k)
+    eta[k] = 0.87*(double)k/(d1-1);
 }
 
 void reflectionfilter_t::set_lp( float g, float c )
 {
-  sx.clear();
   sy.clear();
+  sapx.clear();
+  sapy.clear();
   float c2(1.0f-c);
   B1 = g * c2;
-  B2 = 0.0f;
+  //B2 = 0.0f;
   //A1 = 1.0f;
   A2 = -c;
 }
@@ -126,18 +201,18 @@ private:
   // reflection filter:
   reflectionfilter_t reflection;
   // rotation:
-  cmat3_t rotation;
+  cmat2_t rotation;
   // delayline output for reflection filters:
-  cmat3_t dlout;
+  cmat2_t dlout;
   // delays:
   uint32_t* delay;
   // delayline pointer:
   uint32_t* pos;
 public:
   // input HOA sample:
-  cmat3_t inval;
+  cmat1_t inval;
   // output HOA sample:
-  cmat3_t outval;
+  cmat1_t outval;
 };
 
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay)
@@ -148,12 +223,12 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay)
     delayline(fdnorder_,maxdelay_,amborder1),
     feedbackmat(fdnorder_,fdnorder_,amborder1),
     reflection(fdnorder,amborder1),
-    rotation(fdnorder,1,amborder1),
-    dlout(fdnorder_,1,amborder1),
+    rotation(fdnorder,amborder1),
+    dlout(fdnorder_,amborder1),
     delay(new uint32_t[fdnorder_]),
     pos(new uint32_t[fdnorder_]),
-    inval(1,1,amborder1),
-    outval(1,1,amborder1)
+    inval(amborder1),
+    outval(amborder1)
 {
   //DEBUG(fdnorder);
   memset(delay,0,sizeof(uint32_t)*fdnorder_);
@@ -174,19 +249,19 @@ void fdn_t::process()
     for(uint32_t o=0;o<amborder1;++o){
       float _Complex tmp(delayline.elem(tap,pos[tap],o));
       reflection.filter(tmp,tap,o);
-      tmp *= rotation.elem(tap,0,o);
-      dlout.elem(tap,0,o) = tmp;
-      outval.elem00x(o) += tmp;
+      tmp *= rotation.elem(tap,o);
+      dlout.elem(tap,o) = tmp;
+      outval.elem(o) += tmp;
     }
   // put rotated+attenuated value to delayline, add input:
   for(uint32_t tap=0;tap<fdnorder_;++tap){
     // first put input into delayline:
     for(uint32_t o=0;o<amborder1;++o)
-      delayline.elem(tap,pos[tap],o) = inval.elem00x(o);
+      delayline.elem(tap,pos[tap],o) = inval.elem(o);
     // now add feedback signal:
     for(uint32_t otap=0;otap<fdnorder_;++otap)
       for(uint32_t o=0;o<amborder1;++o)
-        delayline.elem(tap,pos[tap],o) += dlout.elem(otap,0,o)*feedbackmat.elem(tap,otap,o);
+        delayline.elem(tap,pos[tap],o) += dlout.elem(otap,o)*feedbackmat.elem(tap,otap,o);
     // iterate delayline:
     if( !pos[tap] )
       pos[tap] = delay[tap];
@@ -215,9 +290,9 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     if( fdnorder_ > 1 )
       laz = az-daz+2.0*daz*tap*1.0/(fdnorder_);
     float _Complex caz(cexpf(I*laz));
-    rotation.elem(tap,0,0) = 1.0;
+    rotation.elem(tap,0) = 1.0;
     for(uint32_t o=1;o<amborder1;++o){
-      rotation.elem(tap,0,o) = rotation.elem(tap,0,o-1)*caz;
+      rotation.elem(tap,o) = rotation.elem(tap,o-1)*caz;
     }  
   }
   // set feedback matrix:
@@ -379,16 +454,16 @@ int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const
         for( uint32_t t=0;t<n;t++)
           sOut[c][t] = dry*sIn[c][t];
       for( uint32_t t=0;t<n;t++){
-        fdn->inval.elem000() = sIn[0][t];
+        fdn->inval.elem0() = sIn[0][t];
         for(uint32_t o=1;o<o1;++o)
           // ACN!
-          fdn->inval.elem00x(o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
+          fdn->inval.elem(o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
         fdn->process();
-        sOut[0][t] += wet*creal(fdn->outval.elem000());
+        sOut[0][t] += wet*creal(fdn->outval.elem0());
         for(uint32_t o=1;o<o1;++o){
           // ACN!
-          sOut[2*o][t] += wet*creal(fdn->outval.elem00x(o));
-          sOut[2*o-1][t] += wet*cimag(fdn->outval.elem00x(o));
+          sOut[2*o][t] += wet*creal(fdn->outval.elem(o));
+          sOut[2*o-1][t] += wet*cimag(fdn->outval.elem(o));
         }
       }
     }

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session>
+  <scene>
+    <source> 
+      <sound x="1"/>
+    </source>
+    <receiver type="hoa2d_fuma" order="6" caliblevel="110" delaycomp="0.1"/>
+  </scene>
+  <modules>
+    <hoafdnrot id="fdn" amborder="6" fdnorder="7" w="0" dw="0" t="0.06" dt="0.023" decay="1" damping="0.3" dry="1" wet="1"/>
+    <!-- Ambisonics decoder and FDNs: -->
+    <matrix id="dec" decoder="maxre2d">
+      <input connect="fdn:out.0_0" label=".0_0"/>
+      <input connect="fdn:out.1_-1" label=".1_-1"/>
+      <input connect="fdn:out.1_1" label=".1_1"/>
+      <input connect="fdn:out.2_-2" label=".2_-2"/>
+      <input connect="fdn:out.2_2" label=".2_2"/>
+      <input connect="fdn:out.3_-3" label=".3_-3"/>
+      <input connect="fdn:out.3_3" label=".3_3"/>
+      <input connect="fdn:out.4_-4" label=".4_-4"/>
+      <input connect="fdn:out.4_4" label=".4_4"/>
+      <input connect="fdn:out.5_-5" label=".5_-5"/>
+      <input connect="fdn:out.5_5" label=".5_5"/>
+      <input connect="fdn:out.6_-6" label=".6_-6"/>
+      <input connect="fdn:out.6_6" label=".6_6"/>
+      <speaker az="12" connect="system:playback_1"/>
+      <speaker az="36" connect="system:playback_2"/>
+      <speaker az="60" connect="system:playback_3"/>
+      <speaker az="84" connect="system:playback_4"/>
+      <speaker az="108" connect="system:playback_5"/>
+      <speaker az="132" connect="system:playback_6"/>
+      <speaker az="156" connect="system:playback_7"/>
+      <speaker az="180" connect="system:playback_8"/>
+      <speaker az="204" connect="system:playback_9"/>
+      <speaker az="228" connect="system:playback_10"/>
+      <speaker az="252" connect="system:playback_11"/>
+      <speaker az="276" connect="system:playback_12"/>
+      <speaker az="300" connect="system:playback_13"/>
+      <speaker az="324" connect="system:playback_14"/>
+      <speaker az="348" connect="system:playback_15"/>
+    </matrix>
+  </modules>
+  <connect src="render.scene:out.0_0" dest="fdn:in.0_0"/>
+  <connect src="render.scene:out.1_-1" dest="fdn:in.1_-1"/>
+  <connect src="render.scene:out.1_1" dest="fdn:in.1_1"/>
+  <connect src="render.scene:out.2_-2" dest="fdn:in.2_-2"/>
+  <connect src="render.scene:out.2_2" dest="fdn:in.2_2"/>
+  <connect src="render.scene:out.3_-3" dest="fdn:in.3_-3"/>
+  <connect src="render.scene:out.3_3" dest="fdn:in.3_3"/>
+  <connect src="render.scene:out.4_-4" dest="fdn:in.4_-4"/>
+  <connect src="render.scene:out.4_4" dest="fdn:in.4_4"/>
+  <connect src="render.scene:out.5_-5" dest="fdn:in.5_-5"/>
+  <connect src="render.scene:out.5_5" dest="fdn:in.5_5"/>
+  <connect src="render.scene:out.6_-6" dest="fdn:in.6_-6"/>
+  <connect src="render.scene:out.6_6" dest="fdn:in.6_6"/>
+</session>

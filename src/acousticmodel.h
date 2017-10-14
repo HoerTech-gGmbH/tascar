@@ -130,6 +130,7 @@ namespace TASCAR {
       double diffusegain;
       double falloff;
       double delaycomp;
+      double layerfadelen;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       std::vector<wave_t*> outchannelsp;
@@ -232,6 +233,8 @@ namespace TASCAR {
       double air_absorption;
       varidelay_t delayline;
       float airabsorption_state;
+      double layergain;
+      double dlayergain;
     public:
       uint32_t ismorder;
     };
