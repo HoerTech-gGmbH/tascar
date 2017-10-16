@@ -3,13 +3,56 @@
 #include "serviceclass.h"
 #include <unistd.h>
 
+class lobj_t {
+public:
+  lobj_t();
+  void resize( uint32_t channels );
+  void update( double t_frame );
+  float w;
+  std::vector<float> dmx;
+  std::vector<float> fade;
+private:
+  uint32_t n;
+  double t_fade;
+  std::vector<float> ddmx;
+};
+
+lobj_t::lobj_t()
+  : w(1.0), n(1), t_fade(0)
+{
+  resize(1);
+}
+
+void lobj_t::resize( uint32_t channels )
+{
+  n = channels;
+  dmx.resize(n);
+  fade.resize(n+1);
+  ddmx.resize(n);
+}
+
+void lobj_t::update( double t_frame )
+{
+  if( fade[n] > 0 ){
+    t_fade = fade[n];
+    fade[n] = 0;
+    for(uint32_t c=0;c<n;++c)
+      ddmx[c] = (fade[c]-dmx[c])*t_frame/t_fade;
+  }
+  if( t_fade > 0 ){
+    for(uint32_t c=0;c<n;++c)
+      dmx[c] += ddmx[c];
+    t_fade -= t_frame;
+  }
+}
+
 class lightscene_t : public TASCAR::xml_element_t {
 public:
   enum method_t {
     nearest, raisedcosine
   };
   lightscene_t( const TASCAR::module_cfg_t& cfg );
-  void update(uint32_t frame,bool running);
+  void update( uint32_t frame, bool running, double t_fragment );
   void add_variables( TASCAR::osc_server_t* srv );
   const std::string& get_name() const {return name;};
 private:
@@ -34,9 +77,8 @@ public:
 private:
   std::vector<float> tmpdmxdata;
   std::vector<float> basedmx;
-  std::vector<float> objval;
-  std::vector<float> objw;
-  std::vector<std::vector<float> > fixturevals;
+  std::vector<lobj_t> objval;
+  std::vector<lobj_t> fixtureval;
 };
 
 lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
@@ -54,8 +96,10 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(channels);
   GET_ATTRIBUTE(master);
   GET_ATTRIBUTE(method);
-  GET_ATTRIBUTE(objval);
-  GET_ATTRIBUTE(objw);
+  std::vector<float> tmpobjval;
+  get_attribute("objval", tmpobjval );
+  std::vector<float> tmpobjw;
+  get_attribute("objw", tmpobjw );
   if( method.empty() || (method == "nearest") )
     method_ = nearest;
   else if( method == "raisedcosine" )
@@ -74,9 +118,9 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   dmxdata.resize(fixtures.size()*channels);
   basedmx.resize(fixtures.size()*channels);
   tmpdmxdata.resize(fixtures.size()*channels);
-  fixturevals.resize(fixtures.size());
+  fixtureval.resize(fixtures.size());
   for(uint32_t k=0;k<fixtures.size();++k){
-    fixturevals[k].resize(channels);
+    fixtureval[k].resize(channels);
     uint32_t startaddr(1);
     fixtures[k].get_attribute("addr",startaddr);
     std::vector<int32_t> lampdmx;
@@ -87,16 +131,29 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
       basedmx[channels*k+c] = lampdmx[c];
     }
   }
-  objval.resize(channels*objects_.size());
-  objw.resize(objects_.size());
+  objval.resize(objects_.size());
   //
-  for(uint32_t k=0;k<objw.size();++k)
-    if( objw[k] == 0 )
-      objw[k] = 1.0f;
+  uint32_t i(0);
+  for(uint32_t k=0;k<objects_.size();++k){
+    objval[k].resize( channels );
+    if( k<tmpobjw.size() )
+      objval[k].w = tmpobjw[k];
+    if( objval[k].w == 0 )
+      objval[k].w = 1.0f;
+    for( uint32_t ch=0;ch<channels;++ch){
+      if( i<tmpobjval.size() ){
+        objval[k].dmx[ch] = tmpobjval[i++];
+      }
+    }
+  }
 }
 
-void lightscene_t::update(uint32_t frame,bool running)
+void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
 {
+  for( std::vector<lobj_t>::iterator it=objval.begin();it!=objval.end();++it)
+    it->update( t_fragment );
+  for( std::vector<lobj_t>::iterator it=fixtureval.begin();it!=fixtureval.end();++it)
+    it->update( t_fragment );
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     tmpdmxdata[k] = 0;
   switch( method_ ){
@@ -122,7 +179,7 @@ void lightscene_t::update(uint32_t frame,bool running)
           }
         }
         for(uint32_t c=0;c<channels;++c)
-          tmpdmxdata[channels*kmax+c] += objval[channels*kobj+c];
+          tmpdmxdata[channels*kmax+c] += objval[kobj].dmx[c];
         }
     }
     break;
@@ -141,9 +198,9 @@ void lightscene_t::update(uint32_t frame,bool running)
           // cos(az) = (pobj * pfixture)
           float caz(dot_prod(pobj,fixtures[kfix].unitvector));
           // 
-          float w(powf(0.5f*(caz+1.0f),2.0f/objw[kobj]));
+          float w(powf(0.5f*(caz+1.0f),2.0f/objval[kobj].w));
           for(uint32_t c=0;c<channels;++c)
-            tmpdmxdata[channels*kfix+c] += w*objval[channels*kobj+c];
+            tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
         }
       }
     }
@@ -151,7 +208,7 @@ void lightscene_t::update(uint32_t frame,bool running)
   }
   for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
     for(uint32_t c=0;c<channels;++c)
-      tmpdmxdata[channels*kfix+c] += fixturevals[kfix][c];
+      tmpdmxdata[channels*kfix+c] += fixtureval[kfix].dmx[c];
   }
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
@@ -160,16 +217,19 @@ void lightscene_t::update(uint32_t frame,bool running)
 void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_float( "/master", &master );
-  if( objval.size() )
-    srv->add_vector_float( "/dmx", &objval );
-  if( objw.size() )
-    srv->add_vector_float( "/w", &objw );
   if( basedmx.size() )
     srv->add_vector_float( "/basedmx", &basedmx );
-  for(uint32_t k=0;k<fixturevals.size();++k){
+  for( uint32_t ko=0;ko<objects_.size();++ko){
+    srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/dmx", &(objval[ko].dmx) );
+    srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/fade", &(objval[ko].fade) );
+    srv->add_float( "/"+objects_[ko].obj->get_name()+"/w", &(objval[ko].w) );
+  }
+  for(uint32_t k=0;k<fixtureval.size();++k){
     char ctmp[256];
-    sprintf(ctmp,"/fixture%d",k);
-    srv->add_vector_float( ctmp, &(fixturevals[k]) );
+    sprintf(ctmp,"/fixture%d/dmx",k);
+    srv->add_vector_float( ctmp, &(fixtureval[k].dmx) );
+    sprintf(ctmp,"/fixture%d/fade",k);
+    srv->add_vector_float( ctmp, &(fixtureval[k].fade) );
   }
 }
 
@@ -234,7 +294,7 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
 void lightctl_t::update(uint32_t frame,bool running)
 {
   for( std::vector<lightscene_t*>::iterator it=lightscenes.begin();it!=lightscenes.end();++it)
-    (*it)->update( frame, running );
+    (*it)->update( frame, running, t_fragment );
 }
 
 void lightctl_t::add_variables( TASCAR::osc_server_t* srv )
