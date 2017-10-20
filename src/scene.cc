@@ -520,6 +520,25 @@ const std::vector<float>& route_t::readmeter()
   return meterval;
 }
 
+float route_t::read_meter_max()
+{
+  float rv(-HUGE_VAL);
+  for(uint32_t k=0;k<rmsmeter.size();k++){
+    float l(rmsmeter[k]->spldb());
+    if( !(l<rv) )
+      rv = l;
+  }
+  return rv;
+}
+
+float sound_t::read_meter()
+{
+  if( meter.size() > 0 )
+    if( meter[0] )
+      return meter[0]->spldb();
+  return -HUGE_VAL;
+}
+
 route_t::route_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),mute(false),solo(false),
     meter_tc(2),
@@ -1023,6 +1042,14 @@ std::string sound_t::get_parent_name() const
   if( parent )
     return parent->get_name();
   return "";
+}
+
+rgb_color_t sound_t::get_color() const
+{
+  if( parent )
+    return parent->color;
+  else
+    return rgb_color_t();
 }
 
 std::string sound_t::get_port_name() const

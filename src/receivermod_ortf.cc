@@ -27,6 +27,7 @@ private:
   double angle;
   double f6db;
   double fmin;
+  double scale;
   uint32_t sincorder;
   double c;
   TASCAR::pos_t dir_l;
@@ -51,6 +52,7 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
     angle(110*DEG2RAD),
     f6db(1000),
     fmin(60),
+    scale(1.0),
     sincorder(0),
     c(340),
     dir_l(1,0,0),
@@ -63,6 +65,7 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE_DEG(angle);
   GET_ATTRIBUTE(f6db);
   GET_ATTRIBUTE(fmin);
+  GET_ATTRIBUTE(scale);
   GET_ATTRIBUTE(sincorder);
   GET_ATTRIBUTE(c);
   dir_l.rot_z(0.5*angle);
@@ -74,8 +77,8 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
   data_t* d((data_t*)sd);
   TASCAR::pos_t prel_norm(prel.normal());
   // calculate panning parameters (as incremental values):
-  double wl(pow(0.5-0.5*dot_prod(prel_norm,dir_l),wpow));
-  double wr(pow(0.5-0.5*dot_prod(prel_norm,dir_r),wpow));
+  double wl(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_l)),wpow));
+  double wr(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_r)),wpow));
   if( wl > wmin )
     wl = wmin;
   if( wr > wmin )

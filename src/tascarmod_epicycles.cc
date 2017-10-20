@@ -15,8 +15,6 @@ namespace HoS {
     srvvars_t(xmlpp::Element*);
     void write_xml();
     std::string targetaddr;
-    //std::string srv_addr;
-    //std::string srv_port;
     std::string path;
   };
 
@@ -85,21 +83,15 @@ namespace HoS {
     float _az;
     float _rho;
     float lastphi;
+    float phi;
+    float phi_epi;
+    pthread_mutex_t mtx;
   private:
   };
 
 };
 
 namespace OSC {
-
-  //int _feedbackaddr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-  //{
-  //  if( (argc == 1) && (types[0] == 's') ){
-  //    ((HoS::parameter_t*)user_data)->set_feedback_osc_addr(&(argv[0]->s));
-  //    return 0;
-  //  }
-  //  return 1;
-  //}
 
   int _sendphi(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
@@ -225,14 +217,18 @@ void HoS::parameter_t::az(float az_)
 
 void HoS::parameter_t::locate0(float time)
 {
-  time *= f_update;
-  t_locate = 0;
-  if( time > 0 )
-    locate_gain = 1.0f/time;
-  else{
-    locate_gain = 0;
+  if( pthread_mutex_lock( &mtx ) == 0 ){
+    time *= f_update;
+    t_locate = 0;
+    if( time > 0 )
+      locate_gain = 1.0f/time;
+    else{
+      locate_gain = 0;
+    }
+    t_locate = 1+time;
+    par_previous.assign_static( par_current );
+    pthread_mutex_unlock( &mtx );
   }
-  t_locate = 1+time;
 }
 
 void HoS::parameter_t::apply(float time)
@@ -247,11 +243,11 @@ void HoS::parameter_t::apply(float time)
   t_apply = 1+time;
   b_stopat = false;
   b_applyat = false;
+  //par_previous.assign_dynamic( par_current );
 }
 
 HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
   : srvvars_t(e),
-    //TASCAR::osc_server_t(srv_addr,srv_port),
     stopat(0),
     b_stopat(false),
     applyat(0),
@@ -262,11 +258,12 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
     f_update(1),
     t_locate(0),
     t_apply(0),
-    lastphi(0)
+    lastphi(0),
+    phi(0),
+    phi_epi(0)
 {
+  pthread_mutex_init( &mtx, NULL );
   lo_address_set_ttl( lo_addr, 1 );
-  //set_prefix(path+std::string("/"));
-  //add_bool_true("quit",&b_quit);
 #define REGISTER_FLOAT_VAR(x) o->add_float(path+"/"+#x,&(par_osc.x))
 #define REGISTER_FLOAT_VAR_DEGREE(x) o->add_float_degree(path+"/"+#x,&(par_osc.x))
 #define REGISTER_CALLBACK(x,fmt) o->add_method(path+"/"+#x,fmt,OSC::_ ## x,this)
@@ -279,7 +276,6 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
   REGISTER_FLOAT_VAR(f_epi);
   REGISTER_FLOAT_VAR(r_epi);
   REGISTER_FLOAT_VAR_DEGREE(phi0_epi);
-  //REGISTER_CALLBACK(feedbackaddr,"s");
   REGISTER_CALLBACK(sendphi,"s");
   REGISTER_CALLBACK(locate,"f");
   REGISTER_CALLBACK(apply,"f");
@@ -288,7 +284,6 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
   REGISTER_CALLBACK(az,"f");
 #undef REGISTER_FLOAT_VAR
 #undef REGISTER_CALLBACK
-  //activate();
 }
 
 HoS::parameter_t::~parameter_t()
@@ -299,7 +294,6 @@ HoS::srvvars_t::srvvars_t(xmlpp::Element* e)
   : xml_element_t(e)
 {
   GET_ATTRIBUTE(targetaddr);
-  //GET_ATTRIBUTE(srv_port);
   GET_ATTRIBUTE(path);
 }
 
@@ -317,16 +311,12 @@ public:
   void update(uint32_t frame, bool running);
   void write_xml();
 private:
-  float phi;
-  float phi_epi;
   bool use_transport;
 };
 
 epicycles_t::epicycles_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t( cfg ),
     HoS::parameter_t( cfg.xmlsrc, cfg.session ),
-    phi(0),
-    phi_epi(0),
     use_transport(true)
 {
   actor_module_t::GET_ATTRIBUTE_BOOL(use_transport);
@@ -366,25 +356,30 @@ void epicycles_t::prepare( chunk_cfg_t& cf_ )
 void epicycles_t::update(uint32_t frame,bool running)
 {
   if( running || (!use_transport) ){
-    // optionally apply dynamic parameters:
-    if( t_apply ){
-      t_apply--;
-      float g = t_apply*apply_gain;
-      par_current.mix_dynamic( g, par_previous, par_osc);
-    }else{
-      par_previous.assign_dynamic( par_current );
-    }
-    // optionally reset static parameters:
-    if( t_locate ){
-      t_locate--;
-      float g = t_locate*locate_gain;
-      par_current.mix_static( g, par_previous, par_osc );
-      phi = par_current.phi0;
-      phi_epi = par_current.phi0_epi;
-    }else{
-      par_previous.assign_static( par_current );
-      par_current.phi0 = phi;
-      par_current.phi0_epi = phi_epi;
+    if( pthread_mutex_trylock( &mtx ) == 0 ){
+      // optionally apply dynamic parameters:
+      if( t_apply ){
+        t_apply--;
+        float g = t_apply*apply_gain;
+        par_current.mix_dynamic( g, par_previous, par_osc);
+      }else{
+        par_previous.assign_dynamic( par_current );
+      }
+      // optionally reset static parameters:
+      if( t_locate ){
+        t_locate--;
+        float g = t_locate*locate_gain;
+        par_current.mix_static( g, par_previous, par_osc );
+        phi = par_current.phi0;
+        phi_epi = par_current.phi0_epi;
+      }else{
+        //par_previous.assign_static( par_current );
+        par_previous.phi0 = phi;
+        par_previous.phi0_epi = phi_epi;
+        par_current.phi0 = phi;
+        par_current.phi0_epi = phi_epi;
+      }
+      pthread_mutex_unlock( &mtx );
     }
     // ellipse parameters:
     par_current.e = std::min(par_current.e,0.9999f);

@@ -53,6 +53,7 @@ namespace TASCAR {
       uint32_t metercnt() const { return rmsmeter.size(); };
       void reset_meters();
       const std::vector<float>& readmeter();
+      float read_meter_max();
       float get_meterval(uint32_t k) const { return meterval[k]; };
     private:
       std::string name;
@@ -199,6 +200,7 @@ namespace TASCAR {
       sound_t(xmlpp::Element* e,src_object_t* parent_);
       virtual ~sound_t();
       void write_xml();
+      rgb_color_t get_color() const;
       std::string get_port_name() const;
       std::string get_parent_name() const;
       std::string get_name() const { return name; };
@@ -210,6 +212,7 @@ namespace TASCAR {
       void prepare( chunk_cfg_t& );
       void release();
       void add_meter(TASCAR::levelmeter_t*);
+      float read_meter();
     private:
       std::string name;
       src_object_t* parent;

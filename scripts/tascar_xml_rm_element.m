@@ -1,17 +1,16 @@
-function doc = tascar_xml_rm_element(  doc, pNode, cName, varargin )
+function doc = tascar_xml_rm_element(  doc, pNode, etype, varargin )
 % tascar_xml_edit_elements - edit XML elements
 %
 % Usage:
-% doc = tascar_xml_edit_elements( doc, etype, attr, value, [cattr1, cvalue1, ...] )
+% doc = tascar_xml_edit_elements( doc, etype, [cattr1, cvalue1, ...] )
 % 
 % doc - document (java object)
-% pNode - parent node where to add the new element
+% pNode - parent node of the element to be removed
 % cName - name of the new element
 % cattr1 - constraint attribute name
 % cvalue1 - constraint attribute value
 %
 
-  etype=cName;
   root = javaMethod('getFirstChild',doc);
   elem_list = javaMethod('getElementsByTagName',doc,etype);
   N = javaMethod('getLength',elem_list);

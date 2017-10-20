@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<session>
+  <scene name="xy">
+    <source>
+      <sound>
+	<sine a="0"/>
+      </sound>
+    </source>
+    <receiver color="#ffff00"/>
+  </scene>
+  <scene>
+    <source>
+      <sound>
+	<sine/>
+      </sound>
+    </source>
+    <source name="Other" color="#0000ff">
+      <sound/>
+    </source>
+    <receiver color="#ff0000"/>
+  </scene>
+  <modules>
+    <touchosc/>
+  </modules>
+</session>
