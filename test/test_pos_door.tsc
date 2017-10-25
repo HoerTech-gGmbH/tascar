@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <session>
   <scene guiscale="6">
-    <src_object>
+    <source>
       <sound type="omni"/>
       <sound type="door" distance="3"/>
       <position>0 -1 0 0</position>
-    </src_object>
+    </source>
     <receiver type="debugpos" sources="2">
       <position>0 0 -2 0 1 0 2 0</position>
     </receiver>

@@ -245,9 +245,6 @@ public:
   };
   touchosc_t( const TASCAR::module_cfg_t& cfg );
   ~touchosc_t();
-  void write_xml();
-  //virtual void prepare( chunk_cfg_t& );
-  //void update(uint32_t frame, bool running);
   static int osc_connect(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_setfader(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_sceneinc(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -257,10 +254,7 @@ public:
   void setscene(const std::string& host, int32_t dscene );
   void service();
 private:
-  std::string url;
-  std::string pattern;
-  uint32_t ttl;
-  lo_address target;
+  uint32_t port;
   std::vector<TASCAR::named_object_t> obj;
   std::vector<lo_message> vmsg;
   std::vector<lo_arg**> vargv;
@@ -290,23 +284,29 @@ int touchosc_t::osc_sceneinc(const char *path, const char *types, lo_arg **argv,
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t* h((touchosc_t*)user_data);
-  h->setscene( lo_address_get_hostname(src), 1 );
+  if( argv[0]->f > 0 )
+    h->setscene( lo_address_get_hostname(src), 1 );
+  return 0;
 }
 
 int touchosc_t::osc_scenedec(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t* h((touchosc_t*)user_data);
-  h->setscene( lo_address_get_hostname(src), -1 );
+  if( argv[0]->f > 0 )
+    h->setscene( lo_address_get_hostname(src), -1 );
+  return 0;
 }
 
 void touchosc_t::setscene(const std::string& host, int32_t dscene )
 {
+  if( dscene == 0 )
+    return;
   if( pthread_mutex_lock( &mtx ) == 0 ){
     std::map<std::string,connection_t*>::iterator it;
     if( (it=connections.find( host )) != connections.end() ){
       if( it->second ){
-        if( ((int32_t)(it->second->scene)+dscene >= 0) && ((int32_t)(it->second->scene)+dscene < session->scenes.size()) ){
+        if( ((int32_t)(it->second->scene)+dscene >= 0) && ((int32_t)(it->second->scene)+dscene < (int32_t)(session->scenes.size())) ){
           it->second->scene+=dscene;
           it->second->uploadsession(session);
         }
@@ -330,13 +330,17 @@ void touchosc_t::setfader(const std::string& host, uint32_t channel, float val )
 
 void touchosc_t::connect( const std::string& host, uint32_t channels )
 {
+  if( channels == 0 )
+    return;
   if( pthread_mutex_lock( &mtx ) == 0 ){
+    std::cout << "Adding touchosc host \""+host+"\" with " << channels << " channels.\n";
     std::map<std::string,connection_t*>::iterator it;
     if( (it=connections.find( host )) != connections.end() ){
-      delete it->second;
+      if( it->second )
+        delete it->second;
       it->second = NULL;
     }
-    connection_t* con(new connection_t(host,9000,channels));
+    connection_t* con(new connection_t(host,port,channels));
     connections[host] = con;
     con->uploadsession(session);
     pthread_mutex_unlock( &mtx );
@@ -345,23 +349,10 @@ void touchosc_t::connect( const std::string& host, uint32_t channels )
 
 touchosc_t::touchosc_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
-    ttl(1)
+    port(9000)
 {
+  GET_ATTRIBUTE(port);
   pthread_mutex_init( &mtx, NULL );
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE(ttl);
-  if( url.empty() )
-    url = "osc.udp://localhost:9999/";
-  if( pattern.empty() )
-    pattern = "/*/*";
-  target = lo_address_new_from_url(url.c_str());
-  if( !target )
-    throw TASCAR::ErrMsg("Unable to create target adress \""+url+"\".");
-  lo_address_set_ttl(target,ttl);
-  obj = session->find_objects(pattern);
-  if( !obj.size() )
-    throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
   session->add_method("/touchosc/connect","i",&touchosc_t::osc_connect,this);
   session->add_method("/touchosc/incscene","f",&touchosc_t::osc_sceneinc,this);
   session->add_method("/touchosc/decscene","f",&touchosc_t::osc_scenedec,this);
@@ -390,25 +381,6 @@ void touchosc_t::service()
   }
 }
 
-//void touchosc_t::prepare( chunk_cfg_t& cf_ )
-//{
-//  module_base_t::prepare( cf_ );
-//  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
-//    vmsg.push_back(lo_message_new());
-//    for(uint32_t k=0;k<it->obj->metercnt();++k)
-//      lo_message_add_float(vmsg.back(),0);
-//    vargv.push_back(lo_message_get_argv(vmsg.back()));
-//    vpath.push_back(std::string("/level/")+it->obj->get_name());
-//  }
-//}
-
-void touchosc_t::write_xml()
-{
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(pattern);
-  SET_ATTRIBUTE(ttl);
-}
-
 touchosc_t::~touchosc_t()
 {
   stop_service();
@@ -418,22 +390,8 @@ touchosc_t::~touchosc_t()
       delete it->second;
   for(uint32_t k=0;k<vmsg.size();++k)
     lo_message_free(vmsg[k]);
-  lo_address_free(target);
   pthread_mutex_destroy( &mtx );
 }
-
-//void touchosc_t::update(uint32_t tp_frame, bool tp_rolling)
-//{
-//  uint32_t k=0;
-//  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
-//    const std::vector<float>& leveldata(it->obj->readmeter());
-//    uint32_t n(it->obj->metercnt());
-//    for(uint32_t km=0;km<n;++km)
-//      vargv[k][km]->f = it->obj->get_meterval(km);
-//    lo_send_message( target, vpath[k].c_str(), vmsg[k] );
-//    ++k;
-//  }
-//}
 
 REGISTER_MODULE(touchosc_t);
 

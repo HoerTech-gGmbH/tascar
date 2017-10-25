@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <session duration="1">
   <scene guiscale="20">
-    <src_object>
+    <source>
       <sound/>
-    </src_object>
+    </source>
     <receiver type="omni"/>
   </scene>
   <modules>

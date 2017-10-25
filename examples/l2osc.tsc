@@ -2,12 +2,12 @@
 <session name="example" duration="42">
   <description>one source</description>
   <scene name="scene1" guiscale="37">
-    <src_object name="point" color="#f00000" start="0">
+    <source name="point" color="#f00000" start="0">
       <position>0 1 -20 0
       20 1 20 0</position>
       <sound name="0" connect="@.0" gain="0"/>
       <sndfile name="tc1.wav" loop="0"/>
-    </src_object>
+    </source>
     <receiver name="out" type="amb3h0v" color="#0000f0">
       <position>0 -8 13 0
       22 2 0 0</position>

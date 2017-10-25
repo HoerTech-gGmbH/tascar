@@ -2,7 +2,7 @@
 <session name="tascar" duration="88" loop="false" srv_port="9996">
   <!-- main scene setup -->
   <scene name="cafeteria" mirrororder="2" guiscale="20" guicenter="12.3 -16.241478 1.1">
-    <src_object name="joanna" mute="false" solo="false" color="#0068ff" start="0" end="0">
+    <source name="joanna" mute="false" solo="false" color="#0068ff" start="0" end="0">
       <position>0 13.2424955 -15.6749363 0</position>
       <orientation>0 -90 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
@@ -10,8 +10,8 @@
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/christopher /maartje /timo" url="osc.udp://sura:9999/"/>
       </sound>
-    </src_object>
-    <src_object name="christopher" mute="false" solo="false" color="#ff0001" start="0" end="0">
+    </source>
+    <source name="christopher" mute="false" solo="false" color="#ff0001" start="0" end="0">
       <position>0 14.3827801 -16.081316 0</position>
       <orientation>0 180 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
@@ -19,8 +19,8 @@
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/joanna /maartje /timo" url="osc.udp://sura:9999/"/>
       </sound>
-    </src_object>
-    <src_object name="maartje" mute="false" solo="false" color="#43ff00" start="0" end="0">
+    </source>
+    <source name="maartje" mute="false" solo="false" color="#43ff00" start="0" end="0">
       <position>0 13.9055634 -16.5331497 0</position>
       <orientation>0 120 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
@@ -28,8 +28,8 @@
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/joanna /christopher /timo" url="osc.udp://sura:9999/"/>
       </sound>
-    </src_object>
-    <src_object name="timo" mute="false" solo="false" color="#fff300" start="0" end="0">
+    </source>
+    <source name="timo" mute="false" solo="false" color="#fff300" start="0" end="0">
       <position>0 13.3725033 -16.9951344 0</position>
       <orientation>0 120 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
@@ -37,7 +37,7 @@
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/joanna /christopher /maartje" url="osc.udp://sura:9999/"/>
       </sound>
-    </src_object>
+    </source>
     <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" rotation="-11.25" diffup="true">
       <position>0 12.6 -16.441478 1.2</position>
       <orientation>0 3 0 0</orientation>
@@ -62,33 +62,35 @@
       <orientation>0 3 0 0</orientation>
     </receiver>
   </scene>
-  <!-- reverb settings and links -->
-  <module name="system" command="zita-rev1 -B" sleep="0.4"/>
+  <modules>
+    <!-- reverb settings and links -->
+    <system command="zita-rev1 -B" sleep="0.4"/>
+    <!-- motion tracking and data logging -->
+    <glabsensors>
+      <trackir name="TrackIRaz" osctarget="osc.udp://localhost:8000/" crown="C6" use_lsl="true" camrot="92.76 -0.877 -13.946" campos="-0.07 0.321 0.888" f="682" trackobj="true" trackobjadd="false" actor="/*/listener"/>
+      <serial name="eog" device="/dev/rfcomm1" use_lsl="true"/>
+    </glabsensors>
+    <datalogging fileformat="mat" port="7777" multicast="">
+      <lsl predicate="name='TrackIRaz'"/>
+      <variable path="/notfacingforward" size="1"/>
+    </datalogging>
+    <!-- blender control -->
+    <pos2osc pattern="/cafeteria/*" url="osc.udp://sura:9999/" mode="3" transport="false"/>
+    <system command="xterm -e 'ssh sura DISPLAY=:0 /opt/blender-2.78c-linux-glibc219-x86_64/blenderplayer -g noaudio ./lidhan/Demonstrators/glabdemos/cafeteria/cafeteria_tws.blend'" onunload="ssh sura killall -9 blenderplayer"/>
+    <system command="bash -c 'while sleep 2;do send_osc osc.udp://sura:9999/ /fullscreen 1; done'"/>
+    <!-- light control -->
+    <artnetdmx hostname="192.168.0.9" id="light" port="6454" universe="0" channels="3" fps="5">
+      <fixture addr="1" dmxval="6 4 1"/>
+      <fixture addr="25" dmxval="0 1 0"/>
+    </artnetdmx>
+    <system command="cheese"/>
+    <!-- time code generator for synchronization: -->
+    <ltcgen volume="-49" connect="system:playback_35 system:playback_36"/>
+    <lsljacktime sendwhilestopped="true"/>
+  </modules>
   <connect src="zita-rev1:out.W" dest="render.diffuse:reverb.0w"/>
   <connect src="zita-rev1:out.X" dest="render.diffuse:reverb.1x"/>
   <connect src="zita-rev1:out.Y" dest="render.diffuse:reverb.1y"/>
   <connect src="zita-rev1:out.Z" dest="render.diffuse:reverb.1z"/>
   <connect src="render.cafeteria:room" dest="zita-rev1:in.L"/>
-  <!-- motion tracking and data logging -->
-  <module name="glabsensors">
-    <trackir name="TrackIRaz" osctarget="osc.udp://localhost:8000/" crown="C6" use_lsl="true" camrot="92.76 -0.877 -13.946" campos="-0.07 0.321 0.888" f="682" trackobj="true" trackobjadd="false" actor="/*/listener"/>
-  <serial name="eog" device="/dev/rfcomm1" use_lsl="true"/>
-  </module>
-  <module name="datalogging" fileformat="mat" port="7777" multicast="">
-    <lsl predicate="name='TrackIRaz'"/>
-    <variable path="/notfacingforward" size="1"/>
-  </module>
-  <!-- blender control -->
-  <module name="pos2osc" pattern="/cafeteria/*" url="osc.udp://sura:9999/" mode="3" transport="false"/>
-  <module name="system" command="xterm -e 'ssh sura DISPLAY=:0 /opt/blender-2.78c-linux-glibc219-x86_64/blenderplayer -g noaudio ./lidhan/Demonstrators/glabdemos/cafeteria/cafeteria_tws.blend'" onunload="ssh sura killall -9 blenderplayer"/>
-  <module name="system" command="bash -c 'while sleep 2;do send_osc osc.udp://sura:9999/ /fullscreen 1; done'"/>
-  <!-- light control -->
-  <module name="artnetdmx" hostname="192.168.0.9" id="light" port="6454" universe="0" channels="3" fps="5">
-    <fixture addr="1" dmxval="6 4 1"/>
-    <fixture addr="25" dmxval="0 1 0"/>
-  </module>
-  <module name="system" command="cheese"/>
-  <!-- time code generator for synchronization: -->
-  <module name="ltcgen" volume="-49" connect="system:playback_35 system:playback_36"/>
-  <module name="lsljacktime" sendwhilestopped="true"/>
 </session>

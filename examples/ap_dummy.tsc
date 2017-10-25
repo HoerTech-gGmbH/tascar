@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <session duration="1">
   <scene>
-    <src_object>
+    <source>
       <sound>
 	<dummy/>
       </sound>
-    </src_object>
+    </source>
     <receiver type="omni"/>
   </scene>
 </session>

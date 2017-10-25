@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <session duration="12" loop="true" srv_port="9999">
   <scene guiscale="20" guitracking="out">
-    <src_object name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
+    <source name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
       <position interpolation="cartesian">0 0 0 0
       10 15 0 0
       </position>
       <sound>
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
-    </src_object>
+    </source>
     <face name="wall" mute="false" solo="false" color="#771010" start="0" end="0" width="20" height="20" reflectivity="1" damping="0">
       <position>0 15.2 0 0</position>
       <orientation>0 180 0 0</orientation>

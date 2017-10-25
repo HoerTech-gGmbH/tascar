@@ -3,7 +3,7 @@
   <scene guiscale="6" mirrororder="2">
 
     <!-- point source: -->
-    <src_object name="water">
+    <source name="water">
       <sound name="0" y="0.2" >
         <sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" loop="0" level="70"/>
 	</sound>
@@ -11,7 +11,7 @@
         <sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" position="-5" loop="0" level="70"/>
 	</sound>
       <position>0 1 0 0</position>
-    </src_object>
+    </source>
 
     <!-- reflectors: -->
     <facegroup damping="0.4" reflectivity="0.9" name="mirror" >

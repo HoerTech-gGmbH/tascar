@@ -15,10 +15,10 @@
       <position>0 -3 0 0</position>
       <orientation>0 180 0 0</orientation>
     </face>
-    <src_object>
+    <source>
       <position>0 -1 0 0</position>
       <sound/>
-    </src_object>
+    </source>
     <receiver type="debugpos" sources="7"/>
   </scene>
 </session>

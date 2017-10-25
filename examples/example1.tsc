@@ -6,13 +6,13 @@
       receiver.
   -->
   <scene guiscale="37">
-    <src_object>
+    <source>
       <position>0 1 -20 0
       20 1 20 0</position>
       <sound>
 	<sndfile name="tc1.wav" level="65" loop="0"/>
       </sound>
-    </src_object>
+    </source>
     <receiver type="ortf">
       <position>0 -8 13 0
       22 2 0 0</position>

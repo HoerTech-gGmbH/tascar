@@ -151,13 +151,15 @@ void TASCAR::session_t::read_xml()
   }
   catch( ... ){
     if( lock_vars() ){
+      //for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it){
+      //  DEBUG(*it);
+      //  delete (*it);
+      //}
       for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
         delete (*it);
       for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
         delete (*it);
       for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
-        delete (*it);
-      for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
         delete (*it);
       unlock_vars();
     }

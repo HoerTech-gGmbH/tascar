@@ -14,11 +14,11 @@
       <orientation>0 -45 0 0</orientation>
     </facegroup>
 
-    <src_object name="speech">
+    <source name="speech">
       <sndfile loop="0" name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" gain="-10"/>
       <sound connect="@.0" name="0"/>
       <position>0 1.5 0 0</position>
-    </src_object>
+    </source>
 
     <diffuse name="background" connect="@.0">
       <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/trainstation_notrain.wav"  gain="-10" channels="4" loop="0"/>
@@ -37,9 +37,9 @@
   <!--scene name="control_room" guiscale="2">
     <receiver name="cg_cam" type="nsp" layout="vrlab_control.spk" caliblevel="90">
     </receiver>
-    <src_object name="mic_lab">
+    <source name="mic_lab">
       <sound name="0" connect="system:capture_34" gain="0" x="0"/>
-    </src_object>
+    </source>
   </scene-->
 
 
@@ -48,7 +48,9 @@
     <diffuse name="reverb_output"/>
   </scene>
 
-  <module name="system" command="zita-rev1 -B" sleep="0.4"/>
+  <modules>
+    <system command="zita-rev1 -B" sleep="0.4"/>
+  </modules>
   <connect src="zita-rev1:out.W" dest="render.reverb:reverb_output.0w"/>
   <connect src="zita-rev1:out.X" dest="render.reverb:reverb_output.1x"/>
   <connect src="zita-rev1:out.Y" dest="render.reverb:reverb_output.1y"/>
@@ -66,11 +68,6 @@
   <connect src="render.main:cg_cam_r" dest="system:playback_4"/>
   <connect src="render.reverb:cg_cam_l" dest="system:playback_3"/>
   <connect src="render.reverb:cg_cam_r" dest="system:playback_4"/>
-
-<!--
-<module name="system" command="jconvolver diff_nuclear.conf" sleep="0.4"/>
--->
-<!-- connect ports -->
 
 
 </session>

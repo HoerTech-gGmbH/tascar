@@ -1,22 +1,22 @@
 <?xml version="1.0"?>
 <session>
   <scene mirrororder="3">
-    <src_object name="a">
+    <source name="a">
       <sound x="1">
 	<sine/>
       </sound>
       <sound x="-1">
 	<sine/>
       </sound>
-    </src_object>
-    <src_object name="b">
+    </source>
+    <source name="b">
       <sound x="1">
 	<sine/>
       </sound>
       <sound x="-1">
 	<sine/>
       </sound>
-    </src_object>
+    </source>
     <receiver type="omni"/>
   </scene>
 </session>

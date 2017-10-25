@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <receiver/>
+    <source><sound/></source>
+  </scene>
+  <modules>
+    <system command="echo alive"/>
+    <crash/>
+  </modules>
+</session>

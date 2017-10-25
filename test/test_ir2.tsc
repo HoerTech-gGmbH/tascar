@@ -4,9 +4,9 @@ basic test: sound propagation, 1m
 -->
 <session>
   <scene>
-    <src_object>
+    <source>
       <sound x="1"/>
-    </src_object>
+    </source>
     <receiver type="omni"/>
     <facegroup shoebox="5 6 7" damping="0.8"/>
   </scene>

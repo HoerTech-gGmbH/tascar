@@ -11,6 +11,7 @@ public:
   float w;
   std::vector<float> dmx;
   std::vector<float> fade;
+  std::vector<float> calib;
 private:
   uint32_t n;
   double t_fade;
@@ -29,6 +30,7 @@ void lobj_t::resize( uint32_t channels )
   dmx.resize(n);
   fade.resize(n+1);
   ddmx.resize(n);
+  calib.resize(n);
 }
 
 void lobj_t::update( double t_frame )
@@ -125,6 +127,9 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     fixtures[k].get_attribute("addr",startaddr);
     std::vector<int32_t> lampdmx;
     fixtures[k].get_attribute("dmxval",lampdmx);
+    fixtures[k].get_attribute("calib",fixtureval[k].calib);
+    for(uint32_t c=fixtureval[k].calib.size();c<channels;++c)
+      fixtureval[k].calib[c] = 1.0;
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
       dmxaddr[channels*k+c] = (startaddr+c-1);
@@ -207,8 +212,11 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
     break;
   }
   for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-    for(uint32_t c=0;c<channels;++c)
+    for(uint32_t c=0;c<channels;++c){
       tmpdmxdata[channels*kfix+c] += fixtureval[kfix].dmx[c];
+      // calibration:
+      tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calib[c];
+    }
   }
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
@@ -283,7 +291,13 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
     GET_ATTRIBUTE(device);
     if( device.empty() )
       device = "/dev/ttyUSB0";
-    driver_ = new DMX::OpenDMX_USB_t( device.c_str() );
+    try{
+      driver_ = new DMX::OpenDMX_USB_t( device.c_str() );
+    }
+    catch( const std::exception& e ){
+      driver_ = NULL;
+      std::cerr << "WARNING: Unable to open DMX USB driver " << device << ".\n";
+    }
   }else{
     throw TASCAR::ErrMsg("Unknown DMX driver type \""+driver+"\" (must be \"artnet\" or \"opendmxusb\").");
   }
@@ -329,12 +343,14 @@ void lightctl_t::service()
     for( uint32_t kscene=0;kscene<lightscenes.size();++kscene)
       for(uint32_t k=0;k<lightscenes[kscene]->dmxaddr.size();++k)
         localdata[lightscenes[kscene]->dmxaddr[k]] = std::min((uint16_t)255,lightscenes[kscene]->dmxdata[k]);
-    driver_->send(universe,localdata);
+    if( driver_ )
+      driver_->send(universe,localdata);
     usleep( waitusec );
   }
   for(uint32_t k=0;k<localdata.size();++k)
     localdata[k] = 0;
-  driver_->send(universe,localdata);
+  if( driver_ )
+    driver_->send(universe,localdata);
 }
 
 REGISTER_MODULE(lightctl_t);

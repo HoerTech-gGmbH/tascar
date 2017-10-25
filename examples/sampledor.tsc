@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <session duration="60" loop="false">
   <scene guiscale="20" guicenter="5 0 0">
-    <src_object name="steps" mute="false" solo="false" color="#000000" start="0" end="0" sampledorientation="2">
+    <source name="steps" mute="false" solo="false" color="#000000" start="0" end="0" sampledorientation="2">
       <position interpolation="cartesian">0 0 0 0
       5 7 5 0
       10 10 0 0
@@ -11,8 +11,8 @@
       <sound x="-2">
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
-    </src_object>
-    <src_object name="nsteps" mute="false" solo="false" color="#0000FF" start="0" end="0">
+    </source>
+    <source name="nsteps" mute="false" solo="false" color="#0000FF" start="0" end="0">
       <position interpolation="cartesian">0 0 -0.5 0
       5 7 -5 0
       10 10 0 0
@@ -22,7 +22,7 @@
       <sound d="2">
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
-    </src_object>
+    </source>
     <face name="wall" mute="false" solo="false" color="#771010" start="0" end="0" width="20" height="20" reflectivity="1" damping="0">
       <position>0 15.2 0 0</position>
       <orientation>0 180 0 0</orientation>

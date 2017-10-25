@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <session>
   <scene guiscale="6">
-    <src_object>
+    <source>
       <sound type="door" distance="1"><sine/></sound>
       <position>0 -1 0 0</position>
-    </src_object>
+    </source>
     <receiver type="omni">
       <position>0 -2 0 0 1 2 0 0</position>
     </receiver>

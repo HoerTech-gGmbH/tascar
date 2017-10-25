@@ -2,13 +2,13 @@
 <session srv_port="9999">
   <scene guiscale="6">
 
-    <src_object name="src">
+    <source name="src">
       <sound name="0" >
         <sndfile name="${HOME}/tascar_scenes/sounds/Alarm/53448__guitarguy1985__fire.wav" level="65" loop="0"/>
 	</sound>
 
       <position>0 1 0 0</position>
-    </src_object>
+    </source>
 
     <receiver name="outomni" type="omni" caliblevel="120"/>
 

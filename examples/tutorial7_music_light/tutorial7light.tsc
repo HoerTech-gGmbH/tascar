@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <session duration="8" loop="true">
   <scene>
-    <src_object name="src1">
+    <source name="src1">
       <position>0 -5 -5 0
       2 -5 5 0
       4 5 5 0
@@ -10,12 +10,13 @@
       <sound name="0">
 	<!-- <sndfile name="..." level="70"/> -->
       </sound>
-    </src_object>
+    </source>
     <receiver name="out" type="hoa2d" layout="glpo.spk" caliblevel="130" filtershape="triald">
       <position>0 -4 0 1.6</position>
     </receiver>
   </scene>
-  <module name="lightctl" driver="opendmxusb" device="/dev/ttyUSB0">
+  <modules>
+  <lightctl driver="opendmxusb" device="/dev/ttyUSB0">
     <lightscene name="ceiling" objects="/scene/src1" parent="/scene/out" channels="4" method="nearest" objval="255 0 130 0">
       <fixture az="45" addr="33"/>
       <fixture az="135" addr="37"/>
@@ -34,5 +35,6 @@
 	<fixture az="-22.5" addr="29" dmxval="152 0 0 0"/>
 	</lightscene>
     -->
-  </module>
+  </lightctl>
+  </modules>
 </session>

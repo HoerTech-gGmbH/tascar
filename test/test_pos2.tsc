@@ -5,10 +5,10 @@
 			       1  1 -1
 			       1.2 -1 -1
 			       1.2 -1  1" edgereflection="true"/>
-    <src_object>
+    <source>
       <position>0 -1 -8 0 1 -1 8 0</position>
       <sound/>
-    </src_object>
+    </source>
     <receiver type="debugpos" sources="2">
     </receiver>
   </scene>

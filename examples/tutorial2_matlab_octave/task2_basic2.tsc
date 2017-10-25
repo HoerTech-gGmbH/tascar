@@ -16,12 +16,12 @@
       <orientation>0 -45 0 0</orientation>
     </facegroup>
 
-    <src_object name="src">
+    <source name="src">
       <sound name="0">
       <sndfile loop="0" name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" level="65"/>
      </sound>
       <position>0 1.5 0 0</position>
-    </src_object>
+    </source>
 
    <!--choose receiver type that fits to your playback system-->
     <receiver caliblevel="100" name="out" type="ortf"/>

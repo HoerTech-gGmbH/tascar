@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <session>
   <scene>
-    <src_object name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
+    <source name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
       <position interpolation="cartesian">0 0 0 0
       10 15 0 0
       </position>
       <sound>
 	<sndfile name="footsteps.wav" loop="0" level="70"/>
       </sound>
-    </src_object>
+    </source>
     <face name="wall" mute="false" solo="false" color="#771010" start="0" end="0" width="20" height="20" reflectivity="1" damping="0">
       <position>0 15.2 0 0</position>
       <orientation>0 180 0 0</orientation>
@@ -18,13 +18,15 @@
       10 15 0 1.65</position>
     </receiver>
   </scene>
-  <module name="matrix" id="dec">
-    <speaker connect="system:playback_1" m="0.1 0.1 0"/>
-    <speaker connect="system:playback_2" m="0.1 0 0.1"/>
-    <input label=".0" connect="render.scene:out.0_0"/>
-    <input label=".1-" connect="render.scene:out.1_-1"/>
-    <input label=".1+" connect="render.scene:out.1_1"/>
-    <input label=".2-" connect="render.scene:out.2_-2"/>
-    <input label=".2+" connect="render.scene:out.2_2"/>
-  </module>
+  <modules>
+    <matrix id="dec">
+      <speaker connect="system:playback_1" m="0.1 0.1 0"/>
+      <speaker connect="system:playback_2" m="0.1 0 0.1"/>
+      <input label=".0" connect="render.scene:out.0_0"/>
+      <input label=".1-" connect="render.scene:out.1_-1"/>
+      <input label=".1+" connect="render.scene:out.1_1"/>
+      <input label=".2-" connect="render.scene:out.2_-2"/>
+      <input label=".2+" connect="render.scene:out.2_2"/>
+    </matrix>
+  </modules>
 </session>

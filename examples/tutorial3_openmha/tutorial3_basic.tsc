@@ -2,24 +2,24 @@
 <session srv_port="9999" duration="60" loop="true">
 
   <!-- There are two scenes in this session (scene_S and scene_N). First scene contains only target source (S) 
-  and the second scene contains noise sources (N_1,N_2, etc.).Both scenes contain the same receiver type with the same name.-->
+       and the second scene contains noise sources (N_1,N_2, etc.).Both scenes contain the same receiver type with the same name.-->
 
 
   <scene name="scene_S" guiscale="6">
 
-    <src_object name="S">
+    <source name="S">
       <sound name="0" >
-       <sndfile name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" loop="0" level="75"/>
+	<sndfile name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" loop="0" level="75"/>
       </sound>
       <position>0 1 0 0</position>
-    </src_object>
+    </source>
 
-      <!-- speaker-based receiver type-->
+    <!-- speaker-based receiver type-->
     <receiver type="hoa2d" maxre="true" name="out_hoa" layout="24ch.spk" caliblevel="120">
       <position>0 1.3 0.2 1.5</position>
     </receiver>
 
-       <!-- ORTF receiver type-->
+    <!-- ORTF receiver type-->
     <receiver type="ortf" maxre="true" name="out_ortf" layout="24ch.spk" caliblevel="120">
       <position>0 1.3 0.2 1.5</position>
     </receiver>
@@ -29,18 +29,18 @@
 
   <scene name="scene_N" guiscale="6">
 
-    <src_object name="N_1">
+    <source name="N_1">
       <sound name="0">
-       <sndfile name="${HOME}/tascar_scenes/sounds/daps/m1_script1_clean.wav" loop="0" level="75"/>
+	<sndfile name="${HOME}/tascar_scenes/sounds/daps/m1_script1_clean.wav" loop="0" level="75"/>
       </sound>
       <position>1 0.8 0 0</position>
-    </src_object>
+    </source>
 
     <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1" connect="@.0">
- <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>
+      <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>
     </diffuse>
 
-      <!-- speaker-based receiver type-->
+    <!-- speaker-based receiver type-->
     <receiver type="hoa2d" maxre="true" name="out_hoa" layout="24ch.spk" caliblevel="120">
       <position>0 1.3 0.2 1.5</position>
     </receiver>
@@ -52,8 +52,18 @@
 
   </scene>
 
-<!-- A module to convolve the output of the receiver with the HRIRs-->
-  <module name="hrirconv" fftlen="2048" inchannels="24" outchannels="2" autoconnect="true" hrirfile="KU100_24ch_44100.wav"/>
+  <modules>
+    <!-- A module to convolve the output of the receiver with the HRIRs-->
+    <hrirconv fftlen="2048" inchannels="24" outchannels="2" autoconnect="true" hrirfile="KU100_24ch_44100.wav"/>
+    <!-- game controller -->
+    <joystick actor="/*/out*" 
+	      x_ax="1" x_scale="-1" x_threshold="0.2" x_max="4" x_min="-4" 
+	      y_ax="0" y_scale="-1" y_threshold="0.2" y_max="4" y_min="-4" 
+	      r_ax="3" r_scale="-1" r_threshold="0.3" r_max="4" r_min="-4" 
+	      tilt_ax="4" tilt_scale="-0.7" tilt_threshold="0.3" 
+	      dump_events="false" maxnorm="0"/>
+
+  </modules>
 
   <!-- Connect binaural output signal with the system headphone channels-->
 
@@ -66,14 +76,6 @@
   <connect src="render.scene_N:out_ortf_r" dest="system:playback_2"/>
 
 
- <!--module name="simplecontroller" actor="/*/out*" maxnorm="0"/-->
-
-  <!-- game controller -->
-  <module name="joystick" actor="/*/out*" 
-	  x_ax="1" x_scale="-1" x_threshold="0.2" x_max="4" x_min="-4" 
-	  y_ax="0" y_scale="-1" y_threshold="0.2" y_max="4" y_min="-4" 
-	  r_ax="3" r_scale="-1" r_threshold="0.3" r_max="4" r_min="-4" 
-	  tilt_ax="4" tilt_scale="-0.7" tilt_threshold="0.3" 
-	  dump_events="false" maxnorm="0"/>
+  <!--module name="simplecontroller" actor="/*/out*" maxnorm="0"/-->
 
 </session>
