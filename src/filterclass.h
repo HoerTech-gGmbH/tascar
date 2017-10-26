@@ -102,6 +102,25 @@ namespace TASCAR {
     std::vector<float> w2;
   };
 
+  class resonance_filter_t {
+  public:
+    resonance_filter_t();
+    void set_fq( double fresnorm, double q );
+    inline float filter( float inval ){
+      inval = (a1*inval+b1*statey1+b2*statey2);
+      make_friendly_number_limited(inval);
+      statey2 = statey1;
+      statey1 = inval;
+      return inval;
+    };
+  private:
+    double a1;
+    double b1;
+    double b2;
+    double statey1;
+    double statey2;
+  };
+
 }
 
 #endif

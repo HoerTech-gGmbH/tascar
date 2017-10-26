@@ -88,6 +88,7 @@ uint32_t acoustic_model_t::process()
       (ismorder <= src_->ismmax) &&
       (receiver_->ismmin <= ismorder) &&
       (ismorder <= receiver_->ismmax) &&
+      ((!reflector) || reflector->active) &&
       ((receiver_->layers & src_->layers) || (layergain > 0))
       ){
     bool layeractive(receiver_->layers & src_->layers);

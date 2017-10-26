@@ -37,8 +37,8 @@ OBJECTS = audiostates.o coordinates.o audiochunks.o xmlconfig.o		\
   alsamidicc.o speakerarray.o spectrum.o fft.o stft.o ola.o		\
   termsetbaud.o serialport.o dmxdriver.o
 
-AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme	\
-  onsetdetector delay sndfile spksim dummy hannenv gate
+AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme		\
+  onsetdetector delay sndfile spksim dummy hannenv gate metronome
 
 TEST_FILES = test_ngon test_sinc test_fsplit compare_sndfile
 

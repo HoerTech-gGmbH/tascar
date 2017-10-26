@@ -85,6 +85,13 @@ int osc_set_double_db(const char *path, const char *types, lo_arg **argv, int ar
   return 0;
 }
 
+int osc_set_double_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'f') )
+    *(double*)(user_data) = pow(10.0,0.05*argv[0]->f)*2e-5;
+  return 0;
+}
+
 int osc_set_float_degree(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   if( user_data && (argc == 1) && (types[0] == 'f') )
@@ -203,6 +210,11 @@ void osc_server_t::add_vector_float(const std::string& path,std::vector<float> *
 void osc_server_t::add_double_db(const std::string& path,double *data)
 {
   add_method(path,"f",osc_set_double_db,data);
+}
+
+void osc_server_t::add_double_dbspl(const std::string& path,double *data)
+{
+  add_method(path,"f",osc_set_double_dbspl,data);
 }
 
 void osc_server_t::add_float_degree(const std::string& path,float *data)

@@ -3,6 +3,7 @@
 #include "errorhandling.h"
 #include <string.h>
 #include "coordinates.h"
+#include <complex.h>
 
 TASCAR::filter_t::filter_t(unsigned int ilen_A,
                            unsigned int ilen_B)
@@ -204,6 +205,23 @@ TASCAR::fsplit_t::fsplit_t( uint32_t maxdelay, shape_t shape, uint32_t tau )
   for(std::vector<float*>::const_iterator it=vd.begin();it!=vd.end();++it)
     if( (*it) >= d+n )
       throw TASCAR::ErrMsg("Delay exceeds buffer length");
+}
+
+TASCAR::resonance_filter_t::resonance_filter_t()
+  : statey1(0),
+    statey2(0)
+{
+  set_fq( 0.1, 0.5 );
+}
+
+void TASCAR::resonance_filter_t::set_fq( double fresnorm, double q )
+{
+  double farg(2.0*M_PI*fresnorm);
+  b1 = 2.0*q*cos(farg);
+  b2 = -q*q;
+  double _Complex z(cexpf(I*farg));
+  double _Complex z0(q*cexp(-I*farg));
+  a1 = (1.0-q)*(cabs(z-z0));
 }
 
 /*

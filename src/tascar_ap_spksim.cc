@@ -49,6 +49,7 @@ spksim_t::~spksim_t()
 
 void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::transport_t& tp)
 {
+  TASCAR::wave_t& aud(chunk[0]);
   double farg(2.0*M_PI*fres/f_sample);
   b1 = 2.0*q*cos(farg);
   b2 = -q*q;
@@ -56,17 +57,17 @@ void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_
   double _Complex z0(q*cexp(-I*farg));
   double a1((1.0-q)*(cabs(z-z0)));
   double og(pow(10.0,0.05*gain));
-  for(uint32_t k=0;k<chunk[0].n;++k){
+  for(uint32_t k=0;k<aud.n;++k){
     // input resonance filter:
-    make_friendly_number_limited(chunk[0][k]);
-    double y(a1*chunk[0][k]+b1*statey1+b2*statey2);
+    make_friendly_number_limited(aud.d[k]);
+    double y(a1*aud.d[k]+b1*statey1+b2*statey2);
     make_friendly_number_limited(y);
     statey2 = statey1;
     statey1 = y;
     // non-linearity:
     y *= scale/(scale+fabs(y));
     // air coupling to velocity:
-    chunk[k] = og*(y - statex);
+    aud.d[k] = og*(y - statex);
     statex = y;
   }
 }
