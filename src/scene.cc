@@ -618,7 +618,7 @@ void face_object_t::write_xml()
 }
 
 audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
-  : xml_element_t(xmlsrc),portname(""),
+  : xml_element_t(xmlsrc),ctlname(""),
     connect(""),
     port_index(0),
     gain(1),

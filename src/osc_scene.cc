@@ -163,19 +163,21 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::rou
 
 void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sound_t* s)
 {
-  srv->add_method("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/gain","f",osc_set_sound_gain,s);
-  srv->add_method("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/lingain","f",osc_set_sound_gain_lin,s);
-  srv->add_float_db("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/caliblevel",&(s->caliblevel));
-  srv->add_uint("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/ismmin",&(s->ismmin));
-  srv->add_uint("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/ismmax",&(s->ismmax));
-  srv->add_uint("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/layers",&(s->layers));
-  srv->add_double("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/size",&(s->size));
+  std::string ctlname("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name());
+  s->set_ctlname(ctlname);
+  srv->add_method(ctlname+"/gain","f",osc_set_sound_gain,s);
+  srv->add_method(ctlname+"/lingain","f",osc_set_sound_gain_lin,s);
+  srv->add_float_db(ctlname+"/caliblevel",&(s->caliblevel));
+  srv->add_uint(ctlname+"/ismmin",&(s->ismmin));
+  srv->add_uint(ctlname+"/ismmax",&(s->ismmax));
+  srv->add_uint(ctlname+"/layers",&(s->layers));
+  srv->add_double(ctlname+"/size",&(s->size));
   std::string oldpref(srv->get_prefix());
   uint32_t k=0;
   for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=s->plugins.begin();iPlug!=s->plugins.end();++iPlug){
     char ctmp[1024];
     sprintf(ctmp,"ap%d",k);
-    srv->set_prefix("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name()+"/"+ctmp+"/"+(*iPlug)->get_modname());
+    srv->set_prefix(ctlname+"/"+ctmp+"/"+(*iPlug)->get_modname());
     (*iPlug)->add_variables( srv );
     ++k;
   }
@@ -191,13 +193,15 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::s
 
 void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receivermod_object_t* s)
 {
-  srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/gain","f",osc_set_receiver_gain,s);
-  srv->add_double_db("/"+scene->name+"/"+s->object_t::get_name()+"/diffusegain",&(s->diffusegain));
-  srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/fade","ff",osc_set_receiver_fade,s);
-  srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/ismmin",&(s->ismmin));
-  srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/ismmax",&(s->ismmax));
-  srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/layers",&(s->layers));
-  srv->add_float_db("/"+scene->name+"/"+s->object_t::get_name()+"/caliblevel",&(s->caliblevel));
+  std::string ctlname("/"+scene->name+"/"+s->object_t::get_name());
+  s->set_ctlname(ctlname);
+  srv->add_method(ctlname+"/gain","f",osc_set_receiver_gain,s);
+  srv->add_double_db(ctlname+"/diffusegain",&(s->diffusegain));
+  srv->add_method(ctlname+"/fade","ff",osc_set_receiver_fade,s);
+  srv->add_uint(ctlname+"/ismmin",&(s->ismmin));
+  srv->add_uint(ctlname+"/ismmax",&(s->ismmax));
+  srv->add_uint(ctlname+"/layers",&(s->layers));
+  srv->add_float_db(ctlname+"/caliblevel",&(s->caliblevel));
 }
 
 void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)

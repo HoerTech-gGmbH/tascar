@@ -26,7 +26,7 @@ SOURCES = omni cardioidmod door
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
   artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
-  matrix hoafdnrot mpu6050track touchosc
+  matrix hoafdnrot mpu6050track touchosc savegains
 
 OBJECTS = audiostates.o coordinates.o audiochunks.o xmlconfig.o		\
   dynamicobjects.o sourcemod.o receivermod.o filterclass.o		\

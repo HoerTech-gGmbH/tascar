@@ -113,6 +113,13 @@ namespace TASCAR {
       statey1 = inval;
       return inval;
     };
+    inline float filter_unscaled( float inval ){
+      inval = (inval+b1*statey1+b2*statey2);
+      make_friendly_number_limited(inval);
+      statey2 = statey1;
+      statey1 = inval;
+      return inval;
+    };
   private:
     double a1;
     double b1;

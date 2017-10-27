@@ -164,15 +164,15 @@ namespace TASCAR {
       void write_xml();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
-      void set_portname(const std::string& pn);
-      std::string get_portname() const { return portname;};
+      void set_ctlname(const std::string& pn) { ctlname  = pn;};
+      std::string get_ctlname() const { return ctlname;};
       std::string get_connect() const { return connect;};
       float get_gain() const { return gain/(2e-5f*caliblevel);};
       float get_gain_db() const { return 20*log10(gain); };
       void set_gain_db( float g );
       void set_gain_lin( float g );
     private:
-      std::string portname;
+      std::string ctlname;
       std::string connect;
       uint32_t port_index;
     public:

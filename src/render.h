@@ -19,7 +19,7 @@ namespace TASCAR {
                  const std::vector<float*>& outBuffer);
     uint32_t num_input_ports() const { return input_ports.size();};
     uint32_t num_output_ports() const { return output_ports.size();};
-  protected:
+    //protected:
     std::vector<Acousticmodel::source_t*> sources;
     std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
     std::vector<Acousticmodel::reflector_t*> reflectors;

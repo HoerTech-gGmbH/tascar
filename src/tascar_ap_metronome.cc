@@ -32,8 +32,8 @@ metronome_t::metronome_t( const TASCAR::audioplugin_cfg_t& cfg )
     ao(0.001),
     fres1(1000),
     freso(600),
-    q1(0.9),
-    qo(0.9),
+    q1(0.997),
+    qo(0.997),
     sync(false),
     bypass(false),
     t(0),
@@ -94,9 +94,9 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::p
     }
     if( !bypass ){
       if( beat )
-        aud.d[k] += fo.filter( v );
+        aud.d[k] += fo.filter_unscaled( v );
       else
-        aud.d[k] += f1.filter( v );
+        aud.d[k] += f1.filter_unscaled( v );
     }
     ++t;
   }

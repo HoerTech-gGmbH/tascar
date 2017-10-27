@@ -61,6 +61,8 @@ namespace TASCAR {
     void activate();
     void deactivate();
     std::string list_variables() const;
+    int dispatch_data(void* data, size_t size);
+    int dispatch_data_message(const char* path,lo_message m);
     std::vector<descriptor_t> variables;
     const std::string osc_srv_addr;
     const std::string osc_srv_port;
