@@ -132,12 +132,7 @@ class reflectionfilter_t {
 public:
   reflectionfilter_t(uint32_t d1, uint32_t d2);
   inline void filter( float _Complex& x, uint32_t p1, uint32_t p2) {
-    //float _Complex tmp(B1*x);
-    //tmp += B2*sx.elem(p1,p2);
-    //sx.elem(p1,p2) = x;
-    //x = tmp-A2*sy.elem(p1,p2);
     x = B1*x-A2*sy.elem(p1,p2);
-    //x *= A1;
     sy.elem(p1,p2) = x;
     // all pass section:
     float _Complex tmp(eta[p1]*x + sapx.elem( p1, p2 ));
@@ -145,15 +140,11 @@ public:
     x = tmp - eta[p1]*sapy.elem( p1, p2 );
     sapy.elem( p1, p2 ) = x;
   };
-  // to be replaced by 1st order IIR filter!
-  //void set( float g );
   void set_lp( float g, float c );
 protected:
   float B1;
-  //float B2;
   float A2;
   std::vector<float> eta;
-  //cmat2_t sx;
   cmat2_t sy;
   cmat2_t sapx;
   cmat2_t sapy;
@@ -161,7 +152,6 @@ protected:
 
 reflectionfilter_t::reflectionfilter_t(uint32_t d1, uint32_t d2)
   : B1(0),A2(0),
-    //sx(d1,d2),
     sy(d1,d2),
     sapx(d1,d2),
     sapy(d1,d2)
@@ -178,17 +168,15 @@ void reflectionfilter_t::set_lp( float g, float c )
   sapy.clear();
   float c2(1.0f-c);
   B1 = g * c2;
-  //B2 = 0.0f;
-  //A1 = 1.0f;
   A2 = -c;
 }
 
 class fdn_t {
 public:
-  fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay);
+  fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay );
   ~fdn_t();
-  inline void process(); 
-  void setpar(float az, float daz, float t, float dt, float g, float damping );
+  inline void process( bool b_prefilt );
+  void setpar( float az, float daz, float t, float dt, float g, float damping );
 private:
   uint32_t fdnorder_;
   uint32_t amborder1;
@@ -200,6 +188,7 @@ private:
   cmat3_t feedbackmat;
   // reflection filter:
   reflectionfilter_t reflection;
+  reflectionfilter_t prefilt;
   // rotation:
   cmat2_t rotation;
   // delayline output for reflection filters:
@@ -223,6 +212,7 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay)
     delayline(fdnorder_,maxdelay_,amborder1),
     feedbackmat(fdnorder_,fdnorder_,amborder1),
     reflection(fdnorder,amborder1),
+    prefilt(2,amborder1),
     rotation(fdnorder,amborder1),
     dlout(fdnorder_,amborder1),
     delay(new uint32_t[fdnorder_]),
@@ -241,8 +231,14 @@ fdn_t::~fdn_t()
   delete [] pos;
 }
 
-void fdn_t::process()
+void fdn_t::process(bool b_prefilt)
 {
+  if( b_prefilt ){
+    for(uint32_t o=0;o<amborder1;++o){
+      prefilt.filter(inval.elem(o),0,o);
+      prefilt.filter(inval.elem(o),1,o);
+    }
+  }
   outval.clear();
   // get output values from delayline, apply reflection filters and rotation:
   for(uint32_t tap=0;tap<fdnorder_;++tap)
@@ -333,6 +329,7 @@ protected:
   double damping;
   double dry;
   double wet;
+  bool prefilt;
 };
 
 hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
@@ -346,7 +343,8 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
     decay(1.0),
     damping(0.3),
     dry(0.0),
-    wet(1.0)
+    wet(1.0),
+    prefilt(false)
 {
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(amborder);
@@ -359,6 +357,7 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(damping);
   GET_ATTRIBUTE(dry);
   GET_ATTRIBUTE(wet);
+  GET_ATTRIBUTE_BOOL(prefilt);
 }
 
 hoafdnrot_vars_t::~hoafdnrot_vars_t()
@@ -394,21 +393,18 @@ hoafdnrot_t::hoafdnrot_t( const TASCAR::module_cfg_t& cfg )
     int32_t s(o*(2*((c+1) % 2)-1));
     sprintf(ctmp,"in.%d_%d",o,s);
     add_input_port(ctmp);
-    //sprintf(ctmp,"out.%d_%d",o,s);
-    //add_output_port(ctmp);
   }
   for(uint32_t c=0;c<channels;++c){
     char ctmp[1024];
     uint32_t o((c+1)/2);
     int32_t s(o*(2*((c+1) % 2)-1));
-    //sprintf(ctmp,"in.%d_%d",o,s);
-    //add_input_port(ctmp);
     sprintf(ctmp,"out.%d_%d",o,s);
     add_output_port(ctmp);
   }
   session->add_method("/"+id+"/par","ffffff",&hoafdnrot_t::osc_setpar,this);
   session->add_double("/"+id+"/dry",&dry);
   session->add_double("/"+id+"/wet",&wet);
+  session->add_bool("/"+id+"/prefilt",&prefilt);
   activate();
 }
 
@@ -458,7 +454,7 @@ int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const
         for(uint32_t o=1;o<o1;++o)
           // ACN!
           fdn->inval.elem(o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
-        fdn->process();
+        fdn->process(prefilt);
         sOut[0][t] += wet*creal(fdn->outval.elem0());
         for(uint32_t o=1;o<o1;++o){
           // ACN!

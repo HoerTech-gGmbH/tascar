@@ -2,24 +2,66 @@
 #include "dmxdriver.h"
 #include "serviceclass.h"
 #include <unistd.h>
+#include <complex.h>
+
+enum method_t {
+  nearest, raisedcosine, sawleft, sawright
+};
+
+method_t uint2method( uint32_t m )
+{
+  switch( m ){
+  case 0:
+    return nearest;
+  case 1:
+    return raisedcosine;
+  case 2:
+    return sawleft;
+  case 3:
+    return sawright;
+  default:
+    return nearest;
+  }
+}
+
+method_t string2method( const std::string& m )
+{
+#define ADDMETHOD(x) if(m==#x) return x
+  ADDMETHOD(nearest);
+  ADDMETHOD(raisedcosine);
+  ADDMETHOD(sawleft);
+  ADDMETHOD(sawright);
+  return nearest;
+#undef ADDMETHOD
+}
 
 class lobj_t {
 public:
   lobj_t();
   void resize( uint32_t channels );
   void update( double t_frame );
+  method_t method;
   float w;
+  float dw;
+  std::vector<float> wfade;
   std::vector<float> dmx;
   std::vector<float> fade;
   std::vector<float> calib;
 private:
   uint32_t n;
   double t_fade;
+  double t_wfade;
   std::vector<float> ddmx;
 };
 
+static int osc_setmethod(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  method_t* m((method_t*)user_data);
+  *m = uint2method( argv[0]->i );
+}
+
 lobj_t::lobj_t()
-  : w(1.0), n(1), t_fade(0)
+  : method(nearest), w(1.0), dw(0.0), n(1), t_fade(0), t_wfade(0)
 {
   resize(1);
 }
@@ -27,6 +69,7 @@ lobj_t::lobj_t()
 void lobj_t::resize( uint32_t channels )
 {
   n = channels;
+  wfade.resize(2);
   dmx.resize(n);
   fade.resize(n+1);
   ddmx.resize(n);
@@ -35,6 +78,11 @@ void lobj_t::resize( uint32_t channels )
 
 void lobj_t::update( double t_frame )
 {
+  if( wfade[1] > 0 ){
+    t_wfade = wfade[1];
+    wfade[1] = 0;
+    dw = (wfade[0]-w)*t_frame/t_wfade;
+  }
   if( fade[n] > 0 ){
     t_fade = fade[n];
     fade[n] = 0;
@@ -46,13 +94,14 @@ void lobj_t::update( double t_frame )
       dmx[c] += ddmx[c];
     t_fade -= t_frame;
   }
+  if( t_wfade > 0 ){
+    w += dw;
+    t_wfade -= t_frame;
+  }
 }
 
 class lightscene_t : public TASCAR::xml_element_t {
 public:
-  enum method_t {
-    nearest, raisedcosine
-  };
   lightscene_t( const TASCAR::module_cfg_t& cfg );
   void update( uint32_t frame, bool running, double t_fragment );
   void add_variables( TASCAR::osc_server_t* srv );
@@ -71,7 +120,7 @@ private:
   TASCAR::named_object_t parent_;
   std::vector<TASCAR::named_object_t> objects_;
   std::vector<float> values;
-  method_t method_;
+  //method_t method_;
   // dmx basics:
 public:
   std::vector<uint16_t> dmxaddr;
@@ -97,17 +146,14 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(parent);
   GET_ATTRIBUTE(channels);
   GET_ATTRIBUTE(master);
+  std::string method;
+  method_t method_(nearest);
   GET_ATTRIBUTE(method);
   std::vector<float> tmpobjval;
   get_attribute("objval", tmpobjval );
   std::vector<float> tmpobjw;
   get_attribute("objw", tmpobjw );
-  if( method.empty() || (method == "nearest") )
-    method_ = nearest;
-  else if( method == "raisedcosine" )
-    method_ = raisedcosine;
-  else
-    throw TASCAR::ErrMsg("Invalid light render method \""+method+"\" (nearest or raisedcosine).");
+  method_ = string2method( method );
   objects_ = session->find_objects( objects );
   std::vector<TASCAR::named_object_t> o(session->find_objects(parent));
   if( o.size()>0)
@@ -141,6 +187,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   uint32_t i(0);
   for(uint32_t k=0;k<objects_.size();++k){
     objval[k].resize( channels );
+    objval[k].method = method_;
     if( k<tmpobjw.size() )
       objval[k].w = tmpobjw[k];
     if( objval[k].w == 0 )
@@ -161,55 +208,67 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
     it->update( t_fragment );
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     tmpdmxdata[k] = 0;
-  switch( method_ ){
-  case nearest :
-    if( parent_.obj ){
-      TASCAR::pos_t self_pos(parent_.obj->get_location());
-      TASCAR::zyx_euler_t self_rot(parent_.obj->get_orientation());
-      // do panning / copy data
-      for(uint32_t kobj=0;kobj<objects_.size();++kobj){
-        TASCAR::pos_t pobj(objects_[kobj].obj->get_location());
-        pobj -= self_pos;
-        pobj /= self_rot;
-        //float dist(pobj.norm());
-        pobj.normalize();
-        double dmax(-1);
-        double kmax(0);
-        for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-          // cos(az) = (pobj * pfixture)
-          double caz(dot_prod(pobj,fixtures[kfix].unitvector));
-          if( caz > dmax ){
-            kmax = kfix;
-            dmax = caz;
+  if( parent_.obj ){
+    TASCAR::pos_t self_pos(parent_.obj->get_location());
+    TASCAR::zyx_euler_t self_rot(parent_.obj->get_orientation());
+    for(uint32_t kobj=0;kobj<objects_.size();++kobj){
+      TASCAR::Scene::object_t* obj(objects_[kobj].obj);
+      TASCAR::pos_t pobj(obj->get_location());
+      pobj -= self_pos;
+      pobj /= self_rot;
+      pobj.normalize();
+      switch( objval[kobj].method ){
+      case nearest :
+        {
+          // do panning / copy data
+          double dmax(-1);
+          double kmax(0);
+          for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+            double caz(dot_prod(pobj,fixtures[kfix].unitvector));
+            if( caz > dmax ){
+              kmax = kfix;
+              dmax = caz;
+            }
+          }
+          for(uint32_t c=0;c<channels;++c)
+            tmpdmxdata[channels*kmax+c] += objval[kobj].dmx[c];
+        }
+        break;
+      case raisedcosine :
+        {
+          // do panning / copy data
+          for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+            float caz(dot_prod(pobj,fixtures[kfix].unitvector));
+            float w(powf(0.5f*(caz+1.0f),2.0f/objval[kobj].w));
+            for(uint32_t c=0;c<channels;++c)
+              tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
           }
         }
-        for(uint32_t c=0;c<channels;++c)
-          tmpdmxdata[channels*kmax+c] += objval[kobj].dmx[c];
+        break;
+      case sawleft :
+        {
+          // do panning / copy data
+          for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+            float az(objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
+            float w(1.0f-std::max(0.0f,std::min(1.0f,az)));
+            for(uint32_t c=0;c<channels;++c)
+              tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
+          }
         }
-    }
-    break;
-  case raisedcosine :
-    if( parent_.obj ){
-      TASCAR::pos_t self_pos(parent_.obj->get_location());
-      TASCAR::zyx_euler_t self_rot(parent_.obj->get_orientation());
-      // do panning / copy data
-      for(uint32_t kobj=0;kobj<objects_.size();++kobj){
-        TASCAR::pos_t pobj(objects_[kobj].obj->get_location());
-        pobj -= self_pos;
-        pobj /= self_rot;
-        //float dist(pobj.norm());
-        pobj.normalize();
-        for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-          // cos(az) = (pobj * pfixture)
-          float caz(dot_prod(pobj,fixtures[kfix].unitvector));
-          // 
-          float w(powf(0.5f*(caz+1.0f),2.0f/objval[kobj].w));
-          for(uint32_t c=0;c<channels;++c)
-            tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
+        break;
+      case sawright :
+        {
+          // do panning / copy data
+          for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+            float az(objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
+            float w(1.0f-std::max(0.0f,std::min(1.0f,-az)));
+            for(uint32_t c=0;c<channels;++c)
+              tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
+          }
         }
+        break;
       }
     }
-    break;
   }
   for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
     for(uint32_t c=0;c<channels;++c){
@@ -231,6 +290,8 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/dmx", &(objval[ko].dmx) );
     srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/fade", &(objval[ko].fade) );
     srv->add_float( "/"+objects_[ko].obj->get_name()+"/w", &(objval[ko].w) );
+    srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/wfade", &(objval[ko].wfade) );
+    srv->add_method( "/"+objects_[ko].obj->get_name()+"/method", "i", osc_setmethod, &(objval[ko].method));
   }
   for(uint32_t k=0;k<fixtureval.size();++k){
     char ctmp[256];
