@@ -95,7 +95,8 @@ TASCAR::session_t::session_t()
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
     period_time(1.0/(double)srate),
-    started_(false)
+    started_(false)//,
+    //pcnt(0)
 {
   pthread_mutex_init( &mtx, NULL );
   add_output_port("sync_out");
@@ -129,7 +130,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
     period_time(1.0/(double)srate),
-    started_(false)
+    started_(false)//,
+    //pcnt(0)
 {
   pthread_mutex_init( &mtx, NULL );
   add_output_port("sync_out");
@@ -301,6 +303,8 @@ void TASCAR::session_t::start()
 
 int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
+  //DEBUG(pcnt);
+  //++pcnt;
   double t(period_time*(double)tp_frame);
   uint32_t next_tp_frame(tp_frame);
   if( tp_rolling )

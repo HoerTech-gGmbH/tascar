@@ -126,6 +126,7 @@ namespace TASCAR {
     double period_time;
     bool started_;
     pthread_mutex_t mtx;
+    //uint32_t pcnt;
   };
 
   class actor_module_t : public module_base_t {

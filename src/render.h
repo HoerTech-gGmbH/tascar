@@ -41,6 +41,7 @@ namespace TASCAR {
     uint32_t total_diffusesources;
   private:
     bool is_prepared;
+    //uint32_t pcnt;
   };
 
 

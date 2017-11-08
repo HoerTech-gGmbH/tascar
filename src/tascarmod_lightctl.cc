@@ -58,6 +58,7 @@ static int osc_setmethod(const char *path, const char *types, lo_arg **argv, int
 {
   method_t* m((method_t*)user_data);
   *m = uint2method( argv[0]->i );
+  return 0;
 }
 
 lobj_t::lobj_t()
@@ -250,7 +251,9 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
           // do panning / copy data
           for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
             float az(objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
-            float w(1.0f-std::max(0.0f,std::min(1.0f,az)));
+            float w(0);
+            if( az >= 0 )
+              w = 1.0f-std::min(1.0f,az);
             for(uint32_t c=0;c<channels;++c)
               tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
           }
@@ -260,8 +263,10 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
         {
           // do panning / copy data
           for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-            float az(objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
-            float w(1.0f-std::max(0.0f,std::min(1.0f,-az)));
+            float az(-objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
+            float w(0);
+            if( az >= 0 )
+              w = 1.0f-std::min(1.0f,az);
             for(uint32_t c=0;c<channels;++c)
               tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
           }

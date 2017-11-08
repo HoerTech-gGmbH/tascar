@@ -33,6 +33,8 @@ public:
   void on_value_changed();
 private:
   TASCAR::Scene::audio_port_t* ap_;
+  double vmin;
+  double vmax;
 };
 
 class gainctl_t : public Gtk::Frame {

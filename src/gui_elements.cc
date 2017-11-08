@@ -35,11 +35,13 @@ void splmeter_t::update(float v)
 
 GainScale_t::GainScale_t()
   : Gtk::Scale(Gtk::ORIENTATION_VERTICAL),
-    ap_(NULL)
+    ap_(NULL),
+    vmin(-30),
+    vmax(10)
 {
   set_draw_value(false);
   set_has_origin(true);
-  set_range(-30,10);
+  set_range(vmin,vmax);
   set_inverted(true);
   set_increments(1,1);
 }
@@ -55,6 +57,11 @@ float GainScale_t::update()
   double v(0);
   if( ap_ ){
     v = ap_->get_gain_db();
+    if( (v < vmin) || (v > vmax) ){
+      vmin = std::min(vmin,v);
+      vmax = std::max(vmax,v);
+      set_range(vmin,vmax);
+    }
     set_value(v);
   }
   return v;

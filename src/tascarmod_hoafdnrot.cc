@@ -270,6 +270,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
 {
   // set reflection filters:
   reflection.set_lp( g, damping );
+  prefilt.set_lp( g, damping );
   //reflection.set( g );
   // set delays:
   delayline.clear();

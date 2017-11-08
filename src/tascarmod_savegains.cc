@@ -22,6 +22,8 @@ savegains_t::savegains_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(path);
   session->add_method("/savegains/save","",savegains_t::osc_save,this);
   session->add_method("/savegains/restore","",savegains_t::osc_restore,this);
+  session->add_method("/savegains/save","f",savegains_t::osc_save,this);
+  session->add_method("/savegains/restore","f",savegains_t::osc_restore,this);
 }
 
 savegains_t::~savegains_t()
@@ -30,7 +32,8 @@ savegains_t::~savegains_t()
 
 int savegains_t::osc_save(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  ((savegains_t*)user_data)->save();
+  if( (argc == 0) || (argv[0]->f > 0) )
+    ((savegains_t*)user_data)->save();
   return 0;
 }
 
@@ -64,7 +67,8 @@ void savegains_t::save()
 
 int savegains_t::osc_restore(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  ((savegains_t*)user_data)->restore();
+  if( (argc == 0) || (argv[0]->f > 0) )
+    ((savegains_t*)user_data)->restore();
   return 0;
 }
 

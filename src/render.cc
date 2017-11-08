@@ -12,7 +12,8 @@ TASCAR::render_core_t::render_core_t(xmlpp::Element* xmlsrc)
     active_diffusesources(0),
     total_pointsources(0),
     total_diffusesources(0),
-    is_prepared(false)
+    is_prepared(false)//,
+    //pcnt(0)
 {
   pthread_mutex_init( &mtx_world, NULL );
 }
@@ -133,6 +134,9 @@ void TASCAR::render_core_t::process(uint32_t nframes,
                                     const std::vector<float*>& inBuffer,
                                     const std::vector<float*>& outBuffer)
 {
+  //std::cerr << this << " " << pcnt << std::endl;
+  //DEBUG(pcnt);
+  //++pcnt;
   if( pthread_mutex_trylock( &mtx_world ) == 0 ){
     //security/stability:
     for(uint32_t ch=0;ch<inBuffer.size();ch++)
@@ -149,10 +153,10 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     // update audio ports (e.g., for level metering):
     // fill inputs:
     for(unsigned int k=0;k<sounds.size();k++){
-      float gain(sounds[k]->get_gain());
+      //float gain(sounds[k]->get_gain());
       uint32_t numch(sounds[k]->get_num_channels());
       for(uint32_t ch=0;ch<numch;ch++)
-        sounds[k]->inchannels[ch].copy(inBuffer[sounds[k]->get_port_index()+ch],nframes,gain);
+        sounds[k]->inchannels[ch].copy(inBuffer[sounds[k]->get_port_index()+ch],nframes);
       sounds[k]->process_plugins(tp);
       sounds[k]->apply_gain();
     }
