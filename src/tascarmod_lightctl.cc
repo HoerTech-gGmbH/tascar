@@ -47,6 +47,9 @@ public:
   std::vector<float> dmx;
   std::vector<float> fade;
   std::vector<float> calib;
+  std::vector<float> calib26;
+  std::vector<float> calib1;
+  std::vector<TASCAR::table1_t> calibtab;
 private:
   uint32_t n;
   double t_fade;
@@ -75,6 +78,9 @@ void lobj_t::resize( uint32_t channels )
   fade.resize(n+1);
   ddmx.resize(n);
   calib.resize(n);
+  calib26.resize(n);
+  calib1.resize(n);
+  calibtab.resize(n);
 }
 
 void lobj_t::update( double t_frame )
@@ -175,8 +181,19 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     std::vector<int32_t> lampdmx;
     fixtures[k].get_attribute("dmxval",lampdmx);
     fixtures[k].get_attribute("calib",fixtureval[k].calib);
+    fixtures[k].get_attribute("calib26",fixtureval[k].calib26);
+    fixtures[k].get_attribute("calib1",fixtureval[k].calib1);
     for(uint32_t c=fixtureval[k].calib.size();c<channels;++c)
       fixtureval[k].calib[c] = 1.0;
+    for(uint32_t c=fixtureval[k].calib26.size();c<channels;++c)
+      fixtureval[k].calib26[c] = 1.0;
+    for(uint32_t c=fixtureval[k].calib1.size();c<channels;++c)
+      fixtureval[k].calib1[c] = 1.0;
+    for(uint32_t c=fixtureval[k].calib1.size();c<channels;++c){
+      fixtureval[k].calibtab[c][1] = fixtureval[k].calib1[c];
+      fixtureval[k].calibtab[c][26] = fixtureval[k].calib26[c];
+      fixtureval[k].calibtab[c][255] = fixtureval[k].calib[c];
+    }
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
       dmxaddr[channels*k+c] = (startaddr+c-1);
@@ -276,10 +293,13 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
     }
   }
   for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+    float fixmax(0);
     for(uint32_t c=0;c<channels;++c){
       tmpdmxdata[channels*kfix+c] += fixtureval[kfix].dmx[c];
-      // calibration:
-      tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calib[c];
+      fixmax = std::max(tmpdmxdata[channels*kfix+c],fixmax);
+    }
+    for(uint32_t c=0;c<channels;++c){
+      tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calibtab[c].interp(fixmax);
     }
   }
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
@@ -365,7 +385,7 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
       std::cerr << "WARNING: Unable to open DMX USB driver " << device << ".\n";
     }
   }else{
-    throw TASCAR::ErrMsg("Unknown DMX driver type \""+driver+"\" (must be \"artnet\" or \"opendmxusb\").");
+    throw TASCAR::ErrMsg("Unknown DMX driver type \""+driver+"\" (must be \"artnetdmx\" or \"opendmxusb\").");
   }
   add_variables( session );
   start_service();

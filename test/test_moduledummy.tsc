@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <receiver/>
+    <source><sound/></source>
+  </scene>
+  <modules>
+    <dummy checkprepare="true"/>
+  </modules>
+</session>
