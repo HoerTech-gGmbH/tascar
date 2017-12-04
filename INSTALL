@@ -22,18 +22,26 @@ The toolbox depends on the following libraries:
 
 For de-installation, please type
 
-sudo make uninstall
+  sudo make uninstall
 
 On debian-based systems, the dependencies may be satisfied by typing:
 
-sudo apt-get install libxml++2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev libfftw3-dev libfftw3-single3 libfftw3-double3
+  sudo apt-get install libxml++2.6-dev liblo-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev libfftw3-dev libfftw3-single3 libfftw3-double3
 
 To build a debian package of liblsl:
 
-git clone https://github.com/gisogrimm/labstreaminglayer
-cd labstreaminglayer/Distribution
-./pack.sh
-sudo dpkg -i liblsl*.deb
+install cmake: 
+  sudo apt install cmake
+
+clone repository:
+  git clone https://github.com/gisogrimm/labstreaminglayer
+
+compile and package:
+  cd labstreaminglayer/LSL/liblsl/build/
+  make ..
+  cd ../distros/deb/
+  ./pack.sh
+  sudo dpkg -i liblsl*.deb
 
 The original source of labstreaminglayer is
 https://github.com/sccn/labstreaminglayer
