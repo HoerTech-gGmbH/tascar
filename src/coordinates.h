@@ -114,6 +114,9 @@ namespace TASCAR {
     */
     inline pos_t& rot_z(double a) { 
       if( a != 0){
+        // cos -sin  0
+        // sin  cos  0
+        //  0    0   1
         double xn = cos(a)*x - sin(a)*y;
         double yn = cos(a)*y + sin(a)*x;
         x = xn;
@@ -125,6 +128,9 @@ namespace TASCAR {
     */
     inline pos_t& rot_x(double a) { 
       if( a != 0){
+        // 1   0    0
+        // 0  cos -sin
+        // 0  sin  cos
         double zn = cos(a)*z + sin(a)*y;
         double yn = cos(a)*y - sin(a)*z;
         z = zn;
@@ -137,8 +143,11 @@ namespace TASCAR {
     */
     inline pos_t& rot_y(double a) {
       if( a != 0){
-        double zn = cos(a)*z + sin(a)*x;
-        double xn = cos(a)*x - sin(a)*z;
+        // cos 0 sin
+        //  0  1   0
+        // -sin 0  cos
+        double xn = cos(a)*x + sin(a)*z;
+        double zn = cos(a)*z - sin(a)*x;
         z = zn;
         x = xn;
       }

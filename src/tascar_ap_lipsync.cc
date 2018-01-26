@@ -39,6 +39,12 @@ private:
   uint32_t numFormants;
   bool active;
   bool was_active;
+  enum { always, transport, onchange } send_mode;
+  float prev_kissBS;
+  float prev_jawB;
+  float prev_lipsclosedBS;
+  uint32_t onchangecount;
+  uint32_t onchangecounter;
 };
 
 lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -53,7 +59,13 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
     path_(std::string("/")+cfg.parentname),
     numFormants(4),
     active(true),
-    was_active(true)
+    was_active(true),
+    send_mode(always),
+    prev_kissBS(HUGE_VAL),
+    prev_jawB(HUGE_VAL),
+    prev_lipsclosedBS(HUGE_VAL),
+    onchangecount(3),
+    onchangecounter(0)
 {
   GET_ATTRIBUTE(smoothing);
   GET_ATTRIBUTE(url);
@@ -63,6 +75,19 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE(maxspeechlevel);
   GET_ATTRIBUTE(dynamicrange);
   GET_ATTRIBUTE(energypath);
+  std::string sendmode;
+  GET_ATTRIBUTE(sendmode);
+  if( !sendmode.empty() ){
+    if( sendmode == "always" )
+      send_mode = always;
+    else if( sendmode == "transport" )
+      send_mode = transport;
+    else if( sendmode == "onchange" )
+      send_mode = onchange;
+    else
+      throw TASCAR::ErrMsg("Invalid send mode "+sendmode+" (possible values: always, transport, onchange)");
+  }
+  GET_ATTRIBUTE(onchangecount);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());
@@ -183,16 +208,34 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   make_friendly_number(value);
   lipsclosedBS = value;
 
-  if( active ){
-    // send lipsync values to osc target:
-    lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB, lipsclosedBS );
-    if( !energypath.empty() )
-      lo_send( lo_addr, energypath.c_str(), "fffff", energy[1], energy[2], energy[3], 20*log10(vmin + 1e-6), 20*log10(vmax + 1e-6) );
+  bool lactive(active);
+  if( (send_mode == transport) && (tp.rolling == false) )
+    lactive = false;
+  if( lactive ){
+    // if "onchange" mode then send max "onchangecount" equal messages:
+    if( (send_mode == onchange) && 
+        (kissBS == prev_kissBS) && 
+        (jawB == prev_jawB) &&       
+        (lipsclosedBS == prev_lipsclosedBS) ){
+      if( onchangecounter )
+        onchangecounter--;
+    }else{
+      onchangecounter = onchangecount;
+    }
+    if( (send_mode != onchange) || (onchangecounter > 0) ){
+      // send lipsync values to osc target:
+      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB, lipsclosedBS );
+      if( !energypath.empty() )
+        lo_send( lo_addr, energypath.c_str(), "fffff", energy[1], energy[2], energy[3], 20*log10(vmin + 1e-6), 20*log10(vmax + 1e-6) );
+    }
   }else{
     if( was_active )
       lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", 0, 0, 0 );
   }
-  was_active = active;
+  was_active = lactive;
+  prev_kissBS = kissBS;
+  prev_jawB = jawB;
+  prev_lipsclosedBS = lipsclosedBS;
 }
 
 REGISTER_AUDIOPLUGIN(lipsync_t);

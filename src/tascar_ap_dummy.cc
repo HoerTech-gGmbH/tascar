@@ -1,9 +1,3 @@
-/*
- * (C) 2016 Giso Grimm
- * (C) 2015-2016 Gerard Llorach to
- *
- */
-
 #include "audioplugin.h"
 #include <lo/lo.h>
 #include "stft.h"

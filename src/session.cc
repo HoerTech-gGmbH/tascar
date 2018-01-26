@@ -478,10 +478,18 @@ void TASCAR::actor_module_t::write_xml()
   SET_ATTRIBUTE(actor);
 }
 
-void TASCAR::actor_module_t::set_location(const TASCAR::pos_t& l)
+void TASCAR::actor_module_t::set_location(const TASCAR::pos_t& l, bool b_local )
 {
-  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
-    it->obj->dlocation = l;
+  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
+    if( b_local ){
+      TASCAR::zyx_euler_t o(it->obj->get_orientation());
+      TASCAR::pos_t p(l);
+      p*=o;
+      it->obj->dlocation = p;
+    }else{
+      it->obj->dlocation = l;
+    }
+  }
 }
 
 void TASCAR::actor_module_t::set_orientation(const TASCAR::zyx_euler_t& o)
@@ -490,16 +498,36 @@ void TASCAR::actor_module_t::set_orientation(const TASCAR::zyx_euler_t& o)
     it->obj->dorientation = o;
 }
 
-void TASCAR::actor_module_t::add_location(const TASCAR::pos_t& l)
+void TASCAR::actor_module_t::set_transformation( const TASCAR::c6dof_t& tf, bool b_local )
 {
-  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
-    it->obj->dlocation += l;
+  set_orientation(tf.orientation);
+  set_location(tf.position, b_local );
+}
+
+void TASCAR::actor_module_t::add_location(const TASCAR::pos_t& l, bool b_local )
+{
+  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
+    if( b_local ){
+      TASCAR::zyx_euler_t o(it->obj->get_orientation());
+      TASCAR::pos_t p(l);
+      p*=o;
+      it->obj->dlocation += p;
+    }else{
+      it->obj->dlocation += l;
+    }
+  }
 }
 
 void TASCAR::actor_module_t::add_orientation(const TASCAR::zyx_euler_t& o)
 {
   for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it)
     it->obj->dorientation += o;
+}
+
+void TASCAR::actor_module_t::add_transformation( const TASCAR::c6dof_t& tf, bool b_local )
+{
+  add_orientation(tf.orientation);
+  add_location(tf.position, b_local );
 }
 
 namespace OSCSession {

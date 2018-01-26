@@ -26,7 +26,7 @@ SOURCES = omni cardioidmod door
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
   artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
-  matrix hoafdnrot mpu6050track touchosc savegains
+  matrix hoafdnrot mpu6050track touchosc savegains lslactor
 
 OBJECTS = audiostates.o coordinates.o audiochunks.o xmlconfig.o		\
   dynamicobjects.o sourcemod.o receivermod.o filterclass.o		\
@@ -86,7 +86,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
 
 
-CXXFLAGS += -fPIC -Wall -Wno-deprecated-declarations -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -L./ 
+CXXFLAGS += -fPIC -Wall -Wno-deprecated-declarations -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -fno-finite-math-only -std=c++11 -pthread -L./ 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
 $(GUIOBJECTS): EXTERNALS += gtkmm-3.0
@@ -188,7 +188,7 @@ tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
 tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 tascar_hoafdnrot.so: LDLIBS+=-lfftw3f
 
-tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime tascar_levels2osc.so: LDLIBS+=-llsl
+tascar_lsljacktime.so tascar_lslsl tascar_lsljacktime tascar_levels2osc.so tascar_lslactor.so: LDLIBS+=-llsl
 
 tascarreceiver_%.so: receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)

@@ -107,7 +107,7 @@ void src_diffuse_t::prepare( chunk_cfg_t& cf_ )
     delete source;
   reset_meters();
   addmeter( f_sample );
-  source = new TASCAR::Acousticmodel::diffuse_source_t( n_fragment, *(rmsmeter[0]) );
+  source = new TASCAR::Acousticmodel::diffuse_source_t( dynobject_t::e, n_fragment, *(rmsmeter[0]) );
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)

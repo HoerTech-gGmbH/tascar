@@ -70,14 +70,6 @@ varidelay_t::~varidelay_t()
   delete [] dline;
 }
 
-void varidelay_t::push(float x)
-{
-  pos++;
-  if( pos==dmax)
-    pos = 0;
-  dline[pos] = x;
-}
- 
 //float varidelay_t::get_dist_push(double dist,float x)
 //{
 //  pos++;

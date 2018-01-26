@@ -48,14 +48,15 @@ namespace TASCAR {
       pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet);
     };
 
-    class diffuse_source_t : public shoebox_t {
+    class diffuse_source_t : public shoebox_t, public TASCAR::xml_element_t {
     public:
-      diffuse_source_t(uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_);
+      diffuse_source_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_ );
       virtual ~diffuse_source_t() {};
       virtual void preprocess();
       amb1rotator_t audio;
       double falloff;
       bool active;
+      uint32_t layers;
       TASCAR::levelmeter_t& rmslevel;
     };
 

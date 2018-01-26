@@ -67,7 +67,13 @@ namespace TASCAR {
    \brief Add a new input value to delay line
    \param x Input value
 */
-    void push(float x);
+    inline void push(float x){
+      pos++;
+      if( pos>=dmax)
+        pos = 0;
+      dline[pos] = x;
+    };
+ 
 /**
    \brief Return value based on spatial distance between input and output
    \param dist Distance
@@ -80,7 +86,7 @@ namespace TASCAR {
     };
     inline float get_dist_push(double dist,float x){
       pos++;
-      if( pos==dmax)
+      if( pos>=dmax)
         pos = 0;
       dline[pos] = x;
       if( sinc.O )

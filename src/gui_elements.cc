@@ -372,44 +372,47 @@ void scene_draw_t::set_viewport(const viewt_t& viewt)
   }
 }
 
-void scene_draw_t::draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t rpos,TASCAR::Acousticmodel::source_t* src)
-{
-  cr->save();
-  // source connected with green line:
-  cr->set_source_rgb(0, 0.6, 0 );
-  draw_edge(cr,view(rpos),view(src->position));
-  //}else{
-    //TASCAR::Acousticmodel::mirrorsource_t* sim((TASCAR::Acousticmodel::mirrorsource_t*)src);
-    //double w(0);
-    //TASCAR::pos_t p_is;
-    //if( sim->reflector_->intersection( rpos,src->position, p_is, &w) ){
-    //  bool is_outside(false);
-    //  TASCAR::pos_t p_e(sim->reflector_->nearest(p_is, &is_outside));
-    //  if( is_outside ){
-    //    p_is = p_e;
-    //    cr->set_source_rgba(0.6, 0, 0, 0.5 );
-    //  }else{
-    //    cr->set_source_rgb(0, 0.6, 0 );
-    //  }
-    //  draw_edge(cr,view(rpos),view(p_is));
-    //  cr->stroke();
-    //  cr->save();
-    //  std::vector<double> dash(2);
-    //  dash[0] = markersize;
-    //  dash[1] = markersize;
-    //  cr->set_dash(dash,0);
-    //  cr->set_source_rgb(0.6, 0.6, 0.6 );
-    //  draw_edge(cr,view(p_is),view(src->position));
-    //  cr->stroke();
-    //  cr->restore();
-    //  draw_source_trace(cr,p_is,sim->src_);
-    //}else{
-    //  DEBUG("no intersection");
-    //}
-  //}
-  cr->stroke();
-  cr->restore();
-}
+//void scene_draw_t::draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t rpos,TASCAR::Acousticmodel::source_t* src,TASCAR::Acousticmodel::acoustic_model_t* am)
+//{
+//  cr->save();
+//  if( am->ismorder == 0 ){
+//    // primary source connected with green line:
+//    cr->set_source_rgba(0, 0.6, 0, 0.7 );
+//    draw_edge(cr,view(rpos),view(src->position));
+//  }else{
+//    cr->set_source_rgba(0, 0.6, 0, 0.3 );
+//    draw_edge(cr,view(rpos),view(am->position));
+//    //TASCAR::Acousticmodel::mirrorsource_t* sim((TASCAR::Acousticmodel::mirrorsource_t*)src);
+//    //double w(0);
+//    //TASCAR::pos_t p_is;
+//    //if( sim->reflector_->intersection( rpos,src->position, p_is, &w) ){
+//    //  bool is_outside(false);
+//    //  TASCAR::pos_t p_e(sim->reflector_->nearest(p_is, &is_outside));
+//    //  if( is_outside ){
+//    //    p_is = p_e;
+//    //    cr->set_source_rgba(0.6, 0, 0, 0.5 );
+//    //  }else{
+//    //    cr->set_source_rgb(0, 0.6, 0 );
+//    //  }
+//    //  draw_edge(cr,view(rpos),view(p_is));
+//    //  cr->stroke();
+//    //  cr->save();
+//    //  std::vector<double> dash(2);
+//    //  dash[0] = markersize;
+//    //  dash[1] = markersize;
+//    //  cr->set_dash(dash,0);
+//    //  cr->set_source_rgb(0.6, 0.6, 0.6 );
+//    //  draw_edge(cr,view(p_is),view(src->position));
+//    //  cr->stroke();
+//    //  cr->restore();
+//    //  draw_source_trace(cr,p_is,sim->src_);
+//    //}else{
+//    //  DEBUG("no intersection");
+//    //}
+//  }
+//  cr->stroke();
+//  cr->restore();
+//}
 
 void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
 {
@@ -430,14 +433,13 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       pos_t psrc(view((*iam)->position));
       pos_t prec(view((*iam)->receiver_->position));
       cr->save();
-      if( (*iam)->get_gain() < EPS )
+      double gain_color(std::min(1.0,std::max(0.0,(*iam)->get_gain())));
+      if( gain_color < EPS )
         // sources with zero gain but active are shown in red:
-        cr->set_source_rgb(1, 0, 0);
-      else{
+        cr->set_source_rgba(1, 0, 0, 0.5 );
+      else
         // regular sources are gray:
-        double w(std::min(1.0,std::max(0.0,(*iam)->get_gain())));
-        cr->set_source_rgb( 0, w, w );
-      }
+        cr->set_source_rgba( 0,0,0,0.1+0.9*gain_color);
       // mark sources as circle with cross:
       cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
       cr->move_to(psrc.x-0.7*markersize,-psrc.y+0.7*markersize);
@@ -446,11 +448,16 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       cr->line_to(psrc.x+0.7*markersize,-psrc.y+0.7*markersize);
       cr->stroke();
       // draw source traces:
-      draw_source_trace(cr,(*iam)->receiver_->position,(*iam)->src_);
+      //draw_edge(cr,prec,psrc);
+      //draw_source_trace(cr,(*iam)->receiver_->position,(*iam)->src_,*iam);
       // gray line from source to receiver:
-      cr->set_source_rgba(0, 0, 0, std::min(1.0,(*iam)->get_gain()));
-      //draw_edge(cr,psrc,prec);
-      cr->stroke();
+      //cr->set_source_rgba(0, 0, 0, std::min(1.0,(*iam)->get_gain()));
+      // regular sources are gray:
+      if( gain_color > EPS ){
+        cr->set_source_rgba( 0,0.6,0,0.1+0.9*gain_color);
+        draw_edge(cr,psrc,prec);
+        cr->stroke();
+      }
       // image source or primary source:
       if( (*iam)->ismorder > 0 ){
         // image source:
@@ -459,15 +466,21 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
         //cr->fill();
         //draw_edge(cr,psrc,pcut);
         //cr->stroke();
-        //cr->save();
-        //char ctmp[1000];
-        //sprintf(ctmp,"%d",(*iam)->src_->ismorder);
-        ////((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->reflector_->);
+        cr->save();
+        char ctmp[1000];
+        sprintf(ctmp,"%d",(*iam)->ismorder);
+        //((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->reflector_->);
+        if( gain_color < EPS )
+          // sources with zero gain but active are shown in red:
+          cr->set_source_rgba(1, 0, 0, 0.5 );
+        else
+          // regular sources are gray:
+          cr->set_source_rgba( 0,0,0,0.1+0.9*gain_color );
         //cr->set_source_rgba(0, 0, 0, 0.4);
-        //cr->move_to( psrc.x+1.2*markersize, -psrc.y );
-        //cr->show_text( ctmp );
-        //cr->stroke();
-        //cr->restore();
+        cr->move_to( psrc.x+1.2*markersize, -psrc.y );
+        cr->show_text( ctmp );
+        cr->stroke();
+        cr->restore();
       }else{
         // primary source:
         cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );

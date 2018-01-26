@@ -84,17 +84,17 @@ void TASCAR::pdfexport_t::draw(scene_draw_t::viewt_t persp)
   cr->rectangle(lmargin,tmargin,width-lmargin-rmargin,height-tmargin-bmargin);
   cr->stroke();
   cr->set_source_rgb(1,1,1);
-  cr->rectangle(bx,by,bw,bh);
+  cr->rectangle(bx,by+22,bw,bh-22);
   cr->fill();
   //cr->set_line_width( 2 );
   cr->set_source_rgb(0,0,0);
-  cr->rectangle(bx,by,bw,bh);
+  cr->rectangle(bx,by+22,bw,bh-22);
   cr->stroke();
-  cr->move_to( bx+12, by+15 );
-  cr->show_text( filename.c_str() );
-  cr->move_to( bx, by+22 );
-  cr->line_to( bx+bw,by+22);
-  cr->stroke();
+  //cr->move_to( bx+12, by+15 );
+  //cr->show_text( filename.c_str() );
+  //cr->move_to( bx, by+22 );
+  //cr->line_to( bx+bw,by+22);
+  //cr->stroke();
   cr->set_font_size( 10 );
   char ctmp[1024];
   switch( persp ){

@@ -49,7 +49,7 @@ void levels2osc_t::prepare( chunk_cfg_t& cf_ )
       lo_message_add_float(vmsg.back(),0);
     vargv.push_back(lo_message_get_argv(vmsg.back()));
     vpath.push_back(std::string("/level/")+it->obj->get_name());
-    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(it->obj->get_name(),"level",it->obj->metercnt())));
+    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(it->obj->get_name(),"level",it->obj->metercnt(),cf_.f_fragment)));
   }
 }
 

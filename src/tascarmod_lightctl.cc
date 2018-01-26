@@ -184,11 +184,11 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     fixtures[k].get_attribute("calib26",fixtureval[k].calib26);
     fixtures[k].get_attribute("calib1",fixtureval[k].calib1);
     for(uint32_t c=fixtureval[k].calib.size();c<channels;++c)
-      fixtureval[k].calib[c] = 1.0;
+      fixtureval[k].calib.push_back(1.0);
     for(uint32_t c=fixtureval[k].calib26.size();c<channels;++c)
-      fixtureval[k].calib26[c] = 1.0;
+      fixtureval[k].calib26.push_back(1.0);
     for(uint32_t c=fixtureval[k].calib1.size();c<channels;++c)
-      fixtureval[k].calib1[c] = 1.0;
+      fixtureval[k].calib1.push_back(1.0);
     for(uint32_t c=fixtureval[k].calib1.size();c<channels;++c){
       fixtureval[k].calibtab[c][1] = fixtureval[k].calib1[c];
       fixtureval[k].calibtab[c][26] = fixtureval[k].calib26[c];
@@ -197,7 +197,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
       dmxaddr[channels*k+c] = (startaddr+c-1);
-      basedmx[channels*k+c] = lampdmx[c];
+       basedmx[channels*k+c] = lampdmx[c];
     }
   }
   objval.resize(objects_.size());

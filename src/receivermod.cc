@@ -65,6 +65,11 @@ std::vector<std::string> TASCAR::receivermod_t::get_connections() const
   return libdata->get_connections();
 }
 
+void TASCAR::receivermod_t::add_variables( TASCAR::osc_server_t* srv )
+{
+  return libdata->add_variables( srv );
+}
+
 void TASCAR::receivermod_t::prepare( chunk_cfg_t& cf_ )
 {
   receivermod_base_t::prepare( cf_ );

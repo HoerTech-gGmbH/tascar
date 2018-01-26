@@ -49,6 +49,7 @@ namespace TASCAR {
     virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
+    virtual void add_variables( TASCAR::osc_server_t* srv ) {};
   protected:
   };
 
@@ -78,6 +79,7 @@ namespace TASCAR {
     void prepare( chunk_cfg_t& );
     void release();
     virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+    virtual void add_variables( TASCAR::osc_server_t* srv );
   private:
     receivermod_t(const receivermod_t&);
     std::string receivertype;

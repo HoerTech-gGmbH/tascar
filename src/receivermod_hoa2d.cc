@@ -8,7 +8,7 @@ class hoa2d_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    data_t(uint32_t chunksize,uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau );
+    data_t( uint32_t chunksize, uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau );
     virtual ~data_t();
     // point source speaker weights:
     uint32_t amb_order;
@@ -20,7 +20,7 @@ public:
     TASCAR::wave_t wx_2;
     TASCAR::wave_t wy_1;
     TASCAR::wave_t wy_2;
-    TASCAR::fsplit_t delay;
+    TASCAR::fsplit_t fsplitdelay;
     TASCAR::varidelay_t dx;
     TASCAR::varidelay_t dy;
   };
@@ -37,6 +37,7 @@ public:
   void prepare( chunk_cfg_t& );
   // decode HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
+  void add_variables( TASCAR::osc_server_t* srv );
 private:
   uint32_t nbins;
   uint32_t order;
@@ -114,6 +115,14 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     amb_order = std::min((uint32_t)order,amb_order);
 }
 
+void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
+{
+  srv->add_bool( "/diffup", &diffup );
+  srv->add_double_degree( "/diffup_rot", &diffup_rot );
+  srv->add_double( "/diffup_delay", &diffup_delay );
+  srv->add_uint( "/diffup_maxorder", &diffup_maxorder );
+}
+
 void hoa2d_t::write_xml()
 {
   TASCAR::receivermod_base_speaker_t::write_xml();
@@ -176,7 +185,7 @@ hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t channels, double srate, TASC
     wx_2(chunksize),
     wy_1(chunksize),
     wy_2(chunksize),
-    delay(srate, shape, srate*tau ),
+    fsplitdelay(srate, shape, srate*tau ),
     dx(srate, srate, 340, 0, 0 ),
     dy(srate, srate, 340, 0, 0 )
 {
@@ -235,9 +244,9 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TAS
     d->enc_dwp[0] = d->enc_dwm[0] = 0.0f;
     d->enc_wp[0] = d->enc_wm[0] = ordergain[0];
     for(uint32_t kt=0;kt<n_fragment;++kt){
-      d->delay.push(chunk[kt]);
+      d->fsplitdelay.push(chunk[kt]);
       float vp, vm;
-      d->delay.get(vp,vm);
+      d->fsplitdelay.get(vp,vm);
       for(uint32_t ko=0;ko<=amb_order;++ko)
         s_encoded[kt*nbins+ko] += ((d->enc_wp[ko] += d->enc_dwp[ko]) * vp + 
                                    (d->enc_wm[ko] += d->enc_dwm[ko]) * vm);
@@ -263,40 +272,34 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
 
 void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
+  idelay = diffup_delay*f_sample;
   data_t* d((data_t*)sd);
-  float _Complex rot_p(cexpf(I*diffup_rot));
-  float _Complex rot_m(cexpf(-I*diffup_rot));
-  //spkpos.foa_decode(chunk,output);
+  // copy first order data:
   for(uint32_t kt=0;kt<n_fragment;++kt){
     s_encoded[kt*nbins] += ordergain[0]*chunk.w()[kt];
     s_encoded[kt*nbins+1] += ordergain[1]*(chunk.x()[kt] + I*chunk.y()[kt]);
   }
   if( diffup ){
+    float _Complex rot_p(cexpf(I*diffup_rot));
+    float _Complex rot_m(cexpf(-I*diffup_rot));
     // create filtered x and y signals:
     uint32_t n(chunk.size());
-    for(uint32_t k=0;k<n;++k){
+    for(uint32_t kt=0;kt<n;++kt){
       // fill delayline:
-      float xin(chunk.x()[k]);
-      float yin(chunk.y()[k]);
+      float xin(chunk.x()[kt]);
+      float yin(chunk.y()[kt]);
       d->dx.push(xin);
       d->dy.push(yin);
       // get delayed value:
       float xdelayed(d->dx.get(idelay));
       float ydelayed(d->dy.get(idelay));
-      d->wx_1[k] = 0.5*(xin + xdelayed);
-      d->wx_2[k] = 0.5*(xin - xdelayed);
-      d->wy_1[k] = 0.5*(yin + ydelayed);
-      d->wy_2[k] = 0.5*(yin - ydelayed);
-    }
-    for(uint32_t l=2;l<=std::min(amb_order,diffup_maxorder);++l){
-      for(uint32_t k=0;k<n;++k){
-        float _Complex tmp1(rot_p*(d->wx_1[k]+I*d->wy_1[k]));
-        float _Complex tmp2(rot_m*(d->wx_2[k]+I*d->wy_2[k]));
-        d->wx_1[k] = crealf(tmp1);
-        d->wx_2[k] = crealf(tmp2);
-        d->wy_1[k] = cimag(tmp1);
-        d->wy_2[k] = cimag(tmp2);
-        s_encoded[k*nbins+l] = ordergain[l]*(tmp1+tmp2);
+      // create filtered signals:
+      float _Complex tmp_p(0.5*((xin + xdelayed) + I*(yin + ydelayed)));
+      float _Complex tmp_m(0.5*((xin - xdelayed) + I*(yin - ydelayed)));
+      for(uint32_t l=2;l<=std::min(amb_order,diffup_maxorder);++l){
+        tmp_p *= rot_p;
+        tmp_m *= rot_m;
+        //s_encoded[kt*nbins+l] = ordergain[l]*(tmp_p+tmp_m);
       }
     }
   }
@@ -316,7 +319,7 @@ std::string hoa2d_t::get_channel_postfix(uint32_t channel) const
 
 TASCAR::receivermod_base_t::data_t* hoa2d_t::create_data(double srate,uint32_t fragsize)
 {
-  return new data_t(fragsize,spkpos.size(),srate, shape, filterperiod );
+  return new data_t( fragsize, spkpos.size(), srate, shape, filterperiod );
 }
 
 REGISTER_RECEIVERMOD(hoa2d_t);

@@ -68,5 +68,8 @@ leak_test_pos%: test_pos%.tsc expected_pos%.wav
 	LD_LIBRARY_PATH=../build/ ../build/compare_posfile expected_pos$*.wav test_pos$*.wav 1e-9
 	rm -f test_pos$*.wav
 
+leak_%: %.tsc
+	LD_LIBRARY_PATH=../build/ valgrind --leak-check=full  --show-leak-kinds=all ../build/tascar_renderfile -i zeros.wav -o $*.wav -d -f 64 $<
+
 clean:
 	rm -f *~ test*.wav gdbcmd

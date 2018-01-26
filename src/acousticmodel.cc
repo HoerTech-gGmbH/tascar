@@ -18,12 +18,15 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-diffuse_source_t::diffuse_source_t(uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
-  : audio(chunksize),
+diffuse_source_t::diffuse_source_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
+  : xml_element_t( cfg ),
+    audio(chunksize),
     falloff(1.0),
     active(true),
+    layers(0xffffffff),
     rmslevel(rmslevel_)
 {
+  GET_ATTRIBUTE_BITS(layers);
 }
 
 void diffuse_source_t::preprocess()
@@ -122,9 +125,7 @@ uint32_t acoustic_model_t::process()
       for(uint32_t k=0;k<chunksize;++k){
         distance+=ddistance;
         gain+=dgain;
-        float c1(air_absorption+=dairabsorption);
-        float c2(1.0f-c1);
-        // apply air absorption:
+        // calculate layer fade gain:
         if(layeractive){
           if(layergain < 1.0)
             layergain += dlayergain;
@@ -132,6 +133,9 @@ uint32_t acoustic_model_t::process()
           if(layergain > 0.0)
             layergain -= dlayergain;
         }
+        float c1(air_absorption+=dairabsorption);
+        float c2(1.0f-c1);
+        // apply air absorption:
         c1 *= layergain*gain*delayline.get_dist_push(distance,audio[k]);
         airabsorption_state = c2*airabsorption_state+c1;
         make_friendly_number(airabsorption_state);
@@ -375,7 +379,8 @@ uint32_t diffuse_acoustic_model_t::process()
         audio.z()[k] *= gain;
       }
     }
-    if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero) ){
+    if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero)  &&
+        (receiver_->layers & src_->layers) ){
       audio *= receiver_->diffusegain;
       receiver_->add_diffusesource(audio,receiver_data);
       return 1;

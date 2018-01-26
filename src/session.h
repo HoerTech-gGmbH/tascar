@@ -134,10 +134,12 @@ namespace TASCAR {
     actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty=false );
     virtual ~actor_module_t();
     void write_xml();
-    void set_location(const TASCAR::pos_t& l);
-    void set_orientation(const TASCAR::zyx_euler_t& o);
-    void add_location(const TASCAR::pos_t& l);
-    void add_orientation(const TASCAR::zyx_euler_t& o);
+    void set_location(const TASCAR::pos_t& l, bool b_local = false );
+    void set_orientation(const TASCAR::zyx_euler_t& o );
+    void set_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
+    void add_location(const TASCAR::pos_t& l, bool b_local );
+    void add_orientation(const TASCAR::zyx_euler_t& o );
+    void add_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
   protected:
     std::string actor;
     std::vector<TASCAR::named_object_t> obj;

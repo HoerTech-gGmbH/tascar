@@ -27,7 +27,8 @@ int main(int argc, char** argv)
       " channels=" << lsl_get_channel_count(buffer[kstream]) << 
       " fs=" << lsl_get_nominal_srate(buffer[kstream]) << " Hz " <<
       //lsl_get_uid(buffer[kstream]) << "@" <<
-      lsl_get_hostname(buffer[kstream]) <<
+      lsl_get_hostname(buffer[kstream]) << " (" <<
+      lsl_get_source_id(buffer[kstream]) << ")" <<
       std::endl;
     lsl_destroy_streaminfo(buffer[kstream]);
   }

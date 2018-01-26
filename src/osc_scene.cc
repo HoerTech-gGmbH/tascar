@@ -202,6 +202,10 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::
   srv->add_uint(ctlname+"/ismmax",&(s->ismmax));
   srv->add_uint(ctlname+"/layers",&(s->layers));
   srv->add_float_db(ctlname+"/caliblevel",&(s->caliblevel));
+  std::string oldpref(srv->get_prefix());
+  srv->set_prefix( ctlname );
+  s->add_variables( srv );
+  srv->set_prefix( oldpref );
 }
 
 void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
