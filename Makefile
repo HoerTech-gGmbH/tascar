@@ -28,14 +28,14 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
   matrix hoafdnrot mpu6050track touchosc savegains lslactor
 
-OBJECTS = audiostates.o coordinates.o audiochunks.o xmlconfig.o		\
-  dynamicobjects.o sourcemod.o receivermod.o filterclass.o		\
-  osc_helper.o acousticmodel.o scene.o render.o session_reader.o	\
-  session.o jackclient.o delayline.o async_file.o errorhandling.o	\
-  osc_scene.o ringbuffer.o viewport.o sampler.o jackiowav.o cli.o	\
-  irrender.o jackrender.o audioplugin.o levelmeter.o serviceclass.o	\
-  alsamidicc.o speakerarray.o spectrum.o fft.o stft.o ola.o		\
-  termsetbaud.o serialport.o dmxdriver.o
+OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
+  xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
+  filterclass.o osc_helper.o acousticmodel.o scene.o render.o		\
+  session_reader.o session.o jackclient.o delayline.o async_file.o	\
+  errorhandling.o osc_scene.o ringbuffer.o viewport.o sampler.o		\
+  jackiowav.o cli.o irrender.o jackrender.o audioplugin.o		\
+  levelmeter.o serviceclass.o alsamidicc.o speakerarray.o spectrum.o	\
+  fft.o stft.o ola.o termsetbaud.o serialport.o dmxdriver.o
 
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme		\
   onsetdetector delay sndfile spksim dummy hannenv gate metronome

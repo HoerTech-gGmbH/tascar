@@ -467,6 +467,15 @@ void scene_t::release()
     (*it)->release();
 }
 
+void scene_t::add_licenses( licensehandler_t* session )
+{
+  for( std::vector<TASCAR::Scene::sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it)
+    for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=(*it)->plugins.begin();iPlug!=(*it)->plugins.end();++iPlug){
+    (*iPlug)->add_licenses( session );
+  }
+
+}
+
 rgb_color_t::rgb_color_t(const std::string& webc)
   : r(0),g(0),b(0)
 {

@@ -56,13 +56,15 @@ int main(int argc, char** argv)
     std::string jackname;
     std::string output;
     std::string range;
+    bool showlicense(false);
     bool use_range(false);
-    const char *options = "hj:o:r:";
+    const char *options = "hj:o:r:l";
     struct option long_options[] = { 
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'j' },
       { "output",   1, 0, 'o' },
       { "range",    1, 0, 'r' },
+      { "licenses", 0, 0, 'l' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -79,6 +81,9 @@ int main(int argc, char** argv)
       case 'o':
         output = optarg;
         break;
+      case 'l':
+        showlicense = true;
+        break;
       case 'r':
         range = optarg;
         use_range = true;
@@ -92,6 +97,10 @@ int main(int argc, char** argv)
       return -1;
     }
     TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
+    if( showlicense ){
+      std::cout << session.legal_stuff() << std::endl;
+      return 0;
+    }
     if( range.empty() && use_range ){
       for(uint32_t k=0;k<session.ranges.size();k++)
         std::cout << session.ranges[k]->name << std::endl;

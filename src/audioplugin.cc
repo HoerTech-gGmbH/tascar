@@ -78,6 +78,11 @@ void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
   libdata->add_variables( srv );
 }
 
+void TASCAR::audioplugin_t::add_licenses( licensehandler_t* session )
+{
+  libdata->add_licenses( session );
+}
+
 TASCAR::audioplugin_t::~audioplugin_t()
 {
   delete libdata;

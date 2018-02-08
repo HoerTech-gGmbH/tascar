@@ -291,6 +291,7 @@ namespace TASCAR {
       std::vector<object_t*> get_objects();
       std::string scene_path;
       void configure_meter( float tc, TASCAR::levelmeter_t::weight_t w );
+      void add_licenses( licensehandler_t* session );
     private:
       void clean_children();
       scene_t(const scene_t&);

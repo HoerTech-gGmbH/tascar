@@ -1,5 +1,6 @@
 #include "audioplugin.h"
 #include "errorhandling.h"
+#include <fstream>
 
 class ap_sndfile_cfg_t : public TASCAR::audioplugin_base_t {
 public:
@@ -16,6 +17,8 @@ protected:
   bool triggered;
   bool transport;
   bool mute;
+  std::string license;
+  std::string attribution;
 };
 
 ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -44,6 +47,8 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE_BOOL(triggered);
   GET_ATTRIBUTE_BOOL(transport);
   GET_ATTRIBUTE_BOOL(mute);
+  GET_ATTRIBUTE(license);
+  GET_ATTRIBUTE(attribution);
   if( start < 0 )
     throw TASCAR::ErrMsg("file start time must be positive.");
 }
@@ -54,6 +59,7 @@ public:
   ~ap_sndfile_t();
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
+  void add_licenses( licensehandler_t* session );
 private:
   uint32_t triggeredloop;
   TASCAR::transport_t ltp;
@@ -64,6 +70,13 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
     TASCAR::sndfile_t(name,channel,start,length),
     triggeredloop(0)
 {
+  std::ifstream flic(name+".license");
+  if( flic.good() ){
+    if( !flic.eof())
+      std::getline(flic,license);
+    if( !flic.eof())
+      std::getline(flic,attribution);
+  }
   if( triggered ){
     set_position(-n*get_srate());
     set_loop(1);
@@ -85,6 +98,12 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
 
 ap_sndfile_t::~ap_sndfile_t()
 {
+}
+
+void ap_sndfile_t::add_licenses( licensehandler_t* session )
+{
+  int idx0(name.rfind("/"));
+  session->add_license( license, attribution, name.substr(idx0+1) );
 }
 
 void ap_sndfile_t::add_variables( TASCAR::osc_server_t* srv )

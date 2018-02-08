@@ -29,6 +29,24 @@ private:
   int32_t preparecount;
 };
 
+namespace TASCAR {
+  /**
+     \brief Transport state and time information
+
+     Typically the session time, corresponding to the first audio
+     sample in a chunk.
+   */
+  class transport_t {
+  public:
+    transport_t();
+    uint64_t session_time_samples;//!< Session time in samples
+    double session_time_seconds;//!< Session time in seconds
+    uint64_t object_time_samples;//!< Object time in samples
+    double object_time_seconds;//!< Object time in seconds
+    bool rolling;//!< Transport state
+  };
+}
+
 #endif
 
 /*

@@ -138,6 +138,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
   jackc_transport_t::activate();
   // parse XML:
   read_xml();
+  add_license(license,attribution,"session file");
   add_transport_methods();
   osc_server_t::activate();
 }
@@ -149,7 +150,11 @@ void TASCAR::session_t::read_xml()
     tsc_reader_t::GET_ATTRIBUTE_BOOL(loop);
     tsc_reader_t::GET_ATTRIBUTE(levelmeter_tc);
     tsc_reader_t::GET_ATTRIBUTE(levelmeter_weight);
+    tsc_reader_t::GET_ATTRIBUTE(license);
+    tsc_reader_t::GET_ATTRIBUTE(attribution);
     TASCAR::tsc_reader_t::read_xml();
+    for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
+      (*it)->add_licenses( this );
   }
   catch( ... ){
     if( lock_vars() ){
@@ -600,6 +605,7 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
   osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);
 }
+
 
 /*
  * Local Variables:

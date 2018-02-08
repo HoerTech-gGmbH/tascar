@@ -4,6 +4,8 @@
 #include "jackrender.h"
 #include "session_reader.h"
 
+#include <set>
+
 namespace TASCAR {
 
   class session_t;
@@ -77,7 +79,7 @@ namespace TASCAR {
     std::string srv_addr;
   };
 
-  class session_t : public TASCAR::tsc_reader_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t {
+  class session_t : public TASCAR::tsc_reader_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t, public licensehandler_t {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
@@ -127,6 +129,8 @@ namespace TASCAR {
     bool started_;
     pthread_mutex_t mtx;
     //uint32_t pcnt;
+    std::string license;
+    std::string attribution;
   };
 
   class actor_module_t : public module_base_t {

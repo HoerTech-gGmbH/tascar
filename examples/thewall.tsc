@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session duration="12" loop="true" srv_port="9999">
+<session duration="12" loop="true" license="CC-BY-SA" attribution="Giso Grimm">
   <scene guiscale="20" guitracking="out">
     <source name="steps" mute="false" solo="false" color="#000000" start="0" end="0">
       <position interpolation="cartesian">0 0 0 0

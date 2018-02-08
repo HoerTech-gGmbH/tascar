@@ -4,24 +4,9 @@
 #include "xmlconfig.h"
 #include "audiochunks.h"
 #include "tascarplugin.h"
+#include "licensehandler.h"
 
 namespace TASCAR {
-
-  /**
-     \brief Transport state and time information
-
-     Typically the session time, corresponding to the first audio
-     sample in a chunk.
-   */
-  class transport_t {
-  public:
-    transport_t();
-    uint64_t session_time_samples;//!< Session time in samples
-    double session_time_seconds;//!< Session time in seconds
-    uint64_t object_time_samples;//!< Object time in samples
-    double object_time_seconds;//!< Object time in seconds
-    bool rolling;//!< Transport state
-  };
 
   class audioplugin_cfg_t {
   public:
@@ -42,6 +27,7 @@ namespace TASCAR {
     virtual ~audioplugin_base_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp) = 0;
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
+    virtual void add_licenses( licensehandler_t* ) {};
     const std::string& get_name() const { return name; };
     const std::string& get_modname() const { return modname; };
   protected:
@@ -59,6 +45,7 @@ namespace TASCAR {
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
     virtual void prepare( chunk_cfg_t& );
     virtual void add_variables( TASCAR::osc_server_t* srv );
+    virtual void add_licenses( licensehandler_t* srv );
     virtual void release();
   private:
     audioplugin_t(const audioplugin_t&);
