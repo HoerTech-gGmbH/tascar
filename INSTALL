@@ -37,8 +37,10 @@ clone repository:
   git clone https://github.com/gisogrimm/labstreaminglayer
 
 compile and package:
+  mkdir labstreaminglayer/LSL/liblsl/build/
   cd labstreaminglayer/LSL/liblsl/build/
-  make ..
+  cmake ..
+  make
   cd ../distros/deb/
   ./pack.sh
   sudo dpkg -i liblsl*.deb
