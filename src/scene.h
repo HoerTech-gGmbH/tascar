@@ -87,6 +87,8 @@ namespace TASCAR {
       uint32_t loopcnt;
       double gain;
       std::string parentname;
+      std::string license;
+      std::string attribution;
     };
 
     class object_t : public dynobject_t, public route_t {

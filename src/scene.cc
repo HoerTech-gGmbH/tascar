@@ -470,10 +470,14 @@ void scene_t::release()
 void scene_t::add_licenses( licensehandler_t* session )
 {
   for( std::vector<TASCAR::Scene::sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it)
-    for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=(*it)->plugins.begin();iPlug!=(*it)->plugins.end();++iPlug){
-    (*iPlug)->add_licenses( session );
-  }
-
+    for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=(*it)->plugins.begin();iPlug!=(*it)->plugins.end();++iPlug)
+      (*iPlug)->add_licenses( session );
+  for( std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+    for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
+      session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
+  for( std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
+      session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
 }
 
 rgb_color_t::rgb_color_t(const std::string& webc)
@@ -677,6 +681,7 @@ sndfile_info_t::sndfile_info_t(xmlpp::Element* xmlsrc)
     throw TASCAR::ErrMsg("Invalid attribute \"start\" found. Did you mean \"starttime\"? ("+fname+").");
   if( e->get_attribute("channel") != 0 )
     throw TASCAR::ErrMsg("Invalid attribute \"channel\" found. Did you mean \"firstchannel\"? ("+fname+").");
+  get_license_info( e, fname, license, attribution );
 }
 
 void sndfile_info_t::write_xml()

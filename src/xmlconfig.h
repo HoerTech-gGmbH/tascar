@@ -8,6 +8,9 @@
 
 namespace TASCAR {
 
+  std::string tscbasename( const std::string& s );
+
+
   std::string default_string(const std::string& src,const std::string& def);
 
   class xml_element_t {

@@ -47,8 +47,6 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE_BOOL(triggered);
   GET_ATTRIBUTE_BOOL(transport);
   GET_ATTRIBUTE_BOOL(mute);
-  GET_ATTRIBUTE(license);
-  GET_ATTRIBUTE(attribution);
   if( start < 0 )
     throw TASCAR::ErrMsg("file start time must be positive.");
 }
@@ -70,13 +68,7 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
     TASCAR::sndfile_t(name,channel,start,length),
     triggeredloop(0)
 {
-  std::ifstream flic(name+".license");
-  if( flic.good() ){
-    if( !flic.eof())
-      std::getline(flic,license);
-    if( !flic.eof())
-      std::getline(flic,attribution);
-  }
+  get_license_info( e, name, license, attribution );
   if( triggered ){
     set_position(-n*get_srate());
     set_loop(1);
@@ -102,8 +94,7 @@ ap_sndfile_t::~ap_sndfile_t()
 
 void ap_sndfile_t::add_licenses( licensehandler_t* session )
 {
-  int idx0(name.rfind("/"));
-  session->add_license( license, attribution, name.substr(idx0+1) );
+  session->add_license( license, attribution, TASCAR::tscbasename(TASCAR::env_expand(name)) );
 }
 
 void ap_sndfile_t::add_variables( TASCAR::osc_server_t* srv )

@@ -1,4 +1,23 @@
 #include "licensehandler.h"
+#include <fstream>
+#include "xmlconfig.h"
+
+void get_license_info( xmlpp::Element* e, const std::string& fname, std::string& license, std::string& attribution )
+{
+  if( e->get_attribute( "license" ) )
+    license = e->get_attribute_value("license");
+  if( e->get_attribute( "attribution" ) )
+    attribution = e->get_attribute_value("attribution");
+  if( !fname.empty() ){
+    std::ifstream flic(TASCAR::env_expand(fname)+".license");
+    if( flic.good() ){
+      if( !flic.eof())
+        std::getline(flic,license);
+      if( !flic.eof())
+        std::getline(flic,attribution);
+    }
+  }  
+}
 
 void licensehandler_t::add_license( const std::string& license, const std::string& attribution, const std::string& tag )
 {
@@ -19,7 +38,7 @@ std::string licensehandler_t::legal_stuff() const
       if( sit==it->second.begin() )
         retv += "(";
       else
-        retv += ",";
+        retv += ", ";
       retv += *sit;
     }
     if( !it->second.empty() )
@@ -34,7 +53,7 @@ std::string licensehandler_t::legal_stuff() const
         if( sit==it->second.begin() )
           retv += "(";
         else
-          retv += ",";
+          retv += ", ";
         retv += *sit;
       }
       if( !it->second.empty() )

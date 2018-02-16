@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include "errorhandling.h"
 
+std::string TASCAR::tscbasename( const std::string& s )
+{
+  return s.substr(s.rfind("/")+1);
+}
+
 std::string TASCAR::default_string(const std::string& src,const std::string& def)
 {
   if( src.empty() )

@@ -1,6 +1,7 @@
 #ifndef LICENSEHANDLER_H
 #define LICENSEHANDLER_H
 
+#include <libxml++/libxml++.h>
 #include <string>
 #include <map>
 #include <set>
@@ -13,6 +14,8 @@ private:
   std::map<std::string,std::set<std::string> > licenses;
   std::map<std::string,std::set<std::string> > attributions;
 };
+
+void get_license_info( xmlpp::Element* e, const std::string& fname, std::string& license, std::string& attribution );
 
 #endif
 

@@ -16,20 +16,24 @@ TASCAR::tsc_reader_t::tsc_reader_t()
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
 }
 
-void add_includes( xmlpp::Element* e, const std::string& parentdoc )
+void add_includes( xmlpp::Element* e, const std::string& parentdoc, licensehandler_t* lh )
 {
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
       if( sne->get_name() == "include" ){
-        std::string idocname(sne->get_attribute_value("name"));
+        std::string idocname(TASCAR::env_expand(sne->get_attribute_value("name")));
         if( (!idocname.empty()) && (idocname != parentdoc) ){
           TASCAR::xml_doc_t idoc(idocname,TASCAR::xml_doc_t::LOAD_FILE);
           if( idoc.doc->get_root_node()->get_name() != e->get_name() ){
             throw TASCAR::ErrMsg("Invalid root node \""+idoc.doc->get_root_node()->get_name()+"\" in include file \""+idocname+"\".\nexpected \""+e->get_name()+"\".");
           }
-          add_includes( idoc.doc->get_root_node(), idocname );
+          std::string sublicense;
+          std::string subattribution;
+          get_license_info( idoc.doc->get_root_node(), "", sublicense, subattribution );
+          lh->add_license( sublicense, subattribution, TASCAR::tscbasename(idocname));
+          add_includes( idoc.doc->get_root_node(), idocname, lh );
           xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
           for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
             xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
@@ -39,7 +43,7 @@ void add_includes( xmlpp::Element* e, const std::string& parentdoc )
           }
         }
       }else{
-        add_includes( sne, parentdoc );
+        add_includes( sne, parentdoc, lh );
       }
     }
   }
@@ -65,11 +69,13 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type
   if( get_element_name() != "session" )
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
   // add session-includes:
-  add_includes( e, "" );
+  add_includes( e, "", this );
 }
 
 void TASCAR::tsc_reader_t::read_xml()
 {
+  GET_ATTRIBUTE(license);
+  GET_ATTRIBUTE(attribution);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -90,6 +96,7 @@ void TASCAR::tsc_reader_t::read_xml()
       }
     }
   }
+  add_license(license,attribution,"session file");
 }
 
 void TASCAR::tsc_reader_t::write_xml()

@@ -2,10 +2,11 @@
 #define SESSION_READER_H
 
 #include "xmlconfig.h"
+#include "licensehandler.h"
 
 namespace TASCAR {
 
-  class tsc_reader_t : public TASCAR::xml_doc_t, public xml_element_t {
+  class tsc_reader_t : public TASCAR::xml_doc_t, public xml_element_t, public licensehandler_t {
   public:
     tsc_reader_t();
     tsc_reader_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
@@ -21,6 +22,8 @@ namespace TASCAR {
     virtual void add_connection(xmlpp::Element* e) {};
     virtual void add_module(xmlpp::Element* e) {};
     std::string session_path;
+    std::string license;
+    std::string attribution;
   };
 
 }

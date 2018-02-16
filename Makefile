@@ -10,7 +10,7 @@ DEFFULLVERSION=$(shell echo "\#define TASCARVER \\\""$(FULLVERSION)"\\\"")
 #
 # main targets:
 #
-BINFILES = tascar_cli tascar_tscupdate tascar_pdf			\
+BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses tascar_pdf	\
   tascar_osc_jack_transport tascar_jackio tascar_sampler		\
   tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
   tascar_lsljacktime tascar_renderfile tascar_renderir tascar_gpx2csv	\
