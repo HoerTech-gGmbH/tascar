@@ -186,10 +186,10 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     for(std::vector<float>::iterator it=fixtureval[k].calib.begin();it!=fixtureval[k].calib.end();++it)
       if( *it <= 0 )
         *it = 1;
-    for(std::vector<float>::iterator it=fixtureval[k].calib26.begin();it!=fixtureval[k].calib.end();++it)
+    for(std::vector<float>::iterator it=fixtureval[k].calib26.begin();it!=fixtureval[k].calib26.end();++it)
       if( *it <= 0 )
         *it = 1;
-    for(std::vector<float>::iterator it=fixtureval[k].calib1.begin();it!=fixtureval[k].calib.end();++it)
+    for(std::vector<float>::iterator it=fixtureval[k].calib1.begin();it!=fixtureval[k].calib1.end();++it)
       if( *it <= 0 )
         *it = 1;
     for(uint32_t c=fixtureval[k].calib.size();c<channels;++c)
