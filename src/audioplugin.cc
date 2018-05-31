@@ -50,12 +50,6 @@ TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
   }
 }
 
-void TASCAR::audioplugin_t::write_xml()
-{
-  set_attribute("type",plugintype);
-  libdata->write_xml();
-}
-
 void TASCAR::audioplugin_t::ap_process( std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp )
 {
   libdata->ap_process( chunk, pos, tp );

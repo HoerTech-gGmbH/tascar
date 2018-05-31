@@ -4,7 +4,6 @@
 class sound_var_t : public TASCAR::xml_element_t {
 public:
   sound_var_t(xmlpp::Element* xmlsrc);
-  void write_xml();
   std::string name;
   double gain;
 };
@@ -17,16 +16,9 @@ sound_var_t::sound_var_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(gain);
 }
 
-void sound_var_t::write_xml()
-{
-  SET_ATTRIBUTE(name);
-  SET_ATTRIBUTE(gain);
-}
-
 class sampler_var_t : public TASCAR::module_base_t {
 public:
   sampler_var_t( const TASCAR::module_cfg_t& cfg );
-  void write_xml();
   std::string multicast;
   std::string port;
   std::vector<sound_var_t> sounds;
@@ -47,12 +39,6 @@ sampler_var_t::sampler_var_t( const TASCAR::module_cfg_t& cfg )
     if( sne && ( sne->get_name() == "sound" ))
       sounds.push_back(sound_var_t(sne));
   }
-}
-
-void sampler_var_t::write_xml()
-{
-  SET_ATTRIBUTE(multicast);
-  SET_ATTRIBUTE(port);
 }
 
 class sampler_mod_t : public sampler_var_t, public TASCAR::sampler_t {

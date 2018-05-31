@@ -4,7 +4,6 @@ class dummy_t : public TASCAR::actor_module_t {
 public:
   dummy_t( const TASCAR::module_cfg_t& cfg );
   ~dummy_t();
-  void write_xml();
   void update(uint32_t frame, bool running);
   void prepare( chunk_cfg_t& );
   void release();
@@ -55,11 +54,6 @@ void dummy_t::prepare( chunk_cfg_t& cf_ )
   DEBUG(t_sample);
   DEBUG(t_fragment);
   DEBUG(n_fragment);
-}
-
-void dummy_t::write_xml()
-{
-  DEBUG(1);
 }
 
 dummy_t::~dummy_t()

@@ -80,6 +80,23 @@ void ArtnetDMX_t::send(uint8_t universe, const std::vector<uint16_t>& data)
     throw TASCAR::ErrMsg(strerror(errno));
 }
 
+OSC_t::OSC_t(const char* hostname, const char* port, uint16_t maxchannel)
+  : target(lo_address_new(hostname,port)),
+    msg(lo_message_new())
+{
+  for(uint16_t k=0;k<maxchannel;++k)
+    lo_message_add_int32(msg,0);
+  argc = lo_message_get_argc(msg);
+  argv = lo_message_get_argv(msg);
+}
+
+void OSC_t::send(uint8_t universe, const std::vector<uint16_t>& data)
+{
+  for(uint32_t k=0;k<std::min((uint32_t)(data.size()),(uint32_t)argc);++k)
+    argv[k]->i = data[k];
+  lo_send_message( target, "/dmx", msg );
+}
+
 /*
  * Local Variables:
  * mode: c++

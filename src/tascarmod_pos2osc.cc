@@ -4,7 +4,6 @@ class pos2osc_t : public TASCAR::module_base_t {
 public:
   pos2osc_t( const TASCAR::module_cfg_t& cfg );
   ~pos2osc_t();
-  void write_xml();
   void update(uint32_t frame, bool running);
 private:
   std::string url;
@@ -57,18 +56,6 @@ pos2osc_t::pos2osc_t( const TASCAR::module_cfg_t& cfg )
   if( triggered )
     trigger = false;
 
-}
-
-void pos2osc_t::write_xml()
-{
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(pattern);
-  SET_ATTRIBUTE(ttl);
-  SET_ATTRIBUTE(mode);
-  SET_ATTRIBUTE_BOOL(transport);
-  SET_ATTRIBUTE(avatar);
-  SET_ATTRIBUTE(lookatlen);
-  SET_ATTRIBUTE_BOOL(triggered);
 }
 
 pos2osc_t::~pos2osc_t()

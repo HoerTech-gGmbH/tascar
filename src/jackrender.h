@@ -37,7 +37,6 @@ namespace TASCAR {
   public:
     render_rt_t(xmlpp::Element* xmlsrc);
     virtual ~render_rt_t();
-    virtual void write_xml();
     void run(bool &b_quit);
     void start();
     void stop();

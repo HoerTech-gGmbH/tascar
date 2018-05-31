@@ -23,7 +23,6 @@ public:
   };
   neukom_inphase_t(xmlpp::Element* xmlsrc);
   virtual ~neukom_inphase_t() {};
-  void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
@@ -33,11 +32,6 @@ private:
   //TASCAR::Scene::spk_array_t spkpos;
   double order;
 };
-
-void neukom_inphase_t::write_xml()
-{
-  SET_ATTRIBUTE(order);
-}
 
 neukom_inphase_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
 {

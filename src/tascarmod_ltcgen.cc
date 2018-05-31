@@ -6,8 +6,6 @@ class ltcgen_t : public TASCAR::module_base_t, public jackc_transport_t {
 public:
   ltcgen_t( const TASCAR::module_cfg_t& cfg );
   virtual ~ltcgen_t();
-  void write_xml();
-  //void update(uint32_t frame, bool running);
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&,uint32_t tp_frame, bool tp_rolling);
 private:
   double fpsnum;
@@ -50,13 +48,6 @@ ltcgen_t::ltcgen_t( const TASCAR::module_cfg_t& cfg )
   for(std::vector<std::string>::const_iterator it=connect.begin();it!=connect.end();++it)
     jackc_transport_t::connect(get_client_name()+":ltc",*it,true);
   jackc_transport_t::connect(session->get_client_name()+":sync_out",get_client_name()+":sync_in",true);
-}
-
-void ltcgen_t::write_xml()
-{
-  SET_ATTRIBUTE(fpsnum);
-  SET_ATTRIBUTE(fpsden);
-  SET_ATTRIBUTE(volume);
 }
 
 ltcgen_t::~ltcgen_t()

@@ -173,11 +173,13 @@ void reflectionfilter_t::set_lp( float g, float c )
 
 class fdn_t {
 public:
-  fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay );
+  fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay, bool logdelays );
   ~fdn_t();
   inline void process( bool b_prefilt );
   void setpar( float az, float daz, float t, float dt, float g, float damping );
+  void set_logdelays( bool ld ){ logdelays_ = ld; };
 private:
+  bool logdelays_;
   uint32_t fdnorder_;
   uint32_t amborder1;
   uint32_t maxdelay_;
@@ -204,8 +206,9 @@ public:
   cmat1_t outval;
 };
 
-fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay)
-  : fdnorder_(fdnorder),
+fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay, bool logdelays )
+  : logdelays_(logdelays),
+    fdnorder_(fdnorder),
     amborder1(amborder+1),
     maxdelay_(maxdelay),
     taplen(maxdelay*amborder1),
@@ -266,6 +269,15 @@ void fdn_t::process(bool b_prefilt)
   }
 }
 
+/**
+   \brief Set parameters of FDN
+   \param az Average rotation in radians per reflection
+   \param daz Spread of rotation in radians per reflection
+   \param t Average/maximum delay in samples
+   \param dt Spread of delay in samples
+   \param g Gain
+   \param damping Damping
+ */
 void fdn_t::setpar(float az, float daz, float t, float dt, float g, float damping )
 {
   // set reflection filters:
@@ -276,8 +288,13 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
   delayline.clear();
   for(uint32_t tap=0;tap<fdnorder_;++tap){
     double t_(t);
-    if( fdnorder_ > 1 )
-      t_ = t-dt+2.0*dt*pow(tap*1.0/(fdnorder_),0.5);
+    if( logdelays_ ){
+      if( fdnorder_ > 1 )
+        t_ = dt*pow(t/dt,(double)tap/((double)fdnorder_-1.0));;
+    }else{
+      if( fdnorder_ > 1 )
+        t_ = t-dt+2.0*dt*pow(tap*1.0/(fdnorder_),0.5);
+    }
     uint32_t d(std::max(0.0,t_));
     delay[tap] = std::max(2u,std::min(maxdelay_-1u,d));
   }
@@ -331,6 +348,7 @@ protected:
   double dry;
   double wet;
   bool prefilt;
+  bool logdelays;
 };
 
 hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
@@ -345,7 +363,8 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
     damping(0.3),
     dry(0.0),
     wet(1.0),
-    prefilt(false)
+    prefilt(false),
+    logdelays(false)
 {
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(amborder);
@@ -359,6 +378,7 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(dry);
   GET_ATTRIBUTE(wet);
   GET_ATTRIBUTE_BOOL(prefilt);
+  GET_ATTRIBUTE_BOOL(logdelays);
 }
 
 hoafdnrot_vars_t::~hoafdnrot_vars_t()
@@ -371,6 +391,8 @@ public:
   ~hoafdnrot_t();
   void set_par( double w, double dw, double t, double dt, double g, double damping );
   static int osc_setpar(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  void setlogdelays( bool ld );
+  static int osc_setlogdelays(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
   void prepare( chunk_cfg_t& );
 private:
@@ -406,6 +428,7 @@ hoafdnrot_t::hoafdnrot_t( const TASCAR::module_cfg_t& cfg )
   session->add_double("/"+id+"/dry",&dry);
   session->add_double("/"+id+"/wet",&wet);
   session->add_bool("/"+id+"/prefilt",&prefilt);
+  session->add_method("/"+id+"/logdelays","i",&hoafdnrot_t::osc_setlogdelays,this);
   activate();
 }
 
@@ -416,12 +439,19 @@ int hoafdnrot_t::osc_setpar(const char *path, const char *types, lo_arg **argv, 
   return 0;
 }
 
+int hoafdnrot_t::osc_setlogdelays(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc==1) && (types[0]=='i') )
+    ((hoafdnrot_t*)user_data)->setlogdelays( argv[0]->i );
+  return 0;
+}
+
 void hoafdnrot_t::prepare( chunk_cfg_t& cf_ )
 {
   module_base_t::prepare( cf_ );
   if( fdn )
     delete fdn;
-  fdn = new fdn_t(fdnorder,amborder,f_sample);
+  fdn = new fdn_t(fdnorder,amborder,f_sample, logdelays );
   set_par( w, dw, t, dt, decay, damping );
 }
 
@@ -432,10 +462,28 @@ hoafdnrot_t::~hoafdnrot_t()
   pthread_mutex_destroy(&mtx);
 }
 
-void hoafdnrot_t::set_par( double w, double dw, double t, double dt, double decay, double damping )
+void hoafdnrot_t::set_par( double w_, double dw_, double t_, double dt_, double decay_, double damping_ )
+{
+  w = w_;
+  dw = dw_;
+  t = t_;
+  dt = dt_;
+  decay = decay_;
+  damping = damping_;
+  if( pthread_mutex_lock( &mtx ) == 0 ){
+    if( fdn ){
+      double wscale(2.0*M_PI*t);
+      fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
+    }
+    pthread_mutex_unlock( &mtx);
+  }
+}
+
+void hoafdnrot_t::setlogdelays( bool ld )
 {
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( fdn ){
+      fdn->set_logdelays(ld);
       double wscale(2.0*M_PI*t);
       fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
     }

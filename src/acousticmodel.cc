@@ -431,22 +431,6 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(layerfadelen);
 }
 
-void receiver_t::write_xml()
-{
-  receivermod_t::write_xml();
-  SET_ATTRIBUTE(size);
-  set_attribute_bool("point",render_point);
-  set_attribute_bool("diffuse",render_diffuse);
-  set_attribute_bool("image",render_image);
-  set_attribute_bool("globalmask",use_global_mask);
-  set_attribute_db("diffusegain",diffusegain);
-  SET_ATTRIBUTE(ismmin);
-  SET_ATTRIBUTE(ismmax);
-  SET_ATTRIBUTE(falloff);
-  SET_ATTRIBUTE(delaycomp);
-  boundingbox.write_xml();
-}
-
 void receiver_t::prepare( chunk_cfg_t& cf_ )
 {
   receivermod_t::prepare( cf_ );
@@ -594,14 +578,6 @@ TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute_bool("active",active);
 }
 
-void TASCAR::Acousticmodel::boundingbox_t::write_xml()
-{
-  dynobject_t::write_xml();
-  dynobject_t::set_attribute("size",size);
-  dynobject_t::set_attribute("falloff",falloff);
-  dynobject_t::set_attribute_bool("active",active);
-}
-
 /**
    \brief Apply diffraction model 
 
@@ -699,17 +675,6 @@ source_t::source_t(xmlpp::Element* xmlsrc)
 
 source_t::~source_t()
 {
-}
-
-void source_t::write_xml()
-{
-  sourcemod_t::write_xml();
-  SET_ATTRIBUTE(sincorder);
-  SET_ATTRIBUTE(ismmin);
-  SET_ATTRIBUTE(ismmax);
-  SET_ATTRIBUTE(size);
-  SET_ATTRIBUTE(maxdist);
-  SET_ATTRIBUTE_DBSPL(minlevel);
 }
 
 void source_t::prepare( chunk_cfg_t& cf_ )

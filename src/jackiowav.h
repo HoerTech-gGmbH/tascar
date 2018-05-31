@@ -41,6 +41,7 @@ public:
      \param ifname Input file name
      \param ofname Output file name
      \param ports Output and Input ports (the first N ports are assumed to be output ports, N = number of channels in input file)
+     \param jackname Jack client name
      \param freewheel Optionally use freewheeling mode
      \param autoconnect Automatically connect to hardware ports.
      \param verbose Show more infos on console.

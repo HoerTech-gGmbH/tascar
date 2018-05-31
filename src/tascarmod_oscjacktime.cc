@@ -4,7 +4,6 @@ class oscjacktime_t : public TASCAR::module_base_t {
 public:
   oscjacktime_t( const TASCAR::module_cfg_t& cfg );
   ~oscjacktime_t();
-  void write_xml();
   void update(uint32_t frame, bool running);
 private:
   std::string url;
@@ -28,13 +27,6 @@ oscjacktime_t::oscjacktime_t( const TASCAR::module_cfg_t& cfg )
   if( !target )
     throw TASCAR::ErrMsg("Unable to create target adress \""+url+"\".");
   lo_address_set_ttl(target,ttl);
-}
-
-void oscjacktime_t::write_xml()
-{
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(path);
-  SET_ATTRIBUTE(ttl);
 }
 
 oscjacktime_t::~oscjacktime_t()

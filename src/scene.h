@@ -40,7 +40,6 @@ namespace TASCAR {
     public:
       route_t(xmlpp::Element*);
       ~route_t();
-      void write_xml();
       std::string get_name() const {return name;};
       bool get_mute() const {return mute;};
       bool get_solo() const {return solo;};
@@ -55,13 +54,25 @@ namespace TASCAR {
       const std::vector<float>& readmeter();
       float read_meter_max();
       float get_meterval(uint32_t k) const { return meterval[k]; };
+      /**
+         \brief Return a rference to the level meter
+         \param k Channel number
+         \return Level meter
+         \ingroup levels
+       */
+      const TASCAR::levelmeter_t& get_meter(uint32_t k) const { return *(rmsmeter[k]); };
     private:
       std::string name;
       bool mute;
       bool solo;
       float meter_tc;
       TASCAR::levelmeter_t::weight_t meter_weight;
+    public:
+      float targetlevel;
     protected:
+      /**
+         \ingroup levels
+       */
       std::vector<TASCAR::levelmeter_t*> rmsmeter;
       std::vector<float> meterval;
     };
@@ -78,7 +89,6 @@ namespace TASCAR {
     class sndfile_info_t : public scene_node_base_t {
     public:
       sndfile_info_t(xmlpp::Element* e);
-      void write_xml();
       std::string fname;
       uint32_t firstchannel;
       uint32_t channels;
@@ -95,7 +105,6 @@ namespace TASCAR {
     public:
       object_t(xmlpp::Element*);
       virtual ~object_t() {};
-      void write_xml();
       bool isactive(double time) const;
       bool is_active(uint32_t anysolo,double t);
       rgb_color_t color;
@@ -105,7 +114,6 @@ namespace TASCAR {
     class sndfile_object_t : public object_t {
     public:
       sndfile_object_t(xmlpp::Element*);
-      void write_xml();
       std::vector<sndfile_info_t> sndfiles;
     };
 
@@ -121,7 +129,6 @@ namespace TASCAR {
     public:
       face_object_t(xmlpp::Element* xmlsrc);
       virtual ~face_object_t();
-      void write_xml();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       double width;
@@ -133,7 +140,6 @@ namespace TASCAR {
     public:
       face_group_t(xmlpp::Element* xmlsrc);
       virtual ~face_group_t();
-      void write_xml();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
@@ -149,7 +155,6 @@ namespace TASCAR {
     public:
       obstacle_group_t(xmlpp::Element* xmlsrc);
       virtual ~obstacle_group_t();
-      void write_xml();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::obstacle_t*> obstacles;
@@ -163,7 +168,6 @@ namespace TASCAR {
     public:
       audio_port_t(xmlpp::Element* e);
       virtual ~audio_port_t();
-      void write_xml();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
       void set_ctlname(const std::string& pn) { ctlname  = pn;};
@@ -186,7 +190,6 @@ namespace TASCAR {
     public:
       src_diffuse_t(xmlpp::Element* e);
       virtual ~src_diffuse_t();
-      void write_xml();
       void prepare( chunk_cfg_t& );
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
@@ -201,7 +204,6 @@ namespace TASCAR {
     public:
       sound_t(xmlpp::Element* e,src_object_t* parent_);
       virtual ~sound_t();
-      void write_xml();
       rgb_color_t get_color() const;
       std::string get_port_name() const;
       std::string get_parent_name() const;
@@ -229,7 +231,6 @@ namespace TASCAR {
     public:
       src_object_t(xmlpp::Element* e);
       ~src_object_t();
-      void write_xml();
       void prepare( chunk_cfg_t& );
       void release();
       void geometry_update(double t);
@@ -243,7 +244,6 @@ namespace TASCAR {
     class receivermod_object_t : public object_t, public audio_port_t, public TASCAR::Acousticmodel::receiver_t {
     public:
       receivermod_object_t(xmlpp::Element* e);
-      void write_xml();
       void prepare( chunk_cfg_t& );
       void release();
       void geometry_update(double t);
@@ -254,7 +254,6 @@ namespace TASCAR {
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
     public:
       mask_object_t(xmlpp::Element* e);
-      void write_xml();
       void geometry_update(double t);
       void process_active(double t,uint32_t anysolo);
       pos_t xmlsize;
@@ -265,7 +264,6 @@ namespace TASCAR {
     public:
       scene_t(xmlpp::Element* e);
       ~scene_t();
-      void write_xml();
       src_object_t* add_source();
       void prepare( chunk_cfg_t& );
       void release();

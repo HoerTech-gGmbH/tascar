@@ -48,7 +48,6 @@ class nearsensor_t : public TASCAR::module_base_t {
 public:
   nearsensor_t( const TASCAR::module_cfg_t& cfg );
   ~nearsensor_t();
-  void write_xml();
   void update(uint32_t frame, bool running);
 private:
   std::string url;
@@ -108,17 +107,6 @@ nearsensor_t::nearsensor_t( const TASCAR::module_cfg_t& cfg )
         vmsg2.push_back(new msg_t(sne));
     }
   }
-}
-
-void nearsensor_t::write_xml()
-{
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(ttl);
-  SET_ATTRIBUTE(pattern);
-  SET_ATTRIBUTE(parent);
-  SET_ATTRIBUTE(radius);
-  SET_ATTRIBUTE(mode);
-  SET_ATTRIBUTE(path);
 }
 
 nearsensor_t::~nearsensor_t()

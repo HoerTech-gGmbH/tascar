@@ -46,9 +46,6 @@ public:
   std::vector<float> wfade;
   std::vector<float> dmx;
   std::vector<float> fade;
-  std::vector<float> calib;
-  std::vector<float> calib26;
-  std::vector<float> calib1;
   std::vector<TASCAR::table1_t> calibtab;
 private:
   uint32_t n;
@@ -77,9 +74,6 @@ void lobj_t::resize( uint32_t channels )
   dmx.resize(n);
   fade.resize(n+1);
   ddmx.resize(n);
-  calib.resize(n);
-  calib26.resize(n);
-  calib1.resize(n);
   calibtab.resize(n);
 }
 
@@ -137,6 +131,8 @@ private:
   std::vector<float> basedmx;
   std::vector<lobj_t> objval;
   std::vector<lobj_t> fixtureval;
+  std::vector<std::string> labels;
+  bool usecalib;
 };
 
 lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
@@ -146,13 +142,15 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     fixtures(e,"fixture"),
     channels(3),
     master(1),
-    parent_(NULL,"")
+    parent_(NULL,""),
+    usecalib(true)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(objects);
   GET_ATTRIBUTE(parent);
   GET_ATTRIBUTE(channels);
   GET_ATTRIBUTE(master);
+  GET_ATTRIBUTE_BOOL(usecalib);
   std::string method;
   method_t method_(nearest);
   GET_ATTRIBUTE(method);
@@ -174,34 +172,33 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   basedmx.resize(fixtures.size()*channels);
   tmpdmxdata.resize(fixtures.size()*channels);
   fixtureval.resize(fixtures.size());
+  labels.resize(fixtures.size());
   for(uint32_t k=0;k<fixtures.size();++k){
     fixtureval[k].resize(channels);
     uint32_t startaddr(1);
     fixtures[k].get_attribute("addr",startaddr);
+    fixtures[k].get_attribute("label",labels[k]);
     std::vector<int32_t> lampdmx;
     fixtures[k].get_attribute("dmxval",lampdmx);
-    fixtures[k].get_attribute("calib",fixtureval[k].calib);
-    fixtures[k].get_attribute("calib26",fixtureval[k].calib26);
-    fixtures[k].get_attribute("calib1",fixtureval[k].calib1);
-    for(std::vector<float>::iterator it=fixtureval[k].calib.begin();it!=fixtureval[k].calib.end();++it)
-      if( *it <= 0 )
-        *it = 1;
-    for(std::vector<float>::iterator it=fixtureval[k].calib26.begin();it!=fixtureval[k].calib26.end();++it)
-      if( *it <= 0 )
-        *it = 1;
-    for(std::vector<float>::iterator it=fixtureval[k].calib1.begin();it!=fixtureval[k].calib1.end();++it)
-      if( *it <= 0 )
-        *it = 1;
-    for(uint32_t c=fixtureval[k].calib.size();c<channels;++c)
-      fixtureval[k].calib.push_back(1.0);
-    for(uint32_t c=fixtureval[k].calib26.size();c<channels;++c)
-      fixtureval[k].calib26.push_back(1.0);
-    for(uint32_t c=fixtureval[k].calib1.size();c<channels;++c)
-      fixtureval[k].calib1.push_back(1.0);
-    for(uint32_t c=fixtureval[k].calib1.size();c<channels;++c){
-      fixtureval[k].calibtab[c][1] = fixtureval[k].calib1[c];
-      fixtureval[k].calibtab[c][26] = fixtureval[k].calib26[c];
-      fixtureval[k].calibtab[c][255] = fixtureval[k].calib[c];
+    xmlpp::Node::NodeList ch = fixtures[k].e->get_children( "calib" );
+    for( xmlpp::Node::NodeList::iterator it=ch.begin();it!=ch.end();++it){
+      xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(*it);
+      if( el ){
+        int32_t c(-1);
+        double v_in(-1);
+        double v_out(-1);
+        get_attribute_value(el,"channel",c);
+        get_attribute_value(el,"in",v_in);
+        get_attribute_value(el,"out",v_out);
+        if( (c >= 0) && (v_in > 0) && (v_out >= 0) ){
+          v_out /= v_in;
+          fixtureval[k].calibtab[c][v_in] = v_out;
+        }
+      }
+    }
+    for(uint32_t c=0;c<channels;++c){
+      if( fixtureval[k].calibtab[c].empty() )
+        fixtureval[k].calibtab[c][0] = 1.0;
     }
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
@@ -302,14 +299,13 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
     }
   }
   for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-    float fixmax(0);
     for(uint32_t c=0;c<channels;++c){
       tmpdmxdata[channels*kfix+c] += fixtureval[kfix].dmx[c];
-      fixmax = std::max(tmpdmxdata[channels*kfix+c],fixmax);
     }
-    for(uint32_t c=0;c<channels;++c){
-      tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calibtab[c].interp(fixmax);
-    }
+    if( usecalib )
+      for(uint32_t c=0;c<channels;++c){
+        tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calibtab[c].interp(tmpdmxdata[channels*kfix+c]);
+      }
   }
   for(uint32_t k=0;k<tmpdmxdata.size();++k)
     dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
@@ -317,6 +313,7 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
 
 void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
 {
+  srv->add_bool("/usecalib", &usecalib );
   srv->add_float( "/master", &master );
   if( basedmx.size() )
     srv->add_vector_float( "/basedmx", &basedmx );
@@ -328,11 +325,15 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     srv->add_method( "/"+objects_[ko].obj->get_name()+"/method", "i", osc_setmethod, &(objval[ko].method));
   }
   for(uint32_t k=0;k<fixtureval.size();++k){
-    char ctmp[256];
-    sprintf(ctmp,"/fixture%d/dmx",k);
-    srv->add_vector_float( ctmp, &(fixtureval[k].dmx) );
-    sprintf(ctmp,"/fixture%d/fade",k);
-    srv->add_vector_float( ctmp, &(fixtureval[k].fade) );
+    std::string label(labels[k]);
+    if( label.empty() ){
+      char ctmp[256];
+      sprintf(ctmp,"fixture%d",k);
+      label = ctmp;
+    }
+    label = "/" + label + "/";
+    srv->add_vector_float( label+"dmx", &(fixtureval[k].dmx) );
+    srv->add_vector_float( label+"fade", &(fixtureval[k].fade) );
   }
 }
 
@@ -393,8 +394,20 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
       driver_ = NULL;
       std::cerr << "WARNING: Unable to open DMX USB driver " << device << ".\n";
     }
+  }else if( driver == "osc" ){
+    std::string hostname;
+    std::string port;
+    GET_ATTRIBUTE(hostname);
+    if( hostname.empty() )
+      hostname = "localhost";
+    GET_ATTRIBUTE(port);
+    if( port.empty() )
+      port = "9000";
+    uint32_t maxchannels(512);
+    GET_ATTRIBUTE(maxchannels);
+    driver_ = new DMX::OSC_t( hostname.c_str(), port.c_str(), maxchannels );
   }else{
-    throw TASCAR::ErrMsg("Unknown DMX driver type \""+driver+"\" (must be \"artnetdmx\" or \"opendmxusb\").");
+    throw TASCAR::ErrMsg("Unknown DMX driver type \""+driver+"\" (must be \"artnetdmx\", \"osc\" or \"opendmxusb\").");
   }
   add_variables( session );
   start_service();

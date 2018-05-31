@@ -20,7 +20,6 @@ namespace TASCAR {
   class module_base_t : public xml_element_t, public audiostates_t {
   public:
     module_base_t( const module_cfg_t& cfg );
-    virtual void write_xml();
     virtual ~module_base_t();
     /**
        \brief Method to update geometry etc on each processing cycle in the session processing thread (jack).
@@ -35,7 +34,6 @@ namespace TASCAR {
   class module_t : public module_base_t {
   public:
     module_t( const TASCAR::module_cfg_t& cfg );
-    void write_xml();
     virtual ~module_t();
     void prepare( chunk_cfg_t& );
     void release();
@@ -50,7 +48,6 @@ namespace TASCAR {
   class connection_t : public TASCAR::xml_element_t {
   public:
     connection_t(xmlpp::Element*);
-    void write_xml();
     std::string src;
     std::string dest;
   };
@@ -58,7 +55,6 @@ namespace TASCAR {
   class range_t : public scene_node_base_t {
   public:
     range_t(xmlpp::Element* e);
-    void write_xml();
     std::string name;
     double start;
     double end;
@@ -91,7 +87,6 @@ namespace TASCAR {
     void add_range(xmlpp::Element*);
     void add_connection(xmlpp::Element*);
     void add_module(xmlpp::Element*);
-    void write_xml();
     void start();
     void stop();
     void run(bool &b_quit);
@@ -107,6 +102,9 @@ namespace TASCAR {
     bool loop;
     double levelmeter_tc;
     TASCAR::levelmeter_t::weight_t levelmeter_weight;
+    std::string levelmeter_mode;
+    double levelmeter_min;
+    double levelmeter_range;
     std::vector<TASCAR::scene_render_rt_t*> scenes;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;
@@ -135,7 +133,6 @@ namespace TASCAR {
   public:
     actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty=false );
     virtual ~actor_module_t();
-    void write_xml();
     void set_location(const TASCAR::pos_t& l, bool b_local = false );
     void set_orientation(const TASCAR::zyx_euler_t& o );
     void set_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );

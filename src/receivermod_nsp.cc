@@ -23,7 +23,6 @@ public:
   };
   nsp_t(xmlpp::Element* xmlsrc);
   virtual ~nsp_t() {};
-  //void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();

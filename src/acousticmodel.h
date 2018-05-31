@@ -63,7 +63,6 @@ namespace TASCAR {
     class boundingbox_t : public dynobject_t {
     public:
       boundingbox_t(xmlpp::Element*);
-      void write_xml();
       pos_t size;
       double falloff;
       bool active;
@@ -82,7 +81,6 @@ namespace TASCAR {
     public:
       source_t(xmlpp::Element* xmlsrc);
       ~source_t();
-      void write_xml();
       void prepare( chunk_cfg_t& cf_ );
       void release();
       virtual void process_plugins(const TASCAR::transport_t& tp);
@@ -108,7 +106,6 @@ namespace TASCAR {
     public:
       receiver_t(xmlpp::Element* xmlsrc);
       ~receiver_t();
-      void write_xml();
       void prepare( chunk_cfg_t& cf_ );
       void release();
       void clear_output();

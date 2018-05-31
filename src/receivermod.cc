@@ -29,12 +29,6 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
   }
 }
 
-void TASCAR::receivermod_t::write_xml()
-{
-  set_attribute("type",receivertype);
-  libdata->write_xml();
-}
-
 void TASCAR::receivermod_t::add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
 {
   libdata->add_pointsource(prel,width, chunk,output,data);
@@ -98,10 +92,6 @@ TASCAR::receivermod_base_t::receivermod_base_t(xmlpp::Element* xmlsrc)
 {
 }
 
-void TASCAR::receivermod_base_t::write_xml()
-{
-}
-
 TASCAR::receivermod_base_t::~receivermod_base_t()
 {
 }
@@ -110,12 +100,6 @@ TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(xmlpp::Element* x
   : receivermod_base_t(xmlsrc),
     spkpos(xmlsrc)
 {
-}
-
-void TASCAR::receivermod_base_speaker_t::write_xml()
-{
-  receivermod_base_t::write_xml();
-  spkpos.write_xml();
 }
 
 std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() const

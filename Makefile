@@ -103,7 +103,7 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 LDLIBS += -ldl
 
-all: lib bins
+all: lib bins gui
 
 bins:
 	mkdir -p build
@@ -133,7 +133,7 @@ clean:
 VPATH = ../src
 # ../src/hoafilt
 
-.PHONY : doc test
+.PHONY : doc test gui
 
 test:
 	$(MAKE) -C test
@@ -206,6 +206,9 @@ tascar_ltcgen.so: EXTERNALS+=ltc
 
 fullversion:
 	echo $(FULLVERSION) >$@
+
+gui:
+	$(MAKE) -C gui
 
 # Local Variables:
 # compile-command: "make"

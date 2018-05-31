@@ -18,9 +18,7 @@ public:
     double dgauge;
   };
   hoa2d_t(xmlpp::Element* xmlsrc);
-  void write_xml();
   virtual ~hoa2d_t();
-  //void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
@@ -49,12 +47,6 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(order);
   GET_ATTRIBUTE(rho0);
   nbins = order + 2;
-}
-
-void hoa2d_t::write_xml()
-{
-  TASCAR::receivermod_base_t::write_xml();
-  SET_ATTRIBUTE(order);
 }
 
 hoa2d_t::~hoa2d_t()

@@ -6,7 +6,8 @@
 #include "errorhandling.h"
 
 TASCAR::tsc_reader_t::tsc_reader_t()
-  : xml_element_t(doc->get_root_node())
+  : xml_element_t(doc->get_root_node()),
+    file_name("")
 {
   // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
@@ -51,7 +52,8 @@ void add_includes( xmlpp::Element* e, const std::string& parentdoc, licensehandl
 
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : xml_doc_t(filename_or_data,t),
-    xml_element_t(doc->get_root_node())
+    xml_element_t(doc->get_root_node()),
+    file_name(((t==LOAD_FILE)?filename_or_data:""))
 {
   // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
@@ -99,20 +101,14 @@ void TASCAR::tsc_reader_t::read_xml()
   add_license(license,attribution,"session file");
 }
 
-void TASCAR::tsc_reader_t::write_xml()
-{
-}
-
-
-void TASCAR::tsc_reader_t::save(const std::string& filename)
-{
-  write_xml();
-  xml_doc_t::save(filename);
-}
-
 const std::string& TASCAR::tsc_reader_t::get_session_path() const
 {
   return session_path;
+}
+
+const std::string& TASCAR::tsc_reader_t::get_file_name() const
+{
+  return file_name;
 }
 
 

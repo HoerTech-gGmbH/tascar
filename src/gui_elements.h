@@ -15,14 +15,46 @@ public:
   playertimeline_t();
 };
 
+class dameter_t : public Gtk::DrawingArea {
+public:
+  dameter_t();
+  void invalidate_win();
+  enum mode_t {
+    rmspeak,
+    rms,
+    peak,
+    percentile
+  };
+  mode_t mode;
+  float v_rms;
+  float v_peak;
+  float q30;
+  float q50;
+  float q65;
+  float q95;
+  float q99;
+  float vmin;
+  float range;
+  float targetlevel;
+private:
+  virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+};
+
+/**
+   \brief Display of levels
+   \ingroup levels
+ */
 class splmeter_t : public Gtk::Frame {
 public:
   splmeter_t();
-  void update(float v);
+  void update_levelmeter( const TASCAR::levelmeter_t& lm, float targetlevel );
+  void set_mode( dameter_t::mode_t mode );
+  void set_min_and_range( float vmin, float range );
+  void invalidate_win();
 private:
-  Gtk::VBox box;
-  Gtk::Label val;
-  Gtk::ProgressBar meter;
+  //Gtk::VBox box;
+  //Gtk::Label val;
+  dameter_t dameter;
 };
 
 class GainScale_t : public Gtk::Scale {
@@ -58,6 +90,9 @@ public:
   void on_mute();
   void on_solo();
   void update();
+  void set_levelmeter_mode( dameter_t::mode_t mode );
+  void set_levelmeter_range( float vmin, float range );
+  void invalidate_win();
   ~source_ctl_t();
   Gtk::Frame frame;//< frame for background
   Gtk::EventBox ebox;
@@ -83,7 +118,10 @@ public:
   source_panel_t(lo_address client_addr);
   source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade);
   void set_scene(TASCAR::Scene::scene_t*);
+  void set_levelmeter_mode( const std::string& mode );
+  void set_levelmeter_range( float vmin, float range );
   void update();
+  void invalidate_win();
   std::vector<source_ctl_t*> vbuttons;
   Gtk::HBox box;
   lo_address client_addr_;

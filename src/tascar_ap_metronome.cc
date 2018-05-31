@@ -18,8 +18,8 @@ private:
   double qo;
   bool sync;
   bool bypass;
-  uint32_t t;
-  uint32_t beat;
+  uint64_t t;
+  uint64_t beat;
   TASCAR::resonance_filter_t f1;
   TASCAR::resonance_filter_t fo;
 };
@@ -73,16 +73,21 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::p
 {
   f1.set_fq( fres1*t_sample, q1 );
   fo.set_fq( freso*t_sample, qo );
-  uint32_t period(60.0*f_sample/bpm);
+  if( bpm < 6.9444e-04 )
+    bpm = 6.9444e-04;
+  uint64_t period(60*(uint64_t)f_sample/(uint64_t)bpm);
   float v(0);
   TASCAR::wave_t& aud(chunk[0]);
   if( sync ){
-    t = tp.object_time_samples % period;
-    beat = tp.object_time_samples/period;
-    beat = beat % bpb;
+    t = (uint64_t)(tp.object_time_samples) % period;
+    beat = (uint64_t)(tp.object_time_samples)/period;
+    if( bpb > 0 )
+      beat = beat % bpb;
+    else
+      beat = 0;
   }
   for(uint32_t k=0;k<aud.n;++k){
-    if( t >= period ){
+    if( (t >= period)||(t==0) ){
       t = 0;
       beat++;
       if( beat >= bpb )

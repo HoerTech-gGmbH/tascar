@@ -27,9 +27,7 @@ public:
     TASCAR::varidelay_t dy;
   };
   hoa2d_t(xmlpp::Element* xmlsrc);
-  void write_xml();
   virtual ~hoa2d_t();
-  //void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
@@ -93,17 +91,6 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
   else 
     throw TASCAR::ErrMsg("Invalid shape: "+filtershape);
   nbins = order + 2;
-}
-
-void hoa2d_t::write_xml()
-{
-  TASCAR::receivermod_base_t::write_xml();
-  SET_ATTRIBUTE(order);
-  SET_ATTRIBUTE_BOOL(diffup);
-  SET_ATTRIBUTE_DEG(diffup_rot);
-  SET_ATTRIBUTE(diffup_delay);
-  SET_ATTRIBUTE(diffup_maxorder);
-  SET_ATTRIBUTE(filterperiod);
 }
 
 hoa2d_t::~hoa2d_t()

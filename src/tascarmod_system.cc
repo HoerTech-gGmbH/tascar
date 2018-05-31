@@ -7,7 +7,6 @@
 class at_cmd_t : public TASCAR::xml_element_t {
 public:
   at_cmd_t(xmlpp::Element* xmlsrc);
-  void write_xml();
   double time;
   uint32_t frame;
   std::string command;
@@ -18,12 +17,6 @@ at_cmd_t::at_cmd_t(xmlpp::Element* xmlsrc)
 {
   GET_ATTRIBUTE(time);
   GET_ATTRIBUTE(command);
-}
-
-void at_cmd_t::write_xml()
-{
-  SET_ATTRIBUTE(time);
-  SET_ATTRIBUTE(command);
 }
 
 class fifo_t {
@@ -71,7 +64,6 @@ class system_t : public TASCAR::module_base_t {
 public:
   system_t( const TASCAR::module_cfg_t& cfg );
   virtual ~system_t();
-  virtual void write_xml();
   virtual void release();
   virtual void update(uint32_t frame,bool running);
   virtual void prepare( chunk_cfg_t& );
@@ -151,13 +143,6 @@ void system_t::prepare( chunk_cfg_t& cf_ )
   module_base_t::prepare( cf_ );
   for(std::vector<at_cmd_t*>::iterator it=atcmds.begin();it!=atcmds.end();++it)
     (*it)->frame = (*it)->time * f_sample;
-}
-
-void system_t::write_xml()
-{
-  SET_ATTRIBUTE(command);
-  SET_ATTRIBUTE(sleep);
-  SET_ATTRIBUTE(onunload);
 }
 
 void system_t::release()

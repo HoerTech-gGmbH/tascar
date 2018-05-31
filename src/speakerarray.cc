@@ -59,10 +59,6 @@ void spk_array_t::read_xml(xmlpp::Element* e)
   }
 }
 
-void spk_array_t::write_xml()
-{
-}
-
 void spk_array_t::import_file(const std::string& fname)
 {
   try{
@@ -193,20 +189,6 @@ void spk_pos_t::update_foa_decoder(float gain, double xyzgain)
   d_x = unitvector.x * gain;
   d_y = unitvector.y * gain;
   d_z = unitvector.z * gain;
-}
-
-void spk_pos_t::write_xml()
-{
-  if( az != 0.0 )
-    SET_ATTRIBUTE_DEG(az);
-  if( el != 0.0 )
-    SET_ATTRIBUTE_DEG(el);
-  if( r != 1.0 )
-    SET_ATTRIBUTE(r);
-  if( !label.empty() )
-    SET_ATTRIBUTE(label);
-  if( !connect.empty() )
-    SET_ATTRIBUTE(connect);
 }
 
 void spk_array_t::prepare( chunk_cfg_t& cf_ )

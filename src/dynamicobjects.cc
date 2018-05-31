@@ -124,21 +124,6 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
   c6dof_prev = c6dof_;
 }
 
-void TASCAR::dynobject_t::write_xml()
-{
-  set_attribute("start",starttime);
-  if( location.size() ){
-    if( !xml_location )
-      xml_location = e->add_child("position");
-    location.write_xml( xml_location );
-  }
-  if( orientation.size() ){
-    if( !xml_orientation )
-      xml_orientation = e->add_child("orientation");
-    orientation.write_xml( xml_orientation );
-  }
-}
-
 void TASCAR::dynobject_t::geometry_update(double time)
 {
   c6dof_prev = c6dof_;

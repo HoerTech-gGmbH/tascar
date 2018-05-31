@@ -4,7 +4,6 @@ class pendulum_t : public TASCAR::actor_module_t {
 public:
   pendulum_t( const TASCAR::module_cfg_t& cfg );
   ~pendulum_t();
-  void write_xml();
   void update(uint32_t frame, bool running);
 private:
   double amplitude;
@@ -27,15 +26,6 @@ pendulum_t::pendulum_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(decaytime);
   GET_ATTRIBUTE(starttime);
   GET_ATTRIBUTE(distance);
-}
-
-void pendulum_t::write_xml()
-{
-  SET_ATTRIBUTE(amplitude);
-  SET_ATTRIBUTE(frequency);
-  SET_ATTRIBUTE(decaytime);
-  SET_ATTRIBUTE(starttime);
-  SET_ATTRIBUTE(distance);
 }
 
 pendulum_t::~pendulum_t()

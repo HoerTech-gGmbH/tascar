@@ -158,11 +158,6 @@ TASCAR::render_rt_t::~render_rt_t()
     jackc_t::deactivate();
 }
 
-void TASCAR::render_rt_t::write_xml()
-{
-  TASCAR::render_core_t::write_xml();
-}
-
 /**
    \ingroup callgraph
  */

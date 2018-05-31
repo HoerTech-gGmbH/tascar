@@ -29,15 +29,6 @@ object_t::object_t(xmlpp::Element* src)
   color = rgb_color_t(scol);
 }
 
-void object_t::write_xml()
-{
-  route_t::write_xml();
-  dynobject_t::write_xml();
-  if( color.str() != "#000000" )
-    dynobject_t::set_attribute("color",color.str());
-  dynobject_t::set_attribute("end",endtime);
-}
-
 sndfile_object_t::sndfile_object_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc)
 {
@@ -58,14 +49,6 @@ bool object_t::isactive(double time) const
   return (!get_mute())&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
 }
 
-void sndfile_object_t::write_xml()
-{
-  object_t::write_xml();
-  for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
-    it->write_xml();
-}
-
-
 /*
  *src_diffuse_t
  */
@@ -76,14 +59,6 @@ src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
 {
   dynobject_t::get_attribute("size",size);
   dynobject_t::get_attribute("falloff",falloff);
-}
-
-void src_diffuse_t::write_xml()
-{
-  object_t::write_xml();
-  audio_port_t::write_xml();
-  dynobject_t::set_attribute("size",size);
-  dynobject_t::set_attribute("falloff",falloff);
 }
 
 src_diffuse_t::~src_diffuse_t()
@@ -193,13 +168,6 @@ void src_object_t::release()
     (*it)->release();
 }
 
-void src_object_t::write_xml()
-{
-  object_t::write_xml();
-  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
-    (*it)->write_xml();
-}
-
 scene_t::scene_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),
     description(""),
@@ -286,21 +254,6 @@ scene_t::~scene_t()
   clean_children();
 }
 
-void scene_t::write_xml()
-{
-  set_attribute("name",name);
-  set_attribute("mirrororder",mirrororder);
-  set_attribute("guiscale",guiscale);
-  set_attribute("guicenter",guicenter);
-  if( description.size()){
-    xmlpp::Element* description_node = find_or_add_child("description");
-    description_node->add_child_text(description);
-  }
-  std::vector<object_t*> objs(get_objects());
-  for(std::vector<object_t*>::iterator it=objs.begin();it!=objs.end();++it)
-    (*it)->write_xml();
-}
-
 /**
    \brief Update geometry of all objects within a scene based on current transport time
    \param t Transport time
@@ -343,14 +296,6 @@ mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute_bool("inside",mask_inner);
 }
 
-void mask_object_t::write_xml()
-{
-  object_t::write_xml();
-  dynobject_t::set_attribute("size",xmlsize);
-  dynobject_t::set_attribute("falloff",xmlfalloff);
-  dynobject_t::set_attribute_bool("inside",mask_inner);
-}
-
 void mask_object_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
@@ -371,13 +316,6 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
 {
   if( get_name().empty() )
     set_name("out");
-}
-
-void receivermod_object_t::write_xml()
-{
-  object_t::write_xml();
-  audio_port_t::write_xml();
-  receiver_t::write_xml();
 }
 
 void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
@@ -555,18 +493,12 @@ float sound_t::read_meter()
 route_t::route_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),mute(false),solo(false),
     meter_tc(2),
-    meter_weight(TASCAR::levelmeter_t::Z)
+    meter_weight(TASCAR::levelmeter_t::Z),
+    targetlevel(0)
 {
   get_attribute("name",name);
   get_attribute_bool("mute",mute);
   get_attribute_bool("solo",solo);
-}
-
-void route_t::write_xml()
-{
-  set_attribute("name",name);
-  set_attribute_bool("mute",mute);
-  set_attribute_bool("solo",solo);
 }
 
 void route_t::set_solo(bool b,uint32_t& anysolo)
@@ -619,17 +551,6 @@ void face_object_t::geometry_update(double t)
   apply_rot_loc(get_location(),get_orientation());
 }
 
-void face_object_t::write_xml()
-{
-  object_t::write_xml();
-  dynobject_t::set_attribute("width",width);
-  dynobject_t::set_attribute("height",height);
-  dynobject_t::set_attribute("reflectivity",reflectivity);
-  dynobject_t::set_attribute("damping",damping);
-  dynobject_t::set_attribute("vertices",vertices);
-  dynobject_t::set_attribute_bool("edgereflection",edgereflection);
-}
-
 audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),ctlname(""),
     connect(""),
@@ -650,15 +571,6 @@ void audio_port_t::set_gain_db( float g )
 void audio_port_t::set_gain_lin( float g )
 {
   gain = g;
-}
-
-void audio_port_t::write_xml()
-{
-  if( connect.size() )
-    e->set_attribute("connect",connect);
-  if( gain != 0.0 )
-    set_attribute_db("gain",gain);
-  set_attribute_db("caliblevel",caliblevel);
 }
 
 sndfile_info_t::sndfile_info_t(xmlpp::Element* xmlsrc)
@@ -682,19 +594,6 @@ sndfile_info_t::sndfile_info_t(xmlpp::Element* xmlsrc)
   if( e->get_attribute("channel") != 0 )
     throw TASCAR::ErrMsg("Invalid attribute \"channel\" found. Did you mean \"firstchannel\"? ("+fname+").");
   get_license_info( e, fname, license, attribution );
-}
-
-void sndfile_info_t::write_xml()
-{
-  e->set_attribute("name",fname.c_str());
-  if( firstchannel != 0 )
-    set_attribute_uint32(e,"firstchannel",firstchannel);
-  if( channels != 1 )
-    set_attribute_uint32(e,"channels",channels);
-  if( loopcnt != 1 )
-    set_attribute_uint32(e,"loop",loopcnt);
-  if( gain != 0.0 )
-    set_attribute_db("gain",gain);
 }
 
 void src_object_t::process_active(double t, uint32_t anysolo)
@@ -871,15 +770,6 @@ face_group_t::~face_group_t()
     delete *it;
 }
 
-void face_group_t::write_xml()
-{
-  object_t::write_xml();
-  dynobject_t::SET_ATTRIBUTE(reflectivity);
-  dynobject_t::SET_ATTRIBUTE(damping);
-  dynobject_t::SET_ATTRIBUTE(importraw);
-  dynobject_t::set_attribute_bool("edgereflection",edgereflection);
-}
- 
 void face_group_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
@@ -938,13 +828,6 @@ obstacle_group_t::~obstacle_group_t()
     delete *it;
 }
 
-void obstacle_group_t::write_xml()
-{
-  object_t::write_xml();
-  dynobject_t::SET_ATTRIBUTE(transmission);
-  dynobject_t::SET_ATTRIBUTE(importraw);
-}
- 
 void obstacle_group_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
@@ -1042,13 +925,6 @@ void sound_t::apply_gain()
   }
   for(uint32_t k=0;k<get_num_channels();++k)
     meter[k]->update(inchannels[k]);
-}
-
-void sound_t::write_xml()
-{
-  source_t::write_xml();
-  audio_port_t::write_xml();
-  source_t::SET_ATTRIBUTE(name);
 }
 
 std::string sound_t::get_parent_name() const

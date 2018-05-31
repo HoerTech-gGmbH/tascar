@@ -5,7 +5,6 @@ class levels2osc_t : public TASCAR::module_base_t {
 public:
   levels2osc_t( const TASCAR::module_cfg_t& cfg );
   ~levels2osc_t();
-  void write_xml();
   virtual void prepare( chunk_cfg_t& );
   void update(uint32_t frame, bool running);
 private:
@@ -51,13 +50,6 @@ void levels2osc_t::prepare( chunk_cfg_t& cf_ )
     vpath.push_back(std::string("/level/")+it->obj->get_name());
     voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(it->obj->get_name(),"level",it->obj->metercnt(),cf_.f_fragment)));
   }
-}
-
-void levels2osc_t::write_xml()
-{
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(pattern);
-  SET_ATTRIBUTE(ttl);
 }
 
 levels2osc_t::~levels2osc_t()

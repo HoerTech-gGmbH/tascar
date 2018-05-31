@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <lo/lo.h>
 
 namespace DMX {
 
@@ -35,6 +36,17 @@ namespace DMX {
     uint8_t* data_;
     struct addrinfo* res;
     int fd;
+  };
+
+  class OSC_t : public driver_t {
+  public:
+    OSC_t( const char* hostname, const char* port, uint16_t maxchannel );
+    void send( uint8_t universe, const std::vector<uint16_t>& data );
+  private:
+    lo_address target;
+    lo_message msg;
+    int argc;
+    lo_arg** argv;
   };
 
 }

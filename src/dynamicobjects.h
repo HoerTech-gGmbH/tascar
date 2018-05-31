@@ -20,7 +20,6 @@ namespace TASCAR {
   public:
     dynobject_t(xmlpp::Element*);
     ~dynobject_t();
-    void write_xml();
     virtual void geometry_update(double t);
     pos_t get_location() const;
     zyx_euler_t get_orientation() const;

@@ -13,7 +13,6 @@ namespace HoS {
   class srvvars_t : public TASCAR::xml_element_t {
   public:
     srvvars_t(xmlpp::Element*);
-    void write_xml();
     std::string targetaddr;
     std::string path;
   };
@@ -297,19 +296,12 @@ HoS::srvvars_t::srvvars_t(xmlpp::Element* e)
   GET_ATTRIBUTE(path);
 }
 
-void HoS::srvvars_t::write_xml()
-{
-  SET_ATTRIBUTE(targetaddr);
-  SET_ATTRIBUTE(path);
-}
-
 class epicycles_t : public TASCAR::actor_module_t, private HoS::parameter_t {
 public:
   epicycles_t( const TASCAR::module_cfg_t& cfg );
   ~epicycles_t();
   void prepare( chunk_cfg_t& );
   void update(uint32_t frame, bool running);
-  void write_xml();
 private:
   bool use_transport;
 };
@@ -320,13 +312,6 @@ epicycles_t::epicycles_t( const TASCAR::module_cfg_t& cfg )
     use_transport(true)
 {
   actor_module_t::GET_ATTRIBUTE_BOOL(use_transport);
-}
-
-void epicycles_t::write_xml()
-{
-  TASCAR::actor_module_t::write_xml();
-  HoS::parameter_t::write_xml();
-  TASCAR::actor_module_t::SET_ATTRIBUTE_BOOL(use_transport);
 }
 
 epicycles_t::~epicycles_t()

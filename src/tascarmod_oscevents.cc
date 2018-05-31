@@ -5,7 +5,6 @@ public:
   osc_event_base_t(xmlpp::Element* xmlsrc);
   void process_event(double t,double dur,const lo_address& target, const char* path);
   virtual void send(const lo_address& target, const char* path) = 0;
-  void write_xml();
 private:
   double t;
 };
@@ -14,11 +13,6 @@ osc_event_base_t::osc_event_base_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),t(0)
 {
   GET_ATTRIBUTE(t);
-}
-
-void osc_event_base_t::write_xml()
-{
-  SET_ATTRIBUTE(t);
 }
 
 void osc_event_base_t::process_event(double t0,double dur,const lo_address& target, const char* path)
@@ -176,7 +170,6 @@ class oscevents_t : public TASCAR::module_base_t {
 public:
   oscevents_t( const TASCAR::module_cfg_t& cfg );
   ~oscevents_t();
-  void write_xml();
   void update(uint32_t frame, bool running);
 private:
   std::string url;
@@ -224,13 +217,6 @@ oscevents_t::oscevents_t( const TASCAR::module_cfg_t& cfg )
     if( sne && ( sne->get_name() == "oscfff"))
       events.push_back(new osc_event_fff_t(sne));
   }
-}
-
-void oscevents_t::write_xml()
-{
-  SET_ATTRIBUTE(url);
-  SET_ATTRIBUTE(ttl);
-  SET_ATTRIBUTE(path);
 }
 
 oscevents_t::~oscevents_t()

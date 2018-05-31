@@ -42,7 +42,6 @@ namespace TASCAR {
       virtual ~data_t(){};
     };
     sourcemod_base_t(xmlpp::Element* xmlsrc);
-    virtual void write_xml();
     virtual ~sourcemod_base_t();
     virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*) = 0;
     virtual uint32_t get_num_channels() = 0;
@@ -55,7 +54,6 @@ namespace TASCAR {
   class sourcemod_t : public sourcemod_base_t {
   public:
     sourcemod_t(xmlpp::Element* xmlsrc);
-    void write_xml();
     virtual ~sourcemod_t();
     virtual bool read_source( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
     virtual uint32_t get_num_channels();

@@ -23,7 +23,6 @@ public:
   };
   rec_vbap3d_t(xmlpp::Element* xmlsrc);
   virtual ~rec_vbap3d_t() {};
-  void write_xml(); //fun.dec.
   //declaration add_pointsource
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);//declaration add_pointsource
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
@@ -36,11 +35,6 @@ private:
   //std::vector<double> spk_gain;
   //std::vector<TASCAR::pos_t> spk_normal;
 };
-
-//function definition:  write_xml
-void rec_vbap3d_t::write_xml()
-{
-}
 
 //constructor definition for data_t
 rec_vbap3d_t::data_t::data_t(uint32_t chunksize,uint32_t channels)

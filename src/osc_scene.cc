@@ -159,6 +159,7 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::rou
   vprs.push_back(rs);
   srv->add_method("/"+scene->name+"/"+o->get_name()+"/mute","i",osc_route_mute,rs);
   srv->add_method("/"+scene->name+"/"+o->get_name()+"/solo","i",osc_route_solo,rs);
+  srv->add_float("/"+scene->name+"/"+o->get_name()+"/targetlevel",&o->targetlevel);
 }
 
 void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sound_t* s)

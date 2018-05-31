@@ -7,7 +7,6 @@ public:
   ~mpu6050track_t();
   void prepare( chunk_cfg_t& );
   void update(uint32_t frame, bool running);
-  void write_xml();
   static int osc_setrot(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_setrotypr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_setrotgyr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -155,14 +154,6 @@ void mpu6050track_t::calib1( bool bcal )
     if( !calib_end.empty() )
       session->dispatch_data_message(calib_end.c_str(),msg_calib);
   }
-}
-
-void mpu6050track_t::write_xml()
-{
-  actor_module_t::write_xml();
-  SET_ATTRIBUTE(id);
-  SET_ATTRIBUTE(tau);
-  SET_ATTRIBUTE(scale);
 }
 
 mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )

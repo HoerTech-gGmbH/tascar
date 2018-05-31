@@ -40,7 +40,6 @@ namespace TASCAR {
       virtual ~data_t(){};
     };
     receivermod_base_t(xmlpp::Element* xmlsrc);
-    virtual void write_xml();
     virtual ~receivermod_base_t();
     virtual void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
     virtual void add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
@@ -56,7 +55,6 @@ namespace TASCAR {
   class receivermod_base_speaker_t : public receivermod_base_t {
   public:
     receivermod_base_speaker_t(xmlpp::Element* xmlsrc);
-    virtual void write_xml();
     virtual std::vector<std::string> get_connections() const;
     virtual void postproc(std::vector<wave_t>& output);
     virtual void prepare( chunk_cfg_t& );
@@ -68,7 +66,6 @@ namespace TASCAR {
   class receivermod_t : public receivermod_base_t {
   public:
     receivermod_t(xmlpp::Element* xmlsrc);
-    void write_xml();
     virtual ~receivermod_t();
     virtual void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
     virtual void add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);

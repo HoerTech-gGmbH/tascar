@@ -56,7 +56,6 @@ namespace TASCAR {
     void set_attribute(const std::string& name,const std::vector<std::string>& value);
     void set_attribute(const std::string& name,const std::vector<double>& value);
     void set_attribute(const std::string& name,const std::vector<int32_t>& value);
-    virtual void write_xml() {};
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
   protected:

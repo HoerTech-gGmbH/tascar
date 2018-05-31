@@ -76,9 +76,6 @@ int main(int argc, char** argv)
     { 0, 0, 0, 0 }
   };
   int opt(0);
-  bool b_am(false);
-  uint32_t ism_min(0);
-  uint32_t ism_max(3);
   int option_index(0);
   while( (opt = getopt_long(argc, argv, options,
                             long_options, &option_index)) != -1){

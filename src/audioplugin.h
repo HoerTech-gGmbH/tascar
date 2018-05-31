@@ -23,7 +23,6 @@ namespace TASCAR {
   class audioplugin_base_t : public xml_element_t, public audiostates_t {
   public:
     audioplugin_base_t( const audioplugin_cfg_t& cfg );
-    virtual void write_xml() {};
     virtual ~audioplugin_base_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp) = 0;
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
@@ -40,7 +39,6 @@ namespace TASCAR {
   class audioplugin_t : public audioplugin_base_t {
   public:
     audioplugin_t( const audioplugin_cfg_t& cfg );
-    void write_xml();
     virtual ~audioplugin_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
     virtual void prepare( chunk_cfg_t& );

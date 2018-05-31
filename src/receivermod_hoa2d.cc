@@ -25,9 +25,7 @@ public:
     TASCAR::varidelay_t dy;
   };
   hoa2d_t(xmlpp::Element* xmlsrc);
-  void write_xml();
   virtual ~hoa2d_t();
-  //void write_xml();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
@@ -121,19 +119,6 @@ void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double_degree( "/diffup_rot", &diffup_rot );
   srv->add_double( "/diffup_delay", &diffup_delay );
   srv->add_uint( "/diffup_maxorder", &diffup_maxorder );
-}
-
-void hoa2d_t::write_xml()
-{
-  TASCAR::receivermod_base_speaker_t::write_xml();
-  SET_ATTRIBUTE(order);
-  SET_ATTRIBUTE_DEG(rotation);
-  SET_ATTRIBUTE_BOOL(maxre);
-  SET_ATTRIBUTE_BOOL(diffup);
-  SET_ATTRIBUTE_DEG(diffup_rot);
-  SET_ATTRIBUTE(diffup_delay);
-  SET_ATTRIBUTE(diffup_maxorder);
-  SET_ATTRIBUTE(filterperiod);
 }
 
 hoa2d_t::~hoa2d_t()

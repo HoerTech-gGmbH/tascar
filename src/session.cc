@@ -38,11 +38,6 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
   }
 }
 
-void TASCAR::module_t::write_xml()
-{
-  libdata->write_xml();
-}
-
 void TASCAR::module_t::update(uint32_t frame,bool running)
 {
   if( is_configured)
@@ -94,6 +89,8 @@ TASCAR::session_t::session_t()
     loop(false),
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
+    levelmeter_min(30.0),
+    levelmeter_range(70.0),
     period_time(1.0/(double)srate),
     started_(false)//,
     //pcnt(0)
@@ -129,6 +126,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     loop(false),
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
+    levelmeter_min(30.0),
+    levelmeter_range(70.0),
     period_time(1.0/(double)srate),
     started_(false)//,
     //pcnt(0)
@@ -149,16 +148,15 @@ void TASCAR::session_t::read_xml()
     tsc_reader_t::GET_ATTRIBUTE_BOOL(loop);
     tsc_reader_t::GET_ATTRIBUTE(levelmeter_tc);
     tsc_reader_t::GET_ATTRIBUTE(levelmeter_weight);
+    tsc_reader_t::GET_ATTRIBUTE(levelmeter_mode);
+    tsc_reader_t::GET_ATTRIBUTE(levelmeter_min);
+    tsc_reader_t::GET_ATTRIBUTE(levelmeter_range);
     TASCAR::tsc_reader_t::read_xml();
     for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
       (*it)->add_licenses( this );
   }
   catch( ... ){
     if( lock_vars() ){
-      //for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it){
-      //  DEBUG(*it);
-      //  delete (*it);
-      //}
       for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
         delete (*it);
       for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
@@ -169,22 +167,6 @@ void TASCAR::session_t::read_xml()
     }
     throw;
   }
-}
-
-void TASCAR::session_t::write_xml()
-{
-  tsc_reader_t::SET_ATTRIBUTE(duration);
-  tsc_reader_t::SET_ATTRIBUTE_BOOL(loop);
-  tsc_reader_t::SET_ATTRIBUTE(levelmeter_tc);
-  tsc_reader_t::SET_ATTRIBUTE(levelmeter_weight);
-  for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
-    (*it)->write_xml();
-  for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
-    (*it)->write_xml();
-  for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
-    (*it)->write_xml();
-  for( std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!=modules.end();++it)
-    (*it)->write_xml();
 }
 
 void TASCAR::session_t::unload_modules()
@@ -410,13 +392,6 @@ TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
   get_attribute("end",end);
 }
 
-void TASCAR::range_t::write_xml()
-{
-  e->set_attribute("name",name);
-  set_attribute("start",start);
-  set_attribute("end",end);
-}
-
 TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc)
 {
@@ -424,18 +399,8 @@ TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
   get_attribute("dest",dest);
 }
 
-void TASCAR::connection_t::write_xml()
-{
-  set_attribute("src",src);
-  set_attribute("dest",dest);
-}
-
 TASCAR::module_base_t::module_base_t( const TASCAR::module_cfg_t& cfg )
   : xml_element_t(cfg.xmlsrc),session(cfg.session)
-{
-}
-
-void TASCAR::module_base_t::write_xml()
 {
 }
 
@@ -473,11 +438,6 @@ TASCAR::actor_module_t::actor_module_t( const TASCAR::module_cfg_t& cfg, bool fa
 
 TASCAR::actor_module_t::~actor_module_t()
 {
-}
-
-void TASCAR::actor_module_t::write_xml()
-{
-  SET_ATTRIBUTE(actor);
 }
 
 void TASCAR::actor_module_t::set_location(const TASCAR::pos_t& l, bool b_local )

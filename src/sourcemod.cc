@@ -28,12 +28,6 @@ sourcemod_t::sourcemod_t( xmlpp::Element* cfg )
   }
 }
 
-void sourcemod_t::write_xml()
-{
-  set_attribute("type",sourcetype);
-  libdata->write_xml();
-}
-
 bool sourcemod_t::read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t* data)
 {
   return libdata->read_source( prel, input, output, data );
@@ -79,10 +73,6 @@ sourcemod_t::~sourcemod_t()
 
 sourcemod_base_t::sourcemod_base_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc)
-{
-}
-
-void sourcemod_base_t::write_xml()
 {
 }
 

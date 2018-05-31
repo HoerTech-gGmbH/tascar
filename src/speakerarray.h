@@ -14,7 +14,6 @@ namespace TASCAR {
       spk_pos_t(xmlpp::Element*);
       spk_pos_t(const spk_pos_t&);
       virtual ~spk_pos_t();
-      void write_xml();
       double get_rel_azim(double az_src) const;
       double get_cos_adist(pos_t src_unit) const;
       double az;
@@ -43,7 +42,6 @@ namespace TASCAR {
     private:
       spk_array_t(const spk_array_t&);
     public:
-      void write_xml();
       double get_rmax() const { return rmax;};
       double get_rmin() const { return rmin;};
       class didx_t {
