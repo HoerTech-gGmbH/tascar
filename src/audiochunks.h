@@ -21,6 +21,8 @@ namespace TASCAR {
     void copy(const wave_t& src,float gain=1.0);
     uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
+    uint32_t copy_stride(float* data,uint32_t cnt,uint32_t stride,float gain=1.0);
+    uint32_t copy_to_stride(float* data,uint32_t cnt,uint32_t stride,float gain=1.0);
     float rms() const;
     float maxabs() const;
     float spldb() const;

@@ -13,14 +13,6 @@ std::string file2str(const std::string& fname)
   return buffer.str();
 }
 
-std::string load_any_file(const std::string& fname)
-{
-  std::string raw(file2str(fname));
-  if( raw.size() < 4 )
-    throw TASCAR::ErrMsg("Invalid file type \""+fname+"\".");
-  return raw;
-}
-
 scene_manager_t::scene_manager_t()
   : session(NULL)
 {
@@ -41,7 +33,7 @@ void scene_manager_t::scene_load(const std::string& fname)
       delete session;
     session = NULL;
     if( fname.size() ){
-      session = new TASCAR::session_t( load_any_file(fname), TASCAR::xml_doc_t::LOAD_STRING, fname );
+      session = new TASCAR::session_t( fname, TASCAR::xml_doc_t::LOAD_FILE, fname );
       session->start();
     }
   }

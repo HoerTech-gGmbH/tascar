@@ -18,8 +18,8 @@ private:
   double qo;
   bool sync;
   bool bypass;
-  uint64_t t;
-  uint64_t beat;
+  int64_t t;
+  int64_t beat;
   TASCAR::resonance_filter_t f1;
   TASCAR::resonance_filter_t fo;
 };
@@ -75,32 +75,46 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::p
   fo.set_fq( freso*t_sample, qo );
   if( bpm < 6.9444e-04 )
     bpm = 6.9444e-04;
-  uint64_t period(60*(uint64_t)f_sample/(uint64_t)bpm);
+  int64_t period((60*(int64_t)f_sample)/(int64_t)bpm);
+  int64_t objecttime(tp.object_time_samples);
   float v(0);
   TASCAR::wave_t& aud(chunk[0]);
-  if( sync ){
-    t = (uint64_t)(tp.object_time_samples) % period;
-    beat = (uint64_t)(tp.object_time_samples)/period;
-    if( bpb > 0 )
-      beat = beat % bpb;
-    else
-      beat = 0;
-  }
   for(uint32_t k=0;k<aud.n;++k){
-    if( (t >= period)||(t==0) ){
-      t = 0;
-      beat++;
-      if( beat >= bpb )
-	beat = 0;
-      if( !beat ){
-	v = a1;
-      }else{
-	v = ao;
-      }
+    if( sync ){
+      // synchronize to time line:
+      t = objecttime;
+      if( tp.rolling )
+        ++objecttime;
+      ldiv_t tmp(ldiv( t, period ));
+      t = tmp.rem;
+      beat = tmp.quot;
+      if( bpb > 0 ){
+        tmp = ldiv(beat,bpb);
+        beat = tmp.rem;
+      }else
+        beat = 0;
     }else{
+      // free-run mode, in
+      if( t >= period ){
+        t = 0;
+        ++beat;
+        if( beat >= bpb )
+          beat = 0;
+      }
+    }
+    if( t || (sync && !tp.rolling) || bypass ){
+      // this is not a beat sample:
       v = 0.0f;
+    }else{
+      //std::cout << beat << " " << t << " " << period << " " << objecttime << std::endl;
+      // if beat != 0 then this is not a one:
+      if( beat )
+        v = ao;
+      else
+        v = a1;
     }
     if( !bypass ){
+      // beat-dependent filter properties:
       if( beat )
         aud.d[k] += fo.filter_unscaled( v );
       else

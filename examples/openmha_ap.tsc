@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session>
+<scene>
+  <receiver/>
+  <source>
+    <sound x="1">
+      <sine a="50"/>
+      <openmha plugin="rmslevel" config="?"/>
+    </sound>
+  </source>
+</scene>
+</session>

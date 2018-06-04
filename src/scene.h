@@ -213,8 +213,8 @@ namespace TASCAR {
       void geometry_update(double t);
       void process_plugins(const TASCAR::transport_t& tp);
       void apply_gain();
-      void prepare( chunk_cfg_t& );
-      void release();
+      //void prepare( chunk_cfg_t& );
+      //void release();
       void add_meter(TASCAR::levelmeter_t*);
       float read_meter();
     private:

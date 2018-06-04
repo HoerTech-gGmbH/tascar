@@ -79,7 +79,7 @@ acoustic_model_t::~acoustic_model_t()
 /**
    \ingroup callgraph
 */
-uint32_t acoustic_model_t::process()
+uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
 {
   if( src_->active )
     update_position();
@@ -255,7 +255,7 @@ world_t::~world_t()
 /**
    \ingroup callgraph
  */
-void world_t::process()
+void world_t::process(const TASCAR::transport_t& tp)
 {
   uint32_t local_active_point(0);
   uint32_t local_active_diffuse(0);
@@ -295,28 +295,28 @@ void world_t::process()
   }
   // calculate acoustic models:
   for( std::vector<receiver_graph_t*>::iterator ig=receivergraphs.begin();ig!=receivergraphs.end();++ig){
-    (*ig)->process();
+    (*ig)->process(tp);
     local_active_point += (*ig)->get_active_pointsource();
     local_active_diffuse += (*ig)->get_active_diffusesource();
   }
   // apply receiver gain:
   for(uint32_t k=0;k<receivers_.size();k++){
-    receivers_[k]->post_proc();
+    receivers_[k]->post_proc(tp);
     receivers_[k]->apply_gain();
   }
   active_pointsource = local_active_point;
   active_diffusesource = local_active_diffuse;
 }
 
-void receiver_graph_t::process()
+void receiver_graph_t::process(const TASCAR::transport_t& tp)
 {
   uint32_t local_active_point(0);
   uint32_t local_active_diffuse(0);
   // calculate acoustic model:
   for(unsigned int k=0;k<acoustic_model.size();k++)
-    local_active_point += acoustic_model[k]->process();
+    local_active_point += acoustic_model[k]->process(tp);
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
-    local_active_diffuse += diffuse_acoustic_model[k]->process();
+    local_active_diffuse += diffuse_acoustic_model[k]->process(tp);
   active_pointsource = local_active_point;
   active_diffusesource = local_active_diffuse;
 }
@@ -353,7 +353,7 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
 /**
    \ingroup callgraph
  */
-uint32_t diffuse_acoustic_model_t::process()
+uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
 {
   pos_t prel;
   double d(0.0);
@@ -415,7 +415,8 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
   prelim_next_fade_gain(1),
   prelim_previous_fade_gain(1),
   fade_gain(1),
-  is_prepared(false)
+  is_prepared(false),
+  starttime_samples(0)
 {
   GET_ATTRIBUTE(size);
   get_attribute_bool("point",render_point);
@@ -441,12 +442,16 @@ void receiver_t::prepare( chunk_cfg_t& cf_ )
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
   }
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
+    (*p)->prepare( cf_ );
   is_prepared = true;
 }
 
 void receiver_t::release()
 {
   receivermod_t::release();
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
+    (*p)->release();
   outchannels.clear();
   for( uint32_t k=0;k<outchannelsp.size();++k)
     delete outchannelsp[k];
@@ -456,6 +461,10 @@ void receiver_t::release()
 
 receiver_t::~receiver_t()
 {
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+       p!= plugins.end();
+       ++p)
+    delete (*p);
 }
 
 void receiver_t::clear_output()
@@ -475,8 +484,20 @@ void receiver_t::add_pointsource(const pos_t& prel, double width, const wave_t& 
 /**
    \ingroup callgraph
  */
-void receiver_t::post_proc()
+void receiver_t::postproc(std::vector<wave_t>& output)
 {
+  receivermod_t::postproc(output);
+  process_plugins(ltp);
+}
+
+/**
+   \ingroup callgraph
+ */
+void receiver_t::post_proc(const TASCAR::transport_t& tp)
+{
+  ltp = tp;
+  ltp.object_time_samples = ltp.session_time_samples - starttime_samples;
+  ltp.object_time_seconds = ltp.object_time_samples*t_sample;
   postproc(outchannels);
 }
 
@@ -675,6 +696,10 @@ source_t::source_t(xmlpp::Element* xmlsrc)
 
 source_t::~source_t()
 {
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+       p!= plugins.end();
+       ++p)
+    delete (*p);
 }
 
 void source_t::prepare( chunk_cfg_t& cf_ )
@@ -687,11 +712,15 @@ void source_t::prepare( chunk_cfg_t& cf_ )
     inchannelsp.push_back(new wave_t(n_fragment));
     inchannels.push_back(wave_t(*(inchannelsp.back())));
   }
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
+    (*p)->prepare( cf_ );
   is_prepared = true;
 }
 
 void source_t::release()
 {
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
+    (*p)->release( );
   sourcemod_t::release();
   inchannels.clear();
   for( uint32_t k=0;k<inchannelsp.size();++k)
@@ -706,6 +735,29 @@ void source_t::process_plugins( const TASCAR::transport_t& tp )
        p!= plugins.end();
        ++p)
     (*p)->ap_process( inchannels, position, tp );
+}
+
+void receiver_t::process_plugins( const TASCAR::transport_t& tp )
+{
+  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
+       p!= plugins.end();
+       ++p)
+    (*p)->ap_process( outchannels, position, tp );
+}
+
+void receiver_t::add_variables(TASCAR::osc_server_t* srv )
+{
+  receivermod_t::add_variables(srv);
+  std::string oldpref(srv->get_prefix());
+  uint32_t k=0;
+  for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=plugins.begin();iPlug!=plugins.end();++iPlug){
+    char ctmp[1024];
+    sprintf(ctmp,"ap%d",k);
+    srv->set_prefix(oldpref+"/"+ctmp+"/"+(*iPlug)->get_modname());
+    (*iPlug)->add_variables( srv );
+    ++k;
+  }
+  srv->set_prefix(oldpref);
 }
 
 soundpath_t::soundpath_t(const source_t* src, const soundpath_t* parent_, const reflector_t* generator_)

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <diffuse>
+    </diffuse>
+    <receiver type="hoa2d" maxre="true">
+      <speaker az="0"/>
+      <speaker az="90"/>
+      <speaker az="180"/>
+      <speaker az="-90"/>
+    </receiver>
+  </scene>
+</session>

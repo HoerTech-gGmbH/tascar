@@ -71,6 +71,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     s_decoded(NULL),
     dec(NULL),
     fft_scale(1.0),
+    //wgain(sqrt(2.0)),
     maxre(false),
     rotation(-12345),
     diffup(false),
@@ -95,6 +96,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(filterperiod);
   std::string filtershape;
   GET_ATTRIBUTE(filtershape);
+  //GET_ATTRIBUTE(wgain);
   if( filtershape.empty() )
     filtershape = "none";
   if( filtershape == "none" )
@@ -115,6 +117,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
 
 void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
 {
+  //srv->add_double( "/wgain", &wgain );
   srv->add_bool( "/diffup", &diffup );
   srv->add_double_degree( "/diffup_rot", &diffup_rot );
   srv->add_double( "/diffup_delay", &diffup_delay );
@@ -260,9 +263,11 @@ void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TAS
   idelay = diffup_delay*f_sample;
   data_t* d((data_t*)sd);
   // copy first order data:
+  float wgain(fft_scale*sqrt(2.0));
+  float xyzgain(fft_scale*0.5);
   for(uint32_t kt=0;kt<n_fragment;++kt){
-    s_encoded[kt*nbins] += ordergain[0]*chunk.w()[kt];
-    s_encoded[kt*nbins+1] += ordergain[1]*(chunk.x()[kt] + I*chunk.y()[kt]);
+    s_encoded[kt*nbins] += wgain*chunk.w()[kt];
+    s_encoded[kt*nbins+1] += xyzgain*(chunk.x()[kt] + I*chunk.y()[kt]);
   }
   if( diffup ){
     float _Complex rot_p(cexpf(I*diffup_rot));
@@ -284,7 +289,7 @@ void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TAS
       for(uint32_t l=2;l<=std::min(amb_order,diffup_maxorder);++l){
         tmp_p *= rot_p;
         tmp_m *= rot_m;
-        //s_encoded[kt*nbins+l] = ordergain[l]*(tmp_p+tmp_m);
+        s_encoded[kt*nbins+l] += ordergain[l]*(tmp_p+tmp_m);
       }
     }
   }

@@ -174,7 +174,7 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     }
     // process world:
     if( world ){
-      world->process();
+      world->process(tp);
       active_pointsources = world->get_active_pointsource();
       active_diffusesources = world->get_active_diffusesource();
     }else{

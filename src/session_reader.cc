@@ -55,6 +55,14 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type
     xml_element_t(doc->get_root_node()),
     file_name(((t==LOAD_FILE)?filename_or_data:""))
 {
+  switch( t ){
+  case LOAD_FILE :
+    file_name = TASCAR::env_expand(filename_or_data);
+    break;
+  case LOAD_STRING :
+    file_name = "(loaded from string)";
+    break;
+  }
   // avoid problems with number format in xml file:
   setlocale(LC_ALL,"C");
   if( path.size() ){

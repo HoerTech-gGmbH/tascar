@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session>
+  <scene mirrororder="3">
+    <source>
+      <sound x="1">
+	<sine a="90"/>
+      </sound>
+      <orientation>0 37 0 0</orientation>
+    </source>
+    <receiver type="amb1h1v"/>
+  </scene>
+</session>

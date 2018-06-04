@@ -7,6 +7,8 @@ COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
 FULLVERSION=$(shell cat version)-$(COMMITHASH)$(GITMODIFIED)
 DEFFULLVERSION=$(shell echo "\#define TASCARVER \\\""$(FULLVERSION)"\\\"")
 
+HAS_OPENMHA=$(shell test -f /usr/include/openmha/mhapluginloader.h && echo "yes")
+
 #
 # main targets:
 #
@@ -39,6 +41,11 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
 
 AUDIOPLUGINS = identity sine lipsync lipsync_paper lookatme		\
   onsetdetector delay sndfile spksim dummy hannenv gate metronome
+
+ifeq "$(HAS_OPENMHA)" "yes"
+AUDIOPLUGINS += openmha
+tascar_ap_openmha.so: LDLIBS+=-lopenmha
+endif
 
 TEST_FILES = test_ngon test_sinc test_fsplit compare_sndfile
 
@@ -129,6 +136,7 @@ uninstall:
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
+	$(MAKE) -C gui clean
 
 VPATH = ../src
 # ../src/hoafilt

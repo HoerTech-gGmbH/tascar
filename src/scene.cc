@@ -316,6 +316,15 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
 {
   if( get_name().empty() )
     set_name("out");
+  // parse plugins:
+  xmlpp::Element* se_plugs(receiver_t::find_or_add_child("plugins"));
+  xmlpp::Node::NodeList subnodes(se_plugs->get_children());
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,get_name(),"")));
+    }
+  }
 }
 
 void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
@@ -335,6 +344,7 @@ void receivermod_object_t::release()
 
 void receivermod_object_t::postproc(std::vector<wave_t>& output)
 {
+  starttime_samples = TASCAR::Acousticmodel::receiver_t::f_sample*starttime;
   TASCAR::Acousticmodel::receiver_t::postproc(output);
   if( output.size() != rmsmeter.size() ){
     DEBUG(output.size());
@@ -866,18 +876,23 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
   xmlpp::Node::NodeList subnodes = source_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
+    if( sne && (sne->get_name()!="plugins")){
       plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,(parent_?(parent_->get_name()):("")))));
+    }
+  }
+  // parse plugins:
+  xmlpp::Element* se_plugs(source_t::find_or_add_child("plugins"));
+  subnodes = se_plugs->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,get_name(),"")));
     }
   }
 }
 
 sound_t::~sound_t()
 {
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-       p!= plugins.end();
-       ++p)
-    delete (*p);
 }
 
 void sound_t::geometry_update( double t )
@@ -904,7 +919,7 @@ void sound_t::process_plugins( const TASCAR::transport_t& tp )
   TASCAR::transport_t ltp(tp);
   if( parent ){
       ltp.object_time_seconds = ltp.session_time_seconds - parent->starttime;
-      ltp.object_time_samples = f_sample * ltp.object_time_seconds;
+      ltp.object_time_samples = ltp.session_time_samples - f_sample * parent->starttime;
   }
   source_t::process_plugins( ltp );
 }
@@ -949,19 +964,6 @@ std::string sound_t::get_port_name() const
   return name;
 }
 
-void sound_t::prepare( chunk_cfg_t& cf_ )
-{
-  source_t::prepare( cf_ );
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->prepare( cf_ );
-}
-
-void sound_t::release()
-{
-  source_t::release();
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->release( );
-}
 
 
 /*

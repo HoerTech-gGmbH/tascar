@@ -115,7 +115,10 @@ namespace TASCAR {
       void set_next_gain(double gain);
       void set_fade( double targetgain, double duration );
       void apply_gain();
-      void post_proc();
+      virtual void postproc(std::vector<wave_t>& output);
+      void post_proc(const TASCAR::transport_t& tp);
+      virtual void process_plugins(const TASCAR::transport_t& tp);
+      virtual void add_variables( TASCAR::osc_server_t* srv );
       // configuration/control variables:
       TASCAR::pos_t size;
       bool render_point;
@@ -153,6 +156,11 @@ namespace TASCAR {
       // current fade gain:
       float fade_gain;
       bool is_prepared;
+    protected:
+      TASCAR::transport_t ltp;
+      uint64_t starttime_samples;
+    public:
+      std::vector<TASCAR::audioplugin_t*> plugins;
     };
 
     class filter_coeff_t {
@@ -208,7 +216,7 @@ namespace TASCAR {
       ~acoustic_model_t();
       /** \brief Read audio from source, process and add to receiver.
        */
-      uint32_t process();
+      uint32_t process(const TASCAR::transport_t& tp);
       double get_gain() const { return gain;};
     protected:
       double c_;
@@ -248,7 +256,7 @@ namespace TASCAR {
       ~diffuse_acoustic_model_t();
       /** \brief Read audio from source, process and add to receiver.
        */
-      uint32_t process();
+      uint32_t process(const TASCAR::transport_t& tp);
     protected:
       diffuse_source_t* src_;
       receiver_t* receiver_;
@@ -271,7 +279,7 @@ namespace TASCAR {
                        receiver_t* receiver,
                        uint32_t mirror_order);
       ~receiver_graph_t();
-      void process();
+      void process(const TASCAR::transport_t& tp);
       uint32_t get_active_pointsource() const {return active_pointsource;};
       uint32_t get_active_diffusesource() const {return active_diffusesource;};
       uint32_t get_total_pointsource() const {return acoustic_model.size();};
@@ -309,7 +317,7 @@ namespace TASCAR {
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
        */
-      void process();
+      void process(const TASCAR::transport_t& tp);
       uint32_t get_active_pointsource() const {return active_pointsource;};
       uint32_t get_active_diffusesource() const {return active_diffusesource;};
       uint32_t get_total_pointsource() const {return total_pointsource;};

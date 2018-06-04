@@ -1,4 +1,5 @@
 function plot_signal( name, b_render )
+% plot_signal( name, b_render )
 if nargin < 2
     b_render = false;
 end

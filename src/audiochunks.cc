@@ -51,7 +51,18 @@ uint32_t wave_t::copy(float* data,uint32_t cnt,float gain)
   uint32_t n_min(std::min(n,cnt));
   for( uint32_t k=0;k<n_min;++k)
     d[k] = data[k]*gain;
-  //memcpy(d,data,n_min*sizeof(float));
+  if( n_min < n )
+    memset(&(d[n_min]),0,sizeof(float)*(n-n_min));
+  return n_min;
+}
+
+uint32_t wave_t::copy_stride(float* data,uint32_t cnt,uint32_t stride, float gain)
+{
+  uint32_t n_min(std::min(n,cnt));
+  for( uint32_t k=0;k<n_min;++k){
+    d[k] = *data*gain;
+    data += stride;
+  }
   if( n_min < n )
     memset(&(d[n_min]),0,sizeof(float)*(n-n_min));
   return n_min;
@@ -77,6 +88,20 @@ uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
   //memcpy(data,d,n_min*sizeof(float));
   if( n_min < cnt )
     memset(&(data[n_min]),0,sizeof(float)*(cnt-n_min));
+  return n_min;
+}
+
+uint32_t wave_t::copy_to_stride(float* data,uint32_t cnt,uint32_t stride,float gain)
+{
+  uint32_t n_min(std::min(n,cnt));
+  for( uint32_t k=0;k<n_min;++k){
+    *data = d[k]*gain;
+    data += stride;
+  }
+  for( uint32_t k=n_min; k < cnt; ++k){
+    *data = 0;
+    data += stride;
+  }
   return n_min;
 }
 

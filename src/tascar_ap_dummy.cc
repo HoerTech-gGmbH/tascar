@@ -1,7 +1,4 @@
 #include "audioplugin.h"
-#include <lo/lo.h>
-#include "stft.h"
-#include <string.h>
 #include "errorhandling.h"
 
 class dummy_t : public TASCAR::audioplugin_base_t {

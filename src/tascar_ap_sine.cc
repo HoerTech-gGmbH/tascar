@@ -4,6 +4,7 @@ class sine_t : public TASCAR::audioplugin_base_t {
 public:
   sine_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void add_variables( TASCAR::osc_server_t* srv );
   ~sine_t();
 private:
   double f;
@@ -23,6 +24,12 @@ sine_t::sine_t( const TASCAR::audioplugin_cfg_t& cfg )
 
 sine_t::~sine_t()
 {
+}
+
+void sine_t::add_variables( TASCAR::osc_server_t* srv )
+{
+  srv->add_double("/f",&f);
+  srv->add_double_dbspl("/a",&a);
 }
 
 void sine_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
