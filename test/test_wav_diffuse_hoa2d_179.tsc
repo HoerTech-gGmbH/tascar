@@ -3,7 +3,7 @@
   <scene>
     <diffuse>
     </diffuse>
-    <receiver type="nsp" xyzgain="0.70710678118654757274">
+    <receiver type="hoa2d" maxre="true" v0179="true">
       <speaker az="0"/>
       <speaker az="45"/>
       <speaker az="90"/>

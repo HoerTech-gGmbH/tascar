@@ -2,7 +2,8 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_snd1 test_snd2 test_snd4 test_snd3 test_snd5 test_pos1	\
 	test_pos2 test_pos_trackinterp test_snd_door1 test_snd_door2	\
 	test_pos_door test_snd_layers test_snd_rec_amb1h1v		\
-	test_wav_diffuse test_wav_diffuse_hoa2d test_wav_diffuse_nsp4 test_wav_diffuse_hoa2d4
+	test_wav_diffuse test_wav_diffuse_hoa2d test_wav_diffuse_nsp4	\
+	test_wav_diffuse_hoa2d4 test_wav_diffuse_hoa2d_179
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\

@@ -49,6 +49,7 @@ private:
   double rotation;
   std::vector<float _Complex> ordergain;
   bool diffup;
+  bool v0179;
   double diffup_rot;
   double diffup_delay;
   uint32_t diffup_maxorder;
@@ -75,6 +76,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     maxre(false),
     rotation(-12345),
     diffup(false),
+    v0179(false),
     diffup_rot(45*DEG2RAD),
     diffup_delay(0.01),
     diffup_maxorder(100),
@@ -90,6 +92,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     rotation = -spkpos.mean_rotation;
   GET_ATTRIBUTE_BOOL(maxre);
   GET_ATTRIBUTE_BOOL(diffup);
+  GET_ATTRIBUTE_BOOL(v0179);
   GET_ATTRIBUTE_DEG(diffup_rot);
   GET_ATTRIBUTE(diffup_delay);
   GET_ATTRIBUTE(diffup_maxorder);
@@ -122,6 +125,7 @@ void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double_degree( "/diffup_rot", &diffup_rot );
   srv->add_double( "/diffup_delay", &diffup_delay );
   srv->add_uint( "/diffup_maxorder", &diffup_maxorder );
+  srv->add_bool( "/v0179", &v0179 );
 }
 
 hoa2d_t::~hoa2d_t()
@@ -265,6 +269,17 @@ void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TAS
   // copy first order data:
   float wgain(fft_scale*sqrt(2.0));
   float xyzgain(fft_scale*0.5);
+  if( v0179 ){
+    wgain = cabs(ordergain[0]);
+    xyzgain = cabs(ordergain[1]);
+  }else{
+    if( !diffup ){
+      if( maxre )
+        xyzgain *= sqrt(0.5);
+    }else{
+      xyzgain *= cosf(M_PI/(2.0f*amb_order+2.0f));
+    }
+  }
   for(uint32_t kt=0;kt<n_fragment;++kt){
     s_encoded[kt*nbins] += wgain*chunk.w()[kt];
     s_encoded[kt*nbins+1] += xyzgain*(chunk.x()[kt] + I*chunk.y()[kt]);
