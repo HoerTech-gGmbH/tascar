@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<session srv_port="9999">
+<session srv_port="9999" license="CC BY SA 2.0" attribution="Giso Grimm">
   <scene guiscale="10.1">
     
  <!-- there is a shoebox room, one moving obstacle and a strange room as well-->
  
     <facegroup damping="0.2" name="walls" reflectivity="0.8" shoebox="6 7 8"/>
 
-    <obstacle damping="0.6" name="thewall" reflectivity="0.8">
+    <obstacle name="thewall">
       <faces>0 -0.5 -0.5 0 -0.5 0.5 0 0.5 0.5 0 0.5 -0.5</faces>
       <position>0 0.75 2 0
 10 0.75 -2 0</position>
     </obstacle>
 
-    <facegroup importraw="shape_Cube.raw" name="magicchamber" transmission="0.1">
+    <facegroup importraw="shape_Cube.raw" name="magicchamber">
       <orientation>0 -45 0 0</orientation>
     </facegroup>
 
     <source name="src">
       <sound name="0">
-      <sndfile loop="0" name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" level="65"/>
+	<!--<sndfile loop="0" name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" level="65"/>-->
      </sound>
       <position>0 1.5 0 0</position>
     </source>

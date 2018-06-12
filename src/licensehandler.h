@@ -10,6 +10,7 @@ class licensehandler_t {
 public:
   void add_license( const std::string& license, const std::string& attribution, const std::string& tag );
   std::string legal_stuff() const;
+  std::string show_unknown() const;
 private:
   std::map<std::string,std::set<std::string> > licenses;
   std::map<std::string,std::set<std::string> > attributions;

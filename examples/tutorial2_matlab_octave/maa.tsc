@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<session srv_port="9999">
+<session srv_port="9999" license="CC BY SA 2.0" attribution="Giso Grimm">
   <scene guiscale="6">
     <source name="S">
       <sound name="0" x="1"/>

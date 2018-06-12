@@ -12,7 +12,7 @@ public:
   static int osc_setrotgyr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_calib(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_calib1(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void setrot( const TASCAR::zyx_euler_t& e );
+  void setrot( float* e );
   void setrotypr( float* e );
   void setrotgyr( double t, double* gyr, double* acc );
   void calib();
@@ -25,6 +25,8 @@ private:
   uint32_t ypraxis;
   uint32_t gyraxis;
   uint32_t zaxis;
+  uint32_t rotaxis;
+  double rotscale;
   double zscale;
   double gyrscale;
   double scale;
@@ -68,9 +70,14 @@ int mpu6050track_t::osc_setrot(const char *path, const char *types, lo_arg **arg
   // 1 = rx
   // 2 = ry <- here up-axis
   // 3 = rz
-  if( user_data && (argc==4) && (types[2]=='f') )
-    ((mpu6050track_t*)user_data)->setrot( TASCAR::zyx_euler_t(DEG2RAD*(argv[3]->f), DEG2RAD*(argv[2]->f), DEG2RAD*(argv[1]->f)) );
-  return 0;
+  if( user_data && (argc==4) && (types[2]=='f') ){
+    float data[3];
+    data[0] = argv[3]->f;
+    data[1] = argv[2]->f;
+    data[2] = argv[1]->f;
+    ((mpu6050track_t*)user_data)->setrot( data );
+  }
+  return 1;
 }
 
 int mpu6050track_t::osc_setrotypr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -109,13 +116,11 @@ int mpu6050track_t::osc_setrotgyr(const char *path, const char *types, lo_arg **
   return 0;
 }
 
-void mpu6050track_t::setrot( const TASCAR::zyx_euler_t& e )
+void mpu6050track_t::setrot( float* data )
 {
+  TASCAR::zyx_euler_t e(rotscale*data[rotaxis],0,0);
   TASCAR::pos_t x(0,1,0);
   x *= e;
-  double tmp(x.z);
-  x.z = x.y;
-  x.y = tmp;
   double az(x.azim());
   if( (-4 < az) && (az < 4) )
     rot = az;
@@ -161,6 +166,8 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
     ypraxis(0),
     gyraxis(1),
     zaxis(-1),
+  rotaxis(1),
+  rotscale(DEG2RAD),
     zscale(1),
     gyrscale(0.06),
     scale(1.0),
@@ -181,6 +188,10 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(tauz);
   GET_ATTRIBUTE(scale);
   GET_ATTRIBUTE(gyrscale);
+  GET_ATTRIBUTE(rotaxis);
+  if( (rotaxis < 0) || (2 < rotaxis) )
+    throw TASCAR::ErrMsg("Invalid rotation axis (must be 0, 1 or 2).");
+  GET_ATTRIBUTE(rotscale);
   GET_ATTRIBUTE(ypraxis);
   GET_ATTRIBUTE(gyraxis);
   GET_ATTRIBUTE(zaxis);
@@ -196,6 +207,8 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
     session->add_method(id+"/ypr","ffff",&mpu6050track_t::osc_setrotypr,this);
   else if( mode == "gyr" )
     session->add_method(id+"/raw","diiiddd",&mpu6050track_t::osc_setrotgyr,this);
+  else if( mode == "rotnew" )  
+    session->add_method("/rot","ffff",&mpu6050track_t::osc_setrot,this);
   else
     throw TASCAR::ErrMsg("Unknown mode \""+mode+"\".");
   session->add_method(id+"/calib","fff",&mpu6050track_t::osc_calib,this);

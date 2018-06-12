@@ -55,7 +55,9 @@ void openmha_t::parse(const std::string& s)
     std::cout << mhaplug.parse( s ) << std::endl;
   }
   catch( const std::exception& e ){
-    std::cerr << "Error: " << e.what() << std::endl;
+    std::string msg("openMHA Error: ");
+    msg+=e.what();
+    TASCAR::add_warning(msg);
   }
 }
 

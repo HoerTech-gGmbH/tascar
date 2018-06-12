@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<session srv_port="9999">
+<session srv_port="9999" license="CC BY SA 2.0" attribution="Giso Grimm">
   <scene guiscale="6">
 
     <source name="src">
       <sound name="0" >
-        <sndfile name="${HOME}/tascar_scenes/sounds/Alarm/53448__guitarguy1985__fire.wav" level="65" loop="0"/>
+        <!--<sndfile name="${HOME}/tascar_scenes/sounds/Alarm/53448__guitarguy1985__fire.wav" level="65" loop="0"/>-->
 	</sound>
 
       <position>0 1 0 0</position>

@@ -29,6 +29,7 @@
 #include <jack/thread.h>
 #include <unistd.h>
 #include "defs.h"
+#include "xmlconfig.h"
 
 static std::string errmsg("");
 
@@ -106,7 +107,7 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest, 
   if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
     errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
     if( bwarn )
-      std::cerr << "Warning: " << errmsg << std::endl;
+      TASCAR::add_warning(errmsg);
     else
       throw TASCAR::ErrMsg(errmsg.c_str());
   }

@@ -392,7 +392,7 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
     }
     catch( const std::exception& e ){
       driver_ = NULL;
-      std::cerr << "WARNING: Unable to open DMX USB driver " << device << ".\n";
+      TASCAR::add_warning("Unable to open DMX USB driver " + device + ".");
     }
   }else if( driver == "osc" ){
     std::string hostname;

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session duration="3600" loop="true">
+<session duration="3600" loop="true" license="CC BY SA" attribution="Giso Grimm">
   <!-- main scene: -->
   <scene guiscale="25" mirrororder="1">
     <!-- some screams, recorded in the lab: -->
@@ -14,19 +14,19 @@
 	<velocity const="2.55"/>
       </creator>
       <sound name="0">
-	<sndfile name="sounds/olsae.wav" level="65" loop="0"/>
+	<!--<sndfile name="sounds/olsae.wav" level="65" loop="0"/>-->
       </sound>
     </source>
     <!-- open and close the door: -->
     <source name="door">
       <position>0 0.409268 -1.054209 0</position>
       <sound name="0" y="1" z="1.06">
-	<sndfile name="sounds/door_open.wav" levelmode="calib" level="90" triggered="true"/>
-	<sndfile name="sounds/door_close.wav" levelmode="calib" level="90" triggered="true"/>
+	<!--<sndfile name="sounds/door_open.wav" levelmode="calib" level="90" triggered="true"/>-->
+	<!--<sndfile name="sounds/door_close.wav" levelmode="calib" level="90" triggered="true"/>-->
       </sound>
     </source>
     <!-- reflector for image source model: -->
-    <facegroup importraw="dungeon_reflector.raw" r="1" d="0.6"/>
+    <facegroup importraw="dungeon_reflector.raw" reflectivity="1" damping="0.6"/>
     <!-- receiver -->
     <receiver name="out" type="hoa2d" layout="glab.spk" caliblevel="120">
       <position>0 -10 0 1.6</position>

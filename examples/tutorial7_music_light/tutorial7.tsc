@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session duration="293">
+<session duration="293" license="CC BY SA 2.0" attribution="Giso Grimm">
   <scene guiscale="20" mirrororder="2">
     <source name="Voc" color="#0072bd">
       <sound maxdist="200" name="0" connect="ardour:send 3/audio_send 1"/>

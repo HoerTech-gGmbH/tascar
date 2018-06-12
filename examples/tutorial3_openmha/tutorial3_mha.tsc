@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<session srv_port="9999" duration="60" loop="true">
+<session srv_port="9999" duration="60" loop="true" license="CC BY SA 2.0" attribution="Giso Grimm">
 
   <!-- There are two scenes in this session (scene_S and scene_N). First scene contains only target source (S) 
        and the second scene contains noise sources (N_1,N_2, etc.).Both scenes contain the same receiver type with the same name.-->
@@ -8,12 +8,12 @@
 
     <source name="S">
       <sound name="0" >
-	<sndfile name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" loop="0" level="75"/>
+	<!--<sndfile name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" loop="0" level="75"/>-->
       </sound>
       <position>0 1 0 0</position>
     </source>
 
-    <receiver type="ortf" maxre="true" name="out_ortf" layout="24ch.spk" caliblevel="120">
+    <receiver type="ortf" name="out_ortf" caliblevel="120">
       <position>0 1.3 0.2 1.5</position>
     </receiver>
 
@@ -23,16 +23,16 @@
 
     <source name="N_1">
       <sound name="0">
-	<sndfile name="${HOME}/tascar_scenes/sounds/daps/m1_script1_clean.wav" loop="0" level="75"/>
+	<!--<sndfile name="${HOME}/tascar_scenes/sounds/daps/m1_script1_clean.wav" loop="0" level="75"/>-->
       </sound>
       <position>1 0.8 0 0</position>
     </source>
 
     <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1" connect="@.0">
-      <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>
+      <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>-->
     </diffuse>
 
-    <receiver type="ortf" maxre="true" name="out_ortf" caliblevel="120">
+    <receiver type="ortf" name="out_ortf" caliblevel="120">
       <position>0 1.3 0.2 1.5</position>
     </receiver>
 

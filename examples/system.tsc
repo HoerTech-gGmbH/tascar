@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session name="example" duration="42">
+<session name="example" duration="42" license="CC BY SA 2.0" attribution="Giso Grimm">
   <modules>
     <system command="xterm -e 'echo 1;sleep 5'" sleep="0">
       <at time="0" command="echo world"/>

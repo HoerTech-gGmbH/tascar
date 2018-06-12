@@ -21,7 +21,12 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
 {
   name = e->get_name();
   if( name == "module" ){
-    std::cerr << "Deprecated session file, line " << e->get_line() << ": Use modules within <modules>...</modules> section.\n";
+    char cline[256];
+    sprintf(cline,"%d",e->get_line());
+    std::string msg("Deprecated session file, line ");
+    msg+=cline;
+    msg+=": Use modules within <modules>...</modules> section.";
+    TASCAR::add_warning(msg);
     get_attribute("name",name);
   }
   std::string libname("tascar_");
@@ -58,6 +63,11 @@ void TASCAR::module_t::release()
   libdata->release();
 }
 
+void TASCAR::module_t::validate_attributes(std::string& msg) const
+{
+  libdata->validate_attributes(msg);
+}
+
 TASCAR::module_t::~module_t()
 {
   delete libdata;
@@ -81,28 +91,6 @@ const std::string& debug_str(const std::string& s)
   return s;
 }
 
-TASCAR::session_t::session_t()
-  : TASCAR::session_oscvars_t(tsc_reader_t::e),
-    jackc_transport_t(jacknamer(name,"session.")),
-    osc_server_t(srv_addr,srv_port),
-    duration(60),
-    loop(false),
-    levelmeter_tc(2.0),
-    levelmeter_weight(TASCAR::levelmeter_t::Z),
-    levelmeter_min(30.0),
-    levelmeter_range(70.0),
-    period_time(1.0/(double)srate),
-    started_(false)//,
-    //pcnt(0)
-{
-  pthread_mutex_init( &mtx, NULL );
-  add_output_port("sync_out");
-  jackc_transport_t::activate();
-  read_xml();
-  add_transport_methods();
-  osc_server_t::activate();
-}
-
 TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
   : xml_element_t(src)
 {
@@ -117,17 +105,62 @@ TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
     srv_port = "";
 }
 
-TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
+TASCAR::session_core_t::session_core_t()
+  : duration(60),
+    loop(false),
+    levelmeter_tc(2.0),
+    levelmeter_weight(TASCAR::levelmeter_t::Z),
+    levelmeter_min(30.0),
+    levelmeter_range(70.0)
+{
+  GET_ATTRIBUTE(duration);
+  GET_ATTRIBUTE_BOOL(loop);
+  GET_ATTRIBUTE(levelmeter_tc);
+  GET_ATTRIBUTE(levelmeter_weight);
+  GET_ATTRIBUTE(levelmeter_mode);
+  GET_ATTRIBUTE(levelmeter_min);
+  GET_ATTRIBUTE(levelmeter_range);
+}
+
+TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : TASCAR::tsc_reader_t(filename_or_data,t,path),
-    session_oscvars_t(tsc_reader_t::e),
-    jackc_transport_t(jacknamer(name,"session.")),
-    osc_server_t(srv_addr,srv_port),
     duration(60),
     loop(false),
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
     levelmeter_min(30.0),
-    levelmeter_range(70.0),
+    levelmeter_range(70.0)
+{
+  GET_ATTRIBUTE(duration);
+  GET_ATTRIBUTE_BOOL(loop);
+  GET_ATTRIBUTE(levelmeter_tc);
+  GET_ATTRIBUTE(levelmeter_weight);
+  GET_ATTRIBUTE(levelmeter_mode);
+  GET_ATTRIBUTE(levelmeter_min);
+  GET_ATTRIBUTE(levelmeter_range);
+}
+
+TASCAR::session_t::session_t()
+  : TASCAR::session_oscvars_t(tsc_reader_t::e),
+    jackc_transport_t(jacknamer(name,"session.")),
+    osc_server_t(srv_addr,srv_port),
+    period_time(1.0/(double)srate),
+    started_(false)//,
+    //pcnt(0)
+{
+  read_xml();
+  pthread_mutex_init( &mtx, NULL );
+  add_output_port("sync_out");
+  jackc_transport_t::activate();
+  add_transport_methods();
+  osc_server_t::activate();
+}
+
+TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
+  : TASCAR::session_core_t(filename_or_data,t,path),
+    session_oscvars_t(tsc_reader_t::e),
+    jackc_transport_t(jacknamer(name,"session.")),
+    osc_server_t(srv_addr,srv_port),
     period_time(1.0/(double)srate),
     started_(false)//,
     //pcnt(0)
@@ -144,13 +177,6 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
 void TASCAR::session_t::read_xml()
 {
   try{
-    tsc_reader_t::GET_ATTRIBUTE(duration);
-    tsc_reader_t::GET_ATTRIBUTE_BOOL(loop);
-    tsc_reader_t::GET_ATTRIBUTE(levelmeter_tc);
-    tsc_reader_t::GET_ATTRIBUTE(levelmeter_weight);
-    tsc_reader_t::GET_ATTRIBUTE(levelmeter_mode);
-    tsc_reader_t::GET_ATTRIBUTE(levelmeter_min);
-    tsc_reader_t::GET_ATTRIBUTE(levelmeter_range);
     TASCAR::tsc_reader_t::read_xml();
     for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
       (*it)->add_licenses( this );
@@ -272,7 +298,7 @@ void TASCAR::session_t::start()
       connect((*icon)->src,(*icon)->dest);
     }
     catch(const std::exception& e){
-      std::cerr << "Warning: " << e.what() << std::endl;
+      add_warning(e.what());
     }
   }
   for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl){
@@ -280,7 +306,7 @@ void TASCAR::session_t::start()
       connect(get_client_name()+":sync_out",(*ipl)->get_client_name()+":sync_in");
     }
     catch(const std::exception& e){
-      std::cerr << "Warning: " << e.what() << std::endl;
+      add_warning(e.what());
     }
   }
 }
@@ -561,6 +587,20 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/start","",OSCSession::_start,this);
   osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
   osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);
+}
+
+void TASCAR::session_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::tsc_reader_t::validate_attributes(msg);
+  for(std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
+    (*it)->validate_attributes(msg);
+  for(std::vector<TASCAR::range_t*>::const_iterator it=ranges.begin();it!=ranges.end();++it)
+    (*it)->validate_attributes(msg);
+  for(std::vector<TASCAR::connection_t*>::const_iterator it=connections.begin();
+      it!=connections.end();++it)
+    (*it)->validate_attributes(msg);
+  for(std::vector<TASCAR::module_t*>::const_iterator it=modules.begin();it!=modules.end();++it)
+    (*it)->validate_attributes(msg);
 }
 
 

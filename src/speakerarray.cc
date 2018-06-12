@@ -47,7 +47,9 @@ void spk_array_t::read_xml(xmlpp::Element* e)
 {
   GET_ATTRIBUTE(xyzgain);
   clear();
-  std::string importsrc(e->get_attribute_value("layout"));
+  std::string importsrc;
+  xml_element_t xe(e);
+  xe.get_attribute("layout",importsrc);
   if( !importsrc.empty() )
     import_file(importsrc);
   xmlpp::Node::NodeList subnodes = e->get_children();

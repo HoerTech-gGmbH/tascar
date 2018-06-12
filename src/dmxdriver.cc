@@ -5,6 +5,7 @@
 #include <iostream>
 #include "errorhandling.h"
 #include <errno.h>
+#include "xmlconfig.h"
 
 using namespace DMX;
 
@@ -37,8 +38,9 @@ void OpenDMX_USB_t::send(uint8_t universe, const std::vector<uint16_t>& data)
   ioctl(fd,TIOCCBRK,0);
   usleep( 16 );
   uint32_t n(0);
-  if( (n=write(fd,msg,513)) < 513 )
-    std::cerr << "Warning: failed to write 513 bytes to DMX device\n";
+  if( (n=write(fd,msg,513)) < 513 ){
+    TASCAR::add_warning("failed to write 513 bytes to DMX device");
+  }
 }
 
 ArtnetDMX_t::ArtnetDMX_t(const char* hostname, const char* port)

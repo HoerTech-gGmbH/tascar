@@ -112,8 +112,15 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
   xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "sound" ))
-      sound.push_back(new sound_t(sne,this));
+    if( sne ){
+      if( sne->get_name() == "sound" )
+        sound.push_back(new sound_t(sne,this));
+      else if( (sne->get_name() != "creator") && 
+               (sne->get_name() != "sndfile") && 
+               (sne->get_name() != "position") && 
+               (sne->get_name() != "orientation") )
+        TASCAR::add_warning("Invalid sub-node \""+sne->get_name()+"\".",sne);
+    }
   }
 }
 
@@ -136,6 +143,13 @@ std::string src_object_t::next_sound_name() const
     sprintf(ctmp,"%d",n);
   }
   return ctmp;
+}
+
+void src_object_t::validate_attributes(std::string& msg) const
+{
+  dynobject_t::validate_attributes(msg);
+  for(std::vector<sound_t*>::const_iterator it=sound.begin();it!=sound.end();++it)
+    (*it)->TASCAR::Acousticmodel::source_t::validate_attributes(msg);
 }
 
 void src_object_t::geometry_update(double t)
@@ -193,15 +207,17 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
       xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
       if( sne ){
         // rename old "sink" to "receiver":
-        if( sne->get_name() == "sink" )
+        if( sne->get_name() == "sink" ){
           sne->set_name("receiver");
+          add_warning( "Deprecated element \"sink\", use \"receiver\" instead.", sne );
+        }
+        if( sne->get_name() == "src_object" ){
+          object_sources.push_back(new src_object_t(sne));
+          add_warning( "Deprecated element \"src_object\", use \"source\" instead.", sne );
+        }
         // parse nodes:
         if( sne->get_name() == "source" )
           object_sources.push_back(new src_object_t(sne));
-        else if( sne->get_name() == "src_object" )
-          object_sources.push_back(new src_object_t(sne));
-//        else if( sne->get_name() == "door" )
-//          door_sources.push_back(new src_door_t(sne));
         else if( sne->get_name() == "diffuse" )
           diffuse_sources.push_back(new src_diffuse_t(sne));
         else if( sne->get_name() == "receiver" )
@@ -214,8 +230,8 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
           obstaclegroups.push_back(new obstacle_group_t(sne));
         else if( sne->get_name() == "mask" )
           masks.push_back(new mask_object_t(sne));
-        else
-          std::cerr << "Warning: Ignoring unrecognized xml node \"" << sne->get_name() << "\".\n";
+        else if( sne->get_name() != "include" )
+          add_warning("Unrecognized xml element \""+ sne->get_name() +"\".",sne );
       }
     }
     for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){
@@ -640,6 +656,25 @@ std::vector<TASCAR::Scene::object_t*> TASCAR::Scene::scene_t::find_object(const 
     if( fnmatch(pattern.c_str(),(*it)->get_name().c_str(),FNM_PATHNAME) == 0 )
       retv.push_back(*it);
   return retv;
+}
+
+void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
+{
+  scene_node_base_t::validate_attributes(msg);
+  for(std::vector<src_object_t*>::const_iterator it=object_sources.begin();it!=object_sources.end();++it)
+    (*it)->validate_attributes(msg);
+  for(std::vector<src_diffuse_t*>::const_iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
+  for(std::vector<face_object_t*>::const_iterator it=faces.begin();it!=faces.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
+  for(std::vector<face_group_t*>::const_iterator it=facegroups.begin();it!=facegroups.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
+  for(std::vector<obstacle_group_t*>::const_iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
+  for(std::vector<receivermod_object_t*>::const_iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
+  for(std::vector<mask_object_t*>::const_iterator it=masks.begin();it!=masks.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
 }
 
 face_group_t::face_group_t(xmlpp::Element* xmlsrc)

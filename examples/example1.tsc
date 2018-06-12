@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session name="example" duration="42" srv_port="9999">
+<session name="example" duration="42" srv_port="9999" license="CC BY SA 2.0" attribution="Giso Grimm">
   <!--
       This is an example TASCAR configuration file. It contains a
       scene with one moving sound source and one moving and rotating

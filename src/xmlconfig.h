@@ -8,10 +8,14 @@
 
 namespace TASCAR {
 
+  void add_warning( std::string msg, xmlpp::Element* e = NULL );
+  
   std::string tscbasename( const std::string& s );
 
-
   std::string default_string(const std::string& src,const std::string& def);
+
+  extern std::map<xmlpp::Element*,std::map<std::string,std::string> > attribute_list;
+  extern std::vector<std::string> warnings;
 
   class xml_element_t {
   public:
@@ -58,8 +62,11 @@ namespace TASCAR {
     void set_attribute(const std::string& name,const std::vector<int32_t>& value);
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
+    std::vector<std::string> get_unused_attributes() const;
+    virtual void validate_attributes(std::string&) const;
   protected:
     // book keeping
+    //std::map<std::string,std::string> attributelist;
   };
 
   class scene_node_base_t : public xml_element_t, public audiostates_t {

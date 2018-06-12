@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session duration="10">
+<session duration="10" license="CC BY SA" attribution="Giso Grimm">
   <modules>
     <oscevents url="osc.udp://localhost:9999/" path="/xy">
       <osc t="1"/>

@@ -309,6 +309,15 @@ Joanna Luberadzka</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
+                      <object class="GtkMenuItem" id="menu_warnings">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="action_name">view.show_warnings</property>
+                        <property name="label" translatable="yes">show _warnings</property>
+                        <property name="use_underline">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkCheckMenuItem" id="menu_scene_map">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -1129,6 +1138,27 @@ Joanna Luberadzka</property>
             <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="win_warnings">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">tascar Warnings</property>
+    <property name="default_width">1200</property>
+    <property name="default_height">350</property>
+    <child>
+      <object class="GtkScrolledWindow" id="scroll_warnings">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="shadow_type">in</property>
+        <child>
+          <object class="GtkTextView" id="text_warnings">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="editable">False</property>
+            <property name="accepts_tab">False</property>
+          </object>
         </child>
       </object>
     </child>

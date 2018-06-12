@@ -60,7 +60,9 @@ void savegains_t::save()
       }
     }
     catch( const std::exception& e ){
-      std::cerr<< "Warning: Unable to save gains:\n"<<e.what()<<"\n";
+      std::string msg("Warning: Unable to save gains: ");
+      msg += e.what();
+      TASCAR::add_warning(msg);
     }
   }
 }
@@ -99,7 +101,9 @@ void savegains_t::restore()
       }
     }
     catch( const std::exception& e ){
-      std::cerr<< "Warning: Unable to restore gains:\n"<<e.what()<<"\n";
+      std::string msg("Unable to restore gains: ");
+      msg += e.what();
+      TASCAR::add_warning(msg);
     }
   }
 }

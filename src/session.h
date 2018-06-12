@@ -38,6 +38,7 @@ namespace TASCAR {
     void prepare( chunk_cfg_t& );
     void release();
     void update(uint32_t frame,bool running);
+    virtual void validate_attributes(std::string&) const;
   private:
     std::string name;
     void* lib;
@@ -75,7 +76,22 @@ namespace TASCAR {
     std::string srv_addr;
   };
 
-  class session_t : public TASCAR::tsc_reader_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t {
+  class session_core_t : public TASCAR::tsc_reader_t {
+  public:
+    session_core_t();
+    session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
+    // configuration variables:
+    //std::string name;
+    double duration;
+    bool loop;
+    double levelmeter_tc;
+    TASCAR::levelmeter_t::weight_t levelmeter_weight;
+    std::string levelmeter_mode;
+    double levelmeter_min;
+    double levelmeter_range;
+  };
+
+  class session_t : public session_core_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t {
   public:
     session_t();
     session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
@@ -96,15 +112,6 @@ namespace TASCAR {
     uint32_t get_active_diffusesources() const;
     uint32_t get_total_diffusesources() const;
     std::vector<TASCAR::named_object_t> find_objects(const std::string& pattern);
-    // configuration variables:
-    //std::string name;
-    double duration;
-    bool loop;
-    double levelmeter_tc;
-    TASCAR::levelmeter_t::weight_t levelmeter_weight;
-    std::string levelmeter_mode;
-    double levelmeter_min;
-    double levelmeter_range;
     std::vector<TASCAR::scene_render_rt_t*> scenes;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;
@@ -117,6 +124,7 @@ namespace TASCAR {
     void unlock_vars();
     bool trylock_vars();
     bool is_running() { return started_; };
+    virtual void validate_attributes(std::string &) const;
   protected:
     // derived variables:
     std::string session_path;

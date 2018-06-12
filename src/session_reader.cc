@@ -71,7 +71,7 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type
     memcpy(c_fname,path.c_str(),path.size()+1);
     session_path = realpath(dirname(c_fname),c_respath);
     if( chdir(session_path.c_str()) != 0 )
-      std::cerr << "Unable to change directory\n";
+      add_warning("Unable to change directory.");
   }else{
     char c_respath[PATH_MAX];
     session_path = getcwd(c_respath,PATH_MAX);
@@ -89,21 +89,24 @@ void TASCAR::tsc_reader_t::read_xml()
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "scene"))
-      add_scene(sne);
-    if( sne && ( sne->get_name() == "range"))
-      add_range(sne);
-    if( sne && ( sne->get_name() == "connect"))
-      add_connection(sne);
-    if( sne && ( sne->get_name() == "module"))
-      add_module(sne);
-    if( sne && ( sne->get_name() == "modules")){
-      xmlpp::Node::NodeList lsubnodes = sne->get_children();
-      for(xmlpp::Node::NodeList::iterator lsn=lsubnodes.begin();lsn!=lsubnodes.end();++lsn){
-        xmlpp::Element* lsne(dynamic_cast<xmlpp::Element*>(*lsn));
-        if( lsne )
-          add_module( lsne );
-      }
+    if( sne ){
+      if( sne->get_name() == "scene" )
+        add_scene(sne);
+      else if( sne->get_name() == "range" )
+        add_range(sne);
+      else if( sne->get_name() == "connect")
+        add_connection(sne);
+      else if( sne->get_name() == "modules" ){
+        xmlpp::Node::NodeList lsubnodes = sne->get_children();
+        for(xmlpp::Node::NodeList::iterator lsn=lsubnodes.begin();lsn!=lsubnodes.end();++lsn){
+          xmlpp::Element* lsne(dynamic_cast<xmlpp::Element*>(*lsn));
+          if( lsne )
+            add_module( lsne );
+        }
+      }else if( (sne->get_name() != "include") && (sne->get_name() != "description" ) )
+        add_warning("Invalid element: "+sne->get_name(),sne);
+      if( sne->get_name() == "module" )
+        add_module(sne);
     }
   }
   add_license(license,attribution,"session file");

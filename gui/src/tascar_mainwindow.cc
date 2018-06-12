@@ -78,7 +78,9 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   m_refBuilder->get_widget("image_yz",image_yz);
   if( image_yz )
     image_yz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_yz));
-  GET_WIDGET(menu_osc_vars);
+  //GET_WIDGET(menu_osc_vars);
+  GET_WIDGET(win_warnings);
+  GET_WIDGET(text_warnings);
   GET_WIDGET(win_osc_vars);
   GET_WIDGET(win_legal);
   GET_WIDGET(legal_view);
@@ -105,6 +107,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupView = Gio::SimpleActionGroup::create();
   refActionGroupView->add_action("toggle_scene_map",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_toggle_scene_map));
   refActionGroupView->add_action("show_osc_vars",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_osc_vars));
+  refActionGroupView->add_action("show_warnings",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_warnings));
   refActionGroupView->add_action("show_legal",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_legal));
   refActionGroupView->add_action("zoom_in",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_in));
   refActionGroupView->add_action("zoom_out",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_out));
@@ -258,6 +261,7 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
 
 void tascar_window_t::load(const std::string& fname)
 {
+  warnings.clear();
   scene_load(fname);
   sessionquit = false;
   if( session ){
@@ -396,6 +400,7 @@ void tascar_window_t::reset_gui()
     draw.view.set_scale(session->scenes[selected_scene]->guiscale);
     update_levelmeter_settings();
   }
+  on_menu_view_show_warnings();
 }
 
 void tascar_window_t::on_menu_file_quit()
@@ -407,6 +412,7 @@ void tascar_window_t::on_menu_file_close()
 {
   try{
     scene_destroy();
+    warnings.clear();
   }
   catch( const std::exception& e){
     error_message(e.what());
@@ -609,6 +615,7 @@ void tascar_window_t::on_menu_file_exportacmodel()
 void tascar_window_t::on_menu_file_reload()
 {
   try{
+    warnings.clear();
     scene_load(tascar_filename);
     sessionquit = false;
     if( session )
@@ -644,6 +651,7 @@ void tascar_window_t::on_menu_file_open()
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     try{
+      warnings.clear();
       scene_load(filename);
       sessionquit = false;
       if( session )
@@ -682,6 +690,7 @@ void tascar_window_t::on_menu_file_open_example()
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     try{
+      warnings.clear();
       scene_load(filename);
       sessionquit = false;
       if( session )
@@ -758,6 +767,23 @@ void tascar_window_t::on_menu_view_show_osc_vars()
     text_srv_port->set_text("");
   }
   win_osc_vars->show();
+}
+
+void tascar_window_t::on_menu_view_show_warnings()
+{
+  std::string v;
+  for(std::vector<std::string>::const_iterator it=warnings.begin();it!=warnings.end();++it){
+    v+= "Warning: " + *it + "\n";
+  }
+  if( session ){
+    v+= session->show_unknown();
+    session->validate_attributes(v);
+  }
+  text_warnings->get_buffer()->set_text(v);
+  if( v.empty() )
+    win_warnings->hide();
+  else
+    win_warnings->show();
 }
 
 void tascar_window_t::on_menu_view_show_legal()

@@ -35,7 +35,7 @@ endif
 
 EXTERNALS = alsa jack libxml++-2.6 liblo sndfile
 
-LDLIBS += -ltascar -ltascargui -ldl
+LDLIBS += -ltascar -ltascargui -ldl -lfftw3f
 LDFLAGS += -L../../build
 CXXFLAGS += -I../../src -I.
 CPPFLAGS += -I../../src
@@ -47,7 +47,7 @@ all: libtascar
 	mkdir -p build
 	$(MAKE) -C build -f ../Makefile $(BINFILES)
 
-$(BINFILES): ../../build/libtascar.a
+#$(BINFILES): ../../build/libtascar.a
 
 libtascar:
 	$(MAKE) -C ../ lib

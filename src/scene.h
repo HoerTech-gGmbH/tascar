@@ -237,6 +237,7 @@ namespace TASCAR {
       void process_active(double t,uint32_t anysolo);
       std::vector<sound_t*> sound;
       std::string next_sound_name() const;
+      void validate_attributes(std::string& msg) const;
     private:
       int32_t startframe;
     };
@@ -292,6 +293,7 @@ namespace TASCAR {
       std::string scene_path;
       void configure_meter( float tc, TASCAR::levelmeter_t::weight_t w );
       void add_licenses( licensehandler_t* session );
+      void validate_attributes(std::string& msg) const;
     private:
       void clean_children();
       scene_t(const scene_t&);

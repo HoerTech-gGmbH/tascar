@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<session>
-  <scene>
-    <source>
-      <nsound/>
-    </source>
-    <receiver type="omni"/>
-  </scene>
-</session>

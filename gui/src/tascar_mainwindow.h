@@ -36,6 +36,7 @@ protected:
   void on_menu_view_zoom_out();
   void on_menu_view_toggle_scene_map();
   void on_menu_view_show_osc_vars();
+  void on_menu_view_show_warnings();
   void on_menu_view_show_legal();
   void on_menu_view_viewport_xy();
   void on_menu_view_viewport_xz();
@@ -92,9 +93,12 @@ protected:
   Gtk::Statusbar* statusbar_main;
   Gtk::Scale* timeline;
   Gtk::CheckMenuItem* menu_scene_map;
-  Gtk::MenuItem* menu_osc_vars;
+  //Gtk::MenuItem* menu_osc_vars;
+  //Gtk::MenuItem* show_warnings;
   Gtk::Window* scene_map_window;
   Gtk::Window* win_osc_vars;
+  Gtk::Window* win_warnings;
+  Gtk::TextView* text_warnings;
   Gtk::Window* win_legal;
   Gtk::TextView* legal_view;
   Gtk::TextView* osc_vars;

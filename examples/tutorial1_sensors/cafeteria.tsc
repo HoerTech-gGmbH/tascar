@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<session name="tascar" duration="88" loop="false" srv_port="9996">
+<session name="tascar" duration="88" loop="false" srv_port="9996" license="CC BY SA 2.0" attribution="Giso Grimm">
   <!-- main scene setup -->
   <scene name="cafeteria" mirrororder="2" guiscale="20" guicenter="12.3 -16.241478 1.1">
     <source name="joanna" mute="false" solo="false" color="#0068ff" start="0" end="0">
@@ -46,15 +46,17 @@
       <position>0 12.6 -16.441478 1.2</position>
       <orientation>0 3 0 0</orientation>
     </receiver>
+    <!--
     <facegroup name="tables" importraw="${HOME}/tascar_scenes/projects/scene_evaluation/cafeteria_tables1.raw" reflectivity="0.5" damping="0.6" color="#001f10" mute="false"/>
     <facegroup name="windows" importraw="${HOME}/tascar_scenes/projects/scene_evaluation/cafeteria_windows.raw" reflectivity="1" damping="0.1" color="#001f10" mute="false"/>
     <facegroup name="ceiling" importraw="${HOME}/tascar_scenes/projects/scene_evaluation/cafeteria_ceiling.raw" reflectivity="1" damping="0.2" color="#001f10" mute="false"/>
     <facegroup name="floor" importraw="${HOME}/tascar_scenes/projects/scene_evaluation/cafeteria_floor.raw" reflectivity="1" damping="0.2" color="#001f10" mute="false"/>
+    -->
   </scene>
   <!-- diffuse noise scene -->
   <scene name="diffuse">
     <diffuse name="background" size="300 300 300" color="#0000ff" connect="@.0">
-      <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa_distant.wav" gain="0" channels="4" loop="0"/>
+      <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa_distant.wav" gain="0" channels="4" loop="0"/>-->
     </diffuse>
     <diffuse name="reverb" size="300 300 300" color="#0000ff"/>
     <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" rotation="-11.25" diffup="true">

@@ -12,11 +12,11 @@ HAS_OPENMHA=$(shell test -f /usr/include/openmha/mhapluginloader.h && echo "yes"
 #
 # main targets:
 #
-BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses tascar_pdf	\
-  tascar_osc_jack_transport tascar_jackio tascar_sampler		\
-  tascar_hdspmixer tascar_levelmeter tascar_jackpar tascar_lslsl	\
-  tascar_lsljacktime tascar_renderfile tascar_renderir tascar_gpx2csv	\
-  tascar_version
+BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
+  tascar_validatetsc tascar_pdf tascar_osc_jack_transport		\
+  tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
+  tascar_jackpar tascar_lslsl tascar_lsljacktime tascar_renderfile	\
+  tascar_renderir tascar_gpx2csv tascar_version
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
@@ -109,6 +109,7 @@ LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 LDLIBS += -ldl
+LDFLAGS += -L./
 
 all: lib bins gui
 
@@ -120,13 +121,19 @@ bins:
 lib:
 	mkdir -p build
 	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
-	$(MAKE) -C build -f ../Makefile libtascar.a libtascargui.a $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
+	$(MAKE) -C build -f ../Makefile libtascar.so libtascargui.so $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
 
 libtascar.a: $(OBJECTS)
 	ar rcs $@ $^
 
 libtascargui.a: $(GUIOBJECTS)
 	ar rcs $@ $^
+
+libtascar.so: $(OBJECTS)
+	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}
+
+libtascargui.so: $(GUIOBJECTS)
+	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 install:
 	$(MAKE) -C build -f ../Makefile $(INSTBIN)
@@ -145,6 +152,7 @@ VPATH = ../src
 
 test:
 	$(MAKE) -C test
+	$(MAKE) -C examples
 
 doc:
 	cd doc && sed -e 's/PROJECT.NUMBER.*=.*/&'`cat ../version`'/1' doxygen.cfg > .temp.cfg && doxygen .temp.cfg
@@ -152,11 +160,13 @@ doc:
 
 include $(wildcard *.mk)
 
-tascar_gui: libtascargui.a
+#tascar_gui: libtascargui.so
 
-$(BINFILES) $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS): libtascar.a
+$(BINFILES) $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS): LDLIBS += -ltascar
 
-tascar_pdf: libtascargui.a
+$(BINFILES): LDLIBS += -lasound -lfftw3f
+
+#tascar_pdf: libtascargui.so
 
 $(PREFIX)/bin/%: %
 	cp $< $@

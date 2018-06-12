@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<session duration="200" loop="true">
+<session duration="200" loop="true" license="CC BY SA 2.0" attribution="Giso Grimm">
   <scene guiscale="6" mirrororder="2">
 
     <!-- point source: -->
     <source name="water">
       <sound name="0" y="0.2" >
-        <sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" loop="0" level="70"/>
+	<!-- sound files -->
+        <!--<sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" loop="0" level="70"/>-->
 	</sound>
       <sound name="1" y="-0.2" >
-        <sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" position="-5" loop="0" level="70"/>
+        <!--<sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" position="-5" loop="0" level="70"/>-->
 	</sound>
       <position>0 1 0 0</position>
     </source>
@@ -29,7 +30,7 @@
     <!-- diffuse source: -->
     <diffuse name="background" size="300 300 300" color="#0000ff" connect="@.0">
       <!-- diffuse sources are always in first order ambisonics (four channels, wxyz, FuMa normalization) -->
-      <sndfile name="${HOME}/tascar_scenes/sounds/diffuse/birds_oldenburg.wav" gain="-20" channels="4"/>
+      <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/birds_oldenburg.wav" gain="-20" channels="4"/>-->
     </diffuse>
 
     <!-- receiver: -->
