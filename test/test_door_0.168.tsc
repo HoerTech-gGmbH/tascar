@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session>
+<session license="CC-0">
   <scene guiscale="6">
     <door name="d">
       <position>0 -1 0 -1</position>

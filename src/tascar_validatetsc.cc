@@ -42,6 +42,7 @@ namespace App {
     std::vector<TASCAR::module_t*> modules;
     std::string name;
     std::string srv_port;
+    std::string srv_addr;
   };
 
 }
@@ -52,6 +53,7 @@ App::show_licenses_t::show_licenses_t(const std::string& session_filename)
   read_xml();
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(srv_port);
+  GET_ATTRIBUTE(srv_addr);
 }
 
 void App::show_licenses_t::validate_attributes(std::string& msg) const

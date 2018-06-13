@@ -103,7 +103,15 @@ int main(int argc, char** argv)
     }
     TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
     if( validate ){
+      session.start();
+      sleep(1);
+      session.stop();
       std::string v;
+      if( v.size() && TASCAR::warnings.size() )
+        v+="\n";
+      for(std::vector<std::string>::const_iterator it=TASCAR::warnings.begin();it!=TASCAR::warnings.end();++it){
+        v+= "Warning: " + *it + "\n";
+      }
       session.validate_attributes(v);
       if( v.empty() )
         return 0;

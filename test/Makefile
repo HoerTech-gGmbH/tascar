@@ -17,16 +17,19 @@ FAILING_TESTS = test_ir5
 all: $(TESTS) $(TEST_REC)
 
 test_ir%: test_ir%.tsc expected_ir%.wav
+	LD_LIBRARY_PATH=../build/ ../build/tascar_validatetsc $< 
 	LD_LIBRARY_PATH=../build/ ../build/tascar_renderir -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 
 	LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_ir$*.wav test_ir$*.wav 1e-9
 	rm -f test_ir$*.wav
 
 test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
+	LD_LIBRARY_PATH=../build/ ../build/tascar_validatetsc $< 
 	LD_LIBRARY_PATH=../build/ ../build/tascar_renderfile -i input_wav$*.wav -d -f 64 -o test_wav$*.wav $<
 	LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_wav$*.wav test_wav$*.wav 2e-8
 	rm -f test_wav$*.wav
 
 test_snd%: test_snd%.tsc expected_snd%.wav
+	LD_LIBRARY_PATH=../build/ ../build/tascar_validatetsc $< 
 	LD_LIBRARY_PATH=../build/ ../build/tascar_renderfile -i zeros.wav -d -f 64 -o test_snd$*.wav $<
 	LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_snd$*.wav test_snd$*.wav 1e-9
 	rm -f test_snd$*.wav
@@ -42,6 +45,7 @@ test_rec_%: test_rec.tsc
 #LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_rec_$*.wav test_rec_$*.wav 1e-9
 
 test_pos%: test_pos%.tsc expected_pos%.wav
+	LD_LIBRARY_PATH=../build/ ../build/tascar_validatetsc $< 
 	LD_LIBRARY_PATH=../build/ ../build/tascar_renderfile -i zeros.wav -d -f 64 -o test_pos$*.wav $<
 	LD_LIBRARY_PATH=../build/ ../build/compare_sndfile expected_pos$*.wav test_pos$*.wav 1e-9
 	rm -f test_pos$*.wav

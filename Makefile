@@ -123,11 +123,11 @@ lib:
 	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
 	$(MAKE) -C build -f ../Makefile libtascar.so libtascargui.so $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(AUDIOPLUGINDLLS)
 
-libtascar.a: $(OBJECTS)
-	ar rcs $@ $^
-
-libtascargui.a: $(GUIOBJECTS)
-	ar rcs $@ $^
+#libtascar.a: $(OBJECTS)
+#	ar rcs $@ $^
+#
+#libtascargui.a: $(GUIOBJECTS)
+#	ar rcs $@ $^
 
 libtascar.so: $(OBJECTS)
 	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}

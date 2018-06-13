@@ -2,7 +2,7 @@
 <!-- 
 basic test: sound propagation, 1m
 -->
-<session>
+<session license="CC-0">
   <scene mirrororder="2">
     <source>
       <sound x="1"/>

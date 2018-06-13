@@ -413,9 +413,9 @@ TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
     start(0),
     end(0)
 {
-  name = e->get_attribute_value("name");
-  get_attribute("start",start);
-  get_attribute("end",end);
+  GET_ATTRIBUTE(name);
+  GET_ATTRIBUTE(start);
+  GET_ATTRIBUTE(end);
 }
 
 TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
