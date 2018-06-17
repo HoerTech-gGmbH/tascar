@@ -24,9 +24,10 @@ namespace TASCAR {
     ~looped_sndfile_t();
     uint32_t readf_float( float* buf, uint32_t frames );
     uint32_t seekf( uint32_t frame );
+    uint32_t get_channels() const {return sf_inf.channels;};
     uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_loopedframes() const;
-    uint32_t get_channels() const {return sf_inf.channels;};
+    uint32_t get_srate() const {return sf_inf.samplerate;};
   protected:
     std::string efname;
     SNDFILE* sfile;
@@ -62,6 +63,7 @@ namespace TASCAR {
     void start_service();
     void stop_service();
     unsigned int get_xruns() {unsigned int xr(xrun);xrun=0;return xr;};
+    uint32_t get_srate() const;
   private:
     void service();
     static void * service(void* h);

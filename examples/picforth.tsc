@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session duration="36000" srv_port="9877" loop="false" levelmeter_tc="7" levelmeter_weight="Z" levelmeter_min="35" levelmeter_range="40" license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <mainwindow w="1000" h="500" x="0" y="0"/>
+  <mapwindow w="400" h="500" x="1000" y="0"/>
+  <scene name="hos" guiscale="14.1421356237" mirrororder="1">
+    <source name="hille" color="#ff0000"> 
+      <orientation>0 0 0 0</orientation>
+      <sound connect="hille:out" maxdist="20" gainmodel="1" layers="1" gain="-6"/>
+    </source>
+    <source name="julia" color="#ccff00"> 
+      <orientation>0 72 0 0</orientation>
+      <sound connect="julia:out" maxdist="20" gainmodel="1" layers="1" gain="3"/>
+    </source>
+    <source name="marthe" color="#00ff66"> 
+      <orientation>0 144 0 0</orientation>
+      <sound connect="marthe:out" maxdist="20" gainmodel="1" layers="1" gain="1"/>
+    </source>
+    <source name="claas" color="#0066ff"> 
+      <orientation>0 -144 0 0</orientation>
+      <sound connect="claas:out" maxdist="20" gainmodel="1" layers="1" gain="3">
+      </sound>
+    </source>
+    <source name="giso" color="#cc00ff"> 
+      <orientation>0 -72 0 0</orientation>
+      <sound connect="giso:out" maxdist="20" gainmodel="1" layers="1" gain="2">
+</sound>
+    </source>
+    <receiver name="outp" type="hoa2d_fuma_hos" order="6" caliblevel="94" delaycomp="0.1" layers="1"/>
+  </scene>
+  <modules>
+    <hoafdnrot id="fdnp" amborder="6" fdnorder="7" w="0.5" dw="0.02" t="0.06" dt="0.023" decay="1" damping="0.3" prefilt="true" wet="0.01"/>
+    <hossustain id="hille" wlen="32768" wet="0" tau_sustain="1" tau_envelope="1"/>
+    <hossustain id="julia" wlen="32768" wet="0" tau_sustain="1" tau_envelope="1"/>
+    <hossustain id="marthe" wlen="32768" wet="0" tau_sustain="1" tau_envelope="1"/>
+    <hossustain id="claas" wlen="32768" wet="0" tau_sustain="1" tau_envelope="1"/>
+    <hossustain id="giso" wlen="32768" wet="0" tau_sustain="1" tau_envelope="1"/>
+    <system command="xterm -e 'for cpu in {0..3}; do cpufreq-selector -c \$cpu -g performance; done;sleep 3'" sleep="0" onunload=""/>
+    <!-- HoS motion controller: -->
+    <epicycles use_transport="false" actor="/hos/hille" path="/c/hille" targetaddr="osc.udp://localhost:9877/"/>
+    <epicycles use_transport="false" actor="/hos/julia" path="/c/julia" targetaddr="osc.udp://localhost:9877/"/>
+    <epicycles use_transport="false" actor="/hos/marthe" path="/c/marthe" targetaddr="osc.udp://localhost:9877/"/>
+    <epicycles use_transport="false" actor="/hos/claas" path="/c/claas" targetaddr="osc.udp://localhost:9877/"/>
+    <epicycles use_transport="false" actor="/hos/giso" path="/c/giso" targetaddr="osc.udp://localhost:9877/"/>
+    <!-- Ambisonics decoder and FDNs: -->
+    <matrix id="dec" decoder="maxre2d">
+      <input connect="hoa:out.0" label=".0_0"/>
+      <input connect="hoa:out.1" label=".1_-1"/>
+      <input connect="hoa:out.2" label=".1_1"/>
+      <input connect="hoa:out.3" label=".2_-2"/>
+      <input connect="hoa:out.4" label=".2_2"/>
+      <input connect="hoa:out.5" label=".3_-3"/>
+      <input connect="hoa:out.6" label=".3_3"/>
+      <input connect="hoa:out.7" label=".4_-4"/>
+      <input connect="hoa:out.8" label=".4_4"/>
+      <input connect="hoa:out.9" label=".5_-5"/>
+      <input connect="hoa:out.10" label=".5_5"/>
+      <input connect="hoa:out.11" label=".6_-6"/>
+      <input connect="hoa:out.12" label=".6_6"/>
+      <speaker az="12"  connect="render.tostereo:in.0"/>
+      <speaker az="36"  connect="render.tostereo:in.1"/>
+      <speaker az="60"  connect="render.tostereo:in.2"/>
+      <speaker az="84"  connect="render.tostereo:in.3"/>
+      <speaker az="108" connect="render.tostereo:in.4"/>
+      <speaker az="132" connect="render.tostereo:in.5"/>
+      <speaker az="156" connect="render.tostereo:in.6"/>
+      <speaker az="180" connect="render.tostereo:in.7"/>
+      <speaker az="204" connect="render.tostereo:in.8"/>
+      <speaker az="228" connect="render.tostereo:in.9"/>
+      <speaker az="252" connect="render.tostereo:in.10"/>
+      <speaker az="276" connect="render.tostereo:in.11"/>
+      <speaker az="300" connect="render.tostereo:in.12"/>
+      <speaker az="324" connect="render.tostereo:in.13"/>
+      <speaker az="348" connect="render.tostereo:in.14"/>
+    </matrix>
+    <tracegui actor="/hos/[!o]*" fps="20" guiscale="2.5" tracelen="1.6" w="400" h="500" x="1400" y="0"/>
+    <route channels="13" id="hoa"/>
+  </modules>
+  <connect src="render.hos:outp.a0_0" dest="fdnp:in.0_0"/>
+  <connect src="render.hos:outp.a1_-1" dest="fdnp:in.1_-1"/>
+  <connect src="render.hos:outp.a1_1" dest="fdnp:in.1_1"/>
+  <connect src="render.hos:outp.a2_-2" dest="fdnp:in.2_-2"/>
+  <connect src="render.hos:outp.a2_2" dest="fdnp:in.2_2"/>
+  <connect src="render.hos:outp.a3_-3" dest="fdnp:in.3_-3"/>
+  <connect src="render.hos:outp.a3_3" dest="fdnp:in.3_3"/>
+  <connect src="render.hos:outp.a4_-4" dest="fdnp:in.4_-4"/>
+  <connect src="render.hos:outp.a4_4" dest="fdnp:in.4_4"/>
+  <connect src="render.hos:outp.a5_-5" dest="fdnp:in.5_-5"/>
+  <connect src="render.hos:outp.a5_5" dest="fdnp:in.5_5"/>
+  <connect src="render.hos:outp.a6_-6" dest="fdnp:in.6_-6"/>
+  <connect src="render.hos:outp.a6_6" dest="fdnp:in.6_6"/>
+  <connect src="render.hos:outp.0_0"  dest="hoa:in.0"/>
+  <connect src="render.hos:outp.1_-1" dest="hoa:in.1"/>
+  <connect src="render.hos:outp.1_1"  dest="hoa:in.2"/>
+  <connect src="render.hos:outp.2_-2" dest="hoa:in.3"/>
+  <connect src="render.hos:outp.2_2"  dest="hoa:in.4"/>
+  <connect src="render.hos:outp.3_-3" dest="hoa:in.5"/>
+  <connect src="render.hos:outp.3_3"  dest="hoa:in.6"/>
+  <connect src="render.hos:outp.4_-4" dest="hoa:in.7"/>
+  <connect src="render.hos:outp.4_4"  dest="hoa:in.8"/>
+  <connect src="render.hos:outp.5_-5" dest="hoa:in.9"/>
+  <connect src="render.hos:outp.5_5"  dest="hoa:in.10"/>
+  <connect src="render.hos:outp.6_-6" dest="hoa:in.11"/>
+  <connect src="render.hos:outp.6_6"  dest="hoa:in.12"/>
+  <!--
+  <connect src="fdnp:out.0_0" dest="dec:in.0.0_0"/>
+  <connect src="fdnp:out.1_-1" dest="dec:in.1.1_-1"/>
+  <connect src="fdnp:out.1_1" dest="dec:in.2.1_1"/>
+  <connect src="fdnp:out.2_-2" dest="dec:in.3.2_-2"/>
+  <connect src="fdnp:out.2_2" dest="dec:in.4.2_2"/>
+  <connect src="fdnp:out.3_-3" dest="dec:in.5.3_-3"/>
+  <connect src="fdnp:out.3_3" dest="dec:in.6.3_3"/>
+  <connect src="fdnp:out.4_-4" dest="dec:in.7.4_-4"/>
+  <connect src="fdnp:out.4_4" dest="dec:in.8.4_4"/>
+  <connect src="fdnp:out.5_-5" dest="dec:in.9.5_-5"/>
+  <connect src="fdnp:out.5_5" dest="dec:in.10.5_5"/>
+  <connect src="fdnp:out.6_-6" dest="dec:in.11.6_-6"/>
+  <connect src="fdnp:out.6_6" dest="dec:in.12.6_6"/>
+-->
+  <connect src="fdnp:out.0_0" dest="hoa:in.0"/>
+  <connect src="fdnp:out.1_-1" dest="hoa:in.1"/>
+  <connect src="fdnp:out.1_1" dest="hoa:in.2"/>
+  <connect src="fdnp:out.2_-2" dest="hoa:in.3"/>
+  <connect src="fdnp:out.2_2" dest="hoa:in.4"/>
+  <connect src="fdnp:out.3_-3" dest="hoa:in.5"/>
+  <connect src="fdnp:out.3_3" dest="hoa:in.6"/>
+  <connect src="fdnp:out.4_-4" dest="hoa:in.7"/>
+  <connect src="fdnp:out.4_4" dest="hoa:in.8"/>
+  <connect src="fdnp:out.5_-5" dest="hoa:in.9"/>
+  <connect src="fdnp:out.5_5" dest="hoa:in.10"/>
+  <connect src="fdnp:out.6_-6" dest="hoa:in.11"/>
+  <connect src="fdnp:out.6_6" dest="hoa:in.12"/>
+
+  <!-- stereo downmix -->
+  <scene name="tostereo" guiscale="5">
+    <source>
+      <sound x="0.978148" y="0.207912"/>
+      <sound x="0.809017" y="0.587785"/>
+      <sound x="0.5" y="0.866025"/>
+      <sound x="0.104528" y="0.994522"/>
+      <sound x="-0.309017" y="0.951057"/>
+      <sound x="-0.669131" y="0.743145"/>
+      <sound x="-0.913545" y="0.406737"/>
+      <sound x="-1" y="1.22465e-16"/>
+      <sound x="-0.913545" y="-0.406737"/>
+      <sound x="-0.669131" y="-0.743145"/>
+      <sound x="-0.309017" y="-0.951057"/>
+      <sound x="0.104528" y="-0.994522"/>
+      <sound x="0.5" y="-0.866025"/>
+      <sound x="0.809017" y="-0.587785"/>
+      <sound x="0.978148" y="-0.207912"/>
+    </source>
+    <receiver type="ortf" gain="10"/>
+  </scene>
+  <connect src="render.tostereo:out_l" dest="system:playback_1"/>
+  <connect src="render.tostereo:out_r" dest="system:playback_2"/>
+  <connect src="render.tostereo:out_l" dest="system:playback_17"/>
+  <connect src="render.tostereo:out_r" dest="system:playback_18"/>
+  <!--
+      duration: 285.524
+  -->
+</session>

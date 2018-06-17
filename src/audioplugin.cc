@@ -83,6 +83,11 @@ TASCAR::audioplugin_t::~audioplugin_t()
   dlclose(lib);
 }
 
+void TASCAR::audioplugin_t::validate_attributes(std::string& msg) const
+{
+  libdata->validate_attributes(msg);
+}
+
 /*
  * Local Variables:
  * mode: c++

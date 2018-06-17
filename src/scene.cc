@@ -104,7 +104,6 @@ void audio_port_t::set_port_index(uint32_t port_index_)
  */
 src_object_t::src_object_t(xmlpp::Element* xmlsrc)
   : sndfile_object_t(xmlsrc),
-    //reference(reference_),
     startframe(0)
 {
   if( get_name().empty() )
@@ -120,6 +119,33 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
                (sne->get_name() != "position") && 
                (sne->get_name() != "orientation") )
         TASCAR::add_warning("Invalid sub-node \""+sne->get_name()+"\".",sne);
+    }
+  }
+  for( std::vector<sndfile_info_t>::const_iterator it=sndfiles.begin();
+       it!=sndfiles.end();++it){
+    if( it->channels == 1 ){
+      std::string msg("The use of \"sndfile\" in source objects is discouraged.\n  Use audio plugin instead:\n");
+      msg += "  <sndfile";
+      char ctmp[1024];
+      ctmp[1023] = 0;
+      snprintf(ctmp,1023," name=\"%s\"",it->fname.c_str());
+      msg += ctmp;
+      if( it->firstchannel ){
+        snprintf(ctmp,1023," channel=\"%d\"",it->firstchannel);
+        msg += ctmp;
+      }
+      if( it->starttime != 0 ){
+        snprintf(ctmp,1023," position=\"%g\"",it->starttime);
+        msg += ctmp;
+      }
+      if( it->loopcnt != 1 ){
+        snprintf(ctmp,1023," loop=\"%d\"",it->loopcnt);
+        msg += ctmp;
+      }
+      snprintf(ctmp,1023," levelmode=\"calib\" level=\"%g\"",-20*log10(2e-5/it->gain));
+      msg += ctmp;
+      msg += "/>";
+      add_warning(msg,it->e);
     }
   }
 }
@@ -149,7 +175,7 @@ void src_object_t::validate_attributes(std::string& msg) const
 {
   dynobject_t::validate_attributes(msg);
   for(std::vector<sound_t*>::const_iterator it=sound.begin();it!=sound.end();++it)
-    (*it)->TASCAR::Acousticmodel::source_t::validate_attributes(msg);
+    (*it)->validate_attributes(msg);
 }
 
 void src_object_t::geometry_update(double t)
@@ -957,6 +983,13 @@ void sound_t::process_plugins( const TASCAR::transport_t& tp )
       ltp.object_time_samples = ltp.session_time_samples - f_sample * parent->starttime;
   }
   source_t::process_plugins( ltp );
+}
+
+void sound_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::Acousticmodel::source_t::validate_attributes(msg);
+  for(std::vector<TASCAR::audioplugin_t*>::const_iterator it=plugins.begin();it!=plugins.end();++it)
+    (*it)->validate_attributes(msg);
 }
 
 void sound_t::add_meter( TASCAR::levelmeter_t* m )

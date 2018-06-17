@@ -45,6 +45,7 @@ namespace TASCAR {
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void add_licenses( licensehandler_t* srv );
     virtual void release();
+    virtual void validate_attributes(std::string&) const;
   private:
     audioplugin_t(const audioplugin_t&);
     std::string plugintype;

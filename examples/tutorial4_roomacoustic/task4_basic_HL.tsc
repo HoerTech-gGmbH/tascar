@@ -17,11 +17,12 @@
 
     <source name="speech">
       <!--<sndfile loop="0" name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" gain="-10"/>-->
-      <sound connect="@.0" name="0"/>
+      <sound name="0"/>
       <position>0 1.5 0 0</position>
     </source>
 
-    <diffuse name="background" connect="@.0">
+    <diffuse name="background">
+      <!--connect="@.0"-->
       <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/trainstation_notrain.wav"  gain="-10" channels="4" loop="0"/>-->
     </diffuse>
 

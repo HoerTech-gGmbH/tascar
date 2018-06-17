@@ -1,0 +1,85 @@
+/c/claas/phi0   0
+/c/giso/phi0    108
+/c/hille/phi0    -144
+/c/marthe/phi0    144
+/c/julia/phi0     72
+
+/c/*/apply     0.2
+/c/*/locate    0.2
+
+/c/*/sustain/wet 0
+/c/*/sustain/wetapply 0.1
+,0.1
+/c/*/sustain/tau_sus 0.01
+
+/fdn*/dry 0
+/fdn*/wet 0.4
+/fdn*/logdelays 1
+/fdn*/par 0 1.8 0.11 0.027 0.7 0.6
+
+/light/*/*/fade 0 0 0 1
+
+/monitor_*/*/mute 0
+/monitor_*/announce/0/ap0/metronome/bypass 1
+,0.1
+/monitor_*/announce/0/ap0/metronome/bpm 51
+/monitor_*/announce/0/ap0/metronome/bpb 6
+/monitor_*/announce/0/ap0/metronome/bypass 0
+/monitor_*/announce/0/ap0/metronome/a* 60
+/monitor_*/announce/0/ap0/metronome/sync 1
+
+/hos/hille/targetlevel 57
+/hos/julia/targetlevel 57
+/hos/marthe/targetlevel 57
+/hos/claas/targetlevel 59
+/hos/giso/targetlevel 65
+
+/c/*/f 0
+/c/*/r 0.4
+/c/*/theta 0
+/c/*/e 0
+/c/*/f_epi 0
+/c/*/r_epi 0
+/c/*/onset 0
+
+/c/*/locate 1
+
+,11
+
+/monitor_*/announce/0/ap0/metronome/bypass 1
+
+
+/c/hille/f 0.1
+/c/julia/f 0.066667
+/c/marthe/f 0.05
+/c/giso/f 0.033333
+/c/claas/f 0.025
+
+/c/hille/r 0.2
+/c/julia/r 0.3
+/c/marthe/r 0.4
+/c/giso/r 0.6
+/c/claas/r 0.8
+
+/c/*/apply 4
+
+/light/audience/*/w 0.3
+
+#/light/stage/hille/fade $C_HILLE   1
+#/light/stage/julia/fade $C_JULIA 1
+#/light/stage/marthe/fade $C_MARTHE 1
+#/light/stage/claas/fade 0 102 255 1
+#/light/stage/giso/fade 204 0 255 1
+
+
+/light/*/claas/fade $C_CLAAS 1
+,12
+/light/*/marthe/fade $C_MARTHE 30
+,12
+/light/*/giso/fade 204 0 255 30
+,8
+/light/*/julia/fade $C_JULIA 20
+,8
+/light/*/hille/fade $C_HILLE 20
+
+#/monitor_*/announce/0/ap0/metronome/bypass 1

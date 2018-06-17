@@ -28,7 +28,8 @@
     </facegroup>
 
     <!-- diffuse source: -->
-    <diffuse name="background" size="300 300 300" color="#0000ff" connect="@.0">
+    <diffuse name="background" size="300 300 300" color="#0000ff">
+      <!-- to connect to sound file, use connect="@.0" attribute in diffuse element -->
       <!-- diffuse sources are always in first order ambisonics (four channels, wxyz, FuMa normalization) -->
       <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/birds_oldenburg.wav" gain="-20" channels="4"/>-->
     </diffuse>

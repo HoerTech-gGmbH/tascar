@@ -36,7 +36,8 @@
       <position>1 0.8 0 0</position>
     </source>
 
-    <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1" connect="@.0">
+    <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1">
+      <!--connect="@.0"-->
       <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>-->
     </diffuse>
 
@@ -54,7 +55,7 @@
 
   <modules>
     <!-- A module to convolve the output of the receiver with the HRIRs-->
-    <hrirconv fftlen="2048" inchannels="24" outchannels="2" autoconnect="true" hrirfile="KU100_24ch_44100.wav"/>
+    <hrirconv fftlen="2048" inchannels="24" outchannels="2" autoconnect="true" hrirfile="hrir_24ch.wav"/>
     <!-- game controller -->
     <joystick actor="/*/out*" 
 	      x_ax="1" x_scale="-1" x_threshold="0.2" x_max="4" x_min="-4" 

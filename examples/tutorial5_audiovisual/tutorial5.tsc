@@ -28,7 +28,7 @@
     <!-- reflector for image source model: -->
     <facegroup importraw="dungeon_reflector.raw" reflectivity="1" damping="0.6"/>
     <!-- receiver -->
-    <receiver name="out" type="hoa2d" layout="glab.spk" caliblevel="120">
+    <receiver name="out" type="hoa2d" layout="glab_no_connection.spk" caliblevel="120">
       <position>0 -10 0 1.6</position>
       <navmesh importraw="dungeon_navmesh.raw" zshift="1.6"/>
     </receiver>
@@ -38,7 +38,7 @@
     </receiver>
   </scene>
   <scene name="reverb">
-    <receiver name="out" type="hoa2d" layout="reverb.spk" caliblevel="120">
+    <receiver name="out" type="hoa2d" layout="reverb_no_connection.spk" caliblevel="120">
       <position>0 -10 0 1.6</position>
       <navmesh importraw="dungeon_navmesh.raw" zshift="1.6"/>
     </receiver>
@@ -47,7 +47,7 @@
     </diffuse>
   </scene>
   <modules>
-    <system command="xterm -e 'ssh sura DISPLAY=:0 /opt/blender-2.78c-linux-glibc219-x86_64/blenderplayer -f ./lidhan/Projects/tascarworkshop/tutorial5/dungeon.blend;sleep 10'" onunload="ssh sura killall -9 blenderplayer"/>
+    <!--<system command="xterm -e 'ssh sura DISPLAY=:0 /opt/blender-2.78c-linux-glibc219-x86_64/blenderplayer -f ./lidhan/Projects/tascarworkshop/tutorial5/dungeon.blend;sleep 10'" onunload="ssh sura killall -9 blenderplayer"/>-->
     <pos2osc pattern="/scene/*" url="osc.udp://sura:9000/" mode="3" transport="false"/>
     <!-- control the door: -->
     <nearsensor url="osc.udp://localhost:9877/" pattern="/scene/out" parent="/scene/door" radius="3" mode="0">

@@ -18,7 +18,5 @@
 
 
   </scene>
-<connect src="render.scene:out_l" dest="system:playback_1"/>
-<connect src="render.scene:out_r" dest="system:playback_2"/>
 
 </session>

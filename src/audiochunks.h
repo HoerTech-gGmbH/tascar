@@ -77,8 +77,8 @@ namespace TASCAR {
     sndfile_handle_t(const std::string& fname);
     sndfile_handle_t(const std::string& fname, int samplerate, int channels);
     ~sndfile_handle_t();
-    uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_channels() const {return sf_inf.channels;};
+    uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_srate() const {return sf_inf.samplerate;};
     uint32_t readf_float( float* buf, uint32_t frames );
     uint32_t writef_float( float* buf, uint32_t frames );

@@ -30,6 +30,8 @@ openmha_t::openmha_t( const TASCAR::audioplugin_cfg_t& cfg )
     sIn(NULL),
     acpos(get_c_handle(),"pos",3,1,true)
 {
+  GET_ATTRIBUTE(plugin);
+  GET_ATTRIBUTE(config);
   if( !config.empty() )
     std::cout << mhaplug.parse( config ) << std::endl;
   std::stringstream scfg(TASCAR::xml_get_text(e,""));

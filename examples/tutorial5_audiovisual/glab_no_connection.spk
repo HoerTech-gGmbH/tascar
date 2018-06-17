@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout name="glab">
+  <speaker az="11.25"/>
+  <speaker az="33.75"/>
+  <speaker az="56.25"/>
+  <speaker az="78.75"/>
+  <speaker az="101.25"/>
+  <speaker az="123.75"/>
+  <speaker az="146.25"/>
+  <speaker az="168.75"/>
+  <speaker az="191.25"/>
+  <speaker az="213.75"/>
+  <speaker az="236.25"/>
+  <speaker az="258.75"/>
+  <speaker az="281.25"/>
+  <speaker az="303.75"/>
+  <speaker az="326.25"/>
+  <speaker az="348.75"/>
+</layout>

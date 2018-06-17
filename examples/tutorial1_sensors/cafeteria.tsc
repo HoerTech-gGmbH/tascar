@@ -6,7 +6,7 @@
       <position>0 13.2424955 -15.6749363 0</position>
       <orientation>0 -90 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="0" levelmode="calib" level="90"/>
+	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="0" levelmode="calib" level="90"/>-->
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/christopher /maartje /timo" url="osc.udp://sura:9999/"/>
       </sound>
@@ -15,7 +15,7 @@
       <position>0 14.3827801 -16.081316 0</position>
       <orientation>0 180 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="1" levelmode="calib" level="90"/>
+	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="1" levelmode="calib" level="90"/>-->
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/joanna /maartje /timo" url="osc.udp://sura:9999/"/>
       </sound>
@@ -24,7 +24,7 @@
       <position>0 13.9055634 -16.5331497 0</position>
       <orientation>0 120 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="2" levelmode="calib" level="90"/>
+	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="2" levelmode="calib" level="90"/>-->
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/joanna /christopher /timo" url="osc.udp://sura:9999/"/>
       </sound>
@@ -33,7 +33,7 @@
       <position>0 13.3725033 -16.9951344 0</position>
       <orientation>0 120 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="3" levelmode="calib" level="90"/>
+	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="3" levelmode="calib" level="90"/>-->
 	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
 	<plugin type="lookatme" tau="1" paths="/joanna /christopher /maartje" url="osc.udp://sura:9999/"/>
       </sound>
@@ -55,7 +55,8 @@
   </scene>
   <!-- diffuse noise scene -->
   <scene name="diffuse">
-    <diffuse name="background" size="300 300 300" color="#0000ff" connect="@.0">
+    <diffuse name="background" size="300 300 300" color="#0000ff">
+      <!--connect="@.0"-->
       <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa_distant.wav" gain="0" channels="4" loop="0"/>-->
     </diffuse>
     <diffuse name="reverb" size="300 300 300" color="#0000ff"/>
@@ -68,6 +69,7 @@
     <!-- reverb settings and links -->
     <system command="zita-rev1 -B" sleep="0.4"/>
     <!-- motion tracking and data logging -->
+    <!--
     <glabsensors>
       <trackir name="TrackIRaz" osctarget="osc.udp://localhost:8000/" crown="C6" use_lsl="true" camrot="92.76 -0.877 -13.946" campos="-0.07 0.321 0.888" f="682" trackobj="true" trackobjadd="false" actor="/*/listener"/>
       <serial name="eog" device="/dev/rfcomm1" use_lsl="true"/>
@@ -76,16 +78,21 @@
       <lsl predicate="name='TrackIRaz'"/>
       <variable path="/notfacingforward" size="1"/>
     </datalogging>
+    -->
     <!-- blender control -->
     <pos2osc pattern="/cafeteria/*" url="osc.udp://sura:9999/" mode="3" transport="false"/>
+    <!--
     <system command="xterm -e 'ssh sura DISPLAY=:0 /opt/blender-2.78c-linux-glibc219-x86_64/blenderplayer -g noaudio ./lidhan/Demonstrators/glabdemos/cafeteria/cafeteria_tws.blend'" onunload="ssh sura killall -9 blenderplayer"/>
+    -->
     <system command="bash -c 'while sleep 2;do send_osc osc.udp://sura:9999/ /fullscreen 1; done'"/>
     <!-- light control -->
+    <!--
     <artnetdmx hostname="192.168.0.9" id="light" port="6454" universe="0" channels="3" fps="5">
       <fixture addr="1" dmxval="6 4 1"/>
       <fixture addr="25" dmxval="0 1 0"/>
     </artnetdmx>
     <system command="cheese"/>
+    -->
     <!-- time code generator for synchronization: -->
     <ltcgen volume="-49" connect="system:playback_35 system:playback_36"/>
     <lsljacktime sendwhilestopped="true"/>

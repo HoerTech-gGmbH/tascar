@@ -217,6 +217,7 @@ namespace TASCAR {
       //void release();
       void add_meter(TASCAR::levelmeter_t*);
       float read_meter();
+      void validate_attributes(std::string& msg) const;
     private:
       std::string name;
       src_object_t* parent;

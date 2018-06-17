@@ -16,6 +16,7 @@
     </receiver>
   </scene>
   <modules>
+    <!--
   <lightctl driver="opendmxusb" device="/dev/ttyUSB0">
     <lightscene name="ceiling" objects="/scene/src1" parent="/scene/out" channels="4" method="nearest" objval="255 0 130 0">
       <fixture az="45" addr="33"/>
@@ -23,18 +24,7 @@
       <fixture az="-135" addr="41"/>
       <fixture az="-45" addr="45"/>
     </lightscene>
-    <!--
-	<lightscene name="floor" objects="/scene/src1" parent="/scene/out" channels="4" method="raisedcosine" objval="0 0 255 0" objw="0.25">
-	<fixture az="22.5" addr="1" dmxval="152 0 0 0"/>
-	<fixture az="67.5" addr="5" dmxval="152 0 0 0"/>
-	<fixture az="112.5" addr="9" dmxval="152 0 0 0"/>
-	<fixture az="157.5" addr="13" dmxval="152 0 0 0"/>
-	<fixture az="-157.5" addr="17" dmxval="152 0 0 0"/>
-	<fixture az="-112.5" addr="21" dmxval="152 0 0 0"/>
-	<fixture az="-67.5" addr="25" dmxval="152 0 0 0"/>
-	<fixture az="-22.5" addr="29" dmxval="152 0 0 0"/>
-	</lightscene>
-    -->
   </lightctl>
+  -->
   </modules>
 </session>

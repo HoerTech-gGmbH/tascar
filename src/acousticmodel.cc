@@ -473,6 +473,13 @@ void receiver_t::clear_output()
     outchannels[ch].clear();
 }
 
+void receiver_t::validate_attributes(std::string& msg) const
+{
+  receivermod_t::validate_attributes(msg);
+  for(std::vector<TASCAR::audioplugin_t*>::const_iterator it=plugins.begin();it!=plugins.end();++it)
+    (*it)->validate_attributes(msg);
+}
+
 /**
    \ingroup callgraph
  */

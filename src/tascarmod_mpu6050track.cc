@@ -41,6 +41,7 @@ private:
   bool b_calib;
   double tprev;
   lo_message msg_calib;
+  bool use_translation;
 };
 
 void mpu6050track_t::prepare( chunk_cfg_t& cf_ )
@@ -166,8 +167,8 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
     ypraxis(0),
     gyraxis(1),
     zaxis(-1),
-  rotaxis(1),
-  rotscale(DEG2RAD),
+    rotaxis(1),
+    rotscale(DEG2RAD),
     zscale(1),
     gyrscale(0.06),
     scale(1.0),
@@ -180,7 +181,8 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
     zshiftlp(0),
     b_calib(false),
     tprev(0),
-    msg_calib(lo_message_new())
+    msg_calib(lo_message_new()),
+    use_translation(true)
 {
   lo_message_add_int32(msg_calib,1);
   GET_ATTRIBUTE(id);
@@ -189,6 +191,7 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(scale);
   GET_ATTRIBUTE(gyrscale);
   GET_ATTRIBUTE(rotaxis);
+  GET_ATTRIBUTE_BOOL(use_translation);
   if( (rotaxis < 0) || (2 < rotaxis) )
     throw TASCAR::ErrMsg("Invalid rotation axis (must be 0, 1 or 2).");
   GET_ATTRIBUTE(rotscale);
@@ -235,7 +238,8 @@ void mpu6050track_t::update(uint32_t tp_frame,bool tp_rolling)
     set_orientation( TASCAR::zyx_euler_t( 0, 0, 0 ) );
   // z-shifting:
   zshiftlp = cz*zshiftlp + (1.0-cz)*zshift;
-  set_location( TASCAR::pos_t(0, 0, zshiftlp ) );
+  if( use_translation )
+    set_location( TASCAR::pos_t(0, 0, zshiftlp ) );
 }
 
 REGISTER_MODULE(mpu6050track_t);

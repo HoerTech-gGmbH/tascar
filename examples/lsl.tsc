@@ -8,8 +8,10 @@
   </scene>
   <modules>
     <lsljacktime/>
+    <!--
     <datalogging>
       <lsl predicate="type='time'"/>
     </datalogging>
+    -->
   </modules>
 </session>

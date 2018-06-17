@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout name="glab">
+  <speaker az="11.25" r="1.76"/>
+  <speaker az="56.25" r="1.76"/>
+  <speaker az="101.25" r="1.76"/>
+  <speaker az="146.25" r="1.76"/>
+  <speaker az="191.25" r="1.76"/>
+  <speaker az="236.25" r="1.76"/>
+  <speaker az="281.25" r="1.76"/>
+  <speaker az="326.25" r="1.76"/>
+
+  <speaker az="0" el="45" r="1.2"/>
+  <speaker az="60" el="45" r="1.2"/>
+  <speaker az="120" el="45" r="1.2"/>
+  <speaker az="180" el="45" r="1.2"/>
+  <speaker az="240" el="45" r="1.2"/>
+  <speaker az="300" el="45" r="1.2"/>
+
+  <speaker az="30" el="-45" r="2.1"/>
+  <speaker az="90" el="-45" r="2.1"/>
+  <speaker az="150" el="-45" r="2.1"/>
+  <speaker az="210" el="-45" r="2.1"/>
+  <speaker az="270" el="-45" r="2.1"/>
+  <speaker az="330" el="-45" r="2.1"/>
+
+  <speaker az="0" el="90" r="0.8"/>
+</layout>

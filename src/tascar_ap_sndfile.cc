@@ -58,6 +58,7 @@ public:
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
   void add_licenses( licensehandler_t* session );
+  void prepare( chunk_cfg_t& cf );
 private:
   uint32_t triggeredloop;
   TASCAR::transport_t ltp;
@@ -86,6 +87,17 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
         operator*=( level*2e-5 );
       else
         throw TASCAR::ErrMsg("Invalid level mode \""+levelmode+"\". (sndfile)");
+}
+
+void ap_sndfile_t::prepare( chunk_cfg_t& cf )
+{
+  if( get_srate() != cf.f_sample ){
+    std::string msg("Sample rate differs ("+name+"): ");
+    char ctmp[1024];
+    sprintf(ctmp,"file has %d Hz, expected %g Hz",get_srate(),cf.f_sample);
+    msg+=ctmp;
+    TASCAR::add_warning(msg,e);
+  }
 }
 
 ap_sndfile_t::~ap_sndfile_t()

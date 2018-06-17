@@ -28,7 +28,8 @@
       <position>1 0.8 0 0</position>
     </source>
 
-    <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1" connect="@.0">
+    <diffuse name="N_2" size="30 30 30" color="#0000ff" mute="false" solo="false" start="0" end="0" gain="0" falloff="1">
+      <!--connect="@.0"-->
       <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa.wav" gain="0" channels="4" loop="0"/>-->
     </diffuse>
 
@@ -66,19 +67,24 @@
   </modules>
 
   <!-- connect MHA to process S+N: -->
+  <!--
   <connect src="render.scene_S:out_ortf_l" dest="mha+:in_1"/>
   <connect src="render.scene_S:out_ortf_r" dest="mha+:in_2"/>
   <connect src="render.scene_N:out_ortf_l" dest="mha+:in_1"/>
   <connect src="render.scene_N:out_ortf_r" dest="mha+:in_2"/>
+  -->
   <!-- connect MHA to process S-N: -->
+  <!--
   <connect src="render.scene_S:out_ortf_l" dest="mha-:in_1"/>
   <connect src="render.scene_S:out_ortf_r" dest="mha-:in_2"/>
   <connect src="render.scene_N:out_ortf_l" dest="flipsign1:in.0"/>
   <connect src="render.scene_N:out_ortf_r" dest="flipsign1:in.1"/>
   <connect src="flipsign1:out.0" dest="mha-:in_1"/>
   <connect src="flipsign1:out.1" dest="mha-:in_2"/>
+  -->
 
   <!-- split MHA output in S and N and connect to level meter: -->
+  <!--
   <connect src="halfgain:out.0" dest="levelmeter:SL_proc"/>
   <connect src="halfgain:out.1" dest="levelmeter:SR_proc"/>
   <connect src="halfgain:out.0" dest="levelmeter:NL_proc"/>
@@ -87,7 +93,6 @@
   <connect src="halfgain:out.3" dest="levelmeter:SR_proc"/>
   <connect src="flipsign2:out.0" dest="levelmeter:NL_proc"/>
   <connect src="flipsign2:out.1" dest="levelmeter:NR_proc"/>
-
   <connect src="render.scene_S:out_ortf_l" dest="levelmeter:SL_unproc"/>
   <connect src="render.scene_S:out_ortf_r" dest="levelmeter:SR_unproc"/>
   <connect src="render.scene_N:out_ortf_l" dest="levelmeter:NL_unproc"/>
@@ -111,6 +116,7 @@
   <connect src="mha+:out_2" dest="proc:in.1"/>
   <connect src="proc:out.0" dest="system:playback_1"/>
   <connect src="proc:out.1" dest="system:playback_2"/>
+  -->
 
 
 </session>

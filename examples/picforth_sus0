@@ -1,0 +1,18 @@
+/c/*/sustain/tau_env 2
+#/c/*/sustain/tau_sus 6
+/c/claas/sustain/tau_sus 8
+/c/giso/sustain/tau_sus 6
+/c/giso/sustain/bass 0.4
+/c/giso/sustain/fcut 42
+/c/giso/sustain/bassratio 2
+/c/marthe/sustain/tau_sus 4
+/c/julia/sustain/tau_sus 3
+/c/hille/sustain/tau_sus 2
+/c/*/sustain/wet 1
+/c/giso/sustain/gain 1
+/c/*/sustain/wetapply 60
+
+,80
+
+/c/*/sustain/wet 0
+/c/*/sustain/wetapply 56

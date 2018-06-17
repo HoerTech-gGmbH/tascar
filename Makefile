@@ -28,7 +28,8 @@ SOURCES = omni cardioidmod door
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
   artnetdmx opendmxusb lightctl levels2osc nearsensor dirgain dummy	\
-  matrix hoafdnrot mpu6050track touchosc savegains lslactor
+  matrix hoafdnrot mpu6050track touchosc savegains lslactor hrirconv	\
+  joystick hossustain
 
 OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
@@ -221,6 +222,8 @@ tascar_ap_%.so: tascar_ap_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 tascar_ltcgen.so: EXTERNALS+=ltc
+
+tascar_hossustain.so: EXTERNALS += fftw3f
 
 fullversion:
 	echo $(FULLVERSION) >$@

@@ -289,6 +289,13 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
   }
 }
 
+uint32_t TASCAR::async_sndfile_t::get_srate() const
+{
+  if( sfile )
+    return sfile->get_srate();
+  return -1;
+}
+
 void TASCAR::async_sndfile_t::open(const std::string& fname, uint32_t firstchannel, int32_t first_frame, double gain, uint32_t loop)
 {
   if( pthread_mutex_lock( &mtx_file ) != 0 )

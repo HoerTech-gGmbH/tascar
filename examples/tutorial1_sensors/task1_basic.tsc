@@ -5,28 +5,29 @@
     <source name="mario" mute="false" solo="false" color="#ff0001" start="0" end="0">
       <position>0 2 -1.8 0</position>
       <!--<sndfile name="${HOME}/tascar_scenes/pointsources/diskussion_moderator.wav" loop="1" gain="-3"/>-->
-      <sound maxdist="60" name="1" z="1.52" connect="@.0"/>
+      <sound maxdist="60" name="1" z="1.52"/>
     </source>
     <source name="hermann" mute="false" solo="false" color="#fff300" start="0" end="0">
       <position>0 2 1.8 0</position>
       <!--<sndfile name="${HOME}/tascar_scenes/pointsources/diskussion_sprecher1.wav" loop="1" gain="-2"/>-->
-      <sound maxdist="60" name="1" z="1.53" connect="@.0"/>
+      <sound maxdist="60" name="1" z="1.53"/>
     </source>
     <source name="omar" mute="false" solo="false" color="#43ff00" start="0" end="0">
       <position>0 2 0.6 0</position>
       <!--<sndfile name="${HOME}/tascar_scenes/pointsources/diskussion_sprecher2.wav" loop="1" gain="-1"/>-->
-      <sound maxdist="60" name="1" z="1.53" connect="@.0"/>
+      <sound maxdist="60" name="1" z="1.53"/>
     </source>
     <source name="emma" mute="false" solo="false" color="#0068ff" start="0" end="0">
       <position>0 2 -0.6 0</position>
       <!--<sndfile name="${HOME}/tascar_scenes/pointsources/diskussion_sprecher3.wav" loop="1" gain="-1"/>-->
-      <sound maxdist="60" name="1" z="1.52" connect="@.0"/>
+      <sound maxdist="60" name="1" z="1.52"/>
     </source>
 
     <receiver name="out"  layout="16chglab.spk"  type="hoa2d" caliblevel="120"/>
 
   </scene>
   <modules>
+    <!--
     <glabsensors>
       <trackir name="head" crown="C6" use_lsl="true"/>
       <serial name="eog" device="/dev/rfcomm1" use_lsl="true"/>
@@ -35,6 +36,7 @@
     <datalogging>
       <lsl predicate="name='head'"/>
     </datalogging>
+    -->
   </modules>
 
 </session>

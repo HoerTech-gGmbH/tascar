@@ -17,11 +17,11 @@
 
     <source name="speech">
       <!--<sndfile loop="0" name="${HOME}/tascar_scenes/sounds/daps/f1_script1_clean.wav" gain="-10"/>-->
-      <sound connect="@.0" name="0"/>
+      <sound name="0"/>
       <position>0 1.5 0 0</position>
     </source>
 
-    <diffuse name="background" connect="@.0">
+    <diffuse name="background">
       <!--<sndfile name="${HOME}/tascar_scenes/backgrounds/trainstation_notrain.wav"  gain="-10" channels="4" loop="0"/>-->
     </diffuse>
 
@@ -57,7 +57,6 @@
   <connect src="zita-rev1:out.X" dest="render.reverb:reverb_output.1x"/>
   <connect src="zita-rev1:out.Y" dest="render.reverb:reverb_output.1y"/>
   <connect src="zita-rev1:out.Z" dest="render.reverb:reverb_output.1z"/>
-  <connect src="render.diffuse:reverb_input" dest="zita-rev1:in.L"/>
   <connect src="render.main:reverb_input" dest="zita-rev1:in.L"/>
 
 

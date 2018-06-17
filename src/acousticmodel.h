@@ -119,6 +119,7 @@ namespace TASCAR {
       void post_proc(const TASCAR::transport_t& tp);
       virtual void process_plugins(const TASCAR::transport_t& tp);
       virtual void add_variables( TASCAR::osc_server_t* srv );
+      void validate_attributes(std::string& msg) const;
       // configuration/control variables:
       TASCAR::pos_t size;
       bool render_point;

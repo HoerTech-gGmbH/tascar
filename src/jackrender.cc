@@ -116,6 +116,13 @@ void TASCAR::audioplayer_t::open_files()
       sprintf(pname,"%s.%d.in",infos[k].parentname.c_str(),infos[k].objectchannel);
       add_input_port(pname);
     }
+    if( (int64_t)(files[k].get_srate()) != (int64_t)(get_srate()) ){
+      std::string msg("Sample rate differs: ");
+      char ctmp[1024];
+      sprintf(ctmp,"file has %d Hz, expected %d Hz",files[k].get_srate(),get_srate());
+      msg+=ctmp;
+      add_warning(msg);
+    }
   }
 }
 
