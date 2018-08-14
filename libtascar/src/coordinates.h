@@ -391,6 +391,10 @@ namespace TASCAR {
     track_t& operator-=(const pos_t&);
     track_t& operator*=(const pos_t&);
     /**
+       \brief Format as string, return velocity
+    */
+    std::string print_velocity(const std::string& delim=", ");
+    /**
        \brief Format as string in cartesian coordinates
     */
     std::string print_cart(const std::string& delim=", ");

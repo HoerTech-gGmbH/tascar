@@ -649,9 +649,18 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
       msg += "\n";
     char cline[256];
     sprintf(cline,"%d",e->get_line());
-    msg += "Invalid (unused) attributes in element \""+e->get_name()+"\" (Line "+cline+"):";
+    msg += "Invalid attributes in element \""+e->get_name()+"\" (Line "+cline+"):";
     for(std::vector<std::string>::const_iterator it=unused.begin();it!=unused.end();++it)
       msg += " " + *it;
+    msg += " (valid attributes are";
+    for( std::map<std::string,std::string>::const_iterator 
+           it=attribute_list[e].begin();
+         it!=attribute_list[e].end();++it){
+      if( it != attribute_list[e].begin() )
+        msg += ",";
+      msg += " " + it->first;
+    }
+    msg += ").";
   }
 }
 

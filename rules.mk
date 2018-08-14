@@ -1,0 +1,3 @@
+# rules:
+build:
+	mkdir -p $@

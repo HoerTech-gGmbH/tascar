@@ -93,6 +93,21 @@ track_t& track_t::operator-=(const pos_t& x)
   return *this;
 }
 
+std::string track_t::print_velocity(const std::string& delim)
+{
+  std::ostringstream tmp("");
+  tmp.precision(12);
+  pos_t d;
+  double t(0);
+  for(iterator i=begin();i!=end();++i){
+    if( i!=begin() )
+      tmp << i->first << delim << distance(i->second,d)/(i->first-t) << "\n";
+    t = i->first;
+    d = i->second;
+  }
+  return tmp.str();
+}
+  
 std::string track_t::print_cart(const std::string& delim)
 {
   std::ostringstream tmp("");
@@ -121,7 +136,9 @@ void track_t::project_tangent()
 void track_t::project_tangent(pos_t c)
 {
   rot_z( -c.azim() );
-  rot_y( (PI_2 - c.elev()) );
+  // warning: the sign of next rotation is a work-around for a
+  // potential bug in TASCAR rotation:
+  rot_y( -(PI_2 - c.elev()) );
   rot_z( -PI_2 );
   c.set_cart(0,0,-c.norm());
   operator+=(c);
@@ -208,34 +225,34 @@ pos_t track_t::interp(double x) const
 
 void track_t::smooth( unsigned int n )
 {
-  unsigned int n_in= size();
+  uint32_t n_in(size());
   track_t sm;
   std::vector<pos_t> vx;
   std::vector<double> vt;
   vx.resize(n_in);
   vt.resize(n_in);
-  unsigned int n2 = n/2;
-  unsigned int k=0;
+  int32_t n2(n/2);
+  int32_t k(0);
   for(iterator i=begin();i!=end();++i){
     vt[k] = i->first;
     vx[k] = i->second;
-    k++;
+    ++k;
   }
   std::vector<double> wnd;
   wnd.resize(n);
   double wsum(0);
-  for(k = 0;k<n;k++){
+  for(k = 0;k<(int32_t)n;k++){
     wnd[k] = 0.5 - 0.5*cos(PI2*(k+1)/(n+1));
     wsum+=wnd[k];
   }
   make_friendly_number(wsum);
-  for(k = 0;k<n;k++){
+  for(k = 0;k<(int32_t)n;++k){
     wnd[k]/=wsum;
   }
-  for( k=0;k<n_in;k++ ){
+  for( k=0;k<(int32_t)n_in;k++ ){
     pos_t ps;
-    for( unsigned int kw=0;kw<n;kw++){
-      pos_t p = vx[std::min(std::max(k+kw,n2)-n2,n_in-1)];
+    for( int32_t kw=0;kw<(int32_t)n;++kw){
+      pos_t p = vx[std::min(std::max(k+kw,n2)-n2,(int32_t)n_in-1)];
       p *= wnd[kw];
       ps += p;
     }

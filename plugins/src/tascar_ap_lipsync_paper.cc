@@ -231,7 +231,7 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
     }
   }else{
     if( was_active )
-      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", 0, 0, 0 );
+      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", 0.0f, 0.0f, 0.0f );
   }
   was_active = lactive;
   prev_kissBS = kissBS;

@@ -21,6 +21,7 @@ protected:
   uint32_t wlen;
   float fcut;
   double gain;
+  bool delayenvelope;
 };
 
 sustain_vars_t::sustain_vars_t( const TASCAR::module_cfg_t& cfg )
@@ -32,7 +33,8 @@ sustain_vars_t::sustain_vars_t( const TASCAR::module_cfg_t& cfg )
     wet(1.0),
     wlen(8192),
     fcut(40),
-    gain(1.0)
+    gain(1.0),
+    delayenvelope(false)
 {
   GET_ATTRIBUTE(id);
   if( id.empty() )
@@ -45,6 +47,7 @@ sustain_vars_t::sustain_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(bassratio);
   GET_ATTRIBUTE(fcut);
   GET_ATTRIBUTE_DB(gain);
+  GET_ATTRIBUTE_BOOL(delayenvelope);
 }
 
 class sustain_t : public sustain_vars_t, public jackc_db_t {
@@ -87,26 +90,28 @@ void sustain_t::set_apply(float t)
 int sustain_t::process(jack_nframes_t n, const std::vector<float*>& vIn, const std::vector<float*>& vOut)
 {
   jackc_db_t::process(n,vIn,vOut);
-  TASCAR::wave_t w_in(n,vIn[0]);
-  TASCAR::wave_t w_out(n,vOut[0]);
-  float env_c1(0);
-  if( tau_envelope > 0 )
-    env_c1 = exp( -1.0/(tau_envelope*(double)srate));
-  float env_c2(1.0f-env_c1);
-  // envelope reconstruction:
-  for(uint32_t k=0;k<w_in.size();++k){
-    Lin *= env_c1;
-    Lin += env_c2*w_in[k]*w_in[k];
-    Lout *= env_c1;
-    Lout += env_c2*w_out[k]*w_out[k];
-    if( Lout > 0 )
-      w_out[k] *= sqrt(Lin/Lout);
-    if( t_apply ){
-      t_apply--;
-      currentw += deltaw;
+  if( !delayenvelope ){
+    TASCAR::wave_t w_in(n,vIn[0]);
+    TASCAR::wave_t w_out(n,vOut[0]);
+    float env_c1(0);
+    if( tau_envelope > 0 )
+      env_c1 = exp( -1.0/(tau_envelope*(double)srate));
+    float env_c2(1.0f-env_c1);
+    // envelope reconstruction:
+    for(uint32_t k=0;k<w_in.size();++k){
+      Lin *= env_c1;
+      Lin += env_c2*w_in[k]*w_in[k];
+      Lout *= env_c1;
+      Lout += env_c2*w_out[k]*w_out[k];
+      if( Lout > 0 )
+	w_out[k] *= sqrt(Lin/Lout);
+      if( t_apply ){
+	t_apply--;
+	currentw += deltaw;
+      }
+      w_out[k] *= gain*currentw;
+      w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
     }
-    w_out[k] *= gain*currentw;
-    w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
   }
   return 0;
 }
@@ -133,6 +138,29 @@ int sustain_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn, c
       ola.s[k] = 0;
   }
   ola.ifft(w_out);
+  if( delayenvelope ){
+    TASCAR::wave_t w_in(n,vIn[0]);
+    TASCAR::wave_t w_out(n,vOut[0]);
+    float env_c1(0);
+    if( tau_envelope > 0 )
+      env_c1 = exp( -1.0/(tau_envelope*(double)srate));
+    float env_c2(1.0f-env_c1);
+    // envelope reconstruction:
+    for(uint32_t k=0;k<w_in.size();++k){
+      Lin *= env_c1;
+      Lin += env_c2*w_in[k]*w_in[k];
+      Lout *= env_c1;
+      Lout += env_c2*w_out[k]*w_out[k];
+      if( Lout > 0 )
+	w_out[k] *= sqrt(Lin/Lout);
+      if( t_apply ){
+	t_apply--;
+	currentw += deltaw;
+      }
+      w_out[k] *= gain*currentw;
+      w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
+    }
+  }
   return 0;
 }
 
@@ -158,6 +186,7 @@ sustain_t::sustain_t( const TASCAR::module_cfg_t& cfg )
   session->add_double_db("/c/"+id+"/sustain/gain",&gain);
   session->add_float("/c/"+id+"/sustain/wet",&wet);
   session->add_method("/c/"+id+"/sustain/wetapply","f",&sustain_t::osc_apply,this);
+  session->add_bool("/c/"+id+"/sustain/delayenvelope",&delayenvelope);
   activate();
 }
 
