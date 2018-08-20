@@ -102,14 +102,33 @@ void jackc_portless_t::deactivate()
   active = false;
 }
 
-void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn)
+void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn, bool allowoutputsource )
 {
-  if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
-    errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
-    if( bwarn )
-      TASCAR::add_warning(errmsg);
-    else
-      throw TASCAR::ErrMsg(errmsg.c_str());
+  jack_port_t* srcport(jack_port_by_name( jc, src.c_str()));
+  if( allowoutputsource && srcport && (jack_port_flags( srcport ) & JackPortIsInput) ){
+    const char** cons(jack_port_get_all_connections( jc, srcport ));
+    const char** ocons(cons);
+    if( cons ){
+      while( *cons ){
+        if( jack_connect(jc, *cons, dest.c_str()) != 0 ){
+          errmsg = std::string("unable to connect port '")+std::string(*cons) + "' to '" + dest + "'.";
+          if( bwarn )
+            TASCAR::add_warning(errmsg);
+          else
+            throw TASCAR::ErrMsg(errmsg.c_str());
+        }
+        ++cons;
+      }
+      jack_free( ocons );
+    }
+  }else{
+    if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
+      errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
+      if( bwarn )
+        TASCAR::add_warning(errmsg);
+      else
+        throw TASCAR::ErrMsg(errmsg.c_str());
+    }
   }
 }
 
@@ -184,14 +203,14 @@ void jackc_portless_t::on_shutdown(void *arg)
   ((jackc_portless_t*)arg)->active = false;
 }
 
-void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn)
+void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn, bool allowoutputsource)
 {
   if( inPort.size() <= port ){
     DEBUG(port);
     DEBUG(inPort.size());
     throw TASCAR::ErrMsg("Input port number not available (connect_in).");
   }
-  connect(pname,jack_port_name(inPort[port]),bwarn);
+  connect(pname,jack_port_name(inPort[port]),bwarn,allowoutputsource);
 }
 
 void jackc_t::connect_out(unsigned int port,const std::string& pname,bool bwarn)

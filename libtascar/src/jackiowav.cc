@@ -169,7 +169,7 @@ void jackio_t::run()
   for(unsigned int k=0;k<(unsigned int)sf_inf_out.channels;k++)
     if( k+sf_inf_in.channels < p.size() ){
       log("connecting input port to "+p[k+sf_inf_in.channels]);
-      connect_in(k,p[k+sf_inf_in.channels]);
+      connect_in(k,p[k+sf_inf_in.channels],false,true);
     }
   if( freewheel_ ){
     log("switching to freewheeling mode");
