@@ -48,6 +48,7 @@ db_test_rec_%: test_rec.tsc
 test_rec_%: test_rec.tsc
 	$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_rec_$*.wav $<
 	rm -f test_rec_$*.wav
+#	$(LIBPATH) RECEIVER=$* $(VALIDATE) $< 
 #$(LIBPATH) $(COMPARE) expected_rec_$*.wav test_rec_$*.wav 1e-9
 
 test_pos%: test_pos%.tsc expected_pos%.wav

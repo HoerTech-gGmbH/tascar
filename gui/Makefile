@@ -51,7 +51,7 @@ $(PREFIX)/bin/%: %
 build/tascar: $(OBJECTS)
 
 build/%: build/%.o
-	$(CXX) $(CXXFLAGS) $^ $(LDLIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 build/%.o: src/%.cc
 	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
@@ -66,7 +66,7 @@ build/%_glade.h: src/%.glade
 
 build/tascar: build/tascar_glade.h
 
-build/tascar_mainwindow.o: build/tascar_xy.xpm build/tascar_xz.xpm build/tascar_yz.xpm
+build/tascar_mainwindow.o: build/tascar_xy.xpm build/tascar_xz.xpm build/tascar_yz.xpm build/tascar_xyz.xpm src/tascar_mainwindow.h
 
 build/tascar_%.xpm:
 	convert -font Helvetica -size 24x24 -gravity center label:$* -transparent white $@

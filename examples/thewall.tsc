@@ -6,7 +6,9 @@
       10 15 0 0
       </position>
       <sound>
-	<sndfile name="footsteps.wav" loop="0" level="70"/>
+	<plugins>
+	  <sndfile name="footsteps.wav" loop="0" level="70"/>
+	</plugins>
       </sound>
     </source>
     <face name="wall" mute="false" solo="false" color="#771010" start="0" end="0" width="20" height="20" reflectivity="1" damping="0">

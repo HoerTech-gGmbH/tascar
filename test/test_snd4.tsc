@@ -6,7 +6,9 @@
 0.5 2 0 0</position>
 <orientation>0 0 0 0 1 300 0 0</orientation>
       <sound x="1">
-	<sine/>
+	<plugins>
+	  <sine/>
+	</plugins>
       </sound>
     </source>
     <receiver type="omni"/>

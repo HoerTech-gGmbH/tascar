@@ -2,7 +2,7 @@
 <session license="CC-0">
   <scene guiscale="6">
     <source>
-      <sound type="door" distance="1"><sine/></sound>
+      <sound type="door" distance="1"><plugins><sine/></plugins></sound>
       <position>0 -1 0 0</position>
     </source>
     <receiver type="omni">

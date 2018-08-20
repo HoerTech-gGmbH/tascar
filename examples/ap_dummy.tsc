@@ -3,7 +3,9 @@
   <scene>
     <source>
       <sound>
-	<dummy/>
+	<plugins>
+	  <dummy/>
+	</plugins>
       </sound>
     </source>
     <receiver type="omni"/>

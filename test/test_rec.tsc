@@ -4,7 +4,7 @@
     <source>
       <position>0 0 0 0 1 1 1 1</position>
       <sound x="1">
-	<sine/>
+	<plugins><sine/></plugins>
       </sound>
     </source>
     <receiver type="${RECEIVER}" layout="8ch.spk" order="6"/>

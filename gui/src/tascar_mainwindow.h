@@ -34,13 +34,16 @@ protected:
 
   void on_menu_view_zoom_in();
   void on_menu_view_zoom_out();
-  void on_menu_view_toggle_scene_map();
   void on_menu_view_show_osc_vars();
   void on_menu_view_show_warnings();
   void on_menu_view_show_legal();
   void on_menu_view_viewport_xy();
   void on_menu_view_viewport_xz();
   void on_menu_view_viewport_yz();
+  void on_menu_view_viewport_xyz();
+  void on_menu_view_viewport_rotz();
+  void on_menu_view_viewport_rotzcw();
+  void on_menu_view_viewport_setref();
   void on_menu_view_meter_rmspeak();
   void on_menu_view_meter_rms();
   void on_menu_view_meter_peak();
@@ -64,12 +67,17 @@ protected:
   void on_menu_help_about();
 
   void set_scale(double s){draw.view.set_scale( s );};
-  bool on_map_scroll(GdkEventScroll * e);
+  bool on_map_scroll(GdkEventScroll* e);
+  bool on_map_clicked(GdkEventButton* e);
 
   void on_scene_selector_changed();
+  void on_active_selector_changed();
+  void on_active_track_changed();
 
   void reset_gui();
   void update_levelmeter_settings();
+  void update_object_list();
+  void update_selection_info();
 
   scene_draw_t draw;
 
@@ -86,16 +94,10 @@ protected:
 
   int32_t selected_range;
 
-  Gtk::ComboBoxText rangeselector;
-
   Gtk::DrawingArea* scene_map;
-  Gtk::Statusbar* statusbar_scene_map;
+  //Gtk::EventBox* scene_map_events;
   Gtk::Statusbar* statusbar_main;
   Gtk::Scale* timeline;
-  Gtk::CheckMenuItem* menu_scene_map;
-  //Gtk::MenuItem* menu_osc_vars;
-  //Gtk::MenuItem* show_warnings;
-  Gtk::Window* scene_map_window;
   Gtk::Window* win_osc_vars;
   Gtk::Window* win_warnings;
   Gtk::TextView* text_warnings;
@@ -107,9 +109,16 @@ protected:
   source_panel_t* source_panel;
   Gtk::ComboBoxText* scene_selector;
   uint32_t selected_scene;
+  Gtk::ComboBoxText* active_selector;
+  TASCAR::Scene::object_t* active_object;
+  Gtk::Label* active_type_label;
+  Gtk::CheckButton* active_track;
+  Gtk::Label* active_label_sourceline;
+  Gtk::TextView* active_source_display;
+  Gtk::ScrolledWindow* active_mixer;
+  source_ctl_t* active_source_ctl;
 
   bool blink;
-  pos_t scene_map_pointer;
 
   sigc::connection con_draw;
   sigc::connection con_timeout;

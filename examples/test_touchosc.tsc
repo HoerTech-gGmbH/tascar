@@ -3,7 +3,9 @@
   <scene name="xy">
     <source>
       <sound>
-	<sine a="0"/>
+	<plugins>
+	  <sine a="0"/>
+	</plugins>
       </sound>
     </source>
     <receiver color="#ffff00"/>
@@ -11,7 +13,9 @@
   <scene>
     <source>
       <sound>
-	<sine/>
+	<plugins>
+	  <sine/>
+	</plugins>
       </sound>
     </source>
     <source name="Other" color="#0000ff">

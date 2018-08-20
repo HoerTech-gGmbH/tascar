@@ -54,6 +54,7 @@ namespace TASCAR {
       const std::vector<float>& readmeter();
       float read_meter_max();
       float get_meterval(uint32_t k) const { return meterval[k]; };
+      std::string get_type() const;
       /**
          \brief Return a rference to the level meter
          \param k Channel number

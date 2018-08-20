@@ -9,6 +9,8 @@ clean:
 	$(MAKE) -C plugins clean
 	$(MAKE) -C apps clean
 	$(MAKE) -C gui clean
+	$(MAKE) -C test clean
+	$(MAKE) -C examples clean
 	rm -Rf build
 
 test:

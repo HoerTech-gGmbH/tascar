@@ -224,6 +224,9 @@ void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
   case scene_draw_t::p :
     sprintf(ctmp,"perspective");
     break;
+  case scene_draw_t::xyz :
+    sprintf(ctmp,"xyz");
+    break;
   }
   cr->move_to( bx+12, by+36 );
   cr->show_text( ctmp );

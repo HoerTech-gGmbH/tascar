@@ -3,10 +3,10 @@
   <scene mirrororder="3">
     <source>
       <sound x="1" layers="3 7">
-	<sine/>
+	<plugins><sine/></plugins>
       </sound>
       <sound x="2" layers="7">
-	<sine f="100"/>
+	<plugins><sine f="100"/></plugins>
       </sound>
     </source>
     <receiver name="l1" type="omni" layers="3"/>

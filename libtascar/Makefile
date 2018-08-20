@@ -104,7 +104,7 @@ include $(wildcard build/*.mk)
 %: %.o
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
-build/%.o: src/%.cc
+build/%.o: src/%.cc src/%.h
 	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

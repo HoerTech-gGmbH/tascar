@@ -19,3 +19,7 @@ jackvalid:
 	sleep 1
 	$(MAKE) $(EXAMPLES:.tsc=.jvalid) || (killall jackd;false)
 	killall jackd
+
+clean:
+	find -name "*.jvalid" -exec rm -f \{\} \;
+	find -name "*.validated" -exec rm -f \{\} \;

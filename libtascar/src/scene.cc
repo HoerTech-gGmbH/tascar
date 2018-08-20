@@ -498,6 +498,23 @@ void route_t::reset_meters()
   meterval.clear();
 }
 
+std::string route_t::get_type() const
+{
+  if( dynamic_cast<const TASCAR::Scene::face_object_t*>(this))
+    return "face";
+  if( dynamic_cast<const TASCAR::Scene::face_group_t*>(this))
+    return "facegroup";
+  if( dynamic_cast<const TASCAR::Scene::obstacle_group_t*>(this))
+    return "obstacle";
+  if( dynamic_cast<const TASCAR::Scene::src_object_t*>(this))
+    return "source";
+  if( dynamic_cast<const TASCAR::Scene::src_diffuse_t*>(this))
+    return "diffuse";
+  if( dynamic_cast<const TASCAR::Scene::receivermod_object_t*>(this))
+    return "receiver";
+  return "unknwon";
+}
+
 void route_t::addmeter( float fs )
 {
   rmsmeter.push_back(new TASCAR::levelmeter_t(fs,meter_tc,meter_weight));
@@ -938,6 +955,10 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && (sne->get_name()!="plugins")){
+      // add_warning:
+      char ctmp[1024];
+      sprintf(ctmp,"%d",sne->get_line());
+      TASCAR::add_warning( "Audio plugins in sounds should be placed within the <plugins></plugins> element.\n  (plugin \""+sne->get_name()+"\" in sound \""+get_fullname()+"\", line "+std::string(ctmp)+")");
       plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,(parent_?(parent_->get_name()):("")))));
     }
   }

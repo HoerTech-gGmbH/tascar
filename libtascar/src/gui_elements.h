@@ -86,14 +86,17 @@ class source_ctl_t : public Gtk::VBox {
 public:
   source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
   source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r);
+private:
   void setup();
   void on_mute();
   void on_solo();
+public:
   void update();
   void set_levelmeter_mode( dameter_t::mode_t mode );
   void set_levelmeter_range( float vmin, float range );
   void invalidate_win();
   ~source_ctl_t();
+private:
   Gtk::Frame frame;//< frame for background
   Gtk::EventBox ebox;
   Gtk::VBox box; //< control elements container
@@ -109,7 +112,9 @@ public:
   lo_address client_addr_;
   std::string name_;
   TASCAR::Scene::scene_t* scene_;
+public:
   TASCAR::Scene::route_t* route_;
+private:
   bool use_osc;
 };
 
@@ -126,12 +131,13 @@ public:
   Gtk::HBox box;
   lo_address client_addr_;
   bool use_osc;
+  dameter_t::mode_t lmode;
 };
 
 class scene_draw_t {
 public:
   enum viewt_t {
-    xy, xz, yz, p
+    xy, xz, yz, xyz, p
   };
   scene_draw_t();
   virtual ~scene_draw_t();
@@ -145,8 +151,8 @@ public:
   void set_print_labels(bool print_labels);
   void set_show_acoustic_model(bool acmodel);
   double get_time() const {return time;};
-protected:
   void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
+protected:
   void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
   virtual void ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize);
   virtual void ngon_draw(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr,bool fill = false, bool area = false);

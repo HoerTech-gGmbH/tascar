@@ -3,7 +3,9 @@
   <scene mirrororder="3">
     <source>
       <sound x="1">
-	<sine/>
+	<plugins>
+	  <sine/>
+	</plugins>
       </sound>
     </source>
     <receiver type="omni"/>

@@ -3,7 +3,7 @@
   <scene mirrororder="3">
     <source>
       <sound x="1">
-	<sine a="90"/>
+	<plugins><sine a="90"/></plugins>
       </sound>
       <orientation>0 37 0 0</orientation>
     </source>

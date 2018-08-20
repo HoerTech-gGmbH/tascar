@@ -4,7 +4,7 @@
     <source>
       <orientation>0 0 0 0 1 360 0 0</orientation>
       <!--<sound type="cardioidmod"><sine/></sound>-->
-      <sound><sine/></sound>
+      <sound><plugins><sine/></plugins></sound>
     </source>
     <receiver type="omni">
       <position>0 1 0 0</position>

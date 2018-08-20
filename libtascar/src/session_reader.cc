@@ -104,7 +104,6 @@ void TASCAR::tsc_reader_t::read_xml()
             add_module( lsne );
         }
       }else if( (sne->get_name() != "include") && 
-                (sne->get_name() != "mapwindow") && 
                 (sne->get_name() != "mainwindow") && 
                 (sne->get_name() != "description" ) )
         add_warning("Invalid element: "+sne->get_name(),sne);

@@ -2,12 +2,12 @@
 #include "../build/tascar_xy.xpm"
 #include "../build/tascar_xz.xpm"
 #include "../build/tascar_yz.xpm"
+#include "../build/tascar_xyz.xpm"
 #include "logo.xpm"
 #include "pdfexport.h"
 #include <fstream>
 
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
-
 
 void error_message(const std::string& msg)
 {
@@ -21,13 +21,15 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   : Gtk::Window(cobject),
     m_refBuilder(refGlade),
     scene_map(NULL),
-    statusbar_scene_map(NULL),
     statusbar_main(NULL),
     timeline(NULL),
-    menu_scene_map(NULL),
-    scene_map_window(NULL),
     scene_selector(NULL),
     selected_scene(0),
+    active_selector(NULL),
+    active_object(NULL),
+    active_label_sourceline(NULL),
+    active_mixer(NULL),
+    active_source_ctl(NULL),
     blink(false),
     sessionloaded(false),
     sessionquit(false)
@@ -40,12 +42,10 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   con_timeout = Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_window_t::on_timeout), 100 );
   con_timeout_blink = Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_window_t::on_timeout_blink), 600 );
   con_timeout_statusbar = Glib::signal_timeout().connect( sigc::mem_fun(*this, &tascar_window_t::on_timeout_statusbar), 100 );
-  //scene_map->add_events(Gdk::BUTTON_MOTION_MASK);
   scene_map->add_events(Gdk::SCROLL_MASK);
+  scene_map->add_events(Gdk::BUTTON_PRESS_MASK);
   scene_map->signal_scroll_event().connect( sigc::mem_fun(*this,&tascar_window_t::on_map_scroll));
-  m_refBuilder->get_widget("StatusbarSceneMap",statusbar_scene_map);
-  if( !statusbar_scene_map )
-    throw TASCAR::ErrMsg("No scene map status bar");
+  scene_map->signal_button_press_event().connect( sigc::mem_fun(*this,&tascar_window_t::on_map_clicked));
   m_refBuilder->get_widget("StatusbarMain",statusbar_main);
   if( !statusbar_main )
     throw TASCAR::ErrMsg("No main status bar");
@@ -54,9 +54,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
     throw TASCAR::ErrMsg("No time line");
   timeline->signal_value_changed().connect(sigc::mem_fun(*this,
                                                          &tascar_window_t::on_time_changed));
-  GET_WIDGET(menu_scene_map);
-  GET_WIDGET(scene_map_window);
-  //scene_map_window->show();
   m_refBuilder->get_widget_derived("RouteButtons",source_panel);
   if( !source_panel )
     throw TASCAR::ErrMsg("No source panel");
@@ -66,6 +63,14 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
     aboutdialog->set_logo(Gdk::Pixbuf::create_from_xpm_data(logo));
   GET_WIDGET(scene_selector);
   scene_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_scene_selector_changed));
+  GET_WIDGET(active_selector);
+  GET_WIDGET(active_type_label);
+  GET_WIDGET(active_track);
+  GET_WIDGET(active_label_sourceline);
+  GET_WIDGET(active_source_display);
+  GET_WIDGET(active_mixer);
+  active_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
+  active_track->signal_toggled().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
   Gtk::Image* image_xy(NULL);
   m_refBuilder->get_widget("image_xy",image_xy);
   if( image_xy )
@@ -78,6 +83,10 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   m_refBuilder->get_widget("image_yz",image_yz);
   if( image_yz )
     image_yz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_yz));
+  Gtk::Image* image_xyz(NULL);
+  m_refBuilder->get_widget("image_xyz",image_xyz);
+  if( image_xyz )
+    image_xyz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_xyz));
   //GET_WIDGET(menu_osc_vars);
   GET_WIDGET(win_warnings);
   GET_WIDGET(text_warnings);
@@ -91,13 +100,13 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   //Create actions for menus and toolbars:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain = Gio::SimpleActionGroup::create();
   refActionGroupMain->add_action("scene_new",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_new));
-    refActionGroupMain->add_action("scene_open",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open));
-    refActionGroupMain->add_action("scene_open_example",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open_example));
-    refActionGroupMain->add_action("scene_reload",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_reload));
-    refActionGroupMain->add_action("export_csv",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsv));
-    refActionGroupMain->add_action("export_csvsounds",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsvsounds));
-    refActionGroupMain->add_action("export_pdf",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportpdf));
-    refActionGroupMain->add_action("export_acmodel",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportacmodel));
+  refActionGroupMain->add_action("scene_open",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open));
+  refActionGroupMain->add_action("scene_open_example",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open_example));
+  refActionGroupMain->add_action("scene_reload",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_reload));
+  refActionGroupMain->add_action("export_csv",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsv));
+  refActionGroupMain->add_action("export_csvsounds",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsvsounds));
+  refActionGroupMain->add_action("export_pdf",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportpdf));
+  refActionGroupMain->add_action("export_acmodel",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportacmodel));
   refActionGroupMain->add_action("scene_close",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_close));
   refActionGroupMain->add_action("quit",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_quit));
   refActionGroupMain->add_action("help_bugreport",sigc::mem_fun(*this, &tascar_window_t::on_menu_help_bugreport));
@@ -105,7 +114,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupMain->add_action("help_about",sigc::mem_fun(*this, &tascar_window_t::on_menu_help_about));
   insert_action_group("main",refActionGroupMain);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupView = Gio::SimpleActionGroup::create();
-  refActionGroupView->add_action("toggle_scene_map",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_toggle_scene_map));
   refActionGroupView->add_action("show_osc_vars",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_osc_vars));
   refActionGroupView->add_action("show_warnings",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_warnings));
   refActionGroupView->add_action("show_legal",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_legal));
@@ -114,12 +122,15 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupView->add_action("viewport_xy",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xy));
   refActionGroupView->add_action("viewport_xz",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xz));
   refActionGroupView->add_action("viewport_yz",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_yz));
+  refActionGroupView->add_action("viewport_xyz",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xyz));
+  refActionGroupView->add_action("viewport_rotz",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_rotz));
+  refActionGroupView->add_action("viewport_rotzcw",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_rotzcw));
+  refActionGroupView->add_action("viewport_setref",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_setref));
   refActionGroupView->add_action("meter_rmspeak",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rmspeak));
   refActionGroupView->add_action("meter_rms",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rms));
   refActionGroupView->add_action("meter_peak",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_peak));
   refActionGroupView->add_action("meter_percentile",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_percentile));
   insert_action_group("view",refActionGroupView);
-  scene_map_window->insert_action_group("view",refActionGroupView);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupTransport = Gio::SimpleActionGroup::create();
   refActionGroupTransport->add_action("play",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_play));
   refActionGroupTransport->add_action("stop",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_stop));
@@ -128,7 +139,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupTransport->add_action("previous",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_previous));
   refActionGroupTransport->add_action("next",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_next));
   insert_action_group("transport",refActionGroupTransport);
-  scene_map_window->insert_action_group("transport",refActionGroupTransport);
 }
 
 bool tascar_window_t::on_timeout()
@@ -144,6 +154,8 @@ bool tascar_window_t::on_timeout()
       }
       if( source_panel )
         source_panel->invalidate_win();
+      if( active_source_ctl )
+        active_source_ctl->invalidate_win();
       pthread_mutex_unlock( &mtx_draw );
     }
   }
@@ -173,6 +185,8 @@ bool tascar_window_t::on_timeout_statusbar()
     if( session && session->is_running() ){
       if( source_panel )
         source_panel->update();
+      if( active_source_ctl )
+        active_source_ctl->update();
     }
     pthread_mutex_unlock( &mtx_draw );
   }
@@ -198,6 +212,9 @@ tascar_window_t::~tascar_window_t()
   con_timeout.disconnect();
   con_timeout_blink.disconnect();
   con_timeout_statusbar.disconnect();
+  active_mixer->remove();
+  if( active_source_ctl )
+    delete active_source_ctl;
   pthread_mutex_trylock( &mtx_draw );
   pthread_mutex_unlock( &mtx_draw );
   pthread_mutex_destroy( &mtx_draw );
@@ -216,10 +233,10 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           cr->clip();
           cr->translate(0.5*width, 0.5*height);
           double wscale(0.5*std::max(height,width));
-          double markersize(0.02);
+          double markersize(5.0/wscale);
           cr->scale( wscale, wscale );
           cr->set_line_width( 0.3*markersize );
-          cr->set_font_size( 2*markersize );
+          cr->set_font_size( 3*markersize );
           cr->save();
           cr->set_source_rgb( 1, 1, 1 );
           cr->paint();
@@ -227,29 +244,55 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           if( session )
             draw.set_time(session->tp_get_time());
           timeline->set_value(draw.get_time());
+          draw.set_markersize(markersize);
           draw.draw(cr);
-          int mp_x(0);
-          int mp_y(0);
-          scene_map->get_pointer(mp_x,mp_y);
-          if( (mp_x > 0) && (mp_x < width ) && (mp_y > 0) && (mp_y < height) ){
-            pos_t mp(mp_x,mp_y,0);
-            cr->device_to_user(mp.x,mp.y);
-            mp.y *= -1.0;
-            mp = draw.view.inverse(mp);
-            scene_map_pointer = mp;
-          }
-          char cmp[1024];
-          if( draw.view.get_scale() > 5 ){
-            sprintf(cmp,"x: %1.1f  y: %1.1f  z: %1.1f    zoom: %1.3g",
-                    scene_map_pointer.x,scene_map_pointer.y,scene_map_pointer.z,
-                    draw.view.get_scale());
-          }else{
-            sprintf(cmp,"x: %1.2f  y: %1.2f  z: %1.2f    zoom: %1.3g",
-                    scene_map_pointer.x,scene_map_pointer.y,scene_map_pointer.z,
-                    draw.view.get_scale());
-          }
-          statusbar_scene_map->remove_all_messages();
-          statusbar_scene_map->push(cmp);
+          // calculate left bottom corner in TASCAR coordinate system:
+          TASCAR::pos_t p_o(-0.4*width,-0.4*height,0);
+          p_o /= wscale;
+          p_o = draw.view.inverse(p_o);
+          TASCAR::pos_t p_x(0.1*draw.view.scale,0,0);
+          TASCAR::pos_t p_y(0,0.1*draw.view.scale,0);
+          TASCAR::pos_t p_z(0,0,0.1*draw.view.scale);
+          p_x += p_o;
+          p_y += p_o;
+          p_z += p_o;
+          p_o = draw.view(p_o);
+          p_x = draw.view(p_x);
+          p_y = draw.view(p_y);
+          p_z = draw.view(p_z);
+          cr->set_source_rgb(1,0,0);
+          draw.draw_edge(cr,p_o,p_x);
+          cr->stroke();
+          cr->set_source_rgb(0,1,0);
+          draw.draw_edge(cr,p_o,p_y);
+          cr->stroke();
+          cr->set_source_rgb(0,0,1);
+          draw.draw_edge(cr,p_o,p_z);
+          cr->stroke();
+          p_x = TASCAR::pos_t(10.0*draw.view.scale,0,0);
+          p_y = TASCAR::pos_t(0,10.0*draw.view.scale,0);
+          p_z = TASCAR::pos_t(0,0,10.0*draw.view.scale);
+          TASCAR::pos_t p_x1(p_x);
+          TASCAR::pos_t p_y1(p_y);
+          TASCAR::pos_t p_z1(p_z);
+          p_x1*=-1.0;
+          p_y1*=-1.0;
+          p_z1*=-1.0;
+          p_x = draw.view(p_x);
+          p_y = draw.view(p_y);
+          p_z = draw.view(p_z);
+          p_x1 = draw.view(p_x1);
+          p_y1 = draw.view(p_y1);
+          p_z1 = draw.view(p_z1);
+          cr->set_source_rgba(1,0,0,0.17);
+          draw.draw_edge(cr,p_x1,p_x);
+          cr->stroke();
+          cr->set_source_rgba(0,1,0,0.17);
+          draw.draw_edge(cr,p_y1,p_y);
+          cr->stroke();
+          cr->set_source_rgba(0,0,1,0.17);
+          draw.draw_edge(cr,p_z1,p_z);
+          cr->stroke();
           pthread_mutex_unlock( &mtx_draw );
         }
       }
@@ -271,6 +314,37 @@ void tascar_window_t::load(const std::string& fname)
   reset_gui();
 }
 
+void tascar_window_t::on_active_track_changed()
+{
+  if( session && (session->scenes.size() > selected_scene) ){
+    if( active_track->get_active() ){
+      if( active_object )
+        session->scenes[selected_scene]->guitrackobject = active_object;
+    }else{
+      session->scenes[selected_scene]->guitrackobject = NULL;
+    }
+  }
+}
+
+void tascar_window_t::on_active_selector_changed()
+{
+  if( session && (session->scenes.size() > selected_scene) ){
+    // do something.
+    std::string sc(active_selector->get_active_text());
+    if( sc == "(none)" )
+      active_object = NULL;
+    else{
+      std::vector<TASCAR::Scene::object_t*> match(session->scenes[selected_scene]->find_object(sc));
+      if( match.size() )
+        active_object = match[0];
+      else
+        active_object = NULL;
+    }
+    update_selection_info();
+  }
+  draw.select_object( active_object );
+}  
+
 void tascar_window_t::on_scene_selector_changed()
 {
   if( session ){
@@ -285,7 +359,9 @@ void tascar_window_t::on_scene_selector_changed()
     draw.set_scene((session->scenes[selected_scene]));
     source_panel->set_scene((session->scenes[selected_scene]));
     draw.view.set_scale(session->scenes[selected_scene]->guiscale);
+    // fill object list:
     update_levelmeter_settings();
+    update_object_list();
   }else{
     draw.set_scene(NULL);
     source_panel->set_scene(NULL);
@@ -316,11 +392,65 @@ void tascar_window_t::on_menu_edit_inputs()
   //}
 }
 
+void tascar_window_t::update_selection_info()
+{
+  active_mixer->remove();
+  if( active_source_ctl )
+    delete active_source_ctl;
+  active_source_ctl = NULL;
+  if( session && active_object ){
+    active_type_label->set_text(active_object->get_type());
+    active_track->set_active(session->scenes[selected_scene]->guitrackobject==active_object);
+    char ctmp[1024];
+    xmlpp::Element* e(active_object->TASCAR::dynobject_t::e);
+    sprintf(ctmp,"Line %d:",e->get_line());
+    active_label_sourceline->set_text(ctmp);
+    xmlpp::Document doc;
+    doc.create_root_node_by_import(e);
+    std::string disp(doc.write_to_string_formatted());
+    // remove first line:
+    size_t p(disp.find(10));
+    if( p < disp.npos )
+      ++p;
+    disp.erase(disp.begin(),disp.begin()+p);
+    active_source_display->get_buffer()->set_text(disp);
+    active_source_ctl = new source_ctl_t(session->scenes[selected_scene],active_object);
+    active_mixer->add(*active_source_ctl);
+    active_mixer->show_all();
+    active_source_ctl->set_levelmeter_mode(source_panel->lmode);
+    active_source_ctl->set_levelmeter_range(session->levelmeter_min,session->levelmeter_range);
+  }else{
+    active_type_label->set_text("");
+    active_track->set_active(false);
+    active_label_sourceline->set_text("");
+    active_source_display->get_buffer()->set_text("");
+  }
+}
+
+void tascar_window_t::update_object_list()
+{
+  active_selector->remove_all();
+  active_selector->append("(none)");
+  active_selector->set_active(0);
+  active_object = NULL;
+  draw.select_object(NULL);
+  if( session && (session->scenes.size() > selected_scene) ){
+    for( std::vector<TASCAR::Scene::object_t*>::const_iterator it=session->scenes[selected_scene]->all_objects.begin();
+         it!=session->scenes[selected_scene]->all_objects.end(); ++it)
+      active_selector->append((*it)->get_name());
+  }
+  update_selection_info();
+}
+
 void tascar_window_t::update_levelmeter_settings()
 {
   if( session  && source_panel ){
     source_panel->set_levelmeter_mode(session->levelmeter_mode);
     source_panel->set_levelmeter_range(session->levelmeter_min,session->levelmeter_range);
+    if( active_source_ctl ){
+      active_source_ctl->set_levelmeter_mode(source_panel->lmode);
+      active_source_ctl->set_levelmeter_range(session->levelmeter_min,session->levelmeter_range);
+    }
   }
 }
 
@@ -328,14 +458,11 @@ void tascar_window_t::reset_gui()
 {
   timeline->clear_marks();
   scene_selector->remove_all();
-  rangeselector.remove_all();
-  rangeselector.append("- scene -");
-  rangeselector.set_active_text("- scene -");
   scene_selector->set_active(0);
   selected_range = -1;
   if( session ){
     int32_t mainwin_width(1600);
-    int32_t mainwin_height(480);
+    int32_t mainwin_height(900);
     if( session->scenes.empty() ){
       mainwin_width = 200;
       mainwin_height = 60;
@@ -356,7 +483,6 @@ void tascar_window_t::reset_gui()
     for(unsigned int k=0;k<session->ranges.size();k++){
       timeline->add_mark(session->ranges[k]->start,Gtk::POS_BOTTOM,"");
       timeline->add_mark(session->ranges[k]->end,Gtk::POS_BOTTOM,"");
-      rangeselector.append(session->ranges[k]->name);
     }
     for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=session->scenes.begin();it!=session->scenes.end();++it)
       scene_selector->append((*it)->name);
@@ -367,33 +493,11 @@ void tascar_window_t::reset_gui()
   }
   if( session ){
     set_title("tascar - " + session->name + " [" + basename(tascar_filename.c_str()) + "]");
-    scene_map_window->set_title("tascar scene map - " + session->name);
-    if( session->scenes.empty() )
-      scene_map_window->hide();
-    else{
-      int32_t mapwin_x(0);
-      int32_t mapwin_y(0);
-      int32_t mapwin_width(300);
-      int32_t mapwin_height(300);
-      scene_map_window->get_size(mapwin_width,mapwin_height);
-      scene_map_window->get_position(mapwin_x,mapwin_y);
-      xmlpp::Element* mapwin(session->tsc_reader_t::find_or_add_child("mapwindow"));
-      get_attribute_value( mapwin, "w", mapwin_width );
-      get_attribute_value( mapwin, "h", mapwin_height );
-      get_attribute_value( mapwin, "x", mapwin_x );
-      get_attribute_value( mapwin, "y", mapwin_y );
-      scene_map_window->resize( mapwin_width, mapwin_height );
-      scene_map_window->move( mapwin_x, mapwin_y );
-      scene_map_window->resize( mapwin_width, mapwin_height );
-      scene_map_window->move( mapwin_x, mapwin_y );
-      scene_map_window->show();
-    }
   }else{
     set_title("tascar");
-    scene_map_window->set_title("tascar scene map");
-    scene_map_window->hide();
     resize( 200, 60 );
   }
+  update_object_list();
   if( session && (session->scenes.size() > selected_scene) ){
     draw.set_scene((session->scenes[selected_scene]));
     source_panel->set_scene((session->scenes[selected_scene]));
@@ -737,6 +841,30 @@ void tascar_window_t::on_menu_view_viewport_xy()
   draw.set_viewport( scene_draw_t::xy );
 }
 
+void tascar_window_t::on_menu_view_viewport_rotz()
+{
+  draw.view.euler.z += M_PI/24.0;
+}
+
+void tascar_window_t::on_menu_view_viewport_rotzcw()
+{
+  draw.view.euler.z -= M_PI/24.0;
+}
+
+void tascar_window_t::on_menu_view_viewport_setref()
+{
+  if( session && (session->scenes.size() > selected_scene) )
+      session->scenes[selected_scene]->guitrackobject = NULL;
+  draw.select_object(NULL);
+  draw.view.ref = TASCAR::pos_t();
+  active_track->set_active(false);
+}
+
+void tascar_window_t::on_menu_view_viewport_xyz()
+{
+  draw.set_viewport( scene_draw_t::xyz );
+}
+
 void tascar_window_t::on_menu_view_viewport_xz()
 {
   draw.set_viewport( scene_draw_t::xz );
@@ -745,14 +873,6 @@ void tascar_window_t::on_menu_view_viewport_xz()
 void tascar_window_t::on_menu_view_viewport_yz()
 {
   draw.set_viewport( scene_draw_t::yz );
-}
-
-void tascar_window_t::on_menu_view_toggle_scene_map()
-{
-  if( session && menu_scene_map->get_active() )
-    scene_map_window->show();
-  else
-    scene_map_window->hide();
 }
 
 void tascar_window_t::on_menu_view_show_osc_vars()
@@ -811,6 +931,42 @@ void tascar_window_t::on_menu_view_zoom_out()
   }
 }
 
+bool tascar_window_t::on_map_clicked(GdkEventButton* e)
+{
+  if( session && (session->scenes.size() > selected_scene) ){
+    if( e->type == GDK_BUTTON_PRESS ){
+      Gtk::Allocation allocation = scene_map->get_allocation();
+      const int width = allocation.get_width();
+      const int height = allocation.get_height();
+      TASCAR::pos_t mousepos(e->x-0.5*width,-(e->y-0.5*height),0);
+      double wscale(0.5*std::max(height,width));
+      mousepos*=1.0/wscale;
+      if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
+        double dmin(DBL_MAX);
+        TASCAR::Scene::object_t* obj_nearest(NULL);
+        for( std::vector<TASCAR::Scene::object_t*>::iterator it=session->scenes[selected_scene]->all_objects.begin();
+             it!=session->scenes[selected_scene]->all_objects.end();++it){
+          TASCAR::pos_t opos(draw.view((*it)->c6dof.position));
+          opos.z = 0;
+          double d(distance(mousepos,opos));
+          if( (d < dmin) && (d*wscale < 30) ){
+            dmin = d;
+            obj_nearest = *it;
+          }
+        }
+        if( obj_nearest ){
+          //active selection
+          active_object = obj_nearest;
+          active_selector->set_active_text(active_object->get_name());
+          update_selection_info();
+          draw.select_object( active_object );
+        }
+        pthread_mutex_unlock( &mtx_draw );
+      }
+    }
+  }
+  return false;
+}
 
 bool tascar_window_t::on_map_scroll(GdkEventScroll * e)
 {

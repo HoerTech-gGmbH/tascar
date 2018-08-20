@@ -3,8 +3,10 @@
   <scene>
     <source>
       <sound>
-	<plugin type="sine" f="440" a="-20"/>
-	<plugin type="lipsync"/>
+	<plugins>
+	  <plugin type="sine" f="440" a="-20"/>
+	  <plugin type="lipsync"/>
+	</plugins>
       </sound>
     </source>
     <receiver type="omni"/>

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <session duration="36000" srv_port="9877" loop="false" levelmeter_tc="7" levelmeter_weight="Z" levelmeter_min="35" levelmeter_range="40" license="CC BY-SA 3.0" attribution="Giso Grimm">
-  <mainwindow w="1000" h="500" x="0" y="0"/>
-  <mapwindow w="400" h="500" x="1000" y="0"/>
   <scene name="hos" guiscale="14.1421356237" mirrororder="1">
     <source name="hille" color="#ff0000">
       <orientation>0 0 0 0</orientation>

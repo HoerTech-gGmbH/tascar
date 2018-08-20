@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <session name="tascar" duration="88" loop="false" srv_port="9996" license="CC BY SA 2.0" attribution="Giso Grimm">
   <!-- main scene setup -->
   <scene name="cafeteria" mirrororder="2" guiscale="20" guicenter="12.3 -16.241478 1.1">
@@ -6,36 +6,44 @@
       <position>0 13.2424955 -15.6749363 0</position>
       <orientation>0 -90 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="0" levelmode="calib" level="90"/>-->
-	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
-	<plugin type="lookatme" tau="1" paths="/christopher /maartje /timo" url="osc.udp://sura:9999/"/>
+        <plugins>
+          <!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="0" levelmode="calib" level="90"/>-->
+          <plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
+          <plugin type="lookatme" tau="1" paths="/christopher /maartje /timo" url="osc.udp://sura:9999/"/>
+        </plugins>
       </sound>
     </source>
     <source name="christopher" mute="false" solo="false" color="#ff0001" start="0" end="0">
       <position>0 14.3827801 -16.081316 0</position>
       <orientation>0 180 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="1" levelmode="calib" level="90"/>-->
-	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
-	<plugin type="lookatme" tau="1" paths="/joanna /maartje /timo" url="osc.udp://sura:9999/"/>
+        <plugins>
+          <!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="1" levelmode="calib" level="90"/>-->
+          <plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
+          <plugin type="lookatme" tau="1" paths="/joanna /maartje /timo" url="osc.udp://sura:9999/"/>
+        </plugins>
       </sound>
     </source>
     <source name="maartje" mute="false" solo="false" color="#43ff00" start="0" end="0">
       <position>0 13.9055634 -16.5331497 0</position>
       <orientation>0 120 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="2" levelmode="calib" level="90"/>-->
-	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
-	<plugin type="lookatme" tau="1" paths="/joanna /christopher /timo" url="osc.udp://sura:9999/"/>
+        <plugins>
+          <!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="2" levelmode="calib" level="90"/>-->
+          <plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
+          <plugin type="lookatme" tau="1" paths="/joanna /christopher /timo" url="osc.udp://sura:9999/"/>
+        </plugins>
       </sound>
     </source>
     <source name="timo" mute="false" solo="false" color="#fff300" start="0" end="0">
       <position>0 13.3725033 -16.9951344 0</position>
       <orientation>0 120 0 0</orientation>
       <sound maxdist="60" name="1" z="1.1" x="-0.15">
-	<!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="3" levelmode="calib" level="90"/>-->
-	<plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
-	<plugin type="lookatme" tau="1" paths="/joanna /christopher /maartje" url="osc.udp://sura:9999/"/>
+        <plugins>
+          <!--<sndfile name="${HOME}/Projects/tikadasa/final/Story1.flac" loop="1" channel="3" levelmode="calib" level="90"/>-->
+          <plugin type="lipsync_paper" url="osc.udp://sura:9999/"/>
+          <plugin type="lookatme" tau="1" paths="/joanna /christopher /maartje" url="osc.udp://sura:9999/"/>
+        </plugins>
       </sound>
     </source>
     <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" rotation="-11.25" diffup="true">

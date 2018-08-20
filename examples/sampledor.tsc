@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <session duration="60" loop="false" license="CC BY SA 2.0" attribution="Giso Grimm">
   <scene guiscale="20" guicenter="5 0 0">
     <source name="steps" mute="false" solo="false" color="#000000" start="0" end="0" sampledorientation="2">
@@ -9,7 +9,9 @@
       <orientation>0 0 0 0
 10 360 0 0</orientation>
       <sound x="-2">
-	<sndfile name="footsteps.wav" loop="0" level="70"/>
+        <plugins>
+          <sndfile name="footsteps.wav" loop="0" level="70"/>
+        </plugins>
       </sound>
     </source>
     <source name="nsteps" mute="false" solo="false" color="#0000FF" start="0" end="0">
@@ -20,7 +22,9 @@
       <orientation>0 0 0 0
 10 360 0 0</orientation>
       <sound d="2">
-	<sndfile name="footsteps.wav" loop="0" level="70"/>
+        <plugins>
+          <sndfile name="footsteps.wav" loop="0" level="70"/>
+        </plugins>
       </sound>
     </source>
     <face name="wall" mute="false" solo="false" color="#771010" start="0" end="0" width="20" height="20" reflectivity="1" damping="0">

@@ -10,7 +10,9 @@
       <position>0 1 -20 0
       20 1 20 0</position>
       <sound>
-	<sndfile name="tc1.wav" level="65" loop="0"/>
+	<plugins>
+	  <sndfile name="tc1.wav" level="65" loop="0"/>
+	</plugins>
       </sound>
     </source>
     <receiver type="ortf">
