@@ -30,8 +30,6 @@ protected:
   void on_menu_file_close();
   void on_menu_file_quit();
 
-  void on_menu_edit_inputs();
-
   void on_menu_view_zoom_in();
   void on_menu_view_zoom_out();
   void on_menu_view_show_osc_vars();

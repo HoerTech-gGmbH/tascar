@@ -1,6 +1,6 @@
 #ifndef TASCARPLUGIN_H
 
-#include "../build/tascarver.h"
+#include "tascarver.h"
 #include <string.h>
 
 #define TASCAR_PLUGIN( baseclass, cfgclass, pluginclass ) \

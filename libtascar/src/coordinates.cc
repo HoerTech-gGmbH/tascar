@@ -1,28 +1,27 @@
 /**
-   \file coordinates.cc
-   \brief "coordinates" provide classes for coordinate handling
-   \ingroup libtascar
-   \author Giso Grimm
-   \date 2012
-
-   \section license License (LGPL)
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public License
-   as published by the Free Software Foundation; version 2 of the
-   License.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
-
-*/
+ * @file coordinates.cc
+ * @brief "coordinates" provide classes for coordinate handling
+ * @ingroup libtascar
+ * @author Giso Grimm
+ * @date 2012
+ *
+ * @section license License (GPL)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 #include "coordinates.h"
 #include <sstream>
 #include <vector>
@@ -31,15 +30,6 @@
 #include <fstream>
 #include "errorhandling.h"
 #include "xmlconfig.h"
-
-static uint32_t cnt_interp = 0;
-
-uint32_t get_cnt_interp()
-{
-  uint32_t tmp(cnt_interp);
-  cnt_interp = 0;
-  return tmp;
-}
 
 using namespace TASCAR;
 
@@ -184,7 +174,6 @@ void track_t::shift_time(double dt)
 
 pos_t track_t::interp(double x) const
 {
-  cnt_interp++;
   if( begin() == end() )
     return pos_t();
   if( (loop > 0) && (x >= loop) )
@@ -308,9 +297,6 @@ pos_t TASCAR::xml_get_trkpt( xmlpp::Element* pt, time_t& tme )
   return p;
 }
 
-/**
-   \brief load a track from a gpx file
-*/
 void track_t::load_from_gpx( const std::string& fname )
 {
   double ttinc(0);
@@ -342,9 +328,6 @@ void track_t::load_from_gpx( const std::string& fname )
   prepare();
 }
 
-/**
-   \brief load a track from a gpx file
-*/
 void track_t::load_from_csv( const std::string& fname )
 {
   std::string lfname(TASCAR::env_expand(fname));
@@ -896,17 +879,12 @@ ngon_t& ngon_t::operator+=(double p)
   return (*this += n);
 }
 
-/** \brief Default constructor, initialize to 1x2m rectangle
- */
 ngon_t::ngon_t()
   : N(4)
 {
   nonrt_set_rect(1,2);
 }
 
-/**
-   \brief Create a rectangle
- */
 void ngon_t::nonrt_set_rect(double width, double height)
 {
   std::vector<pos_t> nverts;
@@ -917,9 +895,6 @@ void ngon_t::nonrt_set_rect(double width, double height)
   nonrt_set(nverts);
 }
 
-/**
-   \brief Create a polygon from a list of vertices
- */
 void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
 {
   if( verts.size() < 3 )
@@ -951,9 +926,6 @@ void ngon_t::apply_rot_loc(const pos_t& p0,const zyx_euler_t& o)
   update();
 }
 
-/**
-   \brief Transform local to global coordinates and update normals.
- */
 void ngon_t::update()
 {
   // firtst calculate vertices in global coordinate system:
@@ -986,9 +958,6 @@ void ngon_t::update()
   }
 }
 
-/**
-   \brief Return nearest point on infinite plane 
-*/
 pos_t ngon_t::nearest_on_plane( const pos_t& p0 ) const
 {
   double plane_dist = dot_prod(normal,verts_[0]-p0);
@@ -1017,9 +986,6 @@ pos_t edge_nearest(const pos_t& v,const pos_t& d,const pos_t& p0)
   return p0d;
 }
 
-/**
-   \brief Return nearest point on face boundary
-*/
 pos_t ngon_t::nearest_on_edge(const pos_t& p0,uint32_t* pk0) const
 {
   pos_t ne(edge_nearest(verts_[0],edges_[0],p0));
@@ -1039,9 +1005,6 @@ pos_t ngon_t::nearest_on_edge(const pos_t& p0,uint32_t* pk0) const
   return ne;
 }
 
-/**
-   \brief Return nearest point on polygon
- */
 pos_t ngon_t::nearest( const pos_t& p0, bool* is_outside_, pos_t* on_edge_ ) const
 {
   uint32_t k0(0);
@@ -1075,16 +1038,6 @@ bool ngon_t::is_behind(const pos_t& p0) const
   return (dot_prod( p0-p_cut, normal ) < 0);
 }
 
-/**
-   \brief Return intersection point of connection line p0-p1 with infinite plane.
-
-   \param p0 Starting point of intersecting edge
-   \param p1 End point of intersecting edge
-   \param p_is Intersection point
-   \param w Optional pointer on intersecting weight, or NULL. w=0 means that the intersection is at p0, w=1 means that intersection is at p1.
-
-   \return True if the line p0-p1 is intersecting with the plane, and false otherwise.
- */
 bool ngon_t::intersection( const pos_t& p0, const pos_t& p1, pos_t& p_is, double* w) const
 {
   pos_t np(nearest_on_plane(p0));

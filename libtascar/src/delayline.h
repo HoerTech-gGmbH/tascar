@@ -1,35 +1,35 @@
 /**
-   \file delayline.h
-   \ingroup libtascar
-   \brief "delayline" provides a simple delayline with variable delay
-   \author Giso Grimm
-   \date 2012
-
-   \section license License (LGPL)
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public License
-   as published by the Free Software Foundation; version 2 of the
-   License.
-   
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
-
-*/
+ * @file delayline.h
+ * @ingroup libtascar
+ * @brief Variable delay line
+ * @author Giso Grimm
+ * @date 2012
+ */
+/* License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 
 #ifndef DELAYLINE_H
 #define DELAYLINE_H
 
 #include "audiochunks.h"
 #include <math.h>
-//#include "defs.h"
 
 namespace TASCAR {
 
@@ -50,23 +50,27 @@ namespace TASCAR {
     float *data;
   };
 
-/**
-   \brief Delay line with variable length (no subsampling)
-*/
+  /**
+     \brief Delay line with variable length (no subsampling)
+  */
   class varidelay_t {
   public:
-/**
-   \param maxdelay Maximum delay in samples
-   \param fs Sampling rate
-   \param c Speed of sound
-*/
+    /**
+       \brief Primary constructor
+       \param maxdelay Maximum delay in samples
+       \param fs Sampling rate
+       \param c Speed of sound
+       \param order Sinc interpolation order
+       \param oversampling Oversampling factor
+    */
     varidelay_t(uint32_t maxdelay, double fs, double c, uint32_t order, uint32_t oversampling);
+    /// Copy constructor
     varidelay_t(const varidelay_t& src);
     ~varidelay_t();
-/**
-   \brief Add a new input value to delay line
-   \param x Input value
-*/
+    /**
+       \brief Add a new input value to delay line
+       \param x Input value
+    */
     inline void push(float x){
       pos++;
       if( pos>=dmax)
@@ -74,10 +78,10 @@ namespace TASCAR {
       dline[pos] = x;
     };
  
-/**
-   \brief Return value based on spatial distance between input and output
-   \param dist Distance
-*/
+    /**
+       \brief Return value based on spatial distance between input and output
+       \param dist Distance
+    */
     inline float get_dist(double dist){
       if( sinc.O )
         return get_sinc(dist2sample*dist);
@@ -96,15 +100,10 @@ namespace TASCAR {
     };
 
     void add_chunk(const TASCAR::wave_t& x);
-/**
-   \brief Return value delayed by the given delay in seconds
-   \param dist delay
-*/
-//float get_delayed(double d);
-/**
-   \brief Return value of a specific delay
-   \param delay delay in samples
-*/
+    /**
+       \brief Return value of a specific delay
+       \param delay delay in samples
+    */
     inline float get(uint32_t delay) const {
       delay = std::min(delay,dmax);
       uint32_t npos = pos+dmax-delay;
@@ -112,10 +111,10 @@ namespace TASCAR {
         npos -= dmax;
       return dline[npos];
     };
-/**
-   \brief Return value of a specific delay
-   \param delay delay in samples
-*/
+    /**
+       \brief Return value of a specific delay
+       \param delay delay in samples
+    */
     inline float get_sinc(float delay) const{
       int32_t integerdelay(roundf(delay));
       float subsampledelay(delay-integerdelay);
@@ -145,8 +144,8 @@ namespace TASCAR {
         --pos;
       return tmp;
     };
-    private:
-      uint32_t pos;
+  private:
+    uint32_t pos;
   };
 
 }

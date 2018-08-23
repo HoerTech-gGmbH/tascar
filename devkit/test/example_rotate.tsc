@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene>
+    <receiver type="ortf"/>
+    <source>
+      <sound>
+        <plugins>
+          <!-- add a sinusoid to show doppler shift -->
+          <sine a="65"/>
+	  <!-- to test the noise audio plugin, uncomment next element -->
+	  <!--<noise a="65"/>-->
+        </plugins>
+      </sound>
+    </source>
+  </scene>
+  <modules>
+    <rotate actor="/*/in"/>
+  </modules>
+</session>

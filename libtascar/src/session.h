@@ -3,7 +3,6 @@
 
 #include "jackrender.h"
 #include "session_reader.h"
-
 #include <set>
 
 namespace TASCAR {
@@ -22,8 +21,14 @@ namespace TASCAR {
     module_base_t( const module_cfg_t& cfg );
     virtual ~module_base_t();
     /**
-       \brief Method to update geometry etc on each processing cycle in the session processing thread (jack).
-       \param t Transport time.
+       \brief Update geometry etc on each processing cycle in the session processing thread.
+       \callgraph
+       \callergraph
+
+       This method will be called after scene geometry update and
+       before acoustic model update and audio rendering.
+
+       \param frame Transport time (in samples).
        \param running Transport running (true) or stopped (false).
      */
     virtual void update(uint32_t frame,bool running);
@@ -64,8 +69,8 @@ namespace TASCAR {
   class named_object_t {
   public:
     named_object_t(TASCAR::Scene::object_t* o,const std::string& n) : obj(o),name(n){};
-    TASCAR::Scene::object_t* obj;
-    std::string name;
+    TASCAR::Scene::object_t* obj; //< pointer to object
+    std::string name; //< name of object
   };
 
   class session_oscvars_t : public TASCAR::xml_element_t {
@@ -118,7 +123,6 @@ namespace TASCAR {
     std::vector<TASCAR::module_t*> modules;
     std::vector<std::string> get_render_output_ports() const;
     virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
-    //virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
     void unload_modules();
     bool lock_vars();
     void unlock_vars();
@@ -134,13 +138,17 @@ namespace TASCAR {
     double period_time;
     bool started_;
     pthread_mutex_t mtx;
-    //uint32_t pcnt;
   };
 
+  /// Control 'actors' in a scene
   class actor_module_t : public module_base_t {
   public:
     actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty=false );
     virtual ~actor_module_t();
+    /**@brief Set delta location of all actors
+       @param l new delta location
+       @param b_local Apply in local coordinates (true) or in global coordinates (false)
+     */
     void set_location(const TASCAR::pos_t& l, bool b_local = false );
     void set_orientation(const TASCAR::zyx_euler_t& o );
     void set_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
@@ -148,8 +156,8 @@ namespace TASCAR {
     void add_orientation(const TASCAR::zyx_euler_t& o );
     void add_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
   protected:
-    std::string actor;
-    std::vector<TASCAR::named_object_t> obj;
+    std::string actor; //< Actor name pattern
+    std::vector<TASCAR::named_object_t> obj; //< List of matching actor objects
   };
 
 }

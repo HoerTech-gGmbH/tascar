@@ -1,3 +1,30 @@
+/**
+ * @file   filterclass.h
+ * @author Giso Grimm
+ * 
+ * @brief  Definition of filter classes
+ * 
+ */
+/* License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/ or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
+
 #ifndef FILTERCLASS_H
 #define FILTERCLASS_H
 
@@ -10,7 +37,6 @@ namespace TASCAR {
   public:
     /** 
         \brief Constructor 
-        \param ch Number of channels
         \param lena Number of recursive coefficients
         \param lenb Number of non-recursive coefficients
     */
@@ -18,12 +44,12 @@ namespace TASCAR {
              unsigned int lenb); // length B
     /** 
         \brief Constructor with initialization of coefficients.
-        \param ch Number of channels.
         \param vA Recursive coefficients.
         \param vB Non-recursive coefficients.
     */
     filter_t(const std::vector<double>& vA, const std::vector<double>& vB);
 
+    /// copy constructor
     filter_t(const TASCAR::filter_t& src);
 
     ~filter_t();
@@ -37,9 +63,6 @@ namespace TASCAR {
         \param src Input signal.
         \param dframes Number of frames to be filtered.
         \param frame_dist Index distance between frames of one channel
-        \param channel_dist Index distance between audio channels
-        \param channel_begin Number of first channel to be processed
-        \param channel_end Number of last channel to be processed
     */
     void filter(float* dest,
                 const float* src,
@@ -48,7 +71,7 @@ namespace TASCAR {
     /**
        \brief Filter one sample 
        \param x Input value
-       \param ch Channel number to use in filter state
+       \return filtered value
     */
     double filter(float x);
     /** \brief Return length of recursive coefficients */

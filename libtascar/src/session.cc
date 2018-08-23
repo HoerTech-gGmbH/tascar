@@ -9,6 +9,123 @@
 #include <fnmatch.h>
 #include <locale.h>
 
+/**
+   \defgroup moddev Module development
+
+   The functionality of TASCAR can be extended using modules. Five
+   types of modules can be used in TASCAR:
+   
+   \li general purpose modules (derived from TASCAR::module_base_t)
+   \li actor modules (derived from TASCAR::actor_module_t)
+   \li audio processing plugins (derived from TASCAR::audioplugin_base_t)
+   \li source modules (derived from TASCAR::sourcemod_base_t)
+   \li receiver modules (derived from TASCAR::receivermod_base_t)
+
+   General purpose modules and actor modules are called in
+   TASCAR::session_t::process(), which is called first, before the
+   geometry update and acoustic modelling of the scenes.
+
+   Receiver modules, source modules and audio processing plugins are
+   called at their appropriate place during acoustic modelling, i.e,
+   after the geometry update in TASCAR::render_core_t::process().
+
+   To develop your own modules, copy the folder
+   /usr/share/tascar/examples/plugins to a destination of your choice,
+   e.g.:
+
+   \verbatim
+   cp -r /usr/share/tascar/examples/plugins ./
+   \endverbatim
+
+   Change to the new plugins directory and modify the Makefile and the
+   appropriate source files to your needs. For compilation, type:
+
+   \verbatim
+   make
+   \endverbatim
+
+   The plugins can be tested by starting tascar with:
+   \verbatim
+   LD_LIBRARY_PATH=./build tascar
+   \endverbatim
+
+   To install the plugins, type:
+   \verbatim
+   sudo make install
+   \endverbatim
+   
+
+   \section actormod Actor modules
+
+   An example of an actor module is provided in \ref tascar_rotate.cc .
+
+   Actor modules can interact with the position of objects. The
+   objects can be selected with the \c actor attribute (see the <a
+   href="file:///usr/share/doc/tascar/manual.pdf#section.6">user
+   manual, section 6</a> for details).
+
+   The core functionality is implemented in the update() method. Here
+   you may access the vector of objects actor objects,
+   TASCAR::actor_module_t::obj, or use any of the functions
+   TASCAR::actor_module_t::set_location(),
+   TASCAR::actor_module_t::set_orientation(),
+   TASCAR::actor_module_t::set_transformation(),
+   TASCAR::actor_module_t::add_location(),
+   TASCAR::actor_module_t::add_orientation(), or
+   TASCAR::actor_module_t::add_transformation() to control the
+   delta-transformation of the objects.
+
+   Variables can be registered for XML access (static) or OSC access
+   (interactive) in the constructor. To register a variable for XML
+   access, use the macro GET_ATTRIBUTE(). OSC variables can be
+   registered with TASCAR::osc_server_t::add_double() and similar
+   member functions of TASCAR::osc_server_t.
+
+   The parameters of the audio signal backend, e.g., sampling rate and
+   fragment size, can be accessed via the public attributes of
+   chunk_cfg_t.
+
+   \section audioplug Audio plugins
+
+   An example of an audio plugin is provided in \ref
+   tascar_ap_noise.cc .
+
+   Audio plugins can be used in sounds or in receivers (see the <a
+   href="file:///usr/share/doc/tascar/manual.pdf#section.7">user
+   manual, section 7</a> for more details). In sounds,
+   they are processed before application of the acoustic model, and in
+   receivers, they are processed after rendering, in the receiver
+   post_proc method.
+
+   \section sourcemod Source modules
+
+   An example of a source module is provided in \ref
+   tascarsource_example.cc .
+
+   Source directivity types are properties of sounds (see the <a
+   href="file:///usr/share/doc/tascar/manual.pdf#subsection.5.3">user
+   manual, subsection 5.3</a> for more details).
+
+   \section receivermod Receiver modules
+
+   An example of a receiver module is provided in \ref
+   tascarreceiver_example.cc .
+
+   For use documentation of receivers, see the <a
+   href="file:///usr/share/doc/tascar/manual.pdf#subsection.5.5">user
+   manual, subsection 5.5</a>.
+
+   \example tascar_rotate.cc
+
+   \example tascar_ap_noise.cc
+
+   \example tascarsource_example.cc
+   
+   \example tascarreceiver_example.cc
+   
+*/
+
+
 using namespace TASCAR;
 
 TASCAR_RESOLVER( module_base_t, const module_cfg_t& )

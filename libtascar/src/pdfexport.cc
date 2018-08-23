@@ -107,6 +107,9 @@ void TASCAR::pdfexport_t::draw(scene_draw_t::viewt_t persp)
   case scene_draw_t::yz :
     sprintf(ctmp,"left ortho");
     break;
+  case scene_draw_t::xyz :
+    sprintf(ctmp,"xyz");
+    break;
   case scene_draw_t::p :
     sprintf(ctmp,"perspective");
     break;

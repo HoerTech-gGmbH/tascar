@@ -13,6 +13,10 @@ namespace TASCAR {
     void prepare( chunk_cfg_t& );
     void release();
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max );
+    /**
+       \callgraph
+       \callergraph
+     */
     void process(uint32_t nframes,
                  const TASCAR::transport_t& tp,
                  const std::vector<float*>& inBuffer,

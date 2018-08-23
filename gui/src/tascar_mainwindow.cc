@@ -156,6 +156,9 @@ bool tascar_window_t::on_timeout()
         source_panel->invalidate_win();
       if( active_source_ctl )
         active_source_ctl->invalidate_win();
+      if( session )
+        draw.set_time(session->tp_get_time());
+      timeline->set_value(draw.get_time());
       pthread_mutex_unlock( &mtx_draw );
     }
   }
@@ -241,9 +244,6 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           cr->set_source_rgb( 1, 1, 1 );
           cr->paint();
           cr->restore();
-          if( session )
-            draw.set_time(session->tp_get_time());
-          timeline->set_value(draw.get_time());
           draw.set_markersize(markersize);
           draw.draw(cr);
           // calculate left bottom corner in TASCAR coordinate system:
@@ -368,29 +368,6 @@ void tascar_window_t::on_scene_selector_changed()
     draw.view.set_scale(20);
   }
 }  
-
-void tascar_window_t::on_menu_edit_inputs()
-{
-  //if( tascar ){
-  //  tascar->lock();
-  //  try{
-  //    Gtk::Dialog dialog("Edit inputs",*this);
-  //    //Gtk::Box* box(dialog.get_content_area());
-  //    //box->add(e_inputs);
-  //    //box->add(e_outputs);
-  //    dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-  //    dialog.add_button(Gtk::Stock::OK, Gtk::RESPONSE_OK);
-  //    dialog.show_all();
-  //    int result = dialog.run();
-  //    DEBUG(result);
-  //    tascar->unlock();
-  //  }
-  //  catch(const std::exception& e){
-  //    tascar->unlock();
-  //    std::cerr << e.what() << std::endl;
-  //  }
-  //}
-}
 
 void tascar_window_t::update_selection_info()
 {

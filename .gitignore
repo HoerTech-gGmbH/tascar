@@ -26,3 +26,6 @@ temp.*
 
 # local sound files:
 birds_oldenburg.wav
+
+# generated PDF files:
+tutorial*.pdf

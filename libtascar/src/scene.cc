@@ -296,22 +296,12 @@ scene_t::~scene_t()
   clean_children();
 }
 
-/**
-   \brief Update geometry of all objects within a scene based on current transport time
-   \param t Transport time
-   \ingroup callgraph
- */
 void scene_t::geometry_update(double t)
 {
   for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->geometry_update( t );
 }
 
-/**
-   \brief Update activity flags based on current transport time
-   \param t Transport time
-   \ingroup callgraph
- */
 void scene_t::process_active(double t)
 {
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)

@@ -1,29 +1,29 @@
 /**
-   \file scene.h
-   \brief "scene" provide classes for scene definition, without rendering functionality
-   
-   \ingroup libtascar
-   \author Giso Grimm
-   \date 2013
-
-   \section license License (LGPL)
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public License
-   as published by the Free Software Foundation; version 2 of the
-   License.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
-
-*/
+ * @file scene.h
+ * @brief Scene definition without rendering functionality
+ * @ingroup libtascar
+ * @author Giso Grimm
+ * @date 2013
+ */
+/* License (GPL)
+ *
+ * Copyright (C) 2014,2015,2016,2017,2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 #ifndef SCENE_H
 #define SCENE_H
 
@@ -130,7 +130,15 @@ namespace TASCAR {
     public:
       face_object_t(xmlpp::Element* xmlsrc);
       virtual ~face_object_t();
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_active(double t,uint32_t anysolo);
       double width;
       double height;
@@ -156,7 +164,15 @@ namespace TASCAR {
     public:
       obstacle_group_t(xmlpp::Element* xmlsrc);
       virtual ~obstacle_group_t();
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_active(double t,uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::obstacle_t*> obstacles;
       double transmission;
@@ -192,7 +208,15 @@ namespace TASCAR {
       src_diffuse_t(xmlpp::Element* e);
       virtual ~src_diffuse_t();
       void prepare( chunk_cfg_t& );
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_active(double t,uint32_t anysolo);
       pos_t size;
       double falloff;
@@ -211,7 +235,15 @@ namespace TASCAR {
       std::string get_name() const { return name; };
       std::string get_fullname() const { return get_parent_name()+"."+get_name(); };
       void set_name(const std::string& n) { name = n; };
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_plugins(const TASCAR::transport_t& tp);
       void apply_gain();
       //void prepare( chunk_cfg_t& );
@@ -235,7 +267,15 @@ namespace TASCAR {
       ~src_object_t();
       void prepare( chunk_cfg_t& );
       void release();
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_active(double t,uint32_t anysolo);
       std::vector<sound_t*> sound;
       std::string next_sound_name() const;
@@ -249,15 +289,35 @@ namespace TASCAR {
       receivermod_object_t(xmlpp::Element* e);
       void prepare( chunk_cfg_t& );
       void release();
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_active(double t,uint32_t anysolo);
+      /**
+         \callgraph
+         \callergraph
+      */
       virtual void postproc(std::vector<wave_t>& output);
     };
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
     public:
       mask_object_t(xmlpp::Element* e);
+      /**
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \callgraph
+         \callergraph
+      */
       void process_active(double t,uint32_t anysolo);
       pos_t xmlsize;
       double xmlfalloff;
@@ -273,7 +333,21 @@ namespace TASCAR {
       std::string description;
       std::string name;
       double c;
+      /**
+         \brief Update geometry of all objects within a scene based on current transport time
+         \param t Transport time
+         \ingroup callgraph
+         \callgraph
+         \callergraph
+      */
       void geometry_update(double t);
+      /**
+         \brief Update activity flags based on current transport time
+         \param t Transport time
+         \ingroup callgraph
+         \callgraph
+         \callergraph
+      */
       void process_active(double t);
       std::vector<sound_t*> sounds;
       std::vector<src_object_t*> object_sources;

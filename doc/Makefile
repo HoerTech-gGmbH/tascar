@@ -1,7 +1,7 @@
 ALLTEX = $(wildcard tutorial*.tex)
 ALLPDF = $(ALLTEX:.tex=.pdf)
 
-all: $(ALLPDF)
+all: $(ALLPDF) doxy
 
 tutorial0.pdf: ODIR=tutorial0_basics
 tutorial1.pdf: ODIR=tutorial1_sensors
@@ -19,4 +19,8 @@ tutorial7.pdf: ODIR=tutorial7_music_light
 	cp $@ ../examples/$(ODIR)
 
 clean:
-	rm -f *.aux *.log *.idx *.out $(ALLPDF) *~
+	rm -Rf *.aux *.log *.idx *.out $(ALLPDF) *~ latex html
+
+doxy:
+	rm -Rf html
+	doxygen doxygen.cfg

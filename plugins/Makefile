@@ -54,7 +54,7 @@ CXXFLAGS += $(GTKDEF) $(LTRDEF)
 CXXFLAGS += -I../libtascar/src -I../libtascar/build
 LDFLAGS += -L../libtascar/build
 
-CXXFLAGS += -L./ -fpic
+CXXFLAGS += -fpic
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`

@@ -76,9 +76,6 @@ acoustic_model_t::~acoustic_model_t()
     delete source_data;
 }
  
-/**
-   \ingroup callgraph
-*/
 uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
 {
   if( src_->active )
@@ -252,9 +249,6 @@ world_t::~world_t()
     delete (*it);
 }
 
-/**
-   \ingroup callgraph
- */
 void world_t::process(const TASCAR::transport_t& tp)
 {
   uint32_t local_active_point(0);
@@ -606,21 +600,6 @@ TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute_bool("active",active);
 }
 
-/**
-   \brief Apply diffraction model 
-
-   \param p_src Source position
-   \param p_rec Receiver position
-   \param audio Audio chunk
-   \param c Speed of sound
-   \param fs Sampling rate
-   \param state Diffraction filter states
-   \param drywet Direct-to-diffracted ratio
-
-   \return Effective source position
-
-   \ingroup callgraph
-*/
 pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet)
 {
   // calculate intersection:

@@ -1,28 +1,29 @@
 /**
-   \file jackclient.h
-   \ingroup libtascar
-   \brief "jackclient" is a C++ wrapper for the JACK API.
-   \author Giso Grimm
-   \date 2011
-
-   \section license License (LGPL)
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public License
-   as published by the Free Software Foundation; version 2 of the
-   License.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
-
-*/
+ * @file jackclient.h
+ * @ingroup libtascar
+ * @brief C++ wrapper for the JACK API.
+ * @author Giso Grimm
+ * @date 2011
+ */
+/* License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 
 #ifndef JACKCLIENT_H
 #define JACKCLIENT_H

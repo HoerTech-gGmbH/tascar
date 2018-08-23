@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene>
+    <receiver type="ortf"/>
+    <source>
+      <sound>
+        <plugins>
+	  <!-- test the noise audio plugin -->
+	  <noise a="65"/>
+        </plugins>
+      </sound>
+    </source>
+  </scene>
+</session>

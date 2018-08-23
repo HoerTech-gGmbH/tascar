@@ -837,13 +837,11 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
   if( obj ){
     bool active(obj->isactive(time));
     bool solo(obj->get_solo());
-    if( !active ){
-      return;
-      //msize *= 0.4;
-      //plot_time = std::min(std::max(plot_time,obj->starttime),obj->endtime);
-    }
     std::vector<TASCAR::pos_t> sndpos;
     TASCAR::pos_t p(obj->get_location());
+    TASCAR::pos_t dir(0.03*view.scale,0,0);
+    dir *= obj->get_orientation();
+    dir += p;
     TASCAR::pos_t center(p);
     for(unsigned int k=0;k<obj->sound.size();k++){
       TASCAR::pos_t ptmp(obj->sound[k]->position);
@@ -853,6 +851,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
     center *= 1.0/(1.0+sndpos.size());
     center = view(center);
     p = view(p);
+    dir = view(dir);
     cr->save();
     if( p.z != std::numeric_limits<double>::infinity()){
       if( obj == selection ){
@@ -860,14 +859,18 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
         cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
         cr->fill();
       }
-      if( solo && blink ){
+      if( active && solo && blink ){
         cr->set_source_rgba(1, 0, 0, 0.5);
         cr->arc(p.x, -p.y, 1.5*msize, 0, PI2 );
         cr->fill();
       }
-      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
+      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6+0.2*active);
       cr->arc(p.x, -p.y, msize, 0, PI2 );
       cr->fill();
+      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.3+0.5*active);
+      cr->move_to( p.x, -p.y );
+      draw_edge( cr, p, dir );
+      cr->stroke();
     }
     for(unsigned int k=0;k<sndpos.size();k++){
       if( sndpos[k].z != std::numeric_limits<double>::infinity()){
@@ -882,7 +885,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
       }
     }
     if( !active )
-      cr->set_source_rgb(0.5, 0.5, 0.5 );
+      cr->set_source_rgba(0, 0, 0, 0.75 );
     else
       cr->set_source_rgb(0, 0, 0 );
     if( b_print_labels ){
@@ -1071,43 +1074,6 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
     cr->restore();
   }
 }
-
-//void scene_draw_t::draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
-//{
-//  if( obj ){
-//    bool solo(obj->get_solo());
-//    pos_t p(obj->get_location());
-//    zyx_euler_t o(obj->get_orientation());
-//    o += obj->dorientation;
-//    cr->save();
-//    if( solo && blink )
-//      cr->set_line_width( 1.2*msize );
-//    else
-//      cr->set_line_width( 0.4*msize );
-//    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b );
-//    ngon_t f;
-//    f.nonrt_set_rect(obj->width,obj->height);
-//    f.apply_rot_loc(p,o);
-//    ngon_draw(&f,cr);
-//    std::vector<double> dash(2);
-//    dash[0] = msize;
-//    dash[1] = msize;
-//    cr->set_dash(dash,0);
-//    cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6 );
-//    f += obj->falloff;
-//    ngon_draw(&f,cr);
-//    p = view(p);
-//    if( b_print_labels ){
-//      cr->set_source_rgb(0, 0, 0 );
-//      if( p.z != std::numeric_limits<double>::infinity()){
-//        cr->move_to( p.x, -p.y );
-//        cr->show_text( obj->get_name().c_str() );
-//        cr->stroke();
-//      }
-//    }
-//    cr->restore();
-//  }
-//}
 
 void scene_draw_t::draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {

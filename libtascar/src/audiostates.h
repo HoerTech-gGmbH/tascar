@@ -1,3 +1,29 @@
+/**
+ * @file   audiostates.h
+ * @author Giso Grimm
+ * 
+ * @brief Audio signal description and processing state changing class
+ */
+/* 
+ * License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/ or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 #ifndef AUDIOSTATES_H
 #define AUDIOSTATES_H
 
@@ -7,14 +33,14 @@ class chunk_cfg_t {
 public:
   chunk_cfg_t(double samplingrate_=1,uint32_t length_=1,uint32_t channels_=1);
   void update();
-  double f_sample;
-  uint32_t n_fragment;
-  uint32_t n_channels;
+  double f_sample; ///< Sampling rate in Hz
+  uint32_t n_fragment; ///< Fragment size in samples
+  uint32_t n_channels; ///< Number of channels
   // derived parameters:
-  double f_fragment;
-  double t_sample;
-  double t_fragment;
-  double t_inc;
+  double f_fragment; ///< Fragment rate in Hz
+  double t_sample; ///< Sample period in seconds
+  double t_fragment; ///< Fragment period in seconds
+  double t_inc; ///< Time increment 1/n_fragment
 };
 
 class audiostates_t : public chunk_cfg_t {

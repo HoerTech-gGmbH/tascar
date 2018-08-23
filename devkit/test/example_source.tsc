@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene guiscale="4">
+    <receiver type="ortf"/>
+    <source>
+      <position>0 1 0 0</position>
+      <orientation>0 0 0 0
+      60 1800 0 0</orientation>
+      <sound type="example">
+        <plugins>
+          <sine a="65"/>
+        </plugins>
+      </sound>
+    </source>
+  </scene>
+</session>

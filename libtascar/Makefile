@@ -54,7 +54,9 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
 
 
-CXXFLAGS += -fpic -L./ 
+CXXFLAGS += -fpic -I./build
+CPPFLAGS += -I./build
+#-L./ 
 EXTERNALS = jack libxml++-2.6 liblo sndfile
 
 $(BUILD_GUIOBJECTS): EXTERNALS += gtkmm-3.0

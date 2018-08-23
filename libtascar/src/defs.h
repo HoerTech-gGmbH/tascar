@@ -38,12 +38,6 @@
 /**
    \defgroup libtascar TASCAR core library
 
-   This library is published under the LGPL.
-*/
-/**
-   \defgroup apptascar TASCAR applications
-
-   This set of applications is published under the GPL.
 */
 /**
    \defgroup acousticmodel The acoustic model

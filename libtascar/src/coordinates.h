@@ -1,28 +1,29 @@
 /**
-   \file coordinates.h
-   \brief "coordinates" provide classes for coordinate handling
-   \ingroup libtascar
-   \author Giso Grimm
-   \date 2012
-
-   \section license License (LGPL)
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public License
-   as published by the Free Software Foundation; version 2 of the
-   License.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
-
-*/
+ * @file coordinates.h
+ * @brief Simple numerical geometry library
+ * @ingroup libtascar
+ * @author Giso Grimm
+ * @date 2012
+ */
+/* License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/ or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 
 #ifndef COORDINATES_H
 #define COORDINATES_H
@@ -35,8 +36,7 @@
 #include "defs.h"
 #include <stdint.h>
 
-uint32_t get_cnt_interp();
-
+/// Avoid de-normals by flipping to zero
 template<class T> void make_friendly_number(T& x)
 {
   if( (-std::numeric_limits<T>::max() <= x) && (x <= std::numeric_limits<T>::max() ) ){
@@ -49,6 +49,7 @@ template<class T> void make_friendly_number(T& x)
   x = 0;
 }
 
+/// Avoid de-normals and huge values by flipping to zero
 template<class T> void make_friendly_number_limited(T& x)
 {
   if( (-1000000 <= x) && (x <= 1000000 ) ){
@@ -64,8 +65,12 @@ template<class T> void make_friendly_number_limited(T& x)
 
 namespace TASCAR {
 
+  /// Generate random number between 0 and 1
   double drand();
 
+  /**
+     \brief Linear interpolation table
+   */
   class table1_t : public std::map<double,double> {
   public:
     table1_t();
@@ -73,12 +78,15 @@ namespace TASCAR {
   };
 
   /**
-     \brief Coordinates
+     \brief Cartesian coordinate vector
   */
   class pos_t {
   public:
+    /// x-axis, to the front
     double x;
+    /// y-axis, to the left
     double y;
+    /// z-axis, to the top
     double z;
     /**
        \brief Set point from cartesian coordinates
@@ -94,12 +102,19 @@ namespace TASCAR {
        \param theta elevation
     */
     void set_sphere(double r,double phi,double theta){ x=r*cos(phi)*cos(theta);y = r*sin(phi)*cos(theta); z=r*sin(theta);};
+    /// squared norm of vector
     inline double norm2() const {return std::max(1e-10,x*x + y*y + z*z);};
+    /// Eucledian norm
     inline double norm() const {return sqrt(norm2());};
+    /// Eucledian norm of projection to x-y plane
     inline double norm_xy() const {return sqrt(x*x+y*y);};
+    /// Azimuth in radians
     inline double azim() const {return atan2(y,x);};
+    /// Elevation in radians
     inline double elev() const {return atan2(z,norm_xy());};
+    /// Test if zero in any dimension 
     inline bool is_null() const {return (x==0) && (y==0) && (z==0);};
+    /// Return normalized vector
     inline pos_t normal() const {
       pos_t r(*this);
       double n(1.0/norm());
@@ -108,6 +123,7 @@ namespace TASCAR {
       r.z *= n;
       return r;
     };
+    /// Normalize vector
     void normalize();
     /**
        \brief Rotate around z-axis
@@ -175,16 +191,19 @@ namespace TASCAR {
     bool has_infinity() const;
   };
 
+  /// Spherical coordinates
   class sphere_t {
   public:
     sphere_t(double r_,double az_, double el_):r(r_),az(az_),el(el_){};
     sphere_t():r(0),az(0),el(0){};
+    /// Convert from cartesian coordinates
     sphere_t(pos_t c){
       double xy2 = c.x*c.x+c.y*c.y;
       r = sqrt(xy2+c.z*c.z);
       az = atan2(c.y,c.x);
       el = atan2(c.z,sqrt(xy2));
     };
+    /// Convert to cartesian coordinates
     pos_t cart(){
       double cel(cos(el));
       return pos_t(r*cos(az)*cel,r*sin(az)*cel,r*sin(el));
@@ -197,33 +216,35 @@ namespace TASCAR {
      \param self Input data
      \param d ratio
   */
-  inline sphere_t& operator*=(sphere_t& self,double d) {
+  inline TASCAR::sphere_t& operator*=(TASCAR::sphere_t& self,double d) {
     self.r*=d;
     self.az*=d;
     self.el*=d;
     return self;
   };
 
-
-
+  /// ZYX Euler angles
   class zyx_euler_t {
   public:
     std::string print(const std::string& delim=", ");
     zyx_euler_t(double z_,double y_,double x_):z(z_),y(y_),x(x_){};
     zyx_euler_t():z(0),y(0),x(0){};
+    /// rotation around z-axis in radians
     double z;
+    /// rotation around y-axis in radians
     double y;
+    /// rotation around x-axis in radians
     double x;
   };
 
-  inline zyx_euler_t& operator*=(zyx_euler_t& self,const double& scale){
+  inline TASCAR::zyx_euler_t& operator*=(TASCAR::zyx_euler_t& self,const double& scale){
     self.x*=scale;
     self.y*=scale;
     self.z*=scale;
     return self;
   };
 
-  inline zyx_euler_t& operator+=(zyx_euler_t& self,const zyx_euler_t& other){
+  inline TASCAR::zyx_euler_t& operator+=(TASCAR::zyx_euler_t& self,const TASCAR::zyx_euler_t& other){
     // \todo this is not correct; it only works for single-axis rotations. 
     self.x+=other.x;
     self.y+=other.y;
@@ -234,8 +255,9 @@ namespace TASCAR {
   /**
      \brief Apply Euler rotation
      \param r Euler rotation
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator*=(pos_t& self,const zyx_euler_t& r){
+  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,const TASCAR::zyx_euler_t& r){
     self.rot_z(r.z);
     self.rot_y(r.y);
     self.rot_x(r.x);
@@ -245,8 +267,9 @@ namespace TASCAR {
   /**
      \brief Apply inverse Euler rotation
      \param r Euler rotation
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator/=(pos_t& self,const zyx_euler_t& r){
+  inline TASCAR::pos_t& operator/=(TASCAR::pos_t& self,const TASCAR::zyx_euler_t& r){
     self.rot_x(-r.x);
     self.rot_y(-r.y);
     self.rot_z(-r.z);
@@ -256,46 +279,43 @@ namespace TASCAR {
   /**
      \brief Translate a point
      \param p Offset
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator+=(pos_t& self,const pos_t& p) {
+  inline TASCAR::pos_t& operator+=(TASCAR::pos_t& self,const TASCAR::pos_t& p) {
     self.x+=p.x;
     self.y+=p.y;
     self.z+=p.z;
     return self;
   };
   /**
-     \brief Translate a point
-     \param p Offset
+     \brief Return sum of vectors
+     \param a Vector
+     \param b Vector
+     \return Sum
   */
-  inline pos_t operator+(const pos_t& a,const pos_t& b) {
+  inline TASCAR::pos_t operator+(const TASCAR::pos_t& a,const TASCAR::pos_t& b) {
     pos_t tmp(a);
-    tmp+=b;
-    return tmp;
-  };
-  /**
-     \brief Add rotations
-     \param p Offset
-  */
-  inline zyx_euler_t operator+(const zyx_euler_t& a,const zyx_euler_t& b) {
-    zyx_euler_t tmp(a);
     tmp+=b;
     return tmp;
   };
   /**
      \brief Translate a point
      \param p Inverse offset
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator-=(pos_t& self,const pos_t& p) {
+  inline TASCAR::pos_t& operator-=(TASCAR::pos_t& self,const TASCAR::pos_t& p) {
     self.x-=p.x;
     self.y-=p.y;
     self.z-=p.z;
     return self;
   };
   /**
-     \brief Translate a point
-     \param p Offset
+     \brief Return difference between vectors
+     \param a minuend
+     \param b subtrahend
+     \return Difference
   */
-  inline pos_t operator-(const pos_t& a,const pos_t& b) {
+  inline TASCAR::pos_t operator-(const TASCAR::pos_t& a,const TASCAR::pos_t& b) {
     pos_t tmp(a);
     tmp-=b;
     return tmp;
@@ -303,8 +323,9 @@ namespace TASCAR {
   /**
      \brief Scale relative to origin
      \param d inverse ratio
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator/=(pos_t& self,double d) {
+  inline TASCAR::pos_t& operator/=(TASCAR::pos_t& self,double d) {
     self.x/=d;
     self.y/=d;
     self.z/=d;
@@ -313,8 +334,9 @@ namespace TASCAR {
   /**
      \brief Scale relative to origin
      \param d ratio
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator*=(pos_t& self,double d) {
+  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,double d) {
     self.x*=d;
     self.y*=d;
     self.z*=d;
@@ -324,8 +346,9 @@ namespace TASCAR {
   /**
      \brief Scale relative to origin, each axis separately
      \param d ratio
+     \param self modified Cartesian coordinates
   */
-  inline pos_t& operator*=(pos_t& self,const pos_t& d) {
+  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,const TASCAR::pos_t& d) {
     self.x*=d.x;
     self.y*=d.y;
     self.z*=d.z;
@@ -335,19 +358,21 @@ namespace TASCAR {
   /**
      \brief Return distance between two points
   */
-  inline double distance(const pos_t& p1, const pos_t& p2)
+  inline double distance(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
   {
     return sqrt((p1.x-p2.x)*(p1.x-p2.x) + 
                 (p1.y-p2.y)*(p1.y-p2.y) + 
                 (p1.z-p2.z)*(p1.z-p2.z));
   }
 
-  inline double dot_prod(const pos_t& p1, const pos_t& p2)
+  /// Dot product of two vectors
+  inline double dot_prod(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
   {
     return p1.x*p2.x+p1.y*p2.y+p1.z*p2.z;
   }
 
-  inline pos_t cross_prod(const pos_t& a,const pos_t& b)
+  /// Vector multiplication of two vectors
+  inline TASCAR::pos_t cross_prod(const TASCAR::pos_t& a,const TASCAR::pos_t& b)
   {
     return pos_t(a.y*b.z - a.z*b.y,
                  a.z*b.x - a.x*b.z,
@@ -357,10 +382,11 @@ namespace TASCAR {
 
   /**
      \ingroup tascar
-     \brief List of points connected with a time.
+     \brief Trajectory (list of points connected with a time)
   */
-  class track_t : public std::map<double,pos_t> {
+  class track_t : public std::map<double,TASCAR::pos_t> {
   public:
+    /// Interpolation mode
     enum interp_t {
       cartesian, spherical
     };
@@ -368,7 +394,7 @@ namespace TASCAR {
     /**
        \brief Return the center of a track.
     */
-    pos_t center();
+    TASCAR::pos_t center();
     /**
        \brief Return length of a track.
      */
@@ -382,14 +408,14 @@ namespace TASCAR {
     /**
        \brief Return the interpolated position for a given time.
     */
-    pos_t interp(double x) const;
+    TASCAR::pos_t interp(double x) const;
     /**
        \brief Shift the time by a constant value
     */
     void shift_time(double dt);
-    track_t& operator+=(const pos_t&);
-    track_t& operator-=(const pos_t&);
-    track_t& operator*=(const pos_t&);
+    TASCAR::track_t& operator+=(const TASCAR::pos_t&);
+    TASCAR::track_t& operator-=(const TASCAR::pos_t&);
+    TASCAR::track_t& operator*=(const TASCAR::pos_t&);
     /**
        \brief Format as string, return velocity
     */
@@ -405,7 +431,7 @@ namespace TASCAR {
     /**
        \brief Tangent projection, transform origin to given point
     */
-    void project_tangent(pos_t p);
+    void project_tangent(TASCAR::pos_t p);
     /**
        \brief Tangent projection, transform origin to center
     */
@@ -426,6 +452,10 @@ namespace TASCAR {
        \brief Smooth a track by convolution with a Hann-window
     */
     void smooth(unsigned int n);
+    /**
+       \brief Resample trajectory with equal time sampling
+       \param dt New period time
+     */
     void resample(double dt);
     /**
        \brief load a track from a gpx file
@@ -455,12 +485,18 @@ namespace TASCAR {
        \brief Export to xml element
     */
     void write_xml( xmlpp::Element* );
+    /// Read trajectroy from XML element, using "creator" features
     void read_xml( xmlpp::Element* );
+    /// Set interpolation type
     void set_interpt(interp_t p){interpt=p;};
+    /// Convert time to travel length
     double get_dist( double time ) const;
+    /// Convert travel length to time
     double get_time( double dist ) const;
+    /// Update internal data
     void prepare();
-    void fill_gaps(double dt);
+    void fill_gaps( double dt );
+    /// Loop time
     double loop;
   private:
     interp_t interpt;
@@ -480,15 +516,42 @@ namespace TASCAR {
    */
   class ngon_t {
   public:
+    /** \brief Default constructor, initialize to 1x2m rectangle
+     */
     ngon_t();
+    /**
+       \brief Create a polygon from a list of vertices
+    */
     void nonrt_set(const std::vector<pos_t>& verts);
+    /**
+       \brief Create a rectangle
+    */
     void nonrt_set_rect(double width, double height);
     void apply_rot_loc(const pos_t& p0, const zyx_euler_t& o);
     bool is_infront(const pos_t& p0) const;
     bool is_behind(const pos_t& p0) const;
+    /**
+       \brief Return nearest point on infinite plane 
+    */
     pos_t nearest_on_plane(const pos_t& p0) const;
+    /**
+       \brief Return nearest point on face boundary
+    */
     pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
+    /**
+       \brief Return nearest point on polygon
+    */
     pos_t nearest(const pos_t& p0, bool* is_outside=NULL, pos_t* on_edge_=NULL) const;
+    /**
+       \brief Return intersection point of connection line p0-p1 with infinite plane.
+
+       \param p0 Starting point of intersecting edge
+       \param p1 End point of intersecting edge
+       \param p_is Intersection point
+       \param w Optional pointer on intersecting weight, or NULL. w=0 means that the intersection is at p0, w=1 means that intersection is at p1.
+       
+       \return True if the line p0-p1 is intersecting with the plane, and false otherwise.
+    */
     bool intersection( const pos_t& p0, const pos_t& p1, pos_t& p_is, double* w=NULL) const;
     const std::vector<pos_t>& get_verts() const { return verts_;};
     const pos_t& get_normal() const { return normal;};
@@ -498,6 +561,9 @@ namespace TASCAR {
     ngon_t& operator+=(const pos_t& p);
     ngon_t& operator+=(double p);
   protected:
+    /**
+       \brief Transform local to global coordinates and update normals.
+    */
     void update();
     uint32_t N;
     std::vector<pos_t> local_verts_;

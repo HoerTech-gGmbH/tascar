@@ -1,3 +1,31 @@
+/**
+ * @file   acousticmodel.h
+ * @author Giso Grimm
+ * 
+ * @brief  The core of TASCAR acoustic modeling
+ * 
+ */
+/* License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ *
+ */
+
 #ifndef ACOUSTICMODEL_H
 #define ACOUSTICMODEL_H
 
@@ -5,7 +33,6 @@
 #include "sourcemod.h"
 #include "dynamicobjects.h"
 #include "audioplugin.h"
-
 /*
 
   new delayline concept:
@@ -21,12 +48,18 @@
   Radiation directivity D -> (receiver-source)/O_source orientation
   Receiver panning P -> (source-receiver)/O_receiver orientation
  
- */
+*/
 
 namespace TASCAR {
 
+  /**
+   * @brief Falloff gain rules
+   */
   enum gainmodel_t {
-    GAIN_INVR, GAIN_UNITY
+     /// 1/r rule
+    GAIN_INVR,
+     /// constant gain
+    GAIN_UNITY
   };
   
   /** \brief Components relevant for the acoustic modelling
@@ -35,7 +68,7 @@ namespace TASCAR {
 
     /**
        \brief Diffraction model
-     */
+    */
     class diffractor_t : public ngon_t {
     public:
       class state_t {
@@ -45,6 +78,21 @@ namespace TASCAR {
         float s2;
         state_t() : A1(0),s1(0),s2(0) {};
       };
+      /**
+         \brief Apply diffraction model 
+
+         \param p_src Source position
+         \param p_rec Receiver position
+         \param audio Audio chunk
+         \param c Speed of sound
+         \param fs Sampling rate
+         \param state Diffraction filter states
+         \param drywet Direct-to-diffracted ratio
+
+         \return Effective source position
+
+         \ingroup callgraph
+      */
       pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet);
     };
 
@@ -215,7 +263,9 @@ namespace TASCAR {
                        const acoustic_model_t* parent = NULL, 
                        const reflector_t* reflector = NULL);
       ~acoustic_model_t();
-      /** \brief Read audio from source, process and add to receiver.
+      /** 
+       * @brief Read audio from source, process and add to receiver.
+       * @ingroup callgraph
        */
       uint32_t process(const TASCAR::transport_t& tp);
       double get_gain() const { return gain;};
@@ -278,7 +328,7 @@ namespace TASCAR {
                        const std::vector<reflector_t*>& reflectors,
                        const std::vector<obstacle_t*>& obstacles,
                        receiver_t* receiver,
-                       uint32_t mirror_order);
+                       uint32_t ismorder);
       ~receiver_graph_t();
       void process(const TASCAR::transport_t& tp);
       uint32_t get_active_pointsource() const {return active_pointsource;};
@@ -300,9 +350,16 @@ namespace TASCAR {
     public:
       /** \brief Create a world of acoustic models.
        *
+       * \param c Speed of sound in m/s
+       * \param fs Sampling rate in Hz
+       * \param chunksize Chunk size in Samples
        * \param sources Pointers to primary sound sources
        * \param reflectors Pointers to reflector objects
        * \param receivers Pointers to render receivers
+       * \param diffusesources List of diffuse sources
+       * \param obstacles List of obstacles
+       * \param masks List of masks
+       * \param ismorder Maximum image source model order
        *
        * A mirror model is created from the reflectors and primary sources.
        * An instance of this class is created in TASCAR::render_core_t::prepare().
@@ -314,14 +371,19 @@ namespace TASCAR {
                const std::vector<obstacle_t*>& obstacles,
                const std::vector<receiver_t*>& receivers,
                const std::vector<mask_t*>& masks,
-               uint32_t mirror_order);
+               uint32_t ismorder);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
-       */
+          \ingroup callgraph
+      */
       void process(const TASCAR::transport_t& tp);
+      /// Return number of active point sources, including image sources
       uint32_t get_active_pointsource() const {return active_pointsource;};
+      /// Return number of active diffuse sources
       uint32_t get_active_diffusesource() const {return active_diffusesource;};
+      /// Return total number of point sources, including image sources
       uint32_t get_total_pointsource() const {return total_pointsource;};
+      /// Return total number of diffuse sources
       uint32_t get_total_diffusesource() const {return total_diffusesource;};
       std::vector<receiver_graph_t*> receivergraphs;
       std::vector<receiver_t*> receivers_;

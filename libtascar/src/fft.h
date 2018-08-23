@@ -1,3 +1,28 @@
+/**
+ * @file   fft.h
+ * @author Giso Grimm
+ * 
+ * @brief  Wrapper class for FFTW
+ */ 
+/* License (GPL)
+ *
+ * Copyright (C) 2018  Giso Grimm
+ *
+ * This program is free software; you can redistribute it and/ or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; version 2 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
 #ifndef FFT_H
 #define FFT_H
 
@@ -20,8 +45,6 @@ namespace TASCAR {
   private:
     fftwf_plan fftwp_w2s;
     fftwf_plan fftwp_s2w;
-    //rfftwnd_plan fftwp_w2s;
-    //rfftwnd_plan fftwp_s2w;
   };
 
 }

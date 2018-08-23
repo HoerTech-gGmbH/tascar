@@ -25,8 +25,8 @@ EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4
 
 LDLIBS += -ltascar -ltascargui -ldl -lfftw3f
 LDFLAGS += -L../libtascar/build
-CXXFLAGS += -I../libtascar/src -I./src -I./build
-CPPFLAGS += -I../libtascar/src -I./src -I./build
+CXXFLAGS += -I../libtascar/src -I./src -I../libtascar/build -I./build
+CPPFLAGS += -I../libtascar/src -I./src -I../libtascar/build -I./build
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
