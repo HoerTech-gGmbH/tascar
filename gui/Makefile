@@ -21,7 +21,7 @@ else
 CXXFLAGS += -Wall -O3 -L./
 endif
 
-EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4
+EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0
 
 LDLIBS += -ltascar -ltascargui -ldl -lfftw3f
 LDFLAGS += -L../libtascar/build

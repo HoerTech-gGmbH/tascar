@@ -21,7 +21,7 @@ function send_osc( host, port, addr, varargin )
 % Installation:
 % system('wget http://repo1.maven.org/maven2/de/sciss/netutil/1.0.0/netutil-1.0.0.jar')
 % javaaddpath netutil-1.0.0.jar 
-   
+    
     if isstruct( host )
         if nargin > 2
             varargin = [{addr},varargin];
@@ -30,24 +30,25 @@ function send_osc( host, port, addr, varargin )
         port = host.port;
         host = host.host;
     end
-  dch = javaMethod('open','java.nio.channels.DatagramChannel');
-  dch.configureBlocking( true );
-  target = javaObject('java.net.InetSocketAddress', host, port );
-  if ~isempty(varargin)
-    jvar = javaArray('java.lang.Object',numel(varargin));
-    for k=1:numel(varargin)
-      if ischar(varargin{k})
-	jvar(k) = javaObject('java.lang.String',varargin{k});
-      else
-	jvar(k) = javaObject('java.lang.Float',varargin{k});
-      end
+    dch = javaMethod('open','java.nio.channels.DatagramChannel');
+    dch.configureBlocking( true );
+    target = javaObject('java.net.InetSocketAddress', host, port );
+    if ~isempty(varargin)
+        jvar = javaArray('java.lang.Object',numel(varargin));
+        for k=1:numel(varargin)
+            if ischar(varargin{k})
+                jvar(k) = javaObject('java.lang.String',varargin{k});
+            else
+                jvar(k) = javaObject('java.lang.Float',varargin{k});
+            end
+        end
+        osm = javaObject('de.sciss.net.OSCMessage', addr, jvar );
+    else
+        osm = javaObject('de.sciss.net.OSCMessage', addr );
     end
-    osm = javaObject('de.sciss.net.OSCMessage', addr, jvar );
-  else
-    osm = javaObject('de.sciss.net.OSCMessage', addr );
-  end
-  buf = javaMethod('allocateDirect','java.nio.ByteBuffer', 8192 );
-  osm.encode( buf );
-  buf.flip();
-  dch.send( buf, target );
-  
+    buf = javaMethod('allocateDirect','java.nio.ByteBuffer', 8192 );
+    osm.encode( buf );
+    buf.flip();
+    dch.send( buf, target );
+    dch.close();
+    

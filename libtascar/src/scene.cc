@@ -99,6 +99,14 @@ void audio_port_t::set_port_index(uint32_t port_index_)
   port_index = port_index_;
 }
 
+void audio_port_t::set_inv( bool inv )
+{
+  if( inv )
+    gain = -fabsf(gain);
+  else
+    gain = fabsf(gain);
+}
+
 /*
  * src_object_t
  */
@@ -135,7 +143,7 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
         msg += ctmp;
       }
       if( it->starttime != 0 ){
-        snprintf(ctmp,1023," position=\"%g\"",it->starttime);
+        snprintf(ctmp,1023," position=\"%g\"",-it->starttime);
         msg += ctmp;
       }
       if( it->loopcnt != 1 ){
@@ -620,11 +628,17 @@ audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
   get_attribute("connect",connect);
   get_attribute_db_float("gain",gain);
   get_attribute_db_float("caliblevel",caliblevel);
+  bool inv(false);
+  get_attribute_bool("inv",inv);
+  set_inv(inv);
 }
 
 void audio_port_t::set_gain_db( float g )
 {
-  gain = pow(10.0,0.05*g);
+  if( gain < 0.0f )
+    gain = -pow(10.0,0.05*g);
+  else
+    gain = pow(10.0,0.05*g);
 }
 
 void audio_port_t::set_gain_lin( float g )
@@ -958,7 +972,7 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
-      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,get_name(),"")));
+      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,get_name(),(parent_?(parent_->get_name()):("")))));
     }
   }
 }

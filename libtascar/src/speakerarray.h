@@ -4,7 +4,7 @@
 #include "xmlconfig.h"
 #include "filterclass.h"
 #include "delayline.h"
-#include "audiostates.h"
+//#include "audiostates.h"
 
 namespace TASCAR {
 

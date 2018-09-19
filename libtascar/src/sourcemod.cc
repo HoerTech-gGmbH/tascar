@@ -8,12 +8,12 @@ TASCAR_RESOLVER( sourcemod_base_t, xmlpp::Element* );
 
 sourcemod_t::sourcemod_t( xmlpp::Element* cfg )
   : sourcemod_base_t( cfg ),
+    sourcetype("omni"),
     lib( NULL ),
     libdata( NULL )
 {
   get_attribute( "type", sourcetype );
-  if( sourcetype.empty() )
-    sourcetype = "omni";
+  sourcetype = env_expand( sourcetype );
   std::string libname( "tascarsource_" );
   libname += sourcetype + ".so";
   lib = dlopen(libname.c_str(), RTLD_NOW );

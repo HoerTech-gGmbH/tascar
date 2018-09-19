@@ -34,6 +34,19 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
     sessionloaded(false),
     sessionquit(false)
 {
+  Gsv::init();
+  language_manager = Gsv::LanguageManager::create();
+  //std::vector<std::string> langs = language_manager->get_language_ids ();
+  //std::cout << "number of languages found: " << langs.size () << std::endl;
+  //
+  //for (std::vector<std::string>::const_iterator iter = langs.begin(); iter != langs.end (); ++iter) {
+  //  if (!(iter->empty())) {
+  //    Glib::RefPtr<Gsv::Language> lang = language_manager->get_language (*iter);
+  //    std::cout << "language: " << lang->get_name () << std::endl;
+  //  } else {
+  //    std::cout << "language: null" << std::endl;
+  //  }
+  //}
   pthread_mutex_init( &mtx_draw, NULL );
   m_refBuilder->get_widget("SceneDraw",scene_map);
   if( !scene_map )
@@ -63,6 +76,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
     aboutdialog->set_logo(Gdk::Pixbuf::create_from_xpm_data(logo));
   GET_WIDGET(scene_selector);
   scene_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_scene_selector_changed));
+  GET_WIDGET(notebook);
   GET_WIDGET(active_selector);
   GET_WIDGET(active_type_label);
   GET_WIDGET(active_track);
@@ -88,14 +102,23 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   if( image_xyz )
     image_xyz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_xyz));
   //GET_WIDGET(menu_osc_vars);
-  GET_WIDGET(win_warnings);
   GET_WIDGET(text_warnings);
-  GET_WIDGET(win_osc_vars);
-  GET_WIDGET(win_legal);
+  //GET_WIDGET(text_source);
+  GET_WIDGET(scrolled_window_source);
+  scrolled_window_source->add(source_view);
+  source_view.set_show_line_numbers();
+  source_view.set_editable(false);
+  source_view.show();
+  source_buffer = source_view.get_source_buffer();
+  source_buffer->set_language(language_manager->get_language("xml"));
+  //DEBUG(language_manager->get_language("xml"));
+  source_buffer->set_highlight_syntax();
   GET_WIDGET(legal_view);
   GET_WIDGET(osc_vars);
   GET_WIDGET(text_srv_addr);
   GET_WIDGET(text_srv_port);
+  //Glib::RefPtr<Gtk::TextBuffer::Tag> t_bold(legal_view->get_buffer()->create_tag("bold"));
+  //t_bold->property_weight() = PANGO_WEIGHT_BOLD;
   
   //Create actions for menus and toolbars:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain = Gio::SimpleActionGroup::create();
@@ -114,9 +137,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupMain->add_action("help_about",sigc::mem_fun(*this, &tascar_window_t::on_menu_help_about));
   insert_action_group("main",refActionGroupMain);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupView = Gio::SimpleActionGroup::create();
-  refActionGroupView->add_action("show_osc_vars",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_osc_vars));
-  refActionGroupView->add_action("show_warnings",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_warnings));
-  refActionGroupView->add_action("show_legal",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_show_legal));
   refActionGroupView->add_action("zoom_in",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_in));
   refActionGroupView->add_action("zoom_out",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_out));
   refActionGroupView->add_action("viewport_xy",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xy));
@@ -306,11 +326,11 @@ void tascar_window_t::load(const std::string& fname)
 {
   warnings.clear();
   scene_load(fname);
+  tascar_filename = fname;
   sessionquit = false;
   if( session ){
     session->add_bool_true("/tascargui/quit", &sessionquit );
   }
-  tascar_filename = fname;
   reset_gui();
 }
 
@@ -356,15 +376,15 @@ void tascar_window_t::on_scene_selector_changed()
     selected_scene = 0;
   }
   if( session && (session->scenes.size() > selected_scene) ){
-    draw.set_scene((session->scenes[selected_scene]));
-    source_panel->set_scene((session->scenes[selected_scene]));
-    draw.view.set_scale(session->scenes[selected_scene]->guiscale);
+    draw.set_scene( session->scenes[selected_scene] );
+    source_panel->set_scene( session->scenes[selected_scene], session );
+    draw.view.set_scale( session->scenes[selected_scene]->guiscale );
     // fill object list:
     update_levelmeter_settings();
     update_object_list();
   }else{
-    draw.set_scene(NULL);
-    source_panel->set_scene(NULL);
+    draw.set_scene( NULL );
+    source_panel->set_scene( NULL, NULL );
     draw.view.set_scale(20);
   }
 }  
@@ -447,11 +467,11 @@ void tascar_window_t::reset_gui()
     int32_t mainwin_x(0);
     int32_t mainwin_y(0);
     get_position( mainwin_x, mainwin_y );
-    xmlpp::Element* mainwin(session->tsc_reader_t::find_or_add_child("mainwindow"));
-    get_attribute_value( mainwin, "w", mainwin_width );
-    get_attribute_value( mainwin, "h", mainwin_height );
-    get_attribute_value( mainwin, "x", mainwin_x );
-    get_attribute_value( mainwin, "y", mainwin_y );
+    TASCAR::xml_element_t mainwin(session->tsc_reader_t::find_or_add_child("mainwindow"));
+    mainwin.get_attribute( "w", mainwin_width );
+    mainwin.get_attribute( "h", mainwin_height );
+    mainwin.get_attribute( "x", mainwin_x );
+    mainwin.get_attribute( "y", mainwin_y );
     resize( mainwin_width, mainwin_height );
     move( mainwin_x, mainwin_y );
     resize( mainwin_width, mainwin_height );
@@ -476,10 +496,25 @@ void tascar_window_t::reset_gui()
   }
   update_object_list();
   if( session && (session->scenes.size() > selected_scene) ){
-    draw.set_scene((session->scenes[selected_scene]));
-    source_panel->set_scene((session->scenes[selected_scene]));
-    draw.view.set_scale(session->scenes[selected_scene]->guiscale);
+    draw.set_scene( session->scenes[selected_scene] );
+    source_panel->set_scene( session->scenes[selected_scene], session );
+    draw.view.set_scale( session->scenes[selected_scene]->guiscale );
     update_levelmeter_settings();
+  }
+  if( session ){
+    source_buffer->set_text(session->doc->write_to_string_formatted());
+    osc_vars->get_buffer()->set_text(session->list_variables());
+    text_srv_addr->set_text(session->osc_srv_addr);
+    text_srv_port->set_text(session->osc_srv_port);
+    legal_view->get_buffer()->set_text(session->legal_stuff());
+    //legal_view->get_buffer()->set_text("");
+    //legal_view->get_buffer()->insert_markup(legal_view->get_buffer()->end(),session->legal_stuff(true));
+  }else{
+    source_view.get_source_buffer()->set_text("");
+    osc_vars->get_buffer()->set_text("");
+    text_srv_addr->set_text("");
+    text_srv_port->set_text("");
+    legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();
 }
@@ -734,11 +769,11 @@ void tascar_window_t::on_menu_file_open()
     try{
       warnings.clear();
       scene_load(filename);
+      tascar_filename = filename;
       sessionquit = false;
       if( session )
         session->add_bool_true("/tascargui/quit", &sessionquit );
       reset_gui();
-      tascar_filename = filename;
     }
     catch( const std::exception& e){
       error_message(e.what());
@@ -773,11 +808,11 @@ void tascar_window_t::on_menu_file_open_example()
     try{
       warnings.clear();
       scene_load(filename);
+      tascar_filename = filename;
       sessionquit = false;
       if( session )
         session->add_bool_true("/tascargui/quit", &sessionquit );
       reset_gui();
-      tascar_filename = filename;
     }
     catch( const std::exception& e){
       error_message(e.what());
@@ -852,20 +887,6 @@ void tascar_window_t::on_menu_view_viewport_yz()
   draw.set_viewport( scene_draw_t::yz );
 }
 
-void tascar_window_t::on_menu_view_show_osc_vars()
-{
-  if( session ){
-    osc_vars->get_buffer()->set_text(session->list_variables());
-    text_srv_addr->set_text(session->osc_srv_addr);
-    text_srv_port->set_text(session->osc_srv_port);
-  }else{
-    osc_vars->get_buffer()->set_text("");
-    text_srv_addr->set_text("");
-    text_srv_port->set_text("");
-  }
-  win_osc_vars->show();
-}
-
 void tascar_window_t::on_menu_view_show_warnings()
 {
   std::string v;
@@ -877,21 +898,8 @@ void tascar_window_t::on_menu_view_show_warnings()
     session->validate_attributes(v);
   }
   text_warnings->get_buffer()->set_text(v);
-  if( v.empty() )
-    win_warnings->hide();
-  else
-    win_warnings->show();
-}
-
-void tascar_window_t::on_menu_view_show_legal()
-{
-  if( session ){
-    legal_view->get_buffer()->set_text(session->legal_stuff());
-    win_legal->set_title("tascar "+session->name+" licenses");
-    win_legal->show();
-  }else{
-    legal_view->get_buffer()->set_text("");
-  }
+  if( !v.empty() )
+    notebook->set_current_page(5);
 }
 
 void tascar_window_t::on_menu_view_zoom_in()

@@ -122,6 +122,16 @@ int osc_set_receiver_gain(const char *path, const char *types, lo_arg **argv, in
   return 1;
 }
 
+int osc_set_receiver_lingain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  receivermod_object_t* h((receivermod_object_t*)user_data);
+  if( h && (argc == 1) && (types[0]=='f') ){
+    h->set_gain_lin(argv[0]->f);
+    return 0;
+  }
+  return 1;
+}
+
 int osc_set_receiver_fade(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   receivermod_object_t* h((receivermod_object_t*)user_data);
@@ -197,6 +207,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::
   std::string ctlname("/"+scene->name+"/"+s->object_t::get_name());
   s->set_ctlname(ctlname);
   srv->add_method(ctlname+"/gain","f",osc_set_receiver_gain,s);
+  srv->add_method(ctlname+"/lingain","f",osc_set_receiver_lingain,s);
   srv->add_double_db(ctlname+"/diffusegain",&(s->diffusegain));
   srv->add_method(ctlname+"/fade","ff",osc_set_receiver_fade,s);
   srv->add_uint(ctlname+"/ismmin",&(s->ismmin));

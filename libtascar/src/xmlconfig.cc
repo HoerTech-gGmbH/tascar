@@ -51,6 +51,15 @@ TASCAR::xml_element_t::~xml_element_t()
 {
 }
 
+bool TASCAR::xml_element_t::has_attribute( const std::string& name) const
+{
+  const xmlpp::Element::AttributeList atts(e->get_attributes());
+  for( xmlpp::Element::AttributeList::const_iterator it=atts.begin();it!=atts.end();++it)
+    if( (*it)->get_name() == name )
+      return true;
+  return false;
+}
+
 xmlpp::Element* TASCAR::xml_element_t::find_or_add_child(const std::string& name)
 {
   xmlpp::Node::NodeList subnodes = e->get_children();
@@ -65,129 +74,200 @@ xmlpp::Element* TASCAR::xml_element_t::find_or_add_child(const std::string& name
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::string& value)
 {
   attribute_list[e][name] = "string";
-  value = e->get_attribute_value(name);
+  if( has_attribute( name ) )
+    value = e->get_attribute_value(name);
+  else
+    set_attribute( name, value );
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,double& value)
 {
   attribute_list[e][name] = "double";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,float& value)
 {
   attribute_list[e][name] = "float";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,uint32_t& value)
 {
   attribute_list[e][name] = "uint32";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,int32_t& value)
 {
   attribute_list[e][name] = "int32";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,uint64_t& value)
 {
   attribute_list[e][name] = "uint64";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,int64_t& value)
 {
   attribute_list[e][name] = "int64";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute_bits(const std::string& name,uint32_t& value)
 {
   attribute_list[e][name] = "bits32";
-  std::vector<int32_t> bits;
-  get_attribute(name,bits);
-  if( bits.size() ){
-    value = 0;
-    for(uint32_t k=0;k<bits.size();++k){
-      if( bits[k] < 32 )
-        value |= (1<<bits[k]);
+  if( has_attribute( name ) ){
+    std::vector<int32_t> bits;
+    get_attribute(name,bits);
+    if( bits.size() ){
+      value = 0;
+      for(uint32_t k=0;k<bits.size();++k){
+        if( bits[k] < 32 )
+          value |= (1<<bits[k]);
+      }
     }
+  }else{
+    set_attribute_bits( name, value );
   }
 }
 
 void TASCAR::xml_element_t::get_attribute_bool(const std::string& name,bool& value)
 {
   attribute_list[e][name] = "bool";
-  get_attribute_value_bool(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value_bool(e,name,value);
+  else
+    set_attribute_bool( name, value );
 }
 
 void TASCAR::xml_element_t::get_attribute_db(const std::string& name,double& value)
 {
   attribute_list[e][name] = "double_db";
-  get_attribute_value_db(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value_db(e,name,value);
+  else
+    set_attribute_db( name, value );
 }
 
 void TASCAR::xml_element_t::get_attribute_dbspl(const std::string& name,double& value)
 {
   attribute_list[e][name] = "double_dbspl";
-  get_attribute_value_dbspl(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value_dbspl(e,name,value);
+  else
+    set_attribute_dbspl( name, value );
 }
 
 void TASCAR::xml_element_t::get_attribute_db_float(const std::string& name,float& value)
 {
   attribute_list[e][name] = "float_db";
-  get_attribute_value_db_float(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value_db_float(e,name,value);
+  else
+    set_attribute_db( name, value );
 }
 
 void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,double& value)
 {
   attribute_list[e][name] = "double_degree";
-  get_attribute_value_deg(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value_deg(e,name,value);
+  else
+    set_attribute_deg(name,value);
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::pos_t& value)
 {
   attribute_list[e][name] = "pos";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<TASCAR::pos_t>& value)
 {
   attribute_list[e][name] = "vector<pos>";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<std::string>& value)
 {
   attribute_list[e][name] = "vector<string>";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<double>& value)
 {
   attribute_list[e][name] = "vector<double>";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<float>& value)
 {
   attribute_list[e][name] = "vector<float>";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute( name, value );
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<int32_t>& value)
 {
   attribute_list[e][name] = "vector<int32>";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute( name, value );
+
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::levelmeter_t::weight_t& value)
 {
   attribute_list[e][name] = "levelmeterweight";
-  get_attribute_value(e,name,value);
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
 }
 
 void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,bool value)
@@ -260,6 +340,11 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vec
   set_attribute_value(e,name,value);
 }
 
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<float>& value)
+{
+  set_attribute_value(e,name,value);
+}
+
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vector<int32_t>& value)
 {
   set_attribute_value(e,name,value);
@@ -288,6 +373,18 @@ std::string TASCAR::env_expand( std::string s )
     s.replace(spos,epos-spos+1,localgetenv(env));
   }
   return s;
+}
+
+void TASCAR::xml_element_t::set_attribute_bits( const std::string& name, uint32_t value )
+{
+  std::string sv;
+  for(uint32_t b=0;b<32;++b){
+    if( value & (1<<b) )
+      sv += std::to_string( b ) + " ";
+  }
+  if( !sv.empty() )
+    sv.erase( sv.size()-1, 1 );
+  e->set_attribute( name, sv );
 }
 
 void set_attribute_uint32(xmlpp::Element* elem,const std::string& name,uint32_t value)
@@ -388,6 +485,17 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std:
 {
   std::stringstream s;
   for(std::vector<double>::const_iterator i_vert=value.begin();i_vert!=value.end();++i_vert){
+    if( i_vert != value.begin() )
+      s << " ";
+    s << *i_vert;
+  }
+  elem->set_attribute(name,s.str());
+}
+
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<float>& value)
+{
+  std::stringstream s;
+  for(std::vector<float>::const_iterator i_vert=value.begin();i_vert!=value.end();++i_vert){
     if( i_vert != value.begin() )
       s << " ";
     s << *i_vert;

@@ -33,9 +33,15 @@ void licensehandler_t::add_license( const std::string& license, const std::strin
     attributions[attribution].insert(tag);
 }
 
-std::string licensehandler_t::legal_stuff() const
+std::string licensehandler_t::legal_stuff( bool use_markup ) const
 {
-  std::string retv("Licenses:\n");
+  std::string retv;
+  if( use_markup )
+    retv += "<b>";
+  retv += "Licenses:";
+  if( use_markup )
+    retv += "</b>";
+  retv += "\n";
   for(std::map<std::string,std::set<std::string> >::const_iterator it=licenses.begin();it!=licenses.end();++it){
     retv += it->first + " ";
     for(std::set<std::string>::const_iterator sit=it->second.begin();sit!=it->second.end();++sit){
@@ -50,7 +56,13 @@ std::string licensehandler_t::legal_stuff() const
     retv += "\n";
   }
   if( !attributions.empty() ){
-    retv += "\nAttributions:\n";
+    retv += "\n";
+    if( use_markup )
+      retv += "<b>";
+    retv += "Attributions:";
+    if( use_markup )
+      retv += "</b>";
+    retv += "\n";
     for(std::map<std::string,std::set<std::string> >::const_iterator it=attributions.begin();it!=attributions.end();++it){
       retv += it->first + " ";
       for(std::set<std::string>::const_iterator sit=it->second.begin();sit!=it->second.end();++sit){

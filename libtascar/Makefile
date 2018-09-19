@@ -70,7 +70,7 @@ LDFLAGS += -L./
 ver:
 	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
 
-lib:  build/libtascar.so.$(LIBVERSION) build/libtascargui.so.$(LIBVERSION) build/libtascardmx.so.$(LIBVERSION)
+lib:  $(BUILD_OBJECTS) build/libtascar.so.$(LIBVERSION) build/libtascargui.so.$(LIBVERSION) build/libtascardmx.so.$(LIBVERSION)
 	ldconfig -n build
 
 symlink: build/libtascar.so build/libtascargui.so build/libtascardmx.so
@@ -101,13 +101,15 @@ doc:
 	cd doc && sed -e 's/PROJECT.NUMBER.*=.*/&'`cat ../version`'/1' doxygen.cfg > .temp.cfg && doxygen .temp.cfg
 	rm -Rf doc/.temp.cfg
 
-include $(wildcard build/*.mk)
+#include $(wildcard build/*.mk)
+
+build/%.mk: src/%.cc
+	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
 
 %: %.o
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
 build/%.o: src/%.cc src/%.h
-	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%.so: build/%.so.$(LIBVERSION)

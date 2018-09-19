@@ -47,7 +47,9 @@ namespace TASCAR {
   private:
     std::string name;
     void* lib;
+  public:
     TASCAR::module_base_t* libdata;
+  private:
     bool is_configured;
   };
 
@@ -117,6 +119,7 @@ namespace TASCAR {
     uint32_t get_active_diffusesources() const;
     uint32_t get_total_diffusesources() const;
     std::vector<TASCAR::named_object_t> find_objects(const std::string& pattern);
+    std::vector<TASCAR::Scene::audio_port_t*> find_audio_ports(const std::vector<std::string>& pattern);
     std::vector<TASCAR::scene_render_rt_t*> scenes;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;

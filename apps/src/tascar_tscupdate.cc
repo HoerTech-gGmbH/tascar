@@ -1,6 +1,118 @@
 #include <libxml++/libxml++.h>
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
+
+xmlpp::Element* find_or_add_child( xmlpp::Element* e, const std::string& name )
+{
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == name ))
+      return sne;
+  }
+  return e->add_child(name);
+}
+
+void copy_attrib(xmlpp::Element* src,xmlpp::Element* dest,const std::string& name)
+{
+  if( !src->get_attribute_value(name).empty() )
+    dest->set_attribute(name,src->get_attribute_value(name));
+}
+
+void scan_sound( xmlpp::Element* sound )
+{
+  xmlpp::Node::NodeList children(sound->get_children());
+  for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+    xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
+    if( e_child ){
+      if( e_child && (e_child->get_name() != "plugins") ){
+        xmlpp::Element* plugs(find_or_add_child( sound, "plugins" ));
+        plugs->import_node(e_child);
+        sound->remove_child(e_child);
+        e_child = NULL;
+      }
+    }
+  }
+}
+
+void scan_source( xmlpp::Element* src )
+{
+  xmlpp::Node::NodeList children(src->get_children());
+  for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+    xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
+    if( e_child ){
+      if( e_child && (e_child->get_name() == "sound") )
+        scan_sound( e_child );
+      if( e_child && (e_child->get_name() == "sndfile") ){
+        xmlpp::Element* snd(find_or_add_child( src, "move_this_to_the_right_sound" ));
+        xmlpp::Element* plugs(find_or_add_child( snd, "plugins" ));
+        e_child->set_attribute("channel",e_child->get_attribute_value("firstchannel"));
+        e_child->remove_attribute("firstchannel");
+        e_child->set_attribute("levelmode","calib");
+        // gain to level conversion:
+        std::string gain(e_child->get_attribute_value("gain"));
+        double dgain(0);
+        if( !gain.empty() )
+          dgain = atof(gain.c_str());
+        char ctmp[1024];
+        sprintf(ctmp,"%g",dgain-20.0*log10(2e-5));
+        e_child->set_attribute("level",ctmp);
+        e_child->remove_attribute("gain");
+        // starttime to position conversion:
+        std::string startt(e_child->get_attribute_value("starttime"));
+        double dstart(0);
+        if( !startt.empty() ){
+          dstart = atof(startt.c_str());
+          sprintf(ctmp,"%g",-dstart);
+          e_child->set_attribute("position",ctmp);
+        }
+        e_child->remove_attribute("starttime");
+        // copy:
+        plugs->import_node(e_child);
+        src->remove_child(e_child);
+        e_child = NULL;
+        
+      }
+    }
+  }
+}
+
+void scan_scene( xmlpp::Element* scene, xmlpp::Element* session )
+{
+  scene->remove_attribute("duration");
+  scene->remove_attribute("loop");
+  scene->remove_attribute("lat");
+  scene->remove_attribute("lon");
+  scene->remove_attribute("elev");
+  xmlpp::Node::NodeList children(scene->get_children());
+  for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+    xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
+    if( e_child ){
+      if( e_child && (e_child->get_name() == "sink") )
+        e_child->set_name("receiver");
+      if( e_child && (e_child->get_name() == "src_object") )
+        e_child->set_name("source");
+      if( e_child && (e_child->get_name() == "connect") ){
+        session->import_node(e_child);
+        scene->remove_child(e_child);
+        e_child = NULL;
+      }
+      if( e_child && (e_child->get_name() == "range") ){
+        session->import_node(e_child);
+        scene->remove_child(e_child);
+        e_child = NULL;
+      }
+      if( e_child && (e_child->get_name() == "description") ){
+        session->import_node(e_child);
+        scene->remove_child(e_child);
+        e_child = NULL;
+      }
+      if( e_child && (e_child->get_name() == "source") )
+        scan_source( e_child );
+    }
+  }
+}
 
 void del_whitespace( xmlpp::Node* node )
 {
@@ -18,10 +130,27 @@ void del_whitespace( xmlpp::Node* node )
     }
 }
 
-void copy_attrib(xmlpp::Element* src,xmlpp::Element* dest,const std::string& name)
+void scan_session( xmlpp::Element* session )
 {
-  if( !src->get_attribute_value(name).empty() )
-    dest->set_attribute(name,src->get_attribute_value(name));
+  session->set_attribute("license",session->get_attribute_value("license"));
+  session->set_attribute("attribution",session->get_attribute_value("attribution"));
+  xmlpp::Node::NodeList children(session->get_children());
+  for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+    xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
+    if( e_child ){
+      if( e_child && (e_child->get_name() == "scene") )
+        scan_scene( e_child, session );
+      if( e_child && (e_child->get_name() == "module") ){
+        xmlpp::Element* modules(find_or_add_child( session, "modules" ));
+        std::string modname(e_child->get_attribute_value("name"));
+        e_child->set_name(modname);
+        e_child->remove_attribute( "name" );
+        modules->import_node(e_child);
+        session->remove_child(e_child);
+        e_child = NULL;
+      }
+    }
+  }
 }
 
 int main(int argc,char** argv)
@@ -32,53 +161,15 @@ int main(int argc,char** argv)
   }
   xmlpp::DomParser domp(argv[1]);
   xmlpp::Document* doc(domp.get_document());
-  xmlpp::Element* root(doc->get_root_node());
-  if( root->get_name() == "scene" ){
-    std::cout << "Old format detected.\n";
-    xmlpp::Document ndoc;
-    xmlpp::Element* nroot(ndoc.create_root_node("session"));
-    nroot->set_attribute("name","tascar");
-    copy_attrib(root,nroot,"duration");
-    copy_attrib(root,nroot,"loop");
-    xmlpp::Node* scene(nroot->import_node(root));
-    xmlpp::Element* escene(dynamic_cast<xmlpp::Element*>(scene));
-    escene->remove_attribute("duration");
-    escene->remove_attribute("loop");
-    escene->remove_attribute("lat");
-    escene->remove_attribute("lon");
-    escene->remove_attribute("elev");
-    xmlpp::Node::NodeList children(scene->get_children());
-    for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
-      xmlpp::Element* nodeElement(dynamic_cast<xmlpp::Element*>(*nita));
-      if( nodeElement && (nodeElement->get_name() == "sink") ){
-        nodeElement->set_name("receiver");
-      }
-      if( nodeElement && (nodeElement->get_name() == "connect") ){
-        nroot->import_node(nodeElement);
-        scene->remove_child(nodeElement);
-      }
-      if( nodeElement && (nodeElement->get_name() == "range") ){
-        nroot->import_node(nodeElement);
-        scene->remove_child(nodeElement);
-      }
-      if( nodeElement && (nodeElement->get_name() == "description") ){
-        nroot->import_node(nodeElement);
-        scene->remove_child(nodeElement);
-      }
-    }
-    //del_whitespace( root );
-    std::string oname(std::string(argv[1])+".orig");
-    rename(argv[1],oname.c_str() );
-    del_whitespace( nroot );
-    ndoc.write_to_file_formatted( argv[1] );
-  }else{
-    if( root->get_name() == "session" ){
-      std::cout << "New format detected, nothing done.\n";
-    }else{
-      std::cerr << "Error: No tascar file format detected.\n";
+  xmlpp::Element* session(doc->get_root_node());
+  if( session->get_name() != "session" ){
+      std::cerr << "Error: No tascar file format detected (top element is not \"session\").\n";
       return 1;
-    }
   }
+  scan_session( session );
+  del_whitespace( session );
+  std::string oname(std::string(argv[1])+".updated");
+  doc->write_to_file_formatted( oname.c_str() );
   return 0;
 }
 

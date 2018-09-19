@@ -17,7 +17,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
   lightctl levels2osc nearsensor dirgain dummy	\
   matrix hoafdnrot mpu6050track touchosc savegains lslactor hrirconv	\
-  joystick hossustain 
+  joystick hossustain midicc2osc midictl
 
 TASCARMODSGUI = tracegui simplecontroller
 

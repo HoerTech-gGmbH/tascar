@@ -46,6 +46,14 @@ namespace TASCAR {
       void set_name(const std::string& s) {name=s;};
       void set_mute(bool b) {mute=b;};
       void set_solo(bool b,uint32_t& anysolo);
+      /**
+         \brief Return combination of mute and solo.
+
+         Internal solo state is used only if anysolo is true.
+         
+         \param anysolo Counter of objects which are soloed.
+         \return True if active, false if either muted or not soloed but other tracks are soloed.
+       */
       bool is_active(uint32_t anysolo);
       void addmeter(float fs);
       void configure_meter( float tc, TASCAR::levelmeter_t::weight_t w );
@@ -191,9 +199,11 @@ namespace TASCAR {
       std::string get_ctlname() const { return ctlname;};
       std::string get_connect() const { return connect;};
       float get_gain() const { return gain/(2e-5f*caliblevel);};
-      float get_gain_db() const { return 20*log10(gain); };
+      float get_gain_db() const { return 20*log10(fabsf(gain)); };
       void set_gain_db( float g );
       void set_gain_lin( float g );
+      bool get_inv() const { return gain < 0.0f; };
+      void set_inv( bool inv );
     private:
       std::string ctlname;
       std::string connect;

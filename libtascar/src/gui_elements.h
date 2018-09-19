@@ -34,9 +34,10 @@
 #include <gtkmm/window.h>
 #include <gtkmm/drawingarea.h>
 #include <cairomm/context.h>
-#include <lo/lo.h>
+//#include <lo/lo.h>
 #include "viewport.h"
-#include "jackrender.h"
+//#include "jackrender.h"
+#include "session.h"
 
 class playertimeline_t : public Gtk::DrawingArea {
 public:
@@ -80,17 +81,16 @@ public:
   void set_min_and_range( float vmin, float range );
   void invalidate_win();
 private:
-  //Gtk::VBox box;
-  //Gtk::Label val;
   dameter_t dameter;
 };
 
 class GainScale_t : public Gtk::Scale {
 public:
   GainScale_t();
-  float update();
+  float update(bool& inv);
   void set_src(TASCAR::Scene::audio_port_t* ap);
   void on_value_changed();
+  void set_inv(bool inv);
 private:
   TASCAR::Scene::audio_port_t* ap_;
   double vmin;
@@ -104,8 +104,11 @@ public:
   void set_src(TASCAR::Scene::audio_port_t* ap);
   void on_scale_changed();
   void on_text_changed();
+  void on_inv_changed();
 private:
   Gtk::VBox box;
+  //Gtk::CheckButton polarity;
+  Gtk::ToggleButton polarity;
   Gtk::Entry val;
   GainScale_t scale;
 };
@@ -150,7 +153,7 @@ class source_panel_t : public Gtk::ScrolledWindow {
 public:
   source_panel_t(lo_address client_addr);
   source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade);
-  void set_scene(TASCAR::Scene::scene_t*);
+  void set_scene( TASCAR::Scene::scene_t* scene, TASCAR::session_t* session );
   void set_levelmeter_mode( const std::string& mode );
   void set_levelmeter_range( float vmin, float range );
   void update();
@@ -169,7 +172,7 @@ public:
   };
   scene_draw_t();
   virtual ~scene_draw_t();
-  void set_scene(TASCAR::render_core_t* scene);
+  void set_scene( TASCAR::render_core_t* scene );
   void select_object(TASCAR::Scene::object_t* o);
   void set_viewport(const scene_draw_t::viewt_t& v);
   virtual void draw(Cairo::RefPtr<Cairo::Context> cr);

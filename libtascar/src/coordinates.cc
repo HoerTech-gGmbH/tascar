@@ -934,17 +934,17 @@ void ngon_t::update()
     *i_vert = *i_local_vert;
     *i_vert *= orientation;
     *i_vert += delta;
-    i_local_vert++;
+    ++i_local_vert;
   }
   std::vector<pos_t>::iterator i_vert(verts_.begin());
   std::vector<pos_t>::iterator i_next_vert(i_vert+1);
   for(std::vector<pos_t>::iterator i_edge=edges_.begin();i_edge!=edges_.end();++i_edge){
     *i_edge = *i_next_vert;
     *i_edge -= *i_vert;
-    i_next_vert++;
+    ++i_next_vert;
     if( i_next_vert == verts_.end() )
       i_next_vert = verts_.begin();
-    i_vert++;
+    ++i_vert;
   }
   normal = local_normal;
   normal *= orientation;
@@ -954,7 +954,7 @@ void ngon_t::update()
   for(std::vector<pos_t>::iterator i_vert_normal=vert_normals_.begin();i_vert_normal!=vert_normals_.end();++i_vert_normal){
     *i_vert_normal = cross_prod(i_edge->normal() + i_prev_edge->normal(),normal).normal();
     i_prev_edge = i_edge;
-    i_edge++;
+    ++i_edge;
   }
 }
 

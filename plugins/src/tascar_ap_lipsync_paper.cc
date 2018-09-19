@@ -116,15 +116,15 @@ void lipsync_t::prepare( chunk_cfg_t& cf_ )
   sSmoothedMag = new double[num_bins];
   memset(sSmoothedMag,0,num_bins*sizeof(double));
   // Edge frequencies for format energies:
-  float freqBins[numFormants+1];
   if( numFormants+1 != 5)
     throw TASCAR::ErrMsg("Programming error");
+  float freqBins[numFormants+1];
+  formantEdges = new uint32_t[numFormants+1];
   freqBins[0] = 0;
   freqBins[1] = 500 * vocalTract;
   freqBins[2] = 700 * vocalTract;
   freqBins[3] = 3000 * vocalTract;
   freqBins[4] = 6000 * vocalTract;
-  formantEdges = new uint32_t[numFormants+1];
   for(uint32_t k=0;k<numFormants+1;++k)
     formantEdges[k] = std::min(num_bins,(uint32_t)(round(2*freqBins[k]*n_fragment/f_sample)));
 }
@@ -148,10 +148,22 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   // FFT
   // Smooth over time
   // Conversion to dB
+
   stft->process(chunk[0]);
   double vmin(1e20);
   double vmax(-1e20);
   uint32_t num_bins(stft->s.n_);
+  // update formant edges:
+  float freqBins[numFormants+1];
+  formantEdges = new uint32_t[numFormants+1];
+  freqBins[0] = 0;
+  freqBins[1] = 500 * vocalTract;
+  freqBins[2] = 700 * vocalTract;
+  freqBins[3] = 3000 * vocalTract;
+  freqBins[4] = 6000 * vocalTract;
+  for(uint32_t k=0;k<numFormants+1;++k)
+    formantEdges[k] = std::min(num_bins,(uint32_t)(round(2*freqBins[k]*n_fragment/f_sample)));
+  // end update formant edges
   // calculate smooth st-PSD:
   double smoothing_c1(exp(-1.0/(smoothing*f_fragment)));
   double smoothing_c2(1.0-smoothing_c1);

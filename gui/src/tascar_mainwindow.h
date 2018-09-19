@@ -7,6 +7,7 @@
 #include "scene_manager.h"
 #include "viewport.h"
 #include "gui_elements.h"
+#include <gtksourceviewmm.h>
 
 void error_message(const std::string& msg);
 
@@ -32,9 +33,6 @@ protected:
 
   void on_menu_view_zoom_in();
   void on_menu_view_zoom_out();
-  void on_menu_view_show_osc_vars();
-  void on_menu_view_show_warnings();
-  void on_menu_view_show_legal();
   void on_menu_view_viewport_xy();
   void on_menu_view_viewport_xz();
   void on_menu_view_viewport_yz();
@@ -46,6 +44,7 @@ protected:
   void on_menu_view_meter_rms();
   void on_menu_view_meter_peak();
   void on_menu_view_meter_percentile();
+  void on_menu_view_show_warnings();
 
   virtual bool draw_scene(const Cairo::RefPtr<Cairo::Context>& cr);
   bool on_timeout();
@@ -92,14 +91,17 @@ protected:
 
   int32_t selected_range;
 
+  Gtk::Notebook* notebook;
   Gtk::DrawingArea* scene_map;
   //Gtk::EventBox* scene_map_events;
   Gtk::Statusbar* statusbar_main;
   Gtk::Scale* timeline;
-  Gtk::Window* win_osc_vars;
-  Gtk::Window* win_warnings;
   Gtk::TextView* text_warnings;
-  Gtk::Window* win_legal;
+  //Gtk::TextView* text_source;
+  Gtk::ScrolledWindow* scrolled_window_source;
+  Gsv::View source_view;
+  Glib::RefPtr<Gsv::LanguageManager> language_manager;
+  Glib::RefPtr<Gsv::Buffer> source_buffer;
   Gtk::TextView* legal_view;
   Gtk::TextView* osc_vars;
   Gtk::Label* text_srv_addr;

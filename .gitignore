@@ -29,3 +29,5 @@ birds_oldenburg.wav
 
 # generated PDF files:
 tutorial*.pdf
+# updated session files:
+*.updated

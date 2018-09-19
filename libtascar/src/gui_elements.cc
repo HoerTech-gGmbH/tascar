@@ -222,10 +222,18 @@ void GainScale_t::on_value_changed()
     ap_->set_gain_db( get_value() );
 }
 
-float GainScale_t::update()
+void GainScale_t::set_inv( bool inv)
+{
+  if( ap_ ){
+    ap_->set_inv(inv);
+  }
+}
+
+float GainScale_t::update(bool& inv)
 {
   double v(0);
   if( ap_ ){
+    inv = ap_->get_inv();
     v = ap_->get_gain_db();
     if( (v < vmin) || (v > vmax) ){
       vmin = std::min(vmin,v);
@@ -248,16 +256,22 @@ gainctl_t::gainctl_t()
   val.set_max_length( 10 );
   val.set_width_chars( 4 );
   val.set_size_request( 32, -1 );
+  scale.set_size_request( -1, 300 );
+  polarity.set_label("ø");
   add(box);
+  box.pack_start(polarity,Gtk::PACK_SHRINK);
   box.pack_start(val,Gtk::PACK_SHRINK);
   box.add(scale);
   scale.signal_value_changed().connect(sigc::mem_fun(*this,&gainctl_t::on_scale_changed));
   val.signal_activate().connect(sigc::mem_fun(*this,&gainctl_t::on_text_changed));
+  polarity.signal_toggled().connect(sigc::mem_fun(*this,&gainctl_t::on_inv_changed));
 }
 
 void gainctl_t::update()
 {
-  scale.update();
+  bool inv(false);
+  scale.update(inv);
+  polarity.set_active(inv);
 }
 
 void gainctl_t::set_src(TASCAR::Scene::audio_port_t* ap)
@@ -272,6 +286,12 @@ void gainctl_t::on_scale_changed()
   float v(scale.get_value());
   sprintf(ctmp,"%1.1f",v);
   val.set_text(ctmp);
+}
+
+void gainctl_t::on_inv_changed()
+{
+  bool inv(polarity.get_active());
+  scale.set_inv(inv);
 }
 
 void gainctl_t::on_text_changed()
@@ -319,18 +339,18 @@ void source_ctl_t::setup()
   label.set_text(route_->get_name());
   if( dynamic_cast<TASCAR::Scene::face_object_t*>(route_))
     tlabel.set_text("face");
-  if( dynamic_cast<TASCAR::Scene::face_group_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::face_group_t*>(route_))
     tlabel.set_text("fgrp");
-  if( dynamic_cast<TASCAR::Scene::obstacle_group_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::obstacle_group_t*>(route_))
     tlabel.set_text("obstacle");
-  if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
     tlabel.set_text("src");
-  if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
     tlabel.set_text("dif");
-  if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
     tlabel.set_text("rcvr");
-//  if( dynamic_cast<TASCAR::Scene::src_door_t*>(route_))
-//    tlabel.set_text("door");
+  else 
+    tlabel.set_text("route");
   TASCAR::Scene::audio_port_t* ap(dynamic_cast<TASCAR::Scene::audio_port_t*>(route_));
   if( ap ){
     gainctl.push_back(new gainctl_t());
@@ -378,11 +398,7 @@ void source_ctl_t::setup()
   }
 #endif
   frame.add(ebox);
-  //frame.set_size_request( 30, 300 );
-  //add(frame);
   pack_start( frame, Gtk::PACK_SHRINK );
-  //meterbox.set_size_request( 40, -1 );
-  //add(meterbox);
   pack_start( meterbox, Gtk::PACK_SHRINK );
   pack_start( playertimeline, Gtk::PACK_EXPAND_WIDGET );
   for(uint32_t k=0;k<route_->metercnt();k++){
@@ -450,7 +466,6 @@ void source_ctl_t::on_solo()
 source_panel_t::source_panel_t(lo_address client_addr)
   : client_addr_(client_addr),use_osc(true)
 {
-  set_size_request( 600, -1 );
   add(box);
 }
 
@@ -458,7 +473,6 @@ source_panel_t::source_panel_t(lo_address client_addr)
 source_panel_t::source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
   : Gtk::ScrolledWindow(cobject),use_osc(false)
 {
-  set_size_request( 600, -1 );
   add(box);
 }
 
@@ -476,7 +490,7 @@ void source_panel_t::invalidate_win()
   }
 }
 
-void source_panel_t::set_scene(TASCAR::Scene::scene_t* s)
+void source_panel_t::set_scene( TASCAR::Scene::scene_t* s, TASCAR::session_t* session )
 {
   for( unsigned int k=0;k<vbuttons.size();k++){
     box.remove(*(vbuttons[k]));
@@ -492,6 +506,19 @@ void source_panel_t::set_scene(TASCAR::Scene::scene_t* s)
         vbuttons.push_back(new source_ctl_t(s,*it));
     }
   }
+  if( session ){
+    for(std::vector<TASCAR::module_t*>::iterator it=session->modules.begin();
+        it!= session->modules.end();++it){
+      TASCAR::Scene::route_t* rp(dynamic_cast<TASCAR::Scene::route_t*>((*it)->libdata));
+      if( rp ){
+        if( use_osc )
+          vbuttons.push_back(new source_ctl_t(client_addr_,s,rp));
+        else
+          vbuttons.push_back(new source_ctl_t(s,rp));
+      }
+    }
+  }    
+
   for( unsigned int k=0;k<vbuttons.size();k++){
     box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
   }
@@ -535,7 +562,7 @@ scene_draw_t::~scene_draw_t()
   pthread_mutex_destroy( &mtx );
 }
 
-void scene_draw_t::set_scene(TASCAR::render_core_t* scene)
+void scene_draw_t::set_scene( TASCAR::render_core_t* scene )
 {
   pthread_mutex_lock( &mtx );
   scene_ = scene;
@@ -702,7 +729,7 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
 void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize)
 {
   if( f ){
-    std::vector<pos_t> roomnodes(f->get_verts());
+    const std::vector<pos_t>& roomnodes(f->get_verts());
     pos_t center;
     for(unsigned int k=0;k<roomnodes.size();k++){
       center += roomnodes[k];

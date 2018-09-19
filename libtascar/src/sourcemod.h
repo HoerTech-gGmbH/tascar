@@ -29,8 +29,8 @@
 
 #include "tascarplugin.h"
 #include "xmlconfig.h"
-#include "audiochunks.h"
-#include "audiostates.h"
+//#include "audiochunks.h"
+//#include "audiostates.h"
 
 namespace TASCAR {
 

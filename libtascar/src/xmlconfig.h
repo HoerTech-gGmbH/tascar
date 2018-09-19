@@ -1,7 +1,7 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 
-#include "coordinates.h"
+//#include "coordinates.h"
 #include "levelmeter.h"
 #include "osc_helper.h"
 #include "audiostates.h"
@@ -21,6 +21,7 @@ namespace TASCAR {
   public:
     xml_element_t(xmlpp::Element*);
     virtual ~xml_element_t();
+    bool has_attribute( const std::string& name) const;
     std::string get_element_name() const { return e->get_name(); };
     // get attributes:
     void get_attribute(const std::string& name,std::string& value);
@@ -52,6 +53,7 @@ namespace TASCAR {
     void set_attribute_deg(const std::string& name,double value);
     void set_attribute(const std::string& name,int32_t value);
     void set_attribute(const std::string& name,uint32_t value);
+    void set_attribute_bits(const std::string& name,uint32_t value);
     void set_attribute(const std::string& name,int64_t value);
     void set_attribute(const std::string& name,uint64_t value);
     void set_attribute(const std::string& name,const TASCAR::pos_t& value);
@@ -59,6 +61,7 @@ namespace TASCAR {
     void set_attribute(const std::string& name,const std::vector<TASCAR::pos_t>& value);
     void set_attribute(const std::string& name,const std::vector<std::string>& value);
     void set_attribute(const std::string& name,const std::vector<double>& value);
+    void set_attribute(const std::string& name,const std::vector<float>& value);
     void set_attribute(const std::string& name,const std::vector<int32_t>& value);
     xmlpp::Element* find_or_add_child(const std::string& name);
     xmlpp::Element* e;
@@ -127,6 +130,7 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASC
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<std::string>& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<double>& value);
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<float>& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<int32_t>& value);
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::levelmeter_t::weight_t& value);
 
