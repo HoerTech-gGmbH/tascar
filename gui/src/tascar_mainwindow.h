@@ -8,6 +8,7 @@
 #include "viewport.h"
 #include "gui_elements.h"
 #include <gtksourceviewmm.h>
+#include <webkit2/webkit2.h>
 
 void error_message(const std::string& msg);
 
@@ -127,6 +128,10 @@ protected:
 
   bool sessionloaded;
   bool sessionquit;
+
+  WebKitWebView *news_view;
+  Gtk::Box* news_box;
+  Gtk::Widget* news_viewpp;
 };
 
 #endif

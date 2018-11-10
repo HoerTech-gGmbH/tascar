@@ -200,6 +200,7 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::s
   srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
   srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/lingain","f",osc_set_diffuse_gain_lin,s);
   srv->add_float_db("/"+scene->name+"/"+s->object_t::get_name()+"/caliblevel",&(s->caliblevel));
+  srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/layers",&(s->layers));
 }
 
 void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receivermod_object_t* s)

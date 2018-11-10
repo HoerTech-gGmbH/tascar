@@ -55,10 +55,12 @@ bool object_t::isactive(double time) const
 src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
   : sndfile_object_t(xmlsrc),audio_port_t(xmlsrc),size(1,1,1),
     falloff(1.0),
+    layers(0xffffffff),
     source(NULL)
 {
   dynobject_t::get_attribute("size",size);
   dynobject_t::get_attribute("falloff",falloff);
+  dynobject_t::GET_ATTRIBUTE_BITS(layers);
 }
 
 src_diffuse_t::~src_diffuse_t()
@@ -72,6 +74,7 @@ void src_diffuse_t::geometry_update(double t)
   if( source ){
     dynobject_t::geometry_update(t);
     get_6dof(source->center,source->orientation);
+    source->layers = layers;
   }
 }
 
@@ -129,33 +132,33 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
         TASCAR::add_warning("Invalid sub-node \""+sne->get_name()+"\".",sne);
     }
   }
-  for( std::vector<sndfile_info_t>::const_iterator it=sndfiles.begin();
-       it!=sndfiles.end();++it){
-    if( it->channels == 1 ){
-      std::string msg("The use of \"sndfile\" in source objects is discouraged.\n  Use audio plugin instead:\n");
-      msg += "  <sndfile";
-      char ctmp[1024];
-      ctmp[1023] = 0;
-      snprintf(ctmp,1023," name=\"%s\"",it->fname.c_str());
-      msg += ctmp;
-      if( it->firstchannel ){
-        snprintf(ctmp,1023," channel=\"%d\"",it->firstchannel);
-        msg += ctmp;
-      }
-      if( it->starttime != 0 ){
-        snprintf(ctmp,1023," position=\"%g\"",-it->starttime);
-        msg += ctmp;
-      }
-      if( it->loopcnt != 1 ){
-        snprintf(ctmp,1023," loop=\"%d\"",it->loopcnt);
-        msg += ctmp;
-      }
-      snprintf(ctmp,1023," levelmode=\"calib\" level=\"%g\"",-20*log10(2e-5/it->gain));
-      msg += ctmp;
-      msg += "/>";
-      add_warning(msg,it->e);
-    }
-  }
+  //for( std::vector<sndfile_info_t>::const_iterator it=sndfiles.begin();
+  //     it!=sndfiles.end();++it){
+  //  if( it->channels == 1 ){
+  //    std::string msg("The use of \"sndfile\" in source objects is discouraged.\n  Use audio plugin instead:\n");
+  //    msg += "  <sndfile";
+  //    char ctmp[1024];
+  //    ctmp[1023] = 0;
+  //    snprintf(ctmp,1023," name=\"%s\"",it->fname.c_str());
+  //    msg += ctmp;
+  //    if( it->firstchannel ){
+  //      snprintf(ctmp,1023," channel=\"%d\"",it->firstchannel);
+  //      msg += ctmp;
+  //    }
+  //    if( it->starttime != 0 ){
+  //      snprintf(ctmp,1023," position=\"%g\"",-it->starttime);
+  //      msg += ctmp;
+  //    }
+  //    if( it->loopcnt != 1 ){
+  //      snprintf(ctmp,1023," loop=\"%d\"",it->loopcnt);
+  //      msg += ctmp;
+  //    }
+  //    snprintf(ctmp,1023," levelmode=\"calib\" level=\"%g\"",-20*log10(2e-5/it->gain));
+  //    msg += ctmp;
+  //    msg += "/>";
+  //    add_warning(msg,it->e);
+  //  }
+  //}
 }
 
 src_object_t::~src_object_t()

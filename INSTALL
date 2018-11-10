@@ -19,6 +19,7 @@ The toolbox depends on the following libraries:
 - libfftw3-dev
 - libfftw3-single3
 - libfftw3-double3
+- libcurl4-openssl-dev
 
 
 For de-installation, please type
@@ -27,7 +28,7 @@ For de-installation, please type
 
 On debian-based systems, the dependencies may be satisfied by typing:
 
-  sudo apt-get install libxml++2.6-dev liblo-dev libltc-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev libfftw3-dev libfftw3-single3 libfftw3-double3
+  sudo apt-get install libxml++2.6-dev liblo-dev libltc-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev libfftw3-dev libfftw3-single3 libfftw3-double3 libcurl4-openssl-dev libwebkit2gtk-4.0
 
 To build a debian package of liblsl:
 

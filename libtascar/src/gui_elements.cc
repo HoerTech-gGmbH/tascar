@@ -164,7 +164,7 @@ splmeter_t::splmeter_t()
 {
   dameter.signal_draw().connect( sigc::mem_fun(*this,&splmeter_t::on_draw) );
   add(dameter);
-  dameter.set_size_request( 32, 300 );
+  dameter.set_size_request( 32, 320 );
 }
 
 void splmeter_t::invalidate_win()
@@ -256,7 +256,7 @@ gainctl_t::gainctl_t()
   val.set_max_length( 10 );
   val.set_width_chars( 4 );
   val.set_size_request( 32, -1 );
-  scale.set_size_request( -1, 300 );
+  scale.set_size_request( -1, 280 );
   polarity.set_label("ø");
   add(box);
   box.pack_start(polarity,Gtk::PACK_SHRINK);

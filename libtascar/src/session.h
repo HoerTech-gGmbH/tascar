@@ -159,8 +159,14 @@ namespace TASCAR {
     void add_orientation(const TASCAR::zyx_euler_t& o );
     void add_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
   protected:
-    std::string actor; //< Actor name pattern
-    std::vector<TASCAR::named_object_t> obj; //< List of matching actor objects
+    /**
+       \brief Actor name pattern
+     */
+    std::string actor;
+    /**
+       \brief List of matching actor objects
+     */
+    std::vector<TASCAR::named_object_t> obj;
   };
 
 }

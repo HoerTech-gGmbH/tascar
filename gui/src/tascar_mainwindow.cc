@@ -7,6 +7,11 @@
 #include "pdfexport.h"
 #include <fstream>
 
+#include <curl/curl.h>
+#include <libxml/tree.h>
+#include <libxml/HTMLparser.h>
+#include <libxml++/libxml++.h>
+
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
 
 void error_message(const std::string& msg)
@@ -159,6 +164,14 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupTransport->add_action("previous",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_previous));
   refActionGroupTransport->add_action("next",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_next));
   insert_action_group("transport",refActionGroupTransport);
+
+  news_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+  news_viewpp = Glib::wrap( GTK_WIDGET( news_view ) );
+  GET_WIDGET(news_box);
+  news_box->pack_end( *news_viewpp );
+  std::string url(std::string("http://news.tascar.org/?version="+std::string(TASCARVERSION)));
+  webkit_web_view_load_uri( news_view, url.c_str() );
+  notebook->show_all();
 }
 
 bool tascar_window_t::on_timeout()
@@ -231,6 +244,9 @@ bool tascar_window_t::on_timeout_blink()
 
 tascar_window_t::~tascar_window_t()
 {
+#ifdef WEBKIT2GTK40
+  webkit_web_view_try_close(news_view);
+#endif
   con_draw.disconnect();
   con_timeout.disconnect();
   con_timeout_blink.disconnect();

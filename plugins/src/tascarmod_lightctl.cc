@@ -5,7 +5,7 @@
 #include <complex.h>
 
 enum method_t {
-  nearest, raisedcosine, sawleft, sawright
+  nearest, raisedcosine, sawleft, sawright, rect
 };
 
 method_t uint2method( uint32_t m )
@@ -19,6 +19,8 @@ method_t uint2method( uint32_t m )
     return sawleft;
   case 3:
     return sawright;
+  case 4:
+    return rect;
   default:
     return nearest;
   }
@@ -31,6 +33,7 @@ method_t string2method( const std::string& m )
   ADDMETHOD(raisedcosine);
   ADDMETHOD(sawleft);
   ADDMETHOD(sawright);
+  ADDMETHOD(rect);
   return nearest;
 #undef ADDMETHOD
 }
@@ -290,6 +293,17 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
             float w(0);
             if( az >= 0 )
               w = 1.0f-std::min(1.0f,az);
+            for(uint32_t c=0;c<channels;++c)
+              tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
+          }
+        }
+        break;
+      case rect :
+        {
+          // do panning / copy data
+          for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+            float caz(dot_prod(pobj,fixtures[kfix].unitvector));
+            float w(powf(0.5f*(caz+1.0f),2.0f/objval[kobj].w)>0.5);
             for(uint32_t c=0;c<channels;++c)
               tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
           }

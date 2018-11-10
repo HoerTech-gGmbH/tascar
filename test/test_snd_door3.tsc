@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene guiscale="6">
+    <source>
+      <sound type="door" distance="1"><plugins><sine/></plugins></sound>
+      <position>0 -1 0 0</position>
+    </source>
+    <receiver type="omni">
+      <position>
+0 0 0 -20
+1 0 0  20
+      </position>
+    </receiver>
+  </scene>
+</session>

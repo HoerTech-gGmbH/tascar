@@ -45,27 +45,35 @@ lslactor_t::lslactor_t( const TASCAR::module_cfg_t& cfg )
       valid = true;
   if( !valid )
     throw TASCAR::ErrMsg("No channel has a non-zero influence.");
-  std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate,1,1));
-  if( results.empty() )
-    throw TASCAR::ErrMsg("No matching LSL stream found ("+predicate+").");
-  lsl::channel_format_t cf(results[0].channel_format());
-  if( !((cf == lsl::cf_float32) || (cf == lsl::cf_double64)) )
-    throw TASCAR::ErrMsg("The LSL stream \""+predicate+"\" has no floating point data.");
-  int32_t streamchannels(results[0].channel_count());
-  for(uint32_t k=0;k<channels.size();++k)
-    if( (channels[k] > -1) && (channels[k]>=streamchannels) ){
-      char ctmp[1024];
-      sprintf(ctmp,"The %dth entry of channel vector requires channel %d, but the LSL stream \"%s\" has only %d channels.",k,channels[k],predicate.c_str(),streamchannels);
-      throw TASCAR::ErrMsg(ctmp);
-    }
-  inlet = new lsl::stream_inlet(results[0]);
   srv = std::thread(&lslactor_t::service,this);
 }
 
 void lslactor_t::service()
 {
+  inlet = NULL;
+  while( (!inlet) && run_service ){
+    std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate,1,1));
+    if( results.empty() )
+      TASCAR::add_warning("No matching LSL stream found ("+predicate+").");
+    else{
+      lsl::channel_format_t cf(results[0].channel_format());
+      if( !((cf == lsl::cf_float32) || (cf == lsl::cf_double64)) )
+        TASCAR::add_warning("The LSL stream \""+predicate+"\" has no floating point data.");
+      else{
+        int32_t streamchannels(results[0].channel_count());
+        for(uint32_t k=0;k<channels.size();++k)
+          if( (channels[k] > -1) && (channels[k]>=streamchannels) ){
+            char ctmp[1024];
+            sprintf(ctmp,"The %dth entry of channel vector requires channel %d, but the LSL stream \"%s\" has only %d channels.",k,channels[k],predicate.c_str(),streamchannels);
+            TASCAR::add_warning(ctmp);
+          }else{
+            inlet = new lsl::stream_inlet(results[0]);
+          }
+      }
+    }
+  }
   std::vector<double> sample;
-  while( run_service ){
+  while( run_service && inlet){
     double t(inlet->pull_sample( sample, 0.1 ));
     if( t != 0 ){
       if( channels[0] > -1 )

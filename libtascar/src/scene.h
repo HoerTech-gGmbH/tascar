@@ -231,6 +231,7 @@ namespace TASCAR {
       pos_t size;
       double falloff;
       TASCAR::Acousticmodel::diffuse_source_t* get_source() { return source;};
+      uint32_t layers;
     private:
       TASCAR::Acousticmodel::diffuse_source_t* source;
     };
@@ -263,7 +264,9 @@ namespace TASCAR {
       void validate_attributes(std::string& msg) const;
     private:
       std::string name;
+    public:
       src_object_t* parent;
+    private:
       pos_t local_position;
       double chaindist;
       double gain_;

@@ -45,6 +45,7 @@ private:
   std::vector<uint16_t> controllers_;
   std::vector<uint8_t> values;
   std::vector<TASCAR::Scene::audio_port_t*> ports;
+  std::vector<TASCAR::Scene::route_t*> routes;
   std::thread srv;
   bool run_service;
 };
@@ -76,8 +77,19 @@ midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
 
 void midictl_t::prepare(chunk_cfg_t& cf)
 {
+  ports.clear();
+  routes.clear();
   if( session )
     ports = session->find_audio_ports( pattern );
+  for(std::vector<TASCAR::Scene::audio_port_t*>::iterator it=ports.begin();it!=ports.end();++it){
+    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(*it));
+    if( !r ){
+      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(*it));
+      if( s )
+        r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
+    }
+    routes.push_back(r);
+  }
   start_service();
 }
 
@@ -100,17 +112,31 @@ void midictl_t::send_service()
       if( run_service )
         usleep( 1000 );
     if( run_service ){
-      for( uint32_t k=0;k<std::min(controllers_.size(),ports.size());++k){
-        float g(ports[k]->get_gain_db());
-        g -= min;
-        g *= 127/(max-min);
-        g = std::max(0.0f,std::min(127.0f,g));
-        uint8_t v(g);
-        if( v != values[k] ){
-          values[k] = v;
-          int channel(controllers_[k] >> 8);
-          int param(controllers_[k] & 0xff);
-          send_midi( channel, param, v );
+      for( uint32_t k=0;k<ports.size();++k){
+        // gain:
+        if( k < controllers_.size() ){
+          float g(ports[k]->get_gain_db());
+          g -= min;
+          g *= 127/(max-min);
+          g = std::max(0.0f,std::min(127.0f,g));
+          uint8_t v(g);
+          if( v != values[k] ){
+            values[k] = v;
+            int channel(controllers_[k] >> 8);
+            int param(controllers_[k] & 0xff);
+            send_midi( channel, param, v );
+          }
+        }
+        // mute:
+        uint32_t k1=k+ports.size();
+        if( routes[k] && (k1 < controllers_.size()) ){
+          uint8_t v(127*routes[k]->get_mute());
+          if( v != values[k1] ){
+            values[k1] = v;
+            int channel(controllers_[k1] >> 8);
+            int param(controllers_[k1] & 0xff);
+            send_midi( channel, param, v );
+          }
         }
       }
     }
@@ -126,6 +152,14 @@ void midictl_t::emit_event(int channel, int param, int value)
       if( k<ports.size() ){
         values[k] = value;
         ports[k]->set_gain_db( min+value*(max-min)/127 );
+      }else{
+        uint32_t k1(k-ports.size());
+        if( k1 < routes.size() ){
+          if( routes[k1] ){
+            values[k] = value;
+            routes[k1]->set_mute( value > 0 );
+          }
+        }
       }
       known = true;
     }

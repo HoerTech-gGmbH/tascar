@@ -56,8 +56,8 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   uint32_t nch_out(pscene->num_output_ports());
   sndfile_handle_t sf_out( ofname, cf.f_sample, nch_out);
   // allocate io audio buffer:
-  float sf_in_buf[cffile.n_channels*cffile.n_fragment];
-  float sf_out_buf[nch_out*cf.n_fragment];
+  float* sf_in_buf(new float[cffile.n_channels*cffile.n_fragment]);
+  float* sf_out_buf(new float[nch_out*cf.n_fragment]);
   // allocate render audio buffer:
   std::vector<float*> a_in;
   for(uint32_t k=0;k<nch_in;++k){
@@ -114,6 +114,8 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
     delete [] a_in[k];
   for(uint32_t k=0;k<nch_out;++k)
     delete [] a_out[k];
+  delete sf_in_buf;
+  delete sf_out_buf;
 }
 
 

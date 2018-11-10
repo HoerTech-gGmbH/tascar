@@ -21,12 +21,18 @@
    \li source modules (derived from TASCAR::sourcemod_base_t)
    \li receiver modules (derived from TASCAR::receivermod_base_t)
 
-   General purpose modules and actor modules are called in
+   All of these module types consist of an initialization block which
+   is called when the module is loaded, a prepare() and release()
+   method pair, which is called when the audio properties such as
+   sampling rate and block size are defined, and an update method,
+   which is called once in each processing cycle.
+
+   General purpose modules and actor modules are updated in
    TASCAR::session_t::process(), which is called first, before the
    geometry update and acoustic modelling of the scenes.
 
    Receiver modules, source modules and audio processing plugins are
-   called at their appropriate place during acoustic modelling, i.e,
+   updated at their appropriate place during acoustic modelling, i.e,
    after the geometry update in TASCAR::render_core_t::process().
 
    To develop your own modules, copy the folder
@@ -37,8 +43,14 @@
    cp -r /usr/share/tascar/examples/plugins ./
    \endverbatim
 
-   Change to the new plugins directory and modify the Makefile and the
-   appropriate source files to your needs. For compilation, type:
+   Change to the new plugins directory:
+
+   \verbatim
+   cd plugins
+   \endverbatim
+
+   Now modify the Makefile and the appropriate source files in the "src"
+   folder to your needs. For compilation, type:
 
    \verbatim
    make
@@ -46,8 +58,11 @@
 
    The plugins can be tested by starting tascar with:
    \verbatim
-   LD_LIBRARY_PATH=./build tascar
+   LD_LIBRARY_PATH=./build tascar sessionfile.tsc
    \endverbatim
+
+   Replace "sessionfile.tsc" by the name of your session file, e.g.,
+   "example_rotate.tsc".
 
    To install the plugins, type:
    \verbatim
@@ -65,15 +80,18 @@
    manual, section 6</a> for details).
 
    The core functionality is implemented in the update() method. Here
-   you may access the vector of objects actor objects,
-   TASCAR::actor_module_t::obj, or use any of the functions
-   TASCAR::actor_module_t::set_location(),
-   TASCAR::actor_module_t::set_orientation(),
-   TASCAR::actor_module_t::set_transformation(),
-   TASCAR::actor_module_t::add_location(),
-   TASCAR::actor_module_t::add_orientation(), or
-   TASCAR::actor_module_t::add_transformation() to control the
-   delta-transformation of the objects.
+   you may access the list of actor objects,
+   TASCAR::actor_module_t::obj, or use any of the following functions
+   to control the delta-transformation of the objects:
+
+   <ul>
+   <li>TASCAR::actor_module_t::set_location()</li>
+   <li>TASCAR::actor_module_t::set_orientation()</li>
+   <li>TASCAR::actor_module_t::set_transformation()</li>
+   <li>TASCAR::actor_module_t::add_location()</li>
+   <li>TASCAR::actor_module_t::add_orientation()</li>
+   <li>TASCAR::actor_module_t::add_transformation()</li>
+   </ul>
 
    Variables can be registered for XML access (static) or OSC access
    (interactive) in the constructor. To register a variable for XML

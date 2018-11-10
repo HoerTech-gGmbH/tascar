@@ -1,5 +1,5 @@
 #!/bin/bash
-NUM_CPU=`cat /proc/cpuinfo |grep -e 'cpu cores' | sed -e 's/.*: //1' | sort -n -u`
+NUM_CPU=`cat /proc/cpuinfo | grep -e '^processor[^:]*:'|wc -l`
 c=0
 if test -z "$1"; then
     g="performance"

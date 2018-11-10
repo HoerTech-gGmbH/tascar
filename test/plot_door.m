@@ -1,5 +1,5 @@
 close all
-sCmd = 'LD_LIBRARY_PATH=../build/ ../build/tascar_renderfile';
+sCmd = 'LD_LIBRARY_PATH=../libtascar/build/:../plugins/build ../apps/build/tascar_renderfile';
 name = 'test_pos_door';
 system(sprintf('%s -i zeros.wav -d -f 64 -o %s.wav %s.tsc',sCmd,name,name));
 d = audioread([name,'.wav']);

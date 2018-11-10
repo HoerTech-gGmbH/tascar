@@ -914,7 +914,7 @@ Joanna Luberadzka</property>
                         <property name="can_focus">True</property>
                         <property name="shadow_type">in</property>
                         <property name="min_content_width">32</property>
-                        <property name="min_content_height">360</property>
+                        <property name="min_content_height">420</property>
                         <child>
                           <placeholder/>
                         </child>
@@ -1037,7 +1037,7 @@ Joanna Luberadzka</property>
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="box3">
+              <object class="GtkBox" id="box_oscvars">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
@@ -1149,12 +1149,12 @@ Joanna Luberadzka</property>
                 <property name="angle">90</property>
               </object>
               <packing>
-                <property name="position">2</property>
+                <property name="position">3</property>
                 <property name="tab_fill">False</property>
               </packing>
             </child>
             <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow1">
+              <object class="GtkScrolledWindow" id="scrolledwindow_licenses">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
@@ -1182,7 +1182,7 @@ Joanna Luberadzka</property>
                 <property name="angle">90</property>
               </object>
               <packing>
-                <property name="position">2</property>
+                <property name="position">4</property>
                 <property name="tab_fill">False</property>
               </packing>
             </child>
@@ -1213,7 +1213,33 @@ Joanna Luberadzka</property>
                 <property name="angle">90</property>
               </object>
               <packing>
-                <property name="position">2</property>
+                <property name="position">5</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="news_box">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="position">6</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="tab_news_win">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_7 News</property>
+                <property name="use_underline">True</property>
+                <property name="angle">90</property>
+              </object>
+              <packing>
+                <property name="position">6</property>
                 <property name="tab_fill">False</property>
               </packing>
             </child>
@@ -1258,4 +1284,5 @@ Joanna Luberadzka</property>
       </object>
     </child>
   </object>
+  <object class="GtkTextBuffer" id="textbuffer1"/>
 </interface>

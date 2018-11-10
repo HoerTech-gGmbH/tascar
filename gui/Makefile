@@ -7,7 +7,7 @@ TASCARVERSION=$(FULLVERSION)
 TASCARVERSION_MAJOR = $(shell echo $(TASCARVERSION)|sed -e 's/\..*//1')
 TASCARVERSION_MINOR = $(shell echo $(TASCARVERSION)|sed -e 's/[^\.]*\.//1' -e 's/\..*//1')
 
-CXXFLAGS += -DTASCARVERSION_MAJOR=$(TASCARVERSION_MAJOR) -DTASCARVERSION_MINOR=$(TASCARVERSION_MINOR)
+CXXFLAGS += -DTASCARVERSION_MAJOR=$(TASCARVERSION_MAJOR) -DTASCARVERSION_MINOR=$(TASCARVERSION_MINOR) -DTASCARVERSION=\"$(TASCARVERSION)\"
 
 BINFILES = build/tascar
 OBJECTS = build/scene_manager.o build/tascar_mainwindow.o
@@ -21,7 +21,16 @@ else
 CXXFLAGS += -Wall -O3 -L./
 endif
 
-EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0
+EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0 libcurl
+
+HAS_WEBKIT40 = $(shell pkg-config webkit2gtk-4.0 && echo "yes"||echo "no")
+ifeq "$(HAS_WEBKIT40)" "yes"
+EXTERNALS += webkit2gtk-4.0
+CXXFLAGS += -DWEBKIT2GTK40=1
+else
+EXTERNALS += webkit2gtk-3.0
+CXXFLAGS += -DWEBKIT2GTK30=1
+endif
 
 LDLIBS += -ltascar -ltascargui -ldl -lfftw3f
 LDFLAGS += -L../libtascar/build

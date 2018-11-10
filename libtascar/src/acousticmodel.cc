@@ -26,7 +26,7 @@ diffuse_source_t::diffuse_source_t( xmlpp::Element* cfg, uint32_t chunksize,TASC
     layers(0xffffffff),
     rmslevel(rmslevel_)
 {
-  GET_ATTRIBUTE_BITS(layers);
+  //GET_ATTRIBUTE_BITS(layers);
 }
 
 void diffuse_source_t::preprocess()

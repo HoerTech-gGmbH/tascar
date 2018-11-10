@@ -30,7 +30,10 @@ public:
   virtual ~rotate_t();
   void update(uint32_t tp_frame,bool running);
 private:
-  // configuration parameters:
+  //
+  // Declare your module parameters here. Access via XML file and OSC
+  // can be set up in the contructor.
+  // 
   double w; // angular velocity, internally in radians per second
   double t0; // time offset, to calibrate starting position
   double r; // radius
@@ -39,23 +42,33 @@ private:
 rotate_t::rotate_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t( cfg, true ), // initialize base class, fail if no
 				 // matching object was found
+    //
+    // Default values of module parameters:
+    //
     w(10.0*DEG2RAD), // default value 10 deg/second
     t0(0.0), // start at zero
     r(1.0) // in one meter distance
 {
-  // Get configuration parameters from XML file:
+  //
+  // Register module parameters for access via XML file:
+  //
   actor_module_t::GET_ATTRIBUTE_DEG(w); // convert degrees to radians
   actor_module_t::GET_ATTRIBUTE(t0);
   actor_module_t::GET_ATTRIBUTE(r);
+  //
   // Provide also access via the OSC interface:
   // 'actor' is the pattern provided in the XML configuration
   // (warning: it may contain asterix or other symbols)
+  //
   session->add_double_degree(actor+"/w",&w);
   session->add_double(actor+"/t0",&t0);
   session->add_double(actor+"/r",&r);
 }
 
-// main function for geometry update
+//
+// Main function for geometry update. Implement your motion
+// trajectories here.
+//
 void rotate_t::update(uint32_t tp_frame,bool running)
 {
   // convert time in samples into a rotation phase:
