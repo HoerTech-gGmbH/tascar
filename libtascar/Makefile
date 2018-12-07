@@ -45,6 +45,11 @@ else
 CXXFLAGS += -O3 
 endif
 
+ifeq "$(COVERAGE)" "yes"
+CXXFLAGS += -coverage -fprofile-arcs -ftest-coverage
+LDLIBS += -lgcov
+endif
+
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
@@ -57,7 +62,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 CXXFLAGS += -fpic -I./build
 CPPFLAGS += -I./build
 #-L./ 
-EXTERNALS = jack libxml++-2.6 liblo sndfile
+EXTERNALS = jack libxml++-2.6 liblo sndfile alsa fftw3f
 
 $(BUILD_GUIOBJECTS): EXTERNALS += gtkmm-3.0
 

@@ -4,12 +4,11 @@ function h = tascar_xml_get_element( doc, etype, varargin )
 % Usage:
 % h = tascar_xml_get_element( doc, etype [, cattr1, cvalue1, ...] )
 % 
-% doc - document (java object)
+% doc - document (java object) or element
 % etype - element name
 % cattr1 - constraint attribute name
 % cvalue1 - constraint attribute value
 %
-    root = javaMethod('getFirstChild',doc);
     elem_list = javaMethod('getElementsByTagName',doc,etype);
     N = javaMethod('getLength',elem_list);
     h = {};

@@ -32,6 +32,10 @@ else
 CXXFLAGS += -O3 
 endif
 
+ifeq "$(COVERAGE)" "yes"
+CXXFLAGS += -coverage -fprofile-arcs -ftest-coverage -fPIC
+endif
+
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
 CXXFLAGS += -I../libtascar/src -I../libtascar/build
@@ -53,6 +57,11 @@ build/tascar_gui build/tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EX
 build/tascar_gui build/tascar_pdf: EXTERNALS += $(GTKEXT)
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 build/tascar_lslsl build/tascar_lsljacktime: LDLIBS+=-llsl
+
+ifeq "$(COVERAGE)" "yes"
+LDLIBS += -lgcov -lgmock_main
+endif
+
 
 clean:
 	rm -Rf *~ src/*~ build doc/html

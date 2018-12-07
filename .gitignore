@@ -31,3 +31,10 @@ birds_oldenburg.wav
 tutorial*.pdf
 # updated session files:
 *.updated
+
+# unit tests and coverage tests:
+coverage
+coverage.info
+*.gcda
+*.gcno
+googletest

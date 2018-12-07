@@ -38,9 +38,10 @@ void debugpos_t::add_pointsource(const TASCAR::pos_t& prel, double width, const 
   // target_channel is a number from zero to maximum channel number:
   if( target_channel < sources )
     for( uint32_t k=0;k<chunk.n;++k){
-      output[3*target_channel][k] += prel.x;
-      output[3*target_channel+1][k] += prel.y;
-      output[3*target_channel+2][k] += prel.z;
+      output[4*target_channel][k] += prel.x;
+      output[4*target_channel+1][k] += prel.y;
+      output[4*target_channel+2][k] += prel.z;
+      output[4*target_channel+3][k] += chunk[k];
     }
   ++target_channel;
 }
@@ -51,7 +52,7 @@ void debugpos_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<
 
 uint32_t debugpos_t::get_num_channels()
 {
-  return 3*sources;
+  return 4*sources;
 }
 
 std::string debugpos_t::get_channel_postfix(uint32_t channel) const

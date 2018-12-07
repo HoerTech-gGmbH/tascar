@@ -182,7 +182,7 @@ public:
   void set_print_labels(bool print_labels);
   void set_show_acoustic_model(bool acmodel);
   double get_time() const {return time;};
-  void draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
+  bool draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
 protected:
   void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
   virtual void ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize);

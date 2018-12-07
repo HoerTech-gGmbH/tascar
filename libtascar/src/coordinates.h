@@ -525,6 +525,9 @@ namespace TASCAR {
     void nonrt_set(const std::vector<pos_t>& verts);
     /**
        \brief Create a rectangle
+
+       The vertices are at (0,0,0), (0,w,0), (0,w,h), (0,0,h). The
+       face normal is pointing in positive x-axis.
     */
     void nonrt_set_rect(double width, double height);
     void apply_rot_loc(const pos_t& p0, const zyx_euler_t& o);
@@ -536,6 +539,13 @@ namespace TASCAR {
     pos_t nearest_on_plane(const pos_t& p0) const;
     /**
        \brief Return nearest point on face boundary
+
+       If the test point is in the middle of the surface, then center
+       of the first edge is returned.
+
+       \param p0 Point to be tested
+       \param pk0 Edge number
+       \return Nearest point on boundary
     */
     pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
     /**
@@ -554,6 +564,9 @@ namespace TASCAR {
     */
     bool intersection( const pos_t& p0, const pos_t& p1, pos_t& p_is, double* w=NULL) const;
     const std::vector<pos_t>& get_verts() const { return verts_;};
+    const std::vector<pos_t>& get_edges() const { return edges_;};
+    const std::vector<pos_t>& get_vert_normals() const { return vert_normals_;};
+    const std::vector<pos_t>& get_edge_normals() const { return edge_normals_;};
     const pos_t& get_normal() const { return normal;};
     double get_area() const { return area;};
     double get_aperture() const { return aperture; };
@@ -570,6 +583,7 @@ namespace TASCAR {
     std::vector<pos_t> verts_;
     std::vector<pos_t> edges_;
     std::vector<pos_t> vert_normals_;
+    std::vector<pos_t> edge_normals_;
     zyx_euler_t orientation;
     pos_t delta;
     pos_t normal;
@@ -578,6 +592,15 @@ namespace TASCAR {
     double aperture;
   };
 
+  /**
+     \brief Find the nearest point between an edge vector from v to d and p0
+     \param v Origin of the edge
+     \param d Direction of the edge
+     \param p0 Test point
+     \return Position of the nearest point on the edge
+  */
+  pos_t edge_nearest(const pos_t& v,const pos_t& d,const pos_t& p0);
+  
   /**
      \ingroup tascar
      \brief List of Euler rotations connected with a time line.

@@ -27,6 +27,11 @@ void scan_sound( xmlpp::Element* sound )
     xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
     if( e_child ){
       if( e_child && (e_child->get_name() != "plugins") ){
+        if( e_child->get_name() == "plugin" ){
+          std::string plugtype(e_child->get_attribute_value("type"));
+          e_child->set_name(plugtype);
+          e_child->remove_attribute("type");
+        }
         xmlpp::Element* plugs(find_or_add_child( sound, "plugins" ));
         plugs->import_node(e_child);
         sound->remove_child(e_child);
@@ -38,6 +43,8 @@ void scan_sound( xmlpp::Element* sound )
 
 void scan_source( xmlpp::Element* src )
 {
+  xmlpp::Node::NodeList soundchildren(src->get_children("sound"));
+  uint32_t num_sounds(soundchildren.size());
   xmlpp::Node::NodeList children(src->get_children());
   for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
     xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
@@ -45,11 +52,22 @@ void scan_source( xmlpp::Element* src )
       if( e_child && (e_child->get_name() == "sound") )
         scan_sound( e_child );
       if( e_child && (e_child->get_name() == "sndfile") ){
-        xmlpp::Element* snd(find_or_add_child( src, "move_this_to_the_right_sound" ));
+        xmlpp::Element* snd;
+        if( num_sounds == 1 )
+          snd = find_or_add_child( src, "sound" );
+        else
+          snd = find_or_add_child( src, "move_this_to_the_right_sound" );
         xmlpp::Element* plugs(find_or_add_child( snd, "plugins" ));
-        e_child->set_attribute("channel",e_child->get_attribute_value("firstchannel"));
-        e_child->remove_attribute("firstchannel");
-        e_child->set_attribute("levelmode","calib");
+        xmlpp::Element* ne_child(plugs->add_child("sndfile_alternative"));
+        std::string fchannel(e_child->get_attribute_value("firstchannel"));
+        if( !fchannel.empty() )
+          ne_child->set_attribute("channel",fchannel);
+        ne_child->set_attribute("name",e_child->get_attribute_value("name"));
+        std::string sloop(e_child->get_attribute_value("loop"));
+        if( !sloop.empty() )
+          ne_child->set_attribute("loop",sloop);
+        //e_child->remove_attribute("firstchannel");
+        ne_child->set_attribute("levelmode","calib");
         // gain to level conversion:
         std::string gain(e_child->get_attribute_value("gain"));
         double dgain(0);
@@ -57,21 +75,21 @@ void scan_source( xmlpp::Element* src )
           dgain = atof(gain.c_str());
         char ctmp[1024];
         sprintf(ctmp,"%g",dgain-20.0*log10(2e-5));
-        e_child->set_attribute("level",ctmp);
-        e_child->remove_attribute("gain");
+        ne_child->set_attribute("level",ctmp);
+        //e_child->remove_attribute("gain");
         // starttime to position conversion:
         std::string startt(e_child->get_attribute_value("starttime"));
         double dstart(0);
         if( !startt.empty() ){
           dstart = atof(startt.c_str());
           sprintf(ctmp,"%g",-dstart);
-          e_child->set_attribute("position",ctmp);
+          ne_child->set_attribute("position",ctmp);
         }
-        e_child->remove_attribute("starttime");
+        ne_child->remove_attribute("starttime");
         // copy:
-        plugs->import_node(e_child);
-        src->remove_child(e_child);
-        e_child = NULL;
+        //plugs->import_node(e_child);
+        //src->remove_child(e_child);
+        //e_child = NULL;
         
       }
     }

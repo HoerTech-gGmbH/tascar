@@ -904,6 +904,7 @@ void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
   verts_.resize(N);
   edges_.resize(N);
   vert_normals_.resize(N);
+  edge_normals_.resize(N);
   // calculate area and aperture size:
   pos_t rot;
   std::vector<pos_t>::iterator i_prev_vert(local_verts_.end()-1);
@@ -956,6 +957,9 @@ void ngon_t::update()
     i_prev_edge = i_edge;
     ++i_edge;
   }
+  for(uint32_t k=0;k<N;++k){
+    edge_normals_[k] = cross_prod( edges_[k].normal(), normal );
+  }
 }
 
 pos_t ngon_t::nearest_on_plane( const pos_t& p0 ) const
@@ -967,7 +971,7 @@ pos_t ngon_t::nearest_on_plane( const pos_t& p0 ) const
   return p0d;
 }
 
-pos_t edge_nearest(const pos_t& v,const pos_t& d,const pos_t& p0)
+pos_t TASCAR::edge_nearest(const pos_t& v,const pos_t& d,const pos_t& p0)
 {
   pos_t p0p1(p0-v);
   double l(d.norm());
@@ -1015,10 +1019,11 @@ pos_t ngon_t::nearest( const pos_t& p0, bool* is_outside_, pos_t* on_edge_ ) con
   bool is_outside(false);
   pos_t dp0(ne-p0);
   if( dp0.is_null() )
+    // point is exactly on the edge
     is_outside = true;
   else
     // caclulate edge normal:
-    is_outside = (dot_prod(vert_normals_[k0],ne-p0) < 0);
+    is_outside = (dot_prod(edge_normals_[k0],dp0) < 0);
   if( is_outside_ )
     *is_outside_ = is_outside;
   if( is_outside )

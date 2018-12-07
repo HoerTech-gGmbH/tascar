@@ -185,7 +185,10 @@ void osc_server_t::add_method(const std::string& path,const char* typespec,lo_me
     std::string sPath(prefix+path);
     if( verbose )
       std::cerr << "added handler " << sPath << " with typespec \"" << typespec << "\"" << std::endl;
-    lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
+    if( sPath.empty() )
+      lo_server_thread_add_method(lost,NULL,typespec,h,user_data);
+    else
+      lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
     descriptor_t d;
     d.path = sPath;
     d.typespec = typespec;

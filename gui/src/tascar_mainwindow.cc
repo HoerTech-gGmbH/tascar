@@ -533,6 +533,7 @@ void tascar_window_t::reset_gui()
     legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();
+  webkit_web_view_reload_bypass_cache( news_view );
 }
 
 void tascar_window_t::on_menu_file_quit()
