@@ -5,7 +5,7 @@
  * @author Giso Grimm
  * @date 2014,2017
  */
-/* License (GPL)
+/* License ( GPL )
  *
  * Copyright (C) 2018  Giso Grimm
  *
@@ -40,46 +40,67 @@ namespace TASCAR {
       data_t(){};
       virtual ~data_t(){};
     };
-    receivermod_base_t(xmlpp::Element* xmlsrc);
+    /**
+       \brief Constructor, mainly parsing of configuration.
+     */
+    receivermod_base_t( xmlpp::Element* xmlsrc );
     virtual ~receivermod_base_t();
-    virtual void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
-    virtual void add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*) = 0;
-    virtual void postproc(std::vector<wave_t>& output) {};
+    /**
+       \brief Add content of a single sound source (primary or image source)
+       
+       This method implements the core rendering function (receiver characteristics and render format).
+
+       \param prel Position of the source in the receiver coordinate system (from the receiver perspective).
+       \param width Source width.
+       \param chunk Input audio signal, as returned from the source characteristics and transmission model.
+       \retval output Output audio containers.
+       \param sd State data of each acoustic model instance (see TASCAR::Acousticmodel::receiver_graph_t and TASCAR::Acousticmodel::world_t for details)
+     */
+    virtual void add_pointsource( const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* sd ) = 0;
+    virtual void add_diffuse_sound_field( const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* ) = 0;
+    virtual void postproc( std::vector<wave_t>& output ) {};
     virtual uint32_t get_num_channels() = 0;
-    virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+    virtual std::string get_channel_postfix( uint32_t channel ) const { return "";};
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
-    virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
+    virtual receivermod_base_t::data_t* create_data( double srate,uint32_t fragsize ) { return NULL;};
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
   protected:
   };
 
+  /**
+     \brief Base class for loudspeaker based render formats
+   */
   class receivermod_base_speaker_t : public receivermod_base_t {
   public:
-    receivermod_base_speaker_t(xmlpp::Element* xmlsrc);
+    receivermod_base_speaker_t( xmlpp::Element* xmlsrc );
     virtual std::vector<std::string> get_connections() const;
-    virtual void postproc(std::vector<wave_t>& output);
+    virtual void postproc( std::vector<wave_t>& output );
     virtual void prepare( chunk_cfg_t& );
-    virtual void release( );
+    virtual void release();
+    void add_diffuse_sound_field( const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* );
+    uint32_t get_num_channels();
+    std::string get_channel_postfix(uint32_t channel) const;
+    virtual void add_variables( TASCAR::osc_server_t* srv );
   protected:
     TASCAR::spk_array_t spkpos;
   };
 
   class receivermod_t : public receivermod_base_t {
   public:
-    receivermod_t(xmlpp::Element* xmlsrc);
+    receivermod_t( xmlpp::Element* xmlsrc );
     virtual ~receivermod_t();
-    virtual void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
-    virtual void add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t*);
-    virtual void postproc(std::vector<wave_t>& output);
+    virtual void add_pointsource( const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* );
+    virtual void add_diffuse_sound_field( const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* );
+    virtual void postproc( std::vector<wave_t>& output );
     virtual uint32_t get_num_channels();
-    virtual std::string get_channel_postfix(uint32_t channel);
+    virtual std::string get_channel_postfix( uint32_t channel );
     virtual std::vector<std::string> get_connections() const;
     void prepare( chunk_cfg_t& );
     void release();
-    virtual receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+    virtual receivermod_base_t::data_t* create_data( double srate,uint32_t fragsize );
     virtual void add_variables( TASCAR::osc_server_t* srv );
   private:
-    receivermod_t(const receivermod_t&);
+    receivermod_t( const receivermod_t& );
     std::string receivertype;
     void* lib;
     TASCAR::receivermod_base_t* libdata;

@@ -33,9 +33,9 @@ void TASCAR::receivermod_t::add_pointsource(const pos_t& prel, double width, con
   libdata->add_pointsource(prel,width, chunk,output,data);
 }
 
-void TASCAR::receivermod_t::add_diffusesource(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
+void TASCAR::receivermod_t::add_diffuse_sound_field(const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* data)
 {
-  libdata->add_diffusesource(chunk,output,data);
+  libdata->add_diffuse_sound_field(chunk,output,data);
 }
 
 void TASCAR::receivermod_t::postproc(std::vector<wave_t>& output)
@@ -101,13 +101,39 @@ TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(xmlpp::Element* x
 {
 }
 
+void TASCAR::receivermod_base_speaker_t::add_variables( TASCAR::osc_server_t* srv )
+{
+  receivermod_base_t::add_variables(srv);
+  srv->add_bool("/decorr",&(spkpos.decorr));
+  srv->add_bool("/densitycorr",&(spkpos.densitycorr));
+}
+  
+void TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+{
+  spkpos.add_diffuse_sound_field( chunk );
+}
+
+uint32_t TASCAR::receivermod_base_speaker_t::get_num_channels()
+{
+  return spkpos.size();
+}
+
+std::string TASCAR::receivermod_base_speaker_t::get_channel_postfix(uint32_t channel) const
+{
+  char ctmp[1024];
+  sprintf(ctmp,".%d%s",channel,spkpos[channel].label.c_str());
+  return ctmp;
+}
+
+
 std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() const
 {
   return spkpos.connections;
 }
 
-void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
+void TASCAR::receivermod_base_speaker_t::postproc( std::vector<wave_t>& output )
 {
+  spkpos.render_diffuse( output );
   if( spkpos.delaycomp.size() == spkpos.size() ){
     for( uint32_t k=0;k<spkpos.size();++k){
       for( uint32_t f=0;f<output[k].n;++f ){

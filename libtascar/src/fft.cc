@@ -31,8 +31,14 @@ TASCAR::fft_t::fft_t(uint32_t fftlen)
     s(fftlen/2+1),
     fftwp_w2s(fftwf_plan_dft_r2c_1d(fftlen,w.d,(fftwf_complex*)s.b,0)),
     fftwp_s2w(fftwf_plan_dft_c2r_1d(fftlen,(fftwf_complex*)s.b,w.d,0))
-    //fftwp_w2s(rfftwnd_create_plan(1,(int*)(&fftlen),FFTW_REAL_TO_COMPLEX,0)),
-    //fftwp_s2w(rfftwnd_create_plan(1,(int*)(&fftlen),FFTW_COMPLEX_TO_REAL,0))
+{
+}
+
+TASCAR::fft_t::fft_t(const fft_t& src)
+  : w(src.w.n),
+    s(src.s.n_),
+    fftwp_w2s(fftwf_plan_dft_r2c_1d(src.w.n,w.d,(fftwf_complex*)s.b,0)),
+    fftwp_s2w(fftwf_plan_dft_c2r_1d(src.w.n,(fftwf_complex*)s.b,w.d,0))
 {
 }
 
@@ -40,8 +46,6 @@ TASCAR::fft_t::~fft_t()
 {
   fftwf_destroy_plan(fftwp_w2s);
   fftwf_destroy_plan(fftwp_s2w);
-  //rfftwnd_destroy_plan(fftwp_w2s);
-  //rfftwnd_destroy_plan(fftwp_s2w);
 }
 
 /*

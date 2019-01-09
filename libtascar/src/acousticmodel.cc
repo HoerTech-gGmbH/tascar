@@ -18,7 +18,7 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-diffuse_source_t::diffuse_source_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
+diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
   : xml_element_t( cfg ),
     audio(chunksize),
     falloff(1.0),
@@ -29,7 +29,7 @@ diffuse_source_t::diffuse_source_t( xmlpp::Element* cfg, uint32_t chunksize,TASC
   //GET_ATTRIBUTE_BITS(layers);
 }
 
-void diffuse_source_t::preprocess()
+void diffuse_t::preprocess()
 {
   rmslevel.update(audio.w());
 }
@@ -186,18 +186,18 @@ void reflector_t::apply_reflectionfilter( TASCAR::wave_t& audio, double& lpstate
 
 receiver_graph_t::receiver_graph_t( double c, double fs, uint32_t chunksize, 
                                     const std::vector<source_t*>& sources,
-                                    const std::vector<diffuse_source_t*>& diffusesources,
+                                    const std::vector<diffuse_t*>& diffuse_sound_fields,
                                     const std::vector<reflector_t*>& reflectors,
                                     const std::vector<obstacle_t*>& obstacles,
                                     receiver_t* receiver,
                                     uint32_t ism_order )
   : active_pointsource(0),
-    active_diffusesource(0)
+    active_diffuse_sound_field(0)
 {
   // diffuse models:
   if( receiver->render_diffuse )
-    for(uint32_t kSrc=0;kSrc<diffusesources.size();++kSrc)
-      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffusesources[kSrc],receiver));
+    for(uint32_t kSrc=0;kSrc<diffuse_sound_fields.size();++kSrc)
+      diffuse_acoustic_model.push_back(new diffuse_acoustic_model_t(fs,chunksize,diffuse_sound_fields[kSrc],receiver));
   // all primary and image sources:
   if( receiver->render_point ){
     // primary sources:
@@ -223,23 +223,23 @@ receiver_graph_t::receiver_graph_t( double c, double fs, uint32_t chunksize,
   }
 }
 
-world_t::world_t( double c, double fs, uint32_t chunksize, const std::vector<source_t*>& sources,const std::vector<diffuse_source_t*>& diffusesources,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t ism_order)
+world_t::world_t( double c, double fs, uint32_t chunksize, const std::vector<source_t*>& sources,const std::vector<diffuse_t*>& diffuse_sound_fields,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t ism_order)
   : receivers_(receivers),
     masks_(masks),
     active_pointsource(0),
-    active_diffusesource(0),
+    active_diffuse_sound_field(0),
     total_pointsource(0),
-    total_diffusesource(0)
+    total_diffuse_sound_field(0)
 {
   for( uint32_t krec=0;krec<receivers.size();++krec){
     receivergraphs.push_back(new receiver_graph_t( c, fs, chunksize, 
-                                                   sources, diffusesources,
+                                                   sources, diffuse_sound_fields,
                                                    reflectors,
                                                    obstacles,
                                                    receivers[krec],
                                                    ism_order));
     total_pointsource += receivergraphs.back()->get_total_pointsource();
-    total_diffusesource += receivergraphs.back()->get_total_diffusesource();
+    total_diffuse_sound_field += receivergraphs.back()->get_total_diffuse_sound_field();
   }
 }
 
@@ -291,7 +291,7 @@ void world_t::process(const TASCAR::transport_t& tp)
   for( std::vector<receiver_graph_t*>::iterator ig=receivergraphs.begin();ig!=receivergraphs.end();++ig){
     (*ig)->process(tp);
     local_active_point += (*ig)->get_active_pointsource();
-    local_active_diffuse += (*ig)->get_active_diffusesource();
+    local_active_diffuse += (*ig)->get_active_diffuse_sound_field();
   }
   // apply receiver gain:
   for(uint32_t k=0;k<receivers_.size();k++){
@@ -299,7 +299,7 @@ void world_t::process(const TASCAR::transport_t& tp)
     receivers_[k]->apply_gain();
   }
   active_pointsource = local_active_point;
-  active_diffusesource = local_active_diffuse;
+  active_diffuse_sound_field = local_active_diffuse;
 }
 
 void receiver_graph_t::process(const TASCAR::transport_t& tp)
@@ -312,7 +312,7 @@ void receiver_graph_t::process(const TASCAR::transport_t& tp)
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
     local_active_diffuse += diffuse_acoustic_model[k]->process(tp);
   active_pointsource = local_active_point;
-  active_diffusesource = local_active_diffuse;
+  active_diffuse_sound_field = local_active_diffuse;
 }
 
 receiver_graph_t::~receiver_graph_t()
@@ -323,7 +323,7 @@ receiver_graph_t::~receiver_graph_t()
     delete (*it);
 }
 
-diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,receiver_t* receiver)
+diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver)
   : src_(src),
     receiver_(receiver),
     receiver_data(receiver_->create_data(fs,chunksize)),
@@ -376,7 +376,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
     if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero)  &&
         (receiver_->layers & src_->layers) ){
       audio *= receiver_->diffusegain;
-      receiver_->add_diffusesource(audio,receiver_data);
+      receiver_->add_diffuse_sound_field(audio,receiver_data);
       return 1;
     }
   }
@@ -505,9 +505,9 @@ void receiver_t::post_proc(const TASCAR::transport_t& tp)
 /**
    \ingroup callgraph
  */
-void receiver_t::add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t* data)
+void receiver_t::add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_base_t::data_t* data)
 {
-  receivermod_t::add_diffusesource(chunk,outchannels,data);
+  receivermod_t::add_diffuse_sound_field(chunk,outchannels,data);
 }
 
 void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img, gainmodel_t gainmodel )

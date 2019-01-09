@@ -159,6 +159,14 @@ void amb1wave_t::clear()
   z_.clear();
 }
 
+void amb1wave_t::operator+=(const amb1wave_t& v)
+{
+  w_+=v.w();
+  x_+=v.x();
+  y_+=v.y();
+  z_+=v.z();
+}
+
 void amb1wave_t::operator*=(double v)
 {
   w_*=v;

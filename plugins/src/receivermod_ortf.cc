@@ -18,7 +18,7 @@ public:
   };
   ortf_t(xmlpp::Element* xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -102,7 +102,7 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
   }
 }
 
-void ortf_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
   float* o_l(output[0].d);
   float* o_r(output[1].d);

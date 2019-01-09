@@ -94,7 +94,7 @@ int osc_set_sound_gain_lin(const char *path, const char *types, lo_arg **argv, i
 
 int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  src_diffuse_t* h((src_diffuse_t*)user_data);
+  diffuse_info_t* h((diffuse_info_t*)user_data);
   if( h && (argc == 1) && (types[0]=='f') ){
     h->set_gain_db(argv[0]->f);
     return 0;
@@ -104,7 +104,7 @@ int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int
 
 int osc_set_diffuse_gain_lin(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  src_diffuse_t* h((src_diffuse_t*)user_data);
+  diffuse_info_t* h((diffuse_info_t*)user_data);
   if( h && (argc == 1) && (types[0]=='f') ){
     h->set_gain_lin(argv[0]->f);
     return 0;
@@ -195,7 +195,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sou
   srv->set_prefix(oldpref);
 }
 
-void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::src_diffuse_t* s)
+void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::diffuse_info_t* s)
 {
   srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
   srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/lingain","f",osc_set_diffuse_gain_lin,s);
@@ -229,7 +229,7 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
       add_face_object_methods(srv,po);
     if( TASCAR::Scene::face_group_t* po=dynamic_cast<TASCAR::Scene::face_group_t*>(*it))
       add_face_group_methods(srv,po);
-    if( TASCAR::Scene::src_diffuse_t* po=dynamic_cast<TASCAR::Scene::src_diffuse_t*>(*it))
+    if( TASCAR::Scene::diffuse_info_t* po=dynamic_cast<TASCAR::Scene::diffuse_info_t*>(*it))
       add_diffuse_methods(srv,po);
     if( TASCAR::Scene::receivermod_object_t* po=dynamic_cast<TASCAR::Scene::receivermod_object_t*>(*it))
       add_receiver_methods(srv,po);

@@ -25,7 +25,7 @@ namespace TASCAR {
     uint32_t num_output_ports() const { return output_ports.size();};
     //protected:
     std::vector<Acousticmodel::source_t*> sources;
-    std::vector<Acousticmodel::diffuse_source_t*> diffusesources;
+    std::vector<Acousticmodel::diffuse_t*> diffuse_sound_fields;
     std::vector<Acousticmodel::reflector_t*> reflectors;
     std::vector<Acousticmodel::obstacle_t*> obstacles;
     std::vector<Acousticmodel::receiver_t*> receivers;
@@ -40,9 +40,9 @@ namespace TASCAR {
     Acousticmodel::world_t* world;
   public:
     uint32_t active_pointsources;
-    uint32_t active_diffusesources;
+    uint32_t active_diffuse_sound_fields;
     uint32_t total_pointsources;
-    uint32_t total_diffusesources;
+    uint32_t total_diffuse_sound_fields;
   private:
     bool is_prepared;
     //uint32_t pcnt;

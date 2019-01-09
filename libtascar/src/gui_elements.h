@@ -193,7 +193,7 @@ protected:
   virtual void draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   //  virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_room_src(TASCAR::Scene::diffuse_info_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_facegroup(TASCAR::Scene::face_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);

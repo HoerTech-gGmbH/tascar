@@ -23,13 +23,8 @@ public:
   };
   rec_vbap_t(xmlpp::Element* xmlsrc);
   virtual ~rec_vbap_t() {};
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);//declaration add_pointsource
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
+  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-private:
-  //TASCAR::Scene::spk_array_t spkpos;
 };
 
 //constructor definition for data_t
@@ -175,24 +170,6 @@ void rec_vbap_t::add_pointsource(const TASCAR::pos_t& prel, double width, const 
     }
   }
 }
-
-void rec_vbap_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
-{
-  spkpos.foa_decode(chunk,output);
-}
-
-uint32_t rec_vbap_t::get_num_channels()
-{
-  return spkpos.size();
-}
-
-std::string rec_vbap_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[1024];
-  sprintf(ctmp,".%d%s",channel,spkpos[channel].label.c_str());
-  return ctmp;
-}
-
 
 TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_data(double srate,uint32_t fragsize)
 {

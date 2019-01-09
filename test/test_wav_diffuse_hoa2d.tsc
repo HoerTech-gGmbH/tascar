@@ -3,7 +3,7 @@
   <scene>
     <diffuse>
     </diffuse>
-    <receiver type="hoa2d" maxre="true">
+    <receiver type="hoa2d" maxre="true" diffup="true">
       <speaker az="0"/>
       <speaker az="45"/>
       <speaker az="90"/>

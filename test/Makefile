@@ -4,7 +4,7 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_snd_door3 test_pos_door test_snd_layers			\
 	test_snd_rec_amb1h1v test_wav_diffuse test_wav_diffuse_hoa2d	\
 	test_wav_diffuse_nsp4 test_wav_diffuse_hoa2d4			\
-	test_wav_diffuse_hoa2d_179 test_wav_diffuse_layerbug
+	test_wav_diffuse_layerbug test_wav_diffirs
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
@@ -23,6 +23,8 @@ FAILING_TESTS = test_ir5
 
 all: $(TESTS) $(TEST_REC)
 
+db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
+
 test_ir%: test_ir%.tsc expected_ir%.wav
 	$(LIBPATH) $(VALIDATE) $< 
 	$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 
@@ -32,6 +34,13 @@ test_ir%: test_ir%.tsc expected_ir%.wav
 test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 	$(LIBPATH) $(VALIDATE) $< 
 	$(LIBPATH) $(RENDERFILE) -i input_wav$*.wav -d -f 64 -o test_wav$*.wav $<
+	$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
+	rm -f test_wav$*.wav
+
+db_test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
+	$(LIBPATH) $(VALIDATE) $< 
+	echo run -i input_wav$*.wav -d -f 64 -o test_wav$*.wav $< > gdbcmd
+	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
 	$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
 	rm -f test_wav$*.wav
 

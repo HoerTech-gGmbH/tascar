@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <connect src="system:capture_1" dest="system:playback_1"/>
+    <src_object>
+      <sndfile name="sound.wav" starttime="4" firstchannel="2" gain="-10"/>
+      <sound>
+	<sine/>
+      </sound>
+    </src_object>
+    <receiver/>
+  </scene>
+  <module name="system" command="ls"/>
+</session>

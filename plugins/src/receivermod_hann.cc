@@ -24,12 +24,8 @@ public:
   rec_hann_t(xmlpp::Element* xmlsrc);
   virtual ~rec_hann_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
-  //TASCAR::Scene::spk_array_t spkpos;
   double wexp;
 };
 
@@ -93,45 +89,6 @@ void rec_hann_t::add_pointsource(const TASCAR::pos_t& prel, double width, const 
     }
   }
 }
-
-void rec_hann_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
-{
-  spkpos.foa_decode(chunk,output);
-  //data_t* d((data_t*)sd);
-  //double spkng(1.0/(double)spkpos.size());
-  //TASCAR::pos_t px(1,0,0);
-  //TASCAR::pos_t py(0,1,0);
-  //TASCAR::pos_t pz(0,0,1);
-  //for(unsigned int k=0;k<output.size();k++)
-  //  d->dw[k] = (0.701*spkng - d->w[k])*d->dt;
-  //for(unsigned int k=0;k<output.size();k++)
-  //  d->dx[k] = (spkpos[k].get_cos_adist(px)*spkng - d->x[k])*d->dt;
-  //for(unsigned int k=0;k<output.size();k++)
-  //  d->dy[k] = (spkpos[k].get_cos_adist(py)*spkng - d->y[k])*d->dt;
-  //for(unsigned int k=0;k<output.size();k++)
-  //  d->dz[k] = (spkpos[k].get_cos_adist(pz)*spkng - d->z[k])*d->dt;
-  //for( unsigned int i=0;i<chunk.size();i++){
-  //  for( unsigned int k=0;k<output.size();k++){
-  //    output[k][i] += (d->w[k] += d->dw[k]) * chunk.w()[i];
-  //    output[k][i] += (d->x[k] += d->dx[k]) * chunk.x()[i];
-  //    output[k][i] += (d->y[k] += d->dy[k]) * chunk.y()[i];
-  //    output[k][i] += (d->z[k] += d->dz[k]) * chunk.z()[i];
-  //  }
-  //}
-}
-
-uint32_t rec_hann_t::get_num_channels()
-{
-  return spkpos.size();
-}
-
-std::string rec_hann_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[1024];
-  sprintf(ctmp,".%d%s",channel,spkpos[channel].label.c_str());
-  return ctmp;
-}
-
 
 TASCAR::receivermod_base_t::data_t* rec_hann_t::create_data(double srate,uint32_t fragsize)
 {

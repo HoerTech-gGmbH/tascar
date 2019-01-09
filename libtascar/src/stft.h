@@ -5,6 +5,9 @@
 
 namespace TASCAR {
 
+  /**
+     \brief Class for short-time Fourier transform
+   */
   class stft_t : public fft_t {
   public:
     enum windowtype_t {
@@ -13,10 +16,27 @@ namespace TASCAR {
       WND_SQRTHANN,
       WND_BLACKMAN
     };
+    /**
+       \brief Constructor
+       \param fftlen FFT length
+       \param wndlen Length of analysis window
+       \param chunksize Length of signal chunk (= window shift)
+       \param wnd Analysis window type
+       \param wndpos Position of analysis window
+       - 0 = zero padding only at end
+       - 0.5 = symmetric zero padding
+       - 1 = zero padding only at beginning
+     */
     stft_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windowtype_t wnd, double wndpos);
     uint32_t get_fftlen() const { return fftlen_; };
     uint32_t get_wndlen() const { return wndlen_; };
     uint32_t get_chunksize() const { return chunksize_; };
+    /**
+       \brief Update with one audio chunk
+       \param w Audio chunk
+
+       The result is stored in the member fft_t::s.
+     */
     void process(const wave_t& w);
   protected:
     uint32_t fftlen_;

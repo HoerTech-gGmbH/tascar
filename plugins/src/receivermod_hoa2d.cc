@@ -27,9 +27,7 @@ public:
   hoa2d_t(xmlpp::Element* xmlsrc);
   virtual ~hoa2d_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   // initialize decoder and allocate buffers:
   void prepare( chunk_cfg_t& );
@@ -49,7 +47,6 @@ private:
   double rotation;
   std::vector<float _Complex> ordergain;
   bool diffup;
-  bool v0179;
   double diffup_rot;
   double diffup_delay;
   uint32_t diffup_maxorder;
@@ -76,7 +73,6 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     maxre(false),
     rotation(-12345),
     diffup(false),
-    v0179(false),
     diffup_rot(45*DEG2RAD),
     diffup_delay(0.01),
     diffup_maxorder(100),
@@ -92,7 +88,6 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     rotation = -spkpos.mean_rotation;
   GET_ATTRIBUTE_BOOL(maxre);
   GET_ATTRIBUTE_BOOL(diffup);
-  GET_ATTRIBUTE_BOOL(v0179);
   GET_ATTRIBUTE_DEG(diffup_rot);
   GET_ATTRIBUTE(diffup_delay);
   GET_ATTRIBUTE(diffup_maxorder);
@@ -125,7 +120,6 @@ void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double_degree( "/diffup_rot", &diffup_rot );
   srv->add_double( "/diffup_delay", &diffup_delay );
   srv->add_uint( "/diffup_maxorder", &diffup_maxorder );
-  srv->add_bool( "/v0179", &v0179 );
 }
 
 hoa2d_t::~hoa2d_t()
@@ -262,29 +256,26 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_speaker_t::postproc(output);  
 }
 
-void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
-  idelay = diffup_delay*f_sample;
-  data_t* d((data_t*)sd);
-  // copy first order data:
-  float wgain(fft_scale*sqrt(2.0));
-  float xyzgain(fft_scale*0.5);
-  if( v0179 ){
-    wgain = cabs(ordergain[0]);
-    xyzgain = cabs(ordergain[1]);
+  if( !diffup ){
+    TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field( chunk, output, sd );
   }else{
+    idelay = diffup_delay*f_sample;
+    data_t* d((data_t*)sd);
+    // copy first order data:
+    float wgain(fft_scale*sqrt(2.0));
+    float xyzgain(fft_scale*0.5);
     if( !diffup ){
       if( maxre )
         xyzgain *= sqrt(0.5);
     }else{
       xyzgain *= cosf(M_PI/(2.0f*amb_order+2.0f));
     }
-  }
-  for(uint32_t kt=0;kt<n_fragment;++kt){
-    s_encoded[kt*nbins] += wgain*chunk.w()[kt];
-    s_encoded[kt*nbins+1] += xyzgain*(chunk.x()[kt] + I*chunk.y()[kt]);
-  }
-  if( diffup ){
+    for(uint32_t kt=0;kt<n_fragment;++kt){
+      s_encoded[kt*nbins] += wgain*chunk.w()[kt];
+      s_encoded[kt*nbins+1] += xyzgain*(chunk.x()[kt] + I*chunk.y()[kt]);
+    }
     float _Complex rot_p(cexpf(I*diffup_rot));
     float _Complex rot_m(cexpf(-I*diffup_rot));
     // create filtered x and y signals:
@@ -308,18 +299,6 @@ void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TAS
       }
     }
   }
-}
-
-uint32_t hoa2d_t::get_num_channels()
-{
-  return spkpos.size();
-}
-
-std::string hoa2d_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[1024];
-  sprintf(ctmp,".%d%s",channel,spkpos[channel].label.c_str());
-  return ctmp;
 }
 
 TASCAR::receivermod_base_t::data_t* hoa2d_t::create_data(double srate,uint32_t fragsize)

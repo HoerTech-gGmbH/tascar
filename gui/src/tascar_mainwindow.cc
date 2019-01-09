@@ -205,10 +205,10 @@ bool tascar_window_t::on_timeout_statusbar()
   if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
     char cmp[1024];
     if( session && session->is_running() ){
-      sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sources: %d/%d",
+      sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d",
               (long int)(session->scenes.size()),
               session->get_active_pointsources(),session->get_total_pointsources(),
-              session->get_active_diffusesources(),session->get_total_diffusesources());
+              session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields());
       sessionloaded = true;
     }else{
       sprintf(cmp,"No session loaded.");

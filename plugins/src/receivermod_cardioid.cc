@@ -10,7 +10,7 @@ public:
   };
   cardioid_t(xmlpp::Element* xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 };
@@ -34,7 +34,7 @@ void cardioid_t::add_pointsource(const TASCAR::pos_t& prel, double width, const 
     output[0][k] += chunk[k]*(d->azgain+=dazgain);
 }
 
-void cardioid_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void cardioid_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
   output[0] += chunk.w();
 }

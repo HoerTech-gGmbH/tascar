@@ -32,16 +32,54 @@
 
 namespace TASCAR {
 
+  /**
+     \brief Wrapper class around real-to-complex and complex-to-real fftw
+   */
   class fft_t {
   public:
+    /**
+       \brief Constructor
+       \param fftlen FFT length
+     */
     fft_t(uint32_t fftlen);
+    /**
+       \brief Copy constructor
+    */
+    fft_t(const fft_t& src);
+    /**
+       \brief Perform a waveform to spectrum (real-to-complex) transformation
+
+       \param src Input waveform
+
+       The result is stored in the public member fft_t::s.
+     */
     void execute(const TASCAR::wave_t& src);
+    /**
+       \brief Perform a spectrum to waveform (complex-to-real) transformation
+
+       \param src Input spectrum
+
+       The result is stored in the public member fft_t::w.
+     */
     void execute(const TASCAR::spec_t& src);
+    /**
+       \brief Perform a spectrum to waveform (complex-to-real) transformation
+
+       The input is read from the public member fft_t::s.
+       The result is stored in the public member fft::w.
+     */
     void ifft();
+    
+    /**
+       \brief Perform a waveform to spectrum (real-to-complex) transformation
+
+       The input is read from the public member fft_t::w.
+       The result is stored in the public member fft_t::s.
+     */
     void fft();
     ~fft_t();
-    TASCAR::wave_t w;
-    TASCAR::spec_t s;
+    TASCAR::wave_t w; ///< waveform container
+    TASCAR::spec_t s; ///< spectrum container
   private:
     fftwf_plan fftwp_w2s;
     fftwf_plan fftwp_s2w;

@@ -29,7 +29,7 @@ public:
   hoa2d_t(xmlpp::Element* xmlsrc);
   virtual ~hoa2d_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t n_fragment);
@@ -207,12 +207,11 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_t::postproc(output);  
 }
 
-void hoa2d_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   float _Complex rot_p(cexpf(I*diffup_rot));
   float _Complex rot_m(cexpf(-I*diffup_rot));
-  //spkpos.foa_decode(chunk,output);
   for(uint32_t kt=0;kt<n_fragment;++kt){
     s_encoded[kt*nbins] += chunk.w()[kt];
     s_encoded[kt*nbins+1] += (chunk.x()[kt] + I*chunk.y()[kt]);

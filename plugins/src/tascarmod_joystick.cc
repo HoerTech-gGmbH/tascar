@@ -53,7 +53,7 @@ ctl_joystick_t::ctl_joystick_t()
   while( (dev < NUMDEV) && ((joy_fd = open(devices[dev].c_str(), O_RDONLY))==-1) ){
     dev++;
     if( dev >= NUMDEV ){
-      std::cerr << "Warning: Unable to find a valid joystick device.\n";
+      TASCAR::add_warning("Warning: Unable to find a valid joystick device.");
       return;
     }
   }

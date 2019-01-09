@@ -50,9 +50,9 @@ bool object_t::isactive(double time) const
 }
 
 /*
- *src_diffuse_t
+ *diffuse_info_t
  */
-src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
+diffuse_info_t::diffuse_info_t(xmlpp::Element* xmlsrc)
   : sndfile_object_t(xmlsrc),audio_port_t(xmlsrc),size(1,1,1),
     falloff(1.0),
     layers(0xffffffff),
@@ -63,13 +63,13 @@ src_diffuse_t::src_diffuse_t(xmlpp::Element* xmlsrc)
   dynobject_t::GET_ATTRIBUTE_BITS(layers);
 }
 
-src_diffuse_t::~src_diffuse_t()
+diffuse_info_t::~diffuse_info_t()
 {
   if( source )
     delete source;
 }
 
-void src_diffuse_t::geometry_update(double t)
+void diffuse_info_t::geometry_update(double t)
 {
   if( source ){
     dynobject_t::geometry_update(t);
@@ -78,14 +78,14 @@ void src_diffuse_t::geometry_update(double t)
   }
 }
 
-void src_diffuse_t::prepare( chunk_cfg_t& cf_ )
+void diffuse_info_t::prepare( chunk_cfg_t& cf_ )
 {
   sndfile_object_t::prepare( cf_ );
   if( source )
     delete source;
   reset_meters();
   addmeter( f_sample );
-  source = new TASCAR::Acousticmodel::diffuse_source_t( dynobject_t::e, n_fragment, *(rmsmeter[0]) );
+  source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, n_fragment, *(rmsmeter[0]) );
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
@@ -256,7 +256,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         if( sne->get_name() == "source" )
           object_sources.push_back(new src_object_t(sne));
         else if( sne->get_name() == "diffuse" )
-          diffuse_sources.push_back(new src_diffuse_t(sne));
+          diffuse_sound_field_infos.push_back(new diffuse_info_t(sne));
         else if( sne->get_name() == "receiver" )
           receivermod_objects.push_back(new receivermod_object_t(sne));
         else if( sne->get_name() == "face" )
@@ -317,7 +317,7 @@ void scene_t::process_active(double t)
 {
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+  for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     (*it)->process_active(t,anysolo);
@@ -421,7 +421,7 @@ std::vector<object_t*> scene_t::get_objects()
   std::vector<object_t*> r;
   for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     r.push_back(*it);
-  for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+  for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
     r.push_back(*it);
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     r.push_back(*it);
@@ -466,7 +466,7 @@ void scene_t::add_licenses( licensehandler_t* session )
   for( std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
       session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
-  for( std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+  for( std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
     for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
       session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
 }
@@ -509,7 +509,7 @@ std::string route_t::get_type() const
     return "obstacle";
   if( dynamic_cast<const TASCAR::Scene::src_object_t*>(this))
     return "source";
-  if( dynamic_cast<const TASCAR::Scene::src_diffuse_t*>(this))
+  if( dynamic_cast<const TASCAR::Scene::diffuse_info_t*>(this))
     return "diffuse";
   if( dynamic_cast<const TASCAR::Scene::receivermod_object_t*>(this))
     return "receiver";
@@ -679,7 +679,7 @@ void src_object_t::process_active(double t, uint32_t anysolo)
     (*it)->active = a;
 }
 
-void src_diffuse_t::process_active(double t, uint32_t anysolo)
+void diffuse_info_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
   if( source )
@@ -713,7 +713,7 @@ void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
   scene_node_base_t::validate_attributes(msg);
   for(std::vector<src_object_t*>::const_iterator it=object_sources.begin();it!=object_sources.end();++it)
     (*it)->validate_attributes(msg);
-  for(std::vector<src_diffuse_t*>::const_iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it)
+  for(std::vector<diffuse_info_t*>::const_iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
   for(std::vector<face_object_t*>::const_iterator it=faces.begin();it!=faces.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);

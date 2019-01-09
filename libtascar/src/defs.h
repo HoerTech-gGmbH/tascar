@@ -108,7 +108,7 @@
    </ul>
    <li>Diffuse source model TASCAR::Acousticmodel::diffuse_acoustic_model_t::process()</li>
    <ul>
-   <li>Receiver specific FOA decoding TASCAR::Acousticmodel::receiver_t::add_diffusesource()</li>
+   <li>Receiver specific FOA decoding TASCAR::Acousticmodel::receiver_t::add_diffuse_sound_field()</li>
    </ul>
    <li>Output gain mask processing</li>
    </ul>

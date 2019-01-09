@@ -82,6 +82,7 @@ namespace TASCAR {
     inline uint32_t size() const { return w_.size();};
     void clear();
     void operator*=(double v);
+    void operator+=(const amb1wave_t& v);
   protected:
     wave_t w_;
     wave_t x_;

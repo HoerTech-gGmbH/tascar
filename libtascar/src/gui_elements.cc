@@ -349,7 +349,7 @@ void source_ctl_t::setup()
     tlabel.set_text("obstacle");
   else if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
     tlabel.set_text("src");
-  else if( dynamic_cast<TASCAR::Scene::src_diffuse_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::diffuse_info_t*>(route_))
     tlabel.set_text("dif");
   else if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
     tlabel.set_text("rcvr");
@@ -723,7 +723,7 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
     draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
   draw_receiver_object(dynamic_cast<TASCAR::Scene::receivermod_object_t*>(obj),cr,markersize);
   //draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
-  draw_room_src(dynamic_cast<TASCAR::Scene::src_diffuse_t*>(obj),cr,markersize);
+  draw_room_src(dynamic_cast<TASCAR::Scene::diffuse_info_t*>(obj),cr,markersize);
   draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
   draw_facegroup(dynamic_cast<TASCAR::Scene::face_group_t*>(obj),cr,markersize);
   draw_obstaclegroup(dynamic_cast<TASCAR::Scene::obstacle_group_t*>(obj),cr,markersize);
@@ -1115,7 +1115,7 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
   }
 }
 
-void scene_draw_t::draw_room_src(TASCAR::Scene::src_diffuse_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_room_src(TASCAR::Scene::diffuse_info_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( obj ){
     bool solo(obj->get_solo());

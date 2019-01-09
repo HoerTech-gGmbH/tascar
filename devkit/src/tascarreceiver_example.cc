@@ -8,7 +8,9 @@
 
   Receiver plugins inherit from
   TASCAR::receivermod_base_t. Loudspeaker based rendering methods can
-  alternatively inherit from TASCAR::receivermod_base_speaker_t.
+  alternatively inherit from TASCAR::receivermod_base_speaker_t. In
+  that case, the methods add_diffuse_sound_field() and get_num_channels() do
+  not need to be implemented.
  */
 class receiverexample_t : public TASCAR::receivermod_base_t {
 public:
@@ -26,8 +28,8 @@ public:
   receiverexample_t(xmlpp::Element* xmlsrc);
   // add one point source - this is the core panning/rendering function
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  // add a First-Order-Ambisonics diffuse source:
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  // add a First-Order-Ambisonics diffuse sound field:
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   // return the number of output channels:
   uint32_t get_num_channels();
   // register OSC variables:
@@ -80,7 +82,7 @@ void receiverexample_t::add_pointsource(const TASCAR::pos_t& prel, double width,
 }
 
 
-void receiverexample_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void receiverexample_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
   // this algoithm will put a cardioid pattern in frontal direction:
   float* o_l(output[0].d);

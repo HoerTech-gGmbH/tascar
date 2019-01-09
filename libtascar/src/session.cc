@@ -530,19 +530,19 @@ uint32_t TASCAR::session_t::get_total_pointsources() const
   return rv;
 }
 
-uint32_t TASCAR::session_t::get_active_diffusesources() const
+uint32_t TASCAR::session_t::get_active_diffuse_sound_fields() const
 {
   uint32_t rv(0);
   for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
-    rv += (*it)->active_diffusesources;
+    rv += (*it)->active_diffuse_sound_fields;
   return rv;
 }
 
-uint32_t TASCAR::session_t::get_total_diffusesources() const
+uint32_t TASCAR::session_t::get_total_diffuse_sound_fields() const
 {
   uint32_t rv(0);
   for( std::vector<TASCAR::scene_render_rt_t*>::const_iterator it=scenes.begin();it!=scenes.end();++it)
-    rv += (*it)->total_diffusesources;
+    rv += (*it)->total_diffuse_sound_fields;
   return rv;
 }
 

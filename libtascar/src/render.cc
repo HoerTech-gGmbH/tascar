@@ -9,9 +9,9 @@ TASCAR::render_core_t::render_core_t(xmlpp::Element* xmlsrc)
   : scene_t(xmlsrc),
     world(NULL),
     active_pointsources(0),
-    active_diffusesources(0),
+    active_diffuse_sound_fields(0),
     total_pointsources(0),
-    total_diffusesources(0),
+    total_diffuse_sound_fields(0),
     is_prepared(false)//,
     //pcnt(0)
 {
@@ -44,7 +44,7 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
     audioports.clear();
     audioports_in.clear();
     audioports_out.clear();
-    diffusesources.clear();
+    diffuse_sound_fields.clear();
     input_ports.clear();
     output_ports.clear();
     sources.clear();
@@ -59,12 +59,12 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
-    for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-      diffusesources.push_back((*it)->get_source());
+    for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
+      diffuse_sound_fields.push_back((*it)->get_source());
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
-    for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
+    for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
       (*it)->set_port_index(input_ports.size());
       for(uint32_t ch=0;ch<4;ch++){
         char ctmp[32];
@@ -105,9 +105,9 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       pmasks.push_back(*it);
     }
     // create the world, before first process callback is called:
-    world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffusesources,reflectors,obstacles,receivers,pmasks,mirrororder);
+    world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffuse_sound_fields,reflectors,obstacles,receivers,pmasks,mirrororder);
     total_pointsources = world->get_total_pointsource();
-    total_diffusesources = world->get_total_diffusesource();
+    total_diffuse_sound_fields = world->get_total_diffuse_sound_field();
     is_prepared = true;
     pthread_mutex_unlock( &mtx_world );
   }
@@ -160,8 +160,8 @@ void TASCAR::render_core_t::process(uint32_t nframes,
       sounds[k]->process_plugins(tp);
       sounds[k]->apply_gain();
     }
-    for(std::vector<src_diffuse_t*>::iterator it=diffuse_sources.begin();it!=diffuse_sources.end();++it){
-      TASCAR::Acousticmodel::diffuse_source_t* psrc((*it)->get_source());
+    for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
+      TASCAR::Acousticmodel::diffuse_t* psrc((*it)->get_source());
       float gain((*it)->get_gain());
       TASCAR::amb1wave_t amb1tmp(nframes,
                                  inBuffer[(*it)->get_port_index()],
@@ -176,10 +176,10 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     if( world ){
       world->process(tp);
       active_pointsources = world->get_active_pointsource();
-      active_diffusesources = world->get_active_diffusesource();
+      active_diffuse_sound_fields = world->get_active_diffuse_sound_field();
     }else{
       active_pointsources = 0;
-      active_diffusesources = 0;
+      active_diffuse_sound_fields = 0;
     }
     // copy receiver output:
     for(unsigned int k=0;k<receivermod_objects.size();k++){

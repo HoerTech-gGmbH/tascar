@@ -15,7 +15,7 @@ public:
   };
   amb3h0v_t(xmlpp::Element* xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   uint32_t get_num_channels();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   std::string get_channel_postfix(uint32_t channel) const;
@@ -63,7 +63,7 @@ void amb3h0v_t::add_pointsource(const TASCAR::pos_t& prel, double width, const T
   }
 }
 
-void amb3h0v_t::add_diffusesource(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void amb3h0v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   for( unsigned int i=0;i<chunk.size();i++){
     output[AMB30::idx::w][i] += chunk.w()[i];

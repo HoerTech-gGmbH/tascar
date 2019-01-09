@@ -13,7 +13,7 @@ public:
 
 class hrirconv_t : public jackc_t {
 public:
-  hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen, const std::vector<channel_entry_t>& matrix,const std::string& jackname);
+  hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen, const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e);
   virtual ~hrirconv_t();
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
 private:
@@ -21,7 +21,7 @@ private:
   std::vector<channel_entry_t> matrix_;
 };
 
-hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen, const std::vector<channel_entry_t>& matrix,const std::string& jackname)
+hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen, const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e)
   : jackc_t(jackname),matrix_(matrix)
 {
   if( fftlen <= (uint32_t)get_fragsize() ){
@@ -44,7 +44,9 @@ hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen,
   for(std::vector<channel_entry_t>::iterator mit=matrix_.begin();mit!=matrix_.end();++mit){
     TASCAR::sndfile_t sndf(mit->filename,mit->filechannel);
     if( sndf.get_srate() != (uint32_t)get_srate() ){
-      std::cerr << "Warning: The sample rate of file \"" << mit->filename << "\" (" << sndf.get_srate() << ") differs from system sample rate (" << get_srate() << ").\n";
+      std::ostringstream msg;
+      msg << "Warning: The sample rate of file \"" << mit->filename << "\" (" << sndf.get_srate() << ") differs from system sample rate (" << get_srate() << ").";
+      TASCAR::add_warning(msg.str(),e.e);
     }
     TASCAR::overlap_save_t* pcnv(new TASCAR::overlap_save_t(fftlen-fragsize+1,get_fragsize()));
     pcnv->set_irs(sndf,false);
@@ -160,7 +162,7 @@ public:
 
 hrirconv_mod_t::hrirconv_mod_t( const TASCAR::module_cfg_t& cfg )
   : hrirconv_var_t( cfg ),
-    hrirconv_t(inchannels,outchannels,fftlen, matrix, id )
+    hrirconv_t(inchannels,outchannels,fftlen, matrix, id, *this )
 {
 }
 

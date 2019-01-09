@@ -126,14 +126,6 @@ namespace TASCAR {
       std::vector<sndfile_info_t> sndfiles;
     };
 
-    class mirror_t {
-    public:
-      mirror_t():c1(0),c2(0){};
-      pos_t p;
-      double c1;
-      double c2;
-    };
-
     class face_object_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
     public:
       face_object_t(xmlpp::Element* xmlsrc);
@@ -213,10 +205,13 @@ namespace TASCAR {
       float caliblevel;
     };
 
-    class src_diffuse_t : public sndfile_object_t, public audio_port_t {
+    /**
+       \brief Diffuse sound field descriptor
+     */
+    class diffuse_info_t : public sndfile_object_t, public audio_port_t {
     public:
-      src_diffuse_t(xmlpp::Element* e);
-      virtual ~src_diffuse_t();
+      diffuse_info_t(xmlpp::Element* e);
+      virtual ~diffuse_info_t();
       void prepare( chunk_cfg_t& );
       /**
          \callgraph
@@ -230,10 +225,10 @@ namespace TASCAR {
       void process_active(double t,uint32_t anysolo);
       pos_t size;
       double falloff;
-      TASCAR::Acousticmodel::diffuse_source_t* get_source() { return source;};
+      TASCAR::Acousticmodel::diffuse_t* get_source() { return source;};
       uint32_t layers;
     private:
-      TASCAR::Acousticmodel::diffuse_source_t* source;
+      TASCAR::Acousticmodel::diffuse_t* source;
     };
 
     class sound_t : public TASCAR::Acousticmodel::source_t, public audio_port_t {
@@ -364,7 +359,7 @@ namespace TASCAR {
       void process_active(double t);
       std::vector<sound_t*> sounds;
       std::vector<src_object_t*> object_sources;
-      std::vector<src_diffuse_t*> diffuse_sources;
+      std::vector<diffuse_info_t*> diffuse_sound_field_infos;
       //std::vector<src_door_t*> door_sources;
       std::vector<face_object_t*> faces;
       std::vector<face_group_t*> facegroups;

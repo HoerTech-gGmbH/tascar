@@ -90,7 +90,7 @@ void TASCAR::audioplayer_t::open_files()
   for(std::vector<TASCAR::Scene::src_object_t*>::iterator it=scene->object_sources.begin();it!=scene->object_sources.end();++it){
     infos.insert(infos.end(),(*it)->sndfiles.begin(),(*it)->sndfiles.end());
   }
-  for(std::vector<TASCAR::Scene::src_diffuse_t*>::iterator it=scene->diffuse_sources.begin();it!=scene->diffuse_sources.end();++it){
+  for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator it=scene->diffuse_sound_field_infos.begin();it!=scene->diffuse_sound_field_infos.end();++it){
     infos.insert(infos.end(),(*it)->sndfiles.begin(),(*it)->sndfiles.end());
   }
   for(std::vector<TASCAR::Scene::sndfile_info_t>::iterator it=infos.begin();it!=infos.end();++it){
@@ -117,11 +117,11 @@ void TASCAR::audioplayer_t::open_files()
       add_input_port(pname);
     }
     if( (int64_t)(files[k].get_srate()) != (int64_t)(get_srate()) ){
-      std::string msg("Sample rate differs: ");
+      std::string msg("Sample rate differs ("+ infos[k].fname+"): ");
       char ctmp[1024];
       sprintf(ctmp,"file has %d Hz, expected %d Hz",files[k].get_srate(),get_srate());
       msg+=ctmp;
-      add_warning(msg);
+      add_warning(msg,infos[k].e);
     }
   }
 }
@@ -215,8 +215,8 @@ void TASCAR::render_rt_t::start()
 //    }
 //  }
   // todo: connect diffuse ports.
-  for(std::vector<TASCAR::Scene::src_diffuse_t*>::iterator idiff=diffuse_sources.begin();idiff!=diffuse_sources.end();++idiff){
-    TASCAR::Scene::src_diffuse_t* pdiff(*idiff);
+  for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator idiff=diffuse_sound_field_infos.begin();idiff!=diffuse_sound_field_infos.end();++idiff){
+    TASCAR::Scene::diffuse_info_t* pdiff(*idiff);
     std::string cn(pdiff->get_connect());
     cn = strrep(cn,"@","player."+name+":"+pdiff->get_name());
     uint32_t pi(pdiff->get_port_index());

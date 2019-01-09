@@ -5,6 +5,9 @@ BUILD_DIR = build
 include ../config.mk
 include ../rules.mk
 
+clean:
+	rm -Rf googlemock googletest $(BUILD_DIR)
+
 googlemock: $(BUILD_DIR)/googlemock.is_installed
 
 $(BUILD_DIR)/googlemock.is_installed: googletest/WORKSPACE \
@@ -18,4 +21,4 @@ $(BUILD_DIR)/googlemock.is_installed: googletest/WORKSPACE \
 
 googletest/WORKSPACE:
 	git clone https://github.com/google/googletest
-
+	(cd googletest && git checkout 31eb5e9b873af4b509be2f77616113007fa0de9d)

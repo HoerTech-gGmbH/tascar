@@ -96,10 +96,13 @@ namespace TASCAR {
       pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet);
     };
 
-    class diffuse_source_t : public shoebox_t, public TASCAR::xml_element_t {
+    /**
+       \brief Diffuse sound field
+     */
+    class diffuse_t : public shoebox_t, public TASCAR::xml_element_t {
     public:
-      diffuse_source_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_ );
-      virtual ~diffuse_source_t() {};
+      diffuse_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_ );
+      virtual ~diffuse_t() {};
       virtual void preprocess();
       amb1rotator_t audio;
       double falloff;
@@ -125,6 +128,9 @@ namespace TASCAR {
       bool active;
     };
 
+    /**
+       \brief Primary sound source
+     */
     class source_t : public sourcemod_t, public c6dof_t {
     public:
       source_t(xmlpp::Element* xmlsrc);
@@ -150,6 +156,12 @@ namespace TASCAR {
       std::vector<TASCAR::audioplugin_t*> plugins;
     };
 
+    /**
+       \brief Receiver (or end point) of the acoustic model
+
+       Provides output for the render method implementation
+
+     */
     class receiver_t : public receivermod_t, public c6dof_t {
     public:
       receiver_t(xmlpp::Element* xmlsrc);
@@ -158,7 +170,7 @@ namespace TASCAR {
       void release();
       void clear_output();
       void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, receivermod_base_t::data_t*);
-      void add_diffusesource(const amb1wave_t& chunk, receivermod_base_t::data_t*);
+      void add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain, bool b_img, gainmodel_t gainmodel );
       void set_next_gain(double gain);
       void set_fade( double targetgain, double duration );
@@ -225,6 +237,13 @@ namespace TASCAR {
       float transmission;
     };
 
+    /**
+       \brief Acoustic reflector
+
+       Reflectors are a single polygon which reflect sounds arriving
+       from the positive face normal side of the surface. Reflectors
+       create an image source.
+     */
     class reflector_t : public diffractor_t {
     public:
       reflector_t();
@@ -235,6 +254,9 @@ namespace TASCAR {
       bool edgereflection;
     };
 
+    /**
+       \brief The path from one primary or image source to a receiver
+     */
     class soundpath_t : public c6dof_t {
     public:
       soundpath_t(const source_t* src, const soundpath_t* parent_ = NULL, const reflector_t* generator_ = NULL);//< constructor, for primary sources set parent_ to NULL
@@ -303,13 +325,13 @@ namespace TASCAR {
      */
     class diffuse_acoustic_model_t {
     public:
-      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_source_t* src,receiver_t* receiver);
+      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver);
       ~diffuse_acoustic_model_t();
       /** \brief Read audio from source, process and add to receiver.
        */
       uint32_t process(const TASCAR::transport_t& tp);
     protected:
-      diffuse_source_t* src_;
+      diffuse_t* src_;
       receiver_t* receiver_;
       receivermod_base_t::data_t* receiver_data;
       amb1rotator_t audio;
@@ -318,13 +340,16 @@ namespace TASCAR {
       double gain;
     };
 
+    /**
+       \brief Subset of a scene as seen by a single receiver
+     */
     class receiver_graph_t {
     public:
       /** \brief Create a graph for one receiver
        */
       receiver_graph_t(double c, double fs, uint32_t chunksize,
                        const std::vector<source_t*>& sources,
-                       const std::vector<diffuse_source_t*>& diffusesources,
+                       const std::vector<diffuse_t*>& diffuse_sound_fields,
                        const std::vector<reflector_t*>& reflectors,
                        const std::vector<obstacle_t*>& obstacles,
                        receiver_t* receiver,
@@ -332,13 +357,13 @@ namespace TASCAR {
       ~receiver_graph_t();
       void process(const TASCAR::transport_t& tp);
       uint32_t get_active_pointsource() const {return active_pointsource;};
-      uint32_t get_active_diffusesource() const {return active_diffusesource;};
+      uint32_t get_active_diffuse_sound_field() const {return active_diffuse_sound_field;};
       uint32_t get_total_pointsource() const {return acoustic_model.size();};
-      uint32_t get_total_diffusesource() const {return diffuse_acoustic_model.size();};
+      uint32_t get_total_diffuse_sound_field() const {return diffuse_acoustic_model.size();};
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
       uint32_t active_pointsource;
-      uint32_t active_diffusesource;
+      uint32_t active_diffuse_sound_field;
     };
 
     /** \brief The render model of an acoustic scenario.
@@ -356,7 +381,7 @@ namespace TASCAR {
        * \param sources Pointers to primary sound sources
        * \param reflectors Pointers to reflector objects
        * \param receivers Pointers to render receivers
-       * \param diffusesources List of diffuse sources
+       * \param diffuse_sound_fields List of diffuse sound fields
        * \param obstacles List of obstacles
        * \param masks List of masks
        * \param ismorder Maximum image source model order
@@ -366,7 +391,7 @@ namespace TASCAR {
        */
       world_t( double c, double fs, uint32_t chunksize,
                const std::vector<source_t*>& sources,
-               const std::vector<diffuse_source_t*>& diffusesources,
+               const std::vector<diffuse_t*>& diffuse_sound_fields,
                const std::vector<reflector_t*>& reflectors,
                const std::vector<obstacle_t*>& obstacles,
                const std::vector<receiver_t*>& receivers,
@@ -379,19 +404,19 @@ namespace TASCAR {
       void process(const TASCAR::transport_t& tp);
       /// Return number of active point sources, including image sources
       uint32_t get_active_pointsource() const {return active_pointsource;};
-      /// Return number of active diffuse sources
-      uint32_t get_active_diffusesource() const {return active_diffusesource;};
+      /// Return number of active diffuse sound fields
+      uint32_t get_active_diffuse_sound_field() const {return active_diffuse_sound_field;};
       /// Return total number of point sources, including image sources
       uint32_t get_total_pointsource() const {return total_pointsource;};
-      /// Return total number of diffuse sources
-      uint32_t get_total_diffusesource() const {return total_diffusesource;};
+      /// Return total number of diffuse sound fields
+      uint32_t get_total_diffuse_sound_field() const {return total_diffuse_sound_field;};
       std::vector<receiver_graph_t*> receivergraphs;
       std::vector<receiver_t*> receivers_;
       std::vector<mask_t*> masks_;
       uint32_t active_pointsource;
-      uint32_t active_diffusesource;
+      uint32_t active_diffuse_sound_field;
       uint32_t total_pointsource;
-      uint32_t total_diffusesource;
+      uint32_t total_diffuse_sound_field;
     };
 
   }
