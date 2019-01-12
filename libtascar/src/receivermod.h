@@ -5,7 +5,7 @@
  * @author Giso Grimm
  * @date 2014,2017
  */
-/* License ( GPL )
+/* License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
  *
