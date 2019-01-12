@@ -14,12 +14,12 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
 SOURCES = omni cardioidmod door
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen		\
-  lightctl levels2osc nearsensor dirgain dummy	\
-  matrix hoafdnrot mpu6050track touchosc savegains lslactor hrirconv	\
-  joystick hossustain midicc2osc midictl
+  foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen lightctl	\
+  levels2osc nearsensor dirgain dummy matrix hoafdnrot mpu6050track	\
+  touchosc savegains lslactor hrirconv joystick hossustain midicc2osc	\
+  midictl
 
-TASCARMODSGUI = tracegui simplecontroller
+TASCARMODSGUI = tracegui simplecontroller datalogging 
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
 lipsync_paper lookatme metronome onsetdetector openmha sine sndfile	\
@@ -49,10 +49,13 @@ else
 CXXFLAGS += -O3 
 endif
 
+TASCARVERSION=$(FULLVERSION)
+
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
 CXXFLAGS += -I../libtascar/src -I../libtascar/build
 LDFLAGS += -L../libtascar/build
+CXXFLAGS += -DTASCARVERSION="\"$(TASCARVERSION)\""
 
 CXXFLAGS += -fpic
 EXTERNALS = jack libxml++-2.6 liblo sndfile
@@ -81,6 +84,8 @@ build/tascar_hossustain.so: EXTERNALS += fftw3f
 build/tascar_lsljacktime.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
 build/tascar_lightctl.so: LDLIBS+=-ltascardmx
 build/tascar_simplecontroller.so: build/simplecontroller_glade.h
+build/tascar_datalogging.so: LDLIBS += -lmatio -llsl
+build/tascar_datalogging.so: build/datalogging_glade.h
 
 build/tascarreceiver_%.so: src/receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
