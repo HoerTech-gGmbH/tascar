@@ -17,9 +17,9 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route lsljacktime oscevents oscjacktime ltcgen lightctl	\
   levels2osc nearsensor dirgain dummy matrix hoafdnrot mpu6050track	\
   touchosc savegains lslactor hrirconv joystick hossustain midicc2osc	\
-  midictl
+  midictl rotator
 
-TASCARMODSGUI = tracegui simplecontroller datalogging 
+TASCARMODSGUI = tracegui simplecontroller datalogging timedisplay
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
 lipsync_paper lookatme metronome onsetdetector openmha sine sndfile	\
@@ -86,6 +86,7 @@ build/tascar_lightctl.so: LDLIBS+=-ltascardmx
 build/tascar_simplecontroller.so: build/simplecontroller_glade.h
 build/tascar_datalogging.so: LDLIBS += -lmatio -llsl
 build/tascar_datalogging.so: build/datalogging_glade.h
+build/tascar_timedisplay.so: build/timedisplay_glade.h
 
 build/tascarreceiver_%.so: src/receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
