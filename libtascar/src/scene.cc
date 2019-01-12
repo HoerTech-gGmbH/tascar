@@ -127,38 +127,12 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
         sound.push_back(new sound_t(sne,this));
       else if( (sne->get_name() != "creator") && 
                (sne->get_name() != "sndfile") && 
+               (sne->get_name() != "include") && 
                (sne->get_name() != "position") && 
                (sne->get_name() != "orientation") )
         TASCAR::add_warning("Invalid sub-node \""+sne->get_name()+"\".",sne);
     }
   }
-  //for( std::vector<sndfile_info_t>::const_iterator it=sndfiles.begin();
-  //     it!=sndfiles.end();++it){
-  //  if( it->channels == 1 ){
-  //    std::string msg("The use of \"sndfile\" in source objects is discouraged.\n  Use audio plugin instead:\n");
-  //    msg += "  <sndfile";
-  //    char ctmp[1024];
-  //    ctmp[1023] = 0;
-  //    snprintf(ctmp,1023," name=\"%s\"",it->fname.c_str());
-  //    msg += ctmp;
-  //    if( it->firstchannel ){
-  //      snprintf(ctmp,1023," channel=\"%d\"",it->firstchannel);
-  //      msg += ctmp;
-  //    }
-  //    if( it->starttime != 0 ){
-  //      snprintf(ctmp,1023," position=\"%g\"",-it->starttime);
-  //      msg += ctmp;
-  //    }
-  //    if( it->loopcnt != 1 ){
-  //      snprintf(ctmp,1023," loop=\"%d\"",it->loopcnt);
-  //      msg += ctmp;
-  //    }
-  //    snprintf(ctmp,1023," levelmode=\"calib\" level=\"%g\"",-20*log10(2e-5/it->gain));
-  //    msg += ctmp;
-  //    msg += "/>";
-  //    add_warning(msg,it->e);
-  //  }
-  //}
 }
 
 src_object_t::~src_object_t()

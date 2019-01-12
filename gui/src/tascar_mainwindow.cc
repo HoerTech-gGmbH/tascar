@@ -41,17 +41,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
 {
   Gsv::init();
   language_manager = Gsv::LanguageManager::create();
-  //std::vector<std::string> langs = language_manager->get_language_ids ();
-  //std::cout << "number of languages found: " << langs.size () << std::endl;
-  //
-  //for (std::vector<std::string>::const_iterator iter = langs.begin(); iter != langs.end (); ++iter) {
-  //  if (!(iter->empty())) {
-  //    Glib::RefPtr<Gsv::Language> lang = language_manager->get_language (*iter);
-  //    std::cout << "language: " << lang->get_name () << std::endl;
-  //  } else {
-  //    std::cout << "language: null" << std::endl;
-  //  }
-  //}
   pthread_mutex_init( &mtx_draw, NULL );
   m_refBuilder->get_widget("SceneDraw",scene_map);
   if( !scene_map )
@@ -122,9 +111,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   GET_WIDGET(osc_vars);
   GET_WIDGET(text_srv_addr);
   GET_WIDGET(text_srv_port);
-  //Glib::RefPtr<Gtk::TextBuffer::Tag> t_bold(legal_view->get_buffer()->create_tag("bold"));
-  //t_bold->property_weight() = PANGO_WEIGHT_BOLD;
-  
   //Create actions for menus and toolbars:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain = Gio::SimpleActionGroup::create();
   refActionGroupMain->add_action("scene_new",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_new));
