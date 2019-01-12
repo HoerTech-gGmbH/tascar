@@ -68,6 +68,8 @@
    \verbatim
    sudo make install
    \endverbatim
+
+   \note All external modules should use SI units for signals and variables.
    
 
    \section actormod Actor modules
