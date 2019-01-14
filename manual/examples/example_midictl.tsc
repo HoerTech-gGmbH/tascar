@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene name="scene">
+    <source name="in">
+      <sound name="0"/>
+    </source>
+    <receiver name="out"/>
+  </scene>
+  <modules>
+    <midictl name="master" min="-30" max="0" controllers="0/0 0/1 0/2 0/8 0/9 0/10" dumpmsg="true" connect="BCF2000:0" pattern="/scene/in/0 /scene/out /test"/>
+    <route name="test" channels="2"/>
+  </modules>
+</session>

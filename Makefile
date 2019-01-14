@@ -1,5 +1,5 @@
 MODULES = libtascar plugins apps gui
-DOCMODULES = doc
+DOCMODULES = doc manual
 
 all: $(MODULES)
 

@@ -1,0 +1,21 @@
+\subsection{tracegui}\label{sec:tracegui}\index{tracegui}
+
+A GUI module to show traces of a subset of objects, controlled by the
+\attr{actor} attribute.
+
+\begin{tscattributes}
+\attr{tracelen}                     & Length of trace in seconds (default: 4)             \\
+\attr{fps}                          & Display frame rate, frames per second (default: 10) \\
+\attr{guiscale}                     & Zoom factor of GUI (default: 10)                    \\
+\attr{unitcircle}                   & Show unit circle (default: true)                    \\
+\attr{origin}                       & Show cross in origin (default: true)                \\
+\attr{x},\attr{y},\attr{w},\attr{h} & Window position and size                            \\
+\end{tscattributes}
+
+An example which shows traces of all objects not starting with an ``o'':
+
+\begin{lstlisting}[numbers=none]
+<modules>
+  <tracegui actor="/*/[!o]*" fps="20" guiscale="2.2" tracelen="1.6"/>
+</modules>
+\end{lstlisting}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session name="test" srv_addr="" srv_port="9877" license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene name="scene" guiscale="3">
+    <receiver name="out" type="omni"/>
+    <source name="src">
+      <position>0 -0.65 0 0</position>
+      <sound/>
+    </source>
+    <facegroup name="mirror" reflectivity="1" damping="0">
+      <faces>0 -0.5 -0.5 0 -0.5 0.5 0 0.5 0.5 0 0.5 -0.5</faces>
+      <position>0 0.65 0 0</position>
+      <orientation>0 0 0 0</orientation>
+    </facegroup>
+  </scene>
+</session>

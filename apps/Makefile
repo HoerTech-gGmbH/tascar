@@ -18,7 +18,7 @@ BINFILES += $(TEST_FILES)
 
 BUILD_BINS = $(patsubst %,build/%,$(BINFILES))
 
-ifeq "$(HAS_LSL)" "yes2"
+ifeq "$(HAS_LSL)" "yes"
 BINFILES += tascar_lslsl tascar_lsljacktime
 endif
 

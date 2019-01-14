@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<session license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene guiscale="20">
+    <face name="triangle" vertices="0 0 0 1 2 0 2 0 0" color="#ffd500">
+      <position>0 0 1.25 0.85</position>
+      <orientation>0 -30 0 0</orientation>
+    </face>
+    <face name="rectange" width="2.4" height="0.5" color="#00ff80">
+      <position>0 -0.5 0 0.85</position>
+      <orientation>0 5 0 0</orientation>
+    </face>
+    <facegroup name="mirrors" color="#2a00ff">
+      <position>0 -1 -1.25 0.85</position>
+      <orientation>0 -90 0 0</orientation>
+      <faces>0 0 0  1 2 0  2 0 0
+      -4 -2 0  -4 0 0  -1 0 0  -1 -2 0</faces>
+    </facegroup>
+  </scene>
+</session>

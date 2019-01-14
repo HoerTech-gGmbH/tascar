@@ -26,6 +26,7 @@
 #include "scene_manager.h"
 #include "viewport.h"
 #include "gui_elements.h"
+#include <gtksourceview/gtksource.h>
 #include <gtksourceviewmm.h>
 #include <webkit2/webkit2.h>
 

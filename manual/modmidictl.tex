@@ -1,0 +1,18 @@
+\subsection{midictl}\label{sec:midictl}\index{midictl}
+
+Control gains with a MIDI controller.
+
+\begin{tscattributes}
+\indattr{pattern} & Pattern to select gain controllers in TASCAR.\\
+\indattr{dumpmsg} & Dump unprocessed messages to console\\
+\indattr{name} & name of MIDI client\\
+\indattr{connect} & name of MIDI device\\
+\indattr{controllers} & List of controllers, in ``channel/param'' form (e.g., 0/13 0/28) \\
+\indattr{min} & minimum output value (corresponding to MIDI 0)\\
+\indattr{max} & maximum output value (corresponding to MIDI 127)\\
+\end{tscattributes}
+
+Here is an example which selects the gain controller of the sound
+``in.0'', the receiver gain ``out'' (both in the scene ``scene'') and
+the gain controller of the ``route'' module ``/test'':
+\tscexample{example_midictl}

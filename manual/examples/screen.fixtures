@@ -1,0 +1,279 @@
+<?xml version="1.0" ?>
+<layout>
+  <fixture az="0" addr="4" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="30" addr="7" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="60" addr="10" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="90" addr="13" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="120" addr="16" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="150" addr="19" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="180" addr="22" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="210" addr="25" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="240" addr="28" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="270" addr="31" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="300" addr="34" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+  <fixture az="330" addr="37" calib="0.6 1 0.0784" calib26="1 1 0.039" calib1="1 1 0">
+    <calib channel="0" in="255" out="140"/>
+    <calib channel="1" in="255" out="255"/>
+    <calib channel="2" in="255" out="21"/>
+    <calib channel="0" in="127" out="60"/>
+    <calib channel="1" in="127" out="120"/>
+    <calib channel="2" in="127" out="9"/>
+    <calib channel="0" in="63" out="27"/>
+    <calib channel="1" in="63" out="30"/>
+    <calib channel="2" in="63" out="1"/>
+    <calib channel="0" in="31" out="12"/>
+    <calib channel="1" in="31" out="15"/>
+    <calib channel="2" in="31" out="1"/>
+    <calib channel="0" in="15" out="4"/>
+    <calib channel="1" in="15" out="5"/>
+    <calib channel="2" in="15" out="1"/>
+    <calib channel="0" in="7" out="1"/>
+    <calib channel="1" in="7" out="2"/>
+    <calib channel="2" in="7" out="0"/>
+    <calib channel="0" in="1" out="1"/>
+    <calib channel="1" in="1" out="1"/>
+    <calib channel="2" in="1" out="0"/>
+  </fixture>
+</layout>

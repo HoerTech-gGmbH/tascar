@@ -1,0 +1,114 @@
+digraph ap {
+  //ranksep = 2.5;
+  //splines = true;
+  node [
+	shape = "Mrecord",
+	style = "filled",
+	fillcolor = "gold"
+	];
+
+  edge [ penwidth = "1", style="dashed" ];
+
+  {
+    rank = "min";
+    session;
+  }
+
+  session [label="{session:|name|duration|loop}"];
+  scene [label="{scene:|name|guiscale|guicenter|mirrororder|c}"];
+
+  route [label="{route:|name|mute|solo}",fillcolor="gray"];
+  object [label="{object:|start|end}",fillcolor="gray"];
+  jack_port [label="{jack_port:|connect|gain|caliblevel}",fillcolor="gray"];
+  sndfileobject [label="{sndfile_object:}",fillcolor="gray"];
+
+  src_diffuse [label="{diffuse:|size|falloff}",fillcolor="salmon"];
+  src_door [label="{door:|width|height|falloff|distance|maxdist|wndsqrt}",fillcolor="salmon"];
+  src_object [label="{src_object:}",fillcolor="salmon"];
+  receiver_object [label="{receiver:|type|size|point|diffuse|image|isdirect|diffusegain|falloff|globalmask|delaycomp}",fillcolor="salmon"];
+  face [label="{face:|width|height|reflectivity|damping|vertices}",fillcolor="salmon"];
+  facegroup [label="{facegroup:|reflectivity|damping|importraw}",fillcolor="salmon"];
+
+  mask [label="{mask:|size|falloff|inside}",fillcolor="salmon"];
+
+  boundingbox [label="{boundingbox:|size|falloff}"];
+  speaker [label="{speaker:|az|el|r}"];
+  sndfile [label="{sndfile:|name|firstchannel|channels|loop|starttime}"];
+  sound [label="{sound:|x|y|z|d|maxdist|sincorder|direct|name}"];
+
+  range [label="{range:|start|end}"];
+  connect [label="{connect:|src|dest}"];
+
+  module [label="{module:|name}"];
+  faces;
+
+  {
+    rank = "same";
+    src_diffuse;
+    src_door;
+    src_object;
+    receiver_object;
+    mask;
+    face;
+    facegroup;
+  }
+
+  {
+    rank = "same";
+    boundingbox;
+    speaker;
+    sndfile;
+    sound;
+  }
+
+  /*
+   * Inheritance:
+   */
+  route -> object;
+  object -> sndfileobject;
+  sndfileobject -> src_object;
+  sndfileobject -> src_diffuse;
+  object -> src_door;
+  object -> boundingbox;
+  object -> receiver_object;
+  object -> face;
+  object -> facegroup;
+  object -> mask;
+  jack_port -> src_diffuse;
+  jack_port -> src_door;
+  jack_port -> sound;
+  jack_port -> receiver_object;
+
+  /*
+   * Sub-nodes:
+   */
+  src_object -> sound [style="solid",label="N",penwidth="3"];
+  receiver_object -> speaker [style="solid",label="N",penwidth="3"];
+  receiver_object -> boundingbox [style="solid",label="1",penwidth="1"];
+  session -> scene [style="solid",label="N",penwidth="3"];
+  session -> module [style="solid",label="N",penwidth="3"];
+  session -> range [style="solid",label="N",penwidth="3"];
+  session -> connect [style="solid",label="N",penwidth="3"];
+  scene -> description [style="solid",label="1",penwidth="1"];
+  scene -> src_object [style="solid",label="N",penwidth="3"];
+  scene -> src_door [style="solid",label="N",penwidth="3"];
+  scene -> src_diffuse [style="solid",label="N",penwidth="3"];
+  scene -> receiver_object [style="solid",label="N",penwidth="3"];
+  scene -> mask [style="solid",label="N",penwidth="3"];
+  scene -> face [style="solid",label="N",penwidth="3"];
+  scene -> facegroup [style="solid",label="N",penwidth="3"];
+  scene -> include [style="solid",label="N",penwidth="3"];
+  object -> position [style="solid",label="1",penwidth="1"];
+  object -> orientation [style="solid",label="1",penwidth="1"];
+  object -> creator [style="solid",label="1",penwidth="1"];
+  facegroup -> faces [style="solid",label="1",penwidth="1"];
+  sndfileobject -> sndfile [style="solid",label="N",penwidth="3"];
+
+}
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 2
+ * End:
+ */

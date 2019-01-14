@@ -1,0 +1,47 @@
+\subsection{rotator}\label{sec:rotator}\index{rotator}
+
+The \elem{rotator} module can create parametric rotation of objects
+around the $z$-axis. Four modes are supported, {\em linear}
+(\attr{mode="0"}, default), {\em sigmoid} (\attr{mode="1"}), {\em
+  cosine} (\attr{mode="2"}), and {\em free} (\attr{mode="3"}).
+
+Examples:
+
+\paragraph{Linear rotation}
+
+\begin{lstlisting}[numbers=none]
+  <rotator mode="0" t0="2" w="10" actor="/*/out"/>
+\end{lstlisting}
+
+\begin{equation}
+O_z = w (t-t_0)
+\end{equation}
+
+\paragraph{Sigmoid rotation}
+
+\begin{lstlisting}[numbers=none]
+  <rotator mode="1" t0="2" t1="5" phi0="-120" phi1="10" actor="/*/out"/>
+\end{lstlisting}
+
+\begin{equation}
+O_z = \varphi_0+\frac{\varphi_1-\varphi_0}{1+e^{-2\pi (t-0.5(t_0+t_1))/(t_1-t_0)}}
+\end{equation}
+
+\paragraph{Cosine rotation}
+
+\begin{lstlisting}[numbers=none]
+  <rotator mode="2" t0="2" t1="5" phi0="-120" phi1="10" actor="/*/out"/>
+\end{lstlisting}
+
+\begin{equation}
+O_z = \left\{\begin{array}{ll}
+\varphi_0 & t<t_0\\
+\varphi_0+\frac12(\varphi_1-\varphi_0)(1-\cos(\pi \frac{t-t_0}{t_1-t_0})) & t_0\le t \le t_1\\
+\varphi_1 & t_1 < t
+\end{array}\right.
+\end{equation}
+
+\paragraph{Free rotation}
+
+Same as linear, but the rotation phase is continuously incremented
+independent of the transport time.

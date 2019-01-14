@@ -1,0 +1,11 @@
+  ...
+  <receiver type="amb3h0v" name="receiver 1" connect="ambdec:in">
+    <position>0 1.3 0.2 1.5</position>
+    <orientation>0 -165 0 0</orientation>
+  </receiver>
+  
+  <face name="wall" width="2.4" height="0.5" reflectivity="0.9" damping="0.1">
+    <position>0 -2 1.25 0.85</position>
+    <orientation>0 -90 0 0</orientation>
+  </face>
+  ...

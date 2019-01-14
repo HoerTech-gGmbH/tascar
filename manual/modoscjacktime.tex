@@ -1,0 +1,16 @@
+\subsection{oscjacktime}\label{sec:oscjacktime}\index{oscjacktime}
+
+This module sends the current jack time as OSC messages.
+
+\begin{tscattributes}
+\indattr{url} & Destination URL; default: ``osc.udp://localhost:9999/''\\
+\indattr{path} & Destination OSC path; default: ``/time''\\
+\indattr{ttl} & Time to live of UDP messages; default: 1\\
+\end{tscattributes}
+
+
+Example:
+\begin{lstlisting}[numbers=none]
+<oscjacktime url="osc.udp://localhost:7000/" path="/time"/>
+\end{lstlisting}
+

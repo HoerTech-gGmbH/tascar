@@ -1,0 +1,17 @@
+\subsection{savegains}\label{sec:savegains}\index{savegains}
+
+This module can save the gains of all input and output ports into a
+plain text file, containing OSC paths and dB values of the current
+gain.
+%
+The file name is ``savedgains'' (with an optional path prefix, see below).
+%
+The save action can be triggered via an empty OSC message to the OSC
+path \verb!/savegains/save!.
+%
+The same file can be restored by sending an empty OSC message to the
+path \verb!/savegains/restore!.
+
+\begin{tscattributes}
+\attr{path} & Path prefix of output file name \\
+\end{tscattributes}

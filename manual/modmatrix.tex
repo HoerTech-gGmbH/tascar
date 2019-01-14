@@ -1,0 +1,24 @@
+\subsection{matrix}\label{sec:matrix}\index{matrix}
+
+Create a jack based matrix multiplication, e.g., for Ambisonics decoding.
+
+\begin{tscattributes}
+\indattr{id} & Jack identifier\\
+\indattr{decoder} & Empty (for explicit matrix), or maxre2d (for 2D-HOA max-rE decoding)\\
+\end{tscattributes}
+
+Outputs are defined as in any speaker based receiver type. 
+%
+In addition, each speaker can contain the attribute \indattr{m}, which
+contains a list of floating point values.
+%
+Each output channel is the sum of the product of \attr{m} with the
+corresponding input channel.
+
+Inputs are defined by the sub-elements \elem{input}.
+%
+Each input can have the attribute \indattr{connect}.
+
+An Ambisonics decoder configuration can be created with the MATLAB/GNU
+Octave script \verb!tacsar_generatedecmatrix.m!.
+

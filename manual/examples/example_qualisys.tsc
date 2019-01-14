@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<session license="CC0" attribution="Giso Grimm">
+  <modules>
+    <glabsensors>
+      <qualisys qtmurl="osc.udp://192.168.0.52:22225/"/>
+    </glabsensors>
+    <!--<datalogging>
+      <lsl predicate="name='crown'"/>
+    </datalogging>-->
+  </modules>
+</session>

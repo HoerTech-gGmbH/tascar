@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session name="example_obstacle" duration="20" loop="true" license="CC BY SA 2.0" attribution="Giso Grimm">
+  <scene name="example" guiscale="20">
+    <receiver type="omni" name="out">
+      <position>0 0 0 0</position>
+    </receiver>
+    <!--
+    <facegroup name="street" reflectivity="1" damping="0.4">
+      <faces>-2 -100 0 2 -100 0 2 100 0 -2 100 0</faces>
+    </facegroup>
+    -->
+    <source name="noise">
+      <position>0 -8 0 0</position>
+      <sound>
+        <plugins>
+          <sndfile name="sounds/pink.wav" loop="0" level="70"/>
+        </plugins>
+      </sound>
+    </source>
+    <obstacle name="wall" transmission="0.1">
+      <faces>-1 -1 -1 -1 -1 1 -1 1 1 -1 1 -1
+      -1 3 -1 -1 3 1 -1 3.5 1 -1 3.5 -1</faces>
+    </obstacle>
+  </scene>
+  <connect src="render.example:out" dest="system:playback_1"/>
+  <connect src="render.example:out" dest="system:playback_2"/>
+  <modules>
+    <!--<simplecontroller actor="/*/out" maxnorm="0"/>-->
+  </modules>
+</session>

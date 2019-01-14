@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session loop="true" license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene guiscale="20">
+    <receiver name="out" type="ortf" globalmask="true"/>
+    <diffuse name="birds" size="1000 1000 1000" connect="@.0">
+      <sndfile name="sounds/birds.wav" channels="4" loop="0" gain="-10"/>
+    </diffuse>
+    <source name="point">
+      <sound>
+        <plugins>
+          <sndfile name="sounds/pink.wav" loop="0" level="70"/>
+        </plugins>
+      </sound>
+      <position>0 0 2 0</position>
+    </source>
+    <mask name="inside" size="3 3 3" inside="true" falloff="1">
+      <position>0 5 0 0</position>
+    </mask>
+    <mask name="outside" size="3 3 3" inside="false" falloff="1">
+      <position>0 -5 0 0</position>
+    </mask>
+  </scene>
+  <modules>
+    <!--<simplecontroller actor="/*/out"/>-->
+  </modules>
+  <connect src="render.scene:out_l" dest="system:playback_1"/>
+  <connect src="render.scene:out_r" dest="system:playback_2"/>
+</session>

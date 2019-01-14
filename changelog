@@ -1,0 +1,184 @@
+0.191: Store XML code in data logging files.
+0.190: Decorrelation of FOA renderer output signals.
+0.189: Bugfix of visibility in image source model (face boundary detection).
+0.188: Fix layering of diffuse sources.
+0.187: Display route modules in mixer window, shortcuts, MIDI controller.
+0.186: Development kit for (motion/receiver/source/audio) plugin development.
+0.185: Tabbed window for map and mixer, GUI improvements.
+0.184: Reorganization of library dependencies, development kit.
+0.183: Handling of warnings and validation of session files.
+0.182: Bugfix of diffuse sound rendering via hoa2d (diffuse upsampling is broken).
+0.181: Audio plugins for receivers.
+0.180: Bugfix of object time rounding error.
+0.179: 'matcell' file mode in TASCAR datalogging.
+0.178: Improvement of head tracking interface.
+0.177: Content license overview window.
+0.176: Bugfix of diffuse upsampling in hoa2d-receiver.
+0.175: New glabsensors interface.
+0.174: Bugfix of sound vertex gain.
+0.173: Bugfix of reflector mute flag.
+0.172: Bugfix of segmentation fault when module loading failed.
+0.171: GUI module to draw traces of selected objects.
+0.170: Added layers to receivers and sounds.
+0.169: Implementation of directional sources.
+0.168: Documentation updated, modules sub-node, bugfix for unloading.
+0.167: Added source width handling in geometry processing, handled by hoa2d_dw receiver.
+0.166: Command line and MATLAB/GNU Octave tool "tascar_version"
+0.165: GUI gain controller.
+0.164: New GUI orientation, graphical level meter.
+0.163: Corrected timing information in datalogging module.
+0.162: New time display window.
+0.161: Fix of memory leakage, matrix multiplication module.
+0.160: Changed order of sound vertex processing: First plugins, then gain.
+0.159: Support for Entec openDMX USB device.
+0.158: Changed track looping method.
+0.157: Bugfix of callgraph / uninitialized module parameters.
+0.156: Fixed invalid memory access (potential segmentation fault).
+0.155: New module interface for improved code safety.
+0.154: Configuration files: Include elements can be used at any level.
+0.153: Navigation mesh for object motion control.
+0.152: Explicit control of sound source ISM order range.
+0.151: Added loudspeaker distortion simulator.
+0.150: Modified OSC paths of audio plugin parameters.
+0.149: Provide object time in addition to of session time to ap plugins.
+0.148: Bugfix and documentation of directional speaker gain module.
+0.147: New versioning system.
+0.146: Directional gain for regular speaker layouts.
+0.145: Bugfix of racing condition during session unloading.
+0.144: Optionally supply minimum SPL for rendering.
+0.143: Added missing "nearsensor" module.
+0.142: Documentation and matlab xml tools.
+0.141: OSC triggered sound file playback.
+0.140: Audio preprocessing plugin "sndfile".
+0.139: New module to detect nearby objects.
+0.138: Optionally export motion tracks as CSV files.
+0.137: Module levels2osc also sends LSL streams.
+0.136: ArtnetDMX base value per fixture.
+0.135: OSC access to calibration levels and receiver parameters.
+0.134: Bugfix call order in external modules.
+0.133: Added missing documentation on gain attribute.
+0.132: Module to send level meter values via OSC.
+0.131: In tascar_jackio optionally wait for a jack time before starting.
+0.130: Bugfix of artnetDMX light control.
+0.129: Initial support for artnetDMX light control.
+0.128: Correction of FOA decoder bugfix.
+0.127: Bugfix of FOA decoder in speaker-based rendering, automatic default value of rotation in hoa2d.
+0.126: LTC generator module.
+0.125: Improved lookatme plugin, documentation.
+0.124: Added GPX to CSV converter.
+0.123: Avoid mathematical operators in Matlab variable names (datalogging).
+0.122: Increased nameing flexibility when sending OSC data.
+0.121: Added missing tascar_xml-MATLAB/Octave functions.
+0.120: Allow setting linear gain of diffuse sources.
+0.119: deactivation bugfix in lipsync and lookat modules.
+0.118: Support fade to gain in receivers.
+0.117: Support discordant lipsyncing via lookatme pluin.
+0.116: Scaling correction for both lipsync implementations.
+0.115: fixed names of audio processing plugin variables.
+0.114: Remote control of audio processing plugins.
+0.113: Fix of linkage against FFTW for hrirconv.
+0.112: Restored original lipsync module.
+0.111: Link against FFTWf.
+0.110: Fix compilation on Ubuntu 16.04.
+0.109: Fix of lipsync module.
+0.108: Fix compilation with gcc-5.
+0.107: Adoption of lipsync module to webGL implementation.
+0.106: Glabsensors fixes.
+0.105: Bugifx: Use environment variables when importing raw mesh files.
+0.104: User audiowrite/audioread instead of wavread/wavwrite in Matlab.
+0.103: Re-usage of OSC server and documentation.
+0.102: Adaptation of EOG demonstrator to glabsensors module.
+0.101: Bugfix of glabsensors module (workaround for multi-threading bug in libserial).
+0.100: Speaker frequency calibration and distance compensation (delay+gain).
+0.99: Bugfix of sensor module and datalogging (visualization).
+0.98: Sensor module for Oldenburg Gesture-Lab sensors.
+0.97: Correction of bugfix version 0.96.
+0.96: Bugfix: provide also session time in datalogging for LSL variables
+0.95: Allow configuration of level meter time constants.
+0.94: Access to linear sound gain via OSC
+0.93: Virtual microphone (vmic) with controllable directivity.
+0.92: Fix of distribution: sound file paths corrected.
+0.91: User manual updated.
+0.90: Store date and version number in datalogging files.
+0.89: Bugfix in lipsync: scaling of blend shape.
+0.88: Added onset detector and delay audio plugin.
+0.87: OSC control of transport time delta.
+0.86: Added "onunload" attribute to system module.
+0.85: Added module to send jack time as OSC message; extension of tascar_hdspmixer to support RME MADI cards
+0.84: Diffuse upsampling integrated into hoa2d receiver type
+0.83: Datalogging: Access to trial id via OSC
+0.82: Added missing receiver module
+0.81: Bugfix: Order of attribute reads corrected to have correct session name in modules
+0.80: Matlab scripts to create reflection filters from material absorption
+0.79: Better control of avatar steering
+0.78: Added two-string OSC format in oscevents
+0.77: Look-at-me plugin for avatar control
+0.76: Sound source audio processing plugins (e.g., sine, lipsync)
+0.75: Avoid segmentation fault on partial initialization in hoa2d module
+0.74: Simple lip synchronization interface
+0.73: Bugfix: Rounding error potentially deactivated sources (caused by 0.69)
+0.72: Improved PDF exporter, XML Octave/Matlab tools
+0.71: Corrected v0.14 compatibility
+0.70: Corrected bugfix of ISM
+0.69: Bugfix of ISM: do not render "invisible" sources, avoid pre-echos
+0.68: Optionally reproduce ISM bug of version 0.14
+0.67: Fixed command line interface of tascar_renderfile to support zero order ISM
+0.66: Offline rendering of ISM
+0.65: Basic LSL support and session include options.
+0.64: Added missing matlab file
+0.63: Fix for jackd1 compatibility
+0.62: Tools for CPU load measurements
+0.61: Simple route module (gain mixer strip)
+0.60: bugfix of FOA to HOA upsampling
+0.59: FOA to HOA diffuse upsampling
+0.58: Added missing "intensityvector" receiver module
+0.57: Report OSC variables in GUI
+0.56: Specialized receiver module "intensityvector"
+0.55: Bugfix in impulse response measurement tool
+0.54: Allow configuration of output directory in datalogging
+0.53: Replaced packaging system
+0.52: Bugfix: Re-activation of level meters of receivers
+0.51: Simplified interface for hrirconv module
+0.50: fix mask handling of receiver types with post-processing, fix excessive gains in diffuse sources on reload
+0.49: fix trajectory loop (extend to <creator> element)
+0.48: optionally loop trajectories
+0.47: motionpath optionally uses tascar time line
+0.46: bugfix: segmentation fault when reading empty "<position/>" elements
+0.45: User interface of Matlab/Octave tools, new "importcsv" option for position and orientation
+0.44: bugfix von Hann distance law in volume microphones, improved joystick control
+0.43: Improvements of pos2osc (optional sending while transport is stopped) and simple controller (velocity control, tilt)
+0.42: More address modes of module "pos2osc" for better integration into CG tools
+0.41: Update of documentation
+0.40: ITD bugfix of ORTF stereo microphone
+0.39: Implementation of ORTF stereo microphone
+0.38: Implementation of obstacles with diffraction model
+0.37: jack level meter with OSC interface
+0.36: Simple control tool for RME HDSP 9652 (and later other versions)
+0.35: Bugfix 20151021: huge output values after scene reloading.
+0.34: Bugfix of "locationvelocity" module
+0.33: Access to start position in "locationvelocity" module
+0.32: tascar_jackio provides access to jack statistics
+0.31: Refactoring of motion control modules (bugfix time, simplifications)
+0.30: New "motionpath" motion control module for motion paths independent of the session time line
+0.29: Shoebox room generator
+0.28: Speaker layout rotation for 2D-HOA receiver
+0.27: Implementation of 2D-HOA panning receiver type (basic or max-rE)
+0.26: Allow jack connections in speaker layout definition
+0.25: Scripts to generate headmodel-HRIR based on Duda (1993)
+0.24: Export of all sound vertex positions to CSV file
+0.23: Motion control module for linear motions
+0.22: Bugfix of diffuse source orientation
+0.21: optional OSC server at session level, timeline control
+0.20: export of blender curve objects as tascar tracks
+0.19: unified FOA decoding for speaker based receiver types
+0.18: 2D VBAP receiver type added
+0.17: extension of parametric source rotator module
+0.16: image source model bugfix
+0.15: OSC triggered sound sample player
+0.14: documentation and examples improved
+0.13: von-Hann window receiver type
+0.12: NSP bugfix
+0.11: hrirconv module added
+0.10: Duda head model fixed (unsupported)
+0.9: Level meter and calibration added
+0.8: Bugfixes in Neukom panning and tascar_jackio

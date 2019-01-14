@@ -1,0 +1,32 @@
+\subsection{nearsensor}\label{sec:nearsensor}\index{nearsensor}
+
+\begin{tscattributes}
+\indattr{url} & target OSC url\\
+\indattr{ttl} & time-to-live of UDP packets\\
+\indattr{pattern} & pattern ob objects to detect\\
+\indattr{parent} & name of parent object (= sensor position)\\
+\indattr{radius} & sensor radius in meter\\
+\indattr{mode} & operation mode: 0 = detect object origin, 1 = detect sound vertex\\
+\indattr{path} & OSC message target path \\
+\end{tscattributes}
+
+Emit an OSC message when an object or sound vertex is near the parent object.
+%
+The OSC message can be composed from sub-elements of the types
+\elem{f} (e.g., \attr{<f v="1.0"/>}) (float), \elem{i} 
+(\attr{<i v="123"/>}) (integer) or \elem{s} (\attr{<s v="abc"/>}) (string).
+%
+Multiple sub-elements are possible.
+
+Any number of sub-elements \elem{msgapp} (messages to be sent on
+approaching a target) and \elem{msgdep} (messages to be sent on
+departing from a target) are possible.
+%
+Each message has the attribute
+\begin{tscattributes}
+\indattr{path} & OSC message target path \\
+\end{tscattributes}
+and the same sub-elements \elem{f}, \elem{i} and \elem{s} as described
+before.
+
+

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<session license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene>
+    <source name="car">
+      <position>
+        0 -100 5 0
+        10 100 5 0
+      </position>
+      <sound name="wheel" z="-0.5">
+        <plugins>
+          <sndfile name="sounds/redcar_loop1.wav" levelmode="rms" level="85"/>
+          <sine f="1000" a="70"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="ortf">
+    </receiver>
+  </scene>
+  <connect src="render.scene:out_l" dest="system:playback_1"/>
+  <connect src="render.scene:out_r" dest="system:playback_2"/>
+</session>

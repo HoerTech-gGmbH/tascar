@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session name="example" duration="120" license="CC 0">
+  <scene name="scene1">
+    ...
+  </scene>
+  <scene name="scene2">
+    ...
+  </scene>
+  <scene name="scene3">
+    ...
+  </scene>
+</session>

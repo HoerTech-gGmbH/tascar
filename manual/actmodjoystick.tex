@@ -1,0 +1,17 @@
+\subsection{joystick}\label{sec:joystick}\index{joystick}
+
+Very simple joystick motion controller module.  The recognized
+attributes are:
+\begin{tscattributes}
+\indattr{maxnorm}     & Maximum distance of object from origin, or zero
+for no limit.                                           \\
+\indattr{x\_ax}        & Axis number for control         \\
+\indattr{x\_scale}     & Maximum velocity                \\
+\indattr{x\_min}       & minimum value                   \\
+\indattr{x\_max}       & maximum value                   \\
+\indattr{x\_threshold} & Threshold for noise suppression \\
+\end{tscattributes}
+
+{\tt x\_} can be replaced by {\tt x\_} (movement forward/backward), {\tt y\_} (lateral
+movement), {\tt r\_} (rotation) or {\tt tilt\_} (tilt).
+

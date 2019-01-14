@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<session name="hrir" license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene name="test">
+    <receiver name="out" type="vbap">
+      <speaker az="0"/>
+      <speaker az="45"/>
+      <speaker az="90"/>
+      <speaker az="135"/>
+      <speaker az="180"/>
+      <speaker az="-135"/>
+      <speaker az="-90"/>
+      <speaker az="-45"/>
+    </receiver>
+    <!-- ... -->
+  </scene>
+  <modules>
+    <hrirconv inchannels="8" outchannels="2" fftlen="2048" autoconnect="true">
+      <entry in="0" out="0" file="hrir_000.wav" channel="0"/>
+      <entry in="0" out="1" file="hrir_000.wav" channel="1"/>
+      <entry in="1" out="0" file="hrir_045.wav" channel="0"/>
+      <entry in="1" out="1" file="hrir_045.wav" channel="1"/>
+      <entry in="2" out="0" file="hrir_090.wav" channel="0"/>
+      <entry in="2" out="1" file="hrir_090.wav" channel="1"/>
+      <entry in="3" out="0" file="hrir_135.wav" channel="0"/>
+      <entry in="3" out="1" file="hrir_135.wav" channel="1"/>
+      <entry in="4" out="0" file="hrir_180.wav" channel="0"/>
+      <entry in="4" out="1" file="hrir_180.wav" channel="1"/>
+      <entry in="5" out="0" file="hrir_225.wav" channel="0"/>
+      <entry in="5" out="1" file="hrir_225.wav" channel="1"/>
+      <entry in="6" out="0" file="hrir_270.wav" channel="0"/>
+      <entry in="6" out="1" file="hrir_270.wav" channel="1"/>
+      <entry in="7" out="0" file="hrir_315.wav" channel="0"/>
+      <entry in="7" out="1" file="hrir_315.wav" channel="1"/>
+    </hrirconv>
+  </modules>
+  <connect src="hrirconv:out_0" dest="system:playback_1"/>
+  <connect src="hrirconv:out_1" dest="system:playback_2"/>
+</session>

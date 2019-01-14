@@ -1,0 +1,143 @@
+\subsection{datalogging}\label{sec:datalogging}\index{datalogging}
+
+The data logging module allows logging of the OSC messages and LSL
+streams together with the \tascar{} time line. 
+%
+Both OSC and LSL are the protocols used for sending information
+between devices. 
+%
+For example, you may want to collect the data from the sensors used
+during an experiment. 
+%
+If the sensor sends data to the computer either in OSC or LSL
+protocol, you can record this data using the \elem{datalogging}
+module:
+
+Example:
+\begin{lstlisting}[numbers=none]
+<datalogging port="9998" multicast="" fileformat="matcell" outputdir="${HOME}">
+  <osc path="/sensor1/pos" size="3"/>
+  <osc path="/sensor1/rot" size="3"/>
+  <osc path="/sensor3" size="4"/>
+  <lsl predicate="name='EEGamp'"/>
+</datalogging>
+\end{lstlisting}
+
+To record the data, which is sent from a device as an OSC message, we
+have to specify the path to the OSC variable associated with the
+sensor:
+%
+\begin{lstlisting}[numbers=none]
+  <osc path="/sensor1/pos" size="3"/>
+\end{lstlisting}
+%
+The \attr{size} attribute refers to the dimension of the OSC variable.
+%
+The attribute \attr{ignorefirst} can be used to hide the first channel
+in the display, which can be useful if the first channel contains time
+values.
+
+To record the data, which is sent from a device as an LSL stream, we
+have to specify the name of the LSL stream associated with the sensor:
+\begin{lstlisting}[numbers=none]
+  <lsl predicate="name='EEGamp'" tctimeout="2"/>
+\end{lstlisting}
+The attribute \attr{tctimeout} is the maximal time used to measure the
+time correction values between sender and receiver.
+
+
+\begin{tscattributes}
+  \attr{port}       & OSC port (default: empty, i.e., use session server)\\
+  \attr{multicast}  & OSC multicasting address (default: empty)\\
+  \attr{fileformat} & File format, can be either ``mat'', ``matcell'' or ``txt'' (default: ``mat'')\\
+  \attr{outputdir}  & Output directory (default: empty)\\
+  \attr{lsltimeout} & Number of seconds to scan for LSL streams (default: 10)\\
+  \attr{displaydc}  & Display DC components (default: true)\\
+\end{tscattributes}
+
+
+The window size and position of the datalogging GUI can be controlled
+with the attributes \attr{x}, \attr{y}, \attr{w} and \attr{h}.
+
+% some more documentation of attributes...
+
+Depending on the file format, the storage format differs: In the
+\verb!mat! file format, each variable is stored as a matrix with the
+variable name. This means that it is not possible to record two
+streams with the same variable name. To overcome this problem, the
+\verb!matcell! file format can be used. Here, the data is stored in a
+cell array, with one entry for each variable. Each entry contains a
+structure, with a \attr{name} field, a \attr{data} field, and for LSL
+variables also some additional stream information.
+
+\subsubsection*{Data logging, session time and lab streaming layer}
+
+The data logging can record two types of streams: OSC based floating
+point values (\elem{osc}), and LSL based floating point streams
+(\elem{lsl}).
+%
+For OSC messages, the first row of the data matrix contains the
+session time $t_\text{session}$ at which the data packet arrived.
+%
+The underlying function from the jack audio connection kit,
+\verb!jack_get_current_transport_frame!, is used to get a high
+resolution estimate of the current session time.
+%
+For LSL streams, the situation is more complex, since LSL provides an
+own method of time stamping.
+%
+Here, the second row in the data matrix contains the original LSL time
+stamps of the remote sender, $t_\text{lsl,remote}$.
+%
+Since the data is processed in chunks, it is not possible to use the
+arrival time as a session time stamp.
+%
+Instead, the clock difference between the local LSL clock and the
+remote LSL clock $\Delta_\text{stream}$ is measured at the beginning
+and also at the end of each recording session, using the LSL function
+\verb!lsl_time_correction!, i.e., the local LSL clock minus the remote
+clock, $\Delta_\text{stream}=t_\text{lsl,local}-t_\text{lsl,remote}$.
+%
+Additionally, upon each update of the local session time, i.e., upon
+each processing cycle, the difference between the session time and the
+local LSL time,
+$\Delta_\text{session}=t_\text{session}-t_\text{lsl,local}$ is
+measured.
+%
+The combination of $\Delta_\text{session}$ and $\Delta_\text{stream}$
+is used to convert remote LSL time stamps into session time stamps: the estimated session time at time of sending the sample, $\tilde{t}_\text{session}$ is
+\begin{equation}
+\tilde{t}_\text{session} = t_\text{lsl,remote} + \Delta_\text{stream} + \Delta_\text{session}
+\end{equation}
+$\Delta_\text{stream}$ is the value which was measured at the
+beginning of a recording session. $\tilde{t}_\text{session}$ is the
+time stamp which is stored in the first row of the LSL data matrix.
+
+Clock drift may occur between clocks. The drift between the local LSL
+clock $t_\text{lsl,local}$ and the audio clock (basis of
+$t_\text{session}$) is continuously compensated by the measures of
+$\Delta_\text{session}$. The drift between the local LSL time
+$t_\text{lsl,local}$ and the remote LSL time $t_\text{lsl,remote}$ can
+be compensated offline by taking the difference between
+$\Delta_\text{stream}$ at the beginning and the end of a recording
+session, which are both stored in the datalogging file for each LSL
+stream. Thus the drift-compensated estimated session time
+$\hat{t}_\text{session}$ is
+\begin{equation}
+\hat{t}_\text{session} = \tilde{t}_\text{session} + \frac{t_\text{lsl,local}-t_\text{lsl,local,start}}{t_\text{lsl,local,end}-t_\text{lsl,local,start}} (\Delta_\text{stream,end}-\Delta_\text{stream,start}).
+\end{equation}
+
+Some sensors (e.g., the ESP-based IMU/EOG sensor of the Gesture lab in
+University of Oldenburg), synchronize the sensor clock with the
+(remote) LSL clock only upon initialization. This causes the problem,
+that the clock drift reported by $\Delta_\text{stream}$ is not related
+to the clock drift between the sensor and the session time. To
+overcome this problem, the \elem{espheadtracker} glabsensor submodule
+(see section \ref{sec:espheadtracker}) sends a local difference
+$\Delta_\text{sensor}=t_\text{lsl,remote}-t_\text{sensor}$ as an LSL
+stream. This data contains drift as well as jitter caused by the WiFi
+transmission. The sensor drift can be estimated by a linear fit to
+this data. The linear fit of $\Delta_\text{sensor}$ needs to be added
+to $\hat{t}_\text{session}$ of the data of the LSL streams
+corresponding to this sensor.
+

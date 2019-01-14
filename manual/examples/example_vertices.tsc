@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session name="example_vertices" duration="10" license="CC BY-SA 3.0" attribution="Joanna Luberadzka">
+  <scene name="vertices" guiscale="15">
+    <source name="piano" color="#101077">
+      <position>
+        0 -3.2 1.7 1.4
+        10 3.2 2.7 1.4
+      </position>
+      <orientation>0 -24 0 0</orientation>
+      <sound name="leftside" x="-0.7">
+        <plugins>
+          <sndfile name="sounds/jazzclub-piano1.wav" level="75"/>
+        </plugins>
+      </sound>
+      <sound name="rightside" x="0.7">
+        <plugins>
+          <sndfile name="sounds/jazzclub-piano2.wav" level="75"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver name="out" type="ortf">
+      <position>0 0 0 1.6</position>
+    </receiver>
+  </scene>
+  <connect src="render.vertices:out_l" dest="system:playback_1"/>
+  <connect src="render.vertices:out_r" dest="system:playback_2"/>
+</session>

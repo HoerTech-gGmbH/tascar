@@ -1,0 +1,17 @@
+\subsection{route}\label{sec:route}\index{route}
+
+Create a jack bus with OSC controllable gain.
+
+\begin{tscattributes}
+\indattr{name} & Jack and OSC identifier\\
+\indattr{channels}& Number of channels; default: 1\\
+\indattr{gain} & Gain in dB; default: 0\\
+\indattr{lingain} & Linear gain; default: 1\\
+\indattr{connect} & Regular expression of input port names\\
+\indattr{connect\_out} & Regular expression of output port names\\
+\indattr{mute} & Mute state (default: false)\\
+\indattr{caliblevel} & Calibration value, used for metering (default: 93.98)\\
+\end{tscattributes}
+
+The session OSC server is used for control.
+

@@ -1,0 +1,27 @@
+digraph ap {
+
+  //session;
+  A1 [label="audioplayer_t::process()"];
+  A2 [label="renderer_t::process()"];
+  B1 [label="scene_t::geometry_update()"];
+  B2 [label="scene_t::process_active()"];
+  //B3 [label="renderer_t::process() - fill inputs"];
+  B4 [label="world_t::process()"];
+  C1 [label="receiver_mod_t::postproc()"];
+  //B5 [label="renderer_t::process() - copy outputs"];
+  C2 [label="dynobject_t::geometry_update()"];
+
+  {
+    // 
+    A1 -> A2 -> B1 -> B2 -> A2 -> B4 -> C1 -> A2;
+    B1 -> C2 -> B1;
+  }
+  
+}
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 2
+ * End:
+ */

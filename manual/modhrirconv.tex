@@ -1,0 +1,43 @@
+\subsection{hrirconv}\label{sec:hrirconv}\index{hrirconv}
+
+The module {\bf hrirconv} is intended for convolution of multi-channel
+loudspeaker signals with head related impulse responses (HRIR), to
+generate signals for binaural listening or hearing aid processing. To activate the module, add
+\begin{lstlisting}[numbers=none]
+<hrirconv>
+  ...
+</hrirconv>
+\end{lstlisting}
+to your session configuration.
+
+\begin{tscattributes}
+\indattr{id}          & Name used for jack                                                           \\
+\indattr{fftlen}      & FFT length (need to be longer than jack fragment size)                       \\
+\indattr{inchannels}  & Number of input channels                                                     \\
+\indattr{outchannels} & Number of output channels                                                    \\
+\indattr{autoconnect} & Auto-connect input to all receivers with matching channel count (true|false) \\
+\indattr{hrirfile}    & file name of HRIR file, channel order i1o1,i1o2,i1o3,...,i2o1,...            \\
+\end{tscattributes}
+
+The convolution matrix can be defined with the \refelem{entry}
+element. Each entry defines a convolution with an impulse response;
+typically a convolution for each combination of input chsannel and
+output channel is defined. The recognized attributes of \elem{entry}
+are:
+
+\begin{tscattributes}
+\indattr{in}      & Input channel number (zero-based)             \\
+\indattr{out}     & Output channel number (zero-based)            \\
+\indattr{file}    & File name of impulse response                 \\
+\indattr{channel} & File channel of impulse response (zero-based) \\
+\end{tscattributes}
+
+A typical configuration for binaural listening can look like this:
+\tscexample{example_hrirconv}
+
+A configuration file for binaural convolution together with a binaural
+head model HRIR set \citep{Duda1993} can be created with the
+Matlab/GNU Octave script ``tascar\_hrir\_duda.m'' (in
+/usr/share/tascar/matlab). See documentation of the script for
+details.
+

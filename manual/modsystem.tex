@@ -1,0 +1,15 @@
+\subsection{system}\label{sec:system}\index{system}
+
+Start system processes, e.g., to load helper programs, external decoders or video render tools.
+
+\begin{tscattributes}
+\indattr{command}  & Command to execute; process will be terminated with SIGTERM when session modules are unloaded. \\
+\indattr{sleep}    & Wait for given number of seconds before proceeding with session loading.                       \\
+\indattr{onunload} & Execute this command on unload of session.                                                     \\
+\end{tscattributes}
+
+The commands are started into the background using this shell command line:
+\begin{verbatim}
+sh -c "cd sessionpath;command >/dev/null & echo \$!"
+\end{verbatim}
+

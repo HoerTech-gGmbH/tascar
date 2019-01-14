@@ -1,0 +1,20 @@
+\subsection{dirgain}\label{sec:dirgain}\index{dirgain}
+
+The \indmod{dirgain} module optionally applies channel direction
+dependent low-pass filtering (i.e., directional filtering) to signals.
+%
+Typical application is to apply beamformer/cardioid simulation on a
+regular circular loudspeaker system.
+
+\begin{tscattributes}
+\indattr{id} & Plugin ID, used in jack name and OSC path\\
+\indattr{channels} & Number of channels (default: 1)\\
+\indattr{az} & Steering azimuth in degree (default: 0)\\
+\indattr{az0} & Azimuth of first channel (default: 0)\\
+\indattr{f6db}  & Frequency in Hz, at which a 6~dB attenuation at 90 degrees is achieved (default: 1000)\\
+\indattr{fmin} & Low-end limit for stabilization (default: 60)\\
+\indattr{active} & Boolean to control start-up activity (default: true)\\
+\end{tscattributes}
+
+All variables except for id and channel can be controlled via OSC.
+

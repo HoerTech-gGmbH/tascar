@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <glabsensors ontop="false">
+      <midicc controllers="0/6 0/7 0/8" connect="BCF2000:0" data="0.25 0.8" x="0" y="0" w="220" h="280"/>
+    </glabsensors>
+  </modules>
+</session>

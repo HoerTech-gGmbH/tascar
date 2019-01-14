@@ -1,0 +1,28 @@
+\subsection{pos2osc}\label{sec:pos2osc}\index{pos2osc}
+
+The module {\bf pos2osc} sends position and orientation of \tascar{}
+objects as OSC message. This can be used to control objects in
+computer graphics tools. Example:
+\begin{lstlisting}[numbers=none]
+<pos2osc url="osc.udp://localhost:9999/" pattern="/*/cg_*" mode="2"/>
+\end{lstlisting}
+The \attr{pattern} attribute specifies the object (or objects) whose geometry information will be sent.
+%
+In the example above all objects, whose name starts with \verb!cg_! will send geometry data.   
+
+\begin{tscattributes}
+\indattr{url}       & Target URL (default: osc.udp://localhost:9999/)                                   \\
+\indattr{pattern}   & Pattern of \tascar{} object names (default: /*/*). See actor modules for details. \\
+\indattr{ttl}       & Time to live of OSC multicast messages                                            \\
+\indattr{mode}      & Message mode (default: 0)                                                         \\
+                    & 0 : send to /scene/name/pos (x,y,z) and /scene/name/rot (Euler-Z,Euler-Y,Euler-X) \\
+                    & 1 : send to /scene/name/pos (x,y,z,Euler-Z,Euler-Y,Euler-X)                       \\
+                    & 2 : send to /tascarpos (/scene/name,x,y,z,Euler-Z,Euler-Y,Euler-X)                \\
+                    & 3 : send to /tascarpos (name,x,y,z,Euler-Z,Euler-Y,Euler-X)                       \\
+                    & 4 : send to /avatar /lookAt x,y,z,lookatlen                                       \\
+\indattr{transport} & Send data only while transport is rolling (default: true)                         \\
+\indattr{triggered} & Send data only upon OSC trigger (default: false)                                  \\
+\indattr{avatar}    & Avatar name (mode 4 only)                                                         \\
+\indattr{lookatlen} & Animation length (mode 4 only)                                                    \\
+\end{tscattributes}
+

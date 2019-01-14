@@ -1,0 +1,23 @@
+<position>t x y z</position>
+
+<position>
+  t_1  x_1  y_1  z_1
+  t_2  x_2  y_2  z_2
+  t_3  x_3  y_3  z_3
+</position>
+
+<position interpolation="cartesian">
+   0  1  4  0
+  10  1 -4  0
+</position>
+<position interpolation="spherical">
+   0  1  4  0
+  10  1 -4  0
+</position>
+
+<orientation>t Rz Ry Rx</orientation>
+
+<orientation>
+  t_1  Rz_1  Ry_1  Rx_1
+  t_2  Rz_2  Ry_2  Rx_2
+</orientation>

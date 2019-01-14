@@ -1,0 +1,19 @@
+\subsection{simplecontroller}\label{sec:simplecontroller}\index{simplecontroller}
+
+This module creates a minimal graphical user interface for mouse and
+keyboard motion control of objects within a \tascar{} scene. The
+recognized attributes are:
+\begin{tscattributes}
+\indattr{maxnorm} & Maximum distance of object from origin, or zero
+for no limit.\\
+\indattr{vx} & Velocity in x direction (default: 2m/s)\\
+\indattr{vy} & Velocity in y direction (default: 1m/s)\\
+\indattr{vz} & Velocity in z direction (default: 1m/s)\\
+\indattr{vr} & Angular velocity (default: 45deg/s)\\
+\end{tscattributes}
+
+Example:
+\begin{lstlisting}[numbers=none]
+  <simplecontroller actor="/*/out" maxnorm="0"/>
+\end{lstlisting}
+
