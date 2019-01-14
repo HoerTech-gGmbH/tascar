@@ -14,10 +14,9 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
 SOURCES = omni cardioidmod door
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route oscevents oscjacktime ltcgen lightctl levels2osc	\
-  nearsensor dirgain dummy matrix hoafdnrot mpu6050track touchosc	\
-  savegains hrirconv joystick hossustain midicc2osc midictl	\
-  rotator
+  foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\
+  dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
+  hrirconv joystick hossustain midicc2osc midictl rotator
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay
 
@@ -26,7 +25,7 @@ lipsync_paper lookatme metronome onsetdetector openmha sine sndfile	\
 spksim
 
 ifeq "$(HAS_LSL)" "yes"
-TASCARMODS +=  lsljacktime lslactor
+TASCARMODS +=  lsljacktime lslactor levels2osc
 TASCARMODSGUI += datalogging
 endif
 
