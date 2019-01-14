@@ -8,6 +8,7 @@ COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
 FULLVERSION=$(VERSION)-$(COMMITHASH)$(GITMODIFIED)
 
 HAS_LSL=$(shell echo "int main(int,char**){return 0;}"|g++ -llsl -x c++ - 2>/dev/null && echo yes||echo no)
+HAS_OPENMHA=$(shell (echo "#include <openmha/mha_algo_comm.hh>";echo "int main(int,char**){return 0;}")|g++ -lopenmha -x c++ - 2>/dev/null && echo yes||echo no)
 
 BUILD_DIR = build
 SOURCE_DIR = src

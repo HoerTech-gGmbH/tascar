@@ -21,12 +21,16 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
 TASCARMODSGUI = tracegui simplecontroller timedisplay
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
-lipsync_paper lookatme metronome onsetdetector openmha sine sndfile	\
+lipsync_paper lookatme metronome onsetdetector sine sndfile	\
 spksim
 
 ifeq "$(HAS_LSL)" "yes"
 TASCARMODS +=  lsljacktime lslactor levels2osc
 TASCARMODSGUI += datalogging
+endif
+
+ifeq "$(HAS_OPENMHA)" "yes"
+AUDIOPLUGINS +=  openmha
 endif
 
 #
