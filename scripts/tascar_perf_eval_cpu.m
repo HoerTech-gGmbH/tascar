@@ -1,4 +1,12 @@
 function sData = tascar_perf_eval_cpu( tag )
+% tascar_perf_eval_cpu - top level script for performance measurements
+%
+% This script evaluates the TASCAR performance for all test
+% conditions.
+%
+% This is a script to perform performance measurement (using data
+% menagement tool "libsd" and function measure_performance.m).
+
     
   tascarver = tascar_version();
   [a,uname] = system('uname -a');
@@ -20,17 +28,14 @@ function sData = tascar_perf_eval_cpu( tag )
     system(sprintf('cpufreq-selector -c %d -g performance',cpu));
   end  
 
-  %This is a script to perform performance measurement (using data menagement
-  %tool "libsd" and function  measure_performance.m)
-
   h = libsd();
 
   sPar.fields = {'NrSources','NrSpeakers','Period','DelayLine','ReceiverType','cpu','tprep'};
 
   sPar.values = {...
-      [1,10,100,256],...
-      [8,48,128],...
-      [64,256,1024],...
+      [1,3,10,32,100,256],...
+      [8,16,24,48,72,128],...
+      [64,128,256,512,1024],...
       [1,10000] ,...
       {'nsp','vbap','hoa2d'}...
 		};
