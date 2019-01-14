@@ -9,14 +9,18 @@ include ../rules.mk
 BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
   tascar_validatetsc tascar_pdf tascar_osc_jack_transport		\
   tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
-  tascar_jackpar tascar_lslsl tascar_lsljacktime tascar_renderfile	\
-  tascar_renderir tascar_gpx2csv tascar_version compare_sndfile
+  tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
+  tascar_version compare_sndfile
 
 TEST_FILES = test_ngon test_sinc
 
 BINFILES += $(TEST_FILES)
 
 BUILD_BINS = $(patsubst %,build/%,$(BINFILES))
+
+ifeq "$(HAS_LSL)" "yes2"
+BINFILES += tascar_lslsl tascar_lsljacktime
+endif
 
 ifeq "ok" "$(shell pkg-config gtkmm-3.0 && echo ok)"
 GTKDEF = "-DGTKMM30"
