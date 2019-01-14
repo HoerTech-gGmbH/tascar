@@ -7,6 +7,8 @@ GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
 COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
 FULLVERSION=$(VERSION)-$(COMMITHASH)$(GITMODIFIED)
 
+HAS_LSL=$(shell echo "int main(int,char**){return 0;}"|g++ -llsl -x c++ - 2>/dev/null && echo yes||echo no)
+
 BUILD_DIR = build
 SOURCE_DIR = src
 
@@ -14,3 +16,4 @@ export VERSION
 export SOURCE_DIR
 export BUILD_DIR
 export CXXFLAGS
+export HAS_LSL
