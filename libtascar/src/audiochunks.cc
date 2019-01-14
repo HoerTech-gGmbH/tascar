@@ -277,7 +277,7 @@ void sndfile_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
   for(uint32_t k=0;k<chunk.n;++k){
     int64_t trel(chunktime+k-iposition_);
     if( (trel > 0) && (n > 0) ){
-      div_t dv(div(trel,n));
+      ldiv_t dv(ldiv(trel,n));
       if( (loop_ == 0) || (dv.quot < (int64_t)loop_) )
         chunk.d[k] += d[dv.rem];
     }
