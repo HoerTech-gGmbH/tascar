@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene>
+    <receiver name="out"/>
+    <source name="in">
+      <sound/>
+    </source>
+  </scene>
+  <modules>
+    <geopresets actor="/*/in">
+      <preset name="loc" position="2 1 0"/>
+      <preset name="locrot" position="1 -1 0" orientation="70 0 0"/>
+      <preset name="rot" orientation="0 0 0"/>
+    </geopresets>
+  </modules>
+</session>

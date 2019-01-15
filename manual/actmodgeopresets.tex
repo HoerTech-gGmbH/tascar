@@ -1,0 +1,39 @@
+\subsection{geopresets}\label{sec:geopresets}\index{geopresets}
+
+The module {\bf geopresets} allows to define preset positions and
+orientations of objects.
+%
+Objects are moved to the defined preset delta-transformation following
+a von-Hann ramp from the current delta-transformation to the new
+delta-transformation.
+%
+\tscexample[linerange={3-15},firstnumber=3]{example_geopresets}
+
+In this example, the presets ``pos'', ``posrot'' and ``rot'' can be
+reached with OSC commands, e.g.,
+%
+\begin{verbatim}
+/geopresets pos
+\end{verbatim}
+%
+The enable state and the duration can be controlled via OSC.
+%
+\begin{verbatim}
+/geopresets/enable 1
+/geopresets/duration 3
+\end{verbatim}
+%
+
+\begin{tscattributes}
+\indattr{duration} & Duration of ramp in seconds (default: 2)              \\
+\indattr{enable}   & Enable (true, default) or disable (false) the module. \\
+\indattr{id}       & ID used as OSC prefix (default: geopresets)           \\
+\end{tscattributes}
+
+Presets can be defined with one or more \elem{preset} elements, which
+support these attributes:
+\begin{tscattributes}
+\indattr{name}        & Preset name             \\
+\indattr{position}    & Position (optional).    \\
+\indattr{orientation} & Orientation (optional). \\
+\end{tscattributes}

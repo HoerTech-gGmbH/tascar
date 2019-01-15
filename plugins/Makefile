@@ -16,7 +16,7 @@ SOURCES = omni cardioidmod door
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\
   dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
-  hrirconv joystick hossustain midicc2osc midictl rotator
+  hrirconv joystick hossustain midicc2osc midictl rotator geopresets
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay
 

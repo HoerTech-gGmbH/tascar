@@ -644,6 +644,13 @@ and orientation for each time point) we can use the creator tool.
 this case, the orientation is calculated as a tangent along the given
 path.
 
+\subsubsection{Delta-transformations}\label{sec:deltatransform}\index{delta-transformation}
+
+In addition to the transformation defined by the \elem{position},
+\elem{orientation} and \elem{creator} elements, every object has a
+delta-transformation which can be controlled via OSC or by actor
+modules (see section \ref{sec:actormod}).
+
 \subsubsection{The {\tt <navmesh/>} element}\label{sec:navmesh}\index{navmesh}\index{navigation mesh}
 
 The navmesh element can be used to restrict the object motion to a
@@ -1577,7 +1584,7 @@ Modules can be added to a session file within the
 
 \input{secmodules.tex}
 
-\section{Actor modules}
+\section{Actor modules}\label{sec:actormod}
 
 Actor modules can be used in the same way as general purpose modules,
 however, their purpose is to change or query the position one or more
