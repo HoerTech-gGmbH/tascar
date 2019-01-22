@@ -25,7 +25,7 @@ lipsync_paper lookatme metronome onsetdetector sine sndfile	\
 spksim
 
 ifeq "$(HAS_LSL)" "yes"
-TASCARMODS +=  lsljacktime lslactor levels2osc
+TASCARMODS +=  lsljacktime lslactor levels2osc pos2lsl
 TASCARMODSGUI += datalogging
 endif
 
@@ -89,7 +89,7 @@ build/tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
 build/tascar_ltcgen.so: EXTERNALS+=ltc
 build/tascar_hossustain.so: EXTERNALS += fftw3f
-build/tascar_lsljacktime.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
+build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
 build/tascar_lightctl.so: LDLIBS+=-ltascardmx
 build/tascar_simplecontroller.so: build/simplecontroller_glade.h
 build/tascar_datalogging.so: LDLIBS += -lmatio -llsl

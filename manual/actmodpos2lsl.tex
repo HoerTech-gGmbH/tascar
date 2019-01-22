@@ -1,0 +1,16 @@
+\subsection{pos2lsl}\label{sec:pos2lsl}\index{pos2lsl}
+
+The module {\bf pos2lsl} sends position and orientation of \tascar{}
+objects as OSC message. This can be used to control objects in
+computer graphics tools. Example:
+\begin{lstlisting}[numbers=none]
+<pos2lsl pattern="/*/out" transport="false"/>
+\end{lstlisting}
+The \attr{pattern} attribute specifies the object (or objects) whose geometry information will be sent.
+%
+
+\begin{tscattributes}
+\indattr{pattern}   & Pattern of \tascar{} object names (default: /*/*). See actor modules for details. \\
+\indattr{transport} & Send data only while transport is rolling (default: true)                         \\
+\end{tscattributes}
+
