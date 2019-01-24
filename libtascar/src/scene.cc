@@ -53,7 +53,8 @@ bool object_t::isactive(double time) const
  *diffuse_info_t
  */
 diffuse_info_t::diffuse_info_t(xmlpp::Element* xmlsrc)
-  : sndfile_object_t(xmlsrc),audio_port_t(xmlsrc),size(1,1,1),
+  : sndfile_object_t(xmlsrc),
+    audio_port_t(xmlsrc,true),size(1,1,1),
     falloff(1.0),
     layers(0xffffffff),
     source(NULL)
@@ -329,7 +330,7 @@ void mask_object_t::process_active(double t,uint32_t anysolo)
 }
 
 receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), audio_port_t(xmlsrc), receiver_t(xmlsrc)
+  : object_t(xmlsrc), audio_port_t(xmlsrc,false), receiver_t(xmlsrc)
 {
   if( get_name().empty() )
     set_name("out");
@@ -595,10 +596,11 @@ void face_object_t::geometry_update(double t)
   apply_rot_loc(get_location(),get_orientation());
 }
 
-audio_port_t::audio_port_t(xmlpp::Element* xmlsrc)
+audio_port_t::audio_port_t(xmlpp::Element* xmlsrc, bool is_input_)
   : xml_element_t(xmlsrc),ctlname(""),
     connect(""),
     port_index(0),
+    is_input(is_input_),
     gain(1),
     caliblevel(50000.0)
 {
@@ -917,7 +919,7 @@ void obstacle_group_t::process_active(double t,uint32_t anysolo)
 
 sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
   : source_t(xmlsrc),
-    audio_port_t(xmlsrc),
+    audio_port_t(xmlsrc,true),
     parent(parent_),
     chaindist(0),
     gain_(1)

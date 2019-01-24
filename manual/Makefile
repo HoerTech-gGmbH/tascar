@@ -23,14 +23,14 @@ manual.pdf: $(FIGURES) secmodules.tex secactmodules.tex
 secmodules.tex: $(wildcard mod*.tex)
 	echo "List of general purpose modules:\\par\\\begin{itemize}" > $@
 	echo $(patsubst %,\\item \\indmod{%},$(subst mod,,$(subst .tex,,$^))) >> $@
-	echo "\\end{itemize}" >> $@
+	echo '\\end{itemize}' >> $@
 	echo "" >> $@
 	echo $(patsubst %,\\input{%} ,$^) >> $@
 
 secactmodules.tex: $(wildcard actmod*.tex)
 	echo "List of actor modules:\\par\\\begin{itemize}" > $@
 	echo $(patsubst %,\\item \\indmod{%},$(subst actmod,,$(subst .tex,,$^))) >> $@
-	echo "\\end{itemize}" >> $@
+	echo '\\end{itemize}' >> $@
 	echo "" >> $@
 	echo $(patsubst %,\\input{%} ,$^) >> $@
 

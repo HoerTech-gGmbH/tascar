@@ -181,16 +181,24 @@ namespace TASCAR {
 
     class src_object_t;
 
+    /**
+       \brief Audio ports
+     */
     class audio_port_t : public TASCAR::xml_element_t {
     public:
-      audio_port_t(xmlpp::Element* e);
+      audio_port_t(xmlpp::Element* e, bool is_input_);
       virtual ~audio_port_t();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index;};
       void set_ctlname(const std::string& pn) { ctlname  = pn;};
       std::string get_ctlname() const { return ctlname;};
       std::string get_connect() const { return connect;};
-      float get_gain() const { return gain/(2e-5f*caliblevel);};
+      float get_gain() const {
+        if( is_input )
+          return gain*(2e-5f*caliblevel);
+        else
+          return gain/(2e-5f*caliblevel);
+      };
       float get_gain_db() const { return 20*log10(fabsf(gain)); };
       void set_gain_db( float g );
       void set_gain_lin( float g );
@@ -200,6 +208,7 @@ namespace TASCAR {
       std::string ctlname;
       std::string connect;
       uint32_t port_index;
+      const bool is_input;
     public:
       float gain;
       float caliblevel;

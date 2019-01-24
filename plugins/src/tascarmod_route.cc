@@ -21,7 +21,7 @@ routemod_t::routemod_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
     TASCAR::Scene::route_t( TASCAR::module_base_t::e ),
     jackc_t(get_name()),
-    TASCAR::Scene::audio_port_t( TASCAR::module_base_t::e ),
+    TASCAR::Scene::audio_port_t( TASCAR::module_base_t::e, false ),
     channels(1)
 {
   TASCAR::module_base_t::GET_ATTRIBUTE(channels);

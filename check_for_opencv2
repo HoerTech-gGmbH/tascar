@@ -1,0 +1,2 @@
+#!/bin/bash
+pkg-config opencv && echo "yes" || echo "no"
