@@ -1,3 +1,4 @@
+0.193: Use new apt repository.
 0.192: Bugfix of input caliblevel.
 0.191: Store XML code in data logging files.
 0.190: Decorrelation of FOA renderer output signals.

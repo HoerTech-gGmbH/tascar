@@ -19,6 +19,8 @@ public:
   uint32_t get_num_channels();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   std::string get_channel_postfix(uint32_t channel) const;
+  float wgain;
+  float wgaindiff;
 };
 
 
@@ -32,6 +34,14 @@ amb1h1v_t::data_t::data_t(uint32_t chunksize)
 amb1h1v_t::amb1h1v_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc)
 {
+  std::string normalization("FuMa");
+  GET_ATTRIBUTE(normalization);
+  if( normalization == "FuMa" )
+    wgain = MIN3DB;
+  else if( normalization == "SN3D" )
+    wgain = 1.0f;
+  else throw TASCAR::ErrMsg("Currently, only FuMa and SN3D normalization is supported.");
+  wgaindiff = wgain/MIN3DB;
 }
 
 void amb1h1v_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
@@ -45,7 +55,7 @@ void amb1h1v_t::add_pointsource(const TASCAR::pos_t& prel, double width, const T
   data_t* d((data_t*)sd);
   //float az = prel.azim();
   // this is more or less taken from AMB plugins by Fons and Joern:
-  d->_w[AMB11::idx::w] = MIN3DB;
+  d->_w[AMB11::idx::w] = wgain;
   d->_w[AMB11::idx::x] = pnorm.x;
   d->_w[AMB11::idx::y] = pnorm.y;
   d->_w[AMB11::idx::z] = pnorm.z;
@@ -61,7 +71,7 @@ void amb1h1v_t::add_pointsource(const TASCAR::pos_t& prel, double width, const T
 void amb1h1v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   for( unsigned int i=0;i<chunk.size();i++){
-    output[AMB11::idx::w][i] += chunk.w()[i];
+    output[AMB11::idx::w][i] += wgaindiff*chunk.w()[i];
     output[AMB11::idx::x][i] += chunk.x()[i];
     output[AMB11::idx::y][i] += chunk.y()[i];
     output[AMB11::idx::z][i] += chunk.z()[i];
