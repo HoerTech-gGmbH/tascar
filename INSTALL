@@ -15,7 +15,7 @@ The toolbox depends on the following libraries:
 - libltc
 - gtkmm-2.4 or gtkmm-3.0
 - libxml++-2.6
-- liblsl-dev
+- liblsl-dev or lsl-liblsl
 - libfftw3-dev
 - libfftw3-single3
 - libfftw3-double3
@@ -30,22 +30,7 @@ On debian-based systems, the dependencies may be satisfied by typing:
 
   sudo apt-get install git g++ make build-essential libsndfile1-dev ruby-dev jackd2 portaudio19-dev default-jre libjack-jackd2-dev dpkg-dev lsb-release software-properties-common wget libxml++2.6-dev liblo-dev libltc-dev libasound2-dev libjack-jackd2-dev libgtkmm-3.0-dev libcairomm-1.0-dev libsndfile1-dev libfftw3-dev libfftw3-single3 libfftw3-double3 libcurl4-openssl-dev libwebkit2gtk-4.0-dev libgtksourceviewmm-3.0-dev imagemagick libmatio-dev texlive-latex-recommended texlive-latex-extra vim-common doxygen
 
-To build a debian package of liblsl:
+debian packages of lsl-liblsl can be found at:
 
-install cmake: 
-  sudo apt install cmake
+https://github.com/sccn/liblsl/releases
 
-clone repository:
-  git clone https://github.com/gisogrimm/labstreaminglayer
-
-compile and package:
-  mkdir labstreaminglayer/LSL/liblsl/build/
-  cd labstreaminglayer/LSL/liblsl/build/
-  cmake ..
-  make
-  cd ../distros/deb/
-  ./pack.sh
-  sudo dpkg -i liblsl*.deb
-
-The original source of labstreaminglayer is
-https://github.com/sccn/labstreaminglayer

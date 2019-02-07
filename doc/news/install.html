@@ -45,71 +45,40 @@
 	<h2>Toolbox for acoustic scene creation and rendering</h2>
 
 	<p><strong>TASCAR</strong> is an open-source software platform
-	for real-time interactive virtual acoustic environment
-	rendering in laboratory environments, licensed
-	under <a href="https://github.com/gisogrimm/tascar/blob/master/COPYING">GPL-2.0</a>. The
-	source code is hosted
-	at <a href="https://github.com/gisogrimm/tascar/">https://github.com/gisogrimm/tascar/</a>. Binary
-	packages and commercial support is available
+	  for real-time interactive virtual acoustic environment
+	  rendering in laboratory environments, licensed
+	  under <a href="https://github.com/gisogrimm/tascar/blob/master/COPYING">GPL-2.0</a>. The
+	  source code is hosted
+	  at <a href="https://github.com/gisogrimm/tascar/">https://github.com/gisogrimm/tascar/</a>. Binary
+	  packages and commercial support is available
 	  from <a href="http://www.hoertech.de/">H&ouml;rtech gGmbH</a>.</p>
-	
-	<p><a href="install.html">Installation instructions</a></p>
+
+	<p><a href="index.html">Latest news</a></p>
 
       </article>
       
-      <h2>Latest news</h2><br/>
-
-      <time>Feb 4, 2019</time>
-      <h3>TASCAR 0.193 released</h3>
-      <p>Use new apt repository</p>
-      <br/>
-
-      <time>Jan 24, 2019</time>
-      <h3>TASCAR 0.192 released</h3>
-      <p>Bugfix of input caliblevel</p>
-      <br/>
-
-      <time>Jan 11, 2019</time>
-      <h3>TASCAR 0.191 released</h3>
-      <p>Store XML code in data logging files</p>
-      <br/>
-
-      <time>Jan 9, 2019</time>
-      <h3>TASCAR 0.190 released</h3>
-      <p>Decorrelation of FOA renderer output signals</p>
-      <br/>
-
-      <time>Dec 7, 2018</time>
-      <h3>TASCAR 0.189 released</h3>
-      <p>Bugfix of visibility in image source model</p>
-      <br/>
-
-      <time>Oct 24, 2018</time>
-      <h3>TASCAR 0.188 released</h3>
-      <p>Bugfix of layering model for diffuse sound fields</p>
-      <br/>
-
-
-      <time>Sep 6, 2018</time>
-      <h3>TASCAR 0.187 released</h3>
-      <p>Display route modules in mixer window, shortcuts, MIDI controller</p>
-      <br/>
-
-      <time>Aug 23, 2018</time>
-      <h3>TASCAR 0.186 released</h3>
-      <p>Development kit for (motion/receiver/source/audio) plugin development</p>
-      <br/>
-
-      <time>Aug 16, 2018</time>
-      <h3>TASCAR 0.185 released</h3>
-      <p>Tabbed window for map and mixer, GUI improvements</p>
-      <br/>
+      <h2>Installation</h2><br/>
+      <p>In Ubuntu 18.04 (bionic):</p>
+      <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
+sudo apt-add-repository 'deb http://apt.hoertech.de/ bionic universe'
+      </code></pre>
+      <p>In Ubuntu 16.04 (xenial):</p>
+      <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
+sudo apt-add-repository 'deb http://apt.hoertech.de/ xenial universe'
+      </code></pre>
+      <p>In Ubuntu 14.04 (trusty):</p>
+      <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
+sudo apt-add-repository 'deb http://apt.hoertech.de/ trusty universe'
+      </code></pre>
+      <p>In all systems, use
+	<pre><code>sudo apt-get update
+sudo apt-get install tascarpro</code></pre> for installation.</p>
 
       <footer>
 	<a class="footer" href="http://www.tascar.org"><p>TASCAR 2019</p></a>
       </footer>
 
-</main>
-</body>
+    </main>
+  </body>
 
 </html>

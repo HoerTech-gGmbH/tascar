@@ -60,7 +60,7 @@ build/tascar_hdspmixer: EXTERNALS += alsa
 build/tascar_gui build/tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 build/tascar_gui build/tascar_pdf: EXTERNALS += $(GTKEXT)
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
-build/tascar_lslsl build/tascar_lsljacktime: LDLIBS+=-llsl
+build/tascar_lslsl build/tascar_lsljacktime: LDLIBS+=-llsl64
 
 ifeq "$(COVERAGE)" "yes"
 LDLIBS += -lgcov -lgmock_main

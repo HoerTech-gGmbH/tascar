@@ -89,10 +89,10 @@ build/tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
 build/tascar_ltcgen.so: EXTERNALS+=ltc
 build/tascar_hossustain.so: EXTERNALS += fftw3f
-build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
+build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl64
 build/tascar_lightctl.so: LDLIBS+=-ltascardmx
 build/tascar_simplecontroller.so: build/simplecontroller_glade.h
-build/tascar_datalogging.so: LDLIBS += -lmatio -llsl
+build/tascar_datalogging.so: LDLIBS += -lmatio -llsl64
 build/tascar_datalogging.so: build/datalogging_glade.h
 build/tascar_timedisplay.so: build/timedisplay_glade.h
 

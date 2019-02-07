@@ -1,2 +1,2 @@
 #!/bin/bash
-echo 'int main(int,char**){return 0;}'|g++ -llsl -x c++ - 2>/dev/null && echo yes||echo no
+echo 'int main(int,char**){return 0;}'|g++ -llsl64 -x c++ - 2>/dev/null && echo yes||echo no
