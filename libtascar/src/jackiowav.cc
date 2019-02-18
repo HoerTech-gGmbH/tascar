@@ -38,8 +38,11 @@ jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
   }
   if( ofname.size() ){
     log("creating output file "+ofname);
-    if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) )
-      throw TASCAR::ErrMsg("unable to open output file");
+    if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) ){
+      std::string errmsg("Unable to open output file \""+ofname+"\": ");
+      errmsg += sf_strerror(NULL);
+      throw TASCAR::ErrMsg(errmsg);
+    }
   }
   char c_tmp[1024];
   nframes_total = sf_inf_in.frames;
@@ -92,8 +95,11 @@ jackio_t::jackio_t(double duration,const std::string& ofname,
   }
   if( ofname.size() ){
     log("creating output file "+ofname);
-    if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) )
-      throw TASCAR::ErrMsg("unable to open output file");
+    if( !(sf_out = sf_open(ofname.c_str(),SFM_WRITE,&sf_inf_out)) ){
+      std::string errmsg("Unable to open output file \""+ofname+"\": ");
+      errmsg += sf_strerror(NULL);
+      throw TASCAR::ErrMsg(errmsg);
+    }
   }
   char c_tmp[1024];
   sprintf(c_tmp,"%d",nframes_total);
