@@ -55,8 +55,8 @@
 \fancyhead[RO]{\fancyplain{}{\bfseries\thepage}}
 \fancyfoot[LE]{\fancyplain{}{}}
 \fancyfoot[CE]{\fancyplain{}{}}
-\fancyfoot[RE]{\fancyplain{}{\bfseries\scriptsize \copyright{} 2017 H\"orTech gGmbH, Oldenburg }}
-\fancyfoot[LO]{\fancyplain{}{\bfseries\scriptsize \copyright{} 2017 H\"orTech gGmbH, Oldenburg }}
+\fancyfoot[RE]{\fancyplain{}{\bfseries\scriptsize TASCAR -- User manual}}
+\fancyfoot[LO]{\fancyplain{}{\bfseries\scriptsize TASCAR -- User manual}}
 \fancyfoot[CO]{\fancyplain{}{}}
 \fancyfoot[RO]{\fancyplain{}{}}
 %---------- Internal commands used in this style file ----------------
@@ -474,8 +474,8 @@
         {\fancyplain{}{\bfseries\rightmark}}
 \rhead[\fancyplain{}{\bfseries\leftmark}]
         {\fancyplain{}{\bfseries\thepage}}
-\rfoot[\fancyplain{}{\bfseries\scriptsize \copyright{} 2017 H\"orTech gGmbH, Oldenburg }]{}
-\lfoot[]{\fancyplain{}{\bfseries\scriptsize \copyright{} 2017 H\"orTech gGmbH, Oldenburg }}
+\rfoot[\fancyplain{}{\bfseries\scriptsize TASCAR -- User manual}]{}
+\lfoot[]{\fancyplain{}{\bfseries\scriptsize TASCAR -- User manual}}
 \cfoot{}
 %
 %
@@ -495,30 +495,36 @@
 
 \newcommand{\MHAtitle}[1]{
 \begin{titlepage}
-\vspace*{2cm}
+\vspace*{1cm}
 \begin{center}
-{\Huge\bf TASCARpro\\[1ex]\large toolbox for acoustic scene creation and rendering }\\
+{\fontsize{93}{110}\selectfont
+
+TASCAR
+
+}
+{\fontsize{16}{30}\selectfont
+
+  Toolbox for Acoustic Scene Creation And Rendering 
+
+}
+
 \vfill
 
 {\Huge 
 
 #1
 
-\bigskip
-
-{\Large
-
-%Special Edition for use in
-%
-%EU FP6, project 004171 HearCom
-
 }
-}
+
 \vfill
-{\includegraphics[width=7cm]{hoertechlogo}}\\
-\vspace*{0.5cm}
-{\small \copyright{} 2017 by H\"orTech gGmbH, Marie-Curie-Str. 2,
-  D--26129 Oldenburg, Germany}\\
+
+\includegraphics[width=8cm]{../artwork/tascarnotext.pdf}\\
+
+\vfill
+
+%\vspace*{0.5cm}
+%{\small Giso Grimm, Universit\"at Oldenburg, Marie-Curie-Str. 2,
+%  D--26129 Oldenburg, Germany}\\
 \end{center}
 \end{titlepage}
 \thispagestyle{empty}
@@ -527,9 +533,9 @@
 \vfill
 
 G. Grimm, J. Luberadzka, T. Herzke, V. Hohmann:\\
-{\bf TASCARpro -- #1}\\
-Copyright \copyright{} 2017\\
-H\"orTech gGmbH\\
+{\bf TASCAR -- #1}\\
+Copyright \copyright{} 2019\\
+Carl-von-Ossietzky Universit\"at Oldenburg\\
 Marie-Curie-Str. 2\\
 D--26129 Oldenburg
 
@@ -718,7 +724,7 @@ This General Public License does not permit incorporating your program into prop
 
 \showtutorialfalse
 
-\newcommand{\tascar}{{TASCAR{pro}}}
+\newcommand{\tascar}{{TASCAR}}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}

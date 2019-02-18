@@ -71,11 +71,25 @@ arc=0pt,outer arc=0pt,colback=mygraybg,colframe=black,colupper=h4aBlueDark,
 boxsep=0pt,left=1pt,right=1pt,top=2pt,bottom=2pt,
 boxrule=0.2pt,fontupper=\small\ttfamily\bfseries}
 
-\newcommand{\refelem}[2][]{\ifthenelse{\equal{#1}{}}{\hyperref[sec:#2]{\elembox{<#2/>}}}{\hyperref[sec:#1]{\elembox{<#2/>}}}\index{#2}}
+\newcommand{\refelem}[2][]{
+  \ifthenelse{\equal{#1}{}}{
+    \hyperref[sec:#2]{\elembox{<#2/>}}
+  }{
+    \hyperref[sec:#1]{\elembox{<#2/>}}
+  }
+  \index{#2}
+}
 \newcommand{\elem}[1]{\elembox{<#1/>}\index{#1}}
 \newcommand{\indattr}[1]{\attrbox{\lstinline{#1}}\index{#1 (attribute)}}
 \newcommand{\attr}[1]{\attrbox{\lstinline{#1}}}
 \newcommand{\indmod}[1]{\hyperref[sec:#1]{{\bf #1}}\index{#1 (module)}}
+\newcommand{\indapmod}[2][]{
+  \ifthenelse{\equal{#1}{}}{
+    \hyperref[sec:ap_#2]{{\bf #2}}\index{#2 (audio plugin)}
+  }{
+    \hyperref[sec:ap_#1]{{\bf #2}}\index{#2 (audio plugin)}
+  }
+}
 \newcommand{\keyb}[1]{\keybbox{\lstinline{#1}}}
 
 \section*{Preface}
@@ -1641,140 +1655,7 @@ they are processed before the sound is handed to the acoustic
 model. For receivers, audio plugins are processed after the post
 processing function of the render format.
 
-\subsection{sine}
-
-Add a sine wave to the input signal.
-
-\begin{tscattributes}
-\indattr{f} & Frequency in Hz\\
-\indattr{a} & Amplitude in dB\\
-\end{tscattributes}
-
-\subsection{sndfile}\label{sec:ap_sndfile}
-
-Add a sound file and play back at a given time, or triggered via OSC
-messages.
-%
-This plugin provides an alternative to the audio player (the
-\elem{sndfile} element of \elem{source}).
-%
-The main difference is, that this plugin loads the whole sound file
-into memory, where as the audio player creates a separate jack client
-with a decoupling of disk-IO and audio.
-%
-Offline-rendering is only possible with this audio plugin.
-
-\begin{tscattributes}
-  \indattr{name}        & Sound file name.                                                       \\
-  \indattr{channel}     & Sound file channel, zero-base (default: 0)                             \\
-  \indattr{start}       & Start position within the file, in seconds (default: 0).               \\
-  \indattr{length}      & length of sound sample, in seconds, or 0 for file length (default: 0). \\
-  \indattr{position}    & Start position within the scene, in seconds (default: 0).              \\
-  \indattr{loop}        & loop count or 0 for infinite looping (default: 1).                     \\
-  \indattr{levelmode}   & level mode, ``rms'', ``peak'' or ``calib'' (default: ``rms'').         \\
-  \indattr{level}       & level in dB (default: 0).                                              \\
-  \indattr{triggered}   & Play OSC triggered samples, ignore position and loop (default: false)  \\
-  \indattr{transport}   & Use session time base (default: true)                                  \\
-  \indattr{license}     & License form of session file                                           \\
-  \indattr{attribution} & Attribution of session file, e.g., author name                         \\
-  \indattr{mute} & Mute flag\\
-\end{tscattributes}
-
-See also Figure \ref{fig:ap_sndfile} for more deatils.
-
-\begin{figure}[htb]
-    \centering
-    \fbox{\includegraphics[width=\textwidth]{ap_sndfile}}
-    \caption{Explanation of {\tt sndfile} audio plugin attributes.}
-    \label{fig:ap_sndfile}
-\end{figure}
-
-\subsection{lookatme}
-
-Onset-detector for avatar head orientation control.
-
-\begin{tscattributes}
- \indattr{tau} & Time constant of level estimation                                        \\
- \attr{fadelen}       & Motion duration after threshold                                          \\
- \attr{threshold}     & Level threshold in dB SPL                                                \\
- \attr{url}           & Target OSC URL                                                           \\
- \attr{paths}         & Space-separated list of target paths                                     \\
- \attr{animation}     & Animation name (or empty for no animation)                               \\
- \attr{thresholdpath} & Destination path of threshold criterion (or empty)                       \\
- \attr{levelpath}     & Destination path of level logging (or empty)                             \\
- \attr{pos\_onset}    & Position to look at on onset (or empty to look at vertex position)       \\
- \attr{pos\_offset}   & Position to look at on offset (or empty for no change of look direction) \\
-\end{tscattributes}
-
-\subsection{delay}
-
-Delay the vertex audio signal.
-
-\begin{tscattributes}
-  \attr{delay} & Delay in seconds\\
-\end{tscattributes}
-
-\subsection{lipsync\_paper}
-
-Module to control lip synchronization as used in \cite{Llorach2016}.
-
-\begin{tscattributes}
-\attr{smoothing}      & Smoothing time constant in seconds (default: 0.04)                           \\
-\attr{url}            & Target OSC URL                                                               \\
-\attr{scale}          & Scaling factor of blend shapes; 3 values: kiss, jaw, lipsclosed              \\
-                      & (default: ``1 1 1'')                                                         \\
-\attr{vocalTract}     & Vocal tract scaling factor (default: 1)                                      \\
-\attr{threshold}      & Noise threshold, range 0-1 (default: 0.5)                                    \\
-\attr{maxspeechlevel} & Level normalization in dB                                                    \\
-\attr{dynamicrange}   & Mapped dynamic range in dB                                                   \\
-\attr{energypath}     & OSC destination for sending format energies, or empty for no energy messages \\
-\attr{path}           & OSC destination of blendshape messages                                       \\
-                      & (default: parent name)                                                       \\
-\attr{sendmode}       & Sending mode, one of ``always'', ``transport'', or ``onchange''              \\
-                      & (default: ``always'')                                                        \\
-\attr{onchangecount}  & Maximum number of repetitions of equal messages in ``onchange'' mode         \\
-                      & (default: 3)                                                                 \\
-\end{tscattributes}
-
-\subsection{gate}
-
-Gate the vertex audio signal.
-
-\begin{tscattributes}
-\attr{tautrack}   & Min/max tracking time constant in seconds (default: 30)                          \\
-\attr{taurms}     & RMS level estimation time constant in seconds (default: 0.005)                   \\
-\attr{threshold}  & Threshold value between 0 and 1 (default: 0.125)                                 \\
-\attr{holdlen}    & Time in seconds to keep output after level decay below threshold (default: 0.25) \\
-\attr{fadeinlen}  & Duration of von-Hann fade in seconds (default: 0.01)                             \\
-\attr{fadeoutlen} & Duration of von-Hann fade out in seconds (default: 0.125)                        \\
-\attr{bypass}     & Bypass gate (default: true)                                                      \\
-\end{tscattributes}
-
-\subsection{metronome}
-
-\begin{tscattributes}
-\attr{bpm} & Beats per minute (default: 120) \\
-\attr{bpb} & Beats per bar (default: 4) \\
-\attr{a1}, \attr{ao} & Amplitute of first and other beats \\
-\attr{sync} & Use object time syncronization (default: false)\\
-\attr{f1}, \attr{fo} & Resonance frequency of first and other beats\\
-\attr{q1}, \attr{qo} & Filter resonance of first and other betas\\
-\end{tscattributes}
-
-\subsection{openmha}
-
-Load an openmha plugin for audio processing. Currently, plugins which
-change the channel configuration (e.g., sampling rate, number of
-channels, or fragment size) can not be used.
-
-\begin{tscattributes}
-\indattr{plugin} & Plugin name\\
-\indattr{config} & Configuration command handed to openmha\\
-\end{tscattributes}
-
-Configuration can also be provided as embedded text in the
-\elem{openmha} element.
-
+\input{secapmodules.tex}
 
 \clearpage
 
@@ -2152,5 +2033,5 @@ The receiver orientation is defined by
 
 \end{document}
 
-%%  LocalWords:  TASCARpro Ambisonics binaural reflectivity facegroup
+%%  LocalWords:  TASCAR Ambisonics binaural reflectivity facegroup
 %%  LocalWords:  anechoic sinusoid SPL RMS directivity cardioid LSL

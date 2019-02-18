@@ -13,6 +13,7 @@ $(MODULES:external_libs=) $(DOCMODULES):
 clean:
 	for m in $(MODULES) $(DOCMODULES); do $(MAKE) -C $$m clean; done
 	$(MAKE) -C test clean
+	$(MAKE) -C manual clean
 	$(MAKE) -C examples clean
 	$(MAKE) -C external_libs clean
 	rm -Rf build devkit/Makefile.local devkit/build

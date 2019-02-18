@@ -1,0 +1,15 @@
+Onset-detector for avatar head orientation control.
+
+\begin{tscattributes}
+ \indattr{tau} & Time constant of level estimation                                        \\
+ \attr{fadelen}       & Motion duration after threshold                                          \\
+ \attr{threshold}     & Level threshold in dB SPL                                                \\
+ \attr{url}           & Target OSC URL                                                           \\
+ \attr{paths}         & Space-separated list of target paths                                     \\
+ \attr{animation}     & Animation name (or empty for no animation)                               \\
+ \attr{thresholdpath} & Destination path of threshold criterion (or empty)                       \\
+ \attr{levelpath}     & Destination path of level logging (or empty)                             \\
+ \attr{pos\_onset}    & Position to look at on onset (or empty to look at vertex position)       \\
+ \attr{pos\_offset}   & Position to look at on offset (or empty for no change of look direction) \\
+\end{tscattributes}
+

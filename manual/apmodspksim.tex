@@ -1,0 +1,20 @@
+This plugin implements a loudspeaker simulation, which creates distortion.
+
+First, the input $x(t)$ is filtered with the 2nd order resonance
+filter. The filtered signal $x_r(t)$ is then distorted sample-wise,
+\begin{equation}
+  x_d(t) = \frac{s}{s+|x_r(t)|} x_r(t),
+\end{equation}
+with the distortion factor $s$. Larger values of $s$ lead to a smaller
+distortion. The coupling of the speaker membrane to the air is
+simulated using a derivative high-pass filter:
+\begin{equation}
+  y(t) = g\frac{\textrm{d}}{\textrm{d}t}\,x_d(t)
+\end{equation}
+
+\begin{tscattributes}
+  \indattr{fres}  & Resonance frequency in Hz          \\
+  \indattr{q}     & $q$-factor of the resonance filter \\
+  \indattr{scale} & Distortion factor $s$              \\
+  \indattr{gain}  & Post-gain $g$ in dB                \\
+\end{tscattributes}
