@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene mirrororder="3">
+    <source>
+      <sound x="1">
+	<plugins>
+	  <sine/>
+	  <gainramp gain="10" slope="-1000" maxgain="20"/>
+	</plugins>
+      </sound>
+    </source>
+    <receiver type="omni"/>
+  </scene>
+</session>
