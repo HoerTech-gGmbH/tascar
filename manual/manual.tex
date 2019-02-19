@@ -348,18 +348,22 @@ can contain one or more scenes (\refelem{scene}), port connections
 definitions (\refelem{range}).
 
 \begin{tscattributes}
-\indattr{name}               & Name of session (default: ``tascar'')                                        \\
-\indattr{duration}           & Duration of session in seconds; default: 60                                  \\
-\indattr{loop}               & Loop session (true|false); default: false                                    \\
-\indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                             \\
-\indattr{levelmeter\_weight} & Level meter weight type; default: Z (currently the only one)                 \\
-\indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                      \\
-\indattr{levelmeter\_range}  & Level range of level meters in dB (default: 70)                              \\
-\indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                  \\
-\indattr{srv\_addr}          & OSC server multicast address, empty uses unicast                             \\
-\indattr{srv\_port}          & OSC server port number (default: 9877), or ``none'' to deactivate OSC server \\
-\indattr{license}            & License form of session file                                                 \\
-\indattr{attribution}        & Attribution of session file, e.g., author name                               \\
+\indattr{name}               & Name of session (default: ``tascar'')                                                \\
+\indattr{duration}           & Duration of session in seconds; default: 60                                          \\
+\indattr{loop}               & Loop session (true|false); default: false                                            \\
+\indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                     \\
+\indattr{levelmeter\_weight} & Level meter weight type; default: Z (currently the only one)                         \\
+\indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                              \\
+\indattr{levelmeter\_range}  & Level range of level meters in dB (default: 70)                                      \\
+\indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                          \\
+\indattr{srv\_addr}          & OSC server multicast address, empty uses unicast                                     \\
+\indattr{srv\_port}          & OSC server port number (default: 9877), or ``none'' to deactivate OSC server         \\
+\indattr{warnsrate}          & Print a warning if the system sampling rate doesn't match the specified one          \\
+\indattr{requiresrate}       & Stop loading the session if the system sampling rate doesn't match the specified one \\
+\indattr{warnfragsize}       & Print a warning if the system fragment size doesn't match the specified one          \\
+\indattr{requirefragsize}    & Stop loading the session if the system fragment size doesn't match the specified one \\
+\indattr{license}            & License form of session file                                                         \\
+\indattr{attribution}        & Attribution of session file, e.g., author name                                       \\
 \end{tscattributes}
 
 A session can have sub-elements \elem{mainwindow} and \elem{mapwindow}
@@ -941,8 +945,12 @@ orientation, which refers to a position and orientation of the box.
 
 
 If a port connection is provided (\attr{connect} attribute), then the
-four renderer input ports (which are always generated with the diffuse sound field:  \verb!render.<scenename>:<objectname>.n!) are connected to the audio player output ports \verb!@.0!, \verb!@.1!,
-\verb!@.2! and \verb!@.3!, where ''@'' is \verb!player.<scenename>:<objectname>! . Example : \tscexample[linerange={5-7},firstnumber=5]{example_diffuse}
+four renderer input ports (which are always generated with the diffuse
+sound field: \verb!render.<scenename>:<objectname>.n!) are connected
+to the audio player output ports \verb!@.0!, \verb!@.1!, \verb!@.2!
+and \verb!@.3!, where ''@'' is \verb!player.<scenename>:<objectname>!
+. Example :
+\tscexample[linerange={5-7},firstnumber=5]{example_diffuse}
 
 
 
@@ -963,21 +971,21 @@ We can route the output signals to playback system, e.g., loudspeakers
 or headphones.
 
 \begin{tscattributes}
-\indattr{connect}      & Connection to jack port                                                              \\
-\indattr{gain}         & Gain of jack port in dB; default: 0                                                  \\
-\indattr{type}         & Receiver type (see below for a list of receiver types)                               \\
-\indattr{size}         & Size of box in which no distance-rule is applied (x,y,z in m); default: 0 0 0        \\
-\indattr{point}        & Render point sources (true|false); default: true                                     \\
-\indattr{image}        & Render image sources (true|false); default: true                                     \\
-\indattr{ismmin}       & Minimal ISM order to be rendered (0)                                                 \\
-\indattr{ismmax}       & Maximal ISM order to be rendered ($2^{32}$)                                          \\
-\indattr{layers}       & List of active layers, or empty for all layers (default)                             \\
-\indattr{layerfadelen} & Fade length after layer activation or deactivation                                   \\
-\indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                                   \\
-\indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                                    \\
-\indattr{falloff}      & Length of Hanning ramp in m, or -1 for normal distance model; default: -1            \\
-\indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                            \\
-\indattr{delaycomp}    & Subtract this value from delay in delayline (given in seconds)                       \\
+\indattr{connect}      & Connection to jack port                                                       \\
+\indattr{gain}         & Gain of jack port in dB; default: 0                                           \\
+\indattr{type}         & Receiver type (see below for a list of receiver types)                        \\
+\indattr{size}         & Size of box in which no distance-rule is applied (x,y,z in m); default: 0 0 0 \\
+\indattr{point}        & Render point sources (true|false); default: true                              \\
+\indattr{image}        & Render image sources (true|false); default: true                              \\
+\indattr{ismmin}       & Minimal ISM order to be rendered (0)                                          \\
+\indattr{ismmax}       & Maximal ISM order to be rendered ($2^{32}$)                                   \\
+\indattr{layers}       & List of active layers, or empty for all layers (default)                      \\
+\indattr{layerfadelen} & Fade length after layer activation or deactivation                            \\
+\indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                       \\
+\indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                        \\
+\indattr{falloff}      & Length of Hanning ramp in m, or -1 for normal distance model; default: -1     \\
+\indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                     \\
+\indattr{delaycomp}    & Subtract this value from delay in delayline (given in seconds)                \\
 \end{tscattributes}
 
 \begin{tscelements}
@@ -1059,14 +1067,18 @@ elements within the receiver definition.
 \indattr{az}      & Azimuth of loudspeaker in degrees (optional; default 0)   \\
 \indattr{el}      & Elevation of loudspeaker in degrees (optional; default 0) \\
 \indattr{r}       & Distance (optional; default 1)                            \\
+\indattr{delay}   & Static delay in seconds (default: 0)                      \\
 \indattr{label}   & Additional port label (optional; default empty)           \\
 \indattr{connect} & Connection to jack port                                   \\
 \indattr{compA},
-\indattr{compB} & IIR filter coefficients for speaker calibration. \\
+\indattr{compB}   & IIR filter coefficients for speaker calibration.          \\
 \end{tscattributes}
 
-To activate IIR speaker correction filter, provide both \attr{compA} and
-\attr{compB} attributes.
+To activate IIR speaker correction filter, provide both \attr{compA}
+and \attr{compB} attributes. The filter coefficients follow the same
+convention as in GNU Octave/Matlab. Please note that filter
+coefficients are specific to the sampling rate, and not automatically
+recalculated upon sampling rate changes.
 
 %Example:
 %
@@ -1351,7 +1363,7 @@ the given number of loudspeakers is used.
 \indattr{diffup}           & Use diffuse upsampling similar to \citet{Zotter2014} (default: false)                                                       \\
 \indattr{diffup\_rot}      & Decorrelation rotation in degree (default: 45)                                                                              \\
 \indattr{diffup\_delay}    & Decorrelation delay in seconds (default: 0.01)                                                                              \\
-\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (default: 100)                                                                             \\
+\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (default: 100)                                                                        \\
 \indattr{filtershape}      & De-correlation filter shape for source width encoding, one of ``none'' (default), ``notch'', ``sine'', ``tria'', ``triald'' \\
 \indattr{filterperiod}     & Filter period in seconds for source width encoding (default: 0.005)                                                         \\
 \end{tscattributes}

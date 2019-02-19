@@ -13,6 +13,7 @@ transport_t::transport_t()
 audioplugin_base_t::audioplugin_base_t( const audioplugin_cfg_t& cfg )
   : xml_element_t(cfg.xmlsrc),
     name(cfg.name),
+    parentname(cfg.parentname),
     modname(cfg.modname),
     prepared(false)
 {

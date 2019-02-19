@@ -115,6 +115,10 @@ namespace TASCAR {
     std::string levelmeter_mode;
     double levelmeter_min;
     double levelmeter_range;
+    double requiresrate;
+    double warnsrate;
+    int32_t requirefragsize;
+    int32_t warnfragsize;
   };
 
   class session_t : public session_core_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t {

@@ -73,7 +73,7 @@ onsetdetector_t::~onsetdetector_t()
 void onsetdetector_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
   const char* this_side(side.c_str());
-  uint32_t N(chunk.size());
+  uint32_t N(chunk[0].size());
   float v2threshold(threshold*threshold);
   for(uint32_t k=0;k<N;++k){
     time_since_last += t_sample;

@@ -990,6 +990,9 @@ void datalogging_t::save_matcell(const std::string& filename)
     matvar_t *cell_array(Mat_VarCreate("data",MAT_C_CELL,MAT_T_CELL,2,dims,NULL,0));
     if ( cell_array == NULL )
       throw TASCAR::ErrMsg("Unable to create data cell array.");
+    matvar_t *cell_array_names(Mat_VarCreate("names",MAT_C_CELL,MAT_T_CELL,2,dims,NULL,0));
+    if ( cell_array == NULL )
+      throw TASCAR::ErrMsg("Unable to create data cell array.");
     for(uint32_t k=0;k<recorder.size();k++){
       std::string name(nice_name(recorder[k]->get_name()));
       std::vector<double> data(recorder[k]->get_data());
@@ -1036,10 +1039,16 @@ void datalogging_t::save_matcell(const std::string& filename)
         }
       // here add var to cell array!
       Mat_VarSetCell(cell_array,k,matDataStruct);
+      matvar_t* mStrName(Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_INT8,2,dims,v,0));
+      if( mStrName == NULL )
+        throw TASCAR::ErrMsg("Unable to create variable \""+name+"\".");
+      Mat_VarSetCell(cell_array_names,k,mStrName);
     }
     // add data cell array to Mat file:
     Mat_VarWrite(matfp,cell_array,MAT_COMPRESSION_NONE);
+    Mat_VarWrite(matfp,cell_array_names,MAT_COMPRESSION_NONE);
     Mat_VarFree(cell_array);
+    Mat_VarFree(cell_array_names);
   }
   catch( ... ){
     Mat_Close(matfp);

@@ -53,9 +53,11 @@ namespace TASCAR {
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
     virtual void add_licenses( licensehandler_t* ) {};
     const std::string& get_name() const { return name; };
+    std::string get_fullname() const { return parentname+"."+name; };
     const std::string& get_modname() const { return modname; };
   protected:
     std::string name;
+    std::string parentname;
     std::string modname;
   private:
     bool prepared;

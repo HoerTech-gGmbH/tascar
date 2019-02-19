@@ -41,6 +41,7 @@ namespace TASCAR {
     double az;
     double el;
     double r;
+    double delay;
     std::string label;
     std::string connect;
     std::vector<double> compA;

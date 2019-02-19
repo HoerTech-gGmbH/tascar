@@ -1,11 +1,11 @@
 # variables:
-VERSION=0.193.10
+VERSION=0.194.0
 CXXFLAGS = -Wall -Wno-deprecated-declarations -msse -msse2 -mfpmath=sse -ffast-math -fno-finite-math-only -fext-numeric-literals -std=c++11 -pthread
 PREFIX = /usr/local
 
 GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
 COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
-COMMIT_SINCE_MASTER=$(shell git log --pretty='format:%h' master.. | wc -w)
+COMMIT_SINCE_MASTER=$(shell git log --pretty='format:%h' origin/master.. | wc -w)
 
 FULLVERSION=$(VERSION).$(COMMIT_SINCE_MASTER)-$(COMMITHASH)$(GITMODIFIED)
 

@@ -54,6 +54,8 @@
 //#define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << x << std::endl
 #define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " --" << x << "--" << std::endl
 
+#define TASCAR_ASSERT(x) if( !(x) ) throw TASCAR::ErrMsg("Expression " #x " is false.")
+
 /**
    \defgroup libtascar TASCAR core library
 

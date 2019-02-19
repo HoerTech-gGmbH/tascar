@@ -248,7 +248,11 @@ TASCAR::session_core_t::session_core_t()
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
     levelmeter_min(30.0),
-    levelmeter_range(70.0)
+    levelmeter_range(70.0),
+    requiresrate(0),
+    warnsrate(0),
+    requirefragsize(0),
+    warnfragsize(0)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(loop);
@@ -257,6 +261,10 @@ TASCAR::session_core_t::session_core_t()
   GET_ATTRIBUTE(levelmeter_mode);
   GET_ATTRIBUTE(levelmeter_min);
   GET_ATTRIBUTE(levelmeter_range);
+  GET_ATTRIBUTE(requiresrate);
+  GET_ATTRIBUTE(requirefragsize);
+  GET_ATTRIBUTE(warnsrate);
+  GET_ATTRIBUTE(warnfragsize);
 }
 
 TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
@@ -266,7 +274,11 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
     levelmeter_tc(2.0),
     levelmeter_weight(TASCAR::levelmeter_t::Z),
     levelmeter_min(30.0),
-    levelmeter_range(70.0)
+    levelmeter_range(70.0),
+    requiresrate(0),
+    warnsrate(0),
+    requirefragsize(0),
+    warnfragsize(0)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(loop);
@@ -275,6 +287,10 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   GET_ATTRIBUTE(levelmeter_mode);
   GET_ATTRIBUTE(levelmeter_min);
   GET_ATTRIBUTE(levelmeter_range);
+  GET_ATTRIBUTE(requiresrate);
+  GET_ATTRIBUTE(requirefragsize);
+  GET_ATTRIBUTE(warnsrate);
+  GET_ATTRIBUTE(warnfragsize);
 }
 
 TASCAR::session_t::session_t()
@@ -286,6 +302,22 @@ TASCAR::session_t::session_t()
     //pcnt(0)
 {
   read_xml();
+  if( (requiresrate > 0) && ( srate != requiresrate ) )
+    throw TASCAR::ErrMsg("Invalid sampling rate (expected "+
+                         std::to_string(requiresrate)+"Hz, got "+
+                         std::to_string(srate)+" Hz)");
+  if( (requirefragsize > 0) && ( fragsize != requirefragsize ) )
+    throw TASCAR::ErrMsg("Invalid fragment size (expected "+
+                         std::to_string(requirefragsize)+", got "+
+                         std::to_string(fragsize)+")");
+  if( (warnsrate > 0) && ( srate != warnsrate ) )
+    TASCAR::add_warning("Invalid sampling rate (expected "+
+                        std::to_string(requiresrate)+"Hz, got "+
+                        std::to_string(srate)+" Hz)");
+  if( (warnfragsize > 0) && ( fragsize != warnfragsize ) )
+    TASCAR::add_warning("Invalid fragment size (expected "+
+                        std::to_string(requirefragsize)+", got "+
+                        std::to_string(fragsize)+")");
   pthread_mutex_init( &mtx, NULL );
   add_output_port("sync_out");
   jackc_transport_t::activate();

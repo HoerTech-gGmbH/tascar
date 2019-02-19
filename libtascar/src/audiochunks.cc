@@ -111,6 +111,9 @@ void wave_t::operator+=(const wave_t& o)
     d[k]+=o[k];
 }
 
+/**
+   \brief root-mean-square
+ */
 float wave_t::rms() const
 {
   float rv(0.0f);
@@ -118,6 +121,18 @@ float wave_t::rms() const
     rv += d[k]*d[k];
   rv *= rmsscale;
   return sqrt(rv);
+}
+
+/**
+   \brief mean-square
+ */
+float wave_t::ms() const
+{
+  float rv(0.0f);
+  for(uint32_t k=0;k<size();++k)
+    rv += d[k]*d[k];
+  rv *= rmsscale;
+  return rv;
 }
 
 float wave_t::maxabs() const
@@ -130,7 +145,7 @@ float wave_t::maxabs() const
 
 float wave_t::spldb() const
 {
-  return 20.0*log10(rms())-SPLREF;
+  return 10.0*log10(ms())-SPLREF;
 }
 
 float wave_t::maxabsdb() const

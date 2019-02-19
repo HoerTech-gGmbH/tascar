@@ -170,6 +170,7 @@ spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
     az(0.0),
     el(0.0),
     r(1.0),
+    delay(0.0),
     gain(1.0),
     dr(0.0),      
     d_w(0.0f),
@@ -182,6 +183,7 @@ spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE_DEG(az);
   GET_ATTRIBUTE_DEG(el);
   GET_ATTRIBUTE(r);
+  GET_ATTRIBUTE(delay);
   GET_ATTRIBUTE(label);
   GET_ATTRIBUTE(connect);
   GET_ATTRIBUTE(compA);
@@ -237,7 +239,7 @@ void spk_array_t::prepare( chunk_cfg_t& cf_ )
   audiostates_t::prepare( cf_ );
   delaycomp.clear();
   for(uint32_t k=0;k<size();++k)
-    delaycomp.push_back(TASCAR::static_delay_t( f_sample*(operator[](k).dr/340.0)));
+    delaycomp.push_back(TASCAR::static_delay_t( f_sample*((operator[](k).dr/340.0)+operator[](k).delay)));
   // initialize decorrelation filter:
   decorrflt.clear();
   uint32_t irslen(decorr_length*f_sample);
