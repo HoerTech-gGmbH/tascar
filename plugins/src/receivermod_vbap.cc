@@ -1,5 +1,5 @@
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/multi/geometries/multi_point.hpp>
 #include <boost/geometry/geometries/adapted/boost_tuple.hpp>
 
 #include "errorhandling.h"
@@ -148,7 +148,7 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
   for( unsigned int i=0;i<chunk.size();i++){
     // k is output channel number:
     for( unsigned int k=0;k<N;k++){
-      //output in each louspeaker k at sample i: 
+      //output in each louspeaker k at sample i:
       output[k][i] += (d->wp[k] += d->dwp[k]) * chunk[i];
       // This += is because we sum up all the sources for which we
       // call this func

@@ -1,3 +1,4 @@
+0.195: Bugfix of 2D-VBAP with irregular layouts, calibration of layout files.
 0.194: Addition of minor features: store variable names in datalogging, enforce audio settings, speaker delay.
 0.193: Use new apt repository.
 0.192: Bugfix of input caliblevel.
