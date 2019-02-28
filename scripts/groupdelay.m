@@ -1,5 +1,11 @@
-function d = groupdelay( irs )
-  H = realfft(irs);
+function d = groupdelay( ir )
+% groupdelay - calculate group delay of impulse response
+%
+% d = groupdelay( ir )
+%
+% ir : impulse response
+% d  : group delay in samples
+  H = realfft(ir);
   d = -(size(H,1)-1)*angle(H(2:end,:).*conj(H(1:end-1,:)))/pi;
   d(end+1,:) = d(end,:);
 

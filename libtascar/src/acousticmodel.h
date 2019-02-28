@@ -145,6 +145,7 @@ namespace TASCAR {
       double minlevel;
       uint32_t sincorder;
       gainmodel_t gainmodel;
+      bool airabsorption;
       double size;
       // derived / internal / updated variables:
       std::vector<wave_t> inchannels;

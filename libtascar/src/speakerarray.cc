@@ -3,6 +3,11 @@
 #include <complex.h>
 #include <algorithm>
 #include <random>
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+#include <chrono>
+#include <string.h>
 
 using namespace TASCAR;
 
@@ -19,29 +24,34 @@ spk_array_t::spk_array_t(xmlpp::Element* e, const std::string& elementname_)
     mean_rotation(0),
     decorr_length(0.05),
     decorr(true),
-    densitycorr(true)
+    densitycorr(true),
+    caliblevel(50000),
+    calibage(0)
 {
-  read_xml(e);
-  if( !empty() ){
-    rmax = operator[](0).norm();
-    rmin = rmax;
-    for(uint32_t k=1;k<size();k++){
-      double r(operator[](k).norm());
-      if( rmax < r )
-        rmax = r;
-      if( rmin > r )
-        rmin = r;
-    }
-    double _Complex p_xy(0);
-    for(uint32_t k=0;k<size();k++){
-      operator[](k).gain = operator[](k).norm()/rmax;
-      operator[](k).dr = rmax-operator[](k).norm();
-      p_xy += cexp(-(double)k*PI2*I/(double)(size()))*(operator[](k).unitvector.x+I*operator[](k).unitvector.y);
-    }
-    mean_rotation = carg(p_xy);
-  }
+  // read layout file:
+  GET_ATTRIBUTE(layout);
+  if( layout.empty() )
+    throw TASCAR::ErrMsg("No speaker layout file provided.");
+  import_file(layout);
   if( empty() )
     throw TASCAR::ErrMsg("Invalid empty speaker array.");
+  // update derived parameters:
+  rmax = operator[](0).norm();
+  rmin = rmax;
+  for(uint32_t k=1;k<size();k++){
+    double r(operator[](k).norm());
+    if( rmax < r )
+      rmax = r;
+    if( rmin > r )
+      rmin = r;
+  }
+  double _Complex p_xy(0);
+  for(uint32_t k=0;k<size();k++){
+    operator[](k).gain = operator[](k).norm()/rmax;
+    operator[](k).dr = rmax-operator[](k).norm();
+    p_xy += cexp( -(double)k*PI2*I/(double)(size()))*(operator[](k).unitvector.x+I*operator[](k).unitvector.y);
+  }
+  mean_rotation = carg(p_xy);
   didx.resize(size());
   for(uint32_t k=0;k<size();++k){
     operator[](k).update_foa_decoder(1.0f/size(), xyzgain);
@@ -66,13 +76,8 @@ spk_array_t::spk_array_t(xmlpp::Element* e, const std::string& elementname_)
 
 void spk_array_t::read_xml(xmlpp::Element* e)
 {
-  GET_ATTRIBUTE(xyzgain);
   clear();
-  std::string importsrc;
   xml_element_t xe(e);
-  xe.get_attribute("layout",importsrc);
-  if( !importsrc.empty() )
-    import_file(importsrc);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -80,9 +85,25 @@ void spk_array_t::read_xml(xmlpp::Element* e)
       push_back(TASCAR::spk_descriptor_t(sne));
     }
   }
-  GET_ATTRIBUTE(decorr_length);
-  GET_ATTRIBUTE_BOOL(decorr);
-  GET_ATTRIBUTE_BOOL(densitycorr);
+  xe.GET_ATTRIBUTE(xyzgain);
+  xe.GET_ATTRIBUTE(decorr_length);
+  xe.GET_ATTRIBUTE_BOOL(decorr);
+  xe.GET_ATTRIBUTE_BOOL(densitycorr);
+  has_caliblevel = xe.has_attribute("caliblevel");
+  xe.GET_ATTRIBUTE_DB(caliblevel);
+  xe.GET_ATTRIBUTE(calibdate);
+  if( !calibdate.empty() ){
+    std::time_t now(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+    std::tm tcalib;
+    memset(&tcalib,0,sizeof(tcalib));
+    const char* msg(strptime(calibdate.c_str(),"%Y-%m-%d",&tcalib));
+    if( msg ){
+      std::time_t ctcalib(mktime(&tcalib));
+      calibage = difftime(now,ctcalib)/(24*3600);
+    }else{
+      TASCAR::add_warning("Invalid date/time format: "+calibdate);
+    }
+  }
 }
 
 void spk_array_t::import_file(const std::string& fname)
@@ -186,13 +207,10 @@ spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(delay);
   GET_ATTRIBUTE(label);
   GET_ATTRIBUTE(connect);
-  GET_ATTRIBUTE(compA);
   GET_ATTRIBUTE(compB);
   set_sphere(r,az,el);
   unitvector = normal();
   update_foa_decoder(1.0f, 1.0 );
-  if( (compA.size() > 0) && (compB.size() > 0) )
-    comp = new TASCAR::filter_t( compA, compB );
 }
 
 spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
@@ -201,9 +219,9 @@ spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
     az(src.az),
     el(src.el),
     r(src.r),
+    delay(src.delay),
     label(src.label),
     connect(src.connect),
-    compA(src.compA),
     compB(src.compB),
     unitvector(src.unitvector),
     gain(src.gain),
@@ -214,8 +232,6 @@ spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
     d_z(src.d_z),
     comp(NULL)
 {
-  if( (compA.size() > 0) && (compB.size() > 0) )
-    comp = new TASCAR::filter_t( compA, compB );
 }
 
 spk_descriptor_t::~spk_descriptor_t()
@@ -267,6 +283,14 @@ void spk_array_t::prepare( chunk_cfg_t& cf_ )
     delete diffuse_render_buffer;
   diffuse_render_buffer = NULL;
   diffuse_render_buffer = new TASCAR::wave_t(n_fragment);
+  // speaker correction filter:
+  for( uint32_t k=0;k<size();++k ){
+    spk_descriptor_t& spk(operator[](k));
+    if(  spk.compB.size() > 0 ){
+      spk.comp = new TASCAR::overlap_save_t( n_fragment+1, n_fragment );
+      spk.comp->set_irs( spk.compB, false );
+    }
+  }
 }
 
 void spk_array_t::add_diffuse_sound_field( const TASCAR::amb1wave_t& diff )

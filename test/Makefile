@@ -5,7 +5,8 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_snd_rec_amb1h1v test_wav_diffuse test_wav_diffuse_hoa2d	\
 	test_wav_diffuse_nsp4 test_wav_diffuse_hoa2d4			\
 	test_wav_diffuse_layerbug test_wav_diffirs test_sndgainramp	\
-	test_sndgainramp2
+	test_sndgainramp2 test_ir_spkcorr test_snd_calib1		\
+	test_snd_calib2 test_snd_vbap51
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
@@ -27,16 +28,40 @@ all: $(TESTS) $(TEST_REC)
 db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 
 test_ir%: test_ir%.tsc expected_ir%.wav
-	$(LIBPATH) $(VALIDATE) $< 
-	$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 
-	$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav 1e-9
-	rm -f test_ir$*.wav
+	@echo "Impulse response test: $<"
+	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav 1e-7 || (echo "$(<):2: Output differs"; false)
+	@rm -f test_ir$*.wav
 
 test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
-	$(LIBPATH) $(VALIDATE) $< 
-	$(LIBPATH) $(RENDERFILE) -i input_wav$*.wav -d -f 64 -o test_wav$*.wav $<
-	$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
-	rm -f test_wav$*.wav
+	@echo "Input-output processing test: $<"
+	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(LIBPATH) $(RENDERFILE) -i input_wav$*.wav -d -f 64 -o test_wav$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 1e-7 || (echo "$(<):2: Output differs"; false)
+	@rm -f test_wav$*.wav
+
+test_snd%: test_snd%.tsc expected_snd%.wav
+	@echo "Generation test: $<"
+	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_snd$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav 1e-7 || (echo "$(<):2: Output differs"; false)
+	@rm -f test_snd$*.wav
+
+test_pos%: test_pos%.tsc expected_pos%.wav
+	@echo "Position test: $<"
+	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-9 || (echo "$(<):2: Output differs"; false)
+	@rm -f test_pos$*.wav
+
+test_rec_%: test_rec.tsc
+	@echo "Receiver test: $< ($*)"
+	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_rec_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@rm -f test_rec_$*.wav
+
+
+# debugging rules:
 
 db_test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 	$(LIBPATH) $(VALIDATE) $< 
@@ -45,28 +70,10 @@ db_test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 	$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
 	rm -f test_wav$*.wav
 
-test_snd%: test_snd%.tsc expected_snd%.wav
-	$(LIBPATH) $(VALIDATE) $< 
-	$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_snd$*.wav $<
-	$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav 1e-9
-	rm -f test_snd$*.wav
-
 db_test_rec_%: test_rec.tsc
 	echo run -i zeros.wav -d -f 64 -o test_rec_$*.wav $< > gdbcmd
 	$(LIBPATH) RECEIVER=$* gdb $(RENDERIR) -x gdbcmd
 	rm -f test_rec_$*.wav
-
-test_rec_%: test_rec.tsc
-	$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_rec_$*.wav $<
-	rm -f test_rec_$*.wav
-#	$(LIBPATH) RECEIVER=$* $(VALIDATE) $< 
-#$(LIBPATH) $(COMPARE) expected_rec_$*.wav test_rec_$*.wav 1e-9
-
-test_pos%: test_pos%.tsc expected_pos%.wav
-	$(LIBPATH) $(VALIDATE) $< 
-	$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_pos$*.wav $<
-	$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-9
-	rm -f test_pos$*.wav
 
 db_test_ir%: test_ir%.tsc expected_ir%.wav
 	echo run -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 > gdbcmd
@@ -97,7 +104,10 @@ leak_test_pos%: test_pos%.tsc expected_pos%.wav
 	rm -f test_pos$*.wav
 
 leak_%: %.tsc
-	$(LIBPATH) valgrind --leak-check=full  --show-leak-kinds=all $(RENDERIR) -i zeros.wav -o $*.wav -d -f 64 $<
+	$(LIBPATH) valgrind --leak-check=full  --show-leak-kinds=all $(RENDERFILE) -i zeros.wav -o $*.wav -d -f 64 $<
+
+init_%: %.tsc
+	$(LIBPATH) valgrind --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -d -f 64 $<
 
 clean:
 	rm -f *~ test*.wav gdbcmd

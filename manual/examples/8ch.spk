@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<layout>
+  <speaker az="0"/>
+  <speaker az="45"/>
+  <speaker az="90"/>
+  <speaker az="135"/>
+  <speaker az="180"/>
+  <speaker az="-135"/>
+  <speaker az="-90"/>
+  <speaker az="-45"/>
+</layout>

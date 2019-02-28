@@ -119,8 +119,10 @@ int matrix_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const st
     }
   }
   for( uint32_t k=0;k<outputs.size();++k){
-    if( outputs[k].comp )
-      outputs[k].comp->filter(sOut[k],sOut[k],n,1);
+    if( outputs[k].comp ){
+      TASCAR::wave_t wOut(n,sOut[k]);
+      outputs[k].comp->process(wOut,wOut,false);
+    }
   }
   return 0;
 }

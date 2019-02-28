@@ -212,6 +212,7 @@ namespace TASCAR {
     public:
       float gain;
       float caliblevel;
+      bool has_caliblevel;
     };
 
     /**

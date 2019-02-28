@@ -334,6 +334,20 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
 {
   if( get_name().empty() )
     set_name("out");
+  // test if this is a speaker-based receiver module:
+  TASCAR::receivermod_base_speaker_t* spk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(libdata));
+  if( spk ){
+    if( spk->spkpos.has_caliblevel ){
+      if( has_caliblevel )
+        TASCAR::add_warning("Caliblevel is defined in receiver \""+get_name()+
+                            "\" and in layout file \""+spk->spkpos.layout+"\". Will use the value from layout file.");
+      caliblevel = spk->spkpos.caliblevel;
+      if( spk->spkpos.calibage > 30 )
+        TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is more than 30 days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
+
+    }
+    //DEBUG(spk);
+  }
   // parse plugins:
   xmlpp::Element* se_plugs(receiver_t::find_or_add_child("plugins"));
   xmlpp::Node::NodeList subnodes(se_plugs->get_children());
@@ -606,6 +620,7 @@ audio_port_t::audio_port_t(xmlpp::Element* xmlsrc, bool is_input_)
 {
   get_attribute("connect",connect);
   get_attribute_db_float("gain",gain);
+  has_caliblevel = has_attribute("caliblevel");
   get_attribute_db_float("caliblevel",caliblevel);
   bool inv(false);
   get_attribute_bool("inv",inv);

@@ -3,11 +3,7 @@
   <scene>
     <diffuse>
     </diffuse>
-    <receiver type="nsp" xyzgain="0.70710678118654757274" decorr="false" densitycorr="false">
-      <speaker az="0"/>
-      <speaker az="90"/>
-      <speaker az="180"/>
-      <speaker az="-90"/>
+    <receiver type="nsp" layout="4ch.spk">
     </receiver>
   </scene>
 </session>

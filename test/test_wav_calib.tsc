@@ -3,7 +3,6 @@
   <scene>
     <diffuse>
     </diffuse>
-    <receiver type="hoa2d" maxre="true" diffup="true" layout="4ch.spk">
-    </receiver>
+    <receiver type="nsp" caliblevel="90" layout="8ch_calib.spk"/>
   </scene>
 </session>

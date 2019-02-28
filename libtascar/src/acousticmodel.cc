@@ -120,6 +120,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       double dairabsorption((next_air_absorption-air_absorption)*dt);
       apply_reflectionfilter( audio );
       for(uint32_t k=0;k<chunksize;++k){
+        float& current_sample(audio[k]);
         distance+=ddistance;
         gain+=dgain;
         // calculate layer fade gain:
@@ -130,13 +131,16 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           if(layergain > 0.0)
             layergain -= dlayergain;
         }
-        float c1(air_absorption+=dairabsorption);
-        float c2(1.0f-c1);
-        // apply air absorption:
-        c1 *= layergain*gain*delayline.get_dist_push(distance,audio[k]);
-        airabsorption_state = c2*airabsorption_state+c1;
-        make_friendly_number(airabsorption_state);
-        audio[k] = airabsorption_state;
+        current_sample = layergain*gain*delayline.get_dist_push(distance,current_sample);
+        if( src_->airabsorption ){
+          float c1(air_absorption+=dairabsorption);
+          float c2(1.0f-c1);
+          // apply air absorption:
+          c1 *= current_sample;
+          airabsorption_state = c2*airabsorption_state+c1;
+          make_friendly_number(airabsorption_state);
+          current_sample = airabsorption_state;
+        }
       }
       if( ((gain!=0)||(dgain!=0)) ){
         // calculate obstacles:
@@ -657,6 +661,7 @@ source_t::source_t(xmlpp::Element* xmlsrc)
     minlevel(0),
     sincorder(0),
     gainmodel(GAIN_INVR),
+    airabsorption(true),
     size(0),
     active(true),
     is_prepared(false)
@@ -664,6 +669,7 @@ source_t::source_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(size);
   GET_ATTRIBUTE(maxdist);
   GET_ATTRIBUTE_DBSPL(minlevel);
+  GET_ATTRIBUTE_BOOL(airabsorption);
   std::string gr;
   get_attribute("gainmodel",gr);
   if( gr.empty() )

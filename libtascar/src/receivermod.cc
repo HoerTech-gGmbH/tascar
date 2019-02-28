@@ -143,7 +143,7 @@ void TASCAR::receivermod_base_speaker_t::postproc( std::vector<wave_t>& output )
   }
   for( uint32_t k=0;k<spkpos.size();++k){
     if( spkpos[k].comp )
-      spkpos[k].comp->filter(&(output[k]),&(output[k]));
+      spkpos[k].comp->process(output[k],output[k],false);
   }
 }
 

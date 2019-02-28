@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene mirrororder="3">
+    <source>
+      <orientation>0 40 0 0</orientation>
+      <sound x="1" airabsorption="false">
+	<plugins>
+	  <pulse a="1" f="0.1"/>
+	</plugins>
+      </sound>
+    </source>
+    <receiver type="vbap" layout="vbap51.spk" delaycomp="0.0014"/>
+  </scene>
+</session>

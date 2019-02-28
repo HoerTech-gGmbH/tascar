@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<layout>
+  <speaker az="45"/>
+  <speaker az="135"/>
+  <speaker az="-135"/>
+  <speaker az="-45" compB="0.2 0.2 0.2 -0.2 -0.2 -0.2 0.2 0.2 0.2"/>
+</layout>

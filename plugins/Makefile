@@ -22,7 +22,7 @@ TASCARMODSGUI = tracegui simplecontroller timedisplay
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
-  gainramp
+  gainramp pulse
 
 ifeq "$(HAS_LSL)" "yes"
 TASCARMODS +=  lsljacktime lslactor levels2osc pos2lsl

@@ -44,7 +44,7 @@ namespace TASCAR {
     double delay;
     std::string label;
     std::string connect;
-    std::vector<double> compA;
+    //std::vector<double> compA;
     std::vector<double> compB;
     // derived parameters:
     pos_t unitvector;
@@ -57,7 +57,7 @@ namespace TASCAR {
     float d_y;
     float d_z;
     float densityweight;
-    TASCAR::filter_t* comp;
+    TASCAR::overlap_save_t* comp;
   };
 
   /**
@@ -103,6 +103,11 @@ namespace TASCAR {
     double decorr_length;
     bool decorr;
     bool densitycorr;
+    double caliblevel;
+    bool has_caliblevel;
+    std::string layout;
+    double calibage;
+    std::string calibdate;
   };
 
 }

@@ -1,13 +1,9 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <session name="example_kitchen" duration="120" license="CC BY-SA 3.0" attribution="Joanna Luberadzka">
   <scene name="Simple_scene" guiscale="6">
-    <receiver name="nearestspeaker" type="nsp">
+    <receiver name="nearestspeaker" type="nsp" layout="nsp.spk">
       <position>0 0 0 1.6</position>
       <orientation>0 34 0 0</orientation>
-      <speaker el="30" az="45" r="12"/>
-      <speaker el="0" az="40" r="3"/>
-      <speaker el="60" az="4" r="1"/>
-      <speaker el="0" az="-40" r="0"/>
     </receiver>
     <face name="wall" width="2.4" height="0.5" reflectivity="0.9" damping="0.1">
       <position>0 -1 1.25 0.85</position>

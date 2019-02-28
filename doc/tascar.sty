@@ -735,7 +735,7 @@ This General Public License does not permit incorporating your program into prop
 \lstdefinelanguage{tsc}[]{XML}{
   keywords={session,session,},
   morekeywords=[2]{scene,connect,modules,},
-  morekeywords=[3]{receiver,face,facegroup,mask,source,diffuse,hrirconv,simplecontroller,pos2osc,system,datalogging,locationvelocity,rotator,lsljacktime,oscjacktime,route,matrix,ltcgen,lightctl,nearsensor,timedisplay,hoafdnrot,midictl,midi2osc,},
+  morekeywords=[3]{receiver,face,facegroup,mask,source,diffuse,hrirconv,simplecontroller,pos2osc,system,datalogging,locationvelocity,rotator,lsljacktime,oscjacktime,route,matrix,ltcgen,lightctl,nearsensor,timedisplay,hoafdnrot,midictl,midi2osc,layout,},
   morekeywords=[4]{position,position,orientation,creator,sndfile,sound,speaker,faces,entry,plugins,sine,}
   keywordstyle=\color{h4aGreen}\bfseries,       % keyword style
   keywordstyle=[2]\color{h4aBlueDark}\bfseries,     % keyword style for tascar objects
@@ -777,6 +777,7 @@ belowskip=\smallskipamount,
 \renewcommand{\lstlistlistingname}{Examples}
 
 \newcommand{\tscexample}[2][]{\lstinputlisting[language=tsc,caption={\lstname},label=tsc:#2,#1]{examples/#2.tsc}}
+\newcommand{\tscexampleext}[2][]{\lstinputlisting[language=tsc,caption={\lstname},label=tsc:#2,#1]{examples/#2}}
 \newcommand{\tscexamplepriv}[2][]{\lstinputlisting[language=tsc,caption={},nolol,#1]{examples/#2.tsc}}
 \newcommand{\itscexample}[2][]{\lstinputlisting[language=tsc,caption={\lstname},label=tsc:#2,#1]{examples/#2.itsc}}
 \newcommand{\itscexamplepriv}[2][]{\lstinputlisting[language=tsc,caption={},nolol,#1]{examples/#2.itsc}}

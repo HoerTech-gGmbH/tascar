@@ -37,6 +37,8 @@ namespace TASCAR {
   public:
     wave_t(uint32_t chunksize);
     wave_t(const wave_t& src);
+    wave_t(const std::vector<float>& src);
+    wave_t(const std::vector<double>& src);
     wave_t(uint32_t n,float* ptr);
     ~wave_t();
     inline float& operator[](uint32_t k){return d[k];};

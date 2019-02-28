@@ -1034,10 +1034,11 @@ first order Ambisonics signal of the $l$-th diffuse sound field; $L$ is the
 number of all diffuse sound fields, including diffuse reverberation inputs.
 
 For all speaker based receiver types, $D$ is a first order Ambisonics
-decoder matrix. To achieve a $\max rE$-decoder, set the attribute
-\indattr{xyzgain} to 0.707 for regular horizontal speaker layouts and
-to 0.577 for regular 3D speaker layouts.  For Ambisonics based
-receiver types, $D$ is a diagonal matrix.
+decoder matrix, with optional speaker density compensation and
+decorrelation filters. To achieve a $\max rE$-decoder, set the
+attribute \indattr{xyzgain} to 0.707 for regular horizontal speaker
+layouts and to 0.577 for regular 3D speaker layouts.  For Ambisonics
+based receiver types, $D$ is a diagonal matrix.
 %
 By default, the decoded output of the first order Ambisonics rendering
 is decorrelated using FIR all-pass filters to achieve diffuse sound
@@ -1054,31 +1055,42 @@ and may help to visualize the role of the receiver.
   \label{fig:renderer}
 \end{figure}
 
-
-
-
 \subsubsection{The {\tt <speaker .../>} element}\label{sec:speaker}\index{speaker}
 
-The speaker layout of speaker based receiver types can be either
-defined in a separate layout file, or in a list of \elem{speaker}
-elements within the receiver definition.
+The speaker layout of speaker based receiver types can be defined in a
+separate layout file specified in the \attr{layout} attribute, in a
+list of \elem{speaker} elements within the receiver definition.
 
 \begin{tscattributes}
-\indattr{az}      & Azimuth of loudspeaker in degrees (optional; default 0)   \\
-\indattr{el}      & Elevation of loudspeaker in degrees (optional; default 0) \\
-\indattr{r}       & Distance (optional; default 1)                            \\
-\indattr{delay}   & Static delay in seconds (default: 0)                      \\
-\indattr{label}   & Additional port label (optional; default empty)           \\
-\indattr{connect} & Connection to jack port                                   \\
-\indattr{compA},
-\indattr{compB}   & IIR filter coefficients for speaker calibration.          \\
+\indattr{az}         & Azimuth of loudspeaker in degrees (optional; default 0)   \\
+\indattr{el}         & Elevation of loudspeaker in degrees (optional; default 0) \\
+\indattr{r}          & Distance (optional; default 1)                            \\
+\indattr{delay}      & Static delay in seconds (default: 0)                      \\
+\indattr{label}      & Additional port label (optional; default empty)           \\
+\indattr{connect}    & Connection to jack port                                   \\
+\indattr{compB}      & FIR filter coefficients for speaker calibration.          \\
 \end{tscattributes}
 
-To activate IIR speaker correction filter, provide both \attr{compA}
-and \attr{compB} attributes. The filter coefficients follow the same
-convention as in GNU Octave/Matlab. Please note that filter
+To activate FIR speaker correction filter, provide the FIR filter
+coefficients in the \attr{compB} attribute. Please note that filter
 coefficients are specific to the sampling rate, and not automatically
-recalculated upon sampling rate changes.
+recalculated upon sampling rate changes. The maximal length of the
+correction filter is the audio fragment size plus one.
+
+The top-level element of a layout file, \elem{layout}, can be configured with these attributes:
+\begin{tscattributes}
+\indattr{caliblevel}     & Calibration level in dB; default: 93.9794                                           \\
+\indattr{calibdate}      & Calibration date in format YYYY-MM-DD                                               \\
+\indattr{xyzgain}        & XYZ-gain for FOA decoding                                                           \\
+\indattr{decorr}         & Decorrelate speaker signals in diffuse sound field rendering (default: true)        \\
+\indattr{decorr\_length} & Length of decorrelation filter, in seconds (default: 0.05)                          \\
+\indattr{densitycorr}    & In diffuse rendering, correct gains locally for loudspeaker density (default: true) \\
+\end{tscattributes}
+
+If the caliblevel is provided in the receiver element and the layout
+file, then a warning is issued and the value from the layout file is
+used. If a calibration date is provided and the calibration is older
+than 30 days, a warning is displayed.
 
 %Example:
 %
@@ -1305,14 +1317,6 @@ receiver.
 Information about the number of loudspeaker and their location is then
 exploited to produce appropriate receiver output channels.
 %
-Speaker-based receiver types have these additional configuration variables:
-
-\begin{tscattributes}
-\indattr{layout}         & File name of speaker layout definition                                       \\
-\indattr{xyzgain}        & XYZ-gain for FOA decoding                                                    \\
-\indattr{decorr}         & Decorrelate speaker signals in diffuse sound field rendering (default: true) \\
-\indattr{decorr\_length} & Length of decorrelation filter, in seconds (default: 0.05)                   \\
-\end{tscattributes}
 
 
 \begin{figure}[htb]
@@ -1434,7 +1438,9 @@ receiver.
 This receiver also requires defining the position of the playback
 channels and we can do it in the following way (see
 \verb!example_nearest.tsc!):
-\tscexample[linerange={4-11},firstnumber=4]{example_nearest}
+\tscexample[linerange={4-7},firstnumber=4]{example_nearest}
+
+\tscexampleext[linerange={2-7},firstnumber=2]{nsp.spk}
 
 If we load a scene with such a receiver in \tascar{}, we will see all the
 specified channels as an output of the rendering stage in the Jack

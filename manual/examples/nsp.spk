@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<layout>
+  <speaker el="30" az="45" r="12"/>
+  <speaker el="0" az="40" r="3"/>
+  <speaker el="60" az="4" r="1"/>
+  <speaker el="0" az="-40" r="0"/>
+</layout>

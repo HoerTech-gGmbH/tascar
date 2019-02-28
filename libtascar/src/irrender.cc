@@ -114,8 +114,8 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
     delete [] a_in[k];
   for(uint32_t k=0;k<nch_out;++k)
     delete [] a_out[k];
-  delete sf_in_buf;
-  delete sf_out_buf;
+  delete [] sf_in_buf;
+  delete [] sf_out_buf;
 }
 
 

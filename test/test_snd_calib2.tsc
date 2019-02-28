@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1">
+	<plugins>
+	  <sine/>
+	</plugins>
+      </sound>
+    </source>
+    <receiver type="nsp" caliblevel="70" layout="8ch.spk"/>
+  </scene>
+</session>

@@ -24,6 +24,26 @@ wave_t::wave_t(uint32_t chunksize,float* ptr)
   rmsscale = 1.0f/(float)n;
 }
 
+wave_t::wave_t(const std::vector<float>& src)
+  : d(new float[std::max(1u,(uint32_t)(src.size()))]),
+    n(src.size()), own_pointer(true), append_pos(0),
+    rmsscale(1.0f/(float)n)
+{
+  memset(d,0,sizeof(float)*std::max(1u,(uint32_t)(src.size())));
+  for(uint32_t k=0;k<src.size();++k)
+    d[k] = src[k];
+}
+
+wave_t::wave_t(const std::vector<double>& src)
+  : d(new float[std::max(1u,(uint32_t)(src.size()))]),
+    n(src.size()), own_pointer(true), append_pos(0),
+    rmsscale(1.0f/(float)n)
+{
+  memset(d,0,sizeof(float)*std::max(1u,(uint32_t)(src.size())));
+  for(uint32_t k=0;k<src.size();++k)
+    d[k] = src[k];
+}
+
 wave_t::wave_t(const wave_t& src)
   : d(new float[std::max(1u,src.n)]),
     n(src.n), own_pointer(true), append_pos(src.append_pos),

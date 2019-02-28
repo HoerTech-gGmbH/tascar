@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<layout xyzgain="0.70710678118654757274" decorr="false" densitycorr="false">
+  <speaker az="0"/>
+  <speaker az="90"/>
+  <speaker az="180"/>
+  <speaker az="-90"/>
+</layout>
