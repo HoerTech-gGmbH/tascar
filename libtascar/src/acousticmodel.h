@@ -33,6 +33,7 @@
 #include "sourcemod.h"
 #include "dynamicobjects.h"
 #include "audioplugin.h"
+#include "pluginprocessor.h"
 /*
 
   new delayline concept:
@@ -99,16 +100,22 @@ namespace TASCAR {
     /**
        \brief Diffuse sound field
      */
-    class diffuse_t : public shoebox_t, public TASCAR::xml_element_t {
+    class diffuse_t : public shoebox_t,
+                      public TASCAR::xml_element_t,
+                      public audiostates_t {
     public:
-      diffuse_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_ );
+      diffuse_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_, const std::string& name );
       virtual ~diffuse_t() {};
-      virtual void preprocess();
+      virtual void preprocess(const TASCAR::transport_t& tp);
+      void prepare( chunk_cfg_t& cf_ );
+      void release();
       amb1rotator_t audio;
       double falloff;
       bool active;
       uint32_t layers;
       TASCAR::levelmeter_t& rmslevel;
+    public:
+      plugin_processor_t plugins;
     };
 
     class boundingbox_t : public dynobject_t {
@@ -133,7 +140,7 @@ namespace TASCAR {
      */
     class source_t : public sourcemod_t, public c6dof_t {
     public:
-      source_t(xmlpp::Element* xmlsrc);
+      source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname );
       ~source_t();
       void prepare( chunk_cfg_t& cf_ );
       void release();
@@ -154,7 +161,7 @@ namespace TASCAR {
     private:
       bool is_prepared;
     public:
-      std::vector<TASCAR::audioplugin_t*> plugins;
+      plugin_processor_t plugins;
     };
 
     /**
@@ -163,9 +170,10 @@ namespace TASCAR {
        Provides output for the render method implementation
 
      */
-    class receiver_t : public receivermod_t, public c6dof_t {
+    class receiver_t : public receivermod_t,
+                       public c6dof_t {
     public:
-      receiver_t(xmlpp::Element* xmlsrc);
+      receiver_t( xmlpp::Element* xmlsrc, const std::string& name );
       ~receiver_t();
       void prepare( chunk_cfg_t& cf_ );
       void release();
@@ -178,7 +186,7 @@ namespace TASCAR {
       void apply_gain();
       virtual void postproc(std::vector<wave_t>& output);
       void post_proc(const TASCAR::transport_t& tp);
-      virtual void process_plugins(const TASCAR::transport_t& tp);
+      //virtual void process_plugins(const TASCAR::transport_t& tp);
       virtual void add_variables( TASCAR::osc_server_t* srv );
       void validate_attributes(std::string& msg) const;
       // configuration/control variables:
@@ -191,6 +199,7 @@ namespace TASCAR {
       uint32_t layers;
       bool use_global_mask;
       double diffusegain;
+      bool has_diffusegain;
       double falloff;
       double delaycomp;
       double layerfadelen;
@@ -222,7 +231,7 @@ namespace TASCAR {
       TASCAR::transport_t ltp;
       uint64_t starttime_samples;
     public:
-      std::vector<TASCAR::audioplugin_t*> plugins;
+      plugin_processor_t plugins;
     };
 
     class filter_coeff_t {

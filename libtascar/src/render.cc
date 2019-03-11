@@ -50,7 +50,6 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
     sources.clear();
     for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
       TASCAR::Acousticmodel::source_t* source(*it);
-      //source->prepare(fs,fragsize);
       sources.push_back(source);
       (*it)->set_port_index(input_ports.size());
       for(uint32_t ch=0;ch<source->get_num_channels();ch++){
@@ -108,6 +107,7 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
     world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffuse_sound_fields,reflectors,obstacles,receivers,pmasks,mirrororder);
     total_pointsources = world->get_total_pointsource();
     total_diffuse_sound_fields = world->get_total_diffuse_sound_field();
+    ambbuf = new TASCAR::amb1wave_t( n_fragment );
     is_prepared = true;
     pthread_mutex_unlock( &mtx_world );
   }
@@ -126,6 +126,7 @@ void TASCAR::render_core_t::release()
     delete world;
   world = NULL;
   is_prepared = false;
+  delete ambbuf;
   pthread_mutex_unlock( &mtx_world );
 }
 
@@ -163,14 +164,13 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
       TASCAR::Acousticmodel::diffuse_t* psrc((*it)->get_source());
       float gain((*it)->get_gain());
-      TASCAR::amb1wave_t amb1tmp(nframes,
-                                 inBuffer[(*it)->get_port_index()],
-                                 inBuffer[(*it)->get_port_index()+1],
-                                 inBuffer[(*it)->get_port_index()+2],
-                                 inBuffer[(*it)->get_port_index()+3]);
-      psrc->audio.rotate(amb1tmp,psrc->orientation,true);
+      ambbuf->w().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()]) );
+      ambbuf->x().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+1]) );
+      ambbuf->y().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+2]) );
+      ambbuf->z().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+3]) );
+      psrc->audio.rotate(*ambbuf,psrc->orientation,true);
       psrc->audio *= gain;
-      psrc->preprocess();
+      psrc->preprocess( tp );
     }
     // process world:
     if( world ){

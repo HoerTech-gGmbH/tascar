@@ -9,11 +9,8 @@ TASCARVERSION_MINOR = $(shell echo $(TASCARVERSION)|sed -e 's/[^\.]*\.//1' -e 's
 
 CXXFLAGS += -DTASCARVERSION_MAJOR=$(TASCARVERSION_MAJOR) -DTASCARVERSION_MINOR=$(TASCARVERSION_MINOR) -DTASCARVERSION=\"$(TASCARVERSION)\"
 
-BINFILES = build/tascar
+BINFILES = build/tascar build/tascar_spkcalib
 OBJECTS = build/scene_manager.o build/tascar_mainwindow.o
-
-GTKMMBIN = build/tascar
-
 
 ifeq "$(DEBUG)" "yes"
 CXXFLAGS += -Wall -g -L./
@@ -67,13 +64,15 @@ build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%_glade.h: src/%.glade
-	cat $< | sed 's/tascarversion/$(TASCARVERSION)/g' > $*_glade
+	cat $< | sed -e 's/tascarversion/$(TASCARVERSION)/g' -e '/name="authors"/ r ../contributors' -e 's/>usr/>\/usr/1'> $*_glade
 	echo "#include <string>" > $@
 	xxd -i $*_glade >> $@
 	echo "std::string ui_"$*"((const char*)"$*"_glade,(size_t)"$*"_glade_len);" >> $@
 	rm -f $*_glade
 
 build/tascar: build/tascar_glade.h
+
+build/tascar_spkcalib: build/spkcalib_glade.h
 
 build/tascar_mainwindow.o: build/tascar_xy.xpm build/tascar_xz.xpm build/tascar_yz.xpm build/tascar_xyz.xpm src/tascar_mainwindow.h
 

@@ -15,12 +15,12 @@ SOVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1
 #
 OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
-  filterclass.o osc_helper.o acousticmodel.o scene.o render.o		\
-  session_reader.o session.o jackclient.o delayline.o async_file.o	\
-  errorhandling.o osc_scene.o ringbuffer.o viewport.o sampler.o		\
-  jackiowav.o cli.o irrender.o jackrender.o audioplugin.o		\
-  levelmeter.o serviceclass.o alsamidicc.o speakerarray.o spectrum.o	\
-  fft.o stft.o ola.o
+  filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o		\
+  scene.o render.o session_reader.o session.o jackclient.o		\
+  delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
+  viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
+  audioplugin.o levelmeter.o serviceclass.o alsamidicc.o		\
+  speakerarray.o spectrum.o fft.o stft.o ola.o
 
 DMXOBJECTS =  termsetbaud.o serialport.o dmxdriver.o
 
@@ -106,10 +106,13 @@ doc:
 	cd doc && sed -e 's/PROJECT.NUMBER.*=.*/&'`cat ../version`'/1' doxygen.cfg > .temp.cfg && doxygen .temp.cfg
 	rm -Rf doc/.temp.cfg
 
-#include $(wildcard build/*.mk)
+#include $(BUILD_OBJECTS:.o=.mk)
 
 build/%.mk: src/%.cc
-	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
+	$(CPP) $(CXXFLAGS) -MM -MF $(@:.o=.mk) $<
+	printf "build/" > $(@).x
+	cat $@ >> $(@).x
+	mv $(@).x $@
 
 %: %.o
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@

@@ -136,7 +136,7 @@ osc_server_t::osc_server_t(const std::string& multicast, const std::string& port
 {
   lost = NULL;
   liblo_errflag = false;
-  if( port.size() ){
+  if( port.size() && (port != "none") ){
     if( multicast.size() ){
       lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
       if( verbose )

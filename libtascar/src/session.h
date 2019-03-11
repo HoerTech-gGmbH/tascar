@@ -129,7 +129,7 @@ namespace TASCAR {
     session_t(const session_t& src);
   public:
     virtual ~session_t();
-    void add_scene(xmlpp::Element*);
+    void add_scene(xmlpp::Element* src=NULL);
     void add_range(xmlpp::Element*);
     void add_connection(xmlpp::Element*);
     void add_module(xmlpp::Element*);

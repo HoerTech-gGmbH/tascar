@@ -86,12 +86,13 @@ void diffuse_info_t::prepare( chunk_cfg_t& cf_ )
     delete source;
   reset_meters();
   addmeter( f_sample );
-  source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, n_fragment, *(rmsmeter[0]) );
+  source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, n_fragment, *(rmsmeter[0]), get_name() );
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
   for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
     if( it->channels != 4 )
       throw TASCAR::ErrMsg("Diffuse sources support only 4-channel (FOA) sound files ("+it->fname+").");
+  source->prepare( cf_ );
 }
 
 audio_port_t::~audio_port_t()
@@ -125,7 +126,7 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne ){
       if( sne->get_name() == "sound" )
-        sound.push_back(new sound_t(sne,this));
+        add_sound(sne);
       else if( (sne->get_name() != "creator") && 
                (sne->get_name() != "sndfile") && 
                (sne->get_name() != "include") && 
@@ -134,6 +135,13 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
         TASCAR::add_warning("Invalid sub-node \""+sne->get_name()+"\".",sne);
     }
   }
+}
+
+void src_object_t::add_sound(xmlpp::Element* src)
+{
+  if( !src )
+    src = dynobject_t::e->add_child("sound");
+  sound.push_back(new sound_t(src,this));
 }
 
 src_object_t::~src_object_t()
@@ -330,10 +338,8 @@ void mask_object_t::process_active(double t,uint32_t anysolo)
 }
 
 receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), audio_port_t(xmlsrc,false), receiver_t(xmlsrc)
+  : object_t(xmlsrc), audio_port_t(xmlsrc,false), receiver_t(xmlsrc, default_name("out"))
 {
-  if( get_name().empty() )
-    set_name("out");
   // test if this is a speaker-based receiver module:
   TASCAR::receivermod_base_speaker_t* spk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(libdata));
   if( spk ){
@@ -342,20 +348,21 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
         TASCAR::add_warning("Caliblevel is defined in receiver \""+get_name()+
                             "\" and in layout file \""+spk->spkpos.layout+"\". Will use the value from layout file.");
       caliblevel = spk->spkpos.caliblevel;
-      if( spk->spkpos.calibage > 30 )
+      if( spk->spkpos.calibage > TASCAR::config("tascar.spkcalib.maxage",30) )
         TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is more than 30 days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
 
     }
     //DEBUG(spk);
-  }
-  // parse plugins:
-  xmlpp::Element* se_plugs(receiver_t::find_or_add_child("plugins"));
-  xmlpp::Node::NodeList subnodes(se_plugs->get_children());
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,get_name(),"")));
+    if( spk->spkpos.has_diffusegain ){
+      if( has_diffusegain )
+        TASCAR::add_warning("Diffusegain is defined in receiver \""+get_name()+
+                            "\" and in layout file \""+spk->spkpos.layout+"\". Will use the value from layout file.");
+      diffusegain = spk->spkpos.diffusegain;
+      if( spk->spkpos.calibage > TASCAR::config("tascar.spkcalib.maxage",30) )
+        TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is more than 30 days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
+
     }
+    //DEBUG(spk);
   }
 }
 
@@ -449,9 +456,8 @@ void scene_t::release()
 
 void scene_t::add_licenses( licensehandler_t* session )
 {
-  for( std::vector<TASCAR::Scene::sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it)
-    for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=(*it)->plugins.begin();iPlug!=(*it)->plugins.end();++iPlug)
-      (*iPlug)->add_licenses( session );
+  for( auto it=sounds.begin();it!=sounds.end();++it)
+    (*it)->plugins.add_licenses( session );
   for( std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
     for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
       session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
@@ -668,6 +674,13 @@ void src_object_t::process_active(double t, uint32_t anysolo)
   bool a(is_active(anysolo,t));
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
     (*it)->active = a;
+}
+
+void diffuse_info_t::release()
+{
+  sndfile_object_t::release();
+  if( source )
+    source->release();
 }
 
 void diffuse_info_t::process_active(double t, uint32_t anysolo)
@@ -932,8 +945,21 @@ void obstacle_group_t::process_active(double t,uint32_t anysolo)
   }
 }
 
+sound_name_t::sound_name_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
+  : xml_element_t( xmlsrc )
+{
+  GET_ATTRIBUTE(name);
+  if( parent_ && name.empty() )
+    name = parent_->next_sound_name();
+  if( name.empty() )
+    throw TASCAR::ErrMsg("Invalid (empty) sound name.");
+  if( parent_ )
+    parentname = parent_->get_name();
+}
+
 sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
-  : source_t(xmlsrc),
+  : sound_name_t( xmlsrc, parent_ ),
+    source_t(xmlsrc, get_name(), get_parent_name() ),
     audio_port_t(xmlsrc,true),
     parent(parent_),
     chaindist(0),
@@ -943,11 +969,6 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
   source_t::get_attribute("y",local_position.y);
   source_t::get_attribute("z",local_position.z);
   source_t::get_attribute("d",chaindist);
-  source_t::get_attribute("name",name);
-  if( parent_ && name.empty() )
-    name = parent_->next_sound_name();
-  if( name.empty() )
-    throw TASCAR::ErrMsg("Invalid (empty) sound name.");
   // parse plugins:
   xmlpp::Node::NodeList subnodes = source_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -956,17 +977,8 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
       // add_warning:
       char ctmp[1024];
       sprintf(ctmp,"%d",sne->get_line());
-      TASCAR::add_warning( "Audio plugins in sounds should be placed within the <plugins></plugins> element.\n  (plugin \""+sne->get_name()+"\" in sound \""+get_fullname()+"\", line "+std::string(ctmp)+")");
-      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,(parent_?(parent_->get_name()):("")))));
-    }
-  }
-  // parse plugins:
-  xmlpp::Element* se_plugs(source_t::find_or_add_child("plugins"));
-  subnodes = se_plugs->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,get_name(),(parent_?(parent_->get_name()):("")))));
+      TASCAR::add_warning("Ignoring entry \""+sne->get_name()+"\" in sound \""+get_fullname()+"\".",sne);
+      //TASCAR::add_warning( "Audio plugins in sounds should be placed within the <plugins></plugins> element.\n  (plugin \""+sne->get_name()+"\" in sound \""+get_fullname()+"\", line "+std::string(ctmp)+")");
     }
   }
 }
@@ -1007,8 +1019,7 @@ void sound_t::process_plugins( const TASCAR::transport_t& tp )
 void sound_t::validate_attributes(std::string& msg) const
 {
   TASCAR::Acousticmodel::source_t::validate_attributes(msg);
-  for(std::vector<TASCAR::audioplugin_t*>::const_iterator it=plugins.begin();it!=plugins.end();++it)
-    (*it)->validate_attributes(msg);
+  plugins.validate_attributes( msg );
 }
 
 void sound_t::add_meter( TASCAR::levelmeter_t* m )
@@ -1029,13 +1040,6 @@ void sound_t::apply_gain()
     meter[k]->update(inchannels[k]);
 }
 
-std::string sound_t::get_parent_name() const
-{
-  if( parent )
-    return parent->get_name();
-  return "";
-}
-
 rgb_color_t sound_t::get_color() const
 {
   if( parent )
@@ -1043,14 +1047,6 @@ rgb_color_t sound_t::get_color() const
   else
     return rgb_color_t();
 }
-
-std::string sound_t::get_port_name() const
-{
-  if( parent )
-    return parent->get_name() + "." + name;
-  return name;
-}
-
 
 
 /*

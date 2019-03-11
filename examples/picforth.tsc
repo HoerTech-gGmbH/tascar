@@ -54,26 +54,26 @@
       <input connect="hoa:out.10" label=".5_5"/>
       <input connect="hoa:out.11" label=".6_-6"/>
       <input connect="hoa:out.12" label=".6_6"/>
-      <speaker az="12" connect="render.tostereo:in.0"/>
-      <speaker az="36" connect="render.tostereo:in.1"/>
-      <speaker az="60" connect="render.tostereo:in.2"/>
-      <speaker az="84" connect="render.tostereo:in.3"/>
-      <speaker az="108" connect="render.tostereo:in.4"/>
-      <speaker az="132" connect="render.tostereo:in.5"/>
-      <speaker az="156" connect="render.tostereo:in.6"/>
-      <speaker az="180" connect="render.tostereo:in.7"/>
-      <speaker az="204" connect="render.tostereo:in.8"/>
-      <speaker az="228" connect="render.tostereo:in.9"/>
-      <speaker az="252" connect="render.tostereo:in.10"/>
-      <speaker az="276" connect="render.tostereo:in.11"/>
-      <speaker az="300" connect="render.tostereo:in.12"/>
-      <speaker az="324" connect="render.tostereo:in.13"/>
-      <speaker az="348" connect="render.tostereo:in.14"/>
+      <output az="12" connect="render.tostereo:in.0"/>
+      <output az="36" connect="render.tostereo:in.1"/>
+      <output az="60" connect="render.tostereo:in.2"/>
+      <output az="84" connect="render.tostereo:in.3"/>
+      <output az="108" connect="render.tostereo:in.4"/>
+      <output az="132" connect="render.tostereo:in.5"/>
+      <output az="156" connect="render.tostereo:in.6"/>
+      <output az="180" connect="render.tostereo:in.7"/>
+      <output az="204" connect="render.tostereo:in.8"/>
+      <output az="228" connect="render.tostereo:in.9"/>
+      <output az="252" connect="render.tostereo:in.10"/>
+      <output az="276" connect="render.tostereo:in.11"/>
+      <output az="300" connect="render.tostereo:in.12"/>
+      <output az="324" connect="render.tostereo:in.13"/>
+      <output az="348" connect="render.tostereo:in.14"/>
     </matrix>
     <!--
     <tracegui actor="/hos/[!o]*" fps="20" guiscale="2.5" tracelen="1.6" w="400" h="500" x="1400" y="0"/>
     -->
-    <route channels="13" id="hoa"/>
+    <route channels="13" name="hoa"/>
   </modules>
   <connect src="render.hos:outp.a0_0" dest="fdnp:in.0_0"/>
   <connect src="render.hos:outp.a1_-1" dest="fdnp:in.1_-1"/>

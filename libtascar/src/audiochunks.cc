@@ -133,7 +133,7 @@ void wave_t::operator+=(const wave_t& o)
 
 /**
    \brief root-mean-square
- */
+*/
 float wave_t::rms() const
 {
   float rv(0.0f);
@@ -145,7 +145,7 @@ float wave_t::rms() const
 
 /**
    \brief mean-square
- */
+*/
 float wave_t::ms() const
 {
   float rv(0.0f);
@@ -174,16 +174,21 @@ float wave_t::maxabsdb() const
 }
 
 amb1wave_t::amb1wave_t(uint32_t chunksize)
-  : w_(chunksize),x_(chunksize),y_(chunksize),z_(chunksize)
+  : wxyz(4,wave_t(chunksize)),
+    w_(chunksize,wxyz[0].d),
+    x_(chunksize,wxyz[1].d),
+    y_(chunksize,wxyz[2].d),
+    z_(chunksize,wxyz[3].d)
 {
 }
 
-amb1wave_t::amb1wave_t(uint32_t chunksize,float* pw,float* px,float* py,float* pz)
-  : w_(chunksize,pw),
-    x_(chunksize,px),
-    y_(chunksize,py),
-    z_(chunksize,pz)
+void amb1wave_t::print_levels()
 {
+  std::cout << this << " wxyz" << 
+    " " << w_.spldb() <<
+    " " << y_.spldb() <<
+    " " << z_.spldb() <<
+    " " << x_.spldb() << std::endl;
 }
 
 void amb1wave_t::clear()
@@ -228,7 +233,6 @@ sndfile_handle_t::sndfile_handle_t(const std::string& fname,int samplerate,int c
   if( !sfile )
     throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing.");
 }
-    
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)
   : sf_inf(sf_info_configurator(1,1)),
@@ -237,7 +241,7 @@ sndfile_handle_t::sndfile_handle_t(const std::string& fname)
   if( !sfile )
     throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for reading.");
 }
-    
+
 sndfile_handle_t::~sndfile_handle_t()
 {
   sf_close(sfile);
@@ -260,54 +264,62 @@ uint64_t get_chunklen(uint64_t getframes,uint64_t start,uint64_t length)
   return std::max(getframes,start) - start;
 }
 
-sndfile_t::sndfile_t(const std::string& fname,uint32_t channel,double start,double length)
-  : sndfile_handle_t(fname),
-    wave_t(get_chunklen(get_frames(),get_srate()*start,get_srate()*length)),
+looped_wave_t::looped_wave_t(uint32_t length)
+  : wave_t(length),
     looped_t(0),
     looped_gain(0),
     iposition_(0),
     loop_(0)
 {
+}
+
+sndfile_t::sndfile_t(const std::string& fname,uint32_t channel,double start,double length)
+  : sndfile_handle_t(fname),
+    looped_wave_t(get_chunklen(get_frames(),get_srate()*start,get_srate()*length))
+{
   uint32_t ch(get_channels());
   int64_t istart(start*get_srate());
   int64_t ilength(length*get_srate());
-  // if no samples remain then just return zeros, otherwise:
-  if( istart < get_frames() ){
-    if( ilength == 0 )
-      ilength = get_frames()-istart;
-    // trim "start" samples:
-    if( istart > 0 ){
-      wave_t chbuf_skip(istart*ch);
-      readf_float(chbuf_skip.d,istart);
+  // if requested channel is not available return zeros, otherwise:
+  if( channel < ch ){
+    // if no samples remain then just return zeros, otherwise:
+    if( istart < get_frames() ){
+      if( ilength == 0 )
+        ilength = get_frames()-istart;
+      // trim "start" samples:
+      if( istart > 0 ){
+        wave_t chbuf_skip(istart*ch);
+        readf_float(chbuf_skip.d,istart);
+      }
+      // this is the minimum of available and requested number of samples:
+      uint32_t N(std::min(get_frames() - istart,ilength));
+      // temporary data to read all channels:
+      wave_t chbuf(N*ch);
+      readf_float(chbuf.d,N);
+      // select requested audio channel:
+      for(uint32_t k=0;k<N;++k)
+        d[k] = chbuf[k*ch+channel];
     }
-    // this is the minimum of available and requested number of samples:
-    uint32_t N(std::min(get_frames() - istart,ilength));
-    // temporary data to read all channels:
-    wave_t chbuf(N*ch);
-    readf_float(chbuf.d,N);
-    // select requested audio channel:
-    for(uint32_t k=0;k<N;++k)
-      d[k] = chbuf[k*ch+channel];
   }
 }
 
 void sndfile_t::set_position(double position)
 {
-  iposition_ = get_srate()*position;
+  set_iposition(get_srate()*position);
 }
 
-void sndfile_t::set_iposition(int64_t position)
+void looped_wave_t::set_iposition(int64_t position)
 {
   iposition_ = position;
 }
 
 
-void sndfile_t::set_loop(uint32_t loop)
+void looped_wave_t::set_loop(uint32_t loop)
 {
   loop_ = loop;
 }
 
-void sndfile_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
+void looped_wave_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
 {
   for(uint32_t k=0;k<chunk.n;++k){
     int64_t trel(chunktime+k-iposition_);
@@ -319,13 +331,13 @@ void sndfile_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
   }
 }
 
-void sndfile_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk)
+void looped_wave_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk)
 {
   for(int32_t k=std::max(start_time,chunk_time);k < std::min(start_time+(int32_t)(size()),chunk_time+(int32_t)(chunk.size()));++k)
     chunk[k-chunk_time] += gain*d[k-start_time];
 }
 
-void sndfile_t::add_chunk_looped(float gain,wave_t& chunk)
+void looped_wave_t::add_chunk_looped(float gain,wave_t& chunk)
 {
   float dg((gain-looped_gain)/chunk.n);
   float* pdN(chunk.d+chunk.n);

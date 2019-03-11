@@ -26,8 +26,15 @@
 #include <iostream>
 
 namespace TASCAR {
+  /**
+     \brief Spectrum of real-valued chunk (positive frequencies)
+   */
   class spec_t {
   public:
+    /**
+       \param n Number of frequency bins, from 0 to Nyquist frequency 
+       (n=floor(fftlen/2)+1)
+     */
     spec_t(uint32_t n);
     spec_t(const spec_t& src);
     ~spec_t();

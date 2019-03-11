@@ -36,8 +36,8 @@ matrix_vars_t::matrix_vars_t( const TASCAR::module_cfg_t& cfg )
 matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
   : matrix_vars_t( cfg ),
     jackc_t(id),
-    outputs( cfg.xmlsrc ),
-    inputs( cfg.xmlsrc, "input" )
+    outputs( cfg.xmlsrc, true, "output" ),
+    inputs( cfg.xmlsrc, true, "input" )
 {
   m.resize( outputs.size() );
   for(uint32_t k=0;k<outputs.size();++k)

@@ -238,8 +238,6 @@ TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
     name = "tascar";
   if( srv_port.empty() )
     srv_port = "9877";
-  if( srv_port == "none" )
-    srv_port = "";
 }
 
 TASCAR::session_core_t::session_core_t()

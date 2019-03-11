@@ -18,20 +18,34 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_)
+diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_, const std::string& name )
   : xml_element_t( cfg ),
     audio(chunksize),
     falloff(1.0),
     active(true),
     layers(0xffffffff),
-    rmslevel(rmslevel_)
+    rmslevel(rmslevel_),
+    plugins( cfg, name, "" )
 {
   //GET_ATTRIBUTE_BITS(layers);
 }
 
-void diffuse_t::preprocess()
+void diffuse_t::preprocess(const TASCAR::transport_t& tp)
 {
   rmslevel.update(audio.w());
+  plugins.process_plugins( audio.wxyz, center, tp );
+}
+
+void diffuse_t::prepare( chunk_cfg_t& cf_ )
+{
+  audiostates_t::prepare( cf_ );
+  plugins.prepare( cf_ );
+}
+
+void diffuse_t::release()
+{
+  audiostates_t::release();
+  plugins.release();
 }
 
 acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
@@ -387,7 +401,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
   return 0;
 }
 
-receiver_t::receiver_t(xmlpp::Element* xmlsrc)
+receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
   : receivermod_t(xmlsrc),
     render_point(true),
     render_diffuse(true),
@@ -397,6 +411,7 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     layers(0xffffffff),
     use_global_mask(true),
     diffusegain(1.0),
+    has_diffusegain(false),
     falloff(-1.0),
     delaycomp(0.0),
     layerfadelen(1.0),
@@ -409,19 +424,21 @@ receiver_t::receiver_t(xmlpp::Element* xmlsrc)
     fade_timer(0),
     fade_rate(1),
     next_fade_gain(1),
-  previous_fade_gain(1),
-  prelim_next_fade_gain(1),
-  prelim_previous_fade_gain(1),
-  fade_gain(1),
-  is_prepared(false),
-  starttime_samples(0)
+    previous_fade_gain(1),
+    prelim_next_fade_gain(1),
+    prelim_previous_fade_gain(1),
+    fade_gain(1),
+    is_prepared(false),
+    starttime_samples(0),
+    plugins(xmlsrc, name, "" )
 {
   GET_ATTRIBUTE(size);
   get_attribute_bool("point",render_point);
   get_attribute_bool("diffuse",render_diffuse);
   get_attribute_bool("image",render_image);
   get_attribute_bool("globalmask",use_global_mask);
-  get_attribute_db("diffusegain",diffusegain);
+  has_diffusegain = has_attribute("diffusegain");
+  GET_ATTRIBUTE_DB(diffusegain);
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
   GET_ATTRIBUTE_BITS(layers);
@@ -440,16 +457,14 @@ void receiver_t::prepare( chunk_cfg_t& cf_ )
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
   }
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->prepare( cf_ );
+  plugins.prepare( cf_ );
   is_prepared = true;
 }
 
 void receiver_t::release()
 {
   receivermod_t::release();
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->release();
+  plugins.release();
   outchannels.clear();
   for( uint32_t k=0;k<outchannelsp.size();++k)
     delete outchannelsp[k];
@@ -459,10 +474,6 @@ void receiver_t::release()
 
 receiver_t::~receiver_t()
 {
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-       p!= plugins.end();
-       ++p)
-    delete (*p);
 }
 
 void receiver_t::clear_output()
@@ -474,8 +485,7 @@ void receiver_t::clear_output()
 void receiver_t::validate_attributes(std::string& msg) const
 {
   receivermod_t::validate_attributes(msg);
-  for(std::vector<TASCAR::audioplugin_t*>::const_iterator it=plugins.begin();it!=plugins.end();++it)
-    (*it)->validate_attributes(msg);
+  plugins.validate_attributes(msg);
 }
 
 /**
@@ -492,7 +502,7 @@ void receiver_t::add_pointsource(const pos_t& prel, double width, const wave_t& 
 void receiver_t::postproc(std::vector<wave_t>& output)
 {
   receivermod_t::postproc(output);
-  process_plugins(ltp);
+  plugins.process_plugins(output,position,ltp);
 }
 
 /**
@@ -652,7 +662,7 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
 }
 
 
-source_t::source_t(xmlpp::Element* xmlsrc)
+source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname )
   : sourcemod_t(xmlsrc),
     ismmin(0),
     ismmax(2147483647),
@@ -664,7 +674,8 @@ source_t::source_t(xmlpp::Element* xmlsrc)
     airabsorption(true),
     size(0),
     active(true),
-    is_prepared(false)
+    is_prepared(false),
+    plugins(xmlsrc, name, parentname )
 {
   GET_ATTRIBUTE(size);
   GET_ATTRIBUTE(maxdist);
@@ -688,10 +699,6 @@ source_t::source_t(xmlpp::Element* xmlsrc)
 
 source_t::~source_t()
 {
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-       p!= plugins.end();
-       ++p)
-    delete (*p);
 }
 
 void source_t::prepare( chunk_cfg_t& cf_ )
@@ -704,15 +711,13 @@ void source_t::prepare( chunk_cfg_t& cf_ )
     inchannelsp.push_back(new wave_t(n_fragment));
     inchannels.push_back(wave_t(*(inchannelsp.back())));
   }
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->prepare( cf_ );
+  plugins.prepare( cf_ );
   is_prepared = true;
 }
 
 void source_t::release()
 {
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->release( );
+  plugins.release();
   sourcemod_t::release();
   inchannels.clear();
   for( uint32_t k=0;k<inchannelsp.size();++k)
@@ -723,33 +728,13 @@ void source_t::release()
 
 void source_t::process_plugins( const TASCAR::transport_t& tp )
 {
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-       p!= plugins.end();
-       ++p)
-    (*p)->ap_process( inchannels, position, tp );
-}
-
-void receiver_t::process_plugins( const TASCAR::transport_t& tp )
-{
-  for( std::vector<TASCAR::audioplugin_t*>::iterator p=plugins.begin();
-       p!= plugins.end();
-       ++p)
-    (*p)->ap_process( outchannels, position, tp );
+  plugins.process_plugins( inchannels, position, tp );
 }
 
 void receiver_t::add_variables(TASCAR::osc_server_t* srv )
 {
   receivermod_t::add_variables(srv);
-  std::string oldpref(srv->get_prefix());
-  uint32_t k=0;
-  for(std::vector<TASCAR::audioplugin_t*>::iterator iPlug=plugins.begin();iPlug!=plugins.end();++iPlug){
-    char ctmp[1024];
-    sprintf(ctmp,"ap%d",k);
-    srv->set_prefix(oldpref+"/"+ctmp+"/"+(*iPlug)->get_modname());
-    (*iPlug)->add_variables( srv );
-    ++k;
-  }
-  srv->set_prefix(oldpref);
+  plugins.add_variables( srv);
 }
 
 soundpath_t::soundpath_t(const source_t* src, const soundpath_t* parent_, const reflector_t* generator_)

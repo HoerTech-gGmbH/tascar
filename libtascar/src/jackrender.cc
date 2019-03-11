@@ -152,6 +152,7 @@ void TASCAR::audioplayer_t::run(bool & b_quit)
   }
   stop();
 }
+
 TASCAR::render_rt_t::render_rt_t(xmlpp::Element* xmlsrc)
   : render_core_t(xmlsrc),
     osc_scene_t(xmlsrc,this),

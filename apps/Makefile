@@ -10,7 +10,7 @@ BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
   tascar_validatetsc tascar_pdf tascar_osc_jack_transport		\
   tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
   tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
-  tascar_version compare_sndfile
+  tascar_version compare_sndfile compare_level_sum
 
 TEST_FILES = test_ngon test_sinc
 

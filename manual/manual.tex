@@ -296,6 +296,39 @@ for c in {0..11}; do cpufreq-selector -c $c -g performance; done
 \end{verbatim}
 or with the \tascar{} provided wrapper \verb!tascar_cpufreq!.
 
+\subsection{Overwriting application default values}\label{sec:globalconfig}
+
+Some variables which are not session related have built-in default
+values. These values can be overwritten using an external application
+configuration file in XML format. The files
+\verb!/etc/tascar/defaults.xml! and \verb!${HOME}/.tascardefaults.xml!
+  are read in this order, i.e., values in the second file overwrite
+  the system defaults. To see the configurable variables, set the
+  environment variable \verb!TASCARSHOWGLOBAL! to ``yes'' start the
+  application from the command line, e.g.,
+\begin{verbatim}
+TASCARSHOWGLOBAL=yes tascar
+\end{verbatim}
+or
+\begin{verbatim}
+TASCARSHOWGLOBAL=yes tascar_spkcalib
+\end{verbatim}
+%
+An example application configuration file can look like this:
+\begin{verbatim}
+<tascar>
+  <spkcalib>
+    <inputport data="system:capture_29"/>
+    <reflevel data="80"/>
+  </spkcalib>
+</tascar>
+\end{verbatim}
+%
+This will translate into these variables:
+\begin{verbatim}
+tascar.spkcalib.inputport (system:capture_29)
+tascar.spkcalib.reflevel (80)
+\end{verbatim}
 
 \section{Scene Definition}
 
@@ -840,11 +873,10 @@ interactive transitions between simulated rooms.
 
 \subsubsection{The {\tt <sndfile .../>} element}\label{sec:sndfile}\index{sndfile}\index{sound file}
 
-(deprecated for source objects, use only for diffuse objects -- see
-\refelem[ap_sndfile]{sndfile} audio plugin instead)
+\paragraph{Note} Under high CPU load and for long files, due to a yet unidentified racing condition in rare cases the time offset might be wrong. Thus it is recommended to use the audio plugin \elem{sndfile} instead (Section \ref{sec:ap_sndfile}).
 
-A sound content can be assigned to a diffuse sound field using a
-child element \elem{sndfile}.
+A sound content can be assigned to a diffuse sound field using a child
+element \elem{sndfile}.
 %
 The child element \elem{sndfile} has an attribute \attr{name}, where we
 specify sound file, which we would like to associate with the source.
@@ -914,25 +946,23 @@ Sound vertices will be discussed in the next section.
 \end{tscattributes}
 
 \begin{tscelements}
-\refelem{position}, \refelem{boundingbox},\refelem{orientation}, \refelem{creator}, \refelem{sndfile}
+\refelem{position}, \refelem{boundingbox},\refelem{orientation}, \refelem{creator}, \refelem{sndfile}, \elem{plugins}
 \end{tscelements}
 
 Apart of sound sources which consist of one or more sound vertices, we
-also have a possibility to create diffuse sound sources which "fill"
+also have a possibility to create diffuse sound fields which "fill"
 the space and are equally loud within a given volume (for example
-stationary diffuse noise from ventilation). 
+isotropic babble noise in a cafeteria, or remote traffic). 
 %
 We can define a diffuse sound field in the following way:
 \tscexample[linerange={15-18},firstnumber=15]{example_cashdesk}
 %What are the connections in this example?
     
 Sound files used to create diffuse sound fields should contain 4 channels
-(first order ambisonics format with wxyz channel order), so we also
-have to remember to specify the number of channels by using
-\attr{channels="4"} attribute. 
+(B format, FuMa normalization). 
 %
 With attribute \attr{size="x y z"} we can specify the dimensions of
-the box in which the diffuse sound is audible. 
+the box in which the diffuse sound field is audible. 
 %
 To provide a smooth decay of the diffuse sound field, there is a von-Hann
 ramp for the gain of the source outside the box. 
@@ -1646,10 +1676,13 @@ Or if we have more than one scenes, we can choose all the objects called \verb!o
 
 \section{Audio plugins}\index{Audio plugins}
 
-Each sound vertex \elem{sound} and each receiver \elem{receiver} can
-contain a list of audio plugins for processing and analysis, such as
-tone generators or speech analysis for lip synchronization
-modeling. These audio plugins are specified within the \elem{plugins} section within a \elem{sound} or \elem{receiver} element, e.g.:
+Each sound vertex \elem{sound}, each diffuse sound field
+\elem{diffuse}, and each receiver \elem{receiver} can contain a list
+of audio plugins for processing and analysis, such as tone generators
+or speech analysis for lip synchronization modeling.
+%
+These audio plugins are specified within the \elem{plugins} section
+within a \elem{sound} or \elem{receiver} element, e.g.:
 \tscexample[linerange={9-14},firstnumber=9]{example_audioplugins}
 %\begin{lstlisting}[numbers=none]
 %<source name="car">
@@ -1680,7 +1713,7 @@ processing function of the render format.
 \section{Calibration and level metering}\index{calibration}\index{level}
 
 \tascar{} offers a level meter for each primary or diffuse sound
-source and receiver. In the level meters, root-mean-square (RMS)
+field and receiver. In the level meters, root-mean-square (RMS)
 values in dB SPL, averaged over the past two seconds, are shown.  In
 \tascar{}, internal values are measured in Pa. This means that a
 sinusoid with an amplitude of one corresponds to a level of 91 dB
@@ -1725,6 +1758,9 @@ the same value should be used for the \tascar{} input \attr{caliblevel}.
 In that case, the input level meters of \tascar{} should show the same
 values as the output level meters of the speech test.
 
+For a calibration of speaker layouts, it is recommended to use the
+tool ``tascar\_spkcalib''.
+
 To measure the sound pressure level in a virtual acoustic environment,
 one can place an omni-directional microphone at the position of the main
 output receiver.
@@ -1740,6 +1776,92 @@ Please be aware of the fact that in ``unweighted'' mode the background
 noise levels can be in the order of 40-60 dB, due to ventilation of
 the room, door slamming in the building, steps, nearby trains and
 plains etc., which contain extremely low frequencies.
+
+\subsection{Calibrating speaker layouts with {\tt tascar\_spkcalib}}
+
+All loudspeaker-based rendering methods (e.g., those depending on a
+loudspeaker layout file) should result in identical levels at the
+listening positions for virtual sound sources from the directions of
+the speakers (the levels of interpolated virtual sources may differ
+due to differences in the rendering method).
+%
+The broadband calibration of loudspeaker layouts consists of three
+steps: a) calibrate gain differences between loudspeakers b) calibrate
+the reference level for point source rendering, and c) calibrate the
+gain correction for diffuse sound field rendering.
+%
+The tool \verb!tascar_splcalib! can be used to perform these steps.
+
+\begin{figure}[htb]
+    \centering
+    \fbox{\includegraphics[width=0.7\textwidth]{tascarspkcalib.png}}
+    \caption{Loudspeaker calibration window.}
+    \label{fig:spkcalib}
+\end{figure}
+
+To (re-)calibrate a loudspeaker layout file, open it with
+\verb!tascar_splcalib!, e.g., by double-clicking it in the file
+explorer.
+%
+The application has four control areas (see Fig.\ \ref{fig:spkcalib}):
+the menu and toolbar at the top of the application window can be used
+to open, save and close loudspeaker layout files.
+%
+Below is the area for measurement of gain differences between
+loudspeakers, followed by an area for measurement of the reference
+level for point source rendering.
+%
+At the bottom of the window the area for calibration of the diffuse
+rendering gain can be found.
+
+\subsubsection{Calibrating a loudspeaker array for the first time}
+
+The default calibration level in TASCAR is 94~dB SPL. The default test
+tone level is 80~dB SPL. If the actual calibration level is far above
+the default value, then pressing the ``play'' button will result in
+excessive sound levels. Therefore it is recommended to decrease the
+sound level by pressing the ``-10 dB'' button several times. Then
+press ``play'', and increase the level using the ``+10 dB'', ``+2 dB''
+and ``+0.5 dB'' buttons until the level reaches approximately
+80~dB. Then press the stop button. From here, follow the instructions
+for a re-calibration.
+
+\subsubsection{Re-calibration of a loudspeaker array}
+
+For re-calibration of a loudspeaker array, you will need a measurement
+microphone (omni-directional characteristics, flat frequency response
+from 60 to 4000 Hz), and a sound level meter with Z or C
+weighting. The calibration test tone is a pink noise in the frequency
+range from 62~Hz to 4~kHz. Connect the microphone to the port
+\verb!system:capture_1! (or change the setting
+\verb!tascar.spkcalib.inputport! to the jack port name of your
+microphone, see Section \ref{sec:globalconfig} for details), and place
+it at the listening position. Now press ``Record'' to start a
+recording of levels. The sound will be played from the directions of
+the loudspeakers. After the recording is completed, the mean recording
+level and its range are displayed next to the ``Record'' button. If
+the recording level is very low (below -50 dB), then verify the
+connection and configuration of your microphone. Also the level range
+should not exceed 20 dB, otherwise inspect the connections of the
+loudspeakers.
+
+In the next step, play the test tone as a point source using the
+``play'' button in the point source section. Enter the sound pressure
+level measured at the listening position into the level entry field in
+the window, or use the decrement and increment buttons to adjust the
+playback level. When finished with this step, press the ``Stop''
+button.
+
+Now, repeat the same procedure, but with a diffuse test sound, by
+pressing the ``Play'' button in the diffuse calibration area. Enter
+the level reading in the appropriate field, or adjust the level using
+the increment/decrement buttons.
+
+If all steps are completed, press the ``Save'' or ``Save as'' button
+at the top of the window. The changes are stored into the loudspeaker
+file. It is recommended to review the calibration and gain values
+using an editor.
+
 
 \clearpage
 

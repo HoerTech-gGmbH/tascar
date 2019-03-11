@@ -73,7 +73,6 @@ namespace TASCAR {
   class amb1wave_t {
   public:
     amb1wave_t(uint32_t chunksize);
-    amb1wave_t(uint32_t chunksize,float* pw,float* px,float* py,float* pz);
     inline wave_t& w(){return w_;};
     inline wave_t& x(){return x_;};
     inline wave_t& y(){return y_;};
@@ -86,6 +85,8 @@ namespace TASCAR {
     void clear();
     void operator*=(double v);
     void operator+=(const amb1wave_t& v);
+    std::vector<wave_t> wxyz;
+    void print_levels();
   protected:
     wave_t w_;
     wave_t x_;
@@ -117,10 +118,9 @@ namespace TASCAR {
     SNDFILE* sfile;
   };
 
-  class sndfile_t : public sndfile_handle_t, public wave_t {
+  class looped_wave_t : public wave_t {
   public:
-    sndfile_t(const std::string& fname,uint32_t channel=0,double start=0,double length=0);
-    void set_position(double position);
+    looped_wave_t( uint32_t length );
     void set_iposition(int64_t position);
     void set_loop(uint32_t loop);
     void add_to_chunk(int64_t chunktime,wave_t& chunk);
@@ -132,6 +132,12 @@ namespace TASCAR {
     // position parameters:
     int64_t iposition_;
     uint32_t loop_;
+  };
+
+  class sndfile_t : public sndfile_handle_t, public looped_wave_t {
+  public:
+    sndfile_t(const std::string& fname,uint32_t channel=0,double start=0,double length=0);
+    void set_position(double position);
   };
 
 }

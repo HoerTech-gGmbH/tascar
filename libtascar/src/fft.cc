@@ -29,8 +29,8 @@ void TASCAR::fft_t::execute(const spec_t& src)
 TASCAR::fft_t::fft_t(uint32_t fftlen)
   : w(fftlen),
     s(fftlen/2+1),
-    fftwp_w2s(fftwf_plan_dft_r2c_1d(fftlen,w.d,(fftwf_complex*)s.b,0)),
-    fftwp_s2w(fftwf_plan_dft_c2r_1d(fftlen,(fftwf_complex*)s.b,w.d,0))
+    fftwp_w2s(fftwf_plan_dft_r2c_1d(fftlen,w.d,(fftwf_complex*)s.b,FFTW_ESTIMATE)),
+    fftwp_s2w(fftwf_plan_dft_c2r_1d(fftlen,(fftwf_complex*)s.b,w.d,FFTW_ESTIMATE))
 {
 }
 

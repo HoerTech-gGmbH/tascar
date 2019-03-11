@@ -27,6 +27,18 @@
 
 namespace TASCAR {
 
+  class globalconfig_t {
+  public:
+    globalconfig_t();
+    double operator()(const std::string&,double) const;
+    std::string operator()(const std::string&,const std::string&) const;
+    void forceoverwrite(const std::string&,const std::string&);
+  private:
+    void readconfig(const std::string& fname);
+    void readconfig(const std::string& prefix, xmlpp::Element* e);
+    std::map<std::string,std::string> cfg;
+  };
+
   void add_warning( std::string msg, xmlpp::Element* e = NULL );
   
   std::string tscbasename( const std::string& s );
@@ -35,6 +47,8 @@ namespace TASCAR {
 
   extern std::map<xmlpp::Element*,std::map<std::string,std::string> > attribute_list;
   extern std::vector<std::string> warnings;
+
+  extern globalconfig_t config;
 
   class xml_element_t {
   public:

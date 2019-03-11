@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene mirrororder="3">
+    <diffuse>
+      <plugins>
+	<pink period="1"/>
+      </plugins>
+    </diffuse>
+    <receiver type="amb1h1v"/>
+  </scene>
+</session>

@@ -11,30 +11,66 @@
 
 using namespace TASCAR;
 
-// speaker array:
+spk_array_cfg_t::spk_array_cfg_t( xmlpp::Element* xmlsrc, bool use_parent_xml )
+  : xml_element_t( xmlsrc ),
+    e_layout(NULL)
+{
+  if( use_parent_xml ){
+    e_layout = xmlsrc;
+  }else{
+    GET_ATTRIBUTE(layout);
+    if( layout.empty() )
+      throw TASCAR::ErrMsg("No speaker layout file provided.");
+    try{
+      domp.parse_file( TASCAR::env_expand( layout ) );
+    }
+    catch( const xmlpp::internal_error& e){
+      throw TASCAR::ErrMsg(std::string("xml internal error: ")+e.what());
+    }
+    catch( const xmlpp::validity_error& e){
+      throw TASCAR::ErrMsg(std::string("xml validity error: ")+e.what());
+    }
+    catch( const xmlpp::parse_error& e){
+      throw TASCAR::ErrMsg(std::string("xml parse error: ")+e.what());
+    }
+    if( !domp )
+      throw TASCAR::ErrMsg("Unable to parse file \""+layout+"\".");
+    e_layout = domp.get_document()->get_root_node();
+    if( !e_layout )
+      throw TASCAR::ErrMsg("No root node found in document \""+layout+"\".");
+    if( e_layout->get_name() != "layout" )
+      throw TASCAR::ErrMsg("Invalid root node name. Expected \"layout\", got "+e_layout->get_name()+".");
+  }
+}
 
-spk_array_t::spk_array_t(xmlpp::Element* e, const std::string& elementname_)
-  : xml_element_t(e),
-    diffuse_field_accumulator(NULL),
-    diffuse_render_buffer(NULL),
+// speaker array:
+spk_array_t::spk_array_t(xmlpp::Element* e, 
+                         bool use_parent_xml,
+                         const std::string& elementname_)
+  : spk_array_cfg_t( e, use_parent_xml ),
+    elayout( e_layout ),
     rmax(0),
     rmin(0),
     xyzgain(1.0),
     elementname(elementname_),
-    mean_rotation(0),
-    decorr_length(0.05),
-    decorr(true),
-    densitycorr(true),
-    caliblevel(50000),
-    calibage(0)
+    mean_rotation(0)
 {
-  // read layout file:
-  GET_ATTRIBUTE(layout);
-  if( layout.empty() )
-    throw TASCAR::ErrMsg("No speaker layout file provided.");
-  import_file(layout);
+  clear();
+  xmlpp::Node::NodeList subnodes(e_layout->get_children());
+  for( auto sn=subnodes.begin(); sn!=subnodes.end(); ++sn ){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne && ( sne->get_name() == elementname )){
+      emplace_back(sne);
+    }
+  }
+  elayout.GET_ATTRIBUTE(xyzgain);
+  // 
   if( empty() )
-    throw TASCAR::ErrMsg("Invalid empty speaker array.");
+    throw TASCAR::ErrMsg("Invalid " + 
+                         elementname_ + 
+                         " array (no "+
+                         elementname_ +
+                         " elements defined).");
   // update derived parameters:
   rmax = operator[](0).norm();
   rmin = rmax;
@@ -47,7 +83,7 @@ spk_array_t::spk_array_t(xmlpp::Element* e, const std::string& elementname_)
   }
   double _Complex p_xy(0);
   for(uint32_t k=0;k<size();k++){
-    operator[](k).gain = operator[](k).norm()/rmax;
+    operator[](k).spkgain *= operator[](k).norm()/rmax;
     operator[](k).dr = rmax-operator[](k).norm();
     p_xy += cexp( -(double)k*PI2*I/(double)(size()))*(operator[](k).unitvector.x+I*operator[](k).unitvector.y);
   }
@@ -72,62 +108,6 @@ spk_array_t::spk_array_t(xmlpp::Element* e, const std::string& elementname_)
   dwmean /= size();
   for(uint32_t k=0;k<size();++k)
     operator[](k).densityweight /= dwmean;
-}
-
-void spk_array_t::read_xml(xmlpp::Element* e)
-{
-  clear();
-  xml_element_t xe(e);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == elementname )){
-      push_back(TASCAR::spk_descriptor_t(sne));
-    }
-  }
-  xe.GET_ATTRIBUTE(xyzgain);
-  xe.GET_ATTRIBUTE(decorr_length);
-  xe.GET_ATTRIBUTE_BOOL(decorr);
-  xe.GET_ATTRIBUTE_BOOL(densitycorr);
-  has_caliblevel = xe.has_attribute("caliblevel");
-  xe.GET_ATTRIBUTE_DB(caliblevel);
-  xe.GET_ATTRIBUTE(calibdate);
-  if( !calibdate.empty() ){
-    std::time_t now(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
-    std::tm tcalib;
-    memset(&tcalib,0,sizeof(tcalib));
-    const char* msg(strptime(calibdate.c_str(),"%Y-%m-%d",&tcalib));
-    if( msg ){
-      std::time_t ctcalib(mktime(&tcalib));
-      calibage = difftime(now,ctcalib)/(24*3600);
-    }else{
-      TASCAR::add_warning("Invalid date/time format: "+calibdate);
-    }
-  }
-}
-
-void spk_array_t::import_file(const std::string& fname)
-{
-  try{
-    domp.parse_file(TASCAR::env_expand(fname));
-  }
-  catch( const xmlpp::internal_error& e){
-    throw TASCAR::ErrMsg(std::string("xml internal error: ")+e.what());
-  }
-  catch( const xmlpp::validity_error& e){
-    throw TASCAR::ErrMsg(std::string("xml validity error: ")+e.what());
-  }
-  catch( const xmlpp::parse_error& e){
-    throw TASCAR::ErrMsg(std::string("xml parse error: ")+e.what());
-  }
-  if( !domp )
-    throw TASCAR::ErrMsg("Unable to parse file \""+fname+"\".");
-  xmlpp::Element* r(domp.get_document()->get_root_node());
-  if( !r )
-    throw TASCAR::ErrMsg("No root node found in document \""+fname+"\".");
-  if( r->get_name() != "layout" )
-    throw TASCAR::ErrMsg("Invalid root node name. Expected \"layout\", got "+r->get_name()+".");
-  read_xml(r);
 }
 
 double spk_descriptor_t::get_rel_azim(double az_src) const
@@ -155,7 +135,7 @@ const std::vector<spk_array_t::didx_t>& spk_array_t::sort_distance(const pos_t& 
   return didx;
 }
 
-void spk_array_t::render_diffuse( std::vector<TASCAR::wave_t>& output )
+void spk_array_diff_render_t::render_diffuse( std::vector<TASCAR::wave_t>& output )
 {
   uint32_t channels(size());
   if( output.size() != channels )
@@ -193,6 +173,7 @@ spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
     r(1.0),
     delay(0.0),
     gain(1.0),
+    spkgain(1.0),
     dr(0.0),      
     d_w(0.0f),
     d_x(0.0f),
@@ -208,6 +189,7 @@ spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(label);
   GET_ATTRIBUTE(connect);
   GET_ATTRIBUTE(compB);
+  GET_ATTRIBUTE_DB(gain);
   set_sphere(r,az,el);
   unitvector = normal();
   update_foa_decoder(1.0f, 1.0 );
@@ -223,13 +205,15 @@ spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
     label(src.label),
     connect(src.connect),
     compB(src.compB),
-    unitvector(src.unitvector),
     gain(src.gain),
+    unitvector(src.unitvector),
+    spkgain(src.spkgain),
     dr(src.dr),      
     d_w(src.d_w),
     d_x(src.d_x),
     d_y(src.d_y),
     d_z(src.d_z),
+    densityweight(src.densityweight),
     comp(NULL)
 {
 }
@@ -255,7 +239,20 @@ void spk_array_t::prepare( chunk_cfg_t& cf_ )
   audiostates_t::prepare( cf_ );
   delaycomp.clear();
   for(uint32_t k=0;k<size();++k)
-    delaycomp.push_back(TASCAR::static_delay_t( f_sample*((operator[](k).dr/340.0)+operator[](k).delay)));
+    delaycomp.emplace_back( f_sample*((operator[](k).dr/340.0)+operator[](k).delay) );
+  // speaker correction filter:
+  for( uint32_t k=0;k<size();++k ){
+    spk_descriptor_t& spk(operator[](k));
+    if(  spk.compB.size() > 0 ){
+      spk.comp = new TASCAR::overlap_save_t( n_fragment+1, n_fragment );
+      spk.comp->set_irs( spk.compB, false );
+    }
+  }
+}
+
+void spk_array_diff_render_t::prepare( chunk_cfg_t& cf_ )
+{
+  spk_array_t::prepare( cf_ );
   // initialize decorrelation filter:
   decorrflt.clear();
   uint32_t irslen(decorr_length*f_sample);
@@ -283,30 +280,58 @@ void spk_array_t::prepare( chunk_cfg_t& cf_ )
     delete diffuse_render_buffer;
   diffuse_render_buffer = NULL;
   diffuse_render_buffer = new TASCAR::wave_t(n_fragment);
-  // speaker correction filter:
-  for( uint32_t k=0;k<size();++k ){
-    spk_descriptor_t& spk(operator[](k));
-    if(  spk.compB.size() > 0 ){
-      spk.comp = new TASCAR::overlap_save_t( n_fragment+1, n_fragment );
-      spk.comp->set_irs( spk.compB, false );
-    }
-  }
 }
 
-void spk_array_t::add_diffuse_sound_field( const TASCAR::amb1wave_t& diff )
+
+void spk_array_diff_render_t::add_diffuse_sound_field( const TASCAR::amb1wave_t& diff )
 {
   if( !diffuse_field_accumulator )
     throw TASCAR::ErrMsg("No diffuse field accumulator allocated.");
   *diffuse_field_accumulator += diff;
 }
 
-spk_array_t::~spk_array_t()
+spk_array_diff_render_t::~spk_array_diff_render_t()
 {
   if( diffuse_field_accumulator )
     delete diffuse_field_accumulator;
   if( diffuse_render_buffer )
     delete diffuse_render_buffer;
 }
+
+spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e, 
+                                                 bool use_parent_xml,
+                                                 const std::string& elementname_)
+  : spk_array_t( e, use_parent_xml, elementname_ ),
+    diffuse_field_accumulator(NULL),
+    diffuse_render_buffer(NULL),
+    decorr_length(0.05),
+    decorr(true),
+    densitycorr(true),
+    caliblevel(50000),
+    calibage(0)
+{
+  elayout.GET_ATTRIBUTE(decorr_length);
+  elayout.GET_ATTRIBUTE_BOOL(decorr);
+  elayout.GET_ATTRIBUTE_BOOL(densitycorr);
+  has_caliblevel = elayout.has_attribute("caliblevel");
+  elayout.GET_ATTRIBUTE_DB(caliblevel);
+  has_diffusegain = elayout.has_attribute("diffusegain");
+  elayout.GET_ATTRIBUTE_DB(diffusegain);
+  elayout.GET_ATTRIBUTE(calibdate);
+  if( !calibdate.empty() ){
+    std::time_t now(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+    std::tm tcalib;
+    memset(&tcalib,0,sizeof(tcalib));
+    const char* msg(strptime(calibdate.c_str(),"%Y-%m-%d",&tcalib));
+    if( msg ){
+      std::time_t ctcalib(mktime(&tcalib));
+      calibage = difftime(now,ctcalib)/(24*3600);
+    }else{
+      TASCAR::add_warning("Invalid date/time format: "+calibdate);
+    }
+  }
+}
+
 
 /*
  * Local Variables:

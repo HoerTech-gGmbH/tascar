@@ -10,9 +10,8 @@
     <property name="copyright" translatable="yes">Giso Grimm</property>
     <property name="website">http://www.tascar.org/</property>
     <property name="website_label" translatable="yes">www.tascar.org</property>
-    <property name="authors">Giso Grimm
-Tobias Herzke
-Joanna Luberadzka</property>
+    <property name="authors">
+    </property>
     <property name="documenters">Joanna Luberadzka</property>
     <property name="logo_icon_name"/>
     <property name="license_type">gpl-3-0</property>
@@ -275,7 +274,7 @@ Joanna Luberadzka</property>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="transport_stop">
-                        <property name="label">gtk-media-stop</property>
+                        <property name="label">gtk-media-pause</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">transport.stop</property>

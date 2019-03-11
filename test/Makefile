@@ -6,24 +6,34 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_wav_diffuse_nsp4 test_wav_diffuse_hoa2d4			\
 	test_wav_diffuse_layerbug test_wav_diffirs test_sndgainramp	\
 	test_sndgainramp2 test_ir_spkcorr test_snd_calib1		\
-	test_snd_calib2 test_snd_vbap51
+	test_snd_calib2 test_snd_vbap51 test_snd_pink			\
+	test_snd_pink_diffuse test_snd_sndfile test_snd_sndfile2
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
   hoa2d_fuma_hos
 
+LEVELREC = nsp hoa2d neukom_basic vbap hann
+# neukom_inphase
+
 LIBPATH=LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/
 VALIDATE=../apps/build/tascar_validatetsc
 RENDERIR=../apps/build/tascar_renderir
 RENDERFILE=../apps/build/tascar_renderfile
 COMPARE=../apps/build/compare_sndfile
+COMPLEV=../apps/build/compare_level_sum
 
 TEST_REC = $(patsubst %,test_rec_%,$(RECEIVERS))
+TEST_LEV = $(patsubst %,test_level_%,$(LEVELREC))
 
 FAILING_TESTS = test_ir5
 
-all: $(TESTS) $(TEST_REC)
+all: $(TESTS) testrec testlev
+
+testrec: $(TEST_REC)
+
+testlev: $(TEST_LEV)
 
 db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 
@@ -59,6 +69,13 @@ test_rec_%: test_rec.tsc
 	@echo "Receiver test: $< ($*)"
 	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_rec_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@rm -f test_rec_$*.wav
+
+test_level_%: test_level.tsc
+	@echo "Level test: $< ($*)"
+	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav 0.25 || (echo "$(<):2: Level differs"; false)
+	@rm -f test_rec_$*.wav
+
 
 
 # debugging rules:

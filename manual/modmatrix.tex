@@ -1,5 +1,3 @@
-\subsection{matrix}\label{sec:matrix}\index{matrix}
-
 Create a jack based matrix multiplication, e.g., for Ambisonics decoding.
 
 \begin{tscattributes}
@@ -7,7 +5,8 @@ Create a jack based matrix multiplication, e.g., for Ambisonics decoding.
 \indattr{decoder} & Empty (for explicit matrix), or maxre2d (for 2D-HOA max-rE decoding)\\
 \end{tscattributes}
 
-Outputs are defined as in any speaker based receiver type. 
+Outputs are defined as in speaker based layout files, except that tey
+use the element \elem{output}.
 %
 In addition, each speaker can contain the attribute \indattr{m}, which
 contains a list of floating point values.
@@ -21,4 +20,38 @@ Each input can have the attribute \indattr{connect}.
 
 An Ambisonics decoder configuration can be created with the MATLAB/GNU
 Octave script \verb!tacsar_generatedecmatrix.m!.
+
+Example:
+\begin{lstlisting}[numbers=none]
+<matrix id="dec" decoder="maxre2d">
+  <input connect="hoa:out.0" label=".0_0"/>
+  <input connect="hoa:out.1" label=".1_-1"/>
+  <input connect="hoa:out.2" label=".1_1"/>
+  <input connect="hoa:out.3" label=".2_-2"/>
+  <input connect="hoa:out.4" label=".2_2"/>
+  <input connect="hoa:out.5" label=".3_-3"/>
+  <input connect="hoa:out.6" label=".3_3"/>
+  <input connect="hoa:out.7" label=".4_-4"/>
+  <input connect="hoa:out.8" label=".4_4"/>
+  <input connect="hoa:out.9" label=".5_-5"/>
+  <input connect="hoa:out.10" label=".5_5"/>
+  <input connect="hoa:out.11" label=".6_-6"/>
+  <input connect="hoa:out.12" label=".6_6"/>
+  <output az="12" connect="render.tostereo:in.0"/>
+  <output az="36" connect="render.tostereo:in.1"/>
+  <output az="60" connect="render.tostereo:in.2"/>
+  <output az="84" connect="render.tostereo:in.3"/>
+  <output az="108" connect="render.tostereo:in.4"/>
+  <output az="132" connect="render.tostereo:in.5"/>
+  <output az="156" connect="render.tostereo:in.6"/>
+  <output az="180" connect="render.tostereo:in.7"/>
+  <output az="204" connect="render.tostereo:in.8"/>
+  <output az="228" connect="render.tostereo:in.9"/>
+  <output az="252" connect="render.tostereo:in.10"/>
+  <output az="276" connect="render.tostereo:in.11"/>
+  <output az="300" connect="render.tostereo:in.12"/>
+  <output az="324" connect="render.tostereo:in.13"/>
+  <output az="348" connect="render.tostereo:in.14"/>
+</matrix>
+\end{lstlisting}
 

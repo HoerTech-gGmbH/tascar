@@ -2,10 +2,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "errorhandling.h"
+#include <unistd.h>
 
 namespace TASCAR {
   std::map<xmlpp::Element*,std::map<std::string,std::string> > attribute_list;
   std::vector<std::string> warnings;
+  globalconfig_t config;
+}
+
+bool file_exists( const std::string& fname )
+{
+  if( access( fname.c_str(), F_OK ) != -1 )
+    return true;
+  return false;
+}
+
+std::string localgetenv(const std::string& env)
+{
+  if( char* s = getenv(env.c_str()) )
+    return s;
+  return "";
+}
+
+TASCAR::globalconfig_t::globalconfig_t()
+{
+  readconfig("/etc/tascar/defaults.xml");
+  readconfig("${HOME}/.tascardefaults.xml");
+}
+
+void TASCAR::globalconfig_t::readconfig(const std::string& fname)
+{
+  try{
+    std::string lfname(TASCAR::env_expand(fname));
+    if( file_exists( lfname) ){
+      xml_doc_t doc(lfname, xml_doc_t::LOAD_FILE );
+      readconfig("",doc.doc->get_root_node());
+    }
+  }
+  catch( const std::exception& e ){
+  }
+}
+
+void TASCAR::globalconfig_t::forceoverwrite(const std::string& a,const std::string& b)
+{
+  cfg[a] = b;
+}
+
+void TASCAR::globalconfig_t::readconfig(const std::string& prefix, xmlpp::Element* e)
+{
+  std::string key(prefix);
+  if( prefix.size() )
+    key += ".";
+  key += e->get_name();
+  TASCAR::xml_element_t xe(e);
+  if( xe.has_attribute("data") ){
+    cfg[key] = e->get_attribute_value("data");
+  }
+  xmlpp::Node::NodeList subnodes(e->get_children());
+  for( auto sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne )
+      readconfig(key,sne);
+  }
+}
+
+double TASCAR::globalconfig_t::operator()(const std::string& key,double def) const
+{
+  if( localgetenv("TASCARSHOWGLOBAL").size())
+    std::cout << key << " (" << def << ")\n";
+  auto e(cfg.find(key));
+  if( e != cfg.end() )
+    return atof( e->second.c_str() );
+  return def;
+}
+
+std::string TASCAR::globalconfig_t::operator()(const std::string& key,const std::string& def) const
+{
+  if( localgetenv("TASCARSHOWGLOBAL").size())
+    std::cout << key << " (" << def << ")\n";
+  auto e(cfg.find(key));
+  if( e != cfg.end() )
+    return e->second;
+  return def;
 }
 
 void TASCAR::add_warning( std::string msg, xmlpp::Element* e )
@@ -353,13 +431,6 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,const std::vec
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::levelmeter_t::weight_t& value)
 {
   set_attribute_value(e,name,value);
-}
-
-std::string localgetenv(const std::string& env)
-{
-  if( char* s = getenv(env.c_str()) )
-    return s;
-  return "";
 }
 
 std::string TASCAR::env_expand( std::string s )

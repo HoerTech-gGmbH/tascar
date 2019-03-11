@@ -97,7 +97,7 @@ TASCAR::receivermod_base_t::~receivermod_base_t()
 
 TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(xmlpp::Element* xmlsrc)
   : receivermod_base_t(xmlsrc),
-    spkpos(xmlsrc)
+    spkpos(xmlsrc,false)
 {
 }
 
@@ -107,7 +107,14 @@ void TASCAR::receivermod_base_speaker_t::add_variables( TASCAR::osc_server_t* sr
   srv->add_bool("/decorr",&(spkpos.decorr));
   srv->add_bool("/densitycorr",&(spkpos.densitycorr));
 }
-  
+
+void TASCAR::receivermod_base_speaker_t::validate_attributes(std::string& msg) const
+{
+  receivermod_base_t::validate_attributes(msg);
+  spkpos.validate_attributes(msg);
+  spkpos.elayout.validate_attributes(msg);
+}
+
 void TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   spkpos.add_diffuse_sound_field( chunk );
@@ -134,14 +141,13 @@ std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() c
 void TASCAR::receivermod_base_speaker_t::postproc( std::vector<wave_t>& output )
 {
   spkpos.render_diffuse( output );
-  if( spkpos.delaycomp.size() == spkpos.size() ){
-    for( uint32_t k=0;k<spkpos.size();++k){
-      for( uint32_t f=0;f<output[k].n;++f ){
-        output[k].d[f] = spkpos[k].gain*spkpos.delaycomp[k]( output[k].d[f] );
-      }
-    }
-  }
+  if( spkpos.delaycomp.size() != spkpos.size() )
+    throw TASCAR::ErrMsg("Invalid delay compensation array");
   for( uint32_t k=0;k<spkpos.size();++k){
+    float sgain(spkpos[k].spkgain*spkpos[k].gain);
+    for( uint32_t f=0;f<output[k].n;++f ){
+      output[k].d[f] = sgain*spkpos.delaycomp[k]( output[k].d[f] );
+    }
     if( spkpos[k].comp )
       spkpos[k].comp->process(output[k],output[k],false);
   }

@@ -81,7 +81,8 @@ namespace TASCAR {
     uint32_t get_num_channels();
     std::string get_channel_postfix(uint32_t channel) const;
     virtual void add_variables( TASCAR::osc_server_t* srv );
-    TASCAR::spk_array_t spkpos;
+    virtual void validate_attributes(std::string&) const;
+    TASCAR::spk_array_diff_render_t spkpos;
   };
 
   class receivermod_t : public receivermod_base_t {

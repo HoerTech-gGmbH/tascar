@@ -27,14 +27,14 @@ secmodules.tex: $(sort $(wildcard mod*.tex))
 	echo $(patsubst %,\\item \\indmod{%},$(subst mod,,$(subst .tex,,$^))) >> $@
 	echo '\end{itemize}' >> $@
 	echo "" >> $@
-	echo $(patsubst %,\\input{%} ,$^) >> $@
+	(for m in $(subst mod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:$$m}\\index{$${m/_/\\_} (module)}";echo "\\input{mod$$m.tex}"; done) >> $@
 
 secactmodules.tex: $(sort $(wildcard actmod*.tex))
 	echo 'List of actor modules:\par\begin{itemize}' > $@
 	echo $(patsubst %,\\item \\indmod{%},$(subst actmod,,$(subst .tex,,$^))) >> $@
 	echo '\end{itemize}' >> $@
 	echo "" >> $@
-	echo $(patsubst %,\\input{%} ,$^) >> $@
+	(for m in $(subst actmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:$$m}\\index{$${m/_/\\_} (actor module)}";echo "\\input{actmod$$m.tex}"; done) >> $@
 
 secapmodules.tex: $(sort $(wildcard apmod*.tex))
 	echo 'List of audio plugins:\par\begin{itemize}' > $@

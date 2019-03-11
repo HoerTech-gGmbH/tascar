@@ -64,15 +64,19 @@ private:
   SNDFILE* sf_out;
   SF_INFO sf_inf_in;
   SF_INFO sf_inf_out;
+public:
   float* buf_in;
   float* buf_out;
+private:
   unsigned int pos;
   bool b_quit;
   bool start;
   bool freewheel_;
   bool use_transport;
   uint32_t startframe;
+public:
   uint32_t nframes_total;
+private:
   std::vector<std::string> p;
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
   void log(const std::string& msg);

@@ -65,6 +65,7 @@ namespace TASCAR {
   private:
     bool is_prepared;
     //uint32_t pcnt;
+    TASCAR::amb1wave_t* ambbuf;
   };
 
 

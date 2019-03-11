@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene mirrororder="3">
+    <source>
+      <orientation>0 0 0 0
+      0.1249 0 0 0
+      0.1250 45 0 0
+      0.2499 45 0 0
+      0.2500 90 0 0
+      0.3749 90 0 0
+      0.3750 135 0 0
+      0.4999 135 0 0
+      0.5000 180 0 0
+      0.6249 180 0 0
+      0.6250 225 0 0
+      0.7499 225 0 0
+      0.7500 270 0 0
+      0.8749 270 0 0
+      0.8750 315 0 0
+      1.0000 315 0 0</orientation>
+      <sound x="1">
+	<plugins><pink level="70"/></plugins>
+      </sound>
+    </source>
+    <receiver type="${RECEIVER}" layout="8ch.spk"/>
+  </scene>
+</session>

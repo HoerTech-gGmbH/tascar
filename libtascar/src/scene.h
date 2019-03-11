@@ -43,6 +43,11 @@ namespace TASCAR {
       std::string get_name() const {return name;};
       bool get_mute() const {return mute;};
       bool get_solo() const {return solo;};
+      std::string default_name( const std::string& s){
+        if( name.empty() )
+          name = s;
+        return name;
+      }
       void set_name(const std::string& s) {name=s;};
       void set_mute(bool b) {mute=b;};
       void set_solo(bool b,uint32_t& anysolo);
@@ -223,6 +228,7 @@ namespace TASCAR {
       diffuse_info_t(xmlpp::Element* e);
       virtual ~diffuse_info_t();
       void prepare( chunk_cfg_t& );
+      void release();
       /**
          \callgraph
          \callergraph
@@ -241,16 +247,22 @@ namespace TASCAR {
       TASCAR::Acousticmodel::diffuse_t* source;
     };
 
-    class sound_t : public TASCAR::Acousticmodel::source_t, public audio_port_t {
+    class sound_name_t : private xml_element_t {
+    public:
+      sound_name_t( xmlpp::Element* e, src_object_t* parent_ );
+      std::string get_parent_name() const { return parentname; };
+      std::string get_name() const { return name; };
+      std::string get_fullname() const { return parentname+"."+name; };
+    private:
+      std::string name;
+      std::string parentname;
+    };
+
+    class sound_t : public sound_name_t, public TASCAR::Acousticmodel::source_t, public audio_port_t {
     public:
       sound_t(xmlpp::Element* e,src_object_t* parent_);
       virtual ~sound_t();
       rgb_color_t get_color() const;
-      std::string get_port_name() const;
-      std::string get_parent_name() const;
-      std::string get_name() const { return name; };
-      std::string get_fullname() const { return get_parent_name()+"."+get_name(); };
-      void set_name(const std::string& n) { name = n; };
       /**
          \callgraph
          \callergraph
@@ -267,8 +279,6 @@ namespace TASCAR {
       void add_meter(TASCAR::levelmeter_t*);
       float read_meter();
       void validate_attributes(std::string& msg) const;
-    private:
-      std::string name;
     public:
       src_object_t* parent;
     private:
@@ -295,6 +305,7 @@ namespace TASCAR {
          \callergraph
       */
       void process_active(double t,uint32_t anysolo);
+      void add_sound(xmlpp::Element* src=NULL);
       std::vector<sound_t*> sound;
       std::string next_sound_name() const;
       void validate_attributes(std::string& msg) const;
@@ -302,7 +313,9 @@ namespace TASCAR {
       int32_t startframe;
     };
 
-    class receivermod_object_t : public object_t, public audio_port_t, public TASCAR::Acousticmodel::receiver_t {
+    class receivermod_object_t : public object_t,
+                                 public audio_port_t,
+                                 public TASCAR::Acousticmodel::receiver_t {
     public:
       receivermod_object_t(xmlpp::Element* e);
       void prepare( chunk_cfg_t& );
@@ -322,6 +335,7 @@ namespace TASCAR {
          \callergraph
       */
       virtual void postproc(std::vector<wave_t>& output);
+      
     };
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
