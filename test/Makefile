@@ -8,10 +8,11 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_sndgainramp2 test_ir_spkcorr test_snd_calib1		\
 	test_snd_calib2 test_snd_vbap51 test_snd_pink			\
 	test_snd_pink_diffuse test_snd_sndfile test_snd_sndfile2	\
-	test_snd_door4 test_snd_roommic
+	test_snd_door4 test_snd_roommic test_fail_vbap3d_flat		\
+	test_notfail_vbap3d_3d test_level_vbap3d
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
-  neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
+  neukom_basic neukom_inphase hann vbap hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
   hoa2d_fuma_hos
 
@@ -26,7 +27,7 @@ COMPARE=../apps/build/compare_sndfile
 COMPLEV=../apps/build/compare_level_sum
 
 TEST_REC = $(patsubst %,test_rec_%,$(RECEIVERS))
-TEST_LEV = $(patsubst %,test_level_%,$(LEVELREC))
+TEST_LEV = $(patsubst %,test_reclevel_%,$(LEVELREC))
 
 FAILING_TESTS = test_ir5
 
@@ -71,12 +72,26 @@ test_rec_%: test_rec.tsc
 	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_rec_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@rm -f test_rec_$*.wav
 
-test_level_%: test_level.tsc
+test_reclevel_%: test_level.tsc
+	@echo "Receiver level test: $< ($*)"
+	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav 0.25 || (echo "$(<):2: Level differs"; false)
+	@rm -f test_rec_$*.wav
+
+test_level_%: test_level_%.tsc
 	@echo "Level test: $< ($*)"
 	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav 0.25 || (echo "$(<):2: Level differs"; false)
 	@rm -f test_rec_$*.wav
 
+
+test_fail_%: fail_%.tsc
+	@(! $(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_fail.wav $< ) || (echo "$(<):2: Did not fail"; false)
+	@rm -f test_fail.wav
+
+test_notfail_%: notfail_%.tsc
+	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_fail.wav $< || (echo "$(<):2: Failed."; false)
+	@rm -f test_fail.wav
 
 
 # debugging rules:

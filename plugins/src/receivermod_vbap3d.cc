@@ -1,19 +1,49 @@
-#include <boost/geometry.hpp>
-#include <boost/geometry/multi/geometries/multi_point.hpp>
-#include <boost/geometry/geometries/adapted/boost_tuple.hpp>
+#include "quickhull/QuickHull.hpp"
+#include "quickhull/QuickHull.cpp"
 
 #include "errorhandling.h"
 #include "scene.h"
-#include <complex.h>
+#include <math.h>
 
-BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
+using namespace quickhull;
 
-namespace bg = boost::geometry;
 
-typedef boost::tuple<double, double, double> bg_point_t;
-typedef bg::model::multi_point<bg_point_t> bg_pointlist_t;
+class simplex_t {
+public:
+  simplex_t() : c1(-1),c2(-1),c3(-1){};
+  bool get_gain( const TASCAR::pos_t& p){
+    g1 = p.x*l11+p.y*l21+p.z*l31;
+    g2 = p.x*l12+p.y*l22+p.z*l32;
+    g3 = p.x*l13+p.y*l23+p.z*l33;
+    if( (g1>=0.0) && (g2>=0.0) && (g3>=0.0)){
+      double w(sqrt(g1*g1+g2*g2+g3*g3));
+      if( w > 0 )
+        w = 1.0/w;
+      g1*=w;
+      g2*=w;
+      g3*=w;
+      return true;
+    }
+    return false;
+  };
+  uint32_t c1;
+  uint32_t c2;
+  uint32_t c3;
+  double l11;
+  double l12;
+  double l13;
+  double l21;
+  double l22;
+  double l23;
+  double l31;
+  double l32;
+  double l33;
+  double g1;
+  double g2;
+  double g3;
+};
 
-class rec_vbap3d_t : public TASCAR::receivermod_base_speaker_t {
+class rec_vbap_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
@@ -24,13 +54,14 @@ public:
     // differential driving weights:
     float* dwp;
   };
-  rec_vbap3d_t(xmlpp::Element* xmlsrc);
-  virtual ~rec_vbap3d_t() {};
+  rec_vbap_t(xmlpp::Element* xmlsrc);
+  virtual ~rec_vbap_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  std::vector<simplex_t> simplices;
 };
 
-rec_vbap3d_t::data_t::data_t(uint32_t channels)
+rec_vbap_t::data_t::data_t( uint32_t channels )
 {
   wp = new float[channels];
   dwp = new float[channels];
@@ -38,35 +69,100 @@ rec_vbap3d_t::data_t::data_t(uint32_t channels)
     wp[k] = dwp[k] = 0;
 }
 
-rec_vbap3d_t::data_t::~data_t()
+rec_vbap_t::data_t::~data_t()
 {
   delete [] wp;
   delete [] dwp;
 }
 
-rec_vbap3d_t::rec_vbap3d_t(xmlpp::Element* xmlsrc)
+uint32_t findindex( const std::vector<Vector3<double>>& spklist, const Vector3<double>& vertex )
+{
+  for(uint32_t k=0;k<spklist.size();++k)
+    if( (spklist[k].x == vertex.x) &&
+        (spklist[k].y == vertex.y) &&
+        (spklist[k].z == vertex.z)) 
+      return k;
+  throw TASCAR::ErrMsg("Simplex index not found in list");
+  return spklist.size();
+}
+
+bool vector_is_equal( const std::vector<IndexType>& a, const std::vector<IndexType>& b )
+{
+  if( a.size() != b.size() )
+    return false;
+  for( uint32_t k=0;k<a.size();++k)
+    if( a[k] != b[k] )
+      return false;
+  return true;
+}
+
+rec_vbap_t::rec_vbap_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_speaker_t(xmlsrc)
 {
   if( spkpos.size() < 3 )
     throw TASCAR::ErrMsg("At least three loudspeakers are required for 3D-VBAP.");
-  // create a boost point list from speaker layout:
-  bg_pointlist_t spklist;
+  // create a quickhull point list from speaker layout:
+  std::vector<Vector3<double>> spklist;
   for(uint32_t k=0;k<spkpos.size();++k)
-    bg::append(spklist,bg_point_t(spkpos[k].unitvector.x,spkpos[k].unitvector.y,spkpos[k].unitvector.z));
+    spklist.push_back( Vector3<double>(spkpos[k].unitvector.x,spkpos[k].unitvector.y,spkpos[k].unitvector.z));
   // calculate the convex hull:
-  bg_pointlist_t hull;
-  boost::geometry::convex_hull(spklist, hull);
-  if( hull.size() < 2 )
-    throw TASCAR::ErrMsg("Invalid convex hull.");
-  DEBUG(hull.size());
-  DEBUG(spklist.size());
+  QuickHull<double> qh;
+  auto hull = qh.getConvexHull( spklist, true, true );
+  auto indexBuffer = hull.getIndexBuffer();
+  // test degenerated convex hull:
+  std::vector<Vector3<double>> spklist2(spklist);
+  spklist2.push_back( Vector3<double>(0,0,0) );
+  spklist2.push_back( Vector3<double>(0.1,0,0) );
+  spklist2.push_back( Vector3<double>(0,0.1,0) );
+  spklist2.push_back( Vector3<double>(0,0,0.1) );
+  QuickHull<double> qh2;
+  auto hull2 = qh2.getConvexHull( spklist2, true, true );
+  auto indexBuffer2 = hull2.getIndexBuffer();
+  if( !vector_is_equal(indexBuffer,indexBuffer2) )
+    throw TASCAR::ErrMsg("Loudspeaker layout is flat (not a 3D layout?).");
+  auto vertexBuffer = hull.getVertexBuffer();
+  if( indexBuffer.size() < 12 )
+      throw TASCAR::ErrMsg("Invalid convex hull.");
+  // identify channel numbers of simplex vertices and store inverted
+  // loudspeaker matrices:
+  for( uint32_t khull=0;khull<indexBuffer.size();khull+=3){
+    simplex_t sim;
+    sim.c1 = findindex(spklist,vertexBuffer[indexBuffer[khull]]);
+    sim.c2 = findindex(spklist,vertexBuffer[indexBuffer[khull+1]]);
+    sim.c3 = findindex(spklist,vertexBuffer[indexBuffer[khull+2]]);
+    double l11(spklist[sim.c1].x);
+    double l12(spklist[sim.c1].y);
+    double l13(spklist[sim.c1].z);
+    double l21(spklist[sim.c2].x);
+    double l22(spklist[sim.c2].y);
+    double l23(spklist[sim.c2].z);
+    double l31(spklist[sim.c3].x);
+    double l32(spklist[sim.c3].y);
+    double l33(spklist[sim.c3].z);
+    double det_speaker(l11*l22*l33 + l12*l23*l31 + l13*l21*l32 - l31*l22*l13 - l32*l23*l11 - l33*l21*l12);
+    if( det_speaker != 0 )
+      det_speaker = 1.0/det_speaker;
+    sim.l11 = det_speaker*(l22*l33 - l23*l32);
+    sim.l12 = -det_speaker*(l12*l33 - l13*l32);
+    sim.l13 = det_speaker*(l12*l23 - l13*l22);
+    sim.l21 = -det_speaker*(l21*l33 - l23*l31);
+    sim.l22 = det_speaker*(l11*l33 - l13*l31);
+    sim.l23 = -det_speaker*(l11*l23 - l13*l21);
+    sim.l31 = det_speaker*(l21*l32 - l22*l31);
+    sim.l32 = -det_speaker*(l11*l32 - l12*l31);
+    sim.l33 = det_speaker*(l11*l22 - l12*l21);
+    simplices.push_back(sim);
+  }
 }
 
 /*
   See receivermod_base_t::add_pointsource() in file receivermod.h for details.
 */
-void rec_vbap3d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
-
+void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
+                                  double width,
+                                  const TASCAR::wave_t& chunk,
+                                  std::vector<TASCAR::wave_t>& output,
+                                  receivermod_base_t::data_t* sd)
 {
   // N is the number of loudspeakers:
   uint32_t N(output.size());
@@ -79,112 +175,35 @@ void rec_vbap3d_t::add_pointsource(const TASCAR::pos_t& prel, double width, cons
   // coordinate system:
   TASCAR::pos_t psrc_normal(prel.normal());
 
-  //**********************************  3D  VBAP  *************************************
-
-  //-------------1.Search three nearest speakers:--------------
-  const std::vector<TASCAR::spk_array_t::didx_t>& didx(spkpos.sort_distance(psrc_normal));
-
-  // 1.a) Find the first closest loudspeaker
-  uint32_t kmin1(didx[0].idx);
-  // 1.b) Find the second closest loudspeaker
-  uint32_t kmin2(didx[1].idx);
-  // 1.c) Find the third closest loudspeaker
-  uint32_t kmin3(didx[2].idx);
-
-  // now kmin1, kmin2 and kmin3 are nearest speakers numbers and dmin1,dmin2 and dmin3 smallest distances.
-
-
-  //-------------2.Calculate the inverse square matrix:--------------
-
-  //elements of the 3x3 matrix with unit vectors of the louspeaker direction
-  double L_11(spkpos[kmin1].unitvector.x);
-  double L_12(spkpos[kmin1].unitvector.y);
-  double L_13(spkpos[kmin1].unitvector.z);
-  double L_21(spkpos[kmin2].unitvector.x);
-  double L_22(spkpos[kmin2].unitvector.y);
-  double L_23(spkpos[kmin2].unitvector.z);
-  double L_31(spkpos[kmin3].unitvector.x);
-  double L_32(spkpos[kmin3].unitvector.y);
-  double L_33(spkpos[kmin3].unitvector.z);
-
-  // matrix with cofactors
-  //double Co_11=(L_22*L_33)-(L_32*L_23);
-  //double Co_12=(L_21*L_33)-(L_31*L_23)*(-1);
-  //double Co_13=(L_21*L_32)-(L_31*L_32);
-  //double Co_21=(L_12*L_33)-(L_32*L_13)*(-1);
-  //double Co_22=(L_11*L_33)-(L_31*L_13);
-  //double Co_23=(L_11*L_32)-(L_31*L_12)*(-1);
-  //double Co_31=(L_12*L_23)-(L_22*L_13);
-  //double Co_32=(L_11*L_23)-(L_21*L_13)*(-1);
-  //double Co_33=(L_11*L_22)-(L_21*L_12);
-
-  // adjoint matrix - transpose of the cofactor matrix Co_ij=Adj_ji
-  double Adj_11=(L_22*L_33)-(L_32*L_23);
-  double Adj_21=(L_21*L_33)-(L_31*L_23)*(-1);
-  double Adj_31=(L_21*L_32)-(L_31*L_32);
-  double Adj_12=(L_12*L_33)-(L_32*L_13)*(-1);
-  double Adj_22=(L_11*L_33)-(L_31*L_13);
-  double Adj_32=(L_11*L_32)-(L_31*L_12)*(-1);
-  double Adj_13=(L_12*L_23)-(L_22*L_13);
-  double Adj_23=(L_11*L_23)-(L_21*L_13)*(-1);
-  double Adj_33=(L_11*L_22)-(L_21*L_12);
-
-
-  //determinant of a 3x3 matrix
-  double det_inv = 1/(L_11*Adj_11+L_12*Adj_21+L_13*Adj_31);// inverse of a determinant of a matrix
-
-  //inverse of a matrix L
-  double L_inv_11 =det_inv*Adj_11;
-  double L_inv_12 =det_inv*Adj_12;
-  double L_inv_13 =det_inv*Adj_13;
-  double L_inv_21 =det_inv*Adj_21;
-  double L_inv_22 =det_inv*Adj_22;
-  double L_inv_23 =det_inv*Adj_23;
-  double L_inv_31 =det_inv*Adj_31;
-  double L_inv_32 =det_inv*Adj_32;
-  double L_inv_33 =det_inv*Adj_33;
-
-  //-------------3.Calculate the gains for louspeakers according to formula [w1 w2 w3]=[p1 p2 p3]*L^-1  :--------------
-
-  double w_kmin1= psrc_normal.x*L_inv_11+ psrc_normal.y*L_inv_21+psrc_normal.z*L_inv_31;
-  double w_kmin2= psrc_normal.x*L_inv_12+ psrc_normal.y*L_inv_22+psrc_normal.z*L_inv_32;
-  double w_kmin3= psrc_normal.x*L_inv_13+ psrc_normal.y*L_inv_23+psrc_normal.z*L_inv_33;
-
-
-
-  //-------------4.Apply the gain into the signal  :--------------
-
-  //We get information about the gain (w) for loudspeaker only once in each block so we know the value of the gain at the beginning  and at the end of each block (at the beginning - value from the previous frame, at the end - value calculated in this iteration). Because we dont know the exact value for each time sample, we have to linearly interpolate between the two values that we have. To do this we have to compute the increment, and then this increment is added at every sample.
-
-  //4.a) Compute increment (dwp) based on current value (w_kmin) and previous value (wp) and number of samples dt =1/NrSamples
-  for(unsigned int k=0;k<N;k++){
-    d->dwp[k] = (0 - d->wp[k])*t_inc;//dwp=(0-wp)*dt
+  for(unsigned int k=0;k<N;k++)
+    d->dwp[k] = - d->wp[k]*t_inc;
+  uint32_t k=0;
+  for( auto it=simplices.begin();it!=simplices.end();++it){
+    if( it->get_gain(psrc_normal) ){
+      d->dwp[it->c1] = (it->g1 - d->wp[it->c1])*t_inc;
+      d->dwp[it->c2] = (it->g2 - d->wp[it->c2])*t_inc;
+      d->dwp[it->c3] = (it->g3 - d->wp[it->c3])*t_inc;
+    }
+    ++k;
   }
-
-  d->dwp[kmin1] = (w_kmin1 - d->wp[kmin1])*t_inc;// (dwp=G-wp)*dt
-  d->dwp[kmin2] = (w_kmin2 - d->wp[kmin2])*t_inc;
-  d->dwp[kmin3] = (w_kmin3 - d->wp[kmin3])*t_inc;
-
- //4.b) Loop for each channel at each time sample we compute the new value which is equall to the last value plus the increment
-
   // i is time (in samples):
   for( unsigned int i=0;i<chunk.size();i++){
     // k is output channel number:
     for( unsigned int k=0;k<N;k++){
       //output in each louspeaker k at sample i:
-      //d->wp[k] += d->dwp[k];
-      //output[k][i] = d->wp[k] * chunk[i];
-      output[k][i] += (d->wp[k] += d->dwp[k]) * chunk[i]; // This += is because we sum up all the sources for which we call this func
+      output[k][i] += (d->wp[k] += d->dwp[k]) * chunk[i];
+      // This += is because we sum up all the sources for which we
+      // call this func
     }
   }
 }
 
-TASCAR::receivermod_base_t::data_t* rec_vbap3d_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_data(double srate,uint32_t fragsize)
 {
   return new data_t(spkpos.size());
 }
 
-REGISTER_RECEIVERMOD(rec_vbap3d_t);
+REGISTER_RECEIVERMOD(rec_vbap_t);
 
 /*
  * Local Variables:

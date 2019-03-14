@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <receiver type="vbap3d" layout="6ch_3d.spk"/>
+  </scene>
+</session>

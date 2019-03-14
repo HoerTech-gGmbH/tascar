@@ -1198,7 +1198,7 @@ w_x^2 - w_y^2                                                                   
 {\tt hoa2d}           & user def. & see \cite{Daniel2001} for details.                                                                                                             \\
 {\tt nsp}             & user def. & $w_{\argmin\left\{\norm[\big]{\frac{\mathbf{p}_{rel}}{\norm{\mathbf{p}_{rel}}} - \frac{\mathbf{p}_{spk}}{\norm{\mathbf{p}_{spk}}}}\right\}}=1$ \\
 {\tt hann}            & user def. & $w_n = \left(\frac12 + \frac12 \cos\left(\min\left\{\left|\frac{N}{2} \varphi_n\right|,\pi\right\}\right)\right)^\gamma$                       \\
-{\tt vbap}            & user def. & see \cite{Pulkki1997} for details.                                                                                                             \\
+{\tt vbap}, {\tt vbap3d}            & user def. & see \cite{Pulkki1997} for details.                                                                                                             \\
 %{\tt vbap3d}         & user def. & $ w_n=?$ & $d=?$                                                                                                                               \\
 \end{tabular}
 \caption{Specification of receiver types. $d_{n,wxyz}=0$ except for
@@ -1526,9 +1526,12 @@ w_k = \left(\frac12 + \frac12 \cos\left(\frac{N}{2} \alpha\right)\right)^\gamma
 \paragraph{Vector base amplitude panning \citep{Pulkki1997}:}\index{vbap} 
 
 \begin{lstlisting}[numbers=none]
-<receiver type="vbap"/>
+<receiver type="vbap" layout="spkeaker.spk"/>
 \end{lstlisting}
-Currently 2D only!
+
+\begin{lstlisting}[numbers=none]
+<receiver type="vbap3d" layout="spkeaker3d.spk"/>
+\end{lstlisting}
 
 \paragraph{intensityvector:}
 
