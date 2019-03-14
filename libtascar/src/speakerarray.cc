@@ -317,6 +317,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
   elayout.GET_ATTRIBUTE_DB(caliblevel);
   has_diffusegain = elayout.has_attribute("diffusegain");
   elayout.GET_ATTRIBUTE_DB(diffusegain);
+  has_calibdate = elayout.has_attribute("calibdate");
   elayout.GET_ATTRIBUTE(calibdate);
   if( !calibdate.empty() ){
     std::time_t now(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));

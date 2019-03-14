@@ -23,9 +23,11 @@ The enable state and the duration can be controlled via OSC.
 %
 
 \begin{tscattributes}
-\indattr{duration} & Duration of ramp in seconds (default: 2)              \\
-\indattr{enable}   & Enable (true, default) or disable (false) the module. \\
-\indattr{id}       & ID used as OSC prefix (default: geopresets)           \\
+\indattr{duration}    & Duration of ramp in seconds (default: 2)              \\
+\indattr{enable}      & Enable (true, default) or disable (false) the module. \\
+\indattr{id}          & ID used as OSC prefix (default: geopresets)           \\
+\indattr{startpreset} & Starting preset (or empty for no starting preset)     \\
+\indattr{showgui}     & Show GUI (default: false)                             \\
 \end{tscattributes}
 
 Presets can be defined with one or more \elem{preset} elements, which

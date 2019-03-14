@@ -7,7 +7,7 @@
     </source>
   </scene>
   <modules>
-    <geopresets actor="/*/in">
+    <geopresets actor="/*/in" showgui="true">
       <preset name="loc" position="2 1 0"/>
       <preset name="locrot" position="1 -1 0" orientation="70 0 0"/>
       <preset name="rot" orientation="0 0 0"/>

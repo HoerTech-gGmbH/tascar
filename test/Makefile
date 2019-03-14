@@ -7,7 +7,8 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_wav_diffuse_layerbug test_wav_diffirs test_sndgainramp	\
 	test_sndgainramp2 test_ir_spkcorr test_snd_calib1		\
 	test_snd_calib2 test_snd_vbap51 test_snd_pink			\
-	test_snd_pink_diffuse test_snd_sndfile test_snd_sndfile2
+	test_snd_pink_diffuse test_snd_sndfile test_snd_sndfile2	\
+	test_snd_door4 test_snd_roommic
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\

@@ -39,6 +39,8 @@ namespace TASCAR {
     std::map<std::string,std::string> cfg;
   };
 
+  std::string to_string( double x );
+
   void add_warning( std::string msg, xmlpp::Element* e = NULL );
   
   std::string tscbasename( const std::string& s );

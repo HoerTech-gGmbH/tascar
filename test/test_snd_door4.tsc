@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene guiscale="6">
+    <source name="door" start="0" end="0.5">
+      <sound type="door" distance="1"><plugins><sine/></plugins></sound>
+      <orientation>0 180 0 0</orientation>
+      <position>0 1 0 0</position>
+    </source>
+    <source name="direct" start="0.5" end="1">
+      <sound><plugins><sine/></plugins></sound>
+      <orientation>0 180 0 0</orientation>
+      <position>0 2 0 0</position>
+    </source>
+    <receiver type="omni"/>
+  </scene>
+</session>

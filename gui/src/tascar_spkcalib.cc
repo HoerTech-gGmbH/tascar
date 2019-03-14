@@ -13,13 +13,6 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
-std::string tascar_to_string( double x )
-{
-  char ctmp[1024];
-  sprintf(ctmp,"%g",x);
-  return ctmp;
-}
-
 class calibsession_t : public TASCAR::session_t
 {
 public:
@@ -84,8 +77,8 @@ calibsession_t::calibsession_t( const std::string& fname, double reflevel, const
   //e_snd->set_attribute("x","1");
   xmlpp::Element* e_plugs(e_snd->add_child("plugins"));
   xmlpp::Element* e_pink(e_plugs->add_child("pink"));
-  e_pink->set_attribute("level",tascar_to_string(reflevel));
-  e_pink->set_attribute("period",tascar_to_string(duration));
+  e_pink->set_attribute("level",TASCAR::to_string(reflevel));
+  e_pink->set_attribute("period",TASCAR::to_string(duration));
   xmlpp::Element* e_rcvr(e_scene->add_child("receiver"));
   e_rcvr->set_attribute("type","nsp");
   e_rcvr->set_attribute("layout",fname);
@@ -93,8 +86,8 @@ calibsession_t::calibsession_t( const std::string& fname, double reflevel, const
   e_diff->set_attribute("mute","true");
   xmlpp::Element* e_plugs_diff(e_diff->add_child("plugins"));
   xmlpp::Element* e_pink_diff(e_plugs_diff->add_child("pink"));
-  e_pink_diff->set_attribute("level",tascar_to_string(reflevel));
-  e_pink_diff->set_attribute("period",tascar_to_string(duration));
+  e_pink_diff->set_attribute("level",TASCAR::to_string(reflevel));
+  e_pink_diff->set_attribute("period",TASCAR::to_string(duration));
   doc->write_to_file_formatted("temp.cfg");
   add_scene(e_scene);
   startlevel = get_caliblevel();
@@ -166,8 +159,8 @@ void calibsession_t::saveas( const std::string& fname )
   TASCAR::xml_doc_t doc(spkname, TASCAR::xml_doc_t::LOAD_FILE );
   if( doc.doc->get_root_node()->get_name() != "layout" )
     throw TASCAR::ErrMsg("Invalid file type, expected root node type \"layout\", got \""+doc.doc->get_root_node()->get_name()+"\".");
-  doc.doc->get_root_node()->set_attribute("caliblevel",tascar_to_string(get_caliblevel()));
-  doc.doc->get_root_node()->set_attribute("diffusegain",tascar_to_string(get_diffusegain()));
+  doc.doc->get_root_node()->set_attribute("caliblevel",TASCAR::to_string(get_caliblevel()));
+  doc.doc->get_root_node()->set_attribute("diffusegain",TASCAR::to_string(get_diffusegain()));
   // update gains:
   if( !scenes.back()->receivermod_objects.empty() ){
     TASCAR::receivermod_base_speaker_t* recspk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(scenes.back()->receivermod_objects.back()->libdata));
@@ -182,7 +175,7 @@ void calibsession_t::saveas( const std::string& fname )
         xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
         if( sne && ( sne->get_name() == "speaker" )){
           sne->set_attribute("gain",
-                             tascar_to_string(20*log10(recspk->spkpos[std::min(k,(uint32_t)(recspk->spkpos.size()-1))].gain)));
+                             TASCAR::to_string(20*log10(recspk->spkpos[std::min(k,(uint32_t)(recspk->spkpos.size()-1))].gain)));
           ++k;
         }
       }
@@ -425,9 +418,14 @@ void spkcalib_t::manage_act_grp_save()
 
 void spkcalib_t::on_reclevels()
 {
-  if( session )
-    session->get_levels();
-  manage_act_grp_save();
+  try{
+    if( session )
+      session->get_levels();
+    manage_act_grp_save();
+  }
+  catch( const std::exception& e ){
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_play()

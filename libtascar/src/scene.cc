@@ -81,6 +81,7 @@ void diffuse_info_t::geometry_update(double t)
 
 void diffuse_info_t::prepare( chunk_cfg_t& cf_ )
 {
+  cf_.n_channels = 4;
   sndfile_object_t::prepare( cf_ );
   if( source )
     delete source;
@@ -182,6 +183,7 @@ void src_object_t::geometry_update(double t)
 
 void src_object_t::prepare( chunk_cfg_t& cf_ )
 {
+  cf_.n_channels = 1;
   sndfile_object_t::prepare( cf_ );
   reset_meters();
   for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
@@ -342,32 +344,33 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
 {
   // test if this is a speaker-based receiver module:
   TASCAR::receivermod_base_speaker_t* spk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(libdata));
+  double maxage(TASCAR::config("tascar.spkcalib.maxage",30));
   if( spk ){
     if( spk->spkpos.has_caliblevel ){
       if( has_caliblevel )
         TASCAR::add_warning("Caliblevel is defined in receiver \""+get_name()+
                             "\" and in layout file \""+spk->spkpos.layout+"\". Will use the value from layout file.");
       caliblevel = spk->spkpos.caliblevel;
-      if( spk->spkpos.calibage > TASCAR::config("tascar.spkcalib.maxage",30) )
-        TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is more than 30 days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
-
     }
-    //DEBUG(spk);
     if( spk->spkpos.has_diffusegain ){
       if( has_diffusegain )
         TASCAR::add_warning("Diffusegain is defined in receiver \""+get_name()+
                             "\" and in layout file \""+spk->spkpos.layout+"\". Will use the value from layout file.");
       diffusegain = spk->spkpos.diffusegain;
-      if( spk->spkpos.calibage > TASCAR::config("tascar.spkcalib.maxage",30) )
-        TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is more than 30 days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
+    }
+    if( spk->spkpos.has_caliblevel || spk->spkpos.has_diffusegain || spk->spkpos.has_calibdate ){
+      if( spk->spkpos.calibage > maxage )
+        TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is " +
+                            TASCAR::to_string(spk->spkpos.calibage) +
+                            " days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
 
     }
-    //DEBUG(spk);
   }
 }
 
 void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
 {
+  cf_.n_channels = get_num_channels();
   TASCAR::Acousticmodel::receiver_t::prepare( cf_ );
   object_t::prepare( cf_ );
   reset_meters();
@@ -442,7 +445,7 @@ void scene_t::prepare( chunk_cfg_t& cf_ )
   if( name.find(":") != std::string::npos )
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
   all_objects = get_objects();
-  for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
+  for(auto it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->prepare( cf_ );
 }
 
@@ -450,7 +453,7 @@ void scene_t::release()
 {
   scene_node_base_t::release();
   all_objects = get_objects();
-  for(std::vector<object_t*>::iterator it=all_objects.begin();it!=all_objects.end();++it)
+  for(auto it=all_objects.begin();it!=all_objects.end();++it)
     (*it)->release();
 }
 

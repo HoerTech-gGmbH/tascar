@@ -190,7 +190,8 @@ namespace TASCAR {
       virtual void add_variables( TASCAR::osc_server_t* srv );
       void validate_attributes(std::string& msg) const;
       // configuration/control variables:
-      TASCAR::pos_t size;
+      TASCAR::pos_t volumetric;
+      double avgdist;
       bool render_point;
       bool render_diffuse;
       bool render_image;

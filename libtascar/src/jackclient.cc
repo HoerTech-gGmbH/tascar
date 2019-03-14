@@ -161,11 +161,21 @@ int jackc_t::process_(jack_nframes_t nframes)
 void jackc_t::add_input_port(const std::string& name)
 {
   if( (int)(strlen(jack_get_client_name(jc))+name.size()+2) >= jack_port_name_size())
-    throw TASCAR::ErrMsg(std::string("Port name "+name+" is to long."));
+    throw TASCAR::ErrMsg(std::string("Port name \""+
+                                     get_client_name()+":"+name+
+                                     "\" is too long."));
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsInput,0);
-  if( !p )
-    throw TASCAR::ErrMsg(std::string("unable to register input port \""+name+"\"."));
+  if( !p ){
+    p = jack_port_by_name( jc, name.c_str() );
+    if( p )
+      throw TASCAR::ErrMsg(std::string("Unable to register input port \""+
+                                       get_client_name()+":"+name+
+                                       "\": A port of same name already exists."));
+    throw TASCAR::ErrMsg(std::string("Unable to register input port \""+
+                                     get_client_name()+":"+name+
+                                     "\"."));
+  }
   inPort.push_back(p);
   inBuffer.push_back(NULL);
   input_port_names.push_back(std::string(jack_get_client_name(jc))+":"+name);
@@ -174,11 +184,21 @@ void jackc_t::add_input_port(const std::string& name)
 void jackc_t::add_output_port(const std::string& name)
 {
   if( (int)(strlen(jack_get_client_name(jc))+name.size()+2) >= jack_port_name_size())
-    throw TASCAR::ErrMsg(std::string("Port name "+name+" is to long."));
+    throw TASCAR::ErrMsg(std::string("Port name \""+
+                                     get_client_name()+":"+name+
+                                     "\" is too long."));
   jack_port_t* p;
   p = jack_port_register(jc,name.c_str(),JACK_DEFAULT_AUDIO_TYPE,JackPortIsOutput,0);
-  if( !p )
-    throw TASCAR::ErrMsg(std::string("unable to register output port \""+name+"\"."));
+  if( !p ){
+    p = jack_port_by_name( jc, name.c_str() );
+    if( p )
+      throw TASCAR::ErrMsg(std::string("Unable to register output port \""+
+                                       get_client_name()+":"+name+
+                                       "\": A port of same name already exists."));
+    throw TASCAR::ErrMsg(std::string("Unable to register output port \""+
+                                     get_client_name()+":"+name+
+                                     "\"."));
+  }
   outPort.push_back(p);
   outBuffer.push_back(NULL);
   output_port_names.push_back(std::string(jack_get_client_name(jc))+":"+name);

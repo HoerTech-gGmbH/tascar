@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <session name="tascar" duration="88" loop="false" srv_port="9996" license="CC BY SA 2.0" attribution="Giso Grimm">
   <!-- main scene setup -->
   <scene name="cafeteria" mirrororder="2" guiscale="20" guicenter="12.3 -16.241478 1.1">
@@ -50,7 +50,7 @@
       <position>0 12.6 -16.441478 1.2</position>
       <orientation>0 3 0 0</orientation>
     </receiver>
-    <receiver name="room" type="omni" image="false" size="10 10 10">
+    <receiver name="room" type="omni" image="false" volumetric="10 10 10">
       <position>0 12.6 -16.441478 1.2</position>
       <orientation>0 3 0 0</orientation>
     </receiver>

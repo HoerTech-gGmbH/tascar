@@ -630,7 +630,7 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       irc!=scene_->world->receivergraphs.end();++irc)
     for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam=(*irc)->acoustic_model.begin();
         iam != (*irc)->acoustic_model.end();++iam){
-    if( (*iam)->receiver_->size.is_null() && (*iam)->src_->active && 
+    if( (*iam)->receiver_->volumetric.is_null() && (*iam)->src_->active && 
         (*iam)->receiver_->active && 
         ((*iam)->src_->ismmin <= (*iam)->ismorder) && 
         ((*iam)->src_->ismmax >= (*iam)->ismorder) &&
@@ -973,14 +973,14 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     pos_t p(obj->get_location());
     zyx_euler_t o(obj->get_orientation());
-    if( (obj->size.x!=0)&&(obj->size.y!=0)&&(obj->size.z!=0) ){
-      draw_cube(p,o,obj->size,cr);
+    if( (obj->volumetric.x!=0)&&(obj->volumetric.y!=0)&&(obj->volumetric.z!=0) ){
+      draw_cube(p,o,obj->volumetric,cr);
       if( obj->falloff > 0 ){
         std::vector<double> dash(2);
         dash[0] = msize;
         dash[1] = msize;
         cr->set_dash(dash,0);
-        draw_cube(p,o,obj->size+pos_t(2*obj->falloff,2*obj->falloff,2*obj->falloff),cr);
+        draw_cube(p,o,obj->volumetric+pos_t(2*obj->falloff,2*obj->falloff,2*obj->falloff),cr);
         dash[0] = 1.0;
         dash[1] = 0.0;
         cr->set_dash(dash,0);

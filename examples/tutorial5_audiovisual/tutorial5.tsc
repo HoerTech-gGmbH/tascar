@@ -33,7 +33,7 @@
       <navmesh importraw="dungeon_navmesh.raw" zshift="1.6"/>
     </receiver>
     <!-- virtual microphone, used for convolution reverb input: --> 
-    <receiver name="room" type="omni" size="14.290183 8.490165 5.189308" falloff="1" image="false">
+    <receiver name="room" type="omni" volumetric="14.290183 8.490165 5.189308" falloff="1" image="false">
       <position>0 7.625526 -0.576602 2.612056</position>
     </receiver>
   </scene>

@@ -1,3 +1,4 @@
+0.197: Corrections for volumetric receiver rendering and sndfile audio plugin.
 0.196: Loudspeaker level calibration tool, diffuse sound field plugins.
 0.195: Bugfix of 2D-VBAP with irregular layouts, calibration of layout files.
 0.194: Addition of minor features: store variable names in datalogging, enforce audio settings, speaker delay.

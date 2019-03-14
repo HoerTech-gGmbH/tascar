@@ -16,9 +16,9 @@ SOURCES = omni cardioidmod door
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\
   dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
-  hrirconv joystick hossustain midicc2osc midictl rotator geopresets
+  hrirconv joystick hossustain midicc2osc midictl rotator
 
-TASCARMODSGUI = tracegui simplecontroller timedisplay
+TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\

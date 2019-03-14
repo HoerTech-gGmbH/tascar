@@ -10,6 +10,14 @@ namespace TASCAR {
   globalconfig_t config;
 }
 
+std::string TASCAR::to_string( double x )
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%g",x);
+  return ctmp;
+}
+
+
 bool file_exists( const std::string& fname )
 {
   if( access( fname.c_str(), F_OK ) != -1 )

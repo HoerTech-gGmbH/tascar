@@ -343,12 +343,15 @@ scene definition is shown below (example file \verb!example_basic.tsc!):
 \refelem{source} etc.\ are the elements and \textbf{name},
 \textbf{loop}, \textbf{reflectivity}, \textbf{width} etc.\ are their
 attributes. Figure \ref{fig:tascar_scene_example} shows the
-representation of this scene definition in \tascar{}. The main window\index{main window}
-contains a toolbar for file interactions, transport and time control,
-and controls for muting and soloing the different components of the
-scene (left panel). The scene map window contains a visual
-representation of the scene. Editing the scene via the graphical user
-interface is currently not possible.
+representation of this scene definition in \tascar{}.
+%
+The main window\index{main window} contains a toolbar for file
+interactions, transport and time control, and controls for muting and
+soloing the different components of the scene (left panel).
+%
+The scene map window contains a visual representation of the
+scene. Editing the scene via the graphical user interface is currently
+not possible.
 
 \begin{figure}[htb]
     \centering
@@ -950,7 +953,7 @@ Sound vertices will be discussed in the next section.
 \end{tscelements}
 
 Apart of sound sources which consist of one or more sound vertices, we
-also have a possibility to create diffuse sound fields which "fill"
+also have a possibility to create diffuse sound fields which ``fill''
 the space and are equally loud within a given volume (for example
 isotropic babble noise in a cafeteria, or remote traffic). 
 %
@@ -979,9 +982,18 @@ four renderer input ports (which are always generated with the diffuse
 sound field: \verb!render.<scenename>:<objectname>.n!) are connected
 to the audio player output ports \verb!@.0!, \verb!@.1!, \verb!@.2!
 and \verb!@.3!, where ''@'' is \verb!player.<scenename>:<objectname>!
-. Example :
-\tscexample[linerange={5-7},firstnumber=5]{example_diffuse}
+.
+%
 
+
+An example on how to add the \elem{addsndfile} audio plugin to a
+diffuse sound field can be found below:
+%
+\tscexample[linerange={5-9},firstnumber=5]{example_diffuse}
+
+The input signal of diffuse sound fields is the B-format (Furse-Malham
+normalization, channel order wxyz). For level metering, the RMS level
+of the w-channel is taken.
 
 
 \subsection{The {\tt <receiver .../>} element}\label{sec:receiver}\index{receiver}
@@ -1001,21 +1013,22 @@ We can route the output signals to playback system, e.g., loudspeakers
 or headphones.
 
 \begin{tscattributes}
-\indattr{connect}      & Connection to jack port                                                       \\
-\indattr{gain}         & Gain of jack port in dB; default: 0                                           \\
-\indattr{type}         & Receiver type (see below for a list of receiver types)                        \\
-\indattr{size}         & Size of box in which no distance-rule is applied (x,y,z in m); default: 0 0 0 \\
-\indattr{point}        & Render point sources (true|false); default: true                              \\
-\indattr{image}        & Render image sources (true|false); default: true                              \\
-\indattr{ismmin}       & Minimal ISM order to be rendered (0)                                          \\
-\indattr{ismmax}       & Maximal ISM order to be rendered ($2^{32}$)                                   \\
-\indattr{layers}       & List of active layers, or empty for all layers (default)                      \\
-\indattr{layerfadelen} & Fade length after layer activation or deactivation                            \\
-\indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                       \\
-\indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                        \\
-\indattr{falloff}      & Length of Hanning ramp in m, or -1 for normal distance model; default: -1     \\
-\indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                     \\
-\indattr{delaycomp}    & Subtract this value from delay in delayline (given in seconds)                \\
+\indattr{connect}      & Connection to jack port                                                                  \\
+\indattr{gain}         & Gain of jack port in dB; default: 0                                                      \\
+\indattr{type}         & Receiver type (see below for a list of receiver types)                                   \\
+\indattr{volumetric}   & Size of box for volumetric rendering (x,y,z in m); default: 0 0 0            \\
+\indattr{avgdist}      & Average distance which is assumed inside receiver boxes, or 0 to use $(\frac18 V)^{1/3}$ \\
+\indattr{point}        & Render point sources (true|false); default: true                                         \\
+\indattr{image}        & Render image sources (true|false); default: true                                         \\
+\indattr{ismmin}       & Minimal ISM order to be rendered (0)                                                     \\
+\indattr{ismmax}       & Maximal ISM order to be rendered ($2^{32}$)                                              \\
+\indattr{layers}       & List of active layers, or empty for all layers (default)                                 \\
+\indattr{layerfadelen} & Fade length after layer activation or deactivation                                       \\
+\indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                                  \\
+\indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                                   \\
+\indattr{falloff}      & Length of Hanning ramp in m, or -1 for normal distance model; default: -1                \\
+\indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                                \\
+\indattr{delaycomp}    & Subtract this value from delay in delayline (given in seconds)                           \\
 \end{tscattributes}
 
 \begin{tscelements}
@@ -1084,6 +1097,20 @@ and may help to visualize the role of the receiver.
   \caption{Typical structure of connections in \tascar{}.}
   \label{fig:renderer}
 \end{figure}
+
+If the \attr{volumetric} attribute defines a non-zero volume, then all
+sources within the receiver volume box are rendered with the same
+gain (volumetric rendering).
+%
+An average distance of $(\frac18 V)^{1/3}$ with the volume $V$ is
+assumed, or if \attr{avgdist} is provided, then the provided value is
+taken.
+%
+Outside the box either a von-Hann ramp is applied (\attr{falloff}
+$>0$), or the standard distance model is applied.
+%
+With volumetric receiver settings, the delay will depend on the
+relative distance between the receiver origin and the source position.
 
 \subsubsection{The {\tt <speaker .../>} element}\label{sec:speaker}\index{speaker}
 

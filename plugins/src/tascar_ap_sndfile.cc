@@ -74,11 +74,13 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
 
 void ap_sndfile_t::prepare( chunk_cfg_t& cf )
 {
+  TASCAR::audioplugin_base_t::prepare( cf );
   if( cf.n_channels < 1 )
     throw TASCAR::ErrMsg("At least one channel required.");
   sndf.clear();
-  for( uint32_t ch=0;ch<cf.n_channels;++ch)
+  for( uint32_t ch=0;ch<cf.n_channels;++ch){
     sndf.emplace_back(name,channel+ch,start,length);
+  }
   if( sndf[0].get_srate() != cf.f_sample ){
     std::string msg("Sample rate differs ("+name+"): ");
     char ctmp[1024];

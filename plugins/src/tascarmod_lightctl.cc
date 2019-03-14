@@ -142,7 +142,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   : xml_element_t( cfg.xmlsrc ),
     session( cfg.session),
     name("lightscene"),
-    fixtures(e,"fixture"),
+    fixtures(e,false,"fixture"),
     channels(3),
     master(1),
     parent_(NULL,""),

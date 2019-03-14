@@ -127,9 +127,9 @@ namespace TASCAR {
     bool has_caliblevel;
     double diffusegain;
     bool has_diffusegain;
-  public:
     double calibage;
     std::string calibdate;
+    bool has_calibdate;
   };
 
 }

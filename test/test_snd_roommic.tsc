@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene guiscale="6">
+    <source name="direct">
+      <sound><plugins><sine/></plugins></sound>
+      <position>0 1 0 0</position>
+    </source>
+    <receiver name="normal" type="omni"/>
+    <receiver name="size" type="omni" volumetric="2 2 2"/>
+    <receiver name="size1" type="omni" volumetric="4 4 4" avgdist="1"/>
+  </scene>
+</session>

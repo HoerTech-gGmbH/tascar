@@ -1,6 +1,8 @@
 #include "session.h"
 #include <complex>
 #include <mutex>
+#include <gtkmm.h>
+#include <gtkmm/window.h>
 
 class geopresets_t : public TASCAR::actor_module_t {
 public:
@@ -9,16 +11,23 @@ public:
   void update(uint32_t frame, bool );
   static int osc_setpreset(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   void setpreset( const std::string& );
+  static int osc_addposition(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  void addposition( const std::string&, const TASCAR::pos_t& pos );
+  static int osc_addorientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  void addorientation( const std::string&, const TASCAR::zyx_euler_t& ori );
+  void add_to_list(const std::string& preset);
 private:
   double time;
   double duration;
   double current_duration;
+  std::string startpreset;
   bool running;
   std::string id;
   bool enable;
   std::string preset;
   std::map<std::string,TASCAR::pos_t> positions;
   std::map<std::string,TASCAR::zyx_euler_t> orientations;
+  std::vector<std::string> allpresets;
   TASCAR::zyx_euler_t current_r;
   TASCAR::pos_t current_p;
   TASCAR::zyx_euler_t new_r;
@@ -29,6 +38,10 @@ private:
   std::complex<float> d_phase;
   std::mutex mtx;
   bool b_newpos;
+  bool showgui;
+  Gtk::Window* win;
+  Gtk::Box* box;
+  std::vector<Gtk::Button*> buttons;
 };
 
 int geopresets_t::osc_setpreset(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -36,6 +49,57 @@ int geopresets_t::osc_setpreset(const char *path, const char *types, lo_arg **ar
   if( user_data && (argc==1) && (types[0]=='s') )
     ((geopresets_t*)user_data)->setpreset(&(argv[0]->s));
   return 0;
+}
+
+int geopresets_t::osc_addposition(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc==4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') )
+    ((geopresets_t*)user_data)->addposition(&(argv[0]->s),TASCAR::pos_t(argv[1]->f,argv[2]->f,argv[3]->f));
+  return 0;
+}
+
+void geopresets_t::add_to_list(const std::string& s)
+{
+  bool is_in_list(false);
+  for( auto it=allpresets.begin();it!=allpresets.end();++it)
+    if( *it == s )
+      is_in_list = true;
+  if( !is_in_list ){
+    allpresets.push_back(s);
+    if( showgui ){
+      buttons.push_back(new Gtk::Button());
+      buttons.back()->set_label( s );
+      buttons.back()->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this,&geopresets_t::setpreset),s));
+      box->add(*(buttons.back()));
+      box->show_all();
+    }
+  }
+}
+
+void geopresets_t::addposition( const std::string& s, const TASCAR::pos_t& pos )
+{
+  mtx.lock();
+  positions[s] = pos;
+  b_newpos = true;
+  add_to_list(s);
+  mtx.unlock();
+}
+
+int geopresets_t::osc_addorientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc==4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') )
+    ((geopresets_t*)user_data)->addorientation(&(argv[0]->s),
+                                               TASCAR::zyx_euler_t(DEG2RAD * argv[1]->f,DEG2RAD * argv[2]->f,DEG2RAD * argv[3]->f));
+  return 0;
+}
+
+void geopresets_t::addorientation( const std::string& s, const TASCAR::zyx_euler_t& pos )
+{
+  mtx.lock();
+  orientations[s] = pos;
+  b_newpos = true;
+  add_to_list(s);
+  mtx.unlock();
 }
 
 void geopresets_t::setpreset( const std::string& s )
@@ -56,13 +120,17 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
     enable(true),
     phase(1.0f),
     d_phase(1.0f),
-    b_newpos(false)
+    b_newpos(false),
+    showgui(false),
+    win(NULL)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(enable);
   GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE(startpreset);
   if( id.empty() )
     id = "geopresets";
+  GET_ATTRIBUTE_BOOL(showgui);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -70,6 +138,7 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
       xml_element_t pres(sne);
       std::string name;
       pres.get_attribute("name",name);
+      allpresets.push_back(name);
       if( pres.has_attribute("position") ){
         TASCAR::pos_t pos;
         pres.get_attribute("position",pos);
@@ -84,12 +153,34 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
     }
   }
   session->add_method("/"+id,"s",&geopresets_t::osc_setpreset,this);
+  session->add_method("/"+id+"/addposition","sfff",&geopresets_t::osc_addposition,this);
+  session->add_method("/"+id+"/addorientation","sfff",&geopresets_t::osc_addorientation,this);
   session->add_double("/"+id+"/duration",&duration);
   session->add_bool("/"+id+"/enable",&enable);
+  setpreset(startpreset);
+  if( showgui ){
+    win = new Gtk::Window();
+    win->set_size_request(200,-1);
+    box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
+    win->add(*box);
+    for( auto p=allpresets.begin();p!=allpresets.end();++p){
+      buttons.push_back(new Gtk::Button());
+      buttons.back()->set_label( *p );
+      buttons.back()->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this,&geopresets_t::setpreset),*p));
+      box->add(*(buttons.back()));
+    }
+    win->show_all();
+  }
 }
 
 geopresets_t::~geopresets_t()
 {
+  if( showgui ){
+    for( auto p=buttons.begin();p!=buttons.end();++p)
+      delete (*p);
+    delete box;
+    delete win;
+  }
 }
 
 void geopresets_t::update(uint32_t tp_frame,bool tp_rolling)
@@ -99,8 +190,8 @@ void geopresets_t::update(uint32_t tp_frame,bool tp_rolling)
   if( b_newpos ){
     if( mtx.try_lock() ){
       current_duration = duration;
-      old_p = current_p;
-      old_r = current_r;
+      new_p = old_p = current_p;
+      new_r = old_r = current_r;
       auto pos_it(positions.find(preset));
       if( pos_it != positions.end() )
         new_p = pos_it->second;

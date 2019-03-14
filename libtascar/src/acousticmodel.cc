@@ -32,8 +32,8 @@ diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter
 
 void diffuse_t::preprocess(const TASCAR::transport_t& tp)
 {
-  rmslevel.update(audio.w());
   plugins.process_plugins( audio.wxyz, center, tp );
+  rmslevel.update(audio.w());
 }
 
 void diffuse_t::prepare( chunk_cfg_t& cf_ )
@@ -403,6 +403,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
 
 receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
   : receivermod_t(xmlsrc),
+    avgdist(0),
     render_point(true),
     render_diffuse(true),
     render_image(true),
@@ -432,7 +433,8 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
     starttime_samples(0),
     plugins(xmlsrc, name, "" )
 {
-  GET_ATTRIBUTE(size);
+  GET_ATTRIBUTE(volumetric);
+  GET_ATTRIBUTE(avgdist);
   get_attribute_bool("point",render_point);
   get_attribute_bool("diffuse",render_diffuse);
   get_attribute_bool("image",render_image);
@@ -445,6 +447,19 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
   GET_ATTRIBUTE(falloff);
   GET_ATTRIBUTE(delaycomp);
   GET_ATTRIBUTE(layerfadelen);
+  if( has_attribute( "size" ) ){
+    TASCAR::pos_t size;
+    GET_ATTRIBUTE(size);
+    volumetric = size;
+    if( avgdist <= 0 )
+      avgdist = pow(size.x*size.y*size.z,0.33333);
+    TASCAR::add_warning(std::string("For volumetric receiver rendering, use the \"volumetric\" attribute. The \"size\" attribute will be removed in the future. ") +
+                        std::string("To achieve same behavior as before, adjust \"avgdist\" to ") +
+                        TASCAR::to_string(pow(size.x*size.y*size.z,0.33333))+".");
+  }else{
+    if( avgdist <= 0 )
+      avgdist = 0.5*pow(volumetric.x*volumetric.y*volumetric.z,0.33333);
+  }
 }
 
 void receiver_t::prepare( chunk_cfg_t& cf_ )
@@ -527,24 +542,23 @@ void receiver_t::add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_ba
 void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img, gainmodel_t gainmodel )
 {
   
-  if( (size.x!=0)&&(size.y!=0)&&(size.z!=0) ){
+  if( (volumetric.x!=0)&&(volumetric.y!=0)&&(volumetric.z!=0) ){
     prel = psrc_physical;
     prel -= position;
     prel /= orientation;
     distance = prel.norm();
     shoebox_t box;
-    box.size = size;
-    double sizedist = pow(size.x*size.y*size.z,0.33333);
+    box.size = volumetric;
     double d(box.nextpoint(prel).norm());
     if( falloff > 0 )
-      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d/falloff)))/std::max(0.1,sizedist);
+      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d/falloff)))/std::max(0.1,avgdist);
     else{
       switch( gainmodel ){
       case GAIN_INVR :
-        gain = 1.0/std::max(1.0,d+sizedist);
+        gain = 1.0/std::max(1.0,d+avgdist);
         break;
       case GAIN_UNITY :
-        gain = 1.0/std::max(1.0,sizedist);
+        gain = 1.0/std::max(1.0,avgdist);
         break;
       }
     }
