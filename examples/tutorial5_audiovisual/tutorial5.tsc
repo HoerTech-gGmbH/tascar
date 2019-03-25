@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <session duration="3600" loop="true" license="CC BY SA" attribution="Giso Grimm">
   <!-- main scene: -->
-  <scene guiscale="25" mirrororder="1">
+  <scene guiscale="25" ismorder="1">
     <!-- some screams, recorded in the lab: -->
     <source name="screams">
       <sound name="0">

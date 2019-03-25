@@ -1,3 +1,4 @@
+0.199: Allow regular expressions in port names, various bugfixes.
 0.198: Implementation of VBAP3D receiver type.
 0.197: Corrections for volumetric receiver rendering and sndfile audio plugin.
 0.196: Loudspeaker level calibration tool, diffuse sound field plugins.

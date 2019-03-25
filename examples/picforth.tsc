@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <session duration="36000" srv_port="9877" loop="false" levelmeter_tc="7" levelmeter_weight="Z" levelmeter_min="35" levelmeter_range="40" license="CC BY-SA 3.0" attribution="Giso Grimm">
-  <scene name="hos" guiscale="14.1421356237" mirrororder="1">
+  <scene name="hos" guiscale="14.1421356237" ismorder="1">
     <source name="hille" color="#ff0000">
       <orientation>0 0 0 0</orientation>
       <sound connect="hille:out" maxdist="20" gainmodel="1" layers="1" gain="-6"/>

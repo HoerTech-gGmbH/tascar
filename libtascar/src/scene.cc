@@ -209,7 +209,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     description(""),
     name(""),
     c(340.0),
-    mirrororder(1),
+    ismorder(1),
     guiscale(200),
     guitrackobject(NULL),
     anysolo(0),
@@ -219,7 +219,13 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     GET_ATTRIBUTE(name);
     if( name.empty() )
       name = "scene";
-    GET_ATTRIBUTE(mirrororder);
+    if( has_attribute("mirrororder") ){
+      uint32_t mirrororder(1);
+      GET_ATTRIBUTE(mirrororder);
+      ismorder = mirrororder;
+      TASCAR::add_warning("Attribute \"mirrororder\" is deprecated and has been replaced by \"ismorder\".");
+    }
+    GET_ATTRIBUTE(ismorder);
     GET_ATTRIBUTE(guiscale);
     GET_ATTRIBUTE(guicenter);
     GET_ATTRIBUTE(c);
@@ -361,8 +367,8 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
     if( spk->spkpos.has_caliblevel || spk->spkpos.has_diffusegain || spk->spkpos.has_calibdate ){
       if( spk->spkpos.calibage > maxage )
         TASCAR::add_warning("Calibration of layout file \""+spk->spkpos.layout+"\" is " +
-                            TASCAR::to_string(spk->spkpos.calibage) +
-                            " days old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
+                            TASCAR::days_to_string(spk->spkpos.calibage) +
+                            " old (calibrated: "+spk->spkpos.calibdate+", receiver \""+get_name()+"\").",xmlsrc);
 
     }
   }

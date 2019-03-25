@@ -104,6 +104,7 @@ public:
   uint32_t inchannels;
   uint32_t outchannels;
   bool autoconnect;
+  std::string connect;
   std::string hrirfile;
   std::vector<channel_entry_t> matrix;
 };
@@ -120,6 +121,7 @@ hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(inchannels);
   GET_ATTRIBUTE(outchannels);
   get_attribute_bool("autoconnect",autoconnect);
+  GET_ATTRIBUTE(connect);
   GET_ATTRIBUTE(hrirfile);
   if( inchannels == 0 )
     throw TASCAR::ErrMsg("At least one input channel required");
@@ -182,6 +184,21 @@ void hrirconv_mod_t::prepare( chunk_cfg_t& cf_ )
             connect_in(ch,pn,true);
           }
         }
+      }
+    }
+  }else{
+    // use connect variable:
+    if( ! hrirconv_var_t::connect.empty() ){
+      const char **pp_ports(jack_get_ports(jc, hrirconv_var_t::connect.c_str(), NULL, 0));
+      if( pp_ports ){
+        uint32_t ip(0);
+        while( (*pp_ports) && (ip < get_num_input_ports())){
+          connect_in(ip,*pp_ports,true,true);
+          ++pp_ports;
+          ++ip;
+        }
+      }else{
+        TASCAR::add_warning("No port \""+hrirconv_var_t::connect+"\" found.");
       }
     }
   }

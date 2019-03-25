@@ -1,13 +1,15 @@
 Very simple joystick motion controller module.  The recognized
 attributes are:
 \begin{tscattributes}
-\indattr{maxnorm}     & Maximum distance of object from origin, or zero
-for no limit.                                           \\
-\indattr{x\_ax}        & Axis number for control         \\
-\indattr{x\_scale}     & Maximum velocity                \\
-\indattr{x\_min}       & minimum value                   \\
-\indattr{x\_max}       & maximum value                   \\
-\indattr{x\_threshold} & Threshold for noise suppression \\
+\indattr{maxnorm}      & Maximum distance of object from origin, or zero
+for no limit.                                                                       \\
+\indattr{x\_ax}        & Axis number for control                                    \\
+\indattr{x\_scale}     & Maximum velocity                                           \\
+\indattr{x\_min}       & minimum value                                              \\
+\indattr{x\_max}       & maximum value                                              \\
+\indattr{x\_threshold} & Threshold for noise suppression                            \\
+\indattr{preset}       & Preset selection, currently ``xbox360'' or ``logitechX3d'' \\
+\indattr{device}       & Device name, or empty (default) for auto-detection         \\
 \end{tscattributes}
 
 {\tt x\_} can be replaced by {\tt x\_} (movement forward/backward), {\tt y\_} (lateral

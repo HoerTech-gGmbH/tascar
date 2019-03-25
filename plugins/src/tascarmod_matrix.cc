@@ -61,12 +61,18 @@ matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
   }
   for(uint32_t k=0;k<inputs.size();++k){
     char ctmp[1024];
-    sprintf(ctmp,"in.%d%s",k,inputs[k].label.c_str());
+    if( inputs[k].label.empty() )
+      sprintf(ctmp,"in.%d",k);
+    else
+      sprintf(ctmp,"%s",inputs[k].label.c_str());
     add_input_port(ctmp);
   }
   for(uint32_t k=0;k<outputs.size();++k){
     char ctmp[1024];
-    sprintf(ctmp,"out.%d%s",k,outputs[k].label.c_str());
+    if( outputs[k].label.empty() )
+      sprintf(ctmp,"out.%d",k);
+    else
+      sprintf(ctmp,"%s",outputs[k].label.c_str());
     add_output_port(ctmp);
   }
   activate();

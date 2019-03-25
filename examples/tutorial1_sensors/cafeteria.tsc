@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <session name="tascar" duration="88" loop="false" srv_port="9996" license="CC BY SA 2.0" attribution="Giso Grimm">
   <!-- main scene setup -->
-  <scene name="cafeteria" mirrororder="2" guiscale="20" guicenter="12.3 -16.241478 1.1">
+  <scene name="cafeteria" ismorder="2" guiscale="20" guicenter="12.3 -16.241478 1.1">
     <source name="joanna" mute="false" solo="false" color="#0068ff" start="0" end="0">
       <position>0 13.2424955 -15.6749363 0</position>
       <orientation>0 -90 0 0</orientation>

@@ -180,8 +180,14 @@ After successful installation of the packages,
 applications menu, in the ``sounds and video'' section.
 
 \tascar{} is heavily relying on the jack audio connection kit
-(\url{http://jackaudio.org}). It is required to start jack
-before loading a session into \tascar{}.
+(\url{http://jackaudio.org}). It is required to start jack before
+loading a session into \tascar{}. Jack port names in \tascar{} are
+treated as POSIX regular expressions \cite{posixregexp}. If the
+\verb!^! or \verb!$! anchors are not present at the beginning or end
+of an expression, they are added at beginning and end of expression to
+achieve proper full name matching. Please note that some characters
+like \verb!.[?()! (and some more) have special meaning as regular
+expression and need to be quoted for correct matching.
 
 An acoustic environment can be loaded using either the command line by
 providing the file name, or via the file menu in the main window. If
@@ -465,10 +471,10 @@ Relative file names are relative to the directory containing the root
 
 \begin{tscattributes}
 \indattr{name}        & Name of scene (default: ``scene'')                        \\
-\indattr{guiscale}   & Display scaling in meter; default: 200                    \\
-\indattr{guicenter}  & Display center (x, y, z) in meter; default: 0 0 0         \\
+\indattr{guiscale}    & Display scaling in meter; default: 200                    \\
+\indattr{guicenter}   & Display center (x, y, z) in meter; default: 0 0 0         \\
 \indattr{guitracking} & Track an object in the scene map (default: use guicenter) \\
-\indattr{mirrororder} & Order of image source model (default: 1)                  \\
+\indattr{ismorder}    & Order of image source model (default: 1)                  \\
 \indattr{c}           & Speed of sound in m/s; default: 340                       \\
 \end{tscattributes}
 

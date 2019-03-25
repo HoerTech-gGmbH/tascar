@@ -468,7 +468,7 @@ void TASCAR::session_t::start()
   }
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
-      connect((*icon)->src,(*icon)->dest);
+      connect((*icon)->src,(*icon)->dest, true, true, true);
     }
     catch(const std::exception& e){
       add_warning(e.what());

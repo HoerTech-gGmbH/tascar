@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include "defs.h"
 #include "xmlconfig.h"
+#include <regex.h>
 
 static std::string errmsg("");
 
@@ -95,32 +96,96 @@ void jackc_portless_t::deactivate()
   active = false;
 }
 
-void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn, bool allowoutputsource )
+// work around for bug in jack library:
+void assert_valid_regexp( const std::string& exp )
 {
-  jack_port_t* srcport(jack_port_by_name( jc, src.c_str()));
-  if( allowoutputsource && srcport && (jack_port_flags( srcport ) & JackPortIsInput) ){
-    const char** cons(jack_port_get_all_connections( jc, srcport ));
-    const char** ocons(cons);
-    if( cons ){
-      while( *cons ){
-        if( jack_connect(jc, *cons, dest.c_str()) != 0 ){
-          errmsg = std::string("unable to connect port '")+std::string(*cons) + "' to '" + dest + "'.";
-          if( bwarn )
-            TASCAR::add_warning(errmsg);
-          else
-            throw TASCAR::ErrMsg(errmsg.c_str());
-        }
-        ++cons;
-      }
-      jack_free( ocons );
+  regex_t reg;
+  if( regcomp( &reg, exp.c_str(), REG_EXTENDED | REG_NOSUB ) != 0 )
+    throw TASCAR::ErrMsg("Invalid regular expression \""+exp+"\".");
+}
+
+std::vector<std::string> get_port_names_regexp( jack_client_t* jc, std::string name )
+{
+  if( name.size() && (name[0] != '^') )
+    name = "^"+name;
+  if( name.size() && (name[name.size()-1] != '$') )
+    name = name+"$";
+  std::vector<std::string> ports;
+  assert_valid_regexp(name);
+  const char **pp_ports(jack_get_ports(jc, name.c_str(), NULL, 0));
+  if( pp_ports ){
+    const char** p(pp_ports);
+    while( *p ){
+      ports.push_back( *p );
+      ++p;
     }
-  }else{
-    if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
-      errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
+    jack_free(pp_ports);
+  }
+  return ports;
+}
+
+/**
+   \brief Connect JACK ports
+
+   \param src Source port name (including client name)
+
+   \param dest Destination port name (including client name)
+
+   \param bwarn If true, report failure as warning, if false, throw 
+          an exception.
+
+   \param allowoutputsource If true, then if src is an output port, a
+          connection is made to all ports which connect to src.
+   
+   \param connectmulti Port names may contain globbing characters.
+          The number of connections is the maximum of src and dest
+          matches. If src contains fewer matches then dest, the src
+          matches are cyclically repeated (and accoringly for
+          destination matches).
+ */
+void jackc_portless_t::connect(const std::string& src, const std::string& dest, bool bwarn, bool allowoutputsource, bool connectmulti )
+{
+  if( connectmulti ){
+    // connect multiple ports simultaneously using globbing:
+    std::vector<std::string> ports_src(get_port_names_regexp( jc, src ));
+    std::vector<std::string> ports_dest(get_port_names_regexp( jc, dest ));
+    if( (ports_src.size() > 0) && (ports_dest.size() > 0) ){
+      for(uint32_t c=0;c<std::max(ports_src.size(),ports_dest.size());++c){
+        connect( ports_src[c % ports_src.size()], ports_dest[c % ports_dest.size()], bwarn, allowoutputsource );
+      }
+    }else{
       if( bwarn )
-        TASCAR::add_warning(errmsg);
+        TASCAR::add_warning("No connection \""+src+"\" to \""+dest+"\" found.");
       else
-        throw TASCAR::ErrMsg(errmsg.c_str());
+        throw TASCAR::ErrMsg("No connection \""+src+"\" to \""+dest+"\" found.");
+    }
+    //
+  }else{
+    jack_port_t* srcport(jack_port_by_name( jc, src.c_str()));
+    if( allowoutputsource && srcport && (jack_port_flags( srcport ) & JackPortIsInput) ){
+      const char** cons(jack_port_get_all_connections( jc, srcport ));
+      const char** ocons(cons);
+      if( cons ){
+        while( *cons ){
+          if( jack_connect(jc, *cons, dest.c_str()) != 0 ){
+            errmsg = std::string("unable to connect port '")+std::string(*cons) + "' to '" + dest + "'.";
+            if( bwarn )
+              TASCAR::add_warning(errmsg);
+            else
+              throw TASCAR::ErrMsg(errmsg.c_str());
+          }
+          ++cons;
+        }
+        jack_free( ocons );
+      }
+    }else{
+      if( jack_connect(jc,src.c_str(),dest.c_str()) != 0 ){
+        errmsg = std::string("unable to connect port '")+src + "' to '" + dest + "'.";
+        if( bwarn )
+          TASCAR::add_warning(errmsg);
+        else
+          throw TASCAR::ErrMsg(errmsg.c_str());
+      }
     }
   }
 }
@@ -223,7 +288,7 @@ void jackc_t::connect_in(unsigned int port,const std::string& pname,bool bwarn, 
     DEBUG(inPort.size());
     throw TASCAR::ErrMsg("Input port number not available (connect_in).");
   }
-  connect(pname,jack_port_name(inPort[port]),bwarn,allowoutputsource);
+  connect(pname,jack_port_name(inPort[port]),bwarn,allowoutputsource,true);
 }
 
 void jackc_t::connect_out(unsigned int port,const std::string& pname,bool bwarn)
@@ -233,7 +298,7 @@ void jackc_t::connect_out(unsigned int port,const std::string& pname,bool bwarn)
     DEBUG(outPort.size());
     throw TASCAR::ErrMsg("Output port number not available (connect_out).");
   }
-  connect(jack_port_name(outPort[port]),pname,bwarn);
+  connect(jack_port_name(outPort[port]),pname,bwarn,false,true);
 }
 
 jackc_transport_t::jackc_transport_t(const std::string& clientname)

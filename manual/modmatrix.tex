@@ -55,3 +55,16 @@ Example:
 </matrix>
 \end{lstlisting}
 
+An example with explicit matrix element definitions:
+\begin{lstlisting}[numbers=none]
+<matrix id="mix_out">
+  <input label="proc1_l" connect="adm1:out_1"/>
+  <input label="proc1_r" connect="adm1:out_2"/>
+  <input label="proc2_l" connect="adm2:out_1"/>
+  <input label="proc2_r" connect="adm2:out_2"/>
+  <output label="S_out_l" m="0.5 0 0.5 0"/>
+  <output label="S_out_r" m="0 0.5 0 0.5"/>
+  <output label="N_out_l" m="-0.5 0 0.5 0"/>
+  <output label="N_out_r" m="0 -0.5 0 0.5"/>
+</matrix>
+\end{lstlisting}

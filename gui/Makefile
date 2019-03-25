@@ -60,7 +60,6 @@ build/%: build/%.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 build/%.o: src/%.cc
-	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%_glade.h: src/%.glade

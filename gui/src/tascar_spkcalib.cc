@@ -25,6 +25,7 @@ public:
   void set_active(bool b);
   void set_active_diff(bool b);
   void get_levels();
+  void reset_levels();
   void saveas( const std::string& fname );
   void save();
   bool complete() const { return levelsrecorded && calibrated && calibrated_diff; };
@@ -103,6 +104,20 @@ calibsession_t::calibsession_t( const std::string& fname, double reflevel, const
 calibsession_t::~calibsession_t()
 {
   delete spkarray;
+}
+
+void calibsession_t::reset_levels()
+{
+  levelsrecorded = false;
+  if( !scenes.empty() ){
+    if( !scenes.back()->receivermod_objects.empty() ){
+      TASCAR::receivermod_base_speaker_t* recspk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(scenes.back()->receivermod_objects.back()->libdata));
+      if( recspk ){
+        for(uint32_t k=0;k<levels.size();++k)
+          recspk->spkpos[k].gain = 1.0;
+      }
+    }
+  }
 }
 
 void calibsession_t::get_levels()
@@ -269,6 +284,7 @@ protected:
   Glib::RefPtr<Gtk::Builder> m_refBuilder;
   //Signal handlers:
   void on_reclevels();
+  void on_resetlevels();
   void on_play();
   void on_stop();
   void on_dec_10();
@@ -343,6 +359,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
   refActionGroupMain->add_action("quit",sigc::mem_fun(*this, &spkcalib_t::on_quit));
   insert_action_group("main",refActionGroupMain);
   refActionGroupCalib->add_action("reclevels",sigc::mem_fun(*this, &spkcalib_t::on_reclevels));
+  refActionGroupCalib->add_action("resetlevels",sigc::mem_fun(*this, &spkcalib_t::on_resetlevels));
   refActionGroupCalib->add_action("play",sigc::mem_fun(*this, &spkcalib_t::on_play));
   refActionGroupCalib->add_action("stop",sigc::mem_fun(*this, &spkcalib_t::on_stop));
   refActionGroupCalib->add_action("inc_10",sigc::mem_fun(*this, &spkcalib_t::on_inc_10));
@@ -421,6 +438,18 @@ void spkcalib_t::on_reclevels()
   try{
     if( session )
       session->get_levels();
+    manage_act_grp_save();
+  }
+  catch( const std::exception& e ){
+    error_message(e.what());
+  }
+}
+
+void spkcalib_t::on_resetlevels()
+{
+  try{
+    if( session )
+      session->reset_levels();
     manage_act_grp_save();
   }
   catch( const std::exception& e ){

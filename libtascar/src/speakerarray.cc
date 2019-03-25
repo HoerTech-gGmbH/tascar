@@ -308,6 +308,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     decorr(true),
     densitycorr(true),
     caliblevel(50000),
+    diffusegain(1.0),
     calibage(0)
 {
   elayout.GET_ATTRIBUTE(decorr_length);
@@ -323,7 +324,9 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     std::time_t now(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
     std::tm tcalib;
     memset(&tcalib,0,sizeof(tcalib));
-    const char* msg(strptime(calibdate.c_str(),"%Y-%m-%d",&tcalib));
+    const char* msg(strptime(calibdate.c_str(),"%Y-%m-%d %H:%M:%S",&tcalib));
+    if( !msg )
+      msg = strptime(calibdate.c_str(),"%Y-%m-%d",&tcalib);
     if( msg ){
       std::time_t ctcalib(mktime(&tcalib));
       calibage = difftime(now,ctcalib)/(24*3600);

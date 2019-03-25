@@ -3,7 +3,7 @@
 basic test: sound propagation, 1m
 -->
 <session license="CC-0">
-  <scene mirrororder="2">
+  <scene ismorder="2">
     <source>
       <sound x="1" ismmin="1" ismmax="1"/>
     </source>

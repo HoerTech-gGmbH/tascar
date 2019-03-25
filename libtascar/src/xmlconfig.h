@@ -41,6 +41,8 @@ namespace TASCAR {
 
   std::string to_string( double x );
 
+  std::string days_to_string( double x );
+
   void add_warning( std::string msg, xmlpp::Element* e = NULL );
   
   std::string tscbasename( const std::string& s );

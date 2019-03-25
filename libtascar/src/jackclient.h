@@ -47,7 +47,7 @@ public:
   std::string get_client_name();
   int get_srate() { return srate; };
   int get_fragsize() { return fragsize; };
-  void connect(const std::string& src, const std::string& dest, bool btry=false, bool allowoutputsource=false);
+  void connect(const std::string& src, const std::string& dest, bool btry=false, bool allowoutputsource=false, bool connectmulti=false);
   uint32_t get_xruns() const { return xruns;};
   uint32_t get_xrun_latency() const { return xrun_latency;};
   float get_cpu_load() const { return jack_cpu_load(jc);};

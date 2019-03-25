@@ -392,7 +392,7 @@ namespace TASCAR {
       std::vector<mask_object_t*> masks;
       std::vector<object_t*> all_objects;
       std::vector<object_t*> find_object(const std::string& pattern);
-      uint32_t mirrororder;
+      uint32_t ismorder;
       double guiscale;
       pos_t guicenter;
       TASCAR::Scene::object_t* guitrackobject;

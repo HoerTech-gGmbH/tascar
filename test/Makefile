@@ -11,6 +11,9 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_snd_door4 test_snd_roommic test_fail_vbap3d_flat		\
 	test_notfail_vbap3d_3d test_level_vbap3d
 
+TEST_SND=$(wildcard test_snd*.tsc)
+
+
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
@@ -138,6 +141,9 @@ leak_test_pos%: test_pos%.tsc expected_pos%.wav
 
 leak_%: %.tsc
 	$(LIBPATH) valgrind --leak-check=full  --show-leak-kinds=all $(RENDERFILE) -i zeros.wav -o $*.wav -d -f 64 $<
+
+
+all_init: $(patsubst %,init_%,$(TEST_SND:.tsc=))
 
 init_%: %.tsc
 	$(LIBPATH) valgrind --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -d -f 64 $<

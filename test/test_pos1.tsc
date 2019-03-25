@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <session license="CC-0">
-  <scene mirrororder="1">
+  <scene ismorder="1">
     <face name="f1" vertices="0  1  1 
 			      0  1 -1
 			      0 -1 -1

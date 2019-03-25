@@ -21,6 +21,7 @@
 #define SCENE_MANAGER_H
 
 #include "session.h"
+#include <mutex>
 
 class scene_manager_t 
 {
@@ -31,7 +32,8 @@ public:
   void scene_destroy();
   void scene_new();
 protected:
-  pthread_mutex_t mtx_scene;
+  std::mutex session_mutex;
+  //pthread_mutex_t mtx_scene;
   TASCAR::session_t* session;
 };
 

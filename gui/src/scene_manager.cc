@@ -16,7 +16,6 @@ std::string file2str(const std::string& fname)
 scene_manager_t::scene_manager_t()
   : session(NULL)
 {
-  pthread_mutex_init( &mtx_scene, NULL );
 }
 
 scene_manager_t::~scene_manager_t()
@@ -27,54 +26,40 @@ scene_manager_t::~scene_manager_t()
 
 void scene_manager_t::scene_load(const std::string& fname)
 {
-  pthread_mutex_lock( &mtx_scene );
-  try{
-    if( session )
-      delete session;
-    session = NULL;
-    if( fname.size() ){
-      session = new TASCAR::session_t( fname, TASCAR::xml_doc_t::LOAD_FILE, fname );
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session )
+    delete session;
+  session = NULL;
+  if( fname.size() ){
+    session = new TASCAR::session_t( fname, TASCAR::xml_doc_t::LOAD_FILE, fname );
+    try{
       session->start();
     }
+    catch( ... ){
+      delete session;
+      session = NULL;
+      throw;
+    }
   }
-  catch( ... ){
-    pthread_mutex_unlock( &mtx_scene );
-    throw;
-  }
-  pthread_mutex_unlock( &mtx_scene );
 }
 
 void scene_manager_t::scene_new()
 {
-  pthread_mutex_lock( &mtx_scene );
-  try{
-    if( session )
-      delete session;
-    session = new TASCAR::session_t();
-    session->start();
-  }
-  catch( ... ){
-    pthread_mutex_unlock( &mtx_scene );
-    throw;
-  }
-  pthread_mutex_unlock( &mtx_scene );
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session )
+    delete session;
+  session = new TASCAR::session_t();
+  session->start();
 }
 
 void scene_manager_t::scene_destroy()
 {
-  pthread_mutex_lock( &mtx_scene );
-  try{
-    if( session ){
-      session->stop();
-      delete session;
-    }
-    session = NULL;
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session ){
+    session->stop();
+    delete session;
   }
-  catch( ... ){
-    pthread_mutex_unlock( &mtx_scene );
-    throw;
-  }
-  pthread_mutex_unlock( &mtx_scene );
+  session = NULL;
 }
 
 /*

@@ -18,6 +18,19 @@ std::string TASCAR::to_string( double x )
 }
 
 
+std::string TASCAR::days_to_string( double x )
+{
+  int d(floor(x));
+  int h(floor(24*(x-d)));
+  char ctmp[1024];
+  if( d==1 )
+    sprintf(ctmp,"1 day %d hours",h);
+  else
+    sprintf(ctmp,"%d days %d hours",d,h);
+  return ctmp;
+}
+
+
 bool file_exists( const std::string& fname )
 {
   if( access( fname.c_str(), F_OK ) != -1 )

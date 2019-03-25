@@ -27,7 +27,7 @@ TASCAR::render_core_t::~render_core_t()
 
 void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max )
 {
-  mirrororder = ism_max;
+  ismorder = ism_max;
   for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
     (*it)->ismmin = ism_min;
     (*it)->ismmax = ism_max;
@@ -104,7 +104,7 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       pmasks.push_back(*it);
     }
     // create the world, before first process callback is called:
-    world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffuse_sound_fields,reflectors,obstacles,receivers,pmasks,mirrororder);
+    world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffuse_sound_fields,reflectors,obstacles,receivers,pmasks,ismorder);
     total_pointsources = world->get_total_pointsource();
     total_diffuse_sound_fields = world->get_total_diffuse_sound_field();
     ambbuf = new TASCAR::amb1wave_t( n_fragment );

@@ -25,10 +25,10 @@ controller_t::~controller_t()
   stop_service();
 }
 
-class ctl_joystick_t : public controller_t {
+class ctl_gamepad_t : public controller_t {
 public:
-  ctl_joystick_t(const std::string& device);
-  ~ctl_joystick_t();
+  ctl_gamepad_t(const std::string& device);
+  ~ctl_gamepad_t();
   virtual void service();
 private:
   int joy_fd;
@@ -46,7 +46,7 @@ std::string devices[NUMDEV] = {
   "/dev/js3"
 };
 
-ctl_joystick_t::ctl_joystick_t(const std::string& device)
+ctl_gamepad_t::ctl_gamepad_t(const std::string& device)
   : joy_fd(-1)
 {
   if( device.empty() ){
@@ -54,24 +54,24 @@ ctl_joystick_t::ctl_joystick_t(const std::string& device)
   while( (dev < NUMDEV) && ((joy_fd = open(devices[dev].c_str(), O_RDONLY))==-1) ){
     dev++;
     if( dev >= NUMDEV ){
-      TASCAR::add_warning("Warning: Unable to find a valid joystick device.");
+      TASCAR::add_warning("Warning: Unable to find a valid gamepad device.");
       return;
     }
   }
   }else{
     joy_fd = open(device.c_str(), O_RDONLY);
     if( joy_fd == -1 )
-      TASCAR::add_warning("Warning: Unable to find a valid joystick device at \""+device+"\".");
+      TASCAR::add_warning("Warning: Unable to find a valid gamepad device at \""+device+"\".");
   }
 }
 
-ctl_joystick_t::~ctl_joystick_t()
+ctl_gamepad_t::~ctl_gamepad_t()
 {
   if( joy_fd != -1 )
     close( joy_fd );
 }
 
-void ctl_joystick_t::service()
+void ctl_gamepad_t::service()
 {
   if( joy_fd == -1 )
     return;
@@ -93,7 +93,7 @@ void ctl_joystick_t::service()
       }
     }
     if (FD_ISSET(joy_fd, &readers)) {
-      /* read the joystick state */
+      /* read the gamepad state */
       if( sizeof(struct js_event) == read(joy_fd, &js, sizeof(struct js_event)) ){
 	/* see what to do with the event */
 	switch (js.type & ~JS_EVENT_INIT){
@@ -138,10 +138,10 @@ void axprop_t::proc(uint32_t ax_,double val)
   }
 }
 
-class joystick_var_t : public TASCAR::actor_module_t
+class gamepad_var_t : public TASCAR::actor_module_t
 {
 public:
-  joystick_var_t( const TASCAR::module_cfg_t& cfg );
+  gamepad_var_t( const TASCAR::module_cfg_t& cfg );
 protected:
   double d_tilt;
   TASCAR::pos_t velocity;
@@ -154,7 +154,7 @@ protected:
   std::string device;
 };
 
-joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
+gamepad_var_t::gamepad_var_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t( cfg, true ),
     d_tilt(0),
     x(velocity.x,1),
@@ -225,10 +225,10 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
   }
 }
 
-class joystick_t : public joystick_var_t, public ctl_joystick_t {
+class gamepad_t : public gamepad_var_t, public ctl_gamepad_t {
 public:
-  joystick_t( const TASCAR::module_cfg_t& cfg );
-  virtual ~joystick_t();
+  gamepad_t( const TASCAR::module_cfg_t& cfg );
+  virtual ~gamepad_t();
   virtual void axis(uint32_t a, double value);
   virtual void button(uint32_t b, bool value);
   virtual void timeout() {};
@@ -238,9 +238,9 @@ private:
   lo_address lo_addr;
 };
 
-joystick_t::joystick_t( const TASCAR::module_cfg_t& cfg )
-  : joystick_var_t( cfg ),
-    ctl_joystick_t( device ),
+gamepad_t::gamepad_t( const TASCAR::module_cfg_t& cfg )
+  : gamepad_var_t( cfg ),
+    ctl_gamepad_t( device ),
     lo_addr(NULL)
 {
   if( !url.empty() )
@@ -248,13 +248,13 @@ joystick_t::joystick_t( const TASCAR::module_cfg_t& cfg )
   start_service();
 }
 
-void joystick_t::prepare( chunk_cfg_t& cf_ )
+void gamepad_t::prepare( chunk_cfg_t& cf_ )
 {
   actor_module_t::prepare(cf_);
   vscale = (double)n_fragment/(double)f_sample;
 }
 
-void joystick_t::update(uint32_t tp_frame,bool running)
+void gamepad_t::update(uint32_t tp_frame,bool running)
 {
   TASCAR::zyx_euler_t r(rotvel);
   r *= vscale;
@@ -273,13 +273,13 @@ void joystick_t::update(uint32_t tp_frame,bool running)
   }
 }
 
-joystick_t::~joystick_t()
+gamepad_t::~gamepad_t()
 {
   if( lo_addr )
     lo_address_free(lo_addr);
 }
 
-void joystick_t::axis(uint32_t a, double value)
+void gamepad_t::axis(uint32_t a, double value)
 {
   if( lo_addr )
     lo_send( lo_addr, "/axis", "if", a, value );
@@ -291,7 +291,7 @@ void joystick_t::axis(uint32_t a, double value)
   tilt.proc(a,value);
 }
 
-void joystick_t::button(uint32_t a, bool value)
+void gamepad_t::button(uint32_t a, bool value)
 {
   if( lo_addr )
     lo_send( lo_addr, "/button", "ii", a, value );
@@ -299,7 +299,7 @@ void joystick_t::button(uint32_t a, bool value)
     std::cout << "button " << a << "  val " << value << std::endl;
 }
 
-REGISTER_MODULE(joystick_t);
+REGISTER_MODULE(gamepad_t);
 
 /*
  * Local Variables:

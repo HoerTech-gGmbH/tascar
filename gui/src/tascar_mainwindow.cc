@@ -162,55 +162,61 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
 
 bool tascar_window_t::on_timeout()
 {
-  if( session ){
-    if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
-      Glib::RefPtr<Gdk::Window> win = scene_map->get_window();
-      if (win){
-        Gdk::Rectangle r(0,0, 
-                         scene_map->get_allocation().get_width(),
-                         scene_map->get_allocation().get_height() );
-        win->invalidate_rect(r, true);
+  if( session_mutex.try_lock() ){
+    if( session ){
+      if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
+        Glib::RefPtr<Gdk::Window> win = scene_map->get_window();
+        if (win){
+          Gdk::Rectangle r(0,0, 
+                           scene_map->get_allocation().get_width(),
+                           scene_map->get_allocation().get_height() );
+          win->invalidate_rect(r, true);
+        }
+        if( source_panel )
+          source_panel->invalidate_win();
+        if( active_source_ctl )
+          active_source_ctl->invalidate_win();
+        if( session )
+          draw.set_time(session->tp_get_time());
+        timeline->set_value(draw.get_time());
+        pthread_mutex_unlock( &mtx_draw );
       }
-      if( source_panel )
-        source_panel->invalidate_win();
-      if( active_source_ctl )
-        active_source_ctl->invalidate_win();
-      if( session )
-        draw.set_time(session->tp_get_time());
-      timeline->set_value(draw.get_time());
-      pthread_mutex_unlock( &mtx_draw );
     }
+    if( sessionquit )
+      hide();
+    session_mutex.unlock();
   }
-  if( sessionquit )
-    hide();
   return true;
 }
 
 bool tascar_window_t::on_timeout_statusbar()
 {
-  if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
-    char cmp[1024];
-    if( session && session->is_running() ){
-      sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d",
-              (long int)(session->scenes.size()),
-              session->get_active_pointsources(),session->get_total_pointsources(),
-              session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields());
-      sessionloaded = true;
-    }else{
-      sprintf(cmp,"No session loaded.");
-      if( sessionloaded )
-        reset_gui();
-      sessionloaded = false;
+  if( session_mutex.try_lock() ){
+    if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
+      char cmp[1024];
+      if( session && session->is_running() ){
+        sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d",
+                (long int)(session->scenes.size()),
+                session->get_active_pointsources(),session->get_total_pointsources(),
+                session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields());
+        sessionloaded = true;
+      }else{
+        sprintf(cmp,"No session loaded.");
+        if( sessionloaded )
+          reset_gui();
+        sessionloaded = false;
+      }
+      statusbar_main->remove_all_messages();
+      statusbar_main->push(cmp);
+      if( session && session->is_running() ){
+        if( source_panel )
+          source_panel->update();
+        if( active_source_ctl )
+          active_source_ctl->update();
+      }
+      pthread_mutex_unlock( &mtx_draw );
     }
-    statusbar_main->remove_all_messages();
-    statusbar_main->push(cmp);
-    if( session && session->is_running() ){
-      if( source_panel )
-        source_panel->update();
-      if( active_source_ctl )
-        active_source_ctl->update();
-    }
-    pthread_mutex_unlock( &mtx_draw );
+    session_mutex.unlock();
   }
   return true;
 }
@@ -272,9 +278,12 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           TASCAR::pos_t p_o(-0.4*width,-0.4*height,0);
           p_o /= wscale;
           p_o = draw.view.inverse(p_o);
-          TASCAR::pos_t p_x(0.1*draw.view.scale,0,0);
-          TASCAR::pos_t p_y(0,0.1*draw.view.scale,0);
-          TASCAR::pos_t p_z(0,0,0.1*draw.view.scale);
+          float scale(std::min(pow(10.0,ceil(log10(0.1*draw.view.scale))),
+                               std::min(2.0*pow(10.0,ceil(log10(0.05*draw.view.scale))),
+                                        5.0*pow(10.0,ceil(log10(0.02*draw.view.scale))))));
+          TASCAR::pos_t p_x(scale,0,0);
+          TASCAR::pos_t p_y(0,scale,0);
+          TASCAR::pos_t p_z(0,0,scale);
           p_x += p_o;
           p_y += p_o;
           p_z += p_o;
@@ -282,6 +291,14 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           p_x = draw.view(p_x);
           p_y = draw.view(p_y);
           p_z = draw.view(p_z);
+          cr->move_to( p_o.x,-p_o.y );
+          char ctmp[1024];
+          if( scale >= 1000 )
+            sprintf(ctmp,"%2.5g km (%2.5g)",0.001*scale,2*draw.view.scale);
+          else
+            sprintf(ctmp,"%2.5g m (%2.5g)",scale,2*draw.view.scale);
+          cr->set_source_rgb(0,0,0);
+          cr->show_text(ctmp);
           cr->set_source_rgb(1,0,0);
           draw.draw_edge(cr,p_o,p_x);
           cr->stroke();
@@ -338,56 +355,65 @@ void tascar_window_t::load(const std::string& fname)
 
 void tascar_window_t::on_active_track_changed()
 {
-  if( session && (session->scenes.size() > selected_scene) ){
-    if( active_track->get_active() ){
-      if( active_object )
-        session->scenes[selected_scene]->guitrackobject = active_object;
-    }else{
-      session->scenes[selected_scene]->guitrackobject = NULL;
+  if( session_mutex.try_lock() ){
+    if( session && (session->scenes.size() > selected_scene) ){
+      if( active_track->get_active() ){
+        if( active_object )
+          session->scenes[selected_scene]->guitrackobject = active_object;
+      }else{
+        session->scenes[selected_scene]->guitrackobject = NULL;
+      }
     }
+    session_mutex.unlock();
   }
 }
 
 void tascar_window_t::on_active_selector_changed()
 {
-  if( session && (session->scenes.size() > selected_scene) ){
-    // do something.
-    std::string sc(active_selector->get_active_text());
-    if( sc == "(none)" )
-      active_object = NULL;
-    else{
-      std::vector<TASCAR::Scene::object_t*> match(session->scenes[selected_scene]->find_object(sc));
-      if( match.size() )
-        active_object = match[0];
-      else
+  if( session_mutex.try_lock() ){
+    if( session && (session->scenes.size() > selected_scene) ){
+      // do something.
+      std::string sc(active_selector->get_active_text());
+      if( sc == "(none)" )
         active_object = NULL;
+      else{
+        std::vector<TASCAR::Scene::object_t*> match(session->scenes[selected_scene]->find_object(sc));
+        if( match.size() )
+          active_object = match[0];
+        else
+          active_object = NULL;
+      }
+      update_selection_info();
     }
-    update_selection_info();
+    draw.select_object( active_object );
+    session_mutex.unlock();
   }
-  draw.select_object( active_object );
 }  
 
 void tascar_window_t::on_scene_selector_changed()
 {
-  if( session ){
-    std::string sc(scene_selector->get_active_text());
-    for(unsigned int k=0;k<session->scenes.size();k++)
-      if( session->scenes[k]->name == sc )
-        selected_scene = k;
-  }else{
-    selected_scene = 0;
-  }
-  if( session && (session->scenes.size() > selected_scene) ){
-    draw.set_scene( session->scenes[selected_scene] );
-    source_panel->set_scene( session->scenes[selected_scene], session );
-    draw.view.set_scale( session->scenes[selected_scene]->guiscale );
-    // fill object list:
-    update_levelmeter_settings();
-    update_object_list();
-  }else{
-    draw.set_scene( NULL );
-    source_panel->set_scene( NULL, NULL );
-    draw.view.set_scale(20);
+  if( session_mutex.try_lock() ){
+    if( session ){
+      std::string sc(scene_selector->get_active_text());
+      for(unsigned int k=0;k<session->scenes.size();k++)
+        if( session->scenes[k]->name == sc )
+          selected_scene = k;
+    }else{
+      selected_scene = 0;
+    }
+    if( session && (session->scenes.size() > selected_scene) ){
+      draw.set_scene( session->scenes[selected_scene] );
+      source_panel->set_scene( session->scenes[selected_scene], session );
+      draw.view.set_scale( session->scenes[selected_scene]->guiscale );
+      // fill object list:
+      update_levelmeter_settings();
+      update_object_list();
+    }else{
+      draw.set_scene( NULL );
+      source_panel->set_scene( NULL, NULL );
+      draw.view.set_scale(20);
+    }
+    session_mutex.unlock();
   }
 }  
 
@@ -552,6 +578,7 @@ void tascar_window_t::on_menu_file_new()
 
 void tascar_window_t::on_menu_file_exportcsv()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     Gtk::FileChooserDialog dialog("Please choose a destination",
                                   Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -607,6 +634,7 @@ void tascar_window_t::on_menu_file_exportcsv()
 
 void tascar_window_t::on_menu_file_exportcsvsounds()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     Gtk::FileChooserDialog dialog("Please choose a destination",
                                   Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -657,6 +685,7 @@ void tascar_window_t::on_menu_file_exportcsvsounds()
 
 void tascar_window_t::on_menu_file_exportpdf()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     Gtk::FileChooserDialog dialog("Please choose a destination",
                                   Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -695,6 +724,7 @@ void tascar_window_t::on_menu_file_exportpdf()
 
 void tascar_window_t::on_menu_file_exportacmodel()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     Gtk::FileChooserDialog dialog("Please choose a destination",
                                   Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -825,6 +855,7 @@ void tascar_window_t::on_menu_file_open_example()
 
 void tascar_window_t::on_menu_view_meter_rmspeak()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session )
     session->levelmeter_mode = "rmspeak";
   update_levelmeter_settings();
@@ -832,6 +863,7 @@ void tascar_window_t::on_menu_view_meter_rmspeak()
 
 void tascar_window_t::on_menu_view_meter_rms()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session )
     session->levelmeter_mode = "rms";
   update_levelmeter_settings();
@@ -839,6 +871,7 @@ void tascar_window_t::on_menu_view_meter_rms()
 
 void tascar_window_t::on_menu_view_meter_peak()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session )
     session->levelmeter_mode = "peak";
   update_levelmeter_settings();
@@ -846,6 +879,7 @@ void tascar_window_t::on_menu_view_meter_peak()
 
 void tascar_window_t::on_menu_view_meter_percentile()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session )
     session->levelmeter_mode = "percentile";
   update_levelmeter_settings();
@@ -868,11 +902,14 @@ void tascar_window_t::on_menu_view_viewport_rotzcw()
 
 void tascar_window_t::on_menu_view_viewport_setref()
 {
-  if( session && (session->scenes.size() > selected_scene) )
+  if( session_mutex.try_lock() ){
+    if( session && (session->scenes.size() > selected_scene) )
       session->scenes[selected_scene]->guitrackobject = NULL;
-  draw.select_object(NULL);
-  draw.view.ref = TASCAR::pos_t();
-  active_track->set_active(false);
+    draw.select_object(NULL);
+    draw.view.ref = TASCAR::pos_t();
+    active_track->set_active(false);
+    session_mutex.unlock();
+  }
 }
 
 void tascar_window_t::on_menu_view_viewport_xyz()
@@ -892,66 +929,78 @@ void tascar_window_t::on_menu_view_viewport_yz()
 
 void tascar_window_t::on_menu_view_show_warnings()
 {
-  std::string v;
-  for(std::vector<std::string>::const_iterator it=warnings.begin();it!=warnings.end();++it){
-    v+= "Warning: " + *it + "\n";
+  if( session_mutex.try_lock() ){
+    std::string v;
+    for(std::vector<std::string>::const_iterator it=warnings.begin();it!=warnings.end();++it){
+      v+= "Warning: " + *it + "\n";
+    }
+    if( session ){
+      v+= session->show_unknown();
+      session->validate_attributes(v);
+    }
+    text_warnings->get_buffer()->set_text(v);
+    if( !v.empty() )
+      notebook->set_current_page(5);
+    session_mutex.unlock();
   }
-  if( session ){
-    v+= session->show_unknown();
-    session->validate_attributes(v);
-  }
-  text_warnings->get_buffer()->set_text(v);
-  if( !v.empty() )
-    notebook->set_current_page(5);
 }
 
 void tascar_window_t::on_menu_view_zoom_in()
 {
-  if( session && (session->scenes.size() > selected_scene) ){
-    draw.view.set_scale(session->scenes[selected_scene]->guiscale /= 1.1892071150027210269);
+  if( session_mutex.try_lock()){
+    if( session && (session->scenes.size() > selected_scene) ){
+      draw.view.set_scale(session->scenes[selected_scene]->guiscale /= 1.1892071150027210269);
+    }
+    session_mutex.unlock();
   }
 }
 
 void tascar_window_t::on_menu_view_zoom_out()
 {
-  if( session && (session->scenes.size() > selected_scene) ){
-    draw.view.set_scale(session->scenes[selected_scene]->guiscale *= 1.1892071150027210269);
+  if( session_mutex.try_lock()){
+    if( session && (session->scenes.size() > selected_scene) ){
+      draw.view.set_scale(session->scenes[selected_scene]->guiscale *= 1.1892071150027210269);
+    }
+    session_mutex.unlock();
   }
 }
 
 bool tascar_window_t::on_map_clicked(GdkEventButton* e)
 {
-  if( session && (session->scenes.size() > selected_scene) ){
-    if( e->type == GDK_BUTTON_PRESS ){
-      Gtk::Allocation allocation = scene_map->get_allocation();
-      const int width = allocation.get_width();
-      const int height = allocation.get_height();
-      TASCAR::pos_t mousepos(e->x-0.5*width,-(e->y-0.5*height),0);
-      double wscale(0.5*std::max(height,width));
-      mousepos*=1.0/wscale;
-      if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
-        double dmin(DBL_MAX);
-        TASCAR::Scene::object_t* obj_nearest(NULL);
-        for( std::vector<TASCAR::Scene::object_t*>::iterator it=session->scenes[selected_scene]->all_objects.begin();
-             it!=session->scenes[selected_scene]->all_objects.end();++it){
-          TASCAR::pos_t opos(draw.view((*it)->c6dof.position));
-          opos.z = 0;
-          double d(distance(mousepos,opos));
-          if( (d < dmin) && (d*wscale < 30) ){
-            dmin = d;
-            obj_nearest = *it;
+  if( session_mutex.try_lock() ){
+    if( session && (session->scenes.size() > selected_scene) ){
+      if( e->type == GDK_BUTTON_PRESS ){
+        Gtk::Allocation allocation = scene_map->get_allocation();
+        const int width = allocation.get_width();
+        const int height = allocation.get_height();
+        TASCAR::pos_t mousepos(e->x-0.5*width,-(e->y-0.5*height),0);
+        double wscale(0.5*std::max(height,width));
+        mousepos*=1.0/wscale;
+        if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
+          double dmin(DBL_MAX);
+          TASCAR::Scene::object_t* obj_nearest(NULL);
+          for( std::vector<TASCAR::Scene::object_t*>::iterator it=session->scenes[selected_scene]->all_objects.begin();
+               it!=session->scenes[selected_scene]->all_objects.end();++it){
+            TASCAR::pos_t opos(draw.view((*it)->c6dof.position));
+            opos.z = 0;
+            double d(distance(mousepos,opos));
+            if( (d < dmin) && (d*wscale < 30) ){
+              dmin = d;
+              obj_nearest = *it;
+            }
           }
+          if( obj_nearest ){
+            //active selection
+            active_object = obj_nearest;
+            active_selector->set_active_text(active_object->get_name());
+            update_selection_info();
+            draw.select_object( active_object );
+          }
+          pthread_mutex_unlock( &mtx_draw );
         }
-        if( obj_nearest ){
-          //active selection
-          active_object = obj_nearest;
-          active_selector->set_active_text(active_object->get_name());
-          update_selection_info();
-          draw.select_object( active_object );
-        }
-        pthread_mutex_unlock( &mtx_draw );
       }
     }
+    session_mutex.unlock();
   }
   return false;
 }
@@ -977,11 +1026,14 @@ bool tascar_window_t::on_map_scroll(GdkEventScroll * e)
 
 void tascar_window_t::on_time_changed()
 {
-  double ltime(timeline->get_value());
-  if( session ){
-    if( ltime != draw.get_time() ){
-      session->tp_locate(ltime);
+  if( session_mutex.try_lock()){
+    double ltime(timeline->get_value());
+    if( session ){
+      if( ltime != draw.get_time() ){
+        session->tp_locate(ltime);
+      }
     }
+    session_mutex.unlock();
   }
 }
 
@@ -1017,6 +1069,7 @@ void tascar_window_t::on_menu_help_about()
 
 void tascar_window_t::on_menu_transport_play()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     session->tp_start();
   }
@@ -1024,6 +1077,7 @@ void tascar_window_t::on_menu_transport_play()
 
 void tascar_window_t::on_menu_transport_stop()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     session->tp_stop();
   }
@@ -1031,6 +1085,7 @@ void tascar_window_t::on_menu_transport_stop()
 
 void tascar_window_t::on_menu_transport_rewind()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     double cur_time(std::max(0.0,session->tp_get_time()-10.0));
     session->tp_locate(cur_time);
@@ -1039,6 +1094,7 @@ void tascar_window_t::on_menu_transport_rewind()
 
 void tascar_window_t::on_menu_transport_forward()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     double cur_time(std::min(session->duration,session->tp_get_time()+10.0));
     session->tp_locate(cur_time);
@@ -1047,6 +1103,7 @@ void tascar_window_t::on_menu_transport_forward()
 
 void tascar_window_t::on_menu_transport_previous()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     session->tp_locate(0.0);
   }
@@ -1054,6 +1111,7 @@ void tascar_window_t::on_menu_transport_previous()
 
 void tascar_window_t::on_menu_transport_next()
 {
+  std::lock_guard<std::mutex> lock(session_mutex);
   if( session ){
     session->tp_locate(session->duration);
   }
