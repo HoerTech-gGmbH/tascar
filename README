@@ -5,6 +5,9 @@ acoustic scenes in various render formats, e.g., higher order
 Ambisonics or VBAP. The toolbox is developed for applications in the
 context of hearing research and hearing aid evaluation.
 
+For installation of binary packages, please see
+http://install.tascar.org/
+
 References:
 
 Grimm, G.; Luberadzka, J.; Herzke, T.; Hohmann, V. (2015): Toolbox for
@@ -28,4 +31,3 @@ Giso Grimm
 
 g.grimm@uni-oldenburg.de
 
-Oldenburg, February 2013 - February 2016
