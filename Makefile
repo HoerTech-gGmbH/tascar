@@ -34,4 +34,16 @@ coverage: googletest unit-tests
 	genhtml coverage.info --prefix $$PWD --show-details --demangle-cpp --output-directory $@
 	x-www-browser ./coverage/index.html
 
+install: all
+	@echo "We recommend to install TASCAR using the binary packages."
+	@echo "See http://install.tascar.org/ for installation instructions."
+	@echo "Press Ctrl-C to stop installation, or Enter to continue."
+	@read RESP
+	cp libtascar/build/libtascar*.so /usr/local/lib
+	cp plugins/build/*.so /usr/local/lib
+	cp apps/build/tascar_* /usr/local/bin
+	cp gui/build/tascar /usr/local/bin
+	cp gui/build/tascar_spkcalib /usr/local/bin
+
 .PHONY : all clean test
+
