@@ -169,8 +169,8 @@ void TASCAR::render_core_t::process(uint32_t nframes,
       ambbuf->y().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+2]) );
       ambbuf->z().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+3]) );
       psrc->audio.rotate(*ambbuf,psrc->orientation,true);
-      psrc->audio *= gain;
       psrc->preprocess( tp );
+      psrc->audio *= gain;
     }
     // process world:
     if( world ){
