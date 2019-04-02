@@ -1,3 +1,8 @@
+PREFIX=/usr/local
+LIBDIR=$(PREFIX)/lib
+BINDIR=$(PREFIX)/bin
+DESTDIR=
+
 MODULES = libtascar plugins apps gui
 DOCMODULES = doc manual
 
@@ -39,11 +44,11 @@ install: all
 	@echo "See http://install.tascar.org/ for installation instructions."
 	@echo "Press Ctrl-C to stop installation, or Enter to continue."
 	@read RESP
-	cp libtascar/build/libtascar*.so /usr/local/lib
-	cp plugins/build/*.so /usr/local/lib
-	cp apps/build/tascar_* /usr/local/bin
-	cp gui/build/tascar /usr/local/bin
-	cp gui/build/tascar_spkcalib /usr/local/bin
+	cp -i libtascar/build/libtascar*.so $(DESTDIR)$(LIBDIR)
+	cp -i plugins/build/*.so $(DESTDIR)$(LIBDIR)
+	cp -i apps/build/tascar_* $(DESTDIR)$(BINDIR)
+	cp -i gui/build/tascar $(DESTDIR)$(BINDIR)
+	cp -i gui/build/tascar_spkcalib $(DESTDIR)$(BINDIR)
 
 .PHONY : all clean test
 
