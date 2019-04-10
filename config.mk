@@ -1,5 +1,5 @@
 # variables:
-VERSION=0.199.1
+VERSION=0.200.0
 CXXFLAGS = -Wall -Wno-deprecated-declarations -msse -msse2 -mfpmath=sse -ffast-math -fno-finite-math-only -fext-numeric-literals -std=c++11 -pthread
 PREFIX = /usr/local
 

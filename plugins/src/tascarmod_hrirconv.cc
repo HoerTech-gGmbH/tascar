@@ -189,16 +189,15 @@ void hrirconv_mod_t::prepare( chunk_cfg_t& cf_ )
   }else{
     // use connect variable:
     if( ! hrirconv_var_t::connect.empty() ){
-      const char **pp_ports(jack_get_ports(jc, hrirconv_var_t::connect.c_str(), NULL, 0));
-      if( pp_ports ){
-        uint32_t ip(0);
-        while( (*pp_ports) && (ip < get_num_input_ports())){
-          connect_in(ip,*pp_ports,true,true);
-          ++pp_ports;
+      std::vector<std::string> ports(get_port_names_regexp( TASCAR::env_expand(hrirconv_var_t::connect) ) );
+      uint32_t ip(0);
+      if( ports.empty() )
+        TASCAR::add_warning("No port \""+hrirconv_var_t::connect+"\" found.");
+      for( auto it=ports.begin();it!=ports.end();++it){
+        if( ip < get_num_input_ports() ){
+          connect_in( ip, *it, true, true );
           ++ip;
         }
-      }else{
-        TASCAR::add_warning("No port \""+hrirconv_var_t::connect+"\" found.");
       }
     }
   }

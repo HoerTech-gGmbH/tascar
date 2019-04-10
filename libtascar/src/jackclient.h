@@ -51,6 +51,7 @@ public:
   uint32_t get_xruns() const { return xruns;};
   uint32_t get_xrun_latency() const { return xrun_latency;};
   float get_cpu_load() const { return jack_cpu_load(jc);};
+  std::vector<std::string> get_port_names_regexp( const std::string& name, int flags = 0 ) const;
 private:
   static int xrun_callback(void *arg);
   static void on_shutdown(void *arg);

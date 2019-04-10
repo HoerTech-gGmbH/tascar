@@ -41,29 +41,27 @@ routemod_t::routemod_t( const TASCAR::module_cfg_t& cfg )
   activate();
   std::string con(get_connect());
   if( !con.empty() ){
-    const char **pp_ports(jack_get_ports(jc, con.c_str(), NULL, 0));
-    if( pp_ports ){
-      uint32_t ip(0);
-      while( (*pp_ports) && (ip < get_num_input_ports())){
-        connect_in(ip,*pp_ports,true,true);
-        ++pp_ports;
+    std::vector<std::string> ports(get_port_names_regexp( TASCAR::env_expand(con) ) );
+    if( ports.empty() )
+      TASCAR::add_warning("No port \""+con+"\" found.");
+    uint32_t ip(0);
+    for( auto it=ports.begin();it!=ports.end();++it){
+      if( ip < get_num_input_ports() ){
+        connect_in( ip, *it, true, true );
         ++ip;
       }
-    }else{
-      TASCAR::add_warning("No port \""+con+"\" found.");
     }
   }
   if( !connect_out.empty() ){
-    const char **pp_ports(jack_get_ports(jc, connect_out.c_str(), NULL, JackPortIsInput));
-    if( pp_ports ){
-      uint32_t ip(0);
-      while( (*pp_ports) && (ip < get_num_output_ports())){
-        jackc_t::connect_out(ip,*pp_ports,true);
-        ++pp_ports;
+    std::vector<std::string> ports(get_port_names_regexp( TASCAR::env_expand(connect_out), JackPortIsInput ) );
+    if( ports.empty() )
+      TASCAR::add_warning("No input port \""+connect_out+"\" found.");
+    uint32_t ip(0);
+    for( auto it=ports.begin();it!=ports.end();++it){
+      if( ip < get_num_output_ports() ){
+        jackc_t::connect_out( ip, *it, true );
         ++ip;
       }
-    }else{
-      TASCAR::add_warning("No input port \""+con+"\" found.");
     }
   }
 }

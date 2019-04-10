@@ -83,6 +83,40 @@ double jackc_portless_t::tp_get_time() const
   return (1.0/(double)srate)*(double)tp_get_frame();
 }
 
+// work around for bug in jack library:
+void assert_valid_regexp( const std::string& exp )
+{
+  regex_t reg;
+  if( regcomp( &reg, exp.c_str(), REG_EXTENDED | REG_NOSUB ) != 0 )
+    throw TASCAR::ErrMsg("Invalid regular expression \""+exp+"\".");
+}
+
+std::vector<std::string> get_port_names_regexp( jack_client_t* jc, std::string name, int flags )
+{
+  if( name.size() && (name[0] != '^') )
+    name = "^"+name;
+  if( name.size() && (name[name.size()-1] != '$') )
+    name = name+"$";
+  std::vector<std::string> ports;
+  assert_valid_regexp(name);
+  const char **pp_ports(jack_get_ports(jc, name.c_str(), NULL, flags));
+  if( pp_ports ){
+    const char** p(pp_ports);
+    while( *p ){
+      ports.push_back( *p );
+      ++p;
+    }
+    jack_free(pp_ports);
+  }
+  return ports;
+}
+
+
+std::vector<std::string> jackc_portless_t::get_port_names_regexp( const std::string& name, int flags ) const
+{
+  return ::get_port_names_regexp( jc, name, flags );
+}
+
 void jackc_portless_t::activate()
 {
   jack_activate(jc);
@@ -94,34 +128,6 @@ void jackc_portless_t::deactivate()
   if( active )
     jack_deactivate(jc);
   active = false;
-}
-
-// work around for bug in jack library:
-void assert_valid_regexp( const std::string& exp )
-{
-  regex_t reg;
-  if( regcomp( &reg, exp.c_str(), REG_EXTENDED | REG_NOSUB ) != 0 )
-    throw TASCAR::ErrMsg("Invalid regular expression \""+exp+"\".");
-}
-
-std::vector<std::string> get_port_names_regexp( jack_client_t* jc, std::string name )
-{
-  if( name.size() && (name[0] != '^') )
-    name = "^"+name;
-  if( name.size() && (name[name.size()-1] != '$') )
-    name = name+"$";
-  std::vector<std::string> ports;
-  assert_valid_regexp(name);
-  const char **pp_ports(jack_get_ports(jc, name.c_str(), NULL, 0));
-  if( pp_ports ){
-    const char** p(pp_ports);
-    while( *p ){
-      ports.push_back( *p );
-      ++p;
-    }
-    jack_free(pp_ports);
-  }
-  return ports;
 }
 
 /**
@@ -147,8 +153,8 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest, 
 {
   if( connectmulti ){
     // connect multiple ports simultaneously using globbing:
-    std::vector<std::string> ports_src(get_port_names_regexp( jc, src ));
-    std::vector<std::string> ports_dest(get_port_names_regexp( jc, dest ));
+    std::vector<std::string> ports_src(get_port_names_regexp( src ));
+    std::vector<std::string> ports_dest(get_port_names_regexp( dest ));
     if( (ports_src.size() > 0) && (ports_dest.size() > 0) ){
       for(uint32_t c=0;c<std::max(ports_src.size(),ports_dest.size());++c){
         connect( ports_src[c % ports_src.size()], ports_dest[c % ports_dest.size()], bwarn, allowoutputsource );
