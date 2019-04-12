@@ -8,7 +8,7 @@ in sensor drivers, and it can load drivers for various sensors.
 \indattr{ontop}   & Create a window which stays on top                    \\
 \end{tscattributes}
 
-Currently, the sensors {\em trackir}, {\em eog}, {\em emergency} and
+Currently, the sensors {\em trackir}, {\em eog}, {\em emergency}, {\em jackstatus} and
 {\em smiley} are supported.
 
 The {\bf trackir} sensor (optical marker tracking) supports these
@@ -77,6 +77,17 @@ developed. This module requires a session port number of 9800 to work,
 since the port number is hard-coded into the firmware of the sensor.
 \begin{tscattributes}
 \indattr{timeout} & Time out for re-connection/re-initialization of LSL stream in seconds\\
+\end{tscattributes}
+
+The {\bf jackstatus} sensor analyses the JACK backend performance
+(xruns and CPU load). Warnings are issued if xruns occur or if the CPU
+load is above the given threshold. Critical errors are issued when the
+average xrun frequency is above the given threshold, or if the CPU
+load is above the threshold.
+\begin{tscattributes}
+\indattr{warnload}     & CPU load threshold for warnings, in percent (default: 70)        \\
+\indattr{criticalload} & CPU load threshold for critical errors, in percent (default: 95) \\
+\indattr{maxxrunfreq}  & Critical average xrun frequeny threshold in Hz (default: 0.1)    \\
 \end{tscattributes}
 
 
