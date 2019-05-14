@@ -69,6 +69,7 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
     starttime(0),
     sampledorientation(0),
     c6dof(c6dof_),
+    c6dof_nodelta(c6dof_nodelta_),
     xml_location(NULL),
     xml_orientation(NULL),
     navmesh(NULL)
@@ -130,6 +131,7 @@ void TASCAR::dynobject_t::geometry_update(double time)
   double ltime(time-starttime);
   c6dof_.position = location.interp(ltime);
   TASCAR::pos_t ptmp(c6dof_.position);
+  c6dof_nodelta_.position = c6dof_.position;
   c6dof_.position += dlocation;
   if( sampledorientation == 0 )
     c6dof_.orientation = orientation.interp(ltime);
@@ -143,6 +145,7 @@ void TASCAR::dynobject_t::geometry_update(double time)
     c6dof_.orientation.y = pdt.elev();
     c6dof_.orientation.x = 0.0;
   }
+  c6dof_nodelta_.orientation = c6dof_.orientation;
   c6dof_.orientation += dorientation;
   if( navmesh ){
     navmesh->update_pos( c6dof_.position );

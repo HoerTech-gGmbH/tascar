@@ -252,6 +252,14 @@ namespace TASCAR {
     return self;
   };
 
+  inline TASCAR::zyx_euler_t& operator-=(TASCAR::zyx_euler_t& self,const TASCAR::zyx_euler_t& other){
+    // \todo this is not correct; it only works for single-axis rotations. 
+    self.x-=other.x;
+    self.y-=other.y;
+    self.z-=other.z;
+    return self;
+  };
+
   /**
      \brief Apply Euler rotation
      \param r Euler rotation

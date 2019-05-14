@@ -17,6 +17,7 @@ Example:
   <osc path="/sensor1/pos" size="3"/>
   <osc path="/sensor1/rot" size="3"/>
   <osc path="/sensor3" size="4"/>
+  <oscs path="/msg"/>
   <lsl predicate="name='EEGamp'"/>
 </datalogging>
 \end{lstlisting}
@@ -42,6 +43,11 @@ have to specify the name of the LSL stream associated with the sensor:
 \end{lstlisting}
 The attribute \attr{tctimeout} is the maximal time used to measure the
 time correction values between sender and receiver.
+
+Text data (e.g., trigger messages) can be recorded from LSL, or from osc with the \elem{oscs} element:
+\begin{lstlisting}[numbers=none]
+  <oscs path="/msg"/>
+\end{lstlisting}
 
 
 \begin{tscattributes}

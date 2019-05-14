@@ -8,6 +8,11 @@ enum method_t {
   nearest, raisedcosine, sawleft, sawright, rect
 };
 
+inline float sqrf( float x )
+{
+  return x*x;
+}
+
 method_t uint2method( uint32_t m )
 {
   switch( m ){
@@ -97,6 +102,9 @@ void lobj_t::update( double t_frame )
     for(uint32_t c=0;c<n;++c)
       dmx[c] += ddmx[c];
     t_fade -= t_frame;
+    if( t_fade <= 0 )
+      for(uint32_t c=0;c<n;++c)
+        dmx[c] = fade[c];
   }
   if( t_wfade > 0 ){
     w += dw;
@@ -136,6 +144,7 @@ private:
   std::vector<lobj_t> fixtureval;
   std::vector<std::string> labels;
   bool usecalib;
+  bool sendsquared;
 };
 
 lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
@@ -146,7 +155,8 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     channels(3),
     master(1),
     parent_(NULL,""),
-    usecalib(true)
+    usecalib(true),
+    sendsquared(false)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(objects);
@@ -154,6 +164,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(channels);
   GET_ATTRIBUTE(master);
   GET_ATTRIBUTE_BOOL(usecalib);
+  GET_ATTRIBUTE_BOOL(sendsquared);
   std::string method;
   method_t method_(nearest);
   GET_ATTRIBUTE(method);
@@ -193,7 +204,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
         get_attribute_value(el,"channel",c);
         get_attribute_value(el,"in",v_in);
         get_attribute_value(el,"out",v_out);
-        if( (c >= 0) && (v_in > 0) && (v_out >= 0) ){
+        if( (c >= 0) && (v_in > 0) && (v_out >= 0) && (c < (int32_t)channels) ){
           v_out /= v_in;
           fixtureval[k].calibtab[c][v_in] = v_out;
         }
@@ -321,13 +332,18 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
         tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calibtab[c].interp(tmpdmxdata[channels*kfix+c]);
       }
   }
-  for(uint32_t k=0;k<tmpdmxdata.size();++k)
-    dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
+  if( sendsquared )
+    for(uint32_t k=0;k<tmpdmxdata.size();++k)
+      dmxdata[k] = std::min(255.0f,std::max(0.0f,ceilf(255.0f*sqrf(0.0039215686274509803377*(master*tmpdmxdata[k]+basedmx[k])))));
+  else
+    for(uint32_t k=0;k<tmpdmxdata.size();++k)
+      dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
 }
 
 void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_bool("/usecalib", &usecalib );
+  srv->add_bool("/sendsquared", &sendsquared );
   srv->add_float( "/master", &master );
   if( basedmx.size() )
     srv->add_vector_float( "/basedmx", &basedmx );

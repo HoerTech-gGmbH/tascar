@@ -14,6 +14,7 @@ private:
   std::string avatar;
   double lookatlen;
   bool triggered;
+  bool ignoreorientation;
   bool trigger;
   lo_address target;
   std::vector<TASCAR::named_object_t> obj;
@@ -26,6 +27,7 @@ pos2osc_t::pos2osc_t( const TASCAR::module_cfg_t& cfg )
     transport(true),
     lookatlen(1.0),
     triggered(false),
+    ignoreorientation(false),
     trigger(true)
 {
   GET_ATTRIBUTE(url);
@@ -36,6 +38,7 @@ pos2osc_t::pos2osc_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(avatar);
   GET_ATTRIBUTE(lookatlen);
   GET_ATTRIBUTE_BOOL(triggered);
+  GET_ATTRIBUTE_BOOL(ignoreorientation);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   if( pattern.empty() )
@@ -68,9 +71,11 @@ void pos2osc_t::update(uint32_t tp_frame, bool tp_rolling)
 {
   if( trigger && ((!triggered && (tp_rolling || (!transport))) || triggered) ){
     for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
-      TASCAR::pos_t p;
-      TASCAR::zyx_euler_t o;
-      it->obj->get_6dof(p,o);
+      // copy position from parent object:
+      const TASCAR::pos_t& p(it->obj->c6dof.position);
+      TASCAR::zyx_euler_t o(it->obj->c6dof.orientation);
+      if( ignoreorientation )
+        o = it->obj->c6dof_nodelta.orientation;
       std::string path;
       switch( mode ){
       case 0 :

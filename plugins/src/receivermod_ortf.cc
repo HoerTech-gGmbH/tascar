@@ -76,20 +76,25 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
 {
   data_t* d((data_t*)sd);
   TASCAR::pos_t prel_norm(prel.normal());
-  // calculate panning parameters (as incremental values):
-  double wl(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_l)),wpow));
-  double wr(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_r)),wpow));
-  if( wl > wmin )
-    wl = wmin;
-  if( wr > wmin )
-    wr = wmin;
-  if( !(wl > EPS) )
-    wl = EPS;
-  if( !(wr > EPS) )
-    wr = EPS;
-  double dwl((wl - d->wl)*d->dt);
-  double dwr((wr - d->wr)*d->dt);
-  double ditd((distance*(0.5*dot_prod(prel_norm,dir_itd)+0.5) - d->itd)*d->dt);
+  // calculate panning parameters (as incremental values; target_XX is
+  // the value reached at end of block):
+  double target_wl(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_l)),wpow));
+  double target_wr(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_r)),wpow));
+  if( target_wl > wmin )
+    target_wl = wmin;
+  if( target_wr > wmin )
+    target_wr = wmin;
+  if( !(target_wl > EPS) )
+    target_wl = EPS;
+  if( !(target_wr > EPS) )
+    target_wr = EPS;
+  // low pass filters for frequency-dependent directionality:
+  double dwl((target_wl - d->wl)*d->dt);
+  double dwr((target_wr - d->wr)*d->dt);
+  // itd (measured in meter!) is dist*1/2*(cos(az)+1), az is relative to y axis
+  // for frontal directions: az=pi/2 -> cos(az)=0 -> itd=0.5*dist
+  double target_itd(distance*(0.5*dot_prod(prel_norm,dir_itd)+0.5));
+  double ditd((target_itd - d->itd)*d->dt);
   // apply panning:
   uint32_t N(chunk.size());
   for(uint32_t k=0;k<N;++k){
@@ -100,6 +105,10 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
     d->wr+=dwr;
     d->itd += ditd;
   }
+  // explicitely apply final values, to avoid rounding errors:
+  d->wl = target_wl;
+  d->wr = target_wr;
+  d->itd = target_itd;
 }
 
 void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
@@ -109,7 +118,7 @@ void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vecto
   const float* i_w(chunk.w().d);
   const float* i_x(chunk.x().d);
   const float* i_y(chunk.y().d);
-  //const float* i_z(chunk.z().d);
+  // decode diffuse sound field in microphone directions:
   for(uint32_t k=0;k<chunk.size();++k){
     *o_l += *i_w + dir_l.x*(*i_x) + dir_l.y*(*i_y);
     *o_r += *i_w + dir_r.x*(*i_x) + dir_r.y*(*i_y);
@@ -119,8 +128,6 @@ void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vecto
     ++i_x;
     ++i_y;
   }
-  //output[0] += chunk.w() + chunk.x() + chunk.y();
-  //output[1] += chunk.w();
 }
 
 uint32_t ortf_t::get_num_channels()

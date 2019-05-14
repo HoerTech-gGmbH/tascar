@@ -15,6 +15,9 @@ function sCfg = tascar_parse_keyval( sCfg, sHelp, varargin )
       if ischar(sCfg.(field))
 	defval = sCfg.(field);
       end
+      if isa(sCfg.(field),'function_handle')
+	defval = ['@',func2str(sCfg.(field)),' (function handle)'];
+      end
       if iscellstr(sCfg.(field))
 	defval = '{';
 	if isempty(sCfg.(field))

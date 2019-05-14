@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <datalogging>
+      <oscs path="/msg"/>
+    </datalogging>
+  </modules>
+</session>

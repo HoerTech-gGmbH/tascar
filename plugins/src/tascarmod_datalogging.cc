@@ -5,9 +5,11 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/window.h>
 #include <matio.h>
-#include <lsl_c.h>
+#include <lsl_cpp.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#define STRBUFFER_SIZE 1024
 
 class recorder_t;
 
@@ -39,55 +41,48 @@ public:
   void poll_data();
   void get_stream_delta_start();
   void get_stream_delta_end();
+  std::string get_xml() { return inlet->info().as_xml(); };
 private:
   double get_stream_delta();
   std::string predicate;
 public:
-  lsl_streaminfo info;
+//  lsl::stream_info* info;
+  lsl::stream_inlet* inlet;
 private:
-  lsl_inlet inlet;
   double delta;
 public:
   double stream_delta_start;
   double stream_delta_end;
   bool time_correction_failed;
   double tctimeout;
+  lsl::channel_format_t chfmt;
 };
 
 lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
   : xml_element_t(xmlsrc),
     size(0),
     recorder(NULL),
-    delta(lsl_local_clock()),
+    inlet(NULL),
+    delta(lsl::local_clock()),
     stream_delta_start(0),
     stream_delta_end(0),
     time_correction_failed(false),
-    tctimeout(2.0)
+    tctimeout(2.0),
+    chfmt(lsl::cf_undefined)
 {
+  //str_buffer.resize(STRBUFFER_SIZE);
   GET_ATTRIBUTE(predicate);
   GET_ATTRIBUTE(tctimeout);
   if( predicate.empty() )
     throw TASCAR::ErrMsg("Invalid (empty) predicate.");
-  char c_predicate[predicate.size()+1];
-  //std::vector<lsl::stream_info> infos(lsl::resolve_stream(predicate,1,lsltimeout));
-  memmove(c_predicate,predicate.c_str(),predicate.size()+1);
-  int ec(lsl_resolve_bypred(&info,1, c_predicate, 1, lsltimeout ));
-  //int ec(lsl_resolve_byprop(&info,1, "name", c_predicate, 1, lsltimeout ));
-  std::cerr << "resolved LSL predicate " << predicate << std::endl;
-  if( ec <= 0 ){
-    switch( ec ){
-    case lsl_timeout_error : throw TASCAR::ErrMsg("LSL timeout error ("+predicate+")."); break;
-    case lsl_lost_error : throw TASCAR::ErrMsg("LSL lost stream error ("+predicate+")."); break;
-    case lsl_argument_error : throw TASCAR::ErrMsg("LSL argument error ("+predicate+")."); break;
-    case lsl_internal_error : throw TASCAR::ErrMsg("LSL internal error ("+predicate+")."); break;
-    case 0 : throw TASCAR::ErrMsg("No LSL stream found ("+predicate+")."); break;
-    }
-    throw TASCAR::ErrMsg("Unknown LSL error ("+predicate+").");
-  }
-  inlet = lsl_create_inlet(info, 300, LSL_NO_PREFERENCE, 1);
+  std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate,1,1));
+  if( results.empty() )
+    throw TASCAR::ErrMsg("No matching LSL stream found ("+predicate+").");
+  chfmt = results[0].channel_format();
+  size = results[0].channel_count()+1;
+  name = results[0].name();
+  inlet = new lsl::stream_inlet(results[0]);
   std::cerr << "created LSL inlet for predicate " << predicate << std::endl;
-  size = lsl_get_channel_count(info)+1;
-  name = lsl_get_name(info);
   std::cerr << "measuring LSL time correction: ";
   get_stream_delta_start();
   std::cerr << stream_delta_start << " s\n";
@@ -105,33 +100,38 @@ void lslvar_t::get_stream_delta_end()
 
 double lslvar_t::get_stream_delta()
 {
-  int ec(0);
-  double stream_delta(lsl_time_correction( inlet, tctimeout, &ec ));
-  if( ec != 0 ){
-    try{
-      switch( ec ){
-      case lsl_timeout_error : throw TASCAR::ErrMsg("LSL timeout error ("+predicate+")."); break;
-      case lsl_lost_error : throw TASCAR::ErrMsg("LSL lost stream error ("+predicate+")."); break;
-      }
-      throw TASCAR::ErrMsg("Unknown LSL error ("+predicate+").");
-    }
-    catch( const std::exception& e){
-      std::cerr << "Warning: " << e.what() << std::endl;
-      stream_delta = 0;
-      time_correction_failed = true;
-    }
+  double stream_delta(0);
+  try{
+    stream_delta = inlet->time_correction( tctimeout );
+  }
+  catch( const std::exception& e){
+    std::cerr << "Warning: " << e.what() << std::endl;
+    stream_delta = 0;
+    time_correction_failed = true;
   }
   return stream_delta;
 }
   
 lslvar_t::~lslvar_t()
 {
-  lsl_destroy_inlet(inlet);
+  delete inlet;
 }
 
 void lslvar_t::set_delta(double deltatime)
 {
   delta = deltatime;
+}
+
+class oscsvar_t : public TASCAR::xml_element_t {
+public:
+  oscsvar_t(xmlpp::Element* xmlsrc);
+  std::string path;
+};
+
+oscsvar_t::oscsvar_t(xmlpp::Element* xmlsrc)
+  : xml_element_t(xmlsrc)
+{
+  GET_ATTRIBUTE(path);
 }
 
 class oscvar_t : public TASCAR::xml_element_t {
@@ -158,6 +158,7 @@ std::string oscvar_t::get_fmt()
 }
 
 typedef std::vector<oscvar_t> oscvarlist_t;
+typedef std::vector<oscsvar_t> oscsvarlist_t;
 typedef std::vector<lslvar_t*> lslvarlist_t;
 
 class dlog_vars_t  : public TASCAR::module_base_t {
@@ -173,7 +174,8 @@ protected:
   std::string outputdir;
   bool displaydc;
   double lsltimeout;
-  oscvarlist_t vars;
+  oscvarlist_t oscvars;
+  oscsvarlist_t oscsvars;
   lslvarlist_t lslvars;
   jack_client_t* jc_;
 };
@@ -199,9 +201,11 @@ dlog_vars_t::dlog_vars_t( const TASCAR::module_cfg_t& cfg )
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
     if( sne && ( sne->get_name() == "variable" ))
-      vars.push_back(oscvar_t(sne));
+      oscvars.push_back(oscvar_t(sne));
     if( sne && ( sne->get_name() == "osc" ))
-      vars.push_back(oscvar_t(sne));
+      oscvars.push_back(oscvar_t(sne));
+    if( sne && ( sne->get_name() == "oscs" ))
+      oscsvars.push_back(oscsvar_t(sne));
     if( sne && ( sne->get_name() == "lsl" ))
       lslvars.push_back(new lslvar_t(sne,lsltimeout));
   }
@@ -211,7 +215,7 @@ void dlog_vars_t::update(uint32_t frame,bool running)
 {
   if( jc_ ){
     double delta(jack_get_current_transport_frame(jc_)*t_sample);
-    delta -= lsl_local_clock();
+    delta -= lsl::local_clock();
     delta *= -1;
     for(lslvarlist_t::iterator it=lslvars.begin();it!=lslvars.end();++it)
       (*it)->set_delta(delta);
@@ -243,27 +247,44 @@ std::string nice_name(std::string s,std::string extend="")
   return s;
 }
 
+class label_t {
+public:
+  label_t(double t1_,double t2_, const std::string& msg_):t1(t1_),t2(t2_),msg(msg_){};
+  double t1;
+  double t2;
+  std::string msg;
+};
+
 class recorder_t : public Gtk::DrawingArea {
 public:
   recorder_t(uint32_t size,const std::string& name,pthread_mutex_t& mtx,jack_client_t* jc,double srate,bool ignore_first=false);
   virtual ~recorder_t();
   void store(uint32_t n,double* data);
+  void store_msg(double t1, double t2, const std::string& msg);
   const std::vector<double>& get_data() const { return data_;};
   uint32_t get_size() const { return size_;};
   const std::string& get_name() const { return name_; };
   static int osc_setvar(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   void osc_setvar(const char *path, uint32_t size, double* data);
+  static int osc_setvar_s(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
+  void osc_setvar_s(const char *path, const char* msg);
   void clear();
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
   bool on_timeout();
   void set_displaydc( bool displaydc ){ displaydc_ = displaydc; };
+  void set_textdata() { b_textdata = true; };
+  bool is_textdata() const { return b_textdata; };
+  const std::vector<label_t>& get_textdata() const { return messages;};
 private:
   void get_valuerange( const std::vector<double>& data, uint32_t channels, uint32_t firstchannel, uint32_t n1, uint32_t n2, double& dmin, double& dmax);
   bool displaydc_;
   uint32_t size_;
+  bool b_textdata;
   std::vector<double> data_;
   std::vector<double> plotdata_;
   std::vector<double> vdc;
+  std::vector<label_t> messages;
+  std::vector<label_t> plot_messages;
   std::string name_;
   pthread_mutex_t& mtx_;
   jack_client_t* jc_;
@@ -277,6 +298,7 @@ private:
 recorder_t::recorder_t(uint32_t size,const std::string& name,pthread_mutex_t& mtx,jack_client_t* jc,double srate,bool ignore_first)
   : displaydc_(true),
     size_(size),
+    b_textdata(false),
     vdc(size_,0),
     name_(name),
     mtx_(mtx),
@@ -292,8 +314,10 @@ recorder_t::recorder_t(uint32_t size,const std::string& name,pthread_mutex_t& mt
 void recorder_t::clear()
 {
   data_.clear();
+  messages.clear();
   pthread_mutex_lock( &plotdatalock );
   plotdata_.clear();
+  plot_messages.clear();
   pthread_mutex_unlock( &plotdatalock );
 }
 
@@ -384,46 +408,71 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       double dscale(1);
       double dmin(-1);
       double dmax(1);
-      // N is number of (multi-dimensional) samples:
-      uint32_t N(plotdata_.size()/size_);
-      if( N > 1 ){
-        //        double tmax(0);
-        uint32_t n1(0);
-        uint32_t n2(0);
-        ltime = plotdata_[(N-1)*size_];
-        find_timeinterval( plotdata_, size_, ltime-30, ltime, n1, n2 );
-        get_valuerange( plotdata_, size_, 1+ignore_first_, n1, n2, dmin, dmax );
-        uint32_t stepsize((n2-n1)/2048);
-        ++stepsize;
+      if( b_textdata ){
         drange = dmax-dmin;
         dscale = height/drange;
-        for(uint32_t dim=1+ignore_first_;dim<size_;++dim){
-          cr->save();
-          double size_norm(1.0/(size_-1.0-ignore_first_));
-          double c_r((dim-1.0)*size_norm);
-          double c_b(1.0-c_r);
-          double c_g(1.0-2.0*fabs(c_r-0.5));
-          cr->set_source_rgb( sqr(sqr(c_r)), sqr(c_g), sqr(sqr(c_b)) );
-          bool first(true);
-          // limit number of lines:
-          for(uint32_t k=n1;k<n2;k+=stepsize){
-            double t(plotdata_[k*size_]-ltime);
-            double v(plotdata_[dim+k*size_]);
-            if( !displaydc_ )
-              v -= vdc[dim];
-            if(v != HUGE_VAL){
-              t *= width/30.0;
-              v = height-(v-dmin)*dscale;
-              //++nlines;
-              if( first ){
-                cr->move_to(t,v);
-                first = false;
-              }else
-                cr->line_to(t,v);
-            }
+        ltime = israte_*jack_get_current_transport_frame(jc_);
+        for( auto it=plot_messages.begin(); it!=plot_messages.end();++it){
+          if( (it->t1 >= ltime-30) && (it->t1 <= ltime) ){
+            double t((it->t1-ltime) * width/30.0);
+            double v(height-(-0.8-dmin)*dscale);
+            double v2(height-(-0.85-dmin)*dscale);
+            double v1(height);
+            cr->save();
+            cr->set_source_rgb( 0.4, 0, 0 );
+            cr->move_to(t,v2);
+            cr->line_to(t,v1);
+            cr->stroke();
+            cr->move_to(t,v);
+            cr->save();
+            cr->rotate( -0.5*M_PI );
+            cr->show_text( it->msg );
+            cr->restore();
+            cr->restore();
           }
-          cr->stroke();
-          cr->restore();
+        }
+      }else{
+        // N is number of (multi-dimensional) samples:
+        uint32_t N(plotdata_.size()/size_);
+        if( N > 1 ){
+          //        double tmax(0);
+          uint32_t n1(0);
+          uint32_t n2(0);
+          ltime = plotdata_[(N-1)*size_];
+          find_timeinterval( plotdata_, size_, ltime-30, ltime, n1, n2 );
+          get_valuerange( plotdata_, size_, 1+ignore_first_, n1, n2, dmin, dmax );
+          uint32_t stepsize((n2-n1)/2048);
+          ++stepsize;
+          drange = dmax-dmin;
+          dscale = height/drange;
+          for(uint32_t dim=1+ignore_first_;dim<size_;++dim){
+            cr->save();
+            double size_norm(1.0/(size_-1.0-ignore_first_));
+            double c_r((dim-1.0)*size_norm);
+            double c_b(1.0-c_r);
+            double c_g(1.0-2.0*fabs(c_r-0.5));
+            cr->set_source_rgb( sqr(sqr(c_r)), sqr(c_g), sqr(sqr(c_b)) );
+            bool first(true);
+            // limit number of lines:
+            for(uint32_t k=n1;k<n2;k+=stepsize){
+              double t(plotdata_[k*size_]-ltime);
+              double v(plotdata_[dim+k*size_]);
+              if( !displaydc_ )
+                v -= vdc[dim];
+              if(v != HUGE_VAL){
+                t *= width/30.0;
+                v = height-(v-dmin)*dscale;
+                //++nlines;
+                if( first ){
+                  cr->move_to(t,v);
+                  first = false;
+                }else
+                  cr->line_to(t,v);
+              }
+            }
+            cr->stroke();
+            cr->restore();
+          }
         }
       }
       pthread_mutex_unlock(&plotdatalock);
@@ -501,18 +550,49 @@ void recorder_t::store(uint32_t n,double* data)
   }
 }
 
+void recorder_t::store_msg(double t1, double t2, const std::string& msg)
+{
+  if( pthread_mutex_trylock(&mtx_) == 0 ){
+    messages.emplace_back( t1, t2, msg );
+    b_textdata = true;
+    if( pthread_mutex_trylock(&plotdatalock) == 0 ){
+      plot_messages = messages;
+      pthread_mutex_unlock(&plotdatalock);
+    }
+    pthread_mutex_unlock(&mtx_);
+  }
+}
+
 void lslvar_t::poll_data()
 {
   double recorder_buffer[size+1];
   double* data_buffer(&(recorder_buffer[2]));
-  int ec(0);
   double t(1);
+  //char* strb(str_buffer.data());
   while( t != 0 ){
-    t = lsl_pull_sample_d(inlet, data_buffer, size-1, 0.0, &ec);
-    if( (t != 0) && recorder && (ec == lsl_no_error) ){
-      recorder_buffer[0] = t-delta + stream_delta_start;
-      recorder_buffer[1] = t + stream_delta_start;
-      recorder->store(size+1,recorder_buffer);
+    if( chfmt == lsl::cf_string ){
+      std::vector<std::string> sample;
+      t = inlet->pull_sample( sample, 0.0 );
+      if( (t!= 0) && recorder ){
+        recorder->set_textdata();
+        for( auto it=sample.begin();it!=sample.end();++it){
+          recorder->store_msg( t-delta + stream_delta_start,
+                               t + stream_delta_start,
+                               *it );
+        }
+      }
+    }else{
+      try{
+        t = inlet->pull_sample(data_buffer, size-1, 0.0);
+        if( (t != 0) && recorder ){
+          recorder_buffer[0] = t-delta + stream_delta_start;
+          recorder_buffer[1] = t + stream_delta_start;
+          recorder->store(size+1,recorder_buffer);
+        }
+      }
+      catch( const std::exception& e ){
+        TASCAR::add_warning(e.what());
+      }
     }
   }
 }
@@ -527,6 +607,7 @@ public:
   void save_text(const std::string& filename);
   void save_mat(const std::string& filename);
   void save_matcell(const std::string& filename);
+  void save_session_related_meta_data( mat_t *matfp, const std::string& fname );
   void on_osc_set_trialid();
   void on_ui_showdc();
   void on_ui_start();
@@ -582,9 +663,13 @@ datalogging_t::datalogging_t( const TASCAR::module_cfg_t& cfg )
   osc->add_method("/session_start","",&datalogging_t::osc_session_start,this);
   osc->add_method("/session_stop","",&datalogging_t::osc_session_stop,this);
   set_jack_client( session->jc );
-  for(oscvarlist_t::iterator it=vars.begin();it!=vars.end();++it){
+  for(oscvarlist_t::iterator it=oscvars.begin();it!=oscvars.end();++it){
     recorder.push_back(new recorder_t(it->size+1,it->path,mtx,session->jc,session->srate,it->ignorefirst));
     osc->add_method(it->path,it->get_fmt().c_str(),&recorder_t::osc_setvar,recorder.back());
+  }
+  for(oscsvarlist_t::iterator it=oscsvars.begin();it!=oscsvars.end();++it){
+    recorder.push_back(new recorder_t(2,it->path,mtx,session->jc,session->srate,false));
+    osc->add_method(it->path,"s",&recorder_t::osc_setvar_s,recorder.back());
   }
   for(lslvarlist_t::iterator it=lslvars.begin();it!=lslvars.end();++it){
     recorder.push_back(new recorder_t((*it)->size+1,(*it)->name,mtx,session->jc,session->srate,true));
@@ -754,6 +839,18 @@ void recorder_t::osc_setvar(const char *path, uint32_t size, double* data)
   store(size,data);
 }
 
+int recorder_t::osc_setvar_s(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  ((recorder_t*)user_data)->osc_setvar_s(path,&(argv[0]->s));
+  return 0;
+}
+
+void recorder_t::osc_setvar_s( const char *path, const char* msg )
+{
+  double t1(israte_*jack_get_current_transport_frame(jc_));
+  store_msg(t1,0,msg);
+}
+
 datalogging_t::~datalogging_t()
 {
   try{
@@ -843,18 +940,24 @@ void datalogging_t::save_text(const std::string& filename)
   ofs << "# fragsize: " << fragsize << "\n";
   for(uint32_t k=0;k<recorder.size();k++){
     ofs << "# " << recorder[k]->get_name() << std::endl;
-    std::vector<double> data(recorder[k]->get_data());
-    uint32_t N(recorder[k]->get_size());
-    uint32_t M(data.size());
-    uint32_t cnt(N-1);
-    for(uint32_t l=0;l<M;l++){
-      ofs << data[l];
-      if( cnt-- ){
-	ofs << " ";
-      }else{
-	ofs << "\n";
-	cnt = N-1;
-      }	
+    if( recorder[k]->is_textdata() ){
+      std::vector<label_t> data(recorder[k]->get_textdata());
+      for(auto it=data.begin();it!=data.end();++it)
+        ofs << it->t1 << " " << it->t2 << " \"" << it->msg << "\"\n";
+    }else{
+      std::vector<double> data(recorder[k]->get_data());
+      uint32_t N(recorder[k]->get_size());
+      uint32_t M(data.size());
+      uint32_t cnt(N-1);
+      for(uint32_t l=0;l<M;l++){
+        ofs << data[l];
+        if( cnt-- ){
+          ofs << " ";
+        }else{
+          ofs << "\n";
+          cnt = N-1;
+        }	
+      }
     }
   }
   for(lslvarlist_t::iterator it=lslvars.begin();it!=lslvars.end();++it){
@@ -888,21 +991,25 @@ void mat_add_double( mat_t* matfb, const std::string& name, double v)
   Mat_VarFree(mVar);
 }
 
-void mat_add_double_field( matvar_t* s, const std::string& name, double v )
+void mat_set_double_field( matvar_t* s, const std::string& name, double v, size_t idx )
 {
-  Mat_VarAddStructField(s,name.c_str());
   size_t dims[2];
   dims[0] = 1;
   dims[1] = 1;
   matvar_t* mVar(Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,&v,0));
   if( mVar == NULL )
     throw TASCAR::ErrMsg("Unable to create variable \""+name+"\".");
-  Mat_VarSetStructFieldByName(s,name.c_str(),0,mVar);
+  Mat_VarSetStructFieldByName(s, name.c_str(), idx, mVar);
 }
 
-void mat_add_char_field( matvar_t* s, const std::string& name, const std::string& str )
+void mat_add_double_field( matvar_t* s, const std::string& name, double v )
 {
   Mat_VarAddStructField(s,name.c_str());
+  mat_set_double_field( s, name, v, 0 );
+}
+
+void mat_set_char_field( matvar_t* s, const std::string& name, const std::string& str, size_t idx )
+{
   size_t dims[2];
   dims[0] = 1;
   dims[1] = str.size();
@@ -910,17 +1017,17 @@ void mat_add_char_field( matvar_t* s, const std::string& name, const std::string
   matvar_t* mStr(Mat_VarCreate(NULL,MAT_C_CHAR,MAT_T_INT8,2,dims,v,0));
   if( mStr == NULL )
     throw TASCAR::ErrMsg("Unable to create variable \""+name+"\".");
-  Mat_VarSetStructFieldByName(s,name.c_str(),0,mStr);
+  Mat_VarSetStructFieldByName( s, name.c_str(), idx, mStr );
 }
 
-void datalogging_t::save_mat(const std::string& filename)
+void mat_add_char_field( matvar_t* s, const std::string& name, const std::string& str )
 {
-  mat_t *matfp;
-  std::string fname(outputdir+nice_name(filename,"mat"));
-  matfp = Mat_CreateVer(fname.c_str(),NULL,MAT_FT_MAT5);
-  if ( NULL == matfp )
-    throw TASCAR::ErrMsg("Unable to create file \""+fname+"\".");
-  try{
+  Mat_VarAddStructField(s,name.c_str());
+  mat_set_char_field( s, name, str, 0 );
+}
+
+void datalogging_t::save_session_related_meta_data(mat_t *matfp, const std::string& fname)
+{
     mat_add_strvar(matfp,"tascarversion",TASCARVERSION);
     mat_add_strvar(matfp,"trialid",filename);
     mat_add_strvar(matfp,"filename",fname);
@@ -930,22 +1037,59 @@ void datalogging_t::save_mat(const std::string& filename)
     mat_add_strvar(matfp,"sourcexml",session->doc->write_to_string_formatted());
     mat_add_double(matfp,"fragsize",fragsize);
     mat_add_double(matfp,"srate",srate);
+}
+
+matvar_t* create_message_struct( const std::vector<label_t>& msg )
+{
+  size_t dims[2];
+  dims[0] = msg.size();
+  dims[1] = 1;
+  const char *fieldnames[3] = {"t_tascar","t_lsl","message"};
+  matvar_t* matDataStruct(Mat_VarCreateStruct(NULL,2,dims,fieldnames,3));
+  if( matDataStruct == NULL )
+    throw TASCAR::ErrMsg("Unable to create message variable.");
+  for( uint32_t c=0; c<msg.size(); ++c ){
+    mat_set_double_field( matDataStruct, "t_tascar", msg[c].t1, c );
+    mat_set_double_field( matDataStruct, "t_lsl", msg[c].t2, c );
+    mat_set_char_field( matDataStruct, "message", msg[c].msg, c );
+  }
+  return matDataStruct;
+}
+
+void datalogging_t::save_mat(const std::string& filename)
+{
+  // first create mat file:
+  mat_t *matfp;
+  std::string fname(outputdir+nice_name(filename,"mat"));
+  matfp = Mat_CreateVer(fname.c_str(),NULL,MAT_FT_MAT5);
+  if ( NULL == matfp )
+    throw TASCAR::ErrMsg("Unable to create file \""+fname+"\".");
+  // if anything fails, try to close file.
+  try{
+    // now, store session-related meta data:
+    save_session_related_meta_data( matfp, fname );
+    // store recorded variables:
     size_t dims[2];
     for(uint32_t k=0;k<recorder.size();k++){
       std::string name(nice_name(recorder[k]->get_name()));
-      std::vector<double> data(recorder[k]->get_data());
-      uint32_t N(recorder[k]->get_size());
-      uint32_t M(data.size());
-      //uint32_t cnt(N-1);
-      dims[1] = M/N;
-      dims[0] = N;
-      double* x(&(data[0]));
-      matvar_t* mvar(Mat_VarCreate(name.c_str(),MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,x,0));
+      matvar_t* mvar(NULL);
+      if( recorder[k]->is_textdata() ){
+        mvar = create_message_struct( recorder[k]->get_textdata() );
+      }else{
+        std::vector<double> data(recorder[k]->get_data());
+        uint32_t N(recorder[k]->get_size());
+        uint32_t M(data.size());
+        dims[1] = M/N;
+        dims[0] = N;
+        double* x(&(data[0]));
+        mvar = Mat_VarCreate(name.c_str(),MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,x,0);
+      }
       if( mvar == NULL )
         throw TASCAR::ErrMsg("Unable to create variable \""+name+"\".");
       Mat_VarWrite(matfp,mvar,MAT_COMPRESSION_NONE);
       Mat_VarFree(mvar);
     }
+    // add LSL variable meta data:
     for(lslvarlist_t::iterator it=lslvars.begin();it!=lslvars.end();++it){
       mat_add_double(matfp,
                      (*it)->recorder->get_name()+"_stream_delta_start",
@@ -953,14 +1097,13 @@ void datalogging_t::save_mat(const std::string& filename)
       mat_add_double(matfp,
                      (*it)->recorder->get_name()+"_stream_delta_end",
                      (*it)->stream_delta_end);
-      char *tmp = lsl_get_xml((*it)->info);
       mat_add_strvar(matfp,
                      (*it)->recorder->get_name()+"_info",
-                     tmp);
-      lsl_destroy_string(tmp);
+                     (*it)->get_xml().c_str());
     }
   }
   catch( ... ){
+    // close mat file, to have as much written as possible.
     Mat_Close(matfp);
     throw;
   }
@@ -969,21 +1112,17 @@ void datalogging_t::save_mat(const std::string& filename)
 
 void datalogging_t::save_matcell(const std::string& filename)
 {
+  // first create mat file:
   mat_t *matfp;
   std::string fname(outputdir+nice_name(filename,"mat"));
   matfp = Mat_CreateVer(fname.c_str(),NULL,MAT_FT_MAT5);
   if ( NULL == matfp )
     throw TASCAR::ErrMsg("Unable to create file \""+fname+"\".");
+  // if anything fails, try to close file.
   try{
-    mat_add_strvar(matfp,"tascarversion",TASCARVERSION);
-    mat_add_strvar(matfp,"trialid",filename);
-    mat_add_strvar(matfp,"filename",fname);
-    mat_add_strvar(matfp,"savedat",datestr());
-    mat_add_strvar(matfp,"tscfilename",session->get_file_name());
-    mat_add_strvar(matfp,"tscpath",session->get_session_path());
-    mat_add_strvar(matfp,"sourcexml",session->doc->write_to_string_formatted());
-    mat_add_double(matfp,"fragsize",fragsize);
-    mat_add_double(matfp,"srate",srate);
+    // now, store session-related meta data:
+    save_session_related_meta_data( matfp, fname );
+    // store recorded variables:
     size_t dims[2];
     dims[0] = recorder.size();
     dims[1] = 1;
@@ -995,21 +1134,25 @@ void datalogging_t::save_matcell(const std::string& filename)
       throw TASCAR::ErrMsg("Unable to create data cell array.");
     for(uint32_t k=0;k<recorder.size();k++){
       std::string name(nice_name(recorder[k]->get_name()));
-      std::vector<double> data(recorder[k]->get_data());
-      uint32_t N(recorder[k]->get_size());
-      uint32_t M(data.size());
-      //uint32_t cnt(N-1);
-      //matvar_t* mvar(Mat_VarCreate(name.c_str(),MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,x,0));
+      // create data cell entry as struct:
       const char *fieldnames[2] = {"data","name"};
       dims[0] = 1;
       dims[1] = 1;
       matvar_t* matDataStruct(Mat_VarCreateStruct(NULL,2,dims,fieldnames,2));
       if( matDataStruct == NULL )
         throw TASCAR::ErrMsg("Unable to create variable \""+name+"\".");
-      dims[1] = M/N;
-      dims[0] = N;
-      double* x(&(data[0]));
-      matvar_t* mData(Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,x,0));
+      matvar_t* mData(NULL);
+      if( recorder[k]->is_textdata() ){
+        mData = create_message_struct( recorder[k]->get_textdata() );
+      }else{
+        std::vector<double> data(recorder[k]->get_data());
+        uint32_t N(recorder[k]->get_size());
+        uint32_t M(data.size());
+        dims[1] = M/N;
+        dims[0] = N;
+        double* x(&(data[0]));
+        mData = Mat_VarCreate(NULL,MAT_C_DOUBLE,MAT_T_DOUBLE,2,dims,x,0);
+      }
       if( mData == NULL )
         throw TASCAR::ErrMsg("Unable to create variable \""+name+"\".");
       Mat_VarSetStructFieldByName(matDataStruct,"data",0,mData);
@@ -1024,18 +1167,16 @@ void datalogging_t::save_matcell(const std::string& filename)
       // here would come some header information...
       for(lslvarlist_t::iterator it=lslvars.begin();it!=lslvars.end();++it)
         if( (*it)->recorder == recorder[k] ){
-          mat_add_char_field(matDataStruct,"lsl_name",lsl_get_name((*it)->info));
-          mat_add_char_field(matDataStruct,"lsl_type",lsl_get_type((*it)->info));
-          mat_add_double_field(matDataStruct,"lsl_srate",lsl_get_nominal_srate((*it)->info));
-          mat_add_char_field(matDataStruct,"lsl_source_id",lsl_get_source_id((*it)->info));
-          mat_add_char_field(matDataStruct,"lsl_hostname",lsl_get_hostname((*it)->info));
-          mat_add_double_field(matDataStruct,"lsl_protocolversion",lsl_get_version((*it)->info));
-          mat_add_double_field(matDataStruct,"lsl_libraryversion",lsl_library_version());
+          mat_add_char_field(matDataStruct,"lsl_name",(*it)->inlet->info().name());
+          mat_add_char_field(matDataStruct,"lsl_type",(*it)->inlet->info().type());
+          mat_add_double_field(matDataStruct,"lsl_srate",(*it)->inlet->info().nominal_srate());
+          mat_add_char_field(matDataStruct,"lsl_source_id",(*it)->inlet->info().source_id());
+          mat_add_char_field(matDataStruct,"lsl_hostname",(*it)->inlet->info().hostname());
+          mat_add_double_field(matDataStruct,"lsl_protocolversion",(*it)->inlet->info().version());
+          mat_add_double_field(matDataStruct,"lsl_libraryversion",lsl::library_version());
           mat_add_double_field(matDataStruct,"stream_delta_start",(*it)->stream_delta_start);
           mat_add_double_field(matDataStruct,"stream_delta_end",(*it)->stream_delta_end);
-          char *tmp = lsl_get_xml((*it)->info);
-          mat_add_char_field(matDataStruct,"lsl_info",tmp);
-          lsl_destroy_string(tmp);
+          mat_add_char_field(matDataStruct,"lsl_info",(*it)->get_xml());
         }
       // here add var to cell array!
       Mat_VarSetCell(cell_array,k,matDataStruct);

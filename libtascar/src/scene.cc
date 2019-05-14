@@ -1000,17 +1000,15 @@ void sound_t::geometry_update( double t )
 {
   pos_t rp(local_position);
   if( parent ){
-    TASCAR::pos_t ppos;
-    TASCAR::zyx_euler_t por;
-    parent->get_6dof(ppos,por);
+    rp *= parent->c6dof.orientation;
     if( chaindist != 0 ){
       double tp(t - parent->starttime);
       tp = parent->location.get_time(parent->location.get_dist(tp)-chaindist);
-      ppos = parent->location.interp(tp);
+      rp += parent->location.interp(tp);
+    }else{
+      rp += parent->c6dof.position;
     }
-    rp *= por;
-    rp += ppos;
-    orientation = por;
+    orientation = parent->c6dof.orientation;
   }
   position = rp;
 }

@@ -280,7 +280,9 @@ void world_t::process(const TASCAR::transport_t& tp)
       if( receivers_[k]->boundingbox.active ){
         shoebox_t maskbox;
         maskbox.size = receivers_[k]->boundingbox.size;
-        receivers_[k]->boundingbox.get_6dof(maskbox.center, maskbox.orientation);
+        maskbox.center = receivers_[k]->boundingbox.c6dof.position;
+        maskbox.orientation = receivers_[k]->boundingbox.c6dof.orientation;
+        //receivers_[k]->boundingbox.get_6dof(maskbox.center, maskbox.orientation);
         double d(maskbox.nextpoint(receivers_[k]->position).norm());
         gain_inner *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
       }
@@ -310,11 +312,6 @@ void world_t::process(const TASCAR::transport_t& tp)
     (*ig)->process(tp);
     local_active_point += (*ig)->get_active_pointsource();
     local_active_diffuse += (*ig)->get_active_diffuse_sound_field();
-  }
-  // apply receiver gain:
-  for(uint32_t k=0;k<receivers_.size();k++){
-    receivers_[k]->post_proc(tp);
-    receivers_[k]->apply_gain();
   }
   active_pointsource = local_active_point;
   active_diffuse_sound_field = local_active_diffuse;

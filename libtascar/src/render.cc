@@ -1,9 +1,92 @@
 #include "render.h"
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
+
+TASCAR::render_profiler_t::render_profiler_t()
+{
+  t_init = 0.0;
+  t_geo = 0.0;
+  t_preproc = 0.0;
+  t_acoustics = 0.0;
+  t_postproc = 0.0;
+  t_copy = 0.0;
+  set_tau( 1.0, 1.0 );
+}
+
+void TASCAR::render_profiler_t::normalize(double t_total)
+{
+  if( t_total > 0 ){
+    double tinv(1.0/t_total);
+    t_init *= tinv;
+    t_geo *= tinv;
+    t_preproc *= tinv;
+    t_acoustics *= tinv;
+    t_postproc *= tinv;
+    t_copy *= tinv;
+  }
+}
+
+void TASCAR::render_profiler_t::update( const render_profiler_t& src )
+{
+    t_init *= A1;
+    t_geo *= A1;
+    t_preproc *= A1;
+    t_acoustics *= A1;
+    t_postproc *= A1;
+    t_copy *= A1;
+    t_init += B0*src.t_init;
+    t_geo += B0*src.t_geo;
+    t_preproc += B0*src.t_preproc;
+    t_acoustics += B0*src.t_acoustics;
+    t_postproc += B0*src.t_postproc;
+    t_copy += B0*src.t_copy;
+}
+
+void TASCAR::render_profiler_t::set_tau( double t, double fs )
+{
+  A1 = exp(-1.0/(t*fs));
+  B0 = 1.0-A1;
+}
+
+class tictoc_t {
+public:
+  tictoc_t();
+  double toc();
+private:
+  struct timeval tv1;
+  struct timeval tv2;
+  struct timezone tz;
+  double t;
+};
+
+tictoc_t::tictoc_t()
+{
+  memset(&tv1,0,sizeof(timeval));
+  memset(&tv2,0,sizeof(timeval));
+  memset(&tz,0,sizeof(timezone));
+  t = 0;
+  gettimeofday(&tv1,&tz);
+}
+
+double tictoc_t::toc()
+{
+  gettimeofday(&tv2,&tz);
+  tv2.tv_sec -= tv1.tv_sec;
+  if( tv2.tv_usec >= tv1.tv_usec )
+    tv2.tv_usec -= tv1.tv_usec;
+  else{
+    tv2.tv_sec --;
+    tv2.tv_usec += 1000000;
+    tv2.tv_usec -= tv1.tv_usec;
+  }
+  t = (float)(tv2.tv_sec) + 0.000001 * (float)(tv2.tv_usec);
+  return t;
+}
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
+
 
 TASCAR::render_core_t::render_core_t(xmlpp::Element* xmlsrc)
   : scene_t(xmlsrc),
@@ -108,6 +191,7 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
     total_pointsources = world->get_total_pointsource();
     total_diffuse_sound_fields = world->get_total_diffuse_sound_field();
     ambbuf = new TASCAR::amb1wave_t( n_fragment );
+    loadaverage.set_tau( 1.0, f_fragment );
     is_prepared = true;
     pthread_mutex_unlock( &mtx_world );
   }
@@ -130,6 +214,14 @@ void TASCAR::render_core_t::release()
   pthread_mutex_unlock( &mtx_world );
 }
 
+double gettime()
+{
+  struct timeval tv;
+  memset(&tv,0,sizeof(timeval));
+  gettimeofday(&tv, NULL );
+  return (double)(tv.tv_sec) + 0.000001*tv.tv_usec;
+}
+
 void TASCAR::render_core_t::process(uint32_t nframes,
                                     const TASCAR::transport_t& tp,
                                     const std::vector<float*>& inBuffer,
@@ -139,6 +231,10 @@ void TASCAR::render_core_t::process(uint32_t nframes,
   //DEBUG(pcnt);
   //++pcnt;
   if( pthread_mutex_trylock( &mtx_world ) == 0 ){
+    tictoc_t tic;
+    /*
+     * Initialization:
+     */
     //security/stability:
     for(uint32_t ch=0;ch<inBuffer.size();ch++)
       for(uint32_t k=0;k<nframes;k++)
@@ -149,8 +245,16 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     for(unsigned int k=0;k<receivermod_objects.size();k++){
       receivermod_objects[k]->clear_output();
     }
+    load_cycle.t_init = tic.toc();
+    /*
+     * Geometry processing:
+     */
     geometry_update(tp.session_time_seconds);
     process_active(tp.session_time_seconds);
+    load_cycle.t_geo = tic.toc();
+    /*
+     * Pre-processing of point sources and diffuse sources:
+     */
     // update audio ports (e.g., for level metering):
     // fill inputs:
     for(unsigned int k=0;k<sounds.size();k++){
@@ -172,6 +276,10 @@ void TASCAR::render_core_t::process(uint32_t nframes,
       psrc->preprocess( tp );
       psrc->audio *= gain;
     }
+    load_cycle.t_preproc = tic.toc();
+    /*
+     * Acoustic model:
+     */
     // process world:
     if( world ){
       world->process(tp);
@@ -181,17 +289,29 @@ void TASCAR::render_core_t::process(uint32_t nframes,
       active_pointsources = 0;
       active_diffuse_sound_fields = 0;
     }
+    load_cycle.t_acoustics = tic.toc();
+    /*
+     * Post-processing:
+     */
     // copy receiver output:
+    // apply post-processing and receiver gain:
+    for(uint32_t k=0;k<receivers.size();k++){
+      receivers[k]->post_proc(tp);
+      receivers[k]->apply_gain();
+    }
     for(unsigned int k=0;k<receivermod_objects.size();k++){
       float gain(receivermod_objects[k]->get_gain());
       uint32_t numch(receivermod_objects[k]->get_num_channels());
       for(uint32_t ch=0;ch<numch;ch++)
         receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
     }
+    load_cycle.t_postproc = tic.toc();
     //security/stability:
     for(uint32_t ch=0;ch<outBuffer.size();ch++)
       for(uint32_t k=0;k<nframes;k++)
         make_friendly_number_limited(outBuffer[ch][k]);
+    load_cycle.normalize( t_fragment );
+    loadaverage.update(load_cycle);
     pthread_mutex_unlock( &mtx_world );
   }
 }

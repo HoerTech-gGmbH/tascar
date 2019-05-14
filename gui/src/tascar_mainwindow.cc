@@ -24,20 +24,20 @@ void error_message(const std::string& msg)
 
 tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
   : Gtk::Window(cobject),
-    m_refBuilder(refGlade),
-    scene_map(NULL),
-    statusbar_main(NULL),
-    timeline(NULL),
-    scene_selector(NULL),
-    selected_scene(0),
-    active_selector(NULL),
-    active_object(NULL),
-    active_label_sourceline(NULL),
-    active_mixer(NULL),
-    active_source_ctl(NULL),
-    blink(false),
-    sessionloaded(false),
-    sessionquit(false)
+  m_refBuilder(refGlade),
+  scene_map(NULL),
+  statusbar_main(NULL),
+  timeline(NULL),
+  scene_selector(NULL),
+  selected_scene(0),
+  active_selector(NULL),
+  active_object(NULL),
+  active_label_sourceline(NULL),
+  active_mixer(NULL),
+  active_source_ctl(NULL),
+  blink(false),
+  sessionloaded(false),
+  sessionquit(false)
 {
   Gsv::init();
   language_manager = Gsv::LanguageManager::create();
@@ -195,10 +195,26 @@ bool tascar_window_t::on_timeout_statusbar()
     if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
       char cmp[1024];
       if( session && session->is_running() ){
-        sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d",
-                (long int)(session->scenes.size()),
-                session->get_active_pointsources(),session->get_total_pointsources(),
-                session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields());
+        if( session->scenes.size() > selected_scene ){
+          TASCAR::scene_render_rt_t* scene(session->scenes[selected_scene]);
+          TASCAR::render_profiler_t prof(scene->loadaverage);
+          prof.normalize(prof.t_postproc);
+          sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d  | load: %1.1f%% (init: %1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: %1.1f%%  postproc: %1.1f%%)",
+                  (long int)(session->scenes.size()),
+                  session->get_active_pointsources(),session->get_total_pointsources(),
+                  session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields(),
+                  100.0*scene->loadaverage.t_postproc,
+                  100.0*prof.t_init,
+                  100.0*(prof.t_geo-prof.t_init),
+                  100.0*(prof.t_preproc-prof.t_geo),
+                  100.0*(prof.t_acoustics-prof.t_preproc),
+                  100.0*(prof.t_postproc-prof.t_acoustics));
+        }else{
+          sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d",
+                  (long int)(session->scenes.size()),
+                  session->get_active_pointsources(),session->get_total_pointsources(),
+                  session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields());
+        }
         sessionloaded = true;
       }else{
         sprintf(cmp,"No session loaded.");

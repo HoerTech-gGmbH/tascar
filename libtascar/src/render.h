@@ -25,6 +25,25 @@
 
 namespace TASCAR {
 
+  /**
+     \brief Data container for load measurements and profiling
+   */
+  class render_profiler_t {
+  public:
+    render_profiler_t();
+    void normalize(double t_total);
+    void update( const render_profiler_t& src );
+    void set_tau( double t, double fs );
+    double t_init;
+    double t_geo;
+    double t_preproc;
+    double t_acoustics;
+    double t_postproc;
+    double t_copy;
+  private:
+    double B0, A1;
+  };
+
   class render_core_t : public TASCAR::Scene::scene_t {
   public:
     render_core_t(xmlpp::Element* xmlsrc);
@@ -56,6 +75,7 @@ namespace TASCAR {
     std::vector<TASCAR::Scene::audio_port_t*> audioports_out;
     pthread_mutex_t mtx_world;
   public:
+    render_profiler_t loadaverage;
     Acousticmodel::world_t* world;
   public:
     uint32_t active_pointsources;
@@ -64,8 +84,8 @@ namespace TASCAR {
     uint32_t total_diffuse_sound_fields;
   private:
     bool is_prepared;
-    //uint32_t pcnt;
     TASCAR::amb1wave_t* ambbuf;
+    render_profiler_t load_cycle;
   };
 
 

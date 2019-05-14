@@ -57,8 +57,10 @@ namespace TASCAR {
     pos_t dlocation;
     zyx_euler_t dorientation;
     const c6dof_t& c6dof;
+    const c6dof_t& c6dof_nodelta;
   private:
     dynobject_t(const dynobject_t&);
+    c6dof_t c6dof_nodelta_;
     c6dof_t c6dof_;
     c6dof_t c6dof_prev;
     xmlpp::Element* xml_location;
