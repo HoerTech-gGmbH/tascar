@@ -22,12 +22,19 @@ The enable state and the duration can be controlled via OSC.
 \end{verbatim}
 %
 
+To use {\bf geopresets} in combination with the simplecontroller
+(Section \ref{sec:simplecontroller}) or joystick
+(Section \ref{sec:joystick}) actor plugin, configure this module to
+appear before the others in the session file, and
+set \attr{unlock="true"}.
+
 \begin{tscattributes}
 \indattr{duration}    & Duration of ramp in seconds (default: 2)              \\
 \indattr{enable}      & Enable (true, default) or disable (false) the module. \\
 \indattr{id}          & ID used as OSC prefix (default: geopresets)           \\
 \indattr{startpreset} & Starting preset (or empty for no starting preset)     \\
 \indattr{showgui}     & Show GUI (default: false)                             \\
+\indattr{unlock}      & Unlock delta transformation after motion              \\
 \end{tscattributes}
 
 Presets can be defined with one or more \elem{preset} elements, which

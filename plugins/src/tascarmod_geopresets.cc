@@ -39,9 +39,12 @@ private:
   std::mutex mtx;
   bool b_newpos;
   bool showgui;
+  bool unlock;
   Gtk::Window* win;
   Gtk::Box* box;
   std::vector<Gtk::Button*> buttons;
+  bool apply_trans;
+  bool apply_rot;
 };
 
 int geopresets_t::osc_setpreset(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -122,12 +125,16 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
     d_phase(1.0f),
     b_newpos(false),
     showgui(false),
-    win(NULL)
+    unlock(false),
+    win(NULL),
+    apply_trans(false),
+    apply_rot(false)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(enable);
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(startpreset);
+  GET_ATTRIBUTE_BOOL(unlock);
   if( id.empty() )
     id = "geopresets";
   GET_ATTRIBUTE_BOOL(showgui);
@@ -157,6 +164,7 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
   session->add_method("/"+id+"/addorientation","sfff",&geopresets_t::osc_addorientation,this);
   session->add_double("/"+id+"/duration",&duration);
   session->add_bool("/"+id+"/enable",&enable);
+  session->add_bool("/"+id+"/unlock",&unlock);
   setpreset(startpreset);
   if( showgui ){
     win = new Gtk::Window();
@@ -189,15 +197,21 @@ void geopresets_t::update(uint32_t tp_frame,bool tp_rolling)
     return;
   if( b_newpos ){
     if( mtx.try_lock() ){
+      apply_trans = false;
+      apply_rot = false;
       current_duration = duration;
       new_p = old_p = current_p;
       new_r = old_r = current_r;
       auto pos_it(positions.find(preset));
-      if( pos_it != positions.end() )
+      if( pos_it != positions.end() ){
+        apply_trans = true;
         new_p = pos_it->second;
+      }
       auto rot_it(orientations.find(preset));
-      if( rot_it != orientations.end() )
+      if( rot_it != orientations.end() ){
+        apply_rot = true;
         new_r = rot_it->second;
+      }
       const std::complex<double> i(0, 1);
       d_phase = std::exp( i*M_PI*t_fragment/duration );
       phase = 1.0f;
@@ -228,10 +242,19 @@ void geopresets_t::update(uint32_t tp_frame,bool tp_rolling)
   current_r.y = w*new_r.y + w1*old_r.y;
   current_r.z = w*new_r.z + w1*old_r.z;
   // apply transformation:
-  for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
-    iobj->obj->dorientation = current_r;
-    iobj->obj->dlocation = current_p;
-  }
+  if( (!unlock) || running )
+    for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
+      if( apply_rot )
+        iobj->obj->dorientation = current_r;
+      if( apply_trans )
+        iobj->obj->dlocation = current_p;
+    }
+  else
+    for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
+      new_r = current_r = iobj->obj->dorientation;
+      new_p = current_p = iobj->obj->dlocation;
+      
+    }
 }
 
 REGISTER_MODULE(geopresets_t);

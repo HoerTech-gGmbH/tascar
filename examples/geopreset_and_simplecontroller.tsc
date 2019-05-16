@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<session license="CC BY SA 2.0" attribution="Giso Grimm" loop="true">
+  <scene guiscale="5">
+    <source name="in">
+      <position>0 2 0 0</position>
+      <sound>
+	<plugins>
+	  <pink level="65"/>
+	</plugins>
+      </sound>
+    </source>
+    <receiver name="out" type="ortf"/>
+  </scene>
+  <modules>
+    <geopresets actor="/scene/out" showgui="true" duration="2.5" unlock="true">
+      <preset name="pos0" position="0 0 0" orientation="0 0 0"/>
+      <preset name="pos1" position="0 -1 0"/>
+      <preset name="pos2" position="0 1 0" orientation="30 0 0"/>
+    </geopresets>
+    <simplecontroller actor="/scene/out"/>
+  </modules>
+</session>

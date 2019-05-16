@@ -433,7 +433,9 @@ void TASCAR::session_t::add_scene(xmlpp::Element* src)
     src = tsc_reader_t::e->add_child("scene");
   scenes.push_back(new TASCAR::scene_render_rt_t(src));
   scenes.back()->configure_meter( levelmeter_tc, levelmeter_weight );
-  scenes.back()->add_child_methods(this);
+  //DEBUG(1);
+  //scenes.back()->add_child_methods(this);
+  //DEBUG(1);
 }
 
 void TASCAR::session_t::add_range(xmlpp::Element* src)
@@ -460,8 +462,10 @@ void TASCAR::session_t::add_module(xmlpp::Element* src)
 void TASCAR::session_t::start()
 {
   started_ = true;
-  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
+  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl){
     (*ipl)->start();
+    (*ipl)->add_child_methods(this);
+  }
   for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod){
     chunk_cfg_t cf( srate, fragsize );
     (*imod)->prepare( cf );

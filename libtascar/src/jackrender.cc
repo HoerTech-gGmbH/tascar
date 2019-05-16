@@ -194,8 +194,6 @@ void TASCAR::render_rt_t::start()
     add_input_port(*iip);
   for(std::vector<std::string>::iterator iop=output_ports.begin();iop!=output_ports.end();++iop)
     add_output_port(*iop);
-  // activate repositioning services for each object:
-  add_child_methods(this);
   add_input_port("sync_in");
   jackc_t::activate();
   osc_server_t::activate();
@@ -207,15 +205,7 @@ void TASCAR::render_rt_t::start()
       connect_in(sounds[k]->get_port_index(),cn,true);
     }
   }
-//  // connect jack ports of point sources:
-//  for(unsigned int k=0;k<door_sources.size();k++){
-//    std::string cn(door_sources[k]->get_connect());
-//    if( cn.size() ){
-//      cn = strrep(cn,"@","player."+name+":"+door_sources[k]->get_name());
-//      connect_in(door_sources[k]->get_port_index(),cn,true);
-//    }
-//  }
-  // todo: connect diffuse ports.
+  // connect diffuse ports:
   for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator idiff=diffuse_sound_field_infos.begin();idiff!=diffuse_sound_field_infos.end();++idiff){
     TASCAR::Scene::diffuse_info_t* pdiff(*idiff);
     std::string cn(pdiff->get_connect());

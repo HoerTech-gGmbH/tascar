@@ -29,12 +29,14 @@ public:
   void saveas( const std::string& fname );
   void save();
   bool complete() const { return levelsrecorded && calibrated && calibrated_diff; };
+  bool modified() const { return levelsrecorded || calibrated || calibrated_diff || gainmodified; };
   std::string name() const {return spkname;};
   double get_lmin() const {return lmin;};
   double get_lmax() const {return lmax;};
   double get_lmean() const {return lmean;};
   bool levels_complete() const { return levelsrecorded; };
 private:
+  bool gainmodified;
   bool levelsrecorded;
   bool calibrated;
   bool calibrated_diff;
@@ -55,8 +57,10 @@ private:
 
 calibsession_t::calibsession_t( const std::string& fname, double reflevel, const std::string& refport, double duration_ )
   : session_t("<?xml version=\"1.0\"?><session srv_port=\"none\"/>",LOAD_STRING,""),
+    gainmodified(false),
     levelsrecorded(false),
     calibrated(false),
+    calibrated_diff(false),
     startlevel(0),
     startdiffgain(0),
     delta(0),
@@ -202,6 +206,10 @@ void calibsession_t::saveas( const std::string& fname )
   std::strftime(ctmp,1023,"%Y-%m-%d %T",std::localtime(&t));
   doc.doc->get_root_node()->set_attribute("calibdate",ctmp);
   doc.doc->write_to_file_formatted(fname);
+  gainmodified = false;
+  levelsrecorded = false;
+  calibrated = false;
+  calibrated_diff = false;
 }
 
 void calibsession_t::save()
@@ -252,6 +260,7 @@ double calibsession_t::get_diffusegain() const
 
 void calibsession_t::inc_caliblevel(double dl)
 {
+  gainmodified = true;
   delta += dl;
   double gain(pow(10.0,0.05*(startlevel+delta)));
   if( !scenes.empty() )
@@ -261,6 +270,7 @@ void calibsession_t::inc_caliblevel(double dl)
 
 void calibsession_t::inc_diffusegain(double dl)
 {
+  gainmodified = true;
   delta_diff += dl;
   double gain(pow(10.0,0.05*(startdiffgain+delta_diff)));
   if( !scenes.empty() )
@@ -431,6 +441,15 @@ void spkcalib_t::manage_act_grp_save()
   }else{
     text_levelresults->set_text("");
   }
+  if( session ){
+    std::string smodified("");
+    if( session->modified() )
+      smodified = " (modified)";
+    set_title(std::string("TASCAR speaker calibration [") + 
+              std::string(basename(session->name().c_str())) + 
+              std::string("]")+smodified );
+  }else
+    set_title("TASCAR speaker calibration");
 }
 
 void spkcalib_t::on_reclevels()
@@ -608,6 +627,7 @@ void spkcalib_t::on_save()
   try{
     if( session )
       session->save();
+    update_display();
   }
   catch( const std::exception& e){
     error_message(e.what());
@@ -643,6 +663,7 @@ void spkcalib_t::on_saveas()
         if( session )
           session->saveas(filename);
         load(filename);
+        update_display();
       }
       catch( const std::exception& e){
         error_message(e.what());
@@ -696,12 +717,6 @@ void spkcalib_t::update_display()
     levelentry->set_sensitive(false);
     levelentry_diff->set_sensitive(false);
   }
-  if( session )
-    set_title(std::string("TASCAR speaker calibration [") + 
-              std::string(basename(session->name().c_str())) + 
-              std::string("]") );
-  else
-    set_title("TASCAR speaker calibration");
 }
 
 void spkcalib_t::load(const std::string& fname)

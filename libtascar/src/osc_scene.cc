@@ -191,10 +191,17 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sou
 
 void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::diffuse_info_t* s)
 {
-  srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/gain","f",osc_set_diffuse_gain,s);
-  srv->add_method("/"+scene->name+"/"+s->object_t::get_name()+"/lingain","f",osc_set_diffuse_gain_lin,s);
-  srv->add_float_db("/"+scene->name+"/"+s->object_t::get_name()+"/caliblevel",&(s->caliblevel));
-  srv->add_uint("/"+scene->name+"/"+s->object_t::get_name()+"/layers",&(s->layers));
+  std::string oldpref(srv->get_prefix());
+  srv->set_prefix("/"+scene->name+"/"+s->object_t::get_name());
+  srv->add_method("/gain","f",osc_set_diffuse_gain,s);
+  srv->add_method("/lingain","f",osc_set_diffuse_gain_lin,s);
+  srv->add_float_db("/caliblevel",&(s->caliblevel));
+  srv->add_uint("/layers",&(s->layers));
+  if( s->get_source() )
+    s->get_source()->plugins.add_variables( srv );
+  else
+    throw TASCAR::ErrMsg("implementation error");
+  srv->set_prefix(oldpref);
 }
 
 void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receivermod_object_t* s)
