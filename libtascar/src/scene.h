@@ -335,6 +335,7 @@ namespace TASCAR {
          \callergraph
       */
       virtual void postproc(std::vector<wave_t>& output);
+      void validate_attributes(std::string& msg) const;
       
     };
 

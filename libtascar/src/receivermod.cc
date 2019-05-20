@@ -43,6 +43,12 @@ void TASCAR::receivermod_t::postproc(std::vector<wave_t>& output)
   libdata->postproc(output);
 }
 
+void TASCAR::receivermod_t::validate_attributes(std::string& msg) const
+{
+  receivermod_base_t::validate_attributes(msg);
+  libdata->validate_attributes(msg);
+}
+
 uint32_t TASCAR::receivermod_t::get_num_channels()
 {
   return libdata->get_num_channels();

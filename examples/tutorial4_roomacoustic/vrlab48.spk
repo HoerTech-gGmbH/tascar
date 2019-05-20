@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<layout name="vrlab48">
+<layout>
 <speaker az="0.0" el="0.0" connect="system:playback_25" compA="1" compB="1.000000"/>
 <speaker az="7.5" el="0.0" connect="system:playback_26" compA="1" compB="0.969752"/>
 <speaker az="15.0" el="0.0" connect="system:playback_27" compA="1" compB="0.953965"/>

@@ -374,6 +374,12 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
   }
 }
 
+void receivermod_object_t::validate_attributes(std::string& msg) const
+{
+  dynobject_t::validate_attributes(msg);
+  TASCAR::Acousticmodel::receiver_t::validate_attributes(msg);
+}
+
 void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
 {
   cf_.n_channels = get_num_channels();
@@ -735,7 +741,7 @@ void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
   for(std::vector<obstacle_group_t*>::const_iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
   for(std::vector<receivermod_object_t*>::const_iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
-    (*it)->dynobject_t::validate_attributes(msg);
+    (*it)->validate_attributes(msg);
   for(std::vector<mask_object_t*>::const_iterator it=masks.begin();it!=masks.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="3">
+    <diffuse name="diff">
+      <plugins><pink level="70"/></plugins>
+    </diffuse>
+    <receiver type="nsp" layout="4ch_nodecorr.spk"/>
+  </scene>
+</session>

@@ -178,6 +178,7 @@ void calibsession_t::saveas( const std::string& fname )
   TASCAR::xml_doc_t doc(spkname, TASCAR::xml_doc_t::LOAD_FILE );
   if( doc.doc->get_root_node()->get_name() != "layout" )
     throw TASCAR::ErrMsg("Invalid file type, expected root node type \"layout\", got \""+doc.doc->get_root_node()->get_name()+"\".");
+  TASCAR::xml_element_t elem(doc.doc->get_root_node());
   doc.doc->get_root_node()->set_attribute("caliblevel",TASCAR::to_string(get_caliblevel()));
   doc.doc->get_root_node()->set_attribute("diffusegain",TASCAR::to_string(get_diffusegain()));
   // update gains:
@@ -200,6 +201,14 @@ void calibsession_t::saveas( const std::string& fname )
       }
     }
   }
+  std::vector<std::string> attributes;
+  attributes.push_back("decorr_length");
+  attributes.push_back("decorr");
+  attributes.push_back("densitycorr");
+  attributes.push_back("caliblevel");
+  attributes.push_back("diffusegain");
+  size_t checksum(elem.hash(attributes));
+  elem.set_attribute("checksum",checksum);
   char ctmp[1024];
   memset(ctmp,0,1024);
   std::time_t t(std::time(nullptr));

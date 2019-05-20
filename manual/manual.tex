@@ -1150,6 +1150,9 @@ The top-level element of a layout file, \elem{layout}, can be configured with th
 \indattr{decorr\_length} & Length of decorrelation filter, in seconds (default: 0.05)                          \\
 \indattr{densitycorr}    & In diffuse rendering, correct gains locally for loudspeaker density (default: true) \\
 \end{tscattributes}
+%
+Changing any of these attributes (except for \attr{calibdate}) might
+affect the output calibration and requires re-calibration.
 
 If the caliblevel is provided in the receiver element and the layout
 file, then a warning is issued and the value from the layout file is

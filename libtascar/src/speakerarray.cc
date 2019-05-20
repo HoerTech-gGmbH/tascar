@@ -334,6 +334,19 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
       TASCAR::add_warning("Invalid date/time format: "+calibdate);
     }
   }
+  size_t checksum(0);
+  elayout.GET_ATTRIBUTE(checksum);
+  if( checksum != 0 ){
+    std::vector<std::string> attributes;
+    attributes.push_back("decorr_length");
+    attributes.push_back("decorr");
+    attributes.push_back("densitycorr");
+    attributes.push_back("caliblevel");
+    attributes.push_back("diffusegain");
+    size_t current_checksum(elayout.hash(attributes));
+    if( checksum != current_checksum )
+      TASCAR::add_warning("The layout file \""+layout+"\" was modified since last calibration. Re-calibration is recommended.");
+  }
 }
 
 

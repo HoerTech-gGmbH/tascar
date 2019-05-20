@@ -104,6 +104,7 @@ namespace TASCAR {
     xmlpp::Element* e;
     std::vector<std::string> get_unused_attributes() const;
     virtual void validate_attributes(std::string&) const;
+    size_t hash(const std::vector<std::string>& attributes) const;
   protected:
     // book keeping
     //std::map<std::string,std::string> attributelist;

@@ -3,11 +3,21 @@
 #include <stdlib.h>
 #include "errorhandling.h"
 #include <unistd.h>
+#include <functional>
 
 namespace TASCAR {
   std::map<xmlpp::Element*,std::map<std::string,std::string> > attribute_list;
   std::vector<std::string> warnings;
   globalconfig_t config;
+}
+
+size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes) const
+{
+  std::string v;
+  for(auto it=attributes.begin();it!=attributes.end();++it)
+    v += e->get_attribute_value(*it);
+  std::hash<std::string> hash_fn;
+  return hash_fn(v);
 }
 
 std::string TASCAR::to_string( double x )
@@ -16,7 +26,6 @@ std::string TASCAR::to_string( double x )
   sprintf(ctmp,"%g",x);
   return ctmp;
 }
-
 
 std::string TASCAR::days_to_string( double x )
 {

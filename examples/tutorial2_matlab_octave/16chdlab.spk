@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<layout name="glab">
+<layout>
   <speaker az="0"     connect="system:playback_1"/>
   <speaker az="22.5"  connect="system:playback_2"/>
   <speaker az="45"    connect="system:playback_3"/>

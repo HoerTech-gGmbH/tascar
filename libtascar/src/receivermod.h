@@ -99,6 +99,7 @@ namespace TASCAR {
     void release();
     virtual receivermod_base_t::data_t* create_data( double srate,uint32_t fragsize );
     virtual void add_variables( TASCAR::osc_server_t* srv );
+    virtual void validate_attributes(std::string&) const;
   private:
     receivermod_t( const receivermod_t& );
     std::string receivertype;
