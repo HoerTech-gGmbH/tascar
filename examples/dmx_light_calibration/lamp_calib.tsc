@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <lightctl driver="opendmxusb" priority="20" device="/dev/ttyUSB0" universe="0" fps="31.5">
+      <lightscene name="calib" channels="3" master="1" layout="calib.fixtures" sendsquared="true"/>
+    </lightctl>
+  </modules>
+</session>
