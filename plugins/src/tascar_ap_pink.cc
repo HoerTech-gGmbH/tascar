@@ -15,6 +15,7 @@ private:
   double fmax;
   double level;
   double period;
+  bool use_transport;
   std::vector<TASCAR::looped_wave_t> pink;
 };
 
@@ -23,12 +24,14 @@ pink_t::pink_t( const TASCAR::audioplugin_cfg_t& cfg )
     fmin(62.5),
     fmax(4000),
     level(0.001),
-    period(4)
+    period(4),
+    use_transport(false)
 {
   GET_ATTRIBUTE(fmin);
   GET_ATTRIBUTE(fmax);
   GET_ATTRIBUTE_DBSPL(level);
   GET_ATTRIBUTE(period);
+  GET_ATTRIBUTE_BOOL(use_transport);
 }
 
 void pink_t::prepare( chunk_cfg_t& cf_ )
@@ -100,12 +103,18 @@ pink_t::~pink_t()
 void pink_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_double_dbspl("/level",&level);
+  srv->add_bool("/use_transport",&use_transport);
 }
 
 void pink_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
-  for(uint32_t k=0;k<std::min(chunk.size(),pink.size());++k)
-    pink[k].add_chunk_looped(level,chunk[k]);
+  if( (!use_transport) || tp.rolling ){
+    for(uint32_t k=0;k<std::min(chunk.size(),pink.size());++k){
+      if( use_transport )
+        pink[k].set_iposition( tp.object_time_samples );
+      pink[k].add_chunk_looped(level,chunk[k]);
+    }
+  }
 }
 
 REGISTER_AUDIOPLUGIN(pink_t);

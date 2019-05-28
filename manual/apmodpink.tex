@@ -5,4 +5,9 @@ Add a (band limited) pink noise to the input signal.
 \indattr{fmax} & Maximum frequency in Hz\\
 \indattr{level} & RMS level in dB SPL\\
 \indattr{period} & Period time of frozen noise in seconds\\
+\indattr{use\_transport} & Play only if transport is running (default: false)\\
 \end{tscattributes}
+
+If \attr{use\_transport} is activated, the object time is used for the
+frozen noise position.
+
