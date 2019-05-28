@@ -841,7 +841,7 @@ void scene_draw_t::draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASC
 
 void scene_draw_t::draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  if( obj ){
+  if( obj && obj->isactive(time)){
     bool solo(obj->get_solo());
     pos_t p0;
     cr->save();
