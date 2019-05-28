@@ -64,6 +64,7 @@ spk_array_t::spk_array_t(xmlpp::Element* e,
     }
   }
   elayout.GET_ATTRIBUTE(xyzgain);
+  elayout.GET_ATTRIBUTE(name);
   // 
   if( empty() )
     throw TASCAR::ErrMsg("Invalid " + 

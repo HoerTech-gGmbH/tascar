@@ -64,6 +64,7 @@ namespace TASCAR {
   public:
     spk_array_cfg_t( xmlpp::Element*, bool use_parent_xml );
     std::string layout;
+    std::string name;
   protected:
     xmlpp::DomParser domp;
     xmlpp::Element* e_layout;
