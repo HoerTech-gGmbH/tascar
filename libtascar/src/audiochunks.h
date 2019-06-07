@@ -46,6 +46,7 @@ namespace TASCAR {
     inline uint32_t size() const { return n;};
     void clear();
     void copy(const wave_t& src,float gain=1.0);
+    void add(const wave_t& src,float gain=1.0);
     uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
     uint32_t copy_stride(float* data,uint32_t cnt,uint32_t stride,float gain=1.0);
@@ -85,6 +86,7 @@ namespace TASCAR {
     void clear();
     void operator*=(double v);
     void operator+=(const amb1wave_t& v);
+    void add_panned( pos_t p, const wave_t& v, float g=1.0f);
     std::vector<wave_t> wxyz;
     void print_levels();
   protected:

@@ -161,6 +161,7 @@ namespace TASCAR {
       double damping;
       std::string importraw;
       bool edgereflection;
+      double scattering;
       TASCAR::pos_t shoebox;
       TASCAR::pos_t shoeboxwalls;
     };

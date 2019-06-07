@@ -127,7 +127,18 @@ int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, l
   return 0;
 }
 
-osc_server_t::osc_server_t(const std::string& multicast, const std::string& port,bool verbose_)
+int string2proto( const std::string& proto )
+{
+  if( proto == "UDP" )
+    return LO_UDP;
+  if( proto == "TCP" )
+    return LO_TCP;
+  if( proto == "UNIX" )
+    return LO_UNIX;
+  throw TASCAR::ErrMsg("Invalid OSC protocol name \""+proto+"\".");
+}
+
+osc_server_t::osc_server_t(const std::string& multicast, const std::string& port, const std::string& proto, bool verbose_)
   : osc_srv_addr(multicast),
     osc_srv_port(port),
     initialized(false),
@@ -139,17 +150,26 @@ osc_server_t::osc_server_t(const std::string& multicast, const std::string& port
   if( port.size() && (port != "none") ){
     if( multicast.size() ){
       lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
-      if( verbose )
-        std::cerr << "listening on multicast address \"osc.udp://" << multicast << ":"<<port << "/\"" << std::endl;
+      //if( verbose )
+      //std::cerr << "listening on multicast address \"osc.udp://" << multicast << ":"<<port << "/\"" << std::endl;
       initialized = true;
     }else{
-      lost = lo_server_thread_new(port.c_str(),err_handler);
-      if( verbose )
-        std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" << std::endl;
+      lost = lo_server_thread_new_with_proto(port.c_str(),string2proto(proto),err_handler);
+      //if( verbose )
+      //std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" << std::endl;
       initialized = true;
     }
     if( (!lost) || liblo_errflag )
-      throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\").");
+      throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\" "+proto+").");
+  }
+  if( lost ){
+    char* ctmp(lo_server_thread_get_url(lost));
+    if( ctmp ){
+      osc_srv_url = ctmp;
+      free(ctmp);
+    }
+    if( verbose )
+      std::cerr << "listening on \"" << osc_srv_url << "\"" << std::endl;
   }
 }
 
@@ -183,15 +203,22 @@ void osc_server_t::add_method(const std::string& path,const char* typespec,lo_me
 {
   if( initialized ){
     std::string sPath(prefix+path);
-    if( verbose )
-      std::cerr << "added handler " << sPath << " with typespec \"" << typespec << "\"" << std::endl;
+    if( verbose ){
+      std::cerr << "added handler " << sPath;
+      if(typespec)
+        std::cerr << " with typespec \"" << typespec << "\"";
+      std::cerr << std::endl;
+    }
     if( sPath.empty() )
       lo_server_thread_add_method(lost,NULL,typespec,h,user_data);
     else
       lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
     descriptor_t d;
     d.path = sPath;
-    d.typespec = typespec;
+    if( typespec )
+      d.typespec = typespec;
+    else
+      d.typespec = "(any)";
     variables.push_back(d);
   }
 }

@@ -109,8 +109,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   source_buffer->set_highlight_syntax();
   GET_WIDGET(legal_view);
   GET_WIDGET(osc_vars);
-  GET_WIDGET(text_srv_addr);
-  GET_WIDGET(text_srv_port);
+  GET_WIDGET(text_srv_url);
   //Create actions for menus and toolbars:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain = Gio::SimpleActionGroup::create();
   refActionGroupMain->add_action("scene_new",sigc::mem_fun(*this, &tascar_window_t::on_menu_file_new));
@@ -548,16 +547,14 @@ void tascar_window_t::reset_gui()
   if( session ){
     source_buffer->set_text(session->doc->write_to_string_formatted());
     osc_vars->get_buffer()->set_text(session->list_variables());
-    text_srv_addr->set_text(session->osc_srv_addr);
-    text_srv_port->set_text(session->osc_srv_port);
+    text_srv_url->set_text(session->get_srv_url());
     legal_view->get_buffer()->set_text(session->legal_stuff());
     //legal_view->get_buffer()->set_text("");
     //legal_view->get_buffer()->insert_markup(legal_view->get_buffer()->end(),session->legal_stuff(true));
   }else{
     source_view.get_source_buffer()->set_text("");
     osc_vars->get_buffer()->set_text("");
-    text_srv_addr->set_text("");
-    text_srv_port->set_text("");
+    text_srv_url->set_text("");
     legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();

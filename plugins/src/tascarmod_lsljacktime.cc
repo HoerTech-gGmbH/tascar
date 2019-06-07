@@ -45,20 +45,41 @@ public:
   ~lsljacktime_vars_t();
 protected:
   bool sendwhilestopped;
+  uint32_t skip;
 };
 
-class lsljacktime_t : public lsljacktime_vars_t, public lsl_sender_t {
+class lsljacktime_t : public lsljacktime_vars_t {
 public:
   lsljacktime_t( const TASCAR::module_cfg_t& cfg );
   ~lsljacktime_t();
   virtual void update(uint32_t frame,bool running);
+  void prepare( chunk_cfg_t& );
+  void release();
+private:
+  lsl_sender_t* lsl;
+  uint32_t skipcnt;
 };
+
+void lsljacktime_t::prepare( chunk_cfg_t& cf)
+{
+  TASCAR::module_base_t::prepare( cf );
+  lsl = new lsl_sender_t( f_fragment/(1+skip) );
+}
+
+void lsljacktime_t::release()
+{
+  TASCAR::module_base_t::release();
+  delete lsl;
+  lsl = NULL;
+}
 
 lsljacktime_vars_t::lsljacktime_vars_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
-    sendwhilestopped(false)
+    sendwhilestopped(false),
+    skip(0)
 {
   GET_ATTRIBUTE_BOOL(sendwhilestopped);
+  GET_ATTRIBUTE(skip);
 }
 
 lsljacktime_vars_t::~lsljacktime_vars_t()
@@ -67,7 +88,8 @@ lsljacktime_vars_t::~lsljacktime_vars_t()
 
 lsljacktime_t::lsljacktime_t( const TASCAR::module_cfg_t& cfg )
   : lsljacktime_vars_t( cfg ),
-    lsl_sender_t(0)
+    lsl(NULL),
+    skipcnt(0)
 {
 }
 
@@ -77,8 +99,15 @@ lsljacktime_t::~lsljacktime_t()
 
 void lsljacktime_t::update(uint32_t frame,bool running)
 {
-  if( running || sendwhilestopped )
-    send( t_sample * frame - running*t_fragment );
+  if( running || sendwhilestopped ){
+    if( skipcnt ){
+      skipcnt--;
+    }else{
+      if( lsl )
+        lsl->send( t_sample * frame - running*t_fragment );
+      skipcnt = skip;
+    }
+  }
 }
 
 REGISTER_MODULE(lsljacktime_t);

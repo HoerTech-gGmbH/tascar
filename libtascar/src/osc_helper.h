@@ -42,7 +42,7 @@ namespace TASCAR {
       std::string path;
       std::string typespec;
     };
-    osc_server_t(const std::string& multicast, const std::string& port,bool verbose=true);
+    osc_server_t(const std::string& multicast, const std::string& port, const std::string& proto, bool verbose=true);
     ~osc_server_t();
     void set_prefix(const std::string& prefix);
     const std::string& get_prefix() const;
@@ -129,7 +129,9 @@ namespace TASCAR {
     std::vector<descriptor_t> variables;
     const std::string osc_srv_addr;
     const std::string osc_srv_port;
+    const std::string& get_srv_url() const { return osc_srv_url;};
   private:
+    std::string osc_srv_url;
     std::string prefix;
     lo_server_thread lost;
     bool initialized;

@@ -151,6 +151,21 @@ namespace TASCAR {
     double statey2;
   };
 
+  class biquad_t {
+  public:
+    biquad_t(double a0, double a1, double a2, double b0, double b1, double b2)
+      : a0_(a0),a1_(a1),a2_(a2),b0_(b0),b1_(b1),b2_(b2),z1(0.0),z2(0.0) {};
+    inline double filter(double in) {
+        double out = z1 + b0_ * in;
+        z1 = z2 + b1_ * in - a1_ * out;
+        z2 = b2_ * in - a2_ * out;
+        return out;
+    };
+  private:
+    double a0_, a1_, a2_, b0_, b1_, b2_;
+    double z1, z2;
+  };
+
 }
 
 #endif

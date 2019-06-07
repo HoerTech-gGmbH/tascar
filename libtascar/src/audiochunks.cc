@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "errorhandling.h"
 #include "xmlconfig.h"
+#include "amb33defs.h"
 
 using namespace TASCAR;
 
@@ -215,6 +216,15 @@ void amb1wave_t::operator*=(double v)
   z_*=v;
 }
 
+void amb1wave_t::add_panned( pos_t p, const wave_t& v, float g )
+{
+  p.normalize();
+  w_.add( v, g*MIN3DB );
+  x_.add( v, g*p.x );
+  y_.add( v, g*p.y );
+  z_.add( v, g*p.z );
+}
+
 SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate,int channels)
 {
   SF_INFO inf;
@@ -354,6 +364,13 @@ void wave_t::copy(const wave_t& src,float gain)
   memmove(d,src.d,std::min(n,src.n)*sizeof(float));
   if( gain != 1.0f )
     operator*=(gain);
+}
+
+void wave_t::add(const wave_t& src,float gain)
+{
+  uint32_t N(std::min(n,src.n));
+  for( uint32_t k=0;k<N;++k)
+    d[k] += gain*src.d[k];
 }
 
 void wave_t::operator*=(const wave_t& o)

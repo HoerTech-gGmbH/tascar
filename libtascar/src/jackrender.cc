@@ -196,7 +196,7 @@ void TASCAR::render_rt_t::start()
     add_output_port(*iop);
   add_input_port("sync_in");
   jackc_t::activate();
-  osc_server_t::activate();
+  //osc_server_t::activate();
   // connect jack ports of point sources:
   for(unsigned int k=0;k<sounds.size();k++){
     std::string cn(sounds[k]->get_connect());
@@ -239,7 +239,7 @@ void TASCAR::render_rt_t::start()
 
 void TASCAR::render_rt_t::stop()
 {
-  osc_server_t::deactivate();
+  //osc_server_t::deactivate();
   jackc_t::deactivate();
   release();
 }

@@ -100,6 +100,7 @@ namespace TASCAR {
     std::string name;
     std::string srv_port;
     std::string srv_addr;
+    std::string srv_proto;
   };
 
   class session_core_t : public TASCAR::tsc_reader_t {

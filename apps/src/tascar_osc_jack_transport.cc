@@ -92,7 +92,7 @@ namespace OSC {
 }
 
 TASCAR::osc_jt_t::osc_jt_t(const std::string& osc_addr, const std::string& osc_port, double looptime)
-  : jackc_transport_t("tascar_osc_tp"),osc_server_t(osc_addr,osc_port), loop_frame(srate*looptime)
+  : jackc_transport_t("tascar_osc_tp"),osc_server_t(osc_addr,osc_port,"UDP"), loop_frame(srate*looptime)
 {
   osc_server_t::set_prefix("/transport");
   osc_server_t::add_method("/locate","f",OSC::_locate,this);

@@ -21,6 +21,8 @@ private:
   double duration;
   double current_duration;
   std::string startpreset;
+  int32_t width;
+  int32_t buttonheight;
   bool running;
   std::string id;
   bool enable;
@@ -73,6 +75,7 @@ void geopresets_t::add_to_list(const std::string& s)
       buttons.push_back(new Gtk::Button());
       buttons.back()->set_label( s );
       buttons.back()->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this,&geopresets_t::setpreset),s));
+      buttons.back()->set_size_request(-1,buttonheight);
       box->add(*(buttons.back()));
       box->show_all();
     }
@@ -119,6 +122,8 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
     time(0),
     duration(2.0),
     current_duration(duration),
+    width(200),
+    buttonheight(-1),
     running(false),
     enable(true),
     phase(1.0f),
@@ -138,6 +143,8 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
   if( id.empty() )
     id = "geopresets";
   GET_ATTRIBUTE_BOOL(showgui);
+  GET_ATTRIBUTE(width);
+  GET_ATTRIBUTE(buttonheight);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -168,13 +175,14 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
   setpreset(startpreset);
   if( showgui ){
     win = new Gtk::Window();
-    win->set_size_request(200,-1);
+    win->set_size_request(width,-1);
     box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
     win->add(*box);
     for( auto p=allpresets.begin();p!=allpresets.end();++p){
       buttons.push_back(new Gtk::Button());
       buttons.back()->set_label( *p );
       buttons.back()->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this,&geopresets_t::setpreset),*p));
+      buttons.back()->set_size_request(-1,buttonheight);
       box->add(*(buttons.back()));
     }
     win->show_all();

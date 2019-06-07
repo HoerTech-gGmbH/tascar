@@ -10,7 +10,7 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_snd_pink_diffuse test_snd_sndfile test_snd_sndfile2	\
 	test_snd_door4 test_snd_roommic test_fail_vbap3d_flat		\
 	test_notfail_vbap3d_3d test_level_vbap3d test_ir_ortf_0deg	\
-	test_ir_ortf_55deg
+	test_ir_ortf_55deg test_ir_scatter test_ir_noscatter
 
 TEST_SND=$(wildcard test_snd*.tsc)
 

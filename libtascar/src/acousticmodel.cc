@@ -170,7 +170,12 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           if( audio.rms() <= src_->minlevel )
             return 0;
         }
-        receiver_->add_pointsource(prel,std::min(0.5*M_PI,0.25*M_PI*src_->size/std::max(0.01,nextdistance)),audio,receiver_data);
+        // add scattering:
+        double scattering(0.0);
+        if( reflector )
+          scattering = reflector->scattering;
+        // add to receiver:
+        receiver_->add_pointsource(prel,std::min(0.5*M_PI,0.25*M_PI*src_->size/std::max(0.01,nextdistance)),scattering,audio,receiver_data);
         return 1;
       }
     } // of visible
@@ -189,7 +194,8 @@ reflector_t::reflector_t()
   : active(true),
     reflectivity(1.0),
     damping(0.0),
-    edgereflection(true)
+    edgereflection(true),
+    scattering(0)
 {
 }
 
@@ -465,6 +471,8 @@ void receiver_t::prepare( chunk_cfg_t& cf_ )
   n_channels = get_num_channels();
   update();
   cf_ = *(chunk_cfg_t*)this;
+  scatterbuffer = new amb1wave_t(n_fragment);
+  scatter_handle = create_data( f_sample, n_fragment );
   for(uint32_t k=0;k<n_channels;k++){
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
@@ -480,6 +488,9 @@ void receiver_t::release()
   outchannels.clear();
   for( uint32_t k=0;k<outchannelsp.size();++k)
     delete outchannelsp[k];
+  delete scatterbuffer;
+  if( scatter_handle )
+    delete scatter_handle;
   outchannelsp.clear();
   is_prepared = false;
 }
@@ -492,6 +503,7 @@ void receiver_t::clear_output()
 {
   for(uint32_t ch=0;ch<outchannels.size();ch++)
     outchannels[ch].clear();
+  scatterbuffer->clear();
 }
 
 void receiver_t::validate_attributes(std::string& msg) const
@@ -503,9 +515,10 @@ void receiver_t::validate_attributes(std::string& msg) const
 /**
    \ingroup callgraph
  */
-void receiver_t::add_pointsource(const pos_t& prel, double width, const wave_t& chunk, receivermod_base_t::data_t* data)
+void receiver_t::add_pointsource(const pos_t& prel, double width, double scattering, const wave_t& chunk, receivermod_base_t::data_t* data )
 {
-  receivermod_t::add_pointsource(prel,width,chunk,outchannels,data);
+  scatterbuffer->add_panned( prel, chunk, scattering );
+  receivermod_t::add_pointsource( prel, width, chunk, outchannels, data );
 }
 
 /**
@@ -513,6 +526,7 @@ void receiver_t::add_pointsource(const pos_t& prel, double width, const wave_t& 
  */
 void receiver_t::postproc(std::vector<wave_t>& output)
 {
+  add_diffuse_sound_field( *scatterbuffer, scatter_handle );
   receivermod_t::postproc(output);
   plugins.process_plugins(output,position,ltp);
 }

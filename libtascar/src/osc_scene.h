@@ -33,7 +33,8 @@ namespace TASCAR {
   namespace Scene {
 
     //class osc_scene_t : public TASCAR::Scene::scene_t, public TASCAR::osc_server_t {
-    class osc_scene_t : public TASCAR::osc_server_t {
+    //class osc_scene_t : public TASCAR::osc_server_t {
+    class osc_scene_t {
     public:
       osc_scene_t(xmlpp::Element* xmlsrc, TASCAR::Scene::scene_t* scene_);
       ~osc_scene_t();

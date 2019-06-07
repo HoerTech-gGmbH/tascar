@@ -16,7 +16,7 @@ function send_osc_tcp( host, port, addr, varargin )
 % http://mvnrepository.com/artifact/de.sciss/netutil/1.0.0
 %
 % Installation:
-% !wget http://repo1.maven.org/maven2/de/sciss/netutil/1.0.0/netutil-1.0.0.jar
+% system('wget http://repo1.maven.org/maven2/de/sciss/netutil/1.0.0/netutil-1.0.0.jar')
 % javaaddpath netutil-1.0.0.jar 
    
   dch = javaMethod('open','java.nio.channels.SocketChannel');
@@ -35,12 +35,13 @@ function send_osc_tcp( host, port, addr, varargin )
   else
     osm = javaObject('de.sciss.net.OSCMessage', addr );
   end
-  osm.getSize
   buf = javaMethod('allocateDirect','java.nio.ByteBuffer', 8192 );
-  sbuf = javaObject('java.lang.Integer',osm.getSize());
   osm.encode( buf );
   buf.flip();
+  sbufbb = javaMethod('allocateDirect','java.nio.ByteBuffer', 4 );
+  javaMethod('putInt',sbufbb,osm.getSize());
+  sbufbb.flip();
   dch.connect( target );
-  dch.write( sbuf );
+  dch.write( sbufbb );
   dch.write( buf );
-  
+  dch.close();

@@ -170,6 +170,7 @@ public:
 protected:
   std::string multicast;
   std::string port;
+  std::string srv_proto;
   std::string fileformat;
   std::string outputdir;
   bool displaydc;
@@ -182,6 +183,7 @@ protected:
 
 dlog_vars_t::dlog_vars_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
+    srv_proto("UDP"),
     fileformat("matcell"),
     displaydc(true),
     lsltimeout(10.0),
@@ -189,6 +191,7 @@ dlog_vars_t::dlog_vars_t( const TASCAR::module_cfg_t& cfg )
 {
   GET_ATTRIBUTE(multicast);
   GET_ATTRIBUTE(port);
+  GET_ATTRIBUTE(srv_proto);
   GET_ATTRIBUTE(fileformat);
   GET_ATTRIBUTE(outputdir);
   GET_ATTRIBUTE(lsltimeout);
@@ -647,7 +650,7 @@ private:
 
 datalogging_t::datalogging_t( const TASCAR::module_cfg_t& cfg )
   : dlog_vars_t( cfg ),
-    TASCAR::osc_server_t(multicast,port),
+    TASCAR::osc_server_t(multicast,port,srv_proto),
     //jackc_portless_t(jacknamer(session->name,"datalog.")),
     b_recording(false),
     israte_(1.0/cfg.session->srate),

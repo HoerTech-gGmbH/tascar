@@ -270,11 +270,28 @@ Controlling the transport of a \tascar{} scene:
 }
 
 To show more information about an element of the scene, it can be
-selected in the Map view (Alt 1) by clicking on the origin of the object. The
-gain controller and the corresponding part of the XML source code will
-be displayed on the right side of the window, allowing to switch
+selected in the Map view (Alt 1) by clicking on the origin of the
+object.
+%
+The gain controller and the corresponding part of the XML source code
+will be displayed on the right side of the window, allowing to switch
 between the elements by using the drop-down menu in the top right
-corner. There is also an option to track the selected object.
+corner.
+%
+There is also an option to track the selected object in the scene map.
+
+\subsection{Network remote control via OSC}
+
+For remote control of most options, the Open Sound Control (OSC)
+protocol can be used.
+%
+\tascar{} supports UDP and TCP transport.
+%
+If more than one transport layer or multiple ports are required, the
+module ``oscserver'' (see Section \ref{sec:oscserver}) can be used.
+%
+A MATLAB/GNU Octave tool for remote control is available, see section
+\ref{sec:sendosc} for more details.
 
 
 \subsection{Optimization of the operating system for audio processing}
@@ -400,6 +417,7 @@ definitions (\refelem{range}).
 \indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                          \\
 \indattr{srv\_addr}          & OSC server multicast address, empty uses unicast                                     \\
 \indattr{srv\_port}          & OSC server port number (default: 9877), or ``none'' to deactivate OSC server         \\
+\indattr{srv\_proto}         & OSC server protocol (default: ``UDP'', options are ``UDP'' or ``TCP'')               \\
 \indattr{warnsrate}          & Print a warning if the system sampling rate doesn't match the specified one          \\
 \indattr{requiresrate}       & Stop loading the session if the system sampling rate doesn't match the specified one \\
 \indattr{warnfragsize}       & Print a warning if the system fragment size doesn't match the specified one          \\
@@ -1558,6 +1576,7 @@ The \elem{face} element defines a single reflecting surface.
 \begin{tscattributes}
 \indattr{width}, \indattr{height}         & Dimension of reflector in meters; default: 1                                       \\
 \indattr{reflectivity}, \indattr{damping} & First order low pass filter coefficients                                           \\
+\indattr{scattering}                      & Scattering coefficient (default: 0)                                                \\
 \indattr{edgereflection}                  & Apply edge reflection in case of not directly visible image source (default: true) \\
 \indattr{vertices}                        & List of Cartesian coordinates to define polygon surface                            \\
 \end{tscattributes}
@@ -1998,7 +2017,7 @@ information), or \verb!tascar_jackio help! (full list of parameters).
 
 Measure an impulse response using a sine sweep method after \cite{Farina2000}.
 
-\subsection{\tt send\_osc}
+\subsection{\tt send\_osc}\label{sec:sendosc}
 
 The properties of objects placed in the scene or for example the
 transport state can be manipulated from outside \tascar{} using
@@ -2007,11 +2026,12 @@ OSC-messages.
 The parameters (properties) of an object which can be changed by
 sending an OSC message to \tascar{} are called "OSC variables".
 %
-For example, in MATLAB/GNU Octave it can be done by using a function
-\verb!send_osc!.
+For example, in MATLAB/GNU Octave it can be done by using the provided
+function \verb!send_osc! (for UDP transport) or \verb!send_osc_tcp!
+(for TCP transport).
 
-Function \verb!send_osc! is a function by which we can control
-the tascar scene.
+The functions \verb!send_osc!  and \verb!send_osc_tcp! are functions
+by which we can control a \tascar{} session and objects in a \tascar{} scene.
 %
 The default OSC port is 9877, listening to all network devices.
 %
@@ -2040,31 +2060,44 @@ values, e.g.,
 send_osc( 'localhost', 9877, '/scene_name/object_name/pos', ...
           pos_x, pos_y, pos_z, euler_z, euler_y, euler_x );
 \end{lstlisting}
-
-
-
-where \verb!pos_x,pos_y,pos_z! are the cartesian coordinates in meters and euler\_z, euler\_y,euler\_x are the rotations around x,y,and z axis in degrees. They are always relative to the position and orientation specified in the scene definition file. 
+%
+where \verb!pos_x!, \verb!pos_y!, \verb!pos_z! are the cartesian
+coordinates in meters and \verb!euler_z!, \verb!euler_y!,
+\verb!euler_x! are the rotations around $x$, $y$, and $z$-axis in
+degrees.
+%
+They are always relative to the position and orientation specified in
+the scene definition file.
 
 Position can also be specified using only 3 numbers:
 
-\verb!send_osc('localhost',9877,'/scene_name/object_name/pos'!\verb!,pos_x,pos_y,pos_z)!
-
+\begin{lstlisting}[numbers=none]
+send_osc('localhost',9877,'/scene_name/object_name/pos',...
+         pos_x,pos_y,pos_z)!
+\end{lstlisting}
 Orientation of the object can be also changed using:
-
-\verb!send_osc('localhost',9877,'/scene_name/object_name/zyxeuler',!
-\verb!euler_z euler_y,euler_x)!
-
+\begin{lstlisting}[numbers=none]
+send_osc('localhost',9877,'/scene_name/object_name/zyxeuler',...
+         euler_z euler_y,euler_x)
+\end{lstlisting}
 To mute or solo one object, we use: 
-
-\verb!send_osc('localhost',9877,'/scene_name/object_name/solo',1)!
-\verb!send_osc('localhost',9877,'/scene_name/object_name/mute',1)!
+\begin{lstlisting}[numbers=none]
+send_osc('localhost',9877,'/scene_name/object_name/solo',1)
+send_osc('localhost',9877,'/scene_name/object_name/mute',1)
+\end{lstlisting}
 
 Sending OSC messages can also be used for starting, stoping or placing a scene at the arbitrary point in time:
 
-Stop a scene : \verb!send_osc('localhost',9877,'/transport/stop')!\\
-Start a scene : \verb!send_osc('loclhost',9877,'/transport/start')!\\
-Go back to beginning  : \verb!send_osc('localhost',9877,'/transport/locate',0)!\\
-Locate at 4th second  : \verb!send_osc('localhost',9877,'/transport/locate',4)!\\
+Stop/start a scene:
+\begin{lstlisting}[numbers=none]
+send_osc('localhost',9877,'/transport/stop')
+send_osc('loclhost',9877,'/transport/start')
+\end{lstlisting}
+Go back to beginning / 4th second:
+\begin{lstlisting}[numbers=none]
+send_osc('localhost',9877,'/transport/locate',0)
+send_osc('localhost',9877,'/transport/locate',4)
+\end{lstlisting}
 
 
 \clearpage

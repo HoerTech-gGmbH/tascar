@@ -229,15 +229,19 @@ const std::string& debug_str(const std::string& s)
 }
 
 TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
-  : xml_element_t(src)
+  : xml_element_t(src),
+    name("tascar"),
+    srv_port("9877"),
+    srv_proto("UDP")
 {
   GET_ATTRIBUTE(srv_port);
   GET_ATTRIBUTE(srv_addr);
+  GET_ATTRIBUTE(srv_proto);
   GET_ATTRIBUTE(name);
-  if( name.empty() )
-    name = "tascar";
-  if( srv_port.empty() )
-    srv_port = "9877";
+  //if( name.empty() )
+  //  name = "tascar";
+  //if( srv_port.empty() )
+  //  srv_port = "9877";
 }
 
 TASCAR::session_core_t::session_core_t()
@@ -291,32 +295,33 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   GET_ATTRIBUTE(warnfragsize);
 }
 
+void assert_jackpar( const std::string& what, double expected, double found, bool warn)
+{
+  if( (expected > 0) && ( expected != found ) ){
+    std::string msg("Invalid "+what+" (expected "+
+                    TASCAR::to_string(expected)+", jack has "+
+                    TASCAR::to_string(found)+")");
+    if( warn )
+      TASCAR::add_warning(msg);
+    else
+      throw TASCAR::ErrMsg(msg);
+  }
+}
+
 TASCAR::session_t::session_t()
   : TASCAR::session_oscvars_t(tsc_reader_t::e),
-    jackc_transport_t(jacknamer(name,"session.")),
-    osc_server_t(srv_addr,srv_port),
+  jackc_transport_t(jacknamer(name,"session.")),
+  osc_server_t(srv_addr, srv_port, srv_proto),
     period_time(1.0/(double)srate),
     started_(false)//,
     //pcnt(0)
 {
-  read_xml();
-  if( (requiresrate > 0) && ( srate != requiresrate ) )
-    throw TASCAR::ErrMsg("Invalid sampling rate (expected "+
-                         std::to_string(requiresrate)+"Hz, got "+
-                         std::to_string(srate)+" Hz)");
-  if( (requirefragsize > 0) && ( fragsize != requirefragsize ) )
-    throw TASCAR::ErrMsg("Invalid fragment size (expected "+
-                         std::to_string(requirefragsize)+", got "+
-                         std::to_string(fragsize)+")");
-  if( (warnsrate > 0) && ( srate != warnsrate ) )
-    TASCAR::add_warning("Invalid sampling rate (expected "+
-                        std::to_string(requiresrate)+"Hz, got "+
-                        std::to_string(srate)+" Hz)");
-  if( (warnfragsize > 0) && ( fragsize != warnfragsize ) )
-    TASCAR::add_warning("Invalid fragment size (expected "+
-                        std::to_string(requirefragsize)+", got "+
-                        std::to_string(fragsize)+")");
   pthread_mutex_init( &mtx, NULL );
+  read_xml();
+  assert_jackpar( "sampling rate", requiresrate, srate, false );
+  assert_jackpar( "fragment size", requirefragsize, fragsize, false );
+  assert_jackpar( "sampling rate", warnsrate, srate, true );
+  assert_jackpar( "fragment size", warnfragsize, fragsize, true );
   add_output_port("sync_out");
   jackc_transport_t::activate();
   add_transport_methods();
@@ -327,16 +332,20 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
   : TASCAR::session_core_t(filename_or_data,t,path),
     session_oscvars_t(tsc_reader_t::e),
     jackc_transport_t(jacknamer(name,"session.")),
-    osc_server_t(srv_addr,srv_port),
+  osc_server_t(srv_addr, srv_port, srv_proto),
     period_time(1.0/(double)srate),
     started_(false)//,
     //pcnt(0)
 {
   pthread_mutex_init( &mtx, NULL );
-  add_output_port("sync_out");
-  jackc_transport_t::activate();
   // parse XML:
   read_xml();
+  assert_jackpar( "sampling rate", requiresrate, srate, false );
+  assert_jackpar( "fragment size", requirefragsize, fragsize, false );
+  assert_jackpar( "sampling rate", warnsrate, srate, true );
+  assert_jackpar( "fragment size", warnfragsize, fragsize, true );
+  add_output_port("sync_out");
+  jackc_transport_t::activate();
   add_transport_methods();
   osc_server_t::activate();
 }

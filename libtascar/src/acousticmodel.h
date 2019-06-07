@@ -178,7 +178,7 @@ namespace TASCAR {
       void prepare( chunk_cfg_t& cf_ );
       void release();
       void clear_output();
-      void add_pointsource(const pos_t& prel, double width, const wave_t& chunk, receivermod_base_t::data_t*);
+      void add_pointsource(const pos_t& prel, double width, double scattering, const wave_t& chunk, receivermod_base_t::data_t*);
       void add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain, bool b_img, gainmodel_t gainmodel );
       void set_next_gain(double gain);
@@ -207,6 +207,8 @@ namespace TASCAR {
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       std::vector<wave_t*> outchannelsp;
+      TASCAR::amb1wave_t* scatterbuffer;
+      receivermod_base_t::data_t* scatter_handle;
       bool active;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
       bool gain_zero;
@@ -263,6 +265,7 @@ namespace TASCAR {
       double reflectivity;
       double damping;
       bool edgereflection;
+      double scattering;
     };
 
     /**

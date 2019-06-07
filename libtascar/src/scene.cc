@@ -615,6 +615,7 @@ face_object_t::face_object_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("damping",damping);
   dynobject_t::get_attribute("vertices",vertices);
   dynobject_t::get_attribute_bool("edgereflection",edgereflection);
+  dynobject_t::GET_ATTRIBUTE(scattering);
   if( vertices.size() > 2 )
     nonrt_set(vertices);
   else
@@ -750,12 +751,14 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc),
     reflectivity(1.0),
     damping(0.0),
-    edgereflection(true)
+    edgereflection(true),
+    scattering(0)
 {
   dynobject_t::GET_ATTRIBUTE(reflectivity);
   dynobject_t::GET_ATTRIBUTE(damping);
   dynobject_t::GET_ATTRIBUTE(importraw);
   dynobject_t::get_attribute_bool("edgereflection",edgereflection);
+  dynobject_t::GET_ATTRIBUTE(scattering);
   dynobject_t::GET_ATTRIBUTE(shoebox);
   if( !shoebox.is_null() ){
     TASCAR::pos_t sb(shoebox);
@@ -892,6 +895,7 @@ void face_group_t::geometry_update(double t)
     (*it)->reflectivity = reflectivity;
     (*it)->damping = damping;
     (*it)->edgereflection = edgereflection;
+    (*it)->scattering = scattering;
   }
 }
  

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session license="CC BY-NC-SA 4.0" attribution="Giso grimm">
+  <scene>
+    <source><sound x="1"><plugins><pink level="65"/></plugins></sound></source>
+    <receiver type="ortf"/>
+  </scene>
+  <modules>
+    <oscserver/>
+  </modules>
+</session>

@@ -125,8 +125,7 @@ protected:
   Glib::RefPtr<Gsv::Buffer> source_buffer;
   Gtk::TextView* legal_view;
   Gtk::TextView* osc_vars;
-  Gtk::Label* text_srv_addr;
-  Gtk::Label* text_srv_port;
+  Gtk::Label* text_srv_url;
   source_panel_t* source_panel;
   Gtk::ComboBoxText* scene_selector;
   uint32_t selected_scene;

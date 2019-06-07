@@ -16,13 +16,20 @@ SOURCES = omni cardioidmod door
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\
   dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
-  hrirconv joystick gamepad hossustain midicc2osc midictl rotator
+  hrirconv joystick hossustain midicc2osc midictl rotator oscserver	\
+  qualisystracker orientationmodulator locationmodulator		\
+  locationvelocity
 
-TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets
+TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
+glabsensors
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels
+
+GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
+  qualisys jackstatus
+
 
 ifeq "$(HAS_LSL)" "yes"
 TASCARMODS +=  lsljacktime lslactor levels2osc pos2lsl
@@ -43,6 +50,9 @@ TASCARMODDLLS = $(patsubst %,build/tascar_%.so,$(TASCARMODS))
 TASCARMODDLLSGUI = $(patsubst %,build/tascar_%.so,$(TASCARMODSGUI))
 
 AUDIOPLUGINDLLS = $(patsubst %,build/tascar_ap_%.so,$(AUDIOPLUGINS))
+
+GLABSENSORDLLS = $(patsubst %,build/glabsensor_%.so,$(GLABSENSORS))
+
 
 ifeq "ok" "$(shell pkg-config gtkmm-3.0 && echo ok)"
 GTKDEF = "-DGTKMM30"
@@ -74,7 +84,7 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 LDLIBS += -ldl -ltascar
 
-modules: $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(TASCARMODDLLSGUI) $(AUDIOPLUGINDLLS)
+modules: $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(TASCARMODDLLSGUI) $(AUDIOPLUGINDLLS) $(GLABSENSORDLLS)
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
@@ -98,6 +108,13 @@ build/tascar_datalogging.so: LDLIBS += -lmatio -llsl64
 build/tascar_datalogging.so: build/datalogging_glade.h
 build/tascar_timedisplay.so: build/timedisplay_glade.h
 
+build/glabsensor_%.so: EXTERNALS += gtkmm-3.0
+build/glabsensor_%.so: LDLIBS += -llsl64
+build/glabsensor_trackir.so: EXTERNALS += opencv
+build/glabsensors.o: EXTERNALS += gtkmm-3.0
+build/glabsensors.o: build/glabsensors_glade.h
+build/tascar_glabsensors.so: build/glabsensors_glade.h
+
 build/tascarreceiver_%.so: src/receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
@@ -110,12 +127,18 @@ build/tascar_%.so: src/tascarmod_%.cc
 build/tascar_ap_%.so: src/tascar_ap_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
+build/glabsensor_%.so: src/glabsensor_%.cc build/glabsensorplugin.o src/glabsensorplugin.h
+	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
 build/%_glade.h: src/%.glade
 	cat $< | sed 's/tascarversion/$(TASCARVERSION)/g' > $*_glade
 	echo "#include <string>" > $@
 	xxd -i $*_glade >> $@
 	echo "std::string ui_"$*"((const char*)"$*"_glade,(size_t)"$*"_glade_len);" >> $@
 	rm -f $*_glade
+
+build/%.o: src/%.cc
+	$(CXX) $(CXXFLAGS) -o $@ -c $^
 
 
 # Local Variables:

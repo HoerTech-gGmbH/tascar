@@ -94,6 +94,7 @@ void pink_t::prepare( chunk_cfg_t& cf_ )
 
 void pink_t::release()
 {
+  TASCAR::audioplugin_base_t::release();
 }
 
 pink_t::~pink_t()

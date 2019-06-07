@@ -1045,11 +1045,11 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkLabel" id="label2">
+                      <object class="GtkLabel" id="label_osc_url">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Multicast address, or empty for unicast</property>
-                        <property name="label" translatable="yes">address:</property>
+                        <property name="tooltip_text" translatable="yes">OSC url</property>
+                        <property name="label" translatable="yes">url:</property>
                         <property name="ellipsize">start</property>
                         <property name="width_chars">9</property>
                       </object>
@@ -1060,7 +1060,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="text_srv_addr">
+                      <object class="GtkLabel" id="text_srv_url">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">addr</property>
@@ -1074,36 +1074,6 @@
                         <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="label3">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes"> port:</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="text_srv_port">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">port</property>
-                        <property name="ellipsize">start</property>
-                        <property name="width_chars">7</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                          <attribute name="background" value="#ffffffffffff"/>
-                        </attributes>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">3</property>
                       </packing>
                     </child>
                   </object>
