@@ -224,6 +224,55 @@ void TASCAR::resonance_filter_t::set_fq( double fresnorm, double q )
   a1 = (1.0-q)*(cabs(z-z0));
 }
 
+void TASCAR::biquad_t::set_gzp( double g, double zero_r, double zero_phi, double pole_r, double pole_phi )
+{
+  a1_ = -2.0*pole_r*cos(pole_phi);
+  a2_ = pole_r*pole_r;
+  b0_ = g;
+  b1_ = -2.0*g*zero_r*cos(zero_phi);
+  b2_ = g*zero_r*zero_r;
+}
+
+double _Complex TASCAR::biquad_t::response( double phi ) const
+{
+  return response_b(phi)/response_a(phi);
+}
+
+double _Complex TASCAR::biquad_t::response_a( double phi ) const
+{
+  double _Complex z1(cexp(-I*phi));
+  double _Complex z2(z1*z1);
+  return 1.0 + a1_*z1 + a2_*z2;
+}
+
+double _Complex TASCAR::biquad_t::response_b( double phi ) const
+{
+  double _Complex z1(cexp(-I*phi));
+  double _Complex z2(z1*z1);
+  return b0_ + b1_*z1 + b2_*z2;
+}
+
+TASCAR::bandpass_t::bandpass_t( double f1, double f2, double fs )
+  : fs_(fs)
+{
+  set_range( f1, f2 );
+}
+
+void TASCAR::bandpass_t::set_range( double f1, double f2 )
+{
+  b1.set_gzp( 1.0,
+              1.0, 0.0,
+              pow(10.0,-2.0*f1/fs_),
+              f1/fs_*PI2 );
+  b2.set_gzp( 1.0,
+              1.0, M_PI,
+              pow(10.0,-2.0*f2/fs_),
+              f2/fs_*PI2);
+  double f0(sqrt(f1*f2));
+  double g(cabs(b1.response(f0/fs_*PI2)*b2.response(f0/fs_*PI2)));
+  b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*PI2 );
+}
+
 /*
  * Local Variables:
  * mode: c++

@@ -279,7 +279,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
   }
 }
 
-void scene_t::configure_meter( float tc, TASCAR::levelmeter_t::weight_t w )
+void scene_t::configure_meter( float tc, TASCAR::levelmeter::weight_t w )
 {
   std::vector<object_t*> objs(get_objects());
   for(std::vector<object_t*>::iterator it=objs.begin(); it!=objs.end(); ++it)
@@ -538,7 +538,7 @@ route_t::~route_t()
     delete rmsmeter[k];
 }
 
-void route_t::configure_meter( float tc, TASCAR::levelmeter_t::weight_t w )
+void route_t::configure_meter( float tc, TASCAR::levelmeter::weight_t w )
 {
   meter_tc = tc;
   meter_weight = w;
@@ -573,7 +573,7 @@ float sound_t::read_meter()
 route_t::route_t(xmlpp::Element* xmlsrc)
   : scene_node_base_t(xmlsrc),mute(false),solo(false),
     meter_tc(2),
-    meter_weight(TASCAR::levelmeter_t::Z),
+    meter_weight(TASCAR::levelmeter::Z),
     targetlevel(0)
 {
   get_attribute("name",name);
@@ -984,9 +984,25 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
     chaindist(0),
     gain_(1)
 {
-  source_t::get_attribute("x",local_position.x);
-  source_t::get_attribute("y",local_position.y);
-  source_t::get_attribute("z",local_position.z);
+  if( source_t::has_attribute("az") ||
+      source_t::has_attribute("el") ||
+      source_t::has_attribute("r") ){
+    if( source_t::has_attribute("x") ||
+        source_t::has_attribute("y") ||
+        source_t::has_attribute("z") )
+      TASCAR::add_warning("Relative sound position is specified in cartesian and spherical coordinates. Using spherical.",source_t::e);
+    double az(0.0);
+    double el(0.0);
+    double r(1.0);
+    source_t::GET_ATTRIBUTE_DEG(az);
+    source_t::GET_ATTRIBUTE_DEG(el);
+    source_t::GET_ATTRIBUTE(r);
+    local_position.set_sphere(r,az,el);
+  }else{
+    source_t::get_attribute("x",local_position.x);
+    source_t::get_attribute("y",local_position.y);
+    source_t::get_attribute("z",local_position.z);
+  }
   source_t::get_attribute("d",chaindist);
   // parse plugins:
   xmlpp::Node::NodeList subnodes = source_t::e->get_children();

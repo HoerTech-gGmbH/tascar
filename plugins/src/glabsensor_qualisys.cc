@@ -105,6 +105,8 @@ int qualisys_tracker_t::qtmxml(const char *path, const char *types, lo_arg **arg
               xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
               if( sne ){
                 std::string name(sne->get_child_text()->get_content());
+                if( rigids.find(name) != rigids.end() )
+                  TASCAR::add_warning("Rigid "+name+" was allocated more than once.");
                 rigids[name] = new rigid_t(name,nominal_freq);
               }
             }

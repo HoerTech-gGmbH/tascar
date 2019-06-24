@@ -5,7 +5,7 @@
 #include <complex.h>
 
 enum method_t {
-  nearest, raisedcosine, sawleft, sawright, rect
+  nearest, raisedcosine, sawleft, sawright, rect, truncated
 };
 
 inline float sqrf( float x )
@@ -26,6 +26,8 @@ method_t uint2method( uint32_t m )
     return sawright;
   case 4:
     return rect;
+  case 5:
+    return truncated;
   default:
     return nearest;
   }
@@ -39,6 +41,7 @@ method_t string2method( const std::string& m )
   ADDMETHOD(sawleft);
   ADDMETHOD(sawright);
   ADDMETHOD(rect);
+  ADDMETHOD(truncated);
   return nearest;
 #undef ADDMETHOD
 }
@@ -128,6 +131,7 @@ private:
   std::string parent;
   float master;
   std::string method;
+  bool mixmax;
   // derived params:
   TASCAR::named_object_t parent_;
   std::vector<TASCAR::named_object_t> objects_;
@@ -154,6 +158,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     fixtures(e,false,"fixture"),
     channels(3),
     master(1),
+    mixmax(false),
     parent_(NULL,""),
     usecalib(true),
     sendsquared(false)
@@ -165,6 +170,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(master);
   GET_ATTRIBUTE_BOOL(usecalib);
   GET_ATTRIBUTE_BOOL(sendsquared);
+  GET_ATTRIBUTE_BOOL(mixmax);
   std::string method;
   method_t method_(nearest);
   GET_ATTRIBUTE(method);
@@ -283,6 +289,17 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
           }
         }
         break;
+      case truncated :
+        {
+          // do panning / copy data
+          for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
+            float caz(dot_prod(pobj,fixtures[kfix].unitvector));
+            float w(2.0f*std::max(0.0f,powf(0.5f*(caz+1.0f),2.0f/objval[kobj].w)-0.5f));
+            for(uint32_t c=0;c<channels;++c)
+              tmpdmxdata[channels*kfix+c] += w*objval[kobj].dmx[c];
+          }
+        }
+        break;
       case sawleft :
         {
           // do panning / copy data
@@ -324,8 +341,26 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
     }
   }
   for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-    for(uint32_t c=0;c<channels;++c){
-      tmpdmxdata[channels*kfix+c] += fixtureval[kfix].dmx[c];
+    if( mixmax ){
+      float sum_obj(0.0);
+      float sum_fix(0.0);
+      for(uint32_t c=0;c<channels;++c){
+        sum_obj += tmpdmxdata[channels*kfix+c];
+        sum_fix += fixtureval[kfix].dmx[c];
+      }
+      double wmax(std::max(sum_obj,sum_fix));
+      if( wmax > 0 ){
+        sum_obj /= wmax;
+        sum_fix /= wmax;
+      }
+      for(uint32_t c=0;c<channels;++c){
+        tmpdmxdata[channels*kfix+c] *= sum_obj;
+        tmpdmxdata[channels*kfix+c] += sum_fix*fixtureval[kfix].dmx[c];
+      }
+    }else{
+      for(uint32_t c=0;c<channels;++c){
+        tmpdmxdata[channels*kfix+c] += fixtureval[kfix].dmx[c];
+      }
     }
     if( usecalib )
       for(uint32_t c=0;c<channels;++c){
@@ -345,6 +380,7 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool("/usecalib", &usecalib );
   srv->add_bool("/sendsquared", &sendsquared );
   srv->add_float( "/master", &master );
+  srv->add_bool( "/mixmax", &mixmax );
   if( basedmx.size() )
     srv->add_vector_float( "/basedmx", &basedmx );
   for( uint32_t ko=0;ko<objects_.size();++ko){

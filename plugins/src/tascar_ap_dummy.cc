@@ -21,6 +21,7 @@ dummy_t::dummy_t( const TASCAR::audioplugin_cfg_t& cfg )
   DEBUG(t_sample);
   DEBUG(t_fragment);
   DEBUG(n_fragment);
+  DEBUG(n_channels);
   DEBUG(name);
   DEBUG(modname);
 }
@@ -39,6 +40,7 @@ void dummy_t::prepare( chunk_cfg_t& cf_ )
   DEBUG(t_sample);
   DEBUG(t_fragment);
   DEBUG(n_fragment);
+  DEBUG(n_channels);
   DEBUG(name);
   DEBUG(modname);
 }

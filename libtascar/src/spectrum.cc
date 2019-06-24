@@ -14,6 +14,11 @@ TASCAR::spec_t::spec_t(const TASCAR::spec_t& src)
   copy(src);
 }
 
+void TASCAR::spec_t::clear()
+{
+  memset(b,0,n_*sizeof(float _Complex));
+}
+
 TASCAR::spec_t::~spec_t()
 {
   delete [] b;
@@ -26,7 +31,7 @@ void TASCAR::spec_t::copy(const spec_t& src)
 
 void TASCAR::spec_t::operator/=(const spec_t& o)
 {
-  for(unsigned int k=0;k<std::min(o.n_,n_);k++){
+  for(unsigned int k=0;k<std::min(o.n_,n_);++k){
     if( cabs(o.b[k]) > 0 )
       b[k] /= o.b[k];
   }
@@ -34,25 +39,31 @@ void TASCAR::spec_t::operator/=(const spec_t& o)
 
 void TASCAR::spec_t::operator*=(const spec_t& o)
 {
-  for(unsigned int k=0;k<std::min(o.n_,n_);k++)
+  for(unsigned int k=0;k<std::min(o.n_,n_);++k)
     b[k] *= o.b[k];
 }
 
 void TASCAR::spec_t::operator+=(const spec_t& o)
 {
-  for(unsigned int k=0;k<std::min(o.n_,n_);k++)
+  for(unsigned int k=0;k<std::min(o.n_,n_);++k)
     b[k] += o.b[k];
+}
+
+void TASCAR::spec_t::add_scaled(const spec_t& o, float gain)
+{
+  for(unsigned int k=0;k<std::min(o.n_,n_);++k)
+    b[k] += o.b[k] * gain;
 }
 
 void TASCAR::spec_t::operator*=(const float& o)
 {
-  for(unsigned int k=0;k<n_;k++)
+  for(unsigned int k=0;k<n_;++k)
     b[k] *= o;
 }
 
 void TASCAR::spec_t::conj()
 {
-  for(uint32_t k=0;k<n_;k++)
+  for(uint32_t k=0;k<n_;++k)
     b[k] = conjf( b[k] );
 }
 

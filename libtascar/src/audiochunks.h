@@ -57,6 +57,12 @@ namespace TASCAR {
     float spldb() const;
     float maxabsdb() const;
     void append(const wave_t& src);
+    inline void append_sample( float src ) {
+      d[append_pos] = src;
+      ++append_pos;
+      if( append_pos >= n )
+        append_pos = 0;
+    };
     void operator*=(double v);
     void operator*=(float v);
     void operator+=(const wave_t& o);

@@ -153,17 +153,46 @@ namespace TASCAR {
 
   class biquad_t {
   public:
-    biquad_t(double a0, double a1, double a2, double b0, double b1, double b2)
-      : a0_(a0),a1_(a1),a2_(a2),b0_(b0),b1_(b1),b2_(b2),z1(0.0),z2(0.0) {};
+    biquad_t(double a1, double a2, double b0, double b1, double b2)
+      : a1_(a1),a2_(a2),b0_(b0),b1_(b1),b2_(b2),z1(0.0),z2(0.0) {};
+    biquad_t()
+      : a1_(0),a2_(0),b0_(1),b1_(0),b2_(0),z1(0.0),z2(0.0) {};
+    void set_gzp( double g, double zero_r, double zero_phi, double pole_r, double pole_phi );
     inline double filter(double in) {
         double out = z1 + b0_ * in;
         z1 = z2 + b1_ * in - a1_ * out;
         z2 = b2_ * in - a2_ * out;
         return out;
     };
+    double _Complex response( double phi ) const;
+    double _Complex response_a( double phi ) const;
+    double _Complex response_b( double phi ) const;
+    double get_a1() const { return a1_; };
+    double get_a2() const { return a2_; };
+    double get_b0() const { return b0_; };
+    double get_b1() const { return b1_; };
+    double get_b2() const { return b2_; };
   private:
-    double a0_, a1_, a2_, b0_, b1_, b2_;
+    double a1_, a2_, b0_, b1_, b2_;
     double z1, z2;
+  };
+
+  class bandpass_t {
+  public:
+    bandpass_t( double f1, double f2, double fs );
+    void set_range( double f1, double f2 );
+    inline double filter(double in) {
+      return b2.filter(b1.filter(in));
+    };
+    inline void filter( wave_t& w ) {
+      float* wend(w.d+w.n);
+      for( float* v = w.d; v < wend;++v )
+        *v = filter( *v );
+    };
+  private:
+    biquad_t b1;
+    biquad_t b2;
+    double fs_;
   };
 
 }

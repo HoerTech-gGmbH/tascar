@@ -1,5 +1,6 @@
 #include "receivermod.h"
 #include "delayline.h"
+#include <random>
 
 class ortf_t : public TASCAR::receivermod_base_t {
 public:
@@ -22,6 +23,10 @@ public:
   uint32_t get_num_channels();
   std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  virtual void prepare( chunk_cfg_t& );
+  virtual void release( );
+  virtual void postproc( std::vector<TASCAR::wave_t>& output );
+  virtual void add_variables( TASCAR::osc_server_t* srv );
 private:
   double distance;
   double angle;
@@ -35,6 +40,11 @@ private:
   TASCAR::pos_t dir_itd;
   double wpow;
   double wmin;
+  double decorr_length;
+  bool decorr;
+  std::vector<TASCAR::overlap_save_t> decorrflt;
+  TASCAR::wave_t* diffuse_render_buffer_l;
+  TASCAR::wave_t* diffuse_render_buffer_r;
 };
 
 ortf_t::data_t::data_t(double srate,uint32_t chunksize,double maxdist,double c,uint32_t sincorder)
@@ -44,6 +54,60 @@ ortf_t::data_t::data_t(double srate,uint32_t chunksize,double maxdist,double c,u
     dline_r(2*maxdist*srate/c+2+sincorder,srate,c,sincorder,64),
     wl(0),wr(0),itd(0),state_l(0),state_r(0)
 {
+}
+
+void ortf_t::prepare( chunk_cfg_t& cf )
+{
+  TASCAR::receivermod_base_t::prepare( cf );
+  // initialize decorrelation filter:
+  decorrflt.clear();
+  uint32_t irslen(decorr_length*f_sample);
+  uint32_t paddedirslen((1<<(int)(ceil(log2(irslen+n_fragment-1))))-n_fragment+1);
+  for(uint32_t k=0;k<2;++k)
+    decorrflt.push_back(TASCAR::overlap_save_t(paddedirslen,n_fragment));
+  TASCAR::fft_t fft_filter(irslen);
+  std::mt19937 gen(1);
+  std::uniform_real_distribution<double> dis(0.0, 2*M_PI);
+  for(uint32_t k=0;k<2;++k){
+    for(uint32_t b=0;b<fft_filter.s.n_;++b)
+      fft_filter.s[b] = cexp(I*dis(gen));
+    fft_filter.ifft();
+    for(uint32_t t=0;t<fft_filter.w.n;++t)
+      fft_filter.w[t] *= (0.5-0.5*cos(t*PI2/fft_filter.w.n));
+    decorrflt[k].set_irs(fft_filter.w,false);
+  }
+  // end of decorrelation filter.
+  diffuse_render_buffer_l = new TASCAR::wave_t( n_fragment );
+  diffuse_render_buffer_r = new TASCAR::wave_t( n_fragment );
+}
+
+void ortf_t::release( )
+{
+  TASCAR::receivermod_base_t::release();
+  delete diffuse_render_buffer_l;
+  delete diffuse_render_buffer_r;
+}
+
+void ortf_t::postproc( std::vector<TASCAR::wave_t>& output )
+{
+  TASCAR::receivermod_base_t::postproc( output );
+  TASCAR::wave_t* vdiffrender[2] = {diffuse_render_buffer_l,diffuse_render_buffer_r};
+  for(uint32_t ch=0;ch<2;++ch){
+    if( decorr )
+      decorrflt[ch].process( *(vdiffrender[ch]), output[ch], true );
+    else
+      output[ch] += *(vdiffrender[ch]);
+    vdiffrender[ch]->clear();
+  }
+}
+
+void ortf_t::add_variables( TASCAR::osc_server_t* srv )
+{
+  TASCAR::receivermod_base_t::add_variables( srv );
+  srv->add_bool("/ortf/decorr",&decorr);
+  srv->add_double("/ortf/distance",&distance);
+  srv->add_double( "/ortf/angle", &angle );
+  srv->add_double( "/ortf/scale", &scale );
 }
 
 ortf_t::ortf_t(xmlpp::Element* xmlsrc)
@@ -59,7 +123,9 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
     dir_r(1,0,0),
     dir_itd(0,1,0),
     wpow(1),
-    wmin(EPS)
+    wmin(EPS),
+    decorr_length(0.05),
+    decorr(false)
 {
   GET_ATTRIBUTE(distance);
   GET_ATTRIBUTE_DEG(angle);
@@ -68,6 +134,8 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(scale);
   GET_ATTRIBUTE(sincorder);
   GET_ATTRIBUTE(c);
+  GET_ATTRIBUTE(decorr_length);
+  GET_ATTRIBUTE_BOOL(decorr);
   dir_l.rot_z(0.5*angle);
   dir_r.rot_z(-0.5*angle);
 }
@@ -113,8 +181,8 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
 
 void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
-  float* o_l(output[0].d);
-  float* o_r(output[1].d);
+  float* o_l(diffuse_render_buffer_l->d);
+  float* o_r(diffuse_render_buffer_r->d);
   const float* i_w(chunk.w().d);
   const float* i_x(chunk.x().d);
   const float* i_y(chunk.y().d);

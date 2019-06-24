@@ -77,13 +77,35 @@ namespace TASCAR {
        The result is stored in the public member fft_t::s.
      */
     void fft();
+
+    /**
+       \brief Perform Hilbert transformation of a real signal
+
+       \param src Input waveform
+
+       The result is stored in the public member fft_t::w.
+     */
+    void hilbert(const TASCAR::wave_t& src);
     ~fft_t();
     TASCAR::wave_t w; ///< waveform container
     TASCAR::spec_t s; ///< spectrum container
   private:
+    TASCAR::spec_t fullspec;
     fftwf_plan fftwp_w2s;
     fftwf_plan fftwp_s2w;
+    fftwf_plan fftwp_s2s;
   };
+
+
+class minphase_t {
+public:
+  minphase_t(uint32_t fftlen);
+  void operator()(TASCAR::spec_t& s);
+private:
+  TASCAR::fft_t fft_hilbert;
+public:
+  TASCAR::wave_t phase;
+};
 
 }
 

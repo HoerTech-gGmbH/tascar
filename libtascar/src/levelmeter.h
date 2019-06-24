@@ -20,7 +20,9 @@
 #ifndef LEVELMETER_H
 #define LEVELMETER_H
 
+#include "xmlconfig.h"
 #include "audiochunks.h"
+#include "filterclass.h"
 
 namespace TASCAR {
 
@@ -34,16 +36,13 @@ namespace TASCAR {
      \ingroup levels
    */
   class levelmeter_t : public TASCAR::wave_t {
-  public:
-    enum weight_t {
-      Z
-    };
+    public:
     /**
        \param fs Audio sampling rate in Hz
        \param tc Time constant in seconds
        \param weight Frequency weighting type
      */
-    levelmeter_t(float fs, float tc, levelmeter_t::weight_t weight);
+    levelmeter_t(float fs, float tc, levelmeter::weight_t weight);
     /**
        \brief Add audio samples to level meter container
        \param src Audio samples
@@ -60,7 +59,7 @@ namespace TASCAR {
      */
     void get_percentile_levels( float& q30, float& q50, float& q65, float& g95, float& q99 ) const;
   private:
-    weight_t w;
+    TASCAR::levelmeter::weight_t w;
     uint32_t segment_length;
     uint32_t segment_shift;
     uint32_t num_segments;
@@ -69,6 +68,7 @@ namespace TASCAR {
     uint32_t i65;
     uint32_t i95;
     uint32_t i99;
+    bandpass_t bp;
   };
 
 }

@@ -1,7 +1,7 @@
 #include "levelmeter.h"
 #include <algorithm>
 
-TASCAR::levelmeter_t::levelmeter_t(float fs, float tc, levelmeter_t::weight_t weight)
+TASCAR::levelmeter_t::levelmeter_t(float fs, float tc, levelmeter::weight_t weight)
   : wave_t(fs*tc),
     w(weight),
     segment_length(fs*0.125),
@@ -11,15 +11,20 @@ TASCAR::levelmeter_t::levelmeter_t(float fs, float tc, levelmeter_t::weight_t we
     i50(0.5*num_segments),
     i65(0.65*num_segments),
     i95(0.95*num_segments),
-    i99(0.99*num_segments)
+    i99(0.99*num_segments),
+    bp(500.0,4000.0,fs)
 {
 }
 
 void TASCAR::levelmeter_t::update(const TASCAR::wave_t& src)
 {
   switch( w ){
-  case Z:
+  case TASCAR::levelmeter::Z:
     append(src);
+    break;
+  case TASCAR::levelmeter::bandpass:
+    for(uint32_t k=0;k<src.n;++k)
+      append_sample( bp.filter( src.d[k] ) );
     break;
   }
 }

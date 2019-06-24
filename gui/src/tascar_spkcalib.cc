@@ -190,12 +190,12 @@ void calibsession_t::saveas( const std::string& fname )
       //
       //
       xmlpp::Node::NodeList subnodes(doc.doc->get_root_node()->get_children());
-      uint32_t k=0;
+      size_t k=0;
       for( auto sn=subnodes.begin(); sn!=subnodes.end(); ++sn ){
         xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
         if( sne && ( sne->get_name() == "speaker" )){
           sne->set_attribute("gain",
-                             TASCAR::to_string(20*log10(recspk->spkpos[std::min(k,(uint32_t)(recspk->spkpos.size()-1))].gain)));
+                             TASCAR::to_string(20*log10(recspk->spkpos[std::min(k,recspk->spkpos.size()-1)].gain)));
           ++k;
         }
       }

@@ -34,6 +34,7 @@
 #include "dynamicobjects.h"
 #include "audioplugin.h"
 #include "pluginprocessor.h"
+#include "levelmeter.h"
 /*
 
   new delayline concept:

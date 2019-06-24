@@ -58,7 +58,6 @@ public:
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
   static int osc_apply(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   void set_apply(float t);
-  void cleanup();
 protected:
   TASCAR::ola_t ola;
   TASCAR::wave_t absspec;
@@ -90,9 +89,9 @@ void sustain_t::set_apply(float t)
 int sustain_t::process(jack_nframes_t n, const std::vector<float*>& vIn, const std::vector<float*>& vOut)
 {
   jackc_db_t::process(n,vIn,vOut);
+  TASCAR::wave_t w_in(n,vIn[0]);
+  TASCAR::wave_t w_out(n,vOut[0]);
   if( !delayenvelope ){
-    TASCAR::wave_t w_in(n,vIn[0]);
-    TASCAR::wave_t w_out(n,vOut[0]);
     float env_c1(0);
     if( tau_envelope > 0 )
       env_c1 = exp( -1.0/(tau_envelope*(double)srate));
@@ -105,13 +104,15 @@ int sustain_t::process(jack_nframes_t n, const std::vector<float*>& vIn, const s
       Lout += env_c2*w_out[k]*w_out[k];
       if( Lout > 0 )
 	w_out[k] *= sqrt(Lin/Lout);
-      if( t_apply ){
-	t_apply--;
-	currentw += deltaw;
-      }
-      w_out[k] *= gain*currentw;
-      w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
     }
+  }
+  for(uint32_t k=0;k<w_in.size();++k){
+    if( t_apply ){
+      t_apply--;
+      currentw += deltaw;
+    }
+    w_out[k] *= gain*currentw;
+    w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
   }
   return 0;
 }
@@ -153,12 +154,6 @@ int sustain_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn, c
       Lout += env_c2*w_out[k]*w_out[k];
       if( Lout > 0 )
 	w_out[k] *= sqrt(Lin/Lout);
-      if( t_apply ){
-	t_apply--;
-	currentw += deltaw;
-      }
-      w_out[k] *= gain*currentw;
-      w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
     }
   }
   return 0;
@@ -190,13 +185,9 @@ sustain_t::sustain_t( const TASCAR::module_cfg_t& cfg )
   activate();
 }
 
-void sustain_t::cleanup()
-{
-  deactivate();
-}
-
 sustain_t::~sustain_t()
 {
+  deactivate();
 }
 
 REGISTER_MODULE(sustain_t);

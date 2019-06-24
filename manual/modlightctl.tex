@@ -14,17 +14,18 @@ The module has these attributes:
 One or more \refelem{lightscene} elements can be defined, with these
 attributes:
 \begin{tscattributes}
-\indattr{name}        & lightscene name                                          \\
-\indattr{objects}     & Tracking source object name pattern                      \\
-\indattr{parent}      & light center parent object name                          \\
-\indattr{channels}    & number of channels per fixture                           \\
-\indattr{master}      & Master control                                           \\
-\indattr{usecalib}    & Use calibrated (true, default) or raw (false) DMX values \\
-\indattr{sendsquared} & Send squared values (default: false)                     \\
-\indattr{method}      & Rendering method (nearest or raisedcosine)               \\
-\indattr{objval}      & Starting object color values.                            \\
-\indattr{objw}        & Starting object width values.                            \\
-\indattr{layout}      & fixture layout file name (optional)                      \\
+\indattr{name}        & lightscene name                                                               \\
+\indattr{objects}     & Tracking source object name pattern                                           \\
+\indattr{parent}      & light center parent object name                                               \\
+\indattr{channels}    & number of channels per fixture                                                \\
+\indattr{master}      & Master control                                                                \\
+\indattr{usecalib}    & Use calibrated (true, default) or raw (false) DMX values                      \\
+\indattr{sendsquared} & Send squared values (default: false)                                          \\
+\indattr{method}      & Rendering method (nearest, raisedcosine, sawleft, sawright, rect)             \\
+\indattr{mixmax}      & mix light based on maximum between fixture and object values (default: false) \\
+\indattr{objval}      & Starting object color values.                                                 \\
+\indattr{objw}        & Starting object width values.                                                 \\
+\indattr{layout}      & fixture layout file name (optional)                                           \\
 \end{tscattributes}
 
 Fixtures are defined using the \indattr{fixture} element within the

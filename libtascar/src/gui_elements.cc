@@ -919,9 +919,19 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
           cr->arc(sndpos[k].x, -sndpos[k].y, 0.75*msize, 0, PI2 );
           cr->fill();
         }
-        cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-        cr->arc(sndpos[k].x, -sndpos[k].y, 0.5*msize, 0, PI2 );
+        cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.4);
+        float r(0.25+(std::max(40.0f,std::min(100.0f,obj->sound[k]->read_meter()))-40.0)/20.0f);
+        cr->arc(sndpos[k].x, -sndpos[k].y, r*msize, 0, PI2 );
         cr->fill();
+        if( b_print_labels ){
+          cr->save();
+          cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.9);
+          cr->move_to( sndpos[k].x + 1.1*msize, -sndpos[k].y );
+          cr->scale( 0.6, 0.6 );
+          cr->show_text( obj->sound[k]->get_name().c_str() );
+          cr->stroke();
+          cr->restore();
+        }
       }
     }
     if( !active )

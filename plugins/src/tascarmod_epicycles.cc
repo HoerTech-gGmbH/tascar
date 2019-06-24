@@ -2,6 +2,7 @@
 
 #include "osc_helper.h"
 #include <stdlib.h>
+#include <complex.h>
 
 /**
    \brief Classes mainly used for artistic purposes
@@ -84,6 +85,8 @@ namespace HoS {
     float lastphi;
     float phi;
     float phi_epi;
+    double home;
+    bool b_home;
     pthread_mutex_t mtx;
   private:
   };
@@ -151,13 +154,10 @@ namespace OSC {
 void HoS::par_t::mix_static(float g,const par_t& p1,const par_t& p2)
 {
   float g1 = 1.0f-g;
-  float re, im;
-  re = g*cos(p1.phi0)+g1*cos(p2.phi0);
-  im = g*sin(p1.phi0)+g1*sin(p2.phi0);
-  phi0 = atan2f(im,re);
-  re = g*cos(p1.phi0_epi)+g1*cos(p2.phi0_epi);
-  im = g*sin(p1.phi0_epi)+g1*sin(p2.phi0_epi);
-  phi0_epi = atan2f(im,re);
+  float dphi(cargf(cexpf(1.0if*(p2.phi0-p1.phi0))));
+  //phi0 = cargf(g*cexpf(1.0if*p1.phi0)+g1*cexpf(1.0if*p2.phi0));
+  phi0 = p1.phi0 + g1*dphi;
+  phi0_epi = cargf(g*cexpf(1.0if*p1.phi0_epi)+g1*cexpf(1.0if*p2.phi0_epi));
 }
 
 void HoS::par_t::assign_static(const par_t& p1)
@@ -218,14 +218,17 @@ void HoS::parameter_t::locate0(float time)
 {
   if( pthread_mutex_lock( &mtx ) == 0 ){
     time *= f_update;
-    t_locate = 0;
     if( time > 0 )
       locate_gain = 1.0f/time;
     else{
       locate_gain = 0;
     }
     t_locate = 1+time;
-    par_previous.assign_static( par_current );
+    par_previous.phi0 = phi;
+    par_previous.phi0_epi = phi_epi;
+    par_current.phi0 = phi;
+    par_current.phi0_epi = phi_epi;
+    //par_previous.assign_static( par_current );
     pthread_mutex_unlock( &mtx );
   }
 }
@@ -242,7 +245,6 @@ void HoS::parameter_t::apply(float time)
   t_apply = 1+time;
   b_stopat = false;
   b_applyat = false;
-  //par_previous.assign_dynamic( par_current );
 }
 
 HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
@@ -259,10 +261,15 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
     t_apply(0),
     lastphi(0),
     phi(0),
-    phi_epi(0)
+    phi_epi(0),
+    home(0),
+    b_home(false)
 {
+  GET_ATTRIBUTE_DEG(home);
   pthread_mutex_init( &mtx, NULL );
   lo_address_set_ttl( lo_addr, 1 );
+  o->add_bool_true(path+"/gohome",&b_home);
+  o->add_double(path+"/home",&home);
 #define REGISTER_FLOAT_VAR(x) o->add_float(path+"/"+#x,&(par_osc.x))
 #define REGISTER_FLOAT_VAR_DEGREE(x) o->add_float_degree(path+"/"+#x,&(par_osc.x))
 #define REGISTER_CALLBACK(x,fmt) o->add_method(path+"/"+#x,fmt,OSC::_ ## x,this)
@@ -340,6 +347,10 @@ void epicycles_t::prepare( chunk_cfg_t& cf_ )
 
 void epicycles_t::update(uint32_t frame,bool running)
 {
+  if( b_home ){
+    par_osc.phi0 = home;
+    b_home = false;
+  }
   if( running || (!use_transport) ){
     if( pthread_mutex_trylock( &mtx ) == 0 ){
       // optionally apply dynamic parameters:

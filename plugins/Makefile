@@ -18,14 +18,14 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
   hrirconv joystick hossustain midicc2osc midictl rotator oscserver	\
   qualisystracker orientationmodulator locationmodulator		\
-  locationvelocity
+  locationvelocity granularsynth
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
 glabsensors
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
-  gainramp pulse pink dumplevels
+  gainramp pulse pink dumplevels feedbackdelay bandpass
 
 GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
   qualisys jackstatus
@@ -114,6 +114,8 @@ build/glabsensor_trackir.so: EXTERNALS += opencv
 build/glabsensors.o: EXTERNALS += gtkmm-3.0
 build/glabsensors.o: build/glabsensors_glade.h
 build/tascar_glabsensors.so: build/glabsensors_glade.h
+build/tascar_glabsensors.so: build/glabsensorplugin.o build/glabsensors_glade.h src/glabsensorplugin.h
+build/tascar_glabsensors.so: LDLIBS += -llsl64
 
 build/tascarreceiver_%.so: src/receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)

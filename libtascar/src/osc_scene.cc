@@ -153,12 +153,14 @@ void osc_scene_t::add_face_object_methods(TASCAR::osc_server_t* srv,TASCAR::Scen
 {
   srv->add_double("/"+scene->name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
   srv->add_double("/"+scene->name+"/"+o->get_name()+"/damping",&(o->damping));
+  srv->add_double("/"+scene->name+"/"+o->get_name()+"/scattering",&(o->scattering));
 }
 
 void osc_scene_t::add_face_group_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::face_group_t* o)
 {
   srv->add_double("/"+scene->name+"/"+o->get_name()+"/reflectivity",&(o->reflectivity));
   srv->add_double("/"+scene->name+"/"+o->get_name()+"/damping",&(o->damping));
+  srv->add_double("/"+scene->name+"/"+o->get_name()+"/scattering",&(o->scattering));
 }
 
 void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::route_t* o)

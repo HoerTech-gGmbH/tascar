@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<session license="CC0" attribution="Giso Grimm" levelmeter_weight="Z">
+  <scene>
+    <receiver/>
+    <source>
+      <sound>
+	<plugins>
+	  <sine a="60"/>
+	</plugins>
+      </sound>
+    </source>
+  </scene>
+  <modules>
+    <route channels="1" name="level" levelmeter_weight="bandpass"/>
+  </modules>
+  <connect src="render.scene:out" dest="level:in.0"/>
+</session>

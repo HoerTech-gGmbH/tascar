@@ -27,7 +27,7 @@
 #define AUDIOPLUGIN_H
 
 #include "xmlconfig.h"
-//#include "audiochunks.h"
+#include "audiochunks.h"
 #include "tascarplugin.h"
 #include "licensehandler.h"
 

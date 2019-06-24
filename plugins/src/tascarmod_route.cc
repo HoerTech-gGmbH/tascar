@@ -15,6 +15,8 @@ public:
 private:
   uint32_t channels;
   std::string connect_out;
+  double levelmeter_tc;
+  TASCAR::levelmeter::weight_t levelmeter_weight;
 };
 
 routemod_t::routemod_t( const TASCAR::module_cfg_t& cfg )
@@ -22,13 +24,18 @@ routemod_t::routemod_t( const TASCAR::module_cfg_t& cfg )
     TASCAR::Scene::route_t( TASCAR::module_base_t::e ),
     jackc_t(get_name()),
     TASCAR::Scene::audio_port_t( TASCAR::module_base_t::e, false ),
-    channels(1)
+  channels(1),
+  levelmeter_tc(2.0),
+  levelmeter_weight(TASCAR::levelmeter::Z)
 {
   TASCAR::module_base_t::GET_ATTRIBUTE(channels);
   TASCAR::module_base_t::GET_ATTRIBUTE(connect_out);
   TASCAR::module_base_t::get_attribute("lingain",gain);
+  TASCAR::module_base_t::GET_ATTRIBUTE(levelmeter_tc);
+  TASCAR::module_base_t::GET_ATTRIBUTE(levelmeter_weight);
   session->add_float_db("/"+get_name()+"/gain",&gain);
   session->add_float("/"+get_name()+"/lingain",&gain);
+  configure_meter( levelmeter_tc, levelmeter_weight );
   set_ctlname("/"+get_name());
   for(uint32_t k=0;k<channels;++k){
     char ctmp[1024];

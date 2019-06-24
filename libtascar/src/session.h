@@ -112,7 +112,7 @@ namespace TASCAR {
     double duration;
     bool loop;
     double levelmeter_tc;
-    TASCAR::levelmeter_t::weight_t levelmeter_weight;
+    TASCAR::levelmeter::weight_t levelmeter_weight;
     std::string levelmeter_mode;
     double levelmeter_min;
     double levelmeter_range;

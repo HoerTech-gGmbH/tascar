@@ -44,6 +44,8 @@ namespace TASCAR {
     void operator+=(const spec_t& o);
     void operator*=(const float& o);
     void conj();
+    void clear();
+    void add_scaled(const spec_t& o, float gain);
     inline float _Complex & operator[](uint32_t k){return b[k];};
     inline const float _Complex & operator[](uint32_t k) const{return b[k];};
     inline uint32_t size() const {return n_;};
