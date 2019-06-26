@@ -96,6 +96,33 @@ TEST(biquad_t,fresp)
   ASSERT_NEAR(-1.25,b.filter(1.0),1e-9);
 }
 
+TEST(biquad_t,highpass)
+{
+  TASCAR::biquad_t b;
+  b.set_highpass( 1000.0, 44100.0 );
+  // boundaries:
+  ASSERT_NEAR(0.0,cabs(b.response(0.0)),1e-9);
+  ASSERT_NEAR(1.0,cabs(b.response(M_PI)),1e-9);
+  // approx. 12 dB / octave:
+  ASSERT_NEAR(-3.88,20.0*log10(cabs(b.response(1000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-15.47,20.0*log10(cabs(b.response(500.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(0.367,20.0*log10(cabs(b.response(2000.0/44100.0*PI2))),1e-2);
+}
+
+TEST(biquad_t,lowpass)
+{
+  TASCAR::biquad_t b;
+  b.set_lowpass( 1000.0, 44100.0 );
+  // boundaries:
+  ASSERT_NEAR(1.0,cabs(b.response(0.0)),1e-9);
+  ASSERT_NEAR(0.0,cabs(b.response(M_PI)),1e-9);
+  // approx. 12 dB / octave:
+  ASSERT_NEAR(-0.16,20.0*log10(cabs(b.response(1000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-8.04,20.0*log10(cabs(b.response(2000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-20.61,20.0*log10(cabs(b.response(4000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(0.31,20.0*log10(cabs(b.response(500.0/44100.0*PI2))),1e-2);
+}
+
 TEST(bandpass_t, gain)
 {
   double fs(44100);

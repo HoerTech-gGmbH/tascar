@@ -158,11 +158,18 @@ namespace TASCAR {
     biquad_t()
       : a1_(0),a2_(0),b0_(1),b1_(0),b2_(0),z1(0.0),z2(0.0) {};
     void set_gzp( double g, double zero_r, double zero_phi, double pole_r, double pole_phi );
+    void set_highpass( double fc, double fs );
+    void set_lowpass( double fc, double fs );
     inline double filter(double in) {
         double out = z1 + b0_ * in;
         z1 = z2 + b1_ * in - a1_ * out;
         z2 = b2_ * in - a2_ * out;
         return out;
+    };
+    inline void filter( wave_t& w ) {
+      float* wend(w.d+w.n);
+      for( float* v = w.d; v < wend;++v )
+        *v = filter( *v );
     };
     double _Complex response( double phi ) const;
     double _Complex response_a( double phi ) const;

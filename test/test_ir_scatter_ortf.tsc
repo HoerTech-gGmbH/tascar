@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- 
+basic test: sound propagation, 1m
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1" y="0.7" z="1"/>
+    </source>
+    <receiver type="ortf" decorr="true" decorr_length="0.05" delaycomp="0.0014"/>
+    <facegroup shoebox="5 6 7" damping="0.8" scattering="1"/>
+  </scene>
+</session>

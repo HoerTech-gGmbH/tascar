@@ -136,7 +136,7 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
   uint32_t nch_out(pscene->num_output_ports());
   sndfile_handle_t sf_out(ofname,fs,nch_out);
   // allocate io audio buffer:
-  float sf_out_buf[nch_out*len];
+  float* sf_out_buf(new float[nch_out*len]);
   // allocate render audio buffer:
   std::vector<float*> a_in;
   for(uint32_t k=0;k<nch_in;++k){
@@ -172,6 +172,7 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
     delete [] a_in[k];
   for(uint32_t k=0;k<nch_out;++k)
     delete [] a_out[k];
+  delete [] sf_out_buf;
 }
 
 /*

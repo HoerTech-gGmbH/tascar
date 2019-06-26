@@ -11,7 +11,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
   hoa2d_fuma_hos fakebf
 
-SOURCES = omni cardioidmod door
+SOURCES = omni cardioidmod door generic1storder
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\
@@ -25,7 +25,7 @@ glabsensors
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
-  gainramp pulse pink dumplevels feedbackdelay bandpass
+  gainramp pulse pink dumplevels feedbackdelay bandpass filter
 
 GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
   qualisys jackstatus

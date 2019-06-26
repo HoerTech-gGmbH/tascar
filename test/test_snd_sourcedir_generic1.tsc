@@ -3,11 +3,14 @@
   <scene>
     <source>
       <orientation>0 0 0 0 1 360 0 0</orientation>
-      <sound><plugins><sine/></plugins></sound>
+      <sound type="generic1storder" a="0.25">
+	<plugins>
+	  <sine/>
+	</plugins>
+      </sound>
     </source>
-    <receiver type="omni">
+    <receiver type="omni" delaycomp="1">
       <position>0 1 0 0</position>
-      <orientation>0 0 0 0 1 360 0 0</orientation>
     </receiver>
   </scene>
 </session>

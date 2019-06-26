@@ -273,6 +273,20 @@ void TASCAR::bandpass_t::set_range( double f1, double f2 )
   b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*PI2 );
 }
 
+void TASCAR::biquad_t::set_highpass( double fc, double fs )
+{
+  set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  double g(cabs(response(M_PI)));
+  set_gzp( 1.0/g, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+}
+
+void TASCAR::biquad_t::set_lowpass( double fc, double fs )
+{
+  set_gzp( 1.0, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  double g(cabs(response(0.0)));
+  set_gzp( 1.0/g, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+}
+
 /*
  * Local Variables:
  * mode: c++
