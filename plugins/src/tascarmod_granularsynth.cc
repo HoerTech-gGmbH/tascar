@@ -24,6 +24,7 @@ protected:
   double ponset;
   double psustain;
   bool active_;
+  bool bypass_;
   std::vector<double> pitches;
   std::vector<double> durations;
 };
@@ -41,7 +42,8 @@ granularsynth_vars_t::granularsynth_vars_t( const TASCAR::module_cfg_t& cfg )
   gain(1.0),
   ponset(1.0),
   psustain(0.0),
-  active_(true)
+  active_(true),
+  bypass_(false)
 {
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(wet);
@@ -57,6 +59,7 @@ granularsynth_vars_t::granularsynth_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(psustain);
   GET_ATTRIBUTE_DB(gain);
   get_attribute_bool("active",active_);
+  get_attribute_bool("bypass",bypass_);
 }
 
 class grainloop_t : public std::vector<TASCAR::spec_t*>
@@ -202,6 +205,7 @@ granularsynth_t::granularsynth_t( const TASCAR::module_cfg_t& cfg )
   session->add_double_db("/c/"+id+"/gain",&gain);
   session->add_bool_true("/c/"+id+"/reset",&reset);
   session->add_bool("/c/"+id+"/active",&active_);
+  session->add_bool("/c/"+id+"/bypass",&bypass_);
   // activate service:
   set_apply( 0.01f );
   activate();
@@ -236,15 +240,24 @@ int granularsynth_t::process(jack_nframes_t n, const std::vector<float*>& vIn, c
 	t_apply--;
 	currentw += deltaw;
       }
+      if( currentw < 0.0f )
+	currentw = 0.0f;
+      if( currentw > 1.0f )
+	currentw = 1.0f;
       w_out[k] *= gain*currentw;
-      w_out[k] += (1.0f-std::max(0.0f,currentw))*w_in[k];
+      w_out[k] += (1.0f-currentw)*w_in[k];
     }
   }else{
+    if( bypass_ ){
     // copy input to output:
-    for(size_t ch=0;ch<std::min(vIn.size(),vOut.size());++ch)
-      memcpy( vOut[ch], vIn[ch], n*sizeof(float) );
-    for(size_t ch=vIn.size();ch<vOut.size();++ch)
-      memset( vOut[ch], 0, n*sizeof(float) );
+      for(size_t ch=0;ch<std::min(vIn.size(),vOut.size());++ch)
+	memcpy( vOut[ch], vIn[ch], n*sizeof(float) );
+      for(size_t ch=vIn.size();ch<vOut.size();++ch)
+	memset( vOut[ch], 0, n*sizeof(float) );
+    }else{
+      for(size_t ch=0;ch<vOut.size();++ch)
+	memset( vOut[ch], 0, n*sizeof(float) );
+    }
   }
   return 0;
 }
@@ -259,7 +272,7 @@ int granularsynth_t::inner_process(jack_nframes_t n, const std::vector<float*>& 
   uint64_t loopi(loop*srate/(bpm/60.0));
   ldiv_t tmp(ldiv( t, loopi ));
   t = tmp.rem;
-  // if inavtive, do only time update, and return zeros:
+  // if inactive, do only time update, and return zeros:
   if( !active_ ){
     tprev = t;
     for( auto it=vOut.begin();it!=vOut.end();++it)
@@ -327,6 +340,7 @@ int granularsynth_t::inner_process(jack_nframes_t n, const std::vector<float*>& 
   }
   // convert back to time domain:
   ola1.ifft(w_out);
+  //w_out.clear();
   tprev = t;
   return 0;
 }

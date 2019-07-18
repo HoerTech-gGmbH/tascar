@@ -549,8 +549,6 @@ void tascar_window_t::reset_gui()
     osc_vars->get_buffer()->set_text(session->list_variables());
     text_srv_url->set_text(session->get_srv_url());
     legal_view->get_buffer()->set_text(session->legal_stuff());
-    //legal_view->get_buffer()->set_text("");
-    //legal_view->get_buffer()->insert_markup(legal_view->get_buffer()->end(),session->legal_stuff(true));
   }else{
     source_view.get_source_buffer()->set_text("");
     osc_vars->get_buffer()->set_text("");
@@ -558,6 +556,10 @@ void tascar_window_t::reset_gui()
     legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();
+  if( session && (!session->starturl.empty()) ){
+    webkit_web_view_load_uri( news_view, session->starturl.c_str() );
+    notebook->set_current_page(6);
+  }
   webkit_web_view_reload_bypass_cache( news_view );
 }
 
@@ -571,6 +573,7 @@ void tascar_window_t::on_menu_file_close()
   try{
     scene_destroy();
     warnings.clear();
+    webkit_web_view_try_close( news_view );
   }
   catch( const std::exception& e){
     error_message(e.what());

@@ -14,9 +14,11 @@ public:
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
   bool on_timeout();
 private:
+  bool ontop;
   double tracelen;
   double fps;
   double guiscale;
+  double linescale;
   bool unitcircle;
   bool origin;
   uint32_t itracelen;
@@ -31,9 +33,11 @@ private:
 
 tracegui_t::tracegui_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t(cfg,true),
+    ontop(false),
     tracelen(4),
     fps(10),
     guiscale(10),
+    linescale(1),
     unitcircle(true),
     origin(true),
     itracelen(40),
@@ -43,13 +47,17 @@ tracegui_t::tracegui_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE(tracelen);
   GET_ATTRIBUTE(fps);
   GET_ATTRIBUTE(guiscale);
+  GET_ATTRIBUTE(linescale);
   GET_ATTRIBUTE_BOOL(unitcircle);
   GET_ATTRIBUTE_BOOL(origin);
+  GET_ATTRIBUTE_BOOL(ontop);
   session->add_double("/tracegui/guiscale",&guiscale);
+  session->add_double("/tracegui/linescale",&linescale);
   //session->add_bool("/tracegui/unitcircle",&unitcircle);
   //session->add_bool("/tracegui/origin",&origin);
   itracelen = fps*tracelen;
   win.set_title("tascar trace");
+  win.set_keep_above(ontop);
   win.add(map);
   win.show();
   map.show();
@@ -108,7 +116,7 @@ bool tracegui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->translate(0.5*width, 0.5*height);
     double wscale(0.5*std::max(height,width));
     wscale /= guiscale;
-    double mw(1.0/guiscale);
+    double mw(0.1*guiscale*linescale);
     cr->scale( wscale, wscale );
     cr->set_source_rgb( 0.7, 0.7, 0.7 );
     if( origin ){

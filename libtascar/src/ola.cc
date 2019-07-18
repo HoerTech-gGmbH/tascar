@@ -92,6 +92,10 @@ TASCAR::overlap_save_t::overlap_save_t(uint32_t irslen,uint32_t chunksize)
     H_long(fftlen_/2+1),
     out(chunksize)
 {
+  if( irslen == 0 )
+    throw TASCAR::ErrMsg("Invalid (zero) impulse response length.");
+  if(chunksize==0)
+    throw TASCAR::ErrMsg("Invalid (zero) chunk size.");
   TASCAR::wave_t unity(irslen);
   unity[0] = 1.0;
   set_irs(unity);

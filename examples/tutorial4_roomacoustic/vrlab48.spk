@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <layout>
-<speaker az="0.0" el="0.0" connect="system:playback_25" compA="1" compB="1.000000"/>
-<speaker az="7.5" el="0.0" connect="system:playback_26" compA="1" compB="0.969752"/>
-<speaker az="15.0" el="0.0" connect="system:playback_27" compA="1" compB="0.953965"/>
-<speaker az="22.5" el="0.0" connect="system:playback_28" compA="1" compB="1.066793"/>
-<speaker az="30.0" el="0.0" connect="system:playback_29" compA="1" compB="0.939058"/>
-<speaker az="37.5" el="0.0" connect="system:playback_30" compA="1" compB="1.017023"/>
-<speaker az="45.0" el="0.0" connect="system:playback_31" compA="1" compB="1.066442"/>
-<speaker az="52.5" el="0.0" connect="system:playback_32" compA="1" compB="1.295869"/>
-<speaker az="60.0" el="0.0" connect="system:playback_33" compA="1" compB="1.071094"/>
-<speaker az="67.5" el="0.0" connect="system:playback_34" compA="1" compB="1.133627"/>
-<speaker az="75.0" el="0.0" connect="system:playback_35" compA="1" compB="0.938750"/>
-<speaker az="82.5" el="0.0" connect="system:playback_36" compA="1" compB="1.073597"/>
-<speaker az="90.0" el="0.0" connect="system:playback_37" compA="1" compB="1.163098"/>
-<speaker az="97.5" el="0.0" connect="system:playback_38" compA="1" compB="1.018230"/>
-<speaker az="105.0" el="0.0" connect="system:playback_39" compA="1" compB="0.870744"/>
-<speaker az="112.5" el="0.0" connect="system:playback_40" compA="1" compB="0.966371"/>
-<speaker az="120.0" el="0.0" connect="system:playback_41" compA="1" compB="0.844521"/>
-<speaker az="127.5" el="0.0" connect="system:playback_42" compA="1" compB="1.001787"/>
-<speaker az="135.0" el="0.0" connect="system:playback_43" compA="1" compB="0.989982"/>
-<speaker az="142.5" el="0.0" connect="system:playback_44" compA="1" compB="0.946844"/>
-<speaker az="150.0" el="0.0" connect="system:playback_45" compA="1" compB="0.967577"/>
-<speaker az="157.5" el="0.0" connect="system:playback_46" compA="1" compB="0.894066"/>
-<speaker az="165.0" el="0.0" connect="system:playback_47" compA="1" compB="1.332824"/>
-<speaker az="172.5" el="0.0" connect="system:playback_48" compA="1" compB="0.874891"/>
-<speaker az="180.0" el="0.0" connect="system:playback_1" compA="1" compB="0.846801"/>
-<speaker az="187.5" el="0.0" connect="system:playback_2" compA="1" compB="1.117354"/>
-<speaker az="195.0" el="0.0" connect="system:playback_3" compA="1" compB="0.903908"/>
-<speaker az="202.5" el="0.0" connect="system:playback_4" compA="1" compB="0.990615"/>
-<speaker az="210.0" el="0.0" connect="system:playback_5" compA="1" compB="0.995264"/>
-<speaker az="217.5" el="0.0" connect="system:playback_6" compA="1" compB="0.954239"/>
-<speaker az="225.0" el="0.0" connect="system:playback_7" compA="1" compB="0.990118"/>
-<speaker az="232.5" el="0.0" connect="system:playback_8" compA="1" compB="0.980396"/>
-<speaker az="240.0" el="0.0" connect="system:playback_9" compA="1" compB="1.027412"/>
-<speaker az="247.5" el="0.0" connect="system:playback_10" compA="1" compB="0.929750"/>
-<speaker az="255.0" el="0.0" connect="system:playback_11" compA="1" compB="1.170360"/>
-<speaker az="262.5" el="0.0" connect="system:playback_12" compA="1" compB="1.205074"/>
-<speaker az="270.0" el="0.0" connect="system:playback_13" compA="1" compB="1.112517"/>
-<speaker az="277.5" el="0.0" connect="system:playback_14" compA="1" compB="0.979982"/>
-<speaker az="285.0" el="0.0" connect="system:playback_15" compA="1" compB="1.037161"/>
-<speaker az="292.5" el="0.0" connect="system:playback_16" compA="1" compB="1.043588"/>
-<speaker az="300.0" el="0.0" connect="system:playback_17" compA="1" compB="1.053690"/>
-<speaker az="307.5" el="0.0" connect="system:playback_18" compA="1" compB="0.945236"/>
-<speaker az="315.0" el="0.0" connect="system:playback_19" compA="1" compB="1.013436"/>
-<speaker az="322.5" el="0.0" connect="system:playback_20" compA="1" compB="1.093969"/>
-<speaker az="330.0" el="0.0" connect="system:playback_21" compA="1" compB="0.764648"/>
-<speaker az="337.5" el="0.0" connect="system:playback_22" compA="1" compB="0.967495"/>
-<speaker az="345.0" el="0.0" connect="system:playback_23" compA="1" compB="0.937355"/>
-<speaker az="352.5" el="0.0" connect="system:playback_24" compA="1" compB="0.997720"/>
+<speaker az="0.0" el="0.0" connect="system:playback_25"/>
+<speaker az="7.5" el="0.0" connect="system:playback_26"/>
+<speaker az="15.0" el="0.0" connect="system:playback_27"/>
+<speaker az="22.5" el="0.0" connect="system:playback_28"/>
+<speaker az="30.0" el="0.0" connect="system:playback_29"/>
+<speaker az="37.5" el="0.0" connect="system:playback_30"/>
+<speaker az="45.0" el="0.0" connect="system:playback_31"/>
+<speaker az="52.5" el="0.0" connect="system:playback_32"/>
+<speaker az="60.0" el="0.0" connect="system:playback_33"/>
+<speaker az="67.5" el="0.0" connect="system:playback_34"/>
+<speaker az="75.0" el="0.0" connect="system:playback_35"/>
+<speaker az="82.5" el="0.0" connect="system:playback_36"/>
+<speaker az="90.0" el="0.0" connect="system:playback_37"/>
+<speaker az="97.5" el="0.0" connect="system:playback_38"/>
+<speaker az="105.0" el="0.0" connect="system:playback_39"/>
+<speaker az="112.5" el="0.0" connect="system:playback_40"/>
+<speaker az="120.0" el="0.0" connect="system:playback_41"/>
+<speaker az="127.5" el="0.0" connect="system:playback_42"/>
+<speaker az="135.0" el="0.0" connect="system:playback_43"/>
+<speaker az="142.5" el="0.0" connect="system:playback_44"/>
+<speaker az="150.0" el="0.0" connect="system:playback_45"/>
+<speaker az="157.5" el="0.0" connect="system:playback_46"/>
+<speaker az="165.0" el="0.0" connect="system:playback_47"/>
+<speaker az="172.5" el="0.0" connect="system:playback_48"/>
+<speaker az="180.0" el="0.0" connect="system:playback_1"/>
+<speaker az="187.5" el="0.0" connect="system:playback_2"/>
+<speaker az="195.0" el="0.0" connect="system:playback_3"/>
+<speaker az="202.5" el="0.0" connect="system:playback_4"/>
+<speaker az="210.0" el="0.0" connect="system:playback_5"/>
+<speaker az="217.5" el="0.0" connect="system:playback_6"/>
+<speaker az="225.0" el="0.0" connect="system:playback_7"/>
+<speaker az="232.5" el="0.0" connect="system:playback_8"/>
+<speaker az="240.0" el="0.0" connect="system:playback_9"/>
+<speaker az="247.5" el="0.0" connect="system:playback_10"/>
+<speaker az="255.0" el="0.0" connect="system:playback_11"/>
+<speaker az="262.5" el="0.0" connect="system:playback_12"/>
+<speaker az="270.0" el="0.0" connect="system:playback_13"/>
+<speaker az="277.5" el="0.0" connect="system:playback_14"/>
+<speaker az="285.0" el="0.0" connect="system:playback_15"/>
+<speaker az="292.5" el="0.0" connect="system:playback_16"/>
+<speaker az="300.0" el="0.0" connect="system:playback_17"/>
+<speaker az="307.5" el="0.0" connect="system:playback_18"/>
+<speaker az="315.0" el="0.0" connect="system:playback_19"/>
+<speaker az="322.5" el="0.0" connect="system:playback_20"/>
+<speaker az="330.0" el="0.0" connect="system:playback_21"/>
+<speaker az="337.5" el="0.0" connect="system:playback_22"/>
+<speaker az="345.0" el="0.0" connect="system:playback_23"/>
+<speaker az="352.5" el="0.0" connect="system:playback_24"/>
 </layout>

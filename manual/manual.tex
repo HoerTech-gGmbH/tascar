@@ -1144,13 +1144,14 @@ separate layout file specified in the \attr{layout} attribute, in a
 list of \elem{speaker} elements within the receiver definition.
 
 \begin{tscattributes}
-\indattr{az}         & Azimuth of loudspeaker in degrees (optional; default 0)   \\
-\indattr{el}         & Elevation of loudspeaker in degrees (optional; default 0) \\
-\indattr{r}          & Distance (optional; default 1)                            \\
-\indattr{delay}      & Static delay in seconds (default: 0)                      \\
-\indattr{label}      & Additional port label (optional; default empty)           \\
-\indattr{connect}    & Connection to jack port                                   \\
-\indattr{compB}      & FIR filter coefficients for speaker calibration.          \\
+\indattr{az}      & Azimuth of loudspeaker in degrees (optional; default 0)   \\
+\indattr{el}      & Elevation of loudspeaker in degrees (optional; default 0) \\
+\indattr{r}       & Distance (optional; default 1)                            \\
+\indattr{delay}   & Static delay in seconds (default: 0)                      \\
+\indattr{label}   & Additional port label (optional; default empty)           \\
+\indattr{connect} & Connection to jack port                                   \\
+\indattr{compB}   & FIR filter coefficients for speaker calibration.          \\
+\indattr{gain}    & Gain in dB (default: 0)                                   \\
 \end{tscattributes}
 
 To activate FIR speaker correction filter, provide the FIR filter

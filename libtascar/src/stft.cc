@@ -14,6 +14,10 @@ TASCAR::stft_t::stft_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, win
 {
   if( (wndpos < 0.0) || (wndpos > 1.0) )
     throw TASCAR::ErrMsg("Window position must be in the interval 0 <= wndpos <= 1.");
+  if( zpad1 >= fftlen )
+    throw TASCAR::ErrMsg("invalid zero padding 1: "+TASCAR::to_string(zpad1));
+  if( zpad2 >= fftlen )
+    throw TASCAR::ErrMsg("invalid zero padding 2: "+TASCAR::to_string(zpad2));
   unsigned int k;
   switch( wnd ){
   case WND_RECT :

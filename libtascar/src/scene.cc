@@ -186,13 +186,20 @@ void src_object_t::prepare( chunk_cfg_t& cf_ )
   cf_.n_channels = 1;
   sndfile_object_t::prepare( cf_ );
   reset_meters();
-  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
-    for(uint32_t k=0;k<(*it)->get_num_channels();++k){
-      addmeter( f_sample );
-      (*it)->add_meter(rmsmeter.back());
+  try{
+    for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
+      for(uint32_t k=0;k<(*it)->get_num_channels();++k){
+        addmeter( f_sample );
+        (*it)->add_meter(rmsmeter.back());
+      }
+      (*it)->prepare( cf_ );
     }
-    (*it)->prepare( cf_ );
-    //(*it)->get_source()->add_rmslevel((rmsmeter.back()));
+  }
+  catch(...){
+    for( auto it=sound.begin();it!=sound.end();++it)
+      if( (*it)->is_prepared() )
+        (*it)->release();
+    throw;
   }
   startframe = f_sample * starttime;
 }
@@ -466,7 +473,8 @@ void scene_t::release()
   scene_node_base_t::release();
   all_objects = get_objects();
   for(auto it=all_objects.begin();it!=all_objects.end();++it)
-    (*it)->release();
+    if( (*it)->is_prepared() )
+      (*it)->release();
 }
 
 void scene_t::add_licenses( licensehandler_t* session )

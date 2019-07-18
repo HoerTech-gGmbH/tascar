@@ -159,9 +159,6 @@ namespace TASCAR {
       std::vector<wave_t> inchannels;
       std::vector<wave_t*> inchannelsp;
       bool active;
-    private:
-      bool is_prepared;
-    public:
       plugin_processor_t plugins;
     };
 

@@ -18,8 +18,16 @@ plugin_processor_t::plugin_processor_t( xmlpp::Element* xmlsrc, const std::strin
 void plugin_processor_t::prepare( chunk_cfg_t& cf_ )
 {
   audiostates_t::prepare( cf_ );
-  for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->prepare( cf_ );
+  try{
+    for( auto p=plugins.begin(); p!= plugins.end(); ++p)
+      (*p)->prepare( cf_ );
+  }
+  catch( ... ){
+    for( auto p=plugins.begin(); p!= plugins.end(); ++p)
+      if( (*p)->is_prepared() )
+	(*p)->release();
+    throw;
+  }
 }
 
 void plugin_processor_t::add_licenses( licensehandler_t* lh )
@@ -32,7 +40,8 @@ void plugin_processor_t::release()
 {
   audiostates_t::release();
   for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->release();
+    if( (*p)->is_prepared() )
+      (*p)->release();
 }
 
 plugin_processor_t::~plugin_processor_t()

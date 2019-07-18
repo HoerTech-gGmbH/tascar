@@ -94,6 +94,7 @@ namespace TASCAR {
     const std::vector<didx_t>& sort_distance(const pos_t& psrc);
     void prepare( chunk_cfg_t& );
     xml_element_t elayout;
+    void validate_attributes(std::string& msg) const;
   private:
     double rmax;
     double rmin;

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <diffuse>
+    </diffuse>
+    <receiver type="nsp" layout="8ch_diffuse_zero.spk"/>
+  </scene>
+</session>

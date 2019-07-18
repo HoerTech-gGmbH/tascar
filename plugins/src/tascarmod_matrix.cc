@@ -11,6 +11,8 @@ public:
 protected:
   std::string id;
   std::string decoder;
+  bool own_outputs;
+  std::string outname;
 };
 
 class matrix_t : public matrix_vars_t, public jackc_t {
@@ -27,16 +29,22 @@ private:
 };
 
 matrix_vars_t::matrix_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg )
+  : module_base_t( cfg ),
+    own_outputs(true),
+    outname("output")
 {
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(decoder);
+  if( has_attribute("layout") ){
+    own_outputs = false;
+    outname = "speaker";
+  }
 }
 
 matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
   : matrix_vars_t( cfg ),
     jackc_t(id),
-    outputs( cfg.xmlsrc, true, "output" ),
+    outputs( cfg.xmlsrc, own_outputs, outname ),
     inputs( cfg.xmlsrc, true, "input" )
 {
   m.resize( outputs.size() );

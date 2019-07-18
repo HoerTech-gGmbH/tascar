@@ -41,7 +41,7 @@ namespace TASCAR {
     audioplayer_t(const std::string& xmlfile="");
     audioplayer_t(TASCAR::Scene::scene_t*);
     virtual ~audioplayer_t();
-    void run(bool &b_quit);
+    void run(bool &b_quit, bool use_stdin=true);
     void start();
     void stop();
   private:

@@ -11,11 +11,23 @@ namespace TASCAR {
   globalconfig_t config;
 }
 
-size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes) const
+size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes, bool test_children) const
 {
   std::string v;
   for(auto it=attributes.begin();it!=attributes.end();++it)
     v += e->get_attribute_value(*it);
+  if( test_children ){
+    xmlpp::Node::NodeList subnodes(e->get_children());
+    for( auto sn=subnodes.begin();sn!=subnodes.end();++sn){
+      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+      if( sne )
+        for(auto it=attributes.begin();it!=attributes.end();++it){
+          if( sne->get_attribute_value(*it).size() ){
+            v += sne->get_attribute_value(*it);
+          }
+        }
+    }
+  }
   std::hash<std::string> hash_fn;
   return hash_fn(v);
 }

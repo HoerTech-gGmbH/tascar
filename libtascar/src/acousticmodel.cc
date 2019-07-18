@@ -699,7 +699,7 @@ source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::s
     airabsorption(true),
     size(0),
     active(true),
-    is_prepared(false),
+    //is_prepared(false),
     plugins(xmlsrc, name, parentname )
 {
   GET_ATTRIBUTE(size);
@@ -737,7 +737,6 @@ void source_t::prepare( chunk_cfg_t& cf_ )
     inchannels.push_back(wave_t(*(inchannelsp.back())));
   }
   plugins.prepare( cf_ );
-  is_prepared = true;
 }
 
 void source_t::release()
@@ -748,7 +747,6 @@ void source_t::release()
   for( uint32_t k=0;k<inchannelsp.size();++k)
     delete inchannelsp[k];
   inchannelsp.clear();
-  is_prepared = false;
 }
 
 void source_t::process_plugins( const TASCAR::transport_t& tp )

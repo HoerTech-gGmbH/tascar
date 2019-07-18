@@ -16,7 +16,7 @@ using namespace TASCAR::Scene;
 class calibsession_t : public TASCAR::session_t
 {
 public:
-  calibsession_t( const std::string& fname, double reflevel, const std::string& refport, double duration_ );
+  calibsession_t( const std::string& fname, double reflevel, const std::vector<std::string>& refport, double duration_ , double fmin, double fmax );
   ~calibsession_t();
   double get_caliblevel() const;
   double get_diffusegain() const;
@@ -24,7 +24,7 @@ public:
   void inc_diffusegain(double dl);
   void set_active(bool b);
   void set_active_diff(bool b);
-  void get_levels();
+  void get_levels(Gtk::ProgressBar* rec_progress, double prewait);
   void reset_levels();
   void saveas( const std::string& fname );
   void save();
@@ -40,7 +40,7 @@ private:
   bool levelsrecorded;
   bool calibrated;
   bool calibrated_diff;
-  std::string refport;
+  //std::vector<std::string> refport;
   double startlevel;
   double startdiffgain;
   double delta;
@@ -48,14 +48,14 @@ private:
   std::string spkname;
   spk_array_t* spkarray;
   std::vector<double> levels;
-  std::string refport_;
+  std::vector<std::string> refport_;
   double duration;
   double lmin;
   double lmax;
   double lmean;
 };
 
-calibsession_t::calibsession_t( const std::string& fname, double reflevel, const std::string& refport, double duration_ )
+calibsession_t::calibsession_t( const std::string& fname, double reflevel, const std::vector<std::string>& refport, double duration_ , double fmin, double fmax  )
   : session_t("<?xml version=\"1.0\"?><session srv_port=\"none\"/>",LOAD_STRING,""),
     gainmodified(false),
     levelsrecorded(false),
@@ -84,6 +84,8 @@ calibsession_t::calibsession_t( const std::string& fname, double reflevel, const
   xmlpp::Element* e_pink(e_plugs->add_child("pink"));
   e_pink->set_attribute("level",TASCAR::to_string(reflevel));
   e_pink->set_attribute("period",TASCAR::to_string(duration));
+  e_pink->set_attribute("fmin",TASCAR::to_string(fmin));
+  e_pink->set_attribute("fmax",TASCAR::to_string(fmax));
   xmlpp::Element* e_rcvr(e_scene->add_child("receiver"));
   e_rcvr->set_attribute("type","nsp");
   e_rcvr->set_attribute("layout",fname);
@@ -124,18 +126,27 @@ void calibsession_t::reset_levels()
   }
 }
 
-void calibsession_t::get_levels()
+void calibsession_t::get_levels(Gtk::ProgressBar* rec_progress, double prewait)
 {
   if( !scenes.empty() )
     if( !scenes.back()->object_sources.empty() ){
       levels.clear();
       scenes.back()->object_sources.back()->set_mute(false);
+      uint32_t frac(0);
+      rec_progress->set_fraction(0.0);
+      while(Gtk::Main::events_pending())
+        Gtk::Main::iteration(false);
       for( auto spk=spkarray->begin(); spk!=spkarray->end(); ++spk ){
         scenes.back()->object_sources.back()->dlocation = spk->unitvector;
-        jackio_t rec( duration, "", std::vector<std::string>(1,refport_) );
+        usleep(1e6*prewait);
+        jackio_t rec( duration, "", refport_ );
         rec.run();
-        wave_t brec( rec.nframes_total, rec.buf_out );
+        wave_t brec( rec.nframes_total*refport_.size(), rec.buf_out );
         levels.push_back( 10*log10(brec.ms()) );
+        ++frac;
+        rec_progress->set_fraction((double)frac/(double)(spkarray->size()));
+        while(Gtk::Main::events_pending())
+          Gtk::Main::iteration(false);
       }
       // convert levels into gains:
       lmin = levels[0];
@@ -189,6 +200,7 @@ void calibsession_t::saveas( const std::string& fname )
       //  recspk->spkpos[k].gain *= pow(10.0,0.05*(lmin - levels[k]));
       //
       //
+      TASCAR::spk_array_t array(doc.doc->get_root_node(),true);
       xmlpp::Node::NodeList subnodes(doc.doc->get_root_node()->get_children());
       size_t k=0;
       for( auto sn=subnodes.begin(); sn!=subnodes.end(); ++sn ){
@@ -207,7 +219,14 @@ void calibsession_t::saveas( const std::string& fname )
   attributes.push_back("densitycorr");
   attributes.push_back("caliblevel");
   attributes.push_back("diffusegain");
-  size_t checksum(elem.hash(attributes));
+  attributes.push_back("gain");
+  attributes.push_back("az");
+  attributes.push_back("el");
+  attributes.push_back("r");
+  attributes.push_back("delay");
+  attributes.push_back("compB");
+  attributes.push_back("connect");
+  size_t checksum(elem.hash(attributes, true));
   elem.set_attribute("checksum",checksum);
   char ctmp[1024];
   memset(ctmp,0,1024);
@@ -332,16 +351,21 @@ protected:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupClose;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupCalib;
   Gtk::Label* label_levels;
+  Gtk::Label* label_gains;
   Gtk::Label* text_levelresults;
   Gtk::Label* text_instruction;
   Gtk::Label* text_instruction_diff;
   Gtk::Label* text_caliblevel;
   Gtk::Entry* levelentry;
   Gtk::Entry* levelentry_diff;
+  Gtk::ProgressBar* rec_progress;
   calibsession_t* session;
   double reflevel;
   double noiseperiod;
-  std::string refport;
+  double fmin;
+  double fmax;
+  double prewait;
+  std::vector<std::string> refport;
 };
 
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
@@ -364,7 +388,10 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
     session(NULL),
     reflevel(TASCAR::config("tascar.spkcalib.reflevel",80.0)),
     noiseperiod(TASCAR::config("tascar.spkcalib.noiseperiod",2.0)),
-    refport(TASCAR::config("tascar.spkcalib.inputport","system:capture_1"))
+  fmin(TASCAR::config("tascar.spkcalib.fmin",62.5)),
+  fmax(TASCAR::config("tascar.spkcalib.fmax",4000.0)),
+  prewait(TASCAR::config("tascar.spkcalib.prewait",0.5)),
+  refport(str2vecstr(TASCAR::config("tascar.spkcalib.inputport","system:capture_1")))
 {
   //Create actions for menus and toolbars:
   refActionGroupMain = Gio::SimpleActionGroup::create();
@@ -397,12 +424,14 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
   refActionGroupCalib->add_action("dec_diff_05",sigc::mem_fun(*this, &spkcalib_t::on_dec_diff_05));
   //insert_action_group("calib",refActionGroupCalib);
   GET_WIDGET(label_levels);
+  GET_WIDGET(label_gains);
   GET_WIDGET(text_levelresults);
   GET_WIDGET(text_instruction_diff);
   GET_WIDGET(text_instruction);
   GET_WIDGET(text_caliblevel);
   GET_WIDGET(levelentry);
   GET_WIDGET(levelentry_diff);
+  GET_WIDGET(rec_progress);
   levelentry->signal_activate().connect(sigc::mem_fun(*this, &spkcalib_t::on_level_entered));
   levelentry_diff->signal_activate().connect(sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   update_display();
@@ -441,6 +470,22 @@ void spkcalib_t::manage_act_grp_save()
     insert_action_group("save",refActionGroupSave);
   else
     remove_action_group("save");
+  if( session ){
+    std::string gainstr;
+    if( !session->scenes.back()->receivermod_objects.empty() ){
+      TASCAR::receivermod_base_speaker_t* recspk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(session->scenes.back()->receivermod_objects.back()->libdata));
+      if( recspk ){
+        for(uint32_t k=0;k<recspk->spkpos.size();++k){
+          char lc[1024];
+          sprintf(lc,"%1.1f ",20*log10(recspk->spkpos[k].gain));
+          gainstr += lc;
+        }
+      }
+    }
+    label_gains->set_text(gainstr);
+  }else{
+    label_gains->set_text("");
+  }
   if( session && session->levels_complete() ){
     char ctmp[1024];
     sprintf(ctmp,"Mean level: %1.1f dB FS (range: %1.1f dB)",
@@ -464,8 +509,17 @@ void spkcalib_t::manage_act_grp_save()
 void spkcalib_t::on_reclevels()
 {
   try{
-    if( session )
-      session->get_levels();
+    if( session ){
+      remove_action_group("calib");
+      remove_action_group("close");
+      levelentry->set_sensitive(false);
+      levelentry_diff->set_sensitive(false);
+      session->get_levels(rec_progress, prewait);
+      insert_action_group("calib",refActionGroupCalib);
+      insert_action_group("close",refActionGroupClose);
+      levelentry->set_sensitive(true);
+      levelentry_diff->set_sensitive(true);
+    }
     manage_act_grp_save();
   }
   catch( const std::exception& e ){
@@ -688,6 +742,7 @@ spkcalib_t::~spkcalib_t()
 
 void spkcalib_t::update_display()
 {
+  rec_progress->set_fraction(0);
   if( session ){
     char ctmp[1024];
     sprintf(ctmp,"caliblevel: %1.1f dB diffusegain: %1.1f dB",
@@ -697,8 +752,13 @@ void spkcalib_t::update_display()
   }else{
     text_caliblevel->set_text("no layout file loaded.");
   }
+  std::string portlist;
+  for(auto it=refport.begin();it!=refport.end();++it)
+    portlist += *it + " ";
+  if( portlist.size() )
+    portlist.erase(portlist.size()-1,1);
   char ctmp[1024];
-  sprintf(ctmp,"1. Relative loudspeaker gains:\nPlace a measurement microphone at the listening position and connect to port \"%s\". A pink noise will be played from the loudspeaker positions. Press record to start.",refport.c_str());
+  sprintf(ctmp,"1. Relative loudspeaker gains:\nPlace a measurement microphone at the listening position and connect to port%s \"%s\". A pink noise will be played from the loudspeaker positions. Press record to start.",(refport.size()>1)?"s":"",portlist.c_str());
   label_levels->set_text(ctmp);
   sprintf(ctmp,"2. Adjust the playback level to %1.1f dB using the inc/dec buttons. Alternatively, enter the measured level in the field below. Use Z or C weighting.\n a) Point source:",reflevel);
   text_instruction->set_text(ctmp);
@@ -733,7 +793,7 @@ void spkcalib_t::load(const std::string& fname)
   cleanup();
   if( fname.empty() )
     throw TASCAR::ErrMsg("Empty file name.");
-  session = new calibsession_t(fname,reflevel,refport,noiseperiod);
+  session = new calibsession_t(fname,reflevel,refport,noiseperiod,fmin,fmax);
   session->start();
   update_display();
 }

@@ -121,6 +121,7 @@ public:
   void update( uint32_t frame, bool running, double t_fragment );
   void add_variables( TASCAR::osc_server_t* srv );
   const std::string& get_name() const {return name;};
+  virtual void validate_attributes(std::string&) const;
 private:
   TASCAR::session_t* session;
   // config variables:
@@ -150,6 +151,12 @@ private:
   bool usecalib;
   bool sendsquared;
 };
+
+void lightscene_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::xml_element_t::validate_attributes(msg);
+  fixtures.validate_attributes(msg);
+}
 
 lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   : xml_element_t( cfg.xmlsrc ),
@@ -200,7 +207,37 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     fixtures[k].get_attribute("label",labels[k]);
     std::vector<int32_t> lampdmx;
     fixtures[k].get_attribute("dmxval",lampdmx);
-    xmlpp::Node::NodeList ch = fixtures[k].e->get_children( "calib" );
+    xmlpp::DomParser domp;
+    xmlpp::Element* e_calibfile(fixtures[k].e);
+    if( fixtures[k].has_attribute("calibfile") ){
+      std::string calibfile;
+      fixtures[k].get_attribute("calibfile",calibfile);
+      if( calibfile.empty() )
+        throw TASCAR::ErrMsg("No speaker calibfile file provided.");
+      try{
+        domp.parse_file( TASCAR::env_expand( calibfile ) );
+      }
+      catch( const xmlpp::internal_error& e){
+        throw TASCAR::ErrMsg(std::string("xml internal error: ")+e.what());
+      }
+      catch( const xmlpp::validity_error& e){
+        throw TASCAR::ErrMsg(std::string("xml validity error: ")+e.what());
+      }
+      catch( const xmlpp::parse_error& e){
+        throw TASCAR::ErrMsg(std::string("xml parse error: ")+e.what());
+      }
+      if( !domp )
+        throw TASCAR::ErrMsg("Unable to parse file \""+calibfile+"\".");
+      e_calibfile = domp.get_document()->get_root_node();
+      if( !e_calibfile )
+        throw TASCAR::ErrMsg("No root node found in document \""+calibfile+"\".");
+      if( e_calibfile->get_name() != "fixturecalib" )
+        throw TASCAR::ErrMsg("Invalid root node name. Expected \"fixturecalib\", got "+e_calibfile->get_name()+".");
+      xmlpp::Node::NodeList ch(fixtures[k].e->get_children( "calib" ));
+      if( !ch.empty() )
+        TASCAR::add_warning("calib entries found in calib file and fixture entry.",fixtures[k].e);
+    }
+    xmlpp::Node::NodeList ch = e_calibfile->get_children( "calib" );
     for( xmlpp::Node::NodeList::iterator it=ch.begin();it!=ch.end();++it){
       xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(*it);
       if( el ){
@@ -223,7 +260,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
       dmxaddr[channels*k+c] = (startaddr+c-1);
-       basedmx[channels*k+c] = lampdmx[c];
+      basedmx[channels*k+c] = lampdmx[c];
     }
   }
   objval.resize(objects_.size());
@@ -409,6 +446,7 @@ public:
   ~lightctl_t();
   void update(uint32_t frame,bool running);
   void add_variables( TASCAR::osc_server_t* srv );
+  virtual void validate_attributes(std::string&) const;
   virtual void service();
 private:
   std::string driver;
@@ -421,9 +459,9 @@ private:
 
 lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
   : TASCAR::module_base_t( cfg ),
-    fps(30),
-    universe(0),
-    driver_(NULL)
+  fps(30),
+  universe(0),
+  driver_(NULL)
 {
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -479,6 +517,13 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
   start_service();
 }
 
+void lightctl_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::module_base_t::validate_attributes(msg);
+  for( auto it=lightscenes.begin();it!=lightscenes.end();++it)
+    (*it)->validate_attributes(msg);
+}
+
 void lightctl_t::update(uint32_t frame,bool running)
 {
   for( std::vector<lightscene_t*>::iterator it=lightscenes.begin();it!=lightscenes.end();++it)
@@ -499,7 +544,7 @@ lightctl_t::~lightctl_t()
 {
   stop_service();
   usleep(100000);
-  for( std::vector<lightscene_t*>::iterator it=lightscenes.begin();it!=lightscenes.end();++it)
+  for( auto it=lightscenes.begin();it!=lightscenes.end();++it)
     delete (*it);
   if( driver_ )
     delete driver_;

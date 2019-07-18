@@ -1,6 +1,8 @@
 # variables:
-VERSION=0.202.0
-CXXFLAGS = -Wall -Wno-deprecated-declarations -msse -msse2 -mfpmath=sse -ffast-math -fno-finite-math-only -fext-numeric-literals -std=c++11 -pthread
+VERSION=0.203.0
+CXXFLAGS = -Wall -Wno-deprecated-declarations -msse -msse2		\
+-mfpmath=sse -ffast-math -fno-finite-math-only -fext-numeric-literals	\
+-std=c++11 -pthread -ggdb
 PREFIX = /usr/local
 
 GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")

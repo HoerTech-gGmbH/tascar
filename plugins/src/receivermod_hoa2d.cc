@@ -30,7 +30,8 @@ public:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   // initialize decoder and allocate buffers:
-  void prepare( chunk_cfg_t& );
+  virtual void prepare( chunk_cfg_t& );
+  virtual void release();
   // decode HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
   void add_variables( TASCAR::osc_server_t* srv );
@@ -124,12 +125,6 @@ void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
 
 hoa2d_t::~hoa2d_t()
 {
-  if( dec )
-    fftwf_destroy_plan(dec);
-  if( s_encoded )
-    delete [] s_encoded;
-  if( s_decoded )
-    delete [] s_decoded;
 }
 
 void hoa2d_t::prepare( chunk_cfg_t& cf_ )
@@ -138,10 +133,6 @@ void hoa2d_t::prepare( chunk_cfg_t& cf_ )
   n_channels = spkpos.size();
   update();
   fft_scale = 1.0f/((float)n_channels);
-  if( s_encoded )
-    delete [] s_encoded;
-  if( s_decoded )
-    delete [] s_decoded;
   s_encoded = new float _Complex[n_fragment * nbins];
   s_decoded = new float[ n_fragment * n_channels];
   int ichannels(n_channels);
@@ -159,6 +150,14 @@ void hoa2d_t::prepare( chunk_cfg_t& cf_ )
   }
   idelay = diffup_delay*f_sample;
   idelaypoint = filterperiod*f_sample;
+}
+
+void hoa2d_t::release()
+{
+  TASCAR::receivermod_base_speaker_t::release();
+  fftwf_destroy_plan(dec);
+  delete [] s_encoded;
+  delete [] s_decoded;
 }
 
 hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau)

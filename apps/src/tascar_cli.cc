@@ -59,7 +59,8 @@ int main(int argc, char** argv)
     bool showlicense(false);
     bool use_range(false);
     bool validate(false);
-    const char *options = "hj:o:r:lv";
+    bool nostdin(false);
+    const char *options = "hj:o:r:lvs";
     struct option long_options[] = { 
       { "help",     0, 0, 'h' },
       { "jackname", 1, 0, 'j' },
@@ -67,6 +68,7 @@ int main(int argc, char** argv)
       { "range",    1, 0, 'r' },
       { "licenses", 0, 0, 'l' },
       { "validate", 0, 0, 'v' },
+      { "nostdin",  0, 0, 's' },
       { 0, 0, 0, 0 }
     };
     int opt(0);
@@ -92,6 +94,9 @@ int main(int argc, char** argv)
       case 'r':
         range = optarg;
         use_range = true;
+        break;
+      case 's' :
+        nostdin = true;
         break;
       }
     }
@@ -130,7 +135,7 @@ int main(int argc, char** argv)
       return 0;
     }
     if( output.empty() )
-      session.run(b_quit);
+      session.run(b_quit,!nostdin);
     else{
       double t_start(0);
       double t_dur(session.get_duration());

@@ -63,6 +63,7 @@ namespace TASCAR {
     void release();
     void update(uint32_t frame,bool running);
     virtual void validate_attributes(std::string&) const;
+    const std::string& modulename() const { return name; };
   private:
     std::string name;
     void* lib;
@@ -101,6 +102,7 @@ namespace TASCAR {
     std::string srv_port;
     std::string srv_addr;
     std::string srv_proto;
+    std::string starturl;
   };
 
   class session_core_t : public TASCAR::tsc_reader_t {
@@ -136,7 +138,7 @@ namespace TASCAR {
     void add_module(xmlpp::Element*);
     void start();
     void stop();
-    void run(bool &b_quit);
+    void run(bool &b_quit, bool use_stdin=true);
     double get_duration() const { return duration; };
     uint32_t get_active_pointsources() const;
     uint32_t get_total_pointsources() const;

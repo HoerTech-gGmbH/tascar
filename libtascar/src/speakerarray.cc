@@ -156,7 +156,7 @@ void spk_array_diff_render_t::render_diffuse( std::vector<TASCAR::wave_t>& outpu
     }
     if( densitycorr )
       *diffuse_render_buffer *= operator[](ch).densityweight;
-    if( decorr )
+    if( decorr && decorrflt.size() )
       decorrflt[ch].process( *diffuse_render_buffer, output[ch], true );
     else
       output[ch] += *diffuse_render_buffer;
@@ -232,6 +232,14 @@ void spk_descriptor_t::update_foa_decoder(float gain, double xyzgain)
   d_z = unitvector.z * gain;
 }
 
+void spk_array_t::validate_attributes(std::string& msg) const
+{
+  spk_array_cfg_t::validate_attributes(msg);
+  elayout.validate_attributes(msg);
+  for( auto it=begin();it!=end();++it)
+    it->validate_attributes(msg);
+}
+
 void spk_array_t::prepare( chunk_cfg_t& cf_ )
 {
   audiostates_t::prepare( cf_ );
@@ -255,19 +263,21 @@ void spk_array_diff_render_t::prepare( chunk_cfg_t& cf_ )
   decorrflt.clear();
   uint32_t irslen(decorr_length*f_sample);
   uint32_t paddedirslen((1<<(int)(ceil(log2(irslen+n_fragment-1))))-n_fragment+1);
-  for(uint32_t k=0;k<size();++k)
-    decorrflt.push_back(TASCAR::overlap_save_t(paddedirslen,n_fragment));
-  TASCAR::fft_t fft_filter(irslen);
-  std::mt19937 gen(1);
-  std::uniform_real_distribution<double> dis(0.0, 2*M_PI);
-  //std::exponential_distribution<double> dis(1.0);
-  for(uint32_t k=0;k<size();++k){
-    for(uint32_t b=0;b<fft_filter.s.n_;++b)
-      fft_filter.s[b] = cexp(I*dis(gen));
-    fft_filter.ifft();
-    for(uint32_t t=0;t<fft_filter.w.n;++t)
-      fft_filter.w[t] *= (0.5-0.5*cos(t*PI2/fft_filter.w.n));
-    decorrflt[k].set_irs(fft_filter.w,false);
+  if( irslen > 0 ){
+    for(uint32_t k=0;k<size();++k)
+      decorrflt.push_back(TASCAR::overlap_save_t(paddedirslen,n_fragment));
+    TASCAR::fft_t fft_filter(irslen);
+    std::mt19937 gen(1);
+    std::uniform_real_distribution<double> dis(0.0, 2*M_PI);
+    //std::exponential_distribution<double> dis(1.0);
+    for(uint32_t k=0;k<size();++k){
+      for(uint32_t b=0;b<fft_filter.s.n_;++b)
+        fft_filter.s[b] = cexp(I*dis(gen));
+      fft_filter.ifft();
+      for(uint32_t t=0;t<fft_filter.w.n;++t)
+        fft_filter.w[t] *= (0.5-0.5*cos(t*PI2/fft_filter.w.n));
+      decorrflt[k].set_irs(fft_filter.w,false);
+    }
   }
   // end of decorrelation filter.
   if( diffuse_field_accumulator )
@@ -309,6 +319,26 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     diffusegain(1.0),
     calibage(0)
 {
+  size_t checksum(0);
+  elayout.GET_ATTRIBUTE(checksum);
+  if( checksum != 0 ){
+    std::vector<std::string> attributes;
+    attributes.push_back("decorr_length");
+    attributes.push_back("decorr");
+    attributes.push_back("densitycorr");
+    attributes.push_back("caliblevel");
+    attributes.push_back("diffusegain");
+    attributes.push_back("gain");
+    attributes.push_back("az");
+    attributes.push_back("el");
+    attributes.push_back("r");
+    attributes.push_back("delay");
+    attributes.push_back("compB");
+    attributes.push_back("connect");
+    size_t current_checksum(elayout.hash(attributes,true));
+    if( checksum != current_checksum )
+      TASCAR::add_warning("The layout file \""+layout+"\" was modified since last calibration. Re-calibration is recommended.");
+  }
   elayout.GET_ATTRIBUTE(decorr_length);
   elayout.GET_ATTRIBUTE_BOOL(decorr);
   elayout.GET_ATTRIBUTE_BOOL(densitycorr);
@@ -331,19 +361,6 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     }else{
       TASCAR::add_warning("Invalid date/time format: "+calibdate);
     }
-  }
-  size_t checksum(0);
-  elayout.GET_ATTRIBUTE(checksum);
-  if( checksum != 0 ){
-    std::vector<std::string> attributes;
-    attributes.push_back("decorr_length");
-    attributes.push_back("decorr");
-    attributes.push_back("densitycorr");
-    attributes.push_back("caliblevel");
-    attributes.push_back("diffusegain");
-    size_t current_checksum(elayout.hash(attributes));
-    if( checksum != current_checksum )
-      TASCAR::add_warning("The layout file \""+layout+"\" was modified since last calibration. Re-calibration is recommended.");
   }
 }
 

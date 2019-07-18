@@ -28,9 +28,12 @@ TASCAR::fft_t::fft_t(uint32_t fftlen)
   : w(fftlen),
     s(fftlen/2+1),
     fullspec(fftlen),
-    fftwp_w2s(fftwf_plan_dft_r2c_1d(fftlen,w.d,(fftwf_complex*)s.b,FFTW_ESTIMATE)),
-    fftwp_s2w(fftwf_plan_dft_c2r_1d(fftlen,(fftwf_complex*)s.b,w.d,FFTW_ESTIMATE)),
-    fftwp_s2s(fftwf_plan_dft_1d(fftlen,(fftwf_complex*)fullspec.b,(fftwf_complex*)fullspec.b,FFTW_BACKWARD,FFTW_ESTIMATE))
+    wp(w.d),
+    sp((fftwf_complex*)(s.b)),
+    fsp((fftwf_complex*)(fullspec.b)),
+    fftwp_w2s(fftwf_plan_dft_r2c_1d(w.n,wp,sp,FFTW_ESTIMATE)),
+    fftwp_s2w(fftwf_plan_dft_c2r_1d(w.n,sp,wp,FFTW_ESTIMATE)),
+    fftwp_s2s(fftwf_plan_dft_1d(w.n,fsp,fsp,FFTW_BACKWARD,FFTW_ESTIMATE))
 {
 }
 
@@ -38,9 +41,12 @@ TASCAR::fft_t::fft_t(const fft_t& src)
   : w(src.w.n),
     s(src.s.n_),
     fullspec(src.fullspec.n_),
-    fftwp_w2s(fftwf_plan_dft_r2c_1d(src.w.n,w.d,(fftwf_complex*)s.b,0)),
-    fftwp_s2w(fftwf_plan_dft_c2r_1d(src.w.n,(fftwf_complex*)s.b,w.d,0)),
-    fftwp_s2s(fftwf_plan_dft_1d(src.fullspec.n_,(fftwf_complex*)fullspec.b,(fftwf_complex*)fullspec.b,FFTW_BACKWARD,FFTW_ESTIMATE))
+    wp(w.d),
+    sp((fftwf_complex*)(s.b)),
+    fsp((fftwf_complex*)(fullspec.b)),
+    fftwp_w2s(fftwf_plan_dft_r2c_1d(w.n,wp,sp,FFTW_ESTIMATE)),
+    fftwp_s2w(fftwf_plan_dft_c2r_1d(w.n,sp,wp,FFTW_ESTIMATE)),
+    fftwp_s2s(fftwf_plan_dft_1d(w.n,fsp,fsp,FFTW_BACKWARD,FFTW_ESTIMATE))
 {
 }
 

@@ -47,7 +47,7 @@ void delay_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t
     for(uint32_t k=0;k<chunk[0].n;++k){
       float v(dline->d[pos]);
       dline->d[pos] = chunk[0][k];
-      chunk[k] = v;
+      chunk[0][k] = v;
       if( pos )
         pos--;
       else

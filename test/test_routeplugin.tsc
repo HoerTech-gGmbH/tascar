@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session>
+  <modules>
+    <route channels="2" name="pink">
+      <plugins>
+	<pink use_transport="true"/>
+      </plugins>
+    </route>
+  </modules>
+</session>

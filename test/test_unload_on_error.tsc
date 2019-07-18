@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <fail failprepare="true"/>
+    <system command="touch test_unload_on_error.loaded" onunload="touch test_unload_on_error.unloaded"/>
+  </modules>
+</session>

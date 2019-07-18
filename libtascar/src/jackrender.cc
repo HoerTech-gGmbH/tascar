@@ -141,14 +141,16 @@ void TASCAR::audioplayer_t::stop()
     files[k].stop_service();
 }
 
-void TASCAR::audioplayer_t::run(bool & b_quit)
+void TASCAR::audioplayer_t::run(bool & b_quit, bool use_stdin)
 {
   start();
   while( !b_quit ){
     usleep( 50000 );
-    getchar();
-    if( feof( stdin ) )
-      b_quit = true;
+    if( use_stdin ){
+      getchar();
+      if( feof( stdin ) )
+        b_quit = true;
+    }
   }
   stop();
 }
@@ -239,7 +241,6 @@ void TASCAR::render_rt_t::start()
 
 void TASCAR::render_rt_t::stop()
 {
-  //osc_server_t::deactivate();
   jackc_t::deactivate();
   release();
 }
@@ -255,6 +256,7 @@ void TASCAR::render_rt_t::run(bool& b_quit)
   }
   stop();
 }
+
 TASCAR::scene_render_rt_t::scene_render_rt_t(xmlpp::Element* xmlsrc)
   : render_rt_t(xmlsrc),
     player(dynamic_cast<TASCAR::Scene::scene_t*>(this))

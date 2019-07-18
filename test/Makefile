@@ -13,7 +13,9 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_ir_ortf_55deg test_ir_scatter test_ir_noscatter		\
 	test_ir_scatter_ortf test_snd_sourcedir_generic			\
 	test_snd_sourcedir_generic1					\
-	test_snd_sourcedir_generic_cardioid
+	test_snd_sourcedir_generic_cardioid test_unload_on_error	\
+	jack_routeplugin
+
 
 TEST_SND=$(wildcard test_snd*.tsc)
 
@@ -30,6 +32,9 @@ LIBPATH=LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/
 VALIDATE=../apps/build/tascar_validatetsc
 RENDERIR=../apps/build/tascar_renderir
 RENDERFILE=../apps/build/tascar_renderfile
+TASCARCLI=../apps/build/tascar_cli
+JACKLSP=../apps/build/tascar_lsjackp
+JACKIO=../apps/build/tascar_jackio
 COMPARE=../apps/build/compare_sndfile
 COMPLEV=../apps/build/compare_level_sum
 
@@ -146,6 +151,9 @@ leak_test_pos%: test_pos%.tsc expected_pos%.wav
 leak_%: %.tsc
 	$(LIBPATH) valgrind --leak-check=full  --show-leak-kinds=all $(RENDERFILE) -i zeros.wav -o $*.wav -d -f 64 $<
 
+valgrind_%: %.tsc
+	$(LIBPATH) valgrind  $(RENDERFILE) -i zeros.wav -o $*.wav -d -f 64 $<
+
 
 all_init: $(patsubst %,init_%,$(TEST_SND:.tsc=))
 
@@ -154,3 +162,15 @@ init_%: %.tsc
 
 clean:
 	rm -f *~ test*.wav gdbcmd
+
+test_unload_on_error: test_unload_on_error.tsc
+	rm -f test_unload_on_error.loaded test_unload_on_error.unloaded
+	jackd -d dummy & PID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) $< ; kill $$PID
+	test -e test_unload_on_error.loaded || (echo "load failed."; false)
+	rm -f test_unload_on_error.loaded
+	test -e test_unload_on_error.unloaded || (echo "unload failed."; false)
+	rm -f test_unload_on_error.unloaded
+
+jack_%: test_%.tsc input_%.wav expected_%.wav
+	@jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;echo "input: " `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'`;echo "output: " `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'` ; $(LIBPATH) $(JACKIO) -s 0 input_$*.wav -o test_$*.wav `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'` `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'`; kill $$JACKPID $$TSCPID; true
+	@$(LIBPATH) $(COMPARE) expected_$*.wav test_$*.wav 1e-7 || (echo "$(<):2: Output differs"; false)

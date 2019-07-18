@@ -1,3 +1,4 @@
+0.203: Many bugfixes, improvement of speaker calibration, audio plugins in route, more audio plugins.
 0.202: Performance display, TCP server protocol, bandlimited level display, bugfixes.
 0.201: Data logging of string messages (e.g., trigger events).
 0.200: Various minor bugfixes, last version with Ubuntu 14.04 LTS support.

@@ -91,6 +91,9 @@ namespace TASCAR {
     TASCAR::spec_t s; ///< spectrum container
   private:
     TASCAR::spec_t fullspec;
+    float* wp;
+    fftwf_complex* sp;
+    fftwf_complex* fsp;
     fftwf_plan fftwp_w2s;
     fftwf_plan fftwp_s2w;
     fftwf_plan fftwp_s2s;

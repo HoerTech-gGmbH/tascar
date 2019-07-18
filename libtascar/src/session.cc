@@ -151,10 +151,10 @@ using namespace TASCAR;
 TASCAR_RESOLVER( module_base_t, const module_cfg_t& )
 
 TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t(cfg),
-    lib(NULL),
-    libdata(NULL),
-    is_configured(false)
+: module_base_t(cfg),
+  lib(NULL),
+  libdata(NULL),
+  is_configured(false)
 {
   name = e->get_name();
   if( name == "module" ){
@@ -189,8 +189,14 @@ void TASCAR::module_t::update(uint32_t frame,bool running)
 void TASCAR::module_t::prepare( chunk_cfg_t& cf_ )
 {
   module_base_t::prepare( cf_ );
-  libdata->prepare( cf_ );
-  is_configured = true;
+  try{
+    libdata->prepare( cf_ );
+    is_configured = true;
+  }
+  catch( ... ){
+    module_base_t::release();
+    throw;
+  }
 }
 
 void TASCAR::module_t::release()
@@ -238,6 +244,7 @@ TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
   GET_ATTRIBUTE(srv_addr);
   GET_ATTRIBUTE(srv_proto);
   GET_ATTRIBUTE(name);
+  GET_ATTRIBUTE(starturl);
   //if( name.empty() )
   //  name = "tascar";
   //if( srv_port.empty() )
@@ -271,16 +278,16 @@ TASCAR::session_core_t::session_core_t()
 
 TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : TASCAR::tsc_reader_t(filename_or_data,t,path),
-    duration(60),
-    loop(false),
-    levelmeter_tc(2.0),
-    levelmeter_weight(TASCAR::levelmeter::Z),
-    levelmeter_min(30.0),
-    levelmeter_range(70.0),
-    requiresrate(0),
-    warnsrate(0),
-    requirefragsize(0),
-    warnfragsize(0)
+  duration(60),
+  loop(false),
+  levelmeter_tc(2.0),
+  levelmeter_weight(TASCAR::levelmeter::Z),
+  levelmeter_min(30.0),
+  levelmeter_range(70.0),
+  requiresrate(0),
+  warnsrate(0),
+  requirefragsize(0),
+  warnfragsize(0)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(loop);
@@ -312,42 +319,54 @@ TASCAR::session_t::session_t()
   : TASCAR::session_oscvars_t(tsc_reader_t::e),
   jackc_transport_t(jacknamer(name,"session.")),
   osc_server_t(srv_addr, srv_port, srv_proto),
-    period_time(1.0/(double)srate),
-    started_(false)//,
-    //pcnt(0)
+  period_time(1.0/(double)srate),
+  started_(false)//,
+  //pcnt(0)
 {
-  pthread_mutex_init( &mtx, NULL );
-  read_xml();
   assert_jackpar( "sampling rate", requiresrate, srate, false );
   assert_jackpar( "fragment size", requirefragsize, fragsize, false );
   assert_jackpar( "sampling rate", warnsrate, srate, true );
   assert_jackpar( "fragment size", warnfragsize, fragsize, true );
-  add_output_port("sync_out");
-  jackc_transport_t::activate();
-  add_transport_methods();
-  osc_server_t::activate();
+  pthread_mutex_init( &mtx, NULL );
+  read_xml();
+  try{
+    add_output_port("sync_out");
+    jackc_transport_t::activate();
+    add_transport_methods();
+    osc_server_t::activate();
+  }
+  catch(...){
+    unload_modules();
+    throw;
+  }
 }
 
 TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : TASCAR::session_core_t(filename_or_data,t,path),
-    session_oscvars_t(tsc_reader_t::e),
-    jackc_transport_t(jacknamer(name,"session.")),
+  session_oscvars_t(tsc_reader_t::e),
+  jackc_transport_t(jacknamer(name,"session.")),
   osc_server_t(srv_addr, srv_port, srv_proto),
-    period_time(1.0/(double)srate),
-    started_(false)//,
-    //pcnt(0)
+  period_time(1.0/(double)srate),
+  started_(false)//,
+  //pcnt(0)
 {
-  pthread_mutex_init( &mtx, NULL );
-  // parse XML:
-  read_xml();
   assert_jackpar( "sampling rate", requiresrate, srate, false );
   assert_jackpar( "fragment size", requirefragsize, fragsize, false );
   assert_jackpar( "sampling rate", warnsrate, srate, true );
   assert_jackpar( "fragment size", warnfragsize, fragsize, true );
-  add_output_port("sync_out");
-  jackc_transport_t::activate();
-  add_transport_methods();
-  osc_server_t::activate();
+  pthread_mutex_init( &mtx, NULL );
+  // parse XML:
+  read_xml();
+  try{
+    add_output_port("sync_out");
+    jackc_transport_t::activate();
+    add_transport_methods();
+    osc_server_t::activate();
+  }
+  catch(...){
+    unload_modules();
+    throw;
+  }
 }
 
 void TASCAR::session_t::read_xml()
@@ -362,7 +381,8 @@ void TASCAR::session_t::read_xml()
       std::vector<TASCAR::module_t*> lmodules(modules);  
       modules.clear();
       for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
-        (*it)->release();
+        if( (*it)->is_prepared() )
+          (*it)->release();
       for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
         delete (*it);
       for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
@@ -384,17 +404,20 @@ void TASCAR::session_t::unload_modules()
   if( lock_vars() ){
     std::vector<TASCAR::module_t*> lmodules(modules);  
     modules.clear();
-    for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
-      (*it)->release();
-    for( std::vector<TASCAR::module_t*>::iterator it=lmodules.begin();it!=lmodules.end();++it)
+    for( auto it=lmodules.begin();it!=lmodules.end();++it){
+      if( (*it)->is_prepared() )
+        (*it)->release();
+    }
+    for( auto it=lmodules.begin();it!=lmodules.end();++it){
       delete (*it);
-    for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
+    }
+    for( auto it=scenes.begin();it!=scenes.end();++it)
       delete (*it);
     scenes.clear();
-    for( std::vector<TASCAR::range_t*>::iterator it=ranges.begin();it!=ranges.end();++it)
+    for( auto it=ranges.begin();it!=ranges.end();++it)
       delete (*it);
     ranges.clear();
-    for( std::vector<TASCAR::connection_t*>::iterator it=connections.begin();it!=connections.end();++it)
+    for( auto it=connections.begin();it!=connections.end();++it)
       delete (*it);
     connections.clear();
     unlock_vars();
@@ -442,9 +465,6 @@ void TASCAR::session_t::add_scene(xmlpp::Element* src)
     src = tsc_reader_t::e->add_child("scene");
   scenes.push_back(new TASCAR::scene_render_rt_t(src));
   scenes.back()->configure_meter( levelmeter_tc, levelmeter_weight );
-  //DEBUG(1);
-  //scenes.back()->add_child_methods(this);
-  //DEBUG(1);
 }
 
 void TASCAR::session_t::add_range(xmlpp::Element* src)
@@ -471,13 +491,30 @@ void TASCAR::session_t::add_module(xmlpp::Element* src)
 void TASCAR::session_t::start()
 {
   started_ = true;
-  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl){
-    (*ipl)->start();
-    (*ipl)->add_child_methods(this);
+  try{
+    for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl){
+      (*ipl)->start();
+      (*ipl)->add_child_methods(this);
+    }
   }
-  for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod){
-    chunk_cfg_t cf( srate, fragsize );
-    (*imod)->prepare( cf );
+  catch( ... ){
+    started_ = false;
+    throw;
+  }
+  auto last_prepared(modules.begin());
+  try{
+    for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod){
+      chunk_cfg_t cf( srate, fragsize );
+      last_prepared = imod;
+      (*imod)->prepare( cf );
+    }
+    last_prepared = modules.end();
+  }
+  catch( ... ){
+    for(auto it=modules.begin();it!=last_prepared;++it)
+      (*it)->release();
+    started_ = false;
+    throw;
   }
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
     try{
@@ -520,23 +557,22 @@ void TASCAR::session_t::stop()
   started_ = false;
   for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl)
     (*ipl)->stop();
-  //jackc_transport_t::deactivate();
 }
 
 void del_whitespace( xmlpp::Node* node )
 {
-    xmlpp::TextNode* nodeText = dynamic_cast<xmlpp::TextNode*>(node);
-    if( nodeText && nodeText->is_white_space()){
-	nodeText->get_parent()->remove_child(node);
-    }else{
-	xmlpp::Element* nodeElement = dynamic_cast<xmlpp::Element*>(node);
-	if( nodeElement ){
-	    xmlpp::Node::NodeList children = nodeElement->get_children();
-	    for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
-		del_whitespace( *nita );
-	    }
-	}
+  xmlpp::TextNode* nodeText = dynamic_cast<xmlpp::TextNode*>(node);
+  if( nodeText && nodeText->is_white_space()){
+    nodeText->get_parent()->remove_child(node);
+  }else{
+    xmlpp::Element* nodeElement = dynamic_cast<xmlpp::Element*>(node);
+    if( nodeElement ){
+      xmlpp::Node::NodeList children = nodeElement->get_children();
+      for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+        del_whitespace( *nita );
+      }
     }
+  }
 }
 
 void TASCAR::xml_doc_t::save(const std::string& filename)
@@ -547,14 +583,16 @@ void TASCAR::xml_doc_t::save(const std::string& filename)
   }
 }
 
-void TASCAR::session_t::run(bool &b_quit)
+void TASCAR::session_t::run(bool &b_quit, bool use_stdin)
 {
   start();
   while( !b_quit ){
     usleep( 50000 );
-    getchar();
-    if( feof( stdin ) )
-      b_quit = true;
+    if( use_stdin ){
+      getchar();
+      if( feof( stdin ) )
+        b_quit = true;
+    }
   }
   stop();
 }

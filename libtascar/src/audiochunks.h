@@ -69,7 +69,7 @@ namespace TASCAR {
     void operator*=(const wave_t& src);
     float* d;
     uint32_t n;
-    bool own_pointer;
+    const bool own_pointer;
   protected:
     uint32_t append_pos;
     float rmsscale;
@@ -80,6 +80,7 @@ namespace TASCAR {
   class amb1wave_t {
   public:
     amb1wave_t(uint32_t chunksize);
+    amb1wave_t(const amb1wave_t&) = delete;
     inline wave_t& w(){return w_;};
     inline wave_t& x(){return x_;};
     inline wave_t& y(){return y_;};
@@ -115,6 +116,7 @@ namespace TASCAR {
     sndfile_handle_t(const std::string& fname);
     sndfile_handle_t(const std::string& fname, int samplerate, int channels);
     ~sndfile_handle_t();
+    sndfile_handle_t(const sndfile_handle_t&) = delete;
     uint32_t get_channels() const {return sf_inf.channels;};
     uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_srate() const {return sf_inf.samplerate;};

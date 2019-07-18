@@ -59,10 +59,11 @@ public:
   void add_variables( TASCAR::osc_server_t* srv );
   void add_licenses( licensehandler_t* session );
   void prepare( chunk_cfg_t& cf );
+  void release();
 private:
   uint32_t triggeredloop;
   TASCAR::transport_t ltp;
-  std::vector<TASCAR::sndfile_t> sndf;
+  std::vector<TASCAR::sndfile_t*> sndf;
 };
 
 ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -79,23 +80,23 @@ void ap_sndfile_t::prepare( chunk_cfg_t& cf )
     throw TASCAR::ErrMsg("At least one channel required.");
   sndf.clear();
   for( uint32_t ch=0;ch<cf.n_channels;++ch){
-    sndf.emplace_back(name,channel+ch,start,length);
+    sndf.push_back(new TASCAR::sndfile_t(name,channel+ch,start,length));
   }
-  if( sndf[0].get_srate() != cf.f_sample ){
+  if( sndf[0]->get_srate() != cf.f_sample ){
     std::string msg("Sample rate differs ("+name+"): ");
     char ctmp[1024];
-    sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf[0].get_srate(),cf.f_sample);
+    sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf[0]->get_srate(),cf.f_sample);
     msg+=ctmp;
     TASCAR::add_warning(msg,e);
   }
   double gain(1);
   if( levelmode == "rms" )
-    gain = level*2e-5 / sndf[0].rms();
+    gain = level*2e-5 / sndf[0]->rms();
   else
     if( levelmode == "peak" ){
       float maxabs(0);
       for( auto sf=sndf.begin();sf!=sndf.end();++sf)
-        maxabs = std::max(maxabs,sf->maxabs());
+        maxabs = std::max(maxabs,(*sf)->maxabs());
       if( maxabs > 0 )
         gain = level*2e-5 / maxabs;
     }else
@@ -105,14 +106,22 @@ void ap_sndfile_t::prepare( chunk_cfg_t& cf )
         throw TASCAR::ErrMsg("Invalid level mode \""+levelmode+"\". (sndfile)");
   for( auto sf=sndf.begin();sf!=sndf.end();++sf){
     if( triggered ){
-      sf->set_position(-(sf->n)*(sf->get_srate()));
-      sf->set_loop(1);
+      (*sf)->set_position(-((*sf)->n)*((*sf)->get_srate()));
+      (*sf)->set_loop(1);
     }else{
-      sf->set_position(position);
-      sf->set_loop(loop);
+      (*sf)->set_position(position);
+      (*sf)->set_loop(loop);
     }
-    (*sf) *= gain;
+    *(*sf) *= gain;
   }
+}
+
+void ap_sndfile_t::release(  )
+{
+  TASCAR::audioplugin_base_t::release();
+  for( auto it=sndf.begin();it!=sndf.end();++it)
+    delete (*it);
+  sndf.clear();
 }
 
 ap_sndfile_t::~ap_sndfile_t()
@@ -140,15 +149,15 @@ void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::
   if( triggered ){
     if( triggeredloop ){
       for( auto sf=sndf.begin();sf!=sndf.end();++sf){
-        sf->set_iposition(ltp.object_time_samples);
-        sf->set_loop(triggeredloop);
+        (*sf)->set_iposition(ltp.object_time_samples);
+        (*sf)->set_loop(triggeredloop);
       }
       triggeredloop = 0;
     }
   }
   if( (!mute) && (tp.rolling || (!transport)) ){
     for( uint32_t ch=0;ch<std::min(sndf.size(),chunk.size());++ch)
-      sndf[ch].add_to_chunk( ltp.object_time_samples, chunk[ch] );
+      sndf[ch]->add_to_chunk( ltp.object_time_samples, chunk[ch] );
   }
 }
 

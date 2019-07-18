@@ -158,7 +158,6 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
     receivers.clear();
     for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
       TASCAR::Acousticmodel::receiver_t* receiver(*it);
-      //receiver->prepare(fs,fragsize);
       receivers.push_back(receiver);
       (*it)->set_port_index(output_ports.size());
       for(uint32_t ch=0;ch<receiver->get_num_channels();ch++){
