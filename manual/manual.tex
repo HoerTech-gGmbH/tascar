@@ -1570,6 +1570,13 @@ characterization of acoustic scene properties. Its only attribute is
 the intensity integration time constant \indattr{tau}, measured in
 seconds, with the default value of 0.125.
 
+\paragraph{WFS}
+
+A very simple WFS renderer is available. Loudspeaker distance is
+compensated for planar source wave fronts. The gain is proportional to
+the cosine of the angle between source and speaker, for angles smaller
+than 90 degrees, and zero otherwise.
+
 \subsection{Reflectors: {\tt <face .../>} and {\tt <facegroup .../>} elements}\label{sec:face}\label{sec:facegroup}\index{face}\index{facegroup}
 
 The \elem{face} element defines a single reflecting surface.
@@ -1851,6 +1858,11 @@ the reference level for point source rendering, and c) calibrate the
 gain correction for diffuse sound field rendering.
 %
 The tool \verb!tascar_splcalib! can be used to perform these steps.
+
+The levels are calibrated using the ``nsp'' rendering method. When
+using ``hoa2d'' or ``neukom\_basic'' receiver types, the level
+differences were tested to be below 0.25~dB. When using ``vbap'' or
+``wfs'', the level differences are tested to be below 2.5~dB.
 
 \begin{figure}[htb]
     \centering

@@ -105,7 +105,7 @@ namespace TASCAR {
        \param delay delay in samples
     */
     inline float get(uint32_t delay) const {
-      delay = std::min(delay,dmax);
+      delay = std::min(delay,dmax-1);
       uint32_t npos = pos+dmax-delay;
       while( npos >= dmax )
         npos -= dmax;

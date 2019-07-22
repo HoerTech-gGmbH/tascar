@@ -9,7 +9,7 @@ include ../rules.mk
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
-  hoa2d_fuma_hos fakebf
+  hoa2d_fuma_hos fakebf wfs
 
 SOURCES = omni cardioidmod door generic1storder
 
@@ -25,7 +25,8 @@ glabsensors
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
-  gainramp pulse pink dumplevels feedbackdelay bandpass filter
+  gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
+  level2osc
 
 GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
   qualisys jackstatus

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- 
+WFS
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound az="60" r="1" gainmodel="1" airabsorption="false"/>
+    </source>
+    <receiver type="wfs" layout="36ch.spk" delaycomp="1" planewave="false"/>
+  </scene>
+</session>

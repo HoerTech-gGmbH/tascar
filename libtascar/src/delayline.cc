@@ -44,8 +44,8 @@ sinctable_t::~sinctable_t()
 
 
 varidelay_t::varidelay_t(uint32_t maxdelay, double fs, double c, uint32_t order, uint32_t oversampling)
-  : dline(new float[maxdelay]),
-    dmax(maxdelay),
+  : dline(new float[maxdelay+1]),
+    dmax(maxdelay+1),
     dist2sample(fs/c),
     delay2sample(fs),
     pos(0),
@@ -70,15 +70,6 @@ varidelay_t::~varidelay_t()
   delete [] dline;
 }
 
-//float varidelay_t::get_dist_push(double dist,float x)
-//{
-//  pos++;
-//  if( pos==dmax)
-//    pos = 0;
-//  dline[pos] = x;
-//  return get(dist2sample*dist);
-//}
-
 void varidelay_t::add_chunk(const TASCAR::wave_t& x)
 {
   for(uint32_t k=0;k<x.n;k++){
@@ -88,25 +79,6 @@ void varidelay_t::add_chunk(const TASCAR::wave_t& x)
     dline[pos] = x.d[k];
   }
 }
-
-//float varidelay_t::get_dist(double dist)
-//{
-//  return get(dist2sample*dist);
-//}
-//
-//float varidelay_t::get_delayed(double d)
-//{
-//  return get(delay2sample*d);
-//}
-
-//float varidelay_t::get(uint32_t delay)
-//{
-//  delay = std::min(delay,dmax);
-//  uint32_t npos = pos+dmax-delay;
-//  while( npos >= dmax )
-//    npos -= dmax;
-//  return dline[npos];
-//}
 
 static_delay_t::static_delay_t(uint32_t d)
   : wave_t(d), pos(0)

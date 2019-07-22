@@ -16,6 +16,7 @@ private:
   double level;
   double period;
   bool use_transport;
+  bool mute;
   std::vector<TASCAR::looped_wave_t> pink;
 };
 
@@ -25,13 +26,15 @@ pink_t::pink_t( const TASCAR::audioplugin_cfg_t& cfg )
     fmax(4000),
     level(0.001),
     period(4),
-    use_transport(false)
+    use_transport(false),
+    mute(false)
 {
   GET_ATTRIBUTE(fmin);
   GET_ATTRIBUTE(fmax);
   GET_ATTRIBUTE_DBSPL(level);
   GET_ATTRIBUTE(period);
   GET_ATTRIBUTE_BOOL(use_transport);
+  GET_ATTRIBUTE_BOOL(mute);
 }
 
 void pink_t::prepare( chunk_cfg_t& cf_ )
@@ -105,10 +108,13 @@ void pink_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_double_dbspl("/level",&level);
   srv->add_bool("/use_transport",&use_transport);
+  srv->add_bool("/mute",&mute);
 }
 
 void pink_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
 {
+  if( mute )
+    return;
   if( (!use_transport) || tp.rolling ){
     for(uint32_t k=0;k<std::min(chunk.size(),pink.size());++k){
       if( use_transport )

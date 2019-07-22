@@ -14,7 +14,7 @@ TESTS = test_ir1 test_ir2 test_ir3 test_ir4 test_ir6_ismminmax		\
 	test_ir_scatter_ortf test_snd_sourcedir_generic			\
 	test_snd_sourcedir_generic1					\
 	test_snd_sourcedir_generic_cardioid test_unload_on_error	\
-	jack_routeplugin
+	jack_routeplugin test_ir_wfs test_ir_wfs_noplanewave
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -23,10 +23,14 @@ TEST_SND=$(wildcard test_snd*.tsc)
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
-  hoa2d_fuma_hos
+  hoa2d_fuma_hos wfs
 
-LEVELREC = nsp hoa2d neukom_basic vbap hann
-# neukom_inphase
+LEVELREC = nsp hoa2d neukom_basic wfs vbap hann
+#neukom_inphase
+
+LEVTHR=0.25
+
+test_reclevel_wfs test_reclevel_vbap test_reclevel_hann: LEVTHR=2.5
 
 LIBPATH=LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/
 VALIDATE=../apps/build/tascar_validatetsc
@@ -86,8 +90,10 @@ test_rec_%: test_rec.tsc
 
 test_reclevel_%: test_level.tsc
 	@echo "Receiver level test: $< ($*)"
-	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav 0.25 || (echo "$(<):2: Level differs"; false)
+	@$(LIBPATH) RECEIVER=$* CHANNELS=8 $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (8ch)"; false)
+	@$(LIBPATH) RECEIVER=$* CHANNELS=36 $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (36ch)"; false)
 	@rm -f test_rec_$*.wav
 
 test_level_%: test_level_%.tsc
@@ -164,13 +170,17 @@ clean:
 	rm -f *~ test*.wav gdbcmd
 
 test_unload_on_error: test_unload_on_error.tsc
+	@sleep 1
 	rm -f test_unload_on_error.loaded test_unload_on_error.unloaded
-	jackd -d dummy & PID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) $< ; kill $$PID
+	jackd -d dummy & PID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) $< ; kill -9 $$PID
 	test -e test_unload_on_error.loaded || (echo "load failed."; false)
 	rm -f test_unload_on_error.loaded
 	test -e test_unload_on_error.unloaded || (echo "unload failed."; false)
 	rm -f test_unload_on_error.unloaded
+	@sleep 1
 
 jack_%: test_%.tsc input_%.wav expected_%.wav
-	@jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;echo "input: " `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'`;echo "output: " `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'` ; $(LIBPATH) $(JACKIO) -s 0 input_$*.wav -o test_$*.wav `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'` `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'`; kill $$JACKPID $$TSCPID; true
+	@sleep 1
+	@jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;echo "input: " `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'`;echo "output: " `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'` ; $(LIBPATH) $(JACKIO) -s 0 input_$*.wav -o test_$*.wav `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'` `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'`; kill -9 $$JACKPID $$TSCPID; true
 	@$(LIBPATH) $(COMPARE) expected_$*.wav test_$*.wav 1e-7 || (echo "$(<):2: Output differs"; false)
+	@sleep 1

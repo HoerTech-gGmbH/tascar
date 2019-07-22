@@ -1,3 +1,4 @@
+0.204: Bugfix of delayline for delays longer than maxdelay, WFS render format.
 0.203: Many bugfixes, improvement of speaker calibration, audio plugins in route, more audio plugins.
 0.202: Performance display, TCP server protocol, bandlimited level display, bugfixes.
 0.201: Data logging of string messages (e.g., trigger events).

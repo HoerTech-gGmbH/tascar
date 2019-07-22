@@ -22,6 +22,6 @@
 	<plugins><pink level="70"/></plugins>
       </sound>
     </source>
-    <receiver type="${RECEIVER}" layout="8ch.spk"/>
+    <receiver type="${RECEIVER}" layout="${CHANNELS}ch.spk"/>
   </scene>
 </session>

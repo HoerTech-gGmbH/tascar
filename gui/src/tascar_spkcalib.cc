@@ -95,7 +95,9 @@ calibsession_t::calibsession_t( const std::string& fname, double reflevel, const
   xmlpp::Element* e_pink_diff(e_plugs_diff->add_child("pink"));
   e_pink_diff->set_attribute("level",TASCAR::to_string(reflevel));
   e_pink_diff->set_attribute("period",TASCAR::to_string(duration));
-  doc->write_to_file_formatted("temp.cfg");
+  e_pink_diff->set_attribute("fmin",TASCAR::to_string(fmin));
+  e_pink_diff->set_attribute("fmax",TASCAR::to_string(fmax));
+  //doc->write_to_file_formatted("temp.cfg");
   add_scene(e_scene);
   startlevel = get_caliblevel();
   startdiffgain = get_diffusegain();
