@@ -72,15 +72,17 @@ void rec_wfs_t::add_pointsource( const TASCAR::pos_t& prel,
   // psrc is the normalized source direction in the receiver
   // coordinate system:
   TASCAR::pos_t psrc(prel.normal());
+  double rmax(spkpos.get_rmax());
+  double rmaxprelnorm(rmax-prel.norm());
   // calculate final panning parameters:
   float wsum(0.0f);
   for(uint32_t ch=0;ch<N;++ch){
     w[ch] = std::max(0.0,TASCAR::dot_prod( psrc, spkpos[ch].unitvector ));
     wsum += w[ch];
     if( planewave ){
-      d[ch] = spkpos.get_rmax() - spkpos[ch].r*w[ch];
+      d[ch] = rmax - spkpos[ch].r*w[ch];
     }else{
-      d[ch] = std::max(0.0,spkpos.get_rmax() - prel.norm() + distance(spkpos[ch],prel));
+      d[ch] = std::max(0.0,rmaxprelnorm + distance(spkpos[ch],prel));
     }
   }
   if( wsum > 0 )

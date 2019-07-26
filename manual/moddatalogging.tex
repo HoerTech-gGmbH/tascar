@@ -42,7 +42,10 @@ have to specify the name of the LSL stream associated with the sensor:
   <lsl predicate="name='EEGamp'" tctimeout="2"/>
 \end{lstlisting}
 The attribute \attr{tctimeout} is the maximal time used to measure the
-time correction values between sender and receiver.
+time correction values between sender and receiver. The
+attribute \attr{required} can be set to ``false'', to allow for
+starting \tascar{} without requiring all LSL streams to be
+available. The stream will not be recovered later.
 
 Text data (e.g., trigger messages) can be recorded from LSL, or from osc with the \elem{oscs} element:
 \begin{lstlisting}[numbers=none]

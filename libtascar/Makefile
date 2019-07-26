@@ -20,7 +20,7 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
   viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
   audioplugin.o levelmeter.o serviceclass.o alsamidicc.o		\
-  speakerarray.o spectrum.o fft.o stft.o ola.o
+  speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o
 
 DMXOBJECTS =  termsetbaud.o serialport.o dmxdriver.o
 

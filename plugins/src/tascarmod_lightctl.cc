@@ -33,6 +33,41 @@ method_t uint2method( uint32_t m )
   }
 }
 
+
+int osc_set_hsv(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data  ){
+    std::vector<float> *data((std::vector<float> *)user_data);
+    if( (argc==4) && (argc == (int)(data->size())) ){
+      float h(fmodf(argv[0]->f,360.0f));
+      float s(argv[1]->f);
+      float v(argv[2]->f);
+      float d(argv[3]->f);
+      float c(v*s);
+      float x(c*(1.0f-fabsf(fmodf(h/60.0f,2.0f)-1.0f)));
+      float m(v-c);
+      TASCAR::pos_t rgb_d;
+      if( h < 60 )
+        rgb_d = TASCAR::pos_t(c,x,0);
+      else if( h < 120 )
+        rgb_d = TASCAR::pos_t(x,c,0);
+      else if( h < 180 )
+        rgb_d = TASCAR::pos_t(0,c,x);
+      else if( h < 240 )
+        rgb_d = TASCAR::pos_t(0,x,c);
+      else if( h < 300 )
+        rgb_d = TASCAR::pos_t(x,0,c);
+      else
+        rgb_d = TASCAR::pos_t(c,0,x);
+      (*data)[0] = (rgb_d.x+m)*255.0;
+      (*data)[1] = (rgb_d.y+m)*255.0;
+      (*data)[2] = (rgb_d.z+m)*255.0;
+      (*data)[3] = d;
+    }
+  }
+  return 0;
+}
+
 method_t string2method( const std::string& m )
 {
 #define ADDMETHOD(x) if(m==#x) return x
@@ -248,14 +283,15 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
         get_attribute_value(el,"in",v_in);
         get_attribute_value(el,"out",v_out);
         if( (c >= 0) && (v_in > 0) && (v_out >= 0) && (c < (int32_t)channels) ){
-          v_out /= v_in;
+          //v_out /= v_in;
           fixtureval[k].calibtab[c][v_in] = v_out;
         }
       }
     }
     for(uint32_t c=0;c<channels;++c){
       if( fixtureval[k].calibtab[c].empty() )
-        fixtureval[k].calibtab[c][0] = 1.0;
+        //fixtureval[k].calibtab[c][0] = 1.0;
+        fixtureval[k].calibtab[c][0] = 0.0;
     }
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
@@ -401,12 +437,16 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
     }
     if( usecalib )
       for(uint32_t c=0;c<channels;++c){
-        tmpdmxdata[channels*kfix+c] *= fixtureval[kfix].calibtab[c].interp(tmpdmxdata[channels*kfix+c]);
+        tmpdmxdata[channels*kfix+c] = fixtureval[kfix].calibtab[c].interp(tmpdmxdata[channels*kfix+c]);
       }
   }
   if( sendsquared )
-    for(uint32_t k=0;k<tmpdmxdata.size();++k)
-      dmxdata[k] = std::min(255.0f,std::max(0.0f,ceilf(255.0f*sqrf(0.0039215686274509803377*(master*tmpdmxdata[k]+basedmx[k])))));
+    for(uint32_t k=0;k<tmpdmxdata.size();++k){
+      float v(255.0f*sqrf(0.0039215686274509803377*(master*tmpdmxdata[k]+basedmx[k])));
+      if( v < 1.0f )
+        v = 0.0f;
+      dmxdata[k] = std::min(255.0f,std::max(0.0f,ceilf(v)));
+    }
   else
     for(uint32_t k=0;k<tmpdmxdata.size();++k)
       dmxdata[k] = std::min(255.0f,std::max(0.0f,master*tmpdmxdata[k]+basedmx[k]));
@@ -426,6 +466,8 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     srv->add_float( "/"+objects_[ko].obj->get_name()+"/w", &(objval[ko].w) );
     srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/wfade", &(objval[ko].wfade) );
     srv->add_method( "/"+objects_[ko].obj->get_name()+"/method", "i", osc_setmethod, &(objval[ko].method));
+    if( channels == 3 )
+      srv->add_method( "/"+objects_[ko].obj->get_name()+"/hsv", "ffff", osc_set_hsv, &(objval[ko].fade) );
   }
   for(uint32_t k=0;k<fixtureval.size();++k){
     std::string label(labels[k]);
@@ -437,6 +479,8 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     label = "/" + label + "/";
     srv->add_vector_float( label+"dmx", &(fixtureval[k].dmx) );
     srv->add_vector_float( label+"fade", &(fixtureval[k].fade) );
+    if( channels == 3 )
+      srv->add_method( label+"hsv", "ffff", osc_set_hsv, &(fixtureval[k].fade) );
   }
 }
 

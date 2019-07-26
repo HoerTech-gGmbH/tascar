@@ -41,7 +41,7 @@ public:
   void poll_data();
   void get_stream_delta_start();
   void get_stream_delta_end();
-  std::string get_xml() { return inlet->info().as_xml(); };
+  std::string get_xml();
 private:
   double get_stream_delta();
   std::string predicate;
@@ -58,6 +58,13 @@ public:
   lsl::channel_format_t chfmt;
 };
 
+std::string lslvar_t::get_xml()
+{
+  if( !inlet )
+    return "";
+  return inlet->info().as_xml();
+}
+
 lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
   : xml_element_t(xmlsrc),
     size(0),
@@ -72,20 +79,30 @@ lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
 {
   //str_buffer.resize(STRBUFFER_SIZE);
   GET_ATTRIBUTE(predicate);
-  GET_ATTRIBUTE(tctimeout);
   if( predicate.empty() )
     throw TASCAR::ErrMsg("Invalid (empty) predicate.");
+  GET_ATTRIBUTE(tctimeout);
+  bool required(true);
+  GET_ATTRIBUTE_BOOL(required);
   std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate,1,1));
-  if( results.empty() )
-    throw TASCAR::ErrMsg("No matching LSL stream found ("+predicate+").");
-  chfmt = results[0].channel_format();
-  size = results[0].channel_count()+1;
-  name = results[0].name();
-  inlet = new lsl::stream_inlet(results[0]);
-  std::cerr << "created LSL inlet for predicate " << predicate << std::endl;
-  std::cerr << "measuring LSL time correction: ";
-  get_stream_delta_start();
-  std::cerr << stream_delta_start << " s\n";
+  if( results.empty() ){
+    if( required )
+      throw TASCAR::ErrMsg("No matching LSL stream found ("+predicate+").");
+    else
+      TASCAR::add_warning("No matching LSL stream found ("+predicate+").",e);
+  }
+  if( results.size() > 1 )
+    TASCAR::add_warning("More than one LSL stream found ("+predicate+"), using first one.",e);
+  if( !results.empty() ){
+    chfmt = results[0].channel_format();
+    size = results[0].channel_count()+1;
+    name = results[0].name();
+    inlet = new lsl::stream_inlet(results[0]);
+    std::cerr << "created LSL inlet for predicate " << predicate << std::endl;
+    std::cerr << "measuring LSL time correction: ";
+    get_stream_delta_start();
+    std::cerr << stream_delta_start << " s\n";
+  }
 }
 
 void lslvar_t::get_stream_delta_start()
@@ -100,6 +117,8 @@ void lslvar_t::get_stream_delta_end()
 
 double lslvar_t::get_stream_delta()
 {
+  if( !inlet )
+    return 0.0;
   double stream_delta(0);
   try{
     stream_delta = inlet->time_correction( tctimeout );
@@ -114,7 +133,8 @@ double lslvar_t::get_stream_delta()
   
 lslvar_t::~lslvar_t()
 {
-  delete inlet;
+  if( inlet )
+    delete inlet;
 }
 
 void lslvar_t::set_delta(double deltatime)
@@ -568,6 +588,8 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 
 void lslvar_t::poll_data()
 {
+  if( !inlet )
+    return;
   double recorder_buffer[size+1];
   double* data_buffer(&(recorder_buffer[2]));
   double t(1);
@@ -1169,7 +1191,7 @@ void datalogging_t::save_matcell(const std::string& filename)
       // test if this is an LSL variable, if yes, provide some header information:
       // here would come some header information...
       for(lslvarlist_t::iterator it=lslvars.begin();it!=lslvars.end();++it)
-        if( (*it)->recorder == recorder[k] ){
+        if( ((*it)->recorder == recorder[k]) && ((*it)->inlet) ){
           mat_add_char_field(matDataStruct,"lsl_name",(*it)->inlet->info().name());
           mat_add_char_field(matDataStruct,"lsl_type",(*it)->inlet->info().type());
           mat_add_double_field(matDataStruct,"lsl_srate",(*it)->inlet->info().nominal_srate());
