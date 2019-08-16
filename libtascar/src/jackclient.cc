@@ -111,6 +111,15 @@ std::vector<std::string> get_port_names_regexp( jack_client_t* jc, std::string n
   return ports;
 }
 
+std::vector<std::string> jackc_portless_t::get_port_names_regexp( const std::vector<std::string>& name, int flags ) const
+{
+  std::vector<std::string> ports;
+  for( auto it=name.begin();it!=name.end();++it){
+    std::vector<std::string> lports(get_port_names_regexp( *it, flags ));
+    ports.insert(ports.end(),lports.begin(),lports.end());
+  }
+  return ports;
+}
 
 std::vector<std::string> jackc_portless_t::get_port_names_regexp( const std::string& name, int flags ) const
 {

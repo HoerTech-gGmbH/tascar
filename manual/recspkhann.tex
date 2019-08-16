@@ -1,0 +1,13 @@
+Panning of audio between two best-matching speakers with von-Hann
+ramps.
+
+\begin{lstlisting}[numbers=none]
+<receiver type="hann" wexp="0.5">...</receiver>
+\end{lstlisting}
+If $N$ speakers are defined, $\alpha$ is the angle between a speaker
+$k$ and the virtual sound source, and $\gamma$ is the window exponent
+(\indattr{wexp}), then the speaker gain $g_k$ is
+\begin{equation}
+w_k = \left(\frac12 + \frac12 \cos\left(\frac{N}{2} \alpha\right)\right)^\gamma
+\end{equation}
+

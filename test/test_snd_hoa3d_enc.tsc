@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene guiscale="4">
+    <receiver type="hoa3d_enc" order="5" delaycomp="1"/>
+    <source>
+      <orientation>0 0 -80 0
+      1 360 80 0</orientation>
+      <sound x="1" gainmodel="1" airabsorption="false">
+	<plugins>
+	  <const a="1"/>
+	</plugins>
+      </sound>
+    </source>
+  </scene>
+</session>

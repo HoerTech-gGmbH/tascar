@@ -9,14 +9,13 @@ function varargout = tascar_ctl( action, varargin )
 %         action is a different function which will be called - all
 %         the functions are included in this script.  The following
 %         actions are available until now:
-%         'load', 'kill', 'createscene', 'transport'
+%         'load', 'kill', 'createscene', 'transport', 'audioplayercreate'
 %
 %  Example usage:
 %  h = tascar_ctl( 'load', 'test_scene.tsc' )
 %  tascar_ctl( 'transport', h, 'play' )
 %  tascar_ctl( 'transport', h, 'locate', 15 )
 %  tascar_ctl( 'kill', h )
-% -------------------------------------------------------------------------
 
   if nargin < 1
     error('No action name was provided.');
@@ -24,12 +23,12 @@ function varargout = tascar_ctl( action, varargin )
   if ~ischar(action)
     error('Action name is not a string.');
   end
-  %find which function to use
+  % find which function to use
   fun = ['tascar_ctl_',action];
-  %create output array for the chosen function
+  % create output array for the chosen function
   varargout = cell([1,nargout(fun)]);
   if ~isempty(varargout)
-    %evaluate appropriate function with a list of input arguments
+    % evaluate appropriate function with a list of input arguments
     varargout{:} = feval(fun,varargin{:});
   else
     %for void functions
@@ -37,8 +36,7 @@ function varargout = tascar_ctl( action, varargin )
   end
   varargout(nargout+1:end) = [];
 
-  %---------------------------------------------------------------------
-function h = tascar_ctl_load(sessionfile)
+function h = tascar_ctl_load( sessionfile, usegui )
 % Start TASCAR and load a session file.
 %
 % Usage
@@ -53,8 +51,16 @@ function h = tascar_ctl_load(sessionfile)
 %       h.host : 'localhost'
 %       h.port : OSC port number
 
+    if nargin < 2
+        usegui = true;
+    end
+    if usegui
+        s_tascar = 'tascar';
+    else
+        s_tascar = 'tascar_cli -s';
+    end
   h = struct();
-  sCmd = sprintf('LD_LIBRARY_PATH="" tascar %s 2>%s.err >%s.out & echo $! > %s.pid',sessionfile,sessionfile,sessionfile,sessionfile);
+  sCmd = sprintf('LD_LIBRARY_PATH="" %s %s 2>%s.err >%s.out & echo $! > %s.pid',s_tascar,sessionfile,sessionfile,sessionfile,sessionfile);
   %open tascar scene in tascar, save the error message in a .err file and ?
   %in .out file
   [a,b] = system(sCmd);
@@ -110,7 +116,7 @@ function tascar_ctl_kill(h)
     send_osc(h,'/tascargui/quit');
     pause(0.5);
   end
-  [a,b] = system(sprintf('kill %d',h.pid));
+  [a,b] = system(sprintf('kill %d 2>/dev/null',h.pid));
 
 
 function tascar_ctl_createscene( varargin )
@@ -227,4 +233,97 @@ function tascar_ctl_transport( handle, mode, varargin )
 function tascar_ctl_help( name )
 % provide help on a sub-command.
     eval(['help tascar_ctl>tascar_ctl_',name]);
+    
 
+function h = tascar_ctl_audioplayercreate( cSignals, varargin )
+% Create a session file with a simple scene
+%
+% Usage:
+% h = tascar_ctl( 'audioplayercreate', parameter, value, ... )
+%
+% Usage examples:
+%
+% Show detailed information about the parameters and their default
+% values:
+% tascar_ctl('audioplayercreate','help')
+
+
+  sCfg = struct;
+  sHelp = struct;
+  h = [];
+  % default values:
+  sCfg.connect = '';
+  sCfg.level = -20*log10(2e-5);
+  sCfg.levelmode = 'calib';
+  sCfg.fs = 44100;
+  sCfg.duration = 36000;
+  sCfg.port = 9877;
+  sCfg.loop = 1;
+  sCfg.usegui = false;
+
+  % help comments:
+  sHelp.connect = 'connect output to these ports (regexp)';
+  sHelp.level = 'playback level' ;
+  sHelp.levelmode = ['calibration level mode, see documentation of ' ...
+                     'sndfile audio plugin in the manual for details'];
+  sHelp.fs = 'sampling rate in Hz';
+  sHelp.duration = 'session duration (= maximal duration) in seconds';
+  sHelp.port = 'port number';
+  sHelp.loop = 'loop count of each sound';
+  sHelp.usegui = 'open TASCAR with GUI (true) or without (false)';
+  if ischar(cSignals)
+      if strcmp(cSignals,'help')
+          tascar_parse_keyval( sCfg, sHelp, 'help' );
+          return;
+      end
+  end
+  sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
+  if isempty(sCfg)
+    return;
+  end
+  fbase = tempname();
+  %% Create session file:
+  % Create the document node and root element(always):
+  docNode = tascar_xml_doc_new();
+  % session (root element):
+  n_session = tascar_xml_add_element(docNode,docNode,'session',[],...
+                                     'license','CC0',...
+                                     'duration',num2str(sCfg.duration),...
+                                     'srv_port',num2str(sCfg.port));
+  n_scene = tascar_xml_add_element(docNode,n_session,'scene');
+  n_mod = tascar_xml_add_element(docNode,n_session,'modules');
+  % Create wav files:
+  for k=1:numel(cSignals)
+      name = sprintf('%s-%d.wav',fbase,k);
+      audiowrite(name,cSignals{k},sCfg.fs,'BitsPerSample',32);
+      fh = fopen([name,'.license'],'w');
+      fprintf(fh,'CC0\n');
+      fclose(fh);
+      n_route = tascar_xml_add_element(docNode,n_mod,'route',[],...
+                                       'mute','true',...
+                                       'name',num2str(k),...
+                                       'channels',num2str(size(cSignals{k},2)),...
+                                       'connect_out',sCfg.connect);
+      n_plugs = tascar_xml_add_element(docNode,n_route,'plugins');
+      n_snd = tascar_xml_add_element(docNode,n_plugs,'sndfile',[],...
+                                     'name',name,...
+                                     'level',num2str(sCfg.level),...
+                                     'levelmode',sCfg.levelmode,...
+                                     'loop',num2str(sCfg.loop));
+  end
+  n_time = tascar_xml_add_element(docNode,n_mod,'lsljacktime',[],...
+                                  'sendwhilestopped','true');
+  %% save xml file:
+  tascar_xml_save( docNode, [fbase,'.tsc'] );
+  h = tascar_ctl_load( [fbase,'.tsc'], sCfg.usegui );
+  h.routes = numel(cSignals);
+  [err,msg] = system(['rm ',fbase,'*']);
+  
+function tascar_ctl_audioplayerselect( h, player )
+    nonplayer = setdiff(1:h.routes,player);
+    for np=nonplayer
+        send_osc(h,['/',num2str(np),'/mute'],1);
+    end
+    for np=player
+        send_osc(h,['/',num2str(np),'/mute'],0);
+    end

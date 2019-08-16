@@ -77,10 +77,10 @@ boxrule=0.2pt,fontupper=\small\ttfamily\bfseries}
   }{
     \hyperref[sec:#1]{\elembox{<#2/>}}
   }
-  \index{#2}
+  %\index{#2}
 }
-\newcommand{\elem}[1]{\elembox{<#1/>}\index{#1}}
-\newcommand{\indattr}[1]{\attrbox{\lstinline{#1}}\index{#1 (attribute)}}
+\newcommand{\elem}[1]{\elembox{<#1/>}\index{#1 (XML element)}}
+\newcommand{\indattr}[1]{\attrbox{\lstinline{#1}}\index{#1 (XML attribute)}}
 \newcommand{\attr}[1]{\attrbox{\lstinline{#1}}}
 \newcommand{\indmod}[1]{\hyperref[sec:#1]{{\bf #1}}\index{#1 (module)}}
 \newcommand{\indapmod}[2][]{
@@ -88,6 +88,20 @@ boxrule=0.2pt,fontupper=\small\ttfamily\bfseries}
     \hyperref[sec:ap_#2]{{\bf #2}}\index{#2 (audio plugin)}
   }{
     \hyperref[sec:ap_#1]{{\bf #2}}\index{#2 (audio plugin)}
+  }
+}
+\newcommand{\indrecgen}[2][]{
+  \ifthenelse{\equal{#1}{}}{
+    \hyperref[sec:recgen_#2]{{\bf #2}}
+  }{
+    \hyperref[sec:recgen_#1]{{\bf #2}}
+  }
+}
+\newcommand{\indrecspk}[2][]{
+  \ifthenelse{\equal{#1}{}}{
+    \hyperref[sec:recspk_#2]{{\bf #2}}
+  }{
+    \hyperref[sec:recspk_#1]{{\bf #2}}
   }
 }
 \newcommand{\keyb}[1]{\keybbox{\lstinline{#1}}}
@@ -103,7 +117,7 @@ authors of \tascar{}.
 
 \tascar{} -- toolbox for acoustic scene creation and rendering -- is a
 software designed for Linux, which allows to create virtual acoustic
-environments \citep{Grimm2015a,Grimm2016a}. By means of \tascar{}, the sound
+environments \citep{Grimm2015a,Grimm2016a,Grimm2019}. By means of \tascar{}, the sound
 environment, which could in reality be heard in a given space and
 time, can be simulated. In \tascar{} we can design virtual acoustic
 environments, which we call acoustic {\em scenes} here, which are then
@@ -403,8 +417,8 @@ Together, they form the outermost building blocks of \tascar{} scenes.
 
 \elem{session} is the root element of each scene definition file. It
 can contain one or more scenes (\refelem{scene}), port connections
-(\refelem{connection}), external modules (\refelem{modules}) and range
-definitions (\refelem{range}).
+(\elem{connection}), external modules (\elem{modules}) and range
+definitions (\elem{range}).
 
 \begin{tscattributes}
 \indattr{name}               & Name of session (default: ``tascar'')                                                \\
@@ -442,7 +456,7 @@ The jack transport can be controlled via the OSC paths {\tt
   /transport/start}, {\tt /transport/stop} and {\tt
   /transport/locate}.
 
-A special sub-element \refelem{include} can be used to include scenes
+A special sub-element \elem{include} can be used to include scenes
 and other elements from another session file, given by the attribute
 \indattr{name}. Example:
 \begin{lstlisting}[numbers=none]
@@ -458,7 +472,7 @@ and other elements from another session file, given by the attribute
 \indattr{attribution} & Attribution of session file, e.g., author name \\
 \end{tscattributes}
 
-The \refelem{include} element can also be used at other levels; the
+The \elem{include} element can also be used at other levels; the
 only limitation is that the root element of the included file needs to
 match the active element into which the external file is included.
 %
@@ -473,7 +487,7 @@ are ignored.
 % included files to allow multiple scenes (XML permits only a single
 % root element).
 
-The file names given in the name attribute of the \refelem{include}
+The file names given in the name attribute of the \elem{include}
 element can be absolute or relative.
 %
 Relative file names are relative to the directory containing the root
@@ -499,7 +513,7 @@ Relative file names are relative to the directory containing the root
 \begin{tscelements}
 \refelem{source}, \refelem{receiver},
 \refelem{diffuse}, \refelem{face}, \refelem{facegroup},
-\refelem{obstacle}, \refelem{description}
+\refelem{obstacle}, \elem{description}
 \end{tscelements}
 
 \elem{scene} is a top-level element of a \tascar{} scene
@@ -974,7 +988,7 @@ Sound vertices will be discussed in the next section.
 \end{tscattributes}
 
 \begin{tscelements}
-\refelem{position}, \refelem{boundingbox},\refelem{orientation}, \refelem{creator}, \refelem{sndfile}, \elem{plugins}
+\refelem{position}, \elem{boundingbox},\refelem{orientation}, \refelem{creator}, \refelem{sndfile}, \elem{plugins}
 \end{tscelements}
 
 Apart of sound sources which consist of one or more sound vertices, we
@@ -1017,7 +1031,7 @@ diffuse sound field can be found below:
 \tscexample[linerange={5-9},firstnumber=5]{example_diffuse}
 
 The input signal of diffuse sound fields is the B-format (Furse-Malham
-normalization, channel order wxyz). For level metering, the RMS level
+normalization, channel sequence ``wxyz''). For level metering, the RMS level
 of the w-channel is taken.
 
 
@@ -1057,7 +1071,7 @@ or headphones.
 \end{tscattributes}
 
 \begin{tscelements}
-\refelem{speaker}, \refelem{boundingbox}, \refelem{position},
+\refelem{speaker}, \elem{boundingbox}, \refelem{position},
 \refelem{orientation}, \refelem{creator}
 \end{tscelements}
 
@@ -1137,7 +1151,59 @@ $>0$), or the standard distance model is applied.
 With volumetric receiver settings, the delay will depend on the
 relative distance between the receiver origin and the source position.
 
-\subsubsection{The {\tt <speaker .../>} element}\label{sec:speaker}\index{speaker}
+%Example:
+%
+%\tscexample[linerange={5-12},firstnumber=5]{example_neukom}
+
+\subsection{Receiver types}\index{receiver type}
+
+
+
+There are following types of receivers (see Table \ref{tab:receivers} for an overview):
+
+\input{secrecgeneric.tex}
+
+\subsection{Speaker-based receiver types}\label{sec:speaker}\index{speaker}
+
+There are also speaker-based decoding methods (VBAP, ambisonics
+panning and nearest-speaker panning) which require the specification
+of loudspeakers - together with the receiver type, we define a set of
+virtual loudspeakers located relative to the position of this
+receiver.
+%
+Information about the number of loudspeaker and their location is then
+exploited to produce appropriate receiver output channels.
+%
+
+
+
+\begin{figure}[htb]
+  \begin{subfigure}[t]{0.25\textwidth}
+    \centering
+    \fbox{\includegraphics[width=0.85\linewidth]{method_input}}
+    \caption{original}
+  \end{subfigure}%
+  \begin{subfigure}[t]{0.25\textwidth}
+    \centering
+    \fbox{\includegraphics[width=0.85\linewidth]{method_nsp}}
+    \caption{nsp}
+  \end{subfigure}%
+  \begin{subfigure}[t]{0.25\textwidth}
+    \centering
+    \fbox{\includegraphics[width=0.85\linewidth]{method_vbap}}
+    \caption{vbap}
+  \end{subfigure}%
+  \begin{subfigure}[t]{0.25\textwidth}
+    \centering
+    \fbox{\includegraphics[width=0.85\linewidth]{method_amb_basic}}
+    \caption{hoa2d}
+  \end{subfigure}
+  %\centering
+  %\fbox{\includegraphics[width=0.8\textwidth]{nearest.pdf}}
+  \caption{Schematic representation of the reproduced sound fields
+    with different reproduction methods..}
+  \label{fig:repromethods}
+\end{figure}
 
 The speaker layout of speaker based receiver types can be defined in a
 separate layout file specified in the \attr{layout} attribute, in a
@@ -1178,404 +1244,8 @@ file, then a warning is issued and the value from the layout file is
 used. If a calibration date is provided and the calibration is older
 than 30 days, a warning is displayed.
 
-%Example:
-%
-%\tscexample[linerange={5-12},firstnumber=5]{example_neukom}
 
-\subsubsection{receiver types}\index{receiver type}
-
-
-\begin{table}[htb]
-\begin{tabular}{llll}
-Type                      & $N$       & panning                                     & diffuse decoding                                                                             \\
-\hline
-{\tt omni}                & 1         & $w_n=1$                                     & $d_{1,1} = 1$                                                                                \\
-{\tt vmic}                & 1         & $w_n=1+a(\tilde p_{rel,x}-1)$                                     & $d_{1,1} = \sqrt{2}(1-a)$, $d_{1,2} = a$                                                                               \\
-{\tt cardioid}            & 1         & $w_n=\frac12 \left(\cos(\varphi) + 1\right)$ & $d_{1,1} = 1$                                                                               \\
-{\tt ortf} & 2 & ORTF microphone & $\max r_E$\\
-{\tt amb\_3h0v}           & 7         & $w_n=\left\{
-\begin{array}{cl}
-\sqrt{2}                  & n=1                                                                                                                                                    \\
-\cos(\frac{n}{2}\varphi)   & n\, \textrm{even}                                                                                                                                     \\
-\sin(\frac{n-1}{2}\varphi) & n\, \textrm{odd}
-\end{array}\right.$       & $d_{n,n}=1,\, n=\{1,2,3\}$                                                                                                                             \\
-{\tt amb\_3h3v}           & 16        &  
-$w=
-\left(\begin{array}{c}
-w_w                                                                                                                                                                                \\w_y\\w_x\\w_z\\w_v\\w_t\\w_r\\w_s\\w_u\\w_q\\w_o\\w_m\\w_k\\w_l\\w_n\\w_p
-\end{array}
-\right)=
-\left(\begin{array}{c}\sqrt{2}                                                                                                                                                     \\
-\cos(\theta)\sin(\varphi)                                                                                                                                                          \\ %y
-\cos(\theta)\cos(\varphi)                                                                                                                                                          \\ %x
-\sin(\theta)                                                                                                                                                                       \\ %z
-2 w_x w_y                                                                                                                                                                          \\ %v
-2 w_z w_y                                                                                                                                                                          \\ %t
-\frac12 (3 w_z^2 - 1)                                                                                                                                                              \\ %r
-2 w_z w_x                                                                                                                                                                          \\ %s
-w_x^2 - w_y^2                                                                                                                                                                      \\ %u
-(3 w_x^2 - w_y^2) w_y                                                                                                                                                              \\%q
-2.598076 w_z w_v                                                                                                                                                                   \\ %o
-0.726184 (5 w_z^2 - 1) w_y                                                                                                                                                         \\ %m
-\frac12 w_z (5 w_z^2 - 3)                                                                                                                                                          \\ %k
-0.726184 (5 w_z^2 - 1) w_x                                                                                                                                                         \\ %l
-2.598076 w_z w_u                                                                                                                                                                   \\ %n
-(w_x^2 - 3 w_y^2) w_x                                                                                                                                                              \\ %p
-\end{array}\right)$   & $d_{n,n}=1,\, n=\{1,2,3,4\}$                                                                                                                               \\
-{\tt neukom\_basic}   & user def. & $w_n=1+2\sum_{l=1}^{order}\cos(l\varphi_n)$                                                                                                    \\
-{\tt neukom\_inphase} & user def. & $w_n=\cos(0.5\varphi_n)^{order}$                                                                                                               \\
-{\tt hoa2d}           & user def. & see \cite{Daniel2001} for details.                                                                                                             \\
-{\tt nsp}             & user def. & $w_{\argmin\left\{\norm[\big]{\frac{\mathbf{p}_{rel}}{\norm{\mathbf{p}_{rel}}} - \frac{\mathbf{p}_{spk}}{\norm{\mathbf{p}_{spk}}}}\right\}}=1$ \\
-{\tt hann}            & user def. & $w_n = \left(\frac12 + \frac12 \cos\left(\min\left\{\left|\frac{N}{2} \varphi_n\right|,\pi\right\}\right)\right)^\gamma$                       \\
-{\tt vbap}, {\tt vbap3d}            & user def. & see \cite{Pulkki1997} for details.                                                                                                             \\
-%{\tt vbap3d}         & user def. & $ w_n=?$ & $d=?$                                                                                                                               \\
-\end{tabular}
-\caption{Specification of receiver types. $d_{n,wxyz}=0$ except for
-  the given entries. $(\varrho,\varphi,\theta)$ is the source position
-  in spherical coodinates in the receiver coordinate
-  system. $\varphi_n$ is the azimuthal angular distance between
-  loudspeaker $n$ and the sound source.}\label{tab:receivers}
-\end{table}
-
-There are following types of receivers (see Table \ref{tab:receivers} for an overview):
-
-\paragraph{omni-directional:}
-
-\begin{lstlisting}[numbers=none]
-<receiver type="omni"/>
-\end{lstlisting}
-
-If we use the simple omni-directional receiver, then sources coming
-from all directions are rendered with the same weight $w=1$ and at the
-output of the renderer we will get just one channel, $N=1$ - the
-summation of sources from all directions:
-
-$N=1$,
-$w_n=1$
-
-\paragraph{virtual microphone:}
-
-\begin{lstlisting}[numbers=none]
-<receiver type="vmic" a="0"/>
-\end{lstlisting}
-
-The virtual microphone receiver type has a single output channel. The
-driving weight is
-\begin{equation}
-w = 1 + a (\tilde{p}_{rel,x} - 1).
-\end{equation}
-It's directivity pattern can be controlled between omni-directional and
-figure-of-eight with the directivity coefficient $a$; with $a=0$ this
-is an omni-directional microphone, with $a=\frac12$ a standard
-cardioid, and with $a=1$ a figure-of-eight.
-%
-The diffuse decoding matrix is
-\begin{equation}
-\mathbf{D} = \left( \sqrt{2}(1-a) \quad a \quad 0\quad  0 \right).
-\end{equation}
-The factor \(\sqrt{2}\) of the \(w\)-channel is needed to account for
-the Furse-Malham normalization of the diffuse signals.
-
-\paragraph{cardioidal:}
-
-\begin{lstlisting}[numbers=none]
-<receiver type="cardioid"/>
-\end{lstlisting}
-  
-If we use a cardioidal receiver, then sources are multiplied with a
-different weight (depending on the direction of arrival, according to
-cardioidal directivity pattern) and at the output of the renderer we
-will also get just one channel - a summation of sources coming from
-different directions multiplied with different weights.
- 
-$N=1$, $w_n=\frac{1}{2}(cos(\alpha) +1)$,\\
-where \(w(n)\) depends on
-the angle between the source and the receiver, $\alpha$ (direction
-from which the source is coming).
-
-\paragraph{virtual ORTF stereo microphone}\index{ORTF stereo microphone}\index{stereo}
- 
-\begin{lstlisting}[numbers=none]
-<receiver type="ortf" f6db="3000" fmin="80" distance="0.17" angle="110"/>
-\end{lstlisting}
-
-This receiver implements a classical ORTF stereo microphone
-technique. The cardioid microphone pattern has a frequency dependency;
-the 6~dB cutoff frequency for 90 degrees is given by the attribute
-\indattr{f6db}. The attribute \indattr{fmin} defines the cutoff
-frequency for 180 degree sounds. The attributes \indattr{distance} and
-\indattr{angle} control the microphone geometry.
-
-Typical values for small diaphragms are \attr{f6db="3000"} and
-\attr{fmin="800"} (these are the default values since version
-0.172.2); for a higher directivity, use \attr{f6db="1000"} and
-\attr{fmin="60"} (default values of earlier versions).
-
-\paragraph{first order ambisonics:}
-
-Horizontal FOA:
-\begin{lstlisting}[numbers=none]
-<receiver type="amb1h0v"/>
-\end{lstlisting}
-
-Full periphonic:
-\begin{lstlisting}[numbers=none]
-<receiver type="amb1h1v"/>
-\end{lstlisting}
-
-The normalization attributes \attr{normalization="FuMa"} (default) or
-\attr{normalization="SN3D"} are supported.
-
-\paragraph{third order ambisonics:}
-
-Horizontal HOA:
-\begin{lstlisting}[numbers=none]
-<receiver type="amb3h0v"/>
-\end{lstlisting}
-$N=7$, $w_k=\left\{
-\begin{array}{cl}
-\sqrt{2} & k=0\\
-\cos(\frac{k+1}{2}\alpha) & k\, \textrm{odd}\\
-\sin(\frac{k}{2}\alpha) & k\, \textrm{even}
-\end{array}\right.
-$
-
-Full periphonic:
-\begin{lstlisting}[numbers=none]
-<receiver type="amb3h3v"/>
-\end{lstlisting}
-  
-Receiver of this type will produce ambisonics output channels - 7
-channels for \lstinline!type="amb3h0v"! and 16 channels for
-\lstinline!type="amb3h3v"!. Each channel corresponds to different
-directivity pattern, so the resulting signal will be calculated for
-each channel differently.
-
-%, for example channel "u" is calculated with
-%the following weights:
-%  
-% \( C_U=\frac{1}{N}\displaystyle\sum_{i=1}^{N}w_N S_N \) with \(w_N=S_N \cos(2\*\phi)cos^2(\theta)\)
-% 
- 
-To play back the content of a virtual scene on an arbitrary playback
-device, we have to use an external tool to decode the ambisonics
-format (a tool which will mix the ambisonics channels signals in an
-appropriate way in order to get the signals for channels of our
-playback system).  To achieve this, we can make a jack connection
-between the output of the ambisonics receiver
-(\verb!<scenename>.render:<receivername>.<channel>!) and ambisonics
-decoder "ambdec"\index{ambdec}\index{decoder}:
-%
-\itscexamplepriv[linerange={2-5},numbers=none]{objects}
-%
-If we use connect="ambdec:in", then the connections will be done, so
-that the channels have the same name in both receiver output and
-ambdec input, as shown in the Figure \ref{fig:ambdec}. 
-%
-We can then go to the settings of the ambdec device and find a type of
-output corresponding to our playback set up
-(Config$>>$Load$>>$usr/share/ambdec/presets). 
-%
-For example if we choose a preset \textit{octagon-3h0v}, the
-appropriate output ports will appear (Figure \ref{fig:ambdec_out}),
-which can be than connected with the system playback devices.
-
-\begin{figure}[htb]
-  \centering
-  \fbox{\includegraphics[width=0.8\textwidth]{render_ambdec.png}}
-  \caption{Connections, which are created, when using attribute \attr{connect} in the element \elem{sound}}
-  \label{fig:ambdec}
-\end{figure}
- 
- \begin{figure}[htb]
-  \centering
-  \fbox{\includegraphics[width=0.8\textwidth]{ambdec_out.png}}
-  \caption{Ambdec output ports for a horizontal octagon}
-  \label{fig:ambdec_out}
-\end{figure}
-
-There are also speaker-based decoding methods (VBAP, ambisonics
-panning and nearest-speaker panning) which require the specification
-of loudspeakers - together with the receiver type, we define a set of
-virtual loudspeakers located relative to the position of this
-receiver.
-%
-Information about the number of loudspeaker and their location is then
-exploited to produce appropriate receiver output channels.
-%
-
-
-\begin{figure}[htb]
-  \begin{subfigure}[t]{0.25\textwidth}
-    \centering
-    \fbox{\includegraphics[width=0.85\linewidth]{method_input}}
-    \caption{original}
-  \end{subfigure}%
-  \begin{subfigure}[t]{0.25\textwidth}
-    \centering
-    \fbox{\includegraphics[width=0.85\linewidth]{method_nsp}}
-    \caption{nsp}
-  \end{subfigure}%
-  \begin{subfigure}[t]{0.25\textwidth}
-    \centering
-    \fbox{\includegraphics[width=0.85\linewidth]{method_vbap}}
-    \caption{vbap}
-  \end{subfigure}%
-  \begin{subfigure}[t]{0.25\textwidth}
-    \centering
-    \fbox{\includegraphics[width=0.85\linewidth]{method_amb_basic}}
-    \caption{hoa2d}
-  \end{subfigure}
-  %\centering
-  %\fbox{\includegraphics[width=0.8\textwidth]{nearest.pdf}}
-  \caption{Schematic representation of the reproduced sound fields
-    with different reproduction methods..}
-  \label{fig:repromethods}
-\end{figure}
-
-
-\paragraph{2D higher order Ambisonics \citep{Daniel2001}:}\index{hoa2d} 
-
-\begin{lstlisting}[numbers=none]
-<receiver type="hoa2d" order="3" maxre="true">...</receiver>
-\end{lstlisting}
-
-This receiver type provides horizontal higher order ambisonics with
-basic or $\max r_E$ decoding.
-%
-If \attr{order} is zero or unset, then the maximum possible order for
-the given number of loudspeakers is used.
-
-\begin{tscattributes}
-\indattr{order}            & Ambisonics order; 0: use maximum possible (default: 0)                                                                      \\
-\indattr{rotation}         & Rotation of the loudspeaker array in degrees (default: compensate average speaker rotation)                                 \\
-\indattr{maxre}            & Use $\max r_E$ decoder (true) or basic decoder (false) (default: false)                                                     \\
-\indattr{diffup}           & Use diffuse upsampling similar to \citet{Zotter2014} (default: false)                                                       \\
-\indattr{diffup\_rot}      & Decorrelation rotation in degree (default: 45)                                                                              \\
-\indattr{diffup\_delay}    & Decorrelation delay in seconds (default: 0.01)                                                                              \\
-\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (default: 100)                                                                        \\
-\indattr{filtershape}      & De-correlation filter shape for source width encoding, one of ``none'' (default), ``notch'', ``sine'', ``tria'', ``triald'' \\
-\indattr{filterperiod}     & Filter period in seconds for source width encoding (default: 0.005)                                                         \\
-\end{tscattributes}
-
-\paragraph{Note:}
-Only regular speaker arrays can be used. Explicit speaker
-distributions are ignored, and a regular speaker distribution with
-counter-clockwise azimuths is assumed, with the first speaker starting
-at the value provided in the \attr{rotation} attribute.
-%
-If the \attr{rotation} attribute is not given, then the average
-difference between a regular layout and the explicit speaker azimuth
-is taken as \attr{rotation}.
-
-If \indattr{diffup} is set to ``true'', diffuse-decoding is using the
-internal decoder, which is also used for decoding of panned sources.
-%
-If \indattr{diffup} is set to ``false'', the standard speaker-based
-diffuse render method is applied.
-%
-Source-width encoding splits the signal into two uncorrelated signals
-and creates virtual sound sources separated by the source width.
-
-An alternative receiver type \verb!hoa2d_fuma! can be used to return
-the encoded signal in FuMa normalization and ACN channel order.
-
-\paragraph{Ambisonic panning \citep{Neukom2007}:}
-
-\begin{lstlisting}[numbers=none]
-<receiver type="neukom_basic" order="3">...</receiver>
-\end{lstlisting}
-\begin{lstlisting}[numbers=none]
-<receiver type="neukom_inphase" order="3">...</receiver>
-\end{lstlisting}
-
-With these types of receivers, we can also use the ambisonics surround
-format for creating an appropriate sound for our playback system. 
-%
-This time however, we don't have to use an external tool to decode the
-ambisonics format. 
-%
-It will be done automatically after we specify the positions of of the
-playback channels using element \refelem{speaker} (which is equivalent
-to choosing an appropriate preset in the ambdec tool). 
-%
-%It can be done in the following way:
-%\tscexample[linerange={5-13},firstnumber=5]{example_neukom}
-
-Above we can see, that speakers are defined with the element
-\refelem{speaker} and their position and orientation is defined with
-attributes \attr{el}, \attr{az} and \attr{r} and is relative to the
-position and orientation of the whole receiver object.
-%
-Output channels defined using element \refelem{speaker} will appear in
-the Jack Audio as an output of the rendering stage.
-    
-
-%difference between basic and inphase???
-
-\paragraph{nearest speaker receiver:}
-
-\begin{lstlisting}[numbers=none]
-<receiver type="nsp"><speaker az="0"/>...</receiver>
-\end{lstlisting}
-Another speaker-based decoding method is the nearest-speaker
-receiver. 
-%
-This receiver also requires defining the position of the playback
-channels and we can do it in the following way (see
-\verb!example_nearest.tsc!):
-\tscexample[linerange={4-7},firstnumber=4]{example_nearest}
-
-\tscexampleext[linerange={2-7},firstnumber=2]{nsp.spk}
-
-If we load a scene with such a receiver in \tascar{}, we will see all the
-specified channels as an output of the rendering stage in the Jack
-Audio. 
-%
-However, this time, for each source there is only one channel which is
-active, i.e. the one for which there is the lowest angular distance
-from the loudspeaker to the source.
-
-
-\paragraph{von-Hann window panning:}
-
-
-\begin{lstlisting}[numbers=none]
-<receiver type="hann" wexp="0.5">...</receiver>
-\end{lstlisting}
-If $N$ speakers are defined, $\alpha$ is the angle between a speaker
-$k$ and the virtual sound source, and $\gamma$ is the window exponent
-(\indattr{wexp}), then the speaker gain $g_k$ is
-\begin{equation}
-w_k = \left(\frac12 + \frac12 \cos\left(\frac{N}{2} \alpha\right)\right)^\gamma
-\end{equation}
-
-
-%\label{sec:speaker}%
-\paragraph{Vector base amplitude panning \citep{Pulkki1997}:}\index{vbap} 
-
-\begin{lstlisting}[numbers=none]
-<receiver type="vbap" layout="spkeaker.spk"/>
-\end{lstlisting}
-
-\begin{lstlisting}[numbers=none]
-<receiver type="vbap3d" layout="spkeaker3d.spk"/>
-\end{lstlisting}
-
-\paragraph{intensityvector:}
-
-This specialized receiver type accumulates the sound intensity
-weighted direction. This receiver type is used only for analysis and
-characterization of acoustic scene properties. Its only attribute is
-the intensity integration time constant \indattr{tau}, measured in
-seconds, with the default value of 0.125.
-
-\paragraph{WFS}
-
-A very simple WFS renderer is available. Loudspeaker distance is
-compensated for planar source wave fronts. The gain is proportional to
-the cosine of the angle between source and speaker, for angles smaller
-than 90 degrees, and zero otherwise.
+\input{secrecspeaker.tex}
 
 \subsection{Reflectors: {\tt <face .../>} and {\tt <facegroup .../>} elements}\label{sec:face}\label{sec:facegroup}\index{face}\index{facegroup}
 
@@ -1946,15 +1616,27 @@ There are the following scripts available:
 
 \subsection{\tt tascar\_ctl}
 
-This function can be used for two basic actions:
+This function can be used for some basic actions. For details see
+function help in MATLAB/GNU Octave.
 
-\begin{enumerate}
-\item Loading a scene, which already exists:
-      \verb!h = tascar_ctl('load','filename.tsc')!\\
-\item Closing a scene: 
-      \verb!h = tascar_ctl('kill',h )!\\
+\begin{itemize}
+\item Loading a scene, which already exists:\\
+  \verb!h = tascar_ctl('load','filename.tsc')!
+\item Controlling the transport:\\
+  \verb!tascar_ctl( 'transport', h, 'play' )!\\
+  \verb!tascar_ctl( 'transport', h, 'locate', 15 )!
+\item Closing a scene: \\
+  \verb!tascar_ctl('kill',h )!
+\item Creating a basic scene:\\
+  \verb!tascar_ctl('createscene','filename','my_scene.tsc')!
+\item Create an audio player:\\
+  \verb!h = tascar_ctl('audioplayercreate',{sig1,sig2});!
+  \verb!tascar_ctl('audioplayerselect',1);!\\
+  \verb!tascar_ctl('audioplayerselect',2);!\\
+  \verb!tascar_ctl('kill',h )!
+\end{itemize}
 
-\end{enumerate}
+%         'load', 'kill', 'createscene', 'transport', 'audioplayercreate'
 
 An example of the usage of this (and other MATLAB/GNU Octave functions) can be
 found in \verb!example_controlTASCAR.m!.
@@ -2046,7 +1728,7 @@ function \verb!send_osc! (for UDP transport) or \verb!send_osc_tcp!
 The functions \verb!send_osc!  and \verb!send_osc_tcp! are functions
 by which we can control a \tascar{} session and objects in a \tascar{} scene.
 %
-The default OSC port is 9877, listening to all network devices.
+The default OSC port is 9877, listening on all network devices.
 %
 For more control, we can use the attributes
 \attr{srv\_addr} and \attr{srv\_port} to the element \elem{session}, e.g.,
@@ -2169,7 +1851,7 @@ flag \verb!-h! or \verb!--help!.
 \item \verb!tascar_renderir!\\
 This command line tool is used for rendering the impulse response of a \tascar{} scene. Common usage example: 
   \begin{lstlisting}[numbers=none]
-  tascar_renderfile -o output_file.wav -f 44100 -1 2 tascar_scene.tsc
+  tascar_renderir -o output_file.wav -f 44100 -1 2 tascar_scene.tsc
   \end{lstlisting}
 The impulse response will be stored in \verb!output_file.wav!. \verb!44100! is the sampling rate and \verb!2! is the highest rendered image source order.  
 
@@ -2251,6 +1933,58 @@ The receiver orientation is defined by
 \bibliography{tascar}
 
 \lstlistoflistings
+
+\begin{table}[htb]
+\begin{tabular}{llll}
+Type                      & $N$       & panning                                     & diffuse decoding                                                                             \\
+\hline
+{\tt omni}                & 1         & $w_n=1$                                     & $d_{1,1} = 1$                                                                                \\
+{\tt vmic}                & 1         & $w_n=1+a(\tilde p_{rel,x}-1)$                                     & $d_{1,1} = \sqrt{2}(1-a)$, $d_{1,2} = a$                                                                               \\
+{\tt cardioid}            & 1         & $w_n=\frac12 \left(\cos(\varphi) + 1\right)$ & $d_{1,1} = 1$                                                                               \\
+{\tt ortf} & 2 & ORTF microphone & $\max r_E$\\
+{\tt amb\_3h0v}           & 7         & $w_n=\left\{
+\begin{array}{cl}
+\sqrt{2}                  & n=1                                                                                                                                                    \\
+\cos(\frac{n}{2}\varphi)   & n\, \textrm{even}                                                                                                                                     \\
+\sin(\frac{n-1}{2}\varphi) & n\, \textrm{odd}
+\end{array}\right.$       & $d_{n,n}=1,\, n=\{1,2,3\}$                                                                                                                             \\
+{\tt amb\_3h3v}           & 16        &  
+$w=
+\left(\begin{array}{c}
+w_w                                                                                                                                                                                \\w_y\\w_x\\w_z\\w_v\\w_t\\w_r\\w_s\\w_u\\w_q\\w_o\\w_m\\w_k\\w_l\\w_n\\w_p
+\end{array}
+\right)=
+\left(\begin{array}{c}\sqrt{2}                                                                                                                                                     \\
+\cos(\theta)\sin(\varphi)                                                                                                                                                          \\ %y
+\cos(\theta)\cos(\varphi)                                                                                                                                                          \\ %x
+\sin(\theta)                                                                                                                                                                       \\ %z
+2 w_x w_y                                                                                                                                                                          \\ %v
+2 w_z w_y                                                                                                                                                                          \\ %t
+\frac12 (3 w_z^2 - 1)                                                                                                                                                              \\ %r
+2 w_z w_x                                                                                                                                                                          \\ %s
+w_x^2 - w_y^2                                                                                                                                                                      \\ %u
+(3 w_x^2 - w_y^2) w_y                                                                                                                                                              \\%q
+2.598076 w_z w_v                                                                                                                                                                   \\ %o
+0.726184 (5 w_z^2 - 1) w_y                                                                                                                                                         \\ %m
+\frac12 w_z (5 w_z^2 - 3)                                                                                                                                                          \\ %k
+0.726184 (5 w_z^2 - 1) w_x                                                                                                                                                         \\ %l
+2.598076 w_z w_u                                                                                                                                                                   \\ %n
+(w_x^2 - 3 w_y^2) w_x                                                                                                                                                              \\ %p
+\end{array}\right)$   & $d_{n,n}=1,\, n=\{1,2,3,4\}$                                                                                                                               \\
+{\tt neukom\_basic}   & user def. & $w_n=1+2\sum_{l=1}^{order}\cos(l\varphi_n)$                                                                                                    \\
+{\tt neukom\_inphase} & user def. & $w_n=\cos(0.5\varphi_n)^{order}$                                                                                                               \\
+{\tt hoa2d}           & user def. & see \cite{Daniel2001} for details.                                                                                                             \\
+{\tt nsp}             & user def. & $w_{\argmin\left\{\norm[\big]{\frac{\mathbf{p}_{rel}}{\norm{\mathbf{p}_{rel}}} - \frac{\mathbf{p}_{spk}}{\norm{\mathbf{p}_{spk}}}}\right\}}=1$ \\
+{\tt hann}            & user def. & $w_n = \left(\frac12 + \frac12 \cos\left(\min\left\{\left|\frac{N}{2} \varphi_n\right|,\pi\right\}\right)\right)^\gamma$                       \\
+{\tt vbap}, {\tt vbap3d}            & user def. & see \cite{Pulkki1997} for details.                                                                                                             \\
+%{\tt vbap3d}         & user def. & $ w_n=?$ & $d=?$                                                                                                                               \\
+\end{tabular}
+\caption{Specification of receiver types. $d_{n,wxyz}=0$ except for
+  the given entries. $(\varrho,\varphi,\theta)$ is the source position
+  in spherical coodinates in the receiver coordinate
+  system. $\varphi_n$ is the azimuthal angular distance between
+  loudspeaker $n$ and the sound source.}\label{tab:receivers}
+\end{table}
 
 \printindex
 

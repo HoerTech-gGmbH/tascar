@@ -39,7 +39,7 @@ rec_vbap_t::data_t::~data_t()
 
 rec_vbap_t::rec_vbap_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_speaker_t(xmlsrc),
-  vbap(spkpos)
+  vbap(spkpos.get_positions())
 {
 }
 

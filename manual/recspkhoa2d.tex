@@ -1,0 +1,46 @@
+Horzontal higher-order Ambisonics with embedded decoder, for regular
+loudspeaker layouts.
+
+\begin{lstlisting}[numbers=none]
+<receiver type="hoa2d" order="3" maxre="true">...</receiver>
+\end{lstlisting}
+
+This receiver type provides horizontal higher order ambisonics with
+basic or $\max r_E$ decoding.
+%
+If \attr{order} is zero or unset, then the maximum possible order for
+the given number of loudspeakers is used.
+
+\begin{tscattributes}
+\indattr{order}            & Ambisonics order; 0: use maximum possible (default: 0)                                                                      \\
+\indattr{rotation}         & Rotation of the loudspeaker array in degrees (default: compensate average speaker rotation)                                 \\
+\indattr{maxre}            & Use $\max r_E$ decoder (true) or basic decoder (false) (default: false)                                                     \\
+\indattr{diffup}           & Use diffuse upsampling similar to \citet{Zotter2014} (default: false)                                                       \\
+\indattr{diffup\_rot}      & Decorrelation rotation in degree (default: 45)                                                                              \\
+\indattr{diffup\_delay}    & Decorrelation delay in seconds (default: 0.01)                                                                              \\
+\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (default: 100)                                                                        \\
+\indattr{filtershape}      & De-correlation filter shape for source width encoding, one of ``none'' (default), ``notch'', ``sine'', ``tria'', ``triald'' \\
+\indattr{filterperiod}     & Filter period in seconds for source width encoding (default: 0.005)                                                         \\
+\end{tscattributes}
+
+\paragraph{Note:}
+Only regular speaker arrays can be used. Explicit speaker
+distributions are ignored, and a regular speaker distribution with
+counter-clockwise azimuths is assumed, with the first speaker starting
+at the value provided in the \attr{rotation} attribute.
+%
+If the \attr{rotation} attribute is not given, then the average
+difference between a regular layout and the explicit speaker azimuth
+is taken as \attr{rotation}.
+
+If \indattr{diffup} is set to ``true'', diffuse-decoding is using the
+internal decoder, which is also used for decoding of panned sources.
+%
+If \indattr{diffup} is set to ``false'', the standard speaker-based
+diffuse render method is applied.
+%
+Source-width encoding splits the signal into two uncorrelated signals
+and creates virtual sound sources separated by the source width.
+
+An alternative receiver type \verb!hoa2d_fuma! can be used to return
+the encoded signal in FuMa normalization and ACN channel sequence.

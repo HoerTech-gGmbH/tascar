@@ -201,40 +201,51 @@ void TASCAR::render_rt_t::start()
   //osc_server_t::activate();
   // connect jack ports of point sources:
   for(unsigned int k=0;k<sounds.size();k++){
-    std::string cn(sounds[k]->get_connect());
+    std::vector<std::string> cn(sounds[k]->get_connect());
+    for( auto it=cn.begin();it!=cn.end();++it)
+      *it = strrep(*it, "@", "player."+name+":"+sounds[k]->get_parent_name());
     if( cn.size() ){
-      cn = strrep(cn,"@","player."+name+":"+sounds[k]->get_parent_name());
-      connect_in(sounds[k]->get_port_index(),cn,true);
+      std::vector<std::string> cno(get_port_names_regexp( cn ));
+      if( !cno.size() )
+        throw TASCAR::ErrMsg("Port list \""+TASCAR::vecstr2str(cn)+"\" did not match any port.");
+      for( auto it=cno.begin();it!=cno.end();++it)
+        if( it->size() )
+          connect_in(sounds[k]->get_port_index(),*it,true);
     }
-  }
-  // connect diffuse ports:
-  for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator idiff=diffuse_sound_field_infos.begin();idiff!=diffuse_sound_field_infos.end();++idiff){
-    TASCAR::Scene::diffuse_info_t* pdiff(*idiff);
-    std::string cn(pdiff->get_connect());
-    cn = strrep(cn,"@","player."+name+":"+pdiff->get_name());
-    uint32_t pi(pdiff->get_port_index());
-    if( cn.size() ){
-      for(uint32_t k=0;k<4;++k){
-        char ctmp[1024];
-        sprintf(ctmp,"%s.%d",cn.c_str(),k);
-        connect_in(pi+k,ctmp,true);
+    // connect diffuse ports:
+    for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator idiff=diffuse_sound_field_infos.begin();idiff!=diffuse_sound_field_infos.end();++idiff){
+      TASCAR::Scene::diffuse_info_t* pdiff(*idiff);
+      std::vector<std::string> cn(pdiff->get_connect());
+      for( auto it=cn.begin();it!=cn.end();++it)
+        *it = strrep(*it, "@", "player."+name+":"+pdiff->get_name());
+      //cn = get_port_names_regexp( cn );
+      uint32_t pi(pdiff->get_port_index());
+      for( auto it=cn.begin();it!=cn.end();++it)
+        if( it->size() ){
+          for(uint32_t k=0;k<4;++k){
+            char ctmp[1024];
+            sprintf(ctmp,"%s.%d",it->c_str(),k);
+            connect_in(pi+k,ctmp,true);
+          }
+        }
+    }
+    // connect receiver ports:
+    for(unsigned int k=0;k<receivermod_objects.size();k++){
+      std::vector<std::string> cn(receivermod_objects[k]->get_connect());
+      for( auto it=cn.begin();it!=cn.end();++it)
+        *it = strrep(*it,"@","player."+name+":"+receivermod_objects[k]->get_name());
+      for( auto it=cn.begin();it!=cn.end();++it)
+        if( it->size() ){
+          for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
+            connect_out(receivermod_objects[k]->get_port_index()+ch,*it+receivermod_objects[k]->get_channel_postfix(ch),true);
+        }
+      std::vector<std::string> cns(receivermod_objects[k]->get_connections());
+      for(uint32_t kc=0;kc<std::min((uint32_t)(cns.size()),
+                                    receivermod_objects[k]->get_num_channels());kc++){
+        if( cns[kc].size() )
+          connect_out(receivermod_objects[k]->get_port_index()+kc,
+                      cns[kc],true);
       }
-    }
-  }
-  // connect receiver ports:
-  for(unsigned int k=0;k<receivermod_objects.size();k++){
-    std::string cn(receivermod_objects[k]->get_connect());
-    if( cn.size() ){
-      cn = strrep(cn,"@","player."+name+":"+receivermod_objects[k]->get_name());
-      for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
-        connect_out(receivermod_objects[k]->get_port_index()+ch,cn+receivermod_objects[k]->get_channel_postfix(ch),true);
-    }
-    std::vector<std::string> cns(receivermod_objects[k]->get_connections());
-    for(uint32_t kc=0;kc<std::min((uint32_t)(cns.size()),
-                                  receivermod_objects[k]->get_num_channels());kc++){
-      if( cns[kc].size() )
-        connect_out(receivermod_objects[k]->get_port_index()+kc,
-                    cns[kc],true);
     }
   }
 }

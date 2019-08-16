@@ -31,6 +31,17 @@
 #include "errorhandling.h"
 #include "xmlconfig.h"
 
+#define QUICKHULL_1
+
+#ifdef QUICKHULL_1
+#include "quickhull/QuickHull.hpp"
+#include "quickhull/QuickHull.cpp"
+using namespace quickhull;
+#else
+#define CONVHULL_3D_ENABLE
+#include "convhull_3d/convhull_3d.h"
+#endif
+
 using namespace TASCAR;
 
 double TASCAR::drand()
@@ -1094,6 +1105,144 @@ std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n)
 {
   out << n.print();
   return out;
+}
+
+std::vector<pos_t> TASCAR::generate_icosahedron()
+{
+  std::vector<pos_t> m;
+  double phi((1.0+sqrt(5.0))/2.0);
+  m.push_back(pos_t(0,1,phi));
+  m.push_back(pos_t(0,-1,-phi));
+  m.push_back(pos_t(0,1,-phi));
+  m.push_back(pos_t(0,-1,phi));
+  m.push_back(pos_t(1,phi,0));
+  m.push_back(pos_t(1,-phi,0));
+  m.push_back(pos_t(-1,-phi,0));
+  m.push_back(pos_t(-1,phi,0));
+  m.push_back(pos_t(phi,0,1));
+  m.push_back(pos_t(-phi,0,1));
+  m.push_back(pos_t(phi,0,-1));
+  m.push_back(pos_t(-phi,0,-1));
+  return m;
+}
+
+#ifdef QUICKHULL_1
+uint32_t findindex2( const std::vector<Vector3<double>>& spklist, const Vector3<double>& vertex )
+{
+  for(uint32_t k=0;k<spklist.size();++k)
+    if( (spklist[k].x == vertex.x) &&
+        (spklist[k].y == vertex.y) &&
+        (spklist[k].z == vertex.z)) 
+      return k;
+  throw TASCAR::ErrMsg("Simplex index not found in list");
+  return spklist.size();
+}
+
+TASCAR::quickhull_t::quickhull_t( const std::vector<pos_t>& mesh )
+{
+  std::vector<Vector3<double>> spklist;
+  for( auto it=mesh.begin();it!=mesh.end();++it)
+    spklist.push_back( Vector3<double>(it->x,it->y,it->z));
+  QuickHull<double> qh;
+  auto hull = qh.getConvexHull( spklist, true, true );
+  auto indexBuffer = hull.getIndexBuffer();
+  if( indexBuffer.size() < 12 )
+    throw TASCAR::ErrMsg("Invalid convex hull.");
+  auto vertexBuffer = hull.getVertexBuffer();
+  for( uint32_t khull=0;khull<indexBuffer.size();khull+=3){
+    simplex_t sim;
+    sim.c1 = findindex2(spklist,vertexBuffer[indexBuffer[khull]]);
+    sim.c2 = findindex2(spklist,vertexBuffer[indexBuffer[khull+1]]);
+    sim.c3 = findindex2(spklist,vertexBuffer[indexBuffer[khull+2]]);
+    faces.push_back(sim);
+  }
+}
+#else
+
+uint32_t findindex2( const std::vector<TASCAR::pos_t>& spklist, const ch_vertex& vertex )
+{
+  for(uint32_t k=0;k<spklist.size();++k)
+    if( (spklist[k].x == vertex.x) &&
+        (spklist[k].y == vertex.y) &&
+        (spklist[k].z == vertex.z)) 
+      return k;
+  throw TASCAR::ErrMsg("Simplex index not found in list");
+  return spklist.size();
+}
+
+TASCAR::quickhull_t::quickhull_t( const std::vector<pos_t>& mesh )
+{
+  ch_vertex* vertices;
+  vertices = (ch_vertex*)malloc(mesh.size()*sizeof(ch_vertex));
+  size_t k(0);
+  for( auto it=mesh.begin();it!=mesh.end();++it){
+    vertices[k].x = it->x;
+    vertices[k].y = it->y;
+    vertices[k].z = it->z;
+    ++k;
+  }
+  int* faceIndices(NULL);
+  int nFaces(0);
+  convhull_3d_build(vertices, mesh.size(), &faceIndices, &nFaces);
+  for( int khull=0;khull<nFaces;++khull){
+    simplex_t sim;
+    //sim.c1 = faceIndices[khull];
+    //sim.c2 = faceIndices[khull+nFaces];
+    //sim.c3 = faceIndices[khull+2*nFaces];
+    sim.c1 = faceIndices[3*khull];
+    sim.c2 = faceIndices[3*khull+1];
+    sim.c3 = faceIndices[3*khull+2];
+    sim.c1 = findindex2(mesh,vertices[faceIndices[3*khull]]);
+    sim.c2 = findindex2(mesh,vertices[faceIndices[3*khull+1]]);
+    sim.c3 = findindex2(mesh,vertices[faceIndices[3*khull+2]]);
+    faces.push_back(sim);
+  }
+  free(vertices);
+  free(faceIndices);
+}
+#endif
+
+std::vector<pos_t> TASCAR::subdivide_and_normalize_mesh( std::vector<pos_t> mesh, uint32_t iterations )
+{
+  for( auto it=mesh.begin();it!=mesh.end();++it)
+    it->normalize();
+  for( uint32_t i=0;i<iterations;++i){
+    TASCAR::quickhull_t qh( mesh );
+    for( auto it=qh.faces.begin(); it!=qh.faces.end(); ++it ){
+      pos_t pn(mesh[it->c1]);
+      pn += mesh[it->c2];
+      pn += mesh[it->c3];
+      pn *= 1.0/3.0;
+      mesh.push_back(pn);
+    }
+    for( auto it=mesh.begin();it!=mesh.end();++it)
+      it->normalize();
+  }
+  return mesh;
+}
+
+bool operator==(const TASCAR::quickhull_t& h1,const TASCAR::quickhull_t& h2)
+{
+  if( h1.faces.size() != h2.faces.size() )
+    return false;
+  // see if all faces are also available in other mesh:
+  uint32_t k=0;
+  for( auto it=h1.faces.begin();it!=h1.faces.end();++it){
+    bool found(false);
+    for( auto it2=h2.faces.begin();it2!=h2.faces.end();++it2)
+      if( *it == *it2 )
+        found = true;
+    if( !found ){
+      return false;
+    }
+    ++k;
+  }
+  return true;
+}
+
+bool operator==(const TASCAR::quickhull_t::simplex_t& s1,const TASCAR::quickhull_t::simplex_t& s2)
+{
+  return (s1.c1==s2.c1) && (s1.c2==s2.c2) && (s1.c3==s2.c3);
 }
 
 

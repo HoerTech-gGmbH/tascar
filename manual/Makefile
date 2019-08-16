@@ -20,7 +20,7 @@ TEXINPUTS="./:../doc/:"
 FIGURES = filestructure.pdf creator.pdf
 #ap_sndfile.pdf 
 
-manual.pdf: $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex
+manual.pdf: $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex
 
 secmodules.tex: $(sort $(wildcard mod*.tex))
 	echo 'List of general purpose modules:\par\begin{itemize}' > $@
@@ -43,6 +43,22 @@ secapmodules.tex: $(sort $(wildcard apmod*.tex))
 	echo "" >> $@
 	echo "" >> $@
 	(for m in $(subst apmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:ap_$$m}\\index{$${m/_/\\_} (audio plugin)}";echo "\\input{apmod$$m.tex}"; done) >> $@
+
+secrecgeneric.tex: $(sort $(wildcard recgen*.tex))
+	echo 'List of generic receiver types:\par\begin{itemize}' > $@
+	(for m in $(subst recgen,,$(subst .tex,,$^)); do echo "\\item \\indrecgen[$$m]{$${m/_/\\_}}"; done) >> $@
+	echo '\end{itemize}' >> $@
+	echo "" >> $@
+	echo "" >> $@
+	(for m in $(subst recgen,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recgen_$$m}\\index{$${m/_/\\_} (receiver type)}";echo "\\input{recgen$$m.tex}"; done) >> $@
+
+secrecspeaker.tex: $(sort $(wildcard recspk*.tex))
+	echo 'List of speaker based receiver types:\par\begin{itemize}' > $@
+	(for m in $(subst recspk,,$(subst .tex,,$^)); do echo "\\item \\indrecspk[$$m]{$${m/_/\\_}}"; done) >> $@
+	echo '\end{itemize}' >> $@
+	echo "" >> $@
+	echo "" >> $@
+	(for m in $(subst recspk,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recspk_$$m}\\index{$${m/_/\\_} (speaker based receiver type)}";echo "\\input{recspk$$m.tex}"; done) >> $@
 
 %.pdf: %.eps
 	epstopdf $< -o $@

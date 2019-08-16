@@ -733,6 +733,17 @@ std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
   return value;
 }
 
+std::string TASCAR::vecstr2str(const std::vector<std::string>& s)
+{
+  std::string rv;
+  for( auto it=s.begin();it!=s.end();++it){
+    if( it != s.begin() )
+      rv+=" ";
+    rv+=*it;
+  }
+  return rv;
+}
+
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::levelmeter::weight_t& value)
 {
   std::string svalue(elem->get_attribute_value(name));

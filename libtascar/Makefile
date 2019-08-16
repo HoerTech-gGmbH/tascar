@@ -14,13 +14,13 @@ SOVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1
 # main targets:
 #
 OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
-  xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
-  filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o		\
-  scene.o render.o session_reader.o session.o jackclient.o		\
-  delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
-  viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
-  audioplugin.o levelmeter.o serviceclass.o alsamidicc.o		\
-  speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o
+  xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o							\
+  filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o				\
+  scene.o render.o session_reader.o session.o jackclient.o						\
+  delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o		\
+  viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o			\
+  audioplugin.o levelmeter.o serviceclass.o alsamidicc.o							\
+  speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o hoa.o
 
 DMXOBJECTS =  termsetbaud.o serialport.o dmxdriver.o
 
@@ -62,7 +62,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 CXXFLAGS += -fpic -I./build
 CPPFLAGS += -I./build
 #-L./ 
-EXTERNALS = jack libxml++-2.6 liblo sndfile alsa fftw3f
+EXTERNALS = jack libxml++-2.6 liblo sndfile alsa fftw3f gsl eigen3
 
 $(BUILD_GUIOBJECTS): EXTERNALS += gtkmm-3.0
 

@@ -365,6 +365,15 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
 }
 
 
+std::vector<TASCAR::pos_t> spk_array_t::get_positions() const
+{
+  std::vector<TASCAR::pos_t> pos;
+  for( auto it=begin();it!=end();++it)
+    pos.push_back(*it);
+  return pos;
+}
+
+
 /*
  * Local Variables:
  * mode: c++

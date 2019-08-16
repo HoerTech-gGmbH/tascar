@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="3">
+    <source>
+      <orientation>0 0 0 0
+      0.1249 0 0 0
+      0.1250 0 0 90
+      0.2499 0 0 90
+      0.2500 90 0 0
+      0.3749 90 0 0
+      0.3750 0 0 -90
+      0.4999 0 0 -90
+      0.5000 180 0 0
+      0.6249 180 0 0
+      0.6250 0 90 0
+      0.7499 0 90 0
+      0.7500 270 0 0
+      0.8749 270 0 0
+      0.8750 0 -90 0
+      1.0000 0 -90 0</orientation>
+      <sound x="1">
+	<plugins><pink level="70"/></plugins>
+      </sound>
+    </source>
+    <receiver type="hoa3d" order="1" method="pinv" dectype="basic" layout="6ch_3d.spk"/>
+  </scene>
+</session>

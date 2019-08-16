@@ -11,5 +11,9 @@ function doc = tascar_xml_open( ifname )
 		       'javax.xml.parsers.DocumentBuilderFactory');
   docBuilder = javaMethod('newDocumentBuilder',factory);
   % Open xml file:
+  sdir = fileparts(ifname);
+  if isempty(sdir)
+    ifname = [pwd(),filesep(),ifname];
+  end
   doc = javaMethod('parse',docBuilder,ifname);
   

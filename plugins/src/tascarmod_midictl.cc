@@ -81,7 +81,7 @@ void midictl_t::prepare(chunk_cfg_t& cf)
   routes.clear();
   if( session )
     ports = session->find_audio_ports( pattern );
-  for(std::vector<TASCAR::Scene::audio_port_t*>::iterator it=ports.begin();it!=ports.end();++it){
+  for(auto it=ports.begin();it!=ports.end();++it){
     TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(*it));
     if( !r ){
       TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(*it));

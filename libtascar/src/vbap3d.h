@@ -13,7 +13,7 @@ namespace TASCAR {
     /**
        \param spkarray Speaker array for which the encoder is generated
      */
-    vbap3d_t(const std::vector<spk_descriptor_t>& spkarray);
+    vbap3d_t(const std::vector<TASCAR::pos_t>& spkarray);
     virtual ~vbap3d_t();
     /**
        \brief Generate encoding weights for each speaker channel, based on unit vector of target direction

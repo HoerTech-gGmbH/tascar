@@ -11,7 +11,7 @@ function send_osc( host, port, addr, varargin )
 % 3.8.1.
 %
 % Author: Giso Grimm
-% Date: 6/2012, 5/2014
+% Date: 6/2012, 5/2014, 8/2019
 %
 % Depends on 'NetUtil.jar' from http://www.sciss.de/netutil/
 %
@@ -29,6 +29,10 @@ function send_osc( host, port, addr, varargin )
         addr = port;
         port = host.port;
         host = host.host;
+    end
+    if isempty(cell2mat(strfind(javaclasspath(),'netutil')))
+        javaaddpath([fileparts(fullfile(which(mfilename))),...
+                     filesep,'netutil-1.0.0.jar']);
     end
     dch = javaMethod('open','java.nio.channels.DatagramChannel');
     dch.configureBlocking( true );

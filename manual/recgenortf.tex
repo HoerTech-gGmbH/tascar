@@ -1,0 +1,19 @@
+ORTF stereo microphone simulation.
+\index{ORTF stereo microphone}\index{stereo}
+ 
+\begin{lstlisting}[numbers=none]
+<receiver type="ortf" f6db="3000" fmin="80" distance="0.17" angle="110"/>
+\end{lstlisting}
+
+This receiver implements a classical ORTF stereo microphone
+technique. The cardioid microphone pattern has a frequency dependency;
+the 6~dB cutoff frequency for 90 degrees is given by the attribute
+\indattr{f6db}. The attribute \indattr{fmin} defines the cutoff
+frequency for 180 degree sounds. The attributes \indattr{distance} and
+\indattr{angle} control the microphone geometry.
+
+Typical values for small diaphragms are \attr{f6db="3000"} and
+\attr{fmin="800"} (these are the default values since version
+0.172.2); for a higher directivity, use \attr{f6db="1000"} and
+\attr{fmin="60"} (default values of earlier versions).
+

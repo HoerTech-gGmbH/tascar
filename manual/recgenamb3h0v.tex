@@ -1,0 +1,14 @@
+Third order horizontal Ambisonics encoder, B-format (FuMa channel
+sequence ``wyxvuqp'' and normalization).
+
+Horizontal HOA:
+\begin{lstlisting}[numbers=none]
+<receiver type="amb3h0v"/>
+\end{lstlisting}
+$N=7$, $w_k=\left\{
+\begin{array}{cl}
+\sqrt{2} & k=0\\
+\cos(\frac{k+1}{2}\alpha) & k\, \textrm{odd}\\
+\sin(\frac{k}{2}\alpha) & k\, \textrm{even}
+\end{array}\right.
+$

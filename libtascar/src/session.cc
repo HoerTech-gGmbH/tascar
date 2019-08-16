@@ -677,33 +677,23 @@ std::vector<TASCAR::named_object_t> TASCAR::session_t::find_objects(const std::s
 
 std::vector<TASCAR::Scene::audio_port_t*> TASCAR::session_t::find_audio_ports(const std::vector<std::string>& pattern)
 {
-  std::vector<TASCAR::Scene::audio_port_t*> retv;
+  std::vector<TASCAR::Scene::audio_port_t*> all_ports;
   // first get all audio ports from scenes:
   for(std::vector<TASCAR::scene_render_rt_t*>::iterator sit=scenes.begin();sit!=scenes.end();++sit){
     std::vector<TASCAR::Scene::object_t*> objs((*sit)->get_objects());
-    std::string base("/"+(*sit)->name+"/");
+    //std::string base("/"+(*sit)->name+"/");
     for(std::vector<TASCAR::Scene::object_t*>::iterator it=objs.begin();it!=objs.end();++it){
       // check if this object is derived from audio_port_t:
       TASCAR::Scene::audio_port_t* p_ap(dynamic_cast<TASCAR::Scene::audio_port_t*>(*it));
-      if( p_ap ){
-        // check if name is matching:
-        std::string name(p_ap->get_ctlname());
-        for( std::vector<std::string>::const_iterator it=pattern.begin();it!=pattern.end();++it)
-          if( fnmatch(it->c_str(),name.c_str(),FNM_PATHNAME) == 0 )
-            retv.push_back( p_ap );
-      }
+      if( p_ap )
+        all_ports.push_back(p_ap );
       // If this is a source, then check sound vertices:
       TASCAR::Scene::src_object_t* p_src(dynamic_cast<TASCAR::Scene::src_object_t*>(*it));
       if( p_src ){
         for( std::vector<TASCAR::Scene::sound_t*>::iterator it=p_src->sound.begin(); it!=p_src->sound.end();++it ){
           TASCAR::Scene::audio_port_t* p_ap(dynamic_cast<TASCAR::Scene::audio_port_t*>(*it));
-          if( p_ap ){
-            // check if name is matching:
-            std::string name(p_ap->get_ctlname());
-            for( std::vector<std::string>::const_iterator it=pattern.begin();it!=pattern.end();++it)
-              if( fnmatch(it->c_str(),name.c_str(),FNM_PATHNAME) == 0 )
-                retv.push_back( p_ap );
-          }
+          if( p_ap )
+            all_ports.push_back( p_ap );
         }
       }
     }
@@ -711,12 +701,18 @@ std::vector<TASCAR::Scene::audio_port_t*> TASCAR::session_t::find_audio_ports(co
   // now test for all modules which implement audio_port_t:
   for(std::vector<TASCAR::module_t*>::iterator it=modules.begin();it!= modules.end();++it){
     TASCAR::Scene::audio_port_t* p_ap(dynamic_cast<TASCAR::Scene::audio_port_t*>((*it)->libdata));
-    if( p_ap ){
+    if( p_ap )
+      all_ports.push_back( p_ap );
+  }
+  std::vector<TASCAR::Scene::audio_port_t*> retv;
+  // first, iterate over all pattern elements:
+  for( auto i_pattern=pattern.begin();i_pattern!=pattern.end();++i_pattern){
+    for( auto p_ap=all_ports.begin();p_ap!=all_ports.end();++p_ap){
       // check if name is matching:
-      std::string name(p_ap->get_ctlname());
-      for( std::vector<std::string>::const_iterator it=pattern.begin();it!=pattern.end();++it)
-        if( fnmatch(it->c_str(),name.c_str(),FNM_PATHNAME) == 0 )
-          retv.push_back( p_ap );
+      std::string name((*p_ap)->get_ctlname());
+      if( (fnmatch(i_pattern->c_str(),name.c_str(),FNM_PATHNAME) == 0)||
+          ( *i_pattern == "*" ) )
+        retv.push_back( *p_ap );
     }
   }
   return retv;

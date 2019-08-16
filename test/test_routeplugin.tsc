@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session>
+<session license="CC0">
   <modules>
     <route channels="2" name="pink">
       <plugins>

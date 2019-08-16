@@ -120,6 +120,7 @@ namespace TASCAR {
     void add_bool(const std::string& path,bool *data);
     void add_int(const std::string& path,int32_t *data);
     void add_uint(const std::string& path,uint32_t *data);
+    void add_string( const std::string& path, std::string *data );
     void activate();
     void deactivate();
     std::string list_variables() const;

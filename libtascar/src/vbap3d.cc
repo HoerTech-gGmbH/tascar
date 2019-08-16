@@ -1,34 +1,36 @@
-#include "quickhull/QuickHull.hpp"
-#include "quickhull/QuickHull.cpp"
+//#include "quickhull/QuickHull.hpp"
+//#include "quickhull/QuickHull.cpp"
 
 #include "errorhandling.h"
 #include "vbap3d.h"
 
-using namespace quickhull;
+#include <string.h>
+
+//using namespace quickhull;
 using namespace TASCAR;
 
-bool vector_is_equal( const std::vector<IndexType>& a, const std::vector<IndexType>& b )
-{
-  if( a.size() != b.size() )
-    return false;
-  for( uint32_t k=0;k<a.size();++k)
-    if( a[k] != b[k] )
-      return false;
-  return true;
-}
+//bool vector_is_equal( const std::vector<IndexType>& a, const std::vector<IndexType>& b )
+//{
+//  if( a.size() != b.size() )
+//    return false;
+//  for( uint32_t k=0;k<a.size();++k)
+//    if( a[k] != b[k] )
+//      return false;
+//  return true;
+//}
 
-uint32_t findindex( const std::vector<Vector3<double>>& spklist, const Vector3<double>& vertex )
-{
-  for(uint32_t k=0;k<spklist.size();++k)
-    if( (spklist[k].x == vertex.x) &&
-        (spklist[k].y == vertex.y) &&
-        (spklist[k].z == vertex.z)) 
-      return k;
-  throw TASCAR::ErrMsg("Simplex index not found in list");
-  return spklist.size();
-}
+//uint32_t findindex( const std::vector<Vector3<double>>& spklist, const Vector3<double>& vertex )
+//{
+//  for(uint32_t k=0;k<spklist.size();++k)
+//    if( (spklist[k].x == vertex.x) &&
+//        (spklist[k].y == vertex.y) &&
+//        (spklist[k].z == vertex.z)) 
+//      return k;
+//  throw TASCAR::ErrMsg("Simplex index not found in list");
+//  return spklist.size();
+//}
 
-vbap3d_t::vbap3d_t(const std::vector<spk_descriptor_t>& spkarray)
+vbap3d_t::vbap3d_t(const std::vector<TASCAR::pos_t>& spkarray)
   : numchannels(spkarray.size()),
     channelweights(new float[numchannels]),
     weights(channelweights)
@@ -36,34 +38,32 @@ vbap3d_t::vbap3d_t(const std::vector<spk_descriptor_t>& spkarray)
   if( spkarray.size() < 3 )
     throw TASCAR::ErrMsg("At least three loudspeakers are required for 3D-VBAP.");
   // create a quickhull point list from speaker layout:
-  std::vector<Vector3<double>> spklist;
+  std::vector<TASCAR::pos_t> spklist;
   for(uint32_t k=0;k<spkarray.size();++k)
-    spklist.push_back( Vector3<double>(spkarray[k].unitvector.x,spkarray[k].unitvector.y,spkarray[k].unitvector.z));
+    spklist.push_back( spkarray[k].normal() );
   // calculate the convex hull:
-  QuickHull<double> qh;
-  auto hull = qh.getConvexHull( spklist, true, true );
-  auto indexBuffer = hull.getIndexBuffer();
-  // test degenerated convex hull:
-  std::vector<Vector3<double>> spklist2(spklist);
-  spklist2.push_back( Vector3<double>(0,0,0) );
-  spklist2.push_back( Vector3<double>(0.1,0,0) );
-  spklist2.push_back( Vector3<double>(0,0.1,0) );
-  spklist2.push_back( Vector3<double>(0,0,0.1) );
-  QuickHull<double> qh2;
-  auto hull2 = qh2.getConvexHull( spklist2, true, true );
-  auto indexBuffer2 = hull2.getIndexBuffer();
-  if( !vector_is_equal(indexBuffer,indexBuffer2) )
+  TASCAR::quickhull_t qh( spklist );
+  std::vector<TASCAR::pos_t> spklist2(spklist);
+  spklist2.push_back( TASCAR::pos_t(0,0,0) );
+  spklist2.push_back( TASCAR::pos_t(0.1,0,0) );
+  spklist2.push_back( TASCAR::pos_t(0,0.1,0) );
+  spklist2.push_back( TASCAR::pos_t(0,0,0.1) );
+  TASCAR::quickhull_t qh2( spklist2 );
+  if( !(qh == qh2) ){
+    //DEBUG(qh.faces.size());
+    //DEBUG(qh2.faces.size());
+    //for( uint32_t k=0;k<std::min(qh.faces.size(),qh2.faces.size());++k){
+    //  std::cout << k << " " <<
+    //    qh.faces[k].c1 << ","<< qh.faces[k].c2 << ","<< qh.faces[k].c3 << "  " <<
+    //    qh2.faces[k].c1 << ","<< qh2.faces[k].c2 << ","<< qh2.faces[k].c3 << std::endl;
+    //}
     throw TASCAR::ErrMsg("Loudspeaker layout is flat (not a 3D layout?).");
-  auto vertexBuffer = hull.getVertexBuffer();
-  if( indexBuffer.size() < 12 )
-      throw TASCAR::ErrMsg("Invalid convex hull.");
-  // identify channel numbers of simplex vertices and store inverted
-  // loudspeaker matrices:
-  for( uint32_t khull=0;khull<indexBuffer.size();khull+=3){
+  }
+  for( auto it=qh.faces.begin();it!=qh.faces.end();++it){
     simplex_t sim;
-    sim.c1 = findindex(spklist,vertexBuffer[indexBuffer[khull]]);
-    sim.c2 = findindex(spklist,vertexBuffer[indexBuffer[khull+1]]);
-    sim.c3 = findindex(spklist,vertexBuffer[indexBuffer[khull+2]]);
+    sim.c1 = it->c1;
+    sim.c2 = it->c2;
+    sim.c3 = it->c3;
     double l11(spklist[sim.c1].x);
     double l12(spklist[sim.c1].y);
     double l13(spklist[sim.c1].z);

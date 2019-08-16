@@ -9,7 +9,12 @@ path \verb!/savegains/save!.
 %
 The same file can be restored by sending an empty OSC message to the
 path \verb!/savegains/restore!.
+%
+To switch between different gain settings, the file name can be
+changed remotely via OSC.
 
 \begin{tscattributes}
-\attr{path} & Path prefix of output file name \\
+\attr{pattern}  & Pattern of routes to be saved (default: ``*'') \\
+\attr{filename} & File name (default: ``savedgains'')            \\
+\attr{path}     & Path prefix of output file name                \\
 \end{tscattributes}

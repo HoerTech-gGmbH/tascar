@@ -90,7 +90,7 @@ void midicc2osc_t::emit_event(int channel, int param, int value)
   for(uint32_t k=0;k<controllers_.size();++k){
     if( controllers_[k] == ctl ){
       oscmsgargv[k]->f = min+value*(max-min)/127;
-      //data[k] = value*scale;
+      lo_send_message( target, path.c_str(), oscmsg );
       known = true;
     }
   }
@@ -99,8 +99,6 @@ void midicc2osc_t::emit_event(int channel, int param, int value)
     snprintf(ctmp,256,"%d/%d: %d",channel,param,value);
     ctmp[255] = 0;
     std::cout << ctmp << std::endl;
-  }else{
-    lo_send_message( target, path.c_str(), oscmsg );
   }
 }
 

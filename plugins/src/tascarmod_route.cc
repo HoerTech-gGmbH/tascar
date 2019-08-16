@@ -12,13 +12,15 @@ class routemod_t : public TASCAR::module_base_t,
 public:
   routemod_t( const TASCAR::module_cfg_t& cfg );
   ~routemod_t();
-  virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&, 
+  virtual int process(jack_nframes_t,
+                      const std::vector<float*>&,
+                      const std::vector<float*>&, 
                       uint32_t tp_frame, bool tp_rolling);
   void prepare( chunk_cfg_t& cf );
   void release( );
 private:
   uint32_t channels;
-  std::string connect_out;
+  std::vector<std::string> connect_out;
   double levelmeter_tc;
   TASCAR::levelmeter::weight_t levelmeter_weight;
   TASCAR::plugin_processor_t plugins;
@@ -69,8 +71,11 @@ routemod_t::routemod_t( const TASCAR::module_cfg_t& cfg )
     add_output_port(ctmp);
     addmeter( get_srate() );
   }
+  std::string pref(session->get_prefix());
+  session->set_prefix("/"+get_name());
   plugins.add_variables( session );
   plugins.add_licenses( session );
+  session->set_prefix(pref);
   activate();
 }
 
@@ -84,11 +89,13 @@ void routemod_t::prepare( chunk_cfg_t& cf )
   plugins.prepare(cf);
   TASCAR::module_base_t::prepare(cf);
   TASCAR::Scene::route_t::prepare(cf);
-  std::string con(get_connect());
+  std::vector<std::string> con(get_connect());
+  for( auto it=con.begin();it!=con.end();++it)
+    *it = TASCAR::env_expand(*it);
   if( !con.empty() ){
-    std::vector<std::string> ports(get_port_names_regexp( TASCAR::env_expand(con) ) );
+    std::vector<std::string> ports( get_port_names_regexp( con ) );
     if( ports.empty() )
-      TASCAR::add_warning("No port \""+con+"\" found.");
+      TASCAR::add_warning("No port \""+TASCAR::vecstr2str(con)+"\" found.");
     uint32_t ip(0);
     for( auto it=ports.begin();it!=ports.end();++it){
       if( ip < get_num_input_ports() ){
@@ -97,10 +104,12 @@ void routemod_t::prepare( chunk_cfg_t& cf )
       }
     }
   }
+  for( auto it=connect_out.begin();it!=connect_out.end();++it)
+    *it = TASCAR::env_expand(*it);
   if( !connect_out.empty() ){
-    std::vector<std::string> ports(get_port_names_regexp( TASCAR::env_expand(connect_out), JackPortIsInput ) );
+    std::vector<std::string> ports(get_port_names_regexp( connect_out, JackPortIsInput ) );
     if( ports.empty() )
-      TASCAR::add_warning("No input port \""+connect_out+"\" found.");
+      TASCAR::add_warning("No input port matches \""+TASCAR::vecstr2str(connect_out)+"\".");
     uint32_t ip(0);
     for( auto it=ports.begin();it!=ports.end();++it){
       if( ip < get_num_output_ports() ){

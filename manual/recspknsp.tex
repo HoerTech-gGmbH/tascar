@@ -1,0 +1,24 @@
+Nearest speaker selection, i.e., always a single speaker is used to
+render a virtual sound source. In case of moving sources or receivers,
+the transition between two speakers will be linearly interpolated
+within one audio block.
+
+\begin{lstlisting}[numbers=none]
+<receiver type="nsp"><speaker az="0"/>...</receiver>
+\end{lstlisting}
+%
+This receiver also requires defining the position of the playback
+channels and we can do it in the following way (see
+\verb!example_nearest.tsc!):
+\tscexample[linerange={4-7},firstnumber=4]{example_nearest}
+
+\tscexampleext[linerange={2-7},firstnumber=2]{nsp.spk}
+
+If we load a scene with such a receiver in \tascar{}, we will see all the
+specified channels as an output of the rendering stage in the Jack
+Audio. 
+%
+However, this time, for each source there is only one channel which is
+active, i.e. the one for which there is the lowest angular distance
+from the loudspeaker to the source.
+

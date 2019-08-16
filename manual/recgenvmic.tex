@@ -1,0 +1,25 @@
+Generic first-order microphone, directivity can be controlled between
+omni and figure-of-eight.
+
+\begin{lstlisting}[numbers=none]
+<receiver type="vmic" a="0"/>
+\end{lstlisting}
+
+The virtual microphone receiver type has a single output channel. The
+driving weight is
+\begin{equation}
+w = 1 + a (\tilde{p}_{rel,x} - 1).
+\end{equation}
+It's directivity pattern can be controlled between omni-directional and
+figure-of-eight with the directivity coefficient $a$; with $a=0$ this
+is an omni-directional microphone, with $a=\frac12$ a standard
+cardioid, and with $a=1$ a figure-of-eight.
+%
+The diffuse decoding matrix is
+\begin{equation}
+\mathbf{D} = \left( \sqrt{2}(1-a) \quad a \quad 0\quad  0 \right).
+\end{equation}
+The factor \(\sqrt{2}\) of the \(w\)-channel is needed to account for
+the Furse-Malham normalization of the diffuse signals.
+
+

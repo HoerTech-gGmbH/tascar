@@ -110,7 +110,6 @@ namespace TASCAR {
     session_core_t();
     session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
     // configuration variables:
-    //std::string name;
     double duration;
     bool loop;
     double levelmeter_tc;

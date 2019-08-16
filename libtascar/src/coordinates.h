@@ -644,10 +644,27 @@ namespace TASCAR {
     zyx_euler_t orientation;
   };
 
+  class quickhull_t {
+  public:
+    struct simplex_t {
+      size_t c1, c2, c3;
+    };
+    quickhull_t( const std::vector<pos_t>& pos );
+    std::vector<simplex_t> faces;
+  };
+
+  std::vector<pos_t> generate_icosahedron();
+
+  std::vector<pos_t> subdivide_and_normalize_mesh( std::vector<pos_t> mesh, uint32_t iterations );
+  
+
 }
 
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);
 std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n);
+
+bool operator==(const TASCAR::quickhull_t& h1,const TASCAR::quickhull_t& h2);
+bool operator==(const TASCAR::quickhull_t::simplex_t& s1,const TASCAR::quickhull_t::simplex_t& s2);
 
 #endif
 

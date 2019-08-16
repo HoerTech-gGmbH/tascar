@@ -642,7 +642,6 @@ void face_object_t::geometry_update(double t)
 
 audio_port_t::audio_port_t(xmlpp::Element* xmlsrc, bool is_input_)
   : xml_element_t(xmlsrc),ctlname(""),
-    connect(""),
     port_index(0),
     is_input(is_input_),
     gain(1),

@@ -10,16 +10,23 @@ public:
   static int osc_restore(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   void restore();
 private:
+  std::vector<std::string> pattern;
   std::string path;
+  std::string filename;
   lo_message m;
 };
 
 savegains_t::savegains_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
+    pattern(1,"*"),
+    filename("savedgains"),
     m(lo_message_new())
 {
   lo_message_add_float(m,0.0f);
   GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE(filename);
+  GET_ATTRIBUTE(pattern);
+  session->add_string("/savegains/filename",&filename);
   session->add_method("/savegains/save","",savegains_t::osc_save,this);
   session->add_method("/savegains/restore","",savegains_t::osc_restore,this);
   session->add_method("/savegains/save","f",savegains_t::osc_save,this);
@@ -46,15 +53,13 @@ void savegains_t::save()
       if( fname[fname.size()-1] != '/' )
         fname = fname+"/";
     }
-    fname = fname+"savedgains";
+    fname = fname+filename;
     try{
       std::ofstream ofs(fname.c_str());
       if( ofs.good() ){
-        for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=session->scenes.begin();it!=session->scenes.end();++it){
-          for(std::vector<TASCAR::Scene::audio_port_t*>::iterator pit=(*it)->audioports.begin();pit!=(*it)->audioports.end();++pit){
-            ofs << (*pit)->get_ctlname() << "/gain " << (*pit)->get_gain_db() << "\n";
-          }
-        }
+        auto ports(session->find_audio_ports( pattern ));
+        for( auto pit=ports.begin();pit!=ports.end();++pit)
+          ofs << (*pit)->get_ctlname() << "/gain " << (*pit)->get_gain_db() << "\n";
       }else{
         throw TASCAR::ErrMsg("Unable to create file \""+fname+"\".");
       }
@@ -83,7 +88,7 @@ void savegains_t::restore()
       if( fname[fname.size()-1] != '/' )
         fname = fname+"/";
     }
-    fname = fname+"savedgains";
+    fname = fname+filename;
     try{
       std::ifstream ifs(fname.c_str());
       if( !ifs.good() )

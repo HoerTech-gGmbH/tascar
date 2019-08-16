@@ -1,0 +1,17 @@
+Cardioid microphone simulation.
+
+\begin{lstlisting}[numbers=none]
+<receiver type="cardioid"/>
+\end{lstlisting}
+  
+If we use a cardioidal receiver, then sources are multiplied with a
+different weight (depending on the direction of arrival, according to
+cardioidal directivity pattern) and at the output of the renderer we
+will also get just one channel - a summation of sources coming from
+different directions multiplied with different weights.
+ 
+$N=1$, $w_n=\frac{1}{2}(cos(\alpha) +1)$,\\
+where \(w(n)\) depends on
+the angle between the source and the receiver, $\alpha$ (direction
+from which the source is coming).
+

@@ -127,6 +127,7 @@ namespace TASCAR {
 
   std::vector<TASCAR::pos_t> str2vecpos(const std::string& s);
   std::vector<std::string> str2vecstr(const std::string& s);
+  std::string vecstr2str(const std::vector<std::string>& s);
   std::vector<double> str2vecdouble(const std::string& s);
   std::vector<float> str2vecfloat(const std::string& s);
   std::vector<int32_t> str2vecint(const std::string& s);

@@ -97,7 +97,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
       for(uint32_t kf=0;kf<cf.n_fragment;++kf)
         for(uint32_t kc=0;kc<nch_out;++kc)
           sf_out_buf[kc+nch_out*kf] = a_out[kc][kf];
-      sf_out.writef_float(sf_out_buf,cf.n_fragment);
+      sf_out.writef_float(sf_out_buf, n_in );
       // increment time:
       if( b_dynamic ){
         tp.session_time_samples += cf.n_fragment;

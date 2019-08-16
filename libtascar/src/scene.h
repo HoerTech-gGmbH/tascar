@@ -198,7 +198,7 @@ namespace TASCAR {
       uint32_t get_port_index() const { return port_index;};
       void set_ctlname(const std::string& pn) { ctlname  = pn;};
       std::string get_ctlname() const { return ctlname;};
-      std::string get_connect() const { return connect;};
+      std::vector<std::string> get_connect() const { return connect;};
       float get_gain() const {
         if( is_input )
           return gain*(2e-5f*caliblevel);
@@ -212,7 +212,7 @@ namespace TASCAR {
       void set_inv( bool inv );
     private:
       std::string ctlname;
-      std::string connect;
+      std::vector<std::string> connect;
       uint32_t port_index;
       const bool is_input;
     public:

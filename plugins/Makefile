@@ -9,7 +9,7 @@ include ../rules.mk
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
-  hoa2d_fuma_hos fakebf wfs
+  hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc
 
 SOURCES = omni cardioidmod door generic1storder
 
@@ -26,7 +26,7 @@ glabsensors
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
-  level2osc
+  level2osc const noise
 
 GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
   qualisys jackstatus
@@ -101,6 +101,8 @@ build/tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 build/tascar_ap_speechactivity.so: LDLIBS+=-llsl64
 build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
 build/tascar_ltcgen.so: EXTERNALS+=ltc
+build/tascarreceiver_hoa3d_enc.so: EXTERNALS+=gsl
+build/tascarreceiver_hoa3d.so: EXTERNALS+=gsl eigen3
 build/tascar_hossustain.so: EXTERNALS += fftw3f
 build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl64
 build/tascar_lightctl.so: LDLIBS+=-ltascardmx

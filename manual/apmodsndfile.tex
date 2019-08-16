@@ -32,10 +32,19 @@ channels not available in the sound file.
   \indattr{mute}        & Mute flag                                                              \\
 \end{tscattributes}
 %
-In the level omde ``rms'', the RMS value of the first used channel
+In the level mode ``rms'', the RMS value of the first used channel
 will be used for adjusting the level, i.e., all channels will be
 scaled with the same value such that the first channel has the
 level \attr{level}.
+
+Level mode ``rms'' scales the signal so the RMS of the first channel corresponds to \attr{level}.
+
+Level mode ``peak'' scales the signal so the peak over all channels corresponds to \attr{level}.
+
+Level mode ``calib'' scales the signal by \attr{level} minus 93.979~dB.
+
+93.979~dB corresponds internally to a full-scale signal.
+
 
 See also Figure \ref{fig:ap_sndfile} for more deatils on the time and position conventions.
 

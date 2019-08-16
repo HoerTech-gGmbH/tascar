@@ -398,6 +398,24 @@ TEST(pos_t,rot_xyz)
   ASSERT_NEAR( -1.0, r.y, 1e-9 );
   ASSERT_NEAR( 0.0, r.z, 1e-9 );
 }
+
+TEST(pos_t,subdivide_mesh)
+{
+  std::vector<TASCAR::pos_t> mesh(TASCAR::generate_icosahedron());
+  EXPECT_EQ( 12u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  // one new vertex in every face, makes 12 old + 20 new vertices:
+  EXPECT_EQ( 32u, mesh.size() );
+  for( auto it=mesh.begin();it!=mesh.end();++it){
+    ASSERT_NEAR( 1.0, it->norm(), 1e-9 );
+  }
+  mesh = TASCAR::generate_icosahedron();
+  EXPECT_EQ( 12u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 2 );
+  EXPECT_EQ( 92u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  EXPECT_EQ( 272u, mesh.size() );
+}
  
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"

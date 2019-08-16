@@ -38,7 +38,7 @@ int osc_set_hsv(const char *path, const char *types, lo_arg **argv, int argc, lo
 {
   if( user_data  ){
     std::vector<float> *data((std::vector<float> *)user_data);
-    if( (argc==4) && (argc == (int)(data->size())) ){
+    if( (argc==4) && (argc <= (int)(data->size())) ){
       float h(fmodf(argv[0]->f,360.0f));
       float s(argv[1]->f);
       float v(argv[2]->f);
@@ -62,7 +62,9 @@ int osc_set_hsv(const char *path, const char *types, lo_arg **argv, int argc, lo
       (*data)[0] = (rgb_d.x+m)*255.0;
       (*data)[1] = (rgb_d.y+m)*255.0;
       (*data)[2] = (rgb_d.z+m)*255.0;
-      (*data)[3] = d;
+      (*data)[data->size()-1] = d;
+      if( data->size() > (size_t)argc )
+        (*data)[3] = m*255.0;
     }
   }
   return 0;
@@ -289,9 +291,11 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
       }
     }
     for(uint32_t c=0;c<channels;++c){
-      if( fixtureval[k].calibtab[c].empty() )
+      if( fixtureval[k].calibtab[c].empty() ){
         //fixtureval[k].calibtab[c][0] = 1.0;
         fixtureval[k].calibtab[c][0] = 0.0;
+        fixtureval[k].calibtab[c][255] = 255.0;
+      }
     }
     lampdmx.resize(channels);
     for(uint32_t c=0;c<channels;++c){
@@ -466,7 +470,7 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     srv->add_float( "/"+objects_[ko].obj->get_name()+"/w", &(objval[ko].w) );
     srv->add_vector_float( "/"+objects_[ko].obj->get_name()+"/wfade", &(objval[ko].wfade) );
     srv->add_method( "/"+objects_[ko].obj->get_name()+"/method", "i", osc_setmethod, &(objval[ko].method));
-    if( channels == 3 )
+    if( channels >= 3 )
       srv->add_method( "/"+objects_[ko].obj->get_name()+"/hsv", "ffff", osc_set_hsv, &(objval[ko].fade) );
   }
   for(uint32_t k=0;k<fixtureval.size();++k){
@@ -479,7 +483,7 @@ void lightscene_t::add_variables( TASCAR::osc_server_t* srv )
     label = "/" + label + "/";
     srv->add_vector_float( label+"dmx", &(fixtureval[k].dmx) );
     srv->add_vector_float( label+"fade", &(fixtureval[k].fade) );
-    if( channels == 3 )
+    if( channels >= 3 )
       srv->add_method( label+"hsv", "ffff", osc_set_hsv, &(fixtureval[k].fade) );
   }
 }

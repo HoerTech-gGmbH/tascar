@@ -95,6 +95,7 @@ namespace TASCAR {
     void prepare( chunk_cfg_t& );
     xml_element_t elayout;
     void validate_attributes(std::string& msg) const;
+    std::vector<TASCAR::pos_t> get_positions() const;
   private:
     double rmax;
     double rmin;
