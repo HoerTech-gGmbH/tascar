@@ -1137,9 +1137,10 @@ and may help to visualize the role of the receiver.
   \label{fig:renderer}
 \end{figure}
 
-If the \attr{volumetric} attribute defines a non-zero volume, then all
-sources within the receiver volume box are rendered with the same
-gain (volumetric rendering).
+If the \attr{volumetric}\index{volumetric rendering}\label{sec:volumetric}
+attribute defines a non-zero volume, then all sources within the
+receiver volume box are rendered with the same gain (volumetric
+rendering).
 %
 An average distance of $(\frac18 V)^{1/3}$ with the volume $V$ is
 assumed, or if \attr{avgdist} is provided, then the provided value is
@@ -1446,6 +1447,45 @@ processing function of the render format.
 \input{secapmodules.tex}
 
 \clearpage
+
+\section{Adding diffuse reverberation}\label{sec:reverb}
+
+\tascar{} is not capable of rendering physically or perceptually
+correct diffuse or late reverberation.
+%
+However, it is still possible to add diffuse reverberation by means of
+external tools, e.g., feedback delay networks (FDN) or convolution
+tools.
+%
+To add diffuse reverberation, a room microphone needs to be added to
+the scene, configured to volumetric mode (see section
+\ref{sec:volumetric}, page \pageref{sec:volumetric}), and configured
+to exclude diffuse sources from rendering (attribute
+\attr{diffuse="false"}), see also example file \verb!example_diffreverb.tsc!:
+%
+\tscexamplepriv[linerange={40-42},firstnumber=40]{example_diffreverb}
+%
+The output of the reverberation tool needs to be in B-format,
+Furse-Malham normalization and channel order (wxyz). This output is
+handled in \tascar{} the same way as any other diffuse sound field
+(see Section \ref{sec:diffuse} on page \pageref{sec:diffuse}):
+%
+\tscexamplepriv[linerange={34-36},firstnumber=34]{example_diffreverb}
+%
+The appropriate reverberation tool can be started using the
+\elem{system} module, and connections can be made using \elem{connect}
+elements at the end of the session file:
+%
+\tscexamplepriv[linerange={44-50},firstnumber=44]{example_diffreverb}
+%
+The gain may need to be adjusted according to \citet{Grimm2015c}.
+%
+It is recommended to validate the resulting outcome both, perceptually
+and by measuring the resulting impulse responses.
+%
+The GNU Octave/MATLAB tools provided with \tascar{} should be
+sufficient in most cases (e.g., \verb!t60.m!, \verb!iacc.m!,
+\verb!plot_t30.m!, \verb!tascar_ir_measure.m!).
 
 \section{Calibration and level metering}\index{calibration}\index{level}
 
