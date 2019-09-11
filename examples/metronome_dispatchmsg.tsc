@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene/>
+  <modules>
+    <route name="metronome" connect_out="system:playback_[12]">
+      <plugins>
+	<metronome/>
+      </plugins>
+    </route>
+  </modules>
+</session>

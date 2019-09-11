@@ -198,10 +198,12 @@ bool tascar_window_t::on_timeout_statusbar()
           TASCAR::scene_render_rt_t* scene(session->scenes[selected_scene]);
           TASCAR::render_profiler_t prof(scene->loadaverage);
           prof.normalize(prof.t_postproc);
-          sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d  | load: %1.1f%% (init: %1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: %1.1f%%  postproc: %1.1f%%)",
+          sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: %1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: %1.1f%%  postproc: %1.1f%%)",
                   (long int)(session->scenes.size()),
                   session->get_active_pointsources(),session->get_total_pointsources(),
                   session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields(),
+                  scene->get_cpu_load(),
+                  scene->name.c_str(),
                   100.0*scene->loadaverage.t_postproc,
                   100.0*prof.t_init,
                   100.0*(prof.t_geo-prof.t_init),

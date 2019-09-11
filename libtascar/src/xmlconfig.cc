@@ -920,6 +920,40 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data,load_type_t t)
     throw TASCAR::ErrMsg("Unable to parse document.");
 }
 
+TASCAR::msg_t::msg_t( xmlpp::Element* e )
+  : TASCAR::xml_element_t(e),
+    msg(lo_message_new())
+{
+  GET_ATTRIBUTE(path);
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if( sne ){
+      TASCAR::xml_element_t tsne(sne);
+      if( sne->get_name() == "f" ){
+        double v(0);
+        tsne.get_attribute("v",v);
+        lo_message_add_float(msg,v);
+      }
+      if( sne->get_name() == "i" ){
+        int32_t v(0);
+        tsne.get_attribute("v",v);
+        lo_message_add_int32(msg,v);
+      }
+      if( sne->get_name() == "s" ){
+        std::string v("");
+        tsne.get_attribute("v",v);
+        lo_message_add_string(msg,v.c_str());
+      }
+    }
+  }
+}
+
+TASCAR::msg_t::~msg_t()
+{
+  lo_message_free(msg);
+}
+
 
 /*
  * Local Variables:

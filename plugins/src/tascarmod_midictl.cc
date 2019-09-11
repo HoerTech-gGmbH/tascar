@@ -48,12 +48,14 @@ private:
   std::vector<TASCAR::Scene::route_t*> routes;
   std::thread srv;
   bool run_service;
+  bool upload;
 };
 
 midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
   : midictl_vars_t( cfg ),
     TASCAR::midi_ctl_t( name ),
-    run_service(true)
+  run_service(true),
+  upload(false)
 {
   for(uint32_t k=0;k<controllers.size();++k){
     size_t cpos(controllers[k].find("/"));
@@ -72,6 +74,7 @@ midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
     connect_input(connect);
     connect_output(connect);
   }
+  session->add_bool_true(std::string("/")+name+"/upload",&upload);
   srv = std::thread(&midictl_t::send_service,this);
 }
 
@@ -120,7 +123,7 @@ void midictl_t::send_service()
           g *= 127/(max-min);
           g = std::max(0.0f,std::min(127.0f,g));
           uint8_t v(g);
-          if( v != values[k] ){
+          if( (v != values[k]) || upload ){
             values[k] = v;
             int channel(controllers_[k] >> 8);
             int param(controllers_[k] & 0xff);
@@ -131,7 +134,7 @@ void midictl_t::send_service()
         uint32_t k1=k+ports.size();
         if( routes[k] && (k1 < controllers_.size()) ){
           uint8_t v(127*routes[k]->get_mute());
-          if( v != values[k1] ){
+          if( (v != values[k1]) || upload ){
             values[k1] = v;
             int channel(controllers_[k1] >> 8);
             int param(controllers_[k1] & 0xff);
@@ -139,7 +142,13 @@ void midictl_t::send_service()
           }
         }
       }
+      upload = false;
     }
+  }
+  for( uint32_t k=0;k<controllers_.size();++k){
+    int channel(controllers_[k] >> 8);
+    int param(controllers_[k] & 0xff);
+    send_midi( channel, param, 0 );
   }
 }
 

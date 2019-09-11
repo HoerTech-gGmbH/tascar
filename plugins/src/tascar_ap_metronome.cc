@@ -1,6 +1,17 @@
 #include "audioplugin.h"
 #include "filterclass.h"
 
+
+static int osc_set_message(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data ){
+    TASCAR::msg_t* tmsg((TASCAR::msg_t*)user_data);
+    lo_message_free( tmsg->msg );
+    tmsg->msg = lo_message_clone( msg );
+  }
+  return 0;
+}
+
 class metronome_t : public TASCAR::audioplugin_base_t {
 public:
   metronome_t( const TASCAR::audioplugin_cfg_t& cfg );
@@ -22,6 +33,7 @@ private:
   double qo;
   bool sync;
   bool bypass;
+  bool bypass_;
   int64_t t;
   int64_t beat;
   TASCAR::resonance_filter_t f1;
@@ -30,6 +42,9 @@ private:
   double a1_;
   double ao_;
   int64_t period;
+  uint32_t dispatchin;
+  TASCAR::osc_server_t* srv_;
+  TASCAR::msg_t msg;
 };
 
 metronome_t::metronome_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -45,12 +60,16 @@ metronome_t::metronome_t( const TASCAR::audioplugin_cfg_t& cfg )
     qo(0.997),
     sync(false),
     bypass(false),
+    bypass_(false),
     t(0),
     beat(0),
     bpb_(4),
     a1_(0.002),
     ao_(0.001),
-    period(0)
+    period(0),
+    dispatchin(0),
+    srv_(NULL),
+    msg( find_or_add_child( "msg" ) )
 {
   GET_ATTRIBUTE_BOOL(changeonone);
   GET_ATTRIBUTE(bpm);
@@ -64,6 +83,7 @@ metronome_t::metronome_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE(qo);
   GET_ATTRIBUTE_BOOL(bypass);
 }
+
 
 void metronome_t::prepare( chunk_cfg_t& cf_ )
 {
@@ -79,6 +99,7 @@ void metronome_t::release()
 
 void metronome_t::add_variables( TASCAR::osc_server_t* srv )
 {
+  srv_ = srv;
   srv->add_bool( "/changeonone", &changeonone );
   srv->add_double( "/bpm", &bpm );
   srv->add_uint( "/bpb", &bpb );
@@ -90,6 +111,9 @@ void metronome_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double( "/filter/q1", &q1 );
   srv->add_double( "/filter/qo", &qo );
   srv->add_bool("/bypass", &bypass );
+  srv->add_uint("/dispatchin", &dispatchin );
+  srv->add_method( "/dispatchmsg", NULL, &osc_set_message, &msg );
+  srv->add_string( "/dispatchpath", &(msg.path) );
 }
 
 metronome_t::~metronome_t()
@@ -98,6 +122,7 @@ metronome_t::~metronome_t()
 
 void metronome_t::update_par()
 {
+  bypass_ = bypass;
   f1.set_fq( fres1*t_sample, q1 );
   fo.set_fq( freso*t_sample, qo );
   if( bpm < 6.9444e-04 )
@@ -139,21 +164,27 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::p
           beat = 0;
       }
     }
-    if( t || (sync && !tp.rolling) || bypass ){
+    if( t || (sync && !tp.rolling) ){
       // this is not a beat sample:
       v = 0.0f;
     }else{
-      //std::cout << beat << " " << t << " " << period << " " << objecttime << std::endl;
+      // now we are exactly on a beat.
       // if beat != 0 then this is not a one:
       if( beat )
         v = ao_;
       else{
+	if( dispatchin ){
+	  // count down "dispatchin". If zero, then dispatch message.
+	  --dispatchin;
+	  if( (!dispatchin) && srv_ )
+	    srv_->dispatch_data_message( msg.path.c_str(), msg.msg );
+	}
         if( changeonone )
           update_par();
         v = a1_;
       }
     }
-    if( !bypass ){
+    if( !bypass_ ){
       // beat-dependent filter properties:
       if( beat )
         aud.d[k] += fo.filter_unscaled( v );

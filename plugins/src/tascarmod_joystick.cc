@@ -131,9 +131,15 @@ axprop_t::axprop_t(double& x,uint32_t ax_)
 void axprop_t::proc(uint32_t ax_,double val)
 {
   if( ax_ == ax ){
-    if( fabs(val)>=threshold )
-      x_ = std::min(max,std::max(min,scale*val));
-    else
+    if( fabs(val)>=threshold ){
+      double lval(val);
+      if( lval > 0 )
+	lval -=threshold;
+      else
+	lval += threshold;
+      double lscale(scale/(1.0-threshold));
+      x_ = std::min(max,std::max(min,lscale*lval));
+    }else
       x_ = 0;
   }
 }
@@ -167,12 +173,6 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
 {
   tilt.scale = M_PI*0.5;
   tilt.threshold = 0;
-#define ATTRIB(x) get_attribute(#x "_ax",x.ax); get_attribute(#x "_scale",x.scale); get_attribute(#x "_threshold",x.threshold); get_attribute(#x "_max",x.max); get_attribute(#x "_min",x.min)
-  ATTRIB(x);
-  ATTRIB(y);
-  ATTRIB(r);
-  ATTRIB(tilt);
-#undef ATTRIB
   get_attribute_bool("dump_events",dump_events);
   GET_ATTRIBUTE(maxnorm);
   GET_ATTRIBUTE(url);
@@ -218,11 +218,17 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
     r.max=4;
     r.min=-4;
     tilt.ax=3;
-    tilt.scale=-0.4;
+    tilt.scale=-0.5*M_PI;
     tilt.threshold=0.3;
     tilt.max=0.5*M_PI;
     tilt.min=-0.5*M_PI;
   }
+#define ATTRIB(x) get_attribute(#x "_ax",x.ax); get_attribute(#x "_scale",x.scale); get_attribute(#x "_threshold",x.threshold); get_attribute(#x "_max",x.max); get_attribute(#x "_min",x.min)
+  ATTRIB(x);
+  ATTRIB(y);
+  ATTRIB(r);
+  ATTRIB(tilt);
+#undef ATTRIB
 }
 
 class joystick_t : public joystick_var_t, public ctl_joystick_t {

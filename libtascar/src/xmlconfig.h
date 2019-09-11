@@ -21,7 +21,6 @@
 #define XMLCONFIG_H
 
 #include "coordinates.h"
-//#include "levelmeter.h"
 #include "osc_helper.h"
 #include "audiostates.h"
 
@@ -143,6 +142,16 @@ namespace TASCAR {
     xmlpp::Document* doc;
   };
 
+  class msg_t : public TASCAR::xml_element_t {
+  public:
+    msg_t( xmlpp::Element* );
+    ~msg_t();
+    std::string path;
+    lo_message msg;
+  private:
+    msg_t( const msg_t& );
+  };
+  
 }
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,double& value);
