@@ -202,6 +202,7 @@ namespace TASCAR {
       double falloff;
       double delaycomp;
       double layerfadelen;
+      bool muteonstop;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       std::vector<wave_t*> outchannelsp;

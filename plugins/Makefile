@@ -26,7 +26,7 @@ glabsensors
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
-  level2osc const noise
+  level2osc const noise loopmachine
 
 GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
   qualisys jackstatus

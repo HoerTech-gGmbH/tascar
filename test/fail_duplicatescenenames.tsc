@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<session>
+	<scene name="scene">
+		<source name="1"><sound/></source>
+		<receiver name="2"/>
+	</scene>
+	<scene name="scene">
+		<source name="1"><sound/></source>
+		<receiver name="2"/>
+	</scene>
+</session>

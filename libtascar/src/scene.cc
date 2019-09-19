@@ -240,6 +240,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     xmlpp::Node::NodeList subnodes = e->get_children();
     for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
       xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+      TASCAR::Scene::object_t* obj(NULL);
       if( sne ){
         // rename old "sink" to "receiver":
         if( sne->get_name() == "sink" ){
@@ -247,26 +248,39 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
           add_warning( "Deprecated element \"sink\", use \"receiver\" instead.", sne );
         }
         if( sne->get_name() == "src_object" ){
-          object_sources.push_back(new src_object_t(sne));
+          sne->set_name("source");
+          //object_sources.push_back(new src_object_t(sne));
           add_warning( "Deprecated element \"src_object\", use \"source\" instead.", sne );
         }
         // parse nodes:
-        if( sne->get_name() == "source" )
+        if( sne->get_name() == "source" ){
           object_sources.push_back(new src_object_t(sne));
-        else if( sne->get_name() == "diffuse" )
+          obj = object_sources.back();
+        }else if( sne->get_name() == "diffuse" ){
           diffuse_sound_field_infos.push_back(new diffuse_info_t(sne));
-        else if( sne->get_name() == "receiver" )
+          obj = diffuse_sound_field_infos.back();
+        }else if( sne->get_name() == "receiver" ){
           receivermod_objects.push_back(new receivermod_object_t(sne));
-        else if( sne->get_name() == "face" )
+          obj = receivermod_objects.back();
+        }else if( sne->get_name() == "face" ){
           faces.push_back(new face_object_t(sne));
-        else if( sne->get_name() == "facegroup" )
+          obj = faces.back();
+        }else if( sne->get_name() == "facegroup" ){
           facegroups.push_back(new face_group_t(sne));
-        else if( sne->get_name() == "obstacle" )
+          obj = facegroups.back();
+        }else if( sne->get_name() == "obstacle" ){
           obstaclegroups.push_back(new obstacle_group_t(sne));
-        else if( sne->get_name() == "mask" )
+          obj = obstaclegroups.back();
+        }else if( sne->get_name() == "mask" ){
           masks.push_back(new mask_object_t(sne));
-        else if( sne->get_name() != "include" )
+          obj = masks.back();
+        }else if( sne->get_name() != "include" )
           add_warning("Unrecognized xml element \""+ sne->get_name() +"\".",sne );
+        if( obj ){
+          if( namelist.find(obj->get_name()) != namelist.end() )
+            throw TASCAR::ErrMsg("An object of name \""+obj->get_name()+"\" already exists in scene \""+name+"\"");
+          namelist.insert(obj->get_name());
+        }
       }
     }
     for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){

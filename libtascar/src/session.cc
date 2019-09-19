@@ -261,7 +261,9 @@ TASCAR::session_core_t::session_core_t()
     requiresrate(0),
     warnsrate(0),
     requirefragsize(0),
-    warnfragsize(0)
+    warnfragsize(0),
+    h_pipe_initcmd(NULL),
+    pid_initcmd(0)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(loop);
@@ -274,6 +276,26 @@ TASCAR::session_core_t::session_core_t()
   GET_ATTRIBUTE(requirefragsize);
   GET_ATTRIBUTE(warnsrate);
   GET_ATTRIBUTE(warnfragsize);
+  GET_ATTRIBUTE(initcmd);
+  start_initcmd();
+}
+
+void TASCAR::session_core_t::start_initcmd()
+{
+  if( !initcmd.empty() ){
+    char ctmp[1024];
+    memset(ctmp,0,1024);
+    snprintf(ctmp,1024,"sh -c \"%s >/dev/null & echo \\$!;\"",initcmd.c_str());
+    h_pipe_initcmd = popen( ctmp, "r" );
+    if( fgets(ctmp,1024,h_pipe_initcmd) != NULL ){
+      pid_initcmd = atoi(ctmp);
+      if( pid_initcmd == 0 ){
+        std::cerr << "Warning: Invalid subprocess PID (while attempting to start init command \"" << initcmd << "\")." << std::endl;
+      }
+    }
+    usleep( 1.0e5 );
+    usleep( 1.0e5 );
+  }
 }
 
 TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
@@ -287,7 +309,9 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   requiresrate(0),
   warnsrate(0),
   requirefragsize(0),
-  warnfragsize(0)
+  warnfragsize(0),
+  h_pipe_initcmd(NULL),
+  pid_initcmd(0)
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(loop);
@@ -300,6 +324,16 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   GET_ATTRIBUTE(requirefragsize);
   GET_ATTRIBUTE(warnsrate);
   GET_ATTRIBUTE(warnfragsize);
+  GET_ATTRIBUTE(initcmd);
+  start_initcmd();
+}
+
+TASCAR::session_core_t::~session_core_t()
+{
+  if( pid_initcmd != 0 )
+    kill(pid_initcmd,SIGTERM);
+  if( h_pipe_initcmd )
+    fclose(h_pipe_initcmd);
 }
 
 void assert_jackpar( const std::string& what, double expected, double found, bool warn)
@@ -320,8 +354,7 @@ TASCAR::session_t::session_t()
   jackc_transport_t(jacknamer(name,"session.")),
   osc_server_t(srv_addr, srv_port, srv_proto),
   period_time(1.0/(double)srate),
-  started_(false)//,
-  //pcnt(0)
+  started_(false)
 {
   assert_jackpar( "sampling rate", requiresrate, srate, false );
   assert_jackpar( "fragment size", requirefragsize, fragsize, false );
@@ -347,8 +380,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
   jackc_transport_t(jacknamer(name,"session.")),
   osc_server_t(srv_addr, srv_port, srv_proto),
   period_time(1.0/(double)srate),
-  started_(false)//,
-  //pcnt(0)
+  started_(false)
 {
   assert_jackpar( "sampling rate", requiresrate, srate, false );
   assert_jackpar( "fragment size", requirefragsize, fragsize, false );
@@ -461,10 +493,22 @@ std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
 
 void TASCAR::session_t::add_scene(xmlpp::Element* src)
 {
+  TASCAR::scene_render_rt_t* newscene(NULL);
   if( !src )
     src = tsc_reader_t::e->add_child("scene");
-  scenes.push_back(new TASCAR::scene_render_rt_t(src));
-  scenes.back()->configure_meter( levelmeter_tc, levelmeter_weight );
+  try{
+    newscene = new TASCAR::scene_render_rt_t(src);
+    if(namelist.find( newscene->name)!=namelist.end())
+      throw TASCAR::ErrMsg("A scene of name \""+newscene->name+
+                           "\" already exists in the session.");
+    namelist.insert(newscene->name);
+    scenes.push_back(newscene);
+    scenes.back()->configure_meter( levelmeter_tc, levelmeter_weight );
+  }
+  catch( ... ){
+    delete newscene;
+    throw;
+  }
 }
 
 void TASCAR::session_t::add_range(xmlpp::Element* src)
@@ -832,6 +876,15 @@ namespace OSCSession {
     return 1;
   }
 
+  int _playrange(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+  {
+    if( (argc == 2) && (types[0] == 'f') && (types[1] == 'f') ){
+      ((TASCAR::session_t*)user_data)->tp_playrange( argv[0]->f, argv[1]->f );
+      return 0;
+    }
+    return 1;
+  }
+
   int _unload_modules(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
   {
     if( (argc == 0) ){
@@ -843,13 +896,13 @@ namespace OSCSession {
 
 }
 
-
 void TASCAR::session_t::add_transport_methods()
 {
   osc_server_t::add_method("/transport/locate","f",OSCSession::_locate,this);
   osc_server_t::add_method("/transport/locatei","i",OSCSession::_locatei,this);
   osc_server_t::add_method("/transport/addtime","f",OSCSession::_addtime,this);
   osc_server_t::add_method("/transport/start","",OSCSession::_start,this);
+  osc_server_t::add_method("/transport/playrange","ff",OSCSession::_playrange,this);
   osc_server_t::add_method("/transport/stop","",OSCSession::_stop,this);
   osc_server_t::add_method("/transport/unload","",OSCSession::_unload_modules,this);
 }

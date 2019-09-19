@@ -133,6 +133,10 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       double dgain((nextgain-gain)*dt);
       double dairabsorption((next_air_absorption-air_absorption)*dt);
       apply_reflectionfilter( audio );
+      if( receiver_->muteonstop && (!tp.rolling) ){
+        gain = 0.0;
+        dgain = 0.0;
+      }
       for(uint32_t k=0;k<chunksize;++k){
         float& current_sample(audio[k]);
         distance+=ddistance;
@@ -419,6 +423,7 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
     falloff(-1.0),
     delaycomp(0.0),
     layerfadelen(1.0),
+    muteonstop(false),
     active(true),
     boundingbox(find_or_add_child("boundingbox")),
     gain_zero(false),
@@ -450,6 +455,7 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
   GET_ATTRIBUTE(falloff);
   GET_ATTRIBUTE(delaycomp);
   GET_ATTRIBUTE(layerfadelen);
+  GET_ATTRIBUTE_BOOL(muteonstop);
   if( has_attribute( "size" ) ){
     TASCAR::pos_t size;
     GET_ATTRIBUTE(size);

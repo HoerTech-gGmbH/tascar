@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<session>
+	<scene>
+		<source name="1"><sound/></source>
+		<receiver name="1"/>
+	</scene>
+</session>

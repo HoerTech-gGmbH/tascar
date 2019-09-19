@@ -352,7 +352,7 @@ void looped_wave_t::add_chunk_looped(float gain,wave_t& chunk)
   float dg((gain-looped_gain)/chunk.n);
   float* pdN(chunk.d+chunk.n);
   for(float* pd=chunk.d;pd<pdN;++pd){
-    *pd = (looped_gain += dg)*d[looped_t];
+    *pd += (looped_gain += dg)*d[looped_t];
     ++looped_t;
     if( looped_t >= n )
       looped_t = 0;

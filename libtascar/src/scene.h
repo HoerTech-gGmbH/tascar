@@ -407,6 +407,7 @@ namespace TASCAR {
     private:
       void clean_children();
       scene_t(const scene_t&);
+      std::set<std::string> namelist;
     };
 
   }

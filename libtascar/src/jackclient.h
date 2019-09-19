@@ -125,9 +125,12 @@ private:
 class jackc_transport_t : public jackc_t {
 public:
   jackc_transport_t(const std::string& clientname);
+  void tp_playrange( double t1, double t2 );
 protected:
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
   virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling) = 0;
+private:
+  double stop_at_time;
 };
 
 #endif

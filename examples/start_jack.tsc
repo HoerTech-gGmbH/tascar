@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<session license="CC0" initcmd="jackd -d alsa -r 44100">
+	<scene>
+		<source><sound/></source>
+		<receiver/>
+	</scene>
+</session>

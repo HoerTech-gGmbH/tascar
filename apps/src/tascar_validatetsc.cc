@@ -44,6 +44,7 @@ namespace App {
     std::string srv_port;
     std::string srv_addr;
     std::string srv_proto;
+    std::set<std::string> namelist;
   };
 
 }
@@ -80,8 +81,20 @@ App::show_licenses_t::~show_licenses_t()
 
 void App::show_licenses_t::add_scene(xmlpp::Element* sne)
 {
-  scenes.push_back(new render_core_t(sne));
-  scenes.back()->add_licenses( this );
+  TASCAR::render_core_t* newscene(NULL);
+  try{
+    newscene = new render_core_t(sne);
+    if(namelist.find( newscene->name)!=namelist.end())
+      throw TASCAR::ErrMsg("A scene of name \""+newscene->name+
+                           "\" already exists in the session.");
+    namelist.insert(newscene->name);
+    scenes.push_back(newscene);
+    scenes.back()->add_licenses( this );
+  }
+  catch( ... ){
+    delete newscene;
+    throw;
+  }
 }
 
 

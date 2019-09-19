@@ -108,6 +108,7 @@ namespace TASCAR {
   class session_core_t : public TASCAR::tsc_reader_t {
   public:
     session_core_t();
+    ~session_core_t();
     session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
     // configuration variables:
     double duration;
@@ -121,6 +122,11 @@ namespace TASCAR {
     double warnsrate;
     int32_t requirefragsize;
     int32_t warnfragsize;
+    std::string initcmd;
+  private:
+    void start_initcmd();
+    FILE* h_pipe_initcmd;
+    pid_t pid_initcmd;
   };
 
   class session_t : public session_core_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t {
@@ -166,6 +172,8 @@ namespace TASCAR {
     double period_time;
     bool started_;
     pthread_mutex_t mtx;
+    std::set<std::string> namelist;
+    //
   };
 
   /// Control 'actors' in a scene

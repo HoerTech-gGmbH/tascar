@@ -32,6 +32,10 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
 {
   jack_status_t jstat;
   //jack_options_t opt(JackUseExactName |JackNoStartServer);
+  if( (int)(clientname.size()+1) > jack_client_name_size() )
+    throw TASCAR::ErrMsg("unable to open jack client: Client name is too long. (\""+
+                         clientname+"\" max "+
+                         TASCAR::to_string(jack_client_name_size())+")");
   jack_options_t opt((jack_options_t)(JackNoStartServer|JackUseExactName));
   jc = jack_client_open(clientname.c_str(),opt,&jstat);
   if( !jc ){
@@ -317,7 +321,8 @@ void jackc_t::connect_out(unsigned int port,const std::string& pname,bool bwarn)
 }
 
 jackc_transport_t::jackc_transport_t(const std::string& clientname)
-  : jackc_t(clientname)
+  : jackc_t(clientname),
+    stop_at_time(0)
 {
 }
 
@@ -326,7 +331,22 @@ int jackc_transport_t::process(jack_nframes_t nframes,const std::vector<float*>&
   jack_position_t pos;
   jack_transport_state_t jstate;
   jstate = jack_transport_query(jc,&pos);
+  if( (stop_at_time > 0) && ((double)pos.frame/srate >= stop_at_time) ){
+    tp_stop();
+    stop_at_time = 0;
+  }
   return process(nframes,inBuffer,outBuffer,pos.frame,jstate == JackTransportRolling);
+}
+
+void jackc_transport_t::tp_playrange( double t1, double t2 )
+{
+  tp_stop();
+  stop_at_time = 0;
+  tp_locate( t1 );
+  // wait for one block:
+  usleep( 1.0e6 * (double)fragsize/srate );
+  stop_at_time = t2;
+  tp_start();
 }
 
 void jackc_portless_t::tp_locate(double p)

@@ -229,23 +229,23 @@ void TASCAR::render_rt_t::start()
           }
         }
     }
-    // connect receiver ports:
-    for(unsigned int k=0;k<receivermod_objects.size();k++){
-      std::vector<std::string> cn(receivermod_objects[k]->get_connect());
-      for( auto it=cn.begin();it!=cn.end();++it)
-        *it = strrep(*it,"@","player."+name+":"+receivermod_objects[k]->get_name());
-      for( auto it=cn.begin();it!=cn.end();++it)
-        if( it->size() ){
-          for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
-            connect_out(receivermod_objects[k]->get_port_index()+ch,*it+receivermod_objects[k]->get_channel_postfix(ch),true);
-        }
-      std::vector<std::string> cns(receivermod_objects[k]->get_connections());
-      for(uint32_t kc=0;kc<std::min((uint32_t)(cns.size()),
-                                    receivermod_objects[k]->get_num_channels());kc++){
-        if( cns[kc].size() )
-          connect_out(receivermod_objects[k]->get_port_index()+kc,
-                      cns[kc],true);
+  }
+  // connect receiver ports:
+  for(unsigned int k=0;k<receivermod_objects.size();k++){
+    std::vector<std::string> cn(receivermod_objects[k]->get_connect());
+    for( auto it=cn.begin();it!=cn.end();++it)
+      *it = strrep(*it,"@","player."+name+":"+receivermod_objects[k]->get_name());
+    for( auto it=cn.begin();it!=cn.end();++it)
+      if( it->size() ){
+        for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
+          connect_out(receivermod_objects[k]->get_port_index()+ch,*it+receivermod_objects[k]->get_channel_postfix(ch),true);
       }
+    std::vector<std::string> cns(receivermod_objects[k]->get_connections());
+    for(uint32_t kc=0;kc<std::min((uint32_t)(cns.size()),
+                                  receivermod_objects[k]->get_num_channels());kc++){
+      if( cns[kc].size() )
+        connect_out(receivermod_objects[k]->get_port_index()+kc,
+                    cns[kc],true);
     }
   }
 }

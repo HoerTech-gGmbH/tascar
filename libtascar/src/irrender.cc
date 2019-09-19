@@ -27,6 +27,10 @@ void TASCAR::wav_render_t::add_scene(xmlpp::Element* sne)
 {
   if( (!pscene) && (scene.empty() || (sne->get_attribute_value("name") == scene)) ){
     pscene = new render_core_t(sne);
+  }else{
+    if( pscene && (pscene->name == sne->get_attribute_value("name")) )
+      throw TASCAR::ErrMsg("A scene of name \""+pscene->name+
+                           "\" already exists in the session.");
   }
 }
 
