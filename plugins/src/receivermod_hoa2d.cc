@@ -116,6 +116,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
 
 void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
 {
+  TASCAR::receivermod_base_speaker_t::add_variables( srv );
   //srv->add_double( "/wgain", &wgain );
   srv->add_bool( "/diffup", &diffup );
   srv->add_double_degree( "/diffup_rot", &diffup_rot );

@@ -113,6 +113,7 @@ namespace TASCAR {
     // configuration variables:
     double duration;
     bool loop;
+    bool playonload;
     double levelmeter_tc;
     TASCAR::levelmeter::weight_t levelmeter_weight;
     std::string levelmeter_mode;

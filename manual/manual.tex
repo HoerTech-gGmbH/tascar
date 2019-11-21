@@ -221,6 +221,11 @@ achieve proper full name matching. Please note that some characters
 like \verb!.[?()! (and some more) have special meaning as regular
 expression and need to be quoted for correct matching.
 
+When using \tascar{} with jackd1, the memory locking may fail,
+resulting in killing the \tascar{} process. If you observe this
+behaviour, either start jack without memory locking (using the
+\verb!-m! flag), or use jackd2 instead.
+
 An acoustic environment can be loaded using either the command line by
 providing the file name, or via the file menu in the main window. If
 loading of a session file fails for some reason, it might be helpful
@@ -330,7 +335,11 @@ A MATLAB/GNU Octave tool for remote control is available, see section
 
 Configure real-time scheduling: grant permissions to aquire real-time
 priority, and to lock memory in RAM, to users in group 'audio' (edit
-{\tt /etc/security/limits.conf}):
+{\tt /etc/security/limits.conf} as root):
+
+\begin{verbatim}
+sudo gedit /etc/security/limits.conf
+\end{verbatim}
 
 \begin{verbatim}
 @audio - rtprio	 99
@@ -340,12 +349,13 @@ priority, and to lock memory in RAM, to users in group 'audio' (edit
 Add desired user of tascar (in this example, this user is named 'tascar')
 to group 'audio':
 \begin{verbatim}
-adduser tascar audio
+sudo adduser tascar audio
 \end{verbatim}
 Log out and log in again (no re-boot required).
 
-Deactivate CPU frequency scaling in BIOS, or switch to maximum
-performance manually, e.\,g., with
+
+After every login, deactivate CPU frequency scaling in BIOS, or switch
+to maximum performance manually, e.\,g., with
 \begin{verbatim}
 for c in {0..11}; do cpufreq-selector -c $c -g performance; done
 \end{verbatim}
@@ -442,6 +452,7 @@ definitions (\elem{range}).
 \indattr{name}               & Name of session (default: ``tascar'')                                                     \\
 \indattr{duration}           & Duration of session in seconds; default: 60                                               \\
 \indattr{loop}               & Loop session (true|false); default: false                                                 \\
+\indattr{playonload}         & Start playback when loading the session (true|false); default: false                      \\
 \indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                          \\
 \indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'' or ``bandpass'')                               \\
 \indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                                   \\
@@ -660,7 +671,12 @@ terminates.
 
 Instead of defining the position track in the tsc file it can also be
 read from a comma-separated file, by setting the attribute
-\indattr{importcsv}.
+\indattr{importcsv}. Please note that the file needs to be comma
+separated, with four numbers $t,x,y,z$ in each row.
+%
+\begin{lstlisting}[numbers=none]
+  <position importcsv="myfile.csv"/>
+\end{lstlisting}
 
 Position tracks and orientation tracks can be looped by adding the
 attribute \indattr{loop} with a number larger than zero.

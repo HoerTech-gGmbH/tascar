@@ -302,6 +302,7 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   : TASCAR::tsc_reader_t(filename_or_data,t,path),
   duration(60),
   loop(false),
+  playonload(false),
   levelmeter_tc(2.0),
   levelmeter_weight(TASCAR::levelmeter::Z),
   levelmeter_min(30.0),
@@ -315,6 +316,7 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
 {
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(loop);
+  GET_ATTRIBUTE_BOOL(playonload);
   GET_ATTRIBUTE(levelmeter_tc);
   GET_ATTRIBUTE(levelmeter_weight);
   GET_ATTRIBUTE(levelmeter_mode);
@@ -367,6 +369,8 @@ TASCAR::session_t::session_t()
     jackc_transport_t::activate();
     add_transport_methods();
     osc_server_t::activate();
+    if( playonload )
+      tp_start();
   }
   catch(...){
     unload_modules();
@@ -394,6 +398,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
     jackc_transport_t::activate();
     add_transport_methods();
     osc_server_t::activate();
+    if( playonload )
+      tp_start();
   }
   catch(...){
     unload_modules();

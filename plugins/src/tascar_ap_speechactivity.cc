@@ -18,11 +18,13 @@ private:
   double threshold;
   std::string url;
   std::string path;
+  bool transitionsonly;
   std::vector<double> intensity;
   std::vector<int32_t> active;
   std::vector<int32_t> prevactive;
   std::vector<double> dactive;
   std::vector<int32_t> onset;
+  std::vector<int32_t> oldonset;
 };
 
 speechactivity_t::speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -31,13 +33,15 @@ speechactivity_t::speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg )
     tauonset(1),
     threshold(0.0056234),
     url("osc.udp://localhost:9999/"),
-    path( "/"+get_fullname() )
+    path( "/"+get_fullname() ),
+    transitionsonly(false)
 {
   GET_ATTRIBUTE(tauenv);
   GET_ATTRIBUTE(tauonset);
   GET_ATTRIBUTE_DBSPL(threshold);
   GET_ATTRIBUTE(url);
   GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_BOOL(transitionsonly);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
 }
@@ -52,6 +56,7 @@ void speechactivity_t::prepare( chunk_cfg_t& cf_ )
   prevactive = std::vector<int32_t>( cf_.n_channels, 0 );
   dactive = std::vector<double>( cf_.n_channels, 0 );
   onset = std::vector<int32_t>( cf_.n_channels, 0 );
+  oldonset = std::vector<int32_t>( cf_.n_channels, 0 );
 }
 
 void speechactivity_t::release()
@@ -70,6 +75,7 @@ void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASC
   double  lpc1(exp(-PI2/(tauenv*f_fragment)));
   double lpc2(pow(2.0,-1.0/(tauonset*f_fragment)));
   float v2threshold(threshold*threshold);
+  bool transition(false);
   for(uint32_t ch=0;ch<chunk.size();++ch){
     // first get signal intensity:
     intensity[ch] = (1.0-lpc1)*chunk[ch].ms() + lpc1*intensity[ch];
@@ -81,11 +87,18 @@ void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASC
     dactive[ch] = (active[ch]-prevactive[ch]) + lpc2*dactive[ch];
     prevactive[ch] = active[ch];
     onset[ch] = (dactive[ch] > 0.5)*active[ch] + active[ch];
-    char ctmp[1024];
-    sprintf(ctmp,"%s%d",path.c_str(),ch);
-    lo_send( lo_addr, ctmp, "i", onset[ch] );
+    if( onset[ch] != oldonset[ch] )
+      transition = true;
+    oldonset[ch] = onset[ch];
   }
-  lsl_outlet->push_sample( onset );
+  if( (!transitionsonly) || transition ){
+    for(uint32_t ch=0;ch<chunk.size();++ch){
+      char ctmp[1024];
+      sprintf(ctmp,"%s%d",path.c_str(),ch);
+      lo_send( lo_addr, ctmp, "i", onset[ch] );
+    }
+    lsl_outlet->push_sample( onset );
+  }
 }
 
 REGISTER_AUDIOPLUGIN(speechactivity_t);

@@ -1,2 +1,23 @@
 Higher order Ambisonics receiver (3D) with embedded decoder, for
 arbitrary 3D speaker layouts.
+
+\begin{tscattributes}
+\indattr{order}   & Ambisonics order (default: 3).                              \\
+\indattr{method}  & Decoder generation method, ``pinv'' (default) or ``allrad'' \\
+\indattr{dectype} & Decoder type, ``basic'', ``maxre'' (default) or ``inphase'' \\
+\end{tscattributes}
+
+Either the Ambisonics mode matching method using the pseudo-inverse of
+the encoding matrix can be used, \attr{method="pinv"}, or the ALLRAD
+method via regular virtual speakers rendered with VBAP,
+\attr{method="allrad"}. See \citet{Daniel2001} and
+\citet{Heller2012,Heller2014} for details; the decoding methods have
+been validated against the Ambisonics Decoder Toolbox
+\citep{Heller2014}. Except for minor differences in the underlying
+triangulation method the results are comparable.
+
+
+\paragraph{Note:}
+No automatic order calculation from based on the loudspeaker layout is
+applied, thus it is always required to configure the correct
+Ambisonics order.
