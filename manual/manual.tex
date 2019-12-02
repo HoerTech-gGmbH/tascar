@@ -258,6 +258,19 @@ the elements of the menu bar on the left side:
 
 }
 
+Loading the news page can be deactivated by setting the global
+configuration variable \attr{tascar.gui.newspage} to zero in the
+configuration file (see Section \ref{sec:globalconfig} for details):
+
+\begin{verbatim}
+<tascar>
+  <gui>
+    <newspage data="0"/>
+  </gui>
+</tascar>
+\end{verbatim}
+
+
 \parbox{\columnwidth}{ 
 
 Opening the top menu bar elements:
@@ -395,6 +408,33 @@ tascar.spkcalib.inputport (system:capture_29)
 tascar.spkcalib.reflevel (80)
 \end{verbatim}
 
+\subsection{Content ownership rights}
+
+Complex virtual acoustic or audiovisual environments in \tascar{}
+often depend on a huge amount of external files, e.g., sound files,
+trajectory data, 3D models, or texture and material definitions.
+%
+Keeping track of the ownership of many files can be difficult.
+%
+Therefore, \tascar{} provides methods to facilitate the process of
+fair and legally correct distribution of \tascar{} session files.
+%
+Part of these methods is the setting of authorship and license
+abbreviations of session files (see Section \ref{sec:session}), and a
+simple text file based way of specifying license conditions of
+external sound files (see \ref{sec:ap_sndfile}).
+%
+A summary of the licenses used by a session is provided in the main
+window in the ``Licenses'' tab and with the command line tool
+\verb!tascar_showlicenses!.
+%
+Please always check the information provided by those tools carefully
+before sharing a session file.
+
+Please not that in many cases it is illegal to remove or modify
+authorship and license information from files originating from other
+sources.
+
 \section{Scene Definition}
 
 Acoustic scenes are created using xml scene definition file
@@ -516,6 +556,28 @@ are ignored.
 % Comment: This is counter-intuitive.  It is probably a hack to allow
 % included files to allow multiple scenes (XML permits only a single
 % root element).
+
+The element \elem{license} can be used to specify additional licenses, e.g., for additional visual content.
+In addition to the licenses, the authors can be specified using the \elem{author} element:
+\begin{lstlisting}[numbers=none]
+<session license="CC BY-SA 3.0" attribution="Author1">
+  <license name="visuals" license="CC BY-SA-NC 3.0" attribution="Author2"/>
+  <author name="Author1" of="audio"/>
+  <author name="Author2" of="visuals"/>
+  ...
+</session>
+\end{lstlisting}
+When at least one author is specified, then this information will be
+displayed while loading the session.
+%
+Please note that in many cases it is illegal to remove or modify the
+authorship information from a work, or change the original license
+conditions.
+%
+Therefore it is possible in \tascar{} to specify multiple
+\elem{author} and \elem{license} elements, to correctly attribute your
+contributions to a session originating from other sources.
+
 
 The file names given in the name attribute of the \elem{include}
 element can be absolute or relative.

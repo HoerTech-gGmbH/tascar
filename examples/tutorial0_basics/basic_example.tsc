@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <session duration="200" loop="true" license="CC BY SA 2.0" attribution="Giso Grimm">
+  <author name="Giso Grimm" of="session"/>
   <scene guiscale="6" ismorder="2">
 
     <!-- point source: -->

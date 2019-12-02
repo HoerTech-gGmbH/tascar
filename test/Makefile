@@ -14,7 +14,8 @@ TESTS = test_snd_zeros test_ir1 test_ir2 test_ir3 test_ir4						\
 	test_snd_sourcedir_generic1 test_snd_sourcedir_generic_cardioid			\
 	test_unload_on_error jack_routeplugin test_ir_wfs										\
 	test_ir_wfs_noplanewave jackfail_connectfail jack_connect hoa3d			\
-	test_fail_duplicatenames test_fail_duplicatescenenames
+	test_fail_duplicatenames test_fail_duplicatescenenames							\
+	test_level_hoa2d_basic test_level_hoa2d_maxre
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -24,6 +25,8 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
   hoa2d_fuma_hos wfs
+
+
 
 LEVELREC = nsp hoa2d neukom_basic wfs vbap hann
 #neukom_inphase
@@ -54,16 +57,22 @@ test_reclevel_wfs test_reclevel_vbap test_reclevel_hann: LEVTHR=2.5
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
-hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert		\
-	test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert			\
-	test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert	\
-	test_level_hoa3d_pinv test_level_hoa3d_pinv_lidhan		\
-	test_level_hoa3d_pinv_maxre test_level_hoa3d_allrad		\
-	test_level_hoa3d_allrad_lidhan
+hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert								\
+	test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert									\
+	test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert							\
+	test_level_hoa3d_pinv test_level_hoa3d_pinv_lidhan								\
+	test_level_hoa3d_pinv_maxre test_level_hoa3d_allrad								\
+	test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre
+
 
 testrec: $(TEST_REC)
 
-testlev: $(TEST_LEV)
+testlev: $(TEST_LEV) test_level_diff_decorr test_level_diff_nodecorr	\
+  test_level_hoa2d_basic test_level_hoa2d_maxre												\
+  test_level_hoa3d_allrad_lidhan test_level_hoa3d_allrad							\
+  test_level_hoa3d_pinv_lidhan_maxre test_level_hoa3d_pinv_lidhan			\
+  test_level_hoa3d_pinv_maxre test_level_hoa3d_pinv test_level_nsp		\
+  test_level_vbap3d
 
 db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 
@@ -106,13 +115,14 @@ test_reclevel_%: test_level.tsc
 	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (8ch)"; false)
 	@$(LIBPATH) RECEIVER=$* CHANNELS=36 $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (36ch)"; false)
-	@rm -f test_rec_$*.wav
+	@rm -f test_level_$*.wav
 
 test_level_%: test_level_%.tsc
 	@echo "Level test: $< ($*)"
+	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
 	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -d -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs"; false)
-	@rm -f test_rec_$*.wav
+	@rm -f test_level_$*.wav
 
 
 test_fail_%: fail_%.tsc

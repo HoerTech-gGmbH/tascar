@@ -86,6 +86,7 @@ void TASCAR::tsc_reader_t::read_xml()
 {
   GET_ATTRIBUTE(license);
   GET_ATTRIBUTE(attribution);
+  add_license(license,attribution,"session file");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -103,6 +104,22 @@ void TASCAR::tsc_reader_t::read_xml()
           if( lsne )
             add_module( lsne );
         }
+      }else if( sne->get_name() == "license"){
+        TASCAR::xml_element_t lic(sne);
+        std::string license;
+        std::string attribution;
+        std::string name;
+        lic.GET_ATTRIBUTE(license);
+        lic.GET_ATTRIBUTE(attribution);
+        lic.GET_ATTRIBUTE(name);
+        add_license(license,attribution,name);
+      }else if( sne->get_name() == "author"){
+        TASCAR::xml_element_t lic(sne);
+        std::string of;
+        std::string name;
+        lic.GET_ATTRIBUTE(name);
+        lic.GET_ATTRIBUTE(of);
+        add_author(name,of);
       }else if( (sne->get_name() != "include") && 
                 (sne->get_name() != "mainwindow") && 
                 (sne->get_name() != "description" ) )
@@ -111,7 +128,6 @@ void TASCAR::tsc_reader_t::read_xml()
         add_module(sne);
     }
   }
-  add_license(license,attribution,"session file");
 }
 
 const std::string& TASCAR::tsc_reader_t::get_session_path() const

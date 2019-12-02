@@ -247,7 +247,7 @@ void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
 
 void usage(struct option * opt)
 {
-  std::cout << "Usage:\n\ntascar_gui -c configfile [options]\n\nOptions:\n\n";
+  std::cout << "Usage:\n\ntascar_pdf -c sessionfile [options]\n\nOptions:\n\n";
   while( opt->name ){
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
       "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";

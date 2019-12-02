@@ -136,6 +136,9 @@ protected:
   Gtk::Label* active_label_sourceline;
   Gtk::TextView* active_source_display;
   Gtk::ScrolledWindow* active_mixer;
+  Gtk::Window* session_splash;
+  Gtk::Label* lab_authors;
+  Gtk::Label* lab_sessionname;
   source_ctl_t* active_source_ctl;
 
   bool blink;
@@ -151,6 +154,7 @@ protected:
   WebKitWebView *news_view;
   Gtk::Box* news_box;
   Gtk::Widget* news_viewpp;
+  uint32_t splash_timeout;
 };
 
 #endif

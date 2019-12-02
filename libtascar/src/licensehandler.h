@@ -28,9 +28,14 @@
 class licensehandler_t {
 public:
   void add_license( const std::string& license, const std::string& attribution, const std::string& tag );
+  void add_author( const std::string& author, const std::string& tag );
+  bool has_authors() const;
+  std::string get_authors() const;
   std::string legal_stuff(bool use_markup = false) const;
   std::string show_unknown() const;
+  bool distributable() const;
 private:
+  std::map<std::string,std::set<std::string> > authors;
   std::map<std::string,std::set<std::string> > licenses;
   std::map<std::string,std::set<std::string> > attributions;
 };

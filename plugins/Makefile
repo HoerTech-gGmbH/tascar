@@ -34,7 +34,7 @@ GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
 
 ifeq "$(HAS_LSL)" "yes"
 TASCARMODS +=  lsljacktime lslactor levels2osc pos2lsl
-AUDIOPLUGINS += speechactivity
+AUDIOPLUGINS += speechactivity periodogram
 TASCARMODSGUI += datalogging
 endif
 
@@ -99,6 +99,7 @@ build/tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
 build/tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
 build/tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
 build/tascar_ap_speechactivity.so: LDLIBS+=-llsl64
+build/tascar_ap_periodogram.so: LDLIBS+=-llsl64
 build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
 build/tascar_ltcgen.so: EXTERNALS+=ltc
 build/tascarreceiver_hoa3d_enc.so: EXTERNALS+=gsl

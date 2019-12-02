@@ -11,7 +11,7 @@ BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
   tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
   tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
   tascar_version compare_sndfile compare_level_sum tascar_lsjackp	\
-  tascar_sendosc
+  tascar_sendosc tascar_osc2lsl
 
 TEST_FILES = test_ngon test_sinc
 
@@ -61,7 +61,7 @@ build/tascar_hdspmixer: EXTERNALS += alsa
 build/tascar_gui build/tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 build/tascar_gui build/tascar_pdf: EXTERNALS += $(GTKEXT)
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
-build/tascar_lslsl build/tascar_lsljacktime: LDLIBS+=-llsl64
+build/tascar_lslsl build/tascar_lsljacktime build/tascar_osc2lsl: LDLIBS+=-llsl64
 
 ifeq "$(COVERAGE)" "yes"
 LDLIBS += -lgcov -lgmock_main

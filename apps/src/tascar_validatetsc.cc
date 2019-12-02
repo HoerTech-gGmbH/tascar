@@ -114,7 +114,7 @@ void App::show_licenses_t::add_connection(xmlpp::Element* src)
 
 void usage(struct option * opt)
 {
-  std::cout << "Usage:\n\ntascar_gui -c configfile [options]\n\nOptions:\n\n";
+  std::cout << "Usage:\n\ntascar_validatetsc -c sessionfile [options]\n\nOptions:\n\n";
   while( opt->name ){
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
       "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";

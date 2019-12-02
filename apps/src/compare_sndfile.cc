@@ -7,8 +7,10 @@
 
 int main(int argc, char** argv)
 {
-  if( argc < 5 )
+  if( argc < 5 ){
+    std::cerr << "Usage: <expected.wav> <test.wav> <tol> <rmstol>" << std::endl;
     return 1;
+  }
   TASCAR::sndfile_t expected(argv[1]);
   TASCAR::sndfile_t test(argv[2]);
   double tol(atof(argv[3]));

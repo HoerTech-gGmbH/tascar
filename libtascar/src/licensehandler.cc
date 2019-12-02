@@ -19,8 +19,31 @@ void get_license_info( xmlpp::Element* e, const std::string& fname, std::string&
   }  
 }
 
+bool licensehandler_t::has_authors() const
+{
+  return !authors.empty();
+}
+
+
+bool licensehandler_t::distributable() const
+{
+  bool dist(true);
+  for( auto it=licenses.begin();it!=licenses.end();++it)
+    if( it->first == "unknown" )
+      dist = false;
+  return dist;
+}
+
+void licensehandler_t::add_author( const std::string& author, const std::string& tag )
+{
+  if( !author.empty() )
+    authors[author].insert(tag);
+}
+
 void licensehandler_t::add_license( const std::string& license, const std::string& attribution, const std::string& tag )
 {
+  if( tag.empty() )
+    TASCAR::add_warning("A license is specified without defining what is licensed.\n(\""+license+"\", \""+attribution+"\")");
   if( (license.find("CC")!=std::string::npos ) && 
       (license.find("BY")!=std::string::npos))
     if( attribution.empty() )
@@ -36,6 +59,32 @@ void licensehandler_t::add_license( const std::string& license, const std::strin
 std::string licensehandler_t::legal_stuff( bool use_markup ) const
 {
   std::string retv;
+  if( !authors.empty() ){
+    retv += "Authors:\n";
+    for( auto it=authors.begin();it!=authors.end();++it){
+      retv += it->first;
+      if( !it->second.empty() ){
+        retv += " (";
+        for( auto o=it->second.begin();o!=it->second.end();++o)
+          retv += *o;
+        retv += ")";
+      }
+      retv += "\n";
+    }
+    retv += "\n";
+  }
+  if( distributable() ){
+    retv += "This file can be used and distributed according to following license conditions:\n\n";
+  }else{
+    if( use_markup )
+      retv += "<h1>";
+    retv += "Do not use or distribute this file!";
+    if( use_markup )
+      retv += "</h1>";
+    retv += "\n";
+    retv += "The license of some content is not defined.";
+    retv += "\n";
+  }
   if( use_markup )
     retv += "<b>";
   retv += "Licenses:";
@@ -77,6 +126,26 @@ std::string licensehandler_t::legal_stuff( bool use_markup ) const
       retv += "\n";
     }
   }
+  retv += "\nWhen using TASCAR in scientific research, please always cite this publication:\n\nGrimm, Giso; Luberadzka, Joanna; Hohmann, Volker. A Toolbox for Rendering Virtual Acoustic Environments in the Context of Audiology. Acta Acustica united with Acustica, Volume 105, Number 3, May/June 2019, pp. 566-578(13), doi:10.3813/AAA.919337\n";
+  return retv;
+}
+
+std::string licensehandler_t::get_authors() const
+{
+  std::string retv;
+  if( !authors.empty() ){
+    for( auto it=authors.begin();it!=authors.end();++it){
+      retv += it->first;
+      if( !it->second.empty() ){
+        retv += " (";
+        for( auto o=it->second.begin();o!=it->second.end();++o)
+          retv += *o;
+        retv += ")";
+      }
+      retv += "\n";
+    }
+    retv += "\n";
+  }
   return retv;
 }
 
@@ -95,6 +164,8 @@ std::string licensehandler_t::show_unknown() const
   }
   if( !retv.empty() )
     retv = "Unknown licenses: "+retv;
+  if( !distributable() )
+    retv = "Do not use or distribute this file!\n\n"+retv;
   return retv;
 }
 

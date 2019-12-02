@@ -1,3 +1,4 @@
+0.207: Improvement of ownership right management.
 0.206: Various minor bugfixes.
 0.205: Implementation of 3D HOA encoding and decoding.
 0.204: Bugfix of delayline for delays longer than maxdelay, WFS render format.

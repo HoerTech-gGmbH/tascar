@@ -43,11 +43,9 @@ ltcgen_t::ltcgen_t( const TASCAR::module_cfg_t& cfg )
   enc_buf = new ltcsnd_sample_t[ltc_encoder_get_buffersize(encoder)];
   memset(enc_buf,0,ltc_encoder_get_buffersize(encoder)*sizeof(ltcsnd_sample_t));
   add_output_port("ltc");
-  add_input_port("sync_in");
   activate();
   for(std::vector<std::string>::const_iterator it=connect.begin();it!=connect.end();++it)
     jackc_transport_t::connect(get_client_name()+":ltc",*it,true);
-  jackc_transport_t::connect(session->get_client_name()+":sync_out",get_client_name()+":sync_in",true);
 }
 
 ltcgen_t::~ltcgen_t()
@@ -56,17 +54,12 @@ ltcgen_t::~ltcgen_t()
   ltc_encoder_free( encoder );
 }
 
-//void ltcgen_t::update(uint32_t tp_frame, bool tp_rolling)
-//{
-//}
-
 int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut,uint32_t tp_frame, bool tp_rolling)
 {
   float smult = pow(10, volume/20.0)/(90.0);
   if( tp_frame != lastframe + n){
     double sec(tp_frame*t_sample);
     SMPTETimecode st;
-    //sprintf(st.timezone, "%c%02d%02d", tz_minuteswest<0?'-':'+', abs(tz_minuteswest/60),abs(tz_minuteswest%60));
     memset(st.timezone,0,6);
     st.years = 0;
     st.months = 0;

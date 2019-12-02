@@ -37,7 +37,8 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   active_source_ctl(NULL),
   blink(false),
   sessionloaded(false),
-  sessionquit(false)
+  sessionquit(false),
+  splash_timeout(0)
 {
   Gsv::init();
   language_manager = Gsv::LanguageManager::create();
@@ -77,6 +78,9 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   GET_WIDGET(active_label_sourceline);
   GET_WIDGET(active_source_display);
   GET_WIDGET(active_mixer);
+  GET_WIDGET(session_splash);
+  GET_WIDGET(lab_authors);
+  GET_WIDGET(lab_sessionname);
   active_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
   active_track->signal_toggled().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
   Gtk::Image* image_xy(NULL);
@@ -95,6 +99,10 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   m_refBuilder->get_widget("image_xyz",image_xyz);
   if( image_xyz )
     image_xyz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_xyz));
+  Gtk::Image* image_splashlogo(NULL);
+  m_refBuilder->get_widget("image_splashlogo",image_splashlogo);
+  if( image_splashlogo )
+    image_splashlogo->set(Gdk::Pixbuf::create_from_xpm_data(logo));
   //GET_WIDGET(menu_osc_vars);
   GET_WIDGET(text_warnings);
   //GET_WIDGET(text_source);
@@ -155,13 +163,20 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   GET_WIDGET(news_box);
   news_box->pack_end( *news_viewpp );
   std::string url(std::string("http://news.tascar.org/?version="+std::string(TASCARVERSION)));
-  webkit_web_view_load_uri( news_view, url.c_str() );
+  bool load_news(TASCAR::config("tascar.gui.newspage",true));
+  if( load_news )
+    webkit_web_view_load_uri( news_view, url.c_str() );
   notebook->show_all();
 }
 
 bool tascar_window_t::on_timeout()
 {
   if( session_mutex.try_lock() ){
+    if( splash_timeout ){
+      splash_timeout--;
+      if( !splash_timeout )
+        session_splash->hide();
+    }
     if( session ){
       if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
         Glib::RefPtr<Gdk::Window> win = scene_map->get_window();
@@ -503,10 +518,16 @@ void tascar_window_t::reset_gui()
   scene_selector->set_active(0);
   selected_range = -1;
   if( session ){
+    if( session->has_authors() ){
+      lab_authors->set_text(session->get_authors());
+      lab_sessionname->set_text(session->name);
+      splash_timeout = 10.0*TASCAR::config("tascar.gui.sessionsplashtimeout",5.0);
+      session_splash->show();
+    }
     int32_t mainwin_width(1600);
     int32_t mainwin_height(900);
     if( session->scenes.empty() ){
-      mainwin_width = 200;
+      mainwin_width = 400;
       mainwin_height = 60;
     }
     int32_t mainwin_x(0);
