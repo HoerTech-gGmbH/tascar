@@ -568,6 +568,9 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASC
   case TASCAR::levelmeter::Z :
     elem->set_attribute(name,"Z");
     break;
+  case TASCAR::levelmeter::C :
+    elem->set_attribute(name,"C");
+    break;
   case TASCAR::levelmeter::bandpass :
     elem->set_attribute(name,"bandpass");
     break;
@@ -751,12 +754,13 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::le
     return;
   if( svalue == "Z" )
     value = TASCAR::levelmeter::Z;
+  else if( svalue == "C" )
+    value = TASCAR::levelmeter::C;
   else if( svalue == "bandpass" )
     value = TASCAR::levelmeter::bandpass;
   else
     throw TASCAR::ErrMsg(std::string("Unsupported weight type \"")+svalue+std::string("\" for attribute \"")+name+std::string("\"."));
 }
-
 
 void get_attribute_value(xmlpp::Element* elem,const std::string& name,std::vector<TASCAR::pos_t>& value)
 {

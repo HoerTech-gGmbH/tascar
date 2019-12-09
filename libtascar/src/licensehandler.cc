@@ -65,8 +65,11 @@ std::string licensehandler_t::legal_stuff( bool use_markup ) const
       retv += it->first;
       if( !it->second.empty() ){
         retv += " (";
-        for( auto o=it->second.begin();o!=it->second.end();++o)
+        for( auto o=it->second.begin();o!=it->second.end();++o){
+          if( o!=it->second.begin() )
+            retv += ", ";
           retv += *o;
+        }
         retv += ")";
       }
       retv += "\n";
@@ -136,7 +139,7 @@ std::string licensehandler_t::get_authors() const
   if( !authors.empty() ){
     for( auto it=authors.begin();it!=authors.end();++it){
       retv += it->first;
-      if( !it->second.empty() ){
+      if( !(it->second.empty()||it->second.begin()->empty()) ){
         retv += " (";
         for( auto o=it->second.begin();o!=it->second.end();++o)
           retv += *o;

@@ -69,6 +69,7 @@ namespace TASCAR {
     uint32_t i95;
     uint32_t i99;
     bandpass_t bp;
+    bandpass_t bp_C;
   };
 
 }

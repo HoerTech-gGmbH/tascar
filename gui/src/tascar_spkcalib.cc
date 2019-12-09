@@ -7,6 +7,7 @@
 #include <gtkmm/window.h>
 #include <ctime>
 #include "jackiowav.h"
+#include "gui_elements.h"
 
 #include "session.h"
 
@@ -308,7 +309,7 @@ void calibsession_t::inc_diffusegain(double dl)
       scenes.back()->receivermod_objects.back()->diffusegain = gain;
 }
 
-class spkcalib_t : public Gtk::Window
+class spkcalib_t : public Gtk::Window, public jackc_t
 {
 public:
   spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade);
@@ -318,6 +319,7 @@ public:
   void levelinc(double d);
   void inc_diffusegain(double d);
   void update_display();
+  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
 private:
   void manage_act_grp_save();
 protected:
@@ -348,6 +350,8 @@ protected:
   void on_quit();
   void on_level_entered();
   void on_level_diff_entered();
+  bool on_timeout();
+  sigc::connection con_timeout;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupSave;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupClose;
@@ -361,6 +365,7 @@ protected:
   Gtk::Entry* levelentry;
   Gtk::Entry* levelentry_diff;
   Gtk::ProgressBar* rec_progress;
+  Gtk::Box* box_h;
   calibsession_t* session;
   double reflevel;
   double noiseperiod;
@@ -368,10 +373,33 @@ protected:
   double fmax;
   double prewait;
   std::vector<std::string> refport;
+  std::vector<TASCAR::levelmeter_t*> rmsmeter;
+  std::vector<TASCAR::wave_t*> inwave;
+  std::vector<splmeter_t*> guimeter;
+  double miccalib;
 };
 
-#define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
+int spkcalib_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer)
+{
+  for(uint32_t k=0;k<std::min(inBuffer.size(),rmsmeter.size());++k){
+    if( rmsmeter[k] ){
+      inwave[k]->copy(inBuffer[k],nframes,miccalib);
+      rmsmeter[k]->update(*(inwave[k]));
+    }
+  }
+  return 0;
+}
 
+bool spkcalib_t::on_timeout()
+{
+  for( uint32_t k=0;k<guimeter.size();++k){
+    guimeter[k]->update_levelmeter( *(rmsmeter[k]), reflevel );
+    guimeter[k]->invalidate_win();
+  }
+  return true;
+}
+
+#define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
 
 void error_message(const std::string& msg)
 {
@@ -383,6 +411,7 @@ void error_message(const std::string& msg)
 
 spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
   : Gtk::Window(cobject),
+  jackc_t("tascar_spkcalib_levels"),
     m_refBuilder(refGlade),
     text_instruction(NULL),
     text_instruction_diff(NULL),
@@ -393,8 +422,21 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
   fmin(TASCAR::config("tascar.spkcalib.fmin",62.5)),
   fmax(TASCAR::config("tascar.spkcalib.fmax",4000.0)),
   prewait(TASCAR::config("tascar.spkcalib.prewait",0.5)),
-  refport(str2vecstr(TASCAR::config("tascar.spkcalib.inputport","system:capture_1")))
+  refport(str2vecstr(TASCAR::config("tascar.spkcalib.inputport","system:capture_1"))),
+  miccalib(TASCAR::config("tascar.spkcalib.miccalib",0.0))
 {
+  miccalib = 1.0/(pow(10.0,0.05*miccalib)/2e-5);
+  for( uint32_t k=0;k<refport.size();++k){
+    add_input_port(std::string("in.")+TASCAR::to_string(k+1));
+    rmsmeter.push_back(new TASCAR::levelmeter_t(get_srate(),noiseperiod,TASCAR::levelmeter::C));
+    inwave.push_back(new TASCAR::wave_t(get_fragsize()));
+    guimeter.push_back(new splmeter_t());
+    guimeter.back()->set_mode( dameter_t::rmspeak );
+    guimeter.back()->set_min_and_range( reflevel-20.0, 30.0 );
+  }
+  jackc_t::activate();
+  for( uint32_t k=0;k<refport.size();++k)
+    connect_in(k,refport[k],true);
   //Create actions for menus and toolbars:
   refActionGroupMain = Gio::SimpleActionGroup::create();
   refActionGroupSave = Gio::SimpleActionGroup::create();
@@ -434,8 +476,13 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
   GET_WIDGET(levelentry);
   GET_WIDGET(levelentry_diff);
   GET_WIDGET(rec_progress);
+  GET_WIDGET(box_h);
   levelentry->signal_activate().connect(sigc::mem_fun(*this, &spkcalib_t::on_level_entered));
   levelentry_diff->signal_activate().connect(sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
+  con_timeout = Glib::signal_timeout().connect( sigc::mem_fun(*this, &spkcalib_t::on_timeout), 250 );
+  for( uint32_t k=0;k<guimeter.size();++k){
+    box_h->add(*guimeter[k]);
+  }
   update_display();
   show_all();
 }
@@ -739,7 +786,14 @@ void spkcalib_t::on_saveas()
 
 spkcalib_t::~spkcalib_t()
 {
+  con_timeout.disconnect();
   cleanup();
+  for( auto it=rmsmeter.begin();it!=rmsmeter.end();++it)
+    delete *it;
+  for( auto it=inwave.begin();it!=inwave.end();++it)
+    delete *it;
+  for( auto it=guimeter.begin();it!=guimeter.end();++it)
+    delete *it;
 }
 
 void spkcalib_t::update_display()

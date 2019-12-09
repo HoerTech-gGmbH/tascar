@@ -29,7 +29,8 @@ namespace TASCAR {
   namespace levelmeter {
     enum weight_t {
       Z,
-      bandpass
+      bandpass,
+      C
     };
   };
 

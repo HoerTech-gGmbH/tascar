@@ -1694,6 +1694,15 @@ level for point source rendering.
 At the bottom of the window the area for calibration of the diffuse
 rendering gain can be found.
 
+The microphone signal can be also used for level metering, if calibrated correctly.
+%
+The calibration value can be configured via the global configuration
+variable \verb!tascar.spkcalib.miccalib! (see Section
+\ref{sec:globalconfig}).
+%
+Please make sure to properly calibrate before using it, and after any
+changes in the chain from microphone to AD converter.
+
 \subsubsection{Calibrating a loudspeaker array for the first time}
 
 The default calibration level in TASCAR is 94~dB SPL. The default test
