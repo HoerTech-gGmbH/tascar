@@ -30,7 +30,8 @@ namespace TASCAR {
     enum weight_t {
       Z,
       bandpass,
-      C
+      C,
+      A
     };
   };
 
@@ -47,6 +48,7 @@ namespace TASCAR {
   };
 
   std::string to_string( double x );
+  std::string to_string( const TASCAR::levelmeter::weight_t& value );
 
   std::string days_to_string( double x );
 

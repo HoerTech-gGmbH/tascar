@@ -148,6 +148,10 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupView->add_action("meter_rms",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rms));
   refActionGroupView->add_action("meter_peak",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_peak));
   refActionGroupView->add_action("meter_percentile",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_percentile));
+  refActionGroupView->add_action("meterw_z",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_z));
+  refActionGroupView->add_action("meterw_c",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_c));
+  refActionGroupView->add_action("meterw_a",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_a));
+  refActionGroupView->add_action("meterw_bandpass",sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_bandpass));
   insert_action_group("view",refActionGroupView);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupTransport = Gio::SimpleActionGroup::create();
   refActionGroupTransport->add_action("play",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_play));
@@ -476,6 +480,7 @@ void tascar_window_t::update_selection_info()
     active_mixer->show_all();
     active_source_ctl->set_levelmeter_mode(source_panel->lmode);
     active_source_ctl->set_levelmeter_range(session->levelmeter_min,session->levelmeter_range);
+    active_source_ctl->set_levelmeter_weight(session->levelmeter_weight);
   }else{
     active_type_label->set_text("");
     active_track->set_active(false);
@@ -504,9 +509,11 @@ void tascar_window_t::update_levelmeter_settings()
   if( session  && source_panel ){
     source_panel->set_levelmeter_mode(session->levelmeter_mode);
     source_panel->set_levelmeter_range(session->levelmeter_min,session->levelmeter_range);
+    source_panel->set_levelmeter_weight(session->levelmeter_weight);
     if( active_source_ctl ){
       active_source_ctl->set_levelmeter_mode(source_panel->lmode);
       active_source_ctl->set_levelmeter_range(session->levelmeter_min,session->levelmeter_range);
+      active_source_ctl->set_levelmeter_weight(session->levelmeter_weight);
     }
   }
 }
@@ -891,6 +898,39 @@ void tascar_window_t::on_menu_file_open_example()
     }
   }
 }
+
+void tascar_window_t::on_menu_view_meterw_z()
+{
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session )
+    session->levelmeter_weight = TASCAR::levelmeter::Z;
+  update_levelmeter_settings();
+}
+
+void tascar_window_t::on_menu_view_meterw_a()
+{
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session )
+    session->levelmeter_weight = TASCAR::levelmeter::A;
+  update_levelmeter_settings();
+}
+
+void tascar_window_t::on_menu_view_meterw_c()
+{
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session )
+    session->levelmeter_weight = TASCAR::levelmeter::C;
+  update_levelmeter_settings();
+}
+
+void tascar_window_t::on_menu_view_meterw_bandpass()
+{
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if( session )
+    session->levelmeter_weight = TASCAR::levelmeter::bandpass;
+  update_levelmeter_settings();
+}
+
 
 void tascar_window_t::on_menu_view_meter_rmspeak()
 {

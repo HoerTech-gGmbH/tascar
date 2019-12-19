@@ -13,7 +13,8 @@ TASCAR::levelmeter_t::levelmeter_t(float fs, float tc, levelmeter::weight_t weig
     i95(0.95*num_segments),
     i99(0.99*num_segments),
     bp(500.0,4000.0,fs),
-    bp_C(62.5,4000.0,fs)
+    bp_C(62.5,4000.0,fs),
+    flt_A(fs)
 {
 }
 
@@ -31,7 +32,16 @@ void TASCAR::levelmeter_t::update(const TASCAR::wave_t& src)
     for(uint32_t k=0;k<src.n;++k)
       append_sample( bp_C.filter( src.d[k] ) );
     break;
+  case TASCAR::levelmeter::A:
+    for(uint32_t k=0;k<src.n;++k)
+      append_sample( flt_A.filter( src.d[k] ) );
+    break;
   }
+}
+
+void TASCAR::levelmeter_t::set_weight(levelmeter::weight_t weight)
+{
+  w = weight;
 }
 
 void TASCAR::levelmeter_t::get_rms_and_peak( float& rms, float& peak ) const

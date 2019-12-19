@@ -65,6 +65,7 @@ public:
   float vmin;
   float range;
   float targetlevel;
+  TASCAR::levelmeter::weight_t weight;
 private:
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 };
@@ -124,6 +125,7 @@ private:
 public:
   void update();
   void set_levelmeter_mode( dameter_t::mode_t mode );
+  void set_levelmeter_weight( TASCAR::levelmeter::weight_t w );
   void set_levelmeter_range( float vmin, float range );
   void invalidate_win();
   ~source_ctl_t();
@@ -156,6 +158,7 @@ public:
   void set_scene( TASCAR::Scene::scene_t* scene, TASCAR::session_t* session );
   void set_levelmeter_mode( const std::string& mode );
   void set_levelmeter_range( float vmin, float range );
+  void set_levelmeter_weight( TASCAR::levelmeter::weight_t w );
   void update();
   void invalidate_win();
   std::vector<source_ctl_t*> vbuttons;

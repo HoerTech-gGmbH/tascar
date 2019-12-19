@@ -44,6 +44,11 @@ namespace TASCAR {
      */
     levelmeter_t(float fs, float tc, levelmeter::weight_t weight);
     /**
+       Change meter weighting during runtime
+     */
+    void set_weight(levelmeter::weight_t weight);
+    levelmeter::weight_t get_weight() const { return w;};
+    /**
        \brief Add audio samples to level meter container
        \param src Audio samples
      */
@@ -70,6 +75,7 @@ namespace TASCAR {
     uint32_t i99;
     bandpass_t bp;
     bandpass_t bp_C;
+    aweighting_t flt_A;
   };
 
 }

@@ -554,6 +554,13 @@ void route_t::addmeter( float fs )
   meterval.push_back(0);
 }
 
+void route_t::set_meterweight( TASCAR::levelmeter::weight_t w )
+{
+  meter_weight = w;
+  for( auto m=rmsmeter.begin();m!=rmsmeter.end();++m)
+    (*m)->set_weight( w );
+}
+
 route_t::~route_t()
 {
   for(uint32_t k=0;k<rmsmeter.size();++k)

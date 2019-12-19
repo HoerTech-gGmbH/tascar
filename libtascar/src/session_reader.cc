@@ -120,6 +120,13 @@ void TASCAR::tsc_reader_t::read_xml()
         lic.GET_ATTRIBUTE(name);
         lic.GET_ATTRIBUTE(of);
         add_author(name,of);
+      }else if( sne->get_name() == "bibitem" ){
+        xmlpp::NodeSet stxt(sne->find("text()"));
+        for( auto it=stxt.begin();it!=stxt.end();++it){
+          xmlpp::TextNode* txt(dynamic_cast<xmlpp::TextNode*>(*it));
+          if( txt )
+            add_bibitem(txt->get_content());
+        }
       }else if( (sne->get_name() != "include") && 
                 (sne->get_name() != "mainwindow") && 
                 (sne->get_name() != "description" ) )

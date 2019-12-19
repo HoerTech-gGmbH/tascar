@@ -62,6 +62,7 @@ namespace TASCAR {
       bool is_active(uint32_t anysolo);
       void addmeter(float fs);
       void configure_meter( float tc, TASCAR::levelmeter::weight_t w );
+      void set_meterweight( TASCAR::levelmeter::weight_t w );
       uint32_t metercnt() const { return rmsmeter.size(); };
       void reset_meters();
       const std::vector<float>& readmeter();

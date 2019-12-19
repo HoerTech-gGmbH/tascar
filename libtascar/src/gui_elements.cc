@@ -12,7 +12,8 @@ dameter_t::dameter_t()
     q99(0),
     vmin(30),
     range(70),
-    targetlevel(0)
+    targetlevel(0),
+    weight(TASCAR::levelmeter::Z)
 {
 }
 
@@ -141,6 +142,14 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->set_source_rgba( 1, 0, 0, 0.7 );
   line_at(cr,targetlevel,0.5*width,width);
   cr->restore();
+  // write level meter weight:
+  std::string lmweight(TASCAR::to_string(weight));
+  cr->save();
+  cr->move_to(0.02*width,36);
+  cr->set_source_rgb( 0.225, 0.5, 0.175 );
+  cr->scale( 1.2, 1.2 );
+  cr->show_text(lmweight.c_str());
+  cr->restore();
   // print level:
   cr->save();
   cr->set_source_rgb( 1, 1, 1 );
@@ -153,6 +162,7 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->move_to( 0.1*width, 0.8*label_h );
     cr->scale( 1.2, 1.2 );
     cr->show_text(ctmp);
+    
   }
   cr->restore();
   return true;
@@ -187,20 +197,16 @@ void splmeter_t::set_min_and_range( float vmin, float range )
 
 void splmeter_t::update_levelmeter( const TASCAR::levelmeter_t& lm, float targetlevel )
 {
+  dameter.weight = lm.get_weight();
   dameter.targetlevel = targetlevel;
   lm.get_rms_and_peak( dameter.v_rms, dameter.v_peak );
-  //char ctmp[256];
   switch( dameter.mode ){
   case dameter_t::rmspeak:
   case dameter_t::rms:
   case dameter_t::peak:
-    //sprintf(ctmp,"%1.1f",dameter.v_rms);
-    //val.set_text(ctmp);
     break;
   case dameter_t::percentile:
     lm.get_percentile_levels( dameter.q30, dameter.q50, dameter.q65, dameter.q95, dameter.q99 );
-    //sprintf(ctmp,"%1.1f",dameter.q65);
-    //val.set_text(ctmp);
     break;
   }
 }
@@ -449,6 +455,10 @@ void source_ctl_t::set_levelmeter_mode( dameter_t::mode_t mode )
     (*it)->set_mode( mode );
 }
 
+void source_ctl_t::set_levelmeter_weight( TASCAR::levelmeter::weight_t w )
+{
+  route_->set_meterweight( w );
+}
 
 void source_ctl_t::set_levelmeter_range( float vmin, float range )
 {
@@ -546,6 +556,11 @@ void source_panel_t::set_levelmeter_range( float vmin, float range )
     (*it)->set_levelmeter_range( vmin, range );
 }
 
+void source_panel_t::set_levelmeter_weight( TASCAR::levelmeter::weight_t w )
+{
+  for(std::vector<source_ctl_t*>::iterator it=vbuttons.begin();it!=vbuttons.end();++it)
+    (*it)->set_levelmeter_weight( w );
+}
 
 scene_draw_t::scene_draw_t()
   : scene_(NULL),

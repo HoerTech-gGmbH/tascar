@@ -233,6 +233,50 @@ void TASCAR::biquad_t::set_gzp( double g, double zero_r, double zero_phi, double
   b2_ = g*zero_r*zero_r;
 }
 
+double fd2fa( double fs, double fd )
+{
+  return 2.0*fs*tan( fd/(2.0*fs) );
+}
+
+double fa2fd( double fs, double fa )
+{
+  return 2.0*fs*atan( fa/(2.0*fs) );
+}
+
+void TASCAR::biquad_t::set_analog( double g, double z1, double z2, double p1, double p2, double fs )
+{
+  z1 = fa2fd(fs,z1)/fs;
+  z2 = fa2fd(fs,z2)/fs;
+  p1 = fa2fd(fs,p1)/fs;
+  p2 = fa2fd(fs,p2)/fs;
+  g *= (2.0-z1)/(2.0-p1) * (2.0-z2)/(2.0-p2);
+  double z1_((2.0+z1)/(2.0-z1));
+  double z2_((2.0+z2)/(2.0-z2));
+  double p1_((2.0+p1)/(2.0-p1));
+  double p2_((2.0+p2)/(2.0-p2));
+  b1_ = -(z1_+z2_)*g;
+  b2_ = z1_*z2_*g;
+  b0_ = g;
+  a1_ = -(p1_+p2_);
+  a2_ = p1_*p2_;
+}
+
+void TASCAR::biquad_t::set_analog_poles( double g, double p1, double p2, double fs )
+{
+  p1 = fa2fd(fs,p1)/fs;
+  p2 = fa2fd(fs,p2)/fs;
+  g *= 1.0/(fs*(2.0-p1)*(2.0-p2)*fs);
+  double z1_(-1.0);
+  double z2_(-1.0);
+  double p1_((2.0+p1)/(2.0-p1));
+  double p2_((2.0+p2)/(2.0-p2));
+  b1_ = -(z1_+z2_)*g;
+  b2_ = z1_*z2_*g;
+  b0_ = g;
+  a1_ = -(p1_+p2_);
+  a2_ = p1_*p2_;
+}
+
 double _Complex TASCAR::biquad_t::response( double phi ) const
 {
   return response_b(phi)/response_a(phi);
@@ -286,6 +330,14 @@ void TASCAR::biquad_t::set_lowpass( double fc, double fs )
   double g(cabs(response(0.0)));
   set_gzp( 1.0/g, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
 }
+
+TASCAR::aweighting_t::aweighting_t( double fs )
+{
+  b1.set_analog_poles( 7.39705e9, -76655.0, -76655.0, fs );
+  b2.set_analog( sqrt(0.5), 0.0, 0.0, -676.7, -4636.0, fs );
+  b3.set_analog( 1.0, 0.0, 0.0, -129.4, -129.4, fs );
+}
+
 
 /*
  * Local Variables:

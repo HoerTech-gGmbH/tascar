@@ -431,7 +431,7 @@ window in the ``Licenses'' tab and with the command line tool
 Please always check the information provided by those tools carefully
 before sharing a session file.
 
-Please not that in many cases it is illegal to remove or modify
+Please note that in many cases it is illegal to remove or modify
 authorship and license information from files originating from other
 sources.
 
@@ -494,7 +494,7 @@ definitions (\elem{range}).
 \indattr{loop}               & Loop session (true|false); default: false                                                 \\
 \indattr{playonload}         & Start playback when loading the session (true|false); default: false                      \\
 \indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                          \\
-\indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'' or ``bandpass'')                               \\
+\indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'', ``C'' or ``bandpass'')                        \\
 \indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                                   \\
 \indattr{levelmeter\_range}  & Level range of level meters in dB (default: 70)                                           \\
 \indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                               \\
@@ -558,12 +558,13 @@ are ignored.
 % root element).
 
 The element \elem{license} can be used to specify additional licenses, e.g., for additional visual content.
-In addition to the licenses, the authors can be specified using the \elem{author} element:
+In addition to the licenses, the authors can be specified using the \elem{author} element, and a bibliography can be provided using the \elem{bibitem} elements:
 \begin{lstlisting}[numbers=none]
 <session license="CC BY-SA 3.0" attribution="Author1">
   <license name="visuals" license="CC BY-SA-NC 3.0" attribution="Author2"/>
   <author name="Author1" of="audio"/>
   <author name="Author2" of="visuals"/>
+  <bibitem>Grimm, G., Kollmeier, B., &amp; Hohmann, V. (2016). Spatial acoustic scenarios in multichannel loudspeaker systems for hearing aid evaluation. Journal of the American Academy of Audiology, 27(7), 557-566.</bibitem>
   ...
 </session>
 \end{lstlisting}
@@ -1651,6 +1652,11 @@ Please be aware of the fact that in ``unweighted'' mode the background
 noise levels can be in the order of 40-60 dB, due to ventilation of
 the room, door slamming in the building, steps, nearby trains and
 plains etc., which contain extremely low frequencies.
+
+\index{frequency weighting}\index{level meter}
+The \tascar{} level meters support three different frequency
+weightings: ``Z'' or unweighted mode, ``C'' weighting (62.5~Hz to
+4~kHz) and a ``bandpass'' weighting (500~Hz to 4~kHz).
 
 \subsection{Calibrating speaker layouts with {\tt tascar\_spkcalib}}
 

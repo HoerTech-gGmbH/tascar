@@ -19,6 +19,11 @@ void get_license_info( xmlpp::Element* e, const std::string& fname, std::string&
   }  
 }
 
+licensehandler_t::licensehandler_t()
+{
+  bibliography.push_back("Grimm, Giso; Luberadzka, Joanna; Hohmann, Volker. A Toolbox for Rendering Virtual Acoustic Environments in the Context of Audiology. Acta Acustica united with Acustica, Volume 105, Number 3, May/June 2019, pp. 566-578(13), doi:10.3813/AAA.919337");
+}
+
 bool licensehandler_t::has_authors() const
 {
   return !authors.empty();
@@ -54,6 +59,22 @@ void licensehandler_t::add_license( const std::string& license, const std::strin
     licenses[license].insert(tag);
   if( !attribution.empty() )
     attributions[attribution].insert(tag);
+  std::string licatt(license);
+  if( licatt.empty() )
+    licatt = "unknown";
+  if( !attribution.empty() )
+    licatt += std::string(" (")+attribution+std::string(")");
+  licensedcomponents[tag] = licatt;
+}
+
+void licensehandler_t::add_bibliography( const std::vector<std::string>& bib )
+{
+  bibliography.insert(bibliography.end(),bib.begin(),bib.end());
+}
+
+void licensehandler_t::add_bibitem( const std::string& bib )
+{
+  bibliography.push_back( bib );
 }
 
 std::string licensehandler_t::legal_stuff( bool use_markup ) const
@@ -63,7 +84,7 @@ std::string licensehandler_t::legal_stuff( bool use_markup ) const
     retv += "Authors:\n";
     for( auto it=authors.begin();it!=authors.end();++it){
       retv += it->first;
-      if( !it->second.empty() ){
+      if( !(it->second.empty()||it->second.begin()->empty()) ){
         retv += " (";
         for( auto o=it->second.begin();o!=it->second.end();++o){
           if( o!=it->second.begin() )
@@ -129,7 +150,12 @@ std::string licensehandler_t::legal_stuff( bool use_markup ) const
       retv += "\n";
     }
   }
-  retv += "\nWhen using TASCAR in scientific research, please always cite this publication:\n\nGrimm, Giso; Luberadzka, Joanna; Hohmann, Volker. A Toolbox for Rendering Virtual Acoustic Environments in the Context of Audiology. Acta Acustica united with Acustica, Volume 105, Number 3, May/June 2019, pp. 566-578(13), doi:10.3813/AAA.919337\n";
+  retv += "\nBibliography:\n";
+  for(auto it=bibliography.begin();it!=bibliography.end();++it)
+    retv += *it + "\n";
+  retv += "\nLicensed components:\n";
+  for( auto it=licensedcomponents.begin();it!=licensedcomponents.end();++it)
+    retv += it->first + ": " + it->second + "\n";
   return retv;
 }
 

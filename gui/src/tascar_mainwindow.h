@@ -66,6 +66,10 @@ protected:
   void on_menu_view_meter_peak();
   void on_menu_view_meter_percentile();
   void on_menu_view_show_warnings();
+  void on_menu_view_meterw_z();
+  void on_menu_view_meterw_a();
+  void on_menu_view_meterw_c();
+  void on_menu_view_meterw_bandpass();
 
   virtual bool draw_scene(const Cairo::RefPtr<Cairo::Context>& cr);
   bool on_timeout();

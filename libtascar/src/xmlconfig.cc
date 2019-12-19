@@ -32,6 +32,25 @@ size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes, b
   return hash_fn(v);
 }
 
+std::string TASCAR::to_string( const TASCAR::levelmeter::weight_t& value )
+{
+  switch( value ){
+  case TASCAR::levelmeter::Z :
+    return "Z";
+    break;
+  case TASCAR::levelmeter::A :
+    return "A";
+    break;
+  case TASCAR::levelmeter::C :
+    return "C";
+    break;
+  case TASCAR::levelmeter::bandpass :
+    return "bandpass";
+    break;
+  }
+  return "";
+}
+
 std::string TASCAR::to_string( double x )
 {
   char ctmp[1024];
@@ -564,17 +583,7 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASC
 
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::levelmeter::weight_t& value)
 {
-  switch( value ){
-  case TASCAR::levelmeter::Z :
-    elem->set_attribute(name,"Z");
-    break;
-  case TASCAR::levelmeter::C :
-    elem->set_attribute(name,"C");
-    break;
-  case TASCAR::levelmeter::bandpass :
-    elem->set_attribute(name,"bandpass");
-    break;
-  }
+  elem->set_attribute(name,TASCAR::to_string(value));
 }
 
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const std::vector<TASCAR::pos_t>& value)
@@ -756,6 +765,8 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::le
     value = TASCAR::levelmeter::Z;
   else if( svalue == "C" )
     value = TASCAR::levelmeter::C;
+  else if( svalue == "A" )
+    value = TASCAR::levelmeter::A;
   else if( svalue == "bandpass" )
     value = TASCAR::levelmeter::bandpass;
   else

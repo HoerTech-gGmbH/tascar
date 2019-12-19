@@ -29,15 +29,20 @@ class licensehandler_t {
 public:
   void add_license( const std::string& license, const std::string& attribution, const std::string& tag );
   void add_author( const std::string& author, const std::string& tag );
+  void add_bibliography( const std::vector<std::string>& bib );
+  void add_bibitem( const std::string& bib );
   bool has_authors() const;
   std::string get_authors() const;
   std::string legal_stuff(bool use_markup = false) const;
   std::string show_unknown() const;
   bool distributable() const;
+  licensehandler_t();
 private:
   std::map<std::string,std::set<std::string> > authors;
   std::map<std::string,std::set<std::string> > licenses;
   std::map<std::string,std::set<std::string> > attributions;
+  std::map<std::string,std::string> licensedcomponents;
+  std::vector<std::string> bibliography;
 };
 
 void get_license_info( xmlpp::Element* e, const std::string& fname, std::string& license, std::string& attribution );

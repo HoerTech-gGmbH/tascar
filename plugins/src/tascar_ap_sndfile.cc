@@ -1,4 +1,5 @@
 #include "audioplugin.h"
+#include "levelmeter.h"
 #include "errorhandling.h"
 #include <fstream>
 
@@ -13,6 +14,7 @@ protected:
   double length;
   uint32_t loop;
   std::string levelmode;
+  TASCAR::levelmeter::weight_t weighting;
   double level;
   bool triggered;
   bool transport;
@@ -29,6 +31,7 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
     length(0),
     loop(1),
     levelmode("rms"),
+    weighting(TASCAR::levelmeter::Z),
     level(0),
     triggered(false),
     transport(true),
@@ -43,6 +46,7 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE(levelmode);
   if( levelmode.empty() )
     levelmode = "rms";
+  GET_ATTRIBUTE(weighting);
   GET_ATTRIBUTE_DB(level);
   GET_ATTRIBUTE_BOOL(triggered);
   GET_ATTRIBUTE_BOOL(transport);
@@ -90,9 +94,11 @@ void ap_sndfile_t::prepare( chunk_cfg_t& cf )
     TASCAR::add_warning(msg,e);
   }
   double gain(1);
-  if( levelmode == "rms" )
-    gain = level*2e-5 / sndf[0]->rms();
-  else
+  if( levelmode == "rms" ){
+    TASCAR::levelmeter_t meter( cf.f_sample, sndf[0]->n/cf.f_sample, weighting );
+    meter.update( *(sndf[0]) );
+    gain = level*2e-5 / meter.rms();
+  }else
     if( levelmode == "peak" ){
       float maxabs(0);
       for( auto sf=sndf.begin();sf!=sndf.end();++sf)

@@ -446,6 +446,52 @@
                         </child>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkMenuItem" id="main_view_meter1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Meter _weighting</property>
+                        <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu" id="menu3">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkMenuItem" id="main_view_meterw_z">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.meterw_z</property>
+                                <property name="label" translatable="yes">Z weighting</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkMenuItem" id="main_view_meterw_c">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.meterw_c</property>
+                                <property name="label" translatable="yes">C weighting</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkMenuItem" id="main_view_meterw_a">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.meterw_a</property>
+                                <property name="label" translatable="yes">A weighting</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkMenuItem" id="main_view_meterw_bandpass">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.meterw_bandpass</property>
+                                <property name="label" translatable="yes">bandpass weighting</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>

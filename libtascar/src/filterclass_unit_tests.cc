@@ -164,6 +164,61 @@ TEST(bandpass_t, gain)
   ASSERT_NEAR(-10.39f,10.0*log10(sin8000.ms()),0.04f);
 }
 
+TEST(biquad_t,analog)
+{
+  TASCAR::biquad_t b;
+  // in octave:
+  // [ZB,ZA] = bilinear( [20,20], [1000,1000], 1, 1/44100 )
+  b.set_analog( 1.0, 20.0, 20.0, 1000.0, 1000.0, 44100.0 );
+  // boundaries:
+  ASSERT_NEAR(-2.04587156,b.get_a1(),1e-5);
+  ASSERT_NEAR(1.04639761,b.get_a2(),1e-5);
+  ASSERT_NEAR(1.022603369,b.get_b0(),1e-5);
+  ASSERT_NEAR(-2.046134479,b.get_b1(),1e-5);
+  ASSERT_NEAR(1.023531321,b.get_b2(),1e-5);
+  // in octave:
+  // [ZB,ZA] = bilinear( [], [1000,1000], 1, 1/44100 )
+  b.set_analog_poles( 1.0, 1000.0, 1000.0, 44100.0 );
+  // boundaries:
+  ASSERT_NEAR(-2.04587156,b.get_a1(),1e-5);
+  ASSERT_NEAR(1.04639761,b.get_a2(),1e-5);
+  ASSERT_NEAR(1.315124989e-10,b.get_b0(),1e-5);
+  ASSERT_NEAR(2.630249979e-10,b.get_b1(),1e-5);
+  ASSERT_NEAR(1.315124989e-10,b.get_b2(),1e-5);
+}
+
+
+TEST(aweighting_t,fresponse)
+{
+  uint32_t fs(44100);
+  TASCAR::wave_t x(4*fs);
+  std::map<double,double> t;
+  // table from here:
+  // https://www.nti-audio.com/en/support/know-how/frequency-weightings-for-sound-level-measurements
+  //t[8] = -77.8;
+  //t[16] = -56.7;
+  t[31.5] = -39.4;
+  t[63] = -26.2;
+  t[125] = -16.1;
+  t[250] = -8.6;
+  t[500] = -3.2;
+  t[1000] = 0;
+  t[2000] = 1.2;
+  t[4000] = 1.0;
+  t[5000] = 0.5;
+  //t[6300] = -0.1;
+  //t[8000] = -1.1;
+  //t[16000] = -6.6;
+  for( auto it=t.begin();it!=t.end();++it){
+    TASCAR::aweighting_t a(fs);
+    for( uint32_t k=0;k<x.n;++k )
+      x.d[k] = sqrt(2.0)*sin(PI2 * it->first * k/(double)fs);
+    ASSERT_NEAR(0.0,10.0*log10(x.ms()),0.001);
+    a.filter( x );
+    ASSERT_NEAR(it->second,10.0*log10(x.ms()),0.5);
+  }
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
