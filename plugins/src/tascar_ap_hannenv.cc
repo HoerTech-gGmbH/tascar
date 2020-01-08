@@ -3,7 +3,7 @@
 class hannenv_t : public TASCAR::audioplugin_base_t {
 public:
   hannenv_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   ~hannenv_t();
 private:
   double t0;
@@ -32,7 +32,7 @@ hannenv_t::~hannenv_t()
 {
 }
 
-void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   double t1(ramp1);
   double t2(t1+steady);

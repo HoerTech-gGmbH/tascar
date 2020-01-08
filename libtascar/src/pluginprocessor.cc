@@ -56,10 +56,10 @@ void plugin_processor_t::validate_attributes(std::string& msg) const
     (*p)->validate_attributes(msg);
 }
 
-void plugin_processor_t::process_plugins( std::vector<wave_t>& s, const pos_t& pos, const transport_t& tp )
+void plugin_processor_t::process_plugins( std::vector<wave_t>& s, const pos_t& pos, const zyx_euler_t& o, const transport_t& tp )
 {
   for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->ap_process( s, pos, tp );
+    (*p)->ap_process( s, pos, o, tp );
 }
 
 void plugin_processor_t::add_variables( TASCAR::osc_server_t* srv )

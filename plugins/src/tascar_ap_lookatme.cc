@@ -4,7 +4,7 @@
 class lookatme_t : public TASCAR::audioplugin_base_t {
 public:
   lookatme_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   void add_variables( TASCAR::osc_server_t* srv );
   ~lookatme_t();
@@ -76,7 +76,7 @@ lookatme_t::~lookatme_t()
   lo_address_free(lo_addr);
 }
 
-void lookatme_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void lookatme_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   rms = lpc1*rms + (1.0-lpc1)*chunk[0].rms();
   if( !levelpath.empty() )

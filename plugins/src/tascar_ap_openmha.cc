@@ -7,7 +7,7 @@
 class openmha_t : public TASCAR::audioplugin_base_t, public MHAKernel::algo_comm_class_t {
 public:
   openmha_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -95,7 +95,7 @@ openmha_t::~openmha_t()
 {
 }
 
-void openmha_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void openmha_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   try{
     // copy sound vertex position:

@@ -1031,6 +1031,9 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
     source_t::get_attribute("y",local_position.y);
     source_t::get_attribute("z",local_position.z);
   }
+  source_t::get_attribute_deg("rz",local_orientation.z);
+  source_t::get_attribute_deg("ry",local_orientation.y);
+  source_t::get_attribute_deg("rx",local_orientation.x);
   source_t::get_attribute("d",chaindist);
   // parse plugins:
   xmlpp::Node::NodeList subnodes = source_t::e->get_children();
@@ -1053,6 +1056,7 @@ sound_t::~sound_t()
 void sound_t::geometry_update( double t )
 {
   pos_t rp(local_position);
+  orientation = local_orientation;
   if( parent ){
     rp *= parent->c6dof.orientation;
     if( chaindist != 0 ){
@@ -1062,7 +1066,7 @@ void sound_t::geometry_update( double t )
     }else{
       rp += parent->c6dof.position;
     }
-    orientation = parent->c6dof.orientation;
+    orientation += parent->c6dof.orientation;
   }
   position = rp;
 }

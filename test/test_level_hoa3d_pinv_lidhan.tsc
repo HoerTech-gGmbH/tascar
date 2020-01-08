@@ -22,6 +22,6 @@
 	<plugins><pink level="70"/></plugins>
       </sound>
     </source>
-    <receiver type="hoa3d" order="5" method="pinv" dectype="basic" layout="lidhan_3d.spk"/>
+    <receiver type="hoa3d" order="7" method="pinv" dectype="basic" layout="lidhan_3d.spk"/>
   </scene>
 </session>

@@ -3,7 +3,7 @@
 class pulse_t : public TASCAR::audioplugin_base_t {
 public:
   pulse_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
   ~pulse_t();
 private:
@@ -32,7 +32,7 @@ void pulse_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double_dbspl("/a",&a);
 }
 
-void pulse_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void pulse_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
 {
   uint32_t p(f_sample/f);
   for(uint32_t k=0;k<chunk[0].n;++k){

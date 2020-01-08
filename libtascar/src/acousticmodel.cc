@@ -32,7 +32,7 @@ diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter
 
 void diffuse_t::preprocess(const TASCAR::transport_t& tp)
 {
-  plugins.process_plugins( audio.wxyz, center, tp );
+  plugins.process_plugins( audio.wxyz, center, orientation, tp );
   rmslevel.update(audio.w());
 }
 
@@ -534,7 +534,7 @@ void receiver_t::postproc(std::vector<wave_t>& output)
 {
   add_diffuse_sound_field( *scatterbuffer, scatter_handle );
   receivermod_t::postproc(output);
-  plugins.process_plugins(output,position,ltp);
+  plugins.process_plugins(output,position,orientation,ltp);
 }
 
 /**
@@ -757,7 +757,7 @@ void source_t::release()
 
 void source_t::process_plugins( const TASCAR::transport_t& tp )
 {
-  plugins.process_plugins( inchannels, position, tp );
+  plugins.process_plugins( inchannels, position, orientation, tp );
 }
 
 void receiver_t::add_variables(TASCAR::osc_server_t* srv )

@@ -7,7 +7,7 @@
 class periodogram_t : public TASCAR::audioplugin_base_t {
 public:
   periodogram_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -103,7 +103,7 @@ periodogram_t::~periodogram_t()
 {
 }
 
-void periodogram_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void periodogram_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   uint32_t N(chunk[0].size());
   lpc1 = exp(-1.0/(tau*f_sample));

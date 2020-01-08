@@ -3,7 +3,7 @@
 class gate_t : public TASCAR::audioplugin_base_t {
 public:
   gate_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -97,7 +97,7 @@ gate_t::~gate_t()
 {
 }
 
-void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::transport_t& tp)
+void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   double c1rms(exp(-1.0/(taurms*f_sample)));
   double c2rms(1.0-c1rms);

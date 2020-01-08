@@ -6,7 +6,7 @@
 class speechactivity_t : public TASCAR::audioplugin_base_t {
 public:
   speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   void release();
   ~speechactivity_t();
@@ -69,7 +69,7 @@ speechactivity_t::~speechactivity_t()
 {
 }
 
-void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
 {
   TASCAR_ASSERT(chunk.size()==intensity.size());
   double  lpc1(exp(-PI2/(tauenv*f_fragment)));

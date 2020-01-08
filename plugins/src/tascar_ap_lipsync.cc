@@ -13,7 +13,7 @@
 class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
   lipsync_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -141,7 +141,7 @@ lipsync_t::~lipsync_t()
   lo_address_free(lo_addr);
 }
 
-void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   // Following web api doc: https://webaudio.github.io/web-audio-api/#fft-windowing-and-smoothing-over-time
   // Blackman window

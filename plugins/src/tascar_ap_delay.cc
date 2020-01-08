@@ -3,7 +3,7 @@
 class delay_t : public TASCAR::audioplugin_base_t {
 public:
   delay_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& rot, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   void release();
   ~delay_t();
@@ -41,7 +41,7 @@ delay_t::~delay_t()
 {
 }
 
-void delay_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::transport_t& tp)
+void delay_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t&, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   if( dline && (delay > 0) ){
     for(uint32_t k=0;k<chunk[0].n;++k){

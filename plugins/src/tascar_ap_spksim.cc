@@ -4,7 +4,7 @@
 class spksim_t : public TASCAR::audioplugin_base_t {
 public:
   spksim_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
   ~spksim_t();
 private:
@@ -47,7 +47,7 @@ spksim_t::~spksim_t()
 {
 }
 
-void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::transport_t& tp)
+void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
 {
   TASCAR::wave_t& aud(chunk[0]);
   double farg(2.0*M_PI*fres/f_sample);

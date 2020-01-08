@@ -4,7 +4,7 @@
 class feedbackdelay_t : public TASCAR::audioplugin_base_t {
 public:
   feedbackdelay_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
   ~feedbackdelay_t();
 private:
@@ -38,7 +38,7 @@ void feedbackdelay_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double("/feedback",&feedback);
 }
 
-void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   // sample delay; subtract 1 to account for order of read/write:
   double d(f_sample/f-1.0);

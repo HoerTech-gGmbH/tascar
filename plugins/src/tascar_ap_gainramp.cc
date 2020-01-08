@@ -4,7 +4,7 @@
 class gainramp_t : public TASCAR::audioplugin_base_t {
 public:
   gainramp_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
@@ -47,7 +47,7 @@ gainramp_t::~gainramp_t()
 {
 }
 
-void gainramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void gainramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   if( !chunk.empty() ){
     uint32_t nch(chunk.size());

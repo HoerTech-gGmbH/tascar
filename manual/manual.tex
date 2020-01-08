@@ -896,6 +896,7 @@ object (taken from Example \ref{tsc:example_basic}):
 \indattr{caliblevel}                 & Calibration level in dB; default: 93.9794                                                  \\
 \indattr{gain}                       & Gain in dB; default: 0                                                                     \\
 \indattr{x},\indattr{y}, \indattr{z} & Local Cartesian coordinates; default: 0                                                    \\
+\indattr{rz},\indattr{ry}, \indattr{rx} & Local Euler orientation; default: 0                                                    \\
 \indattr{d}                          & Chain distance (vertex distance along trajectory); default: 0                              \\
 \indattr{maxdist}                    & Maximum delay line length in meter; default: 3700                                          \\
 \indattr{minlevel}                   & Minimum SPL for source to be rendered (default: -inf)                                      \\
@@ -916,8 +917,8 @@ Properties of the sound vertex define its radiation characteristics
 \attr{sincorder}), its level calibration and gain characteristics
 (\attr{caliblevel}, \attr{gain}), activity processing
 (\attr{maxdist}, \attr{minlevel}, \attr{layers}), image source model settings
-(\attr{ismmin}, \attr{ismmax}) and the relative position
-(\attr{x}, \attr{y}, \attr{z}, \attr{d}).
+(\attr{ismmin}, \attr{ismmax}) and the relative position and orientation
+(\attr{x}, \attr{y}, \attr{z}, \attr{rz}, \attr{ry}, \attr{rx}, \attr{d}).
 
 If we want to create a point source, as in the example, we will
 have one sound vertex exactly at the position of the source

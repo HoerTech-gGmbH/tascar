@@ -25,6 +25,7 @@ private:
   TASCAR::levelmeter::weight_t levelmeter_weight;
   TASCAR::plugin_processor_t plugins;
   TASCAR::pos_t nullpos;
+  TASCAR::zyx_euler_t nullrot;
   float dummy;
   std::vector<TASCAR::wave_t> sIn_tsc;
   bool bypass;
@@ -156,7 +157,7 @@ int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const 
       sIn_tsc[ch].copy(sIn[ch],n);
     }
     if( active )
-      plugins.process_plugins( sIn_tsc, nullpos, tp );
+      plugins.process_plugins( sIn_tsc, nullpos, nullrot, tp );
     for(uint32_t ch=0;ch<std::min(sIn.size(),sOut.size());++ch){
       if( active ){
         for(uint32_t k=0;k<n;++k){

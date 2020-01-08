@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="3">
+    <source>
+      <orientation>0 0 0 0
+      1.0000 360 0 0</orientation>
+      <sound x="1">
+	<plugins><pink level="70"/></plugins>
+      </sound>
+    </source>
+    <receiver type="${RECEIVER}" layout="${CHANNELS}ch.spk"/>
+  </scene>
+</session>

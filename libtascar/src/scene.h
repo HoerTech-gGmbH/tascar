@@ -285,6 +285,7 @@ namespace TASCAR {
       src_object_t* parent;
     private:
       pos_t local_position;
+      zyx_euler_t local_orientation;
       double chaindist;
       double gain_;
       std::vector<TASCAR::levelmeter_t*> meter;

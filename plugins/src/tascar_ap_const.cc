@@ -10,7 +10,7 @@
 class const_val_t : public TASCAR::audioplugin_base_t {
 public:
   const_val_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
   virtual ~const_val_t();
 private:
@@ -36,7 +36,7 @@ void const_val_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double_dbspl("/a",&a);
 }
 
-void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   // implement the algrithm:
   for(uint32_t k=0;k<chunk[0].n;++k)

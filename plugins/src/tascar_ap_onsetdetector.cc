@@ -4,7 +4,7 @@
 class onsetdetector_t : public TASCAR::audioplugin_base_t {
 public:
   onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void prepare( chunk_cfg_t& cf_ );
   ~onsetdetector_t();
 private:
@@ -70,7 +70,7 @@ onsetdetector_t::~onsetdetector_t()
   lo_address_free(lo_addr);
 }
 
-void onsetdetector_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::transport_t& tp)
+void onsetdetector_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   const char* this_side(side.c_str());
   uint32_t N(chunk[0].size());
