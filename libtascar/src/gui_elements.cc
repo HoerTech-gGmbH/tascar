@@ -3,7 +3,9 @@
 #define GUI_FACE_ALPHA 0.1
 
 dameter_t::dameter_t()
-  : v_rms(0),
+  : narrow(false),
+    narrowleg(false),
+    v_rms(0),
     v_peak(0),
     q30(0),
     q50(0),
@@ -33,8 +35,17 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   Gtk::Allocation allocation(get_allocation());
   const int width(allocation.get_width());
+  int width_bar(0.5*width);
+  if( narrow ){
+    if( narrowleg )
+      width_bar = 0;
+    else
+      width_bar = width;
+  }
   const int height(allocation.get_height());
-  const int label_h(20);
+  int label_h(20);
+  if( narrow )
+    label_h = 0;
   cr->save();
   float yscale((height-label_h)/range);
   cr->translate(0,height);
@@ -55,38 +66,38 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   case rmspeak:
   case rms:
     cr->set_source_rgb( 0.25, 0.7, 0.25 );
-    cr->rectangle(0,0,0.5*width,v_rms);
+    cr->rectangle(0,0,width_bar,v_rms);
     cr->fill();
     break;
   case peak:
     break;
   case percentile:
     cr->set_source_rgb( 0.6, 0.6, 0.6 );
-    cr->rectangle(0,0,0.5*width,q30);
+    cr->rectangle(0,0,width_bar,q30);
     cr->fill();
     cr->set_source_rgb( 0.0, 1.0, 119.0/255.0 );
-    cr->rectangle(0,q30,0.5*width,q50-q30);
+    cr->rectangle(0,q30,width_bar,q50-q30);
     cr->fill();
     cr->set_source_rgb( 0.0, 187.0/255.0, 153.0/255.0 );
-    cr->rectangle(0,q50,0.5*width,q65-q50);
+    cr->rectangle(0,q50,width_bar,q65-q50);
     cr->fill();
     cr->set_source_rgb( 0.0, 119.0/255.0, 187.0/255.0 );
-    cr->rectangle(0,q65,0.5*width,q95-q65);
+    cr->rectangle(0,q65,width_bar,q95-q65);
     cr->fill();
     cr->set_source_rgb( 0.0, 51.0/255.0, 221.0/255.0 );
-    cr->rectangle(0,q95,0.5*width,q99-q95);
+    cr->rectangle(0,q95,width_bar,q99-q95);
     cr->fill();
     cr->set_line_width(2/yscale);
     cr->set_source_rgb( 0.3, 0.3, 0.3 );
-    line_at(cr,q30,0,0.5*width);
+    line_at(cr,q30,0,width_bar);
     cr->set_source_rgb( 0.0, 0.5, 0.5*119.0/255.0 );
-    line_at(cr,q50,0,0.5*width);
+    line_at(cr,q50,0,width_bar);
     cr->set_source_rgb( 0.0, 0.5*187.0/255.0, 0.5*153.0/255.0 );
-    line_at(cr,q65,0,0.5*width);
+    line_at(cr,q65,0,width_bar);
     cr->set_source_rgb( 0.0, 0.5*119.0/255.0, 0.5*187.0/255.0 );
-    line_at(cr,q95,0,0.5*width);
+    line_at(cr,q95,0,width_bar);
     cr->set_source_rgb( 0.0, 0.5*51.0/255.0, 0.5*221.0/255.0 );
-    line_at(cr,q99,0,0.5*width);
+    line_at(cr,q99,0,width_bar);
     break;
   }
   switch( mode ){
@@ -95,76 +106,81 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->set_line_width(1.0);
     cr->set_source_rgb( 1.0, 0.9, 0 );
     cr->move_to(0,v_peak);
-    cr->line_to(0.5*width,v_peak);
+    cr->line_to(width_bar,v_peak);
     cr->stroke();
     break;
   default:
     break;
   }
-  // draw scale:
-  cr->set_line_width(1/yscale);
-  float divider(10.0f);
-  if( range < 50.0f )
-    divider = 5.0f;
-  if( range < 30.0f )
-    divider = 2.0f;
-  for(int32_t k=ceil((vmin+1e-7)/divider);k<=floor((vmin+range-1e-7)/divider);++k){
-    switch( mode ){
-    case rmspeak:
-    case rms:
-    case peak:
-      cr->set_source_rgb( 0.25, 0.7, 0.25 );
-      break;
-    case percentile:
-      cr->set_source_rgb( 0.4, 0.4, 0.4 );
-      break;
+  if( (!narrow) || narrowleg ){
+    // draw scale:
+    cr->set_line_width(1/yscale);
+    float divider(10.0f);
+    if( range < 50.0f )
+      divider = 5.0f;
+    if( range < 30.0f )
+      divider = 2.0f;
+    for(int32_t k=ceil((vmin+1e-7)/divider);k<=floor((vmin+range-1e-7)/divider);++k){
+      switch( mode ){
+      case rmspeak:
+      case rms:
+      case peak:
+        cr->set_source_rgb( 0.25, 0.7, 0.25 );
+        break;
+      case percentile:
+        cr->set_source_rgb( 0.4, 0.4, 0.4 );
+        break;
+      }
+      line_at(cr,divider*k,width_bar,width);
+      cr->save();
+      cr->move_to(1.04*width_bar,divider*k+1/yscale);
+      cr->scale(1.0,-1.0/yscale);
+      char ctmp[256];
+      sprintf(ctmp,"%1.0f",divider*k);
+      switch( mode ){
+      case rmspeak:
+      case rms:
+      case peak:
+        cr->set_source_rgb( 0.45, 1, 0.35 );
+        break;
+      case percentile:
+        cr->set_source_rgb( 0, 0, 0 );
+        break;
+      }
+      cr->show_text(ctmp);
+      cr->restore();
     }
-    line_at(cr,divider*k,0.5*width,width);
-    cr->save();
-    cr->move_to(0.52*width,divider*k+1/yscale);
-    cr->scale(1.0,-1.0/yscale);
-    char ctmp[256];
-    sprintf(ctmp,"%1.0f",divider*k);
-    switch( mode ){
-    case rmspeak:
-    case rms:
-    case peak:
-      cr->set_source_rgb( 0.45, 1, 0.35 );
-      break;
-    case percentile:
-      cr->set_source_rgb( 0, 0, 0 );
-      break;
-    }
-    cr->show_text(ctmp);
-    cr->restore();
   }
   cr->set_line_width(1);
   cr->set_source_rgba( 1, 0, 0, 0.7 );
-  line_at(cr,targetlevel,0.5*width,width);
+  line_at(cr,targetlevel,width_bar,width);
   cr->restore();
-  // write level meter weight:
-  std::string lmweight(TASCAR::to_string(weight));
-  cr->save();
-  cr->move_to(0.02*width,36);
-  cr->set_source_rgb( 0.225, 0.5, 0.175 );
-  cr->scale( 1.2, 1.2 );
-  cr->show_text(lmweight.c_str());
-  cr->restore();
-  // print level:
-  cr->save();
-  cr->set_source_rgb( 1, 1, 1 );
-  cr->rectangle(0,0,width,20);
-  cr->fill();
-  {
-    char ctmp[256];
-    sprintf(ctmp,"%1.1f",v_rms);
-    cr->set_source_rgb( 0, 0, 0 );
-    cr->move_to( 0.1*width, 0.8*label_h );
+  if( (!narrow) || narrowleg ){
+    // write level meter weight:
+    std::string lmweight(TASCAR::to_string(weight));
+    cr->save();
+    cr->move_to(0.02*width,label_h+16);
+    cr->set_source_rgb( 0.225, 0.5, 0.175 );
     cr->scale( 1.2, 1.2 );
-    cr->show_text(ctmp);
-    
+    cr->show_text(lmweight.c_str());
+    cr->restore();
   }
-  cr->restore();
+  if( !narrow ){
+    // print level:
+    cr->save();
+    cr->set_source_rgb( 1, 1, 1 );
+    cr->rectangle(0,0,width,20);
+    cr->fill();
+    {
+      char ctmp[256];
+      sprintf(ctmp,"%1.1f",v_rms);
+      cr->set_source_rgb( 0, 0, 0 );
+      cr->move_to( 0.1*width, 0.8*label_h );
+      cr->scale( 1.2, 1.2 );
+      cr->show_text(ctmp);
+    }
+    cr->restore();
+  }
   return true;
 }
 
@@ -177,6 +193,24 @@ splmeter_t::splmeter_t()
   dameter.signal_draw().connect( sigc::mem_fun(*this,&splmeter_t::on_draw) );
   add(dameter);
   dameter.set_size_request( 32, 320 );
+}
+
+void splmeter_t::set_weight( TASCAR::levelmeter::weight_t w )
+{
+  dameter.weight = w;
+}
+
+void splmeter_t::set_narrow( bool narrow, bool leg )
+{
+  dameter.narrow = narrow;
+  dameter.narrowleg = leg;
+  if( narrow ){
+    if( leg )
+      dameter.set_size_request( 16, 320 );
+    else
+      dameter.set_size_request( 6, 320 );
+  }else
+    dameter.set_size_request( 32, 320 );
 }
 
 void splmeter_t::invalidate_win()
@@ -345,6 +379,7 @@ source_ctl_t::source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
 
 void source_ctl_t::setup()
 {
+  uint32_t maxchannels(TASCAR::config("tascar.gui.leveldisplay.maxchannels",2));
   ebox.add( box );
   label.set_text(route_->get_name());
   if( dynamic_cast<TASCAR::Scene::face_object_t*>(route_))
@@ -413,7 +448,14 @@ void source_ctl_t::setup()
   pack_start( playertimeline, Gtk::PACK_EXPAND_WIDGET );
   for(uint32_t k=0;k<route_->metercnt();k++){
     meters.push_back(new splmeter_t());
-    meterbox.add(*(meters[k]));
+    meterbox.add(*(meters.back()));
+    if( route_->metercnt() > maxchannels )
+      meters.back()->set_narrow(true, false );
+  }
+  if( route_->metercnt() > maxchannels ){
+    meters.push_back(new splmeter_t());
+    meterbox.add(*(meters.back()));
+    meters.back()->set_narrow(true, true );
   }
   mute.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_mute));
   solo.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_solo));
@@ -422,8 +464,10 @@ void source_ctl_t::setup()
 void source_ctl_t::update()
 {
   // update level meters:
-  for(uint32_t k=0;k<meters.size();k++)
+  for(uint32_t k=0;k<route_->metercnt();k++)
     meters[k]->update_levelmeter( route_->get_meter(k), route_->targetlevel );
+  if( route_->metercnt() < meters.size() )
+    meters.back()->set_weight( route_->get_meter(0).get_weight() );
   // update gain controllers:
   for(uint32_t k=0;k<gainctl.size();k++)
     gainctl[k]->update();

@@ -55,6 +55,8 @@ public:
     percentile
   };
   mode_t mode;
+  bool narrow;
+  bool narrowleg;
   float v_rms;
   float v_peak;
   float q30;
@@ -79,6 +81,8 @@ public:
   splmeter_t();
   void update_levelmeter( const TASCAR::levelmeter_t& lm, float targetlevel );
   void set_mode( dameter_t::mode_t mode );
+  void set_weight( TASCAR::levelmeter::weight_t w );
+  void set_narrow( bool narrow, bool leg );
   void set_min_and_range( float vmin, float range );
   void invalidate_win();
 private:

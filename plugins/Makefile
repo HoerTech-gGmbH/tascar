@@ -29,7 +29,7 @@ AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   level2osc const noise loopmachine pos2osc
 
 GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
-  qualisys jackstatus
+  qualisys jackstatus serial
 
 
 ifeq "$(HAS_LSL)" "yes"

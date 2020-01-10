@@ -376,6 +376,7 @@ protected:
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
   std::vector<TASCAR::wave_t*> inwave;
   std::vector<splmeter_t*> guimeter;
+  double miccalibdb;
   double miccalib;
 };
 
@@ -423,16 +424,17 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
   fmax(TASCAR::config("tascar.spkcalib.fmax",4000.0)),
   prewait(TASCAR::config("tascar.spkcalib.prewait",0.5)),
   refport(str2vecstr(TASCAR::config("tascar.spkcalib.inputport","system:capture_1"))),
-  miccalib(TASCAR::config("tascar.spkcalib.miccalib",0.0))
+  miccalibdb(TASCAR::config("tascar.spkcalib.miccalib",0.0)),
+  miccalib(1.0/(pow(10.0,0.05*miccalib)/2e-5))
 {
-  miccalib = 1.0/(pow(10.0,0.05*miccalib)/2e-5);
   for( uint32_t k=0;k<refport.size();++k){
     add_input_port(std::string("in.")+TASCAR::to_string(k+1));
     rmsmeter.push_back(new TASCAR::levelmeter_t(get_srate(),noiseperiod,TASCAR::levelmeter::C));
     inwave.push_back(new TASCAR::wave_t(get_fragsize()));
     guimeter.push_back(new splmeter_t());
     guimeter.back()->set_mode( dameter_t::rmspeak );
-    guimeter.back()->set_min_and_range( reflevel-20.0, 30.0 );
+    //guimeter.back()->set_min_and_range( reflevel-20.0, 30.0 );
+    guimeter.back()->set_min_and_range( miccalibdb-40.0, 40.0 );
   }
   jackc_t::activate();
   for( uint32_t k=0;k<refport.size();++k)

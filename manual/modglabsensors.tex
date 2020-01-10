@@ -62,6 +62,18 @@ these attributes:
 \end{tscattributes}
 The LSL output stream contains one channel.
 
+The {\bf serial} sensor reads data from the serial device, with
+these attributes:
+\begin{tscattributes}
+\indattr{device}   & Serial device (default: ``/dev/ttyS0'') \\
+\indattr{baudrate} & Baud rate (default: 38400)              \\
+\indattr{charsize} & Character size (default: 8)             \\
+\indattr{offset}   & Data offset (default: 0)                \\
+\indattr{scale}    & Data scale (default: 1)                 \\
+\indattr{channels} & Number of channels (default: 1)         \\
+\end{tscattributes}
+The LSL output stream contains one channel.
+
 The {\bf emergency} sensor reacts on continuous OSC messages on path {\tt /noemergency}, and
 executes a command when no OSC message arrives within a given timeout.
 \begin{tscattributes}
