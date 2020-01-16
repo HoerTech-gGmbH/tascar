@@ -17,3 +17,13 @@ Typical values for small diaphragms are \attr{f6db="3000"} and
 0.172.2); for a higher directivity, use \attr{f6db="1000"} and
 \attr{fmin="60"} (default values of earlier versions).
 
+\begin{tscattributes}
+\indattr{distance} & Microphone distance in meter (0.17)\\
+\indattr{angle} & Angular distance between microphone axes in degree (110)\\
+\indattr{f6db}& 6~dB cutoff frequency for 90 degrees in Hz (3000)\\
+\indattr{fmin}  & Cutoff frequency for 180 degree sounds in Hz (800)\\
+\indattr{sincorder} & Sinc interpolation order of ITD delay line (0)\\
+\indattr{c} & Speed of sound in m/s (340)\\
+\indattr{decorr\_length} & Decorrelation length in seconds (0.05)\\
+\indattr{decorr} & Flag to use decorrelatin of diffuse sounds (false)\\
+\end{tscattributes}

@@ -425,7 +425,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
   prewait(TASCAR::config("tascar.spkcalib.prewait",0.5)),
   refport(str2vecstr(TASCAR::config("tascar.spkcalib.inputport","system:capture_1"))),
   miccalibdb(TASCAR::config("tascar.spkcalib.miccalib",0.0)),
-  miccalib(1.0/(pow(10.0,0.05*miccalib)/2e-5))
+  miccalib(pow(10.0,0.05*miccalibdb)*2e-5)
 {
   for( uint32_t k=0;k<refport.size();++k){
     add_input_port(std::string("in.")+TASCAR::to_string(k+1));

@@ -25,8 +25,10 @@ int main(int argc,char** argv)
     uint32_t ism_max(-1);
     // print statistics
     bool b_verbose(false);
+    // input channel number:
+    uint32_t inchannel(0);
     //
-    const char *options = "hs:o:t:l:f:0:1:4v";
+    const char *options = "hs:o:t:l:f:0:1:4vi:";
     struct option long_options[] = { 
       { "help",       0, 0, 'h' },
       { "scene",      1, 0, 's' },
@@ -36,6 +38,7 @@ int main(int argc,char** argv)
       { "srate",      1, 0, 'f' },
       { "ismmin",     1, 0, '0' },
       { "ismmax",     1, 0, '1' },
+      { "inchannel",  1, 0, 'i' },
       { "verbose",    0, 0, 'v' },
       { 0, 0, 0, 0 }
     };
@@ -45,7 +48,7 @@ int main(int argc,char** argv)
                               long_options, &option_index)) != -1){
       switch(opt){
       case 'h':
-        TASCAR::app_usage("tascar_renderfile",long_options,"configfile");
+        TASCAR::app_usage("tascar_renderir",long_options,"configfile");
         return -1;
       case 's':
         scene = optarg;
@@ -61,6 +64,9 @@ int main(int argc,char** argv)
         break;
       case 'f':
         fs = atof(optarg);
+        break;
+      case 'i':
+        inchannel = atoi(optarg);
         break;
       case '0':
         ism_min = atoi(optarg);
@@ -82,7 +88,7 @@ int main(int argc,char** argv)
     TASCAR::wav_render_t r(tscfile,scene,b_verbose);
     if( ism_max != (uint32_t)(-1) )
       r.set_ism_order_range( ism_min, ism_max );
-    r.render_ir(irlen, fs, out_fname, starttime );
+    r.render_ir(irlen, fs, out_fname, starttime, inchannel );
 #ifndef TSCDEBUG
   }
   catch( const std::exception& msg ){

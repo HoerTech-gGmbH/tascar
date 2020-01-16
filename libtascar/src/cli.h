@@ -32,7 +32,7 @@
 
 namespace TASCAR {
 
-  void app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg="");
+  void app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg="", const std::string& help="" );
 
 }
 

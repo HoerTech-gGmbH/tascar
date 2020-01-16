@@ -27,12 +27,18 @@
 
 namespace TASCAR {
 
+  /**
+     \brief offline rendering of scenes
+
+     This class can render scenes and impulse responses of the image
+     source model part of a virtual scene.
+   */
   class wav_render_t : public TASCAR::tsc_reader_t {
   public:
     wav_render_t(const std::string& tscname,const std::string& scene, bool verbose=false);
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max );
     void render(uint32_t fragsize,const std::string& ifname, const std::string& ofname,double starttime, bool b_dynamic);
-    void render_ir(uint32_t len,double fs, const std::string& ofname,double starttime);
+    void render_ir(uint32_t len,double fs, const std::string& ofname,double starttime, uint32_t inputchannel);
     ~wav_render_t();
   protected:
     void add_scene(xmlpp::Element* e);

@@ -2,7 +2,11 @@
 #include "dmxdriver.h"
 #include "serviceclass.h"
 #include <unistd.h>
-#include <complex.h>
+#include <cmath>
+
+double hue_warp_x(0);
+double hue_warp_y(0);
+double hue_warp_rot(0);
 
 enum method_t {
   nearest, raisedcosine, sawleft, sawright, rect, truncated
@@ -39,7 +43,13 @@ int osc_set_hsv(const char *path, const char *types, lo_arg **argv, int argc, lo
   if( user_data  ){
     std::vector<float> *data((std::vector<float> *)user_data);
     if( (argc==4) && (argc <= (int)(data->size())) ){
-      float h(fmodf(argv[0]->f,360.0f));
+      float _Complex cz(cexpf(1.0If*(argv[0]->f*DEG2RAD)));
+      cz += hue_warp_x+1.0If*hue_warp_y;
+      cz *= cexpf(1.0If*hue_warp_rot);
+      float h(cargf(cz)*RAD2DEG);
+      if( h < 0 )
+        h += 360.0;
+      h = fmodf(h,360.0f);
       float s(argv[1]->f);
       float v(argv[2]->f);
       float d(argv[3]->f);
@@ -563,6 +573,9 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
   }
   add_variables( session );
   start_service();
+  GET_ATTRIBUTE(hue_warp_x);
+  GET_ATTRIBUTE(hue_warp_y);
+  GET_ATTRIBUTE_DEG(hue_warp_rot);
 }
 
 void lightctl_t::validate_attributes(std::string& msg) const
@@ -586,6 +599,9 @@ void lightctl_t::add_variables( TASCAR::osc_server_t* srv )
     (*it)->add_variables( srv );
   }
   srv->set_prefix(old_prefix);
+  srv->add_double( "/light/hue_warp_x", &hue_warp_x );
+  srv->add_double( "/light/hue_warp_y", &hue_warp_y );
+  srv->add_double_degree( "/light/hue_warp_rot", &hue_warp_rot );
 }
 
 lightctl_t::~lightctl_t()

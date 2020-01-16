@@ -66,14 +66,14 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   case rmspeak:
   case rms:
     cr->set_source_rgb( 0.25, 0.7, 0.25 );
-    cr->rectangle(0,0,width_bar,v_rms);
+    cr->rectangle(0,vmin,width_bar,v_rms-vmin);
     cr->fill();
     break;
   case peak:
     break;
   case percentile:
     cr->set_source_rgb( 0.6, 0.6, 0.6 );
-    cr->rectangle(0,0,width_bar,q30);
+    cr->rectangle(0,vmin,width_bar,q30-vmin);
     cr->fill();
     cr->set_source_rgb( 0.0, 1.0, 119.0/255.0 );
     cr->rectangle(0,q30,width_bar,q50-q30);

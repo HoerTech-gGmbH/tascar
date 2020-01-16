@@ -123,7 +123,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
 }
 
 
-void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string& ofname,double starttime)
+void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string& ofname,double starttime, uint32_t inputchannel )
 {
   if( !pscene )
     throw TASCAR::ErrMsg("No scene loaded");
@@ -137,6 +137,8 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
   // initialize scene:
   pscene->prepare( cf );
   uint32_t nch_in(pscene->num_input_ports());
+  if( inputchannel >= nch_in )
+    throw TASCAR::ErrMsg("Input channel number "+TASCAR::to_string(inputchannel)+" is not smaller than number of input channels ("+TASCAR::to_string(nch_in)+").");
   uint32_t nch_out(pscene->num_output_ports());
   sndfile_handle_t sf_out(ofname,fs,nch_out);
   // allocate io audio buffer:
@@ -161,7 +163,7 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
   pscene->process(len,tp,a_in,a_out);
   if( verbose_ )
     std::cerr << "rendering " << pscene->active_pointsources << " of " << pscene->total_pointsources << " point sources.\n";
-  a_in[0][0] = 1.0f;
+  a_in[inputchannel][0] = 1.0f;
   // process audio:
   pscene->process(len,tp,a_in,a_out);
   // save audio:
