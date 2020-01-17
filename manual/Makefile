@@ -1,5 +1,7 @@
 SHELL=/bin/bash
 
+include ../config.mk
+
 all: manual.pdf callgraph.pdf 
 
 diff: manual-diff_master.pdf
@@ -18,9 +20,12 @@ TEXINPUTS="./:../doc/:"
 	TEXINPUTS=$(TEXINPUTS) pdflatex $<
 
 FIGURES = filestructure.pdf creator.pdf
-#ap_sndfile.pdf 
+#ap_sndfile.pdf
 
-manual.pdf: $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex
+version.tex:
+	echo $(FULLVERSION) > $@
+
+manual.pdf: version.tex $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex
 
 secmodules.tex: $(sort $(wildcard mod*.tex))
 	echo 'List of general purpose modules:\par\begin{itemize}' > $@
@@ -67,7 +72,7 @@ secrecspeaker.tex: $(sort $(wildcard recspk*.tex))
 	dot -Tpdf < $< > $@
 
 clean:
-	rm -Rf *.log *.lot *.lof *.aux *.dep *.dvi *.toc *~ *.blg *.bbl *.brf manual.pdf plug_*.tex *.idx *.ilg *.out *.ind $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex
+	rm -Rf *.log *.lot *.lof *.aux *.dep *.dvi *.toc *~ *.blg *.bbl *.brf manual.pdf plug_*.tex *.idx *.ilg *.out *.ind $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex version.tex
 	$(MAKE) -C ./examples clean
 
 %.png: %.dot
