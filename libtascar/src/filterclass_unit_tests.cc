@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "filterclass.h"
-#include <complex.h>
+#include <complex>
 
 TEST(filter_t, constructor)
 {
@@ -61,10 +61,10 @@ TEST(biquad_t,unitgain)
   EXPECT_EQ(0.0, b.get_b2() );
   EXPECT_EQ(0.0, b.get_a1() );
   EXPECT_EQ(0.0, b.get_a2() );
-  ASSERT_NEAR(1.0,cabs(b.response(0*PI2)),1e-9);
-  ASSERT_NEAR(1.0,cabs(b.response(0.25*PI2)),1e-9);
-  ASSERT_NEAR(1.0,cabs(b.response(0.5*PI2)),1e-9);
-  ASSERT_NEAR(1.0,cabs(b.response(0.75*PI2)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0*PI2)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.25*PI2)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.5*PI2)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.75*PI2)),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
@@ -86,10 +86,10 @@ TEST(biquad_t,fresp)
 {
   TASCAR::biquad_t b;
   b.set_gzp( 1.0, 1.0, 0, 0.5, 0.5*PI2 );
-  ASSERT_NEAR(0.0,cabs(b.response(0*PI2)),1e-9);
-  ASSERT_NEAR(0.25,cabs(b.response_a(0.5*PI2)),1e-9);
-  ASSERT_NEAR(4.0,cabs(b.response_b(0.5*PI2)),1e-9);
-  ASSERT_NEAR(16.0,cabs(b.response(0.5*PI2)),1e-9);
+  ASSERT_NEAR(0.0,std::abs(b.response(0*PI2)),1e-9);
+  ASSERT_NEAR(0.25,std::abs(b.response_a(0.5*PI2)),1e-9);
+  ASSERT_NEAR(4.0,std::abs(b.response_b(0.5*PI2)),1e-9);
+  ASSERT_NEAR(16.0,std::abs(b.response(0.5*PI2)),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(-2.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(1.75,b.filter(1.0),1e-9);
@@ -101,12 +101,12 @@ TEST(biquad_t,highpass)
   TASCAR::biquad_t b;
   b.set_highpass( 1000.0, 44100.0 );
   // boundaries:
-  ASSERT_NEAR(0.0,cabs(b.response(0.0)),1e-9);
-  ASSERT_NEAR(1.0,cabs(b.response(M_PI)),1e-9);
+  ASSERT_NEAR(0.0,std::abs(b.response(0.0)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(M_PI)),1e-9);
   // approx. 12 dB / octave:
-  ASSERT_NEAR(-3.88,20.0*log10(cabs(b.response(1000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(-15.47,20.0*log10(cabs(b.response(500.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(0.367,20.0*log10(cabs(b.response(2000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-3.88,20.0*log10(std::abs(b.response(1000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-15.47,20.0*log10(std::abs(b.response(500.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(0.367,20.0*log10(std::abs(b.response(2000.0/44100.0*PI2))),1e-2);
 }
 
 TEST(biquad_t,lowpass)
@@ -114,13 +114,13 @@ TEST(biquad_t,lowpass)
   TASCAR::biquad_t b;
   b.set_lowpass( 1000.0, 44100.0 );
   // boundaries:
-  ASSERT_NEAR(1.0,cabs(b.response(0.0)),1e-9);
-  ASSERT_NEAR(0.0,cabs(b.response(M_PI)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.0)),1e-9);
+  ASSERT_NEAR(0.0,std::abs(b.response(M_PI)),1e-9);
   // approx. 12 dB / octave:
-  ASSERT_NEAR(-0.16,20.0*log10(cabs(b.response(1000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(-8.04,20.0*log10(cabs(b.response(2000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(-20.61,20.0*log10(cabs(b.response(4000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(0.31,20.0*log10(cabs(b.response(500.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-0.16,20.0*log10(std::abs(b.response(1000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-8.04,20.0*log10(std::abs(b.response(2000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-20.61,20.0*log10(std::abs(b.response(4000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(0.31,20.0*log10(std::abs(b.response(500.0/44100.0*PI2))),1e-2);
 }
 
 TEST(bandpass_t, gain)

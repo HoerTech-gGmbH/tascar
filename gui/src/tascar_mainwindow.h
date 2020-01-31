@@ -93,6 +93,7 @@ protected:
   bool on_map_clicked(GdkEventButton* e);
 
   void on_scene_selector_changed();
+  void on_scene_active_changed();
   void on_active_selector_changed();
   void on_active_track_changed();
 
@@ -133,6 +134,7 @@ protected:
   source_panel_t* source_panel;
   Gtk::ComboBoxText* scene_selector;
   uint32_t selected_scene;
+  Gtk::CheckButton* scene_active;
   Gtk::ComboBoxText* active_selector;
   TASCAR::Scene::object_t* active_object;
   Gtk::Label* active_type_label;

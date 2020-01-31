@@ -4,7 +4,6 @@
 
 #include "errorhandling.h"
 #include "scene.h"
-#include <complex.h>
 
 BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
 

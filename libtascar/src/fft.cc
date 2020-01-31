@@ -1,6 +1,8 @@
 #include "fft.h"
 #include "errorhandling.h"
 
+const std::complex<float> i(0.0, 1.0);
+
 void TASCAR::fft_t::fft()
 {
   fftwf_execute(fftwp_w2s);
@@ -59,7 +61,7 @@ void TASCAR::fft_t::hilbert(const TASCAR::wave_t& src)
     fullspec.b[k] = s.b[k];
   fftwf_execute( fftwp_s2s );
   for(uint32_t k=0;k<w.n;++k)
-    w.d[k] = sc*cimagf(fullspec.b[k]);
+    w.d[k] = sc*fullspec.b[k].imag();
 }
 
 TASCAR::fft_t::~fft_t()
@@ -89,10 +91,10 @@ void TASCAR::minphase_t::operator()(TASCAR::spec_t& s)
   }
   phase.clear();
   for( uint32_t k=0;k<s.n_;++k)
-    phase.d[k] = logf(std::max(1e-10f,cabsf(s.b[k])));
+    phase.d[k] = logf(std::max(1e-10f,std::abs(s.b[k])));
   fft_hilbert.hilbert(phase);
   for( uint32_t k=0;k<s.n_;++k)
-    s.b[k] = cabsf(s.b[k]) * cexpf(-I*fft_hilbert.w.d[k]);
+    s.b[k] = std::abs(s.b[k]) * std::exp(-i * fft_hilbert.w.d[k]);
 }
 
 /*

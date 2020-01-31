@@ -416,7 +416,47 @@ TEST(pos_t,subdivide_mesh)
   mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
   EXPECT_EQ( 272u, mesh.size() );
 }
- 
+
+TEST(quaternion_t,rotate)
+{
+  TASCAR::quaternion_t q;
+  q.set_rotation( 0.5*M_PI, TASCAR::pos_t( 0, 0, 1 ) );
+  ASSERT_NEAR( 1.0, q.norm(), 1e-7 );
+  ASSERT_NEAR( cosf( 0.25*M_PI ), q.w, 1e-8 );
+  ASSERT_NEAR( 0.0f, q.x, 1e-8 );
+  ASSERT_NEAR( 0.0f, q.y, 1e-8 );
+  ASSERT_NEAR( sinf( 0.25*M_PI ), q.z, 1e-8 );
+  TASCAR::pos_t p( 0, 0, 1 );
+  q.rotate( p );
+  ASSERT_NEAR( 0.0, p.x, 1e-9 );
+  ASSERT_NEAR( 0.0, p.y, 1e-9 );
+  ASSERT_NEAR( 1.0, p.z, 1e-9 );
+  p = TASCAR::pos_t( 1, 0, 0 );
+  q.rotate( p );
+  ASSERT_NEAR( 0.0, p.x, 1e-9 );
+  ASSERT_NEAR( 1.0, p.y, 1e-9 );
+  ASSERT_NEAR( 0.0, p.z, 1e-9 );
+  q.set_rotation( M_PI, TASCAR::pos_t( sqrt(0.5), 0, sqrt(0.5) ) );
+  p = TASCAR::pos_t( 1, 0, 0 );
+  q.rotate( p );
+  ASSERT_NEAR( 0.0, p.x, 1e-9 );
+  ASSERT_NEAR( 0.0, p.y, 1e-7 );
+  ASSERT_NEAR( 1.0, p.z, 1e-9 );
+  q.set_rotation( 0.5*M_PI, TASCAR::pos_t( 0, 0, 1 ) );
+  TASCAR::quaternion_t qp;
+  qp.set_rotation( 0.5*M_PI, TASCAR::pos_t( 0, 0, 1 ) );
+  qp *= q;
+  ASSERT_NEAR( cosf( 0.5*M_PI ), qp.w, 1e-7 );
+  ASSERT_NEAR( 0.0f, qp.x, 1e-8 );
+  ASSERT_NEAR( 0.0f, qp.y, 1e-8 );
+  ASSERT_NEAR( sinf( 0.5*M_PI ), qp.z, 1e-7 );
+  p = TASCAR::pos_t( 1, 0, 0 );
+  qp.rotate( p );
+  ASSERT_NEAR( -1.0, p.x, 1e-7 );
+  ASSERT_NEAR( 0.0, p.y, 1e-7 );
+  ASSERT_NEAR( 0.0, p.z, 1e-7 );
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

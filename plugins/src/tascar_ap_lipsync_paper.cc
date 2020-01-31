@@ -170,7 +170,7 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   for(uint32_t i=0; i<num_bins; ++i){
     // smoothing:
     sSmoothedMag[i] *= smoothing_c1;
-    sSmoothedMag[i] += smoothing_c2*cabsf(stft->s.b[i]);
+    sSmoothedMag[i] += smoothing_c2*std::abs(stft->s.b[i]);
     vmin = std::min(vmin,sSmoothedMag[i]);
     vmax = std::max(vmax,sSmoothedMag[i]);
   }

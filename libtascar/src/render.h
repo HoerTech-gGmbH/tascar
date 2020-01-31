@@ -44,6 +44,9 @@ namespace TASCAR {
     double B0, A1;
   };
 
+  /**
+     \brief Container class for components of virtual acoustic environments
+   */
   class render_core_t : public TASCAR::Scene::scene_t {
   public:
     render_core_t(xmlpp::Element* xmlsrc);

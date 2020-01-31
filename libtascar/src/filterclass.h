@@ -30,6 +30,7 @@
 
 #include <vector>
 #include "audiochunks.h"
+#include <complex>
 
 namespace TASCAR {
 
@@ -174,9 +175,9 @@ namespace TASCAR {
       for( float* v = w.d; v < wend;++v )
         *v = filter( *v );
     };
-    double _Complex response( double phi ) const;
-    double _Complex response_a( double phi ) const;
-    double _Complex response_b( double phi ) const;
+    std::complex<double> response( double phi ) const;
+    std::complex<double> response_a( double phi ) const;
+    std::complex<double> response_b( double phi ) const;
     double get_a1() const { return a1_; };
     double get_a2() const { return a2_; };
     double get_b0() const { return b0_; };

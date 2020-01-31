@@ -21,7 +21,7 @@
 #define SPECTRUM_H
 
 #include "audiochunks.h"
-#include <complex.h>
+#include <complex>
 #include <stdint.h>
 #include <iostream>
 
@@ -38,6 +38,10 @@ namespace TASCAR {
     spec_t(uint32_t n);
     spec_t(const spec_t& src);
     ~spec_t();
+    /**
+       Resize will allocate a new buffer and copy old values.
+     */
+    void resize(uint32_t newsize);
     void copy(const spec_t& src);
     void operator/=(const spec_t& o);
     void operator*=(const spec_t& o);
@@ -46,11 +50,11 @@ namespace TASCAR {
     void conj();
     void clear();
     void add_scaled(const spec_t& o, float gain);
-    inline float _Complex & operator[](uint32_t k){return b[k];};
-    inline const float _Complex & operator[](uint32_t k) const{return b[k];};
+    inline std::complex<float> & operator[](uint32_t k){return b[k];};
+    inline const std::complex<float> & operator[](uint32_t k) const{return b[k];};
     inline uint32_t size() const {return n_;};
     uint32_t n_;
-    float _Complex * b;
+    std::complex<float> * b;
   };
 }
 

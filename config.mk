@@ -1,5 +1,5 @@
 # variables:
-VERSION=0.209.0
+VERSION=0.210.0
 CXXFLAGS = -Wall -Wno-deprecated-declarations -msse -msse2		\
 -mfpmath=sse -ffast-math -fno-finite-math-only -fext-numeric-literals	\
 -std=c++11 -pthread -ggdb
@@ -20,6 +20,8 @@ HAS_LSL=$(shell $(mkfile_path)/check_for_lsl)
 HAS_OPENMHA=$(shell $(mkfile_path)/check_for_openmha)
 
 HAS_OPENCV2=$(shell $(mkfile_path)/check_for_opencv2)
+
+HAS_OPENCV4=$(shell $(mkfile_path)/check_for_opencv4)
 
 BUILD_DIR = build
 SOURCE_DIR = src

@@ -15,7 +15,8 @@ dameter_t::dameter_t()
     vmin(30),
     range(70),
     targetlevel(0),
-    weight(TASCAR::levelmeter::Z)
+    weight(TASCAR::levelmeter::Z),
+    active(true)
 {
 }
 
@@ -46,6 +47,11 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   int label_h(20);
   if( narrow )
     label_h = 0;
+  if( !active ){
+    cr->set_source_rgb( 0.7, 0.7, 0.7 );
+    cr->paint();
+    return true;
+  }
   cr->save();
   float yscale((height-label_h)/range);
   cr->translate(0,height);
@@ -198,6 +204,11 @@ splmeter_t::splmeter_t()
 void splmeter_t::set_weight( TASCAR::levelmeter::weight_t w )
 {
   dameter.weight = w;
+}
+
+void splmeter_t::set_active( bool a )
+{
+  dameter.active = a;
 }
 
 void splmeter_t::set_narrow( bool narrow, bool leg )
@@ -390,9 +401,11 @@ void source_ctl_t::setup()
     tlabel.set_text("obstacle");
   else if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
     tlabel.set_text("src");
-  else if( dynamic_cast<TASCAR::Scene::diffuse_info_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(route_))
     tlabel.set_text("dif");
-  else if( dynamic_cast<TASCAR::Scene::receivermod_object_t*>(route_))
+  else if( dynamic_cast<TASCAR::Scene::diffuse_reverb_t*>(route_))
+    tlabel.set_text("rvrb");
+  else if( dynamic_cast<TASCAR::Scene::receiver_obj_t*>(route_))
     tlabel.set_text("rcvr");
   else 
     tlabel.set_text("route");
@@ -464,8 +477,13 @@ void source_ctl_t::setup()
 void source_ctl_t::update()
 {
   // update level meters:
-  for(uint32_t k=0;k<route_->metercnt();k++)
+  for(uint32_t k=0;k<route_->metercnt();k++){
     meters[k]->update_levelmeter( route_->get_meter(k), route_->targetlevel );
+    if( scene_)
+      meters[k]->set_active( scene_->active );
+    else
+      meters[k]->set_active( true );
+  }
   if( route_->metercnt() < meters.size() )
     meters.back()->set_weight( route_->get_meter(0).get_weight() );
   // update gain controllers:
@@ -780,9 +798,9 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
     draw_track(obj,cr,markersize);
   if( !b_acoustic_model )
     draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
-  draw_receiver_object(dynamic_cast<TASCAR::Scene::receivermod_object_t*>(obj),cr,markersize);
+  draw_receiver_object(dynamic_cast<TASCAR::Scene::receiver_obj_t*>(obj),cr,markersize);
   //draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
-  draw_room_src(dynamic_cast<TASCAR::Scene::diffuse_info_t*>(obj),cr,markersize);
+  draw_room_src(dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(obj),cr,markersize);
   draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
   draw_facegroup(dynamic_cast<TASCAR::Scene::face_group_t*>(obj),cr,markersize);
   draw_obstaclegroup(dynamic_cast<TASCAR::Scene::obstacle_group_t*>(obj),cr,markersize);
@@ -1030,7 +1048,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
   }
 }
 
-void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( obj ){
     if( view.get_perspective() )
@@ -1184,7 +1202,7 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj
   }
 }
 
-void scene_draw_t::draw_room_src(TASCAR::Scene::diffuse_info_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_room_src(TASCAR::Scene::diff_snd_field_obj_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
   if( obj ){
     bool solo(obj->get_solo());

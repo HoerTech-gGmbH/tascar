@@ -1,3 +1,4 @@
+0.210: Receiver type for ITU 5.1 speaker layouts, initial version of new diffuse reverberation rendering interface
 0.209: A-weighting in level meters, improvement of level meter display.
 0.208: C-weighting in level meters, tascar_spkcalib improvements.
 0.207: Improvement of ownership right management.

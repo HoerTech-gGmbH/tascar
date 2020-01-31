@@ -3,7 +3,9 @@
 #include "errorhandling.h"
 #include <string.h>
 #include "coordinates.h"
-#include <complex.h>
+
+const std::complex<double> i(0.0, 1.0);
+
 
 TASCAR::filter_t::filter_t(unsigned int ilen_A,
                            unsigned int ilen_B)
@@ -219,9 +221,9 @@ void TASCAR::resonance_filter_t::set_fq( double fresnorm, double q )
   double farg(2.0*M_PI*fresnorm);
   b1 = 2.0*q*cos(farg);
   b2 = -q*q;
-  double _Complex z(cexpf(I*farg));
-  double _Complex z0(q*cexp(-I*farg));
-  a1 = (1.0-q)*(cabs(z-z0));
+  std::complex<double> z(std::exp(i*farg));
+  std::complex<double> z0(q*std::exp(-i*farg));
+  a1 = (1.0-q)*(std::abs(z-z0));
 }
 
 void TASCAR::biquad_t::set_gzp( double g, double zero_r, double zero_phi, double pole_r, double pole_phi )
@@ -277,22 +279,22 @@ void TASCAR::biquad_t::set_analog_poles( double g, double p1, double p2, double 
   a2_ = p1_*p2_;
 }
 
-double _Complex TASCAR::biquad_t::response( double phi ) const
+std::complex<double> TASCAR::biquad_t::response( double phi ) const
 {
   return response_b(phi)/response_a(phi);
 }
 
-double _Complex TASCAR::biquad_t::response_a( double phi ) const
+std::complex<double> TASCAR::biquad_t::response_a( double phi ) const
 {
-  double _Complex z1(cexp(-I*phi));
-  double _Complex z2(z1*z1);
+  std::complex<double> z1(std::exp(-i*phi));
+  std::complex<double> z2(z1*z1);
   return 1.0 + a1_*z1 + a2_*z2;
 }
 
-double _Complex TASCAR::biquad_t::response_b( double phi ) const
+std::complex<double> TASCAR::biquad_t::response_b( double phi ) const
 {
-  double _Complex z1(cexp(-I*phi));
-  double _Complex z2(z1*z1);
+  std::complex<double> z1(std::exp(-i*phi));
+  std::complex<double> z2(z1*z1);
   return b0_ + b1_*z1 + b2_*z2;
 }
 
@@ -313,21 +315,21 @@ void TASCAR::bandpass_t::set_range( double f1, double f2 )
               pow(10.0,-2.0*f2/fs_),
               f2/fs_*PI2);
   double f0(sqrt(f1*f2));
-  double g(cabs(b1.response(f0/fs_*PI2)*b2.response(f0/fs_*PI2)));
+  double g(std::abs(b1.response(f0/fs_*PI2)*b2.response(f0/fs_*PI2)));
   b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*PI2 );
 }
 
 void TASCAR::biquad_t::set_highpass( double fc, double fs )
 {
   set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
-  double g(cabs(response(M_PI)));
+  double g(std::abs(response(M_PI)));
   set_gzp( 1.0/g, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
 }
 
 void TASCAR::biquad_t::set_lowpass( double fc, double fs )
 {
   set_gzp( 1.0, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
-  double g(cabs(response(0.0)));
+  double g(std::abs(response(0.0)));
   set_gzp( 1.0/g, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
 }
 

@@ -95,7 +95,7 @@ void TASCAR::looped_sample_t::stop()
 
 TASCAR::sampler_t::sampler_t(const std::string& jname,const std::string& srv_addr,const std::string& srv_port)
   : jackc_t(jname),
-    osc_server_t(srv_addr,srv_port,"OSC"),
+    osc_server_t(srv_addr,srv_port,"UDP"),
     b_quit(false)
 {
   set_prefix("/"+jname);

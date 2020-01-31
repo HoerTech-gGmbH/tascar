@@ -62,6 +62,16 @@ wave_t::~wave_t()
     delete [] d;
 }
 
+void wave_t::use_external_buffer(uint32_t chunksize,float* ptr)
+{
+  if( chunksize != n )
+    throw TASCAR::ErrMsg("Programming error: Invalid size of new buffer");
+  if( own_pointer )
+    delete [] d;
+  d = ptr;
+  own_pointer = false;
+}
+
 void wave_t::clear()
 {
   memset(d,0,sizeof(float)*n);
@@ -192,6 +202,21 @@ void amb1wave_t::print_levels()
     " " << x_.spldb() << std::endl;
 }
 
+wave_t& amb1wave_t::operator[](uint32_t acn)
+{
+  switch( acn ){
+  case AMB11::idx::w :
+    return w_;
+  case AMB11::idx::y :
+    return y_;
+  case AMB11::idx::z :
+    return z_;
+  case AMB11::idx::x :
+    return x_;
+  }
+  throw TASCAR::ErrMsg( "Invalid acn "+TASCAR::to_string(acn)+" for first order ambisonics.");
+}
+
 void amb1wave_t::clear()
 {
   w_.clear();
@@ -241,7 +266,7 @@ sndfile_handle_t::sndfile_handle_t(const std::string& fname,int samplerate,int c
     sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_WRITE,&sf_inf))
 {
   if( !sfile )
-    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing.");
+    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing ("+TASCAR::to_string(samplerate)+" Hz, "+TASCAR::to_string(channels)+" channels).");
 }
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)

@@ -171,7 +171,7 @@ namespace TASCAR {
     class receiver_t : public receivermod_t,
                        public c6dof_t {
     public:
-      receiver_t( xmlpp::Element* xmlsrc, const std::string& name );
+      receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is_reverb_ );
       ~receiver_t();
       void prepare( chunk_cfg_t& cf_ );
       void release();
@@ -211,6 +211,8 @@ namespace TASCAR {
       bool active;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
       bool gain_zero;
+      double external_gain;
+      const bool is_reverb;
     private:
       double x_gain;
       double dx_gain;
@@ -369,6 +371,7 @@ namespace TASCAR {
                        uint32_t ismorder);
       ~receiver_graph_t();
       void process(const TASCAR::transport_t& tp);
+      void process_diffuse(const TASCAR::transport_t& tp);
       uint32_t get_active_pointsource() const {return active_pointsource;};
       uint32_t get_active_diffuse_sound_field() const {return active_diffuse_sound_field;};
       uint32_t get_total_pointsource() const {return acoustic_model.size();};

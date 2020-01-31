@@ -128,6 +128,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       if( nextdistance > src_->maxdist )
         return 0;
       nextgain *= srcgainmod;
+      nextgain *= receiver_->external_gain;
       double next_air_absorption(exp(-nextdistance*dscale));
       double ddistance((std::max(0.0,nextdistance-c_*receiver_->delaycomp)-distance)*dt);
       double dgain((nextgain-gain)*dt);
@@ -281,7 +282,6 @@ void world_t::process(const TASCAR::transport_t& tp)
 {
   uint32_t local_active_point(0);
   uint32_t local_active_diffuse(0);
-  //mirrormodel.process();
   // calculate mask gains:
   for(uint32_t k=0;k<receivers_.size();++k){
     double gain_inner(1.0);
@@ -292,7 +292,6 @@ void world_t::process(const TASCAR::transport_t& tp)
         maskbox.size = receivers_[k]->boundingbox.size;
         maskbox.center = receivers_[k]->boundingbox.c6dof.position;
         maskbox.orientation = receivers_[k]->boundingbox.c6dof.orientation;
-        //receivers_[k]->boundingbox.get_6dof(maskbox.center, maskbox.orientation);
         double d(maskbox.nextpoint(receivers_[k]->position).norm());
         gain_inner *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
       }
@@ -321,8 +320,24 @@ void world_t::process(const TASCAR::transport_t& tp)
   for( std::vector<receiver_graph_t*>::iterator ig=receivergraphs.begin();ig!=receivergraphs.end();++ig){
     (*ig)->process(tp);
     local_active_point += (*ig)->get_active_pointsource();
+  }
+  // apply post-processing and receiver gain of reverb receivers:
+  for(auto it=receivers_.begin();it!=receivers_.end();++it)
+    if( (*it)->is_reverb ){
+      (*it)->post_proc(tp);
+      (*it)->apply_gain();
+    }
+  // calculate diffuse sound fields:
+  for( std::vector<receiver_graph_t*>::iterator ig=receivergraphs.begin();ig!=receivergraphs.end();++ig){
+    (*ig)->process_diffuse(tp);
     local_active_diffuse += (*ig)->get_active_diffuse_sound_field();
   }
+  // apply post-processing and receiver gain on non-reverb receivers:
+  for(auto it=receivers_.begin();it!=receivers_.end();++it)
+    if( !(*it)->is_reverb ){
+      (*it)->post_proc(tp);
+      (*it)->apply_gain();
+    }
   active_pointsource = local_active_point;
   active_diffuse_sound_field = local_active_diffuse;
 }
@@ -330,13 +345,18 @@ void world_t::process(const TASCAR::transport_t& tp)
 void receiver_graph_t::process(const TASCAR::transport_t& tp)
 {
   uint32_t local_active_point(0);
-  uint32_t local_active_diffuse(0);
   // calculate acoustic model:
   for(unsigned int k=0;k<acoustic_model.size();k++)
     local_active_point += acoustic_model[k]->process(tp);
+  active_pointsource = local_active_point;
+}
+
+void receiver_graph_t::process_diffuse(const TASCAR::transport_t& tp)
+{
+  uint32_t local_active_diffuse(0);
+  // calculate diffuse sound fields:
   for(unsigned int k=0;k<diffuse_acoustic_model.size();k++)
     local_active_diffuse += diffuse_acoustic_model[k]->process(tp);
-  active_pointsource = local_active_point;
   active_diffuse_sound_field = local_active_diffuse;
 }
 
@@ -408,7 +428,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
   return 0;
 }
 
-receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
+receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is_reverb_ )
   : receivermod_t(xmlsrc),
     avgdist(0),
     render_point(true),
@@ -427,6 +447,8 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
     active(true),
     boundingbox(find_or_add_child("boundingbox")),
     gain_zero(false),
+    external_gain(1.0),
+    is_reverb(is_reverb_),
     x_gain(1.0),
     dx_gain(0),
     next_gain(1.0),
@@ -443,12 +465,16 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name )
 {
   GET_ATTRIBUTE(volumetric);
   GET_ATTRIBUTE(avgdist);
-  get_attribute_bool("point",render_point);
-  get_attribute_bool("diffuse",render_diffuse);
+  if( !is_reverb ){
+    get_attribute_bool("point",render_point);
+    get_attribute_bool("diffuse",render_diffuse);
+  }
   get_attribute_bool("image",render_image);
   get_attribute_bool("globalmask",use_global_mask);
-  has_diffusegain = has_attribute("diffusegain");
-  GET_ATTRIBUTE_DB(diffusegain);
+  if( !is_reverb ){
+    has_diffusegain = has_attribute("diffusegain");
+    GET_ATTRIBUTE_DB(diffusegain);
+  }
   GET_ATTRIBUTE(ismmin);
   GET_ATTRIBUTE(ismmax);
   GET_ATTRIBUTE_BITS(layers);

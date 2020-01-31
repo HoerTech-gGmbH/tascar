@@ -94,7 +94,7 @@ int osc_set_sound_gain_lin(const char *path, const char *types, lo_arg **argv, i
 
 int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  diffuse_info_t* h((diffuse_info_t*)user_data);
+  diff_snd_field_obj_t* h((diff_snd_field_obj_t*)user_data);
   if( h && (argc == 1) && (types[0]=='f') ){
     h->set_gain_db(argv[0]->f);
     return 0;
@@ -104,7 +104,7 @@ int osc_set_diffuse_gain(const char *path, const char *types, lo_arg **argv, int
 
 int osc_set_diffuse_gain_lin(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  diffuse_info_t* h((diffuse_info_t*)user_data);
+  diff_snd_field_obj_t* h((diff_snd_field_obj_t*)user_data);
   if( h && (argc == 1) && (types[0]=='f') ){
     h->set_gain_lin(argv[0]->f);
     return 0;
@@ -114,7 +114,7 @@ int osc_set_diffuse_gain_lin(const char *path, const char *types, lo_arg **argv,
 
 int osc_set_receiver_gain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  receivermod_object_t* h((receivermod_object_t*)user_data);
+  receiver_obj_t* h((receiver_obj_t*)user_data);
   if( h && (argc == 1) && (types[0]=='f') ){
     h->set_gain_db(argv[0]->f);
     return 0;
@@ -124,7 +124,7 @@ int osc_set_receiver_gain(const char *path, const char *types, lo_arg **argv, in
 
 int osc_set_receiver_lingain(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  receivermod_object_t* h((receivermod_object_t*)user_data);
+  receiver_obj_t* h((receiver_obj_t*)user_data);
   if( h && (argc == 1) && (types[0]=='f') ){
     h->set_gain_lin(argv[0]->f);
     return 0;
@@ -134,7 +134,7 @@ int osc_set_receiver_lingain(const char *path, const char *types, lo_arg **argv,
 
 int osc_set_receiver_fade(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
-  receivermod_object_t* h((receivermod_object_t*)user_data);
+  receiver_obj_t* h((receiver_obj_t*)user_data);
   if( h && (argc == 2) && (types[0]=='f') && (types[1]=='f') ){
     h->set_fade(argv[0]->f,argv[1]->f);
     return 0;
@@ -191,7 +191,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sou
   srv->set_prefix(oldpref);
 }
 
-void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::diffuse_info_t* s)
+void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::diff_snd_field_obj_t* s)
 {
   std::string oldpref(srv->get_prefix());
   srv->set_prefix("/"+scene->name+"/"+s->object_t::get_name());
@@ -206,7 +206,7 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::d
   srv->set_prefix(oldpref);
 }
 
-void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receivermod_object_t* s)
+void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::receiver_obj_t* s)
 {
   std::string ctlname("/"+scene->name+"/"+s->object_t::get_name());
   s->set_ctlname(ctlname);
@@ -226,15 +226,20 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::
 
 void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
 {
+  std::string ctlname("/"+scene->name);
+  std::string oldpref(srv->get_prefix());
+  srv->set_prefix( ctlname );
+  srv->add_bool("/active",&(scene->active));
+  srv->set_prefix( oldpref );
   std::vector<object_t*> obj(scene->get_objects());
   for(std::vector<object_t*>::iterator it=obj.begin();it!=obj.end();++it){
     if( TASCAR::Scene::face_object_t* po=dynamic_cast<TASCAR::Scene::face_object_t*>(*it))
       add_face_object_methods(srv,po);
     if( TASCAR::Scene::face_group_t* po=dynamic_cast<TASCAR::Scene::face_group_t*>(*it))
       add_face_group_methods(srv,po);
-    if( TASCAR::Scene::diffuse_info_t* po=dynamic_cast<TASCAR::Scene::diffuse_info_t*>(*it))
+    if( TASCAR::Scene::diff_snd_field_obj_t* po=dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(*it))
       add_diffuse_methods(srv,po);
-    if( TASCAR::Scene::receivermod_object_t* po=dynamic_cast<TASCAR::Scene::receivermod_object_t*>(*it))
+    if( TASCAR::Scene::receiver_obj_t* po=dynamic_cast<TASCAR::Scene::receiver_obj_t*>(*it))
       add_receiver_methods(srv,po);
     add_object_methods(srv,*it);
     add_route_methods(srv,*it);

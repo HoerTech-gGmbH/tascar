@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "fft.h"
-#include <complex.h>
 
 TEST(fft_t,fftifft)
 {
@@ -13,12 +12,12 @@ TEST(fft_t,fftifft)
   w.d[3] = -2;
   // transform to spectrum:
   fft.execute(w);
-  ASSERT_NEAR(crealf(fft.s.b[0]),-5.0f,1e-7f);
-  ASSERT_NEAR(cimagf(fft.s.b[0]),0.0f,1e-7f);
-  ASSERT_NEAR(crealf(fft.s.b[1]),-2.0f,1e-7f);
-  ASSERT_NEAR(cimagf(fft.s.b[1]),-1.0f,1e-7f);
-  ASSERT_NEAR(crealf(fft.s.b[2]),1.0f,1e-7f);
-  ASSERT_NEAR(cimagf(fft.s.b[2]),0.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[0].real(),-5.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[0].imag(),0.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[1].real(),-2.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[1].imag(),-1.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[2].real(),1.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[2].imag(),0.0f,1e-7f);
   fft.ifft();
   ASSERT_NEAR(fft.w.d[0],-2.0f,1e-7f);
   ASSERT_NEAR(fft.w.d[1],-1.0f,1e-7f);
@@ -76,23 +75,23 @@ TEST(minphase_t, minphase)
   w.d[3] = -2;
   // transform to spectrum:
   fft.execute(w);
-  ASSERT_NEAR(crealf(fft.s.b[0]),-5.0f,1e-7f);
-  ASSERT_NEAR(cimagf(fft.s.b[0]),0.0f,1e-7f);
-  ASSERT_NEAR(crealf(fft.s.b[1]),-2.0f,1e-7f);
-  ASSERT_NEAR(cimagf(fft.s.b[1]),-1.0f,1e-7f);
-  ASSERT_NEAR(crealf(fft.s.b[2]),1.0f,1e-7f);
-  ASSERT_NEAR(cimagf(fft.s.b[2]),0.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[0].real(),-5.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[0].imag(),0.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[1].real(),-2.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[1].imag(),-1.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[2].real(),1.0f,1e-7f);
+  ASSERT_NEAR(fft.s.b[2].imag(),0.0f,1e-7f);
   TASCAR::minphase_t minphase(4);
-  ASSERT_NEAR(cabsf(fft.s.b[0]),5.0f,1e-7f);
-  ASSERT_NEAR(cabsf(fft.s.b[1]),2.2361f,1e-4f);
-  ASSERT_NEAR(cabsf(fft.s.b[2]),1.0f,1e-7f);
+  ASSERT_NEAR(std::abs(fft.s.b[0]),5.0f,1e-7f);
+  ASSERT_NEAR(std::abs(fft.s.b[1]),2.2361f,1e-4f);
+  ASSERT_NEAR(std::abs(fft.s.b[2]),1.0f,1e-7f);
   minphase(fft.s);
-  ASSERT_NEAR(crealf(fft.s.b[0]),4.60070f,1e-5f);
-  ASSERT_NEAR(cimagf(fft.s.b[0]),1.95795f,1e-5f);
-  ASSERT_NEAR(crealf(fft.s.b[1]),1.55030f,1e-5f);
-  ASSERT_NEAR(cimagf(fft.s.b[1]),-1.61139f,1e-5f);
-  ASSERT_NEAR(crealf(fft.s.b[2]),0.92014f,1e-5f);
-  ASSERT_NEAR(cimagf(fft.s.b[2]),-0.39159f,1e-5f);
+  ASSERT_NEAR(fft.s.b[0].real(),4.60070f,1e-5f);
+  ASSERT_NEAR(fft.s.b[0].imag(),1.95795f,1e-5f);
+  ASSERT_NEAR(fft.s.b[1].real(),1.55030f,1e-5f);
+  ASSERT_NEAR(fft.s.b[1].imag(),-1.61139f,1e-5f);
+  ASSERT_NEAR(fft.s.b[2].real(),0.92014f,1e-5f);
+  ASSERT_NEAR(fft.s.b[2].imag(),-0.39159f,1e-5f);
   fft.ifft();
   ASSERT_NEAR(2.15536f,fft.w.d[0],1e-5f);
   ASSERT_NEAR(1.72583f,fft.w.d[1],1e-5f);

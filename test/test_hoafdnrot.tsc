@@ -23,21 +23,21 @@
       <input connect="fdn:out.5_5" label=".5_5"/>
       <input connect="fdn:out.6_-6" label=".6_-6"/>
       <input connect="fdn:out.6_6" label=".6_6"/>
-      <speaker az="12" connect="system:playback_1"/>
-      <speaker az="36" connect="system:playback_2"/>
-      <speaker az="60" connect="system:playback_3"/>
-      <speaker az="84" connect="system:playback_4"/>
-      <speaker az="108" connect="system:playback_5"/>
-      <speaker az="132" connect="system:playback_6"/>
-      <speaker az="156" connect="system:playback_7"/>
-      <speaker az="180" connect="system:playback_8"/>
-      <speaker az="204" connect="system:playback_9"/>
-      <speaker az="228" connect="system:playback_10"/>
-      <speaker az="252" connect="system:playback_11"/>
-      <speaker az="276" connect="system:playback_12"/>
-      <speaker az="300" connect="system:playback_13"/>
-      <speaker az="324" connect="system:playback_14"/>
-      <speaker az="348" connect="system:playback_15"/>
+      <output az="12" />
+      <output az="36" />
+      <output az="60" />
+      <output az="84" />
+      <output az="108" />
+      <output az="132" />
+      <output az="156" />
+      <output az="180" />
+      <output az="204" />
+      <output az="228" />
+      <output az="252" />
+      <output az="276" />
+      <output az="300" />
+      <output az="324" />
+      <output az="348" />
     </matrix>
   </modules>
   <connect src="render.scene:out.0_0" dest="fdn:in.0_0"/>

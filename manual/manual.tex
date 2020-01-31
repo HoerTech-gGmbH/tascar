@@ -51,6 +51,8 @@
 \MHAtitle{User Manual}
 
 TASCAR version \input{version.tex} (\today)
+\fancyfoot[LE]{\fancyplain{}{\input{version.tex}}}
+\fancyfoot[RO]{\fancyplain{}{\input{version.tex}}}
 
 \newpage
 \tableofcontents
@@ -105,6 +107,13 @@ boxrule=0.2pt,fontupper=\small\ttfamily\bfseries}
     \hyperref[sec:recspk_#2]{{\bf #2}}
   }{
     \hyperref[sec:recspk_#1]{{\bf #2}}
+  }
+}
+\newcommand{\indrecrev}[2][]{
+  \ifthenelse{\equal{#1}{}}{
+    \hyperref[sec:recrev_#2]{{\bf #2}}
+  }{
+    \hyperref[sec:recrev_#1]{{\bf #2}}
   }
 }
 \newcommand{\keyb}[1]{\keybbox{\lstinline{#1}}}
@@ -226,7 +235,7 @@ expression and need to be quoted for correct matching.
 
 When using \tascar{} with jackd1, the memory locking may fail,
 resulting in killing the \tascar{} process. If you observe this
-behaviour, either start jack without memory locking (using the
+behavior, either start jack without memory locking (using the
 \verb!-m! flag), or use jackd2 instead.
 
 An acoustic environment can be loaded using either the command line by
@@ -362,7 +371,7 @@ A MATLAB/GNU Octave tool for remote control is available, see section
 
 \subsection{Optimization of the operating system for audio processing}
 
-Configure real-time scheduling: grant permissions to aquire real-time
+Configure real-time scheduling: grant permissions to acquire real-time
 priority, and to lock memory in RAM, to users in group 'audio' (edit
 {\tt /etc/security/limits.conf} as root):
 
@@ -453,8 +462,8 @@ sources.
 
 \section{Scene Definition}
 
-Acoustic scenes are created using xml scene definition file
-format\index{file format}. \tascar{} scene definition (\verb!.tsc!-file) is a text xml
+Acoustic scenes are created using XML scene definition file
+format\index{file format}. \tascar{} scene definition (\verb!.tsc!-file) is a text XML
 file, where the user specifies all the details about the scene using
 various commands (elements and their attributes). An example of a
 scene definition is shown below (example file \verb!example_basic.tsc!):
@@ -505,34 +514,41 @@ can contain one or more scenes (\refelem{scene}), port connections
 definitions (\elem{range}).
 
 \begin{tscattributes}
-\indattr{name}               & Name of session (default: ``tascar'')                                                     \\
-\indattr{duration}           & Duration of session in seconds; default: 60                                               \\
-\indattr{loop}               & Loop session (true|false); default: false                                                 \\
-\indattr{playonload}         & Start playback when loading the session (true|false); default: false                      \\
-\indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                          \\
-\indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'', ``C'' or ``bandpass'')                        \\
-\indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                                   \\
-\indattr{levelmeter\_range}  & Level range of level meters in dB (default: 70)                                           \\
-\indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                               \\
-\indattr{srv\_addr}          & OSC server multicast address, empty uses unicast                                          \\
-\indattr{srv\_port}          & OSC server port number (default: 9877), or ``none'' to deactivate OSC server              \\
-\indattr{srv\_proto}         & OSC server protocol (default: ``UDP'', options are ``UDP'' or ``TCP'')                    \\
-\indattr{warnsrate}          & Print a warning if the system sampling rate doesn't match the specified one               \\
-\indattr{requiresrate}       & Stop loading the session if the system sampling rate doesn't match the specified one      \\
-\indattr{warnfragsize}       & Print a warning if the system fragment size doesn't match the specified one               \\
-\indattr{requirefragsize}    & Stop loading the session if the system fragment size doesn't match the specified one      \\
-\indattr{initcmd}            & Command to be executed before first connection to jack. Can be used to start jack server. \\
-\indattr{license}            & License form of session file                                                              \\
-\indattr{attribution}        & Attribution of session file, e.g., author name                                            \\
+\indattr{name}               & Name of session (default: ``tascar'')                                                           \\
+\indattr{duration}           & Duration of session in seconds; default: 60                                                     \\
+\indattr{loop}               & Loop session (true|false); default: false                                                       \\
+\indattr{playonload}         & Start playback when loading the session (true|false); default: false                            \\
+\indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                                \\
+\indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'', ``C'' or ``bandpass'')                              \\
+\indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                                         \\
+\indattr{levelmeter\_range}  & Level range of level meters in dB (default: 70)                                                 \\
+\indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                                     \\
+\indattr{srv\_addr}          & OSC server multicast address, empty uses unicast                                                \\
+\indattr{srv\_port}          & OSC server port number (default: 9877), or ``none'' to deactivate OSC server                    \\
+\indattr{srv\_proto}         & OSC server protocol (default: ``UDP'', options are ``UDP'' or ``TCP'')                          \\
+\indattr{warnsrate}          & Session sampling rate in Hz, print a warning if the system sampling rate doesn't match          \\
+\indattr{requiresrate}       & Session sampling rate in Hz, stop loading the session if the system sampling rate doesn't match \\
+\indattr{warnfragsize}       & Session fragment size, print a warning if the system fragment size doesn't match                \\
+\indattr{requirefragsize}    & Session fragment size, stop loading the session if the system fragment size doesn't match       \\
+\indattr{initcmd}            & Command to be executed before first connection to jack. Can be used to start jack server.       \\
+\indattr{license}            & License form of session file                                                                    \\
+\indattr{attribution}        & Attribution of session file, e.g., author name                                                  \\
+\indattr{active}             & Control activity of a whole scene (default: true)                                               \\
 \end{tscattributes}
+
+The sampling rate and fragment size of a session is typically defined
+by the jack server or the interface of the offline rendering
+tools. Use the attributes \attr{warnrate}, \attr{requiresrate},
+\attr{warnfragsize} and \attr{requirefragsize} for more control over
+the audio back-end settings.
 
 A session can have sub-elements \elem{mainwindow} and \elem{mapwindow}
 to control the window positions. These attributes are allowed:
 \begin{tscattributes}
-\indattr{x}     & x-position of window                                         \\
-\indattr{y}     & y-position of window                                         \\
-\indattr{w}     & Width of window (default: 1600)                                         \\
-\indattr{h}    & Height of window (default: 480)                                         \\
+\indattr{x} & x-position of window            \\
+\indattr{y} & y-position of window            \\
+\indattr{w} & Width of window (default: 1600) \\
+\indattr{h} & Height of window (default: 480) \\
 \end{tscattributes}
 
 An example of a session with multiple scenes is:
@@ -562,12 +578,11 @@ The \elem{include} element can also be used at other levels; the
 only limitation is that the root element of the included file needs to
 match the active element into which the external file is included.
 %
-In the example given above, the root XML element of files
+In the example above, the root XML element of files
 {\verb!session1.tsc!} and {\verb!session2.tsc!} has to be a
 \refelem{session} element.
 %
-Any attributes given to the root element of the included file that
-differ from the attributes of the same element in the including file
+Any attributes of the root element in the included file
 are ignored.
 % Comment: This is counter-intuitive.  It is probably a hack to allow
 % included files to allow multiple scenes (XML permits only a single
@@ -596,7 +611,7 @@ Therefore it is possible in \tascar{} to specify multiple
 contributions to a session originating from other sources.
 
 
-The file names given in the name attribute of the \elem{include}
+The file names provided in the name attribute of the \elem{include}
 element can be absolute or relative.
 %
 Relative file names are relative to the directory containing the root
@@ -779,8 +794,8 @@ seconds, then resting at (10,0,0) for 4 seconds, then again moving for
   \\
   \indattr{importcsv}
   &
-  Read position track from the given \verb!.csv!-file as
-  comma-separated values.  The given file name can contain absolute or
+  Read position track from the \verb!.csv!-file as
+  comma-separated values.  The file name can contain absolute or
   relative path.  Relative paths are relative to the session's
   \verb!.tsc!-file. Default: position track is contained as
   space-separated text between opening and closing \refelem{position}
@@ -827,8 +842,8 @@ Euler orientation tracks can be looped by adding the attribute
 \begin{tscattributes}
   \indattr{importcsv}
   &
-  Read orientation track from the given \verb!.csv!-file as
-  comma-separated values.  The given file name can contain absolute or
+  Read orientation track from the \verb!.csv!-file as
+  comma-separated values.  The file name can contain absolute or
   relative path.  Relative paths are relative to the session's
   \verb!.tsc!-file. Default: orientation track is contained as
   space-separated text between opening and closing
@@ -920,7 +935,7 @@ object (taken from Example \ref{tsc:example_basic}):
 \indattr{ismmax}                     & Maximal ISM order to be rendered ($2^{32}$)                                                \\
 \indattr{layers}                     & List of active layers, or empty for all layers (default)                                   \\
 \indattr{airabsorption}              & Render air absorption (default: true)                                                      \\
-\indattr{name}                       & Name (postfix)                                                                             \\
+\indattr{name}                       & Name (suffix)                                                                             \\
 \indattr{connect}                    & Jack port connection                                                                       \\
 \end{tscattributes}
 
@@ -961,25 +976,6 @@ sub-element \elem{position} using attributes \attr{x}, \attr{y}
 and \attr{z} -- for example the vertex called "guy1" is located
 -0.7\,m from the reference point in x direction and 0.1\,m in y
 direction.
-
-There is one important attribute of the element \elem{sound}, which
-have not been discussed yet - \attr{connect} attribute.
-%
-This attribute creates a jack connection between the audioplayer and
-renderer (Figure \ref{fig:connect}). 
-%
-So in other words it says: connect {\em this} sound vertex (called for
-example "guy1") with the sound content number 0. ''@'' in
-\lstinline!connect="@.0"! is always replaced by
-\verb!player.<scenename>:<objectname>!: .
-
-\begin{figure}[H]
-  \centering
-  \fbox{\includegraphics[width=0.8\textwidth]{connectsounds.png}}
-  \caption{Connections, which are created, when using attribute
-    \attr{connect} in the element \elem{sound}.}
-  \label{fig:connect}
-\end{figure}
  
 Figure \ref{fig:vertices} presents an example of a scene containing sound sources
 consisting of more than one sound vertex.
@@ -997,6 +993,13 @@ consisting of more than one sound vertex.
 
 Source directivity is defined by the source module types. Currently
 the types ``omni'', ``cardioidmod'' and ``door'' are supported.
+
+Audio content can be added either from external playback (using jack
+ports, see the \attr{connect} attribute), or using the audio plugin
+\elem{sndfile} (see \ref{sec:ap_sndfile}). When recording new audio
+material, we recommend to follow the documentation recommendations of
+the DEGA \citep{dieter_leckschat_2020_3597238}. A useful source of
+sound files can be found at \url{https://freesound.org/}.
 
 \subsubsection{Source directivity ``omni''}
 
@@ -1019,7 +1022,7 @@ The ``door'' source directivity has these attributes:
 \begin{tscattributes}
 \indattr{width} & Door width in meters (default: 1)\\
 \indattr{height} & Door height in meters (default: 2)\\
-\indattr{falloff} & Distance at wich the gain attenuation starts (default: 1)\\
+\indattr{falloff} & Distance at which the gain attenuation starts (default: 1)\\
 \indattr{distance} & Distance by which the source is shifted behind the door (default: 1)\\
 \indattr{wndsqrt} & Flag to control von-Hann fall-off (false, default) or square-root of von-Hann fall-off (true)\\
 \end{tscattributes}
@@ -1099,7 +1102,7 @@ Sound vertices will be discussed in the next section.
 \indattr{connect} & Jack connection of ports.                                          \\
 \indattr{gain}    & Output gain in dB                                                  \\
 \indattr{size}    & Size of box in which the diffuse sound field is audible; default: 1 1 1 \\
-\indattr{falloff} & Length of Hanning ramp outside the box in m; default: 1            \\
+\indattr{falloff} & Length of von-Hann ramp outside the box in m; default: 1            \\
 \end{tscattributes}
 
 \begin{tscelements}
@@ -1180,9 +1183,9 @@ or headphones.
 \indattr{layerfadelen} & Fade length after layer activation or deactivation                                       \\
 \indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                                  \\
 \indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                                   \\
-\indattr{falloff}      & Length of Hanning ramp in m, or -1 for normal distance model; default: -1                \\
+\indattr{falloff}      & Length of von-Hann ramp in m, or -1 for normal distance model; default: -1               \\
 \indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                                \\
-\indattr{delaycomp}    & Subtract this value from delay in delayline (given in seconds)                           \\
+\indattr{delaycomp}    & Subtract this value from delay in delay line, in seconds (0)                             \\
 \indattr{muteonstop}   & Do not render any sound when transport is stopped (default: false)                       \\
 \end{tscattributes}
 
@@ -1239,7 +1242,7 @@ layouts and to 0.577 for regular 3D speaker layouts.  For Ambisonics
 based receiver types, $D$ is a diagonal matrix.
 %
 By default, the decoded output of the first order Ambisonics rendering
-is decorrelated using FIR all-pass filters to achieve diffuse sound
+is de-correlated using FIR all-pass filters to achieve diffuse sound
 fields and avoid coloration artifacts (see \indattr{decorr} and
 \indattr{decorr\_length} for details).
 
@@ -1363,6 +1366,28 @@ than 30 days, a warning is displayed.
 
 
 \input{secrecspeaker.tex}
+
+\subsection{Adding diffuse reverberation: {\tt <reverb .../>}}\label{sec:reverbelem}
+
+Diffuse reverberation can be added with the \elem{reverb} element. The
+reverb plugin type is provided with the \attr{type} attribute, which
+can be any of the types listed below.
+
+Under the hood, the \elem{reverb} element combines a dedicated
+receiver with a diffuse sound field. This method of rendering diffuse
+reverberation is new to \tascar{} and still under development. For the
+traditional way of creating diffuse reverberation, see Section
+\ref{sec:reverb}. Advantages of the new method over the old one are a
+much easier setup, and the full functionality also for offline
+rendering.
+
+Currently, only a very basic FDN is provided as part of \tascar{}. It
+is planned, however, to add also reverb receivers as jack ports (for
+external tools), with a partitioned convolution, for convolution
+reverb, and to add a \tascar{} implementation of RAZR
+\citep{Wendt2014}.
+
+\input{secrecreverb.tex}
 
 \subsection{Reflectors: {\tt <face .../>} and {\tt <facegroup .../>} elements}\label{sec:face}\label{sec:facegroup}\index{face}\index{facegroup}
 
@@ -1582,7 +1607,7 @@ to exclude diffuse sources from rendering (attribute
 \tscexamplepriv[linerange={40-42},firstnumber=40]{example_diffreverb}
 %
 The output of the reverberation tool needs to be in B-format,
-Furse-Malham normalization and channel order (wxyz). This output is
+Furse-Malham normalization and ACN channel order (wyzx). This output is
 handled in \tascar{} the same way as any other diffuse sound field
 (see Section \ref{sec:diffuse} on page \pageref{sec:diffuse}):
 %
@@ -1602,6 +1627,8 @@ and by measuring the resulting impulse responses.
 The GNU Octave/MATLAB tools provided with \tascar{} should be
 sufficient in most cases (e.g., \verb!t60.m!, \verb!iacc.m!,
 \verb!plot_t30.m!, \verb!tascar_ir_measure.m!).
+
+A new method of adding reverb is described in \ref{sec:reverbelem}.
 
 \section{Calibration and level metering}\index{calibration}\index{level}
 
@@ -1826,14 +1853,14 @@ receiver.
 %
 There are a couple of parameters which can be specified by a user -
 the file name, the number of sources and loudspeakers, radius of the
-circle, receiver type, as well as the length of a delayline.
+circle, receiver type, as well as the length of a delay line.
 
 
 
 \subsection{\tt tascar\_jackio}
 
-When we already have an xml file with a virtual environment, we may
-want to start perfoming some measurements using MATLAB/GNU Octave.
+When we already have an XML file with a virtual environment, we may
+want to start performing some measurements using MATLAB/GNU Octave.
 %
 The function \verb!tascar_jackio! is used to play and record sound via
 jack (jack audio connection kit).
@@ -2156,6 +2183,11 @@ w_x^2 - w_y^2                                                                   
   loudspeaker $n$ and the sound source.}\label{tab:receivers}
 \end{table}
 
+\begin{figure}[p]
+  \includegraphics[width=\columnwidth]{acousticmodel.pdf}
+  \caption{Signal flow in the acoustic model.}\label{fig:acmodel}
+\end{figure}
+
 \printindex
 
 \newpage
@@ -2163,5 +2195,11 @@ w_x^2 - w_y^2                                                                   
 
 \end{document}
 
+% Local Variables:
+% ispell-local-dictionary: "en_US"
+% End:
+
 %%  LocalWords:  TASCAR Ambisonics binaural reflectivity facegroup
 %%  LocalWords:  anechoic sinusoid SPL RMS directivity cardioid LSL
+%%  LocalWords:  jackd POSIX tascar MATLAB matlab OSC UDP TCP
+%%  LocalWords:  bandpass

@@ -2,7 +2,10 @@
 
 #include "osc_helper.h"
 #include <stdlib.h>
-#include <complex.h>
+#include <complex>
+
+const std::complex<double> i(0.0, 1.0);
+const std::complex<float> i_f(0.0, 1.0);
 
 /**
    \brief Classes mainly used for artistic purposes
@@ -154,10 +157,9 @@ namespace OSC {
 void HoS::par_t::mix_static(float g,const par_t& p1,const par_t& p2)
 {
   float g1 = 1.0f-g;
-  float dphi(cargf(cexpf(1.0if*(p2.phi0-p1.phi0))));
-  //phi0 = cargf(g*cexpf(1.0if*p1.phi0)+g1*cexpf(1.0if*p2.phi0));
+  float dphi(std::arg(std::exp(i_f*(p2.phi0-p1.phi0))));
   phi0 = p1.phi0 + g1*dphi;
-  phi0_epi = cargf(g*cexpf(1.0if*p1.phi0_epi)+g1*cexpf(1.0if*p2.phi0_epi));
+  phi0_epi = std::arg(g*std::exp(i_f*p1.phi0_epi)+g1*std::exp(i_f*p2.phi0_epi));
 }
 
 void HoS::par_t::assign_static(const par_t& p1)

@@ -41,6 +41,7 @@ namespace TASCAR {
     wave_t(const std::vector<double>& src);
     wave_t(uint32_t n,float* ptr);
     ~wave_t();
+    void use_external_buffer(uint32_t n,float* ptr);
     inline float& operator[](uint32_t k){return d[k];};
     inline const float& operator[](uint32_t k) const {return d[k];};
     inline uint32_t size() const { return n;};
@@ -69,7 +70,8 @@ namespace TASCAR {
     void operator*=(const wave_t& src);
     float* d;
     uint32_t n;
-    const bool own_pointer;
+  private:
+    bool own_pointer;
   protected:
     uint32_t append_pos;
     float rmsscale;
@@ -96,6 +98,7 @@ namespace TASCAR {
     void add_panned( pos_t p, const wave_t& v, float g=1.0f);
     std::vector<wave_t> wxyz;
     void print_levels();
+    wave_t& operator[](uint32_t acn);
   protected:
     wave_t w_;
     wave_t x_;

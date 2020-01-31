@@ -130,7 +130,6 @@ jackio_t::~jackio_t()
     delete [] buf_out;
 }
 
-
 int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
 {
   b_cb = true;
@@ -145,13 +144,13 @@ int jackio_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer
         for(unsigned int ch=0;ch<outBuffer.size();ch++)
           outBuffer[ch][k] = buf_in[sf_inf_in.channels*pos+ch];
       for(unsigned int ch=0;ch<inBuffer.size();ch++)
-	buf_out[sf_inf_out.channels*pos+ch] = inBuffer[ch][k];
+        buf_out[sf_inf_out.channels*pos+ch] = inBuffer[ch][k];
       pos++;
     }else{
       if( pos >= nframes_total)
-	b_quit = true;
+        b_quit = true;
       for(unsigned int ch=0;ch<outBuffer.size();ch++)
-	outBuffer[ch][k] = 0;
+        outBuffer[ch][k] = 0;
     }
   }
   return 0;

@@ -30,6 +30,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   timeline(NULL),
   scene_selector(NULL),
   selected_scene(0),
+  scene_active(NULL),
   active_selector(NULL),
   active_object(NULL),
   active_label_sourceline(NULL),
@@ -72,6 +73,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   GET_WIDGET(scene_selector);
   scene_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_scene_selector_changed));
   GET_WIDGET(notebook);
+  GET_WIDGET(scene_active);
   GET_WIDGET(active_selector);
   GET_WIDGET(active_type_label);
   GET_WIDGET(active_track);
@@ -83,6 +85,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   GET_WIDGET(lab_sessionname);
   active_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
   active_track->signal_toggled().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
+  scene_active->signal_toggled().connect(sigc::mem_fun(*this, &tascar_window_t::on_scene_active_changed));
   Gtk::Image* image_xy(NULL);
   m_refBuilder->get_widget("image_xy",image_xy);
   if( image_xy )
@@ -183,6 +186,9 @@ bool tascar_window_t::on_timeout()
     }
     if( session ){
       if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
+        if( session->scenes.size() > selected_scene )
+          if( session->scenes[selected_scene]->scene_t::active != scene_active->get_active() )
+            scene_active->set_active( session->scenes[selected_scene]->scene_t::active );
         Glib::RefPtr<Gdk::Window> win = scene_map->get_window();
         if (win){
           Gdk::Rectangle r(0,0, 
@@ -213,7 +219,7 @@ bool tascar_window_t::on_timeout_statusbar()
     if( pthread_mutex_trylock( &mtx_draw ) == 0 ){
       char cmp[1024];
       if( session && session->is_running() ){
-        if( session->scenes.size() > selected_scene ){
+        if( (session->scenes.size() > selected_scene) && (session->scenes[selected_scene]->scene_t::active) ){
           TASCAR::scene_render_rt_t* scene(session->scenes[selected_scene]);
           TASCAR::render_profiler_t prof(scene->loadaverage);
           prof.normalize(prof.t_postproc);
@@ -404,6 +410,15 @@ void tascar_window_t::on_active_track_changed()
   }
 }
 
+void tascar_window_t::on_scene_active_changed()
+{
+  if( session_mutex.try_lock() ){
+    if( session && (session->scenes.size() > selected_scene) )
+      session->scenes[selected_scene]->scene_t::active = scene_active->get_active();
+    session_mutex.unlock();
+  }
+}
+
 void tascar_window_t::on_active_selector_changed()
 {
   if( session_mutex.try_lock() ){
@@ -560,6 +575,9 @@ void tascar_window_t::reset_gui()
     scene_selector->set_active(0);
     if( session->scenes.size() > selected_scene )
       set_scale(session->scenes[selected_scene]->guiscale);
+    if( session->scenes.size() > selected_scene )
+      if( session->scenes[selected_scene]->scene_t::active != scene_active->get_active() )
+        scene_active->set_active( session->scenes[selected_scene]->scene_t::active );
   }
   if( session ){
     set_title("tascar - " + session->name + " [" + basename(tascar_filename.c_str()) + "]");

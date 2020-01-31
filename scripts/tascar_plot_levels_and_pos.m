@@ -1,4 +1,9 @@
 function tascar_plot_levels_and_pos( data )
+% plot data previously generated with tascar_get_levels_and_pos
+%
+% Usage:
+% data = tascar_get_levels_and_pos( 'tsc', 'scene.tsc' );
+% tascar_plot_levels_and_pos( data );
 figure
 Lmin = 35;
 degdb = 1;
@@ -15,7 +20,6 @@ for kScene=1:numel(data)
             imin = find(obj.lev(:,kSound) > Lmin,1,'first');
             imax = find(obj.lev(:,kSound) > Lmin,1,'last');
             idx = imin:imax;
-            %            L(obj.lev(:,kSound)<Lmin) = nan;
             t = obj.t(idx);
             L = L(idx);
             az = unwrap(atan2(obj.y(idx,kSound),obj.x(idx,kSound)))*180/pi;

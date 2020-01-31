@@ -60,9 +60,9 @@ dummy_t::~dummy_t()
 {
   if( checkprepare ){
     if( localprep )
-      throw TASCAR::ErrMsg("prepared (local)");
+      std::cerr << "prepared (local)" << std::endl;
     if( is_prepared() )
-      throw TASCAR::ErrMsg("prepared (base)");
+      std::cerr << "prepared (base)" << std::endl;
   }
   DEBUG(1);
 }

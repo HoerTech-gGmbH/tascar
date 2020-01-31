@@ -15,7 +15,8 @@ TESTS = test_snd_zeros test_ir1 test_ir2 test_ir3 test_ir4						\
 	test_unload_on_error jack_routeplugin test_ir_wfs										\
 	test_ir_wfs_noplanewave jackfail_connectfail jack_connect hoa3d			\
 	test_fail_duplicatenames test_fail_duplicatescenenames							\
-	test_level_hoa2d_basic test_level_hoa2d_maxre
+	test_level_hoa2d_basic test_level_hoa2d_maxre jack_hoafdnrot				\
+	test_ir_reverb test_snd_reverb
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -32,6 +33,7 @@ LEVELREC = nsp hoa2d neukom_basic wfs vbap hann
 #neukom_inphase
 
 LEVTHR=0.25
+IRLEN = 4000
 
 LIBPATH=LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/
 VALIDATE=../apps/build/tascar_validatetsc
@@ -79,7 +81,7 @@ db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 test_ir%: test_ir%.tsc expected_ir%.wav
 	@echo "Impulse response test: $<"
 	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 || (echo "$(<):2: Rendering failed"; false)
 	@$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 	@rm -f test_ir$*.wav
 
@@ -149,7 +151,7 @@ db_test_rec_%: test_rec.tsc
 	rm -f test_rec_$*.wav
 
 db_test_ir%: test_ir%.tsc expected_ir%.wav
-	echo run -o test_ir$*.wav $< -t 1 -l 4000 -f 44100 > gdbcmd
+	echo run -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 > gdbcmd
 	$(LIBPATH) gdb $(RENDERIR) -x gdbcmd
 	$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav 1e-9 1e-9
 	rm -f test_ir$*.wav
@@ -216,3 +218,5 @@ jackfail_%: test_%.tsc
 
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: TOL=4e-4
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: RMSTOL=1e-4
+test_ir_reverb: IRLEN=44100
+test_ir_temp: IRLEN=441000

@@ -303,9 +303,9 @@ int granularsynth_t::inner_process(jack_nframes_t n, const std::vector<float*>& 
   double intensity_max(0.0);
   double freq_max(0.0);
   for( uint32_t k=0;k<ola1.s.n_;++k ){
-    float _Complex p(ola1.s.b[k] * conjf(ola2.s.b[k]));
-    float f(cargf(p));
-    float intensity(cabsf(p));
+    std::complex<float> p(ola1.s.b[k] * std::conj(ola2.s.b[k]));
+    float f(std::arg(p));
+    float intensity(std::abs(p));
     if( intensity > intensity_max ){
       freq_max = f;
       intensity_max = intensity;

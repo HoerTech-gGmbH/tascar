@@ -3,7 +3,7 @@ LIBDIR=$(PREFIX)/lib
 BINDIR=$(PREFIX)/bin
 DESTDIR=
 
-MODULES = libtascar plugins apps gui
+MODULES = libtascar apps plugins gui
 DOCMODULES = doc manual
 
 all: $(MODULES)

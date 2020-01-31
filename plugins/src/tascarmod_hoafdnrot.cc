@@ -1,141 +1,148 @@
 #include "session.h"
 #include "jackclient.h"
 #include <string.h>
-#include <complex.h>
 #include <cstdlib>
 #include <cmath>
 #include <limits>
 #include "fft.h"
 
+const std::complex<float> i(0.0, 1.0);
+const std::complex<double> i_d(0.0, 1.0);
+
 class cmat3_t {
 public:
   cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 );
   ~cmat3_t();
-  inline float _Complex& elem(uint32_t p1,uint32_t p2,uint32_t p3) { 
+  inline std::complex<float>& elem(uint32_t p1,uint32_t p2,uint32_t p3) { 
     return data[p1*s23+p2*s3+p3]; 
   };
-  inline const float _Complex& elem(uint32_t p1,uint32_t p2,uint32_t p3) const { 
+  inline const std::complex<float>& elem(uint32_t p1,uint32_t p2,uint32_t p3) const { 
     return data[p1*s23+p2*s3+p3]; 
   };
-  inline float _Complex& elem000() { 
+  inline std::complex<float>& elem000() { 
     return data[0]; 
   };
-  inline const float _Complex& elem000() const { 
+  inline const std::complex<float>& elem000() const { 
     return data[0]; 
   };
-  inline float _Complex& elem00x(uint32_t p3) { 
+  inline std::complex<float>& elem00x(uint32_t p3) { 
     return data[p3]; 
   };
-  inline const float _Complex& elem00x(uint32_t p3) const { 
+  inline const std::complex<float>& elem00x(uint32_t p3) const { 
     return data[p3]; 
   };
-  inline void clear() { memset(data,0,sizeof(float _Complex)*s1*s2*s3); };
+  inline void clear() {
+    data.clear();
+    //memset(data,0,sizeof(std::complex<float>)*s1*s2*s3);
+  };
 protected:
   uint32_t s1;
   uint32_t s2;
   uint32_t s3;
   uint32_t s23;
-  float _Complex* data;
+  TASCAR::spec_t data;
 };
 
 class cmat2_t {
 public:
   cmat2_t( uint32_t d1, uint32_t d2 );
   ~cmat2_t();
-  inline float _Complex& elem(uint32_t p1,uint32_t p2) { 
+  inline std::complex<float>& elem(uint32_t p1,uint32_t p2) { 
     return data[p1*s2+p2]; 
   };
-  inline const float _Complex& elem(uint32_t p1,uint32_t p2) const { 
+  inline const std::complex<float>& elem(uint32_t p1,uint32_t p2) const { 
     return data[p1*s2+p2]; 
   };
-  inline float _Complex& elem00() { 
+  inline std::complex<float>& elem00() { 
     return data[0]; 
   };
-  inline const float _Complex& elem00() const { 
+  inline const std::complex<float>& elem00() const { 
     return data[0]; 
   };
-  inline float _Complex& elem0x(uint32_t p2) { 
+  inline std::complex<float>& elem0x(uint32_t p2) { 
     return data[p2]; 
   };
-  inline const float _Complex& elem0x(uint32_t p2) const { 
+  inline const std::complex<float>& elem0x(uint32_t p2) const { 
     return data[p2]; 
   };
-  inline void clear() { memset(data,0,sizeof(float _Complex)*s1*s2); };
+  inline void clear() {
+    data.clear();
+    //memset(data,0,sizeof(std::complex<float>)*s1*s2);
+  };
 protected:
   uint32_t s1;
   uint32_t s2;
-  float _Complex* data;
+  TASCAR::spec_t data;
 };
 
 class cmat1_t {
 public:
   cmat1_t( uint32_t d1 );
   ~cmat1_t();
-  inline float _Complex& elem(uint32_t p1) { 
+  inline std::complex<float>& elem(uint32_t p1) { 
     return data[p1]; 
   };
-  inline const float _Complex& elem(uint32_t p1) const { 
+  inline const std::complex<float>& elem(uint32_t p1) const { 
     return data[p1]; 
   };
-  inline float _Complex& elem0() { 
+  inline std::complex<float>& elem0() { 
     return data[0]; 
   };
-  inline const float _Complex& elem0() const { 
+  inline const std::complex<float>& elem0() const { 
     return data[0]; 
   };
-  inline void clear() { memset(data,0,sizeof(float _Complex)*s1); };
+  inline void clear() {
+    data.clear();
+  };
 protected:
   uint32_t s1;
-  float _Complex* data;
+  TASCAR::spec_t data;
 };
 
 cmat3_t::cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 )
   : s1(d1),s2(d2),s3(d3),
     s23(s2*s3),
-    data(new float _Complex[s1*s2*s3])
+    data(s1*s2*s3)
 {
   clear();
 }
 
 cmat3_t::~cmat3_t()
 {
-  delete [] data;
 }
 
 cmat2_t::cmat2_t( uint32_t d1, uint32_t d2 )
   : s1(d1),s2(d2),
-    data(new float _Complex[s1*s2])
+    data(s1*s2)
 {
   clear();
 }
 
 cmat2_t::~cmat2_t()
 {
-  delete [] data;
 }
 
 
 cmat1_t::cmat1_t( uint32_t d1 )
   : s1(d1),
-    data(new float _Complex[s1])
+    data(s1)
 {
   clear();
 }
 
 cmat1_t::~cmat1_t()
 {
-  delete [] data;
 }
 
 //y[n] = -g x[n] + x[n-1] + g y[n-1]
 class reflectionfilter_t {
 public:
   reflectionfilter_t(uint32_t d1, uint32_t d2);
-  inline void filter( float _Complex& x, uint32_t p1, uint32_t p2) {
+  inline void filter( std::complex<float>& x, uint32_t p1, uint32_t p2) {
     x = B1*x-A2*sy.elem(p1,p2);
     sy.elem(p1,p2) = x;
     // all pass section:
-    float _Complex tmp(eta[p1]*x + sapx.elem( p1, p2 ));
+    std::complex<float> tmp(eta[p1]*x + sapx.elem( p1, p2 ));
     sapx.elem( p1, p2 ) = x;
     x = tmp - eta[p1]*sapy.elem( p1, p2 );
     sapy.elem( p1, p2 ) = x;
@@ -246,7 +253,7 @@ void fdn_t::process(bool b_prefilt)
   // get output values from delayline, apply reflection filters and rotation:
   for(uint32_t tap=0;tap<fdnorder_;++tap)
     for(uint32_t o=0;o<amborder1;++o){
-      float _Complex tmp(delayline.elem(tap,pos[tap],o));
+      std::complex<float> tmp(delayline.elem(tap,pos[tap],o));
       reflection.filter(tmp,tap,o);
       tmp *= rotation.elem(tap,o);
       dlout.elem(tap,o) = tmp;
@@ -303,7 +310,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     float laz(az);
     if( fdnorder_ > 1 )
       laz = az-daz+2.0*daz*tap*1.0/(fdnorder_);
-    float _Complex caz(cexpf(I*laz));
+    std::complex<float> caz(std::exp(i*laz));
     rotation.elem(tap,0) = 1.0;
     for(uint32_t o=1;o<amborder1;++o){
       rotation.elem(tap,o) = rotation.elem(tap,o-1)*caz;
@@ -315,7 +322,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     TASCAR::fft_t fft(fdnorder_);
     TASCAR::spec_t eigenv(fdnorder_/2+1);
     for(uint32_t k=0;k<eigenv.n_;++k)
-      eigenv[k] = cexp(I*2.0*M_PI*pow((double)k/(0.5*fdnorder_),2.0));;
+      eigenv[k] = std::exp(i_d*2.0*M_PI*pow((double)k/(0.5*fdnorder_),2.0));;
     fft.execute(eigenv);
     //std::cout << "row: " << fft.w << std::endl;
     for(uint32_t itap=0;itap<fdnorder_;++itap){
@@ -502,13 +509,13 @@ int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const
         fdn->inval.elem0() = sIn[0][t];
         for(uint32_t o=1;o<o1;++o)
           // ACN!
-          fdn->inval.elem(o) = sIn[2*o][t]+sIn[2*o-1][t]*I;
+          fdn->inval.elem(o) = sIn[2*o][t]+sIn[2*o-1][t]*i;
         fdn->process(prefilt);
-        sOut[0][t] += wet*creal(fdn->outval.elem0());
+        sOut[0][t] += wet*fdn->outval.elem0().real();
         for(uint32_t o=1;o<o1;++o){
           // ACN!
-          sOut[2*o][t] += wet*creal(fdn->outval.elem(o));
-          sOut[2*o-1][t] += wet*cimag(fdn->outval.elem(o));
+          sOut[2*o][t] += wet*fdn->outval.elem(o).real();
+          sOut[2*o-1][t] += wet*fdn->outval.elem(o).imag();
         }
       }
     }

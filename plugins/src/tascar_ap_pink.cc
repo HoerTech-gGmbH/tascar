@@ -2,6 +2,8 @@
 #include "fft.h"
 #include <random>
 
+const std::complex<double> i(0.0, 1.0);
+
 class pink_t : public TASCAR::audioplugin_base_t {
 public:
   pink_t( const TASCAR::audioplugin_cfg_t& cfg );
@@ -58,16 +60,16 @@ void pink_t::prepare( chunk_cfg_t& cf_ )
   for( uint32_t kf=0;kf<sw.n_;++kf){
     double f((double)kf*f_sample/(double)fftlen);
     if( (f >= fmin) && (f <= fmax) )
-      sw.b[kf] = 1.0 / f * cexp(I*dis(gen));
+      sw.b[kf] = 1.0 / f * std::exp(i*dis(gen));
     else
       sw.b[kf] = 0;
     TASCAR::pos_t p(disx(gen),disx(gen),disx(gen));
     p.normalize();
     // FuMa normalization:
     p *= sqrt(2.0);
-    sx.b[kf] = p.x*sw.b[kf];
-    sy.b[kf] = p.y*sw.b[kf];
-    sz.b[kf] = p.z*sw.b[kf];
+    sx.b[kf] = (float)(p.x)*sw.b[kf];
+    sy.b[kf] = (float)(p.y)*sw.b[kf];
+    sz.b[kf] = (float)(p.z)*sw.b[kf];
   }
   // w channel:
   fft.s.copy(sw);

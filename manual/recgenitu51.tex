@@ -1,0 +1,16 @@
+This receiver renders for ITU 5.1 loudspeaker layouts. Point sources
+are panned using VBAP on the C, L, R, Ls and Rs speakers. A warped
+space is used (0° mapped to C, $\pm$45° mapped to L and R, $\pm$135°
+mapped to Ls and Rs) to achieve a stable image in the frontal speaker
+set and to avoid excess intensities on the rear speakers. Diffuse
+sounds are rendered to L, R, Ls and Rs speakers, without
+de-correlation of the speaker signals. The LFE channel is created
+using an omni-directional characteristics (both, point sources and
+diffuse sound fields), and low pass filtered.
+
+\begin{tscattributes}
+\indattr{fc} & LFE cut off frequency in Hz (80)\\
+\indattr{diffusegainfront} & Diffuse gain for frontal speakers in dB (-6)\\
+\indattr{diffusegainrear} & Diffuse gain for rear speakers in dB (0)\\
+\end{tscattributes}
+

@@ -96,19 +96,25 @@ for k=1:numel(cScenes)
             end
         end
         
-        cSources = tascar_xml_get_element( cScenes{k}, 'receiver' );
-        for ksrc=1:numel(cSources)
-            lsourcename = javaMethod('getAttribute',cSources{ksrc},'name');
+        cReceiver = tascar_xml_get_element( cScenes{k}, 'receiver' );
+        num_recmatch = 0;
+        for ksrc=1:numel(cReceiver)
+            lsourcename = javaMethod('getAttribute',cReceiver{ksrc},'name');
             if ~strcmp(lsourcename,sCfg.receiver)
-                javaMethod('removeChild',cScenes{k},cSources{ksrc});
+                javaMethod('removeChild',cScenes{k},cReceiver{ksrc});
             else
+              num_recmatch = num_recmatch+1;
                 if ~isempty(sCfg.layers)
-                    javaMethod('setAttribute',cSources{ksrc},'layers',num2str(sCfg.layers));
+                    javaMethod('setAttribute',cReceiver{ksrc},'layers',num2str(sCfg.layers));
                 end
-                javaMethod('setAttribute',cSources{ksrc},'type','debugpos');
-                javaMethod('setAttribute',cSources{ksrc},'sources','10');
-                javaMethod('setAttribute',cSources{ksrc},'caliblevel','93.9794');
+                javaMethod('setAttribute',cReceiver{ksrc},'type','debugpos');
+                javaMethod('setAttribute',cReceiver{ksrc},'sources','10');
+                javaMethod('setAttribute',cReceiver{ksrc},'caliblevel','93.9794');
             end
+        end
+        if num_recmatch ~= 1
+          error(['Exactly one receiver of name "',sCfg.receiver,...
+                 '" required, got ', num2str(num_recmatch),'.']);
         end
     end
 end
@@ -127,7 +133,11 @@ if err ~= 0
     sCmd
     error(['Subprocess failed: ',msg]);
 end
+if ~isempty(strfind(msg,'Warning'))
+  warning(['while rendering tsc file "',char(oname),'":',char(10),msg]);
+end
 data = audioread('temp.wav');
+[err,msg] = system(['rm ',oname,' temp.wav']);
 Nsounds = size(data,2)/4;
 activesounds = [];
 for k=1:Nsounds
@@ -135,20 +145,28 @@ for k=1:Nsounds
         activesounds(end+1) = k;
     end
 end
-N = size(data,1)/sCfg.fragsize;
-x = zeros([N,numel(activesounds)]);
-y = zeros([N,numel(activesounds)]);
-z = zeros([N,numel(activesounds)]);
-lev = zeros([N,numel(activesounds)]);
+N = floor(size(data,1)/sCfg.fragsize);
+Nactive = numel(activesounds);
+if Nactive > 0
+x = zeros([N,Nactive]);
+y = zeros([N,Nactive]);
+z = zeros([N,Nactive]);
+lev = zeros([N,Nactive]);
 [B,A] = butter(1,1./(sCfg.tau*sCfg.fs));
-for k=1:numel(activesounds)
+for k=1:Nactive
     act = activesounds(k);
-    x(:,k) = data(1:sCfg.fragsize:end,4*(act-1)+1);
-    y(:,k) = data(1:sCfg.fragsize:end,4*(act-1)+2);
-    z(:,k) = data(1:sCfg.fragsize:end,4*(act-1)+3);
+    x(:,k) = data(1:sCfg.fragsize:(sCfg.fragsize*N),4*(act-1)+1);
+    y(:,k) = data(1:sCfg.fragsize:(sCfg.fragsize*N),4*(act-1)+2);
+    z(:,k) = data(1:sCfg.fragsize:(sCfg.fragsize*N),4*(act-1)+3);
     I0 = mean(data(1:sCfg.fragsize,4*(act-1)+4).^2);
     audio = filter(B,A,data(:,4*(act-1)+4).^2,I0);
-    lev(:,k) = 10*log10(audio(1:sCfg.fragsize:end))+93.9794;
+    lev(:,k) = 10*log10(audio(1:sCfg.fragsize:(sCfg.fragsize*N)))+93.9794;
+end
+else
+  x = [];
+  y = [];
+  z = [];
+  lev= [];
 end
 
 function scene_name = get_scene_name( scene_node )

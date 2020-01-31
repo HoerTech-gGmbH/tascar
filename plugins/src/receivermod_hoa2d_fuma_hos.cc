@@ -1,9 +1,11 @@
 #include <fftw3.h>
-#include <complex.h>
 #include <string.h>
 #include "errorhandling.h"
 #include "scene.h"
 #include "amb33defs.h"
+
+const std::complex<double> i(0.0, 1.0);
+const std::complex<float> i_f(0.0, 1.0);
 
 class hoa2d_t : public TASCAR::receivermod_base_t {
 public:
@@ -12,8 +14,8 @@ public:
     data_t(uint32_t chunksize,uint32_t channels);
     virtual ~data_t();
     // point source speaker weights:
-    float _Complex* enc_w;
-    float _Complex* enc_dw;
+    TASCAR::spec_t enc_w;
+    TASCAR::spec_t enc_dw;
     double gauge;
     double dgauge;
   };
@@ -32,8 +34,8 @@ private:
   uint32_t nbins;
   uint32_t order;
   double rho0;
-  float _Complex* s_encoded;
-  float _Complex* s_encoded_alt;
+  TASCAR::spec_t s_encoded;
+  TASCAR::spec_t s_encoded_alt;
 };
 
 hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
@@ -41,8 +43,8 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     nbins(0),
     order(0),
     rho0(1),
-    s_encoded(NULL),
-    s_encoded_alt(NULL)
+    s_encoded(1),
+    s_encoded_alt(1)
 {
   GET_ATTRIBUTE(order);
   GET_ATTRIBUTE(rho0);
@@ -51,39 +53,27 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
 
 hoa2d_t::~hoa2d_t()
 {
-  if( s_encoded )
-    delete [] s_encoded;
-  if( s_encoded_alt )
-    delete [] s_encoded_alt;
 }
 
 void hoa2d_t::prepare( chunk_cfg_t& cf_ )
 {
   TASCAR::receivermod_base_t::prepare( cf_ );
-  if( s_encoded )
-    delete [] s_encoded;
-  if( s_encoded_alt )
-    delete [] s_encoded_alt;
-  s_encoded = new float _Complex[n_fragment*nbins];
-  memset(s_encoded,0,sizeof(float _Complex)*n_fragment*nbins);
-  s_encoded_alt = new float _Complex[n_fragment*nbins];
-  memset(s_encoded_alt,0,sizeof(float _Complex)*n_fragment*nbins);
+  s_encoded.resize(n_fragment*nbins);
+  s_encoded.clear();
+  s_encoded_alt.resize(n_fragment*nbins);
+  s_encoded_alt.clear();
 }
 
 hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t order)
-  : enc_w(new float _Complex[order+1]),
-    enc_dw(new float _Complex[order+1]),
+  : enc_w(order+1),
+    enc_dw(order+1),
     gauge(0),
     dgauge(0)
 {
-  memset(enc_w,0,sizeof(float _Complex)*(order+1));
-  memset(enc_dw,0,sizeof(float _Complex)*(order+1));
 }
 
 hoa2d_t::data_t::~data_t()
 {
-  delete [] enc_w;
-  delete [] enc_dw;
 }
 
 void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
@@ -92,27 +82,27 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TAS
   float az(-prel.azim());
   float rho(prel.norm());
   double normd(rho/rho0);
-  float _Complex ciazp(cexpf(I*az));
-  float _Complex ckiazp(ciazp);
+  std::complex<float> ciazp(std::exp(i_f*az));
+  std::complex<float> ckiazp(ciazp);
   d->dgauge = (1.0/(1.0+normd) - d->gauge) * t_inc;
   for(uint32_t ko=1;ko<=order;++ko){
-    d->enc_dw[ko] = (ckiazp - d->enc_w[ko]) * t_inc;
+    d->enc_dw[ko] = (ckiazp - d->enc_w[ko]) * (float)t_inc;
     ckiazp *= ciazp;
   }
   d->enc_dw[0] = 0.0f;
   d->enc_w[0] = 1.0f;
   float* vpend(chunk.d+chunk.n);
-  float _Complex* encp(s_encoded);
-  float _Complex* encpa(s_encoded_alt);
+  std::complex<float>* encp(s_encoded.b);
+  std::complex<float>* encpa(s_encoded_alt.b);
   for(float* vp=chunk.d;vp!=vpend;++vp){
     d->gauge += d->dgauge;
     double gaugea(1.0-d->gauge);
-    float _Complex* pwp(d->enc_w);
-    float _Complex* pdwp(d->enc_dw);
+    std::complex<float>* pwp(d->enc_w.b);
+    std::complex<float>* pdwp(d->enc_dw.b);
     for(uint32_t ko=0;ko<=order;++ko){
       *pwp += *pdwp;
-      *encp += *pwp * (*vp) * d->gauge;
-      *encpa += *pwp * (*vp) * gaugea;
+      *encp += *pwp * (*vp) * (float)(d->gauge);
+      *encpa += *pwp * (*vp) * (float)gaugea;
       ++encp;
       ++encpa;
       ++pwp;
@@ -129,24 +119,24 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
 {
   uint32_t ch(order*2+1);
   for(uint32_t kt=0;kt<n_fragment;++kt){
-    output[0][kt] = MIN3DB*creal(s_encoded[kt*nbins]);
-    output[ch][kt] = MIN3DB*creal(s_encoded_alt[kt*nbins]);
+    output[0][kt] = MIN3DB*s_encoded[kt*nbins].real();
+    output[ch][kt] = MIN3DB*s_encoded_alt[kt*nbins].real();
   }
   for(uint32_t ko=1;ko<=order;++ko){
     uint32_t kc(2*ko-1);
     for(uint32_t kt=0;kt<n_fragment;++kt){
-      output[kc][kt] = cimag(s_encoded[kt*nbins+ko]);
-      output[kc+ch][kt] = cimag(s_encoded_alt[kt*nbins+ko]);
+      output[kc][kt] = s_encoded[kt*nbins+ko].imag();
+      output[kc+ch][kt] = s_encoded_alt[kt*nbins+ko].imag();
     }
     ++kc;
     for(uint32_t kt=0;kt<n_fragment;++kt){
-      output[kc][kt] = creal(s_encoded[kt*nbins+ko]);
-      output[kc+ch][kt] = creal(s_encoded_alt[kt*nbins+ko]);
+      output[kc][kt] = s_encoded[kt*nbins+ko].real();
+      output[kc+ch][kt] = s_encoded_alt[kt*nbins+ko].real();
     }
   }
   //
-  memset(s_encoded,0,sizeof(float _Complex)*n_fragment*nbins);
-  memset(s_encoded_alt,0,sizeof(float _Complex)*n_fragment*nbins);
+  s_encoded.clear();
+  s_encoded_alt.clear();
   TASCAR::receivermod_base_t::postproc(output);  
 }
 
@@ -154,7 +144,7 @@ void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vect
 {
   for(uint32_t kt=0;kt<n_fragment;++kt){
     s_encoded[kt*nbins] += chunk.w()[kt];
-    s_encoded[kt*nbins+1] += (chunk.x()[kt] + I*chunk.y()[kt]);
+    s_encoded[kt*nbins+1] += (chunk.x()[kt] + i_f*chunk.y()[kt]);
   }
 }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session license="CC0">
+	<scene>
+		<source>
+			<sound x="1">
+				<plugins><pink level="70"/></plugins>
+			</sound>
+		</source>
+		<receiver type="amb1h1v"/>
+		<reverb volumetric="10 7 3"/>
+	</scene>
+</session>

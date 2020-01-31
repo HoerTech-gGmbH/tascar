@@ -58,7 +58,7 @@ namespace TASCAR {
          
          \param anysolo Counter of objects which are soloed.
          \return True if active, false if either muted or not soloed but other tracks are soloed.
-       */
+      */
       bool is_active(uint32_t anysolo);
       void addmeter(float fs);
       void configure_meter( float tc, TASCAR::levelmeter::weight_t w );
@@ -74,7 +74,7 @@ namespace TASCAR {
          \param k Channel number
          \return Level meter
          \ingroup levels
-       */
+      */
       const TASCAR::levelmeter_t& get_meter(uint32_t k) const { return *(rmsmeter[k]); };
     private:
       std::string name;
@@ -87,7 +87,7 @@ namespace TASCAR {
     protected:
       /**
          \ingroup levels
-       */
+      */
       std::vector<TASCAR::levelmeter_t*> rmsmeter;
       std::vector<float> meterval;
     };
@@ -190,7 +190,7 @@ namespace TASCAR {
 
     /**
        \brief Audio ports
-     */
+    */
     class audio_port_t : public TASCAR::xml_element_t {
     public:
       audio_port_t(xmlpp::Element* e, bool is_input_);
@@ -224,11 +224,11 @@ namespace TASCAR {
 
     /**
        \brief Diffuse sound field descriptor
-     */
-    class diffuse_info_t : public sndfile_object_t, public audio_port_t {
+    */
+    class diff_snd_field_obj_t : public sndfile_object_t, public audio_port_t {
     public:
-      diffuse_info_t(xmlpp::Element* e);
-      virtual ~diffuse_info_t();
+      diff_snd_field_obj_t(xmlpp::Element* e);
+      virtual ~diff_snd_field_obj_t();
       void prepare( chunk_cfg_t& );
       void release();
       /**
@@ -316,11 +316,14 @@ namespace TASCAR {
       int32_t startframe;
     };
 
-    class receivermod_object_t : public object_t,
-                                 public audio_port_t,
-                                 public TASCAR::Acousticmodel::receiver_t {
+    /**
+       \brief Combine acoustic receiver functionality with dynamic geometry and audio port control
+    */
+    class receiver_obj_t : public object_t,
+                           public audio_port_t,
+                           public TASCAR::Acousticmodel::receiver_t {
     public:
-      receivermod_object_t(xmlpp::Element* e);
+      receiver_obj_t(xmlpp::Element* e, bool is_reverb_ );
       void prepare( chunk_cfg_t& );
       void release();
       /**
@@ -339,7 +342,6 @@ namespace TASCAR {
       */
       virtual void postproc(std::vector<wave_t>& output);
       void validate_attributes(std::string& msg) const;
-      
     };
 
     class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
@@ -359,6 +361,40 @@ namespace TASCAR {
       double xmlfalloff;
     };
 
+    class diffuse_reverb_defaults_t {
+    public:
+      diffuse_reverb_defaults_t(xmlpp::Element* e);
+    };
+
+
+    /**
+       \brief Object for diffuse reverb, consists of room microphone, diffuse sound field source
+     */
+    class diffuse_reverb_t : public diffuse_reverb_defaults_t, public receiver_obj_t {
+    public:
+      diffuse_reverb_t(xmlpp::Element* e);
+      ~diffuse_reverb_t();
+      void prepare( chunk_cfg_t& );
+      void release();
+      void geometry_update(double t);
+      void process_active(double t, uint32_t anysolo);
+      TASCAR::Acousticmodel::diffuse_t* get_source() { return source;};
+    private:
+      TASCAR::Acousticmodel::diffuse_t* source;
+    };
+
+    /**
+       \brief The class scene_t implements the definition of a virtual acoustic environment.
+
+       Here, objects (object_t, member scene_t::all_objects) are
+       defined, which can move along trajectories. This class is
+       mainly responsible for updating the object positions, see
+       scene_t::geometry_update(). Rendering methods are defined in
+       the derived class TASCAR::render_core_t. The actual acoustic
+       representation of the virtual acoustic environment is
+       implemented in the class TASCAR::Acousticmodel::world_t,
+       allocated in TASCAR::render_core_t::world.
+    */
     class scene_t : public scene_node_base_t {
     public:
       scene_t(xmlpp::Element* e);
@@ -386,14 +422,14 @@ namespace TASCAR {
       */
       void process_active(double t);
       std::vector<sound_t*> sounds;
-      std::vector<src_object_t*> object_sources;
-      std::vector<diffuse_info_t*> diffuse_sound_field_infos;
-      //std::vector<src_door_t*> door_sources;
-      std::vector<face_object_t*> faces;
+      std::vector<src_object_t*> source_objects;
+      std::vector<diff_snd_field_obj_t*> diff_snd_field_objects;
+      std::vector<face_object_t*> face_objects;
       std::vector<face_group_t*> facegroups;
       std::vector<obstacle_group_t*> obstaclegroups;
-      std::vector<receivermod_object_t*> receivermod_objects;
-      std::vector<mask_object_t*> masks;
+      std::vector<receiver_obj_t*> receivermod_objects;
+      std::vector<mask_object_t*> mask_objects;
+      std::vector<diffuse_reverb_t*> diffuse_reverbs;
       std::vector<object_t*> all_objects;
       std::vector<object_t*> find_object(const std::string& pattern);
       uint32_t ismorder;
@@ -406,6 +442,7 @@ namespace TASCAR {
       void configure_meter( float tc, TASCAR::levelmeter::weight_t w );
       void add_licenses( licensehandler_t* session );
       void validate_attributes(std::string& msg) const;
+      bool active;
     private:
       void clean_children();
       scene_t(const scene_t&);

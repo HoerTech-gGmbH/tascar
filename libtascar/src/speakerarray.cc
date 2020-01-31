@@ -1,12 +1,13 @@
 #include "speakerarray.h"
 #include "errorhandling.h"
-#include <complex.h>
 #include <algorithm>
 #include <random>
 #include <chrono>
 #include <string.h>
 
 using namespace TASCAR;
+
+const std::complex<double> i(0.0, 1.0);
 
 spk_array_cfg_t::spk_array_cfg_t( xmlpp::Element* xmlsrc, bool use_parent_xml )
   : xml_element_t( xmlsrc ),
@@ -79,13 +80,13 @@ spk_array_t::spk_array_t(xmlpp::Element* e,
     if( rmin > r )
       rmin = r;
   }
-  double _Complex p_xy(0);
+  std::complex<double> p_xy(0);
   for(uint32_t k=0;k<size();k++){
     operator[](k).spkgain *= operator[](k).norm()/rmax;
     operator[](k).dr = rmax-operator[](k).norm();
-    p_xy += cexp( -(double)k*PI2*I/(double)(size()))*(operator[](k).unitvector.x+I*operator[](k).unitvector.y);
+    p_xy += std::exp( -(double)k*PI2*i/(double)(size()))*(operator[](k).unitvector.x+i*operator[](k).unitvector.y);
   }
-  mean_rotation = carg(p_xy);
+  mean_rotation = std::arg(p_xy);
   didx.resize(size());
   for(uint32_t k=0;k<size();++k){
     operator[](k).update_foa_decoder(1.0f/size(), xyzgain);
@@ -110,7 +111,7 @@ spk_array_t::spk_array_t(xmlpp::Element* e,
 
 double spk_descriptor_t::get_rel_azim(double az_src) const
 {
-  return carg(cexp( I *(az_src - az)));
+  return std::arg(std::exp( i *(az_src - az)));
 }
 
 double spk_descriptor_t::get_cos_adist(pos_t src_unit) const
@@ -271,8 +272,9 @@ void spk_array_diff_render_t::prepare( chunk_cfg_t& cf_ )
     std::uniform_real_distribution<double> dis(0.0, 2*M_PI);
     //std::exponential_distribution<double> dis(1.0);
     for(uint32_t k=0;k<size();++k){
-      for(uint32_t b=0;b<fft_filter.s.n_;++b)
-        fft_filter.s[b] = cexp(I*dis(gen));
+      for(uint32_t b=0;b<fft_filter.s.n_;++b){
+        fft_filter.s[b] = std::exp(i*dis(gen));
+      }
       fft_filter.ifft();
       for(uint32_t t=0;t<fft_filter.w.n;++t)
         fft_filter.w[t] *= (0.5-0.5*cos(t*PI2/fft_filter.w.n));

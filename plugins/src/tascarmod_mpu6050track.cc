@@ -1,5 +1,7 @@
 #include "session.h"
-#include <complex.h>
+#include <complex>
+
+const std::complex<double> i(0.0, 1.0);
 
 class mpu6050track_t : public TASCAR::actor_module_t {
 public:
@@ -32,7 +34,7 @@ private:
   double scale;
   double tau;
   double tauz;
-  double _Complex z_mean;
+  std::complex<double> z_mean;
   double c;
   double cz;
   double rot;
@@ -224,13 +226,13 @@ mpu6050track_t::~mpu6050track_t()
 
 void mpu6050track_t::update(uint32_t tp_frame,bool tp_rolling)
 {
-  double _Complex z(cexp(I*rot));
+  std::complex<double> z(std::exp(i*rot));
   if( b_calib ){
     b_calib = false;
     z_mean = z;
   }
   z_mean = c*z_mean + (1.0-c)*z;
-  double az(carg( z *conj( z_mean ) ));
+  double az(std::arg( z *conj(z_mean) ));
   // check for normal values by using a comparison (result is false for nan and inf):
   if( (-4 < az) && (az < 4) )
     set_orientation( TASCAR::zyx_euler_t( scale*az, 0, 0 ) );

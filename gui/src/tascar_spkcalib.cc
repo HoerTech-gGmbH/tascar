@@ -105,8 +105,8 @@ calibsession_t::calibsession_t( const std::string& fname, double reflevel, const
   spkarray = new spk_array_t( e_rcvr, false );
   levels = std::vector<double>(spkarray->size(),0.0);
   if( !scenes.empty() )
-    if( !scenes.back()->object_sources.empty() ){
-      scenes.back()->object_sources.back()->dlocation = pos_t(1,0,0);
+    if( !scenes.back()->source_objects.empty() ){
+      scenes.back()->source_objects.back()->dlocation = pos_t(1,0,0);
     }
 }
 
@@ -132,20 +132,25 @@ void calibsession_t::reset_levels()
 void calibsession_t::get_levels(Gtk::ProgressBar* rec_progress, double prewait)
 {
   if( !scenes.empty() )
-    if( !scenes.back()->object_sources.empty() ){
+    if( !scenes.back()->source_objects.empty() ){
       levels.clear();
-      scenes.back()->object_sources.back()->set_mute(false);
+      scenes.back()->source_objects.back()->set_mute(false);
       uint32_t frac(0);
       rec_progress->set_fraction(0.0);
       while(Gtk::Main::events_pending())
         Gtk::Main::iteration(false);
       for( auto spk=spkarray->begin(); spk!=spkarray->end(); ++spk ){
-        scenes.back()->object_sources.back()->dlocation = spk->unitvector;
+        scenes.back()->source_objects.back()->dlocation = spk->unitvector;
         usleep(1e6*prewait);
         jackio_t rec( duration, "", refport_ );
         rec.run();
-        wave_t brec( rec.nframes_total*refport_.size(), rec.buf_out );
-        levels.push_back( 10*log10(brec.ms()) );
+        wave_t brec( rec.nframes_total*refport_.size() );
+        for( uint32_t ch=0;ch<refport_.size();++ch)
+          for( uint32_t k=0;k<rec.nframes_total;++k )
+            brec[ch*rec.nframes_total+k] = rec.buf_out[k*refport_.size()+ch];
+        TASCAR::levelmeter_t levelmeter( rec.get_srate(), duration, TASCAR::levelmeter::C );
+        levelmeter.update( brec );
+        levels.push_back( 10*log10(levelmeter.ms()) );
         ++frac;
         rec_progress->set_fraction((double)frac/(double)(spkarray->size()));
         while(Gtk::Main::events_pending())
@@ -173,8 +178,8 @@ void calibsession_t::get_levels(Gtk::ProgressBar* rec_progress, double prewait)
             recspk->spkpos[k].gain /= lmax;
         }
       }
-      scenes.back()->object_sources.back()->set_mute(true);
-      scenes.back()->object_sources.back()->dlocation = pos_t(1,0,0);
+      scenes.back()->source_objects.back()->set_mute(true);
+      scenes.back()->source_objects.back()->dlocation = pos_t(1,0,0);
     }
   levelsrecorded = true;
 }
@@ -251,11 +256,11 @@ void calibsession_t::save()
 void calibsession_t::set_active(bool b)
 {
   if( !scenes.empty() )
-    if( !scenes.back()->object_sources.empty() ){
+    if( !scenes.back()->source_objects.empty() ){
       if( b )
         set_active_diff( false );
-      scenes.back()->object_sources.back()->dlocation = pos_t(1,0,0);
-      scenes.back()->object_sources.back()->set_mute(!b);
+      scenes.back()->source_objects.back()->dlocation = pos_t(1,0,0);
+      scenes.back()->source_objects.back()->set_mute(!b);
       if( b )
         calibrated = true;
     }
@@ -264,10 +269,10 @@ void calibsession_t::set_active(bool b)
 void calibsession_t::set_active_diff(bool b)
 {
   if( !scenes.empty() )
-    if( !scenes.back()->diffuse_sound_field_infos.empty() ){
+    if( !scenes.back()->diff_snd_field_objects.empty() ){
       if( b )
         set_active( false );
-      scenes.back()->diffuse_sound_field_infos.back()->set_mute(!b);
+      scenes.back()->diff_snd_field_objects.back()->set_mute(!b);
       if( b )
         calibrated_diff = true;
     }

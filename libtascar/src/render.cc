@@ -111,7 +111,7 @@ TASCAR::render_core_t::~render_core_t()
 void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max )
 {
   ismorder = ism_max;
-  for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
+  for(std::vector<receiver_obj_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
     (*it)->ismmin = ism_min;
     (*it)->ismmax = ism_max;
   }
@@ -141,12 +141,12 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
-    for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
+    for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it){
       diffuse_sound_fields.push_back((*it)->get_source());
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
-    for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
+    for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it){
       (*it)->set_port_index(input_ports.size());
       for(uint32_t ch=0;ch<4;ch++){
         char ctmp[32];
@@ -156,7 +156,7 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       }
     }
     receivers.clear();
-    for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
+    for(std::vector<receiver_obj_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
       TASCAR::Acousticmodel::receiver_t* receiver(*it);
       receivers.push_back(receiver);
       (*it)->set_port_index(output_ports.size());
@@ -167,7 +167,7 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       audioports_out.push_back(*it);
     }
     reflectors.clear();
-    for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it){
+    for(std::vector<face_object_t*>::iterator it=face_objects.begin();it!=face_objects.end();++it){
       reflectors.push_back(*it);
     }
     for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it){
@@ -182,8 +182,13 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
         obstacles.push_back(*rit);
     }
     pmasks.clear();
-    for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it){
+    for(std::vector<mask_object_t*>::iterator it=mask_objects.begin();it!=mask_objects.end();++it){
       pmasks.push_back(*it);
+    }
+    for( auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it){
+      TASCAR::Acousticmodel::receiver_t* receiver(*it);
+      receivers.push_back(receiver);
+      diffuse_sound_fields.push_back((*it)->get_source());
     }
     // create the world, before first process callback is called:
     world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffuse_sound_fields,reflectors,obstacles,receivers,pmasks,ismorder);
@@ -226,6 +231,13 @@ void TASCAR::render_core_t::process(uint32_t nframes,
                                     const std::vector<float*>& inBuffer,
                                     const std::vector<float*>& outBuffer)
 {
+  if( !active ){
+    for(unsigned int k=0;k<outBuffer.size();k++)
+      memset(outBuffer[k],0,sizeof(float)*nframes);
+    active_pointsources = 0;
+    active_diffuse_sound_fields = 0;
+    return;
+  }
   //std::cerr << this << " " << pcnt << std::endl;
   //DEBUG(pcnt);
   //++pcnt;
@@ -241,9 +253,8 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     // clear output:
     for(unsigned int k=0;k<outBuffer.size();k++)
       memset(outBuffer[k],0,sizeof(float)*nframes);
-    for(unsigned int k=0;k<receivermod_objects.size();k++){
-      receivermod_objects[k]->clear_output();
-    }
+    for( auto it=receivers.begin();it!=receivers.end();++it)
+      (*it)->clear_output();
     load_cycle.t_init = tic.toc();
     /*
      * Geometry processing:
@@ -264,7 +275,7 @@ void TASCAR::render_core_t::process(uint32_t nframes,
       sounds[k]->process_plugins(tp);
       sounds[k]->apply_gain();
     }
-    for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it){
+    for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it){
       TASCAR::Acousticmodel::diffuse_t* psrc((*it)->get_source());
       float gain((*it)->get_gain());
       ambbuf->w().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()]) );
@@ -292,17 +303,18 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     /*
      * Post-processing:
      */
-    // copy receiver output:
-    // apply post-processing and receiver gain:
-    for(uint32_t k=0;k<receivers.size();k++){
-      receivers[k]->post_proc(tp);
-      receivers[k]->apply_gain();
-    }
     for(unsigned int k=0;k<receivermod_objects.size();k++){
       float gain(receivermod_objects[k]->get_gain());
       uint32_t numch(receivermod_objects[k]->get_num_channels());
       for(uint32_t ch=0;ch<numch;ch++)
         receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
+    }
+    for( auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it){
+      TASCAR::Acousticmodel::receiver_t* receiver(*it);
+      TASCAR::Acousticmodel::diffuse_t* diffuse((*it)->get_source());
+      receiver->external_gain = (*it)->get_gain();
+      // for update of level meter:
+      diffuse->preprocess( tp );
     }
     load_cycle.t_postproc = tic.toc();
     //security/stability:

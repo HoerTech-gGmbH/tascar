@@ -68,6 +68,7 @@ public:
   float range;
   float targetlevel;
   TASCAR::levelmeter::weight_t weight;
+  bool active;
 private:
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 };
@@ -81,6 +82,7 @@ public:
   splmeter_t();
   void update_levelmeter( const TASCAR::levelmeter_t& lm, float targetlevel );
   void set_mode( dameter_t::mode_t mode );
+  void set_active( bool );
   void set_weight( TASCAR::levelmeter::weight_t w );
   void set_narrow( bool narrow, bool leg );
   void set_min_and_range( float vmin, float range );
@@ -198,9 +200,9 @@ protected:
   // object draw functions:
   virtual void draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_receiver_object(TASCAR::Scene::receivermod_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   //  virtual void draw_door_src(TASCAR::Scene::src_door_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
-  virtual void draw_room_src(TASCAR::Scene::diffuse_info_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
+  virtual void draw_room_src(TASCAR::Scene::diff_snd_field_obj_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_face(TASCAR::Scene::face_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_facegroup(TASCAR::Scene::face_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);
   virtual void draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize);

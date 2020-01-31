@@ -1,8 +1,9 @@
 #include "session.h"
 #include "jackclient.h"
-#include <complex.h>
 
 #define SQRT12 0.70710678118654757274f
+
+const std::complex<double> i(0.0, 1.0);
 
 class matrix_vars_t : public TASCAR::module_base_t {
 public:
@@ -60,10 +61,10 @@ matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
       m[k][0] = channelgain*ordergain;
         for(uint32_t o=1;o<amborder+1;++o){
           ordergain = cos(o*M_PI/(2.0*amborder+2.0));
-          double _Complex cw(cpow(cexp(-I*outputs[k].azim()),o));
+          std::complex<double> cw(std::pow(std::exp(-i*outputs[k].azim()),o));
           // ACN!
-          m[k][2*o] = channelgain*ordergain*creal(cw);
-          m[k][2*o-1] = channelgain*ordergain*cimag(cw);
+          m[k][2*o] = channelgain*ordergain*cw.real();
+          m[k][2*o-1] = channelgain*ordergain*cw.imag();
         }
     }
   }

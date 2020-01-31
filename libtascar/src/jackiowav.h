@@ -65,8 +65,8 @@ private:
   SF_INFO sf_inf_in;
   SF_INFO sf_inf_out;
 public:
-  float* buf_in;
-  float* buf_out;
+  float* buf_in;  //< input buffer, i.e., samples are read from this buffer during playback. Interleaved channel order.
+  float* buf_out;  //< outout buffer, i.e., samples are stored in this buffer during recording. Interleaved channel order.
 private:
   unsigned int pos;
   bool b_quit;

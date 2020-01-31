@@ -1,6 +1,5 @@
 #include "errorhandling.h"
 #include "scene.h"
-#include <complex.h>
 
 class rec_hann_t : public TASCAR::receivermod_base_speaker_t {
 public:

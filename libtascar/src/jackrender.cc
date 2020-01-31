@@ -87,10 +87,10 @@ void TASCAR::audioplayer_t::open_files()
 {
   if( !scene )
     throw TASCAR::ErrMsg("Invalid scene pointer");
-  for(std::vector<TASCAR::Scene::src_object_t*>::iterator it=scene->object_sources.begin();it!=scene->object_sources.end();++it){
+  for(std::vector<TASCAR::Scene::src_object_t*>::iterator it=scene->source_objects.begin();it!=scene->source_objects.end();++it){
     infos.insert(infos.end(),(*it)->sndfiles.begin(),(*it)->sndfiles.end());
   }
-  for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator it=scene->diffuse_sound_field_infos.begin();it!=scene->diffuse_sound_field_infos.end();++it){
+  for(std::vector<TASCAR::Scene::diff_snd_field_obj_t*>::iterator it=scene->diff_snd_field_objects.begin();it!=scene->diff_snd_field_objects.end();++it){
     infos.insert(infos.end(),(*it)->sndfiles.begin(),(*it)->sndfiles.end());
   }
   for(std::vector<TASCAR::Scene::sndfile_info_t>::iterator it=infos.begin();it!=infos.end();++it){
@@ -164,7 +164,7 @@ TASCAR::render_rt_t::render_rt_t(xmlpp::Element* xmlsrc)
 
 TASCAR::render_rt_t::~render_rt_t()
 {
-  if( active )
+  if( jackc_t::active )
     jackc_t::deactivate();
 }
 
@@ -213,8 +213,8 @@ void TASCAR::render_rt_t::start()
           connect_in(sounds[k]->get_port_index(),*it,true);
     }
     // connect diffuse ports:
-    for(std::vector<TASCAR::Scene::diffuse_info_t*>::iterator idiff=diffuse_sound_field_infos.begin();idiff!=diffuse_sound_field_infos.end();++idiff){
-      TASCAR::Scene::diffuse_info_t* pdiff(*idiff);
+    for(std::vector<TASCAR::Scene::diff_snd_field_obj_t*>::iterator idiff=diff_snd_field_objects.begin();idiff!=diff_snd_field_objects.end();++idiff){
+      TASCAR::Scene::diff_snd_field_obj_t* pdiff(*idiff);
       std::vector<std::string> cn(pdiff->get_connect());
       for( auto it=cn.begin();it!=cn.end();++it)
         *it = strrep(*it, "@", "player."+name+":"+pdiff->get_name());

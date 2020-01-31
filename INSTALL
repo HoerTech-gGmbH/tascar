@@ -37,3 +37,15 @@ debian packages of lsl-liblsl can be found at:
 https://github.com/sccn/liblsl/releases
 
 For installation of binary packages, see http://news.tascar.org/
+
+
+Definition of docker build environments for TASCAR can be found here:
+
+https://github.com/HoerTech-gGmbH/docker-buildenv
+
+The docker files can be seen as a installation instruction of all
+build dependencies.
+
+Corresponding docker images can be found on docker hub:
+
+https://hub.docker.com/r/hoertech/docker-buildenv/tags?page=1&name=tascar

@@ -2,6 +2,8 @@
 #include "delayline.h"
 #include <random>
 
+const std::complex<double> i(0.0, 1.0);
+
 class ortf_t : public TASCAR::receivermod_base_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
@@ -75,7 +77,7 @@ void ortf_t::prepare( chunk_cfg_t& cf )
   std::uniform_real_distribution<double> dis(0.0, 2*M_PI);
   for(uint32_t k=0;k<2;++k){
     for(uint32_t b=0;b<fft_filter.s.n_;++b)
-      fft_filter.s[b] = cexp(I*dis(gen));
+      fft_filter.s[b] = std::exp(i*dis(gen));
     fft_filter.ifft();
     for(uint32_t t=0;t<fft_filter.w.n;++t)
       fft_filter.w[t] *= (0.5-0.5*cos(t*PI2/fft_filter.w.n));

@@ -2,6 +2,9 @@
 #include "ola.h"
 #include <stdlib.h>
 
+const std::complex<float> i_f(0.0, 1.0);
+const std::complex<double> i_d(0.0, 1.0);
+
 double drand()
 {
   return (double)random()/(double)(RAND_MAX+1.0);
@@ -131,10 +134,10 @@ int sustain_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn, c
   absspec *= sus_c1;
   float br(1.0f/std::max(1.0f,bassratio));
   for(uint32_t k=ola.s.size();k--;){
-    absspec[k] += cabsf(ola.s[k]);
+    absspec[k] += std::abs(ola.s[k]);
     if( (bass > 0) )
-      absspec[k*br] += bass*cabsf(ola.s[k]);
-    ola.s[k] = absspec[k]*cexpf(I*drand()*PI2);
+      absspec[k*br] += bass*std::abs(ola.s[k]);
+    ola.s[k] = (double)(absspec[k])*std::exp(i_d*drand()*PI2);
     if( k<fcut_int )
       ola.s[k] = 0;
   }

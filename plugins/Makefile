@@ -9,7 +9,7 @@ include ../rules.mk
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
-  hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc
+  hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc simplefdn itu51
 
 SOURCES = omni cardioidmod door generic1storder
 
@@ -26,10 +26,20 @@ glabsensors
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
-  level2osc const noise loopmachine pos2osc
+  level2osc const noise loopmachine pos2osc gain
 
-GLABSENSORS = smiley eog trackir emergency espheadtracker midicc	\
+GLABSENSORS = smiley eog emergency espheadtracker midicc	\
   qualisys jackstatus serial
+
+ifeq "$(HAS_OPENCV2)" "yes"
+GLABSENSORS += trackir
+CXXFLAGS += -DHAS_OPENCV2
+endif
+ifeq "$(HAS_OPENCV4)" "yes"
+GLABSENSORS += trackir
+CXXFLAGS += -DHAS_OPENCV4
+endif
+# trackir requires opencv2, which is not available on Ubuntu 20.04
 
 
 ifeq "$(HAS_LSL)" "yes"
@@ -114,7 +124,14 @@ build/tascar_timedisplay.so: build/timedisplay_glade.h
 
 build/glabsensor_%.so: EXTERNALS += gtkmm-3.0
 build/glabsensor_%.so: LDLIBS += -llsl64
+
+ifeq "$(HAS_OPENCV2)" "yes"
 build/glabsensor_trackir.so: EXTERNALS += opencv
+endif
+ifeq "$(HAS_OPENCV4)" "yes"
+build/glabsensor_trackir.so: EXTERNALS += opencv4
+endif
+
 build/glabsensors.o: EXTERNALS += gtkmm-3.0
 build/glabsensors.o: build/glabsensors_glade.h
 build/tascar_glabsensors.so: build/glabsensors_glade.h

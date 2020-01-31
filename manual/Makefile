@@ -2,12 +2,15 @@ SHELL=/bin/bash
 
 include ../config.mk
 
-all: manual.pdf callgraph.pdf 
+all: acousticmodel.pdf manual.pdf callgraph.pdf
 
 diff: manual-diff_master.pdf
 
 #TEXINPUTS = "./:../:./plugins/:../technical_report/:../flowcharts/fmt_eps/:../flowcharts/fmt_pdf/:../flowcharts/:"
 TEXINPUTS="./:../doc/:"
+
+SECTIONS=secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex secrecreverb.tex
+
 
 %.pdf: %.tex
 	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $<
@@ -25,7 +28,7 @@ FIGURES = filestructure.pdf creator.pdf
 version.tex:
 	echo $(FULLVERSION) > $@
 
-manual.pdf: version.tex $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex
+manual.pdf: version.tex $(FIGURES) $(SECTIONS)
 
 secmodules.tex: $(sort $(wildcard mod*.tex))
 	echo 'List of general purpose modules:\par\begin{itemize}' > $@
@@ -65,6 +68,14 @@ secrecspeaker.tex: $(sort $(wildcard recspk*.tex))
 	echo "" >> $@
 	(for m in $(subst recspk,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recspk_$$m}\\index{$${m/_/\\_} (speaker based receiver type)}";echo "\\input{recspk$$m.tex}"; done) >> $@
 
+secrecreverb.tex: $(sort $(wildcard recrev*.tex))
+	echo 'List of reverb receiver types:\par\begin{itemize}' > $@
+	(for m in $(subst recrev,,$(subst .tex,,$^)); do echo "\\item \\indrecrev[$$m]{$${m/_/\\_}}"; done) >> $@
+	echo '\end{itemize}' >> $@
+	echo "" >> $@
+	echo "" >> $@
+	(for m in $(subst recrev,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recrev_$$m}\\index{$${m/_/\\_} (reverb receiver type)}";echo "\\input{recrev$$m.tex}"; done) >> $@
+
 %.pdf: %.eps
 	epstopdf $< -o $@
 
@@ -72,7 +83,7 @@ secrecspeaker.tex: $(sort $(wildcard recspk*.tex))
 	dot -Tpdf < $< > $@
 
 clean:
-	rm -Rf *.log *.lot *.lof *.aux *.dep *.dvi *.toc *~ *.blg *.bbl *.brf manual.pdf plug_*.tex *.idx *.ilg *.out *.ind $(FIGURES) secmodules.tex secactmodules.tex secapmodules.tex version.tex
+	rm -Rf *.log *.lot *.lof *.aux *.dep *.dvi *.toc *~ *.blg *.bbl *.brf manual.pdf plug_*.tex *.idx *.ilg *.out *.ind $(FIGURES) $(SECTIONS) version.tex
 	$(MAKE) -C ./examples clean
 
 %.png: %.dot

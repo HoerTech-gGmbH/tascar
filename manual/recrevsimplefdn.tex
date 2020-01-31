@@ -1,0 +1,16 @@
+This receiver implements a simple Feedback Delay Network (FDN). To set
+the room dimensions, use the \attr{volumetric} attribute. By default,
+the $T_{60}$ is calculated using the Sabine's formula, see
+\attr{absorption}. If an explicit $T_{60}$ is provided, this is used
+and the \attr{absorption} attribute is ignored.
+
+\begin{tscattributes}     
+  \indattr{fdnorder}   & Order of FDN (default: 5)                                 \\
+  \indattr{dw}         & Spatial spread, in rad/s (default: 2.0)                   \\
+  \indattr{t60}        & $T_{60}$ in seconds, or zero to use Sabine's equation (0) \\
+  \indattr{damping}    & Damping (first order lowpass) coefficient (0.3)           \\
+  \indattr{prefilt}    & Filter before feedback matrix (true)                      \\
+  \indattr{absorption} & Absorption used in Sabine's equation (0.6)                \\
+  \indattr{c}          & Speed of sound, in m/s (340)                              \\
+  \indattr{volumetric} & Dimension of room x y z in meter (3 4 5)                  \\
+\end{tscattributes}

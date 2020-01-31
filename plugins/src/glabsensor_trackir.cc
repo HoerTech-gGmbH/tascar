@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+
 #include "glabsensorplugin.h"
 #include "errorhandling.h"
 #include <complex>

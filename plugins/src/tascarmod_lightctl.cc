@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <cmath>
 
+const std::complex<double> i(0.0, 1.0);
+
 double hue_warp_x(0);
 double hue_warp_y(0);
 double hue_warp_rot(0);
@@ -43,10 +45,10 @@ int osc_set_hsv(const char *path, const char *types, lo_arg **argv, int argc, lo
   if( user_data  ){
     std::vector<float> *data((std::vector<float> *)user_data);
     if( (argc==4) && (argc <= (int)(data->size())) ){
-      float _Complex cz(cexpf(1.0If*(argv[0]->f*DEG2RAD)));
-      cz += hue_warp_x+1.0If*hue_warp_y;
-      cz *= cexpf(1.0If*hue_warp_rot);
-      float h(cargf(cz)*RAD2DEG);
+      std::complex<float> cz(std::exp(i*(argv[0]->f*DEG2RAD)));
+      cz += hue_warp_x+i*hue_warp_y;
+      cz *= std::exp(i*hue_warp_rot);
+      float h(std::arg(cz)*RAD2DEG);
       if( h < 0 )
         h += 360.0;
       h = fmodf(h,360.0f);
@@ -391,7 +393,7 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
         {
           // do panning / copy data
           for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-            float az(objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
+            float az(objval[kobj].w*std::arg((pobj.x+i*pobj.y)*(fixtures[kfix].unitvector.x-i*fixtures[kfix].unitvector.y)));
             float w(0);
             if( az >= 0 )
               w = 1.0f-std::min(1.0f,az);
@@ -404,7 +406,7 @@ void lightscene_t::update( uint32_t frame, bool running, double t_fragment )
         {
           // do panning / copy data
           for(uint32_t kfix=0;kfix<fixtures.size();++kfix){
-            float az(-objval[kobj].w*cargf((pobj.x+I*pobj.y)*(fixtures[kfix].unitvector.x-I*fixtures[kfix].unitvector.y)));
+            float az(-objval[kobj].w*std::arg((pobj.x+i*pobj.y)*(fixtures[kfix].unitvector.x-i*fixtures[kfix].unitvector.y)));
             float w(0);
             if( az >= 0 )
               w = 1.0f-std::min(1.0f,az);

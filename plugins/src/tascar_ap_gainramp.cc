@@ -52,7 +52,9 @@ void gainramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::po
   if( !chunk.empty() ){
     uint32_t nch(chunk.size());
     uint32_t N(chunk[0].n);
-    double dg(pow(slope,t_sample));
+    double dg(1.0);
+    if( slope != 1.0 )
+      dg = pow(slope,t_sample);
     for(uint32_t k=0;k<N;++k){
       gain *= dg;
       if( gain > maxgain )

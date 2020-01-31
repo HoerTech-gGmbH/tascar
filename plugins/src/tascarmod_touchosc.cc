@@ -130,7 +130,7 @@ void connection_t::uploadsession( TASCAR::session_t* session )
         ++ch;
       }
     }
-    for(std::vector<TASCAR::Scene::receivermod_object_t*>::iterator it=session->scenes[scene]->receivermod_objects.begin();it!=session->scenes[scene]->receivermod_objects.end();++it){
+    for(std::vector<TASCAR::Scene::receiver_obj_t*>::iterator it=session->scenes[scene]->receivermod_objects.begin();it!=session->scenes[scene]->receivermod_objects.end();++it){
       if( ch < channels ){
         char cfader[1024];
         sprintf(cfader,"/touchosc/fader%d",ch+1);
@@ -197,7 +197,7 @@ void connection_t::updatesession( TASCAR::session_t* session )
         ++ch;
       }
     }
-    for(std::vector<TASCAR::Scene::receivermod_object_t*>::iterator it=session->scenes[scene]->receivermod_objects.begin();it!=session->scenes[scene]->receivermod_objects.end();++it){
+    for(std::vector<TASCAR::Scene::receiver_obj_t*>::iterator it=session->scenes[scene]->receivermod_objects.begin();it!=session->scenes[scene]->receivermod_objects.end();++it){
       if( ch < channels ){
         char cfader[1024];
         sprintf(cfader,"/touchosc/fader%d",ch+1);

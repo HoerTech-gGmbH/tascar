@@ -8,9 +8,9 @@
 #include <unistd.h>
 #include <fnmatch.h>
 #include <fstream>
-#include <complex.h>
 #include <algorithm>
 #include <set>
+#include "amb33defs.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -50,9 +50,9 @@ bool object_t::isactive(double time) const
 }
 
 /*
- *diffuse_info_t
+ *diff_snd_field_obj_t
  */
-diffuse_info_t::diffuse_info_t(xmlpp::Element* xmlsrc)
+diff_snd_field_obj_t::diff_snd_field_obj_t(xmlpp::Element* xmlsrc)
   : sndfile_object_t(xmlsrc),
     audio_port_t(xmlsrc,true),size(1,1,1),
     falloff(1.0),
@@ -64,13 +64,13 @@ diffuse_info_t::diffuse_info_t(xmlpp::Element* xmlsrc)
   dynobject_t::GET_ATTRIBUTE_BITS(layers);
 }
 
-diffuse_info_t::~diffuse_info_t()
+diff_snd_field_obj_t::~diff_snd_field_obj_t()
 {
   if( source )
     delete source;
 }
 
-void diffuse_info_t::geometry_update(double t)
+void diff_snd_field_obj_t::geometry_update(double t)
 {
   if( source ){
     dynobject_t::geometry_update(t);
@@ -79,7 +79,7 @@ void diffuse_info_t::geometry_update(double t)
   }
 }
 
-void diffuse_info_t::prepare( chunk_cfg_t& cf_ )
+void diff_snd_field_obj_t::prepare( chunk_cfg_t& cf_ )
 {
   cf_.n_channels = 4;
   sndfile_object_t::prepare( cf_ );
@@ -220,7 +220,8 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     guiscale(200),
     guitrackobject(NULL),
     anysolo(0),
-    scene_path("")
+    scene_path(""),
+    active(true)
 {
   try{
     GET_ATTRIBUTE(name);
@@ -236,6 +237,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
     GET_ATTRIBUTE(guiscale);
     GET_ATTRIBUTE(guicenter);
     GET_ATTRIBUTE(c);
+    GET_ATTRIBUTE_BOOL(active);
     description = xml_get_text(e,"description");
     xmlpp::Node::NodeList subnodes = e->get_children();
     for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -249,22 +251,22 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         }
         if( sne->get_name() == "src_object" ){
           sne->set_name("source");
-          //object_sources.push_back(new src_object_t(sne));
+          //source_objects.push_back(new src_object_t(sne));
           add_warning( "Deprecated element \"src_object\", use \"source\" instead.", sne );
         }
         // parse nodes:
         if( sne->get_name() == "source" ){
-          object_sources.push_back(new src_object_t(sne));
-          obj = object_sources.back();
+          source_objects.push_back(new src_object_t(sne));
+          obj = source_objects.back();
         }else if( sne->get_name() == "diffuse" ){
-          diffuse_sound_field_infos.push_back(new diffuse_info_t(sne));
-          obj = diffuse_sound_field_infos.back();
+          diff_snd_field_objects.push_back(new diff_snd_field_obj_t(sne));
+          obj = diff_snd_field_objects.back();
         }else if( sne->get_name() == "receiver" ){
-          receivermod_objects.push_back(new receivermod_object_t(sne));
+          receivermod_objects.push_back(new receiver_obj_t(sne, false));
           obj = receivermod_objects.back();
         }else if( sne->get_name() == "face" ){
-          faces.push_back(new face_object_t(sne));
-          obj = faces.back();
+          face_objects.push_back(new face_object_t(sne));
+          obj = face_objects.back();
         }else if( sne->get_name() == "facegroup" ){
           facegroups.push_back(new face_group_t(sne));
           obj = facegroups.back();
@@ -272,8 +274,11 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
           obstaclegroups.push_back(new obstacle_group_t(sne));
           obj = obstaclegroups.back();
         }else if( sne->get_name() == "mask" ){
-          masks.push_back(new mask_object_t(sne));
-          obj = masks.back();
+          mask_objects.push_back(new mask_object_t(sne));
+          obj = mask_objects.back();
+        }else if( sne->get_name() == "reverb" ){
+          diffuse_reverbs.push_back(new diffuse_reverb_t(sne));
+          obj = diffuse_reverbs.back();
         }else if( sne->get_name() != "include" )
           add_warning("Unrecognized xml element \""+ sne->get_name() +"\".",sne );
         if( obj ){
@@ -283,7 +288,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         }
       }
     }
-    for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it){
+    for(std::vector<src_object_t*>::iterator it=source_objects.begin();it!=source_objects.end();++it){
       for(std::vector<sound_t*>::iterator its=(*it)->sound.begin();its!=(*it)->sound.end();++its){
         sounds.push_back( *its );
       }
@@ -327,19 +332,21 @@ void scene_t::geometry_update(double t)
 
 void scene_t::process_active(double t)
 {
-  for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+  for(std::vector<src_object_t*>::iterator it=source_objects.begin();it!=source_objects.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
+  for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
+  for(std::vector<receiver_obj_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
+  for(std::vector<face_object_t*>::iterator it=face_objects.begin();it!=face_objects.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
     (*it)->process_active(t,anysolo);
   for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
     (*it)->process_active(t,anysolo);
-  for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it)
+  for(std::vector<mask_object_t*>::iterator it=mask_objects.begin();it!=mask_objects.end();++it)
+    (*it)->process_active(t,anysolo);
+  for(auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it)
     (*it)->process_active(t,anysolo);
 }
 
@@ -366,8 +373,8 @@ void mask_object_t::process_active(double t,uint32_t anysolo)
   mask_object_t::active = is_active(anysolo,t);
 }
 
-receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc), audio_port_t(xmlsrc,false), receiver_t(xmlsrc, default_name("out"))
+receiver_obj_t::receiver_obj_t(xmlpp::Element* xmlsrc, bool is_reverb_ )
+  : object_t(xmlsrc), audio_port_t(xmlsrc,false), receiver_t(xmlsrc, default_name("out"), is_reverb_ )
 {
   // test if this is a speaker-based receiver module:
   TASCAR::receivermod_base_speaker_t* spk(dynamic_cast<TASCAR::receivermod_base_speaker_t*>(libdata));
@@ -395,13 +402,13 @@ receivermod_object_t::receivermod_object_t(xmlpp::Element* xmlsrc)
   }
 }
 
-void receivermod_object_t::validate_attributes(std::string& msg) const
+void receiver_obj_t::validate_attributes(std::string& msg) const
 {
   dynobject_t::validate_attributes(msg);
   TASCAR::Acousticmodel::receiver_t::validate_attributes(msg);
 }
 
-void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
+void receiver_obj_t::prepare( chunk_cfg_t& cf_ )
 {
   cf_.n_channels = get_num_channels();
   TASCAR::Acousticmodel::receiver_t::prepare( cf_ );
@@ -411,59 +418,56 @@ void receivermod_object_t::prepare( chunk_cfg_t& cf_ )
     addmeter( TASCAR::Acousticmodel::receiver_t::f_sample );
 }
 
-void receivermod_object_t::release()
+void receiver_obj_t::release()
 {
   TASCAR::Acousticmodel::receiver_t::release();
   object_t::release();
 }
 
-void receivermod_object_t::postproc(std::vector<wave_t>& output)
+void receiver_obj_t::postproc(std::vector<wave_t>& output)
 {
   starttime_samples = TASCAR::Acousticmodel::receiver_t::f_sample*starttime;
   TASCAR::Acousticmodel::receiver_t::postproc(output);
-  if( output.size() != rmsmeter.size() ){
-    DEBUG(output.size());
-    DEBUG(rmsmeter.size());
-    throw TASCAR::ErrMsg("Programming error");
-  }
-  for(uint32_t k=0;k<output.size();k++)
+  for(uint32_t k=0;k<std::min(output.size(),rmsmeter.size());k++)
     rmsmeter[k]->update(output[k]);
 }
 
-void receivermod_object_t::geometry_update(double t)
+void receiver_obj_t::geometry_update(double t)
 {
   dynobject_t::geometry_update(t);
   *(c6dof_t*)this = c6dof;
   boundingbox.geometry_update(t);
 }
 
-void receivermod_object_t::process_active(double t,uint32_t anysolo)
+void receiver_obj_t::process_active(double t,uint32_t anysolo)
 {
   TASCAR::Acousticmodel::receiver_t::active = is_active(anysolo,t);
 }
 
 src_object_t* scene_t::add_source()
 {
-  object_sources.push_back(new src_object_t(e->add_child("source")));
-  return object_sources.back();
+  source_objects.push_back(new src_object_t(e->add_child("source")));
+  return source_objects.back();
 }
 
 std::vector<object_t*> scene_t::get_objects()
 {
   std::vector<object_t*> r;
-  for(std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+  for(std::vector<src_object_t*>::iterator it=source_objects.begin();it!=source_objects.end();++it)
     r.push_back(*it);
-  for(std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
+  for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it)
     r.push_back(*it);
-  for(std::vector<receivermod_object_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
+  for(std::vector<receiver_obj_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     r.push_back(*it);
-  for(std::vector<face_object_t*>::iterator it=faces.begin();it!=faces.end();++it)
+  for(std::vector<face_object_t*>::iterator it=face_objects.begin();it!=face_objects.end();++it)
     r.push_back(*it);
   for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it)
     r.push_back(*it);
   for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
     r.push_back(*it);
-  for(std::vector<mask_object_t*>::iterator it=masks.begin();it!=masks.end();++it)
+  for(std::vector<mask_object_t*>::iterator it=mask_objects.begin();it!=mask_objects.end();++it)
+    r.push_back(*it);
+  for(auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it)
     r.push_back(*it);
   return r;
 }
@@ -495,10 +499,10 @@ void scene_t::add_licenses( licensehandler_t* session )
 {
   for( auto it=sounds.begin();it!=sounds.end();++it)
     (*it)->plugins.add_licenses( session );
-  for( std::vector<src_object_t*>::iterator it=object_sources.begin();it!=object_sources.end();++it)
+  for( std::vector<src_object_t*>::iterator it=source_objects.begin();it!=source_objects.end();++it)
     for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
       session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
-  for( std::vector<diffuse_info_t*>::iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
+  for( std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it)
     for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
       session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
 }
@@ -541,10 +545,12 @@ std::string route_t::get_type() const
     return "obstacle";
   if( dynamic_cast<const TASCAR::Scene::src_object_t*>(this))
     return "source";
-  if( dynamic_cast<const TASCAR::Scene::diffuse_info_t*>(this))
+  if( dynamic_cast<const TASCAR::Scene::diff_snd_field_obj_t*>(this))
     return "diffuse";
-  if( dynamic_cast<const TASCAR::Scene::receivermod_object_t*>(this))
+  if( dynamic_cast<const TASCAR::Scene::receiver_obj_t*>(this))
     return "receiver";
+  if( dynamic_cast<const TASCAR::Scene::diffuse_reverb_t*>(this))
+    return "reverb";
   return "unknwon";
 }
 
@@ -720,14 +726,14 @@ void src_object_t::process_active(double t, uint32_t anysolo)
     (*it)->active = a;
 }
 
-void diffuse_info_t::release()
+void diff_snd_field_obj_t::release()
 {
   sndfile_object_t::release();
   if( source )
     source->release();
 }
 
-void diffuse_info_t::process_active(double t, uint32_t anysolo)
+void diff_snd_field_obj_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
   if( source )
@@ -759,19 +765,21 @@ std::vector<TASCAR::Scene::object_t*> TASCAR::Scene::scene_t::find_object(const 
 void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
 {
   scene_node_base_t::validate_attributes(msg);
-  for(std::vector<src_object_t*>::const_iterator it=object_sources.begin();it!=object_sources.end();++it)
+  for(std::vector<src_object_t*>::const_iterator it=source_objects.begin();it!=source_objects.end();++it)
     (*it)->validate_attributes(msg);
-  for(std::vector<diffuse_info_t*>::const_iterator it=diffuse_sound_field_infos.begin();it!=diffuse_sound_field_infos.end();++it)
+  for(std::vector<diff_snd_field_obj_t*>::const_iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
-  for(std::vector<face_object_t*>::const_iterator it=faces.begin();it!=faces.end();++it)
+  for(std::vector<face_object_t*>::const_iterator it=face_objects.begin();it!=face_objects.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
   for(std::vector<face_group_t*>::const_iterator it=facegroups.begin();it!=facegroups.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
   for(std::vector<obstacle_group_t*>::const_iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
-  for(std::vector<receivermod_object_t*>::const_iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
+  for(std::vector<receiver_obj_t*>::const_iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it)
     (*it)->validate_attributes(msg);
-  for(std::vector<mask_object_t*>::const_iterator it=masks.begin();it!=masks.end();++it)
+  for(std::vector<mask_object_t*>::const_iterator it=mask_objects.begin();it!=mask_objects.end();++it)
+    (*it)->dynobject_t::validate_attributes(msg);
+  for(auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it)
     (*it)->dynobject_t::validate_attributes(msg);
 }
 
@@ -1044,7 +1052,6 @@ sound_t::sound_t( xmlpp::Element* xmlsrc, src_object_t* parent_ )
       char ctmp[1024];
       sprintf(ctmp,"%d",sne->get_line());
       TASCAR::add_warning("Ignoring entry \""+sne->get_name()+"\" in sound \""+get_fullname()+"\".",sne);
-      //TASCAR::add_warning( "Audio plugins in sounds should be placed within the <plugins></plugins> element.\n  (plugin \""+sne->get_name()+"\" in sound \""+get_fullname()+"\", line "+std::string(ctmp)+")");
     }
   }
 }
@@ -1112,6 +1119,79 @@ rgb_color_t sound_t::get_color() const
   else
     return rgb_color_t();
 }
+
+diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(xmlpp::Element* e)
+{
+  xml_element_t el(e);
+  std::string name("reverb");
+  std::string type("simplefdn");
+  TASCAR::pos_t volumetric(3,4,5);
+  bool diffuse(false);
+  double falloff(1.0);
+  el.GET_ATTRIBUTE(name);
+  el.GET_ATTRIBUTE(type);
+  el.GET_ATTRIBUTE(volumetric);
+  el.GET_ATTRIBUTE_BOOL(diffuse);
+  el.GET_ATTRIBUTE(falloff);
+}
+
+diffuse_reverb_t::diffuse_reverb_t(xmlpp::Element* e)
+  : diffuse_reverb_defaults_t(e),
+    TASCAR::Scene::receiver_obj_t(e, true),
+  source(NULL)
+{
+}
+
+diffuse_reverb_t::~diffuse_reverb_t()
+{
+  if( source )
+    delete source;
+}
+
+void diffuse_reverb_t::prepare( chunk_cfg_t& cf )
+{
+  reset_meters();
+  receiver_obj_t::prepare( cf );
+  //is_reverb = true;
+  if( cf.n_channels != 4 )
+    throw TASCAR::ErrMsg("Four channels are required for FOA rendering. Please check reverb receiver type.");
+  if( source )
+    delete source;
+  source = NULL;
+  addmeter( cf.f_sample );
+  source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, cf.n_fragment, *(rmsmeter.back()), get_name() );
+  source->size = volumetric;
+  source->falloff = 1.0/std::max(falloff,1.0e-10);
+  source->prepare( cf );
+  for(uint32_t acn=0;acn<AMB11::idx::channels;++acn)
+    source->audio[acn].use_external_buffer( outchannels[acn].n, outchannels[acn].d );
+}
+
+void diffuse_reverb_t::release()
+{
+  receiver_obj_t::release();
+  if( source )
+    delete source;
+  source = NULL;
+}
+
+void diffuse_reverb_t::geometry_update(double t)
+{
+  receiver_obj_t::geometry_update(t);
+  if( source ){
+    get_6dof(source->center,source->orientation);
+    source->layers = layers;
+  }
+}
+
+void diffuse_reverb_t::process_active(double t, uint32_t anysolo)
+{
+  receiver_obj_t::process_active( t, anysolo );
+  bool a(is_active(anysolo,t));
+  if( source )
+    source->active = a;
+}
+
 
 
 /*

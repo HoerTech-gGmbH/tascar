@@ -123,7 +123,11 @@ namespace TASCAR {
       r.z *= n;
       return r;
     };
-    /// Normalize vector
+    /// Box volume:
+    double boxvolume() const { return x*y*z; };
+    /// Box area:
+    double boxarea() const { return 2.0*(x*y + x*z + y*z);};
+      /// Normalize vector
     void normalize();
     /**
        \brief Rotate around z-axis
@@ -631,6 +635,8 @@ namespace TASCAR {
     shoebox_t();
     shoebox_t(const pos_t& center_,const pos_t& size_,const zyx_euler_t& orientation_);
     pos_t nextpoint(pos_t p);
+    double volume() const { return size.boxvolume();};
+    double area() const { return size.boxarea();};
     pos_t center;
     pos_t size;
     zyx_euler_t orientation;
@@ -656,7 +662,62 @@ namespace TASCAR {
   std::vector<pos_t> generate_icosahedron();
 
   std::vector<pos_t> subdivide_and_normalize_mesh( std::vector<pos_t> mesh, uint32_t iterations );
-  
+
+  class quaternion_t {
+  public:
+    quaternion_t() : w(0),x(0),y(0),z(0) {};
+    quaternion_t( float w_, float x_, float y_, float z_ ) : w(w_),x(x_),y(y_),z(z_) {};
+    float w;
+    float x;
+    float y;
+    float z;
+    void clear() { w = 0.0; x = 0.0; y = 0.0; z = 0.0; };
+    inline quaternion_t& operator*=(float b){
+      w*=b;
+      x*=b;
+      y*=b;
+      z*=b;
+      return *this;
+    };
+    inline void set_rotation( float angle, TASCAR::pos_t axis ){
+      axis *= sinf(0.5f*angle);
+      w = cosf(0.5f*angle);
+      x = axis.x;
+      y = axis.y;
+      z = axis.z;
+    };
+    inline quaternion_t inverse() const {
+      return conjugate().scale(1.0/norm());
+    };
+    inline float norm() const {
+      return w*w+x*x+y*y+z*z;
+    };
+    inline quaternion_t conjugate() const {
+      return quaternion_t( w, -x, -y, -z );
+    };
+    inline quaternion_t scale( float s ) const {
+      return quaternion_t( w*s, x*s, y*s, z*s);
+    };
+    inline void rotate( TASCAR::pos_t& p ){
+      quaternion_t qv( 0.0f, p.x, p.y, p.z );
+      qv = (*this) * qv * inverse();
+      p.x = qv.x;
+      p.y = qv.y;
+      p.z = qv.z;
+    };
+    inline quaternion_t operator*(const quaternion_t& q) const{
+      return quaternion_t(w*q.w - x*q.x - y*q.y - z*q.z, 
+                          w*q.x + x*q.w + y*q.z - z*q.y,                          
+                          w*q.y + y*q.w + z*q.x - x*q.z,
+                          w*q.z + z*q.w + x*q.y - y*q.x);
+    };
+    inline quaternion_t& operator*=(const quaternion_t& q){
+      quaternion_t tmp(*this*q);
+      *this = tmp;
+      return *this;
+    };
+ 
+  };
 
 }
 
@@ -665,6 +726,8 @@ std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n);
 
 bool operator==(const TASCAR::quickhull_t& h1,const TASCAR::quickhull_t& h2);
 bool operator==(const TASCAR::quickhull_t::simplex_t& s1,const TASCAR::quickhull_t::simplex_t& s2);
+
+
 
 #endif
 

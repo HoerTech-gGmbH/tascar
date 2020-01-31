@@ -1,5 +1,7 @@
 #include "audioplugin.h"
-#include <complex.h>
+#include <complex>
+
+const std::complex<double> i(0.0, 1.0);
 
 class spksim_t : public TASCAR::audioplugin_base_t {
 public:
@@ -53,9 +55,9 @@ void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_
   double farg(2.0*M_PI*fres/f_sample);
   b1 = 2.0*q*cos(farg);
   b2 = -q*q;
-  double _Complex z(cexpf(I*farg));
-  double _Complex z0(q*cexp(-I*farg));
-  double a1((1.0-q)*(cabs(z-z0)));
+  std::complex<double> z(std::exp(i*farg));
+  std::complex<double> z0(q*std::exp(-i*farg));
+  double a1((1.0-q)*(std::abs(z-z0)));
   double og(pow(10.0,0.05*gain));
   for(uint32_t k=0;k<aud.n;++k){
     // input resonance filter:

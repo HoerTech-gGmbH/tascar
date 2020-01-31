@@ -25,6 +25,8 @@ public:
   virtual ~nsp_t() {};
   void add_pointsource( const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* );
   receivermod_base_t::data_t* create_data( double srate,uint32_t fragsize );
+  void add_variables( TASCAR::osc_server_t* srv );
+  bool useall;
 };
 
 
@@ -61,8 +63,16 @@ nsp_t::data_t::~data_t()
 }
 
 nsp_t::nsp_t( xmlpp::Element* xmlsrc )
-  : TASCAR::receivermod_base_speaker_t( xmlsrc )
+  : TASCAR::receivermod_base_speaker_t( xmlsrc ),
+  useall(false)
 {
+  GET_ATTRIBUTE_BOOL(useall);
+}
+
+void nsp_t::add_variables( TASCAR::osc_server_t* srv )
+{
+  TASCAR::receivermod_base_speaker_t::add_variables( srv );
+  srv->add_bool( "/useall", &useall );
 }
 
 void nsp_t::add_pointsource( const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd )
@@ -77,8 +87,12 @@ void nsp_t::add_pointsource( const TASCAR::pos_t& prel, double width, const TASC
       kmin = k;
       dmin = dist;
     }
-  for( unsigned int k=0;k<output.size();k++)
-    d->point_dw[k] = ( (k==kmin ) - d->point_w[k])*d->dt;
+  if( useall )
+    for( unsigned int k=0;k<output.size();k++)
+      d->point_dw[k] = ( 1.0f - d->point_w[k])*d->dt;
+  else
+    for( unsigned int k=0;k<output.size();k++)
+      d->point_dw[k] = ( (k==kmin ) - d->point_w[k])*d->dt;
   for( unsigned int i=0;i<chunk.size();i++){
     for( unsigned int k=0;k<output.size();k++){
       output[k][i] += ( d->point_w[k] += d->point_dw[k] ) * chunk[i];

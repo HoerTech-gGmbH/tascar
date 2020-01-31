@@ -175,7 +175,7 @@ void hrirconv_mod_t::prepare( chunk_cfg_t& cf_ )
     for(std::vector<TASCAR::scene_render_rt_t*>::iterator iscenes=session->scenes.begin();
         iscenes != session->scenes.end();
         ++iscenes){
-      for(std::vector<TASCAR::Scene::receivermod_object_t*>::iterator irec=(*iscenes)->receivermod_objects.begin();
+      for(std::vector<TASCAR::Scene::receiver_obj_t*>::iterator irec=(*iscenes)->receivermod_objects.begin();
           irec!=(*iscenes)->receivermod_objects.end(); ++irec){
         std::string prefix("render."+(*iscenes)->name+":");
         if((*irec)->get_num_channels() == inchannels){

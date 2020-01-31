@@ -96,6 +96,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
   try{
     std::string lfname(TASCAR::env_expand(fname));
     if( file_exists( lfname) ){
+      setlocale(LC_ALL,"C");
       xml_doc_t doc(lfname, xml_doc_t::LOAD_FILE );
       readconfig("",doc.doc->get_root_node());
     }
@@ -899,7 +900,7 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
     msg += "Invalid attributes in element \""+e->get_name()+"\" (Line "+cline+"):";
     for(std::vector<std::string>::const_iterator it=unused.begin();it!=unused.end();++it)
       msg += " " + *it;
-    msg += " (valid attributes are";
+    msg += " (valid attributes are:";
     for( std::map<std::string,std::string>::const_iterator 
            it=attribute_list[e].begin();
          it!=attribute_list[e].end();++it){

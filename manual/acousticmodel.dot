@@ -1,0 +1,154 @@
+digraph ap {
+
+	margin = "0";
+	pad = "0.3";
+
+	node [width = 1.2,height = 0.6,shape="Mrecord"];
+
+	{
+		// plugins:
+		node [style="filled",fillcolor="#ffcb99",shape="box"];
+		preprocdiff;
+		preprocpoint;
+		postproc [label="audio\nplugins"];
+	}
+
+	{
+		// receiver:
+		node [fillcolor="#a8ff99",style="filled",shape="box"];
+		rcvpoint;
+		rcvdiff;
+		rcvreverb;
+	}
+	
+	{
+		node [shape="circle",width=0.2,height=0.2,fixedsize="true"];
+		i1;
+		i2;
+		output;
+	}
+
+	{
+		node [shape="none",width="3",fixedsize="true"];
+		s1 [label="1. copy signals\l"];
+		s2 [label="2. pre-processing plugins\l"];
+		s3 [label="3. update scene geometry\l"];
+		s4 [label="4. update image source positions\l"];
+		s5 [label="5. apply transmission model\l"];
+		s6 [label="6. render point sources\l"];
+		s7 [label="7. render diffuse sound fields\l"];
+		s8 [label="8. post-processing plugins\l"];
+		s9 [label="9. copy signals\l"];
+	}
+
+	{
+		edge [head="none",tail="none",color="#ffffff"];
+		s1 -> s2 -> s3 -> s4 -> s5 -> s6 -> s7 -> s8 -> s9;
+		s1 -> nix2 -> i2 -> nix3 -> i1 -> nix;
+		rcvpoint -> rcvdiff;
+	}
+
+	{
+		rank = "same";
+		s2;
+		preprocdiff [label="audio\nplugins"];
+		preprocpoint [label="audio\nplugins"];
+	}
+	
+	{
+		rank = "min";
+		s1;
+		i1 [label="diffuse input\n\n\n"];
+		i2 [label="point input\n\n\n"];
+		nix [label="",shape="none"];
+		nix2 [label="",shape="none"];
+		nix3 [label="",shape="none"];
+	}
+
+	{
+		rank = "same";
+		s8;
+		postproc;
+	}
+
+	{
+		rank = "same";
+		geo [width="0.1",height="0.1",label="trajectories"];
+		s3;
+	}
+
+	{
+		rank = "same";
+		s4;
+		imgsrc;
+	}
+
+	{
+		rank ="same";
+		s6;
+		rcvpoint;
+		rcvreverb;
+	}
+
+	{
+		rank = "same";
+		diff;
+		diffreverb;
+	}
+
+	reflectors [width="0.1",height="0.1"];
+
+	{
+		edge [style="dashed"];
+		geo -> prisrc;
+		geo -> diff;
+		geo -> reflectors -> imgsrc;
+		geo -> rcvpoint;
+		geo -> rcvreverb;
+	}
+	
+	{
+		rank = "max";
+		output [label="\n\noutput"];
+		s9;
+	}
+	
+	diff [label="diffuse\nsound\nfields"];
+	diffreverb [label="diffuse\nreverberation\noutput"];
+
+	prisrc [label="primary\nsource"];
+	imgsrc [label="image\nsource"];
+
+	rcvpoint [label="receiver\n(point sources)"];
+	rcvdiff [label="receiver\n(diffuse sound fields)"];
+	rcvreverb [label="room receiver\n(point sources)"];
+	diffreverb;
+
+	i1 -> preprocdiff -> diff;
+	i2 -> preprocpoint -> prisrc;
+
+	prisrc -> imgsrc;
+
+	prisrc -> rcvpoint;
+	imgsrc -> rcvpoint;
+
+	prisrc -> rcvreverb;
+	imgsrc -> rcvreverb;
+
+	rcvreverb -> diffreverb;
+
+	diff -> rcvdiff;
+	diffreverb -> rcvdiff;
+
+	
+	rcvpoint -> postproc -> output;
+	rcvdiff -> postproc;
+  
+}
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 2
+ * End:
+ */
