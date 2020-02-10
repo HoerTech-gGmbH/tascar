@@ -487,13 +487,13 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
     GET_ATTRIBUTE(size);
     volumetric = size;
     if( avgdist <= 0 )
-      avgdist = pow(size.x*size.y*size.z,0.33333);
+      avgdist = pow(size.boxvolume(),0.33333);
     TASCAR::add_warning(std::string("For volumetric receiver rendering, use the \"volumetric\" attribute. The \"size\" attribute will be removed in the future. ") +
                         std::string("To achieve same behavior as before, adjust \"avgdist\" to ") +
-                        TASCAR::to_string(pow(size.x*size.y*size.z,0.33333))+".");
+                        TASCAR::to_string(pow(size.boxvolume(),0.33333))+".");
   }else{
     if( avgdist <= 0 )
-      avgdist = 0.5*pow(volumetric.x*volumetric.y*volumetric.z,0.33333);
+      avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
   }
 }
 

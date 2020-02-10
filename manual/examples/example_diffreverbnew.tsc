@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session duration="120" srv_port="9877" license="CC BY-SA 3.0" attribution="Giso Grimm">
+  <scene name="kitchen" guiscale="6">
+    <receiver type="ortf" name="out">
+      <position>0 1.3 0.2 1.5</position>
+      <orientation>0 -165 0 0</orientation>
+    </receiver>
+    <source name="clock">
+      <position>0 0.61 -1.23 2.1</position>
+      <sound>
+        <plugins>
+          <sndfile name="sounds/clock.wav" loop="0" level="60"/>
+        </plugins>
+      </sound>
+    </source>
+    <source name="frying_pan">
+      <position>0 0.9 1.03 0.87</position>
+      <sound>
+        <plugins>
+          <sndfile name="sounds/pan.wav" loop="0" level="85"/>
+        </plugins>
+      </sound>
+    </source>
+		<!--
+				add a wall for geometric first order reflections:
+		-->
+    <face name="wall" width="2.4" height="0.5" reflectivity="0.9" damping="0.1">
+      <position>0 -1 1.25 0.85</position>
+      <orientation>0 -90 0 0</orientation>
+    </face>
+		<!--
+				Add diffuse reverberation with the "simplefdn" module:
+				This module adds a volumetric room receiver and a diffuse sound field.
+		-->
+		<reverb type="simplefdn" volumetric="3 3 3" image="false">
+			<position>0 0 0 1.5</position>
+		</reverb>
+  </scene>
+	<!-- connect stereo output: -->
+  <connect src="render.kitchen:out_l" dest="system:playback_1"/>
+  <connect src="render.kitchen:out_r" dest="system:playback_2"/>
+</session>

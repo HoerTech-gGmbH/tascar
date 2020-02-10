@@ -107,6 +107,37 @@ namespace TASCAR {
     TASCAR::wave_t out;
   };
 
+  class partitioned_conv_t {
+  public:
+    partitioned_conv_t(size_t irslen, size_t fragsize);
+    ~partitioned_conv_t();
+    /**
+       \brief Set filter coefficients.
+
+       \note This method is not real-time safe.
+       \note This method is not thread safe.
+
+       \param h Filter coefficients
+     */
+    void set_irs(const TASCAR::wave_t& h);
+    /**
+       \brief Filter one chunk of audio data.
+       \param inchunk Input audio signal
+       \retval outchunk Reference to output audio signal container
+       \param add Add to buffer (true) or replace buffer (false)
+     */
+    void process(const TASCAR::wave_t& inchunk,TASCAR::wave_t& outchunk,bool add=true);
+    uint32_t get_partitions() const { return partitions; };
+    TASCAR::overlap_save_t* get_overlapsave(uint32_t p) { return partition[p]; };
+  private:
+    uint32_t fragsize;
+    uint32_t partitions;
+    TASCAR::wave_t inbuffer_;
+    std::vector<TASCAR::overlap_save_t*> partition;
+    std::vector<TASCAR::wave_t*> inbuffer;
+    uint32_t partition_index;
+  };
+
 }
 
 #endif

@@ -1374,18 +1374,23 @@ reverb plugin type is provided with the \attr{type} attribute, which
 can be any of the types listed below.
 
 Under the hood, the \elem{reverb} element combines a dedicated
-receiver with a diffuse sound field. This method of rendering diffuse
-reverberation is new to \tascar{} and still under development. For the
-traditional way of creating diffuse reverberation, see Section
-\ref{sec:reverb}. Advantages of the new method over the old one are a
-much easier setup, and the full functionality also for offline
-rendering.
+receiver with a diffuse sound field. Therefore, most common attributes
+of receivers (see \ref{sec:receiver}) can be used here as well. This
+method of rendering diffuse reverberation is new to \tascar{} and
+still under development. For the traditional way of creating diffuse
+reverberation, see Section \ref{sec:reverb}. Advantages of the new
+method over the old one are a much easier setup, and the full
+functionality also for offline rendering.
 
-Currently, only a very basic FDN is provided as part of \tascar{}. It
-is planned, however, to add also reverb receivers as jack ports (for
-external tools), with a partitioned convolution, for convolution
-reverb, and to add a \tascar{} implementation of RAZR
-\citep{Wendt2014}.
+A very basic FDN and a partitioned convolution module are provided as
+part of \tascar{}. An example of diffuse reverberation using the
+``simplefdn'' plugin looks like this:
+%
+\tscexample[linerange={35-37},firstnumber=35]{example_diffreverbnew}
+%
+The attribute ``volumetric'' defines the shoe-box shaped volume in
+which sound sources are rendered. Diffuse sources do not contribute to
+diffuse reverberation.
 
 \input{secrecreverb.tex}
 

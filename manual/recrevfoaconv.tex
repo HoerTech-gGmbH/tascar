@@ -1,0 +1,9 @@
+This receiver implements a partitioned convolution with First Order
+Ambisonics (FOA) impulse responses.
+
+\begin{tscattributes}     
+  \indattr{irsname}       & Name of IRS sound file                                                                      \\
+  \indattr{maxlen}        & Maximum length of IRS in samples, or 0 to use full sound file (default: 0)                  \\
+  \indattr{normalization} & Normalization of FOA response, either ``FuMa'' or ``SN3D'' (default: ``FuMa'')              \\
+  \indattr{channelorder}  & Channel order of FOA response, either ``FuMa'' (wxyz) or ``ACN'' (wyzx), default is ``ACN'' \\
+\end{tscattributes}

@@ -141,6 +141,55 @@ void TASCAR::overlap_save_t::process(const TASCAR::wave_t& inchunk,TASCAR::wave_
     outchunk.copy(out);
 }
 
+TASCAR::partitioned_conv_t::partitioned_conv_t(size_t irslen, size_t fragsize_)
+  : fragsize(fragsize_),
+    partitions((irslen-1u)/fragsize+1u),
+    inbuffer_(partitions*fragsize),
+    partition_index(0)
+{
+  for(uint32_t p=0;p<partitions;++p){
+    partition.push_back(new TASCAR::overlap_save_t(fragsize+1,fragsize));
+    inbuffer.push_back(new TASCAR::wave_t(fragsize,&(inbuffer_.d[p*fragsize])));
+  }
+}
+
+TASCAR::partitioned_conv_t::~partitioned_conv_t()
+{
+  for(uint32_t p=0;p<partitions;++p){
+    delete partition[p];
+    delete inbuffer[p];
+  }
+}
+
+void TASCAR::partitioned_conv_t::set_irs(const TASCAR::wave_t& h)
+{
+  TASCAR::wave_t ichunk(fragsize);
+  for( uint32_t p=0;p<partitions;++p){
+    ichunk.clear();
+    for(uint32_t k=0;k<fragsize;++k)
+      if( p*fragsize+k < h.n )
+        ichunk[k] = h[p*fragsize+k];
+    partition[p]->set_irs(ichunk,false);
+  }
+}
+
+void TASCAR::partitioned_conv_t::process(const TASCAR::wave_t& inchunk,TASCAR::wave_t& outchunk,bool add)
+{
+  inbuffer[partition_index]->copy(inchunk);
+  if( !add )
+    outchunk.clear();
+  uint32_t lp(partition_index);
+  for( auto it=partition.begin();it!=partition.end();++it){
+    (*it)->process(*(inbuffer[lp]),outchunk,true);
+    if( !lp )
+      lp = partitions;
+    lp--;
+  }
+  ++partition_index;
+  if( partition_index >= partitions )
+    partition_index = 0;
+}
+
 /*
  * Local Variables:
  * mode: c++

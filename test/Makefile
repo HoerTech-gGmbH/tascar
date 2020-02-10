@@ -16,7 +16,7 @@ TESTS = test_snd_zeros test_ir1 test_ir2 test_ir3 test_ir4						\
 	test_ir_wfs_noplanewave jackfail_connectfail jack_connect hoa3d			\
 	test_fail_duplicatenames test_fail_duplicatescenenames							\
 	test_level_hoa2d_basic test_level_hoa2d_maxre jack_hoafdnrot				\
-	test_ir_reverb test_snd_reverb
+	test_ir_reverb test_snd_reverb test_ir_simplefdn
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -218,5 +218,7 @@ jackfail_%: test_%.tsc
 
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: TOL=4e-4
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: RMSTOL=1e-4
+test_ir_simplefdn: IRLEN=44100
 test_ir_reverb: IRLEN=44100
+test_ir_partconvrev: IRLEN=44100
 test_ir_temp: IRLEN=441000
