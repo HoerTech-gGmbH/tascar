@@ -20,6 +20,7 @@ double mask_t::gain(const pos_t& p)
 
 diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_, const std::string& name )
   : xml_element_t( cfg ),
+    licensed_component_t(typeid(*this).name()),
     audio(chunksize),
     falloff(1.0),
     active(true),
@@ -36,16 +37,33 @@ void diffuse_t::preprocess(const TASCAR::transport_t& tp)
   rmslevel.update(audio.w());
 }
 
-void diffuse_t::prepare( chunk_cfg_t& cf_ )
+void diffuse_t::configure()
 {
-  audiostates_t::prepare( cf_ );
-  plugins.prepare( cf_ );
+  plugins.prepare( cfg() );
 }
 
 void diffuse_t::release()
 {
   audiostates_t::release();
   plugins.release();
+}
+
+void diffuse_t::add_licenses( licensehandler_t* lh )
+{
+  licensed_component_t::add_licenses( lh );
+  plugins.add_licenses( lh );
+}
+
+void source_t::add_licenses( licensehandler_t* lh )
+{
+  licensed_component_t::add_licenses( lh );
+  plugins.add_licenses( lh );
+}
+
+void receiver_t::add_licenses( licensehandler_t* lh )
+{
+  licensed_component_t::add_licenses( lh );
+  plugins.add_licenses( lh );
 }
 
 acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
@@ -118,11 +136,20 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       pos_t prelsrc(receiver_->position);
       prelsrc -= src_->position;
       prelsrc /= src_->orientation;
-      if( src_->read_source( prelsrc, src_->inchannels, audio, source_data ) ){
-        prelsrc *= src_->orientation;
-        prelsrc -= receiver_->position;
-        prelsrc *= -1.0;
-        position = prelsrc;
+      if( receiver_->volumetric.has_volume() ){
+        if( src_->read_source_diffuse( prelsrc, src_->inchannels, audio, source_data ) ){
+          prelsrc *= src_->orientation;
+          prelsrc -= receiver_->position;
+          prelsrc *= -1.0;
+          position = prelsrc;
+        }
+      }else{
+        if( src_->read_source( prelsrc, src_->inchannels, audio, source_data ) ){
+          prelsrc *= src_->orientation;
+          prelsrc -= receiver_->position;
+          prelsrc *= -1.0;
+          position = prelsrc;
+        }
       }
       receiver_->update_refpoint( primary->position, position, prel, nextdistance, nextgain, ismorder>0, src_->gainmodel );
       if( nextdistance > src_->maxdist )
@@ -430,6 +457,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
 
 receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is_reverb_ )
   : receivermod_t(xmlsrc),
+    licensed_component_t(typeid(*this).name()),
     avgdist(0),
     render_point(true),
     render_diffuse(true),
@@ -459,7 +487,6 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
     prelim_next_fade_gain(1),
     prelim_previous_fade_gain(1),
     fade_gain(1),
-    is_prepared(false),
     starttime_samples(0),
     plugins(xmlsrc, name, "" )
 {
@@ -495,22 +522,23 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
     if( avgdist <= 0 )
       avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
   }
-}
+  }
 
-void receiver_t::prepare( chunk_cfg_t& cf_ )
+void receiver_t::configure()
 {
-  receivermod_t::prepare( cf_ );
-  n_channels = get_num_channels();
+  receivermod_t::configure( );
   update();
-  cf_ = *(chunk_cfg_t*)this;
   scatterbuffer = new amb1wave_t(n_fragment);
   scatter_handle = create_data( f_sample, n_fragment );
   for(uint32_t k=0;k<n_channels;k++){
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
   }
-  plugins.prepare( cf_ );
-  is_prepared = true;
+  plugins.prepare( cfg() );
+  if( n_channels != outchannels.size() ){
+    plugins.release();
+    throw TASCAR::ErrMsg("Implementation error. Number of channels ("+TASCAR::to_string(n_channels)+") differs from number of output buffers ("+TASCAR::to_string(outchannels.size())+").");
+  }
 }
 
 void receiver_t::release()
@@ -524,7 +552,6 @@ void receiver_t::release()
   if( scatter_handle )
     delete scatter_handle;
   outchannelsp.clear();
-  is_prepared = false;
 }
 
 receiver_t::~receiver_t()
@@ -585,7 +612,7 @@ void receiver_t::add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_ba
 void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img, gainmodel_t gainmodel )
 {
   
-  if( (volumetric.x!=0)&&(volumetric.y!=0)&&(volumetric.z!=0) ){
+  if( volumetric.has_volume() ){
     prel = psrc_physical;
     prel -= position;
     prel /= orientation;
@@ -635,8 +662,7 @@ void receiver_t::set_next_gain(double g)
 void receiver_t::apply_gain()
 {
   dx_gain = (next_gain-x_gain)*t_inc;
-  uint32_t ch(get_num_channels());
-  if( ch > 0 ){
+  if( n_channels > 0 ){
     uint32_t psize(outchannels[0].size());
     for(uint32_t k=0;k<psize;k++){
       double g(x_gain+=dx_gain);
@@ -647,7 +673,7 @@ void receiver_t::apply_gain()
         fade_gain = previous_fade_gain + (next_fade_gain - previous_fade_gain)*(0.5+0.5*cos(fade_timer*fade_rate));
       }
       g *= fade_gain;
-      for(uint32_t c=0;c<ch;c++){
+      for(uint32_t c=0;c<n_channels;c++){
         outchannels[c][k] *= g;
       }
     }
@@ -721,6 +747,7 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
 
 source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname )
   : sourcemod_t(xmlsrc),
+    licensed_component_t(typeid(*this).name()),
     ismmin(0),
     ismmax(2147483647),
     layers(0xffffffff),
@@ -758,17 +785,15 @@ source_t::~source_t()
 {
 }
 
-void source_t::prepare( chunk_cfg_t& cf_ )
+void source_t::configure( )
 {
-  sourcemod_t::prepare( cf_ );
-  n_channels = get_num_channels();
+  sourcemod_t::configure();
   update();
-  cf_ = *(chunk_cfg_t*)this;
   for(uint32_t k=0;k<n_channels;k++){
     inchannelsp.push_back(new wave_t(n_fragment));
     inchannels.push_back(wave_t(*(inchannelsp.back())));
   }
-  plugins.prepare( cf_ );
+  plugins.prepare( cfg() );
 }
 
 void source_t::release()

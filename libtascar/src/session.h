@@ -35,7 +35,8 @@ namespace TASCAR {
     xmlpp::Element* xmlsrc;
   };
 
-  class module_base_t : public xml_element_t, public audiostates_t {
+  class module_base_t : public xml_element_t, public audiostates_t,
+                        public licensed_component_t  {
   public:
     module_base_t( const module_cfg_t& cfg );
     virtual ~module_base_t();
@@ -59,7 +60,7 @@ namespace TASCAR {
   public:
     module_t( const TASCAR::module_cfg_t& cfg );
     virtual ~module_t();
-    void prepare( chunk_cfg_t& );
+    void configure();
     void release();
     void update(uint32_t frame,bool running);
     virtual void validate_attributes(std::string&) const;
@@ -69,8 +70,6 @@ namespace TASCAR {
     void* lib;
   public:
     TASCAR::module_base_t* libdata;
-  private:
-    bool is_configured;
   };
 
   class connection_t : public TASCAR::xml_element_t {
@@ -78,9 +77,10 @@ namespace TASCAR {
     connection_t(xmlpp::Element*);
     std::string src;
     std::string dest;
+    bool failonerror;
   };
 
-  class range_t : public scene_node_base_t {
+  class range_t : public xml_element_t {
   public:
     range_t(xmlpp::Element* e);
     std::string name;

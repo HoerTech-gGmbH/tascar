@@ -49,16 +49,6 @@ void TASCAR::receivermod_t::validate_attributes(std::string& msg) const
   libdata->validate_attributes(msg);
 }
 
-uint32_t TASCAR::receivermod_t::get_num_channels()
-{
-  return libdata->get_num_channels();
-}
-
-std::string TASCAR::receivermod_t::get_channel_postfix(uint32_t channel)
-{
-  return libdata->get_channel_postfix(channel);
-}
-
 std::vector<std::string> TASCAR::receivermod_t::get_connections() const
 {
   return libdata->get_connections();
@@ -69,10 +59,10 @@ void TASCAR::receivermod_t::add_variables( TASCAR::osc_server_t* srv )
   return libdata->add_variables( srv );
 }
 
-void TASCAR::receivermod_t::prepare( chunk_cfg_t& cf_ )
+void TASCAR::receivermod_t::configure()
 {
-  receivermod_base_t::prepare( cf_ );
-  libdata->prepare( cf_ );
+  receivermod_base_t::configure();
+  libdata->prepare( *this );
 }
 
 void TASCAR::receivermod_t::release()
@@ -126,19 +116,6 @@ void TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field(const TASCAR::a
   spkpos.add_diffuse_sound_field( chunk );
 }
 
-uint32_t TASCAR::receivermod_base_speaker_t::get_num_channels()
-{
-  return spkpos.size();
-}
-
-std::string TASCAR::receivermod_base_speaker_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[1024];
-  sprintf(ctmp,".%d%s",channel,spkpos[channel].label.c_str());
-  return ctmp;
-}
-
-
 std::vector<std::string> TASCAR::receivermod_base_speaker_t::get_connections() const
 {
   return spkpos.connections;
@@ -159,10 +136,14 @@ void TASCAR::receivermod_base_speaker_t::postproc( std::vector<wave_t>& output )
   }
 }
 
-void TASCAR::receivermod_base_speaker_t::prepare( chunk_cfg_t& cf_ )
+void TASCAR::receivermod_base_speaker_t::configure()
 {
-  receivermod_base_t::prepare( cf_ );
-  spkpos.prepare( cf_ );
+  receivermod_base_t::configure();
+  n_channels = spkpos.size();
+  spkpos.prepare( cfg() );
+  labels.clear();
+  for( uint32_t ch=0;ch<n_channels;++ch)
+    labels.push_back("."+TASCAR::to_string(ch)+spkpos[ch].label);
 }
 
 void TASCAR::receivermod_base_speaker_t::release()

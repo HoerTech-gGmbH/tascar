@@ -1,10 +1,10 @@
 /**
  * @file   audiostates.h
  * @author Giso Grimm
- * 
+ *
  * @brief Audio signal description and processing state changing class
  */
-/* 
+/*
  * License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
@@ -28,6 +28,8 @@
 #define AUDIOSTATES_H
 
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 class chunk_cfg_t {
 public:
@@ -41,16 +43,22 @@ public:
   double t_sample; ///< Sample period in seconds
   double t_fragment; ///< Fragment period in seconds
   double t_inc; ///< Time increment 1/n_fragment
+  std::vector<std::string> labels;
 };
 
 class audiostates_t : public chunk_cfg_t {
 public:
   audiostates_t();
   virtual ~audiostates_t();
-  virtual void prepare( chunk_cfg_t& );
+  virtual void prepare( chunk_cfg_t& ) final;
   virtual void release( );
   bool is_prepared() const { return is_prepared_; };
+  const chunk_cfg_t& inputcfg() const { return inputcfg_; };
+  chunk_cfg_t& cfg() { return *(chunk_cfg_t*)this; };
+protected:
+  virtual void configure() {};
 private:
+  chunk_cfg_t inputcfg_;
   bool is_prepared_;
   int32_t preparecount;
 };

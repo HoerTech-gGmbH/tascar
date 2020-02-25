@@ -54,6 +54,7 @@ namespace TASCAR {
     uint32_t get_frames() const {return sf_inf.frames;};
     uint32_t get_loopedframes() const;
     uint32_t get_srate() const {return sf_inf.samplerate;};
+    const std::string& get_name() const { return efname; };
   protected:
     std::string efname;
     SNDFILE* sfile;

@@ -53,16 +53,16 @@ public:
   lsljacktime_t( const TASCAR::module_cfg_t& cfg );
   ~lsljacktime_t();
   virtual void update(uint32_t frame,bool running);
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
 private:
   lsl_sender_t* lsl;
   uint32_t skipcnt;
 };
 
-void lsljacktime_t::prepare( chunk_cfg_t& cf)
+void lsljacktime_t::configure()
 {
-  TASCAR::module_base_t::prepare( cf );
+  TASCAR::module_base_t::configure();
   lsl = new lsl_sender_t( f_fragment/(1+skip) );
 }
 

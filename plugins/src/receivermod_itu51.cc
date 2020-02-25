@@ -54,11 +54,9 @@ public:
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-  uint32_t get_num_channels();
-  virtual void prepare( chunk_cfg_t& );
-  virtual void release( );
-  virtual void postproc( std::vector<TASCAR::wave_t>& output );
-  std::string get_channel_postfix(uint32_t channel) const;
+  void configure();
+  void release( );
+  void postproc( std::vector<TASCAR::wave_t>& output );
   std::vector<simplex_t> simplices;
   std::vector<TASCAR::pos_t> spkpos;
   std::vector<TASCAR::wave_t*> render_buffer;
@@ -72,9 +70,10 @@ public:
   std::vector<TASCAR::biquad_t> filter;
 };
 
-void rec_itu51_t::prepare( chunk_cfg_t& cf )
+void rec_itu51_t::configure( )
 {
-  TASCAR::receivermod_base_t::prepare( cf );
+  TASCAR::receivermod_base_t::configure();
+  n_channels = 6;
   render_buffer.clear();
   // render buffer gets 5 channels: L R Ls Rs LFE
   for(uint32_t k=0;k<5;++k){
@@ -84,6 +83,13 @@ void rec_itu51_t::prepare( chunk_cfg_t& cf )
   for( auto it=filter.begin();it!=filter.end();++it)
     it->set_highpass( fc, f_sample );
   filter[3].set_lowpass( fc, f_sample );
+  labels.clear();
+  labels.push_back(".0L");
+  labels.push_back(".1R");
+  labels.push_back(".2C");
+  labels.push_back(".3LFE");
+  labels.push_back(".4Ls");
+  labels.push_back(".5Rs");
 }
 
 void rec_itu51_t::release( )
@@ -265,28 +271,6 @@ void rec_itu51_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::
     ++i_x;
     ++i_y;
   }
-}
-
-uint32_t rec_itu51_t::get_num_channels()
-{
-  return 6;
-}
-
-std::string rec_itu51_t::get_channel_postfix(uint32_t channel) const
-{
-  if( channel == 0 )
-    return ".0L";
-  if( channel == 1 )
-    return ".1R";
-  if( channel == 2 )
-    return ".2C";
-  if( channel == 3 )
-    return ".3LFE";
-  if( channel == 4 )
-    return ".4Ls";
-  if( channel == 5 )
-    return ".5Rs";
-  return "";
 }
 
 REGISTER_RECEIVERMOD(rec_itu51_t);

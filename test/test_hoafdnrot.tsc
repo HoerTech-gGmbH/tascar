@@ -40,17 +40,17 @@
       <output az="348" />
     </matrix>
   </modules>
-  <connect src="render.scene:out.0_0" dest="fdn:in.0_0"/>
-  <connect src="render.scene:out.1_-1" dest="fdn:in.1_-1"/>
-  <connect src="render.scene:out.1_1" dest="fdn:in.1_1"/>
-  <connect src="render.scene:out.2_-2" dest="fdn:in.2_-2"/>
-  <connect src="render.scene:out.2_2" dest="fdn:in.2_2"/>
-  <connect src="render.scene:out.3_-3" dest="fdn:in.3_-3"/>
-  <connect src="render.scene:out.3_3" dest="fdn:in.3_3"/>
-  <connect src="render.scene:out.4_-4" dest="fdn:in.4_-4"/>
-  <connect src="render.scene:out.4_4" dest="fdn:in.4_4"/>
-  <connect src="render.scene:out.5_-5" dest="fdn:in.5_-5"/>
-  <connect src="render.scene:out.5_5" dest="fdn:in.5_5"/>
-  <connect src="render.scene:out.6_-6" dest="fdn:in.6_-6"/>
-  <connect src="render.scene:out.6_6" dest="fdn:in.6_6"/>
+  <connect src="render.scene:out.0_0" dest="fdn:in.0_0" failonerror="true"/>
+  <connect src="render.scene:out.1_-1" dest="fdn:in.1_-1" failonerror="true"/>
+  <connect src="render.scene:out.1_1" dest="fdn:in.1_1" failonerror="true"/>
+  <connect src="render.scene:out.2_-2" dest="fdn:in.2_-2" failonerror="true"/>
+  <connect src="render.scene:out.2_2" dest="fdn:in.2_2" failonerror="true"/>
+  <connect src="render.scene:out.3_-3" dest="fdn:in.3_-3" failonerror="true"/>
+  <connect src="render.scene:out.3_3" dest="fdn:in.3_3" failonerror="true"/>
+  <connect src="render.scene:out.4_-4" dest="fdn:in.4_-4" failonerror="true"/>
+  <connect src="render.scene:out.4_4" dest="fdn:in.4_4" failonerror="true"/>
+  <connect src="render.scene:out.5_-5" dest="fdn:in.5_-5" failonerror="true"/>
+  <connect src="render.scene:out.5_5" dest="fdn:in.5_5" failonerror="true"/>
+  <connect src="render.scene:out.6_-6" dest="fdn:in.6_-6" failonerror="true"/>
+  <connect src="render.scene:out.6_6" dest="fdn:in.6_6" failonerror="true"/>
 </session>

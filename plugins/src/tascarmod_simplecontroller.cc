@@ -13,7 +13,7 @@ class simplecontroller_t : public TASCAR::actor_module_t {
 public:
   simplecontroller_t( const TASCAR::module_cfg_t& cfg );
   virtual ~simplecontroller_t();
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void update(uint32_t frame, bool running);
 private:
   void cb_button_left_pressed() { velocity.y = vy;};
@@ -130,9 +130,9 @@ simplecontroller_t::simplecontroller_t( const TASCAR::module_cfg_t& cfg )
   
 }
 
-void simplecontroller_t::prepare( chunk_cfg_t& cf_ )
+void simplecontroller_t::configure()
 {
-  actor_module_t::prepare(cf_);
+  actor_module_t::configure();
   vscale = n_fragment/f_sample;
 }
 

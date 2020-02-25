@@ -4,7 +4,7 @@ class delay_t : public TASCAR::audioplugin_base_t {
 public:
   delay_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& rot, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   ~delay_t();
 private:
@@ -23,9 +23,9 @@ delay_t::delay_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE(delay);
 }
 
-void delay_t::prepare( chunk_cfg_t& cf_ )
+void delay_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   dline = new TASCAR::wave_t(std::max(1.0,f_sample*delay));
   pos = 0;
 }

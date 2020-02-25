@@ -1,4 +1,5 @@
 #include <tascar/sourcemod.h>
+#include <tascar/errorhandling.h>
 
 /*
   This plugin implements a source with a simple "spatial window",
@@ -15,8 +16,13 @@ public:
     double weight;
   };
   sourceexample_t(xmlpp::Element* xmlsrc);
+  // read_source is the main rendering function, called for normal
+  // receivers. For volumetric receivers, always an omni-directional
+  // radiation pattern is assumed. This can be changed by implementing
+  // the method read_source_diffuse() with the same interface as
+  // read_source().
   bool read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*);
-  uint32_t get_num_channels();
+  void configure();
   // register OSC variables:
   void add_variables(TASCAR::osc_server_t* srv);
   TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -63,9 +69,11 @@ bool sourceexample_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR:
   return false;
 }
 
-uint32_t sourceexample_t::get_num_channels()
+void sourceexample_t::configure()
 {
-  return 1;
+  // this source model requires exactly one audio channel:
+  if( n_channels != 1 )
+    throw TASCAR::ErrMsg("his source model requires one input channel, received "+TASCAR::to_string(n_channels)+".");
 }
 
 TASCAR::sourcemod_base_t::data_t* sourceexample_t::create_data(double srate,uint32_t fragsize)

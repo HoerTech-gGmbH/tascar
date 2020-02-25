@@ -12,10 +12,10 @@ transport_t::transport_t()
 
 audioplugin_base_t::audioplugin_base_t( const audioplugin_cfg_t& cfg )
   : xml_element_t(cfg.xmlsrc),
+    licensed_component_t(typeid(*this).name()),
     name(cfg.name),
     parentname(cfg.parentname),
-    modname(cfg.modname),
-    prepared(false)
+    modname(cfg.modname)
 {
 }
 
@@ -56,10 +56,10 @@ void TASCAR::audioplugin_t::ap_process( std::vector<wave_t>& chunk, const TASCAR
   libdata->ap_process( chunk, pos, o, tp );
 }
 
-void TASCAR::audioplugin_t::prepare( chunk_cfg_t& cf_ )
+void TASCAR::audioplugin_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
-  libdata->prepare( cf_ );
+  audioplugin_base_t::configure();
+  libdata->prepare( cfg() );
 }
 
 void TASCAR::audioplugin_t::release()
@@ -75,6 +75,7 @@ void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
 
 void TASCAR::audioplugin_t::add_licenses( licensehandler_t* session )
 {
+  audioplugin_base_t::add_licenses( session );
   libdata->add_licenses( session );
 }
 

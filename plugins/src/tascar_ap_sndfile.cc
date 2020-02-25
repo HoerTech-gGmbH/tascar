@@ -62,7 +62,7 @@ public:
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
   void add_licenses( licensehandler_t* session );
-  void prepare( chunk_cfg_t& cf );
+  void configure();
   void release();
 private:
   uint32_t triggeredloop;
@@ -77,25 +77,25 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
   get_license_info( e, name, license, attribution );
 }
 
-void ap_sndfile_t::prepare( chunk_cfg_t& cf )
+void ap_sndfile_t::configure()
 {
-  TASCAR::audioplugin_base_t::prepare( cf );
-  if( cf.n_channels < 1 )
+  TASCAR::audioplugin_base_t::configure();
+  if( n_channels < 1 )
     throw TASCAR::ErrMsg("At least one channel required.");
   sndf.clear();
-  for( uint32_t ch=0;ch<cf.n_channels;++ch){
+  for( uint32_t ch=0;ch<n_channels;++ch){
     sndf.push_back(new TASCAR::sndfile_t(name,channel+ch,start,length));
   }
-  if( sndf[0]->get_srate() != cf.f_sample ){
+  if( sndf[0]->get_srate() != f_sample ){
     std::string msg("Sample rate differs ("+name+"): ");
     char ctmp[1024];
-    sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf[0]->get_srate(),cf.f_sample);
+    sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf[0]->get_srate(),f_sample);
     msg+=ctmp;
     TASCAR::add_warning(msg,e);
   }
   double gain(1);
   if( levelmode == "rms" ){
-    TASCAR::levelmeter_t meter( cf.f_sample, sndf[0]->n/cf.f_sample, weighting );
+    TASCAR::levelmeter_t meter( f_sample, sndf[0]->n/f_sample, weighting );
     meter.update( *(sndf[0]) );
     gain = level*2e-5 / meter.rms();
   }else
@@ -136,6 +136,7 @@ ap_sndfile_t::~ap_sndfile_t()
 
 void ap_sndfile_t::add_licenses( licensehandler_t* session )
 {
+  audioplugin_base_t::add_licenses( session );
   session->add_license( license, attribution, TASCAR::tscbasename(TASCAR::env_expand(name)) );
 }
 

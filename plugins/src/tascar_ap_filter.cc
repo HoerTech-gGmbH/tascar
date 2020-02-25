@@ -6,7 +6,7 @@ class biquadplugin_t : public TASCAR::audioplugin_base_t {
 public:
   biquadplugin_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~biquadplugin_t();
@@ -31,9 +31,9 @@ void biquadplugin_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool("/highpass",&highpass);
 }
 
-void biquadplugin_t::prepare( chunk_cfg_t& cf_ )
+void biquadplugin_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   for( uint32_t ch=0;ch<n_channels;++ch)
     bp.push_back(new TASCAR::biquad_t());
 }

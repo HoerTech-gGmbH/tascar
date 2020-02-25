@@ -17,8 +17,7 @@ public:
   ortf_t(xmlpp::Element* xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
+  void configure();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
 private:
   double distance;
@@ -108,16 +107,12 @@ void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vecto
   //output[1] += chunk.w();
 }
 
-uint32_t ortf_t::get_num_channels()
+void ortf_t::configure()
 {
-  return 2;
-}
-
-std::string ortf_t::get_channel_postfix(uint32_t channel) const
-{
-  if( channel == 0)
-    return "_l";
-  return "_r";
+  n_channels = 2;
+  labels.clear();
+  labels.push_back("_l");
+  labels.push_back("_r");
 }
 
 TASCAR::receivermod_base_t::data_t* ortf_t::create_data(double srate,uint32_t fragsize)

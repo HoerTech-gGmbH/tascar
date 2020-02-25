@@ -5,7 +5,7 @@ class pos2lsl_t : public TASCAR::module_base_t {
 public:
   pos2lsl_t( const TASCAR::module_cfg_t& cfg );
   ~pos2lsl_t();
-  virtual void prepare( chunk_cfg_t& );
+  virtual void configure( );
   void update(uint32_t frame, bool running);
 private:
   std::string pattern;
@@ -29,14 +29,14 @@ pos2lsl_t::pos2lsl_t( const TASCAR::module_cfg_t& cfg )
     throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
 }
 
-void pos2lsl_t::prepare( chunk_cfg_t& cf_ )
+void pos2lsl_t::configure()
 {
-  module_base_t::prepare( cf_ );
+  module_base_t::configure( );
   for(auto it=voutlet.begin();it!=voutlet.end();++it)
     delete *it;
   voutlet.clear();
   for(auto it=obj.begin();it!=obj.end();++it)
-    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(it->obj->get_name(),"position",6,cf_.f_fragment)));
+    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(it->obj->get_name(),"position",6,f_fragment)));
 }
 
 pos2lsl_t::~pos2lsl_t()

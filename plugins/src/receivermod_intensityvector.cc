@@ -16,9 +16,7 @@ public:
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-  uint32_t get_num_channels();
-  void prepare( chunk_cfg_t& );
-  std::string get_channel_postfix(uint32_t channel) const;
+  void configure();
 private:
   double tau;
   double c1;
@@ -55,11 +53,6 @@ void intensityvector_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
 {
 }
 
-uint32_t intensityvector_t::get_num_channels()
-{
-  return 4;
-}
-
 intensityvector_t::data_t::data_t(uint32_t chunksize)
   : lpstate(0),
     x(0),
@@ -73,28 +66,22 @@ intensityvector_t::data_t::~data_t()
 {
 }
 
-void intensityvector_t::prepare( chunk_cfg_t& cf_ )
+void intensityvector_t::configure()
 {
-  TASCAR::receivermod_base_t::prepare( cf_ );
+  TASCAR::receivermod_base_t::configure();
+  n_channels = 4;
   c1 = exp(-1.0/(tau*f_sample));
   c2 = 1.0-c1;
+  labels.clear();
+  labels.push_back("_norm");
+  labels.push_back("_x");
+  labels.push_back("_y");
+  labels.push_back("_z");
 }
 
 TASCAR::receivermod_base_t::data_t* intensityvector_t::create_data(double srate,uint32_t fragsize)
 {
   return new data_t(fragsize);
-}
-
-
-std::string intensityvector_t::get_channel_postfix(uint32_t channel) const
-{
-  switch( channel ){
-  case 0 : return "_norm";
-  case 1 : return "_x";
-  case 2 : return "_y";
-  case 3 : return "_z";
-  }
-  return "_other";
 }
 
 REGISTER_RECEIVERMOD(intensityvector_t);

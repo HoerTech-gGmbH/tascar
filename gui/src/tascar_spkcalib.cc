@@ -380,7 +380,7 @@ protected:
   std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
   std::vector<TASCAR::wave_t*> inwave;
-  std::vector<splmeter_t*> guimeter;
+  std::vector<TSCGUI::splmeter_t*> guimeter;
   double miccalibdb;
   double miccalib;
 };
@@ -436,8 +436,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
     add_input_port(std::string("in.")+TASCAR::to_string(k+1));
     rmsmeter.push_back(new TASCAR::levelmeter_t(get_srate(),noiseperiod,TASCAR::levelmeter::C));
     inwave.push_back(new TASCAR::wave_t(get_fragsize()));
-    guimeter.push_back(new splmeter_t());
-    guimeter.back()->set_mode( dameter_t::rmspeak );
+    guimeter.push_back(new TSCGUI::splmeter_t());
+    guimeter.back()->set_mode( TSCGUI::dameter_t::rmspeak );
     //guimeter.back()->set_min_and_range( reflevel-20.0, 30.0 );
     guimeter.back()->set_min_and_range( miccalibdb-40.0, 40.0 );
   }

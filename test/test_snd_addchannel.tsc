@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <receiver type="omni">
+			<plugins>
+				<addchannel/>
+				<addchannel/>
+			</plugins>
+		</receiver>
+  </scene>
+</session>

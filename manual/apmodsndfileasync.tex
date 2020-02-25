@@ -1,0 +1,28 @@
+Add a sound file and play back at a given time, with asynchronous file access.
+%
+This plugin provides an alternative to the sndfile audio plugin
+(see \ref{sec:ap_sndfile}). It does not require to load the full
+file during session load, which can be advantageous for huge files. As
+a drawback, it is not possible to configure absolute RMS value, and
+dropouts may occur if the file system is slower than required.
+%
+If the plugin receives multiple channels (e.g., when used in a
+receiver or a diffuse sound field), all channels starting at channel
+number \attr{channel} will be returned. If the file does not contain a
+sufficient number of channels, silcence will be returned for all
+channels not available in the sound file.
+
+\begin{tscattributes}
+  \indattr{name}        & Sound file name.                                            \\
+  \indattr{channel}     & First sound file channel to be used, zero-base (default: 0) \\
+  \indattr{position}    & Start position within the scene, in seconds (default: 0).   \\
+  \indattr{loop}        & loop count or 0 for infinite looping (default: 1).          \\
+  \indattr{caliblevel}  & Calibration level in dB SPL (default: 93.979).              \\
+  \indattr{transport}   & Use session time base (default: true)                       \\
+  \indattr{license}     & License form of session file                                \\
+  \indattr{attribution} & Attribution of session file, e.g., author name              \\
+  \indattr{mute}        & Mute flag                                                   \\
+\end{tscattributes}
+%
+
+93.979~dB corresponds internally to a full-scale signal.

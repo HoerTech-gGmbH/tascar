@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene ismorder="3">
+    <source>
+      <sound x="1" type="cardioidmod"/>
+    </source>
+    <receiver type="omni" volumetric="2 2 2"/>
+  </scene>
+</session>

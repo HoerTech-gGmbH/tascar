@@ -13,22 +13,17 @@ public:
 
 class hrirconv_t : public jackc_t {
 public:
-  hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen, const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e);
+  hrirconv_t(uint32_t inchannels,uint32_t outchannels,const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e);
   virtual ~hrirconv_t();
   int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
 private:
-  std::vector<TASCAR::overlap_save_t*> cnv;
+  std::vector<TASCAR::partitioned_conv_t*> cnv;
   std::vector<channel_entry_t> matrix_;
 };
 
-hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen, const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e)
+hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels, const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e)
   : jackc_t(jackname),matrix_(matrix)
 {
-  if( fftlen <= (uint32_t)get_fragsize() ){
-    DEBUG(fftlen);
-    DEBUG(get_fragsize());
-    throw TASCAR::ErrMsg("Invalid fft length.");
-  }
   for(std::vector<channel_entry_t>::iterator mit=matrix_.begin();mit!=matrix_.end();++mit){
     if( mit->inchannel >= inchannels ){
       DEBUG(mit->inchannel);
@@ -48,8 +43,8 @@ hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen,
       msg << "Warning: The sample rate of file \"" << mit->filename << "\" (" << sndf.get_srate() << ") differs from system sample rate (" << get_srate() << ").";
       TASCAR::add_warning(msg.str(),e.e);
     }
-    TASCAR::overlap_save_t* pcnv(new TASCAR::overlap_save_t(fftlen-fragsize+1,get_fragsize()));
-    pcnv->set_irs(sndf,false);
+    TASCAR::partitioned_conv_t* pcnv(new TASCAR::partitioned_conv_t(sndf.get_frames(),get_fragsize()));
+    pcnv->set_irs(sndf);
     cnv.push_back(pcnv);
   }
   for( uint32_t k=0;k<inchannels;k++){
@@ -68,7 +63,7 @@ hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels,uint32_t fftlen,
 hrirconv_t::~hrirconv_t()
 {
   deactivate();
-  for(std::vector<TASCAR::overlap_save_t*>::iterator it=cnv.begin();it!=cnv.end();++it)
+  for(auto it=cnv.begin();it!=cnv.end();++it)
     delete *it;
 }
 
@@ -100,7 +95,6 @@ class hrirconv_var_t : public TASCAR::module_base_t {
 public:
   hrirconv_var_t( const TASCAR::module_cfg_t& cfg );
   std::string id;
-  uint32_t fftlen;
   uint32_t inchannels;
   uint32_t outchannels;
   bool autoconnect;
@@ -111,13 +105,11 @@ public:
 
 hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
-    fftlen(1024),
     inchannels(0),outchannels(0),autoconnect(false)
 {
   GET_ATTRIBUTE(id);
   if( id.empty() )
     id = "hrirconv";
-  GET_ATTRIBUTE(fftlen);
   GET_ATTRIBUTE(inchannels);
   GET_ATTRIBUTE(outchannels);
   get_attribute_bool("autoconnect",autoconnect);
@@ -157,20 +149,20 @@ hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
 class hrirconv_mod_t : public hrirconv_var_t, public hrirconv_t {
 public:
   hrirconv_mod_t( const TASCAR::module_cfg_t& cfg );
-  void prepare( chunk_cfg_t& );
+  void configure( );
   virtual ~hrirconv_mod_t();
 };
 
 
 hrirconv_mod_t::hrirconv_mod_t( const TASCAR::module_cfg_t& cfg )
   : hrirconv_var_t( cfg ),
-    hrirconv_t(inchannels,outchannels,fftlen, matrix, id, *this )
+    hrirconv_t(inchannels,outchannels,matrix, id, *this )
 {
 }
 
-void hrirconv_mod_t::prepare( chunk_cfg_t& cf_ )
+void hrirconv_mod_t::configure( )
 {
-  module_base_t::prepare( cf_ );
+  module_base_t::configure(  );
   if( autoconnect ){
     for(std::vector<TASCAR::scene_render_rt_t*>::iterator iscenes=session->scenes.begin();
         iscenes != session->scenes.end();
@@ -178,9 +170,9 @@ void hrirconv_mod_t::prepare( chunk_cfg_t& cf_ )
       for(std::vector<TASCAR::Scene::receiver_obj_t*>::iterator irec=(*iscenes)->receivermod_objects.begin();
           irec!=(*iscenes)->receivermod_objects.end(); ++irec){
         std::string prefix("render."+(*iscenes)->name+":");
-        if((*irec)->get_num_channels() == inchannels){
+        if((*irec)->n_channels == inchannels){
           for(uint32_t ch=0;ch<inchannels;ch++){
-            std::string pn(prefix+(*irec)->get_name()+(*irec)->get_channel_postfix(ch));
+            std::string pn(prefix+(*irec)->get_name()+(*irec)->labels[ch]);
             connect_in(ch,pn,true);
           }
         }

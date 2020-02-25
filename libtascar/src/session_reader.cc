@@ -7,6 +7,7 @@
 
 TASCAR::tsc_reader_t::tsc_reader_t()
   : xml_element_t(doc->get_root_node()),
+    licensed_component_t(typeid(*this).name()),
     file_name("")
 {
   // avoid problems with number format in xml file:
@@ -53,6 +54,7 @@ void add_includes( xmlpp::Element* e, const std::string& parentdoc, licensehandl
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
   : xml_doc_t(filename_or_data,t),
     xml_element_t(doc->get_root_node()),
+    licensed_component_t(typeid(*this).name()),
     file_name(((t==LOAD_FILE)?filename_or_data:""))
 {
   switch( t ){

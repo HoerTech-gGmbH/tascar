@@ -23,10 +23,11 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
 glabsensors
 
-AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
+AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
-  gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
-  level2osc const noise loopmachine pos2osc gain
+  gainramp pulse pink dumplevels feedbackdelay bandpass filter				\
+  level2osc const noise loopmachine pos2osc gain sndfileasync					\
+  addchannel
 
 GLABSENSORS = smiley eog emergency espheadtracker midicc	\
   qualisys jackstatus serial

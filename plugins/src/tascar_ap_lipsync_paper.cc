@@ -14,7 +14,7 @@ class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
   lipsync_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~lipsync_t();
@@ -106,9 +106,9 @@ void lipsync_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool("/active",&active);    
 }
 
-void lipsync_t::prepare( chunk_cfg_t& cf_ )
+void lipsync_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   // allocate FFT buffers:
   stft = new TASCAR::stft_t( 2*n_fragment, 2*n_fragment, n_fragment, TASCAR::stft_t::WND_BLACKMAN, 0 );
   uint32_t num_bins(stft->s.n_);

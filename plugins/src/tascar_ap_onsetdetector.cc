@@ -5,7 +5,7 @@ class onsetdetector_t : public TASCAR::audioplugin_base_t {
 public:
   onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   ~onsetdetector_t();
 private:
   lo_address lo_addr;
@@ -58,9 +58,9 @@ onsetdetector_t::onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg )
   lo_addr = lo_address_new_from_url(url.c_str());
 }
 
-void onsetdetector_t::prepare( chunk_cfg_t& cf_ )
+void onsetdetector_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   lpc1 = exp(-1.0/(tau*f_sample));
   lpc11 = 1.0-lpc1;
 }

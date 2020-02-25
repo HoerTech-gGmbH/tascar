@@ -2,6 +2,15 @@
 #include <fstream>
 #include "xmlconfig.h"
 
+std::string liclocalgetenv(const std::string& env)
+{
+  if( char* s = getenv(env.c_str()) )
+    return s;
+  return "";
+}
+
+static bool debuglicenses(liclocalgetenv("DEBUGLICENSES")=="yes");
+
 void get_license_info( xmlpp::Element* e, const std::string& fname, std::string& license, std::string& attribution )
 {
   if( e->get_attribute( "license" ) )
@@ -196,6 +205,25 @@ std::string licensehandler_t::show_unknown() const
   if( !distributable() )
     retv = "Do not use or distribute this file!\n\n"+retv;
   return retv;
+}
+
+
+licensed_component_t::licensed_component_t(const std::string& type_)
+  : type(type_),license_added(false)
+    
+{
+}
+
+licensed_component_t::~licensed_component_t()
+{
+  if( debuglicenses && (!license_added) ){
+    TASCAR::add_warning("Programming error: Licensed component was not registered at license handler ("+type+").");
+  }
+}
+
+void licensed_component_t::add_licenses( licensehandler_t* )
+{
+  license_added = true;
 }
 
 /*

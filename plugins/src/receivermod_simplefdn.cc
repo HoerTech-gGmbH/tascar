@@ -392,10 +392,8 @@ public:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*){};
   void set_par( double dw, double g, double damping );
   void setlogdelays( bool ld );
-  void prepare( chunk_cfg_t& );
-  uint32_t get_num_channels();
+  void configure();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-  std::string get_channel_postfix(uint32_t channel) const;
 private:
   uint32_t channels;
   fdn_t* fdn;
@@ -421,9 +419,10 @@ simplefdn_t::simplefdn_t( xmlpp::Element* cfg )
   pthread_mutex_init( &mtx, NULL );
 }
 
-void simplefdn_t::prepare( chunk_cfg_t& cf_ )
+void simplefdn_t::configure( )
 {
-  receivermod_base_t::prepare( cf_ );
+  receivermod_base_t::configure();
+  n_channels = AMB11::idx::channels;
   if( fdn )
     delete fdn;
   fdn = new fdn_t( fdnorder, f_sample, logdelays );
@@ -431,6 +430,12 @@ void simplefdn_t::prepare( chunk_cfg_t& cf_ )
   if( foa_out )
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t( n_fragment );
+  labels.clear();
+  for(uint32_t ch=0;ch<n_channels;++ch){
+    char ctmp[32];
+    sprintf(ctmp,".%d%c",(ch>0),AMB11::channelorder[ch]);
+    labels.push_back(ctmp);
+  }
 }
 
 simplefdn_t::~simplefdn_t()
@@ -491,22 +496,9 @@ void simplefdn_t::postproc( std::vector<TASCAR::wave_t>& output )
   }
 }
 
-
-uint32_t simplefdn_t::get_num_channels()
-{
-  return AMB11::idx::channels;
-}
-
 TASCAR::receivermod_base_t::data_t* simplefdn_t::create_data(double srate,uint32_t fragsize)
 {
   return new data_t(fragsize);
-}
-
-std::string simplefdn_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[32];
-  sprintf(ctmp,".%d%c",(channel>0),AMB11::channelorder[channel]);
-  return ctmp;
 }
 
 void simplefdn_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)

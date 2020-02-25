@@ -102,7 +102,7 @@ protected:
   void update_object_list();
   void update_selection_info();
 
-  scene_draw_t draw;
+  TSCGUI::scene_draw_t draw;
 
   //Child widgets:
   //Gtk::VPaned vbox;
@@ -131,7 +131,7 @@ protected:
   Gtk::TextView* legal_view;
   Gtk::TextView* osc_vars;
   Gtk::Label* text_srv_url;
-  source_panel_t* source_panel;
+  TSCGUI::source_panel_t* source_panel;
   Gtk::ComboBoxText* scene_selector;
   uint32_t selected_scene;
   Gtk::CheckButton* scene_active;
@@ -145,7 +145,8 @@ protected:
   Gtk::Window* session_splash;
   Gtk::Label* lab_authors;
   Gtk::Label* lab_sessionname;
-  source_ctl_t* active_source_ctl;
+  TSCGUI::source_ctl_t* active_source_ctl;
+  Gtk::Label* lab_warnings;
 
   bool blink;
 

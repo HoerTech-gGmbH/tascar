@@ -53,116 +53,14 @@ TASCAR::scene_container_t::~scene_container_t()
     delete scene;
 }
 
-TASCAR::audioplayer_t::audioplayer_t(const std::string& xmlfile)
-  : scene_container_t(xmlfile),jackc_transport_t(jacknamer(scene->name,"player."))
-{
-}
-
-TASCAR::audioplayer_t::audioplayer_t(TASCAR::Scene::scene_t* scenesrc)
-  : scene_container_t(scenesrc),jackc_transport_t(jacknamer(scene->name,"player."))
-{
-}
-
-TASCAR::audioplayer_t::~audioplayer_t()
-{
-  if( active )
-    deactivate();
-}
-
-int TASCAR::audioplayer_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling)
-{
-  for(uint32_t ch=0;ch<outBuffer.size();ch++)
-    memmove(outBuffer[ch],inBuffer[ch],nframes*sizeof(float));
-  for(uint32_t k=0;k<files.size();k++){
-    uint32_t numchannels(infos[k].channels);
-    float* dp[numchannels];
-    for(uint32_t ch=0;ch<numchannels;ch++)
-      dp[ch] = outBuffer[jack_port_map[k]+ch];
-    files[k].request_data(tp_frame,nframes*tp_rolling,numchannels,dp);
-  }
-  return 0;
-}
-
-void TASCAR::audioplayer_t::open_files()
-{
-  if( !scene )
-    throw TASCAR::ErrMsg("Invalid scene pointer");
-  for(std::vector<TASCAR::Scene::src_object_t*>::iterator it=scene->source_objects.begin();it!=scene->source_objects.end();++it){
-    infos.insert(infos.end(),(*it)->sndfiles.begin(),(*it)->sndfiles.end());
-  }
-  for(std::vector<TASCAR::Scene::diff_snd_field_obj_t*>::iterator it=scene->diff_snd_field_objects.begin();it!=scene->diff_snd_field_objects.end();++it){
-    infos.insert(infos.end(),(*it)->sndfiles.begin(),(*it)->sndfiles.end());
-  }
-  for(std::vector<TASCAR::Scene::sndfile_info_t>::iterator it=infos.begin();it!=infos.end();++it){
-    files.push_back(TASCAR::async_sndfile_t(it->channels,1<<18,get_fragsize()));
-  }
-  jack_port_map.clear();
-  for(uint32_t k=0;k<files.size();k++){
-    files[k].open(infos[k].fname,infos[k].firstchannel,infos[k].starttime*get_srate(),
-                  infos[k].gain,infos[k].loopcnt);
-    jack_port_map.push_back(get_num_output_ports());
-    if( infos[k].channels != 1 ){
-      for(uint32_t ch=0;ch<infos[k].channels;ch++){
-        char pname[1024];
-        sprintf(pname,"%s.%d.%d",infos[k].parentname.c_str(),infos[k].objectchannel,ch);
-        add_output_port(pname);
-        sprintf(pname,"%s.%d.%d.in",infos[k].parentname.c_str(),infos[k].objectchannel,ch);
-        add_input_port(pname);
-      }
-    }else{
-      char pname[1024];
-      sprintf(pname,"%s.%d",infos[k].parentname.c_str(),infos[k].objectchannel);
-      add_output_port(pname);
-      sprintf(pname,"%s.%d.in",infos[k].parentname.c_str(),infos[k].objectchannel);
-      add_input_port(pname);
-    }
-    if( (int64_t)(files[k].get_srate()) != (int64_t)(get_srate()) ){
-      std::string msg("Sample rate differs ("+ infos[k].fname+"): ");
-      char ctmp[1024];
-      sprintf(ctmp,"file has %d Hz, expected %d Hz",files[k].get_srate(),get_srate());
-      msg+=ctmp;
-      add_warning(msg,infos[k].e);
-    }
-  }
-}
-
-void TASCAR::audioplayer_t::start()
-{
-  open_files();
-  for(uint32_t k=0;k<files.size();k++)
-    files[k].start_service();
-  jackc_t::activate();
-}
-
-void TASCAR::audioplayer_t::stop()
-{
-  jackc_t::deactivate();
-  for(uint32_t k=0;k<files.size();k++)
-    files[k].stop_service();
-}
-
-void TASCAR::audioplayer_t::run(bool & b_quit, bool use_stdin)
-{
-  start();
-  while( !b_quit ){
-    usleep( 50000 );
-    if( use_stdin ){
-      getchar();
-      if( feof( stdin ) )
-        b_quit = true;
-    }
-  }
-  stop();
-}
-
-TASCAR::render_rt_t::render_rt_t(xmlpp::Element* xmlsrc)
+TASCAR::scene_render_rt_t::scene_render_rt_t(xmlpp::Element* xmlsrc)
   : render_core_t(xmlsrc),
     osc_scene_t(xmlsrc,this),
     jackc_transport_t(jacknamer(name,"render."))
 {
 }
 
-TASCAR::render_rt_t::~render_rt_t()
+TASCAR::scene_render_rt_t::~scene_render_rt_t()
 {
   if( jackc_t::active )
     jackc_t::deactivate();
@@ -171,9 +69,9 @@ TASCAR::render_rt_t::~render_rt_t()
 /**
    \ingroup callgraph
  */
-int TASCAR::render_rt_t::process(jack_nframes_t nframes,
+int TASCAR::scene_render_rt_t::process(jack_nframes_t nframes,
                                 const std::vector<float*>& inBuffer,
-                                const std::vector<float*>& outBuffer, 
+                                const std::vector<float*>& outBuffer,
                                 uint32_t tp_frame, bool tp_rolling)
 {
   TASCAR::transport_t tp;
@@ -186,11 +84,12 @@ int TASCAR::render_rt_t::process(jack_nframes_t nframes,
   return 0;
 }
 
-void TASCAR::render_rt_t::start()
+void TASCAR::scene_render_rt_t::start()
 {
   chunk_cfg_t cf( get_srate(), get_fragsize() );
   // first prepare all nodes for audio processing:
   prepare( cf );
+  try{
   // create all ports:
   for(std::vector<std::string>::iterator iip=input_ports.begin();iip!=input_ports.end();++iip)
     add_input_port(*iip);
@@ -234,59 +133,33 @@ void TASCAR::render_rt_t::start()
   for(unsigned int k=0;k<receivermod_objects.size();k++){
     std::vector<std::string> cn(receivermod_objects[k]->get_connect());
     for( auto it=cn.begin();it!=cn.end();++it)
-      *it = strrep(*it,"@","player."+name+":"+receivermod_objects[k]->get_name());
-    for( auto it=cn.begin();it!=cn.end();++it)
       if( it->size() ){
-        for(uint32_t ch=0;ch<receivermod_objects[k]->get_num_channels();ch++)
-          connect_out(receivermod_objects[k]->get_port_index()+ch,*it+receivermod_objects[k]->get_channel_postfix(ch),true);
+        for(uint32_t ch=0;ch<receivermod_objects[k]->n_channels;ch++)
+          connect_out(receivermod_objects[k]->get_port_index()+ch,
+                      *it+receivermod_objects[k]->labels[ch],true);
       }
     std::vector<std::string> cns(receivermod_objects[k]->get_connections());
     for(uint32_t kc=0;kc<std::min((uint32_t)(cns.size()),
-                                  receivermod_objects[k]->get_num_channels());kc++){
+                                  receivermod_objects[k]->n_channels);kc++){
       if( cns[kc].size() )
         connect_out(receivermod_objects[k]->get_port_index()+kc,
                     cns[kc],true);
     }
   }
+  }
+  catch( ... ){
+    release();
+    throw;
+  }
 }
 
-void TASCAR::render_rt_t::stop()
+void TASCAR::scene_render_rt_t::stop()
 {
   jackc_t::deactivate();
   release();
 }
 
-void TASCAR::render_rt_t::run(bool& b_quit)
-{
-  start();
-  while( !b_quit ){
-    usleep( 50000 );
-    getchar();
-    if( feof( stdin ) )
-      b_quit = true;
-  }
-  stop();
-}
-
-TASCAR::scene_render_rt_t::scene_render_rt_t(xmlpp::Element* xmlsrc)
-  : render_rt_t(xmlsrc),
-    player(dynamic_cast<TASCAR::Scene::scene_t*>(this))
-{
-}
-
-void TASCAR::scene_render_rt_t::start()
-{
-  player.start();
-  render_rt_t::start();
-}
-
-void TASCAR::scene_render_rt_t::stop()
-{
-  player.stop();
-  render_rt_t::stop();
-}
-
-void TASCAR::scene_render_rt_t::run(bool &b_quit)
+void TASCAR::scene_render_rt_t::run(bool& b_quit)
 {
   start();
   while( !b_quit ){

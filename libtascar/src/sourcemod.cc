@@ -33,14 +33,9 @@ bool sourcemod_t::read_source(pos_t& prel, const std::vector<wave_t>& input, wav
   return libdata->read_source( prel, input, output, data );
 }
 
-uint32_t sourcemod_t::get_num_channels()
+bool sourcemod_t::read_source_diffuse(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t* data)
 {
-  return libdata->get_num_channels();
-}
-
-std::string sourcemod_t::get_channel_postfix(uint32_t channel)
-{
-  return libdata->get_channel_postfix(channel);
+  return libdata->read_source_diffuse( prel, input, output, data );
 }
 
 std::vector<std::string> sourcemod_t::get_connections() const
@@ -48,10 +43,10 @@ std::vector<std::string> sourcemod_t::get_connections() const
   return libdata->get_connections();
 }
 
-void sourcemod_t::prepare( chunk_cfg_t& cf_ )
+void sourcemod_t::configure()
 {
-  sourcemod_base_t::prepare( cf_ );
-  libdata->prepare( cf_ );
+  sourcemod_base_t::configure();
+  libdata->prepare( cfg() );
 }
 
 void sourcemod_t::release()
@@ -63,6 +58,26 @@ void sourcemod_t::release()
 sourcemod_base_t::data_t* sourcemod_t::create_data(double srate,uint32_t fragsize)
 {
   return libdata->create_data(srate,fragsize);
+}
+
+void sourcemod_base_t::configure()
+{
+  if( n_channels != 1 )
+    throw TASCAR::ErrMsg("This source module requires 1 input channel.");
+}
+
+bool sourcemod_base_t::read_source_diffuse(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*)
+{
+  if( n_channels != 1 )
+    throw TASCAR::ErrMsg("This source module requires 1 input channel.");
+  output.copy(input[0]);
+  return false;
+}
+
+bool sourcemod_base_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*)
+{
+  output.copy(input[0]);
+  return false;
 }
 
 sourcemod_t::~sourcemod_t()

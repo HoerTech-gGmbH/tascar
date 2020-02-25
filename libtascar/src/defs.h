@@ -43,7 +43,7 @@
 #define SPLREFf -93.9794f
 
 
-/** 
+/**
     \brief average radius of earth in meters:
 */
 #define R_EARTH 6367467.5
@@ -55,6 +55,8 @@
 #define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " --" << x << "--" << std::endl
 
 #define TASCAR_ASSERT(x) if( !(x) ) throw TASCAR::ErrMsg("Expression " #x " is false.")
+
+#define TASCAR_ASSERT_EQ(x,y) if( !(x==y) ) throw TASCAR::ErrMsg(#x "!=" #y " (x="+TASCAR::to_string(x)+", y="+TASCAR::to_string(y)+")"+__FILE__+":"+TASCAR::to_string(__LINE__))
 
 /**
    \defgroup libtascar TASCAR core library

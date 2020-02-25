@@ -26,11 +26,11 @@
 
 namespace TASCAR {
 
-  class plugin_processor_t : public audiostates_t, public xml_element_t {
+  class plugin_processor_t : public audiostates_t, public xml_element_t, public licensed_component_t {
   public:
     plugin_processor_t( xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname );
     ~plugin_processor_t();
-    void prepare( chunk_cfg_t& cf_ );
+    void configure();
     void release();
     void process_plugins( std::vector<wave_t>& s, const pos_t& p, const zyx_euler_t& o, const transport_t& tp );
     void validate_attributes(std::string& msg) const;

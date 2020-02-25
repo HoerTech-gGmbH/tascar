@@ -112,8 +112,10 @@ namespace TASCAR {
     inline double azim() const {return atan2(y,x);};
     /// Elevation in radians
     inline double elev() const {return atan2(z,norm_xy());};
-    /// Test if zero in any dimension 
+    /// Test if zero all dimensions
     inline bool is_null() const {return (x==0) && (y==0) && (z==0);};
+    /// Test if larger than zero in all dimension
+    inline bool has_volume() const {return (x>0) && (y>0) && (z>0);};
     /// Return normalized vector
     inline pos_t normal() const {
       pos_t r(*this);

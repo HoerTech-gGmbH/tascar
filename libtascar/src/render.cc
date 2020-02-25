@@ -117,13 +117,12 @@ void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_
   }
 }
 
-void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
+void TASCAR::render_core_t::configure()
 {
   if( pthread_mutex_lock( &mtx_world ) != 0 )
     throw TASCAR::ErrMsg("Unable to lock process.");
   try{
-    scene_t::prepare( cf_ );
-    //TASCAR::Scene::scene_t::prepare(fs,fragsize);
+    scene_t::configure();
     audioports.clear();
     audioports_in.clear();
     audioports_out.clear();
@@ -135,8 +134,8 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       TASCAR::Acousticmodel::source_t* source(*it);
       sources.push_back(source);
       (*it)->set_port_index(input_ports.size());
-      for(uint32_t ch=0;ch<source->get_num_channels();ch++){
-        input_ports.push_back((*it)->get_parent_name()+"."+(*it)->get_name()+source->get_channel_postfix(ch));
+      for(uint32_t ch=0;ch<source->n_channels;ch++){
+        input_ports.push_back((*it)->get_parent_name()+"."+(*it)->get_name()+source->labels[ch]);
       }
       audioports.push_back(*it);
       audioports_in.push_back(*it);
@@ -160,8 +159,8 @@ void TASCAR::render_core_t::prepare( chunk_cfg_t& cf_ )
       TASCAR::Acousticmodel::receiver_t* receiver(*it);
       receivers.push_back(receiver);
       (*it)->set_port_index(output_ports.size());
-      for(uint32_t ch=0;ch<receiver->get_num_channels();ch++){
-        output_ports.push_back((*it)->get_name()+receiver->get_channel_postfix(ch));
+      for(uint32_t ch=0;ch<receiver->n_channels;ch++){
+        output_ports.push_back((*it)->get_name()+receiver->labels[ch]);
       }
       audioports.push_back(*it);
       audioports_out.push_back(*it);
@@ -269,7 +268,8 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     // fill inputs:
     for(unsigned int k=0;k<sounds.size();k++){
       //float gain(sounds[k]->get_gain());
-      uint32_t numch(sounds[k]->get_num_channels());
+      uint32_t numch(sounds[k]->n_channels);
+      TASCAR_ASSERT_EQ(numch,sounds[k]->n_channels);
       for(uint32_t ch=0;ch<numch;ch++)
         sounds[k]->inchannels[ch].copy(inBuffer[sounds[k]->get_port_index()+ch],nframes);
       sounds[k]->process_plugins(tp);
@@ -305,7 +305,7 @@ void TASCAR::render_core_t::process(uint32_t nframes,
      */
     for(unsigned int k=0;k<receivermod_objects.size();k++){
       float gain(receivermod_objects[k]->get_gain());
-      uint32_t numch(receivermod_objects[k]->get_num_channels());
+      uint32_t numch(receivermod_objects[k]->n_channels);
       for(uint32_t ch=0;ch<numch;ch++)
         receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
     }

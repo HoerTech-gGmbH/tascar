@@ -5,8 +5,7 @@ public:
   debugpos_t(xmlpp::Element* xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
+  void configure();
   void postproc(std::vector<TASCAR::wave_t>& output);
 private:
   uint32_t sources;
@@ -50,18 +49,10 @@ void debugpos_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::v
 {
 }
 
-uint32_t debugpos_t::get_num_channels()
+void debugpos_t::configure()
 {
-  return 4*sources;
+  n_channels = 4*sources;
 }
-
-std::string debugpos_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[1024];
-  sprintf(ctmp,".%d",channel);
-  return ctmp;
-}
-
 
 REGISTER_RECEIVERMOD(debugpos_t);
 

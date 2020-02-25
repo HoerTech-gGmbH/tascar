@@ -1,3 +1,4 @@
+0.212: Source radiation into diffuse (volumetric) receivers defaults to omni.
 0.211: Partitioned convolution and simple FDN for diffuse reverberation
 0.210: Receiver type for ITU 5.1 speaker layouts, initial version of new diffuse reverberation rendering interface
 0.209: A-weighting in level meters, improvement of level meter display.

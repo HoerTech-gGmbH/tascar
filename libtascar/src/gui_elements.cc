@@ -2,6 +2,8 @@
 
 #define GUI_FACE_ALPHA 0.1
 
+using namespace TSCGUI;
+
 dameter_t::dameter_t()
   : narrow(false),
     narrowleg(false),
@@ -1060,7 +1062,7 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,Cairo
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     pos_t p(obj->get_location());
     zyx_euler_t o(obj->get_orientation());
-    if( (obj->volumetric.x!=0)&&(obj->volumetric.y!=0)&&(obj->volumetric.z!=0) ){
+    if( obj->volumetric.has_volume() ){
       draw_cube(p,o,obj->volumetric,cr);
       if( obj->falloff > 0 ){
         std::vector<double> dash(2);

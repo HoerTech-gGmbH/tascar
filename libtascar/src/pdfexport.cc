@@ -1,5 +1,7 @@
 #include "pdfexport.h"
 
+using namespace TSCGUI;
+
 
 TASCAR::pdfexport_t::pdfexport_t(TASCAR::session_t* s, const std::string& fname, bool ac_model)
   : filename(fname),
@@ -20,7 +22,7 @@ TASCAR::pdfexport_t::pdfexport_t(TASCAR::session_t* s, const std::string& fname,
     draw_views(*it);
 }
 
-void TASCAR::pdfexport_t::draw_views(TASCAR::render_rt_t* s)
+void TASCAR::pdfexport_t::draw_views(TASCAR::scene_render_rt_t* s)
 {
   drawer.set_scene(s);
   double wscale(0.5*std::max(height,width));

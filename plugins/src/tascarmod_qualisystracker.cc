@@ -24,7 +24,7 @@ public:
   qualisys_tracker_t( const TASCAR::module_cfg_t& cfg );
   ~qualisys_tracker_t();
   void add_variables( TASCAR::osc_server_t* srv );
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
   void update(uint32_t frame, bool running);
   OSCHANDLER(qualisys_tracker_t,qtmres);
@@ -102,7 +102,7 @@ void qualisys_tracker_t::update(uint32_t tp_frame,bool tp_rolling)
 }
 
 
-void qualisys_tracker_t::prepare(chunk_cfg_t&)
+void qualisys_tracker_t::configure()
 {
   std::lock_guard<std::mutex> lock(mtx);
   last_prepared = gettime();

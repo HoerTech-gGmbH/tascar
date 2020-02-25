@@ -36,42 +36,16 @@ namespace TASCAR {
     bool own_pointer;
   };    
   
-  class audioplayer_t : public TASCAR::scene_container_t, public jackc_transport_t  {
+  class scene_render_rt_t : public TASCAR::render_core_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
   public:
-    audioplayer_t(const std::string& xmlfile="");
-    audioplayer_t(TASCAR::Scene::scene_t*);
-    virtual ~audioplayer_t();
-    void run(bool &b_quit, bool use_stdin=true);
-    void start();
-    void stop();
-  private:
-    int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
-    void open_files();
-    std::vector<TASCAR::Scene::sndfile_info_t> infos;
-    std::vector<TASCAR::async_sndfile_t> files;
-    std::vector<uint32_t> jack_port_map;
-  };
-
-  class render_rt_t : public TASCAR::render_core_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
-  public:
-    render_rt_t(xmlpp::Element* xmlsrc);
-    virtual ~render_rt_t();
+    scene_render_rt_t(xmlpp::Element* xmlsrc);
+    virtual ~scene_render_rt_t();
     void run(bool &b_quit);
     void start();
     void stop();
   private:
     // jack callback:
     int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer, uint32_t tp_frame, bool tp_rolling);
-  };
-
-  class scene_render_rt_t : public render_rt_t  {
-  public:
-    scene_render_rt_t(xmlpp::Element* xmlsrc);
-    void start();
-    void stop();
-    void run(bool &b_quit);
-  private:
-    audioplayer_t player;
   };
 
 }

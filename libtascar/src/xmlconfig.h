@@ -119,11 +119,11 @@ namespace TASCAR {
     //std::map<std::string,std::string> attributelist;
   };
 
-  class scene_node_base_t : public xml_element_t, public audiostates_t {
-  public:
-    scene_node_base_t(xmlpp::Element*);
-    virtual ~scene_node_base_t();
-  };
+  //class scene_node_base_t : public xml_element_t, public audiostates_t {
+  //public:
+  //  scene_node_base_t(xmlpp::Element*);
+  //  virtual ~scene_node_base_t();
+  //};
 
   std::string env_expand( std::string s );
 

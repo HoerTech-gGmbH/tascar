@@ -4,7 +4,7 @@ class gate_t : public TASCAR::audioplugin_base_t {
 public:
   gate_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~gate_t();
@@ -61,9 +61,9 @@ void gate_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool("/bypass",&bypass);
 }
 
-void gate_t::prepare( chunk_cfg_t& cf_ )
+void gate_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   ifadein = std::max(1.0,f_sample*fadeinlen);
   ifadeout = std::max(1.0,f_sample*fadeoutlen);
   pfadein = new float[ifadein];

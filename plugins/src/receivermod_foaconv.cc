@@ -33,10 +33,8 @@ public:
   void postproc( std::vector<TASCAR::wave_t>& output );
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*){};
-  void prepare( chunk_cfg_t& );
-  uint32_t get_num_channels();
+  void configure();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-  std::string get_channel_postfix(uint32_t channel) const;
 private:
   TASCAR::sndfile_t irs1;
   TASCAR::sndfile_t irs2;
@@ -75,9 +73,10 @@ foaconv_t::foaconv_t( xmlpp::Element* cfg )
   else throw TASCAR::ErrMsg("Currently, only FuMa and ACN channelorder is supported.");
 }
 
-void foaconv_t::prepare( chunk_cfg_t& cf_ )
+void foaconv_t::configure( )
 {
-  receivermod_base_t::prepare( cf_ );
+  receivermod_base_t::configure( );
+  n_channels = AMB11::idx::channels;
   for( auto it=conv.begin();it!=conv.end();++it)
     delete *it;
   conv.clear();
@@ -104,6 +103,12 @@ void foaconv_t::prepare( chunk_cfg_t& cf_ )
   if( rec_out )
     delete rec_out;
   rec_out = new TASCAR::wave_t( n_fragment );
+  labels.clear();
+  for(uint32_t ch=0;ch<n_channels;++ch){
+    char ctmp[32];
+    sprintf(ctmp,".%d%c",(ch>0),AMB11::channelorder[ch]);
+    labels.push_back(ctmp);
+  }
 }
 
 foaconv_t::~foaconv_t()
@@ -121,21 +126,9 @@ void foaconv_t::postproc( std::vector<TASCAR::wave_t>& output )
   rec_out->clear();
 }
 
-uint32_t foaconv_t::get_num_channels()
-{
-  return AMB11::idx::channels;
-}
-
 TASCAR::receivermod_base_t::data_t* foaconv_t::create_data(double srate,uint32_t fragsize)
 {
   return new data_t();
-}
-
-std::string foaconv_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[32];
-  sprintf(ctmp,".%d%c",(channel>0),AMB11::channelorder[channel]);
-  return ctmp;
 }
 
 void foaconv_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)

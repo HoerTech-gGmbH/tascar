@@ -906,7 +906,7 @@ details.
 
 \elem{source} is an element used to create the sound source
 objects in the scene definition. Since sources are also objects, they
-have to have a certain position and orientation in space.  A source
+can have a trajectory (see \ref{common attributes}).  A source
 object can consist of one or more "sound vertices" specified with a
 sub-element \refelem{sound}. There must also be a sound content, for
 example from a sound file, assigned to a source. We can assign a sound
@@ -1030,72 +1030,6 @@ Door sources shift the perceived source position behind a ``door''
 shape, limited by the edges. They are basically designed for
 interactive transitions between simulated rooms.
 
-
-\subsubsection{The {\tt <sndfile .../>} element}\label{sec:sndfile}\index{sndfile}\index{sound file}
-
-\paragraph{Note} Under high CPU load and for long files, due to a yet unidentified racing condition in rare cases the time offset might be wrong. Thus it is recommended to use the audio plugin \elem{sndfile} instead (Section \ref{sec:ap_sndfile}).
-
-A sound content can be assigned to a diffuse sound field using a child
-element \elem{sndfile}.
-%
-The child element \elem{sndfile} has an attribute \attr{name}, where we
-specify sound file, which we would like to associate with the source.
-%
-In the previous example we assign a file \textit{clock.wav} to a sound
-source called "clock".
-
-Each time we use the element \elem{sndfile}, new jack input ports
-called \verb!player.<scenename>:<objectname>.<channel>! will be
-created (one for each audio channel in the sound file), e.\,g.\ here
-it would be \verb!player.scene_example_kitchen:clock.1!, because
-\textit{clock.wav} has a single audio channel (mono).
-%
-The sound file will be played back by the player part.  
-%
-If there are more than one sound files assigned to a source object,
-they will appear as different channels in audio player (according to
-the order in the scene definition). The first sound file in the scene
-definition has by default the number 0.
-
-In practice, we assign more than one sound file to a source if the
-source consist of more than one sound vertex, so then each vertex
-"plays" the different sound file. 
-%
-Sound vertices will be discussed in the next section.
-
-\begin{figure}[htb]
-  \centering
-  \fbox{\includegraphics[width=0.8\textwidth]{player.png}}
-  \caption{Jack audio player shows different sounds assigned to
-    source objects. If there is more than one sound files assigned to
-    one source object, then they will have a different channel
-    number, starting by default with zero (for example source object
-    called guests - we have 6 different sound files assigned to
-    this source in the scene definition).}
-  \label{fig:player}
-\end{figure}
-
-
-%There can be more than one sound file assigned to a source, for example if we want to change the sound assigned to a source while the scene is played back. We can do it as shown below:
-
-%\begin{verbatim}
- %...
-    %<source name="vocals" mute="false" solo="false" color="#ff0000" start="0" end="0">
-      %<position interpolation="cartesian">0 2.2 -0.3 2.1</position>
-      %<sndfile name="../tascar_scenes/pointsources/jazzclub-vocals_man.wav"  starttime="4" loop="1" gain="-10"/>
-      %<sndfile name="../tascar_scenes/pointsources/jazzclub-vocals_woman.wav"  starttime="6" loop="1" gain="-10"/>
-      %<sound name="1" connect="@.0"/>
-    %</source>
-%...
-
-%\end{verbatim}
-
-%We can see that there is now an attribute "starttime" added to a sub-element \textit{sndfile}. The time is specified in seconds and it is counted with respect to the time when the source starts to be active.  
-
-%More than one sound file is sometimes needed if we have a source with more than one sound vertex and we want each vertex to "play" a different sound.
-
-%Each time we use \textit{sndfile} element within one source object, a new jack output port (player) will be created. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 \subsection{The {\tt <diffuse .../>} element}\label{sec:diffuse}\index{diffuse}\index{diffuse}
 
 \begin{tscattributes}
@@ -1106,7 +1040,7 @@ Sound vertices will be discussed in the next section.
 \end{tscattributes}
 
 \begin{tscelements}
-\refelem{position}, \elem{boundingbox},\refelem{orientation}, \refelem{creator}, \refelem{sndfile}, \elem{plugins}
+\refelem{position}, \elem{boundingbox},\refelem{orientation}, \refelem{creator}, \elem{plugins}
 \end{tscelements}
 
 Apart of sound sources which consist of one or more sound vertices, we
@@ -1456,9 +1390,9 @@ vertices of a surface).
 %
 At this point in the code we shouldn't leave empty lines.
 
-Instead of defining all the surfaces manually, we can also create a
-more complicate shape in blender and then export face group raw files
-from blender model:
+Instead of defining all the surfaces manually, they can be modeled in
+blender (blender 2.79 -- the scripts do not yet work with blender
+2.80). The meshes can be exported with:
 \begin{verbatim}
 tascar_blenderexport blendfile.blend
 \end{verbatim}
@@ -1466,7 +1400,18 @@ This will export the meshes of all blender mesh objects of the
 currently selected scene, or if available, from the scene named
 ``tascar'', to the file {\tt <blendfilename>\_<objectname>.raw} and
 all curve objects to a \tascar{} track file {\tt
-  <blendfilename>\_<objectname>.csv}.
+  <blendfilename>\_<objectname>.csv}.  It is recommended to minimize
+the number of faces, e.g., by using polygon faces instead of
+triangulized faces. Also only the acoustically relevant faces should
+be modeled, e.g., typically only the upper surface of a table is
+acoustically important, however, a table modeled for visualization
+contains also the bottom face, legs, and faces at the sides. If all of
+these faces would be imported into \tascar{}, one image source would
+be created for each of the reflectors and primary sources, which would
+result in a wast of computational performance. Small structures can be
+better modeled using the \attr{scattering} attribute of
+reflectors. Late reverberation can be modeled independent from the
+image source model (see Section \ref{sec:reverbelem}).
 
 When we already have a text file, where the coordinates for all the
 vertices are already specified, we can import it to \tascar{} scene
@@ -1487,6 +1432,7 @@ source is in the direction of the face normal.
 
 Polygons meshes are flattened by a projection on a plane which is
 orthogonal to the polygon normal vector.
+
 
 \subsection{Obstacles: {\tt <obstacle .../>} element}\index{obstacle}\label{sec:obstacle}
 
@@ -2016,8 +1962,17 @@ flag \verb!-h! or \verb!--help!.
   tascar_renderfile -i input_file.wav -o output_file.wav tascar_scene.tsc
   \end{lstlisting}
    
-  The size of the input file \verb!input_file.wav! (number of audio channels) has to correspond with the number of sources in the scene. The 
-  size of the file \verb!output_file.wav!, which will be created after calling this tool, will correspond to the number of output channels of the receiver used in the scene. Other options: 
+  The size of the input file \verb!input_file.wav! (number of audio
+  channels) has to correspond with the number of sources in the
+  scene. The size of the file \verb!output_file.wav!, which will be
+  created after calling this tool, will correspond to the number of
+  output channels of the receiver used in the scene. In case of
+  multi-channel output (e.g., speaker based receiver types), the order
+  follows the order of the channel definition in the \tascar{}
+  files. This may differ form the order of jack ports, because some
+  jack front ends sort ports alphabetically.
+
+  Other options:
 
   \begin{lstlisting}[numbers=none]
   -h 

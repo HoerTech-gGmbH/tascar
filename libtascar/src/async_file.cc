@@ -278,7 +278,8 @@ void TASCAR::async_sndfile_t::request_data( int32_t firstframe, uint32_t n, uint
   uint32_t rframes = rb.read( read_fragment_buf, n, &current_pos );
   if( (n>0) && ((current_pos != firstframe) || (rframes<n)) ){
     xrun++;
-    std::cerr << "xrun(" << xrun << ") current_pos=" << current_pos << " firstframe=" << firstframe << " rframes=" << rframes << " n=" << n << std::endl;
+    TASCAR::add_warning("xrun("+TASCAR::to_string(xrun)+") "+sfile->get_name()+" at position "+TASCAR::to_string(current_pos)+".");
+    //std::cerr << "xrun(" << xrun << ") current_pos=" << current_pos << " firstframe=" << firstframe << " rframes=" << rframes << " n=" << n << std::endl;
   }
   if( current_pos == firstframe ){
     // copy and de-interlace buffer:

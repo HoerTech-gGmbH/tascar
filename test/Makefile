@@ -1,22 +1,26 @@
-TESTS = test_snd_zeros test_ir1 test_ir2 test_ir3 test_ir4						\
-	test_ir6_ismminmax test_snd1 test_snd2 test_snd4 test_snd3					\
-	test_snd5 test_pos1 test_pos2 test_pos_trackinterp test_snd_door1		\
-	test_snd_door2 test_snd_door3 test_pos_door test_snd_layers					\
-	test_snd_rec_amb1h1v test_wav_diffuse test_wav_diffuse_hoa2d				\
-	test_wav_diffuse_nsp4 test_wav_diffuse_hoa2d4												\
-	test_wav_diffuse_layerbug test_wav_diffirs test_sndgainramp					\
-	test_sndgainramp2 test_ir_spkcorr test_snd_calib1 test_snd_calib2		\
-	test_snd_vbap51 test_snd_pink test_snd_pink_diffuse									\
-	test_snd_sndfile test_snd_sndfile2 test_snd_door4 test_snd_roommic	\
-	test_fail_vbap3d_flat test_notfail_vbap3d_3d test_level_vbap3d			\
-	test_ir_ortf_0deg test_ir_ortf_55deg test_ir_scatter								\
-	test_ir_noscatter test_ir_scatter_ortf test_snd_sourcedir_generic		\
-	test_snd_sourcedir_generic1 test_snd_sourcedir_generic_cardioid			\
-	test_unload_on_error jack_routeplugin test_ir_wfs										\
-	test_ir_wfs_noplanewave jackfail_connectfail jack_connect hoa3d			\
-	test_fail_duplicatenames test_fail_duplicatescenenames							\
-	test_level_hoa2d_basic test_level_hoa2d_maxre jack_hoafdnrot				\
-	test_ir_reverb test_snd_reverb test_ir_simplefdn
+TESTS = test_snd_zeros test_ir1 test_ir2 test_ir3 test_ir4		\
+	test_ir6_ismminmax test_snd1 test_snd2 test_snd4 test_snd3	\
+	test_snd5 test_pos1 test_pos2 test_pos_trackinterp		\
+	test_snd_door1 test_snd_door2 test_snd_door3 test_pos_door	\
+	test_snd_layers test_snd_rec_amb1h1v test_wav_diffuse		\
+	test_wav_diffuse_hoa2d test_wav_diffuse_nsp4			\
+	test_wav_diffuse_hoa2d4 test_wav_diffuse_layerbug		\
+	test_wav_diffirs test_sndgainramp test_sndgainramp2		\
+	test_ir_spkcorr test_snd_calib1 test_snd_calib2			\
+	test_snd_vbap51 test_snd_pink test_snd_pink_diffuse		\
+	test_snd_sndfile test_snd_sndfile2 test_snd_door4		\
+	test_snd_roommic test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
+	test_level_vbap3d test_ir_ortf_0deg test_ir_ortf_55deg		\
+	test_ir_scatter test_ir_noscatter test_ir_scatter_ortf		\
+	test_snd_sourcedir_generic test_snd_sourcedir_generic1		\
+	test_snd_sourcedir_generic_cardioid test_unload_on_error	\
+	jack_routeplugin test_ir_wfs test_ir_wfs_noplanewave		\
+	jackfail_connectfail jack_connect hoa3d				\
+	test_fail_duplicatenames test_fail_duplicatescenenames		\
+	test_level_hoa2d_basic test_level_hoa2d_maxre jack_hoafdnrot	\
+	test_ir_reverb test_snd_reverb test_ir_simplefdn		\
+	jackconnect_ortf jackconnect_amb1h1v jackconnect_hoa2dfuma	\
+	test_snd_vbap3d_speakermatch test_ir_volumetric
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -128,10 +132,12 @@ test_level_%: test_level_%.tsc
 
 
 test_fail_%: fail_%.tsc
+	@echo "Failure test: $< ($*)"
 	@(! $(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_fail.wav $< ) || (echo "$(<):2: Did not fail"; false)
 	@rm -f test_fail.wav
 
 test_notfail_%: notfail_%.tsc
+	@echo "No failure test: $< ($*)"
 	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_fail.wav $< || (echo "$(<):2: Failed."; false)
 	@rm -f test_fail.wav
 
@@ -215,6 +221,11 @@ jackfail_%: test_%.tsc
 	TSCRET=ok; jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;ps $$TSCPID > /dev/null || TSCRET=fail; kill -9 $$JACKPID $$TSCPID; test $$TSCRET = fail || (echo "$(<):2: Did not fail."; false)
 	@sleep 1
 
+jackconnect_%: test_connect%.tsc
+	@sleep 1
+	TSCRET=ok; jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;ps $$TSCPID > /dev/null || TSCRET=fail; kill -9 $$JACKPID $$TSCPID 2>/dev/null ; test $$TSCRET = ok || (echo "$(<):2: Connection failed."; false)
+	@sleep 1
+
 
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: TOL=4e-4
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: RMSTOL=1e-4
@@ -222,3 +233,4 @@ test_ir_simplefdn: IRLEN=44100
 test_ir_reverb: IRLEN=44100
 test_ir_partconvrev: IRLEN=44100
 test_ir_temp: IRLEN=441000
+test_ir_volumetric: TOL=1e-5

@@ -5,7 +5,7 @@ class levels2osc_t : public TASCAR::module_base_t {
 public:
   levels2osc_t( const TASCAR::module_cfg_t& cfg );
   ~levels2osc_t();
-  virtual void prepare( chunk_cfg_t& );
+  virtual void configure( );
   void update(uint32_t frame, bool running);
 private:
   std::string url;
@@ -41,9 +41,9 @@ levels2osc_t::levels2osc_t( const TASCAR::module_cfg_t& cfg )
   //  throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
 }
 
-void levels2osc_t::prepare( chunk_cfg_t& cf_ )
+void levels2osc_t::configure( )
 {
-  module_base_t::prepare( cf_ );
+  module_base_t::configure( );
   ports.clear();
   routes.clear();
   if( session )
@@ -63,7 +63,7 @@ void levels2osc_t::prepare( chunk_cfg_t& cf_ )
       lo_message_add_float(vmsg.back(),0);
     vargv.push_back(lo_message_get_argv(vmsg.back()));
     vpath.push_back(std::string("/level/")+(*it)->get_name());
-    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info((*it)->get_name(),"level",(*it)->metercnt(),cf_.f_fragment)));
+    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info((*it)->get_name(),"level",(*it)->metercnt(),f_fragment)));
   }
 }
 

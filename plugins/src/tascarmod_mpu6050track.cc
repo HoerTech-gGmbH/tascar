@@ -7,7 +7,7 @@ class mpu6050track_t : public TASCAR::actor_module_t {
 public:
   mpu6050track_t( const TASCAR::module_cfg_t& cfg );
   ~mpu6050track_t();
-  void prepare( chunk_cfg_t& );
+  void configure( );
   void update(uint32_t frame, bool running);
   static int osc_setrot(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   static int osc_setrotypr(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -46,9 +46,9 @@ private:
   bool use_translation;
 };
 
-void mpu6050track_t::prepare( chunk_cfg_t& cf_ )
+void mpu6050track_t::configure( )
 {
-  actor_module_t::prepare( cf_ );
+  actor_module_t::configure( );
   c = exp(-1.0/(tau*f_fragment));
   cz = exp(-1.0/(tauz*f_fragment));
 }

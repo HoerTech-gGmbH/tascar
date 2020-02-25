@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <receiver type="amb1h1v"/>
+  </scene>
+	<connect src="render.scene:out.0w" dest="system:playback_1" failonerror="false"/>
+	<connect src="render.scene:out.1x" dest="system:playback_1" failonerror="false"/>
+	<connect src="render.scene:out.1y" dest="system:playback_1" failonerror="false"/>
+	<connect src="render.scene:out.1z" dest="system:playback_1" failonerror="false"/>
+</session>

@@ -37,7 +37,7 @@ class midictl_t : public midictl_vars_t,
 public:
   midictl_t( const TASCAR::module_cfg_t& cfg );
   ~midictl_t();
-  void prepare(chunk_cfg_t& cf);
+  void configure();
   void release();
   virtual void emit_event(int channel, int param, int value);
 private:
@@ -78,7 +78,7 @@ midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
   srv = std::thread(&midictl_t::send_service,this);
 }
 
-void midictl_t::prepare(chunk_cfg_t& cf)
+void midictl_t::configure()
 {
   ports.clear();
   routes.clear();

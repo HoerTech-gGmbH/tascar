@@ -9,8 +9,14 @@
   Receiver plugins inherit from
   TASCAR::receivermod_base_t. Loudspeaker based rendering methods can
   alternatively inherit from TASCAR::receivermod_base_speaker_t. In
-  that case, the methods add_diffuse_sound_field() and get_num_channels() do
+  that case, the methods add_diffuse_sound_field() does
   not need to be implemented.
+
+  To configure the number of output channels, you need to implement
+  the configure method. In that method, the receiver plugin can be
+  initialized based on the members of the chunk_cfg_t member
+  variables. To report the number of output channels, the member
+  n_channels need to be changed to the correct value.
  */
 class receiverexample_t : public TASCAR::receivermod_base_t {
 public:
@@ -25,13 +31,16 @@ public:
     data_t();
     double weight;
   };
+  // construct a receiver based on the XML configuration of the receiver element
   receiverexample_t(xmlpp::Element* xmlsrc);
   // add one point source - this is the core panning/rendering function
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   // add a First-Order-Ambisonics diffuse sound field:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  // return the number of output channels:
-  uint32_t get_num_channels();
+  // configure plugins, including number of output channels. To report
+  // the number of output channels, the member n_channels need to be
+  // changed to the correct value.
+  void configure();
   // register OSC variables:
   void add_variables(TASCAR::osc_server_t* srv);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -81,7 +90,6 @@ void receiverexample_t::add_pointsource(const TASCAR::pos_t& prel, double width,
     output[0][k] += chunk[k] * (d->weight+=dweight);
 }
 
-
 void receiverexample_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
   // this algoithm will put a cardioid pattern in frontal direction:
@@ -97,9 +105,12 @@ void receiverexample_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
   }
 }
 
-uint32_t receiverexample_t::get_num_channels()
+void receiverexample_t::configure()
 {
-  return 1;
+  // this receiver type returns always exactly one channel:
+  n_channels = 1;
+  // also all other members of chunk_cfg_t can be used to configure
+  // this plugin, e.g., fragment size or sampling rate.
 }
 
 TASCAR::receivermod_base_t::data_t* receiverexample_t::create_data(double srate,uint32_t fragsize)

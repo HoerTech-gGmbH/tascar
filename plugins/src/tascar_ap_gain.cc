@@ -5,8 +5,6 @@ class gainramp_t : public TASCAR::audioplugin_base_t {
 public:
   gainramp_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& );
-  void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~gainramp_t();
 private:
@@ -23,16 +21,6 @@ gainramp_t::gainramp_t( const TASCAR::audioplugin_cfg_t& cfg )
 void gainramp_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_double_db("/gain",&gain);
-}
-
-void gainramp_t::prepare( chunk_cfg_t& cf_ )
-{
-  audioplugin_base_t::prepare( cf_ );
-}
-
-void gainramp_t::release()
-{
-  audioplugin_base_t::release();
 }
 
 gainramp_t::~gainramp_t()

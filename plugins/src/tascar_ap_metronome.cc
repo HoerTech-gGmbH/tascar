@@ -17,7 +17,7 @@ public:
   metronome_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
   ~metronome_t();
 private:
@@ -85,9 +85,9 @@ metronome_t::metronome_t( const TASCAR::audioplugin_cfg_t& cfg )
 }
 
 
-void metronome_t::prepare( chunk_cfg_t& cf_ )
+void metronome_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   update_par();
 }
 

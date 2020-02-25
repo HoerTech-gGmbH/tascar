@@ -51,7 +51,7 @@ namespace TASCAR {
   public:
     render_core_t(xmlpp::Element* xmlsrc);
     virtual ~render_core_t();
-    void prepare( chunk_cfg_t& );
+    void configure();
     void release();
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max );
     /**

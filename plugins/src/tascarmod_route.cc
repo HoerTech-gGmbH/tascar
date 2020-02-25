@@ -16,7 +16,7 @@ public:
                       const std::vector<float*>&,
                       const std::vector<float*>&, 
                       uint32_t tp_frame, bool tp_rolling);
-  void prepare( chunk_cfg_t& cf );
+  void configure( );
   void release( );
 private:
   uint32_t channels;
@@ -80,16 +80,15 @@ routemod_t::routemod_t( const TASCAR::module_cfg_t& cfg )
   activate();
 }
 
-void routemod_t::prepare( chunk_cfg_t& cf )
+void routemod_t::configure( )
 {
   pthread_mutex_lock( &mtx_ );
-  cf.n_channels =  channels;
+  n_channels =  channels;
   sIn_tsc.clear();
   for( uint32_t ch=0;ch<channels;++ch)
     sIn_tsc.push_back( TASCAR::wave_t( fragsize ) );
-  plugins.prepare(cf);
-  TASCAR::module_base_t::prepare(cf);
-  TASCAR::Scene::route_t::prepare(cf);
+  plugins.prepare( cfg() );
+  TASCAR::module_base_t::configure();
   std::vector<std::string> con(get_connect());
   for( auto it=con.begin();it!=con.end();++it)
     *it = TASCAR::env_expand(*it);
@@ -128,7 +127,7 @@ void routemod_t::release( )
   pthread_mutex_lock( &mtx_ );
   bypass = true;
   TASCAR::module_base_t::release();
-  TASCAR::Scene::route_t::release();
+  //TASCAR::Scene::route_t::release();
   plugins.release();
   sIn_tsc.clear();
   pthread_mutex_unlock( &mtx_ );

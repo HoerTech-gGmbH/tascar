@@ -3,7 +3,7 @@
 using namespace TASCAR;
 
 plugin_processor_t::plugin_processor_t( xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname )
-  : xml_element_t( xmlsrc )
+  : xml_element_t( xmlsrc ), licensed_component_t(typeid(*this).name())
 {
   xmlpp::Element* se_plugs(find_or_add_child("plugins"));
   xmlpp::Node::NodeList subnodes(se_plugs->get_children());
@@ -15,23 +15,23 @@ plugin_processor_t::plugin_processor_t( xmlpp::Element* xmlsrc, const std::strin
   }
 }
 
-void plugin_processor_t::prepare( chunk_cfg_t& cf_ )
+void plugin_processor_t::configure()
 {
-  audiostates_t::prepare( cf_ );
   try{
     for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-      (*p)->prepare( cf_ );
+      (*p)->prepare( cfg() );
   }
   catch( ... ){
     for( auto p=plugins.begin(); p!= plugins.end(); ++p)
       if( (*p)->is_prepared() )
-	(*p)->release();
+				(*p)->release();
     throw;
   }
 }
 
 void plugin_processor_t::add_licenses( licensehandler_t* lh )
 {
+  licensed_component_t::add_licenses( lh );
   for( auto p=plugins.begin(); p!= plugins.end(); ++p)
     (*p)->add_licenses( lh );
 }
@@ -75,3 +75,7 @@ void plugin_processor_t::add_variables( TASCAR::osc_server_t* srv )
   }
   srv->set_prefix(oldpref);
 }
+
+// Local Variables:
+// compile-command: "make -C .."
+// End:

@@ -103,13 +103,15 @@ namespace TASCAR {
      */
     class diffuse_t : public shoebox_t,
                       public TASCAR::xml_element_t,
-                      public audiostates_t {
+                      public audiostates_t,
+                      public licensed_component_t {
     public:
       diffuse_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_, const std::string& name );
       virtual ~diffuse_t() {};
       virtual void preprocess(const TASCAR::transport_t& tp);
-      void prepare( chunk_cfg_t& cf_ );
+      void configure();
       void release();
+      void add_licenses( licensehandler_t* );
       amb1rotator_t audio;
       double falloff;
       bool active;
@@ -139,13 +141,16 @@ namespace TASCAR {
     /**
        \brief Primary sound source
      */
-    class source_t : public sourcemod_t, public c6dof_t {
+    class source_t : public sourcemod_t,
+                     public c6dof_t,
+                     public licensed_component_t  {
     public:
       source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname );
       ~source_t();
-      void prepare( chunk_cfg_t& cf_ );
+      void configure();
       void release();
       virtual void process_plugins(const TASCAR::transport_t& tp);
+      void add_licenses( licensehandler_t* );
       uint32_t ismmin;
       uint32_t ismmax;
       uint32_t layers;
@@ -169,11 +174,12 @@ namespace TASCAR {
 
      */
     class receiver_t : public receivermod_t,
-                       public c6dof_t {
+                       public c6dof_t,
+                       public licensed_component_t  {
     public:
       receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is_reverb_ );
       ~receiver_t();
-      void prepare( chunk_cfg_t& cf_ );
+      void configure();
       void release();
       void clear_output();
       void add_pointsource(const pos_t& prel, double width, double scattering, const wave_t& chunk, receivermod_base_t::data_t*);
@@ -187,6 +193,7 @@ namespace TASCAR {
       //virtual void process_plugins(const TASCAR::transport_t& tp);
       virtual void add_variables( TASCAR::osc_server_t* srv );
       void validate_attributes(std::string& msg) const;
+      void add_licenses( licensehandler_t* );
       // configuration/control variables:
       TASCAR::pos_t volumetric;
       double avgdist;
@@ -230,7 +237,6 @@ namespace TASCAR {
       float prelim_previous_fade_gain;
       // current fade gain:
       float fade_gain;
-      bool is_prepared;
     protected:
       TASCAR::transport_t ltp;
       uint64_t starttime_samples;

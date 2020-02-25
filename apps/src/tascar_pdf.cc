@@ -38,7 +38,7 @@ namespace App {
   protected:
     virtual void add_scene(xmlpp::Element *e);
   private:
-    void draw(scene_draw_t::viewt_t persp);
+    void draw(TSCGUI::scene_draw_t::viewt_t persp);
     double time;
     std::string filename;
     double height;
@@ -48,7 +48,7 @@ namespace App {
     double tmargin;
     double bmargin;
     Cairo::RefPtr<Cairo::PdfSurface> surface;
-    scene_draw_t drawer;
+    TSCGUI::scene_draw_t drawer;
     std::vector<TASCAR::render_core_t*> scenes;
   };
 
@@ -130,7 +130,7 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
     // s->geometry_update(time);
     s->process(1,tp,dIn,dOut);
     s->process(1,tp,dIn,dOut);
-    draw(scene_draw_t::xy);
+    draw(TSCGUI::scene_draw_t::xy);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
@@ -141,14 +141,14 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
     //s->geometry_update(time);
     s->process(1,tp,dIn,dOut);
     s->process(1,tp,dIn,dOut);
-    draw(scene_draw_t::xz);
+    draw(TSCGUI::scene_draw_t::xz);
   }
   for(uint32_t k=0;k<t.size();k++){
     time = t[k];
     //s->geometry_update(time);
     s->process(1,tp,dIn,dOut);
     s->process(1,tp,dIn,dOut);
-    draw(scene_draw_t::yz);
+    draw(TSCGUI::scene_draw_t::yz);
   }
   //for(uint32_t k=0;k<t.size();k++){
   //  time = t[k];
@@ -160,7 +160,7 @@ void App::pdf_export_t::render_time(TASCAR::render_core_t* s, const std::vector<
   s->release();
 }
 
-void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
+void App::pdf_export_t::draw(TSCGUI::scene_draw_t::viewt_t persp)
 {
   drawer.set_viewport(persp);
   Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
@@ -212,26 +212,26 @@ void App::pdf_export_t::draw(scene_draw_t::viewt_t persp)
   cr->set_font_size( 10 );
   char ctmp[1024];
   switch( persp ){
-  case scene_draw_t::xy :
+  case TSCGUI::scene_draw_t::xy :
     sprintf(ctmp,"top ortho");
     break;
-  case scene_draw_t::xz :
+  case TSCGUI::scene_draw_t::xz :
     sprintf(ctmp,"front ortho");
     break;
-  case scene_draw_t::yz :
+  case TSCGUI::scene_draw_t::yz :
     sprintf(ctmp,"left ortho");
     break;
-  case scene_draw_t::p :
+  case TSCGUI::scene_draw_t::p :
     sprintf(ctmp,"perspective");
     break;
-  case scene_draw_t::xyz :
+  case TSCGUI::scene_draw_t::xyz :
     sprintf(ctmp,"xyz");
     break;
   }
   cr->move_to( bx+12, by+36 );
   cr->show_text( ctmp );
   cr->stroke();
-  if( persp == scene_draw_t::p )
+  if( persp == TSCGUI::scene_draw_t::p )
     sprintf(ctmp,"fov %g°",drawer.view.get_fov());
   else
     sprintf(ctmp,"scale 1:%g",drawer.view.get_scale()/(wscale/72*0.0254));

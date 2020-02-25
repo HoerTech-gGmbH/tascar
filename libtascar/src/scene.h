@@ -36,7 +36,7 @@ namespace TASCAR {
    */
   namespace Scene {
 
-    class route_t : public scene_node_base_t {
+    class route_t : public xml_element_t { //, public audiostates_t
     public:
       route_t(xmlpp::Element*);
       ~route_t();
@@ -55,7 +55,7 @@ namespace TASCAR {
          \brief Return combination of mute and solo.
 
          Internal solo state is used only if anysolo is true.
-         
+
          \param anysolo Counter of objects which are soloed.
          \return True if active, false if either muted or not soloed but other tracks are soloed.
       */
@@ -101,21 +101,6 @@ namespace TASCAR {
       double r, g, b;
     };
 
-    class sndfile_info_t : public scene_node_base_t {
-    public:
-      sndfile_info_t(xmlpp::Element* e);
-      std::string fname;
-      uint32_t firstchannel;
-      uint32_t channels;
-      uint32_t objectchannel;
-      double starttime;
-      uint32_t loopcnt;
-      double gain;
-      std::string parentname;
-      std::string license;
-      std::string attribution;
-    };
-
     class object_t : public dynobject_t, public route_t {
     public:
       object_t(xmlpp::Element*);
@@ -124,12 +109,6 @@ namespace TASCAR {
       bool is_active(uint32_t anysolo,double t);
       rgb_color_t color;
       double endtime;
-    };
-
-    class sndfile_object_t : public object_t {
-    public:
-      sndfile_object_t(xmlpp::Element*);
-      std::vector<sndfile_info_t> sndfiles;
     };
 
     class face_object_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
@@ -225,11 +204,11 @@ namespace TASCAR {
     /**
        \brief Diffuse sound field descriptor
     */
-    class diff_snd_field_obj_t : public sndfile_object_t, public audio_port_t {
+    class diff_snd_field_obj_t : public object_t, public audio_port_t, public licensed_component_t, public audiostates_t {
     public:
       diff_snd_field_obj_t(xmlpp::Element* e);
       virtual ~diff_snd_field_obj_t();
-      void prepare( chunk_cfg_t& );
+      void configure();
       void release();
       /**
          \callgraph
@@ -244,6 +223,7 @@ namespace TASCAR {
       pos_t size;
       double falloff;
       TASCAR::Acousticmodel::diffuse_t* get_source() { return source;};
+      void add_licenses( licensehandler_t* );
       uint32_t layers;
     private:
       TASCAR::Acousticmodel::diffuse_t* source;
@@ -292,11 +272,11 @@ namespace TASCAR {
     public:
     };
 
-    class src_object_t : public sndfile_object_t {
+    class src_object_t : public object_t, public licensed_component_t, public audiostates_t {
     public:
       src_object_t(xmlpp::Element* e);
       ~src_object_t();
-      void prepare( chunk_cfg_t& );
+      void configure();
       void release();
       /**
          \callgraph
@@ -312,6 +292,7 @@ namespace TASCAR {
       std::vector<sound_t*> sound;
       std::string next_sound_name() const;
       void validate_attributes(std::string& msg) const;
+      void add_licenses( licensehandler_t* );
     private:
       int32_t startframe;
     };
@@ -324,7 +305,7 @@ namespace TASCAR {
                            public TASCAR::Acousticmodel::receiver_t {
     public:
       receiver_obj_t(xmlpp::Element* e, bool is_reverb_ );
-      void prepare( chunk_cfg_t& );
+      void configure();
       void release();
       /**
          \callgraph
@@ -374,11 +355,12 @@ namespace TASCAR {
     public:
       diffuse_reverb_t(xmlpp::Element* e);
       ~diffuse_reverb_t();
-      void prepare( chunk_cfg_t& );
+      void configure();
       void release();
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
       TASCAR::Acousticmodel::diffuse_t* get_source() { return source;};
+      void add_licenses( licensehandler_t* );
     private:
       TASCAR::Acousticmodel::diffuse_t* source;
     };
@@ -395,12 +377,12 @@ namespace TASCAR {
        implemented in the class TASCAR::Acousticmodel::world_t,
        allocated in TASCAR::render_core_t::world.
     */
-    class scene_t : public scene_node_base_t {
+    class scene_t : public xml_element_t, public audiostates_t, public licensed_component_t {
     public:
       scene_t(xmlpp::Element* e);
       ~scene_t();
       src_object_t* add_source();
-      void prepare( chunk_cfg_t& );
+      void configure();
       void release();
       std::string description;
       std::string name;

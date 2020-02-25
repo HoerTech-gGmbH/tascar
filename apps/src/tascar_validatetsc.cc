@@ -57,6 +57,7 @@ App::show_licenses_t::show_licenses_t(const std::string& session_filename)
   GET_ATTRIBUTE(srv_port);
   GET_ATTRIBUTE(srv_addr);
   GET_ATTRIBUTE(srv_proto);
+  add_licenses( this );
 }
 
 void App::show_licenses_t::validate_attributes(std::string& msg) const

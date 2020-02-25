@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <receiver type="hoa2d_fuma" order="6"/>
+  </scene>
+	<connect src="render.scene:out.0_0" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.1_-1" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.1_1" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.2_-2" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.2_2" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.3_-3" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.3_3" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.4_-4" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.4_4" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.5_-5" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.5_5" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.6_-6" dest="system:playback_1" failonerror="true"/>
+	<connect src="render.scene:out.6_6" dest="system:playback_1" failonerror="true"/>
+</session>

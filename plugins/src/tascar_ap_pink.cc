@@ -9,7 +9,7 @@ public:
   pink_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   ~pink_t();
 private:
@@ -39,9 +39,9 @@ pink_t::pink_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE_BOOL(mute);
 }
 
-void pink_t::prepare( chunk_cfg_t& cf_ )
+void pink_t::configure()
 {
-  TASCAR::audioplugin_base_t::prepare( cf_ );
+  TASCAR::audioplugin_base_t::configure();
   uint32_t fftlen(period*f_sample);
   // create 4 buffers, wxyz
   pink.clear();

@@ -8,7 +8,7 @@ class openmha_t : public TASCAR::audioplugin_base_t, public MHAKernel::algo_comm
 public:
   openmha_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   static int osc_parse(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -68,9 +68,9 @@ void openmha_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_method("/parse","s",osc_parse,this);
 }
 
-void openmha_t::prepare( chunk_cfg_t& cf_ )
+void openmha_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   mhaconfig_t mhacfg;
   mhacfg.channels = n_channels;
   mhacfg.domain = MHA_WAVEFORM;

@@ -5,7 +5,7 @@ public:
   loopmachine_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables( TASCAR::osc_server_t* srv );
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
   ~loopmachine_t();
 private:
@@ -47,12 +47,12 @@ loopmachine_t::loopmachine_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE_BOOL(bypass);
 }
 
-void loopmachine_t::prepare( chunk_cfg_t& cf_ )
+void loopmachine_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
-  loop = new TASCAR::looped_wave_t(cf_.f_sample*durationbeats/bpm*60.0);
+  audioplugin_base_t::configure();
+  loop = new TASCAR::looped_wave_t(f_sample*durationbeats/bpm*60.0);
   loop->set_loop(0);
-  ramp = new TASCAR::wave_t( cf_.f_sample*ramplen );
+  ramp = new TASCAR::wave_t( f_sample*ramplen );
   for( size_t k=0;k<ramp->n;++k)
     ramp->d[k] = 0.5f+0.5f*cosf(k*t_sample*M_PI/ramplen);
 }

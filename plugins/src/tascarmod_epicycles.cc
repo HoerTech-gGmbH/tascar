@@ -309,7 +309,7 @@ class epicycles_t : public TASCAR::actor_module_t, private HoS::parameter_t {
 public:
   epicycles_t( const TASCAR::module_cfg_t& cfg );
   ~epicycles_t();
-  void prepare( chunk_cfg_t& );
+  void configure( );
   void update(uint32_t frame, bool running);
 private:
   bool use_transport;
@@ -341,9 +341,9 @@ bool iscrossing( double phi0, double phi, double lastphi )
            ( (pd1 < 0) && (pd2 >= 0) ) ) && (fabs(pd1)<0.5*M_PI) && (fabs(pd2)<0.5*M_PI);
 }
 
-void epicycles_t::prepare( chunk_cfg_t& cf_ )
+void epicycles_t::configure()
 {
-  actor_module_t::prepare( cf_ );
+  actor_module_t::configure( );
   f_update = f_sample/(double)n_fragment;
 }
 

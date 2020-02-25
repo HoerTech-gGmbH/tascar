@@ -238,7 +238,7 @@ public:
   virtual void axis(uint32_t a, double value);
   virtual void button(uint32_t b, bool value);
   virtual void timeout() {};
-  void prepare( chunk_cfg_t& );
+  void configure();
   void update(uint32_t tp_frame,bool running);
 private:
   lo_address lo_addr;
@@ -254,9 +254,9 @@ joystick_t::joystick_t( const TASCAR::module_cfg_t& cfg )
   start_service();
 }
 
-void joystick_t::prepare( chunk_cfg_t& cf_ )
+void joystick_t::configure( )
 {
-  actor_module_t::prepare(cf_);
+  actor_module_t::configure();
   vscale = (double)n_fragment/(double)f_sample;
 }
 

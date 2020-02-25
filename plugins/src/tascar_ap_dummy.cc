@@ -5,7 +5,7 @@ class dummy_t : public TASCAR::audioplugin_base_t {
 public:
   dummy_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& );
+  void configure( );
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~dummy_t();
@@ -31,9 +31,9 @@ void dummy_t::add_variables( TASCAR::osc_server_t* srv )
   DEBUG(srv);
 }
 
-void dummy_t::prepare( chunk_cfg_t& cf_ )
+void dummy_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   DEBUG("--prepare--");
   DEBUG(f_sample);
   DEBUG(f_fragment);

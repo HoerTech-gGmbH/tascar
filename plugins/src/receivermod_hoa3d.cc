@@ -12,7 +12,7 @@ public:
   };
   hoa3d_dec_t(xmlpp::Element* xmlsrc);
   ~hoa3d_dec_t();
-  void prepare( chunk_cfg_t& );
+  void configure( );
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void postproc(std::vector<TASCAR::wave_t>& output);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -27,9 +27,9 @@ public:
   std::vector<TASCAR::wave_t> amb_sig;
 };
 
-void hoa3d_dec_t::prepare( chunk_cfg_t& cf_ )
+void hoa3d_dec_t::configure( )
 {
-  TASCAR::receivermod_base_speaker_t::prepare( cf_ );
+  TASCAR::receivermod_base_speaker_t::configure();
   amb_sig = std::vector<TASCAR::wave_t>(channels,TASCAR::wave_t(n_fragment));
 }
 

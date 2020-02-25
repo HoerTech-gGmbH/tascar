@@ -22,7 +22,7 @@ public:
   ~matrix_t();
   void release();
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
-  void prepare( chunk_cfg_t& );
+  void configure( );
 private:
   TASCAR::spk_array_t outputs;
   TASCAR::spk_array_t inputs;
@@ -103,11 +103,13 @@ matrix_t::~matrix_t()
 {
 }
 
-void matrix_t::prepare( chunk_cfg_t& cf_ )
+void matrix_t::configure( )
 {
-  module_base_t::prepare( cf_ );
-  outputs.prepare( cf_ );
-  inputs.prepare( cf_ );
+  module_base_t::configure( );
+  chunk_cfg_t cf(cfg());
+  outputs.prepare( cf );
+  cf = cfg();
+  inputs.prepare( cf );
   // connect output ports:
   for(uint32_t kc=0;kc<outputs.connections.size();++kc)
     if( outputs.connections[kc].size() )

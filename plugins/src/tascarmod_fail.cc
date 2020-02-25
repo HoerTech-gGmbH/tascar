@@ -5,7 +5,7 @@ public:
   fail_t( const TASCAR::module_cfg_t& cfg );
   ~fail_t();
   void update(uint32_t frame, bool running);
-  void prepare( chunk_cfg_t& );
+  void configure();
   void release();
 private:
   bool failinit;
@@ -36,12 +36,12 @@ void fail_t::release()
   module_base_t::release();
 }
 
-void fail_t::prepare( chunk_cfg_t& cf_ )
+void fail_t::configure()
 {
   DEBUG(this);
   if( failprepare )
     throw TASCAR::ErrMsg("prepare.");
-  module_base_t::prepare( cf_ );
+  module_base_t::configure( );
 }
 
 fail_t::~fail_t()

@@ -25,7 +25,7 @@
 
 namespace TASCAR {
 
-  class tsc_reader_t : public TASCAR::xml_doc_t, public xml_element_t, public licensehandler_t {
+  class tsc_reader_t : public TASCAR::xml_doc_t, public xml_element_t, public licensehandler_t, public licensed_component_t {
   public:
     tsc_reader_t();
     tsc_reader_t(const std::string& filename_or_data,load_type_t t,const std::string& path);

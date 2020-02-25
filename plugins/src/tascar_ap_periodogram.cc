@@ -8,7 +8,7 @@ class periodogram_t : public TASCAR::audioplugin_base_t {
 public:
   periodogram_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   void add_variables( TASCAR::osc_server_t* srv );
   ~periodogram_t();
@@ -70,9 +70,9 @@ periodogram_t::periodogram_t( const TASCAR::audioplugin_cfg_t& cfg )
     throw TASCAR::ErrMsg("Not the same number of entries in fmin and fmax.");
 }
 
-void periodogram_t::prepare( chunk_cfg_t& cf_ )
+void periodogram_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   delays.clear();
   nbands = fmin.size();
   nperiods = periods.size();
@@ -88,7 +88,7 @@ void periodogram_t::prepare( chunk_cfg_t& cf_ )
   out = std::vector<double>(nperiods*nbands,0.0f);
   env = std::vector<double>(nbands,0.0f);
   out_send = std::vector<double>(nperiods*nbands,0.0f);
-  lsl_outlet = new lsl::stream_outlet(lsl::stream_info(name,"level",nperiods*nbands,cf_.f_fragment,lsl::cf_double64));
+  lsl_outlet = new lsl::stream_outlet(lsl::stream_info(name,"level",nperiods*nbands,f_fragment,lsl::cf_double64));
 }
 
 void periodogram_t::release()

@@ -171,14 +171,14 @@ std::string TASCAR::default_string(const std::string& src,const std::string& def
   return src;
 }
 
-TASCAR::scene_node_base_t::scene_node_base_t(xmlpp::Element* xmlsrc)
-  : xml_element_t(xmlsrc)
-{
-}
-
-TASCAR::scene_node_base_t::~scene_node_base_t()
-{
-}
+//TASCAR::scene_node_base_t::scene_node_base_t(xmlpp::Element* xmlsrc)
+//  : xml_element_t(xmlsrc)
+//{
+//}
+//
+//TASCAR::scene_node_base_t::~scene_node_base_t()
+//{
+//}
 
 TASCAR::xml_element_t::xml_element_t(xmlpp::Element* src)
   : e(src)

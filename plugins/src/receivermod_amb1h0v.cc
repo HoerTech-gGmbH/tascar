@@ -16,9 +16,8 @@ public:
   amb1h0v_t(xmlpp::Element* xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-  std::string get_channel_postfix(uint32_t channel) const;
+  void configure();
 };
 
 
@@ -65,22 +64,23 @@ void amb1h0v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::ve
   }
 }
 
-uint32_t amb1h0v_t::get_num_channels()
-{
-  return AMB10::idx::channels;
-}
-
 TASCAR::receivermod_base_t::data_t* amb1h0v_t::create_data(double srate,uint32_t fragsize)
 {
   return new data_t(fragsize);
 }
 
-std::string amb1h0v_t::get_channel_postfix(uint32_t channel) const
+void amb1h0v_t::configure()
 {
-  char ctmp[32];
-  sprintf(ctmp,".%g%c",floor((double)(channel+1)*0.5),AMB10::channelorder[channel]);
-  return ctmp;
+  receivermod_base_t::configure();
+  n_channels = AMB10::idx::channels;
+  labels.clear();
+  for(uint32_t ch=0;ch<n_channels;++ch){
+    char ctmp[32];
+    sprintf(ctmp,".%g%c",floor((double)(ch+1)*0.5),AMB10::channelorder[ch]);
+    labels.push_back(ctmp);
+  }
 }
+
 
 REGISTER_RECEIVERMOD(amb1h0v_t);
 

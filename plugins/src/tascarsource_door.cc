@@ -10,8 +10,8 @@ public:
   };
   door_t(xmlpp::Element* xmlsrc);
   bool read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*);
-  uint32_t get_num_channels();
   TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  void configure() { n_channels = 1; };
 private:
   double width;
   double height;
@@ -66,11 +66,6 @@ bool door_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>&
 door_t::data_t::data_t()
   : w(0)
 {
-}
-
-uint32_t door_t::get_num_channels()
-{
-  return 1;
 }
 
 TASCAR::sourcemod_base_t::data_t* door_t::create_data(double srate,uint32_t fragsize)

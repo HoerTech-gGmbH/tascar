@@ -92,7 +92,7 @@ namespace TASCAR {
       uint32_t idx;
     };
     const std::vector<didx_t>& sort_distance(const pos_t& psrc);
-    void prepare( chunk_cfg_t& );
+    void configure();
     xml_element_t elayout;
     void validate_attributes(std::string& msg) const;
     std::vector<TASCAR::pos_t> get_positions() const;
@@ -116,7 +116,7 @@ namespace TASCAR {
     ~spk_array_diff_render_t();
     void render_diffuse(std::vector<TASCAR::wave_t>& output);
     void add_diffuse_sound_field( const TASCAR::amb1wave_t& diff );
-    void prepare( chunk_cfg_t& );
+    void configure();
   private:
     void read_xml(xmlpp::Element* elem);
     TASCAR::amb1wave_t* diffuse_field_accumulator;

@@ -32,7 +32,7 @@ public:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   // initialize decoder and allocate buffers:
-  virtual void prepare( chunk_cfg_t& );
+  virtual void configure();
   virtual void release();
   // decode HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
@@ -130,9 +130,9 @@ hoa2d_t::~hoa2d_t()
 {
 }
 
-void hoa2d_t::prepare( chunk_cfg_t& cf_ )
+void hoa2d_t::configure()
 {
-  TASCAR::receivermod_base_speaker_t::prepare( cf_ );
+  TASCAR::receivermod_base_speaker_t::configure();
   n_channels = spkpos.size();
   update();
   fft_scale = 1.0f/((float)n_channels);

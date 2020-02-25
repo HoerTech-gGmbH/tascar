@@ -23,11 +23,9 @@ public:
   virtual ~hoa2d_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t n_fragment);
   // allocate buffers:
-  void prepare( chunk_cfg_t& );
+  void configure();
   // re-order HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
 private:
@@ -55,13 +53,30 @@ hoa2d_t::~hoa2d_t()
 {
 }
 
-void hoa2d_t::prepare( chunk_cfg_t& cf_ )
+void hoa2d_t::configure( )
 {
-  TASCAR::receivermod_base_t::prepare( cf_ );
+  TASCAR::receivermod_base_t::configure();
   s_encoded.resize(n_fragment*nbins);
   s_encoded.clear();
   s_encoded_alt.resize(n_fragment*nbins);
   s_encoded_alt.clear();
+  labels.clear();
+  n_channels = 2*(order*2+1);
+  for(uint32_t kch=0;kch<n_channels;++kch){
+    uint32_t ch = kch;
+    char ctmp[1024];
+    char ctmpa[2];
+    ctmpa[1] = 0;
+    ctmpa[0] = 0;
+    if( ch >= (2*order+1) ){
+      ch -= 2*order+1;
+      ctmpa[0] = 'a';
+    }
+    uint32_t o((ch+1)/2);
+    int32_t s(o*(2*((ch+1) % 2)-1));
+    sprintf(ctmp,".%s%d_%d",ctmpa,o,s);
+    labels.push_back( ctmp);
+  }
 }
 
 hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t order)
@@ -146,27 +161,6 @@ void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vect
     s_encoded[kt*nbins] += chunk.w()[kt];
     s_encoded[kt*nbins+1] += (chunk.x()[kt] + i_f*chunk.y()[kt]);
   }
-}
-
-uint32_t hoa2d_t::get_num_channels()
-{
-  return 2*(order*2+1);
-}
-
-std::string hoa2d_t::get_channel_postfix(uint32_t channel) const
-{
-  char ctmp[1024];
-  char ctmpa[2];
-  ctmpa[1] = 0;
-  ctmpa[0] = 0;
-  if( channel >= (2*order+1) ){
-    channel -= 2*order+1;
-    ctmpa[0] = 'a';
-  }
-  uint32_t o((channel+1)/2);
-  int32_t s(o*(2*((channel+1) % 2)-1));
-  sprintf(ctmp,".%s%d_%d",ctmpa,o,s);
-  return ctmp;
 }
 
 TASCAR::receivermod_base_t::data_t* hoa2d_t::create_data(double srate,uint32_t n_fragment)

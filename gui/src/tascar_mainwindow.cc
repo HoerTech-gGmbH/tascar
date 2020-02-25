@@ -83,6 +83,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   GET_WIDGET(session_splash);
   GET_WIDGET(lab_authors);
   GET_WIDGET(lab_sessionname);
+  GET_WIDGET(lab_warnings);
   active_selector->signal_changed().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
   active_track->signal_toggled().connect(sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
   scene_active->signal_toggled().connect(sigc::mem_fun(*this, &tascar_window_t::on_scene_active_changed));
@@ -271,6 +272,17 @@ bool tascar_window_t::on_timeout_blink()
     else
       blink = true;
     draw.set_blink(blink);
+    bool has_warnings(text_warnings->get_buffer()->size());
+    Gdk::RGBA col;
+    if( has_warnings )
+      lab_warnings->set_text("!");
+    else
+      lab_warnings->set_text("");
+    if( has_warnings && blink )
+      col.set_rgba(1,0.5,0,1);
+    else
+      col.set_rgba(0.92,0.92,0.92,1);
+    lab_warnings->override_background_color(col);
     pthread_mutex_unlock( &mtx_draw );
   }
   return true;
@@ -490,7 +502,7 @@ void tascar_window_t::update_selection_info()
       ++p;
     disp.erase(disp.begin(),disp.begin()+p);
     active_source_display->get_buffer()->set_text(disp);
-    active_source_ctl = new source_ctl_t(session->scenes[selected_scene],active_object);
+    active_source_ctl = new TSCGUI::source_ctl_t(session->scenes[selected_scene],active_object);
     active_mixer->add(*active_source_ctl);
     active_mixer->show_all();
     active_source_ctl->set_levelmeter_mode(source_panel->lmode);
@@ -548,10 +560,10 @@ void tascar_window_t::reset_gui()
     }
     int32_t mainwin_width(1600);
     int32_t mainwin_height(900);
-    if( session->scenes.empty() ){
-      mainwin_width = 400;
-      mainwin_height = 60;
-    }
+    //if( session->scenes.empty() ){
+    //  mainwin_width = 400;
+    //  mainwin_height = 60;
+    //}
     int32_t mainwin_x(0);
     int32_t mainwin_y(0);
     get_position( mainwin_x, mainwin_y );
@@ -984,7 +996,7 @@ void tascar_window_t::on_menu_view_meter_percentile()
 
 void tascar_window_t::on_menu_view_viewport_xy()
 {
-  draw.set_viewport( scene_draw_t::xy );
+  draw.set_viewport( TSCGUI::scene_draw_t::xy );
 }
 
 void tascar_window_t::on_menu_view_viewport_rotz()
@@ -1011,17 +1023,17 @@ void tascar_window_t::on_menu_view_viewport_setref()
 
 void tascar_window_t::on_menu_view_viewport_xyz()
 {
-  draw.set_viewport( scene_draw_t::xyz );
+  draw.set_viewport( TSCGUI::scene_draw_t::xyz );
 }
 
 void tascar_window_t::on_menu_view_viewport_xz()
 {
-  draw.set_viewport( scene_draw_t::xz );
+  draw.set_viewport( TSCGUI::scene_draw_t::xz );
 }
 
 void tascar_window_t::on_menu_view_viewport_yz()
 {
-  draw.set_viewport( scene_draw_t::yz );
+  draw.set_viewport( TSCGUI::scene_draw_t::yz );
 }
 
 void tascar_window_t::on_menu_view_show_warnings()

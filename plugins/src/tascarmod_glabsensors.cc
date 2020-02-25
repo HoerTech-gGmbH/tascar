@@ -146,7 +146,7 @@ public:
   virtual ~glabsensors_t();
   bool on_100ms();
   //void update(uint32_t frame,bool running);
-  void prepare( chunk_cfg_t& );
+  void configure( );
   void release();
 private:
   void reset_critical() { msg_critical.clear();};
@@ -314,7 +314,7 @@ bool glabsensors_t::on_100ms()
   return true;
 }
 
-void glabsensors_t::prepare( chunk_cfg_t& )
+void glabsensors_t::configure( )
 {
   for(std::vector<sensorplugin_t*>::iterator it=sensors.begin();it!=sensors.end();++it)
     (*it)->prepare();

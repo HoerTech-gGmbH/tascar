@@ -13,7 +13,7 @@ public:
   ~hoa3d_enc_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
+  void configure() { n_channels = channels; };
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   int32_t order;
   uint32_t channels;
@@ -75,11 +75,6 @@ void hoa3d_enc_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::
       output[3].add( chunk.x() );
     }
   }
-}
-
-uint32_t hoa3d_enc_t::get_num_channels()
-{
-  return channels;
 }
 
 TASCAR::receivermod_base_t::data_t* hoa3d_enc_t::create_data(double srate, uint32_t fragsize)

@@ -94,8 +94,8 @@ int main(int argc,char** argv)
       r.set_ism_order_range( ism_min, ism_max );
     r.render(fragsize,in_fname, out_fname, starttime, dynamic );
     if( b_verbose ){
-    std::cout << (double)(r.t1-r.t0)/CLOCKS_PER_SEC << std::endl;
-    std::cout << (double)(r.t2-r.t1)/CLOCKS_PER_SEC << std::endl;
+      std::cout << (double)(r.t1-r.t0)/CLOCKS_PER_SEC << std::endl;
+      std::cout << (double)(r.t2-r.t1)/CLOCKS_PER_SEC << std::endl;
     }
 #ifndef TSCDEBUG
   }
@@ -111,11 +111,11 @@ int main(int argc,char** argv)
   return 0;
 }
 
-    /*
-     * Local Variables:
-     * mode: c++
-     * c-basic-offset: 2
-     * indent-tabs-mode: nil
-     * compile-command: "make -C .."
-     * End:
-     */
+/*
+ * Local Variables:
+ * mode: c++
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * compile-command: "make -C .."
+ * End:
+ */

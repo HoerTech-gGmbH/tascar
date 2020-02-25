@@ -5,7 +5,7 @@ public:
   dummy_t( const TASCAR::module_cfg_t& cfg );
   ~dummy_t();
   void update(uint32_t frame, bool running);
-  void prepare( chunk_cfg_t& );
+  void configure( );
   void release();
 private:
   bool checkprepare;
@@ -38,7 +38,7 @@ void dummy_t::release()
   DEBUG(localprep);
 }
 
-void dummy_t::prepare( chunk_cfg_t& cf_ )
+void dummy_t::configure( )
 {
   if( checkprepare ){
     if( localprep )
@@ -47,7 +47,7 @@ void dummy_t::prepare( chunk_cfg_t& cf_ )
       throw TASCAR::ErrMsg("prepared (base)");
   }
   localprep = true;
-  actor_module_t::prepare( cf_ );
+  actor_module_t::configure();
   DEBUG(1);
   DEBUG(f_sample);
   DEBUG(f_fragment);

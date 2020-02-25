@@ -23,10 +23,8 @@ public:
   ~ortf_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  uint32_t get_num_channels();
-  std::string get_channel_postfix(uint32_t channel) const;
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
-  virtual void prepare( chunk_cfg_t& );
+  virtual void configure();
   virtual void release( );
   virtual void postproc( std::vector<TASCAR::wave_t>& output );
   virtual void add_variables( TASCAR::osc_server_t* srv );
@@ -62,9 +60,10 @@ ortf_t::data_t::data_t(double srate,uint32_t chunksize,double maxdist,double c,u
 {
 }
 
-void ortf_t::prepare( chunk_cfg_t& cf )
+void ortf_t::configure()
 {
-  TASCAR::receivermod_base_t::prepare( cf );
+  TASCAR::receivermod_base_t::configure();
+  n_channels = 2;
   // initialize decorrelation filter:
   decorrflt.clear();
   diffuse_render_buffer.clear();
@@ -84,6 +83,9 @@ void ortf_t::prepare( chunk_cfg_t& cf )
     decorrflt[k]->set_irs(fft_filter.w,false);
     diffuse_render_buffer.push_back(new TASCAR::wave_t( n_fragment ));
   }
+  labels.clear();
+  labels.push_back("_l");
+  labels.push_back("_r");
   // end of decorrelation filter.
 }
 
@@ -205,18 +207,6 @@ void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vecto
     ++i_x;
     ++i_y;
   }
-}
-
-uint32_t ortf_t::get_num_channels()
-{
-  return 2;
-}
-
-std::string ortf_t::get_channel_postfix(uint32_t channel) const
-{
-  if( channel == 0)
-    return "_l";
-  return "_r";
 }
 
 TASCAR::receivermod_base_t::data_t* ortf_t::create_data(double srate,uint32_t fragsize)

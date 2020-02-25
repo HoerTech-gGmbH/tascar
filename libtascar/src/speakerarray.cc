@@ -241,9 +241,9 @@ void spk_array_t::validate_attributes(std::string& msg) const
     it->validate_attributes(msg);
 }
 
-void spk_array_t::prepare( chunk_cfg_t& cf_ )
+void spk_array_t::configure()
 {
-  audiostates_t::prepare( cf_ );
+  n_channels = size();
   delaycomp.clear();
   for(uint32_t k=0;k<size();++k)
     delaycomp.emplace_back( f_sample*((operator[](k).dr/340.0)+operator[](k).delay) );
@@ -257,9 +257,9 @@ void spk_array_t::prepare( chunk_cfg_t& cf_ )
   }
 }
 
-void spk_array_diff_render_t::prepare( chunk_cfg_t& cf_ )
+void spk_array_diff_render_t::configure()
 {
-  spk_array_t::prepare( cf_ );
+  spk_array_t::configure();
   // initialize decorrelation filter:
   decorrflt.clear();
   uint32_t irslen(decorr_length*f_sample);

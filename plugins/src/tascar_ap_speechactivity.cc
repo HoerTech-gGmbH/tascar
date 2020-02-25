@@ -7,7 +7,7 @@ class speechactivity_t : public TASCAR::audioplugin_base_t {
 public:
   speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   ~speechactivity_t();
 private:
@@ -46,17 +46,17 @@ speechactivity_t::speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg )
     url = "osc.udp://localhost:9999/";
 }
 
-void speechactivity_t::prepare( chunk_cfg_t& cf_ )
+void speechactivity_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   lo_addr = lo_address_new_from_url(url.c_str());
-  lsl_outlet = new lsl::stream_outlet(lsl::stream_info(get_fullname(),"level",cf_.n_channels,cf_.f_fragment,lsl::cf_int32));
-  intensity = std::vector<double>( cf_.n_channels, 0.0 );
-  active = std::vector<int32_t>( cf_.n_channels, 0 );
-  prevactive = std::vector<int32_t>( cf_.n_channels, 0 );
-  dactive = std::vector<double>( cf_.n_channels, 0 );
-  onset = std::vector<int32_t>( cf_.n_channels, 0 );
-  oldonset = std::vector<int32_t>( cf_.n_channels, 0 );
+  lsl_outlet = new lsl::stream_outlet(lsl::stream_info(get_fullname(),"level",n_channels,f_fragment,lsl::cf_int32));
+  intensity = std::vector<double>( n_channels, 0.0 );
+  active = std::vector<int32_t>( n_channels, 0 );
+  prevactive = std::vector<int32_t>( n_channels, 0 );
+  dactive = std::vector<double>( n_channels, 0 );
+  onset = std::vector<int32_t>( n_channels, 0 );
+  oldonset = std::vector<int32_t>( n_channels, 0 );
 }
 
 void speechactivity_t::release()

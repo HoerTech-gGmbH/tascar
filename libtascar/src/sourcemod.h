@@ -43,11 +43,11 @@ namespace TASCAR {
     };
     sourcemod_base_t(xmlpp::Element* xmlsrc);
     virtual ~sourcemod_base_t();
-    virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*) = 0;
-    virtual uint32_t get_num_channels() = 0;
-    virtual std::string get_channel_postfix(uint32_t channel) const { return "";};
+    virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
+    virtual bool read_source_diffuse(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
     virtual sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
+    virtual void configure();
   protected:
   };
 
@@ -56,10 +56,9 @@ namespace TASCAR {
     sourcemod_t(xmlpp::Element* xmlsrc);
     virtual ~sourcemod_t();
     virtual bool read_source( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
-    virtual uint32_t get_num_channels();
-    virtual std::string get_channel_postfix(uint32_t channel);
+    virtual bool read_source_diffuse( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
     virtual std::vector<std::string> get_connections() const;
-    virtual void prepare( chunk_cfg_t& );
+    virtual void configure();
     virtual void release();
     virtual sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   private:

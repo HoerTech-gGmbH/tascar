@@ -153,8 +153,7 @@ TASCAR_RESOLVER( module_base_t, const module_cfg_t& )
 TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
 : module_base_t(cfg),
   lib(NULL),
-  libdata(NULL),
-  is_configured(false)
+  libdata(NULL)
 {
   name = e->get_name();
   if( name == "module" ){
@@ -182,16 +181,15 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
 
 void TASCAR::module_t::update(uint32_t frame,bool running)
 {
-  if( is_configured)
+  if( is_prepared() )
     libdata->update( frame, running );
 }
 
-void TASCAR::module_t::prepare( chunk_cfg_t& cf_ )
+void TASCAR::module_t::configure()
 {
-  module_base_t::prepare( cf_ );
+  module_base_t::configure();
   try{
-    libdata->prepare( cf_ );
-    is_configured = true;
+    libdata->prepare( cfg() );
   }
   catch( ... ){
     module_base_t::release();
@@ -202,7 +200,6 @@ void TASCAR::module_t::prepare( chunk_cfg_t& cf_ )
 void TASCAR::module_t::release()
 {
   module_base_t::release();
-  is_configured = false;
   libdata->release();
 }
 
@@ -245,10 +242,6 @@ TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
   GET_ATTRIBUTE(srv_proto);
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(starturl);
-  //if( name.empty() )
-  //  name = "tascar";
-  //if( srv_port.empty() )
-  //  srv_port = "9877";
 }
 
 TASCAR::session_core_t::session_core_t()
@@ -567,12 +560,7 @@ void TASCAR::session_t::start()
     throw;
   }
   for(std::vector<TASCAR::connection_t*>::iterator icon=connections.begin();icon!=connections.end();++icon){
-    try{
-      connect((*icon)->src,(*icon)->dest, true, true, true);
-    }
-    catch(const std::exception& e){
-      add_warning(e.what());
-    }
+    connect((*icon)->src,(*icon)->dest, !(*icon)->failonerror, true, true);
   }
   for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl=scenes.begin();ipl!=scenes.end();++ipl){
     try{
@@ -680,7 +668,7 @@ uint32_t TASCAR::session_t::get_total_diffuse_sound_fields() const
 }
 
 TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
-  : scene_node_base_t(xmlsrc),
+  : xml_element_t(xmlsrc),
     name(""),
     start(0),
     end(0)
@@ -691,14 +679,18 @@ TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
 }
 
 TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
-  : xml_element_t(xmlsrc)
+  : xml_element_t(xmlsrc),
+    failonerror(false)
 {
   get_attribute("src",src);
   get_attribute("dest",dest);
+  GET_ATTRIBUTE_BOOL(failonerror);
 }
 
 TASCAR::module_base_t::module_base_t( const TASCAR::module_cfg_t& cfg )
-  : xml_element_t(cfg.xmlsrc),session(cfg.session)
+  : xml_element_t(cfg.xmlsrc),
+    licensed_component_t(typeid(*this).name()),
+    session(cfg.session)
 {
 }
 

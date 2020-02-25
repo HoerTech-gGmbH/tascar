@@ -45,6 +45,16 @@ private:
   std::vector<std::string> bibliography;
 };
 
+class licensed_component_t {
+public:
+  licensed_component_t(const std::string&);
+  ~licensed_component_t();
+  virtual void add_licenses( licensehandler_t* );
+private:
+  std::string type;
+  bool license_added;
+};
+
 void get_license_info( xmlpp::Element* e, const std::string& fname, std::string& license, std::string& attribution );
 
 #endif

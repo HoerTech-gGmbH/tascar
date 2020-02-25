@@ -401,7 +401,7 @@ public:
   void setlogdelays( bool ld );
   static int osc_setlogdelays(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
-  void prepare( chunk_cfg_t& );
+  void configure( );
 private:
   uint32_t channels;
   fdn_t* fdn;
@@ -453,9 +453,9 @@ int hoafdnrot_t::osc_setlogdelays(const char *path, const char *types, lo_arg **
   return 0;
 }
 
-void hoafdnrot_t::prepare( chunk_cfg_t& cf_ )
+void hoafdnrot_t::configure( )
 {
-  module_base_t::prepare( cf_ );
+  module_base_t::configure( );
   if( fdn )
     delete fdn;
   fdn = new fdn_t(fdnorder,amborder,f_sample, logdelays );

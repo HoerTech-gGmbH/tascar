@@ -77,7 +77,7 @@ public:
   virtual ~system_t();
   virtual void release();
   virtual void update(uint32_t frame,bool running);
-  virtual void prepare( chunk_cfg_t& );
+  virtual void configure( );
   static int osc_trigger(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
   void trigger( int32_t c );
   void trigger();
@@ -208,11 +208,12 @@ void system_t::update(uint32_t frame,bool running)
           fifo.write(k);
 }
 
-void system_t::prepare( chunk_cfg_t& cf_ )
+void system_t::configure( )
 {
-  module_base_t::prepare( cf_ );
-  for(std::vector<at_cmd_t*>::iterator it=atcmds.begin();it!=atcmds.end();++it)
-    (*it)->prepare(f_sample);
+  module_base_t::configure();
+  for(std::vector<at_cmd_t*>::iterator it=atcmds.begin();it!=atcmds.end();++it){
+    (*it)->prepare( f_sample );
+  }
 }
 
 void system_t::release()

@@ -29,21 +29,6 @@ object_t::object_t(xmlpp::Element* src)
   color = rgb_color_t(scol);
 }
 
-sndfile_object_t::sndfile_object_t(xmlpp::Element* xmlsrc)
-  : object_t(xmlsrc)
-{
-  xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "sndfile")){
-      sndfiles.push_back(sndfile_info_t(sne));
-      sndfiles.back().parentname = get_name();
-      sndfiles.back().starttime += starttime;
-      sndfiles.back().objectchannel = sndfiles.size()-1;
-    }
-  }
-}
-
 bool object_t::isactive(double time) const
 {
   return (!get_mute())&&(time>=starttime)&&((starttime>=endtime)||(time<=endtime));
@@ -53,8 +38,10 @@ bool object_t::isactive(double time) const
  *diff_snd_field_obj_t
  */
 diff_snd_field_obj_t::diff_snd_field_obj_t(xmlpp::Element* xmlsrc)
-  : sndfile_object_t(xmlsrc),
-    audio_port_t(xmlsrc,true),size(1,1,1),
+  : object_t(xmlsrc),
+    audio_port_t(xmlsrc,true),
+    licensed_component_t(typeid(*this).name()),
+    size(1,1,1),
     falloff(1.0),
     layers(0xffffffff),
     source(NULL)
@@ -62,6 +49,13 @@ diff_snd_field_obj_t::diff_snd_field_obj_t(xmlpp::Element* xmlsrc)
   dynobject_t::get_attribute("size",size);
   dynobject_t::get_attribute("falloff",falloff);
   dynobject_t::GET_ATTRIBUTE_BITS(layers);
+}
+
+void diff_snd_field_obj_t::add_licenses( licensehandler_t* lh )
+{
+  licensed_component_t::add_licenses( lh );
+  if( source )
+    source->add_licenses( lh );
 }
 
 diff_snd_field_obj_t::~diff_snd_field_obj_t()
@@ -79,10 +73,9 @@ void diff_snd_field_obj_t::geometry_update(double t)
   }
 }
 
-void diff_snd_field_obj_t::prepare( chunk_cfg_t& cf_ )
+void diff_snd_field_obj_t::configure()
 {
-  cf_.n_channels = 4;
-  sndfile_object_t::prepare( cf_ );
+  n_channels = 4;
   if( source )
     delete source;
   reset_meters();
@@ -90,10 +83,7 @@ void diff_snd_field_obj_t::prepare( chunk_cfg_t& cf_ )
   source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, n_fragment, *(rmsmeter[0]), get_name() );
   source->size = size;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
-  for( std::vector<sndfile_info_t>::iterator it=sndfiles.begin();it!=sndfiles.end();++it)
-    if( it->channels != 4 )
-      throw TASCAR::ErrMsg("Diffuse sources support only 4-channel (FOA) sound files ("+it->fname+").");
-  source->prepare( cf_ );
+  source->prepare( cfg() );
 }
 
 audio_port_t::~audio_port_t()
@@ -117,7 +107,8 @@ void audio_port_t::set_inv( bool inv )
  * src_object_t
  */
 src_object_t::src_object_t(xmlpp::Element* xmlsrc)
-  : sndfile_object_t(xmlsrc),
+  : object_t(xmlsrc),
+    licensed_component_t(typeid(*this).name()),
     startframe(0)
 {
   if( get_name().empty() )
@@ -128,10 +119,10 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
     if( sne ){
       if( sne->get_name() == "sound" )
         add_sound(sne);
-      else if( (sne->get_name() != "creator") && 
-               (sne->get_name() != "sndfile") && 
-               (sne->get_name() != "include") && 
-               (sne->get_name() != "position") && 
+      else if( (sne->get_name() != "creator") &&
+               (sne->get_name() != "sndfile") &&
+               (sne->get_name() != "include") &&
+               (sne->get_name() != "position") &&
                (sne->get_name() != "orientation") )
         TASCAR::add_warning("Invalid sub-node \""+sne->get_name()+"\".",sne);
     }
@@ -149,6 +140,13 @@ src_object_t::~src_object_t()
 {
   for(std::vector<sound_t*>::iterator s=sound.begin();s!=sound.end();++s)
     delete *s;
+}
+
+void src_object_t::add_licenses( licensehandler_t* lh )
+{
+  licensed_component_t::add_licenses( lh );
+  for(auto it=sound.begin();it!=sound.end();++it)
+    (*it)->add_licenses( lh );
 }
 
 std::string src_object_t::next_sound_name() const
@@ -181,18 +179,17 @@ void src_object_t::geometry_update(double t)
   }
 }
 
-void src_object_t::prepare( chunk_cfg_t& cf_ )
+void src_object_t::configure()
 {
-  cf_.n_channels = 1;
-  sndfile_object_t::prepare( cf_ );
   reset_meters();
   try{
-    for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it){
-      for(uint32_t k=0;k<(*it)->get_num_channels();++k){
-        addmeter( f_sample );
+    for(auto it=sound.begin();it!=sound.end();++it){
+      chunk_cfg_t cf(cfg());
+      (*it)->prepare( cf );
+      for(uint32_t k=0;k<cf.n_channels;++k){
+        addmeter( cf.f_sample );
         (*it)->add_meter(rmsmeter.back());
       }
-      (*it)->prepare( cf_ );
     }
   }
   catch(...){
@@ -206,13 +203,14 @@ void src_object_t::prepare( chunk_cfg_t& cf_ )
 
 void src_object_t::release()
 {
-  sndfile_object_t::release();
-  for(std::vector<sound_t*>::iterator it=sound.begin();it!=sound.end();++it)
+  for(auto it=sound.begin();it!=sound.end();++it)
     (*it)->release();
+  audiostates_t::release();
 }
 
 scene_t::scene_t(xmlpp::Element* xmlsrc)
-  : scene_node_base_t(xmlsrc),
+  : xml_element_t(xmlsrc),
+    licensed_component_t(typeid(*this).name()),
     description(""),
     name(""),
     c(340.0),
@@ -408,20 +406,17 @@ void receiver_obj_t::validate_attributes(std::string& msg) const
   TASCAR::Acousticmodel::receiver_t::validate_attributes(msg);
 }
 
-void receiver_obj_t::prepare( chunk_cfg_t& cf_ )
+void receiver_obj_t::configure()
 {
-  cf_.n_channels = get_num_channels();
-  TASCAR::Acousticmodel::receiver_t::prepare( cf_ );
-  object_t::prepare( cf_ );
+  TASCAR::Acousticmodel::receiver_t::configure();
   reset_meters();
-  for(uint32_t k=0;k<get_num_channels();k++)
-    addmeter( TASCAR::Acousticmodel::receiver_t::f_sample );
+  for(uint32_t k=0;k<n_channels;k++)
+    addmeter( f_sample );
 }
 
 void receiver_obj_t::release()
 {
   TASCAR::Acousticmodel::receiver_t::release();
-  object_t::release();
 }
 
 void receiver_obj_t::postproc(std::vector<wave_t>& output)
@@ -472,9 +467,8 @@ std::vector<object_t*> scene_t::get_objects()
   return r;
 }
 
-void scene_t::prepare( chunk_cfg_t& cf_ )
+void scene_t::configure()
 {
-  scene_node_base_t::prepare( cf_ );
   if( !name.size() )
     throw TASCAR::ErrMsg("Invalid empty scene name (please set \"name\" attribute of scene node).");
   if( name.find(" ") != std::string::npos )
@@ -482,29 +476,56 @@ void scene_t::prepare( chunk_cfg_t& cf_ )
   if( name.find(":") != std::string::npos )
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\""+name+"\")");
   all_objects = get_objects();
-  for(auto it=all_objects.begin();it!=all_objects.end();++it)
-    (*it)->prepare( cf_ );
+  try{
+    for(auto it=all_objects.begin();it!=all_objects.end();++it){
+      // prepare all objects which are derived from audiostates:
+      audiostates_t* p_as(dynamic_cast<audiostates_t*>(*it));
+      if( p_as ){
+        chunk_cfg_t cf(cfg());
+        p_as->prepare( cf );
+      }
+    }
+  }
+  catch( ... ){
+    for(auto it=all_objects.begin();it!=all_objects.end();++it){
+      // prepare all objects which are derived from audiostates:
+      audiostates_t* p_as(dynamic_cast<audiostates_t*>(*it));
+      if( p_as && p_as->is_prepared() )
+        p_as->release();
+    }
+    throw;
+  }
 }
 
 void scene_t::release()
 {
-  scene_node_base_t::release();
+  audiostates_t::release();
   all_objects = get_objects();
-  for(auto it=all_objects.begin();it!=all_objects.end();++it)
-    if( (*it)->is_prepared() )
-      (*it)->release();
+  for(auto it=all_objects.begin();it!=all_objects.end();++it){
+    // release all objects which are derived from audiostates and are
+    // in prepared state:
+    audiostates_t* p_as(dynamic_cast<audiostates_t*>(*it));
+    if( p_as ){
+      if( p_as->is_prepared() )
+        p_as->release();
+      if( p_as->is_prepared() ){
+        DEBUG(typeid(**it).name());
+        DEBUG((*it)->get_name());
+      }
+    }
+  }
 }
 
 void scene_t::add_licenses( licensehandler_t* session )
 {
-  for( auto it=sounds.begin();it!=sounds.end();++it)
-    (*it)->plugins.add_licenses( session );
-  for( std::vector<src_object_t*>::iterator it=source_objects.begin();it!=source_objects.end();++it)
-    for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
-      session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
-  for( std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it)
-    for( std::vector<sndfile_info_t>::iterator iFile=(*it)->sndfiles.begin();iFile!=(*it)->sndfiles.end();++iFile)
-      session->add_license( iFile->license, iFile->attribution, TASCAR::tscbasename( TASCAR::env_expand( iFile->fname ) ) );
+  licensed_component_t::add_licenses( session );
+  std::vector<TASCAR::Scene::object_t*> obj(get_objects());
+  for( auto it=obj.begin();it!=obj.end();++it){
+    // add licenses of all licensed components to global list:
+    licensed_component_t* lc(dynamic_cast<licensed_component_t*>(*it));
+    if( lc )
+      lc->add_licenses( session );
+  }
 }
 
 rgb_color_t::rgb_color_t(const std::string& webc)
@@ -522,8 +543,8 @@ rgb_color_t::rgb_color_t(const std::string& webc)
 std::string rgb_color_t::str()
 {
   char ctmp[64];
-  unsigned int c(((unsigned int)(round(r*255.0)) << 16) + 
-                 ((unsigned int)(round(g*255.0)) << 8) + 
+  unsigned int c(((unsigned int)(round(r*255.0)) << 16) +
+                 ((unsigned int)(round(g*255.0)) << 8) +
                  ((unsigned int)(round(b*255.0))));
   sprintf(ctmp,"#%06x",c);
   return ctmp;
@@ -531,7 +552,7 @@ std::string rgb_color_t::str()
 
 void route_t::reset_meters()
 {
-  rmsmeter.clear(); 
+  rmsmeter.clear();
   meterval.clear();
 }
 
@@ -606,7 +627,9 @@ float sound_t::read_meter()
 }
 
 route_t::route_t(xmlpp::Element* xmlsrc)
-  : scene_node_base_t(xmlsrc),mute(false),solo(false),
+  : xml_element_t(xmlsrc),
+    mute(false),
+    solo(false),
     meter_tc(2),
     meter_weight(TASCAR::levelmeter::Z),
     targetlevel(0)
@@ -631,7 +654,7 @@ void route_t::set_solo(bool b,uint32_t& anysolo)
 
 bool route_t::is_active(uint32_t anysolo)
 {
-  return ( !mute && ( (anysolo==0)||(solo) ) );    
+  return ( !mute && ( (anysolo==0)||(solo) ) );
 }
 
 
@@ -696,29 +719,6 @@ void audio_port_t::set_gain_lin( float g )
   gain = g;
 }
 
-sndfile_info_t::sndfile_info_t(xmlpp::Element* xmlsrc)
-  : scene_node_base_t(xmlsrc),fname(""),
-    firstchannel(0),
-    channels(1),
-    objectchannel(0),
-    starttime(0),
-    loopcnt(1),
-    gain(1.0)
-{
-  fname = e->get_attribute_value("name");
-  get_attribute_value(e,"firstchannel",firstchannel);
-  get_attribute_value(e,"channels",channels);
-  get_attribute_value(e,"loop",loopcnt);
-  get_attribute_value(e,"starttime",starttime);
-  get_attribute_value_db(e,"gain",gain);
-  // ensure that no old timimng convection was used:
-  if( e->get_attribute("start") != 0 )
-    throw TASCAR::ErrMsg("Invalid attribute \"start\" found. Did you mean \"starttime\"? ("+fname+").");
-  if( e->get_attribute("channel") != 0 )
-    throw TASCAR::ErrMsg("Invalid attribute \"channel\" found. Did you mean \"firstchannel\"? ("+fname+").");
-  get_license_info( e, fname, license, attribution );
-}
-
 void src_object_t::process_active(double t, uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
@@ -728,7 +728,7 @@ void src_object_t::process_active(double t, uint32_t anysolo)
 
 void diff_snd_field_obj_t::release()
 {
-  sndfile_object_t::release();
+  audiostates_t::release();
   if( source )
     source->release();
 }
@@ -764,7 +764,7 @@ std::vector<TASCAR::Scene::object_t*> TASCAR::Scene::scene_t::find_object(const 
 
 void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
 {
-  scene_node_base_t::validate_attributes(msg);
+  xml_element_t::validate_attributes(msg);
   for(std::vector<src_object_t*>::const_iterator it=source_objects.begin();it!=source_objects.end();++it)
     (*it)->validate_attributes(msg);
   for(std::vector<diff_snd_field_obj_t*>::const_iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it)
@@ -934,7 +934,7 @@ void face_group_t::geometry_update(double t)
     (*it)->scattering = scattering;
   }
 }
- 
+
 void face_group_t::process_active(double t,uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
@@ -990,7 +990,7 @@ void obstacle_group_t::geometry_update(double t)
     (*it)->transmission = transmission;
   }
 }
- 
+
 void obstacle_group_t::process_active(double t,uint32_t anysolo)
 {
   bool a(is_active(anysolo,t));
@@ -1108,7 +1108,7 @@ void sound_t::apply_gain()
     for(uint32_t c=0;c<channels;++c)
       inchannels[c].d[k] *= gain_;
   }
-  for(uint32_t k=0;k<get_num_channels();++k)
+  for(uint32_t k=0;k<n_channels;++k)
     meter[k]->update(inchannels[k]);
 }
 
@@ -1148,21 +1148,21 @@ diffuse_reverb_t::~diffuse_reverb_t()
     delete source;
 }
 
-void diffuse_reverb_t::prepare( chunk_cfg_t& cf )
+void diffuse_reverb_t::configure()
 {
   reset_meters();
-  receiver_obj_t::prepare( cf );
+  receiver_obj_t::configure();
   //is_reverb = true;
-  if( cf.n_channels != 4 )
+  if( n_channels != 4 )
     throw TASCAR::ErrMsg("Four channels are required for FOA rendering. Please check reverb receiver type.");
   if( source )
     delete source;
   source = NULL;
-  addmeter( cf.f_sample );
-  source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, cf.n_fragment, *(rmsmeter.back()), get_name() );
+  addmeter( f_sample );
+  source = new TASCAR::Acousticmodel::diffuse_t( dynobject_t::e, n_fragment, *(rmsmeter.back()), get_name() );
   source->size = volumetric;
   source->falloff = 1.0/std::max(falloff,1.0e-10);
-  source->prepare( cf );
+  source->prepare( cfg() );
   for(uint32_t acn=0;acn<AMB11::idx::channels;++acn)
     source->audio[acn].use_external_buffer( outchannels[acn].n, outchannels[acn].d );
 }
@@ -1170,8 +1170,10 @@ void diffuse_reverb_t::prepare( chunk_cfg_t& cf )
 void diffuse_reverb_t::release()
 {
   receiver_obj_t::release();
-  if( source )
+  if( source ){
+    source->release();
     delete source;
+  }
   source = NULL;
 }
 
@@ -1192,6 +1194,12 @@ void diffuse_reverb_t::process_active(double t, uint32_t anysolo)
     source->active = a;
 }
 
+void diffuse_reverb_t::add_licenses( licensehandler_t* lh )
+{
+  receiver_obj_t::add_licenses( lh );
+  if( source )
+    source->add_licenses( lh );
+}
 
 
 /*

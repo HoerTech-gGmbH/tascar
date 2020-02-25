@@ -6,7 +6,7 @@ class level2osc_t : public TASCAR::audioplugin_base_t {
 public:
   level2osc_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void prepare( chunk_cfg_t& cf_ );
+  void configure();
   void release();
   ~level2osc_t();
 private:
@@ -36,9 +36,9 @@ level2osc_t::level2osc_t( const TASCAR::audioplugin_cfg_t& cfg )
   lo_addr = lo_address_new_from_url(url.c_str());
 }
 
-void level2osc_t::prepare( chunk_cfg_t& cf_ )
+void level2osc_t::configure()
 {
-  audioplugin_base_t::prepare( cf_ );
+  audioplugin_base_t::configure();
   msg = lo_message_new();
   // time:
   lo_message_add_float(msg,0);

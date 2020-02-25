@@ -56,6 +56,8 @@ void TASCAR::wav_render_t::render(uint32_t fragsize,const std::string& ifname, c
   }
   // initialize scene:
   pscene->prepare( cf );
+  add_licenses( this );
+  pscene->add_licenses( this );
   uint32_t nch_in(pscene->num_input_ports());
   uint32_t nch_out(pscene->num_output_ports());
   sndfile_handle_t sf_out( ofname, cf.f_sample, nch_out);
@@ -136,6 +138,8 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs, const std::string&
   chunk_cfg_t cf( fs, len );
   // initialize scene:
   pscene->prepare( cf );
+  add_licenses( this );
+  pscene->add_licenses( this );
   uint32_t nch_in(pscene->num_input_ports());
   if( inputchannel >= nch_in )
     throw TASCAR::ErrMsg("Input channel number "+TASCAR::to_string(inputchannel)+" is not smaller than number of input channels ("+TASCAR::to_string(nch_in)+").");

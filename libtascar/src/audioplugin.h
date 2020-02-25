@@ -45,13 +45,12 @@ namespace TASCAR {
   /**
      \brief Base class of audio processing plugins
   */
-  class audioplugin_base_t : public xml_element_t, public audiostates_t {
+  class audioplugin_base_t : public xml_element_t, public audiostates_t, public licensed_component_t {
   public:
     audioplugin_base_t( const audioplugin_cfg_t& cfg );
     virtual ~audioplugin_base_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp) = 0;
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
-    virtual void add_licenses( licensehandler_t* ) {};
     const std::string& get_name() const { return name; };
     std::string get_fullname() const { return parentname+"."+name; };
     const std::string& get_modname() const { return modname; };
@@ -59,8 +58,6 @@ namespace TASCAR {
     std::string name;
     std::string parentname;
     std::string modname;
-  private:
-    bool prepared;
   };
 
   class audioplugin_t : public audioplugin_base_t {
@@ -68,7 +65,7 @@ namespace TASCAR {
     audioplugin_t( const audioplugin_cfg_t& cfg );
     virtual ~audioplugin_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp);
-    virtual void prepare( chunk_cfg_t& );
+    virtual void configure( );
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void add_licenses( licensehandler_t* srv );
     virtual void release();

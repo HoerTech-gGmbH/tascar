@@ -59,8 +59,6 @@ namespace TASCAR {
     virtual void add_pointsource( const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* sd ) = 0;
     virtual void add_diffuse_sound_field( const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* ) = 0;
     virtual void postproc( std::vector<wave_t>& output ) {};
-    virtual uint32_t get_num_channels() = 0;
-    virtual std::string get_channel_postfix( uint32_t channel ) const { return "";};
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
     virtual receivermod_base_t::data_t* create_data( double srate,uint32_t fragsize ) { return NULL;};
     virtual void add_variables( TASCAR::osc_server_t* srv ) {};
@@ -75,11 +73,9 @@ namespace TASCAR {
     receivermod_base_speaker_t( xmlpp::Element* xmlsrc );
     virtual std::vector<std::string> get_connections() const;
     virtual void postproc( std::vector<wave_t>& output );
-    virtual void prepare( chunk_cfg_t& );
+    virtual void configure();
     virtual void release();
     void add_diffuse_sound_field( const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* );
-    uint32_t get_num_channels();
-    std::string get_channel_postfix(uint32_t channel) const;
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void validate_attributes(std::string&) const;
     TASCAR::spk_array_diff_render_t spkpos;
@@ -92,10 +88,8 @@ namespace TASCAR {
     virtual void add_pointsource( const pos_t& prel, double width, const wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* );
     virtual void add_diffuse_sound_field( const amb1wave_t& chunk, std::vector<wave_t>& output, receivermod_base_t::data_t* );
     virtual void postproc( std::vector<wave_t>& output );
-    virtual uint32_t get_num_channels();
-    virtual std::string get_channel_postfix( uint32_t channel );
     virtual std::vector<std::string> get_connections() const;
-    void prepare( chunk_cfg_t& );
+    void configure();
     void release();
     virtual receivermod_base_t::data_t* create_data( double srate,uint32_t fragsize );
     virtual void add_variables( TASCAR::osc_server_t* srv );
