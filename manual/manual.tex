@@ -703,6 +703,7 @@ The following attributes are common to all scene objects:
 \indattr{color}              & Color of the graphical representation of the object (hex triplet)                                                                     \\
 \indattr{start}              & Render activity start time in seconds; default: 0                                                                                     \\
 \indattr{end}                & Render activity start time in seconds; default: 0                                                                                     \\
+\indattr{localpos}           & Local position in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
 \indattr{sampledorientation} & Sample orientation along trajectory with this distance (default: 0)                                                                   \\
 \end{tscattributes}
 
@@ -920,23 +921,24 @@ object (taken from Example \ref{tsc:example_basic}):
 \subsubsection{The {\tt <sound .../>} element}\label{sec:sound}\index{sound}\index{vertex}
 
 \begin{tscattributes}
-\indattr{type}                       & Sound source radiation type (default: ``omni'')                                            \\
-\indattr{gainmodel}                  & Gain model, either ``1/r'' or ``1'' (default: ``1/r'')                                     \\
-\indattr{size}                       & Physical size for source width simulation\footnote{Currently only used by receiver hoa2d.} \\
-\indattr{sincorder}                  & Sinc interpolation order, 0 = nearest neighbor; default: 0                                 \\
-\indattr{caliblevel}                 & Calibration level in dB; default: 93.9794                                                  \\
-\indattr{gain}                       & Gain in dB; default: 0                                                                     \\
-\indattr{x},\indattr{y}, \indattr{z} & Local Cartesian coordinates; default: 0                                                    \\
-\indattr{rz},\indattr{ry}, \indattr{rx} & Local Euler orientation; default: 0                                                    \\
-\indattr{d}                          & Chain distance (vertex distance along trajectory); default: 0                              \\
-\indattr{maxdist}                    & Maximum delay line length in meter; default: 3700                                          \\
-\indattr{minlevel}                   & Minimum SPL for source to be rendered (default: -inf)                                      \\
-\indattr{ismmin}                     & Minimal ISM order to be rendered (0)                                                       \\
-\indattr{ismmax}                     & Maximal ISM order to be rendered ($2^{32}$)                                                \\
-\indattr{layers}                     & List of active layers, or empty for all layers (default)                                   \\
-\indattr{airabsorption}              & Render air absorption (default: true)                                                      \\
-\indattr{name}                       & Name (suffix)                                                                             \\
-\indattr{connect}                    & Jack port connection                                                                       \\
+\indattr{type}                          & Sound source radiation type (default: ``omni'')                                            \\
+\indattr{gainmodel}                     & Gain model, either ``1/r'' or ``1'' (default: ``1/r'')                                     \\
+\indattr{size}                          & Physical size for source width simulation\footnote{Currently only used by receiver hoa2d.} \\
+\indattr{sincorder}                     & Sinc interpolation order, 0 = nearest neighbor; default: 0                                 \\
+\indattr{caliblevel}                    & Calibration level in dB; default: 93.9794                                                  \\
+\indattr{gain}                          & Gain in dB; default: 0                                                                     \\
+\indattr{x},\indattr{y}, \indattr{z}    & Local Cartesian coordinates in meter; default: 0                                           \\
+\indattr{az},\indattr{el}, \indattr{r}  & Local spherical coordinates in degrees; default: use Cartesian                             \\
+\indattr{rz},\indattr{ry}, \indattr{rx} & Local vertex Euler orientation in degrees; default: 0                                      \\
+\indattr{d}                             & Chain distance (vertex distance along trajectory); default: 0                              \\
+\indattr{maxdist}                       & Maximum delay line length in meter; default: 3700                                          \\
+\indattr{minlevel}                      & Minimum SPL for source to be rendered (default: -inf)                                      \\
+\indattr{ismmin}                        & Minimal ISM order to be rendered (0)                                                       \\
+\indattr{ismmax}                        & Maximal ISM order to be rendered ($2^{32}$)                                                \\
+\indattr{layers}                        & List of active layers, or empty for all layers (default)                                   \\
+\indattr{airabsorption}                 & Render air absorption (default: true)                                                      \\
+\indattr{name}                          & Name (suffix)                                                                              \\
+\indattr{connect}                       & Jack port connection                                                                       \\
 \end{tscattributes}
 
 Another sub-element used in the example is \elem{sound}. With this
@@ -944,12 +946,17 @@ sub-element we specify the sound vertices of the source object, i.e.,
 points from which the sound radiates.
 %
 Properties of the sound vertex define its radiation characteristics
-(\attr{type}, \attr{gainmodel}, \attr{size},
-\attr{sincorder}), its level calibration and gain characteristics
-(\attr{caliblevel}, \attr{gain}), activity processing
-(\attr{maxdist}, \attr{minlevel}, \attr{layers}), image source model settings
-(\attr{ismmin}, \attr{ismmax}) and the relative position and orientation
-(\attr{x}, \attr{y}, \attr{z}, \attr{rz}, \attr{ry}, \attr{rx}, \attr{d}).
+(\attr{type}, \attr{gainmodel}, \attr{size}, \attr{sincorder}), its
+level calibration and gain characteristics (\attr{caliblevel},
+\attr{gain}), activity processing (\attr{maxdist}, \attr{minlevel},
+\attr{layers}), image source model settings (\attr{ismmin},
+\attr{ismmax}) and the relative position and orientation (\attr{x},
+\attr{y}, \attr{z}, \attr{az}, \attr{el}, \attr{r}, \attr{rz},
+\attr{ry}, \attr{rx}, \attr{d}). Please note that the local position
+relative to the object origin and orientation can be provided either
+in Cartesian coordinates (\attr{x}, \attr{y}, \attr{z}) or in
+spherical coordinates (\attr{az}, \attr{el}, \attr{r}), however, these
+can not be mixed.
 
 If we want to create a point source, as in the example, we will
 have one sound vertex exactly at the position of the source
@@ -1400,7 +1407,11 @@ This will export the meshes of all blender mesh objects of the
 currently selected scene, or if available, from the scene named
 ``tascar'', to the file {\tt <blendfilename>\_<objectname>.raw} and
 all curve objects to a \tascar{} track file {\tt
-  <blendfilename>\_<objectname>.csv}.  It is recommended to minimize
+  <blendfilename>\_<objectname>.csv}. Curve objects may set the custom
+property ``speed'' (see ``Custom properties'' in the ``Object'' tab in
+the blender property view), to set the speed in $m/s$.
+
+It is recommended to minimize
 the number of faces, e.g., by using polygon faces instead of
 triangulized faces. Also only the acoustically relevant faces should
 be modeled, e.g., typically only the upper surface of a table is
@@ -1440,11 +1451,25 @@ Obstacles are polygon meshes which can absorb sound and create
 diffraction at their boundaries. The diffraction pattern is only a
 rough approximation.
 \begin{tscattributes}
-\indattr{transmission} & Amount of transmission                                    \\
-\indattr{importraw}    & File name of raw file containing list of polygon surfaces \\
+\indattr{transmission} & Amount of transmission                                                                  \\
+\indattr{importraw}    & File name of raw file containing list of polygon surfaces                               \\
+\indattr{ishole}       & Simulate infitite plane with hole instead of finite surface (default: false)            \\
+\indattr{aperture}     & Override aperture of airy disk calculation, zero for calculation from area (default: 0) \\
 \end{tscattributes}
 
-An example configuration file can be found in the file {\tt example\_obstacle.tsc}.
+An example configuration file can be found in the file {\tt
+  example\_obstacle.tsc}. For an exact definition of the frequency
+response, see Equation 10 in \citet{Grimm2019}. The aperture is
+$a=2\sqrt{A/\pi}$, e.g., in case of an obstacle of 1 times 1 meter the
+aperture is 1.1284 meter.
+
+\begin{figure}[htb]
+    \centering
+    \fbox{\includegraphics[width=\textwidth]{obstacle.pdf}}
+    \caption{Frequency attenuation of a limited obstacle (left) and a hole (right) of 1 square meter, as a function of obstacle distance.}
+    \label{fig:obstacle}
+\end{figure}
+
 
 \subsection{Masks: {\tt <mask ../>} element}\index{mask}\label{sec:mask}
 

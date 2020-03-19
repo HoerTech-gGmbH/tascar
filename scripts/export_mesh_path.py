@@ -47,6 +47,9 @@ def write_mesh(obj,filepath):
   file.close()
 
 def write_track(obj,filepath):
+  speed = 1
+  if 'speed' in obj:
+    speed = obj['speed']
   if len(obj.data.splines) > 0:
     if len(obj.data.splines[0].points) > 0:
       matrix = obj.matrix_world.copy()
@@ -55,7 +58,7 @@ def write_track(obj,filepath):
       oldco = matrix * obj.data.splines[0].points[0].co
       for vert in obj.data.splines[0].points:
         co = matrix * vert.co
-        t = t+math.sqrt(math.pow(oldco.x-co.x,2) + math.pow(oldco.y-co.y,2) + math.pow(oldco.z-co.z,2))
+        t = t+math.sqrt(math.pow(oldco.x-co.x,2) + math.pow(oldco.y-co.y,2) + math.pow(oldco.z-co.z,2))/speed
         file.write( '%f,%f,%f,%f\n' % (t,co.x, co.y, co.z) )
         oldco = co
       file.close()

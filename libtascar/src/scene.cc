@@ -946,10 +946,14 @@ void face_group_t::process_active(double t,uint32_t anysolo)
 // obstacles:
 obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
   : object_t(xmlsrc),
-    transmission(0)
+    transmission(0),
+    ishole(false),
+    aperture(0)
 {
   dynobject_t::GET_ATTRIBUTE(transmission);
   dynobject_t::GET_ATTRIBUTE(importraw);
+  dynobject_t::GET_ATTRIBUTE_BOOL(ishole);
+  dynobject_t::GET_ATTRIBUTE(aperture);
   if( !importraw.empty() ){
     std::ifstream rawmesh( TASCAR::env_expand(importraw).c_str() );
     if( !rawmesh.good() )
@@ -960,6 +964,8 @@ obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
       if( !meshline.empty() ){
         TASCAR::Acousticmodel::obstacle_t* p_obstacle(new TASCAR::Acousticmodel::obstacle_t());
         p_obstacle->nonrt_set(TASCAR::str2vecpos(meshline));
+        p_obstacle->b_inner = !ishole;
+        p_obstacle->manual_aperture = aperture;
         obstacles.push_back(p_obstacle);
       }
     }
@@ -971,6 +977,8 @@ obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
     if( !meshline.empty() ){
       TASCAR::Acousticmodel::obstacle_t* p_obstacle(new TASCAR::Acousticmodel::obstacle_t());
       p_obstacle->nonrt_set(TASCAR::str2vecpos(meshline));
+      p_obstacle->b_inner = !ishole;
+      p_obstacle->manual_aperture = aperture;
       obstacles.push_back(p_obstacle);
     }
   }

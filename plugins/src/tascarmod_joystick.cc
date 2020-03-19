@@ -115,17 +115,26 @@ class axprop_t {
 public:
   axprop_t(double& x,uint32_t ax_);
   void proc(uint32_t ax,double val);
+  void update();
   uint32_t ax;
   double threshold;
   double scale;
   double min;
   double max;
+  double smooth;
+  double x;
   double& x_;
 };
 
 axprop_t::axprop_t(double& x,uint32_t ax_)
-  : ax(ax_),threshold(0.1),scale(1.0),min(-1000.0),max(1000.0),x_(x)
+  : ax(ax_),threshold(0.1),scale(1.0),min(-1000.0),max(1000.0),smooth(0.0),x(0.0),x_(x)
 {
+}
+
+void axprop_t::update()
+{
+  x_*= smooth;
+  x_ += (1.0-smooth)*x;
 }
 
 void axprop_t::proc(uint32_t ax_,double val)
@@ -138,9 +147,10 @@ void axprop_t::proc(uint32_t ax_,double val)
       else
 	lval += threshold;
       double lscale(scale/(1.0-threshold));
-      x_ = std::min(max,std::max(min,lscale*lval));
-    }else
-      x_ = 0;
+      x = std::min(max,std::max(min,lscale*lval));
+    }else{
+      x = 0;
+    }
   }
 }
 
@@ -222,8 +232,9 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
     tilt.threshold=0.3;
     tilt.max=0.5*M_PI;
     tilt.min=-0.5*M_PI;
+    tilt.smooth=0.99;
   }
-#define ATTRIB(x) get_attribute(#x "_ax",x.ax); get_attribute(#x "_scale",x.scale); get_attribute(#x "_threshold",x.threshold); get_attribute(#x "_max",x.max); get_attribute(#x "_min",x.min)
+#define ATTRIB(x) get_attribute(#x "_ax",x.ax); get_attribute(#x "_scale",x.scale); get_attribute(#x "_threshold",x.threshold); get_attribute(#x "_max",x.max); get_attribute(#x "_min",x.min); get_attribute(#x "_smooth",x.smooth)
   ATTRIB(x);
   ATTRIB(y);
   ATTRIB(r);
@@ -262,6 +273,10 @@ void joystick_t::configure( )
 
 void joystick_t::update(uint32_t tp_frame,bool running)
 {
+  x.update();
+  y.update();
+  r.update();
+  tilt.update();
   TASCAR::zyx_euler_t r(rotvel);
   r *= vscale;
   add_orientation(r);

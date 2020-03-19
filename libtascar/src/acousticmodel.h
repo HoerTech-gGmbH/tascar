@@ -1,9 +1,9 @@
 /**
  * @file   acousticmodel.h
  * @author Giso Grimm
- * 
+ *
  * @brief  The core of TASCAR acoustic modeling
- * 
+ *
  */
 /* License (GPL)
  *
@@ -29,12 +29,12 @@
 #ifndef ACOUSTICMODEL_H
 #define ACOUSTICMODEL_H
 
+#include "audioplugin.h"
+#include "dynamicobjects.h"
+#include "levelmeter.h"
+#include "pluginprocessor.h"
 #include "receivermod.h"
 #include "sourcemod.h"
-#include "dynamicobjects.h"
-#include "audioplugin.h"
-#include "pluginprocessor.h"
-#include "levelmeter.h"
 /*
 
   new delayline concept:
@@ -49,7 +49,7 @@
   Air absorption A -> distance
   Radiation directivity D -> (receiver-source)/O_source orientation
   Receiver panning P -> (source-receiver)/O_receiver orientation
- 
+
 */
 
 namespace TASCAR {
@@ -58,12 +58,12 @@ namespace TASCAR {
    * @brief Falloff gain rules
    */
   enum gainmodel_t {
-     /// 1/r rule
+    /// 1/r rule
     GAIN_INVR,
-     /// constant gain
+    /// constant gain
     GAIN_UNITY
   };
-  
+
   /** \brief Components relevant for the acoustic modelling
    */
   namespace Acousticmodel {
@@ -78,10 +78,11 @@ namespace TASCAR {
         double A1;
         float s1;
         float s2;
-        state_t() : A1(0),s1(0),s2(0) {};
+        state_t() : A1(0), s1(0), s2(0){};
       };
+      diffractor_t() : b_inner(true), manual_aperture(0){};
       /**
-         \brief Apply diffraction model 
+         \brief Apply diffraction model
 
          \param p_src Source position
          \param p_rec Receiver position
@@ -95,7 +96,16 @@ namespace TASCAR {
 
          \ingroup callgraph
       */
-      pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet);
+      pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c,
+                    double fs, state_t& state, float drywet);
+      /**
+         \brief Flag, true if the diffraction is caused by the inner
+         part of the object (limited surface), false if the
+         diffraction is created by the outer part (infinite plane with
+         polygon opening)
+      */
+      bool b_inner;
+      double manual_aperture;
     };
 
     /**
@@ -106,17 +116,19 @@ namespace TASCAR {
                       public audiostates_t,
                       public licensed_component_t {
     public:
-      diffuse_t( xmlpp::Element* cfg, uint32_t chunksize, TASCAR::levelmeter_t& rmslevel_, const std::string& name );
-      virtual ~diffuse_t() {};
+      diffuse_t(xmlpp::Element* cfg, uint32_t chunksize,
+                TASCAR::levelmeter_t& rmslevel_, const std::string& name);
+      virtual ~diffuse_t(){};
       virtual void preprocess(const TASCAR::transport_t& tp);
       void configure();
       void release();
-      void add_licenses( licensehandler_t* );
+      void add_licenses(licensehandler_t*);
       amb1rotator_t audio;
       double falloff;
       bool active;
       uint32_t layers;
       TASCAR::levelmeter_t& rmslevel;
+
     public:
       plugin_processor_t plugins;
     };
@@ -143,14 +155,15 @@ namespace TASCAR {
      */
     class source_t : public sourcemod_t,
                      public c6dof_t,
-                     public licensed_component_t  {
+                     public licensed_component_t {
     public:
-      source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname );
+      source_t(xmlpp::Element* xmlsrc, const std::string& name,
+               const std::string& parentname);
       ~source_t();
       void configure();
       void release();
       virtual void process_plugins(const TASCAR::transport_t& tp);
-      void add_licenses( licensehandler_t* );
+      void add_licenses(licensehandler_t*);
       uint32_t ismmin;
       uint32_t ismmax;
       uint32_t layers;
@@ -175,25 +188,31 @@ namespace TASCAR {
      */
     class receiver_t : public receivermod_t,
                        public c6dof_t,
-                       public licensed_component_t  {
+                       public licensed_component_t {
     public:
-      receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is_reverb_ );
+      receiver_t(xmlpp::Element* xmlsrc, const std::string& name,
+                 bool is_reverb_);
       ~receiver_t();
       void configure();
       void release();
       void clear_output();
-      void add_pointsource(const pos_t& prel, double width, double scattering, const wave_t& chunk, receivermod_base_t::data_t*);
-      void add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_base_t::data_t*);
-      void update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distamnce, double& gain, bool b_img, gainmodel_t gainmodel );
+      void add_pointsource(const pos_t& prel, double width, double scattering,
+                           const wave_t& chunk, receivermod_base_t::data_t*);
+      void add_diffuse_sound_field(const amb1wave_t& chunk,
+                                   receivermod_base_t::data_t*);
+      void update_refpoint(const pos_t& psrc_physical,
+                           const pos_t& psrc_virtual, pos_t& prel,
+                           double& distamnce, double& gain, bool b_img,
+                           gainmodel_t gainmodel);
       void set_next_gain(double gain);
-      void set_fade( double targetgain, double duration );
+      void set_fade(double targetgain, double duration);
       void apply_gain();
       virtual void postproc(std::vector<wave_t>& output);
       void post_proc(const TASCAR::transport_t& tp);
-      //virtual void process_plugins(const TASCAR::transport_t& tp);
-      virtual void add_variables( TASCAR::osc_server_t* srv );
+      // virtual void process_plugins(const TASCAR::transport_t& tp);
+      virtual void add_variables(TASCAR::osc_server_t* srv);
       void validate_attributes(std::string& msg) const;
-      void add_licenses( licensehandler_t* );
+      void add_licenses(licensehandler_t*);
       // configuration/control variables:
       TASCAR::pos_t volumetric;
       double avgdist;
@@ -220,6 +239,7 @@ namespace TASCAR {
       bool gain_zero;
       double external_gain;
       const bool is_reverb;
+
     private:
       double x_gain;
       double dx_gain;
@@ -237,16 +257,22 @@ namespace TASCAR {
       float prelim_previous_fade_gain;
       // current fade gain:
       float fade_gain;
+
     protected:
       TASCAR::transport_t ltp;
       uint64_t starttime_samples;
+
     public:
       plugin_processor_t plugins;
     };
 
     class filter_coeff_t {
     public:
-      filter_coeff_t() { c[0] = 1.0; c[1] = 0.0;};
+      filter_coeff_t()
+      {
+        c[0] = 1.0;
+        c[1] = 0.0;
+      };
       double c[2];
     };
 
@@ -267,7 +293,7 @@ namespace TASCAR {
     class reflector_t : public diffractor_t {
     public:
       reflector_t();
-      void apply_reflectionfilter( TASCAR::wave_t& audio, double& lpstate ) const;
+      void apply_reflectionfilter(TASCAR::wave_t& audio, double& lpstate) const;
       bool active;
       double reflectivity;
       double damping;
@@ -280,45 +306,60 @@ namespace TASCAR {
      */
     class soundpath_t : public c6dof_t {
     public:
-      soundpath_t(const source_t* src, const soundpath_t* parent_ = NULL, const reflector_t* generator_ = NULL);//< constructor, for primary sources set parent_ to NULL
-      void update_position();//< Update image source position from parent and reflector
-      pos_t get_effective_position( const pos_t& receiverp, double& gain );//< correct perceived position and caculate gain
-      uint32_t getorder() const; //< Return image source order of sound path, 0 is direct path
-      void apply_reflectionfilter( TASCAR::wave_t& audio ); //< Apply reflection filter of all reflectors
-      const soundpath_t* parent; //< Parent sound path (or this if primary)
-      const source_t* primary; //< Primary source
-      const reflector_t* reflector;//< Reflector, which created new sound path from parent, or NULL for primary
-      std::vector<double> reflectionfilterstates;//< Filter states for first-order reflection filters
+      soundpath_t(
+          const source_t* src, const soundpath_t* parent_ = NULL,
+          const reflector_t* generator_ =
+              NULL); //< constructor, for primary sources set parent_ to NULL
+      void update_position(); //< Update image source position from parent and
+                              //reflector
+      pos_t get_effective_position(
+          const pos_t& receiverp,
+          double& gain); //< correct perceived position and caculate gain
+      uint32_t getorder()
+          const; //< Return image source order of sound path, 0 is direct path
+      void apply_reflectionfilter(
+          TASCAR::wave_t& audio); //< Apply reflection filter of all reflectors
+      const soundpath_t* parent;  //< Parent sound path (or this if primary)
+      const source_t* primary;    //< Primary source
+      const reflector_t* reflector; //< Reflector, which created new sound path
+                                    //from parent, or NULL for primary
+      std::vector<double>
+          reflectionfilterstates; //< Filter states for first-order reflection
+                                  //filters
       bool visible;
       pos_t p_cut;
     };
 
-    /** \brief A model for a sound wave propagating from a point source to a receiver
+    /** \brief A model for a sound wave propagating from a point source to a
+     * receiver
      *
      * Processing includes delay, gain, air absorption, and optional
      * obstacles.
      */
     class acoustic_model_t : public soundpath_t {
     public:
-      acoustic_model_t(double c,double fs,uint32_t chunksize,
-                       source_t* src, receiver_t* receiver,
-                       const std::vector<obstacle_t*>& obstacles = std::vector<obstacle_t*>(0u,NULL),
-                       const acoustic_model_t* parent = NULL, 
+      acoustic_model_t(double c, double fs, uint32_t chunksize, source_t* src,
+                       receiver_t* receiver,
+                       const std::vector<obstacle_t*>& obstacles =
+                           std::vector<obstacle_t*>(0u, NULL),
+                       const acoustic_model_t* parent = NULL,
                        const reflector_t* reflector = NULL);
       ~acoustic_model_t();
-      /** 
+      /**
        * @brief Read audio from source, process and add to receiver.
        * @ingroup callgraph
        */
       uint32_t process(const TASCAR::transport_t& tp);
-      double get_gain() const { return gain;};
+      double get_gain() const { return gain; };
+
     protected:
       double c_;
       double fs_;
+
     public:
       source_t* src_;
       receiver_t* receiver_;
-      //pos_t effective_srcpos;
+      // pos_t effective_srcpos;
     protected:
       receivermod_base_t::data_t* receiver_data;
       sourcemod_base_t::data_t* source_data;
@@ -335,22 +376,26 @@ namespace TASCAR {
       float airabsorption_state;
       double layergain;
       double dlayergain;
+
     public:
       uint32_t ismorder;
     };
 
-    /** \brief A model for a sound wave propagating from a point source to a receiver
+    /** \brief A model for a sound wave propagating from a point source to a
+     * receiver
      *
      * Processing includes delay, gain, air absorption, and optional
      * obstacles.
      */
     class diffuse_acoustic_model_t {
     public:
-      diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver);
+      diffuse_acoustic_model_t(double fs, uint32_t chunksize, diffuse_t* src,
+                               receiver_t* receiver);
       ~diffuse_acoustic_model_t();
       /** \brief Read audio from source, process and add to receiver.
        */
       uint32_t process(const TASCAR::transport_t& tp);
+
     protected:
       diffuse_t* src_;
       receiver_t* receiver_;
@@ -373,15 +418,20 @@ namespace TASCAR {
                        const std::vector<diffuse_t*>& diffuse_sound_fields,
                        const std::vector<reflector_t*>& reflectors,
                        const std::vector<obstacle_t*>& obstacles,
-                       receiver_t* receiver,
-                       uint32_t ismorder);
+                       receiver_t* receiver, uint32_t ismorder);
       ~receiver_graph_t();
       void process(const TASCAR::transport_t& tp);
       void process_diffuse(const TASCAR::transport_t& tp);
-      uint32_t get_active_pointsource() const {return active_pointsource;};
-      uint32_t get_active_diffuse_sound_field() const {return active_diffuse_sound_field;};
-      uint32_t get_total_pointsource() const {return acoustic_model.size();};
-      uint32_t get_total_diffuse_sound_field() const {return diffuse_acoustic_model.size();};
+      uint32_t get_active_pointsource() const { return active_pointsource; };
+      uint32_t get_active_diffuse_sound_field() const
+      {
+        return active_diffuse_sound_field;
+      };
+      uint32_t get_total_pointsource() const { return acoustic_model.size(); };
+      uint32_t get_total_diffuse_sound_field() const
+      {
+        return diffuse_acoustic_model.size();
+      };
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
       uint32_t active_pointsource;
@@ -409,29 +459,35 @@ namespace TASCAR {
        * \param ismorder Maximum image source model order
        *
        * A mirror model is created from the reflectors and primary sources.
-       * An instance of this class is created in TASCAR::render_core_t::prepare().
+       * An instance of this class is created in
+       * TASCAR::render_core_t::prepare().
        */
-      world_t( double c, double fs, uint32_t chunksize,
-               const std::vector<source_t*>& sources,
-               const std::vector<diffuse_t*>& diffuse_sound_fields,
-               const std::vector<reflector_t*>& reflectors,
-               const std::vector<obstacle_t*>& obstacles,
-               const std::vector<receiver_t*>& receivers,
-               const std::vector<mask_t*>& masks,
-               uint32_t ismorder);
+      world_t(double c, double fs, uint32_t chunksize,
+              const std::vector<source_t*>& sources,
+              const std::vector<diffuse_t*>& diffuse_sound_fields,
+              const std::vector<reflector_t*>& reflectors,
+              const std::vector<obstacle_t*>& obstacles,
+              const std::vector<receiver_t*>& receivers,
+              const std::vector<mask_t*>& masks, uint32_t ismorder);
       ~world_t();
       /** \brief Process the mirror model and all acoustic models.
           \ingroup callgraph
       */
       void process(const TASCAR::transport_t& tp);
       /// Return number of active point sources, including image sources
-      uint32_t get_active_pointsource() const {return active_pointsource;};
+      uint32_t get_active_pointsource() const { return active_pointsource; };
       /// Return number of active diffuse sound fields
-      uint32_t get_active_diffuse_sound_field() const {return active_diffuse_sound_field;};
+      uint32_t get_active_diffuse_sound_field() const
+      {
+        return active_diffuse_sound_field;
+      };
       /// Return total number of point sources, including image sources
-      uint32_t get_total_pointsource() const {return total_pointsource;};
+      uint32_t get_total_pointsource() const { return total_pointsource; };
       /// Return total number of diffuse sound fields
-      uint32_t get_total_diffuse_sound_field() const {return total_diffuse_sound_field;};
+      uint32_t get_total_diffuse_sound_field() const
+      {
+        return total_diffuse_sound_field;
+      };
       std::vector<receiver_graph_t*> receivergraphs;
       std::vector<receiver_t*> receivers_;
       std::vector<mask_t*> masks_;
@@ -441,9 +497,9 @@ namespace TASCAR {
       uint32_t total_diffuse_sound_field;
     };
 
-  }
+  } // namespace Acousticmodel
 
-}
+} // namespace TASCAR
 
 #endif
 

@@ -61,6 +61,7 @@ void speechactivity_t::configure()
 
 void speechactivity_t::release()
 {
+  audioplugin_base_t::release();
   delete lsl_outlet;
   lo_address_free(lo_addr);
 }

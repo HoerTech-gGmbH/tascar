@@ -66,6 +66,7 @@ namespace TASCAR {
     xmlpp::Element* xml_location;
     xmlpp::Element* xml_orientation;
     navmesh_t* navmesh;
+    pos_t localpos;
   };
 
 }

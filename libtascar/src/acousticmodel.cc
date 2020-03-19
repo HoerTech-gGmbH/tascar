@@ -151,6 +151,18 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           position = prelsrc;
         }
       }
+      // calculate obstacles:
+      for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
+        obstacle_t* p_obj(obstacles_[kobj]);
+          if( p_obj->active ){
+            // apply diffraction model:
+            if( p_obj->b_inner )
+              p_obj->process(position,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
+            else
+              position = p_obj->process(position,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
+          }
+      }
+      // end obstacles
       receiver_->update_refpoint( primary->position, position, prel, nextdistance, nextgain, ismorder>0, src_->gainmodel );
       if( nextdistance > src_->maxdist )
         return 0;
@@ -189,15 +201,6 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
         }
       }
       if( ((gain!=0)||(dgain!=0)) ){
-        // calculate obstacles:
-        for(uint32_t kobj=0;kobj!=obstacles_.size();++kobj){
-          obstacle_t* p_obj(obstacles_[kobj]);
-          if( p_obj->active ){
-            // apply diffraction model:
-            p_obj->process(position,receiver_->position,audio,c_,fs_,vstate[kobj],p_obj->transmission);
-          }
-        }
-        // end obstacles
         if( src_->minlevel > 0 ){
           if( audio.rms() <= src_->minlevel )
             return 0;
@@ -702,16 +705,23 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
   // calculate intersection:
   pos_t p_is;
   double w(0);
+  // test for intersection with infinite plane:
   bool is_intersect(intersection(p_src,p_rec,p_is,&w));
   if( (w <= 0) || (w >= 1) )
     is_intersect = false;
   if( is_intersect ){
+    // test for intersection with the limited plane:
     bool is_outside(false);
     pos_t pne;
     nearest(p_is,&is_outside,&pne);
     p_is = pne;
-    if( is_outside )
-      is_intersect = false;
+    if( b_inner ){
+      if( is_outside )
+        is_intersect = false;
+    }else{
+      if( !is_outside )
+        is_intersect = false;
+    }
   }
   // calculate filter:
   double dt(1.0/audio.n);
@@ -727,7 +737,10 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
     // calculate first zero crossing frequency:
     double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
     double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
-    double f0(3.8317*c/(PI2*aperture*sin_theta));
+    double loc_aperture(aperture);
+    if( manual_aperture > 0.0 )
+      loc_aperture = manual_aperture;
+    double f0(3.8317*c/(PI2*loc_aperture*sin_theta));
     // calculate filter coefficient increment:
     dA1 = (exp(-M_PI*f0/fs)-state.A1)*dt;
     // return effective source position:

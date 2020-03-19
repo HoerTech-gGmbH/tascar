@@ -163,6 +163,8 @@ namespace TASCAR {
       std::vector<TASCAR::Acousticmodel::obstacle_t*> obstacles;
       double transmission;
       std::string importraw;
+      bool ishole;
+      double aperture;
     };
 
     class src_object_t;

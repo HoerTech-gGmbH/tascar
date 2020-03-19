@@ -76,6 +76,7 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
 {
   get_attribute("start",starttime);
   GET_ATTRIBUTE(sampledorientation);
+  GET_ATTRIBUTE(localpos);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
@@ -152,6 +153,9 @@ void TASCAR::dynobject_t::geometry_update(double time)
     dlocation = c6dof_.position;
     dlocation -= ptmp;
   }
+  ptmp = localpos;
+  ptmp *= c6dof_.orientation;
+  c6dof_.position += ptmp;
 }
 
 TASCAR::pos_t TASCAR::dynobject_t::get_location() const

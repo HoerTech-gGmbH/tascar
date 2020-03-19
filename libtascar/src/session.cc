@@ -404,8 +404,6 @@ void TASCAR::session_t::read_xml()
 {
   try{
     TASCAR::tsc_reader_t::read_xml();
-    for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=scenes.begin();it!=scenes.end();++it)
-      (*it)->add_licenses( this );
   }
   catch( ... ){
     if( lock_vars() ){
@@ -569,6 +567,7 @@ void TASCAR::session_t::start()
     catch(const std::exception& e){
       add_warning(e.what());
     }
+    (*ipl)->add_licenses( this );
   }
 }
 

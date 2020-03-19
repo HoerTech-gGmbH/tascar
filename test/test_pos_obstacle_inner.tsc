@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="1">
+    <obstacle name="o" ishole="true">
+      <faces>0  0.5  0.5 0  0.5 -0.5 0 -0.5 -0.5 0 -0.5  0.5</faces>
+      <position>0 0.5 -1 0
+      1 0.5 1 0</position>
+    </obstacle>
+    <source>
+      <position>0 1 0 0</position>
+      <sound/>
+    </source>
+    <receiver type="${RECTYPE}" sources="2"/>
+  </scene>
+</session>

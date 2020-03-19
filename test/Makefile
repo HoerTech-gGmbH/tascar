@@ -20,7 +20,8 @@ TESTS = test_snd_zeros test_ir1 test_ir2 test_ir3 test_ir4		\
 	test_level_hoa2d_basic test_level_hoa2d_maxre jack_hoafdnrot	\
 	test_ir_reverb test_snd_reverb test_ir_simplefdn		\
 	jackconnect_ortf jackconnect_amb1h1v jackconnect_hoa2dfuma	\
-	test_snd_vbap3d_speakermatch test_ir_volumetric
+	test_snd_vbap3d_speakermatch test_ir_volumetric			\
+	test_pos_obstacle test_pos_obstacle_inner
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -105,8 +106,8 @@ test_snd%: test_snd%.tsc expected_snd%.wav
 
 test_pos%: test_pos%.tsc expected_pos%.wav
 	@echo "Position test: $<"
-	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -d -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(LIBPATH) RECTYPE=debugpos $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(LIBPATH) RECTYPE=debugpos $(RENDERFILE) -i zeros.wav -d -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-9 1e-9|| (echo "$(<):2: Output differs"; false)
 	@rm -f test_pos$*.wav
 

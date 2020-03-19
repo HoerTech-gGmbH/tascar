@@ -947,6 +947,21 @@ void scene_draw_t::draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::
       p0 = p;
     }
     cr->stroke();
+    // draw origin and local position:
+    p0 = obj->c6dof_nodelta.position;
+    p0 = view( p0 );
+    cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
+    if( !p0.has_infinity() ){
+      cr->arc(p0.x, -p0.y, 0.8*msize, 0, PI2 );
+      cr->fill();
+    }
+    std::vector<double> dash(2);
+    dash[0] = msize;
+    dash[1] = msize;
+    cr->set_dash(dash,0);
+    pos_t p1( view( obj->c6dof.position) );
+    draw_edge( cr, p0, p1 );
+    cr->stroke();
     cr->restore();
   }
 }
