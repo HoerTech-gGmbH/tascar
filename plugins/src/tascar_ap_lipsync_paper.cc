@@ -134,6 +134,7 @@ void lipsync_t::release()
   audioplugin_base_t::release();
   delete stft;
   delete [] sSmoothedMag;
+  delete [] formantEdges;
 }
 
 lipsync_t::~lipsync_t()
@@ -148,14 +149,15 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   // FFT
   // Smooth over time
   // Conversion to dB
-
+  if( !chunk.size() )
+    return;
   stft->process(chunk[0]);
   double vmin(1e20);
   double vmax(-1e20);
   uint32_t num_bins(stft->s.n_);
   // update formant edges:
   float freqBins[numFormants+1];
-  formantEdges = new uint32_t[numFormants+1];
+  //formantEdges = new uint32_t[numFormants+1];
   freqBins[0] = 0;
   freqBins[1] = 500 * vocalTract;
   freqBins[2] = 700 * vocalTract;

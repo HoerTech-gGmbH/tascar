@@ -63,7 +63,7 @@ sourcemod_base_t::data_t* sourcemod_t::create_data(double srate,uint32_t fragsiz
 void sourcemod_base_t::configure()
 {
   if( n_channels != 1 )
-    throw TASCAR::ErrMsg("This source module requires 1 input channel.");
+    throw TASCAR::ErrMsg("This source module requires 1 input channel, current configuration is "+TASCAR::to_string(n_channels)+" channels.");
 }
 
 bool sourcemod_base_t::read_source_diffuse(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*)

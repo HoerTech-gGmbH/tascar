@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="3">
+    <source>
+      <sound x="1" y="1"/>
+      <sound x="1" y="-1"/>
+    </source>
+    <receiver type="ortf"/>
+  </scene>
+</session>

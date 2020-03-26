@@ -1,2 +1,4 @@
 test*.wav
 gdbcmd
+*.loaded
+*.unloaded

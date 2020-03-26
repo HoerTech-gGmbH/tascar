@@ -185,6 +185,8 @@ void src_object_t::configure()
   try{
     for(auto it=sound.begin();it!=sound.end();++it){
       chunk_cfg_t cf(cfg());
+      // currently, only single channel sounds are supported:
+      cf.n_channels = 1;
       (*it)->prepare( cf );
       for(uint32_t k=0;k<cf.n_channels;++k){
         addmeter( cf.f_sample );
