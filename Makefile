@@ -49,6 +49,7 @@ install: all
 	cp -i apps/build/tascar_* $(DESTDIR)$(BINDIR)
 	cp -i gui/build/tascar $(DESTDIR)$(BINDIR)
 	cp -i gui/build/tascar_spkcalib $(DESTDIR)$(BINDIR)
+	ldconfig -n $(DESTDIR)$(LIBDIR)
 
 .PHONY : all clean test
 
