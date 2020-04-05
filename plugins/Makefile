@@ -20,17 +20,13 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   qualisystracker orientationmodulator locationmodulator		\
   locationvelocity granularsynth fail oscrelay
 
-TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
-glabsensors
+TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter				\
   level2osc const noise loopmachine pos2osc gain sndfileasync					\
   addchannel
-
-GLABSENSORS = smiley eog emergency espheadtracker midicc	\
-  qualisys jackstatus serial
 
 ifeq "$(HAS_OPENCV2)" "yes"
 GLABSENSORS += trackir
@@ -46,7 +42,9 @@ endif
 ifeq "$(HAS_LSL)" "yes"
 TASCARMODS +=  lsljacktime lslactor levels2osc pos2lsl
 AUDIOPLUGINS += speechactivity periodogram
-TASCARMODSGUI += datalogging
+TASCARMODSGUI += datalogging glabsensors
+GLABSENSORS += smiley eog emergency espheadtracker midicc	\
+  qualisys jackstatus serial
 endif
 
 ifeq "$(HAS_OPENMHA)" "yes"

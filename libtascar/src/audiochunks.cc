@@ -26,21 +26,21 @@ wave_t::wave_t(uint32_t chunksize,float* ptr)
 }
 
 wave_t::wave_t(const std::vector<float>& src)
-  : d(new float[std::max(1lu,src.size())]),
+  : d(new float[std::max(1lu,(long unsigned int)(src.size()))]),
     n(src.size()), own_pointer(true), append_pos(0),
     rmsscale(1.0f/(float)n)
 {
-  memset(d,0,sizeof(float)*std::max(1lu,src.size()));
+  memset(d,0,sizeof(float)*std::max(1lu,(long unsigned int)(src.size())));
   for(uint32_t k=0;k<src.size();++k)
     d[k] = src[k];
 }
 
 wave_t::wave_t(const std::vector<double>& src)
-  : d(new float[std::max(1lu,src.size())]),
+  : d(new float[std::max(1lu,(long unsigned int)(src.size()))]),
     n(src.size()), own_pointer(true), append_pos(0),
     rmsscale(1.0f/(float)n)
 {
-  memset(d,0,sizeof(float)*std::max(1lu,src.size()));
+  memset(d,0,sizeof(float)*std::max(1lu,(long unsigned int)(src.size())));
   for(uint32_t k=0;k<src.size();++k)
     d[k] = src[k];
 }

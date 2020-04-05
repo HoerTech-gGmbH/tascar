@@ -11,7 +11,11 @@ BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
   tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
   tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
   tascar_version compare_sndfile compare_level_sum tascar_lsjackp	\
-  tascar_sendosc tascar_osc2lsl
+  tascar_sendosc
+
+ifeq "$(HAS_LSL)" "yes"
+BINFILES += tascar_osc2lsl
+endif
 
 TEST_FILES = test_ngon test_sinc
 

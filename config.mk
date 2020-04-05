@@ -1,8 +1,15 @@
 # variables:
 VERSION=0.212.4
-CXXFLAGS = -Wall -Wno-deprecated-declarations -msse -msse2		\
--mfpmath=sse -ffast-math -fno-finite-math-only -fext-numeric-literals	\
--std=c++11 -pthread -ggdb
+
+ARCH=$(shell uname -m)
+
+CXXFLAGS = -Wall -Wno-deprecated-declarations -std=c++11 -pthread	\
+-ggdb -fno-finite-math-only -fext-numeric-literals
+
+ifeq "$(ARCH)" "x86_64"
+CXXFLAGS += -msse -msse2 -mfpmath=sse -ffast-math
+endif
+
 CPPFLAGS = -std=c++11
 PREFIX = /usr/local
 

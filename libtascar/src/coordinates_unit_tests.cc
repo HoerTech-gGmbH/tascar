@@ -328,10 +328,10 @@ TEST(ngon_t,nearest_on_plane)
   // this should be outside, on top edge (1,0,0)
   EXPECT_EQ(1,outside);
   EXPECT_EQ(1.0,nearest.x);
-  EXPECT_EQ(0.5,nearest.y);
+  ASSERT_NEAR(0.5,nearest.y,1e-9);
   EXPECT_EQ(0.0,nearest.z);
   EXPECT_EQ(1.0,on_edge.x);
-  EXPECT_EQ(0.5,on_edge.y);
+  ASSERT_NEAR(0.5,on_edge.y,1e-9);
   EXPECT_EQ(0.0,on_edge.z);
   nearest = rect.nearest(TASCAR::pos_t(0,-1,1), &outside, &on_edge);
   // this should be outside, on corner vertex (1,0,0):

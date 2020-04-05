@@ -130,35 +130,35 @@ TEST(bandpass_t, gain)
   for(uint32_t k=0;k<sin1k.size();++k)
     sin1k.d[k] = sqrtf(2.0f)*sinf(k*1000.0*PI2/fs);
   TASCAR::bandpass_t bp( 500.0, 4000.0, fs );
-  ASSERT_NEAR(0.0f,10*log10(sin1k.ms()),3e-7f);
+  ASSERT_NEAR(0.0f,10*log10(sin1k.ms()),3e-4f);
   for(uint32_t k=0;k<sin1k.size();++k)
     sin1k.d[k] = bp.filter(sin1k.d[k]);
   ASSERT_NEAR(0.0f,10.0*log10(sin1k.ms()),0.04f);
   TASCAR::wave_t sin500(fs);
   for(uint32_t k=0;k<sin500.size();++k)
     sin500.d[k] = sqrtf(2.0f)*sinf(k*500.0*PI2/fs);
-  ASSERT_NEAR(0.0f,10.0*log10(sin500.ms()),3e-5f);
+  ASSERT_NEAR(0.0f,10.0*log10(sin500.ms()),0.04f);
   for(uint32_t k=0;k<sin500.size();++k)
     sin500.d[k] = bp.filter(sin500.d[k]);
   ASSERT_NEAR(-4.3f,10.0*log10(sin500.ms()),0.04f);
   TASCAR::wave_t sin250(fs);
   for(uint32_t k=0;k<sin250.size();++k)
     sin250.d[k] = sqrtf(2.0f)*sinf(k*250.0*PI2/fs);
-  ASSERT_NEAR(0.0f,10.0*log10(sin250.ms()),3e-5f);
+  ASSERT_NEAR(0.0f,10.0*log10(sin250.ms()),0.04f);
   for(uint32_t k=0;k<sin250.size();++k)
     sin250.d[k] = bp.filter(sin250.d[k]);
   ASSERT_NEAR(-15.88f,10.0*log10(sin250.ms()),0.04f);
   TASCAR::wave_t sin4000(fs);
   for(uint32_t k=0;k<sin4000.size();++k)
     sin4000.d[k] = sqrtf(2.0f)*sinf(k*4000.0*PI2/fs);
-  ASSERT_NEAR(0.0f,10.0*log10(sin4000.ms()),3e-5f);
+  ASSERT_NEAR(0.0f,10.0*log10(sin4000.ms()),0.04f);
   for(uint32_t k=0;k<sin4000.size();++k)
     sin4000.d[k] = bp.filter(sin4000.d[k]);
   ASSERT_NEAR(-1.0f,10.0*log10(sin4000.ms()),0.04f);
   TASCAR::wave_t sin8000(fs);
   for(uint32_t k=0;k<sin8000.size();++k)
     sin8000.d[k] = sqrtf(2.0f)*sinf(k*8000.0*PI2/fs);
-  ASSERT_NEAR(0.0f,10.0*log10(sin8000.ms()),3e-5f);
+  ASSERT_NEAR(0.0f,10.0*log10(sin8000.ms()),0.04f);
   for(uint32_t k=0;k<sin8000.size();++k)
     sin8000.d[k] = bp.filter(sin8000.d[k]);
   ASSERT_NEAR(-10.39f,10.0*log10(sin8000.ms()),0.04f);

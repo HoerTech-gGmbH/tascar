@@ -522,9 +522,7 @@ void TASCAR::xml_element_t::set_attribute_bits( const std::string& name, uint32_
 
 void set_attribute_uint32(xmlpp::Element* elem,const std::string& name,uint32_t value)
 {
-  char ctmp[1024];
-  sprintf(ctmp,"%d",value);
-  elem->set_attribute(name,ctmp);
+  elem->set_attribute(name,std::to_string(value));
 }
 
 void set_attribute_int32(xmlpp::Element* elem,const std::string& name,int32_t value)
@@ -536,16 +534,12 @@ void set_attribute_int32(xmlpp::Element* elem,const std::string& name,int32_t va
 
 void set_attribute_uint64(xmlpp::Element* elem,const std::string& name,uint64_t value)
 {
-  char ctmp[1024];
-  sprintf(ctmp,"%ld",value);
-  elem->set_attribute(name,ctmp);
+  elem->set_attribute(name,std::to_string(value));
 }
 
 void set_attribute_int64(xmlpp::Element* elem,const std::string& name,int64_t value)
 {
-  char ctmp[1024];
-  sprintf(ctmp,"%ld",value);
-  elem->set_attribute(name,ctmp);
+  elem->set_attribute(name,std::to_string(value));
 }
 
 void set_attribute_bool(xmlpp::Element* elem,const std::string& name,bool value)
