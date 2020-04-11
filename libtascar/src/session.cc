@@ -8,6 +8,8 @@
 #include <dlfcn.h>
 #include <fnmatch.h>
 #include <locale.h>
+#include <thread>
+#include <chrono>
 
 /**
    \defgroup moddev Module development
@@ -286,6 +288,8 @@ void TASCAR::session_core_t::start_initcmd()
         std::cerr << "Warning: Invalid subprocess PID (while attempting to start init command \"" << initcmd << "\")." << std::endl;
       }
     }
+    if( initcmdsleep > 0 )
+      std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000.0*initcmdsleep)));
     usleep( 1.0e5 );
     usleep( 1.0e5 );
   }
@@ -320,6 +324,7 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   GET_ATTRIBUTE(warnsrate);
   GET_ATTRIBUTE(warnfragsize);
   GET_ATTRIBUTE(initcmd);
+  GET_ATTRIBUTE(initcmdsleep);
   start_initcmd();
 }
 

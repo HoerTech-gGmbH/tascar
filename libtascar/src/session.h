@@ -124,6 +124,7 @@ namespace TASCAR {
     int32_t requirefragsize;
     int32_t warnfragsize;
     std::string initcmd;
+    double initcmdsleep;
   private:
     void start_initcmd();
     FILE* h_pipe_initcmd;
