@@ -107,22 +107,22 @@ $(TASCARMODDLLSGUI): CXXFLAGS+=-I./build
 build/tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
 build/tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
 build/tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
-build/tascar_ap_speechactivity.so: LDLIBS+=-llsl64
-build/tascar_ap_periodogram.so: LDLIBS+=-llsl64
+build/tascar_ap_speechactivity.so: LDLIBS+=-llsl
+build/tascar_ap_periodogram.so: LDLIBS+=-llsl
 build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
 build/tascar_ltcgen.so: EXTERNALS+=ltc
 build/tascarreceiver_hoa3d_enc.so: EXTERNALS+=gsl
 build/tascarreceiver_hoa3d.so: EXTERNALS+=gsl eigen3
 build/tascar_hossustain.so: EXTERNALS += fftw3f
-build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl64
+build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
 build/tascar_lightctl.so: LDLIBS+=-ltascardmx
 build/tascar_simplecontroller.so: build/simplecontroller_glade.h
-build/tascar_datalogging.so: LDLIBS += -lmatio -llsl64
+build/tascar_datalogging.so: LDLIBS += -lmatio -llsl
 build/tascar_datalogging.so: build/datalogging_glade.h
 build/tascar_timedisplay.so: build/timedisplay_glade.h
 
 build/glabsensor_%.so: EXTERNALS += gtkmm-3.0
-build/glabsensor_%.so: LDLIBS += -llsl64
+build/glabsensor_%.so: LDLIBS += -llsl
 
 ifeq "$(HAS_OPENCV2)" "yes"
 build/glabsensor_trackir.so: EXTERNALS += opencv
@@ -135,7 +135,7 @@ build/glabsensors.o: EXTERNALS += gtkmm-3.0
 build/glabsensors.o: build/glabsensors_glade.h
 build/tascar_glabsensors.so: build/glabsensors_glade.h
 build/tascar_glabsensors.so: build/glabsensorplugin.o build/glabsensors_glade.h src/glabsensorplugin.h
-build/tascar_glabsensors.so: LDLIBS += -llsl64
+build/tascar_glabsensors.so: LDLIBS += -llsl
 
 build/tascarreceiver_%.so: src/receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
