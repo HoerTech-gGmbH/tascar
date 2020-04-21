@@ -165,6 +165,7 @@ public:
 
 oscvar_t::oscvar_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),
+    size(1),
     ignorefirst(false)
 {
   GET_ATTRIBUTE(path);
