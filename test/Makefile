@@ -22,7 +22,8 @@ TESTS = test_wav_multichannel test_snd_zeros test_ir1 test_ir2		\
 	test_ir_reverb test_snd_reverb test_ir_simplefdn		\
 	jackconnect_ortf jackconnect_amb1h1v jackconnect_hoa2dfuma	\
 	test_snd_vbap3d_speakermatch test_ir_volumetric			\
-	test_pos_obstacle test_pos_obstacle_inner
+	test_pos_obstacle test_pos_obstacle_inner			\
+	test_level_absorption
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
