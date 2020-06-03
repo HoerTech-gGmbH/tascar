@@ -290,8 +290,6 @@ void TASCAR::session_core_t::start_initcmd()
     }
     if( initcmdsleep > 0 )
       std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000.0*initcmdsleep)));
-    usleep( 1.0e5 );
-    usleep( 1.0e5 );
   }
 }
 

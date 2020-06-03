@@ -189,7 +189,9 @@ system_t::system_t( const TASCAR::module_cfg_t& cfg )
     fprintf(h_triggered,"cd %s\n",sessionpath.c_str());
     fflush(h_triggered);
   }
-  usleep(1000000*sleep);
+  //usleep(1000000*sleep);
+  std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000.0*sleep)));
+
   run_service = true;
   srv = std::thread(&system_t::service,this);
   if( !triggered.empty() ){

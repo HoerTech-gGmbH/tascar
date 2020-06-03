@@ -33,7 +33,6 @@ void OpenDMX_USB_t::send(uint8_t universe, const std::vector<uint16_t>& data)
   for(uint32_t k=0;k<data.size();++k)
     data_[k] = data[k];
   ioctl(fd,TIOCSBRK,0); 
-  //usleep( 110 );
   usleep( 110 );
   ioctl(fd,TIOCCBRK,0);
   usleep( 16 );
