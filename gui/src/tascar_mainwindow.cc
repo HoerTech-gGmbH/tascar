@@ -617,7 +617,7 @@ void tascar_window_t::reset_gui()
   }
   on_menu_view_show_warnings();
   if( session && (!session->starturl.empty()) ){
-    webkit_web_view_load_uri( news_view, session->starturl.c_str() );
+    webkit_web_view_load_uri( news_view, TASCAR::env_expand(session->starturl).c_str() );
     notebook->set_current_page(6);
   }
   webkit_web_view_reload_bypass_cache( news_view );

@@ -583,7 +583,7 @@ int TASCAR::session_t::process(jack_nframes_t nframes,const std::vector<float*>&
   if( started_ )
     for(std::vector<TASCAR::module_t*>::iterator imod=modules.begin();imod!=modules.end();++imod)
       (*imod)->update(next_tp_frame,tp_rolling);
-  if( t >= duration ){
+  if( (duration>0) && (t >= duration) ){
     if( loop )
       tp_locate(0u);
     else
