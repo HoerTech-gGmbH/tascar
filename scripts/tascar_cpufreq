@@ -1,5 +1,7 @@
 #!/bin/bash
 NUM_CPU=`cat /proc/cpuinfo | grep -e '^processor[^:]*:'|wc -l`
+TOOLNAME=cpufreq-selector
+test -z `which $TOOLNAME` && TOOLNAME=cpufreq-set
 c=0
 if test -z "$1"; then
     g="performance"
@@ -7,6 +9,6 @@ else
     g="$1"
 fi
 while test $c -lt $NUM_CPU; do
-    cpufreq-selector -c $c -g $g
+    $TOOLNAME -c $c -g $g
     let c=$c+1
 done
