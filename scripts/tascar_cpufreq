@@ -7,6 +7,6 @@ else
     g="$1"
 fi
 while test $c -lt $NUM_CPU; do
-    cpufreq-selector -c $c -g $g
+    cpufreq-set -c $c -g $g
     let c=$c+1
 done
