@@ -41,10 +41,6 @@ coverage: googletest unit-tests
 	x-www-browser ./coverage/index.html
 
 install: all
-	@echo "We recommend to install TASCAR using the binary packages."
-	@echo "See http://install.tascar.org/ for installation instructions."
-	@echo "Press Ctrl-C to stop installation, or Enter to continue."
-	@read RESP
 	install -D libtascar/build/libtascar*.so -t $(DESTDIR)$(LIBDIR)
 	install -D libtascar/src/*.h -t $(DESTDIR)$(INCDIR)/tascar
 	install -D plugins/build/*.so -t $(DESTDIR)$(LIBDIR)
