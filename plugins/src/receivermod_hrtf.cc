@@ -12,6 +12,7 @@ public:
   double c;
   TASCAR::pos_t dir_l;
   TASCAR::pos_t dir_r;
+  TASCAR::pos_t dir_front;
   double radius;
   double angle;
   double thetamin;	   // minimum of the filter modelling the head shadow effect
@@ -36,6 +37,7 @@ hrtf_param_t::hrtf_param_t( xmlpp::Element* xmlsrc )
     c(340),
     dir_l(1,0,0),
     dir_r(1,0,0),
+    dir_front(1,0,0),
     radius(0.08),
     angle(90*DEG2RAD),	// ears modelled at +/- 90 degree
     thetamin(160*DEG2RAD),
@@ -291,6 +293,8 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
   data_t* d((data_t*)sd);
   TASCAR::pos_t prel_norm(prel.normal());
 
+  // angle with respect to front (range [0, pi])
+  double theta_front = acos(dot_prod(prel_norm,par.dir_front));
   // angle with respect to left ear (range [0, pi])
   double theta_l = acos(dot_prod(par.dir_l,prel_norm));
   // angle with respect to right ear (range [0, pi])
@@ -307,7 +311,7 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASC
   double dtau_l((d->target_tau_l - d->tau_l)*d->dt);
   double dtau_r((d->target_tau_r - d->tau_r)*d->dt);
 
-  d->filterdesign( theta_l, theta_r, fabs(prel.azim()), -(prel.elev()-0.5*M_PI) );
+  d->filterdesign( theta_l, theta_r, theta_front, -(prel.elev()-0.5*M_PI) );
 
   // apply panning:
   uint32_t N(chunk.size());
