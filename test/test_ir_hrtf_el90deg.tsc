@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- 
+hrtf lateral direction
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="2" airabsorption="false"/>
+      <orientation>0 0 -90 0</orientation>
+    </source>
+    <receiver type="hrtf" delaycomp="0.1"/>
+  </scene>
+</session>

@@ -23,7 +23,11 @@ TESTS = test_wav_multichannel test_snd_zeros test_ir1 test_ir2		\
 	jackconnect_ortf jackconnect_amb1h1v jackconnect_hoa2dfuma	\
 	test_snd_vbap3d_speakermatch test_ir_volumetric			\
 	test_pos_obstacle test_pos_obstacle_inner			\
-	test_level_absorption
+	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg 	\
+	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg 	\
+	test_ir_hrtf_135deg test_ir_hrtf_180deg	test_ir_hrtf_225deg	\
+	test_ir_hrtf_270deg test_ir_hrtf_315deg	test_ir_hrtf_el90deg	\
+	test_ir_hrtf_el-90deg test_ir_hrtf_el45deg test_ir_hrtf_el-45deg
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -32,7 +36,7 @@ TEST_SND=$(wildcard test_snd*.tsc)
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
   neukom_basic neukom_inphase hann vbap hoa2d ortf	\
   intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
-  hoa2d_fuma_hos wfs
+  hoa2d_fuma_hos wfs hrtf
 
 
 
