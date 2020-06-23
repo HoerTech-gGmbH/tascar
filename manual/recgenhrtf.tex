@@ -1,25 +1,31 @@
 HRTF simulation.
 
+This receiver describes the main features of measured head related transfer functions by using a few low-order digital filters. The parametrization is based on the Spherical Head Model (SHM) by Brown and Duda and includes three further low-order filters. \\
+The SHM introduces an approach to model the head as a rigid sphere. It includes a model for the head shadow effect as well as a method to compute the interaural time difference. The head shadow effect is approximated by a first-order high-shelf filter which depth varies depending on the incident angle. The high-shelf can be described by means of three parameters: The cut-off frequency \indattr{omega}, the angle \indattr{thetamin} at which the maximal depth of the high-shelf is reached and the parameter \indattr{alphamin} which influences the maximal reached depth of the high-shelf. \\
+In order to extend the SHM, two further first-order high-shelf filters similarly to that which realizes the SHM are used to model pinna - respectively torso - shadow. These filters are as well described by three parameters. The two parameters \indattr{alphamin\_front} and \indattr{omega\_front} - respectively \indattr{alphamin\_up} and \indattr{omega\_up} - are used in the same way as described for the SHM. 
+However, the third parameter \indattr{startangle\_front} - respectively \indattr{startangle\_up} -, which is defined with respect to a certain reference direction (front [1 0 0] - respectively up [0 0 1]), is used in order to define a region of incident directions in which these filters are applied. The maximal depth is reached at 180 degree with respect to the reference direction. \\
+Furthermore, a notch filter is used in order to reproduce the concha notch which provides an important feature in order to distinguish between elevation angles. This filter is applied in the upper hemisphere for angles smaller than \indattr{startangle\_notch}. In order to have a smooth transition, the gain of the notch increases linearly from 0 dB at \indattr{startangle\_notch} to the \indattr{maxgain} for an incidence direction directly above the head. Moreover, the center frequency is chosen to vary linearly over the range as well. At \indattr{startangle\_notch} the center frequency is equal to \indattr{freq\_start} as changes linearly to \indattr{freq\_end} for incidence direction right above the head. Furthermore, the notch is described by the quality factor \indattr{Q\_notch}.\\
+In order to optimize the values for the filter parameters, the frequency response of the receiver has been fitted to measured HRTFs of the KEMAR dummy head provided by the OlHeaD-HRTF database.
+
 \begin{tscattributes}     
 \indattr{sincorder}         & Sinc interpolation order of ITD delay line (0)     \\
 \indattr{c}                 & Speed of sound in m/s (340)                        \\
 \indattr{decorr\_length}    & Decorrelation length in seconds (0.05)             \\
-\indattr{decorr}            & Flag to use decorrelatin of diffuse sounds (false) \\
-\indattr{c}                 &                                                    \\
-\indattr{radius}            &                                                    \\
-\indattr{angle}             &                                                    \\
-\indattr{thetamin}          &                                                    \\
-\indattr{omega}             &                                                    \\
-\indattr{alphamin}          &                                                    \\
-\indattr{startangle\_front} &                                                    \\
-\indattr{omega\_front}      &                                                    \\
-\indattr{alphamin\_front}   &                                                    \\
-\indattr{startangle\_up}    &                                                    \\
-\indattr{omega\_up}         &                                                    \\
-\indattr{alphamin\_up}      &                                                    \\
-\indattr{startangle\_notch} &                                                    \\
-\indattr{freq\_start}       &                                                    \\
-\indattr{freq\_end}         &                                                    \\
-\indattr{maxgain}           &                                                    \\
-\indattr{Q\_notch}          &                                                    \\
+\indattr{decorr}            & Flag to use decorrelation of diffuse sounds (false) \\
+\indattr{radius}            & Radius of sphere modelling the head (0.08)         \\
+\indattr{angle}             & Position of the ears on the sphere in degree (90)  \\
+\indattr{thetamin}          & angle with respect to the position of the ears at which the maximum depth of the high-shelf realizing the SHM is reached in degree (160)\\
+\indattr{alphamin}          & parameter which determine the depth of the high-shelf realizing the SHM (0.14)\\
+\indattr{omega}             & cut-off frequency of the high-self realizing the SHM in Hz (3100)\\
+\indattr{startangle\_front} & the second high-shelf, e.g. to model pinna shadow effect, is applied when the angle with respect to front direction [1 0 0] is larger than \indattr{startangle\_front} in degree (0)\\
+\indattr{alphamin\_front}   & parameter which determine the depth of the second high-shelf (0.39)\\
+\indattr{omega\_front}      & cut-off frequency of the second high-self in Hz (11200)\\
+\indattr{startangle\_up}    & the third high-shelf which models the shadow effect of the torso is applied when the angle with respect to up direction [0 0 1] is larger than \indattr{startangle\_up} in degree (135) \\
+\indattr{omega\_up}         & cut-off frequency of the second high-shelf in Hz (\indattr{c}/\indattr{radius}/2) \\
+\indattr{alphamin\_up}      & parameter which determine the depth of the second high-shelf (0.1)\\
+\indattr{startangle\_notch} & notch filter to model concha notch is applied if angle with respect to up direction [0 0 1] is smaller than \indattr{startangle\_notch} in degree (102) \\
+\indattr{freq\_start}       & notch center frequency at \indattr{startangle\_notch} in Hz (1300)\\
+\indattr{freq\_end}         & notch center frequency at [0 0 1] in Hz (650)      \\
+\indattr{maxgain}           & gain applied at [0 0 1] in dB (-5.4) - gain is 0 dB at \indattr{startangle\_notch} and increases linearly\\
+\indattr{Q\_notch}          & quality factor of the notch filter (2.3)   \\
 \end{tscattributes}
