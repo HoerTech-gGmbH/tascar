@@ -32,7 +32,17 @@ m = zeros(size(x,2),numel(cf));
 for k=1:numel(cf)
     m(:,k) = 10*log10(mean(abs(H(ef_low(k):ef_high(k),:)).^2));
 end
+figure
 imagesc(m);
 colorbar;
 set(gca,'YTick',1:3:N,'YTickLabel',round(180/pi*vaz(1:3:N)),...
         'XTick',1:3:numel(cf),'XTickLabel',round(cf(1:3:end)));
+figure
+size(vaz)
+size(m)
+for k=1:3:numel(cf)
+  c = (max(0,30 + m(:,k))) .* exp(i * vaz(:));
+  plot( real(c), imag(c), '-');
+  hold on
+end
+set(gca,'DataAspectRatio',[1,1,1]);
