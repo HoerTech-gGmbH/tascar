@@ -18,7 +18,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
   hrirconv joystick hossustain midicc2osc midictl rotator oscserver	\
   qualisystracker orientationmodulator locationmodulator		\
-  locationvelocity granularsynth fail oscrelay waitforjackport
+  locationvelocity granularsynth fail oscrelay waitforjackport sleep
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets
 

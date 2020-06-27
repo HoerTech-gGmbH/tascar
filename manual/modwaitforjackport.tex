@@ -1,0 +1,19 @@
+Block loading of additional modules until specified jack ports exist.
+
+\begin{tscattributes}
+  \indattr{ports}   & Space separated list of jack ports to test                         \\
+  \indattr{timeout} & Timeout in seconds after which execution will not block any longer (default: 30) \\
+\end{tscattributes}
+
+Ports can also be specified with \elem{port} sub-elements. This way it
+is possible to include whitespace in port names, e.g.:
+
+\begin{lstlisting}[numbers=none]
+  <modules>
+    <waitforjackport ports="obs:in_1 obs:in_2">
+      <port>ardour:Giso/audio_in 1</port>
+      <port>ardour:stereo/audio_in 1</port>
+      <port>ardour:stereo/audio_in 2</port>
+    </waitforjackport>
+  </modules>
+\end{lstlisting}

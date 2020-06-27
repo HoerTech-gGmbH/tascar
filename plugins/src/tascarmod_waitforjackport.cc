@@ -11,10 +11,18 @@ private:
   double timeout;
 };
 
-wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg), timeout(30)
+wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), timeout(30)
 {
   GET_ATTRIBUTE(ports);
   GET_ATTRIBUTE(timeout);
+  xmlpp::Node::NodeList subnodes = e->get_children();
+  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
+      sn != subnodes.end(); ++sn) {
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    if(sne && (sne->get_name() == "port"))
+      ports.push_back(TASCAR::xml_get_text(sne, ""));
+  }
   jack_status_t jstat;
   jack_client_t* jc;
   jack_options_t opt = (jack_options_t)(JackNoStartServer | JackUseExactName);
