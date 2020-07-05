@@ -1,0 +1,4 @@
+#!/bin/bash
+TSCOBJ=$2 blender -b $1 -P /usr/share/tascar/python/export_obj_pos.py >/dev/null
+cat objpos.txt
+rm -f objpos.txt
