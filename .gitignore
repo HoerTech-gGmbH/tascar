@@ -38,3 +38,10 @@ coverage.info
 *.gcda
 *.gcno
 googletest
+
+# mac specific
+.DS_Store
+.vscode
+
+# cmake
+CMakeFiles

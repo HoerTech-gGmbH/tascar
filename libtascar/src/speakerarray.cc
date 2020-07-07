@@ -321,7 +321,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     diffusegain(1.0),
     calibage(0)
 {
-  size_t checksum(0);
+  double checksum(0);
   elayout.GET_ATTRIBUTE(checksum);
   if( checksum != 0 ){
     std::vector<std::string> attributes;
