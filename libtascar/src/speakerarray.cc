@@ -321,7 +321,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     diffusegain(1.0),
     calibage(0)
 {
-  double checksum(0);
+  uint64_t checksum(0);
   elayout.GET_ATTRIBUTE(checksum);
   if( checksum != 0 ){
     std::vector<std::string> attributes;
@@ -337,7 +337,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     attributes.push_back("delay");
     attributes.push_back("compB");
     attributes.push_back("connect");
-    size_t current_checksum(elayout.hash(attributes,true));
+    uint64_t current_checksum(elayout.hash(attributes,true));
     if( checksum != current_checksum )
       TASCAR::add_warning("The layout file \""+layout+"\" was modified since last calibration. Re-calibration is recommended.");
   }
