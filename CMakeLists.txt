@@ -21,9 +21,9 @@ target_include_directories(tascar_cli PUBLIC
 
 target_link_libraries(tascar_cli 
 	tascar
-	tascarmod_route
-	tascarmod_system
-	tascarmod_touchosc
+	tascar_route
+	tascar_system
+	tascar_touchosc
 	tascarreceiver_hrtf
 	tascarreceiver_ortf
 	tascarreceiver_simplefdn

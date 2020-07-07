@@ -166,12 +166,14 @@ tascarsource_generic1storder
 tascarsource_omni)
 
 foreach(plugin IN LISTS plugins)
-	message("Building ${plugin}")
-	add_library(${plugin}
+	STRING(REPLACE "tascarmod_" "tascar_" plugin_name ${plugin})
+	message("Building ${plugin_name}")
+	
+	add_library(${plugin_name}
 				SHARED
 				src/${plugin}.cc)
-	SET_TARGET_PROPERTIES(${plugin} PROPERTIES PREFIX "")
-	target_include_directories(${plugin} PUBLIC 
+	SET_TARGET_PROPERTIES(${plugin_name} PROPERTIES PREFIX "")
+	target_include_directories(${plugin_name} PUBLIC 
 		${PROJECT_SOURCE_DIR}/../libtascar/build
 		${PROJECT_SOURCE_DIR}/../libtascar/src
 		${PROJECT_SOURCE_DIR}/plugins/src 
@@ -184,7 +186,7 @@ foreach(plugin IN LISTS plugins)
 		${LSL_INCLUDE_DIRS}
 	)
 
-	target_link_libraries(${plugin} 
+	target_link_libraries(${plugin_name} 
 		tascar
 		${JACK_LINK_LIBRARIES}
 		${LIBXML++_LINK_LIBRARIES}
@@ -194,6 +196,6 @@ foreach(plugin IN LISTS plugins)
 		${LSL_LINK_LIBRARIES}
 	)
 
-	install(TARGETS ${plugin} DESTINATION lib)
+	install(TARGETS ${plugin_name} DESTINATION lib)
 
 endforeach()
