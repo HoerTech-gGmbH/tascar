@@ -35,7 +35,13 @@ TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
   if( plugintype == "plugin" )
     get_attribute("type",plugintype);
   std::string libname("tascar_ap_");
-  libname += plugintype + ".so";
+  #if defined(__APPLE__)
+    libname += plugintype + ".dylib";
+  #elif __linux__
+    libname += plugintype + ".so";
+  #else
+    #error not supported
+  #endif
   modname = plugintype;
   audioplugin_cfg_t lcfg(cfg);
   lcfg.modname = modname;
