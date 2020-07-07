@@ -8,7 +8,7 @@ public:
   void add_variables( TASCAR::osc_server_t* srv );
   ~feedbackdelay_t();
 private:
-  size_t maxdelay;
+  uint64_t maxdelay;
   double f;
   double feedback;
   TASCAR::varidelay_t* dl;

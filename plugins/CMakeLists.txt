@@ -13,9 +13,39 @@ pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
 pkg_check_modules (JACK REQUIRED jack)
 pkg_check_modules (LIBLO REQUIRED liblo)
 pkg_check_modules (FFTW REQUIRED fftw3f)
+#pkg_check_modules (LSL REQUIRED lsl)
 
-
-list(APPEND receivers hrtf ortf simplefdn)
+list(APPEND receivers 
+amb1h0v
+amb1h1v
+amb3h0v
+amb3h3v
+cardioid
+cardioidmod
+chmap
+debugpos
+fakebf
+foaconv
+hann
+hoa2d
+hoa2d_fuma
+hoa2d_fuma_hos
+hoa3d
+hoa3d_enc
+hrtf
+intensityvector
+itu51
+neukom_basic
+neukom_inphase
+nsp
+omni
+ortf
+simplefdn
+vbap
+vbap3d
+vmic
+wfs
+)
 
 foreach(receiver IN LISTS receivers)
 	message("Building tascarreceiver_${receiver}")
@@ -48,13 +78,99 @@ foreach(receiver IN LISTS receivers)
 
 endforeach()
 
-list(APPEND plugins tascarmod_route tascarmod_system tascarmod_touchosc tascar_ap_delay)
+list(APPEND plugins 
+tascar_ap_addchannel
+tascar_ap_bandpass
+tascar_ap_const
+tascar_ap_delay
+tascar_ap_dummy
+tascar_ap_dumplevels
+tascar_ap_feedbackdelay
+tascar_ap_filter
+tascar_ap_gain
+tascar_ap_gainramp
+tascar_ap_gate
+tascar_ap_hannenv
+tascar_ap_identity
+tascar_ap_level2osc
+tascar_ap_lipsync
+tascar_ap_lipsync_paper
+tascar_ap_lookatme
+tascar_ap_loopmachine
+tascar_ap_metronome
+tascar_ap_noise
+tascar_ap_onsetdetector
+#tascar_ap_openmha
+#tascar_ap_periodogram
+tascar_ap_pink
+tascar_ap_pos2osc
+tascar_ap_pulse
+tascar_ap_sine
+tascar_ap_sndfile
+tascar_ap_sndfileasync
+#tascar_ap_speechactivity
+tascar_ap_spksim
+#tascarmod_artnetdmx
+#tascarmod_circularfence
+#tascarmod_datalogging
+tascarmod_dirgain
+tascarmod_dummy
+tascarmod_epicycles
+tascarmod_fail
+#tascarmod_fence
+tascarmod_foa2hoadiff
+tascarmod_geopresets
+#tascarmod_glabsensors
+tascarmod_granularsynth
+tascarmod_hoafdnrot
+tascarmod_hossustain
+tascarmod_hrirconv
+#tascarmod_joystick
+#tascarmod_levels2osc
+#tascarmod_lightctl
+tascarmod_locationmodulator
+tascarmod_locationvelocity
+#tascarmod_lslactor
+#tascarmod_lsljacktime
+#tascarmod_ltcgen
+tascarmod_matrix
+#tascarmod_midicc2osc
+#tascarmod_midictl
+tascarmod_motionpath
+tascarmod_mpu6050track
+tascarmod_nearsensor
+#tascarmod_opendmxusb
+tascarmod_orientationmodulator
+tascarmod_oscevents
+tascarmod_oscjacktime
+#tascarmod_oscrelay
+#tascarmod_oscserver
+tascarmod_pendulum
+#tascarmod_pos2lsl
+tascarmod_pos2osc
+#tascarmod_qualisystracker
+tascarmod_rotator
+tascarmod_route
+tascarmod_sampler
+tascarmod_savegains
+#tascarmod_simplecontroller
+tascarmod_sleep
+tascarmod_system
+#tascarmod_timedisplay
+tascarmod_touchosc
+tascarmod_tracegui
+tascarmod_waitforjackport
+tascarsource_cardioidmod
+tascarsource_door
+tascarsource_generic1storder
+tascarsource_omni)
 
 foreach(plugin IN LISTS plugins)
 	message("Building ${plugin}")
 	add_library(${plugin}
 				SHARED
 				src/${plugin}.cc)
+	SET_TARGET_PROPERTIES(${plugin} PROPERTIES PREFIX "")
 	target_include_directories(${plugin} PUBLIC 
 		${PROJECT_SOURCE_DIR}/../libtascar/build
 		${PROJECT_SOURCE_DIR}/../libtascar/src
@@ -65,6 +181,7 @@ foreach(plugin IN LISTS plugins)
 		${LIBLO_INCLUDE_DIRS}
 		${LIBSNDFILE_INCLUDE_DIRS}
 		${FFTW_INCLUDE_DIRS}
+		${LSL_INCLUDE_DIRS}
 	)
 
 	target_link_libraries(${plugin} 
@@ -74,6 +191,7 @@ foreach(plugin IN LISTS plugins)
 		${LIBLO_LINK_LIBRARIES}
 		${LIBSNDFILE_LINK_LIBRARIES}
 		${FFTW_LINK_LIBRARIES}
+		${LSL_LINK_LIBRARIES}
 	)
 
 	install(TARGETS ${plugin} DESTINATION lib)
