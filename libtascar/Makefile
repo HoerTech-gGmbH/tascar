@@ -6,7 +6,6 @@ include ../rules.mk
 #
 # versioning:
 #
-DEFFULLVERSION=$(shell echo "\#define TASCARVER \\\""$(FULLVERSION)"\\\"")
 LIBVERSION=$(VERSION)
 SOVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1.\2/1')
 
@@ -73,7 +72,7 @@ LDLIBS += -ldl
 LDFLAGS += -L./
 
 ver:
-	test "$(DEFFULLVERSION)" = "`cat build/tascarver.h`" || echo "$(DEFFULLVERSION)" > build/tascarver.h
+	echo '#define TASCARVER "'$(FULLVERSION)'"' > build/tascarver.h
 
 lib:  $(BUILD_OBJECTS) build/libtascar.so.$(LIBVERSION) build/libtascargui.so.$(LIBVERSION) build/libtascardmx.so.$(LIBVERSION)
 	ldconfig -n build

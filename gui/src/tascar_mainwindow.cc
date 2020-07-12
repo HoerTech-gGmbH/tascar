@@ -1,8 +1,8 @@
 #include "tascar_mainwindow.h"
-#include "../build/tascar_xy.xpm"
-#include "../build/tascar_xz.xpm"
-#include "../build/tascar_yz.xpm"
-#include "../build/tascar_xyz.xpm"
+#include "tascar_xy.xpm"
+#include "tascar_xz.xpm"
+#include "tascar_yz.xpm"
+#include "tascar_xyz.xpm"
 #include "logo.xpm"
 #include "pdfexport.h"
 #include <fstream>

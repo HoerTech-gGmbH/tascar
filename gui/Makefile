@@ -73,11 +73,11 @@ build/tascar: build/tascar_glade.h
 
 build/tascar_spkcalib: build/spkcalib_glade.h
 
-build/tascar_mainwindow.o: build/tascar_xy.xpm build/tascar_xz.xpm build/tascar_yz.xpm build/tascar_xyz.xpm src/tascar_mainwindow.h
+build/tascar_mainwindow.o: src/tascar_xy.xpm src/tascar_xz.xpm src/tascar_yz.xpm src/tascar_xyz.xpm src/tascar_mainwindow.h
 
-build/tascar_%.xpm:
-	convert -font Helvetica -size 24x24 -gravity center label:$* -transparent white $@
-	sed -i -e 's/static char/static const char/1' $@
+#build/tascar_%.xpm:
+#	convert -font Helvetica -size 24x24 -gravity center label:$* -transparent white $@
+#	sed -i -e 's/static char/static const char/1' $@
 
 
 # Local Variables:
