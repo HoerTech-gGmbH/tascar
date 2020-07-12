@@ -6,7 +6,7 @@
 		</source>
 		<receiver name="ism" type="amb1h1v" diffuse="false"/>
 		<receiver name="rvb" type="amb1h1v" point="false"/>
-		<reverb volumetric="10 7 3" image="false"/>
+		<reverb dw="2.0" volumetric="10 7 3" image="false"/>
 		<facegroup shoebox="10 7 3"/>
 	</scene>
 </session>
