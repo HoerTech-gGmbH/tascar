@@ -7,6 +7,6 @@
 			</sound>
 		</source>
 		<receiver type="amb1h1v"/>
-		<reverb volumetric="10 7 3"/>
+		<reverb dw="2.0" volumetric="10 7 3"/>
 	</scene>
 </session>
