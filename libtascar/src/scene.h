@@ -27,8 +27,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include <vector>
 #include "acousticmodel.h"
+#include <vector>
 
 namespace TASCAR {
 
@@ -40,29 +40,31 @@ namespace TASCAR {
     public:
       route_t(xmlpp::Element*);
       ~route_t();
-      std::string get_name() const {return name;};
-      bool get_mute() const {return mute;};
-      bool get_solo() const {return solo;};
-      std::string default_name( const std::string& s){
-        if( name.empty() )
+      std::string get_name() const { return name; };
+      bool get_mute() const { return mute; };
+      bool get_solo() const { return solo; };
+      std::string default_name(const std::string& s)
+      {
+        if(name.empty())
           name = s;
         return name;
       }
-      void set_name(const std::string& s) {name=s;};
-      void set_mute(bool b) {mute=b;};
-      void set_solo(bool b,uint32_t& anysolo);
+      void set_name(const std::string& s) { name = s; };
+      void set_mute(bool b) { mute = b; };
+      void set_solo(bool b, uint32_t& anysolo);
       /**
          \brief Return combination of mute and solo.
 
          Internal solo state is used only if anysolo is true.
 
          \param anysolo Counter of objects which are soloed.
-         \return True if active, false if either muted or not soloed but other tracks are soloed.
+         \return True if active, false if either muted or not soloed but other
+         tracks are soloed.
       */
       bool is_active(uint32_t anysolo);
       void addmeter(float fs);
-      void configure_meter( float tc, TASCAR::levelmeter::weight_t w );
-      void set_meterweight( TASCAR::levelmeter::weight_t w );
+      void configure_meter(float tc, TASCAR::levelmeter::weight_t w);
+      void set_meterweight(TASCAR::levelmeter::weight_t w);
       uint32_t metercnt() const { return rmsmeter.size(); };
       void reset_meters();
       const std::vector<float>& readmeter();
@@ -75,15 +77,21 @@ namespace TASCAR {
          \return Level meter
          \ingroup levels
       */
-      const TASCAR::levelmeter_t& get_meter(uint32_t k) const { return *(rmsmeter[k]); };
+      const TASCAR::levelmeter_t& get_meter(uint32_t k) const
+      {
+        return *(rmsmeter[k]);
+      };
+
     private:
       std::string name;
       bool mute;
       bool solo;
       float meter_tc;
       TASCAR::levelmeter::weight_t meter_weight;
+
     public:
       float targetlevel;
+
     protected:
       /**
          \ingroup levels
@@ -94,9 +102,9 @@ namespace TASCAR {
 
     class rgb_color_t {
     public:
-      rgb_color_t(double r_,double g_,double b_):r(r_),g(g_),b(b_){};
+      rgb_color_t(double r_, double g_, double b_) : r(r_), g(g_), b(b_){};
       rgb_color_t(const std::string& webc);
-      rgb_color_t():r(0),g(0),b(0){};
+      rgb_color_t() : r(0), g(0), b(0){};
       std::string str();
       double r, g, b;
     };
@@ -104,14 +112,15 @@ namespace TASCAR {
     class object_t : public dynobject_t, public route_t {
     public:
       object_t(xmlpp::Element*);
-      virtual ~object_t() {};
+      virtual ~object_t(){};
       bool isactive(double time) const;
-      bool is_active(uint32_t anysolo,double t);
+      bool is_active(uint32_t anysolo, double t);
       rgb_color_t color;
       double endtime;
     };
 
-    class face_object_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
+    class face_object_t : public object_t,
+                          public TASCAR::Acousticmodel::reflector_t {
     public:
       face_object_t(xmlpp::Element* xmlsrc);
       virtual ~face_object_t();
@@ -124,7 +133,7 @@ namespace TASCAR {
          \callgraph
          \callergraph
       */
-      void process_active(double t,uint32_t anysolo);
+      void process_active(double t, uint32_t anysolo);
       double width;
       double height;
       std::vector<TASCAR::pos_t> vertices;
@@ -135,7 +144,7 @@ namespace TASCAR {
       face_group_t(xmlpp::Element* xmlsrc);
       virtual ~face_group_t();
       void geometry_update(double t);
-      void process_active(double t,uint32_t anysolo);
+      void process_active(double t, uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
       double reflectivity;
       double damping;
@@ -159,7 +168,7 @@ namespace TASCAR {
          \callgraph
          \callergraph
       */
-      void process_active(double t,uint32_t anysolo);
+      void process_active(double t, uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::obstacle_t*> obstacles;
       double transmission;
       std::string importraw;
@@ -177,26 +186,29 @@ namespace TASCAR {
       audio_port_t(xmlpp::Element* e, bool is_input_);
       virtual ~audio_port_t();
       void set_port_index(uint32_t port_index_);
-      uint32_t get_port_index() const { return port_index;};
-      void set_ctlname(const std::string& pn) { ctlname  = pn;};
-      std::string get_ctlname() const { return ctlname;};
-      std::vector<std::string> get_connect() const { return connect;};
-      float get_gain() const {
-        if( is_input )
-          return gain*(2e-5f*caliblevel);
+      uint32_t get_port_index() const { return port_index; };
+      void set_ctlname(const std::string& pn) { ctlname = pn; };
+      std::string get_ctlname() const { return ctlname; };
+      std::vector<std::string> get_connect() const { return connect; };
+      float get_gain() const
+      {
+        if(is_input)
+          return gain * (2e-5f * caliblevel);
         else
-          return gain/(2e-5f*caliblevel);
+          return gain / (2e-5f * caliblevel);
       };
-      float get_gain_db() const { return 20*log10(fabsf(gain)); };
-      void set_gain_db( float g );
-      void set_gain_lin( float g );
+      float get_gain_db() const { return 20 * log10(fabsf(gain)); };
+      void set_gain_db(float g);
+      void set_gain_lin(float g);
       bool get_inv() const { return gain < 0.0f; };
-      void set_inv( bool inv );
+      void set_inv(bool inv);
+
     private:
       std::string ctlname;
       std::vector<std::string> connect;
       uint32_t port_index;
       const bool is_input;
+
     public:
       float gain;
       float caliblevel;
@@ -206,7 +218,10 @@ namespace TASCAR {
     /**
        \brief Diffuse sound field descriptor
     */
-    class diff_snd_field_obj_t : public object_t, public audio_port_t, public licensed_component_t, public audiostates_t {
+    class diff_snd_field_obj_t : public object_t,
+                                 public audio_port_t,
+                                 public licensed_component_t,
+                                 public audiostates_t {
     public:
       diff_snd_field_obj_t(xmlpp::Element* e);
       virtual ~diff_snd_field_obj_t();
@@ -221,30 +236,34 @@ namespace TASCAR {
          \callgraph
          \callergraph
       */
-      void process_active(double t,uint32_t anysolo);
+      void process_active(double t, uint32_t anysolo);
       pos_t size;
       double falloff;
-      TASCAR::Acousticmodel::diffuse_t* get_source() { return source;};
-      void add_licenses( licensehandler_t* );
+      TASCAR::Acousticmodel::diffuse_t* get_source() { return source; };
+      void add_licenses(licensehandler_t*);
       uint32_t layers;
+
     private:
       TASCAR::Acousticmodel::diffuse_t* source;
     };
 
     class sound_name_t : private xml_element_t {
     public:
-      sound_name_t( xmlpp::Element* e, src_object_t* parent_ );
+      sound_name_t(xmlpp::Element* e, src_object_t* parent_);
       std::string get_parent_name() const { return parentname; };
       std::string get_name() const { return name; };
-      std::string get_fullname() const { return parentname+"."+name; };
+      std::string get_fullname() const { return parentname + "." + name; };
+
     private:
       std::string name;
       std::string parentname;
     };
 
-    class sound_t : public sound_name_t, public TASCAR::Acousticmodel::source_t, public audio_port_t {
+    class sound_t : public sound_name_t,
+                    public TASCAR::Acousticmodel::source_t,
+                    public audio_port_t {
     public:
-      sound_t(xmlpp::Element* e,src_object_t* parent_);
+      sound_t(xmlpp::Element* e, src_object_t* parent_);
       virtual ~sound_t();
       rgb_color_t get_color() const;
       /**
@@ -258,23 +277,28 @@ namespace TASCAR {
       */
       void process_plugins(const TASCAR::transport_t& tp);
       void apply_gain();
-      //void prepare( chunk_cfg_t& );
-      //void release();
+      // void prepare( chunk_cfg_t& );
+      // void release();
       void add_meter(TASCAR::levelmeter_t*);
       float read_meter();
       void validate_attributes(std::string& msg) const;
+
     public:
       src_object_t* parent;
+
     private:
       pos_t local_position;
       zyx_euler_t local_orientation;
       double chaindist;
       double gain_;
       std::vector<TASCAR::levelmeter_t*> meter;
+
     public:
     };
 
-    class src_object_t : public object_t, public licensed_component_t, public audiostates_t {
+    class src_object_t : public object_t,
+                         public licensed_component_t,
+                         public audiostates_t {
     public:
       src_object_t(xmlpp::Element* e);
       ~src_object_t();
@@ -289,24 +313,26 @@ namespace TASCAR {
          \callgraph
          \callergraph
       */
-      void process_active(double t,uint32_t anysolo);
-      void add_sound(xmlpp::Element* src=NULL);
+      void process_active(double t, uint32_t anysolo);
+      void add_sound(xmlpp::Element* src = NULL);
       std::vector<sound_t*> sound;
       std::string next_sound_name() const;
       void validate_attributes(std::string& msg) const;
-      void add_licenses( licensehandler_t* );
+      void add_licenses(licensehandler_t*);
+
     private:
       int32_t startframe;
     };
 
     /**
-       \brief Combine acoustic receiver functionality with dynamic geometry and audio port control
+       \brief Combine acoustic receiver functionality with dynamic geometry and
+       audio port control
     */
     class receiver_obj_t : public object_t,
                            public audio_port_t,
                            public TASCAR::Acousticmodel::receiver_t {
     public:
-      receiver_obj_t(xmlpp::Element* e, bool is_reverb_ );
+      receiver_obj_t(xmlpp::Element* e, bool is_reverb_);
       void configure();
       void release();
       /**
@@ -318,7 +344,7 @@ namespace TASCAR {
          \callgraph
          \callergraph
       */
-      void process_active(double t,uint32_t anysolo);
+      void process_active(double t, uint32_t anysolo);
       /**
          \callgraph
          \callergraph
@@ -327,7 +353,8 @@ namespace TASCAR {
       void validate_attributes(std::string& msg) const;
     };
 
-    class mask_object_t : public object_t, public TASCAR::Acousticmodel::mask_t {
+    class mask_object_t : public object_t,
+                          public TASCAR::Acousticmodel::mask_t {
     public:
       mask_object_t(xmlpp::Element* e);
       /**
@@ -339,7 +366,7 @@ namespace TASCAR {
          \callgraph
          \callergraph
       */
-      void process_active(double t,uint32_t anysolo);
+      void process_active(double t, uint32_t anysolo);
       pos_t xmlsize;
       double xmlfalloff;
     };
@@ -349,11 +376,12 @@ namespace TASCAR {
       diffuse_reverb_defaults_t(xmlpp::Element* e);
     };
 
-
     /**
-       \brief Object for diffuse reverb, consists of room microphone, diffuse sound field source
+       \brief Object for diffuse reverb, consists of room microphone, diffuse
+       sound field source
      */
-    class diffuse_reverb_t : public diffuse_reverb_defaults_t, public receiver_obj_t {
+    class diffuse_reverb_t : public diffuse_reverb_defaults_t,
+                             public receiver_obj_t {
     public:
       diffuse_reverb_t(xmlpp::Element* e);
       ~diffuse_reverb_t();
@@ -361,14 +389,17 @@ namespace TASCAR {
       void release();
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
-      TASCAR::Acousticmodel::diffuse_t* get_source() { return source;};
-      void add_licenses( licensehandler_t* );
+      TASCAR::Acousticmodel::diffuse_t* get_source() { return source; };
+      void add_licenses(licensehandler_t*);
+
     private:
+      uint32_t outputlayers;
       TASCAR::Acousticmodel::diffuse_t* source;
     };
 
     /**
-       \brief The class scene_t implements the definition of a virtual acoustic environment.
+       \brief The class scene_t implements the definition of a virtual acoustic
+       environment.
 
        Here, objects (object_t, member scene_t::all_objects) are
        defined, which can move along trajectories. This class is
@@ -379,7 +410,9 @@ namespace TASCAR {
        implemented in the class TASCAR::Acousticmodel::world_t,
        allocated in TASCAR::render_core_t::world.
     */
-    class scene_t : public xml_element_t, public audiostates_t, public licensed_component_t {
+    class scene_t : public xml_element_t,
+                    public audiostates_t,
+                    public licensed_component_t {
     public:
       scene_t(xmlpp::Element* e);
       ~scene_t();
@@ -390,10 +423,8 @@ namespace TASCAR {
       std::string name;
       double c;
       /**
-         \brief Update geometry of all objects within a scene based on current transport time
-         \param t Transport time
-         \ingroup callgraph
-         \callgraph
+         \brief Update geometry of all objects within a scene based on current
+         transport time \param t Transport time \ingroup callgraph \callgraph
          \callergraph
       */
       void geometry_update(double t);
@@ -423,19 +454,20 @@ namespace TASCAR {
       uint32_t anysolo;
       std::vector<object_t*> get_objects();
       std::string scene_path;
-      void configure_meter( float tc, TASCAR::levelmeter::weight_t w );
-      void add_licenses( licensehandler_t* session );
+      void configure_meter(float tc, TASCAR::levelmeter::weight_t w);
+      void add_licenses(licensehandler_t* session);
       void validate_attributes(std::string& msg) const;
       bool active;
+
     private:
       void clean_children();
       scene_t(const scene_t&);
       std::set<std::string> namelist;
     };
 
-  }
+  } // namespace Scene
 
-}
+} // namespace TASCAR
 
 std::string jacknamer(const std::string& scenename, const std::string& base);
 
