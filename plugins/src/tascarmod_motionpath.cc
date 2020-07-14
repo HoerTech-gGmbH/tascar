@@ -16,6 +16,7 @@ private:
   bool tascartime;
   TASCAR::track_t location;
   TASCAR::euler_track_t orientation;
+  double sampledorientation;
 };
 
 int motionpath_t::osc_go(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
@@ -40,11 +41,13 @@ motionpath_t::motionpath_t( const TASCAR::module_cfg_t& cfg )
     stoptime(3153600000),// 100 years from now
     running(false),
     active(true),
-    tascartime(false)
+    tascartime(false),
+    sampledorientation(0)
 {
   GET_ATTRIBUTE_BOOL(active);
   GET_ATTRIBUTE_BOOL(tascartime);
   GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE(sampledorientation);
   if( id.empty() )
     id = "motionpath";
   xmlpp::Node::NodeList subnodes = e->get_children();
@@ -108,11 +111,28 @@ void motionpath_t::update(uint32_t tp_frame,bool tp_rolling)
   double ltime(time);
   if( tascartime )
     ltime = tp_frame*t_sample;
-  TASCAR::zyx_euler_t dr(orientation.interp(ltime));
-  TASCAR::pos_t dp(location.interp(ltime));
-  for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
-    iobj->obj->dorientation = dr;
-    iobj->obj->dlocation = dp;
+
+  TASCAR::c6dof_t c6dof_;
+  c6dof_.position = location.interp(ltime);
+  if( sampledorientation == 0 )
+    c6dof_.orientation = orientation.interp(ltime);
+  else{
+    double tp(location.get_time(location.get_dist(ltime)-sampledorientation));
+    TASCAR::pos_t pdt(c6dof_.position);
+    pdt -= location.interp(tp);
+    if( sampledorientation < 0 )
+      pdt *= -1.0;
+    c6dof_.orientation.z = pdt.azim();
+    c6dof_.orientation.y = pdt.elev();
+    c6dof_.orientation.x = 0.0;
+  }
+  //
+  //
+  //TASCAR::zyx_euler_t dr(orientation.interp(ltime));
+  //TASCAR::pos_t dp(location.interp(ltime));
+  for(auto iobj : obj ){
+    iobj.obj->dorientation = c6dof_.orientation;
+    iobj.obj->dlocation = c6dof_.position;
   }
 }
 
