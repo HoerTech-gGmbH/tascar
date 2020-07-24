@@ -73,7 +73,7 @@ void ap_sndfile_async_t::configure()
   sndf = new TASCAR::async_sndfile_t( n_channels, TASCAR::config("tascar.sndfile.bufferlength", 1<<18), n_fragment );
   sndf->open( name, channel, position*f_sample, caliblevel, loop );
   if( sndf->get_srate() != f_sample ){
-    std::string msg("Sample rate differs ("+name+"): ");
+    std::string msg("The sample rate of the sound file "+name+" differs from the audio system sample rate: ");
     char ctmp[1024];
     sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf->get_srate(),f_sample);
     msg+=ctmp;

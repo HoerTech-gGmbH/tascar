@@ -87,7 +87,7 @@ void ap_sndfile_t::configure()
     sndf.push_back(new TASCAR::sndfile_t(name,channel+ch,start,length));
   }
   if( sndf[0]->get_srate() != f_sample ){
-    std::string msg("Sample rate differs ("+name+"): ");
+    std::string msg("The sample rate of the sound file "+name+" differs from the audio system sample rate: ");
     char ctmp[1024];
     sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf[0]->get_srate(),f_sample);
     msg+=ctmp;
