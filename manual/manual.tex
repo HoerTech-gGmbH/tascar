@@ -707,7 +707,13 @@ The following attributes are common to all scene objects:
 \indattr{end}                & Render activity start time in seconds; default: 0                                                                                     \\
 \indattr{localpos}           & Local position in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
 \indattr{sampledorientation} & Sample orientation along trajectory with this distance (default: 0)                                                                   \\
+\indattr{dloaction}           & Delta location in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
+\indattr{dorientation}           & Delta orientation in degree (ZYX Euler transformation); default: ``0 0 0''                                                                  \\
 \end{tscattributes}
+
+The delta transformation values can be overwritten by actor modules or
+the OSC interface. The \attr{dorientation} attribute is first rotation
+around Z axis, then Y axis, followed by X axis.
 
 The render activity is limited to the interval [start,end] only if end
 \(>\) start. All time information of objects, such as dynamic geometry

@@ -351,6 +351,16 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::pos_t&
 
 }
 
+void TASCAR::xml_element_t::get_attribute(const std::string& name,TASCAR::zyx_euler_t& value)
+{
+  attribute_list[e][name] = "zyx_euler";
+  if( has_attribute( name ) )
+    get_attribute_value(e,name,value);
+  else
+    set_attribute(name, value);
+
+}
+
 void TASCAR::xml_element_t::get_attribute(const std::string& name,std::vector<TASCAR::pos_t>& value)
 {
   attribute_list[e][name] = "vector<pos>";
@@ -461,6 +471,11 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,int64_t value)
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::pos_t& value)
+{
+  set_attribute_value(e,name,value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,const TASCAR::zyx_euler_t& value)
 {
   set_attribute_value(e,name,value);
 }
@@ -576,6 +591,13 @@ void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASC
   elem->set_attribute(name,value.print_cart(" "));
 }
 
+void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::zyx_euler_t& value)
+{
+  char ctmp[1024];
+  sprintf(ctmp,"%1.12g %1.12g %1.12g",value.z*RAD2DEG,value.y*RAD2DEG,value.x*RAD2DEG);
+  elem->set_attribute(name,ctmp);
+}
+
 void set_attribute_value(xmlpp::Element* elem,const std::string& name,const TASCAR::levelmeter::weight_t& value)
 {
   elem->set_attribute(name,TASCAR::to_string(value));
@@ -660,6 +682,18 @@ void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::po
   std::string attv(elem->get_attribute_value(name));
   TASCAR::pos_t tmpv;
   if( sscanf(attv.c_str(),"%lf%lf%lf",&(tmpv.x),&(tmpv.y),&(tmpv.z))==3 ){
+    value = tmpv;
+  }
+}
+
+void get_attribute_value(xmlpp::Element* elem,const std::string& name,TASCAR::zyx_euler_t& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  TASCAR::zyx_euler_t tmpv;
+  if( sscanf(attv.c_str(),"%lf%lf%lf",&(tmpv.z),&(tmpv.y),&(tmpv.x))==3 ){
+    tmpv.x *= DEG2RAD;
+    tmpv.y *= DEG2RAD;
+    tmpv.z *= DEG2RAD;
     value = tmpv;
   }
 }
