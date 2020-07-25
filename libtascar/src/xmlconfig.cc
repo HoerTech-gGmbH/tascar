@@ -35,7 +35,8 @@ size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes,
 
 std::string TASCAR::to_string(const TASCAR::pos_t& x)
 {
-  return x.print_cart();
+  return TASCAR::to_string(x.x) + " " + TASCAR::to_string(x.y) + " " +
+         TASCAR::to_string(x.z);
 }
 
 std::string TASCAR::to_string(const TASCAR::zyx_euler_t& x)
