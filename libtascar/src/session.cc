@@ -306,6 +306,7 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_
   warnsrate(0),
   requirefragsize(0),
   warnfragsize(0),
+  initcmdsleep(0),
   h_pipe_initcmd(NULL),
   pid_initcmd(0)
 {
