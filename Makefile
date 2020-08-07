@@ -43,6 +43,7 @@ coverage: googletest unit-tests
 install: all
 	install -D libtascar/build/libtascar*.so -t $(DESTDIR)$(LIBDIR)
 	install -D libtascar/src/*.h -t $(DESTDIR)$(INCDIR)/tascar
+	install -D libtascar/build/*.h -t $(DESTDIR)$(INCDIR)/tascar
 	install -D plugins/build/*.so -t $(DESTDIR)$(LIBDIR)
 	install -D apps/build/tascar_* -t $(DESTDIR)$(BINDIR)
 	install -D gui/build/tascar -t $(DESTDIR)$(BINDIR)
