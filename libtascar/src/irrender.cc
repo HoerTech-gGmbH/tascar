@@ -47,9 +47,9 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
   if(!pscene)
     throw TASCAR::ErrMsg("No scene loaded");
   // open sound files:
-  if( duration==0 )
+  if(duration == 0)
     duration = session_core_t::duration;
-  int64_t iduration(srate*duration);
+  int64_t iduration(srate * duration);
   chunk_cfg_t cf(srate, fragsize, 1);
   uint32_t num_fragments((uint32_t)((iduration - 1) / cf.n_fragment) + 1);
   // configure maximum delayline length:
@@ -57,7 +57,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
   for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd =
           pscene->sounds.begin();
       isnd != pscene->sounds.end(); ++isnd) {
-    if( (*isnd)->maxdist > maxdist )
+    if((*isnd)->maxdist > maxdist)
       (*isnd)->maxdist = maxdist;
   }
   // initialize scene:
@@ -103,12 +103,13 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
     for(uint32_t kf = 0; kf < cf.n_fragment; ++kf)
       for(uint32_t kc = 0; kc < nch_out; ++kc)
         sf_out_buf[kc + nch_out * kf] = a_out[kc][kf];
-    sf_out.writef_float(sf_out_buf, std::max((int64_t)0,std::min(iduration-n,(int64_t)cf.n_fragment)));
+    sf_out.writef_float(
+        sf_out_buf,
+        std::max((int64_t)0, std::min(iduration - n, (int64_t)cf.n_fragment)));
     // increment time:
     if(b_dynamic) {
       tp.session_time_samples += cf.n_fragment;
-      tp.session_time_seconds =
-        ((double)tp.session_time_samples) / cf.f_sample;
+      tp.session_time_seconds = ((double)tp.session_time_samples) / cf.f_sample;
       tp.object_time_samples += cf.n_fragment;
       tp.object_time_seconds = ((double)tp.object_time_samples) / cf.f_sample;
     }
@@ -138,7 +139,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
   uint32_t num_fragments((uint32_t)((sf_in.get_frames() - 1) / cf.n_fragment) +
                          1);
   // configure maximum delayline length:
-  double maxdist((sf_in.get_frames() + 1) / cf.f_sample * (pscene->c));
+  double maxdist((cf.n_fragment + 1) / cf.f_sample * (pscene->c));
   for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd =
           pscene->sounds.begin();
       isnd != pscene->sounds.end(); ++isnd) {
