@@ -138,12 +138,14 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
   chunk_cfg_t cffile(cf);
   uint32_t num_fragments((uint32_t)((sf_in.get_frames() - 1) / cf.n_fragment) +
                          1);
-  // configure maximum delayline length:
-  double maxdist((cf.n_fragment + 1) / cf.f_sample * (pscene->c));
+  // configure maximum delayline length: the maximum meaningful length
+  // is the length of the sound file:
+  double maxdist((sf_in.get_frames() + 1) / cf.f_sample * (pscene->c));
   for(std::vector<TASCAR::Scene::sound_t*>::iterator isnd =
           pscene->sounds.begin();
       isnd != pscene->sounds.end(); ++isnd) {
-    (*isnd)->maxdist = maxdist;
+    if((*isnd)->maxdist > maxdist)
+      (*isnd)->maxdist = maxdist;
   }
   // initialize scene:
   pscene->prepare(cf);
