@@ -966,94 +966,111 @@ void scene_draw_t::draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::
   }
 }
 
-void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,
+                            Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  if( obj ){
+  if(obj) {
     bool active(obj->isactive(time));
     bool solo(obj->get_solo());
     std::vector<TASCAR::pos_t> sndpos;
     TASCAR::pos_t p(obj->get_location());
-    TASCAR::pos_t dir(0.03*view.scale,0,0);
-    dir *= obj->get_orientation();
-    dir += p;
+    TASCAR::pos_t dirx(0.03 * view.scale, 0, 0);
+    TASCAR::pos_t diry(0, 0.03 * view.scale, 0);
+    TASCAR::pos_t dirz(0, 0, 0.03 * view.scale);
+    dirx *= obj->get_orientation();
+    dirx += p;
+    diry *= obj->get_orientation();
+    diry += p;
+    dirz *= obj->get_orientation();
+    dirz += p;
     TASCAR::pos_t center(p);
-    for(unsigned int k=0;k<obj->sound.size();k++){
+    center *= 0.1;
+    for(unsigned int k = 0; k < obj->sound.size(); k++) {
       TASCAR::pos_t ptmp(obj->sound[k]->position);
       sndpos.push_back(view(ptmp));
       center += ptmp;
     }
-    center *= 1.0/(1.0+sndpos.size());
+    center *= 1.0 / (0.1 + sndpos.size());
     center = view(center);
     p = view(p);
-    dir = view(dir);
+    dirx = view(dirx);
+    diry = view(diry);
+    dirz = view(dirz);
     cr->save();
-    if( p.z != std::numeric_limits<double>::infinity()){
-      if( obj == selection ){
+    if(p.z != std::numeric_limits<double>::infinity()) {
+      if(obj == selection) {
         cr->set_source_rgba(1, 0.7, 0, 0.5);
-        cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
+        cr->arc(p.x, -p.y, 3 * msize, 0, PI2);
         cr->fill();
       }
-      if( active && solo && blink ){
+      if(active && solo && blink) {
         cr->set_source_rgba(1, 0, 0, 0.5);
-        cr->arc(p.x, -p.y, 1.5*msize, 0, PI2 );
+        cr->arc(p.x, -p.y, 1.5 * msize, 0, PI2);
         cr->fill();
       }
-      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6+0.2*active);
-      cr->arc(p.x, -p.y, msize, 0, PI2 );
+      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b,
+                          0.6 + 0.2 * active);
+      cr->arc(p.x, -p.y, msize, 0, PI2);
       cr->fill();
-      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.3+0.5*active);
-      cr->move_to( p.x, -p.y );
-      draw_edge( cr, p, dir );
+      cr->set_source_rgb(1.0, 0.0, 0.0);
+      draw_edge(cr, p, dirx);
+      cr->stroke();
+      cr->set_source_rgb(0.0, 1.0, 0.0);
+      draw_edge(cr, p, diry);
+      cr->stroke();
+      cr->set_source_rgb(0.0, 0.0, 1.0);
+      draw_edge(cr, p, dirz);
       cr->stroke();
     }
-    for(unsigned int k=0;k<sndpos.size();k++){
-      if( sndpos[k].z != std::numeric_limits<double>::infinity()){
-        if( solo && blink ){
+    for(unsigned int k = 0; k < sndpos.size(); k++) {
+      if(sndpos[k].z != std::numeric_limits<double>::infinity()) {
+        if(solo && blink) {
           cr->set_source_rgba(1, 0, 0, 0.5);
-          cr->arc(sndpos[k].x, -sndpos[k].y, 0.75*msize, 0, PI2 );
+          cr->arc(sndpos[k].x, -sndpos[k].y, 0.75 * msize, 0, PI2);
           cr->fill();
         }
         cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.4);
-        float r(0.25+(std::max(40.0f,std::min(100.0f,obj->sound[k]->read_meter()))-40.0)/20.0f);
-        cr->arc(sndpos[k].x, -sndpos[k].y, r*msize, 0, PI2 );
+        float r(0.25 + (std::max(40.0f, std::min(100.0f,
+                                                 obj->sound[k]->read_meter())) -
+                        40.0) /
+                           20.0f);
+        cr->arc(sndpos[k].x, -sndpos[k].y, r * msize, 0, PI2);
         cr->fill();
-        if( b_print_labels ){
+        if(b_print_labels) {
           cr->save();
           cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.9);
-          cr->move_to( sndpos[k].x + 1.1*msize, -sndpos[k].y );
-          cr->scale( 0.6, 0.6 );
-          cr->show_text( obj->sound[k]->get_name().c_str() );
+          cr->move_to(sndpos[k].x + 1.1 * msize, -sndpos[k].y);
+          cr->scale(0.6, 0.6);
+          cr->show_text(obj->sound[k]->get_name().c_str());
           cr->stroke();
           cr->restore();
         }
       }
     }
-    if( !active )
-      cr->set_source_rgba(0, 0, 0, 0.75 );
+    if(!active)
+      cr->set_source_rgba(0, 0, 0, 0.75);
     else
-      cr->set_source_rgb(0, 0, 0 );
-    if( b_print_labels ){
-      if( center.z != std::numeric_limits<double>::infinity()){
-        cr->move_to( center.x + 1.1*msize, -center.y );
-        cr->show_text( obj->get_name().c_str() );
+      cr->set_source_rgb(0, 0, 0);
+    if(b_print_labels) {
+      if(center.z != std::numeric_limits<double>::infinity()) {
+        cr->move_to(center.x + 1.1 * msize, -center.y);
+        cr->show_text(obj->get_name().c_str());
         cr->stroke();
       }
     }
-    if( active ){
-      cr->set_line_width( 0.1*msize );
+    if(active) {
+      cr->set_line_width(0.1 * msize);
       cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-      if( obj->sound.size()){
+      if(obj->sound.size()) {
         pos_t pso(view(obj->sound[0]->position));
-        if( pso.z != std::numeric_limits<double>::infinity()){
-          for(unsigned int k=1;k<obj->sound.size();k++){
+        if(pso.z != std::numeric_limits<double>::infinity()) {
+          for(unsigned int k = 1; k < obj->sound.size(); k++) {
             pos_t ps(view(obj->sound[k]->position));
-            bool view_x((fabs(ps.x)<1)||
-                        (fabs(pso.x)<1));
-            bool view_y((fabs(ps.y)<1)||
-                        (fabs(pso.y)<1));
-            if( view_x && view_y ){
-              cr->move_to( pso.x, -pso.y );
-              cr->line_to( ps.x, -ps.y );
+            bool view_x((fabs(ps.x) < 1) || (fabs(pso.x) < 1));
+            bool view_y((fabs(ps.y) < 1) || (fabs(pso.y) < 1));
+            if(view_x && view_y) {
+              cr->move_to(pso.x, -pso.y);
+              cr->line_to(ps.x, -ps.y);
               cr->stroke();
             }
             pso = ps;
@@ -1065,83 +1082,91 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,Cairo::RefPtr<Cairo
   }
 }
 
-void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
+                                        Cairo::RefPtr<Cairo::Context> cr,
+                                        double msize)
 {
-  if( obj ){
-    if( view.get_perspective() )
+  if(obj) {
+    if(view.get_perspective())
       return;
     bool solo(obj->get_solo());
-    msize *= 1.5;
+    msize *= 2.1;
     cr->save();
-    cr->set_line_width( 0.2*msize );
+    cr->set_line_width(0.2 * msize);
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     pos_t p(obj->get_location());
     zyx_euler_t o(obj->get_orientation());
-    if( obj->volumetric.has_volume() ){
-      draw_cube(p,o,obj->volumetric,cr);
-      if( obj->falloff > 0 ){
+    if(obj->volumetric.has_volume()) {
+      draw_cube(p, o, obj->volumetric, cr);
+      if(obj->falloff > 0) {
         std::vector<double> dash(2);
         dash[0] = msize;
         dash[1] = msize;
-        cr->set_dash(dash,0);
-        draw_cube(p,o,obj->volumetric+pos_t(2*obj->falloff,2*obj->falloff,2*obj->falloff),cr);
+        cr->set_dash(dash, 0);
+        draw_cube(p, o,
+                  obj->volumetric + pos_t(2 * obj->falloff, 2 * obj->falloff,
+                                          2 * obj->falloff),
+                  cr);
         dash[0] = 1.0;
         dash[1] = 0.0;
-        cr->set_dash(dash,0);
+        cr->set_dash(dash, 0);
       }
     }
-    if( obj->delaycomp > 0 ){
+    if(obj->delaycomp > 0) {
       cr->save();
-      double dr(obj->delaycomp*scene_->c);
-      cr->set_source_rgba(1.0,0.0,0.0,0.6);
+      double dr(obj->delaycomp * scene_->c);
+      cr->set_source_rgba(1.0, 0.0, 0.0, 0.6);
       std::vector<double> dash(2);
       dash[0] = msize;
       dash[1] = msize;
-      cr->set_dash(dash,0);
+      cr->set_dash(dash, 0);
       pos_t x(p);
-      for(uint32_t k=0;k<25;k++){
+      for(uint32_t k = 0; k < 25; k++) {
         x = p;
-        x.x += dr*cos(PI2*k/24.0);
-        x.y += dr*sin(PI2*k/24.0);
+        x.x += dr * cos(PI2 * k / 24.0);
+        x.y += dr * sin(PI2 * k / 24.0);
         x = view(x);
-        if( k==0 )
-          cr->move_to(x.x,-x.y);
+        if(k == 0)
+          cr->move_to(x.x, -x.y);
         else
-          cr->line_to(x.x,-x.y);
+          cr->line_to(x.x, -x.y);
       }
-      for(uint32_t k=0;k<25;k++){
+      for(uint32_t k = 0; k < 25; k++) {
         x = p;
-        x.y += dr*cos(PI2*k/24.0);
-        x.z += dr*sin(PI2*k/24.0);
+        x.y += dr * cos(PI2 * k / 24.0);
+        x.z += dr * sin(PI2 * k / 24.0);
         x = view(x);
-        if( k==0 )
-          cr->move_to(x.x,-x.y);
+        if(k == 0)
+          cr->move_to(x.x, -x.y);
         else
-          cr->line_to(x.x,-x.y);
+          cr->line_to(x.x, -x.y);
       }
-      for(uint32_t k=0;k<25;k++){
+      for(uint32_t k = 0; k < 25; k++) {
         x = p;
-        x.z += dr*cos(PI2*k/24.0);
-        x.x += dr*sin(PI2*k/24.0);
+        x.z += dr * cos(PI2 * k / 24.0);
+        x.x += dr * sin(PI2 * k / 24.0);
         x = view(x);
-        if( k==0 )
-          cr->move_to(x.x,-x.y);
+        if(k == 0)
+          cr->move_to(x.x, -x.y);
         else
-          cr->line_to(x.x,-x.y);
+          cr->line_to(x.x, -x.y);
       }
       cr->stroke();
       cr->restore();
     }
-    double scale(0.5*view.get_scale());
-    pos_t p1(1.8*msize*scale,-0.6*msize*scale,0);
-    pos_t p2(2.9*msize*scale,0,0);
-    pos_t p3(1.8*msize*scale,0.6*msize*scale,0);
-    pos_t p4(-0.5*msize*scale,2.3*msize*scale,0);
-    pos_t p5(0,1.7*msize*scale,0);
-    pos_t p6(0.5*msize*scale,2.3*msize*scale,0);
-    pos_t p7(-0.5*msize*scale,-2.3*msize*scale,0);
-    pos_t p8(0,-1.7*msize*scale,0);
-    pos_t p9(0.5*msize*scale,-2.3*msize*scale,0);
+    double scale(0.5 * view.get_scale());
+    pos_t p1(1.8 * msize * scale, -0.6 * msize * scale, 0);
+    pos_t p2(2.9 * msize * scale, 0, 0);
+    pos_t p3(1.8 * msize * scale, 0.6 * msize * scale, 0);
+    pos_t p4(-0.5 * msize * scale, 2.3 * msize * scale, 0);
+    pos_t p5(0, 1.7 * msize * scale, 0);
+    pos_t p6(0.5 * msize * scale, 2.3 * msize * scale, 0);
+    pos_t p7(-0.5 * msize * scale, -2.3 * msize * scale, 0);
+    pos_t p8(0, -1.7 * msize * scale, 0);
+    pos_t p9(0.5 * msize * scale, -2.3 * msize * scale, 0);
+    TASCAR::pos_t dirx(0.03 * view.scale, 0, 0);
+    TASCAR::pos_t diry(0, 0.03 * view.scale, 0);
+    TASCAR::pos_t dirz(0, 0, 0.03 * view.scale);
     p1 *= o;
     p2 *= o;
     p3 *= o;
@@ -1151,15 +1176,21 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,Cairo
     p7 *= o;
     p8 *= o;
     p9 *= o;
-    p1+=p;
-    p2+=p;
-    p3+=p;
-    p4+=p;
-    p5+=p;
-    p6+=p;
-    p7+=p;
-    p8+=p;
-    p9+=p;
+    dirx *= o;
+    diry *= o;
+    dirz *= o;
+    p1 += p;
+    p2 += p;
+    p3 += p;
+    p4 += p;
+    p5 += p;
+    p6 += p;
+    p7 += p;
+    p8 += p;
+    p9 += p;
+    dirx += p;
+    diry += p;
+    dirz += p;
     p = view(p);
     p1 = view(p1);
     p2 = view(p2);
@@ -1170,49 +1201,66 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,Cairo
     p7 = view(p7);
     p8 = view(p8);
     p9 = view(p9);
-    if( obj == selection ){
+    dirx = view(dirx);
+    diry = view(diry);
+    dirz = view(dirz);
+    cr->set_source_rgb(1.0, 0.0, 0.0);
+    draw_edge(cr, p, dirx);
+    cr->stroke();
+    cr->set_source_rgb(0.0, 1.0, 0.0);
+    draw_edge(cr, p, diry);
+    cr->stroke();
+    cr->set_source_rgb(0.0, 0.0, 1.0);
+    draw_edge(cr, p, dirz);
+    cr->stroke();
+
+    if(obj == selection) {
       cr->set_source_rgba(1, 0.7, 0, 0.5);
-      cr->arc(p.x, -p.y, 3*msize, 0, PI2 );
+      cr->arc(p.x, -p.y, 3 * msize, 0, PI2);
       cr->fill();
     }
-    if( solo && blink ){
+    if(solo && blink) {
       cr->set_source_rgba(1, 0, 0, 0.5);
-      cr->arc(p.x, -p.y, 1.5*msize, 0, PI2 );
+      cr->arc(p.x, -p.y, 1.5 * msize, 0, PI2);
       cr->fill();
     }
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-    cr->move_to( p.x, -p.y );
-    cr->arc(p.x, -p.y, 2*msize, 0, PI2 );
-    cr->move_to( p1.x, -p1.y );
-    cr->line_to( p2.x, -p2.y );
-    cr->line_to( p3.x, -p3.y );
-    cr->move_to( p4.x, -p4.y );
-    cr->line_to( p5.x, -p5.y );
-    cr->line_to( p6.x, -p6.y );
-    cr->move_to( p7.x, -p7.y );
-    cr->line_to( p8.x, -p8.y );
-    cr->line_to( p9.x, -p9.y );
+    cr->move_to(p.x + 2 * msize, -p.y);
+    cr->arc(p.x, -p.y, 2 * msize, 0, PI2);
+    cr->move_to(p1.x, -p1.y);
+    cr->line_to(p2.x, -p2.y);
+    cr->line_to(p3.x, -p3.y);
+    cr->move_to(p4.x, -p4.y);
+    cr->line_to(p5.x, -p5.y);
+    cr->line_to(p6.x, -p6.y);
+    cr->move_to(p7.x, -p7.y);
+    cr->line_to(p8.x, -p8.y);
+    cr->line_to(p9.x, -p9.y);
     cr->stroke();
-    if( obj->boundingbox.active ){
-      cr->set_line_width( 0.1*msize );
+    if(obj->boundingbox.active) {
+      cr->set_line_width(0.1 * msize);
       pos_t p(obj->boundingbox.get_location());
       zyx_euler_t o(obj->boundingbox.get_orientation());
-      draw_cube(p,o,obj->boundingbox.size,cr);
-      if( obj->boundingbox.falloff > 0 ){
+      draw_cube(p, o, obj->boundingbox.size, cr);
+      if(obj->boundingbox.falloff > 0) {
         std::vector<double> dash(2);
         dash[0] = msize;
         dash[1] = msize;
-        cr->set_dash(dash,0);
-        draw_cube(p,o,obj->boundingbox.size+pos_t(2*obj->boundingbox.falloff,2*obj->boundingbox.falloff,2*obj->boundingbox.falloff),cr);
+        cr->set_dash(dash, 0);
+        draw_cube(p, o,
+                  obj->boundingbox.size + pos_t(2 * obj->boundingbox.falloff,
+                                                2 * obj->boundingbox.falloff,
+                                                2 * obj->boundingbox.falloff),
+                  cr);
         dash[0] = 1.0;
         dash[1] = 0.0;
-        cr->set_dash(dash,0);
+        cr->set_dash(dash, 0);
       }
     }
-    if( b_print_labels ){
-      cr->set_source_rgb(0, 0, 0 );
-      cr->move_to( p.x + 3.1*msize, -p.y );
-      cr->show_text( obj->get_name().c_str() );
+    if(b_print_labels) {
+      cr->set_source_rgb(0, 0, 0);
+      cr->move_to(p.x + 3.1 * msize, -p.y);
+      cr->show_text(obj->get_name().c_str());
       cr->stroke();
     }
     cr->restore();
