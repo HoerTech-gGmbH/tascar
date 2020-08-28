@@ -1,4 +1,4 @@
-TESTS = test_wav_multichannel test_snd_zeros test_ir1 test_ir2		\
+TESTS = jack_routeplugin test_snd_pink_diffuse test_ir1 test_ir2	\
 	test_ir3 test_ir4 test_ir6_ismminmax test_snd1 test_snd2	\
 	test_snd4 test_snd3 test_snd5 test_pos1 test_pos2		\
 	test_pos_trackinterp test_snd_door1 test_snd_door2		\
@@ -8,27 +8,26 @@ TESTS = test_wav_multichannel test_snd_zeros test_ir1 test_ir2		\
 	test_wav_diffuse_layerbug test_wav_diffirs test_sndgainramp	\
 	test_sndgainramp2 test_ir_spkcorr test_snd_calib1		\
 	test_snd_calib2 test_snd_vbap51 test_snd_pink			\
-	test_snd_pink_diffuse test_snd_sndfile test_snd_sndfile2	\
-	test_snd_door4 test_snd_roommic test_fail_vbap3d_flat		\
-	test_notfail_vbap3d_3d test_level_vbap3d test_ir_ortf_0deg	\
-	test_ir_ortf_55deg test_ir_scatter test_ir_noscatter		\
-	test_ir_scatter_ortf test_snd_sourcedir_generic			\
-	test_snd_sourcedir_generic1					\
+	test_snd_sndfile test_snd_sndfile2 test_snd_door4		\
+	test_snd_roommic test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
+	test_level_vbap3d test_ir_ortf_0deg test_ir_ortf_55deg		\
+	test_ir_scatter test_ir_noscatter test_ir_scatter_ortf		\
+	test_snd_sourcedir_generic test_snd_sourcedir_generic1		\
 	test_snd_sourcedir_generic_cardioid test_unload_on_error	\
-	jack_routeplugin test_ir_wfs test_ir_wfs_noplanewave		\
-	jackfail_connectfail jack_connect hoa3d				\
-	test_fail_duplicatenames test_fail_duplicatescenenames		\
-	test_level_hoa2d_basic test_level_hoa2d_maxre jack_hoafdnrot	\
-	test_ir_reverb test_snd_reverb test_ir_simplefdn		\
-	jackconnect_ortf jackconnect_amb1h1v jackconnect_hoa2dfuma	\
-	test_snd_vbap3d_speakermatch test_ir_volumetric			\
-	test_pos_obstacle test_pos_obstacle_inner			\
+	test_ir_wfs test_ir_wfs_noplanewave jackfail_connectfail	\
+	jack_connect hoa3d test_fail_duplicatenames			\
+	test_fail_duplicatescenenames test_level_hoa2d_basic		\
+	test_level_hoa2d_maxre jack_hoafdnrot test_ir_reverb		\
+	test_ir_simplefdn jackconnect_ortf jackconnect_amb1h1v		\
+	jackconnect_hoa2dfuma test_snd_vbap3d_speakermatch		\
+	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner	\
 	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg	\
 	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
 	test_ir_hrtf_270deg test_ir_hrtf_315deg test_ir_hrtf_el90deg	\
 	test_ir_hrtf_el-90deg test_ir_hrtf_el45deg			\
-	test_ir_hrtf_el-45deg test_ir_delay
+	test_ir_hrtf_el-45deg test_ir_delay test_snd_reverb		\
+	test_wav_multichannel test_snd_zeros
 
 
 TEST_SND=$(wildcard test_snd*.tsc)
@@ -62,8 +61,8 @@ TEST_LEV = $(patsubst %,test_reclevel_%,$(LEVELREC))
 
 FAILING_TESTS = test_ir5
 
-TOL = 1e-7
-RMSTOL = 1e-7
+TOL = 2e-7
+RMSTOL = 2e-7
 
 all: $(TESTS) testrec testlev
 
@@ -242,3 +241,8 @@ test_ir_reverb: IRLEN=44100
 test_ir_partconvrev: IRLEN=44100
 test_ir_temp: IRLEN=441000
 test_ir_volumetric: TOL=1e-5
+test_snd_vbap3d_speakermatch: TOL=1e-5
+test_snd_vbap3d_speakermatch: RMSTOL=1e-6
+test_snd_sndfile: TOL=3e-7
+test_snd_reverb: TOL=1e-5
+test_snd_reverb: RMSTOL=1e-6

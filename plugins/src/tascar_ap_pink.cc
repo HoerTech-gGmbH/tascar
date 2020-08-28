@@ -63,7 +63,10 @@ void pink_t::configure()
       sw.b[kf] = 1.0 / f * std::exp(i*dis(gen));
     else
       sw.b[kf] = 0;
-    TASCAR::pos_t p(disx(gen),disx(gen),disx(gen));
+    TASCAR::pos_t p;
+    p.z = disx(gen);
+    p.y = disx(gen);
+    p.x = disx(gen);
     p.normalize();
     // FuMa normalization:
     p *= sqrt(2.0);
