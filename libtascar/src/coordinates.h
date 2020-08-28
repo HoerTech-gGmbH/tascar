@@ -667,60 +667,105 @@ namespace TASCAR {
 
   class quaternion_t {
   public:
-    quaternion_t() : w(0),x(0),y(0),z(0) {};
-    quaternion_t( float w_, float x_, float y_, float z_ ) : w(w_),x(x_),y(y_),z(z_) {};
+    quaternion_t() : w(0), x(0), y(0), z(0){};
+    quaternion_t(float w_, float x_, float y_, float z_)
+        : w(w_), x(x_), y(y_), z(z_){};
     float w;
     float x;
     float y;
     float z;
-    void clear() { w = 0.0; x = 0.0; y = 0.0; z = 0.0; };
-    inline quaternion_t& operator*=(float b){
-      w*=b;
-      x*=b;
-      y*=b;
-      z*=b;
+    void clear()
+    {
+      w = 0.0;
+      x = 0.0;
+      y = 0.0;
+      z = 0.0;
+    };
+    inline quaternion_t& operator*=(float b)
+    {
+      w *= b;
+      x *= b;
+      y *= b;
+      z *= b;
       return *this;
     };
-    inline void set_rotation( float angle, TASCAR::pos_t axis ){
-      axis *= sinf(0.5f*angle);
-      w = cosf(0.5f*angle);
+    inline void set_rotation(float angle, TASCAR::pos_t axis)
+    {
+      axis *= sinf(0.5f * angle);
+      w = cosf(0.5f * angle);
       x = axis.x;
       y = axis.y;
       z = axis.z;
     };
-    inline quaternion_t inverse() const {
-      return conjugate().scale(1.0/norm());
+    inline void set_euler( const zyx_euler_t& eul )
+    {
+          // Abbreviations for the various angular functions
+      float cy = cosf(eul.z * 0.5);
+      float sy = sinf(eul.z * 0.5);
+      float cp = cosf(eul.y * 0.5);
+      float sp = sinf(eul.y * 0.5);
+      float cr = cosf(eul.x * 0.5);
+      float sr = sinf(eul.x * 0.5);
+      w = cr * cp * cy + sr * sp * sy;
+      x = sr * cp * cy - cr * sp * sy;
+      y = cr * sp * cy + sr * cp * sy;
+      z = cr * cp * sy - sr * sp * cy;
     };
-    inline float norm() const {
-      return w*w+x*x+y*y+z*z;
+    inline quaternion_t inverse() const
+    {
+      return conjugate().scale(1.0 / norm());
     };
-    inline quaternion_t conjugate() const {
-      return quaternion_t( w, -x, -y, -z );
+    inline float norm() const { return w * w + x * x + y * y + z * z; };
+    inline quaternion_t conjugate() const
+    {
+      return quaternion_t(w, -x, -y, -z);
     };
-    inline quaternion_t scale( float s ) const {
-      return quaternion_t( w*s, x*s, y*s, z*s);
+    inline quaternion_t scale(float s) const
+    {
+      return quaternion_t(w * s, x * s, y * s, z * s);
     };
-    inline void rotate( TASCAR::pos_t& p ){
-      quaternion_t qv( 0.0f, p.x, p.y, p.z );
+    inline void rotate(TASCAR::pos_t& p)
+    {
+      quaternion_t qv(0.0f, p.x, p.y, p.z);
       qv = (*this) * qv * inverse();
       p.x = qv.x;
       p.y = qv.y;
       p.z = qv.z;
     };
-    inline quaternion_t operator*(const quaternion_t& q) const{
-      return quaternion_t(w*q.w - x*q.x - y*q.y - z*q.z, 
-                          w*q.x + x*q.w + y*q.z - z*q.y,                          
-                          w*q.y + y*q.w + z*q.x - x*q.z,
-                          w*q.z + z*q.w + x*q.y - y*q.x);
+    inline quaternion_t operator*(const quaternion_t& q) const
+    {
+      return quaternion_t(w * q.w - x * q.x - y * q.y - z * q.z,
+                          w * q.x + x * q.w + y * q.z - z * q.y,
+                          w * q.y + y * q.w + z * q.x - x * q.z,
+                          w * q.z + z * q.w + x * q.y - y * q.x);
     };
-    inline quaternion_t& operator*=(const quaternion_t& q){
-      quaternion_t tmp(*this*q);
+    inline quaternion_t& operator*=(const quaternion_t& q)
+    {
+      quaternion_t tmp(*this * q);
       *this = tmp;
       return *this;
     };
- 
+    inline zyx_euler_t to_euler() const
+    {
+      zyx_euler_t eul;
+      // x-axis rotation
+      float sinr_cosp(2.0f * (w * x + y * z));
+      float cosr_cosp(1.0f - 2.0f * (x * x + y * y));
+      eul.x = atan2f(sinr_cosp, cosr_cosp);
+      // y-axis rotation
+      float sinp(2.0f * (w * y - z * x));
+      if(std::abs(sinp) >= 1.0f)
+        eul.y =
+            std::copysign(0.5 * M_PI, sinp); // use 90 degrees if out of range
+      else
+        eul.y = std::asin(sinp);
+      // yaw (z-axis rotation)
+      float siny_cosp(2.0f * (w * z + x * y));
+      float cosy_cosp(1.0f - 2.0f * (y * y + z * z));
+      eul.z = atan2f(siny_cosp, cosy_cosp);
+      return eul;
+    };
   };
-
 }
 
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);

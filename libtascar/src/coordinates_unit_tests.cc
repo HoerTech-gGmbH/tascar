@@ -457,6 +457,47 @@ TEST(quaternion_t,rotate)
   ASSERT_NEAR( 0.0, p.z, 1e-7 );
 }
 
+TEST(quaternion_t, euler)
+{
+  TASCAR::quaternion_t q;
+  TASCAR::zyx_euler_t eul;
+  // single axis rotation:
+  for(double r = -1.5; r <= 1.5; r += 0.25) {
+    q.set_rotation(r, TASCAR::pos_t(0, 0, 1));
+    eul = q.to_euler();
+    ASSERT_NEAR(r, eul.z, 1e-7);
+    ASSERT_NEAR(0.0, eul.y, 1e-9);
+    ASSERT_NEAR(0.0, eul.x, 1e-9);
+    q.set_rotation(r, TASCAR::pos_t(0, 1, 0));
+    eul = q.to_euler();
+    ASSERT_NEAR(0.0, eul.z, 1e-9);
+    ASSERT_NEAR(r, eul.y, 1e-6);
+    ASSERT_NEAR(0.0, eul.x, 1e-9);
+    q.set_rotation(r, TASCAR::pos_t(1, 0, 0));
+    eul = q.to_euler();
+    ASSERT_NEAR(0.0, eul.z, 1e-9);
+    ASSERT_NEAR(0.0, eul.y, 1e-9);
+    ASSERT_NEAR(r, eul.x, 1e-7);
+  }
+  // multiple axis rotation:
+  TASCAR::quaternion_t q2;
+  q.set_rotation(0.2, TASCAR::pos_t(0, 0, 1));
+  q2.set_rotation(0.3, TASCAR::pos_t(0, 1, 0));
+  q *= q2;
+  q2.set_rotation(0.4, TASCAR::pos_t(1, 0, 0));
+  q *= q2;
+  eul = q.to_euler();
+  ASSERT_NEAR(0.2, eul.z, 1e-7);
+  ASSERT_NEAR(0.3, eul.y, 1e-7);
+  ASSERT_NEAR(0.4, eul.x, 1e-7);
+  // to/from euler
+  q.set_euler(TASCAR::zyx_euler_t(0.2, 0.3, 0.4));
+  eul = q.to_euler();
+  ASSERT_NEAR(0.2, eul.z, 1e-7);
+  ASSERT_NEAR(0.3, eul.y, 1e-7);
+  ASSERT_NEAR(0.4, eul.x, 1e-7);
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
