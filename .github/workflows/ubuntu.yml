@@ -1,0 +1,17 @@
+name: Ubuntu make
+
+on:
+  push:
+    branches: [ master, development, automation ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: make
