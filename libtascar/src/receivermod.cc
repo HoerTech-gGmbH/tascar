@@ -15,7 +15,13 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
   get_attribute("type",receivertype);
   receivertype = env_expand( receivertype );
   std::string libname("tascarreceiver_");
-  libname += receivertype + ".so";
+  #if defined(__APPLE__)
+    libname += receivertype + ".dylib";
+  #elif __linux__
+    libname += receivertype + ".so";
+  #else
+    #error not supported
+  #endif
   lib = dlopen(libname.c_str(), RTLD_NOW );
   if( !lib )
     throw TASCAR::ErrMsg("Unable to open receiver module \""+receivertype+"\": "+dlerror());

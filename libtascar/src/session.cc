@@ -168,7 +168,13 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
     get_attribute("name",name);
   }
   std::string libname("tascar_");
-  libname += name + ".so";
+  #if defined(__APPLE__)
+    libname += name + ".dylib";
+  #elif __linux__
+    libname += name + ".so";
+  #else
+    #error not supported
+  #endif
   lib = dlopen(libname.c_str(), RTLD_NOW );
   if( !lib )
     throw TASCAR::ErrMsg("Unable to open module \""+name+"\": "+dlerror());

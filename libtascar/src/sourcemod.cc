@@ -15,7 +15,13 @@ sourcemod_t::sourcemod_t( xmlpp::Element* cfg )
   get_attribute( "type", sourcetype );
   sourcetype = env_expand( sourcetype );
   std::string libname( "tascarsource_" );
-  libname += sourcetype + ".so";
+  #if defined(__APPLE__)
+    libname += sourcetype + ".dylib";
+  #elif __linux__
+    libname += sourcetype + ".so";
+  #else
+    #error not supported
+  #endif
   lib = dlopen(libname.c_str(), RTLD_NOW );
   if( !lib )
     throw TASCAR::ErrMsg("Unable to open source module \""+sourcetype+"\": "+dlerror());

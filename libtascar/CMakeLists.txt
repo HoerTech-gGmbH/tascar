@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 
-# set the project name and version
-project(tascar VERSION 0.1)
+project(tascar LANGUAGES CXX)
+
+set(tascar_VERSION_MAJOR 0)
+set(tascar_VERSION_MINOR 213)
+set(tascar_VERSION_PATCH 0b728d2)
+
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tascarver.h.in"
+	"${PROJECT_SOURCE_DIR}/build/tascarver.h"
+)
 
 find_package (PkgConfig REQUIRED)
 pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
@@ -18,40 +26,39 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 
-set(HEADER_FILES
-	include/tascar.h
+file(GLOB HEADER_FILES
+    "${PROJECT_SOURCE_DIR}/src/*.h"
 )
-set(
-	SOURCE_FILES
-	src/session.cc
-)
+LIST(REMOVE_ITEM HEADER_FILES
+  ${PROJECT_SOURCE_DIR}/src/gui_elements.h
+  ${PROJECT_SOURCE_DIR}/src/dmxdriver.h
+  ${PROJECT_SOURCE_DIR}/src/termsetbaud.h
+  ${PROJECT_SOURCE_DIR}/src/serialport.h
+  ${PROJECT_SOURCE_DIR}/src/pdfexport.h
+  ${PROJECT_SOURCE_DIR}/src/alsamidicc.h)
 
-
-file(GLOB tascar_SRC
-    "src/*.h"
-    "src/*.cc"
+file(GLOB SOURCE_FILES
+	${HEADER_FILES}
+    "${PROJECT_SOURCE_DIR}/src/*.cc"
 )
-LIST(REMOVE_ITEM tascar_SRC
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gui_elements.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gui_elements.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/dmxdriver.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/dmxdriver.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/termsetbaud.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/termsetbaud.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/serialport.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/serialport.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/pdfexport.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/pdfexport.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/alsamidicc.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/alsamidicc.h)
+LIST(REMOVE_ITEM SOURCE_FILES
+  ${PROJECT_SOURCE_DIR}/src/gui_elements.cc
+  ${PROJECT_SOURCE_DIR}/src/dmxdriver.cc
+  ${PROJECT_SOURCE_DIR}/src/termsetbaud.cc
+  ${PROJECT_SOURCE_DIR}/src/serialport.cc
+  ${PROJECT_SOURCE_DIR}/src/pdfexport.cc
+  ${PROJECT_SOURCE_DIR}/src/alsamidicc.cc)
 
 add_library(tascar STATIC 
-	${tascar_SRC}
+	${SOURCE_FILES}
+)
+
+target_include_directories(tascar PRIVATE
+	"build"
 )
 
 target_include_directories(tascar 
 PUBLIC
-	"build"
 	${JACK_INCLUDE_DIRS}
 	${LIBXML++_INCLUDE_DIRS}
 	${LIBLO_INCLUDE_DIRS}
