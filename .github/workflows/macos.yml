@@ -14,6 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: dependencies
-      run: brew install pkgconfig
+      run: brew install pkgconfig libxml2 glibmm libxml++
     - name: make
       run: cmake ./
