@@ -697,9 +697,9 @@ namespace TASCAR {
       y = axis.y;
       z = axis.z;
     };
-    inline void set_euler( const zyx_euler_t& eul )
+    inline void set_euler(const zyx_euler_t& eul)
     {
-          // Abbreviations for the various angular functions
+      // Abbreviations for the various angular functions
       float cy = cosf(eul.z * 0.5);
       float sy = sinf(eul.z * 0.5);
       float cp = cosf(eul.y * 0.5);
@@ -745,6 +745,16 @@ namespace TASCAR {
       *this = tmp;
       return *this;
     };
+    inline quaternion_t operator+(const quaternion_t& q) const
+    {
+      return quaternion_t(w + q.w, x + q.x, y + q.y, z + q.z);
+    };
+    inline quaternion_t& operator+=(const quaternion_t& q)
+    {
+      quaternion_t tmp(*this + q);
+      *this = tmp;
+      return *this;
+    };
     inline zyx_euler_t to_euler() const
     {
       zyx_euler_t eul;
@@ -754,11 +764,10 @@ namespace TASCAR {
       eul.x = atan2f(sinr_cosp, cosr_cosp);
       // y-axis rotation
       float sinp(2.0f * (w * y - z * x));
-      if(std::abs(sinp) >= 1.0f)
-        eul.y =
-            std::copysign(0.5 * M_PI, sinp); // use 90 degrees if out of range
+      if(fabsf(sinp) >= 1.0f)
+        eul.y = copysignf(0.5 * M_PI, sinp); // use 90 degrees if out of range
       else
-        eul.y = std::asin(sinp);
+        eul.y = asinf(sinp);
       // yaw (z-axis rotation)
       float siny_cosp(2.0f * (w * z + x * y));
       float cosy_cosp(1.0f - 2.0f * (y * y + z * z));
@@ -766,7 +775,7 @@ namespace TASCAR {
       return eul;
     };
   };
-}
+} // namespace TASCAR
 
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);
 std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n);

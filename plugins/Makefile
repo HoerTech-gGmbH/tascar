@@ -18,7 +18,8 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
   hrirconv joystick hossustain midicc2osc midictl rotator oscserver	\
   qualisystracker orientationmodulator locationmodulator		\
-  locationvelocity granularsynth fail oscrelay waitforjackport sleep
+  locationvelocity granularsynth fail oscrelay waitforjackport sleep	\
+  ovheadtracker
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets
 
@@ -115,7 +116,7 @@ build/tascarreceiver_hoa3d_enc.so: EXTERNALS+=gsl
 build/tascarreceiver_hoa3d.so: EXTERNALS+=gsl eigen3
 build/tascar_hossustain.so: EXTERNALS += fftw3f
 build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
-build/tascar_lightctl.so: LDLIBS+=-ltascardmx
+build/tascar_lightctl.so build/tascar_ovheadtracker.so: LDLIBS+=-ltascardmx
 build/tascar_simplecontroller.so: build/simplecontroller_glade.h
 build/tascar_datalogging.so: LDLIBS += -lmatio -llsl
 build/tascar_datalogging.so: build/datalogging_glade.h
