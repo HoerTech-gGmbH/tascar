@@ -1,26 +1,24 @@
-TESTS = jack_routeplugin test_snd_pink_diffuse test_ir1 test_ir2	\
-	test_ir3 test_ir4 test_ir6_ismminmax test_snd1 test_snd2	\
-	test_snd4 test_snd3 test_snd5 test_pos1 test_pos2		\
-	test_pos_trackinterp test_snd_door1 test_snd_door2		\
-	test_snd_door3 test_pos_door test_snd_layers			\
-	test_snd_rec_amb1h1v test_wav_diffuse test_wav_diffuse_hoa2d	\
-	test_wav_diffuse_nsp4 test_wav_diffuse_hoa2d4			\
-	test_wav_diffuse_layerbug test_wav_diffirs test_sndgainramp	\
-	test_sndgainramp2 test_ir_spkcorr test_snd_calib1		\
-	test_snd_calib2 test_snd_vbap51 test_snd_pink			\
-	test_snd_sndfile test_snd_sndfile2 test_snd_door4		\
-	test_snd_roommic test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
+TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
+	test_ir6_ismminmax test_snd1 test_snd2 test_snd4 test_snd3	\
+	test_snd5 test_pos1 test_pos2 test_pos_trackinterp		\
+	test_snd_door1 test_snd_door2 test_snd_door3 test_pos_door	\
+	test_snd_layers test_snd_rec_amb1h1v test_wav_diffuse		\
+	test_wav_diffuse_hoa2d test_wav_diffuse_nsp4			\
+	test_wav_diffuse_hoa2d4 test_wav_diffuse_layerbug		\
+	test_wav_diffirs test_sndgainramp test_sndgainramp2		\
+	test_ir_spkcorr test_snd_calib1 test_snd_calib2			\
+	test_snd_vbap51 test_snd_pink test_snd_sndfile			\
+	test_snd_sndfile2 test_snd_door4 test_snd_roommic		\
+	test_fail_vbap3d_flat test_notfail_vbap3d_3d			\
 	test_level_vbap3d test_ir_ortf_0deg test_ir_ortf_55deg		\
 	test_ir_scatter test_ir_noscatter test_ir_scatter_ortf		\
 	test_snd_sourcedir_generic test_snd_sourcedir_generic1		\
-	test_snd_sourcedir_generic_cardioid test_unload_on_error	\
-	test_ir_wfs test_ir_wfs_noplanewave jackfail_connectfail	\
-	jack_connect hoa3d test_fail_duplicatenames			\
+	test_snd_sourcedir_generic_cardioid test_ir_wfs			\
+	test_ir_wfs_noplanewave hoa3d test_fail_duplicatenames		\
 	test_fail_duplicatescenenames test_level_hoa2d_basic		\
-	test_level_hoa2d_maxre jack_hoafdnrot test_ir_reverb		\
-	test_ir_simplefdn jackconnect_ortf jackconnect_amb1h1v		\
-	jackconnect_hoa2dfuma test_snd_vbap3d_speakermatch		\
-	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner	\
+	test_level_hoa2d_maxre test_ir_reverb test_ir_simplefdn		\
+	test_snd_vbap3d_speakermatch test_ir_volumetric			\
+	test_pos_obstacle test_pos_obstacle_inner			\
 	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg	\
 	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
@@ -29,6 +27,9 @@ TESTS = jack_routeplugin test_snd_pink_diffuse test_ir1 test_ir2	\
 	test_ir_hrtf_el-45deg test_ir_delay test_snd_reverb		\
 	test_wav_multichannel test_snd_zeros
 
+TEST_JACK = jack_routeplugin test_unload_on_error			\
+	jackfail_connectfail jack_connect jack_hoafdnrot		\
+	jackconnect_ortf jackconnect_amb1h1v jackconnect_hoa2dfuma
 
 TEST_SND=$(wildcard test_snd*.tsc)
 
@@ -65,6 +66,8 @@ TOL = 2e-7
 RMSTOL = 2e-7
 
 all: $(TESTS) testrec testlev
+
+jack: $(TEST_JACK)
 
 test_reclevel_wfs test_reclevel_vbap test_reclevel_hann: LEVTHR=2.5
 
