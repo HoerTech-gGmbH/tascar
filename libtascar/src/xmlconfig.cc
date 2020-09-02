@@ -1029,14 +1029,14 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
   }
 }
 
-TASCAR::xml_doc_t::xml_doc_t() : doc(NULL)
+TASCAR::xml_doc_t::xml_doc_t() : doc(NULL), freedoc(true)
 {
   doc = new xmlpp::Document();
   doc->create_root_node("session");
 }
 
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
-    : doc(NULL)
+    : doc(NULL), freedoc(false)
 {
   switch(t) {
   case LOAD_FILE:
@@ -1049,6 +1049,12 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
   doc = domp.get_document();
   if(!doc)
     throw TASCAR::ErrMsg("Unable to parse document.");
+}
+
+TASCAR::xml_doc_t::~xml_doc_t()
+{
+  if(freedoc && doc)
+    delete doc;
 }
 
 TASCAR::msg_t::msg_t(xmlpp::Element* e)

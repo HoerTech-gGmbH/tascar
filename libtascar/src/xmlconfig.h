@@ -152,10 +152,14 @@ namespace TASCAR {
     enum load_type_t { LOAD_FILE, LOAD_STRING };
     xml_doc_t();
     xml_doc_t(const std::string& filename, load_type_t t);
+    virtual ~xml_doc_t();
     virtual void save(const std::string& filename);
     // protected:
     xmlpp::DomParser domp;
     xmlpp::Document* doc;
+
+  private:
+    bool freedoc;
   };
 
   class msg_t : public TASCAR::xml_element_t {
