@@ -14,8 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: gtest
-      run: tap ros/deps
+      run: brew install --HEAD https://gist.githubusercontent.com/Kronuz/96ac10f
     - name: dependencies
-      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtest gtkmm
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtest gtkmm3
     - name: make
       run: cmake ./
