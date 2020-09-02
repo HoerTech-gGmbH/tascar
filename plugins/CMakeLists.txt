@@ -37,8 +37,6 @@ nsp
 omni
 ortf
 simplefdn
-vbap
-vbap3d
 vmic
 wfs
 )
