@@ -33,10 +33,6 @@ hoa2d_fuma_hos
 hoa3d
 hoa3d_enc
 hrtf
-intensityvector
-itu51
-neukom_basic
-neukom_inphase
 nsp
 omni
 ortf
