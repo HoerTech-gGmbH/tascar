@@ -18,4 +18,4 @@ jobs:
     - name: dependencies
       run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw
     - name: make
-      run: cmake ./
+      run: mkdir macos && cd macos && cmake ../ && make
