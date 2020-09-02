@@ -16,6 +16,6 @@ jobs:
     - name: gtest
       run: brew install --HEAD https://gist.githubusercontent.com/Kronuz/96ac10fbd8472eb1e7566d740c4034f8/raw/gtest.rb
     - name: dependencies
-      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtest gtkmm3 eigen
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtest gtkmm3 eigen boost
     - name: make
       run: cmake ./
