@@ -14,8 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: gtest
-      run: brew install --HEAD https://gist.githubusercontent.com/Kronuz/96ac10f
+      run: brew install --HEAD https://gist.githubusercontent.com/Kronuz/96ac10fbd8472eb1e7566d740c4034f8/raw/gtest.rb
     - name: dependencies
-      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtest gtkmm3
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtest gtkmm3 eigen
     - name: make
       run: cmake ./
