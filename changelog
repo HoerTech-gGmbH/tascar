@@ -1,3 +1,4 @@
+0.214: Build for arm, minor bugfixes and improvements
 0.213: HRTF receiver type added.
 0.212: Source radiation into diffuse (volumetric) receivers defaults to omni.
 0.211: Partitioned convolution and simple FDN for diffuse reverberation
