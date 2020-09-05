@@ -1,0 +1,19 @@
+name: Ubuntu make
+
+on:
+  push:
+    branches: [ master, development, automation ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: archlinux
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dependencies
+      run: pacman -Syu git make gcc pkg-config libxml++2.6 jack2 liblo libsndfile fftw gsl eigen gtkmm3 boost libltc xxd gtksourceviewmm webkit2gtk
+    - name: make
+      run: make
