@@ -401,8 +401,11 @@ or with the \tascar{} provided wrapper \verb!tascar_cpufreq!.
 
 \subsection{Overwriting application default values}\label{sec:globalconfig}
 
-Some variables which are not session related have built-in default
-values. These values can be overwritten using an external application
+Some variables which do not directly affect the acoustic rendering
+result, e.g., GUI parameters and configuration of the loudspeaker
+calibration tool, have built-in default values.
+%
+These values can be overwritten using an external application
 configuration file in XML format. The files
 \verb!/etc/tascar/defaults.xml! and \verb!${HOME}/.tascardefaults.xml!
   are read in this order, i.e., values in the second file overwrite
