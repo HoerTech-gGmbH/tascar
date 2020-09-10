@@ -711,7 +711,7 @@ The following attributes are common to all scene objects:
 \indattr{localpos}           & Local position in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
 \indattr{sampledorientation} & Sample orientation along trajectory with this distance (default: 0)                                                                   \\
 \indattr{dloaction}           & Delta location in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
-\indattr{dorientation}           & Delta orientation in degree (ZYX Euler transformation); default: ``0 0 0''                                                                  \\
+\indattr{dorientation}           & Delta orientation in degrees (ZYX Euler transformation); default: ``0 0 0''                                                                  \\
 \end{tscattributes}
 
 The delta transformation values can be overwritten by actor modules or
@@ -1243,7 +1243,7 @@ of loudspeakers - together with the receiver type, we define a set of
 virtual loudspeakers located relative to the position of this
 receiver.
 %
-Information about the number of loudspeaker and their location is then
+Information about the number of loudspeakers and their location is then
 exploited to produce appropriate receiver output channels.
 %
 
@@ -1273,7 +1273,7 @@ exploited to produce appropriate receiver output channels.
   %\centering
   %\fbox{\includegraphics[width=0.8\textwidth]{nearest.pdf}}
   \caption{Schematic representation of the reproduced sound fields
-    with different reproduction methods..}
+    with different reproduction methods.}
   \label{fig:repromethods}
 \end{figure}
 
@@ -1427,17 +1427,17 @@ all curve objects to a \tascar{} track file {\tt
 property ``speed'' (see ``Custom properties'' in the ``Object'' tab in
 the blender property view), to set the speed in $m/s$.
 
-It is recommended to minimize
-the number of faces, e.g., by using polygon faces instead of
-triangulized faces. Also only the acoustically relevant faces should
-be modeled, e.g., typically only the upper surface of a table is
-acoustically important, however, a table modeled for visualization
-contains also the bottom face, legs, and faces at the sides. If all of
-these faces would be imported into \tascar{}, one image source would
-be created for each of the reflectors and primary sources, which would
-result in a wast of computational performance. Small structures can be
-better modeled using the \attr{scattering} attribute of
-reflectors. Late reverberation can be modeled independent from the
+It is recommended to minimize the number of faces, e.g. by using
+polygon faces instead of triangulated faces. Also only the
+acoustically relevant surfaces should be modeled, e.g. typically only
+the top of a table is acoustically important, but a table modeled for
+visualization also contains the bottom, legs and side surfaces.
+%
+If all these surfaces were imported into \tascar{}, one image source
+would be created for each of the reflectors and primary sources, which
+would lead to a waste of computational performance. Small structures
+can be better modeled using the \attr{scattering} attribute of
+reflectors. Late reverberation can be modeled independently of the
 image source model (see Section \ref{sec:reverbelem}).
 
 When we already have a text file, where the coordinates for all the
