@@ -1,11 +1,11 @@
-The data logging module allows logging of the OSC messages and LSL
-streams together with the \tascar{} time line. 
+The data logging module allows logging of OSC messages and LSL streams
+together with the \tascar{} timeline.
 %
-Both OSC and LSL are the protocols used for sending information
-between devices. 
+Both OSC and LSL are protocols commonly used to send information
+between devices, such as motion capture devices or bioamplifiers.
 %
-For example, you may want to collect the data from the sensors used
-during an experiment. 
+For example, you can collect data from such sensors that are used
+during an experiment.
 %
 If the sensor sends data to the computer either in OSC or LSL
 protocol, you can record this data using the \elem{datalogging}
@@ -22,7 +22,7 @@ Example:
 </datalogging>
 \end{lstlisting}
 
-To record the data, which is sent from a device as an OSC message, we
+To record the data sent by a device as a series of OSC messages, we
 have to specify the path to the OSC variable associated with the
 sensor:
 %
@@ -34,10 +34,10 @@ The \attr{size} attribute refers to the dimension of the OSC variable.
 %
 The attribute \attr{ignorefirst} can be used to hide the first channel
 in the display, which can be useful if the first channel contains time
-values.
+values or other control data.
 
-To record the data, which is sent from a device as an LSL stream, we
-have to specify the name of the LSL stream associated with the sensor:
+To record the data sent by a device as an LSL stream, we need to
+specify the name of the LSL stream associated with the sensor:
 \begin{lstlisting}[numbers=none]
   <lsl predicate="name='EEGamp'" tctimeout="2"/>
 \end{lstlisting}
@@ -45,7 +45,7 @@ The attribute \attr{tctimeout} is the maximal time used to measure the
 time correction values between sender and receiver. The
 attribute \attr{required} can be set to ``false'', to allow for
 starting \tascar{} without requiring all LSL streams to be
-available. The stream will not be recovered later.
+available. The stream will not be recovered later during the session.
 
 Text data (e.g., trigger messages) can be recorded from LSL, or from osc with the \elem{oscs} element:
 \begin{lstlisting}[numbers=none]
@@ -68,14 +68,15 @@ with the attributes \attr{x}, \attr{y}, \attr{w} and \attr{h}.
 
 % some more documentation of attributes...
 
-Depending on the file format, the storage format differs: In the
-\verb!mat! file format, each variable is stored as a matrix with the
-variable name. This means that it is not possible to record two
-streams with the same variable name. To overcome this problem, the
-\verb!matcell! file format can be used. Here, the data is stored in a
-cell array, with one entry for each variable. Each entry contains a
-structure, with a \attr{name} field, a \attr{data} field, and for LSL
-variables also some additional stream information.
+Depending on the content of the \attr{fileformat} variable, the
+storage format differs: In the \verb!mat! file format, each variable
+is stored as a matrix under the variable name. This means that it is
+not possible to record two streams with the same variable name. To
+work around this problem, the \verb!matcell! file format can be
+used. Here the data is stored in a cell array, with one entry for each
+variable. Each entry contains a structure, with a \attr{name} field,
+a \attr{data} field and for LSL variables some additional stream
+information.
 
 \subsubsection*{Data logging, session time and lab streaming layer}
 
