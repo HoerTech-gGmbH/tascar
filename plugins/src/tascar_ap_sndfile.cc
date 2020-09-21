@@ -13,6 +13,7 @@ protected:
   double position;
   double length;
   uint32_t loop;
+  bool resample;
   std::string levelmode;
   TASCAR::levelmeter::weight_t weighting;
   double level;
@@ -30,6 +31,7 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
     position(0),
     length(0),
     loop(1),
+    resample(false),
     levelmode("rms"),
     weighting(TASCAR::levelmeter::Z),
     level(0),
@@ -43,6 +45,7 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE(position);
   GET_ATTRIBUTE(length);
   GET_ATTRIBUTE(loop);
+  GET_ATTRIBUTE_BOOL(resample);
   GET_ATTRIBUTE(levelmode);
   if( levelmode.empty() )
     levelmode = "rms";
@@ -80,41 +83,46 @@ ap_sndfile_t::ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg )
 void ap_sndfile_t::configure()
 {
   TASCAR::audioplugin_base_t::configure();
-  if( n_channels < 1 )
+  if(n_channels < 1)
     throw TASCAR::ErrMsg("At least one channel required.");
   sndf.clear();
-  for( uint32_t ch=0;ch<n_channels;++ch){
-    sndf.push_back(new TASCAR::sndfile_t(name,channel+ch,start,length));
+  for(uint32_t ch = 0; ch < n_channels; ++ch) {
+    sndf.push_back(new TASCAR::sndfile_t(name, channel + ch, start, length));
   }
-  if( sndf[0]->get_srate() != f_sample ){
-    std::string msg("The sample rate of the sound file "+name+" differs from the audio system sample rate: ");
-    char ctmp[1024];
-    sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf[0]->get_srate(),f_sample);
-    msg+=ctmp;
-    TASCAR::add_warning(msg,e);
+  if(sndf[0]->get_srate() != f_sample) {
+    if(resample) {
+      for(auto sf : sndf)
+        sf->resample(f_sample / sndf[0]->get_srate());
+    } else {
+      std::string msg("The sample rate of the sound file " + name +
+                      " differs from the audio system sample rate: ");
+      char ctmp[1024];
+      sprintf(ctmp, "file has %d Hz, expected %g Hz", sndf[0]->get_srate(),
+              f_sample);
+      msg += ctmp;
+      TASCAR::add_warning(msg, e);
+    }
   }
   double gain(1);
-  if( levelmode == "rms" ){
-    TASCAR::levelmeter_t meter( f_sample, sndf[0]->n/f_sample, weighting );
-    meter.update( *(sndf[0]) );
-    gain = level*2e-5 / meter.rms();
-  }else
-    if( levelmode == "peak" ){
-      float maxabs(0);
-      for( auto sf=sndf.begin();sf!=sndf.end();++sf)
-        maxabs = std::max(maxabs,(*sf)->maxabs());
-      if( maxabs > 0 )
-        gain = level*2e-5 / maxabs;
-    }else
-      if( levelmode == "calib" )
-        gain = level*2e-5;
-      else
-        throw TASCAR::ErrMsg("Invalid level mode \""+levelmode+"\". (sndfile)");
-  for( auto sf=sndf.begin();sf!=sndf.end();++sf){
-    if( triggered ){
-      (*sf)->set_position(-((*sf)->n)*((*sf)->get_srate()));
+  if(levelmode == "rms") {
+    TASCAR::levelmeter_t meter(f_sample, sndf[0]->n / f_sample, weighting);
+    meter.update(*(sndf[0]));
+    gain = level * 2e-5 / meter.rms();
+  } else if(levelmode == "peak") {
+    float maxabs(0);
+    for(auto sf = sndf.begin(); sf != sndf.end(); ++sf)
+      maxabs = std::max(maxabs, (*sf)->maxabs());
+    if(maxabs > 0)
+      gain = level * 2e-5 / maxabs;
+  } else if(levelmode == "calib")
+    gain = level * 2e-5;
+  else
+    throw TASCAR::ErrMsg("Invalid level mode \"" + levelmode + "\". (sndfile)");
+  for(auto sf = sndf.begin(); sf != sndf.end(); ++sf) {
+    if(triggered) {
+      (*sf)->set_position(-((*sf)->n) * ((*sf)->get_srate()));
       (*sf)->set_loop(1);
-    }else{
+    } else {
       (*sf)->set_position(position);
       (*sf)->set_loop(loop);
     }

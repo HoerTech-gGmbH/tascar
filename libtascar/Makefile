@@ -61,7 +61,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 CXXFLAGS += -fpic -I./build
 CPPFLAGS += -I./build
 #-L./ 
-EXTERNALS = jack libxml++-2.6 liblo sndfile alsa fftw3f gsl eigen3
+EXTERNALS = jack libxml++-2.6 liblo sndfile alsa fftw3f gsl eigen3 samplerate
 
 $(BUILD_GUIOBJECTS): EXTERNALS += gtkmm-3.0
 

@@ -39,29 +39,33 @@ namespace TASCAR {
     wave_t(const wave_t& src);
     wave_t(const std::vector<float>& src);
     wave_t(const std::vector<double>& src);
-    wave_t(uint32_t n,float* ptr);
-    ~wave_t();
-    void use_external_buffer(uint32_t n,float* ptr);
-    inline float& operator[](uint32_t k){return d[k];};
-    inline const float& operator[](uint32_t k) const {return d[k];};
-    inline uint32_t size() const { return n;};
+    wave_t(uint32_t n, float* ptr);
+    virtual ~wave_t();
+    void use_external_buffer(uint32_t n, float* ptr);
+    inline float& operator[](uint32_t k) { return d[k]; };
+    inline const float& operator[](uint32_t k) const { return d[k]; };
+    inline uint32_t size() const { return n; };
     void clear();
-    void copy(const wave_t& src,float gain=1.0);
-    void add(const wave_t& src,float gain=1.0);
-    uint32_t copy(float* data,uint32_t cnt,float gain=1.0);
-    uint32_t copy_to(float* data,uint32_t cnt,float gain=1.0);
-    uint32_t copy_stride(float* data,uint32_t cnt,uint32_t stride,float gain=1.0);
-    uint32_t copy_to_stride(float* data,uint32_t cnt,uint32_t stride,float gain=1.0);
+    void copy(const wave_t& src, float gain = 1.0);
+    void add(const wave_t& src, float gain = 1.0);
+    uint32_t copy(float* data, uint32_t cnt, float gain = 1.0);
+    uint32_t copy_to(float* data, uint32_t cnt, float gain = 1.0);
+    uint32_t copy_stride(float* data, uint32_t cnt, uint32_t stride,
+                         float gain = 1.0);
+    uint32_t copy_to_stride(float* data, uint32_t cnt, uint32_t stride,
+                            float gain = 1.0);
     float ms() const;
     float rms() const;
     float maxabs() const;
     float spldb() const;
     float maxabsdb() const;
     void append(const wave_t& src);
-    inline void append_sample( float src ) {
+    virtual void resample(double ratio);
+    inline void append_sample(float src)
+    {
       d[append_pos] = src;
       ++append_pos;
-      if( append_pos >= n )
+      if(append_pos >= n)
         append_pos = 0;
     };
     void operator*=(double v);
@@ -70,8 +74,10 @@ namespace TASCAR {
     void operator*=(const wave_t& src);
     float* d;
     uint32_t n;
+
   private:
     bool own_pointer;
+
   protected:
     uint32_t append_pos;
     float rmsscale;
@@ -126,7 +132,7 @@ namespace TASCAR {
     uint32_t readf_float( float* buf, uint32_t frames );
     uint32_t writef_float( float* buf, uint32_t frames );
     static SF_INFO sf_info_configurator(int samplerate, int channels);
-  private:
+  protected:
     SF_INFO sf_inf;
     SNDFILE* sfile;
   };
@@ -151,6 +157,7 @@ namespace TASCAR {
   public:
     sndfile_t(const std::string& fname,uint32_t channel=0,double start=0,double length=0);
     void set_position(double position);
+    void resample(double ratio);
   };
 
 }

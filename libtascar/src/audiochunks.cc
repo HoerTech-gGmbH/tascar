@@ -4,6 +4,7 @@
 #include "errorhandling.h"
 #include "xmlconfig.h"
 #include "amb33defs.h"
+#include <samplerate.h>
 
 using namespace TASCAR;
 
@@ -407,20 +408,45 @@ void wave_t::operator*=(const wave_t& o)
 
 void wave_t::append(const wave_t& src)
 {
-  if( (src.n == 0) || (n == 0) )
+  if((src.n == 0) || (n == 0))
     return;
-  if( src.n < n ){
+  if(src.n < n) {
     // copy from append_pos to end:
-    uint32_t n1(std::min(n-append_pos,src.n));
-    memmove(&(d[append_pos]),src.d,n1*sizeof(float));
+    uint32_t n1(std::min(n - append_pos, src.n));
+    memmove(&(d[append_pos]), src.d, n1 * sizeof(float));
     // if remainder then copy rest to beginning:
-    if( n1 < src.n )
-      memmove(d,&(src.d[n1]),(src.n-n1)*sizeof(float));
-    append_pos = (append_pos+src.n) % n;
-  }else{
-    memmove(d,&(src.d[src.n-n]),n*sizeof(float));
+    if(n1 < src.n)
+      memmove(d, &(src.d[n1]), (src.n - n1) * sizeof(float));
+    append_pos = (append_pos + src.n) % n;
+  } else {
+    memmove(d, &(src.d[src.n - n]), n * sizeof(float));
     append_pos = 0;
   }
+}
+
+void wave_t::resample(double ratio)
+{
+  if(ratio == 1)
+    return;
+  uint32_t n_new(ratio * n);
+  float* d_new(new float[std::max(1u, n_new)]);
+  memset(d_new, 0, sizeof(float) * std::max(1u, n_new));
+  // do the actual resampling:
+  SRC_DATA srcd;
+  srcd.data_in = d;
+  srcd.data_out = d_new;
+  srcd.input_frames = n;
+  srcd.output_frames = n_new;
+  srcd.src_ratio = ratio;
+  src_simple(&srcd, SRC_SINC_MEDIUM_QUALITY, 1);
+  //
+  // clean-up and re-assign:
+  if(own_pointer)
+    delete[] d;
+  d = d_new;
+  n = n_new;
+  own_pointer = true;
+  rmsscale = 1.0f / (float)n;
 }
 
 amb1rotator_t::amb1rotator_t(uint32_t chunksize)
@@ -511,6 +537,14 @@ amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,const zyx_euler_t& o,
   }
   return *this;
 }
+
+void sndfile_t::resample(double ratio)
+{
+  wave_t::resample(ratio);
+  sf_inf.frames*=ratio;
+  sf_inf.samplerate*=ratio;
+}
+
 
 /*
  * Local Variables:
