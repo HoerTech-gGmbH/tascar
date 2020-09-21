@@ -9,6 +9,8 @@ DOCMODULES = doc manual
 
 all: $(MODULES)
 
+apps plugins gui: libtascar
+
 alldoc: all $(DOCMODULES)
 
 .PHONY : $(MODULES) $(DOCMODULES) coverage
