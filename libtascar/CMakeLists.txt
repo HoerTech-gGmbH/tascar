@@ -47,7 +47,14 @@ LIST(REMOVE_ITEM SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/termsetbaud.cc
   ${PROJECT_SOURCE_DIR}/src/serialport.cc
   ${PROJECT_SOURCE_DIR}/src/pdfexport.cc
-  ${PROJECT_SOURCE_DIR}/src/alsamidicc.cc)
+  ${PROJECT_SOURCE_DIR}/src/alsamidicc.cc
+  ${PROJECT_SOURCE_DIR}/src/audiochunks_unit_tests.cc
+  ${PROJECT_SOURCE_DIR}/src/coordinates_unit_tests.cc
+  ${PROJECT_SOURCE_DIR}/src/delayline_unit_tests.cc
+  ${PROJECT_SOURCE_DIR}/src/fft_unit_tests.cc
+  ${PROJECT_SOURCE_DIR}/src/filterclass_unit_tests.cc
+  ${PROJECT_SOURCE_DIR}/src/hoa_unit_tests.cc
+  ${PROJECT_SOURCE_DIR}/src/ola_unit_tests.cc)
 
 add_library(tascar STATIC 
 	${SOURCE_FILES}

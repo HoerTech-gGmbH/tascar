@@ -64,7 +64,6 @@ TEST(wave_t, resample)
   ASSERT_NEAR(-0.00914826f,wave[28],1e-6);
   ASSERT_NEAR(0.00838445f,wave[29],1e-6);
   ASSERT_NEAR(0.00903543f,wave[30],1e-6);
-  ASSERT_NEAR(-0.00504668f,wave[31],1e-6);
   wave.resample(0.5);
   EXPECT_EQ(16u,wave.size());
   ASSERT_NEAR(orms,wave.rms(),5e-4);
