@@ -1,0 +1,19 @@
+name: MacOS make
+
+on:
+  push:
+    branches: [ master, development, automation ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dependencies
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw samplerate
+    - name: make
+      run: make
