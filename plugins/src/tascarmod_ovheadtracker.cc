@@ -9,8 +9,8 @@ class ovheadtracker_t : public TASCAR::actor_module_t,
                         protected TASCAR::service_t {
 public:
   ovheadtracker_t(const TASCAR::module_cfg_t& cfg);
-  ~ovheadtracker_t();
-  void add_variables( TASCAR::osc_server_t* srv );
+  virtual ~ovheadtracker_t();
+  void add_variables(TASCAR::osc_server_t* srv);
   void update(uint32_t frame, bool running);
 
 protected:
@@ -24,7 +24,9 @@ private:
   uint32_t ttl;
   std::string calib0path;
   std::string calib1path;
-  std::vector<uint32_t> axes;
+  std::vector<int32_t> axes;
+  double accscale;
+  double gyrscale;
   bool apply_loc;
   bool apply_rot;
   double autoref;
@@ -37,10 +39,11 @@ private:
 };
 
 ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
-  : actor_module_t(cfg), name("ovheadtracker"),
+    : actor_module_t(cfg), name("ovheadtracker"),
       devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
-      calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}), autoref(0),
-      target(NULL), bcalib(false), qref(1,0,0,0)
+      calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
+      accscale(16384 / 9.81), gyrscale(16.4), autoref(0), target(NULL),
+      bcalib(false), qref(1, 0, 0, 0)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(devices);
@@ -49,23 +52,26 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(calib0path);
   GET_ATTRIBUTE(calib1path);
   GET_ATTRIBUTE(autoref);
+  GET_ATTRIBUTE(axes);
+  GET_ATTRIBUTE(accscale);
+  GET_ATTRIBUTE(gyrscale);
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
       throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
     lo_address_set_ttl(target, ttl);
   }
-  add_variables( session );
+  add_variables(session);
   start_service();
 }
 
-void ovheadtracker_t::add_variables( TASCAR::osc_server_t* srv )
+void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
 {
   std::string p;
-  if( name.size() )
-    p = "/"+name;
+  if(name.size())
+    p = "/" + name;
   p += "/autoref";
-  srv->add_double(p, &autoref );
+  srv->add_double(p, &autoref);
 }
 
 void ovheadtracker_t::service()
@@ -73,8 +79,11 @@ void ovheadtracker_t::service()
   uint32_t devidx(0);
   for(size_t k = axes.size(); k < 8; ++k)
     axes.push_back(-1);
-  for(auto ax : axes)
-    ax = std::min(ax, 3u);
+  for(auto ax : axes) {
+    ax = std::min(ax, 3);
+    if(ax < 0)
+      ax = 3;
+  }
   std::vector<double> data(4, 0.0);
   std::vector<double> data2(7, 0.0);
   while(run_service) {
@@ -95,8 +104,8 @@ void ovheadtracker_t::service()
             data[2] = std::stod(l);
             data[3] = 0.0;
             if(target)
-              lo_send(target, "/acc", "fff", data[axes[0]], data[axes[1]],
-                      data[axes[2]]);
+              lo_send(target, "/acc", "fff", data[axes[0]] / accscale,
+                      data[axes[1]] / accscale, data[axes[2]] / accscale);
           } break;
           case 'W': {
             l = l.substr(1);
@@ -107,9 +116,13 @@ void ovheadtracker_t::service()
             l = l.substr(sz + 1);
             data[2] = std::stod(l);
             data[3] = 0.0;
-            if(target)
-              lo_send(target, "/wacc", "fff", data[axes[0]], data[axes[1]],
-                      data[axes[2]]);
+            if(target) {
+              TASCAR::pos_t wacc(data[axes[0]], data[axes[1]], data[axes[2]]);
+              wacc *= 1.0 / accscale;
+              lo_send(target, "/wacc", "fff", wacc.x, wacc.y, wacc.z);
+              qref.rotate(wacc);
+              lo_send(target, "/waccref", "fff", wacc.x, wacc.y, wacc.z);
+            }
           } break;
           case 'R': {
             l = l.substr(1);
@@ -127,9 +140,32 @@ void ovheadtracker_t::service()
             data2[5] = std::stod(l, &sz);
             l = l.substr(sz + 1);
             data2[6] = std::stod(l);
-            if(target)
+            if(target) {
               lo_send(target, "/raw", "fffffff", data2[0], data2[1], data2[2],
                       data2[3], data2[4], data2[5], data2[6]);
+              lo_send(target, "/acc", "fff", data2[1] / accscale,
+                      data2[2] / accscale, data2[3] / accscale);
+              lo_send(target, "/gyr", "fff", data2[4] / gyrscale,
+                      data2[5] / gyrscale, data2[6] / gyrscale);
+            }
+          } break;
+          case 'O': {
+            l = l.substr(1);
+            std::string::size_type sz;
+            data2[0] = std::stod(l, &sz);
+            l = l.substr(sz + 1);
+            data2[1] = std::stod(l, &sz);
+            l = l.substr(sz + 1);
+            data2[2] = std::stod(l, &sz);
+            l = l.substr(sz + 1);
+            data2[3] = std::stod(l, &sz);
+            l = l.substr(sz + 1);
+            data2[4] = std::stod(l, &sz);
+            l = l.substr(sz + 1);
+            data2[5] = std::stod(l, &sz);
+            if(target)
+              lo_send(target, "/offs", "ffffff", data2[0], data2[1], data2[2],
+                      data2[3], data2[4], data2[5]);
           } break;
           case 'Q': {
             l = l.substr(1);
@@ -142,12 +178,12 @@ void ovheadtracker_t::service()
             q.y = std::stod(l, &sz);
             l = l.substr(sz + 1);
             q.z = std::stod(l, &sz);
-            if( bcalib )
+            if(bcalib)
               qref = q.inverse();
-            if( autoref > 0 ){
-              qref = qref.scale(1.0-autoref);
+            if(autoref > 0) {
+              qref = qref.scale(1.0 - autoref);
               qref += q.inverse().scale(autoref);
-              qref = qref.scale(1.0/qref.norm());
+              qref = qref.scale(1.0 / qref.norm());
             }
             q *= qref;
             o0 = q.to_euler();
@@ -164,26 +200,26 @@ void ovheadtracker_t::service()
             data[2] = std::stod(l);
             data[3] = 0.0;
             if(target)
-              lo_send(target, "/gyr", "fff", data[axes[0]], data[axes[1]],
+              lo_send(target, "/axrot", "fff", data[axes[0]], data[axes[1]],
                       data[axes[2]]);
           } break;
           case 'C': {
             if((l.size() > 1)) {
-              if((l[1] == '1') && calib1path.size()){
+              if((l[1] == '1') && calib1path.size()) {
                 bcalib = true;
-                if( target )
+                if(target)
                   lo_send(target, calib1path.c_str(), "i", 1);
               }
-              if((l[1] == '0') && calib0path.size()){
+              if((l[1] == '0') && calib0path.size()) {
                 bcalib = false;
-                if( target )
+                if(target)
                   lo_send(target, calib0path.c_str(), "i", 1);
               }
             }
           } break;
-          //default: {
-          //  std::cout << l << std::endl;
-          //} break;
+            // default: {
+            //  std::cout << l << std::endl;
+            //} break;
           }
         }
       }
@@ -200,6 +236,7 @@ void ovheadtracker_t::service()
 
 ovheadtracker_t::~ovheadtracker_t()
 {
+  stop_service();
   if(target)
     lo_address_free(target);
 }

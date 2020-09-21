@@ -1,14 +1,16 @@
 headtracking module for MPU6050 from repository
-\url{https://github.com/gisogrimm/ov-headtracker}.
+\url{https://github.com/gisogrimm/ov-client}.
 
 \begin{tscattributes}
-\indattr{url}        & Target URL (default: osc.udp://localhost:9999/)                                   \\
-\indattr{pattern}    & Pattern of \tascar{} object names (default: /*/*). See actor modules for details. \\
-\indattr{ttl}        & Time to live of OSC multicast messages                                            \\
-\indattr{devices}    & list of serial devices to test for headtracker                                    \\
-\indattr{name}       & Name used for OSC variable prefix                                                 \\
-\indattr{calib0path} & Path name to send to when calibration button is pressed.                          \\
-\indattr{calib1path} & Path name to send to when calibration is completed.                               \\
-\indattr{autoref}    & Auto-reference coefficient, 0 for no auto-referencing.                            \\
+\indattr{name}       & Prefix in OSC control variables (default: ``ovheadtracker'')                                                                 \\
+\indattr{devices}    & Space-separated list of potential serial devices (default: ``/dev/ttyUSB0 /dev/ttyUSB1 /dev/ttyUSB2'')                       \\
+\indattr{url}        & Target URL for OSC data logging, or empty for no datalogging (default: ``'')                                                 \\
+\indattr{ttl}        & Time-to-live of OSC multicast data (default: 1)                                                                              \\
+\indattr{calib0path} & OSC-Path to which a trigger is sent on start of calibration path (default: ``/calib0'')                                      \\
+\indattr{calib1path} & OSC-Path to which a trigger is sent on end of calibration path (default: ``/calib1'')                                        \\
+\indattr{autoref}    & Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing (default: 0) \\
+\indattr{axes}       & Order of axes, or -1 to not use axis (default: ``0 1 2'')                                                                    \\
+\indattr{actor}      & Pattern of \tascar{} object names (default: ``''). See actor modules for details.                                            \\
+\indattr{accscale}   & Scaling factor of accelerometer (default: 16384/9.81, returns $m/s^2$).                                                        \\
+\indattr{gscale}     & Scaling factor of gyroscope (default: 16.4, returns deg/s).                                                                  \\
 \end{tscattributes}
-
