@@ -13,13 +13,20 @@ SOVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1
 # main targets:
 #
 OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
-  xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o							\
-  filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o				\
-  scene.o render.o session_reader.o session.o jackclient.o						\
-  delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o		\
-  viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o			\
-  audioplugin.o levelmeter.o serviceclass.o alsamidicc.o							\
+  xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
+  filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o		\
+  scene.o render.o session_reader.o session.o jackclient.o		\
+  delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
+  viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
+  audioplugin.o levelmeter.o serviceclass.o		\
   speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o hoa.o
+
+ifneq ($(OS),Windows_NT)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  OBJECTS +=  alsamidicc.o
+endif
+endif
 
 DMXOBJECTS =  termsetbaud.o serialport.o dmxdriver.o
 
@@ -61,7 +68,15 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 CXXFLAGS += -fpic -I./build
 CPPFLAGS += -I./build
 #-L./ 
-EXTERNALS = jack libxml++-2.6 liblo sndfile alsa fftw3f gsl eigen3 samplerate
+EXTERNALS = jack libxml++-2.6 liblo sndfile fftw3f gsl eigen3 samplerate
+
+ifneq ($(OS),Windows_NT)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  EXTERNALS +=  alsa
+endif
+endif
+
 
 $(BUILD_GUIOBJECTS): EXTERNALS += gtkmm-3.0
 
