@@ -16,7 +16,6 @@ pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
 pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
 pkg_check_modules (JACK REQUIRED jack)
 pkg_check_modules (LIBLO REQUIRED liblo)
-pkg_check_modules (GTEST REQUIRED gtest)
 pkg_check_modules (GTKMM REQUIRED gtkmm-3.0)
 pkg_check_modules (EIGEN3 REQUIRED eigen3)
 pkg_check_modules (GSL REQUIRED gsl)
@@ -63,7 +62,6 @@ PUBLIC
 	${LIBXML++_INCLUDE_DIRS}
 	${LIBLO_INCLUDE_DIRS}
 	${LIBSNDFILE_INCLUDE_DIRS}
-	${GTEST_INCLUDE_DIRS}
 	${GSL_INCLUDE_DIRS}
 	${GTKMM_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
