@@ -4,7 +4,17 @@ VERSION=0.214.2
 ARCH=$(shell uname -m)
 
 CXXFLAGS = -Wall -Wno-deprecated-declarations -std=c++11 -pthread	\
--ggdb -fno-finite-math-only -fext-numeric-literals
+-ggdb -fno-finite-math-only
+
+
+ifneq ($(OS),Windows_NT)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  EXTERNALS +=  alsa
+  CXXFLAGS += -fext-numeric-literals
+endif
+endif
+
 
 ifeq "$(ARCH)" "x86_64"
 CXXFLAGS += -msse -msse2 -mfpmath=sse -ffast-math
