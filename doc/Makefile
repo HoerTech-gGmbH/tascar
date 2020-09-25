@@ -21,6 +21,6 @@ tutorial7.pdf: ODIR=tutorial7_music_light
 clean:
 	rm -Rf *.aux *.log *.idx *.out $(ALLPDF) *~ latex html
 
-doxy:
+doxy: $(ALLPDF)
 	rm -Rf html
 	doxygen doxygen.cfg

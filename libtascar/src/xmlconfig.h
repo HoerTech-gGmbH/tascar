@@ -128,15 +128,12 @@ namespace TASCAR {
                 bool test_children = false) const;
 
   protected:
-    // book keeping
-    // std::map<std::string,std::string> attributelist;
   };
 
-  // class scene_node_base_t : public xml_element_t, public audiostates_t {
-  // public:
-  //  scene_node_base_t(xmlpp::Element*);
-  //  virtual ~scene_node_base_t();
-  //};
+  void xmlpp_get_and_register_attribute(xmlpp::Element* e,
+                                        const std::string& name,
+                                        std::string& value);
+  bool xmlpp_has_attribute(xmlpp::Element* e, const std::string& name);
 
   std::string env_expand(std::string s);
 

@@ -11,6 +11,17 @@ namespace TASCAR {
   globalconfig_t config;
 } // namespace TASCAR
 
+void TASCAR::xmlpp_get_and_register_attribute(xmlpp::Element* e,
+                                      const std::string& name,
+                                      std::string& value)
+{
+  TASCAR::attribute_list[e][name] = "string";
+  if(TASCAR::xmlpp_has_attribute(e,name))
+    value = e->get_attribute_value(name);
+  else
+    e->set_attribute(name, value);
+}
+
 size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes,
                                    bool test_children) const
 {
@@ -188,15 +199,6 @@ std::string TASCAR::default_string(const std::string& src,
   return src;
 }
 
-// TASCAR::scene_node_base_t::scene_node_base_t(xmlpp::Element* xmlsrc)
-//  : xml_element_t(xmlsrc)
-//{
-//}
-//
-// TASCAR::scene_node_base_t::~scene_node_base_t()
-//{
-//}
-
 TASCAR::xml_element_t::xml_element_t(xmlpp::Element* src) : e(src)
 {
   if(!e)
@@ -205,7 +207,7 @@ TASCAR::xml_element_t::xml_element_t(xmlpp::Element* src) : e(src)
 
 TASCAR::xml_element_t::~xml_element_t() {}
 
-bool TASCAR::xml_element_t::has_attribute(const std::string& name) const
+bool TASCAR::xmlpp_has_attribute(xmlpp::Element* e, const std::string& name)
 {
   const xmlpp::Element::AttributeList atts(e->get_attributes());
   for(xmlpp::Element::AttributeList::const_iterator it = atts.begin();
@@ -213,6 +215,11 @@ bool TASCAR::xml_element_t::has_attribute(const std::string& name) const
     if((*it)->get_name() == name)
       return true;
   return false;
+}
+
+bool TASCAR::xml_element_t::has_attribute(const std::string& name) const
+{
+  return xmlpp_has_attribute(e, name);
 }
 
 xmlpp::Element*

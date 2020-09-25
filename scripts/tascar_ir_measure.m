@@ -40,6 +40,20 @@ function [ir,fs,x,y] = tascar_ir_measure( varargin )
   sHelp.input = 'input ports';
   sCfg.refchannel = [];
   sHelp.refchannel = 'use a recorded channel as reference signal';
+  sCfg.sigtype = 'farina';
+  sHelp.sigtype = ['Measurement signal type: squarephase, farina,' ...
+		   ' noise'];
+  sCfg.fmin = 0.001;
+  sHelp.fmin = 'Minimum frequency in Farina sigtype (1 = Nyquist frequency)';
+  sCfg.fmax = 1;
+  sHelp.fmax = 'Maximum frequency in Farina sigtype (1 = Nyquist frequency)';
+  sCfg.ramplen = 0.001;
+  sHelp.ramplen = ['Total ramp length in Farina sigtype (1 = full' ...
+		   ' signal, corresponding to multiplication with' ...
+		   ' raised cosine).'];
+  sCfg.fweight = 0.25;
+  sHelp.fweight = ['Frequency weighting exponent in Farina method.' ...
+		   ' g ~ f^(-fweight)'];
   sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
   if isempty(sCfg)
     return;
@@ -52,7 +66,7 @@ function [ir,fs,x,y] = tascar_ir_measure( varargin )
   else
     nChannels = numel(sCfg.output);
   end
-  x = create_testsig( sCfg.len, sCfg.gain );
+  x = create_testsig( sCfg.len, sCfg.gain, sCfg.sigtype, sCfg );
   [y,fs,bufsize,load,xruns] = ...
       tascar_jackio( repmat(x,[sCfg.nrep+1,nChannels]), ...
 		     'output',sCfg.output, ...
@@ -73,11 +87,30 @@ function [ir,fs,x,y] = tascar_ir_measure( varargin )
   Y = Y ./ repmat(X,[1,size(Y,2)]);
   ir = realifft(Y,sCfg.len);
 
-function x = create_testsig( len, gain )
-  x = (rand(len,1)-0.5)*gain;
-  X = realfft(x);
-  vF = [1:size(X,1)]';
+function x = create_testsig( len, gain, stype, sCfg )
+  nbins = floor(len/2)+1;
+  vF = [1:nbins]';
   vF = vF / max(vF);
-  X = exp(-len*i*(2*pi)*vF.^2)./max(0.1,vF.^0.5);
-  x = realifft(X,len);
+  switch stype
+   case 'squarephase'
+    X = exp(-len*i*(2*pi)*vF.^2)./max(0.1,vF.^0.5);
+    x = realifft(X,len);
+   case 'farina'
+    T = ([1:len]'-1)/len;
+    w1 = len*sCfg.fmin;
+    w2 = len*sCfg.fmax;
+    phase = pi*w1/log(w2/w1)*(exp(T*log(w2/w1))-1);
+    x = sin(phase);
+    f = diff(phase);
+    f(end+1) = f(end);
+    x = x.*f.^(-sCfg.fweight);
+    rlen = round(0.5*sCfg.ramplen*len);
+    wnd = hann(2*rlen);
+    x(1:rlen) = x(1:rlen).*wnd(1:rlen);
+    x(end+1-[1:rlen]) = x(end+1-[1:rlen]).*wnd(1:rlen);
+   case 'noise'
+    x = randn(len,1);
+   otherwise
+    error(['invalid type: ',stype]);
+  end
   x = 0.5*x/max(abs(x))*gain;

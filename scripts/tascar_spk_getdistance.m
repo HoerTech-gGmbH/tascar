@@ -1,10 +1,15 @@
 function tascar_spk_getdistance( layoutfile, varargin )
-% tascar_spk_calibrate
+% tascar_spk_getdistance
 %
-% tascar_spk_calibrate( layoutfile [, key, value ] )
+% tascar_spk_getdistance( layoutfile [, key, value ] )
 %
 % layoutfile: tascar speaker layout file
 %
+% Meansure loudspeaker distance to measurement microphone. Optionally
+% estimate elevation angle from distance and vertical loudspeaker
+% position.
+%
+% The updated speaker layout file will be stored as [layoutfile,'.dist'].
   
 % 2020-06-09 Giso Grimm
 

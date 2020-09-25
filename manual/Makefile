@@ -4,6 +4,8 @@ include ../config.mk
 
 all: acousticmodel.pdf manual.pdf callgraph.pdf
 
+#manual.pdf: acousticmodel.pdf callgraph.pdf manual.run5
+
 diff: manual-diff_master.pdf
 
 #TEXINPUTS = "./:../:./plugins/:../technical_report/:../flowcharts/fmt_eps/:../flowcharts/fmt_pdf/:../flowcharts/:"
@@ -12,12 +14,27 @@ TEXINPUTS="./:../doc/:"
 SECTIONS=secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex secrecreverb.tex
 
 
-%.pdf: %.tex
-	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $<
-	TEXINPUTS=$(TEXINPUTS) bibtex $(<:.tex=)
-	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
-	TEXINPUTS=$(TEXINPUTS) makeindex $(basename $<)
-	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
+#%.pdf: %.tex
+#	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $<
+#	TEXINPUTS=$(TEXINPUTS) bibtex $(<:.tex=)
+#	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
+#	TEXINPUTS=$(TEXINPUTS) makeindex $(basename $<)
+#	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
+
+%.run1: %.tex $(SECTIONS)
+	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $< && touch $@
+
+%.run2: %.tex %.run1
+	TEXINPUTS=$(TEXINPUTS) bibtex $(<:.tex=) && touch $@
+
+%.run3: %.tex %.run2
+	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $< && touch $@
+
+%.run4: %.tex %.run3
+	TEXINPUTS=$(TEXINPUTS) makeindex $(basename $<) && touch $@
+
+%.run5: %.tex %.run4
+	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $< && touch $@
 
 %.aux: %.tex
 	TEXINPUTS=$(TEXINPUTS) pdflatex $<
@@ -28,52 +45,52 @@ FIGURES = filestructure.pdf creator.pdf
 version.tex:
 	echo $(FULLVERSION) > $@
 
-manual.pdf: version.tex $(FIGURES) $(SECTIONS)
+manual.pdf: version.tex $(FIGURES) $(SECTIONS) acousticmodel.pdf callgraph.pdf manual.run5
 
 secmodules.tex: $(sort $(wildcard mod*.tex))
-	echo 'List of general purpose modules:\par\begin{itemize}' > $@
-	echo $(patsubst %,\\item \\indmod{%},$(subst mod,,$(subst .tex,,$^))) >> $@
-	echo '\end{itemize}' >> $@
-	echo "" >> $@
+	echo 'List of general purpose modules:\par\begin{itemize}' > $@;\
+	echo $(patsubst %,\\item \\indmod{%},$(subst mod,,$(subst .tex,,$^))) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
 	(for m in $(subst mod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:$$m}\\index{$${m/_/\\_} (module)}";echo "\\input{mod$$m.tex}"; done) >> $@
 
 secactmodules.tex: $(sort $(wildcard actmod*.tex))
-	echo 'List of actor modules:\par\begin{itemize}' > $@
-	echo $(patsubst %,\\item \\indmod{%},$(subst actmod,,$(subst .tex,,$^))) >> $@
-	echo '\end{itemize}' >> $@
-	echo "" >> $@
+	echo 'List of actor modules:\par\begin{itemize}' > $@;\
+	echo $(patsubst %,\\item \\indmod{%},$(subst actmod,,$(subst .tex,,$^))) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
 	(for m in $(subst actmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:$$m}\\index{$${m/_/\\_} (actor module)}";echo "\\input{actmod$$m.tex}"; done) >> $@
 
 secapmodules.tex: $(sort $(wildcard apmod*.tex))
-	echo 'List of audio plugins:\par\begin{itemize}' > $@
-	(for m in $(subst apmod,,$(subst .tex,,$^)); do echo "\\item \\indapmod[$$m]{$${m/_/\\_}}"; done) >> $@
-	echo '\end{itemize}' >> $@
-	echo "" >> $@
-	echo "" >> $@
+	echo 'List of audio plugins:\par\begin{itemize}' > $@;\
+	(for m in $(subst apmod,,$(subst .tex,,$^)); do echo "\\item \\indapmod[$$m]{$${m/_/\\_}}"; done) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
+	echo "" >> $@;\
 	(for m in $(subst apmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:ap_$$m}\\index{$${m/_/\\_} (audio plugin)}";echo "\\input{apmod$$m.tex}"; done) >> $@
 
 secrecgeneric.tex: $(sort $(wildcard recgen*.tex))
-	echo 'List of generic receiver types:\par\begin{itemize}' > $@
-	(for m in $(subst recgen,,$(subst .tex,,$^)); do echo "\\item \\indrecgen[$$m]{$${m/_/\\_}}"; done) >> $@
-	echo '\end{itemize}' >> $@
-	echo "" >> $@
-	echo "" >> $@
+	echo 'List of generic receiver types:\par\begin{itemize}' > $@;\
+	(for m in $(subst recgen,,$(subst .tex,,$^)); do echo "\\item \\indrecgen[$$m]{$${m/_/\\_}}"; done) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
+	echo "" >> $@;\
 	(for m in $(subst recgen,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recgen_$$m}\\index{$${m/_/\\_} (receiver type)}";echo "\\input{recgen$$m.tex}"; done) >> $@
 
 secrecspeaker.tex: $(sort $(wildcard recspk*.tex))
-	echo 'List of speaker based receiver types:\par\begin{itemize}' > $@
-	(for m in $(subst recspk,,$(subst .tex,,$^)); do echo "\\item \\indrecspk[$$m]{$${m/_/\\_}}"; done) >> $@
-	echo '\end{itemize}' >> $@
-	echo "" >> $@
-	echo "" >> $@
+	echo 'List of speaker based receiver types:\par\begin{itemize}' > $@;\
+	(for m in $(subst recspk,,$(subst .tex,,$^)); do echo "\\item \\indrecspk[$$m]{$${m/_/\\_}}"; done) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
+	echo "" >> $@;\
 	(for m in $(subst recspk,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recspk_$$m}\\index{$${m/_/\\_} (speaker based receiver type)}";echo "\\input{recspk$$m.tex}"; done) >> $@
 
 secrecreverb.tex: $(sort $(wildcard recrev*.tex))
-	echo 'List of reverb receiver types:\par\begin{itemize}' > $@
-	(for m in $(subst recrev,,$(subst .tex,,$^)); do echo "\\item \\indrecrev[$$m]{$${m/_/\\_}}"; done) >> $@
-	echo '\end{itemize}' >> $@
-	echo "" >> $@
-	echo "" >> $@
+	echo 'List of reverb receiver types:\par\begin{itemize}' > $@;\
+	(for m in $(subst recrev,,$(subst .tex,,$^)); do echo "\\item \\indrecrev[$$m]{$${m/_/\\_}}"; done) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
+	echo "" >> $@;\
 	(for m in $(subst recrev,,$(subst .tex,,$^)); do echo "\\subsubsection{$${m/_/\\_}}\\label{sec:recrev_$$m}\\index{$${m/_/\\_} (reverb receiver type)}";echo "\\input{recrev$$m.tex}"; done) >> $@
 
 %.pdf: %.eps
@@ -83,7 +100,7 @@ secrecreverb.tex: $(sort $(wildcard recrev*.tex))
 	dot -Tpdf < $< > $@
 
 clean:
-	rm -Rf *.log *.lot *.lof *.aux *.dep *.dvi *.toc *~ *.blg *.bbl *.brf manual.pdf plug_*.tex *.idx *.ilg *.out *.ind $(FIGURES) $(SECTIONS) version.tex
+	rm -Rf *.log *.lot *.lof *.aux *.dep *.dvi *.toc *~ *.blg *.bbl *.brf manual.pdf plug_*.tex *.idx *.ilg *.out *.ind $(FIGURES) $(SECTIONS) version.tex *.run*
 	$(MAKE) -C ./examples clean
 
 %.png: %.dot
@@ -104,10 +121,10 @@ manual-diff%.tex: manual.tex manual$(*).tex
 .PHONY : manual_master.tex
 
 manual_master.tex:
-	rm -f manual_master.tex
-	mv manual.tex manual_temp.tex
-	git checkout master manual.tex
-	mv manual.tex $@
+	rm -f manual_master.tex;\
+	mv manual.tex manual_temp.tex;\
+	git checkout master manual.tex;\
+	mv manual.tex $@;\
 	mv manual_temp.tex manual.tex
 
 MODTEX=$(wildcard mod*.tex) $(wildcard actmod*.tex) $(wildcard apmod*.tex)

@@ -26,8 +26,9 @@ clean:
 	$(MAKE) -C external_libs clean
 	rm -Rf build devkit/Makefile.local devkit/build
 
-test:
-	$(MAKE) -C test
+# test can not run in multi-threaded mode!
+test: apps plugins
+	$(MAKE) -j 1 -C test
 	$(MAKE) -C examples
 
 googletest:

@@ -1,52 +1,56 @@
-Add a sound file and play back at a given time, or triggered via OSC
-messages.
-%
-This plugin provides an alternative to the audio player (the
-\elem{sndfile} element of \elem{source}).
-%
-The main difference is, that this plugin loads the whole sound file
-into memory, where as the audio player creates a separate jack client
-with a decoupling of disk-IO and audio.
-%
-Offline-rendering is only possible with this audio plugin.
+With the 'sndfile' plugin it is possible to play back the content of a
+sound file at a given time, or triggered via OSC messages.
+
+\begin{tscattributes}
+  \indattr{name}        & Sound file name.                                                                           \\
+  \indattr{channel}     & First sound file channel to be used, zero-base (default: 0)                                \\
+  \indattr{start}       & Start position within the file, in seconds (default: 0).                                   \\
+  \indattr{length}      & length of sound sample, in seconds, or 0 for file length (default: 0).                     \\
+  \indattr{position}    & Start position within the scene, in seconds (default: 0).                                  \\
+  \indattr{loop}        & loop count or 0 for infinite looping (default: 1).                                         \\
+  \indattr{levelmode}   & level mode, ``rms'', ``peak'' or ``calib'' (default: ``rms'').                             \\
+  \indattr{level}       & level in dB (default: 0).                                                                  \\
+  \indattr{weighting}   & level weighting for RMS mode, one of ``Z'', ``A'', ``C'' or ``bandpass'' (default: ``Z''). \\
+  \indattr{triggered}   & Play OSC triggered samples, ignore position and loop (default: false)                      \\
+  \indattr{transport}   & Use session time base (default: true)                                                      \\
+  \indattr{license}     & License form of session file                                                               \\
+  \indattr{attribution} & Attribution of session file, e.g., author name                                             \\
+  \indattr{mute}        & Mute flag                                                                                  \\
+  \indattr{resample}    & Allow resampling to current session sample rate (default: false)                           \\
+\end{tscattributes}
+
+\paragraph{Multi-channel sound files}
 %
 If the plugin receives multiple channels (e.g., when used in a
 receiver or a diffuse sound field), all channels starting at channel
 number \attr{channel} will be returned. If the file does not contain a
-sufficient number of channels, silcence will be returned for all
+sufficient number of channels, silence will be returned for all
 channels not available in the sound file.
 
-\begin{tscattributes}
-  \indattr{name}        & Sound file name.                                                       \\
-  \indattr{channel}     & First sound file channel to be used, zero-base (default: 0)                             \\
-  \indattr{start}       & Start position within the file, in seconds (default: 0).               \\
-  \indattr{length}      & length of sound sample, in seconds, or 0 for file length (default: 0). \\
-  \indattr{position}    & Start position within the scene, in seconds (default: 0).              \\
-  \indattr{loop}        & loop count or 0 for infinite looping (default: 1).                     \\
-  \indattr{levelmode}   & level mode, ``rms'', ``peak'' or ``calib'' (default: ``rms'').         \\
-  \indattr{level}       & level in dB (default: 0).                                              \\
-  \indattr{triggered}   & Play OSC triggered samples, ignore position and loop (default: false)  \\
-  \indattr{transport}   & Use session time base (default: true)                                  \\
-  \indattr{license}     & License form of session file                                           \\
-  \indattr{attribution} & Attribution of session file, e.g., author name                         \\
-  \indattr{mute}        & Mute flag                                                              \\
-\end{tscattributes}
+\paragraph{Calibration of levels}
 %
 In the level mode ``rms'', the RMS value of the first used channel
 will be used for adjusting the level, i.e., all channels will be
 scaled with the same value such that the first channel has the
 level \attr{level}.
+\begin{itemize}
+\item Level mode ``rms'' scales the signal so the RMS of the first channel corresponds to \attr{level}.
 
-Level mode ``rms'' scales the signal so the RMS of the first channel corresponds to \attr{level}.
+\item Level mode ``peak'' scales the signal so the peak over all channels corresponds to \attr{level}.
 
-Level mode ``peak'' scales the signal so the peak over all channels corresponds to \attr{level}.
-
-Level mode ``calib'' scales the signal by \attr{level} minus 93.979~dB.
-
+\item Level mode ``calib'' scales the signal by \attr{level} minus 93.979~dB.
+\end{itemize}
 93.979~dB corresponds internally to a full-scale signal.
 
+\paragraph{Temporal alignment}
+%
+All times are defined relative to the object time of the parent object
+of the sound file plugin. In most cases this is equivalent to the
+session time, however, it may be changed with the \attr{start}
+attribute of the objects in scenes. If the parent object is not within
+a scene (e.g., a 'route' module), the session time is used.
 
-See also Figure \ref{fig:ap_sndfile} for more deatils on the time and position conventions.
+See also Figure \ref{fig:ap_sndfile} for more details on the time and position conventions.
 
 \begin{figure}[htb]
     \centering

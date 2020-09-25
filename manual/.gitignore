@@ -31,3 +31,4 @@ secrecgeneric.tex
 secrecreverb.tex
 secrecspeaker.tex
 version.tex
+*.run*
