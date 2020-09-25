@@ -20,6 +20,12 @@ function cNode = tascar_xml_add_element( doc, pNode, cName, sContent, varargin )
   cNode = javaMethod( 'createElement', doc, cName );
   %set attributes of the new element:
   for k=1:2:length(varargin)  
+    if ~ischar(varargin{k})
+      warning('character type required for attribute name');
+    end
+    if ~ischar(varargin{k+1})
+      warning('character type required for attribute value');
+    end
     javaMethod('setAttribute',cNode,varargin{k},varargin{k+1});
   end
   % specify the parent node:
