@@ -28,7 +28,7 @@
 \hline
 }{
 \hline
-\end{tabular} 
+\end{tabular}
 \end{snugshade}
 }
 
@@ -39,7 +39,7 @@
 \hline
 }{
 \\\hline
-\end{tabular} 
+\end{tabular}
 \end{snugshade}
 }
 
@@ -158,7 +158,7 @@ configuration, soundscape simulations and computer games.
 %content and dynamics of an acoustic scene very precisely.
 
 An acoustic scene in its simplest form consists of three types of
-objects: sound sources, receiver and reflectors.  
+objects: sound sources, receiver and reflectors.
 %
 Each object has a position and orientation in the virtual space in a
 given time.
@@ -251,7 +251,7 @@ configuration variables.
 
 The \tascar{} GUI can be controlled using keyboard shortcuts.
 
-\parbox{\columnwidth}{ 
+\parbox{\columnwidth}{
 
 Changing the view in the main window between
 the elements of the menu bar on the left side:
@@ -285,7 +285,7 @@ configuration file (see Section \ref{sec:globalconfig} for details):
 \end{verbatim}
 
 
-\parbox{\columnwidth}{ 
+\parbox{\columnwidth}{
 
 Opening the top menu bar elements:
 
@@ -299,7 +299,7 @@ Opening the top menu bar elements:
 \end{tabular}
 }
 
-\parbox{\columnwidth}{ 
+\parbox{\columnwidth}{
 
 Opening and closing \tascar{} files:
 
@@ -316,7 +316,7 @@ Opening and closing \tascar{} files:
 
 }
 
-\parbox{\columnwidth}{ 
+\parbox{\columnwidth}{
 
 Controlling the transport of a \tascar{} scene:
 
@@ -652,7 +652,7 @@ definition. An example scene definition is given in Example
 \section{Objects}
 
 A scene can be complemented with objects\index{object} of different types (as it was
-already shown in the first example of a scene definition). 
+already shown in the first example of a scene definition).
 %
 Objects can be any of the following types:
 \begin{itemize}
@@ -673,7 +673,7 @@ First, we have to specify the ``not interactive'' position and
 orientation (it can be also the whole trajectory of an object) in a
 scene definition file.
 %
- 
+
 As an addition to this predefined geometry, we can steer the object
 using an external device, for example a joystick, head movement
 tracking system or by an algorithm which generates a certain type of
@@ -681,10 +681,10 @@ movement, thus applying ``interactive'' type of geometry.
 %
 The resulting position and orientation of an object will be calculated
 by summing up these two mentioned types of position and
-orientation. 
+orientation.
 %
 The difference between two types of defining the movement has been
-depicted in Figure \ref{fig:positions}. 
+depicted in Figure \ref{fig:positions}.
 
 \begin{figure}[htb]
   \centering
@@ -739,7 +739,7 @@ position and orientation in space and time.
 %
 The following child elements can be used to specify these parameters
 (see also Example \ref{tsc:example_basic}).
- 
+
 \subsubsection{The {\tt <position>...</position>} element}\label{sec:position}\index{position}
 
 Position is specified by providing Cartesian coordinates (in meters)
@@ -765,7 +765,7 @@ We can also use an attribute to control the interpolation method:
 \itscexamplepriv[linerange={9-16},numbers=none]{pos_and_rot}
 The first example will interpolate linearly in Cartesian coordinates,
 i.\,e., the object will move on a straight line from (1,4,0) to
-(1,-4,0). 
+(1,-4,0).
 %
 The second example will interpolate linearly in spherical coordinates
 around the origin, i.\,e., the object will move along an arc from
@@ -893,9 +893,9 @@ This is specifically useful when controlling object positions via game
 controllers.
 
 \begin{tscattributes}
-\indattr{importraw} & File name of raw file containing list of polygon surfaces. \\ 
-\indattr{maxstep}   & Maximal vertical step size.                                \\ 
-\indattr{zshift}    & Vertical shift of control position, to achieve 
+\indattr{importraw} & File name of raw file containing list of polygon surfaces. \\
+\indattr{maxstep}   & Maximal vertical step size.                                \\
+\indattr{zshift}    & Vertical shift of control position, to achieve
 above-floor positions with a floor navigation mesh.                              \\
 \end{tscattributes}
 
@@ -912,7 +912,7 @@ all scene objects, refer to section \ref{common attributes}
 \nameref{common attributes} on page \pageref{common attributes} for
 details.
 
-\underline{Recognized sub-elements:} 
+\underline{Recognized sub-elements:}
 
 \refelem{position}, \refelem{orientation}, \refelem{creator}, \refelem{sound}
 
@@ -974,7 +974,7 @@ have one sound vertex exactly at the position of the source
 object (so at the point specified in the element \elem{position}).
 %
 When we create a source with more than one
-sound vertex, the object position specified in sub-element \elem{position} 
+sound vertex, the object position specified in sub-element \elem{position}
 will now be the reference point for all the sound vertices, and
 changing this position will also change the position of the sound
 vertices.
@@ -994,7 +994,7 @@ sub-element \elem{position} using attributes \attr{x}, \attr{y}
 and \attr{z} -- for example the vertex called "guy1" is located
 -0.7\,m from the reference point in x direction and 0.1\,m in y
 direction.
- 
+
 Figure \ref{fig:vertices} presents an example of a scene containing sound sources
 consisting of more than one sound vertex.
 
@@ -1064,20 +1064,20 @@ interactive transitions between simulated rooms.
 Apart of sound sources which consist of one or more sound vertices, we
 also have a possibility to create diffuse sound fields which ``fill''
 the space and are equally loud within a given volume (for example
-isotropic babble noise in a cafeteria, or remote traffic). 
+isotropic babble noise in a cafeteria, or remote traffic).
 %
 We can define a diffuse sound field in the following way:
 \tscexample[linerange={15-18},firstnumber=15]{example_cashdesk}
 %What are the connections in this example?
-    
+
 Sound files used to create diffuse sound fields should contain 4 channels
-(B format, FuMa normalization). 
+(B format, FuMa normalization).
 %
 With attribute \attr{size="x y z"} we can specify the dimensions of
-the box in which the diffuse sound field is audible. 
+the box in which the diffuse sound field is audible.
 %
 To provide a smooth decay of the diffuse sound field, there is a von-Hann
-ramp for the gain of the source outside the box. 
+ramp for the gain of the source outside the box.
 %
 The length of the ramp can also be specified using
 \attr{falloff="..."}.
@@ -1157,8 +1157,8 @@ The receiver functionality can be split into a {\em panning} or
 directional encoding of primary and image sources, and a {\em
   decoding} of first order Ambisonics diffuse signals:
 \begin{equation}
-\mathbf{z}(t) = 
-\underbrace{\sum_{k=1}^K \mathbf{w}(\mathbf{p}_{k,rel}) y_k(t)}_\text{panning} + 
+\mathbf{z}(t) =
+\underbrace{\sum_{k=1}^K \mathbf{w}(\mathbf{p}_{k,rel}) y_k(t)}_\text{panning} +
 \underbrace{\sum_{l=1}^L \mathbf{D}\hat{\mathbf{O}}_{rec}\hat{\mathbf{O}}^{-1}_{src}\mathbf{f}_l(t)^T}_\text{diffuse decoding}
 \end{equation}
 In the panning part, the driving weights
@@ -1365,7 +1365,7 @@ The \elem{face} element defines a single reflecting surface.
 
 If the attribute \indattr{vertices} contains at least three
 coordinates then a polygon surface is constructed using the vertices
-list. 
+list.
 %
 Otherwise, a rectangular surface with the given width and height is
 created.
@@ -1389,7 +1389,7 @@ with common reflection properties.
 \end{tscattributes}
 
 Element \elem{facegroup} behaves also as an object, since it also has
-a position and orientation in space. 
+a position and orientation in space.
 %
 So if we change the position or orientation of the whole
 \elem{facegroup}, it will also relatively change for all the planes
@@ -1400,16 +1400,16 @@ We can define a \elem{facegroup} in the following way (see example
 \tscexample[linerange={12-17},firstnumber=12]{example_reflectors}
 
 First, we define the facegroup with the name, reflectivity as well as
-the position and orientation of the whole facegroup. 
+the position and orientation of the whole facegroup.
 %
 Then, we use a sub-element \elem{faces} (not the same as \elem{face}
 !) to define the surfaces which will be included in the group.
 %
 Each line has to contain the coordinates x y z for at least three
-vertices. 
+vertices.
 %
 Each surface is defined in one line (by specifying coordinates of the
-vertices of a surface). 
+vertices of a surface).
 %
 At this point in the code we shouldn't leave empty lines.
 
@@ -1452,7 +1452,7 @@ A simple shoebox shaped room can be created by setting the attribute
 %
 The size is given in $x,y,z$ dimensions. All faces are pointing
 inwards.
- 
+
 The normal of faces, i.e., the face orientation, is relevant for the
 acoustics simulation: Image sources are only active if the primary
 source is in the direction of the face normal.
@@ -1489,7 +1489,7 @@ aperture is 1.1284 meter.
 
 \subsection{Masks: {\tt <mask ../>} element}\index{mask}\label{sec:mask}
 
-Global masks affect the attenuation in a receiver, based on the receiver position. 
+Global masks affect the attenuation in a receiver, based on the receiver position.
 See Figure \ref{fig:masks}.
 
 \begin{figure}[htb]
@@ -1681,7 +1681,7 @@ This omni-directional level meter should show the same numbers as a
 real physical sound level meter in the center of the physical
 reproduction system.
 %
-The sound level meter need to be configured to ``unweighted'',
+The sound level meters need to be configured to ``unweighted'',
 ``Z-weighted'' or ``C-weighted'' settings.
 %
 Please be aware of the fact that in ``unweighted'' mode the background
@@ -1937,7 +1937,7 @@ brackets.
 with 3 floating point numbers (it can for example correspond to 3
 coordinates for the position), \verb!(i)! means integer etc.
 
-Funtion \verb!send_osc! requires specifying the destination host
+Function \verb!send_osc! requires specifying the destination host
 (e.g., 'localhost') and port number, the path, and the variable
 values, e.g.,
 \begin{lstlisting}[numbers=none]
@@ -1964,7 +1964,7 @@ Orientation of the object can be also changed using:
 send_osc('localhost',9877,'/scene_name/object_name/zyxeuler',...
          euler_z euler_y,euler_x)
 \end{lstlisting}
-To mute or solo one object, we use: 
+To mute or solo one object, we use:
 \begin{lstlisting}[numbers=none]
 send_osc('localhost',9877,'/scene_name/object_name/solo',1)
 send_osc('localhost',9877,'/scene_name/object_name/mute',1)
@@ -1995,14 +1995,14 @@ flag \verb!-h! or \verb!--help!.
 \begin{itemize}
 \item \verb!tascar_cli!\\
   Load \tascar sessions from command line (no GUI support)
-\item \verb!tascar_renderfile!\\ 
+\item \verb!tascar_renderfile!\\
   This command line tool can be used for rendering the image source model of a single scene in a
   \tascar{} session with audio input from a sound file and saving the rendered signal to a sound file.
-  Common usage example: 
+  Common usage example:
   \begin{lstlisting}[numbers=none]
   tascar_renderfile -i input_file.wav -o output_file.wav tascar_scene.tsc
   \end{lstlisting}
-   
+
   The size of the input file \verb!input_file.wav! (number of audio
   channels) has to correspond with the number of sources in the
   scene. The size of the file \verb!output_file.wav!, which will be
@@ -2010,13 +2010,13 @@ flag \verb!-h! or \verb!--help!.
   output channels of the receiver used in the scene. In case of
   multi-channel output (e.g., speaker based receiver types), the order
   follows the order of the channel definition in the \tascar{}
-  files. This may differ form the order of jack ports, because some
+  files. This may differ from the order of jack ports, because some
   jack front ends sort ports alphabetically.
 
   Other options:
 
   \begin{lstlisting}[numbers=none]
-  -h 
+  -h
   --help
 
   -s #
@@ -2031,7 +2031,7 @@ flag \verb!-h! or \verb!--help!.
   -t #
   --starttime=#
 
-  -d 
+  -d
   --dynamic
 
   -f #
@@ -2043,24 +2043,24 @@ flag \verb!-h! or \verb!--help!.
   -1 #
   --ismmax=#
 
-  -v 
+  -v
   --verbose
   \end{lstlisting}
 \item \verb!tascar_renderir!\\
-This command line tool is used for rendering the impulse response of a \tascar{} scene. Common usage example: 
+This command line tool is used for rendering the impulse response of a \tascar{} scene. Common usage example:
   \begin{lstlisting}[numbers=none]
   tascar_renderir -o output_file.wav -f 44100 -1 2 tascar_scene.tsc
   \end{lstlisting}
-The impulse response will be stored in \verb!output_file.wav!. \verb!44100! is the sampling rate and \verb!2! is the highest rendered image source order.  
+The impulse response will be stored in \verb!output_file.wav!. \verb!44100! is the sampling rate and \verb!2! is the highest rendered image source order.
 
 \item \verb!tascar_lslsl!\\
-This command line tool otuputs a list of available Lab Streaming Layer (LSL) streams.  
+This command line tool outputs a list of available Lab Streaming Layer (LSL) streams.
 \item \verb!tascar_lsljacktime! \\
   Create an LSL stream with jack time
 \item \verb!tascar_hdspmixer! \\
   Interface to HDSP9652
 \item \verb!tascar_jackio! \\
-  Play and record wav files via jack. 
+  Play and record wav files via jack.
 \end{itemize}
 
 
@@ -2092,7 +2092,7 @@ $r=||\mathbf{p}_{rel}||$  & scalar      & distance between source and receiver  
 The receiver orientation is defined by
 \begin{eqnarray}
 \mathbf{O}_{rec}       & =              & \mathbf{O}_x \left(\mathbf{O}_y \mathbf{O}_z\right) \label{eq:orientation}\\
-\mathbf{O}_x           & =              & 
+\mathbf{O}_x           & =              &
 \left(
 \begin{array}{ccc}
 1                      & 0              & 0                                                   \\
@@ -2101,7 +2101,7 @@ The receiver orientation is defined by
 \end{array}
 \right)
                                                                                               \\
-\mathbf{O}_y           & =              & 
+\mathbf{O}_y           & =              &
 \left(
 \begin{array}{ccc}
 \cos(\Omega_y)         & 0              & -\sin(\Omega_y)                                     \\
@@ -2109,7 +2109,7 @@ The receiver orientation is defined by
 \sin(\Omega_y)         & 0              & \cos(\Omega_y)                                      \\
 \end{array}
 \right)                                                                                       \\
-\mathbf{O}_z           & =              & 
+\mathbf{O}_z           & =              &
 \left(
 \begin{array}{ccc}
 \cos(\Omega_y)         & -\sin(\Omega_y & 0                                                   \\
@@ -2146,7 +2146,7 @@ Type                      & $N$       & panning                                 
 \cos(\frac{n}{2}\varphi)   & n\, \textrm{even}                                                                                                                                     \\
 \sin(\frac{n-1}{2}\varphi) & n\, \textrm{odd}
 \end{array}\right.$       & $d_{n,n}=1,\, n=\{1,2,3\}$                                                                                                                             \\
-{\tt amb\_3h3v}           & 16        &  
+{\tt amb\_3h3v}           & 16        &
 $w=
 \left(\begin{array}{c}
 w_w                                                                                                                                                                                \\w_y\\w_x\\w_z\\w_v\\w_t\\w_r\\w_s\\w_u\\w_q\\w_o\\w_m\\w_k\\w_l\\w_n\\w_p

@@ -7,6 +7,7 @@ Send levels via OSC.
   \indattr{path} & Target path (default: ``/level'')\\
 \end{tscattributes}
 
-The OSC message will contain number of channels plus one floats. The
-first float contains the object time in seconds, the other floats
-contain the RMS level within the current audio block in dB SPL.
+If $N$ is the number of channels, the OSC message will contain $N+1$
+floating point values. The first float contains the object time in
+seconds, the other floats contain the RMS level within the current
+audio block in dB SPL.
