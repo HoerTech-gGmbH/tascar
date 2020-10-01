@@ -13,5 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: dependencies
+      run: pacman -S mingw-w64-i686-libxml++
     - name: make
       run: make
