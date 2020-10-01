@@ -2,7 +2,7 @@ function [ir,fs,x,y] = tascar_ir_measure( varargin )
 % TASCAR_IR_MEASURE - measure impulse responses via jack
 %
 % Usage:
-% [ir,fs] = tascar_ir_measure( ... )
+% [ir,fs,x,y] = tascar_ir_measure( ... )
 %
 % Use key/value pairs to fine-control the program.
 %
