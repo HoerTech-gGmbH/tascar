@@ -35,6 +35,9 @@ TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
   if( plugintype == "plugin" )
     get_attribute("type",plugintype);
   std::string libname("tascar_ap_");
+  #ifdef PLUGINPREFIX
+  libname = PLUGINPREFIX + libname;
+  #endif
   #if defined(__APPLE__)
     libname += plugintype + ".dylib";
   #elif __linux__

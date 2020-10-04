@@ -56,7 +56,7 @@ CXXFLAGS += -coverage -fprofile-arcs -ftest-coverage
 LDLIBS += -lgcov
 endif
 
-CXXFLAGS += $(GTKDEF) $(LTRDEF)
+CXXFLAGS += $(GTKDEF) $(LTRDEF) $(TSCCXXFLAGS)
 
 INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(RECEIVERMODS)) \

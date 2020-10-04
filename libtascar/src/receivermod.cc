@@ -15,6 +15,9 @@ TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
   get_attribute("type",receivertype);
   receivertype = env_expand( receivertype );
   std::string libname("tascarreceiver_");
+  #ifdef PLUGINPREFIX
+  libname = PLUGINPREFIX + libname;
+  #endif
   #if defined(__APPLE__)
     libname += receivertype + ".dylib";
   #elif __linux__

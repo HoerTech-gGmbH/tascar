@@ -94,7 +94,7 @@ std::string TASCAR::days_to_string(double x)
   return ctmp;
 }
 
-bool file_exists(const std::string& fname)
+bool file_exists_ov(const std::string& fname)
 {
   if(access(fname.c_str(), F_OK) != -1)
     return true;
@@ -118,7 +118,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
 {
   try {
     std::string lfname(TASCAR::env_expand(fname));
-    if(file_exists(lfname)) {
+    if(file_exists_ov(lfname)) {
       setlocale(LC_ALL, "C");
       xml_doc_t doc(lfname, xml_doc_t::LOAD_FILE);
       readconfig("", doc.doc->get_root_node());

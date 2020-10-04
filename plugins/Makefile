@@ -53,16 +53,16 @@ AUDIOPLUGINS +=  openmha
 endif
 
 #
-RECEIVERMODS = $(patsubst %,build/tascarreceiver_%.so,$(RECEIVERS))
+RECEIVERMODS = $(patsubst %,build/$(PLUGINPREFIX)tascarreceiver_%.so,$(RECEIVERS))
 
-SOURCEMODS = $(patsubst %,build/tascarsource_%.so,$(SOURCES))
+SOURCEMODS = $(patsubst %,build/$(PLUGINPREFIX)tascarsource_%.so,$(SOURCES))
 
-TASCARMODDLLS = $(patsubst %,build/tascar_%.so,$(TASCARMODS))
-TASCARMODDLLSGUI = $(patsubst %,build/tascar_%.so,$(TASCARMODSGUI))
+TASCARMODDLLS = $(patsubst %,build/$(PLUGINPREFIX)tascar_%.so,$(TASCARMODS))
+TASCARMODDLLSGUI = $(patsubst %,build/$(PLUGINPREFIX)tascar_%.so,$(TASCARMODSGUI))
 
-AUDIOPLUGINDLLS = $(patsubst %,build/tascar_ap_%.so,$(AUDIOPLUGINS))
+AUDIOPLUGINDLLS = $(patsubst %,build/$(PLUGINPREFIX)tascar_ap_%.so,$(AUDIOPLUGINS))
 
-GLABSENSORDLLS = $(patsubst %,build/glabsensor_%.so,$(GLABSENSORS))
+GLABSENSORDLLS = $(patsubst %,build/$(PLUGINPREFIX)glabsensor_%.so,$(GLABSENSORS))
 
 
 ifeq "ok" "$(shell pkg-config gtkmm-3.0 && echo ok)"
@@ -105,52 +105,52 @@ clean:
 $(TASCARMODDLLSGUI): EXTERNALS += gtkmm-3.0
 $(TASCARMODDLLSGUI): CXXFLAGS+=-I./build
 
-build/tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
-build/tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
-build/tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
-build/tascar_ap_speechactivity.so: LDLIBS+=-llsl
-build/tascar_ap_periodogram.so: LDLIBS+=-llsl
-build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
-build/tascar_ltcgen.so: EXTERNALS+=ltc
-build/tascarreceiver_hoa3d_enc.so: EXTERNALS+=gsl
-build/tascarreceiver_hoa3d.so: EXTERNALS+=gsl eigen3
-build/tascar_hossustain.so: EXTERNALS += fftw3f
-build/tascar_lsljacktime.so build/tascar_pos2lsl.so build/tascar_levels2osc.so build/tascar_lslactor.so: LDLIBS+=-llsl
-build/tascar_lightctl.so build/tascar_ovheadtracker.so: LDLIBS+=-ltascardmx
-build/tascar_simplecontroller.so: build/simplecontroller_glade.h
-build/tascar_datalogging.so: LDLIBS += -lmatio -llsl
-build/tascar_datalogging.so: build/datalogging_glade.h
-build/tascar_timedisplay.so: build/timedisplay_glade.h
+build/$(PLUGINPREFIX)tascarreceiver_hoa2d.so: LDLIBS+=-lfftw3f
+build/$(PLUGINPREFIX)tascar_ap_lipsync.so: LDLIBS+=-lfftw3f
+build/$(PLUGINPREFIX)tascar_ap_lipsync_paper.so: LDLIBS+=-lfftw3f
+build/$(PLUGINPREFIX)tascar_ap_speechactivity.so: LDLIBS+=-llsl
+build/$(PLUGINPREFIX)tascar_ap_periodogram.so: LDLIBS+=-llsl
+build/$(PLUGINPREFIX)tascar_ap_openmha.so: LDLIBS+=-lopenmha
+build/$(PLUGINPREFIX)tascar_ltcgen.so: EXTERNALS+=ltc
+build/$(PLUGINPREFIX)tascarreceiver_hoa3d_enc.so: EXTERNALS+=gsl
+build/$(PLUGINPREFIX)tascarreceiver_hoa3d.so: EXTERNALS+=gsl eigen3
+build/$(PLUGINPREFIX)tascar_hossustain.so: EXTERNALS += fftw3f
+build/$(PLUGINPREFIX)tascar_lsljacktime.so build/$(PLUGINPREFIX)tascar_pos2lsl.so build/$(PLUGINPREFIX)tascar_levels2osc.so build/$(PLUGINPREFIX)tascar_lslactor.so: LDLIBS+=-llsl
+build/$(PLUGINPREFIX)tascar_lightctl.so build/$(PLUGINPREFIX)tascar_ovheadtracker.so: LDLIBS+=-ltascardmx
+build/$(PLUGINPREFIX)tascar_simplecontroller.so: build/simplecontroller_glade.h
+build/$(PLUGINPREFIX)tascar_datalogging.so: LDLIBS += -lmatio -llsl
+build/$(PLUGINPREFIX)tascar_datalogging.so: build/datalogging_glade.h
+build/$(PLUGINPREFIX)tascar_timedisplay.so: build/timedisplay_glade.h
 
-build/glabsensor_%.so: EXTERNALS += gtkmm-3.0
-build/glabsensor_%.so: LDLIBS += -llsl
+build/$(PLUGINPREFIX)glabsensor_%.so: EXTERNALS += gtkmm-3.0
+build/$(PLUGINPREFIX)glabsensor_%.so: LDLIBS += -llsl
 
 ifeq "$(HAS_OPENCV2)" "yes"
-build/glabsensor_trackir.so: EXTERNALS += opencv
+build/$(PLUGINPREFIX)glabsensor_trackir.so: EXTERNALS += opencv
 endif
 ifeq "$(HAS_OPENCV4)" "yes"
-build/glabsensor_trackir.so: EXTERNALS += opencv4
+build/$(PLUGINPREFIX)glabsensor_trackir.so: EXTERNALS += opencv4
 endif
 
 build/glabsensors.o: EXTERNALS += gtkmm-3.0
 build/glabsensors.o: build/glabsensors_glade.h
-build/tascar_glabsensors.so: build/glabsensors_glade.h
-build/tascar_glabsensors.so: build/glabsensorplugin.o build/glabsensors_glade.h src/glabsensorplugin.h
-build/tascar_glabsensors.so: LDLIBS += -llsl
+build/$(PLUGINPREFIX)tascar_glabsensors.so: build/glabsensors_glade.h
+build/$(PLUGINPREFIX)tascar_glabsensors.so: build/glabsensorplugin.o build/glabsensors_glade.h src/glabsensorplugin.h
+build/$(PLUGINPREFIX)tascar_glabsensors.so: LDLIBS += -llsl
 
-build/tascarreceiver_%.so: src/receivermod_%.cc
+build/$(PLUGINPREFIX)tascarreceiver_%.so: src/receivermod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
-build/tascarsource_%.so: src/tascarsource_%.cc
+build/$(PLUGINPREFIX)tascarsource_%.so: src/tascarsource_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
-build/tascar_%.so: src/tascarmod_%.cc
+build/$(PLUGINPREFIX)tascar_%.so: src/tascarmod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
-build/tascar_ap_%.so: src/tascar_ap_%.cc
+build/$(PLUGINPREFIX)tascar_ap_%.so: src/tascar_ap_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
-build/glabsensor_%.so: src/glabsensor_%.cc build/glabsensorplugin.o src/glabsensorplugin.h
+build/$(PLUGINPREFIX)glabsensor_%.so: src/glabsensor_%.cc build/glabsensorplugin.o src/glabsensorplugin.h
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/%_glade.h: src/%.glade

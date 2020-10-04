@@ -15,6 +15,9 @@ sourcemod_t::sourcemod_t( xmlpp::Element* cfg )
   get_attribute( "type", sourcetype );
   sourcetype = env_expand( sourcetype );
   std::string libname( "tascarsource_" );
+  #ifdef PLUGINPREFIX
+  libname = PLUGINPREFIX + libname;
+  #endif
   #if defined(__APPLE__)
     libname += sourcetype + ".dylib";
   #elif __linux__

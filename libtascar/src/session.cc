@@ -168,6 +168,9 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
     get_attribute("name",name);
   }
   std::string libname("tascar_");
+  #ifdef PLUGINPREFIX
+  libname = PLUGINPREFIX + libname;
+  #endif
   #if defined(__APPLE__)
     libname += name + ".dylib";
   #elif __linux__

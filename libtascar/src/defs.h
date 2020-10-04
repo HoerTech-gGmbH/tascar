@@ -48,11 +48,17 @@
 */
 #define R_EARTH 6367467.5
 
+#ifndef DEBUGS
 #define DEBUGS(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << #x << "=" << x << std::endl
+#endif
 
+#ifndef DEBUG
 #define DEBUG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " " << #x << "=" << x << std::endl
-//#define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << x << std::endl
+#endif
+
+#ifndef DEBUGMSG
 #define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " --" << x << "--" << std::endl
+#endif
 
 #define TASCAR_ASSERT(x) if( !(x) ) throw TASCAR::ErrMsg("Expression " #x " is false.")
 
