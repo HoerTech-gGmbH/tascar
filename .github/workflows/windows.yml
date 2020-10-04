@@ -13,9 +13,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: dependencies
-      run: mingw-get install msys
-    - name: pacman
-      run: pacman -S mingw-w64-i686-libxml++
     - name: make
       run: make
