@@ -88,7 +88,12 @@ public:
   };
   inline foa_sample_t& elem00x(uint32_t p2) { return data[p2]; };
   inline const foa_sample_t& elem00x(uint32_t p2) const { return data[p2]; };
-  inline void clear() { memset(data, 0, sizeof(data[0]) * s1 * s2); };
+  inline void clear()
+  {
+    uint32_t l(s1 * s2);
+    for(uint32_t k = 0; k < l; ++k)
+      data[k].clear();
+  };
 
 protected:
   uint32_t s1;
@@ -102,7 +107,11 @@ public:
   ~cmat2_t();
   inline foa_sample_t& elem(uint32_t p1) { return data[p1]; };
   inline const foa_sample_t& elem(uint32_t p1) const { return data[p1]; };
-  inline void clear() { memset(data, 0, sizeof(data[0]) * s1); };
+  inline void clear()
+  {
+    for(uint32_t k = 0; k < s1; ++k)
+      data[k].clear();
+  };
 
 protected:
   uint32_t s1;
