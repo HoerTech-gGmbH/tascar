@@ -81,6 +81,8 @@ endif
 
 TASCARVERSION=$(FULLVERSION)
 
+TASCARLIB = -ltascar
+
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
 CXXFLAGS += -I../libtascar/src -I../libtascar/build
@@ -93,7 +95,7 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
-LDLIBS += -ldl -ltascar
+LDLIBS += -ldl $(TASCARLIB)
 
 modules: $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(TASCARMODDLLSGUI) $(AUDIOPLUGINDLLS) $(GLABSENSORDLLS)
 
