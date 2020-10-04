@@ -30,7 +30,7 @@ csTasks = {
 
 cResults = {};
 
-for k=1:size(csTasks,2)
+for k=1:size(csTasks,1)
   cResults{k} = ...
       tascar_ratingtool( 'n', numel(cSounds),...
 			 'item', csTasks{k,1}, ...
@@ -41,7 +41,7 @@ for k=1:size(csTasks,2)
   send_osc(hTSC,'/transport/stop');
 
 end
-for k=1:size(csTasks,2)
+for k=1:size(csTasks,1)
   disp(csTasks{k,1})
   disp(cResults{k});
 end
