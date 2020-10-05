@@ -24,15 +24,15 @@
 
 */
 
-#include "jackiowav.h"
 #include "cli.h"
+#include "jackiowav.h"
 #include <fstream>
 
-void store_stats(const std::string& statname,jackio_t& jio)
+void store_stats(const std::string& statname, jackio_t& jio)
 {
-  if( !statname.empty() ){
+  if(!statname.empty()) {
     std::ofstream ofs(statname.c_str());
-    if( ofs.good() ){
+    if(ofs.good()) {
       ofs << "cpuload " << jio.cpuload << std::endl;
       ofs << "xruns " << jio.xruns << std::endl;
     }
@@ -41,22 +41,15 @@ void store_stats(const std::string& statname,jackio_t& jio)
 
 int main(int argc, char** argv)
 {
-  try{
-    const char *options = "fo:chus:d:vt:wn:";
-    struct option long_options[] = { 
-      { "freewheeling", 0, 0, 'f' },
-      { "output-file",  1, 0, 'o' },
-      { "jack-name",    1, 0, 'n' },
-      { "autoconnect",  0, 0, 'c' },
-      { "unlink",       0, 0, 'u' },
-      { "help",         0, 0, 'h' },
-      { "start",        1, 0, 's' },
-      { "wait",         0, 0, 'w' },
-      { "duration",     1, 0, 'd' },
-      { "statistics",   1, 0, 't' },
-      { "verbose",      0, 0, 'v' },
-      { 0, 0, 0, 0 }
-    };
+  try {
+    const char* options = "fo:chus:d:vt:wn:";
+    struct option long_options[] = {
+        {"freewheeling", 0, 0, 'f'}, {"output-file", 1, 0, 'o'},
+        {"jack-name", 1, 0, 'n'},    {"autoconnect", 0, 0, 'c'},
+        {"unlink", 0, 0, 'u'},       {"help", 0, 0, 'h'},
+        {"start", 1, 0, 's'},        {"wait", 0, 0, 'w'},
+        {"duration", 1, 0, 'd'},     {"statistics", 1, 0, 't'},
+        {"verbose", 0, 0, 'v'},      {0, 0, 0, 0}};
     int opt(0);
     int option_index(0);
     bool b_unlink(false);
@@ -73,9 +66,9 @@ int main(int argc, char** argv)
     bool verbose(false);
     std::string statname("");
     std::vector<std::string> ports;
-    while( (opt = getopt_long(argc, argv, options,
-                              long_options, &option_index)) != EOF){
-      switch(opt){
+    while((opt = getopt_long(argc, argv, options, long_options,
+                             &option_index)) != EOF) {
+      switch(opt) {
       case 'f':
         freewheel = 1;
         break;
@@ -107,39 +100,42 @@ int main(int argc, char** argv)
         b_use_inputfile = false;
         break;
       case 'h':
-        //usage(long_options);
-        TASCAR::app_usage("tascar_jackio",long_options,"input.wav [ ports [...]]");
-        return -1;
+        // usage(long_options);
+        TASCAR::app_usage("tascar_jackio", long_options,
+                          "input.wav [ ports [...]]");
+        return 0;
       case 'v':
         verbose = true;
       }
     }
-    if( b_use_inputfile && (optind < argc) )
+    if(b_use_inputfile && (optind < argc))
       ifname = argv[optind++];
-    while( optind < argc ){
-      ports.push_back( argv[optind++] );
+    while(optind < argc) {
+      ports.push_back(argv[optind++]);
     }
-    if( b_use_inputfile ){
-      jackio_t jio(ifname,ofname,ports,jackname,freewheel,autoconnect,verbose);
-      if( b_use_transport )
-        jio.set_transport_start( start, wait );
+    if(b_use_inputfile) {
+      jackio_t jio(ifname, ofname, ports, jackname, freewheel, autoconnect,
+                   verbose);
+      if(b_use_transport)
+        jio.set_transport_start(start, wait);
       jio.run();
-      if( b_unlink )
+      if(b_unlink)
         unlink(ifname.c_str());
-      store_stats(statname,jio);
-    }else{
-      jackio_t jio(duration,ofname,ports,jackname,freewheel,autoconnect,verbose);
-      if( b_use_transport )
-        jio.set_transport_start( start, wait );
+      store_stats(statname, jio);
+    } else {
+      jackio_t jio(duration, ofname, ports, jackname, freewheel, autoconnect,
+                   verbose);
+      if(b_use_transport)
+        jio.set_transport_start(start, wait);
       jio.run();
-      store_stats(statname,jio);
+      store_stats(statname, jio);
     }
   }
-  catch( const std::exception& e ){
+  catch(const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return 1;
   }
-  catch( const char* e ){
+  catch(const char* e) {
     std::cerr << e << std::endl;
     return 1;
   }

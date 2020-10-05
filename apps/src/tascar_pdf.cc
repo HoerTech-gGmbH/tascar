@@ -286,7 +286,7 @@ int main(int argc, char** argv)
       break;
     case 'h':
       usage(long_options);
-      return -1;
+      return 0;
     case 'a':
       b_am = true;
       break;

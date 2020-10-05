@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
     if(vm.count("help") || (argc <= 1)) {
       std::cout << desc << "\n";
-      return 1;
+      return 0;
     }
     if(!vm.count("outputfile"))
       throw "The option --outputfile is required but missing";

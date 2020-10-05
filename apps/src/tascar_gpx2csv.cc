@@ -31,7 +31,7 @@ int main(int argc,char** argv)
     switch(opt){
     case 'h':
       TASCAR::app_usage("tascar_gpx2csv",long_options,"gpxfile");
-      return -1;
+      return 0;
     case 'o':
       geo_lon = atof(optarg);
       break;

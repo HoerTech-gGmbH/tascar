@@ -53,7 +53,7 @@ int main(int argc,char** argv)
       break;
     case 'h':
       usage(long_options);
-      return -1;
+      return 0;
     }
   }
   if( optind < argc )

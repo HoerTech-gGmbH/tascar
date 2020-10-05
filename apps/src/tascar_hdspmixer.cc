@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     switch(opt){
     case 'h':
       usage(long_options);
-      return -1;
+      return 0;
     case 'i':
       b_input = true;
       break;

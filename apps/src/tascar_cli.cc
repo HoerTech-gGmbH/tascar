@@ -27,15 +27,15 @@
 /*
   todo: diffuse reverb for enclosed sources, damping+attenuation for
   non-enclosed sources
-  
+
   todo: directive sound sources - normal vector and size define
   directivity
 
 */
 
-#include "session.h"
-#include "jackiowav.h"
 #include "cli.h"
+#include "jackiowav.h"
+#include "session.h"
 
 static bool b_quit;
 
@@ -47,7 +47,7 @@ static void sighandler(int sig)
 
 int main(int argc, char** argv)
 {
-  try{
+  try {
     b_quit = false;
     signal(SIGABRT, &sighandler);
     signal(SIGTERM, &sighandler);
@@ -60,25 +60,20 @@ int main(int argc, char** argv)
     bool use_range(false);
     bool validate(false);
     bool nostdin(false);
-    const char *options = "hj:o:r:lvs";
-    struct option long_options[] = { 
-      { "help",     0, 0, 'h' },
-      { "jackname", 1, 0, 'j' },
-      { "output",   1, 0, 'o' },
-      { "range",    1, 0, 'r' },
-      { "licenses", 0, 0, 'l' },
-      { "validate", 0, 0, 'v' },
-      { "nostdin",  0, 0, 's' },
-      { 0, 0, 0, 0 }
-    };
+    const char* options = "hj:o:r:lvs";
+    struct option long_options[] = {
+        {"help", 0, 0, 'h'},     {"jackname", 1, 0, 'j'},
+        {"output", 1, 0, 'o'},   {"range", 1, 0, 'r'},
+        {"licenses", 0, 0, 'l'}, {"validate", 0, 0, 'v'},
+        {"nostdin", 0, 0, 's'},  {0, 0, 0, 0}};
     int opt(0);
     int option_index(0);
-    while( (opt = getopt_long(argc, argv, options,
-                              long_options, &option_index)) != -1){
-      switch(opt){
+    while((opt = getopt_long(argc, argv, options, long_options,
+                             &option_index)) != -1) {
+      switch(opt) {
       case 'h':
-        TASCAR::app_usage("tascar_cli",long_options,"configfile");
-        return -1;
+        TASCAR::app_usage("tascar_cli", long_options, "configfile");
+        return 0;
       case 'j':
         jackname = optarg;
         break;
@@ -95,80 +90,86 @@ int main(int argc, char** argv)
         range = optarg;
         use_range = true;
         break;
-      case 's' :
+      case 's':
         nostdin = true;
         break;
       }
     }
-    if( optind < argc )
+    if(optind < argc)
       cfgfile = argv[optind++];
-    if( cfgfile.size() == 0 ){
-      TASCAR::app_usage("tascar_cli",long_options,"configfile");
+    if(cfgfile.size() == 0) {
+      TASCAR::app_usage("tascar_cli", long_options, "configfile");
       return -1;
     }
-    TASCAR::session_t session(cfgfile,TASCAR::xml_doc_t::LOAD_FILE,cfgfile);
-    if( validate ){
+    TASCAR::session_t session(cfgfile, TASCAR::xml_doc_t::LOAD_FILE, cfgfile);
+    if(validate) {
       session.start();
       sleep(1);
       session.stop();
       std::string v;
-      if( v.size() && TASCAR::warnings.size() )
-        v+="\n";
-      for(std::vector<std::string>::const_iterator it=TASCAR::warnings.begin();it!=TASCAR::warnings.end();++it){
-        v+= "Warning: " + *it + "\n";
+      if(v.size() && TASCAR::warnings.size())
+        v += "\n";
+      for(std::vector<std::string>::const_iterator it =
+              TASCAR::warnings.begin();
+          it != TASCAR::warnings.end(); ++it) {
+        v += "Warning: " + *it + "\n";
       }
       session.validate_attributes(v);
-      if( v.empty() )
+      if(v.empty())
         return 0;
-      else{
+      else {
         std::cerr << v << std::endl;
         return 1;
       }
     }
-    if( showlicense ){
+    if(showlicense) {
       std::cout << session.legal_stuff() << std::endl;
       return 0;
     }
-    if( range.empty() && use_range ){
-      for(uint32_t k=0;k<session.ranges.size();k++)
+    if(range.empty() && use_range) {
+      for(uint32_t k = 0; k < session.ranges.size(); k++)
         std::cout << session.ranges[k]->name << std::endl;
       return 0;
     }
-    if( output.empty() )
-      session.run(b_quit,!nostdin);
-    else{
+    if(output.empty())
+      session.run(b_quit, !nostdin);
+    else {
       double t_start(0);
       double t_dur(session.get_duration());
       bool range_found(false);
-      if( use_range ){
-        for(uint32_t k=0;k<session.ranges.size();k++)
-          if( session.ranges[k]->name == range ){
+      if(use_range) {
+        for(uint32_t k = 0; k < session.ranges.size(); k++)
+          if(session.ranges[k]->name == range) {
             t_start = session.ranges[k]->start;
-            t_dur = session.ranges[k]->end-session.ranges[k]->start;
+            t_dur = session.ranges[k]->end - session.ranges[k]->start;
             range_found = true;
           }
-        if( !range_found )
-          throw TASCAR::ErrMsg("Range \""+range+"\" not found.");
+        if(!range_found)
+          throw TASCAR::ErrMsg("Range \"" + range + "\" not found.");
       }
       session.start();
       std::vector<std::string> ports(session.get_render_output_ports());
-      std::cout << "Recording " << ports.size() << " channels, " << t_dur << " seconds to \"" << output << "\":" << std::endl;
-      for(uint32_t k=0;k<ports.size();k++)
+      std::cout << "Recording " << ports.size() << " channels, " << t_dur
+                << " seconds to \"" << output << "\":" << std::endl;
+      for(uint32_t k = 0; k < ports.size(); k++)
         std::cout << k << " " << ports[k] << std::endl;
-      jackio_t* iow(new jackio_t(t_dur,output,ports,session.name+"jackio"));
-      iow->set_transport_start(t_start,false);
+      jackio_t* iow(
+          new jackio_t(t_dur, output, ports, session.name + "jackio"));
+      iow->set_transport_start(t_start, false);
       iow->run();
-      std::cout << iow->get_xruns() << " xruns (total latency: " << iow->get_xrun_latency() << ")" << std::endl;
+      std::cout << iow->get_xruns()
+                << " xruns (total latency: " << iow->get_xrun_latency() << ")"
+                << std::endl;
       delete iow;
       sleep(1);
       session.stop();
     }
   }
-  catch( const std::exception& msg ){
+  catch(const std::exception& msg) {
     std::cerr << "Error: " << msg.what() << std::endl;
     return 1;
   }
-  catch( const char* msg ){
+  catch(const char* msg) {
     std::cerr << "Error: " << msg << std::endl;
     return 1;
   }

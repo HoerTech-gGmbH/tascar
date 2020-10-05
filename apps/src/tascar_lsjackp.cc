@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     switch(opt){
     case 'h':
         TASCAR::app_usage("tascar_lsjackp",long_options,"");
-        return -1;
+        return 0;
     case 'j':
       jackname = optarg;
       break;
