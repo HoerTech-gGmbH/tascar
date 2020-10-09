@@ -12,11 +12,11 @@ namespace TASCAR {
 } // namespace TASCAR
 
 void TASCAR::xmlpp_get_and_register_attribute(xmlpp::Element* e,
-                                      const std::string& name,
-                                      std::string& value)
+                                              const std::string& name,
+                                              std::string& value)
 {
   TASCAR::attribute_list[e][name] = "string";
-  if(TASCAR::xmlpp_has_attribute(e,name))
+  if(TASCAR::xmlpp_has_attribute(e, name))
     value = e->get_attribute_value(name);
   else
     e->set_attribute(name, value);
@@ -215,6 +215,15 @@ bool TASCAR::xmlpp_has_attribute(xmlpp::Element* e, const std::string& name)
     if((*it)->get_name() == name)
       return true;
   return false;
+}
+
+std::vector<std::string> TASCAR::xml_element_t::get_attributes() const
+{
+  std::vector<std::string> r;
+  const xmlpp::Element::AttributeList atts(e->get_attributes());
+  for(auto a : atts)
+    r.push_back(a->get_name());
+  return r;
 }
 
 bool TASCAR::xml_element_t::has_attribute(const std::string& name) const

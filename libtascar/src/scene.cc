@@ -417,6 +417,16 @@ receiver_obj_t::receiver_obj_t(xmlpp::Element* xmlsrc, bool is_reverb_)
                                 ", receiver \"" + get_name() + "\").",
                             xmlsrc);
     }
+    bool checkcalibfor(TASCAR::config("tascar.spkcalib.checktypeid", true));
+    if(checkcalibfor)
+      if(spk->spkpos.has_calibfor) {
+        std::string spktypeid(spk->get_spktypeid());
+        if(spk->spkpos.calibfor != spktypeid)
+          TASCAR::add_warning(
+              "Calibration of layout file \"" + spk->spkpos.layout +
+              "\" was created for '" + spk->spkpos.calibfor +
+              "', but the receiver type id is '" + spktypeid + "'.");
+      }
   }
 }
 

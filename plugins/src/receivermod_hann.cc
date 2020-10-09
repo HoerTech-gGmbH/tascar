@@ -65,6 +65,7 @@ rec_hann_t::rec_hann_t(xmlpp::Element* xmlsrc)
     wexp(0.5)
 {
   GET_ATTRIBUTE(wexp);
+  typeidattr.push_back("wexp");
 }
 
 void rec_hann_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)

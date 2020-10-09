@@ -110,18 +110,19 @@ namespace TASCAR {
 
   class spk_array_diff_render_t : public spk_array_t {
   public:
-    spk_array_diff_render_t(xmlpp::Element*, 
-                            bool use_parent_xml,
-                            const std::string& elementname_="speaker");
+    spk_array_diff_render_t(xmlpp::Element*, bool use_parent_xml,
+                            const std::string& elementname_ = "speaker");
     ~spk_array_diff_render_t();
     void render_diffuse(std::vector<TASCAR::wave_t>& output);
-    void add_diffuse_sound_field( const TASCAR::amb1wave_t& diff );
+    void add_diffuse_sound_field(const TASCAR::amb1wave_t& diff);
     void configure();
+
   private:
     void read_xml(xmlpp::Element* elem);
     TASCAR::amb1wave_t* diffuse_field_accumulator;
     TASCAR::wave_t* diffuse_render_buffer;
     std::vector<TASCAR::overlap_save_t> decorrflt;
+
   public:
     double decorr_length;
     bool decorr;
@@ -133,8 +134,9 @@ namespace TASCAR {
     double calibage;
     std::string calibdate;
     bool has_calibdate;
+    std::string calibfor;
+    bool has_calibfor;
   };
-
 }
 
 #endif

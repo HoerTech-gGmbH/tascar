@@ -114,6 +114,9 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     throw TASCAR::ErrMsg("Invalid shape: "+filtershape);
   if( order > 0 )
     amb_order = std::min((uint32_t)order,amb_order);
+  typeidattr.push_back("order");
+  typeidattr.push_back("maxre");
+  typeidattr.push_back("diffup");
 }
 
 void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )

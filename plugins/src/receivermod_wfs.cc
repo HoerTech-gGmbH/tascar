@@ -47,6 +47,8 @@ rec_wfs_t::rec_wfs_t(xmlpp::Element* xmlsrc)
 {
   GET_ATTRIBUTE(c);
   GET_ATTRIBUTE_BOOL(planewave);
+  typeidattr.push_back("c");
+  typeidattr.push_back("planewave");
 }
 
 void rec_wfs_t::add_variables( TASCAR::osc_server_t* srv )

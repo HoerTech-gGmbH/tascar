@@ -308,22 +308,16 @@ spk_array_diff_render_t::~spk_array_diff_render_t()
     delete diffuse_render_buffer;
 }
 
-spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e, 
-                                                 bool use_parent_xml,
-                                                 const std::string& elementname_)
-  : spk_array_t( e, use_parent_xml, elementname_ ),
-    diffuse_field_accumulator(NULL),
-    diffuse_render_buffer(NULL),
-    decorr_length(0.05),
-    decorr(true),
-    densitycorr(true),
-    caliblevel(50000),
-    diffusegain(1.0),
-    calibage(0)
+spk_array_diff_render_t::spk_array_diff_render_t(
+    xmlpp::Element* e, bool use_parent_xml, const std::string& elementname_)
+    : spk_array_t(e, use_parent_xml, elementname_),
+      diffuse_field_accumulator(NULL), diffuse_render_buffer(NULL),
+      decorr_length(0.05), decorr(true), densitycorr(true), caliblevel(50000),
+      diffusegain(1.0), calibage(0)
 {
   uint64_t checksum(0);
   elayout.GET_ATTRIBUTE(checksum);
-  if( checksum != 0 ){
+  if(checksum != 0) {
     std::vector<std::string> attributes;
     attributes.push_back("decorr_length");
     attributes.push_back("decorr");
@@ -337,9 +331,11 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
     attributes.push_back("delay");
     attributes.push_back("compB");
     attributes.push_back("connect");
-    uint64_t current_checksum(elayout.hash(attributes,true));
-    if( checksum != current_checksum )
-      TASCAR::add_warning("The layout file \""+layout+"\" was modified since last calibration. Re-calibration is recommended.");
+    uint64_t current_checksum(elayout.hash(attributes, true));
+    if(checksum != current_checksum)
+      TASCAR::add_warning("The layout file \"" + layout +
+                          "\" was modified since last calibration. "
+                          "Re-calibration is recommended.");
   }
   elayout.GET_ATTRIBUTE(decorr_length);
   elayout.GET_ATTRIBUTE_BOOL(decorr);
@@ -350,22 +346,24 @@ spk_array_diff_render_t::spk_array_diff_render_t(xmlpp::Element* e,
   elayout.GET_ATTRIBUTE_DB(diffusegain);
   has_calibdate = elayout.has_attribute("calibdate");
   elayout.GET_ATTRIBUTE(calibdate);
-  if( !calibdate.empty() ){
-    std::time_t now(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+  if(!calibdate.empty()) {
+    std::time_t now(
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
     std::tm tcalib;
-    memset(&tcalib,0,sizeof(tcalib));
-    const char* msg(strptime(calibdate.c_str(),"%Y-%m-%d %H:%M:%S",&tcalib));
-    if( !msg )
-      msg = strptime(calibdate.c_str(),"%Y-%m-%d",&tcalib);
-    if( msg ){
+    memset(&tcalib, 0, sizeof(tcalib));
+    const char* msg(strptime(calibdate.c_str(), "%Y-%m-%d %H:%M:%S", &tcalib));
+    if(!msg)
+      msg = strptime(calibdate.c_str(), "%Y-%m-%d", &tcalib);
+    if(msg) {
       std::time_t ctcalib(mktime(&tcalib));
-      calibage = difftime(now,ctcalib)/(24*3600);
-    }else{
-      TASCAR::add_warning("Invalid date/time format: "+calibdate);
+      calibage = difftime(now, ctcalib) / (24 * 3600);
+    } else {
+      TASCAR::add_warning("Invalid date/time format: " + calibdate);
     }
   }
+  has_calibfor = elayout.has_attribute("calibfor");
+  elayout.GET_ATTRIBUTE(calibfor);
 }
-
 
 std::vector<TASCAR::pos_t> spk_array_t::get_positions() const
 {
