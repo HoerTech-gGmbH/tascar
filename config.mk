@@ -7,11 +7,16 @@ CXXFLAGS = -Wall -Wno-deprecated-declarations -std=c++11 -pthread	\
 -ggdb -fno-finite-math-only
 
 
-ifneq ($(OS),Windows_NT)
+ifeq ($(OS),Windows_NT)
+  DLLEXT=.dll
+else
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
+  DLLEXT=.so
   EXTERNALS +=  alsa
   CXXFLAGS += -fext-numeric-literals
+else
+  DLLEXT=.dylib
 endif
 endif
 
