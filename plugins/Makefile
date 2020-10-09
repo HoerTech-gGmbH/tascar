@@ -90,7 +90,7 @@ LDFLAGS += -L../libtascar/build
 CXXFLAGS += -DTASCARVERSION="\"$(TASCARVERSION)\""
 
 CXXFLAGS += -fpic
-EXTERNALS = jack libxml++-2.6 liblo sndfile
+EXTERNALS = jack libxml++-2.6 liblo sndfile fftw3f samplerate
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
