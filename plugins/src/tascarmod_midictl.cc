@@ -60,7 +60,7 @@ midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
   for(uint32_t k=0;k<controllers.size();++k){
     size_t cpos(controllers[k].find("/"));
     if( cpos != std::string::npos ){
-      uint32_t channel(atoi(controllers[k].substr(0,cpos-1).c_str()));
+      uint32_t channel(atoi(controllers[k].substr(0,cpos).c_str()));
       uint32_t param(atoi(controllers[k].substr(cpos+1,controllers[k].size()-cpos-1).c_str()));
       controllers_.push_back(256*channel+param);
       values.push_back(255);
@@ -99,6 +99,7 @@ void midictl_t::configure()
 void midictl_t::release()
 {
   stop_service();
+  TASCAR::module_base_t::release();
 }
 
 midictl_t::~midictl_t()

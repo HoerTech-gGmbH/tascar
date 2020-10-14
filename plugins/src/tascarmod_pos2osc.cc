@@ -20,6 +20,7 @@ private:
   bool ignoreorientation;
   bool trigger;
   bool sendsounds;
+  bool addparentname;
   lo_address target;
   std::vector<TASCAR::named_object_t> obj;
 };
@@ -27,7 +28,7 @@ private:
 pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), mode(0), ttl(1), transport(true), skip(0), skipcnt(0),
       lookatlen(1.0), triggered(false), ignoreorientation(false), trigger(true),
-      sendsounds(false)
+      sendsounds(false), addparentname(false)
 {
   GET_ATTRIBUTE(url);
   GET_ATTRIBUTE(pattern);
@@ -39,6 +40,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(triggered);
   GET_ATTRIBUTE_BOOL(ignoreorientation);
   GET_ATTRIBUTE_BOOL(sendsounds);
+  GET_ATTRIBUTE_BOOL(addparentname);
   GET_ATTRIBUTE(skip);
   if(url.empty())
     url = "osc.udp://localhost:9999/";
@@ -108,14 +110,19 @@ void pos2osc_t::update(uint32_t tp_frame, bool tp_rolling)
             TASCAR::Scene::src_object_t* src(
                 dynamic_cast<TASCAR::Scene::src_object_t*>(it->obj));
             if(src) {
-              for(auto isnd = src->sound.begin(); isnd != src->sound.end();
-                  ++isnd)
-                lo_send(target, path.c_str(), "sffffff",
-                        (*isnd)->get_name().c_str(), (*isnd)->position.x,
-                        (*isnd)->position.y, (*isnd)->position.z,
-                        RAD2DEG * (*isnd)->orientation.z,
-                        RAD2DEG * (*isnd)->orientation.y,
-                        RAD2DEG * (*isnd)->orientation.x);
+              std::string parentname(it->obj->get_name());
+              for(auto isnd : src->sound) {
+                std::string soundname;
+                if(addparentname)
+                  soundname = parentname + "." + isnd->get_name();
+                else
+                  soundname = isnd->get_name();
+                lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
+                        isnd->position.x, isnd->position.y, isnd->position.z,
+                        RAD2DEG * isnd->orientation.z,
+                        RAD2DEG * isnd->orientation.y,
+                        RAD2DEG * isnd->orientation.x);
+              }
             }
           }
           break;

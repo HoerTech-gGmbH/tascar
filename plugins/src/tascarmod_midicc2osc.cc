@@ -39,7 +39,7 @@ class midicc2osc_t : public midicc2osc_vars_t,
 {
 public:
   midicc2osc_t( const TASCAR::module_cfg_t& cfg );
-  ~midicc2osc_t();
+  virtual ~midicc2osc_t();
   virtual void emit_event(int channel, int param, int value);
 private:
   std::vector<uint16_t> controllers_;
