@@ -21,7 +21,8 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   locationvelocity granularsynth fail oscrelay waitforjackport sleep	\
   ovheadtracker
 
-TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets
+TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
+  transportgui
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
@@ -133,6 +134,8 @@ endif
 ifeq "$(HAS_OPENCV4)" "yes"
 build/$(PLUGINPREFIX)glabsensor_trackir$(DLLEXT): EXTERNALS += opencv4
 endif
+
+build/$(PLUGINPREFIX)tascar_transportgui$(DLLEXT): build/transportgui_glade.h
 
 build/glabsensors.o: EXTERNALS += gtkmm-3.0
 build/glabsensors.o: build/glabsensors_glade.h

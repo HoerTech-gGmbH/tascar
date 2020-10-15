@@ -319,18 +319,22 @@ void TASCAR::bandpass_t::set_range( double f1, double f2 )
   b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*PI2 );
 }
 
-void TASCAR::biquad_t::set_highpass( double fc, double fs )
+void TASCAR::biquad_t::set_highpass(double fc, double fs, bool phaseinvert)
 {
-  set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
   double g(std::abs(response(M_PI)));
-  set_gzp( 1.0/g, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  if(phaseinvert)
+    g *= -1.0;
+  set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
 }
 
-void TASCAR::biquad_t::set_lowpass( double fc, double fs )
+void TASCAR::biquad_t::set_lowpass(double fc, double fs, bool phaseinvert)
 {
-  set_gzp( 1.0, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  set_gzp(1.0, 1.0, M_PI, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
   double g(std::abs(response(0.0)));
-  set_gzp( 1.0/g, 1.0, M_PI, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  if(phaseinvert)
+    g *= -1.0;
+  set_gzp(1.0 / g, 1.0, M_PI, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
 }
 
 TASCAR::aweighting_t::aweighting_t( double fs )

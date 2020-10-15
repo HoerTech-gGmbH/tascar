@@ -173,8 +173,8 @@ namespace TASCAR {
       b2_ = b2;
     };
     // void set_analog( double g, double f_pole, double fs );
-    void set_highpass(double fc, double fs);
-    void set_lowpass(double fc, double fs);
+    void set_highpass(double fc, double fs, bool phaseinvert = false);
+    void set_lowpass(double fc, double fs, bool phaseinvert = false);
     inline double filter(double in)
     {
       double out = z1 + b0_ * in;

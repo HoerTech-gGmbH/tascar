@@ -68,21 +68,36 @@ public:
   double diffusegainrear;
   double fc;
   std::vector<TASCAR::biquad_t> filter;
+  TASCAR::biquad_t allpL;
+  TASCAR::biquad_t allpR;
+  TASCAR::biquad_t allpC;
+  TASCAR::biquad_t allpLs;
+  TASCAR::biquad_t allpRs;
+  double r;
 };
 
-void rec_itu51_t::configure( )
+void rec_itu51_t::configure()
 {
   TASCAR::receivermod_base_t::configure();
   n_channels = 6;
   render_buffer.clear();
   // render buffer gets 5 channels: L R Ls Rs LFE
-  for(uint32_t k=0;k<5;++k){
-    render_buffer.push_back(new TASCAR::wave_t( n_fragment ));
+  for(uint32_t k = 0; k < 5; ++k) {
+    render_buffer.push_back(new TASCAR::wave_t(n_fragment));
   }
   filter.resize(6);
-  for( auto it=filter.begin();it!=filter.end();++it)
-    it->set_highpass( fc, f_sample );
-  filter[3].set_lowpass( fc, f_sample );
+  for(auto it = filter.begin(); it != filter.end(); ++it)
+    it->set_highpass(fc, f_sample);
+  filter[3].set_lowpass(fc, f_sample, true);
+  // set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
+  double f0(0.125 * fc / f_sample * PI2);
+  allpL.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
+  double g(std::abs(allpL.response(M_PI)));
+  allpL.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
+  allpR.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
+  allpC.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
+  allpLs.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
+  allpRs.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   labels.clear();
   labels.push_back(".0L");
   labels.push_back(".1R");
@@ -117,6 +132,11 @@ void rec_itu51_t::postproc( std::vector<TASCAR::wave_t>& output )
     (*it)->clear();
   for( uint32_t ch=0;ch<std::min(output.size(),filter.size());++ch)
     filter[ch].filter( output[ch] );
+  allpL.filter(output[0]);
+  allpR.filter(output[1]);
+  allpC.filter(output[2]);
+  allpLs.filter(output[4]);
+  allpRs.filter(output[5]);
 }
 
 rec_itu51_t::data_t::data_t( uint32_t channels )
@@ -141,7 +161,8 @@ rec_itu51_t::rec_itu51_t(xmlpp::Element* xmlsrc)
   dir_Rs(-sqrt(0.5),-sqrt(0.5),0),
   diffusegainfront(0.5),
   diffusegainrear(1),
-  fc(80)
+    fc(80),
+    r(1.01)
 {
   GET_ATTRIBUTE(fc);
   GET_ATTRIBUTE_DB(diffusegainfront);
