@@ -13,5 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: dependencies
+      run: PATH="$PATH;C:/msys64" pacman --noconfirm -Syu git make gcc pkg-config libxml++2.6 jack2 liblo libsndfile fftw gsl eigen gtkmm3 boost libltc xxd gtksourceviewmm webkit2gtk
     - name: make
       run: make
