@@ -16,6 +16,6 @@ jobs:
     - uses: msys2/setup-msys2@v2
     - name: dependencies
       shell: msys2 {0}
-      run: PATH="$PATH;C:/msys64" pacman --noconfirm -Syu git make gcc pkg-config mingw-w64-x86_64-libxml++2.6 mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-gsl mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gtkmm3 mingw-w64-x86_64-boost
+      run: PATH="$PATH;C:/msys64" pacman --noconfirm -Syu git make gcc pkg-config mingw-w64-x86_64-libxml++2.6 mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-gsl mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gtkmm3 mingw-w64-x86_64-boost;PATH="$PATH;C:/msys64" pacman --noconfirm -Syu git make gcc pkg-config mingw-w64-x86_64-libxml++2.6 mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-gsl mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gtkmm3 mingw-w64-x86_64-boost
     - name: make
       run: make
