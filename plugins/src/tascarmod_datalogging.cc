@@ -60,6 +60,7 @@ public:
   bool time_correction_failed;
   double tctimeout;
   lsl::channel_format_t chfmt;
+  uint32_t skipplot;
 };
 
 std::string lslvar_t::get_xml()
@@ -72,7 +73,8 @@ std::string lslvar_t::get_xml()
 lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
     : xml_element_t(xmlsrc), size(0), recorder(NULL), inlet(NULL),
       delta(lsl::local_clock()), stream_delta_start(0), stream_delta_end(0),
-      time_correction_failed(false), tctimeout(2.0), chfmt(lsl::cf_undefined)
+      time_correction_failed(false), tctimeout(2.0), chfmt(lsl::cf_undefined),
+      skipplot(0)
 {
   // str_buffer.resize(STRBUFFER_SIZE);
   GET_ATTRIBUTE(predicate);
@@ -81,6 +83,7 @@ lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
   GET_ATTRIBUTE(tctimeout);
   bool required(true);
   GET_ATTRIBUTE_BOOL(required);
+  GET_ATTRIBUTE(skipplot);
   std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
   if(results.empty()) {
     if(required)
@@ -146,11 +149,14 @@ class oscsvar_t : public TASCAR::xml_element_t {
 public:
   oscsvar_t(xmlpp::Element* xmlsrc);
   std::string path;
+  uint32_t skipplot;
 };
 
-oscsvar_t::oscsvar_t(xmlpp::Element* xmlsrc) : xml_element_t(xmlsrc)
+oscsvar_t::oscsvar_t(xmlpp::Element* xmlsrc)
+    : xml_element_t(xmlsrc), skipplot(0)
 {
   GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE(skipplot);
 }
 
 class oscvar_t : public TASCAR::xml_element_t {
@@ -160,14 +166,16 @@ public:
   std::string path;
   uint32_t size;
   bool ignorefirst;
+  uint32_t skipplot;
 };
 
 oscvar_t::oscvar_t(xmlpp::Element* xmlsrc)
-    : xml_element_t(xmlsrc), size(1), ignorefirst(false)
+    : xml_element_t(xmlsrc), size(1), ignorefirst(false), skipplot(0)
 {
   GET_ATTRIBUTE(path);
   GET_ATTRIBUTE(size);
   GET_ATTRIBUTE_BOOL(ignorefirst);
+  GET_ATTRIBUTE(skipplot);
 }
 
 std::string oscvar_t::get_fmt()
@@ -278,8 +286,9 @@ public:
 
 class recorder_t : public Gtk::DrawingArea {
 public:
-  recorder_t(uint32_t size, const std::string& name, pthread_mutex_t& mtx,
-             jack_client_t* jc, double srate, bool ignore_first = false);
+  recorder_t(uint32_t size, const std::string& name,
+             pthread_mutex_t& record_mtx, jack_client_t* jc, double srate,
+             bool ignore_first, size_t skipplot);
   virtual ~recorder_t();
   void store(uint32_t n, double* data);
   void store_msg(double t1, double t2, const std::string& msg);
@@ -313,21 +322,23 @@ private:
   std::vector<label_t> messages;
   std::vector<label_t> plot_messages;
   std::string name_;
-  pthread_mutex_t& mtx_;
+  pthread_mutex_t& record_mtx_;
   jack_client_t* jc_;
   double israte_;
   pthread_mutex_t drawlock;
   pthread_mutex_t plotdatalock;
   sigc::connection connection_timeout;
   bool ignore_first_;
+  size_t skipplotdata_;
+  size_t plotdata_cnt;
 };
 
 recorder_t::recorder_t(uint32_t size, const std::string& name,
-                       pthread_mutex_t& mtx, jack_client_t* jc, double srate,
-                       bool ignore_first)
+                       pthread_mutex_t& record_mtx, jack_client_t* jc,
+                       double srate, bool ignore_first, size_t skipplotdata)
     : displaydc_(true), size_(size), b_textdata(false), vdc(size_, 0),
-      name_(name), mtx_(mtx), jc_(jc), israte_(1.0 / srate),
-      ignore_first_(ignore_first)
+      name_(name), record_mtx_(record_mtx), jc_(jc), israte_(1.0 / srate),
+      ignore_first_(ignore_first), skipplotdata_(skipplotdata), plotdata_cnt(0)
 {
   pthread_mutex_init(&drawlock, NULL);
   pthread_mutex_init(&plotdatalock, NULL);
@@ -343,6 +354,7 @@ void recorder_t::clear()
   plotdata_.clear();
   plot_messages.clear();
   pthread_mutex_unlock(&plotdatalock);
+  plotdata_cnt = 0;
 }
 
 recorder_t::~recorder_t()
@@ -412,14 +424,18 @@ void recorder_t::get_valuerange(const std::vector<double>& data,
     dmin -= 1.0;
     dmax += 1.0;
   }
+  if(!(dmax > dmin)) {
+    dmin = 1.0;
+    dmax = 1.0;
+  }
 }
 
 TASCAR::Scene::rgb_color_t set_hsv(float h, float s, float v)
 {
-  const std::complex<float> i(0.0, 1.0);
-  h = (std::arg(std::exp(i * h * DEG2RADf)) * RAD2DEGf);
-  if(h < 0)
-    h += 360.0;
+  // const std::complex<float> i(0.0, 1.0);
+  // h = (std::arg(std::exp(i * h * DEG2RADf)) * RAD2DEGf);
+  // if(h < 0)
+  //  h += 360.0;
   h = fmodf(h, 360.0f);
   float c(v * s);
   float x(c * (1.0f - fabsf(fmodf(h / 60.0f, 2.0f) - 1.0f)));
@@ -516,17 +532,19 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
             for(uint32_t k = n1; k < n2; k += stepsize) {
               double t(plotdata_[k * size_] - ltime);
               double v(plotdata_[dim + k * size_]);
-              if(!displaydc_)
-                v -= vdc[dim];
-              if(v != HUGE_VAL) {
-                t *= width / 30.0;
-                v = height - (v - dmin) * dscale;
-                //++nlines;
-                if(first) {
-                  cr->move_to(t, v);
-                  first = false;
-                } else
-                  cr->line_to(t, v);
+              if(finite(v)) {
+                if(!displaydc_)
+                  v -= vdc[dim];
+                if(v != HUGE_VAL) {
+                  t *= width / 30.0;
+                  v = height - (v - dmin) * dscale;
+                  //++nlines;
+                  if(first) {
+                    cr->move_to(t, v);
+                    first = false;
+                  } else
+                    cr->line_to(t, v);
+                }
               }
             }
             cr->stroke();
@@ -565,15 +583,23 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->stroke();
       // y-grid & scale:
       double ystep(pow(10.0, floor(log10(0.5 * drange))));
-      double ddmin(ystep * round(dmin / ystep));
-      for(double dy = ddmin; dy < dmax; dy += ystep) {
-        double v(height - (dy - dmin) * dscale);
-        cr->move_to(-width, v);
-        cr->line_to(-width * (1.0 - 0.01), v);
-        char ctmp[1024];
-        sprintf(ctmp, "%g", dy);
-        cr->show_text(ctmp);
-        cr->stroke();
+      if(isfinite(dmax) && isfinite(dmin) && isfinite(ystep) &&
+         isfinite(dscale)) {
+        double ddmin(ystep * round(dmin / ystep));
+        if(isfinite(dmax) && isfinite(ddmin) && isfinite(ystep) &&
+           (dmax > ddmin)) {
+          uint8_t ky(0);
+          for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
+            ++ky;
+            double v(height - (dy - dmin) * dscale);
+            cr->move_to(-width, v);
+            cr->line_to(-width * (1.0 - 0.01), v);
+            char ctmp[1024];
+            sprintf(ctmp, "%g", dy);
+            cr->show_text(ctmp);
+            cr->stroke();
+          }
+        }
       }
       cr->restore();
     }
@@ -597,7 +623,7 @@ void recorder_t::store(uint32_t n, double* data)
 {
   if(n != size_)
     throw TASCAR::ErrMsg("Invalid size (recorder_t::store)");
-  if(pthread_mutex_trylock(&mtx_) == 0) {
+  if(pthread_mutex_trylock(&record_mtx_) == 0) {
     for(uint32_t k = 0; k < n; k++)
       data_.push_back(data[k]);
     if(pthread_mutex_trylock(&plotdatalock) == 0) {
@@ -605,20 +631,20 @@ void recorder_t::store(uint32_t n, double* data)
         plotdata_.push_back(data[k]);
       pthread_mutex_unlock(&plotdatalock);
     }
-    pthread_mutex_unlock(&mtx_);
+    pthread_mutex_unlock(&record_mtx_);
   }
 }
 
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 {
-  if(pthread_mutex_trylock(&mtx_) == 0) {
+  if(pthread_mutex_trylock(&record_mtx_) == 0) {
     messages.emplace_back(t1, t2, msg);
     b_textdata = true;
     if(pthread_mutex_trylock(&plotdatalock) == 0) {
       plot_messages = messages;
       pthread_mutex_unlock(&plotdatalock);
     }
-    pthread_mutex_unlock(&mtx_);
+    pthread_mutex_unlock(&record_mtx_);
   }
 }
 
@@ -686,7 +712,7 @@ public:
 
 private:
   std::vector<recorder_t*> recorder;
-  pthread_mutex_t mtx;
+  pthread_mutex_t record_mtx;
   bool b_recording;
   std::string filename;
   // GUI:
@@ -721,8 +747,8 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
       b_recording(false), israte_(1.0 / cfg.session->srate),
       fragsize(cfg.session->fragsize), srate(cfg.session->srate)
 {
-  pthread_mutex_init(&mtx, NULL);
-  pthread_mutex_lock(&mtx);
+  pthread_mutex_init(&record_mtx, NULL);
+  pthread_mutex_lock(&record_mtx);
   TASCAR::osc_server_t* osc(this);
   if(port.empty())
     osc = session;
@@ -732,26 +758,31 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
                   this);
   osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this);
   set_jack_client(session->jc);
-  for(oscvarlist_t::iterator it = oscvars.begin(); it != oscvars.end(); ++it) {
-    recorder.push_back(new recorder_t(it->size + 1, it->path, mtx, session->jc,
-                                      session->srate, it->ignorefirst));
-    osc->add_method(it->path, it->get_fmt().c_str(), &recorder_t::osc_setvar,
+  // first, add all regular OSC variables:
+  for(auto ov : oscvars) {
+    recorder.push_back(new recorder_t(ov.size + 1, ov.path, record_mtx,
+                                      session->jc, session->srate,
+                                      ov.ignorefirst, ov.skipplot));
+    osc->add_method(ov.path, ov.get_fmt().c_str(), &recorder_t::osc_setvar,
                     recorder.back());
   }
-  for(oscsvarlist_t::iterator it = oscsvars.begin(); it != oscsvars.end();
-      ++it) {
-    recorder.push_back(
-        new recorder_t(2, it->path, mtx, session->jc, session->srate, false));
-    osc->add_method(it->path, "s", &recorder_t::osc_setvar_s, recorder.back());
+  // second, add all string OSC variables:
+  for(auto ov : oscsvars) {
+    recorder.push_back(new recorder_t(2, ov.path, record_mtx, session->jc,
+                                      session->srate, false, ov.skipplot));
+    osc->add_method(ov.path, "s", &recorder_t::osc_setvar_s, recorder.back());
   }
-  for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it) {
-    recorder.push_back(new recorder_t((*it)->size + 1, (*it)->name, mtx,
-                                      session->jc, session->srate, true));
-    (*it)->recorder = recorder.back();
+  // finally, add all LSL variables (the vector contains pointers):
+  for(auto lslvp : lslvars) {
+    recorder.push_back(new recorder_t(lslvp->size + 1, lslvp->name, record_mtx,
+                                      session->jc, session->srate, true,
+                                      lslvp->skipplot));
+    lslvp->recorder = recorder.back();
   }
-  for(std::vector<recorder_t*>::iterator it = recorder.begin();
-      it != recorder.end(); ++it)
-    (*it)->set_displaydc(displaydc);
+  // update display of DC:
+  for(auto rec : recorder)
+    rec->set_displaydc(displaydc);
+  //
   TASCAR::osc_server_t::activate();
   refBuilder = Gtk::Builder::create_from_string(ui_datalogging);
   GET_WIDGET(win);
@@ -954,7 +985,7 @@ datalogging_t::~datalogging_t()
   TASCAR::osc_server_t::deactivate();
   for(uint32_t k = 0; k < recorder.size(); k++)
     delete recorder[k];
-  pthread_mutex_destroy(&mtx);
+  pthread_mutex_destroy(&record_mtx);
   delete win;
   delete trialid;
   delete datelabel;
@@ -981,7 +1012,7 @@ void datalogging_t::start_trial(const std::string& name)
   }
   filename = name;
   b_recording = true;
-  pthread_mutex_unlock(&mtx);
+  pthread_mutex_unlock(&record_mtx);
   session->tp_start();
 }
 
@@ -1005,7 +1036,7 @@ void datalogging_t::stop_trial()
   }
   if(!b_recording)
     return;
-  pthread_mutex_lock(&mtx);
+  pthread_mutex_lock(&record_mtx);
   b_recording = false;
   if(fileformat == "txt")
     save_text(filename);

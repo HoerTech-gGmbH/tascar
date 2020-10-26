@@ -22,7 +22,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   ovheadtracker
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
-  transportgui
+  transportgui lightcolorpicker
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
