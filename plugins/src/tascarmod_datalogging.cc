@@ -8,6 +8,7 @@
 #include <matio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <math.h>
 
 #define STRBUFFER_SIZE 1024
 
