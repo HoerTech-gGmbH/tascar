@@ -8,7 +8,9 @@
 #include <matio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <math.h>
+#include <cmath>
+
+using std::isfinite;
 
 #define STRBUFFER_SIZE 1024
 
@@ -584,10 +586,10 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->stroke();
       // y-grid & scale:
       double ystep(pow(10.0, floor(log10(0.5 * drange))));
-      if(isfinite(dmax) && isfinite(dmin) && isfinite(ystep) &&
+      if(std::isfinite(dmax) && std::isfinite(dmin) && std::isfinite(ystep) &&
          isfinite(dscale)) {
         double ddmin(ystep * round(dmin / ystep));
-        if(isfinite(dmax) && isfinite(ddmin) && isfinite(ystep) &&
+        if(std::isfinite(dmax) && std::isfinite(ddmin) && std::isfinite(ystep) &&
            (dmax > ddmin)) {
           uint8_t ky(0);
           for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
