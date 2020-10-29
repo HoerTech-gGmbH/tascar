@@ -66,6 +66,7 @@ namespace TASCAR {
     std::string name;
   protected:
     std::string modname;
+    double alivetimeout;
   private:
     std::vector<sensormsg_t> msg_critical;
     std::vector<sensormsg_t> msg_warnings;

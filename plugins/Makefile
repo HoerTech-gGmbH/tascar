@@ -46,7 +46,7 @@ TASCARMODS +=  lsljacktime lslactor levels2osc pos2lsl
 AUDIOPLUGINS += speechactivity periodogram
 TASCARMODSGUI += datalogging glabsensors
 GLABSENSORS += smiley eog emergency espheadtracker midicc	\
-  qualisys jackstatus serial
+  qualisys jackstatus serial oscthreshold
 endif
 
 ifeq "$(HAS_OPENMHA)" "yes"

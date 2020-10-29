@@ -1,9 +1,9 @@
-#include <lsl_cpp.h>
-#include "session.h"
-#include <fstream>
-#include "glabsensors_glade.h"
 #include "glabsensorplugin.h"
+#include "glabsensors_glade.h"
+#include "session.h"
 #include <dlfcn.h>
+#include <fstream>
+#include <lsl_cpp.h>
 
 using namespace TASCAR;
 
@@ -11,16 +11,20 @@ namespace TASCAR {
 
   class sensorplugin_t : public sensorplugin_base_t {
   public:
-    sensorplugin_t( const sensorplugin_cfg_t& cfg );
+    sensorplugin_t(const sensorplugin_cfg_t& cfg);
     ~sensorplugin_t();
     Gtk::Widget& get_gtkframe();
-    void add_variables( TASCAR::osc_server_t* srv );
+    void add_variables(TASCAR::osc_server_t* srv);
     std::vector<sensormsg_t> get_critical();
     std::vector<sensormsg_t> get_warnings();
     bool test_alive();
-    std::string get_fullname() const { return get_name()+" ("+plugintype+")";};
+    std::string get_fullname() const
+    {
+      return get_name() + " (" + plugintype + ")";
+    };
     void prepare();
     void release();
+
   private:
     sensorplugin_t(const sensorplugin_t&);
     std::string plugintype;
@@ -35,44 +39,41 @@ namespace TASCAR {
     uint32_t alive_cnt;
   };
 
-}
+} // namespace TASCAR
 
-TASCAR_RESOLVER( sensorplugin_base_t, const sensorplugin_cfg_t& )
+TASCAR_RESOLVER(sensorplugin_base_t, const sensorplugin_cfg_t&)
 
-sensorplugin_t::sensorplugin_t( const sensorplugin_cfg_t& cfg )
-  : sensorplugin_base_t( cfg ),
-    lib(NULL),
-  libdata(NULL),
-  alive_cnt(0)
+sensorplugin_t::sensorplugin_t(const sensorplugin_cfg_t& cfg)
+    : sensorplugin_base_t(cfg), lib(NULL), libdata(NULL), alive_cnt(0)
 {
   plugintype = e->get_name();
   std::string libname("glabsensor_");
   libname += plugintype + ".so";
   modname = plugintype;
-  if( name.empty() )
+  if(name.empty())
     name = modname;
   sensorplugin_cfg_t lcfg(cfg);
   char chostname[1024];
-  if( gethostname(chostname,1024) == 0 )
+  if(gethostname(chostname, 1024) == 0)
     lcfg.hostname = chostname;
   lcfg.modname = modname;
-  lib = dlopen(libname.c_str(), RTLD_NOW );
-  if( !lib )
-    throw ErrMsg("Unable to open module \""+plugintype+"\": "+dlerror());
-  try{
-    sensorplugin_base_t_resolver( &libdata, lcfg, lib, libname );
+  lib = dlopen(libname.c_str(), RTLD_NOW);
+  if(!lib)
+    throw ErrMsg("Unable to open module \"" + plugintype + "\": " + dlerror());
+  try {
+    sensorplugin_base_t_resolver(&libdata, lcfg, lib, libname);
   }
-  catch( ... ){
+  catch(...) {
     dlclose(lib);
     throw;
   }
-  labstate.set_size_request(20,-1);
-  labname.set_size_request(-1,20);
-  vbox.pack_end(libdata->get_gtkframe(),Gtk::PACK_EXPAND_WIDGET);
-  vbox.pack_end(labname,Gtk::PACK_EXPAND_WIDGET);
-  hbox.pack_end(vbox,Gtk::PACK_EXPAND_WIDGET);
+  labstate.set_size_request(20, -1);
+  labname.set_size_request(-1, 20);
+  vbox.pack_end(libdata->get_gtkframe(), Gtk::PACK_EXPAND_WIDGET);
+  vbox.pack_end(labname, Gtk::PACK_EXPAND_WIDGET);
+  hbox.pack_end(vbox, Gtk::PACK_EXPAND_WIDGET);
   stateframe.add(labstate);
-  hbox.pack_end(stateframe,Gtk::PACK_SHRINK,1);
+  hbox.pack_end(stateframe, Gtk::PACK_SHRINK, 1);
   labname.set_text(get_fullname());
   allframe.add(hbox);
   allframe.show_all();
@@ -81,22 +82,24 @@ sensorplugin_t::sensorplugin_t( const sensorplugin_cfg_t& cfg )
 
 Gtk::Widget& sensorplugin_t::get_gtkframe()
 {
-  //return libdata->get_gtkframe();
+  // return libdata->get_gtkframe();
   return allframe;
 }
 
 void sensorplugin_t::add_variables(osc_server_t* srv)
 {
-  libdata->add_variables( srv );
+  libdata->add_variables(srv);
 }
 
 void sensorplugin_t::prepare()
 {
   libdata->prepare();
+  sensorplugin_base_t::prepare();
 }
 
 void sensorplugin_t::release()
 {
+  sensorplugin_base_t::release();
   libdata->release();
 }
 
@@ -113,15 +116,15 @@ std::vector<sensormsg_t> sensorplugin_t::get_warnings()
 bool sensorplugin_t::test_alive()
 {
   Gdk::RGBA col;
-  if( libdata->get_alive() ){
-    alive_cnt = 10;
+  if(libdata->get_alive()) {
+    alive_cnt = 10 * alivetimeout;
   }
-  if( alive_cnt )
+  if(alive_cnt)
     alive_cnt--;
-  if( alive_cnt==0 )
-    col.set_rgba(1,0,0,1);
+  if(alive_cnt == 0)
+    col.set_rgba(1, 0, 0, 1);
   else
-    col.set_rgba(0,1,0,1);
+    col.set_rgba(0, 1, 0, 1);
   labstate.override_background_color(col);
   return (alive_cnt > 0);
 }
@@ -135,22 +138,23 @@ sensorplugin_t::~sensorplugin_t()
 void error_message(const std::string& msg)
 {
   std::cerr << "Error: " << msg << std::endl;
-  Gtk::MessageDialog dialog("Error",false,Gtk::MESSAGE_ERROR);
+  Gtk::MessageDialog dialog("Error", false, Gtk::MESSAGE_ERROR);
   dialog.set_secondary_text(msg);
   dialog.run();
 }
 
 class glabsensors_t : public module_base_t {
 public:
-  glabsensors_t( const module_cfg_t& cfg );
+  glabsensors_t(const module_cfg_t& cfg);
   virtual ~glabsensors_t();
   bool on_100ms();
-  //void update(uint32_t frame,bool running);
-  void configure( );
+  // void update(uint32_t frame,bool running);
+  void configure();
   void release();
+
 private:
-  void reset_critical() { msg_critical.clear();};
-  void reset_warnings() { msg_warnings.clear();};
+  void reset_critical() { msg_critical.clear(); };
+  void reset_warnings() { msg_warnings.clear(); };
   std::vector<sensorplugin_t*> sensors;
   // GUI:
   Glib::RefPtr<Gtk::Builder> refBuilder;
@@ -179,21 +183,21 @@ private:
   uint32_t startphase;
 };
 
-#define GET_WIDGET(x) refBuilder->get_widget(#x,x);if( !x ) throw ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
+#define GET_WIDGET(x)                                                          \
+  refBuilder->get_widget(#x, x);                                               \
+  if(!x)                                                                       \
+  throw ErrMsg(std::string("No widget \"") + #x + std::string("\" in builder."))
 
-glabsensors_t::glabsensors_t( const module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    x(0),
-    y(0),
-    w(320),
-    h(1080),
-    ontop(true),
-    blink(0),
-    info_critical("glabsensors_critical","notifications",1,LSL_IRREGULAR_RATE,lsl::cf_string,std::string("critical_t")+TASCARVER),
-    outlet_critical(info_critical),
-    info_warnings("glabsensors_warnings","notifications",1,LSL_IRREGULAR_RATE,lsl::cf_string,std::string("warnings_t")+TASCARVER),
-    outlet_warnings(info_warnings),
-                            startphase(100)
+glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
+    : module_base_t(cfg), x(0), y(0), w(320), h(1080), ontop(true), blink(0),
+      info_critical("glabsensors_critical", "notifications", 1,
+                    LSL_IRREGULAR_RATE, lsl::cf_string,
+                    std::string("critical_t") + TASCARVER),
+      outlet_critical(info_critical),
+      info_warnings("glabsensors_warnings", "notifications", 1,
+                    LSL_IRREGULAR_RATE, lsl::cf_string,
+                    std::string("warnings_t") + TASCARVER),
+      outlet_warnings(info_warnings), startphase(100)
 {
   refBuilder = Gtk::Builder::create_from_string(ui_glabsensors);
   GET_ATTRIBUTE(x);
@@ -209,38 +213,44 @@ glabsensors_t::glabsensors_t( const module_cfg_t& cfg )
   GET_WIDGET(lab_warnings);
   GET_WIDGET(but_reset_critical);
   GET_WIDGET(but_reset_warnings);
-  win->move(x,y);
+  win->move(x, y);
   win->set_keep_above(ontop);
-  win->set_size_request( w, h );
+  win->set_size_request(w, h);
   win->set_title("Gesture Lab sensors - " + session->name);
   xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
+  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
+      sn != subnodes.end(); ++sn) {
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne )
+    if(sne)
       sensors.push_back(new sensorplugin_t(sensorplugin_cfg_t(sne)));
   }
-  connection_timeout = Glib::signal_timeout().connect( sigc::mem_fun(*this, &glabsensors_t::on_100ms), 100 );
-  but_reset_critical->signal_clicked().connect( sigc::mem_fun(*this, &glabsensors_t::reset_critical) );
-  but_reset_warnings->signal_clicked().connect( sigc::mem_fun(*this, &glabsensors_t::reset_warnings) );
+  connection_timeout = Glib::signal_timeout().connect(
+      sigc::mem_fun(*this, &glabsensors_t::on_100ms), 100);
+  but_reset_critical->signal_clicked().connect(
+      sigc::mem_fun(*this, &glabsensors_t::reset_critical));
+  but_reset_warnings->signal_clicked().connect(
+      sigc::mem_fun(*this, &glabsensors_t::reset_warnings));
   std::string pref(session->get_prefix());
-  for(std::vector<sensorplugin_t*>::iterator it=sensors.begin();it!=sensors.end();++it){
-    session->set_prefix(pref+"/glabsensors/"+(*it)->get_name());
-    sensorcontainer->add( (*it)->get_gtkframe() );
-    (*it)->add_variables( session );
+  for(std::vector<sensorplugin_t*>::iterator it = sensors.begin();
+      it != sensors.end(); ++it) {
+    session->set_prefix(pref + "/glabsensors/" + (*it)->get_name());
+    sensorcontainer->add((*it)->get_gtkframe());
+    (*it)->add_variables(session);
   }
   session->set_prefix(pref);
   win->show_all();
 }
 
-std::string msglist2str( const std::vector<sensormsg_t>& msg)
+std::string msglist2str(const std::vector<sensormsg_t>& msg)
 {
   std::string r;
-  for( std::vector<sensormsg_t>::const_iterator it=msg.begin();it!=msg.end();++it){
+  for(std::vector<sensormsg_t>::const_iterator it = msg.begin();
+      it != msg.end(); ++it) {
     char ctmp[1000];
-    if( it->count == 1 )
-      sprintf(ctmp,"%s\n",it->msg.c_str());
+    if(it->count == 1)
+      sprintf(ctmp, "%s\n", it->msg.c_str());
     else
-      sprintf(ctmp,"%s (repeated %d times)\n",it->msg.c_str(),it->count);
+      sprintf(ctmp, "%s (repeated %d times)\n", it->msg.c_str(), it->count);
     r = ctmp + r;
   }
   return r;
@@ -249,87 +259,96 @@ std::string msglist2str( const std::vector<sensormsg_t>& msg)
 bool glabsensors_t::on_100ms()
 {
   // send messages as LSL
-  if( !blink )
+  if(!blink)
     blink = 8;
   blink--;
-  if( startphase )
+  if(startphase)
     startphase--;
-  for(std::vector<sensorplugin_t*>::iterator it=sensors.begin();it!=sensors.end();++it){
+  for(std::vector<sensorplugin_t*>::iterator it = sensors.begin();
+      it != sensors.end(); ++it) {
     bool b_alive((*it)->test_alive());
-    if( startphase )
+    if(startphase)
       b_alive = true;
     std::vector<sensormsg_t> msg((*it)->get_critical());
-    for(std::vector<sensormsg_t>::iterator im=msg.begin();im!=msg.end();++im){
+    for(std::vector<sensormsg_t>::iterator im = msg.begin(); im != msg.end();
+        ++im) {
       outlet_critical.push_sample(&(im->msg));
       im->msg = "[" + (*it)->get_fullname() + "] " + im->msg;
-      if( msg_critical.empty() )
-        msg_critical.push_back( *im );
-      else{
-        if( msg_critical.back().msg == im->msg )
-          msg_critical.back().count+=im->count;
+      if(msg_critical.empty())
+        msg_critical.push_back(*im);
+      else {
+        if(msg_critical.back().msg == im->msg)
+          msg_critical.back().count += im->count;
         else
-          msg_critical.push_back( *im );
+          msg_critical.push_back(*im);
       }
     }
-    if( !b_alive ){
-      std::string lmsg("[" + (*it)->get_fullname() + "] Sensor module is not alive.");
-      if( (!msg_critical.empty()) && (msg_critical.back().msg == lmsg) )
+    if(!b_alive) {
+      std::string lmsg("[" + (*it)->get_fullname() +
+                       "] Sensor module is not alive.");
+      if((!msg_critical.empty()) && (msg_critical.back().msg == lmsg))
         msg_critical.back().count++;
       else
-        msg_critical.push_back( sensormsg_t( lmsg ) );
+        msg_critical.push_back(sensormsg_t(lmsg));
     }
-    msg =(*it)->get_warnings();
-    for(std::vector<sensormsg_t>::iterator im=msg.begin();im!=msg.end();++im){
+    msg = (*it)->get_warnings();
+    for(std::vector<sensormsg_t>::iterator im = msg.begin(); im != msg.end();
+        ++im) {
       outlet_warnings.push_sample(&(im->msg));
       im->msg = "[" + (*it)->get_fullname() + "] " + im->msg;
-      if( msg_warnings.empty() )
-        msg_warnings.push_back( *im );
-      else{
-        if( msg_warnings.back().msg == im->msg )
-          msg_warnings.back().count+=im->count;
+      if(msg_warnings.empty())
+        msg_warnings.push_back(*im);
+      else {
+        if(msg_warnings.back().msg == im->msg)
+          msg_warnings.back().count += im->count;
         else
-          msg_warnings.push_back( *im );
+          msg_warnings.push_back(*im);
       }
     }
   }
   // truncate list for better performance:
-  if( msg_critical.size() > 10 )
-    msg_critical.erase(msg_critical.begin(),msg_critical.end()-10);
-  if( msg_warnings.size() > 10 )
-    msg_warnings.erase(msg_warnings.begin(),msg_warnings.end()-10);
+  if(msg_critical.size() > 10)
+    msg_critical.erase(msg_critical.begin(), msg_critical.end() - 10);
+  if(msg_warnings.size() > 10)
+    msg_warnings.erase(msg_warnings.begin(), msg_warnings.end() - 10);
   // set labels:
   labmsg_critical->set_text(msglist2str(msg_critical));
   Gdk::RGBA col;
-  if( msg_critical.size() && (blink < 4) )
-    col.set_rgba(1,0,0,1);
+  if(msg_critical.size() && (blink < 4))
+    col.set_rgba(1, 0, 0, 1);
   else
-    col.set_rgba(0.92,0.92,0.92,1);
+    col.set_rgba(0.92, 0.92, 0.92, 1);
   lab_critical->override_background_color(col);
   labmsg_warnings->set_text(msglist2str(msg_warnings));
-  if( msg_warnings.size() && (blink < 4) )
-    col.set_rgba(1,0.8,0,1);
+  if(msg_warnings.size() && (blink < 4))
+    col.set_rgba(1, 0.8, 0, 1);
   else
-    col.set_rgba(0.92,0.92,0.92,1);
+    col.set_rgba(0.92, 0.92, 0.92, 1);
   lab_warnings->override_background_color(col);
   return true;
 }
 
-void glabsensors_t::configure( )
+void glabsensors_t::configure()
 {
-  for(std::vector<sensorplugin_t*>::iterator it=sensors.begin();it!=sensors.end();++it)
+  module_base_t::configure();
+  for(std::vector<sensorplugin_t*>::iterator it = sensors.begin();
+      it != sensors.end(); ++it)
     (*it)->prepare();
 }
 
 void glabsensors_t::release()
 {
-  for(std::vector<sensorplugin_t*>::iterator it=sensors.begin();it!=sensors.end();++it)
+  for(std::vector<sensorplugin_t*>::iterator it = sensors.begin();
+      it != sensors.end(); ++it)
     (*it)->release();
+  module_base_t::release();
 }
 
 glabsensors_t::~glabsensors_t()
 {
   connection_timeout.disconnect();
-  for(std::vector<sensorplugin_t*>::iterator it=sensors.begin();it!=sensors.end();++it)
+  for(std::vector<sensorplugin_t*>::iterator it = sensors.begin();
+      it != sensors.end(); ++it)
     delete *it;
   delete win;
 }
@@ -344,4 +363,3 @@ REGISTER_MODULE(glabsensors_t);
  * compile-command: "make -C .."
  * End:
  */
-
