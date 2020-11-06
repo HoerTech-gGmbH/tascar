@@ -83,6 +83,7 @@ endif
 TASCARVERSION=$(FULLVERSION)
 
 TASCARLIB = -ltascar
+TASCARDMXLIB = -ltascardmx
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
@@ -119,7 +120,7 @@ build/$(PLUGINPREFIX)tascarreceiver_hoa3d_enc$(DLLEXT): EXTERNALS+=gsl
 build/$(PLUGINPREFIX)tascarreceiver_hoa3d$(DLLEXT): EXTERNALS+=gsl eigen3
 build/$(PLUGINPREFIX)tascar_hossustain$(DLLEXT): EXTERNALS += fftw3f
 build/$(PLUGINPREFIX)tascar_lsljacktime$(DLLEXT) build/$(PLUGINPREFIX)tascar_pos2lsl$(DLLEXT) build/$(PLUGINPREFIX)tascar_levels2osc$(DLLEXT) build/$(PLUGINPREFIX)tascar_lslactor$(DLLEXT): LDLIBS+=-llsl
-build/$(PLUGINPREFIX)tascar_lightctl$(DLLEXT) build/$(PLUGINPREFIX)tascar_ovheadtracker$(DLLEXT): LDLIBS+=-ltascardmx
+build/$(PLUGINPREFIX)tascar_lightctl$(DLLEXT) build/$(PLUGINPREFIX)tascar_ovheadtracker$(DLLEXT): LDLIBS+=$(TASCARDMXLIB)
 build/$(PLUGINPREFIX)tascar_simplecontroller$(DLLEXT): build/simplecontroller_glade.h
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -lmatio -llsl
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): build/datalogging_glade.h
