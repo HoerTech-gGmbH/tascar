@@ -3,9 +3,11 @@ HRTF simulation.
 This receiver describes the main features of measured head related transfer
 functions by using a few low-order digital filters. The parametrization is
 based on the Spherical Head Model (SHM) by \citet{BrownDuda}
-and includes three further low-order filters. The SHM introduces an approach
-to model the head as a rigid sphere. It includes a model for the head shadow
-effect as well as a method to compute the interaural time difference.
+and includes three further low-order filters.
+
+The SHM introduces an approach to model the head as a rigid sphere.
+It includes a model for the head shadow effect as well as a method to
+compute the interaural time difference.
 The head shadow effect is approximated by a first-order high-shelf filter
 which depth varies depending on the incident angle. The high-shelf can be
 described by means of three parameters: The cut-off frequency \indattr{omega},
@@ -13,8 +15,17 @@ the angle \indattr{thetamin} at which the maximal depth of the high-shelf is
 reached and the parameter \indattr{alphamin} which influences the maximal
 reached depth of the high-shelf.
 
-In order to extend the SHM, two further first-order high-shelf filters
-similarly to that which realizes the SHM are used to model pinna
+The Duda SHM was extended by O.\ Buttler and S.D.\ Ewert in the context
+of room acoustics simulator RAZR \citep{Wendt2014b,Ewert2018}
+in \citet{Buttler2018} to improve left-right, front-back, and
+elevation perception:
+
+i) a pre-warping of the azimuth angles is introduced to better match experimentally
+observed interaural level differences as a function of azimuth, particularly in
+the frontal region.
+
+ii) Two further first-order high-shelf filters similarly to that which
+realizes the SHM are used to model pinna
 - respectively torso - shadow. These filters are as well described by
 three parameters. The two parameters \indattr{alphamin\_front} and
 \indattr{omega\_front} -- respectively \indattr{alphamin\_up} and
@@ -26,7 +37,7 @@ in order to define a region of incident directions in which these filters
 are applied. The maximal depth is reached at 180 degrees with respect to
 the reference direction.
 
-Furthermore, a notch filter is used in order to reproduce the concha notch
+iii) Furthermore, a notch filter is used in order to reproduce the concha notch
 which provides an important feature in order to distinguish between elevation
 angles. This filter is applied in the upper hemisphere for angles smaller
 than \indattr{startangle\_notch}. In order to have a smooth transition, the
@@ -38,9 +49,11 @@ as well. At \indattr{startangle\_notch} the center frequency is equal to
 direction right above the head. Furthermore, the notch is described by the
 quality factor \indattr{Q\_notch}.
 
-In order to optimize the values for the filter parameters, the frequency
-response of the receiver has been fitted to measured HRTFs of the KEMAR
-dummy head provided by the OlHeaD-HRTF database~\citep{Denk2020}.
+In order to optimize the values for the filter parameters of the
+original RAZR SHM-Model, the frequency response of the receiver has
+been fitted to measured HRTFs of the KEMAR dummy
+head \citep{Schwark2020} provided by the OlHeaD-HRTF
+database~\citep{Denk2020}.
 
 \begin{tscattributes}
 \indattr{sincorder}         & Sinc interpolation order of ITD delay line (0)                                    \\
