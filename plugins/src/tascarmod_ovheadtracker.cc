@@ -29,6 +29,7 @@ private:
   double gyrscale;
   bool apply_loc;
   bool apply_rot;
+  bool send_only_quaternion;
   double autoref;
   // run-time variables:
   lo_address target;
@@ -43,7 +44,8 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
       calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
       accscale(16384 / 9.81), gyrscale(16.4), apply_loc(false), apply_rot(true),
-      autoref(0), target(NULL), bcalib(false), qref(1, 0, 0, 0)
+      send_only_quaternion(false), autoref(0), target(NULL), bcalib(false),
+      qref(1, 0, 0, 0)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(devices);
@@ -57,6 +59,7 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(gyrscale);
   GET_ATTRIBUTE_BOOL(apply_loc);
   GET_ATTRIBUTE_BOOL(apply_rot);
+  GET_ATTRIBUTE_BOOL(send_only_quaternion);
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
@@ -89,6 +92,9 @@ void ovheadtracker_t::service()
   }
   std::vector<double> data(4, 0.0);
   std::vector<double> data2(7, 0.0);
+  std::string p;
+  if(name.size())
+    p = "/" + name;
   while(run_service) {
     try {
       TASCAR::serialport_t dev;
@@ -106,9 +112,10 @@ void ovheadtracker_t::service()
             l = l.substr(sz + 1);
             data[2] = std::stod(l);
             data[3] = 0.0;
-            if(target)
-              lo_send(target, "/acc", "fff", data[axes[0]] / accscale,
-                      data[axes[1]] / accscale, data[axes[2]] / accscale);
+            if(target && (!send_only_quaternion))
+              lo_send(target, (p + "/acc").c_str(), "fff",
+                      data[axes[0]] / accscale, data[axes[1]] / accscale,
+                      data[axes[2]] / accscale);
           } break;
           case 'W': {
             l = l.substr(1);
@@ -119,12 +126,14 @@ void ovheadtracker_t::service()
             l = l.substr(sz + 1);
             data[2] = std::stod(l);
             data[3] = 0.0;
-            if(target) {
+            if(target && (!send_only_quaternion)) {
               TASCAR::pos_t wacc(data[axes[0]], data[axes[1]], data[axes[2]]);
               wacc *= 1.0 / accscale;
-              lo_send(target, "/wacc", "fff", wacc.x, wacc.y, wacc.z);
+              lo_send(target, (p + "/wacc").c_str(), "fff", wacc.x, wacc.y,
+                      wacc.z);
               qref.rotate(wacc);
-              lo_send(target, "/waccref", "fff", wacc.x, wacc.y, wacc.z);
+              lo_send(target, (p + "/waccref").c_str(), "fff", wacc.x, wacc.y,
+                      wacc.z);
             }
           } break;
           case 'R': {
@@ -143,12 +152,13 @@ void ovheadtracker_t::service()
             data2[5] = std::stod(l, &sz);
             l = l.substr(sz + 1);
             data2[6] = std::stod(l);
-            if(target) {
-              lo_send(target, "/raw", "fffffff", data2[0], data2[1], data2[2],
-                      data2[3], data2[4], data2[5], data2[6]);
-              lo_send(target, "/acc", "fff", data2[1] / accscale,
+            if(target && (!send_only_quaternion)) {
+              lo_send(target, (p + "/raw").c_str(), "fffffff", data2[0],
+                      data2[1], data2[2], data2[3], data2[4], data2[5],
+                      data2[6]);
+              lo_send(target, (p + "/acc").c_str(), "fff", data2[1] / accscale,
                       data2[2] / accscale, data2[3] / accscale);
-              lo_send(target, "/gyr", "fff", data2[4] / gyrscale,
+              lo_send(target, (p + "/gyr").c_str(), "fff", data2[4] / gyrscale,
                       data2[5] / gyrscale, data2[6] / gyrscale);
             }
           } break;
@@ -166,9 +176,9 @@ void ovheadtracker_t::service()
             data2[4] = std::stod(l, &sz);
             l = l.substr(sz + 1);
             data2[5] = std::stod(l, &sz);
-            if(target)
-              lo_send(target, "/offs", "ffffff", data2[0], data2[1], data2[2],
-                      data2[3], data2[4], data2[5]);
+            if(target && (!send_only_quaternion))
+              lo_send(target, (p + "/offs").c_str(), "ffffff", data2[0],
+                      data2[1], data2[2], data2[3], data2[4], data2[5]);
           } break;
           case 'Q': {
             l = l.substr(1);
@@ -191,7 +201,8 @@ void ovheadtracker_t::service()
             q *= qref;
             o0 = q.to_euler();
             if(target)
-              lo_send(target, "/quaternion", "ffff", q.w, q.x, q.y, q.z);
+              lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x,
+                      q.y, q.z);
           } break;
           case 'G': {
             l = l.substr(1);
@@ -202,9 +213,9 @@ void ovheadtracker_t::service()
             l = l.substr(sz + 1);
             data[2] = std::stod(l);
             data[3] = 0.0;
-            if(target)
-              lo_send(target, "/axrot", "fff", data[axes[0]], data[axes[1]],
-                      data[axes[2]]);
+            if(target && (!send_only_quaternion))
+              lo_send(target, (p + "/axrot").c_str(), "fff", data[axes[0]],
+                      data[axes[1]], data[axes[2]]);
           } break;
           case 'C': {
             if((l.size() > 1)) {
