@@ -42,8 +42,8 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
     : actor_module_t(cfg), name("ovheadtracker"),
       devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
       calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
-      accscale(16384 / 9.81), gyrscale(16.4), autoref(0), target(NULL),
-      bcalib(false), qref(1, 0, 0, 0)
+      accscale(16384 / 9.81), gyrscale(16.4), apply_loc(false), apply_rot(true),
+      autoref(0), target(NULL), bcalib(false), qref(1, 0, 0, 0)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(devices);
@@ -55,6 +55,8 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(axes);
   GET_ATTRIBUTE(accscale);
   GET_ATTRIBUTE(gyrscale);
+  GET_ATTRIBUTE_BOOL(apply_loc);
+  GET_ATTRIBUTE_BOOL(apply_rot);
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
@@ -70,8 +72,9 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
   std::string p;
   if(name.size())
     p = "/" + name;
-  p += "/autoref";
-  srv->add_double(p, &autoref);
+  srv->add_double(p + "/autoref", &autoref);
+  srv->add_bool(p + "/apply_loc", &apply_loc);
+  srv->add_bool(p + "/apply_rot", &apply_rot);
 }
 
 void ovheadtracker_t::service()
@@ -243,8 +246,10 @@ ovheadtracker_t::~ovheadtracker_t()
 
 void ovheadtracker_t::update(uint32_t tp_frame, bool tp_rolling)
 {
-  set_location(p0);
-  set_orientation(o0);
+  if(apply_loc)
+    set_location(p0);
+  if(apply_rot)
+    set_orientation(o0);
 }
 
 REGISTER_MODULE(ovheadtracker_t);
