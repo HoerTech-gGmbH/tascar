@@ -1,5 +1,6 @@
 #include "serviceclass.h"
 #include "session.h"
+#include <atomic>
 #include <chrono>
 #include <thread>
 
@@ -12,9 +13,12 @@ public:
   virtual ~ovheadtracker_t();
   void add_variables(TASCAR::osc_server_t* srv);
   void update(uint32_t frame, bool running);
+  void configure();
+  void release();
 
 protected:
   void service();
+  void service_level();
 
 private:
   // configuration variables:
@@ -37,7 +41,57 @@ private:
   TASCAR::zyx_euler_t o0;
   bool bcalib;
   TASCAR::quaternion_t qref;
+  bool first;
+  // level logging:
+  std::thread srv_level;
+  std::atomic_bool run_service_level;
+  std::vector<std::string> levelpattern;
+  std::vector<TASCAR::Scene::audio_port_t*> ports;
+  std::vector<TASCAR::Scene::route_t*> routes;
+  std::vector<lo_message> vmsg;
+  std::vector<lo_arg**> vargv;
+  std::vector<std::string> vpath;
 };
+
+void ovheadtracker_t::configure()
+{
+  TASCAR::actor_module_t::configure();
+  ports.clear();
+  routes.clear();
+  for(auto msg : vmsg)
+    lo_message_free(msg);
+  vmsg.clear();
+  vargv.clear();
+  vpath.clear();
+  if(session)
+    ports = session->find_audio_ports(levelpattern);
+  for(auto port : ports) {
+    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(port));
+    if(!r) {
+      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(port));
+      if(s)
+        r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
+    }
+    routes.push_back(r);
+  }
+  for(auto route : routes) {
+    vmsg.push_back(lo_message_new());
+    for(uint32_t k = 0; k < route->metercnt(); ++k)
+      lo_message_add_float(vmsg.back(), 0);
+    vargv.push_back(lo_message_get_argv(vmsg.back()));
+    vpath.push_back(std::string("/") + name + std::string("/") +
+                    route->get_name());
+  }
+  first = true;
+  srv_level = std::thread(&ovheadtracker_t::service_level, this);
+}
+
+void ovheadtracker_t::release()
+{
+  run_service_level = false;
+  srv_level.join();
+  TASCAR::actor_module_t::release();
+}
 
 ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
     : actor_module_t(cfg), name("ovheadtracker"),
@@ -45,7 +99,7 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
       accscale(16384 / 9.81), gyrscale(16.4), apply_loc(false), apply_rot(true),
       send_only_quaternion(false), autoref(0), target(NULL), bcalib(false),
-      qref(1, 0, 0, 0)
+      qref(1, 0, 0, 0), first(true), run_service_level(true)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(devices);
@@ -60,6 +114,7 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(apply_loc);
   GET_ATTRIBUTE_BOOL(apply_rot);
   GET_ATTRIBUTE_BOOL(send_only_quaternion);
+  GET_ATTRIBUTE(levelpattern);
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
@@ -194,9 +249,14 @@ void ovheadtracker_t::service()
             if(bcalib)
               qref = q.inverse();
             if(autoref > 0) {
-              qref = qref.scale(1.0 - autoref);
-              qref += q.inverse().scale(autoref);
-              qref = qref.scale(1.0 / qref.norm());
+              if(first) {
+                qref = q.inverse();
+                first = false;
+              } else {
+                qref = qref.scale(1.0 - autoref);
+                qref += q.inverse().scale(autoref);
+                qref = qref.scale(1.0 / qref.norm());
+              }
             }
             q *= qref;
             o0 = q.to_euler();
@@ -261,6 +321,22 @@ void ovheadtracker_t::update(uint32_t tp_frame, bool tp_rolling)
     set_location(p0);
   if(apply_rot)
     set_orientation(o0);
+}
+
+void ovheadtracker_t::service_level()
+{
+  while(run_service_level) {
+    uint32_t k = 0;
+    for(auto it = routes.begin(); it != routes.end(); ++it) {
+      const std::vector<float>& leveldata((*it)->readmeter());
+      uint32_t n(leveldata.size());
+      for(uint32_t km = 0; km < n; ++km)
+        vargv[k][km]->f = leveldata[km];
+      lo_send_message(target, vpath[k].c_str(), vmsg[k]);
+      ++k;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
 }
 
 REGISTER_MODULE(ovheadtracker_t);
