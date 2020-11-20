@@ -332,7 +332,8 @@ void ovheadtracker_t::service_level()
       uint32_t n(leveldata.size());
       for(uint32_t km = 0; km < n; ++km)
         vargv[k][km]->f = leveldata[km];
-      lo_send_message(target, vpath[k].c_str(), vmsg[k]);
+      if(target)
+        lo_send_message(target, vpath[k].c_str(), vmsg[k]);
       ++k;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
