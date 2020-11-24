@@ -93,6 +93,7 @@ void assert_valid_regexp( const std::string& exp )
   regex_t reg;
   if( regcomp( &reg, exp.c_str(), REG_EXTENDED | REG_NOSUB ) != 0 )
     throw TASCAR::ErrMsg("Invalid regular expression \""+exp+"\".");
+  regfree( &reg );
 }
 
 std::vector<std::string> get_port_names_regexp( jack_client_t* jc, std::string name, int flags )
