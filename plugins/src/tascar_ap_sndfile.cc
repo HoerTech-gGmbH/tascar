@@ -2,6 +2,7 @@
 #include "levelmeter.h"
 #include "errorhandling.h"
 #include <fstream>
+#include <thread>
 
 class ap_sndfile_cfg_t : public TASCAR::audioplugin_base_t {
 public:
@@ -92,8 +93,15 @@ void ap_sndfile_t::configure()
   if(sndf[0]->get_srate() != f_sample) {
     double origsrate(sndf[0]->get_srate());
     if(resample) {
-      for(auto sf : sndf)
-        sf->resample(f_sample / origsrate);
+      std::vector<std::thread*> threads;
+      for(auto sf : sndf){
+        threads.push_back(new std::thread(&TASCAR::sndfile_t::resample,sf,f_sample / origsrate));
+        //sf->resample(f_sample / origsrate);
+      }
+      for(auto th : threads ){
+        th->join();
+        delete th;
+      }
     } else {
       std::string msg("The sample rate of the sound file " + name +
                       " differs from the audio system sample rate: ");
