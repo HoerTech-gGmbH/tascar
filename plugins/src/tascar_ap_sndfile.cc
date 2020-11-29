@@ -90,9 +90,10 @@ void ap_sndfile_t::configure()
     sndf.push_back(new TASCAR::sndfile_t(name, channel + ch, start, length));
   }
   if(sndf[0]->get_srate() != f_sample) {
+    double origsrate(sndf[0]->get_srate());
     if(resample) {
       for(auto sf : sndf)
-        sf->resample(f_sample / sndf[0]->get_srate());
+        sf->resample(f_sample / origsrate);
     } else {
       std::string msg("The sample rate of the sound file " + name +
                       " differs from the audio system sample rate: ");
