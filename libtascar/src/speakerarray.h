@@ -20,10 +20,10 @@
 #ifndef SPEAKERARRAY_H
 #define SPEAKERARRAY_H
 
-#include "xmlconfig.h"
-#include "filterclass.h"
 #include "delayline.h"
+#include "filterclass.h"
 #include "ola.h"
+#include "xmlconfig.h"
 
 namespace TASCAR {
 
@@ -62,9 +62,10 @@ namespace TASCAR {
 
   class spk_array_cfg_t : public xml_element_t {
   public:
-    spk_array_cfg_t( xmlpp::Element*, bool use_parent_xml );
+    spk_array_cfg_t(xmlpp::Element*, bool use_parent_xml);
     std::string layout;
     std::string name;
+
   protected:
     xmlpp::DomParser domp;
     xmlpp::Element* e_layout;
@@ -74,20 +75,22 @@ namespace TASCAR {
      \brief Loudspeaker array.
    */
   class spk_array_t : public spk_array_cfg_t,
-                      public std::vector<spk_descriptor_t>, 
+                      public std::vector<spk_descriptor_t>,
                       public audiostates_t {
   public:
-    spk_array_t(xmlpp::Element*, 
-                bool use_parent_xml,
-                const std::string& elementname_="speaker");
+    spk_array_t(xmlpp::Element*, bool use_parent_xml,
+                const std::string& elementname_ = "speaker");
+    ~spk_array_t();
+
   private:
     spk_array_t(const spk_array_t&);
+
   public:
-    double get_rmax() const { return rmax;};
-    double get_rmin() const { return rmin;};
+    double get_rmax() const { return rmax; };
+    double get_rmin() const { return rmin; };
     class didx_t {
     public:
-      didx_t() : d(0),idx(0) {};
+      didx_t() : d(0), idx(0){};
       double d;
       uint32_t idx;
     };
@@ -96,12 +99,16 @@ namespace TASCAR {
     xml_element_t elayout;
     void validate_attributes(std::string& msg) const;
     std::vector<TASCAR::pos_t> get_positions() const;
+
   private:
     double rmax;
     double rmin;
     double xyzgain;
+    std::string onload;
+    std::string onunload;
     std::vector<didx_t> didx;
     std::string elementname;
+
   public:
     std::vector<std::string> connections;
     std::vector<TASCAR::static_delay_t> delaycomp;
@@ -137,7 +144,7 @@ namespace TASCAR {
     std::string calibfor;
     bool has_calibfor;
   };
-}
+} // namespace TASCAR
 
 #endif
 
