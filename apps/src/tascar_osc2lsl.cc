@@ -10,12 +10,16 @@
 #define DEBUG(x)                                                               \
   std::cerr << __FILE__ << ":" << __LINE__ << " " << #x << "=" << x << std::endl
 
+// stream map:
 typedef std::map<std::string, lsl::stream_outlet*> stream_map_t;
+
+// use first row as timestamp, and the rest as data:
+bool timestamp(false);
 
 static int send_something(const char* path, const char* types, lo_arg** argv,
                           int argc, lo_message msg, void* user_data)
 {
-  if(argc > 0) {
+  if(argc > timestamp) {
     bool all_same(true);
     for(int32_t k = 1; k < argc; ++k)
       if(types[k] != types[0])
@@ -26,6 +30,7 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
       stream_map_t* smap((stream_map_t*)user_data);
       lsl::stream_outlet* sop(NULL);
       if(smap->find(name) == smap->end()) {
+        // stream is new, add a new descriptor:
         lsl::channel_format_t lslfmt(lsl::cf_float32);
         switch(types[0]) {
         case 'd':
@@ -38,7 +43,10 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
           lslfmt = lsl::cf_string;
           break;
         }
-        lsl::stream_info info(path, "osc2lsl", argc, lsl::IRREGULAR_RATE,
+        int numchannels(argc);
+        if(timestamp && (argc > 1))
+          --numchannels;
+        lsl::stream_info info(path, "osc2lsl", numchannels, lsl::IRREGULAR_RATE,
                               lslfmt, name.c_str());
         sop = new lsl::stream_outlet(info);
         (*smap)[name] = sop;
@@ -47,26 +55,36 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
         sop = (*smap)[name];
       }
       if(sop) {
+        std::int32_t startchannel(timestamp);
         switch(types[0]) {
         case 'f': {
           std::vector<float> data;
-          for(std::int32_t k = 0; k < argc; ++k)
+          for(std::int32_t k = startchannel; k < argc; ++k)
             data.push_back(argv[k]->f);
-          sop->push_sample(data);
+          if(timestamp)
+            sop->push_sample(data, argv[0]->f);
+          else
+            sop->push_sample(data);
           break;
         }
         case 'd': {
           std::vector<double> data;
-          for(std::int32_t k = 0; k < argc; ++k)
+          for(std::int32_t k = startchannel; k < argc; ++k)
             data.push_back(argv[k]->d);
-          sop->push_sample(data);
+          if(timestamp)
+            sop->push_sample(data, argv[0]->d);
+          else
+            sop->push_sample(data);
           break;
         }
         case 'i': {
           std::vector<int32_t> data;
-          for(std::int32_t k = 0; k < argc; ++k)
+          for(std::int32_t k = startchannel; k < argc; ++k)
             data.push_back(argv[k]->i);
-          sop->push_sample(data);
+          if(timestamp)
+            sop->push_sample(data, argv[0]->i);
+          else
+            sop->push_sample(data);
           break;
         }
         case 's': {
@@ -135,12 +153,10 @@ int main(int argc, char** argv)
 {
   stream_map_t streams;
   int32_t port(-1);
-  const char* options = "ha:np:";
-  struct option long_options[] = {{"help", 0, 0, 'h'},
-                                  {"add", 1, 0, 'a'},
-                                  {"noauto", 0, 0, 'n'},
-                                  {"port", 1, 0, 'p'},
-                                  {0, 0, 0, 0}};
+  const char* options = "ha:np:t";
+  struct option long_options[] = {{"help", 0, 0, 'h'},      {"add", 1, 0, 'a'},
+                                  {"noauto", 0, 0, 'n'},    {"port", 1, 0, 'p'},
+                                  {"timestamp", 0, 0, 't'}, {0, 0, 0, 0}};
   int opt(0);
   int option_index(0);
   bool noauto(false);
@@ -159,6 +175,9 @@ int main(int argc, char** argv)
     case 'p':
       port = atoi(optarg);
       break;
+    case 't':
+      timestamp = true;
+      break;
     }
   }
   if(port < 0) {
@@ -167,15 +186,13 @@ int main(int argc, char** argv)
   }
   lo::ServerThread st(port);
   if(!st.is_valid()) {
-    std::cout << "Nope." << std::endl;
+    std::cerr << "Unable to start OSC server thread." << std::endl;
     return 1;
   }
   std::atomic<bool> b_quit(false);
   st.add_method("/osc2lsl/quit", "",
                 [&b_quit](lo_arg**, int) { b_quit = true; });
   for(auto& t : streams) {
-    // DEBUG(t.second->info().name());
-    // DEBUG(t.first.substr(t.second->info().name().size()));
     st.add_method(t.second->info().name(),
                   t.first.substr(t.second->info().name().size()),
                   &send_something, &streams);
