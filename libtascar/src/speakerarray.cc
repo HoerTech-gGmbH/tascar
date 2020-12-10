@@ -16,29 +16,42 @@ spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
     e_layout = xmlsrc;
   } else {
     GET_ATTRIBUTE(layout);
-    if(layout.empty())
-      throw TASCAR::ErrMsg("No speaker layout file provided.");
-    try {
-      domp.parse_file(TASCAR::env_expand(layout));
+    if(layout.empty()) {
+      // try to find layout element:
+      xmlpp::Node::NodeList subnodes = xmlsrc->get_children();
+      for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
+          sn != subnodes.end(); ++sn) {
+        xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+        if(sne && (sne->get_name() == "layout"))
+          e_layout = sne;
+      }
+      if(e_layout == NULL)
+        throw TASCAR::ErrMsg(
+            "No layout file provided and no inline layout xml element.");
+    } else {
+      try {
+        domp.parse_file(TASCAR::env_expand(layout));
+      }
+      catch(const xmlpp::internal_error& e) {
+        throw TASCAR::ErrMsg(std::string("xml internal error: ") + e.what());
+      }
+      catch(const xmlpp::validity_error& e) {
+        throw TASCAR::ErrMsg(std::string("xml validity error: ") + e.what());
+      }
+      catch(const xmlpp::parse_error& e) {
+        throw TASCAR::ErrMsg(std::string("xml parse error: ") + e.what());
+      }
+      if(!domp)
+        throw TASCAR::ErrMsg("Unable to parse file \"" + layout + "\".");
+      e_layout = domp.get_document()->get_root_node();
+      if(!e_layout)
+        throw TASCAR::ErrMsg("No root node found in document \"" + layout +
+                             "\".");
+      if(e_layout->get_name() != "layout")
+        throw TASCAR::ErrMsg(
+            "Invalid root node name. Expected \"layout\", got " +
+            e_layout->get_name() + ".");
     }
-    catch(const xmlpp::internal_error& e) {
-      throw TASCAR::ErrMsg(std::string("xml internal error: ") + e.what());
-    }
-    catch(const xmlpp::validity_error& e) {
-      throw TASCAR::ErrMsg(std::string("xml validity error: ") + e.what());
-    }
-    catch(const xmlpp::parse_error& e) {
-      throw TASCAR::ErrMsg(std::string("xml parse error: ") + e.what());
-    }
-    if(!domp)
-      throw TASCAR::ErrMsg("Unable to parse file \"" + layout + "\".");
-    e_layout = domp.get_document()->get_root_node();
-    if(!e_layout)
-      throw TASCAR::ErrMsg("No root node found in document \"" + layout +
-                           "\".");
-    if(e_layout->get_name() != "layout")
-      throw TASCAR::ErrMsg("Invalid root node name. Expected \"layout\", got " +
-                           e_layout->get_name() + ".");
   }
 }
 
