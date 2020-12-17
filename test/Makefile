@@ -78,7 +78,8 @@ hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert								\
 	test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert							\
 	test_level_hoa3d_pinv test_level_hoa3d_pinv_lidhan								\
 	test_level_hoa3d_pinv_maxre test_level_hoa3d_allrad								\
-	test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre
+	test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre	\
+	test_level_hoa3d_pinv_lidhan45_maxre
 
 
 testrec: $(TEST_REC)
@@ -88,7 +89,7 @@ testlev: $(TEST_LEV) test_level_diff_decorr test_level_diff_nodecorr	\
   test_level_hoa3d_allrad_lidhan test_level_hoa3d_allrad							\
   test_level_hoa3d_pinv_lidhan_maxre test_level_hoa3d_pinv_lidhan			\
   test_level_hoa3d_pinv_maxre test_level_hoa3d_pinv test_level_nsp		\
-  test_level_vbap3d
+  test_level_vbap3d test_level_hoa3d_pinv_lidhan45_maxre
 
 db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 

@@ -43,6 +43,8 @@ namespace TASCAR {
     std::map<std::string, std::string> cfg;
   };
 
+  std::string strrep(std::string s,const std::string& pat, const std::string& rep);
+  
   std::string to_string(double x);
   std::string to_string(const TASCAR::pos_t& x);
   std::string to_string(const TASCAR::zyx_euler_t& x);

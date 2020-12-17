@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<layout xyzgain="0.577" decorr="false">
+  <speaker az="11.25"  el="0.0" label="B.1"/>
+  <speaker az="33.75"  el="0.0" label="B.2"/>
+  <speaker az="56.25"  el="0.0" label="B.3"/>
+  <speaker az="78.75"  el="0.0" label="B.4"/>
+  <speaker az="101.25"  el="0.0" label="B.5"/>
+  <speaker az="123.75"  el="0.0" label="B.6"/>
+  <speaker az="146.25"  el="0.0" label="B.7"/>
+  <speaker az="168.75"  el="0.0" label="B.8"/>
+  <speaker az="191.25"  el="0.0" label="B.9"/>
+  <speaker az="213.75"  el="0.0" label="B.10"/>
+  <speaker az="236.25"  el="0.0" label="B.11"/>
+  <speaker az="258.75"  el="0.0" label="B.12"/>
+  <speaker az="281.25"  el="0.0" label="B.13"/>
+  <speaker az="303.75"  el="0.0" label="B.14"/>
+  <speaker az="326.25"  el="0.0" label="B.15"/>
+  <speaker az="348.75"  el="0.0" label="B.16"/>
+
+  <speaker az="0"  el="31.6" label="C.1"/>
+  <speaker az="60"  el="32.4" label="C.2"/>
+  <speaker az="120"  el="31.3" label="C.3"/>
+  <speaker az="180"  el="30.2" label="C.4"/>
+  <speaker az="240"  el="31.1" label="C.5"/>
+  <speaker az="300"  el="32.4" label="C.6"/>
+
+  <speaker az="30"  el="-38.7" label="A.1"/>
+  <speaker az="90"  el="-39.4" label="A.2"/>
+  <speaker az="150"  el="-40.5" label="A.3"/>
+  <speaker az="210"  el="-39.7" label="A.4"/>
+  <speaker az="270"  el="-41.4" label="A.5"/>
+  <speaker az="330"  el="-40.4" label="A.6"/>
+
+  <speaker az="25"  el="73.4" label="D"/>
+
+  <speaker az="11.25"  el="-16.0" label="E.1"/>
+  <speaker az="33.75"  el="-16.2" label="E.2"/>
+  <speaker az="56.25"  el="-16.1" label="E.3"/>
+  <speaker az="78.75"  el="-15.9" label="E.4"/>
+  <speaker az="101.25"  el="-15.6" label="E.5"/>
+  <speaker az="123.75"  el="-15.8" label="E.6"/>
+  <speaker az="146.25"  el="-15.6" label="E.7"/>
+  <speaker az="168.75"  el="-16.5" label="E.8"/>
+  <speaker az="191.25"  el="-16.2" label="E.9"/>
+  <speaker az="213.75"  el="-15.7" label="E.10"/>
+  <speaker az="236.25"  el="-15.9" label="E.11"/>
+  <speaker az="258.75"  el="-16.1" label="E.12"/>
+  <speaker az="281.25"  el="-16.3" label="E.13"/>
+  <speaker az="303.75"  el="-16.1" label="E.14"/>
+  <speaker az="326.25"  el="-16.2" label="E.15"/>
+  <speaker az="348.75"  el="-16.3" label="E.16"/>
+
+</layout>

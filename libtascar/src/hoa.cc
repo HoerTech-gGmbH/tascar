@@ -29,7 +29,7 @@ void encoder_t::set_order(uint32_t order)
 
 
 decoder_t::decoder_t()
-  : dec(NULL), amb_channels(0), out_channels(0), M(0)
+  : dec(NULL), amb_channels(0), out_channels(0), M(0), dectype(basic), method(pinv)
 {
 }
 
@@ -66,13 +66,41 @@ void decoder_t::create_pinv( uint32_t order, const std::vector<TASCAR::pos_t>& s
     for(uint32_t acn=0;acn<amb_channels;++acn)
       Bdec(acn,ch) = B[acn];
   }
-  auto Binv(pseudoInverse(Bdec,1e-5));
+  auto Binv(pseudoInverse(Bdec,FLT_EPSILON));
   float* p_dec(dec);
   for(uint32_t acn=0;acn<amb_channels;++acn)
     for( uint32_t ch=0;ch<out_channels;++ch){
       *p_dec = Binv(ch,acn);
       ++p_dec;
     }
+  method = pinv;
+}
+
+float decoder_t::maxabs() const
+{
+  float rv(0);
+  float* p_dec(dec);
+  for(uint32_t acn = 0; acn < amb_channels; ++acn)
+    for(uint32_t ch = 0; ch < out_channels; ++ch) {
+      rv = std::max(fabsf(*p_dec),rv);
+      ++p_dec;
+    }
+  return rv;
+}
+
+float decoder_t::rms() const
+{
+  float rv(0);
+  size_t n(0);
+  float* p_dec(dec);
+  for(uint32_t acn = 0; acn < amb_channels; ++acn)
+    for(uint32_t ch = 0; ch < out_channels; ++ch) {
+      rv += *p_dec * *p_dec;
+      ++n;
+      ++p_dec;
+    }
+  rv = sqrtf(rv / (float)n);
+  return rv;
 }
 
 void decoder_t::create_allrad( uint32_t order, const std::vector<TASCAR::pos_t>& spkpos )
@@ -121,8 +149,7 @@ void decoder_t::create_allrad( uint32_t order, const std::vector<TASCAR::pos_t>&
   tg = 1/tg;
   for( uint32_t k=0;k<amb_channels*out_channels;++k)
     dec[k] *= tg;
-  //DEBUG(tg);
-  //DEBUG(20*log10(tg));
+  method = allrad;
 }
 
 
@@ -238,8 +265,46 @@ void decoder_t::modify( const modifier_t& m )
         operator()(acn,ch) *= gm[m];
       ++acn;
     }
+  dectype = m;
 }
 
+std::string decoder_t::to_string() const
+{
+  std::ostringstream tmp("");
+  tmp.precision(6);
+  tmp << "order=" << M << ";\nchannels=" << out_channels << ";\ndectype='";
+  switch(dectype) {
+  case basic:
+    tmp << "basic";
+    break;
+  case maxre:
+    tmp << "max-rE";
+    break;
+  case inphase:
+    tmp << "in-phase";
+    break;
+  }
+  tmp << "';\nmethod='";
+  switch(method) {
+  case pinv:
+    tmp << "pseudo-inverse";
+    break;
+  case allrad:
+    tmp << "ALLRAD";
+    break;
+  }
+  tmp << "';\ndec=[...\n";
+  float* p_dec(dec);
+  for(uint32_t acn = 0; acn < amb_channels; ++acn) {
+    for(uint32_t kch = 0; kch < out_channels; ++kch) {
+      tmp << *p_dec << " ";
+      ++p_dec;
+    }
+    tmp << ";...\n";
+  }
+  tmp << "];\n";
+  return tmp.str();
+}
 
 /*
  * Local Variables:

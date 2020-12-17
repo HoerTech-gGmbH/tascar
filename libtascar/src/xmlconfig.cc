@@ -11,6 +11,22 @@ namespace TASCAR {
   globalconfig_t config;
 } // namespace TASCAR
 
+
+std::string TASCAR::strrep(std::string s,const std::string& pat, const std::string& rep)
+{
+  std::string out_string("");
+  std::string::size_type len = pat.size(  );
+  std::string::size_type pos;
+  while( (pos = s.find(pat)) < s.size() ){
+    out_string += s.substr(0,pos);
+    out_string += rep;
+    s.erase(0,pos+len);
+  }
+  s = out_string + s;
+  return s;
+}
+
+
 void TASCAR::xmlpp_get_and_register_attribute(xmlpp::Element* e,
                                               const std::string& name,
                                               std::string& value)
