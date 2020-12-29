@@ -19,7 +19,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   hrirconv joystick hossustain midicc2osc midictl rotator oscserver	\
   qualisystracker orientationmodulator locationmodulator		\
   locationvelocity granularsynth fail oscrelay waitforjackport sleep	\
-  ovheadtracker
+  ovheadtracker jackrec
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
   transportgui lightcolorpicker

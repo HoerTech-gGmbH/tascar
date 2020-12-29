@@ -30,10 +30,11 @@
 #define JACKIOWAV_H
 
 #include "tascar.h"
+#include <jack/ringbuffer.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <getopt.h>
 #include <unistd.h>
+#include <thread>
 
 /**
    \ingroup apptascar
@@ -86,6 +87,30 @@ private:
 public:
   float cpuload;
   uint32_t xruns;
+};
+
+class jackrec_async_t : public jackc_transport_t {
+public:
+  jackrec_async_t(const std::string& ofname,
+                  const std::vector<std::string>& ports,
+                  const std::string& jackname = "jackrec", double buflen = 10);
+  ~jackrec_async_t();
+
+private:
+  int process(jack_nframes_t nframes, const std::vector<float*>& inBuffer,
+              const std::vector<float*>& outBuffer, uint32_t tp_frame,
+              bool tp_rolling);
+  void service();
+  SNDFILE* sf_out;
+  SF_INFO sf_inf_out;
+  jack_ringbuffer_t* rb;
+  std::thread srv;
+  bool run_service;
+  float* buf;
+  float* rbuf;
+  // size of read buffer in audio samples:
+  size_t rlen;
+  size_t xrun;
 };
 
 #endif

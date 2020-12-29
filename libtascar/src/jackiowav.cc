@@ -216,7 +216,98 @@ void jackio_t::set_transport_start(double start_, bool wait)
 {
   use_transport = true;
   wait_ = wait;
-  startframe = get_srate()*start_;
+  startframe = get_srate() * start_;
+}
+
+jackrec_async_t::jackrec_async_t(const std::string& ofname,
+                                 const std::vector<std::string>& ports,
+                                 const std::string& jackname, double buflen)
+    : jackc_transport_t(jackname), sf_out(NULL), rb(NULL), run_service(true),
+      xrun(0)
+{
+  if(!ports.size())
+    throw TASCAR::ErrMsg("No input ports specified, not creating client.");
+  memset(&sf_inf_out, 0, sizeof(sf_inf_out));
+  sf_inf_out.samplerate = get_srate();
+  sf_inf_out.channels = ports.size();
+  sf_inf_out.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 | SF_ENDIAN_FILE;
+  if(ofname.size()) {
+    if(!(sf_out = sf_open(ofname.c_str(), SFM_WRITE, &sf_inf_out))) {
+      std::string errmsg("Unable to open output file \"" + ofname + "\": ");
+      errmsg += sf_strerror(NULL);
+      throw TASCAR::ErrMsg(errmsg);
+    }
+  }
+  unsigned int k(0);
+  char c_tmp[1024];
+  for(auto p : ports) {
+    ++k;
+    sprintf(c_tmp, "in_%d", k);
+    add_input_port(c_tmp);
+  }
+  if(buflen < 2.0)
+    buflen = 2.0;
+  rb = jack_ringbuffer_create(buflen * get_srate() * ports.size() *
+                              sizeof(float));
+  buf = new float[ports.size() * get_fragsize()];
+  rlen = ports.size() * get_srate();
+  rbuf = new float[rlen];
+  activate();
+  k = 0;
+  for(auto p : ports) {
+    connect_in(k, p, true, true);
+    ++k;
+  }
+  srv = std::thread(&jackrec_async_t::service, this);
+}
+
+jackrec_async_t::~jackrec_async_t()
+{
+  deactivate();
+  run_service = false;
+  srv.join();
+  if(sf_out) {
+    sf_close(sf_out);
+  }
+  if(rb)
+    jack_ringbuffer_free(rb);
+  delete[] buf;
+  delete[] rbuf;
+}
+
+void jackrec_async_t::service()
+{
+  size_t rchunk(rlen * sizeof(float));
+  while(run_service) {
+    if(jack_ringbuffer_read_space(rb) >= rchunk) {
+      size_t rcnt(jack_ringbuffer_read(rb, (char*)rbuf, rchunk));
+      rcnt /= sizeof(float);
+      sf_writef_float(sf_out, rbuf, rcnt);
+    }
+    usleep(100);
+  }
+  size_t rcnt(0);
+  do {
+    rcnt = jack_ringbuffer_read(rb, (char*)rbuf, rchunk);
+    rcnt /= sizeof(float);
+    sf_writef_float(sf_out, rbuf, rcnt);
+  } while(rcnt > 0);
+}
+
+int jackrec_async_t::process(jack_nframes_t nframes,
+                             const std::vector<float*>& inBuffer,
+                             const std::vector<float*>& outBuffer,
+                             uint32_t tp_frame, bool tp_rolling)
+{
+  size_t ch(inBuffer.size());
+  for(size_t k = 0; k < nframes; ++k)
+    for(size_t c = 0; c < ch; ++c)
+      buf[ch * k + c] = inBuffer[c][k];
+  size_t wcnt(ch * nframes * sizeof(float));
+  size_t cnt(jack_ringbuffer_write(rb, (const char*)buf, wcnt));
+  if(cnt < wcnt)
+    ++xrun;
+  return 0;
 }
 
 /*
