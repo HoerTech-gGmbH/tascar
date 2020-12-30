@@ -223,9 +223,9 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
                                  const std::vector<std::string>& ports,
                                  const std::string& jackname, double buflen)
     : jackc_transport_t(jackname), rectime(0), xrun(0), werror(0), sf_out(NULL),
-      rb(NULL), run_service(true), tscale(1), recframes(0)
+      rb(NULL), run_service(true), tscale(1), recframes(0), channels(ports.size())
 {
-  if(!ports.size())
+  if(!channels)
     throw TASCAR::ErrMsg("No sources selected.");
   memset(&sf_inf_out, 0, sizeof(sf_inf_out));
   sf_inf_out.samplerate = get_srate();
@@ -247,10 +247,10 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   }
   if(buflen < 2.0)
     buflen = 2.0;
-  rb = jack_ringbuffer_create(buflen * get_srate() * ports.size() *
+  rb = jack_ringbuffer_create(buflen * get_srate() * channels *
                               sizeof(float));
-  buf = new float[ports.size() * get_fragsize()];
-  rlen = ports.size() * get_srate();
+  buf = new float[channels * get_fragsize()];
+  rlen = channels * get_srate();
   rbuf = new float[rlen];
   activate();
   k = 0;
@@ -282,7 +282,7 @@ void jackrec_async_t::service()
   while(run_service) {
     if(jack_ringbuffer_read_space(rb) >= rchunk) {
       size_t rcnt(jack_ringbuffer_read(rb, (char*)rbuf, rchunk));
-      rcnt /= sizeof(float);
+      rcnt /= sizeof(float)*channels;
       size_t wcnt(sf_writef_float(sf_out, rbuf, rcnt));
       if(wcnt < rcnt)
         ++werror;
@@ -292,7 +292,7 @@ void jackrec_async_t::service()
   size_t rcnt(0);
   do {
     rcnt = jack_ringbuffer_read(rb, (char*)rbuf, rchunk);
-    rcnt /= sizeof(float);
+    rcnt /= sizeof(float)*channels;
     sf_writef_float(sf_out, rbuf, rcnt);
   } while(rcnt > 0);
 }

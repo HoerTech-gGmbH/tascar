@@ -115,6 +115,7 @@ private:
   size_t rlen;
   double tscale;
   size_t recframes;
+  size_t channels;
 };
 
 #endif
