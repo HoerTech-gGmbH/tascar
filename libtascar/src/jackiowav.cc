@@ -222,11 +222,11 @@ void jackio_t::set_transport_start(double start_, bool wait)
 jackrec_async_t::jackrec_async_t(const std::string& ofname,
                                  const std::vector<std::string>& ports,
                                  const std::string& jackname, double buflen)
-    : jackc_transport_t(jackname), sf_out(NULL), rb(NULL), run_service(true),
-      xrun(0)
+    : jackc_transport_t(jackname), rectime(0), xrun(0), werror(0), sf_out(NULL),
+      rb(NULL), run_service(true), tscale(1), recframes(0)
 {
   if(!ports.size())
-    throw TASCAR::ErrMsg("No input ports specified, not creating client.");
+    throw TASCAR::ErrMsg("No sources selected.");
   memset(&sf_inf_out, 0, sizeof(sf_inf_out));
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = ports.size();
@@ -258,6 +258,7 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
     connect_in(k, p, true, true);
     ++k;
   }
+  tscale = 1.0 / get_srate();
   srv = std::thread(&jackrec_async_t::service, this);
 }
 
@@ -282,7 +283,9 @@ void jackrec_async_t::service()
     if(jack_ringbuffer_read_space(rb) >= rchunk) {
       size_t rcnt(jack_ringbuffer_read(rb, (char*)rbuf, rchunk));
       rcnt /= sizeof(float);
-      sf_writef_float(sf_out, rbuf, rcnt);
+      size_t wcnt(sf_writef_float(sf_out, rbuf, rcnt));
+      if(wcnt < rcnt)
+        ++werror;
     }
     usleep(100);
   }
@@ -307,6 +310,8 @@ int jackrec_async_t::process(jack_nframes_t nframes,
   size_t cnt(jack_ringbuffer_write(rb, (const char*)buf, wcnt));
   if(cnt < wcnt)
     ++xrun;
+  recframes += nframes;
+  rectime = recframes * tscale;
   return 0;
 }
 

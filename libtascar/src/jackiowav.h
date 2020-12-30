@@ -95,6 +95,9 @@ public:
                   const std::vector<std::string>& ports,
                   const std::string& jackname = "jackrec", double buflen = 10);
   ~jackrec_async_t();
+  double rectime;
+  size_t xrun;
+  size_t werror;
 
 private:
   int process(jack_nframes_t nframes, const std::vector<float*>& inBuffer,
@@ -110,7 +113,8 @@ private:
   float* rbuf;
   // size of read buffer in audio samples:
   size_t rlen;
-  size_t xrun;
+  double tscale;
+  size_t recframes;
 };
 
 #endif
