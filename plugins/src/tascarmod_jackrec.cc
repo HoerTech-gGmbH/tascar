@@ -85,6 +85,8 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
 
 jackrec_t::~jackrec_t()
 {
+  if(lo_addr)
+    lo_send(lo_addr, (prefix + "/stop").c_str(), "");
   run_service = false;
   srv.join();
   std::lock_guard<std::mutex> lock(mtx);
