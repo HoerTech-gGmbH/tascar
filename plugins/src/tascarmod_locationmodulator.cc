@@ -20,11 +20,11 @@ locmod_t::locmod_t( const TASCAR::module_cfg_t& cfg )
   actor_module_t::GET_ATTRIBUTE(m);
   actor_module_t::GET_ATTRIBUTE(f);
   actor_module_t::GET_ATTRIBUTE(p0);
-  session->add_double(actor+"/m/x",&m.x);
-  session->add_double(actor+"/m/y",&m.y);
-  session->add_double(actor+"/m/z",&m.z);
-  session->add_double(actor+"/f",&f);
-  session->add_double(actor+"/p0",&p0);
+  session->add_double(TASCAR::vecstr2str(actor)+"/m/x",&m.x);
+  session->add_double(TASCAR::vecstr2str(actor)+"/m/y",&m.y);
+  session->add_double(TASCAR::vecstr2str(actor)+"/m/z",&m.z);
+  session->add_double(TASCAR::vecstr2str(actor)+"/f",&f);
+  session->add_double(TASCAR::vecstr2str(actor)+"/p0",&p0);
 }
 
 void locmod_t::update(uint32_t tp_frame,bool running)

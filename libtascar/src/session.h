@@ -197,7 +197,7 @@ namespace TASCAR {
     /**
        \brief Actor name pattern
      */
-    std::string actor;
+    std::vector<std::string> actor;
     /**
        \brief List of matching actor objects
      */

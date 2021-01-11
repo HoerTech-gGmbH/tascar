@@ -776,9 +776,13 @@ TASCAR::actor_module_t::actor_module_t( const TASCAR::module_cfg_t& cfg, bool fa
   : module_base_t( cfg )
 {
   GET_ATTRIBUTE(actor);
-  obj = session->find_objects(actor);
+  for( auto act : actor ){
+    std::vector<TASCAR::named_object_t> lobj = session->find_objects(act);
+    for( auto o : lobj )
+      obj.push_back( o );
+  }
   if( fail_on_empty && obj.empty() )
-    throw TASCAR::ErrMsg("No object matches actor pattern \""+actor+"\".");
+    throw TASCAR::ErrMsg("No object matches actor pattern \""+vecstr2str(actor)+"\".");
 }
 
 TASCAR::actor_module_t::~actor_module_t()

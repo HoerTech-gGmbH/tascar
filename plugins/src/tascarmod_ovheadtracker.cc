@@ -24,7 +24,12 @@ private:
   // configuration variables:
   std::string name;
   std::vector<std::string> devices;
+  // data logging OSC url:
   std::string url;
+  // rotation OSC url:
+  std::string roturl;
+  // rotation OSC path:
+  std::string rotpath;
   uint32_t ttl;
   std::string calib0path;
   std::string calib1path;
@@ -37,6 +42,7 @@ private:
   double autoref;
   // run-time variables:
   lo_address target;
+  lo_address rottarget;
   TASCAR::pos_t p0;
   TASCAR::zyx_euler_t o0;
   bool bcalib;
@@ -50,6 +56,7 @@ private:
   std::vector<TASCAR::Scene::route_t*> routes;
   std::vector<lo_message> vmsg;
   std::vector<lo_arg**> vargv;
+  // level meter paths:
   std::vector<std::string> vpath;
 };
 
@@ -98,12 +105,14 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
       calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
       accscale(16384 / 9.81), gyrscale(16.4), apply_loc(false), apply_rot(true),
-      send_only_quaternion(false), autoref(0), target(NULL), bcalib(false),
-      qref(1, 0, 0, 0), first(true), run_service_level(true)
+      send_only_quaternion(false), autoref(0), target(NULL), rottarget(NULL),
+      bcalib(false), qref(1, 0, 0, 0), first(true), run_service_level(true)
 {
   GET_ATTRIBUTE(name);
   GET_ATTRIBUTE(devices);
   GET_ATTRIBUTE(url);
+  GET_ATTRIBUTE(roturl);
+  GET_ATTRIBUTE(rotpath);
   GET_ATTRIBUTE(ttl);
   GET_ATTRIBUTE(calib0path);
   GET_ATTRIBUTE(calib1path);
@@ -120,6 +129,13 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
     if(!target)
       throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
     lo_address_set_ttl(target, ttl);
+  }
+  if((roturl.size() > 0) && (rotpath.size() > 0)) {
+    rottarget = lo_address_new_from_url(roturl.c_str());
+    if(!rottarget)
+      throw TASCAR::ErrMsg("Unable to create target adress \"" + roturl +
+                           "\".");
+    lo_address_set_ttl(rottarget, ttl);
   }
   add_variables(session);
   start_service();
@@ -263,6 +279,9 @@ void ovheadtracker_t::service()
             if(target)
               lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x,
                       q.y, q.z);
+            if(rottarget)
+              lo_send(rottarget, rotpath.c_str(), "fff", RAD2DEG * o0.z,
+                      RAD2DEG * o0.y, RAD2DEG * o0.x);
           } break;
           case 'G': {
             l = l.substr(1);

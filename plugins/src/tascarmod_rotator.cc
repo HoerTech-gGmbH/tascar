@@ -33,12 +33,12 @@ ormod_t::ormod_t( const TASCAR::module_cfg_t& cfg )
   actor_module_t::GET_ATTRIBUTE(t1);
   actor_module_t::GET_ATTRIBUTE(phi0);
   actor_module_t::GET_ATTRIBUTE(phi1);
-  session->add_uint(actor+"/mode",&mode);
-  session->add_double(actor+"/w",&w);
-  session->add_double(actor+"/t0",&t0);
-  session->add_double(actor+"/t1",&t1);
-  session->add_double(actor+"/phi0",&phi0);
-  session->add_double(actor+"/phi1",&phi1);
+  session->add_uint(TASCAR::vecstr2str(actor)+"/mode",&mode);
+  session->add_double(TASCAR::vecstr2str(actor)+"/w",&w);
+  session->add_double(TASCAR::vecstr2str(actor)+"/t0",&t0);
+  session->add_double(TASCAR::vecstr2str(actor)+"/t1",&t1);
+  session->add_double(TASCAR::vecstr2str(actor)+"/phi0",&phi0);
+  session->add_double(TASCAR::vecstr2str(actor)+"/phi1",&phi1);
 }
 
 void ormod_t::update(uint32_t tp_frame,bool running)
