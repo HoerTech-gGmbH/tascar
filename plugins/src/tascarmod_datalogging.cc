@@ -169,20 +169,24 @@ public:
   std::string path;
   uint32_t size;
   bool ignorefirst;
+  bool usedouble;
   uint32_t skipplot;
 };
 
 oscvar_t::oscvar_t(xmlpp::Element* xmlsrc)
-    : xml_element_t(xmlsrc), size(1), ignorefirst(false), skipplot(0)
+  : xml_element_t(xmlsrc), size(1), ignorefirst(false), usedouble(false),skipplot(0)
 {
   GET_ATTRIBUTE(path);
   GET_ATTRIBUTE(size);
   GET_ATTRIBUTE_BOOL(ignorefirst);
+  GET_ATTRIBUTE_BOOL(usedouble);
   GET_ATTRIBUTE(skipplot);
 }
 
 std::string oscvar_t::get_fmt()
 {
+  if( usedouble )
+    return std::string(size, 'd');
   return std::string(size, 'f');
 }
 
@@ -951,8 +955,19 @@ int recorder_t::osc_setvar(const char* path, const char* types, lo_arg** argv,
 {
   double data[argc + 1];
   data[0] = 0;
-  for(uint32_t k = 0; k < (uint32_t)argc; k++)
-    data[k + 1] = argv[k]->f;
+  for(uint32_t k = 0; k < (uint32_t)argc; k++){
+    switch( types[k] ){
+    case 'f':
+      data[k + 1] = argv[k]->f;
+      break;
+    case 'd':
+      data[k + 1] = argv[k]->d;
+      break;
+    case 'i':
+      data[k + 1] = argv[k]->i;
+      break;
+    }
+  }
   ((recorder_t*)user_data)->osc_setvar(path, argc + 1, data);
   return 0;
 }
