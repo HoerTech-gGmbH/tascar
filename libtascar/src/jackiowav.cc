@@ -221,16 +221,18 @@ void jackio_t::set_transport_start(double start_, bool wait)
 
 jackrec_async_t::jackrec_async_t(const std::string& ofname,
                                  const std::vector<std::string>& ports,
-                                 const std::string& jackname, double buflen)
+                                 const std::string& jackname, double buflen,
+                                 int format)
     : jackc_transport_t(jackname), rectime(0), xrun(0), werror(0), sf_out(NULL),
-      rb(NULL), run_service(true), tscale(1), recframes(0), channels(ports.size())
+      rb(NULL), run_service(true), tscale(1), recframes(0),
+      channels(ports.size())
 {
   if(!channels)
     throw TASCAR::ErrMsg("No sources selected.");
   memset(&sf_inf_out, 0, sizeof(sf_inf_out));
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = ports.size();
-  sf_inf_out.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 | SF_ENDIAN_FILE;
+  sf_inf_out.format = format;
   if(ofname.size()) {
     if(!(sf_out = sf_open(ofname.c_str(), SFM_WRITE, &sf_inf_out))) {
       std::string errmsg("Unable to open output file \"" + ofname + "\": ");
@@ -247,8 +249,7 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   }
   if(buflen < 2.0)
     buflen = 2.0;
-  rb = jack_ringbuffer_create(buflen * get_srate() * channels *
-                              sizeof(float));
+  rb = jack_ringbuffer_create(buflen * get_srate() * channels * sizeof(float));
   buf = new float[channels * get_fragsize()];
   rlen = channels * get_srate();
   rbuf = new float[rlen];
@@ -282,7 +283,7 @@ void jackrec_async_t::service()
   while(run_service) {
     if(jack_ringbuffer_read_space(rb) >= rchunk) {
       size_t rcnt(jack_ringbuffer_read(rb, (char*)rbuf, rchunk));
-      rcnt /= sizeof(float)*channels;
+      rcnt /= sizeof(float) * channels;
       size_t wcnt(sf_writef_float(sf_out, rbuf, rcnt));
       if(wcnt < rcnt)
         ++werror;
@@ -292,7 +293,7 @@ void jackrec_async_t::service()
   size_t rcnt(0);
   do {
     rcnt = jack_ringbuffer_read(rb, (char*)rbuf, rchunk);
-    rcnt /= sizeof(float)*channels;
+    rcnt /= sizeof(float) * channels;
     sf_writef_float(sf_out, rbuf, rcnt);
   } while(rcnt > 0);
 }

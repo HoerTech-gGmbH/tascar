@@ -93,7 +93,9 @@ class jackrec_async_t : public jackc_transport_t {
 public:
   jackrec_async_t(const std::string& ofname,
                   const std::vector<std::string>& ports,
-                  const std::string& jackname = "jackrec", double buflen = 10);
+                  const std::string& jackname = "jackrec", double buflen = 10,
+                  int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 |
+                               SF_ENDIAN_FILE);
   ~jackrec_async_t();
   double rectime;
   size_t xrun;

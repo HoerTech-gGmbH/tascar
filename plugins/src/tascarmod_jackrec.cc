@@ -48,6 +48,7 @@ private:
   double buflen;
   std::string path;
   std::string pattern;
+  int format;
   // OSC variables:
   std::string ofname;
   std::vector<std::string> ports;
@@ -63,7 +64,7 @@ private:
 
 jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), name("jackrec"), buflen(10), path(""),
-      pattern("rec*.wav"), jr(NULL), lo_addr(NULL), run_service(true)
+      pattern("rec*.wav"), format(0), jr(NULL), lo_addr(NULL), run_service(true)
 {
   std::string url;
   // get configuration variables:
@@ -72,6 +73,77 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(url);
   GET_ATTRIBUTE(path);
   GET_ATTRIBUTE(pattern);
+  int ifileformat(0);
+  std::string fileformat("WAV");
+  GET_ATTRIBUTE(fileformat);
+  std::string validformats;
+#define ADD_FILEFORMAT(x)                                                      \
+  if(fileformat == #x)                                                         \
+    ifileformat = SF_FORMAT_##x;                                               \
+  validformats += std::string(" ") + std::string(#x)
+  ADD_FILEFORMAT(WAV);
+  ADD_FILEFORMAT(AIFF);
+  ADD_FILEFORMAT(AU);
+  ADD_FILEFORMAT(RAW);
+  ADD_FILEFORMAT(PAF);
+  ADD_FILEFORMAT(SVX);
+  ADD_FILEFORMAT(NIST);
+  ADD_FILEFORMAT(VOC);
+  ADD_FILEFORMAT(IRCAM);
+  ADD_FILEFORMAT(W64);
+  ADD_FILEFORMAT(MAT4);
+  ADD_FILEFORMAT(MAT5);
+  ADD_FILEFORMAT(PVF);
+  ADD_FILEFORMAT(XI);
+  ADD_FILEFORMAT(HTK);
+  ADD_FILEFORMAT(SDS);
+  ADD_FILEFORMAT(AVR);
+  ADD_FILEFORMAT(WAVEX);
+  ADD_FILEFORMAT(SD2);
+  ADD_FILEFORMAT(FLAC);
+  ADD_FILEFORMAT(CAF);
+  ADD_FILEFORMAT(WVE);
+  ADD_FILEFORMAT(OGG);
+  ADD_FILEFORMAT(MPC2K);
+  ADD_FILEFORMAT(RF64);
+  if(ifileformat == 0)
+    throw TASCAR::ErrMsg("Invalid file format \"" + fileformat +
+                         "\". Valid formats are:" + validformats);
+  validformats = "";
+  std::string sampleformat("PCM_16");
+  GET_ATTRIBUTE(sampleformat);
+  int isampleformat(0);
+#define ADD_SAMPLEFORMAT(x)                                                    \
+  if(sampleformat == #x)                                                       \
+    isampleformat = SF_FORMAT_##x;                                             \
+  validformats += std::string(" ") + std::string(#x)
+  ADD_SAMPLEFORMAT(PCM_S8);
+  ADD_SAMPLEFORMAT(PCM_16);
+  ADD_SAMPLEFORMAT(PCM_24);
+  ADD_SAMPLEFORMAT(PCM_32);
+  ADD_SAMPLEFORMAT(PCM_U8);
+  ADD_SAMPLEFORMAT(FLOAT);
+  ADD_SAMPLEFORMAT(DOUBLE);
+  ADD_SAMPLEFORMAT(ULAW);
+  ADD_SAMPLEFORMAT(ALAW);
+  ADD_SAMPLEFORMAT(IMA_ADPCM);
+  ADD_SAMPLEFORMAT(MS_ADPCM);
+  ADD_SAMPLEFORMAT(GSM610);
+  ADD_SAMPLEFORMAT(VOX_ADPCM);
+  ADD_SAMPLEFORMAT(G721_32);
+  ADD_SAMPLEFORMAT(G723_24);
+  ADD_SAMPLEFORMAT(G723_40);
+  ADD_SAMPLEFORMAT(DWVW_12);
+  ADD_SAMPLEFORMAT(DWVW_16);
+  ADD_SAMPLEFORMAT(DWVW_24);
+  ADD_SAMPLEFORMAT(DWVW_N);
+  ADD_SAMPLEFORMAT(DPCM_8);
+  ADD_SAMPLEFORMAT(DPCM_16);
+  ADD_SAMPLEFORMAT(VORBIS);
+  if(isampleformat == 0)
+    throw TASCAR::ErrMsg("Invalid sample format \"" + sampleformat +
+                         "\". Valid formats are:" + validformats);
+  format = ifileformat | isampleformat;
   // register OSC variables:
   prefix = std::string("/") + name;
   add_variables(session);
@@ -136,12 +208,14 @@ void jackrec_t::rmfile(const std::string& file)
 {
   std::vector<std::string> dir(scan_dir());
   for(auto f : dir)
-    if(f == file){
+    if(f == file) {
       std::remove(f.c_str());
       return;
     }
   if(lo_addr)
-    lo_send(lo_addr, (prefix + "/error").c_str(), "s", (std::string("Not removing file ")+file+std::string(".")).c_str() );
+    lo_send(
+        lo_addr, (prefix + "/error").c_str(), "s",
+        (std::string("Not removing file ") + file + std::string(".")).c_str());
 }
 
 void jackrec_t::start()
@@ -160,7 +234,7 @@ void jackrec_t::start()
       strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", timeinfo);
       ofname_ = std::string("rec") + std::string(buffer) + std::string(".wav");
     }
-    jr = new jackrec_async_t(ofname_, ports, name, buflen);
+    jr = new jackrec_async_t(ofname_, ports, name, buflen, format);
     if(lo_addr)
       lo_send(lo_addr, (prefix + "/start").c_str(), "");
   }
