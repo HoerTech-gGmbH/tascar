@@ -52,6 +52,8 @@
 
 */
 
+#define FADE_START_NOW 0xFFFFFFFFFFFFFFFFu
+
 namespace TASCAR {
 
   /**
@@ -205,7 +207,7 @@ namespace TASCAR {
                            double& distamnce, double& gain, bool b_img,
                            gainmodel_t gainmodel);
       void set_next_gain(double gain);
-      void set_fade(double targetgain, double duration);
+      void set_fade(double targetgain, double duration, double start = -1);
       void apply_gain();
       virtual void postproc(std::vector<wave_t>& output);
       void post_proc(const TASCAR::transport_t& tp);
@@ -257,6 +259,8 @@ namespace TASCAR {
       float prelim_previous_fade_gain;
       // current fade gain:
       float fade_gain;
+      // start sample of next fade, or FADE_START_NOW
+      uint64_t fade_startsample;
 
     protected:
       TASCAR::transport_t ltp;

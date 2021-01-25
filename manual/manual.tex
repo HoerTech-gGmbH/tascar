@@ -1227,6 +1227,23 @@ relative distance between the receiver origin and the source position.
 %
 %\tscexample[linerange={5-12},firstnumber=5]{example_neukom}
 
+\paragraph{OSC control}
+
+Receivers can be controlled via OSC similar to other objects
+(position, zyx Euler rotation, gain). They also support fade
+commands:
+
+\begin{verbatim}
+/<scene>/<name>/fade <gain> <duration> [ <starttime> ]
+\end{verbatim}
+Here \verb!gain! is the linear target gain, \verb!duration! is the
+length of the fade, and the optional third parameter \verb!starttime!
+  is the start time, at which the fade is applied. If the current time
+  is later than \verb!starttime! then the fade is applied
+  immediately. The fade is always calculated using a raised cosine
+  ramp. A new fade event will overwrite any currently ongoing or
+  scheduled fade events.
+
 \subsection{Receiver types}\index{receiver type}
 
 

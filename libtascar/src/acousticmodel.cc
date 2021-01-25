@@ -664,32 +664,41 @@ void receiver_t::set_next_gain(double g)
 
 void receiver_t::apply_gain()
 {
-  dx_gain = (next_gain-x_gain)*t_inc;
-  if( n_channels > 0 ){
+  dx_gain = (next_gain - x_gain) * t_inc;
+  if(n_channels > 0) {
     uint32_t psize(outchannels[0].size());
-    for(uint32_t k=0;k<psize;k++){
-      double g(x_gain+=dx_gain);
-      if( fade_timer > 0 ){
+    for(uint32_t k = 0; k < psize; k++) {
+      double g(x_gain += dx_gain);
+      if((fade_timer > 0) &&
+         ((fade_startsample == FADE_START_NOW) ||
+          ((fade_startsample <= ltp.session_time_samples + k) &&
+           ltp.rolling))) {
         --fade_timer;
         previous_fade_gain = prelim_previous_fade_gain;
         next_fade_gain = prelim_next_fade_gain;
-        fade_gain = previous_fade_gain + (next_fade_gain - previous_fade_gain)*(0.5+0.5*cos(fade_timer*fade_rate));
+        fade_gain =
+            previous_fade_gain + (next_fade_gain - previous_fade_gain) *
+                                     (0.5 + 0.5 * cos(fade_timer * fade_rate));
       }
       g *= fade_gain;
-      for(uint32_t c=0;c<n_channels;c++){
+      for(uint32_t c = 0; c < n_channels; c++) {
         outchannels[c][k] *= g;
       }
     }
   }
 }
 
-void receiver_t::set_fade( double targetgain, double duration )
+void receiver_t::set_fade(double targetgain, double duration, double start)
 {
   fade_timer = 0;
+  if(start < 0)
+    fade_startsample = FADE_START_NOW;
+  else
+    fade_startsample = f_sample * start;
   prelim_previous_fade_gain = fade_gain;
   prelim_next_fade_gain = targetgain;
-  fade_rate = M_PI*t_sample/duration;
-  fade_timer = std::max(1u,(uint32_t)(f_sample*duration));
+  fade_rate = M_PI * t_sample / duration;
+  fade_timer = std::max(1u, (uint32_t)(f_sample * duration));
 }
 
 TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)

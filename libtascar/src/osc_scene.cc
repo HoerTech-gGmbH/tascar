@@ -139,6 +139,10 @@ int osc_set_receiver_fade(const char *path, const char *types, lo_arg **argv, in
     h->set_fade(argv[0]->f,argv[1]->f);
     return 0;
   }
+  if( h && (argc == 3) && (types[0]=='f') && (types[1]=='f') && (types[2]=='f') ){
+    h->set_fade(argv[0]->f,argv[1]->f,argv[2]->f);
+    return 0;
+  }
   return 1;
 }
 
@@ -216,6 +220,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::
   srv->add_method("/lingain","f",osc_set_receiver_lingain,s);
   srv->add_double_db("/diffusegain",&(s->diffusegain));
   srv->add_method("/fade","ff",osc_set_receiver_fade,s);
+  srv->add_method("/fade","fff",osc_set_receiver_fade,s);
   srv->add_uint("/ismmin",&(s->ismmin));
   srv->add_uint("/ismmax",&(s->ismmax));
   srv->add_uint("/layers",&(s->layers));
