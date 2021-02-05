@@ -61,6 +61,7 @@ private:
   //double d0; //< distance at which the dispersion constant is achieved
   double filterperiod; //< filter period time in seconds
   TASCAR::fsplit_t::shape_t shape;
+  size_t n_mainchannels;
 };
 
 hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
@@ -117,6 +118,7 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
   typeidattr.push_back("order");
   typeidattr.push_back("maxre");
   typeidattr.push_back("diffup");
+  n_mainchannels = spkpos.size();
 }
 
 void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
@@ -136,21 +138,20 @@ hoa2d_t::~hoa2d_t()
 void hoa2d_t::configure()
 {
   TASCAR::receivermod_base_speaker_t::configure();
-  n_channels = spkpos.size();
   update();
-  fft_scale = 1.0f/((float)n_channels);
+  fft_scale = 1.0f/((float)n_mainchannels);
   s_encoded.resize(n_fragment * nbins);
   s_encoded.clear();
-  s_decoded = new float[ n_fragment * n_channels];
-  int ichannels(n_channels);
+  s_decoded = new float[ n_fragment * n_mainchannels];
+  int ichannels(n_mainchannels);
   dec = fftwf_plan_many_dft_c2r(1,&ichannels,n_fragment,
                                 (fftwf_complex*)s_encoded.b,NULL,1,nbins,
-                                s_decoded,NULL,1,n_channels,
+                                s_decoded,NULL,1,n_mainchannels,
                                 FFTW_ESTIMATE);
   for( uint32_t k=0;k<n_fragment*nbins;++k)
     s_encoded[k] = 0.0f;
   //memset(s_encoded,0,sizeof(std::complex<float>)*n_fragment*nbins);
-  memset(s_decoded,0,sizeof(float)*n_fragment*n_channels);
+  memset(s_decoded,0,sizeof(float)*n_fragment*n_mainchannels);
   ordergain.resize(nbins);
   for(uint32_t m=0;m<=amb_order;++m){
     ordergain[m] = (double)fft_scale*std::exp(-(double)m*i*rotation);
@@ -245,13 +246,13 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
   // copy to output:
   float* p_encode(s_decoded);
   for(uint32_t kt=0;kt<n_fragment;++kt){
-    for(uint32_t kch=0;kch<n_channels;++kch)
+    for(uint32_t kch=0;kch<n_mainchannels;++kch)
       output[kch][kt]+=p_encode[kch];
-    p_encode+=n_channels;
+    p_encode+=n_mainchannels;
   }
   //
   s_encoded.clear();
-  memset(s_decoded,0,sizeof(float)*n_fragment*n_channels);
+  memset(s_decoded,0,sizeof(float)*n_fragment*n_mainchannels);
   TASCAR::receivermod_base_speaker_t::postproc(output);  
 }
 

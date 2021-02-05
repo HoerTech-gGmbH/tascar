@@ -53,10 +53,10 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
                                   receivermod_base_t::data_t* sd)
 {
   // N is the number of loudspeakers:
-  uint32_t N(output.size());
-  if( N != vbap.numchannels ){
+  uint32_t N(vbap.numchannels);
+  if( N > output.size() ){
     DEBUG(N);
-    DEBUG(vbap.numchannels);
+    DEBUG(output.size());
     throw TASCAR::ErrMsg("Invalid number of channels");
   }
 

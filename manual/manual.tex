@@ -1264,8 +1264,6 @@ Information about the number of loudspeakers and their location is then
 exploited to produce appropriate receiver output channels.
 %
 
-
-
 \begin{figure}[htb]
   \begin{subfigure}[t]{0.25\textwidth}
     \centering
@@ -1309,6 +1307,13 @@ list of \elem{speaker} elements within the receiver definition.
 \indattr{gain}    & Gain in dB (default: 0)                                   \\
 \end{tscattributes}
 
+In addition to regular broadband speakers, a number of subwoofers\index{subwoofer} can
+be defined, using \elem{sub} elements with the same attributes as in
+the \elem{speaker} element. If subwoofers are defined, an IIR
+crossover filter is applied to all signals. Subwoofer signals are
+spatially mapped from the broadband speaker positions to the subwoofer
+positions, using a modified DBAP \citep{Lossius2009} method.
+
 To activate FIR speaker correction filter, provide the FIR filter
 coefficients in the \attr{compB} attribute. Please note that filter
 coefficients are specific to the sampling rate, and not automatically
@@ -1323,6 +1328,7 @@ The top-level element of a layout file, \elem{layout}, can be configured with th
 \indattr{decorr}         & Decorrelate speaker signals in diffuse sound field rendering (default: true)        \\
 \indattr{decorr\_length} & Length of decorrelation filter, in seconds (default: 0.05)                          \\
 \indattr{densitycorr}    & In diffuse rendering, correct gains locally for loudspeaker density (default: true) \\
+\indattr{fcsub}          & Cross-over frequency in Hz, used only if subwoofers are defined (default: 80)       \\
 \end{tscattributes}
 %
 Changing any of these attributes (except for \attr{calibdate}) might

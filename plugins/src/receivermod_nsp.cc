@@ -82,19 +82,19 @@ void nsp_t::add_pointsource( const TASCAR::pos_t& prel, double width, const TASC
   uint32_t kmin(0);
   double dmin( distance(psrc,spkpos[kmin].unitvector ));
   double dist(0);
-  for( unsigned int k=1;k<output.size();k++)
+  for( unsigned int k=1;k<spkpos.size();k++)
     if( ( dist = distance(psrc,spkpos[k].unitvector ))<dmin ){
       kmin = k;
       dmin = dist;
     }
   if( useall )
-    for( unsigned int k=0;k<output.size();k++)
+    for( unsigned int k=0;k<spkpos.size();k++)
       d->point_dw[k] = ( 1.0f - d->point_w[k])*d->dt;
   else
-    for( unsigned int k=0;k<output.size();k++)
+    for( unsigned int k=0;k<spkpos.size();k++)
       d->point_dw[k] = ( (k==kmin ) - d->point_w[k])*d->dt;
   for( unsigned int i=0;i<chunk.size();i++){
-    for( unsigned int k=0;k<output.size();k++){
+    for( unsigned int k=0;k<spkpos.size();k++){
       output[k][i] += ( d->point_w[k] += d->point_dw[k] ) * chunk[i];
     }
   }

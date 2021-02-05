@@ -79,7 +79,7 @@ namespace TASCAR {
                       public audiostates_t {
   public:
     spk_array_t(xmlpp::Element*, bool use_parent_xml,
-                const std::string& elementname_ = "speaker");
+                const std::string& elementname_ = "speaker", bool allow_empty = false);
     ~spk_array_t();
 
   private:
@@ -123,6 +123,7 @@ namespace TASCAR {
     void render_diffuse(std::vector<TASCAR::wave_t>& output);
     void add_diffuse_sound_field(const TASCAR::amb1wave_t& diff);
     void configure();
+    spk_array_t subs;
 
   private:
     void read_xml(xmlpp::Element* elem);
@@ -134,6 +135,8 @@ namespace TASCAR {
     double decorr_length;
     bool decorr;
     bool densitycorr;
+    // cross-over frequency for subwoofer, if subwoofers are defined:
+    double fcsub;
     double caliblevel;
     bool has_caliblevel;
     double diffusegain;
@@ -143,6 +146,14 @@ namespace TASCAR {
     bool has_calibdate;
     std::string calibfor;
     bool has_calibfor;
+    bool use_subs;
+    // highpass filters for cross-overs, broad band speakers:
+    std::vector<TASCAR::biquad_t> flt_hp;
+    // allpass filters for transition phase matching, broad band speakers:
+    std::vector<TASCAR::biquad_t> flt_allp;
+    // lowpass filters for subwoofer:
+    std::vector<TASCAR::biquad_t> flt_lowp;
+    std::vector<std::vector<float>> subweight;
   };
 } // namespace TASCAR
 

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="3">
+    <source>
+      <sound x="1">
+      </sound>
+    </source>
+    <receiver type="nsp" layout="8ch_sub.spk"/>
+  </scene>
+</session>

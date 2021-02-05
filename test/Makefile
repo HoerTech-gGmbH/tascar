@@ -25,7 +25,8 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_hrtf_270deg test_ir_hrtf_315deg test_ir_hrtf_el90deg	\
 	test_ir_hrtf_el-90deg test_ir_hrtf_el45deg			\
 	test_ir_hrtf_el-45deg test_ir_delay test_snd_reverb		\
-	test_wav_multichannel test_snd_zeros
+	test_wav_multichannel test_snd_zeros test_ir_sub		\
+	test_ir_sub_hoa2d test_ir_sub_nsp
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
@@ -70,26 +71,31 @@ all: $(TESTS) testrec testlev
 jack: $(TEST_JACK)
 
 test_reclevel_wfs test_reclevel_vbap test_reclevel_hann: LEVTHR=2.5
+test_level_vbap3d_lidhan45sub: LEVTHR=2.8
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
-hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert								\
-	test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert									\
-	test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert							\
-	test_level_hoa3d_pinv test_level_hoa3d_pinv_lidhan								\
-	test_level_hoa3d_pinv_maxre test_level_hoa3d_allrad								\
-	test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre	\
-	test_level_hoa3d_pinv_lidhan45_maxre
+hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert			\
+  test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert			\
+  test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert			\
+  test_level_hoa3d_pinv test_level_hoa3d_pinv_lidhan			\
+  test_level_hoa3d_pinv_maxre test_level_hoa3d_allrad			\
+  test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre	\
+  test_level_hoa3d_pinv_lidhan45_maxre					\
+  test_level_hoa3d_pinv_lidhan45sub_maxre
 
 
 testrec: $(TEST_REC)
 
 testlev: $(TEST_LEV) test_level_diff_decorr test_level_diff_nodecorr	\
-  test_level_hoa2d_basic test_level_hoa2d_maxre												\
-  test_level_hoa3d_allrad_lidhan test_level_hoa3d_allrad							\
-  test_level_hoa3d_pinv_lidhan_maxre test_level_hoa3d_pinv_lidhan			\
-  test_level_hoa3d_pinv_maxre test_level_hoa3d_pinv test_level_nsp		\
-  test_level_vbap3d test_level_hoa3d_pinv_lidhan45_maxre
+  test_level_hoa2d_basic test_level_hoa2d_maxre				\
+  test_level_hoa3d_allrad_lidhan test_level_hoa3d_allrad		\
+  test_level_hoa3d_pinv_lidhan_maxre test_level_hoa3d_pinv_lidhan	\
+  test_level_hoa3d_pinv_maxre test_level_hoa3d_pinv test_level_nsp	\
+  test_level_vbap3d test_level_hoa3d_pinv_lidhan45_maxre		\
+  test_level_hoa3d_pinv_lidhan45sub_maxre				\
+  test_level_vbap3d_lidhan45sub
+
 
 db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 
@@ -161,6 +167,12 @@ db_test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
 	$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
 	rm -f test_wav$*.wav
+
+db_test_level_%: test_level_%.tsc
+	@echo "Level test: $< ($*)"
+	echo run -i zeros.wav -f 64 -o test_level_$*.wav $< > gdbcmd
+	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
+	@rm -f test_level_$*.wav
 
 db_test_rec_%: test_rec.tsc
 	echo run -i zeros.wav -f 64 -o test_rec_$*.wav $< > gdbcmd

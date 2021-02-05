@@ -4,6 +4,7 @@
 #include <chrono>
 #include <random>
 #include <string.h>
+#include <fstream>
 
 using namespace TASCAR;
 
@@ -57,7 +58,7 @@ spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
 
 // speaker array:
 spk_array_t::spk_array_t(xmlpp::Element* e, bool use_parent_xml,
-                         const std::string& elementname_)
+                         const std::string& elementname_, bool allow_empty)
     : spk_array_cfg_t(e, use_parent_xml), elayout(e_layout), rmax(0), rmin(0),
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
@@ -74,18 +75,20 @@ spk_array_t::spk_array_t(xmlpp::Element* e, bool use_parent_xml,
   elayout.GET_ATTRIBUTE(onload);
   elayout.GET_ATTRIBUTE(onunload);
   //
-  if(empty())
+  if(empty() && (!allow_empty))
     throw TASCAR::ErrMsg("Invalid " + elementname_ + " array (no " +
                          elementname_ + " elements defined).");
   // update derived parameters:
-  rmax = operator[](0).norm();
-  rmin = rmax;
-  for(uint32_t k = 1; k < size(); k++) {
-    double r(operator[](k).norm());
-    if(rmax < r)
-      rmax = r;
-    if(rmin > r)
-      rmin = r;
+  if(!empty()) {
+    rmax = operator[](0).norm();
+    rmin = rmax;
+    for(uint32_t k = 1; k < size(); k++) {
+      double r(operator[](k).norm());
+      if(rmax < r)
+        rmax = r;
+      if(rmin > r)
+        rmin = r;
+    }
   }
   std::complex<double> p_xy(0);
   for(uint32_t k = 0; k < size(); k++) {
@@ -109,12 +112,14 @@ spk_array_t::spk_array_t(xmlpp::Element* e, bool use_parent_xml,
     }
     operator[](k).densityweight = size() / w;
   }
-  float dwmean(0);
-  for(uint32_t k = 0; k < size(); ++k)
-    dwmean += operator[](k).densityweight;
-  dwmean /= size();
-  for(uint32_t k = 0; k < size(); ++k)
-    operator[](k).densityweight /= dwmean;
+  if(!empty()) {
+    float dwmean(0);
+    for(uint32_t k = 0; k < size(); ++k)
+      dwmean += operator[](k).densityweight;
+    dwmean /= size();
+    for(uint32_t k = 0; k < size(); ++k)
+      operator[](k).densityweight /= dwmean;
+  }
   if(!onload.empty()) {
     int err(system(onload.c_str()));
     if(err != 0)
@@ -163,7 +168,7 @@ void spk_array_diff_render_t::render_diffuse(
     std::vector<TASCAR::wave_t>& output)
 {
   uint32_t channels(size());
-  if(output.size() != channels)
+  if(output.size() < channels)
     throw TASCAR::ErrMsg("Invalid size of speaker array");
   if(!diffuse_field_accumulator)
     throw TASCAR::ErrMsg("No diffuse field accumulator allocated.");
@@ -262,6 +267,7 @@ void spk_array_t::configure()
 void spk_array_diff_render_t::configure()
 {
   spk_array_t::configure();
+  n_channels = size() + subs.size();
   // initialize decorrelation filter:
   decorrflt.clear();
   uint32_t irslen(decorr_length * f_sample);
@@ -293,6 +299,26 @@ void spk_array_diff_render_t::configure()
     delete diffuse_render_buffer;
   diffuse_render_buffer = NULL;
   diffuse_render_buffer = new TASCAR::wave_t(n_fragment);
+  if(use_subs) {
+    double fscale(sqrt(0.5));
+    flt_hp.resize(size());
+    flt_allp.resize(size());
+    flt_lowp.resize(subs.size());
+    // configure high pass filter:
+    for(auto& flt : flt_hp)
+      flt.set_highpass(fscale*fcsub, f_sample);
+    // configure low pass filter:
+    for(auto& flt : flt_lowp)
+      flt.set_lowpass(fscale*fcsub, f_sample, true);
+    // configure all pass filter:
+    double f0(0.125 * fscale*fcsub / f_sample * PI2);
+    biquad_t fallp;
+    double r(1.01);
+    fallp.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
+    double g(std::abs(fallp.response(M_PI)));
+    for(auto& flt : flt_allp)
+      flt.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
+  }
 }
 
 void spk_array_diff_render_t::add_diffuse_sound_field(
@@ -314,9 +340,10 @@ spk_array_diff_render_t::~spk_array_diff_render_t()
 spk_array_diff_render_t::spk_array_diff_render_t(
     xmlpp::Element* e, bool use_parent_xml, const std::string& elementname_)
     : spk_array_t(e, use_parent_xml, elementname_),
-      diffuse_field_accumulator(NULL), diffuse_render_buffer(NULL),
-      decorr_length(0.05), decorr(true), densitycorr(true), caliblevel(50000),
-      diffusegain(1.0), calibage(0)
+      subs(e, use_parent_xml, "sub", true), diffuse_field_accumulator(NULL),
+      diffuse_render_buffer(NULL), decorr_length(0.05), decorr(true),
+      densitycorr(true), fcsub(80), caliblevel(50000), diffusegain(1.0),
+      calibage(0), use_subs(false)
 {
   uint64_t checksum(0);
   elayout.GET_ATTRIBUTE(checksum);
@@ -331,6 +358,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(
     attributes.push_back("az");
     attributes.push_back("el");
     attributes.push_back("r");
+    attributes.push_back("fcsub");
     attributes.push_back("delay");
     attributes.push_back("compB");
     attributes.push_back("connect");
@@ -343,6 +371,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(
   elayout.GET_ATTRIBUTE(decorr_length);
   elayout.GET_ATTRIBUTE_BOOL(decorr);
   elayout.GET_ATTRIBUTE_BOOL(densitycorr);
+  elayout.GET_ATTRIBUTE(fcsub);
   has_caliblevel = elayout.has_attribute("caliblevel");
   elayout.GET_ATTRIBUTE_DB(caliblevel);
   has_diffusegain = elayout.has_attribute("diffusegain");
@@ -366,6 +395,25 @@ spk_array_diff_render_t::spk_array_diff_render_t(
   }
   has_calibfor = elayout.has_attribute("calibfor");
   elayout.GET_ATTRIBUTE(calibfor);
+  if(!subs.empty()) {
+    use_subs = true;
+  }
+  subweight.resize(subs.size());
+  for(auto& sub : subweight)
+    sub.resize(size());
+  for(size_t kspk = 0; kspk < size(); ++kspk) {
+    double wsum(0);
+    for(size_t ksub = 0; ksub < subs.size(); ++ksub) {
+      subweight[ksub][kspk] = 0.01 / (0.01 + pow(distance(operator[](kspk).unitvector,
+                                                        subs[ksub].unitvector),2.0));
+      wsum += subweight[ksub][kspk];
+    }
+    for(size_t ksub = 0; ksub < subs.size(); ++ksub) {
+      subweight[ksub][kspk] /= wsum;
+    }
+  }
+  for( auto sub : subs )
+    connections.push_back(sub.connect);
 }
 
 std::vector<TASCAR::pos_t> spk_array_t::get_positions() const

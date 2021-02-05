@@ -1,13 +1,13 @@
 #ifndef HOA_H
 #define HOA_H
 
+#include "audiochunks.h"
+#include "coordinates.h"
 #include "errorhandling.h"
+#include "xmlconfig.h"
+#include <cmath>
 #include <gsl/gsl_sf.h>
 #include <vector>
-#include <cmath>
-#include "coordinates.h"
-#include "audiochunks.h"
-#include "xmlconfig.h"
 
 namespace HOA {
 
@@ -16,25 +16,27 @@ namespace HOA {
     encoder_t();
     ~encoder_t();
     void set_order(uint32_t order);
-    inline void operator()(float azimuth, float elevation, std::vector<float>& B)
+    inline void operator()(float azimuth, float elevation,
+                           std::vector<float>& B)
     {
-      if( B.size() < n_elements )
+      if(B.size() < n_elements)
         throw TASCAR::ErrMsg("Insufficient space for ambisonic weights.");
       gsl_sf_legendre_array(GSL_SF_LEGENDRE_SCHMIDT, M, sin(elevation), leg);
       uint32_t acn(0);
-      for(int l=0; l<=M; ++l ){
-        for (int m=-l; m<=l; ++m ){
+      for(int l = 0; l <= M; ++l) {
+        for(int m = -l; m <= l; ++m) {
           double P(leg[gsl_sf_legendre_array_index(l, abs(m))]);
-          if (m<0)
-            B[acn] = P*sin(abs(m)*azimuth);
-          else if (m==0)
+          if(m < 0)
+            B[acn] = P * sin(abs(m) * azimuth);
+          else if(m == 0)
             B[acn] = P;
           else
-            B[acn] = P*cos(abs(m)*azimuth);
+            B[acn] = P * cos(abs(m) * azimuth);
           ++acn;
         }
       }
     };
+
   private:
     int32_t M;
     uint32_t n_elements;
@@ -67,7 +69,7 @@ namespace HOA {
             "Invalid number of channels in ambisonics signal (got " +
             TASCAR::to_string(ambsig.size()) + ", expected " +
             TASCAR::to_string(amb_channels) + ").");
-      if(outsig.size() != out_channels)
+      if(outsig.size() < out_channels)
         throw TASCAR::ErrMsg(
             "Invalid number of channels in ambisonics signal (got " +
             TASCAR::to_string(outsig.size()) + ", expected " +
@@ -125,12 +127,12 @@ namespace HOA {
     method_t method;
   };
 
-  std::vector<double> legendre_poly( size_t n );
-  std::vector<double> roots( const std::vector<double>& P );
-  std::vector<double> maxre_gm( size_t M );
-  std::vector<double> inphase_gm( size_t M );
+  std::vector<double> legendre_poly(size_t n);
+  std::vector<double> roots(const std::vector<double>& P);
+  std::vector<double> maxre_gm(size_t M);
+  std::vector<double> inphase_gm(size_t M);
 
-}
+} // namespace HOA
 
 #endif
 

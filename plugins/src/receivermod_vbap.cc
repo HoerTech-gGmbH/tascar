@@ -123,7 +123,7 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
                                   receivermod_base_t::data_t* sd)
 {
   // N is the number of loudspeakers:
-  uint32_t N(output.size());
+  uint32_t N(spkpos.size());
 
   // d is the internal state variable for this specific
   // receiver-source-pair:

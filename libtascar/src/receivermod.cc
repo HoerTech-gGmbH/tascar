@@ -149,7 +149,34 @@ TASCAR::receivermod_base_speaker_t::get_connections() const
 
 void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
 {
+  // update diffuse signals:
   spkpos.render_diffuse(output);
+  // subwoofer post processing:
+  if(spkpos.use_subs) {
+    if(output.size() != spkpos.subs.size() + spkpos.size())
+      throw TASCAR::ErrMsg(
+          "Programming error: output.size()==" + std::to_string(output.size()) +
+          ", spkpos.size()==" + std::to_string(spkpos.size()) +
+          ", subs.size()==" + std::to_string(spkpos.subs.size()));
+    // first create raw subwoofer signals:
+    for(size_t ksub = 0; ksub < spkpos.subs.size(); ++ksub) {
+      // clear sub signals:
+      output[ksub + spkpos.size()].clear();
+      for(size_t kbroadband = 0; kbroadband < spkpos.size(); ++kbroadband)
+        output[ksub + spkpos.size()].add(output[kbroadband],
+                                         spkpos.subweight[ksub][kbroadband]);
+    }
+    // now apply lp-filters to subs:
+    for(size_t k = 0; k < spkpos.subs.size(); ++k) {
+      spkpos.flt_lowp[k].filter(output[k + spkpos.size()]);
+    }
+    // then apply hp and allp filters to broad band speakers:
+    for(size_t k = 0; k < spkpos.size(); ++k) {
+      spkpos.flt_hp[k].filter(output[k]);
+      spkpos.flt_allp[k].filter(output[k]);
+    }
+  }
+  // apply calibration:
   if(spkpos.delaycomp.size() != spkpos.size())
     throw TASCAR::ErrMsg("Invalid delay compensation array");
   for(uint32_t k = 0; k < spkpos.size(); ++k) {
@@ -160,16 +187,28 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
     if(spkpos[k].comp)
       spkpos[k].comp->process(output[k], output[k], false);
   }
+  // calibration of subs:
+  for(uint32_t k = 0; k < spkpos.subs.size(); ++k) {
+    float sgain(spkpos.subs[k].spkgain * spkpos.subs[k].gain);
+    output[k+spkpos.size()] *= sgain;
+    if(spkpos.subs[k].comp)
+      spkpos.subs[k].comp->process(output[k+spkpos.size()], output[k+spkpos.size()], false);
+  }
 }
 
 void TASCAR::receivermod_base_speaker_t::configure()
 {
   receivermod_base_t::configure();
-  n_channels = spkpos.size();
+  n_channels = spkpos.size() + spkpos.subs.size();
   spkpos.prepare(cfg());
   labels.clear();
-  for(uint32_t ch = 0; ch < n_channels; ++ch)
-    labels.push_back("." + TASCAR::to_string(ch) + spkpos[ch].label);
+  for(uint32_t ch = 0; ch < n_channels; ++ch) {
+    if(ch < spkpos.size())
+      labels.push_back("." + TASCAR::to_string(ch) + spkpos[ch].label);
+    else
+      labels.push_back(".S" + TASCAR::to_string(ch - spkpos.size()) +
+                       spkpos.subs[ch - spkpos.size()].label);
+  }
 }
 
 void TASCAR::receivermod_base_speaker_t::release()

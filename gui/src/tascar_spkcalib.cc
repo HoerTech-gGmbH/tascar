@@ -18,7 +18,8 @@ class calibsession_t : public TASCAR::session_t {
 public:
   calibsession_t(const std::string& fname, double reflevel,
                  const std::vector<std::string>& refport, double duration_,
-                 double fmin, double fmax);
+                 double fmin, double fmax, double subduration_, double subfmin,
+                 double subfmax);
   ~calibsession_t();
   double get_caliblevel() const;
   double get_diffusegain() const;
@@ -55,10 +56,12 @@ private:
   double delta;
   double delta_diff;
   std::string spkname;
-  spk_array_t* spkarray;
+  spk_array_diff_render_t* spkarray;
   std::vector<double> levels;
+  std::vector<double> sublevels;
   std::vector<std::string> refport_;
   double duration;
+  double subduration;
   double lmin;
   double lmax;
   double lmean;
@@ -88,34 +91,52 @@ std::vector<std::string> string_token(std::string s,
 
 calibsession_t::calibsession_t(const std::string& fname, double reflevel,
                                const std::vector<std::string>& refport,
-                               double duration_, double fmin, double fmax)
+                               double duration_, double fmin, double fmax,
+                               double subduration_, double subfmin,
+                               double subfmax)
     : session_t("<?xml version=\"1.0\"?><session srv_port=\"none\"/>",
                 LOAD_STRING, ""),
       gainmodified(false), levelsrecorded(false), calibrated(false),
       calibrated_diff(false), startlevel(0), startdiffgain(0), delta(0),
       delta_diff(0), spkname(fname), spkarray(NULL), refport_(refport),
-      duration(duration_), lmin(0), lmax(0), lmean(0),
-      calibfor(get_calibfor(fname))
+      duration(duration_), subduration(subduration_), lmin(0), lmax(0),
+      lmean(0), calibfor(get_calibfor(fname))
 {
   if(calibfor.empty())
     calibfor = "type:nsp";
-  // create a new session:
+  // create a new session, no OSC port:
   doc->get_root_node()->set_attribute("srv_port", "none");
+  // add the calibration scene:
   xmlpp::Element* e_scene(doc->get_root_node()->add_child("scene"));
   e_scene->set_attribute("name", "calib");
+  // add a point source for broadband stimulus, muted for now:
   xmlpp::Element* e_src(e_scene->add_child("source"));
   e_src->set_attribute("mute", "true");
   xmlpp::Element* e_snd(e_src->add_child("sound"));
-  // e_snd->set_attribute("x","1");
   xmlpp::Element* e_plugs(e_snd->add_child("plugins"));
+  // add pink noise generator:
   xmlpp::Element* e_pink(e_plugs->add_child("pink"));
   e_pink->set_attribute("level", TASCAR::to_string(reflevel));
   e_pink->set_attribute("period", TASCAR::to_string(duration));
   e_pink->set_attribute("fmin", TASCAR::to_string(fmin));
   e_pink->set_attribute("fmax", TASCAR::to_string(fmax));
+  // add a point source for subwoofer stimulus, muted for now:
+  xmlpp::Element* e_subsrc(e_scene->add_child("source"));
+  e_subsrc->set_attribute("name", "srcsub");
+  e_subsrc->set_attribute("mute", "true");
+  xmlpp::Element* e_subsnd(e_subsrc->add_child("sound"));
+  xmlpp::Element* e_subplugs(e_subsnd->add_child("plugins"));
+  // add pink noise generator:
+  xmlpp::Element* e_subpink(e_subplugs->add_child("pink"));
+  e_subpink->set_attribute("level", TASCAR::to_string(reflevel));
+  e_subpink->set_attribute("period", TASCAR::to_string(subduration));
+  e_subpink->set_attribute("fmin", TASCAR::to_string(subfmin));
+  e_subpink->set_attribute("fmax", TASCAR::to_string(subfmax));
+  // receiver 1 is always nsp, for speaker level differences:
   xmlpp::Element* e_rcvr(e_scene->add_child("receiver"));
   e_rcvr->set_attribute("type", "nsp");
   e_rcvr->set_attribute("layout", fname);
+  // receiver 2 is specific to the layout, for overall calibration:
   xmlpp::Element* e_rcvr2(e_scene->add_child("receiver"));
   e_rcvr2->set_attribute("name", "out2");
   e_rcvr2->set_attribute("mute", "true");
@@ -129,6 +150,7 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
           "': Expected comma separated list of name:value pairs.");
     e_rcvr2->set_attribute(pair[0], pair[1]);
   }
+  // add diffuse source for diffuse gain calibration:
   xmlpp::Element* e_diff(e_scene->add_child("diffuse"));
   e_diff->set_attribute("mute", "true");
   xmlpp::Element* e_plugs_diff(e_diff->add_child("plugins"));
@@ -137,16 +159,22 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   e_pink_diff->set_attribute("period", TASCAR::to_string(duration));
   e_pink_diff->set_attribute("fmin", TASCAR::to_string(fmin));
   e_pink_diff->set_attribute("fmax", TASCAR::to_string(fmax));
+  // end of scene creation.
   // doc->write_to_file_formatted("temp.cfg");
   add_scene(e_scene);
   startlevel = get_caliblevel();
   startdiffgain = get_diffusegain();
-  spkarray = new spk_array_t(e_rcvr, false);
+  spkarray = new spk_array_diff_render_t(e_rcvr, false);
   levels = std::vector<double>(spkarray->size(), 0.0);
-  if(!scenes.empty())
-    if(!scenes.back()->source_objects.empty()) {
-      scenes.back()->source_objects.back()->dlocation = pos_t(1, 0, 0);
-    }
+  sublevels = std::vector<double>(spkarray->subs.size(), 0.0);
+  // validate scene:
+  if(scenes.empty())
+    throw TASCAR::ErrMsg("Programming error: no scene");
+  if(scenes[0]->source_objects.size() != 2)
+    throw TASCAR::ErrMsg("Programming error: not exactly two sources.");
+  if(scenes[0]->receivermod_objects.size() != 2)
+    throw TASCAR::ErrMsg("Programming error: not exactly two receivers.");
+  scenes.back()->source_objects[0]->dlocation = pos_t(1, 0, 0);
 }
 
 calibsession_t::~calibsession_t()
@@ -157,79 +185,134 @@ calibsession_t::~calibsession_t()
 void calibsession_t::reset_levels()
 {
   levelsrecorded = false;
-  if(!scenes.empty()) {
-    for(auto recobj : scenes.back()->receivermod_objects) {
-      TASCAR::receivermod_base_speaker_t* recspk(
-          dynamic_cast<TASCAR::receivermod_base_speaker_t*>(recobj->libdata));
-      if(recspk) {
-        for(uint32_t k = 0; k < levels.size(); ++k)
-          recspk->spkpos[k].gain = 1.0;
-      }
+  for(auto recobj : scenes.back()->receivermod_objects) {
+    TASCAR::receivermod_base_speaker_t* recspk(
+        dynamic_cast<TASCAR::receivermod_base_speaker_t*>(recobj->libdata));
+    if(recspk) {
+      for(uint32_t k = 0; k < levels.size(); ++k)
+        recspk->spkpos[k].gain = 1.0;
+      for(uint32_t k = 0; k < sublevels.size(); ++k)
+        recspk->spkpos.subs[k].gain = 1.0;
     }
   }
 }
 
 void calibsession_t::get_levels(Gtk::ProgressBar* rec_progress, double prewait)
 {
-  if(!scenes.empty())
-    if(!scenes.back()->source_objects.empty()) {
-      levels.clear();
-      scenes.back()->source_objects.back()->set_mute(false);
-      if(scenes.back()->receivermod_objects.size() == 2) {
-        scenes.back()->receivermod_objects[1]->set_mute(true);
-        scenes.back()->receivermod_objects[0]->set_mute(false);
-      } else {
-        TASCAR::add_warning("not two receivers");
-      }
-      uint32_t frac(0);
-      rec_progress->set_fraction(0.0);
-      while(Gtk::Main::events_pending())
-        Gtk::Main::iteration(false);
-      for(auto spk = spkarray->begin(); spk != spkarray->end(); ++spk) {
-        scenes.back()->source_objects.back()->dlocation = spk->unitvector;
-        usleep(1e6 * prewait);
-        jackio_t rec(duration, "", refport_);
-        rec.run();
-        wave_t brec(rec.nframes_total * refport_.size());
-        for(uint32_t ch = 0; ch < refport_.size(); ++ch)
-          for(uint32_t k = 0; k < rec.nframes_total; ++k)
-            brec[ch * rec.nframes_total + k] =
-                rec.buf_out[k * refport_.size() + ch];
-        TASCAR::levelmeter_t levelmeter(rec.get_srate(), duration,
-                                        TASCAR::levelmeter::C);
-        levelmeter.update(brec);
-        levels.push_back(10 * log10(levelmeter.ms()));
-        ++frac;
-        rec_progress->set_fraction((double)frac / (double)(spkarray->size()));
-        while(Gtk::Main::events_pending())
-          Gtk::Main::iteration(false);
-      }
-      // convert levels into gains:
-      lmin = levels[0];
-      lmax = levels[0];
-      lmean = 0;
-      for(auto l = levels.begin(); l != levels.end(); ++l) {
-        lmean += *l;
-        lmin = std::min(*l, lmin);
-        lmax = std::max(*l, lmax);
-      }
-      lmean /= levels.size();
-      for(auto recobj : scenes.back()->receivermod_objects) {
-        TASCAR::receivermod_base_speaker_t* recspk(
-            dynamic_cast<TASCAR::receivermod_base_speaker_t*>(recobj->libdata));
-        if(recspk) {
-          for(uint32_t k = 0; k < levels.size(); ++k)
-            recspk->spkpos[k].gain *= pow(10.0, 0.05 * (lmin - levels[k]));
-          double lmax(0);
-          for(uint32_t k = 0; k < levels.size(); ++k)
-            lmax = std::max(lmax, recspk->spkpos[k].gain);
-          for(uint32_t k = 0; k < levels.size(); ++k)
-            recspk->spkpos[k].gain /= lmax;
-        }
-      }
-      scenes.back()->source_objects.back()->set_mute(true);
-      scenes.back()->source_objects.back()->dlocation = pos_t(1, 0, 0);
+  // we need a valid scene:
+  levels.clear();
+  sublevels.clear();
+  //
+  // broadband:
+  //
+  // unmute broadband source:
+  scenes.back()->source_objects[0]->set_mute(false);
+  // mute subwoofer source:
+  scenes.back()->source_objects[1]->set_mute(true);
+  // unmute the first receiver:
+  scenes.back()->receivermod_objects[1]->set_mute(true);
+  scenes.back()->receivermod_objects[0]->set_mute(false);
+  uint32_t frac(0);
+  rec_progress->set_fraction(0.0);
+  // flush event loop:
+  while(Gtk::Main::events_pending())
+    Gtk::Main::iteration(false);
+  // measure levels of all broadband speakers:
+  for(auto spk : *spkarray) {
+    // move source to speaker position:
+    scenes.back()->source_objects[0]->dlocation = spk.unitvector;
+    usleep(1e6 * prewait);
+    // record measurement signal:
+    jackio_t rec(duration, "", refport_);
+    rec.run();
+    wave_t brec(rec.nframes_total * refport_.size());
+    for(uint32_t ch = 0; ch < refport_.size(); ++ch)
+      for(uint32_t k = 0; k < rec.nframes_total; ++k)
+        brec[ch * rec.nframes_total + k] =
+            rec.buf_out[k * refport_.size() + ch];
+    // return C weighted average microphone level:
+    TASCAR::levelmeter_t levelmeter(rec.get_srate(), duration,
+                                    TASCAR::levelmeter::C);
+    levelmeter.update(brec);
+    levels.push_back(10 * log10(levelmeter.ms()));
+    // update progress bar:
+    ++frac;
+    rec_progress->set_fraction(
+        (double)frac / (double)(spkarray->size() + spkarray->subs.size()));
+    while(Gtk::Main::events_pending())
+      Gtk::Main::iteration(false);
+  }
+  //
+  // subwoofer:
+  //
+  // mute broadband source:
+  scenes.back()->source_objects[0]->set_mute(true);
+  // unmute subwoofer source:
+  scenes.back()->source_objects[1]->set_mute(false);
+  // flush event loop:
+  while(Gtk::Main::events_pending())
+    Gtk::Main::iteration(false);
+  // measure levels of all broadband speakers:
+  for(auto spk : spkarray->subs) {
+    // move source to speaker position:
+    scenes.back()->source_objects[1]->dlocation = spk.unitvector;
+    usleep(1e6 * prewait);
+    // record measurement signal:
+    jackio_t rec(subduration, "", refport_);
+    rec.run();
+    wave_t brec(rec.nframes_total * refport_.size());
+    for(uint32_t ch = 0; ch < refport_.size(); ++ch)
+      for(uint32_t k = 0; k < rec.nframes_total; ++k)
+        brec[ch * rec.nframes_total + k] =
+            rec.buf_out[k * refport_.size() + ch];
+    // return C weighted average microphone level:
+    TASCAR::levelmeter_t levelmeter(rec.get_srate(), duration,
+                                    TASCAR::levelmeter::Z);
+    levelmeter.update(brec);
+    sublevels.push_back(10 * log10(levelmeter.ms()));
+    // update progress bar:
+    ++frac;
+    rec_progress->set_fraction(
+        (double)frac / (double)(spkarray->size() + spkarray->subs.size()));
+    while(Gtk::Main::events_pending())
+      Gtk::Main::iteration(false);
+  }
+  // convert levels into gains:
+  lmin = levels[0];
+  lmax = levels[0];
+  lmean = 0;
+  for(auto l = levels.begin(); l != levels.end(); ++l) {
+    lmean += *l;
+    lmin = std::min(*l, lmin);
+    lmax = std::max(*l, lmax);
+  }
+  lmean /= levels.size();
+  // update gains of all receiver objects:
+  for(auto recobj : scenes.back()->receivermod_objects) {
+    // convert into speaker-based receiver:
+    TASCAR::receivermod_base_speaker_t* recspk(
+        dynamic_cast<TASCAR::receivermod_base_speaker_t*>(recobj->libdata));
+    if(recspk) {
+      // first modify gains:
+      for(uint32_t k = 0; k < levels.size(); ++k)
+        recspk->spkpos[k].gain *= pow(10.0, 0.05 * (lmin - levels[k]));
+      for(uint32_t k = 0; k < sublevels.size(); ++k)
+        recspk->spkpos.subs[k].gain *= pow(10.0, 0.05 * (lmin - sublevels[k]));
+      // set max gain of broadband speakers to zero:
+      double lmax(0);
+      for(uint32_t k = 0; k < levels.size(); ++k)
+        lmax = std::max(lmax, recspk->spkpos[k].gain);
+      for(uint32_t k = 0; k < levels.size(); ++k)
+        recspk->spkpos[k].gain /= lmax;
+      for(uint32_t k = 0; k < sublevels.size(); ++k)
+        recspk->spkpos.subs[k].gain /= lmax;
     }
+  }
+  for(auto src : scenes.back()->source_objects) {
+    // mute source and reset position:
+    src->set_mute(true);
+    src->dlocation = pos_t(1, 0, 0);
+  }
   levelsrecorded = true;
 }
 
@@ -259,11 +342,7 @@ void calibsession_t::saveas(const std::string& fname)
         dynamic_cast<TASCAR::receivermod_base_speaker_t*>(
             scenes.back()->receivermod_objects.back()->libdata));
     if(recspk) {
-      // for(uint32_t k=0;k<levels.size();++k)
-      //  recspk->spkpos[k].gain *= pow(10.0,0.05*(lmin - levels[k]));
-      //
-      //
-      TASCAR::spk_array_t array(doc.doc->get_root_node(), true);
+      TASCAR::spk_array_diff_render_t array(doc.doc->get_root_node(), true);
       xmlpp::Node::NodeList subnodes(doc.doc->get_root_node()->get_children());
       size_t k = 0;
       for(auto sn = subnodes.begin(); sn != subnodes.end(); ++sn) {
@@ -274,6 +353,20 @@ void calibsession_t::saveas(const std::string& fname)
               TASCAR::to_string(
                   20 *
                   log10(recspk->spkpos[std::min(k, recspk->spkpos.size() - 1)]
+                            .gain)));
+          ++k;
+        }
+      }
+      k = 0;
+      for(auto sn = subnodes.begin(); sn != subnodes.end(); ++sn) {
+        xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+        if(sne && (sne->get_name() == "sub")) {
+          sne->set_attribute(
+              "gain",
+              TASCAR::to_string(
+                  20 *
+                  log10(recspk->spkpos
+                            .subs[std::min(k, recspk->spkpos.subs.size() - 1)]
                             .gain)));
           ++k;
         }
@@ -290,6 +383,7 @@ void calibsession_t::saveas(const std::string& fname)
   attributes.push_back("az");
   attributes.push_back("el");
   attributes.push_back("r");
+  attributes.push_back("fcsub");
   attributes.push_back("delay");
   attributes.push_back("compB");
   attributes.push_back("connect");
@@ -315,41 +409,44 @@ void calibsession_t::save()
 
 void calibsession_t::set_active(bool b)
 {
-  if(!scenes.empty())
-    if(scenes.back()->receivermod_objects.size() == 2) {
-      if(!b) {
-        scenes.back()->receivermod_objects[0]->set_mute(false);
-        scenes.back()->receivermod_objects[1]->set_mute(true);
-      }
-      if(b)
-        set_active_diff(false);
-      scenes.back()->source_objects.back()->dlocation = pos_t(1, 0, 0);
-      scenes.back()->source_objects.back()->set_mute(!b);
-      if(b) {
-        calibrated = true;
-        scenes.back()->receivermod_objects[0]->set_mute(true);
-        scenes.back()->receivermod_objects[1]->set_mute(false);
-      }
-    }
+  // activate broadband source and type-specific receiver.
+  scenes.back()->source_objects[1]->set_mute(true);
+  if(!b) {
+    // inactive broadband, so enable nsp receiver:
+    scenes.back()->receivermod_objects[0]->set_mute(false);
+    scenes.back()->receivermod_objects[1]->set_mute(true);
+  }
+  if(b)
+    // active, so mute diffuse sound:
+    set_active_diff(false);
+  scenes.back()->source_objects[0]->dlocation = pos_t(1, 0, 0);
+  // activate broadband source if needed:
+  scenes.back()->source_objects[0]->set_mute(!b);
+  if(b) {
+    // enable saving of file:
+    calibrated = true;
+    // active, so activate type-specific receiver:
+    scenes.back()->receivermod_objects[0]->set_mute(true);
+    scenes.back()->receivermod_objects[1]->set_mute(false);
+  }
 }
 
 void calibsession_t::set_active_diff(bool b)
 {
-  if(!scenes.empty())
-    if(scenes.back()->receivermod_objects.size() == 2) {
-      if(!b) {
-        scenes.back()->receivermod_objects[0]->set_mute(false);
-        scenes.back()->receivermod_objects[1]->set_mute(true);
-      }
-      if(b)
-        set_active(false);
-      scenes.back()->diff_snd_field_objects.back()->set_mute(!b);
-      if(b) {
-        calibrated_diff = true;
-        scenes.back()->receivermod_objects[0]->set_mute(true);
-        scenes.back()->receivermod_objects[1]->set_mute(false);
-      }
-    }
+  // control diffuse source:
+  scenes.back()->source_objects[1]->set_mute(true);
+  if(!b) {
+    scenes.back()->receivermod_objects[0]->set_mute(false);
+    scenes.back()->receivermod_objects[1]->set_mute(true);
+  }
+  if(b)
+    set_active(false);
+  scenes.back()->diff_snd_field_objects.back()->set_mute(!b);
+  if(b) {
+    calibrated_diff = true;
+    scenes.back()->receivermod_objects[0]->set_mute(true);
+    scenes.back()->receivermod_objects[1]->set_mute(false);
+  }
 }
 
 double calibsession_t::get_caliblevel() const
@@ -454,6 +551,9 @@ protected:
   double noiseperiod;
   double fmin;
   double fmax;
+  double noiseperiodsub;
+  double fminsub;
+  double fmaxsub;
   double prewait;
   std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
@@ -508,6 +608,9 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       noiseperiod(TASCAR::config("tascar.spkcalib.noiseperiod", 2.0)),
       fmin(TASCAR::config("tascar.spkcalib.fmin", 62.5)),
       fmax(TASCAR::config("tascar.spkcalib.fmax", 4000.0)),
+      noiseperiodsub(TASCAR::config("tascar.spkcalib.noiseperiodsub", 8.0)),
+      fminsub(TASCAR::config("tascar.spkcalib.fminsub", 31.25)),
+      fmaxsub(TASCAR::config("tascar.spkcalib.fmaxsub", 62.5)),
       prewait(TASCAR::config("tascar.spkcalib.prewait", 0.5)),
       refport(str2vecstr(
           TASCAR::config("tascar.spkcalib.inputport", "system:capture_1"))),
@@ -645,6 +748,13 @@ void spkcalib_t::manage_act_grp_save()
         for(uint32_t k = 0; k < recspk->spkpos.size(); ++k) {
           char lc[1024];
           sprintf(lc, "%1.1f ", 20 * log10(recspk->spkpos[k].gain));
+          gainstr += lc;
+        }
+        if(!recspk->spkpos.subs.empty())
+          gainstr += "subs: ";
+        for(uint32_t k = 0; k < recspk->spkpos.subs.size(); ++k) {
+          char lc[1024];
+          sprintf(lc, "%1.1f ", 20 * log10(recspk->spkpos.subs[k].gain));
           gainstr += lc;
         }
       }
@@ -974,8 +1084,8 @@ void spkcalib_t::load(const std::string& fname)
   cleanup();
   if(fname.empty())
     throw TASCAR::ErrMsg("Empty file name.");
-  session =
-      new calibsession_t(fname, reflevel, refport, noiseperiod, fmin, fmax);
+  session = new calibsession_t(fname, reflevel, refport, noiseperiod, fmin,
+                               fmax, noiseperiodsub, fminsub, fmaxsub);
   session->start();
   update_display();
 }
