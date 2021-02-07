@@ -24,7 +24,7 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
 	test_ir_hrtf_270deg test_ir_hrtf_315deg test_ir_hrtf_el90deg	\
 	test_ir_hrtf_el-90deg test_ir_hrtf_el45deg			\
-	test_ir_hrtf_el-45deg test_ir_delay test_snd_reverb		\
+	test_ir_hrtf_el-45deg test_ir_delay test_ir_delay2 test_ir_delay3 test_snd_reverb		\
 	test_wav_multichannel test_snd_zeros test_ir_sub		\
 	test_ir_sub_hoa2d test_ir_sub_nsp
 

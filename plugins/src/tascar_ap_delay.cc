@@ -11,25 +11,32 @@ public:
   ~delay_t();
 
 private:
-  double delay;
+  std::vector<double> delay;
   uint32_t idelay;
   std::vector<TASCAR::wave_t*> dline;
-  uint32_t pos;
+  std::vector<uint32_t> pos;
 };
 
 delay_t::delay_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : audioplugin_base_t(cfg), delay(1), pos(0)
+    : audioplugin_base_t(cfg), delay({1.0}), pos(0)
 {
   GET_ATTRIBUTE(delay);
+  if(delay.empty())
+    delay.push_back(0.0);
 }
 
 void delay_t::configure()
 {
   audioplugin_base_t::configure();
   dline.clear();
-  for(size_t k = 0; k < n_channels; ++k)
-    dline.push_back(new TASCAR::wave_t(std::max(1.0, f_sample * delay)));
-  pos = 0;
+  for(size_t k = 0; k < n_channels; ++k) {
+    if(delay[k % delay.size()] > 0.0)
+      dline.push_back(new TASCAR::wave_t(
+          std::max(1.0, f_sample * delay[k % delay.size()])));
+    else
+      dline.push_back(NULL);
+  }
+  pos = std::vector<uint32_t>(n_channels, 0);
 }
 
 void delay_t::release()
@@ -46,19 +53,19 @@ void delay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                          const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
                          const TASCAR::transport_t& tp)
 {
-  if(delay > 0) {
-    // first iterate over samples:
-    for(uint32_t k = 0; k < chunk[0].n; ++k) {
-      // now iterate over channels:
-      for(uint32_t c = 0; c < n_channels; ++c) {
-        float v(dline[c]->d[pos]);
-        dline[c]->d[pos] = chunk[c][k];
+  // first iterate over samples:
+  for(uint32_t k = 0; k < chunk[0].n; ++k) {
+    // now iterate over channels:
+    for(uint32_t c = 0; c < n_channels; ++c) {
+      if(dline[c]) {
+        float v(dline[c]->d[pos[c]]);
+        dline[c]->d[pos[c]] = chunk[c][k];
         chunk[c][k] = v;
+        if(pos[c])
+          pos[c]--;
+        else
+          pos[c] = dline[c]->n - 1;
       }
-      if(pos)
-        pos--;
-      else
-        pos = dline[0]->n - 1;
     }
   }
 }
