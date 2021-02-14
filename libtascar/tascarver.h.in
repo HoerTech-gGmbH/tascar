@@ -2,6 +2,6 @@
 #define MSC_VERSION_HPP
 
 // Version configuration.
-#define TASCARVER "@tascar_VERSION_MAJOR@.@tascar_VERSION_MINOR@.@tascar_VERSION_PATCH@"
+#define TASCARVER "@FULLVERSION@"
 
 #endif

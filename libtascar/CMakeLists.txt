@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(tascar LANGUAGES CXX)
 
-set(tascar_VERSION_MAJOR 0)
-set(tascar_VERSION_MINOR 213)
-set(tascar_VERSION_PATCH 0b728d2)
+include(version.cmake)
+
+message("Building libtascar version ${VERSION}")
+message("Building components with version ${FULLVERSION}")
 
 configure_file (
 	"${PROJECT_SOURCE_DIR}/tascarver.h.in"
