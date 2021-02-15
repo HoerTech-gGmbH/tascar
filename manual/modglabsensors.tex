@@ -62,8 +62,16 @@ these attributes:
 \end{tscattributes}
 The LSL output stream contains one channel.
 
-The {\bf serial} sensor reads data from the serial device, with
-these attributes:
+The {\bf midicc} sensor receives MIDI CC messages:
+\begin{tscattributes}
+\indattr{connect}     & Connect input to this MIDI port                                                                                                                           \\
+\indattr{range}       & Value range mapping, input values of 0 are mapped to the first element, input values of 127 are mapped to the second, with linear interpolation (``0 1'') \\
+\indattr{controllers} & Channel/Parameter pairs of controllers to receive                                                                                                         \\
+\indattr{data}        & Start values sent to device upon initialization                                                                                                           \\
+\end{tscattributes}
+
+The {\bf serial} sensor reads data from the serial device, with these
+attributes:
 \begin{tscattributes}
 \indattr{device}   & Serial device (default: ``/dev/ttyS0'') \\
 \indattr{baudrate} & Baud rate (default: 38400)              \\

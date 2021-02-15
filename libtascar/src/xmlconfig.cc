@@ -173,10 +173,15 @@ double TASCAR::globalconfig_t::operator()(const std::string& key,
                                           double def) const
 {
   if(localgetenv("TASCARSHOWGLOBAL").size())
-    std::cout << key << " (" << def << ")\n";
+    std::cout << key << " (" << def;
   auto e(cfg.find(key));
-  if(e != cfg.end())
+  if(e != cfg.end()){
+    if(localgetenv("TASCARSHOWGLOBAL").size())
+      std::cout << "=>" << e->second.c_str() << ")\n";
     return atof(e->second.c_str());
+  }
+  if(localgetenv("TASCARSHOWGLOBAL").size())
+    std::cout << ")\n";
   return def;
 }
 

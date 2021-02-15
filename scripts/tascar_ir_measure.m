@@ -1,4 +1,4 @@
-function [ir,fs,x,y] = tascar_ir_measure( varargin )
+function [ir,fs,x,y,sCfg,sHelp] = tascar_ir_measure( varargin )
 % TASCAR_IR_MEASURE - measure impulse responses via jack
 %
 % Usage:
