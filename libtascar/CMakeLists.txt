@@ -1,32 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
 
+# GLOBAL
 project(tascar LANGUAGES CXX)
-
-include(version.cmake)
-
+include(../version.cmake)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
-
 configure_file (
 	"${PROJECT_SOURCE_DIR}/tascarver.h.in"
 	"${PROJECT_SOURCE_DIR}/build/tascarver.h"
 )
-
-find_package (PkgConfig REQUIRED)
-pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
-pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
-pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
-pkg_check_modules (JACK REQUIRED jack)
-pkg_check_modules (LIBLO REQUIRED liblo)
-pkg_check_modules (GTKMM REQUIRED gtkmm-3.0)
-pkg_check_modules (EIGEN3 REQUIRED eigen3)
-pkg_check_modules (GSL REQUIRED gsl)
-pkg_check_modules (FFTW REQUIRED fftw3f)
-
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 
+
+
+
+# Source file management
 file(GLOB HEADER_FILES
     "${PROJECT_SOURCE_DIR}/src/*.h"
 )
@@ -57,14 +46,42 @@ LIST(REMOVE_ITEM SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/hoa_unit_tests.cc
   ${PROJECT_SOURCE_DIR}/src/ola_unit_tests.cc)
 
+
+
+
+# REQUIREMENTS
+find_package (PkgConfig REQUIRED)
+pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
+pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
+pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
+pkg_check_modules (JACK REQUIRED jack)
+pkg_check_modules (LIBLO REQUIRED liblo)
+pkg_check_modules (GTKMM REQUIRED gtkmm-3.0)
+pkg_check_modules (EIGEN3 REQUIRED eigen3)
+pkg_check_modules (GSL REQUIRED gsl)
+pkg_check_modules (FFTW REQUIRED fftw3f)
+
+
+
+
+# ADDITIONAL FLAGS
+set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
+if( NOT PLUGINPREFIX MATCHES "" )
+	message("Using plugin prefix ${PLUGINPREFIX}")
+	add_compile_definitions(PLUGINPREFIX=${PLUGINPREFIX})
+endif()
+
+
+
+
+
+# TARGET
 add_library(tascar STATIC 
 	${SOURCE_FILES}
 )
-
 target_include_directories(tascar PRIVATE
 	"build"
 )
-
 target_include_directories(tascar 
 PUBLIC
 	${JACK_INCLUDE_DIRS}
@@ -78,7 +95,6 @@ PUBLIC
 	${FFTW_INCLUDE_DIRS}
 	${LIBCURL_INCLUDE_DIRS}
 )
-
 target_link_libraries(tascar
 PUBLIC
 	${JACK_LINK_LIBRARIES}

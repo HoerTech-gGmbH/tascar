@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 
+set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
+
 add_subdirectory(libtascar "${CMAKE_CURRENT_BINARY_DIR}/libtascar")
 
 add_subdirectory(plugins "${CMAKE_CURRENT_BINARY_DIR}/plugins")

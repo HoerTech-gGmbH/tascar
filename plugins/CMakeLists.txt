@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 
+include(../version.cmake)
+set(TASCARVERSION ${FULLVERSION})
+
 find_package (PkgConfig REQUIRED)
 pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
 pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
@@ -42,12 +45,12 @@ wfs
 )
 
 foreach(receiver IN LISTS receivers)
-	message("Building tascarreceiver_${receiver}")
-	add_library(tascarreceiver_${receiver}
+	message("Building ${PLUGINPREFIX}tascarreceiver_${receiver}")
+	add_library(${PLUGINPREFIX}tascarreceiver_${receiver}
 				SHARED
 				src/receivermod_${receiver}.cc)
-	SET_TARGET_PROPERTIES(tascarreceiver_${receiver} PROPERTIES PREFIX "")
-	target_include_directories(tascarreceiver_${receiver} PUBLIC 
+	SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascarreceiver_${receiver} PROPERTIES PREFIX "")
+	target_include_directories(${PLUGINPREFIX}tascarreceiver_${receiver} PUBLIC 
 		${PROJECT_SOURCE_DIR}/../libtascar/build
 		${PROJECT_SOURCE_DIR}/../libtascar/src
 		${PROJECT_SOURCE_DIR}/plugins/src 
@@ -59,7 +62,7 @@ foreach(receiver IN LISTS receivers)
 		${FFTW_INCLUDE_DIRS}
 	)
 
-	target_link_libraries(tascarreceiver_${receiver} 
+	target_link_libraries(${PLUGINPREFIX}tascarreceiver_${receiver} 
 		tascar
 		${JACK_LINK_LIBRARIES}
 		${LIBXML++_LINK_LIBRARIES}
@@ -68,7 +71,7 @@ foreach(receiver IN LISTS receivers)
 		${FFTW_LINK_LIBRARIES}
 	)
 
-	install(TARGETS tascarreceiver_${receiver} DESTINATION lib)
+	install(TARGETS ${PLUGINPREFIX}tascarreceiver_${receiver} DESTINATION lib)
 
 endforeach()
 
@@ -119,6 +122,7 @@ tascarmod_granularsynth
 tascarmod_hoafdnrot
 tascarmod_hossustain
 tascarmod_hrirconv
+tascarmod_jackrec
 #tascarmod_joystick
 #tascarmod_levels2osc
 #tascarmod_lightctl
@@ -161,13 +165,13 @@ tascarsource_omni)
 
 foreach(plugin IN LISTS plugins)
 	STRING(REPLACE "tascarmod_" "tascar_" plugin_name ${plugin})
-	message("Building ${plugin_name}")
+	message("Building ${PLUGINPREFIX}${plugin_name}")
 	
-	add_library(${plugin_name}
+	add_library(${PLUGINPREFIX}${plugin_name}
 				SHARED
 				src/${plugin}.cc)
-	SET_TARGET_PROPERTIES(${plugin_name} PROPERTIES PREFIX "")
-	target_include_directories(${plugin_name} PUBLIC 
+	SET_TARGET_PROPERTIES(${PLUGINPREFIX}${plugin_name} PROPERTIES PREFIX "")
+	target_include_directories(${PLUGINPREFIX}${plugin_name} PUBLIC 
 		${PROJECT_SOURCE_DIR}/../libtascar/build
 		${PROJECT_SOURCE_DIR}/../libtascar/src
 		${PROJECT_SOURCE_DIR}/plugins/src 
@@ -180,7 +184,7 @@ foreach(plugin IN LISTS plugins)
 		${LSL_INCLUDE_DIRS}
 	)
 
-	target_link_libraries(${plugin_name} 
+	target_link_libraries(${PLUGINPREFIX}${plugin_name} 
 		tascar
 		${JACK_LINK_LIBRARIES}
 		${LIBXML++_LINK_LIBRARIES}
@@ -190,6 +194,6 @@ foreach(plugin IN LISTS plugins)
 		${LSL_LINK_LIBRARIES}
 	)
 
-	install(TARGETS ${plugin_name} DESTINATION lib)
+	install(TARGETS ${PLUGINPREFIX}${plugin_name} DESTINATION lib)
 
 endforeach()
