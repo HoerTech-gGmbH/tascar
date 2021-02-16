@@ -174,6 +174,7 @@ namespace TASCAR {
       uint32_t sincorder;
       gainmodel_t gainmodel;
       bool airabsorption;
+      bool delayline;
       double size;
       // derived / internal / updated variables:
       std::vector<wave_t> inchannels;
