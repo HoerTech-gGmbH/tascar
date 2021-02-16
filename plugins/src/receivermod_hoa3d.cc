@@ -30,6 +30,7 @@ public:
   std::vector<float> B;
   std::vector<float> deltaB;
   std::vector<TASCAR::wave_t> amb_sig;
+  double decwarnthreshold;
 };
 
 void hoa3d_dec_t::configure()
@@ -45,12 +46,13 @@ hoa3d_dec_t::data_t::data_t(uint32_t channels)
 
 hoa3d_dec_t::hoa3d_dec_t(xmlpp::Element* xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc), order(3), method("pinv"),
-      dectype("maxre"), savedec(false)
+      dectype("maxre"), savedec(false), decwarnthreshold(8.0)
 {
   GET_ATTRIBUTE(order);
   GET_ATTRIBUTE(method);
   GET_ATTRIBUTE(dectype);
   GET_ATTRIBUTE_BOOL(savedec);
+  GET_ATTRIBUTE(decwarnthreshold);
   if(order < 0)
     throw TASCAR::ErrMsg("Negative order is not possible.");
   encode.set_order(order);
@@ -76,8 +78,10 @@ hoa3d_dec_t::hoa3d_dec_t(xmlpp::Element* xmlsrc)
   typeidattr.push_back("method");
   typeidattr.push_back("dectype");
   float r;
-  if((r=decode.maxabs()/decode.rms())>10.0f){
-    TASCAR::add_warning("The maximum-to-rms ratio of the decoder matrix is "+TASCAR::to_string(r)+".\nThis might mean that the matrix is not optimal.");
+  if((r = decode.maxabs() / decode.rms()) > decwarnthreshold) {
+    TASCAR::add_warning("The maximum-to-rms ratio of the decoder matrix is " +
+                        TASCAR::to_string(r) +
+                        ".\nThis might mean that the matrix is not optimal.");
   }
   if(savedec) {
     std::ofstream ofh(

@@ -2,9 +2,11 @@ Higher order Ambisonics receiver (3D) with embedded decoder, for
 arbitrary 3D speaker layouts.
 
 \begin{tscattributes}
-\indattr{order}   & Ambisonics order (default: 3).                              \\
-\indattr{method}  & Decoder generation method, ``pinv'' (default) or ``allrad'' \\
-\indattr{dectype} & Decoder type, ``basic'', ``maxre'' (default) or ``inphase'' \\
+\indattr{order}            & Ambisonics order (default: 3).                                 \\
+\indattr{method}           & Decoder generation method, ``pinv'' (default) or ``allrad''    \\
+\indattr{dectype}          & Decoder type, ``basic'', ``maxre'' (default) or ``inphase''    \\
+\indattr{savedec}          & Save Octave/Matlab script for decoder matrix debugging (false) \\
+\indattr{decwarnthreshold} & Warning threshold for decoder matrix abs/rms ratio (8.0)       \\
 \end{tscattributes}
 
 Either the Ambisonics mode matching method using the pseudo-inverse of
