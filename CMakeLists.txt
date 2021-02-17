@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 # set the project name and version
 project(tascar_cli LANGUAGES CXX)
@@ -9,27 +9,32 @@ set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 
 set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
 
-add_subdirectory(libtascar "${CMAKE_CURRENT_BINARY_DIR}/libtascar")
-
+add_subdirectory(libtascar)
+if (TARGET tascar)
+    add_library(tascar::tascar ALIAS tascar)
+else ()
+    find_package(tascar CONFIG REQUIRED)
+endif ()
 add_subdirectory(plugins "${CMAKE_CURRENT_BINARY_DIR}/plugins")
 
-add_executable(tascar_cli 
-	apps/src/tascar_cli.cc
-)
+add_executable(tascar_cli
+        apps/src/tascar_cli.cc
+        )
 
-target_include_directories(tascar_cli PUBLIC 
-	${PROJECT_SOURCE_DIR}/libtascar/src
-	${PROJECT_SOURCE_DIR}/plugins/src  )
+target_include_directories(tascar_cli PUBLIC
+        #${PROJECT_SOURCE_DIR}/libtascar/src
+        #${PROJECT_SOURCE_DIR}/plugins/src
+        )
 
-target_link_libraries(tascar_cli 
-	tascar
-	tascar_route
-	tascar_system
-	tascar_touchosc
-	tascarreceiver_hrtf
-	tascarreceiver_ortf
-	tascarreceiver_simplefdn
-	tascar_ap_delay
-)
+target_link_libraries(tascar_cli
+        tascar::tascar
+        #tascar_route
+        #tascar_system
+        #tascar_touchosc
+        #tascarreceiver_hrtf
+        #tascarreceiver_ortf
+        #tascarreceiver_simplefdn
+        #tascar_ap_delay
+        )
 
 install(TARGETS tascar_cli DESTINATION bin)
