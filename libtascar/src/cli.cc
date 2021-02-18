@@ -1,6 +1,10 @@
 #include "cli.h"
 #include <iostream>
-#include "../build/tascarver.h"
+#if CMAKE
+    #include "tascarver.h"
+#else
+    #include "../build/tascarver.h"
+#endif
 
 void TASCAR::app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg, const std::string& help)
 {

@@ -131,7 +131,7 @@ build/%.mk: src/%.cc
 %: %.o
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
-build/%.o: src/%.cc src/%.h
+build/%.o: src/%.cc include/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%.so: build/%.so.$(LIBVERSION)

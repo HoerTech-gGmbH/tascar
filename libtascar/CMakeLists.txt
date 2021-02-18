@@ -3,58 +3,40 @@ cmake_minimum_required(VERSION 3.10)
 # GLOBAL
 project(tascar LANGUAGES CXX)
 include(../version.cmake)
-set(PROJECT_VERSION VERSION)
+set(PROJECT_VERSION ${VERSION})
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
         "${PROJECT_SOURCE_DIR}/tascarver.h.in"
         "${PROJECT_BINARY_DIR}/tascarver.h"
 )
+configure_file(
+        "${PROJECT_SOURCE_DIR}/tascarver.h.in"
+        "${PROJECT_SOURCE_DIR}/include/tascarver.h"
+)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+        # Check whether we are running under Rosetta on arm64 hardware.
+        execute_process(COMMAND sysctl -q hw.optional.arm64
+                OUTPUT_VARIABLE _sysctl_stdout
+                ERROR_VARIABLE _sysctl_stderr
+                RESULT_VARIABLE _sysctl_result
+                )
+        if (_sysctl_result EQUAL 0 AND _sysctl_stdout MATCHES "hw.optional.arm64: 1")
+            #message("Compiling multi build for x84_64 and arm64")
+            set(CMAKE_HOST_SYSTEM_PROCESSOR "arm64")
+            set(QMAKE_APPLE_DEVICE_ARCHS arm64)
+            set(CMAKE_OSX_ARCHITECTURES arm64)
+        else ()
+            set(CMAKE_OSX_ARCHITECTURES x86_64)
+        endif ()
+    endif ()
+endif ()
 
 # Source file management
-set(LIB_HEADER
-        ${PROJECT_SOURCE_DIR}/src/licensehandler.h
-        ${PROJECT_SOURCE_DIR}/src/audiostates.h
-        ${PROJECT_SOURCE_DIR}/src/coordinates.h
-        ${PROJECT_SOURCE_DIR}/src/audiochunks.h
-        ${PROJECT_SOURCE_DIR}/src/xmlconfig.h
-        ${PROJECT_SOURCE_DIR}/src/dynamicobjects.h
-        ${PROJECT_SOURCE_DIR}/src/sourcemod.h
-        ${PROJECT_SOURCE_DIR}/src/receivermod.h
-        ${PROJECT_SOURCE_DIR}/src/filterclass.h
-        ${PROJECT_SOURCE_DIR}/src/osc_helper.h
-        ${PROJECT_SOURCE_DIR}/src/pluginprocessor.h
-        ${PROJECT_SOURCE_DIR}/src/acousticmodel.h
-        ${PROJECT_SOURCE_DIR}/src/scene.h
-        ${PROJECT_SOURCE_DIR}/src/render.h
-        ${PROJECT_SOURCE_DIR}/src/session_reader.h
-        ${PROJECT_SOURCE_DIR}/src/session.h
-        ${PROJECT_SOURCE_DIR}/src/jackclient.h
-        ${PROJECT_SOURCE_DIR}/src/delayline.h
-        ${PROJECT_SOURCE_DIR}/src/async_file.h
-        ${PROJECT_SOURCE_DIR}/src/errorhandling.h
-        ${PROJECT_SOURCE_DIR}/src/osc_scene.h
-        ${PROJECT_SOURCE_DIR}/src/ringbuffer.h
-        ${PROJECT_SOURCE_DIR}/src/viewport.h
-        ${PROJECT_SOURCE_DIR}/src/sampler.h
-        ${PROJECT_SOURCE_DIR}/src/jackiowav.h
-        ${PROJECT_SOURCE_DIR}/src/cli.h
-        ${PROJECT_SOURCE_DIR}/src/irrender.h
-        ${PROJECT_SOURCE_DIR}/src/jackrender.h
-        ${PROJECT_SOURCE_DIR}/src/audioplugin.h
-        ${PROJECT_SOURCE_DIR}/src/levelmeter.h
-        ${PROJECT_SOURCE_DIR}/src/serviceclass.h
-        ${PROJECT_SOURCE_DIR}/src/speakerarray.h
-        ${PROJECT_SOURCE_DIR}/src/spectrum.h
-        ${PROJECT_SOURCE_DIR}/src/fft.h
-        ${PROJECT_SOURCE_DIR}/src/stft.h
-        ${PROJECT_SOURCE_DIR}/src/ola.h
-        ${PROJECT_SOURCE_DIR}/src/vbap3d.h
-        ${PROJECT_SOURCE_DIR}/src/hoa.h
-        ${PROJECT_BINARY_DIR}/tascarver.h
-        )
+file(GLOB LIB_HEADER ${PROJECT_SOURCE_DIR}/include/*.h)
 set(LIB_SOURCES
         ${PROJECT_SOURCE_DIR}/src/licensehandler.cc
         ${PROJECT_SOURCE_DIR}/src/audiostates.cc
@@ -104,19 +86,10 @@ if (Linux)
             ${PROJECT_SOURCE_DIR}/src/alsamidicc.cc
             )
 endif ()
-set(DMX_HEADER
-        ${PROJECT_SOURCE_DIR}/src/termsetbaud.h
-        ${PROJECT_SOURCE_DIR}/src/serialport.h
-        ${PROJECT_SOURCE_DIR}/src/dmxdriver.h
-        )
 set(DMX_SOURCES
         ${PROJECT_SOURCE_DIR}/src/termsetbaud.cc
         ${PROJECT_SOURCE_DIR}/src/serialport.cc
         ${PROJECT_SOURCE_DIR}/src/dmxdriver.cc
-        )
-set(UI_HEADER
-        ${PROJECT_SOURCE_DIR}/src/gui_elements.h
-        ${PROJECT_SOURCE_DIR}/src/pdfexport.h
         )
 set(UI_SOURCES
         ${PROJECT_SOURCE_DIR}/src/gui_elements.cc
@@ -143,15 +116,16 @@ if (NOT PLUGINPREFIX MATCHES "")
     message("Using plugin prefix ${PLUGINPREFIX}")
     add_compile_definitions(PLUGINPREFIX=${PLUGINPREFIX})
 endif ()
+add_compile_definitions(CMAKE)
 
 
 # TARGET
 # libtascar
-add_library(tascar SHARED ${LIB_SOURCES} ${LIB_HEADER})
-set_target_properties(tascar PROPERTIES PUBLIC_HEADER ${LIB_HEADER})
+add_library(tascar SHARED ${LIB_SOURCES})
 target_include_directories(tascar
         PRIVATE
         ${PROJECT_BINARY_DIR}
+        "${PROJECT_SOURCE_DIR}/src"
         PUBLIC
         ${LIBXML++_INCLUDE_DIRS}
         ${LIBLO_INCLUDE_DIRS}
@@ -160,6 +134,8 @@ target_include_directories(tascar
         ${FFTW_INCLUDE_DIRS}
         ${JACK_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIRS}
+        ${GSL_INCLUDE_DIRS}
+        ${GTKMM_INCLUDE_DIRS}
         )
 target_link_libraries(tascar
         PUBLIC
@@ -171,24 +147,11 @@ target_link_libraries(tascar
         ${JACK_LINK_LIBRARIES}
         ${EIGEN3_LINK_LIBRARIES}
         ${GSL_LINK_LIBRARIES}
+        ${GTKMM_LINK_LIBRARIES}
         )
-#[[if(APPLE)
-	set_target_properties(tascar PROPERTIES
-		FRAMEWORK TRUE
-		FRAMEWORK_VERSION C
-		MACOSX_FRAMEWORK_IDENTIFIER org.tascar.libTascar
-		#MACOSX_FRAMEWORK_INFO_PLIST Info.plist
-		# "current version" in semantic format in Mach-O binary file
-		VERSION 16.4.0
-		# "compatibility version" in semantic format in Mach-O binary file
-		SOVERSION 1.0.0
-		#PUBLIC_HEADER ${LIB_HEADER}
-		#XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
-	)
-endif()]]
 
 # libtascargui
-add_library(tascargui SHARED ${UI_SOURCES} ${UI_HEADER})
+add_library(tascargui SHARED ${UI_SOURCES})
 target_compile_definitions(tascargui PRIVATE -DGTKMM30)
 target_include_directories(tascargui
         PRIVATE
@@ -219,25 +182,21 @@ endif ()
 # CMake package config
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
-set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Target")
-write_basic_package_version_file(
-        "${generated_dir}/tascarConfigVersion.cmake" COMPATIBILITY SameMajorVersion
-)
-#write_basic_package_version_file(
-#        "${generated_dir}/tascarGuiConfigVersion.cmake" COMPATIBILITY SameMajorVersion
-#)
-set(TARGETS_EXPORT_NAME "tascarTarget")
+#set_target_properties(tascar PROPERTIES INCLUDES "${LIB_HEADER}")
+set_target_properties(tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
+set(TARGETS_EXPORT_NAME tascarTarget)
+set(INCLUDE_INSTALL_DIR include/tascar CACHE PATH "Install path for include files")
 configure_package_config_file(
         "cmake/Config.cmake.in"
-        "${generated_dir}/tascarConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake"
         INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
+        PATH_VARS INCLUDE_INSTALL_DIR
 )
-#configure_package_config_file(
-#        "cmake/Config.cmake.in"
-#        "${generated_dir}/tascarGuiConfig.cmake"
-#        INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
-#)
+write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/tascarConfigVersion.cmake"
+        VERSION ${VERSION}
+        COMPATIBILITY SameMajorVersion
+)
 install(
         TARGETS tascar
         EXPORT "${TARGETS_EXPORT_NAME}"
@@ -245,6 +204,7 @@ install(
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tascar"
 )
 install(
         TARGETS tascargui
@@ -253,9 +213,10 @@ install(
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tascar"
 )
 install(
-        FILES "${generated_dir}/tascarConfig.cmake" "${generated_dir}/tascarConfigVersion.cmake"
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/tascarConfigVersion.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
 )
 #install(
@@ -275,6 +236,7 @@ if (Linux)
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
             RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
             INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+            PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tascar"
     )
     install(
             FILES "${generated_dir}/tascarDmxConfig.cmake" "${generated_dir}/tascarDmxConfigVersion.cmake"
@@ -285,4 +247,10 @@ if (Linux)
             NAMESPACE "tascar::"
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
     )
+endif ()
+
+if (LINUX)
+    export(TARGETS tascar tascargui tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
+else ()
+    export(TARGETS tascar tascargui NAMESPACE tascar:: FILE tascarTarget.cmake)
 endif ()
