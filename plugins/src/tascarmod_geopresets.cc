@@ -1,21 +1,26 @@
 #include "session.h"
 #include <complex>
-#include <mutex>
 #include <gtkmm.h>
 #include <gtkmm/window.h>
+#include <mutex>
 
 class geopresets_t : public TASCAR::actor_module_t {
 public:
-  geopresets_t( const TASCAR::module_cfg_t& cfg );
+  geopresets_t(const TASCAR::module_cfg_t& cfg);
   ~geopresets_t();
-  void update(uint32_t frame, bool );
-  static int osc_setpreset(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void setpreset( const std::string& );
-  static int osc_addposition(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void addposition( const std::string&, const TASCAR::pos_t& pos );
-  static int osc_addorientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void addorientation( const std::string&, const TASCAR::zyx_euler_t& ori );
+  void update(uint32_t frame, bool);
+  static int osc_setpreset(const char* path, const char* types, lo_arg** argv,
+                           int argc, lo_message msg, void* user_data);
+  void setpreset(const std::string&);
+  static int osc_addposition(const char* path, const char* types, lo_arg** argv,
+                             int argc, lo_message msg, void* user_data);
+  void addposition(const std::string&, const TASCAR::pos_t& pos);
+  static int osc_addorientation(const char* path, const char* types,
+                                lo_arg** argv, int argc, lo_message msg,
+                                void* user_data);
+  void addorientation(const std::string&, const TASCAR::zyx_euler_t& ori);
   void add_to_list(const std::string& preset);
+
 private:
   double time;
   double duration;
@@ -27,8 +32,11 @@ private:
   std::string id;
   bool enable;
   std::string preset;
-  std::map<std::string,TASCAR::pos_t> positions;
-  std::map<std::string,TASCAR::zyx_euler_t> orientations;
+  std::map<std::string, TASCAR::pos_t> positions;
+  std::map<std::string, TASCAR::zyx_euler_t> orientations;
+  std::map<std::string, std::map<std::string, TASCAR::pos_t>> osc_positions;
+  std::map<std::string, std::map<std::string, TASCAR::zyx_euler_t>>
+      osc_orientations;
   std::vector<std::string> allpresets;
   TASCAR::zyx_euler_t current_r;
   TASCAR::pos_t current_p;
@@ -47,42 +55,52 @@ private:
   std::vector<Gtk::Button*> buttons;
   bool apply_trans;
   bool apply_rot;
+  lo_message msg;
+  lo_arg** oscmsgargv;
 };
 
-int geopresets_t::osc_setpreset(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int geopresets_t::osc_setpreset(const char* path, const char* types,
+                                lo_arg** argv, int argc, lo_message msg,
+                                void* user_data)
 {
-  if( user_data && (argc==1) && (types[0]=='s') )
+  if(user_data && (argc == 1) && (types[0] == 's'))
     ((geopresets_t*)user_data)->setpreset(&(argv[0]->s));
   return 0;
 }
 
-int geopresets_t::osc_addposition(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int geopresets_t::osc_addposition(const char* path, const char* types,
+                                  lo_arg** argv, int argc, lo_message msg,
+                                  void* user_data)
 {
-  if( user_data && (argc==4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') )
-    ((geopresets_t*)user_data)->addposition(&(argv[0]->s),TASCAR::pos_t(argv[1]->f,argv[2]->f,argv[3]->f));
+  if(user_data && (argc == 4) && (types[0] == 's') && (types[1] == 'f') &&
+     (types[2] == 'f') && (types[3] == 'f'))
+    ((geopresets_t*)user_data)
+        ->addposition(&(argv[0]->s),
+                      TASCAR::pos_t(argv[1]->f, argv[2]->f, argv[3]->f));
   return 0;
 }
 
 void geopresets_t::add_to_list(const std::string& s)
 {
   bool is_in_list(false);
-  for( auto it=allpresets.begin();it!=allpresets.end();++it)
-    if( *it == s )
+  for(auto it = allpresets.begin(); it != allpresets.end(); ++it)
+    if(*it == s)
       is_in_list = true;
-  if( !is_in_list ){
+  if(!is_in_list) {
     allpresets.push_back(s);
-    if( showgui ){
+    if(showgui) {
       buttons.push_back(new Gtk::Button());
-      buttons.back()->set_label( s );
-      buttons.back()->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this,&geopresets_t::setpreset),s));
-      buttons.back()->set_size_request(-1,buttonheight);
+      buttons.back()->set_label(s);
+      buttons.back()->signal_pressed().connect(
+          sigc::bind(sigc::mem_fun(*this, &geopresets_t::setpreset), s));
+      buttons.back()->set_size_request(-1, buttonheight);
       box->add(*(buttons.back()));
       box->show_all();
     }
   }
 }
 
-void geopresets_t::addposition( const std::string& s, const TASCAR::pos_t& pos )
+void geopresets_t::addposition(const std::string& s, const TASCAR::pos_t& pos)
 {
   mtx.lock();
   positions[s] = pos;
@@ -91,15 +109,22 @@ void geopresets_t::addposition( const std::string& s, const TASCAR::pos_t& pos )
   mtx.unlock();
 }
 
-int geopresets_t::osc_addorientation(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int geopresets_t::osc_addorientation(const char* path, const char* types,
+                                     lo_arg** argv, int argc, lo_message msg,
+                                     void* user_data)
 {
-  if( user_data && (argc==4) && (types[0]=='s') && (types[1]=='f') && (types[2]=='f') && (types[3]=='f') )
-    ((geopresets_t*)user_data)->addorientation(&(argv[0]->s),
-                                               TASCAR::zyx_euler_t(DEG2RAD * argv[1]->f,DEG2RAD * argv[2]->f,DEG2RAD * argv[3]->f));
+  if(user_data && (argc == 4) && (types[0] == 's') && (types[1] == 'f') &&
+     (types[2] == 'f') && (types[3] == 'f'))
+    ((geopresets_t*)user_data)
+        ->addorientation(&(argv[0]->s),
+                         TASCAR::zyx_euler_t(DEG2RAD * argv[1]->f,
+                                             DEG2RAD * argv[2]->f,
+                                             DEG2RAD * argv[3]->f));
   return 0;
 }
 
-void geopresets_t::addorientation( const std::string& s, const TASCAR::zyx_euler_t& pos )
+void geopresets_t::addorientation(const std::string& s,
+                                  const TASCAR::zyx_euler_t& pos)
 {
   mtx.lock();
   orientations[s] = pos;
@@ -108,81 +133,117 @@ void geopresets_t::addorientation( const std::string& s, const TASCAR::zyx_euler
   mtx.unlock();
 }
 
-void geopresets_t::setpreset( const std::string& s )
+void geopresets_t::setpreset(const std::string& s)
 {
   mtx.lock();
   preset = s;
   b_newpos = true;
   mtx.unlock();
+  // upload OSC:
+  auto pos_it(osc_positions.find(s));
+  if(pos_it != osc_positions.end()) {
+    // preset is available in OSC positions, iterate through all paths:
+    for(auto pair : osc_positions[s]) {
+      oscmsgargv[0]->f = pair.second.x;
+      oscmsgargv[1]->f = pair.second.y;
+      oscmsgargv[2]->f = pair.second.z;
+      session->dispatch_data_message(pair.first.c_str(), msg);
+    }
+  }
+  auto rot_it(osc_orientations.find(s));
+  if(rot_it != osc_orientations.end()) {
+    // preset is available in OSC positions, iterate through all paths:
+    for(auto pair : osc_orientations[s]) {
+      oscmsgargv[0]->f = pair.second.z;
+      oscmsgargv[1]->f = pair.second.y;
+      oscmsgargv[2]->f = pair.second.x;
+      session->dispatch_data_message(pair.first.c_str(), msg);
+    }
+  }
 }
 
-
-geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
-  : actor_module_t( cfg ),
-    time(0),
-    duration(2.0),
-    current_duration(duration),
-    width(200),
-    buttonheight(-1),
-    running(false),
-    enable(true),
-    phase(1.0f),
-    d_phase(1.0f),
-    b_newpos(false),
-    showgui(false),
-    unlock(false),
-    win(NULL),
-    apply_trans(false),
-    apply_rot(false)
+geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
+    : actor_module_t(cfg), time(0), duration(2.0), current_duration(duration),
+      width(200), buttonheight(-1), running(false), enable(true), phase(1.0f),
+      d_phase(1.0f), b_newpos(false), showgui(false), unlock(false), win(NULL),
+      apply_trans(false), apply_rot(false)
 {
+  msg = lo_message_new();
+  lo_message_add_float(msg, 0);
+  lo_message_add_float(msg, 0);
+  lo_message_add_float(msg, 0);
+  oscmsgargv = lo_message_get_argv(msg);
   GET_ATTRIBUTE(duration);
   GET_ATTRIBUTE_BOOL(enable);
   GET_ATTRIBUTE(id);
   GET_ATTRIBUTE(startpreset);
   GET_ATTRIBUTE_BOOL(unlock);
-  if( id.empty() )
+  if(id.empty())
     id = "geopresets";
   GET_ATTRIBUTE_BOOL(showgui);
   GET_ATTRIBUTE(width);
   GET_ATTRIBUTE(buttonheight);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "preset")){
+  for(auto sn : e->get_children()) {
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(sn));
+    if(sne && (sne->get_name() == "preset")) {
       xml_element_t pres(sne);
       std::string name;
-      pres.get_attribute("name",name);
+      pres.get_attribute("name", name);
       allpresets.push_back(name);
-      if( pres.has_attribute("position") ){
+      if(pres.has_attribute("position")) {
         TASCAR::pos_t pos;
-        pres.get_attribute("position",pos);
+        pres.get_attribute("position", pos);
         positions[name] = pos;
       }
-      if( pres.has_attribute("orientation") ){
+      if(pres.has_attribute("orientation")) {
         TASCAR::pos_t pos;
-        pres.get_attribute("orientation",pos);
-	pos *= DEG2RAD;
-        orientations[name] = TASCAR::zyx_euler_t(pos.x,pos.y,pos.z);
+        pres.get_attribute("orientation", pos);
+        pos *= DEG2RAD;
+        orientations[name] = TASCAR::zyx_euler_t(pos.x, pos.y, pos.z);
+      }
+      for(auto osn : sne->get_children()) {
+        xmlpp::Element* snel(dynamic_cast<xmlpp::Element*>(osn));
+        if(snel && (snel->get_name() == "osc")) {
+          xml_element_t pres(snel);
+          std::string path;
+          pres.GET_ATTRIBUTE(path);
+          if(!path.empty()) {
+            if(pres.has_attribute("pos")) {
+              TASCAR::pos_t pos;
+              pres.GET_ATTRIBUTE(pos);
+              osc_positions[name][path + "/pos"] = pos;
+            }
+            if(pres.has_attribute("rot")) {
+              TASCAR::pos_t rot;
+              pres.GET_ATTRIBUTE(rot);
+              osc_orientations[name][path + "/zyxeuler"] =
+                  TASCAR::zyx_euler_t(rot.x, rot.y, rot.z);
+            }
+          }
+        }
       }
     }
   }
-  session->add_method("/"+id,"s",&geopresets_t::osc_setpreset,this);
-  session->add_method("/"+id+"/addposition","sfff",&geopresets_t::osc_addposition,this);
-  session->add_method("/"+id+"/addorientation","sfff",&geopresets_t::osc_addorientation,this);
-  session->add_double("/"+id+"/duration",&duration);
-  session->add_bool("/"+id+"/enable",&enable);
-  session->add_bool("/"+id+"/unlock",&unlock);
+  session->add_method("/" + id, "s", &geopresets_t::osc_setpreset, this);
+  session->add_method("/" + id + "/addposition", "sfff",
+                      &geopresets_t::osc_addposition, this);
+  session->add_method("/" + id + "/addorientation", "sfff",
+                      &geopresets_t::osc_addorientation, this);
+  session->add_double("/" + id + "/duration", &duration);
+  session->add_bool("/" + id + "/enable", &enable);
+  session->add_bool("/" + id + "/unlock", &unlock);
   setpreset(startpreset);
-  if( showgui ){
+  if(showgui) {
     win = new Gtk::Window();
-    win->set_size_request(width,-1);
+    win->set_size_request(width, -1);
     box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
     win->add(*box);
-    for( auto p=allpresets.begin();p!=allpresets.end();++p){
+    for(auto p = allpresets.begin(); p != allpresets.end(); ++p) {
       buttons.push_back(new Gtk::Button());
-      buttons.back()->set_label( *p );
-      buttons.back()->signal_pressed().connect(sigc::bind(sigc::mem_fun(*this,&geopresets_t::setpreset),*p));
-      buttons.back()->set_size_request(-1,buttonheight);
+      buttons.back()->set_label(*p);
+      buttons.back()->signal_pressed().connect(
+          sigc::bind(sigc::mem_fun(*this, &geopresets_t::setpreset), *p));
+      buttons.back()->set_size_request(-1, buttonheight);
       box->add(*(buttons.back()));
     }
     win->show_all();
@@ -191,37 +252,38 @@ geopresets_t::geopresets_t( const TASCAR::module_cfg_t& cfg )
 
 geopresets_t::~geopresets_t()
 {
-  if( showgui ){
-    for( auto p=buttons.begin();p!=buttons.end();++p)
-      delete (*p);
+  if(showgui) {
+    for(auto p = buttons.begin(); p != buttons.end(); ++p)
+      delete(*p);
     delete box;
     delete win;
   }
+  lo_message_free(msg);
 }
 
-void geopresets_t::update(uint32_t tp_frame,bool tp_rolling)
+void geopresets_t::update(uint32_t tp_frame, bool tp_rolling)
 {
-  if( !enable )
+  if(!enable)
     return;
-  if( b_newpos ){
-    if( mtx.try_lock() ){
+  if(b_newpos) {
+    if(mtx.try_lock()) {
       apply_trans = false;
       apply_rot = false;
       current_duration = duration;
       new_p = old_p = current_p;
       new_r = old_r = current_r;
       auto pos_it(positions.find(preset));
-      if( pos_it != positions.end() ){
+      if(pos_it != positions.end()) {
         apply_trans = true;
         new_p = pos_it->second;
       }
       auto rot_it(orientations.find(preset));
-      if( rot_it != orientations.end() ){
+      if(rot_it != orientations.end()) {
         apply_rot = true;
         new_r = rot_it->second;
       }
       const std::complex<double> i(0, 1);
-      d_phase = std::exp( i*M_PI*t_fragment/duration );
+      d_phase = std::exp(i * M_PI * t_fragment / duration);
       phase = 1.0f;
       b_newpos = false;
       running = true;
@@ -229,39 +291,40 @@ void geopresets_t::update(uint32_t tp_frame,bool tp_rolling)
       mtx.unlock();
     }
   }
-  if( time > current_duration ){
+  if(time > current_duration) {
     time = current_duration;
     phase = -1.0f;
     running = false;
   }
-  if( running ){
+  if(running) {
     time += t_fragment;
     phase *= d_phase;
   }
   // raised-cosine weights:
-  float w(0.5-0.5*std::real(phase));
-  float w1(1.0f-w);
+  float w(0.5 - 0.5 * std::real(phase));
+  float w1(1.0f - w);
   // get weighted position:
-  current_p.x = w*new_p.x + w1*old_p.x;
-  current_p.y = w*new_p.y + w1*old_p.y;
-  current_p.z = w*new_p.z + w1*old_p.z;
+  current_p.x = w * new_p.x + w1 * old_p.x;
+  current_p.y = w * new_p.y + w1 * old_p.y;
+  current_p.z = w * new_p.z + w1 * old_p.z;
   // get weighted orientation:
-  current_r.x = w*new_r.x + w1*old_r.x;
-  current_r.y = w*new_r.y + w1*old_r.y;
-  current_r.z = w*new_r.z + w1*old_r.z;
+  current_r.x = w * new_r.x + w1 * old_r.x;
+  current_r.y = w * new_r.y + w1 * old_r.y;
+  current_r.z = w * new_r.z + w1 * old_r.z;
   // apply transformation:
-  if( (!unlock) || running )
-    for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
-      if( apply_rot )
+  if((!unlock) || running)
+    for(std::vector<TASCAR::named_object_t>::iterator iobj = obj.begin();
+        iobj != obj.end(); ++iobj) {
+      if(apply_rot)
         iobj->obj->dorientation = current_r;
-      if( apply_trans )
+      if(apply_trans)
         iobj->obj->dlocation = current_p;
     }
   else
-    for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
+    for(std::vector<TASCAR::named_object_t>::iterator iobj = obj.begin();
+        iobj != obj.end(); ++iobj) {
       new_r = current_r = iobj->obj->dorientation;
       new_p = current_p = iobj->obj->dlocation;
-      
     }
 }
 

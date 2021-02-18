@@ -4,6 +4,45 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
+int osc_set_sound_position(const char* path, const char* types, lo_arg** argv,
+                           int argc, lo_message msg, void* user_data)
+{
+  TASCAR::Scene::sound_t* h((TASCAR::Scene::sound_t*)user_data);
+  if(h && (argc == 3) && (types[0] == 'f') && (types[1] == 'f') &&
+     (types[2] == 'f')) {
+    pos_t r;
+    r.x = argv[0]->f;
+    r.y = argv[1]->f;
+    r.z = argv[2]->f;
+    h->local_position = r;
+    return 0;
+  }
+  return 1;
+}
+
+int osc_set_sound_orientation(const char* path, const char* types,
+                              lo_arg** argv, int argc, lo_message msg,
+                              void* user_data)
+{
+  TASCAR::Scene::sound_t* h((TASCAR::Scene::sound_t*)user_data);
+  if(h && (argc == 3) && (types[0] == 'f') && (types[1] == 'f') &&
+     (types[2] == 'f')) {
+    zyx_euler_t r;
+    r.z = DEG2RAD * argv[0]->f;
+    r.y = DEG2RAD * argv[1]->f;
+    r.x = DEG2RAD * argv[2]->f;
+    h->local_orientation = r;
+    return 0;
+  }
+  if(h && (argc == 1) && (types[0] == 'f')) {
+    zyx_euler_t r;
+    r.z = DEG2RAD * argv[0]->f;
+    h->local_orientation = r;
+    return 0;
+  }
+  return 1;
+}
+
 int osc_set_object_position(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   TASCAR::Scene::object_t* h((TASCAR::Scene::object_t*)user_data);
@@ -178,20 +217,25 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::rou
   srv->add_float("/"+scene->name+"/"+o->get_name()+"/targetlevel",&o->targetlevel);
 }
 
-void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::sound_t* s)
+void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
+                                    TASCAR::Scene::sound_t* s)
 {
   std::string oldpref(srv->get_prefix());
-  std::string ctlname("/"+scene->name+"/"+s->get_parent_name()+"/"+s->get_name());
+  std::string ctlname("/" + scene->name + "/" + s->get_parent_name() + "/" +
+                      s->get_name());
   srv->set_prefix(ctlname);
   s->set_ctlname(ctlname);
-  srv->add_method("/gain","f",osc_set_sound_gain,s);
-  srv->add_method("/lingain","f",osc_set_sound_gain_lin,s);
-  srv->add_float_db("/caliblevel",&(s->caliblevel));
-  srv->add_uint("/ismmin",&(s->ismmin));
-  srv->add_uint("/ismmax",&(s->ismmax));
-  srv->add_uint("/layers",&(s->layers));
-  srv->add_double("/size",&(s->size));
-  s->plugins.add_variables( srv );
+  srv->add_method("/gain", "f", osc_set_sound_gain, s);
+  srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s);
+  srv->add_float_db("/caliblevel", &(s->caliblevel));
+  srv->add_uint("/ismmin", &(s->ismmin));
+  srv->add_uint("/ismmax", &(s->ismmax));
+  srv->add_uint("/layers", &(s->layers));
+  srv->add_double("/size", &(s->size));
+  s->plugins.add_variables(srv);
+  srv->add_method("/pos", "fff", osc_set_sound_position, s);
+  srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
+  srv->add_method("/zeuler", "f", osc_set_sound_orientation, s);
   srv->set_prefix(oldpref);
 }
 
