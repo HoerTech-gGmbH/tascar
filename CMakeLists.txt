@@ -34,7 +34,6 @@ add_library(tascar::tascar ALIAS tascar)
 add_executable(tascar_cli
         apps/src/tascar_cli.cc
         )
-message("INCLUDE: ${TASCAR_INCLUDE_DIR}")
 target_include_directories(tascar_cli
         PRIVATE
         ${PROJECT_SOURCE_DIR}/libtascar/include

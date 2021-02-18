@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # GLOBAL
 project(tascar LANGUAGES CXX)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 include(../version.cmake)
 set(PROJECT_VERSION ${VERSION})
 message("Building libtascar version ${VERSION}")
@@ -98,16 +99,13 @@ set(UI_SOURCES
 
 
 # REQUIREMENTS
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
-pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
-pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
-pkg_check_modules(JACK REQUIRED jack)
-pkg_check_modules(LIBLO REQUIRED liblo)
-pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
-pkg_check_modules(EIGEN3 REQUIRED eigen3)
-pkg_check_modules(GSL REQUIRED gsl)
-pkg_check_modules(FFTW REQUIRED fftw3f)
+find_package(LibSndFile REQUIRED)
+find_package(LibSamplerate REQUIRED)
+find_package(LibXml++ REQUIRED)
+find_package(FFTW REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(liblo REQUIRED)
+find_package(GSL REQUIRED)
 
 
 # ADDITIONAL FLAGS
@@ -134,20 +132,19 @@ target_include_directories(tascar
         ${FFTW_INCLUDE_DIRS}
         ${JACK_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIRS}
-        ${GSL_INCLUDE_DIRS}
+        ${GSL_INCLUDE_DIR}
         ${GTKMM_INCLUDE_DIRS}
         )
 target_link_libraries(tascar
         PUBLIC
-        ${LIBXML++_LINK_LIBRARIES}
-        ${LIBLO_LINK_LIBRARIES}
-        ${LIBSNDFILE_LINK_LIBRARIES}
-        ${LIBSAMPLERATE_LINK_LIBRARIES}
-        ${FFTW_LINK_LIBRARIES}
-        ${JACK_LINK_LIBRARIES}
-        ${EIGEN3_LINK_LIBRARIES}
-        ${GSL_LINK_LIBRARIES}
-        ${GTKMM_LINK_LIBRARIES}
+        ${LIBXML++_LIBRARIES}
+        ${LIBLO_LIBRARIES}
+        ${LIBSNDFILE_LIBRARIES}
+        ${LIBSAMPLERATE_LIBRARIES}
+        ${FFTW_LIBRARIES}
+        ${JACK_LIBRARIES}
+        ${GSL_LIBRARIES}
+        ${GTKMM_LIBRARIES}
         )
 
 # libtascargui
@@ -219,10 +216,6 @@ install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/tascarConfigVersion.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
 )
-#install(
-#        FILES "${generated_dir}/tascarGuiConfig.cmake" "${generated_dir}/tascarGuiConfigVersion.cmake"
-#        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
-#)
 install(
         EXPORT "${TARGETS_EXPORT_NAME}"
         NAMESPACE "tascar::"

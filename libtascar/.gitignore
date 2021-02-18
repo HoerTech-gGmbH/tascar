@@ -1,1 +1,8 @@
+# Exclude possible build folders
 bin
+build
+camke-build*
+
+# Exclude tascarver, since it has to be generated
+include/tascarver.h
+src/tascarver.h
