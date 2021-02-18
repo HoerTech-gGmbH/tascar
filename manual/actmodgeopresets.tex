@@ -46,3 +46,11 @@ support these attributes:
 \indattr{position}    & Position (optional).    \\
 \indattr{orientation} & Orientation (optional). \\
 \end{tscattributes}
+
+Within a preset, a number of \elem{osc} elements can be defined. These attributes are supported:
+\begin{tscattributes}
+\indattr{path} & OSC varaibale path, either ``/pos'' or ``/zyxeuler'' are appended \\
+\indattr{pos}  & Position x y z Cartesian coordinates in meter (optional).         \\
+\indattr{rot}  & Orientation z y x Euler angles in degree (optional).              \\
+\end{tscattributes}
+OSC messages are dispatched in the current session. No position fades are applied here.
