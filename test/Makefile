@@ -55,8 +55,8 @@ RENDERFILE=../apps/build/tascar_renderfile
 TASCARCLI=../apps/build/tascar_cli
 JACKLSP=../apps/build/tascar_lsjackp
 JACKIO=../apps/build/tascar_jackio
-COMPARE=../apps/build/compare_sndfile
-COMPLEV=../apps/build/compare_level_sum
+COMPARE=../apps/build/tascar_test_compare_sndfile
+COMPLEV=../apps/build/tascar_test_compare_level_sum
 
 TEST_REC = $(patsubst %,test_rec_%,$(RECEIVERS))
 TEST_LEV = $(patsubst %,test_reclevel_%,$(LEVELREC))
