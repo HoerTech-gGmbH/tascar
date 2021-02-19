@@ -8,7 +8,11 @@ set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 
 # REQUIREMENTS
-add_subdirectory(${PROJECT_SOURCE_DIR}/../libtascar ${PROJECT_BINARY_DIR}/libtascar)
+if( TARGET tascar )
+        add_library(tascar::tascar ALIAS tascar)
+else()
+        find_package(tascar REQUIRED)
+endif()
 
 # PLUGINS
 include(${PROJECT_SOURCE_DIR}}/../plugins.cmake)
