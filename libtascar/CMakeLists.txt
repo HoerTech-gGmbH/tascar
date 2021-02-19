@@ -8,6 +8,7 @@ include(${PROJECT_SOURCE_DIR}/../version.cmake)
 set(PROJECT_VERSION ${VERSION})
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
@@ -143,6 +144,8 @@ target_include_directories(tascar
         ${GSL_INCLUDE_DIR}
         )
 target_link_libraries(tascar
+        PRIVATE
+        Threads::Threads
         PUBLIC
         ${LIBXML++_LIBRARIES}
         ${LIBLO_LIBRARIES}
@@ -199,6 +202,8 @@ if (GTK3_FOUND)
             ${GTK3_INCLUDE_DIRS}
             )
     target_link_libraries(tascargui
+            PRIVATE
+            Threads::Threads
             PUBLIC
             tascar
             #${LIBXML++_LIBRARIES}
