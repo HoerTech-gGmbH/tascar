@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: fetchall
-      run: git fetch --tags origin master:master
+      run: git fetch --tags --all
     - name: dependencies
       run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate
     - name: make
