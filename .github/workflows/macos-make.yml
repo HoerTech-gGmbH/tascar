@@ -1,0 +1,19 @@
+name: MacOS cmake
+
+on:
+  push:
+    branches: [ development ]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: fetchall
+      run: git fetch --tags origin master:master
+    - name: dependencies
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate
+    - name: make
+      run: make
