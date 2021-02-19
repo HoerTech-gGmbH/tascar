@@ -104,13 +104,13 @@ find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
-#find_package(GTK3 COMPONENTS gtkmm)
+find_package(GTK3 COMPONENTS gtkmm)
 # TODO: Following find routine does not work on macOS, but required for WIN32
-#find_package(LibXml++ REQUIRED)
+find_package(LibXml++ REQUIRED)
 # TODO: Remove following workaround
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
-#pkg_check_modules(LIBLO REQUIRED liblo)
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
+
 
 if (JACK_FOUND AND LIBSNDFILE_FOUND AND LIBXML++_FOUND AND FFTW_FOUND AND LIBLO_FOUND AND LIBSAMPLERATE_FOUND AND GSL_FOUND AND EIGEN3_FOUND)
     message(${LIBXML++_LIBRARIES})
@@ -149,7 +149,6 @@ target_include_directories(tascar
         )
 target_link_libraries(tascar
         PUBLIC
-        ${LIBXML++_LINK_LIBRARIES}
         ${LIBXML++_LIBRARIES}
         ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
