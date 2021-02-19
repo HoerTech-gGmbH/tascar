@@ -8,7 +8,6 @@
 # Use pkg-config to get hints about paths
 
 if (LIBXML++_LIBRARIES AND LIBXML++_INCLUDE_DIRS)
-    message("Already found libxml++")
     set(LIBXML++_FOUND TRUE)
 else ()
     find_package(Glibmm REQUIRED)
