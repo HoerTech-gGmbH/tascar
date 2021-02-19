@@ -105,16 +105,10 @@ find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
 find_package(GTK3 COMPONENTS gtkmm)
-# TODO: Following find routine does not work on macOS, but required for WIN32
 find_package(LibXml++ REQUIRED)
-# TODO: Remove following workaround
-#find_package(PkgConfig REQUIRED)
-#pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
 
 
 if (JACK_FOUND AND LIBSNDFILE_FOUND AND LIBXML++_FOUND AND FFTW_FOUND AND LIBLO_FOUND AND LIBSAMPLERATE_FOUND AND GSL_FOUND AND EIGEN3_FOUND)
-    message(${LIBXML++_LIBRARIES})
-    message(${LIBXML++_INCLUDE_DIRS})
     message("All dependencies ok!")
 else ()
     message(FATAL_ERROR "Missing dependencies.")
@@ -133,7 +127,7 @@ add_compile_definitions(CMAKE)
 
 # TARGET
 # libtascar
-add_library(tascar SHARED ${LIB_SOURCES})
+add_library(tascar ${LIB_SOURCES})
 target_include_directories(tascar
         PRIVATE
         ${PROJECT_SOURCE_DIR}/include

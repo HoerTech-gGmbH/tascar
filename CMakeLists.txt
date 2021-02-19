@@ -47,7 +47,7 @@ if (RECEIVERS)
                 )
         target_link_libraries(${PLUGINPREFIX}receiver_${receiver}
                 PUBLIC
-                tascar
+                tascar::tascar
                 )
         install(TARGETS ${PLUGINPREFIX}receiver_${receiver} DESTINATION lib)
     endforeach ()
