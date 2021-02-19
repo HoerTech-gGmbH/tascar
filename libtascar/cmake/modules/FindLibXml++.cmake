@@ -1,40 +1,36 @@
-# - Try to find JACK
-# Once done, this will define
-#
-#  JACK_FOUND - system has JACK
-#  JACK_INCLUDE_DIRS - the JACK include directories
-#  JACK_LIBRARIES - link these to use JACK
-
-# Use pkg-config to get hints about paths
-if (LIBXML++_LIBRARIES AND LIBXML++_INCLUDE_DIRS)
-    # in cache already
-    set(LIBLO_FOUND TRUE)
+if (LIBXML++_INCLUDE_DIRS AND LIBXML++_INCLUDE_DIRS)
+    set(LIBXML++_FOUND TRUE)
 else ()
-    find_package(PkgConfig QUITE)
-    if (PKG_CONFIG_FOUND)
-        pkg_check_modules(LIBXML++_PKG_CONFIG libxml++-2.6)
-    endif (PKG_CONFIG_FOUND)
+    IF (LIBXML++_FIND_REQUIRED)
+        find_package(Glibmm REQUIRED)
+        find_package(LibXml2 REQUIRED)
+    ELSE (LIBXML++_FIND_REQUIRED)
+        find_package(Glibmm)
+        find_package(LibXml2)
+    ENDIF (LIBXML++_FIND_REQUIRED)
 
-    # Include dir
-    find_path(LIBXML++_INCLUDE_DIR
-            NAMES libxml++/libxml++.h
-            PATHS ${LIBXML++_PKG_CONFIG_INCLUDE_DIRS}
-            )
+    IF (GLIBMM_FOUND AND LIBXML2_FOUND)
 
-    # Library
-    find_library(LIBXML++_LIBRARY
-            NAMES xml++ xml++-2.6
-            PATHS ${LIBXML++_PKG_CONFIG_LIBRARY_DIRS}
-            )
+        #use pkg-config
+        find_package(PkgConfig)
+        pkg_check_modules(PC_LIBXMLPP QUIET libxml++-2.6)
 
-    find_package(PackageHandleStandardArgs)
-    find_package_handle_standard_args(LibXml++ DEFAULT_MSG LIBXML++_LIBRARY LIBXML++_INCLUDE_DIR)
+        find_path(LIBXML++_INCLUDE_DIR NAMES LIBXML++/LIBXML++.h HINTS ${PC_LIBXMLPP_INCLUDEDIR} ${PC_LIBXMLPP_INCLUDE_DIRS})
+        find_path(LIBXML++_config_INCLUDE_DIR NAMES LIBXML++config.h HINTS ${PC_LIBXMLPP_INCLUDEDIR} ${PC_LIBXMLPP_INCLUDE_DIRS})
+        find_library(LIBXML++_LIBRARY NAMES xml++ xml++-2.6 HINTS ${PC_LIBXMLPP_LIBDIR} ${PC_LIBXMLPP_LIBRARY_DIRS})
 
-    if (LIBXML++_PKG_CONFIG_FOUND)
-        set(LIBXML++_LIBRARIES ${LIBXML++_LIBRARY})
-        set(LIBXML++_INCLUDE_DIRS ${LIBXML++_INCLUDE_DIR})
-    endif (LIBXML++_PKG_CONFIG_FOUND)
+        set(LIBXML++_LIBRARIES ${LIBXML++_LIBRARY} ${PC_LIBXMLPP_PKGCONF_LIBRARIES} ${GLIBMM_LIBRARIES} ${LIBXML2_LIBRARIES})
+        IF (LIBXML++_config_INCLUDE_DIR)
+            set(LIBXML++_INCLUDE_DIRS ${LIBXML++_INCLUDE_DIR} ${PC_LIBXMLPP_PKGCONF_INCLUDE_DIRS} ${LIBXML++_config_INCLUDE_DIR} ${GLIBMM_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIR})
+        ELSE (LIBXML++_config_INCLUDE_DIR)
+            set(LIBXML++_INCLUDE_DIRS ${LIBXML++_INCLUDE_DIR} ${PC_LIBXMLPP_PKGCONF_INCLUDE_DIRS} ${GLIBMM_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIR})
+        ENDIF (LIBXML++_config_INCLUDE_DIR)
 
-    # Mark the singular variables as advanced, to hide them of the GUI by default
-    mark_as_advanced(LIBXML++_LIBRARY LIBXML++_INCLUDE_DIR)
+    ENDIF (GLIBMM_FOUND AND LIBXML2_FOUND)
+
+    INCLUDE(FindPackageHandleStandardArgs)
+    FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibXml++ DEFAULT_MSG LIBXML++_LIBRARY LIBXML++_INCLUDE_DIR)
+
+    MARK_AS_ADVANCED(LIBXML++_INCLUDE_DIR LIBXML++_config_INCLUDE_DIR LIBXML++_LIBRARY)
 endif ()
+

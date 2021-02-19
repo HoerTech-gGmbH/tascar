@@ -3,14 +3,12 @@ cmake_minimum_required(VERSION 3.10)
 # GLOBAL
 project(tascar LANGUAGES CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 include(../version.cmake)
 set(PROJECT_VERSION ${VERSION})
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
-configure_file(
-        "${PROJECT_SOURCE_DIR}/tascarver.h.in"
-        "${PROJECT_BINARY_DIR}/tascarver.h"
-)
 configure_file(
         "${PROJECT_SOURCE_DIR}/tascarver.h.in"
         "${PROJECT_SOURCE_DIR}/include/tascarver.h"
@@ -81,7 +79,7 @@ set(LIB_SOURCES
         )
 if (Linux)
     list(APPEND LIB_HEADER
-            ${PROJECT_SOURCE_DIR}/src/alsamidicc.h
+            ${PROJECT_SOURCE_DIR}/include/alsamidicc.h
             )
     list(APPEND LIB_SOURCES
             ${PROJECT_SOURCE_DIR}/src/alsamidicc.cc
@@ -99,6 +97,7 @@ set(UI_SOURCES
 
 
 # REQUIREMENTS
+find_package(Jack REQUIRED)
 find_package(LibSndFile REQUIRED)
 find_package(LibSamplerate REQUIRED)
 find_package(LibXml++ REQUIRED)
@@ -106,6 +105,7 @@ find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
+find_package(GTK3 COMPONENTS gtkmm)
 
 
 # ADDITIONAL FLAGS
@@ -117,13 +117,15 @@ endif ()
 add_compile_definitions(CMAKE)
 
 
+# CMake package config
+
+
 # TARGET
 # libtascar
 add_library(tascar SHARED ${LIB_SOURCES})
 target_include_directories(tascar
         PRIVATE
-        ${PROJECT_BINARY_DIR}
-        "${PROJECT_SOURCE_DIR}/src"
+        ${PROJECT_SOURCE_DIR}/include
         PUBLIC
         ${LIBXML++_INCLUDE_DIRS}
         ${LIBLO_INCLUDE_DIRS}
@@ -131,9 +133,8 @@ target_include_directories(tascar
         ${LIBSAMPLERATE_INCLUDE_DIRS}
         ${FFTW_INCLUDE_DIRS}
         ${JACK_INCLUDE_DIRS}
-        ${EIGEN3_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
         ${GSL_INCLUDE_DIR}
-        ${GTKMM_INCLUDE_DIRS}
         )
 target_link_libraries(tascar
         PUBLIC
@@ -144,42 +145,7 @@ target_link_libraries(tascar
         ${FFTW_LIBRARIES}
         ${JACK_LIBRARIES}
         ${GSL_LIBRARIES}
-        ${GTKMM_LIBRARIES}
         )
-
-# libtascargui
-add_library(tascargui SHARED ${UI_SOURCES})
-target_compile_definitions(tascargui PRIVATE -DGTKMM30)
-target_include_directories(tascargui
-        PRIVATE
-        ${PROJECT_BINARY_DIR}
-        PUBLIC
-        ${LIBXML++_INCLUDE_DIRS}
-        ${JACK_INCLUDE_DIRS}
-        ${GTKMM_INCLUDE_DIRS}
-        )
-target_link_libraries(tascargui
-        PUBLIC
-        ${LIBXML++_LIBRARIES}
-        ${JACK_LINK_LIBRARIES}
-        ${GTKMM_LINK_LIBRARIES}
-        tascar
-        dl
-        )
-
-if (Linux)
-    # libtascardmx
-    add_library(tascardmx SHARED ${DMX_SOURCES} ${DMX_HEADER})
-    target_include_directories(tascardmx
-            PUBLIC
-            )
-endif ()
-
-
-# CMake package config
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-#set_target_properties(tascar PROPERTIES INCLUDES "${LIB_HEADER}")
 set_target_properties(tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
 set(TARGETS_EXPORT_NAME tascarTarget)
 set(INCLUDE_INSTALL_DIR include/tascar CACHE PATH "Install path for include files")
@@ -204,15 +170,6 @@ install(
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tascar"
 )
 install(
-        TARGETS tascargui
-        EXPORT "${TARGETS_EXPORT_NAME}"
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tascar"
-)
-install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/tascarConfigVersion.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
 )
@@ -221,7 +178,51 @@ install(
         NAMESPACE "tascar::"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
 )
+
+# libtascargui
+if (GTK3_FOUND)
+    add_library(tascargui SHARED ${UI_SOURCES})
+    target_compile_definitions(tascargui PRIVATE -DGTKMM30)
+    target_include_directories(tascargui
+            PRIVATE
+            ${PROJECT_SOURCE_DIR}/include
+            PUBLIC
+            #${LIBXML++_INCLUDE_DIRS}
+            #${JACK_INCLUDE_DIRS}
+            ${GTK2_INCLUDE_DIRS}
+            ${GTK3_INCLUDE_DIRS}
+            )
+    target_link_libraries(tascargui
+            PUBLIC
+            tascar
+            #${LIBXML++_LIBRARIES}
+            #${JACK_LIBRARIES}
+            ${GTK2_LIBRARIES}
+            ${GTK3_LIBRARIES}
+            )
+    install(
+            TARGETS tascargui
+            EXPORT "${TARGETS_EXPORT_NAME}"
+            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+            INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+            PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/tascar"
+    )
+endif ()
+
 if (Linux)
+    # libtascardmx
+    add_library(tascardmx SHARED ${DMX_SOURCES})
+    target_include_directories(tascardmx
+            PRIVATE
+            ${PROJECT_SOURCE_DIR}/include
+            )
+    target_link_libraries(tascardmx
+            PUBLIC
+            tascar
+            )
+
     install(
             TARGETS tascardmx
             EXPORT "${TARGETS_EXPORT_NAME}"
@@ -243,7 +244,16 @@ if (Linux)
 endif ()
 
 if (LINUX)
-    export(TARGETS tascar tascargui tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
+    if (TARGET tascargui)
+        export(TARGETS tascar tascargui tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
+    elseif ()
+        export(TARGETS tascar tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
+
+    endif ()
 else ()
-    export(TARGETS tascar tascargui NAMESPACE tascar:: FILE tascarTarget.cmake)
+    if (TARGET tascargui)
+        export(TARGETS tascar tascargui NAMESPACE tascar:: FILE tascarTarget.cmake)
+    elseif ()
+        export(TARGETS tascar NAMESPACE tascar:: FILE tascarTarget.cmake)
+    endif ()
 endif ()

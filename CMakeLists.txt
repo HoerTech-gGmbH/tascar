@@ -30,7 +30,7 @@ set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
 add_subdirectory(libtascar)
 add_library(tascar::tascar ALIAS tascar)
 
-add_library(plugins)
+#add_library(plugins)
 
 # CLI
 add_executable(tascar_cli
