@@ -160,7 +160,7 @@ target_include_directories(tascargui
         )
 target_link_libraries(tascargui
         PUBLIC
-        ${LIBXML++_LINK_LIBRARIES}
+        ${LIBXML++_LIBRARIES}
         ${JACK_LINK_LIBRARIES}
         ${GTKMM_LINK_LIBRARIES}
         tascar

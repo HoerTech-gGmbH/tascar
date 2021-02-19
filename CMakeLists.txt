@@ -29,32 +29,20 @@ set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
 
 add_subdirectory(libtascar)
 add_library(tascar::tascar ALIAS tascar)
-#add_subdirectory(plugins "${CMAKE_CURRENT_BINARY_DIR}/plugins")
 
+add_library(plugins)
+
+# CLI
 add_executable(tascar_cli
         apps/src/tascar_cli.cc
         )
 target_include_directories(tascar_cli
         PRIVATE
         ${PROJECT_SOURCE_DIR}/libtascar/include
-
-        PUBLIC
-
-        #${TASCAR_INCLUDE_DIR}
-        #${PROJECT_SOURCE_DIR}/libtascar/src
-        #${PROJECT_BINARY_DIR}}/libtascar
         )
 
 target_link_libraries(tascar_cli
         PRIVATE
         tascar::tascar
-        #tascar_route
-        #tascar_system
-        #tascar_touchosc
-        #tascarreceiver_hrtf
-        #tascarreceiver_ortf
-        #tascarreceiver_simplefdn
-        #tascar_ap_delay
         )
-
 install(TARGETS tascar_cli DESTINATION bin)
