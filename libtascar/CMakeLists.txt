@@ -101,7 +101,7 @@ set(UI_SOURCES
 # REQUIREMENTS
 find_package(LibSndFile REQUIRED)
 find_package(LibSamplerate REQUIRED)
-find_package(LibXml++ REQUIRED)
+find_package(LibXml++-2.6 REQUIRED)
 find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
