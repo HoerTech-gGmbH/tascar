@@ -10,6 +10,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 # REQUIREMENTS
 if( TARGET tascar )
         add_library(tascar::tascar ALIAS tascar)
+        set(TASCAR_INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/../libtascar/include)
 else()
         find_package(tascar REQUIRED)
 endif()
@@ -29,11 +30,12 @@ if (RECEIVERS)
         target_include_directories(${PLUGINPREFIX}receiver_${receiver}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                ${PROJECT_SOURCE_DIR}/../libtascar/include
+                PUBLIC
+                ${TASCAR_INCLUDE_DIRECTORIES}
                 )
         target_link_libraries(${PLUGINPREFIX}receiver_${receiver}
                 PUBLIC
-                tascar
+                tascar::tascar
                 )
         install(TARGETS ${PLUGINPREFIX}receiver_${receiver} DESTINATION lib)
     endforeach ()
@@ -49,11 +51,12 @@ if (TASCARMODS)
         target_include_directories(${PLUGINPREFIX}tascarmod_${tascarmod}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                ${PROJECT_SOURCE_DIR}/../libtascar/include
+                PUBLIC
+                ${TASCAR_INCLUDE_DIRECTORIES}
                 )
         target_link_libraries(${PLUGINPREFIX}tascarmod_${tascarmod}
                 PUBLIC
-                tascar
+                tascar::tascar
                 )
         install(TARGETS ${PLUGINPREFIX}tascarmod_${tascarmod} DESTINATION lib)
     endforeach ()
@@ -69,11 +72,12 @@ if (AUDIOPLUGINS)
         target_include_directories(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                ${PROJECT_SOURCE_DIR}/../libtascar/include
+                PUBLIC
+                ${TASCAR_INCLUDE_DIRECTORIES}
                 )
         target_link_libraries(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 PUBLIC
-                tascar
+                tascar::tascar
                 )
         install(TARGETS ${PLUGINPREFIX}tascar_ap_${audioplugin} DESTINATION lib)
     endforeach ()
