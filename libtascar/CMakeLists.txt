@@ -151,7 +151,7 @@ target_link_libraries(tascar
         PUBLIC
         ${LIBXML++_LINK_LIBRARIES}
         ${LIBXML++_LIBRARIES}
-        ${LIBLO_LINK_LIBRARIES}
+        ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES}
         ${FFTW_LIBRARIES}

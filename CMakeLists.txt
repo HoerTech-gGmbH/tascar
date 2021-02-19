@@ -165,5 +165,7 @@ target_include_directories(tascar_cli
 target_link_libraries(tascar_cli
         PRIVATE
         tascar::tascar
+        PUBLIC
+        #${LIBLO_LIBRARIES}
         )
 install(TARGETS tascar_cli DESTINATION bin)
