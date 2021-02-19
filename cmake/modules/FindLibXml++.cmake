@@ -21,19 +21,19 @@ else ()
     # Include dir
     find_path(LIBXML++_INCLUDE_DIR
             NAMES libxml++/libxml++.h
-            PATHS ${LIBXML++_PKGCONF_INCLUDE_DIRS}
+            PATHS ${LIBXML++_PKGCONF_INCLUDE_DIR}
             )
 
     # Include dir
     find_path(LIBXML++_CONFIG_INCLUDE_DIR
             NAMES libxml++config.h
-            PATHS ${LIBXML++_PKGCONF_INCLUDE_DIRS}
+            PATHS ${LIBXML++_PKGCONF_INCLUDE_DIR}
             )
 
     # Library
     find_library(LIBXML++_LIBRARY
             NAMES xml++ xml++-2.6
-            PATHS ${LIBXML++_PKGCONF_LIBRARY_DIRS}
+            PATHS ${LIBXML++_PKGCONF_LIBRARY_DIR}
             )
 
     find_package(PackageHandleStandardArgs)
