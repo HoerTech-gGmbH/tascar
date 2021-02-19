@@ -87,7 +87,7 @@ TASCARDMXLIB = -ltascardmx
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
-CXXFLAGS += -I../libtascar/src -I../libtascar/build
+CXXFLAGS += -I../libtascar/include -I../libtascar/build
 LDFLAGS += -L../libtascar/build
 CXXFLAGS += -DTASCARVERSION="\"$(TASCARVERSION)\""
 

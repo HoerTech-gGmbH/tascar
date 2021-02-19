@@ -65,8 +65,8 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
 
 
-CXXFLAGS += -fpic -I./build
-CPPFLAGS += -I./build
+CXXFLAGS += -fpic -I./build -I./include
+CPPFLAGS += -I./build -I./include
 #-L./ 
 EXTERNALS = jack libxml++-2.6 liblo sndfile fftw3f gsl eigen3 samplerate
 

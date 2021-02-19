@@ -10,8 +10,8 @@ BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
   tascar_validatetsc tascar_pdf tascar_osc_jack_transport		\
   tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
   tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
-  tascar_version compare_sndfile compare_level_sum tascar_lsjackp	\
-  tascar_sendosc
+  tascar_version tascar_test_compare_sndfile				\
+  tascar_test_compare_level_sum tascar_lsjackp tascar_sendosc
 
 ifeq "$(HAS_LSL)" "yes"
 BINFILES += tascar_osc2lsl
@@ -47,8 +47,8 @@ endif
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
-CXXFLAGS += -I../libtascar/src -I../libtascar/build
-CPPFLAGS += -I../libtascar/src -I../libtascar/build
+CXXFLAGS += -I../libtascar/include -I../libtascar/build
+CPPFLAGS += -I../libtascar/include -I../libtascar/build
 LDFLAGS += -L../libtascar/build 
 
 LDLIBS += -ldl -ltascar -lfftw3f

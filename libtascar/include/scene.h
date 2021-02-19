@@ -286,14 +286,13 @@ namespace TASCAR {
     public:
       src_object_t* parent;
 
-    private:
       pos_t local_position;
       zyx_euler_t local_orientation;
+
+    private:
       double chaindist;
       double gain_;
       std::vector<TASCAR::levelmeter_t*> meter;
-
-    public:
     };
 
     class src_object_t : public object_t,

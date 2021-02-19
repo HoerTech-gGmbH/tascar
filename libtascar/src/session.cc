@@ -360,7 +360,7 @@ void assert_jackpar( const std::string& what, double expected, double found, boo
 TASCAR::session_t::session_t()
   : TASCAR::session_oscvars_t(tsc_reader_t::e),
   jackc_transport_t(jacknamer(name,"session.")),
-  osc_server_t(srv_addr, srv_port, srv_proto),
+    osc_server_t(srv_addr, srv_port, srv_proto, TASCAR::config("tascar.osc.list",0)),
   period_time(1.0/(double)srate),
   started_(false)
 {
@@ -388,7 +388,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data,load_type_t t,c
   : TASCAR::session_core_t(filename_or_data,t,path),
   session_oscvars_t(tsc_reader_t::e),
   jackc_transport_t(jacknamer(name,"session.")),
-  osc_server_t(srv_addr, srv_port, srv_proto),
+  osc_server_t(srv_addr, srv_port, srv_proto, TASCAR::config("tascar.osc.list",0)),
   period_time(1.0/(double)srate),
   started_(false)
 {

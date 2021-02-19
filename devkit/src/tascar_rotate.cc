@@ -57,12 +57,14 @@ rotate_t::rotate_t( const TASCAR::module_cfg_t& cfg )
   actor_module_t::GET_ATTRIBUTE(r);
   //
   // Provide also access via the OSC interface:
-  // 'actor' is the pattern provided in the XML configuration
+  // 'actor' is the list of patters provided in the XML configuration
   // (warning: it may contain asterix or other symbols)
   //
-  session->add_double_degree(actor+"/w",&w);
-  session->add_double(actor+"/t0",&t0);
-  session->add_double(actor+"/r",&r);
+  for( auto act : actor ){
+    session->add_double_degree(act+"/w",&w);
+    session->add_double(act+"/t0",&t0);
+    session->add_double(act+"/r",&r);
+  }
 }
 
 //
