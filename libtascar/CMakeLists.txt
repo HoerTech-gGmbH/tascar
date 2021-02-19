@@ -99,6 +99,7 @@ set(UI_SOURCES
 
 
 # REQUIREMENTS
+find_package(Threads REQUIRED)
 find_package(Jack REQUIRED)
 find_package(LibSndFile REQUIRED)
 find_package(LibSamplerate REQUIRED)
