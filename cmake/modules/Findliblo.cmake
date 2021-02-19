@@ -20,7 +20,7 @@
 if (LIBLO_LIBRARIES AND LIBLO_INCLUDE_DIRS)
     # in cache already
     set(LIBLO_FOUND TRUE)
-else (LIBLO_LIBRARIES AND LIBLO_INCLUDE_DIRS)
+else ()
     find_path(LIBLO_INCLUDE_DIR
             NAMES
             lo/lo.h
@@ -40,6 +40,9 @@ else (LIBLO_LIBRARIES AND LIBLO_INCLUDE_DIRS)
             /opt/local/lib
             /sw/lib
             )
+
+    INCLUDE(FindPackageHandleStandardArgs)
+    FIND_PACKAGE_HANDLE_STANDARD_ARGS(liblo DEFAULT_MSG LIBLO_LIBRARY LIBLO_INCLUDE_DIR)
 
     set(LIBLO_INCLUDE_DIRS
             ${LIBLO_INCLUDE_DIR}
@@ -62,7 +65,8 @@ else (LIBLO_LIBRARIES AND LIBLO_INCLUDE_DIRS)
         endif (liblo_FIND_REQUIRED)
     endif (LIBLO_FOUND)
 
-    # show the LIBLO_INCLUDE_DIRS and LIBLO_LIBRARIES variables only in the advanced view
-    mark_as_advanced(LIBLO_INCLUDE_DIRS LIBLO_LIBRARIES)
 
-endif (LIBLO_LIBRARIES AND LIBLO_INCLUDE_DIRS)
+    # show the LIBLO_INCLUDE_DIRS and LIBLO_LIBRARIES variables only in the advanced view
+    mark_as_advanced(LIBLO_INCLUDE_DIR LIBLO_LIBRARY)
+
+endif ()

@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.10)
 
 # GLOBAL
 project(tascar LANGUAGES CXX)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-include(../version.cmake)
+include(${PROJECT_SOURCE_DIR}/../version.cmake)
 set(PROJECT_VERSION ${VERSION})
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
@@ -100,13 +100,25 @@ set(UI_SOURCES
 find_package(Jack REQUIRED)
 find_package(LibSndFile REQUIRED)
 find_package(LibSamplerate REQUIRED)
-find_package(LibXml++ REQUIRED)
 find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
-find_package(GTK3 COMPONENTS gtkmm)
+#find_package(GTK3 COMPONENTS gtkmm)
+# TODO: Following find routine does not work on macOS, but required for WIN32
+#find_package(LibXml++ REQUIRED)
+# TODO: Remove following workaround
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
+#pkg_check_modules(LIBLO REQUIRED liblo)
 
+if (JACK_FOUND AND LIBSNDFILE_FOUND AND LIBXML++_FOUND AND FFTW_FOUND AND LIBLO_FOUND AND LIBSAMPLERATE_FOUND AND GSL_FOUND AND EIGEN3_FOUND)
+    message(${LIBXML++_LIBRARIES})
+    message(${LIBXML++_INCLUDE_DIRS})
+    message("All dependencies ok!")
+else ()
+    message(FATAL_ERROR "Missing dependencies.")
+endif ()
 
 # ADDITIONAL FLAGS
 set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
@@ -115,7 +127,6 @@ if (NOT PLUGINPREFIX MATCHES "")
     add_compile_definitions(PLUGINPREFIX=${PLUGINPREFIX})
 endif ()
 add_compile_definitions(CMAKE)
-
 
 # CMake package config
 
@@ -138,8 +149,9 @@ target_include_directories(tascar
         )
 target_link_libraries(tascar
         PUBLIC
+        ${LIBXML++_LINK_LIBRARIES}
         ${LIBXML++_LIBRARIES}
-        ${LIBLO_LIBRARIES}
+        ${LIBLO_LINK_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES}
         ${FFTW_LIBRARIES}
@@ -189,7 +201,6 @@ if (GTK3_FOUND)
             PUBLIC
             #${LIBXML++_INCLUDE_DIRS}
             #${JACK_INCLUDE_DIRS}
-            ${GTK2_INCLUDE_DIRS}
             ${GTK3_INCLUDE_DIRS}
             )
     target_link_libraries(tascargui
@@ -197,7 +208,6 @@ if (GTK3_FOUND)
             tascar
             #${LIBXML++_LIBRARIES}
             #${JACK_LIBRARIES}
-            ${GTK2_LIBRARIES}
             ${GTK3_LIBRARIES}
             )
     install(

@@ -2,198 +2,269 @@ cmake_minimum_required(VERSION 3.10)
 
 # set the project name and version
 project(plugins LANGUAGES CXX)
-
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
 
-include(../version.cmake)
-set(TASCARVERSION ${FULLVERSION})
+# REQUIREMENTS
+#find_package(tascar REQUIRED)
+add_library(tascar STATIC IMPORTED GLOBAL ${PROJECT_SOURCE_DIR}/../libtascar)
+add_library(tascar::tascar ALIAS tascar)
 
-find_package (PkgConfig REQUIRED)
-pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
+find_package(Jack REQUIRED)
+find_package(LibSndFile REQUIRED)
+find_package(LibSamplerate REQUIRED)
+find_package(FFTW REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(liblo REQUIRED)
+find_package(GSL REQUIRED)
+find_package(GTK3 COMPONENTS gtkmm)
+# TODO: Following find routine does not work on macOS
+#find_package(LibXml++ REQUIRED)
+# TODO: Remove following workaround
+find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
-pkg_check_modules (JACK REQUIRED jack)
-pkg_check_modules (LIBLO REQUIRED liblo)
-pkg_check_modules (FFTW REQUIRED fftw3f)
-#pkg_check_modules (LSL REQUIRED lsl)
 
-list(APPEND receivers 
-amb1h0v
-amb1h1v
-amb3h0v
-amb3h3v
-cardioid
-cardioidmod
-chmap
-debugpos
-fakebf
-foaconv
-hann
-hoa2d
-hoa2d_fuma
-hoa2d_fuma_hos
-hoa3d
-hoa3d_enc
-hrtf
-nsp
-omni
-ortf
-simplefdn
-vmic
-wfs
-)
+if (NOT RECEIVERS)
+    list(APPEND RECEIVERS
+            amb1h0v
+            amb1h1v
+            amb3h0v
+            amb3h3v
+            cardioid
+            cardioidmod
+            chmap
+            debugpos
+            fakebf
+            foaconv
+            hann
+            hoa2d
+            hoa2d_fuma
+            hoa2d_fuma_hos
+            hoa3d
+            hoa3d_enc
+            hrtf
+            nsp
+            omni
+            ortf
+            simplefdn
+            vmic
+            wfs
+            )
+endif ()
 
-foreach(receiver IN LISTS receivers)
-	message("Building ${PLUGINPREFIX}tascarreceiver_${receiver}")
-	add_library(${PLUGINPREFIX}tascarreceiver_${receiver}
-				SHARED
-				src/receivermod_${receiver}.cc)
-	SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascarreceiver_${receiver} PROPERTIES PREFIX "")
-	target_include_directories(${PLUGINPREFIX}tascarreceiver_${receiver} PUBLIC 
-		${PROJECT_SOURCE_DIR}/../libtascar/build
-		${PROJECT_SOURCE_DIR}/../libtascar/src
-		${PROJECT_SOURCE_DIR}/plugins/src 
+if (NOT TASCARMODS)
+    list(APPEND TASCARMODS
+            #artnetdmx
+            #circularfence
+            #datalogging
+            dirgain
+            dummy
+            epicycles
+            fail
+            #fence
+            foa2hoadiff
+            geopresets
+            #glabsensors
+            granularsynth
+            hoafdnrot
+            hossustain
+            hrirconv
+            jackrec
+            #joystick
+            #levels2osc
+            #lightctl
+            locationmodulator
+            locationvelocity
+            #lslactor
+            #lsljacktime
+            #ltcgen
+            matrix
+            #midicc2osc
+            #midictl
+            motionpath
+            mpu6050track
+            nearsensor
+            #opendmxusb
+            orientationmodulator
+            oscevents
+            oscjacktime
+            #oscrelay
+            #oscserver
+            pendulum
+            #pos2lsl
+            pos2osc
+            #qualisystracker
+            rotator
+            route
+            sampler
+            savegains
+            #simplecontroller
+            sleep
+            system
+            #timedisplay
+            touchosc
+            tracegui
+            waitforjackport
+            )
+endif ()
 
-		${JACK_INCLUDE_DIRS}
-		${LIBXML++_INCLUDE_DIRS}
-		${LIBLO_INCLUDE_DIRS}
-		${LIBSNDFILE_INCLUDE_DIRS}
-		${FFTW_INCLUDE_DIRS}
-	)
+if (NOT AUDIOPLUGINS)
+    list(APPEND AUDIOPLUGINS
+            delay
+            dummy
+            gate
+            hannenv
+            identity lipsync
+            lipsync_paper
+            lookatme
+            metronome
+            onsetdetector
+            sine
+            sndfile
+            spksim
+            gainramp
+            pulse pink
+            dumplevels
+            feedbackdelay
+            bandpass
+            filter
+            level2osc
+            const
+            noise
+            loopmachine
+            pos2osc
+            gain
+            sndfileasync
+            addchannel
+            )
+endif ()
 
-	target_link_libraries(${PLUGINPREFIX}tascarreceiver_${receiver} 
-		tascar
-		${JACK_LINK_LIBRARIES}
-		${LIBXML++_LINK_LIBRARIES}
-		${LIBLO_LINK_LIBRARIES}
-		${LIBSNDFILE_LINK_LIBRARIES}
-		${FFTW_LINK_LIBRARIES}
-	)
+if (GTK3_FOUND AND NOT TASCARMODSGUI)
+    list(APPEND TASCARMODSGUI
+            tracegui
+            simplecontroller
+            timedisplay
+            geopresets
+            transportgui
+            lightcolorpicker
+            )
+    list(APPEND TASCARMOD
+            ${TASCARMODSGUI}
+            )
+endif ()
 
-	install(TARGETS ${PLUGINPREFIX}tascarreceiver_${receiver} DESTINATION lib)
+if (RECEIVERS)
+    foreach (receiver IN LISTS RECEIVERS)
+        message("Building ${PLUGINPREFIX}tascarreceiver_${receiver}")
+        add_library(${PLUGINPREFIX}receiver_${receiver}
+                SHARED
+                src/receivermod_${receiver}.cc)
+        SET_TARGET_PROPERTIES(${PLUGINPREFIX}receiver_${receiver} PROPERTIES PREFIX "")
+        target_include_directories(${PLUGINPREFIX}receiver_${receiver}
+                PRIVATE
+                ${PROJECT_SOURCE_DIR}/src
+                ${PROJECT_SOURCE_DIR}/../libtascar/include
+                PUBLIC
+                ${LIBXML++_INCLUDE_DIRS}
+                ${LIBLO_INCLUDE_DIRS}
+                ${LIBSNDFILE_INCLUDE_DIRS}
+                ${LIBSAMPLERATE_INCLUDE_DIRS}
+                ${FFTW_INCLUDE_DIRS}
+                ${JACK_INCLUDE_DIRS}
+                ${EIGEN3_INCLUDE_DIR}
+                ${GSL_INCLUDE_DIR}
+                )
+        target_link_libraries(${PLUGINPREFIX}receiver_${receiver}
+                PRIVATE
+                tascar::tascar
+                PUBLIC
+                ${LIBXML++_LIBRARIES}
+                ${LIBLO_LIBRARIES}
+                ${LIBSNDFILE_LIBRARIES}
+                ${LIBSAMPLERATE_LIBRARIES}
+                ${FFTW_LIBRARIES}
+                ${JACK_LIBRARIES}
+                ${GSL_LIBRARIES}
+                )
+        install(TARGETS ${PLUGINPREFIX}receiver_${receiver} DESTINATION lib)
+    endforeach ()
+endif ()
 
-endforeach()
+if (TASCARMODS)
+    foreach (tascarmod IN LISTS TASCARMODS)
+        message("Building ${PLUGINPREFIX}tascarmod_${tascarmod}")
+        add_library(${PLUGINPREFIX}tascarmod_${tascarmod}
+                SHARED
+                src/tascarmod_${tascarmod}.cc)
+        SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascarmod_${tascarmod} PROPERTIES PREFIX "")
+        target_include_directories(${PLUGINPREFIX}tascarmod_${tascarmod}
+                PRIVATE
+                ${PROJECT_SOURCE_DIR}/src
+                ${PROJECT_SOURCE_DIR}/../libtascar/include
+                PUBLIC
+                ${LIBXML++_INCLUDE_DIRS}
+                ${LIBLO_INCLUDE_DIRS}
+                ${LIBSNDFILE_INCLUDE_DIRS}
+                ${LIBSAMPLERATE_INCLUDE_DIRS}
+                ${FFTW_INCLUDE_DIRS}
+                ${JACK_INCLUDE_DIRS}
+                ${EIGEN3_INCLUDE_DIR}
+                ${GSL_INCLUDE_DIR}
+                ${GTK3_INCLUDE_DIRS}
+                )
+        target_link_libraries(${PLUGINPREFIX}tascarmod_${tascarmod}
+                PRIVATE
+                tascar
+                PUBLIC
+                ${LIBXML++_LIBRARIES}
+                ${LIBLO_LIBRARIES}
+                ${LIBSNDFILE_LIBRARIES}
+                ${LIBSAMPLERATE_LIBRARIES}
+                ${FFTW_LIBRARIES}
+                ${JACK_LIBRARIES}
+                ${GSL_LIBRARIES}
+                ${GTK3_LIBRARIES}
+                )
+        install(TARGETS ${PLUGINPREFIX}tascarmod_${tascarmod} DESTINATION lib)
+    endforeach ()
+endif ()
 
-list(APPEND plugins 
-tascar_ap_addchannel
-tascar_ap_bandpass
-tascar_ap_const
-tascar_ap_delay
-tascar_ap_dummy
-tascar_ap_dumplevels
-tascar_ap_feedbackdelay
-tascar_ap_filter
-tascar_ap_gain
-tascar_ap_gainramp
-tascar_ap_gate
-tascar_ap_hannenv
-tascar_ap_identity
-tascar_ap_level2osc
-tascar_ap_lipsync
-tascar_ap_lipsync_paper
-tascar_ap_lookatme
-tascar_ap_loopmachine
-tascar_ap_metronome
-tascar_ap_noise
-tascar_ap_onsetdetector
-#tascar_ap_openmha
-#tascar_ap_periodogram
-tascar_ap_pink
-tascar_ap_pos2osc
-tascar_ap_pulse
-tascar_ap_sine
-tascar_ap_sndfile
-tascar_ap_sndfileasync
-#tascar_ap_speechactivity
-tascar_ap_spksim
-#tascarmod_artnetdmx
-#tascarmod_circularfence
-#tascarmod_datalogging
-tascarmod_dirgain
-tascarmod_dummy
-tascarmod_epicycles
-tascarmod_fail
-#tascarmod_fence
-tascarmod_foa2hoadiff
-tascarmod_geopresets
-#tascarmod_glabsensors
-tascarmod_granularsynth
-tascarmod_hoafdnrot
-tascarmod_hossustain
-tascarmod_hrirconv
-tascarmod_jackrec
-#tascarmod_joystick
-#tascarmod_levels2osc
-#tascarmod_lightctl
-tascarmod_locationmodulator
-tascarmod_locationvelocity
-#tascarmod_lslactor
-#tascarmod_lsljacktime
-#tascarmod_ltcgen
-tascarmod_matrix
-#tascarmod_midicc2osc
-#tascarmod_midictl
-tascarmod_motionpath
-tascarmod_mpu6050track
-tascarmod_nearsensor
-#tascarmod_opendmxusb
-tascarmod_orientationmodulator
-tascarmod_oscevents
-tascarmod_oscjacktime
-#tascarmod_oscrelay
-#tascarmod_oscserver
-tascarmod_pendulum
-#tascarmod_pos2lsl
-tascarmod_pos2osc
-#tascarmod_qualisystracker
-tascarmod_rotator
-tascarmod_route
-tascarmod_sampler
-tascarmod_savegains
-#tascarmod_simplecontroller
-tascarmod_sleep
-tascarmod_system
-#tascarmod_timedisplay
-tascarmod_touchosc
-tascarmod_tracegui
-tascarmod_waitforjackport
-tascarsource_cardioidmod
-tascarsource_door
-tascarsource_generic1storder
-tascarsource_omni)
-
-foreach(plugin IN LISTS plugins)
-	STRING(REPLACE "tascarmod_" "tascar_" plugin_name ${plugin})
-	message("Building ${PLUGINPREFIX}${plugin_name}")
-	
-	add_library(${PLUGINPREFIX}${plugin_name}
-				SHARED
-				src/${plugin}.cc)
-	SET_TARGET_PROPERTIES(${PLUGINPREFIX}${plugin_name} PROPERTIES PREFIX "")
-	target_include_directories(${PLUGINPREFIX}${plugin_name} PUBLIC 
-		${PROJECT_SOURCE_DIR}/../libtascar/build
-		${PROJECT_SOURCE_DIR}/../libtascar/src
-		${PROJECT_SOURCE_DIR}/plugins/src 
-
-		${JACK_INCLUDE_DIRS}
-		${LIBXML++_INCLUDE_DIRS}
-		${LIBLO_INCLUDE_DIRS}
-		${LIBSNDFILE_INCLUDE_DIRS}
-		${FFTW_INCLUDE_DIRS}
-		${LSL_INCLUDE_DIRS}
-	)
-
-	target_link_libraries(${PLUGINPREFIX}${plugin_name} 
-		tascar
-		${JACK_LINK_LIBRARIES}
-		${LIBXML++_LINK_LIBRARIES}
-		${LIBLO_LINK_LIBRARIES}
-		${LIBSNDFILE_LINK_LIBRARIES}
-		${FFTW_LINK_LIBRARIES}
-		${LSL_LINK_LIBRARIES}
-	)
-
-	install(TARGETS ${PLUGINPREFIX}${plugin_name} DESTINATION lib)
-
-endforeach()
+if (AUDIOPLUGINS)
+    foreach (audioplugin IN LISTS AUDIOPLUGINS)
+        message("Building ${PLUGINPREFIX}tascar_ap_${audioplugin}")
+        add_library(${PLUGINPREFIX}tascar_ap_${audioplugin}
+                SHARED
+                src/tascar_ap_${audioplugin}.cc)
+        SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascar_ap_${audioplugin} PROPERTIES PREFIX "")
+        target_include_directories(${PLUGINPREFIX}tascar_ap_${audioplugin}
+                PRIVATE
+                ${PROJECT_SOURCE_DIR}/src
+                ${PROJECT_SOURCE_DIR}/../libtascar/include
+                PUBLIC
+                ${LIBXML++_INCLUDE_DIRS}
+                ${LIBLO_INCLUDE_DIRS}
+                ${LIBSNDFILE_INCLUDE_DIRS}
+                ${LIBSAMPLERATE_INCLUDE_DIRS}
+                ${FFTW_INCLUDE_DIRS}
+                ${JACK_INCLUDE_DIRS}
+                ${EIGEN3_INCLUDE_DIR}
+                ${GSL_INCLUDE_DIR}
+                )
+        target_link_libraries(${PLUGINPREFIX}tascar_ap_${audioplugin}
+                PRIVATE
+                PUBLIC
+                tascar::tascar
+                ${LIBXML++_LIBRARIES}
+                ${LIBLO_LIBRARIES}
+                ${LIBSNDFILE_LIBRARIES}
+                ${LIBSAMPLERATE_LIBRARIES}
+                ${FFTW_LIBRARIES}
+                ${JACK_LIBRARIES}
+                ${GSL_LIBRARIES}
+                ${GTK3_LIBRARIES}
+                )
+        install(TARGETS ${PLUGINPREFIX}tascar_ap_${audioplugin} DESTINATION lib)
+    endforeach ()
+endif ()
