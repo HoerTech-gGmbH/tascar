@@ -31,8 +31,8 @@ endif
 
 LDLIBS += -ltascar -ltascargui -ldl -lfftw3f
 LDFLAGS += -L../libtascar/build
-CXXFLAGS += -I../libtascar/src -I./src -I../libtascar/build -I./build
-CPPFLAGS += -I../libtascar/src -I./src -I../libtascar/build -I./build
+CXXFLAGS += -I../libtascar/include -I./src -I../libtascar/build -I./build
+CPPFLAGS += -I../libtascar/include -I./src -I../libtascar/build -I./build
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
