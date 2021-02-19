@@ -161,7 +161,7 @@ set_target_properties(tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
 set(TARGETS_EXPORT_NAME tascarTarget)
 set(INCLUDE_INSTALL_DIR include/tascar CACHE PATH "Install path for include files")
 configure_package_config_file(
-        "cmake/Config.cmake.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake"
         INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
         PATH_VARS INCLUDE_INSTALL_DIR
