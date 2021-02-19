@@ -5,7 +5,6 @@ project(tascar LANGUAGES CXX)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
     if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
         # Check whether we are running under Rosetta on arm64 hardware.
@@ -27,22 +26,6 @@ endif ()
 
 set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
 
-# DEPENDENCIES
-#find_package(Jack REQUIRED)
-#find_package(LibSndFile REQUIRED)
-#find_package(LibSamplerate REQUIRED)
-#find_package(FFTW REQUIRED)
-#find_package(Eigen3 REQUIRED)
-#find_package(liblo REQUIRED)
-#find_package(GSL REQUIRED)
-#find_package(GTK3 COMPONENTS gtkmm)
-# TODO: Following find routine does not work on macOS
-#find_package(LibXml++ REQUIRED)
-# TODO: Remove following workaround
-#find_package(PkgConfig REQUIRED)
-#pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
-
-
 # LIBTASCAR
 add_subdirectory(libtascar)
 add_library(tascar::tascar ALIAS tascar)
@@ -61,26 +44,10 @@ if (RECEIVERS)
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/plugins/src
                 ${PROJECT_SOURCE_DIR}/libtascar/include
-                PUBLIC
-                ${LIBXML++_INCLUDE_DIRS}
-                ${LIBLO_INCLUDE_DIRS}
-                ${LIBSNDFILE_INCLUDE_DIRS}
-                ${LIBSAMPLERATE_INCLUDE_DIRS}
-                ${FFTW_INCLUDE_DIRS}
-                ${JACK_INCLUDE_DIRS}
-                ${EIGEN3_INCLUDE_DIR}
-                ${GSL_INCLUDE_DIR}
                 )
         target_link_libraries(${PLUGINPREFIX}receiver_${receiver}
                 PUBLIC
                 tascar
-                ${LIBXML++_LIBRARIES}
-                ${LIBLO_LIBRARIES}
-                ${LIBSNDFILE_LIBRARIES}
-                ${LIBSAMPLERATE_LIBRARIES}
-                ${FFTW_LIBRARIES}
-                ${JACK_LIBRARIES}
-                ${GSL_LIBRARIES}
                 )
         install(TARGETS ${PLUGINPREFIX}receiver_${receiver} DESTINATION lib)
     endforeach ()
@@ -97,28 +64,10 @@ if (TASCARMODS)
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/plugins/src
                 ${PROJECT_SOURCE_DIR}/libtascar/include
-                PUBLIC
-                ${LIBXML++_INCLUDE_DIRS}
-                ${LIBLO_INCLUDE_DIRS}
-                ${LIBSNDFILE_INCLUDE_DIRS}
-                ${LIBSAMPLERATE_INCLUDE_DIRS}
-                ${FFTW_INCLUDE_DIRS}
-                ${JACK_INCLUDE_DIRS}
-                ${EIGEN3_INCLUDE_DIR}
-                ${GSL_INCLUDE_DIR}
-                ${GTK3_INCLUDE_DIRS}
                 )
         target_link_libraries(${PLUGINPREFIX}tascarmod_${tascarmod}
                 PUBLIC
                 tascar::tascar
-                ${LIBXML++_LIBRARIES}
-                ${LIBLO_LIBRARIES}
-                ${LIBSNDFILE_LIBRARIES}
-                ${LIBSAMPLERATE_LIBRARIES}
-                ${FFTW_LIBRARIES}
-                ${JACK_LIBRARIES}
-                ${GSL_LIBRARIES}
-                ${GTK3_LIBRARIES}
                 )
         install(TARGETS ${PLUGINPREFIX}tascarmod_${tascarmod} DESTINATION lib)
     endforeach ()
@@ -139,14 +88,6 @@ if (AUDIOPLUGINS)
         target_link_libraries(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 PUBLIC
                 tascar::tascar
-                ${LIBXML++_LIBRARIES}
-                ${LIBLO_LIBRARIES}
-                ${LIBSNDFILE_LIBRARIES}
-                ${LIBSAMPLERATE_LIBRARIES}
-                ${FFTW_LIBRARIES}
-                ${JACK_LIBRARIES}
-                ${GSL_LIBRARIES}
-                ${GTK3_LIBRARIES}
                 )
         install(TARGETS ${PLUGINPREFIX}tascar_ap_${audioplugin} DESTINATION lib)
     endforeach ()

@@ -37,7 +37,6 @@ if (NOT TASCARMODS)
             fail
             #fence
             foa2hoadiff
-            geopresets
             #glabsensors
             granularsynth
             hoafdnrot
@@ -72,12 +71,9 @@ if (NOT TASCARMODS)
             route
             sampler
             savegains
-            #simplecontroller
             sleep
             system
-            #timedisplay
             touchosc
-            tracegui
             waitforjackport
             )
 endif ()
@@ -114,6 +110,7 @@ if (NOT AUDIOPLUGINS)
 endif ()
 
 if (GTK3_FOUND AND NOT TASCARMODSGUI)
+    message("Building also GTK3 related tascar GUI mods")
     list(APPEND TASCARMODSGUI
             tracegui
             simplecontroller
