@@ -7,6 +7,7 @@ include(CMakePackageConfigHelpers)
 include(${PROJECT_SOURCE_DIR}/../version.cmake)
 set(PROJECT_VERSION ${VERSION})
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
