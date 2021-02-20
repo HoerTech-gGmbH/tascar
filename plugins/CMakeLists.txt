@@ -18,9 +18,12 @@ endif()
 # PLUGINS
 include(${PROJECT_SOURCE_DIR}}/../plugins.cmake)
 
+set_property(GLOBAL PROPERTY TASCAR_PLUGIN_LIBRARIES)
+
 if (RECEIVERS)
     foreach (receiver IN LISTS RECEIVERS)
         message("Building ${PLUGINPREFIX}tascarreceiver_${receiver}")
+        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}receiver_${receiver}) 
         add_library(${PLUGINPREFIX}receiver_${receiver}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/receivermod_${receiver}.cc)
@@ -44,6 +47,7 @@ endif ()
 if (TASCARMODS)
     foreach (tascarmod IN LISTS TASCARMODS)
         message("Building ${PLUGINPREFIX}tascarmod_${tascarmod}")
+        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascarmod_${tascarmod})
         add_library(${PLUGINPREFIX}tascarmod_${tascarmod}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/tascarmod_${tascarmod}.cc)
@@ -65,6 +69,7 @@ endif ()
 if (AUDIOPLUGINS)
     foreach (audioplugin IN LISTS AUDIOPLUGINS)
         message("Building ${PLUGINPREFIX}tascar_ap_${audioplugin}")
+        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascar_ap_${audioplugin})
         add_library(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/tascar_ap_${audioplugin}.cc)
