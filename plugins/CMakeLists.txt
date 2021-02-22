@@ -32,7 +32,7 @@ if (RECEIVERS)
                 ${PROJECT_SOURCE_DIR}/src/receivermod_${receiver}.cc)
 
         add_dependencies(${PLUGINPREFIX}tascarreceiver_${receiver} tascar)
-        #SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascarreceiver_${receiver} PROPERTIES PREFIX "")
+        SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascarreceiver_${receiver} PROPERTIES PREFIX "")
         target_include_directories(${PLUGINPREFIX}tascarreceiver_${receiver}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
@@ -54,7 +54,7 @@ if (TASCARMODS)
         add_library(${PLUGINPREFIX}tascarmod_${tascarmod}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/tascarmod_${tascarmod}.cc)
-        #set_target_properties(${PLUGINPREFIX}tascarmod_${tascarmod} PROPERTIES PREFIX "")
+        set_target_properties(${PLUGINPREFIX}tascarmod_${tascarmod} PROPERTIES PREFIX "")
         target_include_directories(${PLUGINPREFIX}tascarmod_${tascarmod}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
@@ -77,7 +77,7 @@ if (SOURCEMODS)
         add_library(${PLUGINPREFIX}tascarsource_${sourcemod}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/tascarsource_${sourcemod}.cc)
-        #set_target_properties(${PLUGINPREFIX}tascarsource_${sourcemod} PROPERTIES PREFIX "")
+        set_target_properties(${PLUGINPREFIX}tascarsource_${sourcemod} PROPERTIES PREFIX "")
         target_include_directories(${PLUGINPREFIX}tascarsource_${sourcemod}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
@@ -99,7 +99,7 @@ if (AUDIOPLUGINS)
         add_library(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/tascar_ap_${audioplugin}.cc)
-        #SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascar_ap_${audioplugin} PROPERTIES PREFIX "")
+        SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascar_ap_${audioplugin} PROPERTIES PREFIX "")
         target_include_directories(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
