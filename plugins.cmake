@@ -78,6 +78,15 @@ if (NOT TASCARMODS)
             )
 endif ()
 
+if(NOT SOURCEMODS)
+        list(APPEND SOURCEMODS
+                cardioidmod
+                door
+                generic1storder
+                omni
+        )
+endif()
+
 if (NOT AUDIOPLUGINS)
     list(APPEND AUDIOPLUGINS
             delay
