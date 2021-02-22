@@ -23,24 +23,24 @@ set_property(GLOBAL PROPERTY TASCAR_PLUGIN_LIBRARIES)
 if (RECEIVERS)
     foreach (receiver IN LISTS RECEIVERS)
         message("Building ${PLUGINPREFIX}tascarreceiver_${receiver}")
-        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}receiver_${receiver}) 
-        add_library(${PLUGINPREFIX}receiver_${receiver}
+        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascarreceiver_${receiver}) 
+        add_library(${PLUGINPREFIX}tascarreceiver_${receiver}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/receivermod_${receiver}.cc)
 
-        add_dependencies(${PLUGINPREFIX}receiver_${receiver} tascar)
-        SET_TARGET_PROPERTIES(${PLUGINPREFIX}receiver_${receiver} PROPERTIES PREFIX "")
-        target_include_directories(${PLUGINPREFIX}receiver_${receiver}
+        add_dependencies(${PLUGINPREFIX}tascarreceiver_${receiver} tascar)
+        SET_TARGET_PROPERTIES(${PLUGINPREFIX}tascarreceiver_${receiver} PROPERTIES PREFIX "")
+        target_include_directories(${PLUGINPREFIX}tascarreceiver_${receiver}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
                 PUBLIC
                 ${TASCAR_INCLUDE_DIRECTORIES}
                 )
-        target_link_libraries(${PLUGINPREFIX}receiver_${receiver}
+        target_link_libraries(${PLUGINPREFIX}tascarreceiver_${receiver}
                 PUBLIC
                 tascar::tascar
                 )
-        install(TARGETS ${PLUGINPREFIX}receiver_${receiver} DESTINATION lib)
+        install(TARGETS ${PLUGINPREFIX}tascarreceiver_${receiver} DESTINATION lib)
     endforeach ()
 endif ()
 
