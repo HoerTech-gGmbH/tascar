@@ -49,23 +49,23 @@ endif ()
 
 if (TASCARMODS)
     foreach (tascarmod IN LISTS TASCARMODS)
-        message("Building ${PLUGINPREFIX}tascarmod_${tascarmod} for version ${FULLVERSION}")
-        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascarmod_${tascarmod})
-        add_library(${PLUGINPREFIX}tascarmod_${tascarmod}
+        message("Building ${PLUGINPREFIX}tascar_${tascarmod} for version ${FULLVERSION}")
+        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascar_${tascarmod})
+        add_library(${PLUGINPREFIX}tascar_${tascarmod}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/tascarmod_${tascarmod}.cc)
-        set_target_properties(${PLUGINPREFIX}tascarmod_${tascarmod} PROPERTIES PREFIX "")
-        target_include_directories(${PLUGINPREFIX}tascarmod_${tascarmod}
+        set_target_properties(${PLUGINPREFIX}tascar_${tascarmod} PROPERTIES PREFIX "")
+        target_include_directories(${PLUGINPREFIX}tascar_${tascarmod}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
                 PUBLIC
                 ${TASCAR_INCLUDE_DIRECTORIES}
                 )
-        target_link_libraries(${PLUGINPREFIX}tascarmod_${tascarmod}
+        target_link_libraries(${PLUGINPREFIX}tascar_${tascarmod}
                 PUBLIC
                 tascar::tascar
                 )
-        install(TARGETS ${PLUGINPREFIX}tascarmod_${tascarmod} DESTINATION lib)
+        install(TARGETS ${PLUGINPREFIX}tascar_${tascarmod} DESTINATION lib)
     endforeach ()
 endif ()
 
