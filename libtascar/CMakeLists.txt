@@ -107,15 +107,15 @@ find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
-find_package(GTK3 COMPONENTS gtkmm)
+find_package(LibXml++3)
+#if (NOT LIBXML++3_FOUND)
+#    message("Falling back to LibXml++-2.6")
 find_package(LibXml++ REQUIRED)
-
-
-if (JACK_FOUND AND LIBSNDFILE_FOUND AND LIBXML++_FOUND AND FFTW_FOUND AND LIBLO_FOUND AND LIBSAMPLERATE_FOUND AND GSL_FOUND AND EIGEN3_FOUND)
-    message("All dependencies ok!")
-else ()
-    message(FATAL_ERROR "Missing dependencies.")
-endif ()
+#else ()
+#    set(LIBXML++_LIBRARIES ${LIBXML++3_LIBRARIES})
+#    set(LIBXML++_INCLUDE_DIRS ${LIBXML++3_INCLUDE_DIRS})
+#endif ()
+find_package(GTK3 COMPONENTS gtkmm)
 
 # ADDITIONAL FLAGS
 set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
