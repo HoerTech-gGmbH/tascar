@@ -17,6 +17,7 @@ configure_file(
 )
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
     if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
         # Check whether we are running under Rosetta on arm64 hardware.
