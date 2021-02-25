@@ -41,6 +41,7 @@ namespace TASCAR {
       route_t(xmlpp::Element*);
       ~route_t();
       std::string get_name() const { return name; };
+      std::string get_id() const { return id; };
       bool get_mute() const { return mute; };
       bool get_solo() const { return solo; };
       std::string default_name(const std::string& s)
@@ -84,6 +85,7 @@ namespace TASCAR {
 
     private:
       std::string name;
+      std::string id;
       bool mute;
       bool solo;
       float meter_tc;
@@ -253,9 +255,11 @@ namespace TASCAR {
       std::string get_parent_name() const { return parentname; };
       std::string get_name() const { return name; };
       std::string get_fullname() const { return parentname + "." + name; };
+      std::string get_id() const { return id; };
 
     private:
       std::string name;
+      std::string id;
       std::string parentname;
     };
 
@@ -318,9 +322,11 @@ namespace TASCAR {
       std::string next_sound_name() const;
       void validate_attributes(std::string& msg) const;
       void add_licenses(licensehandler_t*);
+      sound_t& sound_by_id(const std::string& id);
 
     private:
       int32_t startframe;
+      std::map<std::string, sound_t*> soundmap;
     };
 
     /**
@@ -420,6 +426,7 @@ namespace TASCAR {
       void release();
       std::string description;
       std::string name;
+      std::string id;
       double c;
       /**
          \brief Update geometry of all objects within a scene based on current
@@ -436,6 +443,8 @@ namespace TASCAR {
       */
       void process_active(double t);
       std::vector<sound_t*> sounds;
+      std::map<std::string, sound_t*> soundmap;
+      sound_t& sound_by_id(const std::string& id);
       std::vector<src_object_t*> source_objects;
       std::vector<diff_snd_field_obj_t*> diff_snd_field_objects;
       std::vector<face_object_t*> face_objects;

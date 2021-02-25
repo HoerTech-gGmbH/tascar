@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene ismorder="3">
+    <source>
+      <sound x="1">
+	<plugins>
+	  <sine/>
+	</plugins>
+      </sound>
+    </source>
+    <source name="in2">
+      <sound x="-1">
+	<plugins>
+	  <sine f="2000"/>
+	</plugins>
+      </sound>
+    </source>
+    <receiver type="omni"/>
+  </scene>
+</session>

@@ -131,43 +131,58 @@ namespace TASCAR {
     pid_t pid_initcmd;
   };
 
-  class session_t : public session_core_t, public session_oscvars_t, public jackc_transport_t, public TASCAR::osc_server_t {
+  class session_t : public session_core_t,
+                    public session_oscvars_t,
+                    public jackc_transport_t,
+                    public TASCAR::osc_server_t {
   public:
     session_t();
-    session_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
+    session_t(const std::string& filename_or_data, load_type_t t,
+              const std::string& path);
+
   private:
     session_t(const session_t& src);
+
   public:
     virtual ~session_t();
-    void add_scene(xmlpp::Element* src=NULL);
+    void add_scene(xmlpp::Element* src = NULL);
     void add_range(xmlpp::Element*);
     void add_connection(xmlpp::Element*);
     void add_module(xmlpp::Element*);
     void start();
     void stop();
-    void run(bool &b_quit, bool use_stdin=true);
+    void run(bool& b_quit, bool use_stdin = true);
     double get_duration() const { return duration; };
     uint32_t get_active_pointsources() const;
     uint32_t get_total_pointsources() const;
     uint32_t get_active_diffuse_sound_fields() const;
     uint32_t get_total_diffuse_sound_fields() const;
-    std::vector<TASCAR::named_object_t> find_objects(const std::string& pattern);
-    std::vector<TASCAR::Scene::audio_port_t*> find_audio_ports(const std::vector<std::string>& pattern);
+    std::vector<TASCAR::named_object_t>
+    find_objects(const std::string& pattern);
+    std::vector<TASCAR::Scene::audio_port_t*>
+    find_audio_ports(const std::vector<std::string>& pattern);
     std::vector<TASCAR::scene_render_rt_t*> scenes;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;
     std::vector<TASCAR::module_t*> modules;
     std::vector<std::string> get_render_output_ports() const;
-    virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
+    virtual int process(jack_nframes_t nframes,
+                        const std::vector<float*>& inBuffer,
+                        const std::vector<float*>& outBuffer, uint32_t tp_frame,
+                        bool tp_rolling);
     void unload_modules();
     bool lock_vars();
     void unlock_vars();
     bool trylock_vars();
     bool is_running() { return started_; };
-    virtual void validate_attributes(std::string &) const;
+    virtual void validate_attributes(std::string&) const;
+    TASCAR::scene_render_rt_t& scene_by_id(const std::string& id);
+    TASCAR::Scene::sound_t& sound_by_id(const std::string& id);
+
   protected:
     // derived variables:
     std::string session_path;
+
   private:
     void add_transport_methods();
     void read_xml();
@@ -175,6 +190,8 @@ namespace TASCAR {
     bool started_;
     pthread_mutex_t mtx;
     std::set<std::string> namelist;
+    std::map<std::string, TASCAR::scene_render_rt_t*> scenemap;
+    std::map<std::string, TASCAR::Scene::sound_t*> soundmap;
     //
   };
 

@@ -128,7 +128,18 @@ void src_object_t::add_sound(xmlpp::Element* src)
 {
   if(!src)
     src = dynobject_t::e->add_child("sound");
-  sound.push_back(new sound_t(src, this));
+  sound_t* snd(new sound_t(src, this));
+  sound.push_back(snd);
+  soundmap[snd->get_id()] = snd;
+}
+
+sound_t& src_object_t::sound_by_id(const std::string& id)
+{
+  auto snd(soundmap.find(id));
+  if(snd != soundmap.end())
+    return *(snd->second);
+  throw TASCAR::ErrMsg("Unknown sound id \"" + id + "\" in source \"" +
+                       get_name() + "\".");
 }
 
 src_object_t::~src_object_t()
@@ -210,13 +221,15 @@ void src_object_t::release()
 
 scene_t::scene_t(xmlpp::Element* xmlsrc)
     : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name()),
-      description(""), name(""), c(340.0), ismorder(1), guiscale(200),
-      guitrackobject(NULL), anysolo(0), scene_path(""), active(true)
+      description(""), name(""), id(TASCAR::get_tuid()), c(340.0), ismorder(1),
+      guiscale(200), guitrackobject(NULL), anysolo(0), scene_path(""),
+      active(true)
 {
   try {
     GET_ATTRIBUTE(name);
     if(name.empty())
       name = "scene";
+    GET_ATTRIBUTE(id);
     if(has_attribute("mirrororder")) {
       uint32_t mirrororder(1);
       GET_ATTRIBUTE(mirrororder);
@@ -285,11 +298,20 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         }
       }
     }
-    for(std::vector<src_object_t*>::iterator it = source_objects.begin();
-        it != source_objects.end(); ++it) {
-      for(std::vector<sound_t*>::iterator its = (*it)->sound.begin();
-          its != (*it)->sound.end(); ++its) {
-        sounds.push_back(*its);
+    for(auto source_object : source_objects) {
+      for(auto sound : source_object->sound) {
+        sounds.push_back(sound);
+        const std::string id(sound->get_id());
+        auto mapsnd(soundmap.find(id));
+        if(mapsnd != soundmap.end()) {
+          throw TASCAR::ErrMsg("The sound id \"" + id +
+                               "\" of source object \"" +
+                               source_object->get_name() +
+                               "\" is not unique (already used by source \"" +
+                               soundmap[id]->get_parent_name() + "\").");
+        } else {
+          soundmap[sound->get_id()] = sound;
+        }
       }
     }
     std::string guitracking;
@@ -304,6 +326,15 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
   }
 }
 
+sound_t& scene_t::sound_by_id(const std::string& id)
+{
+  auto snd(soundmap.find(id));
+  if(snd != soundmap.end())
+    return *(snd->second);
+  throw TASCAR::ErrMsg("Unknown sound id \"" + id + "\" in scene \"" + name +
+                       "\".");
+}
+
 void scene_t::configure_meter(float tc, TASCAR::levelmeter::weight_t w)
 {
   std::vector<object_t*> objs(get_objects());
@@ -314,10 +345,8 @@ void scene_t::configure_meter(float tc, TASCAR::levelmeter::weight_t w)
 
 void scene_t::clean_children()
 {
-  std::vector<object_t*> objs(get_objects());
-  for(std::vector<object_t*>::iterator it = objs.begin(); it != objs.end();
-      ++it)
-    delete *it;
+  for(auto obj : get_objects() )
+    delete obj;
 }
 
 scene_t::~scene_t()
@@ -667,12 +696,13 @@ float sound_t::read_meter()
 }
 
 route_t::route_t(xmlpp::Element* xmlsrc)
-    : xml_element_t(xmlsrc), mute(false), solo(false), meter_tc(2),
-      meter_weight(TASCAR::levelmeter::Z), targetlevel(0)
+    : xml_element_t(xmlsrc), id(TASCAR::get_tuid()), mute(false), solo(false),
+      meter_tc(2), meter_weight(TASCAR::levelmeter::Z), targetlevel(0)
 {
-  get_attribute("name", name);
-  get_attribute_bool("mute", mute);
-  get_attribute_bool("solo", solo);
+  GET_ATTRIBUTE(name);
+  GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE_BOOL(mute);
+  GET_ATTRIBUTE_BOOL(solo);
 }
 
 void route_t::set_solo(bool b, uint32_t& anysolo)
@@ -1064,13 +1094,14 @@ void obstacle_group_t::process_active(double t, uint32_t anysolo)
 }
 
 sound_name_t::sound_name_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
-    : xml_element_t(xmlsrc)
+    : xml_element_t(xmlsrc), id(TASCAR::get_tuid())
 {
   GET_ATTRIBUTE(name);
   if(parent_ && name.empty())
     name = parent_->next_sound_name();
   if(name.empty())
     throw TASCAR::ErrMsg("Invalid (empty) sound name.");
+  GET_ATTRIBUTE(id);
   if(parent_)
     parentname = parent_->get_name();
 }

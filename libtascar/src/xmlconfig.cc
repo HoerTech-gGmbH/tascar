@@ -9,8 +9,16 @@ namespace TASCAR {
   std::map<xmlpp::Element*, std::map<std::string, std::string>> attribute_list;
   std::vector<std::string> warnings;
   globalconfig_t config;
+  size_t maxid(0);
 } // namespace TASCAR
 
+std::string TASCAR::get_tuid()
+{
+  // todo: make thread safe
+  char c[1024];
+  sprintf(c,"%lx",++maxid);
+  return c;
+}
 
 std::string TASCAR::strrep(std::string s,const std::string& pat, const std::string& rep)
 {

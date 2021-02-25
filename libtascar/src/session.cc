@@ -504,21 +504,51 @@ std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
 void TASCAR::session_t::add_scene(xmlpp::Element* src)
 {
   TASCAR::scene_render_rt_t* newscene(NULL);
-  if( !src )
+  if(!src)
     src = tsc_reader_t::e->add_child("scene");
-  try{
+  try {
     newscene = new TASCAR::scene_render_rt_t(src);
-    if(namelist.find( newscene->name)!=namelist.end())
-      throw TASCAR::ErrMsg("A scene of name \""+newscene->name+
+    if(namelist.find(newscene->name) != namelist.end())
+      throw TASCAR::ErrMsg("A scene of name \"" + newscene->name +
                            "\" already exists in the session.");
     namelist.insert(newscene->name);
     scenes.push_back(newscene);
-    scenes.back()->configure_meter( levelmeter_tc, levelmeter_weight );
+    scenes.back()->configure_meter(levelmeter_tc, levelmeter_weight);
+    scenemap[newscene->id] = newscene;
+    for(auto sound : newscene->sounds) {
+      const std::string id(sound->get_id());
+      auto mapsnd(soundmap.find(id));
+      if(mapsnd != soundmap.end()) {
+        throw TASCAR::ErrMsg("The sound id \"" + id +
+                             "\" is not unique (already used by source \"" +
+                             soundmap[id]->get_parent_name() +
+                             "\" in scene \"" + newscene->name + "\").");
+      } else {
+        soundmap[sound->get_id()] = sound;
+      }
+    }
   }
-  catch( ... ){
+  catch(...) {
     delete newscene;
     throw;
   }
+}
+
+TASCAR::Scene::sound_t& TASCAR::session_t::sound_by_id(const std::string& id)
+{
+  auto snd(soundmap.find(id));
+  if(snd != soundmap.end())
+    return *(snd->second);
+  throw TASCAR::ErrMsg("Unknown sound id \"" + id + "\" in session.");
+}
+
+TASCAR::scene_render_rt_t& TASCAR::session_t::scene_by_id(const std::string& id)
+{
+  auto scene(scenemap.find(id));
+  if(scene != scenemap.end())
+    return *(scene->second);
+  throw TASCAR::ErrMsg("Unknown scene id \"" + id + "\" in session \"" + name +
+                       "\".");
 }
 
 void TASCAR::session_t::add_range(xmlpp::Element* src)
