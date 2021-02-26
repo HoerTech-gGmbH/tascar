@@ -54,11 +54,18 @@ install: all
 	install -D gui/build/tascar_spkcalib -t $(DESTDIR)$(BINDIR)
 	ldconfig -n $(DESTDIR)$(LIBDIR)
 
-.PHONY : all clean test docexamples
+.PHONY : all clean test docexamples releasetag checkmodified
 
 docexamples:
 	$(MAKE) -C manual/examples
 
-
 pack: $(MODULES) $(DOCMODULES) docexamples unit-tests test
 	$(MAKE) -C packaging/deb
+
+include config.mk
+
+checkmodified:
+	test -z "`git status --porcelain -uno`"
+
+releasetag: checkmodified
+	git tag -a release_$(VERSION)
