@@ -53,5 +53,11 @@ install: all
 	install -D gui/build/tascar_spkcalib -t $(DESTDIR)$(BINDIR)
 	ldconfig -n $(DESTDIR)$(LIBDIR)
 
-.PHONY : all clean test
+.PHONY : all clean test docexamples
 
+docexamples:
+	$(MAKE) -C manual/examples
+
+
+pack: $(MODULES) $(DOCMODULES) docexamples unit-tests test
+	$(MAKE) -C packaging/deb

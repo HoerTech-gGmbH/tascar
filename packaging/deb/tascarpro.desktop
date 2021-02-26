@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=TASCAR
+Exec=tascar
+Type=Application
+Icon=tascarpro.png
+Categories=Audio;AudioVideo;
+MimeType=application/x-tascar
