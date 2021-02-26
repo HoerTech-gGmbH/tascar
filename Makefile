@@ -24,6 +24,7 @@ clean:
 	$(MAKE) -C manual clean
 	$(MAKE) -C examples clean
 	$(MAKE) -C external_libs clean
+	$(MAKE) -C packaging/deb clean
 	rm -Rf build devkit/Makefile.local devkit/build
 
 # test can not run in multi-threaded mode!
