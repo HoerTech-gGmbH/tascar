@@ -62,7 +62,7 @@ docexamples:
 pack: $(MODULES) $(DOCMODULES) docexamples unit-tests test
 	$(MAKE) -C packaging/deb
 
-releasepack: checkversiontagged $(MODULES) $(DOCMODULES) docexamples unit-tests test
+releasepack: checkversiontagged checkmodified $(MODULES) $(DOCMODULES) docexamples unit-tests test
 	$(MAKE) -C packaging/deb
 
 include config.mk
@@ -71,7 +71,7 @@ checkmodified:
 	test -z "`git status --porcelain -uno`"
 
 checkversiontagged:
-	test "`git log -1 --abbrev=7 --pretty='format:%h'`" == "`git log -1 --abbrev=7 --pretty='format:%h' release_$(VERSION)`"
+	test "`git log -1 --abbrev=7 --pretty='format:%h'`" = "`git log -1 --abbrev=7 --pretty='format:%h' release_$(VERSION)`"
 
 releasetag: checkmodified
 	git tag -a release_$(VERSION)
