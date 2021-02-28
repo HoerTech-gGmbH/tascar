@@ -1,0 +1,6 @@
+Section: non-free/sound
+Maintainer: Giso Grimm <g.grimm@hoertech.de>
+Description: TASCARpro gesture lab sensor support
+  TASCARpro is a toolbox for acoustic scene creation and rendering
+  (virtual acoustic environment, VAE).
+Homepage: http://www.tascar.org/

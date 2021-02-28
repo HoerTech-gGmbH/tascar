@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=TASCAR speaker calibration
+Exec=tascar_spkcalib
+Type=Application
+Icon=tascarspkcalib.png
+Categories=Audio;AudioVideo;
+MimeType=application/x-tascarspeakerlayout

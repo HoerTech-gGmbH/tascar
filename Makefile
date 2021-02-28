@@ -24,6 +24,7 @@ clean:
 	$(MAKE) -C manual clean
 	$(MAKE) -C examples clean
 	$(MAKE) -C external_libs clean
+	$(MAKE) -C packaging/deb clean
 	rm -Rf build devkit/Makefile.local devkit/build
 
 # test can not run in multi-threaded mode!
@@ -53,5 +54,24 @@ install: all
 	install -D gui/build/tascar_spkcalib -t $(DESTDIR)$(BINDIR)
 	ldconfig -n $(DESTDIR)$(LIBDIR)
 
-.PHONY : all clean test
+.PHONY : all clean test docexamples releasetag checkmodified checkversiontagged
 
+docexamples:
+	$(MAKE) -C manual/examples
+
+pack: $(MODULES) $(DOCMODULES) docexamples unit-tests test
+	$(MAKE) -C packaging/deb
+
+releasepack: checkversiontagged checkmodified $(MODULES) $(DOCMODULES) docexamples unit-tests test
+	$(MAKE) -C packaging/deb
+
+include config.mk
+
+checkmodified:
+	test -z "`git status --porcelain -uno`"
+
+checkversiontagged:
+	test "`git log -1 --abbrev=7 --pretty='format:%h'`" = "`git log -1 --abbrev=7 --pretty='format:%h' release_$(VERSION)`"
+
+releasetag: checkmodified
+	git tag -a release_$(VERSION)

@@ -1,0 +1,3 @@
+"libtascar/build/libtascar.so.${LIBVERSION}","usr/lib/"
+"libtascar/build/libtascargui.so.${LIBVERSION}","usr/lib/"
+"libtascar/build/libtascardmx.so.${LIBVERSION}","usr/lib/"

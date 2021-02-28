@@ -46,3 +46,6 @@ googletest
 
 # cmake
 CMakeFiles
+
+# session file validation:
+*.validated

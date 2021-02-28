@@ -2,6 +2,7 @@ html
 *.aux
 *.idx
 *.log
+*.out
 tutorial0.pdf
 tutorial1.pdf
 tutorial2.pdf

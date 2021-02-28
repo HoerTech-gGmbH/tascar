@@ -1,0 +1,7 @@
+#!/bin/sh
+rm -f /usr/lib/libtascar.so /usr/lib/libtascargui.so /usr/lib/libtascardmx.so
+ldconfig -n /usr/lib
+# symlink latest version to plain:
+ln -s `ls /usr/lib/libtascar.so.*|sort|tail -1` /usr/lib/libtascar.so
+ln -s `ls /usr/lib/libtascargui.so.*|sort|tail -1` /usr/lib/libtascargui.so
+ln -s `ls /usr/lib/libtascardmx.so.*|sort|tail -1` /usr/lib/libtascardmx.so
