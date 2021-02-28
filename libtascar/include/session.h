@@ -178,6 +178,8 @@ namespace TASCAR {
     virtual void validate_attributes(std::string&) const;
     TASCAR::scene_render_rt_t& scene_by_id(const std::string& id);
     TASCAR::Scene::sound_t& sound_by_id(const std::string& id);
+    TASCAR::Scene::src_object_t& source_by_id(const std::string& id);
+    TASCAR::Scene::receiver_obj_t& receiver_by_id(const std::string& id);
 
   protected:
     // derived variables:
@@ -192,6 +194,8 @@ namespace TASCAR {
     std::set<std::string> namelist;
     std::map<std::string, TASCAR::scene_render_rt_t*> scenemap;
     std::map<std::string, TASCAR::Scene::sound_t*> soundmap;
+    std::map<std::string, TASCAR::Scene::src_object_t*> sourcemap;
+    std::map<std::string, TASCAR::Scene::receiver_obj_t*> receivermap;
     //
   };
 

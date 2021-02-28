@@ -527,6 +527,30 @@ void TASCAR::session_t::add_scene(xmlpp::Element* src)
         soundmap[sound->get_id()] = sound;
       }
     }
+    for(auto source : newscene->source_objects) {
+      const std::string id(source->get_id());
+      auto mapsrc(sourcemap.find(id));
+      if(mapsrc != sourcemap.end()) {
+        throw TASCAR::ErrMsg("The sound id \"" + id +
+                             "\" is not unique (already used by source \"" +
+                             sourcemap[id]->get_name() + "\" in scene \"" +
+                             newscene->name + "\").");
+      } else {
+        sourcemap[source->get_id()] = source;
+      }
+    }
+    for(auto rec : newscene->receivermod_objects) {
+      const std::string id(rec->get_id());
+      auto maprec(receivermap.find(id));
+      if(maprec != receivermap.end()) {
+        throw TASCAR::ErrMsg("The sound id \"" + id +
+                             "\" is not unique (already used by source \"" +
+                             receivermap[id]->get_name() + "\" in scene \"" +
+                             newscene->name + "\").");
+      } else {
+        receivermap[rec->get_id()] = rec;
+      }
+    }
   }
   catch(...) {
     delete newscene;
@@ -549,6 +573,25 @@ TASCAR::scene_render_rt_t& TASCAR::session_t::scene_by_id(const std::string& id)
     return *(scene->second);
   throw TASCAR::ErrMsg("Unknown scene id \"" + id + "\" in session \"" + name +
                        "\".");
+}
+
+TASCAR::Scene::src_object_t&
+TASCAR::session_t::source_by_id(const std::string& id)
+{
+  auto src(sourcemap.find(id));
+  if(src != sourcemap.end())
+    return *(src->second);
+  throw TASCAR::ErrMsg("Unknown source id \"" + id + "\" in session.");
+}
+
+TASCAR::Scene::receiver_obj_t&
+TASCAR::session_t::receiver_by_id(const std::string& id)
+{
+  auto rec(receivermap.find(id));
+  if(rec != receivermap.end())
+    return *(rec->second);
+  throw TASCAR::ErrMsg("Unknown receiver id \"" + id + "\" in session \"" +
+                       name + "\".");
 }
 
 void TASCAR::session_t::add_range(xmlpp::Element* src)
