@@ -9,6 +9,7 @@
 #include <gsl/gsl_sf.h>
 #include <vector>
 
+/// Encoder and decoder classes for Higher Order Ambisonics
 namespace HOA {
 
   class encoder_t {

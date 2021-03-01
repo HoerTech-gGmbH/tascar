@@ -34,11 +34,10 @@
 #include <gtkmm/window.h>
 #include <gtkmm/drawingarea.h>
 #include <cairomm/context.h>
-//#include <lo/lo.h>
 #include "viewport.h"
-//#include "jackrender.h"
 #include "session.h"
 
+/// Name space for graphical user interface components
 namespace TSCGUI {
 
   class playertimeline_t : public Gtk::DrawingArea {

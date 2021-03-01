@@ -34,6 +34,7 @@
 #include <netdb.h>
 #include <lo/lo.h>
 
+/// classes for DMX based light control
 namespace DMX {
 
   class driver_t {
