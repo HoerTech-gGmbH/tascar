@@ -28,11 +28,11 @@ door_t::door_t(xmlpp::Element* xmlsrc)
     distance(1),
     wndsqrt(false)
 {
-  GET_ATTRIBUTE(width);
-  GET_ATTRIBUTE(height);
-  GET_ATTRIBUTE(falloff);
-  GET_ATTRIBUTE(distance);
-  GET_ATTRIBUTE_BOOL(wndsqrt);
+  GET_ATTRIBUTE_(width);
+  GET_ATTRIBUTE_(height);
+  GET_ATTRIBUTE_(falloff);
+  GET_ATTRIBUTE_(distance);
+  GET_ATTRIBUTE_BOOL_(wndsqrt);
   nonrt_set_rect( width, height );
   diffractor_t::operator+=( TASCAR::pos_t(0,-0.5*width,-0.5*height));
 }

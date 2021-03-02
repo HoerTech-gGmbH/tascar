@@ -18,8 +18,8 @@ sine_t::sine_t( const TASCAR::audioplugin_cfg_t& cfg )
     a(0.001),
     t(0)
 {
-  GET_ATTRIBUTE(f);
-  GET_ATTRIBUTE_DBSPL(a);
+  GET_ATTRIBUTE_(f);
+  GET_ATTRIBUTE_DBSPL_(a);
 }
 
 sine_t::~sine_t()

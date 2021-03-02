@@ -343,12 +343,12 @@ trackir_tracker_t::trackir_tracker_t( const sensorplugin_cfg_t& cfg )
   flipy(false),
   f(640)
 {
-  GET_ATTRIBUTE(linethreshold);
-  GET_ATTRIBUTE(maxdist);
-  GET_ATTRIBUTE(margin);
-  GET_ATTRIBUTE_BOOL(use_calib);
-  GET_ATTRIBUTE_BOOL(flipx);
-  GET_ATTRIBUTE_BOOL(flipy);
+  GET_ATTRIBUTE_(linethreshold);
+  GET_ATTRIBUTE_(maxdist);
+  GET_ATTRIBUTE_(margin);
+  GET_ATTRIBUTE_BOOL_(use_calib);
+  GET_ATTRIBUTE_BOOL_(flipx);
+  GET_ATTRIBUTE_BOOL_(flipy);
   memset(blobs,0,3*NUM_MARKER*sizeof(float));
   // crown shape:
   // front out: 0.105 0 0
@@ -639,11 +639,11 @@ trackir_solver_t::trackir_solver_t( const sensorplugin_cfg_t& cfg )
     use_presolvepos(false)
 {
   zyx_euler_inv2mat( tf_cam.orientation, cam_comp_mat );
-  GET_ATTRIBUTE(f);
-  GET_ATTRIBUTE(maxframedist);
-  GET_ATTRIBUTE(camcalibfile);
-  GET_ATTRIBUTE(crownfile);
-  GET_ATTRIBUTE_BOOL(use_presolvepos);
+  GET_ATTRIBUTE_(f);
+  GET_ATTRIBUTE_(maxframedist);
+  GET_ATTRIBUTE_(camcalibfile);
+  GET_ATTRIBUTE_(crownfile);
+  GET_ATTRIBUTE_BOOL_(use_presolvepos);
   if( camcalibfile.empty() )
     camcalibfile = "${HOME}/tascartrackircamcalib.txt";
   if( crownfile.empty() )
@@ -784,7 +784,7 @@ trackir_drawer_t::trackir_drawer_t( const sensorplugin_cfg_t& cfg )
     b_calibuse("use calibration"),
     b_drawraw("camera view")
 {
-  GET_ATTRIBUTE_BOOL(camview);
+  GET_ATTRIBUTE_BOOL_(camview);
   remove();
   vbox.pack_start(b_calib,Gtk::PACK_EXPAND_WIDGET);
   vbox.pack_start(b_calibuse,Gtk::PACK_EXPAND_WIDGET);

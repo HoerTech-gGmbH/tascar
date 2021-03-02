@@ -27,11 +27,11 @@ lslactor_t::lslactor_t( const TASCAR::module_cfg_t& cfg )
     local(false),
     incremental(false)
 {
-  GET_ATTRIBUTE(predicate);
-  GET_ATTRIBUTE(channels);
-  GET_ATTRIBUTE(influence);
-  GET_ATTRIBUTE_BOOL(local);
-  GET_ATTRIBUTE_BOOL(incremental);
+  GET_ATTRIBUTE_(predicate);
+  GET_ATTRIBUTE_(channels);
+  GET_ATTRIBUTE_(influence);
+  GET_ATTRIBUTE_BOOL_(local);
+  GET_ATTRIBUTE_BOOL_(incremental);
   if( channels.empty() )
     throw TASCAR::ErrMsg("No channels selected.");
   if( channels.size() > 6 )

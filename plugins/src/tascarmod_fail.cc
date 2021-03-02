@@ -21,10 +21,10 @@ fail_t::fail_t( const TASCAR::module_cfg_t& cfg )
     failrelease(false),
     failupdate(false)
 {
-  GET_ATTRIBUTE_BOOL(failinit);
-  GET_ATTRIBUTE_BOOL(failprepare);
-  GET_ATTRIBUTE_BOOL(failrelease);
-  GET_ATTRIBUTE_BOOL(failupdate);
+  GET_ATTRIBUTE_BOOL_(failinit);
+  GET_ATTRIBUTE_BOOL_(failprepare);
+  GET_ATTRIBUTE_BOOL_(failrelease);
+  GET_ATTRIBUTE_BOOL_(failupdate);
   if( failinit )
     throw TASCAR::ErrMsg("init.");
 }

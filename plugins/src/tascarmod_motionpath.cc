@@ -44,10 +44,10 @@ motionpath_t::motionpath_t( const TASCAR::module_cfg_t& cfg )
     tascartime(false),
     sampledorientation(0)
 {
-  GET_ATTRIBUTE_BOOL(active);
-  GET_ATTRIBUTE_BOOL(tascartime);
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(sampledorientation);
+  GET_ATTRIBUTE_BOOL_(active);
+  GET_ATTRIBUTE_BOOL_(tascartime);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(sampledorientation);
   if( id.empty() )
     id = "motionpath";
   xmlpp::Node::NodeList subnodes = e->get_children();

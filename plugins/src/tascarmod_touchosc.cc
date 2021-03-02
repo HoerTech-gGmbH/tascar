@@ -442,8 +442,8 @@ void touchosc_t::connect(const std::string& host, uint32_t channels)
 touchosc_t::touchosc_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), port(9000), htmlcolors(false)
 {
-  GET_ATTRIBUTE(port);
-  GET_ATTRIBUTE_BOOL(htmlcolors);
+  GET_ATTRIBUTE_(port);
+  GET_ATTRIBUTE_BOOL_(htmlcolors);
   pthread_mutex_init(&mtx, NULL);
   session->add_method("/touchosc/connect", "i", &touchosc_t::osc_connect, this);
   session->add_method("/touchosc/incscene", "f", &touchosc_t::osc_sceneinc,

@@ -96,6 +96,7 @@ namespace TASCAR {
         \param data Pointer to data
      */
     void add_float_db(const std::string& path,float *data);
+    void add_float_dbspl(const std::string& path,float *data);
     /** \brief Register a float variable for OSC access, convert from degree values
 
         In coming messages will be converted from degrees to radians.

@@ -64,7 +64,7 @@ neukom_inphase_t::neukom_inphase_t(xmlpp::Element* xmlsrc)
     //spkpos(xmlsrc),
     order(-1u)
 {
-  GET_ATTRIBUTE(order);
+  GET_ATTRIBUTE_(order);
   if( order == -1u )
     order = 0.5*(spkpos.size()-1.0);
 }

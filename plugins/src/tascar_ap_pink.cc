@@ -31,12 +31,12 @@ pink_t::pink_t( const TASCAR::audioplugin_cfg_t& cfg )
     use_transport(false),
     mute(false)
 {
-  GET_ATTRIBUTE(fmin);
-  GET_ATTRIBUTE(fmax);
-  GET_ATTRIBUTE_DBSPL(level);
-  GET_ATTRIBUTE(period);
-  GET_ATTRIBUTE_BOOL(use_transport);
-  GET_ATTRIBUTE_BOOL(mute);
+  GET_ATTRIBUTE_(fmin);
+  GET_ATTRIBUTE_(fmax);
+  GET_ATTRIBUTE_DBSPL_(level);
+  GET_ATTRIBUTE_(period);
+  GET_ATTRIBUTE_BOOL_(use_transport);
+  GET_ATTRIBUTE_BOOL_(mute);
 }
 
 void pink_t::configure()

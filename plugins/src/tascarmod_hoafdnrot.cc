@@ -373,19 +373,19 @@ hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
     prefilt(false),
     logdelays(false)
 {
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(amborder);
-  GET_ATTRIBUTE(fdnorder);
-  GET_ATTRIBUTE(w);
-  GET_ATTRIBUTE(dw);
-  GET_ATTRIBUTE(t);
-  GET_ATTRIBUTE(dt);
-  GET_ATTRIBUTE(decay);
-  GET_ATTRIBUTE(damping);
-  GET_ATTRIBUTE(dry);
-  GET_ATTRIBUTE(wet);
-  GET_ATTRIBUTE_BOOL(prefilt);
-  GET_ATTRIBUTE_BOOL(logdelays);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(amborder);
+  GET_ATTRIBUTE_(fdnorder);
+  GET_ATTRIBUTE_(w);
+  GET_ATTRIBUTE_(dw);
+  GET_ATTRIBUTE_(t);
+  GET_ATTRIBUTE_(dt);
+  GET_ATTRIBUTE_(decay);
+  GET_ATTRIBUTE_(damping);
+  GET_ATTRIBUTE_(dry);
+  GET_ATTRIBUTE_(wet);
+  GET_ATTRIBUTE_BOOL_(prefilt);
+  GET_ATTRIBUTE_BOOL_(logdelays);
 }
 
 hoafdnrot_vars_t::~hoafdnrot_vars_t()

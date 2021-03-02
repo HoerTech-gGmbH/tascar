@@ -28,8 +28,8 @@ oscrelay_t::oscrelay_t( const TASCAR::module_cfg_t& cfg )
     url("osc.udp://localhost:9000/"),
     target(NULL)
 {
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(url);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(url);
   target = lo_address_new_from_url( url.c_str() );
   if( !target )
     throw TASCAR::ErrMsg("Unable to create OSC target client \""+url+"\".");

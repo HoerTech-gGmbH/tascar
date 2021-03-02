@@ -31,10 +31,10 @@ spksim_t::spksim_t( const TASCAR::audioplugin_cfg_t& cfg )
     statey1(0),
     statey2(0)
 {
-  GET_ATTRIBUTE(fres);
-  GET_ATTRIBUTE(scale);
-  GET_ATTRIBUTE(q);
-  GET_ATTRIBUTE(gain);
+  GET_ATTRIBUTE_(fres);
+  GET_ATTRIBUTE_(scale);
+  GET_ATTRIBUTE_(q);
+  GET_ATTRIBUTE_(gain);
 }
 
 void spksim_t::add_variables( TASCAR::osc_server_t* srv )

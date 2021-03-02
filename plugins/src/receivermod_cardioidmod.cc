@@ -31,8 +31,8 @@ cardioidmod_t::data_t::data_t(uint32_t chunksize)
 cardioidmod_t::cardioidmod_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc)
 {
-  GET_ATTRIBUTE(f6db);
-  GET_ATTRIBUTE(fmin);
+  GET_ATTRIBUTE_(f6db);
+  GET_ATTRIBUTE_(fmin);
 }
 
 void cardioidmod_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& input, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)

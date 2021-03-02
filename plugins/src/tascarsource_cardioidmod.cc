@@ -33,8 +33,8 @@ cardioidmod_t::cardioidmod_t(xmlpp::Element* xmlsrc)
     wpow(1),
     wmin(EPS)
 {
-  GET_ATTRIBUTE(f6db);
-  GET_ATTRIBUTE(fmin);
+  GET_ATTRIBUTE_(f6db);
+  GET_ATTRIBUTE_(fmin);
 }
 
 bool cardioidmod_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t* sd)

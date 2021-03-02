@@ -28,10 +28,10 @@ void fence_t::scalefence(double scale)
 fence_t::fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
   : actor_module_t(xmlsrc,session)
 {
-  GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE_(id);
   if( id.empty() )
     id = "fence";
-  GET_ATTRIBUTE(importraw);
+  GET_ATTRIBUTE_(importraw);
   if( !importraw.empty() ){
     std::ifstream rawmesh(TASCAR::env_expand(importraw).c_str());
     if( !rawmesh.good() )

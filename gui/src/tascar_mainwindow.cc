@@ -551,76 +551,84 @@ void tascar_window_t::reset_gui()
   scene_selector->remove_all();
   scene_selector->set_active(0);
   selected_range = -1;
-  if( session ){
-    if( session->has_authors() ){
+  if(session) {
+    if(session->has_authors()) {
       lab_authors->set_text(session->get_authors());
       lab_sessionname->set_text(session->name);
-      splash_timeout = 10.0*TASCAR::config("tascar.gui.sessionsplashtimeout",5.0);
+      splash_timeout =
+          10.0 * TASCAR::config("tascar.gui.sessionsplashtimeout", 5.0);
       session_splash->show();
     }
     int32_t mainwin_width(1600);
     int32_t mainwin_height(900);
-    //if( session->scenes.empty() ){
+    // if( session->scenes.empty() ){
     //  mainwin_width = 400;
     //  mainwin_height = 60;
     //}
     int32_t mainwin_x(0);
     int32_t mainwin_y(0);
-    get_position( mainwin_x, mainwin_y );
-    TASCAR::xml_element_t mainwin(session->tsc_reader_t::find_or_add_child("mainwindow"));
-    mainwin.get_attribute( "w", mainwin_width );
-    mainwin.get_attribute( "h", mainwin_height );
-    mainwin.get_attribute( "x", mainwin_x );
-    mainwin.get_attribute( "y", mainwin_y );
-    resize( mainwin_width, mainwin_height );
-    move( mainwin_x, mainwin_y );
-    resize( mainwin_width, mainwin_height );
-    move( mainwin_x, mainwin_y );
-    timeline->set_range(0,session->duration);
-    for(unsigned int k=0;k<session->ranges.size();k++){
-      timeline->add_mark(session->ranges[k]->start,Gtk::POS_BOTTOM,"");
-      timeline->add_mark(session->ranges[k]->end,Gtk::POS_BOTTOM,"");
+    get_position(mainwin_x, mainwin_y);
+    TASCAR::xml_element_t mainwin(
+        session->tsc_reader_t::find_or_add_child("mainwindow"));
+    mainwin.get_attribute("w", mainwin_width, "px", "main window width");
+    mainwin.get_attribute("h", mainwin_height, "px", "main window height");
+    mainwin.get_attribute("x", mainwin_x, "px", "main window x position");
+    mainwin.get_attribute("y", mainwin_y, "px", "main window y position");
+    resize(mainwin_width, mainwin_height);
+    move(mainwin_x, mainwin_y);
+    resize(mainwin_width, mainwin_height);
+    move(mainwin_x, mainwin_y);
+    timeline->set_range(0, session->duration);
+    for(unsigned int k = 0; k < session->ranges.size(); k++) {
+      timeline->add_mark(session->ranges[k]->start, Gtk::POS_BOTTOM, "");
+      timeline->add_mark(session->ranges[k]->end, Gtk::POS_BOTTOM, "");
     }
-    for( std::vector<TASCAR::scene_render_rt_t*>::iterator it=session->scenes.begin();it!=session->scenes.end();++it)
+    for(std::vector<TASCAR::scene_render_rt_t*>::iterator it =
+            session->scenes.begin();
+        it != session->scenes.end(); ++it)
       scene_selector->append((*it)->name);
     selected_scene = 0;
     scene_selector->set_active(0);
-    if( session->scenes.size() > selected_scene )
+    if(session->scenes.size() > selected_scene)
       set_scale(session->scenes[selected_scene]->guiscale);
-    if( session->scenes.size() > selected_scene )
-      if( session->scenes[selected_scene]->scene_t::active != scene_active->get_active() )
-        scene_active->set_active( session->scenes[selected_scene]->scene_t::active );
+    if(session->scenes.size() > selected_scene)
+      if(session->scenes[selected_scene]->scene_t::active !=
+         scene_active->get_active())
+        scene_active->set_active(
+            session->scenes[selected_scene]->scene_t::active);
   }
-  if( session ){
-    set_title("tascar - " + session->name + " [" + basename(tascar_filename.c_str()) + "]");
-  }else{
+  if(session) {
+    set_title("tascar - " + session->name + " [" +
+              basename(tascar_filename.c_str()) + "]");
+  } else {
     set_title("tascar");
-    resize( 200, 60 );
+    resize(200, 60);
   }
   update_object_list();
-  if( session && (session->scenes.size() > selected_scene) ){
-    draw.set_scene( session->scenes[selected_scene] );
-    source_panel->set_scene( session->scenes[selected_scene], session );
-    draw.view.set_scale( session->scenes[selected_scene]->guiscale );
+  if(session && (session->scenes.size() > selected_scene)) {
+    draw.set_scene(session->scenes[selected_scene]);
+    source_panel->set_scene(session->scenes[selected_scene], session);
+    draw.view.set_scale(session->scenes[selected_scene]->guiscale);
     update_levelmeter_settings();
   }
-  if( session ){
+  if(session) {
     source_buffer->set_text(session->doc->write_to_string_formatted());
     osc_vars->get_buffer()->set_text(session->list_variables());
     text_srv_url->set_text(session->get_srv_url());
     legal_view->get_buffer()->set_text(session->legal_stuff());
-  }else{
+  } else {
     source_view.get_source_buffer()->set_text("");
     osc_vars->get_buffer()->set_text("");
     text_srv_url->set_text("");
     legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();
-  if( session && (!session->starturl.empty()) ){
-    webkit_web_view_load_uri( news_view, TASCAR::env_expand(session->starturl).c_str() );
+  if(session && (!session->starturl.empty())) {
+    webkit_web_view_load_uri(news_view,
+                             TASCAR::env_expand(session->starturl).c_str());
     notebook->set_current_page(6);
   }
-  webkit_web_view_reload_bypass_cache( news_view );
+  webkit_web_view_reload_bypass_cache(news_view);
 }
 
 void tascar_window_t::on_menu_file_quit()

@@ -42,16 +42,16 @@ lookatme_t::lookatme_t( const TASCAR::audioplugin_cfg_t& cfg )
     active(true),
     discordantLS(false)
 {
-  GET_ATTRIBUTE(tau);
-  GET_ATTRIBUTE(fadelen);
-  GET_ATTRIBUTE_DBSPL(threshold);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(paths);
-  GET_ATTRIBUTE(animation);
-  GET_ATTRIBUTE(thresholdpath);
-  GET_ATTRIBUTE(levelpath);
-  GET_ATTRIBUTE(pos_onset);
-  GET_ATTRIBUTE(pos_offset);
+  GET_ATTRIBUTE_(tau);
+  GET_ATTRIBUTE_(fadelen);
+  GET_ATTRIBUTE_DBSPL_(threshold);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(paths);
+  GET_ATTRIBUTE_(animation);
+  GET_ATTRIBUTE_(thresholdpath);
+  GET_ATTRIBUTE_(levelpath);
+  GET_ATTRIBUTE_(pos_onset);
+  GET_ATTRIBUTE_(pos_offset);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());

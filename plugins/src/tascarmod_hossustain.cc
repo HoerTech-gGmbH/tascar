@@ -39,18 +39,18 @@ sustain_vars_t::sustain_vars_t( const TASCAR::module_cfg_t& cfg )
     gain(1.0),
     delayenvelope(false)
 {
-  GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE_(id);
   if( id.empty() )
     id = "sustain";
-  GET_ATTRIBUTE(tau_sustain);
-  GET_ATTRIBUTE(tau_envelope);
-  GET_ATTRIBUTE(wet);
-  GET_ATTRIBUTE(wlen);
-  GET_ATTRIBUTE(bass);
-  GET_ATTRIBUTE(bassratio);
-  GET_ATTRIBUTE(fcut);
-  GET_ATTRIBUTE_DB(gain);
-  GET_ATTRIBUTE_BOOL(delayenvelope);
+  GET_ATTRIBUTE_(tau_sustain);
+  GET_ATTRIBUTE_(tau_envelope);
+  GET_ATTRIBUTE_(wet);
+  GET_ATTRIBUTE_(wlen);
+  GET_ATTRIBUTE_(bass);
+  GET_ATTRIBUTE_(bassratio);
+  GET_ATTRIBUTE_(fcut);
+  GET_ATTRIBUTE_DB_(gain);
+  GET_ATTRIBUTE_BOOL_(delayenvelope);
 }
 
 class sustain_t : public sustain_vars_t, public jackc_db_t {

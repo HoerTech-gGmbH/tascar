@@ -37,10 +37,10 @@ timedisplay_t::timedisplay_t( const TASCAR::module_cfg_t& cfg )
   col_threshold.set_rgba(0.8,0.1,0.1,1);
   col_normal.set_rgba(0,0,0,1);
   std::vector<double> times;
-  GET_ATTRIBUTE(times);
-  GET_ATTRIBUTE_BOOL(remaining);
-  GET_ATTRIBUTE( fontscale );
-  GET_ATTRIBUTE( threshold );
+  GET_ATTRIBUTE_(times);
+  GET_ATTRIBUTE_BOOL_(remaining);
+  GET_ATTRIBUTE_( fontscale );
+  GET_ATTRIBUTE_( threshold );
   for(uint32_t k=0;k<times.size();++k)
     tset.insert( times[k] );
   //activate();
@@ -59,10 +59,10 @@ timedisplay_t::timedisplay_t( const TASCAR::module_cfg_t& cfg )
   int h(1);
   timedisplaywindow->get_position(x,y);
   timedisplaywindow->get_size(w,h);
-  GET_ATTRIBUTE(x);
-  GET_ATTRIBUTE(y);
-  GET_ATTRIBUTE(w);
-  GET_ATTRIBUTE(h);
+  GET_ATTRIBUTE_(x);
+  GET_ATTRIBUTE_(y);
+  GET_ATTRIBUTE_(w);
+  GET_ATTRIBUTE_(h);
   timedisplaywindow->move(x,y);
   timedisplaywindow->resize(w,h);
 }

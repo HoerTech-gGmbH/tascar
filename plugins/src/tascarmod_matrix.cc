@@ -34,8 +34,8 @@ matrix_vars_t::matrix_vars_t( const TASCAR::module_cfg_t& cfg )
     own_outputs(true),
     outname("output")
 {
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(decoder);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(decoder);
   if( has_attribute("layout") ){
     own_outputs = false;
     outname = "speaker";
@@ -50,7 +50,7 @@ matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
 {
   m.resize( outputs.size() );
   for(uint32_t k=0;k<outputs.size();++k)
-    outputs[k].get_attribute( "m", m[k] );
+    outputs[k].get_attribute( "m", m[k], "", "undocumented" );
   if( decoder == "maxre2d" ){
     uint32_t amborder((inputs.size()-1)/2);
     uint32_t maxc(2*amborder+1);

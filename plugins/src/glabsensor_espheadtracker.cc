@@ -241,8 +241,8 @@ espheadtracker_t::espheadtracker_t( const sensorplugin_cfg_t& cfg )
     timeout(8),
     caliblen(400)
 {
-  GET_ATTRIBUTE(timeout);
-  GET_ATTRIBUTE(caliblen);
+  GET_ATTRIBUTE_(timeout);
+  GET_ATTRIBUTE_(caliblen);
   remove();
   da.set_size_request(360,120);
   vbox.pack_start(b_calib,Gtk::PACK_EXPAND_WIDGET);

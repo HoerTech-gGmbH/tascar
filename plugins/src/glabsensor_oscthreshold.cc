@@ -51,19 +51,19 @@ oscthreshold_t::oscthreshold_t(const sensorplugin_cfg_t& cfg)
   range.resize(2);
   range[0] = 0;
   range[1] = 1;
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(range);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(range);
   if(range.size() != 2)
     throw ErrMsg("Range needs two entries");
   if(range[0] == range[1])
     throw ErrMsg("Range values must differ");
   std::vector<std::string> controllers;
-  GET_ATTRIBUTE(msg_warning);
-  GET_ATTRIBUTE(msg_critical);
-  GET_ATTRIBUTE(disp_prefix);
-  GET_ATTRIBUTE(disp_suffix);
-  GET_ATTRIBUTE(threshold_critical);
-  GET_ATTRIBUTE(threshold_warning);
+  GET_ATTRIBUTE_(msg_warning);
+  GET_ATTRIBUTE_(msg_critical);
+  GET_ATTRIBUTE_(disp_prefix);
+  GET_ATTRIBUTE_(disp_suffix);
+  GET_ATTRIBUTE_(threshold_critical);
+  GET_ATTRIBUTE_(threshold_warning);
   lsl::stream_info streaminfo(get_name(), modname, 1, 0, lsl::cf_double64);
   outlet = new lsl::stream_outlet(streaminfo);
   col.set_rgba(1, 0, 0, 1);

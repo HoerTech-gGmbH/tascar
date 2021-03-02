@@ -30,14 +30,14 @@ artnetdmx_vars_t::artnetdmx_vars_t( const TASCAR::module_cfg_t& cfg )
     channels(4),
     parentobj(NULL,"")
 {
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(device);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(device);
   if( device.empty() )
     device = "/dev/ttyUSB0";
-  GET_ATTRIBUTE(fps);
-  GET_ATTRIBUTE(universe);
-  GET_ATTRIBUTE(channels);
-  GET_ATTRIBUTE(parent);
+  GET_ATTRIBUTE_(fps);
+  GET_ATTRIBUTE_(universe);
+  GET_ATTRIBUTE_(channels);
+  GET_ATTRIBUTE_(parent);
   std::vector<TASCAR::named_object_t> o(session->find_objects(parent));
   if( o.size()>0)
     parentobj = o[0];

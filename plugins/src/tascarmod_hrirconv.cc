@@ -107,14 +107,14 @@ hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
     inchannels(0),outchannels(0),autoconnect(false)
 {
-  GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE_(id);
   if( id.empty() )
     id = "hrirconv";
-  GET_ATTRIBUTE(inchannels);
-  GET_ATTRIBUTE(outchannels);
-  get_attribute_bool("autoconnect",autoconnect);
-  GET_ATTRIBUTE(connect);
-  GET_ATTRIBUTE(hrirfile);
+  GET_ATTRIBUTE_(inchannels);
+  GET_ATTRIBUTE_(outchannels);
+  get_attribute_bool("autoconnect",autoconnect, "", "undocumented");
+  GET_ATTRIBUTE_(connect);
+  GET_ATTRIBUTE_(hrirfile);
   if( inchannels == 0 )
     throw TASCAR::ErrMsg("At least one input channel required");
   if( outchannels == 0 )

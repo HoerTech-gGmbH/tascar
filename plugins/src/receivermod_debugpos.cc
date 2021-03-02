@@ -18,7 +18,7 @@ debugpos_t::debugpos_t(xmlpp::Element* xmlsrc)
     target_channel(0)
 {
   // number of sources is taken from the scene:
-  GET_ATTRIBUTE(sources);
+  GET_ATTRIBUTE_(sources);
 }
 
 // will be called only once per cycle, *after* all primary/image

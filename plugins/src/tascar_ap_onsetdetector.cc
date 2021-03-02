@@ -46,13 +46,13 @@ onsetdetector_t::onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg )
     crit(0),crit1(0),detect(0),
     time_since_last(0)
 {
-  GET_ATTRIBUTE(tau);
-  GET_ATTRIBUTE(taumin);
-  GET_ATTRIBUTE(fadelen);
-  GET_ATTRIBUTE(side);
-  GET_ATTRIBUTE_DBSPL(threshold);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_(tau);
+  GET_ATTRIBUTE_(taumin);
+  GET_ATTRIBUTE_(fadelen);
+  GET_ATTRIBUTE_(side);
+  GET_ATTRIBUTE_DBSPL_(threshold);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());

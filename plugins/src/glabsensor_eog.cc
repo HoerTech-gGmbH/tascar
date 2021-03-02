@@ -152,17 +152,17 @@ eog_t::eog_t( const sensorplugin_cfg_t& cfg )
 {
   range.push_back(0);
   range.push_back(1023);
-  GET_ATTRIBUTE(device);
+  GET_ATTRIBUTE_(device);
   if( device.empty() )
     device = "/dev/rfcomm1";
-  GET_ATTRIBUTE(baudrate);
-  GET_ATTRIBUTE(charsize);
-  GET_ATTRIBUTE(offset);
-  GET_ATTRIBUTE(scale);
-  GET_ATTRIBUTE(range);
+  GET_ATTRIBUTE_(baudrate);
+  GET_ATTRIBUTE_(charsize);
+  GET_ATTRIBUTE_(offset);
+  GET_ATTRIBUTE_(scale);
+  GET_ATTRIBUTE_(range);
   if( range.size() != 2 )
     throw ErrMsg("Value range needs exactly two values.");
-  GET_ATTRIBUTE(unit);
+  GET_ATTRIBUTE_(unit);
   if( unit.empty() )
     unit = "mV";
   switch( baudrate ){

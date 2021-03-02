@@ -27,13 +27,13 @@ dirgain_vars_t::dirgain_vars_t( const TASCAR::module_cfg_t& cfg )
     fmin(60),
     active(true)
 {
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(channels);
-  GET_ATTRIBUTE_DEG(az);
-  GET_ATTRIBUTE_DEG(az0);
-  GET_ATTRIBUTE(f6db);
-  GET_ATTRIBUTE(fmin);
-  GET_ATTRIBUTE_BOOL(active);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(channels);
+  GET_ATTRIBUTE_DEG_(az);
+  GET_ATTRIBUTE_DEG_(az0);
+  GET_ATTRIBUTE_(f6db);
+  GET_ATTRIBUTE_(fmin);
+  GET_ATTRIBUTE_BOOL_(active);
 }
 
 dirgain_vars_t::~dirgain_vars_t()

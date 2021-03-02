@@ -44,8 +44,8 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     s_encoded(1),
     s_encoded_alt(1)
 {
-  GET_ATTRIBUTE(order);
-  GET_ATTRIBUTE(rho0);
+  GET_ATTRIBUTE_(order);
+  GET_ATTRIBUTE_(rho0);
   nbins = order + 2;
 }
 

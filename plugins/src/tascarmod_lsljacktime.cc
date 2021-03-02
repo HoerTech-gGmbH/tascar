@@ -78,8 +78,8 @@ lsljacktime_vars_t::lsljacktime_vars_t( const TASCAR::module_cfg_t& cfg )
     sendwhilestopped(false),
     skip(0)
 {
-  GET_ATTRIBUTE_BOOL(sendwhilestopped);
-  GET_ATTRIBUTE(skip);
+  GET_ATTRIBUTE_BOOL_(sendwhilestopped);
+  GET_ATTRIBUTE_(skip);
 }
 
 lsljacktime_vars_t::~lsljacktime_vars_t()

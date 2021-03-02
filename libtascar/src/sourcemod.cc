@@ -12,7 +12,7 @@ sourcemod_t::sourcemod_t( xmlpp::Element* cfg )
     lib( NULL ),
     libdata( NULL )
 {
-  get_attribute( "type", sourcetype );
+  get_attribute( "type", sourcetype, "","source directivity type, e.g., omni, cardioid" );
   sourcetype = env_expand( sourcetype );
   std::string libname( "tascarsource_" );
   #ifdef PLUGINPREFIX

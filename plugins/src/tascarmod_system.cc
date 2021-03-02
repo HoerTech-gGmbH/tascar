@@ -28,9 +28,9 @@ at_cmd_t::at_cmd_t(xmlpp::Element* xmlsrc)
                         e);
   if(has_attribute("frame"))
     use_frame = true;
-  GET_ATTRIBUTE(time);
-  GET_ATTRIBUTE(frame);
-  GET_ATTRIBUTE(command);
+  GET_ATTRIBUTE_(time);
+  GET_ATTRIBUTE_(frame);
+  GET_ATTRIBUTE_(command);
 }
 
 class fifo_t {
@@ -166,11 +166,11 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
       h_triggered(NULL), pid(0), fifo(1024), run_service(true),
       sessionpath(session->get_session_path())
 {
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(command);
-  GET_ATTRIBUTE(sleep);
-  GET_ATTRIBUTE(onunload);
-  GET_ATTRIBUTE(triggered);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(command);
+  GET_ATTRIBUTE_(sleep);
+  GET_ATTRIBUTE_(onunload);
+  GET_ATTRIBUTE_(triggered);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
       sn != subnodes.end(); ++sn) {

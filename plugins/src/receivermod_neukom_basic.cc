@@ -65,7 +65,7 @@ neukom_basic_t::neukom_basic_t(xmlpp::Element* xmlsrc)
     //spkpos(xmlsrc),
     order(-1u)
 {
-  GET_ATTRIBUTE(order);
+  GET_ATTRIBUTE_(order);
   if( order == -1u )
     order = floor(0.5*(spkpos.size()-1));
 }

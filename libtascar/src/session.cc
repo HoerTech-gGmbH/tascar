@@ -165,7 +165,7 @@ TASCAR::module_t::module_t( const TASCAR::module_cfg_t& cfg )
     msg+=cline;
     msg+=": Use modules within <modules>...</modules> section.";
     TASCAR::add_warning(msg);
-    get_attribute("name",name);
+    GET_ATTRIBUTE_(name);
   }
   std::string libname("tascar_");
   #ifdef PLUGINPREFIX
@@ -248,39 +248,57 @@ TASCAR::session_oscvars_t::session_oscvars_t( xmlpp::Element* src )
     srv_port("9877"),
     srv_proto("UDP")
 {
-  GET_ATTRIBUTE(srv_port);
-  GET_ATTRIBUTE(srv_addr);
-  GET_ATTRIBUTE(srv_proto);
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(starturl);
+  GET_ATTRIBUTE(srv_port,"","OSC port number");
+  GET_ATTRIBUTE(srv_addr,"","OSC multicast address in case of UDP transport");
+  GET_ATTRIBUTE(srv_proto,"","OSC protocol, UDP or TCP");
+  GET_ATTRIBUTE(name,"","session name");
+  GET_ATTRIBUTE(starturl,"","URL of start page for display");
 }
 
 TASCAR::session_core_t::session_core_t()
-  : duration(60),
-    loop(false),
-    levelmeter_tc(2.0),
-    levelmeter_weight(TASCAR::levelmeter::Z),
-    levelmeter_min(30.0),
-    levelmeter_range(70.0),
-    requiresrate(0),
-    warnsrate(0),
-    requirefragsize(0),
-    warnfragsize(0),
-    h_pipe_initcmd(NULL),
-    pid_initcmd(0)
+    : duration(60), loop(false), playonload(false), levelmeter_tc(2.0),
+      levelmeter_weight(TASCAR::levelmeter::Z), levelmeter_min(30.0),
+      levelmeter_range(70.0), requiresrate(0), warnsrate(0), requirefragsize(0),
+      warnfragsize(0), initcmdsleep(0), h_pipe_initcmd(NULL), pid_initcmd(0)
 {
-  GET_ATTRIBUTE(duration);
-  GET_ATTRIBUTE_BOOL(loop);
-  GET_ATTRIBUTE(levelmeter_tc);
-  GET_ATTRIBUTE(levelmeter_weight);
-  GET_ATTRIBUTE(levelmeter_mode);
-  GET_ATTRIBUTE(levelmeter_min);
-  GET_ATTRIBUTE(levelmeter_range);
-  GET_ATTRIBUTE(requiresrate);
-  GET_ATTRIBUTE(requirefragsize);
-  GET_ATTRIBUTE(warnsrate);
-  GET_ATTRIBUTE(warnfragsize);
-  GET_ATTRIBUTE(initcmd);
+  GET_ATTRIBUTE(duration, "s", "session duration");
+  GET_ATTRIBUTE_BOOL(loop, "loop session at end");
+  GET_ATTRIBUTE_BOOL_(playonload);
+  GET_ATTRIBUTE(levelmeter_tc, "s", "level metering time constant");
+  GET_ATTRIBUTE_(levelmeter_weight);
+  GET_ATTRIBUTE_(levelmeter_mode);
+  GET_ATTRIBUTE_(levelmeter_min);
+  GET_ATTRIBUTE_(levelmeter_range);
+  GET_ATTRIBUTE_(requiresrate);
+  GET_ATTRIBUTE_(requirefragsize);
+  GET_ATTRIBUTE_(warnsrate);
+  GET_ATTRIBUTE_(warnfragsize);
+  GET_ATTRIBUTE_(initcmd);
+  start_initcmd();
+}
+
+TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,
+                                       load_type_t t, const std::string& path)
+    : TASCAR::tsc_reader_t(filename_or_data, t, path), duration(60),
+      loop(false), playonload(false), levelmeter_tc(2.0),
+      levelmeter_weight(TASCAR::levelmeter::Z), levelmeter_min(30.0),
+      levelmeter_range(70.0), requiresrate(0), warnsrate(0), requirefragsize(0),
+      warnfragsize(0), initcmdsleep(0), h_pipe_initcmd(NULL), pid_initcmd(0)
+{
+  GET_ATTRIBUTE(duration, "s", "session duration");
+  GET_ATTRIBUTE_BOOL(loop, "loop session at end");
+  GET_ATTRIBUTE_BOOL_(playonload);
+  GET_ATTRIBUTE(levelmeter_tc, "s", "level metering time constant");
+  GET_ATTRIBUTE_(levelmeter_weight);
+  GET_ATTRIBUTE_(levelmeter_mode);
+  GET_ATTRIBUTE_(levelmeter_min);
+  GET_ATTRIBUTE_(levelmeter_range);
+  GET_ATTRIBUTE_(requiresrate);
+  GET_ATTRIBUTE_(requirefragsize);
+  GET_ATTRIBUTE_(warnsrate);
+  GET_ATTRIBUTE_(warnfragsize);
+  GET_ATTRIBUTE_(initcmd);
+  GET_ATTRIBUTE_(initcmdsleep);
   start_initcmd();
 }
 
@@ -300,40 +318,6 @@ void TASCAR::session_core_t::start_initcmd()
     if( initcmdsleep > 0 )
       std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000.0*initcmdsleep)));
   }
-}
-
-TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path)
-  : TASCAR::tsc_reader_t(filename_or_data,t,path),
-  duration(60),
-  loop(false),
-  playonload(false),
-  levelmeter_tc(2.0),
-  levelmeter_weight(TASCAR::levelmeter::Z),
-  levelmeter_min(30.0),
-  levelmeter_range(70.0),
-  requiresrate(0),
-  warnsrate(0),
-  requirefragsize(0),
-  warnfragsize(0),
-  initcmdsleep(0),
-  h_pipe_initcmd(NULL),
-  pid_initcmd(0)
-{
-  GET_ATTRIBUTE(duration);
-  GET_ATTRIBUTE_BOOL(loop);
-  GET_ATTRIBUTE_BOOL(playonload);
-  GET_ATTRIBUTE(levelmeter_tc);
-  GET_ATTRIBUTE(levelmeter_weight);
-  GET_ATTRIBUTE(levelmeter_mode);
-  GET_ATTRIBUTE(levelmeter_min);
-  GET_ATTRIBUTE(levelmeter_range);
-  GET_ATTRIBUTE(requiresrate);
-  GET_ATTRIBUTE(requirefragsize);
-  GET_ATTRIBUTE(warnsrate);
-  GET_ATTRIBUTE(warnfragsize);
-  GET_ATTRIBUTE(initcmd);
-  GET_ATTRIBUTE(initcmdsleep);
-  start_initcmd();
 }
 
 TASCAR::session_core_t::~session_core_t()
@@ -758,18 +742,18 @@ TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
     start(0),
     end(0)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(start);
-  GET_ATTRIBUTE(end);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(start);
+  GET_ATTRIBUTE_(end);
 }
 
 TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),
     failonerror(false)
 {
-  get_attribute("src",src);
-  get_attribute("dest",dest);
-  GET_ATTRIBUTE_BOOL(failonerror);
+  GET_ATTRIBUTE_(src);
+  GET_ATTRIBUTE_(dest);
+  GET_ATTRIBUTE_BOOL_(failonerror);
 }
 
 TASCAR::module_base_t::module_base_t( const TASCAR::module_cfg_t& cfg )
@@ -848,7 +832,7 @@ std::vector<TASCAR::Scene::audio_port_t*> TASCAR::session_t::find_audio_ports(co
 TASCAR::actor_module_t::actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty)
   : module_base_t( cfg )
 {
-  GET_ATTRIBUTE(actor);
+  GET_ATTRIBUTE_(actor);
   for( auto act : actor ){
     std::vector<TASCAR::named_object_t> lobj = session->find_objects(act);
     for( auto o : lobj )

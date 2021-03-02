@@ -24,8 +24,8 @@ private:
 colorpick_t::colorpick_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), msg_hsvt(lo_message_new())
 {
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(color);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(color);
   c.property_show_editor().set_value(true);
   c.property_use_alpha().set_value(false);
   c.property_title().set_value(path);

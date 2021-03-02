@@ -195,9 +195,9 @@ namespace TASCAR {
       float get_gain() const
       {
         if(is_input)
-          return gain * (2e-5f * caliblevel);
+          return gain * caliblevel;
         else
-          return gain / (2e-5f * caliblevel);
+          return gain / caliblevel;
       };
       float get_gain_db() const { return 20 * log10(fabsf(gain)); };
       void set_gain_db(float g);

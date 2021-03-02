@@ -60,6 +60,13 @@ int osc_set_float_db(const char *path, const char *types, lo_arg **argv, int arg
   return 0;
 }
 
+int osc_set_float_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data && (argc == 1) && (types[0] == 'f') )
+    *(float*)(user_data) = powf(10.0f,0.05*argv[0]->f)*2e-5f;
+  return 0;
+}
+
 int osc_set_vector_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   if( user_data  ){
@@ -246,6 +253,11 @@ void osc_server_t::add_double(const std::string& path,double *data)
 void osc_server_t::add_float_db(const std::string& path,float *data)
 {
   add_method(path,"f",osc_set_float_db,data);
+}
+
+void osc_server_t::add_float_dbspl(const std::string& path,float *data)
+{
+  add_method(path,"f",osc_set_float_dbspl,data);
 }
 
 void osc_server_t::add_vector_float(const std::string& path,std::vector<float> *data)

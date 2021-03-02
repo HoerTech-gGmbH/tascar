@@ -29,10 +29,10 @@ level2osc_t::level2osc_t( const TASCAR::audioplugin_cfg_t& cfg )
     path("/level"),
     skipcnt(0)
 {
-  GET_ATTRIBUTE_BOOL(sendwhilestopped);
-  GET_ATTRIBUTE(skip);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_BOOL_(sendwhilestopped);
+  GET_ATTRIBUTE_(skip);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
   lo_addr = lo_address_new_from_url(url.c_str());
 }
 

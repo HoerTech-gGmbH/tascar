@@ -15,9 +15,9 @@ locmod_t::locmod_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t( cfg, true ),
     v(1.0,1.0,0.0)
 {
-  actor_module_t::GET_ATTRIBUTE(v);
-  actor_module_t::GET_ATTRIBUTE(p0);
-  actor_module_t::GET_ATTRIBUTE(t0);
+  actor_module_t::GET_ATTRIBUTE_(v);
+  actor_module_t::GET_ATTRIBUTE_(p0);
+  actor_module_t::GET_ATTRIBUTE_(t0);
   session->add_double(TASCAR::vecstr2str(actor)+"/v/x",&v.x);
   session->add_double(TASCAR::vecstr2str(actor)+"/v/y",&v.y);
   session->add_double(TASCAR::vecstr2str(actor)+"/v/z",&v.z);

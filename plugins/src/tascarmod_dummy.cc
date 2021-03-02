@@ -15,7 +15,7 @@ private:
 dummy_t::dummy_t( const TASCAR::module_cfg_t& cfg )
   : actor_module_t( cfg ),checkprepare(false),localprep(false)
 {
-  GET_ATTRIBUTE_BOOL(checkprepare);
+  GET_ATTRIBUTE_BOOL_(checkprepare);
   DEBUG(1);
   DEBUG(f_sample);
   DEBUG(f_fragment);

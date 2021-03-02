@@ -86,8 +86,8 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,load_type
 
 void TASCAR::tsc_reader_t::read_xml()
 {
-  GET_ATTRIBUTE(license);
-  GET_ATTRIBUTE(attribution);
+  GET_ATTRIBUTE(license,"","license type");
+  GET_ATTRIBUTE(attribution,"","attribution of license, if applicable");
   add_license(license,attribution,"session file");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
@@ -111,16 +111,16 @@ void TASCAR::tsc_reader_t::read_xml()
         std::string license;
         std::string attribution;
         std::string name;
-        lic.GET_ATTRIBUTE(license);
-        lic.GET_ATTRIBUTE(attribution);
-        lic.GET_ATTRIBUTE(name);
+        lic.GET_ATTRIBUTE(license,"","license type");
+        lic.GET_ATTRIBUTE(attribution,"","attribution of license, if applicable");
+        lic.GET_ATTRIBUTE(name,"","name of licensed component");
         add_license(license,attribution,name);
       }else if( sne->get_name() == "author"){
         TASCAR::xml_element_t lic(sne);
         std::string of;
         std::string name;
-        lic.GET_ATTRIBUTE(name);
-        lic.GET_ATTRIBUTE(of);
+        lic.GET_ATTRIBUTE(name,"","author name");
+        lic.GET_ATTRIBUTE(of,"","name of authored component");
         add_author(name,of);
       }else if( sne->get_name() == "bibitem" ){
         xmlpp::NodeSet stxt(sne->find("text()"));

@@ -55,10 +55,10 @@ App::show_licenses_t::show_licenses_t(const std::string& session_filename)
     : session_core_t(session_filename, LOAD_FILE, session_filename)
 {
   read_xml();
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(srv_port);
-  GET_ATTRIBUTE(srv_addr);
-  GET_ATTRIBUTE(srv_proto);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(srv_port);
+  GET_ATTRIBUTE_(srv_addr);
+  GET_ATTRIBUTE_(srv_proto);
   add_licenses(this);
 }
 

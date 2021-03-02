@@ -24,14 +24,14 @@ midicc2osc_vars_t::midicc2osc_vars_t( const TASCAR::module_cfg_t& cfg )
     url("osc.udp://localhost:7777/"),
     path("/midicc")
 {
-  GET_ATTRIBUTE_BOOL(dumpmsg);
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(connect);
-  GET_ATTRIBUTE(controllers);
-  GET_ATTRIBUTE(min);
-  GET_ATTRIBUTE(max);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_BOOL_(dumpmsg);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(connect);
+  GET_ATTRIBUTE_(controllers);
+  GET_ATTRIBUTE_(min);
+  GET_ATTRIBUTE_(max);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
 }
 
 class midicc2osc_t : public midicc2osc_vars_t,

@@ -52,12 +52,12 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
     dir_r(1,0,0),
     dir_itd(0,1,0)
 {
-  GET_ATTRIBUTE(distance);
-  GET_ATTRIBUTE_DEG(angle);
-  GET_ATTRIBUTE_DEG(start_angle);
-  GET_ATTRIBUTE_DEG(stop_angle);
-  GET_ATTRIBUTE(sincorder);
-  GET_ATTRIBUTE(c);
+  GET_ATTRIBUTE_(distance);
+  GET_ATTRIBUTE_DEG_(angle);
+  GET_ATTRIBUTE_DEG_(start_angle);
+  GET_ATTRIBUTE_DEG_(stop_angle);
+  GET_ATTRIBUTE_(sincorder);
+  GET_ATTRIBUTE_(c);
   dir_l.rot_z(0.5*angle);
   dir_r.rot_z(-0.5*angle);
 }

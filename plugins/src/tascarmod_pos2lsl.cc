@@ -20,8 +20,8 @@ pos2lsl_t::pos2lsl_t( const TASCAR::module_cfg_t& cfg )
     transport(true)
 {
   data.resize(6);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE_BOOL(transport);
+  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE_BOOL_(transport);
   if( pattern.empty() )
     pattern = "/*/*";
   obj = session->find_objects(pattern);

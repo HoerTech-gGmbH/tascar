@@ -9,7 +9,7 @@ TASCAR_RESOLVER(receivermod_base_t, xmlpp::Element*);
 TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
     : receivermod_base_t(cfg), receivertype("omni"), lib(NULL), libdata(NULL)
 {
-  get_attribute("type", receivertype);
+  get_attribute("type", receivertype, "", "receiver type");
   receivertype = env_expand(receivertype);
   std::string libname("tascarreceiver_");
 #ifdef PLUGINPREFIX

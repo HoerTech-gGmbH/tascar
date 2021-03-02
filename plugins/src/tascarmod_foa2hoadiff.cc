@@ -32,8 +32,8 @@ foa2hoa_diff_t::foa2hoa_diff_t( const TASCAR::module_cfg_t& cfg  )
     dx(get_srate(), get_srate(), 340, 0, 0 ),
     dy(get_srate(), get_srate(), 340, 0, 0 )
 {
-  GET_ATTRIBUTE(order);
-  GET_ATTRIBUTE(delay);
+  GET_ATTRIBUTE_(order);
+  GET_ATTRIBUTE_(delay);
   session->add_double("/foa2hoa_diff/delay",&delay);
   add_input_port("in.0w");
   add_input_port("in.1x");

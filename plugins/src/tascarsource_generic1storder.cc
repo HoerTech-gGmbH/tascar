@@ -26,7 +26,7 @@ generic1storder_t::generic1storder_t(xmlpp::Element* xmlsrc)
   : TASCAR::sourcemod_base_t(xmlsrc),
   a(0)
 {
-  GET_ATTRIBUTE(a);
+  GET_ATTRIBUTE_(a);
 }
 
 bool generic1storder_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t* sd)

@@ -43,9 +43,9 @@ jackstatus_t::jackstatus_t( const sensorplugin_cfg_t& cfg )
     t_prev(gettime()),
     c1(0.9)
 {
-  GET_ATTRIBUTE(warnload);
-  GET_ATTRIBUTE(criticalload);
-  GET_ATTRIBUTE(maxxrunfreq);
+  GET_ATTRIBUTE_(warnload);
+  GET_ATTRIBUTE_(criticalload);
+  GET_ATTRIBUTE_(maxxrunfreq);
   srv = std::thread(&jackstatus_t::service,this);
   jackc_t::activate();
 }

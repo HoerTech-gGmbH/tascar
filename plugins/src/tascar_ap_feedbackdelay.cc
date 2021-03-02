@@ -21,9 +21,9 @@ feedbackdelay_t::feedbackdelay_t( const TASCAR::audioplugin_cfg_t& cfg )
     feedback(0.5),
     dl(NULL)
 {
-  GET_ATTRIBUTE(maxdelay);
-  GET_ATTRIBUTE(f);
-  GET_ATTRIBUTE(feedback);
+  GET_ATTRIBUTE_(maxdelay);
+  GET_ATTRIBUTE_(f);
+  GET_ATTRIBUTE_(feedback);
   dl = new TASCAR::varidelay_t(maxdelay, 1.0, 1.0, 0, 1);
 }
 

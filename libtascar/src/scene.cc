@@ -21,9 +21,9 @@ using namespace TASCAR::Scene;
 object_t::object_t(xmlpp::Element* src)
     : dynobject_t(src), route_t(src), endtime(0)
 {
-  dynobject_t::get_attribute("end", endtime);
+  dynobject_t::get_attribute("end", endtime,"s","end of render activity, or 0 to render always");
   std::string scol;
-  dynobject_t::get_attribute("color", scol);
+  dynobject_t::get_attribute("color", scol,"","html color string");
   color = rgb_color_t(scol);
 }
 
@@ -41,9 +41,9 @@ diff_snd_field_obj_t::diff_snd_field_obj_t(xmlpp::Element* xmlsrc)
       licensed_component_t(typeid(*this).name()), size(1, 1, 1), falloff(1.0),
       layers(0xffffffff), source(NULL)
 {
-  dynobject_t::get_attribute("size", size);
-  dynobject_t::get_attribute("falloff", falloff);
-  dynobject_t::GET_ATTRIBUTE_BITS(layers);
+  dynobject_t::GET_ATTRIBUTE(size,"m","size in which sound field is rendered.");
+  dynobject_t::GET_ATTRIBUTE(falloff,"m","falloff ramp length at boundaries");
+  dynobject_t::GET_ATTRIBUTE_BITS(layers,"render layers");
 }
 
 void diff_snd_field_obj_t::add_licenses(licensehandler_t* lh)
@@ -221,27 +221,18 @@ void src_object_t::release()
 
 scene_t::scene_t(xmlpp::Element* xmlsrc)
     : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name()),
-      description(""), name(""), id(TASCAR::get_tuid()), c(340.0), ismorder(1),
+      description(""), name("scene"), id(TASCAR::get_tuid()), c(340.0), ismorder(1),
       guiscale(200), guitrackobject(NULL), anysolo(0), scene_path(""),
       active(true)
 {
   try {
-    GET_ATTRIBUTE(name);
-    if(name.empty())
-      name = "scene";
-    GET_ATTRIBUTE(id);
-    if(has_attribute("mirrororder")) {
-      uint32_t mirrororder(1);
-      GET_ATTRIBUTE(mirrororder);
-      ismorder = mirrororder;
-      TASCAR::add_warning("Attribute \"mirrororder\" is deprecated and has "
-                          "been replaced by \"ismorder\".");
-    }
-    GET_ATTRIBUTE(ismorder);
-    GET_ATTRIBUTE(guiscale);
-    GET_ATTRIBUTE(guicenter);
-    GET_ATTRIBUTE(c);
-    GET_ATTRIBUTE_BOOL(active);
+    GET_ATTRIBUTE(name,"","scene name");
+    GET_ATTRIBUTE(id,"","scene id, or empty to auto-generate id");
+    GET_ATTRIBUTE(ismorder,"","order of image source model");
+    GET_ATTRIBUTE(guiscale,"m","scale of GUI window of this scene");
+    GET_ATTRIBUTE(guicenter,"m","origin of GUI window");
+    GET_ATTRIBUTE(c,"m/s","speed of sound");
+    GET_ATTRIBUTE_BOOL(active,"render scene");
     description = xml_get_text(e, "description");
     xmlpp::Node::NodeList subnodes = e->get_children();
     for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
@@ -315,7 +306,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
       }
     }
     std::string guitracking;
-    GET_ATTRIBUTE(guitracking);
+    GET_ATTRIBUTE(guitracking,"","object name for scene tracking");
     std::vector<object_t*> objs(find_object(guitracking));
     if(objs.size())
       guitrackobject = objs[0];
@@ -391,9 +382,9 @@ void scene_t::process_active(double t)
 
 mask_object_t::mask_object_t(xmlpp::Element* xmlsrc) : object_t(xmlsrc)
 {
-  dynobject_t::get_attribute("size", xmlsize);
-  dynobject_t::get_attribute("falloff", xmlfalloff);
-  dynobject_t::get_attribute_bool("inside", mask_inner);
+  dynobject_t::get_attribute("size", xmlsize,"m","dimension of mask");
+  dynobject_t::get_attribute("falloff", xmlfalloff,"m","ramp length at boundaries");
+  dynobject_t::get_attribute_bool("inside", mask_inner,"","mask inner objects");
 }
 
 void mask_object_t::geometry_update(double t)
@@ -699,10 +690,10 @@ route_t::route_t(xmlpp::Element* xmlsrc)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid()), mute(false), solo(false),
       meter_tc(2), meter_weight(TASCAR::levelmeter::Z), targetlevel(0)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE_BOOL(mute);
-  GET_ATTRIBUTE_BOOL(solo);
+  GET_ATTRIBUTE(name,"","route name");
+  GET_ATTRIBUTE(id,"","route id");
+  GET_ATTRIBUTE_BOOL(mute,"mute flag of route");
+  GET_ATTRIBUTE_BOOL(solo,"solo flag of route");
 }
 
 void route_t::set_solo(bool b, uint32_t& anysolo)
@@ -732,13 +723,13 @@ bool object_t::is_active(uint32_t anysolo, double t)
 face_object_t::face_object_t(xmlpp::Element* xmlsrc)
     : object_t(xmlsrc), width(1.0), height(1.0)
 {
-  dynobject_t::get_attribute("width", width);
-  dynobject_t::get_attribute("height", height);
-  dynobject_t::get_attribute("reflectivity", reflectivity);
-  dynobject_t::get_attribute("damping", damping);
-  dynobject_t::get_attribute("vertices", vertices);
-  dynobject_t::get_attribute_bool("edgereflection", edgereflection);
-  dynobject_t::GET_ATTRIBUTE(scattering);
+  dynobject_t::GET_ATTRIBUTE(width,"m","width of reflector");
+  dynobject_t::GET_ATTRIBUTE(height,"m","height of reflector");
+  dynobject_t::GET_ATTRIBUTE(reflectivity,"","reflectivity coefficient");
+  dynobject_t::GET_ATTRIBUTE(damping,"","damping coefficient");
+  dynobject_t::GET_ATTRIBUTE(vertices,"m", "list of vertives");
+  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"edge reflection flag");
+  dynobject_t::GET_ATTRIBUTE(scattering,"","relative amount of scattering");
   if(vertices.size() > 2)
     nonrt_set(vertices);
   else
@@ -755,14 +746,14 @@ void face_object_t::geometry_update(double t)
 
 audio_port_t::audio_port_t(xmlpp::Element* xmlsrc, bool is_input_)
     : xml_element_t(xmlsrc), ctlname(""), port_index(0), is_input(is_input_),
-      gain(1), caliblevel(50000.0)
+      gain(1), caliblevel(1.0)
 {
-  get_attribute("connect", connect);
-  get_attribute_db_float("gain", gain);
+  GET_ATTRIBUTE(connect,"","jack port connection");
+  GET_ATTRIBUTE_DB(gain,"port gain");
   has_caliblevel = has_attribute("caliblevel");
-  get_attribute_db_float("caliblevel", caliblevel);
+  GET_ATTRIBUTE_DBSPL(caliblevel,"calibration level");
   bool inv(false);
-  get_attribute_bool("inv", inv);
+  GET_ATTRIBUTE_BOOL(inv,"phase invert");
   set_inv(inv);
 }
 
@@ -860,12 +851,12 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
     : object_t(xmlsrc), reflectivity(1.0), damping(0.0), edgereflection(true),
       scattering(0)
 {
-  dynobject_t::GET_ATTRIBUTE(reflectivity);
-  dynobject_t::GET_ATTRIBUTE(damping);
-  dynobject_t::GET_ATTRIBUTE(importraw);
-  dynobject_t::get_attribute_bool("edgereflection", edgereflection);
-  dynobject_t::GET_ATTRIBUTE(scattering);
-  dynobject_t::GET_ATTRIBUTE(shoebox);
+  dynobject_t::GET_ATTRIBUTE(reflectivity,"","reflectivity coefficient");
+  dynobject_t::GET_ATTRIBUTE(damping,"","damping coefficient");
+  dynobject_t::GET_ATTRIBUTE(importraw,"","file name of vertex list to import");
+  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"render reflection from edges");
+  dynobject_t::GET_ATTRIBUTE(scattering,"","relative amount of scattering");
+  dynobject_t::GET_ATTRIBUTE(shoebox,"m","generate a shoebox room of these dimensions");
   if(!shoebox.is_null()) {
     TASCAR::pos_t sb(shoebox);
     sb *= 0.5;
@@ -921,7 +912,7 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
     p_reflector->nonrt_set(verts);
     reflectors.push_back(p_reflector);
   }
-  dynobject_t::GET_ATTRIBUTE(shoeboxwalls);
+  dynobject_t::GET_ATTRIBUTE(shoeboxwalls,"m","generate shoebox room without floor and ceiling");
   if(!shoeboxwalls.is_null()) {
     TASCAR::pos_t sb(shoeboxwalls);
     sb *= 0.5;
@@ -1026,10 +1017,10 @@ void face_group_t::process_active(double t, uint32_t anysolo)
 obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
     : object_t(xmlsrc), transmission(0), ishole(false), aperture(0)
 {
-  dynobject_t::GET_ATTRIBUTE(transmission);
-  dynobject_t::GET_ATTRIBUTE(importraw);
-  dynobject_t::GET_ATTRIBUTE_BOOL(ishole);
-  dynobject_t::GET_ATTRIBUTE(aperture);
+  dynobject_t::GET_ATTRIBUTE(transmission,"","transmission coefficient");
+  dynobject_t::GET_ATTRIBUTE(importraw,"","file name of vertex list");
+  dynobject_t::GET_ATTRIBUTE_BOOL(ishole,"the obstacle is outside the specified boundaries");
+  dynobject_t::GET_ATTRIBUTE(aperture,"m","overwrite aperture for acoustic model");
   if(!importraw.empty()) {
     std::ifstream rawmesh(TASCAR::env_expand(importraw).c_str());
     if(!rawmesh.good())
@@ -1096,12 +1087,12 @@ void obstacle_group_t::process_active(double t, uint32_t anysolo)
 sound_name_t::sound_name_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid())
 {
-  GET_ATTRIBUTE(name);
+  GET_ATTRIBUTE(name,"","name of sound vertex");
   if(parent_ && name.empty())
     name = parent_->next_sound_name();
   if(name.empty())
     throw TASCAR::ErrMsg("Invalid (empty) sound name.");
-  GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE(id,"","id of sound vertex");
   if(parent_)
     parentname = parent_->get_name();
 }
@@ -1121,19 +1112,19 @@ sound_t::sound_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
     double az(0.0);
     double el(0.0);
     double r(1.0);
-    source_t::GET_ATTRIBUTE_DEG(az);
-    source_t::GET_ATTRIBUTE_DEG(el);
-    source_t::GET_ATTRIBUTE(r);
+    source_t::GET_ATTRIBUTE_DEG(az,"azimuth relatve to parent");
+    source_t::GET_ATTRIBUTE_DEG(el,"elevation relative to parent");
+    source_t::GET_ATTRIBUTE(r,"m","distance from parent origin");
     local_position.set_sphere(r, az, el);
   } else {
-    source_t::get_attribute("x", local_position.x);
-    source_t::get_attribute("y", local_position.y);
-    source_t::get_attribute("z", local_position.z);
+    source_t::get_attribute("x", local_position.x,"m","position relative to parent");
+    source_t::get_attribute("y", local_position.y,"m","position relative to parent");
+    source_t::get_attribute("z", local_position.z,"m","position relative to parent");
   }
-  source_t::get_attribute_deg("rz", local_orientation.z);
-  source_t::get_attribute_deg("ry", local_orientation.y);
-  source_t::get_attribute_deg("rx", local_orientation.x);
-  source_t::get_attribute("d", chaindist);
+  source_t::get_attribute_deg("rz", local_orientation.z,"deg","Euler orientation (Z) relative to parent");
+  source_t::get_attribute_deg("ry", local_orientation.y,"deg","Euler orientation (Y) relative to parent");
+  source_t::get_attribute_deg("rx", local_orientation.x,"deg","Euler orientation (X) relative to parent");
+  source_t::get_attribute("d", chaindist,"m","distance to next sound along trajectory, or 0 for normal mode");
   // parse plugins:
   xmlpp::Node::NodeList subnodes = source_t::e->get_children();
   for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
@@ -1221,18 +1212,18 @@ diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(xmlpp::Element* e)
   TASCAR::pos_t volumetric(3, 4, 5);
   bool diffuse(false);
   double falloff(1.0);
-  el.GET_ATTRIBUTE(name);
-  el.GET_ATTRIBUTE(type);
-  el.GET_ATTRIBUTE(volumetric);
-  el.GET_ATTRIBUTE_BOOL(diffuse);
-  el.GET_ATTRIBUTE(falloff);
+  el.GET_ATTRIBUTE(name,"","diffuse reverb name");
+  el.GET_ATTRIBUTE(type,"","diffuse reverb type");
+  el.GET_ATTRIBUTE(volumetric,"m","size of diffuse reverberation");
+  el.GET_ATTRIBUTE_BOOL(diffuse,"render diffuse input sound fields");
+  el.GET_ATTRIBUTE(falloff,"m","ramp length at boundaries");
 }
 
 diffuse_reverb_t::diffuse_reverb_t(xmlpp::Element* e)
     : diffuse_reverb_defaults_t(e), TASCAR::Scene::receiver_obj_t(e, true),
       outputlayers(0xffffffff), source(NULL)
 {
-  dynobject_t::GET_ATTRIBUTE_BITS(outputlayers);
+  dynobject_t::GET_ATTRIBUTE_BITS(outputlayers,"output layers");
 }
 
 diffuse_reverb_t::~diffuse_reverb_t()

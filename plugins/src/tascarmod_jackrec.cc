@@ -68,14 +68,14 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
 {
   std::string url;
   // get configuration variables:
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(buflen);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(pattern);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(buflen);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(pattern);
   int ifileformat(0);
   std::string fileformat("WAV");
-  GET_ATTRIBUTE(fileformat);
+  GET_ATTRIBUTE_(fileformat);
   std::string validformats;
 #define ADD_FILEFORMAT(x)                                                      \
   if(fileformat == #x)                                                         \
@@ -111,7 +111,7 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
                          "\". Valid formats are:" + validformats);
   validformats = "";
   std::string sampleformat("PCM_16");
-  GET_ATTRIBUTE(sampleformat);
+  GET_ATTRIBUTE_(sampleformat);
   int isampleformat(0);
 #define ADD_SAMPLEFORMAT(x)                                                    \
   if(sampleformat == #x)                                                       \

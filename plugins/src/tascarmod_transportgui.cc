@@ -44,7 +44,7 @@ transportgui_t::transportgui_t(const TASCAR::module_cfg_t& cfg)
   col_threshold.set_rgba(0.8, 0.1, 0.1, 1);
   col_normal.set_rgba(0, 0, 0, 1);
   std::vector<double> times;
-  GET_ATTRIBUTE(times);
+  GET_ATTRIBUTE_(times);
   for(uint32_t k = 0; k < times.size(); ++k)
     tset.insert(times[k]);
   // activate();
@@ -66,10 +66,10 @@ transportgui_t::transportgui_t(const TASCAR::module_cfg_t& cfg)
     timeline->add_mark(t, Gtk::POS_BOTTOM, "");
   transportguiwin->get_position(x, y);
   transportguiwin->get_size(w, h);
-  GET_ATTRIBUTE(x);
-  GET_ATTRIBUTE(y);
-  GET_ATTRIBUTE(w);
-  GET_ATTRIBUTE(h);
+  GET_ATTRIBUTE_(x);
+  GET_ATTRIBUTE_(y);
+  GET_ATTRIBUTE_(w);
+  GET_ATTRIBUTE_(h);
   transportguiwin->move(x, y);
   transportguiwin->resize(w, h);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupTransport =

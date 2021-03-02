@@ -173,31 +173,31 @@ geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
   lo_message_add_float(msg, 0);
   lo_message_add_float(msg, 0);
   oscmsgargv = lo_message_get_argv(msg);
-  GET_ATTRIBUTE(duration);
-  GET_ATTRIBUTE_BOOL(enable);
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(startpreset);
-  GET_ATTRIBUTE_BOOL(unlock);
+  GET_ATTRIBUTE_(duration);
+  GET_ATTRIBUTE_BOOL_(enable);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(startpreset);
+  GET_ATTRIBUTE_BOOL_(unlock);
   if(id.empty())
     id = "geopresets";
-  GET_ATTRIBUTE_BOOL(showgui);
-  GET_ATTRIBUTE(width);
-  GET_ATTRIBUTE(buttonheight);
+  GET_ATTRIBUTE_BOOL_(showgui);
+  GET_ATTRIBUTE_(width);
+  GET_ATTRIBUTE_(buttonheight);
   for(auto sn : e->get_children()) {
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(sn));
     if(sne && (sne->get_name() == "preset")) {
       xml_element_t pres(sne);
       std::string name;
-      pres.get_attribute("name", name);
+      pres.get_attribute("name", name, "", "undocumented");
       allpresets.push_back(name);
       if(pres.has_attribute("position")) {
         TASCAR::pos_t pos;
-        pres.get_attribute("position", pos);
+        pres.get_attribute("position", pos, "", "undocumented");
         positions[name] = pos;
       }
       if(pres.has_attribute("orientation")) {
         TASCAR::pos_t pos;
-        pres.get_attribute("orientation", pos);
+        pres.get_attribute("orientation", pos, "", "undocumented");
         pos *= DEG2RAD;
         orientations[name] = TASCAR::zyx_euler_t(pos.x, pos.y, pos.z);
       }
@@ -206,16 +206,16 @@ geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
         if(snel && (snel->get_name() == "osc")) {
           xml_element_t pres(snel);
           std::string path;
-          pres.GET_ATTRIBUTE(path);
+          pres.GET_ATTRIBUTE_(path);
           if(!path.empty()) {
             if(pres.has_attribute("pos")) {
               TASCAR::pos_t pos;
-              pres.GET_ATTRIBUTE(pos);
+              pres.GET_ATTRIBUTE_(pos);
               osc_positions[name][path + "/pos"] = pos;
             }
             if(pres.has_attribute("rot")) {
               TASCAR::pos_t rot;
-              pres.GET_ATTRIBUTE(rot);
+              pres.GET_ATTRIBUTE_(rot);
               osc_orientations[name][path + "/zyxeuler"] =
                   TASCAR::zyx_euler_t(rot.x, rot.y, rot.z);
             }

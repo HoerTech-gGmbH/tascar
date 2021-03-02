@@ -12,8 +12,8 @@ sound_var_t::sound_var_t(xmlpp::Element* xmlsrc)
 : xml_element_t(xmlsrc),
   gain(0)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(gain);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(gain);
 }
 
 class sampler_var_t : public TASCAR::module_base_t {
@@ -27,8 +27,8 @@ public:
 sampler_var_t::sampler_var_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg )
 {
-  GET_ATTRIBUTE(multicast);
-  GET_ATTRIBUTE(port);
+  GET_ATTRIBUTE_(multicast);
+  GET_ATTRIBUTE_(port);
   if( port.empty() ){
     std::cerr << "Warning: Empty port number; using default port 9999.\n";
     port = "9999";

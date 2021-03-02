@@ -14,8 +14,8 @@ private:
 wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), timeout(30)
 {
-  GET_ATTRIBUTE(ports);
-  GET_ATTRIBUTE(timeout);
+  GET_ATTRIBUTE_(ports);
+  GET_ATTRIBUTE_(timeout);
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
       sn != subnodes.end(); ++sn) {

@@ -183,12 +183,12 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
 {
   tilt.scale = M_PI*0.5;
   tilt.threshold = 0;
-  get_attribute_bool("dump_events",dump_events);
-  GET_ATTRIBUTE(maxnorm);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(device);
+  get_attribute_bool("dump_events",dump_events, "", "undocumented");
+  GET_ATTRIBUTE_(maxnorm);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(device);
   std::string preset;
-  GET_ATTRIBUTE(preset);
+  GET_ATTRIBUTE_(preset);
   if( preset == "xbox360" ){
     x.ax=1;
     x.scale=-1;
@@ -234,7 +234,7 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
     tilt.min=-0.5*M_PI;
     tilt.smooth=0.99;
   }
-#define ATTRIB(x) get_attribute(#x "_ax",x.ax); get_attribute(#x "_scale",x.scale); get_attribute(#x "_threshold",x.threshold); get_attribute(#x "_max",x.max); get_attribute(#x "_min",x.min); get_attribute(#x "_smooth",x.smooth)
+#define ATTRIB(x) get_attribute(#x "_ax",x.ax,"","axis number"); get_attribute(#x "_scale",x.scale,"","scaling factor"); get_attribute(#x "_threshold",x.threshold,"","axis threshold"); get_attribute(#x "_max",x.max,"","upper limit"); get_attribute(#x "_min",x.min,"","lower limit"); get_attribute(#x "_smooth",x.smooth,"","smoothing coefficient")
   ATTRIB(x);
   ATTRIB(y);
   ATTRIB(r);

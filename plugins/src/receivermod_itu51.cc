@@ -164,9 +164,9 @@ rec_itu51_t::rec_itu51_t(xmlpp::Element* xmlsrc)
     fc(80),
     r(1.01)
 {
-  GET_ATTRIBUTE(fc);
-  GET_ATTRIBUTE_DB(diffusegainfront);
-  GET_ATTRIBUTE_DB(diffusegainrear);
+  GET_ATTRIBUTE_(fc);
+  GET_ATTRIBUTE_DB_(diffusegainfront);
+  GET_ATTRIBUTE_DB_(diffusegainrear);
   // L:
   spkpos.push_back( TASCAR::pos_t( 1, 1, 0 ) ); 
   // R:

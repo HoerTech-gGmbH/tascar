@@ -43,14 +43,14 @@ gls_serial_t::gls_serial_t( const sensorplugin_cfg_t& cfg )
     timeoutcnt(0),
     baud(B9600)
 {
-  GET_ATTRIBUTE(device);
+  GET_ATTRIBUTE_(device);
   if( device.empty() )
     device = "/dev/rfcomm1";
-  GET_ATTRIBUTE(baudrate);
-  GET_ATTRIBUTE(charsize);
-  GET_ATTRIBUTE(offset);
-  GET_ATTRIBUTE(scale);
-  GET_ATTRIBUTE(channels);
+  GET_ATTRIBUTE_(baudrate);
+  GET_ATTRIBUTE_(charsize);
+  GET_ATTRIBUTE_(offset);
+  GET_ATTRIBUTE_(scale);
+  GET_ATTRIBUTE_(channels);
   switch( baudrate ){
   case 50 : baud = B50; break;
   case 75 : baud = B75; break;

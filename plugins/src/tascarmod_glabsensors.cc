@@ -200,11 +200,11 @@ glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
       outlet_warnings(info_warnings), startphase(100)
 {
   refBuilder = Gtk::Builder::create_from_string(ui_glabsensors);
-  GET_ATTRIBUTE(x);
-  GET_ATTRIBUTE(y);
-  GET_ATTRIBUTE(w);
-  GET_ATTRIBUTE(h);
-  GET_ATTRIBUTE_BOOL(ontop);
+  GET_ATTRIBUTE_(x);
+  GET_ATTRIBUTE_(y);
+  GET_ATTRIBUTE_(w);
+  GET_ATTRIBUTE_(h);
+  GET_ATTRIBUTE_BOOL_(ontop);
   GET_WIDGET(win);
   GET_WIDGET(sensorcontainer);
   GET_WIDGET(labmsg_critical);

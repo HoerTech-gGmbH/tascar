@@ -12,7 +12,7 @@ private:
 
 sleep_t::sleep_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg), sleep(1)
 {
-  GET_ATTRIBUTE(sleep);
+  GET_ATTRIBUTE_(sleep);
   std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000.0 * sleep)));
 }
 

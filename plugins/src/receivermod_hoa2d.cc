@@ -86,19 +86,19 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
 {
   if( spkpos.size() < 3 )
     throw TASCAR::ErrMsg("At least three loudspeakers are required for HOA decoding.");
-  GET_ATTRIBUTE(order);
-  GET_ATTRIBUTE_DEG(rotation);
+  GET_ATTRIBUTE_(order);
+  GET_ATTRIBUTE_DEG_(rotation);
   if( rotation == -12345 )
     rotation = -spkpos.mean_rotation;
-  GET_ATTRIBUTE_BOOL(maxre);
-  GET_ATTRIBUTE_BOOL(diffup);
-  GET_ATTRIBUTE_DEG(diffup_rot);
-  GET_ATTRIBUTE(diffup_delay);
-  GET_ATTRIBUTE(diffup_maxorder);
-  GET_ATTRIBUTE(filterperiod);
+  GET_ATTRIBUTE_BOOL_(maxre);
+  GET_ATTRIBUTE_BOOL_(diffup);
+  GET_ATTRIBUTE_DEG_(diffup_rot);
+  GET_ATTRIBUTE_(diffup_delay);
+  GET_ATTRIBUTE_(diffup_maxorder);
+  GET_ATTRIBUTE_(filterperiod);
   std::string filtershape;
-  GET_ATTRIBUTE(filtershape);
-  //GET_ATTRIBUTE(wgain);
+  GET_ATTRIBUTE_(filtershape);
+  //GET_ATTRIBUTE_(wgain);
   if( filtershape.empty() )
     filtershape = "none";
   if( filtershape == "none" )

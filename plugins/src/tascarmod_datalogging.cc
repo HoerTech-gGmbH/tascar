@@ -80,13 +80,13 @@ lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
       skipplot(0)
 {
   // str_buffer.resize(STRBUFFER_SIZE);
-  GET_ATTRIBUTE(predicate);
+  GET_ATTRIBUTE_(predicate);
   if(predicate.empty())
     throw TASCAR::ErrMsg("Invalid (empty) predicate.");
-  GET_ATTRIBUTE(tctimeout);
+  GET_ATTRIBUTE_(tctimeout);
   bool required(true);
-  GET_ATTRIBUTE_BOOL(required);
-  GET_ATTRIBUTE(skipplot);
+  GET_ATTRIBUTE_BOOL_(required);
+  GET_ATTRIBUTE_(skipplot);
   std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
   if(results.empty()) {
     if(required)
@@ -158,8 +158,8 @@ public:
 oscsvar_t::oscsvar_t(xmlpp::Element* xmlsrc)
     : xml_element_t(xmlsrc), skipplot(0)
 {
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(skipplot);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(skipplot);
 }
 
 class oscvar_t : public TASCAR::xml_element_t {
@@ -176,11 +176,11 @@ public:
 oscvar_t::oscvar_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc), size(1), ignorefirst(false), usedouble(false),skipplot(0)
 {
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(size);
-  GET_ATTRIBUTE_BOOL(ignorefirst);
-  GET_ATTRIBUTE_BOOL(usedouble);
-  GET_ATTRIBUTE(skipplot);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(size);
+  GET_ATTRIBUTE_BOOL_(ignorefirst);
+  GET_ATTRIBUTE_BOOL_(usedouble);
+  GET_ATTRIBUTE_(skipplot);
 }
 
 std::string oscvar_t::get_fmt()
@@ -219,13 +219,13 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), srv_proto("UDP"), fileformat("matcell"),
       displaydc(true), lsltimeout(10.0), jc_(NULL)
 {
-  GET_ATTRIBUTE(multicast);
-  GET_ATTRIBUTE(port);
-  GET_ATTRIBUTE(srv_proto);
-  GET_ATTRIBUTE(fileformat);
-  GET_ATTRIBUTE(outputdir);
-  GET_ATTRIBUTE(lsltimeout);
-  GET_ATTRIBUTE_BOOL(displaydc);
+  GET_ATTRIBUTE_(multicast);
+  GET_ATTRIBUTE_(port);
+  GET_ATTRIBUTE_(srv_proto);
+  GET_ATTRIBUTE_(fileformat);
+  GET_ATTRIBUTE_(outputdir);
+  GET_ATTRIBUTE_(lsltimeout);
+  GET_ATTRIBUTE_BOOL_(displaydc);
   if(fileformat.size() == 0)
     fileformat = "matcell";
   if((fileformat != "txt") && (fileformat != "mat") &&

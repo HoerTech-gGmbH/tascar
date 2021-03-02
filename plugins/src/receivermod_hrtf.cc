@@ -97,25 +97,25 @@ hrtf_param_t::hrtf_param_t(xmlpp::Element* xmlsrc)
       alphamin_up(0.1), startangle_notch(102 * DEG2RAD), freq_start(1300),
       freq_end(650), maxgain(-5.4), Q_notch(2.3)
 {
-  GET_ATTRIBUTE(sincorder);
-  GET_ATTRIBUTE(c);
-  GET_ATTRIBUTE(radius);
-  GET_ATTRIBUTE_DEG(angle);
-  GET_ATTRIBUTE(thetamin);
-  GET_ATTRIBUTE(omega);
-  GET_ATTRIBUTE(alphamin);
-  GET_ATTRIBUTE_DEG(startangle_front);
-  GET_ATTRIBUTE(omega_front);
-  GET_ATTRIBUTE(alphamin_front);
-  GET_ATTRIBUTE_DEG(startangle_up);
+  GET_ATTRIBUTE_(sincorder);
+  GET_ATTRIBUTE_(c);
+  GET_ATTRIBUTE_(radius);
+  GET_ATTRIBUTE_DEG_(angle);
+  GET_ATTRIBUTE_(thetamin);
+  GET_ATTRIBUTE_(omega);
+  GET_ATTRIBUTE_(alphamin);
+  GET_ATTRIBUTE_DEG_(startangle_front);
+  GET_ATTRIBUTE_(omega_front);
+  GET_ATTRIBUTE_(alphamin_front);
+  GET_ATTRIBUTE_DEG_(startangle_up);
   omega_up = 340 / radius / 2;
-  GET_ATTRIBUTE(omega_up);
-  GET_ATTRIBUTE(alphamin_up);
-  GET_ATTRIBUTE_DEG(startangle_notch);
-  GET_ATTRIBUTE(freq_start);
-  GET_ATTRIBUTE(freq_end);
-  GET_ATTRIBUTE(maxgain);
-  GET_ATTRIBUTE(Q_notch);
+  GET_ATTRIBUTE_(omega_up);
+  GET_ATTRIBUTE_(alphamin_up);
+  GET_ATTRIBUTE_DEG_(startangle_notch);
+  GET_ATTRIBUTE_(freq_start);
+  GET_ATTRIBUTE_(freq_end);
+  GET_ATTRIBUTE_(maxgain);
+  GET_ATTRIBUTE_(Q_notch);
   dir_l.rot_z(angle);
   dir_r.rot_z(-angle);
 }
@@ -371,8 +371,8 @@ hrtf_t::hrtf_t(xmlpp::Element* xmlsrc)
     : TASCAR::receivermod_base_t(xmlsrc), par(xmlsrc), decorr_length(0.05),
       decorr(false)
 {
-  GET_ATTRIBUTE(decorr_length);
-  GET_ATTRIBUTE_BOOL(decorr);
+  GET_ATTRIBUTE_(decorr_length);
+  GET_ATTRIBUTE_BOOL_(decorr);
 }
 
 void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,

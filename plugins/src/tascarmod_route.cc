@@ -126,11 +126,11 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
       plugins(TASCAR::module_base_t::e, get_name(), ""), bypass(true)
 {
   pthread_mutex_init(&mtx_, NULL);
-  TASCAR::module_base_t::GET_ATTRIBUTE(channels);
-  TASCAR::module_base_t::GET_ATTRIBUTE(connect_out);
-  TASCAR::module_base_t::get_attribute("lingain", gain);
-  TASCAR::module_base_t::GET_ATTRIBUTE(levelmeter_tc);
-  TASCAR::module_base_t::GET_ATTRIBUTE(levelmeter_weight);
+  TASCAR::module_base_t::GET_ATTRIBUTE_(channels);
+  TASCAR::module_base_t::GET_ATTRIBUTE_(connect_out);
+  TASCAR::module_base_t::get_attribute("lingain", gain,"","linear gain");
+  TASCAR::module_base_t::GET_ATTRIBUTE_(levelmeter_tc);
+  TASCAR::module_base_t::GET_ATTRIBUTE_(levelmeter_weight);
   session->add_float_db("/" + get_name() + "/gain", &gain);
   session->add_float("/" + get_name() + "/lingain", &gain);
   session->add_method("/" + get_name() + "/mute", "i", osc_routemod_mute, this);

@@ -362,14 +362,14 @@ simplefdn_vars_t::simplefdn_vars_t(xmlpp::Element* xmlsrc)
       dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
       absorption(0.6), c(340)
 {
-  GET_ATTRIBUTE(fdnorder);
-  GET_ATTRIBUTE(dw);
-  GET_ATTRIBUTE(t60);
-  GET_ATTRIBUTE(damping);
-  GET_ATTRIBUTE_BOOL(prefilt);
-  GET_ATTRIBUTE(absorption);
-  GET_ATTRIBUTE(c);
-  GET_ATTRIBUTE(volumetric);
+  GET_ATTRIBUTE_(fdnorder);
+  GET_ATTRIBUTE_(dw);
+  GET_ATTRIBUTE_(t60);
+  GET_ATTRIBUTE_(damping);
+  GET_ATTRIBUTE_BOOL_(prefilt);
+  GET_ATTRIBUTE_(absorption);
+  GET_ATTRIBUTE_(c);
+  GET_ATTRIBUTE_(volumetric);
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}

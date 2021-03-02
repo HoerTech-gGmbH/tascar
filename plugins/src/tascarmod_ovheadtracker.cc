@@ -108,22 +108,22 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       send_only_quaternion(false), autoref(0), target(NULL), rottarget(NULL),
       bcalib(false), qref(1, 0, 0, 0), first(true), run_service_level(true)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(devices);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(roturl);
-  GET_ATTRIBUTE(rotpath);
-  GET_ATTRIBUTE(ttl);
-  GET_ATTRIBUTE(calib0path);
-  GET_ATTRIBUTE(calib1path);
-  GET_ATTRIBUTE(autoref);
-  GET_ATTRIBUTE(axes);
-  GET_ATTRIBUTE(accscale);
-  GET_ATTRIBUTE(gyrscale);
-  GET_ATTRIBUTE_BOOL(apply_loc);
-  GET_ATTRIBUTE_BOOL(apply_rot);
-  GET_ATTRIBUTE_BOOL(send_only_quaternion);
-  GET_ATTRIBUTE(levelpattern);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(devices);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(roturl);
+  GET_ATTRIBUTE_(rotpath);
+  GET_ATTRIBUTE_(ttl);
+  GET_ATTRIBUTE_(calib0path);
+  GET_ATTRIBUTE_(calib1path);
+  GET_ATTRIBUTE_(autoref);
+  GET_ATTRIBUTE_(axes);
+  GET_ATTRIBUTE_(accscale);
+  GET_ATTRIBUTE_(gyrscale);
+  GET_ATTRIBUTE_BOOL_(apply_loc);
+  GET_ATTRIBUTE_BOOL_(apply_rot);
+  GET_ATTRIBUTE_BOOL_(send_only_quaternion);
+  GET_ATTRIBUTE_(levelpattern);
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)

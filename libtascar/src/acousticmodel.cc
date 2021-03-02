@@ -502,39 +502,28 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
     starttime_samples(0),
     plugins(xmlsrc, name, "" )
 {
-  GET_ATTRIBUTE(volumetric);
-  GET_ATTRIBUTE(avgdist);
+  GET_ATTRIBUTE(volumetric,"m","volume in which receiver does not apply distance based gain model");
+  GET_ATTRIBUTE(avgdist,"m","average distance assumed within volume");
   if( !is_reverb ){
-    get_attribute_bool("point",render_point);
-    get_attribute_bool("diffuse",render_diffuse);
+    get_attribute_bool("point",render_point,"","render point sources");
+    get_attribute_bool("diffuse",render_diffuse,"","render diffuse sources");
   }
-  get_attribute_bool("image",render_image);
-  get_attribute_bool("globalmask",use_global_mask);
+  get_attribute_bool("image",render_image,"","render image sources");
+  get_attribute_bool("globalmask",use_global_mask,"","use global mask");
   if( !is_reverb ){
     has_diffusegain = has_attribute("diffusegain");
-    GET_ATTRIBUTE_DB(diffusegain);
+    GET_ATTRIBUTE_DB(diffusegain,"gain of diffuse sources");
   }
-  GET_ATTRIBUTE(ismmin);
-  GET_ATTRIBUTE(ismmax);
-  GET_ATTRIBUTE_BITS(layers);
-  GET_ATTRIBUTE(falloff);
-  GET_ATTRIBUTE(delaycomp);
-  GET_ATTRIBUTE(layerfadelen);
-  GET_ATTRIBUTE_BOOL(muteonstop);
-  if( has_attribute( "size" ) ){
-    TASCAR::pos_t size;
-    GET_ATTRIBUTE(size);
-    volumetric = size;
-    if( avgdist <= 0 )
-      avgdist = pow(size.boxvolume(),0.33333);
-    TASCAR::add_warning(std::string("For volumetric receiver rendering, use the \"volumetric\" attribute. The \"size\" attribute will be removed in the future. ") +
-                        std::string("To achieve same behavior as before, adjust \"avgdist\" to ") +
-                        TASCAR::to_string(pow(size.boxvolume(),0.33333))+".");
-  }else{
-    if( avgdist <= 0 )
-      avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
-  }
-  }
+  GET_ATTRIBUTE(ismmin,"","minimal ISM order to render");
+  GET_ATTRIBUTE(ismmax,"","maximal ISM order to render");
+  GET_ATTRIBUTE_BITS(layers,"render layers");
+  GET_ATTRIBUTE(falloff,"m","ramp length at boundaries");
+  GET_ATTRIBUTE(delaycomp,"s","subtract this value from delay in delay lines");
+  GET_ATTRIBUTE(layerfadelen,"s","duration of fades between layers");
+  GET_ATTRIBUTE_BOOL(muteonstop,"mute when transport stopped to prevent playback of sounds from delaylines and reverb");
+  if( avgdist <= 0 )
+    avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
+}
 
 void receiver_t::configure()
 {
@@ -713,9 +702,9 @@ void receiver_t::set_fade(double targetgain, double duration, double start)
 TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
   : dynobject_t(xmlsrc),falloff(1.0),active(false)
 {
-  dynobject_t::get_attribute("size",size);
-  dynobject_t::get_attribute("falloff",falloff);
-  dynobject_t::get_attribute_bool("active",active);
+  dynobject_t::GET_ATTRIBUTE(size,"m","dimension of bounding box");
+  dynobject_t::GET_ATTRIBUTE(falloff,"m","length of ramp at boundaries");
+  dynobject_t::GET_ATTRIBUTE_BOOL(active,"use bounding box");
 }
 
 pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet)
@@ -793,13 +782,13 @@ source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::s
     //is_prepared(false),
     plugins(xmlsrc, name, parentname )
 {
-  GET_ATTRIBUTE(size);
-  GET_ATTRIBUTE(maxdist);
-  GET_ATTRIBUTE_DBSPL(minlevel);
-  GET_ATTRIBUTE_BOOL(airabsorption);
-  GET_ATTRIBUTE_BOOL(delayline);
+  GET_ATTRIBUTE(size,"m","physical size of sound source (effect depends on rendering method)");
+  GET_ATTRIBUTE(maxdist, "m", "maximum distance to be used in delay lines");
+  GET_ATTRIBUTE_DBSPL(minlevel,"Level threshold for rendering");
+  GET_ATTRIBUTE_BOOL(airabsorption,"apply air absorption filter");
+  GET_ATTRIBUTE_BOOL(delayline,"use delayline");
   std::string gr;
-  get_attribute("gainmodel",gr);
+  get_attribute("gainmodel",gr,"","gain rule, valid gain models: \"1/r\", \"1\"");
   if( gr.empty() )
     gr = "1/r";
   if( gr == "1/r" )
@@ -808,10 +797,10 @@ source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::s
     gainmodel = GAIN_UNITY;
   else
     throw TASCAR::ErrMsg("Invalid gain model "+gr+"(valid gain models: \"1/r\", \"1\").");
-  GET_ATTRIBUTE(sincorder);
-  GET_ATTRIBUTE(ismmin);
-  GET_ATTRIBUTE(ismmax);
-  GET_ATTRIBUTE_BITS(layers);
+  GET_ATTRIBUTE(sincorder,"","order of sinc interpolation in delayline");
+  GET_ATTRIBUTE(ismmin,"","minimal ISM order to render");
+  GET_ATTRIBUTE(ismmax,"","maximal ISM order to render");
+  GET_ATTRIBUTE_BITS(layers,"render layers");
 }
 
 source_t::~source_t()

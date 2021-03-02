@@ -32,11 +32,11 @@ ap_pos2osc_t::ap_pos2osc_t( const TASCAR::audioplugin_cfg_t& cfg )
     skipcnt(0),
     has_label(0)
 {
-  GET_ATTRIBUTE_BOOL(sendwhilestopped);
-  GET_ATTRIBUTE(skip);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(label);
+  GET_ATTRIBUTE_BOOL_(sendwhilestopped);
+  GET_ATTRIBUTE_(skip);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(label);
   //rot *= DEG2RAD;
   lo_addr = lo_address_new_from_url(url.c_str());
 }

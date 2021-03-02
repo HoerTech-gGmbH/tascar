@@ -91,11 +91,11 @@ simplecontroller_t::simplecontroller_t( const TASCAR::module_cfg_t& cfg )
     vz(1),
     vr(M_PI/2)
 {
-  GET_ATTRIBUTE(maxnorm);
-  GET_ATTRIBUTE(vx);
-  GET_ATTRIBUTE(vy);
-  GET_ATTRIBUTE(vz);
-  GET_ATTRIBUTE_DEG(vr);
+  GET_ATTRIBUTE_(maxnorm);
+  GET_ATTRIBUTE_(vx);
+  GET_ATTRIBUTE_(vy);
+  GET_ATTRIBUTE_(vz);
+  GET_ATTRIBUTE_DEG_(vr);
   //activate();
   refBuilder = Gtk::Builder::create_from_string(ui_simplecontroller);
   GET_WIDGET(win);

@@ -27,12 +27,12 @@ ormod_t::ormod_t( const TASCAR::module_cfg_t& cfg )
     phi0(-90.0),
     phi1(90.0)
 {
-  actor_module_t::GET_ATTRIBUTE(mode);
-  actor_module_t::GET_ATTRIBUTE(w);
-  actor_module_t::GET_ATTRIBUTE(t0);
-  actor_module_t::GET_ATTRIBUTE(t1);
-  actor_module_t::GET_ATTRIBUTE(phi0);
-  actor_module_t::GET_ATTRIBUTE(phi1);
+  actor_module_t::GET_ATTRIBUTE_(mode);
+  actor_module_t::GET_ATTRIBUTE_(w);
+  actor_module_t::GET_ATTRIBUTE_(t0);
+  actor_module_t::GET_ATTRIBUTE_(t1);
+  actor_module_t::GET_ATTRIBUTE_(phi0);
+  actor_module_t::GET_ATTRIBUTE_(phi1);
   session->add_uint(TASCAR::vecstr2str(actor)+"/mode",&mode);
   session->add_double(TASCAR::vecstr2str(actor)+"/w",&w);
   session->add_double(TASCAR::vecstr2str(actor)+"/t0",&t0);

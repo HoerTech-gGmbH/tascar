@@ -21,11 +21,11 @@ pendulum_t::pendulum_t( const TASCAR::module_cfg_t& cfg )
     starttime(10),
     distance(0,0,-2)
 {
-  GET_ATTRIBUTE(amplitude);
-  GET_ATTRIBUTE(frequency);
-  GET_ATTRIBUTE(decaytime);
-  GET_ATTRIBUTE(starttime);
-  GET_ATTRIBUTE(distance);
+  GET_ATTRIBUTE_(amplitude);
+  GET_ATTRIBUTE_(frequency);
+  GET_ATTRIBUTE_(decaytime);
+  GET_ATTRIBUTE_(starttime);
+  GET_ATTRIBUTE_(distance);
 }
 
 pendulum_t::~pendulum_t()

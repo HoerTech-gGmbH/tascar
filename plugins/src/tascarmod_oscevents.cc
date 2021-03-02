@@ -12,7 +12,7 @@ private:
 osc_event_base_t::osc_event_base_t(xmlpp::Element* xmlsrc)
   : xml_element_t(xmlsrc),t(0)
 {
-  GET_ATTRIBUTE(t);
+  GET_ATTRIBUTE_(t);
 }
 
 void osc_event_base_t::process_event(double t0,double dur,const lo_address& target, const char* path)
@@ -33,7 +33,7 @@ public:
 class osc_event_s_t : public osc_event_base_t {
 public:
   osc_event_s_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
-    GET_ATTRIBUTE(a0);
+    GET_ATTRIBUTE_(a0);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -45,8 +45,8 @@ public:
 class osc_event_ss_t : public osc_event_base_t {
 public:
   osc_event_ss_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -59,8 +59,8 @@ public:
 class osc_event_sf_t : public osc_event_base_t {
 public:
   osc_event_sf_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -73,9 +73,9 @@ public:
 class osc_event_sff_t : public osc_event_base_t {
 public:
   osc_event_sff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
-    GET_ATTRIBUTE(a2);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
+    GET_ATTRIBUTE_(a2);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -89,10 +89,10 @@ public:
 class osc_event_sfff_t : public osc_event_base_t {
 public:
   osc_event_sfff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
-    GET_ATTRIBUTE(a2);
-    GET_ATTRIBUTE(a3);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
+    GET_ATTRIBUTE_(a2);
+    GET_ATTRIBUTE_(a3);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -107,11 +107,11 @@ public:
 class osc_event_sffff_t : public osc_event_base_t {
 public:
   osc_event_sffff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0),a4(0){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
-    GET_ATTRIBUTE(a2);
-    GET_ATTRIBUTE(a3);
-    GET_ATTRIBUTE(a4);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
+    GET_ATTRIBUTE_(a2);
+    GET_ATTRIBUTE_(a3);
+    GET_ATTRIBUTE_(a4);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -127,8 +127,8 @@ public:
 class osc_event_ff_t : public osc_event_base_t {
 public:
   osc_event_ff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -141,7 +141,7 @@ public:
 class osc_event_f_t : public osc_event_base_t {
 public:
   osc_event_f_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0){
-    GET_ATTRIBUTE(a0);
+    GET_ATTRIBUTE_(a0);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -153,9 +153,9 @@ public:
 class osc_event_fff_t : public osc_event_base_t {
 public:
   osc_event_fff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0),a2(0){
-    GET_ATTRIBUTE(a0);
-    GET_ATTRIBUTE(a1);
-    GET_ATTRIBUTE(a2);
+    GET_ATTRIBUTE_(a0);
+    GET_ATTRIBUTE_(a1);
+    GET_ATTRIBUTE_(a2);
   };
   virtual void send(const lo_address& target, const char* path)
     {
@@ -184,9 +184,9 @@ oscevents_t::oscevents_t( const TASCAR::module_cfg_t& cfg )
     ttl(1),
     path("/oscevent")
 {
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(ttl);
-  GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(ttl);
+  GET_ATTRIBUTE_(path);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   target = lo_address_new_from_url(url.c_str());

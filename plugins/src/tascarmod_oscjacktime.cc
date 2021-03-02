@@ -16,9 +16,9 @@ oscjacktime_t::oscjacktime_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
     ttl(1)
 {
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(ttl);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(ttl);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   if( path.empty() )

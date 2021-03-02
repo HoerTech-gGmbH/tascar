@@ -56,17 +56,17 @@ metronome_t::metronome_t(const TASCAR::audioplugin_cfg_t& cfg)
       ao_(0.001), period(0), dispatchin(0), srv_(NULL),
       msg(find_or_add_child("msg"))
 {
-  GET_ATTRIBUTE_BOOL(changeonone);
-  GET_ATTRIBUTE(bpm);
-  GET_ATTRIBUTE(bpb);
-  GET_ATTRIBUTE_DBSPL(a1);
-  GET_ATTRIBUTE_DBSPL(ao);
-  GET_ATTRIBUTE_BOOL(sync);
-  GET_ATTRIBUTE(fres1);
-  GET_ATTRIBUTE(freso);
-  GET_ATTRIBUTE(q1);
-  GET_ATTRIBUTE(qo);
-  GET_ATTRIBUTE_BOOL(bypass);
+  GET_ATTRIBUTE_BOOL_(changeonone);
+  GET_ATTRIBUTE_(bpm);
+  GET_ATTRIBUTE_(bpb);
+  GET_ATTRIBUTE_DBSPL_(a1);
+  GET_ATTRIBUTE_DBSPL_(ao);
+  GET_ATTRIBUTE_BOOL_(sync);
+  GET_ATTRIBUTE_(fres1);
+  GET_ATTRIBUTE_(freso);
+  GET_ATTRIBUTE_(q1);
+  GET_ATTRIBUTE_(qo);
+  GET_ATTRIBUTE_BOOL_(bypass);
 }
 
 void metronome_t::configure()

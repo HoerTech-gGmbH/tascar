@@ -51,10 +51,10 @@ emergencybutton_t::emergencybutton_t( const sensorplugin_cfg_t& cfg )
     timeout(1),
     startlock(5)
 {
-  GET_ATTRIBUTE(timeout);
-  GET_ATTRIBUTE(startlock);
-  GET_ATTRIBUTE(on_timeout);
-  GET_ATTRIBUTE(on_alive);
+  GET_ATTRIBUTE_(timeout);
+  GET_ATTRIBUTE_(startlock);
+  GET_ATTRIBUTE_(on_timeout);
+  GET_ATTRIBUTE_(on_alive);
   srv = std::thread(&emergencybutton_t::service,this);
 }
 

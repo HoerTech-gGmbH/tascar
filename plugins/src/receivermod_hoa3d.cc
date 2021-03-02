@@ -48,11 +48,11 @@ hoa3d_dec_t::hoa3d_dec_t(xmlpp::Element* xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc), order(3), method("pinv"),
       dectype("maxre"), savedec(false), decwarnthreshold(8.0)
 {
-  GET_ATTRIBUTE(order);
-  GET_ATTRIBUTE(method);
-  GET_ATTRIBUTE(dectype);
-  GET_ATTRIBUTE_BOOL(savedec);
-  GET_ATTRIBUTE(decwarnthreshold);
+  GET_ATTRIBUTE_(order);
+  GET_ATTRIBUTE_(method);
+  GET_ATTRIBUTE_(dectype);
+  GET_ATTRIBUTE_BOOL_(savedec);
+  GET_ATTRIBUTE_(decwarnthreshold);
   if(order < 0)
     throw TASCAR::ErrMsg("Negative order is not possible.");
   encode.set_order(order);

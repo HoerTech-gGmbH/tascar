@@ -18,8 +18,8 @@ pulse_t::pulse_t( const TASCAR::audioplugin_cfg_t& cfg )
     a(0.001),
     period(0)
 {
-  GET_ATTRIBUTE(f);
-  GET_ATTRIBUTE(a);
+  GET_ATTRIBUTE_(f);
+  GET_ATTRIBUTE_(a);
 }
 
 pulse_t::~pulse_t()

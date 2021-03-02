@@ -14,8 +14,10 @@ static bool debuglicenses(liclocalgetenv("DEBUGLICENSES") == "yes");
 void get_license_info(xmlpp::Element* e, const std::string& fname,
                       std::string& license, std::string& attribution)
 {
-  TASCAR::xmlpp_get_and_register_attribute(e, "license", license);
-  TASCAR::xmlpp_get_and_register_attribute(e, "attribution", attribution);
+  TASCAR::xmlpp_get_and_register_attribute(e, "license", license,
+                                           "license type");
+  TASCAR::xmlpp_get_and_register_attribute(
+      e, "attribution", attribution, "attribution of license, if applicable");
   if(!fname.empty()) {
     std::ifstream flic(TASCAR::env_expand(fname) + ".license");
     if(flic.good()) {

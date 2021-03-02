@@ -55,13 +55,13 @@ periodogram_t::periodogram_t( const TASCAR::audioplugin_cfg_t& cfg )
     nbands(0),
     nperiods(0)
 {
-  GET_ATTRIBUTE(tau);
-  GET_ATTRIBUTE(fmin);
-  GET_ATTRIBUTE(fmax);
-  GET_ATTRIBUTE(coeff);
-  GET_ATTRIBUTE_BOOL(envelope);
-  GET_ATTRIBUTE(periods);
-  GET_ATTRIBUTE(name);
+  GET_ATTRIBUTE_(tau);
+  GET_ATTRIBUTE_(fmin);
+  GET_ATTRIBUTE_(fmax);
+  GET_ATTRIBUTE_(coeff);
+  GET_ATTRIBUTE_BOOL_(envelope);
+  GET_ATTRIBUTE_(periods);
+  GET_ATTRIBUTE_(name);
   if( periods.size() < 2 )
     throw TASCAR::ErrMsg("At least two periods are required.");
   if( fmin.empty() )

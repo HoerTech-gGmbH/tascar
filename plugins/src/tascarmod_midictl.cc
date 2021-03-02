@@ -22,13 +22,13 @@ midictl_vars_t::midictl_vars_t( const TASCAR::module_cfg_t& cfg )
     min(0),
     max(1)
 {
-  GET_ATTRIBUTE_BOOL(dumpmsg);
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(connect);
-  GET_ATTRIBUTE(controllers);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE(min);
-  GET_ATTRIBUTE(max);
+  GET_ATTRIBUTE_BOOL_(dumpmsg);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(connect);
+  GET_ATTRIBUTE_(controllers);
+  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE_(min);
+  GET_ATTRIBUTE_(max);
 }
 
 class midictl_t : public midictl_vars_t,

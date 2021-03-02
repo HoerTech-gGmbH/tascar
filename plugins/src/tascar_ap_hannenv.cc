@@ -21,11 +21,11 @@ hannenv_t::hannenv_t( const TASCAR::audioplugin_cfg_t& cfg )
     ramp2(0.25),
     period(2)
 {
-  GET_ATTRIBUTE(t0);
-  GET_ATTRIBUTE(ramp1);
-  GET_ATTRIBUTE(steady);
-  GET_ATTRIBUTE(ramp2);
-  GET_ATTRIBUTE(period);
+  GET_ATTRIBUTE_(t0);
+  GET_ATTRIBUTE_(ramp1);
+  GET_ATTRIBUTE_(steady);
+  GET_ATTRIBUTE_(ramp2);
+  GET_ATTRIBUTE_(period);
 }
 
 hannenv_t::~hannenv_t()

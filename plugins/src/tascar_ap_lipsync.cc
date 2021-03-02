@@ -67,16 +67,16 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
     onchangecount(3),
     onchangecounter(0)
 {
-  GET_ATTRIBUTE(smoothing);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(scale);
-  GET_ATTRIBUTE(vocalTract);
-  GET_ATTRIBUTE(threshold);
-  GET_ATTRIBUTE(maxspeechlevel);
-  GET_ATTRIBUTE(dynamicrange);
-  GET_ATTRIBUTE(energypath);
+  GET_ATTRIBUTE_(smoothing);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(scale);
+  GET_ATTRIBUTE_(vocalTract);
+  GET_ATTRIBUTE_(threshold);
+  GET_ATTRIBUTE_(maxspeechlevel);
+  GET_ATTRIBUTE_(dynamicrange);
+  GET_ATTRIBUTE_(energypath);
   std::string sendmode;
-  GET_ATTRIBUTE(sendmode);
+  GET_ATTRIBUTE_(sendmode);
   if( !sendmode.empty() ){
     if( sendmode == "always" )
       send_mode = always;
@@ -87,7 +87,7 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
     else
       throw TASCAR::ErrMsg("Invalid send mode "+sendmode+" (possible values: always, transport, onchange)");
   }
-  GET_ATTRIBUTE(onchangecount);
+  GET_ATTRIBUTE_(onchangecount);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());

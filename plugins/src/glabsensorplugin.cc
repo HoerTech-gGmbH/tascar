@@ -15,8 +15,8 @@ sensorplugin_base_t::sensorplugin_base_t( const sensorplugin_cfg_t& cfg )
     alivetimeout(1),
     alive_(false)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(alivetimeout);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(alivetimeout);
   set_size_request(-1,100);
 }
 

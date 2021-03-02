@@ -227,7 +227,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   s->set_ctlname(ctlname);
   srv->add_method("/gain", "f", osc_set_sound_gain, s);
   srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s);
-  srv->add_float_db("/caliblevel", &(s->caliblevel));
+  srv->add_float_dbspl("/caliblevel", &(s->caliblevel));
   srv->add_uint("/ismmin", &(s->ismmin));
   srv->add_uint("/ismmax", &(s->ismmax));
   srv->add_uint("/layers", &(s->layers));
@@ -245,7 +245,7 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::d
   srv->set_prefix("/"+scene->name+"/"+s->object_t::get_name());
   srv->add_method("/gain","f",osc_set_diffuse_gain,s);
   srv->add_method("/lingain","f",osc_set_diffuse_gain_lin,s);
-  srv->add_float_db("/caliblevel",&(s->caliblevel));
+  srv->add_float_dbspl("/caliblevel",&(s->caliblevel));
   srv->add_uint("/layers",&(s->layers));
   if( s->get_source() )
     s->get_source()->plugins.add_variables( srv );
@@ -268,7 +268,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,TASCAR::Scene::
   srv->add_uint("/ismmin",&(s->ismmin));
   srv->add_uint("/ismmax",&(s->ismmax));
   srv->add_uint("/layers",&(s->layers));
-  srv->add_float_db("/caliblevel",&(s->caliblevel));
+  srv->add_float_dbspl("/caliblevel",&(s->caliblevel));
   s->add_variables( srv );
   srv->set_prefix( oldpref );
 }

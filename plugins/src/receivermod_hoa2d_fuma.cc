@@ -68,14 +68,14 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     idelaypoint(0),
     filterperiod(0.005)
 {
-  GET_ATTRIBUTE(order);
-  GET_ATTRIBUTE_BOOL(diffup);
-  GET_ATTRIBUTE_DEG(diffup_rot);
-  GET_ATTRIBUTE(diffup_delay);
-  GET_ATTRIBUTE(diffup_maxorder);
-  GET_ATTRIBUTE(filterperiod);
+  GET_ATTRIBUTE_(order);
+  GET_ATTRIBUTE_BOOL_(diffup);
+  GET_ATTRIBUTE_DEG_(diffup_rot);
+  GET_ATTRIBUTE_(diffup_delay);
+  GET_ATTRIBUTE_(diffup_maxorder);
+  GET_ATTRIBUTE_(filterperiod);
   std::string filtershape;
-  GET_ATTRIBUTE(filtershape);
+  GET_ATTRIBUTE_(filtershape);
   if( filtershape.empty() )
     filtershape = "none";
   if( filtershape == "none" )

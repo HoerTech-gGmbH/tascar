@@ -44,13 +44,13 @@ tracegui_t::tracegui_t( const TASCAR::module_cfg_t& cfg )
     pos(0)
 {
   pthread_mutex_init(&drawlock,NULL);
-  GET_ATTRIBUTE(tracelen);
-  GET_ATTRIBUTE(fps);
-  GET_ATTRIBUTE(guiscale);
-  GET_ATTRIBUTE(linescale);
-  GET_ATTRIBUTE_BOOL(unitcircle);
-  GET_ATTRIBUTE_BOOL(origin);
-  GET_ATTRIBUTE_BOOL(ontop);
+  GET_ATTRIBUTE_(tracelen);
+  GET_ATTRIBUTE_(fps);
+  GET_ATTRIBUTE_(guiscale);
+  GET_ATTRIBUTE_(linescale);
+  GET_ATTRIBUTE_BOOL_(unitcircle);
+  GET_ATTRIBUTE_BOOL_(origin);
+  GET_ATTRIBUTE_BOOL_(ontop);
   session->add_double("/tracegui/guiscale",&guiscale);
   session->add_double("/tracegui/linescale",&linescale);
   //session->add_bool("/tracegui/unitcircle",&unitcircle);
@@ -74,10 +74,10 @@ tracegui_t::tracegui_t( const TASCAR::module_cfg_t& cfg )
   int h(1);
   win.get_position(x,y);
   win.get_size(w,h);
-  GET_ATTRIBUTE(x);
-  GET_ATTRIBUTE(y);
-  GET_ATTRIBUTE(w);
-  GET_ATTRIBUTE(h);
+  GET_ATTRIBUTE_(x);
+  GET_ATTRIBUTE_(y);
+  GET_ATTRIBUTE_(w);
+  GET_ATTRIBUTE_(h);
   win.move(x,y);
   win.resize(w,h);
 }

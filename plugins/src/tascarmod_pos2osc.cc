@@ -30,18 +30,18 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
       lookatlen(1.0), triggered(false), ignoreorientation(false), trigger(true),
       sendsounds(false), addparentname(false)
 {
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE(ttl);
-  GET_ATTRIBUTE(mode);
-  GET_ATTRIBUTE_BOOL(transport);
-  GET_ATTRIBUTE(avatar);
-  GET_ATTRIBUTE(lookatlen);
-  GET_ATTRIBUTE_BOOL(triggered);
-  GET_ATTRIBUTE_BOOL(ignoreorientation);
-  GET_ATTRIBUTE_BOOL(sendsounds);
-  GET_ATTRIBUTE_BOOL(addparentname);
-  GET_ATTRIBUTE(skip);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE_(ttl);
+  GET_ATTRIBUTE_(mode);
+  GET_ATTRIBUTE_BOOL_(transport);
+  GET_ATTRIBUTE_(avatar);
+  GET_ATTRIBUTE_(lookatlen);
+  GET_ATTRIBUTE_BOOL_(triggered);
+  GET_ATTRIBUTE_BOOL_(ignoreorientation);
+  GET_ATTRIBUTE_BOOL_(sendsounds);
+  GET_ATTRIBUTE_BOOL_(addparentname);
+  GET_ATTRIBUTE_(skip);
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   if(pattern.empty())

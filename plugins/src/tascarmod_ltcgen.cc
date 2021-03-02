@@ -34,10 +34,10 @@ ltcgen_t::ltcgen_t( const TASCAR::module_cfg_t& cfg )
     enc_buf_(enc_buf),
     lastframe(-1)
 {
-  GET_ATTRIBUTE(fpsnum);
-  GET_ATTRIBUTE(fpsden);
-  GET_ATTRIBUTE(volume);
-  GET_ATTRIBUTE(connect);
+  GET_ATTRIBUTE_(fpsnum);
+  GET_ATTRIBUTE_(fpsden);
+  GET_ATTRIBUTE_(volume);
+  GET_ATTRIBUTE_(connect);
   encoder = ltc_encoder_create(get_srate(),
                                fpsnum/fpsden, LTC_TV_625_50, 0);
   enc_buf = new ltcsnd_sample_t[ltc_encoder_get_buffersize(encoder)];

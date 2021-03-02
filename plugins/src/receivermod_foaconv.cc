@@ -18,8 +18,8 @@ foaconv_vars_t::foaconv_vars_t( xmlpp::Element* xmlsrc )
   : receivermod_base_t( xmlsrc ),
     maxlen(0)
 {
-  GET_ATTRIBUTE(irsname);
-  GET_ATTRIBUTE(maxlen);
+  GET_ATTRIBUTE_(irsname);
+  GET_ATTRIBUTE_(maxlen);
 }
 
 foaconv_vars_t::~foaconv_vars_t()
@@ -57,7 +57,7 @@ foaconv_t::foaconv_t( xmlpp::Element* cfg )
     is_acn(false)
 {
   std::string normalization("FuMa");
-  GET_ATTRIBUTE(normalization);
+  GET_ATTRIBUTE_(normalization);
   if( normalization == "FuMa" )
     wgain = MIN3DB;
   else if( normalization == "SN3D" )
@@ -65,7 +65,7 @@ foaconv_t::foaconv_t( xmlpp::Element* cfg )
   else throw TASCAR::ErrMsg("Currently, only FuMa and SN3D normalization is supported.");
   irs1 *= wgain;
   std::string channelorder("ACN");
-  GET_ATTRIBUTE(channelorder);
+  GET_ATTRIBUTE_(channelorder);
   if( channelorder == "FuMa" )
     is_acn = false;
   else if( channelorder == "ACN" )

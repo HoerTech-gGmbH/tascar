@@ -6,7 +6,8 @@
 #include <unistd.h>
 
 namespace TASCAR {
-  std::map<xmlpp::Element*, std::map<std::string, std::string>> attribute_list;
+  std::map<xmlpp::Element*, std::map<std::string, cfg_var_desc_t>>
+      attribute_list;
   std::vector<std::string> warnings;
   globalconfig_t config;
   size_t maxid(0);
@@ -16,30 +17,31 @@ std::string TASCAR::get_tuid()
 {
   // todo: make thread safe
   char c[1024];
-  sprintf(c,"%lx",++maxid);
+  sprintf(c, "%lx", ++maxid);
   return c;
 }
 
-std::string TASCAR::strrep(std::string s,const std::string& pat, const std::string& rep)
+std::string TASCAR::strrep(std::string s, const std::string& pat,
+                           const std::string& rep)
 {
   std::string out_string("");
-  std::string::size_type len = pat.size(  );
+  std::string::size_type len = pat.size();
   std::string::size_type pos;
-  while( (pos = s.find(pat)) < s.size() ){
-    out_string += s.substr(0,pos);
+  while((pos = s.find(pat)) < s.size()) {
+    out_string += s.substr(0, pos);
     out_string += rep;
-    s.erase(0,pos+len);
+    s.erase(0, pos + len);
   }
   s = out_string + s;
   return s;
 }
 
-
 void TASCAR::xmlpp_get_and_register_attribute(xmlpp::Element* e,
                                               const std::string& name,
-                                              std::string& value)
+                                              std::string& value,
+                                              const std::string& info)
 {
-  TASCAR::attribute_list[e][name] = "string";
+  TASCAR::attribute_list[e][name] = {name, "string", value, info};
   if(TASCAR::xmlpp_has_attribute(e, name))
     value = e->get_attribute_value(name);
   else
@@ -183,7 +185,7 @@ double TASCAR::globalconfig_t::operator()(const std::string& key,
   if(localgetenv("TASCARSHOWGLOBAL").size())
     std::cout << key << " (" << def;
   auto e(cfg.find(key));
-  if(e != cfg.end()){
+  if(e != cfg.end()) {
     if(localgetenv("TASCARSHOWGLOBAL").size())
       std::cout << "=>" << e->second.c_str() << ")\n";
     return atof(e->second.c_str());
@@ -274,9 +276,11 @@ TASCAR::xml_element_t::find_or_add_child(const std::string& name)
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          std::string& value)
+                                          std::string& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "string";
+  attribute_list[e][name] = {name, "string", value, unit, info};
   if(has_attribute(name))
     value = e->get_attribute_value(name);
   else
@@ -284,38 +288,24 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          double& value)
+                                          double& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "double";
+  attribute_list[e][name] = {name, "double", TASCAR::to_string(value), unit,
+                             info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
     set_attribute(name, value);
 }
 
-void TASCAR::xml_element_t::get_attribute(const std::string& name, float& value)
+void TASCAR::xml_element_t::get_attribute(const std::string& name, float& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "float";
-  if(has_attribute(name))
-    get_attribute_value(e, name, value);
-  else
-    set_attribute(name, value);
-}
-
-void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          uint32_t& value)
-{
-  attribute_list[e][name] = "uint32";
-  if(has_attribute(name))
-    get_attribute_value(e, name, value);
-  else
-    set_attribute(name, value);
-}
-
-void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          int32_t& value)
-{
-  attribute_list[e][name] = "int32";
+  attribute_list[e][name] = {name, "float", TASCAR::to_string(value), unit,
+                             info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -323,9 +313,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          uint64_t& value)
+                                          uint32_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "uint64";
+  attribute_list[e][name] = {name, "uint32", std::to_string(value), unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -333,9 +325,35 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          int64_t& value)
+                                          int32_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "int64";
+  attribute_list[e][name] = {name, "int32", std::to_string(value), unit, info};
+  if(has_attribute(name))
+    get_attribute_value(e, name, value);
+  else
+    set_attribute(name, value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,
+                                          uint64_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
+{
+  attribute_list[e][name] = {name, "uint64", std::to_string(value), unit, info};
+  if(has_attribute(name))
+    get_attribute_value(e, name, value);
+  else
+    set_attribute(name, value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,
+                                          int64_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
+{
+  attribute_list[e][name] = {name, "int64", std::to_string(value), unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -343,12 +361,14 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute_bits(const std::string& name,
-                                               uint32_t& value)
+                                               uint32_t& value,
+                                               const std::string& unit,
+                                               const std::string& info)
 {
-  attribute_list[e][name] = "bits32";
+  attribute_list[e][name] = {name, "bits32", "XXX", unit, info};
   if(has_attribute(name)) {
     std::vector<int32_t> bits;
-    get_attribute(name, bits);
+    get_attribute_value(e, name, bits);
     if(bits.size()) {
       value = 0;
       for(uint32_t k = 0; k < bits.size(); ++k) {
@@ -362,9 +382,11 @@ void TASCAR::xml_element_t::get_attribute_bits(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute_bool(const std::string& name,
-                                               bool& value)
+                                               bool& value,
+                                               const std::string& unit,
+                                               const std::string& info)
 {
-  attribute_list[e][name] = "bool";
+  attribute_list[e][name] = {name, "bool", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value_bool(e, name, value);
   else
@@ -372,9 +394,11 @@ void TASCAR::xml_element_t::get_attribute_bool(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
-                                             double& value)
+                                             double& value,
+                                             const std::string& unit,
+                                             const std::string& info)
 {
-  attribute_list[e][name] = "double_db";
+  attribute_list[e][name] = {name, "double_db", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value_db(e, name, value);
   else
@@ -382,19 +406,35 @@ void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute_dbspl(const std::string& name,
-                                                double& value)
+                                                double& value,
+                                                const std::string& unit,
+                                                const std::string& info)
 {
-  attribute_list[e][name] = "double_dbspl";
+  attribute_list[e][name] = {name, "double_dbspl", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value_dbspl(e, name, value);
   else
     set_attribute_dbspl(name, value);
 }
 
-void TASCAR::xml_element_t::get_attribute_db_float(const std::string& name,
-                                                   float& value)
+void TASCAR::xml_element_t::get_attribute_dbspl(const std::string& name,
+                                                float& value,
+                                                const std::string& unit,
+                                                const std::string& info)
 {
-  attribute_list[e][name] = "float_db";
+  attribute_list[e][name] = {name, "float_dbspl", "XXX", unit, info};
+  if(has_attribute(name))
+    get_attribute_value_dbspl_float(e, name, value);
+  else
+    set_attribute_dbspl(name, value);
+}
+
+void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
+                                                   float& value,
+                                                   const std::string& unit,
+                                                   const std::string& info)
+{
+  attribute_list[e][name] = {name, "float_db", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value_db_float(e, name, value);
   else
@@ -402,9 +442,11 @@ void TASCAR::xml_element_t::get_attribute_db_float(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
-                                              double& value)
+                                              double& value,
+                                              const std::string& unit,
+                                              const std::string& info)
 {
-  attribute_list[e][name] = "double_degree";
+  attribute_list[e][name] = {name, "double_degree", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value_deg(e, name, value);
   else
@@ -412,9 +454,11 @@ void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          TASCAR::pos_t& value)
+                                          TASCAR::pos_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "pos";
+  attribute_list[e][name] = {name, "pos", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -422,9 +466,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          TASCAR::zyx_euler_t& value)
+                                          TASCAR::zyx_euler_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "zyx_euler";
+  attribute_list[e][name] = {name, "zyx_euler", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -432,9 +478,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          std::vector<TASCAR::pos_t>& value)
+                                          std::vector<TASCAR::pos_t>& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "vector<pos>";
+  attribute_list[e][name] = {name, "vector<pos>", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -442,9 +490,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          std::vector<std::string>& value)
+                                          std::vector<std::string>& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "vector<string>";
+  attribute_list[e][name] = {name, "vector<string>", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -452,9 +502,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          std::vector<double>& value)
+                                          std::vector<double>& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "vector<double>";
+  attribute_list[e][name] = {name, "vector<double>", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -462,9 +514,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          std::vector<float>& value)
+                                          std::vector<float>& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "vector<float>";
+  attribute_list[e][name] = {name, "vector<float>", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -472,9 +526,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          std::vector<int32_t>& value)
+                                          std::vector<int32_t>& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "vector<int32>";
+  attribute_list[e][name] = {name, "vector<int32>", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -482,9 +538,11 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
-                                          TASCAR::levelmeter::weight_t& value)
+                                          TASCAR::levelmeter::weight_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
 {
-  attribute_list[e][name] = "levelmeterweight";
+  attribute_list[e][name] = {name, "levelmeterweight", "XXX", unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -979,6 +1037,16 @@ void get_attribute_value_dbspl(xmlpp::Element* elem, const std::string& name,
     value = pow(10.0, 0.05 * tmpv) * 2e-5;
 }
 
+void get_attribute_value_dbspl_float(xmlpp::Element* elem, const std::string& name,
+                               float& value)
+{
+  std::string attv(elem->get_attribute_value(name));
+  char* c;
+  float tmpv(strtof(attv.c_str(), &c));
+  if(c != attv.c_str())
+    value = powf(10.0f, 0.05f * tmpv) * 2e-5f;
+}
+
 void get_attribute_value_db_float(xmlpp::Element* elem, const std::string& name,
                                   float& value)
 {
@@ -1059,17 +1127,11 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
     sprintf(cline, "%d", e->get_line());
     msg += "Invalid attributes in element \"" + e->get_name() + "\" (Line " +
            cline + "):";
-    for(std::vector<std::string>::const_iterator it = unused.begin();
-        it != unused.end(); ++it)
-      msg += " " + *it;
+    for(auto attr : unused)
+      msg += " " + attr;
     msg += " (valid attributes are:";
-    for(std::map<std::string, std::string>::const_iterator it =
-            attribute_list[e].begin();
-        it != attribute_list[e].end(); ++it) {
-      if(it != attribute_list[e].begin())
-        msg += ",";
-      msg += " " + it->first;
-    }
+    for(auto attr : attribute_list[e])
+      msg += " " + attr.first;
     msg += ").";
   }
 }
@@ -1105,26 +1167,24 @@ TASCAR::xml_doc_t::~xml_doc_t()
 TASCAR::msg_t::msg_t(xmlpp::Element* e)
     : TASCAR::xml_element_t(e), msg(lo_message_new())
 {
-  GET_ATTRIBUTE(path);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+  GET_ATTRIBUTE(path,"","OSC path name");
+  for(auto sn : e->get_children()) {
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(sn));
     if(sne) {
       TASCAR::xml_element_t tsne(sne);
       if(sne->get_name() == "f") {
         double v(0);
-        tsne.get_attribute("v", v);
+        tsne.GET_ATTRIBUTE(v,"","float value");
         lo_message_add_float(msg, v);
       }
       if(sne->get_name() == "i") {
         int32_t v(0);
-        tsne.get_attribute("v", v);
+        tsne.GET_ATTRIBUTE(v,"","int value");
         lo_message_add_int32(msg, v);
       }
       if(sne->get_name() == "s") {
         std::string v("");
-        tsne.get_attribute("v", v);
+        tsne.GET_ATTRIBUTE(v,"","string value");
         lo_message_add_string(msg, v.c_str());
       }
     }

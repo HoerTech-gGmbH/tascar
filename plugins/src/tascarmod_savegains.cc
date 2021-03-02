@@ -23,9 +23,9 @@ savegains_t::savegains_t( const TASCAR::module_cfg_t& cfg )
     m(lo_message_new())
 {
   lo_message_add_float(m,0.0f);
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE(filename);
-  GET_ATTRIBUTE(pattern);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_(filename);
+  GET_ATTRIBUTE_(pattern);
   session->add_string("/savegains/filename",&filename);
   session->add_method("/savegains/save","",savegains_t::osc_save,this);
   session->add_method("/savegains/restore","",savegains_t::osc_restore,this);

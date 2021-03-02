@@ -36,15 +36,15 @@ midicc_t::midicc_t( const sensorplugin_cfg_t& cfg )
   range.resize(2);
   range[0] = 0;
   range[1] = 1;
-  GET_ATTRIBUTE(connect);
-  GET_ATTRIBUTE(range);
+  GET_ATTRIBUTE_(connect);
+  GET_ATTRIBUTE_(range);
   if( range.size() != 2 )
     throw ErrMsg("Range needs two entries");
   if( range[0] == range[1] )
     throw ErrMsg("Range values must differ"); 
   std::vector<std::string> controllers;
-  GET_ATTRIBUTE(controllers);
-  GET_ATTRIBUTE(data);
+  GET_ATTRIBUTE_(controllers);
+  GET_ATTRIBUTE_(data);
   for(uint32_t k=0;k<controllers.size();++k){
     size_t cpos(controllers[k].find("/"));
     if( cpos != std::string::npos ){

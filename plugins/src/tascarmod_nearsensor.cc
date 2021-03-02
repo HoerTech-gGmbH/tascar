@@ -31,13 +31,13 @@ nearsensor_t::nearsensor_t( const TASCAR::module_cfg_t& cfg )
     //own_msg(lo_message_new()),
     hitcnt_state(0)
 {
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(ttl);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE(parent);
-  GET_ATTRIBUTE(radius);
-  GET_ATTRIBUTE(mode);
-  GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(ttl);
+  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE_(parent);
+  GET_ATTRIBUTE_(radius);
+  GET_ATTRIBUTE_(mode);
+  GET_ATTRIBUTE_(path);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   if( pattern.empty() )

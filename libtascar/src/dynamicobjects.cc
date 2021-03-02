@@ -8,9 +8,9 @@ TASCAR::navmesh_t::navmesh_t(xmlpp::Element* xmlsrc)
     zshift(0)
 {
   std::string importraw;
-  GET_ATTRIBUTE(maxstep);
-  GET_ATTRIBUTE(importraw);
-  GET_ATTRIBUTE(zshift);
+  GET_ATTRIBUTE(maxstep,"m","maximum step height of object");
+  GET_ATTRIBUTE(importraw,"","file name of vertex list");
+  GET_ATTRIBUTE(zshift,"m","shift object vertically");
   if( !importraw.empty() ){
     std::ifstream rawmesh( TASCAR::env_expand(importraw).c_str() );
     if( !rawmesh.good() )
@@ -65,61 +65,59 @@ TASCAR::navmesh_t::~navmesh_t()
 }
 
 TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
-  : xml_element_t(xmlsrc),
-    starttime(0),
-    sampledorientation(0),
-    c6dof(c6dof_),
-    c6dof_nodelta(c6dof_nodelta_),
-    xml_location(NULL),
-    xml_orientation(NULL),
-    navmesh(NULL)
+    : xml_element_t(xmlsrc), starttime(0), sampledorientation(0), c6dof(c6dof_),
+      c6dof_nodelta(c6dof_nodelta_), xml_location(NULL), xml_orientation(NULL),
+      navmesh(NULL)
 {
-  get_attribute("start",starttime);
-  GET_ATTRIBUTE(sampledorientation);
-  GET_ATTRIBUTE(localpos);
-  GET_ATTRIBUTE(dlocation);
-  GET_ATTRIBUTE(dorientation);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "position")){
+  get_attribute("start", starttime, "s",
+                "time when rendering of object starts");
+  GET_ATTRIBUTE(sampledorientation, "m",
+                "sample orientation by line fit into curve");
+  GET_ATTRIBUTE(localpos, "m", "local position");
+  GET_ATTRIBUTE(dlocation, "m", "delta location");
+  GET_ATTRIBUTE(dorientation, "deg", "delta orientation");
+  for(auto sn : e->get_children()) {
+    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(sn));
+    if(sne && (sne->get_name() == "position")) {
       xml_location = sne;
       location.read_xml(sne);
     }
-    if( sne && ( sne->get_name() == "orientation")){
+    if(sne && (sne->get_name() == "orientation")) {
       xml_orientation = sne;
       orientation.read_xml(sne);
     }
-    if( sne && (sne->get_name() == "creator")){
+    if(sne && (sne->get_name() == "creator")) {
       xmlpp::Node::NodeList subnodes = sne->get_children();
       location.edit(subnodes);
-      TASCAR::track_t::iterator it_old=location.end();
+      TASCAR::track_t::iterator it_old = location.end();
       double old_azim(0);
       double new_azim(0);
-      for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){
-        if( it_old != location.end() ){
-          pos_t p=it->second;
+      for(TASCAR::track_t::iterator it = location.begin(); it != location.end();
+          ++it) {
+        if(it_old != location.end()) {
+          pos_t p = it->second;
           p -= it_old->second;
           new_azim = p.azim();
-          while( new_azim - old_azim > M_PI )
-            new_azim -= 2*M_PI;
-          while( new_azim - old_azim < -M_PI )
-            new_azim += 2*M_PI;
-          orientation[it_old->first] = zyx_euler_t(new_azim,0,0);
+          while(new_azim - old_azim > M_PI)
+            new_azim -= 2 * M_PI;
+          while(new_azim - old_azim < -M_PI)
+            new_azim += 2 * M_PI;
+          orientation[it_old->first] = zyx_euler_t(new_azim, 0, 0);
           old_azim = new_azim;
         }
-        
-        if( (it_old == location.end()) || (TASCAR::distance(it->second,it_old->second) > 0) )
+
+        if((it_old == location.end()) ||
+           (TASCAR::distance(it->second, it_old->second) > 0))
           it_old = it;
       }
       double loop(0);
-      get_attribute_value(sne,"loop",loop);
-      if( loop > 0 ){
+      get_attribute_value(sne, "loop", loop);
+      if(loop > 0) {
         location.loop = loop;
         orientation.loop = loop;
       }
     }
-    if( sne && (sne->get_name() == "navmesh") ){
+    if(sne && (sne->get_name() == "navmesh")) {
       navmesh = new TASCAR::navmesh_t(sne);
     }
   }

@@ -64,7 +64,7 @@ rec_hann_t::rec_hann_t(xmlpp::Element* xmlsrc)
     //spkpos(xmlsrc),
     wexp(0.5)
 {
-  GET_ATTRIBUTE(wexp);
+  GET_ATTRIBUTE_(wexp);
   typeidattr.push_back("wexp");
 }
 

@@ -36,12 +36,12 @@ speechactivity_t::speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg )
     path( "/"+get_fullname() ),
     transitionsonly(false)
 {
-  GET_ATTRIBUTE(tauenv);
-  GET_ATTRIBUTE(tauonset);
-  GET_ATTRIBUTE_DBSPL(threshold);
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(path);
-  GET_ATTRIBUTE_BOOL(transitionsonly);
+  GET_ATTRIBUTE_(tauenv);
+  GET_ATTRIBUTE_(tauonset);
+  GET_ATTRIBUTE_DBSPL_(threshold);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_BOOL_(transitionsonly);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
 }

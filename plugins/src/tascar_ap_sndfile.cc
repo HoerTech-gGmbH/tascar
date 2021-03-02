@@ -40,21 +40,21 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
     transport(true),
     mute(false)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(channel);
-  GET_ATTRIBUTE(start);
-  GET_ATTRIBUTE(position);
-  GET_ATTRIBUTE(length);
-  GET_ATTRIBUTE(loop);
-  GET_ATTRIBUTE_BOOL(resample);
-  GET_ATTRIBUTE(levelmode);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(channel);
+  GET_ATTRIBUTE_(start);
+  GET_ATTRIBUTE_(position);
+  GET_ATTRIBUTE_(length);
+  GET_ATTRIBUTE_(loop);
+  GET_ATTRIBUTE_BOOL_(resample);
+  GET_ATTRIBUTE_(levelmode);
   if( levelmode.empty() )
     levelmode = "rms";
-  GET_ATTRIBUTE(weighting);
-  GET_ATTRIBUTE_DB(level);
-  GET_ATTRIBUTE_BOOL(triggered);
-  GET_ATTRIBUTE_BOOL(transport);
-  GET_ATTRIBUTE_BOOL(mute);
+  GET_ATTRIBUTE_(weighting);
+  GET_ATTRIBUTE_DB_(level);
+  GET_ATTRIBUTE_BOOL_(triggered);
+  GET_ATTRIBUTE_BOOL_(transport);
+  GET_ATTRIBUTE_BOOL_(mute);
   if( start < 0 )
     throw TASCAR::ErrMsg("file start time must be positive.");
 }

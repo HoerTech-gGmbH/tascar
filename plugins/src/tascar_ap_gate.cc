@@ -44,13 +44,13 @@ gate_t::gate_t( const TASCAR::audioplugin_cfg_t& cfg )
     pfadein(NULL),
     pfadeout(NULL)
 {
-  GET_ATTRIBUTE(tautrack);
-  GET_ATTRIBUTE(taurms);
-  GET_ATTRIBUTE(threshold);
-  GET_ATTRIBUTE(holdlen);
-  GET_ATTRIBUTE(fadeinlen);
-  GET_ATTRIBUTE(fadeoutlen);
-  GET_ATTRIBUTE_BOOL(bypass);
+  GET_ATTRIBUTE_(tautrack);
+  GET_ATTRIBUTE_(taurms);
+  GET_ATTRIBUTE_(threshold);
+  GET_ATTRIBUTE_(holdlen);
+  GET_ATTRIBUTE_(fadeinlen);
+  GET_ATTRIBUTE_(fadeoutlen);
+  GET_ATTRIBUTE_BOOL_(bypass);
 }
 
 void gate_t::add_variables( TASCAR::osc_server_t* srv )

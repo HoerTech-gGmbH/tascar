@@ -23,7 +23,7 @@ const_val_t::const_val_t( const TASCAR::audioplugin_cfg_t& cfg )
     a(1)
 {
   // register variable for XML access:
-  GET_ATTRIBUTE(a);
+  GET_ATTRIBUTE_(a);
 }
 
 const_val_t::~const_val_t()

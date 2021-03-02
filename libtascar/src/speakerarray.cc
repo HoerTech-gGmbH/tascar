@@ -16,7 +16,7 @@ spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
   if(use_parent_xml) {
     e_layout = xmlsrc;
   } else {
-    GET_ATTRIBUTE(layout);
+    GET_ATTRIBUTE_(layout);
     if(layout.empty()) {
       // try to find layout element:
       xmlpp::Node::NodeList subnodes = xmlsrc->get_children();
@@ -70,10 +70,10 @@ spk_array_t::spk_array_t(xmlpp::Element* e, bool use_parent_xml,
       emplace_back(sne);
     }
   }
-  elayout.GET_ATTRIBUTE(xyzgain);
-  elayout.GET_ATTRIBUTE(name);
-  elayout.GET_ATTRIBUTE(onload);
-  elayout.GET_ATTRIBUTE(onunload);
+  elayout.GET_ATTRIBUTE_(xyzgain);
+  elayout.GET_ATTRIBUTE_(name);
+  elayout.GET_ATTRIBUTE_(onload);
+  elayout.GET_ATTRIBUTE_(onunload);
   //
   if(empty() && (!allow_empty))
     throw TASCAR::ErrMsg("Invalid " + elementname_ + " array (no " +
@@ -201,14 +201,14 @@ spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
       spkgain(1.0), dr(0.0), d_w(0.0f), d_x(0.0f), d_y(0.0f), d_z(0.0f),
       densityweight(1.0), comp(NULL)
 {
-  GET_ATTRIBUTE_DEG(az);
-  GET_ATTRIBUTE_DEG(el);
-  GET_ATTRIBUTE(r);
-  GET_ATTRIBUTE(delay);
-  GET_ATTRIBUTE(label);
-  GET_ATTRIBUTE(connect);
-  GET_ATTRIBUTE(compB);
-  GET_ATTRIBUTE_DB(gain);
+  GET_ATTRIBUTE_DEG_(az);
+  GET_ATTRIBUTE_DEG_(el);
+  GET_ATTRIBUTE_(r);
+  GET_ATTRIBUTE_(delay);
+  GET_ATTRIBUTE_(label);
+  GET_ATTRIBUTE_(connect);
+  GET_ATTRIBUTE_(compB);
+  GET_ATTRIBUTE_DB_(gain);
   set_sphere(r, az, el);
   unitvector = normal();
   update_foa_decoder(1.0f, 1.0);
@@ -342,11 +342,11 @@ spk_array_diff_render_t::spk_array_diff_render_t(
     : spk_array_t(e, use_parent_xml, elementname_),
       subs(e, use_parent_xml, "sub", true), diffuse_field_accumulator(NULL),
       diffuse_render_buffer(NULL), decorr_length(0.05), decorr(true),
-      densitycorr(true), fcsub(80), caliblevel(50000), diffusegain(1.0),
+      densitycorr(true), fcsub(80), caliblevel(1), diffusegain(1.0),
       calibage(0), use_subs(false)
 {
   uint64_t checksum(0);
-  elayout.GET_ATTRIBUTE(checksum);
+  elayout.GET_ATTRIBUTE_(checksum);
   if(checksum != 0) {
     std::vector<std::string> attributes;
     attributes.push_back("decorr_length");
@@ -368,16 +368,16 @@ spk_array_diff_render_t::spk_array_diff_render_t(
                           "\" was modified since last calibration. "
                           "Re-calibration is recommended.");
   }
-  elayout.GET_ATTRIBUTE(decorr_length);
-  elayout.GET_ATTRIBUTE_BOOL(decorr);
-  elayout.GET_ATTRIBUTE_BOOL(densitycorr);
-  elayout.GET_ATTRIBUTE(fcsub);
+  elayout.GET_ATTRIBUTE_(decorr_length);
+  elayout.GET_ATTRIBUTE_BOOL_(decorr);
+  elayout.GET_ATTRIBUTE_BOOL_(densitycorr);
+  elayout.GET_ATTRIBUTE_(fcsub);
   has_caliblevel = elayout.has_attribute("caliblevel");
-  elayout.GET_ATTRIBUTE_DB(caliblevel);
+  elayout.GET_ATTRIBUTE_DBSPL_(caliblevel);
   has_diffusegain = elayout.has_attribute("diffusegain");
-  elayout.GET_ATTRIBUTE_DB(diffusegain);
+  elayout.GET_ATTRIBUTE_DB_(diffusegain);
   has_calibdate = elayout.has_attribute("calibdate");
-  elayout.GET_ATTRIBUTE(calibdate);
+  elayout.GET_ATTRIBUTE_(calibdate);
   if(!calibdate.empty()) {
     std::time_t now(
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
@@ -394,7 +394,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(
     }
   }
   has_calibfor = elayout.has_attribute("calibfor");
-  elayout.GET_ATTRIBUTE(calibfor);
+  elayout.GET_ATTRIBUTE_(calibfor);
   if(!subs.empty()) {
     use_subs = true;
   }

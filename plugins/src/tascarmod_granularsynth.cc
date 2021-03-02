@@ -45,21 +45,21 @@ granularsynth_vars_t::granularsynth_vars_t( const TASCAR::module_cfg_t& cfg )
   active_(true),
   bypass_(false)
 {
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(wet);
-  GET_ATTRIBUTE(wlen);
-  GET_ATTRIBUTE(f0);
-  GET_ATTRIBUTE(pitches);
-  GET_ATTRIBUTE(durations);
-  GET_ATTRIBUTE(numgrains);
-  GET_ATTRIBUTE(t0);
-  GET_ATTRIBUTE(bpm);
-  GET_ATTRIBUTE(loop);
-  GET_ATTRIBUTE(ponset);
-  GET_ATTRIBUTE(psustain);
-  GET_ATTRIBUTE_DB(gain);
-  get_attribute_bool("active",active_);
-  get_attribute_bool("bypass",bypass_);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(wet);
+  GET_ATTRIBUTE_(wlen);
+  GET_ATTRIBUTE_(f0);
+  GET_ATTRIBUTE_(pitches);
+  GET_ATTRIBUTE_(durations);
+  GET_ATTRIBUTE_(numgrains);
+  GET_ATTRIBUTE_(t0);
+  GET_ATTRIBUTE_(bpm);
+  GET_ATTRIBUTE_(loop);
+  GET_ATTRIBUTE_(ponset);
+  GET_ATTRIBUTE_(psustain);
+  GET_ATTRIBUTE_DB_(gain);
+  get_attribute_bool("active",active_,"","active");
+  get_attribute_bool("bypass",bypass_,"","bypass");
 }
 
 class grainloop_t : public std::vector<TASCAR::spec_t*>

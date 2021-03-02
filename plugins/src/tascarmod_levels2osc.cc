@@ -25,9 +25,9 @@ levels2osc_t::levels2osc_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
     ttl(1)
 {
-  GET_ATTRIBUTE(url);
-  GET_ATTRIBUTE(pattern);
-  GET_ATTRIBUTE(ttl);
+  GET_ATTRIBUTE_(url);
+  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE_(ttl);
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   //if( pattern.empty() )

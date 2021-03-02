@@ -267,7 +267,7 @@ HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
     home(0),
     b_home(false)
 {
-  GET_ATTRIBUTE_DEG(home);
+  GET_ATTRIBUTE_DEG_(home);
   pthread_mutex_init( &mtx, NULL );
   lo_address_set_ttl( lo_addr, 1 );
   o->add_bool_true(path+"/gohome",&b_home);
@@ -301,8 +301,8 @@ HoS::parameter_t::~parameter_t()
 HoS::srvvars_t::srvvars_t(xmlpp::Element* e)
   : xml_element_t(e)
 {
-  GET_ATTRIBUTE(targetaddr);
-  GET_ATTRIBUTE(path);
+  GET_ATTRIBUTE_(targetaddr);
+  GET_ATTRIBUTE_(path);
 }
 
 class epicycles_t : public TASCAR::actor_module_t, private HoS::parameter_t {
@@ -320,7 +320,7 @@ epicycles_t::epicycles_t( const TASCAR::module_cfg_t& cfg )
     HoS::parameter_t( cfg.xmlsrc, cfg.session ),
     use_transport(true)
 {
-  actor_module_t::GET_ATTRIBUTE_BOOL(use_transport);
+  actor_module_t::GET_ATTRIBUTE_BOOL_(use_transport);
 }
 
 epicycles_t::~epicycles_t()

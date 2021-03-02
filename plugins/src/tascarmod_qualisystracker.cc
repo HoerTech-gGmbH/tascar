@@ -81,12 +81,12 @@ qualisys_tracker_t::qualisys_tracker_t( const TASCAR::module_cfg_t& cfg )
   srv_port(0),
   last_prepared(gettime())
 {
-  GET_ATTRIBUTE(qtmurl);
-  GET_ATTRIBUTE(timeout);
-  GET_ATTRIBUTE(influence);
-  GET_ATTRIBUTE_BOOL(local);
-  GET_ATTRIBUTE_BOOL(incremental);
-  GET_ATTRIBUTE(rigid);
+  GET_ATTRIBUTE_(qtmurl);
+  GET_ATTRIBUTE_(timeout);
+  GET_ATTRIBUTE_(influence);
+  GET_ATTRIBUTE_BOOL_(local);
+  GET_ATTRIBUTE_BOOL_(incremental);
+  GET_ATTRIBUTE_(rigid);
   for(uint32_t k=influence.size();k<6;++k)
     influence.push_back(1.0);
   qtmtarget = lo_address_new_from_url(qtmurl.c_str());

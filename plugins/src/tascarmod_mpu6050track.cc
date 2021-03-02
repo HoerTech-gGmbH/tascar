@@ -187,23 +187,23 @@ mpu6050track_t::mpu6050track_t( const TASCAR::module_cfg_t& cfg )
     use_translation(true)
 {
   lo_message_add_int32(msg_calib,1);
-  GET_ATTRIBUTE(id);
-  GET_ATTRIBUTE(tau);
-  GET_ATTRIBUTE(tauz);
-  GET_ATTRIBUTE(scale);
-  GET_ATTRIBUTE(gyrscale);
-  GET_ATTRIBUTE(rotaxis);
-  GET_ATTRIBUTE_BOOL(use_translation);
+  GET_ATTRIBUTE_(id);
+  GET_ATTRIBUTE_(tau);
+  GET_ATTRIBUTE_(tauz);
+  GET_ATTRIBUTE_(scale);
+  GET_ATTRIBUTE_(gyrscale);
+  GET_ATTRIBUTE_(rotaxis);
+  GET_ATTRIBUTE_BOOL_(use_translation);
   if( (rotaxis < 0) || (2 < rotaxis) )
     throw TASCAR::ErrMsg("Invalid rotation axis (must be 0, 1 or 2).");
-  GET_ATTRIBUTE(rotscale);
-  GET_ATTRIBUTE(ypraxis);
-  GET_ATTRIBUTE(gyraxis);
-  GET_ATTRIBUTE(zaxis);
-  GET_ATTRIBUTE(zscale);
-  GET_ATTRIBUTE(calib_start);
-  GET_ATTRIBUTE(calib_end);
-  GET_ATTRIBUTE(mode);
+  GET_ATTRIBUTE_(rotscale);
+  GET_ATTRIBUTE_(ypraxis);
+  GET_ATTRIBUTE_(gyraxis);
+  GET_ATTRIBUTE_(zaxis);
+  GET_ATTRIBUTE_(zscale);
+  GET_ATTRIBUTE_(calib_start);
+  GET_ATTRIBUTE_(calib_end);
+  GET_ATTRIBUTE_(mode);
   if( mode.empty() )
     mode = "euler";
   if( mode == "euler" )  

@@ -140,8 +140,8 @@ qualisys_tracker_t::qualisys_tracker_t( const sensorplugin_cfg_t& cfg )
     nominal_freq(1),
     last_prepared(gettime())
 {
-  GET_ATTRIBUTE(qtmurl);
-  GET_ATTRIBUTE(timeout);
+  GET_ATTRIBUTE_(qtmurl);
+  GET_ATTRIBUTE_(timeout);
   qtmtarget = lo_address_new_from_url(qtmurl.c_str());
 }
 

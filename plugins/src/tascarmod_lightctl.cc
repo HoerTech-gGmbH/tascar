@@ -219,21 +219,21 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     usecalib(true),
     sendsquared(false)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(objects);
-  GET_ATTRIBUTE(parent);
-  GET_ATTRIBUTE(channels);
-  GET_ATTRIBUTE(master);
-  GET_ATTRIBUTE_BOOL(usecalib);
-  GET_ATTRIBUTE_BOOL(sendsquared);
-  GET_ATTRIBUTE_BOOL(mixmax);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(objects);
+  GET_ATTRIBUTE_(parent);
+  GET_ATTRIBUTE_(channels);
+  GET_ATTRIBUTE_(master);
+  GET_ATTRIBUTE_BOOL_(usecalib);
+  GET_ATTRIBUTE_BOOL_(sendsquared);
+  GET_ATTRIBUTE_BOOL_(mixmax);
   std::string method;
   method_t method_(nearest);
-  GET_ATTRIBUTE(method);
+  GET_ATTRIBUTE_(method);
   std::vector<float> tmpobjval;
-  get_attribute("objval", tmpobjval );
+  get_attribute("objval", tmpobjval, "", "DMX value of objects" );
   std::vector<float> tmpobjw;
-  get_attribute("objw", tmpobjw );
+  get_attribute("objw", tmpobjw,  "", "weight of objects" );
   method_ = string2method( method );
   objects_ = session->find_objects( objects );
   std::vector<TASCAR::named_object_t> o(session->find_objects(parent));
@@ -252,15 +252,15 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
   for(uint32_t k=0;k<fixtures.size();++k){
     fixtureval[k].resize(channels);
     uint32_t startaddr(1);
-    fixtures[k].get_attribute("addr",startaddr);
-    fixtures[k].get_attribute("label",labels[k]);
+    fixtures[k].get_attribute("addr",startaddr,"","start address");
+    fixtures[k].get_attribute("label",labels[k],"","fixture label");
     std::vector<int32_t> lampdmx;
-    fixtures[k].get_attribute("dmxval",lampdmx);
+    fixtures[k].get_attribute("dmxval",lampdmx,"","start DMX value");
     xmlpp::DomParser domp;
     xmlpp::Element* e_calibfile(fixtures[k].e);
     if( fixtures[k].has_attribute("calibfile") ){
       std::string calibfile;
-      fixtures[k].get_attribute("calibfile",calibfile);
+      fixtures[k].get_attribute("calibfile",calibfile,"","calibration file");
       if( calibfile.empty() )
         throw TASCAR::ErrMsg("No speaker calibfile file provided.");
       try{
@@ -532,23 +532,23 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
       lightscenes.push_back( new lightscene_t( lcfg ) );
     }
   }
-  GET_ATTRIBUTE(fps);
-  GET_ATTRIBUTE(universe);
-  GET_ATTRIBUTE(priority);
-  GET_ATTRIBUTE(driver);
+  GET_ATTRIBUTE_(fps);
+  GET_ATTRIBUTE_(universe);
+  GET_ATTRIBUTE_(priority);
+  GET_ATTRIBUTE_(driver);
   if( driver == "artnetdmx" ){
     std::string hostname;
     std::string port;
-    GET_ATTRIBUTE(hostname);
+    GET_ATTRIBUTE_(hostname);
     if( hostname.empty() )
       hostname = "localhost";
-    GET_ATTRIBUTE(port);
+    GET_ATTRIBUTE_(port);
     if( port.empty() )
       port = "6454";
     driver_ = new DMX::ArtnetDMX_t( hostname.c_str(), port.c_str() );
   }else if( driver == "opendmxusb" ){
     std::string device;
-    GET_ATTRIBUTE(device);
+    GET_ATTRIBUTE_(device);
     if( device.empty() )
       device = "/dev/ttyUSB0";
     try{
@@ -561,23 +561,23 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
   }else if( driver == "osc" ){
     std::string hostname;
     std::string port;
-    GET_ATTRIBUTE(hostname);
+    GET_ATTRIBUTE_(hostname);
     if( hostname.empty() )
       hostname = "localhost";
-    GET_ATTRIBUTE(port);
+    GET_ATTRIBUTE_(port);
     if( port.empty() )
       port = "9000";
     uint32_t maxchannels(512);
-    GET_ATTRIBUTE(maxchannels);
+    GET_ATTRIBUTE_(maxchannels);
     driver_ = new DMX::OSC_t( hostname.c_str(), port.c_str(), maxchannels );
   }else{
     throw TASCAR::ErrMsg("Unknown DMX driver type \""+driver+"\" (must be \"artnetdmx\", \"osc\" or \"opendmxusb\").");
   }
   add_variables( session );
   start_service();
-  GET_ATTRIBUTE(hue_warp_x);
-  GET_ATTRIBUTE(hue_warp_y);
-  GET_ATTRIBUTE_DEG(hue_warp_rot);
+  GET_ATTRIBUTE_(hue_warp_x);
+  GET_ATTRIBUTE_(hue_warp_y);
+  GET_ATTRIBUTE_DEG_(hue_warp_rot);
 }
 
 void lightctl_t::validate_attributes(std::string& msg) const

@@ -32,15 +32,15 @@ ap_sndfile_async_cfg_t::ap_sndfile_async_cfg_t( const TASCAR::audioplugin_cfg_t&
     transport(true),
     mute(false)
 {
-  GET_ATTRIBUTE(name);
-  GET_ATTRIBUTE(channel);
-  //GET_ATTRIBUTE(start);
-  GET_ATTRIBUTE(position);
-  //GET_ATTRIBUTE(length);
-  GET_ATTRIBUTE_DBSPL(caliblevel);
-  GET_ATTRIBUTE(loop);
-  GET_ATTRIBUTE_BOOL(transport);
-  GET_ATTRIBUTE_BOOL(mute);
+  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE_(channel);
+  //GET_ATTRIBUTE_(start);
+  GET_ATTRIBUTE_(position);
+  //GET_ATTRIBUTE_(length);
+  GET_ATTRIBUTE_DBSPL_(caliblevel);
+  GET_ATTRIBUTE_(loop);
+  GET_ATTRIBUTE_BOOL_(transport);
+  GET_ATTRIBUTE_BOOL_(mute);
   //if( start < 0 )
   //  throw TASCAR::ErrMsg("file start time must be positive.");
 }

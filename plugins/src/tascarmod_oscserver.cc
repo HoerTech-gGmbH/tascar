@@ -30,9 +30,9 @@ oscserver_t::oscserver_t( const TASCAR::module_cfg_t& cfg )
     srv_proto("TCP"),
     srv(NULL)
 {
-  GET_ATTRIBUTE(srv_addr);
-  GET_ATTRIBUTE(srv_port);
-  GET_ATTRIBUTE(srv_proto);
+  GET_ATTRIBUTE_(srv_addr);
+  GET_ATTRIBUTE_(srv_port);
+  GET_ATTRIBUTE_(srv_proto);
   srv = new TASCAR::osc_server_t(srv_addr,srv_port,srv_proto);
   srv->add_method("",NULL,&(oscserver_t::osc_recv),this);
   srv->activate();

@@ -22,12 +22,12 @@ fence_t::fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
     snd(NULL),
     gain(0.0)
 {
-  GET_ATTRIBUTE(id);
+  GET_ATTRIBUTE_(id);
   if( id.empty() )
     id = "fence";
-  GET_ATTRIBUTE(r);
-  GET_ATTRIBUTE(distmax);
-  GET_ATTRIBUTE(filename);
+  GET_ATTRIBUTE_(r);
+  GET_ATTRIBUTE_(distmax);
+  GET_ATTRIBUTE_(filename);
   session->add_double("/"+id+"/r",&r);
   if( !filename.empty() ){
     snd = new TASCAR::sndfile_t(filename);
