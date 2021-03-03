@@ -50,7 +50,7 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE_(levelmode);
   if( levelmode.empty() )
     levelmode = "rms";
-  GET_ATTRIBUTE_(weighting);
+  GET_ATTRIBUTE_NOUNIT(weighting,"level weighting for RMS mode");
   GET_ATTRIBUTE_DB_(level);
   GET_ATTRIBUTE_BOOL_(triggered);
   GET_ATTRIBUTE_BOOL_(transport);

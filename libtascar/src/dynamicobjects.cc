@@ -75,7 +75,7 @@ TASCAR::dynobject_t::dynobject_t(xmlpp::Element* xmlsrc)
                 "sample orientation by line fit into curve");
   GET_ATTRIBUTE(localpos, "m", "local position");
   GET_ATTRIBUTE(dlocation, "m", "delta location");
-  GET_ATTRIBUTE(dorientation, "deg", "delta orientation");
+  GET_ATTRIBUTE_NOUNIT(dorientation, "delta orientation");
   for(auto sn : e->get_children()) {
     xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(sn));
     if(sne && (sne->get_name() == "position")) {

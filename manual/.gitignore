@@ -32,3 +32,5 @@ secrecreverb.tex
 secrecspeaker.tex
 version.tex
 *.run*
+tab*.tex
+autodoc.txt

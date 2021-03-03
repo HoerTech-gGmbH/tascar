@@ -215,7 +215,7 @@ wave_t& amb1wave_t::operator[](uint32_t acn)
   case AMB11::idx::x :
     return x_;
   }
-  throw TASCAR::ErrMsg( "Invalid acn "+TASCAR::to_string(acn)+" for first order ambisonics.");
+  throw TASCAR::ErrMsg( "Invalid acn "+std::to_string(acn)+" for first order ambisonics.");
 }
 
 void amb1wave_t::clear()
@@ -267,7 +267,7 @@ sndfile_handle_t::sndfile_handle_t(const std::string& fname,int samplerate,int c
     sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_WRITE,&sf_inf))
 {
   if( !sfile )
-    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing ("+TASCAR::to_string(samplerate)+" Hz, "+TASCAR::to_string(channels)+" channels).");
+    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing ("+std::to_string(samplerate)+" Hz, "+std::to_string(channels)+" channels).");
 }
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)

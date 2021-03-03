@@ -62,7 +62,7 @@ level2osc_t::~level2osc_t()
 void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   if( chunk.size() != n_channels )
-    throw TASCAR::ErrMsg("Programming error (invalid channel number, expected "+TASCAR::to_string(n_channels)+", got "+TASCAR::to_string(chunk.size())+").");
+    throw TASCAR::ErrMsg("Programming error (invalid channel number, expected "+TASCAR::to_string(n_channels)+", got "+std::to_string(chunk.size())+").");
   if( tp.rolling || sendwhilestopped ){
     if( skipcnt ){
       skipcnt--;

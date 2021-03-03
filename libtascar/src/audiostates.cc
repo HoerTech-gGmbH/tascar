@@ -18,13 +18,13 @@ void chunk_cfg_t::update()
   t_fragment = 1.0/std::max(EPS,f_fragment);
   t_inc = 1.0/std::max(EPS,(double)n_fragment);
   for( uint32_t ch=labels.size(); ch<n_channels; ++ch )
-    labels.push_back( "."+TASCAR::to_string(ch) );
+    labels.push_back( "."+std::to_string(ch) );
   // check for unique channel suffix:
   for( uint32_t ch1=0;ch1<labels.size();++ch1 )
     for( uint32_t ch2=0;ch2<labels.size();++ch2 )
       if( (ch1!=ch2) && (labels[ch1]==labels[ch2]) )
-        throw TASCAR::ErrMsg("Identical channel label in channels "+TASCAR::to_string(ch1)
-                             + " and "+TASCAR::to_string(ch2)+".");
+        throw TASCAR::ErrMsg("Identical channel label in channels "+std::to_string(ch1)
+                             + " and "+std::to_string(ch2)+".");
 }
 
 audiostates_t::audiostates_t()
@@ -62,7 +62,7 @@ void audiostates_t::release( )
   }
 #endif
   if( !is_prepared_ )
-    TASCAR::add_warning("Programming error: Release called without prepare ("+TASCAR::to_string(preparecount)+")");
+    TASCAR::add_warning("Programming error: Release called without prepare ("+std::to_string(preparecount)+")");
   is_prepared_ = false;
 }
 

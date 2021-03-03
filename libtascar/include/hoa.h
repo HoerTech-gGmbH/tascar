@@ -68,12 +68,12 @@ namespace HOA {
       if(ambsig.size() != amb_channels)
         throw TASCAR::ErrMsg(
             "Invalid number of channels in ambisonics signal (got " +
-            TASCAR::to_string(ambsig.size()) + ", expected " +
+            std::to_string(ambsig.size()) + ", expected " +
             TASCAR::to_string(amb_channels) + ").");
       if(outsig.size() < out_channels)
         throw TASCAR::ErrMsg(
             "Invalid number of channels in ambisonics signal (got " +
-            TASCAR::to_string(outsig.size()) + ", expected " +
+            std::to_string(outsig.size()) + ", expected " +
             TASCAR::to_string(out_channels) + ").");
       if(!out_channels)
         return;
@@ -98,12 +98,12 @@ namespace HOA {
       if(ambsig.size() != amb_channels)
         throw TASCAR::ErrMsg(
             "Invalid number of channels in ambisonics signal (got " +
-            TASCAR::to_string(ambsig.size()) + ", expected " +
+            std::to_string(ambsig.size()) + ", expected " +
             TASCAR::to_string(amb_channels) + ").");
       if(outsig.size() != out_channels)
         throw TASCAR::ErrMsg(
             "Invalid number of channels in ambisonics signal (got " +
-            TASCAR::to_string(outsig.size()) + ", expected " +
+            std::to_string(outsig.size()) + ", expected " +
             TASCAR::to_string(out_channels) + ").");
       if(!out_channels)
         return;

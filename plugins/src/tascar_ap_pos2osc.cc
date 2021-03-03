@@ -69,7 +69,7 @@ ap_pos2osc_t::~ap_pos2osc_t()
 void ap_pos2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& rot, const TASCAR::transport_t& tp)
 {
   if( chunk.size() != n_channels )
-    throw TASCAR::ErrMsg("Programming error (invalid channel number, expected "+TASCAR::to_string(n_channels)+", got "+TASCAR::to_string(chunk.size())+").");
+    throw TASCAR::ErrMsg("Programming error (invalid channel number, expected "+TASCAR::to_string(n_channels)+", got "+std::to_string(chunk.size())+").");
   if( tp.rolling || sendwhilestopped ){
     if( skipcnt ){
       skipcnt--;

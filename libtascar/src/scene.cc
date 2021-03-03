@@ -1121,9 +1121,9 @@ sound_t::sound_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
     source_t::get_attribute("y", local_position.y,"m","position relative to parent");
     source_t::get_attribute("z", local_position.z,"m","position relative to parent");
   }
-  source_t::get_attribute_deg("rz", local_orientation.z,"deg","Euler orientation (Z) relative to parent");
-  source_t::get_attribute_deg("ry", local_orientation.y,"deg","Euler orientation (Y) relative to parent");
-  source_t::get_attribute_deg("rx", local_orientation.x,"deg","Euler orientation (X) relative to parent");
+  source_t::get_attribute_deg("rz", local_orientation.z,"Euler orientation (Z) relative to parent");
+  source_t::get_attribute_deg("ry", local_orientation.y,"Euler orientation (Y) relative to parent");
+  source_t::get_attribute_deg("rx", local_orientation.x,"Euler orientation (X) relative to parent");
   source_t::get_attribute("d", chaindist,"m","distance to next sound along trajectory, or 0 for normal mode");
   // parse plugins:
   xmlpp::Node::NodeList subnodes = source_t::e->get_children();

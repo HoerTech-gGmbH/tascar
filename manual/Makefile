@@ -21,7 +21,7 @@ SECTIONS=secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex sec
 #	TEXINPUTS=$(TEXINPUTS) makeindex $(basename $<)
 #	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
 
-%.run1: %.tex $(SECTIONS)
+%.run1: %.tex $(SECTIONS) autodoc.txt
 	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $< && touch $@
 
 %.run2: %.tex %.run1
@@ -44,6 +44,9 @@ FIGURES = filestructure.pdf creator.pdf
 
 version.tex:
 	echo $(FULLVERSION) > $@
+
+autodoc.txt: documentation.tsc $(wildcard ../*/build/*)
+	LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ ../apps/build/tascar_validatetsc -l -g $< > $@ && cat $@ || (cat $@; false)
 
 manual.pdf: version.tex $(FIGURES) $(SECTIONS) acousticmodel.pdf callgraph.pdf manual.run5
 

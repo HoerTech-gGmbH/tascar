@@ -13,6 +13,7 @@
 \usepackage{mathtools}
 \usepackage{listings}
 \usepackage{framed,color}
+\usepackage{tabularx}
 \definecolor{shadecolor}{rgb}{1,0.9,0.8}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
@@ -31,6 +32,17 @@
 \end{tabular}
 \end{snugshade}
 }
+
+%\newenvironment{tscattr}[1]{
+%  %\begin{snugshade}
+%    \begin{tabularx}{\textwidth}{lllX}
+%      \multicolumn{4}{l}{Element {\bf #1}}\\
+%      \hline
+%}{
+%  \hline
+%    \end{tabularx}
+%  %\end{snugshade}
+%}
 
 \newenvironment{tscelements}
 {\begin{snugshade}
@@ -516,6 +528,8 @@ can contain one or more scenes (\refelem{scene}), port connections
 (\elem{connection}), external modules (\elem{modules}) and range
 definitions (\elem{range}).
 
+\input{tabsession.tex}
+
 \begin{tscattributes}
 \indattr{name}               & Name of session (default: ``tascar'')                                                           \\
 \indattr{duration}           & Duration of session in seconds; default: 60                                                     \\
@@ -628,6 +642,8 @@ Relative file names are relative to the directory containing the root
 % respective <include> element.
 
 \subsection{The {\tt <scene>...</scene>} element}\label{sec:scene}\index{scene}
+
+\input{tabscene.tex}
 
 \begin{tscattributes}
 \indattr{name}        & Name of scene (default: ``scene'')                        \\
@@ -912,6 +928,8 @@ all scene objects, refer to section \ref{common attributes}
 \nameref{common attributes} on page \pageref{common attributes} for
 details.
 
+\input{tabsource.tex}
+
 \underline{Recognized sub-elements:}
 
 \refelem{position}, \refelem{orientation}, \refelem{creator}, \refelem{sound}
@@ -930,6 +948,8 @@ object (taken from Example \ref{tsc:example_basic}):
 \tscexamplepriv[linerange={16-23},firstnumber=16]{example_basic}
 
 \subsubsection{The {\tt <sound .../>} element}\label{sec:sound}\index{sound}\index{vertex}
+
+\input{tabsound.tex}
 
 \begin{tscattributes}
 \indattr{type}                          & Sound source radiation type (default: ``omni'')                                            \\
@@ -1120,6 +1140,8 @@ these signals according to its type.
 %
 We can route the output signals to playback system, e.g., loudspeakers
 or headphones.
+
+\input{tabreceiver.tex}
 
 \begin{tscattributes}
 \indattr{connect}      & Connection to jack port                                                                  \\

@@ -206,7 +206,7 @@ void TASCAR::receivermod_base_speaker_t::configure()
     if(ch < spkpos.size())
       labels.push_back("." + TASCAR::to_string(ch) + spkpos[ch].label);
     else
-      labels.push_back(".S" + TASCAR::to_string(ch - spkpos.size()) +
+      labels.push_back(".S" + std::to_string(ch - spkpos.size()) +
                        spkpos.subs[ch - spkpos.size()].label);
   }
 }

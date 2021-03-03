@@ -50,9 +50,20 @@ namespace TASCAR {
                      const std::string& rep);
 
   std::string to_string(double x);
+  std::string to_string(float x);
+  std::string to_string(uint32_t x);
+  std::string to_string(int32_t x);
   std::string to_string(const TASCAR::pos_t& x);
   std::string to_string(const TASCAR::zyx_euler_t& x);
+  std::string to_string_deg(const TASCAR::zyx_euler_t& x);
   std::string to_string(const TASCAR::levelmeter::weight_t& value);
+  std::string to_string(const std::vector<int>& value);
+  std::string to_string_bits(uint32_t value);
+  std::string to_string_db(double value);
+  std::string to_string_dbspl(double value);
+  std::string to_string_db(float value);
+  std::string to_string_dbspl(float value);
+  std::string to_string_bool(bool value);
 
   std::string days_to_string(double x);
 
@@ -100,23 +111,22 @@ namespace TASCAR {
     void get_attribute_bool(const std::string& name, bool& value,
                             const std::string& unit, const std::string& info);
     void get_attribute_db(const std::string& name, double& value,
-                          const std::string& unit, const std::string& info);
+                          const std::string& info);
     void get_attribute_dbspl(const std::string& name, double& value,
-                             const std::string& unit, const std::string& info);
+                             const std::string& info);
     void get_attribute_dbspl(const std::string& name, float& value,
-                             const std::string& unit, const std::string& info);
+                             const std::string& info);
     void get_attribute_db(const std::string& name, float& value,
-                                const std::string& unit,
-                                const std::string& info);
+                          const std::string& info);
     void get_attribute_deg(const std::string& name, double& value,
-                           const std::string& unit, const std::string& info);
+                           const std::string& info);
     void get_attribute(const std::string& name, TASCAR::pos_t& value,
                        const std::string& unit, const std::string& info);
     void get_attribute(const std::string& name, TASCAR::zyx_euler_t& value,
-                       const std::string& unit, const std::string& info);
+                       const std::string& info);
     void get_attribute(const std::string& name,
                        TASCAR::levelmeter::weight_t& value,
-                       const std::string& unit, const std::string& info);
+                       const std::string& info);
     void get_attribute(const std::string& name,
                        std::vector<TASCAR::pos_t>& value,
                        const std::string& unit, const std::string& info);
@@ -129,7 +139,7 @@ namespace TASCAR {
     void get_attribute(const std::string& name, std::vector<int32_t>& value,
                        const std::string& unit, const std::string& info);
     void get_attribute_bits(const std::string& name, uint32_t& value,
-                            const std::string& unit, const std::string& info);
+                            const std::string& info);
     // set attributes:
     void set_attribute_bool(const std::string& name, bool value);
     void set_attribute_db(const std::string& name, double value);
@@ -229,8 +239,8 @@ void get_attribute_value_db(xmlpp::Element* elem, const std::string& name,
                             double& value);
 void get_attribute_value_dbspl(xmlpp::Element* elem, const std::string& name,
                                double& value);
-void get_attribute_value_dbspl_float(xmlpp::Element* elem, const std::string& name,
-                               float& value);
+void get_attribute_value_dbspl_float(xmlpp::Element* elem,
+                                     const std::string& name, float& value);
 void get_attribute_value_db_float(xmlpp::Element* elem, const std::string& name,
                                   float& value);
 void get_attribute_value_deg(xmlpp::Element* elem, const std::string& name,
@@ -286,22 +296,24 @@ void set_attribute_value(xmlpp::Element* elem, const std::string& name,
                          const TASCAR::levelmeter::weight_t& value);
 
 #define GET_ATTRIBUTE(x, u, i) get_attribute(#x, x, u, i)
-#define GET_ATTRIBUTE_(x) get_attribute(#x, x, "","undocumented")
+#define GET_ATTRIBUTE_(x) get_attribute(#x, x, "", "undocumented")
+#define GET_ATTRIBUTE_NOUNIT(x, i) get_attribute(#x, x, i)
+#define GET_ATTRIBUTE_NOUNIT_(x) get_attribute(#x, x, "undocumented")
 #define SET_ATTRIBUTE(x) set_attribute(#x, x)
-#define GET_ATTRIBUTE_DB(x, i) get_attribute_db(#x, x, "dB", i)
-#define GET_ATTRIBUTE_DB_(x) get_attribute_db(#x, x, "dB", "undocumented")
+#define GET_ATTRIBUTE_DB(x, i) get_attribute_db(#x, x, i)
+#define GET_ATTRIBUTE_DB_(x) get_attribute_db(#x, x, "undocumented")
 #define SET_ATTRIBUTE_DB(x) set_attribute_db(#x, x)
-#define GET_ATTRIBUTE_DBSPL(x, i) get_attribute_dbspl(#x, x, "dB SPL", i)
-#define GET_ATTRIBUTE_DBSPL_(x) get_attribute_dbspl(#x, x, "dB SPL", "undocumented")
+#define GET_ATTRIBUTE_DBSPL(x, i) get_attribute_dbspl(#x, x, i)
+#define GET_ATTRIBUTE_DBSPL_(x) get_attribute_dbspl(#x, x, "undocumented")
 #define SET_ATTRIBUTE_DBSPL(x) set_attribute_dbspl(#x, x)
-#define GET_ATTRIBUTE_DEG(x, i) get_attribute_deg(#x, x, "deg", i)
-#define GET_ATTRIBUTE_DEG_(x) get_attribute_deg(#x, x, "deg", "undocumented")
+#define GET_ATTRIBUTE_DEG(x, i) get_attribute_deg(#x, x, i)
+#define GET_ATTRIBUTE_DEG_(x) get_attribute_deg(#x, x, "undocumented")
 #define SET_ATTRIBUTE_DEG(x) set_attribute_deg(#x, x)
 #define GET_ATTRIBUTE_BOOL(x, i) get_attribute_bool(#x, x, "", i)
 #define GET_ATTRIBUTE_BOOL_(x) get_attribute_bool(#x, x, "", "undocumented")
 #define SET_ATTRIBUTE_BOOL(x) set_attribute_bool(#x, x)
-#define GET_ATTRIBUTE_BITS(x, i) get_attribute_bits(#x, x, "", i)
-#define GET_ATTRIBUTE_BITS_(x) get_attribute_bits(#x, x, "", "undocumented")
+#define GET_ATTRIBUTE_BITS(x, i) get_attribute_bits(#x, x, i)
+#define GET_ATTRIBUTE_BITS_(x) get_attribute_bits(#x, x, "undocumented")
 
 #endif
 

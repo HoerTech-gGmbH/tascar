@@ -517,7 +517,7 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
   GET_ATTRIBUTE(ismmin,"","minimal ISM order to render");
   GET_ATTRIBUTE(ismmax,"","maximal ISM order to render");
   GET_ATTRIBUTE_BITS(layers,"render layers");
-  GET_ATTRIBUTE(falloff,"m","ramp length at boundaries");
+  GET_ATTRIBUTE(falloff,"m","fade-out ramp length at boundaries");
   GET_ATTRIBUTE(delaycomp,"s","subtract this value from delay in delay lines");
   GET_ATTRIBUTE(layerfadelen,"s","duration of fades between layers");
   GET_ATTRIBUTE_BOOL(muteonstop,"mute when transport stopped to prevent playback of sounds from delaylines and reverb");
@@ -538,7 +538,7 @@ void receiver_t::configure()
   plugins.prepare( cfg() );
   if( n_channels != outchannels.size() ){
     plugins.release();
-    throw TASCAR::ErrMsg("Implementation error. Number of channels ("+TASCAR::to_string(n_channels)+") differs from number of output buffers ("+TASCAR::to_string(outchannels.size())+").");
+    throw TASCAR::ErrMsg("Implementation error. Number of channels ("+std::to_string(n_channels)+") differs from number of output buffers ("+std::to_string(outchannels.size())+").");
   }
 }
 
@@ -703,7 +703,7 @@ TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
   : dynobject_t(xmlsrc),falloff(1.0),active(false)
 {
   dynobject_t::GET_ATTRIBUTE(size,"m","dimension of bounding box");
-  dynobject_t::GET_ATTRIBUTE(falloff,"m","length of ramp at boundaries");
+  dynobject_t::GET_ATTRIBUTE(falloff,"m","fade-out ramp length at boundaries");
   dynobject_t::GET_ATTRIBUTE_BOOL(active,"use bounding box");
 }
 
@@ -764,43 +764,36 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
   return p_src;
 }
 
-
-source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname )
-  : sourcemod_t(xmlsrc),
-    licensed_component_t(typeid(*this).name()),
-    ismmin(0),
-    ismmax(2147483647),
-    layers(0xffffffff),
-    maxdist(3700),
-    minlevel(0),
-    sincorder(0),
-    gainmodel(GAIN_INVR),
-    airabsorption(true),
-    delayline(true),
-    size(0),
-    active(true),
-    //is_prepared(false),
-    plugins(xmlsrc, name, parentname )
+source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name,
+                   const std::string& parentname)
+    : sourcemod_t(xmlsrc), licensed_component_t(typeid(*this).name()),
+      ismmin(0), ismmax(2147483647), layers(0xffffffff), maxdist(3700),
+      minlevel(0), sincorder(0), gainmodel(GAIN_INVR), airabsorption(true),
+      delayline(true), size(0), active(true),
+      // is_prepared(false),
+      plugins(xmlsrc, name, parentname)
 {
-  GET_ATTRIBUTE(size,"m","physical size of sound source (effect depends on rendering method)");
+  GET_ATTRIBUTE(
+      size, "m",
+      "physical size of sound source (effect depends on rendering method)");
   GET_ATTRIBUTE(maxdist, "m", "maximum distance to be used in delay lines");
-  GET_ATTRIBUTE_DBSPL(minlevel,"Level threshold for rendering");
-  GET_ATTRIBUTE_BOOL(airabsorption,"apply air absorption filter");
-  GET_ATTRIBUTE_BOOL(delayline,"use delayline");
-  std::string gr;
-  get_attribute("gainmodel",gr,"","gain rule, valid gain models: \"1/r\", \"1\"");
-  if( gr.empty() )
-    gr = "1/r";
-  if( gr == "1/r" )
+  GET_ATTRIBUTE_DBSPL(minlevel, "Level threshold for rendering");
+  GET_ATTRIBUTE_BOOL(airabsorption, "apply air absorption filter");
+  GET_ATTRIBUTE_BOOL(delayline, "use delayline");
+  std::string gr("1/r");
+  get_attribute("gainmodel", gr, "",
+                "gain rule, valid gain models: \"1/r\", \"1\"");
+  if(gr == "1/r")
     gainmodel = GAIN_INVR;
-  else if( gr == "1" )
+  else if(gr == "1")
     gainmodel = GAIN_UNITY;
   else
-    throw TASCAR::ErrMsg("Invalid gain model "+gr+"(valid gain models: \"1/r\", \"1\").");
-  GET_ATTRIBUTE(sincorder,"","order of sinc interpolation in delayline");
-  GET_ATTRIBUTE(ismmin,"","minimal ISM order to render");
-  GET_ATTRIBUTE(ismmax,"","maximal ISM order to render");
-  GET_ATTRIBUTE_BITS(layers,"render layers");
+    throw TASCAR::ErrMsg("Invalid gain model " + gr +
+                         "(valid gain models: \"1/r\", \"1\").");
+  GET_ATTRIBUTE(sincorder, "", "order of sinc interpolation in delayline");
+  GET_ATTRIBUTE(ismmin, "", "minimal ISM order to render");
+  GET_ATTRIBUTE(ismmax, "", "maximal ISM order to render");
+  GET_ATTRIBUTE_BITS(layers, "render layers");
 }
 
 source_t::~source_t()
