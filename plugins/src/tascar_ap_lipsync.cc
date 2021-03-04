@@ -67,16 +67,16 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
     onchangecount(3),
     onchangecounter(0)
 {
-  GET_ATTRIBUTE_(smoothing);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(scale);
-  GET_ATTRIBUTE_(vocalTract);
-  GET_ATTRIBUTE_(threshold);
-  GET_ATTRIBUTE_(maxspeechlevel);
-  GET_ATTRIBUTE_(dynamicrange);
-  GET_ATTRIBUTE_(energypath);
+  GET_ATTRIBUTE(smoothing,"s","Smoothing time constant");
+  GET_ATTRIBUTE(url,"","Target OSC URL");
+  GET_ATTRIBUTE(scale,"","Scaling factor of blend shapes; 3 values: kiss, jaw, lipsclosed");
+  GET_ATTRIBUTE(vocalTract,"","Vocal tract scaling factor");
+  GET_ATTRIBUTE(threshold,"","Noise threshold, range 0-1");
+  GET_ATTRIBUTE(maxspeechlevel,"dB","Level normalization");
+  GET_ATTRIBUTE(dynamicrange,"dB","Mapped dynamic range");
+  GET_ATTRIBUTE(energypath,"","OSC destination for sending format energies, or empty for no energy messages");
   std::string sendmode;
-  GET_ATTRIBUTE_(sendmode);
+  GET_ATTRIBUTE(sendmode,"","Sending mode, one of ``always'', ``transport'', or ``onchange''");
   if( !sendmode.empty() ){
     if( sendmode == "always" )
       send_mode = always;
@@ -87,7 +87,7 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
     else
       throw TASCAR::ErrMsg("Invalid send mode "+sendmode+" (possible values: always, transport, onchange)");
   }
-  GET_ATTRIBUTE_(onchangecount);
+  GET_ATTRIBUTE(onchangecount,"","Maximum number of repetitions of equal messages in ``onchange'' mode");
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());

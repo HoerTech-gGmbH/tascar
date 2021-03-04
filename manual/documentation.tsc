@@ -3,44 +3,76 @@
   <include/>
   <mainwindow/>
   <scene>
+    <mask name="mask"/>
+    <source name="nav">
+      <navmesh/>
+    </source>
     <source>
       <position/>
       <orientation/>
       <sound>
 	<plugins>
-	  <noise/>
+	  <bandpass/>
+	  <const/>
+	  <delay/>
+	  <feedbackdelay/>
+	  <filter/>
+	  <gain/>
+	  <gainramp/>
+	  <gate/>
+	  <hannenv/>
+	  <identity/>
+	  <level2osc/>
+	  <lipsync/>
+	  <lipsync_paper/>
+	  <lookatme/>
+	  <loopmachine/>
 	  <metronome/>
+	  <noise/>
+	  <onsetdetector/>
+	  <openmha plugin="identity" config=""/>
+	  <pink/>
+	  <pulse/>
+	  <sine/>
 	  <sndfile license="CC0" name="../examples/footsteps.wav"/>
+	  <sndfileasync license="CC0" name="../examples/footsteps.wav"/>
+	  <speechactivity/>
+	  <spksim/>
 	</plugins>
       </sound>
       <sound type="cardioidmod"/>
       <sound type="door"/>
     </source>
-    <receiver/>
-    <receiver type="hrtf" name="hrtf"/>
-    <receiver type="cardioidmod" name="cardioidmod"/>
+    <!-- generic receivers -->
     <receiver type="amb1h0v" name="amb1h0v"/>
     <receiver type="amb1h1v" name="amb1h1v"/>
     <receiver type="amb3h0v" name="amb3h0v"/>
     <receiver type="amb3h3v" name="amb3h3v"/>
     <receiver type="cardioid" name="cardioid"/>
+    <receiver type="cardioidmod" name="cardioidmod"/>
     <receiver type="chmap" name="chmap"/>
     <receiver type="debugpos" name="debugpos"/>
     <receiver type="fakebf" name="fakebf"/>
     <receiver type="hoa2d_fuma" name="hoa2d_fuma"/>
     <receiver type="hoa3d_enc" name="hoa3d_enc"/>
-    <receiver type="intensityvector" name="intensityvector"/>
+    <receiver type="hrtf" name="hrtf"/>
     <receiver type="itu51" name="itu51"/>
+    <receiver type="omni" name="omni"/>
     <receiver type="ortf" name="ortf"/>
     <receiver type="vmic" name="vmic"/>
+    <!-- speaker based -->
+    <receiver type="hann" name="hann" layout="doclayout2d.spk"/>
+    <receiver type="hoa2d" name="hoa2d" layout="doclayout2d.spk"/>
+    <receiver type="intensityvector" name="intensityvector"/>
     <receiver type="nsp" name="nsp" layout="doclayout2d.spk"/>
     <receiver type="vbap" name="vbap" layout="doclayout2d.spk"/>
-    <receiver type="hoa2d" name="hoa2d" layout="doclayout2d.spk"/>
-    <receiver type="hann" name="hann" layout="doclayout2d.spk"/>
-    <receiver type="wfs" name="wfs" layout="doclayout2d.spk"/>
     <receiver type="vbap3d" name="vbap3d" layout="doclayout3d.spk"/>
+    <receiver type="wfs" name="wfs" layout="doclayout2d.spk"/>
+    <!-- -->
     <diffuse/>
-    <reverb/>
+    <reverb name="rev1" type="simplefdn"/>
+    <reverb name="rev2" type="foaconv" irsname="../examples/noisepulse.wav"/>
+    <!-- -->
     <facegroup name="facegroup"/>
     <face name="face"/>
     <obstacle name="obstacle"/>

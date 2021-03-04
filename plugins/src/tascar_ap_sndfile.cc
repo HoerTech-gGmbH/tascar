@@ -40,21 +40,19 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
     transport(true),
     mute(false)
 {
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(channel);
-  GET_ATTRIBUTE_(start);
-  GET_ATTRIBUTE_(position);
-  GET_ATTRIBUTE_(length);
-  GET_ATTRIBUTE_(loop);
-  GET_ATTRIBUTE_BOOL_(resample);
-  GET_ATTRIBUTE_(levelmode);
-  if( levelmode.empty() )
-    levelmode = "rms";
+  GET_ATTRIBUTE(name,"","Sound file name");
+  GET_ATTRIBUTE(channel,"","First sound file channel to be used, zero-base");
+  GET_ATTRIBUTE(start,"s","Start position within the file");
+  GET_ATTRIBUTE(position,"s","Start position within the scene");
+  GET_ATTRIBUTE(length,"s","length of sound sample, or 0 to use whole file length");
+  GET_ATTRIBUTE(loop,"","loop count or 0 for infinite looping");
+  GET_ATTRIBUTE_BOOL(resample,"Allow resampling to current session sample rate");
+  GET_ATTRIBUTE(levelmode,"","level mode, ``rms'', ``peak'' or ``calib''");
   GET_ATTRIBUTE_NOUNIT(weighting,"level weighting for RMS mode");
-  GET_ATTRIBUTE_DB_(level);
-  GET_ATTRIBUTE_BOOL_(triggered);
-  GET_ATTRIBUTE_BOOL_(transport);
-  GET_ATTRIBUTE_BOOL_(mute);
+  GET_ATTRIBUTE_DB(level,"level, meaning depends on \\attr{levelmode}");
+  GET_ATTRIBUTE_BOOL(triggered,"Play OSC triggered samples, ignore position and loop");
+  GET_ATTRIBUTE_BOOL(transport,"Use session time base");
+  GET_ATTRIBUTE_BOOL(mute,"Load muted");
   if( start < 0 )
     throw TASCAR::ErrMsg("file start time must be positive.");
 }

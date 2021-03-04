@@ -31,10 +31,10 @@ spksim_t::spksim_t( const TASCAR::audioplugin_cfg_t& cfg )
     statey1(0),
     statey2(0)
 {
-  GET_ATTRIBUTE_(fres);
-  GET_ATTRIBUTE_(scale);
-  GET_ATTRIBUTE_(q);
-  GET_ATTRIBUTE_(gain);
+  GET_ATTRIBUTE(fres,"Hz","Resonance frequency");
+  GET_ATTRIBUTE(scale,"","Distortion factor $s$");
+  GET_ATTRIBUTE(q,"","$q$-factor of the resonance filter");
+  GET_ATTRIBUTE(gain,"dB","Post-gain $g$");
 }
 
 void spksim_t::add_variables( TASCAR::osc_server_t* srv )

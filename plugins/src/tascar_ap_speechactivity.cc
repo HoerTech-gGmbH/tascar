@@ -36,12 +36,12 @@ speechactivity_t::speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg )
     path( "/"+get_fullname() ),
     transitionsonly(false)
 {
-  GET_ATTRIBUTE_(tauenv);
-  GET_ATTRIBUTE_(tauonset);
-  GET_ATTRIBUTE_DBSPL_(threshold);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(path);
-  GET_ATTRIBUTE_BOOL_(transitionsonly);
+  GET_ATTRIBUTE(tauenv,"s","Envelope tracking time constant");
+  GET_ATTRIBUTE(tauonset,"s","Onset detection time constant");
+  GET_ATTRIBUTE_DBSPL(threshold,"Envelope threshold");
+  GET_ATTRIBUTE(url,"","OSC destination URL");
+  GET_ATTRIBUTE(path,"","OSC destination path");
+  GET_ATTRIBUTE_BOOL(transitionsonly,"Send only when a transition occurs");
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
 }

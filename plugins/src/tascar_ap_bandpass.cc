@@ -21,8 +21,8 @@ bandpassplugin_t::bandpassplugin_t( const TASCAR::audioplugin_cfg_t& cfg )
     fmin(100.0),
     fmax(20000.0)
 {
-  GET_ATTRIBUTE_(fmin);
-  GET_ATTRIBUTE_(fmax);
+  GET_ATTRIBUTE(fmin,"Hz","Minimum frequency");
+  GET_ATTRIBUTE(fmax,"Hz","Maximum frequency");
 }
 
 void bandpassplugin_t::add_variables( TASCAR::osc_server_t* srv )

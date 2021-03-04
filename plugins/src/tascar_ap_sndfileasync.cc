@@ -32,17 +32,14 @@ ap_sndfile_async_cfg_t::ap_sndfile_async_cfg_t( const TASCAR::audioplugin_cfg_t&
     transport(true),
     mute(false)
 {
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(channel);
-  //GET_ATTRIBUTE_(start);
-  GET_ATTRIBUTE_(position);
-  //GET_ATTRIBUTE_(length);
-  GET_ATTRIBUTE_DBSPL_(caliblevel);
-  GET_ATTRIBUTE_(loop);
-  GET_ATTRIBUTE_BOOL_(transport);
-  GET_ATTRIBUTE_BOOL_(mute);
-  //if( start < 0 )
-  //  throw TASCAR::ErrMsg("file start time must be positive.");
+  GET_ATTRIBUTE_DBSPL(caliblevel,"Calibration level");
+
+  GET_ATTRIBUTE(name,"","Sound file name");
+  GET_ATTRIBUTE(channel,"","First sound file channel to be used, zero-base");
+  GET_ATTRIBUTE(position,"s","Start position within the scene");
+  GET_ATTRIBUTE(loop,"","loop count or 0 for infinite looping");
+  GET_ATTRIBUTE_BOOL(transport,"Use session time base");
+  GET_ATTRIBUTE_BOOL(mute,"Load muted");
 }
 
 class ap_sndfile_async_t : public ap_sndfile_async_cfg_t  {

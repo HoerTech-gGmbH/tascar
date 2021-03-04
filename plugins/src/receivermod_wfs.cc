@@ -45,8 +45,8 @@ rec_wfs_t::rec_wfs_t(xmlpp::Element* xmlsrc)
   d(spkpos.size(),0.0f),
   dd(spkpos.size(),0.0f)
 {
-  GET_ATTRIBUTE_(c);
-  GET_ATTRIBUTE_BOOL_(planewave);
+  GET_ATTRIBUTE(c,"m/s","Speed of sound");
+  GET_ATTRIBUTE_BOOL(planewave,"Simlate always plane waves independent of distance");
   typeidattr.push_back("c");
   typeidattr.push_back("planewave");
 }

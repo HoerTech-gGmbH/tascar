@@ -1,11 +1,6 @@
 Send levels via OSC.
 
-\begin{tscattributes}
-  \indattr{sendwhilestopped} & Send also when transport is stopped? (default: false)\\
-  \indattr{skip} & Skip frames (default: 0)\\
-  \indattr{url} & Target URL (default: ``osc.udp://localhost:9999/'')\\
-  \indattr{path} & Target path (default: ``/level'')\\
-\end{tscattributes}
+\input{tablevel2osc.tex}
 
 If $N$ is the number of channels, the OSC message will contain $N+1$
 floating point values. The first float contains the object time in

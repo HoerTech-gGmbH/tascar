@@ -21,8 +21,8 @@ biquadplugin_t::biquadplugin_t( const TASCAR::audioplugin_cfg_t& cfg )
     fc(1000.0),
     highpass(false)
 {
-  GET_ATTRIBUTE_(fc);
-  GET_ATTRIBUTE_BOOL_(highpass);
+  GET_ATTRIBUTE(fc,"Hz","Cut-off frequncy");
+  GET_ATTRIBUTE_BOOL(highpass,"Highpass filter (true) or lowpass filter (false)");
 }
 
 void biquadplugin_t::add_variables( TASCAR::osc_server_t* srv )

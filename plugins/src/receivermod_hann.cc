@@ -64,7 +64,7 @@ rec_hann_t::rec_hann_t(xmlpp::Element* xmlsrc)
     //spkpos(xmlsrc),
     wexp(0.5)
 {
-  GET_ATTRIBUTE_(wexp);
+  GET_ATTRIBUTE(wexp,"","window exponent $\\gamma$");
   typeidattr.push_back("wexp");
 }
 

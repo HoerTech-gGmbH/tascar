@@ -31,7 +31,7 @@ hoa3d_enc_t::hoa3d_enc_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc),
   order(3)
 {
-  GET_ATTRIBUTE_(order);
+  GET_ATTRIBUTE(order,"","Ambisonics order");
   if( order < 0 )
     throw TASCAR::ErrMsg("Negative order is not possible.");
   channels = (order+1)*(order+1);

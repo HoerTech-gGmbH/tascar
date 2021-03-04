@@ -56,17 +56,17 @@ metronome_t::metronome_t(const TASCAR::audioplugin_cfg_t& cfg)
       ao_(0.001), period(0), dispatchin(0), srv_(NULL),
       msg(find_or_add_child("msg"))
 {
-  GET_ATTRIBUTE_BOOL_(changeonone);
-  GET_ATTRIBUTE_(bpm);
-  GET_ATTRIBUTE_(bpb);
-  GET_ATTRIBUTE_DBSPL_(a1);
-  GET_ATTRIBUTE_DBSPL_(ao);
-  GET_ATTRIBUTE_BOOL_(sync);
-  GET_ATTRIBUTE_(fres1);
-  GET_ATTRIBUTE_(freso);
-  GET_ATTRIBUTE_(q1);
-  GET_ATTRIBUTE_(qo);
-  GET_ATTRIBUTE_BOOL_(bypass);
+  GET_ATTRIBUTE_BOOL(changeonone,"Apply OSC parameter changes on next bar");
+  GET_ATTRIBUTE(bpm,"","Beats per minute");
+  GET_ATTRIBUTE(bpb,"","Beats per bar");
+  GET_ATTRIBUTE_DBSPL(a1,"Amplitude of first beat");
+  GET_ATTRIBUTE_DBSPL(ao,"Amplitude of other beats");
+  GET_ATTRIBUTE_BOOL(sync,"Use object time synchronization");
+  GET_ATTRIBUTE(fres1,"Hz","Resonance frequency of first beat");
+  GET_ATTRIBUTE(freso,"Hz","Resonance frequency of other beats");
+  GET_ATTRIBUTE(q1,"","Filter resonance of first beat");
+  GET_ATTRIBUTE(qo,"","Filter resonance of other beats");
+  GET_ATTRIBUTE_BOOL(bypass,"Load in bypass mode");
 }
 
 void metronome_t::configure()

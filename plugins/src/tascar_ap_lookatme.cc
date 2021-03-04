@@ -42,16 +42,16 @@ lookatme_t::lookatme_t( const TASCAR::audioplugin_cfg_t& cfg )
     active(true),
     discordantLS(false)
 {
-  GET_ATTRIBUTE_(tau);
-  GET_ATTRIBUTE_(fadelen);
-  GET_ATTRIBUTE_DBSPL_(threshold);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(paths);
-  GET_ATTRIBUTE_(animation);
-  GET_ATTRIBUTE_(thresholdpath);
-  GET_ATTRIBUTE_(levelpath);
-  GET_ATTRIBUTE_(pos_onset);
-  GET_ATTRIBUTE_(pos_offset);
+  GET_ATTRIBUTE(tau,"s","Time constant of level estimation");
+  GET_ATTRIBUTE(fadelen,"s","Motion duration after threshold");
+  GET_ATTRIBUTE_DBSPL(threshold,"Level threshold");
+  GET_ATTRIBUTE(url,"","Target OSC URL");
+  GET_ATTRIBUTE(paths,"","Space-separated list of target paths");
+  GET_ATTRIBUTE(animation,"","Animation name (or empty for no animation)");
+  GET_ATTRIBUTE(thresholdpath,"","Destination path of threshold criterion (or empty)");
+  GET_ATTRIBUTE(levelpath,"","Destination path of level logging (or empty)");
+  GET_ATTRIBUTE(pos_onset,"m","Position to look at on onset (or empty to look at vertex position)");
+  GET_ATTRIBUTE(pos_offset,"m","Position to look at on offset (or empty for no change of look direction)");
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());

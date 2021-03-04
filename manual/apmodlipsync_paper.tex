@@ -1,20 +1,3 @@
 Module to control lip synchronization as used in \cite{Llorach2016}.
 
-\begin{tscattributes}
-\attr{smoothing}      & Smoothing time constant in seconds (default: 0.04)                           \\
-\attr{url}            & Target OSC URL                                                               \\
-\attr{scale}          & Scaling factor of blend shapes; 3 values: kiss, jaw, lipsclosed              \\
-                      & (default: ``1 1 1'')                                                         \\
-\attr{vocalTract}     & Vocal tract scaling factor (default: 1)                                      \\
-\attr{threshold}      & Noise threshold, range 0-1 (default: 0.5)                                    \\
-\attr{maxspeechlevel} & Level normalization in dB (default: 48)                                      \\
-\attr{dynamicrange}   & Mapped dynamic range in dB (default: 165)                                     \\
-\attr{energypath}     & OSC destination for sending format energies, or empty for no energy messages \\
-\attr{path}           & OSC destination of blendshape messages                                       \\
-                      & (default: parent name)                                                       \\
-\attr{sendmode}       & Sending mode, one of ``always'', ``transport'', or ``onchange''              \\
-                      & (default: ``always'')                                                        \\
-\attr{onchangecount}  & Maximum number of repetitions of equal messages in ``onchange'' mode         \\
-                      & (default: 3)                                                                 \\
-\end{tscattributes}
-
+\input{tablipsync_paper.tex}

@@ -3,24 +3,6 @@ sound file at a given time, or triggered via OSC messages.
 
 \input{tabsndfile.tex}
 
-\begin{tscattributes}
-  \indattr{name}        & Sound file name.                                                                           \\
-  \indattr{channel}     & First sound file channel to be used, zero-base (default: 0)                                \\
-  \indattr{start}       & Start position within the file, in seconds (default: 0).                                   \\
-  \indattr{length}      & length of sound sample, in seconds, or 0 for file length (default: 0).                     \\
-  \indattr{position}    & Start position within the scene, in seconds (default: 0).                                  \\
-  \indattr{loop}        & loop count or 0 for infinite looping (default: 1).                                         \\
-  \indattr{levelmode}   & level mode, ``rms'', ``peak'' or ``calib'' (default: ``rms'').                             \\
-  \indattr{level}       & level in dB (default: 0).                                                                  \\
-  \indattr{weighting}   & level weighting for RMS mode, one of ``Z'', ``A'', ``C'' or ``bandpass'' (default: ``Z''). \\
-  \indattr{triggered}   & Play OSC triggered samples, ignore position and loop (default: false)                      \\
-  \indattr{transport}   & Use session time base (default: true)                                                      \\
-  \indattr{license}     & License form of session file                                                               \\
-  \indattr{attribution} & Attribution of session file, e.g., author name                                             \\
-  \indattr{mute}        & Mute flag                                                                                  \\
-  \indattr{resample}    & Allow resampling to current session sample rate (default: false)                           \\
-\end{tscattributes}
-
 \paragraph{Multi-channel sound files}
 %
 If the plugin receives multiple channels (e.g., when used in a

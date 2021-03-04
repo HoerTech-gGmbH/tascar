@@ -31,12 +31,12 @@ pink_t::pink_t( const TASCAR::audioplugin_cfg_t& cfg )
     use_transport(false),
     mute(false)
 {
-  GET_ATTRIBUTE_(fmin);
-  GET_ATTRIBUTE_(fmax);
-  GET_ATTRIBUTE_DBSPL_(level);
-  GET_ATTRIBUTE_(period);
-  GET_ATTRIBUTE_BOOL_(use_transport);
-  GET_ATTRIBUTE_BOOL_(mute);
+  GET_ATTRIBUTE(fmin,"Hz","Minimum frequency");
+  GET_ATTRIBUTE(fmax,"Hz","Maximum frequency");
+  GET_ATTRIBUTE_DBSPL(level,"RMS level");
+  GET_ATTRIBUTE(period,"s","Period time of frozen noise");
+  GET_ATTRIBUTE_BOOL(use_transport,"Play only if transport is running");
+  GET_ATTRIBUTE_BOOL(mute,"load muted");
 }
 
 void pink_t::configure()

@@ -138,11 +138,14 @@ struct elem_cfg_var_desc_t {
   std::string type;
 };
 
-void make_common(std::map<std::string, elem_cfg_var_desc_t>& elems,
+void make_common(std::map<std::string, std::set<std::string>>& parentchildren,
+                 std::map<std::string, elem_cfg_var_desc_t>& elems,
                  const std::set<std::string>& list,
                  const std::string& commonname)
 {
   if(list.size()) {
+    for(auto ch : list)
+      parentchildren[commonname].insert(ch);
     // first get a list of common attributes:
     std::set<std::string> common_attributes;
     for(auto attr : elems[(*(list.begin()))].attr)
@@ -194,8 +197,9 @@ void App::show_licenses_t::show_doc(bool latex)
   for(auto elem : TASCAR::attribute_list) {
     std::string category(elem.first->get_name());
     std::string cattype(elem.first->get_attribute_value("type"));
-    std::map<std::string, cfg_var_desc_t> previousattr(attribute_list[category + cattype].attr);
-    for(auto attr:elem.second)
+    std::map<std::string, cfg_var_desc_t> previousattr(
+        attribute_list[category + cattype].attr);
+    for(auto attr : elem.second)
       previousattr[attr.first] = attr.second;
     attribute_list[category + cattype] = {category, previousattr, {}, cattype};
     categories[category].insert(category + cattype);
@@ -206,11 +210,21 @@ void App::show_licenses_t::show_doc(bool latex)
       std::cout << "  " << type << std::endl;
     }
   }
-  make_common(attribute_list, categories["receiver"], "receiver");
-  make_common(attribute_list, categories["sound"], "sound");
-  make_common(attribute_list, {"receiver", "source", "diffuse","facegroup","boundingbox"}, "objects");
-  make_common(attribute_list, {"receiver", "source", "diffuse","facegroup"}, "routes");
-  make_common(attribute_list, {"receiver", "sound", "diffuse"}, "ports");
+  std::map<std::string, std::set<std::string>> parentchildren;
+  make_common(parentchildren, attribute_list, categories["receiver"],
+              "receiver");
+  make_common(parentchildren, attribute_list, categories["reverb"], "receiver");
+  make_common(parentchildren, attribute_list, categories["sound"], "sound");
+  make_common(parentchildren, attribute_list,
+              {"receiver", "source", "diffuse", "facegroup", "face",
+               "boundingbox", "obstacle", "mask"},
+              "objects");
+  make_common(parentchildren, attribute_list,
+              {"receiver", "source", "diffuse", "facegroup", "face", "mask",
+               "obstacle"},
+              "routes");
+  make_common(parentchildren, attribute_list, {"receiver", "sound", "diffuse"},
+              "ports");
   for(auto elem : attribute_list) {
     for(auto attr : elem.second.attr)
       types.insert(attr.second.type);
@@ -221,19 +235,36 @@ void App::show_licenses_t::show_doc(bool latex)
                 << std::endl;
       std::ofstream fh(fname);
       fh << "\\begin{snugshade}\n";
-      fh << "\\label{attrtab:" << elem.first << "}\n";
-      fh << "\\begin{tabularx}{\\textwidth}{lXl}\n\\multicolumn{3}{l}{"
-        "Attributes of ";
-      if( elem.second.type.empty())
+      fh << "\\label{attrtab:" << elem.first << "}\n"
+         << "Attributes of ";
+      if(elem.second.type.empty())
         fh << "element {\\bf " << tolatex(elem.first) + "}";
       else
-        fh << tolatex(elem.second.elem) << " element {\\bf " << tolatex(elem.second.type) + "}";
+        fh << tolatex(elem.second.elem) << " element {\\bf "
+           << tolatex(elem.second.type) + "}";
+      if(!parentchildren[elem.first].empty()) {
+        fh << " (";
+        size_t k(0);
+        for(auto child : parentchildren[elem.first]) {
+          if(k)
+            fh << " ";
+          std::string xchild(child);
+          if(attribute_list[child].type.size())
+            xchild = attribute_list[child].type;
+          fh << "{\\hyperref[attrtab:" << child << "]{" << tolatex(xchild)
+             << "}}";
+          ++k;
+        }
+        fh << ")";
+      }
       if(!elem.second.parents.empty()) {
         fh << ", inheriting from";
         for(auto parent : elem.second.parents)
-          fh << " \\hyperref[attrtab:" << parent << "]{{\\bf "  << tolatex(parent) << "}}";
+          fh << " \\hyperref[attrtab:" << parent << "]{{\\bf "
+             << tolatex(parent) << "}}";
       }
-      fh << "}\\\\\n";
+      fh << "\n\n";
+      fh << "\\begin{tabularx}{\\textwidth}{lXl}\n\\hline\n";
       fh << "name & description (type, unit) & def.\\\\\n\\hline\n";
       for(auto attr : elem.second.attr) {
         //  \indattr{name} & type & def & unit & Name of session (default:
@@ -244,7 +275,7 @@ void App::show_licenses_t::show_doc(bool latex)
         if(!attr.second.unit.empty())
           fh << ", " << attr.second.unit;
         fh << ") ";
-        fh << "&" << tolatex(attr.second.defaultval) << "\\\\" << std::endl;
+        fh << "& " << tolatex(attr.second.defaultval) << "\\\\" << std::endl;
       }
       fh << "\\hline\n\\end{tabularx}\n";
       fh << "\\end{snugshade}\n";

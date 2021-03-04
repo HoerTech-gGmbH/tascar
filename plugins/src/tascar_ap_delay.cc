@@ -20,7 +20,7 @@ private:
 delay_t::delay_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg), delay({1.0}), pos(0)
 {
-  GET_ATTRIBUTE_(delay);
+  GET_ATTRIBUTE(delay,"s","Delays in seconds");
   if(delay.empty())
     delay.push_back(0.0);
 }

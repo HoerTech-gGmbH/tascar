@@ -15,7 +15,7 @@ gainramp_t::gainramp_t( const TASCAR::audioplugin_cfg_t& cfg )
   : audioplugin_base_t( cfg ),
     gain(1.0)
 {
-  GET_ATTRIBUTE_DB_(gain);
+  GET_ATTRIBUTE_DB(gain,"gain");
 }
 
 void gainramp_t::add_variables( TASCAR::osc_server_t* srv )

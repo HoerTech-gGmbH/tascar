@@ -66,7 +66,7 @@ nsp_t::nsp_t( xmlpp::Element* xmlsrc )
   : TASCAR::receivermod_base_speaker_t( xmlsrc ),
   useall(false)
 {
-  GET_ATTRIBUTE_BOOL_(useall);
+  GET_ATTRIBUTE_BOOL(useall,"activate all speakers independent of source position");
 }
 
 void nsp_t::add_variables( TASCAR::osc_server_t* srv )

@@ -115,6 +115,7 @@ src_object_t::src_object_t(xmlpp::Element* xmlsrc)
         add_sound(sne);
       else if((sne->get_name() != "creator") &&
               (sne->get_name() != "sndfile") &&
+              (sne->get_name() != "navmesh") &&
               (sne->get_name() != "include") &&
               (sne->get_name() != "position") &&
               (sne->get_name() != "orientation"))
@@ -380,11 +381,14 @@ void scene_t::process_active(double t)
     (*it)->process_active(t, anysolo);
 }
 
-mask_object_t::mask_object_t(xmlpp::Element* xmlsrc) : object_t(xmlsrc)
+mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
+    : object_t(xmlsrc), xmlfalloff(1)
 {
-  dynobject_t::get_attribute("size", xmlsize,"m","dimension of mask");
-  dynobject_t::get_attribute("falloff", xmlfalloff,"m","ramp length at boundaries");
-  dynobject_t::get_attribute_bool("inside", mask_inner,"","mask inner objects");
+  dynobject_t::get_attribute("size", xmlsize, "m", "dimension of mask");
+  dynobject_t::get_attribute("falloff", xmlfalloff, "m",
+                             "ramp length at boundaries");
+  dynobject_t::get_attribute_bool("inside", mask_inner, "",
+                                  "mask inner objects");
 }
 
 void mask_object_t::geometry_update(double t)
@@ -723,13 +727,13 @@ bool object_t::is_active(uint32_t anysolo, double t)
 face_object_t::face_object_t(xmlpp::Element* xmlsrc)
     : object_t(xmlsrc), width(1.0), height(1.0)
 {
-  dynobject_t::GET_ATTRIBUTE(width,"m","width of reflector");
-  dynobject_t::GET_ATTRIBUTE(height,"m","height of reflector");
-  dynobject_t::GET_ATTRIBUTE(reflectivity,"","reflectivity coefficient");
-  dynobject_t::GET_ATTRIBUTE(damping,"","damping coefficient");
-  dynobject_t::GET_ATTRIBUTE(vertices,"m", "list of vertives");
-  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"edge reflection flag");
-  dynobject_t::GET_ATTRIBUTE(scattering,"","relative amount of scattering");
+  dynobject_t::GET_ATTRIBUTE(width,"m","Width of reflector");
+  dynobject_t::GET_ATTRIBUTE(height,"m","Height of reflector");
+  dynobject_t::GET_ATTRIBUTE(reflectivity,"","Reflectivity coefficient");
+  dynobject_t::GET_ATTRIBUTE(damping,"","Damping coefficient");
+  dynobject_t::GET_ATTRIBUTE(vertices,"m", "List of Cartesian coordinates to define polygon surface");
+  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"Apply edge reflection in case of not directly visible image source");
+  dynobject_t::GET_ATTRIBUTE(scattering,"","Relative amount of scattering");
   if(vertices.size() > 2)
     nonrt_set(vertices);
   else
@@ -851,12 +855,12 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
     : object_t(xmlsrc), reflectivity(1.0), damping(0.0), edgereflection(true),
       scattering(0)
 {
-  dynobject_t::GET_ATTRIBUTE(reflectivity,"","reflectivity coefficient");
-  dynobject_t::GET_ATTRIBUTE(damping,"","damping coefficient");
-  dynobject_t::GET_ATTRIBUTE(importraw,"","file name of vertex list to import");
-  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"render reflection from edges");
-  dynobject_t::GET_ATTRIBUTE(scattering,"","relative amount of scattering");
-  dynobject_t::GET_ATTRIBUTE(shoebox,"m","generate a shoebox room of these dimensions");
+  dynobject_t::GET_ATTRIBUTE(reflectivity,"","Reflectivity coefficient");
+  dynobject_t::GET_ATTRIBUTE(damping,"","Damping coefficient");
+  dynobject_t::GET_ATTRIBUTE(importraw,"","File name of raw file containing list of polygon surfaces");
+  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"Apply edge reflection in case of not directly visible image source");
+  dynobject_t::GET_ATTRIBUTE(scattering,"","Relative amount of scattering");
+  dynobject_t::GET_ATTRIBUTE(shoebox,"m","Generate a shoebox room of these dimensions");
   if(!shoebox.is_null()) {
     TASCAR::pos_t sb(shoebox);
     sb *= 0.5;
@@ -1017,10 +1021,13 @@ void face_group_t::process_active(double t, uint32_t anysolo)
 obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
     : object_t(xmlsrc), transmission(0), ishole(false), aperture(0)
 {
-  dynobject_t::GET_ATTRIBUTE(transmission,"","transmission coefficient");
-  dynobject_t::GET_ATTRIBUTE(importraw,"","file name of vertex list");
-  dynobject_t::GET_ATTRIBUTE_BOOL(ishole,"the obstacle is outside the specified boundaries");
-  dynobject_t::GET_ATTRIBUTE(aperture,"m","overwrite aperture for acoustic model");
+  dynobject_t::GET_ATTRIBUTE(transmission, "", "transmission coefficient");
+  dynobject_t::GET_ATTRIBUTE(importraw, "", "file name of vertex list");
+  dynobject_t::GET_ATTRIBUTE_BOOL(
+      ishole, "Simulate infinite plane with hole instead of finite surface");
+  dynobject_t::GET_ATTRIBUTE(aperture, "m",
+                             "Override aperture of airy disk calculation, zero "
+                             "for calculation from area");
   if(!importraw.empty()) {
     std::ifstream rawmesh(TASCAR::env_expand(importraw).c_str());
     if(!rawmesh.good())

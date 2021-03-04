@@ -11,7 +11,6 @@ private:
   lo_address lo_addr;
   double tau;
   double taumin;
-  double fadelen;
   double threshold;
   std::string url;
   std::string path;
@@ -33,7 +32,6 @@ onsetdetector_t::onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg )
   : audioplugin_base_t( cfg ),
     tau(1),
     taumin(0.05),
-    fadelen(1),
     threshold(0.01),
     url("osc.udp://localhost:9999/"),
     side_l("L"),
@@ -46,13 +44,12 @@ onsetdetector_t::onsetdetector_t( const TASCAR::audioplugin_cfg_t& cfg )
     crit(0),crit1(0),detect(0),
     time_since_last(0)
 {
-  GET_ATTRIBUTE_(tau);
-  GET_ATTRIBUTE_(taumin);
-  GET_ATTRIBUTE_(fadelen);
-  GET_ATTRIBUTE_(side);
-  GET_ATTRIBUTE_DBSPL_(threshold);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE(tau,"s","Level estimator time constant");
+  GET_ATTRIBUTE(taumin,"s","Trigger blocking time");
+  GET_ATTRIBUTE(side,"","");
+  GET_ATTRIBUTE_DBSPL(threshold,"Detection threshold");
+  GET_ATTRIBUTE(url,"","Destination OSC URL");
+  GET_ATTRIBUTE(path,"","Destination OSC path");
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());

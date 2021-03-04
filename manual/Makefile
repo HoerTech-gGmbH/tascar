@@ -51,6 +51,9 @@ autodoc.txt: documentation.tsc $(wildcard ../*/build/*)
 checkusetab: autodoc.txt
 	for i in tab*.tex; do echo "\input{$$i}"; grep -q -e $$i *.tex || exit 1; done
 
+checkundoc: checkusetab
+	if grep -e undocumented tab*.tex; then false; else true; fi
+
 manual.pdf: version.tex $(FIGURES) $(SECTIONS) acousticmodel.pdf callgraph.pdf manual.run5
 
 secmodules.tex: $(sort $(wildcard mod*.tex))

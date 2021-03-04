@@ -44,13 +44,13 @@ gate_t::gate_t( const TASCAR::audioplugin_cfg_t& cfg )
     pfadein(NULL),
     pfadeout(NULL)
 {
-  GET_ATTRIBUTE_(tautrack);
-  GET_ATTRIBUTE_(taurms);
-  GET_ATTRIBUTE_(threshold);
-  GET_ATTRIBUTE_(holdlen);
-  GET_ATTRIBUTE_(fadeinlen);
-  GET_ATTRIBUTE_(fadeoutlen);
-  GET_ATTRIBUTE_BOOL_(bypass);
+  GET_ATTRIBUTE(tautrack,"s","Min/max tracking time constant");
+  GET_ATTRIBUTE(taurms,"s","RMS level estimation time constant");
+  GET_ATTRIBUTE(threshold,"","Threshold value between 0 and 1");
+  GET_ATTRIBUTE(holdlen,"s","Time to keep output after level decay below threshold");
+  GET_ATTRIBUTE(fadeinlen,"s","Duration of von-Hann fade in");
+  GET_ATTRIBUTE(fadeoutlen,"s","Duration of von-Hann fade out");
+  GET_ATTRIBUTE_BOOL(bypass,"Start in bypass mode");
 }
 
 void gate_t::add_variables( TASCAR::osc_server_t* srv )

@@ -76,6 +76,18 @@ std::string TASCAR::to_string(const TASCAR::pos_t& x)
          TASCAR::to_string(x.z);
 }
 
+std::string TASCAR::to_string(const std::vector<TASCAR::pos_t>& x)
+{
+  size_t k(0);
+  std::string rv;
+  for(auto p : x) {
+    if(k)
+      rv += " ";
+    rv += TASCAR::to_string(p);
+  }
+  return rv;
+}
+
 std::string TASCAR::to_string(const TASCAR::zyx_euler_t& x)
 {
   return TASCAR::to_string(x.z) + " " + TASCAR::to_string(x.y) + " " +
@@ -580,7 +592,8 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[e][name] = {name, "vector<pos>", "XXX", unit, info};
+  attribute_list[e][name] = {name, "pos array", TASCAR::to_string(value), unit,
+                             info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else

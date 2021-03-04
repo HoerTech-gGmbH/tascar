@@ -19,9 +19,9 @@ gainramp_t::gainramp_t( const TASCAR::audioplugin_cfg_t& cfg )
     slope(0.0),
     maxgain(1.0)
 {
-  GET_ATTRIBUTE_DB_(gain);
-  GET_ATTRIBUTE_DB_(slope);
-  GET_ATTRIBUTE_DB_(maxgain);
+  GET_ATTRIBUTE_DB(gain,"Set current gain");
+  GET_ATTRIBUTE_DB(slope,"Set gain slope in dB/s");
+  GET_ATTRIBUTE_DB(maxgain,"Set maximal gain");
 }
 
 void gainramp_t::add_variables( TASCAR::osc_server_t* srv )

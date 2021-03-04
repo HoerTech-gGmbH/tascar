@@ -13,18 +13,6 @@ the given number of loudspeakers is used.
 
 \input{tabreceiverhoa2d.tex}
 
-\begin{tscattributes}
-\indattr{order}            & Ambisonics order; 0: use maximum possible (default: 0)                                                                      \\
-\indattr{rotation}         & Rotation of the loudspeaker array in degrees (default: compensate average speaker rotation)                                 \\
-\indattr{maxre}            & Use $\max r_E$ decoder (true) or basic decoder (false) (default: false)                                                     \\
-\indattr{diffup}           & Use diffuse upsampling similar to \citet{Zotter2014} (default: false)                                                       \\
-\indattr{diffup\_rot}      & Decorrelation rotation in degrees (default: 45)                                                                              \\
-\indattr{diffup\_delay}    & Decorrelation delay in seconds (default: 0.01)                                                                              \\
-\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (default: 100)                                                                        \\
-\indattr{filtershape}      & De-correlation filter shape for source width encoding, one of ``none'' (default), ``notch'', ``sine'', ``tria'', ``triald'' \\
-\indattr{filterperiod}     & Filter period in seconds for source width encoding (default: 0.005)                                                         \\
-\end{tscattributes}
-
 \paragraph{Note:}
 Only regular speaker arrays can be used. Explicit speaker
 distributions are ignored, and a regular speaker distribution with

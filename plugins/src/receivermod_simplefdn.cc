@@ -362,14 +362,14 @@ simplefdn_vars_t::simplefdn_vars_t(xmlpp::Element* xmlsrc)
       dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
       absorption(0.6), c(340)
 {
-  GET_ATTRIBUTE_(fdnorder);
-  GET_ATTRIBUTE_(dw);
-  GET_ATTRIBUTE_(t60);
-  GET_ATTRIBUTE_(damping);
-  GET_ATTRIBUTE_BOOL_(prefilt);
-  GET_ATTRIBUTE_(absorption);
-  GET_ATTRIBUTE_(c);
-  GET_ATTRIBUTE_(volumetric);
+  GET_ATTRIBUTE(fdnorder,"","Order of FDN");
+  GET_ATTRIBUTE(dw,"rad/s","Spatial spread");
+  GET_ATTRIBUTE(t60,"s","$T_{60}$, or zero to use Sabine's equation");
+  GET_ATTRIBUTE(damping,"","Damping (first order lowpass) coefficient");
+  GET_ATTRIBUTE_BOOL(prefilt,"Filter before feedback matrix");
+  GET_ATTRIBUTE(absorption,"","Absorption used in Sabine's equation");
+  GET_ATTRIBUTE(c,"m/s","Speed of sound");
+  GET_ATTRIBUTE(volumetric,"m","Dimension of room x y z");
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}

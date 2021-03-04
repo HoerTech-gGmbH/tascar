@@ -40,11 +40,11 @@ loopmachine_t::loopmachine_t( const TASCAR::audioplugin_cfg_t& cfg )
     t_rec_counter(0),
     t_ramp_counter(0)
 {
-  GET_ATTRIBUTE_(bpm);
-  GET_ATTRIBUTE_(durationbeats);
-  GET_ATTRIBUTE_(ramplen);
-  GET_ATTRIBUTE_DB_(gain);
-  GET_ATTRIBUTE_BOOL_(bypass);
+  GET_ATTRIBUTE(bpm,"","Beats per minute");
+  GET_ATTRIBUTE(durationbeats,"beats","Record duration");
+  GET_ATTRIBUTE(ramplen,"s","Ramp length");
+  GET_ATTRIBUTE_DB(gain,"Playback gain");
+  GET_ATTRIBUTE_BOOL(bypass,"Start in bypass mode");
 }
 
 void loopmachine_t::configure()

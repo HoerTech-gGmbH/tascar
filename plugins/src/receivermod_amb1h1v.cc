@@ -34,7 +34,7 @@ amb1h1v_t::amb1h1v_t(xmlpp::Element* xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc)
 {
   std::string normalization("FuMa");
-  GET_ATTRIBUTE_(normalization);
+  GET_ATTRIBUTE(normalization,"","Normalization, either ``FuMa'' or ``SN3D''");
   if( normalization == "FuMa" )
     wgain = MIN3DB;
   else if( normalization == "SN3D" )
