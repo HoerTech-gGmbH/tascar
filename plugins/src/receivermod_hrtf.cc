@@ -97,25 +97,47 @@ hrtf_param_t::hrtf_param_t(xmlpp::Element* xmlsrc)
       alphamin_up(0.1), startangle_notch(102 * DEG2RAD), freq_start(1300),
       freq_end(650), maxgain(-5.4), Q_notch(2.3)
 {
-  GET_ATTRIBUTE_(sincorder);
-  GET_ATTRIBUTE_(c);
-  GET_ATTRIBUTE_(radius);
-  GET_ATTRIBUTE_DEG_(angle);
-  GET_ATTRIBUTE_(thetamin);
-  GET_ATTRIBUTE_(omega);
-  GET_ATTRIBUTE_(alphamin);
-  GET_ATTRIBUTE_DEG_(startangle_front);
-  GET_ATTRIBUTE_(omega_front);
-  GET_ATTRIBUTE_(alphamin_front);
-  GET_ATTRIBUTE_DEG_(startangle_up);
-  omega_up = 340 / radius / 2;
-  GET_ATTRIBUTE_(omega_up);
-  GET_ATTRIBUTE_(alphamin_up);
-  GET_ATTRIBUTE_DEG_(startangle_notch);
-  GET_ATTRIBUTE_(freq_start);
-  GET_ATTRIBUTE_(freq_end);
-  GET_ATTRIBUTE_(maxgain);
-  GET_ATTRIBUTE_(Q_notch);
+  GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of ITD delay line");
+  GET_ATTRIBUTE(c, "m/s", "Speed of sound");
+  GET_ATTRIBUTE(radius, "m", "Radius of sphere modeling the head");
+  GET_ATTRIBUTE_DEG(angle, "Position of the ears on the sphere");
+  GET_ATTRIBUTE_DEG(
+      thetamin, "angle with respect to the position of the ears at which the "
+                "maximum depth of the high-shelf realizing the SHM is reached");
+  GET_ATTRIBUTE(omega, "Hz",
+                "cut-off frequency of the high-self realizing the SHM");
+  GET_ATTRIBUTE(alphamin, "",
+                "parameter which determines the depth of the high-shelf "
+                "realizing the SHM");
+  GET_ATTRIBUTE_DEG(startangle_front,
+                    "the second high-shelf, e.g. to model pinna shadow effect, "
+                    "is applied when the angle with respect to front direction "
+                    "[1 0 0] is larger than \\attr{startangle_front}");
+  GET_ATTRIBUTE(omega_front, "Hz", "cut-off frequency of the second high-self");
+  GET_ATTRIBUTE(
+      alphamin_front, "",
+      "parameter which determines the depth of the second high-shelf");
+  GET_ATTRIBUTE_DEG(startangle_up,
+                    "the third high-shelf which models the shadow effect of "
+                    "the torso is applied when the angle with respect to up "
+                    "direction [0 0 1] is larger than \\attr{startangle_up}");
+  omega_up = c / radius / 2;
+  GET_ATTRIBUTE(omega_up, "Hz",
+                "cut-off frequency of the second high-shelf in Hz");
+  GET_ATTRIBUTE(
+      alphamin_up, "",
+      "parameter which determines the depth of the second high-shelf");
+  GET_ATTRIBUTE_DEG(
+      startangle_notch,
+      "notch filter to model concha notch is applied if angle with respect to "
+      "up direction [0 0 1] is smaller than \\attr{startangle_notch}");
+  GET_ATTRIBUTE(freq_start, "Hz",
+                "notch center frequency at \\attr{startangle_notch}");
+  GET_ATTRIBUTE(freq_end, "Hz", "notch center frequency at [0 0 1]");
+  GET_ATTRIBUTE(maxgain, "dB",
+                "gain applied at [0 0 1] -- gain is 0 dB at "
+                "\\attr{startangle_notch} and increases linearly");
+  GET_ATTRIBUTE(Q_notch, "", "quality factor of the notch filter");
   dir_l.rot_z(angle);
   dir_r.rot_z(-angle);
 }
@@ -371,8 +393,8 @@ hrtf_t::hrtf_t(xmlpp::Element* xmlsrc)
     : TASCAR::receivermod_base_t(xmlsrc), par(xmlsrc), decorr_length(0.05),
       decorr(false)
 {
-  GET_ATTRIBUTE_(decorr_length);
-  GET_ATTRIBUTE_BOOL_(decorr);
+  GET_ATTRIBUTE(decorr_length, "s", "Decorrelation length");
+  GET_ATTRIBUTE_BOOL(decorr, "Flag to use decorrelation of diffuse sounds");
 }
 
 void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,

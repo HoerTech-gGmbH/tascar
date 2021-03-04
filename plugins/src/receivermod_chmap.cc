@@ -18,7 +18,7 @@ chmap_t::chmap_t(xmlpp::Element* xmlsrc)
     target_channel(0)
 {
   // number of channels is taken from the scene:
-  GET_ATTRIBUTE_(channels);
+  GET_ATTRIBUTE(channels,"","number of output channels");
 }
 
 // will be called only once per cycle, *after* all primary/image

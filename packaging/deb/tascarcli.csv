@@ -156,8 +156,6 @@
 "plugins/build/tascarreceiver_hrtf.so","usr/lib/"
 "plugins/build/tascarreceiver_intensityvector.so","usr/lib/"
 "plugins/build/tascarreceiver_itu51.so","usr/lib/"
-"plugins/build/tascarreceiver_neukom_basic.so","usr/lib/"
-"plugins/build/tascarreceiver_neukom_inphase.so","usr/lib/"
 "plugins/build/tascarreceiver_nsp.so","usr/lib/"
 "plugins/build/tascarreceiver_omni.so","usr/lib/"
 "plugins/build/tascarreceiver_ortf.so","usr/lib/"

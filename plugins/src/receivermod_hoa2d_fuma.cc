@@ -68,16 +68,14 @@ hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
     idelaypoint(0),
     filterperiod(0.005)
 {
-  GET_ATTRIBUTE_(order);
-  GET_ATTRIBUTE_BOOL_(diffup);
-  GET_ATTRIBUTE_DEG_(diffup_rot);
-  GET_ATTRIBUTE_(diffup_delay);
-  GET_ATTRIBUTE_(diffup_maxorder);
-  GET_ATTRIBUTE_(filterperiod);
-  std::string filtershape;
-  GET_ATTRIBUTE_(filtershape);
-  if( filtershape.empty() )
-    filtershape = "none";
+  GET_ATTRIBUTE(order,"","Ambisonics order; 0: use maximum possible");
+  GET_ATTRIBUTE_BOOL(diffup,"Use diffuse upsampling similar to \\citet{Zotter2014}");
+  GET_ATTRIBUTE_DEG(diffup_rot,"Decorrelation rotation");
+  GET_ATTRIBUTE(diffup_delay,"s","Decorrelation delay");
+  GET_ATTRIBUTE(diffup_maxorder,"","Maximum order of diffuse sound fields");
+  GET_ATTRIBUTE(filterperiod,"s","Filter period for source width encoding");
+  std::string filtershape("none");
+  GET_ATTRIBUTE(filtershape,"","De-correlation filter shape for source width encoding, one of ``none'', ``notch'', ``sine'', ``tria'', ``triald''");
   if( filtershape == "none" )
     shape = TASCAR::fsplit_t::none;
   else if( filtershape == "notch" )

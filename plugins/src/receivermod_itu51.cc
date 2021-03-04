@@ -164,9 +164,9 @@ rec_itu51_t::rec_itu51_t(xmlpp::Element* xmlsrc)
     fc(80),
     r(1.01)
 {
-  GET_ATTRIBUTE_(fc);
-  GET_ATTRIBUTE_DB_(diffusegainfront);
-  GET_ATTRIBUTE_DB_(diffusegainrear);
+  GET_ATTRIBUTE(fc,"Hz","LFE cut off frequency");
+  GET_ATTRIBUTE_DB(diffusegainfront,"Diffuse gain for frontal speakers");
+  GET_ATTRIBUTE_DB(diffusegainrear,"Diffuse gain for rear speakers");
   // L:
   spkpos.push_back( TASCAR::pos_t( 1, 1, 0 ) ); 
   // R:

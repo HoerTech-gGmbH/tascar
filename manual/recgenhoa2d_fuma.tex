@@ -2,13 +2,3 @@ Horizontal higher order ambisonics encoder with FuMa normalization and
 ACN channel sequence.
 
 \input{tabreceiverhoa2d_fuma.tex}
-
-\begin{tscattributes}
-\indattr{order}            & Ambisonics order; 0: use maximum possible (default: 0)                                                                      \\
-\indattr{diffup}           & Use diffuse upsampling similar to \citet{Zotter2014} (default: false)                                                       \\
-\indattr{diffup\_rot}      & Decorrelation rotation in degrees (default: 45)                                                                             \\
-\indattr{diffup\_delay}    & Decorrelation delay in seconds (default: 0.01)                                                                              \\
-\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (default: 100)                                                                        \\
-\indattr{filtershape}      & De-correlation filter shape for source width encoding, one of ``none'' (default), ``notch'', ``sine'', ``tria'', ``triald'' \\
-\indattr{filterperiod}     & Filter period in seconds for source width encoding (default: 0.005)                                                         \\
-\end{tscattributes}

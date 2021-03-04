@@ -1259,16 +1259,7 @@ The speaker layout of speaker based receiver types can be defined in a
 separate layout file specified in the \attr{layout} attribute, in a
 list of \elem{speaker} elements within the receiver definition.
 
-\begin{tscattributes}
-\indattr{az}      & Azimuth of loudspeaker in degrees (optional; default 0)   \\
-\indattr{el}      & Elevation of loudspeaker in degrees (optional; default 0) \\
-\indattr{r}       & Distance (optional; default 1)                            \\
-\indattr{delay}   & Static delay in seconds (default: 0)                      \\
-\indattr{label}   & Additional port label (optional; default empty)           \\
-\indattr{connect} & Connection to jack port                                   \\
-\indattr{compB}   & FIR filter coefficients for speaker calibration.          \\
-\indattr{gain}    & Gain in dB (default: 0)                                   \\
-\end{tscattributes}
+\input{tabspeaker.tex}
 
 In addition to regular broadband speakers, a number of subwoofers\index{subwoofer} can
 be defined, using \elem{sub} elements with the same attributes as in
@@ -1284,15 +1275,8 @@ recalculated upon sampling rate changes. The maximal length of the
 correction filter is the audio fragment size plus one.
 
 The top-level element of a layout file, \elem{layout}, can be configured with these attributes:
-\begin{tscattributes}
-\indattr{caliblevel}     & Calibration level in dB; default: 93.9794                                           \\
-\indattr{calibdate}      & Calibration date in format YYYY-MM-DD                                               \\
-\indattr{xyzgain}        & XYZ-gain for FOA decoding                                                           \\
-\indattr{decorr}         & Decorrelate speaker signals in diffuse sound field rendering (default: true)        \\
-\indattr{decorr\_length} & Length of decorrelation filter, in seconds (default: 0.05)                          \\
-\indattr{densitycorr}    & In diffuse rendering, correct gains locally for loudspeaker density (default: true) \\
-\indattr{fcsub}          & Cross-over frequency in Hz, used only if subwoofers are defined (default: 80)       \\
-\end{tscattributes}
+
+\input{tablayout.tex}
 %
 Changing any of these attributes (except for \attr{calibdate}) might
 affect the output calibration and requires re-calibration.
@@ -1301,7 +1285,6 @@ If the caliblevel is provided in the receiver element and the layout
 file, then a warning is issued and the value from the layout file is
 used. If a calibration date is provided and the calibration is older
 than 30 days, a warning is displayed.
-
 
 \input{secrecspeaker.tex}
 
@@ -1456,6 +1439,9 @@ orthogonal to the polygon normal vector.
 Obstacles are polygon meshes which can absorb sound and create
 diffraction at their boundaries. The diffraction pattern is only a
 rough approximation.
+
+\input{tabobstacle.tex}
+
 \begin{tscattributes}
 \indattr{transmission} & Amount of transmission                                                                  \\
 \indattr{importraw}    & File name of raw file containing list of polygon surfaces                               \\

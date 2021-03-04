@@ -56,34 +56,3 @@ head \citep{Schwark2020} provided by the OlHeaD-HRTF
 database~\citep{Denk2020}.
 
 \input{tabreceiverhrtf.tex}
-
-\begin{tscattributes}
-\indattr{sincorder}         & Sinc interpolation order of ITD delay line (0)                                    \\
-\indattr{c}                 & Speed of sound in m/s (340)                                                       \\
-\indattr{decorr\_length}    & Decorrelation length in seconds (0.05)                                            \\
-\indattr{decorr}            & Flag to use decorrelation of diffuse sounds (false)                               \\
-\indattr{radius}            & Radius of sphere modeling the head (0.08)                                        \\
-\indattr{angle}             & Position of the ears on the sphere in degrees (90)                                 \\
-\indattr{thetamin}          & angle with respect to the position of the ears at which
-the maximum depth of the high-shelf realizing the SHM is reached in degrees (160)                                \\
-\indattr{alphamin}          & parameter which determines the depth of the high-shelf
-realizing the SHM (0.14)                                                                                        \\
-\indattr{omega}             & cut-off frequency of the high-self realizing the SHM in Hz (3100)                 \\
-\indattr{startangle\_front} & the second high-shelf, e.g. to model pinna shadow effect,
-is applied when the angle with respect to front direction [1 0 0] is larger than
-\indattr{startangle\_front} in degrees (0)                                                                       \\
-\indattr{alphamin\_front}   & parameter which determines the depth of the second high-shelf (0.39)               \\
-\indattr{omega\_front}      & cut-off frequency of the second high-self in Hz (11200)                           \\
-\indattr{startangle\_up}    & the third high-shelf which models the shadow effect of
-the torso is applied when the angle with respect to up direction [0 0 1] is larger
-than \indattr{startangle\_up} in degrees (135)                                                                   \\
-\indattr{omega\_up}         & cut-off frequency of the second high-shelf in Hz (\indattr{c}/\indattr{radius}/2) \\
-\indattr{alphamin\_up}      & parameter which determines the depth of the second high-shelf (0.1)                \\
-\indattr{startangle\_notch} & notch filter to model concha notch is applied if angle with
-respect to up direction [0 0 1] is smaller than \indattr{startangle\_notch} in degrees (102)                     \\
-\indattr{freq\_start}       & notch center frequency at \indattr{startangle\_notch} in Hz (1300)                \\
-\indattr{freq\_end}         & notch center frequency at [0 0 1] in Hz (650)                                     \\
-\indattr{maxgain}           & gain applied at [0 0 1] in dB (-5.4) - gain is 0 dB at
-\indattr{startangle\_notch} and increases linearly                                                              \\
-\indattr{Q\_notch}          & quality factor of the notch filter (2.3)                                          \\
-\end{tscattributes}

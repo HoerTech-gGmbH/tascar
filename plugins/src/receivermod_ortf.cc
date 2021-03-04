@@ -138,15 +138,15 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
     decorr_length(0.05),
     decorr(false)
 {
-  GET_ATTRIBUTE_(distance);
-  GET_ATTRIBUTE_DEG_(angle);
-  GET_ATTRIBUTE_(f6db);
-  GET_ATTRIBUTE_(fmin);
-  GET_ATTRIBUTE_(scale);
-  GET_ATTRIBUTE_(sincorder);
-  GET_ATTRIBUTE_(c);
-  GET_ATTRIBUTE_(decorr_length);
-  GET_ATTRIBUTE_BOOL_(decorr);
+  GET_ATTRIBUTE(distance,"m","Microphone distance");
+  GET_ATTRIBUTE_DEG(angle,"Angular distance between microphone axes");
+  GET_ATTRIBUTE(f6db,"Hz","6 dB cutoff frequency for 90 degrees");
+  GET_ATTRIBUTE(fmin,"Hz","Cutoff frequency for 180 degrees sounds");
+  GET_ATTRIBUTE(scale,"","Scaling factor for cosine attenuation function");
+  GET_ATTRIBUTE(sincorder,"","Sinc interpolation order of ITD delay line");
+  GET_ATTRIBUTE(c,"m/s","Speed of sound");
+  GET_ATTRIBUTE(decorr_length,"s","Decorrelation length");
+  GET_ATTRIBUTE_BOOL(decorr,"Flag to use decorrelatin of diffuse sounds");
   dir_l.rot_z(0.5*angle);
   dir_r.rot_z(-0.5*angle);
 }

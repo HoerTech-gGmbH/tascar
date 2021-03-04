@@ -52,12 +52,12 @@ ortf_t::ortf_t(xmlpp::Element* xmlsrc)
     dir_r(1,0,0),
     dir_itd(0,1,0)
 {
-  GET_ATTRIBUTE_(distance);
-  GET_ATTRIBUTE_DEG_(angle);
-  GET_ATTRIBUTE_DEG_(start_angle);
-  GET_ATTRIBUTE_DEG_(stop_angle);
-  GET_ATTRIBUTE_(sincorder);
-  GET_ATTRIBUTE_(c);
+  GET_ATTRIBUTE(distance,"m","Microphone distance");
+  GET_ATTRIBUTE_DEG(angle,"Angular distance between microphone axes");
+  GET_ATTRIBUTE_DEG(start_angle,"Angle at which attenutation ramp starts");
+  GET_ATTRIBUTE_DEG(stop_angle,"Angle at which full attenutation is reached");
+  GET_ATTRIBUTE(sincorder,"","Sinc interpolation order of ITD delay line");
+  GET_ATTRIBUTE(c,"m/s","Speed of sound");
   dir_l.rot_z(0.5*angle);
   dir_r.rot_z(-0.5*angle);
 }

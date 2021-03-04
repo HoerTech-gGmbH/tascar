@@ -6,10 +6,10 @@ include ../rules.mk
 #
 # main targets:
 #
-RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid	\
-  neukom_basic neukom_inphase hann vbap vbap3d hoa2d ortf	\
-  intensityvector vmic chmap hoa2d_fuma cardioidmod debugpos	\
-  hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc simplefdn itu51 foaconv hrtf
+RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
+  vbap vbap3d hoa2d ortf intensityvector vmic chmap hoa2d_fuma		\
+  cardioidmod debugpos hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc	\
+  simplefdn itu51 foaconv hrtf
 
 SOURCES = omni cardioidmod door generic1storder
 

@@ -58,6 +58,8 @@ namespace TASCAR {
   std::string to_string_deg(const TASCAR::zyx_euler_t& x);
   std::string to_string(const TASCAR::levelmeter::weight_t& value);
   std::string to_string(const std::vector<int>& value);
+  std::string to_string(const std::vector<double>& value);
+  std::string to_string(const std::vector<float>& value);
   std::string to_string_bits(uint32_t value);
   std::string to_string_db(double value);
   std::string to_string_dbspl(double value);

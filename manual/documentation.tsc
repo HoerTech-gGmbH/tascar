@@ -8,6 +8,9 @@
       <orientation/>
       <sound>
 	<plugins>
+	  <noise/>
+	  <metronome/>
+	  <sndfile license="CC0" name="../examples/footsteps.wav"/>
 	</plugins>
       </sound>
       <sound type="cardioidmod"/>
@@ -26,12 +29,24 @@
     <receiver type="fakebf" name="fakebf"/>
     <receiver type="hoa2d_fuma" name="hoa2d_fuma"/>
     <receiver type="hoa3d_enc" name="hoa3d_enc"/>
+    <receiver type="intensityvector" name="intensityvector"/>
+    <receiver type="itu51" name="itu51"/>
+    <receiver type="ortf" name="ortf"/>
+    <receiver type="vmic" name="vmic"/>
+    <receiver type="nsp" name="nsp" layout="doclayout2d.spk"/>
+    <receiver type="vbap" name="vbap" layout="doclayout2d.spk"/>
+    <receiver type="hoa2d" name="hoa2d" layout="doclayout2d.spk"/>
+    <receiver type="hann" name="hann" layout="doclayout2d.spk"/>
+    <receiver type="wfs" name="wfs" layout="doclayout2d.spk"/>
+    <receiver type="vbap3d" name="vbap3d" layout="doclayout3d.spk"/>
     <diffuse/>
     <reverb/>
     <facegroup name="facegroup"/>
     <face name="face"/>
+    <obstacle name="obstacle"/>
   </scene>
   <modules>
+    <datalogging/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

@@ -151,6 +151,30 @@ std::string TASCAR::to_string(const std::vector<int>& value)
   return s.str();
 }
 
+std::string TASCAR::to_string(const std::vector<double>& value)
+{
+  std::stringstream s;
+  for(std::vector<double>::const_iterator i_vert = value.begin();
+      i_vert != value.end(); ++i_vert) {
+    if(i_vert != value.begin())
+      s << " ";
+    s << *i_vert;
+  }
+  return s.str();
+}
+
+std::string TASCAR::to_string(const std::vector<float>& value)
+{
+  std::stringstream s;
+  for(std::vector<float>::const_iterator i_vert = value.begin();
+      i_vert != value.end(); ++i_vert) {
+    if(i_vert != value.begin())
+      s << " ";
+    s << *i_vert;
+  }
+  return s.str();
+}
+
 std::string TASCAR::days_to_string(double x)
 {
   int d(floor(x));
@@ -581,7 +605,8 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[e][name] = {name, "vector<double>", "XXX", unit, info};
+  attribute_list[e][name] = {name, "double array", TASCAR::to_string(value),
+                             unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -593,7 +618,8 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[e][name] = {name, "vector<float>", "XXX", unit, info};
+  attribute_list[e][name] = {name, "float array", TASCAR::to_string(value),
+                             unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -605,7 +631,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[e][name] = {name, "vector<int32>", TASCAR::to_string(value),
+  attribute_list[e][name] = {name, "int32 array", TASCAR::to_string(value),
                              unit, info};
   if(has_attribute(name))
     get_attribute_value(e, name, value);

@@ -29,7 +29,7 @@ intensityvector_t::intensityvector_t(xmlpp::Element* xmlsrc)
     c1(1),
     c2(0)
 {
-  GET_ATTRIBUTE_(tau);
+  GET_ATTRIBUTE(tau,"s","intensity integration time constant");
 }
 
 void intensityvector_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
