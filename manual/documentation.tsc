@@ -1,15 +1,38 @@
 <?xml version="1.0"?>
 <session license="CC0">
+  <include/>
+  <mainwindow/>
   <scene>
     <source>
+      <position/>
+      <orientation/>
       <sound>
 	<plugins>
 	</plugins>
       </sound>
+      <sound type="cardioidmod"/>
+      <sound type="door"/>
     </source>
     <receiver/>
+    <receiver type="hrtf" name="hrtf"/>
+    <receiver type="cardioidmod" name="cardioidmod"/>
+    <receiver type="amb1h0v" name="amb1h0v"/>
+    <receiver type="amb1h1v" name="amb1h1v"/>
+    <receiver type="amb3h0v" name="amb3h0v"/>
+    <receiver type="amb3h3v" name="amb3h3v"/>
+    <receiver type="cardioid" name="cardioid"/>
+    <receiver type="chmap" name="chmap"/>
+    <receiver type="debugpos" name="debugpos"/>
+    <receiver type="fakebf" name="fakebf"/>
+    <receiver type="hoa2d_fuma" name="hoa2d_fuma"/>
+    <receiver type="hoa3d_enc" name="hoa3d_enc"/>
+    <diffuse/>
+    <reverb/>
+    <facegroup name="facegroup"/>
+    <face name="face"/>
   </scene>
   <modules>
   </modules>
   <connect src="a" dest="b"/>
+  <range/>
 </session>

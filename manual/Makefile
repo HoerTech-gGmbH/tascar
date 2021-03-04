@@ -46,7 +46,10 @@ version.tex:
 	echo $(FULLVERSION) > $@
 
 autodoc.txt: documentation.tsc $(wildcard ../*/build/*)
-	LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ ../apps/build/tascar_validatetsc -l -g $< > $@ && cat $@ || (cat $@; false)
+	rm -f tab*.tex;LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ ../apps/build/tascar_validatetsc -l -g $< > $@ && cat $@ || (cat $@; false)
+
+checkusetab: autodoc.txt
+	for i in tab*.tex; do echo "\input{$$i}"; grep -q -e $$i *.tex || exit 1; done
 
 manual.pdf: version.tex $(FIGURES) $(SECTIONS) acousticmodel.pdf callgraph.pdf manual.run5
 

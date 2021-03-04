@@ -620,42 +620,62 @@ void track_t::write_xml( xmlpp::Element* a)
   a->add_child_text(print_cart(" "));
 }
 
-void track_t::read_xml( xmlpp::Element* a )
+void track_t::read_xml(xmlpp::Element* a)
 {
-  get_attribute_value(a,"loop",loop);
+  TASCAR::xml_element_t te(a);
+  te.GET_ATTRIBUTE(loop, "s",
+                   "The value, if greater than 0, specifies the time when this "
+                   "position track is repeated from 0");
+  // get_attribute_value(a,"loop",loop);
   track_t ntrack;
   ntrack.loop = loop;
-  if( a->get_attribute_value("interpolation") == "spherical" )
+  std::string interpolation("cartesian");
+  te.GET_ATTRIBUTE(
+      interpolation, "",
+      "Coordinate system in which positions are linearly interpolated between "
+      "given positions. Possible values are cartesian and spherical.");
+  if(interpolation == "spherical")
     ntrack.set_interpt(TASCAR::track_t::spherical);
-  std::string importcsv(a->get_attribute_value("importcsv"));
-  if( !importcsv.empty() ){
+  else if(interpolation != "cartesian")
+    throw TASCAR::ErrMsg(
+        "Invalid interpolation type, must be either spherical or cartesian.");
+  std::string importcsv;
+  te.GET_ATTRIBUTE(
+      importcsv, "",
+      "Read position track from the {\\tt .csv}-file as comma-separated "
+      "values.  The file name can contain absolute or relative path.  Relative "
+      "paths are relative to the session's {\\tt .tsc}-file. Default: "
+      "position track is contained as space-separated text between opening and "
+      "closing \\refelem{position} tags.");
+  if(!importcsv.empty()) {
     // load track from CSV file:
     std::ifstream fh(importcsv.c_str());
-    if( fh.fail() || (!fh.good()) ){
-      throw TASCAR::ErrMsg("Unable to open track csv file \""+importcsv+"\".");
+    if(fh.fail() || (!fh.good())) {
+      throw TASCAR::ErrMsg("Unable to open track csv file \"" + importcsv +
+                           "\".");
     }
     std::string v_tm, v_x, v_y, v_z;
-    while( !fh.eof() ){
-      getline(fh,v_tm,',');
-      getline(fh,v_x,',');
-      getline(fh,v_y,',');
-      getline(fh,v_z);
-      if( v_tm.size() && v_x.size() && v_y.size() && v_z.size() ){
+    while(!fh.eof()) {
+      getline(fh, v_tm, ',');
+      getline(fh, v_x, ',');
+      getline(fh, v_y, ',');
+      getline(fh, v_z);
+      if(v_tm.size() && v_x.size() && v_y.size() && v_z.size()) {
         double tm = atof(v_tm.c_str());
         double x = atof(v_x.c_str());
         double y = atof(v_y.c_str());
         double z = atof(v_z.c_str());
-        ntrack[tm] = pos_t(x,y,z);
+        ntrack[tm] = pos_t(x, y, z);
       }
     }
     fh.close();
   }
-  std::stringstream ptxt(xml_get_text(a,""));
-  while( !ptxt.eof() ){
+  std::stringstream ptxt(xml_get_text(a, ""));
+  while(!ptxt.eof()) {
     double t(-1);
     pos_t p;
     ptxt >> t;
-    if( !ptxt.eof() ){
+    if(!ptxt.eof()) {
       ptxt >> p.x >> p.y >> p.z;
       ntrack[t] = p;
     }

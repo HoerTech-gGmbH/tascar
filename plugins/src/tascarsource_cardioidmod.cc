@@ -33,8 +33,8 @@ cardioidmod_t::cardioidmod_t(xmlpp::Element* xmlsrc)
     wpow(1),
     wmin(EPS)
 {
-  GET_ATTRIBUTE_(f6db);
-  GET_ATTRIBUTE_(fmin);
+  GET_ATTRIBUTE(f6db,"Hz","Frequency in Hz, at which a 6~dB attenuation at 90 degrees is achieved");
+  GET_ATTRIBUTE(fmin,"Hz","Low-end limit for stabilization");
 }
 
 bool cardioidmod_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t* sd)

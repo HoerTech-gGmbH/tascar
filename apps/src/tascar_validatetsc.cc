@@ -131,6 +131,48 @@ std::string tolatex(std::string s)
   return s;
 }
 
+struct elem_cfg_var_desc_t {
+  std::string elem;
+  std::map<std::string, cfg_var_desc_t> attr;
+  std::set<std::string> parents;
+  std::string type;
+};
+
+void make_common(std::map<std::string, elem_cfg_var_desc_t>& elems,
+                 const std::set<std::string>& list,
+                 const std::string& commonname)
+{
+  if(list.size()) {
+    // first get a list of common attributes:
+    std::set<std::string> common_attributes;
+    for(auto attr : elems[(*(list.begin()))].attr)
+      common_attributes.insert(attr.first);
+    for(auto elem : list) {
+      std::set<std::string> attrs;
+      for(auto attr : elems[elem].attr)
+        attrs.insert(attr.first);
+      std::set<std::string> rmattrs;
+      for(auto attr : common_attributes)
+        if(attrs.find(attr) == attrs.end())
+          rmattrs.insert(attr);
+      for(auto attr : rmattrs)
+        common_attributes.erase(attr);
+    }
+    // attribute map for common object:
+    std::map<std::string, cfg_var_desc_t> commonattr;
+    for(auto attr : common_attributes) {
+      // fill common attributes from first element in list:
+      commonattr[attr] = elems[(*(list.begin()))].attr[attr];
+      // remote common attributes from list:
+      for(auto elem : list) {
+        elems[elem].attr.erase(attr);
+        elems[elem].parents.insert(commonname);
+      }
+    }
+    elems[commonname] = {commonname, commonattr};
+  }
+}
+
 void App::show_licenses_t::show_doc(bool latex)
 {
   std::map<std::string, std::string> tdesc;
@@ -147,26 +189,50 @@ void App::show_licenses_t::show_doc(bool latex)
       "Cartesian coordinates, triplet of doubles separated by spaces";
   tdesc["string array"] = "space separated array of strings";
   std::set<std::string> types;
-  std::map<std::string, std::map<std::string, cfg_var_desc_t>> attribute_list;
+  std::map<std::string, elem_cfg_var_desc_t> attribute_list;
+  std::map<std::string, std::set<std::string>> categories;
   for(auto elem : TASCAR::attribute_list) {
-    for(auto attr : elem.second)
-      attribute_list[elem.first->get_name()][attr.first] = attr.second;
+    std::string category(elem.first->get_name());
+    std::string cattype(elem.first->get_attribute_value("type"));
+    attribute_list[category + cattype] = {category, elem.second, {}, cattype};
+    categories[category].insert(category + cattype);
   }
+  for(auto cat : categories) {
+    std::cout << "category " << cat.first << std::endl;
+    for(auto type : cat.second) {
+      std::cout << "  " << type << std::endl;
+    }
+  }
+  make_common(attribute_list, categories["receiver"], "receiver");
+  make_common(attribute_list, categories["sound"], "sound");
+  make_common(attribute_list, {"receiver", "source", "diffuse","facegroup","boundingbox"}, "objects");
+  make_common(attribute_list, {"receiver", "source", "diffuse","facegroup"}, "routes");
+  make_common(attribute_list, {"receiver", "sound", "diffuse"}, "ports");
   for(auto elem : attribute_list) {
-    for(auto attr : elem.second)
+    for(auto attr : elem.second.attr)
       types.insert(attr.second.type);
-    if(latex) {
+    if(latex && (!elem.second.attr.empty())) {
       std::string fname("tab" + elem.first + ".tex");
       std::cout << "Creating latex table for " + elem.first + " in file " +
                        fname + "."
                 << std::endl;
       std::ofstream fh(fname);
       fh << "\\begin{snugshade}\n";
+      fh << "\\label{attrtab:" << elem.first << "}\n";
       fh << "\\begin{tabularx}{\\textwidth}{lXl}\n\\multicolumn{3}{l}{"
-            "Attributes of element {\\bf " +
-                tolatex(elem.first) + "}}\\\\\n";
-      fh << "name & description (type, unit) & def.\\\\\\hline\n";
-      for(auto attr : elem.second) {
+        "Attributes of ";
+      if( elem.second.type.empty())
+        fh << "element {\\bf " << tolatex(elem.first) + "}";
+      else
+        fh << tolatex(elem.second.elem) << " element {\\bf " << tolatex(elem.second.type) + "}";
+      if(!elem.second.parents.empty()) {
+        fh << ", inheriting from";
+        for(auto parent : elem.second.parents)
+          fh << " \\hyperref[attrtab:" << parent << "]{{\\bf "  << tolatex(parent) << "}}";
+      }
+      fh << "}\\\\\n";
+      fh << "name & description (type, unit) & def.\\\\\n\\hline\n";
+      for(auto attr : elem.second.attr) {
         //  \indattr{name} & type & def & unit & Name of session (default:
         //  ``tascar'')
         fh << "\\hline\n";
@@ -179,13 +245,18 @@ void App::show_licenses_t::show_doc(bool latex)
       }
       fh << "\\hline\n\\end{tabularx}\n";
       fh << "\\end{snugshade}\n";
-    } else {
-      std::cout << elem.first << ":\n";
-      for(auto attr : elem.second) {
-        std::cout << "  " << attr.first << " (" << attr.second.type << ") ["
-                  << attr.second.defaultval << attr.second.unit << "] "
-                  << attr.second.info << std::endl;
-      }
+    }
+    std::cout << elem.first << " - " << elem.second.type;
+    if(!elem.second.parents.empty()) {
+      std::cout << ", inheriting from";
+      for(auto parent : elem.second.parents)
+        std::cout << " " << parent;
+    }
+    std::cout << ":\n";
+    for(auto attr : elem.second.attr) {
+      std::cout << "  " << attr.first << " (" << attr.second.type << ") ["
+                << attr.second.defaultval << attr.second.unit << "] "
+                << attr.second.info << std::endl;
     }
   }
   std::cout << std::endl << "types:" << std::endl;

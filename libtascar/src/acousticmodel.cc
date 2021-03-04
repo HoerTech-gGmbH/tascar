@@ -503,7 +503,7 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
     plugins(xmlsrc, name, "" )
 {
   GET_ATTRIBUTE(volumetric,"m","volume in which receiver does not apply distance based gain model");
-  GET_ATTRIBUTE(avgdist,"m","average distance assumed within volume");
+  GET_ATTRIBUTE(avgdist,"m","Average distance which is assumed inside receiver boxes, or 0 to use $(\\frac18 V)^{1/3}$");
   if( !is_reverb ){
     get_attribute_bool("point",render_point,"","render point sources");
     get_attribute_bool("diffuse",render_diffuse,"","render diffuse sources");
@@ -517,7 +517,7 @@ receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is
   GET_ATTRIBUTE(ismmin,"","minimal ISM order to render");
   GET_ATTRIBUTE(ismmax,"","maximal ISM order to render");
   GET_ATTRIBUTE_BITS(layers,"render layers");
-  GET_ATTRIBUTE(falloff,"m","fade-out ramp length at boundaries");
+  GET_ATTRIBUTE(falloff,"m","Length of von-Hann ramp at volume boundaries, or -1 for normal distance model");
   GET_ATTRIBUTE(delaycomp,"s","subtract this value from delay in delay lines");
   GET_ATTRIBUTE(layerfadelen,"s","duration of fades between layers");
   GET_ATTRIBUTE_BOOL(muteonstop,"mute when transport stopped to prevent playback of sounds from delaylines and reverb");

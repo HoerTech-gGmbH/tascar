@@ -525,34 +525,14 @@ Together, they form the outermost building blocks of \tascar{} scenes.
 
 \elem{session} is the root element of each scene definition file. It
 can contain one or more scenes (\refelem{scene}), port connections
-(\elem{connection}), external modules (\elem{modules}) and range
+(\elem{connect}), external modules (\elem{modules}) and range
 definitions (\elem{range}).
 
 \input{tabsession.tex}
 
-\begin{tscattributes}
-\indattr{name}               & Name of session (default: ``tascar'')                                                           \\
-\indattr{duration}           & Duration of session in seconds; default: 60                                                     \\
-\indattr{loop}               & Loop session (true|false); default: false                                                       \\
-\indattr{playonload}         & Start playback when loading the session (true|false); default: false                            \\
-\indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                                \\
-\indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'', ``C'' or ``bandpass'')                              \\
-\indattr{levelmeter\_min}    & Level meter minimum in dB (default: 30)                                                         \\
-\indattr{levelmeter\_range}  & Level range of level meters in dB (default: 70)                                                 \\
-\indattr{levelmeter\_mode}   & Level meter mode (rms, rmspeak, percentile)                                                     \\
-\indattr{srv\_addr}          & OSC server multicast address, empty uses unicast                                                \\
-\indattr{srv\_port}          & OSC server port number (default: 9877), or ``none'' to deactivate OSC server                    \\
-\indattr{srv\_proto}         & OSC server protocol (default: ``UDP'', options are ``UDP'' or ``TCP'')                          \\
-\indattr{warnsrate}          & Session sampling rate in Hz, print a warning if the system sampling rate doesn't match          \\
-\indattr{requiresrate}       & Session sampling rate in Hz, stop loading the session if the system sampling rate doesn't match \\
-\indattr{warnfragsize}       & Session fragment size, print a warning if the system fragment size doesn't match                \\
-\indattr{requirefragsize}    & Session fragment size, stop loading the session if the system fragment size doesn't match       \\
-\indattr{initcmd}            & Command to be executed before first connection to jack. Can be used to start jack server.       \\
-\indattr{initcmdsleep}       & Time to wait for initcmd to start up, in seconds.                                               \\
-\indattr{license}            & License form of session file                                                                    \\
-\indattr{attribution}        & Attribution of session file, e.g., author name                                                  \\
-\indattr{starturl}           & URL to display in news tab (default: http://news.tascar.org/)                                   \\
-\end{tscattributes}
+\input{tabconnect.tex}
+
+\input{tabrange.tex}
 
 The sampling rate and fragment size of a session is typically defined
 by the jack server or the interface of the offline rendering
@@ -645,16 +625,6 @@ Relative file names are relative to the directory containing the root
 
 \input{tabscene.tex}
 
-\begin{tscattributes}
-\indattr{name}        & Name of scene (default: ``scene'')                        \\
-\indattr{guiscale}    & Display scaling in meter; default: 200                    \\
-\indattr{guicenter}   & Display center (x, y, z) in meter; default: 0 0 0         \\
-\indattr{guitracking} & Track an object in the scene map (default: use guicenter) \\
-\indattr{ismorder}    & Order of image source model (default: 1)                  \\
-\indattr{c}           & Speed of sound in m/s; default: 340                       \\
-\indattr{active}      & Control activity of a whole scene (default: true)         \\
-\end{tscattributes}
-
 \begin{tscelements}
 \refelem{source}, \refelem{receiver},
 \refelem{diffuse}, \refelem{face}, \refelem{facegroup},
@@ -717,18 +687,25 @@ depicted in Figure \ref{fig:positions}.
 
 The following attributes are common to all scene objects:
 
-\begin{tscattributes}
-\indattr{name}               & Name of the object (default: "in" for {\tt source}, "out" for {\tt receiver})                                                         \\
-\indattr{mute}               & Mute the object; {\tt mute="true"} or {\tt mute="false"}; default: "false"                                                            \\
-\indattr{solo}               & Solo the object (i.\,e.\ mute all objects which don't have solo activated); {\tt solo="true"} or {\tt solo="false"}; default: "false" \\
-\indattr{color}              & Color of the graphical representation of the object (hex triplet)                                                                     \\
-\indattr{start}              & Render activity start time in seconds; default: 0                                                                                     \\
-\indattr{end}                & Render activity start time in seconds; default: 0                                                                                     \\
-\indattr{localpos}           & Local position in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
-\indattr{sampledorientation} & Sample orientation along trajectory with this distance (default: 0)                                                                   \\
-\indattr{dloaction}           & Delta location in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
-\indattr{dorientation}           & Delta orientation in degrees (ZYX Euler transformation); default: ``0 0 0''                                                                  \\
-\end{tscattributes}
+\input{tabobjects.tex}
+
+\input{tabports.tex}
+
+\input{tabroutes.tex}
+
+
+%\begin{tscattributes}
+%\indattr{name}               & Name of the object (default: "in" for {\tt source}, "out" for {\tt receiver})                                                         \\
+%\indattr{mute}               & Mute the object; {\tt mute="true"} or {\tt mute="false"}; default: "false"                                                            \\
+%\indattr{solo}               & Solo the object (i.\,e.\ mute all objects which don't have solo activated); {\tt solo="true"} or {\tt solo="false"}; default: "false" \\
+%\indattr{color}              & Color of the graphical representation of the object (hex triplet)                                                                     \\
+%\indattr{start}              & Render activity start time in seconds; default: 0                                                                                     \\
+%\indattr{end}                & Render activity start time in seconds; default: 0                                                                                     \\
+%\indattr{localpos}           & Local position in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
+%\indattr{sampledorientation} & Sample orientation along trajectory with this distance (default: 0)                                                                   \\
+%\indattr{dloaction}           & Delta location in meters (Cartesian coordinates); default: ``0 0 0''                                                                  \\
+%\indattr{dorientation}           & Delta orientation in degrees (ZYX Euler transformation); default: ``0 0 0''                                                                  \\
+%\end{tscattributes}
 
 The delta transformation values can be overwritten by actor modules or
 the OSC interface. The \attr{dorientation} attribute is first rotation
@@ -813,29 +790,7 @@ modulo loop time (10 seconds), i.\,e., the object is moving for 6
 seconds, then resting at (10,0,0) for 4 seconds, then again moving for
 6 seconds, starting at (0,0,0).
 
-\begin{tscattributes}
-  \indattr{interpolation}
-  &
-  Coordinate system in which positions are linearly interpolated
-  between given positions. Possible values are {\tt cartesian} and
-  {\tt spherical}. Default: {\tt cartesian}.
-  \\
-  \indattr{importcsv}
-  &
-  Read position track from the \verb!.csv!-file as
-  comma-separated values.  The file name can contain absolute or
-  relative path.  Relative paths are relative to the session's
-  \verb!.tsc!-file. Default: position track is contained as
-  space-separated text between opening and closing \refelem{position}
-  tags.
-  \\
-  \indattr{loop}
-  &
-  The value, if greater than {\tt 0}, specifies the time in seconds
-  when this position track is repeated from {\tt 0}. Default: {\tt 0},
-  no repetition.
-  \\
-\end{tscattributes}
+\input{tabposition.tex}
 
 \subsubsection{The {\tt <orientation>...</orientation>} element}\label{sec:orientation}\index{orientation}
 
@@ -928,8 +883,6 @@ all scene objects, refer to section \ref{common attributes}
 \nameref{common attributes} on page \pageref{common attributes} for
 details.
 
-\input{tabsource.tex}
-
 \underline{Recognized sub-elements:}
 
 \refelem{position}, \refelem{orientation}, \refelem{creator}, \refelem{sound}
@@ -951,26 +904,26 @@ object (taken from Example \ref{tsc:example_basic}):
 
 \input{tabsound.tex}
 
-\begin{tscattributes}
-\indattr{type}                          & Sound source radiation type (default: ``omni'')                                            \\
-\indattr{gainmodel}                     & Gain model, either ``1/r'' or ``1'' (default: ``1/r'')                                     \\
-\indattr{size}                          & Physical size for source width simulation\footnote{Currently only used by receiver hoa2d.} \\
-\indattr{sincorder}                     & Sinc interpolation order, 0 = nearest neighbor; default: 0                                 \\
-\indattr{caliblevel}                    & Calibration level in dB; default: 93.9794                                                  \\
-\indattr{gain}                          & Gain in dB; default: 0                                                                     \\
-\indattr{x},\indattr{y}, \indattr{z}    & Local Cartesian coordinates in meter; default: 0                                           \\
-\indattr{az},\indattr{el}, \indattr{r}  & Local spherical coordinates in degrees; default: use Cartesian                             \\
-\indattr{rz},\indattr{ry}, \indattr{rx} & Local vertex Euler orientation in degrees; default: 0                                      \\
-\indattr{d}                             & Chain distance (vertex distance along trajectory); default: 0                              \\
-\indattr{maxdist}                       & Maximum delay line length in meter; default: 3700                                          \\
-\indattr{minlevel}                      & Minimum SPL for source to be rendered (default: -inf)                                      \\
-\indattr{ismmin}                        & Minimal ISM order to be rendered (0)                                                       \\
-\indattr{ismmax}                        & Maximal ISM order to be rendered ($2^{32}$)                                                \\
-\indattr{layers}                        & List of active layers, or empty for all layers (default)                                   \\
-\indattr{airabsorption}                 & Render air absorption (default: true)                                                      \\
-\indattr{name}                          & Name (suffix)                                                                              \\
-\indattr{connect}                       & Jack port connection                                                                       \\
-\end{tscattributes}
+%\begin{tscattributes}
+%\indattr{type}                          & Sound source radiation type (default: ``omni'')                                            \\
+%\indattr{gainmodel}                     & Gain model, either ``1/r'' or ``1'' (default: ``1/r'')                                     \\
+%\indattr{size}                          & Physical size for source width simulation\footnote{Currently only used by receiver hoa2d.} \\
+%\indattr{sincorder}                     & Sinc interpolation order, 0 = nearest neighbor; default: 0                                 \\
+%\indattr{caliblevel}                    & Calibration level in dB; default: 93.9794                                                  \\
+%\indattr{gain}                          & Gain in dB; default: 0                                                                     \\
+%\indattr{x},\indattr{y}, \indattr{z}    & Local Cartesian coordinates in meter; default: 0                                           \\
+%\indattr{az},\indattr{el}, \indattr{r}  & Local spherical coordinates in degrees; default: use Cartesian                             \\
+%\indattr{rz},\indattr{ry}, \indattr{rx} & Local vertex Euler orientation in degrees; default: 0                                      \\
+%\indattr{d}                             & Chain distance (vertex distance along trajectory); default: 0                              \\
+%\indattr{maxdist}                       & Maximum delay line length in meter; default: 3700                                          \\
+%\indattr{minlevel}                      & Minimum SPL for source to be rendered (default: -inf)                                      \\
+%\indattr{ismmin}                        & Minimal ISM order to be rendered (0)                                                       \\
+%\indattr{ismmax}                        & Maximal ISM order to be rendered ($2^{32}$)                                                \\
+%\indattr{layers}                        & List of active layers, or empty for all layers (default)                                   \\
+%\indattr{airabsorption}                 & Render air absorption (default: true)                                                      \\
+%\indattr{name}                          & Name (suffix)                                                                              \\
+%\indattr{connect}                       & Jack port connection                                                                       \\
+%\end{tscattributes}
 
 Another sub-element used in the example is \elem{sound}. With this
 sub-element we specify the sound vertices of the source object, i.e.,
@@ -1047,35 +1000,21 @@ sound source radiates independently of the direction.
 \subsubsection{Source directivity ``cardioidmod''}
 
 The ``cardioidmod'' source directivity has these attributes:
-\begin{tscattributes}
-\indattr{f6db} & Frequency in Hz, at which a 6~dB attenuation at 90 degrees is achieved (default: 1000) \\
-\indattr{fmin} & Low-end limit for stabilization (default: 60)                                          \\
-\end{tscattributes}
+\input{tabsoundcardioidmod.tex}
 At low frequencies, the source radiates omni-directionally. At higher
 frequencies, a cardioid-like radiation pattern is achieved.
 
 \subsubsection{Source directivity ``door''}
 
 The ``door'' source directivity has these attributes:
-\begin{tscattributes}
-\indattr{width} & Door width in meters (default: 1)\\
-\indattr{height} & Door height in meters (default: 2)\\
-\indattr{falloff} & Distance at which the gain attenuation starts (default: 1)\\
-\indattr{distance} & Distance by which the source is shifted behind the door (default: 1)\\
-\indattr{wndsqrt} & Flag to control von-Hann fall-off (false, default) or square-root of von-Hann fall-off (true)\\
-\end{tscattributes}
+\input{tabsounddoor.tex}
 Door sources shift the perceived source position behind a ``door''
 shape, limited by the edges. They are basically designed for
 interactive transitions between simulated rooms.
 
 \subsection{The {\tt <diffuse .../>} element}\label{sec:diffuse}\index{diffuse}\index{diffuse}
 
-\begin{tscattributes}
-\indattr{connect} & Jack connection of ports.                                          \\
-\indattr{gain}    & Output gain in dB                                                  \\
-\indattr{size}    & Size of box in which the diffuse sound field is audible; default: 1 1 1 \\
-\indattr{falloff} & Length of von-Hann ramp outside the box in m; default: 1            \\
-\end{tscattributes}
+\input{tabdiffuse.tex}
 
 \begin{tscelements}
 \refelem{position}, \elem{boundingbox},\refelem{orientation}, \refelem{creator}, \elem{plugins}
@@ -1142,31 +1081,33 @@ We can route the output signals to playback system, e.g., loudspeakers
 or headphones.
 
 \input{tabreceiver.tex}
-
-\begin{tscattributes}
-\indattr{connect}      & Connection to jack port                                                                  \\
-\indattr{gain}         & Gain of jack port in dB; default: 0                                                      \\
-\indattr{type}         & Receiver type (see below for a list of receiver types)                                   \\
-\indattr{volumetric}   & Size of box for volumetric rendering (x,y,z in m); default: 0 0 0                        \\
-\indattr{avgdist}      & Average distance which is assumed inside receiver boxes, or 0 to use $(\frac18 V)^{1/3}$ \\
-\indattr{point}        & Render point sources (true|false); default: true                                         \\
-\indattr{image}        & Render image sources (true|false); default: true                                         \\
-\indattr{ismmin}       & Minimal ISM order to be rendered (0)                                                     \\
-\indattr{ismmax}       & Maximal ISM order to be rendered ($2^{32}$)                                              \\
-\indattr{layers}       & List of active layers, or empty for all layers (default)                                 \\
-\indattr{layerfadelen} & Fade length after layer activation or deactivation                                       \\
-\indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                                  \\
-\indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                                   \\
-\indattr{falloff}      & Length of von-Hann ramp in m, or -1 for normal distance model; default: -1               \\
-\indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                                \\
-\indattr{delaycomp}    & Subtract this value from delay in delay line, in seconds (0)                             \\
-\indattr{muteonstop}   & Do not render any sound when transport is stopped (default: false)                       \\
-\end{tscattributes}
+%
+%\begin{tscattributes}
+%\indattr{connect}      & Connection to jack port                                                                  \\
+%\indattr{gain}         & Gain of jack port in dB; default: 0                                                      \\
+%\indattr{type}         & Receiver type (see below for a list of receiver types)                                   \\
+%\indattr{volumetric}   & Size of box for volumetric rendering (x,y,z in m); default: 0 0 0                        \\
+%\indattr{avgdist}      & Average distance which is assumed inside receiver boxes, or 0 to use $(\frac18 V)^{1/3}$ \\
+%\indattr{point}        & Render point sources (true|false); default: true                                         \\
+%\indattr{image}        & Render image sources (true|false); default: true                                         \\
+%\indattr{ismmin}       & Minimal ISM order to be rendered (0)                                                     \\
+%\indattr{ismmax}       & Maximal ISM order to be rendered ($2^{32}$)                                              \\
+%\indattr{layers}       & List of active layers, or empty for all layers (default)                                 \\
+%\indattr{layerfadelen} & Fade length after layer activation or deactivation                                       \\
+%\indattr{diffuse}      & Render diffuse sound fields (true|false); default: true                                  \\
+%\indattr{diffusegain}  & Gain applied to diffuse sound fields in dB; default: 0                                   \\
+%\indattr{falloff}      & Length of von-Hann ramp in m, or -1 for normal distance model; default: -1               \\
+%\indattr{caliblevel}   & Calibration level in dB; default: 93.9794                                                \\
+%\indattr{delaycomp}    & Subtract this value from delay in delay line, in seconds (0)                             \\
+%\indattr{muteonstop}   & Do not render any sound when transport is stopped (default: false)                       \\
+%\end{tscattributes}
 
 \begin{tscelements}
 \refelem{speaker}, \elem{boundingbox}, \refelem{position},
 \refelem{orientation}, \refelem{creator}
 \end{tscelements}
+
+\input{tabboundingbox.tex}
 
 A receiver encodes the signals of primary sources, image sources and
 diffuse sound fields into a receiver type specific output format. Each
@@ -1400,6 +1341,8 @@ reproduced.
 
 The \elem{face} element defines a single reflecting surface.
 
+\input{tabface.tex}
+
 \begin{tscattributes}
 \indattr{width}, \indattr{height}         & Dimension of reflector in meters; default: 1                                       \\
 \indattr{reflectivity}, \indattr{damping} & First order low pass filter coefficients                                           \\
@@ -1425,6 +1368,8 @@ In \verb!example_reflectors.tsc! both cases are shown:
 
 The \elem{facegroup} element creates a group of polygon reflectors,
 with common reflection properties.
+
+\input{tabfacegroup.tex}
 
 \begin{tscattributes}
 \indattr{reflectivity}, \indattr{damping} & First order low pass filter coefficients                                           \\

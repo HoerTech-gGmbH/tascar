@@ -28,11 +28,11 @@ door_t::door_t(xmlpp::Element* xmlsrc)
     distance(1),
     wndsqrt(false)
 {
-  GET_ATTRIBUTE_(width);
-  GET_ATTRIBUTE_(height);
-  GET_ATTRIBUTE_(falloff);
-  GET_ATTRIBUTE_(distance);
-  GET_ATTRIBUTE_BOOL_(wndsqrt);
+  GET_ATTRIBUTE(width,"m","Door width");
+  GET_ATTRIBUTE(height,"m","Door height");
+  GET_ATTRIBUTE(falloff,"m","Distance at which the gain attenuation starts");
+  GET_ATTRIBUTE(distance,"m","Distance by which the source is shifted behind the door");
+  GET_ATTRIBUTE_BOOL(wndsqrt,"Flag to control von-Hann fall-off (false, default) or square-root of von-Hann fall-off");
   nonrt_set_rect( width, height );
   diffractor_t::operator+=( TASCAR::pos_t(0,-0.5*width,-0.5*height));
 }

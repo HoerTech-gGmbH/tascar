@@ -783,17 +783,17 @@ uint32_t TASCAR::session_t::get_total_diffuse_sound_fields() const
 TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
     : xml_element_t(xmlsrc), name(""), start(0), end(0)
 {
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(start);
-  GET_ATTRIBUTE_(end);
+  GET_ATTRIBUTE(name,"","range name");
+  GET_ATTRIBUTE(start,"s","start time");
+  GET_ATTRIBUTE(end,"s","end time");
 }
 
 TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
     : xml_element_t(xmlsrc), failonerror(false)
 {
-  GET_ATTRIBUTE_(src);
-  GET_ATTRIBUTE_(dest);
-  GET_ATTRIBUTE_BOOL_(failonerror);
+  GET_ATTRIBUTE(src,"","jack source port");
+  GET_ATTRIBUTE(dest,"","jack destination port");
+  GET_ATTRIBUTE_BOOL(failonerror,"create an error if connection failed, alternatively just warn");
 }
 
 TASCAR::module_base_t::module_base_t(const TASCAR::module_cfg_t& cfg)
