@@ -76,6 +76,11 @@ namespace TASCAR {
     {
       return NULL;
     };
+    virtual receivermod_base_t::data_t* create_diffuse_data(double srate,
+                                                            uint32_t fragsize)
+    {
+      return create_data(srate, fragsize);
+    };
     virtual void add_variables(TASCAR::osc_server_t* srv){};
 
   protected:
@@ -118,6 +123,8 @@ namespace TASCAR {
     void release();
     virtual receivermod_base_t::data_t* create_data(double srate,
                                                     uint32_t fragsize);
+    virtual receivermod_base_t::data_t* create_diffuse_data(double srate,
+                                                            uint32_t fragsize);
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
 

@@ -85,6 +85,7 @@ public:
   double maxgain; // gain applied at 90 degr elev (0 dB gain at startangle_notch
                   // and linear increase)
   double Q_notch; // inverse Q factor of the parametric equalizer
+  bool diffuse_hrtf; // apply hrtf model also to diffuse rendering
 };
 
 hrtf_param_t::hrtf_param_t(xmlpp::Element* xmlsrc)
@@ -95,7 +96,7 @@ hrtf_param_t::hrtf_param_t(xmlpp::Element* xmlsrc)
       omega_front(11200), alphamin_front(0.39), startangle_up(135 * DEG2RAD),
       //    omega_up(c/radius/2),
       alphamin_up(0.1), startangle_notch(102 * DEG2RAD), freq_start(1300),
-      freq_end(650), maxgain(-5.4), Q_notch(2.3)
+      freq_end(650), maxgain(-5.4), Q_notch(2.3), diffuse_hrtf(false)
 {
   GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of ITD delay line");
   GET_ATTRIBUTE(c, "m/s", "Speed of sound");
@@ -140,6 +141,8 @@ hrtf_param_t::hrtf_param_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE(Q_notch, "", "quality factor of the notch filter");
   dir_l.rot_z(angle);
   dir_r.rot_z(-angle);
+  GET_ATTRIBUTE_BOOL(diffuse_hrtf,
+                     "apply hrtf model also to diffuse rendering");
 }
 
 class hrtf_t : public TASCAR::receivermod_base_t {
@@ -156,6 +159,7 @@ public:
       out_l = bqelev_l.filter(bqazim_l.filter(out_l));
       out_r = bqelev_r.filter(bqazim_r.filter(out_r));
     }
+    void set_param(const TASCAR::pos_t& prel_norm);
     double fs;
     double dt;
     hrtf_param_t& par;
@@ -181,17 +185,24 @@ public:
     double inv_a0_u;
     double alpha_u;
   };
+  class diffuse_data_t : public TASCAR::receivermod_base_t::data_t {
+  public:
+    diffuse_data_t(double srate, uint32_t chunksize, hrtf_param_t& par_plugin);
+    hrtf_t::data_t xp, xm, yp, ym, zp, zm;
+  };
   hrtf_t(xmlpp::Element* xmlsrc);
   ~hrtf_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width,
                        const TASCAR::wave_t& chunk,
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
-  void tau_woodworth_schlosberg(const double theta, double& tau);
+  // void tau_woodworth_schlosberg(const double theta, double& tau);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
                                std::vector<TASCAR::wave_t>& output,
                                receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_diffuse_data(double srate,
+                                                  uint32_t fragsize);
   virtual void configure();
   virtual void release();
   virtual void postproc(std::vector<TASCAR::wave_t>& output);
@@ -204,6 +215,16 @@ private:
   std::vector<TASCAR::overlap_save_t*> decorrflt;
   std::vector<TASCAR::wave_t*> diffuse_render_buffer;
 };
+
+// calculate time delay according to woodworth and schlosberg
+void tau_woodworth_schlosberg(const double theta, const double radius,
+                              double& tau)
+{
+  if(theta < 0.5 * M_PI)
+    tau = -radius * (cos(theta) - 1.0);
+  else
+    tau = radius * (theta - 0.5 * M_PI + 1.0);
+}
 
 hrtf_t::~hrtf_t() {}
 
@@ -313,6 +334,20 @@ void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
   }
 }
 
+hrtf_t::diffuse_data_t::diffuse_data_t(double srate, uint32_t chunksize,
+                                       hrtf_param_t& par_plugin)
+    : xp(srate, chunksize, par_plugin), xm(srate, chunksize, par_plugin),
+      yp(srate, chunksize, par_plugin), ym(srate, chunksize, par_plugin),
+      zp(srate, chunksize, par_plugin), zm(srate, chunksize, par_plugin)
+{
+  xp.set_param(TASCAR::pos_t(1, 0, 0));
+  xm.set_param(TASCAR::pos_t(-1, 0, 0));
+  yp.set_param(TASCAR::pos_t(0, 1, 0));
+  ym.set_param(TASCAR::pos_t(0, -1, 0));
+  zp.set_param(TASCAR::pos_t(0, 0, 1));
+  zm.set_param(TASCAR::pos_t(0, 0, -1));
+}
+
 void hrtf_t::configure()
 {
   TASCAR::receivermod_base_t::configure();
@@ -387,6 +422,7 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_double("/hrtf/freq_end", &par.freq_end);
   srv->add_double("/hrtf/maxgain", &par.maxgain);
   srv->add_double("/hrtf/Q_notch", &par.Q_notch);
+  srv->add_bool("/hrtf/diffuse_hrtf", &par.diffuse_hrtf);
 }
 
 hrtf_t::hrtf_t(xmlpp::Element* xmlsrc)
@@ -397,14 +433,8 @@ hrtf_t::hrtf_t(xmlpp::Element* xmlsrc)
   GET_ATTRIBUTE_BOOL(decorr, "Flag to use decorrelation of diffuse sounds");
 }
 
-void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
-                             const TASCAR::wave_t& chunk,
-                             std::vector<TASCAR::wave_t>& output,
-                             receivermod_base_t::data_t* sd)
+void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
 {
-  data_t* d((data_t*)sd);
-  TASCAR::pos_t prel_norm(prel.normal());
-
   // angle with respect to front (range [0, pi])
   double theta_front = acos(dot_prod(prel_norm, par.dir_front));
   // angle with respect to left ear (range [0, pi])
@@ -418,13 +448,23 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
 
   // time delay in meter (panning parameters: target_tau is reached at end of
   // the block)
-  tau_woodworth_schlosberg(theta_l, d->target_tau_l);
-  tau_woodworth_schlosberg(theta_r, d->target_tau_r);
+  tau_woodworth_schlosberg(theta_l, par.radius, target_tau_l);
+  tau_woodworth_schlosberg(theta_r, par.radius, target_tau_r);
+  // calculate delta tau for each panning step
+
+  filterdesign(theta_l, theta_r, theta_front, -(prel_norm.elev() - 0.5 * M_PI));
+}
+
+void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+                             const TASCAR::wave_t& chunk,
+                             std::vector<TASCAR::wave_t>& output,
+                             receivermod_base_t::data_t* sd)
+{
+  data_t* d((data_t*)sd);
+  d->set_param(prel.normal());
   // calculate delta tau for each panning step
   double dtau_l((d->target_tau_l - d->tau_l) * d->dt);
   double dtau_r((d->target_tau_r - d->tau_r) * d->dt);
-
-  d->filterdesign(theta_l, theta_r, theta_front, -(prel.elev() - 0.5 * M_PI));
 
   // apply panning:
   uint32_t N(chunk.size());
@@ -441,33 +481,54 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
   d->tau_l = d->target_tau_l;
 }
 
-// calculate time delay according to woodworth and schlosberg
-void hrtf_t::tau_woodworth_schlosberg(const double theta, double& tau)
-{
-  if(theta < 0.5 * M_PI)
-    tau = -par.radius * (cos(theta) - 1.0);
-  else
-    tau = par.radius * (theta - 0.5 * M_PI + 1.0);
-}
-
 void hrtf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
                                      std::vector<TASCAR::wave_t>& output,
-                                     receivermod_base_t::data_t*)
+                                     receivermod_base_t::data_t* sd)
 {
-  float* o_l(diffuse_render_buffer[0]->d);
-  float* o_r(diffuse_render_buffer[1]->d);
-  const float* i_w(chunk.w().d);
-  const float* i_x(chunk.x().d);
-  const float* i_y(chunk.y().d);
-  // decode diffuse sound field in microphone directions:
-  for(uint32_t k = 0; k < chunk.size(); ++k) {
-    *o_l += *i_w + par.dir_l.x * (*i_x) + par.dir_l.y * (*i_y);
-    *o_r += *i_w + par.dir_r.x * (*i_x) + par.dir_r.y * (*i_y);
-    ++o_l;
-    ++o_r;
-    ++i_w;
-    ++i_x;
-    ++i_y;
+  hrtf_t::diffuse_data_t* d((hrtf_t::diffuse_data_t*)sd);
+  if(par.diffuse_hrtf) {
+    float* o_l(diffuse_render_buffer[0]->d);
+    float* o_r(diffuse_render_buffer[1]->d);
+    const float* i_w(chunk.w().d);
+    const float* i_x(chunk.x().d);
+    const float* i_y(chunk.y().d);
+    const float* i_z(chunk.z().d);
+    // decode diffuse sound field in microphone directions:
+    for(uint32_t k = 0; k < chunk.size(); ++k) {
+      // FOA decoding into main axes:
+      d->xp.filter(0.70711f * *i_w + *i_x);
+      d->xm.filter(0.70711f * *i_w - *i_x);
+      d->yp.filter(0.70711f * *i_w + *i_y);
+      d->ym.filter(0.70711f * *i_w - *i_y);
+      d->zp.filter(0.70711f * *i_w + *i_z);
+      d->zm.filter(0.70711f * *i_w - *i_z);
+      *o_l += 0.25f * (d->xp.out_l + d->xm.out_l + d->yp.out_l + d->ym.out_l +
+                       d->zp.out_l + d->zm.out_l);
+      *o_r += 0.25f * (d->xp.out_r + d->xm.out_r + d->yp.out_r + d->ym.out_r +
+                       d->zp.out_r + d->zm.out_r);
+      ++o_l;
+      ++o_r;
+      ++i_w;
+      ++i_x;
+      ++i_y;
+      ++i_z;
+    }
+  } else {
+    float* o_l(diffuse_render_buffer[0]->d);
+    float* o_r(diffuse_render_buffer[1]->d);
+    const float* i_w(chunk.w().d);
+    const float* i_x(chunk.x().d);
+    const float* i_y(chunk.y().d);
+    // decode diffuse sound field in microphone directions:
+    for(uint32_t k = 0; k < chunk.size(); ++k) {
+      *o_l += *i_w + par.dir_l.x * (*i_x) + par.dir_l.y * (*i_y);
+      *o_r += *i_w + par.dir_r.x * (*i_x) + par.dir_r.y * (*i_y);
+      ++o_l;
+      ++o_r;
+      ++i_w;
+      ++i_x;
+      ++i_y;
+    }
   }
 }
 
@@ -475,6 +536,12 @@ TASCAR::receivermod_base_t::data_t* hrtf_t::create_data(double srate,
                                                         uint32_t fragsize)
 {
   return new data_t(srate, fragsize, par);
+}
+
+TASCAR::receivermod_base_t::data_t*
+hrtf_t::create_diffuse_data(double srate, uint32_t fragsize)
+{
+  return new diffuse_data_t(srate, fragsize, par);
 }
 
 REGISTER_RECEIVERMOD(hrtf_t);

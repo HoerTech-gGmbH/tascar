@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- 
+hrtf frontal direction
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="2" airabsorption="false"/>
+    </source>
+    <receiver type="hrtf"/>
+    <reverb volumetric="5 6 7"/>
+  </scene>
+</session>

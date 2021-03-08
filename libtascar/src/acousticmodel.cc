@@ -410,7 +410,7 @@ receiver_graph_t::~receiver_graph_t()
 diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver)
   : src_(src),
     receiver_(receiver),
-    receiver_data(receiver_->create_data(fs,chunksize)),
+    receiver_data(receiver_->create_diffuse_data(fs,chunksize)),
     audio(src->audio.size()),
     chunksize(audio.size()),
     dt(1.0/std::max(1u,chunksize)),
@@ -530,7 +530,7 @@ void receiver_t::configure()
   receivermod_t::configure( );
   update();
   scatterbuffer = new amb1wave_t(n_fragment);
-  scatter_handle = create_data( f_sample, n_fragment );
+  scatter_handle = create_diffuse_data( f_sample, n_fragment );
   for(uint32_t k=0;k<n_channels;k++){
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));

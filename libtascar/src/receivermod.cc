@@ -89,6 +89,12 @@ TASCAR::receivermod_t::create_data(double srate, uint32_t fragsize)
   return libdata->create_data(srate, fragsize);
 }
 
+TASCAR::receivermod_base_t::data_t*
+TASCAR::receivermod_t::create_diffuse_data(double srate, uint32_t fragsize)
+{
+  return libdata->create_diffuse_data(srate, fragsize);
+}
+
 TASCAR::receivermod_t::~receivermod_t()
 {
   delete libdata;
