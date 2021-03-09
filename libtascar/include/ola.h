@@ -119,7 +119,7 @@ namespace TASCAR {
 
        \param h Filter coefficients
      */
-    void set_irs(const TASCAR::wave_t& h);
+    void set_irs(const TASCAR::wave_t& h, uint32_t offset = 0);
     /**
        \brief Filter one chunk of audio data.
        \param inchunk Input audio signal

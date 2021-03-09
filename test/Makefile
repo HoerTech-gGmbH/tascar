@@ -24,9 +24,11 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
 	test_ir_hrtf_270deg test_ir_hrtf_315deg test_ir_hrtf_el90deg	\
 	test_ir_hrtf_el-90deg test_ir_hrtf_el45deg			\
-	test_ir_hrtf_el-45deg test_ir_delay test_ir_delay2 test_ir_delay3 test_snd_reverb		\
-	test_wav_multichannel test_snd_zeros test_ir_sub		\
-	test_ir_sub_hoa2d test_ir_sub_nsp
+	test_ir_hrtf_el-45deg test_ir_hrtf_diffuse1			\
+	test_ir_hrtf_diffuse2 test_ir_delay test_ir_delay2		\
+	test_ir_delay3 test_snd_reverb test_wav_multichannel		\
+	test_snd_zeros test_ir_sub test_ir_sub_hoa2d test_ir_sub_nsp	\
+	test_ir_partconvrev test_ir_partconvrev_offset
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
@@ -253,6 +255,7 @@ test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_
 test_ir_simplefdn: IRLEN=44100
 test_ir_reverb: IRLEN=44100
 test_ir_partconvrev: IRLEN=44100
+test_ir_partconvrev_offset: IRLEN=44100
 test_ir_temp: IRLEN=441000
 test_ir_volumetric: TOL=1e-5
 test_snd_vbap3d_speakermatch: TOL=1e-5

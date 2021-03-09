@@ -161,15 +161,16 @@ TASCAR::partitioned_conv_t::~partitioned_conv_t()
   }
 }
 
-void TASCAR::partitioned_conv_t::set_irs(const TASCAR::wave_t& h)
+void TASCAR::partitioned_conv_t::set_irs(const TASCAR::wave_t& h,
+                                         uint32_t offset)
 {
   TASCAR::wave_t ichunk(fragsize);
-  for( uint32_t p=0;p<partitions;++p){
+  for(uint32_t p = 0; p < partitions; ++p) {
     ichunk.clear();
-    for(uint32_t k=0;k<fragsize;++k)
-      if( p*fragsize+k < h.n )
-        ichunk[k] = h[p*fragsize+k];
-    partition[p]->set_irs(ichunk,false);
+    for(uint32_t k = 0; k < fragsize; ++k)
+      if(p * fragsize + k + offset < h.n)
+        ichunk[k] = h[p * fragsize + k + offset];
+    partition[p]->set_irs(ichunk, false);
   }
 }
 
