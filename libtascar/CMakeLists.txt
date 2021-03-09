@@ -15,7 +15,7 @@ configure_file(
         "${PROJECT_SOURCE_DIR}/tascarver.h.in"
         "${PROJECT_SOURCE_DIR}/include/tascarver.h"
 )
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
@@ -131,7 +131,7 @@ add_compile_definitions(CMAKE)
 
 # TARGET
 # libtascar
-add_library(tascar ${LIB_SOURCES})
+add_library(tascar STATIC ${LIB_SOURCES})
 target_include_directories(tascar
         PRIVATE
         ${PROJECT_SOURCE_DIR}/include
