@@ -670,14 +670,34 @@ void track_t::read_xml(xmlpp::Element* a)
     }
     fh.close();
   }
-  std::stringstream ptxt(xml_get_text(a, ""));
-  while(!ptxt.eof()) {
-    double t(-1);
-    pos_t p;
-    ptxt >> t;
-    if(!ptxt.eof()) {
-      ptxt >> p.x >> p.y >> p.z;
-      ntrack[t] = p;
+  std::stringstream ptxt1(xml_get_text(a, ""));
+  while(!ptxt1.eof()) {
+    std::string meshline;
+    getline(ptxt1, meshline, '\n');
+    if(!meshline.empty()) {
+      double t(-1);
+      pos_t p;
+      bool notgood(false);
+      std::stringstream ptxt(meshline);
+      while(ptxt.good()) {
+        ptxt >> t;
+        if(ptxt.good()) {
+          notgood = true;
+          ptxt >> p.x;
+          if(ptxt.good()) {
+            ptxt >> p.y;
+            if(ptxt.good()) {
+              ptxt >> p.z;
+              ntrack[t] = p;
+              notgood = false;
+            }
+          }
+        }
+      }
+      if(notgood)
+        TASCAR::add_warning("Invalid characters or unexpected end of line in "
+                            "track definition: " +
+                            meshline);
     }
   }
   *this = ntrack;
@@ -766,24 +786,25 @@ void euler_track_t::write_xml( xmlpp::Element* a)
   a->add_child_text(print(" "));
 }
 
-void euler_track_t::read_xml( xmlpp::Element* a )
+void euler_track_t::read_xml(xmlpp::Element* a)
 {
-  get_attribute_value(a,"loop",loop);
+  get_attribute_value(a, "loop", loop);
   euler_track_t ntrack;
   ntrack.loop = loop;
   std::string importcsv(a->get_attribute_value("importcsv"));
-  if( !importcsv.empty() ){
+  if(!importcsv.empty()) {
     // load track from CSV file:
     std::ifstream fh(importcsv.c_str());
-    if( fh.fail() || (!fh.good()) )
-      throw TASCAR::ErrMsg("Unable to open Euler track csv file \""+importcsv+"\".");
+    if(fh.fail() || (!fh.good()))
+      throw TASCAR::ErrMsg("Unable to open Euler track csv file \"" +
+                           importcsv + "\".");
     std::string v_tm, v_x, v_y, v_z;
-    while( !fh.eof() ){
-      getline(fh,v_tm,',');
-      getline(fh,v_z,',');
-      getline(fh,v_y,',');
-      getline(fh,v_x);
-      if( v_tm.size() && v_x.size() && v_y.size() && v_z.size() ){
+    while(!fh.eof()) {
+      getline(fh, v_tm, ',');
+      getline(fh, v_z, ',');
+      getline(fh, v_y, ',');
+      getline(fh, v_x);
+      if(v_tm.size() && v_x.size() && v_y.size() && v_z.size()) {
         double tm = atof(v_tm.c_str());
         zyx_euler_t p;
         p.x = atof(v_x.c_str());
@@ -795,15 +816,35 @@ void euler_track_t::read_xml( xmlpp::Element* a )
     }
     fh.close();
   }
-  std::stringstream ptxt(xml_get_text(a,""));
-  while( !ptxt.eof() ){
-    double t(-1);
-    zyx_euler_t p;
-    ptxt >> t;
-    if( !ptxt.eof() ){
-      ptxt >> p.z >> p.y >> p.x;
-      p *= DEG2RAD;
-      ntrack[t] = p;
+  std::stringstream ptxt1(xml_get_text(a, ""));
+  while(!ptxt1.eof()) {
+    std::string meshline;
+    getline(ptxt1, meshline, '\n');
+    if(!meshline.empty()) {
+      double t(-1);
+      zyx_euler_t p;
+      bool notgood(false);
+      std::stringstream ptxt(meshline);
+      while(ptxt.good()) {
+        ptxt >> t;
+        if(ptxt.good()) {
+          notgood = true;
+          ptxt >> p.z;
+          if(ptxt.good()) {
+            ptxt >> p.y;
+            if(ptxt.good()) {
+              ptxt >> p.x;
+              p *= DEG2RAD;
+              ntrack[t] = p;
+              notgood = false;
+            }
+          }
+        }
+      }
+      if(notgood)
+        TASCAR::add_warning("Invalid characters or unexpected end of line in "
+                            "orientation definition: " +
+                            meshline);
     }
   }
   *this = ntrack;
