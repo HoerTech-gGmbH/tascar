@@ -100,7 +100,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/Users/tobias/Developer/digitalstage/ds-client/libov/tascar/libtascar/include/termsetbaud.h"
     "/Users/tobias/Developer/digitalstage/ds-client/libov/tascar/libtascar/include/vbap3d.h"
     "/Users/tobias/Developer/digitalstage/ds-client/libov/tascar/libtascar/include/viewport.h"
-    "/Users/tobias/Developer/digitalstage/ds-client/libov/tascar/libtascar/include/xmlconfig.h"
+    "/Users/tobias/Developer/digitalstage/ds-client/libov/tascar/libtascar/include/tscconfig.h"
     )
 endif()
 

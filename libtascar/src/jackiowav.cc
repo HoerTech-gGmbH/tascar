@@ -1,4 +1,5 @@
 #include "jackiowav.h"
+#include <iostream>
 
 jackio_t::jackio_t(const std::string& ifname,const std::string& ofname,
 		   const std::vector<std::string>& ports, const std::string& jackname,int freewheel,int autoconnect,bool verbose)

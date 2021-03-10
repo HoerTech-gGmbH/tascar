@@ -29,7 +29,6 @@
 #ifndef ACOUSTICMODEL_H
 #define ACOUSTICMODEL_H
 
-#include "audioplugin.h"
 #include "dynamicobjects.h"
 #include "levelmeter.h"
 #include "pluginprocessor.h"

@@ -28,7 +28,6 @@
 #define SCENE_H
 
 #include "acousticmodel.h"
-#include <vector>
 
 namespace TASCAR {
 

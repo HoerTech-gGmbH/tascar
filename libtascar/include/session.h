@@ -22,7 +22,6 @@
 
 #include "jackrender.h"
 #include "session_reader.h"
-#include <set>
 
 namespace TASCAR {
 

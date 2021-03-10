@@ -18,7 +18,7 @@
  * 02110-1301, USA.
  */
 #ifndef SAMPLER_H
-#define SAMPELR_H
+#define SAMPLER_H
 
 #include "audiochunks.h"
 #include "jackclient.h"

@@ -1,5 +1,4 @@
 #include "session.h"
-#include "errorhandling.h"
 #include <chrono>
 #include <dlfcn.h>
 #include <fnmatch.h>
@@ -7,7 +6,6 @@
 #include <limits.h>
 #include <locale.h>
 #include <stdlib.h>
-#include <string.h>
 #include <thread>
 #include <unistd.h>
 

@@ -29,7 +29,7 @@
 #include <string.h>
 #include <fstream>
 #include "errorhandling.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 
 #define QUICKHULL_1
 

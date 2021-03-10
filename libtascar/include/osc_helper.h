@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 #include <lo/lo.h>
+#include "tscconfig.h"
 
 namespace TASCAR {
 
@@ -139,6 +140,17 @@ namespace TASCAR {
     bool initialized;
     bool isactive;
     bool verbose;
+  };
+
+  class msg_t : public TASCAR::xml_element_t {
+  public:
+    msg_t(xmlpp::Element*);
+    ~msg_t();
+    std::string path;
+    lo_message msg;
+
+  private:
+    msg_t(const msg_t&);
   };
 
 };

@@ -26,10 +26,11 @@
 #ifndef AUDIOPLUGIN_H
 #define AUDIOPLUGIN_H
 
-#include "xmlconfig.h"
+#include "audiostates.h"
 #include "audiochunks.h"
 #include "tascarplugin.h"
 #include "licensehandler.h"
+#include "osc_helper.h"
 
 namespace TASCAR {
 

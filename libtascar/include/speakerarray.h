@@ -20,10 +20,11 @@
 #ifndef SPEAKERARRAY_H
 #define SPEAKERARRAY_H
 
+#include "audiostates.h"
 #include "delayline.h"
 #include "filterclass.h"
 #include "ola.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 
 namespace TASCAR {
 

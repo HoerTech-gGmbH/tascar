@@ -20,7 +20,7 @@
 #ifndef SESSION_READER_H
 #define SESSION_READER_H
 
-#include "xmlconfig.h"
+#include "tscconfig.h"
 #include "licensehandler.h"
 
 namespace TASCAR {

@@ -22,7 +22,7 @@
 #include <jack/thread.h>
 #include <unistd.h>
 #include "defs.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 #include <regex.h>
 
 static std::string errmsg("");

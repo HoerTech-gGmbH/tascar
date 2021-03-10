@@ -2,7 +2,6 @@
 
 #include "errorhandling.h"
 #include <string.h>
-#include "coordinates.h"
 
 const std::complex<double> i(0.0, 1.0);
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include "errorhandling.h"
 #include <errno.h>
-#include "xmlconfig.h"
+#include "tscconfig.h"
 
 using namespace DMX;
 

@@ -44,7 +44,7 @@ set(LIB_SOURCES
         ${PROJECT_SOURCE_DIR}/src/audiostates.cc
         ${PROJECT_SOURCE_DIR}/src/coordinates.cc
         ${PROJECT_SOURCE_DIR}/src/audiochunks.cc
-        ${PROJECT_SOURCE_DIR}/src/xmlconfig.cc
+        ${PROJECT_SOURCE_DIR}/src/tscconfig.cc
         ${PROJECT_SOURCE_DIR}/src/dynamicobjects.cc
         ${PROJECT_SOURCE_DIR}/src/sourcemod.cc
         ${PROJECT_SOURCE_DIR}/src/receivermod.cc

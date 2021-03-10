@@ -28,8 +28,10 @@
 #ifndef RECEIVERMOD_H
 #define RECEIVERMOD_H
 
+#include "audiostates.h"
 #include "speakerarray.h"
 #include "tascarplugin.h"
+#include "osc_helper.h"
 
 namespace TASCAR {
 
@@ -81,6 +83,7 @@ namespace TASCAR {
     {
       return create_data(srate, fragsize);
     };
+    
     virtual void add_variables(TASCAR::osc_server_t* srv){};
 
   protected:

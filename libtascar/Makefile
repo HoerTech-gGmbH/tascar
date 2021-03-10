@@ -13,7 +13,7 @@ SOVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1
 # main targets:
 #
 OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
-  xmlconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
+  tscconfig.o dynamicobjects.o sourcemod.o receivermod.o		\
   filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o		\
   scene.o render.o session_reader.o session.o jackclient.o		\
   delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\

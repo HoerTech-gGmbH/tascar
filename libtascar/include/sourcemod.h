@@ -27,10 +27,10 @@
 #ifndef SOURCEMOD_H
 #define SOURCEMOD_H
 
-#include "tascarplugin.h"
-#include "xmlconfig.h"
 #include "audiochunks.h"
-//#include "audiostates.h"
+#include "audiostates.h"
+#include "tascarplugin.h"
+#include "tscconfig.h"
 
 namespace TASCAR {
 

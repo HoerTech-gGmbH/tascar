@@ -26,7 +26,7 @@
 #ifndef DYNAMICOBJECTS_H
 #define DYNAMICOBJECTS_H
 
-#include "xmlconfig.h"
+#include "tscconfig.h"
 
 namespace TASCAR {
 

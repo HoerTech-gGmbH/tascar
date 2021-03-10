@@ -1,5 +1,5 @@
 #include "licensehandler.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 #include <fstream>
 
 std::string liclocalgetenv(const std::string& env)

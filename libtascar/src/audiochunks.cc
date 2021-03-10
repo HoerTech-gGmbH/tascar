@@ -2,7 +2,7 @@
 #include <string.h>
 #include <algorithm>
 #include "errorhandling.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 #include "amb33defs.h"
 #include <samplerate.h>
 

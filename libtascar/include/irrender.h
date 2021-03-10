@@ -23,7 +23,6 @@
 #include <time.h>
 
 #include "audiochunks.h"
-#include "render.h"
 #include "session.h"
 
 namespace TASCAR {

@@ -20,9 +20,8 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 
-#include "audiostates.h"
 #include "coordinates.h"
-#include "osc_helper.h"
+//#include "osc_helper.h"
 
 namespace TASCAR {
 
@@ -209,17 +208,6 @@ namespace TASCAR {
 
   private:
     bool freedoc;
-  };
-
-  class msg_t : public TASCAR::xml_element_t {
-  public:
-    msg_t(xmlpp::Element*);
-    ~msg_t();
-    std::string path;
-    lo_message msg;
-
-  private:
-    msg_t(const msg_t&);
   };
 
 } // namespace TASCAR
