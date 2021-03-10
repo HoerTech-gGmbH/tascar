@@ -1,21 +1,47 @@
 cmake_minimum_required(VERSION 3.10)
 
-# set the project name and version
+### GLOBAL CONFIGURATION
 project(plugins LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "-Wall -O3")
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 
+
+### ADDITIONAL FLAGS
 add_compile_definitions("TASCARVERSION=${FULLVERSION}")
 
-# REQUIREMENTS
-if( TARGET tascar )
-        add_library(tascar::tascar ALIAS tascar)
-        set(TASCAR_INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/../libtascar/include)
-else()
-        find_package(tascar REQUIRED)
-endif()
+
+### DEPENDENCIES
+if (TARGET tascar)
+    add_library(tascar::tascar ALIAS tascar)
+    set(TASCAR_INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/../libtascar/include)
+else ()
+    find_package(tascar REQUIRED)
+endif ()
+find_package(Jack REQUIRED)
+find_package(LibXml++ REQUIRED)
+find_package(liblo REQUIRED)
+find_package(LibSndFile REQUIRED)
+find_package(FFTW REQUIRED)
+find_package(LibSamplerate REQUIRED)
+set(EXTERNAL_INCLUDES
+        ${TASCAR_INCLUDE_DIRECTORIES}
+        ${JACK_INCLUDE_DIRS}
+        ${LIBXML++_INCLUDE_DIRS}
+        ${LIBLO_INCLUDE_DIRS}
+        ${LIBSNDFILE_INCLUDE_DIRS}
+        ${FFTW_INCLUDE_DIRS}
+        ${LIBSAMPLERATE_INCLUDE_DIRS})
+set(EXTERNAL_LIBS
+        tascar::tascar
+        ${JACK_LIBRARIES}
+        ${LIBXML++_LIBRARIES}
+        ${LIBLO_LIBRARIES}
+        ${LIBSNDFILE_LIBRARIES}
+        ${FFTW_LIBRARIES}
+        ${LIBSAMPLERATE_LIBRARIES})
+
 
 # PLUGINS
 include(${PROJECT_SOURCE_DIR}/../version.cmake)
@@ -26,7 +52,7 @@ set_property(GLOBAL PROPERTY TASCAR_PLUGIN_LIBRARIES)
 if (RECEIVERS)
     foreach (receiver IN LISTS RECEIVERS)
         message("Building ${PLUGINPREFIX}tascarreceiver_${receiver} for version ${FULLVERSION}")
-        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascarreceiver_${receiver}) 
+        set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascarreceiver_${receiver})
         add_library(${PLUGINPREFIX}tascarreceiver_${receiver}
                 SHARED
                 ${PROJECT_SOURCE_DIR}/src/receivermod_${receiver}.cc)
@@ -36,12 +62,11 @@ if (RECEIVERS)
         target_include_directories(${PLUGINPREFIX}tascarreceiver_${receiver}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                PUBLIC
-                ${TASCAR_INCLUDE_DIRECTORIES}
+                ${EXTERNAL_INCLUDES}
                 )
         target_link_libraries(${PLUGINPREFIX}tascarreceiver_${receiver}
-                PUBLIC
-                tascar::tascar
+                PRIVATE
+                ${EXTERNAL_LIBS}
                 )
         install(TARGETS ${PLUGINPREFIX}tascarreceiver_${receiver} DESTINATION lib)
     endforeach ()
@@ -58,12 +83,11 @@ if (TASCARMODS)
         target_include_directories(${PLUGINPREFIX}tascar_${tascarmod}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                PUBLIC
-                ${TASCAR_INCLUDE_DIRECTORIES}
+                ${EXTERNAL_INCLUDES}
                 )
         target_link_libraries(${PLUGINPREFIX}tascar_${tascarmod}
-                PUBLIC
-                tascar::tascar
+                PRIVATE
+                ${EXTERNAL_LIBS}
                 )
         install(TARGETS ${PLUGINPREFIX}tascar_${tascarmod} DESTINATION lib)
     endforeach ()
@@ -81,12 +105,11 @@ if (SOURCEMODS)
         target_include_directories(${PLUGINPREFIX}tascarsource_${sourcemod}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                PUBLIC
-                ${TASCAR_INCLUDE_DIRECTORIES}
+                ${EXTERNAL_INCLUDES}
                 )
         target_link_libraries(${PLUGINPREFIX}tascarsource_${sourcemod}
-                PUBLIC
-                tascar::tascar
+                PRIVATE
+                ${EXTERNAL_LIBS}
                 )
         install(TARGETS ${PLUGINPREFIX}tascarsource_${sourcemod} DESTINATION lib)
     endforeach ()
@@ -103,12 +126,11 @@ if (AUDIOPLUGINS)
         target_include_directories(${PLUGINPREFIX}tascar_ap_${audioplugin}
                 PRIVATE
                 ${PROJECT_SOURCE_DIR}/src
-                PUBLIC
-                ${TASCAR_INCLUDE_DIRECTORIES}
+                ${EXTERNAL_INCLUDES}
                 )
         target_link_libraries(${PLUGINPREFIX}tascar_ap_${audioplugin}
-                PUBLIC
-                tascar::tascar
+                PRIVATE
+                ${EXTERNAL_LIBS}
                 )
         install(TARGETS ${PLUGINPREFIX}tascar_ap_${audioplugin} DESTINATION lib)
     endforeach ()
