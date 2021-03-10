@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-# GLOBAL
+### GLOBAL CONFIGURATION
 project(tascar LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -15,29 +15,12 @@ configure_file(
         "${PROJECT_SOURCE_DIR}/tascarver.h.in"
         "${PROJECT_SOURCE_DIR}/include/tascarver.h"
 )
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
-if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-    if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
-        # Check whether we are running under Rosetta on arm64 hardware.
-        execute_process(COMMAND sysctl -q hw.optional.arm64
-                OUTPUT_VARIABLE _sysctl_stdout
-                ERROR_VARIABLE _sysctl_stderr
-                RESULT_VARIABLE _sysctl_result
-                )
-        if (_sysctl_result EQUAL 0 AND _sysctl_stdout MATCHES "hw.optional.arm64: 1")
-            #message("Compiling multi build for x84_64 and arm64")
-            set(CMAKE_HOST_SYSTEM_PROCESSOR "arm64")
-            set(QMAKE_APPLE_DEVICE_ARCHS arm64)
-            set(CMAKE_OSX_ARCHITECTURES arm64)
-        else ()
-            set(CMAKE_OSX_ARCHITECTURES x86_64)
-        endif ()
-    endif ()
-endif ()
 
-# Source file management
+
+### SOURCE FILE MANAGEMENT
 file(GLOB LIB_HEADER ${PROJECT_SOURCE_DIR}/include/*.h)
 set(LIB_SOURCES
         ${PROJECT_SOURCE_DIR}/src/licensehandler.cc
@@ -99,7 +82,7 @@ set(UI_SOURCES
         )
 
 
-# REQUIREMENTS
+### DEPENDENCIES
 find_package(Threads REQUIRED)
 find_package(Jack REQUIRED)
 find_package(LibSndFile REQUIRED)
@@ -108,17 +91,11 @@ find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
-#find_package(LibXml++3)
-#if (NOT LIBXML++3_FOUND)
-#    message("Falling back to LibXml++-2.6")
 find_package(LibXml++ REQUIRED)
-#else ()
-#    set(LIBXML++_LIBRARIES ${LIBXML++3_LIBRARIES})
-#    set(LIBXML++_INCLUDE_DIRS ${LIBXML++3_INCLUDE_DIRS})
-#endif ()
 find_package(GTK3 COMPONENTS gtkmm)
 
-# ADDITIONAL FLAGS
+
+### ADDITIONAL FLAGS
 set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
 if (NOT PLUGINPREFIX MATCHES "")
     message("Using plugin prefix ${PLUGINPREFIX}")
@@ -126,14 +103,10 @@ if (NOT PLUGINPREFIX MATCHES "")
 endif ()
 add_compile_definitions(CMAKE)
 
-# CMake package config
 
-
-# TARGET
+### TARGETS
 # libtascar
 add_library(tascar STATIC ${LIB_SOURCES})
-set_property(TARGET tascar PROPERTY CXX_STANDARD 14)
-set_property(TARGET tascar PROPERTY CXX_STANDARD_REQUIRED ON)
 target_include_directories(tascar
         PRIVATE
         ${PROJECT_SOURCE_DIR}/include
@@ -142,15 +115,14 @@ target_include_directories(tascar
         ${FFTW_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIR}
         ${GSL_INCLUDE_DIR}
-        PUBLIC
         ${JACK_INCLUDE_DIRS}
         ${LIBXML++_INCLUDE_DIRS}
         ${LIBLO_INCLUDE_DIRS}
         )
 target_link_libraries(tascar
         PRIVATE
-        ${LIBXML++_LIBRARIES}
         Threads::Threads
+        ${LIBXML++_LIBRARIES}
         ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES}
@@ -261,7 +233,6 @@ if (LINUX)
         export(TARGETS tascar tascargui tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
     elseif ()
         export(TARGETS tascar tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
-
     endif ()
 else ()
     if (TARGET tascargui)

@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+
+# REQUIREMENTS
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBSNDFILE REQUIRED sndfile)
+pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
+pkg_check_modules(LIBXML++ REQUIRED libxml++-2.6)
+pkg_check_modules(JACK REQUIRED jack)
+pkg_check_modules(LIBLO REQUIRED liblo)
+pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
+pkg_check_modules(EIGEN3 REQUIRED eigen3)
+pkg_check_modules(GSL REQUIRED gsl)
+pkg_check_modules(FFTW REQUIRED fftw3f)
+
+set_and_check(TASCAR_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+
+include("${CMAKE_CURRENT_LIST_DIR}/@TARGETS_EXPORT_NAME@.cmake")
+check_required_components("@PROJECT_NAME@")

@@ -1,6 +1,6 @@
 
 # Read version
-file(READ "${PROJECT_SOURCE_DIR}/../config.mk" config_file)
+file(READ "${CMAKE_CURRENT_LIST_DIR}/config.mk" config_file)
 string(REGEX MATCH "VERSION=([0-9]*).([0-9]*).([0-9]*)" _ "${config_file}")
 set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
