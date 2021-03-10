@@ -15,7 +15,7 @@ configure_file(
         "${PROJECT_SOURCE_DIR}/tascarver.h.in"
         "${PROJECT_SOURCE_DIR}/include/tascarver.h"
 )
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
@@ -132,31 +132,32 @@ add_compile_definitions(CMAKE)
 # TARGET
 # libtascar
 add_library(tascar STATIC ${LIB_SOURCES})
+set_property(TARGET tascar PROPERTY CXX_STANDARD 14)
+set_property(TARGET tascar PROPERTY CXX_STANDARD_REQUIRED ON)
 target_include_directories(tascar
         PRIVATE
         ${PROJECT_SOURCE_DIR}/include
-        PUBLIC
-        ${LIBXML++_INCLUDE_DIRS}
-        ${LIBLO_INCLUDE_DIRS}
         ${LIBSNDFILE_INCLUDE_DIRS}
         ${LIBSAMPLERATE_INCLUDE_DIRS}
         ${FFTW_INCLUDE_DIRS}
-        ${JACK_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIR}
         ${GSL_INCLUDE_DIR}
+        PUBLIC
+        ${JACK_INCLUDE_DIRS}
+        ${LIBXML++_INCLUDE_DIRS}
+        ${LIBLO_INCLUDE_DIRS}
         )
 target_link_libraries(tascar
         PRIVATE
-        Threads::Threads
-        PUBLIC
         ${LIBXML++_LIBRARIES}
+        Threads::Threads
         ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES}
         ${FFTW_LIBRARIES}
-        ${JACK_LIBRARIES}
         ${GSL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        ${JACK_LIBRARIES}
         )
 set_target_properties(tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
 set(TARGETS_EXPORT_NAME tascarTarget)

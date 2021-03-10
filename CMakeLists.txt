@@ -5,6 +5,7 @@ project(tascar LANGUAGES CXX)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
     if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
         # Check whether we are running under Rosetta on arm64 hardware.
@@ -34,6 +35,8 @@ add_subdirectory(plugins)
 add_executable(tascar_cli
         apps/src/tascar_cli.cc
         )
+set_property(TARGET tascar_cli PROPERTY CXX_STANDARD 14)
+set_property(TARGET tascar_cli PROPERTY CXX_STANDARD_REQUIRED ON)
 target_include_directories(tascar_cli
         PRIVATE
         ${PROJECT_SOURCE_DIR}/libtascar/include

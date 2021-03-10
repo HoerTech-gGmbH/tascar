@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 # set the project name and version
 project(plugins LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_C_FLAGS "-Wall -std=c++11 -O3")
+set(CMAKE_C_FLAGS "-Wall -O3")
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 
 add_compile_definitions("TASCARVERSION=${FULLVERSION}")
