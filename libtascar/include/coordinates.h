@@ -484,10 +484,6 @@ namespace TASCAR {
     */
     void edit( xmlpp::Element* m );
     /**
-       \brief manipulate track based on a set of XML entries
-    */
-    void edit( xmlpp::Node::NodeList cmds );
-    /**
        \brief set constant velocity
     */
     void set_velocity_const( double vel );

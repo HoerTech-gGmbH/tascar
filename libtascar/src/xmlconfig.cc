@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pugixml.hpp>
 
 namespace TASCAR {
   std::map<xmlpp::Element*, std::map<std::string, cfg_var_desc_t>>

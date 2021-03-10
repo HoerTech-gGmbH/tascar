@@ -510,15 +510,6 @@ void track_t::resample( double dt )
   prepare();
 }
 
-void track_t::edit( xmlpp::Node::NodeList cmds )
-{
-  for( xmlpp::Node::NodeList::iterator icmd=cmds.begin();icmd != cmds.end();++icmd){
-    xmlpp::Element* cmd = dynamic_cast<xmlpp::Element*>(*icmd);
-    edit( cmd );
-  }
-  prepare();
-}
-
 void track_t::set_velocity_const( double v )
 {
   if( v != 0 ){

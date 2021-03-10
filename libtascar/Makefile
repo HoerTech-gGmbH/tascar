@@ -18,8 +18,8 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   scene.o render.o session_reader.o session.o jackclient.o		\
   delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
   viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
-  audioplugin.o levelmeter.o serviceclass.o		\
-  speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o hoa.o
+  audioplugin.o levelmeter.o serviceclass.o speakerarray.o spectrum.o	\
+  fft.o stft.o ola.o vbap3d.o hoa.o pugixml.o
 
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
@@ -97,22 +97,17 @@ symlink: build/libtascar.so build/libtascargui.so build/libtascardmx.so
 build/libtascar.so.%: $(BUILD_OBJECTS)
 	$(CXX) -shared -Wl,-soname,libtascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 	rm -f build/libtascar.so
-#	ln -s $@ build/libtascar.so
 
 build/libtascargui.so.%: $(BUILD_GUIOBJECTS)
 	$(CXX) -shared -Wl,-soname,libtascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 	rm -f build/libtascargui.so
-#	ln -s $@ build/libtascargui.so
 
 build/libtascardmx.so.%: $(BUILD_DMXOBJECTS)
 	$(CXX) -shared -Wl,-soname,libtascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 	rm -f build/libtascardmx.so
-#	ln -s $@ build/libtascardmx.so
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
-
-#VPATH = ../src
 
 .PHONY : doc test gui
 
@@ -132,6 +127,9 @@ build/%.mk: src/%.cc
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
 build/%.o: src/%.cc include/%.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+build/pugixml.o: ../external_libs/pugixml-1.11.4/src/pugixml.cpp ../external_libs/pugixml-1.11.4/src/pugixml.hpp ../external_libs/pugixml-1.11.4/src/pugiconfig.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%.so: build/%.so.$(LIBVERSION)

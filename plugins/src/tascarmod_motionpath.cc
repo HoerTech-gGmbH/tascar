@@ -61,10 +61,10 @@ motionpath_t::motionpath_t( const TASCAR::module_cfg_t& cfg )
       //xml_orientation = sne;
       orientation.read_xml(sne);
     }
-    if( sne && (sne->get_name() == "creator")){
-      xmlpp::Node::NodeList subnodes = sne->get_children();
-      location.edit(subnodes);
-      TASCAR::track_t::iterator it_old=location.end();
+    if(sne && (sne->get_name() == "creator")) {
+      for(auto node : sne->get_children())
+        location.edit(dynamic_cast<xmlpp::Element*>(node));
+      TASCAR::track_t::iterator it_old = location.end();
       double old_azim(0);
       double new_azim(0);
       for(TASCAR::track_t::iterator it=location.begin();it!=location.end();++it){

@@ -1,6 +1,6 @@
 # rules:
 
-CXXFLAGS += -I../external_libs/$(BUILD_DIR)/include
+CXXFLAGS += -I../external_libs/$(BUILD_DIR)/include -I../external_libs/pugixml-1.11.4/src
 LDLIBS += -L../external_libs/$(BUILD_DIR)/lib
 
 build: build/.directory
