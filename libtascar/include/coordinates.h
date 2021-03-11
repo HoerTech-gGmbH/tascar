@@ -28,21 +28,22 @@
 #ifndef COORDINATES_H
 #define COORDINATES_H
 
-#include <math.h>
-#include <string>
-#include <libxml++/libxml++.h>
-#include <map>
-#include <limits>
 #include "defs.h"
+#include <limits>
+#include <map>
+#include <math.h>
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 /// Avoid de-normals by flipping to zero
-template<class T> void make_friendly_number(T& x)
+template <class T> void make_friendly_number(T& x)
 {
-  if( (-std::numeric_limits<T>::max() <= x) && (x <= std::numeric_limits<T>::max() ) ){
-    if( (0 < x) && (x < std::numeric_limits<T>::min()) )
+  if((-std::numeric_limits<T>::max() <= x) &&
+     (x <= std::numeric_limits<T>::max())) {
+    if((0 < x) && (x < std::numeric_limits<T>::min()))
       x = 0;
-    if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
+    if((0 > x) && (x > -std::numeric_limits<T>::min()))
       x = 0;
     return;
   }
@@ -50,18 +51,17 @@ template<class T> void make_friendly_number(T& x)
 }
 
 /// Avoid de-normals and huge values by flipping to zero
-template<class T> void make_friendly_number_limited(T& x)
+template <class T> void make_friendly_number_limited(T& x)
 {
-  if( (-1000000 <= x) && (x <= 1000000 ) ){
-    if( (0 < x) && (x < std::numeric_limits<T>::min()) )
+  if((-1000000 <= x) && (x <= 1000000)) {
+    if((0 < x) && (x < std::numeric_limits<T>::min()))
       x = 0;
-    if( (0 > x) && (x > -std::numeric_limits<T>::min()) )
+    if((0 > x) && (x > -std::numeric_limits<T>::min()))
       x = 0;
     return;
   }
   x = 0;
 }
-
 
 namespace TASCAR {
 
@@ -71,7 +71,7 @@ namespace TASCAR {
   /**
      \brief Linear interpolation table
    */
-  class table1_t : public std::map<double,double> {
+  class table1_t : public std::map<double, double> {
   public:
     table1_t();
     double interp(double) const;
@@ -94,67 +94,84 @@ namespace TASCAR {
        \param ny new y value
        \param nz new z value
     */
-    void set_cart(double nx,double ny,double nz){ x=nx;y=ny;z=nz;};
+    void set_cart(double nx, double ny, double nz)
+    {
+      x = nx;
+      y = ny;
+      z = nz;
+    };
     /**
        \brief Set point from spherical coordinates
        \param r radius from center
        \param phi azimuth
        \param theta elevation
     */
-    void set_sphere(double r,double phi,double theta){ x=r*cos(phi)*cos(theta);y = r*sin(phi)*cos(theta); z=r*sin(theta);};
+    void set_sphere(double r, double phi, double theta)
+    {
+      x = r * cos(phi) * cos(theta);
+      y = r * sin(phi) * cos(theta);
+      z = r * sin(theta);
+    };
     /// squared norm of vector
-    inline double norm2() const {return std::max(1e-10,x*x + y*y + z*z);};
+    inline double norm2() const
+    {
+      return std::max(1e-10, x * x + y * y + z * z);
+    };
     /// Eucledian norm
-    inline double norm() const {return sqrt(norm2());};
+    inline double norm() const { return sqrt(norm2()); };
     /// Eucledian norm of projection to x-y plane
-    inline double norm_xy() const {return sqrt(x*x+y*y);};
+    inline double norm_xy() const { return sqrt(x * x + y * y); };
     /// Azimuth in radians
-    inline double azim() const {return atan2(y,x);};
+    inline double azim() const { return atan2(y, x); };
     /// Elevation in radians
-    inline double elev() const {return atan2(z,norm_xy());};
+    inline double elev() const { return atan2(z, norm_xy()); };
     /// Test if zero all dimensions
-    inline bool is_null() const {return (x==0) && (y==0) && (z==0);};
+    inline bool is_null() const { return (x == 0) && (y == 0) && (z == 0); };
     /// Test if larger than zero in all dimension
-    inline bool has_volume() const {return (x>0) && (y>0) && (z>0);};
+    inline bool has_volume() const { return (x > 0) && (y > 0) && (z > 0); };
     /// Return normalized vector
-    inline pos_t normal() const {
+    inline pos_t normal() const
+    {
       pos_t r(*this);
-      double n(1.0/norm());
+      double n(1.0 / norm());
       r.x *= n;
       r.y *= n;
       r.z *= n;
       return r;
     };
     /// Box volume:
-    double boxvolume() const { return x*y*z; };
+    double boxvolume() const { return x * y * z; };
     /// Box area:
-    double boxarea() const { return 2.0*(x*y + x*z + y*z);};
-      /// Normalize vector
+    double boxarea() const { return 2.0 * (x * y + x * z + y * z); };
+    /// Normalize vector
     void normalize();
     /**
        \brief Rotate around z-axis
     */
-    inline pos_t& rot_z(double a) { 
-      if( a != 0){
+    inline pos_t& rot_z(double a)
+    {
+      if(a != 0) {
         // cos -sin  0
         // sin  cos  0
         //  0    0   1
-        double xn = cos(a)*x - sin(a)*y;
-        double yn = cos(a)*y + sin(a)*x;
+        double xn = cos(a) * x - sin(a) * y;
+        double yn = cos(a) * y + sin(a) * x;
         x = xn;
-        y = yn;}
+        y = yn;
+      }
       return *this;
     };
     /**
        \brief Rotate around x-axis
     */
-    inline pos_t& rot_x(double a) { 
-      if( a != 0){
+    inline pos_t& rot_x(double a)
+    {
+      if(a != 0) {
         // 1   0    0
         // 0  cos -sin
         // 0  sin  cos
-        double zn = cos(a)*z + sin(a)*y;
-        double yn = cos(a)*y - sin(a)*z;
+        double zn = cos(a) * z + sin(a) * y;
+        double yn = cos(a) * y - sin(a) * z;
         z = zn;
         y = yn;
       }
@@ -163,13 +180,14 @@ namespace TASCAR {
     /**
        \brief Rotate around y-axis
     */
-    inline pos_t& rot_y(double a) {
-      if( a != 0){
+    inline pos_t& rot_y(double a)
+    {
+      if(a != 0) {
         // cos 0 sin
         //  0  1   0
         // -sin 0  cos
-        double xn = cos(a)*x + sin(a)*z;
-        double zn = cos(a)*z - sin(a)*x;
+        double xn = cos(a) * x + sin(a) * z;
+        double zn = cos(a) * z - sin(a) * x;
         z = zn;
         x = xn;
       }
@@ -178,19 +196,19 @@ namespace TASCAR {
     /**
        \brief Default constructor, initialize to origin
     */
-    pos_t() : x(0),y(0),z(0) {};
+    pos_t() : x(0), y(0), z(0){};
     /**
        \brief Initialize to cartesian coordinates
     */
-    pos_t(double nx, double ny, double nz) : x(nx),y(ny),z(nz) {};
+    pos_t(double nx, double ny, double nz) : x(nx), y(ny), z(nz){};
     /**
        \brief Format as string in cartesian coordinates
     */
-    std::string print_cart(const std::string& delim=", ") const;
+    std::string print_cart(const std::string& delim = ", ") const;
     /**
        \brief Format as string in spherical coordinates
     */
-    std::string print_sphere(const std::string& delim=", ") const;
+    std::string print_sphere(const std::string& delim = ", ") const;
     /**
        \brief Check for infinity in any of the elements
     */
@@ -200,21 +218,23 @@ namespace TASCAR {
   /// Spherical coordinates
   class sphere_t {
   public:
-    sphere_t(double r_,double az_, double el_):r(r_),az(az_),el(el_){};
-    sphere_t():r(0),az(0),el(0){};
+    sphere_t(double r_, double az_, double el_) : r(r_), az(az_), el(el_){};
+    sphere_t() : r(0), az(0), el(0){};
     /// Convert from cartesian coordinates
-    sphere_t(pos_t c){
-      double xy2 = c.x*c.x+c.y*c.y;
-      r = sqrt(xy2+c.z*c.z);
-      az = atan2(c.y,c.x);
-      el = atan2(c.z,sqrt(xy2));
+    sphere_t(pos_t c)
+    {
+      double xy2 = c.x * c.x + c.y * c.y;
+      r = sqrt(xy2 + c.z * c.z);
+      az = atan2(c.y, c.x);
+      el = atan2(c.z, sqrt(xy2));
     };
     /// Convert to cartesian coordinates
-    pos_t cart(){
+    pos_t cart()
+    {
       double cel(cos(el));
-      return pos_t(r*cos(az)*cel,r*sin(az)*cel,r*sin(el));
+      return pos_t(r * cos(az) * cel, r * sin(az) * cel, r * sin(el));
     };
-    double r,az,el;
+    double r, az, el;
   };
 
   /**
@@ -222,19 +242,20 @@ namespace TASCAR {
      \param self Input data
      \param d ratio
   */
-  inline TASCAR::sphere_t& operator*=(TASCAR::sphere_t& self,double d) {
-    self.r*=d;
-    self.az*=d;
-    self.el*=d;
+  inline TASCAR::sphere_t& operator*=(TASCAR::sphere_t& self, double d)
+  {
+    self.r *= d;
+    self.az *= d;
+    self.el *= d;
     return self;
   };
 
   /// ZYX Euler angles
   class zyx_euler_t {
   public:
-    std::string print(const std::string& delim=", ");
-    zyx_euler_t(double z_,double y_,double x_):z(z_),y(y_),x(x_){};
-    zyx_euler_t():z(0),y(0),x(0){};
+    std::string print(const std::string& delim = ", ");
+    zyx_euler_t(double z_, double y_, double x_) : z(z_), y(y_), x(x_){};
+    zyx_euler_t() : z(0), y(0), x(0){};
     /// rotation around z-axis in radians
     double z;
     /// rotation around y-axis in radians
@@ -243,26 +264,32 @@ namespace TASCAR {
     double x;
   };
 
-  inline TASCAR::zyx_euler_t& operator*=(TASCAR::zyx_euler_t& self,const double& scale){
-    self.x*=scale;
-    self.y*=scale;
-    self.z*=scale;
+  inline TASCAR::zyx_euler_t& operator*=(TASCAR::zyx_euler_t& self,
+                                         const double& scale)
+  {
+    self.x *= scale;
+    self.y *= scale;
+    self.z *= scale;
     return self;
   };
 
-  inline TASCAR::zyx_euler_t& operator+=(TASCAR::zyx_euler_t& self,const TASCAR::zyx_euler_t& other){
-    // \todo this is not correct; it only works for single-axis rotations. 
-    self.x+=other.x;
-    self.y+=other.y;
-    self.z+=other.z;
+  inline TASCAR::zyx_euler_t& operator+=(TASCAR::zyx_euler_t& self,
+                                         const TASCAR::zyx_euler_t& other)
+  {
+    // \todo this is not correct; it only works for single-axis rotations.
+    self.x += other.x;
+    self.y += other.y;
+    self.z += other.z;
     return self;
   };
 
-  inline TASCAR::zyx_euler_t& operator-=(TASCAR::zyx_euler_t& self,const TASCAR::zyx_euler_t& other){
-    // \todo this is not correct; it only works for single-axis rotations. 
-    self.x-=other.x;
-    self.y-=other.y;
-    self.z-=other.z;
+  inline TASCAR::zyx_euler_t& operator-=(TASCAR::zyx_euler_t& self,
+                                         const TASCAR::zyx_euler_t& other)
+  {
+    // \todo this is not correct; it only works for single-axis rotations.
+    self.x -= other.x;
+    self.y -= other.y;
+    self.z -= other.z;
     return self;
   };
 
@@ -271,7 +298,9 @@ namespace TASCAR {
      \param r Euler rotation
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,const TASCAR::zyx_euler_t& r){
+  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,
+                                   const TASCAR::zyx_euler_t& r)
+  {
     self.rot_z(r.z);
     self.rot_y(r.y);
     self.rot_x(r.x);
@@ -283,7 +312,9 @@ namespace TASCAR {
      \param r Euler rotation
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator/=(TASCAR::pos_t& self,const TASCAR::zyx_euler_t& r){
+  inline TASCAR::pos_t& operator/=(TASCAR::pos_t& self,
+                                   const TASCAR::zyx_euler_t& r)
+  {
     self.rot_x(-r.x);
     self.rot_y(-r.y);
     self.rot_z(-r.z);
@@ -295,10 +326,11 @@ namespace TASCAR {
      \param p Offset
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator+=(TASCAR::pos_t& self,const TASCAR::pos_t& p) {
-    self.x+=p.x;
-    self.y+=p.y;
-    self.z+=p.z;
+  inline TASCAR::pos_t& operator+=(TASCAR::pos_t& self, const TASCAR::pos_t& p)
+  {
+    self.x += p.x;
+    self.y += p.y;
+    self.z += p.z;
     return self;
   };
   /**
@@ -307,9 +339,10 @@ namespace TASCAR {
      \param b Vector
      \return Sum
   */
-  inline TASCAR::pos_t operator+(const TASCAR::pos_t& a,const TASCAR::pos_t& b) {
+  inline TASCAR::pos_t operator+(const TASCAR::pos_t& a, const TASCAR::pos_t& b)
+  {
     pos_t tmp(a);
-    tmp+=b;
+    tmp += b;
     return tmp;
   };
   /**
@@ -317,10 +350,11 @@ namespace TASCAR {
      \param p Inverse offset
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator-=(TASCAR::pos_t& self,const TASCAR::pos_t& p) {
-    self.x-=p.x;
-    self.y-=p.y;
-    self.z-=p.z;
+  inline TASCAR::pos_t& operator-=(TASCAR::pos_t& self, const TASCAR::pos_t& p)
+  {
+    self.x -= p.x;
+    self.y -= p.y;
+    self.z -= p.z;
     return self;
   };
   /**
@@ -329,9 +363,10 @@ namespace TASCAR {
      \param b subtrahend
      \return Difference
   */
-  inline TASCAR::pos_t operator-(const TASCAR::pos_t& a,const TASCAR::pos_t& b) {
+  inline TASCAR::pos_t operator-(const TASCAR::pos_t& a, const TASCAR::pos_t& b)
+  {
     pos_t tmp(a);
-    tmp-=b;
+    tmp -= b;
     return tmp;
   };
   /**
@@ -339,10 +374,11 @@ namespace TASCAR {
      \param d inverse ratio
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator/=(TASCAR::pos_t& self,double d) {
-    self.x/=d;
-    self.y/=d;
-    self.z/=d;
+  inline TASCAR::pos_t& operator/=(TASCAR::pos_t& self, double d)
+  {
+    self.x /= d;
+    self.y /= d;
+    self.z /= d;
     return self;
   };
   /**
@@ -350,10 +386,11 @@ namespace TASCAR {
      \param d ratio
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,double d) {
-    self.x*=d;
-    self.y*=d;
-    self.z*=d;
+  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self, double d)
+  {
+    self.x *= d;
+    self.y *= d;
+    self.z *= d;
     return self;
   };
 
@@ -362,10 +399,11 @@ namespace TASCAR {
      \param d ratio
      \param self modified Cartesian coordinates
   */
-  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self,const TASCAR::pos_t& d) {
-    self.x*=d.x;
-    self.y*=d.y;
-    self.z*=d.z;
+  inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self, const TASCAR::pos_t& d)
+  {
+    self.x *= d.x;
+    self.y *= d.y;
+    self.z *= d.z;
     return self;
   };
 
@@ -374,152 +412,23 @@ namespace TASCAR {
   */
   inline double distance(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
   {
-    return sqrt((p1.x-p2.x)*(p1.x-p2.x) + 
-                (p1.y-p2.y)*(p1.y-p2.y) + 
-                (p1.z-p2.z)*(p1.z-p2.z));
+    return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) +
+                (p1.z - p2.z) * (p1.z - p2.z));
   }
 
   /// Dot product of two vectors
   inline double dot_prod(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
   {
-    return p1.x*p2.x+p1.y*p2.y+p1.z*p2.z;
+    return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
   }
 
   /// Vector multiplication of two vectors
-  inline TASCAR::pos_t cross_prod(const TASCAR::pos_t& a,const TASCAR::pos_t& b)
+  inline TASCAR::pos_t cross_prod(const TASCAR::pos_t& a,
+                                  const TASCAR::pos_t& b)
   {
-    return pos_t(a.y*b.z - a.z*b.y,
-                 a.z*b.x - a.x*b.z,
-                 a.x*b.y - a.y*b.x);
+    return pos_t(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
+                 a.x * b.y - a.y * b.x);
   }
-
-
-  /**
-     \ingroup tascar
-     \brief Trajectory (list of points connected with a time)
-  */
-  class track_t : public std::map<double,TASCAR::pos_t> {
-  public:
-    /// Interpolation mode
-    enum interp_t {
-      cartesian, spherical
-    };
-    track_t();
-    /**
-       \brief Return the center of a track.
-    */
-    TASCAR::pos_t center();
-    /**
-       \brief Return length of a track.
-     */
-    double length();
-    /**
-       \brief minimum time
-     */
-    double t_min(){if( size() ) return begin()->first; else return 0; };
-    double t_max(){if( size() ) return rbegin()->first; else return 0; };
-    double duration(){return t_max()-t_min();};
-    /**
-       \brief Return the interpolated position for a given time.
-    */
-    TASCAR::pos_t interp(double x) const;
-    /**
-       \brief Shift the time by a constant value
-    */
-    void shift_time(double dt);
-    TASCAR::track_t& operator+=(const TASCAR::pos_t&);
-    TASCAR::track_t& operator-=(const TASCAR::pos_t&);
-    TASCAR::track_t& operator*=(const TASCAR::pos_t&);
-    /**
-       \brief Format as string, return velocity
-    */
-    std::string print_velocity(const std::string& delim=", ");
-    /**
-       \brief Format as string in cartesian coordinates
-    */
-    std::string print_cart(const std::string& delim=", ");
-    /**
-       \brief Format as string in spherical coordinates
-    */
-    std::string print_sphere(const std::string& delim=", ");
-    /**
-       \brief Tangent projection, transform origin to given point
-    */
-    void project_tangent(TASCAR::pos_t p);
-    /**
-       \brief Tangent projection, transform origin to center
-    */
-    void project_tangent();
-    /**
-       \brief Rotate around z-axis
-    */
-    void rot_z(double a);
-    /**
-       \brief Rotate around x-axis
-    */
-    void rot_x(double a);
-    /**
-       \brief Rotate around y-axis
-    */
-    void rot_y(double a);
-    /**
-       \brief Smooth a track by convolution with a Hann-window
-    */
-    void smooth(unsigned int n);
-    /**
-       \brief Resample trajectory with equal time sampling
-       \param dt New period time
-     */
-    void resample(double dt);
-    /**
-       \brief load a track from a gpx file
-    */
-    void load_from_gpx(const std::string& fname);
-    /**
-       \brief load a track from a csv file
-    */
-    void load_from_csv(const std::string& fname);
-    /**
-       \brief manipulate track based on a set of XML entries
-    */
-    void edit( xmlpp::Element* m );
-    /**
-       \brief set constant velocity
-    */
-    void set_velocity_const( double vel );
-    /**
-       \brief set velocity from CSV file
-    */
-    void set_velocity_csvfile( const std::string& fname, double offset );
-    /**
-       \brief Export to xml element
-    */
-    void write_xml( xmlpp::Element* );
-    /// Read trajectroy from XML element, using "creator" features
-    void read_xml( xmlpp::Element* );
-    /// Set interpolation type
-    void set_interpt(interp_t p){interpt=p;};
-    /// Convert time to travel length
-    double get_dist( double time ) const;
-    /// Convert travel length to time
-    double get_time( double dist ) const;
-    /// Update internal data
-    void prepare();
-    void fill_gaps( double dt );
-    /// Loop time
-    double loop;
-  private:
-    interp_t interpt;
-    table1_t time_dist;
-    table1_t dist_time;
-  };
-
-  /**
-     \brief Read a single track point from an XML trkpt element
-  */
-  pos_t xml_get_trkpt( xmlpp::Element* pt, time_t& tme );
-
-  std::string xml_get_text( xmlpp::Node* n, const std::string& child );
 
   /**
      \brief Polygon class for reflectors and obstacles
@@ -544,7 +453,7 @@ namespace TASCAR {
     bool is_infront(const pos_t& p0) const;
     bool is_behind(const pos_t& p0) const;
     /**
-       \brief Return nearest point on infinite plane 
+       \brief Return nearest point on infinite plane
     */
     pos_t nearest_on_plane(const pos_t& p0) const;
     /**
@@ -557,32 +466,44 @@ namespace TASCAR {
        \param pk0 Edge number
        \return Nearest point on boundary
     */
-    pos_t nearest_on_edge(const pos_t& p0,uint32_t* pk0=NULL) const;
+    pos_t nearest_on_edge(const pos_t& p0, uint32_t* pk0 = NULL) const;
     /**
        \brief Return nearest point on polygon
     */
-    pos_t nearest(const pos_t& p0, bool* is_outside=NULL, pos_t* on_edge_=NULL) const;
+    pos_t nearest(const pos_t& p0, bool* is_outside = NULL,
+                  pos_t* on_edge_ = NULL) const;
     /**
-       \brief Return intersection point of connection line p0-p1 with infinite plane.
+       \brief Return intersection point of connection line p0-p1 with infinite
+       plane.
 
        \param p0 Starting point of intersecting edge
        \param p1 End point of intersecting edge
        \param p_is Intersection point
-       \param w Optional pointer on intersecting weight, or NULL. w=0 means that the intersection is at p0, w=1 means that intersection is at p1.
-       
-       \return True if the line p0-p1 is intersecting with the plane, and false otherwise.
+       \param w Optional pointer on intersecting weight, or NULL. w=0 means that
+       the intersection is at p0, w=1 means that intersection is at p1.
+
+       \return True if the line p0-p1 is intersecting with the plane, and false
+       otherwise.
     */
-    bool intersection( const pos_t& p0, const pos_t& p1, pos_t& p_is, double* w=NULL) const;
-    const std::vector<pos_t>& get_verts() const { return verts_;};
-    const std::vector<pos_t>& get_edges() const { return edges_;};
-    const std::vector<pos_t>& get_vert_normals() const { return vert_normals_;};
-    const std::vector<pos_t>& get_edge_normals() const { return edge_normals_;};
-    const pos_t& get_normal() const { return normal;};
-    double get_area() const { return area;};
+    bool intersection(const pos_t& p0, const pos_t& p1, pos_t& p_is,
+                      double* w = NULL) const;
+    const std::vector<pos_t>& get_verts() const { return verts_; };
+    const std::vector<pos_t>& get_edges() const { return edges_; };
+    const std::vector<pos_t>& get_vert_normals() const
+    {
+      return vert_normals_;
+    };
+    const std::vector<pos_t>& get_edge_normals() const
+    {
+      return edge_normals_;
+    };
+    const pos_t& get_normal() const { return normal; };
+    double get_area() const { return area; };
     double get_aperture() const { return aperture; };
-    std::string print(const std::string& delim=", ") const;
+    std::string print(const std::string& delim = ", ") const;
     ngon_t& operator+=(const pos_t& p);
     ngon_t& operator+=(double p);
+
   protected:
     /**
        \brief Transform local to global coordinates and update normals.
@@ -609,32 +530,16 @@ namespace TASCAR {
      \param p0 Test point
      \return Position of the nearest point on the edge
   */
-  pos_t edge_nearest(const pos_t& v,const pos_t& d,const pos_t& p0);
-  
-  /**
-     \ingroup tascar
-     \brief List of Euler rotations connected with a time line.
-  */
-  class euler_track_t : public std::map<double,zyx_euler_t> {
-  public:
-    /**
-       \brief Return the interpolated orientation for a given time.
-    */
-    euler_track_t();
-    zyx_euler_t interp(double x) const;
-    void write_xml( xmlpp::Element* );
-    void read_xml( xmlpp::Element* );
-    std::string print(const std::string& delim=", ");
-    double loop;
-  };
+  pos_t edge_nearest(const pos_t& v, const pos_t& d, const pos_t& p0);
 
   class shoebox_t {
   public:
     shoebox_t();
-    shoebox_t(const pos_t& center_,const pos_t& size_,const zyx_euler_t& orientation_);
+    shoebox_t(const pos_t& center_, const pos_t& size_,
+              const zyx_euler_t& orientation_);
     pos_t nextpoint(pos_t p);
-    double volume() const { return size.boxvolume();};
-    double area() const { return size.boxarea();};
+    double volume() const { return size.boxvolume(); };
+    double area() const { return size.boxarea(); };
     pos_t center;
     pos_t size;
     zyx_euler_t orientation;
@@ -642,8 +547,9 @@ namespace TASCAR {
 
   class c6dof_t {
   public:
-    c6dof_t() {};
-    c6dof_t(const pos_t& psrc,const zyx_euler_t& osrc) : position(psrc), orientation(osrc) {};
+    c6dof_t(){};
+    c6dof_t(const pos_t& psrc, const zyx_euler_t& osrc)
+        : position(psrc), orientation(osrc){};
     pos_t position;
     zyx_euler_t orientation;
   };
@@ -653,13 +559,14 @@ namespace TASCAR {
     struct simplex_t {
       size_t c1, c2, c3;
     };
-    quickhull_t( const std::vector<pos_t>& pos );
+    quickhull_t(const std::vector<pos_t>& pos);
     std::vector<simplex_t> faces;
   };
 
   std::vector<pos_t> generate_icosahedron();
 
-  std::vector<pos_t> subdivide_and_normalize_mesh( std::vector<pos_t> mesh, uint32_t iterations );
+  std::vector<pos_t> subdivide_and_normalize_mesh(std::vector<pos_t> mesh,
+                                                  uint32_t iterations);
 
   class quaternion_t {
   public:
@@ -776,10 +683,9 @@ namespace TASCAR {
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);
 std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n);
 
-bool operator==(const TASCAR::quickhull_t& h1,const TASCAR::quickhull_t& h2);
-bool operator==(const TASCAR::quickhull_t::simplex_t& s1,const TASCAR::quickhull_t::simplex_t& s2);
-
-
+bool operator==(const TASCAR::quickhull_t& h1, const TASCAR::quickhull_t& h2);
+bool operator==(const TASCAR::quickhull_t::simplex_t& s1,
+                const TASCAR::quickhull_t::simplex_t& s2);
 
 #endif
 
