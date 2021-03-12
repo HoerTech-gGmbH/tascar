@@ -56,7 +56,7 @@ const std::complex<double> i(0.0, 1.0);
 
 class hrtf_param_t : public TASCAR::xml_element_t {
 public:
-  hrtf_param_t(xmlpp::Element* xmlsrc);
+  hrtf_param_t(tsccfg::node_t xmlsrc);
   uint32_t sincorder;
   double c;
   TASCAR::pos_t dir_l;
@@ -88,7 +88,7 @@ public:
   bool diffuse_hrtf; // apply hrtf model also to diffuse rendering
 };
 
-hrtf_param_t::hrtf_param_t(xmlpp::Element* xmlsrc)
+hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
     : TASCAR::xml_element_t(xmlsrc), sincorder(0), c(340), dir_l(1, 0, 0),
       dir_r(1, 0, 0), dir_front(1, 0, 0), radius(0.08),
       angle(90 * DEG2RAD), // ears modelled at +/- 90 degree
@@ -190,7 +190,7 @@ public:
     diffuse_data_t(double srate, uint32_t chunksize, hrtf_param_t& par_plugin);
     hrtf_t::data_t xp, xm, yp, ym, zp, zm;
   };
-  hrtf_t(xmlpp::Element* xmlsrc);
+  hrtf_t(tsccfg::node_t xmlsrc);
   ~hrtf_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width,
                        const TASCAR::wave_t& chunk,
@@ -425,7 +425,7 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/hrtf/diffuse_hrtf", &par.diffuse_hrtf);
 }
 
-hrtf_t::hrtf_t(xmlpp::Element* xmlsrc)
+hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_t(xmlsrc), par(xmlsrc), decorr_length(0.05),
       decorr(false)
 {

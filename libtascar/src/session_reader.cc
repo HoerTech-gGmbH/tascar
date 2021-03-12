@@ -5,6 +5,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX 0x1000000
+#endif
+
 TASCAR::tsc_reader_t::tsc_reader_t()
     : xml_element_t(root), licensed_component_t(typeid(*this).name()),
       file_name("")
@@ -43,7 +47,11 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
                         TASCAR::tscbasename(idocname));
         add_includes(idoc.root, idocname, lh);
         for(auto isne : tsccfg::node_get_children(idoc.root)) {
+#ifdef USEPUGIXML
+          e.append_copy(isne);
+#else
           e->import_node(isne);
+#endif
         }
       }
     } else {
@@ -54,7 +62,7 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
 
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
-    : xml_doc_t(filename_or_data, t), xml_element_t(doc->get_root_node()),
+    : xml_doc_t(filename_or_data, t), xml_element_t(root),
       licensed_component_t(typeid(*this).name()),
       file_name(((t == LOAD_FILE) ? filename_or_data : ""))
 {
@@ -91,56 +99,43 @@ void TASCAR::tsc_reader_t::read_xml()
   GET_ATTRIBUTE(license, "", "license type");
   GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
   add_license(license, attribution, "session file");
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
-    if(sne) {
-      if(tsccfg::node_get_name(sne) == "scene")
-        add_scene(sne);
-      else if(tsccfg::node_get_name(sne) == "range")
-        add_range(sne);
-      else if(tsccfg::node_get_name(sne) == "connect")
-        add_connection(sne);
-      else if(tsccfg::node_get_name(sne) == "modules") {
-        xmlpp::Node::NodeList lsubnodes = sne->get_children();
-        for(xmlpp::Node::NodeList::iterator lsn = lsubnodes.begin();
-            lsn != lsubnodes.end(); ++lsn) {
-          tsccfg::node_t lsne(dynamic_cast<tsccfg::node_t>(*lsn));
-          if(lsne)
-            add_module(lsne);
-        }
-      } else if(tsccfg::node_get_name(sne) == "license") {
-        TASCAR::xml_element_t lic(sne);
-        std::string license;
-        std::string attribution;
-        std::string name;
-        lic.GET_ATTRIBUTE(license, "", "license type");
-        lic.GET_ATTRIBUTE(attribution, "",
-                          "attribution of license, if applicable");
-        lic.GET_ATTRIBUTE(name, "", "name of licensed component");
-        add_license(license, attribution, name);
-      } else if(tsccfg::node_get_name(sne) == "author") {
-        TASCAR::xml_element_t lic(sne);
-        std::string of;
-        std::string name;
-        lic.GET_ATTRIBUTE(name, "", "author name");
-        lic.GET_ATTRIBUTE(of, "", "name of authored component");
-        add_author(name, of);
-      } else if(tsccfg::node_get_name(sne) == "bibitem") {
-        xmlpp::NodeSet stxt(sne->find("text()"));
-        for(auto it = stxt.begin(); it != stxt.end(); ++it) {
-          xmlpp::TextNode* txt(dynamic_cast<xmlpp::TextNode*>(*it));
-          if(txt)
-            add_bibitem(txt->get_content());
-        }
-      } else if((tsccfg::node_get_name(sne) != "include") &&
-                (tsccfg::node_get_name(sne) != "mainwindow") &&
-                (tsccfg::node_get_name(sne) != "description"))
-        add_warning("Invalid element: " + tsccfg::node_get_name(sne), sne);
-      if(tsccfg::node_get_name(sne) == "module")
-        add_module(sne);
-    }
+  for(auto sne : tsccfg::node_get_children(e)){
+    if(tsccfg::node_get_name(sne) == "scene")
+      add_scene(sne);
+    else if(tsccfg::node_get_name(sne) == "range")
+      add_range(sne);
+    else if(tsccfg::node_get_name(sne) == "connect")
+      add_connection(sne);
+    else if(tsccfg::node_get_name(sne) == "modules") {
+      for(auto lsne : tsccfg::node_get_children(sne)){
+        add_module(lsne);
+      }
+    } else if(tsccfg::node_get_name(sne) == "license") {
+      TASCAR::xml_element_t lic(sne);
+      std::string license;
+      std::string attribution;
+      std::string name;
+      lic.GET_ATTRIBUTE(license, "", "license type");
+      lic.GET_ATTRIBUTE(attribution, "",
+                        "attribution of license, if applicable");
+      lic.GET_ATTRIBUTE(name, "", "name of licensed component");
+      add_license(license, attribution, name);
+    } else if(tsccfg::node_get_name(sne) == "author") {
+      TASCAR::xml_element_t lic(sne);
+      std::string of;
+      std::string name;
+      lic.GET_ATTRIBUTE(name, "", "author name");
+      lic.GET_ATTRIBUTE(of, "", "name of authored component");
+      add_author(name, of);
+    } else if(tsccfg::node_get_name(sne) == "bibitem") {
+      add_bibitem(tsccfg::node_get_text(sne));
+      
+    } else if((tsccfg::node_get_name(sne) != "include") &&
+              (tsccfg::node_get_name(sne) != "mainwindow") &&
+              (tsccfg::node_get_name(sne) != "description"))
+      add_warning("Invalid element: " + tsccfg::node_get_name(sne), sne);
+    if(tsccfg::node_get_name(sne) == "module")
+      add_module(sne);
   }
 }
 

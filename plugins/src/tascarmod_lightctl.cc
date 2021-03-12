@@ -257,7 +257,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     std::vector<int32_t> lampdmx;
     fixtures[k].get_attribute("dmxval",lampdmx,"","start DMX value");
     xmlpp::DomParser domp;
-    xmlpp::Element* e_calibfile(fixtures[k].e);
+    tsccfg::node_t e_calibfile(fixtures[k].e);
     if( fixtures[k].has_attribute("calibfile") ){
       std::string calibfile;
       fixtures[k].get_attribute("calibfile",calibfile,"","calibration file");
@@ -288,7 +288,7 @@ lightscene_t::lightscene_t( const TASCAR::module_cfg_t& cfg )
     }
     xmlpp::Node::NodeList ch = e_calibfile->get_children( "calib" );
     for( xmlpp::Node::NodeList::iterator it=ch.begin();it!=ch.end();++it){
-      xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(*it);
+      tsccfg::node_t el = dynamic_cast<tsccfg::node_t>(*it);
       if( el ){
         int32_t c(-1);
         double v_in(-1);
@@ -525,7 +525,7 @@ lightctl_t::lightctl_t( const TASCAR::module_cfg_t& cfg )
 {
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
     if( sne && ( sne->get_name() == "lightscene")){
       TASCAR::module_cfg_t lcfg(cfg);
       lcfg.xmlsrc = sne;

@@ -220,7 +220,7 @@ glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
       sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
     if(sne)
       sensors.push_back(new sensorplugin_t(sensorplugin_cfg_t(sne)));
   }

@@ -9,7 +9,7 @@ public:
     double w;
     double state;
   };
-  cardioidmod_t(xmlpp::Element* xmlsrc);
+  cardioidmod_t(tsccfg::node_t xmlsrc);
   bool read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*);
   TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   void configure() { n_channels = 1; };
@@ -26,7 +26,7 @@ cardioidmod_t::data_t::data_t(uint32_t chunksize)
 {
 }
 
-cardioidmod_t::cardioidmod_t(xmlpp::Element* xmlsrc)
+cardioidmod_t::cardioidmod_t(tsccfg::node_t xmlsrc)
   : TASCAR::sourcemod_base_t(xmlsrc),
     f6db(1000),
     fmin(60),

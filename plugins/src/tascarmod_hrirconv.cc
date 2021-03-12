@@ -122,7 +122,7 @@ hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
   if( hrirfile.empty() ){
     xmlpp::Node::NodeList subnodes = e->get_children();
     for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+      tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
       if( sne && ( sne->get_name() == "entry" )){
         channel_entry_t che;
         get_attribute_value(sne,"in",che.inchannel);

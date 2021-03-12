@@ -184,7 +184,7 @@ geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_(width);
   GET_ATTRIBUTE_(buttonheight);
   for(auto sn : e->get_children()) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
     if(sne && (sne->get_name() == "preset")) {
       xml_element_t pres(sne);
       std::string name;
@@ -202,7 +202,7 @@ geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
         orientations[name] = TASCAR::zyx_euler_t(pos.x, pos.y, pos.z);
       }
       for(auto osn : sne->get_children()) {
-        xmlpp::Element* snel(dynamic_cast<xmlpp::Element*>(osn));
+        tsccfg::node_t snel(dynamic_cast<tsccfg::node_t>(osn));
         if(snel && (snel->get_name() == "osc")) {
           xml_element_t pres(snel);
           std::string path;

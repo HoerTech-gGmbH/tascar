@@ -59,7 +59,7 @@ namespace tsccfg {
                                        const std::string& name,
                                        std::string& value,
                                        const std::string& info);
-  std::string node_get_text(tsccfg::node_t n, const std::string& child);
+  std::string node_get_text(tsccfg::node_t n, const std::string& child = "");
 
 } // namespace tsccfg
 
@@ -249,10 +249,10 @@ namespace TASCAR {
     xmlpp::DomParser domp;
     xmlpp::Document* doc;
 
-  private:
-    tsccfg::node_t get_root_node();
     bool freedoc;
 #endif
+  private:
+    tsccfg::node_t get_root_node();
   };
 
 } // namespace TASCAR

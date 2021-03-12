@@ -94,15 +94,15 @@ int qualisys_tracker_t::qtmxml(const char *path, const char *types, lo_arg **arg
   nominal_freq = root.e->eval_to_number("/*/General/Frequency");
   xmlpp::Node::NodeList subnodes(root.e->get_children("The_6D"));
   for(auto sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
     if( sne ){
         xmlpp::Node::NodeList subnodes(sne->get_children("Body"));
         for(auto sn=subnodes.begin();sn!=subnodes.end();++sn){
-          xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+          tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
           if( sne ){
             xmlpp::Node::NodeList subnodes(sne->get_children("Name"));
             for(auto sn=subnodes.begin();sn!=subnodes.end();++sn){
-              xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+              tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
               if( sne ){
                 std::string name(sne->get_child_text()->get_content());
                 if( rigids.find(name) != rigids.end() )

@@ -16,7 +16,7 @@ namespace HoS {
 
   class srvvars_t : public TASCAR::xml_element_t {
   public:
-    srvvars_t(xmlpp::Element*);
+    srvvars_t(tsccfg::node_t);
     std::string targetaddr;
     std::string path;
   };
@@ -41,7 +41,7 @@ namespace HoS {
 
   class parameter_t : public srvvars_t {
   public:
-    parameter_t( xmlpp::Element*, TASCAR::osc_server_t* o );
+    parameter_t( tsccfg::node_t, TASCAR::osc_server_t* o );
     ~parameter_t();
     void locate0( float time );
     void az(float az_);
@@ -249,7 +249,7 @@ void HoS::parameter_t::apply(float time)
   b_applyat = false;
 }
 
-HoS::parameter_t::parameter_t(xmlpp::Element* e,TASCAR::osc_server_t* o)
+HoS::parameter_t::parameter_t(tsccfg::node_t e,TASCAR::osc_server_t* o)
   : srvvars_t(e),
     stopat(0),
     b_stopat(false),
@@ -298,7 +298,7 @@ HoS::parameter_t::~parameter_t()
 {
 }
 
-HoS::srvvars_t::srvvars_t(xmlpp::Element* e)
+HoS::srvvars_t::srvvars_t(tsccfg::node_t e)
   : xml_element_t(e)
 {
   GET_ATTRIBUTE_(targetaddr);

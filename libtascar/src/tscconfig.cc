@@ -1306,7 +1306,7 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
 TASCAR::xml_doc_t::xml_doc_t()
 {
   doc.load_string("<?xml version=1.0?>\n<session/>");
-  root = doc.get_root_node();
+  root = doc.document_element();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t() : doc(NULL), freedoc(true)
@@ -1338,7 +1338,7 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
           " at line " + std::to_string(result.offset));
     break;
   }
-  root = doc.get_root_node();
+  root = doc.document_element();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)

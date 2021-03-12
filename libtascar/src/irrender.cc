@@ -21,13 +21,13 @@ TASCAR::wav_render_t::~wav_render_t()
     delete pscene;
 }
 
-void TASCAR::wav_render_t::add_scene(xmlpp::Element* sne)
+void TASCAR::wav_render_t::add_scene(tsccfg::node_t sne)
 {
   if((!pscene) &&
-     (scene.empty() || (sne->get_attribute_value("name") == scene))) {
+     (scene.empty() || (tsccfg::node_get_attribute_value(sne,"name") == scene))) {
     pscene = new render_core_t(sne);
   } else {
-    if(pscene && (pscene->name == sne->get_attribute_value("name")))
+    if(pscene && (pscene->name == tsccfg::node_get_attribute_value(sne,"name")))
       throw TASCAR::ErrMsg("A scene of name \"" + pscene->name +
                            "\" already exists in the session.");
   }

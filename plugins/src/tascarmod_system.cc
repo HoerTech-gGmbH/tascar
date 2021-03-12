@@ -8,7 +8,7 @@
 
 class at_cmd_t : public TASCAR::xml_element_t {
 public:
-  at_cmd_t(xmlpp::Element* xmlsrc);
+  at_cmd_t(tsccfg::node_t xmlsrc);
   void prepare(double f_sample)
   {
     if(!use_frame)
@@ -20,7 +20,7 @@ public:
   bool use_frame;
 };
 
-at_cmd_t::at_cmd_t(xmlpp::Element* xmlsrc)
+at_cmd_t::at_cmd_t(tsccfg::node_t xmlsrc)
     : TASCAR::xml_element_t(xmlsrc), time(0), frame(0), use_frame(false)
 {
   if(has_attribute("frame") && has_attribute("time"))
@@ -171,16 +171,8 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_(sleep);
   GET_ATTRIBUTE_(onunload);
   GET_ATTRIBUTE_(triggered);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if(sne) {
-      // parse nodes:
-      if(sne->get_name() == "at")
-        atcmds.push_back(new at_cmd_t(sne));
-    }
-  }
+  for(auto sne : tsccfg::node_get_children(e,"at"))
+    atcmds.push_back(new at_cmd_t(sne));
   if(!command.empty()) {
     pid = system2(command.c_str());
   }

@@ -1,16 +1,14 @@
-#include "session.h"
 #include "sampler.h"
+#include "session.h"
 
 class sound_var_t : public TASCAR::xml_element_t {
 public:
-  sound_var_t(xmlpp::Element* xmlsrc);
+  sound_var_t(tsccfg::node_t xmlsrc);
   std::string name;
   double gain;
 };
 
-sound_var_t::sound_var_t(xmlpp::Element* xmlsrc)
-: xml_element_t(xmlsrc),
-  gain(0)
+sound_var_t::sound_var_t(tsccfg::node_t xmlsrc) : xml_element_t(xmlsrc), gain(0)
 {
   GET_ATTRIBUTE_(name);
   GET_ATTRIBUTE_(gain);
@@ -18,41 +16,38 @@ sound_var_t::sound_var_t(xmlpp::Element* xmlsrc)
 
 class sampler_var_t : public TASCAR::module_base_t {
 public:
-  sampler_var_t( const TASCAR::module_cfg_t& cfg );
+  sampler_var_t(const TASCAR::module_cfg_t& cfg);
   std::string multicast;
   std::string port;
   std::vector<sound_var_t> sounds;
 };
 
-sampler_var_t::sampler_var_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg )
+sampler_var_t::sampler_var_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg)
 {
   GET_ATTRIBUTE_(multicast);
   GET_ATTRIBUTE_(port);
-  if( port.empty() ){
+  if(port.empty()) {
     std::cerr << "Warning: Empty port number; using default port 9999.\n";
     port = "9999";
   }
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "sound" ))
-      sounds.push_back(sound_var_t(sne));
-  }
+  for(auto sne : tsccfg::node_get_children(e, "sound"))
+    sounds.push_back(sound_var_t(sne));
 }
 
 class sampler_mod_t : public sampler_var_t, public TASCAR::sampler_t {
 public:
-  sampler_mod_t( const TASCAR::module_cfg_t& cfg );
+  sampler_mod_t(const TASCAR::module_cfg_t& cfg);
   ~sampler_mod_t();
 };
 
-sampler_mod_t::sampler_mod_t( const TASCAR::module_cfg_t& cfg)
-  : sampler_var_t( cfg ),
-    TASCAR::sampler_t(jacknamer(session->name,"sampler."),multicast,port)
+sampler_mod_t::sampler_mod_t(const TASCAR::module_cfg_t& cfg)
+    : sampler_var_t(cfg), TASCAR::sampler_t(
+                              jacknamer(session->name, "sampler."), multicast,
+                              port)
 {
-  for(std::vector<sound_var_t>::iterator it=sampler_var_t::sounds.begin();it!=sampler_var_t::sounds.end();++it)
-    add_sound(it->name,it->gain);
+  for(auto snd : sampler_var_t::sounds)
+    add_sound(snd.name, snd.gain);
   start();
 }
 
@@ -71,4 +66,3 @@ REGISTER_MODULE(sampler_mod_t);
  * compile-command: "make -C .."
  * End:
  */
-

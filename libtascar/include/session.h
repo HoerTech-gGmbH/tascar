@@ -144,7 +144,7 @@ namespace TASCAR {
 
   public:
     virtual ~session_t();
-    void add_scene(tsccfg::node_t src = NULL);
+    void add_scene(tsccfg::node_t);
     void add_range(tsccfg::node_t);
     void add_connection(tsccfg::node_t);
     void add_module(tsccfg::node_t);

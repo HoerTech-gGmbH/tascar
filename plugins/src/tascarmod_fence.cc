@@ -3,7 +3,7 @@
 
 class fence_t : public TASCAR::actor_module_t {
 public:
-  fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  fence_t(tsccfg::node_t xmlsrc,TASCAR::session_t* session);
   ~fence_t();
   void update(uint32_t frame, bool running);
   static int osc_scalefence(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
@@ -25,7 +25,7 @@ void fence_t::scalefence(double scale)
 {
 }
 
-fence_t::fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
+fence_t::fence_t(tsccfg::node_t xmlsrc,TASCAR::session_t* session)
   : actor_module_t(xmlsrc,session)
 {
   GET_ATTRIBUTE_(id);

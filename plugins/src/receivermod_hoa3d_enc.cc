@@ -9,7 +9,7 @@ public:
     // ambisonic weights:
     std::vector<float> B;
   };
-  hoa3d_enc_t(xmlpp::Element* xmlsrc);
+  hoa3d_enc_t(tsccfg::node_t xmlsrc);
   ~hoa3d_enc_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
@@ -27,7 +27,7 @@ hoa3d_enc_t::data_t::data_t(uint32_t channels )
   B = std::vector<float>(channels, 0.0f );
 }
 
-hoa3d_enc_t::hoa3d_enc_t(xmlpp::Element* xmlsrc)
+hoa3d_enc_t::hoa3d_enc_t(tsccfg::node_t xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc),
   order(3)
 {

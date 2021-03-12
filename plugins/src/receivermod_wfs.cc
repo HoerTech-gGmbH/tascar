@@ -13,7 +13,7 @@ public:
     // delay lines:
     std::vector<TASCAR::varidelay_t> dline;
   };
-  rec_wfs_t(xmlpp::Element* xmlsrc);
+  rec_wfs_t(tsccfg::node_t xmlsrc);
   virtual ~rec_wfs_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -36,7 +36,7 @@ rec_wfs_t::data_t::data_t( uint32_t channels, float fs, float rmax, float c )
 {
 }
 
-rec_wfs_t::rec_wfs_t(xmlpp::Element* xmlsrc)
+rec_wfs_t::rec_wfs_t(tsccfg::node_t xmlsrc)
   : TASCAR::receivermod_base_speaker_t(xmlsrc),
   c(340),
   planewave(true),

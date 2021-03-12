@@ -35,7 +35,7 @@ std::string datestr()
 
 class lslvar_t : public TASCAR::xml_element_t {
 public:
-  lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout);
+  lslvar_t(tsccfg::node_t xmlsrc, double lsltimeout);
   ~lslvar_t();
   uint32_t size;
   std::string name;
@@ -73,7 +73,7 @@ std::string lslvar_t::get_xml()
   return inlet->info().as_xml();
 }
 
-lslvar_t::lslvar_t(xmlpp::Element* xmlsrc, double lsltimeout)
+lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double lsltimeout)
     : xml_element_t(xmlsrc), size(0), recorder(NULL), inlet(NULL),
       delta(lsl::local_clock()), stream_delta_start(0), stream_delta_end(0),
       time_correction_failed(false), tctimeout(2.0), chfmt(lsl::cf_undefined),
@@ -150,12 +150,12 @@ void lslvar_t::set_delta(double deltatime)
 
 class oscsvar_t : public TASCAR::xml_element_t {
 public:
-  oscsvar_t(xmlpp::Element* xmlsrc);
+  oscsvar_t(tsccfg::node_t xmlsrc);
   std::string path;
   uint32_t skipplot;
 };
 
-oscsvar_t::oscsvar_t(xmlpp::Element* xmlsrc)
+oscsvar_t::oscsvar_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), skipplot(0)
 {
   GET_ATTRIBUTE_(path);
@@ -164,7 +164,7 @@ oscsvar_t::oscsvar_t(xmlpp::Element* xmlsrc)
 
 class oscvar_t : public TASCAR::xml_element_t {
 public:
-  oscvar_t(xmlpp::Element* xmlsrc);
+  oscvar_t(tsccfg::node_t xmlsrc);
   std::string get_fmt();
   std::string path;
   uint32_t size;
@@ -173,7 +173,7 @@ public:
   uint32_t skipplot;
 };
 
-oscvar_t::oscvar_t(xmlpp::Element* xmlsrc)
+oscvar_t::oscvar_t(tsccfg::node_t xmlsrc)
   : xml_element_t(xmlsrc), size(1), ignorefirst(false), usedouble(false),skipplot(0)
 {
   GET_ATTRIBUTE_(path);
@@ -234,7 +234,7 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg)
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
       sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
     if(sne && (sne->get_name() == "variable"))
       oscvars.push_back(oscvar_t(sne));
     if(sne && (sne->get_name() == "osc"))

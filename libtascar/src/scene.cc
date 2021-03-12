@@ -1202,7 +1202,6 @@ diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(tsccfg::node_t e)
   el.GET_ATTRIBUTE(volumetric,"m","size of diffuse reverberation");
   el.GET_ATTRIBUTE_BOOL(diffuse,"render diffuse input sound fields");
   el.GET_ATTRIBUTE(falloff,"m","ramp length at boundaries");
-  DEBUG(type);
 }
 
 diffuse_reverb_t::diffuse_reverb_t(tsccfg::node_t e)

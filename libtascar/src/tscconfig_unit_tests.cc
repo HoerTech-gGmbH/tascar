@@ -58,6 +58,14 @@ TEST(node_t, set_attribute)
   EXPECT_EQ("other", tsccfg::node_get_attribute_value(doc.root, "name"));
 }
 
+TEST(node_t, get_text)
+{
+  TASCAR::xml_doc_t doc("<session>text12</session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ("text12",tsccfg::node_get_text(doc.root));
+}
+
+                      
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

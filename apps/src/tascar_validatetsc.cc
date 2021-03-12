@@ -35,9 +35,9 @@ namespace App {
     void show_doc(bool latex);
 
   protected:
-    void add_scene(xmlpp::Element* e);
-    void add_range(xmlpp::Element*);
-    void add_connection(xmlpp::Element*);
+    void add_scene(tsccfg::node_t e);
+    void add_range(tsccfg::node_t);
+    void add_connection(tsccfg::node_t);
 
   private:
     std::vector<TASCAR::render_core_t*> scenes;
@@ -93,7 +93,7 @@ App::show_licenses_t::~show_licenses_t()
     delete(*sit);
 }
 
-void App::show_licenses_t::add_scene(xmlpp::Element* sne)
+void App::show_licenses_t::add_scene(tsccfg::node_t sne)
 {
   TASCAR::render_core_t* newscene(NULL);
   try {
@@ -111,17 +111,13 @@ void App::show_licenses_t::add_scene(xmlpp::Element* sne)
   }
 }
 
-void App::show_licenses_t::add_range(xmlpp::Element* src)
+void App::show_licenses_t::add_range(tsccfg::node_t src)
 {
-  if(!src)
-    src = tsc_reader_t::e->add_child("range");
   ranges.push_back(new TASCAR::range_t(src));
 }
 
-void App::show_licenses_t::add_connection(xmlpp::Element* src)
+void App::show_licenses_t::add_connection(tsccfg::node_t src)
 {
-  if(!src)
-    src = tsc_reader_t::e->add_child("connect");
   connections.push_back(new TASCAR::connection_t(src));
 }
 

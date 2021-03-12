@@ -55,7 +55,7 @@ nearsensor_t::nearsensor_t( const TASCAR::module_cfg_t& cfg )
   vmsg1.push_back(new TASCAR::msg_t(e));
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
     if( sne ){
       if( sne->get_name() == "msgapp" )
         vmsg1.push_back(new TASCAR::msg_t(sne));
