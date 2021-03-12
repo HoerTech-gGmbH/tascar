@@ -1406,12 +1406,20 @@ std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
 
 std::string tsccfg::node_get_name(const tsccfg::node_t& node)
 {
+#ifdef USEPUGIXML
   return "";
+#else
+  return node->get_name();
+#endif
 }
 
 std::string tsccfg::node_get_path(const tsccfg::node_t& node)
 {
+#ifdef USEPUGIXML
   return "";
+#else
+  return node->get_path();
+#endif
 }
 
 void tsccfg::node_set_attribute(tsccfg::node_t&, const std::string& n,
