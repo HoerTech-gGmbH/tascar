@@ -41,7 +41,7 @@ namespace TASCAR {
       data_t(){};
       virtual ~data_t(){};
     };
-    sourcemod_base_t(xmlpp::Element* xmlsrc);
+    sourcemod_base_t(tsccfg::node_t xmlsrc);
     virtual ~sourcemod_base_t();
     virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
     virtual bool read_source_diffuse(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
@@ -53,7 +53,7 @@ namespace TASCAR {
 
   class sourcemod_t : public sourcemod_base_t {
   public:
-    sourcemod_t(xmlpp::Element* xmlsrc);
+    sourcemod_t(tsccfg::node_t xmlsrc);
     virtual ~sourcemod_t();
     virtual bool read_source( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
     virtual bool read_source_diffuse( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
@@ -70,7 +70,7 @@ namespace TASCAR {
 
 }
 
-#define REGISTER_SOURCEMOD(x) TASCAR_PLUGIN( sourcemod_base_t, xmlpp::Element*, x )
+#define REGISTER_SOURCEMOD(x) TASCAR_PLUGIN( sourcemod_base_t, tsccfg::node_t, x )
 
 
 #endif

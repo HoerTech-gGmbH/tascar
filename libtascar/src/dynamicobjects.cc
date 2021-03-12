@@ -28,7 +28,7 @@ TASCAR::navmesh_t::navmesh_t(tsccfg::node_t xmlsrc)
       }
     }
   }
-  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc, "faces"));
+  std::stringstream txtmesh(tsccfg::node_get_text(xmlsrc, "faces"));
   while(!txtmesh.eof()) {
     std::string meshline;
     getline(txtmesh, meshline, '\n');
@@ -389,48 +389,20 @@ void track_t::smooth(unsigned int n)
   prepare();
 }
 
-std::string TASCAR::xml_get_text(tsccfg::node_t n, const std::string& child)
-{
-#ifdef USEPUGIXML
-#else
-  if(n) {
-    if(child.size()) {
-      xmlpp::Node::NodeList ch = n->get_children(child);
-      if(ch.size()) {
-        xmlpp::NodeSet stxt = (*ch.begin())->find("text()");
-        xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
-        if(txt) {
-          return txt->get_content();
-        }
-      }
-    } else {
-      xmlpp::NodeSet stxt = n->find("text()");
-      if(stxt.begin() != stxt.end()) {
-        xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
-        if(txt) {
-          return txt->get_content();
-        }
-      }
-    }
-  }
-#endif
-  return "";
-}
-
 pos_t TASCAR::xml_get_trkpt(tsccfg::node_t pt, time_t& tme)
 {
   double lat(0);
   get_attribute_value(pt, "lat", lat);
   double lon(0);
   get_attribute_value(pt, "lon", lon);
-  std::string stm(xml_get_text(pt, "time"));
+  std::string stm(tsccfg::node_get_text(pt, "time"));
   struct tm bdtm;
   tme = 0;
   memset(&bdtm, 0, sizeof(bdtm));
   if(strptime(stm.c_str(), "%Y-%m-%dT%T", &bdtm)) {
     tme = mktime(&bdtm);
   }
-  std::string selev = xml_get_text(pt, "ele");
+  std::string selev = tsccfg::node_get_text(pt, "ele");
   double elev = 0;
   if(selev.size())
     elev = atof(selev.c_str());
@@ -443,32 +415,19 @@ void track_t::load_from_gpx(const std::string& fname)
 {
   double ttinc(0);
   track_t track;
-  xmlpp::DomParser parser(TASCAR::env_expand(fname));
-  tsccfg::node_t root = parser.get_document()->get_root_node();
-  if(root) {
-    xmlpp::Node::NodeList xmltrack = root->get_children("trk");
-    if(xmltrack.size()) {
-      xmlpp::Node::NodeList trackseg =
-          (*(xmltrack.begin()))->get_children("trkseg");
-      if(trackseg.size()) {
-        xmlpp::Node::NodeList trackpt =
-            (*(trackseg.begin()))->get_children("trkpt");
-        for(xmlpp::Node::NodeList::iterator itrackpt = trackpt.begin();
-            itrackpt != trackpt.end(); ++itrackpt) {
-          tsccfg::node_t loc = dynamic_cast<tsccfg::node_t>(*itrackpt);
-          if(loc) {
-            time_t tm;
-            pos_t p = xml_get_trkpt(loc, tm);
-            double ltm(tm);
-            if(ltm == 0)
-              ltm = ttinc;
-            track[ltm] = p;
-            ttinc += 1.0;
-          }
-        }
+  TASCAR::xml_doc_t doc(TASCAR::env_expand(fname),TASCAR::xml_doc_t::LOAD_FILE);
+  tsccfg::node_t root(doc.get_root_node());
+  for( auto node : tsccfg::node_get_children(root,"trk"))
+    for( auto segment : tsccfg::node_get_children(node, "trkseg") )
+      for( auto point : tsccfg::node_get_children( segment, "trkpt") ){
+        time_t tm;
+        pos_t p = xml_get_trkpt(point, tm);
+        double ltm(tm);
+        if(ltm == 0)
+          ltm = ttinc;
+        track[ltm] = p;
+        ttinc += 1.0;
       }
-    }
-  }
   *this = track;
   prepare();
 }
@@ -502,11 +461,10 @@ void track_t::load_from_csv(const std::string& fname)
 void track_t::edit(tsccfg::node_t cmd)
 {
   if(cmd) {
-    std::string scmd(cmd->get_name());
+    std::string scmd(tsccfg::node_get_name(cmd));
     if(scmd == "load") {
-      std::string filename =
-          TASCAR::env_expand(cmd->get_attribute_value("name"));
-      std::string filefmt = cmd->get_attribute_value("format");
+      std::string filename(TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd,"name")));
+      std::string filefmt(tsccfg::node_get_attribute_value(cmd,"format"));
       if(filefmt == "gpx") {
         load_from_gpx(filename);
       } else if(filefmt == "csv") {
@@ -516,22 +474,20 @@ void track_t::edit(tsccfg::node_t cmd)
         DEBUG(filefmt);
       }
     } else if(scmd == "save") {
-      std::string filename =
-          TASCAR::env_expand(cmd->get_attribute_value("name"));
+      std::string filename(TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd,"name")));
       std::ofstream ofs(filename.c_str());
       ofs << print_cart(",");
     } else if(scmd == "origin") {
-      std::string normtype = cmd->get_attribute_value("src");
-      std::string normmode = cmd->get_attribute_value("mode");
+      std::string normtype(tsccfg::node_get_attribute_value(cmd,"src"));
+      std::string normmode(tsccfg::node_get_attribute_value(cmd,"mode"));
       TASCAR::pos_t orig;
       if(normtype == "center") {
         orig = center();
       } else if(normtype == "trkpt") {
-        xmlpp::Node::NodeList trackpt = cmd->get_children("trkpt");
-        tsccfg::node_t loc = dynamic_cast<tsccfg::node_t>(*(trackpt.begin()));
-        if(loc) {
+        auto trackptlist(tsccfg::node_get_children(cmd,"trkpt"));
+        if( trackptlist.size() ){
           time_t tm;
-          orig = xml_get_trkpt(loc, tm);
+          orig = xml_get_trkpt(trackptlist[0], tm);
         }
       }
       if(normmode == "tangent") {
@@ -540,36 +496,31 @@ void track_t::edit(tsccfg::node_t cmd)
         *this -= orig;
       }
     } else if(scmd == "addpoints") {
-      std::string fmt = cmd->get_attribute_value("format");
+      std::string fmt(tsccfg::node_get_attribute_value(cmd,"format"));
       // TASCAR::pos_t orig;
       if(fmt == "trkpt") {
         double ttinc(0);
         if(rbegin() != rend())
           ttinc = rbegin()->first;
-        xmlpp::Node::NodeList trackpt = cmd->get_children("trkpt");
-        for(xmlpp::Node::NodeList::iterator itrackpt = trackpt.begin();
-            itrackpt != trackpt.end(); ++itrackpt) {
-          tsccfg::node_t loc = dynamic_cast<tsccfg::node_t>(*itrackpt);
-          if(loc) {
-            time_t tm;
-            pos_t p = xml_get_trkpt(loc, tm);
-            double ltm(tm);
-            if(ltm == 0)
-              ltm = ttinc;
-            (*this)[ltm] = p;
-            ttinc += 1.0;
-          }
+        for( auto loc : tsccfg::node_get_children(cmd,"trkpt")){
+          time_t tm;
+          pos_t p = xml_get_trkpt(loc, tm);
+          double ltm(tm);
+          if(ltm == 0)
+            ltm = ttinc;
+          (*this)[ltm] = p;
+          ttinc += 1.0;
         }
       }
     } else if(scmd == "velocity") {
-      std::string vel(cmd->get_attribute_value("const"));
+      std::string vel(tsccfg::node_get_attribute_value(cmd,"const"));
       if(vel.size()) {
         double v(atof(vel.c_str()));
         set_velocity_const(v);
       }
       std::string vel_fname(
-          TASCAR::env_expand(cmd->get_attribute_value("csvfile")));
-      std::string s_offset(cmd->get_attribute_value("start"));
+          TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd,"csvfile")));
+      std::string s_offset(tsccfg::node_get_attribute_value(cmd,"start"));
       if(vel_fname.size()) {
         double v_offset(0);
         if(s_offset.size())
@@ -577,28 +528,28 @@ void track_t::edit(tsccfg::node_t cmd)
         set_velocity_csvfile(vel_fname, v_offset);
       }
     } else if(scmd == "rotate") {
-      rot_z(DEG2RAD * atof(cmd->get_attribute_value("angle").c_str()));
+      rot_z(DEG2RAD * atof(tsccfg::node_get_attribute_value(cmd,"angle").c_str()));
     } else if(scmd == "scale") {
-      TASCAR::pos_t scale(atof(cmd->get_attribute_value("x").c_str()),
-                          atof(cmd->get_attribute_value("y").c_str()),
-                          atof(cmd->get_attribute_value("z").c_str()));
+      TASCAR::pos_t scale(atof(tsccfg::node_get_attribute_value(cmd,"x").c_str()),
+                          atof(tsccfg::node_get_attribute_value(cmd,"y").c_str()),
+                          atof(tsccfg::node_get_attribute_value(cmd,"z").c_str()));
       *this *= scale;
     } else if(scmd == "translate") {
-      TASCAR::pos_t dx(atof(cmd->get_attribute_value("x").c_str()),
-                       atof(cmd->get_attribute_value("y").c_str()),
-                       atof(cmd->get_attribute_value("z").c_str()));
+      TASCAR::pos_t dx(atof(tsccfg::node_get_attribute_value(cmd,"x").c_str()),
+                       atof(tsccfg::node_get_attribute_value(cmd,"y").c_str()),
+                       atof(tsccfg::node_get_attribute_value(cmd,"z").c_str()));
       *this += dx;
     } else if(scmd == "smooth") {
-      unsigned int n = atoi(cmd->get_attribute_value("n").c_str());
+      unsigned int n = atoi(tsccfg::node_get_attribute_value(cmd,"n").c_str());
       if(n)
         smooth(n);
     } else if(scmd == "resample") {
-      double dt = atof(cmd->get_attribute_value("dt").c_str());
+      double dt = atof(tsccfg::node_get_attribute_value(cmd,"dt").c_str());
       resample(dt);
     } else if(scmd == "trim") {
       prepare();
-      double d_start = atof(cmd->get_attribute_value("start").c_str());
-      double d_end = atof(cmd->get_attribute_value("end").c_str());
+      double d_start = atof(tsccfg::node_get_attribute_value(cmd,"start").c_str());
+      double d_end = atof(tsccfg::node_get_attribute_value(cmd,"end").c_str());
       double t_start(get_time(d_start));
       double t_end(get_time(length() - d_end));
       TASCAR::track_t ntrack;
@@ -613,12 +564,12 @@ void track_t::edit(tsccfg::node_t cmd)
       prepare();
     } else if(scmd == "time") {
       // scale...
-      std::string att_start(cmd->get_attribute_value("start"));
+      std::string att_start(tsccfg::node_get_attribute_value(cmd,"start"));
       if(att_start.size()) {
         double starttime = atof(att_start.c_str());
         shift_time(starttime - begin()->first);
       }
-      std::string att_scale(cmd->get_attribute_value("scale"));
+      std::string att_scale(tsccfg::node_get_attribute_value(cmd,"scale"));
       if(att_scale.size()) {
         double scaletime = atof(att_scale.c_str());
         TASCAR::track_t ntrack;
@@ -629,7 +580,7 @@ void track_t::edit(tsccfg::node_t cmd)
         prepare();
       }
     } else {
-      DEBUG(cmd->get_name());
+      DEBUG(tsccfg::node_get_name(cmd));
     }
   }
   prepare();
@@ -737,14 +688,19 @@ void track_t::write_xml(tsccfg::node_t a)
     // a->set_attribute("interpolation","cartesian");
     break;
   case TASCAR::track_t::spherical:
-    a->set_attribute("interpolation", "spherical");
+    tsccfg::node_set_attribute(a,"interpolation", "spherical");
     break;
   }
+#ifdef USEPUGIXML
+  a.remove_children();
+  a.text().set(print_cart(" ").c_str());
+#else
   xmlpp::Node::NodeList ch = a->get_children();
   for(xmlpp::Node::NodeList::reverse_iterator sn = ch.rbegin(); sn != ch.rend();
       ++sn)
     a->remove_child(*sn);
   a->add_child_text(print_cart(" "));
+#endif
 }
 
 void track_t::read_xml(tsccfg::node_t a)
@@ -797,7 +753,7 @@ void track_t::read_xml(tsccfg::node_t a)
     }
     fh.close();
   }
-  std::stringstream ptxt1(xml_get_text(a, ""));
+  std::stringstream ptxt1(tsccfg::node_get_text(a, ""));
   while(!ptxt1.eof()) {
     std::string meshline;
     getline(ptxt1, meshline, '\n');
@@ -876,11 +832,16 @@ zyx_euler_t euler_track_t::interp(double x) const
 
 void euler_track_t::write_xml(tsccfg::node_t a)
 {
+#ifdef USEPUGIXML
+  a.remove_children();
+  a.text().set(print(" ").c_str());
+#else
   xmlpp::Node::NodeList ch = a->get_children();
   for(xmlpp::Node::NodeList::reverse_iterator sn = ch.rbegin(); sn != ch.rend();
       ++sn)
     a->remove_child(*sn);
   a->add_child_text(print(" "));
+#endif
 }
 
 void euler_track_t::read_xml(tsccfg::node_t a)
@@ -888,7 +849,7 @@ void euler_track_t::read_xml(tsccfg::node_t a)
   get_attribute_value(a, "loop", loop);
   euler_track_t ntrack;
   ntrack.loop = loop;
-  std::string importcsv(a->get_attribute_value("importcsv"));
+  std::string importcsv(tsccfg::node_get_attribute_value(a,"importcsv"));
   if(!importcsv.empty()) {
     // load track from CSV file:
     std::ifstream fh(importcsv.c_str());
@@ -913,7 +874,7 @@ void euler_track_t::read_xml(tsccfg::node_t a)
     }
     fh.close();
   }
-  std::stringstream ptxt1(xml_get_text(a, ""));
+  std::stringstream ptxt1(tsccfg::node_get_text(a, ""));
   while(!ptxt1.eof()) {
     std::string meshline;
     getline(ptxt1, meshline, '\n');

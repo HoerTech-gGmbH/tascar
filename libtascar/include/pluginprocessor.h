@@ -30,7 +30,7 @@ namespace TASCAR {
                              public xml_element_t,
                              public licensed_component_t {
   public:
-    plugin_processor_t(xmlpp::Element* xmlsrc, const std::string& name,
+    plugin_processor_t(tsccfg::node_t xmlsrc, const std::string& name,
                        const std::string& parentname);
     ~plugin_processor_t();
     void configure();

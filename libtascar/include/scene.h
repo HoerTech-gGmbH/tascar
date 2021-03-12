@@ -37,7 +37,7 @@ namespace TASCAR {
 
     class route_t : public xml_element_t { //, public audiostates_t
     public:
-      route_t(xmlpp::Element*);
+      route_t(tsccfg::node_t);
       ~route_t();
       std::string get_name() const { return name; };
       std::string get_id() const { return id; };
@@ -112,7 +112,7 @@ namespace TASCAR {
 
     class object_t : public dynobject_t, public route_t {
     public:
-      object_t(xmlpp::Element*);
+      object_t(tsccfg::node_t);
       virtual ~object_t(){};
       bool isactive(double time) const;
       bool is_active(uint32_t anysolo, double t);
@@ -123,7 +123,7 @@ namespace TASCAR {
     class face_object_t : public object_t,
                           public TASCAR::Acousticmodel::reflector_t {
     public:
-      face_object_t(xmlpp::Element* xmlsrc);
+      face_object_t(tsccfg::node_t xmlsrc);
       virtual ~face_object_t();
       /**
          \callgraph
@@ -142,7 +142,7 @@ namespace TASCAR {
 
     class face_group_t : public object_t {
     public:
-      face_group_t(xmlpp::Element* xmlsrc);
+      face_group_t(tsccfg::node_t xmlsrc);
       virtual ~face_group_t();
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
@@ -158,7 +158,7 @@ namespace TASCAR {
 
     class obstacle_group_t : public object_t {
     public:
-      obstacle_group_t(xmlpp::Element* xmlsrc);
+      obstacle_group_t(tsccfg::node_t xmlsrc);
       virtual ~obstacle_group_t();
       /**
          \callgraph
@@ -184,7 +184,7 @@ namespace TASCAR {
     */
     class audio_port_t : public TASCAR::xml_element_t {
     public:
-      audio_port_t(xmlpp::Element* e, bool is_input_);
+      audio_port_t(tsccfg::node_t e, bool is_input_);
       virtual ~audio_port_t();
       void set_port_index(uint32_t port_index_);
       uint32_t get_port_index() const { return port_index; };
@@ -224,7 +224,7 @@ namespace TASCAR {
                                  public licensed_component_t,
                                  public audiostates_t {
     public:
-      diff_snd_field_obj_t(xmlpp::Element* e);
+      diff_snd_field_obj_t(tsccfg::node_t e);
       virtual ~diff_snd_field_obj_t();
       void configure();
       void release();
@@ -250,7 +250,7 @@ namespace TASCAR {
 
     class sound_name_t : private xml_element_t {
     public:
-      sound_name_t(xmlpp::Element* e, src_object_t* parent_);
+      sound_name_t(tsccfg::node_t e, src_object_t* parent_);
       std::string get_parent_name() const { return parentname; };
       std::string get_name() const { return name; };
       std::string get_fullname() const { return parentname + "." + name; };
@@ -266,7 +266,7 @@ namespace TASCAR {
                     public TASCAR::Acousticmodel::source_t,
                     public audio_port_t {
     public:
-      sound_t(xmlpp::Element* e, src_object_t* parent_);
+      sound_t(tsccfg::node_t e, src_object_t* parent_);
       virtual ~sound_t();
       rgb_color_t get_color() const;
       /**
@@ -302,7 +302,7 @@ namespace TASCAR {
                          public licensed_component_t,
                          public audiostates_t {
     public:
-      src_object_t(xmlpp::Element* e);
+      src_object_t(tsccfg::node_t e);
       ~src_object_t();
       void configure();
       void release();
@@ -316,7 +316,7 @@ namespace TASCAR {
          \callergraph
       */
       void process_active(double t, uint32_t anysolo);
-      void add_sound(xmlpp::Element* src = NULL);
+      void add_sound(tsccfg::node_t src);
       std::vector<sound_t*> sound;
       std::string next_sound_name() const;
       void validate_attributes(std::string& msg) const;
@@ -336,7 +336,7 @@ namespace TASCAR {
                            public audio_port_t,
                            public TASCAR::Acousticmodel::receiver_t {
     public:
-      receiver_obj_t(xmlpp::Element* e, bool is_reverb_);
+      receiver_obj_t(tsccfg::node_t e, bool is_reverb_);
       void configure();
       void release();
       /**
@@ -360,7 +360,7 @@ namespace TASCAR {
     class mask_object_t : public object_t,
                           public TASCAR::Acousticmodel::mask_t {
     public:
-      mask_object_t(xmlpp::Element* e);
+      mask_object_t(tsccfg::node_t e);
       /**
          \callgraph
          \callergraph
@@ -377,7 +377,7 @@ namespace TASCAR {
 
     class diffuse_reverb_defaults_t {
     public:
-      diffuse_reverb_defaults_t(xmlpp::Element* e);
+      diffuse_reverb_defaults_t(tsccfg::node_t e);
     };
 
     /**
@@ -387,7 +387,7 @@ namespace TASCAR {
     class diffuse_reverb_t : public diffuse_reverb_defaults_t,
                              public receiver_obj_t {
     public:
-      diffuse_reverb_t(xmlpp::Element* e);
+      diffuse_reverb_t(tsccfg::node_t e);
       ~diffuse_reverb_t();
       void configure();
       void release();
@@ -418,7 +418,7 @@ namespace TASCAR {
                     public audiostates_t,
                     public licensed_component_t {
     public:
-      scene_t(xmlpp::Element* e);
+      scene_t(tsccfg::node_t e);
       ~scene_t();
       src_object_t* add_source();
       void configure();

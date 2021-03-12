@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 namespace TASCAR {
-  std::map<std::string, std::map<std::string, cfg_var_desc_t>> attribute_list;
+  std::map<std::string, cfg_node_desc_t> attribute_list;
   std::vector<std::string> warnings;
   globalconfig_t config;
   size_t maxid(0);
@@ -21,21 +21,33 @@ std::string TASCAR::get_tuid()
   return c;
 }
 
-std::vector<tsccfg::node_t> tsccfg::node_get_children(tsccfg::node_t& node)
+std::vector<tsccfg::node_t> tsccfg::node_get_children(tsccfg::node_t& node, const std::string& name)
 {
   std::vector<tsccfg::node_t> children;
 #ifdef USEPUGIXML
   for(auto sn : node.children()) {
-    children.push_back(sn);
+    if( name.empty() || (name == tsccfg::node_get_name(sn)) )
+      children.push_back(sn);
   }
 #else
   for(auto sn : node->get_children()) {
     tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
     if(sne)
-      children.push_back(sne);
+      if( name.empty() || (name == tsccfg::node_get_name(sne)) )
+        children.push_back(sne);
   }
 #endif
   return children;
+}
+
+tsccfg::node_t tsccfg::node_add_child(tsccfg::node_t& node,
+                                      const std::string& name)
+{
+#ifdef USEPUGIXML
+  return node.append_child(name.c_str());
+#else
+  return node->add_child(name);
+#endif
 }
 
 std::string TASCAR::strrep(std::string s, const std::string& pat,
@@ -53,13 +65,25 @@ std::string TASCAR::strrep(std::string s, const std::string& pat,
   return s;
 }
 
+void node_register_attr(tsccfg::node_t& e, const std::string& name,
+                                const std::string& value,
+                                const std::string& unit,
+                                const std::string& info,
+                                const std::string& type)
+{
+  std::string path(tsccfg::node_get_path(e));
+  TASCAR::attribute_list[path].category = tsccfg::node_get_name(e);
+  TASCAR::attribute_list[path].type =
+      tsccfg::node_get_attribute_value(e, "type");
+  TASCAR::attribute_list[path].vars[name] = {name, type, value, unit, info};
+}
+
 void tsccfg::node_get_and_register_attribute(tsccfg::node_t& e,
                                              const std::string& name,
                                              std::string& value,
                                              const std::string& info)
 {
-  TASCAR::attribute_list[tsccfg::node_get_path(e)][name] = {name, "string",
-                                                            value, info};
+  node_register_attr(e,name,value,"",info,"string");
   if(tsccfg::node_has_attribute(e, name))
     value = tsccfg::node_get_attribute_value(e, name);
   else
@@ -404,8 +428,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {name, "string", value, unit,
-                                                    info};
+  node_register_attr(e,name,value,unit,info,"string");
   if(has_attribute(name))
     value = tsccfg::node_get_attribute_value(e, name);
   else
@@ -417,8 +440,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "double", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"double");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -429,8 +451,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name, float& value,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "float", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"float");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -442,8 +463,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "uint32", std::to_string(value), unit, info};
+  node_register_attr(e,name,std::to_string(value),unit,info,"uint32");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -455,8 +475,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "int32", std::to_string(value), unit, info};
+  node_register_attr(e,name,std::to_string(value),unit,info,"int32");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -468,8 +487,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "uint64", std::to_string(value), unit, info};
+  node_register_attr(e,name,std::to_string(value),unit,info,"uint64");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -481,8 +499,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "int64", std::to_string(value), unit, info};
+  node_register_attr(e,name,std::to_string(value),unit,info,"int64");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -493,8 +510,7 @@ void TASCAR::xml_element_t::get_attribute_bits(const std::string& name,
                                                uint32_t& value,
                                                const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "bits32", to_string_bits(value), "", info};
+  node_register_attr(e,name,to_string_bits(value),"",info,"bits32");
   if(has_attribute(name)) {
     std::string strval;
     strval = tsccfg::node_get_attribute_value(e, name);
@@ -518,8 +534,7 @@ void TASCAR::xml_element_t::get_attribute_bool(const std::string& name,
                                                const std::string& unit,
                                                const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "bool", TASCAR::to_string_bool(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string_bool(value),unit,info,"bool");
   if(has_attribute(name))
     get_attribute_value_bool(e, name, value);
   else
@@ -530,8 +545,7 @@ void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
                                              double& value,
                                              const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "double", TASCAR::to_string_db(value), "dB", info};
+  node_register_attr(e,name,TASCAR::to_string_db(value),"dB",info,"double");
   if(has_attribute(name))
     get_attribute_value_db(e, name, value);
   else
@@ -542,8 +556,7 @@ void TASCAR::xml_element_t::get_attribute_dbspl(const std::string& name,
                                                 double& value,
                                                 const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "double", TASCAR::to_string_dbspl(value), "dB SPL", info};
+  node_register_attr(e,name,TASCAR::to_string_dbspl(value),"dB SPL",info,"double");
   if(has_attribute(name))
     get_attribute_value_dbspl(e, name, value);
   else
@@ -554,8 +567,7 @@ void TASCAR::xml_element_t::get_attribute_dbspl(const std::string& name,
                                                 float& value,
                                                 const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "float", TASCAR::to_string_dbspl(value), "dB SPL", info};
+  node_register_attr(e,name,TASCAR::to_string_dbspl(value),"dB SPL",info,"float");
   if(has_attribute(name))
     get_attribute_value_dbspl_float(e, name, value);
   else
@@ -566,8 +578,7 @@ void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
                                              float& value,
                                              const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "float", TASCAR::to_string_db(value), "dB", info};
+  node_register_attr(e,name,TASCAR::to_string_db(value),"dB",info,"float");
   if(has_attribute(name))
     get_attribute_value_db_float(e, name, value);
   else
@@ -578,8 +589,7 @@ void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
                                               double& value,
                                               const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "double", TASCAR::to_string(value * RAD2DEG), "deg", info};
+  node_register_attr(e,name,TASCAR::to_string(value * RAD2DEG),"deg",info,"double");
   if(has_attribute(name))
     get_attribute_value_deg(e, name, value);
   else
@@ -591,8 +601,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "pos", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"pos");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -603,8 +612,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           TASCAR::zyx_euler_t& value,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "Euler rot", TASCAR::to_string_deg(value), "deg", info};
+  node_register_attr(e,name,TASCAR::to_string_deg(value),"deg",info,"Euler rot");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -616,8 +624,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "pos array", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"pos array");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -629,8 +636,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "string array", TASCAR::vecstr2str(value), unit, info};
+  node_register_attr(e,name,TASCAR::vecstr2str(value),unit,info,"string array");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -642,8 +648,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "double array", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"double array");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -655,8 +660,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "float array", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"float array");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -668,8 +672,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           const std::string& unit,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "int32 array", TASCAR::to_string(value), unit, info};
+  node_register_attr(e,name,TASCAR::to_string(value),unit,info,"int32 array");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -680,8 +683,7 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           TASCAR::levelmeter::weight_t& value,
                                           const std::string& info)
 {
-  attribute_list[tsccfg::node_get_path(e)][name] = {
-      name, "f-weight", TASCAR::to_string(value), "", info};
+  node_register_attr(e,name,TASCAR::to_string(value),"",info,"f-weight");
   if(has_attribute(name))
     get_attribute_value(e, name, value);
   else
@@ -973,7 +975,7 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
   tsccfg::node_set_attribute(elem, name, s.str());
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          double& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -983,7 +985,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
     value = tmpv;
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          float& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -993,7 +995,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
     value = tmpv;
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::pos_t& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1003,7 +1005,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
   }
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::zyx_euler_t& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1103,7 +1105,7 @@ std::string TASCAR::vecstr2str(const std::vector<std::string>& s)
   return rv;
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::levelmeter::weight_t& value)
 {
   std::string svalue(tsccfg::node_get_attribute_value(elem, name));
@@ -1123,37 +1125,37 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          std::string("\"."));
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<TASCAR::pos_t>& value)
 {
   value = TASCAR::str2vecpos(tsccfg::node_get_attribute_value(elem, name));
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<std::string>& value)
 {
   value = TASCAR::str2vecstr(tsccfg::node_get_attribute_value(elem, name));
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<double>& value)
 {
   value = TASCAR::str2vecdouble(tsccfg::node_get_attribute_value(elem, name));
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<float>& value)
 {
   value = TASCAR::str2vecfloat(tsccfg::node_get_attribute_value(elem, name));
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<int32_t>& value)
 {
   value = TASCAR::str2vecint(tsccfg::node_get_attribute_value(elem, name));
 }
 
-void get_attribute_value_deg(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value_deg(const tsccfg::node_t& elem, const std::string& name,
                              double& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1163,7 +1165,7 @@ void get_attribute_value_deg(tsccfg::node_t& elem, const std::string& name,
     value = DEG2RAD * tmpv;
 }
 
-void get_attribute_value_db(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value_db(const tsccfg::node_t& elem, const std::string& name,
                             double& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1173,7 +1175,7 @@ void get_attribute_value_db(tsccfg::node_t& elem, const std::string& name,
     value = pow(10.0, 0.05 * tmpv);
 }
 
-void get_attribute_value_dbspl(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value_dbspl(const tsccfg::node_t& elem, const std::string& name,
                                double& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1183,7 +1185,7 @@ void get_attribute_value_dbspl(tsccfg::node_t& elem, const std::string& name,
     value = pow(10.0, 0.05 * tmpv) * 2e-5;
 }
 
-void get_attribute_value_dbspl_float(tsccfg::node_t& elem,
+void get_attribute_value_dbspl_float(const tsccfg::node_t& elem,
                                      const std::string& name, float& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1193,7 +1195,7 @@ void get_attribute_value_dbspl_float(tsccfg::node_t& elem,
     value = powf(10.0f, 0.05f * tmpv) * 2e-5f;
 }
 
-void get_attribute_value_db_float(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value_db_float(const tsccfg::node_t& elem, const std::string& name,
                                   float& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1203,7 +1205,7 @@ void get_attribute_value_db_float(tsccfg::node_t& elem, const std::string& name,
     value = pow(10.0, 0.05 * tmpv);
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          uint32_t& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1213,7 +1215,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
     value = tmpv;
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          uint64_t& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1223,7 +1225,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
     value = tmpv;
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          int32_t& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1233,7 +1235,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
     value = tmpv;
 }
 
-void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          int64_t& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1243,7 +1245,7 @@ void get_attribute_value(tsccfg::node_t& elem, const std::string& name,
     value = tmpv;
 }
 
-void get_attribute_value_bool(tsccfg::node_t& elem, const std::string& name,
+void get_attribute_value_bool(const tsccfg::node_t& elem, const std::string& name,
                               bool& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1258,13 +1260,13 @@ std::vector<std::string> TASCAR::xml_element_t::get_unused_attributes() const
 #ifdef USEPUGIXML
   for(auto attr : e.attributes()) {
     std::string attrname(attr.name());
-    if(attribute_list[path].find(attrname) == attribute_list[path].end())
+    if(attribute_list[path].vars.find(attrname) == attribute_list[path].vars.end())
       retv.push_back(attrname);
   }
 #else
   for(auto attr : e->get_attributes()) {
     std::string attrname(attr->get_name());
-    if(attribute_list[path].find(attrname) == attribute_list[path].end())
+    if(attribute_list[path].vars.find(attrname) == attribute_list[path].vars.end())
       retv.push_back(attrname);
   }
 #endif
@@ -1283,7 +1285,7 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
     for(auto attr : unused)
       msg += " " + attr;
     msg += " (valid attributes are:";
-    for(auto attr : attribute_list[path])
+    for(auto attr : attribute_list[path].vars)
       msg += " " + attr.first;
     msg += ").";
   }
@@ -1362,6 +1364,63 @@ tsccfg::node_t TASCAR::xml_doc_t::get_root_node()
 std::string TASCAR::xml_element_t::get_element_name() const
 {
   return tsccfg::node_get_name(e);
+}
+
+std::string tsccfg::node_get_text(tsccfg::node_t n, const std::string& child)
+{
+#ifdef USEPUGIXML
+#else
+  if(n) {
+    if(child.size()) {
+      xmlpp::Node::NodeList ch = n->get_children(child);
+      if(ch.size()) {
+        xmlpp::NodeSet stxt = (*ch.begin())->find("text()");
+        xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
+        if(txt) {
+          return txt->get_content();
+        }
+      }
+    } else {
+      xmlpp::NodeSet stxt = n->find("text()");
+      if(stxt.begin() != stxt.end()) {
+        xmlpp::TextNode* txt = dynamic_cast<xmlpp::TextNode*>(*(stxt.begin()));
+        if(txt) {
+          return txt->get_content();
+        }
+      }
+    }
+  }
+#endif
+  return "";
+}
+
+std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
+                                             const std::string& name)
+{
+#ifdef USEPUGIXML
+#else
+  
+#endif
+  return "";
+}
+
+std::string tsccfg::node_get_name(const tsccfg::node_t& node)
+{
+  return "";
+}
+
+std::string tsccfg::node_get_path(const tsccfg::node_t& node)
+{
+  return "";
+}
+
+void tsccfg::node_set_attribute(tsccfg::node_t&, const std::string& n,
+                                const std::string& v)
+{
+}
+
+const std::vector<tsccfg::node_t> tsccfg::node_get_children(const tsccfg::node_t&){
+  return std::vector<tsccfg::node_t>();
 }
 
 /*

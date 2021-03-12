@@ -11,12 +11,12 @@ using namespace TASCAR;
 const std::complex<double> i(0.0, 1.0);
 
 spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
-    : xml_element_t(xmlsrc), e_layout(NULL)
+    : xml_element_t(xmlsrc), doc(NULL), e_layout(NULL)
 {
   if(use_parent_xml) {
     e_layout = xmlsrc;
   } else {
-    GET_ATTRIBUTE(layout,"","name of speaker layout file");
+    GET_ATTRIBUTE(layout, "", "name of speaker layout file");
     if(layout.empty()) {
       // try to find layout element:
       xmlpp::Node::NodeList subnodes = xmlsrc->get_children();
@@ -30,28 +30,22 @@ spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
         throw TASCAR::ErrMsg(
             "No layout file provided and no inline layout xml element.");
     } else {
+      doc = new TASCAR::xml_doc_t(TASCAR::env_expand(layout),
+                                  TASCAR::xml_doc_t::LOAD_FILE);
       try {
-        domp.parse_file(TASCAR::env_expand(layout));
+        e_layout = doc->get_root_node();
+        if(!e_layout)
+          throw TASCAR::ErrMsg("No root node found in document \"" + layout +
+                               "\".");
+        if(e_layout->get_name() != "layout")
+          throw TASCAR::ErrMsg(
+              "Invalid root node name. Expected \"layout\", got " +
+              e_layout->get_name() + ".");
       }
-      catch(const xmlpp::internal_error& e) {
-        throw TASCAR::ErrMsg(std::string("xml internal error: ") + e.what());
+      catch(...) {
+        delete doc;
+        throw;
       }
-      catch(const xmlpp::validity_error& e) {
-        throw TASCAR::ErrMsg(std::string("xml validity error: ") + e.what());
-      }
-      catch(const xmlpp::parse_error& e) {
-        throw TASCAR::ErrMsg(std::string("xml parse error: ") + e.what());
-      }
-      if(!domp)
-        throw TASCAR::ErrMsg("Unable to parse file \"" + layout + "\".");
-      e_layout = domp.get_document()->get_root_node();
-      if(!e_layout)
-        throw TASCAR::ErrMsg("No root node found in document \"" + layout +
-                             "\".");
-      if(e_layout->get_name() != "layout")
-        throw TASCAR::ErrMsg(
-            "Invalid root node name. Expected \"layout\", got " +
-            e_layout->get_name() + ".");
     }
   }
 }

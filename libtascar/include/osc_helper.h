@@ -144,7 +144,7 @@ namespace TASCAR {
 
   class msg_t : public TASCAR::xml_element_t {
   public:
-    msg_t(xmlpp::Element*);
+    msg_t(tsccfg::node_t);
     ~msg_t();
     std::string path;
     lo_message msg;

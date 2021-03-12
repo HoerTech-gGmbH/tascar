@@ -1,52 +1,53 @@
 #include "session_reader.h"
-#include <string.h>
+#include "errorhandling.h"
 #include <libgen.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-#include "errorhandling.h"
 
 TASCAR::tsc_reader_t::tsc_reader_t()
-  : xml_element_t(doc->get_root_node()),
-    licensed_component_t(typeid(*this).name()),
-    file_name("")
+    : xml_element_t(get_root_node()),
+      licensed_component_t(typeid(*this).name()), file_name("")
 {
   // avoid problems with number format in xml file:
-  setlocale(LC_ALL,"C");
-  char c_respath[PATH_MAX];
-  session_path = getcwd(c_respath,PATH_MAX);
-  if( get_element_name() != "session" )
-    throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got "+get_element_name()+".");
+  setlocale(LC_ALL, "C");
+  char* c_respath(getcwd(NULL,0));
+  session_path = c_respath;
+  free(c_respath);
+  if(get_element_name() != "session")
+    throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got " +
+                         get_element_name() + ".");
 }
 
-void add_includes( xmlpp::Element* e, const std::string& parentdoc, licensehandler_t* lh )
+void add_includes(tsccfg::node_t e, const std::string& parentdoc,
+                  licensehandler_t* lh)
 {
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      if( sne->get_name() == "include" ){
-        std::string idocname(TASCAR::env_expand(sne->get_attribute_value("name")));
-        if( (!idocname.empty()) && (idocname != parentdoc) ){
-          TASCAR::xml_doc_t idoc(idocname,TASCAR::xml_doc_t::LOAD_FILE);
-          if( idoc.doc->get_root_node()->get_name() != e->get_name() ){
-            throw TASCAR::ErrMsg("Invalid root node \""+idoc.doc->get_root_node()->get_name()+"\" in include file \""+idocname+"\".\nexpected \""+e->get_name()+"\".");
-          }
-          std::string sublicense;
-          std::string subattribution;
-          get_license_info( idoc.doc->get_root_node(), "", sublicense, subattribution );
-          lh->add_license( sublicense, subattribution, TASCAR::tscbasename(idocname));
-          add_includes( idoc.doc->get_root_node(), idocname, lh );
-          xmlpp::Node::NodeList isubnodes = idoc.doc->get_root_node()->get_children();
-          for(xmlpp::Node::NodeList::iterator isn=isubnodes.begin();isn!=isubnodes.end();++isn){
-            xmlpp::Element* isne(dynamic_cast<xmlpp::Element*>(*isn));
-            if( isne ){
-              e->import_node( isne );
-            }
-          }
+  for(auto sne : tsccfg::node_get_children(e)) {
+    if(tsccfg::node_get_name(sne) == "include") {
+      std::string idocname(
+          TASCAR::env_expand(tsccfg::node_get_attribute_value(sne, "name")));
+      if((!idocname.empty()) && (idocname != parentdoc)) {
+        TASCAR::xml_doc_t idoc(idocname, TASCAR::xml_doc_t::LOAD_FILE);
+        if(tsccfg::node_get_name(idoc.get_root_node()) !=
+           tsccfg::node_get_name(e)) {
+          throw TASCAR::ErrMsg("Invalid root node \"" +
+                               tsccfg::node_get_name(idoc.get_root_node()) +
+                               "\" in include file \"" + idocname +
+                               "\".\nexpected \"" + tsccfg::node_get_name(e) +
+                               "\".");
         }
-      }else{
-        add_includes( sne, parentdoc, lh );
+        std::string sublicense;
+        std::string subattribution;
+        get_license_info(idoc.get_root_node(), "", sublicense, subattribution);
+        lh->add_license(sublicense, subattribution,
+                        TASCAR::tscbasename(idocname));
+        add_includes(idoc.get_root_node(), idocname, lh);
+        for(auto isne : tsccfg::node_get_children(idoc.get_root_node())) {
+          e->import_node(isne);
+        }
       }
+    } else {
+      add_includes(sne, parentdoc, lh);
     }
   }
 }
@@ -91,22 +92,22 @@ void TASCAR::tsc_reader_t::read_xml()
   add_license(license,attribution,"session file");
   xmlpp::Node::NodeList subnodes = e->get_children();
   for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
     if( sne ){
-      if( sne->get_name() == "scene" )
+      if( tsccfg::node_get_name(sne) == "scene" )
         add_scene(sne);
-      else if( sne->get_name() == "range" )
+      else if( tsccfg::node_get_name(sne) == "range" )
         add_range(sne);
-      else if( sne->get_name() == "connect")
+      else if( tsccfg::node_get_name(sne) == "connect")
         add_connection(sne);
-      else if( sne->get_name() == "modules" ){
+      else if( tsccfg::node_get_name(sne) == "modules" ){
         xmlpp::Node::NodeList lsubnodes = sne->get_children();
         for(xmlpp::Node::NodeList::iterator lsn=lsubnodes.begin();lsn!=lsubnodes.end();++lsn){
-          xmlpp::Element* lsne(dynamic_cast<xmlpp::Element*>(*lsn));
+          tsccfg::node_t lsne(dynamic_cast<tsccfg::node_t>(*lsn));
           if( lsne )
             add_module( lsne );
         }
-      }else if( sne->get_name() == "license"){
+      }else if( tsccfg::node_get_name(sne) == "license"){
         TASCAR::xml_element_t lic(sne);
         std::string license;
         std::string attribution;
@@ -115,25 +116,25 @@ void TASCAR::tsc_reader_t::read_xml()
         lic.GET_ATTRIBUTE(attribution,"","attribution of license, if applicable");
         lic.GET_ATTRIBUTE(name,"","name of licensed component");
         add_license(license,attribution,name);
-      }else if( sne->get_name() == "author"){
+      }else if( tsccfg::node_get_name(sne) == "author"){
         TASCAR::xml_element_t lic(sne);
         std::string of;
         std::string name;
         lic.GET_ATTRIBUTE(name,"","author name");
         lic.GET_ATTRIBUTE(of,"","name of authored component");
         add_author(name,of);
-      }else if( sne->get_name() == "bibitem" ){
+      }else if( tsccfg::node_get_name(sne) == "bibitem" ){
         xmlpp::NodeSet stxt(sne->find("text()"));
         for( auto it=stxt.begin();it!=stxt.end();++it){
           xmlpp::TextNode* txt(dynamic_cast<xmlpp::TextNode*>(*it));
           if( txt )
             add_bibitem(txt->get_content());
         }
-      }else if( (sne->get_name() != "include") && 
-                (sne->get_name() != "mainwindow") && 
-                (sne->get_name() != "description" ) )
-        add_warning("Invalid element: "+sne->get_name(),sne);
-      if( sne->get_name() == "module" )
+      }else if( (tsccfg::node_get_name(sne) != "include") && 
+                (tsccfg::node_get_name(sne) != "mainwindow") && 
+                (tsccfg::node_get_name(sne) != "description" ) )
+        add_warning("Invalid element: "+tsccfg::node_get_name(sne),sne);
+      if( tsccfg::node_get_name(sne) == "module" )
         add_module(sne);
     }
   }

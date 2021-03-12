@@ -29,9 +29,9 @@ namespace TASCAR {
 
   class module_cfg_t {
   public:
-    module_cfg_t(xmlpp::Element* xmlsrc, TASCAR::session_t* session_ );
+    module_cfg_t(tsccfg::node_t xmlsrc, TASCAR::session_t* session_ );
     TASCAR::session_t* session;
-    xmlpp::Element* xmlsrc;
+    tsccfg::node_t xmlsrc;
   };
 
   class module_base_t : public xml_element_t, public audiostates_t,
@@ -73,7 +73,7 @@ namespace TASCAR {
 
   class connection_t : public TASCAR::xml_element_t {
   public:
-    connection_t(xmlpp::Element*);
+    connection_t(tsccfg::node_t);
     std::string src;
     std::string dest;
     bool failonerror;
@@ -81,7 +81,7 @@ namespace TASCAR {
 
   class range_t : public xml_element_t {
   public:
-    range_t(xmlpp::Element* e);
+    range_t(tsccfg::node_t e);
     std::string name;
     double start;
     double end;
@@ -96,7 +96,7 @@ namespace TASCAR {
 
   class session_oscvars_t : public TASCAR::xml_element_t {
   public:
-    session_oscvars_t( xmlpp::Element* src );
+    session_oscvars_t( tsccfg::node_t src );
     std::string name;
     std::string srv_port;
     std::string srv_addr;
@@ -144,10 +144,10 @@ namespace TASCAR {
 
   public:
     virtual ~session_t();
-    void add_scene(xmlpp::Element* src = NULL);
-    void add_range(xmlpp::Element*);
-    void add_connection(xmlpp::Element*);
-    void add_module(xmlpp::Element*);
+    void add_scene(tsccfg::node_t src = NULL);
+    void add_range(tsccfg::node_t);
+    void add_connection(tsccfg::node_t);
+    void add_module(tsccfg::node_t);
     void start();
     void stop();
     void run(bool& b_quit, bool use_stdin = true);

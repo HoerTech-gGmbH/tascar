@@ -36,8 +36,8 @@ namespace TASCAR {
 
   class audioplugin_cfg_t {
   public:
-    audioplugin_cfg_t(xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname):xmlsrc(xmlsrc),name(name),parentname(parentname){};
-    xmlpp::Element* xmlsrc;
+    audioplugin_cfg_t(tsccfg::node_t xmlsrc, const std::string& name, const std::string& parentname):xmlsrc(xmlsrc),name(name),parentname(parentname){};
+    tsccfg::node_t xmlsrc;
     const std::string& name;
     const std::string& parentname;
     std::string modname;

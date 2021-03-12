@@ -195,11 +195,11 @@ void App::show_licenses_t::show_doc(bool latex)
   std::map<std::string, elem_cfg_var_desc_t> attribute_list;
   std::map<std::string, std::set<std::string>> categories;
   for(auto elem : TASCAR::attribute_list) {
-    std::string category(elem.first->get_name());
-    std::string cattype(elem.first->get_attribute_value("type"));
+    std::string category(elem.second.category);
+    std::string cattype(elem.second.type);
     std::map<std::string, cfg_var_desc_t> previousattr(
         attribute_list[category + cattype].attr);
-    for(auto attr : elem.second)
+    for(auto attr : elem.second.vars)
       previousattr[attr.first] = attr.second;
     attribute_list[category + cattype] = {category, previousattr, {}, cattype};
     categories[category].insert(category + cattype);

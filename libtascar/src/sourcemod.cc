@@ -4,9 +4,9 @@
 
 using namespace TASCAR;
 
-TASCAR_RESOLVER( sourcemod_base_t, xmlpp::Element* );
+TASCAR_RESOLVER( sourcemod_base_t, tsccfg::node_t );
 
-sourcemod_t::sourcemod_t( xmlpp::Element* cfg )
+sourcemod_t::sourcemod_t( tsccfg::node_t cfg )
   : sourcemod_base_t( cfg ),
     sourcetype("omni"),
     lib( NULL ),
@@ -95,7 +95,7 @@ sourcemod_t::~sourcemod_t()
   dlclose(lib);
 }
 
-sourcemod_base_t::sourcemod_base_t(xmlpp::Element* xmlsrc)
+sourcemod_base_t::sourcemod_base_t(tsccfg::node_t xmlsrc)
   : xml_element_t(xmlsrc)
 {
 }

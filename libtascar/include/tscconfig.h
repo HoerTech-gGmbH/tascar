@@ -44,8 +44,10 @@ namespace tsccfg {
 
 namespace tsccfg {
 
-  std::vector<tsccfg::node_t> node_get_children(tsccfg::node_t&);
+  std::vector<tsccfg::node_t> node_get_children(tsccfg::node_t&,
+                                                const std::string& name = "");
   const std::vector<tsccfg::node_t> node_get_children(const tsccfg::node_t&);
+  tsccfg::node_t node_add_child(tsccfg::node_t&, const std::string&);
   std::string node_get_attribute_value(const tsccfg::node_t&,
                                        const std::string& n);
   std::string node_get_name(const tsccfg::node_t&);
@@ -57,6 +59,7 @@ namespace tsccfg {
                                        const std::string& name,
                                        std::string& value,
                                        const std::string& info);
+  std::string node_get_text(tsccfg::node_t n, const std::string& child);
 
 } // namespace tsccfg
 
@@ -121,7 +124,13 @@ namespace TASCAR {
     std::string info;
   };
 
-  extern std::map<std::string, std::map<std::string, cfg_var_desc_t>>
+  struct cfg_node_desc_t {
+    std::string category;
+    std::string type;
+    std::map<std::string, cfg_var_desc_t> vars;
+  };
+
+  extern std::map<std::string, cfg_node_desc_t>
       attribute_list;
   extern std::vector<std::string> warnings;
 
@@ -289,37 +298,37 @@ void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::levelmeter::weight_t& value);
 
-void set_attribute_bool(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_bool(tsccfg::node_t& elem, const std::string& name,
                         bool value);
-void set_attribute_db(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_db(tsccfg::node_t& elem, const std::string& name,
                       double value);
-void set_attribute_dbspl(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_dbspl(tsccfg::node_t& elem, const std::string& name,
                          double value);
-void set_attribute_double(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_double(tsccfg::node_t& elem, const std::string& name,
                           double value);
-void set_attribute_uint32(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_uint32(tsccfg::node_t& elem, const std::string& name,
                           uint32_t value);
-void set_attribute_int32(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_int32(tsccfg::node_t& elem, const std::string& name,
                          int32_t value);
-void set_attribute_uint64(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_uint64(tsccfg::node_t& elem, const std::string& name,
                           uint64_t value);
-void set_attribute_int64(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_int64(tsccfg::node_t& elem, const std::string& name,
                          int64_t value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::pos_t& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::zyx_euler_t& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<TASCAR::pos_t>& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<std::string>& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<double>& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<float>& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<int32_t>& value);
-void set_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::levelmeter::weight_t& value);
 
 #define GET_ATTRIBUTE(x, u, i) get_attribute(#x, x, u, i)

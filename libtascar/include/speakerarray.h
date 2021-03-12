@@ -34,7 +34,7 @@ namespace TASCAR {
   class spk_descriptor_t : public xml_element_t, public pos_t {
   public:
     // if you add members please update copy constructor!
-    spk_descriptor_t(xmlpp::Element*);
+    spk_descriptor_t(tsccfg::node_t);
     spk_descriptor_t(const spk_descriptor_t&);
     virtual ~spk_descriptor_t();
     double get_rel_azim(double az_src) const;
@@ -63,13 +63,13 @@ namespace TASCAR {
 
   class spk_array_cfg_t : public xml_element_t {
   public:
-    spk_array_cfg_t(xmlpp::Element*, bool use_parent_xml);
+    spk_array_cfg_t(tsccfg::node_t, bool use_parent_xml);
     std::string layout;
     std::string name;
 
   protected:
-    xmlpp::DomParser domp;
-    xmlpp::Element* e_layout;
+    TASCAR::xml_doc_t* doc;
+    tsccfg::node_t e_layout;
   };
 
   /**
@@ -79,7 +79,7 @@ namespace TASCAR {
                       public std::vector<spk_descriptor_t>,
                       public audiostates_t {
   public:
-    spk_array_t(xmlpp::Element*, bool use_parent_xml,
+    spk_array_t(tsccfg::node_t, bool use_parent_xml,
                 const std::string& elementname_ = "speaker", bool allow_empty = false);
     ~spk_array_t();
 
@@ -118,7 +118,7 @@ namespace TASCAR {
 
   class spk_array_diff_render_t : public spk_array_t {
   public:
-    spk_array_diff_render_t(xmlpp::Element*, bool use_parent_xml,
+    spk_array_diff_render_t(tsccfg::node_t, bool use_parent_xml,
                             const std::string& elementname_ = "speaker");
     ~spk_array_diff_render_t();
     void render_diffuse(std::vector<TASCAR::wave_t>& output);
@@ -127,7 +127,7 @@ namespace TASCAR {
     spk_array_t subs;
 
   private:
-    void read_xml(xmlpp::Element* elem);
+    void read_xml(tsccfg::node_t elem);
     TASCAR::amb1wave_t* diffuse_field_accumulator;
     TASCAR::wave_t* diffuse_render_buffer;
     std::vector<TASCAR::overlap_save_t> decorrflt;

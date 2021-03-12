@@ -178,7 +178,6 @@ namespace TASCAR {
   */
   pos_t xml_get_trkpt(tsccfg::node_t pt, time_t& tme);
 
-  std::string xml_get_text(tsccfg::node_t n, const std::string& child);
 
   /**
      \ingroup tascar

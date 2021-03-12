@@ -36,7 +36,7 @@ namespace TASCAR {
     //class osc_scene_t : public TASCAR::osc_server_t {
     class osc_scene_t {
     public:
-      osc_scene_t(xmlpp::Element* xmlsrc, TASCAR::Scene::scene_t* scene_);
+      osc_scene_t(tsccfg::node_t xmlsrc, TASCAR::Scene::scene_t* scene_);
       ~osc_scene_t();
       void add_child_methods(TASCAR::osc_server_t*);
     private:

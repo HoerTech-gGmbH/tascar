@@ -45,7 +45,7 @@ namespace TASCAR {
     /**
        \brief Constructor, mainly parsing of configuration.
      */
-    receivermod_base_t(xmlpp::Element* xmlsrc);
+    receivermod_base_t(tsccfg::node_t xmlsrc);
     virtual ~receivermod_base_t();
     /**
        \brief Add content of a single sound source (primary or image source)
@@ -94,7 +94,7 @@ namespace TASCAR {
    */
   class receivermod_base_speaker_t : public receivermod_base_t {
   public:
-    receivermod_base_speaker_t(xmlpp::Element* xmlsrc);
+    receivermod_base_speaker_t(tsccfg::node_t xmlsrc);
     virtual std::vector<std::string> get_connections() const;
     virtual void postproc(std::vector<wave_t>& output);
     virtual void configure();
@@ -111,7 +111,7 @@ namespace TASCAR {
 
   class receivermod_t : public receivermod_base_t {
   public:
-    receivermod_t(xmlpp::Element* xmlsrc);
+    receivermod_t(tsccfg::node_t xmlsrc);
     virtual ~receivermod_t();
     virtual void add_pointsource(const pos_t& prel, double width,
                                  const wave_t& chunk,
@@ -143,7 +143,7 @@ namespace TASCAR {
 } // namespace TASCAR
 
 #define REGISTER_RECEIVERMOD(x)                                                \
-  TASCAR_PLUGIN(receivermod_base_t, xmlpp::Element*, x)
+  TASCAR_PLUGIN(receivermod_base_t, tsccfg::node_t, x)
 
 #endif
 

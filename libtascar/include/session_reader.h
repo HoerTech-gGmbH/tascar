@@ -35,10 +35,10 @@ namespace TASCAR {
   private:
     tsc_reader_t(const tsc_reader_t&);
   protected:
-    virtual void add_scene(xmlpp::Element* e) {};
-    virtual void add_range(xmlpp::Element* e) {};
-    virtual void add_connection(xmlpp::Element* e) {};
-    virtual void add_module(xmlpp::Element* e) {};
+    virtual void add_scene(tsccfg::node_t e) {};
+    virtual void add_range(tsccfg::node_t e) {};
+    virtual void add_connection(tsccfg::node_t e) {};
+    virtual void add_module(tsccfg::node_t e) {};
     std::string file_name;
     std::string session_path;
     std::string license;

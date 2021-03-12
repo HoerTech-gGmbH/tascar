@@ -88,7 +88,7 @@ using namespace TASCAR;
 using namespace TASCAR::Scene;
 
 
-TASCAR::render_core_t::render_core_t(xmlpp::Element* xmlsrc)
+TASCAR::render_core_t::render_core_t(tsccfg::node_t xmlsrc)
   : scene_t(xmlsrc),
     world(NULL),
     active_pointsources(0),
