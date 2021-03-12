@@ -130,8 +130,7 @@ namespace TASCAR {
     std::map<std::string, cfg_var_desc_t> vars;
   };
 
-  extern std::map<std::string, cfg_node_desc_t>
-      attribute_list;
+  extern std::map<std::string, cfg_node_desc_t> attribute_list;
   extern std::vector<std::string> warnings;
 
   extern globalconfig_t config;
@@ -243,7 +242,7 @@ namespace TASCAR {
     xml_doc_t(const std::string& filename, load_type_t t);
     virtual ~xml_doc_t();
     virtual void save(const std::string& filename);
-    tsccfg::node_t get_root_node();
+    tsccfg::node_t root;
 #ifdef USEPUGIXML
     pugi::xml_document doc;
 #else
@@ -251,6 +250,7 @@ namespace TASCAR {
     xmlpp::Document* doc;
 
   private:
+    tsccfg::node_t get_root_node();
     bool freedoc;
 #endif
   };

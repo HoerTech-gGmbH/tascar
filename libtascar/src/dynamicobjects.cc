@@ -415,11 +415,11 @@ void track_t::load_from_gpx(const std::string& fname)
 {
   double ttinc(0);
   track_t track;
-  TASCAR::xml_doc_t doc(TASCAR::env_expand(fname),TASCAR::xml_doc_t::LOAD_FILE);
-  tsccfg::node_t root(doc.get_root_node());
-  for( auto node : tsccfg::node_get_children(root,"trk"))
-    for( auto segment : tsccfg::node_get_children(node, "trkseg") )
-      for( auto point : tsccfg::node_get_children( segment, "trkpt") ){
+  TASCAR::xml_doc_t doc(TASCAR::env_expand(fname),
+                        TASCAR::xml_doc_t::LOAD_FILE);
+  for(auto node : tsccfg::node_get_children(doc.root, "trk"))
+    for(auto segment : tsccfg::node_get_children(node, "trkseg"))
+      for(auto point : tsccfg::node_get_children(segment, "trkpt")) {
         time_t tm;
         pos_t p = xml_get_trkpt(point, tm);
         double ltm(tm);
@@ -463,8 +463,9 @@ void track_t::edit(tsccfg::node_t cmd)
   if(cmd) {
     std::string scmd(tsccfg::node_get_name(cmd));
     if(scmd == "load") {
-      std::string filename(TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd,"name")));
-      std::string filefmt(tsccfg::node_get_attribute_value(cmd,"format"));
+      std::string filename(
+          TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd, "name")));
+      std::string filefmt(tsccfg::node_get_attribute_value(cmd, "format"));
       if(filefmt == "gpx") {
         load_from_gpx(filename);
       } else if(filefmt == "csv") {
@@ -474,18 +475,19 @@ void track_t::edit(tsccfg::node_t cmd)
         DEBUG(filefmt);
       }
     } else if(scmd == "save") {
-      std::string filename(TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd,"name")));
+      std::string filename(
+          TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd, "name")));
       std::ofstream ofs(filename.c_str());
       ofs << print_cart(",");
     } else if(scmd == "origin") {
-      std::string normtype(tsccfg::node_get_attribute_value(cmd,"src"));
-      std::string normmode(tsccfg::node_get_attribute_value(cmd,"mode"));
+      std::string normtype(tsccfg::node_get_attribute_value(cmd, "src"));
+      std::string normmode(tsccfg::node_get_attribute_value(cmd, "mode"));
       TASCAR::pos_t orig;
       if(normtype == "center") {
         orig = center();
       } else if(normtype == "trkpt") {
-        auto trackptlist(tsccfg::node_get_children(cmd,"trkpt"));
-        if( trackptlist.size() ){
+        auto trackptlist(tsccfg::node_get_children(cmd, "trkpt"));
+        if(trackptlist.size()) {
           time_t tm;
           orig = xml_get_trkpt(trackptlist[0], tm);
         }
@@ -496,13 +498,13 @@ void track_t::edit(tsccfg::node_t cmd)
         *this -= orig;
       }
     } else if(scmd == "addpoints") {
-      std::string fmt(tsccfg::node_get_attribute_value(cmd,"format"));
+      std::string fmt(tsccfg::node_get_attribute_value(cmd, "format"));
       // TASCAR::pos_t orig;
       if(fmt == "trkpt") {
         double ttinc(0);
         if(rbegin() != rend())
           ttinc = rbegin()->first;
-        for( auto loc : tsccfg::node_get_children(cmd,"trkpt")){
+        for(auto loc : tsccfg::node_get_children(cmd, "trkpt")) {
           time_t tm;
           pos_t p = xml_get_trkpt(loc, tm);
           double ltm(tm);
@@ -513,14 +515,14 @@ void track_t::edit(tsccfg::node_t cmd)
         }
       }
     } else if(scmd == "velocity") {
-      std::string vel(tsccfg::node_get_attribute_value(cmd,"const"));
+      std::string vel(tsccfg::node_get_attribute_value(cmd, "const"));
       if(vel.size()) {
         double v(atof(vel.c_str()));
         set_velocity_const(v);
       }
       std::string vel_fname(
-          TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd,"csvfile")));
-      std::string s_offset(tsccfg::node_get_attribute_value(cmd,"start"));
+          TASCAR::env_expand(tsccfg::node_get_attribute_value(cmd, "csvfile")));
+      std::string s_offset(tsccfg::node_get_attribute_value(cmd, "start"));
       if(vel_fname.size()) {
         double v_offset(0);
         if(s_offset.size())
@@ -528,28 +530,32 @@ void track_t::edit(tsccfg::node_t cmd)
         set_velocity_csvfile(vel_fname, v_offset);
       }
     } else if(scmd == "rotate") {
-      rot_z(DEG2RAD * atof(tsccfg::node_get_attribute_value(cmd,"angle").c_str()));
+      rot_z(DEG2RAD *
+            atof(tsccfg::node_get_attribute_value(cmd, "angle").c_str()));
     } else if(scmd == "scale") {
-      TASCAR::pos_t scale(atof(tsccfg::node_get_attribute_value(cmd,"x").c_str()),
-                          atof(tsccfg::node_get_attribute_value(cmd,"y").c_str()),
-                          atof(tsccfg::node_get_attribute_value(cmd,"z").c_str()));
+      TASCAR::pos_t scale(
+          atof(tsccfg::node_get_attribute_value(cmd, "x").c_str()),
+          atof(tsccfg::node_get_attribute_value(cmd, "y").c_str()),
+          atof(tsccfg::node_get_attribute_value(cmd, "z").c_str()));
       *this *= scale;
     } else if(scmd == "translate") {
-      TASCAR::pos_t dx(atof(tsccfg::node_get_attribute_value(cmd,"x").c_str()),
-                       atof(tsccfg::node_get_attribute_value(cmd,"y").c_str()),
-                       atof(tsccfg::node_get_attribute_value(cmd,"z").c_str()));
+      TASCAR::pos_t dx(
+          atof(tsccfg::node_get_attribute_value(cmd, "x").c_str()),
+          atof(tsccfg::node_get_attribute_value(cmd, "y").c_str()),
+          atof(tsccfg::node_get_attribute_value(cmd, "z").c_str()));
       *this += dx;
     } else if(scmd == "smooth") {
-      unsigned int n = atoi(tsccfg::node_get_attribute_value(cmd,"n").c_str());
+      unsigned int n = atoi(tsccfg::node_get_attribute_value(cmd, "n").c_str());
       if(n)
         smooth(n);
     } else if(scmd == "resample") {
-      double dt = atof(tsccfg::node_get_attribute_value(cmd,"dt").c_str());
+      double dt = atof(tsccfg::node_get_attribute_value(cmd, "dt").c_str());
       resample(dt);
     } else if(scmd == "trim") {
       prepare();
-      double d_start = atof(tsccfg::node_get_attribute_value(cmd,"start").c_str());
-      double d_end = atof(tsccfg::node_get_attribute_value(cmd,"end").c_str());
+      double d_start =
+          atof(tsccfg::node_get_attribute_value(cmd, "start").c_str());
+      double d_end = atof(tsccfg::node_get_attribute_value(cmd, "end").c_str());
       double t_start(get_time(d_start));
       double t_end(get_time(length() - d_end));
       TASCAR::track_t ntrack;
@@ -564,12 +570,12 @@ void track_t::edit(tsccfg::node_t cmd)
       prepare();
     } else if(scmd == "time") {
       // scale...
-      std::string att_start(tsccfg::node_get_attribute_value(cmd,"start"));
+      std::string att_start(tsccfg::node_get_attribute_value(cmd, "start"));
       if(att_start.size()) {
         double starttime = atof(att_start.c_str());
         shift_time(starttime - begin()->first);
       }
-      std::string att_scale(tsccfg::node_get_attribute_value(cmd,"scale"));
+      std::string att_scale(tsccfg::node_get_attribute_value(cmd, "scale"));
       if(att_scale.size()) {
         double scaletime = atof(att_scale.c_str());
         TASCAR::track_t ntrack;
@@ -688,7 +694,7 @@ void track_t::write_xml(tsccfg::node_t a)
     // a->set_attribute("interpolation","cartesian");
     break;
   case TASCAR::track_t::spherical:
-    tsccfg::node_set_attribute(a,"interpolation", "spherical");
+    tsccfg::node_set_attribute(a, "interpolation", "spherical");
     break;
   }
 #ifdef USEPUGIXML
@@ -849,7 +855,7 @@ void euler_track_t::read_xml(tsccfg::node_t a)
   get_attribute_value(a, "loop", loop);
   euler_track_t ntrack;
   ntrack.loop = loop;
-  std::string importcsv(tsccfg::node_get_attribute_value(a,"importcsv"));
+  std::string importcsv(tsccfg::node_get_attribute_value(a, "importcsv"));
   if(!importcsv.empty()) {
     // load track from CSV file:
     std::ifstream fh(importcsv.c_str());

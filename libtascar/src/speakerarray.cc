@@ -33,7 +33,7 @@ spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
       doc = new TASCAR::xml_doc_t(TASCAR::env_expand(layout),
                                   TASCAR::xml_doc_t::LOAD_FILE);
       try {
-        e_layout = doc->get_root_node();
+        e_layout = doc->root;
         if(!e_layout)
           throw TASCAR::ErrMsg("No root node found in document \"" + layout +
                                "\".");

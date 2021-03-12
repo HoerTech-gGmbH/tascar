@@ -118,7 +118,7 @@ std::string TASCAR::receivermod_base_speaker_t::get_spktypeid() const
 {
   std::string r;
   for(auto ta : typeidattr)
-    r += ta + ":" + tsccfg::node_get_attribute_value(e,ta) + ",";
+    r += ta + ":" + tsccfg::node_get_attribute_value(e, ta) + ",";
   if(r.size() && (r[r.size() - 1] == ','))
     r.erase(r.size() - 1);
   return r;
@@ -196,9 +196,10 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
   // calibration of subs:
   for(uint32_t k = 0; k < spkpos.subs.size(); ++k) {
     float sgain(spkpos.subs[k].spkgain * spkpos.subs[k].gain);
-    output[k+spkpos.size()] *= sgain;
+    output[k + spkpos.size()] *= sgain;
     if(spkpos.subs[k].comp)
-      spkpos.subs[k].comp->process(output[k+spkpos.size()], output[k+spkpos.size()], false);
+      spkpos.subs[k].comp->process(output[k + spkpos.size()],
+                                   output[k + spkpos.size()], false);
   }
 }
 
