@@ -105,9 +105,9 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   if(calibfor.empty())
     calibfor = "type:nsp";
   // create a new session, no OSC port:
-  session_core_t::set_attribute("srv_port","none");
+  root.set_attribute("srv_port","none");
   // add the calibration scene:
-  xml_element_t e_scene(session_core_t::add_child("scene"));
+  xml_element_t e_scene(root.add_child("scene"));
   e_scene.set_attribute("name", "calib");
   // add a point source for broadband stimulus, muted for now:
   xml_element_t e_src(e_scene.add_child("source"));

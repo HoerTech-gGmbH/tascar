@@ -566,7 +566,7 @@ void tascar_window_t::reset_gui()
     int32_t mainwin_y(0);
     get_position(mainwin_x, mainwin_y);
     TASCAR::xml_element_t mainwin(
-        session->tsc_reader_t::find_or_add_child("mainwindow"));
+        session->root.find_or_add_child("mainwindow"));
     mainwin.get_attribute("w", mainwin_width, "px", "main window width");
     mainwin.get_attribute("h", mainwin_height, "px", "main window height");
     mainwin.get_attribute("x", mainwin_x, "px", "main window x position");

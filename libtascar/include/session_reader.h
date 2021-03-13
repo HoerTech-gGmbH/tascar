@@ -20,32 +20,37 @@
 #ifndef SESSION_READER_H
 #define SESSION_READER_H
 
-#include "tscconfig.h"
 #include "licensehandler.h"
+#include "tscconfig.h"
 
 namespace TASCAR {
 
-  class tsc_reader_t : public TASCAR::xml_doc_t, public xml_element_t, public licensehandler_t, public licensed_component_t {
+  class tsc_reader_t : public TASCAR::xml_doc_t,
+                       public licensehandler_t,
+                       public licensed_component_t {
   public:
     tsc_reader_t();
-    tsc_reader_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
+    tsc_reader_t(const std::string& filename_or_data, load_type_t t,
+                 const std::string& path);
     void read_xml();
     const std::string& get_session_path() const;
     const std::string& get_file_name() const;
+
   private:
     tsc_reader_t(const tsc_reader_t&);
+
   protected:
-    virtual void add_scene(tsccfg::node_t e) {};
-    virtual void add_range(tsccfg::node_t e) {};
-    virtual void add_connection(tsccfg::node_t e) {};
-    virtual void add_module(tsccfg::node_t e) {};
+    virtual void add_scene(tsccfg::node_t e){};
+    virtual void add_range(tsccfg::node_t e){};
+    virtual void add_connection(tsccfg::node_t e){};
+    virtual void add_module(tsccfg::node_t e){};
     std::string file_name;
     std::string session_path;
     std::string license;
     std::string attribution;
   };
 
-}
+} // namespace TASCAR
 
 #endif
 
@@ -57,4 +62,3 @@ namespace TASCAR {
  * compile-command: "make -C .."
  * End:
  */
-

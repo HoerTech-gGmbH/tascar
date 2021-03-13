@@ -22,7 +22,7 @@
 
 #include "coordinates.h"
 
-//#define USEPUGIXML
+#define USEPUGIXML
 
 #ifdef USEPUGIXML
 

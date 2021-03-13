@@ -10,7 +10,7 @@
 #endif
 
 TASCAR::tsc_reader_t::tsc_reader_t()
-    : xml_element_t(root), licensed_component_t(typeid(*this).name()),
+  : xml_doc_t("<session/>",LOAD_STRING),licensed_component_t(typeid(*this).name()),
       file_name("")
 {
   // avoid problems with number format in xml file:
@@ -18,9 +18,9 @@ TASCAR::tsc_reader_t::tsc_reader_t()
   char* c_respath(getcwd(NULL, 0));
   session_path = c_respath;
   free(c_respath);
-  if(get_element_name() != "session")
+  if(root.get_element_name() != "session")
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got " +
-                         get_element_name() + ".");
+                         root.get_element_name() + ".");
 }
 
 void add_includes(tsccfg::node_t e, const std::string& parentdoc,
@@ -60,20 +60,20 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
   }
 }
 
+const std::string& showstring(const std::string& s)
+{
+  DEBUG(s);
+  return s;
+}
+
+
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
-    : xml_doc_t(filename_or_data, t), xml_element_t(root),
+  : xml_doc_t(showstring(filename_or_data), t),
       licensed_component_t(typeid(*this).name()),
-      file_name(((t == LOAD_FILE) ? filename_or_data : ""))
+      file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
 {
-  switch(t) {
-  case LOAD_FILE:
-    file_name = TASCAR::env_expand(filename_or_data);
-    break;
-  case LOAD_STRING:
-    file_name = "(loaded from string)";
-    break;
-  }
+  DEBUG(1);
   // avoid problems with number format in xml file:
   setlocale(LC_ALL, "C");
   if(path.size()) {
@@ -87,19 +87,19 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
     char c_respath[PATH_MAX];
     session_path = getcwd(c_respath, PATH_MAX);
   }
-  if(get_element_name() != "session")
+  if(root.get_element_name() != "session")
     throw TASCAR::ErrMsg("Invalid root node name. Expected \"session\", got " +
-                         get_element_name() + ".");
+                         root.get_element_name() + ".");
   // add session-includes:
-  add_includes(e, "", this);
+  add_includes(root(), "", this);
 }
 
 void TASCAR::tsc_reader_t::read_xml()
 {
-  GET_ATTRIBUTE(license, "", "license type");
-  GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
+  root.GET_ATTRIBUTE(license, "", "license type");
+  root.GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
   add_license(license, attribution, "session file");
-  for(auto sne : tsccfg::node_get_children(e)){
+  for(auto sne : root.get_children()){
     if(tsccfg::node_get_name(sne) == "scene")
       add_scene(sne);
     else if(tsccfg::node_get_name(sne) == "range")

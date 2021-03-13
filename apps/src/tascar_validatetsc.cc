@@ -60,17 +60,17 @@ App::show_licenses_t::show_licenses_t(const std::string& session_filename)
 // starturl("http://news.tascar.org/")
 {
   read_xml();
-  GET_ATTRIBUTE(srv_port, "", "OSC port number");
-  GET_ATTRIBUTE(srv_addr, "", "OSC multicast address in case of UDP transport");
-  GET_ATTRIBUTE(srv_proto, "", "OSC protocol, UDP or TCP");
-  GET_ATTRIBUTE(name, "", "session name");
-  GET_ATTRIBUTE(starturl, "", "URL of start page for display");
+  root.GET_ATTRIBUTE(srv_port, "", "OSC port number");
+  root.GET_ATTRIBUTE(srv_addr, "", "OSC multicast address in case of UDP transport");
+  root.GET_ATTRIBUTE(srv_proto, "", "OSC protocol, UDP or TCP");
+  root.GET_ATTRIBUTE(name, "", "session name");
+  root.GET_ATTRIBUTE(starturl, "", "URL of start page for display");
   add_licenses(this);
 }
 
 void App::show_licenses_t::validate_attributes(std::string& msg) const
 {
-  TASCAR::tsc_reader_t::validate_attributes(msg);
+  root.validate_attributes(msg);
   for(std::vector<TASCAR::render_core_t*>::const_iterator it = scenes.begin();
       it != scenes.end(); ++it)
     (*it)->validate_attributes(msg);

@@ -1469,6 +1469,7 @@ TASCAR::xml_doc_t::~xml_doc_t()
 tsccfg::node_t TASCAR::xml_doc_t::get_root_node()
 {
 #ifdef USEPUGIXML
+  DEBUG(1);
   return doc.document_element();
 #else
   return doc->get_root_node();
@@ -1561,6 +1562,7 @@ const std::vector<tsccfg::node_t>
 tsccfg::node_get_children(const tsccfg::node_t& node)
 {
 #ifdef USEPUGIXML
+  DEBUG(1);
   return std::vector<tsccfg::node_t>();
 #else
   std::vector<tsccfg::node_t> retval;
