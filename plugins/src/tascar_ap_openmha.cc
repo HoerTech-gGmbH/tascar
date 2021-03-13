@@ -24,8 +24,8 @@ private:
 
 openmha_t::openmha_t( const TASCAR::audioplugin_cfg_t& cfg )
   : audioplugin_base_t( cfg ),
-    plugin(e->get_attribute_value("plugin")),
-    config(e->get_attribute_value("config")),
+    plugin(tsccfg::node_get_attribute_value(e,"plugin")),
+    config(tsccfg::node_get_attribute_value(e,"config")),
     mhaplug(get_c_handle(),plugin),
     sIn(NULL),
     acpos(get_c_handle(),"pos",3,1,true)

@@ -231,19 +231,14 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg)
   if((fileformat != "txt") && (fileformat != "mat") &&
      (fileformat != "matcell"))
     throw TASCAR::ErrMsg("Invalid file format \"" + fileformat + "\".");
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
-    if(sne && (sne->get_name() == "variable"))
+  for(auto sne : tsccfg::node_get_children(e,"variable"))
       oscvars.push_back(oscvar_t(sne));
-    if(sne && (sne->get_name() == "osc"))
-      oscvars.push_back(oscvar_t(sne));
-    if(sne && (sne->get_name() == "oscs"))
-      oscsvars.push_back(oscsvar_t(sne));
-    if(sne && (sne->get_name() == "lsl"))
-      lslvars.push_back(new lslvar_t(sne, lsltimeout));
-  }
+  for(auto sne : tsccfg::node_get_children(e,"osc"))
+    oscvars.push_back(oscvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e,"oscs"))
+    oscsvars.push_back(oscsvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e,"lsl"))
+    lslvars.push_back(new lslvar_t(sne, lsltimeout));
 }
 
 void dlog_vars_t::update(uint32_t frame, bool running)
@@ -1185,7 +1180,7 @@ void datalogging_t::save_session_related_meta_data(mat_t* matfp,
   mat_add_strvar(matfp, "savedat", datestr());
   mat_add_strvar(matfp, "tscfilename", session->get_file_name());
   mat_add_strvar(matfp, "tscpath", session->get_session_path());
-  mat_add_strvar(matfp, "sourcexml", session->doc->write_to_string_formatted());
+  mat_add_strvar(matfp, "sourcexml", session->save_to_string());
   mat_add_double(matfp, "fragsize", fragsize);
   mat_add_double(matfp, "srate", srate);
 }

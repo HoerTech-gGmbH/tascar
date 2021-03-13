@@ -700,39 +700,6 @@ void TASCAR::session_t::stop()
     (*ipl)->stop();
 }
 
-#ifdef USEPUGIXML
-void del_whitespace(tsccfg::node_t node) {}
-#else
-void del_whitespace(xmlpp::Node* node)
-{
-  xmlpp::TextNode* nodeText = dynamic_cast<xmlpp::TextNode*>(node);
-  if(nodeText && nodeText->is_white_space()) {
-    nodeText->get_parent()->remove_child(node);
-  } else {
-    tsccfg::node_t nodeElement = dynamic_cast<tsccfg::node_t>(node);
-    if(nodeElement) {
-      xmlpp::Node::NodeList children = nodeElement->get_children();
-      for(xmlpp::Node::NodeList::iterator nita = children.begin();
-          nita != children.end(); ++nita) {
-        del_whitespace(*nita);
-      }
-    }
-  }
-}
-#endif
-
-void TASCAR::xml_doc_t::save(const std::string& filename)
-{
-  if(doc) {
-    del_whitespace(root);
-#ifdef USEPUGIXML
-    doc.save_file(filename.c_str(),"  ");
-#else
-    doc->write_to_file_formatted(filename);
-#endif
-  }
-}
-
 void TASCAR::session_t::run(bool& b_quit, bool use_stdin)
 {
   start();

@@ -71,7 +71,7 @@ private:
 std::string get_calibfor(const std::string& fname)
 {
   TASCAR::xml_doc_t doc(fname, TASCAR::xml_doc_t::LOAD_FILE);
-  return doc.doc->get_root_node()->get_attribute_value("calibfor");
+  return tsccfg::node_get_attribute_value(doc.root,"calibfor");
 }
 
 std::vector<std::string> string_token(std::string s,

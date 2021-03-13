@@ -36,8 +36,8 @@ namespace TASCAR {
 
   class sensorplugin_cfg_t {
   public:
-    sensorplugin_cfg_t(xmlpp::Element* xmlsrc) : xmlsrc(xmlsrc){};
-    xmlpp::Element* xmlsrc;
+    sensorplugin_cfg_t(tsccfg::node_t xmlsrc) : xmlsrc(xmlsrc){};
+    tsccfg::node_t xmlsrc;
     std::string modname;
     std::string hostname;
   };

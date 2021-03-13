@@ -53,16 +53,10 @@ nearsensor_t::nearsensor_t( const TASCAR::module_cfg_t& cfg )
   if( o.size()>0)
     parentobj = o[0];
   vmsg1.push_back(new TASCAR::msg_t(e));
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(*sn));
-    if( sne ){
-      if( sne->get_name() == "msgapp" )
-        vmsg1.push_back(new TASCAR::msg_t(sne));
-      if( sne->get_name() == "msgdep" )
-        vmsg2.push_back(new TASCAR::msg_t(sne));
-    }
-  }
+  for(auto sne : tsccfg::node_get_children(e,"msgapp") )
+    vmsg1.push_back(new TASCAR::msg_t(sne));
+  for(auto sne : tsccfg::node_get_children(e,"msgdep") )
+    vmsg2.push_back(new TASCAR::msg_t(sne));
 }
 
 nearsensor_t::~nearsensor_t()

@@ -21,7 +21,6 @@
 #define XMLCONFIG_H
 
 #include "coordinates.h"
-//#include "osc_helper.h"
 
 //#define USEPUGIXML
 
@@ -60,6 +59,8 @@ namespace tsccfg {
                                        std::string& value,
                                        const std::string& info);
   std::string node_get_text(tsccfg::node_t n, const std::string& child = "");
+
+  double node_xpath_to_number(tsccfg::node_t,const std::string& path);
 
 } // namespace tsccfg
 
@@ -240,8 +241,10 @@ namespace TASCAR {
     enum load_type_t { LOAD_FILE, LOAD_STRING };
     xml_doc_t();
     xml_doc_t(const std::string& filename, load_type_t t);
+    xml_doc_t(tsccfg::node_t);
     virtual ~xml_doc_t();
     virtual void save(const std::string& filename);
+    std::string save_to_string();
     tsccfg::node_t root;
 #ifdef USEPUGIXML
     pugi::xml_document doc;
@@ -257,6 +260,8 @@ namespace TASCAR {
 
 } // namespace TASCAR
 
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+                         std::string& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          double& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,

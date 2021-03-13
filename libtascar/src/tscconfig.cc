@@ -294,6 +294,52 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
   }
 }
 
+#ifdef USEPUGIXML
+void del_whitespace(tsccfg::node_t node) {}
+#else
+void del_whitespace(xmlpp::Node* node)
+{
+  xmlpp::TextNode* nodeText = dynamic_cast<xmlpp::TextNode*>(node);
+  if(nodeText && nodeText->is_white_space()) {
+    nodeText->get_parent()->remove_child(node);
+  } else {
+    tsccfg::node_t nodeElement = dynamic_cast<tsccfg::node_t>(node);
+    if(nodeElement) {
+      xmlpp::Node::NodeList children = nodeElement->get_children();
+      for(xmlpp::Node::NodeList::iterator nita = children.begin();
+          nita != children.end(); ++nita) {
+        del_whitespace(*nita);
+      }
+    }
+  }
+}
+#endif
+
+void TASCAR::xml_doc_t::save(const std::string& filename)
+{
+  if(doc) {
+    del_whitespace(root);
+#ifdef USEPUGIXML
+    doc.save_file(filename.c_str(),"  ");
+#else
+    doc->write_to_file_formatted(filename);
+#endif
+  }
+}
+
+std::string TASCAR::xml_doc_t::save_to_string()
+{
+  if(doc) {
+    del_whitespace(root);
+#ifdef USEPUGIXML
+    return "";
+#else
+    return doc->write_to_string_formatted();
+#endif
+  }
+  return "";
+}
+
 void TASCAR::globalconfig_t::forceoverwrite(const std::string& a,
                                             const std::string& b)
 {
@@ -985,6 +1031,13 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
 }
 
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+                         std::string& value)
+{
+  if( tsccfg::node_has_attribute(elem, name))
+    value = tsccfg::node_get_attribute_value(elem, name);
+}
+
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          double& value)
 {
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
@@ -1359,6 +1412,19 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
 }
 #endif
 
+#ifdef USEPUGIXML
+TASCAR::xml_doc_t::xml_doc_t(tsccfg::node_t src)
+{
+}
+#else
+TASCAR::xml_doc_t::xml_doc_t(tsccfg::node_t src)
+    : doc(new xmlpp::Document()), freedoc(true)
+{
+  doc->create_root_node_by_import(src);
+  root = doc->get_root_node();
+}
+#endif
+
 TASCAR::xml_doc_t::~xml_doc_t()
 {
 #ifndef USEPUGIXML
@@ -1459,6 +1525,15 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
       retval.push_back(sne);
   }
   return retval;
+#endif
+}
+
+double tsccfg::node_xpath_to_number(tsccfg::node_t node,const std::string& path)
+{
+#ifdef USEPUGIXML
+  return 0;
+#else
+  return node->eval_to_number(path);
 #endif
 }
 

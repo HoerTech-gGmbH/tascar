@@ -183,43 +183,37 @@ geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL_(showgui);
   GET_ATTRIBUTE_(width);
   GET_ATTRIBUTE_(buttonheight);
-  for(auto sn : e->get_children()) {
-    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
-    if(sne && (sne->get_name() == "preset")) {
-      xml_element_t pres(sne);
-      std::string name;
-      pres.get_attribute("name", name, "", "undocumented");
-      allpresets.push_back(name);
-      if(pres.has_attribute("position")) {
-        TASCAR::pos_t pos;
-        pres.get_attribute("position", pos, "", "undocumented");
-        positions[name] = pos;
-      }
-      if(pres.has_attribute("orientation")) {
-        TASCAR::pos_t pos;
-        pres.get_attribute("orientation", pos, "", "undocumented");
-        pos *= DEG2RAD;
-        orientations[name] = TASCAR::zyx_euler_t(pos.x, pos.y, pos.z);
-      }
-      for(auto osn : sne->get_children()) {
-        tsccfg::node_t snel(dynamic_cast<tsccfg::node_t>(osn));
-        if(snel && (snel->get_name() == "osc")) {
-          xml_element_t pres(snel);
-          std::string path;
-          pres.GET_ATTRIBUTE_(path);
-          if(!path.empty()) {
-            if(pres.has_attribute("pos")) {
-              TASCAR::pos_t pos;
-              pres.GET_ATTRIBUTE_(pos);
-              osc_positions[name][path + "/pos"] = pos;
-            }
-            if(pres.has_attribute("rot")) {
-              TASCAR::pos_t rot;
-              pres.GET_ATTRIBUTE_(rot);
-              osc_orientations[name][path + "/zyxeuler"] =
-                  TASCAR::zyx_euler_t(rot.x, rot.y, rot.z);
-            }
-          }
+  for(auto preset : tsccfg::node_get_children(e, "preset")) {
+    xml_element_t pres(preset);
+    std::string name;
+    pres.get_attribute("name", name, "", "undocumented");
+    allpresets.push_back(name);
+    if(pres.has_attribute("position")) {
+      TASCAR::pos_t pos;
+      pres.get_attribute("position", pos, "", "undocumented");
+      positions[name] = pos;
+    }
+    if(pres.has_attribute("orientation")) {
+      TASCAR::pos_t pos;
+      pres.get_attribute("orientation", pos, "", "undocumented");
+      pos *= DEG2RAD;
+      orientations[name] = TASCAR::zyx_euler_t(pos.x, pos.y, pos.z);
+    }
+    for(auto presetl : tsccfg::node_get_children(preset, "osc")) {
+      xml_element_t pres(presetl);
+      std::string path;
+      pres.GET_ATTRIBUTE_(path);
+      if(!path.empty()) {
+        if(pres.has_attribute("pos")) {
+          TASCAR::pos_t pos;
+          pres.GET_ATTRIBUTE_(pos);
+          osc_positions[name][path + "/pos"] = pos;
+        }
+        if(pres.has_attribute("rot")) {
+          TASCAR::pos_t rot;
+          pres.GET_ATTRIBUTE_(rot);
+          osc_orientations[name][path + "/zyxeuler"] =
+              TASCAR::zyx_euler_t(rot.x, rot.y, rot.z);
         }
       }
     }

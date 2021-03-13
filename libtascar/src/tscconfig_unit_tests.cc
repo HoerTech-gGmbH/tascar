@@ -58,14 +58,46 @@ TEST(node_t, set_attribute)
   EXPECT_EQ("other", tsccfg::node_get_attribute_value(doc.root, "name"));
 }
 
+TEST(node_t, node_xpath_to_number)
+{
+  TASCAR::xml_doc_t doc(
+      "<session><sound name=\"myname\" val=\"42\"/><sound/></session>",
+      TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ(42.0, tsccfg::node_xpath_to_number(doc.root, "/*/sound/val"));
+}
+
 TEST(node_t, get_text)
 {
   TASCAR::xml_doc_t doc("<session>text12</session>",
                         TASCAR::xml_doc_t::LOAD_STRING);
-  EXPECT_EQ("text12",tsccfg::node_get_text(doc.root));
+  EXPECT_EQ("text12", tsccfg::node_get_text(doc.root));
 }
 
-                      
+TEST(xml_doc_t, save_to_string)
+{
+  TASCAR::xml_doc_t doc("<session>text12</session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ(
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<session>text12</session>\n",
+      doc.save_to_string());
+}
+
+TEST(xml_doc_t, from_node)
+{
+  TASCAR::xml_doc_t doc(
+      "<session><sound name=\"myname\" val=\"42\"/><sound/></session>",
+      TASCAR::xml_doc_t::LOAD_STRING);
+  auto nodes(tsccfg::node_get_children(doc.root));
+  EXPECT_EQ(2u, nodes.size());
+  if(2u == nodes.size()) {
+    TASCAR::xml_doc_t doc2(nodes[0]);
+    EXPECT_EQ("sound", tsccfg::node_get_name(doc2.root));
+    EXPECT_EQ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sound "
+              "name=\"myname\" val=\"42\"/>\n",
+              doc2.save_to_string());
+  }
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
