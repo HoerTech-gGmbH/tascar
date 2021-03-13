@@ -174,9 +174,9 @@ public:
   void add_variables(TASCAR::osc_server_t* srv);
   const std::string& get_name() const { return name; };
   virtual void validate_attributes(std::string&) const;
-  void read_calib(size_t k, tsccfg::node_t src);
 
 private:
+  void read_calib(size_t k, tsccfg::node_t src);
   TASCAR::session_t* session;
   // config variables:
   std::string name;
@@ -262,20 +262,20 @@ lightscene_t::lightscene_t(const TASCAR::module_cfg_t& cfg)
       if(calibfile.empty())
         throw TASCAR::ErrMsg("No speaker calibfile file provided.");
       TASCAR::xml_doc_t doc(calibfile, TASCAR::xml_doc_t::LOAD_FILE);
-      if(!doc.root)
+      if(!doc.root())
         throw TASCAR::ErrMsg("No root node found in document \"" + calibfile +
                              "\".");
-      if(tsccfg::node_get_name(doc.root) != "fixturecalib")
+      if(doc.root.get_element_name() != "fixturecalib")
         throw TASCAR::ErrMsg(
             "Invalid root node name. Expected \"fixturecalib\", got " +
-            tsccfg::node_get_name(doc.root) + ".");
+            doc.root.get_element_name() + ".");
       auto calib_nodes_fixture(
           tsccfg::node_get_children(fixtures[k].e, "calib"));
       if(!calib_nodes_fixture.empty())
         TASCAR::add_warning(
             "calib entries found in calib file and fixture entry.",
             fixtures[k].e);
-      read_calib(k, doc.root);
+      read_calib(k, doc.root());
     } else {
       read_calib(k, fixtures[k].e);
     }

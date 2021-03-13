@@ -139,10 +139,14 @@ namespace TASCAR {
   class xml_element_t {
   public:
     xml_element_t(tsccfg::node_t);
+    xml_element_t();
     virtual ~xml_element_t();
     bool has_attribute(const std::string& name) const;
     std::string get_element_name() const;
+    std::vector<tsccfg::node_t> get_children(const std::string& name = "");
+
     // get attributes:
+    std::string get_attribute(const std::string& name);
     void get_attribute(const std::string& name, std::string& value,
                        const std::string& unit, const std::string& info);
     void get_attribute(const std::string& name, double& value,
@@ -217,12 +221,14 @@ namespace TASCAR {
     void set_attribute(const std::string& name,
                        const std::vector<int32_t>& value);
     tsccfg::node_t find_or_add_child(const std::string& name);
+    tsccfg::node_t add_child(const std::string& name);
     tsccfg::node_t e;
     std::vector<std::string> get_unused_attributes() const;
     virtual void validate_attributes(std::string&) const;
     size_t hash(const std::vector<std::string>& attributes,
                 bool test_children = false) const;
     std::vector<std::string> get_attributes() const;
+    tsccfg::node_t& operator()() { return e;};
 
   protected:
   };
@@ -245,7 +251,7 @@ namespace TASCAR {
     virtual ~xml_doc_t();
     virtual void save(const std::string& filename);
     std::string save_to_string();
-    tsccfg::node_t root;
+    TASCAR::xml_element_t root;
 #ifdef USEPUGIXML
     pugi::xml_document doc;
 #else

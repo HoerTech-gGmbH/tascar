@@ -287,7 +287,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
     if(file_exists_ov(lfname)) {
       setlocale(LC_ALL, "C");
       xml_doc_t doc(lfname, xml_doc_t::LOAD_FILE);
-      readconfig("", doc.root);
+      readconfig("", doc.root());
     }
   }
   catch(const std::exception& e) {
@@ -318,9 +318,13 @@ void del_whitespace(xmlpp::Node* node)
 void TASCAR::xml_doc_t::save(const std::string& filename)
 {
   if(doc) {
-    del_whitespace(root);
+    del_whitespace(root());
 #ifdef USEPUGIXML
-    doc.save_file(filename.c_str(),"  ");
+    pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
+    decl.append_attribute("version") = "1.0";
+    decl.append_attribute("encoding") = "UTF-8";
+    doc.save_file(filename.c_str(), "  ", pugi::format_default,
+                  pugi::encoding_utf8);
 #else
     doc->write_to_file_formatted(filename);
 #endif
@@ -330,9 +334,14 @@ void TASCAR::xml_doc_t::save(const std::string& filename)
 std::string TASCAR::xml_doc_t::save_to_string()
 {
   if(doc) {
-    del_whitespace(root);
+    del_whitespace(root());
 #ifdef USEPUGIXML
-    return "";
+    pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
+    decl.append_attribute("version") = "1.0";
+    decl.append_attribute("encoding") = "UTF-8";
+    std::stringstream out;
+    doc.save(out, "  ", pugi::format_default, pugi::encoding_utf8);
+    return out.str();
 #else
     return doc->write_to_string_formatted();
 #endif
@@ -419,6 +428,8 @@ TASCAR::xml_element_t::xml_element_t(tsccfg::node_t src) : e(src)
     throw TASCAR::ErrMsg("Invalid NULL element pointer.");
 }
 
+TASCAR::xml_element_t::xml_element_t() : e(NULL) {}
+
 TASCAR::xml_element_t::~xml_element_t() {}
 
 bool tsccfg::node_has_attribute(const tsccfg::node_t& e,
@@ -465,6 +476,26 @@ tsccfg::node_t TASCAR::xml_element_t::find_or_add_child(const std::string& name)
 #else
   return e->add_child(name);
 #endif
+}
+
+tsccfg::node_t TASCAR::xml_element_t::add_child(const std::string& name)
+{
+#ifdef USEPUGIXML
+  return (e.append_child(name.c_str()));
+#else
+  return e->add_child(name);
+#endif
+}
+
+std::string TASCAR::xml_element_t::get_attribute(const std::string& name)
+{
+  return tsccfg::node_get_attribute_value(e, name);
+}
+
+std::vector<tsccfg::node_t>
+TASCAR::xml_element_t::get_children(const std::string& name)
+{
+  return tsccfg::node_get_children(e, name);
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
@@ -1033,7 +1064,7 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::string& value)
 {
-  if( tsccfg::node_has_attribute(elem, name))
+  if(tsccfg::node_has_attribute(elem, name))
     value = tsccfg::node_get_attribute_value(elem, name);
 }
 
@@ -1359,14 +1390,14 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
 TASCAR::xml_doc_t::xml_doc_t()
 {
   doc.load_string("<?xml version=1.0?>\n<session/>");
-  root = doc.document_element();
+  root = TASCAR::xml_element_t(doc.document_element());
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t() : doc(NULL), freedoc(true)
 {
   doc = new xmlpp::Document();
   doc->create_root_node("session");
-  root = doc->get_root_node();
+  root = TASCAR::xml_element_t(doc->get_root_node());
 }
 #endif
 
@@ -1415,6 +1446,8 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
 #ifdef USEPUGIXML
 TASCAR::xml_doc_t::xml_doc_t(tsccfg::node_t src)
 {
+  doc.append_copy(src);
+  root = doc.document_element();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t(tsccfg::node_t src)
@@ -1450,6 +1483,7 @@ std::string TASCAR::xml_element_t::get_element_name() const
 std::string tsccfg::node_get_text(tsccfg::node_t n, const std::string& child)
 {
 #ifdef USEPUGIXML
+  return n.text().get();
 #else
   if(n) {
     if(child.size()) {
@@ -1479,7 +1513,7 @@ std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
                                              const std::string& name)
 {
 #ifdef USEPUGIXML
-  return "";
+  return node.attribute(name.c_str()).value();
 #else
   return node->get_attribute_value(name);
 #endif
@@ -1488,7 +1522,7 @@ std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
 std::string tsccfg::node_get_name(const tsccfg::node_t& node)
 {
 #ifdef USEPUGIXML
-  return "";
+  return node.name();
 #else
   return node->get_name();
 #endif
@@ -1497,7 +1531,17 @@ std::string tsccfg::node_get_name(const tsccfg::node_t& node)
 std::string tsccfg::node_get_path(const tsccfg::node_t& node)
 {
 #ifdef USEPUGIXML
-  return "";
+  tsccfg::node_t sib(node);
+  size_t sib_prev(0);
+  while((sib = sib.previous_sibling(node.name())))
+    sib_prev++;
+  sib = node;
+  size_t sib_next(0);
+  while((sib = sib.next_sibling(node.name())))
+    sib_next++;
+  if(sib_prev + sib_next == 0)
+    return node.path();
+  return std::string(node.path()) + "[" + std::to_string(sib_prev + 1) + "]";
 #else
   return node->get_path();
 #endif
@@ -1507,6 +1551,7 @@ void tsccfg::node_set_attribute(tsccfg::node_t& node, const std::string& name,
                                 const std::string& value)
 {
 #ifdef USEPUGIXML
+  node.attribute(name.c_str()).set_value(value.c_str());
 #else
   node->set_attribute(name, value);
 #endif
@@ -1528,10 +1573,12 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
 #endif
 }
 
-double tsccfg::node_xpath_to_number(tsccfg::node_t node,const std::string& path)
+double tsccfg::node_xpath_to_number(tsccfg::node_t node,
+                                    const std::string& path)
 {
 #ifdef USEPUGIXML
-  return 0;
+  pugi::xpath_query query(path.c_str());
+  return query.evaluate_number(node);
 #else
   return node->eval_to_number(path);
 #endif

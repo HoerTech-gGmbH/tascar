@@ -91,7 +91,7 @@ int qualisys_tracker_t::qtmxml(const char *path, const char *types, lo_arg **arg
 {
   TASCAR::xml_doc_t qtmcfg(&(argv[0]->s), TASCAR::xml_doc_t::LOAD_STRING );
   TASCAR::xml_element_t root(qtmcfg.root);
-  nominal_freq = root.e->eval_to_number("/*/General/Frequency");
+  nominal_freq = tsccfg::node_xpath_to_number(root.e,"/*/General/Frequency");
   for( auto the6d : tsccfg::node_get_children(root.e,"The_6D")){
     for( auto body : tsccfg::node_get_children(the6d,"Body")){
       for( auto bname : tsccfg::node_get_children(body,"Name")){

@@ -417,7 +417,7 @@ void track_t::load_from_gpx(const std::string& fname)
   track_t track;
   TASCAR::xml_doc_t doc(TASCAR::env_expand(fname),
                         TASCAR::xml_doc_t::LOAD_FILE);
-  for(auto node : tsccfg::node_get_children(doc.root, "trk"))
+  for(auto node : doc.root.get_children("trk"))
     for(auto segment : tsccfg::node_get_children(node, "trkseg"))
       for(auto point : tsccfg::node_get_children(segment, "trkpt")) {
         time_t tm;

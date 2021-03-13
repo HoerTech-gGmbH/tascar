@@ -71,7 +71,7 @@ private:
 std::string get_calibfor(const std::string& fname)
 {
   TASCAR::xml_doc_t doc(fname, TASCAR::xml_doc_t::LOAD_FILE);
-  return tsccfg::node_get_attribute_value(doc.root,"calibfor");
+  return doc.root.get_attribute("calibfor");
 }
 
 std::vector<std::string> string_token(std::string s,
@@ -105,42 +105,42 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   if(calibfor.empty())
     calibfor = "type:nsp";
   // create a new session, no OSC port:
-  doc->get_root_node()->set_attribute("srv_port", "none");
+  session_core_t::set_attribute("srv_port","none");
   // add the calibration scene:
-  xmlpp::Element* e_scene(doc->get_root_node()->add_child("scene"));
-  e_scene->set_attribute("name", "calib");
+  xml_element_t e_scene(session_core_t::add_child("scene"));
+  e_scene.set_attribute("name", "calib");
   // add a point source for broadband stimulus, muted for now:
-  xmlpp::Element* e_src(e_scene->add_child("source"));
-  e_src->set_attribute("mute", "true");
-  xmlpp::Element* e_snd(e_src->add_child("sound"));
-  xmlpp::Element* e_plugs(e_snd->add_child("plugins"));
+  xml_element_t e_src(e_scene.add_child("source"));
+  e_src.set_attribute("mute", "true");
+  xml_element_t e_snd(e_src.add_child("sound"));
+  xml_element_t e_plugs(e_snd.add_child("plugins"));
   // add pink noise generator:
-  xmlpp::Element* e_pink(e_plugs->add_child("pink"));
-  e_pink->set_attribute("level", TASCAR::to_string(reflevel));
-  e_pink->set_attribute("period", TASCAR::to_string(duration));
-  e_pink->set_attribute("fmin", TASCAR::to_string(fmin));
-  e_pink->set_attribute("fmax", TASCAR::to_string(fmax));
+  xml_element_t e_pink(e_plugs.add_child("pink"));
+  e_pink.set_attribute("level", TASCAR::to_string(reflevel));
+  e_pink.set_attribute("period", TASCAR::to_string(duration));
+  e_pink.set_attribute("fmin", TASCAR::to_string(fmin));
+  e_pink.set_attribute("fmax", TASCAR::to_string(fmax));
   // add a point source for subwoofer stimulus, muted for now:
-  xmlpp::Element* e_subsrc(e_scene->add_child("source"));
-  e_subsrc->set_attribute("name", "srcsub");
-  e_subsrc->set_attribute("mute", "true");
-  xmlpp::Element* e_subsnd(e_subsrc->add_child("sound"));
-  xmlpp::Element* e_subplugs(e_subsnd->add_child("plugins"));
+  xml_element_t e_subsrc(e_scene.add_child("source"));
+  e_subsrc.set_attribute("name", "srcsub");
+  e_subsrc.set_attribute("mute", "true");
+  xml_element_t e_subsnd(e_subsrc.add_child("sound"));
+  xml_element_t e_subplugs(e_subsnd.add_child("plugins"));
   // add pink noise generator:
-  xmlpp::Element* e_subpink(e_subplugs->add_child("pink"));
-  e_subpink->set_attribute("level", TASCAR::to_string(reflevel));
-  e_subpink->set_attribute("period", TASCAR::to_string(subduration));
-  e_subpink->set_attribute("fmin", TASCAR::to_string(subfmin));
-  e_subpink->set_attribute("fmax", TASCAR::to_string(subfmax));
+  xml_element_t e_subpink(e_subplugs.add_child("pink"));
+  e_subpink.set_attribute("level", TASCAR::to_string(reflevel));
+  e_subpink.set_attribute("period", TASCAR::to_string(subduration));
+  e_subpink.set_attribute("fmin", TASCAR::to_string(subfmin));
+  e_subpink.set_attribute("fmax", TASCAR::to_string(subfmax));
   // receiver 1 is always nsp, for speaker level differences:
-  xmlpp::Element* e_rcvr(e_scene->add_child("receiver"));
-  e_rcvr->set_attribute("type", "nsp");
-  e_rcvr->set_attribute("layout", fname);
+  xml_element_t e_rcvr(e_scene.add_child("receiver"));
+  e_rcvr.set_attribute("type", "nsp");
+  e_rcvr.set_attribute("layout", fname);
   // receiver 2 is specific to the layout, for overall calibration:
-  xmlpp::Element* e_rcvr2(e_scene->add_child("receiver"));
-  e_rcvr2->set_attribute("name", "out2");
-  e_rcvr2->set_attribute("mute", "true");
-  e_rcvr2->set_attribute("layout", fname);
+  xml_element_t e_rcvr2(e_scene.add_child("receiver"));
+  e_rcvr2.set_attribute("name", "out2");
+  e_rcvr2.set_attribute("mute", "true");
+  e_rcvr2.set_attribute("layout", fname);
   std::vector<std::string> receivertypeattr(string_token(calibfor, ","));
   for(auto typeattr : receivertypeattr) {
     std::vector<std::string> pair(string_token(typeattr, ":"));
@@ -148,23 +148,23 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
       throw TASCAR::ErrMsg(
           "Invalid format of 'calibfor' attribute '" + calibfor +
           "': Expected comma separated list of name:value pairs.");
-    e_rcvr2->set_attribute(pair[0], pair[1]);
+    e_rcvr2.set_attribute(pair[0], pair[1]);
   }
   // add diffuse source for diffuse gain calibration:
-  xmlpp::Element* e_diff(e_scene->add_child("diffuse"));
-  e_diff->set_attribute("mute", "true");
-  xmlpp::Element* e_plugs_diff(e_diff->add_child("plugins"));
-  xmlpp::Element* e_pink_diff(e_plugs_diff->add_child("pink"));
-  e_pink_diff->set_attribute("level", TASCAR::to_string(reflevel));
-  e_pink_diff->set_attribute("period", TASCAR::to_string(duration));
-  e_pink_diff->set_attribute("fmin", TASCAR::to_string(fmin));
-  e_pink_diff->set_attribute("fmax", TASCAR::to_string(fmax));
+  xml_element_t e_diff(e_scene.add_child("diffuse"));
+  e_diff.set_attribute("mute", "true");
+  xml_element_t e_plugs_diff(e_diff.add_child("plugins"));
+  xml_element_t e_pink_diff(e_plugs_diff.add_child("pink"));
+  e_pink_diff.set_attribute("level", TASCAR::to_string(reflevel));
+  e_pink_diff.set_attribute("period", TASCAR::to_string(duration));
+  e_pink_diff.set_attribute("fmin", TASCAR::to_string(fmin));
+  e_pink_diff.set_attribute("fmax", TASCAR::to_string(fmax));
   // end of scene creation.
   // doc->write_to_file_formatted("temp.cfg");
-  add_scene(e_scene);
+  add_scene(e_scene.e);
   startlevel = get_caliblevel();
   startdiffgain = get_diffusegain();
-  spkarray = new spk_array_diff_render_t(e_rcvr, false);
+  spkarray = new spk_array_diff_render_t(e_rcvr.e, false);
   levels = std::vector<double>(spkarray->size(), 0.0);
   sublevels = std::vector<double>(spkarray->subs.size(), 0.0);
   // validate scene:
@@ -327,41 +327,35 @@ void calibsession_t::saveas(const std::string& fname)
     gains.push_back(20 * log10((*spkarray)[k].gain) + lmin - levels[k]);
   // rewrite file:
   TASCAR::xml_doc_t doc(spkname, TASCAR::xml_doc_t::LOAD_FILE);
-  if(doc.doc->get_root_node()->get_name() != "layout")
+  if(doc.root.get_element_name() != "layout")
     throw TASCAR::ErrMsg(
         "Invalid file type, expected root node type \"layout\", got \"" +
-        doc.doc->get_root_node()->get_name() + "\".");
-  TASCAR::xml_element_t elem(doc.doc->get_root_node());
-  doc.doc->get_root_node()->set_attribute("caliblevel",
-                                          TASCAR::to_string(get_caliblevel()));
-  doc.doc->get_root_node()->set_attribute("diffusegain",
-                                          TASCAR::to_string(get_diffusegain()));
+        doc.root.get_element_name() + "\".");
+  TASCAR::xml_element_t elem(doc.root);
+  elem.set_attribute("caliblevel", TASCAR::to_string(get_caliblevel()));
+  elem.set_attribute("diffusegain", TASCAR::to_string(get_diffusegain()));
   // update gains:
   if(!scenes.back()->receivermod_objects.empty()) {
     TASCAR::receivermod_base_speaker_t* recspk(
         dynamic_cast<TASCAR::receivermod_base_speaker_t*>(
             scenes.back()->receivermod_objects.back()->libdata));
     if(recspk) {
-      TASCAR::spk_array_diff_render_t array(doc.doc->get_root_node(), true);
-      xmlpp::Node::NodeList subnodes(doc.doc->get_root_node()->get_children());
+      TASCAR::spk_array_diff_render_t array(doc.root(), true);
       size_t k = 0;
-      for(auto sn = subnodes.begin(); sn != subnodes.end(); ++sn) {
-        xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-        if(sne && (sne->get_name() == "speaker")) {
-          sne->set_attribute(
+      for(auto spk : doc.root.get_children("speaker") ){
+        xml_element_t espk(spk);
+        espk.set_attribute(
               "gain",
               TASCAR::to_string(
                   20 *
                   log10(recspk->spkpos[std::min(k, recspk->spkpos.size() - 1)]
-                            .gain)));
-          ++k;
-        }
+                        .gain)));
+        ++k;
       }
       k = 0;
-      for(auto sn = subnodes.begin(); sn != subnodes.end(); ++sn) {
-        xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-        if(sne && (sne->get_name() == "sub")) {
-          sne->set_attribute(
+      for(auto spk : doc.root.get_children("sub") ){
+        xml_element_t espk(spk);
+        espk.set_attribute(
               "gain",
               TASCAR::to_string(
                   20 *
@@ -370,7 +364,6 @@ void calibsession_t::saveas(const std::string& fname)
                             .gain)));
           ++k;
         }
-      }
     }
   }
   std::vector<std::string> attributes;
@@ -393,9 +386,9 @@ void calibsession_t::saveas(const std::string& fname)
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
   std::strftime(ctmp, 1023, "%Y-%m-%d %T", std::localtime(&t));
-  doc.doc->get_root_node()->set_attribute("calibdate", ctmp);
-  doc.doc->get_root_node()->set_attribute("calibfor", calibfor);
-  doc.doc->write_to_file_formatted(fname);
+  doc.root.set_attribute("calibdate", ctmp);
+  doc.root.set_attribute("calibfor", calibfor);
+  doc.save(fname);
   gainmodified = false;
   levelsrecorded = false;
   calibrated = false;

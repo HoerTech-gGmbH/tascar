@@ -32,21 +32,21 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
           TASCAR::env_expand(tsccfg::node_get_attribute_value(sne, "name")));
       if((!idocname.empty()) && (idocname != parentdoc)) {
         TASCAR::xml_doc_t idoc(idocname, TASCAR::xml_doc_t::LOAD_FILE);
-        if(tsccfg::node_get_name(idoc.root) !=
+        if(idoc.root.get_element_name() !=
            tsccfg::node_get_name(e)) {
           throw TASCAR::ErrMsg("Invalid root node \"" +
-                               tsccfg::node_get_name(idoc.root) +
+                               idoc.root.get_element_name() +
                                "\" in include file \"" + idocname +
                                "\".\nexpected \"" + tsccfg::node_get_name(e) +
                                "\".");
         }
         std::string sublicense;
         std::string subattribution;
-        get_license_info(idoc.root, "", sublicense, subattribution);
+        get_license_info(idoc.root(), "", sublicense, subattribution);
         lh->add_license(sublicense, subattribution,
                         TASCAR::tscbasename(idocname));
-        add_includes(idoc.root, idocname, lh);
-        for(auto isne : tsccfg::node_get_children(idoc.root)) {
+        add_includes(idoc.root(), idocname, lh);
+        for(auto isne : idoc.root.get_children()) {
 #ifdef USEPUGIXML
           e.append_copy(isne);
 #else
