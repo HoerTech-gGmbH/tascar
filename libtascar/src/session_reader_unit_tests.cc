@@ -8,6 +8,20 @@ TEST(tsc_reader_t, defaultconstructor)
   EXPECT_EQ("session",reader.root.get_element_name());
 }
 
+TEST(tsc_reader_t, loadconstructor_xmldoc)
+{
+  TASCAR::xml_doc_t reader("<session/>",TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ("session",reader.root.get_element_name());
+  EXPECT_EQ(0u,reader.root.get_children().size());
+}
+
+TEST(tsc_reader_t, loadconstructor_empty)
+{
+  TASCAR::tsc_reader_t reader("<session/>",TASCAR::xml_doc_t::LOAD_STRING,"");
+  EXPECT_EQ("session",reader.root.get_element_name());
+  EXPECT_EQ(0u,reader.root.get_children().size());
+}
+
 TEST(tsc_reader_t, loadconstructor)
 {
   TASCAR::tsc_reader_t reader("<session><scene/></session>",TASCAR::xml_doc_t::LOAD_STRING,"");

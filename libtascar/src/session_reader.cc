@@ -67,13 +67,22 @@ const std::string& showstring(const std::string& s)
 }
 
 
+TASCAR::tsc_reader_t::~tsc_reader_t()
+{
+}
+
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
-  : xml_doc_t(showstring(filename_or_data), t),
+  : xml_doc_t(filename_or_data, t),
       licensed_component_t(typeid(*this).name()),
-      file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
+    //      file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
+    file_name("")
 {
-  DEBUG(1);
+  if( t == LOAD_FILE )
+    file_name = filename_or_data;
+  else
+    file_name = "(loaded from string)";
+  //file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
   // avoid problems with number format in xml file:
   setlocale(LC_ALL, "C");
   if(path.size()) {

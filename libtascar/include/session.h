@@ -107,7 +107,7 @@ namespace TASCAR {
   class session_core_t : public TASCAR::tsc_reader_t {
   public:
     session_core_t();
-    ~session_core_t();
+    virtual ~session_core_t();
     session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
     // configuration variables:
     double duration;

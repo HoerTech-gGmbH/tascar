@@ -22,7 +22,7 @@
 
 #include "coordinates.h"
 
-#define USEPUGIXML
+//#define USEPUGIXML
 
 #ifdef USEPUGIXML
 
@@ -58,9 +58,9 @@ namespace tsccfg {
                                        const std::string& name,
                                        std::string& value,
                                        const std::string& info);
-  std::string node_get_text(tsccfg::node_t n, const std::string& child = "");
+  std::string node_get_text(tsccfg::node_t& n, const std::string& child = "");
 
-  double node_xpath_to_number(tsccfg::node_t,const std::string& path);
+  double node_xpath_to_number(tsccfg::node_t&,const std::string& path);
 
 } // namespace tsccfg
 
@@ -138,7 +138,7 @@ namespace TASCAR {
 
   class xml_element_t {
   public:
-    xml_element_t(tsccfg::node_t);
+    xml_element_t(const tsccfg::node_t&);
     xml_element_t();
     virtual ~xml_element_t();
     bool has_attribute(const std::string& name) const;
@@ -247,7 +247,7 @@ namespace TASCAR {
     enum load_type_t { LOAD_FILE, LOAD_STRING };
     xml_doc_t();
     xml_doc_t(const std::string& filename, load_type_t t);
-    xml_doc_t(tsccfg::node_t);
+    xml_doc_t(const tsccfg::node_t&);
     virtual ~xml_doc_t();
     virtual void save(const std::string& filename);
     std::string save_to_string();

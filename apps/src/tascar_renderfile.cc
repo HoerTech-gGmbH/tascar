@@ -100,7 +100,6 @@ int main(int argc, char** argv)
     char c_respath[PATH_MAX];
     std::string current_path = getcwd(c_respath, PATH_MAX);
     current_path += "/";
-    DEBUG(tscfile);
     TASCAR::wav_render_t r(tscfile, scene, b_verbose);
     if(ism_max != (uint32_t)(-1))
       r.set_ism_order_range(ism_min, ism_max);

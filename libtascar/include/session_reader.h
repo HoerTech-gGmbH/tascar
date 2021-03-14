@@ -32,6 +32,7 @@ namespace TASCAR {
     tsc_reader_t();
     tsc_reader_t(const std::string& filename_or_data, load_type_t t,
                  const std::string& path);
+    virtual ~tsc_reader_t();
     void read_xml();
     const std::string& get_session_path() const;
     const std::string& get_file_name() const;
