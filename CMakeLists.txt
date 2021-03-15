@@ -8,7 +8,7 @@ include(${PROJECT_SOURCE_DIR}/version.cmake)
 set(PROJECT_VERSION ${VERSION})
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
+#set(THREADS_PREFER_PTHREAD_FLAG ON)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
@@ -19,31 +19,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 if (APPLE)
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" -gdwarf-2)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" -gdwarf-2)
+    set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
 endif (APPLE)
 
-
-### DEPENDENCIES
-find_package(Threads REQUIRED)
-find_package(Jack REQUIRED)
-find_package(LibSndFile REQUIRED)
-find_package(LibSamplerate REQUIRED)
-find_package(FFTW REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(liblo REQUIRED)
-find_package(GSL REQUIRED)
-find_package(LibXml++ REQUIRED)
-find_package(GTK3 COMPONENTS gtkmm)
-
-
-### ADDITIONAL FLAGS
-set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
-if (NOT PLUGINPREFIX MATCHES "")
-    message("Using plugin prefix ${PLUGINPREFIX}")
-    add_compile_definitions(PLUGINPREFIX=${PLUGINPREFIX})
-endif ()
-add_compile_definitions(CMAKE)
 
 
 ## DEPENDENCIES
@@ -67,6 +45,15 @@ set(EXTERNAL_LIBS
         ${LIBSNDFILE_LIBRARIES}
         ${FFTW_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES})
+
+
+### ADDITIONAL FLAGS
+set(PLUGINPREFIX "" CACHE STRING "Prefix for plugins")
+if (NOT PLUGINPREFIX MATCHES "")
+    message("Using plugin prefix ${PLUGINPREFIX}")
+    add_compile_definitions(PLUGINPREFIX=${PLUGINPREFIX})
+endif ()
+add_compile_definitions(CMAKE)
 
 
 ### TARGETS

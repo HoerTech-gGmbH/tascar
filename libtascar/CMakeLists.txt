@@ -4,16 +4,16 @@ cmake_minimum_required(VERSION 3.10)
 project(tascar LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-include(${PROJECT_SOURCE_DIR}/../version.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake)
 set(PROJECT_VERSION ${VERSION})
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
+#set(THREADS_PREFER_PTHREAD_FLAG ON)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
-        "${PROJECT_SOURCE_DIR}/tascarver.h.in"
-        "${PROJECT_SOURCE_DIR}/include/tascarver.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tascarver.h.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/tascarver.h"
 )
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -21,64 +21,64 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
 
 ### SOURCE FILE MANAGEMENT
-file(GLOB LIB_HEADER ${PROJECT_SOURCE_DIR}/include/*.h)
+file(GLOB LIB_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 set(LIB_SOURCES
-        ${PROJECT_SOURCE_DIR}/src/licensehandler.cc
-        ${PROJECT_SOURCE_DIR}/src/audiostates.cc
-        ${PROJECT_SOURCE_DIR}/src/coordinates.cc
-        ${PROJECT_SOURCE_DIR}/src/audiochunks.cc
-        ${PROJECT_SOURCE_DIR}/src/xmlconfig.cc
-        ${PROJECT_SOURCE_DIR}/src/dynamicobjects.cc
-        ${PROJECT_SOURCE_DIR}/src/sourcemod.cc
-        ${PROJECT_SOURCE_DIR}/src/receivermod.cc
-        ${PROJECT_SOURCE_DIR}/src/filterclass.cc
-        ${PROJECT_SOURCE_DIR}/src/osc_helper.cc
-        ${PROJECT_SOURCE_DIR}/src/pluginprocessor.cc
-        ${PROJECT_SOURCE_DIR}/src/acousticmodel.cc
-        ${PROJECT_SOURCE_DIR}/src/scene.cc
-        ${PROJECT_SOURCE_DIR}/src/render.cc
-        ${PROJECT_SOURCE_DIR}/src/session_reader.cc
-        ${PROJECT_SOURCE_DIR}/src/session.cc
-        ${PROJECT_SOURCE_DIR}/src/jackclient.cc
-        ${PROJECT_SOURCE_DIR}/src/delayline.cc
-        ${PROJECT_SOURCE_DIR}/src/async_file.cc
-        ${PROJECT_SOURCE_DIR}/src/errorhandling.cc
-        ${PROJECT_SOURCE_DIR}/src/osc_scene.cc
-        ${PROJECT_SOURCE_DIR}/src/ringbuffer.cc
-        ${PROJECT_SOURCE_DIR}/src/viewport.cc
-        ${PROJECT_SOURCE_DIR}/src/sampler.cc
-        ${PROJECT_SOURCE_DIR}/src/jackiowav.cc
-        ${PROJECT_SOURCE_DIR}/src/jackclient.cc
-        ${PROJECT_SOURCE_DIR}/src/cli.cc
-        ${PROJECT_SOURCE_DIR}/src/irrender.cc
-        ${PROJECT_SOURCE_DIR}/src/jackrender.cc
-        ${PROJECT_SOURCE_DIR}/src/audioplugin.cc
-        ${PROJECT_SOURCE_DIR}/src/levelmeter.cc
-        ${PROJECT_SOURCE_DIR}/src/serviceclass.cc
-        ${PROJECT_SOURCE_DIR}/src/speakerarray.cc
-        ${PROJECT_SOURCE_DIR}/src/spectrum.cc
-        ${PROJECT_SOURCE_DIR}/src/fft.cc
-        ${PROJECT_SOURCE_DIR}/src/stft.cc
-        ${PROJECT_SOURCE_DIR}/src/ola.cc
-        ${PROJECT_SOURCE_DIR}/src/vbap3d.cc
-        ${PROJECT_SOURCE_DIR}/src/hoa.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/licensehandler.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/audiostates.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/coordinates.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/audiochunks.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dynamicobjects.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sourcemod.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receivermod.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/filterclass.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/osc_helper.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pluginprocessor.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/acousticmodel.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/scene.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/render.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/session_reader.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/session.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/jackclient.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/delayline.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/async_file.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/errorhandling.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/osc_scene.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ringbuffer.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/viewport.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sampler.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/jackiowav.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/jackclient.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/cli.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/irrender.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/jackrender.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/audioplugin.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/levelmeter.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/serviceclass.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/speakerarray.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/spectrum.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/fft.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/stft.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ola.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vbap3d.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hoa.cc
         )
 if (Linux)
     list(APPEND LIB_HEADER
-            ${PROJECT_SOURCE_DIR}/include/alsamidicc.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/include/alsamidicc.h
             )
     list(APPEND LIB_SOURCES
-            ${PROJECT_SOURCE_DIR}/src/alsamidicc.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/alsamidicc.cc
             )
 endif ()
 set(DMX_SOURCES
-        ${PROJECT_SOURCE_DIR}/src/termsetbaud.cc
-        ${PROJECT_SOURCE_DIR}/src/serialport.cc
-        ${PROJECT_SOURCE_DIR}/src/dmxdriver.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/termsetbaud.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/serialport.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dmxdriver.cc
         )
 set(UI_SOURCES
-        ${PROJECT_SOURCE_DIR}/src/gui_elements.cc
-        ${PROJECT_SOURCE_DIR}/src/pdfexport.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/gui_elements.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pdfexport.cc
         )
 
 
@@ -109,7 +109,7 @@ add_compile_definitions(CMAKE)
 add_library(tascar STATIC ${LIB_SOURCES})
 target_include_directories(tascar
         PRIVATE
-        ${PROJECT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${LIBSNDFILE_INCLUDE_DIRS}
         ${LIBSAMPLERATE_INCLUDE_DIRS}
         ${FFTW_INCLUDE_DIRS}
@@ -170,7 +170,7 @@ if (GTK3_FOUND)
     target_compile_definitions(tascargui PRIVATE -DGTKMM30)
     target_include_directories(tascargui
             PRIVATE
-            ${PROJECT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
             PUBLIC
             #${LIBXML++_INCLUDE_DIRS}
             #${JACK_INCLUDE_DIRS}
@@ -201,7 +201,7 @@ if (Linux)
     add_library(tascardmx SHARED ${DMX_SOURCES})
     target_include_directories(tascardmx
             PRIVATE
-            ${PROJECT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
             )
     target_link_libraries(tascardmx
             PUBLIC
