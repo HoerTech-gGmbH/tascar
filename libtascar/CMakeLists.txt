@@ -27,7 +27,6 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audiostates.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/coordinates.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audiochunks.cc
-        #${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dynamicobjects.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sourcemod.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receivermod.cc
@@ -62,6 +61,7 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ola.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vbap3d.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hoa.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tscconfig.cc
         )
 if (Linux)
     list(APPEND LIB_HEADER
