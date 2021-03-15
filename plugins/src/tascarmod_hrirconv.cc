@@ -120,17 +120,13 @@ hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
   if( outchannels == 0 )
     throw TASCAR::ErrMsg("At least one output channel required");
   if( hrirfile.empty() ){
-    xmlpp::Node::NodeList subnodes = e->get_children();
-    for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-      if( sne && ( sne->get_name() == "entry" )){
-        channel_entry_t che;
-        get_attribute_value(sne,"in",che.inchannel);
-        get_attribute_value(sne,"out",che.outchannel);
-        che.filename = sne->get_attribute_value("file");
-        get_attribute_value(sne,"channel",che.filechannel);
-        matrix.push_back(che);
-      }
+    for(auto entry : tsccfg::node_get_children(e,"entry")){
+      channel_entry_t che;
+      get_attribute_value(entry,"in",che.inchannel);
+      get_attribute_value(entry,"out",che.outchannel);
+      get_attribute_value(entry,"file",che.filename);
+      get_attribute_value(entry,"channel",che.filechannel);
+      matrix.push_back(che);
     }
   }else{
     for(uint32_t kin=0;kin<inchannels;++kin){

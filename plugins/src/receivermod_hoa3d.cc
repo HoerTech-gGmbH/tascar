@@ -11,7 +11,7 @@ public:
     // ambisonic weights:
     std::vector<float> B;
   };
-  hoa3d_dec_t(xmlpp::Element* xmlsrc);
+  hoa3d_dec_t(tsccfg::node_t xmlsrc);
   ~hoa3d_dec_t();
   void configure();
   void add_pointsource(const TASCAR::pos_t& prel, double width,
@@ -44,7 +44,7 @@ hoa3d_dec_t::data_t::data_t(uint32_t channels)
   B = std::vector<float>(channels, 0.0f);
 }
 
-hoa3d_dec_t::hoa3d_dec_t(xmlpp::Element* xmlsrc)
+hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc), order(3), method("pinv"),
       dectype("maxre"), savedec(false), decwarnthreshold(8.0)
 {

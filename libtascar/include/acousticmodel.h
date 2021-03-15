@@ -29,7 +29,6 @@
 #ifndef ACOUSTICMODEL_H
 #define ACOUSTICMODEL_H
 
-#include "audioplugin.h"
 #include "dynamicobjects.h"
 #include "levelmeter.h"
 #include "pluginprocessor.h"
@@ -118,7 +117,7 @@ namespace TASCAR {
                       public audiostates_t,
                       public licensed_component_t {
     public:
-      diffuse_t(xmlpp::Element* cfg, uint32_t chunksize,
+      diffuse_t(tsccfg::node_t cfg, uint32_t chunksize,
                 TASCAR::levelmeter_t& rmslevel_, const std::string& name);
       virtual ~diffuse_t(){};
       virtual void preprocess(const TASCAR::transport_t& tp);
@@ -137,7 +136,7 @@ namespace TASCAR {
 
     class boundingbox_t : public dynobject_t {
     public:
-      boundingbox_t(xmlpp::Element*);
+      boundingbox_t(tsccfg::node_t);
       pos_t size;
       double falloff;
       bool active;
@@ -159,7 +158,7 @@ namespace TASCAR {
                      public c6dof_t,
                      public licensed_component_t {
     public:
-      source_t(xmlpp::Element* xmlsrc, const std::string& name,
+      source_t(tsccfg::node_t xmlsrc, const std::string& name,
                const std::string& parentname);
       ~source_t();
       void configure();
@@ -193,7 +192,7 @@ namespace TASCAR {
                        public c6dof_t,
                        public licensed_component_t {
     public:
-      receiver_t(xmlpp::Element* xmlsrc, const std::string& name,
+      receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
                  bool is_reverb_);
       ~receiver_t();
       void configure();

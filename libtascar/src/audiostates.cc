@@ -1,7 +1,6 @@
 #include "audiostates.h"
 #include "errorhandling.h"
-#include "defs.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 
 chunk_cfg_t::chunk_cfg_t( double f_sample_, uint32_t n_fragment_, uint32_t n_channels_ )
   :  f_sample(f_sample_),

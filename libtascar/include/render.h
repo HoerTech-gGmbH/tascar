@@ -49,7 +49,7 @@ namespace TASCAR {
    */
   class render_core_t : public TASCAR::Scene::scene_t {
   public:
-    render_core_t(xmlpp::Element* xmlsrc);
+    render_core_t(tsccfg::node_t xmlsrc);
     virtual ~render_core_t();
     void configure();
     void release();

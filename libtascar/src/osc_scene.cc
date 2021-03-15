@@ -298,9 +298,8 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
   }
 }
 
-osc_scene_t::osc_scene_t(xmlpp::Element* xmlsrc, TASCAR::Scene::scene_t* scene_)
-  : //osc_server_t(xmlsrc->get_attribute_value("srv_addr"),xmlsrc->get_attribute_value("srv_port")),
-    scene(scene_)
+osc_scene_t::osc_scene_t(tsccfg::node_t xmlsrc, TASCAR::Scene::scene_t* scene_)
+  : scene(scene_)
 {
   if( !scene )
     throw TASCAR::ErrMsg("Invalid scene pointer");

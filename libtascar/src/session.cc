@@ -1,13 +1,12 @@
 #include "session.h"
-#include "errorhandling.h"
 #include <chrono>
 #include <dlfcn.h>
 #include <fnmatch.h>
 #include <libgen.h>
 #include <limits.h>
 #include <locale.h>
+#include <signal.h>
 #include <stdlib.h>
-#include <string.h>
 #include <thread>
 #include <unistd.h>
 
@@ -154,7 +153,7 @@ TASCAR_RESOLVER(module_base_t, const module_cfg_t&)
 TASCAR::module_t::module_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), lib(NULL), libdata(NULL)
 {
-  name = e->get_name();
+  name = tsccfg::node_get_name(e);
   std::string libname("tascar_");
 #ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
@@ -214,13 +213,13 @@ TASCAR::module_t::~module_t()
   dlclose(lib);
 }
 
-TASCAR::module_cfg_t::module_cfg_t(xmlpp::Element* xmlsrc_,
+TASCAR::module_cfg_t::module_cfg_t(tsccfg::node_t xmlsrc_,
                                    TASCAR::session_t* session_)
     : session(session_), xmlsrc(xmlsrc_)
 {
 }
 
-xmlpp::Element* assert_element(xmlpp::Element* e)
+tsccfg::node_t assert_element(tsccfg::node_t e)
 {
   if(!e)
     throw TASCAR::ErrMsg("NULL pointer element");
@@ -232,7 +231,7 @@ const std::string& debug_str(const std::string& s)
   return s;
 }
 
-TASCAR::session_oscvars_t::session_oscvars_t(xmlpp::Element* src)
+TASCAR::session_oscvars_t::session_oscvars_t(tsccfg::node_t src)
     : xml_element_t(src), name("tascar"), srv_port("9877"), srv_proto("UDP")
 {
   GET_ATTRIBUTE(srv_port, "", "OSC port number");
@@ -248,32 +247,37 @@ TASCAR::session_core_t::session_core_t()
       levelmeter_range(70.0), requiresrate(0), warnsrate(0), requirefragsize(0),
       warnfragsize(0), initcmdsleep(0), h_pipe_initcmd(NULL), pid_initcmd(0)
 {
-  GET_ATTRIBUTE(duration, "s", "session duration");
-  GET_ATTRIBUTE_BOOL(loop, "loop session at end");
-  GET_ATTRIBUTE_BOOL(playonload, "start playing when session is loaded");
-  GET_ATTRIBUTE(levelmeter_tc, "s", "level meter time constant");
-  GET_ATTRIBUTE_NOUNIT(levelmeter_weight, "level meter weighting");
-  GET_ATTRIBUTE(levelmeter_mode, "",
-                "Level meter mode (rms, rmspeak, percentile)");
-  GET_ATTRIBUTE(levelmeter_min, "dB SPL", "Level meter minimum");
-  GET_ATTRIBUTE(levelmeter_range, "dB", "Level range of level meters");
-  GET_ATTRIBUTE(requiresrate, "Hz",
-                "Session sampling rate, stop loading the session if the system "
-                "sampling rate doesn't match");
-  GET_ATTRIBUTE(requirefragsize, "",
-                "Session fragment size, stop loading the session if the system "
-                "fragment size doesn't match");
-  GET_ATTRIBUTE(warnsrate, "Hz",
-                "Session sampling rate, print a warning if the system sampling "
-                "rate doesn't match");
-  GET_ATTRIBUTE(warnfragsize, "",
-                "Session fragment size, print a warning if the system fragment "
-                "size doesn't match");
-  GET_ATTRIBUTE(initcmd, "",
-                "Command to be executed before first connection to jack. Can "
-                "be used to start jack server.");
-  GET_ATTRIBUTE(initcmdsleep, "s",
-                "Time to wait for initcmd to start up, in seconds.");
+  root.GET_ATTRIBUTE(duration, "s", "session duration");
+  root.GET_ATTRIBUTE_BOOL(loop, "loop session at end");
+  root.GET_ATTRIBUTE_BOOL(playonload, "start playing when session is loaded");
+  root.GET_ATTRIBUTE(levelmeter_tc, "s", "level meter time constant");
+  root.GET_ATTRIBUTE_NOUNIT(levelmeter_weight, "level meter weighting");
+  root.GET_ATTRIBUTE(levelmeter_mode, "",
+                     "Level meter mode (rms, rmspeak, percentile)");
+  root.GET_ATTRIBUTE(levelmeter_min, "dB SPL", "Level meter minimum");
+  root.GET_ATTRIBUTE(levelmeter_range, "dB", "Level range of level meters");
+  root.GET_ATTRIBUTE(
+      requiresrate, "Hz",
+      "Session sampling rate, stop loading the session if the system "
+      "sampling rate doesn't match");
+  root.GET_ATTRIBUTE(
+      requirefragsize, "",
+      "Session fragment size, stop loading the session if the system "
+      "fragment size doesn't match");
+  root.GET_ATTRIBUTE(
+      warnsrate, "Hz",
+      "Session sampling rate, print a warning if the system sampling "
+      "rate doesn't match");
+  root.GET_ATTRIBUTE(
+      warnfragsize, "",
+      "Session fragment size, print a warning if the system fragment "
+      "size doesn't match");
+  root.GET_ATTRIBUTE(
+      initcmd, "",
+      "Command to be executed before first connection to jack. Can "
+      "be used to start jack server.");
+  root.GET_ATTRIBUTE(initcmdsleep, "s",
+                     "Time to wait for initcmd to start up, in seconds.");
   start_initcmd();
 }
 
@@ -285,32 +289,37 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,
       levelmeter_range(70.0), requiresrate(0), warnsrate(0), requirefragsize(0),
       warnfragsize(0), initcmdsleep(0), h_pipe_initcmd(NULL), pid_initcmd(0)
 {
-  GET_ATTRIBUTE(duration, "s", "session duration");
-  GET_ATTRIBUTE_BOOL(loop, "loop session at end");
-  GET_ATTRIBUTE_BOOL(playonload, "start playing when session is loaded");
-  GET_ATTRIBUTE(levelmeter_tc, "s", "level meter time constant");
-  GET_ATTRIBUTE_NOUNIT(levelmeter_weight, "level meter weighting");
-  GET_ATTRIBUTE(levelmeter_mode, "",
-                "Level meter mode (rms, rmspeak, percentile)");
-  GET_ATTRIBUTE(levelmeter_min, "dB SPL", "Level meter minimum");
-  GET_ATTRIBUTE(levelmeter_range, "dB", "Level range of level meters");
-  GET_ATTRIBUTE(requiresrate, "Hz",
-                "Session sampling rate, stop loading the session if the system "
-                "sampling rate doesn't match");
-  GET_ATTRIBUTE(requirefragsize, "",
-                "Session fragment size, stop loading the session if the system "
-                "fragment size doesn't match");
-  GET_ATTRIBUTE(warnsrate, "Hz",
-                "Session sampling rate, print a warning if the system sampling "
-                "rate doesn't match");
-  GET_ATTRIBUTE(warnfragsize, "",
-                "Session fragment size, print a warning if the system fragment "
-                "size doesn't match");
-  GET_ATTRIBUTE(initcmd, "",
-                "Command to be executed before first connection to jack. Can "
-                "be used to start jack server.");
-  GET_ATTRIBUTE(initcmdsleep, "s",
-                "Time to wait for initcmd to start up, in seconds.");
+  root.GET_ATTRIBUTE(duration, "s", "session duration");
+  root.GET_ATTRIBUTE_BOOL(loop, "loop session at end");
+  root.GET_ATTRIBUTE_BOOL(playonload, "start playing when session is loaded");
+  root.GET_ATTRIBUTE(levelmeter_tc, "s", "level meter time constant");
+  root.GET_ATTRIBUTE_NOUNIT(levelmeter_weight, "level meter weighting");
+  root.GET_ATTRIBUTE(levelmeter_mode, "",
+                     "Level meter mode (rms, rmspeak, percentile)");
+  root.GET_ATTRIBUTE(levelmeter_min, "dB SPL", "Level meter minimum");
+  root.GET_ATTRIBUTE(levelmeter_range, "dB", "Level range of level meters");
+  root.GET_ATTRIBUTE(
+      requiresrate, "Hz",
+      "Session sampling rate, stop loading the session if the system "
+      "sampling rate doesn't match");
+  root.GET_ATTRIBUTE(
+      requirefragsize, "",
+      "Session fragment size, stop loading the session if the system "
+      "fragment size doesn't match");
+  root.GET_ATTRIBUTE(
+      warnsrate, "Hz",
+      "Session sampling rate, print a warning if the system sampling "
+      "rate doesn't match");
+  root.GET_ATTRIBUTE(
+      warnfragsize, "",
+      "Session fragment size, print a warning if the system fragment "
+      "size doesn't match");
+  root.GET_ATTRIBUTE(
+      initcmd, "",
+      "Command to be executed before first connection to jack. Can "
+      "be used to start jack server.");
+  root.GET_ATTRIBUTE(initcmdsleep, "s",
+                     "Time to wait for initcmd to start up, in seconds.");
   start_initcmd();
 }
 
@@ -359,7 +368,7 @@ void assert_jackpar(const std::string& what, double expected, double found,
 }
 
 TASCAR::session_t::session_t()
-    : TASCAR::session_oscvars_t(tsc_reader_t::e),
+  : TASCAR::session_oscvars_t(root()),
       jackc_transport_t(jacknamer(name, "session.")),
       osc_server_t(srv_addr, srv_port, srv_proto,
                    TASCAR::config("tascar.osc.list", 0)),
@@ -388,7 +397,7 @@ TASCAR::session_t::session_t()
 TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
                              const std::string& path)
     : TASCAR::session_core_t(filename_or_data, t, path),
-      session_oscvars_t(tsc_reader_t::e),
+      session_oscvars_t(root()),
       jackc_transport_t(jacknamer(name, "session.")),
       osc_server_t(srv_addr, srv_port, srv_proto,
                    TASCAR::config("tascar.osc.list", 0)),
@@ -510,11 +519,11 @@ std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
   return ports;
 }
 
-void TASCAR::session_t::add_scene(xmlpp::Element* src)
+void TASCAR::session_t::add_scene(tsccfg::node_t src)
 {
   TASCAR::scene_render_rt_t* newscene(NULL);
   if(!src)
-    src = tsc_reader_t::e->add_child("scene");
+    src = root.add_child("scene");
   try {
     newscene = new TASCAR::scene_render_rt_t(src);
     if(namelist.find(newscene->name) != namelist.end())
@@ -603,24 +612,24 @@ TASCAR::session_t::receiver_by_id(const std::string& id)
                        name + "\".");
 }
 
-void TASCAR::session_t::add_range(xmlpp::Element* src)
+void TASCAR::session_t::add_range(tsccfg::node_t src)
 {
   if(!src)
-    src = tsc_reader_t::e->add_child("range");
+    src = root.add_child("range");
   ranges.push_back(new TASCAR::range_t(src));
 }
 
-void TASCAR::session_t::add_connection(xmlpp::Element* src)
+void TASCAR::session_t::add_connection(tsccfg::node_t src)
 {
   if(!src)
-    src = tsc_reader_t::e->add_child("connect");
+    src = root.add_child("connect");
   connections.push_back(new TASCAR::connection_t(src));
 }
 
-void TASCAR::session_t::add_module(xmlpp::Element* src)
+void TASCAR::session_t::add_module(tsccfg::node_t src)
 {
   if(!src)
-    src = tsc_reader_t::e->add_child("module");
+    src = root.add_child("module");
   modules.push_back(new TASCAR::module_t(TASCAR::module_cfg_t(src, this)));
 }
 
@@ -701,31 +710,6 @@ void TASCAR::session_t::stop()
     (*ipl)->stop();
 }
 
-void del_whitespace(xmlpp::Node* node)
-{
-  xmlpp::TextNode* nodeText = dynamic_cast<xmlpp::TextNode*>(node);
-  if(nodeText && nodeText->is_white_space()) {
-    nodeText->get_parent()->remove_child(node);
-  } else {
-    xmlpp::Element* nodeElement = dynamic_cast<xmlpp::Element*>(node);
-    if(nodeElement) {
-      xmlpp::Node::NodeList children = nodeElement->get_children();
-      for(xmlpp::Node::NodeList::iterator nita = children.begin();
-          nita != children.end(); ++nita) {
-        del_whitespace(*nita);
-      }
-    }
-  }
-}
-
-void TASCAR::xml_doc_t::save(const std::string& filename)
-{
-  if(doc) {
-    del_whitespace(doc->get_root_node());
-    doc->write_to_file_formatted(filename);
-  }
-}
-
 void TASCAR::session_t::run(bool& b_quit, bool use_stdin)
 {
   start();
@@ -780,20 +764,22 @@ uint32_t TASCAR::session_t::get_total_diffuse_sound_fields() const
   return rv;
 }
 
-TASCAR::range_t::range_t(xmlpp::Element* xmlsrc)
+TASCAR::range_t::range_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), name(""), start(0), end(0)
 {
-  GET_ATTRIBUTE(name,"","range name");
-  GET_ATTRIBUTE(start,"s","start time");
-  GET_ATTRIBUTE(end,"s","end time");
+  GET_ATTRIBUTE(name, "", "range name");
+  GET_ATTRIBUTE(start, "s", "start time");
+  GET_ATTRIBUTE(end, "s", "end time");
 }
 
-TASCAR::connection_t::connection_t(xmlpp::Element* xmlsrc)
+TASCAR::connection_t::connection_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), failonerror(false)
 {
-  GET_ATTRIBUTE(src,"","jack source port");
-  GET_ATTRIBUTE(dest,"","jack destination port");
-  GET_ATTRIBUTE_BOOL(failonerror,"create an error if connection failed, alternatively just warn");
+  GET_ATTRIBUTE(src, "", "jack source port");
+  GET_ATTRIBUTE(dest, "", "jack destination port");
+  GET_ATTRIBUTE_BOOL(
+      failonerror,
+      "create an error if connection failed, alternatively just warn");
 }
 
 TASCAR::module_base_t::module_base_t(const TASCAR::module_cfg_t& cfg)
@@ -1047,7 +1033,7 @@ void TASCAR::session_t::add_transport_methods()
 
 void TASCAR::session_t::validate_attributes(std::string& msg) const
 {
-  TASCAR::tsc_reader_t::validate_attributes(msg);
+  root.validate_attributes(msg);
   for(std::vector<TASCAR::scene_render_rt_t*>::const_iterator it =
           scenes.begin();
       it != scenes.end(); ++it)

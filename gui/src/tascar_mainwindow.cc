@@ -8,9 +8,9 @@
 #include <fstream>
 
 #include <curl/curl.h>
-#include <libxml/tree.h>
-#include <libxml/HTMLparser.h>
-#include <libxml++/libxml++.h>
+//#include <libxml/tree.h>
+//#include <libxml/HTMLparser.h>
+//#include <libxml++/libxml++.h>
 
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
 
@@ -489,13 +489,10 @@ void tascar_window_t::update_selection_info()
   if( session && active_object ){
     active_type_label->set_text(active_object->get_type());
     active_track->set_active(session->scenes[selected_scene]->guitrackobject==active_object);
-    char ctmp[1024];
-    xmlpp::Element* e(active_object->TASCAR::dynobject_t::e);
-    sprintf(ctmp,"Line %d:",e->get_line());
-    active_label_sourceline->set_text(ctmp);
-    xmlpp::Document doc;
-    doc.create_root_node_by_import(e);
-    std::string disp(doc.write_to_string_formatted());
+    tsccfg::node_t e(active_object->TASCAR::dynobject_t::e);
+    active_label_sourceline->set_text(tsccfg::node_get_path(e));
+    TASCAR::xml_doc_t doc(e);
+    std::string disp(doc.save_to_string());
     // remove first line:
     size_t p(disp.find(10));
     if( p < disp.npos )
@@ -569,7 +566,7 @@ void tascar_window_t::reset_gui()
     int32_t mainwin_y(0);
     get_position(mainwin_x, mainwin_y);
     TASCAR::xml_element_t mainwin(
-        session->tsc_reader_t::find_or_add_child("mainwindow"));
+        session->root.find_or_add_child("mainwindow"));
     mainwin.get_attribute("w", mainwin_width, "px", "main window width");
     mainwin.get_attribute("h", mainwin_height, "px", "main window height");
     mainwin.get_attribute("x", mainwin_x, "px", "main window x position");
@@ -612,7 +609,7 @@ void tascar_window_t::reset_gui()
     update_levelmeter_settings();
   }
   if(session) {
-    source_buffer->set_text(session->doc->write_to_string_formatted());
+    source_buffer->set_text(session->save_to_string());
     osc_vars->get_buffer()->set_text(session->list_variables());
     text_srv_url->set_text(session->get_srv_url());
     legal_view->get_buffer()->set_text(session->legal_stuff());

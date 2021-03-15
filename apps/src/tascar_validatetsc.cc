@@ -35,9 +35,9 @@ namespace App {
     void show_doc(bool latex);
 
   protected:
-    void add_scene(xmlpp::Element* e);
-    void add_range(xmlpp::Element*);
-    void add_connection(xmlpp::Element*);
+    void add_scene(tsccfg::node_t e);
+    void add_range(tsccfg::node_t);
+    void add_connection(tsccfg::node_t);
 
   private:
     std::vector<TASCAR::render_core_t*> scenes;
@@ -60,17 +60,17 @@ App::show_licenses_t::show_licenses_t(const std::string& session_filename)
 // starturl("http://news.tascar.org/")
 {
   read_xml();
-  GET_ATTRIBUTE(srv_port, "", "OSC port number");
-  GET_ATTRIBUTE(srv_addr, "", "OSC multicast address in case of UDP transport");
-  GET_ATTRIBUTE(srv_proto, "", "OSC protocol, UDP or TCP");
-  GET_ATTRIBUTE(name, "", "session name");
-  GET_ATTRIBUTE(starturl, "", "URL of start page for display");
+  root.GET_ATTRIBUTE(srv_port, "", "OSC port number");
+  root.GET_ATTRIBUTE(srv_addr, "", "OSC multicast address in case of UDP transport");
+  root.GET_ATTRIBUTE(srv_proto, "", "OSC protocol, UDP or TCP");
+  root.GET_ATTRIBUTE(name, "", "session name");
+  root.GET_ATTRIBUTE(starturl, "", "URL of start page for display");
   add_licenses(this);
 }
 
 void App::show_licenses_t::validate_attributes(std::string& msg) const
 {
-  TASCAR::tsc_reader_t::validate_attributes(msg);
+  root.validate_attributes(msg);
   for(std::vector<TASCAR::render_core_t*>::const_iterator it = scenes.begin();
       it != scenes.end(); ++it)
     (*it)->validate_attributes(msg);
@@ -93,7 +93,7 @@ App::show_licenses_t::~show_licenses_t()
     delete(*sit);
 }
 
-void App::show_licenses_t::add_scene(xmlpp::Element* sne)
+void App::show_licenses_t::add_scene(tsccfg::node_t sne)
 {
   TASCAR::render_core_t* newscene(NULL);
   try {
@@ -111,17 +111,13 @@ void App::show_licenses_t::add_scene(xmlpp::Element* sne)
   }
 }
 
-void App::show_licenses_t::add_range(xmlpp::Element* src)
+void App::show_licenses_t::add_range(tsccfg::node_t src)
 {
-  if(!src)
-    src = tsc_reader_t::e->add_child("range");
   ranges.push_back(new TASCAR::range_t(src));
 }
 
-void App::show_licenses_t::add_connection(xmlpp::Element* src)
+void App::show_licenses_t::add_connection(tsccfg::node_t src)
 {
-  if(!src)
-    src = tsc_reader_t::e->add_child("connect");
   connections.push_back(new TASCAR::connection_t(src));
 }
 
@@ -195,11 +191,11 @@ void App::show_licenses_t::show_doc(bool latex)
   std::map<std::string, elem_cfg_var_desc_t> attribute_list;
   std::map<std::string, std::set<std::string>> categories;
   for(auto elem : TASCAR::attribute_list) {
-    std::string category(elem.first->get_name());
-    std::string cattype(elem.first->get_attribute_value("type"));
+    std::string category(elem.second.category);
+    std::string cattype(elem.second.type);
     std::map<std::string, cfg_var_desc_t> previousattr(
         attribute_list[category + cattype].attr);
-    for(auto attr : elem.second)
+    for(auto attr : elem.second.vars)
       previousattr[attr.first] = attr.second;
     attribute_list[category + cattype] = {category, previousattr, {}, cattype};
     categories[category].insert(category + cattype);

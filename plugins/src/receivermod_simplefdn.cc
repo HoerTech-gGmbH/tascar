@@ -340,7 +340,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g,
 
 class simplefdn_vars_t : public TASCAR::receivermod_base_t {
 public:
-  simplefdn_vars_t(xmlpp::Element* xmlsrc);
+  simplefdn_vars_t(tsccfg::node_t xmlsrc);
   ~simplefdn_vars_t();
   // protected:
   uint32_t fdnorder;
@@ -357,7 +357,7 @@ public:
   TASCAR::pos_t volumetric;
 };
 
-simplefdn_vars_t::simplefdn_vars_t(xmlpp::Element* xmlsrc)
+simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
     : receivermod_base_t(xmlsrc), fdnorder(5), w(0.0), dw(60.0), t(0.01),
       dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
       absorption(0.6), c(340)
@@ -385,7 +385,7 @@ public:
     float dw[AMB11::idx::channels];
     double dt;
   };
-  simplefdn_t(xmlpp::Element* xmlsrc);
+  simplefdn_t(tsccfg::node_t xmlsrc);
   ~simplefdn_t();
   void postproc(std::vector<TASCAR::wave_t>& output);
   void add_pointsource(const TASCAR::pos_t& prel, double width,
@@ -431,7 +431,7 @@ int simplefdn_t::osc_set_dim_damp_absorption(const char* path,
   return 0;
 }
 
-simplefdn_t::simplefdn_t(xmlpp::Element* cfg)
+simplefdn_t::simplefdn_t(tsccfg::node_t cfg)
     : simplefdn_vars_t(cfg), fdn(NULL), foa_out(NULL), wgain(MIN3DB),
       distcorr(1.0)
 {

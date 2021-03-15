@@ -18,7 +18,7 @@ double mask_t::gain(const pos_t& p)
   return d;
 }
 
-diffuse_t::diffuse_t( xmlpp::Element* cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_, const std::string& name )
+diffuse_t::diffuse_t( tsccfg::node_t cfg, uint32_t chunksize,TASCAR::levelmeter_t& rmslevel_, const std::string& name )
   : xml_element_t( cfg ),
     licensed_component_t(typeid(*this).name()),
     audio(chunksize),
@@ -467,7 +467,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
   return 0;
 }
 
-receiver_t::receiver_t( xmlpp::Element* xmlsrc, const std::string& name, bool is_reverb_ )
+receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_reverb_ )
   : receivermod_t(xmlsrc),
     licensed_component_t(typeid(*this).name()),
     avgdist(0),
@@ -699,7 +699,7 @@ void receiver_t::set_fade(double targetgain, double duration, double start)
   fade_timer = std::max(1u, (uint32_t)(f_sample * duration));
 }
 
-TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(xmlpp::Element* xmlsrc)
+TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(tsccfg::node_t xmlsrc)
   : dynobject_t(xmlsrc),falloff(1.0),active(false)
 {
   dynobject_t::GET_ATTRIBUTE(size,"m","dimension of bounding box");
@@ -764,7 +764,7 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
   return p_src;
 }
 
-source_t::source_t(xmlpp::Element* xmlsrc, const std::string& name,
+source_t::source_t(tsccfg::node_t xmlsrc, const std::string& name,
                    const std::string& parentname)
     : sourcemod_t(xmlsrc), licensed_component_t(typeid(*this).name()),
       ismmin(0), ismmax(2147483647), layers(0xffffffff), maxdist(3700),

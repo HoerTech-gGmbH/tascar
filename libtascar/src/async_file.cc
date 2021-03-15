@@ -1,8 +1,10 @@
 #include "async_file.h"
-#include "tascar.h"
+//#include "tascar.h"
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "tscconfig.h"
+#include "errorhandling.h"
 
 static std::string async_file_error("");
 

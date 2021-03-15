@@ -2,14 +2,14 @@
 
 class osc_event_base_t : public TASCAR::xml_element_t {
 public:
-  osc_event_base_t(xmlpp::Element* xmlsrc);
+  osc_event_base_t(tsccfg::node_t xmlsrc);
   void process_event(double t,double dur,const lo_address& target, const char* path);
   virtual void send(const lo_address& target, const char* path) = 0;
 private:
   double t;
 };
 
-osc_event_base_t::osc_event_base_t(xmlpp::Element* xmlsrc)
+osc_event_base_t::osc_event_base_t(tsccfg::node_t xmlsrc)
   : xml_element_t(xmlsrc),t(0)
 {
   GET_ATTRIBUTE_(t);
@@ -23,7 +23,7 @@ void osc_event_base_t::process_event(double t0,double dur,const lo_address& targ
 
 class osc_event_t : public osc_event_base_t {
 public:
-  osc_event_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){};
+  osc_event_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc){};
   virtual void send(const lo_address& target, const char* path)
     {
       lo_send(target,path,"");
@@ -32,7 +32,7 @@ public:
 
 class osc_event_s_t : public osc_event_base_t {
 public:
-  osc_event_s_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_s_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc){
     GET_ATTRIBUTE_(a0);
   };
   virtual void send(const lo_address& target, const char* path)
@@ -44,7 +44,7 @@ public:
 
 class osc_event_ss_t : public osc_event_base_t {
 public:
-  osc_event_ss_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc){
+  osc_event_ss_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
   };
@@ -58,7 +58,7 @@ public:
 
 class osc_event_sf_t : public osc_event_base_t {
 public:
-  osc_event_sf_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0){
+  osc_event_sf_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a1(0){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
   };
@@ -72,7 +72,7 @@ public:
 
 class osc_event_sff_t : public osc_event_base_t {
 public:
-  osc_event_sff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0){
+  osc_event_sff_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
     GET_ATTRIBUTE_(a2);
@@ -88,7 +88,7 @@ public:
 
 class osc_event_sfff_t : public osc_event_base_t {
 public:
-  osc_event_sfff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0){
+  osc_event_sfff_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
     GET_ATTRIBUTE_(a2);
@@ -106,7 +106,7 @@ public:
 
 class osc_event_sffff_t : public osc_event_base_t {
 public:
-  osc_event_sffff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0),a4(0){
+  osc_event_sffff_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a1(0),a2(0),a3(0),a4(0){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
     GET_ATTRIBUTE_(a2);
@@ -126,7 +126,7 @@ public:
 
 class osc_event_ff_t : public osc_event_base_t {
 public:
-  osc_event_ff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0){
+  osc_event_ff_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
   };
@@ -140,7 +140,7 @@ public:
 
 class osc_event_f_t : public osc_event_base_t {
 public:
-  osc_event_f_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0){
+  osc_event_f_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a0(0){
     GET_ATTRIBUTE_(a0);
   };
   virtual void send(const lo_address& target, const char* path)
@@ -152,7 +152,7 @@ public:
 
 class osc_event_fff_t : public osc_event_base_t {
 public:
-  osc_event_fff_t(xmlpp::Element* xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0),a2(0){
+  osc_event_fff_t(tsccfg::node_t xmlsrc):osc_event_base_t(xmlsrc),a0(0),a1(0),a2(0){
     GET_ATTRIBUTE_(a0);
     GET_ATTRIBUTE_(a1);
     GET_ATTRIBUTE_(a2);
@@ -193,28 +193,26 @@ oscevents_t::oscevents_t( const TASCAR::module_cfg_t& cfg )
   if( !target )
     throw TASCAR::ErrMsg("Unable to create target adress \""+url+"\".");
   lo_address_set_ttl(target,ttl);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne && ( sne->get_name() == "osc"))
+  for(auto sne : tsccfg::node_get_children(e)){
+    if( sne && ( tsccfg::node_get_name(sne) == "osc"))
       events.push_back(new osc_event_t(sne));
-    if( sne && ( sne->get_name() == "oscs"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscs"))
       events.push_back(new osc_event_s_t(sne));
-    if( sne && ( sne->get_name() == "oscss"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscss"))
       events.push_back(new osc_event_ss_t(sne));
-    if( sne && ( sne->get_name() == "oscsf"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscsf"))
       events.push_back(new osc_event_sf_t(sne));
-    if( sne && ( sne->get_name() == "oscsff"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscsff"))
       events.push_back(new osc_event_sff_t(sne));
-    if( sne && ( sne->get_name() == "oscsfff"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscsfff"))
       events.push_back(new osc_event_sfff_t(sne));
-    if( sne && ( sne->get_name() == "oscsffff"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscsffff"))
       events.push_back(new osc_event_sffff_t(sne));
-    if( sne && ( sne->get_name() == "oscf"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscf"))
       events.push_back(new osc_event_f_t(sne));
-    if( sne && ( sne->get_name() == "oscff"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscff"))
       events.push_back(new osc_event_ff_t(sne));
-    if( sne && ( sne->get_name() == "oscfff"))
+    if( sne && ( tsccfg::node_get_name(sne) == "oscfff"))
       events.push_back(new osc_event_fff_t(sne));
   }
 }

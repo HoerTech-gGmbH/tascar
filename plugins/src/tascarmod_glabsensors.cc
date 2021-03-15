@@ -46,7 +46,7 @@ TASCAR_RESOLVER(sensorplugin_base_t, const sensorplugin_cfg_t&)
 sensorplugin_t::sensorplugin_t(const sensorplugin_cfg_t& cfg)
     : sensorplugin_base_t(cfg), lib(NULL), libdata(NULL), alive_cnt(0)
 {
-  plugintype = e->get_name();
+  plugintype = tsccfg::node_get_name(e);
   std::string libname("glabsensor_");
   libname += plugintype + ".so";
   modname = plugintype;
@@ -217,13 +217,8 @@ glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
   win->set_keep_above(ontop);
   win->set_size_request(w, h);
   win->set_title("Gesture Lab sensors - " + session->name);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if(sne)
-      sensors.push_back(new sensorplugin_t(sensorplugin_cfg_t(sne)));
-  }
+  for(auto sne : tsccfg::node_get_children(e) )
+    sensors.push_back(new sensorplugin_t(sensorplugin_cfg_t(sne)));
   connection_timeout = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &glabsensors_t::on_100ms), 100);
   but_reset_critical->signal_clicked().connect(

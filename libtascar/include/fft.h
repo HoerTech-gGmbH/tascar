@@ -27,7 +27,6 @@
 #define FFT_H
 
 #include "spectrum.h"
-#include "audiochunks.h"
 #include <fftw3.h>
 
 namespace TASCAR {

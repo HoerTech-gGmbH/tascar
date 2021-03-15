@@ -20,7 +20,7 @@ public:
     float* dz;
     double dt;
   };
-  rec_hann_t(xmlpp::Element* xmlsrc);
+  rec_hann_t(tsccfg::node_t xmlsrc);
   virtual ~rec_hann_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
@@ -59,7 +59,7 @@ rec_hann_t::data_t::~data_t()
   delete [] dz;
 }
 
-rec_hann_t::rec_hann_t(xmlpp::Element* xmlsrc)
+rec_hann_t::rec_hann_t(tsccfg::node_t xmlsrc)
   : TASCAR::receivermod_base_speaker_t(xmlsrc),
     //spkpos(xmlsrc),
     wexp(0.5)

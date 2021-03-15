@@ -3,7 +3,7 @@
 
 class fence_t : public TASCAR::actor_module_t {
 public:
-  fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session);
+  fence_t(tsccfg::node_t xmlsrc,TASCAR::session_t* session);
   ~fence_t();
   void update(uint32_t frame, bool running);
 private:
@@ -15,7 +15,7 @@ private:
   double gain;
 };
 
-fence_t::fence_t(xmlpp::Element* xmlsrc,TASCAR::session_t* session)
+fence_t::fence_t(tsccfg::node_t xmlsrc,TASCAR::session_t* session)
   : actor_module_t(xmlsrc,session),
     r(1.0),
     distmax(0.1),

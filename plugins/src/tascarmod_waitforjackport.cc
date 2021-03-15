@@ -16,12 +16,8 @@ wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
 {
   GET_ATTRIBUTE_(ports);
   GET_ATTRIBUTE_(timeout);
-  xmlpp::Node::NodeList subnodes = e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if(sne && (sne->get_name() == "port"))
-      ports.push_back(TASCAR::xml_get_text(sne, ""));
+  for( auto sne : tsccfg::node_get_children(e,"port")){
+    ports.push_back(tsccfg::node_get_text(sne, ""));
   }
   jack_status_t jstat;
   jack_client_t* jc;

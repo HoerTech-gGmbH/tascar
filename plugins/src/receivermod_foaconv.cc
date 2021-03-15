@@ -7,7 +7,7 @@
 
 class foaconv_vars_t : public TASCAR::receivermod_base_t {
 public:
-  foaconv_vars_t(xmlpp::Element* xmlsrc);
+  foaconv_vars_t(tsccfg::node_t xmlsrc);
   ~foaconv_vars_t();
 
 protected:
@@ -16,7 +16,7 @@ protected:
   uint32_t offset;
 };
 
-foaconv_vars_t::foaconv_vars_t(xmlpp::Element* xmlsrc)
+foaconv_vars_t::foaconv_vars_t(tsccfg::node_t xmlsrc)
     : receivermod_base_t(xmlsrc), maxlen(0), offset(0)
 {
   GET_ATTRIBUTE(irsname, "", "Name of IRS sound file");
@@ -29,7 +29,7 @@ foaconv_vars_t::~foaconv_vars_t() {}
 
 class foaconv_t : public foaconv_vars_t {
 public:
-  foaconv_t(xmlpp::Element* xmlsrc);
+  foaconv_t(tsccfg::node_t xmlsrc);
   ~foaconv_t();
   void postproc(std::vector<TASCAR::wave_t>& output);
   void add_pointsource(const TASCAR::pos_t& prel, double width,
@@ -53,7 +53,7 @@ private:
   bool is_acn;
 };
 
-foaconv_t::foaconv_t(xmlpp::Element* cfg)
+foaconv_t::foaconv_t(tsccfg::node_t cfg)
     : foaconv_vars_t(cfg), irs1(irsname, 0), irs2(irsname, 1), irs3(irsname, 2),
       irs4(irsname, 3), rec_out(NULL), wgain(MIN3DB), is_acn(false)
 {

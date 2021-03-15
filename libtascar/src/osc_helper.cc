@@ -352,7 +352,34 @@ const std::string& osc_server_t::get_prefix() const
   return prefix;
 }
 
+TASCAR::msg_t::msg_t(tsccfg::node_t e)
+    : TASCAR::xml_element_t(e), msg(lo_message_new())
+{
+  GET_ATTRIBUTE(path, "", "OSC path name");
+  for(auto sne : tsccfg::node_get_children(e,"f")) {
+    TASCAR::xml_element_t tsne(sne);
+    double v(0);
+    tsne.GET_ATTRIBUTE(v, "", "float value");
+    lo_message_add_float(msg, v);
+  }
+  for(auto sne : tsccfg::node_get_children(e,"i")) {
+    TASCAR::xml_element_t tsne(sne);
+    int32_t v(0);
+    tsne.GET_ATTRIBUTE(v, "", "int value");
+    lo_message_add_int32(msg, v);
+  }
+  for(auto sne : tsccfg::node_get_children(e,"s")) {
+    TASCAR::xml_element_t tsne(sne);
+    std::string v("");
+    tsne.GET_ATTRIBUTE(v, "", "string value");
+    lo_message_add_string(msg, v.c_str());
+  }
+}
 
+TASCAR::msg_t::~msg_t()
+{
+  lo_message_free(msg);
+}
 
 /*
  * Local Variables:

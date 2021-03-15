@@ -1,5 +1,5 @@
 #include "licensehandler.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 #include <fstream>
 
 std::string liclocalgetenv(const std::string& env)
@@ -11,12 +11,12 @@ std::string liclocalgetenv(const std::string& env)
 
 static bool debuglicenses(liclocalgetenv("DEBUGLICENSES") == "yes");
 
-void get_license_info(xmlpp::Element* e, const std::string& fname,
+void get_license_info(tsccfg::node_t e, const std::string& fname,
                       std::string& license, std::string& attribution)
 {
-  TASCAR::xmlpp_get_and_register_attribute(e, "license", license,
-                                           "license type");
-  TASCAR::xmlpp_get_and_register_attribute(
+  tsccfg::node_get_and_register_attribute(e, "license", license,
+                                          "license type");
+  tsccfg::node_get_and_register_attribute(
       e, "attribution", attribution, "attribution of license, if applicable");
   if(!fname.empty()) {
     std::ifstream flic(TASCAR::env_expand(fname) + ".license");

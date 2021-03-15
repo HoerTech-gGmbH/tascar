@@ -90,28 +90,16 @@ int qualisys_tracker_t::qtmres(const char *path, const char *types, lo_arg **arg
 int qualisys_tracker_t::qtmxml(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg)
 {
   TASCAR::xml_doc_t qtmcfg(&(argv[0]->s), TASCAR::xml_doc_t::LOAD_STRING );
-  TASCAR::xml_element_t root(qtmcfg.doc->get_root_node());
-  nominal_freq = root.e->eval_to_number("/*/General/Frequency");
-  xmlpp::Node::NodeList subnodes(root.e->get_children("The_6D"));
-  for(auto sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-        xmlpp::Node::NodeList subnodes(sne->get_children("Body"));
-        for(auto sn=subnodes.begin();sn!=subnodes.end();++sn){
-          xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-          if( sne ){
-            xmlpp::Node::NodeList subnodes(sne->get_children("Name"));
-            for(auto sn=subnodes.begin();sn!=subnodes.end();++sn){
-              xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-              if( sne ){
-                std::string name(sne->get_child_text()->get_content());
-                if( rigids.find(name) != rigids.end() )
-                  TASCAR::add_warning("Rigid "+name+" was allocated more than once.");
-                rigids[name] = new rigid_t(name,nominal_freq);
-              }
-            }
-          }
-        }
+  TASCAR::xml_element_t root(qtmcfg.root);
+  nominal_freq = tsccfg::node_xpath_to_number(root.e,"/*/General/Frequency");
+  for( auto the6d : tsccfg::node_get_children(root.e,"The_6D")){
+    for( auto body : tsccfg::node_get_children(the6d,"Body")){
+      for( auto bname : tsccfg::node_get_children(body,"Name")){
+        std::string name(tsccfg::node_get_text(bname));
+        if( rigids.find(name) != rigids.end() )
+          TASCAR::add_warning("Rigid "+name+" was allocated more than once.");
+        rigids[name] = new rigid_t(name,nominal_freq);
+      }
     }
   }
   lo_send(qtmtarget,"/qtm","sss", "StreamFrames", "AllFrames", "6DEuler" );

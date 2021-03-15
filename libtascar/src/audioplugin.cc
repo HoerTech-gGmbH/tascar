@@ -31,7 +31,7 @@ TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
     lib(NULL),
     libdata(NULL)
 {
-  plugintype = e->get_name();
+  plugintype = tsccfg::node_get_name(e);
   if( plugintype == "plugin" )
     get_attribute("type",plugintype,"","plugin type");
   std::string libname("tascar_ap_");
