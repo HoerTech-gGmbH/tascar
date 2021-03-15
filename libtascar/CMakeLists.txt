@@ -4,16 +4,16 @@ cmake_minimum_required(VERSION 3.10)
 project(tascar LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../version.cmake)
 set(PROJECT_VERSION ${VERSION})
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #set(THREADS_PREFER_PTHREAD_FLAG ON)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/tascarver.h.in"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/tascarver.h"
+        "${CMAKE_CURRENT_LIST_DIR}/tascarver.h.in"
+        "${CMAKE_CURRENT_LIST_DIR}/include/tascarver.h"
 )
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -27,7 +27,7 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audiostates.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/coordinates.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audiochunks.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.cc
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dynamicobjects.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sourcemod.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/receivermod.cc
@@ -135,7 +135,7 @@ set_target_properties(tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
 set(TARGETS_EXPORT_NAME tascarTarget)
 set(INCLUDE_INSTALL_DIR include/tascar CACHE PATH "Install path for include files")
 configure_package_config_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
+        "${CMAKE_CURRENT_LIST_DIR}/cmake/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake"
         INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
         PATH_VARS INCLUDE_INSTALL_DIR

@@ -4,16 +4,16 @@ cmake_minimum_required(VERSION 3.10)
 project(tascar LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-include(${PROJECT_SOURCE_DIR}/version.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
 set(PROJECT_VERSION ${VERSION})
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/modules)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake/modules)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #set(THREADS_PREFER_PTHREAD_FLAG ON)
 message("Building libtascar version ${VERSION}")
 message("Building components with version ${FULLVERSION}")
 configure_file(
-        "${PROJECT_SOURCE_DIR}/libtascar/tascarver.h.in"
-        "${PROJECT_SOURCE_DIR}/libtascar/include/tascarver.h"
+        "${CMAKE_CURRENT_LIST_DIR}/libtascar/tascarver.h.in"
+        "${CMAKE_CURRENT_LIST_DIR}/libtascar/include/tascarver.h"
 )
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -59,7 +59,7 @@ add_compile_definitions(CMAKE)
 ### TARGETS
 # libov
 add_subdirectory(libtascar)
-set(TASCAR_INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/libtascar/include)
+set(TASCAR_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libtascar/include)
 
 # Plugins
 add_subdirectory(plugins)
@@ -72,7 +72,7 @@ set_property(TARGET tascar_cli PROPERTY CXX_STANDARD 14)
 set_property(TARGET tascar_cli PROPERTY CXX_STANDARD_REQUIRED ON)
 target_include_directories(tascar_cli
         PRIVATE
-        ${PROJECT_SOURCE_DIR}/libtascar/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/libtascar/include
         ${EXTERNAL_INCLUDES}
         )
 

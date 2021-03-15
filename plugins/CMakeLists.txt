@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "-Wall -O3")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake/modules)
 
 
 ### ADDITIONAL FLAGS
@@ -16,11 +16,11 @@ add_compile_definitions("TASCARVERSION=${FULLVERSION}")
 ### DEPENDENCIES
 if (TARGET tascar)
     add_library(tascar::tascar ALIAS tascar)
-    set(TASCAR_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../libtascar/include)
+    set(TASCAR_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/../libtascar/include)
 else ()
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libtascar" "${CMAKE_CURRENT_BINARY_DIR}/libtascar")
+    add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../libtascar" "${CMAKE_CURRENT_BINARY_DIR}/libtascar")
     add_library(tascar::tascar ALIAS tascar)
-    set(TASCAR_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../libtascar/include)
+    set(TASCAR_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/../libtascar/include)
 endif ()
 find_package(Jack REQUIRED)
 find_package(LibXml++ REQUIRED)
@@ -47,8 +47,8 @@ set(EXTERNAL_LIBS
 
 
 # PLUGINS
-include(${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../plugins.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../version.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../plugins.cmake)
 
 set_property(GLOBAL PROPERTY TASCAR_PLUGIN_LIBRARIES)
 
