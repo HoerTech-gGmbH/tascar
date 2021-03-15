@@ -30,39 +30,42 @@ namespace App {
   public:
     show_licenses_t(const std::string& session_filename);
     ~show_licenses_t();
+
   protected:
-    virtual void add_scene(xmlpp::Element *e);
+    virtual void add_scene(tsccfg::node_t e);
+
   private:
     std::vector<TASCAR::render_core_t*> scenes;
   };
 
-}
+} // namespace App
 
 App::show_licenses_t::show_licenses_t(const std::string& session_filename)
-  : tsc_reader_t(session_filename,LOAD_FILE,session_filename)
+    : tsc_reader_t(session_filename, LOAD_FILE, session_filename)
 {
   read_xml();
 }
 
 App::show_licenses_t::~show_licenses_t()
 {
-  for(std::vector<TASCAR::render_core_t*>::iterator sit=scenes.begin();sit!=scenes.end();++sit)
-    delete (*sit);
+  for(std::vector<TASCAR::render_core_t*>::iterator sit = scenes.begin();
+      sit != scenes.end(); ++sit)
+    delete(*sit);
 }
 
-void App::show_licenses_t::add_scene(xmlpp::Element* sne)
+void App::show_licenses_t::add_scene(tsccfg::node_t sne)
 {
   scenes.push_back(new render_core_t(sne));
-  scenes.back()->add_licenses( this );
+  scenes.back()->add_licenses(this);
 }
 
-
-void usage(struct option * opt)
+void usage(struct option* opt)
 {
-  std::cout << "Usage:\n\ntascar_showlicenses -c sessionfile [options]\n\nOptions:\n\n";
-  while( opt->name ){
-    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
-      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
+  std::cout << "Usage:\n\ntascar_showlicenses -c sessionfile "
+               "[options]\n\nOptions:\n\n";
+  while(opt->name) {
+    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg ? "#" : "")
+              << "\n  --" << opt->name << (opt->has_arg ? "=#" : "") << "\n\n";
     opt++;
   }
 }
@@ -70,24 +73,21 @@ void usage(struct option * opt)
 int main(int argc, char** argv)
 {
   std::string tscfile("");
-  const char *options = "h";
-  struct option long_options[] = { 
-    { "help",     0, 0, 'h' },
-    { 0, 0, 0, 0 }
-  };
+  const char* options = "h";
+  struct option long_options[] = {{"help", 0, 0, 'h'}, {0, 0, 0, 0}};
   int opt(0);
   int option_index(0);
-  while( (opt = getopt_long(argc, argv, options,
-                            long_options, &option_index)) != -1){
-    switch(opt){
+  while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
+        -1) {
+    switch(opt) {
     case 'h':
       usage(long_options);
       return 0;
     }
   }
-  if( optind < argc )
+  if(optind < argc)
     tscfile = argv[optind++];
-  if( tscfile.size() == 0 ){
+  if(tscfile.size() == 0) {
     usage(long_options);
     return -1;
   }

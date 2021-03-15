@@ -2,9 +2,8 @@
 #define HOA_H
 
 #include "audiochunks.h"
-#include "coordinates.h"
 #include "errorhandling.h"
-#include "xmlconfig.h"
+#include "tscconfig.h"
 #include <cmath>
 #include <gsl/gsl_sf.h>
 #include <vector>

@@ -10,66 +10,50 @@ using namespace TASCAR;
 
 const std::complex<double> i(0.0, 1.0);
 
-spk_array_cfg_t::spk_array_cfg_t(xmlpp::Element* xmlsrc, bool use_parent_xml)
-    : xml_element_t(xmlsrc), e_layout(NULL)
+spk_array_cfg_t::spk_array_cfg_t(tsccfg::node_t xmlsrc, bool use_parent_xml)
+    : xml_element_t(xmlsrc), doc(NULL), e_layout(NULL)
 {
   if(use_parent_xml) {
     e_layout = xmlsrc;
   } else {
-    GET_ATTRIBUTE(layout,"","name of speaker layout file");
+    GET_ATTRIBUTE(layout, "", "name of speaker layout file");
     if(layout.empty()) {
       // try to find layout element:
-      xmlpp::Node::NodeList subnodes = xmlsrc->get_children();
-      for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-          sn != subnodes.end(); ++sn) {
-        xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-        if(sne && (sne->get_name() == "layout"))
-          e_layout = sne;
-      }
+      for(auto sne:tsccfg::node_get_children(xmlsrc,"layout"))
+        e_layout = sne;
       if(e_layout == NULL)
         throw TASCAR::ErrMsg(
             "No layout file provided and no inline layout xml element.");
     } else {
+      doc = new TASCAR::xml_doc_t(TASCAR::env_expand(layout),
+                                  TASCAR::xml_doc_t::LOAD_FILE);
       try {
-        domp.parse_file(TASCAR::env_expand(layout));
+        e_layout = doc->root();
+        if(!e_layout)
+          throw TASCAR::ErrMsg("No root node found in document \"" + layout +
+                               "\".");
+        if(tsccfg::node_get_name(e_layout) != "layout")
+          throw TASCAR::ErrMsg(
+              "Invalid root node name. Expected \"layout\", got " +
+              tsccfg::node_get_name(e_layout) + ".");
       }
-      catch(const xmlpp::internal_error& e) {
-        throw TASCAR::ErrMsg(std::string("xml internal error: ") + e.what());
+      catch(...) {
+        delete doc;
+        throw;
       }
-      catch(const xmlpp::validity_error& e) {
-        throw TASCAR::ErrMsg(std::string("xml validity error: ") + e.what());
-      }
-      catch(const xmlpp::parse_error& e) {
-        throw TASCAR::ErrMsg(std::string("xml parse error: ") + e.what());
-      }
-      if(!domp)
-        throw TASCAR::ErrMsg("Unable to parse file \"" + layout + "\".");
-      e_layout = domp.get_document()->get_root_node();
-      if(!e_layout)
-        throw TASCAR::ErrMsg("No root node found in document \"" + layout +
-                             "\".");
-      if(e_layout->get_name() != "layout")
-        throw TASCAR::ErrMsg(
-            "Invalid root node name. Expected \"layout\", got " +
-            e_layout->get_name() + ".");
     }
   }
 }
 
 // speaker array:
-spk_array_t::spk_array_t(xmlpp::Element* e, bool use_parent_xml,
+spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
                          const std::string& elementname_, bool allow_empty)
     : spk_array_cfg_t(e, use_parent_xml), elayout(e_layout), rmax(0), rmin(0),
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
   clear();
-  xmlpp::Node::NodeList subnodes(e_layout->get_children());
-  for(auto sn = subnodes.begin(); sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if(sne && (sne->get_name() == elementname)) {
-      emplace_back(sne);
-    }
-  }
+  for(auto sn : tsccfg::node_get_children(e_layout,elementname))
+    emplace_back(sn);
   elayout.GET_ATTRIBUTE(xyzgain,"","XYZ-gain for FOA decoding");
   elayout.GET_ATTRIBUTE(name,"","Name of layout, for documentation only");
   elayout.GET_ATTRIBUTE(onload,"","system command to be executed when layout is loaded");
@@ -196,7 +180,7 @@ void spk_array_diff_render_t::render_diffuse(
   diffuse_field_accumulator->clear();
 }
 
-spk_descriptor_t::spk_descriptor_t(xmlpp::Element* xmlsrc)
+spk_descriptor_t::spk_descriptor_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), az(0.0), el(0.0), r(1.0), delay(0.0), gain(1.0),
       spkgain(1.0), dr(0.0), d_w(0.0f), d_x(0.0f), d_y(0.0f), d_z(0.0f),
       densityweight(1.0), comp(NULL)
@@ -338,7 +322,7 @@ spk_array_diff_render_t::~spk_array_diff_render_t()
 }
 
 spk_array_diff_render_t::spk_array_diff_render_t(
-    xmlpp::Element* e, bool use_parent_xml, const std::string& elementname_)
+    tsccfg::node_t e, bool use_parent_xml, const std::string& elementname_)
     : spk_array_t(e, use_parent_xml, elementname_),
       subs(e, use_parent_xml, "sub", true), diffuse_field_accumulator(NULL),
       diffuse_render_buffer(NULL), decorr_length(0.05), decorr(true),

@@ -20,8 +20,7 @@
 #ifndef LEVELMETER_H
 #define LEVELMETER_H
 
-#include "xmlconfig.h"
-#include "audiochunks.h"
+#include "tscconfig.h"
 #include "filterclass.h"
 
 namespace TASCAR {

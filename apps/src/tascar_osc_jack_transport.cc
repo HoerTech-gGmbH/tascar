@@ -28,6 +28,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 static bool b_quit;
 

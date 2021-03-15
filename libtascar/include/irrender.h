@@ -23,7 +23,6 @@
 #include <time.h>
 
 #include "audiochunks.h"
-#include "render.h"
 #include "session.h"
 
 namespace TASCAR {
@@ -48,7 +47,7 @@ namespace TASCAR {
     ~wav_render_t();
 
   protected:
-    void add_scene( xmlpp::Element* e );
+    void add_scene( tsccfg::node_t e );
     std::string scene;
     render_core_t* pscene;
     bool verbose_;

@@ -20,8 +20,9 @@
 #ifndef GLABSENSORS_H
 #define GLABSENSORS_H
 
-#include "xmlconfig.h"
+#include "osc_helper.h"
 #include "tascarplugin.h"
+#include "tscconfig.h"
 #include <gtkmm.h>
 
 namespace TASCAR {
@@ -35,8 +36,8 @@ namespace TASCAR {
 
   class sensorplugin_cfg_t {
   public:
-    sensorplugin_cfg_t(xmlpp::Element* xmlsrc):xmlsrc(xmlsrc){};
-    xmlpp::Element* xmlsrc;
+    sensorplugin_cfg_t(tsccfg::node_t xmlsrc) : xmlsrc(xmlsrc){};
+    tsccfg::node_t xmlsrc;
     std::string modname;
     std::string hostname;
   };
@@ -46,51 +47,65 @@ namespace TASCAR {
   */
   class sensorplugin_base_t : public TASCAR::xml_element_t, public Gtk::Frame {
   public:
-    sensorplugin_base_t( const sensorplugin_cfg_t& cfg );
+    sensorplugin_base_t(const sensorplugin_cfg_t& cfg);
     virtual ~sensorplugin_base_t();
     const std::string& get_name() const { return name; };
     const std::string& get_modname() const { return modname; };
     virtual Gtk::Widget& get_gtkframe() { return *((Gtk::Widget*)this); };
-    virtual void add_variables( TASCAR::osc_server_t* srv ) {};
+    virtual void add_variables(TASCAR::osc_server_t* srv){};
     virtual std::vector<sensormsg_t> get_critical();
     virtual std::vector<sensormsg_t> get_warnings();
-    virtual bool get_alive() { bool r(alive_);alive_ = false;return r; };
-    virtual void prepare() {};
-    virtual void release() {};
+    virtual bool get_alive()
+    {
+      bool r(alive_);
+      alive_ = false;
+      return r;
+    };
+    virtual void prepare(){};
+    virtual void release(){};
+
   protected:
     void add_critical(const std::string& msg);
     void add_warning(const std::string& msg);
     void alive() { alive_ = true; };
     bool get_alive_const() const { return alive_; };
+
   protected:
     std::string name;
+
   protected:
     std::string modname;
     double alivetimeout;
+
   private:
     std::vector<sensormsg_t> msg_critical;
     std::vector<sensormsg_t> msg_warnings;
     bool alive_;
   };
-  
+
   class sensorplugin_drawing_t : public sensorplugin_base_t {
   public:
-    sensorplugin_drawing_t( const sensorplugin_cfg_t& cfg );
+    sensorplugin_drawing_t(const sensorplugin_cfg_t& cfg);
     ~sensorplugin_drawing_t();
+
   protected:
-    virtual void draw(const Cairo::RefPtr<Cairo::Context>& cr, double width, double height) = 0;
+    virtual void draw(const Cairo::RefPtr<Cairo::Context>& cr, double width,
+                      double height) = 0;
     Gtk::DrawingArea da;
+
   private:
     bool da_draw(const Cairo::RefPtr<Cairo::Context>& cr);
     bool invalidatewin();
     sigc::connection connection_timeout;
   };
 
-  void ctext_at( const Cairo::RefPtr<Cairo::Context>& cr, double x, double y, const std::string& t );
+  void ctext_at(const Cairo::RefPtr<Cairo::Context>& cr, double x, double y,
+                const std::string& t);
 
-}
+} // namespace TASCAR
 
-#define REGISTER_SENSORPLUGIN(x) TASCAR_PLUGIN( sensorplugin_base_t, const sensorplugin_cfg_t&, x )
+#define REGISTER_SENSORPLUGIN(x)                                               \
+  TASCAR_PLUGIN(sensorplugin_base_t, const sensorplugin_cfg_t&, x)
 
 #endif
 

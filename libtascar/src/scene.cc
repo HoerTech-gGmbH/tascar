@@ -18,7 +18,7 @@ using namespace TASCAR::Scene;
 /*
  * object_t
  */
-object_t::object_t(xmlpp::Element* src)
+object_t::object_t(tsccfg::node_t src)
     : dynobject_t(src), route_t(src), endtime(0)
 {
   dynobject_t::get_attribute("end", endtime,"s","end of render activity, or 0 to render always");
@@ -36,7 +36,7 @@ bool object_t::isactive(double time) const
 /*
  *diff_snd_field_obj_t
  */
-diff_snd_field_obj_t::diff_snd_field_obj_t(xmlpp::Element* xmlsrc)
+diff_snd_field_obj_t::diff_snd_field_obj_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), audio_port_t(xmlsrc, true),
       licensed_component_t(typeid(*this).name()), size(1, 1, 1), falloff(1.0),
       layers(0xffffffff), source(NULL)
@@ -100,35 +100,35 @@ void audio_port_t::set_inv(bool inv)
 /*
  * src_object_t
  */
-src_object_t::src_object_t(xmlpp::Element* xmlsrc)
+src_object_t::src_object_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), licensed_component_t(typeid(*this).name()),
       startframe(0)
 {
   if(get_name().empty())
     set_name("in");
-  xmlpp::Node::NodeList subnodes = dynobject_t::e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if(sne) {
-      if(sne->get_name() == "sound")
-        add_sound(sne);
-      else if((sne->get_name() != "creator") &&
-              (sne->get_name() != "sndfile") &&
-              (sne->get_name() != "navmesh") &&
-              (sne->get_name() != "include") &&
-              (sne->get_name() != "position") &&
-              (sne->get_name() != "orientation"))
-        TASCAR::add_warning("Invalid sub-node \"" + sne->get_name() + "\".",
-                            sne);
-    }
+  for(auto sne : tsccfg::node_get_children(dynobject_t::e)) {
+    if(tsccfg::node_get_name(sne) == "sound")
+      add_sound(sne);
+    else if((tsccfg::node_get_name(sne) != "creator") &&
+            (tsccfg::node_get_name(sne) != "sndfile") &&
+            (tsccfg::node_get_name(sne) != "navmesh") &&
+            (tsccfg::node_get_name(sne) != "include") &&
+            (tsccfg::node_get_name(sne) != "position") &&
+            (tsccfg::node_get_name(sne) != "orientation"))
+      TASCAR::add_warning(
+          "Invalid sub-node \"" + tsccfg::node_get_name(sne) + "\".", sne);
   }
 }
 
-void src_object_t::add_sound(xmlpp::Element* src)
+void src_object_t::add_sound(tsccfg::node_t src)
 {
+#ifdef USEPUGIXML
+  if(!src)
+    src = dynobject_t::e.append_child("sound");
+#else
   if(!src)
     src = dynobject_t::e->add_child("sound");
+#endif
   sound_t* snd(new sound_t(src, this));
   sound.push_back(snd);
   soundmap[snd->get_id()] = snd;
@@ -220,74 +220,57 @@ void src_object_t::release()
   audiostates_t::release();
 }
 
-scene_t::scene_t(xmlpp::Element* xmlsrc)
+scene_t::scene_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name()),
-      description(""), name("scene"), id(TASCAR::get_tuid()), c(340.0), ismorder(1),
-      guiscale(200), guitrackobject(NULL), anysolo(0), scene_path(""),
-      active(true)
+      description(""), name("scene"), id(TASCAR::get_tuid()), c(340.0),
+      ismorder(1), guiscale(200), guitrackobject(NULL), anysolo(0),
+      scene_path(""), active(true)
 {
   try {
-    GET_ATTRIBUTE(name,"","scene name");
-    GET_ATTRIBUTE(id,"","scene id, or empty to auto-generate id");
-    GET_ATTRIBUTE(ismorder,"","order of image source model");
-    GET_ATTRIBUTE(guiscale,"m","scale of GUI window of this scene");
-    GET_ATTRIBUTE(guicenter,"m","origin of GUI window");
-    GET_ATTRIBUTE(c,"m/s","speed of sound");
-    GET_ATTRIBUTE_BOOL(active,"render scene");
-    description = xml_get_text(e, "description");
-    xmlpp::Node::NodeList subnodes = e->get_children();
-    for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-        sn != subnodes.end(); ++sn) {
-      xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
+    GET_ATTRIBUTE(name, "", "scene name");
+    GET_ATTRIBUTE(id, "", "scene id, or empty to auto-generate id");
+    GET_ATTRIBUTE(ismorder, "", "order of image source model");
+    GET_ATTRIBUTE(guiscale, "m", "scale of GUI window of this scene");
+    GET_ATTRIBUTE(guicenter, "m", "origin of GUI window");
+    GET_ATTRIBUTE(c, "m/s", "speed of sound");
+    GET_ATTRIBUTE_BOOL(active, "render scene");
+    description = tsccfg::node_get_text(e, "description");
+    for(auto sne : tsccfg::node_get_children(e)) {
       TASCAR::Scene::object_t* obj(NULL);
-      if(sne) {
-        // rename old "sink" to "receiver":
-        if(sne->get_name() == "sink") {
-          sne->set_name("receiver");
-          add_warning("Deprecated element \"sink\", use \"receiver\" instead.",
-                      sne);
-        }
-        if(sne->get_name() == "src_object") {
-          sne->set_name("source");
-          // source_objects.push_back(new src_object_t(sne));
-          add_warning(
-              "Deprecated element \"src_object\", use \"source\" instead.",
-              sne);
-        }
-        // parse nodes:
-        if(sne->get_name() == "source") {
-          source_objects.push_back(new src_object_t(sne));
-          obj = source_objects.back();
-        } else if(sne->get_name() == "diffuse") {
-          diff_snd_field_objects.push_back(new diff_snd_field_obj_t(sne));
-          obj = diff_snd_field_objects.back();
-        } else if(sne->get_name() == "receiver") {
-          receivermod_objects.push_back(new receiver_obj_t(sne, false));
-          obj = receivermod_objects.back();
-        } else if(sne->get_name() == "face") {
-          face_objects.push_back(new face_object_t(sne));
-          obj = face_objects.back();
-        } else if(sne->get_name() == "facegroup") {
-          facegroups.push_back(new face_group_t(sne));
-          obj = facegroups.back();
-        } else if(sne->get_name() == "obstacle") {
-          obstaclegroups.push_back(new obstacle_group_t(sne));
-          obj = obstaclegroups.back();
-        } else if(sne->get_name() == "mask") {
-          mask_objects.push_back(new mask_object_t(sne));
-          obj = mask_objects.back();
-        } else if(sne->get_name() == "reverb") {
-          diffuse_reverbs.push_back(new diffuse_reverb_t(sne));
-          obj = diffuse_reverbs.back();
-        } else if(sne->get_name() != "include")
-          add_warning("Unrecognized xml element \"" + sne->get_name() + "\".",
-                      sne);
-        if(obj) {
-          if(namelist.find(obj->get_name()) != namelist.end())
-            throw TASCAR::ErrMsg("An object of name \"" + obj->get_name() +
-                                 "\" already exists in scene \"" + name + "\"");
-          namelist.insert(obj->get_name());
-        }
+      // parse nodes:
+      if(tsccfg::node_get_name(sne) == "source") {
+        source_objects.push_back(new src_object_t(sne));
+        obj = source_objects.back();
+      } else if(tsccfg::node_get_name(sne) == "diffuse") {
+        diff_snd_field_objects.push_back(new diff_snd_field_obj_t(sne));
+        obj = diff_snd_field_objects.back();
+      } else if(tsccfg::node_get_name(sne) == "receiver") {
+        receivermod_objects.push_back(new receiver_obj_t(sne, false));
+        obj = receivermod_objects.back();
+      } else if(tsccfg::node_get_name(sne) == "face") {
+        face_objects.push_back(new face_object_t(sne));
+        obj = face_objects.back();
+      } else if(tsccfg::node_get_name(sne) == "facegroup") {
+        facegroups.push_back(new face_group_t(sne));
+        obj = facegroups.back();
+      } else if(tsccfg::node_get_name(sne) == "obstacle") {
+        obstaclegroups.push_back(new obstacle_group_t(sne));
+        obj = obstaclegroups.back();
+      } else if(tsccfg::node_get_name(sne) == "mask") {
+        mask_objects.push_back(new mask_object_t(sne));
+        obj = mask_objects.back();
+      } else if(tsccfg::node_get_name(sne) == "reverb") {
+        diffuse_reverbs.push_back(new diffuse_reverb_t(sne));
+        obj = diffuse_reverbs.back();
+      } else if(tsccfg::node_get_name(sne) != "include")
+        add_warning("Unrecognized xml element \"" + tsccfg::node_get_name(sne) +
+                        "\".",
+                    sne);
+      if(obj) {
+        if(namelist.find(obj->get_name()) != namelist.end())
+          throw TASCAR::ErrMsg("An object of name \"" + obj->get_name() +
+                               "\" already exists in scene \"" + name + "\"");
+        namelist.insert(obj->get_name());
       }
     }
     for(auto source_object : source_objects) {
@@ -296,8 +279,7 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
         const std::string id(sound->get_id());
         auto mapsnd(soundmap.find(id));
         if(mapsnd != soundmap.end()) {
-          throw TASCAR::ErrMsg("The sound id \"" + id +
-                               "\" of source object \"" +
+          throw TASCAR::ErrMsg("The sound id \"" + id + "\" of source object \"" +
                                source_object->get_name() +
                                "\" is not unique (already used by source \"" +
                                soundmap[id]->get_parent_name() + "\").");
@@ -307,15 +289,16 @@ scene_t::scene_t(xmlpp::Element* xmlsrc)
       }
     }
     std::string guitracking;
-    GET_ATTRIBUTE(guitracking,"","object name for scene tracking");
+    GET_ATTRIBUTE(guitracking, "", "object name for scene tracking");
     std::vector<object_t*> objs(find_object(guitracking));
     if(objs.size())
       guitrackobject = objs[0];
   }
-  catch(...) {
-    clean_children();
-    throw;
-  }
+  catch(...)
+    {
+      clean_children();
+      throw;
+    }
 }
 
 sound_t& scene_t::sound_by_id(const std::string& id)
@@ -381,7 +364,7 @@ void scene_t::process_active(double t)
     (*it)->process_active(t, anysolo);
 }
 
-mask_object_t::mask_object_t(xmlpp::Element* xmlsrc)
+mask_object_t::mask_object_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), xmlfalloff(1)
 {
   dynobject_t::get_attribute("size", xmlsize, "m", "dimension of mask");
@@ -406,7 +389,7 @@ void mask_object_t::process_active(double t, uint32_t anysolo)
   mask_object_t::active = is_active(anysolo, t);
 }
 
-receiver_obj_t::receiver_obj_t(xmlpp::Element* xmlsrc, bool is_reverb_)
+receiver_obj_t::receiver_obj_t(tsccfg::node_t xmlsrc, bool is_reverb_)
     : object_t(xmlsrc), audio_port_t(xmlsrc, false),
       receiver_t(xmlsrc, default_name("out"), is_reverb_)
 {
@@ -495,7 +478,7 @@ void receiver_obj_t::process_active(double t, uint32_t anysolo)
 
 src_object_t* scene_t::add_source()
 {
-  source_objects.push_back(new src_object_t(e->add_child("source")));
+  source_objects.push_back(new src_object_t(tsccfg::node_add_child(e,"source")));
   return source_objects.back();
 }
 
@@ -690,7 +673,7 @@ float sound_t::read_meter()
   return -HUGE_VAL;
 }
 
-route_t::route_t(xmlpp::Element* xmlsrc)
+route_t::route_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid()), mute(false), solo(false),
       meter_tc(2), meter_weight(TASCAR::levelmeter::Z), targetlevel(0)
 {
@@ -724,7 +707,7 @@ bool object_t::is_active(uint32_t anysolo, double t)
           ((t <= endtime) || (endtime <= starttime)));
 }
 
-face_object_t::face_object_t(xmlpp::Element* xmlsrc)
+face_object_t::face_object_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), width(1.0), height(1.0)
 {
   dynobject_t::GET_ATTRIBUTE(width,"m","Width of reflector");
@@ -748,7 +731,7 @@ void face_object_t::geometry_update(double t)
   apply_rot_loc(get_location(), get_orientation());
 }
 
-audio_port_t::audio_port_t(xmlpp::Element* xmlsrc, bool is_input_)
+audio_port_t::audio_port_t(tsccfg::node_t xmlsrc, bool is_input_)
     : xml_element_t(xmlsrc), ctlname(""), port_index(0), is_input(is_input_),
       gain(1), caliblevel(1.0)
 {
@@ -851,7 +834,7 @@ void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
     (*it)->dynobject_t::validate_attributes(msg);
 }
 
-face_group_t::face_group_t(xmlpp::Element* xmlsrc)
+face_group_t::face_group_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), reflectivity(1.0), damping(0.0), edgereflection(true),
       scattering(0)
 {
@@ -972,7 +955,7 @@ face_group_t::face_group_t(xmlpp::Element* xmlsrc)
       }
     }
   }
-  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc, "faces"));
+  std::stringstream txtmesh(tsccfg::node_get_text(xmlsrc, "faces"));
   while(!txtmesh.eof()) {
     std::string meshline;
     getline(txtmesh, meshline, '\n');
@@ -1018,7 +1001,7 @@ void face_group_t::process_active(double t, uint32_t anysolo)
 }
 
 // obstacles:
-obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
+obstacle_group_t::obstacle_group_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), transmission(0), ishole(false), aperture(0)
 {
   dynobject_t::GET_ATTRIBUTE(transmission, "", "transmission coefficient");
@@ -1046,7 +1029,7 @@ obstacle_group_t::obstacle_group_t(xmlpp::Element* xmlsrc)
       }
     }
   }
-  std::stringstream txtmesh(TASCAR::xml_get_text(xmlsrc, "faces"));
+  std::stringstream txtmesh(tsccfg::node_get_text(xmlsrc, "faces"));
   while(!txtmesh.eof()) {
     std::string meshline;
     getline(txtmesh, meshline, '\n');
@@ -1091,7 +1074,7 @@ void obstacle_group_t::process_active(double t, uint32_t anysolo)
   }
 }
 
-sound_name_t::sound_name_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
+sound_name_t::sound_name_t(tsccfg::node_t xmlsrc, src_object_t* parent_)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid())
 {
   GET_ATTRIBUTE(name,"","name of sound vertex");
@@ -1104,7 +1087,7 @@ sound_name_t::sound_name_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
     parentname = parent_->get_name();
 }
 
-sound_t::sound_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
+sound_t::sound_t(tsccfg::node_t xmlsrc, src_object_t* parent_)
     : sound_name_t(xmlsrc, parent_),
       source_t(xmlsrc, get_name(), get_parent_name()),
       audio_port_t(xmlsrc, true), parent(parent_), chaindist(0), gain_(1)
@@ -1133,16 +1116,11 @@ sound_t::sound_t(xmlpp::Element* xmlsrc, src_object_t* parent_)
   source_t::get_attribute_deg("rx", local_orientation.x,"Euler orientation (X) relative to parent");
   source_t::get_attribute("d", chaindist,"m","distance to next sound along trajectory, or 0 for normal mode");
   // parse plugins:
-  xmlpp::Node::NodeList subnodes = source_t::e->get_children();
-  for(xmlpp::Node::NodeList::iterator sn = subnodes.begin();
-      sn != subnodes.end(); ++sn) {
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if(sne && (sne->get_name() != "plugins")) {
+  for( auto sne : tsccfg::node_get_children(source_t::e) ){
+    if(tsccfg::node_get_name(sne) != "plugins") {
       // add_warning:
-      char ctmp[1024];
-      sprintf(ctmp, "%d", sne->get_line());
-      TASCAR::add_warning("Ignoring entry \"" + sne->get_name() +
-                              "\" in sound \"" + get_fullname() + "\".",
+      TASCAR::add_warning("Ignoring entry \"" + tsccfg::node_get_name(sne) +
+                          "\" in sound \"" + get_fullname() + "\".",
                           sne);
     }
   }
@@ -1211,7 +1189,7 @@ rgb_color_t sound_t::get_color() const
     return rgb_color_t();
 }
 
-diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(xmlpp::Element* e)
+diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(tsccfg::node_t e)
 {
   xml_element_t el(e);
   std::string name("reverb");
@@ -1226,7 +1204,7 @@ diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(xmlpp::Element* e)
   el.GET_ATTRIBUTE(falloff,"m","ramp length at boundaries");
 }
 
-diffuse_reverb_t::diffuse_reverb_t(xmlpp::Element* e)
+diffuse_reverb_t::diffuse_reverb_t(tsccfg::node_t e)
     : diffuse_reverb_defaults_t(e), TASCAR::Scene::receiver_obj_t(e, true),
       outputlayers(0xffffffff), source(NULL)
 {

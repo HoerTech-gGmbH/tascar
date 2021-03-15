@@ -26,7 +26,7 @@ public:
     TASCAR::varidelay_t dx;
     TASCAR::varidelay_t dy;
   };
-  hoa2d_t(xmlpp::Element* xmlsrc);
+  hoa2d_t(tsccfg::node_t xmlsrc);
   virtual ~hoa2d_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
@@ -64,7 +64,7 @@ private:
   size_t n_mainchannels;
 };
 
-hoa2d_t::hoa2d_t(xmlpp::Element* xmlsrc)
+hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
   : TASCAR::receivermod_base_speaker_t(xmlsrc),
     nbins(spkpos.size()/2+1),
     order(0),

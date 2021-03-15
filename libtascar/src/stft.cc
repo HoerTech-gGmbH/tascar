@@ -1,5 +1,7 @@
 #include "stft.h"
-#include "tascar.h"
+//#include "tascar.h"
+#include "errorhandling.h"
+#include "tscconfig.h"
 
 TASCAR::stft_t::stft_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windowtype_t wnd,double wndpos)
   : fft_t(fftlen),

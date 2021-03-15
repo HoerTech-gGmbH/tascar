@@ -27,6 +27,7 @@
 #include "cli.h"
 #include "jackiowav.h"
 #include <fstream>
+#include <iostream>
 
 void store_stats(const std::string& statname, jackio_t& jio)
 {

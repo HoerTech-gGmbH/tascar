@@ -8,7 +8,7 @@ public:
     data_t();
     double w;
   };
-  door_t(xmlpp::Element* xmlsrc);
+  door_t(tsccfg::node_t xmlsrc);
   bool read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*);
   TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
   void configure() { n_channels = 1; };
@@ -20,7 +20,7 @@ private:
   bool wndsqrt;
 };
 
-door_t::door_t(xmlpp::Element* xmlsrc)
+door_t::door_t(tsccfg::node_t xmlsrc)
   : TASCAR::sourcemod_base_t(xmlsrc),
     width(1),
     height(2),

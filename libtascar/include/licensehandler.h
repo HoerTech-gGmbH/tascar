@@ -20,7 +20,8 @@
 #ifndef LICENSEHANDLER_H
 #define LICENSEHANDLER_H
 
-#include <libxml++/libxml++.h>
+//#include <libxml++/libxml++.h>
+#include "tscconfig.h"
 #include <string>
 #include <map>
 #include <set>
@@ -55,7 +56,7 @@ private:
   bool license_added;
 };
 
-void get_license_info( xmlpp::Element* e, const std::string& fname, std::string& license, std::string& attribution );
+void get_license_info( tsccfg::node_t e, const std::string& fname, std::string& license, std::string& attribution );
 
 #endif
 

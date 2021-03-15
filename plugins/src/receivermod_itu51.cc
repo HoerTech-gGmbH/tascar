@@ -49,7 +49,7 @@ public:
     // differential driving weights:
     float* dwp;
   };
-  rec_itu51_t(xmlpp::Element* xmlsrc);
+  rec_itu51_t(tsccfg::node_t xmlsrc);
   virtual ~rec_itu51_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
@@ -153,7 +153,7 @@ rec_itu51_t::data_t::~data_t()
   delete [] dwp;
 }
 
-rec_itu51_t::rec_itu51_t(xmlpp::Element* xmlsrc)
+rec_itu51_t::rec_itu51_t(tsccfg::node_t xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc),
   dir_L(sqrt(0.5),sqrt(0.5),0),
   dir_R(sqrt(0.5),-sqrt(0.5),0),

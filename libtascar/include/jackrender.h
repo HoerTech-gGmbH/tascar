@@ -27,7 +27,7 @@ namespace TASCAR {
 
   class scene_render_rt_t : public TASCAR::render_core_t, public TASCAR::Scene::osc_scene_t, public jackc_transport_t  {
   public:
-    scene_render_rt_t(xmlpp::Element* xmlsrc);
+    scene_render_rt_t(tsccfg::node_t xmlsrc);
     virtual ~scene_render_rt_t();
     void run(bool &b_quit);
     void start();

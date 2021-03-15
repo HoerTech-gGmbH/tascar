@@ -4,9 +4,9 @@
 
 using namespace TASCAR;
 
-TASCAR_RESOLVER(receivermod_base_t, xmlpp::Element*);
+TASCAR_RESOLVER(receivermod_base_t, tsccfg::node_t);
 
-TASCAR::receivermod_t::receivermod_t(xmlpp::Element* cfg)
+TASCAR::receivermod_t::receivermod_t(tsccfg::node_t cfg)
     : receivermod_base_t(cfg), receivertype("omni"), lib(NULL), libdata(NULL)
 {
   get_attribute("type", receivertype, "", "receiver type");
@@ -101,7 +101,7 @@ TASCAR::receivermod_t::~receivermod_t()
   dlclose(lib);
 }
 
-TASCAR::receivermod_base_t::receivermod_base_t(xmlpp::Element* xmlsrc)
+TASCAR::receivermod_base_t::receivermod_base_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc)
 {
 }
@@ -109,7 +109,7 @@ TASCAR::receivermod_base_t::receivermod_base_t(xmlpp::Element* xmlsrc)
 TASCAR::receivermod_base_t::~receivermod_base_t() {}
 
 TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(
-    xmlpp::Element* xmlsrc)
+    tsccfg::node_t xmlsrc)
     : receivermod_base_t(xmlsrc), spkpos(xmlsrc, false), typeidattr({"type"})
 {
 }
@@ -118,7 +118,7 @@ std::string TASCAR::receivermod_base_speaker_t::get_spktypeid() const
 {
   std::string r;
   for(auto ta : typeidattr)
-    r += ta + ":" + e->get_attribute_value(ta) + ",";
+    r += ta + ":" + tsccfg::node_get_attribute_value(e, ta) + ",";
   if(r.size() && (r[r.size() - 1] == ','))
     r.erase(r.size() - 1);
   return r;
@@ -196,9 +196,10 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
   // calibration of subs:
   for(uint32_t k = 0; k < spkpos.subs.size(); ++k) {
     float sgain(spkpos.subs[k].spkgain * spkpos.subs[k].gain);
-    output[k+spkpos.size()] *= sgain;
+    output[k + spkpos.size()] *= sgain;
     if(spkpos.subs[k].comp)
-      spkpos.subs[k].comp->process(output[k+spkpos.size()], output[k+spkpos.size()], false);
+      spkpos.subs[k].comp->process(output[k + spkpos.size()],
+                                   output[k + spkpos.size()], false);
   }
 }
 

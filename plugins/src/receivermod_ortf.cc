@@ -19,7 +19,7 @@ public:
     double state_l;
     double state_r;
   };
-  ortf_t(xmlpp::Element* xmlsrc);
+  ortf_t(tsccfg::node_t xmlsrc);
   ~ortf_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
@@ -121,7 +121,7 @@ void ortf_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double( "/ortf/scale", &scale );
 }
 
-ortf_t::ortf_t(xmlpp::Element* xmlsrc)
+ortf_t::ortf_t(tsccfg::node_t xmlsrc)
   : TASCAR::receivermod_base_t(xmlsrc),
     distance(0.17),
     angle(110*DEG2RAD),

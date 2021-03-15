@@ -2,10 +2,10 @@
 
 class omni_t : public TASCAR::sourcemod_base_t {
 public:
-  omni_t(xmlpp::Element* xmlsrc);
+  omni_t(tsccfg::node_t xmlsrc);
 };
 
-omni_t::omni_t(xmlpp::Element* xmlsrc)
+omni_t::omni_t(tsccfg::node_t xmlsrc)
   : TASCAR::sourcemod_base_t(xmlsrc)
 {
 }

@@ -2,17 +2,12 @@
 
 using namespace TASCAR;
 
-plugin_processor_t::plugin_processor_t( xmlpp::Element* xmlsrc, const std::string& name, const std::string& parentname )
+plugin_processor_t::plugin_processor_t( tsccfg::node_t xmlsrc, const std::string& name, const std::string& parentname )
   : xml_element_t( xmlsrc ), licensed_component_t(typeid(*this).name())
 {
-  xmlpp::Element* se_plugs(find_or_add_child("plugins"));
-  xmlpp::Node::NodeList subnodes(se_plugs->get_children());
-  for(xmlpp::Node::NodeList::iterator sn=subnodes.begin();sn!=subnodes.end();++sn){
-    xmlpp::Element* sne(dynamic_cast<xmlpp::Element*>(*sn));
-    if( sne ){
-      plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,parentname)));
-    }
-  }
+  tsccfg::node_t se_plugs(find_or_add_child("plugins"));
+  for(auto sne : tsccfg::node_get_children(se_plugs))
+    plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,parentname)));
 }
 
 void plugin_processor_t::configure()

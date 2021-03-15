@@ -26,7 +26,6 @@
 #ifndef PDFEXPORT_H
 #define PDFEXPORT_H
 
-#include "session.h"
 #include "gui_elements.h"
 
 namespace TASCAR {

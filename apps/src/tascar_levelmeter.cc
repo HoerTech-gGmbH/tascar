@@ -14,6 +14,8 @@
 #include <unistd.h>
 // needed for command line option parsing:
 #include "cli.h"
+// needed handling user interrupt:
+#include <signal.h>
 
 
 /*

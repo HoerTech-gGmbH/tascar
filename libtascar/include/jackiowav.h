@@ -29,7 +29,10 @@
 #ifndef JACKIOWAV_H
 #define JACKIOWAV_H
 
-#include "tascar.h"
+//#include "tascar.h"
+#include "jackclient.h"
+#include <sndfile.h>
+#include "errorhandling.h"
 #include <jack/ringbuffer.h>
 #include <stdlib.h>
 #include <string.h>
