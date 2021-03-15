@@ -45,6 +45,7 @@ namespace tsccfg {
 
 #include <xercesc/util/OutOfMemoryException.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/framework/MemBufFormatTarget.hpp>
 
 namespace tsccfg {
   typedef xercesc::DOMElement* node_t;

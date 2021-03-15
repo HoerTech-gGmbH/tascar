@@ -92,11 +92,13 @@ TEST(node_t, get_text)
 
 TEST(xml_doc_t, save_to_string)
 {
-  TASCAR::xml_doc_t doc("<session>text12</session>",
+  TASCAR::xml_doc_t doc("<nosession>text12</nosession>",
                         TASCAR::xml_doc_t::LOAD_STRING);
-  EXPECT_EQ(
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<session>text12</session>\n",
-      doc.save_to_string());
+  std::string xmlcfg(doc.save_to_string());
+  EXPECT_EQ("<?xml version=\"1.0\" encoding=\"UTF-8\"",
+            xmlcfg.substr(0,36));
+  TASCAR::xml_doc_t doc2(xmlcfg, TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ("nosession", doc2.root.get_element_name());
 }
 
 TEST(xml_doc_t, from_node)

@@ -388,7 +388,15 @@ void TASCAR::xml_doc_t::save(const std::string& filename)
     doc.save_file(filename.c_str(), "  ", pugi::format_default,
                   pugi::encoding_utf8);
 #elif defined(USEXERCESXML)
-
+    auto serial(doc->getImplementation()->createLSSerializer());
+    auto config(serial->getDomConfig());
+    config->setParameter(str2wstr("format-pretty-print").c_str(),true);
+    xercesc::LocalFileFormatTarget target(str2wstr(filename).c_str());
+    xercesc::DOMLSOutput* pDomLsOutput(doc->getImplementation()->createLSOutput());
+    pDomLsOutput->setByteStream(&target);
+    serial->write(doc,pDomLsOutput);
+    delete pDomLsOutput;
+    delete serial;
 #else
     doc->write_to_file_formatted(filename);
 #endif
@@ -407,7 +415,17 @@ std::string TASCAR::xml_doc_t::save_to_string()
     doc.save(out, "  ", pugi::format_default, pugi::encoding_utf8);
     return out.str();
 #elif defined(USEXERCESXML)
-    return "";
+    auto serial(doc->getImplementation()->createLSSerializer());
+    auto config(serial->getDomConfig());
+    config->setParameter(str2wstr("format-pretty-print").c_str(),true);
+    xercesc::MemBufFormatTarget target;
+    xercesc::DOMLSOutput* pDomLsOutput(doc->getImplementation()->createLSOutput());
+    pDomLsOutput->setByteStream(&target);
+    serial->write(doc,pDomLsOutput);
+    std::string retv((char*)target.getRawBuffer());
+    delete pDomLsOutput;
+    delete serial;
+    return retv;
 #else
     return doc->write_to_string_formatted();
 #endif
@@ -1623,7 +1641,13 @@ TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src)
   root = doc.document_element();
 }
 #elif defined(USEXERCESXML)
-TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src) : doc(NULL) {}
+TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src) : doc(NULL)
+{
+  domp.setValidationScheme(xercesc::XercesDOMParser::Val_Never);
+  domp.setDoNamespaces(false);
+  domp.setDoSchema(false);
+  domp.setLoadExternalDTD(false);
+}
 #else
 TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src)
     : doc(new xmlpp::Document()), freedoc(true)
