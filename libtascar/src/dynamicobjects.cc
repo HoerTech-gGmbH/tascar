@@ -700,6 +700,8 @@ void track_t::write_xml(tsccfg::node_t a)
 #ifdef USEPUGIXML
   a.remove_children();
   a.text().set(print_cart(" ").c_str());
+#elif defined(USEXERCESXML)
+  TASCAR_ASSERT(false);
 #else
   xmlpp::Node::NodeList ch = a->get_children();
   for(xmlpp::Node::NodeList::reverse_iterator sn = ch.rbegin(); sn != ch.rend();
@@ -841,6 +843,8 @@ void euler_track_t::write_xml(tsccfg::node_t a)
 #ifdef USEPUGIXML
   a.remove_children();
   a.text().set(print(" ").c_str());
+#elif defined(USEXERCESXML)
+  TASCAR_ASSERT(false);
 #else
   xmlpp::Node::NodeList ch = a->get_children();
   for(xmlpp::Node::NodeList::reverse_iterator sn = ch.rbegin(); sn != ch.rend();

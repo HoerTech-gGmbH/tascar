@@ -23,6 +23,7 @@
 #include "coordinates.h"
 
 //#define USEPUGIXML
+#define USEXERCESXML
 
 #ifdef USEPUGIXML
 
@@ -31,6 +32,23 @@
 namespace tsccfg {
   typedef pugi::xml_node node_t;
 }
+#elif defined(USEXERCESXML)
+
+#include <xercesc/util/PlatformUtils.hpp>
+
+#include <xercesc/dom/DOM.hpp>
+
+#include <xercesc/framework/StdOutFormatTarget.hpp>
+#include <xercesc/framework/LocalFileFormatTarget.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/util/XMLUni.hpp>
+
+#include <xercesc/util/OutOfMemoryException.hpp>
+
+namespace tsccfg {
+  typedef xercesc::DOMElement* node_t;
+}
+
 #else // not using pigixml
 
 #include <libxml++/libxml++.h>
@@ -254,6 +272,8 @@ namespace TASCAR {
     TASCAR::xml_element_t root;
 #ifdef USEPUGIXML
     pugi::xml_document doc;
+#elif defined(USEXERCESXML)
+    xercesc::DOMDocument* doc;
 #else
     xmlpp::DomParser domp;
     xmlpp::Document* doc;

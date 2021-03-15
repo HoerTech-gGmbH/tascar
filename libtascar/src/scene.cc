@@ -122,13 +122,8 @@ src_object_t::src_object_t(tsccfg::node_t xmlsrc)
 
 void src_object_t::add_sound(tsccfg::node_t src)
 {
-#ifdef USEPUGIXML
   if(!src)
-    src = dynobject_t::e.append_child("sound");
-#else
-  if(!src)
-    src = dynobject_t::e->add_child("sound");
-#endif
+    src = dynobject_t::add_child("sound");
   sound_t* snd(new sound_t(src, this));
   sound.push_back(snd);
   soundmap[snd->get_id()] = snd;

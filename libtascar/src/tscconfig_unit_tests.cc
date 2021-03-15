@@ -2,6 +2,19 @@
 
 #include "tscconfig.h"
 
+TEST(xml_doc_t, constructor)
+{
+  TASCAR::xml_doc_t doc;
+  EXPECT_EQ(true, (doc.root() != NULL));
+  EXPECT_EQ("session", doc.root.get_element_name());
+}
+
+TEST(xml_doc_t, load_string)
+{
+  TASCAR::xml_doc_t doc("<session/>", TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ(true, (doc.root() != NULL));
+}
+
 TEST(node_t, get_name)
 {
   TASCAR::xml_doc_t doc("<session/>", TASCAR::xml_doc_t::LOAD_STRING);
@@ -96,8 +109,8 @@ TEST(xml_doc_t, from_node)
   if(2u == nodes.size()) {
     TASCAR::xml_doc_t doc2(nodes[0]);
     EXPECT_EQ("sound", tsccfg::node_get_name(doc2.root()));
-    EXPECT_EQ("myname",doc2.root.get_attribute("name"));
-    EXPECT_EQ("42",doc2.root.get_attribute("val"));
+    EXPECT_EQ("myname", doc2.root.get_attribute("name"));
+    EXPECT_EQ("42", doc2.root.get_attribute("val"));
   }
 }
 

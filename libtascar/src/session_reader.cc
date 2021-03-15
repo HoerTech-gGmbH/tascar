@@ -49,6 +49,8 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
         for(auto isne : idoc.root.get_children()) {
 #ifdef USEPUGIXML
           e.append_copy(isne);
+#elif defined(USEXERCESXML)
+          TASCAR_ASSERT(false);
 #else
           e->import_node(isne);
 #endif
