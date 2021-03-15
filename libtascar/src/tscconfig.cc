@@ -1573,28 +1573,29 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
           " at line " + std::to_string(result.offset));
     break;
   }
-  root = doc.document_element();
+  root = get_root_node();
 }
 #elif defined(USEXERCESXML)
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
     : doc(NULL)
 {
+  domp.setValidationScheme(xercesc::XercesDOMParser::Val_Never);
+  domp.setDoNamespaces(false);
+  domp.setDoSchema(false);
+  domp.setLoadExternalDTD(false);
   switch(t) {
   case LOAD_FILE:
-    result = doc.load_file(TASCAR::env_expand(filename_or_data).c_str());
-    if(!result)
-      throw TASCAR::ErrMsg(
-          "Error while parsing XML: " + std::string(result.description()) +
-          " at " + TASCAR::env_expand(filename_or_data) + " line " +
-          std::to_string(result.offset));
+    domp.parse(filename_or_data.c_str());
     break;
   case LOAD_STRING:
-    xercesc::MemBufInputSource myxml_buf(filename_or_data.c_str(), filename_or_data.,
-                                     "myxml (in memory)");
-    parser->parse(myxml_buf);
+    xercesc::MemBufInputSource myxml_buf((XMLByte*)(filename_or_data.c_str()),
+                                         filename_or_data.size(),
+                                         "xml_doc_t(in memory)");
+    domp.parse(myxml_buf);
     break;
   }
-  root = doc.document_element();
+  doc = domp.getDocument();
+  root = get_root_node();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)

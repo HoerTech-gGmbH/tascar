@@ -44,6 +44,7 @@ namespace tsccfg {
 #include <xercesc/util/XMLUni.hpp>
 
 #include <xercesc/util/OutOfMemoryException.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
 
 namespace tsccfg {
   typedef xercesc::DOMElement* node_t;
@@ -273,6 +274,7 @@ namespace TASCAR {
 #ifdef USEPUGIXML
     pugi::xml_document doc;
 #elif defined(USEXERCESXML)
+    xercesc::XercesDOMParser domp;
     xercesc::DOMDocument* doc;
 #else
     xmlpp::DomParser domp;
