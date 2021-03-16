@@ -2,19 +2,6 @@
 
 #include "tscconfig.h"
 
-TEST(xml_doc_t, constructor)
-{
-  TASCAR::xml_doc_t doc;
-  EXPECT_EQ(true, (doc.root() != NULL));
-  EXPECT_EQ("session", doc.root.get_element_name());
-}
-
-TEST(xml_doc_t, load_string)
-{
-  TASCAR::xml_doc_t doc("<session/>", TASCAR::xml_doc_t::LOAD_STRING);
-  EXPECT_EQ(true, (doc.root() != NULL));
-}
-
 TEST(node_t, get_name)
 {
   TASCAR::xml_doc_t doc("<session/>", TASCAR::xml_doc_t::LOAD_STRING);
@@ -88,6 +75,22 @@ TEST(node_t, get_text)
   TASCAR::xml_doc_t doc("<session>text12</session>",
                         TASCAR::xml_doc_t::LOAD_STRING);
   EXPECT_EQ("text12", tsccfg::node_get_text(doc.root()));
+  TASCAR::xml_doc_t doc2("<session>text12<!-- ignore -->XY</session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ("text12XY", tsccfg::node_get_text(doc2.root()));
+}
+
+TEST(xml_doc_t, constructor)
+{
+  TASCAR::xml_doc_t doc;
+  EXPECT_EQ(true, (doc.root() != NULL));
+  EXPECT_EQ("session", doc.root.get_element_name());
+}
+
+TEST(xml_doc_t, load_string)
+{
+  TASCAR::xml_doc_t doc("<session/>", TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ(true, (doc.root() != NULL));
 }
 
 TEST(xml_doc_t, save_to_string)
@@ -95,8 +98,7 @@ TEST(xml_doc_t, save_to_string)
   TASCAR::xml_doc_t doc("<nosession>text12</nosession>",
                         TASCAR::xml_doc_t::LOAD_STRING);
   std::string xmlcfg(doc.save_to_string());
-  EXPECT_EQ("<?xml version=\"1.0\" encoding=\"UTF-8\"",
-            xmlcfg.substr(0,36));
+  EXPECT_EQ("<?xml version=\"1.0\" encoding=\"UTF-8\"", xmlcfg.substr(0, 36));
   TASCAR::xml_doc_t doc2(xmlcfg, TASCAR::xml_doc_t::LOAD_STRING);
   EXPECT_EQ("nosession", doc2.root.get_element_name());
 }

@@ -10,18 +10,11 @@
 
 class xml_init_t {
 public:
-  xml_init_t()
-  {
-    xercesc::XMLPlatformUtils::Initialize();
-  };
-  ~xml_init_t()
-  {
-    xercesc::XMLPlatformUtils::Terminate();
-  };
+  xml_init_t() { xercesc::XMLPlatformUtils::Initialize(); };
+  ~xml_init_t() { xercesc::XMLPlatformUtils::Terminate(); };
 };
 
 static xml_init_t xercesc_init;
- 
 
 std::basic_string<XMLCh> str2wstr(const char* text)
 {
@@ -390,11 +383,12 @@ void TASCAR::xml_doc_t::save(const std::string& filename)
 #elif defined(USEXERCESXML)
     auto serial(doc->getImplementation()->createLSSerializer());
     auto config(serial->getDomConfig());
-    config->setParameter(str2wstr("format-pretty-print").c_str(),true);
+    config->setParameter(str2wstr("format-pretty-print").c_str(), true);
     xercesc::LocalFileFormatTarget target(str2wstr(filename).c_str());
-    xercesc::DOMLSOutput* pDomLsOutput(doc->getImplementation()->createLSOutput());
+    xercesc::DOMLSOutput* pDomLsOutput(
+        doc->getImplementation()->createLSOutput());
     pDomLsOutput->setByteStream(&target);
-    serial->write(doc,pDomLsOutput);
+    serial->write(doc, pDomLsOutput);
     delete pDomLsOutput;
     delete serial;
 #else
@@ -417,11 +411,12 @@ std::string TASCAR::xml_doc_t::save_to_string()
 #elif defined(USEXERCESXML)
     auto serial(doc->getImplementation()->createLSSerializer());
     auto config(serial->getDomConfig());
-    config->setParameter(str2wstr("format-pretty-print").c_str(),true);
+    config->setParameter(str2wstr("format-pretty-print").c_str(), true);
     xercesc::MemBufFormatTarget target;
-    xercesc::DOMLSOutput* pDomLsOutput(doc->getImplementation()->createLSOutput());
+    xercesc::DOMLSOutput* pDomLsOutput(
+        doc->getImplementation()->createLSOutput());
     pDomLsOutput->setByteStream(&target);
-    serial->write(doc,pDomLsOutput);
+    serial->write(doc, pDomLsOutput);
     std::string retv((char*)target.getRawBuffer());
     delete pDomLsOutput;
     delete serial;
@@ -1647,6 +1642,14 @@ TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src) : doc(NULL)
   domp.setDoNamespaces(false);
   domp.setDoSchema(false);
   domp.setLoadExternalDTD(false);
+  xercesc::DOMImplementation* impl(
+      xercesc::DOMImplementationRegistry::getDOMImplementation(
+          str2wstr("XML 1.0").c_str()));
+  TASCAR_ASSERT(impl);
+  doc = impl->createDocument(0, str2wstr("session").c_str(), NULL);
+  auto impnode(doc->importNode(src, true));
+  doc->replaceChild(impnode, get_root_node());
+  root = get_root_node();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src)
@@ -1694,7 +1697,7 @@ std::string tsccfg::node_get_text(tsccfg::node_t& n, const std::string& child)
 #ifdef USEPUGIXML
   return n.text().get();
 #elif defined(USEXERCESXML)
-  return "";
+  return wstr2str(n->getTextContent());
 #else
   if(n) {
     if(child.size()) {
@@ -1727,7 +1730,7 @@ std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
 #ifdef USEPUGIXML
   return node.attribute(name.c_str()).value();
 #elif defined(USEXERCESXML)
-  return "";
+  return wstr2str(node->getAttribute(str2wstr(name).c_str()));
 #else
   return node->get_attribute_value(name);
 #endif
@@ -1761,7 +1764,28 @@ std::string tsccfg::node_get_path(const tsccfg::node_t& node)
     return node.path();
   return std::string(node.path()) + "[" + std::to_string(sib_prev + 1) + "]";
 #elif defined(USEXERCESXML)
-  return "";
+  std::string thisname(tsccfg::node_get_name(node));
+  xercesc::DOMNode* sib(node);
+  size_t sib_prev(0);
+  while((sib = sib->getPreviousSibling())) {
+    tsccfg::node_t sibe(dynamic_cast<tsccfg::node_t>(sib));
+    if(sibe && (tsccfg::node_get_name(sibe) == thisname))
+      sib_prev++;
+  }
+  sib = node;
+  size_t sib_next(0);
+  while((sib = sib->getNextSibling())) {
+    tsccfg::node_t sibe(dynamic_cast<tsccfg::node_t>(sib));
+    if(sibe && (tsccfg::node_get_name(sibe) == thisname))
+      sib_next++;
+  }
+  std::string nodepath(std::string("/") + thisname);
+  if(sib_prev + sib_next != 0)
+    nodepath += "[" + std::to_string(sib_prev + 1) + "]";
+  tsccfg::node_t parent(dynamic_cast<tsccfg::node_t>(node->getParentNode()));
+  if(parent)
+    nodepath = tsccfg::node_get_path(parent) + nodepath;
+  return nodepath;
 #else
   return node->get_path();
 #endif
@@ -1774,7 +1798,7 @@ void tsccfg::node_set_attribute(tsccfg::node_t& node, const std::string& name,
 #ifdef USEPUGIXML
   node.attribute(name.c_str()).set_value(value.c_str());
 #elif defined(USEXERCESXML)
-
+  node->setAttribute(str2wstr(name).c_str(), str2wstr(value).c_str());
 #else
   node->set_attribute(name, value);
 #endif
@@ -1809,7 +1833,35 @@ double tsccfg::node_xpath_to_number(tsccfg::node_t& node,
   pugi::xpath_query query(path.c_str());
   return query.evaluate_number(node);
 #elif defined(USEXERCESXML)
-  return 0;
+  try {
+    // auto res(node->getOwnerDocument()->evaluate(
+    //    str2wstr(path).c_str(), node, NULL,
+    //    xercesc::DOMXPathResult::NUMBER_TYPE, NULL));
+    auto res(node->getOwnerDocument()->evaluate(
+        str2wstr(path).c_str(), node, NULL,
+        xercesc::DOMXPathResult::FIRST_ORDERED_NODE_TYPE, NULL));
+    if(!res)
+      throw TASCAR::ErrMsg("xpath evaluation failed");
+    auto resnode(res->getNodeValue());
+    if(!resnode)
+      throw TASCAR::ErrMsg("No node found matching " + path);
+    DEBUG(wstr2str(resnode->getNodeValue()));
+    double val(-1);
+    DEBUG(1);
+    delete res;
+    return val;
+  }
+  catch(const xercesc::DOMXPathException& e) {
+    DEBUG(wstr2str(e.getMessage()));
+    throw TASCAR::ErrMsg("DOMXPathException while evaluating xpath " + path +
+                         " for node " + tsccfg::node_get_path(node) + ": " +
+                         wstr2str(e.getMessage()));
+  }
+  catch(const xercesc::DOMException&) {
+    DEBUG("DOMException");
+    throw;
+  }
+  DEBUG(1);
 #else
   return node->eval_to_number(path);
 #endif
