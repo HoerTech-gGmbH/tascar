@@ -42,11 +42,51 @@ std::string wstr2str(const XMLCh* text)
 #endif
 
 namespace TASCAR {
-  std::map<std::string, cfg_node_desc_t> attribute_list;
-  std::vector<std::string> warnings;
-  globalconfig_t config;
-  size_t maxid(0);
+  
+  class globalconfig_t {
+  public:
+    globalconfig_t();
+    double operator()(const std::string&, double) const;
+    std::string operator()(const std::string&, const std::string&) const;
+    void forceoverwrite(const std::string&, const std::string&);
+
+  private:
+    void readconfig(const std::string& fname);
+    void readconfig(const std::string& prefix, tsccfg::node_t& e);
+    std::map<std::string, std::string> cfg;
+  };
+  
+  static std::map<std::string, cfg_node_desc_t> attribute_list;
+  static std::vector<std::string> warnings;
+  static globalconfig_t config_;
+  static size_t maxid(0);
 } // namespace TASCAR
+
+
+double TASCAR::config(const std::string& v, double d)
+{
+  return TASCAR::config_(v,d);
+}
+
+std::string TASCAR::config(const std::string& v, const std::string& d)
+{
+  return TASCAR::config_(v,d);
+}
+
+void TASCAR::config_forceoverwrite(const std::string& v, const std::string& d)
+{
+  TASCAR::config_.forceoverwrite(v,d);
+} 
+
+std::map<std::string, TASCAR::cfg_node_desc_t>& TASCAR::get_attribute_list()
+{
+  return TASCAR::attribute_list;
+}
+
+std::vector<std::string>& TASCAR::get_warnings()
+{
+  return TASCAR::warnings;
+}
 
 std::string TASCAR::get_tuid()
 {
@@ -1911,6 +1951,13 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
 //  return node->eval_to_number(path);
 //#endif
 //}
+
+TASCAR::cfg_node_desc_t::cfg_node_desc_t()
+{
+}
+TASCAR::cfg_node_desc_t::~cfg_node_desc_t()
+{
+}
 
 /*
  * Local Variables:

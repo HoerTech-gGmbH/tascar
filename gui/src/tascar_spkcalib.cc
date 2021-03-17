@@ -924,7 +924,7 @@ void spkcalib_t::on_open()
     std::string filename = dialog.get_filename();
     if(!filename.empty()) {
       try {
-        warnings.clear();
+        get_warnings().clear();
         load(filename);
       }
       catch(const std::exception& e) {
@@ -991,7 +991,7 @@ void spkcalib_t::on_saveas()
       // Notice that this is a std::string, not a Glib::ustring.
       std::string filename = dialog.get_filename();
       try {
-        warnings.clear();
+        get_warnings().clear();
         if(session)
           session->saveas(filename);
         load(filename);
@@ -1047,14 +1047,14 @@ void spkcalib_t::update_display()
           reflevel);
   text_instruction->set_text(ctmp);
   text_instruction_diff->set_text(" b) Diffuse sound field:");
-  if(warnings.size()) {
+  if(get_warnings().size()) {
     Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
     std::string msg;
-    for(auto it = warnings.begin(); it != warnings.end(); ++it)
-      msg += *it + "\n";
+    for(auto warn : get_warnings())
+      msg += warn + "\n";
     dialog.set_secondary_text(msg);
     dialog.run();
-    warnings.clear();
+    get_warnings().clear();
   }
   manage_act_grp_save();
   if(session) {
@@ -1095,8 +1095,8 @@ void spkcalib_t::cleanup()
 
 int main(int argc, char** argv)
 {
-  TASCAR::config.forceoverwrite("tascar.spkcalib.maxage", "3650");
-  TASCAR::config.forceoverwrite("tascar.spkcalib.checktypeid", "0");
+  TASCAR::config_forceoverwrite("tascar.spkcalib.maxage", "3650");
+  TASCAR::config_forceoverwrite("tascar.spkcalib.checktypeid", "0");
   setlocale(LC_ALL, "C");
   int nargv(1);
   Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(

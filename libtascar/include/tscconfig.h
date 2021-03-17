@@ -89,21 +89,9 @@ namespace tsccfg {
 
 namespace TASCAR {
 
+
   namespace levelmeter {
     enum weight_t { Z, bandpass, C, A };
-  };
-
-  class globalconfig_t {
-  public:
-    globalconfig_t();
-    double operator()(const std::string&, double) const;
-    std::string operator()(const std::string&, const std::string&) const;
-    void forceoverwrite(const std::string&, const std::string&);
-
-  private:
-    void readconfig(const std::string& fname);
-    void readconfig(const std::string& prefix, tsccfg::node_t& e);
-    std::map<std::string, std::string> cfg;
   };
 
   // get a TASCAR unique identifier, valid within one program start:
@@ -148,16 +136,24 @@ namespace TASCAR {
     std::string info;
   };
 
-  struct cfg_node_desc_t {
+  class cfg_node_desc_t {
+  public:
+    cfg_node_desc_t();
+    ~cfg_node_desc_t();
     std::string category;
     std::string type;
     std::map<std::string, cfg_var_desc_t> vars;
   };
 
-  extern std::map<std::string, cfg_node_desc_t> attribute_list;
-  extern std::vector<std::string> warnings;
+  //extern std::map<std::string, cfg_node_desc_t> attribute_list;
+  std::map<std::string, cfg_node_desc_t>& get_attribute_list();
+  //extern std::vector<std::string> warnings;
+  std::vector<std::string>& get_warnings();
+  //extern globalconfig_t config;
+  double config(const std::string&, double);
+  std::string config(const std::string&, const std::string&);
+  void config_forceoverwrite(const std::string&, const std::string&);
 
-  extern globalconfig_t config;
 
   class xml_element_t {
   public:
