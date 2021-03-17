@@ -26,7 +26,6 @@ endif (APPLE)
 
 ## DEPENDENCIES
 find_package(Jack REQUIRED)
-#find_package(LibXml++ REQUIRED)
 find_package(XercesC REQUIRED)
 find_package(liblo REQUIRED)
 find_package(LibSndFile REQUIRED)
@@ -34,14 +33,13 @@ find_package(FFTW REQUIRED)
 find_package(LibSamplerate REQUIRED)
 set(EXTERNAL_INCLUDES
         ${JACK_INCLUDE_DIRS}
-        ${XercesC_INCLUDE_DIRS}
         ${LIBLO_INCLUDE_DIRS}
         ${LIBSNDFILE_INCLUDE_DIRS}
         ${FFTW_INCLUDE_DIRS}
         ${LIBSAMPLERATE_INCLUDE_DIRS})
 set(EXTERNAL_LIBS
         ${JACK_LIBRARIES}
-        ${XercesC_LIBRARIES}
+        XercesC::XercesC
         ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${FFTW_LIBRARIES}

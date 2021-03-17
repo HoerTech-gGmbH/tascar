@@ -91,7 +91,7 @@ find_package(FFTW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(liblo REQUIRED)
 find_package(GSL REQUIRED)
-find_package(LibXml++ REQUIRED)
+find_package(XercesC REQUIRED)
 find_package(GTK3 COMPONENTS gtkmm)
 
 
@@ -116,13 +116,12 @@ target_include_directories(tascar
         ${EIGEN3_INCLUDE_DIR}
         ${GSL_INCLUDE_DIR}
         ${JACK_INCLUDE_DIRS}
-        ${LIBXML++_INCLUDE_DIRS}
         ${LIBLO_INCLUDE_DIRS}
         )
 target_link_libraries(tascar
         PRIVATE
         Threads::Threads
-        ${LIBXML++_LIBRARIES}
+        XercesC::XercesC
         ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES}
@@ -172,7 +171,6 @@ if (GTK3_FOUND)
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             PUBLIC
-            #${LIBXML++_INCLUDE_DIRS}
             #${JACK_INCLUDE_DIRS}
             ${GTK3_INCLUDE_DIRS}
             )
@@ -181,7 +179,7 @@ if (GTK3_FOUND)
             Threads::Threads
             PUBLIC
             tascar
-            #${LIBXML++_LIBRARIES}
+            XercesC::XercesC
             #${JACK_LIBRARIES}
             ${GTK3_LIBRARIES}
             )

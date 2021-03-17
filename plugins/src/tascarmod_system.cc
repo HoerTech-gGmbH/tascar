@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <thread>
 #include <unistd.h>
+#include <signal.h>
 
 class at_cmd_t : public TASCAR::xml_element_t {
 public:

@@ -23,27 +23,26 @@ else ()
     set(TASCAR_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/../libtascar/include)
 endif ()
 find_package(Jack REQUIRED)
-find_package(LibXml++ REQUIRED)
 find_package(liblo REQUIRED)
 find_package(LibSndFile REQUIRED)
 find_package(FFTW REQUIRED)
 find_package(LibSamplerate REQUIRED)
 set(EXTERNAL_INCLUDES
         ${TASCAR_INCLUDE_DIRECTORIES}
-        ${JACK_INCLUDE_DIRS}
-        ${LIBXML++_INCLUDE_DIRS}
-        ${LIBLO_INCLUDE_DIRS}
+        #${JACK_INCLUDE_DIRS}
+        #${LIBLO_INCLUDE_DIRS}
         ${LIBSNDFILE_INCLUDE_DIRS}
-        ${FFTW_INCLUDE_DIRS}
-        ${LIBSAMPLERATE_INCLUDE_DIRS})
+        #${FFTW_INCLUDE_DIRS}
+        #${LIBSAMPLERATE_INCLUDE_DIRS}
+        )
 set(EXTERNAL_LIBS
         tascar::tascar
-        ${JACK_LIBRARIES}
-        ${LIBXML++_LIBRARIES}
-        ${LIBLO_LIBRARIES}
+        #${JACK_LIBRARIES}
+        #${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
-        ${FFTW_LIBRARIES}
-        ${LIBSAMPLERATE_LIBRARIES})
+        #${FFTW_LIBRARIES}
+        #${LIBSAMPLERATE_LIBRARIES}
+        )
 
 
 # PLUGINS
