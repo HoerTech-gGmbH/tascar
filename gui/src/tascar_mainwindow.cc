@@ -397,7 +397,7 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
 
 void tascar_window_t::load(const std::string& fname)
 {
-  warnings.clear();
+  get_warnings().clear();
   scene_load(fname);
   tascar_filename = fname;
   sessionquit = false;
@@ -637,7 +637,7 @@ void tascar_window_t::on_menu_file_close()
 {
   try{
     scene_destroy();
-    warnings.clear();
+    get_warnings().clear();
     webkit_web_view_try_close( news_view );
   }
   catch( const std::exception& e){
@@ -845,7 +845,7 @@ void tascar_window_t::on_menu_file_exportacmodel()
 void tascar_window_t::on_menu_file_reload()
 {
   try{
-    warnings.clear();
+    get_warnings().clear();
     scene_load(tascar_filename);
     sessionquit = false;
     if( session )
@@ -881,7 +881,7 @@ void tascar_window_t::on_menu_file_open()
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     try{
-      warnings.clear();
+      get_warnings().clear();
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
@@ -920,7 +920,7 @@ void tascar_window_t::on_menu_file_open_example()
     //Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     try{
-      warnings.clear();
+      get_warnings().clear();
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
@@ -1045,8 +1045,8 @@ void tascar_window_t::on_menu_view_show_warnings()
 {
   if( session_mutex.try_lock() ){
     std::string v;
-    for(std::vector<std::string>::const_iterator it=warnings.begin();it!=warnings.end();++it){
-      v+= "Warning: " + *it + "\n";
+    for(auto warn : get_warnings()){
+      v+= "Warning: " + warn + "\n";
     }
     if( session ){
       v+= session->show_unknown();

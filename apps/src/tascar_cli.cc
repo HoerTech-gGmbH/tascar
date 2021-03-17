@@ -108,12 +108,10 @@ int main(int argc, char** argv)
       sleep(1);
       session.stop();
       std::string v;
-      if(v.size() && TASCAR::warnings.size())
+      if(v.size() && TASCAR::get_warnings().size())
         v += "\n";
-      for(std::vector<std::string>::const_iterator it =
-              TASCAR::warnings.begin();
-          it != TASCAR::warnings.end(); ++it) {
-        v += "Warning: " + *it + "\n";
+      for(auto warn : TASCAR::get_warnings()) {
+        v += "Warning: " + warn + "\n";
       }
       session.validate_attributes(v);
       if(v.empty())

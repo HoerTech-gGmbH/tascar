@@ -190,7 +190,7 @@ void App::show_licenses_t::show_doc(bool latex)
   std::set<std::string> types;
   std::map<std::string, elem_cfg_var_desc_t> attribute_list;
   std::map<std::string, std::set<std::string>> categories;
-  for(auto elem : TASCAR::attribute_list) {
+  for(auto elem : TASCAR::get_attribute_list() ) {
     std::string category(elem.second.category);
     std::string cattype(elem.second.type);
     std::map<std::string, cfg_var_desc_t> previousattr(
@@ -341,11 +341,10 @@ int main(int argc, char** argv)
     }
     App::show_licenses_t c(tscfile);
     std::string v(c.show_unknown());
-    if(v.size() && warnings.size())
+    if(v.size() && get_warnings().size())
       v += "\n";
-    for(std::vector<std::string>::const_iterator it = warnings.begin();
-        it != warnings.end(); ++it) {
-      v += "Warning: " + *it + "\n";
+    for(auto warn : get_warnings()) {
+      v += "Warning: " + warn + "\n";
     }
     c.validate_attributes(v);
     if(gendoc)
