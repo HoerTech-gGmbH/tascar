@@ -1781,6 +1781,18 @@ std::string tsccfg::node_get_name(const tsccfg::node_t& node)
 #endif
 }
 
+void tsccfg::node_set_name(const tsccfg::node_t& node,const std::string& name)
+{
+  TASCAR_ASSERT(node);
+#ifdef USEPUGIXML
+  TASCAR_ASSERT(false);
+#elif defined(USEXERCESXML)
+  node->getOwnerDocument()->renameNode(node,NULL,str2wstr(name).c_str());
+#else
+  TASCAR_ASSERT(false);
+#endif
+}
+
 std::string tsccfg::node_get_path(const tsccfg::node_t& node)
 {
   TASCAR_ASSERT(node);

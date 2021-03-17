@@ -70,6 +70,7 @@ namespace tsccfg {
   std::string node_get_attribute_value(const tsccfg::node_t&,
                                        const std::string& n);
   std::string node_get_name(const tsccfg::node_t&);
+  void node_set_name(const tsccfg::node_t&,const std::string&);
   std::string node_get_path(const tsccfg::node_t&);
   void node_set_attribute(tsccfg::node_t&, const std::string& n,
                           const std::string& v);

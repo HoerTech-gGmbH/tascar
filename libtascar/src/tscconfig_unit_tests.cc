@@ -11,6 +11,14 @@ TEST(node_t, get_name)
   EXPECT_EQ("nosession", tsccfg::node_get_name(doc2.root()));
 }
 
+TEST(node_t, set_name)
+{
+  TASCAR::xml_doc_t doc;
+  EXPECT_EQ("session", tsccfg::node_get_name(doc.root()));
+  tsccfg::node_set_name(doc.root(),"blue");
+  EXPECT_EQ("blue", tsccfg::node_get_name(doc.root()));
+}
+
 TEST(node_t, get_children)
 {
   TASCAR::xml_doc_t doc("<session>\n  <sound><plugins/> </sound> <!-- abc -->  "
