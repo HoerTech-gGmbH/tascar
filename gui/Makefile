@@ -18,7 +18,7 @@ else
 CXXFLAGS += -Wall -O3 -L./
 endif
 
-EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0 libcurl
+EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0 libcurl xerces-c
 
 HAS_WEBKIT40 = $(shell pkg-config webkit2gtk-4.0 && echo "yes"||echo "no")
 ifeq "$(HAS_WEBKIT40)" "yes"

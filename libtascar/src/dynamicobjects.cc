@@ -697,16 +697,7 @@ void track_t::write_xml(tsccfg::node_t a)
     tsccfg::node_set_attribute(a, "interpolation", "spherical");
     break;
   }
-#ifdef USEPUGIXML
-  a.remove_children();
-  a.text().set(print_cart(" ").c_str());
-#else
-  xmlpp::Node::NodeList ch = a->get_children();
-  for(xmlpp::Node::NodeList::reverse_iterator sn = ch.rbegin(); sn != ch.rend();
-      ++sn)
-    a->remove_child(*sn);
-  a->add_child_text(print_cart(" "));
-#endif
+  tsccfg::node_set_text(a,print_cart(" "));
 }
 
 void track_t::read_xml(tsccfg::node_t a)
@@ -838,16 +829,7 @@ zyx_euler_t euler_track_t::interp(double x) const
 
 void euler_track_t::write_xml(tsccfg::node_t a)
 {
-#ifdef USEPUGIXML
-  a.remove_children();
-  a.text().set(print(" ").c_str());
-#else
-  xmlpp::Node::NodeList ch = a->get_children();
-  for(xmlpp::Node::NodeList::reverse_iterator sn = ch.rbegin(); sn != ch.rend();
-      ++sn)
-    a->remove_child(*sn);
-  a->add_child_text(print(" "));
-#endif
+  tsccfg::node_set_text(a,print(" "));
 }
 
 void euler_track_t::read_xml(tsccfg::node_t a)

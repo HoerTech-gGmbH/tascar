@@ -69,7 +69,7 @@ INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
 CXXFLAGS += -fpic -I./build -I./include
 CPPFLAGS += -I./build -I./include
 #-L./ 
-EXTERNALS = jack libxml++-2.6 liblo sndfile fftw3f gsl eigen3 samplerate
+EXTERNALS = jack libxml++-2.6 liblo sndfile fftw3f gsl eigen3 samplerate xerces-c
 
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)

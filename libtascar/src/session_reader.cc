@@ -46,13 +46,8 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
         lh->add_license(sublicense, subattribution,
                         TASCAR::tscbasename(idocname));
         add_includes(idoc.root(), idocname, lh);
-        for(auto isne : idoc.root.get_children()) {
-#ifdef USEPUGIXML
-          e.append_copy(isne);
-#else
-          e->import_node(isne);
-#endif
-        }
+        for(auto isne : idoc.root.get_children()) 
+          tsccfg::node_import_node(e,isne);
       }
     } else {
       add_includes(sne, parentdoc, lh);

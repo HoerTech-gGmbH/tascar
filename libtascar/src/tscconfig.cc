@@ -6,6 +6,41 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef USEXERCESXML
+
+class xml_init_t {
+public:
+  xml_init_t() { xercesc::XMLPlatformUtils::Initialize(); };
+  ~xml_init_t() { xercesc::XMLPlatformUtils::Terminate(); };
+};
+
+static xml_init_t xercesc_init;
+
+std::basic_string<XMLCh> str2wstr(const char* text)
+{
+  XMLCh* resarr(xercesc::XMLString::transcode(text));
+  std::basic_string<XMLCh> result(resarr);
+  xercesc::XMLString::release(&resarr);
+  return result;
+}
+
+std::basic_string<XMLCh> str2wstr(const std::string& text)
+{
+  XMLCh* resarr(xercesc::XMLString::transcode(text.c_str()));
+  std::basic_string<XMLCh> result(resarr);
+  xercesc::XMLString::release(&resarr);
+  return result;
+}
+
+std::string wstr2str(const XMLCh* text)
+{
+  char* resarr(xercesc::XMLString::transcode(text));
+  std::string result(resarr);
+  xercesc::XMLString::release(&resarr);
+  return result;
+}
+#endif
+
 namespace TASCAR {
   std::map<std::string, cfg_node_desc_t> attribute_list;
   std::vector<std::string> warnings;
@@ -31,6 +66,17 @@ std::vector<tsccfg::node_t> tsccfg::node_get_children(tsccfg::node_t& node,
     if(name.empty() || (name == tsccfg::node_get_name(sn)))
       children.push_back(sn);
   }
+#elif defined(USEXERCESXML)
+  auto nodelist(node->getChildNodes());
+  for(size_t k = 0; k < nodelist->getLength(); ++k) {
+    auto node(nodelist->item(k));
+    if(node->getNodeType() == xercesc::DOMNode::ELEMENT_NODE) {
+      tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(node));
+      if(sne)
+        if(name.empty() || (name == tsccfg::node_get_name(sne)))
+          children.push_back(sne);
+    }
+  }
 #else
   for(auto sn : node->get_children()) {
     tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
@@ -48,6 +94,9 @@ tsccfg::node_t tsccfg::node_add_child(tsccfg::node_t& node,
   TASCAR_ASSERT(node);
 #ifdef USEPUGIXML
   return node.append_child(name.c_str());
+#elif defined(USEXERCESXML)
+  return dynamic_cast<tsccfg::node_t>(node->appendChild(
+      node->getOwnerDocument()->createElement(str2wstr(name).c_str())));
 #else
   return node->add_child(name);
 #endif
@@ -300,6 +349,8 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
 
 #ifdef USEPUGIXML
 void del_whitespace(tsccfg::node_t node) {}
+#elif defined(USEXERCESXML)
+void del_whitespace(tsccfg::node_t node) {}
 #else
 void del_whitespace(xmlpp::Node* node)
 {
@@ -329,6 +380,17 @@ void TASCAR::xml_doc_t::save(const std::string& filename)
     decl.append_attribute("encoding") = "UTF-8";
     doc.save_file(filename.c_str(), "  ", pugi::format_default,
                   pugi::encoding_utf8);
+#elif defined(USEXERCESXML)
+    auto serial(doc->getImplementation()->createLSSerializer());
+    auto config(serial->getDomConfig());
+    config->setParameter(str2wstr("format-pretty-print").c_str(), true);
+    xercesc::LocalFileFormatTarget target(str2wstr(filename).c_str());
+    xercesc::DOMLSOutput* pDomLsOutput(
+        doc->getImplementation()->createLSOutput());
+    pDomLsOutput->setByteStream(&target);
+    serial->write(doc, pDomLsOutput);
+    delete pDomLsOutput;
+    delete serial;
 #else
     doc->write_to_file_formatted(filename);
 #endif
@@ -346,6 +408,19 @@ std::string TASCAR::xml_doc_t::save_to_string()
     std::stringstream out;
     doc.save(out, "  ", pugi::format_default, pugi::encoding_utf8);
     return out.str();
+#elif defined(USEXERCESXML)
+    auto serial(doc->getImplementation()->createLSSerializer());
+    auto config(serial->getDomConfig());
+    config->setParameter(str2wstr("format-pretty-print").c_str(), true);
+    xercesc::MemBufFormatTarget target;
+    xercesc::DOMLSOutput* pDomLsOutput(
+        doc->getImplementation()->createLSOutput());
+    pDomLsOutput->setByteStream(&target);
+    serial->write(doc, pDomLsOutput);
+    std::string retv((char*)target.getRawBuffer());
+    delete pDomLsOutput;
+    delete serial;
+    return retv;
 #else
     return doc->write_to_string_formatted();
 #endif
@@ -430,7 +505,7 @@ std::string TASCAR::default_string(const std::string& src,
 TASCAR::xml_element_t::xml_element_t(const tsccfg::node_t& src) : e(src)
 {
   if(!e)
-    throw TASCAR::ErrMsg("Invalid NULL element pointer.");
+    throw TASCAR::ErrMsg("Invalid NULL element pointer (xml_element_t).");
 }
 
 TASCAR::xml_element_t::xml_element_t() : e(NULL) {}
@@ -446,6 +521,8 @@ bool tsccfg::node_has_attribute(const tsccfg::node_t& e,
     if(attr.name() == name)
       return true;
   return false;
+#elif defined(USEXERCESXML)
+  return e->getAttributeNode(str2wstr(name).c_str());
 #else
   for(auto attr : e->get_attributes())
     if(attr->get_name() == name)
@@ -460,6 +537,10 @@ std::vector<std::string> TASCAR::xml_element_t::get_attributes() const
 #ifdef USEPUGIXML
   for(auto a : e.attributes())
     r.push_back(a.name());
+#elif defined(USEXERCESXML)
+  auto attrs(e->getAttributes());
+  for(size_t k = 0; k < attrs->getLength(); ++k)
+    r.push_back(wstr2str(attrs->item(k)->getNodeName()));
 #else
   for(auto a : e->get_attributes())
     r.push_back(a->get_name());
@@ -479,20 +560,13 @@ tsccfg::node_t TASCAR::xml_element_t::find_or_add_child(const std::string& name)
   for(auto ch : tsccfg::node_get_children(e))
     if(tsccfg::node_get_name(ch) == name)
       return ch;
-#ifdef USEPUGIXML
-  return (e.append_child(name.c_str()));
-#else
-  return e->add_child(name);
-#endif
+  return add_child(name);
 }
 
 tsccfg::node_t TASCAR::xml_element_t::add_child(const std::string& name)
 {
-#ifdef USEPUGIXML
-  return (e.append_child(name.c_str()));
-#else
-  return e->add_child(name);
-#endif
+  TASCAR_ASSERT(e);
+  return tsccfg::node_add_child(e, name);
 }
 
 std::string TASCAR::xml_element_t::get_attribute(const std::string& name)
@@ -1439,21 +1513,11 @@ std::vector<std::string> TASCAR::xml_element_t::get_unused_attributes() const
   TASCAR_ASSERT(e);
   std::vector<std::string> retv;
   std::string path(tsccfg::node_get_path(e));
-#ifdef USEPUGIXML
-  for(auto attr : e.attributes()) {
-    std::string attrname(attr.name());
+  for(auto attrname : get_attributes()) {
     if(attribute_list[path].vars.find(attrname) ==
        attribute_list[path].vars.end())
       retv.push_back(attrname);
   }
-#else
-  for(auto attr : e->get_attributes()) {
-    std::string attrname(attr->get_name());
-    if(attribute_list[path].vars.find(attrname) ==
-       attribute_list[path].vars.end())
-      retv.push_back(attrname);
-  }
-#endif
   return retv;
 }
 
@@ -1480,14 +1544,24 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
 TASCAR::xml_doc_t::xml_doc_t()
 {
   doc.load_string("<?xml version=1.0?>\n<session/>");
-  root = TASCAR::xml_element_t(doc.document_element());
+  root = get_root_node();
+}
+#elif defined(USEXERCESXML)
+TASCAR::xml_doc_t::xml_doc_t() : doc(NULL)
+{
+  xercesc::DOMImplementation* impl(
+      xercesc::DOMImplementationRegistry::getDOMImplementation(
+          str2wstr("XML 1.0").c_str()));
+  TASCAR_ASSERT(impl);
+  doc = impl->createDocument(0, str2wstr("session").c_str(), NULL);
+  root = get_root_node();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t() : doc(NULL), freedoc(true)
 {
   doc = new xmlpp::Document();
   doc->create_root_node("session");
-  root = TASCAR::xml_element_t(doc->get_root_node());
+  root = get_root_node();
 }
 #endif
 
@@ -1512,7 +1586,29 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
           " at line " + std::to_string(result.offset));
     break;
   }
-  root = doc.document_element();
+  root = get_root_node();
+}
+#elif defined(USEXERCESXML)
+TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
+    : doc(NULL)
+{
+  domp.setValidationScheme(xercesc::XercesDOMParser::Val_Never);
+  domp.setDoNamespaces(false);
+  domp.setDoSchema(false);
+  domp.setLoadExternalDTD(false);
+  switch(t) {
+  case LOAD_FILE:
+    domp.parse(filename_or_data.c_str());
+    break;
+  case LOAD_STRING:
+    xercesc::MemBufInputSource myxml_buf((XMLByte*)(filename_or_data.c_str()),
+                                         filename_or_data.size(),
+                                         "xml_doc_t(in memory)");
+    domp.parse(myxml_buf);
+    break;
+  }
+  doc = domp.getDocument();
+  root = get_root_node();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
@@ -1539,6 +1635,22 @@ TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src)
   doc.append_copy(src);
   root = doc.document_element();
 }
+#elif defined(USEXERCESXML)
+TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src) : doc(NULL)
+{
+  domp.setValidationScheme(xercesc::XercesDOMParser::Val_Never);
+  domp.setDoNamespaces(false);
+  domp.setDoSchema(false);
+  domp.setLoadExternalDTD(false);
+  xercesc::DOMImplementation* impl(
+      xercesc::DOMImplementationRegistry::getDOMImplementation(
+          str2wstr("XML 1.0").c_str()));
+  TASCAR_ASSERT(impl);
+  doc = impl->createDocument(0, str2wstr("session").c_str(), NULL);
+  auto impnode(doc->importNode(src, true));
+  doc->replaceChild(impnode, get_root_node());
+  root = get_root_node();
+}
 #else
 TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src)
     : doc(new xmlpp::Document()), freedoc(true)
@@ -1550,7 +1662,11 @@ TASCAR::xml_doc_t::xml_doc_t(const tsccfg::node_t& src)
 
 TASCAR::xml_doc_t::~xml_doc_t()
 {
-#ifndef USEPUGIXML
+#ifdef USEPUGIXML
+  // do nothing
+#elif defined(USEXERCESXML)
+  // cleanup document
+#else
   if(freedoc && doc)
     delete doc;
 #endif
@@ -1558,9 +1674,12 @@ TASCAR::xml_doc_t::~xml_doc_t()
 
 tsccfg::node_t TASCAR::xml_doc_t::get_root_node()
 {
+  TASCAR_ASSERT(doc);
 #ifdef USEPUGIXML
   DEBUG(1);
   return doc.document_element();
+#elif defined(USEXERCESXML)
+  return doc->getDocumentElement();
 #else
   return doc->get_root_node();
 #endif
@@ -1577,6 +1696,15 @@ std::string tsccfg::node_get_text(tsccfg::node_t& n, const std::string& child)
   TASCAR_ASSERT(n);
 #ifdef USEPUGIXML
   return n.text().get();
+#elif defined(USEXERCESXML)
+  if(!n)
+    return "";
+  if(child.empty())
+    return wstr2str(n->getTextContent());
+  std::string retval;
+  for(auto ch : tsccfg::node_get_children(n, child))
+    retval += tsccfg::node_get_text(ch);
+  return retval;
 #else
   if(n) {
     if(child.size()) {
@@ -1602,12 +1730,40 @@ std::string tsccfg::node_get_text(tsccfg::node_t& n, const std::string& child)
   return "";
 }
 
+void tsccfg::node_set_text(tsccfg::node_t& node, const std::string& text)
+{
+#ifdef USEPUGIXML
+  node.remove_children();
+  node.text().set(text.c_str());
+#elif defined(USEXERCESXML)
+  node->setTextContent(str2wstr(text).c_str());
+#else
+  for(auto sn : node->get_children())
+    node->remove_child(sn);
+  node->add_child_text(text);
+#endif
+}
+
+void tsccfg::node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src)
+{
+#ifdef USEPUGIXML
+  node.append_copy(src);
+#elif defined(USEXERCESXML)
+  auto impnode(node->getOwnerDocument()->importNode(src, true));
+  node->appendChild(impnode);
+#else
+  node->import_node(src);
+#endif
+}
+
 std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
                                              const std::string& name)
 {
   TASCAR_ASSERT(node);
 #ifdef USEPUGIXML
   return node.attribute(name.c_str()).value();
+#elif defined(USEXERCESXML)
+  return wstr2str(node->getAttribute(str2wstr(name).c_str()));
 #else
   return node->get_attribute_value(name);
 #endif
@@ -1618,6 +1774,8 @@ std::string tsccfg::node_get_name(const tsccfg::node_t& node)
   TASCAR_ASSERT(node);
 #ifdef USEPUGIXML
   return node.name();
+#elif defined(USEXERCESXML)
+  return wstr2str(node->getTagName());
 #else
   return node->get_name();
 #endif
@@ -1638,6 +1796,29 @@ std::string tsccfg::node_get_path(const tsccfg::node_t& node)
   if(sib_prev + sib_next == 0)
     return node.path();
   return std::string(node.path()) + "[" + std::to_string(sib_prev + 1) + "]";
+#elif defined(USEXERCESXML)
+  std::string thisname(tsccfg::node_get_name(node));
+  xercesc::DOMNode* sib(node);
+  size_t sib_prev(0);
+  while((sib = sib->getPreviousSibling())) {
+    tsccfg::node_t sibe(dynamic_cast<tsccfg::node_t>(sib));
+    if(sibe && (tsccfg::node_get_name(sibe) == thisname))
+      sib_prev++;
+  }
+  sib = node;
+  size_t sib_next(0);
+  while((sib = sib->getNextSibling())) {
+    tsccfg::node_t sibe(dynamic_cast<tsccfg::node_t>(sib));
+    if(sibe && (tsccfg::node_get_name(sibe) == thisname))
+      sib_next++;
+  }
+  std::string nodepath(std::string("/") + thisname);
+  if(sib_prev + sib_next != 0)
+    nodepath += "[" + std::to_string(sib_prev + 1) + "]";
+  tsccfg::node_t parent(dynamic_cast<tsccfg::node_t>(node->getParentNode()));
+  if(parent)
+    nodepath = tsccfg::node_get_path(parent) + nodepath;
+  return nodepath;
 #else
   return node->get_path();
 #endif
@@ -1649,6 +1830,8 @@ void tsccfg::node_set_attribute(tsccfg::node_t& node, const std::string& name,
   TASCAR_ASSERT(node);
 #ifdef USEPUGIXML
   node.attribute(name.c_str()).set_value(value.c_str());
+#elif defined(USEXERCESXML)
+  node->setAttribute(str2wstr(name).c_str(), str2wstr(value).c_str());
 #else
   node->set_attribute(name, value);
 #endif
@@ -1659,7 +1842,10 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
 {
   TASCAR_ASSERT(node);
 #ifdef USEPUGIXML
-  DEBUG(1);
+  TASCAR_ASSERT(false);
+  return std::vector<tsccfg::node_t>();
+#elif defined(USEXERCESXML)
+  TASCAR_ASSERT(false);
   return std::vector<tsccfg::node_t>();
 #else
   std::vector<tsccfg::node_t> retval;
@@ -1672,17 +1858,47 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
 #endif
 }
 
-double tsccfg::node_xpath_to_number(tsccfg::node_t& node,
-                                    const std::string& path)
-{
-  TASCAR_ASSERT(node);
-#ifdef USEPUGIXML
-  pugi::xpath_query query(path.c_str());
-  return query.evaluate_number(node);
-#else
-  return node->eval_to_number(path);
-#endif
-}
+// double tsccfg::node_xpath_to_number(tsccfg::node_t& node,
+//                                    const std::string& path)
+//{
+//  TASCAR_ASSERT(node);
+//#ifdef USEPUGIXML
+//  pugi::xpath_query query(path.c_str());
+//  return query.evaluate_number(node);
+//#elif defined(USEXERCESXML)
+//  try {
+//    // auto res(node->getOwnerDocument()->evaluate(
+//    //    str2wstr(path).c_str(), node, NULL,
+//    //    xercesc::DOMXPathResult::NUMBER_TYPE, NULL));
+//    auto res(node->getOwnerDocument()->evaluate(
+//        str2wstr(path).c_str(), node, NULL,
+//        xercesc::DOMXPathResult::FIRST_ORDERED_NODE_TYPE, NULL));
+//    if(!res)
+//      throw TASCAR::ErrMsg("xpath evaluation failed");
+//    auto resnode(res->getNodeValue());
+//    if(!resnode)
+//      throw TASCAR::ErrMsg("No node found matching " + path);
+//    DEBUG(wstr2str(resnode->getNodeValue()));
+//    double val(-1);
+//    DEBUG(1);
+//    delete res;
+//    return val;
+//  }
+//  catch(const xercesc::DOMXPathException& e) {
+//    DEBUG(wstr2str(e.getMessage()));
+//    throw TASCAR::ErrMsg("DOMXPathException while evaluating xpath " + path +
+//                         " for node " + tsccfg::node_get_path(node) + ": " +
+//                         wstr2str(e.getMessage()));
+//  }
+//  catch(const xercesc::DOMException&) {
+//    DEBUG("DOMException");
+//    throw;
+//  }
+//  DEBUG(1);
+//#else
+//  return node->eval_to_number(path);
+//#endif
+//}
 
 /*
  * Local Variables:

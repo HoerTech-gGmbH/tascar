@@ -36,7 +36,7 @@ googletest:
 	$(MAKE) -C external_libs googlemock
 
 unit-tests: $(patsubst %,%-subdir-unit-tests,$(MODULES))
-$(patsubst %,%-subdir-unit-tests,$(MODULES)): all googletest
+$(patsubst %,%-subdir-unit-tests,$(MODULES)): libtascar googletest
 	$(MAKE) -C $(@:-subdir-unit-tests=) unit-tests
 
 coverage: googletest unit-tests
