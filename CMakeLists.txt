@@ -15,7 +15,7 @@ configure_file(
         "${CMAKE_CURRENT_LIST_DIR}/libtascar/tascarver.h.in"
         "${CMAKE_CURRENT_LIST_DIR}/libtascar/include/tascarver.h"
 )
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 if (APPLE)
