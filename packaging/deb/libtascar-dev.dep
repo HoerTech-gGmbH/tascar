@@ -1,1 +1,1 @@
-libtascar (VERSION), libxml++2.6-dev, libjack-dev | libjack-jackd2-dev, libsndfile1-dev, liblo-dev, libsamplerate0-dev
+libtascar (VERSION), libxml++2.6-dev, libjack-dev | libjack-jackd2-dev, libsndfile1-dev, liblo-dev, libsamplerate0-dev, libxerces-c-dev
