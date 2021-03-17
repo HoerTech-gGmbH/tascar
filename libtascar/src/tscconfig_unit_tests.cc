@@ -62,13 +62,13 @@ TEST(node_t, set_attribute)
   EXPECT_EQ("other", tsccfg::node_get_attribute_value(doc.root(), "name"));
 }
 
-TEST(node_t, node_xpath_to_number)
-{
-  TASCAR::xml_doc_t doc(
-      "<session><sound name=\"myname\" val=\"42\"/><sound/></session>",
-      TASCAR::xml_doc_t::LOAD_STRING);
-  EXPECT_EQ(42.0, tsccfg::node_xpath_to_number(doc.root(), "/*/sound/val"));
-}
+// TEST(node_t, node_xpath_to_number)
+//{
+//  TASCAR::xml_doc_t doc(
+//      "<session><sound name=\"myname\" val=\"42\"/><sound/></session>",
+//      TASCAR::xml_doc_t::LOAD_STRING);
+//  EXPECT_EQ(42.0, tsccfg::node_xpath_to_number(doc.root(), "/*/sound/val"));
+//}
 
 TEST(node_t, get_text)
 {
@@ -76,8 +76,39 @@ TEST(node_t, get_text)
                         TASCAR::xml_doc_t::LOAD_STRING);
   EXPECT_EQ("text12", tsccfg::node_get_text(doc.root()));
   TASCAR::xml_doc_t doc2("<session>text12<!-- ignore -->XY</session>",
-                        TASCAR::xml_doc_t::LOAD_STRING);
+                         TASCAR::xml_doc_t::LOAD_STRING);
   EXPECT_EQ("text12XY", tsccfg::node_get_text(doc2.root()));
+  TASCAR::xml_doc_t doc3(
+      "<session>X<a>text_a</a>Y<b>text_b</b><b>text_b2</b>Z</session>",
+      TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ("text_a", tsccfg::node_get_text(doc3.root(), "a"));
+  EXPECT_EQ("text_btext_b2", tsccfg::node_get_text(doc3.root(), "b"));
+  EXPECT_EQ("Xtext_aYtext_btext_b2Z", tsccfg::node_get_text(doc3.root()));
+}
+
+TEST(node_t, set_text)
+{
+  TASCAR::xml_doc_t doc("<session>text12</session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  EXPECT_EQ("text12", tsccfg::node_get_text(doc.root()));
+  tsccfg::node_set_text(doc.root(), "abc");
+  EXPECT_EQ("abc", tsccfg::node_get_text(doc.root()));
+}
+
+TEST(node_t, import_node)
+{
+  TASCAR::xml_doc_t src("<src><sound val=\"12\"/></src>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  TASCAR::xml_doc_t dest("<session><source/></session>",
+                         TASCAR::xml_doc_t::LOAD_STRING);
+  tsccfg::node_import_node(dest.root.get_children("source").front(),
+                           src.root.get_children("sound").front());
+  EXPECT_EQ("session", dest.root.get_element_name());
+  auto nsrc(dest.root.get_children().front());
+  EXPECT_EQ("source", tsccfg::node_get_name(nsrc));
+  auto nsnd(tsccfg::node_get_children(nsrc).front());
+  EXPECT_EQ("sound", tsccfg::node_get_name(nsnd));
+  EXPECT_EQ("12", tsccfg::node_get_attribute_value(nsnd, "val"));
 }
 
 TEST(xml_doc_t, constructor)

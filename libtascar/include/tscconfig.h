@@ -38,14 +38,14 @@ namespace tsccfg {
 
 #include <xercesc/dom/DOM.hpp>
 
-#include <xercesc/framework/StdOutFormatTarget.hpp>
 #include <xercesc/framework/LocalFileFormatTarget.hpp>
+#include <xercesc/framework/StdOutFormatTarget.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 
-#include <xercesc/util/OutOfMemoryException.hpp>
-#include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/framework/MemBufFormatTarget.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/util/OutOfMemoryException.hpp>
 
 namespace tsccfg {
   typedef xercesc::DOMElement* node_t;
@@ -79,8 +79,10 @@ namespace tsccfg {
                                        std::string& value,
                                        const std::string& info);
   std::string node_get_text(tsccfg::node_t& n, const std::string& child = "");
+  void node_set_text(tsccfg::node_t& n, const std::string& text);
+  void node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src);
 
-  double node_xpath_to_number(tsccfg::node_t&,const std::string& path);
+  // double node_xpath_to_number(tsccfg::node_t&,const std::string& path);
 
 } // namespace tsccfg
 
@@ -248,7 +250,7 @@ namespace TASCAR {
     size_t hash(const std::vector<std::string>& attributes,
                 bool test_children = false) const;
     std::vector<std::string> get_attributes() const;
-    tsccfg::node_t& operator()() { return e;};
+    tsccfg::node_t& operator()() { return e; };
 
   protected:
   };

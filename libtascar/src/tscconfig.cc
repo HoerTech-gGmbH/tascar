@@ -1697,7 +1697,14 @@ std::string tsccfg::node_get_text(tsccfg::node_t& n, const std::string& child)
 #ifdef USEPUGIXML
   return n.text().get();
 #elif defined(USEXERCESXML)
-  return wstr2str(n->getTextContent());
+  if(!n)
+    return "";
+  if(child.empty())
+    return wstr2str(n->getTextContent());
+  std::string retval;
+  for(auto ch : tsccfg::node_get_children(n, child))
+    retval += tsccfg::node_get_text(ch);
+  return retval;
 #else
   if(n) {
     if(child.size()) {
@@ -1721,6 +1728,32 @@ std::string tsccfg::node_get_text(tsccfg::node_t& n, const std::string& child)
   }
 #endif
   return "";
+}
+
+void tsccfg::node_set_text(tsccfg::node_t& node, const std::string& text)
+{
+#ifdef USEPUGIXML
+  node.remove_children();
+  node.text().set(text.c_str());
+#elif defined(USEXERCESXML)
+  node->setTextContent(str2wstr(text).c_str());
+#else
+  for(auto sn : node->get_children())
+    node->remove_child(sn);
+  node->add_child_text(text);
+#endif
+}
+
+void tsccfg::node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src)
+{
+#ifdef USEPUGIXML
+  node.append_copy(src);
+#elif defined(USEXERCESXML)
+  auto impnode(node->getOwnerDocument()->importNode(src, true));
+  node->appendChild(impnode);
+#else
+  node->import_node(src);
+#endif
 }
 
 std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
@@ -1825,47 +1858,47 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
 #endif
 }
 
-double tsccfg::node_xpath_to_number(tsccfg::node_t& node,
-                                    const std::string& path)
-{
-  TASCAR_ASSERT(node);
-#ifdef USEPUGIXML
-  pugi::xpath_query query(path.c_str());
-  return query.evaluate_number(node);
-#elif defined(USEXERCESXML)
-  try {
-    // auto res(node->getOwnerDocument()->evaluate(
-    //    str2wstr(path).c_str(), node, NULL,
-    //    xercesc::DOMXPathResult::NUMBER_TYPE, NULL));
-    auto res(node->getOwnerDocument()->evaluate(
-        str2wstr(path).c_str(), node, NULL,
-        xercesc::DOMXPathResult::FIRST_ORDERED_NODE_TYPE, NULL));
-    if(!res)
-      throw TASCAR::ErrMsg("xpath evaluation failed");
-    auto resnode(res->getNodeValue());
-    if(!resnode)
-      throw TASCAR::ErrMsg("No node found matching " + path);
-    DEBUG(wstr2str(resnode->getNodeValue()));
-    double val(-1);
-    DEBUG(1);
-    delete res;
-    return val;
-  }
-  catch(const xercesc::DOMXPathException& e) {
-    DEBUG(wstr2str(e.getMessage()));
-    throw TASCAR::ErrMsg("DOMXPathException while evaluating xpath " + path +
-                         " for node " + tsccfg::node_get_path(node) + ": " +
-                         wstr2str(e.getMessage()));
-  }
-  catch(const xercesc::DOMException&) {
-    DEBUG("DOMException");
-    throw;
-  }
-  DEBUG(1);
-#else
-  return node->eval_to_number(path);
-#endif
-}
+// double tsccfg::node_xpath_to_number(tsccfg::node_t& node,
+//                                    const std::string& path)
+//{
+//  TASCAR_ASSERT(node);
+//#ifdef USEPUGIXML
+//  pugi::xpath_query query(path.c_str());
+//  return query.evaluate_number(node);
+//#elif defined(USEXERCESXML)
+//  try {
+//    // auto res(node->getOwnerDocument()->evaluate(
+//    //    str2wstr(path).c_str(), node, NULL,
+//    //    xercesc::DOMXPathResult::NUMBER_TYPE, NULL));
+//    auto res(node->getOwnerDocument()->evaluate(
+//        str2wstr(path).c_str(), node, NULL,
+//        xercesc::DOMXPathResult::FIRST_ORDERED_NODE_TYPE, NULL));
+//    if(!res)
+//      throw TASCAR::ErrMsg("xpath evaluation failed");
+//    auto resnode(res->getNodeValue());
+//    if(!resnode)
+//      throw TASCAR::ErrMsg("No node found matching " + path);
+//    DEBUG(wstr2str(resnode->getNodeValue()));
+//    double val(-1);
+//    DEBUG(1);
+//    delete res;
+//    return val;
+//  }
+//  catch(const xercesc::DOMXPathException& e) {
+//    DEBUG(wstr2str(e.getMessage()));
+//    throw TASCAR::ErrMsg("DOMXPathException while evaluating xpath " + path +
+//                         " for node " + tsccfg::node_get_path(node) + ": " +
+//                         wstr2str(e.getMessage()));
+//  }
+//  catch(const xercesc::DOMException&) {
+//    DEBUG("DOMException");
+//    throw;
+//  }
+//  DEBUG(1);
+//#else
+//  return node->eval_to_number(path);
+//#endif
+//}
 
 /*
  * Local Variables:
