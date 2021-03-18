@@ -1,7 +1,8 @@
 # rules:
 
-CXXFLAGS += -I../external_libs/$(BUILD_DIR)/include -I../external_libs/pugixml-1.11.4/src
-LDLIBS += -L../external_libs/$(BUILD_DIR)/lib
+CXXFLAGS += -I../external_libs/$(BUILD_DIR)/include $(GCCCOVFLAGS)
+LDLIBS += -L../external_libs/$(BUILD_DIR)/lib $(COVLIBS)
+LDFLAGS += $(LDCOVFLAGS)
 
 build: build/.directory
 

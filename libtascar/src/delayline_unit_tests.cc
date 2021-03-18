@@ -11,6 +11,16 @@ TEST(delayline_t, get_dist_push)
   EXPECT_EQ(0.0,delay.get_dist_push(1,0));
 }
 
+TEST(delayline_t, get_dist_push_sinc)
+{
+  TASCAR::varidelay_t delay(3, 1, 1, 5, 4);
+  EXPECT_EQ(0.0,delay.get_dist(0));
+  ASSERT_NEAR(0.0,delay.get_dist_push(4,1),1e-7);
+  ASSERT_NEAR(0.0,delay.get_dist_push(4,0),1e-7);
+  ASSERT_NEAR(0.0,delay.get_dist_push(4,0),1e-7);
+  ASSERT_NEAR(1.0,delay.get_dist_push(4,0),1e-7);
+}
+
 TEST(delayline_t, get_dist_push_overflow)
 {
   TASCAR::varidelay_t delay(3, 1, 1, 0, 1);
@@ -19,6 +29,15 @@ TEST(delayline_t, get_dist_push_overflow)
   EXPECT_EQ(0.0,delay.get_dist_push(4,0));
   EXPECT_EQ(0.0,delay.get_dist_push(4,0));
   EXPECT_EQ(1.0,delay.get_dist_push(4,0));
+}
+
+TEST(sinctable_t, getval)
+{
+  TASCAR::sinctable_t s(7,4);
+  ASSERT_NEAR(1.0f, s(0.0f), 1e-9);
+  ASSERT_NEAR(0.0f, s(1.0f), 1e-7);
+  ASSERT_NEAR(0.0f, s(2.0f), 1e-7);
+  ASSERT_NEAR(0.63662, s(0.5), 1e-5);
 }
 
 // Local Variables:
