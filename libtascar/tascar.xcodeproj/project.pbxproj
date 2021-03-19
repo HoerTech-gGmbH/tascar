@@ -94,15 +94,20 @@
 		F6AE208F2604B1C300A687AE /* tscconfig.cc in Sources */ = {isa = PBXBuildFile; fileRef = F6AE20492604B1C300A687AE /* tscconfig.cc */; };
 		F6AE20902604B1C300A687AE /* filterclass.cc in Sources */ = {isa = PBXBuildFile; fileRef = F6AE204A2604B1C300A687AE /* filterclass.cc */; };
 		F6AE20922604B1C300A687AE /* jackrender.cc in Sources */ = {isa = PBXBuildFile; fileRef = F6AE204C2604B1C300A687AE /* jackrender.cc */; };
-		F6AE209E2604B45500A687AE /* libsndfile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE209C2604B40200A687AE /* libsndfile.a */; };
 		F6AE20F72604F07300A687AE /* libjack.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE20F62604F07300A687AE /* libjack.0.dylib */; };
 		F6AE20F82604F07300A687AE /* libjack.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE20F62604F07300A687AE /* libjack.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		F6AE20FB2604F0A600A687AE /* libsamplerate.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE20FA2604F08D00A687AE /* libsamplerate.a */; };
-		F6AE20FD2604F0E500A687AE /* libxerces-c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE20FC2604F0D600A687AE /* libxerces-c.a */; };
-		F6AE21012604F14C00A687AE /* libgsl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE21002604F13700A687AE /* libgsl.a */; };
 		F6AE21032604F16E00A687AE /* liblo.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE21022604F16E00A687AE /* liblo.7.dylib */; };
 		F6AE21042604F16E00A687AE /* liblo.7.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE21022604F16E00A687AE /* liblo.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		F6AE21062604F1A600A687AE /* libfftw3f.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE21052604F18F00A687AE /* libfftw3f.a */; };
+		F6AE26972605158500A687AE /* libfftw3f.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE26962605158500A687AE /* libfftw3f.3.dylib */; };
+		F6AE26982605158500A687AE /* libfftw3f.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE26962605158500A687AE /* libfftw3f.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		F6AE269A2605159900A687AE /* libgsl.25.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE26992605159900A687AE /* libgsl.25.dylib */; };
+		F6AE269B2605159900A687AE /* libgsl.25.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE26992605159900A687AE /* libgsl.25.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		F6AE269D260515AB00A687AE /* libsamplerate.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE269C260515AB00A687AE /* libsamplerate.0.dylib */; };
+		F6AE269E260515AB00A687AE /* libsamplerate.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE269C260515AB00A687AE /* libsamplerate.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		F6AE269F260515C200A687AE /* libsndfile.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE21E42605020800A687AE /* libsndfile.1.dylib */; };
+		F6AE26A0260515C200A687AE /* libsndfile.1.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE21E42605020800A687AE /* libsndfile.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		F6AE26A2260515D400A687AE /* libxerces-c-3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AE26A1260515D400A687AE /* libxerces-c-3.2.dylib */; };
+		F6AE26A3260515D400A687AE /* libxerces-c-3.2.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F6AE26A1260515D400A687AE /* libxerces-c-3.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -113,7 +118,12 @@
 			dstSubfolderSpec = 10;
 			files = (
 				F6AE21042604F16E00A687AE /* liblo.7.dylib in Embed Libraries */,
+				F6AE26A0260515C200A687AE /* libsndfile.1.dylib in Embed Libraries */,
+				F6AE26982605158500A687AE /* libfftw3f.3.dylib in Embed Libraries */,
 				F6AE20F82604F07300A687AE /* libjack.0.dylib in Embed Libraries */,
+				F6AE269E260515AB00A687AE /* libsamplerate.0.dylib in Embed Libraries */,
+				F6AE269B2605159900A687AE /* libgsl.25.dylib in Embed Libraries */,
+				F6AE26A3260515D400A687AE /* libxerces-c-3.2.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -211,17 +221,14 @@
 		F6AE20492604B1C300A687AE /* tscconfig.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tscconfig.cc; sourceTree = "<group>"; };
 		F6AE204A2604B1C300A687AE /* filterclass.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = filterclass.cc; sourceTree = "<group>"; };
 		F6AE204C2604B1C300A687AE /* jackrender.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jackrender.cc; sourceTree = "<group>"; };
-		F6AE209C2604B40200A687AE /* libsndfile.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsndfile.a; path = ../../../../../../usr/local/Cellar/libsndfile/1.0.31/lib/libsndfile.a; sourceTree = "<group>"; };
-		F6AE20A12604B4BB00A687AE /* sndfile.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sndfile.hh; sourceTree = "<group>"; };
-		F6AE20A22604B4BB00A687AE /* sndfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sndfile.h; sourceTree = "<group>"; };
 		F6AE20D32604D32500A687AE /* libsystem_asl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsystem_asl.tbd; path = usr/lib/system/libsystem_asl.tbd; sourceTree = SDKROOT; };
 		F6AE20F62604F07300A687AE /* libjack.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjack.0.dylib; path = ../../../../../../usr/local/lib/libjack.0.dylib; sourceTree = "<group>"; };
-		F6AE20FA2604F08D00A687AE /* libsamplerate.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsamplerate.a; path = ../../../../../../usr/local/Cellar/libsamplerate/0.1.9_1/lib/libsamplerate.a; sourceTree = "<group>"; };
-		F6AE20FC2604F0D600A687AE /* libxerces-c.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libxerces-c.a"; path = "../../../../../../usr/local/Cellar/xerces-c/3.2.3/lib/libxerces-c.a"; sourceTree = "<group>"; };
-		F6AE20FE2604F10E00A687AE /* libfftw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfftw3.a; path = ../../../../../../usr/local/Cellar/fftw/3.3.9/lib/libfftw3.a; sourceTree = "<group>"; };
-		F6AE21002604F13700A687AE /* libgsl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgsl.a; path = ../../../../../../usr/local/Cellar/gsl/2.6/lib/libgsl.a; sourceTree = "<group>"; };
 		F6AE21022604F16E00A687AE /* liblo.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblo.7.dylib; path = ../../../../../../usr/local/Cellar/liblo/0.31/lib/liblo.7.dylib; sourceTree = "<group>"; };
-		F6AE21052604F18F00A687AE /* libfftw3f.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfftw3f.a; path = ../../../../../../usr/local/Cellar/fftw/3.3.9/lib/libfftw3f.a; sourceTree = "<group>"; };
+		F6AE21E42605020800A687AE /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = ../../../../../../usr/local/Cellar/libsndfile/1.0.31/lib/libsndfile.1.dylib; sourceTree = "<group>"; };
+		F6AE26962605158500A687AE /* libfftw3f.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfftw3f.3.dylib; path = ../../../../../../usr/local/Cellar/fftw/3.3.9/lib/libfftw3f.3.dylib; sourceTree = "<group>"; };
+		F6AE26992605159900A687AE /* libgsl.25.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgsl.25.dylib; path = ../../../../../../usr/local/Cellar/gsl/2.6/lib/libgsl.25.dylib; sourceTree = "<group>"; };
+		F6AE269C260515AB00A687AE /* libsamplerate.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsamplerate.0.dylib; path = ../../../../../../usr/local/Cellar/libsamplerate/0.1.9_1/lib/libsamplerate.0.dylib; sourceTree = "<group>"; };
+		F6AE26A1260515D400A687AE /* libxerces-c-3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libxerces-c-3.2.dylib"; path = "../../../../../../usr/local/Cellar/xerces-c/3.2.3/lib/libxerces-c-3.2.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,13 +236,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F6AE209E2604B45500A687AE /* libsndfile.a in Frameworks */,
+				F6AE26A2260515D400A687AE /* libxerces-c-3.2.dylib in Frameworks */,
 				F6AE21032604F16E00A687AE /* liblo.7.dylib in Frameworks */,
-				F6AE21012604F14C00A687AE /* libgsl.a in Frameworks */,
-				F6AE20FD2604F0E500A687AE /* libxerces-c.a in Frameworks */,
-				F6AE21062604F1A600A687AE /* libfftw3f.a in Frameworks */,
-				F6AE20FB2604F0A600A687AE /* libsamplerate.a in Frameworks */,
+				F6AE269D260515AB00A687AE /* libsamplerate.0.dylib in Frameworks */,
+				F6AE269A2605159900A687AE /* libgsl.25.dylib in Frameworks */,
+				F6AE26972605158500A687AE /* libfftw3f.3.dylib in Frameworks */,
 				F6AE20F72604F07300A687AE /* libjack.0.dylib in Frameworks */,
+				F6AE269F260515C200A687AE /* libsndfile.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,28 +381,16 @@
 		F6AE209B2604B40200A687AE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				F6AE21052604F18F00A687AE /* libfftw3f.a */,
+				F6AE26A1260515D400A687AE /* libxerces-c-3.2.dylib */,
+				F6AE269C260515AB00A687AE /* libsamplerate.0.dylib */,
+				F6AE26992605159900A687AE /* libgsl.25.dylib */,
+				F6AE26962605158500A687AE /* libfftw3f.3.dylib */,
+				F6AE21E42605020800A687AE /* libsndfile.1.dylib */,
 				F6AE21022604F16E00A687AE /* liblo.7.dylib */,
-				F6AE21002604F13700A687AE /* libgsl.a */,
-				F6AE20FE2604F10E00A687AE /* libfftw3.a */,
-				F6AE20FC2604F0D600A687AE /* libxerces-c.a */,
-				F6AE20FA2604F08D00A687AE /* libsamplerate.a */,
 				F6AE20F62604F07300A687AE /* libjack.0.dylib */,
 				F6AE20D32604D32500A687AE /* libsystem_asl.tbd */,
-				F6AE20A02604B4BB00A687AE /* include */,
-				F6AE209C2604B40200A687AE /* libsndfile.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		F6AE20A02604B4BB00A687AE /* include */ = {
-			isa = PBXGroup;
-			children = (
-				F6AE20A12604B4BB00A687AE /* sndfile.hh */,
-				F6AE20A22604B4BB00A687AE /* sndfile.h */,
-			);
-			name = include;
-			path = ../../../../../../usr/local/Cellar/libsndfile/1.0.31/include;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -695,9 +690,11 @@
 		F6AC32C12604AE9F00C56849 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLY_RULES_IN_COPY_HEADERS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = JH3275598G;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -705,7 +702,7 @@
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUGS=1";
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"/usr/local/opt/xerces-c/include",
 					/usr/local/opt/libsndfile/include,
@@ -719,8 +716,16 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
+					/usr/local/Cellar/libsndfile/1.0.31/lib,
+					/usr/local/Cellar/fftw/3.3.9/lib,
+					/usr/local/Cellar/gsl/2.6/lib,
+					/usr/local/Cellar/libsamplerate/0.1.9_1/lib,
+					"/usr/local/Cellar/xerces-c/3.2.3/lib",
 				);
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "";
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -728,16 +733,18 @@
 		F6AC32C22604AE9F00C56849 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APPLY_RULES_IN_COPY_HEADERS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = JH3275598G;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"/usr/local/opt/xerces-c/include",
 					/usr/local/opt/libsndfile/include,
@@ -751,8 +758,16 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
+					/usr/local/Cellar/libsndfile/1.0.31/lib,
+					/usr/local/Cellar/fftw/3.3.9/lib,
+					/usr/local/Cellar/gsl/2.6/lib,
+					/usr/local/Cellar/libsamplerate/0.1.9_1/lib,
+					"/usr/local/Cellar/xerces-c/3.2.3/lib",
 				);
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "";
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
