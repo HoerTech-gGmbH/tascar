@@ -270,55 +270,55 @@
 		F6AE1F982604B1B800A687AE /* include */ = {
 			isa = PBXGroup;
 			children = (
-				F6AE1F992604B1B800A687AE /* fft.h */,
-				F6AE1F9A2604B1B800A687AE /* vbap3d.h */,
-				F6AE1F9B2604B1B800A687AE /* async_file.h */,
-				F6AE1F9C2604B1B800A687AE /* defs.h */,
-				F6AE1F9D2604B1B800A687AE /* sourcemod.h */,
-				F6AE1F9E2604B1B800A687AE /* gui_elements.h */,
-				F6AE1F9F2604B1B800A687AE /* speakerarray.h */,
-				F6AE1FA02604B1B800A687AE /* licensehandler.h */,
-				F6AE1FA12604B1B800A687AE /* audiochunks.h */,
-				F6AE1FA22604B1B800A687AE /* tascar.h */,
-				F6AE1FA32604B1B800A687AE /* levelmeter.h */,
-				F6AE1FA42604B1B800A687AE /* filterclass.h */,
-				F6AE1FA52604B1B800A687AE /* jackrender.h */,
-				F6AE1FA62604B1B800A687AE /* audioplugin.h */,
-				F6AE1FA72604B1B800A687AE /* hoa.h */,
-				F6AE1FA82604B1B800A687AE /* sampler.h */,
-				F6AE1FA92604B1B800A687AE /* coordinates.h */,
-				F6AE1FAA2604B1B800A687AE /* pluginprocessor.h */,
-				F6AE1FAB2604B1B800A687AE /* viewport.h */,
-				F6AE1FAC2604B1B800A687AE /* osc_helper.h */,
-				F6AE1FAD2604B1B800A687AE /* pdfexport.h */,
-				F6AE1FAE2604B1B800A687AE /* jackiowav.h */,
 				F6AE1FAF2604B1B800A687AE /* acousticmodel.h */,
-				F6AE1FB02604B1B800A687AE /* amb33defs.h */,
-				F6AE1FB12604B1B800A687AE /* serialport.h */,
-				F6AE1FB22604B1B800A687AE /* osc_scene.h */,
 				F6AE1FB32604B1B800A687AE /* alsamidicc.h */,
-				F6AE1FB42604B1B800A687AE /* tscconfig.h */,
-				F6AE1FB52604B1B800A687AE /* termsetbaud.h */,
-				F6AE1FB62604B1B800A687AE /* cli.h */,
-				F6AE1FB72604B1B800A687AE /* delayline.h */,
-				F6AE1FB82604B1B800A687AE /* dynamicobjects.h */,
-				F6AE1FB92604B1B800A687AE /* dmxdriver.h */,
-				F6AE1FBA2604B1B800A687AE /* session.h */,
-				F6AE1FBB2604B1B800A687AE /* tascarplugin.h */,
-				F6AE1FBC2604B1B800A687AE /* irrender.h */,
-				F6AE1FBD2604B1B800A687AE /* spectrum.h */,
+				F6AE1FB02604B1B800A687AE /* amb33defs.h */,
+				F6AE1F9B2604B1B800A687AE /* async_file.h */,
+				F6AE1FA12604B1B800A687AE /* audiochunks.h */,
+				F6AE1FA62604B1B800A687AE /* audioplugin.h */,
 				F6AE1FBE2604B1B800A687AE /* audiostates.h */,
-				F6AE1FBF2604B1B800A687AE /* stft.h */,
-				F6AE1FC02604B1B800A687AE /* tascarver.h */,
+				F6AE1FB62604B1B800A687AE /* cli.h */,
+				F6AE1FA92604B1B800A687AE /* coordinates.h */,
+				F6AE1F9C2604B1B800A687AE /* defs.h */,
+				F6AE1FB72604B1B800A687AE /* delayline.h */,
+				F6AE1FB92604B1B800A687AE /* dmxdriver.h */,
+				F6AE1FB82604B1B800A687AE /* dynamicobjects.h */,
 				F6AE1FC12604B1B800A687AE /* errorhandling.h */,
-				F6AE1FC22604B1B800A687AE /* session_reader.h */,
+				F6AE1F992604B1B800A687AE /* fft.h */,
+				F6AE1FA42604B1B800A687AE /* filterclass.h */,
+				F6AE1F9E2604B1B800A687AE /* gui_elements.h */,
+				F6AE1FA72604B1B800A687AE /* hoa.h */,
+				F6AE1FBC2604B1B800A687AE /* irrender.h */,
 				F6AE1FC32604B1B800A687AE /* jackclient.h */,
-				F6AE1FC42604B1B800A687AE /* serviceclass.h */,
-				F6AE1FC52604B1B800A687AE /* receivermod.h */,
-				F6AE1FC62604B1B800A687AE /* ringbuffer.h */,
-				F6AE1FC72604B1B800A687AE /* render.h */,
-				F6AE1FC82604B1B800A687AE /* scene.h */,
+				F6AE1FAE2604B1B800A687AE /* jackiowav.h */,
+				F6AE1FA52604B1B800A687AE /* jackrender.h */,
+				F6AE1FA32604B1B800A687AE /* levelmeter.h */,
+				F6AE1FA02604B1B800A687AE /* licensehandler.h */,
 				F6AE1FC92604B1B800A687AE /* ola.h */,
+				F6AE1FAC2604B1B800A687AE /* osc_helper.h */,
+				F6AE1FB22604B1B800A687AE /* osc_scene.h */,
+				F6AE1FAD2604B1B800A687AE /* pdfexport.h */,
+				F6AE1FAA2604B1B800A687AE /* pluginprocessor.h */,
+				F6AE1FC52604B1B800A687AE /* receivermod.h */,
+				F6AE1FC72604B1B800A687AE /* render.h */,
+				F6AE1FC62604B1B800A687AE /* ringbuffer.h */,
+				F6AE1FA82604B1B800A687AE /* sampler.h */,
+				F6AE1FC82604B1B800A687AE /* scene.h */,
+				F6AE1FB12604B1B800A687AE /* serialport.h */,
+				F6AE1FC42604B1B800A687AE /* serviceclass.h */,
+				F6AE1FC22604B1B800A687AE /* session_reader.h */,
+				F6AE1FBA2604B1B800A687AE /* session.h */,
+				F6AE1F9D2604B1B800A687AE /* sourcemod.h */,
+				F6AE1F9F2604B1B800A687AE /* speakerarray.h */,
+				F6AE1FBD2604B1B800A687AE /* spectrum.h */,
+				F6AE1FBF2604B1B800A687AE /* stft.h */,
+				F6AE1FA22604B1B800A687AE /* tascar.h */,
+				F6AE1FBB2604B1B800A687AE /* tascarplugin.h */,
+				F6AE1FC02604B1B800A687AE /* tascarver.h */,
+				F6AE1FB52604B1B800A687AE /* termsetbaud.h */,
+				F6AE1FB42604B1B800A687AE /* tscconfig.h */,
+				F6AE1F9A2604B1B800A687AE /* vbap3d.h */,
+				F6AE1FAB2604B1B800A687AE /* viewport.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -725,7 +725,7 @@
 				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PUBLIC_HEADERS_FOLDER_PATH = "";
+				PUBLIC_HEADERS_FOLDER_PATH = libtascar;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -767,7 +767,7 @@
 				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PUBLIC_HEADERS_FOLDER_PATH = "";
+				PUBLIC_HEADERS_FOLDER_PATH = libtascar;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
