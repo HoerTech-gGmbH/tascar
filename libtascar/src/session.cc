@@ -368,7 +368,7 @@ void assert_jackpar(const std::string& what, double expected, double found,
 }
 
 TASCAR::session_t::session_t()
-  : TASCAR::session_oscvars_t(root()),
+    : TASCAR::session_oscvars_t(root()),
       jackc_transport_t(jacknamer(name, "session.")),
       osc_server_t(srv_addr, srv_port, srv_proto,
                    TASCAR::config("tascar.osc.list", 0)),
@@ -397,8 +397,7 @@ TASCAR::session_t::session_t()
 TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
                              const std::string& path)
     : TASCAR::session_core_t(filename_or_data, t, path),
-      session_oscvars_t(root()),
-      jackc_transport_t(jacknamer(name, "session.")),
+      session_oscvars_t(root()), jackc_transport_t(jacknamer(name, "session.")),
       osc_server_t(srv_addr, srv_port, srv_proto,
                    TASCAR::config("tascar.osc.list", 0)),
       period_time(1.0 / (double)srate), started_(false)
@@ -977,7 +976,7 @@ namespace OSCSession {
   int _stop(const char* path, const char* types, lo_arg** argv, int argc,
             lo_message msg, void* user_data)
   {
-    if((argc == 0)) {
+    if(argc == 0) {
       ((TASCAR::session_t*)user_data)->tp_stop();
       return 0;
     }
@@ -987,7 +986,7 @@ namespace OSCSession {
   int _start(const char* path, const char* types, lo_arg** argv, int argc,
              lo_message msg, void* user_data)
   {
-    if((argc == 0)) {
+    if(argc == 0) {
       ((TASCAR::session_t*)user_data)->tp_start();
       return 0;
     }
@@ -1007,7 +1006,7 @@ namespace OSCSession {
   int _unload_modules(const char* path, const char* types, lo_arg** argv,
                       int argc, lo_message msg, void* user_data)
   {
-    if((argc == 0)) {
+    if(argc == 0) {
       ((TASCAR::session_t*)user_data)->unload_modules();
       return 0;
     }
