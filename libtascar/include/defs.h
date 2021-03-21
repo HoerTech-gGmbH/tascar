@@ -22,6 +22,15 @@
 
 #include <iostream>
 
+#ifdef HAS_APPLE_UNIFIED_LOG_
+#include <os/log.h>
+#endif
+
+#ifdef HAS_SYSLOG_
+#include <syslog.h>
+#endif
+
+
 /**
    \file defs.h
    \brief Some basic definitions
@@ -48,17 +57,47 @@
 */
 #define R_EARTH 6367467.5
 
+#ifdef HAS_APPLE_UNIFIED_LOG_
+/**
+    Use os_log
+ */
+#ifndef DEBUGS
+#define DEBUGS os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_DEBUG, "%", (std::to_string(x)).c_str())
+#endif
+#ifndef DEBUG
+#define DEBUG os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_DEBUG, "%", (std::to_string(x)).c_str())
+#endif
+#ifndef DEBUGMSG
+#define DEBUGMSG os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_DEBUG, "%", (std::to_string(x)).c_str())
+#endif
+#elif HAS_SYSLOG
+/**
+    Use syslog
+ */
+#ifndef DEBUGS
+#define DEBUGS syslog(get_syslog_priority(metadata.severity), "%s", (std::to_string(x)).c_str());
+#endif
+#ifndef DEBUG
+#define DEBUG syslog(get_syslog_priority(metadata.severity), "%s", (std::to_string(x)).c_str());
+#endif
+#ifndef DEBUGMSG
+#define DEBUGMSG syslog(get_syslog_priority(metadata.severity), "%s", (std::to_string(x)).c_str());
+#endif
+#else
+/**
+    Use default std error output
+ */
 #ifndef DEBUGS
 #define DEBUGS(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << #x << "=" << x << std::endl
 #endif
-
 #ifndef DEBUG
 #define DEBUG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " " << #x << "=" << x << std::endl
 #endif
-
 #ifndef DEBUGMSG
 #define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " --" << x << "--" << std::endl
 #endif
+#endif
+
 
 #define TASCAR_ASSERT(x) if( !(x) ) throw TASCAR::ErrMsg(std::string(__FILE__)+":"+std::to_string(__LINE__)+": Expression " #x " is false.")
 
