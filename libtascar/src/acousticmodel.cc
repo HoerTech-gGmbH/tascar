@@ -169,7 +169,9 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       nextgain *= receiver_->external_gain;
       double next_air_absorption(exp(-nextdistance * dscale));
       double ddistance(
-          (std::max(0.0, nextdistance - c_ * receiver_->delaycomp) - distance) *
+          (std::max(0.0, nextdistance - c_ * (receiver_->delaycomp +
+                                              receiver_->recdelaycomp)) -
+           distance) *
           dt);
       double dgain((nextgain - gain) * dt);
       double dairabsorption((next_air_absorption - air_absorption) * dt);
@@ -482,6 +484,7 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
     has_diffusegain(false),
     falloff(-1.0),
     delaycomp(0.0),
+    recdelaycomp(0.0),
     layerfadelen(1.0),
     muteonstop(false),
     active(true),
@@ -527,19 +530,23 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
 
 void receiver_t::configure()
 {
-  receivermod_t::configure( );
+  receivermod_t::configure();
   update();
   scatterbuffer = new amb1wave_t(n_fragment);
-  scatter_handle = create_diffuse_data( f_sample, n_fragment );
-  for(uint32_t k=0;k<n_channels;k++){
+  scatter_handle = create_diffuse_data(f_sample, n_fragment);
+  for(uint32_t k = 0; k < n_channels; k++) {
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
   }
-  plugins.prepare( cfg() );
-  if( n_channels != outchannels.size() ){
+  plugins.prepare(cfg());
+  if(n_channels != outchannels.size()) {
     plugins.release();
-    throw TASCAR::ErrMsg("Implementation error. Number of channels ("+std::to_string(n_channels)+") differs from number of output buffers ("+std::to_string(outchannels.size())+").");
+    throw TASCAR::ErrMsg("Implementation error. Number of channels (" +
+                         std::to_string(n_channels) +
+                         ") differs from number of output buffers (" +
+                         std::to_string(outchannels.size()) + ").");
   }
+  recdelaycomp = get_delay_comp();
 }
 
 void receiver_t::release()

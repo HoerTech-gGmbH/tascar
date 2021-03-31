@@ -66,6 +66,11 @@ std::vector<std::string> TASCAR::receivermod_t::get_connections() const
   return libdata->get_connections();
 }
 
+double TASCAR::receivermod_t::get_delay_comp() const
+{
+  return libdata->get_delay_comp();
+}
+
 void TASCAR::receivermod_t::add_variables(TASCAR::osc_server_t* srv)
 {
   return libdata->add_variables(srv);

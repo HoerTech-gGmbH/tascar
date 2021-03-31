@@ -229,6 +229,7 @@ namespace TASCAR {
       bool has_diffusegain;
       double falloff;
       double delaycomp;
+      double recdelaycomp;
       double layerfadelen;
       bool muteonstop;
       // derived / internal / updated variables:
@@ -313,23 +314,23 @@ namespace TASCAR {
       soundpath_t(
           const source_t* src, const soundpath_t* parent_ = NULL,
           const reflector_t* generator_ =
-              NULL); //< constructor, for primary sources set parent_ to NULL
-      void update_position(); //< Update image source position from parent and
-                              //reflector
+              NULL); ///< constructor, for primary sources set parent_ to NULL
+      void update_position(); ///< Update image source position from parent and
+                              ///< reflector
       pos_t get_effective_position(
           const pos_t& receiverp,
-          double& gain); //< correct perceived position and caculate gain
+          double& gain); ///< correct perceived position and caculate gain
       uint32_t getorder()
-          const; //< Return image source order of sound path, 0 is direct path
+          const; ///< Return image source order of sound path, 0 is direct path
       void apply_reflectionfilter(
-          TASCAR::wave_t& audio); //< Apply reflection filter of all reflectors
-      const soundpath_t* parent;  //< Parent sound path (or this if primary)
-      const source_t* primary;    //< Primary source
-      const reflector_t* reflector; //< Reflector, which created new sound path
-                                    //from parent, or NULL for primary
+          TASCAR::wave_t& audio); ///< Apply reflection filter of all reflectors
+      const soundpath_t* parent;  ///< Parent sound path (or this if primary)
+      const source_t* primary;    ///< Primary source
+      const reflector_t* reflector; ///< Reflector, which created new sound path
+                                    ///< from parent, or NULL for primary
       std::vector<double>
-          reflectionfilterstates; //< Filter states for first-order reflection
-                                  //filters
+          reflectionfilterstates; ///< Filter states for first-order reflection
+                                  ///< filters
       bool visible;
       pos_t p_cut;
     };

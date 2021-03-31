@@ -29,9 +29,9 @@
 #define RECEIVERMOD_H
 
 #include "audiostates.h"
+#include "osc_helper.h"
 #include "speakerarray.h"
 #include "tascarplugin.h"
-#include "osc_helper.h"
 
 namespace TASCAR {
 
@@ -83,8 +83,15 @@ namespace TASCAR {
     {
       return create_data(srate, fragsize);
     };
-    
+
     virtual void add_variables(TASCAR::osc_server_t* srv){};
+    /**
+       Return the delay compensation in seconds needed by a receiver
+       implementation.
+
+       This value will be added to the user-provided delay compensation.
+     */
+    virtual double get_delay_comp() const { return 0.0; };
 
   protected:
   };
@@ -130,6 +137,7 @@ namespace TASCAR {
                                                             uint32_t fragsize);
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
+    virtual double get_delay_comp() const;
 
   private:
     receivermod_t(const receivermod_t&);
