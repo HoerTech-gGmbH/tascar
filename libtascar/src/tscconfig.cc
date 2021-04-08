@@ -42,7 +42,7 @@ std::string wstr2str(const XMLCh* text)
 #endif
 
 namespace TASCAR {
-  
+
   class globalconfig_t {
   public:
     globalconfig_t();
@@ -55,28 +55,27 @@ namespace TASCAR {
     void readconfig(const std::string& prefix, tsccfg::node_t& e);
     std::map<std::string, std::string> cfg;
   };
-  
+
   static std::map<std::string, cfg_node_desc_t> attribute_list;
   static std::vector<std::string> warnings;
   static globalconfig_t config_;
   static size_t maxid(0);
 } // namespace TASCAR
 
-
 double TASCAR::config(const std::string& v, double d)
 {
-  return TASCAR::config_(v,d);
+  return TASCAR::config_(v, d);
 }
 
 std::string TASCAR::config(const std::string& v, const std::string& d)
 {
-  return TASCAR::config_(v,d);
+  return TASCAR::config_(v, d);
 }
 
 void TASCAR::config_forceoverwrite(const std::string& v, const std::string& d)
 {
-  TASCAR::config_.forceoverwrite(v,d);
-} 
+  TASCAR::config_.forceoverwrite(v, d);
+}
 
 std::map<std::string, TASCAR::cfg_node_desc_t>& TASCAR::get_attribute_list()
 {
@@ -1632,15 +1631,19 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
     : doc(NULL)
 {
+  std::string msg;
   domp.setValidationScheme(xercesc::XercesDOMParser::Val_Never);
   domp.setDoNamespaces(false);
   domp.setDoSchema(false);
   domp.setLoadExternalDTD(false);
   switch(t) {
   case LOAD_FILE:
+    msg = "parsing file \"" + filename_or_data + "\"";
     domp.parse(filename_or_data.c_str());
     break;
   case LOAD_STRING:
+    msg = "parsing string of " + std::to_string(filename_or_data.size()) +
+          " characters";
     xercesc::MemBufInputSource myxml_buf((XMLByte*)(filename_or_data.c_str()),
                                          filename_or_data.size(),
                                          "xml_doc_t(in memory)");
@@ -1648,24 +1651,34 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
     break;
   }
   doc = domp.getDocument();
+  if(!doc)
+    throw TASCAR::ErrMsg("Unable to parse document (" + msg + ").");
+  if(!get_root_node())
+    throw TASCAR::ErrMsg("The document has no root node (" + msg + ").");
   root = get_root_node();
 }
 #else
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
     : doc(NULL), freedoc(false)
 {
+  std::string msg;
   switch(t) {
   case LOAD_FILE:
     domp.parse_file(TASCAR::env_expand(filename_or_data));
+    msg = "parsing file \"" + filename_or_data + "\"";
     break;
   case LOAD_STRING:
     domp.parse_memory(filename_or_data);
+    msg = "parsing string of " + std::to_string(filename_or_data.size()) +
+          " characters";
     break;
   }
   doc = domp.get_document();
   if(!doc)
-    throw TASCAR::ErrMsg("Unable to parse document.");
+    throw TASCAR::ErrMsg("Unable to parse document (" + msg + ").");
   root = doc->get_root_node();
+  if(!root)
+    throw TASCAR::ErrMsg("The document has no root node (" + msg + ").");
 }
 #endif
 
@@ -1821,13 +1834,13 @@ std::string tsccfg::node_get_name(const tsccfg::node_t& node)
 #endif
 }
 
-void tsccfg::node_set_name(const tsccfg::node_t& node,const std::string& name)
+void tsccfg::node_set_name(const tsccfg::node_t& node, const std::string& name)
 {
   TASCAR_ASSERT(node);
 #ifdef USEPUGIXML
   TASCAR_ASSERT(false);
 #elif defined(USEXERCESXML)
-  node->getOwnerDocument()->renameNode(node,NULL,str2wstr(name).c_str());
+  node->getOwnerDocument()->renameNode(node, NULL, str2wstr(name).c_str());
 #else
   TASCAR_ASSERT(false);
 #endif
@@ -1952,12 +1965,8 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
 //#endif
 //}
 
-TASCAR::cfg_node_desc_t::cfg_node_desc_t()
-{
-}
-TASCAR::cfg_node_desc_t::~cfg_node_desc_t()
-{
-}
+TASCAR::cfg_node_desc_t::cfg_node_desc_t() {}
+TASCAR::cfg_node_desc_t::~cfg_node_desc_t() {}
 
 /*
  * Local Variables:

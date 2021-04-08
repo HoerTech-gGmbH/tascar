@@ -15,7 +15,7 @@ TEST(node_t, set_name)
 {
   TASCAR::xml_doc_t doc;
   EXPECT_EQ("session", tsccfg::node_get_name(doc.root()));
-  tsccfg::node_set_name(doc.root(),"blue");
+  tsccfg::node_set_name(doc.root(), "blue");
   EXPECT_EQ("blue", tsccfg::node_get_name(doc.root()));
 }
 
@@ -155,6 +155,23 @@ TEST(xml_doc_t, from_node)
     EXPECT_EQ("myname", doc2.root.get_attribute("name"));
     EXPECT_EQ("42", doc2.root.get_attribute("val"));
   }
+}
+
+TEST(xml_doc_t, failfromemptystring)
+{
+  bool success(true);
+  try {
+    TASCAR::xml_doc_t doc("", TASCAR::xml_doc_t::LOAD_STRING);
+  }
+  catch(const std::exception& e) {
+    success = false;
+    std::string msg(e.what());
+    EXPECT_NE(std::string::npos, msg.find("pars"));
+    EXPECT_NE(std::string::npos, msg.find("string"));
+    EXPECT_NE(std::string::npos, msg.find("root node"));
+    std::cout << e.what() << std::endl;
+  }
+  EXPECT_EQ(false, success);
 }
 
 // Local Variables:
