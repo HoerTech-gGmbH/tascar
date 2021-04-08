@@ -36,11 +36,16 @@ void const_val_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double_dbspl("/a",&a);
 }
 
-void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                             const TASCAR::pos_t& pos,
+                             const TASCAR::zyx_euler_t&,
+                             const TASCAR::transport_t& tp)
 {
   // implement the algrithm:
-  for(uint32_t k=0;k<chunk[0].n;++k)
-    chunk[0].d[k] += a;
+  size_t channels(chunk.size());
+  for(size_t ch = 0; ch < channels; ++ch)
+    for(uint32_t k = 0; k < chunk[ch].n; ++k)
+      chunk[ch].d[k] += a;
 }
 
 // create the plugin interface:
