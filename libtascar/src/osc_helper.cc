@@ -78,6 +78,28 @@ int osc_set_vector_float(const char *path, const char *types, lo_arg **argv, int
   return 0;
 }
 
+int osc_set_vector_float_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data  ){
+    std::vector<float> *data((std::vector<float> *)user_data);
+    if( argc == (int)(data->size()) )
+      for(int k=0;k<argc;++k)
+        (*data)[k] = pow(10.0,0.05*argv[k]->f)*2e-5;
+  }
+  return 0;
+}
+
+int osc_set_vector_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data  ){
+    std::vector<double> *data((std::vector<double> *)user_data);
+    if( argc == (int)(data->size()) )
+      for(int k=0;k<argc;++k)
+        (*data)[k] = argv[k]->f;
+  }
+  return 0;
+}
+
 int osc_set_double_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
 {
   if( user_data && (argc == 1) && (types[0] == 'f') )
@@ -260,9 +282,25 @@ void osc_server_t::add_float_dbspl(const std::string& path,float *data)
   add_method(path,"f",osc_set_float_dbspl,data);
 }
 
-void osc_server_t::add_vector_float(const std::string& path,std::vector<float> *data)
+void osc_server_t::add_vector_float_dbspl(const std::string& path,
+                                          std::vector<float>* data)
 {
-  add_method(path,std::string(data->size(),'f').c_str(),osc_set_vector_float,data);
+  add_method(path, std::string(data->size(), 'f').c_str(),
+             osc_set_vector_float_dbspl, data);
+}
+
+void osc_server_t::add_vector_float(const std::string& path,
+                                    std::vector<float>* data)
+{
+  add_method(path, std::string(data->size(), 'f').c_str(), osc_set_vector_float,
+             data);
+}
+
+void osc_server_t::add_vector_double(const std::string& path,
+                                     std::vector<double>* data)
+{
+  add_method(path, std::string(data->size(), 'f').c_str(),
+             osc_set_vector_double, data);
 }
 
 void osc_server_t::add_double_db(const std::string& path,double *data)
