@@ -42,6 +42,14 @@ SECTIONS=secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex sec
 FIGURES = filestructure.pdf creator.pdf
 #ap_sndfile.pdf
 
+ALLAPPS = $(sort $(subst .mk,,$(wildcard ../apps/build/tascar_*)))
+
+NOHELPAPPS = jackpar lsljacktime sendosc compare_level_sum	\
+	test_compare_sndfile tscupdate test_compare_level_sum
+
+ALLAPPNAMES = $(filter-out $(NOHELPAPPS),$(patsubst ../apps/build/tascar_%,%,$(ALLAPPS)))
+
+
 version.tex:
 	echo $(FULLVERSION) > $@
 
@@ -54,7 +62,7 @@ checkusetab: autodoc.txt
 checkundoc: checkusetab
 	if grep -e undocumented tab*.tex; then false; else true; fi
 
-manual.pdf: version.tex $(FIGURES) $(SECTIONS) acousticmodel.pdf callgraph.pdf manual.run5
+manual.pdf: clihelp.tex version.tex $(FIGURES) $(SECTIONS) acousticmodel.pdf callgraph.pdf manual.run5
 
 secmodules.tex: $(sort $(wildcard mod*.tex))
 	echo 'List of general purpose modules:\par\begin{itemize}' > $@;\
@@ -142,3 +150,23 @@ testundocumented: $(MODTEX:.tex=.documented)
 
 %.documented: %.tex
 	@test 0 != `cat $< | wc -w` || (echo "$<:0:"; false)
+
+clihelp.tex: $(patsubst %,cli_%.tex,$(ALLAPPNAMES)) Makefile
+	(echo '\section{Command line interfaces}';\
+	echo 'All command line applications of \tascar{} start with the prefix \verb!tascar_!.';\
+	echo ' To get a list of valid command line options, use the flag \verb!-h! or \verb!--help!.')>$@;\
+	for app in $(ALLAPPNAMES); do (\
+	texapp=$$(echo $${app}|sed 's/_/\\_/g');\
+	echo "\\subsection{tascar\_$${texapp}}";\
+	echo "\\index{tascar\_$${texapp}}";\
+	echo '';\
+	test -e clihelp_$${app}.tex && echo "\\input{clihelp_$${app}.tex}";\
+	echo '';\
+	echo "\\input{cli_$${app}.tex}";\
+	echo '';\
+	)>>$@; done;\
+
+
+
+cli_%.tex: ../apps/build/tascar_% Makefile
+	(echo ''; echo '\begin{lstlisting}[numbers=none]'; LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ $< -h;echo '\end{lstlisting}') > $@

@@ -34,3 +34,5 @@ version.tex
 *.run*
 tab*.tex
 autodoc.txt
+cli_*.tex
+clihelp.tex
