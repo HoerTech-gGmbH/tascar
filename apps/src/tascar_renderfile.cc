@@ -41,6 +41,7 @@ int main(int argc, char** argv)
                        "whole duration.");
     desc.add_options()("static", "render scene statically at the given time "
                                  "without updating the geometry");
+    desc.add_options()("dynamic,d", "render scene dynamically (now default anyway, for backward compatibility)");
     desc.add_options()("ismmin", po::value<int>()->default_value(0),
                        "Minimum order of image source model.");
     desc.add_options()("ismmax", po::value<int>()->default_value(-1),
@@ -82,6 +83,8 @@ int main(int argc, char** argv)
     double duration(vm["duration"].as<double>());
     // flag to increment time on each cycle:
     bool dynamic(vm.count("static") == 0);
+    if( vm.count("dynamic")>0)
+      dynamic = true;
     // fragment size, or -1 to use only a single fragment:
     uint32_t fragsize(vm["fragsize"].as<int>());
     // minimum ISM order:
