@@ -28,7 +28,15 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_hrtf_diffuse2 test_ir_delay test_ir_delay2		\
 	test_ir_delay3 test_snd_reverb test_wav_multichannel		\
 	test_snd_zeros test_ir_sub test_ir_sub_hoa2d test_ir_sub_nsp	\
-	test_ir_partconvrev test_ir_partconvrev_offset
+	test_ir_partconvrev test_ir_partconvrev_offset		\
+	test_ir_micarray_az0deg test_ir_micarray_az45deg		\
+	test_ir_micarray_az75deg test_ir_micarray_az90deg		\
+	test_ir_micarray_az105deg test_ir_micarray_az135deg		\
+	test_ir_micarray_az180deg test_ir_micarray_az225deg		\
+	test_ir_micarray_az270deg test_ir_micarray_az315deg		\
+	test_ir_micarray_el45deg test_ir_micarray_el90deg		\
+	test_ir_micarray_el-45deg test_ir_micarray_el-90deg		\
+	test_snd_diffuse_micarray
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
@@ -39,7 +47,7 @@ TEST_SND=$(wildcard test_snd*.tsc)
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
   vbap hoa2d ortf intensityvector vmic chmap hoa2d_fuma cardioidmod	\
-  debugpos hoa2d_fuma_hos wfs hrtf
+  debugpos hoa2d_fuma_hos wfs hrtf micarray
 
 
 

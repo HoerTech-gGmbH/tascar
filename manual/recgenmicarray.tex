@@ -1,0 +1,55 @@
+Microphone array simulation.
+
+This receiver implements a hierarchic parameteric multi-microphone (head-)model.
+The (relative) transfer functions are parameterized by a filter and a delay model.
+For each node of the hierarchic structure a delay model needs to be chosen (default
+freefield) a filter model can be defined by setting a single or multiple filter
+models. Multiple filter models are applied in a cascade. If no filter model is set,
+the transfer functions corresponds to a pure delay component.
+
+Two filter types are implemented:
+
+i) A High-Shelf Filter (\indattr{highshelf})
+The spatial design of this filter is an adopted version of the Spherical Head Model by
+\citet{BrownDuda}. As proposed by Brown and Duda, a first order high-shelf is created
+by the single pole-zero pair $s_p=-2\omega$ and $s_z=\frac{-2\omega}{\alpha(\theta)}$. 
+However, the design function $\alpha(\theta)$ is adopted and additional parameters are
+added to allow for a higher variablity of the filter design.
+Adaptation of the design function results in the following:
+$\alpha(\theta) = \left(\frac{\alpha_{st}}{2} + \frac{\alpha_m}{2}\right) +
+\left(\frac{\alpha_{st}}{2} - \frac{\alpha_m}{2}\rigth) \cdot
+\cos\left(\frac{\theta - \thetha{st}}{\beta\cdot(\pi - \theta_st)}\cdot\pi\right)$
+The four parameter \indattr{alpha\_st}, \indattr{alpha\_m}, \indattr{theta\_st} and
+\indattr{beta} of this filter type can be used to vary the course of the design function
+and thus the spatial design of the filter.
+Furthermore, the frequency \indattr{omega} is an additional parameter of this filter
+type. By varying the frequency \indattr{omega} the position of the pole and the zero are
+varied and the range in which the high-shelf is applied is adjusted.
+Moreover, the orientation \indattr{axis} of the filter can be chosen freely. The angle
+$\theta$ is then computed with respect to the specified orientation \indattr{axis}.
+
+ii) A Parametric Equalizer (\indattr{equalizer})
+With the aid of a second-order parametric equalizer a cut or boost can be created around
+a certain center frequency. The spatial design of the parametric equalizer is a simple
+linear variation in center frequency and gain. The design is defined with respect to a
+freely selectable orientation \indattr{axis}.
+The maximal gain is applied in the direction of this orientation \indattr{axis}. In order
+to have a smooth transition, the gain of the parametric equalizer is set to zero decibel
+at the starting angle \indattr{theta\_st} and the gain is linearly varied inbetween.
+The center frequency of the parametric equalizer is linearly varied between the starting
+value \indattr{omega\_st} at the starting angle \indattr{theta\_st} and the end value
+\indattr{omeg\_end} at the orientation \indattr{axis}.
+
+It can be chosen between two delay models:
+
+i) Free Field (\indattr{freefield})
+This delay model determines the delay between two microphones in the free field.
+
+ii) Sphere (\indattr{sphere})
+This delay models the delay of a microphone positioned on a sphere. The used formular is
+the modle proposed by \citet{BrownDuda} for modelling the interaural time delay for the
+Spherical Head Model.
+
+The delay model is applied with respect to the parent microphone.
+
+\input{tabreceivermicarray.tex}
