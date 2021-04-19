@@ -1,6 +1,6 @@
-#include <tascar/delayline.h>
-#include <tascar/errorhandling.h>
-#include <tascar/receivermod.h>
+#include "delayline.h"
+#include "errorhandling.h"
+#include "receivermod.h"
 
 class mic_processor_t;
 
