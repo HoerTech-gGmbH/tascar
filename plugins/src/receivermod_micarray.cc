@@ -65,7 +65,7 @@ filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
     e.GET_ATTRIBUTE(alpha_m, "", "alpha at theta = beta*(pi-theta_st)");
     filtertype = highshelf;
   } else
-    throw TASCAR::ErrMsg("Invalid filter type \"" + type + "\".");
+    throw TASCAR::ErrMsg("Invalid filter type \"" + type + "\", must be \"equalizer\" or \"highshelf\".");
 }
 
 void filter_model_t::update_par(TASCAR::biquad_t& flt,
