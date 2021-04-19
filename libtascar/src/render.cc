@@ -230,29 +230,29 @@ void TASCAR::render_core_t::process(uint32_t nframes,
                                     const std::vector<float*>& inBuffer,
                                     const std::vector<float*>& outBuffer)
 {
-  if( !active ){
-    for(unsigned int k=0;k<outBuffer.size();k++)
-      memset(outBuffer[k],0,sizeof(float)*nframes);
+  if(!active) {
+    for(unsigned int k = 0; k < outBuffer.size(); k++)
+      memset(outBuffer[k], 0, sizeof(float) * nframes);
     active_pointsources = 0;
     active_diffuse_sound_fields = 0;
     return;
   }
-  //std::cerr << this << " " << pcnt << std::endl;
-  //DEBUG(pcnt);
+  // std::cerr << this << " " << pcnt << std::endl;
+  // DEBUG(pcnt);
   //++pcnt;
-  if( pthread_mutex_trylock( &mtx_world ) == 0 ){
+  if(pthread_mutex_trylock(&mtx_world) == 0) {
     tictoc_t tic;
     /*
      * Initialization:
      */
-    //security/stability:
-    for(uint32_t ch=0;ch<inBuffer.size();ch++)
-      for(uint32_t k=0;k<nframes;k++)
+    // security/stability:
+    for(uint32_t ch = 0; ch < inBuffer.size(); ch++)
+      for(uint32_t k = 0; k < nframes; k++)
         make_friendly_number_limited(inBuffer[ch][k]);
     // clear output:
-    for(unsigned int k=0;k<outBuffer.size();k++)
-      memset(outBuffer[k],0,sizeof(float)*nframes);
-    for( auto it=receivers.begin();it!=receivers.end();++it)
+    for(unsigned int k = 0; k < outBuffer.size(); k++)
+      memset(outBuffer[k], 0, sizeof(float) * nframes);
+    for(auto it = receivers.begin(); it != receivers.end(); ++it)
       (*it)->clear_output();
     load_cycle.t_init = tic.toc();
     /*
@@ -266,36 +266,47 @@ void TASCAR::render_core_t::process(uint32_t nframes,
      */
     // update audio ports (e.g., for level metering):
     // fill inputs:
-    for(unsigned int k=0;k<sounds.size();k++){
-      //float gain(sounds[k]->get_gain());
+    for(unsigned int k = 0; k < sounds.size(); k++) {
+      // float gain(sounds[k]->get_gain());
       uint32_t numch(sounds[k]->n_channels);
-      TASCAR_ASSERT_EQ(numch,sounds[k]->n_channels);
-      for(uint32_t ch=0;ch<numch;ch++)
-        sounds[k]->inchannels[ch].copy(inBuffer[sounds[k]->get_port_index()+ch],nframes);
+      TASCAR_ASSERT_EQ(numch, sounds[k]->n_channels);
+      for(uint32_t ch = 0; ch < numch; ch++)
+        sounds[k]->inchannels[ch].copy(
+            inBuffer[sounds[k]->get_port_index() + ch], nframes);
       sounds[k]->process_plugins(tp);
       sounds[k]->apply_gain();
     }
-    for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it){
+    for(std::vector<diff_snd_field_obj_t*>::iterator it =
+            diff_snd_field_objects.begin();
+        it != diff_snd_field_objects.end(); ++it) {
       TASCAR::Acousticmodel::diffuse_t* psrc((*it)->get_source());
       float gain((*it)->get_gain());
-      ambbuf->w().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()]) );
-      ambbuf->x().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+1]) );
-      ambbuf->y().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+2]) );
-      ambbuf->z().copy( TASCAR::wave_t(nframes,inBuffer[(*it)->get_port_index()+3]) );
-      psrc->audio.rotate(*ambbuf,psrc->orientation,true);
-      psrc->preprocess( tp );
+      ambbuf->w().copy(
+          TASCAR::wave_t(nframes, inBuffer[(*it)->get_port_index()]));
+      ambbuf->x().copy(
+          TASCAR::wave_t(nframes, inBuffer[(*it)->get_port_index() + 1]));
+      ambbuf->y().copy(
+          TASCAR::wave_t(nframes, inBuffer[(*it)->get_port_index() + 2]));
+      ambbuf->z().copy(
+          TASCAR::wave_t(nframes, inBuffer[(*it)->get_port_index() + 3]));
+      psrc->audio.rotate(*ambbuf, psrc->orientation, true);
+      psrc->preprocess(tp);
       psrc->audio *= gain;
+    }
+    for(auto preverb : diffuse_reverbs) {
+      TASCAR::Acousticmodel::receiver_t* receiver(preverb);
+      receiver->external_gain = preverb->get_gain();
     }
     load_cycle.t_preproc = tic.toc();
     /*
      * Acoustic model:
      */
     // process world:
-    if( world ){
+    if(world) {
       world->process(tp);
       active_pointsources = world->get_active_pointsource();
       active_diffuse_sound_fields = world->get_active_diffuse_sound_field();
-    }else{
+    } else {
       active_pointsources = 0;
       active_diffuse_sound_fields = 0;
     }
@@ -303,27 +314,26 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     /*
      * Post-processing:
      */
-    for(unsigned int k=0;k<receivermod_objects.size();k++){
+    for(unsigned int k = 0; k < receivermod_objects.size(); k++) {
       float gain(receivermod_objects[k]->get_gain());
       uint32_t numch(receivermod_objects[k]->n_channels);
-      for(uint32_t ch=0;ch<numch;ch++)
-        receivermod_objects[k]->outchannels[ch].copy_to(outBuffer[receivermod_objects[k]->get_port_index()+ch],nframes,gain);
+      for(uint32_t ch = 0; ch < numch; ch++)
+        receivermod_objects[k]->outchannels[ch].copy_to(
+            outBuffer[receivermod_objects[k]->get_port_index() + ch], nframes,
+            gain);
     }
-    for( auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it){
-      TASCAR::Acousticmodel::receiver_t* receiver(*it);
-      TASCAR::Acousticmodel::diffuse_t* diffuse((*it)->get_source());
-      receiver->external_gain = (*it)->get_gain();
-      // for update of level meter:
-      diffuse->preprocess( tp );
+    for(auto preverb : diffuse_reverbs) {
+      TASCAR::Acousticmodel::diffuse_t* diffuse(preverb->get_source());
+      diffuse->preprocess(tp);
     }
     load_cycle.t_postproc = tic.toc();
-    //security/stability:
-    for(uint32_t ch=0;ch<outBuffer.size();ch++)
-      for(uint32_t k=0;k<nframes;k++)
+    // security/stability:
+    for(uint32_t ch = 0; ch < outBuffer.size(); ch++)
+      for(uint32_t k = 0; k < nframes; k++)
         make_friendly_number_limited(outBuffer[ch][k]);
-    load_cycle.normalize( t_fragment );
+    load_cycle.normalize(t_fragment);
     loadaverage.update(load_cycle);
-    pthread_mutex_unlock( &mtx_world );
+    pthread_mutex_unlock(&mtx_world);
   }
 }
 

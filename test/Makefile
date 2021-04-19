@@ -17,8 +17,8 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_wfs_noplanewave hoa3d test_fail_duplicatenames		\
 	test_fail_duplicatescenenames test_level_hoa2d_basic		\
 	test_level_hoa2d_maxre test_ir_reverb test_ir_simplefdn		\
-	test_snd_vbap3d_speakermatch test_ir_volumetric			\
-	test_pos_obstacle test_pos_obstacle_inner			\
+	test_ir_simplefdn_gain test_snd_vbap3d_speakermatch		\
+	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner	\
 	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg	\
 	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
@@ -252,7 +252,7 @@ jackconnect_%: test_connect%.tsc
 
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: TOL=4e-4
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: RMSTOL=1e-4
-test_ir_simplefdn: IRLEN=44100
+test_ir_simplefdn test_ir_simplefdn_gain: IRLEN=44100
 test_ir_reverb: IRLEN=44100
 test_ir_partconvrev: IRLEN=44100
 test_ir_partconvrev_offset: IRLEN=44100

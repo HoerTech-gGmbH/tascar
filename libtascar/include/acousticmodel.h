@@ -204,7 +204,7 @@ namespace TASCAR {
                                    receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
-                           double& distamnce, double& gain, bool b_img,
+                           double& distamnce, float& gain, bool b_img,
                            gainmodel_t gainmodel);
       void set_next_gain(double gain);
       void set_fade(double targetgain, double duration, double start = -1);
@@ -240,13 +240,14 @@ namespace TASCAR {
       bool active;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
       bool gain_zero;
-      double external_gain;
+      float external_gain;
       const bool is_reverb;
 
     private:
-      double x_gain;
-      double dx_gain;
-      double next_gain;
+      // gain state:
+      float x_gain;
+      // target gain:
+      float next_gain;
       // fade timer, is > 0 during fade:
       int32_t fade_timer;
       // time constant for fade:
@@ -319,7 +320,7 @@ namespace TASCAR {
                               ///< reflector
       pos_t get_effective_position(
           const pos_t& receiverp,
-          double& gain); ///< correct perceived position and caculate gain
+          float& gain); ///< correct perceived position and caculate gain
       uint32_t getorder()
           const; ///< Return image source order of sound path, 0 is direct path
       void apply_reflectionfilter(
@@ -355,7 +356,7 @@ namespace TASCAR {
        * @ingroup callgraph
        */
       uint32_t process(const TASCAR::transport_t& tp);
-      double get_gain() const { return gain; };
+      float get_gain() const { return gain; };
 
     protected:
       double c_;
@@ -374,13 +375,13 @@ namespace TASCAR {
       uint32_t chunksize;
       double dt;
       double distance;
-      double gain;
+      float gain;
       double dscale;
       double air_absorption;
       varidelay_t delayline;
       float airabsorption_state;
-      double layergain;
-      double dlayergain;
+      float layergain;
+      float dlayergain;
 
     public:
       uint32_t ismorder;
@@ -408,7 +409,7 @@ namespace TASCAR {
       amb1rotator_t audio;
       uint32_t chunksize;
       double dt;
-      double gain;
+      float gain;
     };
 
     /**
