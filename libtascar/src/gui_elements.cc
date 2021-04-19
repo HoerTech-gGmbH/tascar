@@ -718,7 +718,7 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       pos_t psrc(view((*iam)->position));
       pos_t prec(view((*iam)->receiver_->position));
       cr->save();
-      double gain_color(std::min(1.0,std::max(0.0,(*iam)->get_gain())));
+      float gain_color(std::min(1.0f,std::max(0.0f,(*iam)->get_gain())));
       if( gain_color < EPS )
         // sources with zero gain but active are shown in red:
         cr->set_source_rgba(1, 0, 0, 0.5 );
