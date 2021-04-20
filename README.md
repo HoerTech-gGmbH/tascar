@@ -43,3 +43,26 @@ Giso Grimm
 
 g.grimm@uni-oldenburg.de
 
+
+## Testing:
+
+C++ unit tests (gtest):
+
+````
+make unit-tests
+````
+
+Reproducibility test:
+
+````
+make test
+````
+
+Measure test coverage:
+
+````
+make clean cleancov
+make allwithcov
+make coverage
+````
+

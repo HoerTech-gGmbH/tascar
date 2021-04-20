@@ -174,6 +174,22 @@ TEST(xml_doc_t, failfromemptystring)
   EXPECT_EQ(false, success);
 }
 
+TEST(strrep,strrep)
+{
+  EXPECT_EQ("abc",TASCAR::strrep("xxxabcxxx","xxx",""));
+  EXPECT_EQ("xxxxxx",TASCAR::strrep("xxxabcxxx","abc",""));
+  EXPECT_EQ("111abc111",TASCAR::strrep("xxxabcxxx","x","1"));
+  EXPECT_EQ("xxxa12345xxx",TASCAR::strrep("xxxabcxxx","bc","12345"));
+}
+
+TEST(tostring,levelmeter)
+{
+  EXPECT_EQ("Z",TASCAR::to_string(TASCAR::levelmeter::Z));
+  EXPECT_EQ("A",TASCAR::to_string(TASCAR::levelmeter::A));
+  EXPECT_EQ("C",TASCAR::to_string(TASCAR::levelmeter::C));
+  EXPECT_EQ("bandpass",TASCAR::to_string(TASCAR::levelmeter::bandpass));
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

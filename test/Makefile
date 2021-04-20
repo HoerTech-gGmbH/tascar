@@ -228,6 +228,9 @@ all_init: $(patsubst %,init_%,$(TESTS))
 init_%: %.tsc
 	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
+init_test_ir%: test_ir%.tsc
+	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100
+
 clean:
 	rm -f *~ test*.wav gdbcmd
 
