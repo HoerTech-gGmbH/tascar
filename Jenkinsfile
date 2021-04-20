@@ -10,6 +10,9 @@ def tascar_build_steps(stage_name) {
     // Avoid that artifacts from previous builds influence this build
     sh "git reset --hard && git clean -ffdx"
 
+    // get tags from public repo:
+    sh "git fetch --tags https://github.com/HoerTech-gGmbH/tascar"
+
     // Autodetect libs/compiler
     sh "make pack"
 
