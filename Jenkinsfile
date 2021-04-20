@@ -10,6 +10,9 @@ def tascar_build_steps(stage_name) {
     // Avoid that artifacts from previous builds influence this build
     sh "git reset --hard && git clean -ffdx"
 
+    // fetch tags for correct build number calculation:
+    sh "git fetch --tags"
+
     // Autodetect libs/compiler
     sh "make pack"
 
