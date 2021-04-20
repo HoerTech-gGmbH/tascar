@@ -60,6 +60,12 @@
     <receiver type="omni" name="omni"/>
     <receiver type="ortf" name="ortf"/>
     <receiver type="vmic" name="vmic"/>
+    <receiver type="micarray" name="micarray">
+      <mic>
+	<filter type="equalizer"/>
+	<filter type="highshelf"/>
+      </mic>
+    </receiver>
     <!-- speaker based -->
     <receiver type="hann" name="hann" layout="doclayout2d.spk"/>
     <receiver type="hoa2d" name="hoa2d" layout="doclayout2d.spk"/>

@@ -15,10 +15,12 @@ configure_file(
         "${CMAKE_CURRENT_LIST_DIR}/tascarver.h.in"
         "${CMAKE_CURRENT_LIST_DIR}/include/tascarver.h"
 )
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
-
+set(CMAKE_WARN_DEPRECATED FALSE)
+if(APPLE)
+    include(${CMAKE_CURRENT_LIST_DIR}/../cmake/FixAppleArchitecture.cmake)
+endif(APPLE)
 
 ### SOURCE FILE MANAGEMENT
 file(GLOB LIB_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
@@ -106,10 +108,12 @@ add_compile_definitions(CMAKE)
 
 ### TARGETS
 # libtascar
-add_library(tascar STATIC ${LIB_SOURCES})
-target_include_directories(tascar
-        PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+add_library(Tascar STATIC ${LIB_SOURCES})
+add_library(Tascar::Tascar ALIAS Tascar)
+target_include_directories(Tascar
+        PUBLIC
+        $<INSTALL_INTERFACE:include> 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         ${LIBSNDFILE_INCLUDE_DIRS}
         ${LIBSAMPLERATE_INCLUDE_DIRS}
         ${FFTW_INCLUDE_DIRS}
@@ -118,26 +122,26 @@ target_include_directories(tascar
         ${JACK_INCLUDE_DIRS}
         ${LIBLO_INCLUDE_DIRS}
         )
-target_link_libraries(tascar
+target_link_libraries(Tascar
         PRIVATE
         Threads::Threads
+        ${CMAKE_DL_LIBS}
+        PUBLIC
         XercesC::XercesC
         ${LIBLO_LIBRARIES}
         ${LIBSNDFILE_LIBRARIES}
         ${LIBSAMPLERATE_LIBRARIES}
         ${FFTW_LIBRARIES}
         ${GSL_LIBRARIES}
-        ${CMAKE_DL_LIBS}
         ${JACK_LIBRARIES}
         )
-set_target_properties(tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
-set(TARGETS_EXPORT_NAME tascarTarget)
-set(INCLUDE_INSTALL_DIR include/tascar CACHE PATH "Install path for include files")
+
+set(TARGETS_EXPORT_NAME TascarTarget)
+set_target_properties(Tascar PROPERTIES PUBLIC_HEADER "${LIB_HEADER}")
 configure_package_config_file(
         "${CMAKE_CURRENT_LIST_DIR}/cmake/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/tascarConfig.cmake"
         INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
-        PATH_VARS INCLUDE_INSTALL_DIR
 )
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/tascarConfigVersion.cmake"
@@ -145,7 +149,7 @@ write_basic_package_version_file(
         COMPATIBILITY SameMajorVersion
 )
 install(
-        TARGETS tascar
+        TARGETS Tascar
         EXPORT "${TARGETS_EXPORT_NAME}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -159,32 +163,31 @@ install(
 )
 install(
         EXPORT "${TARGETS_EXPORT_NAME}"
-        NAMESPACE "tascar::"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
+        NAMESPACE "Tascar::"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Tascar"
 )
 
 # libtascargui
 if (GTK3_FOUND)
-    add_library(tascargui SHARED ${UI_SOURCES})
-    target_compile_definitions(tascargui PRIVATE -DGTKMM30)
-    target_include_directories(tascargui
+    add_library(Gui SHARED ${UI_SOURCES})
+    add_library(Tascar::Gui ALIAS Gui)
+    target_compile_definitions(Gui PRIVATE -DGTKMM30)
+    target_include_directories(Gui
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             PUBLIC
-            #${JACK_INCLUDE_DIRS}
             ${GTK3_INCLUDE_DIRS}
             )
-    target_link_libraries(tascargui
+    target_link_libraries(Gui
             PRIVATE
             Threads::Threads
             PUBLIC
-            tascar
+            Tascar::Tascar
             XercesC::XercesC
-            #${JACK_LIBRARIES}
             ${GTK3_LIBRARIES}
             )
     install(
-            TARGETS tascargui
+            TARGETS Gui
             EXPORT "${TARGETS_EXPORT_NAME}"
             LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -196,18 +199,19 @@ endif ()
 
 if (Linux)
     # libtascardmx
-    add_library(tascardmx SHARED ${DMX_SOURCES})
-    target_include_directories(tascardmx
+    add_library(DMX SHARED ${DMX_SOURCES})
+    add_library(Tascar::DMX ALIAS DMX)
+    target_include_directories(DMX
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             )
-    target_link_libraries(tascardmx
+    target_link_libraries(DMX
             PUBLIC
-            tascar
+            Tascar::Tascar
             )
 
     install(
-            TARGETS tascardmx
+            TARGETS DMX
             EXPORT "${TARGETS_EXPORT_NAME}"
             LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -221,21 +225,21 @@ if (Linux)
     )
     install(
             EXPORT "${TARGETS_EXPORT_NAME}"
-            NAMESPACE "tascar::"
+            NAMESPACE "Tascar::"
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/tascar"
     )
 endif ()
 
 if (LINUX)
-    if (TARGET tascargui)
-        export(TARGETS tascar tascargui tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
+    if (TARGET Gui)
+        export(TARGETS Tascar Gui DMX NAMESPACE Tascar:: FILE TascarTarget.cmake)
     elseif ()
-        export(TARGETS tascar tascardmx NAMESPACE tascar:: FILE tascarTarget.cmake)
+        export(TARGETS Tascar DMX NAMESPACE Tascar:: FILE TascarTarget.cmake)
     endif ()
 else ()
-    if (TARGET tascargui)
-        export(TARGETS tascar tascargui NAMESPACE tascar:: FILE tascarTarget.cmake)
+    if (TARGET Gui)
+        export(TARGETS Tascar Gui NAMESPACE Tascar:: FILE TascarTarget.cmake)
     elseif ()
-        export(TARGETS tascar NAMESPACE tascar:: FILE tascarTarget.cmake)
+        export(TARGETS Tascar NAMESPACE Tascar:: FILE TascarTarget.cmake)
     endif ()
 endif ()

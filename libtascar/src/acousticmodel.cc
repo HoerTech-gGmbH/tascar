@@ -121,9 +121,9 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
     if(visible) {
       pos_t prel;
       double nextdistance(0.0);
-      double nextgain(1.0);
+      float nextgain(1.0);
       // calculate relative geometry between source and receiver:
-      double srcgainmod(1.0);
+      float srcgainmod(1.0);
       // update effective position/calculate ISM geometry:
       position = get_effective_position(receiver_->position, srcgainmod);
       // read audio from source, update radation position:
@@ -207,6 +207,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           current_sample = airabsorption_state;
         }
       }
+      gain = nextgain;
       if(((gain != 0) || (dgain != 0))) {
         if(src_->minlevel > 0) {
           if(audio.rms() <= src_->minlevel)
@@ -437,7 +438,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
 {
   pos_t prel;
   double d(0.0);
-  double nextgain(1.0);
+  float nextgain(1.0);
   // calculate relative geometry between source and receiver:
   receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain,false,GAIN_INVR);
   shoebox_t box(*src_);
@@ -459,6 +460,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
         audio.z()[k] *= gain;
       }
     }
+    gain = nextgain;
     if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero)  &&
         (receiver_->layers & src_->layers) ){
       audio *= receiver_->diffusegain;
@@ -493,7 +495,6 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
     external_gain(1.0),
     is_reverb(is_reverb_),
     x_gain(1.0),
-    dx_gain(0),
     next_gain(1.0),
     fade_timer(0),
     fade_rate(1),
@@ -617,10 +618,13 @@ void receiver_t::add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_ba
   receivermod_t::add_diffuse_sound_field(chunk,outchannels,data);
 }
 
-void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img, gainmodel_t gainmodel )
+void receiver_t::update_refpoint(const pos_t& psrc_physical,
+                                 const pos_t& psrc_virtual, pos_t& prel,
+                                 double& distance, float& gain, bool b_img,
+                                 gainmodel_t gainmodel)
 {
-  
-  if( volumetric.has_volume() ){
+
+  if(volumetric.has_volume()) {
     prel = psrc_physical;
     prel -= position;
     prel /= orientation;
@@ -628,33 +632,34 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     shoebox_t box;
     box.size = volumetric;
     double d(box.nextpoint(prel).norm());
-    if( falloff > 0 )
-      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d/falloff)))/std::max(0.1,avgdist);
-    else{
-      switch( gainmodel ){
-      case GAIN_INVR :
-        gain = 1.0/std::max(1.0,d+avgdist);
+    if(falloff > 0)
+      gain = (0.5 + 0.5 * cos(M_PI * std::min(1.0, d / falloff))) /
+             std::max(0.1, avgdist);
+    else {
+      switch(gainmodel) {
+      case GAIN_INVR:
+        gain = 1.0 / std::max(1.0, d + avgdist);
         break;
-      case GAIN_UNITY :
-        gain = 1.0/std::max(1.0,avgdist);
+      case GAIN_UNITY:
+        gain = 1.0 / std::max(1.0, avgdist);
         break;
       }
     }
-  }else{
+  } else {
     prel = psrc_virtual;
     prel -= position;
     prel /= orientation;
     distance = prel.norm();
-    switch( gainmodel ){
-    case GAIN_INVR :
-      gain = 1.0/std::max(0.1,distance);
+    switch(gainmodel) {
+    case GAIN_INVR:
+      gain = 1.0 / std::max(0.1, distance);
       break;
-    case GAIN_UNITY :
+    case GAIN_UNITY:
       gain = 1.0;
       break;
     }
-    double physical_dist(TASCAR::distance(psrc_physical,position));
-    if( b_img && (physical_dist > distance) ){
+    double physical_dist(TASCAR::distance(psrc_physical, position));
+    if(b_img && (physical_dist > distance)) {
       gain = 0.0;
     }
   }
@@ -669,11 +674,11 @@ void receiver_t::set_next_gain(double g)
 
 void receiver_t::apply_gain()
 {
-  dx_gain = (next_gain - x_gain) * t_inc;
+  float dx_gain = (next_gain - x_gain) * t_inc;
   if(n_channels > 0) {
     uint32_t psize(outchannels[0].size());
     for(uint32_t k = 0; k < psize; k++) {
-      double g(x_gain += dx_gain);
+      float g(x_gain += dx_gain);
       if((fade_timer > 0) &&
          ((fade_startsample == FADE_START_NOW) ||
           ((fade_startsample <= ltp.session_time_samples + k) &&
@@ -691,6 +696,7 @@ void receiver_t::apply_gain()
       }
     }
   }
+  x_gain = next_gain;
 }
 
 void receiver_t::set_fade(double targetgain, double duration, double start)
@@ -892,7 +898,7 @@ void soundpath_t::apply_reflectionfilter( TASCAR::wave_t& audio )
   }
 }
 
-pos_t soundpath_t::get_effective_position( const pos_t& p_rec, double& gain )
+pos_t soundpath_t::get_effective_position( const pos_t& p_rec, float& gain )
 {
   if( !reflector )
     return position;
