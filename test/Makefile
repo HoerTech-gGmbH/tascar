@@ -9,13 +9,11 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_spkcorr test_snd_calib1 test_snd_calib2			\
 	test_snd_vbap51 test_snd_pink test_snd_sndfile			\
 	test_snd_sndfile2 test_snd_door4 test_snd_roommic		\
-	test_fail_vbap3d_flat test_notfail_vbap3d_3d			\
 	test_level_vbap3d test_ir_ortf_0deg test_ir_ortf_55deg		\
 	test_ir_scatter test_ir_noscatter test_ir_scatter_ortf		\
 	test_snd_sourcedir_generic test_snd_sourcedir_generic1		\
 	test_snd_sourcedir_generic_cardioid test_ir_wfs			\
-	test_ir_wfs_noplanewave hoa3d test_fail_duplicatenames		\
-	test_fail_duplicatescenenames test_level_hoa2d_basic		\
+	test_ir_wfs_noplanewave hoa3d test_level_hoa2d_basic		\
 	test_level_hoa2d_maxre test_ir_reverb test_ir_simplefdn		\
 	test_ir_simplefdn_gain test_snd_vbap3d_speakermatch		\
 	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner	\
@@ -28,7 +26,7 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_hrtf_diffuse2 test_ir_delay test_ir_delay2		\
 	test_ir_delay3 test_snd_reverb test_wav_multichannel		\
 	test_snd_zeros test_ir_sub test_ir_sub_hoa2d test_ir_sub_nsp	\
-	test_ir_partconvrev test_ir_partconvrev_offset		\
+	test_ir_partconvrev test_ir_partconvrev_offset			\
 	test_ir_micarray_az0deg test_ir_micarray_az45deg		\
 	test_ir_micarray_az75deg test_ir_micarray_az90deg		\
 	test_ir_micarray_az105deg test_ir_micarray_az135deg		\
@@ -37,6 +35,9 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_micarray_el45deg test_ir_micarray_el90deg		\
 	test_ir_micarray_el-45deg test_ir_micarray_el-90deg		\
 	test_snd_diffuse_micarray
+
+TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
+	test_fail_duplicatenames test_fail_duplicatescenenames
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
@@ -74,7 +75,7 @@ FAILING_TESTS = test_ir5
 TOL = 2e-7
 RMSTOL = 2e-7
 
-all: $(TESTS) testrec testlev
+all: $(TESTS) $(TEST_FAIL) testrec testlev
 
 jack: $(TEST_JACK)
 
@@ -222,10 +223,10 @@ valgrind_%: %.tsc
 	$(LIBPATH) valgrind  $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 
-all_init: $(patsubst %,init_%,$(TEST_SND:.tsc=))
+all_init: $(patsubst %,init_%,$(TESTS))
 
 init_%: %.tsc
-	$(LIBPATH) valgrind --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 clean:
 	rm -f *~ test*.wav gdbcmd
