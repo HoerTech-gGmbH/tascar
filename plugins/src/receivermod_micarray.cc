@@ -36,12 +36,18 @@ private:
   double gain_m;
 };
 
+#define CHECKNAN(x)                                                            \
+  if(!(x < HUGE_VAL))                                                          \
+  throw TASCAR::ErrMsg("No value for \"" #x "\" was given.")
+
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
-    : axis(0,0,0), theta_st(0), beta(2.62), omega(4025), alpha_st(2), alpha_m(0.1),
-      omega_st(1300), omega_end(650), Q(2.3), gain_m(-5.4)
+    : axis(0, 0, 0), theta_st(HUGE_VAL), beta(HUGE_VAL), omega(HUGE_VAL),
+      alpha_st(HUGE_VAL), alpha_m(HUGE_VAL), omega_st(HUGE_VAL),
+      omega_end(HUGE_VAL), Q(HUGE_VAL), gain_m(HUGE_VAL)
 {
   TASCAR::xml_element_t e(xmlsrc);
-  e.GET_ATTRIBUTE(axis, "","orientation axis for filter parameter "
+  e.GET_ATTRIBUTE(axis, "",
+                  "orientation axis for filter parameter "
                   "variation relative to receiver orientation");
   axis.normalize();
   std::string type;
@@ -49,25 +55,36 @@ filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
   if(type == "equalizer") {
     e.GET_ATTRIBUTE(theta_st, "rad",
                     "angle from which on the gain is increased linearly");
+    CHECKNAN(theta_st);
     e.GET_ATTRIBUTE(omega_st, "Hz",
                     "center frequency of boost/cut at theta = theta_st");
+    CHECKNAN(omega_st);
     e.GET_ATTRIBUTE(omega_end, "Hz",
                     "center frequency of boost/cut at theta =  pi");
+    CHECKNAN(omega_end);
     e.GET_ATTRIBUTE(Q, "", "quality factor of the boost/cut");
+    CHECKNAN(Q);
     e.GET_ATTRIBUTE(gain_m, "dB",
                     "maximal gain which is reached at theta = pi");
+    CHECKNAN(gain_m);
     filtertype = equalizer;
   } else if(type == "highshelf") {
     e.GET_ATTRIBUTE(theta_st, "rad",
                     "angle at which the zero position starts to vary");
+    CHECKNAN(theta_st);
     e.GET_ATTRIBUTE(beta, "",
                     "parameter to determine angle at which alpha = alpha_m");
+    CHECKNAN(beta);
     e.GET_ATTRIBUTE(omega, "Hz", "cut-off frequency of high-shelf");
+    CHECKNAN(omega);
     e.GET_ATTRIBUTE(alpha_st, "", "alpha for all theta < theta_st");
+    CHECKNAN(alpha_st);
     e.GET_ATTRIBUTE(alpha_m, "", "alpha at theta = beta*(pi-theta_st)");
+    CHECKNAN(alpha_m);
     filtertype = highshelf;
   } else
-    throw TASCAR::ErrMsg("Invalid filter type \"" + type + "\", must be \"equalizer\" or \"highshelf\".");
+    throw TASCAR::ErrMsg("Invalid filter type \"" + type +
+                         "\", must be \"equalizer\" or \"highshelf\".");
 }
 
 void filter_model_t::update_par(TASCAR::biquad_t& flt,

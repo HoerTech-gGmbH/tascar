@@ -37,7 +37,8 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd_diffuse_micarray
 
 TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
-	test_fail_duplicatenames test_fail_duplicatescenenames
+	test_fail_duplicatenames test_fail_duplicatescenenames	\
+	test_fail_ir_micarray
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
