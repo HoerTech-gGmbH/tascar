@@ -37,6 +37,8 @@ private:
 };
 
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
+    : axis(0,0,0), theta_st(0), beta(2.62), omega(4025), alpha_st(2), alpha_m(0.1),
+      omega_st(1300), omega_end(650), Q(2.3), gain_m(-5.4)
 {
   TASCAR::xml_element_t e(xmlsrc);
   e.GET_ATTRIBUTE(axis, "","orientation axis for filter parameter "
