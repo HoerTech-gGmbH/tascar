@@ -23,17 +23,19 @@ private:
   // Model parameters, initialized from XML file:
   TASCAR::pos_t axis;
   filtertype_t filtertype;
-  double theta_st;
   // high-shelf parameters
+  double theta_st;
   double beta;
   double omega;
   double alpha_st;
   double alpha_m;
   // equalizer parameters
+  double theta_end;
+  double gain_st;
+  double gain_end;
   double omega_st;
   double omega_end;
   double Q;
-  double gain_m;
 };
 
 #define CHECKNAN(x)                                                            \
@@ -42,8 +44,8 @@ private:
 
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
     : axis(0, 0, 0), theta_st(HUGE_VAL), beta(HUGE_VAL), omega(HUGE_VAL),
-      alpha_st(HUGE_VAL), alpha_m(HUGE_VAL), omega_st(HUGE_VAL),
-      omega_end(HUGE_VAL), Q(HUGE_VAL), gain_m(HUGE_VAL)
+      alpha_st(HUGE_VAL), alpha_m(HUGE_VAL), theta_end(HUGE_VAL), gain_st(HUGE_VAL),
+      gain_end(HUGE_VAL), omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
 {
   TASCAR::xml_element_t e(xmlsrc);
   e.GET_ATTRIBUTE(axis, "",
@@ -53,20 +55,18 @@ filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
   std::string type;
   e.GET_ATTRIBUTE(type, "", "filter model type");
   if(type == "equalizer") {
-    e.GET_ATTRIBUTE(theta_st, "rad",
-                    "angle from which on the gain is increased linearly");
-    CHECKNAN(theta_st);
-    e.GET_ATTRIBUTE(omega_st, "Hz",
-                    "center frequency of boost/cut at theta = theta_st");
+    e.GET_ATTRIBUTE(theta_end, "rad", "angle until which the gain is varied");
+    CHECKNAN(theta_end);
+    e.GET_ATTRIBUTE(gain_st, "dB", "gain applied at theta = 0 rad");
+    CHECKNAN(gain_st);
+    e.GET_ATTRIBUTE(gain_end, "dB", "gain applied for all theta >= theta_end");
+    CHECKNAN(gain_end);
+    e.GET_ATTRIBUTE(omega_st, "Hz", "center frequency at theta = 0 rad");
     CHECKNAN(omega_st);
-    e.GET_ATTRIBUTE(omega_end, "Hz",
-                    "center frequency of boost/cut at theta =  pi");
+    e.GET_ATTRIBUTE(omega_end, "Hz", "center frequency for theta >= theta_end");
     CHECKNAN(omega_end);
-    e.GET_ATTRIBUTE(Q, "", "quality factor of the boost/cut");
+    e.GET_ATTRIBUTE(Q, "", "quality factor");
     CHECKNAN(Q);
-    e.GET_ATTRIBUTE(gain_m, "dB",
-                    "maximal gain which is reached at theta = pi");
-    CHECKNAN(gain_m);
     filtertype = equalizer;
   } else if(type == "highshelf") {
     e.GET_ATTRIBUTE(theta_st, "rad",
@@ -94,33 +94,31 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
   // filter design of parametric equalizer
   case equalizer: {
     double theta = acos(dot_prod(rel_pos.normal(), axis));
-    if(theta < theta_st) {
-      // linear gain (dB) variation
-      double gain = gain_m * (theta_st - theta) / theta_st;
-      // linear center frequency variation
-      double Omega =
-          (theta_st - theta) / theta_st * (omega_end - omega_st) + omega_st;
-      // bilinear transformation
-      double t = 1.0 / tan(M_PI * Omega / fs);
-      double t_sq = t * t;
-      double Bc = t / Q;
-      if(gain < 0.0) {
-        double g = pow(10.0, (-gain / 20.0));
-        double inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
-        flt.set_coefficients(
-            2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - g * Bc) * inv_a0,
-            (t_sq + 1.0 + Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
-            (t_sq + 1.0 - Bc) * inv_a0);
-      } else {
-        double g = pow(10.0, (gain / 20.0));
-        double inv_a0 = 1.0 / (t_sq + 1.0 + Bc);
-        flt.set_coefficients(
-            2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
-            (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
-            (t_sq + 1.0 - g * Bc) * inv_a0);
-      }
-    } else
-      flt.set_coefficients(0.0, 0.0, 1.0, 0.0, 0.0);
+    // gain (dB) variation
+    double gain = (cos(std::min(theta/theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
+                  (gain_st - gain_end) + gain_end;
+    // center frequency variation
+    double Omega = (cos(std::min(theta/theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
+                   (omega_st - omega_end) + omega_end;
+    // bilinear transformation
+    double t = 1.0 / tan(M_PI * Omega / fs);
+    double t_sq = t * t;
+    double Bc = t / Q;
+    if(gain < 0.0) {
+      double g = pow(10.0, (-gain / 20.0));
+      double inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
+      flt.set_coefficients(
+          2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - g * Bc) * inv_a0,
+          (t_sq + 1.0 + Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
+          (t_sq + 1.0 - Bc) * inv_a0);
+    } else {
+      double g = pow(10.0, (gain / 20.0));
+      double inv_a0 = 1.0 / (t_sq + 1.0 + Bc);
+      flt.set_coefficients(
+          2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
+          (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
+          (t_sq + 1.0 - g * Bc) * inv_a0);
+    }
     break;
   }
   // filterdesign of high-shelf filter
