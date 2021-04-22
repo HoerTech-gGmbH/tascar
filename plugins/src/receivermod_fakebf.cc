@@ -18,7 +18,7 @@ public:
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void configure();
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
 private:
   double distance;
   double angle;
@@ -115,7 +115,7 @@ void ortf_t::configure()
   labels.push_back("_r");
 }
 
-TASCAR::receivermod_base_t::data_t* ortf_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* ortf_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t(srate,fragsize,distance,c,sincorder);
 }

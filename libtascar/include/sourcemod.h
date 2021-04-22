@@ -46,7 +46,7 @@ namespace TASCAR {
     virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
     virtual bool read_source_diffuse(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
     virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
-    virtual sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize) { return NULL;};
+    virtual sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const = 0;
     virtual void configure();
   protected:
   };
@@ -60,7 +60,7 @@ namespace TASCAR {
     virtual std::vector<std::string> get_connections() const;
     virtual void configure();
     virtual void release();
-    virtual sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+    virtual sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   private:
     sourcemod_t(const sourcemod_t&);
     std::string sourcetype;

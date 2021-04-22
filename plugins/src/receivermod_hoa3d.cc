@@ -19,7 +19,7 @@ public:
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
   void postproc(std::vector<TASCAR::wave_t>& output);
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
   int32_t order;
   std::string method;
   std::string dectype;
@@ -122,8 +122,8 @@ void hoa3d_dec_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_speaker_t::postproc(output);
 }
 
-TASCAR::receivermod_base_t::data_t* hoa3d_dec_t::create_data(double srate,
-                                                             uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* hoa3d_dec_t::create_state_data(double srate,
+                                                             uint32_t fragsize) const
 {
   return new data_t(channels);
 }

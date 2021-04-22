@@ -23,7 +23,7 @@ public:
   ~ortf_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   virtual void configure();
   virtual void release( );
   virtual void postproc( std::vector<TASCAR::wave_t>& output );
@@ -63,6 +63,9 @@ ortf_t::data_t::data_t(double srate,uint32_t chunksize,double maxdist,double c,u
 void ortf_t::configure()
 {
   TASCAR::receivermod_base_t::configure();
+  wpow = log(exp(-M_PI*f6db/f_sample))/log(0.5);
+  //wmin = pow(exp(-M_PI*fmin/srate),wpow);
+  wmin = exp(-M_PI*fmin/f_sample);
   n_channels = 2;
   // initialize decorrelation filter:
   decorrflt.clear();
@@ -209,11 +212,8 @@ void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vecto
   }
 }
 
-TASCAR::receivermod_base_t::data_t* ortf_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* ortf_t::create_state_data(double srate,uint32_t fragsize) const
 {
-  wpow = log(exp(-M_PI*f6db/srate))/log(0.5);
-  //wmin = pow(exp(-M_PI*fmin/srate),wpow);
-  wmin = exp(-M_PI*fmin/srate);
   return new data_t(srate,fragsize,distance,c,sincorder);
 }
 

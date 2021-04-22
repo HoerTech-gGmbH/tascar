@@ -409,7 +409,7 @@ public:
                                receivermod_base_t::data_t*);
   void configure();
   void add_variables(TASCAR::osc_server_t* srv);
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
   void validate_attributes(std::string&) const;
   double get_delay_comp() const;
 
@@ -470,7 +470,7 @@ void micarray_t::configure()
 }
 
 TASCAR::receivermod_base_t::data_t*
-micarray_t::create_data(double srate, uint32_t fragsize)
+micarray_t::create_state_data(double srate, uint32_t fragsize) const
 {
   if(!is_prepared())
     throw TASCAR::ErrMsg(std::string(__FILE__) + ":" +

@@ -24,7 +24,7 @@ public:
   public:
     /*
       A receiver module needs to provide a data class which is keeping
-      the internal state for each source. The create_data() method
+      the internal state for each source. The create_state_data() method
       will be called to generate instances of this type. The data will
       be cleaned up automatically in the end.
      */
@@ -43,7 +43,7 @@ public:
   void configure();
   // register OSC variables:
   void add_variables(TASCAR::osc_server_t* srv);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
 private:
   double start_angle; //< start angle in radians
 };
@@ -113,7 +113,7 @@ void receiverexample_t::configure()
   // this plugin, e.g., fragment size or sampling rate.
 }
 
-TASCAR::receivermod_base_t::data_t* receiverexample_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* receiverexample_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t();
 }

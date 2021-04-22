@@ -73,15 +73,12 @@ namespace TASCAR {
     {
       return std::vector<std::string>();
     };
-    virtual receivermod_base_t::data_t* create_data(double srate,
-                                                    uint32_t fragsize)
+    virtual receivermod_base_t::data_t* create_state_data(double srate,
+                                                          uint32_t fragsize) const = 0;
+    virtual receivermod_base_t::data_t* create_diffuse_state_data(double srate,
+                                                                  uint32_t fragsize) const
     {
-      return NULL;
-    };
-    virtual receivermod_base_t::data_t* create_diffuse_data(double srate,
-                                                            uint32_t fragsize)
-    {
-      return create_data(srate, fragsize);
+      return create_state_data(srate, fragsize);
     };
 
     virtual void add_variables(TASCAR::osc_server_t* srv){};
@@ -112,6 +109,7 @@ namespace TASCAR {
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
     virtual std::string get_spktypeid() const;
+    virtual std::vector<TASCAR::pos_t> get_rE(std::vector<TASCAR::pos_t> srcpos) const;
     TASCAR::spk_array_diff_render_t spkpos;
     std::vector<std::string> typeidattr;
   };
@@ -131,10 +129,10 @@ namespace TASCAR {
     virtual std::vector<std::string> get_connections() const;
     void configure();
     void release();
-    virtual receivermod_base_t::data_t* create_data(double srate,
-                                                    uint32_t fragsize);
-    virtual receivermod_base_t::data_t* create_diffuse_data(double srate,
-                                                            uint32_t fragsize);
+    virtual receivermod_base_t::data_t* create_state_data(double srate,
+                                                    uint32_t fragsize) const;
+    virtual receivermod_base_t::data_t* create_diffuse_state_data(double srate,
+                                                            uint32_t fragsize) const;
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
     virtual double get_delay_comp() const;

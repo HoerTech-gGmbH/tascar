@@ -55,6 +55,7 @@ public:
   bool is_prepared() const { return is_prepared_; };
   const chunk_cfg_t& inputcfg() const { return inputcfg_; };
   chunk_cfg_t& cfg() { return *(chunk_cfg_t*)this; };
+  const chunk_cfg_t& cfg() const { return *(chunk_cfg_t*)this; };
 protected:
   virtual void configure() {};
 private:

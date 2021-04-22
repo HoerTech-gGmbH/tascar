@@ -89,15 +89,15 @@ void TASCAR::receivermod_t::release()
 }
 
 TASCAR::receivermod_base_t::data_t*
-TASCAR::receivermod_t::create_data(double srate, uint32_t fragsize)
+TASCAR::receivermod_t::create_state_data(double srate, uint32_t fragsize) const
 {
-  return libdata->create_data(srate, fragsize);
+  return libdata->create_state_data(srate, fragsize);
 }
 
 TASCAR::receivermod_base_t::data_t*
-TASCAR::receivermod_t::create_diffuse_data(double srate, uint32_t fragsize)
+TASCAR::receivermod_t::create_diffuse_state_data(double srate, uint32_t fragsize) const
 {
-  return libdata->create_diffuse_data(srate, fragsize);
+  return libdata->create_diffuse_state_data(srate, fragsize);
 }
 
 TASCAR::receivermod_t::~receivermod_t()
@@ -227,6 +227,16 @@ void TASCAR::receivermod_base_speaker_t::release()
 {
   receivermod_base_t::release();
   spkpos.release();
+}
+
+std::vector<TASCAR::pos_t> TASCAR::receivermod_base_speaker_t::get_rE(
+    std::vector<TASCAR::pos_t> srcpos) const
+{
+  if(!is_prepared())
+    throw TASCAR::ErrMsg("not in configured state. unable to calculate "
+                         "get_rE() of an unconfigured receiver.");
+  TASCAR::receivermod_base_t::data_t* sd(create_state_data(f_sample, n_fragment));
+  return srcpos;
 }
 
 /*

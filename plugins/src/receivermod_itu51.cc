@@ -53,7 +53,7 @@ public:
   virtual ~rec_itu51_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   void configure();
   void release( );
   void postproc( std::vector<TASCAR::wave_t>& output );
@@ -261,7 +261,7 @@ void rec_itu51_t::add_pointsource( const TASCAR::pos_t& prel,
   output[3] += chunk;
 }
 
-TASCAR::receivermod_base_t::data_t* rec_itu51_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* rec_itu51_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t(spkpos.size());
 }

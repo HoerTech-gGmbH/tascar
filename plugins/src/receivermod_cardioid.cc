@@ -9,37 +9,49 @@ public:
     double dt;
   };
   cardioid_t(tsccfg::node_t xmlsrc);
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  void add_pointsource(const TASCAR::pos_t& prel, double width,
+                       const TASCAR::wave_t& chunk,
+                       std::vector<TASCAR::wave_t>& output,
+                       receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                               std::vector<TASCAR::wave_t>& output,
+                               receivermod_base_t::data_t*);
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   void configure() { n_channels = 1; };
 };
 
 cardioid_t::data_t::data_t(uint32_t chunksize)
 {
   azgain = 0;
-  dt = 1.0/std::max(1.0,(double)chunksize);
+  dt = 1.0 / std::max(1.0, (double)chunksize);
 }
 
 cardioid_t::cardioid_t(tsccfg::node_t xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc)
+    : TASCAR::receivermod_base_t(xmlsrc)
 {
 }
 
-void cardioid_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void cardioid_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+                                 const TASCAR::wave_t& chunk,
+                                 std::vector<TASCAR::wave_t>& output,
+                                 receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
-  float dazgain((0.5*cos(prel.azim())+0.5 - d->azgain)*d->dt);
-  for(uint32_t k=0;k<chunk.size();k++)
-    output[0][k] += chunk[k]*(d->azgain+=dazgain);
+  float dazgain((0.5 * cos(prel.azim()) + 0.5 - d->azgain) * d->dt);
+  for(uint32_t k = 0; k < chunk.size(); k++)
+    output[0][k] += chunk[k] * (d->azgain += dazgain);
 }
 
-void cardioid_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void cardioid_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                                         std::vector<TASCAR::wave_t>& output,
+                                         receivermod_base_t::data_t*)
 {
   output[0] += chunk.w();
 }
 
-TASCAR::receivermod_base_t::data_t* cardioid_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t*
+cardioid_t::create_state_data(double srate, uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

@@ -40,7 +40,7 @@ public:
                                std::vector<TASCAR::wave_t>& output,
                                receivermod_base_t::data_t*){};
   void configure();
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
 
 private:
   TASCAR::sndfile_t irs1;
@@ -139,8 +139,8 @@ void foaconv_t::postproc(std::vector<TASCAR::wave_t>& output)
   rec_out->clear();
 }
 
-TASCAR::receivermod_base_t::data_t* foaconv_t::create_data(double srate,
-                                                           uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* foaconv_t::create_state_data(double srate,
+                                                           uint32_t fragsize) const
 {
   return new data_t();
 }

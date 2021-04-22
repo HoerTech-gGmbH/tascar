@@ -10,7 +10,7 @@ public:
   };
   door_t(tsccfg::node_t xmlsrc);
   bool read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*);
-  TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  TASCAR::sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   void configure() { n_channels = 1; };
 private:
   double width;
@@ -68,7 +68,7 @@ door_t::data_t::data_t()
 {
 }
 
-TASCAR::sourcemod_base_t::data_t* door_t::create_data(double srate,uint32_t fragsize)
+TASCAR::sourcemod_base_t::data_t* door_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t();
 }

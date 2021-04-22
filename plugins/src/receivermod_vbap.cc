@@ -52,7 +52,7 @@ public:
   rec_vbap_t(tsccfg::node_t xmlsrc);
   virtual ~rec_vbap_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   std::vector<simplex_t> simplices;
 };
 
@@ -155,7 +155,7 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
   }
 }
 
-TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t(spkpos.size());
 }

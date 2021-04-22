@@ -16,7 +16,7 @@ public:
   amb3h3v_t(tsccfg::node_t xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   void configure();
 };
 
@@ -86,7 +86,7 @@ void amb3h3v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::ve
   }
 }
 
-TASCAR::receivermod_base_t::data_t* amb3h3v_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* amb3h3v_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

@@ -398,7 +398,7 @@ public:
   void update_par();
   void setlogdelays(bool ld);
   void configure();
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
   virtual void add_variables(TASCAR::osc_server_t* srv);
   static int osc_set_dim_damp_absorption(const char* path, const char* types,
                                          lo_arg** argv, int argc,
@@ -537,8 +537,8 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
   }
 }
 
-TASCAR::receivermod_base_t::data_t* simplefdn_t::create_data(double srate,
-                                                             uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* simplefdn_t::create_state_data(double srate,
+                                                                   uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

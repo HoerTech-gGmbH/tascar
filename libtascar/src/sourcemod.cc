@@ -64,9 +64,9 @@ void sourcemod_t::release()
   libdata->release();
 }
 
-sourcemod_base_t::data_t* sourcemod_t::create_data(double srate,uint32_t fragsize)
+sourcemod_base_t::data_t* sourcemod_t::create_state_data(double srate,uint32_t fragsize) const
 {
-  return libdata->create_data(srate,fragsize);
+  return libdata->create_state_data(srate,fragsize);
 }
 
 void sourcemod_base_t::configure()

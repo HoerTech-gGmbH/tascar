@@ -149,7 +149,7 @@ class hrtf_t : public TASCAR::receivermod_base_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    data_t(double srate, uint32_t chunksize, hrtf_param_t& par_plugin);
+    data_t(double srate, uint32_t chunksize, const hrtf_param_t& par_plugin);
     void filterdesign(const double theta_left, const double theta_right,
                       const double theta_front, const double elevation);
     inline void filter(const float& input)
@@ -162,7 +162,7 @@ public:
     void set_param(const TASCAR::pos_t& prel_norm);
     double fs;
     double dt;
-    hrtf_param_t& par;
+    const hrtf_param_t& par;
     TASCAR::varidelay_t dline_l;
     TASCAR::varidelay_t dline_r;
     TASCAR::biquad_t bqazim_l;
@@ -187,7 +187,7 @@ public:
   };
   class diffuse_data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    diffuse_data_t(double srate, uint32_t chunksize, hrtf_param_t& par_plugin);
+    diffuse_data_t(double srate, uint32_t chunksize, const hrtf_param_t& par_plugin);
     hrtf_t::data_t xp, xm, yp, ym, zp, zm;
   };
   hrtf_t(tsccfg::node_t xmlsrc);
@@ -200,9 +200,9 @@ public:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
                                std::vector<TASCAR::wave_t>& output,
                                receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
-  receivermod_base_t::data_t* create_diffuse_data(double srate,
-                                                  uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
+  receivermod_base_t::data_t* create_diffuse_state_data(double srate,
+                                                  uint32_t fragsize) const;
   virtual void configure();
   virtual void release();
   virtual void postproc(std::vector<TASCAR::wave_t>& output);
@@ -229,7 +229,7 @@ void tau_woodworth_schlosberg(const double theta, const double radius,
 hrtf_t::~hrtf_t() {}
 
 hrtf_t::data_t::data_t(double srate, uint32_t chunksize,
-                       hrtf_param_t& par_plugin)
+                       const hrtf_param_t& par_plugin)
     : fs(srate), dt(1.0 / std::max(1.0, (double)chunksize)), par(par_plugin),
       dline_l(4 * par.radius * srate / par.c + 2 + par.sincorder, srate, par.c,
               par.sincorder, 64),
@@ -335,7 +335,7 @@ void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
 }
 
 hrtf_t::diffuse_data_t::diffuse_data_t(double srate, uint32_t chunksize,
-                                       hrtf_param_t& par_plugin)
+                                       const hrtf_param_t& par_plugin)
     : xp(srate, chunksize, par_plugin), xm(srate, chunksize, par_plugin),
       yp(srate, chunksize, par_plugin), ym(srate, chunksize, par_plugin),
       zp(srate, chunksize, par_plugin), zm(srate, chunksize, par_plugin)
@@ -532,14 +532,14 @@ void hrtf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
   }
 }
 
-TASCAR::receivermod_base_t::data_t* hrtf_t::create_data(double srate,
-                                                        uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* hrtf_t::create_state_data(double srate,
+                                                        uint32_t fragsize) const
 {
   return new data_t(srate, fragsize, par);
 }
 
 TASCAR::receivermod_base_t::data_t*
-hrtf_t::create_diffuse_data(double srate, uint32_t fragsize)
+hrtf_t::create_diffuse_state_data(double srate, uint32_t fragsize) const
 {
   return new diffuse_data_t(srate, fragsize, par);
 }

@@ -25,7 +25,7 @@ public:
   void configure();
   // register OSC variables:
   void add_variables(TASCAR::osc_server_t* srv);
-  TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  TASCAR::sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
 private:
   double start_angle; //< start angle in radians
 };
@@ -76,7 +76,7 @@ void sourceexample_t::configure()
     throw TASCAR::ErrMsg("his source model requires one input channel, received "+TASCAR::to_string(n_channels)+".");
 }
 
-TASCAR::sourcemod_base_t::data_t* sourceexample_t::create_data(double srate,uint32_t fragsize)
+TASCAR::sourcemod_base_t::data_t* sourceexample_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t();
 }

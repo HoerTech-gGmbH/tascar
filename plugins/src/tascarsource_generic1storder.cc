@@ -11,7 +11,7 @@ public:
   };
   generic1storder_t(tsccfg::node_t xmlsrc);
   bool read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*);
-  TASCAR::sourcemod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  TASCAR::sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   void configure() { n_channels = 1; };
   double a;
 };
@@ -45,7 +45,7 @@ bool generic1storder_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCA
   return false;
 }
 
-TASCAR::sourcemod_base_t::data_t* generic1storder_t::create_data(double srate,uint32_t fragsize)
+TASCAR::sourcemod_base_t::data_t* generic1storder_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }
