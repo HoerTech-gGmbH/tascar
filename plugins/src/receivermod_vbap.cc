@@ -14,28 +14,27 @@ typedef bg::model::multi_point<bg_point_t> bg_pointlist_t;
 
 class simplex_t {
 public:
-  simplex_t() : c1(-1),c2(-1){};
-  bool get_gain( const TASCAR::pos_t& p){
-    g1 = p.x*l11+p.y*l21;
-    g2 = p.x*l12+p.y*l22;
-    if( (g1>=0.0) && (g2>=0.0) ){
-      double w(sqrt(g1*g1+g2*g2));
-      if( w > 0 )
-        w = 1.0/w;
-      g1*=w;
-      g2*=w;
+  simplex_t() : c1(-1), c2(-1){};
+  bool get_gain(const TASCAR::pos_t& p, float& g1, float& g2) const
+  {
+    g1 = p.x * l11 + p.y * l21;
+    g2 = p.x * l12 + p.y * l22;
+    if((g1 >= 0.0f) && (g2 >= 0.0f)) {
+      float w(sqrtf(g1 * g1 + g2 * g2));
+      if(w > 0.0f)
+        w = 1.0f / w;
+      g1 *= w;
+      g2 *= w;
       return true;
     }
     return false;
   };
   uint32_t c1;
   uint32_t c2;
-  double l11;
-  double l12;
-  double l21;
-  double l22;
-  double g1;
-  double g2;
+  float l11;
+  float l12;
+  float l21;
+  float l22;
 };
 
 class rec_vbap_t : public TASCAR::receivermod_base_speaker_t {
@@ -137,9 +136,11 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
     d->dwp[k] = - d->wp[k]*t_inc;
   uint32_t k=0;
   for( auto it=simplices.begin();it!=simplices.end();++it){
-    if( it->get_gain(psrc_normal) ){
-      d->dwp[it->c1] = (it->g1 - d->wp[it->c1])*t_inc;
-      d->dwp[it->c2] = (it->g2 - d->wp[it->c2])*t_inc;
+    float g1(0.0f);
+    float g2(0.0f);
+    if( it->get_gain(psrc_normal,g1,g2) ){
+      d->dwp[it->c1] = (g1 - d->wp[it->c1])*t_inc;
+      d->dwp[it->c2] = (g2 - d->wp[it->c2])*t_inc;
     }
     ++k;
   }

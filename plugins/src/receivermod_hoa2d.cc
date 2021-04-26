@@ -167,19 +167,13 @@ void hoa2d_t::release()
   delete [] s_decoded;
 }
 
-hoa2d_t::data_t::data_t(uint32_t chunksize,uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau)
-  : amb_order((channels-1)/2),
-    enc_wp(amb_order+1),
-    enc_wm(amb_order+1),
-    enc_dwp(amb_order+1),
-    enc_dwm(amb_order+1),
-    wx_1(chunksize),
-    wx_2(chunksize),
-    wy_1(chunksize),
-    wy_2(chunksize),
-    fsplitdelay(srate, shape, srate*tau ),
-    dx(srate, srate, 340, 0, 0 ),
-    dy(srate, srate, 340, 0, 0 )
+hoa2d_t::data_t::data_t(uint32_t chunksize, uint32_t channels, double srate,
+                        TASCAR::fsplit_t::shape_t shape, double tau)
+    : amb_order((channels - 1) / 2), enc_wp(amb_order + 1),
+      enc_wm(amb_order + 1), enc_dwp(amb_order + 1), enc_dwm(amb_order + 1),
+      wx_1(chunksize), wx_2(chunksize), wy_1(chunksize), wy_2(chunksize),
+      fsplitdelay(srate, shape, srate * tau), dx(srate, srate, 340, 0, 0),
+      dy(srate, srate, 340, 0, 0)
 {
 }
 
@@ -187,53 +181,56 @@ hoa2d_t::data_t::~data_t()
 {
 }
 
-void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+                              const TASCAR::wave_t& chunk,
+                              std::vector<TASCAR::wave_t>& output,
+                              receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   float az(-prel.azim());
-  if( shape == TASCAR::fsplit_t::none ){
-    std::complex<float> ciazp(std::exp(i_f*az));
+  if(shape == TASCAR::fsplit_t::none) {
+    std::complex<float> ciazp(std::exp(i_f * az));
     std::complex<float> ckiazp(ciazp);
-    for(uint32_t ko=1;ko<=amb_order;++ko){
-      d->enc_dwp[ko] = (ordergain[ko]*ckiazp - d->enc_wp[ko])*(float)t_inc;
+    for(uint32_t ko = 1; ko <= amb_order; ++ko) {
+      d->enc_dwp[ko] = (ordergain[ko] * ckiazp - d->enc_wp[ko]) * (float)t_inc;
       ckiazp *= ciazp;
     }
     d->enc_dwp[0] = 0.0f;
     d->enc_wp[0] = ordergain[0];
-    float* vpend(chunk.d+chunk.n);
+    float* vpend(chunk.d + chunk.n);
     std::complex<float>* encp(s_encoded.b);
-    for(float* vp=chunk.d;vp!=vpend;++vp){
+    for(float* vp = chunk.d; vp != vpend; ++vp) {
       std::complex<float>* pwp(d->enc_wp.b);
       std::complex<float>* pdwp(d->enc_dwp.b);
-      for(uint32_t ko=0;ko<=amb_order;++ko){
+      for(uint32_t ko = 0; ko <= amb_order; ++ko) {
         *encp += ((*pwp += *pdwp) * (*vp));
         ++encp;
         ++pwp;
         ++pdwp;
       }
-      for(uint32_t ko=amb_order+1;ko<nbins;++ko)
+      for(uint32_t ko = amb_order + 1; ko < nbins; ++ko)
         ++encp;
     }
-  }else{
-    std::complex<float> ciazp(std::exp(i*(az+width)));
-    std::complex<float> ciazm(std::exp(i*(az-width)));
+  } else {
+    std::complex<float> ciazp(std::exp(i * (az + width)));
+    std::complex<float> ciazm(std::exp(i * (az - width)));
     std::complex<float> ckiazp(ciazp);
     std::complex<float> ckiazm(ciazm);
-    for(uint32_t ko=1;ko<=amb_order;++ko){
-      d->enc_dwp[ko] = (ordergain[ko]*ckiazp - d->enc_wp[ko])*(float)t_inc;
+    for(uint32_t ko = 1; ko <= amb_order; ++ko) {
+      d->enc_dwp[ko] = (ordergain[ko] * ckiazp - d->enc_wp[ko]) * (float)t_inc;
       ckiazp *= ciazp;
-      d->enc_dwm[ko] = (ordergain[ko]*ckiazm - d->enc_wm[ko])*(float)t_inc;
+      d->enc_dwm[ko] = (ordergain[ko] * ckiazm - d->enc_wm[ko]) * (float)t_inc;
       ckiazm *= ciazm;
     }
     d->enc_dwp[0] = d->enc_dwm[0] = 0.0f;
     d->enc_wp[0] = d->enc_wm[0] = ordergain[0];
-    for(uint32_t kt=0;kt<n_fragment;++kt){
+    for(uint32_t kt = 0; kt < n_fragment; ++kt) {
       d->fsplitdelay.push(chunk[kt]);
       float vp, vm;
-      d->fsplitdelay.get(vp,vm);
-      for(uint32_t ko=0;ko<=amb_order;++ko)
-        s_encoded[kt*nbins+ko] += ((d->enc_wp[ko] += d->enc_dwp[ko]) * vp + 
-                                   (d->enc_wm[ko] += d->enc_dwm[ko]) * vm);
+      d->fsplitdelay.get(vp, vm);
+      for(uint32_t ko = 0; ko <= amb_order; ++ko)
+        s_encoded[kt * nbins + ko] += ((d->enc_wp[ko] += d->enc_dwp[ko]) * vp +
+                                       (d->enc_wm[ko] += d->enc_dwm[ko]) * vm);
     }
   }
 }
@@ -254,31 +251,35 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_speaker_t::postproc(output);  
 }
 
-void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                                      std::vector<TASCAR::wave_t>& output,
+                                      receivermod_base_t::data_t* sd)
 {
-  if( !diffup ){
-    TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field( chunk, output, sd );
-  }else{
-    idelay = diffup_delay*f_sample;
+  if(!diffup) {
+    TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field(chunk, output,
+                                                                sd);
+  } else {
+    idelay = diffup_delay * f_sample;
     data_t* d((data_t*)sd);
     // copy first order data:
-    float wgain(fft_scale*sqrt(2.0));
-    float xyzgain(fft_scale*0.5);
-    if( !diffup ){
-      if( maxre )
+    float wgain(fft_scale * sqrt(2.0));
+    float xyzgain(fft_scale * 0.5);
+    if(!diffup) {
+      if(maxre)
         xyzgain *= sqrt(0.5);
-    }else{
-      xyzgain *= cosf(M_PI/(2.0f*amb_order+2.0f));
+    } else {
+      xyzgain *= cosf(M_PI / (2.0f * amb_order + 2.0f));
     }
-    for(uint32_t kt=0;kt<n_fragment;++kt){
-      s_encoded[kt*nbins] += wgain*chunk.w()[kt];
-      s_encoded[kt*nbins+1] += xyzgain*(chunk.x()[kt] + i_f*chunk.y()[kt]);
+    for(uint32_t kt = 0; kt < n_fragment; ++kt) {
+      s_encoded[kt * nbins] += wgain * chunk.w()[kt];
+      s_encoded[kt * nbins + 1] +=
+          xyzgain * (chunk.x()[kt] + i_f * chunk.y()[kt]);
     }
-    std::complex<float> rot_p(std::exp(i*diffup_rot));
-    std::complex<float> rot_m(std::exp(-i*diffup_rot));
+    std::complex<float> rot_p(std::exp(i * diffup_rot));
+    std::complex<float> rot_m(std::exp(-i * diffup_rot));
     // create filtered x and y signals:
     uint32_t n(chunk.size());
-    for(uint32_t kt=0;kt<n;++kt){
+    for(uint32_t kt = 0; kt < n; ++kt) {
       // fill delayline:
       float xin(chunk.x()[kt]);
       float yin(chunk.y()[kt]);
@@ -288,20 +289,23 @@ void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vect
       float xdelayed(d->dx.get(idelay));
       float ydelayed(d->dy.get(idelay));
       // create filtered signals:
-      std::complex<float> tmp_p(0.5f*((xin + xdelayed) + i_f*(yin + ydelayed)));
-      std::complex<float> tmp_m(0.5f*((xin - xdelayed) + i_f*(yin - ydelayed)));
-      for(uint32_t l=2;l<=std::min(amb_order,diffup_maxorder);++l){
+      std::complex<float> tmp_p(0.5f *
+                                ((xin + xdelayed) + i_f * (yin + ydelayed)));
+      std::complex<float> tmp_m(0.5f *
+                                ((xin - xdelayed) + i_f * (yin - ydelayed)));
+      for(uint32_t l = 2; l <= std::min(amb_order, diffup_maxorder); ++l) {
         tmp_p *= rot_p;
         tmp_m *= rot_m;
-        s_encoded[kt*nbins+l] += ordergain[l]*(tmp_p+tmp_m);
+        s_encoded[kt * nbins + l] += ordergain[l] * (tmp_p + tmp_m);
       }
     }
   }
 }
 
-TASCAR::receivermod_base_t::data_t* hoa2d_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t*
+hoa2d_t::create_state_data(double srate, uint32_t fragsize) const
 {
-  return new data_t( fragsize, spkpos.size(), srate, shape, filterperiod );
+  return new data_t(fragsize, spkpos.size(), srate, shape, filterperiod);
 }
 
 REGISTER_RECEIVERMOD(hoa2d_t);

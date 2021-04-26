@@ -64,10 +64,10 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
   // receiver-source-pair:
   data_t* d((data_t*)sd);//it creates the variable d
 
-  vbap.encode( prel.normal() );
+  vbap.encode( prel.normal(), d->dwp );
 
   for(unsigned int k=0;k<N;k++)
-    d->dwp[k] = (vbap.weights[k] - d->wp[k])*t_inc;
+    d->dwp[k] = (d->dwp[k] - d->wp[k])*t_inc;
   // i is time (in samples):
   for( unsigned int i=0;i<chunk.size();i++){
     // k is output channel number:

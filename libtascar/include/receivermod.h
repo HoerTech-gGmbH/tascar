@@ -109,7 +109,7 @@ namespace TASCAR {
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
     virtual std::string get_spktypeid() const;
-    virtual std::vector<TASCAR::pos_t> get_rE(std::vector<TASCAR::pos_t> srcpos) const;
+    virtual std::vector<TASCAR::pos_t> get_rE(std::vector<TASCAR::pos_t> srcpos);
     TASCAR::spk_array_diff_render_t spkpos;
     std::vector<std::string> typeidattr;
   };

@@ -230,12 +230,19 @@ void TASCAR::receivermod_base_speaker_t::release()
 }
 
 std::vector<TASCAR::pos_t> TASCAR::receivermod_base_speaker_t::get_rE(
-    std::vector<TASCAR::pos_t> srcpos) const
+    std::vector<TASCAR::pos_t> srcpos)
 {
   if(!is_prepared())
     throw TASCAR::ErrMsg("not in configured state. unable to calculate "
                          "get_rE() of an unconfigured receiver.");
-  TASCAR::receivermod_base_t::data_t* sd(create_state_data(f_sample, n_fragment));
+  TASCAR::receivermod_base_t::data_t* sd(
+      create_state_data(f_sample, n_fragment));
+  TASCAR::wave_t ones(n_fragment);
+  ones += 1.0f;
+  std::vector<wave_t> output(spkpos.size(),TASCAR::wave_t(n_fragment));
+  for(auto pos : srcpos) {
+    add_pointsource(pos, 0.0, ones, output, sd);
+  }
   return srcpos;
 }
 
