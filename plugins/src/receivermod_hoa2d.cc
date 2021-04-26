@@ -1,7 +1,7 @@
-#include <fftw3.h>
-#include <string.h>
 #include "errorhandling.h"
 #include "scene.h"
+#include <fftw3.h>
+#include <string.h>
 
 const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0, 1.0);
@@ -10,7 +10,8 @@ class hoa2d_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    data_t( uint32_t chunksize, uint32_t channels, double srate, TASCAR::fsplit_t::shape_t shape, double tau );
+    data_t(uint32_t chunksize, uint32_t channels, double srate,
+           TASCAR::fsplit_t::shape_t shape, double tau);
     virtual ~data_t();
     // point source speaker weights:
     uint32_t amb_order;
@@ -28,15 +29,22 @@ public:
   };
   hoa2d_t(tsccfg::node_t xmlsrc);
   virtual ~hoa2d_t();
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
+  void add_pointsource(const TASCAR::pos_t& prel, double width,
+                       const TASCAR::wave_t& chunk,
+                       std::vector<TASCAR::wave_t>& output,
+                       receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                               std::vector<TASCAR::wave_t>& output,
+                               receivermod_base_t::data_t*);
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   // initialize decoder and allocate buffers:
   virtual void configure();
   virtual void release();
   // decode HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
-  void add_variables( TASCAR::osc_server_t* srv );
+  void add_variables(TASCAR::osc_server_t* srv);
+
 private:
   uint32_t nbins;
   uint32_t order;
@@ -45,7 +53,7 @@ private:
   float* s_decoded;
   fftwf_plan dec;
   float fft_scale;
-  //double wgain;
+  // double wgain;
   bool maxre;
   double rotation;
   std::vector<std::complex<float>> ordergain;
@@ -56,115 +64,126 @@ private:
   uint32_t idelay;
   uint32_t idelaypoint;
   // Zotter width control:
-  //uint32_t truncofs; //< truncation offset
-  //double dispersion; //< dispersion constant (to be replaced by physical object size)
-  //double d0; //< distance at which the dispersion constant is achieved
+  // uint32_t truncofs; //< truncation offset
+  // double dispersion; //< dispersion constant (to be replaced by physical
+  // object size) double d0; //< distance at which the dispersion constant is
+  // achieved
   double filterperiod; //< filter period time in seconds
   TASCAR::fsplit_t::shape_t shape;
   size_t n_mainchannels;
 };
 
 hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
-  : TASCAR::receivermod_base_speaker_t(xmlsrc),
-    nbins(spkpos.size()/2+1),
-    order(0),
-    amb_order(nbins-2),
-    s_encoded(1),
-    s_decoded(NULL),
-    dec(NULL),
-    fft_scale(1.0),
-    //wgain(sqrt(2.0)),
-    maxre(false),
-    rotation(-12345),
-    diffup(false),
-    diffup_rot(45*DEG2RAD),
-    diffup_delay(0.01),
-    diffup_maxorder(100),
-    idelay(0),
-    idelaypoint(0),
-    filterperiod(0.005)
+    : TASCAR::receivermod_base_speaker_t(xmlsrc), nbins(spkpos.size() / 2 + 1),
+      order(0), amb_order(nbins - 2), s_encoded(1), s_decoded(NULL), dec(NULL),
+      fft_scale(1.0),
+      // wgain(sqrt(2.0)),
+      maxre(false), rotation(-12345), diffup(false), diffup_rot(45 * DEG2RAD),
+      diffup_delay(0.01), diffup_maxorder(100), idelay(0), idelaypoint(0),
+      filterperiod(0.005)
 {
-  if( spkpos.size() < 3 )
-    throw TASCAR::ErrMsg("At least three loudspeakers are required for HOA decoding.");
-  GET_ATTRIBUTE(order,"","Ambisonics order; 0: use maximum possible");
-  GET_ATTRIBUTE_DEG(rotation,"Rotation of the loudspeaker array in degrees");
-  if( rotation == -12345 )
-    rotation = -spkpos.mean_rotation;
-  GET_ATTRIBUTE_BOOL(maxre,"Use $\\max r_E$ decoder (true) or basic decoder (false)");
-  GET_ATTRIBUTE_BOOL(diffup,"Use diffuse upsampling similar to \\citet{Zotter2014}");
-  GET_ATTRIBUTE_DEG(diffup_rot,"Decorrelation rotation");
-  GET_ATTRIBUTE(diffup_delay,"s","Decorrelation delay");
-  GET_ATTRIBUTE(diffup_maxorder,"","Maximum order of diffuse sound fields");
-  GET_ATTRIBUTE(filterperiod,"s","Filter period for source width encoding");
+  if(spkpos.size() < 3)
+    throw TASCAR::ErrMsg(
+        "At least three loudspeakers are required for HOA decoding.");
+  for(size_t ch = 0; ch < spkpos.size(); ++ch)
+    if(spkpos[ch].z != 0.0)
+      throw TASCAR::ErrMsg("The hoa2d receiver requires a flat loudspeaker "
+                           "layout on the xy-plane, the z value of speaker " +
+                           std::to_string(ch) + " is " +
+                           TASCAR::to_string(spkpos[ch].z));
+  GET_ATTRIBUTE(order, "", "Ambisonics order; 0: use maximum possible");
+  GET_ATTRIBUTE_DEG(rotation, "Rotation of the loudspeaker array in degrees");
+  if(rotation == -12345)
+    rotation = -spkpos[0].az;
+  for(size_t ch = 0; ch < spkpos.size(); ++ch) {
+    if(distance(spkpos[ch].unitvector,
+                TASCAR::pos_t(cos(-rotation + ch * PI2 / spkpos.size()),
+                              sin(-rotation + ch * PI2 / spkpos.size()), 0.0)) >
+       1e-4)
+      throw TASCAR::ErrMsg(
+          "The hoa2d receiver requires a regular loudspeaker layout. Speaker " +
+          std::to_string(ch) + " is at " + TASCAR::to_string(180.0*spkpos[ch].az/M_PI) +
+          " degree, expected " +
+          TASCAR::to_string(-rotation * 180.0 / M_PI +
+                            ch * 360.0 / spkpos.size()) +
+          " degree.");
+  }
+  GET_ATTRIBUTE_BOOL(maxre,
+                     "Use $\\max r_E$ decoder (true) or basic decoder (false)");
+  GET_ATTRIBUTE_BOOL(diffup,
+                     "Use diffuse upsampling similar to \\citet{Zotter2014}");
+  GET_ATTRIBUTE_DEG(diffup_rot, "Decorrelation rotation");
+  GET_ATTRIBUTE(diffup_delay, "s", "Decorrelation delay");
+  GET_ATTRIBUTE(diffup_maxorder, "", "Maximum order of diffuse sound fields");
+  GET_ATTRIBUTE(filterperiod, "s", "Filter period for source width encoding");
   std::string filtershape("none");
-  GET_ATTRIBUTE(filtershape,"","De-correlation filter shape for source width encoding, one of ``none'', ``notch'', ``sine'', ``tria'', ``triald''");
-  //GET_ATTRIBUTE_(wgain);
-  if( filtershape == "none" )
+  GET_ATTRIBUTE(filtershape, "",
+                "De-correlation filter shape for source width encoding, one "
+                "of ``none'', ``notch'', ``sine'', ``tria'', ``triald''");
+  // GET_ATTRIBUTE_(wgain);
+  if(filtershape == "none")
     shape = TASCAR::fsplit_t::none;
-  else if( filtershape == "notch" )
+  else if(filtershape == "notch")
     shape = TASCAR::fsplit_t::notch;
-  else if( filtershape == "sine" )
+  else if(filtershape == "sine")
     shape = TASCAR::fsplit_t::sine;
-  else if( filtershape == "tria" )
+  else if(filtershape == "tria")
     shape = TASCAR::fsplit_t::tria;
-  else if( filtershape == "triald" )
+  else if(filtershape == "triald")
     shape = TASCAR::fsplit_t::triald;
-  else 
-    throw TASCAR::ErrMsg("Invalid shape: "+filtershape);
-  if( order > 0 )
-    amb_order = std::min((uint32_t)order,amb_order);
+  else
+    throw TASCAR::ErrMsg("Invalid shape: " + filtershape);
+  if(order > 0)
+    amb_order = std::min((uint32_t)order, amb_order);
   typeidattr.push_back("order");
   typeidattr.push_back("maxre");
   typeidattr.push_back("diffup");
   n_mainchannels = spkpos.size();
 }
 
-void hoa2d_t::add_variables( TASCAR::osc_server_t* srv )
+void hoa2d_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  TASCAR::receivermod_base_speaker_t::add_variables( srv );
-  //srv->add_double( "/wgain", &wgain );
-  srv->add_bool( "/diffup", &diffup );
-  srv->add_double_degree( "/diffup_rot", &diffup_rot );
-  srv->add_double( "/diffup_delay", &diffup_delay );
-  srv->add_uint( "/diffup_maxorder", &diffup_maxorder );
+  TASCAR::receivermod_base_speaker_t::add_variables(srv);
+  // srv->add_double( "/wgain", &wgain );
+  srv->add_bool("/diffup", &diffup);
+  srv->add_double_degree("/diffup_rot", &diffup_rot);
+  srv->add_double("/diffup_delay", &diffup_delay);
+  srv->add_uint("/diffup_maxorder", &diffup_maxorder);
 }
 
-hoa2d_t::~hoa2d_t()
-{
-}
+hoa2d_t::~hoa2d_t() {}
 
 void hoa2d_t::configure()
 {
   TASCAR::receivermod_base_speaker_t::configure();
   update();
-  fft_scale = 1.0f/((float)n_mainchannels);
+  fft_scale = 1.0f / ((float)n_mainchannels);
   s_encoded.resize(n_fragment * nbins);
   s_encoded.clear();
-  s_decoded = new float[ n_fragment * n_mainchannels];
+  s_decoded = new float[n_fragment * n_mainchannels];
   int ichannels(n_mainchannels);
-  dec = fftwf_plan_many_dft_c2r(1,&ichannels,n_fragment,
-                                (fftwf_complex*)s_encoded.b,NULL,1,nbins,
-                                s_decoded,NULL,1,n_mainchannels,
-                                FFTW_ESTIMATE);
-  for( uint32_t k=0;k<n_fragment*nbins;++k)
+  dec = fftwf_plan_many_dft_c2r(
+      1, &ichannels, n_fragment, (fftwf_complex*)s_encoded.b, NULL, 1, nbins,
+      s_decoded, NULL, 1, n_mainchannels, FFTW_ESTIMATE);
+  for(uint32_t k = 0; k < n_fragment * nbins; ++k)
     s_encoded[k] = 0.0f;
-  //memset(s_encoded,0,sizeof(std::complex<float>)*n_fragment*nbins);
-  memset(s_decoded,0,sizeof(float)*n_fragment*n_mainchannels);
+  // memset(s_encoded,0,sizeof(std::complex<float>)*n_fragment*nbins);
+  memset(s_decoded, 0, sizeof(float) * n_fragment * n_mainchannels);
   ordergain.resize(nbins);
-  for(uint32_t m=0;m<=amb_order;++m){
-    ordergain[m] = (double)fft_scale*std::exp(-(double)m*i*rotation);
-    if( maxre )
-      ordergain[m] *= cosf((float)m*M_PI/(2.0f*(float)amb_order+2.0f));
+  for(uint32_t m = 0; m <= amb_order; ++m) {
+    ordergain[m] = (double)fft_scale * std::exp(-(double)m * i * rotation);
+    if(maxre)
+      ordergain[m] *= cosf((float)m * M_PI / (2.0f * (float)amb_order + 2.0f));
   }
-  idelay = diffup_delay*f_sample;
-  idelaypoint = filterperiod*f_sample;
+  idelay = diffup_delay * f_sample;
+  idelaypoint = filterperiod * f_sample;
 }
 
 void hoa2d_t::release()
 {
   TASCAR::receivermod_base_speaker_t::release();
   fftwf_destroy_plan(dec);
-  delete [] s_decoded;
+  delete[] s_decoded;
 }
 
 hoa2d_t::data_t::data_t(uint32_t chunksize, uint32_t channels, double srate,
@@ -177,9 +196,7 @@ hoa2d_t::data_t::data_t(uint32_t chunksize, uint32_t channels, double srate,
 {
 }
 
-hoa2d_t::data_t::~data_t()
-{
-}
+hoa2d_t::data_t::~data_t() {}
 
 void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width,
                               const TASCAR::wave_t& chunk,
@@ -240,15 +257,15 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
   fftwf_execute(dec);
   // copy to output:
   float* p_encode(s_decoded);
-  for(uint32_t kt=0;kt<n_fragment;++kt){
-    for(uint32_t kch=0;kch<n_mainchannels;++kch)
-      output[kch][kt]+=p_encode[kch];
-    p_encode+=n_mainchannels;
+  for(uint32_t kt = 0; kt < n_fragment; ++kt) {
+    for(uint32_t kch = 0; kch < n_mainchannels; ++kch)
+      output[kch][kt] += p_encode[kch];
+    p_encode += n_mainchannels;
   }
   //
   s_encoded.clear();
-  memset(s_decoded,0,sizeof(float)*n_fragment*n_mainchannels);
-  TASCAR::receivermod_base_speaker_t::postproc(output);  
+  memset(s_decoded, 0, sizeof(float) * n_fragment * n_mainchannels);
+  TASCAR::receivermod_base_speaker_t::postproc(output);
 }
 
 void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,

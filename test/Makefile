@@ -3,7 +3,7 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd5 test_pos1 test_pos2 test_pos_trackinterp		\
 	test_snd_door1 test_snd_door2 test_snd_door3 test_pos_door	\
 	test_snd_layers test_snd_rec_amb1h1v test_wav_diffuse		\
-	test_wav_diffuse_hoa2d test_wav_diffuse_nsp4			\
+	test_wav_diffuse_hoa2d test_ir_hoa2d_offset test_wav_diffuse_nsp4			\
 	test_wav_diffuse_hoa2d4 test_wav_diffuse_layerbug		\
 	test_wav_diffirs test_sndgainramp test_sndgainramp2		\
 	test_ir_spkcorr test_snd_calib1 test_snd_calib2			\
@@ -38,7 +38,8 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 
 TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
 	test_fail_duplicatenames test_fail_duplicatescenenames	\
-	test_fail_ir_micarray
+	test_fail_ir_micarray test_fail_hoa2d_nonflat		\
+	test_fail_hoa2d_irregular
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
