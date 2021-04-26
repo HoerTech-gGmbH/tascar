@@ -7,7 +7,7 @@ class mic_processor_t;
 /**
    A generator of filtercoefficients based on axis and relative position
  */
-class filter_model_t {
+class filter_model_t : public TASCAR::xml_element_t {
 public:
   // filter types, extend as needed:
   enum filtertype_t { equalizer, highshelf };
@@ -43,43 +43,42 @@ private:
   throw TASCAR::ErrMsg("No value for \"" #x "\" was given.")
 
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
-    : axis(0, 0, 0), theta_st(HUGE_VAL), beta(HUGE_VAL), omega(HUGE_VAL),
+  : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0), theta_st(HUGE_VAL), beta(HUGE_VAL), omega(HUGE_VAL),
       alpha_st(HUGE_VAL), alpha_m(HUGE_VAL), theta_end(HUGE_VAL), gain_st(HUGE_VAL),
       gain_end(HUGE_VAL), omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
 {
-  TASCAR::xml_element_t e(xmlsrc);
-  e.GET_ATTRIBUTE(axis, "",
+  GET_ATTRIBUTE(axis, "",
                   "orientation axis for filter parameter "
                   "variation relative to receiver orientation");
   axis.normalize();
   std::string type;
-  e.GET_ATTRIBUTE(type, "", "filter model type");
+  GET_ATTRIBUTE(type, "", "filter model type");
   if(type == "equalizer") {
-    e.GET_ATTRIBUTE(theta_end, "rad", "angle until which the gain is varied");
+    GET_ATTRIBUTE(theta_end, "rad", "angle until which the gain is varied");
     CHECKNAN(theta_end);
-    e.GET_ATTRIBUTE(gain_st, "dB", "gain applied at theta = 0 rad");
+    GET_ATTRIBUTE(gain_st, "dB", "gain applied at theta = 0 rad");
     CHECKNAN(gain_st);
-    e.GET_ATTRIBUTE(gain_end, "dB", "gain applied for all theta >= theta_end");
+    GET_ATTRIBUTE(gain_end, "dB", "gain applied for all theta >= theta_end");
     CHECKNAN(gain_end);
-    e.GET_ATTRIBUTE(omega_st, "Hz", "center frequency at theta = 0 rad");
+    GET_ATTRIBUTE(omega_st, "Hz", "center frequency at theta = 0 rad");
     CHECKNAN(omega_st);
-    e.GET_ATTRIBUTE(omega_end, "Hz", "center frequency for theta >= theta_end");
+    GET_ATTRIBUTE(omega_end, "Hz", "center frequency for theta >= theta_end");
     CHECKNAN(omega_end);
-    e.GET_ATTRIBUTE(Q, "", "quality factor");
+    GET_ATTRIBUTE(Q, "", "quality factor");
     CHECKNAN(Q);
     filtertype = equalizer;
   } else if(type == "highshelf") {
-    e.GET_ATTRIBUTE(theta_st, "rad",
+    GET_ATTRIBUTE(theta_st, "rad",
                     "angle at which the zero position starts to vary");
     CHECKNAN(theta_st);
-    e.GET_ATTRIBUTE(beta, "",
+    GET_ATTRIBUTE(beta, "",
                     "parameter to determine angle at which alpha = alpha_m");
     CHECKNAN(beta);
-    e.GET_ATTRIBUTE(omega, "Hz", "cut-off frequency of high-shelf");
+    GET_ATTRIBUTE(omega, "Hz", "cut-off frequency of high-shelf");
     CHECKNAN(omega);
-    e.GET_ATTRIBUTE(alpha_st, "", "alpha for all theta < theta_st");
+    GET_ATTRIBUTE(alpha_st, "", "alpha for all theta < theta_st");
     CHECKNAN(alpha_st);
-    e.GET_ATTRIBUTE(alpha_m, "", "alpha at theta = beta*(pi-theta_st)");
+    GET_ATTRIBUTE(alpha_m, "", "alpha at theta = beta*(pi-theta_st)");
     CHECKNAN(alpha_m);
     filtertype = highshelf;
   } else
@@ -488,6 +487,8 @@ void mic_t::validate_attributes(std::string& msg) const
   TASCAR::xml_element_t::validate_attributes(msg);
   for(auto child : children)
     child->validate_attributes(msg);
+  for(auto flt : filtermodels)
+    flt.validate_attributes(msg);
 }
 
 REGISTER_RECEIVERMOD(micarray_t);
