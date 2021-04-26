@@ -62,7 +62,7 @@
     <receiver type="vmic" name="vmic"/>
     <receiver type="micarray" name="micarray">
       <mic>
-	<filter type="equalizer" Q="1" gain_m="1" omega_end="4000" omega_st="2000" theta_st="30"/>
+	<filter type="equalizer" Q="1" gain_m="1" omega_end="4000" omega_st="2000" theta_st="30" theta_end="10" gain_st="1" gain_end="0"/>
 	<filter type="highshelf" theta_st="30" beta="1" omega="4000" alpha_st="10" alpha_m="30"/>
       </mic>
     </receiver>

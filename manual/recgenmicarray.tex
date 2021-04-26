@@ -3,7 +3,7 @@ Microphone array simulation.
 This receiver implements a hierarchic parametric multi-microphone (head-)model.
 The (relative) transfer functions are parameterized by a filter and a delay model.
 For each node of the hierarchic structure a delay model needs to be chosen (default
-freefield) a filter model can be defined by setting a single or multiple filter
+freefield). A filter model can be defined by setting a single or multiple filter
 models. Multiple filter models are applied in a cascade. If no filter model is set,
 the transfer functions corresponds to a pure delay component.
 
@@ -50,6 +50,9 @@ varied and the range in which the high-shelf is applied is adjusted.
 Moreover, the orientation \indattr{axis} of the filter can be chosen freely. The angle
 $\theta$ is then computed with respect to the specified orientation \indattr{axis}.
 
+\input{tabfilterhighshelf.tex}
+
+
 ii) A Parametric Equalizer (\indattr{equalizer})
 
 With the aid of a second-order parametric equalizer a cut or boost can be created around
@@ -62,6 +65,9 @@ Moreover, the gain of the parametric equalizer is equal to \indattr{gain\_end} a
 The center frequency of the parametric equalizer is continuously varied between the starting
 value \indattr{omega\_st} at the orientation \indattr{axis} and the end value
 \indattr{omega\_end} at the angle \indattr{theta\_end}.
+
+\input{tabfilterequalizer.tex}
+
 
 It can be chosen between two delay models:
 
@@ -87,8 +93,8 @@ $\tau_2 = \cfrac{r\cdot(\theta-\frac{\pi}{2})}{c}~f_s~\forall~\theta\geq\cfrac{\
 (a) Free-field & \multicolumn{2}{c}{(b) Sphere}
 \end{tabular}
 \caption{Used formulas and graphical representation of the delay models.}
-\end{center}
 \label{Tab_delaymodels}
+\end{center}
 \end{table}
 
 Table \ref{Tab_delaymodels} shows the graphical representation as well as provides the used
@@ -99,6 +105,3 @@ respect to the parent microphone.
 
 \input{tabmic.tex}
 
-\input{tabfilterhighshelf.tex}
-
-\input{tabfilterequalizer.tex}
