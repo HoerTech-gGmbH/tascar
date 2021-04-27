@@ -38,7 +38,7 @@
     </receiver>
   </scene>
   <scene name="reverb">
-    <receiver name="out" type="hoa2d" layout="reverb_no_connection.spk" caliblevel="120">
+    <receiver name="out" type="nsp" layout="reverb_no_connection.spk" caliblevel="120">
       <position>0 -10 0 1.6</position>
       <navmesh importraw="dungeon_navmesh.raw" zshift="1.6"/>
     </receiver>

@@ -78,7 +78,7 @@ hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
       order(0), amb_order(nbins - 2), s_encoded(1), s_decoded(NULL), dec(NULL),
       fft_scale(1.0),
       // wgain(sqrt(2.0)),
-      maxre(false), rotation(-12345), diffup(false), diffup_rot(45 * DEG2RAD),
+      maxre(false), rotation(0.0), diffup(false), diffup_rot(45 * DEG2RAD),
       diffup_delay(0.01), diffup_maxorder(100), idelay(0), idelaypoint(0),
       filterperiod(0.005)
 {
@@ -90,23 +90,27 @@ hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
       throw TASCAR::ErrMsg("The hoa2d receiver requires a flat loudspeaker "
                            "layout on the xy-plane, the z value of speaker " +
                            std::to_string(ch) + " is " +
-                           TASCAR::to_string(spkpos[ch].z));
+                           TASCAR::to_string(spkpos[ch].z) + " (elevation " +
+                           TASCAR::to_string(180.0 * spkpos[ch].el / M_PI) +
+                           " degree)");
   GET_ATTRIBUTE(order, "", "Ambisonics order; 0: use maximum possible");
-  GET_ATTRIBUTE_DEG(rotation, "Rotation of the loudspeaker array in degrees");
-  if(rotation == -12345)
-    rotation = -spkpos[0].az;
+  rotation = -spkpos[0].az;
   for(size_t ch = 0; ch < spkpos.size(); ++ch) {
     if(distance(spkpos[ch].unitvector,
                 TASCAR::pos_t(cos(-rotation + ch * PI2 / spkpos.size()),
                               sin(-rotation + ch * PI2 / spkpos.size()), 0.0)) >
-       1e-4)
+       1e-4) {
+      double az(180.0 * spkpos[ch].az / M_PI);
+      while(az < 0)
+        az += 360.0;
       throw TASCAR::ErrMsg(
           "The hoa2d receiver requires a regular loudspeaker layout. Speaker " +
-          std::to_string(ch) + " is at " + TASCAR::to_string(180.0*spkpos[ch].az/M_PI) +
+          std::to_string(ch) + " is at " + TASCAR::to_string(az) +
           " degree, expected " +
           TASCAR::to_string(-rotation * 180.0 / M_PI +
                             ch * 360.0 / spkpos.size()) +
           " degree.");
+    }
   }
   GET_ATTRIBUTE_BOOL(maxre,
                      "Use $\\max r_E$ decoder (true) or basic decoder (false)");
