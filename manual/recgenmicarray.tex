@@ -27,21 +27,20 @@ Adaptation of the design function results in the following:
 \forall \ \theta \leq {\color{red!40!yellow}\theta_{st}}
 \end{align}
 
-\begin{figure}[H]
- \subfloat[Exemplary course of $\alpha(\theta)$.]
- {\centering \includegraphics[width=0.5\textwidth]{micarray_alpha.pdf}}
- \subfloat[Influence of each parameter on~$\alpha(\theta)$.]{
- \begin{tabular}[b]{@{}c@{}}
-  \includegraphics[width=.225\textwidth]{micarray_alpha_st.pdf}
-  \includegraphics[width=.225\textwidth]{micarray_alpha_m.pdf}\\
-  \includegraphics[width=.225\textwidth]{micarray_theta_m.pdf}
-  \includegraphics[width=.225\textwidth]{micarray_theta_st.pdf}
- \end{tabular}}
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{ccc}
+\multirow{2}{*}{\includegraphics[width=0.5\textwidth]{micarray_alpha.pdf}} & &\\
+& \includegraphics[width=.2\textwidth]{micarray_alpha_st.pdf} & \includegraphics[width=.2\textwidth]{micarray_alpha_m.pdf}\\
+& \includegraphics[width=.2\textwidth]{micarray_theta_m.pdf} & \includegraphics[width=.2\textwidth]{micarray_theta_st.pdf}\\
+(a) Exemplary course of $\alpha(\theta)$. & \multicolumn{2}{c}{(b) Influence of each parameter on~$\alpha(\theta)$.}\\
+\end{tabular}
  \caption{Relation between design parameters and course of the function $\alpha(\theta)$.}
- \label{Fig_alpha}
-\end{figure}
+ \label{Tab_alpha}
+\end{center}
+\end{table}
 
-Figure \ref{Fig_alpha} shows how the four parameter \indattr{alpha\_st}, \indattr{alpha\_m},
+Table \ref{Tab_alpha} shows how the four parameters \indattr{alpha\_st}, \indattr{alpha\_m},
 \indattr{theta\_st} and \indattr{beta} of this filter type can be used to vary the course of
 the design function and thus the spatial design of the filter.
 Furthermore, the frequency \indattr{omega} is an additional parameter of this filter
