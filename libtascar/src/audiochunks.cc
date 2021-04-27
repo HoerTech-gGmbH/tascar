@@ -112,6 +112,18 @@ void wave_t::operator*=(float v)
     d[k] *= v;
 }
 
+void wave_t::operator+=(double v)
+{
+  for( uint32_t k=0;k<n;++k)
+    d[k] += v;
+}
+
+void wave_t::operator+=(float v)
+{
+  for( uint32_t k=0;k<n;++k)
+    d[k] += v;
+}
+
 uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
 {
   uint32_t n_min(std::min(n,cnt));

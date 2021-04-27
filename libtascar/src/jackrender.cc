@@ -52,6 +52,7 @@ void TASCAR::scene_render_rt_t::start()
   chunk_cfg_t cf( get_srate(), get_fragsize() );
   // first prepare all nodes for audio processing:
   prepare( cf );
+  post_prepare();
   try{
     // create all ports:
     for(std::vector<std::string>::iterator iip=input_ports.begin();iip!=input_ports.end();++iip)

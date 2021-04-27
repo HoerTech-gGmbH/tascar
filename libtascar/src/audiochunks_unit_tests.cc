@@ -24,6 +24,16 @@ TEST(wave_t, rms)
   ASSERT_NEAR(1.0f, wave.rms(), 1e-9f);
 }
 
+TEST(wave_t, plusop)
+{
+  TASCAR::wave_t wave(4);
+  wave += 1.0f;
+  EXPECT_EQ(1.0f,wave.d[0]);
+  EXPECT_EQ(1.0f,wave.d[1]);
+  EXPECT_EQ(1.0f,wave.d[2]);
+  EXPECT_EQ(1.0f,wave.d[3]);
+}
+
 TEST(wave_t, resample)
 {
   TASCAR::wave_t wave(16);

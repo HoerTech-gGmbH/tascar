@@ -58,6 +58,12 @@ void sourcemod_t::configure()
   libdata->prepare( cfg() );
 }
 
+void sourcemod_t::post_prepare()
+{
+  sourcemod_base_t::post_prepare();
+  libdata->post_prepare();
+}
+
 void sourcemod_t::release()
 {
   sourcemod_base_t::release();

@@ -63,6 +63,12 @@ TASCAR::ola_t::ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windo
   }
 }
 
+void TASCAR::ola_t::clear()
+{
+  stft_t::clear();
+  long_out.clear();
+}
+
 void TASCAR::ola_t::ifft(wave_t& wOut)
 {
   fft_t::ifft();

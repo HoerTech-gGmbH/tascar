@@ -60,6 +60,7 @@ namespace TASCAR {
     virtual std::vector<std::string> get_connections() const;
     virtual void configure();
     virtual void release();
+    void post_prepare();
     virtual sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   private:
     sourcemod_t(const sourcemod_t&);

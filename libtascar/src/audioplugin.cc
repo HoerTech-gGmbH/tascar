@@ -71,6 +71,12 @@ void TASCAR::audioplugin_t::configure()
   libdata->prepare( cfg() );
 }
 
+void TASCAR::audioplugin_t::post_prepare()
+{
+  audioplugin_base_t::post_prepare();
+  libdata->post_prepare();
+}
+
 void TASCAR::audioplugin_t::release()
 {
   audioplugin_base_t::release();

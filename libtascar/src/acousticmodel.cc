@@ -37,6 +37,11 @@ void diffuse_t::preprocess(const TASCAR::transport_t& tp)
   rmslevel.update(audio.w());
 }
 
+void diffuse_t::post_prepare()
+{
+  plugins.post_prepare();
+}
+
 void diffuse_t::configure()
 {
   plugins.prepare( cfg() );
@@ -550,6 +555,12 @@ void receiver_t::configure()
   recdelaycomp = get_delay_comp();
 }
 
+void receiver_t::post_prepare()
+{
+  receivermod_t::post_prepare();
+  plugins.post_prepare();
+}
+
 void receiver_t::release()
 {
   receivermod_t::release();
@@ -822,6 +833,12 @@ void source_t::configure( )
     inchannels.push_back(wave_t(*(inchannelsp.back())));
   }
   plugins.prepare( cfg() );
+}
+
+void source_t::post_prepare()
+{
+  sourcemod_t::post_prepare();
+  plugins.post_prepare();
 }
 
 void source_t::release()

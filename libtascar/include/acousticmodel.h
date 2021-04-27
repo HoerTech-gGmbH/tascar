@@ -122,6 +122,7 @@ namespace TASCAR {
       virtual ~diffuse_t(){};
       virtual void preprocess(const TASCAR::transport_t& tp);
       void configure();
+      void post_prepare();
       void release();
       void add_licenses(licensehandler_t*);
       amb1rotator_t audio;
@@ -162,6 +163,7 @@ namespace TASCAR {
                const std::string& parentname);
       ~source_t();
       void configure();
+      void post_prepare();
       void release();
       virtual void process_plugins(const TASCAR::transport_t& tp);
       void add_licenses(licensehandler_t*);
@@ -196,6 +198,7 @@ namespace TASCAR {
                  bool is_reverb_);
       ~receiver_t();
       void configure();
+      void post_prepare();
       void release();
       void clear_output();
       void add_pointsource(const pos_t& prel, double width, double scattering,

@@ -40,7 +40,13 @@ TASCAR::stft_t::stft_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, win
     break;
   }
 }
-    
+
+void TASCAR::stft_t::clear()
+{
+  long_in.clear();
+  long_windowed_in.clear();
+}
+
 void TASCAR::stft_t::process(const wave_t& w)
 {
   TASCAR::wave_t newchunk(wndlen_,&(long_windowed_in.d[zpad1]));

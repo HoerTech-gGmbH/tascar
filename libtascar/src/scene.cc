@@ -82,6 +82,11 @@ void diff_snd_field_obj_t::configure()
   source->prepare(cfg());
 }
 
+void diff_snd_field_obj_t::post_prepare()
+{
+  source->post_prepare();
+}
+
 audio_port_t::~audio_port_t() {}
 
 void audio_port_t::set_port_index(uint32_t port_index_)
@@ -206,6 +211,12 @@ void src_object_t::configure()
     throw;
   }
   startframe = f_sample * starttime;
+}
+
+void src_object_t::post_prepare()
+{
+  for(auto snd : sound)
+    snd->post_prepare();
 }
 
 void src_object_t::release()
@@ -537,6 +548,17 @@ void scene_t::configure()
         p_as->release();
     }
     throw;
+  }
+}
+
+void scene_t::post_prepare()
+{
+  for(auto it = all_objects.begin(); it != all_objects.end(); ++it) {
+    // prepare all objects which are derived from audiostates:
+    audiostates_t* p_as(dynamic_cast<audiostates_t*>(*it));
+    if(p_as) {
+      p_as->post_prepare();
+    }
   }
 }
 
@@ -1232,6 +1254,12 @@ void diffuse_reverb_t::configure()
   for(uint32_t acn = 0; acn < AMB11::idx::channels; ++acn)
     source->audio[acn].use_external_buffer(outchannels[acn].n,
                                            outchannels[acn].d);
+}
+
+void diffuse_reverb_t::post_prepare()
+{
+  receiver_obj_t::post_prepare();
+  source->post_prepare();
 }
 
 void diffuse_reverb_t::release()

@@ -196,6 +196,13 @@ void TASCAR::module_t::configure()
   }
 }
 
+
+void TASCAR::module_t::post_prepare()
+{
+  module_base_t::post_prepare();
+  libdata->post_prepare();
+}
+
 void TASCAR::module_t::release()
 {
   module_base_t::release();
@@ -662,6 +669,8 @@ void TASCAR::session_t::start()
     started_ = false;
     throw;
   }
+  for(auto mod : modules)
+    mod->post_prepare();
   for(std::vector<TASCAR::connection_t*>::iterator icon = connections.begin();
       icon != connections.end(); ++icon) {
     connect((*icon)->src, (*icon)->dest, !(*icon)->failonerror, true, true);

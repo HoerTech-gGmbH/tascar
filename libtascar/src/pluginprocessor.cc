@@ -24,6 +24,12 @@ void plugin_processor_t::configure()
   }
 }
 
+void plugin_processor_t::post_prepare()
+{
+  for(auto p : plugins)
+    p->post_prepare();
+}
+
 void plugin_processor_t::add_licenses( licensehandler_t* lh )
 {
   licensed_component_t::add_licenses( lh );

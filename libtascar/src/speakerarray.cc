@@ -408,6 +408,19 @@ std::vector<TASCAR::pos_t> spk_array_t::get_positions() const
   return pos;
 }
 
+void spk_array_diff_render_t::clear_states()
+{
+  // reset all subwoofer filters:
+  for(auto flt : flt_lowp)
+    flt.clear();
+  for(auto flt : flt_hp)
+    flt.clear();
+  for(auto flt : flt_allp)
+    flt.clear();
+  for(auto flt : decorrflt)
+    flt.clear();
+}
+
 /*
  * Local Variables:
  * mode: c++

@@ -93,6 +93,13 @@ namespace TASCAR {
   protected:
   };
 
+  struct spatial_error_t {
+    double abs_rE_error;
+    double abs_rV_error;
+    double angular_rE_error;
+    double angular_rV_error;
+  };
+
   /**
      \brief Base class for loudspeaker based render formats
    */
@@ -109,9 +116,11 @@ namespace TASCAR {
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
     virtual std::string get_spktypeid() const;
-    virtual std::vector<TASCAR::pos_t> get_rE(std::vector<TASCAR::pos_t> srcpos);
+    void post_prepare();
+    spatial_error_t get_spatial_error(const std::vector<TASCAR::pos_t>& srcpos);
     TASCAR::spk_array_diff_render_t spkpos;
     std::vector<std::string> typeidattr;
+    bool showspatialerror;
   };
 
   class receivermod_t : public receivermod_base_t {
@@ -128,6 +137,7 @@ namespace TASCAR {
     virtual void postproc(std::vector<wave_t>& output);
     virtual std::vector<std::string> get_connections() const;
     void configure();
+    void post_prepare();
     void release();
     virtual receivermod_base_t::data_t* create_state_data(double srate,
                                                     uint32_t fragsize) const;

@@ -34,6 +34,7 @@ namespace TASCAR {
                        const std::string& parentname);
     ~plugin_processor_t();
     void configure();
+    void post_prepare();
     void release();
     void process_plugins(std::vector<wave_t>& s, const pos_t& p,
                          const zyx_euler_t& o, const transport_t& tp);

@@ -67,9 +67,10 @@ namespace TASCAR {
     virtual ~audioplugin_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp);
     virtual void configure( );
+    virtual void post_prepare();
+    virtual void release();
     virtual void add_variables( TASCAR::osc_server_t* srv );
     virtual void add_licenses( licensehandler_t* srv );
-    virtual void release();
     virtual void validate_attributes(std::string&) const;
   private:
     audioplugin_t(const audioplugin_t&);

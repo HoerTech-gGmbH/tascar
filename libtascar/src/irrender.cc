@@ -62,6 +62,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
   }
   // initialize scene:
   pscene->prepare(cf);
+  pscene->post_prepare();
   add_licenses(this);
   pscene->add_licenses(this);
   uint32_t nch_in(pscene->num_input_ports());
@@ -149,6 +150,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
   }
   // initialize scene:
   pscene->prepare(cf);
+  pscene->post_prepare();
   add_licenses(this);
   pscene->add_licenses(this);
   uint32_t nch_in(pscene->num_input_ports());
@@ -237,6 +239,7 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs,
   chunk_cfg_t cf(fs, len);
   // initialize scene:
   pscene->prepare(cf);
+  pscene->post_prepare();
   add_licenses(this);
   pscene->add_licenses(this);
   uint32_t nch_in(pscene->num_input_ports());
