@@ -129,7 +129,7 @@ TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(
 std::string TASCAR::receivermod_base_speaker_t::get_spktypeid() const
 {
   std::string r;
-  for(auto ta : typeidattr)
+  for(auto& ta : typeidattr)
     r += ta + ":" + tsccfg::node_get_attribute_value(e, ta) + ",";
   if(r.size() && (r[r.size() - 1] == ','))
     r.erase(r.size() - 1);
@@ -253,7 +253,7 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   err.abs_rV_error = 0;
   err.angular_rE_error = 0;
   err.angular_rV_error = 0;
-  for(auto pos : srcpos) {
+  for(auto& pos : srcpos) {
     for(size_t ch = 0; ch < output.size(); ++ch)
       output[ch].clear();
     add_pointsource(pos, 0.0, ones, output, sd);
@@ -281,8 +281,8 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
       rE /= norm_E;
     if(norm_V != 0.0)
       rV /= norm_V;
-    err.abs_rV_error += 1.0 - rV.norm() * rV.norm();
-    err.abs_rE_error += 1.0 - rE.norm() * rE.norm();
+    err.abs_rV_error += pow(1.0 - rV.norm(), 2.0);
+    err.abs_rE_error += pow(1.0 - rE.norm(), 2.0);
     err.angular_rV_error += dot_prod(rV, pos);
     err.angular_rE_error += dot_prod(rE, pos);
   }
@@ -297,18 +297,30 @@ void TASCAR::receivermod_base_speaker_t::post_prepare()
 {
   receivermod_base_t::post_prepare();
   spkpos.post_prepare();
-  if( showspatialerror ){
-  std::vector<TASCAR::pos_t> ring;
-  ring.resize(360);
-  for(size_t k = 0; k < ring.size(); ++k)
-    ring[k].set_sphere(1.0, k * PI2 / ring.size(), 0.0);
-  spatial_error_t err = get_spatial_error(ring);
-  DEBUG(spkpos.size());
-  DEBUG(spkpos.subs.size());
-  DEBUG(err.abs_rV_error);
-  DEBUG(err.abs_rE_error);
-  DEBUG(RAD2DEG * err.angular_rV_error);
-  DEBUG(RAD2DEG * err.angular_rE_error);
+  if(showspatialerror) {
+    std::vector<TASCAR::pos_t> ring;
+    ring.resize(360);
+    for(size_t k = 0; k < ring.size(); ++k)
+      ring[k].set_sphere(1.0, k * PI2 / ring.size(), 0.0);
+    spatial_error_t err = get_spatial_error(ring);
+    std::cout << "% spatial error:\n";
+    std::cout << "layout = '" << spkpos.layout << "';\n";
+    std::cout << "typeid = '" << get_spktypeid() << "';\n";
+    std::cout << "numchannels = " << spkpos.size() << ";\n";
+    std::cout << "% error on a ring:\n";
+    std::cout << "err2d.abs_rV = " << err.abs_rV_error << ";\n";
+    std::cout << "err2d.abs_rE = " << err.abs_rE_error << ";\n";
+    std::cout << "err2d.ang_rV = " << RAD2DEG * err.angular_rV_error << ";\n";
+    std::cout << "err2d.ang_rE = " << RAD2DEG * err.angular_rE_error << ";\n";
+    std::vector<TASCAR::pos_t> sphere(TASCAR::generate_icosahedron());
+    while(sphere.size() < 20 * spkpos.size())
+      sphere = subdivide_and_normalize_mesh(sphere, 1);
+    err = get_spatial_error(sphere);
+    std::cout << "% error on a sphere:\n";
+    std::cout << "err3d.abs_rV = " << err.abs_rV_error << ";\n";
+    std::cout << "err3d.abs_rE = " << err.abs_rE_error << ";\n";
+    std::cout << "err3d.ang_rV = " << RAD2DEG * err.angular_rV_error << ";\n";
+    std::cout << "err3d.ang_rE = " << RAD2DEG * err.angular_rE_error << ";\n";
   }
 }
 
