@@ -26,7 +26,7 @@ TASCAR::tsc_reader_t::tsc_reader_t()
 void add_includes(tsccfg::node_t e, const std::string& parentdoc,
                   licensehandler_t* lh)
 {
-  for(auto sne : tsccfg::node_get_children(e)) {
+  for(auto& sne : tsccfg::node_get_children(e)) {
     if(tsccfg::node_get_name(sne) == "include") {
       std::string idocname(
           TASCAR::env_expand(tsccfg::node_get_attribute_value(sne, "name")));
@@ -46,7 +46,7 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
         lh->add_license(sublicense, subattribution,
                         TASCAR::tscbasename(idocname));
         add_includes(idoc.root(), idocname, lh);
-        for(auto isne : idoc.root.get_children()) 
+        for(auto& isne : idoc.root.get_children()) 
           tsccfg::node_import_node(e,isne);
       }
     } else {
@@ -103,7 +103,7 @@ void TASCAR::tsc_reader_t::read_xml()
   root.GET_ATTRIBUTE(license, "", "license type");
   root.GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
   add_license(license, attribution, "session file");
-  for(auto sne : root.get_children()){
+  for(auto& sne : root.get_children()){
     if(tsccfg::node_get_name(sne) == "scene")
       add_scene(sne);
     else if(tsccfg::node_get_name(sne) == "range")
@@ -111,7 +111,7 @@ void TASCAR::tsc_reader_t::read_xml()
     else if(tsccfg::node_get_name(sne) == "connect")
       add_connection(sne);
     else if(tsccfg::node_get_name(sne) == "modules") {
-      for(auto lsne : tsccfg::node_get_children(sne)){
+      for(auto& lsne : tsccfg::node_get_children(sne)){
         add_module(lsne);
       }
     } else if(tsccfg::node_get_name(sne) == "license") {

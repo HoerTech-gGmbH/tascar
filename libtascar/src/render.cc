@@ -293,7 +293,7 @@ void TASCAR::render_core_t::process(uint32_t nframes,
       psrc->preprocess(tp);
       psrc->audio *= gain;
     }
-    for(auto preverb : diffuse_reverbs) {
+    for(auto& preverb : diffuse_reverbs) {
       TASCAR::Acousticmodel::receiver_t* receiver(preverb);
       receiver->external_gain = preverb->get_gain();
     }
@@ -322,7 +322,7 @@ void TASCAR::render_core_t::process(uint32_t nframes,
             outBuffer[receivermod_objects[k]->get_port_index() + ch], nframes,
             gain);
     }
-    for(auto preverb : diffuse_reverbs) {
+    for(auto& preverb : diffuse_reverbs) {
       TASCAR::Acousticmodel::diffuse_t* diffuse(preverb->get_source());
       diffuse->preprocess(tp);
     }

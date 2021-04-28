@@ -19,7 +19,7 @@ spk_array_cfg_t::spk_array_cfg_t(tsccfg::node_t xmlsrc, bool use_parent_xml)
     GET_ATTRIBUTE(layout, "", "name of speaker layout file");
     if(layout.empty()) {
       // try to find layout element:
-      for(auto sne:tsccfg::node_get_children(xmlsrc,"layout"))
+      for(auto& sne:tsccfg::node_get_children(xmlsrc,"layout"))
         e_layout = sne;
       if(e_layout == NULL)
         throw TASCAR::ErrMsg(
@@ -52,7 +52,7 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
   clear();
-  for(auto sn : tsccfg::node_get_children(e_layout,elementname))
+  for(auto& sn : tsccfg::node_get_children(e_layout,elementname))
     emplace_back(sn);
   elayout.GET_ATTRIBUTE(xyzgain,"","XYZ-gain for FOA decoding");
   elayout.GET_ATTRIBUTE(name,"","Name of layout, for documentation only");
@@ -411,13 +411,13 @@ std::vector<TASCAR::pos_t> spk_array_t::get_positions() const
 void spk_array_diff_render_t::clear_states()
 {
   // reset all subwoofer filters:
-  for(auto flt : flt_lowp)
+  for(auto& flt : flt_lowp)
     flt.clear();
-  for(auto flt : flt_hp)
+  for(auto& flt : flt_hp)
     flt.clear();
-  for(auto flt : flt_allp)
+  for(auto& flt : flt_allp)
     flt.clear();
-  for(auto flt : decorrflt)
+  for(auto& flt : decorrflt)
     flt.clear();
 }
 

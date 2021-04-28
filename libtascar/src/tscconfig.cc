@@ -101,7 +101,7 @@ std::vector<tsccfg::node_t> tsccfg::node_get_children(tsccfg::node_t& node,
   TASCAR_ASSERT(node);
   std::vector<tsccfg::node_t> children;
 #ifdef USEPUGIXML
-  for(auto sn : node.children()) {
+  for(auto& sn : node.children()) {
     if(name.empty() || (name == tsccfg::node_get_name(sn)))
       children.push_back(sn);
   }
@@ -117,7 +117,7 @@ std::vector<tsccfg::node_t> tsccfg::node_get_children(tsccfg::node_t& node,
     }
   }
 #else
-  for(auto sn : node->get_children()) {
+  for(auto& sn : node->get_children()) {
     tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
     if(sne)
       if(name.empty() || (name == tsccfg::node_get_name(sne)))
@@ -185,11 +185,11 @@ size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes,
                                    bool test_children) const
 {
   std::string v;
-  for(auto attr : attributes)
+  for(auto& attr : attributes)
     v += tsccfg::node_get_attribute_value(e, attr);
   if(test_children)
-    for(auto sne : tsccfg::node_get_children(e))
-      for(auto attr : attributes)
+    for(auto& sne : tsccfg::node_get_children(e))
+      for(auto& attr : attributes)
         v += tsccfg::node_get_attribute_value(sne, attr);
   std::hash<std::string> hash_fn;
   return hash_fn(v);
@@ -205,7 +205,7 @@ std::string TASCAR::to_string(const std::vector<TASCAR::pos_t>& x)
 {
   size_t k(0);
   std::string rv;
-  for(auto p : x) {
+  for(auto& p : x) {
     if(k)
       rv += " ";
     rv += TASCAR::to_string(p);
@@ -485,7 +485,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& prefix,
   if(xe.has_attribute("data")) {
     cfg[key] = tsccfg::node_get_attribute_value(e, "data");
   }
-  for(auto sn : tsccfg::node_get_children(e)) {
+  for(auto& sn : tsccfg::node_get_children(e)) {
     readconfig(key, sn);
   }
 }
@@ -556,14 +556,14 @@ bool tsccfg::node_has_attribute(const tsccfg::node_t& e,
 {
   TASCAR_ASSERT(e);
 #ifdef USEPUGIXML
-  for(auto attr : e.attributes())
+  for(auto& attr : e.attributes())
     if(attr.name() == name)
       return true;
   return false;
 #elif defined(USEXERCESXML)
   return e->getAttributeNode(str2wstr(name).c_str());
 #else
-  for(auto attr : e->get_attributes())
+  for(auto& attr : e->get_attributes())
     if(attr->get_name() == name)
       return true;
   return false;
@@ -574,14 +574,14 @@ std::vector<std::string> TASCAR::xml_element_t::get_attributes() const
 {
   std::vector<std::string> r;
 #ifdef USEPUGIXML
-  for(auto a : e.attributes())
+  for(auto& a : e.attributes())
     r.push_back(a.name());
 #elif defined(USEXERCESXML)
   auto attrs(e->getAttributes());
   for(size_t k = 0; k < attrs->getLength(); ++k)
     r.push_back(wstr2str(attrs->item(k)->getNodeName()));
 #else
-  for(auto a : e->get_attributes())
+  for(auto& a : e->get_attributes())
     r.push_back(a->get_name());
 #endif
   return r;
@@ -596,7 +596,7 @@ bool TASCAR::xml_element_t::has_attribute(const std::string& name) const
 tsccfg::node_t TASCAR::xml_element_t::find_or_add_child(const std::string& name)
 {
   TASCAR_ASSERT(e);
-  for(auto ch : tsccfg::node_get_children(e))
+  for(auto& ch : tsccfg::node_get_children(e))
     if(tsccfg::node_get_name(ch) == name)
       return ch;
   return add_child(name);
@@ -1552,7 +1552,7 @@ std::vector<std::string> TASCAR::xml_element_t::get_unused_attributes() const
   TASCAR_ASSERT(e);
   std::vector<std::string> retv;
   std::string path(tsccfg::node_get_path(e));
-  for(auto attrname : get_attributes()) {
+  for(auto& attrname : get_attributes()) {
     if(attribute_list[path].vars.find(attrname) ==
        attribute_list[path].vars.end())
       retv.push_back(attrname);
@@ -1570,10 +1570,10 @@ void TASCAR::xml_element_t::validate_attributes(std::string& msg) const
     std::string path(tsccfg::node_get_path(e));
     msg += "Invalid attributes in element \"" + tsccfg::node_get_name(e) +
            "\" (path " + path + "):";
-    for(auto attr : unused)
+    for(auto& attr : unused)
       msg += " " + attr;
     msg += " (valid attributes are:";
-    for(auto attr : attribute_list[path].vars)
+    for(auto& attr : attribute_list[path].vars)
       msg += " " + attr.first;
     msg += ").";
   }
@@ -1755,7 +1755,7 @@ std::string tsccfg::node_get_text(tsccfg::node_t& n, const std::string& child)
   if(child.empty())
     return wstr2str(n->getTextContent());
   std::string retval;
-  for(auto ch : tsccfg::node_get_children(n, child))
+  for(auto& ch : tsccfg::node_get_children(n, child))
     retval += tsccfg::node_get_text(ch);
   return retval;
 #else
@@ -1791,7 +1791,7 @@ void tsccfg::node_set_text(tsccfg::node_t& node, const std::string& text)
 #elif defined(USEXERCESXML)
   node->setTextContent(str2wstr(text).c_str());
 #else
-  for(auto sn : node->get_children())
+  for(auto& sn : node->get_children())
     node->remove_child(sn);
   node->add_child_text(text);
 #endif
@@ -1914,7 +1914,7 @@ tsccfg::node_get_children(const tsccfg::node_t& node)
   return std::vector<tsccfg::node_t>();
 #else
   std::vector<tsccfg::node_t> retval;
-  for(auto sn : node->get_children()) {
+  for(auto& sn : node->get_children()) {
     tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
     if(sne)
       retval.push_back(sne);

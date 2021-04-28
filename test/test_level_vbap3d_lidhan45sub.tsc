@@ -22,6 +22,6 @@
 	<plugins><pink level="70"/></plugins>
       </sound>
     </source>
-    <receiver type="vbap3d" layout="lidhan_3d45_sub.spk"/>
+    <receiver type="vbap3d" layout="lidhan_3d45_sub.spk" showspatialerror="true"/>
   </scene>
 </session>

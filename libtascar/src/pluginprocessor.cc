@@ -6,7 +6,7 @@ plugin_processor_t::plugin_processor_t( tsccfg::node_t xmlsrc, const std::string
   : xml_element_t( xmlsrc ), licensed_component_t(typeid(*this).name())
 {
   tsccfg::node_t se_plugs(find_or_add_child("plugins"));
-  for(auto sne : tsccfg::node_get_children(se_plugs))
+  for(auto& sne : tsccfg::node_get_children(se_plugs))
     plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,parentname)));
 }
 
@@ -26,7 +26,7 @@ void plugin_processor_t::configure()
 
 void plugin_processor_t::post_prepare()
 {
-  for(auto p : plugins)
+  for(auto& p : plugins)
     p->post_prepare();
 }
 

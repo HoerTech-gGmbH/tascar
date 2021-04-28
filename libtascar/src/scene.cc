@@ -111,7 +111,7 @@ src_object_t::src_object_t(tsccfg::node_t xmlsrc)
 {
   if(get_name().empty())
     set_name("in");
-  for(auto sne : tsccfg::node_get_children(dynobject_t::e)) {
+  for(auto& sne : tsccfg::node_get_children(dynobject_t::e)) {
     if(tsccfg::node_get_name(sne) == "sound")
       add_sound(sne);
     else if((tsccfg::node_get_name(sne) != "creator") &&
@@ -215,7 +215,7 @@ void src_object_t::configure()
 
 void src_object_t::post_prepare()
 {
-  for(auto snd : sound)
+  for(auto& snd : sound)
     snd->post_prepare();
 }
 
@@ -241,7 +241,7 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
     GET_ATTRIBUTE(c, "m/s", "speed of sound");
     GET_ATTRIBUTE_BOOL(active, "render scene");
     description = tsccfg::node_get_text(e, "description");
-    for(auto sne : tsccfg::node_get_children(e)) {
+    for(auto& sne : tsccfg::node_get_children(e)) {
       TASCAR::Scene::object_t* obj(NULL);
       // parse nodes:
       if(tsccfg::node_get_name(sne) == "source") {
@@ -279,8 +279,8 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
         namelist.insert(obj->get_name());
       }
     }
-    for(auto source_object : source_objects) {
-      for(auto sound : source_object->sound) {
+    for(auto& source_object : source_objects) {
+      for(auto& sound : source_object->sound) {
         sounds.push_back(sound);
         const std::string id(sound->get_id());
         auto mapsnd(soundmap.find(id));
@@ -326,7 +326,7 @@ void scene_t::configure_meter(float tc, TASCAR::levelmeter::weight_t w)
 
 void scene_t::clean_children()
 {
-  for(auto obj : get_objects() )
+  for(auto& obj : get_objects() )
     delete obj;
 }
 

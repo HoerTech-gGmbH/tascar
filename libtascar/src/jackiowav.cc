@@ -256,7 +256,7 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   rbuf = new float[rlen];
   activate();
   k = 0;
-  for(auto p : ports) {
+  for(auto& p : ports) {
     connect_in(k, p, true, true);
     ++k;
   }

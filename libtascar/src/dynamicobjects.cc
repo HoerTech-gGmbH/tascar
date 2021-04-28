@@ -85,7 +85,7 @@ TASCAR::dynobject_t::dynobject_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(localpos, "m", "local position");
   GET_ATTRIBUTE(dlocation, "m", "delta location");
   GET_ATTRIBUTE_NOUNIT(dorientation, "delta orientation");
-  for(auto sne : tsccfg::node_get_children(e)) {
+  for(auto& sne : tsccfg::node_get_children(e)) {
     if(tsccfg::node_get_name(sne) == "position") {
       xml_location = sne;
       location.read_xml(sne);
@@ -95,7 +95,7 @@ TASCAR::dynobject_t::dynobject_t(tsccfg::node_t xmlsrc)
       orientation.read_xml(sne);
     }
     if(tsccfg::node_get_name(sne) == "creator") {
-      for(auto node : tsccfg::node_get_children(sne))
+      for(auto& node : tsccfg::node_get_children(sne))
         location.edit(node);
       TASCAR::track_t::iterator it_old = location.end();
       double old_azim(0);
@@ -417,9 +417,9 @@ void track_t::load_from_gpx(const std::string& fname)
   track_t track;
   TASCAR::xml_doc_t doc(TASCAR::env_expand(fname),
                         TASCAR::xml_doc_t::LOAD_FILE);
-  for(auto node : doc.root.get_children("trk"))
-    for(auto segment : tsccfg::node_get_children(node, "trkseg"))
-      for(auto point : tsccfg::node_get_children(segment, "trkpt")) {
+  for(auto& node : doc.root.get_children("trk"))
+    for(auto& segment : tsccfg::node_get_children(node, "trkseg"))
+      for(auto& point : tsccfg::node_get_children(segment, "trkpt")) {
         time_t tm;
         pos_t p = xml_get_trkpt(point, tm);
         double ltm(tm);
@@ -504,7 +504,7 @@ void track_t::edit(tsccfg::node_t cmd)
         double ttinc(0);
         if(rbegin() != rend())
           ttinc = rbegin()->first;
-        for(auto loc : tsccfg::node_get_children(cmd, "trkpt")) {
+        for(auto& loc : tsccfg::node_get_children(cmd, "trkpt")) {
           time_t tm;
           pos_t p = xml_get_trkpt(loc, tm);
           double ltm(tm);

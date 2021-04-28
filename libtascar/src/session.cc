@@ -539,7 +539,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
     scenes.push_back(newscene);
     scenes.back()->configure_meter(levelmeter_tc, levelmeter_weight);
     scenemap[newscene->id] = newscene;
-    for(auto sound : newscene->sounds) {
+    for(auto& sound : newscene->sounds) {
       const std::string id(sound->get_id());
       auto mapsnd(soundmap.find(id));
       if(mapsnd != soundmap.end()) {
@@ -551,7 +551,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
         soundmap[sound->get_id()] = sound;
       }
     }
-    for(auto source : newscene->source_objects) {
+    for(auto& source : newscene->source_objects) {
       const std::string id(source->get_id());
       auto mapsrc(sourcemap.find(id));
       if(mapsrc != sourcemap.end()) {
@@ -563,7 +563,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
         sourcemap[source->get_id()] = source;
       }
     }
-    for(auto rec : newscene->receivermod_objects) {
+    for(auto& rec : newscene->receivermod_objects) {
       const std::string id(rec->get_id());
       auto maprec(receivermap.find(id));
       if(maprec != receivermap.end()) {
@@ -669,7 +669,7 @@ void TASCAR::session_t::start()
     started_ = false;
     throw;
   }
-  for(auto mod : modules)
+  for(auto& mod : modules)
     mod->post_prepare();
   for(std::vector<TASCAR::connection_t*>::iterator icon = connections.begin();
       icon != connections.end(); ++icon) {
@@ -877,9 +877,9 @@ TASCAR::actor_module_t::actor_module_t(const TASCAR::module_cfg_t& cfg,
     : module_base_t(cfg)
 {
   GET_ATTRIBUTE(actor, "", "pattern to match actor objects");
-  for(auto act : actor) {
+  for(auto& act : actor) {
     std::vector<TASCAR::named_object_t> lobj = session->find_objects(act);
-    for(auto o : lobj)
+    for(auto& o : lobj)
       obj.push_back(o);
   }
   if(fail_on_empty && obj.empty())
