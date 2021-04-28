@@ -2,7 +2,7 @@ SHELL=/bin/bash
 
 include ../config.mk
 
-all: acousticmodel.pdf manual.pdf callgraph.pdf
+all: fdn.pdf acousticmodel.pdf manual.pdf callgraph.pdf
 
 #manual.pdf: acousticmodel.pdf callgraph.pdf manual.run5
 

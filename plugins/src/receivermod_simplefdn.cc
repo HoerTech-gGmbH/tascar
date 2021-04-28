@@ -362,14 +362,14 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
       dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
       absorption(0.6), c(340)
 {
-  GET_ATTRIBUTE(fdnorder,"","Order of FDN");
-  GET_ATTRIBUTE(dw,"rad/s","Spatial spread");
-  GET_ATTRIBUTE(t60,"s","$T_{60}$, or zero to use Sabine's equation");
-  GET_ATTRIBUTE(damping,"","Damping (first order lowpass) coefficient");
-  GET_ATTRIBUTE_BOOL(prefilt,"Filter before feedback matrix");
-  GET_ATTRIBUTE(absorption,"","Absorption used in Sabine's equation");
-  GET_ATTRIBUTE(c,"m/s","Speed of sound");
-  GET_ATTRIBUTE(volumetric,"m","Dimension of room x y z");
+  GET_ATTRIBUTE(fdnorder, "", "Order of FDN");
+  GET_ATTRIBUTE(dw, "rad/s", "Spatial spread");
+  GET_ATTRIBUTE(t60, "s", "$T_{60}$, or zero to use Sabine's equation");
+  GET_ATTRIBUTE(damping, "", "Damping (first order lowpass) coefficient");
+  GET_ATTRIBUTE_BOOL(prefilt, "Filter before feedback matrix");
+  GET_ATTRIBUTE(absorption, "", "Absorption used in Sabine's equation");
+  GET_ATTRIBUTE(c, "m/s", "Speed of sound");
+  GET_ATTRIBUTE(volumetric, "m", "Dimension of room x y z");
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}
@@ -398,7 +398,8 @@ public:
   void update_par();
   void setlogdelays(bool ld);
   void configure();
-  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   virtual void add_variables(TASCAR::osc_server_t* srv);
   static int osc_set_dim_damp_absorption(const char* path, const char* types,
                                          lo_arg** argv, int argc,
@@ -537,8 +538,8 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
   }
 }
 
-TASCAR::receivermod_base_t::data_t* simplefdn_t::create_state_data(double srate,
-                                                                   uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t*
+simplefdn_t::create_state_data(double srate, uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }
