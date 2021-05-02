@@ -1,3 +1,9 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (C) 2018 Giso Grimm
+ * Copyright (C) 2021 Giso Grimm
+ */
 /**
    \file jackiowav.h
    \ingroup apptascar
@@ -8,8 +14,6 @@
 /*
   License (GPL)
  
-  Copyright (C) 2018  Giso Grimm
-
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License as
   published by the Free Software Foundation; version 2 of the

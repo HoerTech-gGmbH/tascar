@@ -1,3 +1,10 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
 /* License (GPL)
  *
  * This program is free software; you can redistribute it and/or
