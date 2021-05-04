@@ -114,6 +114,38 @@ std::string TASCAR::get_tuid()
   return c;
 }
 
+const std::vector<tsccfg::node_t>
+tsccfg::node_get_children(const tsccfg::node_t& node, const std::string& name)
+{
+  TASCAR_ASSERT(node);
+  std::vector<tsccfg::node_t> children;
+#ifdef USEPUGIXML
+  for(auto& sn : node.children()) {
+    if(name.empty() || (name == tsccfg::node_get_name(sn)))
+      children.push_back(sn);
+  }
+#elif defined(USEXERCESXML)
+  auto nodelist(node->getChildNodes());
+  for(size_t k = 0; k < nodelist->getLength(); ++k) {
+    auto node(nodelist->item(k));
+    if(node->getNodeType() == xercesc::DOMNode::ELEMENT_NODE) {
+      tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(node));
+      if(sne)
+        if(name.empty() || (name == tsccfg::node_get_name(sne)))
+          children.push_back(sne);
+    }
+  }
+#else
+  for(auto& sn : node->get_children()) {
+    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
+    if(sne)
+      if(name.empty() || (name == tsccfg::node_get_name(sne)))
+        children.push_back(sne);
+  }
+#endif
+  return children;
+}
+
 std::vector<tsccfg::node_t> tsccfg::node_get_children(tsccfg::node_t& node,
                                                       const std::string& name)
 {
@@ -1918,27 +1950,6 @@ void tsccfg::node_set_attribute(tsccfg::node_t& node, const std::string& name,
   node->setAttribute(str2wstr(name).c_str(), str2wstr(value).c_str());
 #else
   node->set_attribute(name, value);
-#endif
-}
-
-const std::vector<tsccfg::node_t>
-tsccfg::node_get_children(const tsccfg::node_t& node)
-{
-  TASCAR_ASSERT(node);
-#ifdef USEPUGIXML
-  TASCAR_ASSERT(false);
-  return std::vector<tsccfg::node_t>();
-#elif defined(USEXERCESXML)
-  TASCAR_ASSERT(false);
-  return std::vector<tsccfg::node_t>();
-#else
-  std::vector<tsccfg::node_t> retval;
-  for(auto& sn : node->get_children()) {
-    tsccfg::node_t sne(dynamic_cast<tsccfg::node_t>(sn));
-    if(sne)
-      retval.push_back(sne);
-  }
-  return retval;
 #endif
 }
 

@@ -65,7 +65,8 @@ namespace tsccfg {
 
   std::vector<tsccfg::node_t> node_get_children(tsccfg::node_t&,
                                                 const std::string& name = "");
-  const std::vector<tsccfg::node_t> node_get_children(const tsccfg::node_t&);
+  const std::vector<tsccfg::node_t>
+  node_get_children(const tsccfg::node_t&, const std::string& name = "");
   tsccfg::node_t node_add_child(tsccfg::node_t&, const std::string&);
   std::string node_get_attribute_value(const tsccfg::node_t&,
                                        const std::string& n);

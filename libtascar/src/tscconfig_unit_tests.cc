@@ -51,6 +51,18 @@ TEST(node_t, get_children)
   EXPECT_EQ(3u, nodes3.size());
 }
 
+TEST(node_t, get_children2)
+{
+  TASCAR::xml_doc_t doc("<session>\n  <sound><plugins/> </sound> <!-- abc -->  "
+                        "<sound/> <image/></session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  const tsccfg::node_t& rnode(doc.root());
+  auto nodes(tsccfg::node_get_children(rnode));
+  EXPECT_EQ(3u, nodes.size());
+  auto nodes2(tsccfg::node_get_children(rnode, "image"));
+  EXPECT_EQ(1u, nodes2.size());
+}
+
 TEST(node_t, get_path)
 {
   TASCAR::xml_doc_t doc("<session><sound/><sound/></session>",
