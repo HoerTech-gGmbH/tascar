@@ -169,6 +169,7 @@
 "plugins/build/tascarsource_door.so","usr/lib/"
 "plugins/build/tascarsource_generic1storder.so","usr/lib/"
 "plugins/build/tascarsource_omni.so","usr/lib/"
+"plugins/build/tascarsource_farsrc.so","usr/lib/"
 "scripts/*.py","usr/share/tascar/python/"
 "scripts/airabsorptionfilter.m","usr/share/tascar/matlab/"
 "scripts/example_materials.m","usr/share/tascar/matlab/"

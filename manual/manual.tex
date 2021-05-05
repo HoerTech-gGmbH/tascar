@@ -993,6 +993,13 @@ Door sources shift the perceived source position behind a ``door''
 shape, limited by the edges. They are basically designed for
 interactive transitions between simulated rooms.
 
+\subsubsection{Source directivity ``farsrc''}
+
+The ``farsrc'' source is the same as ``omni'' except that sound is
+attenuated within a spherical volume and faded in with a von-Hann ramp
+outside the volume, converging to a $\frac1r$ distance law outside the
+ramp. It has these attributes: \input{tabsoundfarsrc.tex}
+
 \subsection{The {\tt <diffuse .../>} element}\label{sec:diffuse}\index{diffuse}\index{diffuse}
 
 \input{tabdiffuse.tex}

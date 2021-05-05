@@ -42,6 +42,7 @@
       </sound>
       <sound type="cardioidmod"/>
       <sound type="door"/>
+      <sound type="farsrc"/>
     </source>
     <!-- generic receivers -->
     <receiver type="amb1h0v" name="amb1h0v"/>
