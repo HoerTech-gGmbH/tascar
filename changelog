@@ -1,3 +1,4 @@
+0.217: Microphone array receiver type, many minor bugfixes and improvements
 0.216: Support of subwoofers in speaker layout files.
 0.215: Bugfix of the hoa3d receiver type (tolerance value of pseudo-inverse).
 0.214: Build for arm, minor bugfixes and improvements.
