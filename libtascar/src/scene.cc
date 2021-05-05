@@ -137,7 +137,6 @@ src_object_t::src_object_t(tsccfg::node_t xmlsrc)
     if(tsccfg::node_get_name(sne) == "sound")
       add_sound(sne);
     else if((tsccfg::node_get_name(sne) != "creator") &&
-            (tsccfg::node_get_name(sne) != "sndfile") &&
             (tsccfg::node_get_name(sne) != "navmesh") &&
             (tsccfg::node_get_name(sne) != "include") &&
             (tsccfg::node_get_name(sne) != "position") &&
