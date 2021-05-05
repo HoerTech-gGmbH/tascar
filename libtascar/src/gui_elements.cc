@@ -831,23 +831,30 @@ void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo:
   draw_mask(dynamic_cast<TASCAR::Scene::mask_object_t*>(obj),cr,markersize);
 }
 
-void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize)
+void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f,
+                                    Cairo::RefPtr<Cairo::Context> cr,
+                                    double normalsize, double msize)
 {
-  if( f ){
+  if(f) {
     const std::vector<pos_t>& roomnodes(f->get_verts());
     pos_t center;
-    for(unsigned int k=0;k<roomnodes.size();k++){
+    for(unsigned int k = 0; k < roomnodes.size(); k++) {
       center += roomnodes[k];
     }
-    center *= 1.0/roomnodes.size();
+    center *= 1.0 / roomnodes.size();
     cr->save();
-    if( normalsize > 0 ){
+    if(normalsize > 0) {
+      cr->set_source_rgba(0, 0, 0, 0.5);
+      cr->set_line_width(0.2 * msize);
       pos_t pn(f->get_normal());
-      pn *= normalsize;
+      pn *= normalsize * view.get_scale() * 0.2;
       pn += center;
       pn = view(pn);
       center = view(center);
-      draw_edge(cr,center,pn);
+      cr->move_to(center.x, -center.y);
+      cr->arc(center.x, -center.y, 0.5 * msize, 0, PI2);
+      cr->fill();
+      draw_edge(cr, center, pn);
     }
     cr->stroke();
     cr->restore();
@@ -1328,191 +1335,222 @@ void scene_draw_t::draw_room_src(TASCAR::Scene::diff_snd_field_obj_t* obj,Cairo:
   }
 }
 
-void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,
+                             Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  if( face ){
+  if(face) {
     bool active(face->isactive(time));
     bool solo(face->get_solo());
-    if( !active )
-      msize*=0.5;
+    if(!active)
+      msize *= 0.5;
     pos_t loc(view(face->get_location()));
     cr->save();
-    if( ((TASCAR::Scene::object_t*)face) == selection ){
-      cr->set_line_width( 2*msize );
-      cr->set_source_rgba(1,0.7,0,0.5);
-      ngon_draw(face,cr);
+    if(((TASCAR::Scene::object_t*)face) == selection) {
+      cr->set_line_width(2 * msize);
+      cr->set_source_rgba(1, 0.7, 0, 0.5);
+      ngon_draw(face, cr);
     }
-    if( solo && blink ){
+    if(solo && blink) {
       // solo indicating:
-      cr->set_line_width( 1.2*msize );
-      cr->set_source_rgba(1,0,0,0.5);
-      ngon_draw(face,cr);
+      cr->set_line_width(1.2 * msize);
+      cr->set_source_rgba(1, 0, 0, 0.5);
+      ngon_draw(face, cr);
     }
     // outline:
-    cr->set_line_width( 0.2*msize );
-    if( active )
-      cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
+    cr->set_line_width(0.2 * msize);
+    if(active)
+      cr->set_source_rgb(face->color.r, face->color.g, face->color.b);
     else
-      cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
-    ngon_draw(face,cr);
+      cr->set_source_rgba(face->color.r, face->color.g, face->color.b, 0.6);
+    ngon_draw(face, cr);
     // fill:
-    if( active ){
+    if(active) {
       cr->save();
-      cr->set_line_width( 0.1*msize );
-      ngon_draw_normal(face,cr,1.0);
+      cr->set_line_width(0.1 * msize);
+      ngon_draw_normal(face, cr, 0.2, msize);
       cr->restore();
       // normal and name:
-      cr->set_source_rgba(face->color.r,face->color.g,0.5+0.5*face->color.b,0.3);
-      if( loc.z != std::numeric_limits<double>::infinity()){
-        if( !b_acoustic_model ){
-          cr->arc(loc.x, -loc.y, msize, 0, PI2 );
+      cr->set_source_rgba(face->color.r, face->color.g,
+                          0.5 + 0.5 * face->color.b, 0.3);
+      if(loc.z != std::numeric_limits<double>::infinity()) {
+        if(!b_acoustic_model) {
+          cr->arc(loc.x, -loc.y, msize, 0, PI2);
           cr->fill();
         }
-        cr->set_line_width( 0.4*msize );
-        cr->set_source_rgba(face->color.r,face->color.g,face->color.b,GUI_FACE_ALPHA);
-        ngon_draw(face,cr,true);
-        if( b_print_labels && (!b_acoustic_model) ){
-          cr->set_source_rgb(0, 0, 0 );
-          cr->move_to( loc.x + 0.1*msize, -loc.y );
-          cr->show_text( face->get_name().c_str() );
+        cr->set_line_width(0.4 * msize);
+        cr->set_source_rgba(face->color.r, face->color.g, face->color.b,
+                            GUI_FACE_ALPHA);
+        ngon_draw(face, cr, true);
+        if(b_print_labels && (!b_acoustic_model)) {
+          cr->set_source_rgb(0, 0, 0);
+          cr->move_to(loc.x + 0.1 * msize, -loc.y);
+          cr->show_text(face->get_name().c_str());
           cr->stroke();
         }
       }
     }
     cr->restore();
-    
   }
 }
 
-void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,
+                                  Cairo::RefPtr<Cairo::Context> cr,
+                                  double msize)
 {
-  if( face ){
+  if(face) {
     bool active(face->isactive(time));
     bool solo(face->get_solo());
-    if( !active )
-      msize*=0.5;
+    if(!active)
+      msize *= 0.5;
     pos_t loc(view(face->get_location()));
     cr->save();
-    if( ((TASCAR::Scene::object_t*)face) == selection ){
-      cr->set_line_width( 2*msize );
-      cr->set_source_rgba(1,0.7,0,0.5);
-      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        ngon_draw(*it,cr);
+    if(((TASCAR::Scene::object_t*)face) == selection) {
+      cr->set_line_width(2 * msize);
+      cr->set_source_rgba(1, 0.7, 0, 0.5);
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it =
+              face->reflectors.begin();
+          it != face->reflectors.end(); ++it)
+        ngon_draw(*it, cr);
     }
-    if( solo && blink ){
+    if(solo && blink) {
       // solo indicating:
-      cr->set_line_width( 1.5*msize );
-      cr->set_source_rgba(1,0,0,0.5);
-      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        ngon_draw(*it,cr);
+      cr->set_line_width(1.5 * msize);
+      cr->set_source_rgba(1, 0, 0, 0.5);
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it =
+              face->reflectors.begin();
+          it != face->reflectors.end(); ++it)
+        ngon_draw(*it, cr);
     }
     // fill:
-    if( active ){
+    if(active) {
       // normal and name:
-      cr->set_source_rgba(face->color.r,face->color.g,0.5+0.5*face->color.b,0.3);
-      if( loc.z != std::numeric_limits<double>::infinity()){
-        if( !b_acoustic_model ){
-          cr->arc(loc.x, -loc.y, msize, 0, PI2 );
+      cr->set_source_rgba(face->color.r, face->color.g,
+                          0.5 + 0.5 * face->color.b, 0.3);
+      if(loc.z != std::numeric_limits<double>::infinity()) {
+        if(!b_acoustic_model) {
+          cr->arc(loc.x, -loc.y, msize, 0, PI2);
           cr->fill();
         }
-        cr->set_line_width( 0.4*msize );
-        cr->set_source_rgba(face->color.r,face->color.g,face->color.b,GUI_FACE_ALPHA);
-        for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-          ngon_draw(*it,cr,true);
+        cr->set_line_width(0.4 * msize);
+        cr->set_source_rgba(face->color.r, face->color.g, face->color.b,
+                            GUI_FACE_ALPHA);
+        for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it =
+                face->reflectors.begin();
+            it != face->reflectors.end(); ++it)
+          ngon_draw(*it, cr, true);
         cr->save();
-        cr->set_line_width( 0.2*msize );
-        cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
-        for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-          ngon_draw_normal(*it,cr,0.2);
+        cr->set_line_width(0.2 * msize);
+        cr->set_source_rgb(face->color.r, face->color.g, face->color.b);
+        for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it =
+                face->reflectors.begin();
+            it != face->reflectors.end(); ++it)
+          ngon_draw_normal(*it, cr, 0.2, msize);
         cr->restore();
-        //ngon_draw_normal(face,cr);
-        if( b_print_labels && (!b_acoustic_model) ){
-          cr->set_source_rgb(0, 0, 0 );
-          cr->move_to( loc.x + 0.1*msize, -loc.y );
-          cr->show_text( face->get_name().c_str() );
+        // ngon_draw_normal(face,cr);
+        if(b_print_labels && (!b_acoustic_model)) {
+          cr->set_source_rgb(0, 0, 0);
+          cr->move_to(loc.x + 0.1 * msize, -loc.y);
+          cr->show_text(face->get_name().c_str());
           cr->stroke();
         }
       }
-    }else{
+    } else {
       // outline:
-      cr->set_line_width( 0.2*msize );
-      cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
-      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        ngon_draw(*it,cr);
+      cr->set_line_width(0.2 * msize);
+      cr->set_source_rgba(face->color.r, face->color.g, face->color.b, 0.6);
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it =
+              face->reflectors.begin();
+          it != face->reflectors.end(); ++it)
+        ngon_draw(*it, cr);
       cr->save();
-      cr->set_line_width( 0.1*msize );
-      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it=face->reflectors.begin();it!=face->reflectors.end();++it)
-        ngon_draw_normal(*it,cr,0.2);
+      cr->set_line_width(0.1 * msize);
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator it =
+              face->reflectors.begin();
+          it != face->reflectors.end(); ++it)
+        ngon_draw_normal(*it, cr, 0.2, msize);
       cr->restore();
     }
     cr->restore();
-    
   }
 }
 
-void scene_draw_t::draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* face,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* face,
+                                      Cairo::RefPtr<Cairo::Context> cr,
+                                      double msize)
 {
-  if( face ){
+  if(face) {
     bool active(face->isactive(time));
     bool solo(face->get_solo());
-    if( !active )
-      msize*=0.5;
+    if(!active)
+      msize *= 0.5;
     pos_t loc(view(face->get_location()));
     cr->save();
-    if( ((TASCAR::Scene::object_t*)face) == selection ){
-      cr->set_line_width( 2*msize );
-      cr->set_source_rgba(1,0.7,0,0.5);
-      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=face->obstacles.begin();it!=face->obstacles.end();++it)
-        ngon_draw(*it,cr);
+    if(((TASCAR::Scene::object_t*)face) == selection) {
+      cr->set_line_width(2 * msize);
+      cr->set_source_rgba(1, 0.7, 0, 0.5);
+      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it =
+              face->obstacles.begin();
+          it != face->obstacles.end(); ++it)
+        ngon_draw(*it, cr);
     }
-    if( solo && blink ){
+    if(solo && blink) {
       // solo indicating:
-      cr->set_line_width( 1.5*msize );
-      cr->set_source_rgba(1,0,0,0.5);
-      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=face->obstacles.begin();it!=face->obstacles.end();++it)
-        ngon_draw(*it,cr);
+      cr->set_line_width(1.5 * msize);
+      cr->set_source_rgba(1, 0, 0, 0.5);
+      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it =
+              face->obstacles.begin();
+          it != face->obstacles.end(); ++it)
+        ngon_draw(*it, cr);
     }
     // fill:
-    if( active ){
+    if(active) {
       // normal and name:
-      cr->set_source_rgba(face->color.r,face->color.g,0.5+0.5*face->color.b,0.3);
-      if( loc.z != std::numeric_limits<double>::infinity()){
-        if( !b_acoustic_model ){
-          cr->arc(loc.x, -loc.y, msize, 0, PI2 );
+      cr->set_source_rgba(face->color.r, face->color.g,
+                          0.5 + 0.5 * face->color.b, 0.3);
+      if(loc.z != std::numeric_limits<double>::infinity()) {
+        if(!b_acoustic_model) {
+          cr->arc(loc.x, -loc.y, msize, 0, PI2);
           cr->fill();
         }
-        cr->set_line_width( 0.4*msize );
-        cr->set_source_rgba(face->color.r,face->color.g,face->color.b,GUI_FACE_ALPHA);
-        for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=face->obstacles.begin();it!=face->obstacles.end();++it)
-          ngon_draw(*it,cr,true);
-        //cr->save();
-        //cr->set_line_width( 0.2*msize );
-        //cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
-        //for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=face->obstacles.begin();it!=face->obstacles.end();++it)
+        cr->set_line_width(0.4 * msize);
+        cr->set_source_rgba(face->color.r, face->color.g, face->color.b,
+                            GUI_FACE_ALPHA);
+        for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it =
+                face->obstacles.begin();
+            it != face->obstacles.end(); ++it)
+          ngon_draw(*it, cr, true);
+        // cr->save();
+        // cr->set_line_width( 0.2*msize );
+        // cr->set_source_rgb(face->color.r,face->color.g,face->color.b);
+        // for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator
+        // it=face->obstacles.begin();it!=face->obstacles.end();++it)
         //  ngon_draw_normal(*it,cr,0.2);
-        //cr->restore();
-        //ngon_draw_normal(face,cr);
-        if( b_print_labels && (!b_acoustic_model) ){
-          cr->set_source_rgb(0, 0, 0 );
-          cr->move_to( loc.x + 0.1*msize, -loc.y );
-          cr->show_text( face->get_name().c_str() );
+        // cr->restore();
+        // ngon_draw_normal(face,cr);
+        if(b_print_labels && (!b_acoustic_model)) {
+          cr->set_source_rgb(0, 0, 0);
+          cr->move_to(loc.x + 0.1 * msize, -loc.y);
+          cr->show_text(face->get_name().c_str());
           cr->stroke();
         }
       }
-    }else{
+    } else {
       // outline:
-      cr->set_line_width( 0.2*msize );
-      cr->set_source_rgba(face->color.r,face->color.g,face->color.b,0.6);
-      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=face->obstacles.begin();it!=face->obstacles.end();++it)
-        ngon_draw(*it,cr);
+      cr->set_line_width(0.2 * msize);
+      cr->set_source_rgba(face->color.r, face->color.g, face->color.b, 0.6);
+      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it =
+              face->obstacles.begin();
+          it != face->obstacles.end(); ++it)
+        ngon_draw(*it, cr);
       cr->save();
-      cr->set_line_width( 0.1*msize );
-      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it=face->obstacles.begin();it!=face->obstacles.end();++it)
-        ngon_draw_normal(*it,cr,0.2);
+      cr->set_line_width(0.1 * msize);
+      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator it =
+              face->obstacles.begin();
+          it != face->obstacles.end(); ++it)
+        ngon_draw_normal(*it, cr, 0.2, msize);
       cr->restore();
     }
     cr->restore();
-    
   }
 }
 
