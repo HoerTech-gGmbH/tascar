@@ -9,9 +9,9 @@ include ../rules.mk
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
   vbap vbap3d hoa2d ortf intensityvector vmic chmap hoa2d_fuma		\
   cardioidmod debugpos hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc	\
-  simplefdn itu51 foaconv hrtf
+  simplefdn itu51 foaconv hrtf micarray
 
-SOURCES = omni cardioidmod door generic1storder
+SOURCES = omni cardioidmod door generic1storder farsrc
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\

@@ -195,7 +195,7 @@ namespace TSCGUI {
     bool draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2);
   protected:
     void draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr);
-    virtual void ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize);
+    virtual void ngon_draw_normal(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr, double normalsize, double msize);
     virtual void ngon_draw(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr,bool fill = false, bool area = false);
     virtual void draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASCAR::pos_t size,Cairo::RefPtr<Cairo::Context> cr);
     // object draw functions:

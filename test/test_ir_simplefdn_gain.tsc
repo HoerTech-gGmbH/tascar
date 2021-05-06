@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <source><sound x="1"/></source>
+    <reverb dw="2.0" type="simplefdn" gain="6.0205999132796241824"/>
+    <receiver type="amb1h1v"/>
+  </scene>
+</session>

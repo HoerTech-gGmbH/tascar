@@ -1,3 +1,24 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <gtest/gtest.h>
 
 #include "audiochunks.h"
@@ -22,6 +43,16 @@ TEST(wave_t, rms)
   ASSERT_NEAR(0.707107f, wave.rms(), 1e-6f);
   wave[1] = -1.0f;
   ASSERT_NEAR(1.0f, wave.rms(), 1e-9f);
+}
+
+TEST(wave_t, plusop)
+{
+  TASCAR::wave_t wave(4);
+  wave += 1.0f;
+  EXPECT_EQ(1.0f,wave.d[0]);
+  EXPECT_EQ(1.0f,wave.d[1]);
+  EXPECT_EQ(1.0f,wave.d[2]);
+  EXPECT_EQ(1.0f,wave.d[3]);
 }
 
 TEST(wave_t, resample)

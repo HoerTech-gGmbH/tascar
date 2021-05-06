@@ -1,5 +1,5 @@
 # variables:
-VERSION=0.216.1
+VERSION=0.217.0
 
 ARCH=$(shell uname -m)
 
@@ -30,9 +30,10 @@ PREFIX = /usr/local
 
 GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
 COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
-COMMIT_SINCE_MASTER=$(shell git log --pretty='format:%h' origin/master.. | wc -w)
+LATEST_RELEASETAG=$(shell git tag -l "release*" |tail -1)
+COMMIT_SINCE_RELEASE=$(shell git rev-list --count $(LATEST_RELEASETAG)..)
 
-FULLVERSION=$(VERSION).$(COMMIT_SINCE_MASTER)-$(COMMITHASH)$(GITMODIFIED)
+FULLVERSION=$(VERSION).$(COMMIT_SINCE_RELEASE)-$(COMMITHASH)$(GITMODIFIED)
 
 mkfile_name := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_path := $(subst $(notdir $(mkfile_name)),,$(mkfile_name))

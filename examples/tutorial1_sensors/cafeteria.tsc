@@ -46,7 +46,7 @@
         </plugins>
       </sound>
     </source>
-    <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" rotation="-11.25" diffup="true">
+    <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" diffup="true">
       <position>0 12.6 -16.441478 1.2</position>
       <orientation>0 3 0 0</orientation>
     </receiver>
@@ -68,7 +68,7 @@
       <!--<sndfile name="${HOME}/tascar_scenes/sounds/diffuse/mensa_distant.wav" gain="0" channels="4" loop="0"/>-->
     </diffuse>
     <diffuse name="reverb" size="300 300 300" color="#0000ff"/>
-    <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" rotation="-11.25" diffup="true">
+    <receiver name="listener" type="hoa2d" maxre="true" layout="16chglab.spk" diffuse="true" caliblevel="120" diffup="true">
       <position>0 12.6 -16.441478 1.2</position>
       <orientation>0 3 0 0</orientation>
     </receiver>

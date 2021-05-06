@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "speakerarray.h"
 #include "errorhandling.h"
 #include <algorithm>
@@ -19,7 +41,7 @@ spk_array_cfg_t::spk_array_cfg_t(tsccfg::node_t xmlsrc, bool use_parent_xml)
     GET_ATTRIBUTE(layout, "", "name of speaker layout file");
     if(layout.empty()) {
       // try to find layout element:
-      for(auto sne:tsccfg::node_get_children(xmlsrc,"layout"))
+      for(auto& sne:tsccfg::node_get_children(xmlsrc,"layout"))
         e_layout = sne;
       if(e_layout == NULL)
         throw TASCAR::ErrMsg(
@@ -52,7 +74,7 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
   clear();
-  for(auto sn : tsccfg::node_get_children(e_layout,elementname))
+  for(auto& sn : tsccfg::node_get_children(e_layout,elementname))
     emplace_back(sn);
   elayout.GET_ATTRIBUTE(xyzgain,"","XYZ-gain for FOA decoding");
   elayout.GET_ATTRIBUTE(name,"","Name of layout, for documentation only");
@@ -406,6 +428,19 @@ std::vector<TASCAR::pos_t> spk_array_t::get_positions() const
   for(auto it = begin(); it != end(); ++it)
     pos.push_back(*it);
   return pos;
+}
+
+void spk_array_diff_render_t::clear_states()
+{
+  // reset all subwoofer filters:
+  for(auto& flt : flt_lowp)
+    flt.clear();
+  for(auto& flt : flt_hp)
+    flt.clear();
+  for(auto& flt : flt_allp)
+    flt.clear();
+  for(auto& flt : decorrflt)
+    flt.clear();
 }
 
 /*

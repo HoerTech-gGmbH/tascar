@@ -29,9 +29,9 @@
 #define RECEIVERMOD_H
 
 #include "audiostates.h"
+#include "osc_helper.h"
 #include "speakerarray.h"
 #include "tascarplugin.h"
-#include "osc_helper.h"
 
 namespace TASCAR {
 
@@ -73,20 +73,31 @@ namespace TASCAR {
     {
       return std::vector<std::string>();
     };
-    virtual receivermod_base_t::data_t* create_data(double srate,
-                                                    uint32_t fragsize)
+    virtual receivermod_base_t::data_t* create_state_data(double srate,
+                                                          uint32_t fragsize) const = 0;
+    virtual receivermod_base_t::data_t* create_diffuse_state_data(double srate,
+                                                                  uint32_t fragsize) const
     {
-      return NULL;
+      return create_state_data(srate, fragsize);
     };
-    virtual receivermod_base_t::data_t* create_diffuse_data(double srate,
-                                                            uint32_t fragsize)
-    {
-      return create_data(srate, fragsize);
-    };
-    
+
     virtual void add_variables(TASCAR::osc_server_t* srv){};
+    /**
+       Return the delay compensation in seconds needed by a receiver
+       implementation.
+
+       This value will be added to the user-provided delay compensation.
+     */
+    virtual double get_delay_comp() const { return 0.0; };
 
   protected:
+  };
+
+  struct spatial_error_t {
+    double abs_rE_error;
+    double abs_rV_error;
+    double angular_rE_error;
+    double angular_rV_error;
   };
 
   /**
@@ -105,8 +116,11 @@ namespace TASCAR {
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
     virtual std::string get_spktypeid() const;
+    void post_prepare();
+    spatial_error_t get_spatial_error(const std::vector<TASCAR::pos_t>& srcpos);
     TASCAR::spk_array_diff_render_t spkpos;
     std::vector<std::string> typeidattr;
+    bool showspatialerror;
   };
 
   class receivermod_t : public receivermod_base_t {
@@ -123,13 +137,15 @@ namespace TASCAR {
     virtual void postproc(std::vector<wave_t>& output);
     virtual std::vector<std::string> get_connections() const;
     void configure();
+    void post_prepare();
     void release();
-    virtual receivermod_base_t::data_t* create_data(double srate,
-                                                    uint32_t fragsize);
-    virtual receivermod_base_t::data_t* create_diffuse_data(double srate,
-                                                            uint32_t fragsize);
+    virtual receivermod_base_t::data_t* create_state_data(double srate,
+                                                    uint32_t fragsize) const;
+    virtual receivermod_base_t::data_t* create_diffuse_state_data(double srate,
+                                                            uint32_t fragsize) const;
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
+    virtual double get_delay_comp() const;
 
   private:
     receivermod_t(const receivermod_t&);

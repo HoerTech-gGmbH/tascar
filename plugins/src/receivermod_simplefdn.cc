@@ -1,3 +1,23 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "amb33defs.h"
 #include "errorhandling.h"
 #include "receivermod.h"
@@ -362,14 +382,14 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
       dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
       absorption(0.6), c(340)
 {
-  GET_ATTRIBUTE(fdnorder,"","Order of FDN");
-  GET_ATTRIBUTE(dw,"rad/s","Spatial spread");
-  GET_ATTRIBUTE(t60,"s","$T_{60}$, or zero to use Sabine's equation");
-  GET_ATTRIBUTE(damping,"","Damping (first order lowpass) coefficient");
-  GET_ATTRIBUTE_BOOL(prefilt,"Filter before feedback matrix");
-  GET_ATTRIBUTE(absorption,"","Absorption used in Sabine's equation");
-  GET_ATTRIBUTE(c,"m/s","Speed of sound");
-  GET_ATTRIBUTE(volumetric,"m","Dimension of room x y z");
+  GET_ATTRIBUTE(fdnorder, "", "Order of FDN");
+  GET_ATTRIBUTE(dw, "rad/s", "Spatial spread");
+  GET_ATTRIBUTE(t60, "s", "$T_{60}$, or zero to use Sabine's equation");
+  GET_ATTRIBUTE(damping, "", "Damping (first order lowpass) coefficient");
+  GET_ATTRIBUTE_BOOL(prefilt, "Filter before feedback matrix");
+  GET_ATTRIBUTE(absorption, "", "Absorption used in Sabine's equation");
+  GET_ATTRIBUTE(c, "m/s", "Speed of sound");
+  GET_ATTRIBUTE(volumetric, "m", "Dimension of room x y z");
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}
@@ -398,7 +418,8 @@ public:
   void update_par();
   void setlogdelays(bool ld);
   void configure();
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   virtual void add_variables(TASCAR::osc_server_t* srv);
   static int osc_set_dim_damp_absorption(const char* path, const char* types,
                                          lo_arg** argv, int argc,
@@ -537,8 +558,8 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
   }
 }
 
-TASCAR::receivermod_base_t::data_t* simplefdn_t::create_data(double srate,
-                                                             uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t*
+simplefdn_t::create_state_data(double srate, uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

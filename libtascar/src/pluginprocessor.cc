@@ -1,3 +1,24 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "pluginprocessor.h"
 
 using namespace TASCAR;
@@ -6,7 +27,7 @@ plugin_processor_t::plugin_processor_t( tsccfg::node_t xmlsrc, const std::string
   : xml_element_t( xmlsrc ), licensed_component_t(typeid(*this).name())
 {
   tsccfg::node_t se_plugs(find_or_add_child("plugins"));
-  for(auto sne : tsccfg::node_get_children(se_plugs))
+  for(auto& sne : tsccfg::node_get_children(se_plugs))
     plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,parentname)));
 }
 
@@ -22,6 +43,12 @@ void plugin_processor_t::configure()
 				(*p)->release();
     throw;
   }
+}
+
+void plugin_processor_t::post_prepare()
+{
+  for(auto& p : plugins)
+    p->post_prepare();
 }
 
 void plugin_processor_t::add_licenses( licensehandler_t* lh )

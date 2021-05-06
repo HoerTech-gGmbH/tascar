@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ola.h"
 #include <math.h>
 #include "errorhandling.h"
@@ -61,6 +83,12 @@ TASCAR::ola_t::ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windo
     for(uint32_t k=0;k<pwnd.size();k++)
       pwnd[k] = (1.0-0.16)/2.0-0.5*cos(2.0*k*M_PI/pwnd.size())+0.16*0.5*cos(4.0*M_PI*k/pwnd.size());
   }
+}
+
+void TASCAR::ola_t::clear()
+{
+  stft_t::clear();
+  long_out.clear();
 }
 
 void TASCAR::ola_t::ifft(wave_t& wOut)

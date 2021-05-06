@@ -196,6 +196,11 @@ namespace TASCAR {
     double get_b0() const { return b0_; };
     double get_b1() const { return b1_; };
     double get_b2() const { return b2_; };
+    void clear()
+    {
+      z1 = 0.0;
+      z2 = 0.0;
+    };
 
   protected:
     double a1_, a2_, b0_, b1_, b2_;

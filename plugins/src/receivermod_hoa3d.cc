@@ -1,3 +1,24 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "errorhandling.h"
 #include "hoa.h"
 #include "receivermod.h"
@@ -19,7 +40,7 @@ public:
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
   void postproc(std::vector<TASCAR::wave_t>& output);
-  receivermod_base_t::data_t* create_data(double srate, uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
   int32_t order;
   std::string method;
   std::string dectype;
@@ -122,8 +143,8 @@ void hoa3d_dec_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_speaker_t::postproc(output);
 }
 
-TASCAR::receivermod_base_t::data_t* hoa3d_dec_t::create_data(double srate,
-                                                             uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* hoa3d_dec_t::create_state_data(double srate,
+                                                             uint32_t fragsize) const
 {
   return new data_t(channels);
 }

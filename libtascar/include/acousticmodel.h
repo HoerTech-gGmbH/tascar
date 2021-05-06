@@ -122,6 +122,7 @@ namespace TASCAR {
       virtual ~diffuse_t(){};
       virtual void preprocess(const TASCAR::transport_t& tp);
       void configure();
+      void post_prepare();
       void release();
       void add_licenses(licensehandler_t*);
       amb1rotator_t audio;
@@ -162,6 +163,7 @@ namespace TASCAR {
                const std::string& parentname);
       ~source_t();
       void configure();
+      void post_prepare();
       void release();
       virtual void process_plugins(const TASCAR::transport_t& tp);
       void add_licenses(licensehandler_t*);
@@ -196,6 +198,7 @@ namespace TASCAR {
                  bool is_reverb_);
       ~receiver_t();
       void configure();
+      void post_prepare();
       void release();
       void clear_output();
       void add_pointsource(const pos_t& prel, double width, double scattering,
@@ -204,7 +207,7 @@ namespace TASCAR {
                                    receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
-                           double& distamnce, double& gain, bool b_img,
+                           double& distamnce, float& gain, bool b_img,
                            gainmodel_t gainmodel);
       void set_next_gain(double gain);
       void set_fade(double targetgain, double duration, double start = -1);
@@ -229,6 +232,7 @@ namespace TASCAR {
       bool has_diffusegain;
       double falloff;
       double delaycomp;
+      double recdelaycomp;
       double layerfadelen;
       bool muteonstop;
       // derived / internal / updated variables:
@@ -239,13 +243,14 @@ namespace TASCAR {
       bool active;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
       bool gain_zero;
-      double external_gain;
+      float external_gain;
       const bool is_reverb;
 
     private:
-      double x_gain;
-      double dx_gain;
-      double next_gain;
+      // gain state:
+      float x_gain;
+      // target gain:
+      float next_gain;
       // fade timer, is > 0 during fade:
       int32_t fade_timer;
       // time constant for fade:
@@ -313,23 +318,23 @@ namespace TASCAR {
       soundpath_t(
           const source_t* src, const soundpath_t* parent_ = NULL,
           const reflector_t* generator_ =
-              NULL); //< constructor, for primary sources set parent_ to NULL
-      void update_position(); //< Update image source position from parent and
-                              //reflector
+              NULL); ///< constructor, for primary sources set parent_ to NULL
+      void update_position(); ///< Update image source position from parent and
+                              ///< reflector
       pos_t get_effective_position(
           const pos_t& receiverp,
-          double& gain); //< correct perceived position and caculate gain
+          float& gain); ///< correct perceived position and caculate gain
       uint32_t getorder()
-          const; //< Return image source order of sound path, 0 is direct path
+          const; ///< Return image source order of sound path, 0 is direct path
       void apply_reflectionfilter(
-          TASCAR::wave_t& audio); //< Apply reflection filter of all reflectors
-      const soundpath_t* parent;  //< Parent sound path (or this if primary)
-      const source_t* primary;    //< Primary source
-      const reflector_t* reflector; //< Reflector, which created new sound path
-                                    //from parent, or NULL for primary
+          TASCAR::wave_t& audio); ///< Apply reflection filter of all reflectors
+      const soundpath_t* parent;  ///< Parent sound path (or this if primary)
+      const source_t* primary;    ///< Primary source
+      const reflector_t* reflector; ///< Reflector, which created new sound path
+                                    ///< from parent, or NULL for primary
       std::vector<double>
-          reflectionfilterstates; //< Filter states for first-order reflection
-                                  //filters
+          reflectionfilterstates; ///< Filter states for first-order reflection
+                                  ///< filters
       bool visible;
       pos_t p_cut;
     };
@@ -354,7 +359,7 @@ namespace TASCAR {
        * @ingroup callgraph
        */
       uint32_t process(const TASCAR::transport_t& tp);
-      double get_gain() const { return gain; };
+      float get_gain() const { return gain; };
 
     protected:
       double c_;
@@ -373,13 +378,13 @@ namespace TASCAR {
       uint32_t chunksize;
       double dt;
       double distance;
-      double gain;
+      float gain;
       double dscale;
       double air_absorption;
       varidelay_t delayline;
       float airabsorption_state;
-      double layergain;
-      double dlayergain;
+      float layergain;
+      float dlayergain;
 
     public:
       uint32_t ismorder;
@@ -407,7 +412,7 @@ namespace TASCAR {
       amb1rotator_t audio;
       uint32_t chunksize;
       double dt;
-      double gain;
+      float gain;
     };
 
     /**

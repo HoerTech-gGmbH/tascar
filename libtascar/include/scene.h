@@ -227,6 +227,7 @@ namespace TASCAR {
       diff_snd_field_obj_t(tsccfg::node_t e);
       virtual ~diff_snd_field_obj_t();
       void configure();
+      void post_prepare();
       void release();
       /**
          \callgraph
@@ -305,6 +306,7 @@ namespace TASCAR {
       src_object_t(tsccfg::node_t e);
       ~src_object_t();
       void configure();
+      void post_prepare();
       void release();
       /**
          \callgraph
@@ -390,6 +392,7 @@ namespace TASCAR {
       diffuse_reverb_t(tsccfg::node_t e);
       ~diffuse_reverb_t();
       void configure();
+      void post_prepare();
       void release();
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
@@ -422,6 +425,7 @@ namespace TASCAR {
       ~scene_t();
       src_object_t* add_source();
       void configure();
+      void post_prepare();
       void release();
       std::string description;
       std::string name;

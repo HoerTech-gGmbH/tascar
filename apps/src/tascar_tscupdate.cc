@@ -1,3 +1,22 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <libxml++/libxml++.h>
 #include <iostream>
 #include <stdio.h>
@@ -41,56 +60,60 @@ void scan_sound( xmlpp::Element* sound )
   }
 }
 
-void scan_source( xmlpp::Element* src )
+void scan_source(xmlpp::Element* src)
 {
   xmlpp::Node::NodeList soundchildren(src->get_children("sound"));
   uint32_t num_sounds(soundchildren.size());
   xmlpp::Node::NodeList children(src->get_children());
-  for(xmlpp::Node::NodeList::iterator nita=children.begin();nita!=children.end();++nita){
+  for(xmlpp::Node::NodeList::iterator nita = children.begin();
+      nita != children.end(); ++nita) {
     xmlpp::Element* e_child(dynamic_cast<xmlpp::Element*>(*nita));
-    if( e_child ){
-      if( e_child && (e_child->get_name() == "sound") )
-        scan_sound( e_child );
-      if( e_child && (e_child->get_name() == "sndfile") ){
+    if(e_child) {
+      if(e_child && (e_child->get_name() == "sound"))
+        scan_sound(e_child);
+      if(e_child && (e_child->get_name() == "sndfile")) {
         xmlpp::Element* snd;
-        if( num_sounds == 1 )
-          snd = find_or_add_child( src, "sound" );
+        if(num_sounds == 1)
+          snd = find_or_add_child(src, "sound");
         else
-          snd = find_or_add_child( src, "move_this_to_the_right_sound" );
-        xmlpp::Element* plugs(find_or_add_child( snd, "plugins" ));
-        xmlpp::Element* ne_child(plugs->add_child("sndfile_alternative"));
+          snd = find_or_add_child(src, "move_this_to_the_right_sound");
+        xmlpp::Element* plugs(find_or_add_child(snd, "plugins"));
+        xmlpp::Element* ne_child(plugs->add_child("sndfile"));
         std::string fchannel(e_child->get_attribute_value("firstchannel"));
-        if( !fchannel.empty() )
-          ne_child->set_attribute("channel",fchannel);
-        ne_child->set_attribute("name",e_child->get_attribute_value("name"));
+        if(!fchannel.empty())
+          ne_child->set_attribute("channel", fchannel);
+        ne_child->set_attribute("name", e_child->get_attribute_value("name"));
         std::string sloop(e_child->get_attribute_value("loop"));
-        if( !sloop.empty() )
-          ne_child->set_attribute("loop",sloop);
-        //e_child->remove_attribute("firstchannel");
-        ne_child->set_attribute("levelmode","calib");
+        if(!sloop.empty())
+          ne_child->set_attribute("loop", sloop);
+        // e_child->remove_attribute("firstchannel");
+        ne_child->set_attribute("levelmode", "calib");
         // gain to level conversion:
         std::string gain(e_child->get_attribute_value("gain"));
         double dgain(0);
-        if( !gain.empty() )
+        if(!gain.empty())
           dgain = atof(gain.c_str());
         char ctmp[1024];
-        sprintf(ctmp,"%g",dgain-20.0*log10(2e-5));
-        ne_child->set_attribute("level",ctmp);
-        //e_child->remove_attribute("gain");
+        sprintf(ctmp, "%g", dgain - 20.0 * log10(2e-5));
+        ne_child->set_attribute("level", ctmp);
+        // e_child->remove_attribute("gain");
         // starttime to position conversion:
         std::string startt(e_child->get_attribute_value("starttime"));
         double dstart(0);
-        if( !startt.empty() ){
+        if(!startt.empty()) {
           dstart = atof(startt.c_str());
-          sprintf(ctmp,"%g",-dstart);
-          ne_child->set_attribute("position",ctmp);
+          sprintf(ctmp, "%g", -dstart);
+          ne_child->set_attribute("position", ctmp);
         }
         ne_child->remove_attribute("starttime");
+        std::string sconnect(snd->get_attribute_value("connect"));
+        if((sconnect == "@.0") || (sconnect == "@.1")) {
+          snd->remove_attribute("connect");
+        }
         // copy:
-        //plugs->import_node(e_child);
-        //src->remove_child(e_child);
-        //e_child = NULL;
-        
+        // plugs->import_node(e_child);
+        src->remove_child(e_child);
+        e_child = NULL;
       }
     }
   }

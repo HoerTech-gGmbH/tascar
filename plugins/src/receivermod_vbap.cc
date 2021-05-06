@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
 #include <boost/geometry/geometries/adapted/boost_tuple.hpp>
@@ -14,28 +36,27 @@ typedef bg::model::multi_point<bg_point_t> bg_pointlist_t;
 
 class simplex_t {
 public:
-  simplex_t() : c1(-1),c2(-1){};
-  bool get_gain( const TASCAR::pos_t& p){
-    g1 = p.x*l11+p.y*l21;
-    g2 = p.x*l12+p.y*l22;
-    if( (g1>=0.0) && (g2>=0.0) ){
-      double w(sqrt(g1*g1+g2*g2));
-      if( w > 0 )
-        w = 1.0/w;
-      g1*=w;
-      g2*=w;
+  simplex_t() : c1(-1), c2(-1){};
+  bool get_gain(const TASCAR::pos_t& p, float& g1, float& g2) const
+  {
+    g1 = p.x * l11 + p.y * l21;
+    g2 = p.x * l12 + p.y * l22;
+    if((g1 >= 0.0f) && (g2 >= 0.0f)) {
+      float w(sqrtf(g1 * g1 + g2 * g2));
+      if(w > 0.0f)
+        w = 1.0f / w;
+      g1 *= w;
+      g2 *= w;
       return true;
     }
     return false;
   };
   uint32_t c1;
   uint32_t c2;
-  double l11;
-  double l12;
-  double l21;
-  double l22;
-  double g1;
-  double g2;
+  float l11;
+  float l12;
+  float l21;
+  float l22;
 };
 
 class rec_vbap_t : public TASCAR::receivermod_base_speaker_t {
@@ -52,7 +73,7 @@ public:
   rec_vbap_t(tsccfg::node_t xmlsrc);
   virtual ~rec_vbap_t() {};
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   std::vector<simplex_t> simplices;
 };
 
@@ -137,9 +158,11 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
     d->dwp[k] = - d->wp[k]*t_inc;
   uint32_t k=0;
   for( auto it=simplices.begin();it!=simplices.end();++it){
-    if( it->get_gain(psrc_normal) ){
-      d->dwp[it->c1] = (it->g1 - d->wp[it->c1])*t_inc;
-      d->dwp[it->c2] = (it->g2 - d->wp[it->c2])*t_inc;
+    float g1(0.0f);
+    float g2(0.0f);
+    if( it->get_gain(psrc_normal,g1,g2) ){
+      d->dwp[it->c1] = (g1 - d->wp[it->c1])*t_inc;
+      d->dwp[it->c2] = (g2 - d->wp[it->c2])*t_inc;
     }
     ++k;
   }
@@ -155,7 +178,7 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
   }
 }
 
-TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_state_data(double srate,uint32_t fragsize) const
 {
   return new data_t(spkpos.size());
 }

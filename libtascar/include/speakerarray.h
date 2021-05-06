@@ -124,6 +124,7 @@ namespace TASCAR {
     void render_diffuse(std::vector<TASCAR::wave_t>& output);
     void add_diffuse_sound_field(const TASCAR::amb1wave_t& diff);
     void configure();
+    void clear_states();
     spk_array_t subs;
 
   private:

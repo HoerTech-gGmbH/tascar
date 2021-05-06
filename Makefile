@@ -32,6 +32,9 @@ test: apps plugins
 	$(MAKE) -j 1 -C test
 	$(MAKE) -C examples
 
+testjack: apps plugins
+	$(MAKE) -j 1 -C test jack
+
 googletest:
 	$(MAKE) -C external_libs googlemock
 
@@ -39,7 +42,7 @@ unit-tests: $(patsubst %,%-subdir-unit-tests,$(MODULES))
 $(patsubst %,%-subdir-unit-tests,$(MODULES)): libtascar googletest
 	$(MAKE) -C $(@:-subdir-unit-tests=) unit-tests
 
-coverage: googletest unit-tests test
+coverage: googletest unit-tests test testjack
 	lcov --capture --directory ./ --output-file coverage.info
 	genhtml coverage.info --prefix $$PWD --show-details --demangle-cpp --output-directory $@
 	x-www-browser ./coverage/index.html
@@ -76,10 +79,10 @@ checkversiontagged:
 releasetag: checkmodified
 	git tag -a release_$(VERSION)
 
-allwithcov:
+allwithcov: googletest
 	$(MAKE) LDCOVFLAGS="-fprofile-arcs" GCCCOVFLAGS="-fprofile-arcs -ftest-coverage" COVLIBS="-lgcov" $(MODULES)
 
 cleancov:
 	find -name "*.gcda" -exec rm -f \{\} \;
 	rm -Rf coverage
-	rm coverage.info
+	rm -f coverage.info

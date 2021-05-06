@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "scene.h"
 #include "amb33defs.h"
 #include "errorhandling.h"
@@ -82,6 +104,11 @@ void diff_snd_field_obj_t::configure()
   source->prepare(cfg());
 }
 
+void diff_snd_field_obj_t::post_prepare()
+{
+  source->post_prepare();
+}
+
 audio_port_t::~audio_port_t() {}
 
 void audio_port_t::set_port_index(uint32_t port_index_)
@@ -106,11 +133,10 @@ src_object_t::src_object_t(tsccfg::node_t xmlsrc)
 {
   if(get_name().empty())
     set_name("in");
-  for(auto sne : tsccfg::node_get_children(dynobject_t::e)) {
+  for(auto& sne : tsccfg::node_get_children(dynobject_t::e)) {
     if(tsccfg::node_get_name(sne) == "sound")
       add_sound(sne);
     else if((tsccfg::node_get_name(sne) != "creator") &&
-            (tsccfg::node_get_name(sne) != "sndfile") &&
             (tsccfg::node_get_name(sne) != "navmesh") &&
             (tsccfg::node_get_name(sne) != "include") &&
             (tsccfg::node_get_name(sne) != "position") &&
@@ -208,6 +234,12 @@ void src_object_t::configure()
   startframe = f_sample * starttime;
 }
 
+void src_object_t::post_prepare()
+{
+  for(auto& snd : sound)
+    snd->post_prepare();
+}
+
 void src_object_t::release()
 {
   for(auto it = sound.begin(); it != sound.end(); ++it)
@@ -230,7 +262,7 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
     GET_ATTRIBUTE(c, "m/s", "speed of sound");
     GET_ATTRIBUTE_BOOL(active, "render scene");
     description = tsccfg::node_get_text(e, "description");
-    for(auto sne : tsccfg::node_get_children(e)) {
+    for(auto& sne : tsccfg::node_get_children(e)) {
       TASCAR::Scene::object_t* obj(NULL);
       // parse nodes:
       if(tsccfg::node_get_name(sne) == "source") {
@@ -268,8 +300,8 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
         namelist.insert(obj->get_name());
       }
     }
-    for(auto source_object : source_objects) {
-      for(auto sound : source_object->sound) {
+    for(auto& source_object : source_objects) {
+      for(auto& sound : source_object->sound) {
         sounds.push_back(sound);
         const std::string id(sound->get_id());
         auto mapsnd(soundmap.find(id));
@@ -315,7 +347,7 @@ void scene_t::configure_meter(float tc, TASCAR::levelmeter::weight_t w)
 
 void scene_t::clean_children()
 {
-  for(auto obj : get_objects() )
+  for(auto& obj : get_objects() )
     delete obj;
 }
 
@@ -537,6 +569,17 @@ void scene_t::configure()
         p_as->release();
     }
     throw;
+  }
+}
+
+void scene_t::post_prepare()
+{
+  for(auto it = all_objects.begin(); it != all_objects.end(); ++it) {
+    // prepare all objects which are derived from audiostates:
+    audiostates_t* p_as(dynamic_cast<audiostates_t*>(*it));
+    if(p_as) {
+      p_as->post_prepare();
+    }
   }
 }
 
@@ -1232,6 +1275,12 @@ void diffuse_reverb_t::configure()
   for(uint32_t acn = 0; acn < AMB11::idx::channels; ++acn)
     source->audio[acn].use_external_buffer(outchannels[acn].n,
                                            outchannels[acn].d);
+}
+
+void diffuse_reverb_t::post_prepare()
+{
+  receiver_obj_t::post_prepare();
+  source->post_prepare();
 }
 
 void diffuse_reverb_t::release()

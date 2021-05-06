@@ -1,3 +1,8 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ */
 /**
    \file tascar_jackpar.cc
    \ingroup apptascar

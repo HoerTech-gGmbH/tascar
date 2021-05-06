@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "jackrender.h"
 #include <string.h>
 #include <unistd.h>
@@ -52,6 +74,7 @@ void TASCAR::scene_render_rt_t::start()
   chunk_cfg_t cf( get_srate(), get_fragsize() );
   // first prepare all nodes for audio processing:
   prepare( cf );
+  post_prepare();
   try{
     // create all ports:
     for(std::vector<std::string>::iterator iip=input_ports.begin();iip!=input_ports.end();++iip)

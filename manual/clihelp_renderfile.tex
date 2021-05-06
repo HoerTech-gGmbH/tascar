@@ -1,0 +1,16 @@
+This command line tool can be used for rendering the image source model of a single scene in a
+\tascar{} session with audio input from a sound file and saving the rendered signal to a sound file.
+Common usage example:
+\begin{lstlisting}[numbers=none]
+  tascar_renderfile -i input_file.wav -o output_file.wav tascar_scene.tsc
+\end{lstlisting}
+
+The size of the input file \verb!input_file.wav! (number of audio
+channels) has to correspond with the number of sources in the
+scene. The size of the file \verb!output_file.wav!, which will be
+created after calling this tool, will correspond to the number of
+output channels of the receiver used in the scene. In case of
+multi-channel output (e.g., speaker based receiver types), the order
+follows the order of the channel definition in the \tascar{}
+files. This may differ from the order of jack ports, because some
+jack front ends sort ports alphabetically.

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+basic test: sound propagation, 2m
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="2" delayline="false" airabsorption="false"/>
+      <orientation>0 0 -45 0</orientation>
+    </source>
+    <receiver type="micarray">
+      <mic delay="freefield" position="0 0 0">
+        <mic name="Test Highshelf" delay="freefield" position="0 0 0">
+          <filter type="highshelf" axis="0 1 0" theta_st="0" beta="0.89" omega="3100" alpha_st="2" alpha_m="0.14"/>
+        </mic>
+        <mic name="Test ParamEq" delay="freefield" position="0 0 0">
+          <filter type="equalizer" axis="0 0 1" theta_end="1.78" omega_end="1300" omega_st="650" gain_end="-2" gain_st="-5.4" Q="2.3"/>
+          <mic name="Test HierarchicFilter" delay="freefield" position="0 0 0">
+            <filter type="highshelf" axis="0 1 0" theta_st="0" beta="0.89" omega="3100" alpha_st="2" alpha_m="0.14"/>
+          </mic>
+        </mic>
+        <mic name="Test Multiple Filter" delay="freefield" position="0 0 0">
+          <filter type="equalizer" axis="0 0 1" theta_end="1.78" omega_end="1300" omega_st="650" gain_end="-2" gain_st="-5.4" Q="2.3"/>
+          <filter type="highshelf" axis="0 1 0" theta_st="0" beta="0.89" omega="3100" alpha_st="2" alpha_m="0.14"/>
+        </mic>
+        <mic name="Test Sphere" delay="sphere" position="0 0.08 0">
+          <mic name="Test HierarchicDelay" delay="freefield" position="0.02 0.08 0"/>
+        </mic>
+        <mic name="Test Freefield" delay="freefield" position="0 0.08 0"/>
+      </mic>
+    </receiver>
+  </scene>
+</session>

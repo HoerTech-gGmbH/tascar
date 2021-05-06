@@ -13,7 +13,7 @@
   <speaker az="-135"   connect="system:playback_11"/>
   <speaker az="-112.5" connect="system:playback_12"/>
   <speaker az="-90"    connect="system:playback_13"/>
-  <speaker az="-57.5"  connect="system:playback_14"/>
+  <speaker az="-67.5"  connect="system:playback_14"/>
   <speaker az="-45"    connect="system:playback_15"/>
   <speaker az="-22.5"  connect="system:playback_16"/>
 </layout>

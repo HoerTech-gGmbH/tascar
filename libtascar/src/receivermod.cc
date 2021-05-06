@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm, Tobias Hegemann
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "receivermod.h"
 #include "errorhandling.h"
 #include <dlfcn.h>
@@ -66,6 +88,11 @@ std::vector<std::string> TASCAR::receivermod_t::get_connections() const
   return libdata->get_connections();
 }
 
+double TASCAR::receivermod_t::get_delay_comp() const
+{
+  return libdata->get_delay_comp();
+}
+
 void TASCAR::receivermod_t::add_variables(TASCAR::osc_server_t* srv)
 {
   return libdata->add_variables(srv);
@@ -77,6 +104,12 @@ void TASCAR::receivermod_t::configure()
   libdata->prepare(*this);
 }
 
+void TASCAR::receivermod_t::post_prepare()
+{
+  receivermod_base_t::post_prepare();
+  libdata->post_prepare();
+}
+
 void TASCAR::receivermod_t::release()
 {
   receivermod_base_t::release();
@@ -84,15 +117,15 @@ void TASCAR::receivermod_t::release()
 }
 
 TASCAR::receivermod_base_t::data_t*
-TASCAR::receivermod_t::create_data(double srate, uint32_t fragsize)
+TASCAR::receivermod_t::create_state_data(double srate, uint32_t fragsize) const
 {
-  return libdata->create_data(srate, fragsize);
+  return libdata->create_state_data(srate, fragsize);
 }
 
 TASCAR::receivermod_base_t::data_t*
-TASCAR::receivermod_t::create_diffuse_data(double srate, uint32_t fragsize)
+TASCAR::receivermod_t::create_diffuse_state_data(double srate, uint32_t fragsize) const
 {
-  return libdata->create_diffuse_data(srate, fragsize);
+  return libdata->create_diffuse_state_data(srate, fragsize);
 }
 
 TASCAR::receivermod_t::~receivermod_t()
@@ -110,14 +143,15 @@ TASCAR::receivermod_base_t::~receivermod_base_t() {}
 
 TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(
     tsccfg::node_t xmlsrc)
-    : receivermod_base_t(xmlsrc), spkpos(xmlsrc, false), typeidattr({"type"})
+  : receivermod_base_t(xmlsrc), spkpos(xmlsrc, false), typeidattr({"type"}), showspatialerror(false)
 {
+  GET_ATTRIBUTE_BOOL(showspatialerror,"show absolute and angular error for rE and rV for 2D and 3D rendering, given the actual speaker layout and settings");
 }
 
 std::string TASCAR::receivermod_base_speaker_t::get_spktypeid() const
 {
   std::string r;
-  for(auto ta : typeidattr)
+  for(auto& ta : typeidattr)
     r += ta + ":" + tsccfg::node_get_attribute_value(e, ta) + ",";
   if(r.size() && (r[r.size() - 1] == ','))
     r.erase(r.size() - 1);
@@ -222,6 +256,94 @@ void TASCAR::receivermod_base_speaker_t::release()
 {
   receivermod_base_t::release();
   spkpos.release();
+}
+
+spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
+    const std::vector<TASCAR::pos_t>& srcpos)
+{
+  if(!is_prepared())
+    throw TASCAR::ErrMsg("not in configured state. unable to calculate "
+                         "get_rE() of an unconfigured receiver.");
+  TASCAR::receivermod_base_t::data_t* sd(
+      create_state_data(f_sample, n_fragment));
+  TASCAR::wave_t ones(n_fragment);
+  ones += 1.0f;
+  std::vector<wave_t> output(spkpos.size() + spkpos.subs.size(),
+                             TASCAR::wave_t(n_fragment));
+  spatial_error_t err;
+  err.abs_rE_error = 0;
+  err.abs_rV_error = 0;
+  err.angular_rE_error = 0;
+  err.angular_rV_error = 0;
+  for(auto& pos : srcpos) {
+    for(size_t ch = 0; ch < output.size(); ++ch)
+      output[ch].clear();
+    add_pointsource(pos, 0.0, ones, output, sd);
+    postproc(output);
+    spkpos.clear_states();
+    TASCAR::pos_t rE;
+    TASCAR::pos_t rV;
+    double norm_E(0.0);
+    double norm_V(0.0);
+    for(size_t outch(0); outch < spkpos.size(); ++outch) {
+      double w(output[outch].d[output[outch].n - 1]);
+      // calculate rV:
+      TASCAR::pos_t pV(spkpos[outch].unitvector);
+      pV *= w;
+      rV += pV;
+      norm_V += w;
+      // calculate rE:
+      w *= w;
+      TASCAR::pos_t pE(spkpos[outch].unitvector);
+      pE *= w;
+      rE += pE;
+      norm_E += w;
+    }
+    if(norm_E > 0.0)
+      rE /= norm_E;
+    if(norm_V != 0.0)
+      rV /= norm_V;
+    err.abs_rV_error += pow(1.0 - rV.norm(), 2.0);
+    err.abs_rE_error += pow(1.0 - rE.norm(), 2.0);
+    err.angular_rV_error += dot_prod(rV, pos);
+    err.angular_rE_error += dot_prod(rE, pos);
+  }
+  err.abs_rV_error = sqrt(err.abs_rV_error / srcpos.size());
+  err.abs_rE_error = sqrt(err.abs_rE_error / srcpos.size());
+  err.angular_rV_error = acos(err.angular_rV_error / srcpos.size());
+  err.angular_rE_error = acos(err.angular_rE_error / srcpos.size());
+  return err;
+}
+
+void TASCAR::receivermod_base_speaker_t::post_prepare()
+{
+  receivermod_base_t::post_prepare();
+  spkpos.post_prepare();
+  if(showspatialerror) {
+    std::vector<TASCAR::pos_t> ring;
+    ring.resize(360);
+    for(size_t k = 0; k < ring.size(); ++k)
+      ring[k].set_sphere(1.0, k * PI2 / ring.size(), 0.0);
+    spatial_error_t err = get_spatial_error(ring);
+    std::cout << "% spatial error:\n";
+    std::cout << "layout = '" << spkpos.layout << "';\n";
+    std::cout << "typeid = '" << get_spktypeid() << "';\n";
+    std::cout << "numchannels = " << spkpos.size() << ";\n";
+    std::cout << "% error on a ring:\n";
+    std::cout << "err2d.abs_rV = " << err.abs_rV_error << ";\n";
+    std::cout << "err2d.abs_rE = " << err.abs_rE_error << ";\n";
+    std::cout << "err2d.ang_rV = " << RAD2DEG * err.angular_rV_error << ";\n";
+    std::cout << "err2d.ang_rE = " << RAD2DEG * err.angular_rE_error << ";\n";
+    std::vector<TASCAR::pos_t> sphere(TASCAR::generate_icosahedron());
+    while(sphere.size() < 20 * spkpos.size())
+      sphere = subdivide_and_normalize_mesh(sphere, 1);
+    err = get_spatial_error(sphere);
+    std::cout << "% error on a sphere:\n";
+    std::cout << "err3d.abs_rV = " << err.abs_rV_error << ";\n";
+    std::cout << "err3d.abs_rE = " << err.abs_rE_error << ";\n";
+    std::cout << "err3d.ang_rV = " << RAD2DEG * err.angular_rV_error << ";\n";
+    std::cout << "err3d.ang_rE = " << RAD2DEG * err.angular_rE_error << ";\n";
+  }
 }
 
 /*

@@ -45,6 +45,7 @@ namespace TASCAR {
      */
     ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windowtype_t wnd, windowtype_t zerownd,double wndpos,windowtype_t postwnd=WND_RECT);
     void ifft(wave_t& wOut);
+    void clear();
   private:
     wave_t zwnd1;
     wave_t zwnd2;

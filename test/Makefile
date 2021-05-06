@@ -3,22 +3,20 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd5 test_pos1 test_pos2 test_pos_trackinterp		\
 	test_snd_door1 test_snd_door2 test_snd_door3 test_pos_door	\
 	test_snd_layers test_snd_rec_amb1h1v test_wav_diffuse		\
-	test_wav_diffuse_hoa2d test_wav_diffuse_nsp4			\
+	test_wav_diffuse_hoa2d test_ir_hoa2d_offset test_wav_diffuse_nsp4			\
 	test_wav_diffuse_hoa2d4 test_wav_diffuse_layerbug		\
 	test_wav_diffirs test_sndgainramp test_sndgainramp2		\
 	test_ir_spkcorr test_snd_calib1 test_snd_calib2			\
 	test_snd_vbap51 test_snd_pink test_snd_sndfile			\
 	test_snd_sndfile2 test_snd_door4 test_snd_roommic		\
-	test_fail_vbap3d_flat test_notfail_vbap3d_3d			\
 	test_level_vbap3d test_ir_ortf_0deg test_ir_ortf_55deg		\
 	test_ir_scatter test_ir_noscatter test_ir_scatter_ortf		\
 	test_snd_sourcedir_generic test_snd_sourcedir_generic1		\
 	test_snd_sourcedir_generic_cardioid test_ir_wfs			\
-	test_ir_wfs_noplanewave hoa3d test_fail_duplicatenames		\
-	test_fail_duplicatescenenames test_level_hoa2d_basic		\
+	test_ir_wfs_noplanewave hoa3d test_level_hoa2d_basic		\
 	test_level_hoa2d_maxre test_ir_reverb test_ir_simplefdn		\
-	test_snd_vbap3d_speakermatch test_ir_volumetric			\
-	test_pos_obstacle test_pos_obstacle_inner			\
+	test_ir_simplefdn_gain test_snd_vbap3d_speakermatch		\
+	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner	\
 	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg	\
 	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
@@ -28,7 +26,20 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_hrtf_diffuse2 test_ir_delay test_ir_delay2		\
 	test_ir_delay3 test_snd_reverb test_wav_multichannel		\
 	test_snd_zeros test_ir_sub test_ir_sub_hoa2d test_ir_sub_nsp	\
-	test_ir_partconvrev test_ir_partconvrev_offset
+	test_ir_partconvrev test_ir_partconvrev_offset			\
+	test_ir_micarray_az0deg test_ir_micarray_az45deg		\
+	test_ir_micarray_az75deg test_ir_micarray_az90deg		\
+	test_ir_micarray_az105deg test_ir_micarray_az135deg		\
+	test_ir_micarray_az180deg test_ir_micarray_az225deg		\
+	test_ir_micarray_az270deg test_ir_micarray_az315deg		\
+	test_ir_micarray_el45deg test_ir_micarray_el90deg		\
+	test_ir_micarray_el-45deg test_ir_micarray_el-90deg		\
+	test_snd_diffuse_micarray
+
+TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
+	test_fail_duplicatenames test_fail_duplicatescenenames	\
+	test_fail_ir_micarray test_fail_hoa2d_nonflat		\
+	test_fail_hoa2d_irregular
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\
@@ -39,7 +50,7 @@ TEST_SND=$(wildcard test_snd*.tsc)
 
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
   vbap hoa2d ortf intensityvector vmic chmap hoa2d_fuma cardioidmod	\
-  debugpos hoa2d_fuma_hos wfs hrtf
+  debugpos hoa2d_fuma_hos wfs hrtf micarray
 
 
 
@@ -66,7 +77,7 @@ FAILING_TESTS = test_ir5
 TOL = 2e-7
 RMSTOL = 2e-7
 
-all: $(TESTS) testrec testlev
+all: $(TESTS) $(TEST_FAIL) testrec testlev
 
 jack: $(TEST_JACK)
 
@@ -214,10 +225,13 @@ valgrind_%: %.tsc
 	$(LIBPATH) valgrind  $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 
-all_init: $(patsubst %,init_%,$(TEST_SND:.tsc=))
+all_init: $(patsubst %,init_%,$(TESTS))
 
 init_%: %.tsc
-	$(LIBPATH) valgrind --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+
+init_test_ir%: test_ir%.tsc
+	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100
 
 clean:
 	rm -f *~ test*.wav gdbcmd
@@ -252,7 +266,7 @@ jackconnect_%: test_connect%.tsc
 
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: TOL=4e-4
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: RMSTOL=1e-4
-test_ir_simplefdn: IRLEN=44100
+test_ir_simplefdn test_ir_simplefdn_gain: IRLEN=44100
 test_ir_reverb: IRLEN=44100
 test_ir_partconvrev: IRLEN=44100
 test_ir_partconvrev_offset: IRLEN=44100

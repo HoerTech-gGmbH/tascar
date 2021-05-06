@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm, Tobias Hegemann
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "session.h"
 #include <chrono>
 #include <dlfcn.h>
@@ -194,6 +216,13 @@ void TASCAR::module_t::configure()
     module_base_t::release();
     throw;
   }
+}
+
+
+void TASCAR::module_t::post_prepare()
+{
+  module_base_t::post_prepare();
+  libdata->post_prepare();
 }
 
 void TASCAR::module_t::release()
@@ -532,7 +561,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
     scenes.push_back(newscene);
     scenes.back()->configure_meter(levelmeter_tc, levelmeter_weight);
     scenemap[newscene->id] = newscene;
-    for(auto sound : newscene->sounds) {
+    for(auto& sound : newscene->sounds) {
       const std::string id(sound->get_id());
       auto mapsnd(soundmap.find(id));
       if(mapsnd != soundmap.end()) {
@@ -544,7 +573,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
         soundmap[sound->get_id()] = sound;
       }
     }
-    for(auto source : newscene->source_objects) {
+    for(auto& source : newscene->source_objects) {
       const std::string id(source->get_id());
       auto mapsrc(sourcemap.find(id));
       if(mapsrc != sourcemap.end()) {
@@ -556,7 +585,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
         sourcemap[source->get_id()] = source;
       }
     }
-    for(auto rec : newscene->receivermod_objects) {
+    for(auto& rec : newscene->receivermod_objects) {
       const std::string id(rec->get_id());
       auto maprec(receivermap.find(id));
       if(maprec != receivermap.end()) {
@@ -662,6 +691,8 @@ void TASCAR::session_t::start()
     started_ = false;
     throw;
   }
+  for(auto& mod : modules)
+    mod->post_prepare();
   for(std::vector<TASCAR::connection_t*>::iterator icon = connections.begin();
       icon != connections.end(); ++icon) {
     connect((*icon)->src, (*icon)->dest, !(*icon)->failonerror, true, true);
@@ -868,9 +899,9 @@ TASCAR::actor_module_t::actor_module_t(const TASCAR::module_cfg_t& cfg,
     : module_base_t(cfg)
 {
   GET_ATTRIBUTE(actor, "", "pattern to match actor objects");
-  for(auto act : actor) {
+  for(auto& act : actor) {
     std::vector<TASCAR::named_object_t> lobj = session->find_objects(act);
-    for(auto o : lobj)
+    for(auto& o : lobj)
       obj.push_back(o);
   }
   if(fail_on_empty && obj.empty())

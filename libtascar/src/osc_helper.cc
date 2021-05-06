@@ -1,3 +1,10 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
 /* License (GPL)
  *
  * This program is free software; you can redistribute it and/or
@@ -71,6 +78,28 @@ int osc_set_vector_float(const char *path, const char *types, lo_arg **argv, int
 {
   if( user_data  ){
     std::vector<float> *data((std::vector<float> *)user_data);
+    if( argc == (int)(data->size()) )
+      for(int k=0;k<argc;++k)
+        (*data)[k] = argv[k]->f;
+  }
+  return 0;
+}
+
+int osc_set_vector_float_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data  ){
+    std::vector<float> *data((std::vector<float> *)user_data);
+    if( argc == (int)(data->size()) )
+      for(int k=0;k<argc;++k)
+        (*data)[k] = pow(10.0,0.05*argv[k]->f)*2e-5;
+  }
+  return 0;
+}
+
+int osc_set_vector_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data  ){
+    std::vector<double> *data((std::vector<double> *)user_data);
     if( argc == (int)(data->size()) )
       for(int k=0;k<argc;++k)
         (*data)[k] = argv[k]->f;
@@ -260,9 +289,25 @@ void osc_server_t::add_float_dbspl(const std::string& path,float *data)
   add_method(path,"f",osc_set_float_dbspl,data);
 }
 
-void osc_server_t::add_vector_float(const std::string& path,std::vector<float> *data)
+void osc_server_t::add_vector_float_dbspl(const std::string& path,
+                                          std::vector<float>* data)
 {
-  add_method(path,std::string(data->size(),'f').c_str(),osc_set_vector_float,data);
+  add_method(path, std::string(data->size(), 'f').c_str(),
+             osc_set_vector_float_dbspl, data);
+}
+
+void osc_server_t::add_vector_float(const std::string& path,
+                                    std::vector<float>* data)
+{
+  add_method(path, std::string(data->size(), 'f').c_str(), osc_set_vector_float,
+             data);
+}
+
+void osc_server_t::add_vector_double(const std::string& path,
+                                     std::vector<double>* data)
+{
+  add_method(path, std::string(data->size(), 'f').c_str(),
+             osc_set_vector_double, data);
 }
 
 void osc_server_t::add_double_db(const std::string& path,double *data)
@@ -356,19 +401,19 @@ TASCAR::msg_t::msg_t(tsccfg::node_t e)
     : TASCAR::xml_element_t(e), msg(lo_message_new())
 {
   GET_ATTRIBUTE(path, "", "OSC path name");
-  for(auto sne : tsccfg::node_get_children(e,"f")) {
+  for(auto& sne : tsccfg::node_get_children(e,"f")) {
     TASCAR::xml_element_t tsne(sne);
     double v(0);
     tsne.GET_ATTRIBUTE(v, "", "float value");
     lo_message_add_float(msg, v);
   }
-  for(auto sne : tsccfg::node_get_children(e,"i")) {
+  for(auto& sne : tsccfg::node_get_children(e,"i")) {
     TASCAR::xml_element_t tsne(sne);
     int32_t v(0);
     tsne.GET_ATTRIBUTE(v, "", "int value");
     lo_message_add_int32(msg, v);
   }
-  for(auto sne : tsccfg::node_get_children(e,"s")) {
+  for(auto& sne : tsccfg::node_get_children(e,"s")) {
     TASCAR::xml_element_t tsne(sne);
     std::string v("");
     tsne.GET_ATTRIBUTE(v, "", "string value");

@@ -1,3 +1,24 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "audioplugin.h"
 
 /*
@@ -9,38 +30,42 @@
  */
 class const_val_t : public TASCAR::audioplugin_base_t {
 public:
-  const_val_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
+  const_val_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   virtual ~const_val_t();
+
 private:
-  double a;
+  std::vector<float> a;
 };
 
 // default constructor, called while loading the plugin
-const_val_t::const_val_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    a(1)
+const_val_t::const_val_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), a(1, 1)
 {
   // register variable for XML access:
-  GET_ATTRIBUTE(a,"Pa","amplitude");
+  GET_ATTRIBUTE(a, "Pa", "amplitude, one entry per channel");
 }
 
-const_val_t::~const_val_t()
-{
-}
+const_val_t::~const_val_t() {}
 
-void const_val_t::add_variables( TASCAR::osc_server_t* srv )
+void const_val_t::add_variables(TASCAR::osc_server_t* srv)
 {
   // register variables for interactive OSC access:
-  srv->add_double_dbspl("/a",&a);
+  srv->add_vector_float_dbspl("/a", &a);
 }
 
-void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                             const TASCAR::pos_t& pos,
+                             const TASCAR::zyx_euler_t&,
+                             const TASCAR::transport_t& tp)
 {
   // implement the algrithm:
-  for(uint32_t k=0;k<chunk[0].n;++k)
-    chunk[0].d[k] += a;
+  size_t channels(std::min(chunk.size(), a.size()));
+  for(size_t ch = 0; ch < channels; ++ch)
+    for(uint32_t k = 0; k < chunk[ch].n; ++k)
+      chunk[ch].d[k] += a[ch];
 }
 
 // create the plugin interface:

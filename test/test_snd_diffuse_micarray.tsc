@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <receiver type="micarray">
+      <orientation>0 0 0 0
+      1 180 0 0</orientation>
+      <mic delay="freefield" position="0.1 0 0">
+	<mic position="0 0.1 0"/>
+	<mic position="0 0 0.1"/>
+	<mic position="0 -0.1 0"/>
+	<mic position="-0.1 -0.1 0"/>
+      </mic>
+    </receiver>
+    <diffuse>
+      <plugins>
+	<const a="0 1 0 0"/>
+      </plugins>
+    </diffuse>
+  </scene>
+</session>

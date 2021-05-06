@@ -14,6 +14,7 @@
 \usepackage{listings}
 \usepackage{framed,color}
 \usepackage{tabularx}
+\usepackage{multirow}
 \definecolor{shadecolor}{rgb}{1,0.9,0.8}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
@@ -992,6 +993,13 @@ Door sources shift the perceived source position behind a ``door''
 shape, limited by the edges. They are basically designed for
 interactive transitions between simulated rooms.
 
+\subsubsection{Source directivity ``farsrc''}
+
+The ``farsrc'' source is the same as ``omni'' except that sound is
+attenuated within a spherical volume and faded in with a von-Hann ramp
+outside the volume, converging to a $\frac1r$ distance law outside the
+ramp. It has these attributes: \input{tabsoundfarsrc.tex}
+
 \subsection{The {\tt <diffuse .../>} element}\label{sec:diffuse}\index{diffuse}\index{diffuse}
 
 \input{tabdiffuse.tex}
@@ -1917,83 +1925,7 @@ send_osc('localhost',9877,'/transport/locate',4)
 
 \clearpage
 
-\section{Command line interfaces}
-
-All command line applications of \tascar{} start with the prefix
-\verb!tascar_!. To get a list of valid command line options, use the
-flag \verb!-h! or \verb!--help!.
-
-\begin{itemize}
-\item \verb!tascar_cli!\\
-  Load \tascar sessions from command line (no GUI support)
-\item \verb!tascar_renderfile!\\
-  This command line tool can be used for rendering the image source model of a single scene in a
-  \tascar{} session with audio input from a sound file and saving the rendered signal to a sound file.
-  Common usage example:
-  \begin{lstlisting}[numbers=none]
-  tascar_renderfile -i input_file.wav -o output_file.wav tascar_scene.tsc
-  \end{lstlisting}
-
-  The size of the input file \verb!input_file.wav! (number of audio
-  channels) has to correspond with the number of sources in the
-  scene. The size of the file \verb!output_file.wav!, which will be
-  created after calling this tool, will correspond to the number of
-  output channels of the receiver used in the scene. In case of
-  multi-channel output (e.g., speaker based receiver types), the order
-  follows the order of the channel definition in the \tascar{}
-  files. This may differ from the order of jack ports, because some
-  jack front ends sort ports alphabetically.
-
-  Other options:
-
-  \begin{lstlisting}[numbers=none]
-  -h
-  --help
-
-  -s #
-  --scene=#
-
-  -i #
-  --inputfile=#
-
-  -o #
-  --outputfile=#
-
-  -t #
-  --starttime=#
-
-  -d
-  --dynamic
-
-  -f #
-  --fragsize=#
-
-  -0 #
-  --ismmin=#
-
-  -1 #
-  --ismmax=#
-
-  -v
-  --verbose
-  \end{lstlisting}
-\item \verb!tascar_renderir!\\
-This command line tool is used for rendering the impulse response of a \tascar{} scene. Common usage example:
-  \begin{lstlisting}[numbers=none]
-  tascar_renderir -o output_file.wav -f 44100 -1 2 tascar_scene.tsc
-  \end{lstlisting}
-The impulse response will be stored in \verb!output_file.wav!. \verb!44100! is the sampling rate and \verb!2! is the highest rendered image source order.
-
-\item \verb!tascar_lslsl!\\
-This command line tool outputs a list of available Lab Streaming Layer (LSL) streams.
-\item \verb!tascar_lsljacktime! \\
-  Create an LSL stream with jack time
-\item \verb!tascar_hdspmixer! \\
-  Interface to HDSP9652
-\item \verb!tascar_jackio! \\
-  Play and record wav files via jack.
-\end{itemize}
-
+\input{clihelp.tex}
 
 \clearpage
 

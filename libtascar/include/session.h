@@ -60,6 +60,7 @@ namespace TASCAR {
     module_t( const TASCAR::module_cfg_t& cfg );
     virtual ~module_t();
     void configure();
+    void post_prepare();
     void release();
     void update(uint32_t frame,bool running);
     virtual void validate_attributes(std::string&) const;

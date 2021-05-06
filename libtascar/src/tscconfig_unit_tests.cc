@@ -1,3 +1,22 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <gtest/gtest.h>
 
 #include "tscconfig.h"
@@ -15,7 +34,7 @@ TEST(node_t, set_name)
 {
   TASCAR::xml_doc_t doc;
   EXPECT_EQ("session", tsccfg::node_get_name(doc.root()));
-  tsccfg::node_set_name(doc.root(),"blue");
+  tsccfg::node_set_name(doc.root(), "blue");
   EXPECT_EQ("blue", tsccfg::node_get_name(doc.root()));
 }
 
@@ -30,6 +49,18 @@ TEST(node_t, get_children)
   EXPECT_EQ(1u, nodes2.size());
   auto nodes3(doc.root.get_children());
   EXPECT_EQ(3u, nodes3.size());
+}
+
+TEST(node_t, get_children2)
+{
+  TASCAR::xml_doc_t doc("<session>\n  <sound><plugins/> </sound> <!-- abc -->  "
+                        "<sound/> <image/></session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  const tsccfg::node_t& rnode(doc.root());
+  auto nodes(tsccfg::node_get_children(rnode));
+  EXPECT_EQ(3u, nodes.size());
+  auto nodes2(tsccfg::node_get_children(rnode, "image"));
+  EXPECT_EQ(1u, nodes2.size());
 }
 
 TEST(node_t, get_path)
@@ -155,6 +186,39 @@ TEST(xml_doc_t, from_node)
     EXPECT_EQ("myname", doc2.root.get_attribute("name"));
     EXPECT_EQ("42", doc2.root.get_attribute("val"));
   }
+}
+
+TEST(xml_doc_t, failfromemptystring)
+{
+  bool success(true);
+  try {
+    TASCAR::xml_doc_t doc("", TASCAR::xml_doc_t::LOAD_STRING);
+  }
+  catch(const std::exception& e) {
+    success = false;
+    std::string msg(e.what());
+    EXPECT_NE(std::string::npos, msg.find("pars"));
+    EXPECT_NE(std::string::npos, msg.find("string"));
+    EXPECT_NE(std::string::npos, msg.find("root node"));
+    std::cout << e.what() << std::endl;
+  }
+  EXPECT_EQ(false, success);
+}
+
+TEST(strrep,strrep)
+{
+  EXPECT_EQ("abc",TASCAR::strrep("xxxabcxxx","xxx",""));
+  EXPECT_EQ("xxxxxx",TASCAR::strrep("xxxabcxxx","abc",""));
+  EXPECT_EQ("111abc111",TASCAR::strrep("xxxabcxxx","x","1"));
+  EXPECT_EQ("xxxa12345xxx",TASCAR::strrep("xxxabcxxx","bc","12345"));
+}
+
+TEST(tostring,levelmeter)
+{
+  EXPECT_EQ("Z",TASCAR::to_string(TASCAR::levelmeter::Z));
+  EXPECT_EQ("A",TASCAR::to_string(TASCAR::levelmeter::A));
+  EXPECT_EQ("C",TASCAR::to_string(TASCAR::levelmeter::C));
+  EXPECT_EQ("bandpass",TASCAR::to_string(TASCAR::levelmeter::bandpass));
 }
 
 // Local Variables:

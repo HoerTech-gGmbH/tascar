@@ -1,3 +1,24 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm, Tobias Hegemann
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "sourcemod.h"
 #include "errorhandling.h"
 #include <dlfcn.h>
@@ -58,15 +79,21 @@ void sourcemod_t::configure()
   libdata->prepare( cfg() );
 }
 
+void sourcemod_t::post_prepare()
+{
+  sourcemod_base_t::post_prepare();
+  libdata->post_prepare();
+}
+
 void sourcemod_t::release()
 {
   sourcemod_base_t::release();
   libdata->release();
 }
 
-sourcemod_base_t::data_t* sourcemod_t::create_data(double srate,uint32_t fragsize)
+sourcemod_base_t::data_t* sourcemod_t::create_state_data(double srate,uint32_t fragsize) const
 {
-  return libdata->create_data(srate,fragsize);
+  return libdata->create_state_data(srate,fragsize);
 }
 
 void sourcemod_base_t::configure()

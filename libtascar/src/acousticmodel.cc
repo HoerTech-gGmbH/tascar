@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "acousticmodel.h"
 #include "errorhandling.h"
 
@@ -35,6 +57,11 @@ void diffuse_t::preprocess(const TASCAR::transport_t& tp)
 {
   plugins.process_plugins( audio.wxyz, center, orientation, tp );
   rmslevel.update(audio.w());
+}
+
+void diffuse_t::post_prepare()
+{
+  plugins.post_prepare();
 }
 
 void diffuse_t::configure()
@@ -76,8 +103,8 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
     fs_(fs),
     src_(src),
     receiver_(receiver),
-    receiver_data(receiver_->create_data(fs,chunksize)),
-    source_data(src->create_data(fs,chunksize)),
+    receiver_data(receiver_->create_state_data(fs,chunksize)),
+    source_data(src->create_state_data(fs,chunksize)),
     obstacles_(obstacles),
     audio(chunksize),
     chunksize(audio.size()),
@@ -121,9 +148,9 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
     if(visible) {
       pos_t prel;
       double nextdistance(0.0);
-      double nextgain(1.0);
+      float nextgain(1.0);
       // calculate relative geometry between source and receiver:
-      double srcgainmod(1.0);
+      float srcgainmod(1.0);
       // update effective position/calculate ISM geometry:
       position = get_effective_position(receiver_->position, srcgainmod);
       // read audio from source, update radation position:
@@ -169,7 +196,9 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       nextgain *= receiver_->external_gain;
       double next_air_absorption(exp(-nextdistance * dscale));
       double ddistance(
-          (std::max(0.0, nextdistance - c_ * receiver_->delaycomp) - distance) *
+          (std::max(0.0, nextdistance - c_ * (receiver_->delaycomp +
+                                              receiver_->recdelaycomp)) -
+           distance) *
           dt);
       double dgain((nextgain - gain) * dt);
       double dairabsorption((next_air_absorption - air_absorption) * dt);
@@ -205,6 +234,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           current_sample = airabsorption_state;
         }
       }
+      gain = nextgain;
       if(((gain != 0) || (dgain != 0))) {
         if(src_->minlevel > 0) {
           if(audio.rms() <= src_->minlevel)
@@ -410,7 +440,7 @@ receiver_graph_t::~receiver_graph_t()
 diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver)
   : src_(src),
     receiver_(receiver),
-    receiver_data(receiver_->create_diffuse_data(fs,chunksize)),
+    receiver_data(receiver_->create_diffuse_state_data(fs,chunksize)),
     audio(src->audio.size()),
     chunksize(audio.size()),
     dt(1.0/std::max(1u,chunksize)),
@@ -435,7 +465,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
 {
   pos_t prel;
   double d(0.0);
-  double nextgain(1.0);
+  float nextgain(1.0);
   // calculate relative geometry between source and receiver:
   receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain,false,GAIN_INVR);
   shoebox_t box(*src_);
@@ -457,6 +487,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
         audio.z()[k] *= gain;
       }
     }
+    gain = nextgain;
     if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero)  &&
         (receiver_->layers & src_->layers) ){
       audio *= receiver_->diffusegain;
@@ -482,6 +513,7 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
     has_diffusegain(false),
     falloff(-1.0),
     delaycomp(0.0),
+    recdelaycomp(0.0),
     layerfadelen(1.0),
     muteonstop(false),
     active(true),
@@ -490,7 +522,6 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
     external_gain(1.0),
     is_reverb(is_reverb_),
     x_gain(1.0),
-    dx_gain(0),
     next_gain(1.0),
     fade_timer(0),
     fade_rate(1),
@@ -527,19 +558,29 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
 
 void receiver_t::configure()
 {
-  receivermod_t::configure( );
+  receivermod_t::configure();
   update();
   scatterbuffer = new amb1wave_t(n_fragment);
-  scatter_handle = create_diffuse_data( f_sample, n_fragment );
-  for(uint32_t k=0;k<n_channels;k++){
+  scatter_handle = create_diffuse_state_data(f_sample, n_fragment);
+  for(uint32_t k = 0; k < n_channels; k++) {
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
   }
-  plugins.prepare( cfg() );
-  if( n_channels != outchannels.size() ){
+  plugins.prepare(cfg());
+  if(n_channels != outchannels.size()) {
     plugins.release();
-    throw TASCAR::ErrMsg("Implementation error. Number of channels ("+std::to_string(n_channels)+") differs from number of output buffers ("+std::to_string(outchannels.size())+").");
+    throw TASCAR::ErrMsg("Implementation error. Number of channels (" +
+                         std::to_string(n_channels) +
+                         ") differs from number of output buffers (" +
+                         std::to_string(outchannels.size()) + ").");
   }
+  recdelaycomp = get_delay_comp();
+}
+
+void receiver_t::post_prepare()
+{
+  receivermod_t::post_prepare();
+  plugins.post_prepare();
 }
 
 void receiver_t::release()
@@ -610,10 +651,13 @@ void receiver_t::add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_ba
   receivermod_t::add_diffuse_sound_field(chunk,outchannels,data);
 }
 
-void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_virtual, pos_t& prel, double& distance, double& gain, bool b_img, gainmodel_t gainmodel )
+void receiver_t::update_refpoint(const pos_t& psrc_physical,
+                                 const pos_t& psrc_virtual, pos_t& prel,
+                                 double& distance, float& gain, bool b_img,
+                                 gainmodel_t gainmodel)
 {
-  
-  if( volumetric.has_volume() ){
+
+  if(volumetric.has_volume()) {
     prel = psrc_physical;
     prel -= position;
     prel /= orientation;
@@ -621,33 +665,34 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical, const pos_t& psrc_v
     shoebox_t box;
     box.size = volumetric;
     double d(box.nextpoint(prel).norm());
-    if( falloff > 0 )
-      gain = (0.5+0.5*cos(M_PI*std::min(1.0,d/falloff)))/std::max(0.1,avgdist);
-    else{
-      switch( gainmodel ){
-      case GAIN_INVR :
-        gain = 1.0/std::max(1.0,d+avgdist);
+    if(falloff > 0)
+      gain = (0.5 + 0.5 * cos(M_PI * std::min(1.0, d / falloff))) /
+             std::max(0.1, avgdist);
+    else {
+      switch(gainmodel) {
+      case GAIN_INVR:
+        gain = 1.0 / std::max(1.0, d + avgdist);
         break;
-      case GAIN_UNITY :
-        gain = 1.0/std::max(1.0,avgdist);
+      case GAIN_UNITY:
+        gain = 1.0 / std::max(1.0, avgdist);
         break;
       }
     }
-  }else{
+  } else {
     prel = psrc_virtual;
     prel -= position;
     prel /= orientation;
     distance = prel.norm();
-    switch( gainmodel ){
-    case GAIN_INVR :
-      gain = 1.0/std::max(0.1,distance);
+    switch(gainmodel) {
+    case GAIN_INVR:
+      gain = 1.0 / std::max(0.1, distance);
       break;
-    case GAIN_UNITY :
+    case GAIN_UNITY:
       gain = 1.0;
       break;
     }
-    double physical_dist(TASCAR::distance(psrc_physical,position));
-    if( b_img && (physical_dist > distance) ){
+    double physical_dist(TASCAR::distance(psrc_physical, position));
+    if(b_img && (physical_dist > distance)) {
       gain = 0.0;
     }
   }
@@ -662,11 +707,11 @@ void receiver_t::set_next_gain(double g)
 
 void receiver_t::apply_gain()
 {
-  dx_gain = (next_gain - x_gain) * t_inc;
+  float dx_gain = (next_gain - x_gain) * t_inc;
   if(n_channels > 0) {
     uint32_t psize(outchannels[0].size());
     for(uint32_t k = 0; k < psize; k++) {
-      double g(x_gain += dx_gain);
+      float g(x_gain += dx_gain);
       if((fade_timer > 0) &&
          ((fade_startsample == FADE_START_NOW) ||
           ((fade_startsample <= ltp.session_time_samples + k) &&
@@ -684,6 +729,7 @@ void receiver_t::apply_gain()
       }
     }
   }
+  x_gain = next_gain;
 }
 
 void receiver_t::set_fade(double targetgain, double duration, double start)
@@ -811,6 +857,12 @@ void source_t::configure( )
   plugins.prepare( cfg() );
 }
 
+void source_t::post_prepare()
+{
+  sourcemod_t::post_prepare();
+  plugins.post_prepare();
+}
+
 void source_t::release()
 {
   plugins.release();
@@ -885,7 +937,7 @@ void soundpath_t::apply_reflectionfilter( TASCAR::wave_t& audio )
   }
 }
 
-pos_t soundpath_t::get_effective_position( const pos_t& p_rec, double& gain )
+pos_t soundpath_t::get_effective_position( const pos_t& p_rec, float& gain )
 {
   if( !reflector )
     return position;

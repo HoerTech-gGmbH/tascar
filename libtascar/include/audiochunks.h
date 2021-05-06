@@ -70,6 +70,8 @@ namespace TASCAR {
     };
     void operator*=(double v);
     void operator*=(float v);
+    void operator+=(double v);
+    void operator+=(float v);
     void operator+=(const wave_t& o);
     void operator*=(const wave_t& src);
     float* d;

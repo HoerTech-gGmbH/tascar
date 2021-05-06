@@ -1,3 +1,8 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2019 Giso Grimm
+ */
 /**
    \file hos_sendosc.cc
    \brief Send OSC messages, read from stdin

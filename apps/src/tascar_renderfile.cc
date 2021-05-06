@@ -1,3 +1,24 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "irrender.h"
 #include <boost/program_options.hpp>
 #include <stdlib.h>
@@ -41,6 +62,7 @@ int main(int argc, char** argv)
                        "whole duration.");
     desc.add_options()("static", "render scene statically at the given time "
                                  "without updating the geometry");
+    desc.add_options()("dynamic,d", "render scene dynamically (now default anyway, for backward compatibility)");
     desc.add_options()("ismmin", po::value<int>()->default_value(0),
                        "Minimum order of image source model.");
     desc.add_options()("ismmax", po::value<int>()->default_value(-1),
@@ -82,6 +104,8 @@ int main(int argc, char** argv)
     double duration(vm["duration"].as<double>());
     // flag to increment time on each cycle:
     bool dynamic(vm.count("static") == 0);
+    if( vm.count("dynamic")>0)
+      dynamic = true;
     // fragment size, or -1 to use only a single fragment:
     uint32_t fragsize(vm["fragsize"].as<int>());
     // minimum ISM order:

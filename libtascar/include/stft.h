@@ -57,6 +57,7 @@ namespace TASCAR {
        The result is stored in the member fft_t::s.
      */
     void process(const wave_t& w);
+    void clear();
   protected:
     uint32_t fftlen_;
     uint32_t wndlen_;

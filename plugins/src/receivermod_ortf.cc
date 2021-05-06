@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "receivermod.h"
 #include "delayline.h"
 #include <random>
@@ -23,7 +45,7 @@ public:
   ~ortf_t();
   void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_data(double srate,uint32_t fragsize);
+  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
   virtual void configure();
   virtual void release( );
   virtual void postproc( std::vector<TASCAR::wave_t>& output );
@@ -63,6 +85,9 @@ ortf_t::data_t::data_t(double srate,uint32_t chunksize,double maxdist,double c,u
 void ortf_t::configure()
 {
   TASCAR::receivermod_base_t::configure();
+  wpow = log(exp(-M_PI*f6db/f_sample))/log(0.5);
+  //wmin = pow(exp(-M_PI*fmin/srate),wpow);
+  wmin = exp(-M_PI*fmin/f_sample);
   n_channels = 2;
   // initialize decorrelation filter:
   decorrflt.clear();
@@ -209,11 +234,8 @@ void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vecto
   }
 }
 
-TASCAR::receivermod_base_t::data_t* ortf_t::create_data(double srate,uint32_t fragsize)
+TASCAR::receivermod_base_t::data_t* ortf_t::create_state_data(double srate,uint32_t fragsize) const
 {
-  wpow = log(exp(-M_PI*f6db/srate))/log(0.5);
-  //wmin = pow(exp(-M_PI*fmin/srate),wpow);
-  wmin = exp(-M_PI*fmin/srate);
   return new data_t(srate,fragsize,distance,c,sincorder);
 }
 

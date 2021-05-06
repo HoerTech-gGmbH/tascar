@@ -1,3 +1,25 @@
+/*
+ * This file is part of the TASCAR software, see <http://tascar.org/>
+ *
+ * Copyright (c) 2018 Giso Grimm
+ * Copyright (c) 2019 Giso Grimm
+ * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
+ */
+/*
+ * TASCAR is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, version 3 of the License.
+ *
+ * TASCAR is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License, version 3 for more details.
+ *
+ * You should have received a copy of the GNU General Public License,
+ * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "session_reader.h"
 #include "errorhandling.h"
 #include <libgen.h>
@@ -26,7 +48,7 @@ TASCAR::tsc_reader_t::tsc_reader_t()
 void add_includes(tsccfg::node_t e, const std::string& parentdoc,
                   licensehandler_t* lh)
 {
-  for(auto sne : tsccfg::node_get_children(e)) {
+  for(auto& sne : tsccfg::node_get_children(e)) {
     if(tsccfg::node_get_name(sne) == "include") {
       std::string idocname(
           TASCAR::env_expand(tsccfg::node_get_attribute_value(sne, "name")));
@@ -46,7 +68,7 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
         lh->add_license(sublicense, subattribution,
                         TASCAR::tscbasename(idocname));
         add_includes(idoc.root(), idocname, lh);
-        for(auto isne : idoc.root.get_children()) 
+        for(auto& isne : idoc.root.get_children()) 
           tsccfg::node_import_node(e,isne);
       }
     } else {
@@ -103,7 +125,7 @@ void TASCAR::tsc_reader_t::read_xml()
   root.GET_ATTRIBUTE(license, "", "license type");
   root.GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
   add_license(license, attribution, "session file");
-  for(auto sne : root.get_children()){
+  for(auto& sne : root.get_children()){
     if(tsccfg::node_get_name(sne) == "scene")
       add_scene(sne);
     else if(tsccfg::node_get_name(sne) == "range")
@@ -111,7 +133,7 @@ void TASCAR::tsc_reader_t::read_xml()
     else if(tsccfg::node_get_name(sne) == "connect")
       add_connection(sne);
     else if(tsccfg::node_get_name(sne) == "modules") {
-      for(auto lsne : tsccfg::node_get_children(sne)){
+      for(auto& lsne : tsccfg::node_get_children(sne)){
         add_module(lsne);
       }
     } else if(tsccfg::node_get_name(sne) == "license") {

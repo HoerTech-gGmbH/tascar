@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1" airabsorption="false" delayline="false"/>
+    </source>
+    <receiver type="hoa2d" layout="16ch_offset.spk"/>
+  </scene>
+</session>
