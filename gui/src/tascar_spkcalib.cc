@@ -466,16 +466,17 @@ void calibsession_t::set_active_diff(bool b)
 double calibsession_t::get_caliblevel() const
 {
   if(!scenes.empty())
-    if(!scenes.back()->receivermod_objects.empty())
-      return 20 * log10(scenes.back()->receivermod_objects.back()->caliblevel);
-  return 20 * log10(2e5);
+    if(!scenes.back()->receivermod_objects.empty()){
+      return 20.0 * log10(scenes.back()->receivermod_objects.back()->caliblevel*5e4);
+    }
+  return 20.0 * log10(5e4);
 }
 
 double calibsession_t::get_diffusegain() const
 {
   if(!scenes.empty())
     if(!scenes.back()->receivermod_objects.empty())
-      return 20 * log10(scenes.back()->receivermod_objects.back()->diffusegain);
+      return 20.0 * log10(scenes.back()->receivermod_objects.back()->diffusegain);
   return 0;
 }
 
