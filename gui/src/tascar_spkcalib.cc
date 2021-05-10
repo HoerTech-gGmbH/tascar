@@ -484,10 +484,10 @@ void calibsession_t::inc_caliblevel(double dl)
 {
   gainmodified = true;
   delta += dl;
-  double gain(pow(10.0, 0.05 * (startlevel + delta)));
+  double newlevel_pa(2e-5*pow(10.0, 0.05 * (startlevel + delta)));
   if(!scenes.empty())
     for(auto recobj : scenes.back()->receivermod_objects)
-      recobj->caliblevel = gain;
+      recobj->caliblevel = newlevel_pa;
 }
 
 void calibsession_t::inc_diffusegain(double dl)
