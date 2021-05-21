@@ -335,8 +335,7 @@ void TASCAR::receivermod_base_speaker_t::post_prepare()
     std::cout << "err2d.ang_rV = " << RAD2DEG * err.angular_rV_error << ";\n";
     std::cout << "err2d.ang_rE = " << RAD2DEG * err.angular_rE_error << ";\n";
     std::vector<TASCAR::pos_t> sphere(TASCAR::generate_icosahedron());
-    while(sphere.size() < 20 * spkpos.size())
-      sphere = subdivide_and_normalize_mesh(sphere, 1);
+    sphere = subdivide_and_normalize_mesh(sphere, 5);
     err = get_spatial_error(sphere);
     std::cout << "% error on a sphere:\n";
     std::cout << "err3d.abs_rV = " << err.abs_rV_error << ";\n";
