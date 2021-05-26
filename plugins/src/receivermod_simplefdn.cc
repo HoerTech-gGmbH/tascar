@@ -25,9 +25,12 @@
 #include "fft.h"
 #include <limits>
 
-const std::complex<float> i(0.0, 1.0);
+const std::complex<float> i(0.0f, 1.0f);
 const std::complex<double> i_d(0.0, 1.0);
 
+/**
+ * A First Order Ambisonics audio sample
+ */
 class foa_sample_t {
 public:
   foa_sample_t() : w(0), x(0), y(0), z(0){};
@@ -94,10 +97,13 @@ inline foa_sample_t operator+(foa_sample_t a, const foa_sample_t& b)
   return a;
 }
 
-class cmat3_t {
+/**
+ * Two-dimensional container for foa_sample_t
+ */
+class foa_sample_matrix_2d_t {
 public:
-  cmat3_t(uint32_t d1, uint32_t d2);
-  ~cmat3_t();
+  foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2);
+  ~foa_sample_matrix_2d_t();
   inline foa_sample_t& elem(uint32_t p1, uint32_t p2)
   {
     return data[p1 * s2 + p2];
@@ -121,10 +127,10 @@ protected:
   foa_sample_t* data;
 };
 
-class cmat2_t {
+class foa_sample_array_1d_t {
 public:
-  cmat2_t(uint32_t d1);
-  ~cmat2_t();
+  foa_sample_array_1d_t(uint32_t d1);
+  ~foa_sample_array_1d_t();
   inline foa_sample_t& elem(uint32_t p1) { return data[p1]; };
   inline const foa_sample_t& elem(uint32_t p1) const { return data[p1]; };
   inline void clear()
@@ -138,23 +144,24 @@ protected:
   foa_sample_t* data;
 };
 
-cmat3_t::cmat3_t(uint32_t d1, uint32_t d2)
+foa_sample_matrix_2d_t::foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2)
     : s1(d1), s2(d2), data(new foa_sample_t[s1 * s2])
 {
   clear();
 }
 
-cmat3_t::~cmat3_t()
+foa_sample_matrix_2d_t::~foa_sample_matrix_2d_t()
 {
   delete[] data;
 }
 
-cmat2_t::cmat2_t(uint32_t d1) : s1(d1), data(new foa_sample_t[s1])
+foa_sample_array_1d_t::foa_sample_array_1d_t(uint32_t d1)
+    : s1(d1), data(new foa_sample_t[s1])
 {
   clear();
 }
 
-cmat2_t::~cmat2_t()
+foa_sample_array_1d_t::~foa_sample_array_1d_t()
 {
   delete[] data;
 }
@@ -180,9 +187,9 @@ protected:
   float B1;
   float A2;
   std::vector<float> eta;
-  cmat2_t sy;
-  cmat2_t sapx;
-  cmat2_t sapy;
+  foa_sample_array_1d_t sy;
+  foa_sample_array_1d_t sapx;
+  foa_sample_array_1d_t sapy;
 };
 
 reflectionfilter_t::reflectionfilter_t(uint32_t d1)
@@ -217,7 +224,7 @@ private:
   uint32_t maxdelay_;
   uint32_t taplen;
   // delayline:
-  cmat3_t delayline;
+  foa_sample_matrix_2d_t delayline;
   // feedback matrix:
   std::vector<float> feedbackmat;
   // reflection filter:
@@ -226,7 +233,7 @@ private:
   // rotation:
   std::vector<TASCAR::quaternion_t> rotation;
   // delayline output for reflection filters:
-  cmat2_t dlout;
+  foa_sample_array_1d_t dlout;
   // delays:
   uint32_t* delay;
   // delayline pointer:
