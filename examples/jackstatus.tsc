@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <glabsensors>
+      <jackstatus warnload="1" criticalload="95" oncritical="killall -9 jackd"/>
+    </glabsensors>
+  </modules>
+</session>
