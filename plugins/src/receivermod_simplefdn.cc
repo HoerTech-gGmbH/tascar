@@ -184,12 +184,13 @@ public:
   void set_lp(float g, float c);
 
 protected:
-  float B1;
-  float A2;
-  std::vector<float> eta;
-  foa_sample_array_1d_t sy;
-  foa_sample_array_1d_t sapx;
-  foa_sample_array_1d_t sapy;
+  float B1; ///< non-recursive filter coefficient for all channels
+  float A2; ///< recursive filter coefficient for all channels
+  std::vector<float>
+      eta; ///< phase coefficient of allpass filters for each channel
+  foa_sample_array_1d_t sy;   ///< output state buffer
+  foa_sample_array_1d_t sapx; ///< input state variable of allpass filter
+  foa_sample_array_1d_t sapy; ///< output state variable of allpass filter
 };
 
 reflectionfilter_t::reflectionfilter_t(uint32_t d1)
@@ -200,6 +201,13 @@ reflectionfilter_t::reflectionfilter_t(uint32_t d1)
     eta[k] = 0.87 * (double)k / (d1 - 1);
 }
 
+/**
+ * Set low pass filter coefficient and gain of reflection filter,
+ * leave allpass coefficient untouched.
+ *
+ * @param g Scaling factor
+ * @param c Recursive lowpass filter coefficient
+ */
 void reflectionfilter_t::set_lp(float g, float c)
 {
   sy.clear();
@@ -389,11 +397,12 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
       dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
       absorption(0.6), c(340)
 {
-  GET_ATTRIBUTE(fdnorder, "", "Order of FDN");
-  GET_ATTRIBUTE(dw, "rad/s", "Spatial spread");
+  GET_ATTRIBUTE(fdnorder, "", "Order of FDN (number of recursive paths)");
+  GET_ATTRIBUTE(dw, "rad/s", "Spatial spread of rotation");
   GET_ATTRIBUTE(t60, "s", "$T_{60}$, or zero to use Sabine's equation");
   GET_ATTRIBUTE(damping, "", "Damping (first order lowpass) coefficient");
-  GET_ATTRIBUTE_BOOL(prefilt, "Filter before feedback matrix");
+  GET_ATTRIBUTE_BOOL(prefilt,
+                     "Apply additional filter before inserting audio into FDN");
   GET_ATTRIBUTE(absorption, "", "Absorption used in Sabine's equation");
   GET_ATTRIBUTE(c, "m/s", "Speed of sound");
   GET_ATTRIBUTE(volumetric, "m", "Dimension of room x y z");
