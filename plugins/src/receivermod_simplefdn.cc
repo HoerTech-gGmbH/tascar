@@ -220,10 +220,12 @@ void reflectionfilter_t::set_lp(float g, float c)
 
 class fdn_t {
 public:
-  fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays);
+  enum gainmethod_t { original, mean, schroeder };
+  fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm);
   ~fdn_t();
   inline void process(bool b_prefilt);
-  void setpar(float az, float daz, float t, float dt, float g, float damping);
+  void setpar_t60(float az, float daz, float t, float dt, float t60,
+                  float damping);
   void set_logdelays(bool ld) { logdelays_ = ld; };
 
 private:
@@ -246,6 +248,8 @@ private:
   uint32_t* delay;
   // delayline pointer:
   uint32_t* pos;
+  // gain calculation method:
+  gainmethod_t gainmethod;
 
 public:
   // input FOA sample:
@@ -254,12 +258,13 @@ public:
   foa_sample_t outval;
 };
 
-fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays)
+fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
+             gainmethod_t gm)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
       taplen(maxdelay * 2), delayline(fdnorder_, maxdelay_),
       feedbackmat(fdnorder_ * fdnorder_), reflection(fdnorder), prefilt(2),
       rotation(fdnorder), dlout(fdnorder_), delay(new uint32_t[fdnorder_]),
-      pos(new uint32_t[fdnorder_])
+      pos(new uint32_t[fdnorder_]), gainmethod(gm)
 {
   memset(delay, 0, sizeof(uint32_t) * fdnorder_);
   memset(pos, 0, sizeof(uint32_t) * fdnorder_);
@@ -315,30 +320,46 @@ void fdn_t::process(bool b_prefilt)
    \param g Gain
    \param damping Damping
 */
-void fdn_t::setpar(float az, float daz, float t, float dt, float g,
-                   float damping)
+void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
+                       float damping)
 {
-  // set reflection filters:
-  reflection.set_lp(g, damping);
-  prefilt.set_lp(g, damping);
-  // reflection.set( g );
   // set delays:
   delayline.clear();
+  double t_mean(0);
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
-    double t_(t);
+    double t_(t_min);
     if(logdelays_) {
       // logarithmic distribution:
       if(fdnorder_ > 1)
-        t_ = t * pow((t + dt) / t, (double)tap / ((double)fdnorder_ - 1.0));
+        t_ =
+            t_min * pow(t_max / t_min, (double)tap / ((double)fdnorder_ - 1.0));
       ;
     } else {
       // squareroot distribution:
       if(fdnorder_ > 1)
-        t_ = t + dt * pow((double)tap / ((double)fdnorder_ - 1.0), 0.5);
+        t_ = t_min + (t_max - t_min) *
+                         pow((double)tap / ((double)fdnorder_ - 1.0), 0.5);
     }
     uint32_t d(std::max(0.0, t_));
     delay[tap] = std::max(2u, std::min(maxdelay_ - 1u, d));
+    t_mean += delay[tap];
   }
+  t_mean /= std::max(1u, fdnorder_);
+  double g(0.0);
+  switch(gainmethod) {
+  case fdn_t::original:
+    g = exp(-4.2 * t_min / t60);
+    break;
+  case fdn_t::mean:
+    g = exp(-4.2 * t_mean / t60);
+    break;
+  case fdn_t::schroeder:
+    g = pow(10.0, -3.0 * t_mean / t60);
+    break;
+  }
+  // set reflection filters:
+  reflection.set_lp(g, damping);
+  prefilt.set_lp(g, damping);
   // set rotation:
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
     float laz(az);
@@ -381,8 +402,8 @@ public:
   uint32_t fdnorder;
   double w;
   double dw;
-  double t;
-  double dt;
+  // double t;
+  // double dt;
   double t60;
   double damping;
   bool prefilt;
@@ -390,22 +411,37 @@ public:
   double absorption;
   double c;
   TASCAR::pos_t volumetric;
+  fdn_t::gainmethod_t gm;
 };
 
 simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
-    : receivermod_base_t(xmlsrc), fdnorder(5), w(0.0), dw(60.0), t(0.01),
-      dt(0.002), t60(0), damping(0.3), prefilt(true), logdelays(true),
-      absorption(0.6), c(340)
+    : receivermod_base_t(xmlsrc), fdnorder(5), w(0.0), dw(60.0), t60(0),
+      damping(0.3), prefilt(true), logdelays(true), absorption(0.6), c(340)
 {
   GET_ATTRIBUTE(fdnorder, "", "Order of FDN (number of recursive paths)");
-  GET_ATTRIBUTE(dw, "rad/s", "Spatial spread of rotation");
-  GET_ATTRIBUTE(t60, "s", "$T_{60}$, or zero to use Sabine's equation");
-  GET_ATTRIBUTE(damping, "", "Damping (first order lowpass) coefficient");
+  GET_ATTRIBUTE(dw, "rounds/s", "Spatial spread of rotation");
+  GET_ATTRIBUTE(t60, "s", "T60, or zero to use Sabine's equation");
+  GET_ATTRIBUTE(damping, "",
+                "Damping (first order lowpass) coefficient to control spectral "
+                "tilt of T60");
   GET_ATTRIBUTE_BOOL(prefilt,
                      "Apply additional filter before inserting audio into FDN");
   GET_ATTRIBUTE(absorption, "", "Absorption used in Sabine's equation");
   GET_ATTRIBUTE(c, "m/s", "Speed of sound");
   GET_ATTRIBUTE(volumetric, "m", "Dimension of room x y z");
+  std::string gainmethod("original");
+  GET_ATTRIBUTE(gainmethod, "original mean schroeder",
+                "Gain calculation method");
+  if(gainmethod == "original")
+    gm = fdn_t::original;
+  else if(gainmethod == "mean")
+    gm = fdn_t::mean;
+  else if(gainmethod == "schroeder")
+    gm = fdn_t::schroeder;
+  else
+    throw TASCAR::ErrMsg(
+        "Invalid gain method \"" + gainmethod +
+        "\". Possible values are original, mean or schroeder.");
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}
@@ -472,10 +508,6 @@ simplefdn_t::simplefdn_t(tsccfg::node_t cfg)
     : simplefdn_vars_t(cfg), fdn(NULL), foa_out(NULL), wgain(MIN3DB),
       distcorr(1.0)
 {
-  double dmin(std::min(volumetric.x, std::min(volumetric.y, volumetric.z)) / c);
-  double dmax(std::max(volumetric.x, std::max(volumetric.y, volumetric.z)) / c);
-  t = dmin;
-  dt = (dmax - dmin);
   if(t60 <= 0.0)
     t60 = 0.161 * volumetric.boxvolume() / (absorption * volumetric.boxarea());
   pthread_mutex_init(&mtx, NULL);
@@ -487,7 +519,7 @@ void simplefdn_t::configure()
   n_channels = AMB11::idx::channels;
   if(fdn)
     delete fdn;
-  fdn = new fdn_t(fdnorder, f_sample, logdelays);
+  fdn = new fdn_t(fdnorder, f_sample, logdelays, gm);
   update_par();
   if(foa_out)
     delete foa_out;
@@ -520,19 +552,17 @@ void simplefdn_t::update_par()
   if(pthread_mutex_lock(&mtx) == 0) {
     distcorr =
         1.0 / (0.5 * pow(volumetric.x * volumetric.y * volumetric.z, 0.33333));
-    double dmin(std::min(volumetric.x, std::min(volumetric.y, volumetric.z)) /
+    double tmin(std::min(volumetric.x, std::min(volumetric.y, volumetric.z)) /
                 c);
-    double dmax(std::max(volumetric.x, std::max(volumetric.y, volumetric.z)) /
+    double tmax(std::max(volumetric.x, std::max(volumetric.y, volumetric.z)) /
                 c);
-    t = dmin;
-    dt = (dmax - dmin);
     if(t60 <= 0.0)
       t60 =
           0.161 * volumetric.boxvolume() / (absorption * volumetric.boxarea());
     if(fdn) {
-      double wscale(2.0 * M_PI * t);
-      fdn->setpar(wscale * w, wscale * dw, f_sample * t, f_sample * dt,
-                  exp(-4.2 * t / t60), std::max(0.0, std::min(0.999, damping)));
+      double wscale(2.0 * M_PI * tmin);
+      fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
+                      f_sample * t60, std::max(0.0, std::min(0.999, damping)));
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -543,9 +573,16 @@ void simplefdn_t::setlogdelays(bool ld)
   if(pthread_mutex_lock(&mtx) == 0) {
     if(fdn) {
       fdn->set_logdelays(ld);
-      double wscale(2.0 * M_PI * t);
-      fdn->setpar(wscale * w, wscale * dw, f_sample * t, f_sample * dt,
-                  exp(-4.2 * t / t60), std::max(0.0, std::min(0.999, damping)));
+      double tmin(std::min(volumetric.x, std::min(volumetric.y, volumetric.z)) /
+                  c);
+      double tmax(std::max(volumetric.x, std::max(volumetric.y, volumetric.z)) /
+                  c);
+      if(t60 <= 0.0)
+        t60 = 0.161 * volumetric.boxvolume() /
+              (absorption * volumetric.boxarea());
+      double wscale(2.0 * M_PI * tmin);
+      fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
+                      f_sample * t60, std::max(0.0, std::min(0.999, damping)));
     }
     pthread_mutex_unlock(&mtx);
   }
