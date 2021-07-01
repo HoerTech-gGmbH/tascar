@@ -998,7 +998,18 @@ interactive transitions between simulated rooms.
 The ``farsrc'' source is the same as ``omni'' except that sound is
 attenuated within a spherical volume and faded in with a von-Hann ramp
 outside the volume, converging to a $\frac1r$ distance law outside the
-ramp. It has these attributes: \input{tabsoundfarsrc.tex}
+ramp. It has these attributes:
+
+\input{tabsoundfarsrc.tex}
+
+\subsubsection{Source directivity ``generic1storder''}
+
+This source type can be controlled to vary between omni-directional
+and figure-of-eight directivity. See also the description of the
+receiver type ``vmic'' (Section \ref{sec:recgen_vmic} on page
+\pageref{sec:recgen_vmic}) for details.
+
+\input{tabsoundgeneric1storder.tex}
 
 \subsection{The {\tt <diffuse .../>} element}\label{sec:diffuse}\index{diffuse}\index{diffuse}
 
