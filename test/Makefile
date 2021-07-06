@@ -1,9 +1,10 @@
 TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
-	test_ir6_ismminmax test_snd1 test_snd2 test_snd4 test_snd3	\
-	test_snd5 test_pos1 test_pos2 test_pos_trackinterp		\
-	test_snd_door1 test_snd_door2 test_snd_door3 test_pos_door	\
-	test_snd_layers test_snd_rec_amb1h1v test_wav_diffuse		\
-	test_wav_diffuse_hoa2d test_ir_hoa2d_offset test_wav_diffuse_nsp4			\
+	test_ir6_ismminmax test_snd1 test_snd_include_sound test_snd2	\
+	test_snd4 test_snd3 test_snd5 test_pos1 test_pos2		\
+	test_pos_trackinterp test_snd_door1 test_snd_door2		\
+	test_snd_door3 test_pos_door test_snd_layers			\
+	test_snd_rec_amb1h1v test_wav_diffuse test_wav_diffuse_hoa2d	\
+	test_ir_hoa2d_offset test_wav_diffuse_nsp4			\
 	test_wav_diffuse_hoa2d4 test_wav_diffuse_layerbug		\
 	test_wav_diffirs test_sndgainramp test_sndgainramp2		\
 	test_ir_spkcorr test_snd_calib1 test_snd_calib2			\

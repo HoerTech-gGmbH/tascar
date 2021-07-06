@@ -54,13 +54,11 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
           TASCAR::env_expand(tsccfg::node_get_attribute_value(sne, "name")));
       if((!idocname.empty()) && (idocname != parentdoc)) {
         TASCAR::xml_doc_t idoc(idocname, TASCAR::xml_doc_t::LOAD_FILE);
-        if(idoc.root.get_element_name() !=
-           tsccfg::node_get_name(e)) {
-          throw TASCAR::ErrMsg("Invalid root node \"" +
-                               idoc.root.get_element_name() +
-                               "\" in include file \"" + idocname +
-                               "\".\nexpected \"" + tsccfg::node_get_name(e) +
-                               "\".");
+        if(idoc.root.get_element_name() != tsccfg::node_get_name(e)) {
+          throw TASCAR::ErrMsg(
+              "Invalid root node \"" + idoc.root.get_element_name() +
+              "\" in include file \"" + idocname + "\".\nexpected \"" +
+              tsccfg::node_get_name(e) + "\".");
         }
         std::string sublicense;
         std::string subattribution;
@@ -68,8 +66,9 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
         lh->add_license(sublicense, subattribution,
                         TASCAR::tscbasename(idocname));
         add_includes(idoc.root(), idocname, lh);
-        for(auto& isne : idoc.root.get_children()) 
-          tsccfg::node_import_node(e,isne);
+        for(auto& isne : idoc.root.get_children())
+          tsccfg::node_import_node(e, isne);
+        tsccfg::node_remove_child(e, sne);
       }
     } else {
       add_includes(sne, parentdoc, lh);

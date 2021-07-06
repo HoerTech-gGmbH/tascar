@@ -192,6 +192,13 @@ tsccfg::node_t tsccfg::node_add_child(tsccfg::node_t& node,
 #endif
 }
 
+void tsccfg::node_remove_child(tsccfg::node_t& parent, tsccfg::node_t child)
+{
+#ifdef USEXERCESXML
+  parent->removeChild(child);
+#endif
+}
+
 std::string TASCAR::strrep(std::string s, const std::string& pat,
                            const std::string& rep)
 {
