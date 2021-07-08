@@ -294,7 +294,6 @@ void mic_t::process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
   } else if(delaylinemodel == freefield)
       target_tau = -axis.norm() * cos_theta;
   target_tau += tau_parent;
-
   // filtering and delay line
   processors[thisindex]->process(input, output[thisindex], rel_pos);
   for(auto child : children) {
@@ -340,7 +339,7 @@ void mic_t::add_processors(std::vector<mic_processor_t*>& processors,
 mic_t::mic_t(tsccfg::node_t xmlsrc, const TASCAR::pos_t& parentposition_,
              double c_)
     : TASCAR::xml_element_t(xmlsrc), c(c_), sincorder(0),
-      target_tau(0.0), maxdist(0.0), parentposition(parentposition_)
+      target_tau(0.0), maxdist(0.0), parentposition(parentposition_), tau_parent(0.0)
 {
   GET_ATTRIBUTE(name, "", "microphone label");
   GET_ATTRIBUTE(position, "m",

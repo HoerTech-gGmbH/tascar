@@ -31,6 +31,18 @@ TEST(delayline_t, get_dist_push)
   EXPECT_EQ(0.0,delay.get_dist_push(1,0));
 }
 
+TEST(delayline_t, get_dist_push2)
+{
+  TASCAR::varidelay_t delay(1000, 4, 1, 0, 1);
+  EXPECT_EQ(0.0,delay.get_dist_push(1,0));
+  EXPECT_EQ(0.0,delay.get_dist_push(1,1));
+  EXPECT_EQ(0.0,delay.get_dist_push(1,0));
+  EXPECT_EQ(0.0,delay.get_dist_push(1,0));
+  EXPECT_EQ(0.0,delay.get_dist_push(1,0));
+  EXPECT_EQ(1.0,delay.get_dist_push(1,0));
+  EXPECT_EQ(0.0,delay.get_dist_push(1,0));
+}
+
 TEST(delayline_t, get_dist_push_sinc)
 {
   TASCAR::varidelay_t delay(3, 1, 1, 5, 4);
