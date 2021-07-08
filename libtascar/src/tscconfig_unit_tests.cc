@@ -63,6 +63,22 @@ TEST(node_t, get_children2)
   EXPECT_EQ(1u, nodes2.size());
 }
 
+TEST(node_t, remove_child)
+{
+  TASCAR::xml_doc_t doc("<session>\n<sound><plugins/></sound>"
+                        "<sound/> <image/></session>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  auto nodes(tsccfg::node_get_children(doc.root(), "image"));
+  EXPECT_EQ(1u, nodes.size());
+  if(nodes.size()) {
+    tsccfg::node_remove_child(doc.root(), nodes[0]);
+    std::string xmlcfg(doc.save_to_string());
+    // expect that we do not find any "image" in the tree:
+    auto nodes(tsccfg::node_get_children(doc.root(), "image"));
+    EXPECT_EQ(0u, nodes.size());
+  }
+}
+
 TEST(node_t, get_path)
 {
   TASCAR::xml_doc_t doc("<session><sound/><sound/></session>",
