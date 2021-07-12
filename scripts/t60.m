@@ -1,8 +1,8 @@
-function [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold )
-% t60 - measure broadband RT30 based on impulse response
+function [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold, pthreshold )
+%%% t60 - measure broadband RT30 based on impulse response
 %
 % Usage:
-% [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold );
+% [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold, pthreshold );
 % or:
 % [t60late,EDT,i50,i250,cburst] = t60( filename );
 %
@@ -10,14 +10,15 @@ function [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold )
 % fs  : sampling rate
 % lthreshold : threshold used for late reverb (default: -30)
 % ethreshold : threshold used for early reflections (defaut: -10)
+% pthreshold : threshold used for peak (defaut: -0.2)
 %
 % Method after: Schroeder, Manfred R. "New method of measuring
 % reverberation time." The Journal of the Acoustical Society of
 % America 37 (1965): 409.
 %
 % Author: Giso Grimm
-% 2012, 2018, 2019
-  ;
+% 2012, 2018, 2019, 2021
+
   if ischar(irs)
     [irs,fs] = audioread(irs);
   end
@@ -27,24 +28,51 @@ function [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold )
   if nargin < 4
     ethreshold = -10;
   end
+  if nargin < 5
+    pthreshold = -0.2;
+  end
   cburst = {};
   for k=1:size(irs,2)
-      lirs = irs(:,k);
-      idx_end = ...
-          find(abs(lirs)./max(abs(lirs)) >= ...
-               10.^(0.05*(lthreshold+ethreshold-10.1)),...
-               1,'last');
-      lirs = lirs(1:idx_end,:);
+    %% copy IR of channel k:
+    lirs = irs(:,k);
+    %% remove everything before max:
+    [tmp,idx] = max(abs(lirs));
+    lirs = lirs(idx:end,:);
+    %lirs = lirs / max(abs(lirs));
+    %lnoise = 10*log10(mean(lirs(round(0.75*numel(lirs)):end).^2))
+    %% trim end to required range, to avoid influence of noise floor:
     tburst = cumsum(lirs(end:-1:1,1).^2);
     tburst = 10*log10(tburst(end:-1:1) ./ max(tburst));
-    idx0 = find(tburst<-0.1,1);
-    idx1 = find(tburst<ethreshold-0.1,1);
-    idx2 = find(tburst<lthreshold+ethreshold-0.1,1);
+    idx_start = find(tburst<pthreshold,1);
+    lstart = tburst(idx_start);
+    idx_end = ...
+    find(tburst  >= ...
+	 lstart + lthreshold+ethreshold-10,...
+	 1,'last');
+    lirs = lirs(1:idx_end,:);
+    %% now get tone burst for calculation ot T60:
+    tburst = cumsum(lirs(end:-1:1,1).^2);
+    tburst = 10*log10(tburst(end:-1:1) ./ max(tburst));
+    idx_start = find(tburst<pthreshold,1);
+    lstart = tburst(idx_start);
+    idx0 = find(tburst<lstart-0.1,1);
+    idx1 = find(tburst<lstart+ethreshold+pthreshold,1);
+    idx2 = find(tburst<lstart+lthreshold+ethreshold+pthreshold,1);
+    %% get fit quality:
+    q_threshold = 1;
+    q_edt = get_fitquality( tburst, idx0, idx1 );
+    if q_edt > q_threshold
+      warning('poor EDT fit quality. Consider decreasing pthreshold.');
+    end
+    q_t60 = get_fitquality( tburst, idx1, idx2 );
+    if q_t60 > q_threshold
+      warning('poor T60 fit quality. Consider increasing lthreshold or ethreshold.');
+    end
     EDT(k) = -60/ethreshold*(idx1-idx0)/fs;
     if ~isempty(idx2)
       t60late(k) = -60/lthreshold*(idx2-idx1)/fs;
     else
-      rg = ethreshold-0.1 - tburst(end);
+      rg = ethreshold+pthreshold - tburst(end);
       idx2 = numel(tburst);
       t60late(k) = 60/rg*(idx2-idx1)/fs;
     end
@@ -59,5 +87,27 @@ function [t60late,EDT,i50,i250,cburst] = t60( irs, fs, lthreshold, ethreshold )
       i250(k) = -inf;
     end
     cburst{k} = tburst;
+    if( (nargout == 0)||(q_edt>q_threshold)||(q_t60>q_threshold) )
+      figure
+      plot([idx0,idx1,idx2]/fs,tburst([idx0,idx1,idx2]),'kx-','linewidth',5,'markersize',10,'Color',[0.5,0.5,0.5]);
+      hold on
+      plot([1:numel(tburst)]/fs,tburst);
+      plot([1:numel(lirs)]/fs,20*log10(abs(lirs./max(abs(lirs)))))
+      text(mean([idx0,idx1])/fs,mean(tburst([idx0,idx1])),...
+	   sprintf('  EDT = %1.3fs (q=%1.3g)',EDT(k),q_edt));
+      text(mean([idx2,idx1])/fs,mean(tburst([idx2,idx1])),...
+	   sprintf('  RT%g = %1.3fs (q=%1.3g)',abs(lthreshold),t60late(k),q_t60));
+      ylim([-90,0]);
+      title(['channel ',num2str(k)]);
+      xlabel('time / s');
+    end
   end
-  
+end
+
+function q = get_fitquality( tburst, idx0, idx1 )
+  x = [idx0:idx1]';
+  y = tburst(idx0:idx1,:);
+  m = (y(end)-y(1))/numel(y);
+  q = y - (x*m - m*x(1) + y(1));
+  q = mean(q.^2);
+end
