@@ -65,7 +65,7 @@ public:
 private:
   // configuration variables:
   std::string name;
-  double buflen;
+  double buflen = {10.0};
   std::string path;
   std::string pattern;
   int format;
@@ -73,59 +73,68 @@ private:
   std::string ofname;
   std::vector<std::string> ports;
   // internal members:
-  std::string prefix;
+  std::string oscprefix;
   jackrec_async_t* jr;
   std::mutex mtx;
   lo_address lo_addr;
   void service();
   std::thread srv;
   bool run_service;
+  std::string extension = {".wav"};
+  std::string prefix = {"rec"};
+  std::string tag = {""};
 };
 
 jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg), name("jackrec"), buflen(10), path(""),
-      pattern("rec*.wav"), format(0), jr(NULL), lo_addr(NULL), run_service(true)
+    : module_base_t(cfg), name("jackrec"), path(""), pattern("rec*.wav"),
+      format(0), jr(NULL), lo_addr(NULL), run_service(true)
 {
   std::string url;
   // get configuration variables:
   GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(buflen);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(path);
-  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE(buflen, "s", "audio buffer length");
+  GET_ATTRIBUTE(url, "", "URL of OSC controller interface");
+  GET_ATTRIBUTE(path, "", "File path where to store and search for files");
+  // append path delimiter if needed:
+  if(!path.empty() && (path[path.size() - 1] != '/'))
+    path += "/";
+  GET_ATTRIBUTE(pattern, "", "search pattern");
+  GET_ATTRIBUTE(prefix, "", "file prefix");
   int ifileformat(0);
   std::string fileformat("WAV");
   GET_ATTRIBUTE_(fileformat);
   std::string validformats;
-#define ADD_FILEFORMAT(x)                                                      \
-  if(fileformat == #x)                                                         \
+#define ADD_FILEFORMAT(x, y)                                                   \
+  if(fileformat == #x) {                                                       \
     ifileformat = SF_FORMAT_##x;                                               \
+    extension = y;                                                             \
+  }                                                                            \
   validformats += std::string(" ") + std::string(#x)
-  ADD_FILEFORMAT(WAV);
-  ADD_FILEFORMAT(AIFF);
-  ADD_FILEFORMAT(AU);
-  ADD_FILEFORMAT(RAW);
-  ADD_FILEFORMAT(PAF);
-  ADD_FILEFORMAT(SVX);
-  ADD_FILEFORMAT(NIST);
-  ADD_FILEFORMAT(VOC);
-  ADD_FILEFORMAT(IRCAM);
-  ADD_FILEFORMAT(W64);
-  ADD_FILEFORMAT(MAT4);
-  ADD_FILEFORMAT(MAT5);
-  ADD_FILEFORMAT(PVF);
-  ADD_FILEFORMAT(XI);
-  ADD_FILEFORMAT(HTK);
-  ADD_FILEFORMAT(SDS);
-  ADD_FILEFORMAT(AVR);
-  ADD_FILEFORMAT(WAVEX);
-  ADD_FILEFORMAT(SD2);
-  ADD_FILEFORMAT(FLAC);
-  ADD_FILEFORMAT(CAF);
-  ADD_FILEFORMAT(WVE);
-  ADD_FILEFORMAT(OGG);
-  ADD_FILEFORMAT(MPC2K);
-  ADD_FILEFORMAT(RF64);
+  ADD_FILEFORMAT(WAV, ".wav");
+  ADD_FILEFORMAT(AIFF, ".aif");
+  ADD_FILEFORMAT(AU, ".au");
+  ADD_FILEFORMAT(RAW, "");
+  ADD_FILEFORMAT(PAF, ".paf");
+  ADD_FILEFORMAT(SVX, ".svx");
+  ADD_FILEFORMAT(NIST, ".nist");
+  ADD_FILEFORMAT(VOC, ".voc");
+  ADD_FILEFORMAT(IRCAM, ".ircam");
+  ADD_FILEFORMAT(W64, ".wav");
+  ADD_FILEFORMAT(MAT4, ".mat");
+  ADD_FILEFORMAT(MAT5, ".mat");
+  ADD_FILEFORMAT(PVF, ".pvf");
+  ADD_FILEFORMAT(XI, ".xi");
+  ADD_FILEFORMAT(HTK, ".htk");
+  ADD_FILEFORMAT(SDS, ".sds");
+  ADD_FILEFORMAT(AVR, ".avr");
+  ADD_FILEFORMAT(WAVEX, ".wav");
+  ADD_FILEFORMAT(SD2, ".sd2");
+  ADD_FILEFORMAT(FLAC, ".flac");
+  ADD_FILEFORMAT(CAF, ".caf");
+  ADD_FILEFORMAT(WVE, ".wav");
+  ADD_FILEFORMAT(OGG, ".ogg");
+  ADD_FILEFORMAT(MPC2K, ".mpc2k");
+  ADD_FILEFORMAT(RF64, ".rf64");
   if(ifileformat == 0)
     throw TASCAR::ErrMsg("Invalid file format \"" + fileformat +
                          "\". Valid formats are:" + validformats);
@@ -165,20 +174,20 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
                          "\". Valid formats are:" + validformats);
   format = ifileformat | isampleformat;
   // register OSC variables:
-  prefix = std::string("/") + name;
+  oscprefix = std::string("/") + name;
   add_variables(session);
   // optionally set OSC response target:
   if(!url.empty())
     lo_addr = lo_address_new_from_url(url.c_str());
   srv = std::thread(&jackrec_t::service, this);
   if(lo_addr)
-    lo_send(lo_addr, (prefix + "/ready").c_str(), "");
+    lo_send(lo_addr, (oscprefix + "/ready").c_str(), "");
 }
 
 jackrec_t::~jackrec_t()
 {
   if(lo_addr)
-    lo_send(lo_addr, (prefix + "/stop").c_str(), "");
+    lo_send(lo_addr, (oscprefix + "/stop").c_str(), "");
   run_service = false;
   srv.join();
   std::lock_guard<std::mutex> lock(mtx);
@@ -196,15 +205,15 @@ void jackrec_t::service()
     {
       std::lock_guard<std::mutex> lock(mtx);
       if(jr && lo_addr) {
-        lo_send(lo_addr, (prefix + "/rectime").c_str(), "f",
+        lo_send(lo_addr, (oscprefix + "/rectime").c_str(), "f",
                 (float)(jr->rectime));
         if(jr->xrun > xrun) {
           xrun = jr->xrun;
-          lo_send(lo_addr, (prefix + "/xrun").c_str(), "i", xrun);
+          lo_send(lo_addr, (oscprefix + "/xrun").c_str(), "i", xrun);
         }
         if(jr->werror > werror) {
           if(werror == 0)
-            lo_send(lo_addr, (prefix + "/error").c_str(), "s",
+            lo_send(lo_addr, (oscprefix + "/error").c_str(), "s",
                     "Disk write error.");
           werror = jr->werror;
         }
@@ -234,7 +243,7 @@ void jackrec_t::rmfile(const std::string& file)
     }
   if(lo_addr)
     lo_send(
-        lo_addr, (prefix + "/error").c_str(), "s",
+        lo_addr, (oscprefix + "/error").c_str(), "s",
         (std::string("Not removing file ") + file + std::string(".")).c_str());
 }
 
@@ -252,11 +261,11 @@ void jackrec_t::start()
       time(&rawtime);
       timeinfo = localtime(&rawtime);
       strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", timeinfo);
-      ofname_ = std::string("rec") + std::string(buffer) + std::string(".wav");
+      ofname_ = path + prefix + tag + std::string(buffer) + extension;
     }
     jr = new jackrec_async_t(ofname_, ports, name, buflen, format);
     if(lo_addr)
-      lo_send(lo_addr, (prefix + "/start").c_str(), "");
+      lo_send(lo_addr, (oscprefix + "/start").c_str(), "");
   }
   catch(const std::exception& e) {
     std::string msg(e.what());
@@ -264,7 +273,7 @@ void jackrec_t::start()
     jr = NULL;
     TASCAR::add_warning(msg);
     if(lo_addr)
-      lo_send(lo_addr, (prefix + "/error").c_str(), "s", msg.c_str());
+      lo_send(lo_addr, (oscprefix + "/error").c_str(), "s", msg.c_str());
   }
 }
 
@@ -275,7 +284,7 @@ void jackrec_t::stop()
     delete jr;
   jr = NULL;
   if(lo_addr)
-    lo_send(lo_addr, (prefix + "/stop").c_str(), "");
+    lo_send(lo_addr, (oscprefix + "/stop").c_str(), "");
 }
 
 void jackrec_t::listports()
@@ -284,10 +293,10 @@ void jackrec_t::listports()
   std::vector<std::string> lports(
       jc.get_port_names_regexp(".*", JackPortIsOutput));
   if(lo_addr) {
-    lo_send(lo_addr, (prefix + "/portlist").c_str(), "");
+    lo_send(lo_addr, (oscprefix + "/portlist").c_str(), "");
     for(auto p : lports)
       if(p.find("sync_out") == std::string::npos)
-        lo_send(lo_addr, (prefix + "/port").c_str(), "s", p.c_str());
+        lo_send(lo_addr, (oscprefix + "/port").c_str(), "s", p.c_str());
   }
 }
 
@@ -327,16 +336,16 @@ void jackrec_t::listfiles()
 {
   std::vector<std::string> res(scan_dir());
   if(lo_addr) {
-    lo_send(lo_addr, (prefix + "/filelist").c_str(), "");
+    lo_send(lo_addr, (oscprefix + "/filelist").c_str(), "");
     for(auto f : res)
-      lo_send(lo_addr, (prefix + "/file").c_str(), "s", f.c_str());
+      lo_send(lo_addr, (oscprefix + "/file").c_str(), "s", f.c_str());
   }
 }
 
 void jackrec_t::add_variables(TASCAR::osc_server_t* srv)
 {
   std::string prefix_(srv->get_prefix());
-  srv->set_prefix(prefix);
+  srv->set_prefix(oscprefix);
   srv->add_string("/name", &ofname);
   srv->add_method("/start", "", &jackrec_t::start, this);
   srv->add_method("/stop", "", &jackrec_t::stop, this);
@@ -345,6 +354,7 @@ void jackrec_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_method("/listports", "", &jackrec_t::listports, this);
   srv->add_method("/listfiles", "", &jackrec_t::listfiles, this);
   srv->add_method("/rmfile", "s", &jackrec_t::rmfile, this);
+  srv->add_string("/tag", &tag);
   srv->set_prefix(prefix_);
 }
 

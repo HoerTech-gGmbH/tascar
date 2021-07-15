@@ -3,56 +3,76 @@ OSC controlled audio recorder
 
 List of configuration variables:
 \begin{tscattributes}
-  \attr{name} & jack client name (jackrec)\\
-  \attr{buflen} & recording buffer in seconds (10)\\
-  \attr{url} & OSC url where response messages are sent\\
-  \attr{path} & File path where to store and search for files\\
-  \attr{pattern} & File pattern of files to show in list (``rec*.wav'')\\
-  \attr{fileformat} & File format (``WAV'')\\
-  \attr{sampleformat} & Sample format (``PCM\_S16'')\\
+  \attr{name}         & jack client name (jackrec)                                                \\
+  \attr{buflen}       & recording buffer in seconds (10)                                          \\
+  \attr{url}          & OSC url where response messages are sent                                  \\
+  \attr{path}         & File path where to store and search for files                             \\
+  \attr{pattern}      & File pattern of files to show in list (``rec*.wav'')                      \\
+  \attr{fileformat}   & File format (``WAV'')                                                     \\
+  \attr{sampleformat} & Sample format (``PCM\_S16'')                                              \\
+  \attr{prefix}       & file prefix, may contain path delimiters if path already exists (``rec'') \\
 \end{tscattributes}
 
 Here is an example of the communication protocol:
 
 \begin{tabular}{|l|l|}
   \hline
-  TASCAR response                               & control client request             \\
+  TASCAR response                                 & control client request             \\
   \hline
   \hline
-  /jackrec/ready                                &                                    \\
+  /jackrec/ready                                  &                                    \\
   \hline
-                                                & /jackrec/listports                 \\
+                                                  & /jackrec/listports                 \\
   \hline
-  /jackrec/portlist                             &                                    \\
-  /jackrec/port system:capture\_1               &                                    \\
-  /jackrec/port system:capture\_2               &                                    \\
-  /jackrec/port render.scene:out\_l             &                                    \\
-  \dots                                         &                                    \\
+  /jackrec/portlist                               &                                    \\
+  /jackrec/port system:capture\_1                 &                                    \\
+  /jackrec/port system:capture\_2                 &                                    \\
+  /jackrec/port render.scene:out\_l               &                                    \\
+  \dots                                           &                                    \\
   \hline
-                                                & /jackrec/addport system:capture\_1 \\
-                                                & /jackrec/addport system:capture\_2 \\
-                                                & \dots                              \\
+                                                  & /jackrec/addport system:capture\_1 \\
+                                                  & /jackrec/addport system:capture\_2 \\
+                                                  & \dots                              \\
   \hline
-                                                & /jackrec/start                     \\
+                                                  & /jackrec/start                     \\
   \hline
-  /jackrec/rectime 0.18575963377952576          &                                    \\
-  /jackrec/rectime 0.38603174686431885          &                                    \\
-  /jackrec/rectime 0.5863038301467896           &                                    \\
-  /jackrec/rectime 0.786575973033905            &                                    \\
-  /jackrec/rectime 0.9868480563163757           &                                    \\
-  \dots                                         &                                    \\
+  /jackrec/rectime 0.18575963377952576            &                                    \\
+  /jackrec/rectime 0.38603174686431885            &                                    \\
+  /jackrec/rectime 0.5863038301467896             &                                    \\
+  /jackrec/rectime 0.786575973033905              &                                    \\
+  /jackrec/rectime 0.9868480563163757             &                                    \\
+  \dots                                           &                                    \\
   \hline
-                                                & /jackrec/stop                      \\
+                                                  & /jackrec/stop                      \\
   \hline
-                                                & /jackrec/listfiles                 \\
+                                                  & /jackrec/listfiles                 \\
   \hline
-  /jackrec/file rec20201122\_101133.wav         &                                    \\
+  /jackrec/file rec20201122\_101133.wav           &                                    \\
   \hline
   \hline
-                                                & /jackrec/clear                     \\
-                                                & /jackrec/start                     \\
+                                                  & /jackrec/clear                     \\
+                                                  & /jackrec/start                     \\
   \hline
-   /jackrec/error Failure: No sources selected. &                                    \\
+   /jackrec/error Failure: No sources selected.   &                                    \\
+  \hline
+  \hline
+                                                  & /jackrec/addport system:capture\_1 \\
+                                                  & /jackrec/tag \_id1234\_            \\
+                                                  & /jackrec/start                     \\
+  \hline
+  /jackrec/rectime 0.18575963377952576            &                                    \\
+  /jackrec/rectime 0.38603174686431885            &                                    \\
+  /jackrec/rectime 0.5863038301467896             &                                    \\
+  /jackrec/rectime 0.786575973033905              &                                    \\
+  /jackrec/rectime 0.9868480563163757             &                                    \\
+  \dots                                           &                                    \\
+  \hline
+                                                  & /jackrec/stop                      \\
+  \hline
+                                                  & /jackrec/listfiles                 \\
+  \hline
+  /jackrec/file rec20201122\_101133.wav           &                                    \\
+  /jackrec/file rec\_id1234\_20201122\_101633.wav &                                    \\
   \hline
 \end{tabular}
 

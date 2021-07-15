@@ -112,7 +112,7 @@ std::vector<std::string> get_port_names_regexp( jack_client_t* jc, std::string n
     name = name+"$";
   std::vector<std::string> ports;
   assert_valid_regexp(name);
-  const char **pp_ports(jack_get_ports(jc, name.c_str(), NULL, flags));
+  const char **pp_ports(jack_get_ports(jc, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, flags));
   if( pp_ports ){
     const char** p(pp_ports);
     while( *p ){
