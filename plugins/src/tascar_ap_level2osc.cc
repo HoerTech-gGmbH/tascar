@@ -22,15 +22,20 @@
 #include "audioplugin.h"
 #include "errorhandling.h"
 #include <lo/lo.h>
+#include <mutex>
+#include <thread>
 
 class level2osc_t : public TASCAR::audioplugin_base_t {
 public:
-  level2osc_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  level2osc_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void configure();
   void release();
   ~level2osc_t();
+
 private:
+  void send();
   bool sendwhilestopped;
   uint32_t skip;
   std::string url;
@@ -40,20 +45,17 @@ private:
   uint32_t skipcnt;
   lo_message msg;
   lo_arg** oscmsgargv;
+  std::mutex mtx;
 };
 
-level2osc_t::level2osc_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    sendwhilestopped(false),
-    skip(0),
-    url("osc.udp://localhost:9999/"),
-    path("/level"),
-    skipcnt(0)
+level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), sendwhilestopped(false), skip(0),
+      url("osc.udp://localhost:9999/"), path("/level"), skipcnt(0)
 {
-  GET_ATTRIBUTE_BOOL(sendwhilestopped,"Send also when transport is stopped");
-  GET_ATTRIBUTE(skip,"","Skip frames");
-  GET_ATTRIBUTE(url,"","Target URL");
-  GET_ATTRIBUTE(path,"","Target path");
+  GET_ATTRIBUTE_BOOL(sendwhilestopped, "Send also when transport is stopped");
+  GET_ATTRIBUTE(skip, "", "Skip frames");
+  GET_ATTRIBUTE(url, "", "Target URL");
+  GET_ATTRIBUTE(path, "", "Target path");
   lo_addr = lo_address_new_from_url(url.c_str());
 }
 
@@ -62,16 +64,16 @@ void level2osc_t::configure()
   audioplugin_base_t::configure();
   msg = lo_message_new();
   // time:
-  lo_message_add_float(msg,0);
+  lo_message_add_float(msg, 0);
   // levels:
-  for( uint32_t k=0;k<n_channels;++k)
-    lo_message_add_float(msg,0);
+  for(uint32_t k = 0; k < n_channels; ++k)
+    lo_message_add_float(msg, 0);
   oscmsgargv = lo_message_get_argv(msg);
 }
 
 void level2osc_t::release()
 {
-  lo_message_free( msg );
+  lo_message_free(msg);
   audioplugin_base_t::release();
 }
 
@@ -80,22 +82,36 @@ level2osc_t::~level2osc_t()
   lo_address_free(lo_addr);
 }
 
-void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                             const TASCAR::pos_t& pos,
+                             const TASCAR::zyx_euler_t&,
+                             const TASCAR::transport_t& tp)
 {
-  if( chunk.size() != n_channels )
-    throw TASCAR::ErrMsg("Programming error (invalid channel number, expected "+TASCAR::to_string(n_channels)+", got "+std::to_string(chunk.size())+").");
-  if( tp.rolling || sendwhilestopped ){
-    if( skipcnt ){
+  if(chunk.size() != n_channels)
+    throw TASCAR::ErrMsg(
+        "Programming error (invalid channel number, expected " +
+        TASCAR::to_string(n_channels) + ", got " +
+        std::to_string(chunk.size()) + ").");
+  if(tp.rolling || sendwhilestopped) {
+    if(skipcnt) {
       skipcnt--;
-    }else{
+    } else {
       // pack data:
       oscmsgargv[0]->f = tp.object_time_seconds;
-      for( uint32_t ch=0;ch<n_channels;++ch)
-        oscmsgargv[ch+1]->f = chunk[ch].spldb();
+      for(uint32_t ch = 0; ch < n_channels; ++ch)
+        oscmsgargv[ch + 1]->f = chunk[ch].spldb();
       // send message:
-      lo_send_message( lo_addr, path.c_str(), msg );
+      std::thread(&level2osc_t::send, this);
       skipcnt = skip;
     }
+  }
+}
+
+void level2osc_t::send()
+{
+  if(mtx.try_lock()) {
+    lo_send_message(lo_addr, path.c_str(), msg);
+    mtx.unlock();
   }
 }
 
