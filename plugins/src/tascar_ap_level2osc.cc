@@ -22,8 +22,6 @@
 #include "audioplugin.h"
 #include "errorhandling.h"
 #include <lo/lo.h>
-#include <mutex>
-#include <thread>
 
 class level2osc_t : public TASCAR::audioplugin_base_t {
 public:
@@ -35,22 +33,19 @@ public:
   ~level2osc_t();
 
 private:
-  void send();
-  bool sendwhilestopped;
-  uint32_t skip;
-  std::string url;
-  std::string path;
+  bool sendwhilestopped = {false};
+  uint32_t skip = {0};
+  std::string url = {"osc.udp://localhost:9999/"};
+  std::string path = {"/level"};
   // derived variables:
   lo_address lo_addr;
-  uint32_t skipcnt;
+  uint32_t skipcnt = {0};
   lo_message msg;
   lo_arg** oscmsgargv;
-  std::mutex mtx;
 };
 
 level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : audioplugin_base_t(cfg), sendwhilestopped(false), skip(0),
-      url("osc.udp://localhost:9999/"), path("/level"), skipcnt(0)
+    : audioplugin_base_t(cfg)
 {
   GET_ATTRIBUTE_BOOL(sendwhilestopped, "Send also when transport is stopped");
   GET_ATTRIBUTE(skip, "", "Skip frames");
@@ -101,17 +96,9 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
       for(uint32_t ch = 0; ch < n_channels; ++ch)
         oscmsgargv[ch + 1]->f = chunk[ch].spldb();
       // send message:
-      std::thread(&level2osc_t::send, this);
+      lo_send_message(lo_addr, path.c_str(), msg);
       skipcnt = skip;
     }
-  }
-}
-
-void level2osc_t::send()
-{
-  if(mtx.try_lock()) {
-    lo_send_message(lo_addr, path.c_str(), msg);
-    mtx.unlock();
   }
 }
 
