@@ -32,8 +32,8 @@
 #endif
 
 TASCAR::tsc_reader_t::tsc_reader_t()
-  : xml_doc_t("<session/>",LOAD_STRING),licensed_component_t(typeid(*this).name()),
-      file_name("")
+    : xml_doc_t("<session/>", LOAD_STRING),
+      licensed_component_t(typeid(*this).name()), file_name("")
 {
   // avoid problems with number format in xml file:
   setlocale(LC_ALL, "C");
@@ -82,23 +82,21 @@ const std::string& showstring(const std::string& s)
   return s;
 }
 
-
-TASCAR::tsc_reader_t::~tsc_reader_t()
-{
-}
+TASCAR::tsc_reader_t::~tsc_reader_t() {}
 
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
-  : xml_doc_t(filename_or_data, t),
+    : xml_doc_t(filename_or_data, t),
       licensed_component_t(typeid(*this).name()),
-    //      file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
-    file_name("")
+      //      file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from
+      //      string)"))
+      file_name("")
 {
-  if( t == LOAD_FILE )
+  if(t == LOAD_FILE)
     file_name = filename_or_data;
   else
     file_name = "(loaded from string)";
-  //file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
+  // file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
   // avoid problems with number format in xml file:
   setlocale(LC_ALL, "C");
   if(path.size()) {
@@ -124,7 +122,7 @@ void TASCAR::tsc_reader_t::read_xml()
   root.GET_ATTRIBUTE(license, "", "license type");
   root.GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
   add_license(license, attribution, "session file");
-  for(auto& sne : root.get_children()){
+  for(auto& sne : root.get_children()) {
     if(tsccfg::node_get_name(sne) == "scene")
       add_scene(sne);
     else if(tsccfg::node_get_name(sne) == "range")
@@ -132,7 +130,7 @@ void TASCAR::tsc_reader_t::read_xml()
     else if(tsccfg::node_get_name(sne) == "connect")
       add_connection(sne);
     else if(tsccfg::node_get_name(sne) == "modules") {
-      for(auto& lsne : tsccfg::node_get_children(sne)){
+      for(auto& lsne : tsccfg::node_get_children(sne)) {
         add_module(lsne);
       }
     } else if(tsccfg::node_get_name(sne) == "license") {
@@ -154,7 +152,7 @@ void TASCAR::tsc_reader_t::read_xml()
       add_author(name, of);
     } else if(tsccfg::node_get_name(sne) == "bibitem") {
       add_bibitem(tsccfg::node_get_text(sne));
-      
+
     } else if((tsccfg::node_get_name(sne) != "include") &&
               (tsccfg::node_get_name(sne) != "mainwindow") &&
               (tsccfg::node_get_name(sne) != "description"))
@@ -162,6 +160,8 @@ void TASCAR::tsc_reader_t::read_xml()
     if(tsccfg::node_get_name(sne) == "module")
       add_module(sne);
   }
+  if(localgetenv("TASCARGENDOC").size())
+    generate_plugin_documentation_tables(true);
 }
 
 const std::string& TASCAR::tsc_reader_t::get_session_path() const

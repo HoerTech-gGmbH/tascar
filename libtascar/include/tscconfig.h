@@ -90,8 +90,9 @@ namespace tsccfg {
 
 } // namespace tsccfg
 
-namespace TASCAR {
+std::string localgetenv(const std::string& env);
 
+namespace TASCAR {
 
   namespace levelmeter {
     enum weight_t { Z, bandpass, C, A };
@@ -148,15 +149,14 @@ namespace TASCAR {
     std::map<std::string, cfg_var_desc_t> vars;
   };
 
-  //extern std::map<std::string, cfg_node_desc_t> attribute_list;
+  // extern std::map<std::string, cfg_node_desc_t> attribute_list;
   std::map<std::string, cfg_node_desc_t>& get_attribute_list();
-  //extern std::vector<std::string> warnings;
+  // extern std::vector<std::string> warnings;
   std::vector<std::string>& get_warnings();
-  //extern globalconfig_t config;
+  // extern globalconfig_t config;
   double config(const std::string&, double);
   std::string config(const std::string&, const std::string&);
   void config_forceoverwrite(const std::string&, const std::string&);
-
 
   class xml_element_t {
   public:
@@ -288,6 +288,8 @@ namespace TASCAR {
   private:
     tsccfg::node_t get_root_node();
   };
+
+  void generate_plugin_documentation_tables(bool latex);
 
 } // namespace TASCAR
 

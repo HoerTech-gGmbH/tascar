@@ -1,16 +1,50 @@
 headtracking module for MPU6050 from repository
 \url{https://github.com/gisogrimm/ov-client}.
 
-\begin{tscattributes}
-\indattr{name}       & Prefix in OSC control variables (default: ``ovheadtracker'')                                                                 \\
-\indattr{devices}    & Space-separated list of potential serial devices (default: ``/dev/ttyUSB0 /dev/ttyUSB1 /dev/ttyUSB2'')                       \\
-\indattr{url}        & Target URL for OSC data logging, or empty for no datalogging (default: ``'')                                                 \\
-\indattr{ttl}        & Time-to-live of OSC multicast data (default: 1)                                                                              \\
-\indattr{calib0path} & OSC-Path to which a trigger is sent on start of calibration path (default: ``/calib0'')                                      \\
-\indattr{calib1path} & OSC-Path to which a trigger is sent on end of calibration path (default: ``/calib1'')                                        \\
-\indattr{autoref}    & Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing (default: 0) \\
-\indattr{axes}       & Order of axes, or -1 to not use axis (default: ``0 1 2'')                                                                    \\
-\indattr{actor}      & Pattern of \tascar{} object names (default: ``''). See actor modules for details.                                            \\
-\indattr{accscale}   & Scaling factor of accelerometer (default: 16384/9.81, returns $m/s^2$).                                                        \\
-\indattr{gscale}     & Scaling factor of gyroscope (default: 16.4, returns deg/s).                                                                  \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:ovheadtracker}
+Attributes of element {\bf ovheadtracker}
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{accscale} & Scaling factor of accelerometer, default value scales to $m/s^2$ (double) & 1670.13\\
+\hline
+\indattr{actor} & pattern to match actor objects (string array) & \\
+\hline
+\indattr{apply\_loc} & Apply translation based on accelerometer (bool) & false\\
+\hline
+\indattr{apply\_rot} & Apply rotation based on gyroscope and accelerometer (bool) & true\\
+\hline
+\indattr{autoref} & Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing (double) & 0\\
+\hline
+\indattr{axes} & Order of axes, or -1 to not use axis (int32 array) & 0 1 2\\
+\hline
+\indattr{calib0path} & OSC-Path to which a trigger is sent on start of calibration path (string) & /calib0\\
+\hline
+\indattr{calib1path} & OSC-Path to which a trigger is sent on end of calibration path (string) & /calib1\\
+\hline
+\indattr{devices} & List of serial port device candidates (string array) & {\tiny /dev/ttyUSB0 /dev/ttyUSB1 /dev/ttyUSB2}\\
+\hline
+\indattr{gyrscale} & Scaling factor of gyroscope, default value scales to deg/s (double) & 16.4\\
+\hline
+\indattr{levelpattern} & TASCAR internal path of level meter to read level data (string array) & \\
+\hline
+\indattr{name} & Prefix in OSC control variables (string) & ovheadtracker\\
+\hline
+\indattr{rotpath} & OSC target path for rotation data (string) & \\
+\hline
+\indattr{roturl} & OSC target URL for rotation data (string) & \\
+\hline
+\indattr{send\_only\_quaternion} & Send only quaternion data instead of raw sensor data (bool) & false\\
+\hline
+\indattr{ttl} & Time-to-live of OSC multicast data (uint32) & 1\\
+\hline
+\indattr{url} & Target URL for OSC data logging, or empty for no datalogging (string) & \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

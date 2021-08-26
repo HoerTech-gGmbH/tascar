@@ -128,22 +128,22 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       send_only_quaternion(false), autoref(0), target(NULL), rottarget(NULL),
       bcalib(false), qref(1, 0, 0, 0), first(true), run_service_level(true)
 {
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(devices);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(roturl);
-  GET_ATTRIBUTE_(rotpath);
-  GET_ATTRIBUTE_(ttl);
-  GET_ATTRIBUTE_(calib0path);
-  GET_ATTRIBUTE_(calib1path);
-  GET_ATTRIBUTE_(autoref);
-  GET_ATTRIBUTE_(axes);
-  GET_ATTRIBUTE_(accscale);
-  GET_ATTRIBUTE_(gyrscale);
-  GET_ATTRIBUTE_BOOL_(apply_loc);
-  GET_ATTRIBUTE_BOOL_(apply_rot);
-  GET_ATTRIBUTE_BOOL_(send_only_quaternion);
-  GET_ATTRIBUTE_(levelpattern);
+  GET_ATTRIBUTE(name,"","Prefix in OSC control variables");
+  GET_ATTRIBUTE(devices,"","List of serial port device candidates");
+  GET_ATTRIBUTE(url,"","Target URL for OSC data logging, or empty for no datalogging");
+  GET_ATTRIBUTE(roturl,"","OSC target URL for rotation data");
+  GET_ATTRIBUTE(rotpath,"","OSC target path for rotation data");
+  GET_ATTRIBUTE(ttl,"","Time-to-live of OSC multicast data");
+  GET_ATTRIBUTE(calib0path,"","OSC-Path to which a trigger is sent on start of calibration path");
+  GET_ATTRIBUTE(calib1path,"","OSC-Path to which a trigger is sent on end of calibration path");
+  GET_ATTRIBUTE(autoref,"","Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing");
+  GET_ATTRIBUTE(axes,"","Order of axes, or -1 to not use axis");
+  GET_ATTRIBUTE(accscale,"","Scaling factor of accelerometer, default value scales to $m/s^2$");
+  GET_ATTRIBUTE(gyrscale,"","Scaling factor of gyroscope, default value scales to deg/s");
+  GET_ATTRIBUTE_BOOL(apply_loc,"Apply translation based on accelerometer");
+  GET_ATTRIBUTE_BOOL(apply_rot,"Apply rotation based on gyroscope and accelerometer");
+  GET_ATTRIBUTE_BOOL(send_only_quaternion,"Send only quaternion data instead of raw sensor data");
+  GET_ATTRIBUTE(levelpattern,"","TASCAR internal path of level meter to read level data");
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
