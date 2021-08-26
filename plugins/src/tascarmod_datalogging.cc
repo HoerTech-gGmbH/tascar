@@ -21,6 +21,7 @@
 
 #include "datalogging_glade.h"
 #include "session.h"
+#include <cmath>
 #include <fstream>
 #include <gtkmm.h>
 #include <gtkmm/builder.h>
@@ -29,7 +30,6 @@
 #include <matio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <cmath>
 
 using std::isfinite;
 
@@ -176,8 +176,7 @@ public:
   uint32_t skipplot;
 };
 
-oscsvar_t::oscsvar_t(tsccfg::node_t xmlsrc)
-    : xml_element_t(xmlsrc), skipplot(0)
+oscsvar_t::oscsvar_t(tsccfg::node_t xmlsrc) : xml_element_t(xmlsrc), skipplot(0)
 {
   GET_ATTRIBUTE_(path);
   GET_ATTRIBUTE_(skipplot);
@@ -195,7 +194,8 @@ public:
 };
 
 oscvar_t::oscvar_t(tsccfg::node_t xmlsrc)
-  : xml_element_t(xmlsrc), size(1), ignorefirst(false), usedouble(false),skipplot(0)
+    : xml_element_t(xmlsrc), size(1), ignorefirst(false), usedouble(false),
+      skipplot(0)
 {
   GET_ATTRIBUTE_(path);
   GET_ATTRIBUTE_(size);
@@ -206,7 +206,7 @@ oscvar_t::oscvar_t(tsccfg::node_t xmlsrc)
 
 std::string oscvar_t::get_fmt()
 {
-  if( usedouble )
+  if(usedouble)
     return std::string(size, 'd');
   return std::string(size, 'f');
 }
@@ -240,25 +240,26 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), srv_proto("UDP"), fileformat("matcell"),
       displaydc(true), lsltimeout(10.0), jc_(NULL)
 {
-  GET_ATTRIBUTE_(multicast);
-  GET_ATTRIBUTE_(port);
-  GET_ATTRIBUTE_(srv_proto);
-  GET_ATTRIBUTE_(fileformat);
-  GET_ATTRIBUTE_(outputdir);
-  GET_ATTRIBUTE_(lsltimeout);
-  GET_ATTRIBUTE_BOOL_(displaydc);
+  GET_ATTRIBUTE(multicast, "", "OSC multicasting address");
+  GET_ATTRIBUTE(port, "", "OSC port, or empty to use session server");
+  GET_ATTRIBUTE(srv_proto, "", "Server protocol, UDP or TCP");
+  GET_ATTRIBUTE(fileformat, "",
+                "File format, can be either ``mat'', ``matcell'' or ``txt''");
+  GET_ATTRIBUTE(outputdir, "", "Data output directory");
+  GET_ATTRIBUTE(lsltimeout, "s", "Number of seconds to scan for LSL streams");
+  GET_ATTRIBUTE_BOOL(displaydc, "Display DC components");
   if(fileformat.size() == 0)
     fileformat = "matcell";
   if((fileformat != "txt") && (fileformat != "mat") &&
      (fileformat != "matcell"))
     throw TASCAR::ErrMsg("Invalid file format \"" + fileformat + "\".");
-  for(auto sne : tsccfg::node_get_children(e,"variable"))
-      oscvars.push_back(oscvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e,"osc"))
+  for(auto sne : tsccfg::node_get_children(e, "variable"))
     oscvars.push_back(oscvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e,"oscs"))
+  for(auto sne : tsccfg::node_get_children(e, "osc"))
+    oscvars.push_back(oscvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e, "oscs"))
     oscsvars.push_back(oscsvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e,"lsl"))
+  for(auto sne : tsccfg::node_get_children(e, "lsl"))
     lslvars.push_back(new lslvar_t(sne, lsltimeout));
 }
 
@@ -609,8 +610,8 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       if(std::isfinite(dmax) && std::isfinite(dmin) && std::isfinite(ystep) &&
          isfinite(dscale)) {
         double ddmin(ystep * round(dmin / ystep));
-        if(std::isfinite(dmax) && std::isfinite(ddmin) && std::isfinite(ystep) &&
-           (dmax > ddmin)) {
+        if(std::isfinite(dmax) && std::isfinite(ddmin) &&
+           std::isfinite(ystep) && (dmax > ddmin)) {
           uint8_t ky(0);
           for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
             ++ky;
@@ -971,8 +972,8 @@ int recorder_t::osc_setvar(const char* path, const char* types, lo_arg** argv,
 {
   double data[argc + 1];
   data[0] = 0;
-  for(uint32_t k = 0; k < (uint32_t)argc; k++){
-    switch( types[k] ){
+  for(uint32_t k = 0; k < (uint32_t)argc; k++) {
+    switch(types[k]) {
     case 'f':
       data[k + 1] = argv[k]->f;
       break;

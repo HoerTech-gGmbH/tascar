@@ -1,1 +1,39 @@
-Play audio samples triggered via OSC.
+Play audio samples via jack, triggered by OSC messages.
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:sampler}
+Attributes of element {\bf sampler}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{multicast} & Multicast address (string) & \\
+\hline
+\indattr{port} & OSC port number (string) & 9999\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+Sound files can be loaded with the sub-element \elem{sound}:
+
+
+\begin{snugshade}
+{\footnotesize
+Attributes of element {\bf sound}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{gain} & Gain to be applied (double, dB) & 0\\
+\hline
+\indattr{name} & File name of sound file (string) & \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

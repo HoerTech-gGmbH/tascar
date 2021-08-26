@@ -213,8 +213,8 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
                 << std::endl;
       std::ofstream fh(fname);
       fh << "\\begin{snugshade}\n{\\footnotesize\n";
-      fh << "\\label{attrtab:" << elem.first << "}\n"
-         << "Attributes of ";
+      fh << "\\label{attrtab:" << elem.first << "}\n";
+      fh << "Attributes of ";
       if(elem.second.type.empty())
         fh << "element {\\bf " << tolatex(elem.first) + "}";
       else
@@ -241,8 +241,10 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
           fh << " \\hyperref[attrtab:" << parent << "]{{\\bf "
              << tolatex(parent) << "}}";
       }
-      fh << "\n\n";
-      fh << "\\begin{tabularx}{\\textwidth}{lXl}\n\\hline\n";
+      fh << "\\nopagebreak\n\n";
+      fh << "\\begin{tabularx}{\\textwidth}{lXl}\n";
+
+      fh << "\\hline\n";
       fh << "name & description (type, unit) & def.\\\\\n\\hline\n";
       for(auto attr : elem.second.attr) {
         //  \indattr{name} & type & def & unit & Name of session (default:
@@ -254,7 +256,7 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
           fh << ", " << attr.second.unit;
         fh << ") ";
         std::string sdef(tolatex(attr.second.defaultval));
-        if( sdef.size() > 24 )
+        if(sdef.size() > 24)
           sdef = "{\\tiny " + sdef + "}";
         fh << "& " << sdef << "\\\\" << std::endl;
       }

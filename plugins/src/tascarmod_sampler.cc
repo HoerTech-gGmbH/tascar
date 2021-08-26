@@ -30,8 +30,8 @@ public:
 
 sound_var_t::sound_var_t(tsccfg::node_t xmlsrc) : xml_element_t(xmlsrc), gain(0)
 {
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(gain);
+  GET_ATTRIBUTE(name, "", "File name of sound file");
+  GET_ATTRIBUTE(gain, "dB", "Gain to be applied");
 }
 
 class sampler_var_t : public TASCAR::module_base_t {
@@ -43,10 +43,10 @@ public:
 };
 
 sampler_var_t::sampler_var_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg)
+    : module_base_t(cfg), port("9999")
 {
-  GET_ATTRIBUTE_(multicast);
-  GET_ATTRIBUTE_(port);
+  GET_ATTRIBUTE(multicast, "", "Multicast address");
+  GET_ATTRIBUTE(port, "", "OSC port number");
   if(port.empty()) {
     std::cerr << "Warning: Empty port number; using default port 9999.\n";
     port = "9999";
