@@ -21,7 +21,7 @@ def tascar_build_steps(stage_name) {
 }
 
 pipeline {
-    agent {label "jenkinsmaster"}
+    agent any
     stages {
         stage("build") {
             parallel {
@@ -52,7 +52,7 @@ pipeline {
                 // Copies the new debs to the stash of existing debs,
                 sh "make -f hoertechstorage.mk storage"
 
-                build job: "/hoertech-aptly/$BRANCH_NAME", quietPeriod: 300, wait: false
+                build job: "/Packaging/hoertech-aptly/$BRANCH_NAME", quietPeriod: 300, wait: false
             }
         }
     }
