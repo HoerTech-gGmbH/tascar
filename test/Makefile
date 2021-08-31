@@ -35,7 +35,7 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_micarray_az270deg test_ir_micarray_az315deg		\
 	test_ir_micarray_el45deg test_ir_micarray_el90deg		\
 	test_ir_micarray_el-45deg test_ir_micarray_el-90deg		\
-	test_snd_diffuse_micarray
+	test_snd_diffuse_micarray test_snd_micarray_az0deg
 
 TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
 	test_fail_duplicatenames test_fail_duplicatescenenames	\

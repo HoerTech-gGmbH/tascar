@@ -93,6 +93,9 @@
 #ifndef DEBUG
 #define DEBUG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " " << #x << "=" << x << std::endl
 #endif
+#ifndef DEBUG2
+#define DEBUG2(x,y) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " " << #x << "=" << x << ", " << #y << "=" << y << std::endl
+#endif
 #ifndef DEBUGMSG
 #define DEBUGMSG(x) std::cerr << __FILE__ << ":" << __LINE__ << ": " << __PRETTY_FUNCTION__ << " --" << x << "--" << std::endl
 #endif

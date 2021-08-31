@@ -191,7 +191,6 @@ public:
   delayline_model_t delaylinemodel;
   double c;
   double sincorder;
-  double tau;        // delay w.r.t. parent at begin of chunk
   double target_tau; // delay w.r.t. parent at the end of chunk
   double maxdist;    // maximal objectsize w.r.t to origin
 
@@ -228,10 +227,10 @@ private:
 mic_processor_t::mic_processor_t(const mic_t* creator, const chunk_cfg_t& cfg,
                                  double delaycorr)
     : sigbuf(cfg.n_fragment),
-      dline(2 * delaycorr * cfg.f_sample + 2 * creator->sincorder, 
-            cfg.f_sample, creator->c, creator->sincorder, 64),
-      configuration(creator),
-      dt(1.0/std::max(1.0,(double)cfg.n_fragment)), fs(cfg.f_sample)
+      dline(2 * delaycorr * cfg.f_sample + 2 * creator->sincorder, cfg.f_sample,
+            creator->c, creator->sincorder, 64),
+      configuration(creator), dt(1.0 / std::max(1.0, (double)cfg.n_fragment)),
+      fs(cfg.f_sample)
 {
   for(size_t k = 0; k < creator->filtermodels.size(); ++k)
     filters.push_back(new TASCAR::biquad_t());
@@ -262,7 +261,6 @@ void mic_processor_t::process(const TASCAR::wave_t& input,
     ++kflt;
   }
   // delayline:
-  tau = configuration->tau;
   target_tau = configuration->target_tau;
   dtau = (target_tau - tau)*dt;
   uint32_t N(sigbuf.size());
@@ -271,6 +269,7 @@ void mic_processor_t::process(const TASCAR::wave_t& input,
     output[k] += dline.get_dist_push(tau, in);
     tau += dtau;
   }
+  tau = target_tau;
 }
 
 void mic_t::process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
@@ -279,7 +278,6 @@ void mic_t::process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
                     double tau_parent)
 {
   size_t thisindex(channelindex);
-  tau = target_tau;
   // relative delay w.r.t. parent
   TASCAR::pos_t pos(rel_pos);
   TASCAR::pos_t axis = position - parentposition;
