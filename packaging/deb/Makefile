@@ -10,10 +10,12 @@ PACKVERSION:=$(PACKVERSION)-debug
 endif
 LIBVERSION=$(VERSION)
 
+LSLVERSION:=$(shell dpkg-query --show --showformat='$${Version}' liblsl)
+
 all:
 	rm -Rf tascar;\
 	mkdir -p tascar/$(CODENAME);\
-	for c in $(ALL_CSV); do $(MAKE) $${c}.version && (cd ../.. && LIBVERSION=$(LIBVERSION) ./packaging/deb/htchdebian-mkdeb packaging/deb/$$c `cat packaging/deb/$${c}.version` ); done;\
+	for c in $(ALL_CSV); do $(MAKE) $${c}.version && (cd ../.. && LIBVERSION=$(LIBVERSION) LSLVERSION=$(LSLVERSION) ./packaging/deb/htchdebian-mkdeb packaging/deb/$$c `cat packaging/deb/$${c}.version` ); done;\
 	mv ../../*.deb tascar/$(CODENAME);\
 	for c in $(ALL_CSV:.csv=); do ls tascar/$(CODENAME)/$${c}_*.deb || return 1; done
 
@@ -21,6 +23,7 @@ all:
 ver:
 	@echo "Packaging: $(PACKVERSION)"
 	@echo "Library: $(LIBVERSION)"
+	@echo "LSL: $(LSLVERSION)"
 
 .PHONY: $(wildcard *.version)
 

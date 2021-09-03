@@ -98,7 +98,7 @@ fi
 packagename=$(echo "$distname" | sed -e "s/_/-/g")
 #packageversion="$version"-$(date +%Y%m%d)
 packageversion="$version"
-deb_depends="Depends: "`cat "${PACKAGEBASE}.dep"|sed -e "s/(VERSION)/(=${VERSION})/g"`
+deb_depends="Depends: "`cat "${PACKAGEBASE}.dep"|envsubst|sed -e "s/(VERSION)/(=${VERSION})/g"`
 deb_provides="Provides: ${PACKAGE}"
 inst_size=`du debian|tail -1|sed -e 's/\([0-9]*\).*/\1/1'`
 
