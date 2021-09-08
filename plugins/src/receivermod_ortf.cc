@@ -35,8 +35,8 @@ public:
     double dt;
     TASCAR::varidelay_t dline_l;
     TASCAR::varidelay_t dline_r;
-    double wl;
-    double wr;
+    double wl = 0.0;
+    double wr = 0.0;
     double itd;
     double state_l;
     double state_r;
@@ -53,6 +53,7 @@ public:
 private:
   double distance;
   double angle;
+  bool broadband = false;
   double f6db;
   double fmin;
   double scale;
@@ -172,47 +173,85 @@ ortf_t::ortf_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(c,"m/s","Speed of sound");
   GET_ATTRIBUTE(decorr_length,"s","Decorrelation length");
   GET_ATTRIBUTE_BOOL(decorr,"Flag to use decorrelatin of diffuse sounds");
+  GET_ATTRIBUTE_BOOL(broadband,"Use broadband cardioid characteristics");
   dir_l.rot_z(0.5*angle);
   dir_r.rot_z(-0.5*angle);
 }
 
-void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+                             const TASCAR::wave_t& chunk,
+                             std::vector<TASCAR::wave_t>& output,
+                             receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   TASCAR::pos_t prel_norm(prel.normal());
-  // calculate panning parameters (as incremental values; target_XX is
-  // the value reached at end of block):
-  double target_wl(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_l)),wpow));
-  double target_wr(pow(std::max(0.0,0.5-0.5*scale*dot_prod(prel_norm,dir_r)),wpow));
-  if( target_wl > wmin )
-    target_wl = wmin;
-  if( target_wr > wmin )
-    target_wr = wmin;
-  if( !(target_wl > EPS) )
-    target_wl = EPS;
-  if( !(target_wr > EPS) )
-    target_wr = EPS;
-  // low pass filters for frequency-dependent directionality:
-  double dwl((target_wl - d->wl)*d->dt);
-  double dwr((target_wr - d->wr)*d->dt);
-  // itd (measured in meter!) is dist*1/2*(cos(az)+1), az is relative to y axis
-  // for frontal directions: az=pi/2 -> cos(az)=0 -> itd=0.5*dist
-  double target_itd(distance*(0.5*dot_prod(prel_norm,dir_itd)+0.5));
-  double ditd((target_itd - d->itd)*d->dt);
-  // apply panning:
-  uint32_t N(chunk.size());
-  for(uint32_t k=0;k<N;++k){
-    float v(chunk[k]);
-    output[0][k] += (d->state_l = (d->dline_l.get_dist_push(distance-d->itd,v)*(1.0f-d->wl) + d->state_l*d->wl));
-    output[1][k] += (d->state_r = (d->dline_r.get_dist_push(d->itd,v)*(1.0f-d->wr) + d->state_r*d->wr));
-    d->wl+=dwl;
-    d->wr+=dwr;
-    d->itd += ditd;
+  if(broadband) {
+    // calculate panning parameters (as incremental values; target_XX is
+    // the value reached at end of block):
+    double target_wl(0.5 * dot_prod(prel_norm, dir_l) + 0.5);
+    double target_wr(0.5 * dot_prod(prel_norm, dir_r) + 0.5);
+    double dwl((target_wl - d->wl) * d->dt);
+    double dwr((target_wr - d->wr) * d->dt);
+    // itd (measured in meter!) is dist*1/2*(cos(az)+1), az is relative to y
+    // axis for frontal directions: az=pi/2 -> cos(az)=0 -> itd=0.5*dist
+    double target_itd(distance * (0.5 * dot_prod(prel_norm, dir_itd) + 0.5));
+    double ditd((target_itd - d->itd) * d->dt);
+    // apply panning:
+    uint32_t N(chunk.size());
+    for(uint32_t k = 0; k < N; ++k) {
+      float v(chunk[k]);
+      output[0][k] += d->dline_l.get_dist_push(distance - d->itd, v) * d->wl;
+      output[1][k] += d->dline_r.get_dist_push(d->itd, v) * d->wr;
+      d->wl += dwl;
+      d->wr += dwr;
+      d->itd += ditd;
+    }
+    // explicitely apply final values, to avoid rounding errors:
+    d->wl = target_wl;
+    d->wr = target_wr;
+    d->itd = target_itd;
+  } else {
+    // calculate panning parameters (as incremental values; target_XX is
+    // the value reached at end of block):
+    double target_wl(pow(
+        std::max(0.0, 0.5 - 0.5 * scale * dot_prod(prel_norm, dir_l)), wpow));
+    double target_wr(pow(
+        std::max(0.0, 0.5 - 0.5 * scale * dot_prod(prel_norm, dir_r)), wpow));
+    if(target_wl > wmin)
+      target_wl = wmin;
+    if(target_wr > wmin)
+      target_wr = wmin;
+    if(!(target_wl > EPS))
+      target_wl = EPS;
+    if(!(target_wr > EPS))
+      target_wr = EPS;
+    // low pass filters for frequency-dependent directionality:
+    double dwl((target_wl - d->wl) * d->dt);
+    double dwr((target_wr - d->wr) * d->dt);
+    // itd (measured in meter!) is dist*1/2*(cos(az)+1), az is relative to y
+    // axis for frontal directions: az=pi/2 -> cos(az)=0 -> itd=0.5*dist
+    double target_itd(distance * (0.5 * dot_prod(prel_norm, dir_itd) + 0.5));
+    double ditd((target_itd - d->itd) * d->dt);
+    // apply panning:
+    uint32_t N(chunk.size());
+    for(uint32_t k = 0; k < N; ++k) {
+      float v(chunk[k]);
+      output[0][k] +=
+          (d->state_l = (d->dline_l.get_dist_push(distance - d->itd, v) *
+                             (1.0f - d->wl) +
+                         d->state_l * d->wl));
+      output[1][k] +=
+          (d->state_r = (d->dline_r.get_dist_push(d->itd, v) * (1.0f - d->wr) +
+                         d->state_r * d->wr));
+      d->wl += dwl;
+      d->wr += dwr;
+      d->itd += ditd;
+    }
+    // explicitely apply final values, to avoid rounding errors:
+    d->wl = target_wl;
+    d->wr = target_wr;
+    d->itd = target_itd;
   }
-  // explicitely apply final values, to avoid rounding errors:
-  d->wl = target_wl;
-  d->wr = target_wr;
-  d->itd = target_itd;
 }
 
 void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
