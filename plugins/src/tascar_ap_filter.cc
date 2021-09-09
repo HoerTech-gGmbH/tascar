@@ -44,7 +44,7 @@ biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg), fc(1000.0)
 {
   GET_ATTRIBUTE(fc, "Hz", "Cut-off frequncy");
-  GET_ATTRIBUTE_DB(gain, "equalizer gain");
+  GET_ATTRIBUTE(gain, "dB", "equalizer gain");
   GET_ATTRIBUTE(Q, "", "quality factor");
   bool highpass(false);
   GET_ATTRIBUTE_BOOL(highpass,
