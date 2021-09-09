@@ -40,24 +40,30 @@ private:
   std::vector<TASCAR::biquad_t*> bp;
 };
 
-biquadplugin_t::biquadplugin_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    fc(1000.0)
+biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), fc(1000.0)
 {
-  GET_ATTRIBUTE(fc,"Hz","Cut-off frequncy");
-  GET_ATTRIBUTE_DB(gain,"equalizer gain");
-  GET_ATTRIBUTE(Q,"","quality factor");
+  GET_ATTRIBUTE(fc, "Hz", "Cut-off frequncy");
+  GET_ATTRIBUTE_DB(gain, "equalizer gain");
+  GET_ATTRIBUTE(Q, "", "quality factor");
   bool highpass(false);
-  GET_ATTRIBUTE_BOOL(highpass,"Highpass filter (true) or lowpass filter (false)");
+  GET_ATTRIBUTE_BOOL(highpass,
+                     "Highpass filter (true) or lowpass filter (false)");
   std::string mode("lohi");
-  GET_ATTRIBUTE(mode,"","filter mode: lohi, lowpass, highpass, equalizer");
-  if( mode == "lohi" ){
-    if( highpass )
+  GET_ATTRIBUTE(mode, "", "filter mode: lohi, lowpass, highpass, equalizer");
+  if(mode == "lohi") {
+    if(highpass)
       ftype = biquadplugin_t::highpass;
     else
       ftype = biquadplugin_t::lowpass;
-  }else
-    throw TASCAR::ErrMsg("Invalid mode: "+mode);
+  } else if(mode == "lowpass")
+    ftype = biquadplugin_t::lowpass;
+  else if(mode == "highpass")
+    ftype = biquadplugin_t::highpass;
+  else if(mode == "equalizer")
+    ftype = biquadplugin_t::equalizer;
+  else
+    throw TASCAR::ErrMsg("Invalid mode: " + mode);
 }
 
 void biquadplugin_t::add_variables( TASCAR::osc_server_t* srv )
