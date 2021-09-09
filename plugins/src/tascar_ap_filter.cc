@@ -25,6 +25,7 @@
 
 class biquadplugin_t : public TASCAR::audioplugin_base_t {
 public:
+  enum filtertype_t { lowpass, highpass, equalizer };
   biquadplugin_t( const TASCAR::audioplugin_cfg_t& cfg );
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void configure();
@@ -32,24 +33,39 @@ public:
   void add_variables( TASCAR::osc_server_t* srv );
   ~biquadplugin_t();
 private:
-  double fc;
-  bool highpass;
+  double fc = 1000.0;
+  double gain = 0.0;
+  double Q = 1.0;
+  filtertype_t ftype = biquadplugin_t::lowpass;
   std::vector<TASCAR::biquad_t*> bp;
 };
 
 biquadplugin_t::biquadplugin_t( const TASCAR::audioplugin_cfg_t& cfg )
   : audioplugin_base_t( cfg ),
-    fc(1000.0),
-    highpass(false)
+    fc(1000.0)
 {
   GET_ATTRIBUTE(fc,"Hz","Cut-off frequncy");
+  GET_ATTRIBUTE_DB(gain,"equalizer gain");
+  GET_ATTRIBUTE(Q,"","quality factor");
+  bool highpass(false);
   GET_ATTRIBUTE_BOOL(highpass,"Highpass filter (true) or lowpass filter (false)");
+  std::string mode("lohi");
+  GET_ATTRIBUTE(mode,"","filter mode: lohi, lowpass, highpass, equalizer");
+  if( mode == "lohi" ){
+    if( highpass )
+      ftype = biquadplugin_t::highpass;
+    else
+      ftype = biquadplugin_t::lowpass;
+  }else
+    throw TASCAR::ErrMsg("Invalid mode: "+mode);
 }
 
 void biquadplugin_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_double("/fc",&fc);
-  srv->add_bool("/highpass",&highpass);
+  srv->add_double("/gain",&gain);
+  srv->add_double("/q",&Q);
+  //srv->add_bool("/highpass",&highpass);
 }
 
 void biquadplugin_t::configure()
@@ -74,10 +90,17 @@ biquadplugin_t::~biquadplugin_t()
 void biquadplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
 {
   for(size_t k=0;k<chunk.size();++k){
-    if( highpass )
-      bp[k]->set_highpass(fc, f_sample);
-    else
+    switch( ftype ){
+    case lowpass:
       bp[k]->set_lowpass(fc, f_sample);
+      break;
+    case highpass:
+      bp[k]->set_highpass(fc, f_sample);
+      break;
+    case equalizer:
+      bp[k]->set_pareq(fc, f_sample, gain, Q);
+      break;
+    }
     bp[k]->filter(chunk[k]);
   }
 }

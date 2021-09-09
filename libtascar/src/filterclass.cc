@@ -358,6 +358,29 @@ void TASCAR::biquad_t::set_lowpass(double fc, double fs, bool phaseinvert)
   set_gzp(1.0 / g, 1.0, M_PI, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
 }
 
+void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
+{
+  // bilinear transformation
+  double t = 1.0 / tan(M_PI * f / fs);
+  double t_sq = t * t;
+  double Bc = t / q;
+  if(gain < 0.0) {
+    double g = pow(10.0, (-gain / 20.0));
+    double inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
+    set_coefficients(
+        2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - g * Bc) * inv_a0,
+        (t_sq + 1.0 + Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
+        (t_sq + 1.0 - Bc) * inv_a0);
+  } else {
+    double g = pow(10.0, (gain / 20.0));
+    double inv_a0 = 1.0 / (t_sq + 1.0 + Bc);
+    set_coefficients(
+        2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
+        (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
+        (t_sq + 1.0 - g * Bc) * inv_a0);
+  }
+}
+
 TASCAR::aweighting_t::aweighting_t( double fs )
 {
   b1.set_analog_poles( 7.39705e9, -76655.0, -76655.0, fs );
