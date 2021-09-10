@@ -70,6 +70,7 @@ private:
   bool b_newpos;
   bool showgui;
   bool unlock;
+  bool applyonaddition = true;
   Gtk::Window* win;
   Gtk::Box* box;
   std::vector<Gtk::Button*> buttons;
@@ -124,7 +125,8 @@ void geopresets_t::addposition(const std::string& s, const TASCAR::pos_t& pos)
 {
   mtx.lock();
   positions[s] = pos;
-  b_newpos = true;
+  if(applyonaddition)
+    b_newpos = true;
   add_to_list(s);
   mtx.unlock();
 }
@@ -148,7 +150,8 @@ void geopresets_t::addorientation(const std::string& s,
 {
   mtx.lock();
   orientations[s] = pos;
-  b_newpos = true;
+  if(applyonaddition)
+    b_newpos = true;
   add_to_list(s);
   mtx.unlock();
 }
@@ -203,6 +206,9 @@ geopresets_t::geopresets_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL_(showgui);
   GET_ATTRIBUTE_(width);
   GET_ATTRIBUTE_(buttonheight);
+  GET_ATTRIBUTE_BOOL(
+      applyonaddition,
+      "If true then addposition/addorientation trigger a movement");
   for(auto preset : tsccfg::node_get_children(e, "preset")) {
     xml_element_t pres(preset);
     std::string name;
