@@ -72,6 +72,15 @@ TEST(sinctable_t, getval)
   ASSERT_NEAR(0.63662, s(0.5), 1e-5);
 }
 
+TEST(sinctable_t, getval_sinc)
+{
+  TASCAR::sinctable_t s(7,0);
+  ASSERT_NEAR(1.0f, s(0.0f), 1e-9);
+  ASSERT_NEAR(0.0f, s(1.0f), 1e-5);
+  ASSERT_NEAR(0.0f, s(2.0f), 1e-5);
+  ASSERT_NEAR(0.63662, s(0.5), 1e-5);
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

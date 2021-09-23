@@ -38,16 +38,21 @@ namespace TASCAR {
     sinctable_t(uint32_t order, uint32_t oversampling);
     sinctable_t(const sinctable_t& src);
     ~sinctable_t();
-    inline float operator()(float x) const {
-      return data[std::min((uint32_t)(fabsf(x)*scale),N1)];
+    inline float operator()(float x) const
+    {
+      if(N0 > 0)
+        return data[std::min((uint32_t)(fabsf(x) * scale), N1)];
+      float tmp(M_PIf32 * fabsf(x) + EPSf);
+      return sinf(tmp) / tmp;
     };
     const uint32_t O;
+
   private:
     uint32_t N0;
     uint32_t N;
     uint32_t N1;
     float scale;
-    float *data;
+    float* data;
   };
 
   /**

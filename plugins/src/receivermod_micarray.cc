@@ -36,7 +36,8 @@ public:
      @param flt Reference to a filter to be updated
      @param rel_pos Relative position
   */
-  void update_par(TASCAR::biquad_t& flt, const TASCAR::pos_t& rel_pos, double& fs) const;
+  void update_par(TASCAR::biquad_t& flt, const TASCAR::pos_t& rel_pos,
+                  double& fs) const;
 
 private:
   // Model parameters, initialized from XML file:
@@ -62,13 +63,14 @@ private:
   throw TASCAR::ErrMsg("No value for \"" #x "\" was given.")
 
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
-  : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0), theta_st(HUGE_VAL), beta(HUGE_VAL), omega(HUGE_VAL),
-      alpha_st(HUGE_VAL), alpha_m(HUGE_VAL), theta_end(HUGE_VAL), gain_st(HUGE_VAL),
-      gain_end(HUGE_VAL), omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
+    : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0), theta_st(HUGE_VAL),
+      beta(HUGE_VAL), omega(HUGE_VAL), alpha_st(HUGE_VAL), alpha_m(HUGE_VAL),
+      theta_end(HUGE_VAL), gain_st(HUGE_VAL), gain_end(HUGE_VAL),
+      omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
 {
   GET_ATTRIBUTE(axis, "",
-                  "orientation axis for filter parameter "
-                  "variation relative to receiver orientation");
+                "orientation axis for filter parameter "
+                "variation relative to receiver orientation");
   axis.normalize();
   std::string type;
   GET_ATTRIBUTE(type, "", "filter model type");
@@ -88,10 +90,10 @@ filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
     filtertype = equalizer;
   } else if(type == "highshelf") {
     GET_ATTRIBUTE(theta_st, "rad",
-                    "angle at which the zero position starts to vary");
+                  "angle at which the zero position starts to vary");
     CHECKNAN(theta_st);
     GET_ATTRIBUTE(beta, "",
-                    "parameter to determine angle at which alpha = alpha_m");
+                  "parameter to determine angle at which alpha = alpha_m");
     CHECKNAN(beta);
     GET_ATTRIBUTE(omega, "Hz", "cut-off frequency of high-shelf");
     CHECKNAN(omega);
@@ -113,11 +115,13 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
   case equalizer: {
     double theta = acos(dot_prod(rel_pos.normal(), axis));
     // gain (dB) variation
-    double gain = (cos(std::min(theta/theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
-                  (gain_st - gain_end) + gain_end;
+    double gain = (cos(std::min(theta / theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
+                      (gain_st - gain_end) +
+                  gain_end;
     // center frequency variation
-    double Omega = (cos(std::min(theta/theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
-                   (omega_st - omega_end) + omega_end;
+    double Omega = (cos(std::min(theta / theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
+                       (omega_st - omega_end) +
+                   omega_end;
     // bilinear transformation
     double t = 1.0 / tan(M_PI * Omega / fs);
     double t_sq = t * t;
@@ -183,7 +187,7 @@ public:
   void add_processors(std::vector<mic_processor_t*>& processors,
                       const chunk_cfg_t& cfg, double delaycorr) const;
   void validate_attributes(std::string&) const;
-  
+
   TASCAR::pos_t position;
   TASCAR::pos_t position_norm;
   std::vector<filter_model_t> filtermodels;
@@ -191,6 +195,7 @@ public:
   delayline_model_t delaylinemodel;
   double c;
   double sincorder;
+  uint32_t sincsampling = 64;
   double target_tau; // delay w.r.t. parent at the end of chunk
   double maxdist;    // maximal objectsize w.r.t to origin
 
@@ -207,7 +212,7 @@ private:
 class mic_processor_t {
 public:
   mic_processor_t(const mic_t* creator, const chunk_cfg_t& cfg,
-                  double delaycorr);
+                  double delaycorr, uint32_t sincsampling);
   ~mic_processor_t();
   void process(const TASCAR::wave_t& input, TASCAR::wave_t& output,
                TASCAR::pos_t rel_pos);
@@ -225,10 +230,10 @@ private:
 };
 
 mic_processor_t::mic_processor_t(const mic_t* creator, const chunk_cfg_t& cfg,
-                                 double delaycorr)
+                                 double delaycorr, uint32_t sincsampling)
     : sigbuf(cfg.n_fragment),
       dline(2 * delaycorr * cfg.f_sample + 2 * creator->sincorder, cfg.f_sample,
-            creator->c, creator->sincorder, 64),
+            creator->c, creator->sincorder, sincsampling),
       configuration(creator), dt(1.0 / std::max(1.0, (double)cfg.n_fragment)),
       fs(cfg.f_sample)
 {
@@ -262,9 +267,9 @@ void mic_processor_t::process(const TASCAR::wave_t& input,
   }
   // delayline:
   target_tau = configuration->target_tau;
-  dtau = (target_tau - tau)*dt;
+  dtau = (target_tau - tau) * dt;
   uint32_t N(sigbuf.size());
-  for(uint32_t k=0;k<N;++k){
+  for(uint32_t k = 0; k < N; ++k) {
     float in(sigbuf[k]);
     output[k] += dline.get_dist_push(tau, in);
     tau += dtau;
@@ -290,7 +295,7 @@ void mic_t::process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
     else
       target_tau = axis.norm() * (theta - M_PI * 0.5);
   } else if(delaylinemodel == freefield)
-      target_tau = -axis.norm() * cos_theta;
+    target_tau = -axis.norm() * cos_theta;
   target_tau += tau_parent;
   // filtering and delay line
   processors[thisindex]->process(input, output[thisindex], rel_pos);
@@ -313,7 +318,8 @@ void mic_t::process_diffuse(const TASCAR::amb1wave_t& chunk,
   const float* i_y(chunk.y().d);
   const float* i_z(chunk.z().d);
   for(uint32_t k = 0; k < chunk.size(); ++k) {
-    *o_l += *i_w + *i_x * position_norm.x + *i_y * position_norm.y + *i_z * position_norm.z;
+    *o_l += *i_w + *i_x * position_norm.x + *i_y * position_norm.y +
+            *i_z * position_norm.z;
     ++o_l;
     ++i_w;
     ++i_x;
@@ -329,15 +335,15 @@ void mic_t::process_diffuse(const TASCAR::amb1wave_t& chunk,
 void mic_t::add_processors(std::vector<mic_processor_t*>& processors,
                            const chunk_cfg_t& cfg, double delaycorr) const
 {
-  processors.push_back(new mic_processor_t(this, cfg, delaycorr));
+  processors.push_back(new mic_processor_t(this, cfg, delaycorr, sincsampling));
   for(auto child : children)
     child->add_processors(processors, cfg, delaycorr);
 }
 
 mic_t::mic_t(tsccfg::node_t xmlsrc, const TASCAR::pos_t& parentposition_,
              double c_)
-    : TASCAR::xml_element_t(xmlsrc), c(c_), sincorder(0),
-      target_tau(0.0), maxdist(0.0), parentposition(parentposition_), tau_parent(0.0)
+    : TASCAR::xml_element_t(xmlsrc), c(c_), sincorder(0), target_tau(0.0),
+      maxdist(0.0), parentposition(parentposition_), tau_parent(0.0)
 {
   GET_ATTRIBUTE(name, "", "microphone label");
   GET_ATTRIBUTE(position, "m",
@@ -349,6 +355,8 @@ mic_t::mic_t(tsccfg::node_t xmlsrc, const TASCAR::pos_t& parentposition_,
   GET_ATTRIBUTE(delay, "",
                 "delay line model type, \"freefield\" or \"sphere\"");
   GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of delay line");
+  GET_ATTRIBUTE(sincsampling, "",
+                "Sampling of sinc table, or 0 for direct calculation");
   if(delay == "freefield")
     delaylinemodel = freefield;
   else if(delay == "sphere")
@@ -368,7 +376,8 @@ mic_t::mic_t(tsccfg::node_t xmlsrc, const TASCAR::pos_t& parentposition_,
     }
   }
   for(auto child : children)
-    maxdist = std::max( std::max(maxdist, child->position.norm()), child->maxdist);
+    maxdist =
+        std::max(std::max(maxdist, child->position.norm()), child->maxdist);
 }
 
 mic_t::~mic_t()
@@ -390,10 +399,10 @@ size_t mic_t::get_num_nodes() const
 class mic_vars_t {
 public:
   mic_vars_t(tsccfg::node_t cfg);
-  double c;
+  double c = 340.0;
 };
 
-mic_vars_t::mic_vars_t(tsccfg::node_t cfg) : c(340)
+mic_vars_t::mic_vars_t(tsccfg::node_t cfg)
 {
   TASCAR::xml_element_t e(cfg);
   e.GET_ATTRIBUTE(c, "m/s", "speed of sound");
@@ -422,7 +431,8 @@ public:
                                receivermod_base_t::data_t*);
   void configure();
   void add_variables(TASCAR::osc_server_t* srv);
-  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   void validate_attributes(std::string&) const;
   double get_delay_comp() const;
 
@@ -431,7 +441,7 @@ private:
 };
 
 micarray_t::data_t::data_t(const mic_t& creator, const chunk_cfg_t& cfg,
-                                  double delaycorr)
+                           double delaycorr)
 {
   creator.add_processors(processors, cfg, delaycorr);
 }
@@ -457,9 +467,9 @@ double micarray_t::get_delay_comp() const
 void micarray_t::add_variables(TASCAR::osc_server_t* srv) {}
 
 void micarray_t::add_pointsource(const TASCAR::pos_t& prel, double width,
-                                        const TASCAR::wave_t& chunk,
-                                        std::vector<TASCAR::wave_t>& output,
-                                        receivermod_base_t::data_t* sd)
+                                 const TASCAR::wave_t& chunk,
+                                 std::vector<TASCAR::wave_t>& output,
+                                 receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   // process data:
@@ -468,9 +478,9 @@ void micarray_t::add_pointsource(const TASCAR::pos_t& prel, double width,
                  get_delay_comp() * c);
 }
 
-void micarray_t::add_diffuse_sound_field(
-    const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output,
-    receivermod_base_t::data_t*)
+void micarray_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                                         std::vector<TASCAR::wave_t>& output,
+                                         receivermod_base_t::data_t*)
 {
   size_t channelindex(0);
   origin.process_diffuse(chunk, output, channelindex);

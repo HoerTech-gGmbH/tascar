@@ -78,6 +78,7 @@ class hrtf_param_t : public TASCAR::xml_element_t {
 public:
   hrtf_param_t(tsccfg::node_t xmlsrc);
   uint32_t sincorder;
+  uint32_t sincsampling = 64;
   double c;
   TASCAR::pos_t dir_l;
   TASCAR::pos_t dir_r;
@@ -119,6 +120,8 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
       freq_end(650), maxgain(-5.4), Q_notch(2.3), diffuse_hrtf(false)
 {
   GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of ITD delay line");
+  GET_ATTRIBUTE(sincsampling, "",
+                "Sinc table sampling of ITD delay line, or 0 for no table.");
   GET_ATTRIBUTE(c, "m/s", "Speed of sound");
   GET_ATTRIBUTE(radius, "m", "Radius of sphere modeling the head");
   GET_ATTRIBUTE_DEG(angle, "Position of the ears on the sphere");
@@ -207,7 +210,8 @@ public:
   };
   class diffuse_data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    diffuse_data_t(double srate, uint32_t chunksize, const hrtf_param_t& par_plugin);
+    diffuse_data_t(double srate, uint32_t chunksize,
+                   const hrtf_param_t& par_plugin);
     hrtf_t::data_t xp, xm, yp, ym, zp, zm;
   };
   hrtf_t(tsccfg::node_t xmlsrc);
@@ -220,9 +224,10 @@ public:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
                                std::vector<TASCAR::wave_t>& output,
                                receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
-  receivermod_base_t::data_t* create_diffuse_state_data(double srate,
-                                                  uint32_t fragsize) const;
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
+  receivermod_base_t::data_t*
+  create_diffuse_state_data(double srate, uint32_t fragsize) const;
   virtual void configure();
   virtual void release();
   virtual void postproc(std::vector<TASCAR::wave_t>& output);
@@ -252,9 +257,9 @@ hrtf_t::data_t::data_t(double srate, uint32_t chunksize,
                        const hrtf_param_t& par_plugin)
     : fs(srate), dt(1.0 / std::max(1.0, (double)chunksize)), par(par_plugin),
       dline_l(4 * par.radius * srate / par.c + 2 + par.sincorder, srate, par.c,
-              par.sincorder, 64),
+              par.sincorder, par.sincsampling),
       dline_r(4 * par.radius * srate / par.c + 2 + par.sincorder, srate, par.c,
-              par.sincorder, 64),
+              par.sincorder, par.sincsampling),
       out_l(0), out_r(0), state_l(0), state_r(0), tau_l(0), tau_r(0),
       inv_a0(1.0 / (par.omega + fs)), alpha_l(0.0), alpha_r(0.0),
       inv_a0_f(1.0 / (par.omega_front + fs)), alpha_f(0.0),
@@ -552,8 +557,8 @@ void hrtf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
   }
 }
 
-TASCAR::receivermod_base_t::data_t* hrtf_t::create_state_data(double srate,
-                                                        uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t*
+hrtf_t::create_state_data(double srate, uint32_t fragsize) const
 {
   return new data_t(srate, fragsize, par);
 }
