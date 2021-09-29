@@ -2,7 +2,7 @@
 
 On branch development:
 
-- build, test and package: `make clean; make pack`
+- build, test and package: `make clean; make -j 8 && make pack`
 
 - increment version number in `config.mk`, edit `changelog`
 
@@ -17,5 +17,4 @@ On branch development:
 - push tags and master to all remotes
 
 - switch back to development branch
-
 
