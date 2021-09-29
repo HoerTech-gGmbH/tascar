@@ -6,11 +6,15 @@
     <!-- point source: -->
     <source name="water">
       <sound name="0" y="0.2" >
-	<!-- sound files -->
-        <!--<sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" loop="0" level="70"/>-->
+        <plugins>
+          <!-- sound files -->
+          <!--<sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" loop="0" level="70"/>-->
+        </plugins>
       </sound>
       <sound name="1" y="-0.2" >
-        <!--<sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" position="-5" loop="0" level="70"/>-->
+        <plugins>
+          <!--<sndfile name="${HOME}/tascar_scenes/sounds/Wasser_Brunnen/62395__bsumusictech__fountain-close.wav" position="-5" loop="0" level="70"/>-->
+        </plugins>
       </sound>
       <position>0 1 0 0</position>
     </source>
