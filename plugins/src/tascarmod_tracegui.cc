@@ -42,6 +42,7 @@ private:
   double linescale;
   bool unitcircle;
   bool origin;
+  double orientation;
   uint32_t itracelen;
   Gtk::Window win;
   Gtk::DrawingArea map;
@@ -61,6 +62,7 @@ tracegui_t::tracegui_t( const TASCAR::module_cfg_t& cfg )
     linescale(1),
     unitcircle(true),
     origin(true),
+    orientation(0.0),
     itracelen(40),
     pos(0)
 {
@@ -69,6 +71,7 @@ tracegui_t::tracegui_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE_(fps);
   GET_ATTRIBUTE_(guiscale);
   GET_ATTRIBUTE_(linescale);
+  GET_ATTRIBUTE_DEG(orientation,"canvas orientation");
   GET_ATTRIBUTE_BOOL_(unitcircle);
   GET_ATTRIBUTE_BOOL_(origin);
   GET_ATTRIBUTE_BOOL_(ontop);
@@ -139,6 +142,8 @@ bool tracegui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     wscale /= guiscale;
     double mw(0.1*guiscale*linescale);
     cr->scale( wscale, wscale );
+    if( orientation != 0 )
+      cr->rotate(orientation);
     cr->set_source_rgb( 0.7, 0.7, 0.7 );
     if( origin ){
       cr->set_line_width( 0.075*mw );

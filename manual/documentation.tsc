@@ -51,7 +51,7 @@
     <receiver type="amb3h0v" name="amb3h0v"/>
     <receiver type="amb3h3v" name="amb3h3v"/>
     <receiver type="cardioid" name="cardioid"/>
-    <receiver type="cardioidmod" name="cardioidmod"/>
+    <!--<receiver type="cardioidmod" name="cardioidmod"/>-->
     <receiver type="chmap" name="chmap"/>
     <receiver type="debugpos" name="debugpos"/>
     <receiver type="fakebf" name="fakebf"/>
@@ -87,6 +87,7 @@
   </scene>
   <modules>
     <datalogging/>
+    <oscrelay/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

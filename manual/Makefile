@@ -4,22 +4,12 @@ include ../config.mk
 
 all: acousticmodel.pdf manual.pdf callgraph.pdf
 
-#manual.pdf: acousticmodel.pdf callgraph.pdf manual.run5
-
 diff: manual-diff_master.pdf
 
-#TEXINPUTS = "./:../:./plugins/:../technical_report/:../flowcharts/fmt_eps/:../flowcharts/fmt_pdf/:../flowcharts/:"
 TEXINPUTS="./:../doc/:"
 
-SECTIONS=secmodules.tex secactmodules.tex secapmodules.tex secrecgeneric.tex secrecspeaker.tex secrecreverb.tex
-
-
-#%.pdf: %.tex
-#	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $<
-#	TEXINPUTS=$(TEXINPUTS) bibtex $(<:.tex=)
-#	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
-#	TEXINPUTS=$(TEXINPUTS) makeindex $(basename $<)
-#	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $<
+SECTIONS= secmodules.tex secactmodules.tex secapmodules.tex	\
+secrecgeneric.tex secrecspeaker.tex secrecreverb.tex
 
 %.run1: %.tex $(SECTIONS) autodoc.txt
 	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $< && touch $@
