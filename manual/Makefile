@@ -160,3 +160,7 @@ clihelp.tex: $(patsubst %,cli_%.tex,$(ALLAPPNAMES)) Makefile
 
 cli_%.tex: ../apps/build/tascar_% Makefile
 	(echo ''; echo '\begin{lstlisting}[numbers=none]'; LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ $< -h;echo '\end{lstlisting}') > $@
+
+
+modtabs:
+	(export LD_LIBRARY_PATH="../libtascar/build/:../plugins/build/";export TASCARGENDOC="true";../gui/build/tascar documentation.tsc)

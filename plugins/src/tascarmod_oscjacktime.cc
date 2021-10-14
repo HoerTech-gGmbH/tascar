@@ -29,16 +29,21 @@ private:
   std::string url;
   std::string path;
   uint32_t ttl;
+  uint32_t skip = 0;
   lo_address target;
+  uint32_t skipcnt = 0;
 };
 
 oscjacktime_t::oscjacktime_t( const TASCAR::module_cfg_t& cfg )
   : module_base_t( cfg ),
+    url("osc.udp://localhost:9999/"),
+    path("/time"),
     ttl(1)
 {
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(path);
-  GET_ATTRIBUTE_(ttl);
+  GET_ATTRIBUTE(url,"","Destination URL");
+  GET_ATTRIBUTE(path,"","Destination OSC path");
+  GET_ATTRIBUTE(ttl,"","Time-to-live of UDP messages");
+  GET_ATTRIBUTE(skip,"blocks","Skip this number of blocks between sending");
   if( url.empty() )
     url = "osc.udp://localhost:9999/";
   if( path.empty() )
@@ -56,7 +61,12 @@ oscjacktime_t::~oscjacktime_t()
 
 void oscjacktime_t::update(uint32_t tp_frame, bool tp_rolling)
 {
-  lo_send(target,path.c_str(),"f",tp_frame*t_sample);
+  if( skipcnt == 0 ){
+    lo_send(target,path.c_str(),"f",tp_frame*t_sample);
+    skipcnt = skip;
+  }else{
+    --skipcnt;
+  }
 }
 
 REGISTER_MODULE(oscjacktime_t);

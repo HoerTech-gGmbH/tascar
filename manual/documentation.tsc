@@ -88,6 +88,7 @@
   <modules>
     <datalogging/>
     <oscrelay/>
+    <oscjacktime/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
