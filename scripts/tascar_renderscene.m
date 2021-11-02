@@ -53,10 +53,10 @@ function [y,sCfg] = tascar_renderscene( x, session, varargin )
     sCmd = [sCmd,sprintf(' -t %g',sCfg.starttime)];
   end
   if ~isempty(sCfg.ismmin)
-    sCmd = [sCmd,sprintf(' -0 %d',sCfg.ismmin)];
+    sCmd = [sCmd,sprintf(' --ismmin=%d',sCfg.ismmin)];
   end
   if ~isempty(sCfg.ismmax)
-    sCmd = [sCmd,sprintf(' -1 %d',sCfg.ismmax)];
+    sCmd = [sCmd,sprintf(' --ismmax=%d',sCfg.ismmax)];
   end
   if sCfg.dynamic
     sCmd = [sCmd,' -d'];

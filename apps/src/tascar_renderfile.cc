@@ -62,7 +62,8 @@ int main(int argc, char** argv)
                        "whole duration.");
     desc.add_options()("static", "render scene statically at the given time "
                                  "without updating the geometry");
-    desc.add_options()("dynamic,d", "render scene dynamically (now default anyway, for backward compatibility)");
+    desc.add_options()("dynamic,d", "render scene dynamically (now default "
+                                    "anyway, for backward compatibility)");
     desc.add_options()("ismmin", po::value<int>()->default_value(0),
                        "Minimum order of image source model.");
     desc.add_options()("ismmax", po::value<int>()->default_value(-1),
@@ -104,7 +105,7 @@ int main(int argc, char** argv)
     double duration(vm["duration"].as<double>());
     // flag to increment time on each cycle:
     bool dynamic(vm.count("static") == 0);
-    if( vm.count("dynamic")>0)
+    if(vm.count("dynamic") > 0)
       dynamic = true;
     // fragment size, or -1 to use only a single fragment:
     uint32_t fragsize(vm["fragsize"].as<int>());
@@ -124,6 +125,9 @@ int main(int argc, char** argv)
     char c_respath[PATH_MAX];
     std::string current_path = getcwd(c_respath, PATH_MAX);
     current_path += "/";
+    if(out_fname[0] != '/') {
+      out_fname = current_path + out_fname;
+    }
     TASCAR::wav_render_t r(tscfile, scene, b_verbose);
     if(ism_max != (uint32_t)(-1))
       r.set_ism_order_range(ism_min, ism_max);
@@ -131,11 +135,9 @@ int main(int argc, char** argv)
       if(duration <= 0)
         duration = r.duration - starttime;
       fragsize = std::min(fragsize, (uint32_t)(srate * duration));
-      r.render(fragsize, srate, duration, current_path + out_fname, starttime,
-               dynamic);
+      r.render(fragsize, srate, duration, out_fname, starttime, dynamic);
     } else
-      r.render(fragsize, in_fname, current_path + out_fname, starttime,
-               dynamic);
+      r.render(fragsize, in_fname, out_fname, starttime, dynamic);
     if(b_verbose) {
       std::cout << (double)(r.t1 - r.t0) / CLOCKS_PER_SEC << std::endl;
       std::cout << (double)(r.t2 - r.t1) / CLOCKS_PER_SEC << std::endl;

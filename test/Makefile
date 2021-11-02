@@ -279,3 +279,9 @@ test_snd_vbap3d_speakermatch: RMSTOL=1e-6
 test_snd_sndfile: TOL=3e-7
 test_snd_reverb: TOL=1e-5
 test_snd_reverb: RMSTOL=1e-6
+
+%.octave: %.m
+	octave --no-gui --eval $*
+
+%.matlab: %.m
+	matlab -nodisplay -batch $*
