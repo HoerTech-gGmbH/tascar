@@ -19,7 +19,7 @@ function tascar_validate_foa_irs( ir, fs )
   ir = filter(B,A,ir);
   %% find peak of direct sound:
   idx = irs_firstpeak( ir );
-  if c*std(idx)/fs > 0.05
+  if c*std(idx)/fs > 0.2
     error(['The standard deviation of first peak (',num2str(c*std(idx)/fs),'m) is larger than a typical microphone diameter']);
   end
   idx = round(median(idx));
@@ -35,7 +35,7 @@ function tascar_validate_foa_irs( ir, fs )
   %% estimate ratio between w and xyz
   wxyzrat = abs(ir(:,1))./sqrt(max(1e-9,sum(ir(:,2:4).^2,2)));
   wxyzrat_mean = sum(w.*wxyzrat)./sum(w);
-  if abs(wxyzrat_mean-sqrt(0.5)) > 0.02
+  if abs(wxyzrat_mean-sqrt(0.5)) > 0.05
     error(['The ratio between w and xyz is ',num2str(wxyzrat_mean),', which is not 0.70711 (FuMa normalization)']);
   end
   %% estimate element-wise direction of arrival:
