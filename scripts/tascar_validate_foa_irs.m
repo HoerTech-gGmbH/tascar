@@ -1,4 +1,4 @@
-function tascar_validate_foa_irs( ir, fs )
+function [d,az,el,ratio] = tascar_validate_foa_irs( ir, fs )
 % tascar_validate_foa_irs - check if an impulse response matches B-format structure
 %
 % Usage:
@@ -43,11 +43,17 @@ function tascar_validate_foa_irs( ir, fs )
   %% calculate weighted average:
   doa_mean = sum(repmat(w,[1,3]).*doa)./sum(w);
   [th,phi,r] = cart2sph(doa_mean(1),doa_mean(2),doa_mean(3));
-  disp('Estimated parameters:');
-  disp(sprintf('  distance = %1.2f m',d));
-  disp(sprintf('  azimuth = %1.1f deg',180/pi*th));
-  disp(sprintf('  elevation = %1.1f deg', 180/pi*phi));
-  disp(sprintf('  w/xyz = %1.3f', wxyzrat_mean));
+  az = 180/pi*th;
+  el = 180/pi*phi;
+  ratio = wxyzrat_mean;
+  if nargout == 0
+    disp('Estimated parameters:');
+    disp(sprintf('  distance = %1.2f m',d));
+    disp(sprintf('  azimuth = %1.1f deg',az));
+    disp(sprintf('  elevation = %1.1f deg',el ));
+    disp(sprintf('  w/xyz = %1.3f', ratio));
+    clear d;
+  end
 end
 
 function b = isoctave()
