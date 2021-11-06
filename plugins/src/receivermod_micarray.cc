@@ -115,15 +115,15 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
   case equalizer: {
     double theta = acos(dot_prod(rel_pos.normal(), axis));
     // gain (dB) variation
-    double gain = (cos(std::min(theta / theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
+    double gain = (cos(std::min(theta / theta_end, 1.0) * TASCAR_PI) + 1.0) * 0.5 *
                       (gain_st - gain_end) +
                   gain_end;
     // center frequency variation
-    double Omega = (cos(std::min(theta / theta_end, 1.0) * M_PI) + 1.0) * 0.5 *
+    double Omega = (cos(std::min(theta / theta_end, 1.0) * TASCAR_PI) + 1.0) * 0.5 *
                        (omega_st - omega_end) +
                    omega_end;
     // bilinear transformation
-    double t = 1.0 / tan(M_PI * Omega / fs);
+    double t = 1.0 / tan(TASCAR_PI * Omega / fs);
     double t_sq = t * t;
     double Bc = t / Q;
     if(gain < 0.0) {
@@ -151,7 +151,7 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
       double alpha =
           (alpha_st + alpha_m) * 0.5 +
           (alpha_st - alpha_m) * 0.5 *
-              cos((theta - theta_st) / (beta * (M_PI - theta_st)) * M_PI);
+              cos((theta - theta_st) / (beta * (TASCAR_PI - theta_st)) * TASCAR_PI);
       flt.set_coefficients((omega - fs) * inv_a0, 0.0,
                            (omega + alpha * fs) * inv_a0,
                            (omega - alpha * fs) * inv_a0, 0.0);
@@ -290,10 +290,10 @@ void mic_t::process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
   double cos_theta = dot_prod(pos.normal(), axis.normal());
   double theta = acos(cos_theta);
   if(delaylinemodel == sphere) {
-    if(theta < M_PI * 0.5)
+    if(theta < TASCAR_PI2)
       target_tau = -axis.norm() * cos_theta;
     else
-      target_tau = axis.norm() * (theta - M_PI * 0.5);
+      target_tau = axis.norm() * (theta - TASCAR_PI2);
   } else if(delaylinemodel == freefield)
     target_tau = -axis.norm() * cos_theta;
   target_tau += tau_parent;
@@ -460,7 +460,7 @@ micarray_t::micarray_t(tsccfg::node_t xmlsrc)
 
 double micarray_t::get_delay_comp() const
 {
-  return origin.maxdist * 0.5 * M_PI / c;
+  return origin.maxdist * TASCAR_PI2 / c;
   // maximal possible delay due to sphere delay model
 }
 

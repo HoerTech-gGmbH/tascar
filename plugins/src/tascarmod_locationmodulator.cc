@@ -51,7 +51,7 @@ void locmod_t::update(uint32_t tp_frame,bool running)
 {
   double tptime(tp_frame*t_sample);
   TASCAR::pos_t r(m);
-  r *= cos(tptime*2.0*M_PI*f+p0*DEG2RAD);
+  r *= cos(tptime*TASCAR_2PI*f+p0*DEG2RAD);
   set_location(r);
 }
 

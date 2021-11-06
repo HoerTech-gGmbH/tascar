@@ -524,7 +524,7 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
             cr->stroke();
             cr->move_to(t, v);
             cr->save();
-            cr->rotate(-0.5 * M_PI);
+            cr->rotate(-TASCAR_PI2);
             cr->show_text(it->msg);
             cr->restore();
             cr->restore();

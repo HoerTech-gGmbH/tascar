@@ -39,8 +39,8 @@ public:
   void configure()
   {
     n_channels = 1;
-    wpow = log(exp(-M_PI * f6db / f_sample)) / log(0.5);
-    wmin = exp(-M_PI * fmin / f_sample);
+    wpow = log(exp(-TASCAR_PI * f6db / f_sample)) / log(0.5);
+    wmin = exp(-TASCAR_PI * fmin / f_sample);
   };
   double f6db;
   double fmin;

@@ -76,7 +76,7 @@ void pink_t::configure()
   TASCAR::spec_t sy(fft.s.n_);
   TASCAR::spec_t sz(fft.s.n_);
   std::mt19937 gen(1);
-  std::uniform_real_distribution<double> dis(0.0, 2*M_PI);
+  std::uniform_real_distribution<double> dis(0.0, TASCAR_2PI);
   std::uniform_real_distribution<double> disx(-1.0, 1.0);
   for( uint32_t kf=0;kf<sw.n_;++kf){
     double f((double)kf*f_sample/(double)fftlen);

@@ -90,9 +90,9 @@ void gate_t::configure()
   pfadein = new float[ifadein];
   pfadeout = new float[ifadeout];
   for(uint32_t k=0;k<ifadein;++k)
-    pfadein[k] = 0.5+0.5*cos(M_PI*k/ifadein);
+    pfadein[k] = 0.5+0.5*cos(TASCAR_PI*k/ifadein);
   for(uint32_t k=0;k<ifadeout;++k)
-    pfadeout[k] = 0.5-0.5*cos(M_PI*k/ifadeout);
+    pfadeout[k] = 0.5-0.5*cos(TASCAR_PI*k/ifadeout);
   ihold = f_sample*holdlen;
   lmin.resize( n_channels );
   lmax.resize( n_channels );

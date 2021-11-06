@@ -95,9 +95,9 @@ ortf_t::data_t::data_t(double srate, uint32_t chunksize, double maxdist,
 void ortf_t::configure()
 {
   TASCAR::receivermod_base_t::configure();
-  wpow = log(exp(-M_PI * f6db / f_sample)) / log(0.5);
-  // wmin = pow(exp(-M_PI*fmin/srate),wpow);
-  wmin = exp(-M_PI * fmin / f_sample);
+  wpow = log(exp(-TASCAR_PI * f6db / f_sample)) / log(0.5);
+  // wmin = pow(exp(-TASCAR_PI*fmin/srate),wpow);
+  wmin = exp(-TASCAR_PI * fmin / f_sample);
   n_channels = 2;
   // initialize decorrelation filter:
   decorrflt.clear();
@@ -109,7 +109,7 @@ void ortf_t::configure()
     decorrflt.push_back(new TASCAR::overlap_save_t(paddedirslen, n_fragment));
   TASCAR::fft_t fft_filter(irslen);
   std::mt19937 gen(1);
-  std::uniform_real_distribution<double> dis(0.0, 2 * M_PI);
+  std::uniform_real_distribution<double> dis(0.0, TASCAR_2PI);
   for(uint32_t k = 0; k < 2; ++k) {
     for(uint32_t b = 0; b < fft_filter.s.n_; ++b)
       fft_filter.s[b] = std::exp(i * dis(gen));

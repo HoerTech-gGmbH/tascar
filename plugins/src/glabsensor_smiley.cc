@@ -52,10 +52,10 @@ void smiley_t::draw(const Cairo::RefPtr<Cairo::Context>& cr, double width, doubl
     else if( happiness < 0.1 )
       add_warning( "I am not happy." );
     float s(std::min(width,height));
-    cr->arc(0.5*width, 0.5*height, 0.2*s, 0.0, 2 * M_PI);
+    cr->arc(0.5*width, 0.5*height, 0.2*s, 0.0, TASCAR_2PI);
     cr->stroke();
-    cr->arc(0.5*width-0.1*s, 0.5*height-0.05*s, 0.02*s, 0.0, 2 * M_PI);
-    cr->arc(0.5*width+0.1*s, 0.5*height-0.05*s, 0.02*s, 0.0, 2 * M_PI);
+    cr->arc(0.5*width-0.1*s, 0.5*height-0.05*s, 0.02*s, 0.0, TASCAR_2PI);
+    cr->arc(0.5*width+0.1*s, 0.5*height-0.05*s, 0.02*s, 0.0, TASCAR_2PI);
     cr->fill();
     cr->move_to(0.5*width-0.1*s, 0.5*height+0.1*s-0.05*s*happiness);
     for(uint32_t k=0;k<32;++k){

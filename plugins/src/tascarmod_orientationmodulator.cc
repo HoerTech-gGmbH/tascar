@@ -49,7 +49,7 @@ void ormod_t::update(uint32_t frame, bool running)
 {
   double tptime((double)frame*t_sample);
   TASCAR::zyx_euler_t r;
-  r.z = m*DEG2RAD*cos(tptime*2.0*M_PI*f+p0*DEG2RAD);
+  r.z = m*DEG2RAD*cos(tptime*TASCAR_2PI*f+p0*DEG2RAD);
   set_orientation(r);
 }
 

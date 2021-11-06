@@ -67,7 +67,7 @@ bool door_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>&
   double gain(std::max(0.0,preln.x));
   // calculate gain:
   // gain rule: normal hanning window or sqrt
-  double gainfalloff(0.5-0.5*cos(M_PI*std::min(1.0,std::max(0.0,dist)/falloff)));
+  double gainfalloff(0.5-0.5*cos(TASCAR_PI*std::min(1.0,std::max(0.0,dist)/falloff)));
   if( wndsqrt )
     gainfalloff = sqrt( gainfalloff );
   gain *= gainfalloff;

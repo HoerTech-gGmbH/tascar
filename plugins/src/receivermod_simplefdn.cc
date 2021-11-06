@@ -380,7 +380,7 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
     TASCAR::spec_t eigenv(fdnorder_ / 2 + 1);
     for(uint32_t k = 0; k < eigenv.n_; ++k)
       eigenv[k] =
-          std::exp(i_d * 2.0 * M_PI * pow((double)k / (0.5 * fdnorder_), 2.0));
+          std::exp(i_d * TASCAR_2PI * pow((double)k / (0.5 * fdnorder_), 2.0));
     ;
     fft.execute(eigenv);
     // std::cout << "row: " << fft.w << std::endl;
@@ -560,7 +560,7 @@ void simplefdn_t::update_par()
       t60 =
           0.161 * volumetric.boxvolume() / (absorption * volumetric.boxarea());
     if(fdn) {
-      double wscale(2.0 * M_PI * tmin);
+      double wscale(TASCAR_2PI * tmin);
       fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
                       f_sample * t60, std::max(0.0, std::min(0.999, damping)));
     }
@@ -580,7 +580,7 @@ void simplefdn_t::setlogdelays(bool ld)
       if(t60 <= 0.0)
         t60 = 0.161 * volumetric.boxvolume() /
               (absorption * volumetric.boxarea());
-      double wscale(2.0 * M_PI * tmin);
+      double wscale(TASCAR_2PI * tmin);
       fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
                       f_sample * t60, std::max(0.0, std::min(0.999, damping)));
     }

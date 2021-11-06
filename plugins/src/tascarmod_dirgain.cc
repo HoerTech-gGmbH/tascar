@@ -103,8 +103,8 @@ dirgain_t::~dirgain_t()
 int dirgain_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut)
 {
   if( dirgain_vars_t::active ){
-    double wpow(log(exp(-M_PI*f6db/srate))/log(0.5));
-    double wmin(exp(-M_PI*fmin/srate));
+    double wpow(log(exp(-TASCAR_PI*f6db/srate))/log(0.5));
+    double wmin(exp(-TASCAR_PI*fmin/srate));
     for(uint32_t ch=0;ch<channels;++ch){
       double w(pow(0.5-0.5*cos(az-az0-ch*kazscale),wpow));
       if( w > wmin )

@@ -112,7 +112,7 @@ void rec_itu51_t::configure()
   // set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
   double f0(0.125 * fc / f_sample * PI2);
   allpL.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
-  double g(std::abs(allpL.response(M_PI)));
+  double g(std::abs(allpL.response(TASCAR_PI)));
   allpL.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   allpR.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   allpC.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);

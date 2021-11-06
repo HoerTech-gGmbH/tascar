@@ -75,7 +75,7 @@ void loopmachine_t::configure()
   loop->set_loop(0);
   ramp = new TASCAR::wave_t( f_sample*ramplen );
   for( size_t k=0;k<ramp->n;++k)
-    ramp->d[k] = 0.5f+0.5f*cosf(k*t_sample*M_PI/ramplen);
+    ramp->d[k] = 0.5f+0.5f*cosf(k*t_sample*TASCAR_PI/ramplen);
 }
 
 void loopmachine_t::release()

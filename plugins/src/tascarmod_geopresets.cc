@@ -303,7 +303,7 @@ void geopresets_t::update(uint32_t tp_frame, bool tp_rolling)
         new_r = rot_it->second;
       }
       const std::complex<double> i(0, 1);
-      d_phase = std::exp(i * M_PI * t_fragment / duration);
+      d_phase = std::exp(i * TASCAR_PI * t_fragment / duration);
       phase = 1.0f;
       b_newpos = false;
       running = true;

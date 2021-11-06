@@ -269,7 +269,7 @@ void eog_t::draw(const Cairo::RefPtr<Cairo::Context>& cr, double width, double h
   cr->set_font_size( 6*linewidth );
   cr->set_source_rgb( 0, 0, 0 );
   cr->save();
-  cr->arc( 0, 0, r, -vscale-0.5*M_PI, vscale-0.5*M_PI );
+  cr->arc( 0, 0, r, -vscale-TASCAR_PI2, vscale-TASCAR_PI2 );
   cr->stroke();
   cr->restore();
   for(int iv=-2;iv<=2;++iv){
@@ -295,7 +295,7 @@ void eog_t::draw(const Cairo::RefPtr<Cairo::Context>& cr, double width, double h
   }
   ctext_at( cr, 0, 0.2, name + " / " + unit );
   cr->save();
-  cr->arc(0,0,0.1,0,2.0*M_PI);
+  cr->arc(0,0,0.1,0,TASCAR_2PI);
   cr->fill();
   cr->restore();
 }

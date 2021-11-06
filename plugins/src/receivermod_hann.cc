@@ -98,7 +98,7 @@ void rec_hann_t::add_pointsource(const TASCAR::pos_t& prel, double width, const 
   for(unsigned int k=0;k<channels;k++){
     double az(0.5*channels*fabs(spkpos[k].get_rel_azim(az_src)));
     double w = 0;
-    if( az<M_PI ){
+    if( az<TASCAR_PI ){
       w = 0.5+0.5*cos(az);
       if( wexp != 1.0 )
         w = pow(w,wexp);

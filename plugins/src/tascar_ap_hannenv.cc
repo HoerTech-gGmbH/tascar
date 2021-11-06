@@ -58,8 +58,8 @@ void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   double t1(ramp1);
   double t2(t1+steady);
   double t3(t2+ramp2);
-  double p1(M_PI/ramp1);
-  double p2(M_PI/ramp2);
+  double p1(TASCAR_PI/ramp1);
+  double p2(TASCAR_PI/ramp2);
   double t(tp.object_time_seconds-t0);
   double dt(t_sample);
   if( !tp.rolling )

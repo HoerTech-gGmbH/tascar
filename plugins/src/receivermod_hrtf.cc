@@ -245,10 +245,10 @@ private:
 void tau_woodworth_schlosberg(const double theta, const double radius,
                               double& tau)
 {
-  if(theta < 0.5 * M_PI)
+  if(theta < TASCAR_PI2)
     tau = -radius * (cos(theta) - 1.0);
   else
-    tau = radius * (theta - 0.5 * M_PI + 1.0);
+    tau = radius * (theta - TASCAR_PI2 + 1.0);
 }
 
 hrtf_t::~hrtf_t() {}
@@ -273,17 +273,17 @@ void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
   // bqazim_l/r
   // parameter of SHM
   alpha_l = (1.0 + 0.5 * par.alphamin +
-             (1.0 - 0.5 * par.alphamin) * cos(theta_l / par.thetamin * M_PI)) *
+             (1.0 - 0.5 * par.alphamin) * cos(theta_l / par.thetamin * TASCAR_PI)) *
             fs;
   alpha_r = (1.0 + 0.5 * par.alphamin +
-             (1.0 - 0.5 * par.alphamin) * cos(theta_r / par.thetamin * M_PI)) *
+             (1.0 - 0.5 * par.alphamin) * cos(theta_r / par.thetamin * TASCAR_PI)) *
             fs;
 
   if(theta_f > par.startangle_front) // pinna shadow effect
   {
     alpha_f = (1.0 - (1.0 - par.alphamin_front) *
                          (0.5 - cos((theta_f - par.startangle_front) /
-                                    (M_PI - par.startangle_front) * M_PI) *
+                                    (TASCAR_PI - par.startangle_front) * TASCAR_PI) *
                                     0.5)) *
               fs;
     // alpha_f = (1.0 - ( 1.0-par.alphamin_front ) * ( 0.5-0.5*cos(theta_f) ) )
@@ -326,7 +326,7 @@ void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
     double p_angle = (par.startangle_notch - elevation) / par.startangle_notch;
     double transform_const =
         1.0 /
-        tan(M_PI *
+        tan(TASCAR_PI *
             (p_angle * (par.freq_end - par.freq_start) + par.freq_start) / fs);
     double Q_n = transform_const / par.Q_notch;
     double inv_gain_Q = pow(10.0, (-par.maxgain * p_angle / 20.0)) * Q_n;
@@ -344,7 +344,7 @@ void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
   {
     alpha_u = (1.0 - (1.0 - par.alphamin_up) *
                          (0.5 - 0.5 * cos((elevation - par.startangle_up) /
-                                          (M_PI - par.startangle_up) * M_PI))) *
+                                          (TASCAR_PI - par.startangle_up) * TASCAR_PI))) *
               fs;
 
     bqelev_l.set_coefficients((par.omega_up - fs) * inv_a0_u, 0.0,
@@ -387,7 +387,7 @@ void hrtf_t::configure()
     decorrflt.push_back(new TASCAR::overlap_save_t(paddedirslen, n_fragment));
   TASCAR::fft_t fft_filter(irslen);
   std::mt19937 gen(1);
-  std::uniform_real_distribution<double> dis(0.0, 2 * M_PI);
+  std::uniform_real_distribution<double> dis(0.0, TASCAR_2PI);
   for(uint32_t k = 0; k < 2; ++k) {
     for(uint32_t b = 0; b < fft_filter.s.n_; ++b)
       fft_filter.s[b] = std::exp(i * dis(gen));
@@ -468,8 +468,8 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
   double theta_r = acos(dot_prod(par.dir_r, prel_norm));
 
   // warping for better grip on small angles
-  theta_l = theta_l * (1.0 - 0.5 * cos(sqrt(theta_l / M_PI) * M_PI)) / 1.5;
-  theta_r = theta_r * (1.0 - 0.5 * cos(sqrt(theta_r / M_PI) * M_PI)) / 1.5;
+  theta_l = theta_l * (1.0 - 0.5 * cos(sqrt(theta_l / TASCAR_PI) * TASCAR_PI)) / 1.5;
+  theta_r = theta_r * (1.0 - 0.5 * cos(sqrt(theta_r / TASCAR_PI) * TASCAR_PI)) / 1.5;
 
   // time delay in meter (panning parameters: target_tau is reached at end of
   // the block)
@@ -477,7 +477,7 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
   tau_woodworth_schlosberg(theta_r, par.radius, target_tau_r);
   // calculate delta tau for each panning step
 
-  filterdesign(theta_l, theta_r, theta_front, -(prel_norm.elev() - 0.5 * M_PI));
+  filterdesign(theta_l, theta_r, theta_front, -(prel_norm.elev() - TASCAR_PI2));
 }
 
 void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,

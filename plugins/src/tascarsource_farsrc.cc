@@ -51,7 +51,7 @@ bool door_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>&
 {
   data_t* d((data_t*)sd);
   float dist(prel.norm()-distance);
-  float gain(0.5-0.5*cos(M_PI*std::min(1.0f,std::max(0.0f,dist)/falloff)));
+  float gain(0.5-0.5*cos(TASCAR_PI*std::min(1.0f,std::max(0.0f,dist)/falloff)));
   float dw((gain-d->w)*t_inc);
   uint32_t N(output.size());
   float* pi(input[0].d);

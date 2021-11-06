@@ -67,7 +67,7 @@ ortf_t::ortf_t(tsccfg::node_t xmlsrc)
     distance(0.17),
     angle(110*DEG2RAD),
     start_angle(0),
-    stop_angle(0.5*M_PI),
+    stop_angle(TASCAR_PI2),
     sincorder(0),
     c(340),
     dir_l(1,0,0),

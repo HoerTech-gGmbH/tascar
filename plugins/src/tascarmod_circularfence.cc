@@ -72,7 +72,7 @@ void fence_t::update(uint32_t tp_frame,bool tp_rolling)
     //obj->dorientation = dr;
     //obj->dlocation = dp;
   }
-  gain = 0.5+0.5*cos(dist/distmax*M_PI);
+  gain = 0.5+0.5*cos(dist/distmax*TASCAR_PI);
 }
 
 REGISTER_MODULE(fence_t);

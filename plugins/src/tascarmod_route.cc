@@ -86,7 +86,7 @@ void fader_t::set_fade(double targetgain, double duration)
   fade_timer = 0;
   prelim_previous_fade_gain = fade_gain;
   prelim_next_fade_gain = targetgain;
-  fade_rate = M_PI / (duration * f_sample);
+  fade_rate = TASCAR_PI / (duration * f_sample);
   fade_timer = std::max(1u, (uint32_t)(f_sample * duration));
 }
 

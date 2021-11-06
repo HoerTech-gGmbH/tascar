@@ -110,7 +110,7 @@ simplecontroller_t::simplecontroller_t( const TASCAR::module_cfg_t& cfg )
     vx(1),
     vy(1),
     vz(1),
-    vr(M_PI/2)
+    vr(TASCAR_PI/2)
 {
   GET_ATTRIBUTE_(maxnorm);
   GET_ATTRIBUTE_(vx);

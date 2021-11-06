@@ -89,10 +89,10 @@ motionpath_t::motionpath_t(const TASCAR::module_cfg_t& cfg)
           TASCAR::pos_t p = it->second;
           p -= it_old->second;
           new_azim = p.azim();
-          while(new_azim - old_azim > M_PI)
-            new_azim -= 2 * M_PI;
-          while(new_azim - old_azim < -M_PI)
-            new_azim += 2 * M_PI;
+          while(new_azim - old_azim > TASCAR_PI)
+            new_azim -= TASCAR_2PI;
+          while(new_azim - old_azim < -TASCAR_PI)
+            new_azim += TASCAR_2PI;
           orientation[it_old->first] = TASCAR::zyx_euler_t(new_azim, 0, 0);
           old_azim = new_azim;
         }

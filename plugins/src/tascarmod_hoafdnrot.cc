@@ -343,7 +343,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     TASCAR::fft_t fft(fdnorder_);
     TASCAR::spec_t eigenv(fdnorder_/2+1);
     for(uint32_t k=0;k<eigenv.n_;++k)
-      eigenv[k] = std::exp(i_d*2.0*M_PI*pow((double)k/(0.5*fdnorder_),2.0));;
+      eigenv[k] = std::exp(i_d*TASCAR_2PI*pow((double)k/(0.5*fdnorder_),2.0));;
     fft.execute(eigenv);
     //std::cout << "row: " << fft.w << std::endl;
     for(uint32_t itap=0;itap<fdnorder_;++itap){
@@ -500,7 +500,7 @@ void hoafdnrot_t::set_par( double w_, double dw_, double t_, double dt_, double 
   damping = damping_;
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( fdn ){
-      double wscale(2.0*M_PI*t);
+      double wscale(TASCAR_2PI*t);
       fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
     }
     pthread_mutex_unlock( &mtx);
@@ -512,7 +512,7 @@ void hoafdnrot_t::setlogdelays( bool ld )
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( fdn ){
       fdn->set_logdelays(ld);
-      double wscale(2.0*M_PI*t);
+      double wscale(TASCAR_2PI*t);
       fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
     }
     pthread_mutex_unlock( &mtx);

@@ -203,7 +203,7 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
     maxnorm(0),
     dump_events(false)
 {
-  tilt.scale = M_PI*0.5;
+  tilt.scale = TASCAR_PI2;
   tilt.threshold = 0;
   get_attribute_bool("dump_events",dump_events, "", "undocumented");
   GET_ATTRIBUTE_(maxnorm);
@@ -230,8 +230,8 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
     tilt.ax=4;
     tilt.scale=-0.4;
     tilt.threshold=0.3;
-    tilt.max=0.5*M_PI;
-    tilt.min=-0.5*M_PI;
+    tilt.max=TASCAR_PI2;
+    tilt.min=-TASCAR_PI2;
   }
   if( preset == "logitechX3d" ){
     x.ax=1;
@@ -250,10 +250,10 @@ joystick_var_t::joystick_var_t( const TASCAR::module_cfg_t& cfg )
     r.max=4;
     r.min=-4;
     tilt.ax=3;
-    tilt.scale=-0.5*M_PI;
+    tilt.scale=-TASCAR_PI2;
     tilt.threshold=0.3;
-    tilt.max=0.5*M_PI;
-    tilt.min=-0.5*M_PI;
+    tilt.max=TASCAR_PI2;
+    tilt.min=-TASCAR_PI2;
     tilt.smooth=0.99;
   }
 #define ATTRIB(x) get_attribute(#x "_ax",x.ax,"","axis number"); get_attribute(#x "_scale",x.scale,"","scaling factor"); get_attribute(#x "_threshold",x.threshold,"","axis threshold"); get_attribute(#x "_max",x.max,"","upper limit"); get_attribute(#x "_min",x.min,"","lower limit"); get_attribute(#x "_smooth",x.smooth,"","smoothing coefficient")

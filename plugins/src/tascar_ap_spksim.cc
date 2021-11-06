@@ -73,7 +73,7 @@ spksim_t::~spksim_t()
 void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
 {
   TASCAR::wave_t& aud(chunk[0]);
-  double farg(2.0*M_PI*fres/f_sample);
+  double farg(TASCAR_2PI*fres/f_sample);
   b1 = 2.0*q*cos(farg);
   b2 = -q*q;
   std::complex<double> z(std::exp(i*farg));

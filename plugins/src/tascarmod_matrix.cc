@@ -82,7 +82,7 @@ matrix_t::matrix_t( const TASCAR::module_cfg_t& cfg )
       double channelgain(1.0/maxc);
       m[k][0] = channelgain*ordergain;
         for(uint32_t o=1;o<amborder+1;++o){
-          ordergain = cos(o*M_PI/(2.0*amborder+2.0));
+          ordergain = cos(o*TASCAR_PI/(2.0*amborder+2.0));
           std::complex<double> cw(std::pow(std::exp(-i*outputs[k].azim()),o));
           // ACN!
           m[k][2*o] = channelgain*ordergain*cw.real();

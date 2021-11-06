@@ -360,7 +360,7 @@ bool iscrossing( double phi0, double phi, double lastphi )
   double pd1(phidiff(phi0,phi));
   double pd2(phidiff(phi0,lastphi));
   return ( ( (pd1 >= 0) && (pd2 < 0) ) ||
-           ( (pd1 < 0) && (pd2 >= 0) ) ) && (fabs(pd1)<0.5*M_PI) && (fabs(pd2)<0.5*M_PI);
+           ( (pd1 < 0) && (pd2 >= 0) ) ) && (fabs(pd1)<TASCAR_PI2) && (fabs(pd2)<TASCAR_PI2);
 }
 
 void epicycles_t::configure()
@@ -429,16 +429,16 @@ void epicycles_t::update(uint32_t frame,bool running)
     _rho = sqrtf(x*x+y*y);
     // increment phi and phi_epi:
     phi += w_main/std::max(rho*rho,EPSf);
-    while( phi > M_PI )
-      phi -= 2.0*M_PI;
-    while( phi < -M_PI )
-      phi += 2.0*M_PI;
+    while( phi > TASCAR_PI )
+      phi -= TASCAR_2PI;
+    while( phi < -TASCAR_PI )
+      phi += TASCAR_2PI;
     //phi_epi += ons_crit*w_epi;
     phi_epi += w_epi;
-    while( phi_epi > M_PI )
-      phi_epi -= 2.0*M_PI;
-    while( phi_epi < -M_PI )
-      phi_epi += 2.0*M_PI;
+    while( phi_epi > TASCAR_PI )
+      phi_epi -= TASCAR_2PI;
+    while( phi_epi < -TASCAR_PI )
+      phi_epi += TASCAR_2PI;
     if( b_stopat && iscrossing( stopat, phi, lastphi ) ){
       par_current.f = 0;
       par_osc.f = 0;

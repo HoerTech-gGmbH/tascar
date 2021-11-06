@@ -74,7 +74,7 @@ void ormod_t::update(uint32_t tp_frame,bool running)
     break;
   case cosine:
     tptime = std::max(t0,std::min(t1,tptime));
-    r.z = DEG2RAD*(phi0+(phi1-phi0)*(0.5-0.5*cos(M_PI*(tptime-t0)/(t1-t0))));
+    r.z = DEG2RAD*(phi0+(phi1-phi0)*(0.5-0.5*cos(TASCAR_PI*(tptime-t0)/(t1-t0))));
     break;
   case free:
     r.z = w*DEG2RAD*t_fragment;
