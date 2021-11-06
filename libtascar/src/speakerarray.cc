@@ -284,7 +284,7 @@ void spk_array_diff_render_t::configure()
       decorrflt.push_back(TASCAR::overlap_save_t(paddedirslen, n_fragment));
     TASCAR::fft_t fft_filter(irslen);
     std::mt19937 gen(1);
-    std::uniform_real_distribution<double> dis(0.0, 2 * M_PI);
+    std::uniform_real_distribution<double> dis(0.0, TASCAR_2PI);
     // std::exponential_distribution<double> dis(1.0);
     for(uint32_t k = 0; k < size(); ++k) {
       for(uint32_t b = 0; b < fft_filter.s.n_; ++b) {
@@ -321,7 +321,7 @@ void spk_array_diff_render_t::configure()
     biquad_t fallp;
     double r(1.01);
     fallp.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
-    double g(std::abs(fallp.response(M_PI)));
+    double g(std::abs(fallp.response(TASCAR_PI)));
     for(auto& flt : flt_allp)
       flt.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   }

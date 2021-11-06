@@ -697,15 +697,15 @@ void scene_draw_t::set_viewport(const viewt_t& viewt)
       break;
     case xz :
       view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0,0,-0.5*M_PI));
+      view.set_euler(zyx_euler_t(0,0,-TASCAR_PI2));
       break;
     case yz :
       view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0.5*M_PI,0,-0.5*M_PI));
+      view.set_euler(zyx_euler_t(TASCAR_PI2,0,-TASCAR_PI2));
       break;
     case xyz :
       view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0.1*M_PI,0,-0.45*M_PI));
+      view.set_euler(zyx_euler_t(0.1*TASCAR_PI,0,-0.45*TASCAR_PI));
       break;
     case p :
       view.set_perspective(true);

@@ -668,7 +668,7 @@ namespace TASCAR {
       // y-axis rotation
       float sinp(2.0f * (w * y - z * x));
       if(fabsf(sinp) >= 1.0f)
-        eul.y = copysignf(0.5 * M_PI, sinp); // use 90 degrees if out of range
+        eul.y = copysignf(TASCAR_PI2f, sinp); // use 90 degrees if out of range
       else
         eul.y = asinf(sinp);
       // yaw (z-axis rotation)

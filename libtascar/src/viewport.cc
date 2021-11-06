@@ -21,7 +21,7 @@
 
 viewport_t::viewport_t()
   : perspective(false),
-    fov(110.0*M_PI/180),
+    fov(110.0*TASCAR_PI/180),
     scale(10.0)
 {
   set_fov(120);

@@ -239,7 +239,7 @@ TASCAR::resonance_filter_t::resonance_filter_t()
 
 void TASCAR::resonance_filter_t::set_fq( double fresnorm, double q )
 {
-  double farg(2.0*M_PI*fresnorm);
+  double farg(TASCAR_2PI*fresnorm);
   b1 = 2.0*q*cos(farg);
   b2 = -q*q;
   std::complex<double> z(std::exp(i*farg));
@@ -330,38 +330,38 @@ void TASCAR::bandpass_t::set_range( double f1, double f2 )
   b1.set_gzp( 1.0,
               1.0, 0.0,
               pow(10.0,-2.0*f1/fs_),
-              f1/fs_*PI2 );
+              f1/fs_*TASCAR_2PI );
   b2.set_gzp( 1.0,
-              1.0, M_PI,
+              1.0, TASCAR_PI,
               pow(10.0,-2.0*f2/fs_),
-              f2/fs_*PI2);
+              f2/fs_*TASCAR_2PI);
   double f0(sqrt(f1*f2));
-  double g(std::abs(b1.response(f0/fs_*PI2)*b2.response(f0/fs_*PI2)));
-  b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*PI2 );
+  double g(std::abs(b1.response(f0/fs_*TASCAR_2PI)*b2.response(f0/fs_*TASCAR_2PI)));
+  b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*TASCAR_2PI );
 }
 
 void TASCAR::biquad_t::set_highpass(double fc, double fs, bool phaseinvert)
 {
-  set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
-  double g(std::abs(response(M_PI)));
+  set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+  double g(std::abs(response(TASCAR_PI)));
   if(phaseinvert)
     g *= -1.0;
-  set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
+  set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
 }
 
 void TASCAR::biquad_t::set_lowpass(double fc, double fs, bool phaseinvert)
 {
-  set_gzp(1.0, 1.0, M_PI, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
+  set_gzp(1.0, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
   double g(std::abs(response(0.0)));
   if(phaseinvert)
     g *= -1.0;
-  set_gzp(1.0 / g, 1.0, M_PI, pow(10.0, -2.0 * fc / fs), fc / fs * PI2);
+  set_gzp(1.0 / g, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
 }
 
 void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
 {
   // bilinear transformation
-  double t = 1.0 / tan(M_PI * f / fs);
+  double t = 1.0 / tan(TASCAR_PI * f / fs);
   double t_sq = t * t;
   double Bc = t / q;
   if(gain < 0.0) {

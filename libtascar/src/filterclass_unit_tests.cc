@@ -81,10 +81,10 @@ TEST(biquad_t,unitgain)
   EXPECT_EQ(0.0, b.get_b2() );
   EXPECT_EQ(0.0, b.get_a1() );
   EXPECT_EQ(0.0, b.get_a2() );
-  ASSERT_NEAR(1.0,std::abs(b.response(0*PI2)),1e-9);
-  ASSERT_NEAR(1.0,std::abs(b.response(0.25*PI2)),1e-9);
-  ASSERT_NEAR(1.0,std::abs(b.response(0.5*PI2)),1e-9);
-  ASSERT_NEAR(1.0,std::abs(b.response(0.75*PI2)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0*TASCAR_2PI)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.25*TASCAR_2PI)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.5*TASCAR_2PI)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(0.75*TASCAR_2PI)),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
@@ -105,11 +105,11 @@ TEST(biquad_t,setgzp)
 TEST(biquad_t,fresp)
 {
   TASCAR::biquad_t b;
-  b.set_gzp( 1.0, 1.0, 0, 0.5, 0.5*PI2 );
-  ASSERT_NEAR(0.0,std::abs(b.response(0*PI2)),1e-9);
-  ASSERT_NEAR(0.25,std::abs(b.response_a(0.5*PI2)),1e-9);
-  ASSERT_NEAR(4.0,std::abs(b.response_b(0.5*PI2)),1e-9);
-  ASSERT_NEAR(16.0,std::abs(b.response(0.5*PI2)),1e-9);
+  b.set_gzp( 1.0, 1.0, 0, 0.5, 0.5*TASCAR_2PI );
+  ASSERT_NEAR(0.0,std::abs(b.response(0*TASCAR_2PI)),1e-9);
+  ASSERT_NEAR(0.25,std::abs(b.response_a(0.5*TASCAR_2PI)),1e-9);
+  ASSERT_NEAR(4.0,std::abs(b.response_b(0.5*TASCAR_2PI)),1e-9);
+  ASSERT_NEAR(16.0,std::abs(b.response(0.5*TASCAR_2PI)),1e-9);
   ASSERT_NEAR(1.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(-2.0,b.filter(1.0),1e-9);
   ASSERT_NEAR(1.75,b.filter(1.0),1e-9);
@@ -122,11 +122,11 @@ TEST(biquad_t,highpass)
   b.set_highpass( 1000.0, 44100.0 );
   // boundaries:
   ASSERT_NEAR(0.0,std::abs(b.response(0.0)),1e-9);
-  ASSERT_NEAR(1.0,std::abs(b.response(M_PI)),1e-9);
+  ASSERT_NEAR(1.0,std::abs(b.response(TASCAR_PI)),1e-9);
   // approx. 12 dB / octave:
-  ASSERT_NEAR(-3.88,20.0*log10(std::abs(b.response(1000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(-15.47,20.0*log10(std::abs(b.response(500.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(0.367,20.0*log10(std::abs(b.response(2000.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-3.88,20.0*log10(std::abs(b.response(1000.0/44100.0*TASCAR_2PI))),1e-2);
+  ASSERT_NEAR(-15.47,20.0*log10(std::abs(b.response(500.0/44100.0*TASCAR_2PI))),1e-2);
+  ASSERT_NEAR(0.367,20.0*log10(std::abs(b.response(2000.0/44100.0*TASCAR_2PI))),1e-2);
 }
 
 TEST(biquad_t,lowpass)
@@ -135,12 +135,12 @@ TEST(biquad_t,lowpass)
   b.set_lowpass( 1000.0, 44100.0 );
   // boundaries:
   ASSERT_NEAR(1.0,std::abs(b.response(0.0)),1e-9);
-  ASSERT_NEAR(0.0,std::abs(b.response(M_PI)),1e-9);
+  ASSERT_NEAR(0.0,std::abs(b.response(TASCAR_PI)),1e-9);
   // approx. 12 dB / octave:
-  ASSERT_NEAR(-0.16,20.0*log10(std::abs(b.response(1000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(-8.04,20.0*log10(std::abs(b.response(2000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(-20.61,20.0*log10(std::abs(b.response(4000.0/44100.0*PI2))),1e-2);
-  ASSERT_NEAR(0.31,20.0*log10(std::abs(b.response(500.0/44100.0*PI2))),1e-2);
+  ASSERT_NEAR(-0.16,20.0*log10(std::abs(b.response(1000.0/44100.0*TASCAR_2PI))),1e-2);
+  ASSERT_NEAR(-8.04,20.0*log10(std::abs(b.response(2000.0/44100.0*TASCAR_2PI))),1e-2);
+  ASSERT_NEAR(-20.61,20.0*log10(std::abs(b.response(4000.0/44100.0*TASCAR_2PI))),1e-2);
+  ASSERT_NEAR(0.31,20.0*log10(std::abs(b.response(500.0/44100.0*TASCAR_2PI))),1e-2);
 }
 
 TEST(bandpass_t, gain)
@@ -148,7 +148,7 @@ TEST(bandpass_t, gain)
   double fs(44100);
   TASCAR::wave_t sin1k(fs);
   for(uint32_t k=0;k<sin1k.size();++k)
-    sin1k.d[k] = sqrtf(2.0f)*sinf(k*1000.0*PI2/fs);
+    sin1k.d[k] = sqrtf(2.0f)*sinf(k*1000.0*TASCAR_2PI/fs);
   TASCAR::bandpass_t bp( 500.0, 4000.0, fs );
   ASSERT_NEAR(0.0f,10*log10(sin1k.ms()),3e-4f);
   for(uint32_t k=0;k<sin1k.size();++k)
@@ -156,28 +156,28 @@ TEST(bandpass_t, gain)
   ASSERT_NEAR(0.0f,10.0*log10(sin1k.ms()),0.04f);
   TASCAR::wave_t sin500(fs);
   for(uint32_t k=0;k<sin500.size();++k)
-    sin500.d[k] = sqrtf(2.0f)*sinf(k*500.0*PI2/fs);
+    sin500.d[k] = sqrtf(2.0f)*sinf(k*500.0*TASCAR_2PI/fs);
   ASSERT_NEAR(0.0f,10.0*log10(sin500.ms()),0.04f);
   for(uint32_t k=0;k<sin500.size();++k)
     sin500.d[k] = bp.filter(sin500.d[k]);
   ASSERT_NEAR(-4.3f,10.0*log10(sin500.ms()),0.04f);
   TASCAR::wave_t sin250(fs);
   for(uint32_t k=0;k<sin250.size();++k)
-    sin250.d[k] = sqrtf(2.0f)*sinf(k*250.0*PI2/fs);
+    sin250.d[k] = sqrtf(2.0f)*sinf(k*250.0*TASCAR_2PI/fs);
   ASSERT_NEAR(0.0f,10.0*log10(sin250.ms()),0.04f);
   for(uint32_t k=0;k<sin250.size();++k)
     sin250.d[k] = bp.filter(sin250.d[k]);
   ASSERT_NEAR(-15.88f,10.0*log10(sin250.ms()),0.04f);
   TASCAR::wave_t sin4000(fs);
   for(uint32_t k=0;k<sin4000.size();++k)
-    sin4000.d[k] = sqrtf(2.0f)*sinf(k*4000.0*PI2/fs);
+    sin4000.d[k] = sqrtf(2.0f)*sinf(k*4000.0*TASCAR_2PI/fs);
   ASSERT_NEAR(0.0f,10.0*log10(sin4000.ms()),0.04f);
   for(uint32_t k=0;k<sin4000.size();++k)
     sin4000.d[k] = bp.filter(sin4000.d[k]);
   ASSERT_NEAR(-1.0f,10.0*log10(sin4000.ms()),0.04f);
   TASCAR::wave_t sin8000(fs);
   for(uint32_t k=0;k<sin8000.size();++k)
-    sin8000.d[k] = sqrtf(2.0f)*sinf(k*8000.0*PI2/fs);
+    sin8000.d[k] = sqrtf(2.0f)*sinf(k*8000.0*TASCAR_2PI/fs);
   ASSERT_NEAR(0.0f,10.0*log10(sin8000.ms()),0.04f);
   for(uint32_t k=0;k<sin8000.size();++k)
     sin8000.d[k] = bp.filter(sin8000.d[k]);
@@ -232,7 +232,7 @@ TEST(aweighting_t,fresponse)
   for( auto it=t.begin();it!=t.end();++it){
     TASCAR::aweighting_t a(fs);
     for( uint32_t k=0;k<x.n;++k )
-      x.d[k] = sqrt(2.0)*sin(PI2 * it->first * k/(double)fs);
+      x.d[k] = sqrt(2.0)*sin(TASCAR_2PI * it->first * k/(double)fs);
     ASSERT_NEAR(0.0,10.0*log10(x.ms()),0.001);
     a.filter( x );
     ASSERT_NEAR(it->second,10.0*log10(x.ms()),0.5);

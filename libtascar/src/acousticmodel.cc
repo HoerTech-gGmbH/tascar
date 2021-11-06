@@ -34,7 +34,7 @@ mask_t::mask_t()
 double mask_t::gain(const pos_t& p)
 {
   double d(nextpoint(p).norm());
-  d = 0.5+0.5*cos(M_PI*std::min(1.0,d*inv_falloff));
+  d = 0.5+0.5*cos(TASCAR_PI*std::min(1.0,d*inv_falloff));
   if( mask_inner )
     return 1.0-d;
   return d;
@@ -247,8 +247,8 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
         // add to receiver:
         receiver_->add_pointsource(
             prel,
-            std::min(0.5 * M_PI,
-                     0.25 * M_PI * src_->size / std::max(0.01, nextdistance)),
+            std::min(TASCAR_PI2,
+                     0.5 * TASCAR_PI2 * src_->size / std::max(0.01, nextdistance)),
             scattering, audio, receiver_data);
         return 1;
       }
@@ -362,7 +362,7 @@ void world_t::process(const TASCAR::transport_t& tp)
         maskbox.center = receivers_[k]->boundingbox.c6dof.position;
         maskbox.orientation = receivers_[k]->boundingbox.c6dof.orientation;
         double d(maskbox.nextpoint(receivers_[k]->position).norm());
-        gain_inner *= 0.5+0.5*cos(M_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
+        gain_inner *= 0.5+0.5*cos(TASCAR_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
       }
       // then calculate attenuation based on global masks:
       if( receivers_[k]->use_global_mask ){
@@ -474,7 +474,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
   pos_t prel_nonrot(prel);
   prel_nonrot *= receiver_->orientation;
   d = box.nextpoint(prel_nonrot).norm();
-  nextgain = 0.5+0.5*cos(M_PI*std::min(1.0,d*src_->falloff));
+  nextgain = 0.5+0.5*cos(TASCAR_PI*std::min(1.0,d*src_->falloff));
   if( !((gain==0) && (nextgain==0))){
     audio.rotate(src_->audio,receiver_->orientation);
     double dgain((nextgain-gain)*dt);
@@ -666,7 +666,7 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
     box.size = volumetric;
     double d(box.nextpoint(prel).norm());
     if(falloff > 0)
-      gain = (0.5 + 0.5 * cos(M_PI * std::min(1.0, d / falloff))) /
+      gain = (0.5 + 0.5 * cos(TASCAR_PI * std::min(1.0, d / falloff))) /
              std::max(0.1, avgdist);
     else {
       switch(gainmodel) {
@@ -741,7 +741,7 @@ void receiver_t::set_fade(double targetgain, double duration, double start)
     fade_startsample = f_sample * start;
   prelim_previous_fade_gain = fade_gain;
   prelim_next_fade_gain = targetgain;
-  fade_rate = M_PI * t_sample / duration;
+  fade_rate = TASCAR_PI * t_sample / duration;
   fade_timer = std::max(1u, (uint32_t)(f_sample * duration));
 }
 
@@ -795,7 +795,7 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
       loc_aperture = manual_aperture;
     double f0(3.8317*c/(PI2*loc_aperture*sin_theta));
     // calculate filter coefficient increment:
-    dA1 = (exp(-M_PI*f0/fs)-state.A1)*dt;
+    dA1 = (exp(-TASCAR_PI*f0/fs)-state.A1)*dt;
     // return effective source position:
     p_rec_is *= d_is_src;
     p_src = p_is+p_rec_is;

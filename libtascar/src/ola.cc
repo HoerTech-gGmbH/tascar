@@ -43,26 +43,26 @@ TASCAR::ola_t::ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windo
   case WND_HANNING :
     if( zpad1 )
       for(uint32_t k=0;k<zpad1;k++)
-        zwnd1[k] = 0.5-0.5*cos(k*M_PI/zpad1);
+        zwnd1[k] = 0.5-0.5*cos(k*TASCAR_PI/zpad1);
     if( zpad2 )
       for(uint32_t k=0;k<zpad2;k++)
-        zwnd2[k] = 0.5+0.5*cos(k*M_PI/zpad2);
+        zwnd2[k] = 0.5+0.5*cos(k*TASCAR_PI/zpad2);
     break;
   case WND_SQRTHANN :
     if( zpad1 )
       for(uint32_t k=0;k<zpad1;k++)
-        zwnd1[k] = sqrt(0.5-0.5*cos(k*M_PI/zpad1));
+        zwnd1[k] = sqrt(0.5-0.5*cos(k*TASCAR_PI/zpad1));
     if( zpad2 )
       for(uint32_t k=0;k<zpad2;k++)
-        zwnd2[k] = sqrt(0.5+0.5*cos(k*M_PI/zpad2));
+        zwnd2[k] = sqrt(0.5+0.5*cos(k*TASCAR_PI/zpad2));
     break;
   case WND_BLACKMAN :
     if( zpad1 )
       for(uint32_t k=0;k<zpad1;++k)
-        zwnd1[k] = (1.0-0.16)/2.0-0.5*cos(k*M_PI/zpad1)+0.16*0.5*cos(2.0*M_PI*k/zpad1);
+        zwnd1[k] = (1.0-0.16)/2.0-0.5*cos(k*TASCAR_PI/zpad1)+0.16*0.5*cos(TASCAR_2PI*k/zpad1);
     if( zpad2 )
       for(uint32_t k=0;k<zpad2;++k)
-        zwnd2[k] = (1.0-0.16)/2.0-0.5*cos(k*M_PI/zpad2+M_PI)+0.16*0.5*cos(2.0*M_PI*k/zpad2+2.0*M_PI);
+        zwnd2[k] = (1.0-0.16)/2.0-0.5*cos(k*TASCAR_PI/zpad2+TASCAR_PI)+0.16*0.5*cos(TASCAR_2PI*k/zpad2+TASCAR_2PI);
     break;
   }
   switch( postwnd ){
@@ -73,15 +73,15 @@ TASCAR::ola_t::ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windo
     break;
   case WND_HANNING :
     for(uint32_t k=0;k<pwnd.size();k++)
-      pwnd[k] = 0.5-0.5*cos(PI2*(double)k/(double)(pwnd.size()));
+      pwnd[k] = 0.5-0.5*cos(k*TASCAR_2PI/pwnd.size());
     break;
   case WND_SQRTHANN :
     for(uint32_t k=0;k<pwnd.size();k++)
-      pwnd[k] = sqrt(0.5-0.5*cos(PI2*(double)k/(double)(pwnd.size())));
+      pwnd[k] = sqrt(0.5-0.5*cos(k*TASCAR_2PI/pwnd.size()));
     break;
   case WND_BLACKMAN :
     for(uint32_t k=0;k<pwnd.size();k++)
-      pwnd[k] = (1.0-0.16)/2.0-0.5*cos(2.0*k*M_PI/pwnd.size())+0.16*0.5*cos(4.0*M_PI*k/pwnd.size());
+      pwnd[k] = (1.0-0.16)/2.0-0.5*cos(k*TASCAR_2PI/pwnd.size())+0.16*0.5*cos(4.0*TASCAR_PI*k/pwnd.size());
   }
 }
 

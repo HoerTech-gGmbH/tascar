@@ -192,7 +192,7 @@ void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
   local_normal = rot;
   local_normal /= local_normal.norm();
   area = 0.5 * rot.norm();
-  aperture = 2.0 * sqrt(area / M_PI);
+  aperture = 2.0 * sqrt(area / TASCAR_PI);
   // update global coordinates:
   update();
 }

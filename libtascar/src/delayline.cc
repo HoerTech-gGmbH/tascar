@@ -35,7 +35,7 @@ sinctable_t::sinctable_t(uint32_t order, uint32_t oversampling)
 {
   data[0] = 1.0f;
   for(uint32_t k=1;k<N;k++){
-    float x(M_PI*(float)k/scale);
+    float x(TASCAR_PIf*(float)k/scale);
     data[k] = sinf(x)/x;
   }
   data[N1] = 0.0f;
@@ -51,7 +51,7 @@ sinctable_t::sinctable_t(const sinctable_t& src)
 {
   data[0] = 1.0f;
   for(uint32_t k=1;k<N;k++){
-    float x(M_PI*(float)k/scale);
+    float x(TASCAR_PIf*(float)k/scale);
     data[k] = sinf(x)/x;
   }
   data[N1] = 0.0f;

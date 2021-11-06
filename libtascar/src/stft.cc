@@ -49,15 +49,15 @@ TASCAR::stft_t::stft_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, win
     break;
   case WND_HANNING :
     for(k=0;k<wndlen;k++)
-      window.d[k] = 0.5-0.5*cos(2.0*k*M_PI/wndlen);
+      window.d[k] = 0.5-0.5*cos(k*TASCAR_2PI/wndlen);
     break;
   case WND_SQRTHANN :
     for(k=0;k<wndlen;k++)
-      window.d[k] = sqrt(0.5-0.5*cos(2.0*k*M_PI/wndlen));
+      window.d[k] = sqrt(0.5-0.5*cos(k*TASCAR_2PI/wndlen));
     break;
   case WND_BLACKMAN :
     for(k=0;k<wndlen;k++)
-      window.d[k] = (1-0.16)/2.0  -  0.5 * cos((2.0*M_PI*k)/wndlen)  +  0.16*0.5* cos((4.0*M_PI*k)/wndlen);
+      window.d[k] = (1-0.16)/2.0  -  0.5 * cos(k*TASCAR_2PI/wndlen)  +  0.16*0.5* cos((4.0*TASCAR_PI*k)/wndlen);
     break;
   }
 }
