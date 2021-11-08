@@ -113,7 +113,8 @@ struct elem_cfg_var_desc_t {
 void make_common(std::map<std::string, std::set<std::string>>& parentchildren,
                  std::map<std::string, elem_cfg_var_desc_t>& elems,
                  const std::set<std::string>& list,
-                 const std::string& commonname)
+                 const std::string& commonname,
+                 const std::set<std::string>& typeconstraint = {})
 {
   if(list.size()) {
     for(auto ch : list)
@@ -123,22 +124,25 @@ void make_common(std::map<std::string, std::set<std::string>>& parentchildren,
     for(auto attr : elems[(*(list.begin()))].attr)
       common_attributes.insert(attr.first);
     for(auto elem : list) {
-      std::set<std::string> attrs;
-      for(auto attr : elems[elem].attr)
-        attrs.insert(attr.first);
-      std::set<std::string> rmattrs;
-      for(auto attr : common_attributes)
-        if(attrs.find(attr) == attrs.end())
-          rmattrs.insert(attr);
-      for(auto attr : rmattrs)
-        common_attributes.erase(attr);
+      if(typeconstraint.empty() ||
+         (typeconstraint.find(elems[elem].type) != typeconstraint.end())) {
+        std::set<std::string> attrs;
+        for(auto attr : elems[elem].attr)
+          attrs.insert(attr.first);
+        std::set<std::string> rmattrs;
+        for(auto attr : common_attributes)
+          if(attrs.find(attr) == attrs.end())
+            rmattrs.insert(attr);
+        for(auto attr : rmattrs)
+          common_attributes.erase(attr);
+      }
     }
     // attribute map for common object:
     std::map<std::string, TASCAR::cfg_var_desc_t> commonattr;
     for(auto attr : common_attributes) {
       // fill common attributes from first element in list:
       commonattr[attr] = elems[(*(list.begin()))].attr[attr];
-      // remote common attributes from list:
+      // remove common attributes from list:
       for(auto elem : list) {
         elems[elem].attr.erase(attr);
         elems[elem].parents.insert(commonname);
@@ -203,6 +207,10 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
               "routes");
   make_common(parentchildren, attribute_list, {"receiver", "sound", "diffuse"},
               "ports");
+  make_common(parentchildren, attribute_list,
+              {"receiverhann", "receiverhoa3d", "receiverhoa2d",
+               "receivervbap3d", "receivervbap", "receivernsp", "receiverwfs"},
+              "speakerbased");
   for(auto elem : attribute_list) {
     for(auto attr : elem.second.attr)
       types.insert(attr.second.type);

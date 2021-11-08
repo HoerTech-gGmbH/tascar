@@ -75,6 +75,7 @@
     <receiver type="nsp" name="nsp" layout="doclayout2d.spk"/>
     <receiver type="vbap" name="vbap" layout="doclayout2d.spk"/>
     <receiver type="vbap3d" name="vbap3d" layout="doclayout3d.spk"/>
+    <receiver type="hoa3d" name="hoa3d" layout="doclayout3d.spk"/>
     <receiver type="wfs" name="wfs" layout="doclayout2d.spk"/>
     <!-- -->
     <diffuse/>

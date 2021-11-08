@@ -69,11 +69,11 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc), order(3), method("pinv"),
       dectype("maxre"), savedec(false), decwarnthreshold(8.0)
 {
-  GET_ATTRIBUTE_(order);
-  GET_ATTRIBUTE_(method);
-  GET_ATTRIBUTE_(dectype);
-  GET_ATTRIBUTE_BOOL_(savedec);
-  GET_ATTRIBUTE_(decwarnthreshold);
+  GET_ATTRIBUTE(order,"","Ambisonics order");
+  GET_ATTRIBUTE(method,"","Decoder generation method, ``pinv'' or ``allrad''");
+  GET_ATTRIBUTE(dectype,"","Decoder type, ``basic'', ``maxre'' or ``inphase''");
+  GET_ATTRIBUTE_BOOL(savedec,"Save Octave/Matlab script for decoder matrix debugging");
+  GET_ATTRIBUTE(decwarnthreshold,"","Warning threshold for decoder matrix abs/rms ratio");
   if(order < 0)
     throw TASCAR::ErrMsg("Negative order is not possible.");
   encode.set_order(order);
