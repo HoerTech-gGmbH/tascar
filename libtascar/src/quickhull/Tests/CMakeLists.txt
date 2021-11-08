@@ -6,5 +6,5 @@ set(SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/../QuickHull.cpp
   )
 
-add_definitions(-std=c++11)
+add_definitions(-std=c++17)
 add_executable(QuickHullTests ${SOURCE_FILES})
