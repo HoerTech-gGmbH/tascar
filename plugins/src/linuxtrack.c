@@ -271,6 +271,7 @@ static char *construct_name(const char *path, const char *sep, const char *name)
   size_t len = strlen(path) + strlen(sep) + strlen(name) + 1;
   char *res = (char *)malloc(len);
   snprintf(res, len, "%s%s%s", path, sep, name);
+  res[len-1] = 0;
   return res;
 }
 

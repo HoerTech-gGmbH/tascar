@@ -765,7 +765,7 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
         // image source:
         cr->save();
         char ctmp[1000];
-        sprintf(ctmp,"%d",(*iam)->ismorder);
+        sprintf(ctmp,"%u",(*iam)->ismorder);
         if( gain_color < EPS )
           // sources with zero gain but active are shown in red:
           cr->set_source_rgba(1, 0, 0, 0.5 );

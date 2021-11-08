@@ -356,9 +356,10 @@ void TASCAR::session_core_t::start_initcmd()
 {
   if(!initcmd.empty()) {
     char ctmp[1024];
-    memset(ctmp, 0, 1024);
-    snprintf(ctmp, 1024, "sh -c \"%s >/dev/null & echo \\$!;\"",
+    memset(ctmp, 0, sizeof(ctmp));
+    snprintf(ctmp, sizeof(ctmp), "sh -c \"%s >/dev/null & echo \\$!;\"",
              initcmd.c_str());
+    ctmp[sizeof(ctmp)-1] = 0;
     h_pipe_initcmd = popen(ctmp, "r");
     if(fgets(ctmp, 1024, h_pipe_initcmd) != NULL) {
       pid_initcmd = atoi(ctmp);

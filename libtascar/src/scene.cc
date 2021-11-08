@@ -185,10 +185,10 @@ std::string src_object_t::next_sound_name() const
     names.insert((*it)->get_name());
   char ctmp[1024];
   uint32_t n(0);
-  sprintf(ctmp, "%d", n);
+  sprintf(ctmp, "%u", n);
   while(names.find(ctmp) != names.end()) {
     ++n;
-    sprintf(ctmp, "%d", n);
+    sprintf(ctmp, "%u", n);
   }
   return ctmp;
 }
@@ -617,7 +617,7 @@ void scene_t::add_licenses(licensehandler_t* session)
 rgb_color_t::rgb_color_t(const std::string& webc) : r(0), g(0), b(0)
 {
   if((webc.size() == 7) && (webc[0] == '#')) {
-    int c(0);
+    unsigned int c(0);
     sscanf(webc.c_str(), "#%x", &c);
     r = ((c >> 16) & 0xff) / 255.0;
     g = ((c >> 8) & 0xff) / 255.0;

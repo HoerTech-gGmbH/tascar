@@ -90,7 +90,7 @@ void plugin_processor_t::add_variables( TASCAR::osc_server_t* srv )
   uint32_t k=0;
   for( auto p=plugins.begin(); p!=plugins.end(); ++p){
     char ctmp[1024];
-    sprintf(ctmp,"ap%d",k);
+    sprintf(ctmp,"ap%u",k);
     srv->set_prefix(oldpref+"/"+ctmp+"/"+(*p)->get_modname());
     (*p)->add_variables( srv );
     ++k;

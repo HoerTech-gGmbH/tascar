@@ -142,9 +142,10 @@ void system_t::trigger(int32_t c)
 {
   if(!triggered.empty()) {
     char ctmp[1024];
-    memset(ctmp, 0, 1024);
-    snprintf(ctmp, 1024, "sh -c \"cd %s;%s %d\"", sessionpath.c_str(),
+    memset(ctmp, 0, sizeof(ctmp));
+    snprintf(ctmp, sizeof(ctmp), "sh -c \"cd %s;%s %d\"", sessionpath.c_str(),
              triggered.c_str(), c);
+    ctmp[sizeof(ctmp)-1] = 0;
     if(h_triggered) {
       fprintf(h_triggered, "%s\n", ctmp);
       fflush(h_triggered);
@@ -157,9 +158,10 @@ void system_t::trigger()
 {
   if(!triggered.empty()) {
     char ctmp[1024];
-    memset(ctmp, 0, 1024);
-    snprintf(ctmp, 1024, "sh -c \"cd %s;%s\"", sessionpath.c_str(),
+    memset(ctmp, 0, sizeof(ctmp));
+    snprintf(ctmp, sizeof(ctmp), "sh -c \"cd %s;%s\"", sessionpath.c_str(),
              triggered.c_str());
+    ctmp[sizeof(ctmp)-1] = 0;
     if(h_triggered) {
       fprintf(h_triggered, "%s\n", ctmp);
       fflush(h_triggered);
