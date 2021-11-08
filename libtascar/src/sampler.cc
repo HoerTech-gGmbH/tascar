@@ -182,7 +182,7 @@ void TASCAR::sampler_t::add_sound(const std::string& fname,double gain)
   soundnames.push_back(fname);
   uint32_t k(sounds.size()-1);
   char ctmp[1024];
-  sprintf(ctmp,"%d",k+1);
+  sprintf(ctmp,"%u",k+1);
   std::string sname(soundnames[k]);
   size_t p(sname.rfind("/"));
   if( p < sname.size() )

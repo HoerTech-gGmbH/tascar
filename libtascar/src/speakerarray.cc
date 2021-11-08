@@ -100,7 +100,7 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
   for(uint32_t k = 0; k < size(); k++) {
     operator[](k).spkgain *= operator[](k).norm() / rmax;
     operator[](k).dr = rmax - operator[](k).norm();
-    p_xy += std::exp(-(double)k * PI2 * i / (double)(size())) *
+    p_xy += std::exp(-(double)k * TASCAR_2PI * i / (double)(size())) *
             (operator[](k).unitvector.x + i * operator[](k).unitvector.y);
   }
   mean_rotation = std::arg(p_xy);
@@ -292,7 +292,7 @@ void spk_array_diff_render_t::configure()
       }
       fft_filter.ifft();
       for(uint32_t t = 0; t < fft_filter.w.n; ++t)
-        fft_filter.w[t] *= (0.5 - 0.5 * cos(t * PI2 / fft_filter.w.n));
+        fft_filter.w[t] *= (0.5 - 0.5 * cos(t * TASCAR_2PI / fft_filter.w.n));
       decorrflt[k].set_irs(fft_filter.w, false);
     }
   }
@@ -306,7 +306,7 @@ void spk_array_diff_render_t::configure()
   diffuse_render_buffer = NULL;
   diffuse_render_buffer = new TASCAR::wave_t(n_fragment);
   if(use_subs) {
-    double fscale(sqrt(0.5));
+    const double fscale(sqrt(0.5));
     flt_hp.resize(size());
     flt_allp.resize(size());
     flt_lowp.resize(subs.size());
@@ -317,11 +317,11 @@ void spk_array_diff_render_t::configure()
     for(auto& flt : flt_lowp)
       flt.set_lowpass(fscale*fcsub, f_sample, true);
     // configure all pass filter:
-    double f0(0.125 * fscale*fcsub / f_sample * PI2);
+    const double f0(0.125 * fscale*fcsub / f_sample * TASCAR_2PI);
     biquad_t fallp;
-    double r(1.01);
+    const double r(1.01);
     fallp.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
-    double g(std::abs(fallp.response(TASCAR_PI)));
+    const double g(std::abs(fallp.response(TASCAR_PI)));
     for(auto& flt : flt_allp)
       flt.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   }

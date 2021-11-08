@@ -174,9 +174,9 @@ void oscthreshold_t::update(double newvalue)
     }
   }
   char ctmp[4096];
-  snprintf(ctmp, 4096, "%s%g%s", disp_prefix.c_str(), value,
+  snprintf(ctmp, sizeof(ctmp), "%s%g%s", disp_prefix.c_str(), value,
            disp_suffix.c_str());
-  ctmp[4095] = 0;
+  ctmp[sizeof(ctmp)-1] = 0;
   unknown_label = ctmp;
   outlet->push_sample(&value);
   alive();

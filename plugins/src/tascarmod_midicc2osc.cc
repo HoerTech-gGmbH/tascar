@@ -118,8 +118,8 @@ void midicc2osc_t::emit_event(int channel, int param, int value)
   }
   if( (!known) && dumpmsg ){
     char ctmp[256];
-    snprintf(ctmp,256,"%d/%d: %d",channel,param,value);
-    ctmp[255] = 0;
+    snprintf(ctmp,sizeof(ctmp),"%d/%d: %d",channel,param,value);
+    ctmp[sizeof(ctmp)-1] = 0;
     std::cout << ctmp << std::endl;
   }
 }

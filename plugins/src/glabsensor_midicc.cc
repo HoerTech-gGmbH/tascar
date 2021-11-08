@@ -123,11 +123,6 @@ void midicc_t::draw(const Cairo::RefPtr<Cairo::Context>& cr, double width, doubl
   cr->set_font_size( 6*linewidth );
   cr->set_source_rgb( 0, 0, 0 );
   double y0(height-20);
-  //cr->move_to(0,y0);
-  //cr->line_to(width,y0);
-  //cr->move_to(0,20);
-  //cr->line_to(width,20);
-  //cr->stroke();
   cr->save();
   cr->set_source_rgb( 0.5, 0.5, 0.5 );
   for(uint32_t k=0;k<controllers_.size();++k){
@@ -141,8 +136,8 @@ void midicc_t::draw(const Cairo::RefPtr<Cairo::Context>& cr, double width, doubl
     cr->line_to( x1, y0 );
     cr->stroke();
     char ctmp[256];
-    snprintf(ctmp,256,"%d/%d",controllers_[k] >> 8, controllers_[k] & 0xff );
-    ctmp[255] = 0;
+    snprintf(ctmp,sizeof(ctmp),"%d/%d",controllers_[k] >> 8, controllers_[k] & 0xff );
+    ctmp[sizeof(ctmp)-1] = 0;
     ctext_at( cr, x0, 10, ctmp);
   }
   cr->restore();
@@ -182,8 +177,8 @@ void midicc_t::emit_event(int channel, int param, int value)
   }
   if( !known ){
     char ctmp[256];
-    snprintf(ctmp,256,"%d/%d: %d",channel,param,value);
-    ctmp[255] = 0;
+    snprintf(ctmp,sizeof(ctmp),"%d/%d: %d",channel,param,value);
+    ctmp[sizeof(ctmp)-1] = 0;
     unknown_label = ctmp;
   }
 }

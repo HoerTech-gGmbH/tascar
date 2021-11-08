@@ -323,7 +323,7 @@ void TASCAR::receivermod_base_speaker_t::post_prepare()
     std::vector<TASCAR::pos_t> ring;
     ring.resize(360);
     for(size_t k = 0; k < ring.size(); ++k)
-      ring[k].set_sphere(1.0, k * PI2 / ring.size(), 0.0);
+      ring[k].set_sphere(1.0, k * TASCAR_2PI / ring.size(), 0.0);
     spatial_error_t err = get_spatial_error(ring);
     std::cout << "% spatial error:\n";
     std::cout << "layout = '" << spkpos.layout << "';\n";

@@ -500,7 +500,7 @@ void hoafdnrot_t::set_par( double w_, double dw_, double t_, double dt_, double 
   damping = damping_;
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( fdn ){
-      double wscale(TASCAR_2PI*t);
+      const double wscale(TASCAR_2PI*t);
       fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
     }
     pthread_mutex_unlock( &mtx);
@@ -512,7 +512,7 @@ void hoafdnrot_t::setlogdelays( bool ld )
   if( pthread_mutex_lock( &mtx ) == 0 ){
     if( fdn ){
       fdn->set_logdelays(ld);
-      double wscale(TASCAR_2PI*t);
+      const double wscale(TASCAR_2PI*t);
       fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
     }
     pthread_mutex_unlock( &mtx);

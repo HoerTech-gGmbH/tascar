@@ -406,8 +406,8 @@ void epicycles_t::update(uint32_t frame,bool running)
     e2 = par_current.e * par_current.e;
     r2 = par_current.r / sqrt(1.0 - e2);
     // normalized angular velocity:
-    w_main = par_current.f * PI2 * par_current.r*par_current.r / f_update;
-    w_epi = par_current.f_epi * PI2 / f_update;
+    w_main = par_current.f * TASCAR_2PI * par_current.r*par_current.r / f_update;
+    w_epi = par_current.f_epi * TASCAR_2PI / f_update;
     // random component:
     double r;
     r = (2.0*rand()/RAND_MAX)-0.7;
@@ -429,16 +429,15 @@ void epicycles_t::update(uint32_t frame,bool running)
     _rho = sqrtf(x*x+y*y);
     // increment phi and phi_epi:
     phi += w_main/std::max(rho*rho,EPSf);
-    while( phi > TASCAR_PI )
-      phi -= TASCAR_2PI;
-    while( phi < -TASCAR_PI )
-      phi += TASCAR_2PI;
-    //phi_epi += ons_crit*w_epi;
+    while( phi > TASCAR_PIf )
+      phi -= TASCAR_2PIf;
+    while( phi < -TASCAR_PIf )
+      phi += TASCAR_2PIf;
     phi_epi += w_epi;
-    while( phi_epi > TASCAR_PI )
-      phi_epi -= TASCAR_2PI;
-    while( phi_epi < -TASCAR_PI )
-      phi_epi += TASCAR_2PI;
+    while( phi_epi > TASCAR_PIf )
+      phi_epi -= TASCAR_2PIf;
+    while( phi_epi < -TASCAR_PIf )
+      phi_epi += TASCAR_2PIf;
     if( b_stopat && iscrossing( stopat, phi, lastphi ) ){
       par_current.f = 0;
       par_osc.f = 0;

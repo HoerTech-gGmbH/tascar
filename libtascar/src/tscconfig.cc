@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <atomic>
 
 #ifdef USEXERCESXML
 
@@ -80,7 +81,7 @@ namespace TASCAR {
   static std::map<std::string, cfg_node_desc_t> attribute_list;
   static std::vector<std::string> warnings;
   static globalconfig_t config_;
-  static size_t maxid(0);
+  static std::atomic_size_t maxid(0);
 } // namespace TASCAR
 
 double TASCAR::config(const std::string& v, double d)
@@ -296,9 +297,9 @@ std::vector<std::string>& TASCAR::get_warnings()
 
 std::string TASCAR::get_tuid()
 {
-  // todo: make thread safe
   char c[1024];
-  sprintf(c, "%lx", ++maxid);
+  snprintf(c, sizeof(c), "%zx", ++maxid);
+  c[sizeof(c)-1] = 0;
   return c;
 }
 

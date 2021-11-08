@@ -115,7 +115,7 @@ void TASCAR::scene_render_rt_t::start()
           if( it->size() ){
             for(uint32_t k=0;k<4;++k){
               char ctmp[1024];
-              sprintf(ctmp,"%s.%d",it->c_str(),k);
+              sprintf(ctmp,"%s.%u",it->c_str(),k);
               connect_in(pi+k,ctmp,true);
             }
           }

@@ -333,7 +333,7 @@ int granularsynth_t::inner_process(jack_nframes_t n, const std::vector<float*>& 
     }
   }
   // if instantaneous frequency matches, then add grain:
-  freq_max *= f_sample/PI2;
+  freq_max *= f_sample/TASCAR_2PI;
   // phase modification, e.g., convert to minimum phase stimulus:
   minphase( ola1.s );
   // add grains to grain store if features are matching:

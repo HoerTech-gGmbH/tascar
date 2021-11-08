@@ -248,7 +248,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
         receiver_->add_pointsource(
             prel,
             std::min(TASCAR_PI2,
-                     0.5 * TASCAR_PI2 * src_->size / std::max(0.01, nextdistance)),
+                     0.25 * TASCAR_PI * src_->size / std::max(0.01, nextdistance)),
             scattering, audio, receiver_data);
         return 1;
       }
@@ -784,16 +784,16 @@ pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, doub
     pos_t p_is_src(p_src-p_is);
     pos_t p_rec_is(p_is-p_rec);
     p_rec_is.normalize();
-    double d_is_src(p_is_src.norm());
+    const double d_is_src(p_is_src.norm());
     if( d_is_src > 0 )
       p_is_src *= 1.0/d_is_src;
     // calculate first zero crossing frequency:
-    double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
-    double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
+    const double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
+    const double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
     double loc_aperture(aperture);
     if( manual_aperture > 0.0 )
       loc_aperture = manual_aperture;
-    double f0(3.8317*c/(PI2*loc_aperture*sin_theta));
+    const double f0(3.8317*c/(TASCAR_2PI*loc_aperture*sin_theta));
     // calculate filter coefficient increment:
     dA1 = (exp(-TASCAR_PI*f0/fs)-state.A1)*dt;
     // return effective source position:

@@ -36,25 +36,55 @@
    \brief Some basic definitions
 */
 
-#define TASCAR_PI 3.141592653589793116
-#define TASCAR_2PI 6.283185307179586232
-#define TASCAR_PI2 1.570796326794896558
+#define TASCAR_PI  3.1415926535897932 ///< double value closest to pi
+#define TASCAR_2PI 6.2831853071795865 ///< double value closest to two pi
+#define TASCAR_PI2 1.5707963267948966 ///< double value closest to half pi
+#define DEG2RAD 0.017453292519943296  ///< double value closest to pi / 180
+#define RAD2DEG 57.295779513082321    ///< double value closest to 180 / pi
 
-#define TASCAR_PIf 3.141592653589793116f
-#define TASCAR_2PIf 6.283185307179586232f
-#define TASCAR_PI2f 1.570796326794896558f
+// Let compiler check expectations for PI related definitions
+static_assert(TASCAR_PI * 2 == TASCAR_2PI and TASCAR_PI / 2 == TASCAR_PI2);
+static_assert(TASCAR_PI/180 == DEG2RAD and 180/TASCAR_PI == RAD2DEG);
+static_assert(1 == DEG2RAD * RAD2DEG);
+#ifdef M_PI // for source files which include math header before this one
+static_assert(M_PI == TASCAR_PI);
+#endif
 
-#define PI2 6.283185307179586232
-#define PI_2 1.570796326794896558
-#define DEG2RAD 0.017453292519943295474
-#define RAD2DEG 57.29577951308232286464
+#define TASCAR_PIf  3.1415927f   ///< float value closest to pi
+#define TASCAR_2PIf 6.2831853f   ///< float value closest to two pi
+#define TASCAR_PI2f 1.57079633f  ///< float value closest to half pi
+#define DEG2RADf    0.017453293f ///< float value closest to pi / 180 
+#define RAD2DEGf   57.295780f    ///< float value closest to 180 / pi
+
+// Let compiler check expectations for PIf related definitions
+static_assert((float)TASCAR_PI == TASCAR_PIf);
+static_assert((float)TASCAR_2PI == TASCAR_2PIf);
+static_assert((float)TASCAR_PI2 == TASCAR_PI2f);
+static_assert((float)DEG2RAD == DEG2RADf);
+static_assert((float)RAD2DEG == RAD2DEGf);
+static_assert(TASCAR_PIf * 2 == TASCAR_2PIf and TASCAR_PIf / 2 == TASCAR_PI2f);
+static_assert(TASCAR_PIf/180 == DEG2RADf);
+static_assert(1 == DEG2RADf * RAD2DEGf);
+// division 180/pi produces a rounding difference when done in single precision
+static_assert(180/TASCAR_PIf >= RAD2DEGf*(1-std::numeric_limits<float>::epsilon()));
+static_assert(180/TASCAR_PIf <= RAD2DEGf*(1+std::numeric_limits<float>::epsilon()));
+static_assert((float)(180/TASCAR_PI) == RAD2DEGf);
+
+// Mark short pi-related symbols deprecated in favor of the macros beginning with
+// TASCAR_. Old symbols will be unavailable in a future version of libtascar.
+
+/// constant for pi @deprecated use TASCAR_PIf instead
+[[deprecated("use TASCAR_PIf instead")]] constexpr float PIf = TASCAR_PIf;
+/// constant for two pi @deprecated use TASCAR_2PI instead
+[[deprecated("use TASCAR_2PI instead")]] constexpr double PI2 = TASCAR_2PI;
+/// constant for two pi @deprecated use TASCAR_2PIf instead
+[[deprecated("use TASCAR_2PIf instead")]] constexpr float PI2f = TASCAR_2PIf;
+/// constant for half pi @deprecated use TASCAR_PI2 instead
+[[deprecated("use TASCAR_PI2 instead")]] constexpr double PI_2 = TASCAR_PI2;
+/// constant for half pi @deprecated use TASCAR_PI2f instead
+[[deprecated("use TASCAR_PI2f instead")]] constexpr float PI_2f = TASCAR_PI2f;
+
 #define EPS 3.0e-6
-
-#define PIf 3.141592653589793116f
-#define PI2f 6.283185307179586232f
-#define PI_2f 1.570796326794896558f
-#define DEG2RADf 0.017453292519943295474f
-#define RAD2DEGf 57.29577951308232286464f
 #define EPSf 3.0e-6f
 
 #define SPLREF -93.9794

@@ -42,7 +42,7 @@ namespace TASCAR {
     {
       if(N0 > 0)
         return data[std::min((uint32_t)(fabsf(x) * scale), N1)];
-      float tmp(PIf * fabsf(x) + EPSf);
+      const float tmp(TASCAR_PIf * fabsf(x) + EPSf);
       return sinf(tmp) / tmp;
     };
     const uint32_t O;

@@ -70,7 +70,7 @@ void ormod_t::update(uint32_t tp_frame,bool running)
     r.z = DEG2RAD*(tptime-t0)*w;
     break;
   case sigmoid:
-    r.z = DEG2RAD*(phi0+(phi1-phi0)/(1.0+exp(-PI2*(tptime-0.5*(t0+t1))/(t1-t0))));
+    r.z = DEG2RAD*(phi0+(phi1-phi0)/(1.0+exp(-TASCAR_2PI*(tptime-0.5*(t0+t1))/(t1-t0))));
     break;
   case cosine:
     tptime = std::max(t0,std::min(t1,tptime));

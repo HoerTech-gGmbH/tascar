@@ -3,7 +3,7 @@ VERSION=0.220.0
 
 ARCH=$(shell uname -m)
 
-CXXFLAGS = -Wall -Wno-deprecated-declarations -std=c++17 -pthread	\
+CXXFLAGS = -Wall -Wdeprecated-declarations -std=c++17 -pthread	\
 -ggdb -fno-finite-math-only
 
 
@@ -25,7 +25,7 @@ ifeq "$(ARCH)" "x86_64"
 CXXFLAGS += -msse -msse2 -mfpmath=sse -ffast-math
 endif
 
-CPPFLAGS = -std=c++11
+CPPFLAGS = -std=c++17
 PREFIX = /usr/local
 
 GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")

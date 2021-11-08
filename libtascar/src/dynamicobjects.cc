@@ -289,8 +289,8 @@ void track_t::project_tangent(pos_t c)
   rot_z(-c.azim());
   // warning: the sign of next rotation is a work-around for a
   // potential bug in TASCAR rotation:
-  rot_y(-(PI_2 - c.elev()));
-  rot_z(-PI_2);
+  rot_y(-(TASCAR_PI2 - c.elev()));
+  rot_z(-TASCAR_PI2);
   c.set_cart(0, 0, -c.norm());
   operator+=(c);
   // operator*=(pos_t(1,-1,1));
@@ -391,7 +391,7 @@ void track_t::smooth(unsigned int n)
   wnd.resize(n);
   double wsum(0);
   for(k = 0; k < (int32_t)n; k++) {
-    wnd[k] = 0.5 - 0.5 * cos(PI2 * (k + 1) / (n + 1));
+    wnd[k] = 0.5 - 0.5 * cos(TASCAR_2PI * (k + 1) / (n + 1));
     wsum += wnd[k];
   }
   make_friendly_number(wsum);

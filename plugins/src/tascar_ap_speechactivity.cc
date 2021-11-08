@@ -94,9 +94,9 @@ speechactivity_t::~speechactivity_t()
 void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
 {
   TASCAR_ASSERT(chunk.size()==intensity.size());
-  double  lpc1(exp(-PI2/(tauenv*f_fragment)));
-  double lpc2(pow(2.0,-1.0/(tauonset*f_fragment)));
-  float v2threshold(threshold*threshold);
+  const double lpc1(exp(-TASCAR_2PI/(tauenv*f_fragment)));
+  const double lpc2(pow(2.0,-1.0/(tauonset*f_fragment)));
+  const float v2threshold(threshold*threshold);
   bool transition(false);
   for(uint32_t ch=0;ch<chunk.size();++ch){
     // first get signal intensity:

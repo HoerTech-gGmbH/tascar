@@ -334,7 +334,7 @@ void espheadtracker_t::draw(const Cairo::RefPtr<Cairo::Context>& cr, double widt
       double lx((0.75+0.05*c)*width);
       double ly((y-0.04)*height);
       double r(0.055*height);
-      cr->arc(lx, ly, r, 0, PI2 );
+      cr->arc(lx, ly, r, 0, TASCAR_2PI );
       cr->stroke();
       double lrot(it->second->get_rot(c));
       cr->move_to(lx,ly);

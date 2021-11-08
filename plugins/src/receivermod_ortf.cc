@@ -115,7 +115,7 @@ void ortf_t::configure()
       fft_filter.s[b] = std::exp(i * dis(gen));
     fft_filter.ifft();
     for(uint32_t t = 0; t < fft_filter.w.n; ++t)
-      fft_filter.w[t] *= (0.5 - 0.5 * cos(t * PI2 / fft_filter.w.n));
+      fft_filter.w[t] *= (0.5 - 0.5 * cos(t * TASCAR_2PI / fft_filter.w.n));
     decorrflt[k]->set_irs(fft_filter.w, false);
     diffuse_render_buffer.push_back(new TASCAR::wave_t(n_fragment));
   }

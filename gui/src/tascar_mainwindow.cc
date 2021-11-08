@@ -28,11 +28,7 @@
 #include "logo.xpm"
 #include "pdfexport.h"
 #include <fstream>
-
 #include <curl/curl.h>
-//#include <libxml/tree.h>
-//#include <libxml/HTMLparser.h>
-//#include <libxml++/libxml++.h>
 
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
 
@@ -246,8 +242,8 @@ bool tascar_window_t::on_timeout_statusbar()
           TASCAR::scene_render_rt_t* scene(session->scenes[selected_scene]);
           TASCAR::render_profiler_t prof(scene->loadaverage);
           prof.normalize(prof.t_postproc);
-          sprintf(cmp,"scenes: %ld  point sources: %d/%d  diffuse sound fields: %d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: %1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: %1.1f%%  postproc: %1.1f%%)",
-                  (long int)(session->scenes.size()),
+          sprintf(cmp,"scenes: %zu  point sources: %d/%d  diffuse sound fields: %d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: %1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: %1.1f%%  postproc: %1.1f%%)",
+                  session->scenes.size(),
                   session->get_active_pointsources(),session->get_total_pointsources(),
                   session->get_active_diffuse_sound_fields(),session->get_total_diffuse_sound_fields(),
                   scene->get_cpu_load(),
@@ -1028,12 +1024,12 @@ void tascar_window_t::on_menu_view_viewport_xy()
 
 void tascar_window_t::on_menu_view_viewport_rotz()
 {
-  draw.view.euler.z += TASCAR_PI/24.0;
+  draw.view.euler.z += TASCAR_PIf/24;
 }
 
 void tascar_window_t::on_menu_view_viewport_rotzcw()
 {
-  draw.view.euler.z -= TASCAR_PI/24.0;
+  draw.view.euler.z -= TASCAR_PIf/24;
 }
 
 void tascar_window_t::on_menu_view_viewport_setref()
