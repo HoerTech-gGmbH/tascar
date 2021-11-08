@@ -239,7 +239,7 @@ TASCAR::resonance_filter_t::resonance_filter_t()
 
 void TASCAR::resonance_filter_t::set_fq( double fresnorm, double q )
 {
-  double farg(TASCAR_2PI*fresnorm);
+  const double farg(TASCAR_2PI*fresnorm);
   b1 = 2.0*q*cos(farg);
   b2 = -q*q;
   std::complex<double> z(std::exp(i*farg));

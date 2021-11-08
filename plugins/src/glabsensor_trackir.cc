@@ -1059,7 +1059,7 @@ void trackir_drawer_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
       for(std::vector<std::complex<double>>::const_iterator ip =
               plot.vP.begin();
           ip != plot.vP.end(); ++ip) {
-        cr->arc(std::real(*ip), -std::imag(*ip), 8, 0, PI2);
+        cr->arc(std::real(*ip), -std::imag(*ip), 8, 0, TASCAR_2PI);
         cr->fill();
       }
       // now draw all detected lines:
@@ -1084,7 +1084,7 @@ void trackir_drawer_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
       // highlight all markers, which were used for solving:
       cr->set_source_rgba(0, 0.8, 0, 0.5);
       for(uint32_t k = 0; k < plot.imagePoints.size(); ++k) {
-        cr->arc(plot.imagePoints[k].x, -plot.imagePoints[k].y, 12, 0, PI2);
+        cr->arc(plot.imagePoints[k].x, -plot.imagePoints[k].y, 12, 0, TASCAR_2PI);
         cr->stroke();
       }
       cr->set_source_rgb(0, 0, 0);

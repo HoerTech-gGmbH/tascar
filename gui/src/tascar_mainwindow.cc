@@ -28,11 +28,7 @@
 #include "logo.xpm"
 #include "pdfexport.h"
 #include <fstream>
-
 #include <curl/curl.h>
-//#include <libxml/tree.h>
-//#include <libxml/HTMLparser.h>
-//#include <libxml++/libxml++.h>
 
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
 
@@ -1028,12 +1024,12 @@ void tascar_window_t::on_menu_view_viewport_xy()
 
 void tascar_window_t::on_menu_view_viewport_rotz()
 {
-  draw.view.euler.z += TASCAR_PI/24.0;
+  draw.view.euler.z += TASCAR_PIf/24;
 }
 
 void tascar_window_t::on_menu_view_viewport_rotzcw()
 {
-  draw.view.euler.z -= TASCAR_PI/24.0;
+  draw.view.euler.z -= TASCAR_PIf/24;
 }
 
 void tascar_window_t::on_menu_view_viewport_setref()

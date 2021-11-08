@@ -393,7 +393,7 @@ void hrtf_t::configure()
       fft_filter.s[b] = std::exp(i * dis(gen));
     fft_filter.ifft();
     for(uint32_t t = 0; t < fft_filter.w.n; ++t)
-      fft_filter.w[t] *= (0.5 - 0.5 * cos(t * PI2 / fft_filter.w.n));
+      fft_filter.w[t] *= (0.5 - 0.5 * cos(t * TASCAR_2PI / fft_filter.w.n));
     decorrflt[k]->set_irs(fft_filter.w, false);
     diffuse_render_buffer.push_back(new TASCAR::wave_t(n_fragment));
   }
@@ -468,8 +468,8 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
   double theta_r = acos(dot_prod(par.dir_r, prel_norm));
 
   // warping for better grip on small angles
-  theta_l = theta_l * (1.0 - 0.5 * cos(sqrt(theta_l / TASCAR_PI) * TASCAR_PI)) / 1.5;
-  theta_r = theta_r * (1.0 - 0.5 * cos(sqrt(theta_r / TASCAR_PI) * TASCAR_PI)) / 1.5;
+  theta_l = theta_l * (1.0 - 0.5 * cos(sqrt(theta_l * TASCAR_PI))) / 1.5;
+  theta_r = theta_r * (1.0 - 0.5 * cos(sqrt(theta_r * TASCAR_PI))) / 1.5;
 
   // time delay in meter (panning parameters: target_tau is reached at end of
   // the block)

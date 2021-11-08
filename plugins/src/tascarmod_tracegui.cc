@@ -156,7 +156,7 @@ bool tracegui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if( unitcircle ){
       cr->set_line_width( 0.075*mw );
       cr->move_to( 1, 0 );
-      cr->arc(0, 0, 1, 0, PI2 );
+      cr->arc(0, 0, 1, 0, TASCAR_2PI );
       cr->stroke();
     }
     // draw traces
@@ -172,7 +172,7 @@ bool tracegui_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       }
       cr->set_source_rgb( col.r, col.g, col.b );
       TASCAR::pos_t p(trace[k][pos]);
-      cr->arc(p.x, -p.y, 0.3*mw, 0, PI2 );
+      cr->arc(p.x, -p.y, 0.3*mw, 0, TASCAR_2PI );
       cr->fill();
     }
     cr->restore();

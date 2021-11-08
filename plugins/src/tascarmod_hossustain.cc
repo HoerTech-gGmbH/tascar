@@ -159,7 +159,7 @@ int sustain_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn, c
     absspec[k] += std::abs(ola.s[k]);
     if( (bass > 0) )
       absspec[k*br] += bass*std::abs(ola.s[k]);
-    ola.s[k] = (double)(absspec[k])*std::exp(i_d*drand()*PI2);
+    ola.s[k] = (double)(absspec[k])*std::exp(i_d*drand()*TASCAR_2PI);
     if( k<fcut_int )
       ola.s[k] = 0;
   }

@@ -58,7 +58,7 @@ void pendulum_t::update(uint32_t frame,bool running)
   double rx(amplitude*DEG2RAD);
   time -= starttime;
   if( time>0 )
-    rx = amplitude*DEG2RAD*cos(PI2*frequency*(time))*exp(-0.70711*time/decaytime);
+    rx = amplitude*DEG2RAD*cos(TASCAR_2PI*frequency*(time))*exp(-0.70711*time/decaytime);
   for(std::vector<TASCAR::named_object_t>::iterator iobj=obj.begin();iobj!=obj.end();++iobj){
     TASCAR::zyx_euler_t dr(0,0,rx);
     TASCAR::pos_t dp(distance);

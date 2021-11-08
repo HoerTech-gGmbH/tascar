@@ -109,10 +109,10 @@ void rec_itu51_t::configure()
   for(auto it = filter.begin(); it != filter.end(); ++it)
     it->set_highpass(fc, f_sample);
   filter[3].set_lowpass(fc, f_sample, true);
-  // set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*PI2 );
-  double f0(0.125 * fc / f_sample * PI2);
+  // set_gzp( 1.0, 1.0, 0.0, pow(10.0,-2.0*fc/fs), fc/fs*TASCAR_2PI );
+  const double f0(0.125 * fc / f_sample * TASCAR_2PI);
   allpL.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
-  double g(std::abs(allpL.response(TASCAR_PI)));
+  const double g(std::abs(allpL.response(TASCAR_PI)));
   allpL.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   allpR.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   allpC.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);

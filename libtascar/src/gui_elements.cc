@@ -748,18 +748,13 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
         // regular sources are gray:
         cr->set_source_rgba( 0,0,0,0.1+0.9*gain_color);
       // mark sources as circle with cross:
-      cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
+      cr->arc(psrc.x, -psrc.y, markersize, 0, TASCAR_2PI );
       cr->move_to(psrc.x-0.7*markersize,-psrc.y+0.7*markersize);
       cr->line_to(psrc.x+0.7*markersize,-psrc.y-0.7*markersize);
       cr->move_to(psrc.x-0.7*markersize,-psrc.y-0.7*markersize);
       cr->line_to(psrc.x+0.7*markersize,-psrc.y+0.7*markersize);
       cr->stroke();
       // draw source traces:
-      //draw_edge(cr,prec,psrc);
-      //draw_source_trace(cr,(*iam)->receiver_->position,(*iam)->src_,*iam);
-      // gray line from source to receiver:
-      //cr->set_source_rgba(0, 0, 0, std::min(1.0,(*iam)->get_gain()));
-      // regular sources are gray:
       if( gain_color > EPS ){
         cr->set_source_rgba( 0,0.6,0,0.1+0.9*gain_color);
         draw_edge(cr,psrc,prec);
@@ -768,29 +763,22 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
       // image source or primary source:
       if( (*iam)->ismorder > 0 ){
         // image source:
-        //pos_t pcut(view(((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->p_cut));
-        //cr->arc(pcut.x, -pcut.y, 0.6*markersize, 0, PI2 );
-        //cr->fill();
-        //draw_edge(cr,psrc,pcut);
-        //cr->stroke();
         cr->save();
         char ctmp[1000];
         sprintf(ctmp,"%d",(*iam)->ismorder);
-        //((TASCAR::Acousticmodel::mirrorsource_t*)((*iam)->src_))->reflector_->);
         if( gain_color < EPS )
           // sources with zero gain but active are shown in red:
           cr->set_source_rgba(1, 0, 0, 0.5 );
         else
           // regular sources are gray:
           cr->set_source_rgba( 0,0,0,0.1+0.9*gain_color );
-        //cr->set_source_rgba(0, 0, 0, 0.4);
         cr->move_to( psrc.x+1.2*markersize, -psrc.y );
         cr->show_text( ctmp );
         cr->stroke();
         cr->restore();
       }else{
         // primary source:
-        cr->arc(psrc.x, -psrc.y, markersize, 0, PI2 );
+        cr->arc(psrc.x, -psrc.y, markersize, 0, TASCAR_2PI );
         cr->fill();
       }
       cr->restore();
@@ -852,7 +840,7 @@ void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f,
       pn = view(pn);
       center = view(center);
       cr->move_to(center.x, -center.y);
-      cr->arc(center.x, -center.y, 0.5 * msize, 0, PI2);
+      cr->arc(center.x, -center.y, 0.5 * msize, 0, TASCAR_2PI);
       cr->fill();
       draw_edge(cr, center, pn);
     }
@@ -981,7 +969,7 @@ void scene_draw_t::draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::
     p0 = view( p0 );
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     if( !p0.has_infinity() ){
-      cr->arc(p0.x, -p0.y, 0.8*msize, 0, PI2 );
+      cr->arc(p0.x, -p0.y, 0.8*msize, 0, TASCAR_2PI );
       cr->fill();
     }
     std::vector<double> dash(2);
@@ -1029,17 +1017,17 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,
     if(p.z != std::numeric_limits<double>::infinity()) {
       if(obj == selection) {
         cr->set_source_rgba(1, 0.7, 0, 0.5);
-        cr->arc(p.x, -p.y, 3 * msize, 0, PI2);
+        cr->arc(p.x, -p.y, 3 * msize, 0, TASCAR_2PI);
         cr->fill();
       }
       if(active && solo && blink) {
         cr->set_source_rgba(1, 0, 0, 0.5);
-        cr->arc(p.x, -p.y, 1.5 * msize, 0, PI2);
+        cr->arc(p.x, -p.y, 1.5 * msize, 0, TASCAR_2PI);
         cr->fill();
       }
       cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b,
                           0.6 + 0.2 * active);
-      cr->arc(p.x, -p.y, msize, 0, PI2);
+      cr->arc(p.x, -p.y, msize, 0, TASCAR_2PI);
       cr->fill();
       cr->set_source_rgb(1.0, 0.0, 0.0);
       draw_edge(cr, p, dirx);
@@ -1055,7 +1043,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,
       if(sndpos[k].z != std::numeric_limits<double>::infinity()) {
         if(solo && blink) {
           cr->set_source_rgba(1, 0, 0, 0.5);
-          cr->arc(sndpos[k].x, -sndpos[k].y, 0.75 * msize, 0, PI2);
+          cr->arc(sndpos[k].x, -sndpos[k].y, 0.75 * msize, 0, TASCAR_2PI);
           cr->fill();
         }
         cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.4);
@@ -1063,7 +1051,7 @@ void scene_draw_t::draw_src(TASCAR::Scene::src_object_t* obj,
                                                  obj->sound[k]->read_meter())) -
                         40.0) /
                            20.0f);
-        cr->arc(sndpos[k].x, -sndpos[k].y, r * msize, 0, PI2);
+        cr->arc(sndpos[k].x, -sndpos[k].y, r * msize, 0, TASCAR_2PI);
         cr->fill();
         if(b_print_labels) {
           cr->save();
@@ -1152,8 +1140,8 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
       pos_t x(p);
       for(uint32_t k = 0; k < 25; k++) {
         x = p;
-        x.x += dr * cos(PI2 * k / 24.0);
-        x.y += dr * sin(PI2 * k / 24.0);
+        x.x += dr * cos(TASCAR_2PI * k / 24.0);
+        x.y += dr * sin(TASCAR_2PI * k / 24.0);
         x = view(x);
         if(k == 0)
           cr->move_to(x.x, -x.y);
@@ -1162,8 +1150,8 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
       }
       for(uint32_t k = 0; k < 25; k++) {
         x = p;
-        x.y += dr * cos(PI2 * k / 24.0);
-        x.z += dr * sin(PI2 * k / 24.0);
+        x.y += dr * cos(TASCAR_2PI * k / 24.0);
+        x.z += dr * sin(TASCAR_2PI * k / 24.0);
         x = view(x);
         if(k == 0)
           cr->move_to(x.x, -x.y);
@@ -1172,8 +1160,8 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
       }
       for(uint32_t k = 0; k < 25; k++) {
         x = p;
-        x.z += dr * cos(PI2 * k / 24.0);
-        x.x += dr * sin(PI2 * k / 24.0);
+        x.z += dr * cos(TASCAR_2PI * k / 24.0);
+        x.x += dr * sin(TASCAR_2PI * k / 24.0);
         x = view(x);
         if(k == 0)
           cr->move_to(x.x, -x.y);
@@ -1245,17 +1233,17 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
 
     if(obj == selection) {
       cr->set_source_rgba(1, 0.7, 0, 0.5);
-      cr->arc(p.x, -p.y, 3 * msize, 0, PI2);
+      cr->arc(p.x, -p.y, 3 * msize, 0, TASCAR_2PI);
       cr->fill();
     }
     if(solo && blink) {
       cr->set_source_rgba(1, 0, 0, 0.5);
-      cr->arc(p.x, -p.y, 1.5 * msize, 0, PI2);
+      cr->arc(p.x, -p.y, 1.5 * msize, 0, TASCAR_2PI);
       cr->fill();
     }
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
     cr->move_to(p.x + 2 * msize, -p.y);
-    cr->arc(p.x, -p.y, 2 * msize, 0, PI2);
+    cr->arc(p.x, -p.y, 2 * msize, 0, TASCAR_2PI);
     cr->move_to(p1.x, -p1.y);
     cr->line_to(p2.x, -p2.y);
     cr->line_to(p3.x, -p3.y);
@@ -1374,7 +1362,7 @@ void scene_draw_t::draw_face(TASCAR::Scene::face_object_t* face,
                           0.5 + 0.5 * face->color.b, 0.3);
       if(loc.z != std::numeric_limits<double>::infinity()) {
         if(!b_acoustic_model) {
-          cr->arc(loc.x, -loc.y, msize, 0, PI2);
+          cr->arc(loc.x, -loc.y, msize, 0, TASCAR_2PI);
           cr->fill();
         }
         cr->set_line_width(0.4 * msize);
@@ -1428,7 +1416,7 @@ void scene_draw_t::draw_facegroup(TASCAR::Scene::face_group_t* face,
                           0.5 + 0.5 * face->color.b, 0.3);
       if(loc.z != std::numeric_limits<double>::infinity()) {
         if(!b_acoustic_model) {
-          cr->arc(loc.x, -loc.y, msize, 0, PI2);
+          cr->arc(loc.x, -loc.y, msize, 0, TASCAR_2PI);
           cr->fill();
         }
         cr->set_line_width(0.4 * msize);
@@ -1509,7 +1497,7 @@ void scene_draw_t::draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* face,
                           0.5 + 0.5 * face->color.b, 0.3);
       if(loc.z != std::numeric_limits<double>::infinity()) {
         if(!b_acoustic_model) {
-          cr->arc(loc.x, -loc.y, msize, 0, PI2);
+          cr->arc(loc.x, -loc.y, msize, 0, TASCAR_2PI);
           cr->fill();
         }
         cr->set_line_width(0.4 * msize);

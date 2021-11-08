@@ -78,7 +78,7 @@ dirgain_t::dirgain_t( const TASCAR::module_cfg_t& cfg )
     w_(channels,0.0f),
     state_(channels,0.0f),
     dt(1.0/get_fragsize()),
-    kazscale(PI2/channels)
+    kazscale(TASCAR_2PI/channels)
 {
   session->add_double_degree("/"+id+"/az",&az);
   session->add_double_degree("/"+id+"/az0",&az0);

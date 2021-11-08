@@ -113,23 +113,23 @@ hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
                            "layout on the xy-plane, the z value of speaker " +
                            std::to_string(ch) + " is " +
                            TASCAR::to_string(spkpos[ch].z) + " (elevation " +
-                           TASCAR::to_string(180.0 * spkpos[ch].el / TASCAR_PI) +
+                           TASCAR::to_string(RAD2DEG * spkpos[ch].el) +
                            " degree)");
   GET_ATTRIBUTE(order, "", "Ambisonics order; 0: use maximum possible");
   rotation = -spkpos[0].az;
   for(size_t ch = 0; ch < spkpos.size(); ++ch) {
     if(distance(spkpos[ch].unitvector,
-                TASCAR::pos_t(cos(-rotation + ch * PI2 / spkpos.size()),
-                              sin(-rotation + ch * PI2 / spkpos.size()), 0.0)) >
+                TASCAR::pos_t(cos(-rotation + ch * TASCAR_2PI / spkpos.size()),
+                              sin(-rotation + ch * TASCAR_2PI / spkpos.size()), 0.0)) >
        1e-4) {
-      double az(180.0 * spkpos[ch].az / TASCAR_PI);
+      double az(RAD2DEG * spkpos[ch].az);
       while(az < 0)
         az += 360.0;
       throw TASCAR::ErrMsg(
           "The hoa2d receiver requires a regular loudspeaker layout. Speaker " +
           std::to_string(ch) + " is at " + TASCAR::to_string(az) +
           " degree, expected " +
-          TASCAR::to_string(-rotation * 180.0 / TASCAR_PI +
+          TASCAR::to_string(-rotation * RAD2DEG +
                             ch * 360.0 / spkpos.size()) +
           " degree.");
     }
@@ -199,7 +199,7 @@ void hoa2d_t::configure()
   for(uint32_t m = 0; m <= amb_order; ++m) {
     ordergain[m] = (double)fft_scale * std::exp(-(double)m * i * rotation);
     if(maxre)
-      ordergain[m] *= cosf(m * TASCAR_PI2f / (amb_order + 1));
+      ordergain[m] *= cosf(m * TASCAR_PI2f / (amb_order + 1U));
   }
   idelay = diffup_delay * f_sample;
   idelaypoint = filterperiod * f_sample;
@@ -311,7 +311,7 @@ void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
       if(maxre)
         xyzgain *= sqrtf(0.5f);
     } else {
-      xyzgain *= cosf(TASCAR_PI2f / (amb_order + 1));
+      xyzgain *= cosf(TASCAR_PI2f / (amb_order + 1U));
     }
     for(uint32_t kt = 0; kt < n_fragment; ++kt) {
       s_encoded[kt * nbins] += wgain * chunk.w()[kt];

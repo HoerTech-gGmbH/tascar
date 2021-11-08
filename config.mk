@@ -3,7 +3,7 @@ VERSION=0.220.0
 
 ARCH=$(shell uname -m)
 
-CXXFLAGS = -Wall -Wno-deprecated-declarations -std=c++17 -pthread	\
+CXXFLAGS = -Wall -Wdeprecated-declarations -std=c++17 -pthread	\
 -ggdb -fno-finite-math-only
 
 
