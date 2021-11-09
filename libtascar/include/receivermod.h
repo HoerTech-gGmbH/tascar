@@ -93,11 +93,19 @@ namespace TASCAR {
   protected:
   };
 
-  struct spatial_error_t {
-    double abs_rE_error;
-    double abs_rV_error;
-    double angular_rE_error;
-    double angular_rV_error;
+  class spatial_error_t {
+  public:
+    spatial_error_t(){};
+    double abs_rE_error = 0.0;
+    double abs_rV_error = 0.0;
+    double angular_rE_error = 0.0;
+    double angular_rV_error = 0.0;
+    double azim_rE_error = 0.0;
+    double azim_rV_error = 0.0;
+    double elev_rE_error = 0.0;
+    double elev_rV_error = 0.0;
+    std::string to_string(const std::string& label,
+                          const std::string& sampling);
   };
 
   /**
@@ -121,6 +129,7 @@ namespace TASCAR {
     TASCAR::spk_array_diff_render_t spkpos;
     std::vector<std::string> typeidattr;
     bool showspatialerror;
+    std::vector<TASCAR::pos_t> spatialerrorpos;
   };
 
   class receivermod_t : public receivermod_base_t {
