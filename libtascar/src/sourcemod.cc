@@ -21,6 +21,7 @@
 
 #include "sourcemod.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <dlfcn.h>
 
 using namespace TASCAR;
@@ -39,13 +40,7 @@ sourcemod_t::sourcemod_t( tsccfg::node_t cfg )
   #ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
   #endif
-  #if defined(__APPLE__)
-    libname += sourcetype + ".dylib";
-  #elif __linux__
-    libname += sourcetype + ".so";
-  #else
-    #error not supported
-  #endif
+  libname += sourcetype + TASCAR::dynamic_lib_extension();
   lib = dlopen(libname.c_str(), RTLD_NOW );
   if( !lib )
     throw TASCAR::ErrMsg("Unable to open source module \""+sourcetype+"\": "+dlerror());

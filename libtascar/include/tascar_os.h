@@ -32,7 +32,13 @@ namespace TASCAR {
   /// @return pointer to first character that is not consumed by the conversion
   ///         or nullptr if s does not match format f.
   const char* strptime(const char* s, const char* f, struct tm* tm);
-}
+
+  /// @brief Function returning the platform-specific file name extension.
+  /// @return ".dylib" on Mac
+  /// @return ".dll" on Windows
+  /// @return ".so" on Linux
+  const char* dynamic_lib_extension(void);
+} // namespace TASCAR
 
 #endif
 

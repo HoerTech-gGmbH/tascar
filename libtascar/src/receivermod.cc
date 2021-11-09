@@ -22,6 +22,7 @@
 
 #include "receivermod.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <dlfcn.h>
 
 using namespace TASCAR;
@@ -37,13 +38,7 @@ TASCAR::receivermod_t::receivermod_t(tsccfg::node_t cfg)
 #ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
 #endif
-#if defined(__APPLE__)
-  libname += receivertype + ".dylib";
-#elif __linux__
-  libname += receivertype + ".so";
-#else
-#error not supported
-#endif
+  libname += receivertype + TASCAR::dynamic_lib_extension();
   lib = dlopen(libname.c_str(), RTLD_NOW);
   if(!lib)
     throw TASCAR::ErrMsg("Unable to open receiver module \"" + receivertype +

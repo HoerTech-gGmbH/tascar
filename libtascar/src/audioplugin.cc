@@ -22,6 +22,7 @@
 
 #include "audioplugin.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <dlfcn.h>
 
 using namespace TASCAR;
@@ -60,13 +61,7 @@ TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
   #ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
   #endif
-  #if defined(__APPLE__)
-    libname += plugintype + ".dylib";
-  #elif __linux__
-    libname += plugintype + ".so";
-  #else
-    #error not supported
-  #endif
+  libname += plugintype + TASCAR::dynamic_lib_extension();
   modname = plugintype;
   audioplugin_cfg_t lcfg(cfg);
   lcfg.modname = modname;

@@ -27,41 +27,49 @@ TEST(tascar_os, strptime)
   EXPECT_EQ(nullptr, TASCAR::strptime("2020-02-29 12:34:error",
                                       "%Y-%m-%d %H:%M:%S", &time));
   time = time0;
-  EXPECT_EQ('\0', *TASCAR::strptime("2020-02-29 12:34:56",
-                                    "%Y-%m-%d %H:%M:%S", &time));
-  EXPECT_EQ(2020-1900, time.tm_year);
-  EXPECT_EQ(2-1, time.tm_mon);
+  EXPECT_EQ('\0', *TASCAR::strptime("2020-02-29 12:34:56", "%Y-%m-%d %H:%M:%S",
+                                    &time));
+  EXPECT_EQ(2020 - 1900, time.tm_year);
+  EXPECT_EQ(2 - 1, time.tm_mon);
   EXPECT_EQ(29, time.tm_mday);
   EXPECT_EQ(12, time.tm_hour);
   EXPECT_EQ(34, time.tm_min);
   EXPECT_EQ(56, time.tm_sec);
 
-  EXPECT_EQ(nullptr, TASCAR::strptime("2020-02-error",
-                                      "%Y-%m-%d", &time));
+  EXPECT_EQ(nullptr, TASCAR::strptime("2020-02-error", "%Y-%m-%d", &time));
   time = time0;
-  EXPECT_EQ(' ', *TASCAR::strptime("2020-02-29 12:34:error",
-                                   "%Y-%m-%d", &time));
-  EXPECT_EQ(2020-1900, time.tm_year);
-  EXPECT_EQ(2-1, time.tm_mon);
+  EXPECT_EQ(' ',
+            *TASCAR::strptime("2020-02-29 12:34:error", "%Y-%m-%d", &time));
+  EXPECT_EQ(2020 - 1900, time.tm_year);
+  EXPECT_EQ(2 - 1, time.tm_mon);
   EXPECT_EQ(29, time.tm_mday);
   EXPECT_EQ(0, time.tm_hour);
   EXPECT_EQ(0, time.tm_min);
   EXPECT_EQ(0, time.tm_sec);
-  //"%Y-%m-%dT%T"
 
-  EXPECT_EQ(nullptr, TASCAR::strptime("2020-02-29T12:34:error",
-                                      "%Y-%m-%dT%T", &time));
+  EXPECT_EQ(nullptr,
+            TASCAR::strptime("2020-02-29T12:34:error", "%Y-%m-%dT%T", &time));
   time = time0;
-  EXPECT_EQ(',', *TASCAR::strptime("2020-02-29T12:34:56,",
-                                   "%Y-%m-%dT%T", &time));
-  EXPECT_EQ(2020-1900, time.tm_year);
-  EXPECT_EQ(2-1, time.tm_mon);
+  EXPECT_EQ(',',
+            *TASCAR::strptime("2020-02-29T12:34:56,", "%Y-%m-%dT%T", &time));
+  EXPECT_EQ(2020 - 1900, time.tm_year);
+  EXPECT_EQ(2 - 1, time.tm_mon);
   EXPECT_EQ(29, time.tm_mday);
   EXPECT_EQ(12, time.tm_hour);
   EXPECT_EQ(34, time.tm_min);
   EXPECT_EQ(56, time.tm_sec);
 }
 
+TEST(tascar_os, dynamic_lib_extension)
+{
+#ifdef _WIN32
+  EXPECT_STREQ(".dll", TASCAR::dynamic_lib_extension());
+#elif defined(__APPLE__)
+  EXPECT_STREQ(".dylib", TASCAR::dynamic_lib_extension());
+#else
+  EXPECT_STREQ(".so", TASCAR::dynamic_lib_extension());
+#endif
+}
 
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"

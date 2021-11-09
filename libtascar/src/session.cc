@@ -21,6 +21,7 @@
  */
 
 #include "session.h"
+#include "tascar_os.h"
 #include <chrono>
 #include <dlfcn.h>
 #include <fnmatch.h>
@@ -180,13 +181,7 @@ TASCAR::module_t::module_t(const TASCAR::module_cfg_t& cfg)
 #ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
 #endif
-#if defined(__APPLE__)
-  libname += name + ".dylib";
-#elif __linux__
-  libname += name + ".so";
-#else
-#error not supported
-#endif
+  libname += name + TASCAR::dynamic_lib_extension();
   lib = dlopen(libname.c_str(), RTLD_NOW);
   if(!lib)
     throw TASCAR::ErrMsg("Unable to open module \"" + name +
