@@ -53,13 +53,15 @@ function vRes = tascar_optim_reverbsettings( s_session, ir_ref, fs_ref )
   vRes = apply_damp_abs_constraints( vRes );
   e1 = vE(idx);
   % grid search for gain:
-  vGain = -20:1:20;
+  vGain = -30:1:30;
   vE = [];
   for g=vGain
     vE(end+1) = get_drr_error(s_session,g,vRefDRR,size(ir_ref,1),fs_ref,vRes(1),vRes(2));
   end
   [tmp,idx] = min(vE);
   gain = vGain(idx);
+  vResGrid = [gain,vRes(1),vRes(2)];
+  err_grid = get_combined_error(s_session,vResGrid,vRefDRR,vRefT60,size(ir_ref,1),fs_ref);
   if nargout == 0
     disp('Grid search result:');
     disp(sprintf('  gain="%g" absorption="%g" damping="%g"',gain,vRes(1),vRes(2)));
@@ -68,6 +70,11 @@ function vRes = tascar_optim_reverbsettings( s_session, ir_ref, fs_ref )
   % refine parameters:
   [vResDRR,e] = fminsearch(@(x) get_drr_error(s_session,x,vRefDRR,size(ir_ref,1),fs_ref,vRes(1),vRes(2)),gain);
   [vRes,e] = fminsearch(@(x) get_combined_error(s_session,x,vRefDRR,vRefT60,size(ir_ref,1),fs_ref),[vResDRR,vRes]);
+  if e > err_grid
+    disp('no convergence, using grid results');
+    e = err_grid;
+    vRes = vResGrid;
+  end
   vRes(2:3) = apply_damp_abs_constraints( vRes(2:3) );
   if nargout == 0
     disp('Optimization result:');
@@ -126,11 +133,11 @@ end
 
 function e = get_combined_error( s_session, vPar, vRefDRR, vRefT60, irlen, fs )
   try
-    vPar(2:3) = apply_damp_abs_constraints( vPar(2:3) );
+    [vPar(2:3),e0] = apply_damp_abs_constraints( vPar(2:3) );
     [ir,fs] = tascar_renderir_reverbsettings(s_session, irlen,fs,'gain',vPar(1),'absorption',vPar(2),'damping',vPar(3));
     vFeatDRR = get_drr_features( ir, fs );
     vFeatT60 = get_t60_features( ir, fs );
-    e = sum((vFeatDRR-vRefDRR).^2) + sum((vFeatT60-vRefT60).^2);
+    e = sum((vFeatDRR-vRefDRR).^2) + sum((vFeatT60-vRefT60).^2)+e0;
   catch
     disp(lasterr)
     e = 1e6;

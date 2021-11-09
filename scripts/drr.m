@@ -25,6 +25,7 @@ function r = drr( irs, fs, x, tw, s )
     x = [];
   end
   if isempty(x)
+    rand('seed',1);
     x = rand(4*fs,1)-0.5;
   end
   if nargin < 4
