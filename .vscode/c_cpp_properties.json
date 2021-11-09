@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "DefaultVSCodeConfig_Do_NOT_add_machine-specific_settings",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/libtascar/include",
+                "${workspaceFolder}/libtascar/build"
+            ],
+            "defines": [],
+            "intelliSenseMode": "gcc-x64",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
