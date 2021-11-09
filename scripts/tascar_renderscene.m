@@ -1,4 +1,4 @@
-function [y,sCfg] = tascar_renderscene( x, session, varargin )
+function [y,sCfg,msg] = tascar_renderscene( x, session, varargin )
 % TASCAR_renderscene - offline rendering of a scene
 %
 % Usage:
@@ -61,6 +61,7 @@ function [y,sCfg] = tascar_renderscene( x, session, varargin )
   if sCfg.dynamic
     sCmd = [sCmd,' -d'];
   end
+  sCmd = [sCmd,sprintf(' --fragsize=%d',sCfg.fragsize)];
   sNameIn = [tempname(),'.wav'];
   sCmd = [sCmd,' -i ',sNameIn];
   if ~isempty(ver('octave'))
@@ -73,9 +74,9 @@ function [y,sCfg] = tascar_renderscene( x, session, varargin )
   sNameOut = [tempname(),'.wav'];
   sCmd = [sCmd,' -o ',sNameOut];
   %disp(sCmd)
-  [a,b] = system(['LD_LIBRARY_PATH="" ',sCmd]);
-  if ~isempty(b)
-    error(b);
+  [a,msg] = system(['LD_LIBRARY_PATH="" ',sCmd]);
+  if a ~= 0
+    error(msg);
   end
   y = audioread(sNameOut);
   delete(sNameIn);
