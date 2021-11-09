@@ -29,6 +29,9 @@
 #define OSC_HELPER_H
 
 #include "tscconfig.h"
+#if defined(_WIN32) && !defined(WIN32)
+#define WIN32 _WIN32 // liblo needs WIN32 defined in order to detect Windows
+#endif
 #include <lo/lo.h>
 #include <string>
 #include <vector>

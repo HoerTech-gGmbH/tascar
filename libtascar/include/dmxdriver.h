@@ -32,6 +32,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#if defined(_WIN32) && !defined(WIN32)
+#define WIN32 _WIN32 // liblo needs WIN32 defined in order to detect Windows
+#endif
 #include <lo/lo.h>
 
 /// classes for DMX based light control
