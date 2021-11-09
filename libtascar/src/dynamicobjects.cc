@@ -22,6 +22,7 @@
 
 #include "dynamicobjects.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <fstream>
 #include <sstream>
 #include <string.h>
@@ -421,7 +422,7 @@ pos_t TASCAR::xml_get_trkpt(tsccfg::node_t pt, time_t& tme)
   struct tm bdtm;
   tme = 0;
   memset(&bdtm, 0, sizeof(bdtm));
-  if(strptime(stm.c_str(), "%Y-%m-%dT%T", &bdtm)) {
+  if(TASCAR::strptime(stm.c_str(), "%Y-%m-%dT%T", &bdtm)) {
     tme = mktime(&bdtm);
   }
   std::string selev = tsccfg::node_get_text(pt, "ele");

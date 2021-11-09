@@ -19,7 +19,7 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
   viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
   audioplugin.o levelmeter.o serviceclass.o speakerarray.o spectrum.o	\
-  fft.o stft.o ola.o vbap3d.o hoa.o
+  fft.o stft.o ola.o vbap3d.o hoa.o tascar_os.o
 # pugixml.o
 
 ifneq ($(OS),Windows_NT)

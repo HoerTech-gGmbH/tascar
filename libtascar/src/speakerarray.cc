@@ -22,6 +22,7 @@
 
 #include "speakerarray.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <algorithm>
 #include <chrono>
 #include <random>
@@ -389,9 +390,9 @@ spk_array_diff_render_t::spk_array_diff_render_t(
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
     std::tm tcalib;
     memset(&tcalib, 0, sizeof(tcalib));
-    const char* msg(strptime(calibdate.c_str(), "%Y-%m-%d %H:%M:%S", &tcalib));
+    const char* msg(TASCAR::strptime(calibdate.c_str(), "%Y-%m-%d %H:%M:%S", &tcalib));
     if(!msg)
-      msg = strptime(calibdate.c_str(), "%Y-%m-%d", &tcalib);
+      msg = TASCAR::strptime(calibdate.c_str(), "%Y-%m-%d", &tcalib);
     if(msg) {
       std::time_t ctcalib(mktime(&tcalib));
       calibage = difftime(now, ctcalib) / (24 * 3600);
