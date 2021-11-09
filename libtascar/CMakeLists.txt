@@ -64,6 +64,7 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vbap3d.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hoa.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/tscconfig.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tascar_os.cc
         )
 if (Linux)
     list(APPEND LIB_HEADER
