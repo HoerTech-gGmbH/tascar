@@ -20,7 +20,6 @@
 
 #include "audioplugin.h"
 #include "fft.h"
-#include <random>
 
 class dump_levels_t : public TASCAR::audioplugin_base_t {
 public:
