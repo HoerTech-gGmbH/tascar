@@ -410,11 +410,11 @@ void epicycles_t::update(uint32_t frame,bool running)
     w_epi = par_current.f_epi * TASCAR_2PI / f_update;
     // random component:
     double r;
-    r = (2.0*rand()/RAND_MAX)-0.7;
+    r = (2.0*TASCAR::drand())-0.7;
     r *= r*r;
     r *= par_current.random;
     w_main += r;
-    r = (2.0*rand()/RAND_MAX)-0.7;
+    r = (2.0*TASCAR::drand())-0.7;
     r *= r*r;
     r *= par_current.random;
     w_epi += r;

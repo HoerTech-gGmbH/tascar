@@ -23,11 +23,6 @@
 #include "ola.h"
 #include <stdlib.h>
 
-double drand()
-{
-  return (double)random()/(double)(RAND_MAX+1.0);
-}
-
 class granularsynth_vars_t : public TASCAR::module_base_t {
 public:
   granularsynth_vars_t( const TASCAR::module_cfg_t& cfg );
@@ -345,7 +340,7 @@ int granularsynth_t::inner_process(jack_nframes_t n, const std::vector<float*>& 
   ola1.s.clear();
   TASCAR::wave_t w_out(n,vOut[0]);
   // play melody from grain collection:
-  double vrandom(drand());
+  const double vrandom(TASCAR::drand());
   for( uint32_t k=0;k<std::min(startingtimes.size(),vfreqs.size());++k ){
     uint64_t tstart(startingtimes[k]);
     if( ((t >= tstart) && ((tprev < tstart) || (tprev>t))) && (vrandom < ponset) )

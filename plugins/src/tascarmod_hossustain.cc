@@ -27,11 +27,6 @@
 const std::complex<float> i_f(0.0, 1.0);
 const std::complex<double> i_d(0.0, 1.0);
 
-double drand()
-{
-  return (double)random()/(double)(RAND_MAX+1.0);
-}
-
 class sustain_vars_t : public TASCAR::module_base_t {
 public:
   sustain_vars_t( const TASCAR::module_cfg_t& cfg );
@@ -159,7 +154,7 @@ int sustain_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn, c
     absspec[k] += std::abs(ola.s[k]);
     if( (bass > 0) )
       absspec[k*br] += bass*std::abs(ola.s[k]);
-    ola.s[k] = (double)(absspec[k])*std::exp(i_d*drand()*TASCAR_2PI);
+    ola.s[k] = (double)(absspec[k])*std::exp(i_d*(TASCAR::drand()*TASCAR_2PI));
     if( k<fcut_int )
       ola.s[k] = 0;
   }
