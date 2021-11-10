@@ -5,7 +5,7 @@
     <!-- ... -->
   </scene>
   <modules>
-    <hrirconv inchannels="8" outchannels="2" fftlen="2048" autoconnect="true">
+    <hrirconv inchannels="8" outchannels="2" autoconnect="true">
       <entry in="0" out="0" file="hrir_000.wav" channel="0"/>
       <entry in="0" out="1" file="hrir_000.wav" channel="1"/>
       <entry in="1" out="0" file="hrir_045.wav" channel="0"/>

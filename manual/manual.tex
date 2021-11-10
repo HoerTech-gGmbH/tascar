@@ -825,8 +825,10 @@ Euler orientation tracks can be looped by adding the attribute
 
 Instead of defining the object's movement manually (defining position
 and orientation for each time point) we can use the creator tool.
-\tscexamplepriv[linerange={8-14},firstnumber=8]{example_cashdesk} In
-this case, the orientation is calculated as a tangent along the given
+%
+\tscexamplepriv[linerange={8-14},firstnumber=8]{example_cashdesk}
+%
+In this case, the orientation is calculated as a tangent along the given
 path.
 
 \subsubsection{Delta-transformations}\label{sec:deltatransform}\index{delta-transformation}
@@ -1014,38 +1016,30 @@ receiver type ``vmic'' (Section \ref{sec:recgen_vmic} on page
 \refelem{position}, \elem{boundingbox},\refelem{orientation}, \refelem{creator}, \elem{plugins}
 \end{tscelements}
 
-Apart of sound sources which consist of one or more sound vertices, we
-also have a possibility to create diffuse sound fields which ``fill''
-the space and are equally loud within a given volume (for example
-isotropic babble noise in a cafeteria, or remote traffic).
+Besides sound sources consisting of one or more vertices, there is also
+the possibility of creating diffuse sound fields that ``fill'' the room
+and are equally loud within a certain volume (e.g. isotropic babble
+noise in a cafeteria or distant traffic).
 %
 We can define a diffuse sound field in the following way:
-\tscexample[linerange={15-18},firstnumber=15]{example_cashdesk}
-%What are the connections in this example?
+\tscexample[linerange={5-9},firstnumber=5]{example_diffuse}
 
-Sound files used to create diffuse sound fields should contain 4 channels
-(B format, FuMa normalization).
+Sound files used to create diffuse sound fields must contain 4 channels
+(B format, FuMa normalisation, ACN channel sequence).
 %
-With attribute \attr{size="x y z"} we can specify the dimensions of
-the box in which the diffuse sound field is audible.
+The attribute \attr{size="x y z"} defines the dimensions of the box in
+which the diffuse sound field is audible.
 %
-To provide a smooth decay of the diffuse sound field, there is a von-Hann
-ramp for the gain of the source outside the box.
+To achieve a smooth decay of the diffuse sound field at the edge of this
+box, there is a von-Hann ramp for the attenuation of the source outside
+the box.
 %
-The length of the ramp can also be specified using
+The length of the ramp is determined by the attribute
 \attr{falloff="..."}.
 %
- As all other objects, diffuse sound fields also have position and
-orientation, which refers to a position and orientation of the box.
+Like all other objects, diffuse sound fields have a position and an
+orientation that refers to a position and an orientation of the box.
 
-
-If a port connection is provided (\attr{connect} attribute), then the
-four renderer input ports (which are always generated with the diffuse
-sound field: \verb!render.<scenename>:<objectname>.n!) are connected
-to the audio player output ports \verb!@.0!, \verb!@.1!, \verb!@.2!
-and \verb!@.3!, where ''@'' is \verb!player.<scenename>:<objectname>!
-.
-%
 
 
 An example on how to add the \elem{addsndfile} audio plugin to a
@@ -1053,9 +1047,12 @@ diffuse sound field can be found below:
 %
 \tscexample[linerange={5-9},firstnumber=5]{example_diffuse}
 
-The input signal of diffuse sound fields is the B-format (Furse-Malham
-normalization, channel sequence ``wxyz''). For level metering, the RMS level
-of the w-channel is taken.
+Internally, TASCAR uses FuMa normalization and ACN channel sequence
+(``wyzx'').
+%
+At most places, the Ambisonics channel sequence and normalization can be configured.
+%
+For level metering, the RMS level of the w-channel is taken.
 
 
 \subsection{The {\tt <receiver .../>} element}\label{sec:receiver}\index{receiver}
@@ -1509,47 +1506,6 @@ processing function of the render format.
 \input{secapmodules.tex}
 
 \clearpage
-
-\section{Adding diffuse reverberation}\label{sec:reverb}
-
-\tascar{} is not capable of rendering physically or perceptually
-correct diffuse or late reverberation.
-%
-However, it is still possible to add diffuse reverberation by means of
-external tools, e.g., feedback delay networks (FDN) or convolution
-tools.
-%
-To add diffuse reverberation, a room microphone needs to be added to
-the scene, configured to volumetric mode (see section
-\ref{sec:volumetric}, page \pageref{sec:volumetric}), and configured
-to exclude diffuse sources from rendering (attribute
-\attr{diffuse="false"}), see also example file \verb!example_diffreverb.tsc!:
-%
-\tscexamplepriv[linerange={40-42},firstnumber=40]{example_diffreverb}
-%
-The output of the reverberation tool needs to be in B-format,
-Furse-Malham normalization and ACN channel order (wyzx). This output is
-handled in \tascar{} the same way as any other diffuse sound field
-(see Section \ref{sec:diffuse} on page \pageref{sec:diffuse}):
-%
-\tscexamplepriv[linerange={34-36},firstnumber=34]{example_diffreverb}
-%
-The appropriate reverberation tool can be started using the
-\elem{system} module, and connections can be made using \elem{connect}
-elements at the end of the session file:
-%
-\tscexamplepriv[linerange={44-50},firstnumber=44]{example_diffreverb}
-%
-The gain may need to be adjusted according to \citet{Grimm2015c}.
-%
-It is recommended to validate the resulting outcome both, perceptually
-and by measuring the resulting impulse responses.
-%
-The GNU Octave/MATLAB tools provided with \tascar{} should be
-sufficient in most cases (e.g., \verb!t60.m!, \verb!iacc.m!,
-\verb!plot_t30.m!, \verb!tascar_ir_measure.m!).
-
-A new method of adding reverb is described in \ref{sec:reverbelem}.
 
 \section{Calibration and level metering}\index{calibration}\index{level}
 

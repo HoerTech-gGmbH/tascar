@@ -109,7 +109,7 @@ foaconv_t::foaconv_t(tsccfg::node_t cfg)
 void foaconv_t::configure()
 {
   receivermod_base_t::configure();
-  n_channels = AMB11::idx::channels;
+  n_channels = AMB11ACN::idx::channels;
   for(auto it = conv.begin(); it != conv.end(); ++it)
     delete *it;
   conv.clear();
@@ -139,7 +139,7 @@ void foaconv_t::configure()
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
     char ctmp[32];
-    sprintf(ctmp, ".%d%c", (ch > 0), AMB11::channelorder[ch]);
+    sprintf(ctmp, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
     labels.push_back(ctmp);
   }
 }

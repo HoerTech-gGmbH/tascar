@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <diffuse>
+      <orientation>0 17 0 0</orientation>
+      <plugins>
+        <sndfile name="expected_ir_amb1.wav" levelmode="peak" level="93.979" channelorder="ACN"/>
+      </plugins>
+    </diffuse>
+    <receiver type="amb1h1v" normalization="FuMa"/>
+  </scene>
+</session>

@@ -45,6 +45,7 @@ protected:
   bool mute;
   std::string license;
   std::string attribution;
+  std::string channelorder;
 };
 
 ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -75,6 +76,7 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE_BOOL(triggered,"Play OSC triggered samples, ignore position and loop");
   GET_ATTRIBUTE_BOOL(transport,"Use session time base");
   GET_ATTRIBUTE_BOOL(mute,"Load muted");
+  GET_ATTRIBUTE(channelorder,"","Channel order in case of First Order Ambisonics recordings, ``FuMa'', ``ACN'' or ``none''");
   if( start < 0 )
     throw TASCAR::ErrMsg("file start time must be positive.");
 }
@@ -107,8 +109,30 @@ void ap_sndfile_t::configure()
   if(n_channels < 1)
     throw TASCAR::ErrMsg("At least one channel required.");
   sndf.clear();
-  for(uint32_t ch = 0; ch < n_channels; ++ch) {
-    sndf.push_back(new TASCAR::sndfile_t(name, channel + ch, start, length));
+  if((n_channels == 4) && (channelorder != "none")) {
+    // probably FOA, check for channelorder
+    if(channelorder.empty()) {
+      TASCAR::add_warning(
+          "No channel order is specified, but probably FOA format. Please "
+          "specify ``FuMa'', ``ACN'' or ``none''.",
+          e);
+    }
+    if((channelorder == "FuMa") || channelorder.empty()) {
+      sndf.push_back(new TASCAR::sndfile_t(name, 0, start, length));
+      sndf.push_back(new TASCAR::sndfile_t(name, 2, start, length));
+      sndf.push_back(new TASCAR::sndfile_t(name, 3, start, length));
+      sndf.push_back(new TASCAR::sndfile_t(name, 1, start, length));
+    } else if(channelorder == "ACN") {
+      sndf.push_back(new TASCAR::sndfile_t(name, 0, start, length));
+      sndf.push_back(new TASCAR::sndfile_t(name, 1, start, length));
+      sndf.push_back(new TASCAR::sndfile_t(name, 2, start, length));
+      sndf.push_back(new TASCAR::sndfile_t(name, 3, start, length));
+    } else
+      throw TASCAR::ErrMsg("Invalid channel order: \"" + channelorder + "\"");
+  } else {
+    for(uint32_t ch = 0; ch < n_channels; ++ch) {
+      sndf.push_back(new TASCAR::sndfile_t(name, channel + ch, start, length));
+    }
   }
   if(sndf[0]->get_srate() != f_sample) {
     double origsrate(sndf[0]->get_srate());
@@ -188,8 +212,6 @@ void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::
 {
   if( transport )
     ltp = tp;
-  else
-    ltp.object_time_samples += chunk[0].n;
   if( triggered ){
     if( triggeredloop ){
       for( auto sf=sndf.begin();sf!=sndf.end();++sf){
@@ -203,6 +225,8 @@ void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::
     for( uint32_t ch=0;ch<std::min(sndf.size(),chunk.size());++ch)
       sndf[ch]->add_to_chunk( ltp.object_time_samples, chunk[ch] );
   }
+  if( !transport)
+    ltp.object_time_samples += chunk[0].n;
 }
 
 REGISTER_AUDIOPLUGIN(ap_sndfile_t);

@@ -452,9 +452,9 @@ public:
   public:
     data_t(uint32_t chunksize);
     // ambisonic weights:
-    float _w[AMB11::idx::channels];
-    float w_current[AMB11::idx::channels];
-    float dw[AMB11::idx::channels];
+    float _w[AMB11ACN::idx::channels];
+    float w_current[AMB11ACN::idx::channels];
+    float dw[AMB11ACN::idx::channels];
     double dt;
   };
   simplefdn_t(tsccfg::node_t xmlsrc);
@@ -516,7 +516,7 @@ simplefdn_t::simplefdn_t(tsccfg::node_t cfg)
 void simplefdn_t::configure()
 {
   receivermod_base_t::configure();
-  n_channels = AMB11::idx::channels;
+  n_channels = AMB11ACN::idx::channels;
   if(fdn)
     delete fdn;
   fdn = new fdn_t(fdnorder, f_sample, logdelays, gm);
@@ -527,7 +527,7 @@ void simplefdn_t::configure()
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
     char ctmp[32];
-    sprintf(ctmp, ".%d%c", (ch > 0), AMB11::channelorder[ch]);
+    sprintf(ctmp, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
     labels.push_back(ctmp);
   }
 }
@@ -600,10 +600,10 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
         fdn->inval.y = foa_out->y()[t];
         fdn->inval.z = foa_out->z()[t];
         fdn->process(prefilt);
-        output[AMB11::idx::w][t] += fdn->outval.w;
-        output[AMB11::idx::x][t] += fdn->outval.x;
-        output[AMB11::idx::y][t] += fdn->outval.y;
-        output[AMB11::idx::z][t] += fdn->outval.z;
+        output[AMB11ACN::idx::w][t] += fdn->outval.w;
+        output[AMB11ACN::idx::x][t] += fdn->outval.x;
+        output[AMB11ACN::idx::y][t] += fdn->outval.y;
+        output[AMB11ACN::idx::z][t] += fdn->outval.z;
       }
     }
     foa_out->clear();
@@ -625,20 +625,20 @@ void simplefdn_t::add_pointsource(const TASCAR::pos_t& prel, double width,
   TASCAR::pos_t pnorm(prel.normal());
   data_t* d((data_t*)sd);
   // use ACN everywhere:
-  d->_w[AMB11::idx::w] = wgain;
-  d->_w[AMB11::idx::x] = pnorm.x;
-  d->_w[AMB11::idx::y] = pnorm.y;
-  d->_w[AMB11::idx::z] = pnorm.z;
-  for(unsigned int k = 0; k < AMB11::idx::channels; k++)
+  d->_w[AMB11ACN::idx::w] = wgain;
+  d->_w[AMB11ACN::idx::x] = pnorm.x;
+  d->_w[AMB11ACN::idx::y] = pnorm.y;
+  d->_w[AMB11ACN::idx::z] = pnorm.z;
+  for(unsigned int k = 0; k < AMB11ACN::idx::channels; k++)
     d->dw[k] = (d->_w[k] - d->w_current[k]) * d->dt;
-  for(uint32_t acn = 0; acn < AMB11::idx::channels; ++acn)
+  for(uint32_t acn = 0; acn < AMB11ACN::idx::channels; ++acn)
     for(uint32_t i = 0; i < chunk.size(); i++)
       (*foa_out)[acn][i] += (d->w_current[acn] += d->dw[acn]) * chunk[i];
 }
 
 simplefdn_t::data_t::data_t(uint32_t chunksize)
 {
-  for(uint32_t k = 0; k < AMB11::idx::channels; k++)
+  for(uint32_t k = 0; k < AMB11ACN::idx::channels; k++)
     _w[k] = w_current[k] = dw[k] = 0;
   dt = 1.0 / std::max(1.0, (double)chunksize);
 }

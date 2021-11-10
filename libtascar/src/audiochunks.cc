@@ -220,33 +220,39 @@ float wave_t::maxabsdb() const
 }
 
 amb1wave_t::amb1wave_t(uint32_t chunksize)
-  : wxyz(4,wave_t(chunksize)),
-    w_(chunksize,wxyz[0].d),
-    x_(chunksize,wxyz[1].d),
-    y_(chunksize,wxyz[2].d),
-    z_(chunksize,wxyz[3].d)
+  : wyzx(4,wave_t(chunksize)),
+    w_(chunksize,wyzx[0].d),
+    x_(chunksize,wyzx[3].d),
+    y_(chunksize,wyzx[1].d),
+    z_(chunksize,wyzx[2].d)
 {
+}
+
+void amb1wave_t::copy(const amb1wave_t& src)
+{
+  w_.copy(src.w_);
+  x_.copy(src.x_);
+  y_.copy(src.y_);
+  z_.copy(src.z_);
 }
 
 void amb1wave_t::print_levels()
 {
-  std::cout << this << " wxyz" << 
-    " " << w_.spldb() <<
-    " " << y_.spldb() <<
-    " " << z_.spldb() <<
-    " " << x_.spldb() << std::endl;
+  std::cout << this << " wyzx"
+            << " " << w_.spldb() << " " << y_.spldb() << " " << z_.spldb()
+            << " " << x_.spldb() << std::endl;
 }
 
 wave_t& amb1wave_t::operator[](uint32_t acn)
 {
   switch( acn ){
-  case AMB11::idx::w :
+  case AMB11ACN::idx::w :
     return w_;
-  case AMB11::idx::y :
+  case AMB11ACN::idx::y :
     return y_;
-  case AMB11::idx::z :
+  case AMB11ACN::idx::z :
     return z_;
-  case AMB11::idx::x :
+  case AMB11ACN::idx::x :
     return x_;
   }
   throw TASCAR::ErrMsg( "Invalid acn "+std::to_string(acn)+" for first order ambisonics.");
@@ -393,7 +399,7 @@ void looped_wave_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
 {
   for(uint32_t k=0;k<chunk.n;++k){
     int64_t trel(chunktime+k-iposition_);
-    if( (trel > 0) && (n > 0) ){
+    if( (trel >= 0) && (n > 0) ){
       ldiv_t dv(ldiv(trel,n));
       if( (loop_ == 0) || (dv.quot < (int64_t)loop_) )
         chunk.d[k] += d[dv.rem];
@@ -570,6 +576,86 @@ amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,const zyx_euler_t& o,
     ++p_src_z;
   }
   return *this;
+}
+
+void amb1rotator_t::rotate(const zyx_euler_t& o, bool invert)
+{
+  float dxx;
+  float dxy;
+  float dxz;
+  float dyx;
+  float dyy;
+  float dyz;
+  float dzx;
+  float dzy;
+  float dzz;
+  if(invert) {
+    double cosy(cos(o.y));
+    double siny(sin(-o.y));
+    double cosz(cos(o.z));
+    double sinz(sin(-o.z));
+    double sinx(sin(-o.x));
+    double cosx(cos(o.x));
+    double sinxsiny(sinx * siny);
+    double cosxsiny(cosx * siny);
+    dxx = (cosz * cosy - wxx) * dt;
+    dxy = (sinz * cosy - wxy) * dt;
+    dxz = (siny - wxz) * dt;
+    dyx = (-cosz * sinxsiny - sinz * cosx - wyx) * dt;
+    dyy = (cosz * cosx - sinz * sinxsiny - wyy) * dt;
+    dyz = (cosy * sinx - wyz) * dt;
+    dzx = (-cosz * cosxsiny + sinz * sinx - wzx) * dt;
+    dzy = (-cosz * sinx - sinz * cosxsiny - wzy) * dt;
+    dzz = (cosy * cosx - wzz) * dt;
+  } else {
+    // 1, 0, 0
+    // rot_z: cosz, sinz, 0
+    // rot_y: cosy*cosz, sinz, siny*cosz
+    // rot_x: cosy*cosz, cosx*sinz-sinx*siny*cosz, cosx*siny*cosz+sinx*sinz
+
+    // 0, 1, 0
+    // rot_z: -sinz, cosz, 0
+    // rot_y: -cosy*sinz, cosz, -siny*sinz
+    // rot_x: -cosy*sinz, cosx*cosz+sinx*siny*sinz, -cosx*siny*sinz + sinx*cosz
+
+    // 0, 0, 1
+    // rot_z: 0, 0, 1
+    // rot_y: -siny, 0, cosy
+    // rot_x: -siny, -sinx*cosy, cosx*cosy
+    double cosy(cos(o.y));
+    double cosz(cos(o.z));
+    double cosx(cos(o.x));
+    double sinz(sin(o.z));
+    double siny(sin(o.y));
+    double sinx(sin(o.x));
+    double sinxsiny(sinx * siny);
+    dxx = (cosy * cosz - wxx) * dt;
+    dxy = (cosx * sinz - sinxsiny * cosz - wxy) * dt;
+    dxz = (cosx * siny * cosz + sinx * sinz - wxz) * dt;
+    dyx = (-cosy * sinz - wyx) * dt;
+    dyy = (cosx * cosz + sinxsiny * sinz - wyy) * dt;
+    dyz = (-cosx * siny * sinz + sinx * cosz - wyz) * dt;
+    dzx = (-siny - wzx) * dt;
+    dzy = (-sinx * cosy - wzy) * dt;
+    dzz = (cosx * cosy - wzz) * dt;
+  }
+  float* p_x(x_.d);
+  float* p_y(y_.d);
+  float* p_z(z_.d);
+  for(uint32_t k = 0; k < w_.n; ++k) {
+    float tmp_x =
+        *p_x * (wxx += dxx) + *p_y * (wxy += dxy) + *p_z * (wxz += dxz);
+    float tmp_y =
+        *p_x * (wyx += dyx) + *p_y * (wyy += dyy) + *p_z * (wyz += dyz);
+    float tmp_z =
+        *p_x * (wzx += dzx) + *p_y * (wzy += dzy) + *p_z * (wzz += dzz);
+    *p_x = tmp_x;
+    *p_y = tmp_y;
+    *p_z = tmp_z;
+    ++p_x;
+    ++p_y;
+    ++p_z;
+  }
 }
 
 void sndfile_t::resample(double ratio)

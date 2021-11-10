@@ -22,8 +22,8 @@
       -1 3 -1 -1 3 1 -1 3.5 1 -1 3.5 -1</faces>
     </obstacle>
   </scene>
-  <connect src="render.example:out" dest="system:playback_1"/>
-  <connect src="render.example:out" dest="system:playback_2"/>
+  <connect src="render.example:out.0" dest="system:playback_1"/>
+  <connect src="render.example:out.0" dest="system:playback_2"/>
   <modules>
     <!--<simplecontroller actor="/*/out" maxnorm="0"/>-->
   </modules>

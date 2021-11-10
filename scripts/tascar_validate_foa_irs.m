@@ -23,7 +23,7 @@ function [d,az,el,ratio] = tascar_validate_foa_irs( ir, fs )
     error(['The standard deviation of first peak (',num2str(c*std(idx)/fs),'m) is larger than a typical microphone diameter']);
   end
   idx = round(median(idx));
-  d = c*idx/fs;
+  d = c*(idx-1)/fs;
   %% window position for estimation of direct sound direction:
   widx = unique(max(1,[-round(l*fs):round(l*fs)]+idx));
   %% select direct path, with von-Hann window:
@@ -41,17 +41,23 @@ function [d,az,el,ratio] = tascar_validate_foa_irs( ir, fs )
   %% estimate element-wise direction of arrival:
   doa = ir(:,2:4) ./ repmat(ir(:,1),[1,3]);
   %% calculate weighted average:
-  doa_mean = sum(repmat(w,[1,3]).*doa)./sum(w);
+  doa_mean = wxyzrat_mean*sum(repmat(w,[1,3]).*doa)./sum(w);
   [th,phi,r] = cart2sph(doa_mean(1),doa_mean(2),doa_mean(3));
   az = 180/pi*th;
   el = 180/pi*phi;
+  [th,phi,r] = cart2sph(doa_mean(3),doa_mean(1),doa_mean(2));
+  az_acn = 180/pi*th;
+  el_acn = 180/pi*phi;
   ratio = wxyzrat_mean;
   if nargout == 0
-    disp('Estimated parameters:');
+    disp('Estimated parameters (assuming B-format):');
     disp(sprintf('  distance = %1.2f m',d));
-    disp(sprintf('  azimuth = %1.1f deg',az));
-    disp(sprintf('  elevation = %1.1f deg',el ));
     disp(sprintf('  w/xyz = %1.3f', ratio));
+    disp(sprintf('  channels 2,3,4 = %1.3f %1.3f %1.3f', doa_mean(1),doa_mean(2),doa_mean(3)));
+    disp(sprintf('  azimuth = %1.1f deg (FuMa channel order wxyz)',az));
+    disp(sprintf('  elevation = %1.1f deg (FuMa channel order wxyz)',el ));
+    disp(sprintf('  azimuth = %1.1f deg (ACN channel order wyzx)',az_acn));
+    disp(sprintf('  elevation = %1.1f deg (ACN channel order wyzx)',el_acn ));
     clear d;
   end
 end

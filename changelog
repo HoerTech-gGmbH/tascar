@@ -1,3 +1,4 @@
+0.221: Fix orientation and channel order of diffuse sound fields, minor bugfixes and documentation.
 0.220: Fix dependency problem with LSL, minor improvements of various plugins, documentation and scripts.
 0.219: Add watchdog functionality to glabsensor jackstatus.
 0.218: Bugfix of severe calibration bug in tascar_spkcalib.

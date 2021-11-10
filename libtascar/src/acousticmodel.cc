@@ -55,7 +55,7 @@ diffuse_t::diffuse_t( tsccfg::node_t cfg, uint32_t chunksize,TASCAR::levelmeter_
 
 void diffuse_t::preprocess(const TASCAR::transport_t& tp)
 {
-  plugins.process_plugins( audio.wxyz, center, orientation, tp );
+  plugins.process_plugins( audio.wyzx, center, orientation, tp );
   rmslevel.update(audio.w());
 }
 

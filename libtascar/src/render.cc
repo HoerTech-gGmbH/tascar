@@ -311,8 +311,9 @@ void TASCAR::render_core_t::process(uint32_t nframes,
           TASCAR::wave_t(nframes, inBuffer[(*it)->get_port_index() + 2]));
       ambbuf->z().copy(
           TASCAR::wave_t(nframes, inBuffer[(*it)->get_port_index() + 3]));
-      psrc->audio.rotate(*ambbuf, psrc->orientation, true);
+      psrc->audio.copy(*ambbuf);
       psrc->preprocess(tp);
+      psrc->audio.rotate(psrc->orientation, true);
       psrc->audio *= gain;
     }
     for(auto& preverb : diffuse_reverbs) {

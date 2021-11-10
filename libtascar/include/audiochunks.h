@@ -104,9 +104,10 @@ namespace TASCAR {
     void operator*=(double v);
     void operator+=(const amb1wave_t& v);
     void add_panned( pos_t p, const wave_t& v, float g=1.0f);
-    std::vector<wave_t> wxyz;
+    std::vector<wave_t> wyzx;
     void print_levels();
     wave_t& operator[](uint32_t acn);
+    void copy(const amb1wave_t&);
   protected:
     wave_t w_;
     wave_t x_;
@@ -118,6 +119,7 @@ namespace TASCAR {
   public:
     amb1rotator_t(uint32_t chunksize);
     amb1rotator_t& rotate(const amb1wave_t& src,const TASCAR::zyx_euler_t& o,bool invert=false);
+    void rotate(const TASCAR::zyx_euler_t& o,bool invert=false);
   private:
     double wxx, wxy, wxz, wyx, wyy, wyz, wzx, wzy, wzz, dt;
   };

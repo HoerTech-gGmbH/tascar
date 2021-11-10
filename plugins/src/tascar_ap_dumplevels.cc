@@ -37,7 +37,7 @@ void dump_levels_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR:
 {
   std::cout << this;
   for( auto it=chunk.begin(); it!=chunk.end(); ++it )
-    std::cout << " " << it->spldb();
+    std::cout << " " << it->spldb() << " (" << it->maxabs() << ")";
   std::cout << std::endl;
 }
 

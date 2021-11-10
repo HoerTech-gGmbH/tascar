@@ -29,18 +29,27 @@
 
 #define MIN3DB  0.707107f
 
-namespace AMB11 {
+namespace AMB11ACN {
 
   const char channelorder[] = "wyzx";
 
   class idx {
   public:
-    enum {
-      w, y, z, x, channels
-    };
+    enum { w, y, z, x, channels };
   };
 
-};
+}; // namespace AMB11ACN
+
+namespace AMB11FuMa {
+
+  const char channelorder[] = "wxyz";
+
+  class idx {
+  public:
+    enum { w, x, y, z, channels };
+  };
+
+}; // namespace AMB11FuMa
 
 namespace AMB10 {
 
@@ -48,12 +57,10 @@ namespace AMB10 {
 
   class idx {
   public:
-    enum {
-      w, y, x, channels
-    };
+    enum { w, y, x, channels };
   };
 
-};
+}; // namespace AMB10
 
 namespace AMB33 {
 
@@ -61,12 +68,10 @@ namespace AMB33 {
 
   class idx {
   public:
-    enum {
-      w, y, z, x, v, t, r, s, u, q, o, m, k, l, n, p, channels
-    };
+    enum { w, y, z, x, v, t, r, s, u, q, o, m, k, l, n, p, channels };
   };
 
-};
+}; // namespace AMB33
 
 namespace AMB30 {
 
@@ -74,12 +79,10 @@ namespace AMB30 {
 
   class idx {
   public:
-    enum {
-      w, y, x, v, u, q, p, channels
-    };
+    enum { w, y, x, v, u, q, p, channels };
   };
 
-};
+}; // namespace AMB30
 
 #endif
 

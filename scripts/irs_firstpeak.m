@@ -16,7 +16,15 @@ function idx = irs_firstpeak( irs, threshold )
     threshold = 0.1;
   end
   for k=1:size(irs,2)
-    tburst = cumsum(irs(end:-1:1,k).^2);
-    tburst = 10*log10(tburst(end:-1:1) ./ max(tburst));
-    idx(k) = find(tburst<-threshold,1);
+    if any(irs(:,k)~=0)
+      tburst = cumsum(irs(end:-1:1,k).^2);
+      tburst = 10*log10(tburst(end:-1:1) ./ max(tburst));
+      idx(k) = find(tburst<-threshold,1)-1;
+    else
+      if( k > 1 )
+        idx(k) = idx(k-1);
+      else
+        idx(k) = 1;
+      end
+    end
   end

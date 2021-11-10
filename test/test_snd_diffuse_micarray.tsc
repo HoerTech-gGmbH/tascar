@@ -13,7 +13,7 @@
     </receiver>
     <diffuse>
       <plugins>
-	<const a="0 1 0 0"/>
+	<const a="0 0 0 1"/>
       </plugins>
     </diffuse>
   </scene>

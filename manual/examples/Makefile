@@ -14,10 +14,12 @@ all: $(EXAMPLES:.tsc=.validated)
 	@LD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) $(BINPATH)tascar_cli -v $<  || (echo "$(<):1:";false)
 	echo ok > $@
 
+JVALIDTARG = $(filter-out ./example_glabsensor_midicc.jvalid ./example_geopresets.jvalid ./example_qualisys.jvalid,$(EXAMPLES:.tsc=.jvalid))
+
 jackvalid:
 	jackd -d dummy -r 44100 -p 1024 &
 	sleep 1
-	$(MAKE) $(EXAMPLES:.tsc=.jvalid) || (killall jackd;false)
+	$(MAKE) $(JVALIDTARG) || (killall jackd;false)
 	killall jackd
 
 format: $(EXAMPLES:.tsc=.format)

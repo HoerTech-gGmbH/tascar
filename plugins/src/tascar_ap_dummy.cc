@@ -81,6 +81,7 @@ void dummy_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t
 {
   DEBUG(chunk.size());
   DEBUG(chunk[0].n);
+  DEBUG(tp.object_time_samples);
 }
 
 REGISTER_AUDIOPLUGIN(dummy_t);

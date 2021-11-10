@@ -4,7 +4,7 @@
     <receiver name="out" type="ortf" globalmask="true"/>
     <diffuse name="birds" size="1000 1000 1000">
       <plugins>
-        <sndfile name="sounds/birds.wav" loop="0" level="70"/>
+        <sndfile name="sounds/birds.wav" loop="0" level="70" channelorder="FuMa"/>
       </plugins>
     </diffuse>
   </scene>

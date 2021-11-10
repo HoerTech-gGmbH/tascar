@@ -12,9 +12,5 @@
       </creator>
       <sound/>
     </source>
-    <diffuse name="cashdesk_noise" connect="@.0" size="4 4 4" falloff="4">
-      <position>0 0 0 0</position>
-      <sndfile name="sounds/kasse1.amb" channels="4" loop="0" gain="-22"/>
-    </diffuse>
   </scene>
 </session>

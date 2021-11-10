@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <source><sound z="1" airabsorption="false" delayline="false"/></source>
+    <receiver type="amb1h1v" normalization="FuMa"/>
+  </scene>
+</session>

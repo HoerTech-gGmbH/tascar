@@ -1272,7 +1272,7 @@ void diffuse_reverb_t::configure()
   source->size = volumetric;
   source->falloff = 1.0 / std::max(falloff, 1.0e-10);
   source->prepare(cfg());
-  for(uint32_t acn = 0; acn < AMB11::idx::channels; ++acn)
+  for(uint32_t acn = 0; acn < AMB11ACN::idx::channels; ++acn)
     source->audio[acn].use_external_buffer(outchannels[acn].n,
                                            outchannels[acn].d);
 }
