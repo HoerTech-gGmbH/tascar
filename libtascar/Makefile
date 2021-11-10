@@ -59,13 +59,6 @@ endif
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF) $(TSCCXXFLAGS)
 
-INSTBIN = $(patsubst %,$(PREFIX)/bin/%,$(BINFILES)) \
-	$(patsubst %,$(PREFIX)/lib/%,$(RECEIVERMODS)) \
-	$(patsubst %,$(PREFIX)/lib/%,$(SOURCEMODS)) \
-	$(patsubst %,$(PREFIX)/lib/%,$(TASCARMODDLLS)) \
-	$(patsubst %,$(PREFIX)/lib/%,$(AUDIOPLUGINDLLS))
-
-
 CXXFLAGS += -fpic -I./build -I./include
 CPPFLAGS += -I./build -I./include
 #-L./ 
@@ -90,22 +83,22 @@ LDFLAGS += -L./
 ver:
 	echo '#define TASCARVER "'$(FULLVERSION)'"' > build/tascarver.h
 
-lib:  $(BUILD_OBJECTS) build/libtascar.so.$(LIBVERSION) build/libtascargui.so.$(LIBVERSION) build/libtascardmx.so.$(LIBVERSION)
+lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
 	ldconfig -n build
 
-symlink: build/libtascar.so build/libtascargui.so build/libtascardmx.so
+symlink: build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
 
-build/libtascar.so.%: $(BUILD_OBJECTS)
-	$(CXX) -shared -Wl,-soname,libtascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
-	rm -f build/libtascar.so
+build/lib$(PLUGINPREFIX)tascar.so.%: $(BUILD_OBJECTS)
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	rm -f build/lib$(PLUGINPREFIX)tascar.so
 
-build/libtascargui.so.%: $(BUILD_GUIOBJECTS)
-	$(CXX) -shared -Wl,-soname,libtascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
-	rm -f build/libtascargui.so
+build/lib$(PLUGINPREFIX)tascargui.so.%: $(BUILD_GUIOBJECTS)
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	rm -f build/lib$(PLUGINPREFIX)tascargui.so
 
-build/libtascardmx.so.%: $(BUILD_DMXOBJECTS)
-	$(CXX) -shared -Wl,-soname,libtascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
-	rm -f build/libtascardmx.so
+build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS)
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	rm -f build/lib$(PLUGINPREFIX)tascardmx.so
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
