@@ -116,6 +116,15 @@ namespace TASCAR {
     double mean_rotation;
   };
 
+  /**
+   * @brief Loudspeaker array with diffuse renderer
+   *
+   * If for each speaker an impulse response file for convolution
+   * (attribute "conv") is specified, then the speaker output is
+   * convolved with the impulse response, and that convolution output
+   * is returned instead. All impulse responses need to have the same
+   * number of channels.
+   */
   class spk_array_diff_render_t : public spk_array_t {
   public:
     spk_array_diff_render_t(tsccfg::node_t, bool use_parent_xml,
@@ -156,6 +165,9 @@ namespace TASCAR {
     // lowpass filters for subwoofer:
     std::vector<TASCAR::biquad_t> flt_lowp;
     std::vector<std::vector<float>> subweight;
+    std::vector<std::string> convolution_ir; //< file name of impulse response for convolution
+    bool use_conv = false;
+    std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
   };
 } // namespace TASCAR
 
