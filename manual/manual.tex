@@ -1261,6 +1261,25 @@ Attributes common to all loudspeaker-based layouts are:
 
 \input{tabspeakerbased.tex}
 
+With all speaker-based receiver types it is possible to specify an
+impulse response for convolution for each loudspeaker channel
+(attribute \attr{conv} of element \elem{speaker} in the layout
+definition).
+%
+If an impulse response is provided for one channel, an impulse
+response with the same number of channels need to be provided for all
+other channels as well.
+%
+The output of the convolution will be provided in additional output
+channels; use the attribute \attr{convlabels} to set the names of
+those channels.
+%
+The convolution can be applied before or after speaker gain and delay
+compensation.
+%
+Currently, this method will not work in layouts with subwoofer
+definitions.
+
 \input{secrecspeaker.tex}
 
 \subsection{Adding diffuse reverberation: {\tt <reverb .../>}}\label{sec:reverbelem}

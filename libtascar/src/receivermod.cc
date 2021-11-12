@@ -212,13 +212,14 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
 {
   // update diffuse signals:
   spkpos.render_diffuse(output);
+  if(output.size() != spkpos.subs.size() + spkpos.size() + spkpos.conv_channels)
+    throw TASCAR::ErrMsg(
+        "Programming error: output.size()==" + std::to_string(output.size()) +
+        ", spkpos.size()==" + std::to_string(spkpos.size()) +
+        ", subs.size()==" + std::to_string(spkpos.subs.size()) +
+        ", conv_channels==" + std::to_string(spkpos.conv_channels));
   // subwoofer post processing:
   if(spkpos.use_subs) {
-    if(output.size() != spkpos.subs.size() + spkpos.size())
-      throw TASCAR::ErrMsg(
-          "Programming error: output.size()==" + std::to_string(output.size()) +
-          ", spkpos.size()==" + std::to_string(spkpos.size()) +
-          ", subs.size()==" + std::to_string(spkpos.subs.size()));
     // first create raw subwoofer signals:
     for(size_t ksub = 0; ksub < spkpos.subs.size(); ++ksub) {
       // clear sub signals:
@@ -236,6 +237,20 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
       spkpos.flt_hp[k].filter(output[k]);
       spkpos.flt_allp[k].filter(output[k]);
     }
+  }
+  // convolution
+  if(spkpos.use_conv && spkpos.convprecalib) {
+    size_t choffset(spkpos.size() + spkpos.subs.size());
+    // clear outputs:
+    for(size_t ch = 0; ch < spkpos.conv_channels; ++ch)
+      output[choffset + ch].clear();
+    for(size_t inchannel = 0; inchannel < spkpos.vvp_convolver.size();
+        ++inchannel)
+      for(size_t outchannel = 0; outchannel < spkpos.conv_channels;
+          ++outchannel) {
+        spkpos.vvp_convolver[inchannel][outchannel]->process(
+            output[inchannel], output[choffset + outchannel], true);
+      }
   }
   // apply calibration:
   if(spkpos.delaycomp.size() != spkpos.size())
@@ -256,6 +271,20 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
       spkpos.subs[k].comp->process(output[k + spkpos.size()],
                                    output[k + spkpos.size()], false);
   }
+  // convolution
+  if(spkpos.use_conv && (!spkpos.convprecalib)) {
+    size_t choffset(spkpos.size() + spkpos.subs.size());
+    // clear outputs:
+    for(size_t ch = 0; ch < spkpos.conv_channels; ++ch)
+      output[choffset + ch].clear();
+    for(size_t inchannel = 0; inchannel < spkpos.vvp_convolver.size();
+        ++inchannel)
+      for(size_t outchannel = 0; outchannel < spkpos.conv_channels;
+          ++outchannel) {
+        spkpos.vvp_convolver[inchannel][outchannel]->process(
+            output[inchannel], output[choffset + outchannel], true);
+      }
+  }
 }
 
 void TASCAR::receivermod_base_speaker_t::configure()
@@ -267,9 +296,15 @@ void TASCAR::receivermod_base_speaker_t::configure()
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
     if(ch < spkpos.size())
       labels.push_back("." + TASCAR::to_string(ch) + spkpos[ch].label);
-    else
+    else if(ch < spkpos.size() + spkpos.subs.size())
       labels.push_back(".S" + std::to_string(ch - spkpos.size()) +
                        spkpos.subs[ch - spkpos.size()].label);
+    else if(ch < spkpos.size() + spkpos.subs.size() + spkpos.convlabels.size())
+      labels.push_back(
+          spkpos.convlabels[ch - (spkpos.size() + spkpos.subs.size())]);
+    else
+      labels.push_back(
+          ".conv." + std::to_string(ch - (spkpos.size() + spkpos.subs.size())));
   }
 }
 

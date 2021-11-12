@@ -165,9 +165,13 @@ namespace TASCAR {
     // lowpass filters for subwoofer:
     std::vector<TASCAR::biquad_t> flt_lowp;
     std::vector<std::vector<float>> subweight;
-    std::vector<std::string> convolution_ir; //< file name of impulse response for convolution
+    std::vector<std::string>
+        convolution_ir; //< file name of impulse response for convolution
     bool use_conv = false;
-    std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
+    size_t conv_channels = 0;
+    bool convprecalib = true;
+    std::vector<std::vector<TASCAR::partitioned_conv_t*>> vvp_convolver;
+    std::vector<std::string> convlabels;
   };
 } // namespace TASCAR
 
