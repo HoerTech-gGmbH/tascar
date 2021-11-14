@@ -24,7 +24,9 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
 #include <sys/wait.h>
+#endif
 #include <thread>
 #include <unistd.h>
 #include <signal.h>
@@ -172,7 +174,9 @@ void system_t::trigger()
 
 pid_t system2(const char* command)
 {
-  pid_t pid = fork();
+  pid_t pid = -1;
+#ifndef _WIN32 // Windows has no fork.
+  pid = fork();
   if(pid < 0) {
     return pid;
   } else if(pid == 0) {
@@ -183,6 +187,7 @@ pid_t system2(const char* command)
     execl("/bin/sh", "sh", "-c", command, NULL);
     _exit(1);
   }
+#endif
   return pid;
 }
 
@@ -256,8 +261,10 @@ system_t::~system_t()
 {
   run_service = false;
   srv.join();
-  if(pid != 0)
+#ifndef _WIN32 // As Windows does not fork, there is no need to kill.
+  if(pid > 0)
     killpg(pid, SIGTERM);
+#endif
   if(h_pipe)
     fclose(h_pipe);
   for(std::vector<at_cmd_t*>::iterator it = atcmds.begin(); it != atcmds.end();
