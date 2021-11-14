@@ -18,8 +18,9 @@ else
 CXXFLAGS += -Wall -O3 -L./
 endif
 
-EXTERNALS = alsa jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0 libcurl xerces-c
+EXTERNALS = jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm-3.0 xerces-c
 
+ifneq ($(OS),Windows_NT) # There is no Gtk Webkit for Windows
 HAS_WEBKIT40 = $(shell pkg-config webkit2gtk-4.0 && echo "yes"||echo "no")
 ifeq "$(HAS_WEBKIT40)" "yes"
 EXTERNALS += webkit2gtk-4.0
@@ -27,6 +28,7 @@ CXXFLAGS += -DWEBKIT2GTK40=1
 else
 EXTERNALS += webkit2gtk-3.0
 CXXFLAGS += -DWEBKIT2GTK30=1
+endif
 endif
 
 LDLIBS += -ltascar -ltascargui -ldl -lfftw3f
@@ -62,7 +64,7 @@ build/%: build/%.o
 build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-build/%_glade.h: src/%.glade
+build/%_glade.h: src/%.glade build/.directory
 	cat $< | sed -e 's/tascarversion/$(TASCARVERSION)/g' -e '/name="authors"/ r ../contributors' -e 's/>usr/>\/usr/1'> $*_glade
 	echo "#include <string>" > $@
 	xxd -i $*_glade >> $@
@@ -74,6 +76,8 @@ build/tascar: build/tascar_glade.h
 build/tascar_spkcalib: build/spkcalib_glade.h
 
 build/tascar_mainwindow.o: src/tascar_xy.xpm src/tascar_xz.xpm src/tascar_yz.xpm src/tascar_xyz.xpm src/tascar_mainwindow.h
+
+build/tascar build/tascar_mainwindow.o: EXTERNALS += libcurl
 
 #build/tascar_%.xpm:
 #	convert -font Helvetica -size 24x24 -gravity center label:$* -transparent white $@

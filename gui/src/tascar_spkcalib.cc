@@ -406,7 +406,7 @@ void calibsession_t::saveas(const std::string& fname)
   char ctmp[1024];
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
-  std::strftime(ctmp, 1023, "%Y-%m-%d %T", std::localtime(&t));
+  std::strftime(ctmp, 1023, "%Y-%m-%d %H:%M:%S", std::localtime(&t));
   doc.root.set_attribute("calibdate", ctmp);
   doc.root.set_attribute("calibfor", calibfor);
   doc.save(fname);
@@ -791,7 +791,7 @@ void spkcalib_t::manage_act_grp_save()
     if(session->modified())
       smodified = " (modified)";
     set_title(std::string("TASCAR speaker calibration [") +
-              std::string(basename(session->name().c_str())) +
+              Glib::filename_display_basename(session->name()) +
               std::string("]") + smodified);
   } else
     set_title("TASCAR speaker calibration");
