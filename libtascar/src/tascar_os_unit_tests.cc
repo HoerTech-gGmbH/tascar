@@ -71,6 +71,67 @@ TEST(tascar_os, dynamic_lib_extension)
 #endif
 }
 
+TEST(tascar_os, fnmatch)
+{
+  // trivial single-asterisk pattern matches simple names in both modes
+  EXPECT_EQ(0, TASCAR::fnmatch("*", "name", 0));
+  EXPECT_EQ(0, TASCAR::fnmatch("*", "name", true));
+
+  // trivial single-asterisk pattern matches paths only in one mode
+  EXPECT_EQ(0, TASCAR::fnmatch("*", "/name", 0));
+  EXPECT_NE(0, TASCAR::fnmatch("*", "/name", true));
+
+  // typical usage has a single asterisk as one dir component
+  EXPECT_EQ(0, TASCAR::fnmatch("/*/receiver", "/scene/receiver", 0));
+  EXPECT_NE(0, TASCAR::fnmatch("/*/receiver", "/scene/sender", 0));
+  EXPECT_EQ(0, TASCAR::fnmatch("/*/receiver", "/scene/receiver", true));
+  EXPECT_NE(0, TASCAR::fnmatch("/*/receiver", "/scene/sender", true));
+
+  // matching (or not) forward slashes with asterisk in non-trivial pattern
+  EXPECT_EQ(0, TASCAR::fnmatch("*/receiver", "/scene/receiver", 0));
+  EXPECT_NE(0, TASCAR::fnmatch("*/receiver", "/scene/receiver", true));
+
+  // Test cases inspired by use cases in other TASCAR tests
+  EXPECT_EQ(0, TASCAR::fnmatch("", "", true));
+  EXPECT_EQ(0, TASCAR::fnmatch("", "", 0));
+  EXPECT_NE(0, TASCAR::fnmatch("", "out", true));
+  EXPECT_NE(0, TASCAR::fnmatch("", "out", 0));
+  EXPECT_NE(0, TASCAR::fnmatch("", "1", true));
+  EXPECT_NE(0, TASCAR::fnmatch("", "1", 0));
+  EXPECT_EQ(0, TASCAR::fnmatch("out", "out", true));
+  EXPECT_EQ(0, TASCAR::fnmatch("out", "out", 0));
+  EXPECT_NE(0, TASCAR::fnmatch("out", "wall", true));
+  EXPECT_NE(0, TASCAR::fnmatch("out", "wall", 0));
+}
+
+#include <limits.h>
+
+TEST(tascar_os, realpath)
+{
+  char buf[PATH_MAX * 2];
+
+  // realpath should be able to resolve "."
+  EXPECT_EQ(buf, TASCAR::realpath(".", buf));
+
+  // and should resolve it to the current working directory.
+  char cwd[PATH_MAX * 2];
+  auto no_ignored_return_value_warning = getcwd(cwd, PATH_MAX * 2);
+  cwd[PATH_MAX * 2 - 1] = 0;
+  EXPECT_STREQ(cwd, buf);
+  (void)no_ignored_return_value_warning;
+
+#ifdef _WIN32
+  // On Windows, the realpath will either start with two backslashes,
+  // or with driveletter-colon-backslash
+  EXPECT_TRUE(
+      (buf[0] == '\\' && buf[1] == '\\') ||
+      (buf[0] >= 'A' && buf[0] <= 'Z' && buf[1] == ':' && buf[2] == '\\'));
+#else
+  // On Unix, the realpath will start with a slash
+  EXPECT_EQ('/', buf[0]);
+#endif
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

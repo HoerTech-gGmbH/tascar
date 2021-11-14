@@ -24,7 +24,6 @@
 #include "tascar_os.h"
 #include <chrono>
 #include <dlfcn.h>
-#include <fnmatch.h>
 #include <libgen.h>
 #include <limits.h>
 #include <locale.h>
@@ -350,6 +349,9 @@ TASCAR::session_core_t::session_core_t(const std::string& filename_or_data,
 void TASCAR::session_core_t::start_initcmd()
 {
   if(!initcmd.empty()) {
+#ifdef _WIN32
+    add_warning("Not executing initcmd on Windows: " + initcmd);
+#else
     char ctmp[1024];
     memset(ctmp, 0, sizeof(ctmp));
     snprintf(ctmp, sizeof(ctmp), "sh -c \"%s >/dev/null & echo \\$!;\"",
@@ -364,6 +366,7 @@ void TASCAR::session_core_t::start_initcmd()
                   << initcmd << "\")." << std::endl;
       }
     }
+#endif
     if(initcmdsleep > 0)
       std::this_thread::sleep_for(
           std::chrono::milliseconds((int)(1000.0 * initcmdsleep)));
@@ -372,10 +375,12 @@ void TASCAR::session_core_t::start_initcmd()
 
 TASCAR::session_core_t::~session_core_t()
 {
+#ifndef _WIN32
   if(pid_initcmd != 0)
     kill(pid_initcmd, SIGTERM);
   if(h_pipe_initcmd)
     fclose(h_pipe_initcmd);
+#endif
 }
 
 void assert_jackpar(const std::string& what, double expected, double found,
@@ -829,7 +834,7 @@ TASCAR::session_t::find_objects(const std::string& pattern)
     for(std::vector<TASCAR::Scene::object_t*>::iterator it = objs.begin();
         it != objs.end(); ++it) {
       std::string name(base + (*it)->get_name());
-      if(fnmatch(pattern.c_str(), name.c_str(), FNM_PATHNAME) == 0)
+      if(TASCAR::fnmatch(pattern.c_str(), name.c_str(), true) == 0)
         retv.push_back(TASCAR::named_object_t(*it, name));
     }
   }
@@ -882,8 +887,8 @@ TASCAR::session_t::find_audio_ports(const std::vector<std::string>& pattern)
     for(auto p_ap = all_ports.begin(); p_ap != all_ports.end(); ++p_ap) {
       // check if name is matching:
       std::string name((*p_ap)->get_ctlname());
-      if((fnmatch(i_pattern->c_str(), name.c_str(), FNM_PATHNAME) == 0) ||
-         (*i_pattern == "*"))
+      if((TASCAR::fnmatch(i_pattern->c_str(), name.c_str(), true) == 0)
+         || (*i_pattern == "*"))
         retv.push_back(*p_ap);
     }
   }

@@ -22,6 +22,7 @@
 
 #include "session_reader.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,22 +89,22 @@ TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
     : xml_doc_t(filename_or_data, t),
       licensed_component_t(typeid(*this).name()),
-      //      file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from
-      //      string)"))
       file_name("")
 {
   if(t == LOAD_FILE)
     file_name = filename_or_data;
   else
     file_name = "(loaded from string)";
-  // file_name(((t == LOAD_FILE) ? filename_or_data : "(loaded from string)"))
   // avoid problems with number format in xml file:
   setlocale(LC_ALL, "C");
   if(path.size()) {
     char c_fname[path.size() + 1];
     char c_respath[PATH_MAX];
     memcpy(c_fname, path.c_str(), path.size() + 1);
-    session_path = realpath(dirname(c_fname), c_respath);
+    session_path = TASCAR::realpath(dirname(c_fname), c_respath);
+    // Change current working directory of the complete process to the
+    // directory containing the main configuration file in order to
+    // resolve any relative paths present in the configuration.
     if(chdir(session_path.c_str()) != 0)
       add_warning("Unable to change directory.");
   } else {

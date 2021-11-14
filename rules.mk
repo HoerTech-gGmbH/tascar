@@ -24,6 +24,12 @@ $(BUILD_DIR)/unit-test-runner: CXXFLAGS += -I../libtascar/src -I../libtascar/bui
 $(BUILD_DIR)/unit-test-runner: CPPFLAGS += -I../libtascar/src -I../libtascar/build
 $(BUILD_DIR)/unit-test-runner: LDFLAGS += -L../libtascar/build 
 
+ifeq ($(OS),Windows_NT)
+  LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dll
+else
+  LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.so
+endif
+
 $(BUILD_DIR)/unit-test-runner: $(BUILD_DIR)/.directory $(unit_tests_test_files) $(patsubst %_unit_tests.cpp, %.cpp , $(unit_tests_test_files))
-	if test -n "$(unit_tests_test_files)"; then $(CXX) $(CXXFLAGS) --coverage -o $@ $(wordlist 2, $(words $^), $^) $(LDFLAGS) ../libtascar/$(BUILD_DIR)/libtascar.so $(LDLIBS) -lgmock_main -lpthread; fi
+	if test -n "$(unit_tests_test_files)"; then $(CXX) $(CXXFLAGS) --coverage -o $@ $(wordlist 2, $(words $^), $^) $(LDFLAGS) $(LIBTASCARDLL) $(LDLIBS) -lgmock_main -lpthread; fi
 

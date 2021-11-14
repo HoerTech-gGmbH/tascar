@@ -20,6 +20,7 @@
 
 #include "jackiowav.h"
 #include "session.h"
+#include "tascar_os.h"
 #include <mutex>
 
 #ifdef _WIN32
@@ -27,7 +28,6 @@
 #include <windows.h>
 #else
 #include <dirent.h>
-#include <fnmatch.h>
 #endif
 
 #define OSC_VOID(x)                                                            \
@@ -322,7 +322,7 @@ std::vector<std::string> jackrec_t::scan_dir()
   n = scandir(dir.c_str(), &namelist, NULL, alphasort);
   if(n >= 0) {
     for(int k = 0; k < n; k++) {
-      if(fnmatch(pattern.c_str(), namelist[k]->d_name, 0) == 0)
+      if(TASCAR::fnmatch(pattern.c_str(), namelist[k]->d_name, false) == 0)
         res.push_back(namelist[k]->d_name);
       free(namelist[k]);
     }

@@ -21,8 +21,12 @@
 #define SAMPLER_H
 
 #include "audiochunks.h"
-#include "jackclient.h"
+// In order to compile on Windows, the order of the following two
+// includes must not be changed (include winsock2.h before windows.h):
+// clang-format off
 #include "osc_helper.h"
+#include "jackclient.h"
+// clang-format on
 
 namespace TASCAR {
 

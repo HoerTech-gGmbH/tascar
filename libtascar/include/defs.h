@@ -21,6 +21,7 @@
 #define DEFS_H
 
 #include <iostream>
+#include <limits>
 
 #ifdef HAS_APPLE_UNIFIED_LOG_
 #include <os/log.h>

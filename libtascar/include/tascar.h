@@ -28,8 +28,12 @@
 #ifndef TASCAR_H
 #define TASCAR_H
 
-#include "jackclient.h"
+// In order to compile on Windows, the order of the following two
+// includes must not be changed (include winsock2.h before windows.h):
+// clang-format off
 #include "scene.h"
+#include "jackclient.h"
+// clang-format on
 #include "errorhandling.h"
 
 #endif

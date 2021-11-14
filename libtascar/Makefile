@@ -69,6 +69,8 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
   EXTERNALS +=  alsa
 endif
+else
+  EXTERNALS += regex
 endif
 
 
@@ -83,15 +85,21 @@ LDFLAGS += -L./
 ver:
 	echo '#define TASCARVER "'$(FULLVERSION)'"' > build/tascarver.h
 
+ifeq ($(OS),Windows_NT)
+LDLIBS += -lshlwapi -lssp
+lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
+symlink: build/lib$(PLUGINPREFIX)tascar.dll build/lib$(PLUGINPREFIX)tascargui.dll
+else
 lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
 	ldconfig -n build
-
 symlink: build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
+endif
 
 build/lib$(PLUGINPREFIX)tascar.so.%: $(BUILD_OBJECTS)
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 	rm -f build/lib$(PLUGINPREFIX)tascar.so
 
+build/lib$(PLUGINPREFIX)tascargui.so.%: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui.so.%: $(BUILD_GUIOBJECTS)
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 	rm -f build/lib$(PLUGINPREFIX)tascargui.so
@@ -99,6 +107,14 @@ build/lib$(PLUGINPREFIX)tascargui.so.%: $(BUILD_GUIOBJECTS)
 build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS)
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 	rm -f build/lib$(PLUGINPREFIX)tascardmx.so
+
+build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll: $(BUILD_OBJECTS)
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+
+build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
+build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: LDLIBS += build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
+build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS)
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
@@ -127,6 +143,11 @@ build/pugixml.o: ../external_libs/pugixml-1.11.4/src/pugixml.cpp ../external_lib
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%.so: build/%.so.$(LIBVERSION)
+	rm -f $@ # because ln -s does not update existing links
+	ln -s $(subst build/,,$<) $@
+
+build/%.dll: build/%-$(LIBVERSION).dll
+	rm -f $@ # because ln -s does not update existing links
 	ln -s $(subst build/,,$<) $@
 
 fullversion:

@@ -23,8 +23,8 @@
 #include "scene.h"
 #include "amb33defs.h"
 #include "errorhandling.h"
+#include "tascar_os.h"
 #include <algorithm>
-#include <fnmatch.h>
 #include <fstream>
 #include <libgen.h>
 #include <locale.h>
@@ -836,7 +836,7 @@ TASCAR::Scene::scene_t::find_object(const std::string& pattern)
   std::vector<TASCAR::Scene::object_t*> objs(get_objects());
   for(std::vector<TASCAR::Scene::object_t*>::iterator it = objs.begin();
       it != objs.end(); ++it)
-    if(fnmatch(pattern.c_str(), (*it)->get_name().c_str(), FNM_PATHNAME) == 0)
+    if(TASCAR::fnmatch(pattern.c_str(), (*it)->get_name().c_str(), true) == 0)
       retv.push_back(*it);
   return retv;
 }

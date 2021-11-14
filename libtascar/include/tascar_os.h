@@ -38,6 +38,34 @@ namespace TASCAR {
   /// @return ".dll" on Windows
   /// @return ".so" on Linux
   const char* dynamic_lib_extension(void);
+
+  /// @brief Match filename or pathname against pattern.
+  /// On Linux and Mac, this function delegates to the system function fnmatch.
+  /// @param pattern shell wildcard pattern against which to map string
+  /// @param string string argument checked if it matches pattern
+  /// @param fnm_pathname if true, then fnmatch matches a slash in string
+  ///                     only with a slash in pattern and not by an
+  ///                     asterisk (*) or a question mark (?) metacharacter,
+  ///                     nor by a bracket expression ([]) containing a
+  ///                     slash.  Other fnmatch modes are not supported.
+  /// @bug On Windows, when fnm_pathname is true, this implementation only
+  ///      checks that pattern and string contain the same number of
+  ///      literal forward slashes, but does not check their placement.
+  ///      We have not investigated if this results in the same behaviour
+  ///      as on POSIX in all cases.
+  /// @return 0 if string matches pattern
+  /// @return nonzero value if there is no match or if there is an error
+  int fnmatch(const char* pattern, const char* string, bool fnm_pathname);
+
+  /// @brief return the canonicalized absolute pathname
+  /// On Linux and Mac, this function delegates to the system function fnmatch.
+  /// On Windows, this function TODO: describe.
+  /// @param path input path
+  /// @param resolved_path pointer to storage allocated by caller, at least
+  ///                      MAX_PATH bytes long.  Must not be nullptr.
+  /// @return this implementation returns resolved_path when the conversion
+  ///         was successful, and returns path when not.
+  const char* realpath(const char* path, char* resolved_path);
 } // namespace TASCAR
 
 #endif
