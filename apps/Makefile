@@ -53,7 +53,7 @@ LDFLAGS += -L../libtascar/build
 
 LDLIBS += -ldl -ltascar -lfftw3f
 
-EXTERNALS = jack libxml++-2.6 liblo sndfile alsa xerces-c
+EXTERNALS = jack libxml++-2.6 liblo sndfile xerces-c
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
@@ -61,7 +61,7 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 bin: $(BUILD_BINS)
 
 build/tascar_hoadisplay: EXTERNALS += $(GTKEXT)
-build/tascar_hdspmixer: EXTERNALS += alsa
+build/tascar_hdspmixer build/tascar_hdspmixer.o: EXTERNALS += alsa
 build/tascar_gui build/tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 build/tascar_gui build/tascar_pdf: EXTERNALS += $(GTKEXT)
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
@@ -84,8 +84,9 @@ $(PREFIX)/bin/%: %
 
 build/%: build/%.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
-
-build/%.o: src/%.cc
+ 
+# The additional build/.directory dependency ensures subdirectory creation
+build/%.o: src/%.cc build/.directory
 	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
