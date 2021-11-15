@@ -16,15 +16,18 @@ function [ir,fs] = tascar_renderir_reverbsettings( fname, irlen, fs, varargin )
   end
   doc = tascar_xml_open(fname);
   %% remove all sound files:
-  elst = tascar_xml_get_element( doc, 'sndfile' );
+  doc = xml_remove_sndfile( doc );
+  elst = tascar_xml_get_element( doc, 'include' );
+  cRMFiles = {};
   for k=1:numel(elst)
-    parent = javaMethod('getParentNode',elst{k});
-    javaMethod('removeChild',parent,elst{k});
-  end
-  elst = tascar_xml_get_element( doc, 'sndfileasync' );
-  for k=1:numel(elst)
-    parent = javaMethod('getParentNode',elst{k});
-    javaMethod('removeChild',parent,elst{k});
+    incname = tascar_xml_get_attribute( elst{k}, 'name');
+    inctscname = [tempname('./'),'.itsc'];
+    tascar_xml_set_attribute( elst{k}, 'name', inctscname );
+    incdoc = tascar_xml_open(incname);
+    incdoc = xml_remove_sndfile( incdoc );
+    tascar_xml_save(incdoc,inctscname);
+    clear('incdoc');
+    cRMFiles{end+1} = inctscname;
   end
   for k=1:2:numel(varargin)
     key = varargin{k};
@@ -42,3 +45,20 @@ function [ir,fs] = tascar_renderir_reverbsettings( fname, irlen, fs, varargin )
   [ir,fs] = audioread(irname);
   delete(tscname);
   delete(irname);
+  for c=cRMFiles
+    delete(c{:});
+  end
+end
+
+function doc = xml_remove_sndfile( doc )
+  elst = tascar_xml_get_element( doc, 'sndfile' );
+  for k=1:numel(elst)
+    parent = javaMethod('getParentNode',elst{k});
+    javaMethod('removeChild',parent,elst{k});
+  end
+  elst = tascar_xml_get_element( doc, 'sndfileasync' );
+  for k=1:numel(elst)
+    parent = javaMethod('getParentNode',elst{k});
+    javaMethod('removeChild',parent,elst{k});
+  end
+end
