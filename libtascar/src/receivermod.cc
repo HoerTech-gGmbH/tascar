@@ -323,6 +323,7 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   TASCAR::receivermod_base_t::data_t* sd(
       create_state_data(f_sample, n_fragment));
   TASCAR::wave_t ones(n_fragment);
+  TASCAR::wave_t zeros(n_fragment);
   ones += 1.0f;
   std::vector<wave_t> output(spkpos.size() + spkpos.subs.size(),
                              TASCAR::wave_t(n_fragment));
@@ -330,11 +331,14 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   for(auto& pos : srcpos) {
     for(size_t ch = 0; ch < output.size(); ++ch)
       output[ch].clear();
+    add_pointsource(pos, 0.0, zeros, output, sd);
+    postproc(output);
+    for(size_t ch = 0; ch < output.size(); ++ch)
+      output[ch].clear();
     add_pointsource(pos, 0.0, ones, output, sd);
     postproc(output);
-    for(size_t outch(0); outch < spkpos.size(); ++outch) {
-      output[outch] *= 1.0f / spkpos[outch].gain;
-    }
+    for(size_t outch(0); outch < spkpos.size(); ++outch)
+      output[outch] *= 1.0f / (spkpos[outch].gain * spkpos[outch].spkgain);
     spkpos.clear_states();
     TASCAR::pos_t rE;
     TASCAR::pos_t rV;

@@ -68,6 +68,9 @@ pack: $(MODULES) $(DOCMODULES) docexamples unit-tests test
 releasepack: checkversiontagged checkmodified $(MODULES) $(DOCMODULES) docexamples unit-tests test
 	$(MAKE) -C packaging/deb
 
+fastpack: $(MODULES) $(DOCMODULES)
+	$(MAKE) -C packaging/deb
+
 include config.mk
 
 checkmodified:
