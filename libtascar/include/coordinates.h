@@ -35,6 +35,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 /// Avoid de-normals by flipping to zero
 template <class T> void make_friendly_number(T& x)
@@ -678,6 +679,26 @@ namespace TASCAR {
       return eul;
     };
   };
+
+  template <class RandAccessIter>
+  double median(RandAccessIter begin, RandAccessIter end)
+  {
+    if(begin == end)
+      return 0.0;
+    std::size_t size = end - begin;
+    std::size_t middleIdx = size / 2;
+    RandAccessIter target = begin + middleIdx;
+    std::nth_element(begin, target, end);
+    if((size & 1) != 0) { // Odd number of elements
+      return *target;
+    } else { // Even number of elements
+      double a = *target;
+      RandAccessIter targetNeighbor = target - 1;
+      std::nth_element(begin, targetNeighbor, end);
+      return (a + *targetNeighbor) / 2.0;
+    }
+  }
+
 } // namespace TASCAR
 
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);

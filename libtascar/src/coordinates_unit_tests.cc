@@ -519,6 +519,20 @@ TEST(quaternion_t, euler)
   ASSERT_NEAR(0.4, eul.x, 1e-7);
 }
 
+TEST(median, median)
+{
+  std::vector<float> data;
+  // special return value for empty arrays:
+  ASSERT_EQ(0.0, TASCAR::median(data.begin(), data.end()));
+  data = {5.0f, 3.0f};
+  // median of even number is mean of neighboring elements
+  ASSERT_EQ(4.0, TASCAR::median(data.begin(), data.end()));
+  // expected data to be partially sorted:
+  ASSERT_EQ(3.0f, data[0]);
+  data = {7.0f, 4.0f, 4.0f, 2.0f, 1.0f, 9.0f, 9.0f, 10.0f, 7.0f};
+  ASSERT_EQ(7.0, TASCAR::median(data.begin(), data.end()));
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
