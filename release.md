@@ -18,3 +18,4 @@ On branch development:
 
 - switch back to development branch
 
+- create release on github
