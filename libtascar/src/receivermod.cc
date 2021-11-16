@@ -152,7 +152,15 @@ std::string spatial_error_t::to_string(const std::string& label,
          "e." + label +
          ".el_rV = " + TASCAR::to_string(RAD2DEG * elev_rV_error) + ";\n" +
          "e." + label +
-         ".el_rE = " + TASCAR::to_string(RAD2DEG * elev_rE_error) + ";\n";
+         ".el_rE = " + TASCAR::to_string(RAD2DEG * elev_rE_error) + ";\n" +
+         "e." + label + ".median_az_rV = " +
+         TASCAR::to_string(RAD2DEG * median_azim_rV_error) + ";\n" + "e." +
+         label + ".median_az_rE = " +
+         TASCAR::to_string(RAD2DEG * median_azim_rE_error) + ";\n" + "e." +
+         label + ".median_el_rV = " +
+         TASCAR::to_string(RAD2DEG * median_elev_rV_error) + ";\n" + "e." +
+         label + ".median_el_rE = " +
+         TASCAR::to_string(RAD2DEG * median_elev_rE_error) + ";\n";
 }
 
 TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(
@@ -328,6 +336,10 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   std::vector<wave_t> output(spkpos.size() + spkpos.subs.size(),
                              TASCAR::wave_t(n_fragment));
   spatial_error_t err;
+  std::vector<double> vaz_rV;
+  std::vector<double> vaz_rE;
+  std::vector<double> vel_rV;
+  std::vector<double> vel_rE;
   for(auto& pos : srcpos) {
     for(size_t ch = 0; ch < output.size(); ++ch)
       output[ch].clear();
@@ -370,6 +382,10 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
     err.azim_rE_error += rE.azim() - pos.azim();
     err.elev_rV_error += rV.elev() - pos.elev();
     err.elev_rE_error += rE.elev() - pos.elev();
+    vaz_rV.push_back(rV.azim() - pos.azim());
+    vaz_rE.push_back(rE.azim() - pos.azim());
+    vel_rV.push_back(rV.elev() - pos.elev());
+    vel_rE.push_back(rE.elev() - pos.elev());
   }
   err.abs_rV_error = sqrt(err.abs_rV_error / srcpos.size());
   err.abs_rE_error = sqrt(err.abs_rE_error / srcpos.size());
@@ -379,6 +395,10 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   err.azim_rE_error /= srcpos.size();
   err.elev_rV_error /= srcpos.size();
   err.elev_rE_error /= srcpos.size();
+  err.median_azim_rV_error = TASCAR::median(vaz_rV.begin(), vaz_rV.end());
+  err.median_azim_rE_error = TASCAR::median(vaz_rE.begin(), vaz_rE.end());
+  err.median_elev_rV_error = TASCAR::median(vel_rV.begin(), vel_rV.end());
+  err.median_elev_rE_error = TASCAR::median(vel_rE.begin(), vel_rE.end());
   return err;
 }
 
