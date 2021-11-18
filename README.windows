@@ -90,10 +90,30 @@ make -C plugins -j 8 build/tascar_ap_pink.dll build/tascar_ap_sndfile.dll \
     build/tascarreceiver_hrtf.dll build/tascarreceiver_nsp.dll \
     build/tascarreceiver_omni.dll build/tascarsource_omni.dll
 
-# Collect all artifacts into a zip file in the parent direcotry
-zip -j ../tascar.zip  */build/[lt]*.{dll,exe}
+# Prepare to create a zip file which can be unpacked on another computer as
+# a simple TASCAR installation method on Windows.  Collect everything for
+# the zip file in subdirectory TASCAR:
+mkdir -p TASCAR
+# Collect all compiled artifacts
+cp -v */build/[lt]*.{dll,exe} TASCAR
+
 # Add all DLLs dependencies provided by Msys2
-unzip ../tascar.zip
-PATH="$PATH:." cygcheck *.exe *.dll | grep C:.msys64.mingw64 | \
-  sed -e 's/ //g' -e 's.\\./.g' | sort -u | xargs zip -ju ../tascar.zip
+pushd TASCAR
+cp -v $(cygcheck ./* | grep mingw64 | sort -bu) .
+popd
+
+# Add GTK GUI resources:
+mkdir -p TASCAR/share/{icons,glib-2.0} TASCAR/lib
+cp -r /mingw64/share/icons/Adwaita TASCAR/share/icons
+cp -r /mingw64/share/glib-2.0/schemas TASCAR/share/glib-2.0
+cp -r /mingw64/lib/gdk-pixbuf-2.0 TASCAR/lib
+cp /mingw64/bin/gdbus.exe TASCAR
+
+# Add TASCAR icons
+cp artwork/*.png TASCAR
+
+# Now create the zip file in the parent directory
+export $(grep ^VERSION= config.mk)
+zip -r ../TASCAR-$VERSION-windows.zip TASCAR
+
 git clean -fdx .

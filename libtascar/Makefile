@@ -113,8 +113,7 @@ build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll: $(BUILD_OBJECTS)
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
-build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: LDLIBS += build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
-build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS)
+build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 clean:

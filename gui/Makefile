@@ -66,6 +66,7 @@ build/%.o: src/%.cc
 
 ifeq ($(OS),Windows_NT)
 ICON_PATH_REPLACEMENT = -e 's|usr/share/icons/hicolor/48x48/apps/|./|'
+LDFLAGS += -mwindows
 else
 ICON_PATH_REPLACEMENT = -e 's/>usr/>\/usr/1'
 endif
