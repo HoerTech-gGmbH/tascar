@@ -64,8 +64,14 @@ build/%: build/%.o
 build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+ifeq ($(OS),Windows_NT)
+ICON_PATH_REPLACEMENT = -e 's|usr/share/icons/hicolor/48x48/apps/|./|'
+else
+ICON_PATH_REPLACEMENT = -e 's/>usr/>\/usr/1'
+endif
+
 build/%_glade.h: src/%.glade build/.directory
-	cat $< | sed -e 's/tascarversion/$(TASCARVERSION)/g' -e '/name="authors"/ r ../contributors' -e 's/>usr/>\/usr/1'> $*_glade
+	cat $< | sed -e 's/tascarversion/$(TASCARVERSION)/g' -e '/name="authors"/ r ../contributors' $(ICON_PATH_REPLACEMENT) >$*_glade
 	echo "#include <string>" > $@
 	xxd -i $*_glade >> $@
 	echo "std::string ui_"$*"((const char*)"$*"_glade,(size_t)"$*"_glade_len);" >> $@
