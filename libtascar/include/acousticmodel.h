@@ -31,6 +31,7 @@
 
 #include "dynamicobjects.h"
 #include "levelmeter.h"
+#include "maskplugin.h"
 #include "pluginprocessor.h"
 #include "receivermod.h"
 #include "sourcemod.h"
@@ -273,6 +274,8 @@ namespace TASCAR {
 
     public:
       plugin_processor_t plugins;
+      // optional mask plugin
+      TASCAR::maskplugin_t* maskplug = nullptr;
     };
 
     class filter_coeff_t {

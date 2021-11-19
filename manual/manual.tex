@@ -109,6 +109,13 @@ boxrule=0.2pt,fontupper=\small\ttfamily\bfseries}
     \hyperref[sec:ap_#1]{{\bf #2}}\index{#2 (audio plugin)}
   }
 }
+\newcommand{\indmaskmod}[2][]{
+  \ifthenelse{\equal{#1}{}}{
+    \hyperref[sec:mask_#2]{{\bf #2}}\index{#2 (mask plugin)}
+  }{
+    \hyperref[sec:mask_#1]{{\bf #2}}\index{#2 (mask plugin)}
+  }
+}
 \newcommand{\indrecgen}[2][]{
   \ifthenelse{\equal{#1}{}}{
     \hyperref[sec:recgen_#2]{{\bf #2}}
@@ -1290,12 +1297,13 @@ can be any of the types listed below.
 
 Under the hood, the \elem{reverb} element combines a dedicated
 receiver with a diffuse sound field. Therefore, most common attributes
-of receivers (see \ref{sec:receiver}) can be used here as well. This
-method of rendering diffuse reverberation is new to \tascar{} and
-still under development. For the traditional way of creating diffuse
-reverberation, see Section \ref{sec:reverb}. Advantages of the new
-method over the old one are a much easier setup, and the full
-functionality also for offline rendering.
+of receivers (see \ref{sec:receiver}) can be used here as well.
+%
+To create diffuse reverberation with external convolution or
+algorithmic reverb tools connected via jack, you may use a receiver
+plugin, set the \attr{volumetric} attribute, and add a diffuse sound
+field using the same position, orientation and dimension as the
+volumetric receiver.
 
 A very basic FDN and a partitioned convolution module are provided as
 part of \tascar{}. An example of diffuse reverberation using the
@@ -1523,6 +1531,18 @@ model. For receivers, audio plugins are processed after the post
 processing function of the render format.
 
 \input{secapmodules.tex}
+
+\clearpage
+
+\section{Spatial mask plugins}\index{Mask plugins}
+
+Spatial masks can be used to control a direction dependent gain in
+receivers. This gain is applied independent of the receiver type,
+i.e., the same spatial gain map can be created for any type of
+receiver, from omni-directional, via binaural up to multi-channel
+loudspeaker receiver types.
+
+\input{secmaskmodules.tex}
 
 \clearpage
 

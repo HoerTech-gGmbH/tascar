@@ -30,6 +30,7 @@ secmodules.tex
 secrecgeneric.tex
 secrecreverb.tex
 secrecspeaker.tex
+secmaskmodules.tex
 version.tex
 *.run*
 tab*.tex

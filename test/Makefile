@@ -38,12 +38,12 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd_diffuse_micarray test_snd_micarray_az0deg		\
 	test_ir_micarraysinc test_ir_amb1 test_ir_amb1_y		\
 	test_ir_amb1_z test_snd_diffuse_0deg test_snd_diffuse_17deg	\
-	test_snd_diffuse_rec17deg
+	test_snd_diffuse_rec17deg test_snd_maskplugin_fig8
 
 TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
 	test_fail_duplicatenames test_fail_duplicatescenenames	\
 	test_fail_ir_micarray test_fail_hoa2d_nonflat		\
-	test_fail_hoa2d_irregular
+	test_fail_hoa2d_irregular test_fail_invalidmaskplugin
 
 TEST_JACK = jack_routeplugin test_unload_on_error			\
 	jackfail_connectfail jack_connect jack_hoafdnrot		\

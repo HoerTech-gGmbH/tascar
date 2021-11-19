@@ -59,7 +59,9 @@
     <receiver type="hoa3d_enc" name="hoa3d_enc"/>
     <receiver type="hrtf" name="hrtf"/>
     <receiver type="itu51" name="itu51"/>
-    <receiver type="omni" name="omni"/>
+    <receiver type="omni" name="omni">
+      <maskplugin type="fig8"/>
+    </receiver>
     <receiver type="ortf" name="ortf"/>
     <receiver type="vmic" name="vmic"/>
     <receiver type="micarray" name="micarray">

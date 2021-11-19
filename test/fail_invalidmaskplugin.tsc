@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <source><sound/></source>
+    <receiver>
+      <maskplugin type="abcdef"/>
+    </receiver>
+  </scene>
+</session>

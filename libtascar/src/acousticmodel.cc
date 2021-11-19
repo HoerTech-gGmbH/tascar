@@ -194,6 +194,8 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
         return 0;
       nextgain *= srcgainmod;
       nextgain *= receiver_->external_gain;
+      if(receiver_->maskplug)
+        nextgain *= receiver_->maskplug->get_gain(prel);
       double next_air_absorption(exp(-nextdistance * dscale));
       double ddistance(
           (std::max(0.0, nextdistance - c_ * (receiver_->delaycomp +
@@ -554,6 +556,14 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
   GET_ATTRIBUTE_BOOL(muteonstop,"mute when transport stopped to prevent playback of sounds from delaylines and reverb");
   if( avgdist <= 0 )
     avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
+  // check for mask plugins:
+  for(auto& sne : tsccfg::node_get_children(xmlsrc)) {
+    if(tsccfg::node_get_name(sne) == "maskplugin"){
+      if( maskplug )
+        throw TASCAR::ErrMsg("More than one mask plugin was defined, only zero or one are allowed."+tsccfg::node_get_path(sne));
+      maskplug = new TASCAR::maskplugin_t(TASCAR::maskplugin_cfg_t(sne));
+    }
+  }
 }
 
 void receiver_t::configure()
@@ -598,6 +608,8 @@ void receiver_t::release()
 
 receiver_t::~receiver_t()
 {
+  if( maskplug )
+    delete maskplug;
 }
 
 void receiver_t::clear_output()

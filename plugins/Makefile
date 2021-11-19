@@ -30,6 +30,8 @@ AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
   level2osc const noise loopmachine pos2osc gain sndfileasync					\
   addchannel
 
+MASKPLUGINS = fig8
+
 ifeq "$(HAS_OPENCV2)" "yes"
 GLABSENSORS += trackir
 CXXFLAGS += -DHAS_OPENCV2
@@ -62,6 +64,8 @@ TASCARMODDLLS = $(patsubst %,build/$(PLUGINPREFIX)tascar_%$(DLLEXT),$(TASCARMODS
 TASCARMODDLLSGUI = $(patsubst %,build/$(PLUGINPREFIX)tascar_%$(DLLEXT),$(TASCARMODSGUI))
 
 AUDIOPLUGINDLLS = $(patsubst %,build/$(PLUGINPREFIX)tascar_ap_%$(DLLEXT),$(AUDIOPLUGINS))
+
+MASKPLUGINDLLS = $(patsubst %,build/$(PLUGINPREFIX)tascar_mask_%$(DLLEXT),$(MASKPLUGINS))
 
 GLABSENSORDLLS = $(patsubst %,build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT),$(GLABSENSORS))
 
@@ -99,7 +103,7 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 LDLIBS += -ldl $(TASCARLIB)
 
-modules: $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(TASCARMODDLLSGUI) $(AUDIOPLUGINDLLS) $(GLABSENSORDLLS)
+modules: $(RECEIVERMODS) $(SOURCEMODS) $(TASCARMODDLLS) $(TASCARMODDLLSGUI) $(AUDIOPLUGINDLLS) $(MASKPLUGINDLLS) $(GLABSENSORDLLS)
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
@@ -154,6 +158,9 @@ build/$(PLUGINPREFIX)tascar_%$(DLLEXT): src/tascarmod_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)tascar_ap_%$(DLLEXT): src/tascar_ap_%.cc
+	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
+build/$(PLUGINPREFIX)tascar_mask_%$(DLLEXT): src/tascar_mask_%.cc
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): src/glabsensor_%.cc build/glabsensorplugin.o src/glabsensorplugin.h

@@ -9,7 +9,7 @@ diff: manual-diff_master.pdf
 TEXINPUTS="./:../doc/:"
 
 SECTIONS= secmodules.tex secactmodules.tex secapmodules.tex	\
-secrecgeneric.tex secrecspeaker.tex secrecreverb.tex
+secrecgeneric.tex secrecspeaker.tex secrecreverb.tex secmaskmodules.tex
 
 %.run1: %.tex $(SECTIONS) autodoc.txt
 	TEXINPUTS=$(TEXINPUTS) pdflatex -draftmode -halt-on-error -file-line-error $< && touch $@
@@ -24,7 +24,7 @@ secrecgeneric.tex secrecspeaker.tex secrecreverb.tex
 	TEXINPUTS=$(TEXINPUTS) makeindex $(basename $<) && touch $@
 
 %.run5: %.tex %.run4
-	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $< && touch $@
+	TEXINPUTS=$(TEXINPUTS) pdflatex -halt-on-error -file-line-error $< > $@.err && touch $@ && ( ! grep -e 'LaTeX Warning: Reference.* undefined' $@.err)
 
 %.aux: %.tex
 	TEXINPUTS=$(TEXINPUTS) pdflatex $<
@@ -75,6 +75,14 @@ secapmodules.tex: $(sort $(wildcard apmod*.tex))
 	echo "" >> $@;\
 	echo "" >> $@;\
 	(for m in $(subst apmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:ap_$$m}\\index{$${m/_/\\_} (audio plugin)}";echo "\\input{apmod$$m.tex}"; done) >> $@
+
+secmaskmodules.tex: $(sort $(wildcard maskmod*.tex))
+	echo 'List of mask plugins:\par\begin{itemize}' > $@;\
+	(for m in $(subst maskmod,,$(subst .tex,,$^)); do echo "\\item \\indmaskmod[$$m]{$${m/_/\\_}}"; done) >> $@;\
+	echo '\end{itemize}' >> $@;\
+	echo "" >> $@;\
+	echo "" >> $@;\
+	(for m in $(subst maskmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:ap_$$m}\\index{$${m/_/\\_} (audio plugin)}";echo "\\input{maskmod$$m.tex}"; done) >> $@
 
 secrecgeneric.tex: $(sort $(wildcard recgen*.tex))
 	echo 'List of generic receiver types:\par\begin{itemize}' > $@;\
@@ -134,7 +142,7 @@ manual_master.tex:
 	mv manual.tex $@;\
 	mv manual_temp.tex manual.tex
 
-MODTEX=$(wildcard mod*.tex) $(wildcard actmod*.tex) $(wildcard apmod*.tex)
+MODTEX=$(wildcard mod*.tex) $(wildcard actmod*.tex) $(wildcard apmod*.tex) $(wildcard maskmod*.tex)
 
 testundocumented: $(MODTEX:.tex=.documented)
 

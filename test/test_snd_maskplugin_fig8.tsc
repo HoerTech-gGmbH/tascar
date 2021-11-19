@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+      <sound airabsorption="false" delayline="false" x="1">
+	<plugins>
+	  <const a="1"/>
+	</plugins>
+      </sound>
+    </source>
+    <receiver type="omni">
+      <maskplugin type="fig8"/>
+    </receiver>
+  </scene>
+</session>
