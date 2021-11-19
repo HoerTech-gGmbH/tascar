@@ -62,7 +62,9 @@
     <receiver type="omni" name="omni">
       <maskplugin type="fig8"/>
     </receiver>
-    <receiver type="ortf" name="ortf"/>
+    <receiver type="ortf" name="ortf">
+      <maskplugin type="multibeam"/>
+    </receiver>
     <receiver type="vmic" name="vmic"/>
     <receiver type="micarray" name="micarray">
       <mic>

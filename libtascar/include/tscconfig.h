@@ -94,6 +94,11 @@ std::string localgetenv(const std::string& env);
 
 namespace TASCAR {
 
+  float db2lin(const float& x);
+  double db2lin(const double& x);
+  float lin2db(const float& x);
+  double lin2db(const double& x);
+
   namespace levelmeter {
     enum weight_t { Z, bandpass, C, A };
   };
@@ -120,6 +125,7 @@ namespace TASCAR {
   std::string to_string_db(double value);
   std::string to_string_dbspl(double value);
   std::string to_string_db(float value);
+  std::string to_string_db(const std::vector<float>& value);
   std::string to_string_dbspl(float value);
   std::string to_string_bool(bool value);
 
@@ -193,6 +199,8 @@ namespace TASCAR {
                              const std::string& info);
     void get_attribute_db(const std::string& name, float& value,
                           const std::string& info);
+    void get_attribute_db(const std::string& name, std::vector<float>& value,
+                          const std::string& info);
     void get_attribute_deg(const std::string& name, double& value,
                            const std::string& info);
     void get_attribute(const std::string& name, TASCAR::pos_t& value,
@@ -218,6 +226,8 @@ namespace TASCAR {
     // set attributes:
     void set_attribute_bool(const std::string& name, bool value);
     void set_attribute_db(const std::string& name, double value);
+    void set_attribute_db(const std::string& name,
+                          const std::vector<float>& value);
     void set_attribute_dbspl(const std::string& name, double value);
     void set_attribute(const std::string& name, const std::string& value);
     void set_attribute(const std::string& name, double value);
@@ -317,6 +327,9 @@ void get_attribute_value_dbspl_float(const tsccfg::node_t& elem,
                                      const std::string& name, float& value);
 void get_attribute_value_db_float(const tsccfg::node_t& elem,
                                   const std::string& name, float& value);
+void get_attribute_value_db_float_vec(const tsccfg::node_t& elem,
+                                      const std::string& name,
+                                      std::vector<float>& value);
 void get_attribute_value_deg(const tsccfg::node_t& elem,
                              const std::string& name, double& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
@@ -340,6 +353,8 @@ void set_attribute_bool(tsccfg::node_t& elem, const std::string& name,
                         bool value);
 void set_attribute_db(tsccfg::node_t& elem, const std::string& name,
                       double value);
+void set_attribute_db(tsccfg::node_t& elem, const std::string& name,
+                      const std::vector<float>& value);
 void set_attribute_dbspl(tsccfg::node_t& elem, const std::string& name,
                          double value);
 void set_attribute_double(tsccfg::node_t& elem, const std::string& name,

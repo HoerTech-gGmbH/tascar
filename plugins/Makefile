@@ -30,7 +30,7 @@ AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
   level2osc const noise loopmachine pos2osc gain sndfileasync					\
   addchannel
 
-MASKPLUGINS = fig8
+MASKPLUGINS = fig8 multibeam
 
 ifeq "$(HAS_OPENCV2)" "yes"
 GLABSENSORS += trackir

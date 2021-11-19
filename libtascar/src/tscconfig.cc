@@ -19,6 +19,7 @@
 
 #include "tscconfig.h"
 #include "errorhandling.h"
+#include <atomic>
 #include <fstream>
 #include <functional>
 #include <set>
@@ -26,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <atomic>
 
 #ifdef USEXERCESXML
 
@@ -299,7 +299,7 @@ std::string TASCAR::get_tuid()
 {
   char c[1024];
   snprintf(c, sizeof(c), "%zx", ++maxid);
-  c[sizeof(c)-1] = 0;
+  c[sizeof(c) - 1] = 0;
   return c;
 }
 
@@ -590,6 +590,14 @@ std::string TASCAR::to_string_db(float value)
   char ctmp[1024];
   sprintf(ctmp, "%g", 20.0f * log10f(value));
   return ctmp;
+}
+
+std::string TASCAR::to_string_db(const std::vector<float>& value)
+{
+  std::vector<float> tmp(value);
+  for(auto& x : tmp)
+    x = TASCAR::lin2db(x);
+  return TASCAR::to_string(tmp);
 }
 
 std::string TASCAR::to_string_dbspl(float value)
@@ -1142,6 +1150,19 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
     set_attribute(name, value);
 }
 
+void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
+                                             std::vector<float>& value,
+                                             const std::string& info)
+{
+  TASCAR_ASSERT(e);
+  node_register_attr(e, name, TASCAR::to_string_db(value), "dB", info,
+                     "float array");
+  if(has_attribute(name))
+    get_attribute_value_db_float_vec(e, name, value);
+  else
+    set_attribute_db(name, value);
+}
+
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           std::vector<int32_t>& value,
                                           const std::string& unit,
@@ -1177,6 +1198,13 @@ void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,
 
 void TASCAR::xml_element_t::set_attribute_db(const std::string& name,
                                              double value)
+{
+  TASCAR_ASSERT(e);
+  ::set_attribute_db(e, name, value);
+}
+
+void TASCAR::xml_element_t::set_attribute_db(const std::string& name,
+                                             const std::vector<float>& value)
 {
   TASCAR_ASSERT(e);
   ::set_attribute_db(e, name, value);
@@ -1383,6 +1411,16 @@ void set_attribute_db(tsccfg::node_t& elem, const std::string& name,
   char ctmp[1024];
   sprintf(ctmp, "%1.12g", 20.0 * log10(value));
   tsccfg::node_set_attribute(elem, name, ctmp);
+}
+
+void set_attribute_db(tsccfg::node_t& elem, const std::string& name,
+                      const std::vector<float>& value)
+{
+  TASCAR_ASSERT(elem);
+  std::vector<float> tmp(value);
+  for(auto& x : tmp)
+    x = TASCAR::lin2db(x);
+  tsccfg::node_set_attribute(elem, name, TASCAR::to_string(tmp));
 }
 
 void set_attribute_dbspl(tsccfg::node_t& elem, const std::string& name,
@@ -1677,6 +1715,16 @@ void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   value = TASCAR::str2vecfloat(tsccfg::node_get_attribute_value(elem, name));
+}
+
+void get_attribute_value_db_float_vec(const tsccfg::node_t& elem,
+                                      const std::string& name,
+                                      std::vector<float>& value)
+{
+  TASCAR_ASSERT(elem);
+  value = TASCAR::str2vecfloat(tsccfg::node_get_attribute_value(elem, name));
+  for(auto& x : value)
+    x = TASCAR::db2lin(x);
 }
 
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
@@ -2190,6 +2238,26 @@ void tsccfg::node_set_attribute(tsccfg::node_t& node, const std::string& name,
 //  return node->eval_to_number(path);
 //#endif
 //}
+
+float TASCAR::db2lin(const float& x)
+{
+  return powf(10.0f, 0.05f * x);
+}
+
+double TASCAR::db2lin(const double& x)
+{
+  return pow(10.0, 0.05 * x);
+}
+
+float TASCAR::lin2db(const float& x)
+{
+  return 20.0f * log10f(x);
+}
+
+double TASCAR::lin2db(const double& x)
+{
+  return 20.0 * log10(x);
+}
 
 TASCAR::cfg_node_desc_t::cfg_node_desc_t() {}
 TASCAR::cfg_node_desc_t::~cfg_node_desc_t() {}

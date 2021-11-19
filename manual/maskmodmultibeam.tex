@@ -1,0 +1,12 @@
+Add multiple steerable beams. The directional gain $g$ as a function
+of the incident direction $\mathbf{p}$ is defined as
+%
+\begin{equation}
+g(\mathbf{p}) = g_{\textrm{min}} + \sum\limits_{k=1}^N (g_k-g_{\textrm{min}})\frac{\left(1+\cos\left(\min\{\pi,\arccos(s_k \left(\mathbf{p}\cdot\mathbf{p}_k\right)\right)\})\right)}{2}
+\end{equation}
+%
+with the minimum gain $g_\textrm{min}$, the number of beams $N$, the
+on-axis gain $g_k$, the selectivity $s_k$ and the steering vector
+$\mathbf{p}_k$.
+
+\input{tabmaskpluginmultibeam.tex}
