@@ -91,7 +91,18 @@ int osc_set_vector_float_dbspl(const char *path, const char *types, lo_arg **arg
     std::vector<float> *data((std::vector<float> *)user_data);
     if( argc == (int)(data->size()) )
       for(int k=0;k<argc;++k)
-        (*data)[k] = pow(10.0,0.05*argv[k]->f)*2e-5;
+        (*data)[k] = powf(10.0f,0.05f*argv[k]->f)*2e-5f;
+  }
+  return 0;
+}
+
+int osc_set_vector_float_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+{
+  if( user_data  ){
+    std::vector<float> *data((std::vector<float> *)user_data);
+    if( argc == (int)(data->size()) )
+      for(int k=0;k<argc;++k)
+        (*data)[k] = powf(10.0f,0.05f*argv[k]->f);
   }
   return 0;
 }
@@ -294,6 +305,13 @@ void osc_server_t::add_vector_float_dbspl(const std::string& path,
 {
   add_method(path, std::string(data->size(), 'f').c_str(),
              osc_set_vector_float_dbspl, data);
+}
+
+void osc_server_t::add_vector_float_db(const std::string& path,
+                                       std::vector<float>* data)
+{
+  add_method(path, std::string(data->size(), 'f').c_str(),
+             osc_set_vector_float_db, data);
 }
 
 void osc_server_t::add_vector_float(const std::string& path,

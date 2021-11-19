@@ -623,6 +623,8 @@ void receiver_t::validate_attributes(std::string& msg) const
 {
   receivermod_t::validate_attributes(msg);
   plugins.validate_attributes(msg);
+  if( maskplug )
+    maskplug->validate_attributes(msg);
 }
 
 /**
@@ -890,10 +892,16 @@ void source_t::process_plugins( const TASCAR::transport_t& tp )
   plugins.process_plugins( inchannels, position, orientation, tp );
 }
 
-void receiver_t::add_variables(TASCAR::osc_server_t* srv )
+void receiver_t::add_variables(TASCAR::osc_server_t* srv)
 {
   receivermod_t::add_variables(srv);
-  plugins.add_variables( srv);
+  plugins.add_variables(srv);
+  if(maskplug) {
+    std::string oldpref(srv->get_prefix());
+    srv->set_prefix(oldpref + "/mask");
+    maskplug->add_variables(srv);
+    srv->set_prefix(oldpref);
+  }
 }
 
 soundpath_t::soundpath_t(const source_t* src, const soundpath_t* parent_, const reflector_t* generator_)

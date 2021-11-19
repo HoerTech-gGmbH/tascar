@@ -1,8 +1,7 @@
 /*
  * This file is part of the TASCAR software, see <http://tascar.org/>
  *
- * Copyright (c) 2018 Giso Grimm
- * Copyright (c) 2020 Giso Grimm
+ * Copyright (c) 2021 Giso Grimm
  */
 /*
  * TASCAR is free software: you can redistribute it and/or modify
@@ -26,17 +25,21 @@ class multibeam_t : public maskplugin_base_t {
 public:
   multibeam_t(const maskplugin_cfg_t& cfg);
   float get_gain(const pos_t& pos);
+  void add_variables(TASCAR::osc_server_t* srv);
 
 private:
   void update_steer();
   void resize_val();
   size_t numbeams = 1u;
   float mingain = 0.0f;
+
+  std::vector<pos_t> vsteer;
+
+public:
   std::vector<float> gain;
   std::vector<float> az;
   std::vector<float> el;
   std::vector<float> selectivity;
-  std::vector<pos_t> vsteer;
 };
 
 void resize_with_default(std::vector<float>& vec, float def, size_t n)
@@ -69,6 +72,15 @@ multibeam_t::multibeam_t(const maskplugin_cfg_t& cfg) : maskplugin_base_t(cfg)
   update_steer();
 }
 
+void multibeam_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  srv->add_vector_float_db("/gain", &gain);
+  srv->add_vector_float("/selectivity", &selectivity);
+  srv->add_vector_float("/az", &az);
+  srv->add_vector_float("/el", &el);
+  srv->add_float("/mingain", &mingain);
+}
+
 void multibeam_t::update_steer()
 {
   for(size_t k = 0u; k < numbeams; ++k)
@@ -77,6 +89,7 @@ void multibeam_t::update_steer()
 
 float multibeam_t::get_gain(const pos_t& pos)
 {
+  update_steer();
   TASCAR::pos_t rp(pos.normal());
   float pgain = 0.0f;
   for(size_t k = 0; k < numbeams; ++k) {
