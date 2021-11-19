@@ -54,6 +54,7 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/irrender.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/jackrender.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audioplugin.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/maskplugin.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/levelmeter.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/serviceclass.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/speakerarray.cc

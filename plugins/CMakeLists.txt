@@ -129,28 +129,55 @@ if (SOURCEMODS)
 endif ()
 
 if (AUDIOPLUGINS)
-    foreach (audioplugin IN LISTS AUDIOPLUGINS)
-        if(NOT TARGET ${PLUGINPREFIX}tascar_ap_${audioplugin})
-            message("Building ${PLUGINPREFIX}tascar_ap_${audioplugin} for version ${FULLVERSION}")
-            set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascar_ap_${audioplugin})
-            add_library(${PLUGINPREFIX}tascar_ap_${audioplugin}
-                    SHARED
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/tascar_ap_${audioplugin}.cc)
-            set_target_properties(${PLUGINPREFIX}tascar_ap_${audioplugin} PROPERTIES PREFIX "")
-            set_target_properties (${PLUGINPREFIX}tascar_ap_${audioplugin}
-                    PROPERTIES BUILD_WITH_INSTALL_RPATH 1
-                    INSTALL_NAME_DIR "@rpath"
-                    )
-            target_include_directories(${PLUGINPREFIX}tascar_ap_${audioplugin}
-                    PRIVATE
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src
-                    ${EXTERNAL_INCLUDES}
-                    )
-            target_link_libraries(${PLUGINPREFIX}tascar_ap_${audioplugin}
-                    PRIVATE
-                    ${EXTERNAL_LIBS}
-                    )
-        endif()
-        install(TARGETS ${PLUGINPREFIX}tascar_ap_${audioplugin} DESTINATION lib)
-    endforeach ()
+  foreach (audioplugin IN LISTS AUDIOPLUGINS)
+    if(NOT TARGET ${PLUGINPREFIX}tascar_ap_${audioplugin})
+      message("Building ${PLUGINPREFIX}tascar_ap_${audioplugin} for version ${FULLVERSION}")
+      set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascar_ap_${audioplugin})
+      add_library(${PLUGINPREFIX}tascar_ap_${audioplugin}
+        SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tascar_ap_${audioplugin}.cc)
+      set_target_properties(${PLUGINPREFIX}tascar_ap_${audioplugin} PROPERTIES PREFIX "")
+      set_target_properties (${PLUGINPREFIX}tascar_ap_${audioplugin}
+        PROPERTIES BUILD_WITH_INSTALL_RPATH 1
+        INSTALL_NAME_DIR "@rpath"
+        )
+      target_include_directories(${PLUGINPREFIX}tascar_ap_${audioplugin}
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${EXTERNAL_INCLUDES}
+        )
+      target_link_libraries(${PLUGINPREFIX}tascar_ap_${audioplugin}
+        PRIVATE
+        ${EXTERNAL_LIBS}
+        )
+    endif()
+    install(TARGETS ${PLUGINPREFIX}tascar_ap_${audioplugin} DESTINATION lib)
+  endforeach ()
+endif ()
+
+if (MASKPLUGINS)
+  foreach (maskplugin IN LISTS MASKPLUGINS)
+    if(NOT TARGET ${PLUGINPREFIX}tascar_mask_${maskplugin})
+      message("Building ${PLUGINPREFIX}tascar_mask_${maskplugin} for version ${FULLVERSION}")
+      set_property(GLOBAL APPEND PROPERTY TASCAR_PLUGIN_LIBRARIES ${PLUGINPREFIX}tascar_mask_${maskplugin})
+      add_library(${PLUGINPREFIX}tascar_mask_${maskplugin}
+        SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tascar_mask_${maskplugin}.cc)
+      set_target_properties(${PLUGINPREFIX}tascar_mask_${maskplugin} PROPERTIES PREFIX "")
+      set_target_properties (${PLUGINPREFIX}tascar_mask_${maskplugin}
+        PROPERTIES BUILD_WITH_INSTALL_RPATH 1
+        INSTALL_NAME_DIR "@rpath"
+        )
+      target_include_directories(${PLUGINPREFIX}tascar_mask_${maskplugin}
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${EXTERNAL_INCLUDES}
+        )
+      target_link_libraries(${PLUGINPREFIX}tascar_mask_${maskplugin}
+        PRIVATE
+        ${EXTERNAL_LIBS}
+        )
+    endif()
+    install(TARGETS ${PLUGINPREFIX}tascar_mask_${maskplugin} DESTINATION lib)
+  endforeach ()
 endif ()

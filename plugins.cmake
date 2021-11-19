@@ -118,6 +118,12 @@ if (NOT AUDIOPLUGINS)
             )
 endif ()
 
+if (NOT MASKPLUGINS)
+  list(APPEND MASKPLUGINS
+    fig8
+    )
+endif ()
+
 if (GTK3_FOUND AND NOT TASCARMODSGUI)
     message("Building also GTK3 related tascar GUI mods")
     list(APPEND TASCARMODSGUI
