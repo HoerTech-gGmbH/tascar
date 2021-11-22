@@ -313,6 +313,13 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs,
   delete[] sf_out_buf;
 }
 
+void TASCAR::wav_render_t::validate_attributes(std::string& msg) const
+{
+  root.validate_attributes(msg);
+  if( pscene )
+    pscene->validate_attributes(msg);
+}
+
 /*
  * Local Variables:
  * mode: c++

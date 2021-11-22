@@ -45,6 +45,7 @@ namespace TASCAR {
     void render_ir( uint32_t len, double fs, const std::string& ofname,
                     double starttime, uint32_t inputchannel );
     ~wav_render_t();
+    virtual void validate_attributes(std::string&) const;
 
   protected:
     void add_scene( tsccfg::node_t e );

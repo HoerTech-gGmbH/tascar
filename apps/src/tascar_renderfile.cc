@@ -142,6 +142,14 @@ int main(int argc, char** argv)
       std::cout << (double)(r.t1 - r.t0) / CLOCKS_PER_SEC << std::endl;
       std::cout << (double)(r.t2 - r.t1) / CLOCKS_PER_SEC << std::endl;
     }
+    std::string v(r.show_unknown());
+    if(v.size() && TASCAR::get_warnings().size())
+      v += "\n";
+    for(auto warn : TASCAR::get_warnings()) {
+      v += "Warning: " + warn + "\n";
+    }
+    r.validate_attributes(v);
+    std::cout << v << std::endl;
 #ifndef TSCDEBUG
   }
   catch(const std::exception& msg) {

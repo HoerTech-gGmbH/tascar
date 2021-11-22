@@ -558,9 +558,12 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
     avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
   // check for mask plugins:
   for(auto& sne : tsccfg::node_get_children(xmlsrc)) {
-    if(tsccfg::node_get_name(sne) == "maskplugin"){
-      if( maskplug )
-        throw TASCAR::ErrMsg("More than one mask plugin was defined, only zero or one are allowed."+tsccfg::node_get_path(sne));
+    std::string node_name = tsccfg::node_get_name(sne);
+    if(node_name == "maskplugin") {
+      if(maskplug)
+        throw TASCAR::ErrMsg("More than one mask plugin was defined, only zero "
+                             "or one are allowed. " +
+                             tsccfg::node_get_path(sne));
       maskplug = new TASCAR::maskplugin_t(TASCAR::maskplugin_cfg_t(sne));
     }
   }
