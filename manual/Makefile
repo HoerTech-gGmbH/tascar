@@ -82,7 +82,7 @@ secmaskmodules.tex: $(sort $(wildcard maskmod*.tex))
 	echo '\end{itemize}' >> $@;\
 	echo "" >> $@;\
 	echo "" >> $@;\
-	(for m in $(subst maskmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:ap_$$m}\\index{$${m/_/\\_} (audio plugin)}";echo "\\input{maskmod$$m.tex}"; done) >> $@
+	(for m in $(subst maskmod,,$(subst .tex,,$^)); do echo "\\subsection{$${m/_/\\_}}\\label{sec:maskplug_$$m}\\index{$${m/_/\\_} (mask plugin)}";echo "\\input{maskmod$$m.tex}"; done) >> $@
 
 secrecgeneric.tex: $(sort $(wildcard recgen*.tex))
 	echo 'List of generic receiver types:\par\begin{itemize}' > $@;\

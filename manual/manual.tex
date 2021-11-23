@@ -111,9 +111,9 @@ boxrule=0.2pt,fontupper=\small\ttfamily\bfseries}
 }
 \newcommand{\indmaskmod}[2][]{
   \ifthenelse{\equal{#1}{}}{
-    \hyperref[sec:mask_#2]{{\bf #2}}\index{#2 (mask plugin)}
+    \hyperref[sec:maskplug_#2]{{\bf #2}}\index{#2 (mask plugin)}
   }{
-    \hyperref[sec:mask_#1]{{\bf #2}}\index{#2 (mask plugin)}
+    \hyperref[sec:maskplug_#1]{{\bf #2}}\index{#2 (mask plugin)}
   }
 }
 \newcommand{\indrecgen}[2][]{
@@ -1541,6 +1541,14 @@ receivers. This gain is applied independent of the receiver type,
 i.e., the same spatial gain map can be created for any type of
 receiver, from omni-directional, via binaural up to multi-channel
 loudspeaker receiver types.
+
+To add a spatial mask to a receiver, in any receiver type add a
+\elem{maskplugin} element within the receiver section, e.g.:
+\begin{lstlisting}[numbers=none]
+<receiver type="omni">
+  <maskplugin type="multibeam" numbeams="2" az="30 -90"/>
+</receiver>
+\end{lstlisting}
 
 \input{secmaskmodules.tex}
 
