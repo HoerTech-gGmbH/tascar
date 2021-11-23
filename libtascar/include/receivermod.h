@@ -108,6 +108,10 @@ namespace TASCAR {
     double median_azim_rV_error = 0.0;
     double median_elev_rE_error = 0.0;
     double median_elev_rV_error = 0.0;
+    double abs_azim_rE_error = 0.0;
+    double abs_azim_rV_error = 0.0;
+    double abs_elev_rE_error = 0.0;
+    double abs_elev_rV_error = 0.0;
     std::string to_string(const std::string& label,
                           const std::string& sampling);
   };

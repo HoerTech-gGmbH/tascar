@@ -149,7 +149,8 @@ int main(int argc, char** argv)
       v += "Warning: " + warn + "\n";
     }
     r.validate_attributes(v);
-    std::cout << v << std::endl;
+    if( v.size() )
+      std::cerr << v << std::endl;
 #ifndef TSCDEBUG
   }
   catch(const std::exception& msg) {
