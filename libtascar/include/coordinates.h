@@ -681,15 +681,18 @@ namespace TASCAR {
   };
 
   template <class RandAccessIter>
-  double median(RandAccessIter begin, RandAccessIter end)
+  double median(RandAccessIter begin, RandAccessIter end, double q = 0.5)
   {
     if(begin == end)
       return 0.0;
+    q = std::max(q, 0.0);
     std::size_t size = end - begin;
-    std::size_t middleIdx = size / 2;
+    std::size_t middleIdx = size * q;
+    if(middleIdx >= size)
+      middleIdx = size - 1u;
     RandAccessIter target = begin + middleIdx;
     std::nth_element(begin, target, end);
-    if((size & 1) != 0) { // Odd number of elements
+    if(((size & 1) != 0) || (q != 0.5)) { // Odd number of elements
       return *target;
     } else { // Even number of elements
       double a = *target;

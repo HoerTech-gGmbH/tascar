@@ -108,6 +108,14 @@ namespace TASCAR {
     double median_azim_rV_error = 0.0;
     double median_elev_rE_error = 0.0;
     double median_elev_rV_error = 0.0;
+    double q25_azim_rE_error = 0.0;
+    double q25_azim_rV_error = 0.0;
+    double q25_elev_rE_error = 0.0;
+    double q25_elev_rV_error = 0.0;
+    double q75_azim_rE_error = 0.0;
+    double q75_azim_rV_error = 0.0;
+    double q75_elev_rE_error = 0.0;
+    double q75_elev_rV_error = 0.0;
     double abs_azim_rE_error = 0.0;
     double abs_azim_rV_error = 0.0;
     double abs_elev_rE_error = 0.0;

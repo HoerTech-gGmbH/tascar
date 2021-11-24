@@ -162,6 +162,22 @@ std::string spatial_error_t::to_string(const std::string& label,
          label + ".median_el_rE = " +
          TASCAR::to_string(RAD2DEG * median_elev_rE_error) + ";\n" + "e." +
          label +
+         ".q25_az_rV = " + TASCAR::to_string(RAD2DEG * q25_azim_rV_error) +
+         ";\n" + "e." + label +
+         ".q25_az_rE = " + TASCAR::to_string(RAD2DEG * q25_azim_rE_error) +
+         ";\n" + "e." + label +
+         ".q25_el_rV = " + TASCAR::to_string(RAD2DEG * q25_elev_rV_error) +
+         ";\n" + "e." + label +
+         ".q25_el_rE = " + TASCAR::to_string(RAD2DEG * q25_elev_rE_error) +
+         ";\n" + "e." + label +
+         ".q75_az_rV = " + TASCAR::to_string(RAD2DEG * q75_azim_rV_error) +
+         ";\n" + "e." + label +
+         ".q75_az_rE = " + TASCAR::to_string(RAD2DEG * q75_azim_rE_error) +
+         ";\n" + "e." + label +
+         ".q75_el_rV = " + TASCAR::to_string(RAD2DEG * q75_elev_rV_error) +
+         ";\n" + "e." + label +
+         ".q75_el_rE = " + TASCAR::to_string(RAD2DEG * q75_elev_rE_error) +
+         ";\n" + "e." + label +
          ".abs_az_rV = " + TASCAR::to_string(RAD2DEG * abs_azim_rV_error) +
          ";\n" + "e." + label +
          ".abs_az_rE = " + TASCAR::to_string(RAD2DEG * abs_azim_rE_error) +
@@ -416,6 +432,14 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   err.median_azim_rE_error = TASCAR::median(vaz_rE.begin(), vaz_rE.end());
   err.median_elev_rV_error = TASCAR::median(vel_rV.begin(), vel_rV.end());
   err.median_elev_rE_error = TASCAR::median(vel_rE.begin(), vel_rE.end());
+  err.q25_azim_rV_error = TASCAR::median(vaz_rV.begin(), vaz_rV.end(), 0.25);
+  err.q25_azim_rE_error = TASCAR::median(vaz_rE.begin(), vaz_rE.end(), 0.25);
+  err.q25_elev_rV_error = TASCAR::median(vel_rV.begin(), vel_rV.end(), 0.25);
+  err.q25_elev_rE_error = TASCAR::median(vel_rE.begin(), vel_rE.end(), 0.25);
+  err.q75_azim_rV_error = TASCAR::median(vaz_rV.begin(), vaz_rV.end(), 0.75);
+  err.q75_azim_rE_error = TASCAR::median(vaz_rE.begin(), vaz_rE.end(), 0.75);
+  err.q75_elev_rV_error = TASCAR::median(vel_rV.begin(), vel_rV.end(), 0.75);
+  err.q75_elev_rE_error = TASCAR::median(vel_rE.begin(), vel_rE.end(), 0.75);
   return err;
 }
 
