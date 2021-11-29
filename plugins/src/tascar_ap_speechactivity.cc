@@ -71,13 +71,15 @@ void speechactivity_t::configure()
 {
   audioplugin_base_t::configure();
   lo_addr = lo_address_new_from_url(url.c_str());
-  lsl_outlet = new lsl::stream_outlet(lsl::stream_info(get_fullname(),"level",n_channels,f_fragment,lsl::cf_int32));
-  intensity = std::vector<double>( n_channels, 0.0 );
-  active = std::vector<int32_t>( n_channels, 0 );
-  prevactive = std::vector<int32_t>( n_channels, 0 );
-  dactive = std::vector<double>( n_channels, 0 );
-  onset = std::vector<int32_t>( n_channels, 0 );
-  oldonset = std::vector<int32_t>( n_channels, 0 );
+  lsl_outlet = new lsl::stream_outlet(
+      lsl::stream_info(get_fullname(), "level", n_channels, f_fragment,
+                       lsl::cf_int32, tsccfg::node_get_path(e)));
+  intensity = std::vector<double>(n_channels, 0.0);
+  active = std::vector<int32_t>(n_channels, 0);
+  prevactive = std::vector<int32_t>(n_channels, 0);
+  dactive = std::vector<double>(n_channels, 0);
+  onset = std::vector<int32_t>(n_channels, 0);
+  oldonset = std::vector<int32_t>(n_channels, 0);
 }
 
 void speechactivity_t::release()
