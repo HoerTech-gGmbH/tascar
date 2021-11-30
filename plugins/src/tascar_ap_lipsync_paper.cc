@@ -65,6 +65,7 @@ private:
   float prev_lipsclosedBS;
   uint32_t onchangecount;
   uint32_t onchangecounter;
+  std::string strmsg;
 };
 
 lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
@@ -85,7 +86,8 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
     prev_jawB(HUGE_VAL),
     prev_lipsclosedBS(HUGE_VAL),
     onchangecount(3),
-    onchangecounter(0)
+    onchangecounter(0),
+    strmsg("/lipsync")
 {
   GET_ATTRIBUTE(smoothing,"s","Smoothing time constant");
   GET_ATTRIBUTE(url,"","Target OSC URL");
@@ -99,6 +101,7 @@ lipsync_t::lipsync_t( const TASCAR::audioplugin_cfg_t& cfg )
   GET_ATTRIBUTE(path,"","OSC destination of blendshape messages (empty: use parent name)");
   if( !path.empty() )
     path_ = path;
+  GET_ATTRIBUTE(strmsg,"","Message string to be added to OSC messages before blend shapes");
   std::string sendmode("always");
   GET_ATTRIBUTE(sendmode,"","Sending mode, one of ``always'', ``transport'', or ``onchange''");
   if( sendmode == "always" )
@@ -243,28 +246,31 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   lipsclosedBS = value;
 
   bool lactive(active);
-  if( (send_mode == transport) && (tp.rolling == false) )
+  if((send_mode == transport) && (tp.rolling == false))
     lactive = false;
-  if( lactive ){
+  if(lactive) {
     // if "onchange" mode then send max "onchangecount" equal messages:
-    if( (send_mode == onchange) && 
-        (kissBS == prev_kissBS) && 
-        (jawB == prev_jawB) &&       
-        (lipsclosedBS == prev_lipsclosedBS) ){
-      if( onchangecounter )
+    if((send_mode == onchange) && (kissBS == prev_kissBS) &&
+       (jawB == prev_jawB) && (lipsclosedBS == prev_lipsclosedBS)) {
+      if(onchangecounter)
         onchangecounter--;
-    }else{
+    } else {
       onchangecounter = onchangecount;
     }
-    if( (send_mode != onchange) || (onchangecounter > 0) ){
+    if((send_mode != onchange) || (onchangecounter > 0)) {
       // send lipsync values to osc target:
-      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB, lipsclosedBS );
-      if( !energypath.empty() )
-        lo_send( lo_addr, energypath.c_str(), "fffff", energy[1], energy[2], energy[3], 20*log10(vmin + 1e-6), 20*log10(vmax + 1e-6) );
+      if(strmsg.size())
+        lo_send(lo_addr, path_.c_str(), "sfff", strmsg.c_str(), kissBS, jawB,
+                lipsclosedBS);
+      else
+        lo_send(lo_addr, path_.c_str(), "fff", kissBS, jawB, lipsclosedBS);
+      if(!energypath.empty())
+        lo_send(lo_addr, energypath.c_str(), "fffff", energy[1], energy[2],
+                energy[3], 20 * log10(vmin + 1e-6), 20 * log10(vmax + 1e-6));
     }
-  }else{
-    if( was_active )
-      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", 0.0f, 0.0f, 0.0f );
+  } else {
+    if(was_active)
+      lo_send(lo_addr, path_.c_str(), "sfff", "/lipsync", 0.0f, 0.0f, 0.0f);
   }
   was_active = lactive;
   prev_kissBS = kissBS;
