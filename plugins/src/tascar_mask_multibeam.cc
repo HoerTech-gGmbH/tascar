@@ -32,6 +32,7 @@ private:
   void resize_val();
   size_t numbeams = 1u;
   float mingain = 0.0f;
+  float maxgain = 1.0f;
 
   std::vector<pos_t> vsteer;
 
@@ -62,6 +63,7 @@ multibeam_t::multibeam_t(const maskplugin_cfg_t& cfg) : maskplugin_base_t(cfg)
   GET_ATTRIBUTE(numbeams, "", "Number of beams");
   resize_val();
   GET_ATTRIBUTE_DB(mingain, "Minimum gain");
+  GET_ATTRIBUTE_DB(maxgain, "Maximum gain");
   GET_ATTRIBUTE_DB(gain, "On-axis gain");
   GET_ATTRIBUTE(az, "deg", "Azimuth of steering vectors");
   GET_ATTRIBUTE(el, "deg", "Elevation of steering vectors");
@@ -78,7 +80,8 @@ void multibeam_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_vector_float("/selectivity", &selectivity);
   srv->add_vector_float("/az", &az);
   srv->add_vector_float("/el", &el);
-  srv->add_float("/mingain", &mingain);
+  srv->add_float_db("/mingain", &mingain);
+  srv->add_float_db("/maxgain", &maxgain);
 }
 
 void multibeam_t::update_steer()
@@ -95,9 +98,9 @@ float multibeam_t::get_gain(const pos_t& pos)
   for(size_t k = 0; k < numbeams; ++k) {
     float ang =
         std::min(selectivity[k] * acosf(dot_prod(rp, vsteer[k])), TASCAR_PIf);
-    pgain += (gain[k] - mingain) * (0.5f + 0.5f * cosf(ang));
+    pgain += gain[k] * (0.5f + 0.5f * cosf(ang));
   }
-  pgain += mingain;
+  pgain = std::min(maxgain,mingain+(1.0f-mingain)*pgain);
   return pgain;
 };
 
