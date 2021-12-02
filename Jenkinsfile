@@ -13,11 +13,41 @@ def tascar_build_steps(stage_name) {
     // get tags from public repo:
     sh "git fetch --tags https://github.com/HoerTech-gGmbH/tascar"
 
-    // Autodetect libs/compiler
-    sh "make pack"
-
-    // Store debian packets for later retrieval by the repository manager
-    stash name: (arch+"_"+system), includes: 'packaging/deb/tascar/'
+    if (system != "windows") {
+        // Autodetect libs/compiler on Unix
+        sh "make pack"
+        // Store debian packets for later retrieval by the repository manager
+        stash name: (arch+"_"+system), includes: 'packaging/deb/tascar/'
+    } else {
+        // Compile subset of TASCAR on Windows
+        sh "make -j 4 libtascar googletest"
+        sh "make -j 4 -C libtascar unit-tests"
+        sh "make -C apps build/tascar_cli"
+        sh "make -C gui build/tascar_spkcalib"
+        sh "make -C plugins build/.directory"
+        sh("make -C plugins -j 4 build/tascarsource_omni.dll" +
+           " build/tascar_ap_pink.dll build/tascar_ap_sndfile.dll" +
+           " build/tascar_ap_spksim.dll build/tascar_oscjacktime.dll" + 
+           " build/tascar_system.dll build/tascarreceiver_hoa2d.dll" +
+           " build/tascarreceiver_hrtf.dll build/tascarreceiver_nsp.dll" +
+           " build/tascarreceiver_omni.dll")
+        sh "mkdir -p TASCAR"
+        // Collect all compiled artifacts
+        sh "cp -v */build/[lt]*.{dll,exe} TASCAR"
+        // Add all DLLs dependencies provided by Msys2
+        dir('TASCAR') {
+            sh 'cp -v $(cygcheck ./* | grep mingw64 | sort -bu) .'
+            sh "mkdir -p share/{icons,glib-2.0} lib"
+        }
+        sh "cp -r /mingw64/share/icons/Adwaita TASCAR/share/icons"
+        sh "cp -r /mingw64/share/glib-2.0/schemas TASCAR/share/glib-2.0"
+        sh "cp -r /mingw64/lib/gdk-pixbuf-2.0 TASCAR/lib"
+        sh "cp /mingw64/bin/gdbus.exe TASCAR"
+        sh "cp artwork/*.png TASCAR"
+        // Now create the zip file from everything inside the TASCAR dir
+        sh 'zip -r TASCAR-$(grep ^VERSION= config.mk)-windows.zip TASCAR'
+        archiveArtifacts 'TASCAR-*-windows.zip'
+    }
 }
 
 pipeline {
@@ -36,6 +66,10 @@ pipeline {
                 stage(                        "bionic && armv7 && tascardev") {
                     agent {label              "bionic && armv7 && tascardev"}
                     steps {tascar_build_steps("bionic && armv7 && tascardev")}
+                }
+                stage(                        "windows && x86_64 && tascardev") {
+                    agent {label              "windows && x86_64 && tascardev"}
+                    steps {tascar_build_steps("windows && x86_64 && tascardev")}
                 }
             }
         }
