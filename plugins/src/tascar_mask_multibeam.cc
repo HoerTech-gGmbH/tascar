@@ -25,7 +25,7 @@ class multibeam_t : public maskplugin_base_t {
 public:
   multibeam_t(const maskplugin_cfg_t& cfg);
   float get_gain(const pos_t& pos);
-  void get_diff_gain(float& gw, float& gy, float& gz, float& gx);
+  void get_diff_gain(float* gm);
   void add_variables(TASCAR::osc_server_t* srv);
 
 private:
@@ -105,26 +105,26 @@ float multibeam_t::get_gain(const pos_t& pos)
   return pgain;
 };
 
-void multibeam_t::get_diff_gain(float& gw, float& gy, float& gz, float& gx)
+void multibeam_t::get_diff_gain(float* gm)
 {
-  update_steer();
-  float pgainw = 0.0f;
-  float pgainy = 0.0f;
-  float pgainz = 0.0f;
-  float pgainx = 0.0f;
-  for(size_t k = 0; k < numbeams; ++k) {
-    pgainw += gain[k];
-    float selgain = std::min(selectivity[k], 1.0f);
-    float zyxgain = gain[k] * (1.0f - selgain);
-    selgain *= gain[k];
-    pgainy += selgain * vsteer[k].y + zyxgain;
-    pgainz += selgain * vsteer[k].z + zyxgain;
-    pgainx += selgain * vsteer[k].x + zyxgain;
-  }
-  gw *= std::min(maxgain, mingain + (1.0f - mingain) * pgainw);
-  gy *= std::min(maxgain, mingain + (1.0f - mingain) * pgainy);
-  gz *= std::min(maxgain, mingain + (1.0f - mingain) * pgainz);
-  gx *= std::min(maxgain, mingain + (1.0f - mingain) * pgainx);
+  //update_steer();
+  //float pgainw = 0.0f;
+  //float pgainy = 0.0f;
+  //float pgainz = 0.0f;
+  //float pgainx = 0.0f;
+  //for(size_t k = 0; k < numbeams; ++k) {
+  //  pgainw += gain[k];
+  //  float selgain = std::min(selectivity[k], 1.0f);
+  //  float zyxgain = gain[k] * (1.0f - selgain);
+  //  selgain *= gain[k];
+  //  pgainy += selgain * vsteer[k].y + zyxgain;
+  //  pgainz += selgain * vsteer[k].z + zyxgain;
+  //  pgainx += selgain * vsteer[k].x + zyxgain;
+  //}
+  //gw *= std::min(maxgain, mingain + (1.0f - mingain) * pgainw);
+  //gy *= std::min(maxgain, mingain + (1.0f - mingain) * pgainy);
+  //gz *= std::min(maxgain, mingain + (1.0f - mingain) * pgainz);
+  //gx *= std::min(maxgain, mingain + (1.0f - mingain) * pgainx);
 }
 
 REGISTER_MASKPLUGIN(multibeam_t);

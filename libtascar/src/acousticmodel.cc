@@ -447,6 +447,8 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,
     chunksize(audio.size()),
     dt(1.0/std::max(1u,chunksize))
 {
+  memset(gainmat,0,sizeof(float)*16);
+  gainmat[0] = gainmat[5] = gainmat[10] = gainmat[15] = 1.0f;
   pos_t prel;
   double d(1.0);
   float gain;
@@ -477,34 +479,24 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
   prel_nonrot *= receiver_->orientation;
   d = box.nextpoint(prel_nonrot).norm();
   nextgain = 0.5 + 0.5 * cos(TASCAR_PI * std::min(1.0, d * src_->falloff));
-  if(!((gw == 0) && (nextgain == 0))) {
+  if(!((gain == 0) && (nextgain == 0))) {
     audio.rotate(src_->audio, receiver_->orientation);
-    float nextgainw = nextgain;
-    float nextgainy = nextgain;
-    float nextgainz = nextgain;
-    float nextgainx = nextgain;
+    memset(gainmat,0,sizeof(float)*16);
+    gainmat[0] = gainmat[5] = gainmat[10] = gainmat[15] = 1.0f;
     if(receiver_->maskplug)
-      receiver_->maskplug->get_diff_gain(nextgainw, nextgainy, nextgainz, nextgainx);
-    float dgainw((nextgainw - gw) * dt);
-    float dgainy((nextgainy - gy) * dt);
-    float dgainz((nextgainz - gz) * dt);
-    float dgainx((nextgainx - gx) * dt);
+      receiver_->maskplug->get_diff_gain(gainmat);
+    float dgain((nextgain - gain) * dt);
     for(uint32_t k = 0; k < chunksize; k++) {
-      gw += dgainw;
-      gy += dgainy;
-      gz += dgainz;
-      gx += dgainx;
+      gain += dgain;
       if(receiver_->active && src_->active) {
-        audio.w()[k] *= gw;
-        audio.y()[k] *= gy;
-        audio.z()[k] *= gz;
-        audio.x()[k] *= gx;
+        audio.w()[k] *= gain;
+        audio.y()[k] *= gain;
+        audio.z()[k] *= gain;
+        audio.x()[k] *= gain;
       }
     }
-    gw = nextgainw;
-    gy = nextgainy;
-    gz = nextgainz;
-    gx = nextgainx;
+    audio.apply_matrix( gainmat );
+    gain = nextgain;
     if(receiver_->render_diffuse && receiver_->active && src_->active &&
        (!receiver_->gain_zero) && (receiver_->layers & src_->layers)) {
       audio *= receiver_->diffusegain;

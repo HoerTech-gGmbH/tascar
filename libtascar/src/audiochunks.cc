@@ -236,11 +236,26 @@ void amb1wave_t::copy(const amb1wave_t& src)
   z_.copy(src.z_);
 }
 
-void amb1wave_t::print_levels()
+void amb1wave_t::print_levels() const
 {
   std::cout << this << " wyzx"
             << " " << w_.spldb() << " " << y_.spldb() << " " << z_.spldb()
             << " " << x_.spldb() << std::endl;
+}
+
+void amb1wave_t::apply_matrix(float* m)
+{
+  float tmp[4];
+  size_t N = size();
+  for(size_t k = 0; k < N; ++k) {
+    for(size_t ch = 0; ch < 4; ++ch)
+      tmp[ch] = wyzx[ch].d[k];
+    for(size_t och = 0; och < 4; ++och) {
+      wyzx[och].d[k] = 0.0f;
+      for(size_t ich = 0; ich < 4; ++ich)
+        wyzx[och].d[k] += tmp[ich] * m[ich + 4 * och];
+    }
+  }
 }
 
 wave_t& amb1wave_t::operator[](uint32_t acn)

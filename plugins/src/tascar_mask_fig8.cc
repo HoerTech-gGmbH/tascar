@@ -26,6 +26,14 @@ class identity_t : public maskplugin_base_t {
 public:
   identity_t(const maskplugin_cfg_t& cfg) : maskplugin_base_t(cfg){};
   float get_gain(const pos_t& pos) { return pos.normal().x; };
+  void get_diff_gain(float* gm)
+  {
+    memset(gm,0,sizeof(float)*16);
+    gm[0] = 1.0f;
+    gm[3] = 1.0f;
+    gm[12] = 1.0f;
+    gm[15] = 1.0f;
+  };
 };
 
 REGISTER_MASKPLUGIN(identity_t);

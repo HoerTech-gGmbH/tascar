@@ -415,10 +415,8 @@ namespace TASCAR {
       amb1rotator_t audio;
       uint32_t chunksize;
       double dt;
-      float gw = 1.0f;
-      float gy = 1.0f;
-      float gz = 1.0f;
-      float gx = 1.0f;
+      float gain = 1.0f;
+      float gainmat[16];
     };
 
     /**

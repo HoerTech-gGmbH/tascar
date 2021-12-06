@@ -105,9 +105,10 @@ namespace TASCAR {
     void operator+=(const amb1wave_t& v);
     void add_panned( pos_t p, const wave_t& v, float g=1.0f);
     std::vector<wave_t> wyzx;
-    void print_levels();
+    void print_levels() const;
     wave_t& operator[](uint32_t acn);
     void copy(const amb1wave_t&);
+    void apply_matrix( float* m );
   protected:
     wave_t w_;
     wave_t x_;
