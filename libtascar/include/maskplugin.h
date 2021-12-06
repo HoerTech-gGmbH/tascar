@@ -64,6 +64,7 @@ namespace TASCAR {
     maskplugin_t(const maskplugin_cfg_t& cfg);
     virtual ~maskplugin_t();
     virtual float get_gain(const TASCAR::pos_t& pos);
+    virtual void get_diff_gain(float& gw, float& gy, float& gz, float& gx);
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void add_licenses(licensehandler_t* srv);
     virtual void validate_attributes(std::string&) const;

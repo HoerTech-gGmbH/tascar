@@ -67,6 +67,12 @@ float TASCAR::maskplugin_t::get_gain(const TASCAR::pos_t& pos)
   return libdata->get_gain(pos);
 }
 
+void TASCAR::maskplugin_t::get_diff_gain(float& gw, float& gy, float& gz,
+                                         float& gx)
+{
+  libdata->get_diff_gain(gw, gy, gz, gx);
+}
+
 void TASCAR::maskplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
   libdata->add_variables(srv);
