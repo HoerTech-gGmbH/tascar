@@ -51,6 +51,7 @@ namespace TASCAR {
     maskplugin_base_t(const maskplugin_cfg_t& cfg);
     virtual ~maskplugin_base_t();
     virtual float get_gain(const TASCAR::pos_t& pos) = 0;
+    virtual void get_diff_gain(float& gw, float& gy, float& gz, float& gx){};
     virtual void add_variables(TASCAR::osc_server_t* srv){};
     const std::string& get_modname() const { return modname; };
 

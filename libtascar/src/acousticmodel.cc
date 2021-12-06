@@ -445,13 +445,12 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,
     receiver_data(receiver_->create_diffuse_state_data(fs,chunksize)),
     audio(src->audio.size()),
     chunksize(audio.size()),
-    dt(1.0/std::max(1u,chunksize)),
-    gain(1.0)
+    dt(1.0/std::max(1u,chunksize))
 {
   pos_t prel;
   double d(1.0);
+  float gain;
   receiver_->update_refpoint(src_->center,src_->center,prel,d,gain,false,GAIN_INVR);
-  gain = 0;
 }
 
 diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
@@ -459,7 +458,7 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
   if( receiver_data )
     delete receiver_data;
 }
- 
+
 /**
    \ingroup callgraph
  */
@@ -469,31 +468,47 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
   double d(0.0);
   float nextgain(1.0);
   // calculate relative geometry between source and receiver:
-  receiver_->update_refpoint(src_->center,src_->center,prel,d,nextgain,false,GAIN_INVR);
+  receiver_->update_refpoint(src_->center, src_->center, prel, d, nextgain,
+                             false, GAIN_INVR);
   shoebox_t box(*src_);
-  //box.size = src_->size;
+  // box.size = src_->size;
   box.center = pos_t();
   pos_t prel_nonrot(prel);
   prel_nonrot *= receiver_->orientation;
   d = box.nextpoint(prel_nonrot).norm();
-  nextgain = 0.5+0.5*cos(TASCAR_PI*std::min(1.0,d*src_->falloff));
-  if( !((gain==0) && (nextgain==0))){
-    audio.rotate(src_->audio,receiver_->orientation);
-    double dgain((nextgain-gain)*dt);
-    for(uint32_t k=0;k<chunksize;k++){
-      gain+=dgain;
-      if( receiver_->active && src_->active ){
-        audio.w()[k] *= gain;
-        audio.x()[k] *= gain;
-        audio.y()[k] *= gain;
-        audio.z()[k] *= gain;
+  nextgain = 0.5 + 0.5 * cos(TASCAR_PI * std::min(1.0, d * src_->falloff));
+  if(!((gw == 0) && (nextgain == 0))) {
+    audio.rotate(src_->audio, receiver_->orientation);
+    float nextgainw = nextgain;
+    float nextgainy = nextgain;
+    float nextgainz = nextgain;
+    float nextgainx = nextgain;
+    if(receiver_->maskplug)
+      receiver_->maskplug->get_diff_gain(nextgainw, nextgainy, nextgainz, nextgainx);
+    float dgainw((nextgainw - gw) * dt);
+    float dgainy((nextgainy - gy) * dt);
+    float dgainz((nextgainz - gz) * dt);
+    float dgainx((nextgainx - gx) * dt);
+    for(uint32_t k = 0; k < chunksize; k++) {
+      gw += dgainw;
+      gy += dgainy;
+      gz += dgainz;
+      gx += dgainx;
+      if(receiver_->active && src_->active) {
+        audio.w()[k] *= gw;
+        audio.y()[k] *= gy;
+        audio.z()[k] *= gz;
+        audio.x()[k] *= gx;
       }
     }
-    gain = nextgain;
-    if( receiver_->render_diffuse && receiver_->active && src_->active && (!receiver_->gain_zero)  &&
-        (receiver_->layers & src_->layers) ){
+    gw = nextgainw;
+    gy = nextgainy;
+    gz = nextgainz;
+    gx = nextgainx;
+    if(receiver_->render_diffuse && receiver_->active && src_->active &&
+       (!receiver_->gain_zero) && (receiver_->layers & src_->layers)) {
       audio *= receiver_->diffusegain;
-      receiver_->add_diffuse_sound_field(audio,receiver_data);
+      receiver_->add_diffuse_sound_field(audio, receiver_data);
       return 1;
     }
   }

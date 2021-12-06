@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC-0">
+  <scene>
+    <diffuse>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+      <plugins>
+        <const a="0.70711 1 0 0"/>
+      </plugins>
+    </diffuse>
+    <receiver type="nsp" layout="8ch_nodecorr.spk">
+      <maskplugin type="multibeam" numbeams="1" az="0" selectivity="1"/>
+    </receiver>
+  </scene>
+</session>
