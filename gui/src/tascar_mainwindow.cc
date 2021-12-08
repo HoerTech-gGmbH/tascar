@@ -183,7 +183,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupTransport->add_action("previous",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_previous));
   refActionGroupTransport->add_action("next",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_next));
   insert_action_group("transport",refActionGroupTransport);
-
+#ifndef _WIN32
   news_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
   news_viewpp = Glib::wrap( GTK_WIDGET( news_view ) );
   GET_WIDGET(news_box);
@@ -192,6 +192,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   bool load_news(TASCAR::config("tascar.gui.newspage",true));
   if( load_news )
     webkit_web_view_load_uri( news_view, url.c_str() );
+#endif
   notebook->show_all();
 }
 
@@ -614,7 +615,7 @@ void tascar_window_t::reset_gui()
   }
   if(session) {
     set_title("tascar - " + session->name + " [" +
-              basename(tascar_filename.c_str()) + "]");
+              Glib::filename_display_basename(tascar_filename) + "]");
   } else {
     set_title("tascar");
     resize(200, 60);
@@ -638,12 +639,14 @@ void tascar_window_t::reset_gui()
     legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();
+#ifndef _WIN32
   if(session && (!session->starturl.empty())) {
     webkit_web_view_load_uri(news_view,
                              TASCAR::env_expand(session->starturl).c_str());
     notebook->set_current_page(6);
   }
   webkit_web_view_reload_bypass_cache(news_view);
+#endif
 }
 
 void tascar_window_t::on_menu_file_quit()
@@ -656,7 +659,9 @@ void tascar_window_t::on_menu_file_close()
   try{
     scene_destroy();
     get_warnings().clear();
+#ifndef _WIN32
     webkit_web_view_try_close( news_view );
+#endif
   }
   catch( const std::exception& e){
     error_message(e.what());

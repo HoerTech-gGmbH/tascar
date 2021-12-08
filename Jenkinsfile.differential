@@ -5,7 +5,16 @@ def tascar_build_steps(stage_name) {
 
     // checkout tascarpro from version control system, the exact same revision that
     // triggered this job on each build slave
-    checkout scm
+    checkout changelog: false, poll: false, scm: [
+      $class: 'GitSCM',
+      branches: [[name: "phabricator/diff/$DIFF_ID"]],
+      browser: [$class: 'Phabricator', repo: 'rTP',
+                repoUrl: 'https://dev.openmha.org/'],
+      doGenerateSubmoduleConfigurations: false,
+      extensions: [[$class: 'CleanCheckout']],
+      submoduleCfg: [],
+      userRemoteConfigs: [[credentialsId: 'git',
+                           url: "$GIT_SERVER_HZOL/mha_phabricator_staging"]]]
 
     // Avoid that artifacts from previous builds influence this build
     sh "git reset --hard && git clean -ffdx"
@@ -52,7 +61,11 @@ def tascar_build_steps(stage_name) {
 }
 
 pipeline {
-    agent any
+    agent {label "arcanist"}
+    parameters {
+        string(name: 'PHID', defaultValue: 'invalidDefault', description: '')
+        string(name: 'DIFF_ID', defaultValue: 'invalidDefault', description: '')
+    }
     stages {
         stage("build") {
             parallel {
@@ -74,28 +87,19 @@ pipeline {
                 }
             }
         }
-        stage("artifacts") {
-            agent {label "aptly"}
-            // do not publish packages for any branches except these
-            when { anyOf { branch 'master'; branch 'development' } }
-            steps {
-                // receive all deb packages from tascarpro build
-                unstash "x86_64_focal"
-                unstash "x86_64_bionic"
-                unstash "armv7_bionic"
-
-                // Copies the new debs to the stash of existing debs,
-                sh "make -f hoertechstorage.mk storage"
-
-                build job: "/Packaging/hoertech-aptly/$BRANCH_NAME", quietPeriod: 300, wait: false
-            }
-        }
     }
     post {
-        failure {
-            mail to: 'g.grimm@hoertech.de,t.herzke@hoertech.de',
-            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-            body: "Something is wrong with ${env.BUILD_URL} ($GIT_URL)"
+        always {
+          script {
+            // workaround. See https://github.com/uber/phabricator-jenkins-plugin/pull/185
+            currentBuild.result = currentBuild.currentResult
+          }
+          step([$class: 'PhabricatorNotifier',
+                commentOnSuccess: true,
+                commentWithConsoleLinkOnFailure: true,
+                uberallsEnabled: false,
+                customComment: false,
+                processLint: false])
         }
     }
 }

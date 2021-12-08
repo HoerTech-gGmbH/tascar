@@ -28,7 +28,9 @@
 #include "gui_elements.h"
 #include <gtksourceview/gtksource.h>
 #include <gtksourceviewmm.h>
+#ifndef _WIN32
 #include <webkit2/webkit2.h>
+#endif
 
 void error_message(const std::string& msg);
 
@@ -157,10 +159,11 @@ protected:
 
   bool sessionloaded;
   bool sessionquit;
-
+#ifndef _WIN32
   WebKitWebView *news_view;
   Gtk::Box* news_box;
   Gtk::Widget* news_viewpp;
+#endif
   uint32_t splash_timeout;
 };
 

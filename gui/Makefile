@@ -80,7 +80,7 @@ build/%_glade.h: src/%.glade build/.directory
 
 build/tascar: build/tascar_glade.h
 
-build/tascar_spkcalib: build/spkcalib_glade.h
+build/tascar_spkcalib.o: build/spkcalib_glade.h
 
 build/tascar_mainwindow.o: src/tascar_xy.xpm src/tascar_xz.xpm src/tascar_yz.xpm src/tascar_xyz.xpm src/tascar_mainwindow.h
 
