@@ -90,7 +90,7 @@ make -C plugins -j 8 build/tascar_ap_pink.dll build/tascar_ap_sndfile.dll \
     build/tascar_system.dll       build/tascarreceiver_hoa2d.dll \
     build/tascarreceiver_hrtf.dll build/tascarreceiver_nsp.dll \
     build/tascarreceiver_omni.dll build/tascarsource_omni.dll \
-    build/tascar_hrirconv.dll
+    build/tascar_hrirconv.dll     build/tascarreceiver_foaconv.dll
 
 # Prepare to create a zip file which can be unpacked on another computer as
 # a simple TASCAR installation method on Windows.  Collect everything for
