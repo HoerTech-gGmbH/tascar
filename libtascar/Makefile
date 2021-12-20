@@ -8,6 +8,7 @@ include ../rules.mk
 #
 LIBVERSION=$(VERSION)
 SOVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1.\2/1')
+DYLIBCURVERSION=$(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1.\2.\3/1')
 
 #
 # main targets:
@@ -91,9 +92,15 @@ LDLIBS += -lshlwapi -lssp
 lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
 symlink: build/lib$(PLUGINPREFIX)tascar.dll build/lib$(PLUGINPREFIX)tascargui.dll
 else
+ifeq ($(UNAME_S),Linux)
 lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
 	ldconfig -n build
 symlink: build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
+else
+# probably on MacOS
+lib:   $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascargui.0.dylib
+symlink: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascargui.dylib
+endif
 endif
 
 build/lib$(PLUGINPREFIX)tascar.so.%: $(BUILD_OBJECTS)
@@ -111,6 +118,13 @@ build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS)
 
 build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll: $(BUILD_OBJECTS)
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+
+build/lib$(PLUGINPREFIX)tascar.0.dylib: $(BUILD_OBJECTS)
+	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascar.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+
+build/lib$(PLUGINPREFIX)tascargui.0.dylib: EXTERNALS += gtkmm-3.0
+build/lib$(PLUGINPREFIX)tascargui.0.dylib: $(BUILD_GUIOBJECTS)
+	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascargui.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
