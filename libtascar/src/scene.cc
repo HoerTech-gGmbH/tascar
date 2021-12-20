@@ -451,7 +451,7 @@ receiver_obj_t::receiver_obj_t(tsccfg::node_t xmlsrc, bool is_reverb_)
                                 ", receiver \"" + get_name() + "\").",
                             xmlsrc);
     }
-    bool checkcalibfor(TASCAR::config("tascar.spkcalib.checktypeid", true));
+    bool checkcalibfor(TASCAR::config("tascar.spkcalib.checktypeid", true) > 0.0);
     if(checkcalibfor)
       if(spk->spkpos.has_calibfor) {
         std::string spktypeid(spk->get_spktypeid());
@@ -595,7 +595,8 @@ void scene_t::release()
       if(p_as->is_prepared())
         p_as->release();
       if(p_as->is_prepared()) {
-        DEBUG(typeid(**it).name());
+        auto& r = **it;
+        DEBUG(typeid(r).name());
         DEBUG((*it)->get_name());
       }
     }
