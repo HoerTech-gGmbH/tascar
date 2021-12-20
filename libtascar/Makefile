@@ -18,7 +18,7 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   filterclass.o osc_helper.o pluginprocessor.o acousticmodel.o		\
   scene.o render.o session_reader.o session.o jackclient.o		\
   delayline.o async_file.o errorhandling.o osc_scene.o ringbuffer.o	\
-  viewport.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
+  sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
   audioplugin.o maskplugin.o levelmeter.o serviceclass.o		\
   speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o hoa.o		\
   tascar_os.o
@@ -33,7 +33,7 @@ endif
 
 DMXOBJECTS =  termsetbaud.o serialport.o dmxdriver.o
 
-GUIOBJECTS = gui_elements.o pdfexport.o
+GUIOBJECTS = gui_elements.o pdfexport.o viewport.o 
 
 # build dir:
 BUILD_OBJECTS = $(patsubst %,build/%,$(OBJECTS))
