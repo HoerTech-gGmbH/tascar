@@ -1,0 +1,21 @@
+name: MacOS make
+
+on:
+  push:
+    branches: [ feature/macosmake ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: fetchall
+      run: git fetch --tags --all
+    - name: dependencies
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c
+    - name: make
+      run: make
