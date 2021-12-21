@@ -31,7 +31,7 @@ public:
 private:
   void update_steer();
   void resize_val();
-  size_t numbeams = 1u;
+  uint32_t numbeams = 1u;
   float mingain = 0.0f;
   float maxgain = 1.0f;
 
