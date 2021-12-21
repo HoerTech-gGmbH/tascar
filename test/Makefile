@@ -62,7 +62,14 @@ LEVELREC = nsp hoa2d wfs vbap hann
 LEVTHR=0.25
 IRLEN = 4000
 
-LIBPATH=LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+LIBVAR=LD_LIBRARY_PATH
+endif
+ifeq ($(UNAME_S),Darwin)
+LIBVAR=DYLD_LIBRARY_PATH
+endif
+LIBPATH=$(LIBVAR)=../libtascar/build/:../plugins/build/
 VALIDATE=../apps/build/tascar_validatetsc
 RENDERIR=../apps/build/tascar_renderir
 RENDERFILE=../apps/build/tascar_renderfile
