@@ -46,7 +46,6 @@ namespace TASCAR {
     double tmargin;
     double bmargin;
     Cairo::RefPtr<Cairo::PdfSurface> surface;
-    bool b_acmodel;
   };
 
 }

@@ -31,8 +31,7 @@ TASCAR::pdfexport_t::pdfexport_t(TASCAR::session_t* s, const std::string& fname,
     rmargin(72*12/25.4),
     tmargin(72*18/25.4),
     bmargin(72*12/25.4),
-    surface(Cairo::PdfSurface::create(filename, width, height )),
-    b_acmodel(ac_model)
+    surface(Cairo::PdfSurface::create(filename, width, height ))
 {
   if( ac_model ){
     drawer.set_print_labels(false);
