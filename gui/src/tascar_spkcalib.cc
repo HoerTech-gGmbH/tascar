@@ -402,7 +402,7 @@ void calibsession_t::saveas(const std::string& fname)
   attributes.push_back("compB");
   attributes.push_back("connect");
   size_t checksum(elem.hash(attributes, true));
-  elem.set_attribute("checksum", checksum);
+  elem.set_attribute("checksum", (uint64_t)checksum);
   char ctmp[1024];
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
