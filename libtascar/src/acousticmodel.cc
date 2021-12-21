@@ -247,7 +247,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
         if(reflector)
           scattering = reflector->scattering;
         // add to receiver:
-        receiver_->add_pointsource(
+        receiver_->add_pointsource_with_scattering(
             prel,
             std::min(TASCAR_PI2,
                      0.25 * TASCAR_PI * src_->size / std::max(0.01, nextdistance)),
@@ -500,7 +500,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
     if(receiver_->render_diffuse && receiver_->active && src_->active &&
        (!receiver_->gain_zero) && (receiver_->layers & src_->layers)) {
       audio *= receiver_->diffusegain;
-      receiver_->add_diffuse_sound_field(audio, receiver_data);
+      receiver_->add_diffuse_sound_field_rec(audio, receiver_data);
       return 1;
     }
   }
@@ -640,10 +640,12 @@ void receiver_t::validate_attributes(std::string& msg) const
 /**
    \ingroup callgraph
  */
-void receiver_t::add_pointsource(const pos_t& prel, double width, double scattering, const wave_t& chunk, receivermod_base_t::data_t* data )
+void receiver_t::add_pointsource_with_scattering(
+    const pos_t& prel, double width, double scattering, const wave_t& chunk,
+    receivermod_base_t::data_t* data)
 {
-  scatterbuffer->add_panned( prel, chunk, scattering );
-  receivermod_t::add_pointsource( prel, width, chunk, outchannels, data );
+  scatterbuffer->add_panned(prel, chunk, scattering);
+  receivermod_t::add_pointsource(prel, width, chunk, outchannels, data);
 }
 
 /**
@@ -651,7 +653,7 @@ void receiver_t::add_pointsource(const pos_t& prel, double width, double scatter
  */
 void receiver_t::postproc(std::vector<wave_t>& output)
 {
-  add_diffuse_sound_field( *scatterbuffer, scatter_handle );
+  add_diffuse_sound_field_rec( *scatterbuffer, scatter_handle );
   receivermod_t::postproc(output);
   plugins.process_plugins(output,position,orientation,ltp);
 }
@@ -670,7 +672,7 @@ void receiver_t::post_proc(const TASCAR::transport_t& tp)
 /**
    \ingroup callgraph
  */
-void receiver_t::add_diffuse_sound_field(const amb1wave_t& chunk, receivermod_base_t::data_t* data)
+void receiver_t::add_diffuse_sound_field_rec(const amb1wave_t& chunk, receivermod_base_t::data_t* data)
 {
   receivermod_t::add_diffuse_sound_field(chunk,outchannels,data);
 }

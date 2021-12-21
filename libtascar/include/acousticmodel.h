@@ -202,9 +202,9 @@ namespace TASCAR {
       void post_prepare();
       void release();
       void clear_output();
-      void add_pointsource(const pos_t& prel, double width, double scattering,
+      void add_pointsource_with_scattering(const pos_t& prel, double width, double scattering,
                            const wave_t& chunk, receivermod_base_t::data_t*);
-      void add_diffuse_sound_field(const amb1wave_t& chunk,
+      void add_diffuse_sound_field_rec(const amb1wave_t& chunk,
                                    receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
