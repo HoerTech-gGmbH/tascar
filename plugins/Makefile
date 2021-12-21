@@ -155,19 +155,19 @@ build/$(PLUGINPREFIX)tascar_glabsensors$(DLLEXT): build/glabsensorplugin.o build
 build/$(PLUGINPREFIX)tascar_glabsensors$(DLLEXT): LDLIBS += -llsl
 
 build/$(PLUGINPREFIX)tascarreceiver_%$(DLLEXT): src/receivermod_%.cc
-	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)tascarsource_%$(DLLEXT): src/tascarsource_%.cc
-	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)tascar_%$(DLLEXT): src/tascarmod_%.cc
-	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)tascar_ap_%$(DLLEXT): src/tascar_ap_%.cc
-	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)tascar_mask_%$(DLLEXT): src/tascar_mask_%.cc
-	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): src/glabsensor_%.cc build/glabsensorplugin.o src/glabsensorplugin.h
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
