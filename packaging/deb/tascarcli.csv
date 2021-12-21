@@ -17,7 +17,6 @@
 "apps/build/tascar_showlicenses","usr/bin/"
 "apps/build/tascar_test_compare_level_sum","usr/bin/"
 "apps/build/tascar_test_compare_sndfile","usr/bin/"
-"apps/build/tascar_tscupdate","usr/bin/"
 "apps/build/tascar_validatetsc","usr/bin/"
 "apps/build/tascar_version","usr/bin/"
 "etc/mailcap/tascarsession.xml","usr/share/mime/packages/"

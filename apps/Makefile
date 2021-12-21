@@ -6,7 +6,7 @@ include ../rules.mk
 #
 # main targets:
 #
-BINFILES = tascar_cli tascar_tscupdate tascar_showlicenses		\
+BINFILES = tascar_cli tascar_showlicenses		\
   tascar_validatetsc tascar_pdf tascar_osc_jack_transport		\
   tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
   tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
