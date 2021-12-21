@@ -183,7 +183,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk
   refActionGroupTransport->add_action("previous",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_previous));
   refActionGroupTransport->add_action("next",sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_next));
   insert_action_group("transport",refActionGroupTransport);
-#ifndef _WIN32
+#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
   news_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
   news_viewpp = Glib::wrap( GTK_WIDGET( news_view ) );
   GET_WIDGET(news_box);
@@ -639,7 +639,7 @@ void tascar_window_t::reset_gui()
     legal_view->get_buffer()->set_text("");
   }
   on_menu_view_show_warnings();
-#ifndef _WIN32
+#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
   if(session && (!session->starturl.empty())) {
     webkit_web_view_load_uri(news_view,
                              TASCAR::env_expand(session->starturl).c_str());
@@ -659,7 +659,7 @@ void tascar_window_t::on_menu_file_close()
   try{
     scene_destroy();
     get_warnings().clear();
-#ifndef _WIN32
+#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
     webkit_web_view_try_close( news_view );
 #endif
   }

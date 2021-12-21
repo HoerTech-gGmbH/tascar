@@ -22,12 +22,15 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile gtkmm-3.0 glibmm-2.4 gtksourceviewmm
 
 ifneq ($(OS),Windows_NT) # There is no Gtk Webkit for Windows
 HAS_WEBKIT40 = $(shell pkg-config webkit2gtk-4.0 && echo "yes"||echo "no")
+HAS_WEBKIT30 = $(shell pkg-config webkit2gtk-3.0 && echo "yes"||echo "no")
 ifeq "$(HAS_WEBKIT40)" "yes"
 EXTERNALS += webkit2gtk-4.0
 CXXFLAGS += -DWEBKIT2GTK40=1
 else
+ifeq "$(HAS_WEBKIT30)" "yes"
 EXTERNALS += webkit2gtk-3.0
 CXXFLAGS += -DWEBKIT2GTK30=1
+endif
 endif
 endif
 

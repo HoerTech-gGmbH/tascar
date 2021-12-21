@@ -28,7 +28,8 @@
 #include "gui_elements.h"
 #include <gtksourceview/gtksource.h>
 #include <gtksourceviewmm.h>
-#ifndef _WIN32
+
+#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
 #include <webkit2/webkit2.h>
 #endif
 
@@ -159,7 +160,7 @@ protected:
 
   bool sessionloaded;
   bool sessionquit;
-#ifndef _WIN32
+#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
   WebKitWebView *news_view;
   Gtk::Box* news_box;
   Gtk::Widget* news_viewpp;

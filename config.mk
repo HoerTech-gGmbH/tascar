@@ -46,6 +46,8 @@ HAS_OPENCV2=$(shell $(mkfile_path)/check_for_opencv2)
 
 HAS_OPENCV4=$(shell $(mkfile_path)/check_for_opencv4)
 
+HAS_WEBKIT=$(shell $(mkfile_path)/check_for_webkit)
+
 BUILD_DIR = build
 SOURCE_DIR = src
 
@@ -56,3 +58,4 @@ export CXXFLAGS
 export HAS_LSL
 export HAS_OPENMHA
 export HAS_OPENCV2
+export HAS_WEBKIT
