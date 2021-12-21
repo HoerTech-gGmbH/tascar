@@ -2,7 +2,7 @@ name: MacOS make
 
 on:
   push:
-    branches: [ feature/macosmake ]
+    branches: [ master | development ]
   pull_request:
     branches: [ master ]
 
@@ -19,5 +19,5 @@ jobs:
       run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3
     - name: make
       run: make
-    - name: test
-      run: make test
+#    - name: test
+#      run: make test
