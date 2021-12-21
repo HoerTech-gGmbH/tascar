@@ -57,6 +57,7 @@ EXTERNALS = jack libxml++-2.6 liblo sndfile xerces-c
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
+CPPFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
 bin: $(BUILD_BINS)
 
