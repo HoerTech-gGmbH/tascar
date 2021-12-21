@@ -14,23 +14,29 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
 SOURCES = omni cardioidmod door generic1storder farsrc
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route oscevents oscjacktime ltcgen lightctl nearsensor	\
-  dirgain dummy matrix hoafdnrot mpu6050track touchosc savegains	\
-  hrirconv joystick hossustain midicc2osc midictl rotator oscserver	\
-  qualisystracker orientationmodulator locationmodulator		\
+  foa2hoadiff route oscevents oscjacktime ltcgen nearsensor dirgain	\
+  dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
+  hossustain rotator oscserver orientationmodulator locationmodulator	\
   locationvelocity granularsynth fail oscrelay waitforjackport sleep	\
   ovheadtracker jackrec
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
   transportgui lightcolorpicker
 
-AUDIOPLUGINS = delay dummy gate hannenv identity lipsync							\
+AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
-  gainramp pulse pink dumplevels feedbackdelay bandpass filter				\
-  level2osc const noise loopmachine pos2osc gain sndfileasync					\
+  gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
+  level2osc const noise loopmachine pos2osc gain sndfileasync		\
   addchannel
 
 MASKPLUGINS = fig8 multibeam
+
+ifneq ($(OS),Windows_NT)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  TASCARMODS += lightctl midicc2osc midictl joystick qualisystracker 
+endif
+endif
 
 ifeq "$(HAS_OPENCV2)" "yes"
 GLABSENSORS += trackir
