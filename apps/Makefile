@@ -8,13 +8,20 @@ include ../rules.mk
 #
 BINFILES = tascar_cli tascar_showlicenses		\
   tascar_validatetsc tascar_pdf tascar_osc_jack_transport		\
-  tascar_jackio tascar_sampler tascar_hdspmixer tascar_levelmeter	\
+  tascar_jackio tascar_sampler tascar_levelmeter	\
   tascar_jackpar tascar_renderfile tascar_renderir tascar_gpx2csv	\
   tascar_version tascar_test_compare_sndfile				\
   tascar_test_compare_level_sum tascar_lsjackp tascar_sendosc
 
 ifeq "$(HAS_LSL)" "yes"
 BINFILES += tascar_osc2lsl
+endif
+
+ifneq ($(OS),Windows_NT)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  BINFILES += tascar_hdspmixer
+endif
 endif
 
 TEST_FILES = test_ngon test_sinc
