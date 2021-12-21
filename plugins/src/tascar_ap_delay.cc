@@ -34,7 +34,6 @@ public:
 
 private:
   std::vector<double> delay;
-  uint32_t idelay;
   std::vector<TASCAR::wave_t*> dline;
   std::vector<uint32_t> pos;
 };

@@ -55,7 +55,6 @@ private:
   TASCAR::stft_t* stft;
   double* sSmoothedMag;
   double* sLogMag;
-  float freqBins [5];
   uint32_t* formantEdges;
   uint32_t numFormants;
   bool active;

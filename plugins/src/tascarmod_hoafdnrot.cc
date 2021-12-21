@@ -211,7 +211,6 @@ private:
   uint32_t fdnorder_;
   uint32_t amborder1;
   uint32_t maxdelay_;
-  uint32_t taplen;
   // delayline:
   cmat3_t delayline;
   // feedback matrix:
@@ -239,7 +238,6 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay, bool logde
     fdnorder_(fdnorder),
     amborder1(amborder+1),
     maxdelay_(maxdelay),
-    taplen(maxdelay*amborder1),
     delayline(fdnorder_,maxdelay_,amborder1),
     feedbackmat(fdnorder_,fdnorder_,amborder1),
     reflection(fdnorder,amborder1),
