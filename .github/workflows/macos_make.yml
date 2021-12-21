@@ -19,3 +19,5 @@ jobs:
       run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3
     - name: make
       run: make
+    - name: test
+      run: make test
