@@ -16,7 +16,7 @@ SOURCES = omni cardioidmod door generic1storder farsrc
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen nearsensor dirgain	\
   dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
-  hossustain rotator oscserver orientationmodulator locationmodulator	\
+  hossustain rotator orientationmodulator locationmodulator		\
   locationvelocity granularsynth fail oscrelay waitforjackport sleep	\
   ovheadtracker jackrec
 
@@ -34,7 +34,8 @@ MASKPLUGINS = fig8 multibeam
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-  TASCARMODS += lightctl midicc2osc midictl joystick qualisystracker 
+  TASCARMODS += lightctl midicc2osc midictl joystick qualisystracker	\
+  oscserver
 endif
 endif
 
