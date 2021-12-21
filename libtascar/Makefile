@@ -162,6 +162,9 @@ build/%.so: build/%.so.$(LIBVERSION)
 build/%.dll: build/%-$(LIBVERSION).dll
 	rm -f $@; ln -s $(subst build/,,$<) $@
 
+build/%.dylib: build/%.0.dylib
+	rm -f $@; ln -s $(subst build/,,$<) $@
+
 fullversion:
 	echo $(FULLVERSION) >$@
 
