@@ -62,8 +62,8 @@ bin: $(BUILD_BINS)
 
 build/tascar_hoadisplay: EXTERNALS += $(GTKEXT)
 build/tascar_hdspmixer build/tascar_hdspmixer.o: EXTERNALS += alsa
-build/tascar_gui build/tascar_pdf: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
-build/tascar_gui build/tascar_pdf: EXTERNALS += $(GTKEXT)
+build/tascar_pdf build/tascar_pdf.o: EXTERNALS += $(GTKEXT)
+build/tascar_pdf build/tascar_pdf.o: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 build/tascar_lslsl build/tascar_lsljacktime build/tascar_osc2lsl: LDLIBS+=-llsl
 build/tascar_renderfile: LDLIBS += -lboost_program_options
@@ -84,7 +84,7 @@ $(PREFIX)/bin/%: %
 
 build/%: build/%.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
- 
+
 # The additional build/.directory dependency ensures subdirectory creation
 build/%.o: src/%.cc build/.directory
 	$(CPP) $(CPPFLAGS) -MM -MF $(@:.o=.mk) $<
