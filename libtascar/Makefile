@@ -123,7 +123,7 @@ build/lib$(PLUGINPREFIX)tascar.0.dylib: $(BUILD_OBJECTS)
 	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascar.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascargui.0.dylib: EXTERNALS += gtkmm-3.0
-build/lib$(PLUGINPREFIX)tascargui.0.dylib: $(BUILD_GUIOBJECTS)
+build/lib$(PLUGINPREFIX)tascargui.0.dylib: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib
 	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascargui.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
@@ -157,12 +157,10 @@ build/pugixml.o: ../external_libs/pugixml-1.11.4/src/pugixml.cpp ../external_lib
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/%.so: build/%.so.$(LIBVERSION)
-	rm -f $@ # because ln -s does not update existing links
-	ln -s $(subst build/,,$<) $@
+	rm -f $@; ln -s $(subst build/,,$<) $@
 
 build/%.dll: build/%-$(LIBVERSION).dll
-	rm -f $@ # because ln -s does not update existing links
-	ln -s $(subst build/,,$<) $@
+	rm -f $@; ln -s $(subst build/,,$<) $@
 
 fullversion:
 	echo $(FULLVERSION) >$@
