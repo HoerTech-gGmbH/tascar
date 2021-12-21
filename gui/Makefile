@@ -60,9 +60,10 @@ $(PREFIX)/bin/%: %
 	cp $< $@
 
 build/tascar: $(OBJECTS)
+build/tascar: TSCOBJECTS=$(OBJECTS)
 
 build/%: build/%.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< $(TSCOBJECTS) $(LDLIBS) -o $@
 
 build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
