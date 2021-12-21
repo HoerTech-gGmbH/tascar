@@ -24,7 +24,7 @@
 #include "ola.h"
 #include <stdlib.h>
 
-const std::complex<float> i_f(0.0, 1.0);
+//const std::complex<float> i_f(0.0, 1.0);
 const std::complex<double> i_d(0.0, 1.0);
 
 class sustain_vars_t : public TASCAR::module_base_t {

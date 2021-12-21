@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <complex>
 
-const std::complex<double> i(0.0, 1.0);
+//const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0, 1.0);
 
 /**

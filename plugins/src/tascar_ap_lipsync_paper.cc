@@ -54,7 +54,7 @@ private:
   std::string path_;
   TASCAR::stft_t* stft;
   double* sSmoothedMag;
-  float freqBins [5];
+  //float freqBins [5];
   uint32_t* formantEdges;
   uint32_t numFormants;
   bool active;
