@@ -96,6 +96,7 @@ test_level_vbap3d_lidhan45sub: LEVTHR=2.8
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
+ifeq ($(UNAME_S),Linux)
 hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert			\
   test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert			\
   test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert			\
@@ -104,7 +105,16 @@ hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert			\
   test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre	\
   test_level_hoa3d_pinv_lidhan45_maxre					\
   test_level_hoa3d_pinv_lidhan45sub_maxre
-
+else
+hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert		\
+  test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert		\
+  test_snd_hoa3d_allrad_vert test_level_hoa3d_pinv		\
+  test_level_hoa3d_pinv_lidhan test_level_hoa3d_pinv_maxre	\
+  test_level_hoa3d_allrad test_level_hoa3d_allrad_lidhan	\
+  test_level_hoa3d_pinv_lidhan_maxre				\
+  test_level_hoa3d_pinv_lidhan45_maxre				\
+  test_level_hoa3d_pinv_lidhan45sub_maxre
+endif
 
 testrec: $(TEST_REC)
 
