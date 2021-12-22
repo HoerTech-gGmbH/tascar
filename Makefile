@@ -7,6 +7,20 @@ DESTDIR=
 MODULES = libtascar apps plugins gui
 DOCMODULES = doc manual
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	CMD_INSTALL=install
+	LIB_EXT=so
+	CMD_LD=ldconfig -n $(DESTDIR)$(LIBDIR)
+endif
+ifeq ($(UNAME_S),Darwin)
+	CMD_INSTALL=ginstall
+	LIB_EXT=dylib
+	CMD_LD=
+endif
+
+
+
 all: $(MODULES)
 
 apps plugins gui: libtascar
@@ -48,14 +62,14 @@ coverage: googletest unit-tests test testjack
 	x-www-browser ./coverage/index.html
 
 install: all
-	install -D libtascar/build/libtascar*.so -t $(DESTDIR)$(LIBDIR)
-	install -D libtascar/include/*.h -t $(DESTDIR)$(INCDIR)/tascar
-	install -D libtascar/build/*.h -t $(DESTDIR)$(INCDIR)/tascar
-	install -D plugins/build/*.so -t $(DESTDIR)$(LIBDIR)
-	install -D apps/build/tascar_* -t $(DESTDIR)$(BINDIR)
-	install -D gui/build/tascar -t $(DESTDIR)$(BINDIR)
-	install -D gui/build/tascar_spkcalib -t $(DESTDIR)$(BINDIR)
-	ldconfig -n $(DESTDIR)$(LIBDIR)
+	$(CMD_INSTALL) -D libtascar/build/libtascar*.$(LIB_EXT) -t $(DESTDIR)$(LIBDIR)
+	$(CMD_INSTALL) -D libtascar/include/*.h -t $(DESTDIR)$(INCDIR)/tascar
+	$(CMD_INSTALL) -D libtascar/build/*.h -t $(DESTDIR)$(INCDIR)/tascar
+	$(CMD_INSTALL) -D plugins/build/*.$(LIB_EXT) -t $(DESTDIR)$(LIBDIR)
+	$(CMD_INSTALL) -D apps/build/tascar_* -t $(DESTDIR)$(BINDIR)
+	$(CMD_INSTALL) -D gui/build/tascar -t $(DESTDIR)$(BINDIR)
+	$(CMD_INSTALL) -D gui/build/tascar_spkcalib -t $(DESTDIR)$(BINDIR)
+	$(CMD_LD)
 
 .PHONY : all clean test docexamples releasetag checkmodified checkversiontagged
 

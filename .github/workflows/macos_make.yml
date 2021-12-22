@@ -16,8 +16,8 @@ jobs:
     - name: fetchall
       run: git fetch --tags --all
     - name: dependencies
-      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3 coreutils adwaita-icon-theme 
     - name: make
       run: make
-#    - name: test
-#      run: make test
+    - name: test
+      run: make test
