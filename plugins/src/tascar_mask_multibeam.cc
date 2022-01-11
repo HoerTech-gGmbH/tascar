@@ -56,7 +56,7 @@ void multibeam_t::resize_val()
   resize_with_default(gain, 1.0f, numbeams);
   resize_with_default(az, 0.0f, numbeams);
   resize_with_default(el, 0.0f, numbeams);
-  resize_with_default(selectivity, 90.0f, numbeams);
+  resize_with_default(selectivity, 1.0f, numbeams);
 }
 
 multibeam_t::multibeam_t(const maskplugin_cfg_t& cfg) : maskplugin_base_t(cfg)
@@ -107,24 +107,32 @@ float multibeam_t::get_gain(const pos_t& pos)
 
 void multibeam_t::get_diff_gain(float* gm)
 {
-  //update_steer();
-  //float pgainw = 0.0f;
-  //float pgainy = 0.0f;
-  //float pgainz = 0.0f;
-  //float pgainx = 0.0f;
-  //for(size_t k = 0; k < numbeams; ++k) {
-  //  pgainw += gain[k];
-  //  float selgain = std::min(selectivity[k], 1.0f);
-  //  float zyxgain = gain[k] * (1.0f - selgain);
-  //  selgain *= gain[k];
-  //  pgainy += selgain * vsteer[k].y + zyxgain;
-  //  pgainz += selgain * vsteer[k].z + zyxgain;
-  //  pgainx += selgain * vsteer[k].x + zyxgain;
-  //}
-  //gw *= std::min(maxgain, mingain + (1.0f - mingain) * pgainw);
-  //gy *= std::min(maxgain, mingain + (1.0f - mingain) * pgainy);
-  //gz *= std::min(maxgain, mingain + (1.0f - mingain) * pgainz);
-  //gx *= std::min(maxgain, mingain + (1.0f - mingain) * pgainx);
+  update_steer();
+  memset(gm, 0, sizeof(float) * 16);
+  float diag_gain = mingain;
+  for(size_t k = 0; k < numbeams; ++k) {
+    float selgain = std::min(selectivity[k], 1.0f);
+    diag_gain += gain[k] * (1.0f - selgain);
+    float pgainw = gain[k] * selgain;
+    float pgainy = vsteer[k].y * pgainw;
+    float pgainz = vsteer[k].z * pgainw;
+    float pgainx = vsteer[k].x * pgainw;
+    float gains[4] = {1.0f, (float)(vsteer[k].y), (float)(vsteer[k].z),
+                      (float)(vsteer[k].x)};
+    size_t kgain = 0;
+    for(size_t r = 0; r < 16; r += 4) {
+      float gain = gains[kgain];
+      ++kgain;
+      gm[r] += pgainw * gain;
+      gm[r + 1] += pgainy * gain;
+      gm[r + 2] += pgainz * gain;
+      gm[r + 3] += pgainx * gain;
+    }
+  }
+  for(size_t r = 0; r < 16; r += 5)
+    gm[r] += diag_gain;
+  for(size_t r = 0; r < 16; ++r)
+    gm[r] = std::min(maxgain, gm[r]);
 }
 
 REGISTER_MASKPLUGIN(multibeam_t);

@@ -4,11 +4,11 @@
     <diffuse>
       <orientation>0 0 0 0 1 360 0 0</orientation>
       <plugins>
-        <const a="0.70711 1 0 0"/>
+        <const a="0.70711 0 0 1"/>
       </plugins>
     </diffuse>
     <receiver type="nsp" layout="8ch_nodecorr.spk">
-      <maskplugin type="multibeam" numbeams="1" az="0" selectivity="1"/>
+      <maskplugin type="multibeam" numbeams="1" az="90" selectivity="1"/>
     </receiver>
   </scene>
 </session>
