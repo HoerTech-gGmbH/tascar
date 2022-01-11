@@ -39,7 +39,9 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_ir_micarraysinc test_ir_amb1 test_ir_amb1_y		\
 	test_ir_amb1_z test_snd_diffuse_0deg test_snd_diffuse_17deg	\
 	test_snd_diffuse_rec17deg test_snd_maskplugin_fig8		\
-	test_snd_maskplugin_multibeam test_snd_maskplugin_multibeam1
+	test_snd_maskplugin_multibeam test_snd_maskplugin_multibeam1	\
+	test_snd_diffuse_inphase test_snd_diffuse_basic			\
+	test_snd_diffuse_maxre
 
 #test_snd_maskplugin_multibeam_diff
 
@@ -97,6 +99,7 @@ jack: $(TEST_JACK)
 
 test_reclevel_wfs test_reclevel_vbap test_reclevel_hann: LEVTHR=2.5
 test_level_vbap3d_lidhan45sub: LEVTHR=2.8
+test_level_diff_decorr: LEVTHR=1.5
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 

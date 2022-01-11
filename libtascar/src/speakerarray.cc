@@ -240,7 +240,7 @@ void spk_descriptor_t::update_foa_decoder(float gain, double xyzgain)
 {
   // update of FOA decoder matrix:
   d_w = 1.4142135623730951455f * gain;
-  gain *= xyzgain;
+  gain *= 2.0f * xyzgain;
   d_x = unitvector.x * gain;
   d_y = unitvector.y * gain;
   d_z = unitvector.z * gain;
@@ -288,12 +288,12 @@ void spk_array_diff_render_t::configure()
     std::uniform_real_distribution<double> dis(0.0, TASCAR_2PI);
     // std::exponential_distribution<double> dis(1.0);
     for(uint32_t k = 0; k < size(); ++k) {
-      for(uint32_t b = 0; b < fft_filter.s.n_; ++b) {
+      for(uint32_t b = 0u; b < fft_filter.s.n_; ++b)
         fft_filter.s[b] = std::exp(i * dis(gen));
-      }
       fft_filter.ifft();
       for(uint32_t t = 0; t < fft_filter.w.n; ++t)
-        fft_filter.w[t] *= (0.5 - 0.5 * cos(t * TASCAR_2PI / fft_filter.w.n));
+        fft_filter.w[t] *=
+            (0.5f - 0.5f * cosf(t * TASCAR_2PIf / fft_filter.w.n));
       decorrflt[k].set_irs(fft_filter.w, false);
     }
   }

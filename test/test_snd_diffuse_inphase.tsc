@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <diffuse>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+      <plugins>
+        <!-- internally, FuMa normalization and ACN is used: -->
+        <const a="0.70711 0 0 1"/>
+      </plugins>
+    </diffuse>
+    <receiver type="nsp">
+      <!-- inphase decoding is achieved with g_m = 0.5 (Daniel, 2001) -->
+      <layout xyzgain="0.5" decorr="false">
+        <speaker az="0" r="1"/>
+      </layout>
+    </receiver>
+  </scene>
+</session>
