@@ -152,7 +152,7 @@ build/glabsensors.o: EXTERNALS += gtkmm-3.0
 build/glabsensors.o: build/glabsensors_glade.h
 build/$(PLUGINPREFIX)tascar_glabsensors$(DLLEXT): build/glabsensors_glade.h
 build/$(PLUGINPREFIX)tascar_glabsensors$(DLLEXT): build/glabsensorplugin.o build/glabsensors_glade.h src/glabsensorplugin.h
-build/$(PLUGINPREFIX)tascar_glabsensors$(DLLEXT): LDLIBS += -llsl
+build/$(PLUGINPREFIX)tascar_glabsensors$(DLLEXT): LDLIBS += -llsl build/glabsensorplugin.o
 
 build/$(PLUGINPREFIX)tascarreceiver_%$(DLLEXT): src/receivermod_%.cc
 	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
