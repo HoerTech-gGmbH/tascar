@@ -156,6 +156,10 @@ void pos2osc_t::update(uint32_t tp_frame, bool tp_rolling)
           else
             lo_send(target, path.c_str(), "sfff", "/lookAt", p.x, p.y, p.z);
           break;
+        case 5:
+          path = "/" + avatar;
+          lo_send(target, path.c_str(), "f", RAD2DEG * o.z);
+          break;
         }
       }
     }
