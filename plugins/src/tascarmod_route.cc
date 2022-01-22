@@ -111,7 +111,6 @@ private:
   TASCAR::plugin_processor_t plugins;
   TASCAR::pos_t nullpos;
   TASCAR::zyx_euler_t nullrot;
-  float dummy;
   std::vector<TASCAR::wave_t> sIn_tsc;
   bool bypass;
   pthread_mutex_t mtx_;

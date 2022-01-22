@@ -25,7 +25,6 @@
 #include "fft.h"
 #include <limits>
 
-const std::complex<float> i(0.0f, 1.0f);
 const std::complex<double> i_d(0.0, 1.0);
 
 /**
@@ -232,7 +231,6 @@ private:
   bool logdelays_;
   uint32_t fdnorder_;
   uint32_t maxdelay_;
-  uint32_t taplen;
   // delayline:
   foa_sample_matrix_2d_t delayline;
   // feedback matrix:
@@ -261,7 +259,7 @@ public:
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
              gainmethod_t gm)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
-      taplen(maxdelay * 2), delayline(fdnorder_, maxdelay_),
+      delayline(fdnorder_, maxdelay_),
       feedbackmat(fdnorder_ * fdnorder_), reflection(fdnorder), prefilt(2),
       rotation(fdnorder), dlout(fdnorder_), delay(new uint32_t[fdnorder_]),
       pos(new uint32_t[fdnorder_]), gainmethod(gm)
@@ -365,7 +363,6 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
     float laz(az);
     if(fdnorder_ > 1)
       laz = az - daz + 2.0 * daz * tap * 1.0 / (fdnorder_);
-    std::complex<float> caz(std::exp(i * laz));
     rotation[tap].set_rotation(laz, TASCAR::pos_t(0, 0, 1));
     TASCAR::quaternion_t q;
     q.set_rotation(0.5 * daz * (tap & 1) - 0.5 * daz, TASCAR::pos_t(0, 1, 0));
@@ -478,7 +475,6 @@ public:
                                          lo_message msg, void* user_data);
 
 private:
-  uint32_t channels;
   fdn_t* fdn;
   TASCAR::amb1wave_t* foa_out;
   pthread_mutex_t mtx;
