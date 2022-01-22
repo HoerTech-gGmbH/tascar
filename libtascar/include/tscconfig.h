@@ -268,6 +268,12 @@ namespace TASCAR {
   std::string env_expand(std::string s);
 
   std::vector<TASCAR::pos_t> str2vecpos(const std::string& s);
+
+  /** Split a string into tokens at spaces.
+   *
+   * A quoted string can include spaces. Single and double quotes are
+   * accepted. Quotes (of other type) within quotes are passed trough.
+   */
   std::vector<std::string> str2vecstr(const std::string& s);
   std::string vecstr2str(const std::vector<std::string>& s);
   std::vector<double> str2vecdouble(const std::string& s);

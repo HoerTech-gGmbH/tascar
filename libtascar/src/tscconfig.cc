@@ -1646,14 +1646,31 @@ std::vector<int32_t> TASCAR::str2vecint(const std::string& s)
 std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
 {
   std::vector<std::string> value;
-  if(!s.empty()) {
-    std::stringstream ptxt(s);
-    while(ptxt.good()) {
-      std::string p;
-      ptxt >> p;
-      value.push_back(p);
+  std::string tok;
+  int mode = 0;
+  bool wasquoted = false;
+  for( auto c : s ){
+    if( (mode==0) && (c == ' ') ){
+      if( tok.size()||wasquoted )
+        value.push_back(tok);
+      tok.clear();
+      wasquoted = false;
+    }else if( (mode==0) && (c == '\'') ){
+      wasquoted = true;
+      mode = 1;
+    }else if( (mode==1) && (c == '\'') ){
+      mode = 0;
+    }else if( (mode==0) && (c == '"') ){
+      wasquoted = true;
+      mode = 2;
+    }else if( (mode==2) && (c == '"') ){
+      mode = 0;
+    }else{
+      tok += c;
     }
   }
+  if( tok.size() )
+    value.push_back(tok);
   return value;
 }
 
@@ -1663,7 +1680,10 @@ std::string TASCAR::vecstr2str(const std::vector<std::string>& s)
   for(auto it = s.begin(); it != s.end(); ++it) {
     if(it != s.begin())
       rv += " ";
-    rv += *it;
+    if( it->find(' ') != std::string::npos )
+      rv += "'"+*it+"'";
+    else
+      rv += *it;
   }
   return rv;
 }
