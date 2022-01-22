@@ -27,9 +27,9 @@
 #ifndef _WIN32
 #include <sys/wait.h>
 #endif
+#include <signal.h>
 #include <thread>
 #include <unistd.h>
-#include <signal.h>
 
 class at_cmd_t : public TASCAR::xml_element_t {
 public:
@@ -118,6 +118,7 @@ private:
   std::string triggered;
   double sleep;
   std::string onunload;
+  bool noshell = true;
   FILE* h_pipe;
   FILE* h_atcmd;
   FILE* h_triggered;
@@ -147,7 +148,7 @@ void system_t::trigger(int32_t c)
     memset(ctmp, 0, sizeof(ctmp));
     snprintf(ctmp, sizeof(ctmp), "sh -c \"cd %s;%s %d\"", sessionpath.c_str(),
              triggered.c_str(), c);
-    ctmp[sizeof(ctmp)-1] = 0;
+    ctmp[sizeof(ctmp) - 1] = 0;
     if(h_triggered) {
       fprintf(h_triggered, "%s\n", ctmp);
       fflush(h_triggered);
@@ -163,7 +164,7 @@ void system_t::trigger()
     memset(ctmp, 0, sizeof(ctmp));
     snprintf(ctmp, sizeof(ctmp), "sh -c \"cd %s;%s\"", sessionpath.c_str(),
              triggered.c_str());
-    ctmp[sizeof(ctmp)-1] = 0;
+    ctmp[sizeof(ctmp) - 1] = 0;
     if(h_triggered) {
       fprintf(h_triggered, "%s\n", ctmp);
       fflush(h_triggered);
@@ -172,7 +173,7 @@ void system_t::trigger()
   }
 }
 
-pid_t system2(const char* command)
+pid_t system2(const std::string& command, bool noshell)
 {
   pid_t pid = -1;
 #ifndef _WIN32 // Windows has no fork.
@@ -184,12 +185,47 @@ pid_t system2(const char* command)
     for(int i = 3; i < 4096; ++i)
       ::close(i);
     setsid();
-    execl("/bin/sh", "sh", "-c", command, NULL);
+    if(noshell) {
+      std::vector<std::string> pars = TASCAR::str2vecstr(command);
+      char* vpars[pars.size() + 1];
+      for(size_t k = 0; k < pars.size(); ++k) {
+        vpars[k] = strdup(pars[k].c_str());
+      }
+      vpars[pars.size()] = NULL;
+      if(pars.size()) {
+        execvp(pars[0].c_str(), vpars);
+      }
+      for(size_t k = 0; k < pars.size(); ++k) {
+        DEBUG(vpars[k]);
+        free(vpars[k]);
+      }
+    } else {
+      execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
+    }
     _exit(1);
   }
 #endif
   return pid;
 }
+
+// pid_t system2(const char* command)
+//{
+//  pid_t pid = -1;
+//#ifndef _WIN32 // Windows has no fork.
+//  pid = fork();
+//  if(pid < 0) {
+//    return pid;
+//  } else if(pid == 0) {
+//    /// Close all other descriptors for the safety sake.
+//    for(int i = 3; i < 4096; ++i)
+//      ::close(i);
+//    setsid();
+//    execl("/bin/sh", "sh", "-c", command, NULL);
+//    _exit(1);
+//  }
+//#endif
+//  return pid;
+//}
 
 system_t::system_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), id("system"), sleep(0), h_pipe(NULL), h_atcmd(NULL),
@@ -201,10 +237,11 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_(sleep);
   GET_ATTRIBUTE_(onunload);
   GET_ATTRIBUTE_(triggered);
-  for(auto sne : tsccfg::node_get_children(e,"at"))
+  GET_ATTRIBUTE_BOOL(noshell, "do not use shell to spawn subprocess");
+  for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
   if(!command.empty()) {
-    pid = system2(command.c_str());
+    pid = system2(command.c_str(), noshell);
   }
   if(atcmds.size()) {
     h_atcmd = popen("/bin/bash -s", "w");
