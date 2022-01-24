@@ -23,6 +23,8 @@
 #include "errorhandling.h"
 #include <lo/lo.h>
 
+enum levelmode_t { dbspl, rms, max };
+
 class level2osc_t : public TASCAR::audioplugin_base_t {
 public:
   level2osc_t(const TASCAR::audioplugin_cfg_t& cfg);
@@ -33,13 +35,14 @@ public:
   ~level2osc_t();
 
 private:
-  bool sendwhilestopped = {false};
-  uint32_t skip = {0};
-  std::string url = {"osc.udp://localhost:9999/"};
-  std::string path = {"/level"};
+  bool sendwhilestopped = false;
+  uint32_t skip = 0;
+  std::string url = "osc.udp://localhost:9999/";
+  std::string path = "/level";
   // derived variables:
+  levelmode_t imode = dbspl;
   lo_address lo_addr;
-  uint32_t skipcnt = {0};
+  uint32_t skipcnt = 0;
   lo_message msg;
   lo_arg** oscmsgargv;
 };
@@ -51,6 +54,16 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(skip, "", "Skip frames");
   GET_ATTRIBUTE(url, "", "Target URL");
   GET_ATTRIBUTE(path, "", "Target path");
+  std::string mode("dbspl");
+  GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
+  if(mode == "dbspl")
+    imode = dbspl;
+  else if(mode == "rms")
+    imode = rms;
+  else if(mode == "max")
+    imode = max;
+  else
+    throw TASCAR::ErrMsg("Invalid level mode: " + mode);
   lo_addr = lo_address_new_from_url(url.c_str());
 }
 
@@ -93,8 +106,19 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     } else {
       // pack data:
       oscmsgargv[0]->f = tp.object_time_seconds;
-      for(uint32_t ch = 0; ch < n_channels; ++ch)
-        oscmsgargv[ch + 1]->f = chunk[ch].spldb();
+      for(uint32_t ch = 0; ch < n_channels; ++ch) {
+        switch(imode) {
+        case dbspl:
+          oscmsgargv[ch + 1]->f = chunk[ch].spldb();
+          break;
+        case rms:
+          oscmsgargv[ch + 1]->f = chunk[ch].rms();
+          break;
+        case max:
+          oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
+          break;
+        }
+      }
       // send message:
       lo_send_message(lo_addr, path.c_str(), msg);
       skipcnt = skip;
