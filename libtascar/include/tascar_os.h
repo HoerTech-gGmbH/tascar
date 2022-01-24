@@ -20,6 +20,7 @@
 #ifndef TASCAR_OS_H
 #define TASCAR_OS_H
 #include <time.h>
+#include <sys/types.h>
 
 namespace TASCAR {
   /// @brief Convert a string representation of time to a time tm structure.
