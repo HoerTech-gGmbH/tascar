@@ -66,6 +66,14 @@ namespace TASCAR {
   /// @return this implementation returns resolved_path when the conversion
   ///         was successful, and returns path when not.
   const char* realpath(const char* path, char* resolved_path);
+
+  /// @brief Spawn a subprocess and return its process ID
+  /// This function is not implemented for Windows.
+  /// @param command Command to be executed
+  /// @param shell Launch command using a shell (true) or directly
+  /// @return Process ID
+  pid_t system(const char* command, bool shell);
+
 } // namespace TASCAR
 
 #endif

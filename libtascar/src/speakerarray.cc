@@ -75,12 +75,14 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
   clear();
-  for(auto& sn : tsccfg::node_get_children(e_layout,elementname))
+  for(auto& sn : tsccfg::node_get_children(e_layout, elementname))
     emplace_back(sn);
-  elayout.GET_ATTRIBUTE(xyzgain,"","XYZ-gain for FOA decoding");
-  elayout.GET_ATTRIBUTE(name,"","Name of layout, for documentation only");
-  elayout.GET_ATTRIBUTE(onload,"","system command to be executed when layout is loaded");
-  elayout.GET_ATTRIBUTE(onunload,"","system command to be executed when layout is unloaded");
+  elayout.GET_ATTRIBUTE(xyzgain, "", "XYZ-gain for FOA decoding");
+  elayout.GET_ATTRIBUTE(name, "", "Name of layout, for documentation only");
+  elayout.GET_ATTRIBUTE(onload, "",
+                        "system command to be executed when layout is loaded");
+  elayout.GET_ATTRIBUTE(
+      onunload, "", "system command to be executed when layout is unloaded");
   //
   if(empty() && (!allow_empty))
     throw TASCAR::ErrMsg("Invalid " + elementname_ + " array (no " +
@@ -128,7 +130,7 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
       operator[](k).densityweight /= dwmean;
   }
   if(!onload.empty()) {
-    int err(system(onload.c_str()));
+    int err(::system(onload.c_str()));
     if(err != 0)
       std::cerr << "subprocess \"" << onload << "\" returned " << err
                 << std::endl;
@@ -138,7 +140,7 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
 spk_array_t::~spk_array_t()
 {
   if(!onunload.empty()) {
-    int err(system(onunload.c_str()));
+    int err(::system(onunload.c_str()));
     if(err != 0)
       std::cerr << "subprocess \"" << onunload << "\" returned " << err
                 << std::endl;

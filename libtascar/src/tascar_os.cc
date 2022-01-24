@@ -28,6 +28,8 @@
 #else
 #include <fnmatch.h>
 #endif
+#include <unistd.h>
+#include "tscconfig.h"
 
 namespace TASCAR {
   const char* strptime(const char* s, const char* f, struct tm* tm)
@@ -96,6 +98,40 @@ namespace TASCAR {
     }
     return result;
 #endif
+  }
+
+  pid_t system(const char* command, bool noshell)
+  {
+    pid_t pid = -1;
+#ifndef _WIN32 // Windows has no fork.
+    pid = fork();
+    if(pid < 0) {
+      return pid;
+    } else if(pid == 0) {
+      /// Close all other descriptors for the safety sake.
+      for(int i = 3; i < 4096; ++i)
+        ::close(i);
+      setsid();
+      if(noshell) {
+        std::vector<std::string> pars = TASCAR::str2vecstr(command);
+        char* vpars[pars.size() + 1];
+        for(size_t k = 0; k < pars.size(); ++k) {
+          vpars[k] = strdup(pars[k].c_str());
+        }
+        vpars[pars.size()] = NULL;
+        if(pars.size()) {
+          execvp(pars[0].c_str(), vpars);
+        }
+        for(size_t k = 0; k < pars.size(); ++k) {
+          free(vpars[k]);
+        }
+      } else {
+        execl("/bin/sh", "sh", "-c", command, NULL);
+      }
+      _exit(1);
+    }
+#endif
+    return pid;
   }
 
 } // namespace TASCAR

@@ -21,15 +21,13 @@
  */
 
 #include "session.h"
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#ifndef _WIN32
-#include <sys/wait.h>
-#endif
+#include "tascar_os.h"
 #include <signal.h>
 #include <thread>
 #include <unistd.h>
+#ifndef _WIN32
+#include <sys/wait.h>
+#endif
 
 class at_cmd_t : public TASCAR::xml_element_t {
 public:
@@ -173,60 +171,6 @@ void system_t::trigger()
   }
 }
 
-pid_t system2(const std::string& command, bool noshell)
-{
-  pid_t pid = -1;
-#ifndef _WIN32 // Windows has no fork.
-  pid = fork();
-  if(pid < 0) {
-    return pid;
-  } else if(pid == 0) {
-    /// Close all other descriptors for the safety sake.
-    for(int i = 3; i < 4096; ++i)
-      ::close(i);
-    setsid();
-    if(noshell) {
-      std::vector<std::string> pars = TASCAR::str2vecstr(command);
-      char* vpars[pars.size() + 1];
-      for(size_t k = 0; k < pars.size(); ++k) {
-        vpars[k] = strdup(pars[k].c_str());
-      }
-      vpars[pars.size()] = NULL;
-      if(pars.size()) {
-        execvp(pars[0].c_str(), vpars);
-      }
-      for(size_t k = 0; k < pars.size(); ++k) {
-        DEBUG(vpars[k]);
-        free(vpars[k]);
-      }
-    } else {
-      execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
-    }
-    _exit(1);
-  }
-#endif
-  return pid;
-}
-
-// pid_t system2(const char* command)
-//{
-//  pid_t pid = -1;
-//#ifndef _WIN32 // Windows has no fork.
-//  pid = fork();
-//  if(pid < 0) {
-//    return pid;
-//  } else if(pid == 0) {
-//    /// Close all other descriptors for the safety sake.
-//    for(int i = 3; i < 4096; ++i)
-//      ::close(i);
-//    setsid();
-//    execl("/bin/sh", "sh", "-c", command, NULL);
-//    _exit(1);
-//  }
-//#endif
-//  return pid;
-//}
-
 system_t::system_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), id("system"), sleep(0), h_pipe(NULL), h_atcmd(NULL),
       h_triggered(NULL), pid(0), fifo(1024), run_service(true),
@@ -241,7 +185,7 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
   if(!command.empty()) {
-    pid = system2(command.c_str(), noshell);
+    pid = TASCAR::system(command.c_str(), !noshell);
   }
   if(atcmds.size()) {
     h_atcmd = popen("/bin/bash -s", "w");
@@ -299,8 +243,10 @@ system_t::~system_t()
   run_service = false;
   srv.join();
 #ifndef _WIN32 // As Windows does not fork, there is no need to kill.
-  if(pid > 0)
+  if(pid > 0) {
     killpg(pid, SIGTERM);
+    waitpid(pid, NULL, 0);
+  }
 #endif
   if(h_pipe)
     fclose(h_pipe);

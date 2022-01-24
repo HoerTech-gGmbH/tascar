@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     case cft_int64:
       fmt = "int64";
       break;
-    case cft_undefined:
+    default:
       fmt = "undefined";
       break;
     }
