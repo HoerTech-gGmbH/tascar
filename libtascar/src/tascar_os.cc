@@ -112,6 +112,7 @@ namespace TASCAR {
       for(int i = 3; i < 4096; ++i)
         ::close(i);
       setsid();
+      DEBUG(command);
       if(!shell) {
         std::vector<std::string> pars = TASCAR::str2vecstr(command);
         char* vpars[pars.size() + 1];
@@ -122,11 +123,14 @@ namespace TASCAR {
         if(pars.size()) {
           execvp(pars[0].c_str(), vpars);
         }
+        DEBUG(1);
         for(size_t k = 0; k < pars.size(); ++k) {
           free(vpars[k]);
         }
+        DEBUG(1);
       } else {
         execl("/bin/sh", "sh", "-c", command, NULL);
+        DEBUG(1);
       }
       _exit(1);
     }
