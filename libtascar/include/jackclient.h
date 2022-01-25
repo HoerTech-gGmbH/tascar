@@ -31,6 +31,7 @@
 #include <jack/jack.h>
 #include <string>
 #include <vector>
+#include <atomic>
 
 class jackc_portless_t {
 public:
@@ -64,6 +65,7 @@ public:
   bool active;
   uint32_t xruns;
   double xrun_latency;
+  std::atomic_bool shutdown = false;
 };
 
 /**
