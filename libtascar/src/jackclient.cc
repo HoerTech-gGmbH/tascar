@@ -36,7 +36,7 @@
 static std::string errmsg("");
 
 jackc_portless_t::jackc_portless_t(const std::string& clientname)
-    : srate(0), active(false), xruns(0), xrun_latency(0)
+  : srate(0), active(false), xruns(0), xrun_latency(0), shutdown(false)
 {
   jack_status_t jstat;
   // jack_options_t opt(JackUseExactName |JackNoStartServer);

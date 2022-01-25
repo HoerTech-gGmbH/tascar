@@ -65,7 +65,7 @@ public:
   bool active;
   uint32_t xruns;
   double xrun_latency;
-  std::atomic_bool shutdown = false;
+  std::atomic_bool shutdown;
 };
 
 /**
