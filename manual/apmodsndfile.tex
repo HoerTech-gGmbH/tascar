@@ -39,7 +39,25 @@ See also Figure \ref{fig:ap_sndfile} for more details on the time and position c
 \begin{figure}[htb]
     \centering
     \fbox{\includegraphics[width=\textwidth]{ap_sndfile}}
-    \caption{Explanation of {\tt sndfile} audio plugin attributes.}
+    \caption{Temporal alignment of sounds added with the {\tt sndfile} audio plugin.}
     \label{fig:ap_sndfile}
 \end{figure}
 
+\paragraph{OSC control}
+%
+To load a file via OSC, send to the path {\tt /loadfile} (for full
+path check the list of OSC variables in TASCAR) with two strings and a
+float parameter.
+%
+The first string is the file name, either as absolute path or relative
+to the current session file. The second string is the level mode, see
+above for details. The third parameter is the level in dB, again see
+above for details.
+%
+\begin{verbatim}
+/scene/in/0/ap0/sndfile/loadfile sound.wav rms 50
+\end{verbatim}
+%
+If an invalid file name or level mode is provided, a warning is
+printed to the console running TASCAR (to see such warnings start
+TASCAR from a terminal).
