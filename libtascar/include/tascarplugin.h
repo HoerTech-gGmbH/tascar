@@ -18,6 +18,7 @@
  * 02110-1301, USA.
  */
 #ifndef TASCARPLUGIN_H
+#define TASCARPLUGIN_H
 
 #include "tascarver.h"
 #include <string.h>

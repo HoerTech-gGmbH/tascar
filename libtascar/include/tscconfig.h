@@ -164,6 +164,9 @@ namespace TASCAR {
   std::string config(const std::string&, const std::string&);
   void config_forceoverwrite(const std::string&, const std::string&);
 
+  void set_libdir(const std::string&);
+  const std::string& get_libdir();
+
   class xml_element_t {
   public:
     xml_element_t(const tsccfg::node_t&);

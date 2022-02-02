@@ -38,6 +38,18 @@ public:
 
 static xml_init_t xercesc_init;
 
+static std::string tascar_libdir;
+
+void TASCAR::set_libdir(const std::string& s)
+{
+  tascar_libdir = s;
+}
+
+const std::string& TASCAR::get_libdir()
+{
+  return tascar_libdir;
+}
+
 std::basic_string<XMLCh> str2wstr(const char* text)
 {
   XMLCh* resarr(xercesc::XMLString::transcode(text));

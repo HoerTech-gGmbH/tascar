@@ -49,7 +49,7 @@ TASCAR::maskplugin_t::maskplugin_t(const maskplugin_cfg_t& cfg)
   modname = plugintype;
   maskplugin_cfg_t lcfg(cfg);
   lcfg.modname = modname;
-  lib = dlopen(libname.c_str(), RTLD_NOW);
+  lib = dlopen((TASCAR::get_libdir()+libname).c_str(), RTLD_NOW);
   if(!lib)
     throw TASCAR::ErrMsg("Unable to open module \"" + plugintype +
                          "\": " + dlerror());
