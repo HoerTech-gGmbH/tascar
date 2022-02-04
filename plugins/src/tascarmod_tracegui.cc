@@ -22,7 +22,7 @@
 #include <iostream>
 #include "session.h"
 #include "errorhandling.h"
-#include <gdkmm/event.h>
+//#include <gdkmm/event.h>
 #include <gtkmm.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/window.h>
