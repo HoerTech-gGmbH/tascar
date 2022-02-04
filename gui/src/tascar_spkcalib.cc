@@ -387,7 +387,8 @@ void calibsession_t::saveas(const std::string& fname)
         }
     }
   }
-  elem.set_attribute("checksum", get_spklayout_checksum(elem));
+  auto checksum = get_spklayout_checksum(elem);
+  elem.set_attribute("checksum", checksum);
   char ctmp[1024];
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
