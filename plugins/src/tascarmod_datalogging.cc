@@ -348,7 +348,7 @@ private:
   std::string name_;
   pthread_mutex_t& record_mtx_;
   jack_client_t* jc_;
-  double israte_;
+  double audio_sample_period_;
   pthread_mutex_t drawlock;
   pthread_mutex_t plotdatalock;
   sigc::connection connection_timeout;
@@ -361,8 +361,9 @@ recorder_t::recorder_t(uint32_t size, const std::string& name,
                        pthread_mutex_t& record_mtx, jack_client_t* jc,
                        double srate, bool ignore_first, size_t skipplotdata)
     : displaydc_(true), size_(size), b_textdata(false), vdc(size_, 0),
-      name_(name), record_mtx_(record_mtx), jc_(jc), israte_(1.0 / srate),
-      ignore_first_(ignore_first), skipplotdata_(skipplotdata), plotdata_cnt(0)
+      name_(name), record_mtx_(record_mtx), jc_(jc),
+      audio_sample_period_(1.0 / srate), ignore_first_(ignore_first),
+      skipplotdata_(skipplotdata), plotdata_cnt(0)
 {
   pthread_mutex_init(&drawlock, NULL);
   pthread_mutex_init(&plotdatalock, NULL);
@@ -510,7 +511,7 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       if(b_textdata) {
         drange = dmax - dmin;
         dscale = height / drange;
-        ltime = israte_ * jack_get_current_transport_frame(jc_);
+        ltime = audio_sample_period_ * jack_get_current_transport_frame(jc_);
         for(auto it = plot_messages.begin(); it != plot_messages.end(); ++it) {
           if((it->t1 >= ltime - 30) && (it->t1 <= ltime)) {
             double t((it->t1 - ltime) * width / 30.0);
@@ -648,15 +649,16 @@ void recorder_t::store(uint32_t n, double* data)
   // todo: increase efficiency, add multi-frame addition
   if(n != size_)
     throw TASCAR::ErrMsg("Invalid size (recorder_t::store)");
-  pthread_mutex_lock(&record_mtx_);
-  for(uint32_t k = 0; k < n; k++)
-    data_.push_back(data[k]);
-  if(pthread_mutex_trylock(&plotdatalock) == 0) {
+  if(pthread_mutex_lock(&record_mtx_) == 0) {
     for(uint32_t k = 0; k < n; k++)
-      plotdata_.push_back(data[k]);
-    pthread_mutex_unlock(&plotdatalock);
+      data_.push_back(data[k]);
+    if(pthread_mutex_trylock(&plotdatalock) == 0) {
+      for(uint32_t k = 0; k < n; k++)
+        plotdata_.push_back(data[k]);
+      pthread_mutex_unlock(&plotdatalock);
+    }
+    pthread_mutex_unlock(&record_mtx_);
   }
-  pthread_mutex_unlock(&record_mtx_);
 }
 
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
@@ -754,7 +756,7 @@ private:
   Glib::Dispatcher osc_stop;
   Glib::Dispatcher osc_set_trialid;
   std::string osc_trialid;
-  double israte_;
+  double audio_sample_period_;
   uint32_t fragsize;
   double srate;
 };
@@ -768,7 +770,7 @@ private:
 datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
     : dlog_vars_t(cfg), TASCAR::osc_server_t(multicast, port, srv_proto),
       // jackc_portless_t(jacknamer(session->name,"datalog.")),
-      b_recording(false), israte_(1.0 / cfg.session->srate),
+      b_recording(false), audio_sample_period_(1.0 / cfg.session->srate),
       fragsize(cfg.session->fragsize), srate(cfg.session->srate)
 {
   pthread_mutex_init(&record_mtx, NULL);
@@ -991,7 +993,7 @@ int recorder_t::osc_setvar(const char* path, const char* types, lo_arg** argv,
 
 void recorder_t::osc_setvar(const char* path, uint32_t size, double* data)
 {
-  data[0] = israte_ * jack_get_current_transport_frame(jc_);
+  data[0] = audio_sample_period_ * jack_get_current_transport_frame(jc_);
   store(size, data);
 }
 
@@ -1004,7 +1006,7 @@ int recorder_t::osc_setvar_s(const char* path, const char* types, lo_arg** argv,
 
 void recorder_t::osc_setvar_s(const char* path, const char* msg)
 {
-  double t1(israte_ * jack_get_current_transport_frame(jc_));
+  double t1(audio_sample_period_ * jack_get_current_transport_frame(jc_));
   store_msg(t1, 0, msg);
 }
 
