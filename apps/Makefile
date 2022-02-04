@@ -60,7 +60,7 @@ LDFLAGS += -L../libtascar/build
 
 LDLIBS += -ldl -ltascar -lfftw3f
 
-EXTERNALS = jack libxml++-2.6 liblo sndfile xerces-c
+EXTERNALS = jack liblo sndfile xerces-c fftw3
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`

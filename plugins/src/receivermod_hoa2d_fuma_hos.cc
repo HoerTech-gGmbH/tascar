@@ -26,7 +26,6 @@
 #include "scene.h"
 #include "amb33defs.h"
 
-const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0, 1.0);
 
 class hoa2d_t : public TASCAR::receivermod_base_t {

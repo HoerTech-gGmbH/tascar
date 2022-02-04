@@ -21,5 +21,5 @@ jackvalid:
 	killall jackd
 
 clean:
-	find -name "*.jvalid" -exec rm -f \{\} \;
-	find -name "*.validated" -exec rm -f \{\} \;
+	rm -f *.jvalid */*.jvalid *.validated */*.validated
+

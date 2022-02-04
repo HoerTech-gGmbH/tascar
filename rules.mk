@@ -28,6 +28,15 @@ ifeq ($(OS),Windows_NT)
   LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dll
 else
   LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.so
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  BINFILES += tascar_hdspmixer
+endif
+ifeq ($(UNAME_S),Darwin)
+  CXXFLAGS += -I/opt/homebrew/include
+  CPPFLAGS += -I/opt/homebrew/include
+  LDFLAGS += -L/opt/homebrew/lib
+endif
 endif
 
 $(BUILD_DIR)/unit-test-runner: $(BUILD_DIR)/.directory $(unit_tests_test_files) $(patsubst %_unit_tests.cpp, %.cpp , $(unit_tests_test_files))

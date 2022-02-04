@@ -83,7 +83,7 @@ namespace OSC {
   int _stop(const char* path, const char* types, lo_arg** argv, int argc,
             lo_message msg, void* user_data)
   {
-    if((argc == 0)) {
+    if(argc == 0) {
       ((TASCAR::osc_jt_t*)user_data)->tp_stop();
       return 0;
     }
@@ -93,7 +93,7 @@ namespace OSC {
   int _start(const char* path, const char* types, lo_arg** argv, int argc,
              lo_message msg, void* user_data)
   {
-    if((argc == 0)) {
+    if(argc == 0) {
       ((TASCAR::osc_jt_t*)user_data)->tp_start();
       return 0;
     }
