@@ -645,18 +645,18 @@ bool recorder_t::on_timeout()
 
 void recorder_t::store(uint32_t n, double* data)
 {
+  // todo: increase efficiency, add multi-frame addition
   if(n != size_)
     throw TASCAR::ErrMsg("Invalid size (recorder_t::store)");
-  if(pthread_mutex_trylock(&record_mtx_) == 0) {
+  pthread_mutex_lock(&record_mtx_);
+  for(uint32_t k = 0; k < n; k++)
+    data_.push_back(data[k]);
+  if(pthread_mutex_trylock(&plotdatalock) == 0) {
     for(uint32_t k = 0; k < n; k++)
-      data_.push_back(data[k]);
-    if(pthread_mutex_trylock(&plotdatalock) == 0) {
-      for(uint32_t k = 0; k < n; k++)
-        plotdata_.push_back(data[k]);
-      pthread_mutex_unlock(&plotdatalock);
-    }
-    pthread_mutex_unlock(&record_mtx_);
+      plotdata_.push_back(data[k]);
+    pthread_mutex_unlock(&plotdatalock);
   }
+  pthread_mutex_unlock(&record_mtx_);
 }
 
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
