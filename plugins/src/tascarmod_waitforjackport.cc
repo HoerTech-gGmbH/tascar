@@ -35,9 +35,9 @@ wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), timeout(30)
 {
   std::string name("waitforjackport");
-  GET_ATTRIBUTE_(ports);
-  GET_ATTRIBUTE_(timeout);
-  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE(ports,"","List of port names to wait for");
+  GET_ATTRIBUTE(timeout,"s","Timeout after which execution will not block any longer");
+  GET_ATTRIBUTE(name,"","Name used in jack");
   for( auto sne : tsccfg::node_get_children(e,"port")){
     ports.push_back(tsccfg::node_get_text(sne, ""));
   }

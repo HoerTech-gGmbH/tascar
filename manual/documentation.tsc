@@ -94,6 +94,8 @@
     <datalogging/>
     <oscrelay/>
     <oscjacktime/>
+    <waitforlslstream/>
+    <waitforjackport/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
