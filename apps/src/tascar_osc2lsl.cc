@@ -18,6 +18,7 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "errorhandling.h"
 #include <atomic>
 #include <getopt.h>
 #include <iostream>
@@ -70,7 +71,7 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
                               lslfmt, name.c_str());
         sop = new lsl::stream_outlet(info);
         (*smap)[name] = sop;
-        std::cout << "allocating " << name << std::endl;
+        std::cout << "allocating name=" << path << " id=" << name << std::endl;
       } else {
         sop = (*smap)[name];
       }
@@ -149,6 +150,8 @@ void add_stream(stream_map_t& streams, const std::string& path_and_format)
       if(streams.find(name) == streams.end()) {
         lsl::channel_format_t lslfmt(lsl::cf_float32);
         switch(types[0]) {
+        case 'f':
+          break;
         case 'd':
           lslfmt = lsl::cf_double64;
           break;
@@ -158,12 +161,15 @@ void add_stream(stream_map_t& streams, const std::string& path_and_format)
         case 's':
           lslfmt = lsl::cf_string;
           break;
+        default:
+          throw TASCAR::ErrMsg(std::string("Invalid format key '") + types[0] +
+                               "' while parsing '" + path_and_format + "'.");
         }
         lsl::stream_info info(path, "osc2lsl", argc, lsl::IRREGULAR_RATE,
                               lslfmt, name.c_str());
         sop = new lsl::stream_outlet(info);
         streams[name] = sop;
-        std::cout << "allocating " << name << std::endl;
+        std::cout << "allocating name=" << path << " id=" << name << std::endl;
       }
     }
   }
@@ -201,7 +207,11 @@ int main(int argc, char** argv)
     }
   }
   if(port < 0) {
-    app_usage("osc2lsl", long_options, "");
+    app_usage(
+        "osc2lsl", long_options,
+        "To add streams manually, specify it as '<path>:<format>', e.g., "
+        "'/path:ff'.\n"
+        "<format> can be 'i' (integer), 'f' (32 bit float) or 's' (string).");
     return -1;
   }
   lo::ServerThread st(port);
