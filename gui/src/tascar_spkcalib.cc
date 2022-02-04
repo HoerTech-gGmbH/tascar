@@ -126,7 +126,7 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   if(calibfor.empty())
     calibfor = "type:nsp";
   // create a new session, no OSC port:
-  root.set_attribute("srv_port","none");
+  root.set_attribute("srv_port", "none");
   // add the calibration scene:
   xml_element_t e_scene(root.add_child("scene"));
   e_scene.set_attribute("name", "calib");
@@ -363,32 +363,32 @@ void calibsession_t::saveas(const std::string& fname)
     if(recspk) {
       TASCAR::spk_array_diff_render_t array(doc.root(), true);
       size_t k = 0;
-      for(auto spk : doc.root.get_children("speaker") ){
+      for(auto spk : doc.root.get_children("speaker")) {
         xml_element_t espk(spk);
         espk.set_attribute(
-              "gain",
-              TASCAR::to_string(
-                  20 *
-                  log10(recspk->spkpos[std::min(k, recspk->spkpos.size() - 1)]
-                        .gain)));
+            "gain",
+            TASCAR::to_string(
+                20 *
+                log10(recspk->spkpos[std::min(k, recspk->spkpos.size() - 1)]
+                          .gain)));
         ++k;
       }
       k = 0;
-      for(auto spk : doc.root.get_children("sub") ){
+      for(auto spk : doc.root.get_children("sub")) {
         xml_element_t espk(spk);
         espk.set_attribute(
-              "gain",
-              TASCAR::to_string(
-                  20 *
-                  log10(recspk->spkpos
-                            .subs[std::min(k, recspk->spkpos.subs.size() - 1)]
-                            .gain)));
-          ++k;
-        }
+            "gain",
+            TASCAR::to_string(
+                20 *
+                log10(recspk->spkpos
+                          .subs[std::min(k, recspk->spkpos.subs.size() - 1)]
+                          .gain)));
+        ++k;
+      }
     }
   }
-  auto checksum = get_spklayout_checksum(elem);
-  elem.set_attribute("checksum", checksum);
+  size_t checksum = get_spklayout_checksum(elem);
+  elem.set_attribute("checksum", (uint64_t)checksum);
   char ctmp[1024];
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
@@ -452,8 +452,9 @@ void calibsession_t::set_active_diff(bool b)
 double calibsession_t::get_caliblevel() const
 {
   if(!scenes.empty())
-    if(!scenes.back()->receivermod_objects.empty()){
-      return 20.0 * log10(scenes.back()->receivermod_objects.back()->caliblevel*5e4);
+    if(!scenes.back()->receivermod_objects.empty()) {
+      return 20.0 *
+             log10(scenes.back()->receivermod_objects.back()->caliblevel * 5e4);
     }
   return 20.0 * log10(5e4);
 }
@@ -462,7 +463,8 @@ double calibsession_t::get_diffusegain() const
 {
   if(!scenes.empty())
     if(!scenes.back()->receivermod_objects.empty())
-      return 20.0 * log10(scenes.back()->receivermod_objects.back()->diffusegain);
+      return 20.0 *
+             log10(scenes.back()->receivermod_objects.back()->diffusegain);
   return 0;
 }
 
@@ -470,7 +472,7 @@ void calibsession_t::inc_caliblevel(double dl)
 {
   gainmodified = true;
   delta += dl;
-  double newlevel_pa(2e-5*pow(10.0, 0.05 * (startlevel + delta)));
+  double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
   if(!scenes.empty())
     for(auto recobj : scenes.back()->receivermod_objects)
       recobj->caliblevel = newlevel_pa;
