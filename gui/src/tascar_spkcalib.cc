@@ -387,22 +387,7 @@ void calibsession_t::saveas(const std::string& fname)
         }
     }
   }
-  std::vector<std::string> attributes;
-  attributes.push_back("decorr_length");
-  attributes.push_back("decorr");
-  attributes.push_back("densitycorr");
-  attributes.push_back("caliblevel");
-  attributes.push_back("diffusegain");
-  attributes.push_back("gain");
-  attributes.push_back("az");
-  attributes.push_back("el");
-  attributes.push_back("r");
-  attributes.push_back("fcsub");
-  attributes.push_back("delay");
-  attributes.push_back("compB");
-  attributes.push_back("connect");
-  size_t checksum(elem.hash(attributes, true));
-  elem.set_attribute("checksum", (uint64_t)checksum);
+  elem.set_attribute("checksum", get_spklayout_checksum(elem));
   char ctmp[1024];
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
