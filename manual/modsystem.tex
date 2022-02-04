@@ -6,6 +6,8 @@ Start system processes, e.g., to load helper programs, external decoders or vide
 \indattr{onunload}  & Execute this command on unload of session.                                                     \\
 \indattr{id}        & OSC path prefix (default: ``system'').                                                         \\
 \indattr{triggered} & Command to be executed upon OSC trigger.                                                       \\
+\indattr{noshell}   & If true then do not start an additional shell to launch the command.                           \\
+\indattr{relaunch}  & If true then do relaunch command when ended before session unload.                             \\
 \end{tscattributes}
 
 The commands are started into the background using this shell command line:

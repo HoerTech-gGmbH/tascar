@@ -100,7 +100,7 @@ namespace TASCAR {
 #endif
   }
 
-  pid_t system(const char* command, bool shell)
+  pid_t system(const char* command, bool shell, bool relaunch)
   {
     pid_t pid = -1;
 #ifndef _WIN32 // Windows has no fork.
@@ -112,21 +112,25 @@ namespace TASCAR {
       for(int i = 3; i < 4096; ++i)
         ::close(i);
       setsid();
-      if(!shell) {
-        std::vector<std::string> pars = TASCAR::str2vecstr(command);
-        char* vpars[pars.size() + 1];
-        for(size_t k = 0; k < pars.size(); ++k) {
-          vpars[k] = strdup(pars[k].c_str());
+      bool first = true;
+      while(relaunch || first) {
+        first = false;
+        if(!shell) {
+          std::vector<std::string> pars = TASCAR::str2vecstr(command);
+          char* vpars[pars.size() + 1];
+          for(size_t k = 0; k < pars.size(); ++k) {
+            vpars[k] = strdup(pars[k].c_str());
+          }
+          vpars[pars.size()] = NULL;
+          if(pars.size()) {
+            execvp(pars[0].c_str(), vpars);
+          }
+          for(size_t k = 0; k < pars.size(); ++k) {
+            free(vpars[k]);
+          }
+        } else {
+          execl("/bin/sh", "sh", "-c", command, NULL);
         }
-        vpars[pars.size()] = NULL;
-        if(pars.size()) {
-          execvp(pars[0].c_str(), vpars);
-        }
-        for(size_t k = 0; k < pars.size(); ++k) {
-          free(vpars[k]);
-        }
-      } else {
-        execl("/bin/sh", "sh", "-c", command, NULL);
       }
       _exit(1);
     }

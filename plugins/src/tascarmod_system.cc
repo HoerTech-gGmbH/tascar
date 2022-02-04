@@ -117,6 +117,7 @@ private:
   double sleep;
   std::string onunload;
   bool noshell = true;
+  bool relaunch = false;
   FILE* h_pipe;
   FILE* h_atcmd;
   FILE* h_triggered;
@@ -177,15 +178,19 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
       sessionpath(session->get_session_path())
 {
   GET_ATTRIBUTE_(id);
-  GET_ATTRIBUTE_(command);
-  GET_ATTRIBUTE_(sleep);
-  GET_ATTRIBUTE_(onunload);
-  GET_ATTRIBUTE_(triggered);
+  GET_ATTRIBUTE(command, "", "command to be executed");
+  GET_ATTRIBUTE(
+      sleep, "s",
+      "wait after starting the command before continuing to load session");
+  GET_ATTRIBUTE(onunload, "", "command to be executed when unloading session");
+  GET_ATTRIBUTE(triggered, "", "command to be executed upon trigger signal");
   GET_ATTRIBUTE_BOOL(noshell, "do not use shell to spawn subprocess");
+  GET_ATTRIBUTE_BOOL(relaunch,
+                     "relaunch process if ended before session unload");
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
   if(!command.empty()) {
-    pid = TASCAR::system(command.c_str(), !noshell);
+    pid = TASCAR::system(command.c_str(), !noshell, relaunch);
   }
   if(atcmds.size()) {
     h_atcmd = popen("/bin/bash -s", "w");
