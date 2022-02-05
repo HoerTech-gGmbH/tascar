@@ -22,6 +22,7 @@
 
 #include "session.h"
 #include "tascar_os.h"
+#include "spawn_process.h"
 #include <signal.h>
 #include <thread>
 #include <unistd.h>
@@ -118,10 +119,10 @@ private:
   std::string onunload;
   bool noshell = true;
   bool relaunch = false;
-  FILE* h_pipe;
   FILE* h_atcmd;
   FILE* h_triggered;
-  pid_t pid;
+  //pid_t pid;
+  TASCAR::spawn_process_t* proc = NULL;
   fifo_t fifo;
   std::vector<at_cmd_t*> atcmds;
   std::thread srv;
@@ -173,8 +174,8 @@ void system_t::trigger()
 }
 
 system_t::system_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg), id("system"), sleep(0), h_pipe(NULL), h_atcmd(NULL),
-      h_triggered(NULL), pid(0), fifo(1024), run_service(true),
+    : module_base_t(cfg), id("system"), sleep(0), h_atcmd(NULL),
+      h_triggered(NULL), fifo(1024), run_service(true),
       sessionpath(session->get_session_path())
 {
   GET_ATTRIBUTE_(id);
@@ -190,7 +191,8 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
   if(!command.empty()) {
-    pid = TASCAR::system(command.c_str(), !noshell, relaunch);
+    proc = new TASCAR::spawn_process_t(command, !noshell, relaunch);
+    //pid = TASCAR::system(command.c_str(), !noshell, relaunch);
   }
   if(atcmds.size()) {
     h_atcmd = popen("/bin/bash -s", "w");
@@ -247,14 +249,8 @@ system_t::~system_t()
 {
   run_service = false;
   srv.join();
-#ifndef _WIN32 // As Windows does not fork, there is no need to kill.
-  if(pid > 0) {
-    killpg(pid, SIGTERM);
-    waitpid(pid, NULL, 0);
-  }
-#endif
-  if(h_pipe)
-    fclose(h_pipe);
+  if( proc )
+    delete proc;
   for(std::vector<at_cmd_t*>::iterator it = atcmds.begin(); it != atcmds.end();
       ++it)
     delete *it;

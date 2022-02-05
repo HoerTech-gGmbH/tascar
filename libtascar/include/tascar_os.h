@@ -74,7 +74,7 @@ namespace TASCAR {
   /// @param shell Launch command using a shell (true) or directly
   /// @param relaunch Relaunch the command when subprocess ended
   /// @return Process ID
-  pid_t system(const char* command, bool shell,bool relaunch = false);
+  pid_t system(const char* command, bool shell);
 
 } // namespace TASCAR
 
