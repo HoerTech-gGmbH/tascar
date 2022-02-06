@@ -66,6 +66,7 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hoa.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/tscconfig.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/tascar_os.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/spawn_process.cc
         )
 if (Linux)
     list(APPEND LIB_HEADER
