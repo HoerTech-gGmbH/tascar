@@ -100,6 +100,6 @@ allwithcov: googletest
 	$(MAKE) LDCOVFLAGS="-fprofile-arcs" GCCCOVFLAGS="-fprofile-arcs -ftest-coverage" COVLIBS="-lgcov" $(MODULES)
 
 cleancov:
-	find -name "*.gcda" -exec rm -f \{\} \;
+	find . -name "*.gcda" -exec rm -f \{\} \;
 	rm -Rf coverage
 	rm -f coverage.info

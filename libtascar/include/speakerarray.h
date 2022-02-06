@@ -136,6 +136,28 @@ namespace TASCAR {
     void add_diffuse_sound_field(const TASCAR::amb1wave_t& diff);
     void configure();
     void clear_states();
+    size_t num_input_channels() const { return size(); };
+    size_t num_output_channels() const
+    {
+      return size() + subs.size() + conv_channels;
+    };
+    /**
+     * @brief Apply calibration, delay compensation, subwoofer
+     * processing and convolution
+     *
+     * @retval output Signal buffer to be updated
+     *
+     * The first num_input_channels() of the signal buffer contain the
+     * input signal. After post processing, the input channels are
+     * updated (calibration), the channels with indices
+     * num_input_channels() to
+     * num_input_channels()+num_sub_channels()-1 contain the subwoofer
+     * signals, and the channels with indices
+     * num_input_channels()+num_sub_channels() to
+     * num_output_channels()-1 contain the (optional) convolution
+     * channels.
+     */
+    void postproc(std::vector<wave_t>& output);
     spk_array_t subs;
 
   private:
@@ -143,6 +165,7 @@ namespace TASCAR {
     TASCAR::amb1wave_t* diffuse_field_accumulator;
     TASCAR::wave_t* diffuse_render_buffer;
     std::vector<TASCAR::overlap_save_t> decorrflt;
+    bool has_diffuse = false;
 
   public:
     double decorr_length;

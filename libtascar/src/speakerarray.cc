@@ -25,9 +25,9 @@
 #include "tascar_os.h"
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <random>
 #include <string.h>
-#include <fstream>
 
 using namespace TASCAR;
 
@@ -42,7 +42,7 @@ spk_array_cfg_t::spk_array_cfg_t(tsccfg::node_t xmlsrc, bool use_parent_xml)
     GET_ATTRIBUTE(layout, "", "name of speaker layout file");
     if(layout.empty()) {
       // try to find layout element:
-      for(auto& sne:tsccfg::node_get_children(xmlsrc,"layout"))
+      for(auto& sne : tsccfg::node_get_children(xmlsrc, "layout"))
         e_layout = sne;
       if(e_layout == NULL)
         throw TASCAR::ErrMsg(
@@ -210,14 +210,14 @@ spk_descriptor_t::spk_descriptor_t(tsccfg::node_t xmlsrc)
       spkgain(1.0), dr(0.0), d_w(0.0f), d_x(0.0f), d_y(0.0f), d_z(0.0f),
       densityweight(1.0), comp(NULL)
 {
-  GET_ATTRIBUTE_DEG(az,"Azimuth");
-  GET_ATTRIBUTE_DEG(el,"Elevation");
-  GET_ATTRIBUTE(r,"m","Distance");
-  GET_ATTRIBUTE(delay,"s","Static delay");
-  GET_ATTRIBUTE(label,"","Additional port label");
-  GET_ATTRIBUTE(connect,"","Connection to jack port");
-  GET_ATTRIBUTE(compB,"","FIR filter coefficients for speaker calibration");
-  GET_ATTRIBUTE_DB(gain,"Broadband gain correction");
+  GET_ATTRIBUTE_DEG(az, "Azimuth");
+  GET_ATTRIBUTE_DEG(el, "Elevation");
+  GET_ATTRIBUTE(r, "m", "Distance");
+  GET_ATTRIBUTE(delay, "s", "Static delay");
+  GET_ATTRIBUTE(label, "", "Additional port label");
+  GET_ATTRIBUTE(connect, "", "Connection to jack port");
+  GET_ATTRIBUTE(compB, "", "FIR filter coefficients for speaker calibration");
+  GET_ATTRIBUTE_DB(gain, "Broadband gain correction");
   set_sphere(r, az, el);
   unitvector = normal();
   update_foa_decoder(1.0f, 1.0);
@@ -388,6 +388,7 @@ void spk_array_diff_render_t::add_diffuse_sound_field(
   if(!diffuse_field_accumulator)
     throw TASCAR::ErrMsg("No diffuse field accumulator allocated.");
   *diffuse_field_accumulator += diff;
+  has_diffuse = true;
 }
 
 spk_array_diff_render_t::~spk_array_diff_render_t()
@@ -528,6 +529,84 @@ void spk_array_diff_render_t::clear_states()
     flt.clear();
   for(auto& flt : decorrflt)
     flt.clear();
+  has_diffuse = false;
+}
+
+void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
+{
+  // update diffuse signals:
+  if(has_diffuse) {
+    render_diffuse(output);
+    has_diffuse = false;
+  }
+  if(output.size() != num_output_channels())
+    throw TASCAR::ErrMsg(
+        "Programming error: output.size()==" + std::to_string(output.size()) +
+        ", spkpos.size()==" + std::to_string(size()) +
+        ", subs.size()==" + std::to_string(subs.size()) +
+        ", conv_channels==" + std::to_string(conv_channels));
+  // subwoofer post processing:
+  if(use_subs) {
+    // first create raw subwoofer signals:
+    for(size_t ksub = 0; ksub < subs.size(); ++ksub) {
+      // clear sub signals:
+      output[ksub + size()].clear();
+      for(size_t kbroadband = 0; kbroadband < size(); ++kbroadband)
+        output[ksub + size()].add(output[kbroadband],
+                                  subweight[ksub][kbroadband]);
+    }
+    // now apply lp-filters to subs:
+    for(size_t k = 0; k < subs.size(); ++k) {
+      flt_lowp[k].filter(output[k + size()]);
+    }
+    // then apply hp and allp filters to broad band speakers:
+    for(size_t k = 0; k < size(); ++k) {
+      flt_hp[k].filter(output[k]);
+      flt_allp[k].filter(output[k]);
+    }
+  }
+  // convolution
+  if(use_conv && convprecalib) {
+    size_t choffset(size() + subs.size());
+    // clear outputs:
+    for(size_t ch = 0; ch < conv_channels; ++ch)
+      output[choffset + ch].clear();
+    for(size_t inchannel = 0; inchannel < vvp_convolver.size(); ++inchannel)
+      for(size_t outchannel = 0; outchannel < conv_channels; ++outchannel) {
+        vvp_convolver[inchannel][outchannel]->process(
+            output[inchannel], output[choffset + outchannel], true);
+      }
+  }
+  // apply calibration:
+  if(delaycomp.size() != size())
+    throw TASCAR::ErrMsg("Invalid delay compensation array");
+  for(uint32_t k = 0; k < size(); ++k) {
+    float sgain(operator[](k).spkgain * operator[](k).gain);
+    for(uint32_t f = 0; f < output[k].n; ++f) {
+      output[k].d[f] = sgain * delaycomp[k](output[k].d[f]);
+    }
+    if(operator[](k).comp)
+      operator[](k).comp->process(output[k], output[k], false);
+  }
+  // calibration of subs:
+  for(uint32_t k = 0; k < subs.size(); ++k) {
+    float sgain(subs[k].spkgain * subs[k].gain);
+    output[k + size()] *= sgain;
+    if(subs[k].comp)
+      subs[k].comp->process(output[k + size()], output[k + size()], false);
+  }
+  // convolution
+  if(use_conv && (!convprecalib)) {
+    size_t choffset(size() + subs.size());
+    // clear outputs:
+    for(size_t ch = 0; ch < conv_channels; ++ch)
+      output[choffset + ch].clear();
+    for(size_t inchannel = 0; inchannel < vvp_convolver.size(); ++inchannel)
+      for(size_t outchannel = 0; outchannel < conv_channels; ++outchannel) {
+        vvp_convolver[inchannel][outchannel]->process(
+            output[inchannel], output[choffset + outchannel], true);
+      }
+  }
 }
 
 /*

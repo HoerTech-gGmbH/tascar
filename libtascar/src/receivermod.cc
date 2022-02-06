@@ -243,87 +243,13 @@ TASCAR::receivermod_base_speaker_t::get_connections() const
 
 void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
 {
-  // update diffuse signals:
-  spkpos.render_diffuse(output);
-  if(output.size() != spkpos.subs.size() + spkpos.size() + spkpos.conv_channels)
-    throw TASCAR::ErrMsg(
-        "Programming error: output.size()==" + std::to_string(output.size()) +
-        ", spkpos.size()==" + std::to_string(spkpos.size()) +
-        ", subs.size()==" + std::to_string(spkpos.subs.size()) +
-        ", conv_channels==" + std::to_string(spkpos.conv_channels));
-  // subwoofer post processing:
-  if(spkpos.use_subs) {
-    // first create raw subwoofer signals:
-    for(size_t ksub = 0; ksub < spkpos.subs.size(); ++ksub) {
-      // clear sub signals:
-      output[ksub + spkpos.size()].clear();
-      for(size_t kbroadband = 0; kbroadband < spkpos.size(); ++kbroadband)
-        output[ksub + spkpos.size()].add(output[kbroadband],
-                                         spkpos.subweight[ksub][kbroadband]);
-    }
-    // now apply lp-filters to subs:
-    for(size_t k = 0; k < spkpos.subs.size(); ++k) {
-      spkpos.flt_lowp[k].filter(output[k + spkpos.size()]);
-    }
-    // then apply hp and allp filters to broad band speakers:
-    for(size_t k = 0; k < spkpos.size(); ++k) {
-      spkpos.flt_hp[k].filter(output[k]);
-      spkpos.flt_allp[k].filter(output[k]);
-    }
-  }
-  // convolution
-  if(spkpos.use_conv && spkpos.convprecalib) {
-    size_t choffset(spkpos.size() + spkpos.subs.size());
-    // clear outputs:
-    for(size_t ch = 0; ch < spkpos.conv_channels; ++ch)
-      output[choffset + ch].clear();
-    for(size_t inchannel = 0; inchannel < spkpos.vvp_convolver.size();
-        ++inchannel)
-      for(size_t outchannel = 0; outchannel < spkpos.conv_channels;
-          ++outchannel) {
-        spkpos.vvp_convolver[inchannel][outchannel]->process(
-            output[inchannel], output[choffset + outchannel], true);
-      }
-  }
-  // apply calibration:
-  if(spkpos.delaycomp.size() != spkpos.size())
-    throw TASCAR::ErrMsg("Invalid delay compensation array");
-  for(uint32_t k = 0; k < spkpos.size(); ++k) {
-    float sgain(spkpos[k].spkgain * spkpos[k].gain);
-    for(uint32_t f = 0; f < output[k].n; ++f) {
-      output[k].d[f] = sgain * spkpos.delaycomp[k](output[k].d[f]);
-    }
-    if(spkpos[k].comp)
-      spkpos[k].comp->process(output[k], output[k], false);
-  }
-  // calibration of subs:
-  for(uint32_t k = 0; k < spkpos.subs.size(); ++k) {
-    float sgain(spkpos.subs[k].spkgain * spkpos.subs[k].gain);
-    output[k + spkpos.size()] *= sgain;
-    if(spkpos.subs[k].comp)
-      spkpos.subs[k].comp->process(output[k + spkpos.size()],
-                                   output[k + spkpos.size()], false);
-  }
-  // convolution
-  if(spkpos.use_conv && (!spkpos.convprecalib)) {
-    size_t choffset(spkpos.size() + spkpos.subs.size());
-    // clear outputs:
-    for(size_t ch = 0; ch < spkpos.conv_channels; ++ch)
-      output[choffset + ch].clear();
-    for(size_t inchannel = 0; inchannel < spkpos.vvp_convolver.size();
-        ++inchannel)
-      for(size_t outchannel = 0; outchannel < spkpos.conv_channels;
-          ++outchannel) {
-        spkpos.vvp_convolver[inchannel][outchannel]->process(
-            output[inchannel], output[choffset + outchannel], true);
-      }
-  }
+  spkpos.postproc(output);
 }
 
 void TASCAR::receivermod_base_speaker_t::configure()
 {
   receivermod_base_t::configure();
-  n_channels = spkpos.size() + spkpos.subs.size();
+  n_channels = spkpos.num_output_channels();
   spkpos.prepare(cfg());
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
