@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <system command="tascar_osc2lsl -a /testlslstream:fff -p 9999"/>
+    <waitforlslstream streams="/testlslstream"/>
+    <datalogging controltransport="false" usetransport="true">
+      <!--
+      <lsl predicate="name='/testlslstream'"/>
+      <oscs path="/abc"/>
+      <osc path="/num" size="2"/>
+-->
+    </datalogging>
+  </modules>
+</session>

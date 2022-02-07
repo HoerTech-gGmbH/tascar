@@ -19,6 +19,7 @@
  */
 
 #include "errorhandling.h"
+#include "cli.h"
 #include <atomic>
 #include <getopt.h>
 #include <iostream>
@@ -119,19 +120,6 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-void app_usage(const std::string& app_name, struct option* opt,
-               const std::string& app_arg)
-{
-  std::cout << "Usage:\n\n"
-            << app_name << " [options] " << app_arg << "\n\nOptions:\n\n";
-  while(opt->name) {
-    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg ? "#" : "")
-              << "\n  --" << opt->name << (opt->has_arg ? "=#" : "") << "\n\n";
-    opt++;
-  }
-  std::cout << std::endl;
-}
-
 void add_stream(stream_map_t& streams, const std::string& path_and_format)
 {
   size_t p(path_and_format.find(":"));
@@ -190,7 +178,11 @@ int main(int argc, char** argv)
         -1) {
     switch(opt) {
     case 'h':
-      app_usage("osc2lsl", long_options, "");
+      TASCAR::app_usage(
+          "osc2lsl", long_options, "",
+          "To add streams manually, specify it as '<path>:<format>', e.g., "
+          "'/path:ff'.\n"
+          "<format> can be 'i' (integer), 'f' (32 bit float) or 's' (string).");
       return 0;
     case 'a':
       add_stream(streams, optarg);
@@ -207,8 +199,8 @@ int main(int argc, char** argv)
     }
   }
   if(port < 0) {
-    app_usage(
-        "osc2lsl", long_options,
+    TASCAR::app_usage(
+        "osc2lsl", long_options, "",
         "To add streams manually, specify it as '<path>:<format>', e.g., "
         "'/path:ff'.\n"
         "<format> can be 'i' (integer), 'f' (32 bit float) or 's' (string).");

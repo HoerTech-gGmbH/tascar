@@ -63,6 +63,8 @@ Attributes of element {\bf datalogging}\nopagebreak
 name & description (type, unit) & def.\\
 \hline
 \hline
+\indattr{controltransport} & Control transport with recording session control (bool) & true\\
+\hline
 \indattr{displaydc} & Display DC components (bool) & true\\
 \hline
 \indattr{fileformat} & File format, can be either ``mat'', ``matcell'' or ``txt'' (string) & matcell\\
@@ -76,6 +78,8 @@ name & description (type, unit) & def.\\
 \indattr{port} & OSC port, or empty to use session server (string) & \\
 \hline
 \indattr{srv\_proto} & Server protocol, UDP or TCP (string) & UDP\\
+\hline
+\indattr{usetransport} & Record only while transport is rolling (bool) & false\\
 \hline
 \end{tabularx}
 }
