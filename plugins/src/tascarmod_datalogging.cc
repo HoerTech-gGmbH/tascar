@@ -38,6 +38,7 @@
 #include <mutex>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <thread>
 
 using std::isfinite;
 
@@ -168,7 +169,18 @@ public:
              std::atomic_bool& is_roll, jack_client_t* jc, double srate,
              bool ignore_first);
   virtual ~recorder_t();
-  void store_sample(uint32_t n, double* data);
+  /**
+   * @brief Store a single data sample (can be multi-channel)
+   *
+   * @param n Number of channels including timestamps
+   * @param data Sample data
+   *
+   * The data format of OSC variables is [t,d1,d2,d3,...], the data
+   * format of LSL data is [t,tlsl,d1,d2,d3,...], where t is the local
+   * session time at time of arrival (OSC) or time of measurement
+   * (LSL), tlsl is the LSL time stamp, and d are the data points.
+   */
+  void store_sample(uint32_t nch, double* data);
   void store_msg(double t1, double t2, const std::string& msg);
   std::vector<double> get_data()
   {
@@ -810,7 +822,6 @@ public:
   void on_ui_start();
   void on_ui_stop();
   bool on_100ms();
-  void poll_lsl_data();
   static int osc_session_start(const char* path, const char* types,
                                lo_arg** argv, int argc, lo_message msg,
                                void* user_data);
@@ -822,6 +833,7 @@ public:
                                      void* user_data);
 
 private:
+  void poll_lsl_data();
   std::vector<recorder_t*> recorder;
   std::atomic_bool is_recording = false;
   // pthread_mutex_t record_mtx;
@@ -845,6 +857,8 @@ private:
   double audio_sample_period_;
   uint32_t fragsize;
   double srate;
+  std::thread lsl_poll_service;
+  std::atomic_bool run_lsl_poll_service = true;
 };
 
 #define GET_WIDGET(x)                                                          \
@@ -959,12 +973,16 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   }
   draw_grid->show_all();
   showdc->set_active(displaydc);
+  lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data,this);
 }
 
 void datalogging_t::poll_lsl_data()
 {
-  for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it)
-    (*it)->poll_data();
+  while(run_lsl_poll_service) {
+    for(auto var : lslvars)
+      var->poll_data();
+    usleep(1000);
+  }
 }
 
 int datalogging_t::osc_session_start(const char* path, const char* types,
@@ -1045,13 +1063,10 @@ void datalogging_t::on_ui_stop()
 
 bool datalogging_t::on_100ms()
 {
-  // poll LSL data:
-  poll_lsl_data();
   // update labels:
   if(!b_recording)
     datelabel->set_text(datestr());
   char ctmp[1024];
-  // sprintf(ctmp,"%1.1f s", jack_frame_time(jc)/(double)srate );
   sprintf(ctmp, "%1.1f s", session->tp_get_time());
   jacktime->set_text(ctmp);
   return true;
@@ -1111,6 +1126,9 @@ datalogging_t::~datalogging_t()
   catch(const std::exception& e) {
     std::cerr << "Warning: " << e.what() << "\n";
   }
+  run_lsl_poll_service = false;
+  if(lsl_poll_service.joinable())
+    lsl_poll_service.join();
   connection_timeout.disconnect();
   TASCAR::osc_server_t::deactivate();
   for(uint32_t k = 0; k < recorder.size(); k++)
