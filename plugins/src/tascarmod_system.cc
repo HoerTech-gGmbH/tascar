@@ -197,7 +197,7 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
           "Spawning sub-processes on Windows is not yet implemented: " +
           command);
 #else
-    proc = new TASCAR::spawn_process_t(command, !noshell, relaunch);
+    proc = new TASCAR::spawn_process_t(TASCAR::env_expand(command), !noshell, relaunch);
 #endif
   }
   if(atcmds.size()) {
