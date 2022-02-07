@@ -21,16 +21,12 @@
  */
 
 #include "session.h"
-#include "tascar_os.h"
 #ifndef _WIN32
 #include "spawn_process.h"
+#else
+#include "tascar_os.h"
 #endif
-#include <signal.h>
-#include <thread>
 #include <unistd.h>
-#ifndef _WIN32
-#include <sys/wait.h>
-#endif
 
 class at_cmd_t : public TASCAR::xml_element_t {
 public:
