@@ -22,7 +22,9 @@
 
 #include "session.h"
 #include "tascar_os.h"
+#ifndef _WIN32
 #include "spawn_process.h"
+#endif
 #include <signal.h>
 #include <thread>
 #include <unistd.h>
@@ -122,7 +124,9 @@ private:
   FILE* h_atcmd;
   FILE* h_triggered;
   //pid_t pid;
+#ifndef _WIN32
   TASCAR::spawn_process_t* proc = NULL;
+#endif
   fifo_t fifo;
   std::vector<at_cmd_t*> atcmds;
   std::thread srv;
@@ -191,8 +195,13 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
   if(!command.empty()) {
+#ifdef _WIN32
+    throw TASCAR::ErrMsg(
+          "Spawning sub-processes on Windows is not yet implemented: " +
+          command);
+#else
     proc = new TASCAR::spawn_process_t(command, !noshell, relaunch);
-    //pid = TASCAR::system(command.c_str(), !noshell, relaunch);
+#endif
   }
   if(atcmds.size()) {
     h_atcmd = popen("/bin/bash -s", "w");
@@ -249,8 +258,10 @@ system_t::~system_t()
 {
   run_service = false;
   srv.join();
+#ifndef _WIN32
   if( proc )
     delete proc;
+#endif
   for(std::vector<at_cmd_t*>::iterator it = atcmds.begin(); it != atcmds.end();
       ++it)
     delete *it;
