@@ -29,6 +29,7 @@
 
 */
 
+#include "cli.h"
 #include "tscconfig.h"
 #include <iostream>
 #include <lo/lo.h>
@@ -38,16 +39,45 @@
 
 int main(int argc, char** argv)
 {
-  if(argc != 2) {
-    fprintf(stderr, "Usage: sendosc url\n");
+  const char* options = "hi:";
+  struct option long_options[] = {
+      {"help", 0, 0, 'h'}, {"inputfile", 1, 0, 'i'}, {0, 0, 0, 0}};
+  int opt(0);
+  int option_index(0);
+  std::string inputfile;
+  std::string url;
+  while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
+        -1) {
+    switch(opt) {
+    case 'h':
+      TASCAR::app_usage("tascar_sendosc", long_options, "url");
+      return 0;
+    case 'i':
+      inputfile = optarg;
+      break;
+    }
+  }
+  if(optind < argc)
+    url = argv[optind++];
+  if(url.size() == 0) {
+    TASCAR::app_usage("tascar_sendosc", long_options, "url");
     return 1;
   }
-  lo_address lo_addr(lo_address_new_from_url(argv[1]));
+  lo_address lo_addr(lo_address_new_from_url(url.c_str()));
   lo_address_set_ttl(lo_addr, 1);
   char rbuf[0x4000];
-  while(!feof(stdin)) {
+  FILE* fh;
+  if(inputfile.empty())
+    fh = stdin;
+  else
+    fh = fopen(inputfile.c_str(), "r");
+  if(!fh) {
+    std::cerr << "Error: Cannot open file \"" << inputfile << "\".\n";
+    return 2;
+  }
+  while(!feof(fh)) {
     memset(rbuf, 0, 0x4000);
-    char* s = fgets(rbuf, 0x4000 - 1, stdin);
+    char* s = fgets(rbuf, 0x4000 - 1, fh);
     if(s) {
       rbuf[0x4000 - 1] = 0;
       if(rbuf[0] == '#')
@@ -86,6 +116,8 @@ int main(int argc, char** argv)
       // fprintf(stderr,"-%s-%s-%g-\n",rbuf,addr,val);
     }
   }
+  if(!inputfile.empty())
+    fclose(fh);
 }
 
 /*
