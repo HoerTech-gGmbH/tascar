@@ -34,31 +34,41 @@ wait_lsl_t::wait_lsl_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
 {
   std::vector<std::string> streams;
   double timeout = 30;
+  bool showgui = true;
   GET_ATTRIBUTE(streams, "", "List of stream names to wait for");
   GET_ATTRIBUTE(timeout, "s", "Timeout");
-  Gtk::Window* win = new Gtk::Window();
-  Gtk::Label* lab = new Gtk::Label();
-  win->add(*lab);
-  Pango::AttrList attrlist;
-  Pango::Attribute fscale(Pango::Attribute::create_attr_scale(1.2));
-  attrlist.insert(fscale);
-  lab->set_attributes(attrlist);
-  win->set_size_request(400, 80);
-  win->show_all();
-  win->queue_draw();
-  for(auto p : streams) {
-    lab->set_label(std::string("Waiting for LSL stream '") + p + "'...");
+  GET_ATTRIBUTE_BOOL(showgui, "Show GUI");
+  Gtk::Window* win = NULL;
+  Gtk::Label* lab = NULL;
+  if(showgui) {
+    win = new Gtk::Window();
+    lab = new Gtk::Label();
+    win->add(*lab);
+    Pango::AttrList attrlist;
+    Pango::Attribute fscale(Pango::Attribute::create_attr_scale(1.2));
+    attrlist.insert(fscale);
+    lab->set_attributes(attrlist);
+    win->set_size_request(400, 80);
+    win->show_all();
     win->queue_draw();
-    uint32_t cnt = 2000;
-    while(gtk_events_pending() && cnt) {
-      --cnt;
-      gtk_main_iteration();
+  }
+  for(auto p : streams) {
+    if(showgui) {
+      lab->set_label(std::string("Waiting for LSL stream '") + p + "'...");
+      win->queue_draw();
+      uint32_t cnt = 2000;
+      while(gtk_events_pending() && cnt) {
+        --cnt;
+        gtk_main_iteration();
+      }
     }
     lsl::resolve_stream("name", p, 1, timeout);
   }
-  win->hide();
-  delete lab;
-  delete win;
+  if(showgui) {
+    win->hide();
+    delete lab;
+    delete win;
+  }
 }
 
 REGISTER_MODULE(wait_lsl_t);
