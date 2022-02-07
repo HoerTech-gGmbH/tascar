@@ -1,6 +1,6 @@
 Section: non-free/sound
 Suggests: qjackctl
-Maintainer: Giso Grimm <g.grimm@hoertech.de>
+Maintainer: Giso Grimm <grimm@hz-ol.de>
 Description: TASCARpro dynamic libraries
   TASCARpro is a toolbox for acoustic scene creation and rendering
   (virtual acoustic environment, VAE).

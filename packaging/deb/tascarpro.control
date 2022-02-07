@@ -1,6 +1,6 @@
 Section: non-free/sound
 Suggests: qjackctl, libopencv-calib3d2.4v5 | libopencv-calib3d2.4 | libopencv-calib3d3.2
-Maintainer: Giso Grimm <g.grimm@hoertech.de>
+Maintainer: Giso Grimm <grimm@hz-ol.de>
 Description: TASCARpro GUI
   TASCARpro is a toolbox for acoustic scene creation and rendering
   (virtual acoustic environment, VAE).
