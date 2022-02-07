@@ -25,6 +25,7 @@
 #include "spawn_process.h"
 #else
 #include "tascar_os.h"
+#include <thread>
 #endif
 #include <unistd.h>
 
