@@ -590,10 +590,14 @@ void tascar_window_t::reset_gui()
     mainwin.get_attribute("h", mainwin_height, "px", "main window height");
     mainwin.get_attribute("x", mainwin_x, "px", "main window x position");
     mainwin.get_attribute("y", mainwin_y, "px", "main window y position");
+    bool minimized = false;
+    mainwin.GET_ATTRIBUTE_BOOL(minimized,"Start with minimized main window");
     resize(mainwin_width, mainwin_height);
     move(mainwin_x, mainwin_y);
     resize(mainwin_width, mainwin_height);
     move(mainwin_x, mainwin_y);
+    if( minimized )
+      Gtk::Window::iconify();
     timeline->set_range(0, session->duration);
     for(unsigned int k = 0; k < session->ranges.size(); k++) {
       timeline->add_mark(session->ranges[k]->start, Gtk::POS_BOTTOM, "");

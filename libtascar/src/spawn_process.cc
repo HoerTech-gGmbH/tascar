@@ -44,7 +44,7 @@ void TASCAR::spawn_process_t::launcher()
     first = false;
     int wstatus = 0;
     running = true;
-    pid = TASCAR::system(command_.c_str(), false);
+    pid = TASCAR::system(command_.c_str(), useshell_);
     waitpid(pid, &wstatus, 0);
     if(runservice) {
       if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0))
