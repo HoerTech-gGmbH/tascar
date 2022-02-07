@@ -134,6 +134,10 @@ void matrix_t::configure()
   outputs.prepare(cf);
   cf = cfg();
   inputs.prepare(cf);
+  audio_out = std::vector<TASCAR::wave_t>(outputs.num_output_channels(),
+                                          TASCAR::wave_t(n_fragment));
+  configured = true;
+  activate();
   // connect output ports:
   for(uint32_t kc = 0; kc < outputs.connections.size(); ++kc)
     if(outputs.connections[kc].size())
@@ -141,10 +145,6 @@ void matrix_t::configure()
   for(uint32_t kc = 0; kc < inputs.connections.size(); ++kc)
     if(inputs.connections[kc].size())
       connect_in(kc, inputs.connections[kc], true);
-  audio_out = std::vector<TASCAR::wave_t>(outputs.num_output_channels(),
-                                          TASCAR::wave_t(n_fragment));
-  configured = true;
-  activate();
 }
 
 int matrix_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
