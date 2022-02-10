@@ -442,17 +442,16 @@ void tsccfg::node_get_and_register_attribute(tsccfg::node_t& e,
 
 uint32_t CRC32(const char* data, size_t data_length)
 {
-  uint32_t crc, mask;
-  char byte;
-  crc = 0xFFFFFFFF;
-  for(size_t i = 0; i < data_length; i++) {
-    byte = data[i];
+  uint32_t crc = 0xFFFFFFFF;
+  for(size_t i = 0; i < data_length; ++i) {
+    char byte = data[i];
     crc = crc ^ byte;
-    for(size_t j = 7; j >= 0; j--) {
-      mask = -(crc & 1);
+    size_t j = 8;
+    while(j) {
+      --j;
+      uint32_t mask = -(crc & 1);
       crc = (crc >> 1) ^ (0xEDB88320 & mask);
     }
-    i = i + 1;
   }
   return ~crc;
 }
