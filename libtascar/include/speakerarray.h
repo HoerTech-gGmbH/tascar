@@ -28,7 +28,7 @@
 
 namespace TASCAR {
 
-  size_t get_spklayout_checksum(const xml_element_t&);
+  uint32_t get_spklayout_checksum(const xml_element_t&);
 
   /**
      \brief Description of a single loudspeaker in a speaker array.

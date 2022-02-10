@@ -260,8 +260,8 @@ namespace TASCAR {
     tsccfg::node_t e;
     std::vector<std::string> get_unused_attributes() const;
     virtual void validate_attributes(std::string&) const;
-    size_t hash(const std::vector<std::string>& attributes,
-                bool test_children = false) const;
+    uint32_t hash(const std::vector<std::string>& attributes,
+                  bool test_children = false) const;
     std::vector<std::string> get_attributes() const;
     tsccfg::node_t& operator()() { return e; };
 

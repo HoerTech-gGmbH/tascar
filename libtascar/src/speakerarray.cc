@@ -402,7 +402,7 @@ spk_array_diff_render_t::~spk_array_diff_render_t()
       delete p_convolver;
 }
 
-size_t TASCAR::get_spklayout_checksum(const xml_element_t& e)
+uint32_t TASCAR::get_spklayout_checksum(const xml_element_t& e)
 {
   std::vector<std::string> attributes;
   attributes.push_back("decorr_length");

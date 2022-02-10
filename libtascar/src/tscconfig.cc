@@ -440,8 +440,25 @@ void tsccfg::node_get_and_register_attribute(tsccfg::node_t& e,
     tsccfg::node_set_attribute(e, name, value);
 }
 
-size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes,
-                                   bool test_children) const
+uint32_t CRC32(const char* data, size_t data_length)
+{
+  uint32_t crc, mask;
+  char byte;
+  crc = 0xFFFFFFFF;
+  for(size_t i = 0; i < data_length; i++) {
+    byte = data[i];
+    crc = crc ^ byte;
+    for(size_t j = 7; j >= 0; j--) {
+      mask = -(crc & 1);
+      crc = (crc >> 1) ^ (0xEDB88320 & mask);
+    }
+    i = i + 1;
+  }
+  return ~crc;
+}
+
+uint32_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes,
+                                     bool test_children) const
 {
   std::string v;
   for(auto& attr : attributes)
@@ -450,8 +467,9 @@ size_t TASCAR::xml_element_t::hash(const std::vector<std::string>& attributes,
     for(auto& sne : tsccfg::node_get_children(e))
       for(auto& attr : attributes)
         v += tsccfg::node_get_attribute_value(sne, attr);
-  std::hash<std::string> hash_fn;
-  return hash_fn(v);
+  // std::hash<std::string> hash_fn;
+  // return hash_fn(v);
+  return CRC32(v.c_str(), v.size());
 }
 
 std::string TASCAR::to_string(const TASCAR::pos_t& x)
@@ -1661,27 +1679,27 @@ std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
   std::string tok;
   int mode = 0;
   bool wasquoted = false;
-  for( auto c : s ){
-    if( (mode==0) && (c == ' ') ){
-      if( tok.size()||wasquoted )
+  for(auto c : s) {
+    if((mode == 0) && (c == ' ')) {
+      if(tok.size() || wasquoted)
         value.push_back(tok);
       tok.clear();
       wasquoted = false;
-    }else if( (mode==0) && (c == '\'') ){
+    } else if((mode == 0) && (c == '\'')) {
       wasquoted = true;
       mode = 1;
-    }else if( (mode==1) && (c == '\'') ){
+    } else if((mode == 1) && (c == '\'')) {
       mode = 0;
-    }else if( (mode==0) && (c == '"') ){
+    } else if((mode == 0) && (c == '"')) {
       wasquoted = true;
       mode = 2;
-    }else if( (mode==2) && (c == '"') ){
+    } else if((mode == 2) && (c == '"')) {
       mode = 0;
-    }else{
+    } else {
       tok += c;
     }
   }
-  if( tok.size() )
+  if(tok.size())
     value.push_back(tok);
   return value;
 }
@@ -1692,8 +1710,8 @@ std::string TASCAR::vecstr2str(const std::vector<std::string>& s)
   for(auto it = s.begin(); it != s.end(); ++it) {
     if(it != s.begin())
       rv += " ";
-    if( it->find(' ') != std::string::npos )
-      rv += "'"+*it+"'";
+    if(it->find(' ') != std::string::npos)
+      rv += "'" + *it + "'";
     else
       rv += *it;
   }
