@@ -30,7 +30,7 @@
 	  <metronome/>
 	  <noise/>
 	  <onsetdetector/>
-	  <openmha plugin="identity" config=""/>
+	  <!--<openmha plugin="identity" config=""/>-->
 	  <pink/>
 	  <pulse/>
 	  <sine/>

@@ -59,7 +59,7 @@ GLABSENSORS += smiley eog emergency espheadtracker midicc	\
 endif
 
 ifeq "$(HAS_OPENMHA)" "yes"
-AUDIOPLUGINS +=  openmha
+#AUDIOPLUGINS +=  openmha
 endif
 
 #
