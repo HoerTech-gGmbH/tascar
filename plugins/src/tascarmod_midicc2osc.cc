@@ -36,6 +36,7 @@ protected:
   double max;
   std::string url;
   std::string path;
+  std::string dumppath;
 };
 
 midicc2osc_vars_t::midicc2osc_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -52,6 +53,7 @@ midicc2osc_vars_t::midicc2osc_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(max, "", "maximum output value (corresponding to MIDI 127)");
   GET_ATTRIBUTE(url, "", "OSC destination URL");
   GET_ATTRIBUTE(path, "", "OSC path");
+  GET_ATTRIBUTE(dumppath, "", "Path to send unprocessed messages");
 }
 
 class midicc2osc_t : public midicc2osc_vars_t,
@@ -119,6 +121,9 @@ void midicc2osc_t::emit_event(int channel, int param, int value)
     snprintf(ctmp,sizeof(ctmp),"%d/%d: %d",channel,param,value);
     ctmp[sizeof(ctmp)-1] = 0;
     std::cout << ctmp << std::endl;
+    if( dumppath.size() ){
+      lo_send( target, dumppath.c_str(), "iii", channel, param, value );
+    }
   }
 }
 
