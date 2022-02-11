@@ -1,1 +1,51 @@
 Parametric cycle/epicycle generator, to be controlled via OSC.
+
+The algorithm was originally presented in \cite{Grimm2012}.
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:epicycles}
+Attributes of element {\bf epicycles}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{actor} & pattern to match actor objects (string array) & \\
+\hline
+\indattr{home} & Home direction of sound source (double, deg) & 0\\
+\hline
+\indattr{path} & Path prefix of plugin (string) & \\
+\hline
+\indattr{targetaddr} & Target url where the current position is sent to on trigger (string) & \\
+\hline
+\indattr{use\_transport} & Update traces only while transport is running (bool) & true\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+OSC variables are:
+
+\begin{tabularx}{\textwidth}{llX}
+  {\bf name }     & {\bf format} & {\bf meaning}                                                                      \\
+  \hline
+  {\tt phi0}      & f            & Starting direction in degrees                                                      \\
+  {\tt random}    & f            & Amount of randomness                                                               \\
+  {\tt f}         & f            & Rounds per second of main rotation                                                 \\
+  {\tt r}         & f            & Normalized radius of main rotation                                                 \\
+  {\tt theta}     & f            & Alignment of Keppler ellipse                                                       \\
+  {\tt e}         & f            & Excentricity of movement                                                           \\
+  {\tt f\_epi}    & f            & Rounds per second of epicycles                                                     \\
+  {\tt r\_epi}    & f            & Radius of epicycles                                                                \\
+  {\tt phi0\_epi} &              & Starting direction of epicycle, in degrees                                         \\
+  {\tt sendphi}   & s            & OSC path to send current position                                                  \\
+  {\tt locate}    & f            & Trigger movement to starting directions, paramter defines time to reach in seconds \\
+  {\tt apply}     & f            & Apply non-angular parameters, parameter defines time to reach in seconds           \\
+  {\tt stopat}    & f            & Stop movement when given direction is next reached, in degrees                     \\
+  {\tt applyat}   & ff           & Apply parameters when position is reached, in seconds                              \\
+  {\tt az}        & f            & Move to this direction immediately                                                 \\
+  {\tt gohome}    &              & Trigger movement to home position                                                  \\
+  {\tt home}      & f            & Overwrite configured home direction                                                \\
+\end{tabularx}

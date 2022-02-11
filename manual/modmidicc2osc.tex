@@ -1,12 +1,31 @@
-Convert MIDI CC events into OSC messages.
+Convert MIDI CC events from ALSA devices into OSC messages.
 
-\begin{tscattributes}
-\indattr{url} & OSC destination URL\\
-\indattr{path} & OSC path\\
-\indattr{dumpmsg} & Dump unprocessed messages to console\\
-\indattr{name} & name of MIDI client\\
-\indattr{connect} & name of input MIDI source\\
-\indattr{controllers} & List of controllers, in ``channel/param'' form (e.g., 0/13 0/28) \\
-\indattr{min} & minimum output value (corresponding to MIDI 0)\\
-\indattr{max} & maximum output value (corresponding to MIDI 127)\\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:midicc2osc}
+Attributes of element {\bf midicc2osc}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{connect} & name of input ALSA MIDI source (string) & \\
+\hline
+\indattr{controllers} & List of controllers, in ``channel/param'' form (e.g., 0/13 0/28) (string array) & \\
+\hline
+\indattr{dumpmsg} & Dump unprocessed messages to console (bool) & false\\
+\hline
+\indattr{max} & maximum output value (corresponding to MIDI 127) (double) & 1\\
+\hline
+\indattr{min} & minimum output value (corresponding to MIDI 0) (double) & 0\\
+\hline
+\indattr{name} & name of MIDI client (string) & \\
+\hline
+\indattr{path} & OSC path (string) & /midicc\\
+\hline
+\indattr{url} & OSC destination URL (string) & {\tiny osc.udp://localhost:7777/}\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

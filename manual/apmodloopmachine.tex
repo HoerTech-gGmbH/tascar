@@ -1,3 +1,12 @@
 Simple loop machine with OSC control.
 
 \input{tabloopmachine.tex}
+
+The OSC control variables are:
+\begin{tabular}{lll}
+{\tt /clear}  &       & clear current recording                      \\
+{\tt /record} &       & start recording                              \\
+{\tt /bypass} & 0|1   & bypass flag, 0 means loop is added to output \\
+{\tt /gain}   & floar & linear gain applied to loop                  \\
+{\tt /gaindb} & float & dB gain applied to loop                      \\
+\end{tabular}

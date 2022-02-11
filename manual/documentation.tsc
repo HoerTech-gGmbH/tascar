@@ -96,6 +96,8 @@
     <oscjacktime/>
     <waitforlslstream/>
     <waitforjackport/>
+    <epicycles/>
+    <midicc2osc controllers="0/1"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

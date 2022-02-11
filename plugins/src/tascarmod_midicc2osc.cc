@@ -38,22 +38,20 @@ protected:
   std::string path;
 };
 
-midicc2osc_vars_t::midicc2osc_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    dumpmsg(false),
-    min(0),
-    max(1),
-    url("osc.udp://localhost:7777/"),
-    path("/midicc")
+midicc2osc_vars_t::midicc2osc_vars_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), dumpmsg(false), min(0), max(1),
+      url("osc.udp://localhost:7777/"), path("/midicc")
 {
-  GET_ATTRIBUTE_BOOL_(dumpmsg);
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(connect);
-  GET_ATTRIBUTE_(controllers);
-  GET_ATTRIBUTE_(min);
-  GET_ATTRIBUTE_(max);
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE_BOOL(dumpmsg, "Dump unprocessed messages to console");
+  GET_ATTRIBUTE(name, "", "name of MIDI client");
+  GET_ATTRIBUTE(connect, "", "name of input ALSA MIDI source");
+  GET_ATTRIBUTE(
+      controllers, "",
+      "List of controllers, in ``channel/param'' form (e.g., 0/13 0/28)");
+  GET_ATTRIBUTE(min, "", "minimum output value (corresponding to MIDI 0)");
+  GET_ATTRIBUTE(max, "", "maximum output value (corresponding to MIDI 127)");
+  GET_ATTRIBUTE(url, "", "OSC destination URL");
+  GET_ATTRIBUTE(path, "", "OSC path");
 }
 
 class midicc2osc_t : public midicc2osc_vars_t,
