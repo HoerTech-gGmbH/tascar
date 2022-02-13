@@ -1,17 +1,43 @@
 Create a jack bus with OSC controllable gain.
 
-\begin{tscattributes}
-\indattr{name} & Jack and OSC identifier\\
-\indattr{channels}& Number of channels; default: 1\\
-\indattr{gain} & Gain in dB; default: 0\\
-\indattr{lingain} & Linear gain; default: 1\\
-\indattr{connect} & Regular expression of input port names\\
-\indattr{connect\_out} & Regular expression of output port names\\
-\indattr{mute} & Mute state (default: false)\\
-\indattr{caliblevel} & Calibration value, used for metering (default: 93.98)\\
-\indattr{levelmeter\_tc}     & Level meter time constant in seconds; default: 2                                     \\
-\indattr{levelmeter\_weight} & Level meter weight type; default: Z (``Z'' or ``bandpass'')                         \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:route}
+Attributes of element {\bf route}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{name} & Jack and OSC identifier (string) & \\
+\hline
+\indattr{id} & Unique route id, empty to autogenerate (string) & \\
+\hline
+\indattr{channels} & Number of channels (uint32) & 1\\
+\hline
+\indattr{gain} & Route gain (float, dB) & 0\\
+\hline
+\indattr{lingain} & linear gain (float) & 1\\
+\hline
+\indattr{connect} & Regular expressions of input port names (string array) & \\
+\hline
+\indattr{connect\_out} & Regular expressions of output port names (string array) & \\
+\hline
+\indattr{inv} & phase invert (bool) & false\\
+\hline
+\indattr{mute} & mute flag of route (bool) & false\\
+\hline
+\indattr{solo} & solo flag of route (bool) & false\\
+\hline
+\indattr{levelmeter\_tc} & Level meter time constant (double) & 2\\
+\hline
+\indattr{levelmeter\_weight} & level meter weighting (f-weight) & Z\\
+\hline
+\indattr{caliblevel} & calibration level (float, dB SPL) & 93.9794\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
 
 The session OSC server is used for control.
-
