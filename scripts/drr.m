@@ -1,4 +1,4 @@
-function r = drr( irs, fs, x, tw, s )
+function [r,l1,l2] = drr( irs, fs, x, tw, s )
 % DRR - calculate direct-to-reverberant ratio
 %
 % Usage:
@@ -21,6 +21,8 @@ function r = drr( irs, fs, x, tw, s )
 %
 % Author: Giso Grimm, 2015
   r = zeros([1,size(irs,2)]);
+  l1 = zeros([1,size(irs,2)]);
+  l2 = zeros([1,size(irs,2)]);
   if nargin < 3
     x = [];
   end
@@ -52,6 +54,7 @@ function r = drr( irs, fs, x, tw, s )
     h_r = irs(:,kch) .* (1-w);
     y_dir = fftfilt( h_d, x );
     y_rev = fftfilt( h_r, x );
-    r(kch) = 10*log10(mean(y_dir.^2)) - ...
-	     10*log10(mean(y_rev.^2));
+    l1(kch) = 10*log10(mean(y_dir.^2));
+    l2(kch) = 10*log10(mean(y_rev.^2));
+    r(kch) = l1(kch) - l2(kch);
   end
