@@ -180,9 +180,31 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   e_pink_diff.set_attribute("period", TASCAR::to_string(duration));
   e_pink_diff.set_attribute("fmin", TASCAR::to_string(fmin));
   e_pink_diff.set_attribute("fmax", TASCAR::to_string(fmax));
+  // extra routes:
+  xml_element_t e_mods(root.add_child("modules"));
+  xml_element_t e_route_pink(e_mods.add_child("route"));
+  e_route_pink.set_attribute("name", "pink");
+  e_route_pink.set_attribute("channels", "1");
+  xml_element_t e_route_pink_plugs(e_route_pink.add_child("plugins"));
+  xml_element_t e_route_pink_pink(e_route_pink_plugs.add_child("pink"));
+  e_route_pink_pink.set_attribute("level", "50");
+  e_route_pink_pink.set_attribute("period", TASCAR::to_string(duration));
+  e_route_pink_pink.set_attribute("fmin", TASCAR::to_string(fmin));
+  e_route_pink_pink.set_attribute("fmax", TASCAR::to_string(fmax));
+  xml_element_t e_route_sub(e_mods.add_child("route"));
+  e_route_sub.set_attribute("name", "sub");
+  e_route_sub.set_attribute("channels", "1");
+  xml_element_t e_route_sub_plugs(e_route_sub.add_child("plugins"));
+  xml_element_t e_route_sub_pink(e_route_sub_plugs.add_child("pink"));
+  e_route_sub_pink.set_attribute("level", "50");
+  e_route_sub_pink.set_attribute("period", TASCAR::to_string(subduration));
+  e_route_sub_pink.set_attribute("fmin", TASCAR::to_string(subfmin));
+  e_route_sub_pink.set_attribute("fmax", TASCAR::to_string(subfmax));
   // end of scene creation.
   // doc->write_to_file_formatted("temp.cfg");
   add_scene(e_scene.e);
+  add_module(e_route_pink.e);
+  add_module(e_route_sub.e);
   startlevel = get_caliblevel();
   startdiffgain = get_diffusegain();
   spkarray = new spk_array_diff_render_t(e_rcvr.e, false);
