@@ -50,6 +50,11 @@ private:
   std::string roturl;
   // rotation OSC path:
   std::string rotpath;
+  // tilt OSC url:
+  std::string tilturl;
+  // tilt OSC path:
+  std::string tiltpath = "/tilt";
+  std::vector<float> tiltmap = {0.0f, 0.0f, 180.0f, 180.0f};
   uint32_t ttl;
   std::string calib0path;
   std::string calib1path;
@@ -61,8 +66,9 @@ private:
   bool send_only_quaternion;
   double autoref;
   // run-time variables:
-  lo_address target;
-  lo_address rottarget;
+  lo_address target = NULL;
+  lo_address rottarget = NULL;
+  lo_address tilttarget = NULL;
   TASCAR::pos_t p0;
   TASCAR::zyx_euler_t o0;
   bool bcalib;
@@ -128,22 +134,42 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       send_only_quaternion(false), autoref(0), target(NULL), rottarget(NULL),
       bcalib(false), qref(1, 0, 0, 0), first(true), run_service_level(true)
 {
-  GET_ATTRIBUTE(name,"","Prefix in OSC control variables");
-  GET_ATTRIBUTE(devices,"","List of serial port device candidates");
-  GET_ATTRIBUTE(url,"","Target URL for OSC data logging, or empty for no datalogging");
-  GET_ATTRIBUTE(roturl,"","OSC target URL for rotation data");
-  GET_ATTRIBUTE(rotpath,"","OSC target path for rotation data");
-  GET_ATTRIBUTE(ttl,"","Time-to-live of OSC multicast data");
-  GET_ATTRIBUTE(calib0path,"","OSC-Path to which a trigger is sent on start of calibration path");
-  GET_ATTRIBUTE(calib1path,"","OSC-Path to which a trigger is sent on end of calibration path");
-  GET_ATTRIBUTE(autoref,"","Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing");
-  GET_ATTRIBUTE(axes,"","Order of axes, or -1 to not use axis");
-  GET_ATTRIBUTE(accscale,"","Scaling factor of accelerometer, default value scales to $m/s^2$");
-  GET_ATTRIBUTE(gyrscale,"","Scaling factor of gyroscope, default value scales to deg/s");
-  GET_ATTRIBUTE_BOOL(apply_loc,"Apply translation based on accelerometer");
-  GET_ATTRIBUTE_BOOL(apply_rot,"Apply rotation based on gyroscope and accelerometer");
-  GET_ATTRIBUTE_BOOL(send_only_quaternion,"Send only quaternion data instead of raw sensor data");
-  GET_ATTRIBUTE(levelpattern,"","TASCAR internal path of level meter to read level data");
+  GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
+  GET_ATTRIBUTE(devices, "", "List of serial port device candidates");
+  GET_ATTRIBUTE(url, "",
+                "Target URL for OSC data logging, or empty for no datalogging");
+  GET_ATTRIBUTE(roturl, "", "OSC target URL for rotation data");
+  GET_ATTRIBUTE(rotpath, "", "OSC target path for rotation data");
+  GET_ATTRIBUTE(ttl, "", "Time-to-live of OSC multicast data");
+  GET_ATTRIBUTE(
+      calib0path, "",
+      "OSC-Path to which a trigger is sent on start of calibration path");
+  GET_ATTRIBUTE(
+      calib1path, "",
+      "OSC-Path to which a trigger is sent on end of calibration path");
+  GET_ATTRIBUTE(autoref, "",
+                "Filter coefficient for estimating reference orientation from "
+                "average direction, or zero for no auto-referencing");
+  GET_ATTRIBUTE(axes, "", "Order of axes, or -1 to not use axis");
+  GET_ATTRIBUTE(
+      accscale, "",
+      "Scaling factor of accelerometer, default value scales to $m/s^2$");
+  GET_ATTRIBUTE(gyrscale, "",
+                "Scaling factor of gyroscope, default value scales to deg/s");
+  GET_ATTRIBUTE_BOOL(apply_loc, "Apply translation based on accelerometer");
+  GET_ATTRIBUTE_BOOL(apply_rot,
+                     "Apply rotation based on gyroscope and accelerometer");
+  GET_ATTRIBUTE_BOOL(send_only_quaternion,
+                     "Send only quaternion data instead of raw sensor data");
+  GET_ATTRIBUTE(levelpattern, "",
+                "TASCAR internal path of level meter to read level data");
+  GET_ATTRIBUTE(tilturl, "", "OSC target URL for tilt");
+  GET_ATTRIBUTE(tiltpath, "", "OSC path for tilt");
+  GET_ATTRIBUTE(tiltmap, "", "tilt mapping, [in1 out1 in2 out2]");
+  if(tiltmap.size() != 4)
+    throw TASCAR::ErrMsg("Tilt map needs exactly four entries.");
+  if(tiltmap[2] == tiltmap[0])
+    throw TASCAR::ErrMsg("Tilt map entries in1 and in2 cannot be the same.");
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
@@ -156,6 +182,13 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       throw TASCAR::ErrMsg("Unable to create target adress \"" + roturl +
                            "\".");
     lo_address_set_ttl(rottarget, ttl);
+  }
+  if((tilturl.size() > 0) && (tiltpath.size() > 0)) {
+    tilttarget = lo_address_new_from_url(tilturl.c_str());
+    if(!tilttarget)
+      throw TASCAR::ErrMsg("Unable to create target adress \"" + tilturl +
+                           "\".");
+    lo_address_set_ttl(tilttarget, ttl);
   }
   add_variables(session);
   start_service();
@@ -296,9 +329,24 @@ void ovheadtracker_t::service()
             }
             q *= qref;
             o0 = q.to_euler();
-            if(target)
+            if(target) {
               lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x,
                       q.y, q.z);
+            }
+            if(tilttarget) {
+              TASCAR::pos_t pz(0.0f, 0.0f, 1.0f);
+              q.rotate(pz);
+              float f = RAD2DEGf * acosf(pz.z);
+              if(f < tiltmap[0])
+                f = tiltmap[1];
+              else if(f > tiltmap[2])
+                f = tiltmap[3];
+              else
+                f = (f - tiltmap[0]) / (tiltmap[2] - tiltmap[0]) *
+                        (tiltmap[3] - tiltmap[1]) +
+                    tiltmap[1];
+              lo_send(tilttarget, tiltpath.c_str(), "f", f);
+            }
             if(rottarget)
               lo_send(rottarget, rotpath.c_str(), "fff", RAD2DEG * o0.z,
                       RAD2DEG * o0.y, RAD2DEG * o0.x);
