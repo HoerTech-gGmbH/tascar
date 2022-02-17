@@ -141,6 +141,7 @@ namespace TASCAR {
     {
       return size() + subs.size() + conv_channels;
     };
+    std::string get_label(size_t ch) const;
     /**
      * @brief Apply calibration, delay compensation, subwoofer
      * processing and convolution

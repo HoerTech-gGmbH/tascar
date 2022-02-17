@@ -105,11 +105,12 @@ matrix_t::matrix_t(const TASCAR::module_cfg_t& cfg)
     add_input_port(ctmp);
   }
   for(uint32_t k = 0; k < outputs.num_output_channels(); ++k) {
+    std::string label(outputs.get_label(k));
     char ctmp[1024];
-    if(outputs[k].label.empty())
+    if(label.empty())
       sprintf(ctmp, "out.%d", k);
     else
-      sprintf(ctmp, "%s", outputs[k].label.c_str());
+      sprintf(ctmp, "%s", label.c_str());
     add_output_port(ctmp);
   }
 }

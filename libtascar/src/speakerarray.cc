@@ -609,6 +609,17 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
   }
 }
 
+std::string spk_array_diff_render_t::get_label(size_t ch) const
+{
+  if(ch < size())
+    return operator[](ch).label;
+  if(ch < size() + subs.size())
+    return subs[ch - size()].label;
+  if(ch < size() + subs.size() + convlabels.size())
+    return convlabels[ch - (size() + subs.size())];
+  return "";
+}
+
 /*
  * Local Variables:
  * mode: c++
