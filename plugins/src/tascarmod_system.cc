@@ -135,11 +135,10 @@ private:
   bool relaunch = false;
   bool allowoscmod = false;
   std::string timedprefix;
-  FILE* h_atcmd;
   FILE* h_triggered;
-  // pid_t pid;
 #ifndef _WIN32
   TASCAR::spawn_process_t* proc = NULL;
+  std::vector<TASCAR::spawn_process_t*> atprocs;
 #endif
   fifo_t fifo;
   std::vector<at_cmd_t*> atcmds;
@@ -212,9 +211,8 @@ void system_t::trigger()
 }
 
 system_t::system_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg), id("system"), sleep(0), h_atcmd(NULL),
-      h_triggered(NULL), fifo(1024), run_service(true),
-      sessionpath(session->get_session_path())
+    : module_base_t(cfg), id("system"), sleep(0), h_triggered(NULL), fifo(1024),
+      run_service(true), sessionpath(session->get_session_path())
 {
   GET_ATTRIBUTE_(id);
   GET_ATTRIBUTE(command, "", "command to be executed");
@@ -228,7 +226,7 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
                      "relaunch process if ended before session unload");
   GET_ATTRIBUTE_BOOL(allowoscmod,
                      "allow modifications of timed commands via OSC");
-  GET_ATTRIBUTE(timedprefix,"","Prefix for timed commands added via OSC");
+  GET_ATTRIBUTE(timedprefix, "", "Prefix for timed commands added via OSC");
   atcmdmtx.lock();
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
@@ -242,13 +240,6 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
                                        relaunch);
 #endif
   }
-  if(atcmds.size() || allowoscmod) {
-    h_atcmd = popen("/bin/bash -s", "w");
-    if(!h_atcmd)
-      throw TASCAR::ErrMsg("Unable to create pipe with /bin/bash");
-    fprintf(h_atcmd, "cd %s\n", sessionpath.c_str());
-    fflush(h_atcmd);
-  }
   if(triggered.size()) {
     h_triggered = popen("/bin/bash -s", "w");
     if(!h_triggered)
@@ -257,7 +248,6 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
     fprintf(h_triggered, "cd %s\n", sessionpath.c_str());
     fflush(h_triggered);
   }
-  // usleep(1000000*sleep);
   std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000.0 * sleep)));
 
   if(!triggered.empty()) {
@@ -309,13 +299,18 @@ void system_t::atcmdclear()
   for(auto cmd : atcmds)
     delete cmd;
   atcmds.clear();
+#ifndef _WIN32
+  for(auto proc : atprocs)
+    delete proc;
+  atprocs.clear();
+#endif
   atcmdmtx.unlock();
 }
 
 void system_t::atcmdadd(double t, const std::string& cmd)
 {
   atcmdmtx.lock();
-  atcmds.push_back(new at_cmd_t(t * f_sample, timedprefix+cmd));
+  atcmds.push_back(new at_cmd_t(t * f_sample, timedprefix + cmd));
   atcmdmtx.unlock();
 }
 
@@ -328,8 +323,6 @@ system_t::~system_t()
     delete proc;
 #endif
   atcmdclear();
-  if(h_atcmd)
-    fclose(h_atcmd);
   if(h_triggered)
     fclose(h_triggered);
   if(!onunload.empty()) {
@@ -341,20 +334,21 @@ system_t::~system_t()
 
 void system_t::service()
 {
+#ifndef _WIN32
   while(run_service) {
     usleep(500);
     if(fifo.can_read()) {
       uint32_t v(fifo.read());
-      if(h_atcmd) {
-        atcmdmtx.lock();
-        if(v < atcmds.size())
-          fprintf(h_atcmd, "%s\n", atcmds[v]->command.c_str());
-        atcmdmtx.unlock();
-        fflush(h_atcmd);
-      } else
-        std::cerr << "Warning: no pipe\n";
+      std::string cmd;
+      atcmdmtx.lock();
+      if(v < atcmds.size())
+        cmd = atcmds[v]->command.c_str();
+      atcmdmtx.unlock();
+      if(cmd.size())
+        atprocs.push_back(new TASCAR::spawn_process_t(cmd, false, false));
     }
   }
+#endif
 }
 
 REGISTER_MODULE(system_t);
