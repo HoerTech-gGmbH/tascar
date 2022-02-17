@@ -248,6 +248,8 @@ TEST(strcnv, str2vecstr)
             TASCAR::str2vecstr("abc def "));
   EXPECT_EQ(std::vector<std::string>({"abc", "def"}),
             TASCAR::str2vecstr("abc  def"));
+  EXPECT_EQ(std::vector<std::string>({"abc", "def"}),
+            TASCAR::str2vecstr("abc \t def"));
   EXPECT_EQ(std::vector<std::string>({"abc", "", "def"}),
             TASCAR::str2vecstr("abc '' def"));
   EXPECT_EQ(std::vector<std::string>({"abc", "def"}),

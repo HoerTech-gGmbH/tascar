@@ -1679,7 +1679,7 @@ std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
   int mode = 0;
   bool wasquoted = false;
   for(auto c : s) {
-    if((mode == 0) && (c == ' ')) {
+    if((mode == 0) && ((c == ' ') || (c == '\t'))) {
       if(tok.size() || wasquoted)
         value.push_back(tok);
       tok.clear();
