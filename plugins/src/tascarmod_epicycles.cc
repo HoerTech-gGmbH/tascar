@@ -283,7 +283,7 @@ HoS::parameter_t::parameter_t(tsccfg::node_t e, TASCAR::osc_server_t* o)
       b_quit(false), f_update(1), t_locate(0), t_apply(0), lastphi(0), phi(0),
       phi_epi(0), home(0), b_home(false)
 {
-  GET_ATTRIBUTE_DEG(home,"Home direction of sound source");
+  GET_ATTRIBUTE_DEG(home, "Home direction of sound source");
   pthread_mutex_init(&mtx, NULL);
   if(lo_addr)
     lo_address_set_ttl(lo_addr, 1);
@@ -317,8 +317,9 @@ HoS::parameter_t::~parameter_t() {}
 
 HoS::srvvars_t::srvvars_t(tsccfg::node_t e) : xml_element_t(e)
 {
-  GET_ATTRIBUTE(targetaddr,"","Target url where the current position is sent to on trigger");
-  GET_ATTRIBUTE(path,"","Path prefix of plugin");
+  GET_ATTRIBUTE(targetaddr, "",
+                "Target url where the current position is sent to on trigger");
+  GET_ATTRIBUTE(path, "", "Path prefix of plugin");
 }
 
 class epicycles_t : public TASCAR::actor_module_t, private HoS::parameter_t {
@@ -336,7 +337,8 @@ epicycles_t::epicycles_t(const TASCAR::module_cfg_t& cfg)
     : actor_module_t(cfg), HoS::parameter_t(cfg.xmlsrc, cfg.session),
       use_transport(true)
 {
-  actor_module_t::GET_ATTRIBUTE_BOOL(use_transport,"Update traces only while transport is running");
+  actor_module_t::GET_ATTRIBUTE_BOOL(
+      use_transport, "Update traces only while transport is running");
 }
 
 epicycles_t::~epicycles_t() {}
@@ -406,11 +408,11 @@ void epicycles_t::update(uint32_t frame, bool running)
     r = (2.0 * TASCAR::drand()) - 0.7;
     r *= r * r;
     r *= par_current.random;
-    w_main += r;
+    w_main += r * n_fragment / 64.0;
     r = (2.0 * TASCAR::drand()) - 0.7;
     r *= r * r;
     r *= par_current.random;
-    w_epi += r;
+    w_epi += r * n_fragment / 64.0;
     // panning parameters:
     // get ellipse in polar coordinates:
     float rho = r2 * (1.0f - e2) /
