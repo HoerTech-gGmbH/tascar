@@ -61,3 +61,18 @@ above for details.
 If an invalid file name or level mode is provided, a warning is
 printed to the console running TASCAR (to see such warnings start
 TASCAR from a terminal).
+
+List of OSC variables:
+
+\begin{tabularx}{\textwidth}{llX}
+\hline
+name            & format & description                                     \\
+\hline
+{\tt /loop}     & i      & Loop count, 0 for infitie loop                  \\
+{\tt /position} & f      & Position in scene in seconds                    \\
+{\tt /loadfile} & ssf    & Load file with level mode and level (see above) \\
+{\tt /mute}     & i      & Mute state                                      \\
+\hline
+\end{tabularx}
+
+\verb!/position! and \verb!loop! will affect the file which is loaded next. It will not affect the current file.

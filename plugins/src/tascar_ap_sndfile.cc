@@ -179,8 +179,8 @@ void ap_sndfile_t::load_file()
         gain = level * 2e-5 / meter.rms();
       } else if(levelmode == "peak") {
         float maxabs(0);
-        for(auto sf = sndf.begin(); sf != sndf.end(); ++sf)
-          maxabs = std::max(maxabs, (*sf)->maxabs());
+        for(auto sf : sndf)
+          maxabs = std::max(maxabs, sf->maxabs());
         if(maxabs > 0)
           gain = level * 2e-5 / maxabs;
       } else if(levelmode == "calib")
@@ -188,15 +188,15 @@ void ap_sndfile_t::load_file()
       else
         throw TASCAR::ErrMsg("Invalid level mode \"" + levelmode +
                              "\". (sndfile)");
-      for(auto sf = sndf.begin(); sf != sndf.end(); ++sf) {
+      for(auto sf : sndf) {
         if(triggered) {
-          (*sf)->set_position(-((*sf)->n) * ((*sf)->get_srate()));
-          (*sf)->set_loop(1);
+          sf->set_position(-(sf->n) * (sf->get_srate()));
+          sf->set_loop(1);
         } else {
-          (*sf)->set_position(position);
-          (*sf)->set_loop(loop);
+          sf->set_position(position);
+          sf->set_loop(loop);
         }
-        *(*sf) *= gain;
+        *(sf) *= gain;
       }
     }
   }
@@ -261,8 +261,11 @@ void ap_sndfile_t::add_variables( TASCAR::osc_server_t* srv )
 {
   if( triggered )
     srv->add_uint( "/loop", &triggeredloop );
+  else
+    srv->add_uint( "/loop", &loop );
   srv->add_bool( "/mute", &mute );
   srv->add_method("/loadfile","ssf",&osc_loadfile,this);
+  srv->add_double("/position", &position);
 }
 
 void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
@@ -276,9 +279,9 @@ void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         ltp = tp;
       if(triggered) {
         if(triggeredloop) {
-          for(auto sf = sndf.begin(); sf != sndf.end(); ++sf) {
-            (*sf)->set_iposition(ltp.object_time_samples);
-            (*sf)->set_loop(triggeredloop);
+          for(auto sf : sndf) {
+            sf->set_iposition(ltp.object_time_samples);
+            sf->set_loop(triggeredloop);
           }
           triggeredloop = 0;
         }
