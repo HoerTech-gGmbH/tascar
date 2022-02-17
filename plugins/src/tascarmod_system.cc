@@ -33,14 +33,14 @@
 class at_cmd_t {
 public:
   at_cmd_t(tsccfg::node_t xmlsrc);
-  at_cmd_t(size_t frame_, const std::string& cmd);
+  at_cmd_t(uint32_t frame_, const std::string& cmd);
   void prepare(double f_sample)
   {
     if(!use_frame)
       frame = time * f_sample;
   };
   double time = 0.0;
-  size_t frame = 0;
+  uint32_t frame = 0;
   std::string command;
   bool use_frame = false;
 };
@@ -58,7 +58,7 @@ at_cmd_t::at_cmd_t(tsccfg::node_t xmlsrc) : time(0), frame(0), use_frame(false)
   e.GET_ATTRIBUTE_(command);
 }
 
-at_cmd_t::at_cmd_t(size_t frame_, const std::string& cmd)
+at_cmd_t::at_cmd_t(uint32_t frame_, const std::string& cmd)
 {
   use_frame = true;
   frame = frame_;
