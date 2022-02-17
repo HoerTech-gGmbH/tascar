@@ -31,11 +31,13 @@
 
 #include "cli.h"
 #include "tscconfig.h"
+#include <chrono>
 #include <iostream>
 #include <lo/lo.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <thread>
 
 int main(int argc, char** argv)
 {
@@ -64,6 +66,10 @@ int main(int argc, char** argv)
     return 1;
   }
   lo_address lo_addr(lo_address_new_from_url(url.c_str()));
+  if( !lo_addr ){
+    std::cerr << "Invalid url " << url << std::endl;
+    return 1;
+  }
   lo_address_set_ttl(lo_addr, 1);
   char rbuf[0x4000];
   FILE* fh;
@@ -89,11 +95,9 @@ int main(int argc, char** argv)
         if(rbuf[0] == ',') {
           double val(0.0f);
           sscanf(&rbuf[1], "%lg", &val);
-          struct timespec slp;
-          slp.tv_sec = floor(val);
-          val -= slp.tv_sec;
-          slp.tv_nsec = 1000000000 * val;
-          nanosleep(&slp, NULL);
+
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds((int)(1000.0 * val)));
         } else {
           std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
           if(args.size()) {
