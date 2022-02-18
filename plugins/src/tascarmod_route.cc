@@ -102,6 +102,7 @@ public:
                       bool tp_rolling);
   void configure();
   void release();
+  void validate_attributes(std::string&) const;
 
 private:
   uint32_t channels;
@@ -116,6 +117,14 @@ private:
   pthread_mutex_t mtx_;
   fader_t fader;
 };
+
+void routemod_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::module_base_t::validate_attributes(msg);
+  TASCAR::Scene::route_t::validate_attributes(msg);
+  TASCAR::Scene::audio_port_t::validate_attributes(msg);
+  plugins.validate_attributes(msg);
+}
 
 int osc_routemod_mute(const char* path, const char* types, lo_arg** argv,
                       int argc, lo_message msg, void* user_data)
