@@ -38,6 +38,7 @@ private:
   double q = 0.8;
   double gain = 0.0;
   bool bypass = false;
+  float wet = 1.0f;
   double b1;
   double b2;
   double statex;
@@ -54,6 +55,7 @@ spksim_t::spksim_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(q, "", "$q$-factor of the resonance filter");
   GET_ATTRIBUTE(gain, "dB", "Post-gain $g$");
   GET_ATTRIBUTE_BOOL(bypass, "Bypass plugin");
+  GET_ATTRIBUTE(wet, "", "Wet (1) - dry (0) mixture gain");
 }
 
 void spksim_t::add_variables(TASCAR::osc_server_t* srv)
@@ -63,6 +65,7 @@ void spksim_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_double("/q", &q);
   srv->add_double("/gain", &gain);
   srv->add_bool("/bypass", &bypass);
+  srv->add_float("/wet", &wet);
 }
 
 spksim_t::~spksim_t() {}
@@ -91,7 +94,7 @@ void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     // non-linearity:
     y *= scale / (scale + fabs(y));
     // air coupling to velocity:
-    aud.d[k] = og * (y - statex);
+    aud.d[k] = wet * og * (y - statex) + (1.0f - wet) * aud.d[k];
     statex = y;
   }
 }
