@@ -45,6 +45,7 @@ namespace TASCAR {
     public:
       std::string path;
       std::string typespec;
+      bool readable;
     };
     osc_server_t(const std::string& multicast, const std::string& port,
                  const std::string& proto, bool verbose = true);
@@ -59,7 +60,8 @@ namespace TASCAR {
        \param user_data Pointer to user data
      */
     void add_method(const std::string& path, const char* typespec,
-                    lo_method_handler h, void* user_data);
+                    lo_method_handler h, void* user_data, bool visible = true,
+                    bool readable = false);
     /** \brief Register a double variable for OSC access
         \param path OSC path
         \param data Pointer to data

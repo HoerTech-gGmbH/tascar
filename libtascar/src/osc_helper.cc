@@ -24,160 +24,338 @@
  */
 
 #include "osc_helper.h"
-#include "errorhandling.h"
-#include <math.h>
 #include "defs.h"
+#include "errorhandling.h"
 #include <map>
+#include <math.h>
 
 using namespace TASCAR;
 
 static bool liblo_errflag;
 
-void err_handler(int num, const char *msg, const char *where)
+void err_handler(int num, const char* msg, const char* where)
 {
   liblo_errflag = true;
   std::cout << "liblo error " << num << ": " << msg << "\n(" << where << ")\n";
 }
 
-int osc_set_bool_true(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_bool_true(const char* path, const char* types, lo_arg** argv,
+                      int argc, lo_message msg, void* user_data)
 {
-  if( user_data )
+  if(user_data)
     *(bool*)(user_data) = true;
   return 0;
 }
 
-int osc_set_bool_false(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_bool_false(const char* path, const char* types, lo_arg** argv,
+                       int argc, lo_message msg, void* user_data)
 {
-  if( user_data )
+  if(user_data)
     *(bool*)(user_data) = false;
   return 0;
 }
 
-int osc_set_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_float(const char* path, const char* types, lo_arg** argv, int argc,
+                  lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
+  if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = argv[0]->f;
   return 0;
 }
 
-int osc_set_float_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
+                  lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
-    *(float*)(user_data) = powf(10.0f,0.05*argv[0]->f);
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f", *(float*)(user_data));
+      lo_address_free(target);
+    }
+  }
   return 0;
 }
 
-int osc_set_float_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_float_db(const char* path, const char* types, lo_arg** argv,
+                     int argc, lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
-    *(float*)(user_data) = powf(10.0f,0.05*argv[0]->f)*2e-5f;
+  if(user_data && (argc == 1) && (types[0] == 'f'))
+    *(float*)(user_data) = powf(10.0f, 0.05 * argv[0]->f);
   return 0;
 }
 
-int osc_set_vector_float(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_float_db(const char* path, const char* types, lo_arg** argv,
+                     int argc, lo_message msg, void* user_data)
 {
-  if( user_data  ){
-    std::vector<float> *data((std::vector<float> *)user_data);
-    if( argc == (int)(data->size()) )
-      for(int k=0;k<argc;++k)
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f", 20.0f * log10f(*(float*)(user_data)));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_float_dbspl(const char* path, const char* types, lo_arg** argv,
+                        int argc, lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'f'))
+    *(float*)(user_data) = powf(10.0f, 0.05 * argv[0]->f) * 2e-5f;
+  return 0;
+}
+
+int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
+                        int argc, lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f",
+              20.0f * log10f(*(float*)(user_data)*5.0e4f));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_vector_float(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data)
+{
+  if(user_data) {
+    std::vector<float>* data((std::vector<float>*)user_data);
+    if(argc == (int)(data->size()))
+      for(int k = 0; k < argc; ++k)
         (*data)[k] = argv[k]->f;
   }
   return 0;
 }
 
-int osc_set_vector_float_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_vector_float_dbspl(const char* path, const char* types,
+                               lo_arg** argv, int argc, lo_message msg,
+                               void* user_data)
 {
-  if( user_data  ){
-    std::vector<float> *data((std::vector<float> *)user_data);
-    if( argc == (int)(data->size()) )
-      for(int k=0;k<argc;++k)
-        (*data)[k] = powf(10.0f,0.05f*argv[k]->f)*2e-5f;
+  if(user_data) {
+    std::vector<float>* data((std::vector<float>*)user_data);
+    if(argc == (int)(data->size()))
+      for(int k = 0; k < argc; ++k)
+        (*data)[k] = powf(10.0f, 0.05f * argv[k]->f) * 2e-5f;
   }
   return 0;
 }
 
-int osc_set_vector_float_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_vector_float_db(const char* path, const char* types, lo_arg** argv,
+                            int argc, lo_message msg, void* user_data)
 {
-  if( user_data  ){
-    std::vector<float> *data((std::vector<float> *)user_data);
-    if( argc == (int)(data->size()) )
-      for(int k=0;k<argc;++k)
-        (*data)[k] = powf(10.0f,0.05f*argv[k]->f);
+  if(user_data) {
+    std::vector<float>* data((std::vector<float>*)user_data);
+    if(argc == (int)(data->size()))
+      for(int k = 0; k < argc; ++k)
+        (*data)[k] = powf(10.0f, 0.05f * argv[k]->f);
   }
   return 0;
 }
 
-int osc_set_vector_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_vector_double(const char* path, const char* types, lo_arg** argv,
+                          int argc, lo_message msg, void* user_data)
 {
-  if( user_data  ){
-    std::vector<double> *data((std::vector<double> *)user_data);
-    if( argc == (int)(data->size()) )
-      for(int k=0;k<argc;++k)
+  if(user_data) {
+    std::vector<double>* data((std::vector<double>*)user_data);
+    if(argc == (int)(data->size()))
+      for(int k = 0; k < argc; ++k)
         (*data)[k] = argv[k]->f;
   }
   return 0;
 }
 
-int osc_set_double_db(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_double_db(const char* path, const char* types, lo_arg** argv,
+                      int argc, lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
-    *(double*)(user_data) = pow(10.0,0.05*argv[0]->f);
+  if(user_data && (argc == 1) && (types[0] == 'f'))
+    *(double*)(user_data) = pow(10.0, 0.05 * argv[0]->f);
   return 0;
 }
 
-int osc_set_double_dbspl(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_double_db(const char* path, const char* types, lo_arg** argv,
+                      int argc, lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
-    *(double*)(user_data) = pow(10.0,0.05*argv[0]->f)*2e-5;
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f",
+              20.0f * log10f(*(double*)(user_data)));
+      lo_address_free(target);
+    }
+  }
   return 0;
 }
 
-int osc_set_float_degree(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_set_double_dbspl(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
-    *(float*)(user_data) = DEG2RAD * argv[0]->f;
+  if(user_data && (argc == 1) && (types[0] == 'f'))
+    *(double*)(user_data) = pow(10.0, 0.05 * argv[0]->f) * 2e-5;
   return 0;
 }
 
-int osc_set_double_degree(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f",
+              20.0f * log10f(*(double*)(user_data)*5.0e4f));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_float_degree(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'f'))
+    *(float*)(user_data) = DEG2RADf * argv[0]->f;
+  return 0;
+}
+
+int osc_get_float_degree(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f", RAD2DEGf * *(float*)(user_data));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_double_degree(const char* path, const char* types, lo_arg** argv,
+                          int argc, lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = DEG2RAD * argv[0]->f;
   return 0;
 }
 
-int osc_set_double(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_double_degree(const char* path, const char* types, lo_arg** argv,
+                          int argc, lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'f') )
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f", RAD2DEGf * *(double*)(user_data));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_double(const char* path, const char* types, lo_arg** argv, int argc,
+                   lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = argv[0]->f;
   return 0;
 }
 
-int osc_set_int32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_double(const char* path, const char* types, lo_arg** argv, int argc,
+                   lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'i') )
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "f", *(double*)(user_data));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_int32(const char* path, const char* types, lo_arg** argv, int argc,
+                  lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'i'))
     *(int32_t*)(user_data) = argv[0]->i;
   return 0;
 }
 
-int osc_set_uint32(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_int32(const char* path, const char* types, lo_arg** argv, int argc,
+                  lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'i') )
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "i", *(int32_t*)(user_data));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_uint32(const char* path, const char* types, lo_arg** argv, int argc,
+                   lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'i'))
     *(uint32_t*)(user_data) = (uint32_t)(argv[0]->i);
   return 0;
 }
 
-int osc_set_bool(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_uint32(const char* path, const char* types, lo_arg** argv, int argc,
+                   lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 'i') )
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "i", *(uint32_t*)(user_data));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_bool(const char* path, const char* types, lo_arg** argv, int argc,
+                 lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 'i'))
     *(bool*)(user_data) = (argv[0]->i != 0);
   return 0;
 }
 
-int osc_set_string(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int osc_get_bool(const char* path, const char* types, lo_arg** argv, int argc,
+                 lo_message msg, void* user_data)
 {
-  if( user_data && (argc == 1) && (types[0] == 's') )
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "i", *(bool*)(user_data));
+      lo_address_free(target);
+    }
+  }
+  return 0;
+}
+
+int osc_set_string(const char* path, const char* types, lo_arg** argv, int argc,
+                   lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 1) && (types[0] == 's'))
     *(std::string*)(user_data) = &(argv[0]->s);
+  return 0;
+}
+
+int osc_get_string(const char* path, const char* types, lo_arg** argv, int argc,
+                   lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      lo_send(target, &(argv[1]->s), "s", ((std::string*)(user_data))->c_str());
+      lo_address_free(target);
+    }
+  }
   return 0;
 }
 
@@ -196,15 +374,15 @@ int osc_send_variables(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int string2proto( const std::string& proto )
+int string2proto(const std::string& proto)
 {
-  if( proto == "UDP" )
+  if(proto == "UDP")
     return LO_UDP;
-  if( proto == "TCP" )
+  if(proto == "TCP")
     return LO_TCP;
-  if( proto == "UNIX" )
+  if(proto == "UNIX")
     return LO_UNIX;
-  throw TASCAR::ErrMsg("Invalid OSC protocol name \""+proto+"\".");
+  throw TASCAR::ErrMsg("Invalid OSC protocol name \"" + proto + "\".");
 }
 
 osc_server_t::osc_server_t(const std::string& multicast,
@@ -251,23 +429,23 @@ osc_server_t::osc_server_t(const std::string& multicast,
 int osc_server_t::dispatch_data(void* data, size_t size)
 {
   lo_server srv(lo_server_thread_get_server(lost));
-  return lo_server_dispatch_data(srv,data,size);
+  return lo_server_dispatch_data(srv, data, size);
 }
 
-int osc_server_t::dispatch_data_message(const char* path,lo_message m)
+int osc_server_t::dispatch_data_message(const char* path, lo_message m)
 {
-  if( !isactive )
+  if(!isactive)
     return 0;
-  size_t len(lo_message_length(m,path));
-  char data[len+1];
-  return dispatch_data(lo_message_serialise(m,path,data,NULL),len);
+  size_t len(lo_message_length(m, path));
+  char data[len + 1];
+  return dispatch_data(lo_message_serialise(m, path, data, NULL), len);
 }
 
 osc_server_t::~osc_server_t()
 {
-  if( isactive )
+  if(isactive)
     deactivate();
-  if( initialized )
+  if(initialized)
     lo_server_thread_free(lost);
 }
 
@@ -276,48 +454,57 @@ void osc_server_t::set_prefix(const std::string& prefix_)
   prefix = prefix_;
 }
 
-void osc_server_t::add_method(const std::string& path,const char* typespec,lo_method_handler h, void *user_data)
+void osc_server_t::add_method(const std::string& path, const char* typespec,
+                              lo_method_handler h, void* user_data,
+                              bool visible, bool readable)
 {
-  if( initialized ){
-    std::string sPath(prefix+path);
-    if( verbose ){
+  if(initialized) {
+    std::string sPath(prefix + path);
+    if(verbose && visible) {
       std::cerr << "added handler " << sPath;
       if(typespec)
         std::cerr << " with typespec \"" << typespec << "\"";
       std::cerr << std::endl;
     }
-    if( sPath.empty() )
-      lo_server_thread_add_method(lost,NULL,typespec,h,user_data);
+    if(sPath.empty())
+      lo_server_thread_add_method(lost, NULL, typespec, h, user_data);
     else
-      lo_server_thread_add_method(lost,sPath.c_str(),typespec,h,user_data);
-    descriptor_t d;
-    d.path = sPath;
-    if( typespec )
-      d.typespec = typespec;
-    else
-      d.typespec = "(any)";
-    variables.push_back(d);
+      lo_server_thread_add_method(lost, sPath.c_str(), typespec, h, user_data);
+    if(visible) {
+      descriptor_t d;
+      d.path = sPath;
+      if(typespec)
+        d.typespec = typespec;
+      else
+        d.typespec = "(any)";
+      d.readable = readable;
+      variables.push_back(d);
+    }
   }
 }
 
-void osc_server_t::add_float(const std::string& path,float *data)
+void osc_server_t::add_float(const std::string& path, float* data)
 {
-  add_method(path,"f",osc_set_float,data);
+  add_method(path, "f", osc_set_float, data, true, true);
+  add_method(path + "/get", "ss", osc_get_float, data, false);
 }
 
-void osc_server_t::add_double(const std::string& path,double *data)
+void osc_server_t::add_double(const std::string& path, double* data)
 {
-  add_method(path,"f",osc_set_double,data);
+  add_method(path, "f", osc_set_double, data, true, true);
+  add_method(path + "/get", "ss", osc_get_double, data, false);
 }
 
-void osc_server_t::add_float_db(const std::string& path,float *data)
+void osc_server_t::add_float_db(const std::string& path, float* data)
 {
-  add_method(path,"f",osc_set_float_db,data);
+  add_method(path, "f", osc_set_float_db, data, true, true);
+  add_method(path + "/get", "ss", osc_get_float_db, data, false);
 }
 
-void osc_server_t::add_float_dbspl(const std::string& path,float *data)
+void osc_server_t::add_float_dbspl(const std::string& path, float* data)
 {
-  add_method(path,"f",osc_set_float_dbspl,data);
+  add_method(path, "f", osc_set_float_dbspl, data, true, true);
+  add_method(path + "/get", "ss", osc_get_float_dbspl, data, false);
 }
 
 void osc_server_t::add_vector_float_dbspl(const std::string& path,
@@ -348,83 +535,93 @@ void osc_server_t::add_vector_double(const std::string& path,
              osc_set_vector_double, data);
 }
 
-void osc_server_t::add_double_db(const std::string& path,double *data)
+void osc_server_t::add_double_db(const std::string& path, double* data)
 {
-  add_method(path,"f",osc_set_double_db,data);
+  add_method(path, "f", osc_set_double_db, data, true, true);
+  add_method(path + "/get", "ss", osc_get_double_db, data, false);
 }
 
-void osc_server_t::add_double_dbspl(const std::string& path,double *data)
+void osc_server_t::add_double_dbspl(const std::string& path, double* data)
 {
-  add_method(path,"f",osc_set_double_dbspl,data);
+  add_method(path, "f", osc_set_double_dbspl, data, true, true);
+  add_method(path + "/get", "ss", osc_get_double_dbspl, data, false);
 }
 
-void osc_server_t::add_float_degree(const std::string& path,float *data)
+void osc_server_t::add_float_degree(const std::string& path, float* data)
 {
-  add_method(path,"f",osc_set_float_degree,data);
+  add_method(path, "f", osc_set_float_degree, data, true, true);
+  add_method(path + "/get", "ss", osc_get_float_degree, data, false);
 }
 
-void osc_server_t::add_double_degree(const std::string& path,double *data)
+void osc_server_t::add_double_degree(const std::string& path, double* data)
 {
-  add_method(path,"f",osc_set_double_degree,data);
+  add_method(path, "f", osc_set_double_degree, data, true, true);
+  add_method(path + "/get", "ss", osc_get_double_degree, data, false);
 }
 
-void osc_server_t::add_bool_true(const std::string& path,bool *data)
+void osc_server_t::add_bool_true(const std::string& path, bool* data)
 {
-  add_method(path,"",osc_set_bool_true,data);
+  add_method(path, "", osc_set_bool_true, data);
 }
 
-void osc_server_t::add_bool_false(const std::string& path,bool *data)
+void osc_server_t::add_bool_false(const std::string& path, bool* data)
 {
-  add_method(path,"",osc_set_bool_false,data);
+  add_method(path, "", osc_set_bool_false, data);
 }
 
-void osc_server_t::add_bool(const std::string& path,bool *data)
+void osc_server_t::add_bool(const std::string& path, bool* data)
 {
-  add_method(path,"i",osc_set_bool,data);
+  add_method(path, "i", osc_set_bool, data, true, true);
+  add_method(path + "/get", "ss", osc_get_bool, data, false);
 }
 
-void osc_server_t::add_int(const std::string& path,int32_t *data)
+void osc_server_t::add_int(const std::string& path, int32_t* data)
 {
-  add_method(path,"i",osc_set_int32,data);
+  add_method(path, "i", osc_set_int32, data, true, true);
+  add_method(path + "/get", "ss", osc_get_int32, data, false);
 }
 
-void osc_server_t::add_uint(const std::string& path,uint32_t *data)
+void osc_server_t::add_uint(const std::string& path, uint32_t* data)
 {
-  add_method(path,"i",osc_set_uint32,data);
+  add_method(path, "i", osc_set_uint32, data, true, true);
+  add_method(path + "/get", "ss", osc_get_uint32, data, false);
 }
 
-void osc_server_t::add_string( const std::string& path, std::string *data )
+void osc_server_t::add_string(const std::string& path, std::string* data)
 {
-  add_method( path, "s", osc_set_string, data );
+  add_method(path, "s", osc_set_string, data, true, true);
+  add_method(path + "/get", "ss", osc_get_string, data, false);
 }
 
 void osc_server_t::activate()
 {
-  if( initialized ){
+  if(initialized) {
     lo_server_thread_start(lost);
     isactive = true;
-    if( verbose )
+    if(verbose)
       std::cerr << "server active\n";
   }
 }
 
 void osc_server_t::deactivate()
 {
-  if( initialized ){
+  if(initialized) {
     lo_server_thread_stop(lost);
     isactive = false;
-    if( verbose )
+    if(verbose)
       std::cerr << "server inactive\n";
   }
 }
 
 std::string osc_server_t::list_variables() const
 {
-  std::map<std::string,descriptor_t> vars;
-  for(std::vector<descriptor_t>::const_iterator it=variables.begin();it!=variables.end();++it)
-    vars[it->path+it->typespec] = *it;
+  std::map<std::string, descriptor_t> vars;
+  for(std::vector<descriptor_t>::const_iterator it = variables.begin();
+      it != variables.end(); ++it)
+    vars[it->path + it->typespec] = *it;
   std::string rv;
-  for(std::map<std::string,descriptor_t>::const_iterator it=vars.begin();it!=vars.end();++it){
+  for(std::map<std::string, descriptor_t>::const_iterator it = vars.begin();
+      it != vars.end(); ++it) {
     rv += it->second.path + "  (" + it->second.typespec + ")\n";
   }
   return rv;
@@ -443,8 +640,9 @@ void osc_server_t::send_variable_list(const std::string& url,
   if(!target)
     return;
   for(const auto& var : variables)
-    if( prefix.empty() || (var.path.find(prefix)==0) )
-      lo_send(target, path.c_str(), "ss", var.path.c_str(), var.typespec.c_str());
+    if(prefix.empty() || (var.path.find(prefix) == 0))
+      lo_send(target, path.c_str(), "ssi", var.path.c_str(),
+              var.typespec.c_str(), var.readable);
   lo_address_free(target);
 }
 
@@ -452,19 +650,19 @@ TASCAR::msg_t::msg_t(tsccfg::node_t e)
     : TASCAR::xml_element_t(e), msg(lo_message_new())
 {
   GET_ATTRIBUTE(path, "", "OSC path name");
-  for(auto& sne : tsccfg::node_get_children(e,"f")) {
+  for(auto& sne : tsccfg::node_get_children(e, "f")) {
     TASCAR::xml_element_t tsne(sne);
     double v(0);
     tsne.GET_ATTRIBUTE(v, "", "float value");
     lo_message_add_float(msg, v);
   }
-  for(auto& sne : tsccfg::node_get_children(e,"i")) {
+  for(auto& sne : tsccfg::node_get_children(e, "i")) {
     TASCAR::xml_element_t tsne(sne);
     int32_t v(0);
     tsne.GET_ATTRIBUTE(v, "", "int value");
     lo_message_add_int32(msg, v);
   }
-  for(auto& sne : tsccfg::node_get_children(e,"s")) {
+  for(auto& sne : tsccfg::node_get_children(e, "s")) {
     TASCAR::xml_element_t tsne(sne);
     std::string v("");
     tsne.GET_ATTRIBUTE(v, "", "string value");
@@ -485,4 +683,3 @@ TASCAR::msg_t::~msg_t()
  * compile-command: "make -C .."
  * End:
  */
-
