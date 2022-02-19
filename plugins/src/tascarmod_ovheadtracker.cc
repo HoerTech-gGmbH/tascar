@@ -69,6 +69,7 @@ private:
   lo_address target = NULL;
   lo_address rottarget = NULL;
   lo_address tilttarget = NULL;
+  float prevtilt = 0;
   TASCAR::pos_t p0;
   TASCAR::zyx_euler_t o0;
   bool bcalib;
@@ -345,7 +346,10 @@ void ovheadtracker_t::service()
                 f = (f - tiltmap[0]) / (tiltmap[2] - tiltmap[0]) *
                         (tiltmap[3] - tiltmap[1]) +
                     tiltmap[1];
-              lo_send(tilttarget, tiltpath.c_str(), "f", f);
+              if( f != prevtilt ){
+                lo_send(tilttarget, tiltpath.c_str(), "f", f);
+                prevtilt = f;
+              }
             }
             if(rottarget)
               lo_send(rottarget, rotpath.c_str(), "fff", RAD2DEG * o0.z,
