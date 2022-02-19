@@ -181,6 +181,20 @@ int osc_set_string(const char *path, const char *types, lo_arg **argv, int argc,
   return 0;
 }
 
+int osc_send_variables(const char* path, const char* types, lo_arg** argv,
+                       int argc, lo_message msg, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    osc_server_t* srv(reinterpret_cast<osc_server_t*>(user_data));
+    srv->send_variable_list(&(argv[0]->s), &(argv[1]->s));
+  }
+  if(user_data && (argc == 3) && (types[0] == 's') && (types[1] == 's') &&
+     (types[2] == 's')) {
+    osc_server_t* srv(reinterpret_cast<osc_server_t*>(user_data));
+    srv->send_variable_list(&(argv[0]->s), &(argv[1]->s), &(argv[2]->s));
+  }
+  return 0;
+}
 
 int string2proto( const std::string& proto )
 {
@@ -193,39 +207,45 @@ int string2proto( const std::string& proto )
   throw TASCAR::ErrMsg("Invalid OSC protocol name \""+proto+"\".");
 }
 
-osc_server_t::osc_server_t(const std::string& multicast, const std::string& port, const std::string& proto, bool verbose_)
-  : osc_srv_addr(multicast),
-    osc_srv_port(port),
-    initialized(false),
-    isactive(false),
-    verbose(verbose_)
+osc_server_t::osc_server_t(const std::string& multicast,
+                           const std::string& port, const std::string& proto,
+                           bool verbose_)
+    : osc_srv_addr(multicast), osc_srv_port(port), initialized(false),
+      isactive(false), verbose(verbose_)
 {
   lost = NULL;
   liblo_errflag = false;
-  if( port.size() && (port != "none") ){
-    if( multicast.size() ){
-      lost = lo_server_thread_new_multicast(multicast.c_str(),port.c_str(),err_handler);
-      //if( verbose )
-      //std::cerr << "listening on multicast address \"osc.udp://" << multicast << ":"<<port << "/\"" << std::endl;
+  if(port.size() && (port != "none")) {
+    if(multicast.size()) {
+      lost = lo_server_thread_new_multicast(multicast.c_str(), port.c_str(),
+                                            err_handler);
+      // if( verbose )
+      // std::cerr << "listening on multicast address \"osc.udp://" << multicast
+      // << ":"<<port << "/\"" << std::endl;
       initialized = true;
-    }else{
-      lost = lo_server_thread_new_with_proto(port.c_str(),string2proto(proto),err_handler);
-      //if( verbose )
-      //std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" << std::endl;
+    } else {
+      lost = lo_server_thread_new_with_proto(port.c_str(), string2proto(proto),
+                                             err_handler);
+      // if( verbose )
+      // std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" <<
+      // std::endl;
       initialized = true;
     }
-    if( (!lost) || liblo_errflag )
-      throw ErrMsg("liblo error (srv_addr: \""+multicast+"\" srv_port: \""+port+"\" "+proto+").");
+    if((!lost) || liblo_errflag)
+      throw ErrMsg("liblo error (srv_addr: \"" + multicast + "\" srv_port: \"" +
+                   port + "\" " + proto + ").");
   }
-  if( lost ){
+  if(lost) {
     char* ctmp(lo_server_thread_get_url(lost));
-    if( ctmp ){
+    if(ctmp) {
       osc_srv_url = ctmp;
       free(ctmp);
     }
-    if( verbose )
+    if(verbose)
       std::cerr << "listening on \"" << osc_srv_url << "\"" << std::endl;
   }
+  add_method("/sendvarsto", "ss", osc_send_variables, this);
+  add_method("/sendvarsto", "sss", osc_send_variables, this);
 }
 
 int osc_server_t::dispatch_data(void* data, size_t size)
@@ -413,6 +433,19 @@ std::string osc_server_t::list_variables() const
 const std::string& osc_server_t::get_prefix() const
 {
   return prefix;
+}
+
+void osc_server_t::send_variable_list(const std::string& url,
+                                      const std::string& path,
+                                      const std::string& prefix) const
+{
+  lo_address target = lo_address_new_from_url(url.c_str());
+  if(!target)
+    return;
+  for(const auto& var : variables)
+    if( prefix.empty() || (var.path.find(prefix)==0) )
+      lo_send(target, path.c_str(), "ss", var.path.c_str(), var.typespec.c_str());
+  lo_address_free(target);
 }
 
 TASCAR::msg_t::msg_t(tsccfg::node_t e)

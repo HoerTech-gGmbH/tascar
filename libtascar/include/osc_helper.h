@@ -149,7 +149,8 @@ namespace TASCAR {
      */
     void add_vector_float_dbspl(const std::string& path,
                                 std::vector<float>* data);
-    /** \brief Register a vector of floats variable for OSC access as dB (e.g. for gains)
+    /** \brief Register a vector of floats variable for OSC access as dB (e.g.
+       for gains)
 
         The dimension of the vector specifies the length of the
         message. Sending a message of different size will not have any
@@ -159,8 +160,7 @@ namespace TASCAR {
         \param path OSC path
         \param data Pointer to data
      */
-    void add_vector_float_db(const std::string& path,
-                                std::vector<float>* data);
+    void add_vector_float_db(const std::string& path, std::vector<float>* data);
     void add_bool_true(const std::string& path, bool* data);
     void add_bool_false(const std::string& path, bool* data);
     void add_bool(const std::string& path, bool* data);
@@ -177,6 +177,8 @@ namespace TASCAR {
     const std::string osc_srv_addr;
     const std::string osc_srv_port;
     const std::string& get_srv_url() const { return osc_srv_url; };
+    void send_variable_list(const std::string& url, const std::string& path,
+                            const std::string& prefix = "") const;
 
   private:
     std::string osc_srv_url;
