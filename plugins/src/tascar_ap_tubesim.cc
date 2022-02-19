@@ -79,7 +79,7 @@ void tubesim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
 {
   if(bypass)
     return;
-  float oshift = tubeval(offset);
+  float oshift = tubeval(0.0f);
   for(auto& aud : chunk)
     for(uint32_t k = 0; k < aud.n; ++k)
       aud.d[k] = wet * (tubeval(aud.d[k] * pregain) - oshift) * postgain +
