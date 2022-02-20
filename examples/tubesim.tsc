@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session>
+  <scene>
+    <source>
+      <sound x="1">
+        <plugins>
+          <tubesim bypass="false"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver/>
+  </scene>
+</session>

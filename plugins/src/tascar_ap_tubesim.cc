@@ -63,12 +63,13 @@ tubesim_t::tubesim_t(const TASCAR::audioplugin_cfg_t& cfg)
 
 void tubesim_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_float_db("/pregain", &pregain);
-  srv->add_float_db("/postgain", &postgain);
-  srv->add_float("/saturation", &saturation);
-  srv->add_float("/offset", &offset);
+  srv->add_float_db("/pregain", &pregain, "[-10,50]", "Input gain in dB");
+  srv->add_float_db("/postgain", &postgain, "[-50,10]", "Output gain in dB");
+  srv->add_float_db("/saturation", &saturation, "[-40,0]",
+                    "Saturation threshold in dB");
+  srv->add_float("/offset", &offset, "[0,1]", "Input offset");
   srv->add_bool("/bypass", &bypass);
-  srv->add_float("/wet", &wet);
+  srv->add_float("/wet", &wet, "[0,1]");
 }
 
 tubesim_t::~tubesim_t() {}

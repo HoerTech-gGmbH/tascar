@@ -456,7 +456,9 @@ void osc_server_t::set_prefix(const std::string& prefix_)
 
 void osc_server_t::add_method(const std::string& path, const char* typespec,
                               lo_method_handler h, void* user_data,
-                              bool visible, bool readable)
+                              bool visible, bool readable,
+                              const std::string& rangehint,
+                              const std::string& comment)
 {
   if(initialized) {
     std::string sPath(prefix + path);
@@ -478,118 +480,152 @@ void osc_server_t::add_method(const std::string& path, const char* typespec,
       else
         d.typespec = "(any)";
       d.readable = readable;
+      d.rangehint = rangehint;
+      d.comment = comment;
       variables.push_back(d);
     }
   }
 }
 
-void osc_server_t::add_float(const std::string& path, float* data)
+void osc_server_t::add_float(const std::string& path, float* data,
+                             const std::string& range,
+                             const std::string& comment)
 {
-  add_method(path, "f", osc_set_float, data, true, true);
+  add_method(path, "f", osc_set_float, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float, data, false);
 }
 
-void osc_server_t::add_double(const std::string& path, double* data)
+void osc_server_t::add_double(const std::string& path, double* data,
+                              const std::string& range,
+                              const std::string& comment)
 {
-  add_method(path, "f", osc_set_double, data, true, true);
+  add_method(path, "f", osc_set_double, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double, data, false);
 }
 
-void osc_server_t::add_float_db(const std::string& path, float* data)
+void osc_server_t::add_float_db(const std::string& path, float* data,
+                                const std::string& range,
+                                const std::string& comment)
 {
-  add_method(path, "f", osc_set_float_db, data, true, true);
+  add_method(path, "f", osc_set_float_db, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_db, data, false);
 }
 
-void osc_server_t::add_float_dbspl(const std::string& path, float* data)
+void osc_server_t::add_float_dbspl(const std::string& path, float* data,
+                                   const std::string& range,
+                                   const std::string& comment)
 {
-  add_method(path, "f", osc_set_float_dbspl, data, true, true);
+  add_method(path, "f", osc_set_float_dbspl, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_dbspl, data, false);
 }
 
 void osc_server_t::add_vector_float_dbspl(const std::string& path,
-                                          std::vector<float>* data)
+                                          std::vector<float>* data,
+                                          const std::string& range,
+                                          const std::string& comment)
 {
   add_method(path, std::string(data->size(), 'f').c_str(),
-             osc_set_vector_float_dbspl, data);
+             osc_set_vector_float_dbspl, data, true, false, range, comment);
 }
 
 void osc_server_t::add_vector_float_db(const std::string& path,
-                                       std::vector<float>* data)
+                                       std::vector<float>* data,
+                                       const std::string& range,
+                                       const std::string& comment)
 {
   add_method(path, std::string(data->size(), 'f').c_str(),
-             osc_set_vector_float_db, data);
+             osc_set_vector_float_db, data, true, false, range, comment);
 }
 
 void osc_server_t::add_vector_float(const std::string& path,
-                                    std::vector<float>* data)
+                                    std::vector<float>* data,
+                                    const std::string& range,
+                                    const std::string& comment)
 {
   add_method(path, std::string(data->size(), 'f').c_str(), osc_set_vector_float,
-             data);
+             data, true, false, range, comment);
 }
 
 void osc_server_t::add_vector_double(const std::string& path,
-                                     std::vector<double>* data)
+                                     std::vector<double>* data,
+                                     const std::string& range,
+                                     const std::string& comment)
 {
   add_method(path, std::string(data->size(), 'f').c_str(),
-             osc_set_vector_double, data);
+             osc_set_vector_double, data, true, false, range, comment);
 }
 
-void osc_server_t::add_double_db(const std::string& path, double* data)
+void osc_server_t::add_double_db(const std::string& path, double* data,
+                                 const std::string& range,
+                                 const std::string& comment)
 {
-  add_method(path, "f", osc_set_double_db, data, true, true);
+  add_method(path, "f", osc_set_double_db, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double_db, data, false);
 }
 
-void osc_server_t::add_double_dbspl(const std::string& path, double* data)
+void osc_server_t::add_double_dbspl(const std::string& path, double* data,
+                                    const std::string& range,
+                                    const std::string& comment)
 {
-  add_method(path, "f", osc_set_double_dbspl, data, true, true);
+  add_method(path, "f", osc_set_double_dbspl, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double_dbspl, data, false);
 }
 
-void osc_server_t::add_float_degree(const std::string& path, float* data)
+void osc_server_t::add_float_degree(const std::string& path, float* data,
+                                    const std::string& range,
+                                    const std::string& comment)
 {
-  add_method(path, "f", osc_set_float_degree, data, true, true);
+  add_method(path, "f", osc_set_float_degree, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_degree, data, false);
 }
 
-void osc_server_t::add_double_degree(const std::string& path, double* data)
+void osc_server_t::add_double_degree(const std::string& path, double* data,
+                                     const std::string& range,
+                                     const std::string& comment)
 {
-  add_method(path, "f", osc_set_double_degree, data, true, true);
+  add_method(path, "f", osc_set_double_degree, data, true, true, range,
+             comment);
   add_method(path + "/get", "ss", osc_get_double_degree, data, false);
 }
 
-void osc_server_t::add_bool_true(const std::string& path, bool* data)
+void osc_server_t::add_bool_true(const std::string& path, bool* data,
+                                 const std::string& comment)
 {
-  add_method(path, "", osc_set_bool_true, data);
+  add_method(path, "", osc_set_bool_true, data, true, false, "", comment);
 }
 
-void osc_server_t::add_bool_false(const std::string& path, bool* data)
+void osc_server_t::add_bool_false(const std::string& path, bool* data,
+                                  const std::string& comment)
 {
-  add_method(path, "", osc_set_bool_false, data);
+  add_method(path, "", osc_set_bool_false, data, true, false, "", comment);
 }
 
-void osc_server_t::add_bool(const std::string& path, bool* data)
+void osc_server_t::add_bool(const std::string& path, bool* data,
+                            const std::string& comment)
 {
-  add_method(path, "i", osc_set_bool, data, true, true);
+  add_method(path, "i", osc_set_bool, data, true, true, "bool", comment);
   add_method(path + "/get", "ss", osc_get_bool, data, false);
 }
 
-void osc_server_t::add_int(const std::string& path, int32_t* data)
+void osc_server_t::add_int(const std::string& path, int32_t* data,
+                           const std::string& range, const std::string& comment)
 {
-  add_method(path, "i", osc_set_int32, data, true, true);
+  add_method(path, "i", osc_set_int32, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_int32, data, false);
 }
 
-void osc_server_t::add_uint(const std::string& path, uint32_t* data)
+void osc_server_t::add_uint(const std::string& path, uint32_t* data,
+                            const std::string& range,
+                            const std::string& comment)
 {
-  add_method(path, "i", osc_set_uint32, data, true, true);
+  add_method(path, "i", osc_set_uint32, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_uint32, data, false);
 }
 
-void osc_server_t::add_string(const std::string& path, std::string* data)
+void osc_server_t::add_string(const std::string& path, std::string* data,
+                              const std::string& comment)
 {
-  add_method(path, "s", osc_set_string, data, true, true);
+  add_method(path, "s", osc_set_string, data, true, true, "string", comment);
   add_method(path + "/get", "ss", osc_get_string, data, false);
 }
 
@@ -639,10 +675,13 @@ void osc_server_t::send_variable_list(const std::string& url,
   lo_address target = lo_address_new_from_url(url.c_str());
   if(!target)
     return;
+  lo_send(target, (path + "/begin").c_str(), "");
   for(const auto& var : variables)
     if(prefix.empty() || (var.path.find(prefix) == 0))
-      lo_send(target, path.c_str(), "ssi", var.path.c_str(),
-              var.typespec.c_str(), var.readable);
+      lo_send(target, path.c_str(), "ssiss", var.path.c_str(),
+              var.typespec.c_str(), var.readable, var.rangehint.c_str(),
+              var.comment.c_str());
+  lo_send(target, (path + "/end").c_str(), "");
   lo_address_free(target);
 }
 
