@@ -69,7 +69,10 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f", *(float*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *(float*)(user_data));
       lo_address_free(target);
     }
   }
@@ -90,7 +93,11 @@ int osc_get_float_db(const char* path, const char* types, lo_arg** argv,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f", 20.0f * log10f(*(float*)(user_data)));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
+              20.0f * log10f(*(float*)(user_data)));
       lo_address_free(target);
     }
   }
@@ -111,7 +118,10 @@ int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f",
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
               20.0f * log10f(*(float*)(user_data)*5.0e4f));
       lo_address_free(target);
     }
@@ -182,7 +192,10 @@ int osc_get_double_db(const char* path, const char* types, lo_arg** argv,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f",
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
               20.0f * log10f(*(double*)(user_data)));
       lo_address_free(target);
     }
@@ -204,7 +217,10 @@ int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f",
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
               20.0f * log10f(*(double*)(user_data)*5.0e4f));
       lo_address_free(target);
     }
@@ -226,7 +242,11 @@ int osc_get_float_degree(const char* path, const char* types, lo_arg** argv,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f", RAD2DEGf * *(float*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
+              RAD2DEGf * *(float*)(user_data));
       lo_address_free(target);
     }
   }
@@ -247,7 +267,11 @@ int osc_get_double_degree(const char* path, const char* types, lo_arg** argv,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f", RAD2DEGf * *(double*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
+              RAD2DEGf * *(double*)(user_data));
       lo_address_free(target);
     }
   }
@@ -268,7 +292,11 @@ int osc_get_double(const char* path, const char* types, lo_arg** argv, int argc,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "f", *(double*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
+              *(double*)(user_data));
       lo_address_free(target);
     }
   }
@@ -289,7 +317,11 @@ int osc_get_int32(const char* path, const char* types, lo_arg** argv, int argc,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "i", *(int32_t*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "si", npath.c_str(),
+              *(int32_t*)(user_data));
       lo_address_free(target);
     }
   }
@@ -310,7 +342,11 @@ int osc_get_uint32(const char* path, const char* types, lo_arg** argv, int argc,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "i", *(uint32_t*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "si", npath.c_str(),
+              *(uint32_t*)(user_data));
       lo_address_free(target);
     }
   }
@@ -331,7 +367,10 @@ int osc_get_bool(const char* path, const char* types, lo_arg** argv, int argc,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "i", *(bool*)(user_data));
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "si", npath.c_str(), *(bool*)(user_data));
       lo_address_free(target);
     }
   }
@@ -352,7 +391,11 @@ int osc_get_string(const char* path, const char* types, lo_arg** argv, int argc,
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
     if(target) {
-      lo_send(target, &(argv[1]->s), "s", ((std::string*)(user_data))->c_str());
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      lo_send(target, &(argv[1]->s), "ss", npath.c_str(),
+              ((std::string*)(user_data))->c_str());
       lo_address_free(target);
     }
   }
