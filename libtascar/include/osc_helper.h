@@ -226,6 +226,7 @@ namespace TASCAR {
     void activate();
     void deactivate();
     std::string list_variables() const;
+    std::map<std::string,descriptor_t> get_variable_map() const;
     int dispatch_data(void* data, size_t size);
     int dispatch_data_message(const char* path, lo_message m);
     int get_srv_port() const { return lo_server_thread_get_port(lost); };

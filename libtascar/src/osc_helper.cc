@@ -692,17 +692,23 @@ void osc_server_t::deactivate()
   }
 }
 
-std::string osc_server_t::list_variables() const
+std::map<std::string, osc_server_t::descriptor_t>
+osc_server_t::get_variable_map() const
 {
   std::map<std::string, descriptor_t> vars;
-  for(std::vector<descriptor_t>::const_iterator it = variables.begin();
-      it != variables.end(); ++it)
-    vars[it->path + it->typespec] = *it;
+  for(const auto& var : variables)
+    vars[var.path + var.typespec] = var;
+  return vars;
+}
+
+std::string osc_server_t::list_variables() const
+{
+  auto vars = get_variable_map();
   std::string rv;
-  for(std::map<std::string, descriptor_t>::const_iterator it = vars.begin();
-      it != vars.end(); ++it) {
-    rv += it->second.path + "  (" + it->second.typespec + ")\n";
-  }
+  for(const auto& v : vars)
+    rv += v.second.path + "  (" + v.second.typespec + ")" +
+          (v.second.readable ? " r " : " ") + v.second.rangehint + " " +
+          v.second.comment + "\n";
   return rv;
 }
 
