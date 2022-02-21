@@ -48,8 +48,8 @@ bandpassplugin_t::bandpassplugin_t( const TASCAR::audioplugin_cfg_t& cfg )
 
 void bandpassplugin_t::add_variables( TASCAR::osc_server_t* srv )
 {
-  srv->add_double("/fmin",&fmin);
-  srv->add_double("/fmax",&fmax);
+  srv->add_double("/fmin",&fmin,"]0,20000]","Lower cutoff frequency in Hz");
+  srv->add_double("/fmax",&fmax,"]0,20000]","Upper cutoff frequency in Hz");
 }
 
 void bandpassplugin_t::configure()

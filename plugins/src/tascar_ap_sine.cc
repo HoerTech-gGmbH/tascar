@@ -49,8 +49,8 @@ sine_t::~sine_t()
 
 void sine_t::add_variables( TASCAR::osc_server_t* srv )
 {
-  srv->add_double("/f",&f);
-  srv->add_double_dbspl("/a",&a);
+  srv->add_double("/f",&f,"]0,20000]","Frequency in Hz");
+  srv->add_double_dbspl("/a",&a,"[0,100]","Amplitude in dB SPL");
 }
 
 void sine_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
