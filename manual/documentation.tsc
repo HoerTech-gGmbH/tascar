@@ -99,6 +99,7 @@
     <epicycles/>
     <midicc2osc controllers="0/1"/>
     <route/>
+    <ovheadtracker/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

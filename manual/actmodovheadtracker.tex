@@ -4,7 +4,7 @@ headtracking module for MPU6050 from repository
 \begin{snugshade}
 {\footnotesize
 \label{attrtab:ovheadtracker}
-Attributes of element {\bf ovheadtracker}
+Attributes of element {\bf ovheadtracker}\nopagebreak
 
 \begin{tabularx}{\textwidth}{lXl}
 \hline
@@ -15,7 +15,7 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{actor} & pattern to match actor objects (string array) & \\
 \hline
-\indattr{apply\_loc} & Apply translation based on accelerometer (bool) & false\\
+\indattr{apply\_loc} & Apply translation based on accelerometer (not implemented) (bool) & false\\
 \hline
 \indattr{apply\_rot} & Apply rotation based on gyroscope and accelerometer (bool) & true\\
 \hline
@@ -40,6 +40,12 @@ name & description (type, unit) & def.\\
 \indattr{roturl} & OSC target URL for rotation data (string) & \\
 \hline
 \indattr{send\_only\_quaternion} & Send only quaternion data instead of raw sensor data (bool) & false\\
+\hline
+\indattr{tiltmap} & tilt mapping, [in1 out1 in2 out2] (float array) & 0 0 180 180\\
+\hline
+\indattr{tiltpath} & OSC path for tilt (string) & /tilt\\
+\hline
+\indattr{tilturl} & OSC target URL for tilt (string) & \\
 \hline
 \indattr{ttl} & Time-to-live of OSC multicast data (uint32) & 1\\
 \hline

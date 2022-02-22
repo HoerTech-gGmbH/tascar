@@ -61,10 +61,10 @@ private:
   std::vector<int32_t> axes;
   double accscale;
   double gyrscale;
-  bool apply_loc;
-  bool apply_rot;
-  bool send_only_quaternion;
-  double autoref;
+  bool apply_loc = false;
+  bool apply_rot = true;
+  bool send_only_quaternion = false;
+  double autoref = 0.0;
   // run-time variables:
   lo_address target = NULL;
   lo_address rottarget = NULL;
@@ -131,8 +131,7 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
     : actor_module_t(cfg), name("ovheadtracker"),
       devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
       calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
-      accscale(16384 / 9.81), gyrscale(16.4), apply_loc(false), apply_rot(true),
-      send_only_quaternion(false), autoref(0), target(NULL), rottarget(NULL),
+      accscale(16384 / 9.81), gyrscale(16.4), target(NULL), rottarget(NULL),
       bcalib(false), qref(1, 0, 0, 0), first(true), run_service_level(true)
 {
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
@@ -157,7 +156,8 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       "Scaling factor of accelerometer, default value scales to $m/s^2$");
   GET_ATTRIBUTE(gyrscale, "",
                 "Scaling factor of gyroscope, default value scales to deg/s");
-  GET_ATTRIBUTE_BOOL(apply_loc, "Apply translation based on accelerometer");
+  GET_ATTRIBUTE_BOOL(
+      apply_loc, "Apply translation based on accelerometer (not implemented)");
   GET_ATTRIBUTE_BOOL(apply_rot,
                      "Apply rotation based on gyroscope and accelerometer");
   GET_ATTRIBUTE_BOOL(send_only_quaternion,
@@ -200,9 +200,13 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
   std::string p;
   if(name.size())
     p = "/" + name;
-  srv->add_double(p + "/autoref", &autoref);
-  srv->add_bool(p + "/apply_loc", &apply_loc);
-  srv->add_bool(p + "/apply_rot", &apply_rot);
+  srv->add_double(p + "/autoref", &autoref, "[0,1[",
+                  "Filter coefficient for estimating reference orientation "
+                  "from average direction, or zero for no auto-referencing");
+  srv->add_bool(p + "/apply_loc", &apply_loc,
+                "Apply translation based on accelerometer (not implemented)");
+  srv->add_bool(p + "/apply_rot", &apply_rot,
+                "Apply rotation based on gyroscope and accelerometer");
 }
 
 void ovheadtracker_t::service()
@@ -346,7 +350,7 @@ void ovheadtracker_t::service()
                 f = (f - tiltmap[0]) / (tiltmap[2] - tiltmap[0]) *
                         (tiltmap[3] - tiltmap[1]) +
                     tiltmap[1];
-              if( f != prevtilt ){
+              if(f != prevtilt) {
                 lo_send(tilttarget, tiltpath.c_str(), "f", f);
                 prevtilt = f;
               }
