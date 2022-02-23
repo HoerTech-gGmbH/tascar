@@ -622,7 +622,7 @@ void osc_server_t::add_float(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float, data, false);
-  datamap[path] = data_element_t(path, data, str_get_float, "float");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float, "float");
 }
 
 void osc_server_t::add_double(const std::string& path, double* data,
@@ -631,7 +631,7 @@ void osc_server_t::add_double(const std::string& path, double* data,
 {
   add_method(path, "f", osc_set_double, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double, data, false);
-  datamap[path] = data_element_t(path, data, str_get_double, "double");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double, "double");
 }
 
 void osc_server_t::add_float_db(const std::string& path, float* data,
@@ -640,7 +640,7 @@ void osc_server_t::add_float_db(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float_db, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_db, data, false);
-  datamap[path] = data_element_t(path, data, str_get_float_db, "float");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float_db, "float");
 }
 
 void osc_server_t::add_float_dbspl(const std::string& path, float* data,
@@ -649,7 +649,7 @@ void osc_server_t::add_float_dbspl(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float_dbspl, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_dbspl, data, false);
-  datamap[path] = data_element_t(path, data, str_get_float_dbspl, "float");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float_dbspl, "float");
 }
 
 void osc_server_t::add_vector_float_dbspl(const std::string& path,
@@ -694,7 +694,7 @@ void osc_server_t::add_double_db(const std::string& path, double* data,
 {
   add_method(path, "f", osc_set_double_db, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double_db, data, false);
-  datamap[path] = data_element_t(path, data, str_get_double_db, "double");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double_db, "double");
 }
 
 void osc_server_t::add_double_dbspl(const std::string& path, double* data,
@@ -703,7 +703,7 @@ void osc_server_t::add_double_dbspl(const std::string& path, double* data,
 {
   add_method(path, "f", osc_set_double_dbspl, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double_dbspl, data, false);
-  datamap[path] = data_element_t(path, data, str_get_double_dbspl, "double");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double_dbspl, "double");
 }
 
 void osc_server_t::add_float_degree(const std::string& path, float* data,
@@ -712,7 +712,7 @@ void osc_server_t::add_float_degree(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float_degree, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_degree, data, false);
-  datamap[path] = data_element_t(path, data, str_get_float_degree, "float");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float_degree, "float");
 }
 
 void osc_server_t::add_double_degree(const std::string& path, double* data,
@@ -722,7 +722,7 @@ void osc_server_t::add_double_degree(const std::string& path, double* data,
   add_method(path, "f", osc_set_double_degree, data, true, true, range,
              comment);
   add_method(path + "/get", "ss", osc_get_double_degree, data, false);
-  datamap[path] = data_element_t(path, data, str_get_double_degree, "double");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double_degree, "double");
 }
 
 void osc_server_t::add_bool_true(const std::string& path, bool* data,
@@ -742,7 +742,7 @@ void osc_server_t::add_bool(const std::string& path, bool* data,
 {
   add_method(path, "i", osc_set_bool, data, true, true, "bool", comment);
   add_method(path + "/get", "ss", osc_get_bool, data, false);
-  datamap[path] = data_element_t(path, data, str_get_bool, "bool");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_bool, "bool");
 }
 
 void osc_server_t::add_int(const std::string& path, int32_t* data,
@@ -750,7 +750,7 @@ void osc_server_t::add_int(const std::string& path, int32_t* data,
 {
   add_method(path, "i", osc_set_int32, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_int32, data, false);
-  datamap[path] = data_element_t(path, data, str_get_int, "int");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_int, "int");
 }
 
 void osc_server_t::add_uint(const std::string& path, uint32_t* data,
@@ -759,7 +759,7 @@ void osc_server_t::add_uint(const std::string& path, uint32_t* data,
 {
   add_method(path, "i", osc_set_uint32, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_uint32, data, false);
-  datamap[path] = data_element_t(path, data, str_get_uint, "uint");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_uint, "uint");
 }
 
 void osc_server_t::add_string(const std::string& path, std::string* data,
@@ -767,7 +767,7 @@ void osc_server_t::add_string(const std::string& path, std::string* data,
 {
   add_method(path, "s", osc_set_string, data, true, true, "string", comment);
   add_method(path + "/get", "ss", osc_get_string, data, false);
-  datamap[path] = data_element_t(path, data, str_get_string, "string");
+  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_string, "string");
 }
 
 void osc_server_t::activate()

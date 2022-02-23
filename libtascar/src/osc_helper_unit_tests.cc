@@ -78,8 +78,10 @@ TEST(oschelper, jsonexplevels)
   srv.add_float("/b2/b", &d);
   srv.add_float("/b2/sub1/a", &e);
   srv.add_float("/b2/sub1/b", &f);
-  srv.add_float("/b2/sub2/a", &g);
-  srv.add_float("/b2/sub2/b", &h);
+  srv.set_prefix("/b2");
+  srv.add_float("/sub2/a", &g);
+  srv.add_float("/sub2/b", &h);
+  srv.set_prefix("");
   srv.add_float("/c/a", &i);
   srv.add_float("/d", &j);
   EXPECT_EQ("{\"b1\":{\"a\":1,\"b\":2},\"b2\":{\"a\":3,\"b\":4,\"sub1\":{\"a\":"
