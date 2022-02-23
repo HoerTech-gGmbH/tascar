@@ -70,6 +70,8 @@ TEST(oschelper, jsonexplevels)
   float f = 6.0f;
   float g = 7.0f;
   float h = 8.0f;
+  float i = 9.0f;
+  float j = 10.0f;
   srv.add_float("/b1/a", &a);
   srv.add_float("/b1/b", &b);
   srv.add_float("/b2/a", &c);
@@ -78,8 +80,10 @@ TEST(oschelper, jsonexplevels)
   srv.add_float("/b2/sub1/b", &f);
   srv.add_float("/b2/sub2/a", &g);
   srv.add_float("/b2/sub2/b", &h);
+  srv.add_float("/c/a", &i);
+  srv.add_float("/d", &j);
   EXPECT_EQ("{\"b1\":{\"a\":1,\"b\":2},\"b2\":{\"a\":3,\"b\":4,\"sub1\":{\"a\":"
-            "5,\"b\":6},\"sub2\":{\"a\":7,\"b\":8}}}",
+            "5,\"b\":6},\"sub2\":{\"a\":7,\"b\":8}},\"c\":{\"a\":9},\"d\":10}",
             srv.get_vars_as_json("", false));
 }
 
