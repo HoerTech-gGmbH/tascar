@@ -36,6 +36,8 @@
 #include <string>
 #include <vector>
 
+typedef std::string(strcnvrt_t)(void*);
+
 namespace TASCAR {
 
   /// OSC server
@@ -48,6 +50,19 @@ namespace TASCAR {
       bool readable;
       std::string rangehint;
       std::string comment;
+    };
+    class data_element_t {
+    public:
+      data_element_t(const std::string& p, void* ptr_, strcnvrt_t* cnv_,
+                     const std::string& type_);
+      data_element_t();
+      void* ptr;
+      strcnvrt_t* cnv;
+      std::string path;
+      std::string name;
+      std::string prefix;
+      std::string type;
+      std::string getstr() const { return cnv(ptr); };
     };
     osc_server_t(const std::string& multicast, const std::string& port,
                  const std::string& proto, bool verbose = true);
@@ -226,7 +241,7 @@ namespace TASCAR {
     void activate();
     void deactivate();
     std::string list_variables() const;
-    std::map<std::string,descriptor_t> get_variable_map() const;
+    std::map<std::string, descriptor_t> get_variable_map() const;
     int dispatch_data(void* data, size_t size);
     int dispatch_data_message(const char* path, lo_message m);
     int get_srv_port() const { return lo_server_thread_get_port(lost); };
@@ -236,14 +251,32 @@ namespace TASCAR {
     const std::string& get_srv_url() const { return osc_srv_url; };
     void send_variable_list(const std::string& url, const std::string& path,
                             const std::string& prefix = "") const;
+    /**
+       @brief Return list of OSC variables with their current values
+       as json expression
+
+
+       @param prefix Optionally return only those variables with the
+       path beginning with prefix
+       @param asstring Return variable values as strings (default)
+       @return json expression
+     */
+    std::string get_vars_as_json(std::string prefix = "",
+                                 bool asstring = true) const;
 
   private:
+    std::string get_vars_as_json_rg(
+        std::string prefix,
+        std::map<std::string, data_element_t>::const_iterator& ibegin,
+        std::map<std::string, data_element_t>::const_iterator iend,
+        bool asstring) const;
     std::string osc_srv_url;
     std::string prefix;
     lo_server_thread lost;
     bool initialized;
     bool isactive;
     bool verbose;
+    std::map<std::string, data_element_t> datamap;
   };
 
   class msg_t : public TASCAR::xml_element_t {
