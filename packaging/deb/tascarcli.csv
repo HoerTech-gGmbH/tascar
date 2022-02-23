@@ -107,6 +107,7 @@
 "plugins/build/tascar_ap_sndfileasync.so","usr/lib/"
 "plugins/build/tascar_ap_speechactivity.so","usr/lib/"
 "plugins/build/tascar_ap_spksim.so","usr/lib/"
+"plugins/build/tascar_ap_tubesim.so","usr/lib/"
 "plugins/build/tascar_dirgain.so","usr/lib/"
 "plugins/build/tascar_epicycles.so","usr/lib/"
 "plugins/build/tascar_geopresets.so","usr/lib/"
