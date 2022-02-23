@@ -28,30 +28,58 @@ TEST(oschelper, jsonexp)
   TASCAR::osc_server_t srv("", "0", "UDP");
   float a = 2.0f;
   srv.add_float("/a", &a);
-  EXPECT_EQ("{'a':'2'}", srv.get_vars_as_json());
+  EXPECT_EQ("{\"a\":\"2\"}", srv.get_vars_as_json());
   a = 4.0f;
-  EXPECT_EQ("{'a':'4'}", srv.get_vars_as_json());
+  EXPECT_EQ("{\"a\":\"4\"}", srv.get_vars_as_json());
   float b = 2.0f;
   srv.add_float("/b", &b);
-  EXPECT_EQ("{'a':'4','b':'2'}", srv.get_vars_as_json());
+  EXPECT_EQ("{\"a\":\"4\",\"b\":\"2\"}", srv.get_vars_as_json());
   double d = 2.0;
   srv.add_double("/c/d", &d);
-  EXPECT_EQ("{'a':'4','b':'2','c':{'d':'2'}}", srv.get_vars_as_json());
-  EXPECT_EQ("{'d':'2'}", srv.get_vars_as_json("/c"));
-  EXPECT_EQ("{'d':'2'}", srv.get_vars_as_json("/c/"));
+  EXPECT_EQ("{\"a\":\"4\",\"b\":\"2\",\"c\":{\"d\":\"2\"}}",
+            srv.get_vars_as_json());
+  EXPECT_EQ("{\"d\":\"2\"}", srv.get_vars_as_json("/c"));
+  EXPECT_EQ("{\"d\":\"2\"}", srv.get_vars_as_json("/c/"));
   double e = 1.0;
   srv.add_double_db("/c/e", &e);
-  EXPECT_EQ("{'a':'4','b':'2','c':{'d':'2','e':'0'}}", srv.get_vars_as_json());
+  EXPECT_EQ("{\"a\":\"4\",\"b\":\"2\",\"c\":{\"d\":\"2\",\"e\":\"0\"}}",
+            srv.get_vars_as_json());
   double aae = 1.0;
   srv.add_double_db("/aa/e", &aae);
-  EXPECT_EQ("{'a':'4','aa':{'e':'0'},'b':'2','c':{'d':'2','e':'0'}}",
+  EXPECT_EQ("{\"a\":\"4\",\"aa\":{\"e\":\"0\"},\"b\":\"2\",\"c\":{\"d\":\"2\","
+            "\"e\":\"0\"}}",
             srv.get_vars_as_json());
   std::string str("abc");
   srv.add_string("/c/str", &str);
-  EXPECT_EQ(
-      "{'a':'4','aa':{'e':'0'},'b':'2','c':{'d':'2','e':'0','str':'abc'}}",
-      srv.get_vars_as_json());
-  EXPECT_EQ("{'a':4,'aa':{'e':0},'b':2,'c':{'d':2,'e':0,'str':'abc'}}",
+  EXPECT_EQ("{\"a\":\"4\",\"aa\":{\"e\":\"0\"},\"b\":\"2\",\"c\":{\"d\":\"2\","
+            "\"e\":\"0\",\"str\":\"abc\"}}",
+            srv.get_vars_as_json());
+  EXPECT_EQ("{\"a\":4,\"aa\":{\"e\":0},\"b\":2,\"c\":{\"d\":2,\"e\":0,\"str\":"
+            "\"abc\"}}",
+            srv.get_vars_as_json("", false));
+}
+
+TEST(oschelper, jsonexplevels)
+{
+  TASCAR::osc_server_t srv("", "0", "UDP");
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  float d = 4.0f;
+  float e = 5.0f;
+  float f = 6.0f;
+  float g = 7.0f;
+  float h = 8.0f;
+  srv.add_float("/b1/a", &a);
+  srv.add_float("/b1/b", &b);
+  srv.add_float("/b2/a", &c);
+  srv.add_float("/b2/b", &d);
+  srv.add_float("/b2/sub1/a", &e);
+  srv.add_float("/b2/sub1/b", &f);
+  srv.add_float("/b2/sub2/a", &g);
+  srv.add_float("/b2/sub2/b", &h);
+  EXPECT_EQ("{\"b1\":{\"a\":1,\"b\":2},\"b2\":{\"a\":3,\"b\":4,\"sub1\":{\"a\":"
+            "5,\"b\":6},\"sub2\":{\"a\":7,\"b\":8}}}",
             srv.get_vars_as_json("", false));
 }
 

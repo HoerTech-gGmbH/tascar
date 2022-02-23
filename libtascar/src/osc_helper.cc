@@ -880,16 +880,15 @@ std::string osc_server_t::get_vars_as_json_rg(
       if(vpf[0] == '/')
         vpf.erase(0, 1);
       if(!vpf.empty()) {
-        r += "'" + vpf +
-             "':" + get_vars_as_json_rg(it->second.prefix, it, iend, asstring) +
-             ",";
+        r += "\"" + vpf + "\":" +
+             get_vars_as_json_rg(it->second.prefix, it, iend, asstring) + ",";
       } else {
         if(asstring || (it->second.type == "string"))
-          r += "'" + it->second.name + "':'" + it->second.getstr() + "',";
+          r += "\"" + it->second.name + "\":\"" + it->second.getstr() + "\",";
         else
-          r += "'" + it->second.name + "':" + it->second.getstr() + ",";
-        ibegin = it;
+          r += "\"" + it->second.name + "\":" + it->second.getstr() + ",";
       }
+      ibegin = it;
       lastprefix = vpf;
     }
   }
