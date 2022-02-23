@@ -55,7 +55,7 @@ tubesim_t::tubesim_t(const TASCAR::audioplugin_cfg_t& cfg)
 {
   GET_ATTRIBUTE_DB(pregain, "Pre-gain");
   GET_ATTRIBUTE(offset, "Pa", "Input offset");
-  GET_ATTRIBUTE(saturation, "", "Saturation constant");
+  GET_ATTRIBUTE_DB(saturation, "Saturation constant");
   GET_ATTRIBUTE_DB(postgain, "Post-gain");
   GET_ATTRIBUTE_BOOL(bypass, "Bypass plugin");
   GET_ATTRIBUTE(wet, "", "Wet (1) - dry (0) mixture gain");
