@@ -63,6 +63,9 @@ def tascar_build_steps(stage_name) {
 
 pipeline {
     agent {label "arcanist"}
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
+    }
     parameters {
         string(name: 'PHID', defaultValue: 'invalidDefault', description: '')
         string(name: 'DIFF_ID', defaultValue: 'invalidDefault', description: '')

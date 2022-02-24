@@ -45,7 +45,7 @@ STORAGE_DIR = /STORAGE/$(PROJECT)/$(BRANCH_NAME)/
 
 # How many days to keep debian packages in storage that are superceded by a
 # newer version
-RETENTION = 28
+RETENTION = 16
 
 storage: pruned-storage-$(BRANCH_NAME)
 
