@@ -54,6 +54,9 @@ def tascar_build_steps(stage_name) {
 
 pipeline {
     agent any
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
+    }
     stages {
         stage("build") {
             parallel {
