@@ -129,13 +129,15 @@ private:
   std::string id;
   std::string command;
   std::string triggered;
-  double sleep;
+  double sleep = 0.0;
   std::string onunload;
   bool noshell = true;
   bool relaunch = false;
   bool allowoscmod = false;
+  bool timedcmdpipe = true;
   std::string timedprefix;
-  FILE* h_triggered;
+  FILE* h_atcmd = NULL;
+  FILE* h_triggered = NULL;
 #ifndef _WIN32
   TASCAR::spawn_process_t* proc = NULL;
   std::vector<TASCAR::spawn_process_t*> atprocs;
@@ -211,8 +213,8 @@ void system_t::trigger()
 }
 
 system_t::system_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg), id("system"), sleep(0), h_triggered(NULL), fifo(1024),
-      run_service(true), sessionpath(session->get_session_path())
+    : module_base_t(cfg), id("system"), fifo(1024), run_service(true),
+      sessionpath(session->get_session_path())
 {
   GET_ATTRIBUTE_(id);
   GET_ATTRIBUTE(command, "", "command to be executed");
@@ -227,6 +229,8 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(allowoscmod,
                      "allow modifications of timed commands via OSC");
   GET_ATTRIBUTE(timedprefix, "", "Prefix for timed commands added via OSC");
+  GET_ATTRIBUTE_BOOL(
+      timedcmdpipe, "start timed commands using a pipe (true) or fork (false)");
   atcmdmtx.lock();
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
@@ -239,6 +243,13 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
     proc = new TASCAR::spawn_process_t(TASCAR::env_expand(command), !noshell,
                                        relaunch);
 #endif
+  }
+  if(atcmds.size() || allowoscmod) {
+    h_atcmd = popen("/bin/bash -s", "w");
+    if(!h_atcmd)
+      throw TASCAR::ErrMsg("Unable to create pipe with /bin/bash");
+    fprintf(h_atcmd, "cd %s\n", sessionpath.c_str());
+    fflush(h_atcmd);
   }
   if(triggered.size()) {
     h_triggered = popen("/bin/bash -s", "w");
@@ -323,6 +334,8 @@ system_t::~system_t()
     delete proc;
 #endif
   atcmdclear();
+  if(h_atcmd)
+    fclose(h_atcmd);
   if(h_triggered)
     fclose(h_triggered);
   if(!onunload.empty()) {
@@ -344,8 +357,17 @@ void system_t::service()
       if(v < atcmds.size())
         cmd = atcmds[v]->command.c_str();
       atcmdmtx.unlock();
-      if(cmd.size())
-        atprocs.push_back(new TASCAR::spawn_process_t(cmd, false, false));
+      if(cmd.size()) {
+        if(timedcmdpipe) {
+          if(h_atcmd) {
+            fprintf(h_atcmd, "%s\n", cmd.c_str());
+            fflush(h_atcmd);
+          } else
+            std::cerr << "Warning: no pipe\n";
+        } else {
+          atprocs.push_back(new TASCAR::spawn_process_t(cmd, false, false));
+        }
+      }
     }
   }
 #endif
