@@ -37,6 +37,8 @@ namespace TASCAR {
   public:
     wav_render_t( const std::string& tscname, const std::string& scene,
                   bool verbose = false );
+    void set_channelmap( const std::vector<size_t>& channels );
+    void reset_channelmap();
     void set_ism_order_range( uint32_t ism_min, uint32_t ism_max );
     void render( uint32_t fragsize, const std::string& ifname,
                  const std::string& ofname, double starttime, bool b_dynamic );
@@ -52,6 +54,7 @@ namespace TASCAR {
     std::string scene;
     render_core_t* pscene;
     bool verbose_;
+    std::vector<size_t> ochannels;
 
   public:
     clock_t t0;

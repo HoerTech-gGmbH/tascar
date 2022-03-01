@@ -270,6 +270,8 @@ TEST(strcnv, str2vecstr)
             TASCAR::str2vecstr("abc  'def g"));
   EXPECT_EQ(std::vector<std::string>({"abc", "def \"x y\" g"}),
             TASCAR::str2vecstr("abc 'def \"x y\" g'"));
+  EXPECT_EQ(std::vector<std::string>({"abc", "def \"x y\" g"}),
+            TASCAR::str2vecstr("abc |'def \"x y\" g'"," |"));
 }
 
 TEST(strcnv, vecstr2str)
@@ -279,6 +281,18 @@ TEST(strcnv, vecstr2str)
   EXPECT_EQ("abc def g", TASCAR::vecstr2str({"abc", "def", "g"}));
   EXPECT_EQ("abc 'def g'", TASCAR::vecstr2str({"abc", "def g"}));
   EXPECT_EQ("abc 'def g' 'xy z'", TASCAR::vecstr2str({"abc", "def g", "xy z"}));
+}
+
+TEST(strcnv, str2vecint)
+{
+  EXPECT_EQ(std::vector<int32_t>({1, 2, 3}), TASCAR::str2vecint("1 2 3"));
+  EXPECT_EQ(std::vector<int32_t>({1, 2, 3, 1}), TASCAR::str2vecint("1 2 3 1"));
+  EXPECT_EQ(std::vector<int32_t>({1, 2, 3, 1}),
+            TASCAR::str2vecint("1-2-3-1", "-"));
+  EXPECT_EQ(std::vector<int32_t>({1, -2, 3, 1}),
+            TASCAR::str2vecint("1,-2, 3,1", ","));
+  EXPECT_EQ(std::vector<int32_t>({1, 3, 1}),
+            TASCAR::str2vecint("1 -2,3,1", ","));
 }
 
 // Local Variables:

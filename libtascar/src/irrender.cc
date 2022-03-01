@@ -62,6 +62,25 @@ void TASCAR::wav_render_t::set_ism_order_range(uint32_t ism_min,
     pscene->set_ism_order_range(ism_min, ism_max);
 }
 
+std::vector<size_t> get_chmap(const std::vector<size_t>& chmap, size_t& nch)
+{
+  std::vector<size_t> m;
+  if(chmap.empty()) {
+    for(size_t k = 0; k < nch; ++k)
+      m.push_back(k);
+  } else {
+    for(auto c : chmap)
+      if(c < nch)
+        m.push_back(c);
+      else
+        TASCAR::add_warning("Ignoring channel " + std::to_string(c) +
+                            " (only " + std::to_string(nch) +
+                            " channels are available).");
+  }
+  nch = m.size();
+  return m;
+}
+
 void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
                                   double duration, const std::string& ofname,
                                   double starttime, bool b_dynamic)
@@ -87,8 +106,10 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
   pscene->post_prepare();
   add_licenses(this);
   pscene->add_licenses(this);
-  uint32_t nch_in(pscene->num_input_ports());
-  uint32_t nch_out(pscene->num_output_ports());
+  size_t nch_in(pscene->num_input_ports());
+  size_t nch_out_scene(pscene->num_output_ports());
+  size_t nch_out = nch_out_scene;
+  std::vector<size_t> chmap = get_chmap(ochannels, nch_out);
   sndfile_handle_t sf_out(ofname, cf.f_sample, nch_out);
   // allocate io audio buffer:
   float* sf_out_buf(new float[nch_out * cf.n_fragment]);
@@ -99,7 +120,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
     memset(a_in.back(), 0, sizeof(float) * cf.n_fragment);
   }
   std::vector<float*> a_out;
-  for(uint32_t k = 0; k < nch_out; ++k) {
+  for(size_t k = 0; k < nch_out_scene; ++k) {
     a_out.push_back(new float[cf.n_fragment]);
     memset(a_out.back(), 0, sizeof(float) * cf.n_fragment);
   }
@@ -125,7 +146,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
     // save audio:
     for(uint32_t kf = 0; kf < cf.n_fragment; ++kf)
       for(uint32_t kc = 0; kc < nch_out; ++kc)
-        sf_out_buf[kc + nch_out * kf] = a_out[kc][kf];
+        sf_out_buf[kc + nch_out * kf] = a_out[chmap[kc]][kf];
     sf_out.writef_float(
         sf_out_buf,
         std::max((int64_t)0, std::min(iduration - n, (int64_t)cf.n_fragment)));
@@ -143,7 +164,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, double srate,
   // de-allocate render audio buffer:
   for(uint32_t k = 0; k < nch_in; ++k)
     delete[] a_in[k];
-  for(uint32_t k = 0; k < nch_out; ++k)
+  for(uint32_t k = 0; k < nch_out_scene; ++k)
     delete[] a_out[k];
   delete[] sf_out_buf;
 }
@@ -176,7 +197,9 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
   add_licenses(this);
   pscene->add_licenses(this);
   uint32_t nch_in(pscene->num_input_ports());
-  uint32_t nch_out(pscene->num_output_ports());
+  size_t nch_out_scene(pscene->num_output_ports());
+  size_t nch_out = nch_out_scene;
+  std::vector<size_t> chmap = get_chmap(ochannels, nch_out);
   sndfile_handle_t sf_out(ofname, cf.f_sample, nch_out);
   // allocate io audio buffer:
   float* sf_in_buf(new float[cffile.n_channels * cffile.n_fragment]);
@@ -188,7 +211,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
     memset(a_in.back(), 0, sizeof(float) * cffile.n_fragment);
   }
   std::vector<float*> a_out;
-  for(uint32_t k = 0; k < nch_out; ++k) {
+  for(uint32_t k = 0; k < nch_out_scene; ++k) {
     a_out.push_back(new float[cf.n_fragment]);
     memset(a_out.back(), 0, sizeof(float) * cf.n_fragment);
   }
@@ -221,7 +244,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
       // save audio:
       for(uint32_t kf = 0; kf < cf.n_fragment; ++kf)
         for(uint32_t kc = 0; kc < nch_out; ++kc)
-          sf_out_buf[kc + nch_out * kf] = a_out[kc][kf];
+          sf_out_buf[kc + nch_out * kf] = a_out[chmap[kc]][kf];
       sf_out.writef_float(sf_out_buf, n_in);
       // increment time:
       if(b_dynamic) {
@@ -238,7 +261,7 @@ void TASCAR::wav_render_t::render(uint32_t fragsize, const std::string& ifname,
   // de-allocate render audio buffer:
   for(uint32_t k = 0; k < nch_in; ++k)
     delete[] a_in[k];
-  for(uint32_t k = 0; k < nch_out; ++k)
+  for(uint32_t k = 0; k < nch_out_scene; ++k)
     delete[] a_out[k];
   delete[] sf_in_buf;
   delete[] sf_out_buf;
@@ -270,7 +293,9 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs,
                          TASCAR::to_string(inputchannel) +
                          " is not smaller than number of input channels (" +
                          TASCAR::to_string(nch_in) + ").");
-  uint32_t nch_out(pscene->num_output_ports());
+  size_t nch_out_scene(pscene->num_output_ports());
+  size_t nch_out = nch_out_scene;
+  std::vector<size_t> chmap = get_chmap(ochannels, nch_out);
   sndfile_handle_t sf_out(ofname, fs, nch_out);
   // allocate io audio buffer:
   float* sf_out_buf(new float[nch_out * len]);
@@ -281,7 +306,7 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs,
     memset(a_in.back(), 0, sizeof(float) * len);
   }
   std::vector<float*> a_out;
-  for(uint32_t k = 0; k < nch_out; ++k) {
+  for(uint32_t k = 0; k < nch_out_scene; ++k) {
     a_out.push_back(new float[len]);
     memset(a_out.back(), 0, sizeof(float) * len);
   }
@@ -301,14 +326,14 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs,
   // save audio:
   for(uint32_t kf = 0; kf < len; ++kf)
     for(uint32_t kc = 0; kc < nch_out; ++kc)
-      sf_out_buf[kc + nch_out * kf] = a_out[kc][kf];
+      sf_out_buf[kc + nch_out * kf] = a_out[chmap[kc]][kf];
   sf_out.writef_float(sf_out_buf, len);
   // increment time:
   // de-allocate render audio buffer:
   pscene->release();
   for(uint32_t k = 0; k < nch_in; ++k)
     delete[] a_in[k];
-  for(uint32_t k = 0; k < nch_out; ++k)
+  for(uint32_t k = 0; k < nch_out_scene; ++k)
     delete[] a_out[k];
   delete[] sf_out_buf;
 }
@@ -318,6 +343,16 @@ void TASCAR::wav_render_t::validate_attributes(std::string& msg) const
   root.validate_attributes(msg);
   if( pscene )
     pscene->validate_attributes(msg);
+}
+
+void TASCAR::wav_render_t::set_channelmap( const std::vector<size_t>& channels )
+{
+  ochannels = channels;
+}
+
+void TASCAR::wav_render_t::reset_channelmap()
+{
+  ochannels.clear();
 }
 
 /*

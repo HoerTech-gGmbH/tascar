@@ -1658,28 +1658,28 @@ std::vector<float> TASCAR::str2vecfloat(const std::string& s)
   return value;
 }
 
-std::vector<int32_t> TASCAR::str2vecint(const std::string& s)
+std::vector<int32_t> TASCAR::str2vecint(const std::string& s,
+                                        const std::string& delim)
 {
   std::vector<int32_t> value;
   if(!s.empty()) {
-    std::stringstream ptxt(s);
-    while(ptxt.good()) {
-      double p;
-      ptxt >> p;
-      value.push_back(p);
-    }
+    auto vstr = TASCAR::str2vecstr(s, delim);
+    for(auto s : vstr)
+      value.push_back(atoi(s.c_str()));
   }
   return value;
 }
 
-std::vector<std::string> TASCAR::str2vecstr(const std::string& s)
+std::vector<std::string> TASCAR::str2vecstr(const std::string& s,
+                                            const std::string& delim)
 {
   std::vector<std::string> value;
   std::string tok;
   int mode = 0;
   bool wasquoted = false;
   for(auto c : s) {
-    if((mode == 0) && ((c == ' ') || (c == '\t'))) {
+    if((mode == 0) && (delim.find(c) != std::string::npos)) {
+      //(c == ' ') || (c == '\t'))) {
       if(tok.size() || wasquoted)
         value.push_back(tok);
       tok.clear();
