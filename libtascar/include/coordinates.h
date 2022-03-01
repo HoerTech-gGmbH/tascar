@@ -707,6 +707,11 @@ namespace TASCAR {
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);
 std::ostream& operator<<(std::ostream& out, const TASCAR::ngon_t& n);
 
+inline bool operator==(const TASCAR::pos_t& a, const TASCAR::pos_t& b)
+{
+  return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
+};
+
 bool operator==(const TASCAR::quickhull_t& h1, const TASCAR::quickhull_t& h2);
 bool operator==(const TASCAR::quickhull_t::simplex_t& s1,
                 const TASCAR::quickhull_t::simplex_t& s2);

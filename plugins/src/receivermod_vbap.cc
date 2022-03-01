@@ -20,19 +20,8 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/multi/geometries/multi_point.hpp>
-#include <boost/geometry/geometries/adapted/boost_tuple.hpp>
-
 #include "errorhandling.h"
 #include "scene.h"
-
-BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
-
-namespace bg = boost::geometry;
-
-typedef boost::tuple<double, double> bg_point_t;
-typedef bg::model::multi_point<bg_point_t> bg_pointlist_t;
 
 class simplex_t {
 public:
@@ -92,44 +81,47 @@ rec_vbap_t::data_t::~data_t()
 }
 
 rec_vbap_t::rec_vbap_t(tsccfg::node_t xmlsrc)
-  : TASCAR::receivermod_base_speaker_t(xmlsrc)
+    : TASCAR::receivermod_base_speaker_t(xmlsrc)
 {
-  if( spkpos.size() < 2 )
+  if(spkpos.size() < 2)
     throw TASCAR::ErrMsg("At least two loudspeakers are required for 2D-VBAP.");
-  // create a boost point list from speaker layout:
-  bg_pointlist_t spklist;
-  for(uint32_t k=0;k<spkpos.size();++k)
-    bg::append(spklist,bg_point_t(spkpos[k].unitvector.x,spkpos[k].unitvector.y));
-  // calculate the convex hull:
-  bg_pointlist_t hull;
-  boost::geometry::convex_hull(spklist, hull);
-  if( hull.size() < 2 )
-    throw TASCAR::ErrMsg("Invalid convex hull.");
+  std::vector<TASCAR::pos_t> hull;
+  for(uint32_t k = 0; k < spkpos.size(); ++k) {
+    if(fabs(spkpos[k].z) > EPS)
+      throw TASCAR::ErrMsg("Channel elevation must be zero for 2D VBAP");
+    hull.push_back(spkpos[k].unitvector);
+  }
+  auto spklist = hull;
+  std::sort(hull.begin(), hull.end(),
+            [](const TASCAR::pos_t& a, const TASCAR::pos_t& b) {
+              return a.azim() < b.azim();
+            });
+  hull.push_back(hull[0]);
   // identify channel numbers of simplex vertices and store inverted
   // loudspeaker matrices:
-  for( uint32_t khull=0;khull<hull.size()-1;++khull){
+  for(uint32_t khull = 0; khull < hull.size() - 1; ++khull) {
     simplex_t sim;
     sim.c1 = spklist.size();
     sim.c2 = spklist.size();
-    for(uint32_t k=0;k<bg::num_points(spklist);++k)
-      if( bg::equals(spklist[k],hull[khull]))
+    for(uint32_t k = 0; k < spklist.size(); ++k)
+      if(spklist[k] == hull[khull])
         sim.c1 = k;
-    for(uint32_t k=0;k<bg::num_points(spklist);++k)
-      if( bg::equals(spklist[k],hull[khull+1]))
+    for(uint32_t k = 0; k < spklist.size(); ++k)
+      if(spklist[k] == hull[khull + 1])
         sim.c2 = k;
-    if( (sim.c1 >= spklist.size()) || (sim.c2 >= spklist.size()) )
+    if((sim.c1 >= spklist.size()) || (sim.c2 >= spklist.size()))
       throw TASCAR::ErrMsg("Simplex vertex not found in speaker list.");
     double l11(spkpos[sim.c1].unitvector.x);
     double l12(spkpos[sim.c1].unitvector.y);
     double l21(spkpos[sim.c2].unitvector.x);
     double l22(spkpos[sim.c2].unitvector.y);
-    double det_speaker(l11*l22 - l21*l12);
-    if( det_speaker != 0 )
-      det_speaker = 1.0/det_speaker;
-    sim.l11 = det_speaker*l22;
-    sim.l12 = -det_speaker*l12;
-    sim.l21 = -det_speaker*l21;
-    sim.l22 = det_speaker*l11;
+    double det_speaker(l11 * l22 - l21 * l12);
+    if(det_speaker != 0)
+      det_speaker = 1.0 / det_speaker;
+    sim.l11 = det_speaker * l22;
+    sim.l12 = -det_speaker * l12;
+    sim.l21 = -det_speaker * l21;
+    sim.l22 = det_speaker * l11;
     simplices.push_back(sim);
   }
 }
