@@ -38,6 +38,7 @@
 	  <sndfileasync license="CC0" name="../examples/footsteps.wav"/>
 	  <speechactivity/>
 	  <spksim/>
+	  <tubesim/>
 	</plugins>
       </sound>
       <sound type="cardioidmod"/>
