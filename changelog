@@ -1,3 +1,9 @@
+0.224:
+       - Complete redesign of subprocess spawning
+       - Bugfixes in data logging for larg amount of data
+       - Add method to discover OSC variables and current values
+       - Output channel map for offline-rendering (thanks to A. Moore)
+       - many minor bugfixes and improvements, e.g., macOS build
 0.223: Bugfix of diffuse sound field decoding and directional mask.
 0.222: Optional convolution of loudspeaker channels with HRIR for all speaker-based receivers.
 0.221: Fix orientation and channel order of diffuse sound fields, minor bugfixes and documentation.

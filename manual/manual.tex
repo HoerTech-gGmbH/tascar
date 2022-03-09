@@ -383,6 +383,33 @@ module ``oscserver'' (see Section \ref{sec:oscserver}) can be used.
 A MATLAB/GNU Octave tool for remote control is available, see section
 \ref{sec:sendosc} for more details.
 
+A list of OSC variables with their type, and in some cases also with
+documentation, typical value range and current value, can be read
+using special variable \verb!/sendvarsto!.
+%
+This OSC variable takes three string parameters: The first is a valid OSC URL, e.g., \verb!osc.udp://localhost:9000/!.
+%
+The variable list will be sent to this address.
+%
+The second parameter is an OSC path to which the variable list will be
+sent, e.g., \verb!/getvar!.
+%
+The third parameter, which is optional, is a prefix.
+%
+If specified, only variables starting with this prefix will be
+reported.
+
+When a message to \verb!/sendvarsto! arrives, first an empty message
+is sent to \verb!<path>/begin!.
+%
+This is followed by multiple messages of format \verb!ssiss!, one
+message per matching OSC variable.
+%
+The parameters are OSC path (\verb!s!), typespec (\verb!s!), indicator
+if the current value is readable (\verb!i!), a value range hint
+(\verb!s!) and a help comment (\verb!s!).
+%
+At the end of the list, an empty message is sent to \verb!<path>/end!.
 
 \subsection{Optimization of the operating system for audio processing}
 
