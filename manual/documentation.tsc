@@ -101,6 +101,7 @@
     <midicc2osc controllers="0/1"/>
     <route/>
     <ovheadtracker/>
+    <hoafdnrot/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

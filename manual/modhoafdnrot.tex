@@ -2,20 +2,59 @@ A higher-order-ambisonics feedback delay network (FDN) with rotation
 line-filters, and circulant feedback matrix design after
 \cite{Rocchesso1997}.
 
-\begin{tscattributes}
-\indattr{id}        & Jack / OSC id                                                        \\
-\indattr{amborder}  & Ambisonics order (default: 3)                                        \\
-\indattr{fdnorder}  & FDN order (default: 5)                                               \\
-\indattr{w}         & Rotation velocity in rounds per second (default: 1)                  \\
-\indattr{dw}        & Rotation velocity spread (default: 0.1)                              \\
-\indattr{t}         & Average delay line length in seconds (default: 0.01)                 \\
-\indattr{dt}        & Delay line spread (default: 0.002)                                   \\
-\indattr{decay}     & Decay time in seconds (default: 1)                                   \\
-\indattr{damping}   & Damping coefficient (default: 0.3)                                   \\
-\indattr{dry}       & Dry signal ratio (default: 0)                                        \\
-\indattr{prefilt}   & Pre-filtering of signals (default: false)                            \\
-\indattr{logdelays} & Use logarithmic delay distribution between dt and t (default: false) \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:hoafdnrot}
+Attributes of element {\bf hoafdnrot}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name                & description (type, unit)                                   & def.  \\
+\hline
+\hline
+\indattr{id}        & Jack / OSC id (string)                                     & fdn   \\
+\hline
+\indattr{amborder}  & Ambisonics order (uint32)                                  & 3     \\
+\hline
+\indattr{fdnorder}  & FDN order (uint32)                                         & 5     \\
+\hline
+\indattr{w}         & Rotation velocity in rounds per second (double, rps)       & 1     \\
+\hline
+\indattr{dw}        & Angular spread (double, rps)                               & 0.1   \\
+\hline
+\indattr{t}         & Average delay line length (double, s)                      & 0.01  \\
+\hline
+\indattr{dt}        & Delay line spread (double, s)                              & 0.002 \\
+\hline
+\indattr{decay}     & Decay time (double, s)                                     & 1     \\
+\hline
+\indattr{damping}   & Damping coefficient (double)                               & 0.3   \\
+\hline
+\indattr{dry}       & Dry signal ratio (double)                                  & 0     \\
+\hline
+\indattr{wet}       & Wet signal ratio (double)                                  & 1     \\
+\hline
+\indattr{prefilt}   & Use pre-filters (bool)                                     & false \\
+\hline
+\indattr{logdelays} & Use logarithmic delay distribution between dt and t (bool) & false \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+%\begin{tscattributes}
+%\indattr{id}        & Jack / OSC id                                                        \\
+%\indattr{amborder}  & Ambisonics order (default: 3)                                        \\
+%\indattr{fdnorder}  & FDN order (default: 5)                                               \\
+%\indattr{w}         & Rotation velocity in rounds per second (default: 1)                  \\
+%\indattr{dw}        & Rotation velocity spread (default: 0.1)                              \\
+%\indattr{t}         & Average delay line length in seconds (default: 0.01)                 \\
+%\indattr{dt}        & Delay line spread (default: 0.002)                                   \\
+%\indattr{decay}     & Decay time in seconds (default: 1)                                   \\
+%\indattr{damping}   & Damping coefficient (default: 0.3)                                   \\
+%\indattr{dry}       & Dry signal ratio (default: 0)                                        \\
+%\indattr{prefilt}   & Pre-filtering of signals (default: false)                            \\
+%\indattr{logdelays} & Use logarithmic delay distribution between dt and t (default: false) \\
+%\end{tscattributes}
 
 Real-time parameters can be remote-controlled with the OSC variables
 \verb!/id/par!, accepting six floats (w, dw, t, dt, decay, damping),

@@ -224,7 +224,7 @@ public:
   ~fdn_t();
   inline void process(bool b_prefilt);
   void setpar_t60(float az, float daz, float t, float dt, float t60,
-                  float damping);
+                  float damping, bool fixcirculantmat);
   void set_logdelays(bool ld) { logdelays_ = ld; };
 
 private:
@@ -259,10 +259,10 @@ public:
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
              gainmethod_t gm)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
-      delayline(fdnorder_, maxdelay_),
-      feedbackmat(fdnorder_ * fdnorder_), reflection(fdnorder), prefilt(2),
-      rotation(fdnorder), dlout(fdnorder_), delay(new uint32_t[fdnorder_]),
-      pos(new uint32_t[fdnorder_]), gainmethod(gm)
+      delayline(fdnorder_, maxdelay_), feedbackmat(fdnorder_ * fdnorder_),
+      reflection(fdnorder), prefilt(2), rotation(fdnorder), dlout(fdnorder_),
+      delay(new uint32_t[fdnorder_]), pos(new uint32_t[fdnorder_]),
+      gainmethod(gm)
 {
   memset(delay, 0, sizeof(uint32_t) * fdnorder_);
   memset(pos, 0, sizeof(uint32_t) * fdnorder_);
@@ -319,7 +319,7 @@ void fdn_t::process(bool b_prefilt)
    \param damping Damping
 */
 void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
-                       float damping)
+                       float damping, bool fixcirculantmat)
 {
   // set delays:
   delayline.clear();
@@ -380,12 +380,14 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
           std::exp(i_d * TASCAR_2PI * pow((double)k / (0.5 * fdnorder_), 2.0));
     ;
     fft.execute(eigenv);
-    // std::cout << "row: " << fft.w << std::endl;
-    for(uint32_t itap = 0; itap < fdnorder_; ++itap) {
-      for(uint32_t otap = 0; otap < fdnorder_; ++otap) {
-        feedbackmat[fdnorder_ * itap + otap] = fft.w[(otap + itap) % fdnorder_];
-      }
-    }
+    for(uint32_t itap = 0; itap < fdnorder_; ++itap)
+      for(uint32_t otap = 0; otap < fdnorder_; ++otap)
+        if(fixcirculantmat)
+          feedbackmat[fdnorder_ * itap + otap] =
+              fft.w[(otap + fdnorder_ - itap) % fdnorder_];
+        else
+          feedbackmat[fdnorder_ * itap + otap] =
+              fft.w[(otap + itap) % fdnorder_];
   } else {
     feedbackmat[0] = 1.0;
   }
@@ -396,24 +398,22 @@ public:
   simplefdn_vars_t(tsccfg::node_t xmlsrc);
   ~simplefdn_vars_t();
   // protected:
-  uint32_t fdnorder;
-  double w;
-  double dw;
-  // double t;
-  // double dt;
-  double t60;
-  double damping;
-  bool prefilt;
-  bool logdelays;
-  double absorption;
-  double c;
+  uint32_t fdnorder = 5;
+  double w = 0.0;
+  double dw = 60.0;
+  double t60 = 0.0;
+  double damping = 0.3;
+  bool prefilt = true;
+  bool logdelays = true;
+  double absorption = 0.6;
+  double c = 340.0;
+  bool fixcirculantmat = false;
   TASCAR::pos_t volumetric;
   fdn_t::gainmethod_t gm;
 };
 
 simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
-    : receivermod_base_t(xmlsrc), fdnorder(5), w(0.0), dw(60.0), t60(0),
-      damping(0.3), prefilt(true), logdelays(true), absorption(0.6), c(340)
+    : receivermod_base_t(xmlsrc)
 {
   GET_ATTRIBUTE(fdnorder, "", "Order of FDN (number of recursive paths)");
   GET_ATTRIBUTE(dw, "rounds/s", "Spatial spread of rotation");
@@ -426,6 +426,9 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(absorption, "", "Absorption used in Sabine's equation");
   GET_ATTRIBUTE(c, "m/s", "Speed of sound");
   GET_ATTRIBUTE(volumetric, "m", "Dimension of room x y z");
+  GET_ATTRIBUTE_BOOL(
+      fixcirculantmat,
+      "Apply fix to correctly initialize circulant feedback matrix");
   std::string gainmethod("original");
   GET_ATTRIBUTE(gainmethod, "original mean schroeder",
                 "Gain calculation method");
@@ -473,6 +476,9 @@ public:
   static int osc_set_dim_damp_absorption(const char* path, const char* types,
                                          lo_arg** argv, int argc,
                                          lo_message msg, void* user_data);
+  static int osc_fixcirculantmat(const char* path, const char* types,
+                                 lo_arg** argv, int argc, lo_message msg,
+                                 void* user_data);
 
 private:
   fdn_t* fdn;
@@ -481,6 +487,17 @@ private:
   float wgain;
   float distcorr;
 };
+
+int simplefdn_t::osc_fixcirculantmat(const char* path, const char* types,
+                                     lo_arg** argv, int argc, lo_message msg,
+                                     void* user_data)
+{
+  if((1 == argc) && (types[0] == 'i')) {
+    ((simplefdn_t*)user_data)->fixcirculantmat = (argv[0]->i > 0);
+    ((simplefdn_t*)user_data)->update_par();
+  }
+  return 0;
+}
 
 int simplefdn_t::osc_set_dim_damp_absorption(const char* path,
                                              const char* types, lo_arg** argv,
@@ -530,6 +547,7 @@ void simplefdn_t::configure()
 
 void simplefdn_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->add_method("/fixcirculantmat", "i", &osc_fixcirculantmat, this);
   srv->add_method("/dim_damp_absorption", "fffff", &osc_set_dim_damp_absorption,
                   this);
 }
@@ -558,7 +576,8 @@ void simplefdn_t::update_par()
     if(fdn) {
       double wscale(TASCAR_2PI * tmin);
       fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
-                      f_sample * t60, std::max(0.0, std::min(0.999, damping)));
+                      f_sample * t60, std::max(0.0, std::min(0.999, damping)),
+                      fixcirculantmat);
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -578,7 +597,8 @@ void simplefdn_t::setlogdelays(bool ld)
               (absorption * volumetric.boxarea());
       double wscale(TASCAR_2PI * tmin);
       fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
-                      f_sample * t60, std::max(0.0, std::min(0.999, damping)));
+                      f_sample * t60, std::max(0.0, std::min(0.999, damping)),
+                      fixcirculantmat);
     }
     pthread_mutex_unlock(&mtx);
   }

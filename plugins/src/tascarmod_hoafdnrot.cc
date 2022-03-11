@@ -328,7 +328,7 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
   for(uint32_t tap=0;tap<fdnorder_;++tap){
     float laz(az);
     if( fdnorder_ > 1 )
-      laz = az-daz+2.0*daz*tap*1.0/(fdnorder_);
+      laz = az-daz+2.0f*daz*tap/(fdnorder_ - 1.0f);
     std::complex<float> caz(std::exp(i*laz));
     rotation.elem(tap,0) = 1.0;
     for(uint32_t o=1;o<amborder1;++o){
@@ -343,10 +343,9 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     for(uint32_t k=0;k<eigenv.n_;++k)
       eigenv[k] = std::exp(i_d*TASCAR_2PI*pow((double)k/(0.5*fdnorder_),2.0));;
     fft.execute(eigenv);
-    //std::cout << "row: " << fft.w << std::endl;
     for(uint32_t itap=0;itap<fdnorder_;++itap){
       for(uint32_t otap=0;otap<fdnorder_;++otap){
-        feedbackmat.elem(itap,otap,0) = fft.w[(otap+itap) % fdnorder_];
+        feedbackmat.elem(itap,otap,0) = fft.w[(otap+fdnorder_-itap) % fdnorder_];
         for(uint32_t o=1;o<amborder1;++o)
           feedbackmat.elem(itap,otap,o) = feedbackmat.elem(itap,otap,o-1);
       }
@@ -355,6 +354,13 @@ void fdn_t::setpar(float az, float daz, float t, float dt, float g, float dampin
     for(uint32_t o=0;o<amborder1;++o)
       feedbackmat.elem00x(o) = 1.0;
   }
+  std::cout << "m=[..." << std::endl;
+  for(uint32_t itap=0;itap<fdnorder_;++itap){
+    for(uint32_t otap=0;otap<fdnorder_;++otap)
+      std::cout << std::real(feedbackmat.elem(itap,otap,0)) << "  ";
+    std::cout << ";..." << std::endl;
+  }
+  std::cout << "];" << std::endl;
 }
   
 class hoafdnrot_vars_t : public TASCAR::module_base_t {
@@ -362,49 +368,37 @@ public:
   hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg );
   ~hoafdnrot_vars_t();
 protected:
-  std::string id;
-  uint32_t amborder;
-  uint32_t fdnorder;
-  double w;
-  double dw;
-  double t;
-  double dt;
-  double decay;
-  double damping;
-  double dry;
-  double wet;
-  bool prefilt;
-  bool logdelays;
+  std::string id = "fdn";
+  uint32_t amborder = 3;
+  uint32_t fdnorder = 5;
+  double w = 1.0;
+  double dw = 0.1;
+  double t = 0.01;
+  double dt = 0.002;
+  double decay = 1.0;
+  double damping = 0.3;
+  double dry = 0.0;
+  double wet = 1.0;
+  bool prefilt = false;
+  bool logdelays = false;
 };
 
 hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    amborder(3),
-    fdnorder(5),
-    w(1.0),
-    dw(0.1),
-    t(0.01),
-    dt(0.002),
-    decay(1.0),
-    damping(0.3),
-    dry(0.0),
-    wet(1.0),
-    prefilt(false),
-    logdelays(false)
+  : module_base_t( cfg )
 {
-  GET_ATTRIBUTE_(id);
-  GET_ATTRIBUTE_(amborder);
-  GET_ATTRIBUTE_(fdnorder);
-  GET_ATTRIBUTE_(w);
-  GET_ATTRIBUTE_(dw);
-  GET_ATTRIBUTE_(t);
-  GET_ATTRIBUTE_(dt);
-  GET_ATTRIBUTE_(decay);
-  GET_ATTRIBUTE_(damping);
-  GET_ATTRIBUTE_(dry);
-  GET_ATTRIBUTE_(wet);
-  GET_ATTRIBUTE_BOOL_(prefilt);
-  GET_ATTRIBUTE_BOOL_(logdelays);
+  GET_ATTRIBUTE(id,"","Jack / OSC id");
+  GET_ATTRIBUTE(amborder,"","Ambisonics order");
+  GET_ATTRIBUTE(fdnorder,"","FDN order");
+  GET_ATTRIBUTE(w,"rps","Rotation velocity in rounds per second");
+  GET_ATTRIBUTE(dw,"rps","Angular spread");
+  GET_ATTRIBUTE(t,"s","Average delay line length");
+  GET_ATTRIBUTE(dt,"s","Delay line spread");
+  GET_ATTRIBUTE(decay,"s","Decay time");
+  GET_ATTRIBUTE(damping,"","Damping coefficient");
+  GET_ATTRIBUTE(dry,"","Dry signal ratio");
+  GET_ATTRIBUTE(wet,"","Wet signal ratio");
+  GET_ATTRIBUTE_BOOL(prefilt,"Use pre-filters");
+  GET_ATTRIBUTE_BOOL(logdelays,"Use logarithmic delay distribution between dt and t");
 }
 
 hoafdnrot_vars_t::~hoafdnrot_vars_t()
