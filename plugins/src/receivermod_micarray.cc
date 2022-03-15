@@ -25,7 +25,7 @@ class mic_processor_t;
 
 /**
    A generator of filtercoefficients based on axis and relative position
- */
+*/
 class filter_model_t : public TASCAR::xml_element_t {
 public:
   // filter types, extend as needed:
@@ -58,15 +58,15 @@ private:
   double Q;
 };
 
-#define CHECKNAN(x)                                                            \
-  if(!(x < HUGE_VAL))                                                          \
-  throw TASCAR::ErrMsg("No value for \"" #x "\" was given.")
+#define CHECKNAN(x)                                             \
+  if(!(x < HUGE_VAL))                                           \
+    throw TASCAR::ErrMsg("No value for \"" #x "\" was given.")
 
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
-    : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0), theta_st(HUGE_VAL),
-      beta(HUGE_VAL), omega(HUGE_VAL), alpha_st(HUGE_VAL), alpha_m(HUGE_VAL),
-      theta_end(HUGE_VAL), gain_st(HUGE_VAL), gain_end(HUGE_VAL),
-      omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
+  : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0), theta_st(HUGE_VAL),
+    beta(HUGE_VAL), omega(HUGE_VAL), alpha_st(HUGE_VAL), alpha_m(HUGE_VAL),
+    theta_end(HUGE_VAL), gain_st(HUGE_VAL), gain_end(HUGE_VAL),
+    omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
 {
   GET_ATTRIBUTE(axis, "",
                 "orientation axis for filter parameter "
@@ -111,17 +111,17 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
                                 const TASCAR::pos_t& rel_pos, double& fs) const
 {
   switch(filtertype) {
-  // filter design of parametric equalizer
+    // filter design of parametric equalizer
   case equalizer: {
     double theta = acos(dot_prod(rel_pos.normal(), axis));
     // gain (dB) variation
-    double gain = (cos(std::min(theta / theta_end, 1.0) * TASCAR_PI) + 1.0) * 0.5 *
-                      (gain_st - gain_end) +
-                  gain_end;
+    double gain = (cos(std::min(theta / theta_end, 1.0) * TASCAR_PI) + 1.0) *
+      0.5 * (gain_st - gain_end) +
+      gain_end;
     // center frequency variation
-    double Omega = (cos(std::min(theta / theta_end, 1.0) * TASCAR_PI) + 1.0) * 0.5 *
-                       (omega_st - omega_end) +
-                   omega_end;
+    double Omega = (cos(std::min(theta / theta_end, 1.0) * TASCAR_PI) + 1.0) *
+      0.5 * (omega_st - omega_end) +
+      omega_end;
     // bilinear transformation
     double t = 1.0 / tan(TASCAR_PI * Omega / fs);
     double t_sq = t * t;
@@ -130,28 +130,28 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
       double g = pow(10.0, (-gain / 20.0));
       double inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
       flt.set_coefficients(
-          2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - g * Bc) * inv_a0,
-          (t_sq + 1.0 + Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
-          (t_sq + 1.0 - Bc) * inv_a0);
+                           2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - g * Bc) * inv_a0,
+                           (t_sq + 1.0 + Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
+                           (t_sq + 1.0 - Bc) * inv_a0);
     } else {
       double g = pow(10.0, (gain / 20.0));
       double inv_a0 = 1.0 / (t_sq + 1.0 + Bc);
       flt.set_coefficients(
-          2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
-          (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
-          (t_sq + 1.0 - g * Bc) * inv_a0);
+                           2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
+                           (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
+                           (t_sq + 1.0 - g * Bc) * inv_a0);
     }
     break;
   }
-  // filterdesign of high-shelf filter
+    // filterdesign of high-shelf filter
   case highshelf: {
     double theta = acos(dot_prod(rel_pos.normal(), axis));
     double inv_a0 = 1.0 / (omega + fs);
     if(theta > theta_st) {
-      double alpha =
-          (alpha_st + alpha_m) * 0.5 +
-          (alpha_st - alpha_m) * 0.5 *
-              cos((theta - theta_st) / (beta * (TASCAR_PI - theta_st)) * TASCAR_PI);
+      double alpha = (alpha_st + alpha_m) * 0.5 +
+        (alpha_st - alpha_m) * 0.5 *
+        cos((theta - theta_st) /
+            (beta * (TASCAR_PI - theta_st)) * TASCAR_PI);
       flt.set_coefficients((omega - fs) * inv_a0, 0.0,
                            (omega + alpha * fs) * inv_a0,
                            (omega - alpha * fs) * inv_a0, 0.0);
@@ -166,7 +166,7 @@ void filter_model_t::update_par(TASCAR::biquad_t& flt,
 
 /**
    The main class consisting of a delayline and an array of biquad filters
- */
+*/
 class mic_t : public TASCAR::xml_element_t {
 public:
   // delay line model types:
@@ -177,6 +177,7 @@ public:
   size_t get_num_nodes() const;
   void prepare(const chunk_cfg_t&);
   void release();
+  void append_label(std::vector<std::string>& labels, size_t& cnt);
   void process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
                std::vector<mic_processor_t*>& processors,
                std::vector<TASCAR::wave_t>& output, size_t& channelindex,
@@ -208,7 +209,7 @@ private:
 
 /**
    Signal processor and state class of single mic
- */
+*/
 class mic_processor_t {
 public:
   mic_processor_t(const mic_t* creator, const chunk_cfg_t& cfg,
@@ -231,11 +232,11 @@ private:
 
 mic_processor_t::mic_processor_t(const mic_t* creator, const chunk_cfg_t& cfg,
                                  double delaycorr, uint32_t sincsampling)
-    : sigbuf(cfg.n_fragment),
-      dline(2 * delaycorr * cfg.f_sample + 2 * creator->sincorder, cfg.f_sample,
-            creator->c, creator->sincorder, sincsampling),
-      configuration(creator), dt(1.0 / std::max(1.0, (double)cfg.n_fragment)),
-      fs(cfg.f_sample)
+  : sigbuf(cfg.n_fragment),
+    dline(2 * delaycorr * cfg.f_sample + 2 * creator->sincorder, cfg.f_sample,
+          creator->c, creator->sincorder, sincsampling),
+    configuration(creator), dt(1.0 / std::max(1.0, (double)cfg.n_fragment)),
+    fs(cfg.f_sample)
 {
   for(size_t k = 0; k < creator->filtermodels.size(); ++k)
     filters.push_back(new TASCAR::biquad_t());
@@ -306,6 +307,17 @@ void mic_t::process(const TASCAR::wave_t& input, const TASCAR::pos_t& rel_pos,
   }
 }
 
+void mic_t::append_label(std::vector<std::string>& labels,size_t& cnt)
+{
+  if(name.size() )
+    labels.push_back(name);
+  else
+    labels.push_back("out."+std::to_string(cnt));
+  ++cnt;
+  for(auto child : children)
+    child->append_label(labels,cnt);
+}
+
 void mic_t::process_diffuse(const TASCAR::amb1wave_t& chunk,
                             std::vector<TASCAR::wave_t>& output,
                             size_t& channelindex)
@@ -319,7 +331,7 @@ void mic_t::process_diffuse(const TASCAR::amb1wave_t& chunk,
   const float* i_z(chunk.z().d);
   for(uint32_t k = 0; k < chunk.size(); ++k) {
     *o_l += *i_w + *i_x * position_norm.x + *i_y * position_norm.y +
-            *i_z * position_norm.z;
+      *i_z * position_norm.z;
     ++o_l;
     ++i_w;
     ++i_x;
@@ -342,8 +354,8 @@ void mic_t::add_processors(std::vector<mic_processor_t*>& processors,
 
 mic_t::mic_t(tsccfg::node_t xmlsrc, const TASCAR::pos_t& parentposition_,
              double c_)
-    : TASCAR::xml_element_t(xmlsrc), c(c_), sincorder(0), target_tau(0.0),
-      maxdist(0.0), parentposition(parentposition_), tau_parent(0.0)
+  : TASCAR::xml_element_t(xmlsrc), c(c_), sincorder(0), target_tau(0.0),
+    maxdist(0.0), parentposition(parentposition_), tau_parent(0.0)
 {
   GET_ATTRIBUTE(name, "", "microphone label");
   GET_ATTRIBUTE(position, "m",
@@ -377,7 +389,7 @@ mic_t::mic_t(tsccfg::node_t xmlsrc, const TASCAR::pos_t& parentposition_,
   }
   for(auto child : children)
     maxdist =
-        std::max(std::max(maxdist, child->position.norm()), child->maxdist);
+      std::max(std::max(maxdist, child->position.norm()), child->maxdist);
 }
 
 mic_t::~mic_t()
@@ -409,10 +421,10 @@ mic_vars_t::mic_vars_t(tsccfg::node_t cfg)
 }
 
 /**
-  This plugin implements a receiver consisting of a hierarchical
-  structure of microphones realted by relative transfer functions
-  (RTFs). Each RTF consisting of a delay model and a filter model.
- */
+   This plugin implements a receiver consisting of a hierarchical
+   structure of microphones realted by relative transfer functions
+   (RTFs). Each RTF consisting of a delay model and a filter model.
+*/
 class micarray_t : public mic_vars_t, public TASCAR::receivermod_base_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
@@ -453,8 +465,8 @@ micarray_t::data_t::~data_t()
 }
 
 micarray_t::micarray_t(tsccfg::node_t xmlsrc)
-    : mic_vars_t(xmlsrc), TASCAR::receivermod_base_t(xmlsrc),
-      origin(find_or_add_child("mic"), TASCAR::pos_t(), c)
+  : mic_vars_t(xmlsrc), TASCAR::receivermod_base_t(xmlsrc),
+    origin(find_or_add_child("mic"), TASCAR::pos_t(), c)
 {
 }
 
@@ -490,6 +502,9 @@ void micarray_t::configure()
 {
   // number of output channels
   n_channels = origin.get_num_nodes();
+  labels.clear();
+  size_t cnt = 0;
+  origin.append_label(labels,cnt);
 }
 
 TASCAR::receivermod_base_t::data_t*

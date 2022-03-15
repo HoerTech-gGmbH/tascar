@@ -80,7 +80,7 @@ private:
   spk_array_diff_render_t* spkarray;
   std::vector<double> levels;
   std::vector<double> sublevels;
-  std::vector<std::string> refport_;
+  std::vector<std::string> refport_;///< list of measurement microphone ports
   double duration;
   double subduration;
   double lmin;
