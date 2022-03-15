@@ -60,6 +60,10 @@ pipeline {
     stages {
         stage("build") {
             parallel {
+                stage(                        "jammy && x86_64 && tascardev") {
+                    agent {label              "jammy && x86_64 && tascardev"}
+                    steps {tascar_build_steps("jammy && x86_64 && tascardev")}
+                }
                 stage(                        "focal && x86_64 && tascardev") {
                     agent {label              "focal && x86_64 && tascardev"}
                     steps {tascar_build_steps("focal && x86_64 && tascardev")}
@@ -67,6 +71,10 @@ pipeline {
                 stage(                        "bionic && x86_64 && tascardev") {
                     agent {label              "bionic && x86_64 && tascardev"}
                     steps {tascar_build_steps("bionic && x86_64 && tascardev")}
+                }
+                stage(                        "bullseye && armv7 && tascardev") {
+                    agent {label              "bullseye && armv7 && tascardev"}
+                    steps {tascar_build_steps("bullseye && armv7 && tascardev")}
                 }
                 stage(                        "bionic && armv7 && tascardev") {
                     agent {label              "bionic && armv7 && tascardev"}
@@ -84,8 +92,10 @@ pipeline {
             when { anyOf { branch 'master'; branch 'development' } }
             steps {
                 // receive all deb packages from tascarpro build
+                unstash "x86_64_jammy"
                 unstash "x86_64_focal"
                 unstash "x86_64_bionic"
+                unstash "armv7_bullseye"
                 unstash "armv7_bionic"
 
                 // Copies the new debs to the stash of existing debs,
