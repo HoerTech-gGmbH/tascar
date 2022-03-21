@@ -121,7 +121,7 @@ done
 
 fakeroot=/usr/bin/fakeroot
 test -x $fakeroot || fakeroot=""
-$fakeroot dpkg-deb --build debian
+$fakeroot dpkg-deb -Zxz --build debian
 mv debian.deb "$packagename"_"$packageversion"_"${ARCH}".deb
 rm -Rf debian
 
