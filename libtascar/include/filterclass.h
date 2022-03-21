@@ -219,6 +219,11 @@ namespace TASCAR {
       for(float* v = w.d; v < wend; ++v)
         *v = filter(*v);
     };
+    void clear()
+    {
+      b1.clear();
+      b2.clear();
+    };
 
   private:
     biquad_t b1;

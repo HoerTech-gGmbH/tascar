@@ -226,6 +226,12 @@ public:
   void setpar_t60(float az, float daz, float t, float dt, float t60,
                   float damping, bool fixcirculantmat);
   void set_logdelays(bool ld) { logdelays_ = ld; };
+  void clear()
+  {
+    delayline.clear();
+    outval.clear();
+  };
+  void get_ir(TASCAR::wave_t& w, bool b_prefilt);
 
 private:
   bool logdelays_;
@@ -307,6 +313,20 @@ void fdn_t::process(bool b_prefilt)
     if(pos[tap])
       --pos[tap];
   }
+}
+
+void fdn_t::get_ir(TASCAR::wave_t& ir, bool b_prefilt)
+{
+  clear();
+  inval.w = 1.0f;
+  inval.x = 1.0f;
+  inval.y = 0.0f;
+  inval.z = 0.0f;
+  for(size_t k = 0u; k < ir.n; ++k) {
+    process(b_prefilt);
+    ir.d[k] = outval.w;
+  }
+  clear();
 }
 
 /**
@@ -410,6 +430,9 @@ public:
   bool fixcirculantmat = false;
   TASCAR::pos_t volumetric;
   fdn_t::gainmethod_t gm;
+  std::vector<float> vcf;
+  std::vector<float> vt60;
+  uint32_t numiter = 100;
 };
 
 simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
@@ -429,6 +452,13 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE_BOOL(
       fixcirculantmat,
       "Apply fix to correctly initialize circulant feedback matrix");
+  GET_ATTRIBUTE(
+      vcf, "Hz",
+      "Center frequencies for T60 optimization, or empty for no optimization");
+  GET_ATTRIBUTE(vt60, "s", "T60 at specified center frequencies");
+  if(vcf.size() != vt60.size())
+    throw TASCAR::ErrMsg("Mismatching number of entries in vcf and vt60.");
+  GET_ATTRIBUTE(numiter, "", "Number of iterations in T60 optimization");
   std::string gainmethod("original");
   GET_ATTRIBUTE(gainmethod, "original mean schroeder",
                 "Gain calculation method");
@@ -470,6 +500,8 @@ public:
   void update_par();
   void setlogdelays(bool ld);
   void configure();
+  void optim_param();
+  void release();
   receivermod_base_t::data_t* create_state_data(double srate,
                                                 uint32_t fragsize) const;
   virtual void add_variables(TASCAR::osc_server_t* srv);
@@ -479,6 +511,13 @@ public:
   static int osc_fixcirculantmat(const char* path, const char* types,
                                  lo_arg** argv, int argc, lo_message msg,
                                  void* user_data);
+  /**
+     @brief Get T60 at octave bands around provided center frequencies
+     @param cf list of center frequencies in Hz
+     @retval t60 T60 in seconds
+   */
+  void get_t60(const std::vector<float>& cf, std::vector<float>& t60);
+  float t60err(const std::vector<float>& param);
 
 private:
   fdn_t* fdn;
@@ -486,6 +525,8 @@ private:
   pthread_mutex_t mtx;
   float wgain;
   float distcorr;
+  TASCAR::wave_t* ir_bb;
+  TASCAR::wave_t* ir_band;
 };
 
 int simplefdn_t::osc_fixcirculantmat(const char* path, const char* types,
@@ -526,6 +567,56 @@ simplefdn_t::simplefdn_t(tsccfg::node_t cfg)
   pthread_mutex_init(&mtx, NULL);
 }
 
+static float t60err_(const std::vector<float>& param, void* data)
+{
+  return ((simplefdn_t*)data)->t60err(param);
+}
+
+float simplefdn_t::t60err(const std::vector<float>& param)
+{
+  if(param.size() != 2)
+    throw TASCAR::ErrMsg("Invalid parameter space");
+  absorption = std::max(0.0f, std::min(1.0f, param[0]));
+  damping = std::max(0.0f, std::min(0.999f, param[1]));
+  t60 = 0.0;
+  update_par();
+  std::vector<float> xt60;
+  get_t60(vcf, xt60);
+  float err = 0.0f;
+  for(size_t k = 0; k < std::min(xt60.size(), vt60.size()); ++k) {
+    // float le = fabsf(log10f(xt60[k]) - log10f(vt60[k]));
+    float le = fabs(xt60[k] / vt60[k] - 1.0f);
+    // le *= le;
+    err += le;
+  }
+  err /= xt60.size();
+  return err;
+}
+
+/**
+   \brief One iteration of gradient search
+   \param eps Stepsize scaling factor
+   \retval param Input: start values, Output: new values
+   \param err Error function handle
+   \param data Data pointer to be handed to error function
+   \param unitstep Unit step size
+   \return Error measure
+ */
+float downhill_iterate(float eps, std::vector<float>& param,
+                       float (*err)(const std::vector<float>& x, void* data),
+                       void* data, const std::vector<float>& unitstep)
+{
+  std::vector<float> stepparam(param);
+  float errv(err(param, data));
+  for(uint32_t k = 0; k < param.size(); k++) {
+    stepparam[k] += unitstep[k];
+    float dv(eps * (errv - err(stepparam, data)));
+    stepparam[k] = param[k];
+    param[k] += dv;
+  }
+  return errv;
+}
+
 void simplefdn_t::configure()
 {
   receivermod_base_t::configure();
@@ -533,7 +624,6 @@ void simplefdn_t::configure()
   if(fdn)
     delete fdn;
   fdn = new fdn_t(fdnorder, f_sample, logdelays, gm);
-  update_par();
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
@@ -543,6 +633,52 @@ void simplefdn_t::configure()
     sprintf(ctmp, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
     labels.push_back(ctmp);
   }
+  // prepare impulse response container for T60 measurements:
+  size_t irlen(f_sample);
+  double maxdim(volumetric.x);
+  maxdim = std::max(maxdim, volumetric.y);
+  maxdim = std::max(maxdim, volumetric.z);
+  size_t irlendim(10.0 * maxdim / c * f_sample);
+  irlen = std::max(irlen, irlendim);
+  ir_bb = new TASCAR::wave_t(irlen);
+  ir_band = new TASCAR::wave_t(irlen);
+  if(vcf.size() > 0) {
+    // optimize damping and absorption to match given T60
+    t60 = 0.0;
+    // param is tan(([absorption,damping]-0.5)*pi)
+    std::vector<float> param = {(float)absorption, (float)damping};
+    float eps = 1.6f;
+    float lasterr = 10000.0f;
+    for(size_t it = 0; it < numiter; ++it) {
+      float err = downhill_iterate(eps, param, t60err_, this, {2e-3f, 1e-2f});
+      param[0] = fabs(param[0]);
+      param[1] = fabs(param[1]);
+      if(err > 4 * lasterr)
+        eps *= 0.5;
+      lasterr = err;
+      // DEBUG(err);
+      if(err < 0.005)
+        it = numiter;
+    }
+    std::vector<float> xt60;
+    get_t60(vcf, xt60);
+    absorption = std::max(0.0f, std::min(1.0f, param[0]));
+    damping = std::max(0.0f, std::min(0.999f, param[1]));
+    t60 = 0.0f;
+    std::cout << "Optimization of T60:\n  absorption=\"" << absorption
+              << "\" damping=\"" << damping << "\" t60=\"0\"\n";
+    for(size_t k = 0; k < vcf.size(); ++k) {
+      std::cout << "  f = " << vcf[k] << " Hz\n  t60 = " << xt60[k] << " s\n";
+    }
+  }
+  update_par();
+}
+
+void simplefdn_t::release()
+{
+  TASCAR::receivermod_base_t::release();
+  delete ir_bb;
+  delete ir_band;
 }
 
 void simplefdn_t::add_variables(TASCAR::osc_server_t* srv)
@@ -623,6 +759,56 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
       }
     }
     foa_out->clear();
+    pthread_mutex_unlock(&mtx);
+  }
+}
+
+float ir_get_t60(TASCAR::wave_t& ir, float fs)
+{
+  if(ir.n < 2)
+    return -1;
+  // max threshold is -0.2 dB below max:
+  float thmax = powf(10.0f, -0.1 * 10.2f);
+  float thmin = powf(10.0f, -0.1 * 30.2f);
+  float cs = 0.0f;
+  for(size_t k = ir.n - 1; k != 0; --k) {
+    cs += ir.d[k] * ir.d[k];
+    ir.d[k] = cs;
+  }
+  thmax *= cs;
+  thmin *= cs;
+  size_t idx_max = 0;
+  size_t idx_min = 0;
+  for(size_t k = 0; k < ir.n; ++k) {
+    if(ir.d[k] > thmax)
+      idx_max = k;
+    if(ir.d[k] > thmin)
+      idx_min = k;
+  }
+  if(idx_min > idx_max) {
+    cs = (-60.0f / (10.0f * log10f(ir.d[idx_min] / ir.d[idx_max]) * fs)) *
+         (idx_min - idx_max);
+    return cs;
+  }
+  return -1.0f;
+}
+
+void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
+{
+  if(pthread_mutex_trylock(&mtx) == 0) {
+    if(fdn) {
+      t60.clear();
+      fdn->get_ir(*ir_bb, prefilt);
+      TASCAR::bandpass_t bp(176.78f, 353.55f, f_sample);
+      for(auto f : cf) {
+        bp.set_range(f * sqrtf(0.5f), f * sqrtf(2.0f));
+        ir_band->copy(*ir_bb);
+        bp.filter(*ir_band);
+        bp.clear();
+        bp.filter(*ir_band);
+        t60.push_back(ir_get_t60(*ir_band, f_sample));
+      }
+    }
     pthread_mutex_unlock(&mtx);
   }
 }
