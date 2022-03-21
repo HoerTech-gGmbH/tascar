@@ -586,7 +586,7 @@ float simplefdn_t::t60err(const std::vector<float>& param)
   for(size_t k = 0; k < std::min(xt60.size(), vt60.size()); ++k) {
     // float le = fabsf(log10f(xt60[k]) - log10f(vt60[k]));
     float le = fabs(xt60[k] / vt60[k] - 1.0f);
-    // le *= le;
+    le *= le;
     err += le;
   }
   err /= xt60.size();
@@ -645,7 +645,18 @@ void simplefdn_t::configure()
   if(vcf.size() > 0) {
     // optimize damping and absorption to match given T60
     t60 = 0.0;
-    // param is tan(([absorption,damping]-0.5)*pi)
+    float emin = 1000000;
+    for( float labs = 0.05; labs < 1.0f; labs += 0.05)
+      for( float ldamp = 0.05; ldamp < 1.0f; ldamp += 0.05 ){
+        float err = t60err({ labs, ldamp });
+        if( err < emin ){
+          absorption = labs;
+          damping = ldamp;
+          emin = err;
+        }
+      }
+    std::cout << "Grid optimization of T60:\n  absorption=\"" << absorption
+              << "\" damping=\"" << damping << "\" t60=\"0\"\n";
     std::vector<float> param = {(float)absorption, (float)damping};
     float eps = 1.6f;
     float lasterr = 10000.0f;
@@ -803,6 +814,8 @@ void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
       for(auto f : cf) {
         bp.set_range(f * sqrtf(0.5f), f * sqrtf(2.0f));
         ir_band->copy(*ir_bb);
+        bp.filter(*ir_band);
+        bp.clear();
         bp.filter(*ir_band);
         bp.clear();
         bp.filter(*ir_band);
