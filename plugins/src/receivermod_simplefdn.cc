@@ -518,6 +518,7 @@ public:
    */
   void get_t60(const std::vector<float>& cf, std::vector<float>& t60);
   float t60err(const std::vector<float>& param);
+  float slopeerr(const std::vector<float>& param);
 
 private:
   fdn_t* fdn;
@@ -572,25 +573,48 @@ static float t60err_(const std::vector<float>& param, void* data)
   return ((simplefdn_t*)data)->t60err(param);
 }
 
+static float slopeerr_(const std::vector<float>& param, void* data)
+{
+  return ((simplefdn_t*)data)->slopeerr(param);
+}
+
 float simplefdn_t::t60err(const std::vector<float>& param)
 {
-  if(param.size() != 2)
-    throw TASCAR::ErrMsg("Invalid parameter space");
+  if(param.empty())
+    throw TASCAR::ErrMsg("Invalid (empty) parameter space");
   absorption = std::max(0.0f, std::min(1.0f, param[0]));
-  damping = std::max(0.0f, std::min(0.999f, param[1]));
-  t60 = 0.0;
+  t60 = 0.0f;
   update_par();
   std::vector<float> xt60;
   get_t60(vcf, xt60);
-  float err = 0.0f;
+  float t60max = 0.0f;
+  float t60max_ref = 0.0f;
   for(size_t k = 0; k < std::min(xt60.size(), vt60.size()); ++k) {
-    // float le = fabsf(log10f(xt60[k]) - log10f(vt60[k]));
-    float le = fabs(xt60[k] / vt60[k] - 1.0f);
-    le *= le;
-    err += le;
+    t60max = std::max(t60max, xt60[k]);
+    t60max_ref = std::max(t60max_ref, vt60[k]);
   }
-  err /= xt60.size();
-  return err;
+  float le = fabs(t60max / t60max_ref - 1.0f);
+  le *= le;
+  return le;
+}
+
+float simplefdn_t::slopeerr(const std::vector<float>& param)
+{
+  if(param.empty())
+    throw TASCAR::ErrMsg("Invalid (empty) parameter space");
+  damping = std::max(0.0f, std::min(0.999f, param[0]));
+  update_par();
+  std::vector<float> xt60;
+  get_t60(vcf, xt60);
+  float slope = 0.0f;
+  for(size_t k = 1; k < std::min(xt60.size(), vt60.size()); ++k)
+    slope += (xt60[k] - xt60[0]) / (logf(vcf[k]) - logf(vcf[0]));
+  float slope_ref = 0.0f;
+  for(size_t k = 1; k < std::min(xt60.size(), vt60.size()); ++k)
+    slope_ref += (vt60[k] - vt60[0]) / (logf(vcf[k]) - logf(vcf[0]));
+  float le = fabs(slope / slope_ref - 1.0f);
+  le *= le;
+  return le;
 }
 
 /**
@@ -644,43 +668,45 @@ void simplefdn_t::configure()
   ir_band = new TASCAR::wave_t(irlen);
   if(vcf.size() > 0) {
     // optimize damping and absorption to match given T60
+    // first optimize absorption
     t60 = 0.0;
-    float emin = 1000000;
-    for( float labs = 0.05; labs < 1.0f; labs += 0.05)
-      for( float ldamp = 0.05; ldamp < 1.0f; ldamp += 0.05 ){
-        float err = t60err({ labs, ldamp });
-        if( err < emin ){
-          absorption = labs;
-          damping = ldamp;
-          emin = err;
-        }
-      }
-    std::cout << "Grid optimization of T60:\n  absorption=\"" << absorption
-              << "\" damping=\"" << damping << "\" t60=\"0\"\n";
-    std::vector<float> param = {(float)absorption, (float)damping};
-    float eps = 1.6f;
+    damping = 0.2;
+    absorption =
+        0.161 * volumetric.boxvolume() / (vt60[0] * volumetric.boxarea());
+    float eps = 1.0f;
     float lasterr = 10000.0f;
+    std::vector<float> param = {(float)absorption};
     for(size_t it = 0; it < numiter; ++it) {
-      float err = downhill_iterate(eps, param, t60err_, this, {2e-3f, 1e-2f});
+      float err = downhill_iterate(eps, param, t60err_, this, {1e-3f});
       param[0] = fabs(param[0]);
-      param[1] = fabs(param[1]);
+      if((err < 0.00005) || (fabsf(lasterr / err - 1.0f) < 1e-9f))
+        it = numiter;
+      lasterr = err;
+    }
+    absorption = fabsf(param[0]);
+    param = {(float)damping};
+    lasterr = 10000.0f;
+    for(size_t it = 0; it < numiter; ++it) {
+      float err = downhill_iterate(eps, param, slopeerr_, this, {2e-3f});
+      param[0] = std::min(0.99f, fabs(param[0]));
       if(err > 4 * lasterr)
         eps *= 0.5;
-      lasterr = err;
-      // DEBUG(err);
-      if(err < 0.005)
+      if((err < 0.00005) || (fabsf(lasterr / err - 1.0f) < 1e-9f))
         it = numiter;
+      lasterr = err;
     }
+    damping = param[0];
+    t60 = 0.0f;
+    update_par();
     std::vector<float> xt60;
     get_t60(vcf, xt60);
-    absorption = std::max(0.0f, std::min(1.0f, param[0]));
-    damping = std::max(0.0f, std::min(0.999f, param[1]));
-    t60 = 0.0f;
     std::cout << "Optimization of T60:\n  absorption=\"" << absorption
               << "\" damping=\"" << damping << "\" t60=\"0\"\n";
     for(size_t k = 0; k < vcf.size(); ++k) {
-      std::cout << "  f = " << vcf[k] << " Hz\n  t60 = " << xt60[k] << " s\n";
+      std::cout << "  " << vcf[k] << " Hz: " << xt60[k] << " s\n";
     }
+    std::cout << "  (T60_sab = " << t60 << "s)\n";
+    t60 = 0.0f;
   }
   update_par();
 }
@@ -814,6 +840,8 @@ void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
       for(auto f : cf) {
         bp.set_range(f * sqrtf(0.5f), f * sqrtf(2.0f));
         ir_band->copy(*ir_bb);
+        bp.filter(*ir_band);
+        bp.clear();
         bp.filter(*ir_band);
         bp.clear();
         bp.filter(*ir_band);
