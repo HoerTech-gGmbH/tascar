@@ -13,17 +13,17 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4			\
 	test_snd_sourcedir_generic1 test_snd_sourcedir_generic_cardioid			\
 	test_ir_wfs test_ir_wfs_noplanewave hoa3d test_level_hoa2d_basic		\
 	test_level_hoa2d_maxre test_ir_reverb test_ir_simplefdn							\
-	test_ir_simplefdn_gain test_ir_simplefdn_optimt60										\
-	test_snd_vbap3d_speakermatch test_ir_volumetric test_pos_obstacle		\
-	test_pos_obstacle_inner test_level_absorption test_ir_hrtf_0deg			\
-	test_ir_hrtf_45deg test_ir_hrtf_75deg test_ir_hrtf_90deg						\
-	test_ir_hrtf_105deg test_ir_hrtf_135deg test_ir_hrtf_180deg					\
-	test_ir_hrtf_225deg test_ir_hrtf_270deg test_ir_hrtf_315deg					\
-	test_ir_hrtf_el90deg test_ir_hrtf_el-90deg test_ir_hrtf_el45deg			\
-	test_ir_hrtf_el-45deg test_ir_hrtf_diffuse1 test_ir_hrtf_diffuse2		\
-	test_ir_delay test_ir_delay2 test_ir_delay3 test_snd_reverb					\
-	test_wav_multichannel test_snd_zeros test_ir_sub test_ir_sub_hoa2d	\
-	test_ir_sub_nsp test_ir_partconvrev test_ir_partconvrev_offset			\
+	test_ir_simplefdn_gain test_snd_vbap3d_speakermatch									\
+	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner				\
+	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg					\
+	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg						\
+	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg					\
+	test_ir_hrtf_270deg test_ir_hrtf_315deg test_ir_hrtf_el90deg				\
+	test_ir_hrtf_el-90deg test_ir_hrtf_el45deg test_ir_hrtf_el-45deg		\
+	test_ir_hrtf_diffuse1 test_ir_hrtf_diffuse2 test_ir_delay						\
+	test_ir_delay2 test_ir_delay3 test_snd_reverb test_wav_multichannel	\
+	test_snd_zeros test_ir_sub test_ir_sub_hoa2d test_ir_sub_nsp				\
+	test_ir_partconvrev test_ir_partconvrev_offset											\
 	test_ir_micarray_az0deg test_ir_micarray_az45deg										\
 	test_ir_micarray_az75deg test_ir_micarray_az90deg										\
 	test_ir_micarray_az105deg test_ir_micarray_az135deg									\
@@ -38,6 +38,8 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4			\
 	test_snd_maskplugin_multibeam test_snd_maskplugin_multibeam1				\
 	test_snd_diffuse_inphase test_snd_diffuse_basic											\
 	test_snd_diffuse_maxre test_snd_maskplugin_multibeam_diff
+
+#test_ir_simplefdn_optimt60
 
 TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d	\
 	test_fail_duplicatenames test_fail_duplicatescenenames	\
