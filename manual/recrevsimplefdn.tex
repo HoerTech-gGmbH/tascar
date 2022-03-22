@@ -9,6 +9,12 @@ $T_{60}$ is calculated using the Sabine's formula, see
 \attr{absorption}. If an explicit $T_{60}$ is provided, this is used
 and the \attr{absorption} attribute is ignored.
 
+If the variables \attr{vcf} and \attr{vt60} are specified, an
+iterative optimization process will be started. Resulting optimized
+parameters will be printed at the console and can be used for further
+usage as long as the sampling rate or other parameters of the plugin
+are not altered.
+
 \begin{figure}[htb]
 \centering
 \fbox{\includegraphics[width=\textwidth]{fdn}}
