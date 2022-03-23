@@ -11,7 +11,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
   cardioidmod debugpos hoa2d_fuma_hos fakebf wfs hoa3d hoa3d_enc	\
   simplefdn itu51 foaconv hrtf micarray
 
-SOURCES = omni cardioidmod door generic1storder farsrc
+SOURCES = omni cardioidmod door generic1storder farsrc head
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   foa2hoadiff route oscevents oscjacktime ltcgen nearsensor dirgain	\

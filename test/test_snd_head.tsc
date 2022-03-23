@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene guiscale="6">
+    <source>
+      <sound type="head" airabsorption="false"><plugins><sine f="1780"/></plugins></sound>
+      <orientation>0 0 0 0
+      1 360 0 0</orientation>
+      <position>0 -1 0 0</position>
+    </source>
+    <receiver type="omni"/>
+  </scene>
+</session>
