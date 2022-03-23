@@ -33,7 +33,7 @@ using namespace TASCAR;
 
 static bool liblo_errflag;
 
-std::string str_get_null(void* data)
+std::string str_get_null(void*)
 {
   return "null";
 }
@@ -65,24 +65,24 @@ void err_handler(int num, const char* msg, const char* where)
   std::cout << "liblo error " << num << ": " << msg << "\n(" << where << ")\n";
 }
 
-int osc_set_bool_true(const char* path, const char* types, lo_arg** argv,
-                      int argc, lo_message msg, void* user_data)
+int osc_set_bool_true(const char*, const char*, lo_arg**, int, lo_message,
+                      void* user_data)
 {
   if(user_data)
     *(bool*)(user_data) = true;
   return 0;
 }
 
-int osc_set_bool_false(const char* path, const char* types, lo_arg** argv,
-                       int argc, lo_message msg, void* user_data)
+int osc_set_bool_false(const char*, const char*, lo_arg**, int, lo_message,
+                       void* user_data)
 {
   if(user_data)
     *(bool*)(user_data) = false;
   return 0;
 }
 
-int osc_set_float(const char* path, const char* types, lo_arg** argv, int argc,
-                  lo_message msg, void* user_data)
+int osc_set_float(const char*, const char* types, lo_arg** argv, int argc,
+                  lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = argv[0]->f;
@@ -95,7 +95,7 @@ std::string str_get_float(void* data)
 }
 
 int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
-                  lo_message msg, void* user_data)
+                  lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -110,8 +110,8 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
   return 0;
 }
 
-int osc_set_float_db(const char* path, const char* types, lo_arg** argv,
-                     int argc, lo_message msg, void* user_data)
+int osc_set_float_db(const char*, const char* types, lo_arg** argv, int argc,
+                     lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = powf(10.0f, 0.05 * argv[0]->f);
@@ -119,7 +119,7 @@ int osc_set_float_db(const char* path, const char* types, lo_arg** argv,
 }
 
 int osc_get_float_db(const char* path, const char* types, lo_arg** argv,
-                     int argc, lo_message msg, void* user_data)
+                     int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -140,8 +140,8 @@ std::string str_get_float_db(void* data)
   return TASCAR::to_string(20.0f * log10f(*(float*)(data)));
 }
 
-int osc_set_float_dbspl(const char* path, const char* types, lo_arg** argv,
-                        int argc, lo_message msg, void* user_data)
+int osc_set_float_dbspl(const char*, const char* types, lo_arg** argv, int argc,
+                        lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = powf(10.0f, 0.05 * argv[0]->f) * 2e-5f;
@@ -154,7 +154,7 @@ std::string str_get_float_dbspl(void* data)
 }
 
 int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
-                        int argc, lo_message msg, void* user_data)
+                        int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -170,8 +170,8 @@ int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_vector_float(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+int osc_set_vector_float(const char*, const char*, lo_arg** argv, int argc,
+                         lo_message, void* user_data)
 {
   if(user_data) {
     std::vector<float>* data((std::vector<float>*)user_data);
@@ -182,9 +182,8 @@ int osc_set_vector_float(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_vector_float_dbspl(const char* path, const char* types,
-                               lo_arg** argv, int argc, lo_message msg,
-                               void* user_data)
+int osc_set_vector_float_dbspl(const char*, const char*, lo_arg** argv,
+                               int argc, lo_message, void* user_data)
 {
   if(user_data) {
     std::vector<float>* data((std::vector<float>*)user_data);
@@ -195,8 +194,8 @@ int osc_set_vector_float_dbspl(const char* path, const char* types,
   return 0;
 }
 
-int osc_set_vector_float_db(const char* path, const char* types, lo_arg** argv,
-                            int argc, lo_message msg, void* user_data)
+int osc_set_vector_float_db(const char*, const char*, lo_arg** argv, int argc,
+                            lo_message, void* user_data)
 {
   if(user_data) {
     std::vector<float>* data((std::vector<float>*)user_data);
@@ -207,8 +206,8 @@ int osc_set_vector_float_db(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_vector_double(const char* path, const char* types, lo_arg** argv,
-                          int argc, lo_message msg, void* user_data)
+int osc_set_vector_double(const char*, const char*, lo_arg** argv, int argc,
+                          lo_message, void* user_data)
 {
   if(user_data) {
     std::vector<double>* data((std::vector<double>*)user_data);
@@ -219,8 +218,8 @@ int osc_set_vector_double(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_double_db(const char* path, const char* types, lo_arg** argv,
-                      int argc, lo_message msg, void* user_data)
+int osc_set_double_db(const char*, const char* types, lo_arg** argv, int argc,
+                      lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = pow(10.0, 0.05 * argv[0]->f);
@@ -233,7 +232,7 @@ std::string str_get_double_db(void* data)
 }
 
 int osc_get_double_db(const char* path, const char* types, lo_arg** argv,
-                      int argc, lo_message msg, void* user_data)
+                      int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -254,8 +253,8 @@ std::string str_get_double_dbspl(void* data)
   return TASCAR::to_string(20.0 * log10(*(double*)(data)*5e4));
 }
 
-int osc_set_double_dbspl(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+int osc_set_double_dbspl(const char*, const char* types, lo_arg** argv,
+                         int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = pow(10.0, 0.05 * argv[0]->f) * 2e-5;
@@ -263,7 +262,7 @@ int osc_set_double_dbspl(const char* path, const char* types, lo_arg** argv,
 }
 
 int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+                         int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -279,8 +278,8 @@ int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_float_degree(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+int osc_set_float_degree(const char*, const char* types, lo_arg** argv,
+                         int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = DEG2RADf * argv[0]->f;
@@ -293,7 +292,7 @@ std::string str_get_float_degree(void* data)
 }
 
 int osc_get_float_degree(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+                         int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -309,8 +308,8 @@ int osc_get_float_degree(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_double_degree(const char* path, const char* types, lo_arg** argv,
-                          int argc, lo_message msg, void* user_data)
+int osc_set_double_degree(const char*, const char* types, lo_arg** argv,
+                          int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = DEG2RAD * argv[0]->f;
@@ -323,7 +322,7 @@ std::string str_get_double_degree(void* data)
 }
 
 int osc_get_double_degree(const char* path, const char* types, lo_arg** argv,
-                          int argc, lo_message msg, void* user_data)
+                          int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -339,8 +338,8 @@ int osc_get_double_degree(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int osc_set_double(const char* path, const char* types, lo_arg** argv, int argc,
-                   lo_message msg, void* user_data)
+int osc_set_double(const char*, const char* types, lo_arg** argv, int argc,
+                   lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = argv[0]->f;
@@ -353,7 +352,7 @@ std::string str_get_double(void* data)
 }
 
 int osc_get_double(const char* path, const char* types, lo_arg** argv, int argc,
-                   lo_message msg, void* user_data)
+                   lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -369,8 +368,8 @@ int osc_get_double(const char* path, const char* types, lo_arg** argv, int argc,
   return 0;
 }
 
-int osc_set_int32(const char* path, const char* types, lo_arg** argv, int argc,
-                  lo_message msg, void* user_data)
+int osc_set_int32(const char*, const char* types, lo_arg** argv, int argc,
+                  lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'i'))
     *(int32_t*)(user_data) = argv[0]->i;
@@ -378,7 +377,7 @@ int osc_set_int32(const char* path, const char* types, lo_arg** argv, int argc,
 }
 
 int osc_get_int32(const char* path, const char* types, lo_arg** argv, int argc,
-                  lo_message msg, void* user_data)
+                  lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -394,8 +393,8 @@ int osc_get_int32(const char* path, const char* types, lo_arg** argv, int argc,
   return 0;
 }
 
-int osc_set_uint32(const char* path, const char* types, lo_arg** argv, int argc,
-                   lo_message msg, void* user_data)
+int osc_set_uint32(const char*, const char* types, lo_arg** argv, int argc,
+                   lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'i'))
     *(uint32_t*)(user_data) = (uint32_t)(argv[0]->i);
@@ -418,7 +417,7 @@ std::string str_get_string(void* data)
 }
 
 int osc_get_uint32(const char* path, const char* types, lo_arg** argv, int argc,
-                   lo_message msg, void* user_data)
+                   lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -434,8 +433,8 @@ int osc_get_uint32(const char* path, const char* types, lo_arg** argv, int argc,
   return 0;
 }
 
-int osc_set_bool(const char* path, const char* types, lo_arg** argv, int argc,
-                 lo_message msg, void* user_data)
+int osc_set_bool(const char*, const char* types, lo_arg** argv, int argc,
+                 lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'i'))
     *(bool*)(user_data) = (argv[0]->i != 0);
@@ -448,7 +447,7 @@ std::string str_get_bool(void* data)
 }
 
 int osc_get_bool(const char* path, const char* types, lo_arg** argv, int argc,
-                 lo_message msg, void* user_data)
+                 lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -463,8 +462,8 @@ int osc_get_bool(const char* path, const char* types, lo_arg** argv, int argc,
   return 0;
 }
 
-int osc_set_string(const char* path, const char* types, lo_arg** argv, int argc,
-                   lo_message msg, void* user_data)
+int osc_set_string(const char*, const char* types, lo_arg** argv, int argc,
+                   lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 's'))
     *(std::string*)(user_data) = &(argv[0]->s);
@@ -472,7 +471,7 @@ int osc_set_string(const char* path, const char* types, lo_arg** argv, int argc,
 }
 
 int osc_get_string(const char* path, const char* types, lo_arg** argv, int argc,
-                   lo_message msg, void* user_data)
+                   lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -488,8 +487,8 @@ int osc_get_string(const char* path, const char* types, lo_arg** argv, int argc,
   return 0;
 }
 
-int osc_send_variables(const char* path, const char* types, lo_arg** argv,
-                       int argc, lo_message msg, void* user_data)
+int osc_send_variables(const char*, const char* types, lo_arg** argv, int argc,
+                       lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     osc_server_t* srv(reinterpret_cast<osc_server_t*>(user_data));
@@ -622,7 +621,8 @@ void osc_server_t::add_float(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float, "float");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_float, "float");
 }
 
 void osc_server_t::add_double(const std::string& path, double* data,
@@ -631,7 +631,8 @@ void osc_server_t::add_double(const std::string& path, double* data,
 {
   add_method(path, "f", osc_set_double, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double, "double");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_double, "double");
 }
 
 void osc_server_t::add_float_db(const std::string& path, float* data,
@@ -640,7 +641,8 @@ void osc_server_t::add_float_db(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float_db, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_db, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float_db, "float");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_float_db, "float");
 }
 
 void osc_server_t::add_float_dbspl(const std::string& path, float* data,
@@ -649,7 +651,8 @@ void osc_server_t::add_float_dbspl(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float_dbspl, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_dbspl, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float_dbspl, "float");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_float_dbspl, "float");
 }
 
 void osc_server_t::add_vector_float_dbspl(const std::string& path,
@@ -694,7 +697,8 @@ void osc_server_t::add_double_db(const std::string& path, double* data,
 {
   add_method(path, "f", osc_set_double_db, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double_db, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double_db, "double");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_double_db, "double");
 }
 
 void osc_server_t::add_double_dbspl(const std::string& path, double* data,
@@ -703,7 +707,8 @@ void osc_server_t::add_double_dbspl(const std::string& path, double* data,
 {
   add_method(path, "f", osc_set_double_dbspl, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_double_dbspl, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double_dbspl, "double");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_double_dbspl, "double");
 }
 
 void osc_server_t::add_float_degree(const std::string& path, float* data,
@@ -712,7 +717,8 @@ void osc_server_t::add_float_degree(const std::string& path, float* data,
 {
   add_method(path, "f", osc_set_float_degree, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_float_degree, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_float_degree, "float");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_float_degree, "float");
 }
 
 void osc_server_t::add_double_degree(const std::string& path, double* data,
@@ -722,7 +728,8 @@ void osc_server_t::add_double_degree(const std::string& path, double* data,
   add_method(path, "f", osc_set_double_degree, data, true, true, range,
              comment);
   add_method(path + "/get", "ss", osc_get_double_degree, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_double_degree, "double");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_double_degree, "double");
 }
 
 void osc_server_t::add_bool_true(const std::string& path, bool* data,
@@ -742,7 +749,8 @@ void osc_server_t::add_bool(const std::string& path, bool* data,
 {
   add_method(path, "i", osc_set_bool, data, true, true, "bool", comment);
   add_method(path + "/get", "ss", osc_get_bool, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_bool, "bool");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_bool, "bool");
 }
 
 void osc_server_t::add_int(const std::string& path, int32_t* data,
@@ -750,7 +758,8 @@ void osc_server_t::add_int(const std::string& path, int32_t* data,
 {
   add_method(path, "i", osc_set_int32, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_int32, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_int, "int");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_int, "int");
 }
 
 void osc_server_t::add_uint(const std::string& path, uint32_t* data,
@@ -759,7 +768,8 @@ void osc_server_t::add_uint(const std::string& path, uint32_t* data,
 {
   add_method(path, "i", osc_set_uint32, data, true, true, range, comment);
   add_method(path + "/get", "ss", osc_get_uint32, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_uint, "uint");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_uint, "uint");
 }
 
 void osc_server_t::add_string(const std::string& path, std::string* data,
@@ -767,7 +777,8 @@ void osc_server_t::add_string(const std::string& path, std::string* data,
 {
   add_method(path, "s", osc_set_string, data, true, true, "string", comment);
   add_method(path + "/get", "ss", osc_get_string, data, false);
-  datamap[prefix+path] = data_element_t(prefix+path, data, str_get_string, "string");
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_string, "string");
 }
 
 void osc_server_t::activate()

@@ -229,8 +229,8 @@ void TASCAR::receivermod_base_speaker_t::validate_attributes(
 }
 
 void TASCAR::receivermod_base_speaker_t::add_diffuse_sound_field(
-    const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output,
-    receivermod_base_t::data_t* sd)
+    const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>&,
+    receivermod_base_t::data_t*)
 {
   spkpos.add_diffuse_sound_field(chunk);
 }

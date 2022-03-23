@@ -78,17 +78,29 @@ public:
   virtual ~jackc_t();
   virtual void add_input_port(const std::string& name);
   virtual void add_output_port(const std::string& name);
-  void connect_in(unsigned int port,const std::string& pname,bool btry=false, bool allowoutputsource=false);
-  void connect_out(unsigned int port,const std::string& pname,bool btry=false);
-  size_t get_num_input_ports() const {return inPort.size();};
-  size_t get_num_output_ports() const {return outPort.size();};
+  void connect_in(unsigned int port, const std::string& pname,
+                  bool btry = false, bool allowoutputsource = false);
+  void connect_out(unsigned int port, const std::string& pname,
+                   bool btry = false);
+  size_t get_num_input_ports() const { return inPort.size(); };
+  size_t get_num_output_ports() const { return outPort.size(); };
   std::vector<std::string> get_input_ports() const { return input_port_names; };
-  std::vector<std::string> get_output_ports() const { return output_port_names; };
+  std::vector<std::string> get_output_ports() const
+  {
+    return output_port_names;
+  };
+
 protected:
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) { return 0; };
+  virtual int process(jack_nframes_t, const std::vector<float*>&,
+                      const std::vector<float*>&)
+  {
+    return 0;
+  };
+
 private:
-  static int process_(jack_nframes_t nframes, void *arg);
+  static int process_(jack_nframes_t nframes, void* arg);
   int process_(jack_nframes_t nframes);
+
 private:
   std::vector<jack_port_t*> inPort;
   std::vector<jack_port_t*> outPort;
@@ -100,15 +112,23 @@ private:
 
 class jackc_db_t : public jackc_t {
 public:
-  jackc_db_t(const std::string& clientname,jack_nframes_t fragsize);
+  jackc_db_t(const std::string& clientname, jack_nframes_t fragsize);
   virtual ~jackc_db_t();
   virtual void add_input_port(const std::string& name);
   virtual void add_output_port(const std::string& name);
+
 protected:
-  virtual int inner_process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer) { return 0; };
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
+  virtual int inner_process(jack_nframes_t, const std::vector<float*>&,
+                            const std::vector<float*>&)
+  {
+    return 0;
+  };
+  virtual int process(jack_nframes_t nframes,
+                      const std::vector<float*>& inBuffer,
+                      const std::vector<float*>& outBuffer);
+
 private:
-  static void * service(void* h);
+  static void* service(void* h);
   void service();
   std::vector<float*> dbinBuffer[2];
   std::vector<float*> dboutBuffer[2];

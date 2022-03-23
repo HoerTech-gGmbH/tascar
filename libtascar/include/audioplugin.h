@@ -51,7 +51,7 @@ namespace TASCAR {
     audioplugin_base_t( const audioplugin_cfg_t& cfg );
     virtual ~audioplugin_base_t();
     virtual void ap_process(std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp) = 0;
-    virtual void add_variables( TASCAR::osc_server_t* srv ) {};
+    virtual void add_variables( TASCAR::osc_server_t*) {};
     const std::string& get_name() const { return name; };
     std::string get_fullname() const { return parentname+"."+name; };
     const std::string& get_modname() const { return modname; };

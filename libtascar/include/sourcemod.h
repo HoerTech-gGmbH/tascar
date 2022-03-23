@@ -29,6 +29,7 @@
 
 #include "audiochunks.h"
 #include "audiostates.h"
+#include "osc_helper.h"
 #include "tascarplugin.h"
 #include "tscconfig.h"
 
@@ -43,11 +44,20 @@ namespace TASCAR {
     };
     sourcemod_base_t(tsccfg::node_t xmlsrc);
     virtual ~sourcemod_base_t();
-    virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
-    virtual bool read_source_diffuse(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t*);
-    virtual std::vector<std::string> get_connections() const { return std::vector<std::string>();};
-    virtual sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const = 0;
+    virtual bool read_source(pos_t& prel, const std::vector<wave_t>& input,
+                             wave_t& output, sourcemod_base_t::data_t*);
+    virtual bool read_source_diffuse(pos_t& prel,
+                                     const std::vector<wave_t>& input,
+                                     wave_t& output, sourcemod_base_t::data_t*);
+    virtual std::vector<std::string> get_connections() const
+    {
+      return std::vector<std::string>();
+    };
+    virtual sourcemod_base_t::data_t*
+    create_state_data(double srate, uint32_t fragsize) const = 0;
     virtual void configure();
+    virtual void add_variables(TASCAR::osc_server_t*){};
+
   protected:
   };
 
@@ -55,13 +65,18 @@ namespace TASCAR {
   public:
     sourcemod_t(tsccfg::node_t xmlsrc);
     virtual ~sourcemod_t();
-    virtual bool read_source( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
-    virtual bool read_source_diffuse( pos_t&, const std::vector<wave_t>&, wave_t&, sourcemod_base_t::data_t* );
+    virtual bool read_source(pos_t&, const std::vector<wave_t>&, wave_t&,
+                             sourcemod_base_t::data_t*);
+    virtual bool read_source_diffuse(pos_t&, const std::vector<wave_t>&,
+                                     wave_t&, sourcemod_base_t::data_t*);
     virtual std::vector<std::string> get_connections() const;
     virtual void configure();
     virtual void release();
     void post_prepare();
-    virtual sourcemod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
+    virtual sourcemod_base_t::data_t*
+    create_state_data(double srate, uint32_t fragsize) const;
+    virtual void add_variables(TASCAR::osc_server_t* srv);
+
   private:
     sourcemod_t(const sourcemod_t&);
     std::string sourcetype;
@@ -69,10 +84,9 @@ namespace TASCAR {
     TASCAR::sourcemod_base_t* libdata;
   };
 
-}
+} // namespace TASCAR
 
-#define REGISTER_SOURCEMOD(x) TASCAR_PLUGIN( sourcemod_base_t, tsccfg::node_t, x )
-
+#define REGISTER_SOURCEMOD(x) TASCAR_PLUGIN(sourcemod_base_t, tsccfg::node_t, x)
 
 #endif
 
@@ -84,4 +98,3 @@ namespace TASCAR {
  * compile-command: "make -C .."
  * End:
  */
-

@@ -597,19 +597,19 @@ namespace TASCAR {
     {
       axis *= sinf(0.5f * angle);
       w = cosf(0.5f * angle);
-      x = axis.x;
-      y = axis.y;
-      z = axis.z;
+      x = (float)(axis.x);
+      y = (float)(axis.y);
+      z = (float)(axis.z);
     };
     inline void set_euler(const zyx_euler_t& eul)
     {
       // Abbreviations for the various angular functions
-      float cy = cosf(eul.z * 0.5);
-      float sy = sinf(eul.z * 0.5);
-      float cp = cosf(eul.y * 0.5);
-      float sp = sinf(eul.y * 0.5);
-      float cr = cosf(eul.x * 0.5);
-      float sr = sinf(eul.x * 0.5);
+      float cy = cosf((float)(eul.z) * 0.5f);
+      float sy = sinf((float)(eul.z) * 0.5f);
+      float cp = cosf((float)(eul.y) * 0.5f);
+      float sp = sinf((float)(eul.y) * 0.5f);
+      float cr = cosf((float)(eul.x) * 0.5f);
+      float sr = sinf((float)(eul.x) * 0.5f);
       w = cr * cp * cy + sr * sp * sy;
       x = sr * cp * cy - cr * sp * sy;
       y = cr * sp * cy + sr * cp * sy;
@@ -617,7 +617,7 @@ namespace TASCAR {
     };
     inline quaternion_t inverse() const
     {
-      return conjugate().scale(1.0 / norm());
+      return conjugate().scale(1.0f / norm());
     };
     inline float norm() const { return w * w + x * x + y * y + z * z; };
     inline quaternion_t conjugate() const
@@ -630,7 +630,7 @@ namespace TASCAR {
     };
     inline void rotate(TASCAR::pos_t& p)
     {
-      quaternion_t qv(0.0f, p.x, p.y, p.z);
+      quaternion_t qv(0.0f, (float)(p.x), (float)(p.y), (float)(p.z));
       qv = (*this) * qv * inverse();
       p.x = qv.x;
       p.y = qv.y;

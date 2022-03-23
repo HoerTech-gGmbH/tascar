@@ -208,6 +208,60 @@ namespace TASCAR {
     double z1, z2;
   };
 
+  class biquadf_t {
+  public:
+    biquadf_t(float a1, float a2, float b0, float b1, float b2)
+        : a1_(a1), a2_(a2), b0_(b0), b1_(b1), b2_(b2), z1(0.0), z2(0.0){};
+    biquadf_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0){};
+    void set_gzp(float g, float zero_r, float zero_phi, float pole_r,
+                 float pole_phi);
+    void set_analog(float g, float z1, float z2, float p1, float p2,
+                    float fs);
+    void set_analog_poles(float g, float p1, float p2, float fs);
+    void set_coefficients(float a1, float a2, float b0, float b1, float b2)
+    {
+      a1_ = a1;
+      a2_ = a2;
+      b0_ = b0;
+      b1_ = b1;
+      b2_ = b2;
+    };
+    // void set_analog( float g, float f_pole, float fs );
+    void set_highpass(float fc, float fs, bool phaseinvert = false);
+    void set_lowpass(float fc, float fs, bool phaseinvert = false);
+    void set_pareq(float f, float fs, float gain, float q);
+    inline float filter(float in)
+    {
+      float out = z1 + b0_ * in;
+      z1 = z2 + b1_ * in - a1_ * out;
+      z2 = b2_ * in - a2_ * out;
+      return out;
+    };
+    inline void filter(wave_t& w)
+    {
+      float* wend(w.d + w.n);
+      for(float* v = w.d; v < wend; ++v)
+        *v = filter(*v);
+    };
+    std::complex<float> response(float phi) const;
+    std::complex<float> response_a(float phi) const;
+    std::complex<float> response_b(float phi) const;
+    float get_a1() const { return a1_; };
+    float get_a2() const { return a2_; };
+    float get_b0() const { return b0_; };
+    float get_b1() const { return b1_; };
+    float get_b2() const { return b2_; };
+    void clear()
+    {
+      z1 = 0.0;
+      z2 = 0.0;
+    };
+
+  protected:
+    float a1_, a2_, b0_, b1_, b2_;
+    float z1, z2;
+  };
+
   class bandpass_t {
   public:
     bandpass_t(double f1, double f2, double fs);

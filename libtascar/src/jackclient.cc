@@ -36,7 +36,7 @@
 static std::string errmsg("");
 
 jackc_portless_t::jackc_portless_t(const std::string& clientname)
-  : srate(0), active(false), xruns(0), xrun_latency(0), shutdown(false)
+    : srate(0), active(false), xruns(0), xrun_latency(0), shutdown(false)
 {
   jack_status_t jstat;
   // jack_options_t opt(JackUseExactName |JackNoStartServer);
@@ -532,8 +532,7 @@ void jackc_db_t::add_output_port(const std::string& name)
   jackc_t::add_output_port(name);
 }
 
-int jackc_db_t::process(jack_nframes_t nframes,
-                        const std::vector<float*>& inBuffer,
+int jackc_db_t::process(jack_nframes_t, const std::vector<float*>& inBuffer,
                         const std::vector<float*>& outBuffer)
 {
   if(!active)

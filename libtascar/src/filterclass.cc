@@ -26,6 +26,7 @@
 #include <string.h>
 
 const std::complex<double> i(0.0, 1.0);
+const std::complex<float> i_f(0.0f, 1.0f);
 
 
 TASCAR::filter_t::filter_t(unsigned int ilen_A,
@@ -256,6 +257,15 @@ void TASCAR::biquad_t::set_gzp( double g, double zero_r, double zero_phi, double
   b2_ = g*zero_r*zero_r;
 }
 
+void TASCAR::biquadf_t::set_gzp( float g, float zero_r, float zero_phi, float pole_r, float pole_phi )
+{
+  a1_ = -2.0f*pole_r*cosf(pole_phi);
+  a2_ = pole_r*pole_r;
+  b0_ = g;
+  b1_ = -2.0f*g*zero_r*cosf(zero_phi);
+  b2_ = g*zero_r*zero_r;
+}
+
 double fd2fa( double fs, double fd )
 {
   return 2.0*fs*tan( fd/(2.0*fs) );
@@ -264,6 +274,11 @@ double fd2fa( double fs, double fd )
 double fa2fd( double fs, double fa )
 {
   return 2.0*fs*atan( fa/(2.0*fs) );
+}
+
+float fa2fdf( float fs, float fa )
+{
+  return 2.0f*fs*atanf( fa/(2.0f*fs) );
 }
 
 void TASCAR::biquad_t::set_analog( double g, double z1, double z2, double p1, double p2, double fs )
@@ -277,6 +292,24 @@ void TASCAR::biquad_t::set_analog( double g, double z1, double z2, double p1, do
   double z2_((2.0+z2)/(2.0-z2));
   double p1_((2.0+p1)/(2.0-p1));
   double p2_((2.0+p2)/(2.0-p2));
+  b1_ = -(z1_+z2_)*g;
+  b2_ = z1_*z2_*g;
+  b0_ = g;
+  a1_ = -(p1_+p2_);
+  a2_ = p1_*p2_;
+}
+
+void TASCAR::biquadf_t::set_analog( float g, float z1, float z2, float p1, float p2, float fs )
+{
+  z1 = fa2fdf(fs,z1)/fs;
+  z2 = fa2fdf(fs,z2)/fs;
+  p1 = fa2fdf(fs,p1)/fs;
+  p2 = fa2fdf(fs,p2)/fs;
+  g *= (2.0f-z1)/(2.0f-p1) * (2.0f-z2)/(2.0f-p2);
+  float z1_((2.0f+z1)/(2.0f-z1));
+  float z2_((2.0f+z2)/(2.0f-z2));
+  float p1_((2.0f+p1)/(2.0f-p1));
+  float p2_((2.0f+p2)/(2.0f-p2));
   b1_ = -(z1_+z2_)*g;
   b2_ = z1_*z2_*g;
   b0_ = g;
@@ -300,6 +333,22 @@ void TASCAR::biquad_t::set_analog_poles( double g, double p1, double p2, double 
   a2_ = p1_*p2_;
 }
 
+void TASCAR::biquadf_t::set_analog_poles( float g, float p1, float p2, float fs )
+{
+  p1 = fa2fdf(fs,p1)/fs;
+  p2 = fa2fdf(fs,p2)/fs;
+  g *= 1.0f/(fs*(2.0f-p1)*(2.0f-p2)*fs);
+  float z1_(-1.0f);
+  float z2_(-1.0f);
+  float p1_((2.0f+p1)/(2.0f-p1));
+  float p2_((2.0f+p2)/(2.0f-p2));
+  b1_ = -(z1_+z2_)*g;
+  b2_ = z1_*z2_*g;
+  b0_ = g;
+  a1_ = -(p1_+p2_);
+  a2_ = p1_*p2_;
+}
+
 std::complex<double> TASCAR::biquad_t::response( double phi ) const
 {
   return response_b(phi)/response_a(phi);
@@ -316,6 +365,25 @@ std::complex<double> TASCAR::biquad_t::response_b( double phi ) const
 {
   std::complex<double> z1(std::exp(-i*phi));
   std::complex<double> z2(z1*z1);
+  return b0_ + b1_*z1 + b2_*z2;
+}
+
+std::complex<float> TASCAR::biquadf_t::response( float phi ) const
+{
+  return response_b(phi)/response_a(phi);
+}
+
+std::complex<float> TASCAR::biquadf_t::response_a( float phi ) const
+{
+  std::complex<float> z1(std::exp(-i_f*phi));
+  std::complex<float> z2(z1*z1);
+  return 1.0f + a1_*z1 + a2_*z2;
+}
+
+std::complex<float> TASCAR::biquadf_t::response_b( float phi ) const
+{
+  std::complex<float> z1(std::exp(-i_f*phi));
+  std::complex<float> z2(z1*z1);
   return b0_ + b1_*z1 + b2_*z2;
 }
 
@@ -378,6 +446,47 @@ void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
         2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
         (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
         (t_sq + 1.0 - g * Bc) * inv_a0);
+  }
+}
+
+void TASCAR::biquadf_t::set_highpass(float fc, float fs, bool phaseinvert)
+{
+  set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+  float g(std::abs(response(TASCAR_PI)));
+  if(phaseinvert)
+    g *= -1.0;
+  set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+}
+
+void TASCAR::biquadf_t::set_lowpass(float fc, float fs, bool phaseinvert)
+{
+  set_gzp(1.0, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+  float g(std::abs(response(0.0)));
+  if(phaseinvert)
+    g *= -1.0;
+  set_gzp(1.0 / g, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+}
+
+void TASCAR::biquadf_t::set_pareq(float f, float fs, float gain, float q)
+{
+  // bilinear transformation
+  float t = 1.0f / tanf(TASCAR_PI * f / fs);
+  float t_sq = t * t;
+  float Bc = t / q;
+  if(gain < 0.0f) {
+    float g = powf(10.0f, (-gain / 20.0f));
+    float inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
+    set_coefficients(
+        2.0f * (1.0f - t_sq) * inv_a0, (t_sq + 1.0f - g * Bc) * inv_a0,
+        (t_sq + 1.0f + Bc) * inv_a0, 2.0f * (1.0f - t_sq) * inv_a0,
+        (t_sq + 1.0f - Bc) * inv_a0);
+  } else {
+    float g = powf(10.0f, (gain / 20.0f));
+    float inv_a0 = 1.0f / (t_sq + 1.0f + Bc);
+    set_coefficients(
+        2.0f * (1.0f - t_sq) * inv_a0, (t_sq + 1.0f - Bc) * inv_a0,
+        (t_sq + 1.0f + g * Bc) * inv_a0, 2.0f * (1.0f - t_sq) * inv_a0,
+        (t_sq + 1.0f - g * Bc) * inv_a0);
   }
 }
 

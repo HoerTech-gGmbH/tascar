@@ -323,8 +323,7 @@ void jackrec_async_t::service()
 
 int jackrec_async_t::process(jack_nframes_t nframes,
                              const std::vector<float*>& inBuffer,
-                             const std::vector<float*>& outBuffer,
-                             uint32_t tp_frame, bool tp_rolling)
+                             const std::vector<float*>&, uint32_t, bool)
 {
   size_t ch(inBuffer.size());
   for(size_t k = 0; k < nframes; ++k)

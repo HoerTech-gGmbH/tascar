@@ -175,8 +175,10 @@ void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
 {
   if(verts.size() < 3)
     throw TASCAR::ErrMsg("A polygon needs at least three vertices.");
+  if( verts.size() > (size_t)1<<31)
+    throw TASCAR::ErrMsg("Too many vertices.");
   local_verts_ = verts;
-  N = verts.size();
+  N = (uint32_t)(verts.size());
   verts_.resize(N);
   edges_.resize(N);
   vert_normals_.resize(N);
@@ -407,7 +409,7 @@ uint32_t findindex2(const std::vector<Vector3<double>>& spklist,
        (spklist[k].z == vertex.z))
       return k;
   throw TASCAR::ErrMsg("Simplex index not found in list");
-  return spklist.size();
+  return (uint32_t)(spklist.size());
 }
 
 TASCAR::quickhull_t::quickhull_t(const std::vector<pos_t>& mesh)

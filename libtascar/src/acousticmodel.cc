@@ -464,7 +464,7 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
 /**
    \ingroup callgraph
  */
-uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t& tp)
+uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
 {
   pos_t prel;
   double d(0.0);

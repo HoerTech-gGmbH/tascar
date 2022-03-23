@@ -161,7 +161,8 @@ void make_common(std::map<std::string, std::set<std::string>>& parentchildren,
         elems[elem].parents.insert(commonname);
       }
     }
-    elems[commonname] = {commonname, commonattr};
+    std::set<std::string> parents;
+    elems[commonname] = {commonname, commonattr, parents, ""};
   }
 }
 
@@ -673,7 +674,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
 #ifdef USEPUGIXML
 void del_whitespace(tsccfg::node_t node) {}
 #elif defined(USEXERCESXML)
-void del_whitespace(tsccfg::node_t node) {}
+void del_whitespace(tsccfg::node_t) {}
 #else
 void del_whitespace(xmlpp::Node* node)
 {

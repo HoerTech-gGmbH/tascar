@@ -181,7 +181,7 @@ TASCAR::module_t::module_t(const TASCAR::module_cfg_t& cfg)
   libname = PLUGINPREFIX + libname;
 #endif
   libname += name + TASCAR::dynamic_lib_extension();
-  lib = dlopen((TASCAR::get_libdir()+libname).c_str(), RTLD_NOW);
+  lib = dlopen((TASCAR::get_libdir() + libname).c_str(), RTLD_NOW);
   if(!lib)
     throw TASCAR::ErrMsg("Unable to open module \"" + name +
                          "\": " + dlerror());
@@ -211,7 +211,6 @@ void TASCAR::module_t::configure()
     throw;
   }
 }
-
 
 void TASCAR::module_t::post_prepare()
 {
@@ -356,7 +355,7 @@ void TASCAR::session_core_t::start_initcmd()
     memset(ctmp, 0, sizeof(ctmp));
     snprintf(ctmp, sizeof(ctmp), "sh -c \"%s >/dev/null & echo \\$!;\"",
              initcmd.c_str());
-    ctmp[sizeof(ctmp)-1] = 0;
+    ctmp[sizeof(ctmp) - 1] = 0;
     h_pipe_initcmd = popen(ctmp, "r");
     if(fgets(ctmp, 1024, h_pipe_initcmd) != NULL) {
       pid_initcmd = atoi(ctmp);
@@ -711,10 +710,9 @@ void TASCAR::session_t::start()
   }
 }
 
-int TASCAR::session_t::process(jack_nframes_t nframes,
-                               const std::vector<float*>& inBuffer,
-                               const std::vector<float*>& outBuffer,
-                               uint32_t tp_frame, bool tp_rolling)
+int TASCAR::session_t::process(jack_nframes_t, const std::vector<float*>&,
+                               const std::vector<float*>&, uint32_t tp_frame,
+                               bool tp_rolling)
 {
   double t(period_time * (double)tp_frame);
   uint32_t next_tp_frame(tp_frame);
@@ -819,7 +817,7 @@ TASCAR::module_base_t::module_base_t(const TASCAR::module_cfg_t& cfg)
 {
 }
 
-void TASCAR::module_base_t::update(uint32_t frame, bool running) {}
+void TASCAR::module_base_t::update(uint32_t, bool) {}
 
 TASCAR::module_base_t::~module_base_t() {}
 
@@ -887,8 +885,8 @@ TASCAR::session_t::find_audio_ports(const std::vector<std::string>& pattern)
     for(auto p_ap = all_ports.begin(); p_ap != all_ports.end(); ++p_ap) {
       // check if name is matching:
       std::string name((*p_ap)->get_ctlname());
-      if((TASCAR::fnmatch(i_pattern->c_str(), name.c_str(), true) == 0)
-         || (*i_pattern == "*"))
+      if((TASCAR::fnmatch(i_pattern->c_str(), name.c_str(), true) == 0) ||
+         (*i_pattern == "*"))
         retv.push_back(*p_ap);
     }
   }
@@ -972,8 +970,8 @@ void TASCAR::actor_module_t::add_transformation(const TASCAR::c6dof_t& tf,
 
 namespace OSCSession {
 
-  int _addtime(const char* path, const char* types, lo_arg** argv, int argc,
-               lo_message msg, void* user_data)
+  int _addtime(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       double cur_time(std::max(
@@ -985,8 +983,8 @@ namespace OSCSession {
     return 1;
   }
 
-  int _locate(const char* path, const char* types, lo_arg** argv, int argc,
-              lo_message msg, void* user_data)
+  int _locate(const char*, const char* types, lo_arg** argv, int argc,
+              lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((TASCAR::session_t*)user_data)->tp_locate(argv[0]->f);
@@ -995,8 +993,8 @@ namespace OSCSession {
     return 1;
   }
 
-  int _locatei(const char* path, const char* types, lo_arg** argv, int argc,
-               lo_message msg, void* user_data)
+  int _locatei(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'i')) {
       ((TASCAR::session_t*)user_data)->tp_locate((uint32_t)(argv[0]->i));
@@ -1005,8 +1003,8 @@ namespace OSCSession {
     return 1;
   }
 
-  int _stop(const char* path, const char* types, lo_arg** argv, int argc,
-            lo_message msg, void* user_data)
+  int _stop(const char*, const char*, lo_arg**, int argc, lo_message,
+            void* user_data)
   {
     if(argc == 0) {
       ((TASCAR::session_t*)user_data)->tp_stop();
@@ -1015,8 +1013,8 @@ namespace OSCSession {
     return 1;
   }
 
-  int _start(const char* path, const char* types, lo_arg** argv, int argc,
-             lo_message msg, void* user_data)
+  int _start(const char*, const char*, lo_arg**, int argc, lo_message,
+             void* user_data)
   {
     if(argc == 0) {
       ((TASCAR::session_t*)user_data)->tp_start();
@@ -1025,8 +1023,8 @@ namespace OSCSession {
     return 1;
   }
 
-  int _playrange(const char* path, const char* types, lo_arg** argv, int argc,
-                 lo_message msg, void* user_data)
+  int _playrange(const char*, const char* types, lo_arg** argv, int argc,
+                 lo_message, void* user_data)
   {
     if((argc == 2) && (types[0] == 'f') && (types[1] == 'f')) {
       ((TASCAR::session_t*)user_data)->tp_playrange(argv[0]->f, argv[1]->f);
@@ -1035,8 +1033,8 @@ namespace OSCSession {
     return 1;
   }
 
-  int _unload_modules(const char* path, const char* types, lo_arg** argv,
-                      int argc, lo_message msg, void* user_data)
+  int _unload_modules(const char*, const char*, lo_arg**, int argc, lo_message,
+                      void* user_data)
   {
     if(argc == 0) {
       ((TASCAR::session_t*)user_data)->unload_modules();

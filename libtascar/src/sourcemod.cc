@@ -26,41 +26,44 @@
 
 using namespace TASCAR;
 
-TASCAR_RESOLVER( sourcemod_base_t, tsccfg::node_t );
+TASCAR_RESOLVER(sourcemod_base_t, tsccfg::node_t);
 
-sourcemod_t::sourcemod_t( tsccfg::node_t cfg )
-  : sourcemod_base_t( cfg ),
-    sourcetype("omni"),
-    lib( NULL ),
-    libdata( NULL )
+sourcemod_t::sourcemod_t(tsccfg::node_t cfg)
+    : sourcemod_base_t(cfg), sourcetype("omni"), lib(NULL), libdata(NULL)
 {
-  get_attribute( "type", sourcetype, "","source directivity type, e.g., omni, cardioid" );
-  sourcetype = env_expand( sourcetype );
-  std::string libname( "tascarsource_" );
-  #ifdef PLUGINPREFIX
+  get_attribute("type", sourcetype, "",
+                "source directivity type, e.g., omni, cardioid");
+  sourcetype = env_expand(sourcetype);
+  std::string libname("tascarsource_");
+#ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
-  #endif
+#endif
   libname += sourcetype + TASCAR::dynamic_lib_extension();
-  lib = dlopen((TASCAR::get_libdir()+libname).c_str(), RTLD_NOW );
-  if( !lib )
-    throw TASCAR::ErrMsg("Unable to open source module \""+sourcetype+"\": "+dlerror());
-  try{
-    sourcemod_base_t_resolver( &libdata, cfg, lib, libname );
+  lib = dlopen((TASCAR::get_libdir() + libname).c_str(), RTLD_NOW);
+  if(!lib)
+    throw TASCAR::ErrMsg("Unable to open source module \"" + sourcetype +
+                         "\": " + dlerror());
+  try {
+    sourcemod_base_t_resolver(&libdata, cfg, lib, libname);
   }
-  catch( ... ){
+  catch(...) {
     dlclose(lib);
     throw;
   }
 }
 
-bool sourcemod_t::read_source(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t* data)
+bool sourcemod_t::read_source(pos_t& prel, const std::vector<wave_t>& input,
+                              wave_t& output, sourcemod_base_t::data_t* data)
 {
-  return libdata->read_source( prel, input, output, data );
+  return libdata->read_source(prel, input, output, data);
 }
 
-bool sourcemod_t::read_source_diffuse(pos_t& prel, const std::vector<wave_t>& input, wave_t& output, sourcemod_base_t::data_t* data)
+bool sourcemod_t::read_source_diffuse(pos_t& prel,
+                                      const std::vector<wave_t>& input,
+                                      wave_t& output,
+                                      sourcemod_base_t::data_t* data)
 {
-  return libdata->read_source_diffuse( prel, input, output, data );
+  return libdata->read_source_diffuse(prel, input, output, data);
 }
 
 std::vector<std::string> sourcemod_t::get_connections() const
@@ -71,7 +74,7 @@ std::vector<std::string> sourcemod_t::get_connections() const
 void sourcemod_t::configure()
 {
   sourcemod_base_t::configure();
-  libdata->prepare( cfg() );
+  libdata->prepare(cfg());
 }
 
 void sourcemod_t::post_prepare()
@@ -86,26 +89,34 @@ void sourcemod_t::release()
   libdata->release();
 }
 
-sourcemod_base_t::data_t* sourcemod_t::create_state_data(double srate,uint32_t fragsize) const
+sourcemod_base_t::data_t*
+sourcemod_t::create_state_data(double srate, uint32_t fragsize) const
 {
-  return libdata->create_state_data(srate,fragsize);
+  return libdata->create_state_data(srate, fragsize);
 }
 
 void sourcemod_base_t::configure()
 {
-  if( n_channels != 1 )
-    throw TASCAR::ErrMsg("This source module requires 1 input channel, current configuration is "+std::to_string(n_channels)+" channels.");
+  if(n_channels != 1)
+    throw TASCAR::ErrMsg("This source module requires 1 input channel, current "
+                         "configuration is " +
+                         std::to_string(n_channels) + " channels.");
 }
 
-bool sourcemod_base_t::read_source_diffuse(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*)
+bool sourcemod_base_t::read_source_diffuse(
+    TASCAR::pos_t&, const std::vector<TASCAR::wave_t>& input,
+    TASCAR::wave_t& output, sourcemod_base_t::data_t*)
 {
-  if( n_channels != 1 )
+  if(n_channels != 1)
     throw TASCAR::ErrMsg("This source module requires 1 input channel.");
   output.copy(input[0]);
   return false;
 }
 
-bool sourcemod_base_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCAR::wave_t>& input, TASCAR::wave_t& output, sourcemod_base_t::data_t*)
+bool sourcemod_base_t::read_source(TASCAR::pos_t&,
+                                   const std::vector<TASCAR::wave_t>& input,
+                                   TASCAR::wave_t& output,
+                                   sourcemod_base_t::data_t*)
 {
   output.copy(input[0]);
   return false;
@@ -118,14 +129,16 @@ sourcemod_t::~sourcemod_t()
 }
 
 sourcemod_base_t::sourcemod_base_t(tsccfg::node_t xmlsrc)
-  : xml_element_t(xmlsrc)
+    : xml_element_t(xmlsrc)
 {
 }
 
-sourcemod_base_t::~sourcemod_base_t()
-{
-}
+sourcemod_base_t::~sourcemod_base_t() {}
 
+void TASCAR::sourcemod_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  return libdata->add_variables(srv);
+}
 
 /*
  * Local Variables:
@@ -135,4 +148,3 @@ sourcemod_base_t::~sourcemod_base_t()
  * compile-command: "make -C .."
  * End:
  */
-

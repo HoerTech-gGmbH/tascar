@@ -569,9 +569,9 @@ source_panel_t::source_panel_t(lo_address client_addr)
   add(box);
 }
 
-
-source_panel_t::source_panel_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
-  : Gtk::ScrolledWindow(cobject),use_osc(false)
+source_panel_t::source_panel_t(BaseObjectType* cobject,
+                               const Glib::RefPtr<Gtk::Builder>&)
+    : Gtk::ScrolledWindow(cobject), use_osc(false)
 {
   add(box);
 }

@@ -68,7 +68,7 @@ namespace TASCAR {
     virtual void add_diffuse_sound_field(const amb1wave_t& chunk,
                                          std::vector<wave_t>& output,
                                          receivermod_base_t::data_t*) = 0;
-    virtual void postproc(std::vector<wave_t>& output){};
+    virtual void postproc(std::vector<wave_t>&){};
     virtual std::vector<std::string> get_connections() const
     {
       return std::vector<std::string>();
@@ -81,7 +81,7 @@ namespace TASCAR {
       return create_state_data(srate, fragsize);
     };
 
-    virtual void add_variables(TASCAR::osc_server_t* srv){};
+    virtual void add_variables(TASCAR::osc_server_t*){};
     /**
        Return the delay compensation in seconds needed by a receiver
        implementation.
