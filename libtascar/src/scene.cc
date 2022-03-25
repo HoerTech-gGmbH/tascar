@@ -96,11 +96,11 @@ void diff_snd_field_obj_t::configure()
   if(source)
     delete source;
   reset_meters();
-  addmeter(f_sample);
+  addmeter((float)f_sample);
   source = new TASCAR::Acousticmodel::diffuse_t(dynobject_t::e, n_fragment,
                                                 *(rmsmeter[0]), get_name());
   source->size = size;
-  source->falloff = 1.0 / std::max(falloff, 1.0e-10);
+  source->falloff = 1.0f / std::max(falloff, 1.0e-10f);
   source->prepare(cfg());
 }
 
@@ -1271,7 +1271,7 @@ void diffuse_reverb_t::configure()
   source = new TASCAR::Acousticmodel::diffuse_t(dynobject_t::e, n_fragment,
                                                 *(rmsmeter.back()), get_name());
   source->size = volumetric;
-  source->falloff = 1.0 / std::max(falloff, 1.0e-10);
+  source->falloff = 1.0f / std::max(falloff, 1.0e-10f);
   source->prepare(cfg());
   for(uint32_t acn = 0; acn < AMB11ACN::idx::channels; ++acn)
     source->audio[acn].use_external_buffer(outchannels[acn].n,

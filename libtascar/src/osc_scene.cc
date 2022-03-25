@@ -235,23 +235,23 @@ void osc_scene_t::add_object_methods(TASCAR::osc_server_t* srv,
 void osc_scene_t::add_face_object_methods(TASCAR::osc_server_t* srv,
                                           TASCAR::Scene::face_object_t* o)
 {
-  srv->add_double("/" + scene->name + "/" + o->get_name() + "/reflectivity",
-                  &(o->reflectivity));
-  srv->add_double("/" + scene->name + "/" + o->get_name() + "/damping",
-                  &(o->damping));
-  srv->add_double("/" + scene->name + "/" + o->get_name() + "/scattering",
-                  &(o->scattering));
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/reflectivity",
+                 &(o->reflectivity), "[0,1]", "Reflectivity of object");
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/damping",
+                 &(o->damping), "[0,1[", "Damping coefficient");
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/scattering",
+                 &(o->scattering), "[0,1]", "Scattering coefficient");
 }
 
 void osc_scene_t::add_face_group_methods(TASCAR::osc_server_t* srv,
                                          TASCAR::Scene::face_group_t* o)
 {
-  srv->add_double("/" + scene->name + "/" + o->get_name() + "/reflectivity",
-                  &(o->reflectivity));
-  srv->add_double("/" + scene->name + "/" + o->get_name() + "/damping",
-                  &(o->damping));
-  srv->add_double("/" + scene->name + "/" + o->get_name() + "/scattering",
-                  &(o->scattering));
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/reflectivity",
+                 &(o->reflectivity), "[0,1]", "Reflectivity of object");
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/damping",
+                 &(o->damping), "[0,1[", "Damping coefficient");
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/scattering",
+                 &(o->scattering), "[0,1]", "Scattering coefficient");
 }
 
 void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,
@@ -283,7 +283,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   srv->add_uint("/ismmin", &(s->ismmin));
   srv->add_uint("/ismmax", &(s->ismmax));
   srv->add_uint("/layers", &(s->layers));
-  srv->add_double("/size", &(s->size));
+  srv->add_float("/size", &(s->size));
   s->plugins.add_variables(srv);
   srv->add_method("/pos", "fff", osc_set_sound_position, s);
   srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
@@ -316,7 +316,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,
   srv->set_prefix(ctlname);
   srv->add_method("/gain", "f", osc_set_receiver_gain, s);
   srv->add_method("/lingain", "f", osc_set_receiver_lingain, s);
-  srv->add_double_db("/diffusegain", &(s->diffusegain));
+  srv->add_float_db("/diffusegain", &(s->diffusegain),"[-30,30]","relative gain of diffuse sound field model");
   srv->add_method("/fade", "ff", osc_set_receiver_fade, s);
   srv->add_method("/fade", "fff", osc_set_receiver_fade, s);
   srv->add_uint("/ismmin", &(s->ismmin));

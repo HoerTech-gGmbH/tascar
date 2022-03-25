@@ -31,12 +31,12 @@ mask_t::mask_t()
 {
 }
 
-double mask_t::gain(const pos_t& p)
+float mask_t::gain(const pos_t& p)
 {
-  double d(nextpoint(p).norm());
-  d = 0.5+0.5*cos(TASCAR_PI*std::min(1.0,d*inv_falloff));
+  float d = (float)(nextpoint(p).norm());
+  d = 0.5f+0.5f*cosf(TASCAR_PIf*std::min(1.0f,d*inv_falloff));
   if( mask_inner )
-    return 1.0-d;
+    return 1.0f-d;
   return d;
 }
 
@@ -93,7 +93,7 @@ void receiver_t::add_licenses( licensehandler_t* lh )
   plugins.add_licenses( lh );
 }
 
-acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
+acoustic_model_t::acoustic_model_t(float c,float fs,uint32_t chunksize,
                                    source_t* src, receiver_t* receiver,
                                    const std::vector<obstacle_t*>& obstacles,
                                    const acoustic_model_t* parent, 
@@ -108,15 +108,15 @@ acoustic_model_t::acoustic_model_t(double c,double fs,uint32_t chunksize,
     obstacles_(obstacles),
     audio(chunksize),
     chunksize(audio.size()),
-    dt(1.0/std::max(1.0f,(float)chunksize)),
+    dt(1.0f/std::max(1.0f,(float)chunksize)),
     distance(1.0),
     gain(1.0),
-    dscale(fs/(c_*7782.0)),
+    dscale(fs/(c_*7782.0f)),
     air_absorption(0.5),
-    delayline((src->maxdist/c_)*fs,fs,c_,src->sincorder,64),
+    delayline((uint32_t)((src->maxdist/c_)*fs),fs,c_,src->sincorder,64),
   airabsorption_state(0.0),
   layergain(0.0),
-  dlayergain(1.0/(receiver->layerfadelen*fs)),
+  dlayergain(1.0f/(receiver->layerfadelen*fs)),
   ismorder(getorder())
 {
   pos_t prel;
@@ -147,7 +147,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
     bool layeractive(receiver_->layers & src_->layers);
     if(visible) {
       pos_t prel;
-      double nextdistance(0.0);
+      float nextdistance(0.0);
       float nextgain(1.0);
       // calculate relative geometry between source and receiver:
       float srcgainmod(1.0);
@@ -196,14 +196,13 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       nextgain *= receiver_->external_gain;
       if(receiver_->maskplug)
         nextgain *= receiver_->maskplug->get_gain(prel);
-      double next_air_absorption(exp(-nextdistance * dscale));
-      double ddistance(
-          (std::max(0.0, nextdistance - c_ * (receiver_->delaycomp +
-                                              receiver_->recdelaycomp)) -
-           distance) *
-          dt);
-      double dgain((nextgain - gain) * dt);
-      double dairabsorption((next_air_absorption - air_absorption) * dt);
+      float next_air_absorption(expf(-nextdistance * dscale));
+      float new_distance_with_delaycomp =
+          std::max(0.0f, nextdistance - c_ * (receiver_->delaycomp +
+                                              receiver_->recdelaycomp));
+      float ddistance = (new_distance_with_delaycomp - distance) * dt;
+      float dgain((nextgain - gain) * dt);
+      float dairabsorption((next_air_absorption - air_absorption) * dt);
       apply_reflectionfilter(audio);
       if(receiver_->muteonstop && (!tp.rolling)) {
         gain = 0.0;
@@ -236,21 +235,23 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           current_sample = airabsorption_state;
         }
       }
+      distance = new_distance_with_delaycomp;
       gain = nextgain;
+      air_absorption = next_air_absorption;
       if(((gain != 0) || (dgain != 0))) {
         if(src_->minlevel > 0) {
           if(audio.rms() <= src_->minlevel)
             return 0;
         }
         // add scattering:
-        double scattering(0.0);
+        float scattering(0.0);
         if(reflector)
           scattering = reflector->scattering;
         // add to receiver:
         receiver_->add_pointsource_with_scattering(
             prel,
-            std::min(TASCAR_PI2,
-                     0.25 * TASCAR_PI * src_->size / std::max(0.01, nextdistance)),
+            std::min(TASCAR_PI2f, 0.25f * TASCAR_PIf * src_->size /
+                                      std::max(0.01f, nextdistance)),
             scattering, audio, receiver_data);
         return 1;
       }
@@ -281,10 +282,10 @@ void reflector_t::apply_reflectionfilter( TASCAR::wave_t& audio, double& lpstate
   float* p_begin(audio.d);
   float* p_end(p_begin+audio.n);
   for(float* pf=p_begin;pf!=p_end;++pf)
-    *pf = (lpstate = lpstate*damping + *pf * c1);
+    *pf = (float)(lpstate = lpstate*damping + *pf * c1);
 }
 
-receiver_graph_t::receiver_graph_t( double c, double fs, uint32_t chunksize, 
+receiver_graph_t::receiver_graph_t( float c, float fs, uint32_t chunksize, 
                                     const std::vector<source_t*>& sources,
                                     const std::vector<diffuse_t*>& diffuse_sound_fields,
                                     const std::vector<reflector_t*>& reflectors,
@@ -304,16 +305,16 @@ receiver_graph_t::receiver_graph_t( double c, double fs, uint32_t chunksize,
     for(uint32_t kSrc=0;kSrc<sources.size();++kSrc)
         acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[kSrc],receiver,obstacles));
     if( receiver->render_image && (ism_order > 0) ){
-      uint32_t num_mirrors_start(acoustic_model.size());
+      auto num_mirrors_start = acoustic_model.size();
       // first order image sources:
       for(uint32_t ksrc=0;ksrc<sources.size();++ksrc)
         for(uint32_t kreflector=0;kreflector<reflectors.size();++kreflector)
           acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,sources[ksrc],receiver,obstacles,acoustic_model[ksrc],reflectors[kreflector]));
       // now higher order image sources:
-      uint32_t num_mirrors_end(acoustic_model.size());
+      auto num_mirrors_end = acoustic_model.size();
       for(uint32_t korder=1;korder<ism_order;++korder){
-        for(uint32_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;++ksrc)
-          for(uint32_t kreflector=0;kreflector<reflectors.size();++kreflector)
+        for(size_t ksrc=num_mirrors_start;ksrc<num_mirrors_end;++ksrc)
+          for(size_t kreflector=0;kreflector<reflectors.size();++kreflector)
             if( acoustic_model[ksrc]->reflector != reflectors[kreflector] )
               acoustic_model.push_back(new acoustic_model_t(c,fs,chunksize,acoustic_model[ksrc]->src_,receiver,obstacles,acoustic_model[ksrc],reflectors[kreflector]));
         num_mirrors_start = num_mirrors_end;
@@ -323,7 +324,7 @@ receiver_graph_t::receiver_graph_t( double c, double fs, uint32_t chunksize,
   }
 }
 
-world_t::world_t( double c, double fs, uint32_t chunksize, const std::vector<source_t*>& sources,const std::vector<diffuse_t*>& diffuse_sound_fields,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t ism_order)
+world_t::world_t( float c, float fs, uint32_t chunksize, const std::vector<source_t*>& sources,const std::vector<diffuse_t*>& diffuse_sound_fields,const std::vector<reflector_t*>& reflectors,const std::vector<obstacle_t*>& obstacles,const std::vector<receiver_t*>& receivers,const std::vector<mask_t*>& masks,uint32_t ism_order)
   : receivers_(receivers),
     masks_(masks),
     active_pointsource(0),
@@ -355,7 +356,7 @@ void world_t::process(const TASCAR::transport_t& tp)
   uint32_t local_active_diffuse(0);
   // calculate mask gains:
   for(uint32_t k=0;k<receivers_.size();++k){
-    double gain_inner(1.0);
+    float gain_inner(1.0);
     if( receivers_[k]->use_global_mask || receivers_[k]->boundingbox.active ){
       // first calculate attentuation based on bounding box:
       if( receivers_[k]->boundingbox.active ){
@@ -363,13 +364,13 @@ void world_t::process(const TASCAR::transport_t& tp)
         maskbox.size = receivers_[k]->boundingbox.size;
         maskbox.center = receivers_[k]->boundingbox.c6dof.position;
         maskbox.orientation = receivers_[k]->boundingbox.c6dof.orientation;
-        double d(maskbox.nextpoint(receivers_[k]->position).norm());
-        gain_inner *= 0.5+0.5*cos(TASCAR_PI*std::min(1.0,d/std::max(receivers_[k]->boundingbox.falloff,1e-10)));
+        float d(maskbox.nextpoint(receivers_[k]->position).normf());
+        gain_inner *= 0.5f+0.5f*cosf(TASCAR_PIf*std::min(1.0f,d/std::max(receivers_[k]->boundingbox.falloff,1e-10f)));
       }
       // then calculate attenuation based on global masks:
       if( receivers_[k]->use_global_mask ){
         uint32_t c_outer(0);
-        double gain_outer(0.0);
+        float gain_outer(0.0);
         for(uint32_t km=0;km<masks_.size();++km){
           if( masks_[km]->active ){
             pos_t p(receivers_[k]->position);
@@ -439,18 +440,18 @@ receiver_graph_t::~receiver_graph_t()
     delete (*it);
 }
 
-diffuse_acoustic_model_t::diffuse_acoustic_model_t(double fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver)
+diffuse_acoustic_model_t::diffuse_acoustic_model_t(float fs,uint32_t chunksize,diffuse_t* src,receiver_t* receiver)
   : src_(src),
     receiver_(receiver),
     receiver_data(receiver_->create_diffuse_state_data(fs,chunksize)),
     audio(src->audio.size()),
     chunksize(audio.size()),
-    dt(1.0/std::max(1u,chunksize))
+    dt(1.0f/(float)(std::max(1u,chunksize)))
 {
   memset(gainmat,0,sizeof(float)*16);
   gainmat[0] = gainmat[5] = gainmat[10] = gainmat[15] = 1.0f;
   pos_t prel;
-  double d(1.0);
+  float d(1.0);
   float gain;
   receiver_->update_refpoint(src_->center,src_->center,prel,d,gain,false,GAIN_INVR);
 }
@@ -467,7 +468,7 @@ diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
 uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
 {
   pos_t prel;
-  double d(0.0);
+  float d(0.0);
   float nextgain(1.0);
   // calculate relative geometry between source and receiver:
   receiver_->update_refpoint(src_->center, src_->center, prel, d, nextgain,
@@ -477,8 +478,8 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
   box.center = pos_t();
   pos_t prel_nonrot(prel);
   prel_nonrot *= receiver_->orientation;
-  d = box.nextpoint(prel_nonrot).norm();
-  nextgain = 0.5 + 0.5 * cos(TASCAR_PI * std::min(1.0, d * src_->falloff));
+  d = box.nextpoint(prel_nonrot).normf();
+  nextgain = 0.5f + 0.5f * cosf(TASCAR_PIf * std::min(1.0f, d * src_->falloff));
   if(!((gain == 0) && (nextgain == 0))) {
     audio.rotate(src_->audio, receiver_->orientation);
     memset(gainmat,0,sizeof(float)*16);
@@ -562,7 +563,7 @@ receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_
   GET_ATTRIBUTE(layerfadelen,"s","duration of fades between layers");
   GET_ATTRIBUTE_BOOL(muteonstop,"mute when transport stopped to prevent playback of sounds from delaylines and reverb");
   if( avgdist <= 0 )
-    avgdist = 0.5*pow(volumetric.boxvolume(),0.33333);
+    avgdist = 0.5f*powf(volumetric.boxvolumef(),0.33333f);
   // check for mask plugins:
   for(auto& sne : tsccfg::node_get_children(xmlsrc)) {
     std::string node_name = tsccfg::node_get_name(sne);
@@ -641,7 +642,7 @@ void receiver_t::validate_attributes(std::string& msg) const
    \ingroup callgraph
  */
 void receiver_t::add_pointsource_with_scattering(
-    const pos_t& prel, double width, double scattering, const wave_t& chunk,
+    const pos_t& prel, float width, float scattering, const wave_t& chunk,
     receivermod_base_t::data_t* data)
 {
   scatterbuffer->add_panned(prel, chunk, scattering);
@@ -665,7 +666,7 @@ void receiver_t::post_proc(const TASCAR::transport_t& tp)
 {
   ltp = tp;
   ltp.object_time_samples = ltp.session_time_samples - starttime_samples;
-  ltp.object_time_seconds = ltp.object_time_samples*t_sample;
+  ltp.object_time_seconds = (double)ltp.object_time_samples * t_sample;
   postproc(outchannels);
 }
 
@@ -679,7 +680,7 @@ void receiver_t::add_diffuse_sound_field_rec(const amb1wave_t& chunk, receivermo
 
 void receiver_t::update_refpoint(const pos_t& psrc_physical,
                                  const pos_t& psrc_virtual, pos_t& prel,
-                                 double& distance, float& gain, bool b_img,
+                                 float& distance, float& gain, bool b_img,
                                  gainmodel_t gainmodel)
 {
 
@@ -687,20 +688,20 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
     prel = psrc_physical;
     prel -= position;
     prel /= orientation;
-    distance = prel.norm();
+    distance = prel.normf();
     shoebox_t box;
     box.size = volumetric;
-    double d(box.nextpoint(prel).norm());
+    float d(box.nextpoint(prel).normf());
     if(falloff > 0)
-      gain = (0.5 + 0.5 * cos(TASCAR_PI * std::min(1.0, d / falloff))) /
-             std::max(0.1, avgdist);
+      gain = (0.5f + 0.5f * cosf(TASCAR_PIf * std::min(1.0f, d / falloff))) /
+             std::max(0.1f, avgdist);
     else {
       switch(gainmodel) {
       case GAIN_INVR:
-        gain = 1.0 / std::max(1.0, d + avgdist);
+        gain = 1.0f / std::max(1.0f, d + avgdist);
         break;
       case GAIN_UNITY:
-        gain = 1.0 / std::max(1.0, avgdist);
+        gain = 1.0f / std::max(1.0f, avgdist);
         break;
       }
     }
@@ -708,16 +709,16 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
     prel = psrc_virtual;
     prel -= position;
     prel /= orientation;
-    distance = prel.norm();
+    distance = prel.normf();
     switch(gainmodel) {
     case GAIN_INVR:
-      gain = 1.0 / std::max(0.1, distance);
+      gain = 1.0f / std::max(0.1f, distance);
       break;
     case GAIN_UNITY:
-      gain = 1.0;
+      gain = 1.0f;
       break;
     }
-    double physical_dist(TASCAR::distance(psrc_physical, position));
+    float physical_dist(TASCAR::distancef(psrc_physical, position));
     if(b_img && (physical_dist > distance)) {
       gain = 0.0;
     }
@@ -725,7 +726,7 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
   make_friendly_number(gain);
 }
 
-void receiver_t::set_next_gain(double g)
+void receiver_t::set_next_gain(float g)
 {
   next_gain = g;
   gain_zero = (next_gain==0) && (x_gain==0);
@@ -733,7 +734,7 @@ void receiver_t::set_next_gain(double g)
 
 void receiver_t::apply_gain()
 {
-  float dx_gain = (next_gain - x_gain) * t_inc;
+  float dx_gain = (next_gain - x_gain) * (float)t_inc;
   if(n_channels > 0) {
     uint32_t psize(outchannels[0].size());
     for(uint32_t k = 0; k < psize; k++) {
@@ -747,7 +748,7 @@ void receiver_t::apply_gain()
         next_fade_gain = prelim_next_fade_gain;
         fade_gain =
             previous_fade_gain + (next_fade_gain - previous_fade_gain) *
-                                     (0.5 + 0.5 * cos(fade_timer * fade_rate));
+          (0.5f + 0.5f * cosf((float)fade_timer * fade_rate));
       }
       g *= fade_gain;
       for(uint32_t c = 0; c < n_channels; c++) {
@@ -758,16 +759,16 @@ void receiver_t::apply_gain()
   x_gain = next_gain;
 }
 
-void receiver_t::set_fade(double targetgain, double duration, double start)
+void receiver_t::set_fade(float targetgain, float duration, float start)
 {
   fade_timer = 0;
   if(start < 0)
     fade_startsample = FADE_START_NOW;
   else
-    fade_startsample = f_sample * start;
+    fade_startsample = (uint64_t)(f_sample * start);
   prelim_previous_fade_gain = fade_gain;
   prelim_next_fade_gain = targetgain;
-  fade_rate = TASCAR_PI * t_sample / duration;
+  fade_rate = TASCAR_PIf * (float)t_sample / duration;
   fade_timer = std::max(1u, (uint32_t)(f_sample * duration));
 }
 
@@ -779,59 +780,62 @@ TASCAR::Acousticmodel::boundingbox_t::boundingbox_t(tsccfg::node_t xmlsrc)
   dynobject_t::GET_ATTRIBUTE_BOOL(active,"use bounding box");
 }
 
-pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c, double fs, state_t& state,float drywet)
+pos_t diffractor_t::process(pos_t p_src, const pos_t& p_rec, wave_t& audio,
+                            float c, float fs, state_t& state, float drywet)
 {
   // calculate intersection:
   pos_t p_is;
   double w(0);
   // test for intersection with infinite plane:
-  bool is_intersect(intersection(p_src,p_rec,p_is,&w));
-  if( (w <= 0) || (w >= 1) )
+  bool is_intersect(intersection(p_src, p_rec, p_is, &w));
+  if((w <= 0) || (w >= 1))
     is_intersect = false;
-  if( is_intersect ){
+  if(is_intersect) {
     // test for intersection with the limited plane:
     bool is_outside(false);
     pos_t pne;
-    nearest(p_is,&is_outside,&pne);
+    nearest(p_is, &is_outside, &pne);
     p_is = pne;
-    if( b_inner ){
-      if( is_outside )
+    if(b_inner) {
+      if(is_outside)
         is_intersect = false;
-    }else{
-      if( !is_outside )
+    } else {
+      if(!is_outside)
         is_intersect = false;
     }
   }
   // calculate filter:
-  double dt(1.0/audio.n);
-  double dA1(-state.A1*dt);
-  if( is_intersect ){
+  float dt(1.0f / (float)audio.n);
+  double dA1(-state.A1 * dt);
+  if(is_intersect) {
     // calculate geometry:
-    pos_t p_is_src(p_src-p_is);
-    pos_t p_rec_is(p_is-p_rec);
+    pos_t p_is_src(p_src - p_is);
+    pos_t p_rec_is(p_is - p_rec);
     p_rec_is.normalize();
-    const double d_is_src(p_is_src.norm());
-    if( d_is_src > 0 )
-      p_is_src *= 1.0/d_is_src;
+    const float d_is_src(p_is_src.normf());
+    if(d_is_src > 0)
+      p_is_src *= 1.0 / d_is_src;
     // calculate first zero crossing frequency:
-    const double cos_theta(std::max(0.0,dot_prod(p_is_src,p_rec_is)));
-    const double sin_theta(std::max(EPS,sqrt(1.0-cos_theta*cos_theta)));
-    double loc_aperture(aperture);
-    if( manual_aperture > 0.0 )
+    const float cos_theta(std::max(0.0f, dot_prodf(p_is_src, p_rec_is)));
+    const float sin_theta(std::max(EPSf, sqrtf(1.0f - cos_theta * cos_theta)));
+    float loc_aperture = (float)aperture;
+    if(manual_aperture > 0.0)
       loc_aperture = manual_aperture;
-    const double f0(3.8317*c/(TASCAR_2PI*loc_aperture*sin_theta));
+    const float f0(3.8317f * c / (TASCAR_2PIf * loc_aperture * sin_theta));
     // calculate filter coefficient increment:
-    dA1 = (exp(-TASCAR_PI*f0/fs)-state.A1)*dt;
+    dA1 = (exp(-TASCAR_PI * f0 / fs) - state.A1) * dt;
     // return effective source position:
     p_rec_is *= d_is_src;
-    p_src = p_is+p_rec_is;
+    p_src = p_is + p_rec_is;
   }
   // apply low pass filter to audio chunk:
-  for(uint32_t k=0;k<audio.n;k++){
+  for(uint32_t k = 0; k < audio.n; k++) {
     state.A1 += dA1;
-    double B0(1.0-state.A1);
-    state.s1 = state.s1*state.A1+audio[k]*B0;
-    audio[k] = drywet*audio[k] + (1.0f-drywet)*(state.s2 = state.s2*state.A1+state.s1*B0);
+    double B0(1.0 - state.A1);
+    state.s1 = state.s1 * state.A1 + (double)audio[k] * B0;
+    audio[k] = drywet * audio[k] +
+               (1.0f - drywet) *
+                   (float)(state.s2 = state.s2 * state.A1 + state.s1 * B0);
   }
   return p_src;
 }
@@ -980,18 +984,18 @@ pos_t soundpath_t::get_effective_position( const pos_t& p_rec, float& gain )
     gain = 0;
     return position;
   }
-  double len_receiver(distance(pcut_rec,p_rec));
-  double len_src(distance( p_cut, position ));
+  float len_receiver(distancef(pcut_rec,p_rec));
+  float len_src(distancef( p_cut, position ));
   // calculate intersection:
-  double ratio(len_receiver/std::max(1e-6,(len_receiver+len_src)));
+  float ratio(len_receiver/std::max(1e-6f,(len_receiver+len_src)));
   pos_t p_is(p_cut-pcut_rec);
   p_is *= ratio;
   p_is += pcut_rec;
   p_is = reflector->nearest(p_is);
-  gain = pow(std::max(0.0,dot_prod((p_rec-p_is).normal(),(p_is-position).normal())),2.7);
+  gain = powf(std::max(0.0f,dot_prodf((p_rec-p_is).normal(),(p_is-position).normal())),2.7f);
   make_friendly_number(gain);
   if( reflector->edgereflection ){
-    double len_img(distance(p_is,position));
+    float len_img(distancef(p_is,position));
     pos_t p_eff((p_is-p_rec).normal());
     p_eff *= len_img;
     p_eff += p_is;

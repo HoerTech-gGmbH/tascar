@@ -83,7 +83,7 @@ std::vector<std::string> TASCAR::receivermod_t::get_connections() const
   return libdata->get_connections();
 }
 
-double TASCAR::receivermod_t::get_delay_comp() const
+float TASCAR::receivermod_t::get_delay_comp() const
 {
   return libdata->get_delay_comp();
 }
@@ -249,7 +249,7 @@ void TASCAR::receivermod_base_speaker_t::postproc(std::vector<wave_t>& output)
 void TASCAR::receivermod_base_speaker_t::configure()
 {
   receivermod_base_t::configure();
-  n_channels = spkpos.num_output_channels();
+  n_channels = (uint32_t)spkpos.num_output_channels();
   spkpos.prepare(cfg());
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
@@ -301,7 +301,7 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
     add_pointsource(pos, 0.0, ones, output, sd);
     postproc(output);
     for(size_t outch(0); outch < spkpos.size(); ++outch)
-      output[outch] *= 1.0f / (spkpos[outch].gain * spkpos[outch].spkgain);
+      output[outch] *= 1.0f / ((float)spkpos[outch].gain * (float)spkpos[outch].spkgain);
     spkpos.clear_states();
     TASCAR::pos_t rE;
     TASCAR::pos_t rV;
@@ -377,7 +377,7 @@ void TASCAR::receivermod_base_speaker_t::post_prepare()
     std::vector<TASCAR::pos_t> ring;
     ring.resize(360);
     for(size_t k = 0; k < ring.size(); ++k)
-      ring[k].set_sphere(1.0, k * TASCAR_2PI / ring.size(), 0.0);
+      ring[k].set_sphere(1.0, k * TASCAR_2PI / (double)ring.size(), 0.0);
     spatial_error_t err = get_spatial_error(ring);
     std::cout << "% spatial error:\n";
     std::cout << "e.layout = '" << spkpos.layout << "';\n";

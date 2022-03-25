@@ -78,8 +78,8 @@ namespace TASCAR {
       class state_t {
       public:
         double A1;
-        float s1;
-        float s2;
+        double s1;
+        double s2;
         state_t() : A1(0), s1(0), s2(0){};
       };
       diffractor_t() : b_inner(true), manual_aperture(0){};
@@ -98,8 +98,8 @@ namespace TASCAR {
 
          \ingroup callgraph
       */
-      pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, double c,
-                    double fs, state_t& state, float drywet);
+      pos_t process(pos_t p_src, const pos_t& p_rec, wave_t& audio, float c,
+                    float fs, state_t& state, float drywet);
       /**
          \brief Flag, true if the diffraction is caused by the inner
          part of the object (limited surface), false if the
@@ -107,7 +107,7 @@ namespace TASCAR {
          polygon opening)
       */
       bool b_inner;
-      double manual_aperture;
+      float manual_aperture;
     };
 
     /**
@@ -127,7 +127,7 @@ namespace TASCAR {
       void release();
       void add_licenses(licensehandler_t*);
       amb1rotator_t audio;
-      double falloff;
+      float falloff;
       bool active;
       uint32_t layers;
       TASCAR::levelmeter_t& rmslevel;
@@ -140,15 +140,15 @@ namespace TASCAR {
     public:
       boundingbox_t(tsccfg::node_t);
       pos_t size;
-      double falloff;
+      float falloff;
       bool active;
     };
 
     class mask_t : public shoebox_t {
     public:
       mask_t();
-      double gain(const pos_t& p);
-      double inv_falloff;
+      float gain(const pos_t& p);
+      float inv_falloff;
       bool mask_inner;
       bool active;
     };
@@ -171,13 +171,13 @@ namespace TASCAR {
       uint32_t ismmin;
       uint32_t ismmax;
       uint32_t layers;
-      double maxdist;
-      double minlevel;
+      float maxdist;
+      float minlevel;
       uint32_t sincorder;
       gainmodel_t gainmodel;
       bool airabsorption;
       bool delayline;
-      double size;
+      float size;
       // derived / internal / updated variables:
       std::vector<wave_t> inchannels;
       std::vector<wave_t*> inchannelsp;
@@ -202,16 +202,18 @@ namespace TASCAR {
       void post_prepare();
       void release();
       void clear_output();
-      void add_pointsource_with_scattering(const pos_t& prel, double width, double scattering,
-                           const wave_t& chunk, receivermod_base_t::data_t*);
+      void add_pointsource_with_scattering(const pos_t& prel, float width,
+                                           float scattering,
+                                           const wave_t& chunk,
+                                           receivermod_base_t::data_t*);
       void add_diffuse_sound_field_rec(const amb1wave_t& chunk,
-                                   receivermod_base_t::data_t*);
+                                       receivermod_base_t::data_t*);
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
-                           double& distamnce, float& gain, bool b_img,
+                           float& distance, float& gain, bool b_img,
                            gainmodel_t gainmodel);
-      void set_next_gain(double gain);
-      void set_fade(double targetgain, double duration, double start = -1);
+      void set_next_gain(float gain);
+      void set_fade(float targetgain, float duration, float start = -1);
       void apply_gain();
       virtual void postproc(std::vector<wave_t>& output);
       void post_proc(const TASCAR::transport_t& tp);
@@ -221,7 +223,7 @@ namespace TASCAR {
       void add_licenses(licensehandler_t*);
       // configuration/control variables:
       TASCAR::pos_t volumetric;
-      double avgdist;
+      float avgdist;
       bool render_point;
       bool render_diffuse;
       bool render_image;
@@ -229,12 +231,12 @@ namespace TASCAR {
       uint32_t ismmax;
       uint32_t layers;
       bool use_global_mask;
-      double diffusegain;
+      float diffusegain;
       bool has_diffusegain;
-      double falloff;
-      double delaycomp;
-      double recdelaycomp;
-      double layerfadelen;
+      float falloff;
+      float delaycomp;
+      float recdelaycomp;
+      float layerfadelen;
       bool muteonstop;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
@@ -307,10 +309,10 @@ namespace TASCAR {
       reflector_t();
       void apply_reflectionfilter(TASCAR::wave_t& audio, double& lpstate) const;
       bool active;
-      double reflectivity;
-      double damping;
+      float reflectivity;
+      float damping;
       bool edgereflection;
-      double scattering;
+      float scattering;
     };
 
     /**
@@ -350,7 +352,7 @@ namespace TASCAR {
      */
     class acoustic_model_t : public soundpath_t {
     public:
-      acoustic_model_t(double c, double fs, uint32_t chunksize, source_t* src,
+      acoustic_model_t(float c, float fs, uint32_t chunksize, source_t* src,
                        receiver_t* receiver,
                        const std::vector<obstacle_t*>& obstacles =
                            std::vector<obstacle_t*>(0u, NULL),
@@ -365,8 +367,8 @@ namespace TASCAR {
       float get_gain() const { return gain; };
 
     protected:
-      double c_;
-      double fs_;
+      float c_;
+      float fs_;
 
     public:
       source_t* src_;
@@ -379,11 +381,11 @@ namespace TASCAR {
       std::vector<diffractor_t::state_t> vstate;
       wave_t audio;
       uint32_t chunksize;
-      double dt;
-      double distance;
+      float dt;
+      float distance;
       float gain;
-      double dscale;
-      double air_absorption;
+      float dscale;
+      float air_absorption;
       varidelay_t delayline;
       float airabsorption_state;
       float layergain;
@@ -401,7 +403,7 @@ namespace TASCAR {
      */
     class diffuse_acoustic_model_t {
     public:
-      diffuse_acoustic_model_t(double fs, uint32_t chunksize, diffuse_t* src,
+      diffuse_acoustic_model_t(float fs, uint32_t chunksize, diffuse_t* src,
                                receiver_t* receiver);
       ~diffuse_acoustic_model_t();
       /** \brief Read audio from source, process and add to receiver.
@@ -414,7 +416,7 @@ namespace TASCAR {
       receivermod_base_t::data_t* receiver_data;
       amb1rotator_t audio;
       uint32_t chunksize;
-      double dt;
+      float dt;
       float gain = 1.0f;
       float gainmat[16];
     };
@@ -426,7 +428,7 @@ namespace TASCAR {
     public:
       /** \brief Create a graph for one receiver
        */
-      receiver_graph_t(double c, double fs, uint32_t chunksize,
+      receiver_graph_t(float c, float fs, uint32_t chunksize,
                        const std::vector<source_t*>& sources,
                        const std::vector<diffuse_t*>& diffuse_sound_fields,
                        const std::vector<reflector_t*>& reflectors,
@@ -440,10 +442,13 @@ namespace TASCAR {
       {
         return active_diffuse_sound_field;
       };
-      uint32_t get_total_pointsource() const { return acoustic_model.size(); };
+      uint32_t get_total_pointsource() const
+      {
+        return (uint32_t)(acoustic_model.size());
+      };
       uint32_t get_total_diffuse_sound_field() const
       {
-        return diffuse_acoustic_model.size();
+        return (uint32_t)(diffuse_acoustic_model.size());
       };
       std::vector<acoustic_model_t*> acoustic_model;
       std::vector<diffuse_acoustic_model_t*> diffuse_acoustic_model;
@@ -475,7 +480,7 @@ namespace TASCAR {
        * An instance of this class is created in
        * TASCAR::render_core_t::prepare().
        */
-      world_t(double c, double fs, uint32_t chunksize,
+      world_t(float c, float fs, uint32_t chunksize,
               const std::vector<source_t*>& sources,
               const std::vector<diffuse_t*>& diffuse_sound_fields,
               const std::vector<reflector_t*>& reflectors,

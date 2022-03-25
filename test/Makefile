@@ -157,7 +157,7 @@ test_pos%: test_pos%.tsc expected_pos%.wav
 	@echo "Position test: $<"
 	@$(LIBPATH) RECTYPE=debugpos $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
 	@$(LIBPATH) RECTYPE=debugpos $(RENDERFILE) -i zeros.wav -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-9 1e-9|| (echo "$(<):2: Output differs"; false)
+	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-7 1e-7|| (echo "$(<):2: Output differs"; false)
 	@rm -f test_pos$*.wav
 
 test_rec_%: test_rec.tsc
@@ -301,6 +301,7 @@ test_snd_reverb: TOL=1e-5
 test_snd_reverb: RMSTOL=1e-6
 test_snd_maskplugin_multibeam: TOL=1e-5
 test_snd_maskplugin_multibeam1: TOL=1e-5
+test_snd_maskplugin_fig8: TOL=1e-5
 
 %.octave: %.m
 	octave --no-gui --eval $*

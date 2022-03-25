@@ -65,7 +65,7 @@ namespace TASCAR {
       void addmeter(float fs);
       void configure_meter(float tc, TASCAR::levelmeter::weight_t w);
       void set_meterweight(TASCAR::levelmeter::weight_t w);
-      uint32_t metercnt() const { return rmsmeter.size(); };
+      uint32_t metercnt() const { return (uint32_t)rmsmeter.size(); };
       void reset_meters();
       const std::vector<float>& readmeter();
       float read_meter_max();
@@ -147,11 +147,11 @@ namespace TASCAR {
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
-      double reflectivity;
-      double damping;
+      float reflectivity;
+      float damping;
       std::string importraw;
       bool edgereflection;
-      double scattering;
+      float scattering;
       TASCAR::pos_t shoebox;
       TASCAR::pos_t shoeboxwalls;
     };
@@ -171,10 +171,10 @@ namespace TASCAR {
       */
       void process_active(double t, uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::obstacle_t*> obstacles;
-      double transmission;
+      float transmission;
       std::string importraw;
       bool ishole;
-      double aperture;
+      float aperture;
     };
 
     class src_object_t;
@@ -240,7 +240,7 @@ namespace TASCAR {
       */
       void process_active(double t, uint32_t anysolo);
       pos_t size;
-      double falloff;
+      float falloff;
       TASCAR::Acousticmodel::diffuse_t* get_source() { return source; };
       void add_licenses(licensehandler_t*);
       uint32_t layers;

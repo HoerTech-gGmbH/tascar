@@ -118,8 +118,13 @@ namespace TASCAR {
     {
       return std::max(1e-10, x * x + y * y + z * z);
     };
+    inline float norm2f() const
+    {
+      return std::max(1e-10f, (float)x * (float)x + (float)y * (float)y + (float)z * (float)z);
+    };
     /// Eucledian norm
     inline double norm() const { return sqrt(norm2()); };
+    inline float normf() const { return sqrtf(norm2f()); };
     /// Eucledian norm of projection to x-y plane
     inline double norm_xy() const { return sqrt(x * x + y * y); };
     inline float norm_xyf() const { return sqrtf((float)x * (float)x + (float)y * (float)y); };
@@ -144,6 +149,7 @@ namespace TASCAR {
     };
     /// Box volume:
     double boxvolume() const { return x * y * z; };
+    float boxvolumef() const { return (float)x * (float)y * (float)z; };
     /// Box area:
     double boxarea() const { return 2.0 * (x * y + x * z + y * z); };
     /// Normalize vector
@@ -417,6 +423,12 @@ namespace TASCAR {
   {
     return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) +
                 (p1.z - p2.z) * (p1.z - p2.z));
+  }
+  inline float distancef(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
+  {
+    return sqrtf(((float)p1.x - (float)p2.x) * ((float)p1.x - (float)p2.x) +
+                 ((float)p1.y - (float)p2.y) * ((float)p1.y - (float)p2.y) +
+                 ((float)p1.z - (float)p2.z) * ((float)p1.z - (float)p2.z));
   }
 
   /// Dot product of two vectors

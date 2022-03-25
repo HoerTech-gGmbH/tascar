@@ -88,7 +88,7 @@ namespace TASCAR {
 
        This value will be added to the user-provided delay compensation.
      */
-    virtual double get_delay_comp() const { return 0.0; };
+    virtual float get_delay_comp() const { return 0.0f; };
 
   protected:
   };
@@ -170,7 +170,7 @@ namespace TASCAR {
                                                             uint32_t fragsize) const;
     virtual void add_variables(TASCAR::osc_server_t* srv);
     virtual void validate_attributes(std::string&) const;
-    virtual double get_delay_comp() const;
+    virtual float get_delay_comp() const;
 
   private:
     receivermod_t(const receivermod_t&);

@@ -446,7 +446,7 @@ public:
   receivermod_base_t::data_t* create_state_data(double srate,
                                                 uint32_t fragsize) const;
   void validate_attributes(std::string&) const;
-  double get_delay_comp() const;
+  float get_delay_comp() const;
 
 private:
   mic_t origin;
@@ -470,9 +470,9 @@ micarray_t::micarray_t(tsccfg::node_t xmlsrc)
 {
 }
 
-double micarray_t::get_delay_comp() const
+float micarray_t::get_delay_comp() const
 {
-  return origin.maxdist * TASCAR_PI2 / c;
+  return origin.maxdist * TASCAR_PI2f / c;
   // maximal possible delay due to sphere delay model
 }
 
