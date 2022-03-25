@@ -73,51 +73,52 @@ Florian Denk and Birger Kollmeier. The hearpiece database of
 #include <random>
 
 const std::complex<double> i(0.0, 1.0);
+const std::complex<float> i_f(0.0f, 1.0f);
 
 class hrtf_param_t : public TASCAR::xml_element_t {
 public:
   hrtf_param_t(tsccfg::node_t xmlsrc);
   uint32_t sincorder;
   uint32_t sincsampling = 64;
-  double c;
+  float c;
   TASCAR::pos_t dir_l;
   TASCAR::pos_t dir_r;
   TASCAR::pos_t dir_front;
-  double radius;
-  double angle;
-  double thetamin; // minimum of the filter modelling the head shadow effect
-  double omega;    // cut-off frequency of HSM
-  double
-      alphamin; // parameter which determines maximal depth of SHM at thetamin
-  double startangle_front; // define range in which filter modelling pinna
-                           // shadow operates
-  double omega_front;      // cut-off frequency of pinna shadow filter
-  double alphamin_front;   // parameter which determines maximal depth of pinna
-                           // shadow filter
-  double startangle_up; // define range in which filter modelling torso shadow
-                        // operates
-  double omega_up;      // cut-off frequency of torso shadow filter
-  double alphamin_up;   // parameter which determines maximal depth of torso
-                        // shadow filter
-  double
-      startangle_notch; // define range in which parametric equalizer operates
-  double freq_start;    // notch frequency at startangle_notch
-  double freq_end;      // notch frequency at 90 degr elev
-  double maxgain; // gain applied at 90 degr elev (0 dB gain at startangle_notch
-                  // and linear increase)
-  double Q_notch; // inverse Q factor of the parametric equalizer
+  float radius;
+  float angle;
+  float thetamin; // minimum of the filter modelling the head shadow effect
+  float omega;    // cut-off frequency of HSM
+  float alphamin; // parameter which determines maximal depth of SHM at thetamin
+  float startangle_front; // define range in which filter modelling pinna
+                          // shadow operates
+  float omega_front;      // cut-off frequency of pinna shadow filter
+  float alphamin_front;   // parameter which determines maximal depth of pinna
+                          // shadow filter
+  float startangle_up;    // define range in which filter modelling torso shadow
+                          // operates
+  float omega_up;         // cut-off frequency of torso shadow filter
+  float alphamin_up;      // parameter which determines maximal depth of torso
+                          // shadow filter
+  float startangle_notch; // define range in which parametric equalizer operates
+  float freq_start;       // notch frequency at startangle_notch
+  float freq_end;         // notch frequency at 90 degr elev
+  float maxgain; // gain applied at 90 degr elev (0 dB gain at startangle_notch
+                 // and linear increase)
+  float Q_notch; // inverse Q factor of the parametric equalizer
   bool diffuse_hrtf; // apply hrtf model also to diffuse rendering
 };
 
 hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
     : TASCAR::xml_element_t(xmlsrc), sincorder(0), c(340), dir_l(1, 0, 0),
-      dir_r(1, 0, 0), dir_front(1, 0, 0), radius(0.08),
-      angle(90 * DEG2RAD), // ears modelled at +/- 90 degree
-      thetamin(160 * DEG2RAD), omega(3100), alphamin(0.14), startangle_front(0),
-      omega_front(11200), alphamin_front(0.39), startangle_up(135 * DEG2RAD),
+      dir_r(1, 0, 0), dir_front(1, 0, 0), radius(0.08f),
+      angle(90.0f * DEG2RADf), // ears modelled at +/- 90 degree
+      thetamin(160.0f * DEG2RADf), omega(3100), alphamin(0.14f),
+      startangle_front(0), omega_front(11200.0f), alphamin_front(0.39f),
+      startangle_up(135.0f * DEG2RADf),
       //    omega_up(c/radius/2),
-      alphamin_up(0.1), startangle_notch(102 * DEG2RAD), freq_start(1300),
-      freq_end(650), maxgain(-5.4), Q_notch(2.3), diffuse_hrtf(false)
+      alphamin_up(0.1f), startangle_notch(102.0f * DEG2RADf),
+      freq_start(1300.0f), freq_end(650.0f), maxgain(-5.4f), Q_notch(2.3f),
+      diffuse_hrtf(false)
 {
   GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of ITD delay line");
   GET_ATTRIBUTE(sincsampling, "",
@@ -172,9 +173,9 @@ class hrtf_t : public TASCAR::receivermod_base_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    data_t(double srate, uint32_t chunksize, const hrtf_param_t& par_plugin);
-    void filterdesign(const double theta_left, const double theta_right,
-                      const double theta_front, const double elevation);
+    data_t(float srate, uint32_t chunksize, const hrtf_param_t& par_plugin);
+    void filterdesign(const float theta_left, const float theta_right,
+                      const float theta_front, const float elevation);
     inline void filter(const float& input)
     {
       out_l = (state_l = (dline_l.get_dist_push(tau_l, input)));
@@ -183,34 +184,34 @@ public:
       out_r = bqelev_r.filter(bqazim_r.filter(out_r));
     }
     void set_param(const TASCAR::pos_t& prel_norm);
-    double fs;
-    double dt;
+    float fs;
+    float dt;
     const hrtf_param_t& par;
     TASCAR::varidelay_t dline_l;
     TASCAR::varidelay_t dline_r;
-    TASCAR::biquad_t bqazim_l;
-    TASCAR::biquad_t bqazim_r;
-    TASCAR::biquad_t bqelev_l;
-    TASCAR::biquad_t bqelev_r;
-    double out_l;
-    double out_r;
-    double state_l;
-    double state_r;
-    double target_tau_l;
-    double target_tau_r;
-    double tau_l;
-    double tau_r;
-    double inv_a0;
-    double alpha_l;
-    double alpha_r;
-    double inv_a0_f;
-    double alpha_f;
-    double inv_a0_u;
-    double alpha_u;
+    TASCAR::biquadf_t bqazim_l;
+    TASCAR::biquadf_t bqazim_r;
+    TASCAR::biquadf_t bqelev_l;
+    TASCAR::biquadf_t bqelev_r;
+    float out_l;
+    float out_r;
+    float state_l;
+    float state_r;
+    float target_tau_l;
+    float target_tau_r;
+    float tau_l;
+    float tau_r;
+    float inv_a0;
+    float alpha_l;
+    float alpha_r;
+    float inv_a0_f;
+    float alpha_f;
+    float inv_a0_u;
+    float alpha_u;
   };
   class diffuse_data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    diffuse_data_t(double srate, uint32_t chunksize,
+    diffuse_data_t(float srate, uint32_t chunksize,
                    const hrtf_param_t& par_plugin);
     hrtf_t::data_t xp, xm, yp, ym, zp, zm;
   };
@@ -220,7 +221,7 @@ public:
                        const TASCAR::wave_t& chunk,
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
-  // void tau_woodworth_schlosberg(const double theta, double& tau);
+  // void tau_woodworth_schlosberg(const float theta, float& tau);
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
                                std::vector<TASCAR::wave_t>& output,
                                receivermod_base_t::data_t*);
@@ -235,56 +236,60 @@ public:
 
 private:
   hrtf_param_t par;
-  double decorr_length;
+  float decorr_length;
   bool decorr;
   std::vector<TASCAR::overlap_save_t*> decorrflt;
   std::vector<TASCAR::wave_t*> diffuse_render_buffer;
 };
 
 // calculate time delay according to woodworth and schlosberg
-void tau_woodworth_schlosberg(const double theta, const double radius,
-                              double& tau)
+void tau_woodworth_schlosberg(const float theta, const float radius, float& tau)
 {
-  if(theta < TASCAR_PI2)
-    tau = -radius * (cos(theta) - 1.0);
+  if(theta < TASCAR_PI2f)
+    tau = -radius * (cosf(theta) - 1.0f);
   else
-    tau = radius * (theta - TASCAR_PI2 + 1.0);
+    tau = radius * (theta - TASCAR_PI2f + 1.0f);
 }
 
 hrtf_t::~hrtf_t() {}
 
-hrtf_t::data_t::data_t(double srate, uint32_t chunksize,
+hrtf_t::data_t::data_t(float srate, uint32_t chunksize,
                        const hrtf_param_t& par_plugin)
-    : fs(srate), dt(1.0 / std::max(1.0, (double)chunksize)), par(par_plugin),
-      dline_l(4 * par.radius * srate / par.c + 2 + par.sincorder, srate, par.c,
-              par.sincorder, par.sincsampling),
-      dline_r(4 * par.radius * srate / par.c + 2 + par.sincorder, srate, par.c,
-              par.sincorder, par.sincsampling),
+    : fs(srate), dt(1.0f / std::max(1.0f, (float)chunksize)), par(par_plugin),
+      dline_l((uint32_t)(4.0f * par.radius * srate / par.c + 2.0f +
+                         (float)par.sincorder),
+              srate, par.c, par.sincorder, par.sincsampling),
+      dline_r((uint32_t)(4.0f * par.radius * srate / par.c + 2.0f +
+                         (float)par.sincorder),
+              srate, par.c, par.sincorder, par.sincsampling),
       out_l(0), out_r(0), state_l(0), state_r(0), tau_l(0), tau_r(0),
-      inv_a0(1.0 / (par.omega + fs)), alpha_l(0.0), alpha_r(0.0),
-      inv_a0_f(1.0 / (par.omega_front + fs)), alpha_f(0.0),
-      inv_a0_u(1.0 / (par.omega_up + fs)), alpha_u(0.0)
+      inv_a0(1.0f / (par.omega + fs)), alpha_l(0.0f), alpha_r(0.0f),
+      inv_a0_f(1.0f / (par.omega_front + fs)), alpha_f(0.0f),
+      inv_a0_u(1.0f / (par.omega_up + fs)), alpha_u(0.0f)
 {
 }
 
-void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
-                                  const double theta_f, const double elevation)
+void hrtf_t::data_t::filterdesign(const float theta_l, const float theta_r,
+                                  const float theta_f, const float elevation)
 {
   // bqazim_l/r
   // parameter of SHM
-  alpha_l = (1.0 + 0.5 * par.alphamin +
-             (1.0 - 0.5 * par.alphamin) * cos(theta_l / par.thetamin * TASCAR_PI)) *
+  alpha_l = (1.0f + 0.5f * par.alphamin +
+             (1.0f - 0.5f * par.alphamin) *
+                 cosf(theta_l / par.thetamin * TASCAR_PIf)) *
             fs;
-  alpha_r = (1.0 + 0.5 * par.alphamin +
-             (1.0 - 0.5 * par.alphamin) * cos(theta_r / par.thetamin * TASCAR_PI)) *
+  alpha_r = (1.0f + 0.5f * par.alphamin +
+             (1.0f - 0.5f * par.alphamin) *
+                 cosf(theta_r / par.thetamin * TASCAR_PIf)) *
             fs;
 
   if(theta_f > par.startangle_front) // pinna shadow effect
   {
-    alpha_f = (1.0 - (1.0 - par.alphamin_front) *
-                         (0.5 - cos((theta_f - par.startangle_front) /
-                                    (TASCAR_PI - par.startangle_front) * TASCAR_PI) *
-                                    0.5)) *
+    alpha_f = (1.0f - (1.0f - par.alphamin_front) *
+                          (0.5f - cosf((theta_f - par.startangle_front) /
+                                       (TASCAR_PIf - par.startangle_front) *
+                                       TASCAR_PIf) *
+                                      0.5f)) *
               fs;
     // alpha_f = (1.0 - ( 1.0-par.alphamin_front ) * ( 0.5-0.5*cos(theta_f) ) )
     // *fs; // if startangle_front == 0
@@ -323,43 +328,44 @@ void hrtf_t::data_t::filterdesign(const double theta_l, const double theta_r,
   if(elevation <
      par.startangle_notch) // concha notch (parametric equalizer for cut)
   {
-    double p_angle = (par.startangle_notch - elevation) / par.startangle_notch;
-    double transform_const =
-        1.0 /
-        tan(TASCAR_PI *
-            (p_angle * (par.freq_end - par.freq_start) + par.freq_start) / fs);
-    double Q_n = transform_const / par.Q_notch;
-    double inv_gain_Q = pow(10.0, (-par.maxgain * p_angle / 20.0)) * Q_n;
-    double tc_sq = transform_const * transform_const;
-    double inv_a0_n = 1.0 / (tc_sq + 1.0 + inv_gain_Q);
+    float p_angle = (par.startangle_notch - elevation) / par.startangle_notch;
+    float transform_const =
+        1.0f /
+        tanf(TASCAR_PIf *
+             (p_angle * (par.freq_end - par.freq_start) + par.freq_start) / fs);
+    float Q_n = transform_const / par.Q_notch;
+    float inv_gain_Q = powf(10.0f, (-par.maxgain * p_angle / 20.0f)) * Q_n;
+    float tc_sq = transform_const * transform_const;
+    float inv_a0_n = 1.0f / (tc_sq + 1.0f + inv_gain_Q);
     bqelev_l.set_coefficients(
-        2.0 * (1.0 - tc_sq) * inv_a0_n, (tc_sq + 1.0 - inv_gain_Q) * inv_a0_n,
-        (tc_sq + 1.0 + Q_n) * inv_a0_n, 2.0 * (1.0 - tc_sq) * inv_a0_n,
-        (tc_sq + 1.0 - Q_n) * inv_a0_n);
+        2.0f * (1.0f - tc_sq) * inv_a0_n,
+        (tc_sq + 1.0f - inv_gain_Q) * inv_a0_n, (tc_sq + 1.0f + Q_n) * inv_a0_n,
+        2.0f * (1.0f - tc_sq) * inv_a0_n, (tc_sq + 1.0f - Q_n) * inv_a0_n);
     bqelev_r.set_coefficients(
-        2.0 * (1.0 - tc_sq) * inv_a0_n, (tc_sq + 1.0 - inv_gain_Q) * inv_a0_n,
-        (tc_sq + 1.0 + Q_n) * inv_a0_n, 2.0 * (1.0 - tc_sq) * inv_a0_n,
-        (tc_sq + 1.0 - Q_n) * inv_a0_n);
+        2.0f * (1.0f - tc_sq) * inv_a0_n,
+        (tc_sq + 1.0f - inv_gain_Q) * inv_a0_n, (tc_sq + 1.0f + Q_n) * inv_a0_n,
+        2.0f * (1.0f - tc_sq) * inv_a0_n, (tc_sq + 1.0f - Q_n) * inv_a0_n);
   } else if(elevation > par.startangle_up) // torso shadow effect
   {
-    alpha_u = (1.0 - (1.0 - par.alphamin_up) *
-                         (0.5 - 0.5 * cos((elevation - par.startangle_up) /
-                                          (TASCAR_PI - par.startangle_up) * TASCAR_PI))) *
+    alpha_u = (1.0f - (1.0f - par.alphamin_up) *
+                          (0.5f - 0.5f * cosf((elevation - par.startangle_up) /
+                                              (TASCAR_PIf - par.startangle_up) *
+                                              TASCAR_PIf))) *
               fs;
 
-    bqelev_l.set_coefficients((par.omega_up - fs) * inv_a0_u, 0.0,
+    bqelev_l.set_coefficients((par.omega_up - fs) * inv_a0_u, 0.0f,
                               (par.omega_up + alpha_u) * inv_a0_u,
-                              (par.omega_up - alpha_u) * inv_a0_u, 0.0);
-    bqelev_r.set_coefficients((par.omega_up - fs) * inv_a0_u, 0.0,
+                              (par.omega_up - alpha_u) * inv_a0_u, 0.0f);
+    bqelev_r.set_coefficients((par.omega_up - fs) * inv_a0_u, 0.0f,
                               (par.omega_up + alpha_u) * inv_a0_u,
-                              (par.omega_up - alpha_u) * inv_a0_u, 0.0);
+                              (par.omega_up - alpha_u) * inv_a0_u, 0.0f);
   } else {
     bqelev_l.set_coefficients(0.0, 0.0, 1.0, 0.0, 0.0);
     bqelev_r.set_coefficients(0.0, 0.0, 1.0, 0.0, 0.0);
   }
 }
 
-hrtf_t::diffuse_data_t::diffuse_data_t(double srate, uint32_t chunksize,
+hrtf_t::diffuse_data_t::diffuse_data_t(float srate, uint32_t chunksize,
                                        const hrtf_param_t& par_plugin)
     : xp(srate, chunksize, par_plugin), xm(srate, chunksize, par_plugin),
       yp(srate, chunksize, par_plugin), ym(srate, chunksize, par_plugin),
@@ -380,20 +386,21 @@ void hrtf_t::configure()
   // initialize decorrelation filter:
   decorrflt.clear();
   diffuse_render_buffer.clear();
-  uint32_t irslen(decorr_length * f_sample);
+  uint32_t irslen((uint32_t)(decorr_length * (float)f_sample));
   uint32_t paddedirslen((1 << (int)(ceil(log2(irslen + n_fragment - 1)))) -
                         n_fragment + 1);
   for(uint32_t k = 0; k < 2; ++k)
     decorrflt.push_back(new TASCAR::overlap_save_t(paddedirslen, n_fragment));
   TASCAR::fft_t fft_filter(irslen);
   std::mt19937 gen(1);
-  std::uniform_real_distribution<double> dis(0.0, TASCAR_2PI);
+  std::uniform_real_distribution<float> dis(0.0f, TASCAR_2PIf);
   for(uint32_t k = 0; k < 2; ++k) {
     for(uint32_t b = 0; b < fft_filter.s.n_; ++b)
-      fft_filter.s[b] = std::exp(i * dis(gen));
+      fft_filter.s[b] = std::exp(i_f * dis(gen));
     fft_filter.ifft();
     for(uint32_t t = 0; t < fft_filter.w.n; ++t)
-      fft_filter.w[t] *= (0.5 - 0.5 * cos(t * TASCAR_2PI / fft_filter.w.n));
+      fft_filter.w[t] *= (0.5f - 0.5f * cosf((float)t * TASCAR_2PIf /
+                                             (float)(fft_filter.w.n)));
     decorrflt[k]->set_irs(fft_filter.w, false);
     diffuse_render_buffer.push_back(new TASCAR::wave_t(n_fragment));
   }
@@ -432,26 +439,26 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
 {
   TASCAR::receivermod_base_t::add_variables(srv);
   srv->add_bool("/hrtf/decorr", &decorr);
-  srv->add_double("/hrtf/angle", &par.angle);
-  srv->add_double("/hrtf/thetamin", &par.thetamin);
-  srv->add_double("/hrtf/omega", &par.omega);
-  srv->add_double("/hrtf/alphamin", &par.alphamin);
-  srv->add_double("/hrtf/startangle_front", &par.startangle_front);
-  srv->add_double("/hrtf/omega_front", &par.omega_front);
-  srv->add_double("/hrtf/alphamin_front", &par.alphamin_front);
-  srv->add_double("/hrtf/startangle_up", &par.startangle_up);
-  srv->add_double("/hrtf/omega_up", &par.omega_up);
-  srv->add_double("/hrtf/alphamin_up", &par.alphamin_up);
-  srv->add_double("/hrtf/startangle_notch", &par.startangle_notch);
-  srv->add_double("/hrtf/freq_start", &par.freq_start);
-  srv->add_double("/hrtf/freq_end", &par.freq_end);
-  srv->add_double("/hrtf/maxgain", &par.maxgain);
-  srv->add_double("/hrtf/Q_notch", &par.Q_notch);
+  srv->add_float("/hrtf/angle", &par.angle);
+  srv->add_float("/hrtf/thetamin", &par.thetamin);
+  srv->add_float("/hrtf/omega", &par.omega);
+  srv->add_float("/hrtf/alphamin", &par.alphamin);
+  srv->add_float("/hrtf/startangle_front", &par.startangle_front);
+  srv->add_float("/hrtf/omega_front", &par.omega_front);
+  srv->add_float("/hrtf/alphamin_front", &par.alphamin_front);
+  srv->add_float("/hrtf/startangle_up", &par.startangle_up);
+  srv->add_float("/hrtf/omega_up", &par.omega_up);
+  srv->add_float("/hrtf/alphamin_up", &par.alphamin_up);
+  srv->add_float("/hrtf/startangle_notch", &par.startangle_notch);
+  srv->add_float("/hrtf/freq_start", &par.freq_start);
+  srv->add_float("/hrtf/freq_end", &par.freq_end);
+  srv->add_float("/hrtf/maxgain", &par.maxgain);
+  srv->add_float("/hrtf/Q_notch", &par.Q_notch);
   srv->add_bool("/hrtf/diffuse_hrtf", &par.diffuse_hrtf);
 }
 
 hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
-    : TASCAR::receivermod_base_t(xmlsrc), par(xmlsrc), decorr_length(0.05),
+    : TASCAR::receivermod_base_t(xmlsrc), par(xmlsrc), decorr_length(0.05f),
       decorr(false)
 {
   GET_ATTRIBUTE(decorr_length, "s", "Decorrelation length");
@@ -461,15 +468,15 @@ hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
 void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
 {
   // angle with respect to front (range [0, pi])
-  double theta_front = acos(dot_prod(prel_norm, par.dir_front));
+  float theta_front = acosf(dot_prodf(prel_norm, par.dir_front));
   // angle with respect to left ear (range [0, pi])
-  double theta_l = acos(dot_prod(par.dir_l, prel_norm));
+  float theta_l = acosf(dot_prodf(par.dir_l, prel_norm));
   // angle with respect to right ear (range [0, pi])
-  double theta_r = acos(dot_prod(par.dir_r, prel_norm));
+  float theta_r = acosf(dot_prodf(par.dir_r, prel_norm));
 
   // warping for better grip on small angles
-  theta_l = theta_l * (1.0 - 0.5 * cos(sqrt(theta_l * TASCAR_PI))) / 1.5;
-  theta_r = theta_r * (1.0 - 0.5 * cos(sqrt(theta_r * TASCAR_PI))) / 1.5;
+  theta_l = theta_l * (1.0f - 0.5f * cosf(sqrt(theta_l * TASCAR_PIf))) / 1.5f;
+  theta_r = theta_r * (1.0f - 0.5f * cosf(sqrt(theta_r * TASCAR_PIf))) / 1.5f;
 
   // time delay in meter (panning parameters: target_tau is reached at end of
   // the block)
@@ -477,10 +484,11 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
   tau_woodworth_schlosberg(theta_r, par.radius, target_tau_r);
   // calculate delta tau for each panning step
 
-  filterdesign(theta_l, theta_r, theta_front, -(prel_norm.elev() - TASCAR_PI2));
+  filterdesign(theta_l, theta_r, theta_front,
+               -(prel_norm.elevf() - TASCAR_PI2f));
 }
 
-void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double,
                              const TASCAR::wave_t& chunk,
                              std::vector<TASCAR::wave_t>& output,
                              receivermod_base_t::data_t* sd)
@@ -488,8 +496,8 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
   data_t* d((data_t*)sd);
   d->set_param(prel.normal());
   // calculate delta tau for each panning step
-  double dtau_l((d->target_tau_l - d->tau_l) * d->dt);
-  double dtau_r((d->target_tau_r - d->tau_r) * d->dt);
+  float dtau_l((d->target_tau_l - d->tau_l) * d->dt);
+  float dtau_r((d->target_tau_r - d->tau_r) * d->dt);
 
   // apply panning:
   uint32_t N(chunk.size());
@@ -507,7 +515,7 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
 }
 
 void hrtf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
-                                     std::vector<TASCAR::wave_t>& output,
+                                     std::vector<TASCAR::wave_t>&,
                                      receivermod_base_t::data_t* sd)
 {
   hrtf_t::diffuse_data_t* d((hrtf_t::diffuse_data_t*)sd);
@@ -546,8 +554,8 @@ void hrtf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
     const float* i_y(chunk.y().d);
     // decode diffuse sound field in microphone directions:
     for(uint32_t k = 0; k < chunk.size(); ++k) {
-      *o_l += *i_w + par.dir_l.x * (*i_x) + par.dir_l.y * (*i_y);
-      *o_r += *i_w + par.dir_r.x * (*i_x) + par.dir_r.y * (*i_y);
+      *o_l += *i_w + (float)par.dir_l.x * (*i_x) + (float)par.dir_l.y * (*i_y);
+      *o_r += *i_w + (float)par.dir_r.x * (*i_x) + (float)par.dir_r.y * (*i_y);
       ++o_l;
       ++o_r;
       ++i_w;
@@ -560,13 +568,13 @@ void hrtf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
 TASCAR::receivermod_base_t::data_t*
 hrtf_t::create_state_data(double srate, uint32_t fragsize) const
 {
-  return new data_t(srate, fragsize, par);
+  return new data_t((float)srate, fragsize, par);
 }
 
 TASCAR::receivermod_base_t::data_t*
 hrtf_t::create_diffuse_state_data(double srate, uint32_t fragsize) const
 {
-  return new diffuse_data_t(srate, fragsize, par);
+  return new diffuse_data_t((float)srate, fragsize, par);
 }
 
 REGISTER_RECEIVERMOD(hrtf_t);

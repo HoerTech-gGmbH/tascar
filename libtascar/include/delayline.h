@@ -87,13 +87,13 @@ namespace TASCAR {
        \brief Return value based on spatial distance between input and output
        \param dist Distance
     */
-    inline float get_dist(double dist){
+    inline float get_dist(float dist){
       if( sinc.O )
         return get_sinc(dist2sample*dist);
       else
-        return get(dist2sample*dist);
+        return get((uint32_t)(dist2sample*dist));
     };
-    inline float get_dist_push(double dist,float x){
+    inline float get_dist_push(float dist,float x){
       pos++;
       if( pos>=dmax)
         pos = 0;
@@ -101,7 +101,7 @@ namespace TASCAR {
       if( sinc.O )
         return get_sinc(dist2sample*dist);
       else
-        return get(dist2sample*dist);
+        return get((uint32_t)(dist2sample*dist));
     };
 
     void add_chunk(const TASCAR::wave_t& x);
@@ -121,18 +121,18 @@ namespace TASCAR {
        \param delay delay in samples
     */
     inline float get_sinc(float delay) const{
-      int32_t integerdelay(roundf(delay));
+      float integerdelay(roundf(delay));
       float subsampledelay(delay-integerdelay);
       float rv(0.0f);
       for(int32_t order=-sinc.O;order<=(int32_t)(sinc.O);order++)
-        rv += sinc((float)order-subsampledelay)*get(integerdelay+order);
+        rv += sinc((float)order-subsampledelay)*get((uint32_t)(std::max(0,(int32_t)integerdelay+order)));
       return rv;
     };
   private:
     float* dline;
     uint32_t dmax;
-    double dist2sample;
-    double delay2sample;
+    float dist2sample;
+    float delay2sample;
     uint32_t pos;
     sinctable_t sinc;
   };

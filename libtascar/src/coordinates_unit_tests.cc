@@ -443,10 +443,10 @@ TEST(quaternion_t,rotate)
   TASCAR::quaternion_t q;
   q.set_rotation( TASCAR_PI2, TASCAR::pos_t( 0, 0, 1 ) );
   ASSERT_NEAR( 1.0, q.norm(), 1e-7 );
-  ASSERT_NEAR( cosf( 0.25*TASCAR_PI ), q.w, 1e-8 );
+  ASSERT_NEAR( cosf( 0.25f*TASCAR_PIf ), q.w, 1e-8f );
   ASSERT_NEAR( 0.0f, q.x, 1e-8 );
   ASSERT_NEAR( 0.0f, q.y, 1e-8 );
-  ASSERT_NEAR( sinf( 0.25*TASCAR_PI ), q.z, 1e-8 );
+  ASSERT_NEAR( sinf( 0.25f*TASCAR_PIf ), q.z, 1e-8 );
   TASCAR::pos_t p( 0, 0, 1 );
   q.rotate( p );
   ASSERT_NEAR( 0.0, p.x, 1e-9 );

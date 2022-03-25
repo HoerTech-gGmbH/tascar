@@ -68,9 +68,9 @@ namespace TASCAR {
       if(append_pos >= n)
         append_pos = 0;
     };
-    void operator*=(double v);
+    //void operator*=(double v);
     void operator*=(float v);
-    void operator+=(double v);
+    //void operator+=(double v);
     void operator+=(float v);
     void operator+=(const wave_t& o);
     void operator*=(const wave_t& src);
@@ -132,7 +132,7 @@ namespace TASCAR {
     ~sndfile_handle_t();
     sndfile_handle_t(const sndfile_handle_t&) = delete;
     uint32_t get_channels() const {return sf_inf.channels;};
-    uint32_t get_frames() const {return sf_inf.frames;};
+    uint32_t get_frames() const {return (uint32_t)sf_inf.frames;};
     uint32_t get_srate() const {return sf_inf.samplerate;};
     uint32_t readf_float( float* buf, uint32_t frames );
     uint32_t writef_float( float* buf, uint32_t frames );

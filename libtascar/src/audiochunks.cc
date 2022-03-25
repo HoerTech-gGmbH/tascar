@@ -50,7 +50,7 @@ wave_t::wave_t(uint32_t chunksize,float* ptr)
 
 wave_t::wave_t(const std::vector<float>& src)
   : d(new float[std::max(1lu,(long unsigned int)(src.size()))]),
-    n(src.size()), own_pointer(true), append_pos(0),
+    n((uint32_t)src.size()), own_pointer(true), append_pos(0),
     rmsscale(1.0f/(float)n)
 {
   memset(d,0,sizeof(float)*std::max(1lu,(long unsigned int)(src.size())));
@@ -60,12 +60,12 @@ wave_t::wave_t(const std::vector<float>& src)
 
 wave_t::wave_t(const std::vector<double>& src)
   : d(new float[std::max(1lu,(long unsigned int)(src.size()))]),
-    n(src.size()), own_pointer(true), append_pos(0),
+    n((uint32_t)src.size()), own_pointer(true), append_pos(0),
     rmsscale(1.0f/(float)n)
 {
   memset(d,0,sizeof(float)*std::max(1lu,(long unsigned int)(src.size())));
   for(uint32_t k=0;k<src.size();++k)
-    d[k] = src[k];
+    d[k] = (float)(src[k]);
 }
 
 wave_t::wave_t(const wave_t& src)
@@ -122,11 +122,11 @@ uint32_t wave_t::copy_stride(float* data,uint32_t cnt,uint32_t stride, float gai
   return n_min;
 }
 
-void wave_t::operator*=(double v)
-{
-  for( uint32_t k=0;k<n;++k)
-    d[k] *= v;
-}
+//void wave_t::operator*=(double v)
+//{
+//  for( uint32_t k=0;k<n;++k)
+//    d[k] *= (float)v;
+//}
 
 void wave_t::operator*=(float v)
 {
@@ -134,11 +134,11 @@ void wave_t::operator*=(float v)
     d[k] *= v;
 }
 
-void wave_t::operator+=(double v)
-{
-  for( uint32_t k=0;k<n;++k)
-    d[k] += v;
-}
+//void wave_t::operator+=(double v)
+//{
+//  for( uint32_t k=0;k<n;++k)
+//    d[k] += v;
+//}
 
 void wave_t::operator+=(float v)
 {

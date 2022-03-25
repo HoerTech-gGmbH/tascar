@@ -1098,6 +1098,19 @@ void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
     set_attribute_deg(name, value);
 }
 
+void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
+                                              float& value,
+                                              const std::string& info)
+{
+  TASCAR_ASSERT(e);
+  node_register_attr(e, name, TASCAR::to_string(value * RAD2DEGf), "deg", info,
+                     "float");
+  if(has_attribute(name))
+    get_attribute_value_deg(e, name, value);
+  else
+    set_attribute_deg(name, value);
+}
+
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           TASCAR::pos_t& value,
                                           const std::string& unit,
@@ -1793,6 +1806,17 @@ void get_attribute_value_deg(const tsccfg::node_t& elem,
   double tmpv(strtod(attv.c_str(), &c));
   if(c != attv.c_str())
     value = DEG2RAD * tmpv;
+}
+
+void get_attribute_value_deg(const tsccfg::node_t& elem,
+                             const std::string& name, float& value)
+{
+  TASCAR_ASSERT(elem);
+  std::string attv(tsccfg::node_get_attribute_value(elem, name));
+  char* c;
+  double tmpv(strtod(attv.c_str(), &c));
+  if(c != attv.c_str())
+    value = DEG2RADf * tmpv;
 }
 
 void get_attribute_value_db(const tsccfg::node_t& elem, const std::string& name,

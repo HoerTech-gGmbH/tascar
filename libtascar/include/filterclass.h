@@ -131,18 +131,18 @@ namespace TASCAR {
     void set_fq(double fresnorm, double q);
     inline float filter(float inval)
     {
-      inval = (a1 * inval + b1 * statey1 + b2 * statey2);
+      inval = (float)(a1 * (double)inval + b1 * statey1 + b2 * statey2);
       make_friendly_number_limited(inval);
       statey2 = statey1;
-      statey1 = inval;
+      statey1 = (double)inval;
       return inval;
     };
     inline float filter_unscaled(float inval)
     {
-      inval = (inval + b1 * statey1 + b2 * statey2);
+      inval = (float)((double)inval + b1 * statey1 + b2 * statey2);
       make_friendly_number_limited(inval);
       statey2 = statey1;
-      statey1 = inval;
+      statey1 = (double)inval;
       return inval;
     };
 
@@ -187,7 +187,7 @@ namespace TASCAR {
     {
       float* wend(w.d + w.n);
       for(float* v = w.d; v < wend; ++v)
-        *v = filter(*v);
+        *v = (float)(filter((double)(*v)));
     };
     std::complex<double> response(double phi) const;
     std::complex<double> response_a(double phi) const;
@@ -271,7 +271,7 @@ namespace TASCAR {
     {
       float* wend(w.d + w.n);
       for(float* v = w.d; v < wend; ++v)
-        *v = filter(*v);
+        *v = (float)(filter((double)(*v)));
     };
     void clear()
     {
@@ -285,6 +285,29 @@ namespace TASCAR {
     double fs_;
   };
 
+  class bandpassf_t {
+  public:
+    bandpassf_t(float f1, float f2, float fs);
+    void set_range(float f1, float f2);
+    inline float filter(float in) { return b2.filter(b1.filter(in)); };
+    inline void filter(wave_t& w)
+    {
+      float* wend(w.d + w.n);
+      for(float* v = w.d; v < wend; ++v)
+        *v = filter(*v);
+    };
+    void clear()
+    {
+      b1.clear();
+      b2.clear();
+    };
+
+  private:
+    biquadf_t b1;
+    biquadf_t b2;
+    float fs_;
+  };
+
   class aweighting_t {
   public:
     aweighting_t(double fs);
@@ -296,7 +319,7 @@ namespace TASCAR {
     {
       float* wend(w.d + w.n);
       for(float* v = w.d; v < wend; ++v)
-        *v = filter(*v);
+        *v = (float)(filter((double)(*v)));
     };
     biquad_t b1;
     biquad_t b2;

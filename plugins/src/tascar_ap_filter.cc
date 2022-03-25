@@ -26,18 +26,20 @@
 class biquadplugin_t : public TASCAR::audioplugin_base_t {
 public:
   enum filtertype_t { lowpass, highpass, equalizer };
-  biquadplugin_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void configure();
   void release();
-  void add_variables( TASCAR::osc_server_t* srv );
+  void add_variables(TASCAR::osc_server_t* srv);
   ~biquadplugin_t();
+
 private:
-  double fc = 1000.0;
-  double gain = 0.0;
-  double Q = 1.0;
+  float fc = 1000.0;
+  float gain = 0.0;
+  float Q = 1.0;
   filtertype_t ftype = biquadplugin_t::lowpass;
-  std::vector<TASCAR::biquad_t*> bp;
+  std::vector<TASCAR::biquadf_t*> bp;
 };
 
 biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -66,47 +68,48 @@ biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
     throw TASCAR::ErrMsg("Invalid mode: " + mode);
 }
 
-void biquadplugin_t::add_variables( TASCAR::osc_server_t* srv )
+void biquadplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_double("/fc",&fc,"]0,20000]","Cutoff frequency in Hz");
-  if( ftype == biquadplugin_t::equalizer ){
-    srv->add_double("/gain",&gain,"[-30,30]","Gain in dB");
-    srv->add_double("/q",&Q,"]0,1[","Q-factor of resonance filter");
+  srv->add_float("/fc", &fc, "]0,20000]", "Cutoff frequency in Hz");
+  if(ftype == biquadplugin_t::equalizer) {
+    srv->add_float("/gain", &gain, "[-30,30]", "Gain in dB");
+    srv->add_float("/q", &Q, "]0,1[", "Q-factor of resonance filter");
   }
-  //srv->add_bool("/highpass",&highpass);
+  // srv->add_bool("/highpass",&highpass);
 }
 
 void biquadplugin_t::configure()
 {
   audioplugin_base_t::configure();
-  for( uint32_t ch=0;ch<n_channels;++ch)
-    bp.push_back(new TASCAR::biquad_t());
+  for(uint32_t ch = 0; ch < n_channels; ++ch)
+    bp.push_back(new TASCAR::biquadf_t());
 }
 
 void biquadplugin_t::release()
 {
   audioplugin_base_t::release();
-  for( auto it=bp.begin();it!=bp.end();++it)
-    delete (*it);
+  for(auto it = bp.begin(); it != bp.end(); ++it)
+    delete(*it);
   bp.clear();
 }
 
-biquadplugin_t::~biquadplugin_t()
-{
-}
+biquadplugin_t::~biquadplugin_t() {}
 
-void biquadplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void biquadplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                                const TASCAR::pos_t&,
+                                const TASCAR::zyx_euler_t&,
+                                const TASCAR::transport_t&)
 {
-  for(size_t k=0;k<chunk.size();++k){
-    switch( ftype ){
+  for(size_t k = 0; k < chunk.size(); ++k) {
+    switch(ftype) {
     case lowpass:
-      bp[k]->set_lowpass(fc, f_sample);
+      bp[k]->set_lowpass(fc, (float)f_sample);
       break;
     case highpass:
-      bp[k]->set_highpass(fc, f_sample);
+      bp[k]->set_highpass(fc, (float)f_sample);
       break;
     case equalizer:
-      bp[k]->set_pareq(fc, f_sample, gain, Q);
+      bp[k]->set_pareq(fc, (float)f_sample, gain, Q);
       break;
     }
     bp[k]->filter(chunk[k]);

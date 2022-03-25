@@ -122,10 +122,12 @@ namespace TASCAR {
     inline double norm() const { return sqrt(norm2()); };
     /// Eucledian norm of projection to x-y plane
     inline double norm_xy() const { return sqrt(x * x + y * y); };
+    inline float norm_xyf() const { return sqrtf((float)x * (float)x + (float)y * (float)y); };
     /// Azimuth in radians
     inline double azim() const { return atan2(y, x); };
     /// Elevation in radians
     inline double elev() const { return atan2(z, norm_xy()); };
+    inline float elevf() const { return atan2f((float)z, norm_xyf()); };
     /// Test if zero all dimensions
     inline bool is_null() const { return (x == 0) && (y == 0) && (z == 0); };
     /// Test if larger than zero in all dimension
@@ -421,6 +423,12 @@ namespace TASCAR {
   inline double dot_prod(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
   {
     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+  }
+
+  /// Dot product of two vectors
+  inline float dot_prodf(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
+  {
+    return (float)p1.x * (float)p2.x + (float)p1.y * (float)p2.y + (float)p1.z * (float)p2.z;
   }
 
   /// Vector multiplication of two vectors

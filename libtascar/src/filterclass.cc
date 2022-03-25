@@ -73,8 +73,8 @@ TASCAR::filter_t::filter_t(const TASCAR::filter_t& src)
 TASCAR::filter_t::filter_t(const std::vector<double>& vA, const std::vector<double>& vB)
   : A(NULL),
     B(NULL),
-    len_A(vA.size()),
-    len_B(vB.size()),
+    len_A((unsigned int)(vA.size())),
+    len_B((unsigned int)(vB.size())),
     len(0),
     state(NULL)
 {
@@ -138,9 +138,9 @@ void TASCAR::filter_t::filter(float* dest,
     // apply non recursive coefficients to output:
     dest[idx] = 0;
     for(uint32_t n=0; n<len_B; ++n)
-      dest[idx] += state[n] * B[n];
+      dest[idx] += (float)(state[n] * B[n]);
     // normalize by first recursive element:
-    dest[idx] /= A[0];
+    dest[idx] /= (float)(A[0]);
     make_friendly_number( dest[idx] );
   }
 }
@@ -393,19 +393,34 @@ TASCAR::bandpass_t::bandpass_t( double f1, double f2, double fs )
   set_range( f1, f2 );
 }
 
-void TASCAR::bandpass_t::set_range( double f1, double f2 )
+void TASCAR::bandpass_t::set_range(double f1, double f2)
 {
-  b1.set_gzp( 1.0,
-              1.0, 0.0,
-              pow(10.0,-2.0*f1/fs_),
-              f1/fs_*TASCAR_2PI );
-  b2.set_gzp( 1.0,
-              1.0, TASCAR_PI,
-              pow(10.0,-2.0*f2/fs_),
-              f2/fs_*TASCAR_2PI);
-  double f0(sqrt(f1*f2));
-  double g(std::abs(b1.response(f0/fs_*TASCAR_2PI)*b2.response(f0/fs_*TASCAR_2PI)));
-  b1.set_gzp(1.0/g,1.0, 0.0,pow(10.0,-2.0*f1/fs_),f1/fs_*TASCAR_2PI );
+  b1.set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * f1 / fs_), f1 / fs_ * TASCAR_2PI);
+  b2.set_gzp(1.0, 1.0, TASCAR_PI, pow(10.0, -2.0 * f2 / fs_),
+             f2 / fs_ * TASCAR_2PI);
+  double f0(sqrt(f1 * f2));
+  double g(std::abs(b1.response(f0 / fs_ * TASCAR_2PI) *
+                    b2.response(f0 / fs_ * TASCAR_2PI)));
+  b1.set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * f1 / fs_),
+             f1 / fs_ * TASCAR_2PI);
+}
+
+TASCAR::bandpassf_t::bandpassf_t(float f1, float f2, float fs) : fs_(fs)
+{
+  set_range(f1, f2);
+}
+
+void TASCAR::bandpassf_t::set_range(float f1, float f2)
+{
+  b1.set_gzp(1.0f, 1.0f, 0.0f, powf(10.0f, -2.0f * f1 / fs_),
+             f1 / fs_ * TASCAR_2PIf);
+  b2.set_gzp(1.0f, 1.0f, TASCAR_PIf, powf(10.0f, -2.0f * f2 / fs_),
+             f2 / fs_ * TASCAR_2PIf);
+  float f0(sqrtf(f1 * f2));
+  float g(std::abs(b1.response(f0 / fs_ * TASCAR_2PIf) *
+                   b2.response(f0 / fs_ * TASCAR_2PIf)));
+  b1.set_gzp(1.0f / g, 1.0f, 0.0f, powf(10.0f, -2.0f * f1 / fs_),
+             f1 / fs_ * TASCAR_2PIf);
 }
 
 void TASCAR::biquad_t::set_highpass(double fc, double fs, bool phaseinvert)
@@ -451,31 +466,35 @@ void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
 
 void TASCAR::biquadf_t::set_highpass(float fc, float fs, bool phaseinvert)
 {
-  set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
-  float g(std::abs(response(TASCAR_PI)));
+  set_gzp(1.0f, 1.0f, 0.0f, powf(10.0f, -2.0f * fc / fs),
+          fc / fs * TASCAR_2PIf);
+  float g(std::abs(response(TASCAR_PIf)));
   if(phaseinvert)
-    g *= -1.0;
-  set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+    g *= -1.0f;
+  set_gzp(1.0f / g, 1.0f, 0.0f, powf(10.0f, -2.0f * fc / fs),
+          fc / fs * TASCAR_2PIf);
 }
 
 void TASCAR::biquadf_t::set_lowpass(float fc, float fs, bool phaseinvert)
 {
-  set_gzp(1.0, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
-  float g(std::abs(response(0.0)));
+  set_gzp(1.0, 1.0, TASCAR_PIf, powf(10.0f, -2.0f * fc / fs),
+          fc / fs * TASCAR_2PIf);
+  float g(std::abs(response(0.0f)));
   if(phaseinvert)
-    g *= -1.0;
-  set_gzp(1.0 / g, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+    g *= -1.0f;
+  set_gzp(1.0f / g, 1.0f, TASCAR_PIf, powf(10.0f, -2.0f * fc / fs),
+          fc / fs * TASCAR_2PIf);
 }
 
 void TASCAR::biquadf_t::set_pareq(float f, float fs, float gain, float q)
 {
   // bilinear transformation
-  float t = 1.0f / tanf(TASCAR_PI * f / fs);
+  float t = 1.0f / tanf(TASCAR_PIf * f / fs);
   float t_sq = t * t;
   float Bc = t / q;
   if(gain < 0.0f) {
     float g = powf(10.0f, (-gain / 20.0f));
-    float inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
+    float inv_a0 = 1.0f / (t_sq + 1.0f + g * Bc);
     set_coefficients(
         2.0f * (1.0f - t_sq) * inv_a0, (t_sq + 1.0f - g * Bc) * inv_a0,
         (t_sq + 1.0f + Bc) * inv_a0, 2.0f * (1.0f - t_sq) * inv_a0,

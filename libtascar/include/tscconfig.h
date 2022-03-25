@@ -206,6 +206,8 @@ namespace TASCAR {
                           const std::string& info);
     void get_attribute_deg(const std::string& name, double& value,
                            const std::string& info);
+    void get_attribute_deg(const std::string& name, float& value,
+                           const std::string& info);
     void get_attribute(const std::string& name, TASCAR::pos_t& value,
                        const std::string& unit, const std::string& info);
     void get_attribute(const std::string& name, TASCAR::zyx_euler_t& value,
@@ -341,6 +343,8 @@ void get_attribute_value_db_float_vec(const tsccfg::node_t& elem,
                                       std::vector<float>& value);
 void get_attribute_value_deg(const tsccfg::node_t& elem,
                              const std::string& name, double& value);
+void get_attribute_value_deg(const tsccfg::node_t& elem,
+                             const std::string& name, float& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::pos_t& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
