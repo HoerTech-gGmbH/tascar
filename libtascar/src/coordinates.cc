@@ -72,6 +72,22 @@ std::string pos_t::print_sphere(const std::string& delim) const
   return tmp.str();
 }
 
+std::string posf_t::print_cart(const std::string& delim) const
+{
+  std::ostringstream tmp("");
+  tmp.precision(9);
+  tmp << x << delim << y << delim << z;
+  return tmp.str();
+}
+
+std::string posf_t::print_sphere(const std::string& delim) const
+{
+  std::ostringstream tmp("");
+  tmp.precision(9);
+  tmp << norm() << delim << RAD2DEGf * azim() << delim << RAD2DEGf * elev();
+  return tmp.str();
+}
+
 table1_t::table1_t() {}
 
 double table1_t::interp(double x) const
@@ -103,6 +119,11 @@ void pos_t::normalize()
   *this /= norm();
 }
 
+void posf_t::normalize()
+{
+  *this /= norm();
+}
+
 bool pos_t::has_infinity() const
 {
   if(x == std::numeric_limits<double>::infinity())
@@ -110,6 +131,17 @@ bool pos_t::has_infinity() const
   if(y == std::numeric_limits<double>::infinity())
     return true;
   if(z == std::numeric_limits<double>::infinity())
+    return true;
+  return false;
+}
+
+bool posf_t::has_infinity() const
+{
+  if(x == std::numeric_limits<float>::infinity())
+    return true;
+  if(y == std::numeric_limits<float>::infinity())
+    return true;
+  if(z == std::numeric_limits<float>::infinity())
     return true;
   return false;
 }
@@ -175,7 +207,7 @@ void ngon_t::nonrt_set(const std::vector<pos_t>& verts)
 {
   if(verts.size() < 3)
     throw TASCAR::ErrMsg("A polygon needs at least three vertices.");
-  if( verts.size() > (size_t)1<<31)
+  if(verts.size() > (size_t)1 << 31)
     throw TASCAR::ErrMsg("Too many vertices.");
   local_verts_ = verts;
   N = (uint32_t)(verts.size());

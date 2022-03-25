@@ -29,13 +29,13 @@
 #define COORDINATES_H
 
 #include "defs.h"
+#include <algorithm>
 #include <limits>
 #include <map>
 #include <math.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 /// Avoid de-normals by flipping to zero
 template <class T> void make_friendly_number(T& x)
@@ -120,14 +120,18 @@ namespace TASCAR {
     };
     inline float norm2f() const
     {
-      return std::max(1e-10f, (float)x * (float)x + (float)y * (float)y + (float)z * (float)z);
+      return std::max(1e-10f, (float)x * (float)x + (float)y * (float)y +
+                                  (float)z * (float)z);
     };
     /// Eucledian norm
     inline double norm() const { return sqrt(norm2()); };
     inline float normf() const { return sqrtf(norm2f()); };
     /// Eucledian norm of projection to x-y plane
     inline double norm_xy() const { return sqrt(x * x + y * y); };
-    inline float norm_xyf() const { return sqrtf((float)x * (float)x + (float)y * (float)y); };
+    inline float norm_xyf() const
+    {
+      return sqrtf((float)x * (float)x + (float)y * (float)y);
+    };
     /// Azimuth in radians
     inline double azim() const { return atan2(y, x); };
     /// Elevation in radians
@@ -152,6 +156,11 @@ namespace TASCAR {
     float boxvolumef() const { return (float)x * (float)y * (float)z; };
     /// Box area:
     double boxarea() const { return 2.0 * (x * y + x * z + y * z); };
+    float boxareaf() const
+    {
+      return 2.0f *
+             ((float)x * (float)y + (float)x * (float)z + (float)y * (float)z);
+    };
     /// Normalize vector
     void normalize();
     /**
@@ -210,6 +219,144 @@ namespace TASCAR {
        \brief Initialize to cartesian coordinates
     */
     pos_t(double nx, double ny, double nz) : x(nx), y(ny), z(nz){};
+    /**
+       \brief Format as string in cartesian coordinates
+    */
+    std::string print_cart(const std::string& delim = ", ") const;
+    /**
+       \brief Format as string in spherical coordinates
+    */
+    std::string print_sphere(const std::string& delim = ", ") const;
+    /**
+       \brief Check for infinity in any of the elements
+    */
+    bool has_infinity() const;
+  };
+
+  /**
+     \brief Cartesian coordinate vector with single precision resolution
+  */
+  class posf_t {
+  public:
+    /// x-axis, to the front
+    float x;
+    /// y-axis, to the left
+    float y;
+    /// z-axis, to the top
+    float z;
+    /**
+       \brief Set point from cartesian coordinates
+       \param nx new x value
+       \param ny new y value
+       \param nz new z value
+    */
+    void set_cart(float nx, float ny, float nz)
+    {
+      x = nx;
+      y = ny;
+      z = nz;
+    };
+    /**
+       \brief Set point from spherical coordinates
+       \param r radius from center
+       \param phi azimuth
+       \param theta elevation
+    */
+    void set_sphere(float r, float phi, float theta)
+    {
+      x = r * cosf(phi) * cosf(theta);
+      y = r * sinf(phi) * cosf(theta);
+      z = r * sinf(theta);
+    };
+    /// squared norm of vector
+    inline float norm2() const
+    {
+      return std::max(1e-10f, x * x + y * y + z * z);
+    };
+    /// Eucledian norm
+    inline float norm() const { return sqrtf(norm2()); };
+    /// Eucledian norm of projection to x-y plane
+    inline float norm_xy() const { return sqrtf(x * x + y * y); };
+    /// Azimuth in radians
+    inline float azim() const { return atan2f(y, x); };
+    /// Elevation in radians
+    inline float elev() const { return atan2f(z, norm_xy()); };
+    /// Test if zero all dimensions
+    inline bool is_null() const { return (x == 0) && (y == 0) && (z == 0); };
+    /// Test if larger than zero in all dimension
+    inline bool has_volume() const { return (x > 0) && (y > 0) && (z > 0); };
+    /// Return normalized vector
+    inline posf_t normal() const
+    {
+      posf_t r(*this);
+      float n(1.0f / norm());
+      r.x *= n;
+      r.y *= n;
+      r.z *= n;
+      return r;
+    };
+    /// Box volume:
+    float boxvolume() const { return x * y * z; };
+    /// Box area:
+    float boxarea() const { return 2.0f * (x * y + x * z + y * z); };
+    /// Normalize vector
+    void normalize();
+    /**
+       \brief Rotate around z-axis
+    */
+    inline posf_t& rot_z(float a)
+    {
+      if(a != 0) {
+        // cos -sin  0
+        // sin  cos  0
+        //  0    0   1
+        float xn = cosf(a) * x - sinf(a) * y;
+        float yn = cosf(a) * y + sinf(a) * x;
+        x = xn;
+        y = yn;
+      }
+      return *this;
+    };
+    /**
+       \brief Rotate around x-axis
+    */
+    inline posf_t& rot_x(float a)
+    {
+      if(a != 0) {
+        // 1   0    0
+        // 0  cos -sin
+        // 0  sin  cos
+        float zn = cosf(a) * z + sinf(a) * y;
+        float yn = cosf(a) * y - sinf(a) * z;
+        z = zn;
+        y = yn;
+      }
+      return *this;
+    };
+    /**
+       \brief Rotate around y-axis
+    */
+    inline posf_t& rot_y(float a)
+    {
+      if(a != 0) {
+        // cos 0 sin
+        //  0  1   0
+        // -sin 0  cos
+        float xn = cosf(a) * x + sinf(a) * z;
+        float zn = cosf(a) * z - sinf(a) * x;
+        z = zn;
+        x = xn;
+      }
+      return *this;
+    };
+    /**
+       \brief Default constructor, initialize to origin
+    */
+    posf_t() : x(0), y(0), z(0){};
+    /**
+       \brief Initialize to cartesian coordinates
+    */
+    posf_t(float nx, float ny, float nz) : x(nx), y(ny), z(nz){};
     /**
        \brief Format as string in cartesian coordinates
     */
@@ -392,10 +539,34 @@ namespace TASCAR {
   };
   /**
      \brief Scale relative to origin
+     \param d inverse ratio
+     \param self modified Cartesian coordinates
+  */
+  inline TASCAR::posf_t& operator/=(TASCAR::posf_t& self, float d)
+  {
+    self.x /= d;
+    self.y /= d;
+    self.z /= d;
+    return self;
+  };
+  /**
+     \brief Scale relative to origin
      \param d ratio
      \param self modified Cartesian coordinates
   */
   inline TASCAR::pos_t& operator*=(TASCAR::pos_t& self, double d)
+  {
+    self.x *= d;
+    self.y *= d;
+    self.z *= d;
+    return self;
+  };
+  /**
+     \brief Scale relative to origin
+     \param d ratio
+     \param self modified Cartesian coordinates
+  */
+  inline TASCAR::posf_t& operator*=(TASCAR::posf_t& self, float d)
   {
     self.x *= d;
     self.y *= d;
@@ -440,7 +611,8 @@ namespace TASCAR {
   /// Dot product of two vectors
   inline float dot_prodf(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
   {
-    return (float)p1.x * (float)p2.x + (float)p1.y * (float)p2.y + (float)p1.z * (float)p2.z;
+    return (float)p1.x * (float)p2.x + (float)p1.y * (float)p2.y +
+           (float)p1.z * (float)p2.z;
   }
 
   /// Vector multiplication of two vectors
@@ -621,6 +793,14 @@ namespace TASCAR {
       y = (float)(axis.y);
       z = (float)(axis.z);
     };
+    inline void set_rotation(float angle, TASCAR::posf_t axis)
+    {
+      axis *= sinf(0.5f * angle);
+      w = cosf(0.5f * angle);
+      x = axis.x;
+      y = axis.y;
+      z = axis.z;
+    };
     inline void set_euler(const zyx_euler_t& eul)
     {
       // Abbreviations for the various angular functions
@@ -651,6 +831,14 @@ namespace TASCAR {
     inline void rotate(TASCAR::pos_t& p)
     {
       quaternion_t qv(0.0f, (float)(p.x), (float)(p.y), (float)(p.z));
+      qv = (*this) * qv * inverse();
+      p.x = qv.x;
+      p.y = qv.y;
+      p.z = qv.z;
+    };
+    inline void rotate(TASCAR::posf_t& p)
+    {
+      quaternion_t qv(0.0f, p.x, p.y, p.z);
       qv = (*this) * qv * inverse();
       p.x = qv.x;
       p.y = qv.y;

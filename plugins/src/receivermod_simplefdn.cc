@@ -26,6 +26,7 @@
 #include <limits>
 
 const std::complex<double> i_d(0.0, 1.0);
+const std::complex<float> i_f(0.0f, 1.0f);
 
 /**
  * A First Order Ambisonics audio sample
@@ -197,7 +198,7 @@ reflectionfilter_t::reflectionfilter_t(uint32_t d1)
 {
   eta.resize(d1);
   for(uint32_t k = 0; k < d1; ++k)
-    eta[k] = 0.87 * (double)k / (d1 - 1);
+    eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
 }
 
 /**
@@ -291,7 +292,7 @@ void fdn_t::process(bool b_prefilt)
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
     foa_sample_t tmp(delayline.elem(tap, pos[tap]));
     reflection.filter(tmp, tap);
-    TASCAR::pos_t p(tmp.x, tmp.y, tmp.z);
+    TASCAR::posf_t p(tmp.x, tmp.y, tmp.z);
     rotation[tap].rotate(p);
     tmp.x = p.x;
     tmp.y = p.y;
@@ -343,36 +344,36 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
 {
   // set delays:
   delayline.clear();
-  double t_mean(0);
+  float t_mean(0);
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
-    double t_(t_min);
+    float t_(t_min);
     if(logdelays_) {
       // logarithmic distribution:
       if(fdnorder_ > 1)
         t_ =
-            t_min * pow(t_max / t_min, (double)tap / ((double)fdnorder_ - 1.0));
+            t_min * powf(t_max / t_min, (float)tap / ((float)fdnorder_ - 1.0f));
       ;
     } else {
       // squareroot distribution:
       if(fdnorder_ > 1)
         t_ = t_min + (t_max - t_min) *
-                         pow((double)tap / ((double)fdnorder_ - 1.0), 0.5);
+                         powf((float)tap / ((float)fdnorder_ - 1.0f), 0.5f);
     }
-    uint32_t d(std::max(0.0, t_));
+    uint32_t d((uint32_t)std::max(0.0f, t_));
     delay[tap] = std::max(2u, std::min(maxdelay_ - 1u, d));
-    t_mean += delay[tap];
+    t_mean += (float)delay[tap];
   }
-  t_mean /= std::max(1u, fdnorder_);
-  double g(0.0);
+  t_mean /= (float)std::max(1u, fdnorder_);
+  float g(0.0f);
   switch(gainmethod) {
   case fdn_t::original:
-    g = exp(-4.2 * t_min / t60);
+    g = expf(-4.2f * t_min / t60);
     break;
   case fdn_t::mean:
-    g = exp(-4.2 * t_mean / t60);
+    g = expf(-4.2f * t_mean / t60);
     break;
   case fdn_t::schroeder:
-    g = pow(10.0, -3.0 * t_mean / t60);
+    g = powf(10.0f, -3.0f * t_mean / t60);
     break;
   }
   // set reflection filters:
@@ -382,13 +383,14 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
     float laz(az);
     if(fdnorder_ > 1)
-      laz = az - daz + 2.0 * daz * tap * 1.0 / (fdnorder_);
-    rotation[tap].set_rotation(laz, TASCAR::pos_t(0, 0, 1));
+      laz = az - daz + 2.0f * daz * (float)tap / (float)fdnorder_;
+    rotation[tap].set_rotation(laz, TASCAR::posf_t(0, 0, 1));
     TASCAR::quaternion_t q;
-    q.set_rotation(0.5 * daz * (tap & 1) - 0.5 * daz, TASCAR::pos_t(0, 1, 0));
+    q.set_rotation(0.5f * daz * (float)(tap & 1) - 0.5f * daz,
+                   TASCAR::posf_t(0, 1, 0));
     rotation[tap] *= q;
-    q.set_rotation(0.125 * daz * (tap % 3) - 0.25 * daz,
-                   TASCAR::pos_t(1, 0, 0));
+    q.set_rotation(0.125f * daz * (float)(tap % 3) - 0.25f * daz,
+                   TASCAR::posf_t(1, 0, 0));
     rotation[tap] *= q;
   }
   // set feedback matrix:
@@ -396,8 +398,8 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
     TASCAR::fft_t fft(fdnorder_);
     TASCAR::spec_t eigenv(fdnorder_ / 2 + 1);
     for(uint32_t k = 0; k < eigenv.n_; ++k)
-      eigenv[k] =
-          std::exp(i_d * TASCAR_2PI * pow((double)k / (0.5 * fdnorder_), 2.0));
+      eigenv[k] = std::exp(i_f * TASCAR_2PIf *
+                           powf((float)k / (0.5f * (float)fdnorder_), 2.0f));
     ;
     fft.execute(eigenv);
     for(uint32_t itap = 0; itap < fdnorder_; ++itap)
@@ -419,14 +421,14 @@ public:
   ~simplefdn_vars_t();
   // protected:
   uint32_t fdnorder = 5;
-  double w = 0.0;
-  double dw = 60.0;
-  double t60 = 0.0;
-  double damping = 0.3;
+  float w = 0.0;
+  float dw = 60.0;
+  float t60 = 0.0;
+  float damping = 0.3f;
   bool prefilt = true;
   bool logdelays = true;
-  double absorption = 0.6;
-  double c = 340.0;
+  float absorption = 0.6f;
+  float c = 340.0f;
   bool fixcirculantmat = false;
   TASCAR::pos_t volumetric;
   fdn_t::gainmethod_t gm;
@@ -485,7 +487,7 @@ public:
     float _w[AMB11ACN::idx::channels];
     float w_current[AMB11ACN::idx::channels];
     float dw[AMB11ACN::idx::channels];
-    double dt;
+    float dt;
   };
   simplefdn_t(tsccfg::node_t xmlsrc);
   ~simplefdn_t();
@@ -494,8 +496,8 @@ public:
                        const TASCAR::wave_t& chunk,
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
-  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
-                               std::vector<TASCAR::wave_t>& output,
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t&,
+                               std::vector<TASCAR::wave_t>&,
                                receivermod_base_t::data_t*){};
   void update_par();
   void setlogdelays(bool ld);
@@ -530,8 +532,8 @@ private:
   TASCAR::wave_t* ir_band;
 };
 
-int simplefdn_t::osc_fixcirculantmat(const char* path, const char* types,
-                                     lo_arg** argv, int argc, lo_message msg,
+int simplefdn_t::osc_fixcirculantmat(const char*, const char* types,
+                                     lo_arg** argv, int argc, lo_message,
                                      void* user_data)
 {
   if((1 == argc) && (types[0] == 'i')) {
@@ -541,10 +543,9 @@ int simplefdn_t::osc_fixcirculantmat(const char* path, const char* types,
   return 0;
 }
 
-int simplefdn_t::osc_set_dim_damp_absorption(const char* path,
-                                             const char* types, lo_arg** argv,
-                                             int argc, lo_message msg,
-                                             void* user_data)
+int simplefdn_t::osc_set_dim_damp_absorption(const char*, const char* types,
+                                             lo_arg** argv, int argc,
+                                             lo_message, void* user_data)
 {
   if((5 == argc) && (types[0] == 'f') && (types[1] == 'f') &&
      (types[2] == 'f') && (types[3] == 'f') && (types[4] == 'f')) {
@@ -564,7 +565,8 @@ simplefdn_t::simplefdn_t(tsccfg::node_t cfg)
       distcorr(1.0)
 {
   if(t60 <= 0.0)
-    t60 = 0.161 * volumetric.boxvolume() / (absorption * volumetric.boxarea());
+    t60 =
+        0.161f * volumetric.boxvolumef() / (absorption * volumetric.boxareaf());
   pthread_mutex_init(&mtx, NULL);
 }
 
@@ -647,7 +649,7 @@ void simplefdn_t::configure()
   n_channels = AMB11ACN::idx::channels;
   if(fdn)
     delete fdn;
-  fdn = new fdn_t(fdnorder, f_sample, logdelays, gm);
+  fdn = new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm);
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
@@ -658,24 +660,24 @@ void simplefdn_t::configure()
     labels.push_back(ctmp);
   }
   // prepare impulse response container for T60 measurements:
-  size_t irlen(f_sample);
-  double maxdim(volumetric.x);
-  maxdim = std::max(maxdim, volumetric.y);
-  maxdim = std::max(maxdim, volumetric.z);
-  size_t irlendim(10.0 * maxdim / c * f_sample);
+  size_t irlen((size_t)f_sample);
+  float maxdim((float)volumetric.x);
+  maxdim = std::max(maxdim, (float)volumetric.y);
+  maxdim = std::max(maxdim, (float)volumetric.z);
+  size_t irlendim((size_t)(10.0f * maxdim / c * (float)f_sample));
   irlen = std::max(irlen, irlendim);
-  ir_bb = new TASCAR::wave_t(irlen);
-  ir_band = new TASCAR::wave_t(irlen);
+  ir_bb = new TASCAR::wave_t((uint32_t)irlen);
+  ir_band = new TASCAR::wave_t((uint32_t)irlen);
   if(vcf.size() > 0) {
     // optimize damping and absorption to match given T60
     // first optimize absorption
-    t60 = 0.0;
-    damping = 0.2;
+    t60 = 0.0f;
+    damping = 0.2f;
     absorption =
-        0.161 * volumetric.boxvolume() / (vt60[0] * volumetric.boxarea());
+        0.161f * volumetric.boxvolumef() / (vt60[0] * volumetric.boxareaf());
     float eps = 1.0f;
     float lasterr = 10000.0f;
-    std::vector<float> param = {(float)absorption};
+    std::vector<float> param = {absorption};
     for(size_t it = 0; it < numiter; ++it) {
       float err = downhill_iterate(eps, param, t60err_, this, {1e-3f});
       param[0] = fabs(param[0]);
@@ -689,9 +691,9 @@ void simplefdn_t::configure()
     for(size_t it = 0; it < numiter; ++it) {
       float err = downhill_iterate(eps, param, slopeerr_, this, {2e-3f});
       param[0] = std::min(0.99f, fabs(param[0]));
-      if(err > 4 * lasterr)
-        eps *= 0.5;
-      if((err < 0.00005) || (fabsf(lasterr / err - 1.0f) < 1e-9f))
+      if(err > 4.0f * lasterr)
+        eps *= 0.5f;
+      if((err < 0.00005f) || (fabsf(lasterr / err - 1.0f) < 1e-9f))
         it = numiter;
       lasterr = err;
     }
@@ -737,19 +739,23 @@ simplefdn_t::~simplefdn_t()
 void simplefdn_t::update_par()
 {
   if(pthread_mutex_lock(&mtx) == 0) {
-    distcorr =
-        1.0 / (0.5 * pow(volumetric.x * volumetric.y * volumetric.z, 0.33333));
-    double tmin(std::min(volumetric.x, std::min(volumetric.y, volumetric.z)) /
-                c);
-    double tmax(std::max(volumetric.x, std::max(volumetric.y, volumetric.z)) /
-                c);
+    distcorr = 1.0f / (0.5f * powf((float)volumetric.x * (float)volumetric.y *
+                                       (float)volumetric.z,
+                                   0.33333f));
+    float tmin(std::min((float)volumetric.x,
+                        std::min((float)volumetric.y, (float)volumetric.z)) /
+               c);
+    float tmax(std::max((float)volumetric.x,
+                        std::max((float)volumetric.y, (float)volumetric.z)) /
+               c);
     if(t60 <= 0.0)
-      t60 =
-          0.161 * volumetric.boxvolume() / (absorption * volumetric.boxarea());
+      t60 = 0.161f * volumetric.boxvolumef() /
+            (absorption * volumetric.boxareaf());
     if(fdn) {
-      double wscale(TASCAR_2PI * tmin);
-      fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
-                      f_sample * t60, std::max(0.0, std::min(0.999, damping)),
+      float wscale(TASCAR_2PIf * tmin);
+      fdn->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
+                      (float)f_sample * tmax, (float)f_sample * t60,
+                      std::max(0.0f, std::min(0.999f, damping)),
                       fixcirculantmat);
     }
     pthread_mutex_unlock(&mtx);
@@ -761,16 +767,19 @@ void simplefdn_t::setlogdelays(bool ld)
   if(pthread_mutex_lock(&mtx) == 0) {
     if(fdn) {
       fdn->set_logdelays(ld);
-      double tmin(std::min(volumetric.x, std::min(volumetric.y, volumetric.z)) /
-                  c);
-      double tmax(std::max(volumetric.x, std::max(volumetric.y, volumetric.z)) /
-                  c);
-      if(t60 <= 0.0)
-        t60 = 0.161 * volumetric.boxvolume() /
-              (absorption * volumetric.boxarea());
-      double wscale(TASCAR_2PI * tmin);
-      fdn->setpar_t60(wscale * w, wscale * dw, f_sample * tmin, f_sample * tmax,
-                      f_sample * t60, std::max(0.0, std::min(0.999, damping)),
+      float tmin(std::min((float)volumetric.x,
+                          std::min((float)volumetric.y, (float)volumetric.z)) /
+                 c);
+      float tmax(std::max((float)volumetric.x,
+                          std::max((float)volumetric.y, (float)volumetric.z)) /
+                 c);
+      if(t60 <= 0.0f)
+        t60 = 0.161f * volumetric.boxvolumef() /
+              (absorption * volumetric.boxareaf());
+      float wscale(TASCAR_2PIf * tmin);
+      fdn->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
+                      (float)f_sample * tmax, (float)f_sample * t60,
+                      std::max(0.0f, std::min(0.999f, damping)),
                       fixcirculantmat);
     }
     pthread_mutex_unlock(&mtx);
@@ -805,8 +814,8 @@ float ir_get_t60(TASCAR::wave_t& ir, float fs)
   if(ir.n < 2)
     return -1;
   // max threshold is -0.2 dB below max:
-  float thmax = powf(10.0f, -0.1 * 10.2f);
-  float thmin = powf(10.0f, -0.1 * 30.2f);
+  float thmax = powf(10.0f, -0.1f * 10.2f);
+  float thmin = powf(10.0f, -0.1f * 30.2f);
   float cs = 0.0f;
   for(size_t k = ir.n - 1; k != 0; --k) {
     cs += ir.d[k] * ir.d[k];
@@ -824,7 +833,7 @@ float ir_get_t60(TASCAR::wave_t& ir, float fs)
   }
   if(idx_min > idx_max) {
     cs = (-60.0f / (10.0f * log10f(ir.d[idx_min] / ir.d[idx_max]) * fs)) *
-         (idx_min - idx_max);
+         (float)(idx_min - idx_max);
     return cs;
   }
   return -1.0f;
@@ -847,7 +856,7 @@ void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
         bp.filter(*ir_band);
         bp.clear();
         bp.filter(*ir_band);
-        t60.push_back(ir_get_t60(*ir_band, f_sample));
+        t60.push_back(ir_get_t60(*ir_band, (float)f_sample));
       }
     }
     pthread_mutex_unlock(&mtx);
@@ -855,35 +864,37 @@ void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
 }
 
 TASCAR::receivermod_base_t::data_t*
-simplefdn_t::create_state_data(double srate, uint32_t fragsize) const
+simplefdn_t::create_state_data(double, uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }
 
-void simplefdn_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+void simplefdn_t::add_pointsource(const TASCAR::pos_t& prel, double,
                                   const TASCAR::wave_t& chunk,
-                                  std::vector<TASCAR::wave_t>& output,
+                                  std::vector<TASCAR::wave_t>&,
                                   receivermod_base_t::data_t* sd)
 {
   TASCAR::pos_t pnorm(prel.normal());
   data_t* d((data_t*)sd);
   // use ACN everywhere:
   d->_w[AMB11ACN::idx::w] = wgain;
-  d->_w[AMB11ACN::idx::x] = pnorm.x;
-  d->_w[AMB11ACN::idx::y] = pnorm.y;
-  d->_w[AMB11ACN::idx::z] = pnorm.z;
-  for(unsigned int k = 0; k < AMB11ACN::idx::channels; k++)
-    d->dw[k] = (d->_w[k] - d->w_current[k]) * d->dt;
+  d->_w[AMB11ACN::idx::x] = (float)pnorm.x;
+  d->_w[AMB11ACN::idx::y] = (float)pnorm.y;
+  d->_w[AMB11ACN::idx::z] = (float)pnorm.z;
+  for(uint32_t acn = 0; acn < AMB11ACN::idx::channels; ++acn)
+    d->dw[acn] = (d->_w[acn] - d->w_current[acn]) * d->dt;
   for(uint32_t acn = 0; acn < AMB11ACN::idx::channels; ++acn)
     for(uint32_t i = 0; i < chunk.size(); i++)
       (*foa_out)[acn][i] += (d->w_current[acn] += d->dw[acn]) * chunk[i];
+  for(uint32_t acn = 0; acn < AMB11ACN::idx::channels; ++acn)
+    d->w_current[acn] = d->_w[acn];
 }
 
 simplefdn_t::data_t::data_t(uint32_t chunksize)
 {
   for(uint32_t k = 0; k < AMB11ACN::idx::channels; k++)
     _w[k] = w_current[k] = dw[k] = 0;
-  dt = 1.0 / std::max(1.0, (double)chunksize);
+  dt = 1.0f / std::max(1.0f, (float)chunksize);
 }
 
 REGISTER_RECEIVERMOD(simplefdn_t);
