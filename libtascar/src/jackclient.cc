@@ -392,7 +392,7 @@ void jackc_transport_t::tp_playrange(double t1, double t2)
   stop_at_time = 0;
   tp_locate(t1);
   // wait for one block:
-  usleep(1.0e6 * (double)fragsize / srate);
+  usleep((useconds_t)(1.0e6 * (double)fragsize / srate));
   stop_at_time = t2;
   tp_start();
 }
@@ -401,7 +401,7 @@ void jackc_portless_t::tp_locate(double p)
 {
   if(shutdown)
     throw TASCAR::ErrMsg("Jack server has shut down");
-  jack_transport_locate(jc, p * srate);
+  jack_transport_locate(jc, (jack_nframes_t)(p * srate));
 }
 
 void jackc_portless_t::tp_locate(uint32_t p)

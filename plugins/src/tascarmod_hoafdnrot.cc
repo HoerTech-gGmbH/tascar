@@ -19,43 +19,43 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "session.h"
-#include "jackclient.h"
-#include <string.h>
-#include <cstdlib>
-#include <cmath>
-#include <limits>
 #include "fft.h"
+#include "jackclient.h"
+#include "session.h"
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <string.h>
 
-const std::complex<float> i(0.0, 1.0);
+const std::complex<float> i_f(0.0f, 1.0f);
 const std::complex<double> i_d(0.0, 1.0);
 
 class cmat3_t {
 public:
-  cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 );
+  cmat3_t(uint32_t d1, uint32_t d2, uint32_t d3);
   ~cmat3_t();
-  inline std::complex<float>& elem(uint32_t p1,uint32_t p2,uint32_t p3) { 
-    return data[p1*s23+p2*s3+p3]; 
+  inline std::complex<float>& elem(uint32_t p1, uint32_t p2, uint32_t p3)
+  {
+    return data[p1 * s23 + p2 * s3 + p3];
   };
-  inline const std::complex<float>& elem(uint32_t p1,uint32_t p2,uint32_t p3) const { 
-    return data[p1*s23+p2*s3+p3]; 
+  inline const std::complex<float>& elem(uint32_t p1, uint32_t p2,
+                                         uint32_t p3) const
+  {
+    return data[p1 * s23 + p2 * s3 + p3];
   };
-  inline std::complex<float>& elem000() { 
-    return data[0]; 
+  inline std::complex<float>& elem000() { return data[0]; };
+  inline const std::complex<float>& elem000() const { return data[0]; };
+  inline std::complex<float>& elem00x(uint32_t p3) { return data[p3]; };
+  inline const std::complex<float>& elem00x(uint32_t p3) const
+  {
+    return data[p3];
   };
-  inline const std::complex<float>& elem000() const { 
-    return data[0]; 
-  };
-  inline std::complex<float>& elem00x(uint32_t p3) { 
-    return data[p3]; 
-  };
-  inline const std::complex<float>& elem00x(uint32_t p3) const { 
-    return data[p3]; 
-  };
-  inline void clear() {
+  inline void clear()
+  {
     data.clear();
-    //memset(data,0,sizeof(std::complex<float>)*s1*s2*s3);
+    // memset(data,0,sizeof(std::complex<float>)*s1*s2*s3);
   };
+
 protected:
   uint32_t s1;
   uint32_t s2;
@@ -66,30 +66,29 @@ protected:
 
 class cmat2_t {
 public:
-  cmat2_t( uint32_t d1, uint32_t d2 );
+  cmat2_t(uint32_t d1, uint32_t d2);
   ~cmat2_t();
-  inline std::complex<float>& elem(uint32_t p1,uint32_t p2) { 
-    return data[p1*s2+p2]; 
+  inline std::complex<float>& elem(uint32_t p1, uint32_t p2)
+  {
+    return data[p1 * s2 + p2];
   };
-  inline const std::complex<float>& elem(uint32_t p1,uint32_t p2) const { 
-    return data[p1*s2+p2]; 
+  inline const std::complex<float>& elem(uint32_t p1, uint32_t p2) const
+  {
+    return data[p1 * s2 + p2];
   };
-  inline std::complex<float>& elem00() { 
-    return data[0]; 
+  inline std::complex<float>& elem00() { return data[0]; };
+  inline const std::complex<float>& elem00() const { return data[0]; };
+  inline std::complex<float>& elem0x(uint32_t p2) { return data[p2]; };
+  inline const std::complex<float>& elem0x(uint32_t p2) const
+  {
+    return data[p2];
   };
-  inline const std::complex<float>& elem00() const { 
-    return data[0]; 
-  };
-  inline std::complex<float>& elem0x(uint32_t p2) { 
-    return data[p2]; 
-  };
-  inline const std::complex<float>& elem0x(uint32_t p2) const { 
-    return data[p2]; 
-  };
-  inline void clear() {
+  inline void clear()
+  {
     data.clear();
-    //memset(data,0,sizeof(std::complex<float>)*s1*s2);
+    // memset(data,0,sizeof(std::complex<float>)*s1*s2);
   };
+
 protected:
   uint32_t s1;
   uint32_t s2;
@@ -98,77 +97,60 @@ protected:
 
 class cmat1_t {
 public:
-  cmat1_t( uint32_t d1 );
+  cmat1_t(uint32_t d1);
   ~cmat1_t();
-  inline std::complex<float>& elem(uint32_t p1) { 
-    return data[p1]; 
+  inline std::complex<float>& elem(uint32_t p1) { return data[p1]; };
+  inline const std::complex<float>& elem(uint32_t p1) const
+  {
+    return data[p1];
   };
-  inline const std::complex<float>& elem(uint32_t p1) const { 
-    return data[p1]; 
-  };
-  inline std::complex<float>& elem0() { 
-    return data[0]; 
-  };
-  inline const std::complex<float>& elem0() const { 
-    return data[0]; 
-  };
-  inline void clear() {
-    data.clear();
-  };
+  inline std::complex<float>& elem0() { return data[0]; };
+  inline const std::complex<float>& elem0() const { return data[0]; };
+  inline void clear() { data.clear(); };
+
 protected:
   uint32_t s1;
   TASCAR::spec_t data;
 };
 
-cmat3_t::cmat3_t( uint32_t d1, uint32_t d2, uint32_t d3 )
-  : s1(d1),s2(d2),s3(d3),
-    s23(s2*s3),
-    data(s1*s2*s3)
+cmat3_t::cmat3_t(uint32_t d1, uint32_t d2, uint32_t d3)
+    : s1(d1), s2(d2), s3(d3), s23(s2 * s3), data(s1 * s2 * s3)
 {
   clear();
 }
 
-cmat3_t::~cmat3_t()
-{
-}
+cmat3_t::~cmat3_t() {}
 
-cmat2_t::cmat2_t( uint32_t d1, uint32_t d2 )
-  : s1(d1),s2(d2),
-    data(s1*s2)
+cmat2_t::cmat2_t(uint32_t d1, uint32_t d2) : s1(d1), s2(d2), data(s1 * s2)
 {
   clear();
 }
 
-cmat2_t::~cmat2_t()
-{
-}
+cmat2_t::~cmat2_t() {}
 
-
-cmat1_t::cmat1_t( uint32_t d1 )
-  : s1(d1),
-    data(s1)
+cmat1_t::cmat1_t(uint32_t d1) : s1(d1), data(s1)
 {
   clear();
 }
 
-cmat1_t::~cmat1_t()
-{
-}
+cmat1_t::~cmat1_t() {}
 
-//y[n] = -g x[n] + x[n-1] + g y[n-1]
+// y[n] = -g x[n] + x[n-1] + g y[n-1]
 class reflectionfilter_t {
 public:
   reflectionfilter_t(uint32_t d1, uint32_t d2);
-  inline void filter( std::complex<float>& x, uint32_t p1, uint32_t p2) {
-    x = B1*x-A2*sy.elem(p1,p2);
-    sy.elem(p1,p2) = x;
+  inline void filter(std::complex<float>& x, uint32_t p1, uint32_t p2)
+  {
+    x = B1 * x - A2 * sy.elem(p1, p2);
+    sy.elem(p1, p2) = x;
     // all pass section:
-    std::complex<float> tmp(eta[p1]*x + sapx.elem( p1, p2 ));
-    sapx.elem( p1, p2 ) = x;
-    x = tmp - eta[p1]*sapy.elem( p1, p2 );
-    sapy.elem( p1, p2 ) = x;
+    std::complex<float> tmp(eta[p1] * x + sapx.elem(p1, p2));
+    sapx.elem(p1, p2) = x;
+    x = tmp - eta[p1] * sapy.elem(p1, p2);
+    sapy.elem(p1, p2) = x;
   };
-  void set_lp( float g, float c );
+  void set_lp(float g, float c);
+
 protected:
   float B1;
   float A2;
@@ -179,33 +161,32 @@ protected:
 };
 
 reflectionfilter_t::reflectionfilter_t(uint32_t d1, uint32_t d2)
-  : B1(0),A2(0),
-    sy(d1,d2),
-    sapx(d1,d2),
-    sapy(d1,d2)
+    : B1(0), A2(0), sy(d1, d2), sapx(d1, d2), sapy(d1, d2)
 {
   eta.resize(d1);
-  for(uint32_t k=0;k<d1;++k)
-    eta[k] = 0.87*(double)k/(d1-1);
+  for(uint32_t k = 0; k < d1; ++k)
+    eta[k] = 0.87f * (float)k / (float)(d1 - 1);
 }
 
-void reflectionfilter_t::set_lp( float g, float c )
+void reflectionfilter_t::set_lp(float g, float c)
 {
   sy.clear();
   sapx.clear();
   sapy.clear();
-  float c2(1.0f-c);
+  float c2(1.0f - c);
   B1 = g * c2;
   A2 = -c;
 }
 
 class fdn_t {
 public:
-  fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay, bool logdelays );
+  fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay, bool logdelays,
+        bool dumpmatrix_);
   ~fdn_t();
-  inline void process( bool b_prefilt );
-  void setpar( float az, float daz, float t, float dt, float g, float damping );
-  void set_logdelays( bool ld ){ logdelays_ = ld; };
+  inline void process(bool b_prefilt);
+  void setpar(float az, float daz, float t, float dt, float g, float damping);
+  void set_logdelays(bool ld) { logdelays_ = ld; };
+
 private:
   bool logdelays_;
   uint32_t fdnorder_;
@@ -226,6 +207,9 @@ private:
   uint32_t* delay;
   // delayline pointer:
   uint32_t* pos;
+  // show feedback matrix on console:
+  bool dumpmatrix;
+
 public:
   // input HOA sample:
   cmat1_t inval;
@@ -233,64 +217,59 @@ public:
   cmat1_t outval;
 };
 
-fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay, bool logdelays )
-  : logdelays_(logdelays),
-    fdnorder_(fdnorder),
-    amborder1(amborder+1),
-    maxdelay_(maxdelay),
-    delayline(fdnorder_,maxdelay_,amborder1),
-    feedbackmat(fdnorder_,fdnorder_,amborder1),
-    reflection(fdnorder,amborder1),
-    prefilt(2,amborder1),
-    rotation(fdnorder,amborder1),
-    dlout(fdnorder_,amborder1),
-    delay(new uint32_t[fdnorder_]),
-    pos(new uint32_t[fdnorder_]),
-    inval(amborder1),
-    outval(amborder1)
+fdn_t::fdn_t(uint32_t fdnorder, uint32_t amborder, uint32_t maxdelay,
+             bool logdelays, bool dumpmatrix_)
+    : logdelays_(logdelays), fdnorder_(fdnorder), amborder1(amborder + 1),
+      maxdelay_(maxdelay), delayline(fdnorder_, maxdelay_, amborder1),
+      feedbackmat(fdnorder_, fdnorder_, amborder1),
+      reflection(fdnorder, amborder1), prefilt(2, amborder1),
+      rotation(fdnorder, amborder1), dlout(fdnorder_, amborder1),
+      delay(new uint32_t[fdnorder_]), pos(new uint32_t[fdnorder_]),
+      dumpmatrix(dumpmatrix_), inval(amborder1), outval(amborder1)
 {
-  //DEBUG(fdnorder);
-  memset(delay,0,sizeof(uint32_t)*fdnorder_);
-  memset(pos,0,sizeof(uint32_t)*fdnorder_);
+  // DEBUG(fdnorder);
+  memset(delay, 0, sizeof(uint32_t) * fdnorder_);
+  memset(pos, 0, sizeof(uint32_t) * fdnorder_);
 }
 
 fdn_t::~fdn_t()
 {
-  delete [] delay;
-  delete [] pos;
+  delete[] delay;
+  delete[] pos;
 }
 
 void fdn_t::process(bool b_prefilt)
 {
-  if( b_prefilt ){
-    for(uint32_t o=0;o<amborder1;++o){
-      prefilt.filter(inval.elem(o),0,o);
-      prefilt.filter(inval.elem(o),1,o);
+  if(b_prefilt) {
+    for(uint32_t o = 0; o < amborder1; ++o) {
+      prefilt.filter(inval.elem(o), 0, o);
+      prefilt.filter(inval.elem(o), 1, o);
     }
   }
   outval.clear();
   // get output values from delayline, apply reflection filters and rotation:
-  for(uint32_t tap=0;tap<fdnorder_;++tap)
-    for(uint32_t o=0;o<amborder1;++o){
-      std::complex<float> tmp(delayline.elem(tap,pos[tap],o));
-      reflection.filter(tmp,tap,o);
-      tmp *= rotation.elem(tap,o);
-      dlout.elem(tap,o) = tmp;
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap)
+    for(uint32_t o = 0; o < amborder1; ++o) {
+      std::complex<float> tmp(delayline.elem(tap, pos[tap], o));
+      reflection.filter(tmp, tap, o);
+      tmp *= rotation.elem(tap, o);
+      dlout.elem(tap, o) = tmp;
       outval.elem(o) += tmp;
     }
   // put rotated+attenuated value to delayline, add input:
-  for(uint32_t tap=0;tap<fdnorder_;++tap){
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
     // first put input into delayline:
-    for(uint32_t o=0;o<amborder1;++o)
-      delayline.elem(tap,pos[tap],o) = inval.elem(o);
+    for(uint32_t o = 0; o < amborder1; ++o)
+      delayline.elem(tap, pos[tap], o) = inval.elem(o);
     // now add feedback signal:
-    for(uint32_t otap=0;otap<fdnorder_;++otap)
-      for(uint32_t o=0;o<amborder1;++o)
-        delayline.elem(tap,pos[tap],o) += dlout.elem(otap,o)*feedbackmat.elem(tap,otap,o);
+    for(uint32_t otap = 0; otap < fdnorder_; ++otap)
+      for(uint32_t o = 0; o < amborder1; ++o)
+        delayline.elem(tap, pos[tap], o) +=
+            dlout.elem(otap, o) * feedbackmat.elem(tap, otap, o);
     // iterate delayline:
-    if( !pos[tap] )
+    if(!pos[tap])
       pos[tap] = delay[tap];
-    if( pos[tap] )
+    if(pos[tap])
       --pos[tap];
   }
 }
@@ -304,117 +283,132 @@ void fdn_t::process(bool b_prefilt)
    \param g Gain
    \param damping Damping
  */
-void fdn_t::setpar(float az, float daz, float t, float dt, float g, float damping )
+void fdn_t::setpar(float az, float daz, float t, float dt, float g,
+                   float damping)
 {
   // set reflection filters:
-  reflection.set_lp( g, damping );
-  prefilt.set_lp( g, damping );
-  //reflection.set( g );
+  reflection.set_lp(g, damping);
+  prefilt.set_lp(g, damping);
+  // reflection.set( g );
   // set delays:
   delayline.clear();
-  for(uint32_t tap=0;tap<fdnorder_;++tap){
-    double t_(t);
-    if( logdelays_ ){
-      if( fdnorder_ > 1 )
-        t_ = dt*pow(t/dt,(double)tap/((double)fdnorder_-1.0));;
-    }else{
-      if( fdnorder_ > 1 )
-        t_ = t-dt+2.0*dt*pow(tap*1.0/(fdnorder_),0.5);
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+    float t_(t);
+    if(logdelays_) {
+      if(fdnorder_ > 1)
+        t_ = dt * pow(t / dt, (float)tap / ((float)fdnorder_ - 1.0f));
+      ;
+    } else {
+      if(fdnorder_ > 1)
+        t_ = t - dt +
+             2.0f * dt * powf((float)tap * 1.0f / (float)fdnorder_, 0.5f);
     }
-    uint32_t d(std::max(0.0,t_));
-    delay[tap] = std::max(2u,std::min(maxdelay_-1u,d));
+    uint32_t d((uint32_t)std::max(0.0f, t_));
+    delay[tap] = std::max(2u, std::min(maxdelay_ - 1u, d));
   }
   // set rotation:
-  for(uint32_t tap=0;tap<fdnorder_;++tap){
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
     float laz(az);
-    if( fdnorder_ > 1 )
-      laz = az-daz+2.0f*daz*tap/(fdnorder_ - 1.0f);
-    std::complex<float> caz(std::exp(i*laz));
-    rotation.elem(tap,0) = 1.0;
-    for(uint32_t o=1;o<amborder1;++o){
-      rotation.elem(tap,o) = rotation.elem(tap,o-1)*caz;
-    }  
+    if(fdnorder_ > 1)
+      laz = az - daz + 2.0f * daz * (float)tap / ((float)fdnorder_ - 1.0f);
+    std::complex<float> caz(std::exp(i_f * laz));
+    rotation.elem(tap, 0) = 1.0;
+    for(uint32_t o = 1; o < amborder1; ++o) {
+      rotation.elem(tap, o) = rotation.elem(tap, o - 1) * caz;
+    }
   }
   // set feedback matrix:
   feedbackmat.clear();
-  if( fdnorder_ > 1 ){
+  if(fdnorder_ > 1) {
     TASCAR::fft_t fft(fdnorder_);
-    TASCAR::spec_t eigenv(fdnorder_/2+1);
-    for(uint32_t k=0;k<eigenv.n_;++k)
-      eigenv[k] = std::exp(i_d*TASCAR_2PI*pow((double)k/(0.5*fdnorder_),2.0));;
+    TASCAR::spec_t eigenv(fdnorder_ / 2 + 1);
+    for(uint32_t k = 0; k < eigenv.n_; ++k)
+      eigenv[k] =
+          std::exp(i_d * TASCAR_2PI * pow((double)k / (0.5 * fdnorder_), 2.0));
+    ;
     fft.execute(eigenv);
-    for(uint32_t itap=0;itap<fdnorder_;++itap){
-      for(uint32_t otap=0;otap<fdnorder_;++otap){
-        feedbackmat.elem(itap,otap,0) = fft.w[(otap+fdnorder_-itap) % fdnorder_];
-        for(uint32_t o=1;o<amborder1;++o)
-          feedbackmat.elem(itap,otap,o) = feedbackmat.elem(itap,otap,o-1);
+    for(uint32_t itap = 0; itap < fdnorder_; ++itap) {
+      for(uint32_t otap = 0; otap < fdnorder_; ++otap) {
+        feedbackmat.elem(itap, otap, 0) =
+            fft.w[(otap + fdnorder_ - itap) % fdnorder_];
+        for(uint32_t o = 1; o < amborder1; ++o)
+          feedbackmat.elem(itap, otap, o) = feedbackmat.elem(itap, otap, o - 1);
       }
     }
-  }else{
-    for(uint32_t o=0;o<amborder1;++o)
+  } else {
+    for(uint32_t o = 0; o < amborder1; ++o)
       feedbackmat.elem00x(o) = 1.0;
   }
-  std::cout << "m=[..." << std::endl;
-  for(uint32_t itap=0;itap<fdnorder_;++itap){
-    for(uint32_t otap=0;otap<fdnorder_;++otap)
-      std::cout << std::real(feedbackmat.elem(itap,otap,0)) << "  ";
-    std::cout << ";..." << std::endl;
+  if(dumpmatrix) {
+    std::cout << "m=[..." << std::endl;
+    for(uint32_t itap = 0; itap < fdnorder_; ++itap) {
+      for(uint32_t otap = 0; otap < fdnorder_; ++otap)
+        std::cout << std::real(feedbackmat.elem(itap, otap, 0)) << "  ";
+      std::cout << ";..." << std::endl;
+    }
+    std::cout << "];" << std::endl;
   }
-  std::cout << "];" << std::endl;
 }
-  
+
 class hoafdnrot_vars_t : public TASCAR::module_base_t {
 public:
-  hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg );
+  hoafdnrot_vars_t(const TASCAR::module_cfg_t& cfg);
   ~hoafdnrot_vars_t();
+
 protected:
   std::string id = "fdn";
   uint32_t amborder = 3;
   uint32_t fdnorder = 5;
-  double w = 1.0;
-  double dw = 0.1;
-  double t = 0.01;
-  double dt = 0.002;
-  double decay = 1.0;
-  double damping = 0.3;
-  double dry = 0.0;
-  double wet = 1.0;
+  float w = 1.0f;
+  float dw = 0.1f;
+  float t = 0.01f;
+  float dt = 0.002f;
+  float decay = 1.0f;
+  float damping = 0.3f;
+  float dry = 0.0f;
+  float wet = 1.0f;
   bool prefilt = false;
   bool logdelays = false;
+  bool dumpmatrix = false;
 };
 
-hoafdnrot_vars_t::hoafdnrot_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg )
+hoafdnrot_vars_t::hoafdnrot_vars_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg)
 {
-  GET_ATTRIBUTE(id,"","Jack / OSC id");
-  GET_ATTRIBUTE(amborder,"","Ambisonics order");
-  GET_ATTRIBUTE(fdnorder,"","FDN order");
-  GET_ATTRIBUTE(w,"rps","Rotation velocity in rounds per second");
-  GET_ATTRIBUTE(dw,"rps","Angular spread");
-  GET_ATTRIBUTE(t,"s","Average delay line length");
-  GET_ATTRIBUTE(dt,"s","Delay line spread");
-  GET_ATTRIBUTE(decay,"s","Decay time");
-  GET_ATTRIBUTE(damping,"","Damping coefficient");
-  GET_ATTRIBUTE(dry,"","Dry signal ratio");
-  GET_ATTRIBUTE(wet,"","Wet signal ratio");
-  GET_ATTRIBUTE_BOOL(prefilt,"Use pre-filters");
-  GET_ATTRIBUTE_BOOL(logdelays,"Use logarithmic delay distribution between dt and t");
+  GET_ATTRIBUTE(id, "", "Jack / OSC id");
+  GET_ATTRIBUTE(amborder, "", "Ambisonics order");
+  GET_ATTRIBUTE(fdnorder, "", "FDN order");
+  GET_ATTRIBUTE(w, "rps", "Rotation velocity in rounds per second");
+  GET_ATTRIBUTE(dw, "rps", "Angular spread");
+  GET_ATTRIBUTE(t, "s", "Average delay line length");
+  GET_ATTRIBUTE(dt, "s", "Delay line spread");
+  GET_ATTRIBUTE(decay, "s", "Decay time");
+  GET_ATTRIBUTE(damping, "", "Damping coefficient");
+  GET_ATTRIBUTE(dry, "", "Dry signal ratio");
+  GET_ATTRIBUTE(wet, "", "Wet signal ratio");
+  GET_ATTRIBUTE_BOOL(prefilt, "Use pre-filters");
+  GET_ATTRIBUTE_BOOL(logdelays,
+                     "Use logarithmic delay distribution between dt and t");
+  GET_ATTRIBUTE_BOOL(dumpmatrix, "Dump feedback matrix on console");
 }
 
-hoafdnrot_vars_t::~hoafdnrot_vars_t()
-{
-}
+hoafdnrot_vars_t::~hoafdnrot_vars_t() {}
 
 class hoafdnrot_t : public hoafdnrot_vars_t, public jackc_t {
 public:
-  hoafdnrot_t( const TASCAR::module_cfg_t& cfg );
+  hoafdnrot_t(const TASCAR::module_cfg_t& cfg);
   ~hoafdnrot_t();
-  void set_par( double w, double dw, double t, double dt, double g, double damping );
-  static int osc_setpar(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void setlogdelays( bool ld );
-  static int osc_setlogdelays(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
-  void configure( );
+  void set_par(float w, float dw, float t, float dt, float g, float damping);
+  static int osc_setpar(const char* path, const char* types, lo_arg** argv,
+                        int argc, lo_message msg, void* user_data);
+  void setlogdelays(bool ld);
+  static int osc_setlogdelays(const char* path, const char* types,
+                              lo_arg** argv, int argc, lo_message msg,
+                              void* user_data);
+  virtual int process(jack_nframes_t, const std::vector<float*>&,
+                      const std::vector<float*>&);
+  void configure();
+
 private:
   uint32_t channels;
   fdn_t* fdn;
@@ -422,57 +416,61 @@ private:
   pthread_mutex_t mtx;
 };
 
-hoafdnrot_t::hoafdnrot_t( const TASCAR::module_cfg_t& cfg )
-  : hoafdnrot_vars_t( cfg ),
-    jackc_t(id),
-    channels(amborder*2+1),
-    fdn(NULL),
-    o1(amborder+1)
+hoafdnrot_t::hoafdnrot_t(const TASCAR::module_cfg_t& cfg)
+    : hoafdnrot_vars_t(cfg), jackc_t(id), channels(amborder * 2 + 1), fdn(NULL),
+      o1(amborder + 1)
 {
-  pthread_mutex_init( &mtx, NULL );
-  for(uint32_t c=0;c<channels;++c){
+  pthread_mutex_init(&mtx, NULL);
+  for(uint32_t c = 0; c < channels; ++c) {
     char ctmp[1024];
-    uint32_t o((c+1)/2);
-    int32_t s(o*(2*((c+1) % 2)-1));
-    sprintf(ctmp,"in.%d_%d",o,s);
+    uint32_t o((c + 1) / 2);
+    int32_t s(o * (2 * ((c + 1) % 2) - 1));
+    sprintf(ctmp, "in.%d_%d", o, s);
     add_input_port(ctmp);
   }
-  for(uint32_t c=0;c<channels;++c){
+  for(uint32_t c = 0; c < channels; ++c) {
     char ctmp[1024];
-    uint32_t o((c+1)/2);
-    int32_t s(o*(2*((c+1) % 2)-1));
-    sprintf(ctmp,"out.%d_%d",o,s);
+    uint32_t o((c + 1) / 2);
+    int32_t s(o * (2 * ((c + 1) % 2) - 1));
+    sprintf(ctmp, "out.%d_%d", o, s);
     add_output_port(ctmp);
   }
-  session->add_method("/"+id+"/par","ffffff",&hoafdnrot_t::osc_setpar,this);
-  session->add_double("/"+id+"/dry",&dry);
-  session->add_double("/"+id+"/wet",&wet);
-  session->add_bool("/"+id+"/prefilt",&prefilt);
-  session->add_method("/"+id+"/logdelays","i",&hoafdnrot_t::osc_setlogdelays,this);
+  session->add_method("/" + id + "/par", "ffffff", &hoafdnrot_t::osc_setpar,
+                      this);
+  session->add_float("/" + id + "/dry", &dry, "[0,1]", "Amount of dry signal");
+  session->add_float("/" + id + "/wet", &wet, "[0,1]", "Amount of wet signal");
+  session->add_bool("/" + id + "/prefilt", &prefilt);
+  session->add_method("/" + id + "/logdelays", "i",
+                      &hoafdnrot_t::osc_setlogdelays, this);
   activate();
 }
 
-int hoafdnrot_t::osc_setpar(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int hoafdnrot_t::osc_setpar(const char*, const char* types, lo_arg** argv,
+                            int argc, lo_message, void* user_data)
 {
-  if( user_data && (argc==6) && (types[0]=='f') )
-    ((hoafdnrot_t*)user_data)->set_par( argv[0]->f, argv[1]->f, argv[2]->f, argv[3]->f, argv[4]->f, argv[5]->f );
+  if(user_data && (argc == 6) && (types[0] == 'f'))
+    ((hoafdnrot_t*)user_data)
+        ->set_par(argv[0]->f, argv[1]->f, argv[2]->f, argv[3]->f, argv[4]->f,
+                  argv[5]->f);
   return 0;
 }
 
-int hoafdnrot_t::osc_setlogdelays(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int hoafdnrot_t::osc_setlogdelays(const char*, const char* types, lo_arg** argv,
+                                  int argc, lo_message, void* user_data)
 {
-  if( user_data && (argc==1) && (types[0]=='i') )
-    ((hoafdnrot_t*)user_data)->setlogdelays( argv[0]->i );
+  if(user_data && (argc == 1) && (types[0] == 'i'))
+    ((hoafdnrot_t*)user_data)->setlogdelays(argv[0]->i);
   return 0;
 }
 
-void hoafdnrot_t::configure( )
+void hoafdnrot_t::configure()
 {
-  module_base_t::configure( );
-  if( fdn )
+  module_base_t::configure();
+  if(fdn)
     delete fdn;
-  fdn = new fdn_t(fdnorder,amborder,f_sample, logdelays );
-  set_par( w, dw, t, dt, decay, damping );
+  fdn =
+      new fdn_t(fdnorder, amborder, (uint32_t)f_sample, logdelays, dumpmatrix);
+  set_par(w, dw, t, dt, decay, damping);
 }
 
 hoafdnrot_t::~hoafdnrot_t()
@@ -482,7 +480,8 @@ hoafdnrot_t::~hoafdnrot_t()
   pthread_mutex_destroy(&mtx);
 }
 
-void hoafdnrot_t::set_par( double w_, double dw_, double t_, double dt_, double decay_, double damping_ )
+void hoafdnrot_t::set_par(float w_, float dw_, float t_, float dt_,
+                          float decay_, float damping_)
 {
   w = w_;
   dw = dw_;
@@ -490,49 +489,54 @@ void hoafdnrot_t::set_par( double w_, double dw_, double t_, double dt_, double 
   dt = dt_;
   decay = decay_;
   damping = damping_;
-  if( pthread_mutex_lock( &mtx ) == 0 ){
-    if( fdn ){
-      const double wscale(TASCAR_2PI*t);
-      fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
+  if(pthread_mutex_lock(&mtx) == 0) {
+    if(fdn) {
+      const float wscale(TASCAR_2PIf * t);
+      fdn->setpar(wscale * w, wscale * dw, (float)f_sample * t,
+                  (float)f_sample * dt, expf(-t / decay),
+                  std::max(0.0f, std::min(0.999f, damping)));
     }
-    pthread_mutex_unlock( &mtx);
+    pthread_mutex_unlock(&mtx);
   }
 }
 
-void hoafdnrot_t::setlogdelays( bool ld )
+void hoafdnrot_t::setlogdelays(bool ld)
 {
-  if( pthread_mutex_lock( &mtx ) == 0 ){
-    if( fdn ){
+  if(pthread_mutex_lock(&mtx) == 0) {
+    if(fdn) {
       fdn->set_logdelays(ld);
-      const double wscale(TASCAR_2PI*t);
-      fdn->setpar(wscale*w,wscale*dw,f_sample*t,f_sample*dt,exp(-t/decay),std::max(0.0,std::min(0.999,damping)));
+      const float wscale(TASCAR_2PIf * t);
+      fdn->setpar(wscale * w, wscale * dw, (float)f_sample * t,
+                  (float)f_sample * dt, expf(-t / decay),
+                  std::max(0.0f, std::min(0.999f, damping)));
     }
-    pthread_mutex_unlock( &mtx);
+    pthread_mutex_unlock(&mtx);
   }
 }
 
-int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut)
+int hoafdnrot_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
+                         const std::vector<float*>& sOut)
 {
-  if( pthread_mutex_trylock( &mtx ) == 0 ){
-    if( fdn ){
-      for(uint32_t c=0;c<channels;++c)
-        for( uint32_t t=0;t<n;t++)
-          sOut[c][t] = dry*sIn[c][t];
-      for( uint32_t t=0;t<n;t++){
+  if(pthread_mutex_trylock(&mtx) == 0) {
+    if(fdn) {
+      for(uint32_t c = 0; c < channels; ++c)
+        for(uint32_t t = 0; t < n; t++)
+          sOut[c][t] = dry * sIn[c][t];
+      for(uint32_t t = 0; t < n; t++) {
         fdn->inval.elem0() = sIn[0][t];
-        for(uint32_t o=1;o<o1;++o)
+        for(uint32_t o = 1; o < o1; ++o)
           // ACN!
-          fdn->inval.elem(o) = sIn[2*o][t]+sIn[2*o-1][t]*i;
+          fdn->inval.elem(o) = sIn[2 * o][t] + sIn[2 * o - 1][t] * i_f;
         fdn->process(prefilt);
-        sOut[0][t] += wet*fdn->outval.elem0().real();
-        for(uint32_t o=1;o<o1;++o){
+        sOut[0][t] += wet * fdn->outval.elem0().real();
+        for(uint32_t o = 1; o < o1; ++o) {
           // ACN!
-          sOut[2*o][t] += wet*fdn->outval.elem(o).real();
-          sOut[2*o-1][t] += wet*fdn->outval.elem(o).imag();
+          sOut[2 * o][t] += wet * fdn->outval.elem(o).real();
+          sOut[2 * o - 1][t] += wet * fdn->outval.elem(o).imag();
         }
       }
     }
-    pthread_mutex_unlock( &mtx);
+    pthread_mutex_unlock(&mtx);
   }
   return 0;
 }
@@ -547,4 +551,3 @@ REGISTER_MODULE(hoafdnrot_t);
  * compile-command: "make -C .."
  * End:
  */
-

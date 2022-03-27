@@ -28,10 +28,10 @@
 #ifndef JACKCLIENT_H
 #define JACKCLIENT_H
 
+#include <atomic>
 #include <jack/jack.h>
 #include <string>
 #include <vector>
-#include <atomic>
 
 class jackc_portless_t {
 public:
@@ -48,15 +48,22 @@ public:
   std::string get_client_name();
   int get_srate() { return srate; };
   int get_fragsize() { return fragsize; };
-  void connect(const std::string& src, const std::string& dest, bool btry=false, bool allowoutputsource=false, bool connectmulti=false);
-  uint32_t get_xruns() const { return xruns;};
-  uint32_t get_xrun_latency() const { return xrun_latency;};
-  float get_cpu_load() const { return jack_cpu_load(jc);};
-  std::vector<std::string> get_port_names_regexp( const std::string& name, int flags = 0 ) const;
-  std::vector<std::string> get_port_names_regexp( const std::vector<std::string>& names, int flags = 0 ) const;
+  void connect(const std::string& src, const std::string& dest,
+               bool btry = false, bool allowoutputsource = false,
+               bool connectmulti = false);
+  uint32_t get_xruns() const { return xruns; };
+  double get_xrun_latency() const { return xrun_latency; };
+  float get_cpu_load() const { return jack_cpu_load(jc); };
+  std::vector<std::string> get_port_names_regexp(const std::string& name,
+                                                 int flags = 0) const;
+  std::vector<std::string>
+  get_port_names_regexp(const std::vector<std::string>& names,
+                        int flags = 0) const;
+
 private:
-  static int xrun_callback(void *arg);
-  static void on_shutdown(void *arg);
+  static int xrun_callback(void* arg);
+  static void on_shutdown(void* arg);
+
 public:
   jack_client_t* jc;
   int srate;
@@ -147,10 +154,16 @@ private:
 class jackc_transport_t : public jackc_t {
 public:
   jackc_transport_t(const std::string& clientname);
-  void tp_playrange( double t1, double t2 );
+  void tp_playrange(double t1, double t2);
+
 protected:
-  int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling) = 0;
+  int process(jack_nframes_t nframes, const std::vector<float*>& inBuffer,
+              const std::vector<float*>& outBuffer);
+  virtual int process(jack_nframes_t nframes,
+                      const std::vector<float*>& inBuffer,
+                      const std::vector<float*>& outBuffer, uint32_t tp_frame,
+                      bool tp_rolling) = 0;
+
 private:
   double stop_at_time;
 };
@@ -165,4 +178,3 @@ private:
  * compile-command: "make -C .."
  * End:
  */
-
