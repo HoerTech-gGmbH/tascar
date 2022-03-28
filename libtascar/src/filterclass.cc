@@ -516,6 +516,32 @@ TASCAR::aweighting_t::aweighting_t( double fs )
   b3.set_analog( 1.0, 0.0, 0.0, -129.4, -129.4, fs );
 }
 
+float TASCAR::optim_parameq(std::vector<biquadf_t>& flt, float& g,
+                            const std::vector<float>& vF,
+                            const std::vector<float>& vG, float fs)
+{
+  if(vF.size() != vG.size())
+    throw TASCAR::ErrMsg(
+        "Frequency vector needs same number of elements as gain vector "
+        "(optimization of parametric equalizer)\nvF.size() = " +
+        std::to_string(vF.size()) +
+        "\nvG.size() = " + std::to_string(vG.size()) + "\n");
+  if(vF.size() < 3 * flt.size() + 1)
+    throw TASCAR::ErrMsg("Not enough samples to optimize " +
+                         std::to_string(flt.size()) + " filters. At least " +
+                         std::to_string(3 * flt.size() + 1) +
+                         " samples are required.");
+  for(auto f : vF)
+    if(f >= 0.5f * fs)
+      throw TASCAR::ErrMsg("Frequency vector contains frequencies at or above "
+                           "Nyquist frequency");
+  float glogmean = 0.0f;
+  for(auto glog : vG)
+    glogmean += glog;
+  glogmean /= vG.size();
+  g = powf(10.0f, 0.05 * glogmean);
+  return 0.0f;
+}
 
 /*
  * Local Variables:

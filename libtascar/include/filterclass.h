@@ -326,6 +326,22 @@ namespace TASCAR {
     biquad_t b3;
   };
 
+  /**
+     @brief Optimize an array of parametric equalizers to match a given
+     frequency response.
+
+     @retval flt Filters to be optimized.
+     @retval g Broadband gain to be optimized.
+     @param vF Frequencies at which a gain value is provided.
+     @param vG Gain values in dB.
+     @param fs Sampling rate in Hz.
+
+     vF.size() and vG.size() must be equal and at least 3*flt.size()+1.
+   */
+  float optim_parameq(std::vector<biquadf_t>& flt, float& g,
+                      const std::vector<float>& vF,
+                      const std::vector<float>& vG, float fs);
+
 } // namespace TASCAR
 
 #endif
