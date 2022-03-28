@@ -164,7 +164,7 @@ TEST(biquadf_t, highpass)
   b.set_highpass(1000.0f, 44100.0f);
   // boundaries:
   ASSERT_NEAR(0.0f, std::abs(b.response(0.0f)), 1e-9f);
-  ASSERT_NEAR(1.0f, std::abs(b.response(TASCAR_PIf)), 1e-7f);
+  ASSERT_NEAR(1.0f, std::abs(b.response(TASCAR_PIf)), 1e-6f);
   // approx. 12 dB / octave:
   ASSERT_NEAR(-3.88f,
               20.0f *
