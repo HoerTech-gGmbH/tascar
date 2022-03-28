@@ -24,6 +24,7 @@
 
 #include "fft.h"
 #include <limits>
+#include "optim.h"
 
 const std::complex<double> i_d(0.0, 1.0);
 const std::complex<float> i_f(0.0f, 1.0f);
@@ -617,30 +618,6 @@ float simplefdn_t::slopeerr(const std::vector<float>& param)
   float le = fabs(slope / slope_ref - 1.0f);
   le *= le;
   return le;
-}
-
-/**
-   \brief One iteration of gradient search
-   \param eps Stepsize scaling factor
-   \retval param Input: start values, Output: new values
-   \param err Error function handle
-   \param data Data pointer to be handed to error function
-   \param unitstep Unit step size
-   \return Error measure
- */
-float downhill_iterate(float eps, std::vector<float>& param,
-                       float (*err)(const std::vector<float>& x, void* data),
-                       void* data, const std::vector<float>& unitstep)
-{
-  std::vector<float> stepparam(param);
-  float errv(err(param, data));
-  for(uint32_t k = 0; k < param.size(); k++) {
-    stepparam[k] += unitstep[k];
-    float dv(eps * (errv - err(stepparam, data)));
-    stepparam[k] = param[k];
-    param[k] += dv;
-  }
-  return errv;
 }
 
 void simplefdn_t::configure()
