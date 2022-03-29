@@ -98,18 +98,34 @@ namespace TASCAR {
     fftwf_plan fftwp_s2s;
   };
 
+  class minphase_t {
+  public:
+    minphase_t(uint32_t fftlen);
+    void operator()(TASCAR::spec_t& s);
 
-class minphase_t {
-public:
-  minphase_t(uint32_t fftlen);
-  void operator()(TASCAR::spec_t& s);
-private:
-  TASCAR::fft_t fft_hilbert;
-public:
-  TASCAR::wave_t phase;
-};
+  private:
+    TASCAR::fft_t fft_hilbert;
 
-}
+  public:
+    TASCAR::wave_t phase;
+  };
+
+  /**
+     @brief Return sound levels in frequency bands.
+
+     @param w Input waveform.
+     @param cfmin Lowest center frequency in Hz.
+     @param cfmax Highest center frequency in Hz.
+     @param fs Sampling rate in Hz.
+     @param bpo Nominal bands per octave.
+     @retval vF Final center frequencies in Hz.
+     @retval vL Levels in dB SPL.
+   */
+  void get_bandlevels(const TASCAR::wave_t& w, float cfmin, float cfmax,
+                      float fs, float bpo, std::vector<float>& vF,
+                      std::vector<float>& vL);
+
+} // namespace TASCAR
 
 #endif
 

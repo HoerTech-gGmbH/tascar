@@ -119,6 +119,91 @@ TEST(minphase_t, minphase)
   ASSERT_NEAR(0.11444f,fft.w.d[3],1e-5f);
 }
 
+TEST(get_bandlevels, bandspacing)
+{
+  TASCAR::wave_t w(2000);
+  std::vector<float> vF;
+  std::vector<float> vL;
+  TASCAR::get_bandlevels(w, 100.0f, 400.0f, 2000.0f, 1.0f, vF, vL);
+  ASSERT_EQ(vF.size(), 3u);
+  if(vF.size() == 3) {
+    ASSERT_NEAR(vF[0], 100.0f, 0.1f);
+    ASSERT_NEAR(vF[1], 200.0f, 0.1f);
+    ASSERT_NEAR(vF[2], 400.0f, 0.1f);
+  }
+  TASCAR::get_bandlevels(w, 100.0f, 400.0f, 2000.0f, 3.0f, vF, vL);
+  ASSERT_EQ(vF.size(), 7u);
+  if(vF.size() == 3) {
+    ASSERT_NEAR(vF[0], 100.0f, 0.1f);
+    ASSERT_NEAR(vF[1], 126.0f, 0.1f);
+    ASSERT_NEAR(vF[2], 158.7f, 0.1f);
+    ASSERT_NEAR(vF[3], 200.0f, 0.1f);
+    ASSERT_NEAR(vF[4], 252.0f, 0.1f);
+    ASSERT_NEAR(vF[5], 317.5f, 0.1f);
+    ASSERT_NEAR(vF[6], 400.0f, 0.1f);
+  }
+}
+
+TEST(get_bandlevels, bandlevels)
+{
+  float fs = 2000.0f;
+  float f0 = 200.0f;
+  TASCAR::wave_t w((uint32_t)fs);
+  for(size_t k=0;k<w.n;++k)
+    w.d[k] = sinf((float)k/fs*TASCAR_2PIf*f0);
+  ASSERT_NEAR(w.spldb(), 91.0f, 0.1f);
+  std::vector<float> vF;
+  std::vector<float> vL;
+  TASCAR::get_bandlevels(w, 100.0f, 400.0f, fs, 1.0f, vF, vL);
+  ASSERT_EQ(vL.size(), 3u);
+  if(vL.size() == 3) {
+    ASSERT_NEAR(vL[0], -21.0f, 2.0f);
+    ASSERT_NEAR(vL[1], 91.0f, 0.1f);
+    ASSERT_NEAR(vL[2], -9.0f, 2.0f);
+  }
+}
+
+TEST(get_bandlevels, bandlevels2)
+{
+  float fs = 8000.0f;
+  float f0 = 200.0f;
+  TASCAR::wave_t w((uint32_t)fs);
+  for(size_t k=0;k<w.n;++k)
+    w.d[k] = sinf((float)k/fs*TASCAR_2PIf*f0);
+  ASSERT_NEAR(w.spldb(), 91.0f, 0.1f);
+  std::vector<float> vF;
+  std::vector<float> vL;
+  TASCAR::get_bandlevels(w, 100.0f, 400.0f, fs, 1.0f, vF, vL);
+  ASSERT_EQ(vL.size(), 3u);
+  if(vL.size() == 3u) {
+    ASSERT_NEAR(vL[0], -25.0f, 2.0f);
+    ASSERT_NEAR(vL[1], 91.0f, 0.1f);
+    ASSERT_NEAR(vL[2], -20.0f, 2.0f);
+  }
+}
+
+TEST(get_bandlevels, bandlevels3)
+{
+  float fs = 8000.0f;
+  TASCAR::wave_t w((uint32_t)fs);
+  for(size_t k=0;k<w.n;++k)
+    w.d[k] = (float)TASCAR::drand()-0.5f;
+  ASSERT_NEAR(w.spldb(), 83.2f, 0.5f);
+  std::vector<float> vF;
+  std::vector<float> vL;
+  TASCAR::get_bandlevels(w, 50.0f, 3200.0f, fs, 1.0f, vF, vL);
+  ASSERT_EQ(vL.size(), 7u);
+  if(vL.size() == 7u) {
+    ASSERT_NEAR(vL[0], 61.4f, 1.0f);
+    ASSERT_NEAR(vL[1], 65.584f, 1.0f);
+    ASSERT_NEAR(vL[2], 69.162f, 1.0f);
+    ASSERT_NEAR(vL[3], 71.592f, 1.0f);
+    ASSERT_NEAR(vL[4], 74.632f, 1.0f);
+    ASSERT_NEAR(vL[5], 77.832f, 1.0f);
+    ASSERT_NEAR(vL[6], 79.523f, 1.0f);
+  }
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
