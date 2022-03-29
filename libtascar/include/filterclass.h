@@ -215,8 +215,7 @@ namespace TASCAR {
     biquadf_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0){};
     void set_gzp(float g, float zero_r, float zero_phi, float pole_r,
                  float pole_phi);
-    void set_analog(float g, float z1, float z2, float p1, float p2,
-                    float fs);
+    void set_analog(float g, float z1, float z2, float p1, float p2, float fs);
     void set_analog_poles(float g, float p1, float p2, float fs);
     void set_coefficients(float a1, float a2, float b0, float b1, float b2)
     {
@@ -326,21 +325,89 @@ namespace TASCAR {
     biquad_t b3;
   };
 
-  /**
-     @brief Optimize an array of parametric equalizers to match a given
-     frequency response.
+  class multiband_pareq_t {
+  public:
+    multiband_pareq_t(){};
+    void resize(size_t s) { flt.resize(s); };
+    /**
+       @brief Set center frequencies, gains and q-factor
 
-     @retval flt Filters to be optimized.
-     @retval g Broadband gain to be optimized.
-     @param vF Frequencies at which a gain value is provided.
-     @param vG Gain values in dB.
-     @param fs Sampling rate in Hz.
+       @param f Center frequencies in Hz
+       @param g Filter gains in dB
+       @param q Filter q-factors (dimensionless)
+       @param fs Sampling frequency in Hz
 
-     vF.size() and vG.size() must be equal and at least 3*flt.size()+1.
-   */
-  float optim_parameq(std::vector<biquadf_t>& flt, float& g,
-                      const std::vector<float>& vF,
-                      const std::vector<float>& vG, float fs);
+       f, g and q need to have the same size.
+     */
+    void set_fgq(const std::vector<float>& f, const std::vector<float>& g,
+                 const std::vector<float>& q, float fs);
+    /**
+       @brief Optimize coefficients to match given response
+
+       @param numflt Number of filters to be used
+       @param vF Frequencies at which a gain value is provided.
+       @param vG Gain values in dB.
+       @param fs Sampling rate in Hz.
+       @return Resulting gains in dB.
+
+       vF.size() and vG.size() must be equal and at least 3*numflt+1.
+     */
+    std::vector<float> optim_response(size_t numflt,
+                                      const std::vector<float>& vF,
+                                      const std::vector<float>& vG, float fs);
+    /**
+       @brief Return gain response in dB
+       @param f Frequencies in Hz
+       @param fs Sampling frequency
+     */
+    std::vector<float> dbresponse(const std::vector<float>& f, float fs) const;
+    /**
+       @brief Return gain response in dB
+       @retval resp Response vector with gains in dB
+       @param f Frequencies in Hz
+       @param fs Sampling frequency
+     */
+    void dbresponse(std::vector<float>& resp, const std::vector<float>& f,
+                    float fs) const;
+    std::complex<float> response(float phi) const
+    {
+      std::complex<float> r = g0;
+      for(const auto f : flt)
+        r *= f.response(phi);
+      return r;
+    }
+    inline float filter(float in)
+    {
+      in *= g0;
+      for(auto f : flt)
+        in = f.filter(in);
+      return in;
+    };
+    inline void filter(wave_t& w)
+    {
+      float* wend(w.d + w.n);
+      for(float* v = w.d; v < wend; ++v)
+        *v = filter(*v);
+    };
+    void clear()
+    {
+      for(auto f : flt)
+        f.clear();
+    };
+    float optim_error_fun(const std::vector<float>& par);
+
+  private:
+    void optimpar2fltsettings(const std::vector<float>& par, float fs,
+                              bool dump = false);
+    std::vector<biquadf_t> flt;
+    float g0 = 1.0f;
+    float fmin = 0.0f;
+    float fmax = 1.0f;
+    float optim_fs = 1.0f;
+    std::vector<float> optim_f;
+    std::vector<float> optim_g;
+    std::vector<float> optim_gmeas;
+  };
 
 } // namespace TASCAR
 

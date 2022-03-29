@@ -23,151 +23,133 @@
 #include "filterclass.h"
 
 #include "errorhandling.h"
+#include "optim.h"
 #include <string.h>
 
 const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0f, 1.0f);
 
-
-TASCAR::filter_t::filter_t(unsigned int ilen_A,
-                           unsigned int ilen_B)
-  : A(NULL),
-    B(NULL),
-    len_A(ilen_A),
-    len_B(ilen_B),
-    len(0),
-    state(NULL)
+TASCAR::filter_t::filter_t(unsigned int ilen_A, unsigned int ilen_B)
+    : A(NULL), B(NULL), len_A(ilen_A), len_B(ilen_B), len(0), state(NULL)
 {
   unsigned int k;
   // recursive and non-recursive coefficients need at least one entry:
-  len = std::max(len_A,len_B);
-  if( std::min(len_A,len_B) == 0 )
+  len = std::max(len_A, len_B);
+  if(std::min(len_A, len_B) == 0)
     throw TASCAR::ErrMsg("invalid filter length: 0");
   // allocate filter coefficient buffers and initialize to identity:
   A = new double[len_A];
-  memset(A,0,sizeof(A[0])*len_A);
+  memset(A, 0, sizeof(A[0]) * len_A);
   A[0] = 1.0;
   B = new double[len_B];
-  memset(B,0,sizeof(B[0])*len_B);
+  memset(B, 0, sizeof(B[0]) * len_B);
   B[0] = 1.0;
   // allocate filter state buffer and initialize to zero:
   state = new double[len];
-  for( k=0;k<len;k++)
+  for(k = 0; k < len; k++)
     state[k] = 0;
 }
 
 TASCAR::filter_t::filter_t(const TASCAR::filter_t& src)
-  : A(new double[src.len_A]),
-    B(new double[src.len_B]),
-    len_A(src.len_A),
-    len_B(src.len_B),
-    len(src.len),
-    state(new double[len])
+    : A(new double[src.len_A]), B(new double[src.len_B]), len_A(src.len_A),
+      len_B(src.len_B), len(src.len), state(new double[len])
 {
-  memmove(A,src.A,len_A*sizeof(double));
-  memmove(B,src.B,len_B*sizeof(double));
-  memmove(state,src.state,len*sizeof(double));
+  memmove(A, src.A, len_A * sizeof(double));
+  memmove(B, src.B, len_B * sizeof(double));
+  memmove(state, src.state, len * sizeof(double));
 }
 
-
-TASCAR::filter_t::filter_t(const std::vector<double>& vA, const std::vector<double>& vB)
-  : A(NULL),
-    B(NULL),
-    len_A((unsigned int)(vA.size())),
-    len_B((unsigned int)(vB.size())),
-    len(0),
-    state(NULL)
+TASCAR::filter_t::filter_t(const std::vector<double>& vA,
+                           const std::vector<double>& vB)
+    : A(NULL), B(NULL), len_A((unsigned int)(vA.size())),
+      len_B((unsigned int)(vB.size())), len(0), state(NULL)
 {
   unsigned int k;
   // recursive and non-recursive coefficients need at least one entry:
-  if( vA.size() == 0 )
+  if(vA.size() == 0)
     throw TASCAR::ErrMsg("Recursive coefficients are empty.");
-  if( vB.size() == 0 )
+  if(vB.size() == 0)
     throw TASCAR::ErrMsg("Non-recursive coefficients are empty.");
-  len = std::max(len_A,len_B);
+  len = std::max(len_A, len_B);
   // allocate filter coefficient buffers and initialize to identity:
   A = new double[len_A];
   B = new double[len_B];
-  for(k=0;k<len_A;k++)
+  for(k = 0; k < len_A; k++)
     A[k] = vA[k];
-  for(k=0;k<len_B;k++)
+  for(k = 0; k < len_B; k++)
     B[k] = vB[k];
   // allocate filter state buffer and initialize to zero:
   state = new double[len];
-  for( k=0;k<len;k++)
+  for(k = 0; k < len; k++)
     state[k] = 0;
 }
 
-void TASCAR::filter_t::filter(TASCAR::wave_t* dest,
-                              const TASCAR::wave_t* src)
+void TASCAR::filter_t::filter(TASCAR::wave_t* dest, const TASCAR::wave_t* src)
 {
-  if( dest->n != src->n )
+  if(dest->n != src->n)
     throw TASCAR::ErrMsg("mismatching number of frames");
-  filter(dest->d,src->d,dest->n,1);
+  filter(dest->d, src->d, dest->n, 1);
 }
 
 double TASCAR::filter_t::filter(float x)
 {
   float y = 0;
-  filter(&y,&x,1,1);
+  filter(&y, &x, 1, 1);
   return y;
 }
 
-void TASCAR::filter_t::filter(float* dest,
-                              const float* src,
-                              unsigned int dframes,
-                              unsigned int frame_dist)
+void TASCAR::filter_t::filter(float* dest, const float* src,
+                              unsigned int dframes, unsigned int frame_dist)
 {
   // direct form II, one delay line for each channel
   // A[k] are the recursive filter coefficients (A[0] is typically 1)
   // B[k] are the non recursive filter coefficients
   // loop through all frames, and all channels:
-  for(uint32_t fr=0;fr<dframes;++fr){
+  for(uint32_t fr = 0; fr < dframes; ++fr) {
     // index into input/output buffer:
     uint32_t idx(frame_dist * fr);
     // shift filter delay line for current channel:
-    for(uint32_t n=len-1; n>0; n--)
-      state[n] = state[n-1];
+    for(uint32_t n = len - 1; n > 0; n--)
+      state[n] = state[n - 1];
     // replace first delay line entry by input signal:
-    //state[ch] =  src[idx] / A[0];
-    state[0] =  src[idx];
+    // state[ch] =  src[idx] / A[0];
+    state[0] = src[idx];
     // apply recursive coefficients:
-    for(uint32_t n = 1; n < len_A; ++n )
+    for(uint32_t n = 1; n < len_A; ++n)
       state[0] -= state[n] * A[n];
-    make_friendly_number( state[0] );
+    make_friendly_number(state[0]);
     // apply non recursive coefficients to output:
     dest[idx] = 0;
-    for(uint32_t n=0; n<len_B; ++n)
+    for(uint32_t n = 0; n < len_B; ++n)
       dest[idx] += (float)(state[n] * B[n]);
     // normalize by first recursive element:
     dest[idx] /= (float)(A[0]);
-    make_friendly_number( dest[idx] );
+    make_friendly_number(dest[idx]);
   }
 }
 
 TASCAR::filter_t::~filter_t()
 {
-  delete [] A;
-  delete [] B;
-  delete [] state;
+  delete[] A;
+  delete[] B;
+  delete[] state;
 }
 
-
-void normalize_vec( std::vector<float>& v )
+void normalize_vec(std::vector<float>& v)
 {
   float norm(0.0f);
-  for( std::vector<float>::const_iterator it=v.begin();it!=v.end();++it)
+  for(std::vector<float>::const_iterator it = v.begin(); it != v.end(); ++it)
     norm += fabsf(*it);
-  if( norm > 0 ){
-    for( std::vector<float>::iterator it=v.begin();it!=v.end();++it)
-      *it *= 1.0f/norm;
+  if(norm > 0) {
+    for(std::vector<float>::iterator it = v.begin(); it != v.end(); ++it)
+      *it *= 1.0f / norm;
   }
 }
 
-TASCAR::fsplit_t::fsplit_t( uint32_t maxdelay, shape_t shape, uint32_t tau )
-  : TASCAR::wave_t(maxdelay)
+TASCAR::fsplit_t::fsplit_t(uint32_t maxdelay, shape_t shape, uint32_t tau)
+    : TASCAR::wave_t(maxdelay)
 {
-  switch( shape ){
+  switch(shape) {
   case none:
     vd.resize(1);
     w1.resize(1);
@@ -181,7 +163,7 @@ TASCAR::fsplit_t::fsplit_t( uint32_t maxdelay, shape_t shape, uint32_t tau )
     w1.resize(2);
     w2.resize(2);
     vd[0] = d;
-    vd[1] = d+tau;
+    vd[1] = d + tau;
     w1[0] = w2[0] = w1[1] = 1.0f;
     w2[1] = -1.0f;
     break;
@@ -190,8 +172,8 @@ TASCAR::fsplit_t::fsplit_t( uint32_t maxdelay, shape_t shape, uint32_t tau )
     w1.resize(3);
     w2.resize(3);
     vd[0] = d;
-    vd[1] = d+tau;
-    vd[2] = d+2*tau;
+    vd[1] = d + tau;
+    vd[2] = d + 2 * tau;
     w1[0] = w1[2] = 1.0f;
     w2[0] = w2[2] = -1.0f;
     w1[1] = w2[1] = 2.0f;
@@ -201,196 +183,198 @@ TASCAR::fsplit_t::fsplit_t( uint32_t maxdelay, shape_t shape, uint32_t tau )
     w1.resize(5);
     w2.resize(5);
     vd[0] = d;
-    vd[1] = d+2*tau;
-    vd[2] = d+3*tau;
-    vd[3] = d+4*tau;
-    vd[4] = d+6*tau;
-    w1[0] = w1[4] = 1.0f/9.0f;
+    vd[1] = d + 2 * tau;
+    vd[2] = d + 3 * tau;
+    vd[3] = d + 4 * tau;
+    vd[4] = d + 6 * tau;
+    w1[0] = w1[4] = 1.0f / 9.0f;
     w1[1] = w1[3] = 1.0f;
-    w1[2] = w2[2] = 2.0f+2.0f/9.0f;
+    w1[2] = w2[2] = 2.0f + 2.0f / 9.0f;
     w2[1] = w2[3] = -1.0f;
-    w2[0] = w2[4] = -1.0f/9.0f;
+    w2[0] = w2[4] = -1.0f / 9.0f;
     break;
   case triald:
     vd.resize(3);
     w1.resize(3);
     w2.resize(3);
     vd[0] = d;
-    vd[1] = d+tau;
-    vd[2] = d+3*tau;
+    vd[1] = d + tau;
+    vd[2] = d + 3 * tau;
     w1[0] = w2[0] = w1[1] = 1.0f;
     w2[1] = -1.0f;
-    w1[2] = 1.0f/9.0f;
-    w2[2] = -1.0f/9.0f;
+    w1[2] = 1.0f / 9.0f;
+    w2[2] = -1.0f / 9.0f;
     break;
   }
   normalize_vec(w1);
   normalize_vec(w2);
-  for(std::vector<float*>::const_iterator it=vd.begin();it!=vd.end();++it)
-    if( (*it) >= d+n )
+  for(std::vector<float*>::const_iterator it = vd.begin(); it != vd.end(); ++it)
+    if((*it) >= d + n)
       throw TASCAR::ErrMsg("Delay exceeds buffer length");
 }
 
-TASCAR::resonance_filter_t::resonance_filter_t()
-  : statey1(0),
-    statey2(0)
+TASCAR::resonance_filter_t::resonance_filter_t() : statey1(0), statey2(0)
 {
-  set_fq( 0.1, 0.5 );
+  set_fq(0.1, 0.5);
 }
 
-void TASCAR::resonance_filter_t::set_fq( double fresnorm, double q )
+void TASCAR::resonance_filter_t::set_fq(double fresnorm, double q)
 {
-  const double farg(TASCAR_2PI*fresnorm);
-  b1 = 2.0*q*cos(farg);
-  b2 = -q*q;
-  std::complex<double> z(std::exp(i*farg));
-  std::complex<double> z0(q*std::exp(-i*farg));
-  a1 = (1.0-q)*(std::abs(z-z0));
+  const double farg(TASCAR_2PI * fresnorm);
+  b1 = 2.0 * q * cos(farg);
+  b2 = -q * q;
+  std::complex<double> z(std::exp(i * farg));
+  std::complex<double> z0(q * std::exp(-i * farg));
+  a1 = (1.0 - q) * (std::abs(z - z0));
 }
 
-void TASCAR::biquad_t::set_gzp( double g, double zero_r, double zero_phi, double pole_r, double pole_phi )
+void TASCAR::biquad_t::set_gzp(double g, double zero_r, double zero_phi,
+                               double pole_r, double pole_phi)
 {
-  a1_ = -2.0*pole_r*cos(pole_phi);
-  a2_ = pole_r*pole_r;
+  a1_ = -2.0 * pole_r * cos(pole_phi);
+  a2_ = pole_r * pole_r;
   b0_ = g;
-  b1_ = -2.0*g*zero_r*cos(zero_phi);
-  b2_ = g*zero_r*zero_r;
+  b1_ = -2.0 * g * zero_r * cos(zero_phi);
+  b2_ = g * zero_r * zero_r;
 }
 
-void TASCAR::biquadf_t::set_gzp( float g, float zero_r, float zero_phi, float pole_r, float pole_phi )
+void TASCAR::biquadf_t::set_gzp(float g, float zero_r, float zero_phi,
+                                float pole_r, float pole_phi)
 {
-  a1_ = -2.0f*pole_r*cosf(pole_phi);
-  a2_ = pole_r*pole_r;
+  a1_ = -2.0f * pole_r * cosf(pole_phi);
+  a2_ = pole_r * pole_r;
   b0_ = g;
-  b1_ = -2.0f*g*zero_r*cosf(zero_phi);
-  b2_ = g*zero_r*zero_r;
+  b1_ = -2.0f * g * zero_r * cosf(zero_phi);
+  b2_ = g * zero_r * zero_r;
 }
 
-double fd2fa( double fs, double fd )
+double fd2fa(double fs, double fd)
 {
-  return 2.0*fs*tan( fd/(2.0*fs) );
+  return 2.0 * fs * tan(fd / (2.0 * fs));
 }
 
-double fa2fd( double fs, double fa )
+double fa2fd(double fs, double fa)
 {
-  return 2.0*fs*atan( fa/(2.0*fs) );
+  return 2.0 * fs * atan(fa / (2.0 * fs));
 }
 
-float fa2fdf( float fs, float fa )
+float fa2fdf(float fs, float fa)
 {
-  return 2.0f*fs*atanf( fa/(2.0f*fs) );
+  return 2.0f * fs * atanf(fa / (2.0f * fs));
 }
 
-void TASCAR::biquad_t::set_analog( double g, double z1, double z2, double p1, double p2, double fs )
+void TASCAR::biquad_t::set_analog(double g, double z1, double z2, double p1,
+                                  double p2, double fs)
 {
-  z1 = fa2fd(fs,z1)/fs;
-  z2 = fa2fd(fs,z2)/fs;
-  p1 = fa2fd(fs,p1)/fs;
-  p2 = fa2fd(fs,p2)/fs;
-  g *= (2.0-z1)/(2.0-p1) * (2.0-z2)/(2.0-p2);
-  double z1_((2.0+z1)/(2.0-z1));
-  double z2_((2.0+z2)/(2.0-z2));
-  double p1_((2.0+p1)/(2.0-p1));
-  double p2_((2.0+p2)/(2.0-p2));
-  b1_ = -(z1_+z2_)*g;
-  b2_ = z1_*z2_*g;
+  z1 = fa2fd(fs, z1) / fs;
+  z2 = fa2fd(fs, z2) / fs;
+  p1 = fa2fd(fs, p1) / fs;
+  p2 = fa2fd(fs, p2) / fs;
+  g *= (2.0 - z1) / (2.0 - p1) * (2.0 - z2) / (2.0 - p2);
+  double z1_((2.0 + z1) / (2.0 - z1));
+  double z2_((2.0 + z2) / (2.0 - z2));
+  double p1_((2.0 + p1) / (2.0 - p1));
+  double p2_((2.0 + p2) / (2.0 - p2));
+  b1_ = -(z1_ + z2_) * g;
+  b2_ = z1_ * z2_ * g;
   b0_ = g;
-  a1_ = -(p1_+p2_);
-  a2_ = p1_*p2_;
+  a1_ = -(p1_ + p2_);
+  a2_ = p1_ * p2_;
 }
 
-void TASCAR::biquadf_t::set_analog( float g, float z1, float z2, float p1, float p2, float fs )
+void TASCAR::biquadf_t::set_analog(float g, float z1, float z2, float p1,
+                                   float p2, float fs)
 {
-  z1 = fa2fdf(fs,z1)/fs;
-  z2 = fa2fdf(fs,z2)/fs;
-  p1 = fa2fdf(fs,p1)/fs;
-  p2 = fa2fdf(fs,p2)/fs;
-  g *= (2.0f-z1)/(2.0f-p1) * (2.0f-z2)/(2.0f-p2);
-  float z1_((2.0f+z1)/(2.0f-z1));
-  float z2_((2.0f+z2)/(2.0f-z2));
-  float p1_((2.0f+p1)/(2.0f-p1));
-  float p2_((2.0f+p2)/(2.0f-p2));
-  b1_ = -(z1_+z2_)*g;
-  b2_ = z1_*z2_*g;
+  z1 = fa2fdf(fs, z1) / fs;
+  z2 = fa2fdf(fs, z2) / fs;
+  p1 = fa2fdf(fs, p1) / fs;
+  p2 = fa2fdf(fs, p2) / fs;
+  g *= (2.0f - z1) / (2.0f - p1) * (2.0f - z2) / (2.0f - p2);
+  float z1_((2.0f + z1) / (2.0f - z1));
+  float z2_((2.0f + z2) / (2.0f - z2));
+  float p1_((2.0f + p1) / (2.0f - p1));
+  float p2_((2.0f + p2) / (2.0f - p2));
+  b1_ = -(z1_ + z2_) * g;
+  b2_ = z1_ * z2_ * g;
   b0_ = g;
-  a1_ = -(p1_+p2_);
-  a2_ = p1_*p2_;
+  a1_ = -(p1_ + p2_);
+  a2_ = p1_ * p2_;
 }
 
-void TASCAR::biquad_t::set_analog_poles( double g, double p1, double p2, double fs )
+void TASCAR::biquad_t::set_analog_poles(double g, double p1, double p2,
+                                        double fs)
 {
-  p1 = fa2fd(fs,p1)/fs;
-  p2 = fa2fd(fs,p2)/fs;
-  g *= 1.0/(fs*(2.0-p1)*(2.0-p2)*fs);
+  p1 = fa2fd(fs, p1) / fs;
+  p2 = fa2fd(fs, p2) / fs;
+  g *= 1.0 / (fs * (2.0 - p1) * (2.0 - p2) * fs);
   double z1_(-1.0);
   double z2_(-1.0);
-  double p1_((2.0+p1)/(2.0-p1));
-  double p2_((2.0+p2)/(2.0-p2));
-  b1_ = -(z1_+z2_)*g;
-  b2_ = z1_*z2_*g;
+  double p1_((2.0 + p1) / (2.0 - p1));
+  double p2_((2.0 + p2) / (2.0 - p2));
+  b1_ = -(z1_ + z2_) * g;
+  b2_ = z1_ * z2_ * g;
   b0_ = g;
-  a1_ = -(p1_+p2_);
-  a2_ = p1_*p2_;
+  a1_ = -(p1_ + p2_);
+  a2_ = p1_ * p2_;
 }
 
-void TASCAR::biquadf_t::set_analog_poles( float g, float p1, float p2, float fs )
+void TASCAR::biquadf_t::set_analog_poles(float g, float p1, float p2, float fs)
 {
-  p1 = fa2fdf(fs,p1)/fs;
-  p2 = fa2fdf(fs,p2)/fs;
-  g *= 1.0f/(fs*(2.0f-p1)*(2.0f-p2)*fs);
+  p1 = fa2fdf(fs, p1) / fs;
+  p2 = fa2fdf(fs, p2) / fs;
+  g *= 1.0f / (fs * (2.0f - p1) * (2.0f - p2) * fs);
   float z1_(-1.0f);
   float z2_(-1.0f);
-  float p1_((2.0f+p1)/(2.0f-p1));
-  float p2_((2.0f+p2)/(2.0f-p2));
-  b1_ = -(z1_+z2_)*g;
-  b2_ = z1_*z2_*g;
+  float p1_((2.0f + p1) / (2.0f - p1));
+  float p2_((2.0f + p2) / (2.0f - p2));
+  b1_ = -(z1_ + z2_) * g;
+  b2_ = z1_ * z2_ * g;
   b0_ = g;
-  a1_ = -(p1_+p2_);
-  a2_ = p1_*p2_;
+  a1_ = -(p1_ + p2_);
+  a2_ = p1_ * p2_;
 }
 
-std::complex<double> TASCAR::biquad_t::response( double phi ) const
+std::complex<double> TASCAR::biquad_t::response(double phi) const
 {
-  return response_b(phi)/response_a(phi);
+  return response_b(phi) / response_a(phi);
 }
 
-std::complex<double> TASCAR::biquad_t::response_a( double phi ) const
+std::complex<double> TASCAR::biquad_t::response_a(double phi) const
 {
-  std::complex<double> z1(std::exp(-i*phi));
-  std::complex<double> z2(z1*z1);
-  return 1.0 + a1_*z1 + a2_*z2;
+  std::complex<double> z1(std::exp(-i * phi));
+  std::complex<double> z2(z1 * z1);
+  return 1.0 + a1_ * z1 + a2_ * z2;
 }
 
-std::complex<double> TASCAR::biquad_t::response_b( double phi ) const
+std::complex<double> TASCAR::biquad_t::response_b(double phi) const
 {
-  std::complex<double> z1(std::exp(-i*phi));
-  std::complex<double> z2(z1*z1);
-  return b0_ + b1_*z1 + b2_*z2;
+  std::complex<double> z1(std::exp(-i * phi));
+  std::complex<double> z2(z1 * z1);
+  return b0_ + b1_ * z1 + b2_ * z2;
 }
 
-std::complex<float> TASCAR::biquadf_t::response( float phi ) const
+std::complex<float> TASCAR::biquadf_t::response(float phi) const
 {
-  return response_b(phi)/response_a(phi);
+  return response_b(phi) / response_a(phi);
 }
 
-std::complex<float> TASCAR::biquadf_t::response_a( float phi ) const
+std::complex<float> TASCAR::biquadf_t::response_a(float phi) const
 {
-  std::complex<float> z1(std::exp(-i_f*phi));
-  std::complex<float> z2(z1*z1);
-  return 1.0f + a1_*z1 + a2_*z2;
+  std::complex<float> z1(std::exp(-i_f * phi));
+  std::complex<float> z2(z1 * z1);
+  return 1.0f + a1_ * z1 + a2_ * z2;
 }
 
-std::complex<float> TASCAR::biquadf_t::response_b( float phi ) const
+std::complex<float> TASCAR::biquadf_t::response_b(float phi) const
 {
-  std::complex<float> z1(std::exp(-i_f*phi));
-  std::complex<float> z2(z1*z1);
-  return b0_ + b1_*z1 + b2_*z2;
+  std::complex<float> z1(std::exp(-i_f * phi));
+  std::complex<float> z2(z1 * z1);
+  return b0_ + b1_ * z1 + b2_ * z2;
 }
 
-TASCAR::bandpass_t::bandpass_t( double f1, double f2, double fs )
-  : fs_(fs)
+TASCAR::bandpass_t::bandpass_t(double f1, double f2, double fs) : fs_(fs)
 {
-  set_range( f1, f2 );
+  set_range(f1, f2);
 }
 
 void TASCAR::bandpass_t::set_range(double f1, double f2)
@@ -438,7 +422,8 @@ void TASCAR::biquad_t::set_lowpass(double fc, double fs, bool phaseinvert)
   double g(std::abs(response(0.0)));
   if(phaseinvert)
     g *= -1.0;
-  set_gzp(1.0 / g, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
+  set_gzp(1.0 / g, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs),
+          fc / fs * TASCAR_2PI);
 }
 
 void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
@@ -450,17 +435,16 @@ void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
   if(gain < 0.0) {
     double g = pow(10.0, (-gain / 20.0));
     double inv_a0 = 1.0 / (t_sq + 1.0 + g * Bc);
-    set_coefficients(
-        2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - g * Bc) * inv_a0,
-        (t_sq + 1.0 + Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
-        (t_sq + 1.0 - Bc) * inv_a0);
+    set_coefficients(2.0 * (1.0 - t_sq) * inv_a0,
+                     (t_sq + 1.0 - g * Bc) * inv_a0, (t_sq + 1.0 + Bc) * inv_a0,
+                     2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0);
   } else {
     double g = pow(10.0, (gain / 20.0));
     double inv_a0 = 1.0 / (t_sq + 1.0 + Bc);
-    set_coefficients(
-        2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
-        (t_sq + 1.0 + g * Bc) * inv_a0, 2.0 * (1.0 - t_sq) * inv_a0,
-        (t_sq + 1.0 - g * Bc) * inv_a0);
+    set_coefficients(2.0 * (1.0 - t_sq) * inv_a0, (t_sq + 1.0 - Bc) * inv_a0,
+                     (t_sq + 1.0 + g * Bc) * inv_a0,
+                     2.0 * (1.0 - t_sq) * inv_a0,
+                     (t_sq + 1.0 - g * Bc) * inv_a0);
   }
 }
 
@@ -495,31 +479,91 @@ void TASCAR::biquadf_t::set_pareq(float f, float fs, float gain, float q)
   if(gain < 0.0f) {
     float g = powf(10.0f, (-gain / 20.0f));
     float inv_a0 = 1.0f / (t_sq + 1.0f + g * Bc);
-    set_coefficients(
-        2.0f * (1.0f - t_sq) * inv_a0, (t_sq + 1.0f - g * Bc) * inv_a0,
-        (t_sq + 1.0f + Bc) * inv_a0, 2.0f * (1.0f - t_sq) * inv_a0,
-        (t_sq + 1.0f - Bc) * inv_a0);
+    set_coefficients(2.0f * (1.0f - t_sq) * inv_a0,
+                     (t_sq + 1.0f - g * Bc) * inv_a0,
+                     (t_sq + 1.0f + Bc) * inv_a0, 2.0f * (1.0f - t_sq) * inv_a0,
+                     (t_sq + 1.0f - Bc) * inv_a0);
   } else {
     float g = powf(10.0f, (gain / 20.0f));
     float inv_a0 = 1.0f / (t_sq + 1.0f + Bc);
-    set_coefficients(
-        2.0f * (1.0f - t_sq) * inv_a0, (t_sq + 1.0f - Bc) * inv_a0,
-        (t_sq + 1.0f + g * Bc) * inv_a0, 2.0f * (1.0f - t_sq) * inv_a0,
-        (t_sq + 1.0f - g * Bc) * inv_a0);
+    set_coefficients(2.0f * (1.0f - t_sq) * inv_a0, (t_sq + 1.0f - Bc) * inv_a0,
+                     (t_sq + 1.0f + g * Bc) * inv_a0,
+                     2.0f * (1.0f - t_sq) * inv_a0,
+                     (t_sq + 1.0f - g * Bc) * inv_a0);
   }
 }
 
-TASCAR::aweighting_t::aweighting_t( double fs )
+TASCAR::aweighting_t::aweighting_t(double fs)
 {
-  b1.set_analog_poles( 7.39705e9, -76655.0, -76655.0, fs );
-  b2.set_analog( sqrt(0.5), 0.0, 0.0, -676.7, -4636.0, fs );
-  b3.set_analog( 1.0, 0.0, 0.0, -129.4, -129.4, fs );
+  b1.set_analog_poles(7.39705e9, -76655.0, -76655.0, fs);
+  b2.set_analog(sqrt(0.5), 0.0, 0.0, -676.7, -4636.0, fs);
+  b3.set_analog(1.0, 0.0, 0.0, -129.4, -129.4, fs);
 }
 
-float TASCAR::optim_parameq(std::vector<biquadf_t>& flt, float& g,
-                            const std::vector<float>& vF,
-                            const std::vector<float>& vG, float fs)
+void TASCAR::multiband_pareq_t::set_fgq(const std::vector<float>& f,
+                                        const std::vector<float>& g,
+                                        const std::vector<float>& q, float fs)
 {
+  if(f.size() < 1)
+    throw TASCAR::ErrMsg("At least one frequency sample needed");
+  if(g.size() != f.size())
+    throw TASCAR::ErrMsg(
+        "Gain vector needs same number of entries as frequency vector");
+  if(q.size() != f.size())
+    throw TASCAR::ErrMsg(
+        "Gain vector needs same number of entries as q-factor vector");
+  resize(f.size());
+  g0 = 1.0f;
+  for(size_t k = 0; k < f.size(); ++k)
+    flt[k].set_pareq(f[k], fs, g[k], q[k]);
+}
+
+void TASCAR::multiband_pareq_t::optimpar2fltsettings(
+    const std::vector<float>& par, float fs, bool dump)
+{
+  if(par.size() != 3 * flt.size() + 1)
+    throw TASCAR::ErrMsg("Invalid size of parameter space");
+  g0 = powf(10.0f, 0.05f * par[0]);
+  if(dump)
+    std::cout << "  g0 = " << par[0] << " dB\n";
+  for(size_t k = 0; k < flt.size(); ++k) {
+    float f =
+        (atanf(par[3 * k + 1]) / TASCAR_PIf + 0.5f) * (fmax - fmin) + fmin;
+    float q = atanf(par[3 * k + 2]) / TASCAR_PIf + 0.5f;
+    flt[k].set_pareq(f, fs, par[3 * k + 2], q);
+    if(dump)
+      std::cout << "  " << f << " Hz: g=" << par[3 * k + 2] << " dB q=" << q
+                << std::endl;
+  }
+}
+
+static float mbeqerrfun(const std::vector<float>& x, void* data)
+{
+  return ((TASCAR::multiband_pareq_t*)data)->optim_error_fun(x);
+}
+
+float TASCAR::multiband_pareq_t::optim_error_fun(const std::vector<float>& par)
+{
+  optimpar2fltsettings(par, optim_fs);
+  dbresponse(optim_gmeas, optim_f, optim_fs);
+  float err = 0.0f;
+  for(size_t k = 0; k < optim_g.size(); ++k) {
+    float lerr = optim_g[k] - optim_gmeas[k];
+    lerr *= lerr;
+    err += lerr;
+  }
+  err /= (float)optim_g.size();
+  return err;
+}
+
+std::vector<float> TASCAR::multiband_pareq_t::optim_response(
+    size_t numflt, const std::vector<float>& vF, const std::vector<float>& vG,
+    float fs)
+{
+  if(numflt < 1)
+    throw TASCAR::ErrMsg(
+        "At least one filter is needed for optimization of filter fresponse");
+  resize(numflt);
   if(vF.size() != vG.size())
     throw TASCAR::ErrMsg(
         "Frequency vector needs same number of elements as gain vector "
@@ -531,16 +575,76 @@ float TASCAR::optim_parameq(std::vector<biquadf_t>& flt, float& g,
                          std::to_string(flt.size()) + " filters. At least " +
                          std::to_string(3 * flt.size() + 1) +
                          " samples are required.");
-  for(auto f : vF)
+  float f0 = 0.0f;
+  fmin = fs;
+  fmax = 0.0f;
+  for(auto f : vF) {
+    if(f <= 0.0f)
+      throw TASCAR::ErrMsg(
+          "Frequency vector contains negative or zero frequencies");
     if(f >= 0.5f * fs)
       throw TASCAR::ErrMsg("Frequency vector contains frequencies at or above "
                            "Nyquist frequency");
+    if(f <= f0)
+      throw TASCAR::ErrMsg("Frequency vector contains non-monotonic entries");
+    f0 = f;
+    fmin = std::min(f, fmin);
+    fmax = std::max(f, fmax);
+  }
+  fmin *= 0.5f;
+  fmax *= 2.0f;
+  optim_fs = fs;
+  optim_f = vF;
+  optim_g = vG;
   float glogmean = 0.0f;
   for(auto glog : vG)
     glogmean += glog;
-  glogmean /= vG.size();
-  g = powf(10.0f, 0.05 * glogmean);
-  return 0.0f;
+  glogmean /= (float)vG.size();
+  std::vector<float> par;
+  std::vector<float> step(3 * flt.size() + 1, 0.1f);
+  par.resize(3 * flt.size() + 1);
+  for(size_t k = 0; k < flt.size(); ++k) {
+    float frel =
+        2.0f * fmin *
+        powf(0.25f * fmax / fmin, (float)k / ((float)flt.size() - 1.0f));
+    par[3 * k + 1] = tanf(TASCAR_PIf * ((frel - fmin) / (fmax - fmin) - 0.5f));
+    par[3 * k + 2] = 0.0f;
+    par[3 * k + 3] = 0.5f;
+  }
+  optimpar2fltsettings(par, fs, true);
+  float err = 10000000.0f;
+  float eps = 1.0f;
+  size_t numiter = 1000;
+  for(size_t k = 0; k < numiter; ++k) {
+    float nerr = downhill_iterate(eps, par, mbeqerrfun, this, step);
+    if(nerr > err)
+      eps *= 0.5f;
+    if(fabsf(nerr / err - 1.0f) < 1e-7f)
+      k = numiter;
+    err = nerr;
+    if(err < 0.01f)
+      k = numiter;
+  }
+  optimpar2fltsettings(par, fs, true);
+  return dbresponse(vF, fs);
+}
+
+std::vector<float>
+TASCAR::multiband_pareq_t::dbresponse(const std::vector<float>& vF,
+                                      float fs) const
+{
+  std::vector<float> og;
+  dbresponse(og, vF, fs);
+  return og;
+}
+
+void TASCAR::multiband_pareq_t::dbresponse(std::vector<float>& og,
+                                           const std::vector<float>& vF,
+                                           float fs) const
+{
+  og.resize(0);
+  for(auto f : vF)
+    og.push_back(20.0f * log10f(std::abs(response(f * TASCAR_2PIf / fs))));
 }
 
 /*
