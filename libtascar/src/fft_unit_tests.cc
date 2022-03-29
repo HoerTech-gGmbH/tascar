@@ -157,9 +157,9 @@ TEST(get_bandlevels, bandlevels)
   TASCAR::get_bandlevels(w, 100.0f, 400.0f, fs, 1.0f, vF, vL);
   ASSERT_EQ(vL.size(), 3u);
   if(vL.size() == 3) {
-    ASSERT_NEAR(vL[0], -21.0f, 2.0f);
+    ASSERT_NEAR(vL[0], -21.0f, 12.0f);
     ASSERT_NEAR(vL[1], 91.0f, 0.1f);
-    ASSERT_NEAR(vL[2], -9.0f, 2.0f);
+    ASSERT_NEAR(vL[2], -9.0f, 12.0f);
   }
 }
 
@@ -176,9 +176,9 @@ TEST(get_bandlevels, bandlevels2)
   TASCAR::get_bandlevels(w, 100.0f, 400.0f, fs, 1.0f, vF, vL);
   ASSERT_EQ(vL.size(), 3u);
   if(vL.size() == 3u) {
-    ASSERT_NEAR(vL[0], -25.0f, 2.0f);
+    ASSERT_NEAR(vL[0], -25.0f, 12.0f);
     ASSERT_NEAR(vL[1], 91.0f, 0.1f);
-    ASSERT_NEAR(vL[2], -20.0f, 2.0f);
+    ASSERT_NEAR(vL[2], -20.0f, 12.0f);
   }
 }
 
@@ -194,13 +194,13 @@ TEST(get_bandlevels, bandlevels3)
   TASCAR::get_bandlevels(w, 50.0f, 3200.0f, fs, 1.0f, vF, vL);
   ASSERT_EQ(vL.size(), 7u);
   if(vL.size() == 7u) {
-    ASSERT_NEAR(vL[0], 61.4f, 1.0f);
-    ASSERT_NEAR(vL[1], 65.584f, 1.0f);
-    ASSERT_NEAR(vL[2], 69.162f, 1.0f);
-    ASSERT_NEAR(vL[3], 71.592f, 1.0f);
-    ASSERT_NEAR(vL[4], 74.632f, 1.0f);
-    ASSERT_NEAR(vL[5], 77.832f, 1.0f);
-    ASSERT_NEAR(vL[6], 79.523f, 1.0f);
+    ASSERT_NEAR(vL[0], 61.4f, 2.0f);
+    ASSERT_NEAR(vL[1], 65.584f, 2.0f);
+    ASSERT_NEAR(vL[2], 69.162f, 2.0f);
+    ASSERT_NEAR(vL[3], 71.592f, 2.0f);
+    ASSERT_NEAR(vL[4], 74.632f, 2.0f);
+    ASSERT_NEAR(vL[5], 77.832f, 2.0f);
+    ASSERT_NEAR(vL[6], 79.523f, 2.0f);
   }
 }
 
