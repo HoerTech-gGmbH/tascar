@@ -30,7 +30,7 @@
 using namespace TASCAR;
 
 vbap3d_t::vbap3d_t(const std::vector<TASCAR::pos_t>& spkarray)
-    : numchannels(spkarray.size()), channelweights(new float[numchannels]),
+  : numchannels((uint32_t)spkarray.size()), channelweights(new float[numchannels]),
       weights(channelweights)
 {
   if(spkarray.size() < 3)
@@ -53,9 +53,9 @@ vbap3d_t::vbap3d_t(const std::vector<TASCAR::pos_t>& spkarray)
   }
   for(auto it = qh.faces.begin(); it != qh.faces.end(); ++it) {
     simplex_t sim;
-    sim.c1 = it->c1;
-    sim.c2 = it->c2;
-    sim.c3 = it->c3;
+    sim.c1 = (uint32_t)(it->c1);
+    sim.c2 = (uint32_t)(it->c2);
+    sim.c3 = (uint32_t)(it->c3);
     double l11(spklist[sim.c1].x);
     double l12(spklist[sim.c1].y);
     double l13(spklist[sim.c1].z);

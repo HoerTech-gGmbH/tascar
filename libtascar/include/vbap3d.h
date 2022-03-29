@@ -59,13 +59,13 @@ namespace TASCAR {
       bool get_gain(const TASCAR::pos_t& p, float& g1, float& g2,
                     float& g3) const
       {
-        g1 = p.x * l11 + p.y * l21 + p.z * l31;
-        g2 = p.x * l12 + p.y * l22 + p.z * l32;
-        g3 = p.x * l13 + p.y * l23 + p.z * l33;
+        g1 = (float)(p.x * l11 + p.y * l21 + p.z * l31);
+        g2 = (float)(p.x * l12 + p.y * l22 + p.z * l32);
+        g3 = (float)(p.x * l13 + p.y * l23 + p.z * l33);
         if((g1 >= 0.0) && (g2 >= 0.0) && (g3 >= 0.0)) {
-          double w(sqrt(g1 * g1 + g2 * g2 + g3 * g3));
-          if(w > 0)
-            w = 1.0 / w;
+          float w(sqrtf(g1 * g1 + g2 * g2 + g3 * g3));
+          if(w > 0.0f)
+            w = 1.0f / w;
           g1 *= w;
           g2 *= w;
           g3 *= w;

@@ -44,13 +44,13 @@ namespace HOA {
       uint32_t acn(0);
       for(int l = 0; l <= M; ++l) {
         for(int m = -l; m <= l; ++m) {
-          double P(leg[gsl_sf_legendre_array_index(l, abs(m))]);
+          float P((float)leg[gsl_sf_legendre_array_index(l, abs(m))]);
           if(m < 0)
-            B[acn] = P * sin(abs(m) * azimuth);
+            B[acn] = P * sinf((float)abs(m) * azimuth);
           else if(m == 0)
             B[acn] = P;
           else
-            B[acn] = P * cos(abs(m) * azimuth);
+            B[acn] = P * cosf((float)abs(m) * azimuth);
           ++acn;
         }
       }

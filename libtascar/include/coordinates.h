@@ -895,7 +895,7 @@ namespace TASCAR {
       return 0.0;
     q = std::max(q, 0.0);
     std::size_t size = end - begin;
-    std::size_t middleIdx = size * q;
+    std::size_t middleIdx = (std::size_t)((double)size * q);
     if(middleIdx >= size)
       middleIdx = size - 1u;
     RandAccessIter target = begin + middleIdx;

@@ -441,7 +441,7 @@ TEST(pos_t,subdivide_mesh)
 TEST(quaternion_t,rotate)
 {
   TASCAR::quaternion_t q;
-  q.set_rotation( TASCAR_PI2, TASCAR::pos_t( 0, 0, 1 ) );
+  q.set_rotation( TASCAR_PI2f, TASCAR::pos_t( 0, 0, 1 ) );
   ASSERT_NEAR( 1.0, q.norm(), 1e-7 );
   ASSERT_NEAR( cosf( 0.25f*TASCAR_PIf ), q.w, 1e-8f );
   ASSERT_NEAR( 0.0f, q.x, 1e-8 );
@@ -457,20 +457,20 @@ TEST(quaternion_t,rotate)
   ASSERT_NEAR( 0.0, p.x, 1e-9 );
   ASSERT_NEAR( 1.0, p.y, 1e-9 );
   ASSERT_NEAR( 0.0, p.z, 1e-9 );
-  q.set_rotation( TASCAR_PI, TASCAR::pos_t( sqrt(0.5), 0, sqrt(0.5) ) );
+  q.set_rotation( TASCAR_PIf, TASCAR::pos_t( sqrt(0.5), 0, sqrt(0.5) ) );
   p = TASCAR::pos_t( 1, 0, 0 );
   q.rotate( p );
   ASSERT_NEAR( 0.0, p.x, 1e-9 );
   ASSERT_NEAR( 0.0, p.y, 1e-7 );
   ASSERT_NEAR( 1.0, p.z, 1e-9 );
-  q.set_rotation( TASCAR_PI2, TASCAR::pos_t( 0, 0, 1 ) );
+  q.set_rotation( TASCAR_PI2f, TASCAR::pos_t( 0, 0, 1 ) );
   TASCAR::quaternion_t qp;
-  qp.set_rotation( TASCAR_PI2, TASCAR::pos_t( 0, 0, 1 ) );
+  qp.set_rotation( TASCAR_PI2f, TASCAR::pos_t( 0, 0, 1 ) );
   qp *= q;
-  ASSERT_NEAR( cosf( TASCAR_PI2 ), qp.w, 1e-7 );
+  ASSERT_NEAR( cosf( TASCAR_PI2f ), qp.w, 1e-7 );
   ASSERT_NEAR( 0.0f, qp.x, 1e-8 );
   ASSERT_NEAR( 0.0f, qp.y, 1e-8 );
-  ASSERT_NEAR( sinf( TASCAR_PI2 ), qp.z, 1e-7 );
+  ASSERT_NEAR( sinf( TASCAR_PI2f ), qp.z, 1e-7 );
   p = TASCAR::pos_t( 1, 0, 0 );
   qp.rotate( p );
   ASSERT_NEAR( -1.0, p.x, 1e-7 );
@@ -483,7 +483,7 @@ TEST(quaternion_t, euler)
   TASCAR::quaternion_t q;
   TASCAR::zyx_euler_t eul;
   // single axis rotation:
-  for(double r = -1.5; r <= 1.5; r += 0.25) {
+  for(float r = -1.5f; r <= 1.5f; r += 0.25f) {
     q.set_rotation(r, TASCAR::pos_t(0, 0, 1));
     eul = q.to_euler();
     ASSERT_NEAR(r, eul.z, 1e-7);
@@ -502,21 +502,21 @@ TEST(quaternion_t, euler)
   }
   // multiple axis rotation:
   TASCAR::quaternion_t q2;
-  q.set_rotation(0.2, TASCAR::pos_t(0, 0, 1));
-  q2.set_rotation(0.3, TASCAR::pos_t(0, 1, 0));
+  q.set_rotation(0.2f, TASCAR::pos_t(0, 0, 1));
+  q2.set_rotation(0.3f, TASCAR::pos_t(0, 1, 0));
   q *= q2;
-  q2.set_rotation(0.4, TASCAR::pos_t(1, 0, 0));
+  q2.set_rotation(0.4f, TASCAR::pos_t(1, 0, 0));
   q *= q2;
   eul = q.to_euler();
-  ASSERT_NEAR(0.2, eul.z, 1e-7);
-  ASSERT_NEAR(0.3, eul.y, 1e-7);
-  ASSERT_NEAR(0.4, eul.x, 1e-7);
+  ASSERT_NEAR(0.2f, eul.z, 1e-7);
+  ASSERT_NEAR(0.3f, eul.y, 1e-7);
+  ASSERT_NEAR(0.4f, eul.x, 1e-7);
   // to/from euler
   q.set_euler(TASCAR::zyx_euler_t(0.2, 0.3, 0.4));
   eul = q.to_euler();
-  ASSERT_NEAR(0.2, eul.z, 1e-7);
-  ASSERT_NEAR(0.3, eul.y, 1e-7);
-  ASSERT_NEAR(0.4, eul.x, 1e-7);
+  ASSERT_NEAR(0.2f, eul.z, 1e-7);
+  ASSERT_NEAR(0.3f, eul.y, 1e-7);
+  ASSERT_NEAR(0.4f, eul.x, 1e-7);
 }
 
 TEST(median, median)
