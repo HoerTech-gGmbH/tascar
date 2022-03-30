@@ -54,13 +54,20 @@ namespace TASCAR {
     double spkgain;
     double dr;
     // decoder matrix:
-    void update_foa_decoder(float gain, double xyzgain);
+    void update_foa_decoder(float gain, float xyzgain);
     float d_w;
     float d_x;
     float d_y;
     float d_z;
     float densityweight;
+    // frequency response correction:
+    // FIR filter:
     TASCAR::overlap_save_t* comp;
+    // IIR filter:
+    TASCAR::multiband_pareq_t eq;
+    std::vector<float> eqfreq;
+    std::vector<float> eqgain;
+    uint32_t eqstages = 0u;
   };
 
   class spk_array_cfg_t : public xml_element_t {
@@ -106,7 +113,7 @@ namespace TASCAR {
   private:
     double rmax;
     double rmin;
-    double xyzgain;
+    float xyzgain;
     std::string onload;
     std::string onunload;
     std::vector<didx_t> didx;

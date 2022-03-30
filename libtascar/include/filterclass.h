@@ -325,9 +325,13 @@ namespace TASCAR {
     biquad_t b3;
   };
 
+  /**
+     @brief Multi-band parametric equalizer with filter-design functions
+   */
   class multiband_pareq_t {
   public:
     multiband_pareq_t(){};
+    size_t size() const { return flt.size(); };
     void resize(size_t s) { flt.resize(s); };
     /**
        @brief Set center frequencies, gains and q-factor

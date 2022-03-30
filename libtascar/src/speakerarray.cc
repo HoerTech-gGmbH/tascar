@@ -109,23 +109,24 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
   mean_rotation = std::arg(p_xy);
   didx.resize(size());
   for(uint32_t k = 0; k < size(); ++k) {
-    operator[](k).update_foa_decoder(1.0f / size(), xyzgain);
+    operator[](k).update_foa_decoder(1.0f / (float)size(), xyzgain);
     connections.push_back(operator[](k).connect);
     float w(1);
     for(uint32_t l = 0; l < size(); ++l) {
       if(l != k) {
-        float d(dot_prod(operator[](k).unitvector, operator[](l).unitvector));
+        float d((
+            float)dot_prod(operator[](k).unitvector, operator[](l).unitvector));
         if(d > 0)
           w += d;
       }
     }
-    operator[](k).densityweight = size() / w;
+    operator[](k).densityweight = (float)size() / w;
   }
   if(!empty()) {
     float dwmean(0);
     for(uint32_t k = 0; k < size(); ++k)
       dwmean += operator[](k).densityweight;
-    dwmean /= size();
+    dwmean /= (float)size();
     for(uint32_t k = 0; k < size(); ++k)
       operator[](k).densityweight /= dwmean;
   }
@@ -176,7 +177,7 @@ spk_array_t::sort_distance(const pos_t& psrc)
 void spk_array_diff_render_t::render_diffuse(
     std::vector<TASCAR::wave_t>& output)
 {
-  uint32_t channels(size());
+  uint32_t channels((uint32_t)size());
   if(output.size() < channels)
     throw TASCAR::ErrMsg("Invalid size of speaker array");
   if(!diffuse_field_accumulator)
@@ -218,6 +219,11 @@ spk_descriptor_t::spk_descriptor_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(connect, "", "Connection to jack port");
   GET_ATTRIBUTE(compB, "", "FIR filter coefficients for speaker calibration");
   GET_ATTRIBUTE_DB(gain, "Broadband gain correction");
+  GET_ATTRIBUTE(
+      eqstages, "",
+      "Number of biquad-stages in IIR frequency correction (0 = disable)");
+  GET_ATTRIBUTE(eqfreq, "Hz", "Frequencies for IIR filter design");
+  GET_ATTRIBUTE(eqgain, "dB", "Gains for IIR filter design");
   set_sphere(r, az, el);
   unitvector = normal();
   update_foa_decoder(1.0f, 1.0);
@@ -238,14 +244,14 @@ spk_descriptor_t::~spk_descriptor_t()
     delete comp;
 }
 
-void spk_descriptor_t::update_foa_decoder(float gain, double xyzgain)
+void spk_descriptor_t::update_foa_decoder(float gain, float xyzgain)
 {
   // update of FOA decoder matrix:
   d_w = 1.4142135623730951455f * gain;
   gain *= 2.0f * xyzgain;
-  d_x = unitvector.x * gain;
-  d_y = unitvector.y * gain;
-  d_z = unitvector.z * gain;
+  d_x = (float)unitvector.x * gain;
+  d_y = (float)unitvector.y * gain;
+  d_z = (float)unitvector.z * gain;
 }
 
 void spk_array_t::validate_attributes(std::string& msg) const
@@ -258,7 +264,7 @@ void spk_array_t::validate_attributes(std::string& msg) const
 
 void spk_array_t::configure()
 {
-  n_channels = size();
+  n_channels = (uint32_t)size();
   delaycomp.clear();
   for(uint32_t k = 0; k < size(); ++k)
     delaycomp.emplace_back(f_sample *
@@ -270,16 +276,19 @@ void spk_array_t::configure()
       spk.comp = new TASCAR::overlap_save_t(n_fragment + 1, n_fragment);
       spk.comp->set_irs(spk.compB, false);
     }
+    if(spk.eqstages > 0)
+      spk.eq.optim_response(spk.eqstages, spk.eqfreq, spk.eqgain,
+                            (float)f_sample);
   }
 }
 
 void spk_array_diff_render_t::configure()
 {
   spk_array_t::configure();
-  n_channels = size() + subs.size();
+  n_channels = (uint32_t)(size() + subs.size());
   // initialize decorrelation filter:
   decorrflt.clear();
-  uint32_t irslen(decorr_length * f_sample);
+  uint32_t irslen((uint32_t)(decorr_length * f_sample));
   uint32_t paddedirslen((1 << (int)(ceil(log2(irslen + n_fragment - 1)))) -
                         n_fragment + 1);
   if(irslen > 0) {
@@ -294,8 +303,8 @@ void spk_array_diff_render_t::configure()
         fft_filter.s[b] = std::exp(i * dis(gen));
       fft_filter.ifft();
       for(uint32_t t = 0; t < fft_filter.w.n; ++t)
-        fft_filter.w[t] *=
-            (0.5f - 0.5f * cosf(t * TASCAR_2PIf / fft_filter.w.n));
+        fft_filter.w[t] *= (0.5f - 0.5f * cosf((float)t * TASCAR_2PIf /
+                                               (float)fft_filter.w.n));
       decorrflt[k].set_irs(fft_filter.w, false);
     }
   }
@@ -418,6 +427,9 @@ uint32_t TASCAR::get_spklayout_checksum(const xml_element_t& e)
   attributes.push_back("fcsub");
   attributes.push_back("delay");
   attributes.push_back("compB");
+  attributes.push_back("eqstages");
+  attributes.push_back("eqfreq");
+  attributes.push_back("eqgain");
   attributes.push_back("connect");
   return e.hash(attributes, true);
 }
@@ -587,6 +599,8 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
     }
     if(operator[](k).comp)
       operator[](k).comp->process(output[k], output[k], false);
+    if(operator[](k).eqstages)
+      operator[](k).eq.filter(output[k]);
   }
   // calibration of subs:
   for(uint32_t k = 0; k < subs.size(); ++k) {
@@ -594,6 +608,8 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
     output[k + size()] *= sgain;
     if(subs[k].comp)
       subs[k].comp->process(output[k + size()], output[k + size()], false);
+    if(subs[k].eqstages)
+      subs[k].eq.filter(output[k + size()]);
   }
   // convolution
   if(use_conv && (!convprecalib)) {
