@@ -411,6 +411,24 @@ if the current value is readable (\verb!i!), a value range hint
 %
 At the end of the list, an empty message is sent to \verb!<path>/end!.
 
+The current XML configuration can be retrieved by sending a URL and path to the \verb!/sendxmlto! variable.
+%
+This OSC variable requires two string parameters:
+%
+The first is a valid OSC URL, e.g. \verb!osc.udp://localhost:9000/!.
+%
+The XML configuration is sent to this address.
+%
+The second parameter is an OSC path, e.g. \verb!/xml!.
+%
+This destination should be able to receive string data (format \verb!s!).
+
+Please note that in some cases the maximum transmission unit of UDP
+messages is not sufficient to transmit all data.
+%
+In this case you should use TCP transport.
+
+
 \subsection{Optimization of the operating system for audio processing}
 
 Configure real-time scheduling: grant permissions to acquire real-time

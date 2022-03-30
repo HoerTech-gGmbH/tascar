@@ -559,7 +559,7 @@ void TASCAR::session_t::add_scene(tsccfg::node_t src)
                            "\" already exists in the session.");
     namelist.insert(newscene->name);
     scenes.push_back(newscene);
-    scenes.back()->configure_meter(levelmeter_tc, levelmeter_weight);
+    scenes.back()->configure_meter((float)levelmeter_tc, levelmeter_weight);
     scenemap[newscene->id] = newscene;
     for(auto& sound : newscene->sounds) {
       const std::string id(sound->get_id());
@@ -1043,10 +1043,21 @@ namespace OSCSession {
     return 0;
   }
 
+  int _osc_send_xml(const char*, const char* types, lo_arg** argv, int argc,
+                    lo_message, void* user_data)
+  {
+    if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+      TASCAR::session_t* srv(reinterpret_cast<TASCAR::session_t*>(user_data));
+      srv->send_xml(&(argv[0]->s), &(argv[1]->s));
+    }
+    return 0;
+  }
+
 } // namespace OSCSession
 
 void TASCAR::session_t::add_transport_methods()
 {
+  osc_server_t::add_method("/sendxmlto", "ss", OSCSession::_osc_send_xml, this);
   osc_server_t::add_method("/transport/locate", "f", OSCSession::_locate, this);
   osc_server_t::add_method("/transport/locatei", "i", OSCSession::_locatei,
                            this);
@@ -1058,6 +1069,17 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/stop", "", OSCSession::_stop, this);
   osc_server_t::add_method("/transport/unload", "", OSCSession::_unload_modules,
                            this);
+}
+
+void TASCAR::session_t::send_xml(const std::string& url,
+                                 const std::string& path)
+{
+  lo_address target = lo_address_new_from_url(url.c_str());
+  if(!target)
+    return;
+  std::string xml = save_to_string();
+  lo_send(target, path.c_str(), "s", xml.c_str());
+  lo_address_free(target);
 }
 
 void TASCAR::session_t::validate_attributes(std::string& msg) const
