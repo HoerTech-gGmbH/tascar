@@ -51,7 +51,7 @@ namespace TASCAR {
     uint32_t readf_float( float* buf, uint32_t frames );
     uint32_t seekf( uint32_t frame );
     uint32_t get_channels() const {return sf_inf.channels;};
-    uint32_t get_frames() const {return sf_inf.frames;};
+    uint32_t get_frames() const {return (uint32_t)sf_inf.frames;};
     uint32_t get_loopedframes() const;
     uint32_t get_srate() const {return sf_inf.samplerate;};
     const std::string& get_name() const { return efname; };

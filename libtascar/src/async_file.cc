@@ -67,7 +67,7 @@ TASCAR::looped_sndfile_t::looped_sndfile_t(const std::string& fname,uint32_t loo
     case SF_ERR_UNSUPPORTED_ENCODING : sf_errs = "Unsupported encoding."; break;
     default: sf_errs = sf_error_number(sf_err);
     }
-    async_file_error = "unable to open sound file '" + efname + "'.\n"+sf_errs+" ("+num2str(sf_err)+").\nCurrent working directory: '" + cwds + "'.";
+    async_file_error = "unable to open sound file '" + efname + "'.\n"+sf_errs+" ("+std::to_string(sf_err)+").\nCurrent working directory: '" + cwds + "'.";
     throw ErrMsg(async_file_error.c_str());
   }
   if( !(sf_inf.seekable ) ){
