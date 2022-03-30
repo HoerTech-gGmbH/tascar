@@ -46,11 +46,58 @@ TEST(delayline_t, get_dist_push2)
 TEST(delayline_t, get_dist_push_sinc)
 {
   TASCAR::varidelay_t delay(3, 1, 1, 5, 4);
-  EXPECT_EQ(0.0,delay.get_dist(0));
-  ASSERT_NEAR(0.0,delay.get_dist_push(4,1),1e-7);
-  ASSERT_NEAR(0.0,delay.get_dist_push(4,0),1e-7);
-  ASSERT_NEAR(0.0,delay.get_dist_push(4,0),1e-7);
-  ASSERT_NEAR(1.0,delay.get_dist_push(4,0),1e-7);
+  EXPECT_EQ(0.0, delay.get_dist(0));
+  ASSERT_NEAR(0.0, delay.get_dist_push(4, 1), 1e-7);
+  ASSERT_NEAR(0.0, delay.get_dist_push(4, 0), 1e-7);
+  ASSERT_NEAR(0.0, delay.get_dist_push(4, 0), 1e-7);
+  ASSERT_NEAR(1.0, delay.get_dist_push(4, 0), 1e-7);
+}
+
+TEST(delayline_t, get_dist_sinc)
+{
+  TASCAR::varidelay_t delay(10, 1, 1, 5, 100);
+  delay.push(1.0f);
+  delay.push(0.0f);
+  delay.push(0.0f);
+  delay.push(0.0f);
+  for(float d = 0.0f; d < 9.0f; d += 0.25f)
+    std::cout << "ASSERT_NEAR(" << delay.get_dist(d) << ",delay.get_dist(" << d
+              << ",1e-7);\n";
+  ASSERT_NEAR(0.0f, delay.get_dist(0), 1e-7);
+  ASSERT_NEAR(0.127324, delay.get_dist(0.5), 1e-6);
+  ASSERT_NEAR(0.100035, delay.get_dist(0.75), 1e-6);
+  ASSERT_NEAR(0.0f, delay.get_dist(1), 1e-7);
+  ASSERT_NEAR(-0.128617, delay.get_dist(1.25), 1e-6);
+  ASSERT_NEAR(-0.212207, delay.get_dist(1.5), 1e-6);
+  ASSERT_NEAR(-0.180063, delay.get_dist(1.75), 1e-6);
+  ASSERT_NEAR(0.0f, delay.get_dist(2), 1e-7);
+  ASSERT_NEAR(0.300105, delay.get_dist(2.25), 1e-6);
+  ASSERT_NEAR(0.63662, delay.get_dist(2.5), 1e-6);
+  ASSERT_NEAR(0.900316, delay.get_dist(2.75), 1e-6);
+  ASSERT_NEAR(1, delay.get_dist(3), 1e-7);
+  ASSERT_NEAR(0.900316, delay.get_dist(3.25), 1e-6);
+  ASSERT_NEAR(0.63662, delay.get_dist(3.5), 1e-6);
+  ASSERT_NEAR(0.300105, delay.get_dist(3.75), 1e-6);
+  ASSERT_NEAR(0.0f, delay.get_dist(4), 1e-7);
+  ASSERT_NEAR(-0.180063, delay.get_dist(4.25), 1e-6);
+  ASSERT_NEAR(-0.212207, delay.get_dist(4.5), 1e-6);
+  ASSERT_NEAR(-0.128617, delay.get_dist(4.75), 1e-6);
+  ASSERT_NEAR(0.0f, delay.get_dist(5), 1e-7);
+  ASSERT_NEAR(0.100035, delay.get_dist(5.25), 1e-6);
+  ASSERT_NEAR(0.127324, delay.get_dist(5.5), 1e-6);
+  ASSERT_NEAR(0.0818469, delay.get_dist(5.75), 1e-6);
+  ASSERT_NEAR(0.0f, delay.get_dist(6), 1e-7);
+  ASSERT_NEAR(-0.0692551, delay.get_dist(6.25), 1e-6);
+  ASSERT_NEAR(-0.0909457, delay.get_dist(6.5), 1e-6);
+  ASSERT_NEAR(-0.060021, delay.get_dist(6.75), 1e-6);
+  ASSERT_NEAR(0.0f, delay.get_dist(7), 1e-7);
+  ASSERT_NEAR(0.0529598, delay.get_dist(7.25), 1e-6);
+  ASSERT_NEAR(0.0707355, delay.get_dist(7.5), 1e-6);
+  ASSERT_NEAR(0.0473851, delay.get_dist(7.75), 1e-6);
+  ASSERT_NEAR(0, delay.get_dist(8), 1e-7);
+  ASSERT_NEAR(0, delay.get_dist(8.25), 1e-7);
+  ASSERT_NEAR(0, delay.get_dist(8.5), 1e-7);
+  ASSERT_NEAR(0, delay.get_dist(8.75), 1e-7);
 }
 
 TEST(delayline_t, get_dist_push_overflow)
