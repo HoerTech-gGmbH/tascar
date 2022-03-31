@@ -23,7 +23,6 @@
 #include "render.h"
 #include <string.h>
 #include <unistd.h>
-#include <sys/time.h>
 
 TASCAR::render_profiler_t::render_profiler_t()
 {
@@ -71,44 +70,9 @@ void TASCAR::render_profiler_t::set_tau( double t, double fs )
   B0 = 1.0-A1;
 }
 
-class tictoc_t {
-public:
-  tictoc_t();
-  double toc();
-private:
-  struct timeval tv1;
-  struct timeval tv2;
-  struct timezone tz;
-  double t;
-};
-
-tictoc_t::tictoc_t()
-{
-  memset(&tv1,0,sizeof(timeval));
-  memset(&tv2,0,sizeof(timeval));
-  memset(&tz,0,sizeof(timezone));
-  t = 0;
-  gettimeofday(&tv1,&tz);
-}
-
-double tictoc_t::toc()
-{
-  gettimeofday(&tv2,&tz);
-  tv2.tv_sec -= tv1.tv_sec;
-  if( tv2.tv_usec >= tv1.tv_usec )
-    tv2.tv_usec -= tv1.tv_usec;
-  else{
-    tv2.tv_sec --;
-    tv2.tv_usec += 1000000;
-    tv2.tv_usec -= tv1.tv_usec;
-  }
-  t = (float)(tv2.tv_sec) + 0.000001 * (float)(tv2.tv_usec);
-  return t;
-}
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
-
 
 TASCAR::render_core_t::render_core_t(tsccfg::node_t xmlsrc)
   : scene_t(xmlsrc),
@@ -263,7 +227,7 @@ void TASCAR::render_core_t::process(uint32_t nframes,
   // DEBUG(pcnt);
   //++pcnt;
   if(pthread_mutex_trylock(&mtx_world) == 0) {
-    tictoc_t tic;
+    TASCAR::tictoc_t tic;
     /*
      * Initialization:
      */
@@ -358,6 +322,30 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     loadaverage.update(load_cycle);
     pthread_mutex_unlock(&mtx_world);
   }
+}
+
+TASCAR::tictoc_t::tictoc_t()
+{
+  memset(&tv1, 0, sizeof(timeval));
+  memset(&tv2, 0, sizeof(timeval));
+  memset(&tz, 0, sizeof(timezone));
+  t = 0;
+  gettimeofday(&tv1, &tz);
+}
+
+double TASCAR::tictoc_t::toc()
+{
+  gettimeofday(&tv2, &tz);
+  tv2.tv_sec -= tv1.tv_sec;
+  if(tv2.tv_usec >= tv1.tv_usec)
+    tv2.tv_usec -= tv1.tv_usec;
+  else {
+    tv2.tv_sec--;
+    tv2.tv_usec += 1000000;
+    tv2.tv_usec -= tv1.tv_usec;
+  }
+  t = (float)(tv2.tv_sec) + 0.000001 * (float)(tv2.tv_usec);
+  return t;
 }
 
 /*

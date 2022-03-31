@@ -21,7 +21,7 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
   audioplugin.o maskplugin.o levelmeter.o serviceclass.o		\
   speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o hoa.o		\
-  tascar_os.o
+  tascar_os.o calibsession.o
 # pugixml.o
 
 ifneq ($(OS),Windows_NT)
