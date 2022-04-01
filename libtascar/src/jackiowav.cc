@@ -332,6 +332,7 @@ jackrec2wave_t::jackrec2wave_t(const std::vector<std::string>& ports,
                                const std::string& jackname)
     : jackc_t(jackname)
 {
+  isrecording = false;
   for(size_t k = 0; k < ports.size(); ++k)
     add_input_port(std::string("in.") + std::to_string(k));
   activate();

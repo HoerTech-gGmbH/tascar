@@ -43,6 +43,7 @@
 #include <string.h>
 #include <thread>
 #include <unistd.h>
+#include <atomic>
 
 /**
    \ingroup apptascar
@@ -151,7 +152,7 @@ public:
 private:
   int process(jack_nframes_t n, const std::vector<float*>& s_in,
               const std::vector<float*>& s_out);
-  std::atomic_bool isrecording = false;
+  std::atomic_bool isrecording;
   const std::vector<TASCAR::wave_t>* buff = NULL;
   uint32_t appendpos = 0u;
 };
