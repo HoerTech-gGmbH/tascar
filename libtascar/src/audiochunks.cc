@@ -211,12 +211,12 @@ float wave_t::maxabs() const
 
 float wave_t::spldb() const
 {
-  return 10.0*log10(ms())-SPLREF;
+  return 10.0f*log10f(ms())-SPLREFf;
 }
 
 float wave_t::maxabsdb() const
 {
-  return 20.0*log10(maxabs())-SPLREF;
+  return 20.0f*log10f(maxabs())-SPLREFf;
 }
 
 amb1wave_t::amb1wave_t(uint32_t chunksize)
@@ -289,7 +289,7 @@ void amb1wave_t::operator+=(const amb1wave_t& v)
   z_+=v.z();
 }
 
-void amb1wave_t::operator*=(double v)
+void amb1wave_t::operator*=(float v)
 {
   w_*=v;
   x_*=v;

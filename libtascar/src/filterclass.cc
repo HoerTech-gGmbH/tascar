@@ -611,7 +611,7 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
     par[3 * k + 2] = 0.0f;
     par[3 * k + 3] = 0.5f;
   }
-  optimpar2fltsettings(par, fs, true);
+  optimpar2fltsettings(par, fs);
   float err = 10000000.0f;
   float eps = 1.0f;
   size_t numiter = 1000;

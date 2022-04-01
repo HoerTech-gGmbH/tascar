@@ -98,11 +98,15 @@ public:
   };
 
 protected:
-  virtual int process(jack_nframes_t, const std::vector<float*>&,
-                      const std::vector<float*>&)
-  {
-    return 0;
-  };
+  /**
+     @brief Wrapper of jack process callback.
+     @param n Number of samples to process.
+     @param s_in Container of input float samples.
+     @param s_out Container of output float samples.
+     @return Zero on success, non-zero on error.
+   */
+  virtual int process(jack_nframes_t n, const std::vector<float*>& s_in,
+                      const std::vector<float*>& s_out);
 
 private:
   static int process_(jack_nframes_t nframes, void* arg);

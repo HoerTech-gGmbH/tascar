@@ -2,6 +2,7 @@
 #define CALIBSESSION_H
 
 #include "session.h"
+#include "jackiowav.h"
 
 namespace TASCAR {
 
@@ -18,6 +19,11 @@ namespace TASCAR {
     void inc_diffusegain(double dl);
     void set_active(bool b);
     void set_active_diff(bool b);
+    /**
+       @brief Measure relative levels of loudspeakers
+       @param prewait Waiting time between activation and repositioning of sound
+       sources and measurement phase
+     */
     void get_levels(double prewait);
     void reset_levels();
     void saveas(const std::string& fname);
@@ -75,6 +81,7 @@ namespace TASCAR {
     double lmax;
     double lmean;
     std::string calibfor;
+    jackrec2wave_t jackrec;
   };
 
 } // namespace TASCAR

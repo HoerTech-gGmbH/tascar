@@ -3,7 +3,7 @@
  * @author Giso Grimm
  * @brief  Chunks for block-wise audio processing
  */
-/* 
+/*
  * License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
@@ -26,8 +26,8 @@
 #ifndef AUDIOCHUNKS_H
 #define AUDIOCHUNKS_H
 
-#include <sndfile.h>
 #include "coordinates.h"
+#include <sndfile.h>
 
 namespace TASCAR {
 
@@ -48,6 +48,13 @@ namespace TASCAR {
     void clear();
     void copy(const wave_t& src, float gain = 1.0);
     void add(const wave_t& src, float gain = 1.0);
+    /**
+       @brief Copy samples from float buffer.
+       @param data Float buffer.
+       @param cnt Maximum number to copy (not more than min{cnt,n} samples are
+       copied).
+       @param gain Linear gain.
+     */
     uint32_t copy(float* data, uint32_t cnt, float gain = 1.0);
     uint32_t copy_to(float* data, uint32_t cnt, float gain = 1.0);
     uint32_t copy_stride(float* data, uint32_t cnt, uint32_t stride,
@@ -68,9 +75,9 @@ namespace TASCAR {
       if(append_pos >= n)
         append_pos = 0;
     };
-    //void operator*=(double v);
+    // void operator*=(double v);
     void operator*=(float v);
-    //void operator+=(double v);
+    // void operator+=(double v);
     void operator+=(float v);
     void operator+=(const wave_t& o);
     void operator*=(const wave_t& src);
@@ -91,24 +98,25 @@ namespace TASCAR {
   public:
     amb1wave_t(uint32_t chunksize);
     amb1wave_t(const amb1wave_t&) = delete;
-    inline wave_t& w(){return w_;};
-    inline wave_t& x(){return x_;};
-    inline wave_t& y(){return y_;};
-    inline wave_t& z(){return z_;};
-    inline const wave_t& w() const {return w_;};
-    inline const wave_t& x() const {return x_;};
-    inline const wave_t& y() const {return y_;};
-    inline const wave_t& z() const {return z_;};
-    inline uint32_t size() const { return w_.size();};
+    inline wave_t& w() { return w_; };
+    inline wave_t& x() { return x_; };
+    inline wave_t& y() { return y_; };
+    inline wave_t& z() { return z_; };
+    inline const wave_t& w() const { return w_; };
+    inline const wave_t& x() const { return x_; };
+    inline const wave_t& y() const { return y_; };
+    inline const wave_t& z() const { return z_; };
+    inline uint32_t size() const { return w_.size(); };
     void clear();
-    void operator*=(double v);
+    void operator*=(float v);
     void operator+=(const amb1wave_t& v);
-    void add_panned( pos_t p, const wave_t& v, float g=1.0f);
+    void add_panned(pos_t p, const wave_t& v, float g = 1.0f);
     std::vector<wave_t> wyzx;
     void print_levels() const;
     wave_t& operator[](uint32_t acn);
     void copy(const amb1wave_t&);
-    void apply_matrix( float* m );
+    void apply_matrix(float* m);
+
   protected:
     wave_t w_;
     wave_t x_;
@@ -119,8 +127,10 @@ namespace TASCAR {
   class amb1rotator_t : public amb1wave_t {
   public:
     amb1rotator_t(uint32_t chunksize);
-    amb1rotator_t& rotate(const amb1wave_t& src,const TASCAR::zyx_euler_t& o,bool invert=false);
-    void rotate(const TASCAR::zyx_euler_t& o,bool invert=false);
+    amb1rotator_t& rotate(const amb1wave_t& src, const TASCAR::zyx_euler_t& o,
+                          bool invert = false);
+    void rotate(const TASCAR::zyx_euler_t& o, bool invert = false);
+
   private:
     double wxx, wxy, wxz, wyx, wyy, wyz, wzx, wzy, wzz, dt;
   };
@@ -131,12 +141,13 @@ namespace TASCAR {
     sndfile_handle_t(const std::string& fname, int samplerate, int channels);
     ~sndfile_handle_t();
     sndfile_handle_t(const sndfile_handle_t&) = delete;
-    uint32_t get_channels() const {return sf_inf.channels;};
-    uint32_t get_frames() const {return (uint32_t)sf_inf.frames;};
-    uint32_t get_srate() const {return sf_inf.samplerate;};
-    uint32_t readf_float( float* buf, uint32_t frames );
-    uint32_t writef_float( float* buf, uint32_t frames );
+    uint32_t get_channels() const { return sf_inf.channels; };
+    uint32_t get_frames() const { return (uint32_t)sf_inf.frames; };
+    uint32_t get_srate() const { return sf_inf.samplerate; };
+    uint32_t readf_float(float* buf, uint32_t frames);
+    uint32_t writef_float(float* buf, uint32_t frames);
     static SF_INFO sf_info_configurator(int samplerate, int channels);
+
   protected:
     SF_INFO sf_inf;
     SNDFILE* sfile;
@@ -144,12 +155,14 @@ namespace TASCAR {
 
   class looped_wave_t : public wave_t {
   public:
-    looped_wave_t( uint32_t length );
+    looped_wave_t(uint32_t length);
     void set_iposition(int64_t position);
     void set_loop(uint32_t loop);
-    void add_to_chunk(int64_t chunktime,wave_t& chunk);
-    void add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk);
-    void add_chunk_looped(float gain,wave_t& chunk);
+    void add_to_chunk(int64_t chunktime, wave_t& chunk);
+    void add_chunk(int32_t chunk_time, int32_t start_time, float gain,
+                   wave_t& chunk);
+    void add_chunk_looped(float gain, wave_t& chunk);
+
   private:
     uint32_t looped_t;
     float looped_gain;
@@ -160,12 +173,13 @@ namespace TASCAR {
 
   class sndfile_t : public sndfile_handle_t, public looped_wave_t {
   public:
-    sndfile_t(const std::string& fname,uint32_t channel=0,double start=0,double length=0);
+    sndfile_t(const std::string& fname, uint32_t channel = 0, double start = 0,
+              double length = 0);
     void set_position(double position);
     void resample(double ratio);
   };
 
-}
+} // namespace TASCAR
 
 #endif
 

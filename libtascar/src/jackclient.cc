@@ -262,6 +262,12 @@ jackc_t::~jackc_t()
   }
 }
 
+int jackc_t::process(jack_nframes_t, const std::vector<float*>&,
+                     const std::vector<float*>&)
+{
+  return 0;
+}
+
 int jackc_t::process_(jack_nframes_t nframes, void* arg)
 {
   return ((jackc_t*)(arg))->process_(nframes);

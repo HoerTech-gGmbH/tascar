@@ -13,7 +13,7 @@
 */
 /*
   License (GPL)
- 
+
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License as
   published by the Free Software Foundation; version 2 of the
@@ -34,14 +34,15 @@
 #define JACKIOWAV_H
 
 //#include "tascar.h"
-#include "jackclient.h"
-#include <sndfile.h>
+#include "audiochunks.h"
 #include "errorhandling.h"
+#include "jackclient.h"
 #include <jack/ringbuffer.h>
+#include <sndfile.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <thread>
+#include <unistd.h>
 
 /**
    \ingroup apptascar
@@ -51,30 +52,38 @@ public:
   /**
      \param ifname Input file name
      \param ofname Output file name
-     \param ports Output and Input ports (the first N ports are assumed to be output ports, N = number of channels in input file)
-     \param jackname Jack client name
-     \param freewheel Optionally use freewheeling mode
-     \param autoconnect Automatically connect to hardware ports.
-     \param verbose Show more infos on console.
+     \param ports Output and Input ports (the first N ports are assumed to be
+     output ports, N = number of channels in input file) \param jackname Jack
+     client name \param freewheel Optionally use freewheeling mode \param
+     autoconnect Automatically connect to hardware ports. \param verbose Show
+     more infos on console.
   */
-  jackio_t(const std::string& ifname,const std::string& ofname,
-	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0, bool verbose = false);
-  jackio_t(double duration,const std::string& ofname,
-	   const std::vector<std::string>& ports,const std::string& jackname = "jackio",int freewheel = 0,int autoconnect = 0, bool verbose = false);
+  jackio_t(const std::string& ifname, const std::string& ofname,
+           const std::vector<std::string>& ports,
+           const std::string& jackname = "jackio", int freewheel = 0,
+           int autoconnect = 0, bool verbose = false);
+  jackio_t(double duration, const std::string& ofname,
+           const std::vector<std::string>& ports,
+           const std::string& jackname = "jackio", int freewheel = 0,
+           int autoconnect = 0, bool verbose = false);
   void set_transport_start(double start, bool wait);
   ~jackio_t();
   /**
      \brief start processing
   */
   void run();
+
 private:
   SNDFILE* sf_in;
   SNDFILE* sf_out;
   SF_INFO sf_inf_in;
   SF_INFO sf_inf_out;
+
 public:
-  float* buf_in;  //< input buffer, i.e., samples are read from this buffer during playback. Interleaved channel order.
-  float* buf_out;  //< outout buffer, i.e., samples are stored in this buffer during recording. Interleaved channel order.
+  float* buf_in;  //< input buffer, i.e., samples are read from this buffer
+                  // during playback. Interleaved channel order.
+  float* buf_out; //< outout buffer, i.e., samples are stored in this buffer
+                  // during recording. Interleaved channel order.
 private:
   unsigned int pos;
   bool b_quit;
@@ -82,15 +91,20 @@ private:
   bool freewheel_;
   bool use_transport;
   uint32_t startframe;
+
 public:
   uint32_t nframes_total;
+
 private:
   std::vector<std::string> p;
-  int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer,uint32_t tp_frame, bool tp_rolling);
+  int process(jack_nframes_t nframes, const std::vector<float*>& inBuffer,
+              const std::vector<float*>& outBuffer, uint32_t tp_frame,
+              bool tp_rolling);
   void log(const std::string& msg);
   bool b_cb;
   bool b_verbose;
   bool wait_;
+
 public:
   float cpuload;
   uint32_t xruns;
@@ -125,6 +139,21 @@ private:
   double tscale;
   size_t recframes;
   size_t channels;
+};
+
+class jackrec2wave_t : public jackc_t {
+public:
+  jackrec2wave_t(const std::vector<std::string>& ports,
+                 const std::string& jackname = "jackrec");
+  ~jackrec2wave_t();
+  void rec(const std::vector<TASCAR::wave_t>& w);
+
+private:
+  int process(jack_nframes_t n, const std::vector<float*>& s_in,
+              const std::vector<float*>& s_out);
+  std::atomic_bool isrecording = false;
+  const std::vector<TASCAR::wave_t>* buff = NULL;
+  uint32_t appendpos = 0u;
 };
 
 #endif

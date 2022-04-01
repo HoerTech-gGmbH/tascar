@@ -66,7 +66,7 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
       calibrated_diff(false), startlevel(0), startdiffgain(0), delta(0),
       delta_diff(0), spkname(fname), spkarray(NULL), refport_(refport),
       duration(duration_), subduration(subduration_), lmin(0), lmax(0),
-      lmean(0), calibfor(get_calibfor(fname))
+      lmean(0), calibfor(get_calibfor(fname)), jackrec(refport, "spkcalibrec")
 {
   if(calibfor.empty())
     calibfor = "type:nsp";
@@ -187,11 +187,10 @@ void calibsession_t::reset_levels()
 
 void calibsession_t::get_levels(double prewait)
 {
-  // we need a valid scene:
   levels.clear();
   sublevels.clear();
   //
-  // broadband:
+  // first broadband speakers:
   //
   // unmute broadband source:
   scenes.back()->source_objects[0]->set_mute(false);
@@ -200,11 +199,6 @@ void calibsession_t::get_levels(double prewait)
   // unmute the first receiver:
   scenes.back()->receivermod_objects[1]->set_mute(true);
   scenes.back()->receivermod_objects[0]->set_mute(false);
-  uint32_t frac(0);
-  // rec_progress->set_fraction(0.0);
-  //// flush event loop:
-  // while(Gtk::Main::events_pending())
-  //  Gtk::Main::iteration(false);
   // measure levels of all broadband speakers:
   for(auto spk : *spkarray) {
     // move source to speaker position:
@@ -223,12 +217,6 @@ void calibsession_t::get_levels(double prewait)
                                     TASCAR::levelmeter::C);
     levelmeter.update(brec);
     levels.push_back(10 * log10(levelmeter.ms()));
-    // update progress bar:
-    ++frac;
-    //rec_progress->set_fraction(
-    //    (double)frac / (double)(spkarray->size() + spkarray->subs.size()));
-    //while(Gtk::Main::events_pending())
-    //  Gtk::Main::iteration(false);
   }
   //
   // subwoofer:
@@ -237,9 +225,6 @@ void calibsession_t::get_levels(double prewait)
   scenes.back()->source_objects[0]->set_mute(true);
   // unmute subwoofer source:
   scenes.back()->source_objects[1]->set_mute(false);
-  // flush event loop:
-  //while(Gtk::Main::events_pending())
-  //  Gtk::Main::iteration(false);
   // measure levels of all broadband speakers:
   for(auto spk : spkarray->subs) {
     // move source to speaker position:
@@ -258,12 +243,6 @@ void calibsession_t::get_levels(double prewait)
                                     TASCAR::levelmeter::Z);
     levelmeter.update(brec);
     sublevels.push_back(10 * log10(levelmeter.ms()));
-    // update progress bar:
-    ++frac;
-    //rec_progress->set_fraction(
-    //    (double)frac / (double)(spkarray->size() + spkarray->subs.size()));
-    //while(Gtk::Main::events_pending())
-    //  Gtk::Main::iteration(false);
   }
   // convert levels into gains:
   lmin = levels[0];
