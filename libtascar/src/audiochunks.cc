@@ -21,108 +21,111 @@
  */
 
 #include "audiochunks.h"
-#include <string.h>
-#include <algorithm>
+#include "amb33defs.h"
 #include "errorhandling.h"
 #include "tscconfig.h"
-#include "amb33defs.h"
+#include <algorithm>
 #include <samplerate.h>
+#include <string.h>
 
 using namespace TASCAR;
 
-wave_t::wave_t(uint32_t chunksize)
-  : d(new float[std::max(1u,chunksize)]),
-    n(chunksize), own_pointer(true),
-    append_pos(0),
-    rmsscale(1.0f)
+wave_t::wave_t()
+    : d(new float[1]), n(0u), own_pointer(true), append_pos(0), rmsscale(1.0f)
 {
-  memset(d,0,sizeof(float)*std::max(1u,n));
-  rmsscale = 1.0f/(float)n;
+  memset(d, 0, sizeof(float) * std::max(1u, n));
+  rmsscale = 1.0f / (float)n;
 }
 
-
-wave_t::wave_t(uint32_t chunksize,float* ptr)
-  : d(ptr), n(chunksize), own_pointer(false), append_pos(0),
-    rmsscale(1.0f)
+wave_t::wave_t(uint32_t chunksize)
+    : d(new float[std::max(1u, chunksize)]), n(chunksize), own_pointer(true),
+      append_pos(0), rmsscale(1.0f)
 {
-  rmsscale = 1.0f/(float)n;
+  memset(d, 0, sizeof(float) * std::max(1u, n));
+  rmsscale = 1.0f / (float)n;
+}
+
+wave_t::wave_t(uint32_t chunksize, float* ptr)
+    : d(ptr), n(chunksize), own_pointer(false), append_pos(0), rmsscale(1.0f)
+{
+  rmsscale = 1.0f / (float)n;
 }
 
 wave_t::wave_t(const std::vector<float>& src)
-  : d(new float[std::max(1lu,(long unsigned int)(src.size()))]),
-    n((uint32_t)src.size()), own_pointer(true), append_pos(0),
-    rmsscale(1.0f/(float)n)
+    : d(new float[std::max(1lu, (long unsigned int)(src.size()))]),
+      n((uint32_t)src.size()), own_pointer(true), append_pos(0),
+      rmsscale(1.0f / (float)n)
 {
-  memset(d,0,sizeof(float)*std::max(1lu,(long unsigned int)(src.size())));
-  for(uint32_t k=0;k<src.size();++k)
+  memset(d, 0, sizeof(float) * std::max(1lu, (long unsigned int)(src.size())));
+  for(uint32_t k = 0; k < src.size(); ++k)
     d[k] = src[k];
 }
 
 wave_t::wave_t(const std::vector<double>& src)
-  : d(new float[std::max(1lu,(long unsigned int)(src.size()))]),
-    n((uint32_t)src.size()), own_pointer(true), append_pos(0),
-    rmsscale(1.0f/(float)n)
+    : d(new float[std::max(1lu, (long unsigned int)(src.size()))]),
+      n((uint32_t)src.size()), own_pointer(true), append_pos(0),
+      rmsscale(1.0f / (float)n)
 {
-  memset(d,0,sizeof(float)*std::max(1lu,(long unsigned int)(src.size())));
-  for(uint32_t k=0;k<src.size();++k)
+  memset(d, 0, sizeof(float) * std::max(1lu, (long unsigned int)(src.size())));
+  for(uint32_t k = 0; k < src.size(); ++k)
     d[k] = (float)(src[k]);
 }
 
 wave_t::wave_t(const wave_t& src)
-  : d(new float[std::max(1u,src.n)]),
-    n(src.n), own_pointer(true), append_pos(src.append_pos),
-    rmsscale(1.0f)
+    : d(new float[std::max(1u, src.n)]), n(src.n), own_pointer(true),
+      append_pos(src.append_pos), rmsscale(1.0f)
 {
-  memset(d,0,sizeof(float)*std::max(1u,src.n));
-  for(uint32_t k=0;k<n;++k)
+  memset(d, 0, sizeof(float) * std::max(1u, src.n));
+  for(uint32_t k = 0; k < n; ++k)
     d[k] = src.d[k];
-  rmsscale = 1.0f/(float)n;
+  rmsscale = 1.0f / (float)n;
 }
 
 wave_t::~wave_t()
 {
-  if( own_pointer )
-    delete [] d;
+  if(own_pointer)
+    delete[] d;
 }
 
-void wave_t::use_external_buffer(uint32_t chunksize,float* ptr)
+void wave_t::use_external_buffer(uint32_t chunksize, float* ptr)
 {
-  if( chunksize != n )
+  if(chunksize != n)
     throw TASCAR::ErrMsg("Programming error: Invalid size of new buffer");
-  if( own_pointer )
-    delete [] d;
+  if(own_pointer)
+    delete[] d;
   d = ptr;
   own_pointer = false;
 }
 
 void wave_t::clear()
 {
-  memset(d,0,sizeof(float)*n);
+  memset(d, 0, sizeof(float) * n);
 }
 
-uint32_t wave_t::copy(float* data,uint32_t cnt,float gain)
+uint32_t wave_t::copy(float* data, uint32_t cnt, float gain)
 {
-  uint32_t n_min(std::min(n,cnt));
-  for( uint32_t k=0;k<n_min;++k)
-    d[k] = data[k]*gain;
-  if( n_min < n )
-    memset(&(d[n_min]),0,sizeof(float)*(n-n_min));
+  uint32_t n_min(std::min(n, cnt));
+  for(uint32_t k = 0; k < n_min; ++k)
+    d[k] = data[k] * gain;
+  if(n_min < n)
+    memset(&(d[n_min]), 0, sizeof(float) * (n - n_min));
   return n_min;
 }
 
-uint32_t wave_t::copy_stride(float* data,uint32_t cnt,uint32_t stride, float gain)
+uint32_t wave_t::copy_stride(float* data, uint32_t cnt, uint32_t stride,
+                             float gain)
 {
-  uint32_t n_min(std::min(n,cnt));
-  for( uint32_t k=0;k<n_min;++k){
-    d[k] = *data*gain;
+  uint32_t n_min(std::min(n, cnt));
+  for(uint32_t k = 0; k < n_min; ++k) {
+    d[k] = *data * gain;
     data += stride;
   }
-  if( n_min < n )
-    memset(&(d[n_min]),0,sizeof(float)*(n-n_min));
+  if(n_min < n)
+    memset(&(d[n_min]), 0, sizeof(float) * (n - n_min));
   return n_min;
 }
 
-//void wave_t::operator*=(double v)
+// void wave_t::operator*=(double v)
 //{
 //  for( uint32_t k=0;k<n;++k)
 //    d[k] *= (float)v;
@@ -130,11 +133,11 @@ uint32_t wave_t::copy_stride(float* data,uint32_t cnt,uint32_t stride, float gai
 
 void wave_t::operator*=(float v)
 {
-  for( uint32_t k=0;k<n;++k)
+  for(uint32_t k = 0; k < n; ++k)
     d[k] *= v;
 }
 
-//void wave_t::operator+=(double v)
+// void wave_t::operator+=(double v)
 //{
 //  for( uint32_t k=0;k<n;++k)
 //    d[k] += v;
@@ -142,29 +145,30 @@ void wave_t::operator*=(float v)
 
 void wave_t::operator+=(float v)
 {
-  for( uint32_t k=0;k<n;++k)
+  for(uint32_t k = 0; k < n; ++k)
     d[k] += v;
 }
 
-uint32_t wave_t::copy_to(float* data,uint32_t cnt,float gain)
+uint32_t wave_t::copy_to(float* data, uint32_t cnt, float gain)
 {
-  uint32_t n_min(std::min(n,cnt));
-  for( uint32_t k=0;k<n_min;++k)
-    data[k] = d[k]*gain;
-  //memcpy(data,d,n_min*sizeof(float));
-  if( n_min < cnt )
-    memset(&(data[n_min]),0,sizeof(float)*(cnt-n_min));
+  uint32_t n_min(std::min(n, cnt));
+  for(uint32_t k = 0; k < n_min; ++k)
+    data[k] = d[k] * gain;
+  // memcpy(data,d,n_min*sizeof(float));
+  if(n_min < cnt)
+    memset(&(data[n_min]), 0, sizeof(float) * (cnt - n_min));
   return n_min;
 }
 
-uint32_t wave_t::copy_to_stride(float* data,uint32_t cnt,uint32_t stride,float gain)
+uint32_t wave_t::copy_to_stride(float* data, uint32_t cnt, uint32_t stride,
+                                float gain)
 {
-  uint32_t n_min(std::min(n,cnt));
-  for( uint32_t k=0;k<n_min;++k){
-    *data = d[k]*gain;
+  uint32_t n_min(std::min(n, cnt));
+  for(uint32_t k = 0; k < n_min; ++k) {
+    *data = d[k] * gain;
     data += stride;
   }
-  for( uint32_t k=n_min; k < cnt; ++k){
+  for(uint32_t k = n_min; k < cnt; ++k) {
     *data = 0;
     data += stride;
   }
@@ -173,8 +177,8 @@ uint32_t wave_t::copy_to_stride(float* data,uint32_t cnt,uint32_t stride,float g
 
 void wave_t::operator+=(const wave_t& o)
 {
-  for(uint32_t k=0;k<std::min(size(),o.size());++k)
-    d[k]+=o[k];
+  for(uint32_t k = 0; k < std::min(size(), o.size()); ++k)
+    d[k] += o[k];
 }
 
 /**
@@ -183,8 +187,8 @@ void wave_t::operator+=(const wave_t& o)
 float wave_t::rms() const
 {
   float rv(0.0f);
-  for(uint32_t k=0;k<size();++k)
-    rv += d[k]*d[k];
+  for(uint32_t k = 0; k < size(); ++k)
+    rv += d[k] * d[k];
   rv *= rmsscale;
   return sqrt(rv);
 }
@@ -195,8 +199,8 @@ float wave_t::rms() const
 float wave_t::ms() const
 {
   float rv(0.0f);
-  for(uint32_t k=0;k<size();++k)
-    rv += d[k]*d[k];
+  for(uint32_t k = 0; k < size(); ++k)
+    rv += d[k] * d[k];
   rv *= rmsscale;
   return rv;
 }
@@ -204,27 +208,25 @@ float wave_t::ms() const
 float wave_t::maxabs() const
 {
   float rv(0.0f);
-  for(uint32_t k=0;k<size();++k)
-    rv = std::max(rv,fabsf(d[k]));
+  for(uint32_t k = 0; k < size(); ++k)
+    rv = std::max(rv, fabsf(d[k]));
   return rv;
 }
 
 float wave_t::spldb() const
 {
-  return 10.0f*log10f(ms())-SPLREFf;
+  return 10.0f * log10f(ms()) - SPLREFf;
 }
 
 float wave_t::maxabsdb() const
 {
-  return 20.0f*log10f(maxabs())-SPLREFf;
+  return 20.0f * log10f(maxabs()) - SPLREFf;
 }
 
 amb1wave_t::amb1wave_t(uint32_t chunksize)
-  : wyzx(4,wave_t(chunksize)),
-    w_(chunksize,wyzx[0].d),
-    x_(chunksize,wyzx[3].d),
-    y_(chunksize,wyzx[1].d),
-    z_(chunksize,wyzx[2].d)
+    : wyzx(4, wave_t(chunksize)), w_(chunksize, wyzx[0].d),
+      x_(chunksize, wyzx[3].d), y_(chunksize, wyzx[1].d),
+      z_(chunksize, wyzx[2].d)
 {
 }
 
@@ -260,17 +262,18 @@ void amb1wave_t::apply_matrix(float* m)
 
 wave_t& amb1wave_t::operator[](uint32_t acn)
 {
-  switch( acn ){
-  case AMB11ACN::idx::w :
+  switch(acn) {
+  case AMB11ACN::idx::w:
     return w_;
-  case AMB11ACN::idx::y :
+  case AMB11ACN::idx::y:
     return y_;
-  case AMB11ACN::idx::z :
+  case AMB11ACN::idx::z:
     return z_;
-  case AMB11ACN::idx::x :
+  case AMB11ACN::idx::x:
     return x_;
   }
-  throw TASCAR::ErrMsg( "Invalid acn "+std::to_string(acn)+" for first order ambisonics.");
+  throw TASCAR::ErrMsg("Invalid acn " + std::to_string(acn) +
+                       " for first order ambisonics.");
 }
 
 void amb1wave_t::clear()
@@ -283,54 +286,57 @@ void amb1wave_t::clear()
 
 void amb1wave_t::operator+=(const amb1wave_t& v)
 {
-  w_+=v.w();
-  x_+=v.x();
-  y_+=v.y();
-  z_+=v.z();
+  w_ += v.w();
+  x_ += v.x();
+  y_ += v.y();
+  z_ += v.z();
 }
 
 void amb1wave_t::operator*=(float v)
 {
-  w_*=v;
-  x_*=v;
-  y_*=v;
-  z_*=v;
+  w_ *= v;
+  x_ *= v;
+  y_ *= v;
+  z_ *= v;
 }
 
-void amb1wave_t::add_panned( pos_t p, const wave_t& v, float g )
+void amb1wave_t::add_panned(pos_t p, const wave_t& v, float g)
 {
   p.normalize();
-  w_.add( v, g*MIN3DB );
-  x_.add( v, g*p.x );
-  y_.add( v, g*p.y );
-  z_.add( v, g*p.z );
+  w_.add(v, g * MIN3DB);
+  x_.add(v, g * p.x);
+  y_.add(v, g * p.y);
+  z_.add(v, g * p.z);
 }
 
-SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate,int channels)
+SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate, int channels)
 {
   SF_INFO inf;
-  memset(&inf,0,sizeof(inf));
+  memset(&inf, 0, sizeof(inf));
   inf.samplerate = samplerate;
   inf.channels = channels;
-  inf.format = SF_FORMAT_WAV|SF_FORMAT_FLOAT;
+  inf.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
   return inf;
 }
 
-
-sndfile_handle_t::sndfile_handle_t(const std::string& fname,int samplerate,int channels)
-  : sf_inf(sf_info_configurator(samplerate,channels)),
-    sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_WRITE,&sf_inf))
+sndfile_handle_t::sndfile_handle_t(const std::string& fname, int samplerate,
+                                   int channels)
+    : sf_inf(sf_info_configurator(samplerate, channels)),
+      sfile(sf_open(TASCAR::env_expand(fname).c_str(), SFM_WRITE, &sf_inf))
 {
-  if( !sfile )
-    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for writing ("+std::to_string(samplerate)+" Hz, "+std::to_string(channels)+" channels).");
+  if(!sfile)
+    throw TASCAR::ErrMsg("Unable to open sound file \"" + fname +
+                         "\" for writing (" + std::to_string(samplerate) +
+                         " Hz, " + std::to_string(channels) + " channels).");
 }
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname)
-  : sf_inf(sf_info_configurator(1,1)),
-    sfile(sf_open(TASCAR::env_expand(fname).c_str(),SFM_READ,&sf_inf))
+    : sf_inf(sf_info_configurator(1, 1)),
+      sfile(sf_open(TASCAR::env_expand(fname).c_str(), SFM_READ, &sf_inf))
 {
-  if( !sfile )
-    throw TASCAR::ErrMsg("Unable to open sound file \""+fname+"\" for reading.");
+  if(!sfile)
+    throw TASCAR::ErrMsg("Unable to open sound file \"" + fname +
+                         "\" for reading.");
 }
 
 sndfile_handle_t::~sndfile_handle_t()
@@ -338,65 +344,63 @@ sndfile_handle_t::~sndfile_handle_t()
   sf_close(sfile);
 }
 
-uint32_t sndfile_handle_t::readf_float( float* buf, uint32_t frames )
+uint32_t sndfile_handle_t::readf_float(float* buf, uint32_t frames)
 {
-  return sf_readf_float( sfile, buf, frames );
+  return sf_readf_float(sfile, buf, frames);
 }
 
-uint32_t sndfile_handle_t::writef_float( float* buf, uint32_t frames )
+uint32_t sndfile_handle_t::writef_float(float* buf, uint32_t frames)
 {
-  return sf_writef_float( sfile, buf, frames );
+  return sf_writef_float(sfile, buf, frames);
 }
 
-uint64_t get_chunklen(uint64_t getframes,uint64_t start,uint64_t length)
+uint64_t get_chunklen(uint64_t getframes, uint64_t start, uint64_t length)
 {
-  if( length > 0 )
+  if(length > 0)
     return length;
-  return std::max(getframes,start) - start;
+  return std::max(getframes, start) - start;
 }
 
 looped_wave_t::looped_wave_t(uint32_t length)
-  : wave_t(length),
-    looped_t(0),
-    looped_gain(0),
-    iposition_(0),
-    loop_(0)
+    : wave_t(length), looped_t(0), looped_gain(0), iposition_(0), loop_(0)
 {
 }
 
-sndfile_t::sndfile_t(const std::string& fname,uint32_t channel,double start,double length)
-  : sndfile_handle_t(fname),
-    looped_wave_t(get_chunklen(get_frames(),get_srate()*start,get_srate()*length))
+sndfile_t::sndfile_t(const std::string& fname, uint32_t channel, double start,
+                     double length)
+    : sndfile_handle_t(fname),
+      looped_wave_t(
+          get_chunklen(get_frames(), get_srate() * start, get_srate() * length))
 {
   uint32_t ch(get_channels());
-  int64_t istart(start*get_srate());
-  int64_t ilength(length*get_srate());
+  int64_t istart(start * get_srate());
+  int64_t ilength(length * get_srate());
   // if requested channel is not available return zeros, otherwise:
-  if( channel < ch ){
+  if(channel < ch) {
     // if no samples remain then just return zeros, otherwise:
-    if( istart < get_frames() ){
-      if( ilength == 0 )
-        ilength = get_frames()-istart;
+    if(istart < get_frames()) {
+      if(ilength == 0)
+        ilength = get_frames() - istart;
       // trim "start" samples:
-      if( istart > 0 ){
-        wave_t chbuf_skip(istart*ch);
-        readf_float(chbuf_skip.d,istart);
+      if(istart > 0) {
+        wave_t chbuf_skip(istart * ch);
+        readf_float(chbuf_skip.d, istart);
       }
       // this is the minimum of available and requested number of samples:
-      uint32_t N(std::min(get_frames() - istart,ilength));
+      uint32_t N(std::min(get_frames() - istart, ilength));
       // temporary data to read all channels:
-      wave_t chbuf(N*ch);
-      readf_float(chbuf.d,N);
+      wave_t chbuf(N * ch);
+      readf_float(chbuf.d, N);
       // select requested audio channel:
-      for(uint32_t k=0;k<N;++k)
-        d[k] = chbuf[k*ch+channel];
+      for(uint32_t k = 0; k < N; ++k)
+        d[k] = chbuf[k * ch + channel];
     }
   }
 }
 
 void sndfile_t::set_position(double position)
 {
-  set_iposition(get_srate()*position);
+  set_iposition(get_srate() * position);
 }
 
 void looped_wave_t::set_iposition(int64_t position)
@@ -404,59 +408,62 @@ void looped_wave_t::set_iposition(int64_t position)
   iposition_ = position;
 }
 
-
 void looped_wave_t::set_loop(uint32_t loop)
 {
   loop_ = loop;
 }
 
-void looped_wave_t::add_to_chunk(int64_t chunktime,wave_t& chunk)
+void looped_wave_t::add_to_chunk(int64_t chunktime, wave_t& chunk)
 {
-  for(uint32_t k=0;k<chunk.n;++k){
-    int64_t trel(chunktime+k-iposition_);
-    if( (trel >= 0) && (n > 0) ){
-      ldiv_t dv(ldiv(trel,n));
-      if( (loop_ == 0) || (dv.quot < (int64_t)loop_) )
+  for(uint32_t k = 0; k < chunk.n; ++k) {
+    int64_t trel(chunktime + k - iposition_);
+    if((trel >= 0) && (n > 0)) {
+      ldiv_t dv(ldiv(trel, n));
+      if((loop_ == 0) || (dv.quot < (int64_t)loop_))
         chunk.d[k] += d[dv.rem];
     }
   }
 }
 
-void looped_wave_t::add_chunk(int32_t chunk_time, int32_t start_time,float gain,wave_t& chunk)
+void looped_wave_t::add_chunk(int32_t chunk_time, int32_t start_time,
+                              float gain, wave_t& chunk)
 {
-  for(int32_t k=std::max(start_time,chunk_time);k < std::min(start_time+(int32_t)(size()),chunk_time+(int32_t)(chunk.size()));++k)
-    chunk[k-chunk_time] += gain*d[k-start_time];
+  for(int32_t k = std::max(start_time, chunk_time);
+      k < std::min(start_time + (int32_t)(size()),
+                   chunk_time + (int32_t)(chunk.size()));
+      ++k)
+    chunk[k - chunk_time] += gain * d[k - start_time];
 }
 
-void looped_wave_t::add_chunk_looped(float gain,wave_t& chunk)
+void looped_wave_t::add_chunk_looped(float gain, wave_t& chunk)
 {
-  float dg((gain-looped_gain)/chunk.n);
-  float* pdN(chunk.d+chunk.n);
-  for(float* pd=chunk.d;pd<pdN;++pd){
-    *pd += (looped_gain += dg)*d[looped_t];
+  float dg((gain - looped_gain) / chunk.n);
+  float* pdN(chunk.d + chunk.n);
+  for(float* pd = chunk.d; pd < pdN; ++pd) {
+    *pd += (looped_gain += dg) * d[looped_t];
     ++looped_t;
-    if( looped_t >= n )
+    if(looped_t >= n)
       looped_t = 0;
   }
 }
 
-void wave_t::copy(const wave_t& src,float gain)
+void wave_t::copy(const wave_t& src, float gain)
 {
-  memmove(d,src.d,std::min(n,src.n)*sizeof(float));
-  if( gain != 1.0f )
+  memmove(d, src.d, std::min(n, src.n) * sizeof(float));
+  if(gain != 1.0f)
     operator*=(gain);
 }
 
-void wave_t::add(const wave_t& src,float gain)
+void wave_t::add(const wave_t& src, float gain)
 {
-  uint32_t N(std::min(n,src.n));
-  for( uint32_t k=0;k<N;++k)
-    d[k] += gain*src.d[k];
+  uint32_t N(std::min(n, src.n));
+  for(uint32_t k = 0; k < N; ++k)
+    d[k] += gain * src.d[k];
 }
 
 void wave_t::operator*=(const wave_t& o)
 {
-  for(unsigned int k=0;k<std::min(o.n,n);++k){
+  for(unsigned int k = 0; k < std::min(o.n, n); ++k) {
     d[k] *= o.d[k];
   }
 }
@@ -505,13 +512,13 @@ void wave_t::resample(double ratio)
 }
 
 amb1rotator_t::amb1rotator_t(uint32_t chunksize)
-  : amb1wave_t(chunksize),
-    wxx(1), wxy(0), wxz(0), wyx(0), wyy(1), wyz(0), wzx(0), wzy(0), wzz(1), 
-    dt(1.0/(double)chunksize)
+    : amb1wave_t(chunksize), wxx(1), wxy(0), wxz(0), wyx(0), wyy(1), wyz(0),
+      wzx(0), wzy(0), wzz(1), dt(1.0 / (double)chunksize)
 {
 }
 
-amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,const zyx_euler_t& o,bool invert)
+amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,
+                                     const zyx_euler_t& o, bool invert)
 {
   float dxx;
   float dxy;
@@ -522,25 +529,25 @@ amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,const zyx_euler_t& o,
   float dzx;
   float dzy;
   float dzz;
-  if( invert ){
+  if(invert) {
     double cosy(cos(o.y));
     double siny(sin(-o.y));
     double cosz(cos(o.z));
     double sinz(sin(-o.z));
     double sinx(sin(-o.x));
     double cosx(cos(o.x));
-    double sinxsiny(sinx*siny);
-    double cosxsiny(cosx*siny);
-    dxx = (cosz*cosy - wxx)*dt;
-    dxy = (sinz*cosy - wxy)*dt;
-    dxz = (siny - wxz)*dt;
-    dyx = (-cosz*sinxsiny-sinz*cosx - wyx)*dt;
-    dyy = (cosz*cosx-sinz*sinxsiny - wyy)*dt;
-    dyz = (cosy*sinx - wyz)*dt;
-    dzx = (-cosz*cosxsiny+sinz*sinx - wzx)*dt;
-    dzy = (-cosz*sinx-sinz*cosxsiny - wzy)*dt;
-    dzz = (cosy*cosx - wzz)*dt;
-  }else{
+    double sinxsiny(sinx * siny);
+    double cosxsiny(cosx * siny);
+    dxx = (cosz * cosy - wxx) * dt;
+    dxy = (sinz * cosy - wxy) * dt;
+    dxz = (siny - wxz) * dt;
+    dyx = (-cosz * sinxsiny - sinz * cosx - wyx) * dt;
+    dyy = (cosz * cosx - sinz * sinxsiny - wyy) * dt;
+    dyz = (cosy * sinx - wyz) * dt;
+    dzx = (-cosz * cosxsiny + sinz * sinx - wzx) * dt;
+    dzy = (-cosz * sinx - sinz * cosxsiny - wzy) * dt;
+    dzz = (cosy * cosx - wzz) * dt;
+  } else {
     // 1, 0, 0
     // rot_z: cosz, sinz, 0
     // rot_y: cosy*cosz, sinz, siny*cosz
@@ -561,28 +568,31 @@ amb1rotator_t& amb1rotator_t::rotate(const amb1wave_t& src,const zyx_euler_t& o,
     double sinz(sin(o.z));
     double siny(sin(o.y));
     double sinx(sin(o.x));
-    double sinxsiny(sinx*siny);
-    dxx = (cosy*cosz - wxx)*dt;
-    dxy = (cosx*sinz-sinxsiny*cosz - wxy)*dt;
-    dxz = (cosx*siny*cosz+sinx*sinz - wxz)*dt;
-    dyx = (-cosy*sinz - wyx)*dt;
-    dyy = (cosx*cosz+sinxsiny*sinz - wyy)*dt;
-    dyz = (-cosx*siny*sinz+sinx*cosz - wyz)*dt;
-    dzx = (-siny - wzx)*dt;
-    dzy = (-sinx*cosy - wzy)*dt;
-    dzz = (cosx*cosy - wzz)*dt;
+    double sinxsiny(sinx * siny);
+    dxx = (cosy * cosz - wxx) * dt;
+    dxy = (cosx * sinz - sinxsiny * cosz - wxy) * dt;
+    dxz = (cosx * siny * cosz + sinx * sinz - wxz) * dt;
+    dyx = (-cosy * sinz - wyx) * dt;
+    dyy = (cosx * cosz + sinxsiny * sinz - wyy) * dt;
+    dyz = (-cosx * siny * sinz + sinx * cosz - wyz) * dt;
+    dzx = (-siny - wzx) * dt;
+    dzy = (-sinx * cosy - wzy) * dt;
+    dzz = (cosx * cosy - wzz) * dt;
   }
   w_.copy(src.w());
-  float *p_src_x(src.x().d);
-  float *p_src_y(src.y().d);
-  float *p_src_z(src.z().d);
-  float *p_x(x_.d);
-  float *p_y(y_.d);
-  float *p_z(z_.d);
-  for(uint32_t k=0;k<w_.n;++k){
-    *p_x = *p_src_x*(wxx+=dxx) + *p_src_y*(wxy+=dxy) + *p_src_z*(wxz+=dxz);
-    *p_y = *p_src_x*(wyx+=dyx) + *p_src_y*(wyy+=dyy) + *p_src_z*(wyz+=dyz);
-    *p_z = *p_src_x*(wzx+=dzx) + *p_src_y*(wzy+=dzy) + *p_src_z*(wzz+=dzz);
+  float* p_src_x(src.x().d);
+  float* p_src_y(src.y().d);
+  float* p_src_z(src.z().d);
+  float* p_x(x_.d);
+  float* p_y(y_.d);
+  float* p_z(z_.d);
+  for(uint32_t k = 0; k < w_.n; ++k) {
+    *p_x = *p_src_x * (wxx += dxx) + *p_src_y * (wxy += dxy) +
+           *p_src_z * (wxz += dxz);
+    *p_y = *p_src_x * (wyx += dyx) + *p_src_y * (wyy += dyy) +
+           *p_src_z * (wyz += dyz);
+    *p_z = *p_src_x * (wzx += dzx) + *p_src_y * (wzy += dzy) +
+           *p_src_z * (wzz += dzz);
     ++p_x;
     ++p_y;
     ++p_z;
@@ -676,10 +686,9 @@ void amb1rotator_t::rotate(const zyx_euler_t& o, bool invert)
 void sndfile_t::resample(double ratio)
 {
   wave_t::resample(ratio);
-  sf_inf.frames*=ratio;
-  sf_inf.samplerate*=ratio;
+  sf_inf.frames *= ratio;
+  sf_inf.samplerate *= ratio;
 }
-
 
 /*
  * Local Variables:

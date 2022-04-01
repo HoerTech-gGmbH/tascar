@@ -1,8 +1,8 @@
 #ifndef CALIBSESSION_H
 #define CALIBSESSION_H
 
-#include "session.h"
 #include "jackiowav.h"
+#include "session.h"
 
 namespace TASCAR {
 
@@ -80,8 +80,14 @@ namespace TASCAR {
     double lmin;
     double lmax;
     double lmean;
+    float fmin_;
+    float fmax_;
+    float subfmin_;
+    float subfmax_;
     std::string calibfor;
     jackrec2wave_t jackrec;
+    std::vector<TASCAR::wave_t> bbrecbuf;
+    std::vector<TASCAR::wave_t> subrecbuf;
   };
 
 } // namespace TASCAR

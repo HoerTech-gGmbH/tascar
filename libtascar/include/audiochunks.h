@@ -35,6 +35,7 @@ namespace TASCAR {
    */
   class wave_t {
   public:
+    wave_t();
     wave_t(uint32_t chunksize);
     wave_t(const wave_t& src);
     wave_t(const std::vector<float>& src);
