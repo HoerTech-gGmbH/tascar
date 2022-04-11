@@ -370,6 +370,26 @@ void jackc_t::connect_out(unsigned int port, const std::string& pname,
   connect(jack_port_name(outPort[port]), pname, bwarn, false, true);
 }
 
+int jackc_t::disconnect_in(unsigned int port)
+{
+  if(inPort.size() <= port) {
+    DEBUG(port);
+    DEBUG(inPort.size());
+    throw TASCAR::ErrMsg("Input port number not available (disconnect_in).");
+  }
+  return jack_port_disconnect(jc, inPort[port]);
+}
+
+int jackc_t::disconnect_out(unsigned int port)
+{
+  if(outPort.size() <= port) {
+    DEBUG(port);
+    DEBUG(outPort.size());
+    throw TASCAR::ErrMsg("Output port number not available (disconnect_out).");
+  }
+  return jack_port_disconnect(jc, outPort[port]);
+}
+
 jackc_transport_t::jackc_transport_t(const std::string& clientname)
     : jackc_t(clientname), stop_at_time(0)
 {

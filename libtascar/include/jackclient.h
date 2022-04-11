@@ -89,6 +89,8 @@ public:
                   bool btry = false, bool allowoutputsource = false);
   void connect_out(unsigned int port, const std::string& pname,
                    bool btry = false);
+  int disconnect_in(unsigned int port);
+  int disconnect_out(unsigned int port);
   size_t get_num_input_ports() const { return inPort.size(); };
   size_t get_num_output_ports() const { return outPort.size(); };
   std::vector<std::string> get_input_ports() const { return input_port_names; };

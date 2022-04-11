@@ -328,16 +328,14 @@ int jackrec_async_t::process(jack_nframes_t nframes,
   return 0;
 }
 
-jackrec2wave_t::jackrec2wave_t(const std::vector<std::string>& ports,
+jackrec2wave_t::jackrec2wave_t(size_t channels,
                                const std::string& jackname)
     : jackc_t(jackname)
 {
   isrecording = false;
-  for(size_t k = 0; k < ports.size(); ++k)
+  for(size_t k = 0; k < channels; ++k)
     add_input_port(std::string("in.") + std::to_string(k));
   activate();
-  for(size_t k = 0; k < ports.size(); ++k)
-    connect_in((unsigned int)k, ports[k], true, true);
 }
 
 jackrec2wave_t::~jackrec2wave_t()
@@ -345,22 +343,29 @@ jackrec2wave_t::~jackrec2wave_t()
   deactivate();
 }
 
-void jackrec2wave_t::rec(const std::vector<TASCAR::wave_t>& w)
+void jackrec2wave_t::rec(const std::vector<TASCAR::wave_t>& w,
+                         const std::vector<std::string>& ports)
 {
+  size_t ch = std::min(w.size(), std::min(get_num_input_ports(), ports.size()));
+  for(size_t k = 0; k < ch; ++k)
+    connect_in((unsigned int)k, ports[k], true, true);
   buff = &w;
   appendpos = 0u;
   isrecording = true;
-  while( isrecording )
+  while(isrecording)
     usleep(1000);
   buff = NULL;
+  for(size_t k = 0; k < ch; ++k)
+    disconnect_in((unsigned int)k);
 }
 
 int jackrec2wave_t::process(jack_nframes_t n, const std::vector<float*>& s_in,
                             const std::vector<float*>&)
 {
   if(isrecording) {
-    if(buff && (buff->size() == s_in.size())) {
-      for(size_t ch = 0; ch < s_in.size(); ++ch) {
+    if(buff) {
+      size_t channels = std::min(buff->size(), s_in.size());
+      for(size_t ch = 0; ch < channels; ++ch) {
         const TASCAR::wave_t& w = (*buff)[ch];
         if(appendpos > w.n) {
           // buffer is filled.

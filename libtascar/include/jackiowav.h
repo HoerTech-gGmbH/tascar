@@ -144,10 +144,10 @@ private:
 
 class jackrec2wave_t : public jackc_t {
 public:
-  jackrec2wave_t(const std::vector<std::string>& ports,
+  jackrec2wave_t(size_t channels,
                  const std::string& jackname = "jackrec");
   ~jackrec2wave_t();
-  void rec(const std::vector<TASCAR::wave_t>& w);
+  void rec(const std::vector<TASCAR::wave_t>& w,const std::vector<std::string>& ports);
 
 private:
   int process(jack_nframes_t n, const std::vector<float*>& s_in,
