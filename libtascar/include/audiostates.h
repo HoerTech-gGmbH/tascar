@@ -50,15 +50,17 @@ class audiostates_t : public chunk_cfg_t {
 public:
   audiostates_t();
   virtual ~audiostates_t();
-  virtual void prepare( chunk_cfg_t& ) final;
-  virtual void post_prepare() {};
-  virtual void release( );
+  virtual void prepare(chunk_cfg_t&) final;
+  virtual void post_prepare(){};
+  virtual void release();
   bool is_prepared() const { return is_prepared_; };
   const chunk_cfg_t& inputcfg() const { return inputcfg_; };
   chunk_cfg_t& cfg() { return *(chunk_cfg_t*)this; };
   const chunk_cfg_t& cfg() const { return *(chunk_cfg_t*)this; };
+
 protected:
-  virtual void configure() {};
+  virtual void configure(){};
+
 private:
   chunk_cfg_t inputcfg_;
   bool is_prepared_;

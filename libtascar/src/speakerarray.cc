@@ -234,7 +234,8 @@ spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
       delay(src.delay), label(src.label), connect(src.connect),
       compB(src.compB), gain(src.gain), unitvector(src.unitvector),
       spkgain(src.spkgain), dr(src.dr), d_w(src.d_w), d_x(src.d_x),
-      d_y(src.d_y), d_z(src.d_z), densityweight(src.densityweight), comp(NULL)
+      d_y(src.d_y), d_z(src.d_z), densityweight(src.densityweight), comp(NULL),
+      eqfreq(src.eqfreq), eqgain(src.eqgain), eqstages(src.eqstages)
 {
 }
 
@@ -270,8 +271,7 @@ void spk_array_t::configure()
     delaycomp.emplace_back(f_sample *
                            ((operator[](k).dr / 340.0) + operator[](k).delay));
   // speaker correction filter:
-  for(uint32_t k = 0; k < size(); ++k) {
-    spk_descriptor_t& spk(operator[](k));
+  for(auto& spk : *this) {
     if(spk.compB.size() > 0) {
       spk.comp = new TASCAR::overlap_save_t(n_fragment + 1, n_fragment);
       spk.comp->set_irs(spk.compB, false);
@@ -282,9 +282,18 @@ void spk_array_t::configure()
   }
 }
 
+void spk_array_diff_render_t::release()
+{
+  spk_array_t::release();
+  subs.release();
+}
+
 void spk_array_diff_render_t::configure()
 {
   spk_array_t::configure();
+  auto cfg_ = cfg();
+  subs.prepare(cfg_);
+  subs.configure();
   n_channels = (uint32_t)(size() + subs.size());
   // initialize decorrelation filter:
   decorrflt.clear();

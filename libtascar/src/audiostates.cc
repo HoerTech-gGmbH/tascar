@@ -37,7 +37,7 @@ void chunk_cfg_t::update()
   t_sample = 1.0/std::max(EPS,f_sample);
   t_fragment = 1.0/std::max(EPS,f_fragment);
   t_inc = 1.0/std::max(EPS,(double)n_fragment);
-  for( uint32_t ch=labels.size(); ch<n_channels; ++ch )
+  for( uint32_t ch=(uint32_t)labels.size(); ch<n_channels; ++ch )
     labels.push_back( "."+std::to_string(ch) );
   // check for unique channel suffix:
   for( uint32_t ch1=0;ch1<labels.size();++ch1 )

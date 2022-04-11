@@ -604,9 +604,9 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
   std::vector<float> step(3 * flt.size() + 1, 0.1f);
   par.resize(3 * flt.size() + 1);
   for(size_t k = 0; k < flt.size(); ++k) {
-    float frel =
-        2.0f * fmin *
-        powf(0.25f * fmax / fmin, (float)k / ((float)flt.size() - 1.0f));
+    float frel = 2.0f * fmin *
+                 powf(0.25f * fmax / fmin,
+                      (float)k / ((float)std::max((size_t)2u, flt.size()) - 1.0f));
     par[3 * k + 1] = tanf(TASCAR_PIf * ((frel - fmin) / (fmax - fmin) - 0.5f));
     par[3 * k + 2] = 0.0f;
     par[3 * k + 3] = 0.5f;

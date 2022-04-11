@@ -171,8 +171,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
 {
   for(uint32_t k = 0; k < refport.size(); ++k) {
     add_input_port(std::string("in.") + TASCAR::to_string(k + 1));
-    rmsmeter.push_back(new TASCAR::levelmeter_t((float)get_srate(), (float)noiseperiod,
-                                                TASCAR::levelmeter::C));
+    rmsmeter.push_back(new TASCAR::levelmeter_t(
+        (float)get_srate(), (float)noiseperiod, TASCAR::levelmeter::C));
     inwave.push_back(new TASCAR::wave_t(get_fragsize()));
     guimeter.push_back(new TSCGUI::splmeter_t());
     guimeter.back()->set_mode(TSCGUI::dameter_t::rmspeak);
@@ -295,7 +295,7 @@ void spkcalib_t::manage_act_grp_save()
     if(!session->scenes.back()->receivermod_objects.empty()) {
       TASCAR::receivermod_base_speaker_t* recspk(
           dynamic_cast<TASCAR::receivermod_base_speaker_t*>(
-              session->scenes.back()->receivermod_objects.back()->libdata));
+              session->scenes.back()->receivermod_objects[1]->libdata));
       if(recspk) {
         for(uint32_t k = 0; k < recspk->spkpos.size(); ++k) {
           char lc[1024];
@@ -340,8 +340,8 @@ void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
   while(!(*pbquit)) {
     double t = tic.toc();
     t /= sleepsec;
-    rec_progress->set_fraction(std::min(1.0,t));
-    //while(gtk_events_pending())
+    rec_progress->set_fraction(std::min(1.0, t));
+    // while(gtk_events_pending())
     //  gtk_main_iteration();
     while(Gtk::Main::events_pending())
       Gtk::Main::iteration(false);
@@ -349,7 +349,7 @@ void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
   }
 }
 
-void getlevels(TASCAR::calibsession_t* session,double prewait,bool* pbquit)
+void getlevels(TASCAR::calibsession_t* session, double prewait, bool* pbquit)
 {
   session->get_levels(prewait);
   *pbquit = true;
@@ -375,6 +375,7 @@ void spkcalib_t::on_reclevels()
                 session->get_measurement_duration() +
                     prewait * (double)session->get_num_channels(),
                 &bquitthread);
+
       if(guiupdater.joinable())
         guiupdater.join();
       insert_action_group("calib", refActionGroupCalib);

@@ -376,14 +376,14 @@ namespace TASCAR {
     std::complex<float> response(float phi) const
     {
       std::complex<float> r = g0;
-      for(const auto f : flt)
+      for(const auto& f : flt)
         r *= f.response(phi);
       return r;
     }
     inline float filter(float in)
     {
       in *= g0;
-      for(auto f : flt)
+      for(auto& f : flt)
         in = f.filter(in);
       return in;
     };
@@ -395,7 +395,7 @@ namespace TASCAR {
     };
     void clear()
     {
-      for(auto f : flt)
+      for(auto& f : flt)
         f.clear();
     };
     float optim_error_fun(const std::vector<float>& par);

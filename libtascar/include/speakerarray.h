@@ -142,6 +142,7 @@ namespace TASCAR {
     void render_diffuse(std::vector<TASCAR::wave_t>& output);
     void add_diffuse_sound_field(const TASCAR::amb1wave_t& diff);
     void configure();
+    virtual void release();
     void clear_states();
     size_t num_input_channels() const { return size(); };
     size_t num_output_channels() const
