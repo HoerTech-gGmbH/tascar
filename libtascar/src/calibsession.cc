@@ -69,9 +69,9 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
       duration(duration_), subduration(subduration_), lmin(0), lmax(0),
       lmean(0), fmin_((float)fmin), fmax_((float)fmax),
       subfmin_((float)subfmin), subfmax_((float)subfmax),
-      calibfor(get_calibfor(fname)), jackrec(refport, "spkcalibrec")
+      calibfor(get_calibfor(fname)), jackrec(refport_.size() + 1, "spkcalibrec")
 {
-  for(size_t ich = 0; ich < refport_.size(); ++ich) {
+  for(size_t ich = 0; ich < refport_.size() + 1; ++ich) {
     bbrecbuf.push_back((uint32_t)(jackrec.get_srate() * duration));
     subrecbuf.push_back((uint32_t)(jackrec.get_srate() * subduration));
   }
@@ -114,6 +114,10 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   e_rcvr2.set_attribute("name", "out2");
   e_rcvr2.set_attribute("mute", "true");
   e_rcvr2.set_attribute("layout", fname);
+  // receiver 3 is omni, for reference signal:
+  xml_element_t e_rcvr3(e_scene.add_child("receiver"));
+  e_rcvr3.set_attribute("type", "omni");
+  e_rcvr3.set_attribute("name", "ref");
   std::vector<std::string> receivertypeattr(string_token(calibfor, ","));
   for(auto typeattr : receivertypeattr) {
     std::vector<std::string> pair(string_token(typeattr, ":"));
@@ -167,8 +171,8 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
     throw TASCAR::ErrMsg("Programming error: no scene");
   if(scenes[0]->source_objects.size() != 2)
     throw TASCAR::ErrMsg("Programming error: not exactly two sources.");
-  if(scenes[0]->receivermod_objects.size() != 2)
-    throw TASCAR::ErrMsg("Programming error: not exactly two receivers.");
+  if(scenes[0]->receivermod_objects.size() != 3)
+    throw TASCAR::ErrMsg("Programming error: not exactly three receivers.");
   scenes.back()->source_objects[0]->dlocation = pos_t(1, 0, 0);
 }
 
@@ -208,20 +212,24 @@ void calibsession_t::get_levels(double prewait)
   scenes.back()->receivermod_objects[0]->set_mute(false);
   std::vector<float> vF;
   std::vector<float> vL;
+  auto allports = refport_;
+  allports.push_back("render.calib:ref.0");
   // measure levels of all broadband speakers:
   for(auto spk : *spkarray) {
     // move source to speaker position:
     scenes.back()->source_objects[0]->dlocation = spk.unitvector;
     usleep((unsigned int)(1e6 * prewait));
     // record measurement signal:
-    jackrec.rec(bbrecbuf);
+    jackrec.rec(bbrecbuf, allports);
     //
     TASCAR::levelmeter_t levelmeter((float)jackrec.get_srate(), (float)duration,
                                     TASCAR::levelmeter::C);
     // calc average across input channels:
     float lev_sqr = 0.0f;
     std::vector<float> vLmean;
-    for(auto& wav : bbrecbuf) {
+    std::vector<float> vLref;
+    for(size_t ch = 0u; ch < refport_.size(); ++ch) {
+      auto& wav = bbrecbuf[ch];
       levelmeter.update(wav);
       lev_sqr += levelmeter.ms();
       TASCAR::get_bandlevels(wav, (float)fmin_, (float)fmax_,
@@ -239,11 +247,23 @@ void calibsession_t::get_levels(double prewait)
       l /= (float)bbrecbuf.size();
       l = 10.0f * log10f(l);
     }
+    levelmeter.update(bbrecbuf.back());
+    TASCAR::get_bandlevels(bbrecbuf.back(), (float)fmin_, (float)fmax_,
+                           (float)jackrec.get_srate(), 3.0f, vF, vLref);
+    float lev_ref = 10.0f * log10f(levelmeter.ms());
     std::cout << "--------------\n";
     std::cout << TASCAR::to_string(vF) << std::endl;
     std::cout << TASCAR::to_string(vLmean) << std::endl;
     lev_sqr /= (float)bbrecbuf.size();
-    levels.push_back(10.0f * log10f(lev_sqr));
+    lev_sqr = 10.0f * log10f(lev_sqr);
+    levels.push_back(lev_sqr);
+    for(auto& l : vLmean)
+      l -= lev_sqr;
+    for(auto& l : vLref)
+      l -= lev_ref;
+    for(size_t chXXX
+    DEBUG(lev_ref);
+    DEBUG(lev_sqr);
   }
   //
   // subwoofer:
@@ -258,7 +278,7 @@ void calibsession_t::get_levels(double prewait)
     scenes.back()->source_objects[1]->dlocation = spk.unitvector;
     usleep((unsigned int)(1e6 * prewait));
     // record measurement signal:
-    jackrec.rec(subrecbuf);
+    jackrec.rec(subrecbuf,refport_);
     //
     TASCAR::levelmeter_t levelmeter((float)jackrec.get_srate(),
                                     (float)subduration, TASCAR::levelmeter::Z);
