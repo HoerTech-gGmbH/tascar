@@ -73,6 +73,7 @@ namespace TASCAR {
   class spk_array_cfg_t : public xml_element_t {
   public:
     spk_array_cfg_t(tsccfg::node_t, bool use_parent_xml);
+    ~spk_array_cfg_t();
     std::string layout;
     std::string name;
 

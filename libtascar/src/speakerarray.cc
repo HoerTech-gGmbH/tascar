@@ -68,6 +68,12 @@ spk_array_cfg_t::spk_array_cfg_t(tsccfg::node_t xmlsrc, bool use_parent_xml)
   }
 }
 
+spk_array_cfg_t::~spk_array_cfg_t()
+{
+  if( doc )
+    delete doc;
+}
+
 // speaker array:
 spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
                          const std::string& elementname_, bool allow_empty)
