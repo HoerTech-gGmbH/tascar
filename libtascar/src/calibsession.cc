@@ -245,13 +245,6 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       l /= (float)recbuf.size();
       l = 10.0f * log10f(l);
     }
-    auto vl_min = vLmean.back();
-    auto vl_max = vLmean.back();
-    for(const auto& l : vLmean) {
-      vl_min = std::min(vl_min, l);
-      vl_max = std::max(vl_max, l);
-    }
-    levelrange.push_back(vl_max - vl_min);
     levelmeter.update(recbuf.back());
     TASCAR::get_bandlevels(recbuf.back(), fmin, fmax,
                            (float)jackrec.get_srate(), 3.0f, vF, vLref);
@@ -265,6 +258,13 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       l -= lev_ref;
     for(size_t ch = 0; ch < std::min(vLmean.size(), vLref.size()); ++ch)
       vLmean[ch] = vLref[ch] - vLmean[ch];
+    auto vl_min = vLmean.back();
+    auto vl_max = vLmean.back();
+    for(const auto& l : vLmean) {
+      vl_min = std::min(vl_min, l);
+      vl_max = std::max(vl_max, l);
+    }
+    levelrange.push_back(vl_max - vl_min);
     if(spk.eqfreq == vF)
       for(size_t ch = 0; ch < std::min(vLmean.size(), spk.eqgain.size()); ++ch)
         vLmean[ch] += spk.eqgain[ch];
