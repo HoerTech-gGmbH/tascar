@@ -72,14 +72,18 @@ namespace TASCAR {
     double delta_diff;
     std::string spkname;
     spk_array_diff_render_t* spkarray;
-    std::vector<double> levels;
-    std::vector<double> sublevels;
+    std::vector<float> levels;
+    std::vector<float> sublevels;
+  public:
+    std::vector<float> levelsfrg; // frequency-dependent level range (max-min)
+    std::vector<float> sublevelsfrg; // frequency-dependent level range (max-min)
+  private:
     std::vector<std::string> refport_; ///< list of measurement microphone ports
     double duration;
     double subduration;
-    double lmin;
-    double lmax;
-    double lmean;
+    float lmin;
+    float lmax;
+    float lmean;
     float fmin_;
     float fmax_;
     float subfmin_;
@@ -88,6 +92,8 @@ namespace TASCAR {
     jackrec2wave_t jackrec;
     std::vector<TASCAR::wave_t> bbrecbuf;
     std::vector<TASCAR::wave_t> subrecbuf;
+    TASCAR::wave_t teststim_bb;
+    TASCAR::wave_t teststim_sub;
   };
 
 } // namespace TASCAR

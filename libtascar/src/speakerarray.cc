@@ -70,7 +70,7 @@ spk_array_cfg_t::spk_array_cfg_t(tsccfg::node_t xmlsrc, bool use_parent_xml)
 
 spk_array_cfg_t::~spk_array_cfg_t()
 {
-  if( doc )
+  if(doc)
     delete doc;
 }
 
@@ -393,7 +393,7 @@ void spk_array_diff_render_t::configure()
     for(const auto& conv : convolution_ir) {
       std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
       for(size_t ch = 0u; ch < conv_channels; ++ch) {
-        TASCAR::sndfile_t sndf(conv, ch);
+        TASCAR::sndfile_t sndf(conv, (uint32_t)ch);
         TASCAR::partitioned_conv_t* pcnv(
             new TASCAR::partitioned_conv_t(sndf.get_frames(), n_fragment));
         pcnv->set_irs(sndf);
@@ -403,7 +403,7 @@ void spk_array_diff_render_t::configure()
       ++k;
     }
   }
-  n_channels += conv_channels;
+  n_channels += (uint32_t)conv_channels;
 }
 
 void spk_array_diff_render_t::add_diffuse_sound_field(
@@ -446,7 +446,8 @@ uint32_t TASCAR::get_spklayout_checksum(const xml_element_t& e)
   attributes.push_back("eqfreq");
   attributes.push_back("eqgain");
   attributes.push_back("connect");
-  return e.hash(attributes, true);
+  auto checksum = e.hash(attributes, true);
+  return checksum;
 }
 
 spk_array_diff_render_t::spk_array_diff_render_t(
@@ -521,12 +522,12 @@ spk_array_diff_render_t::spk_array_diff_render_t(
   for(auto& sub : subweight)
     sub.resize(size());
   for(size_t kspk = 0; kspk < size(); ++kspk) {
-    double wsum(0);
+    float wsum(0);
     for(size_t ksub = 0; ksub < subs.size(); ++ksub) {
       subweight[ksub][kspk] =
-          0.01 / (0.01 + pow(distance(operator[](kspk).unitvector,
-                                      subs[ksub].unitvector),
-                             2.0));
+          0.01f / (0.01f + powf((float)distance(operator[](kspk).unitvector,
+                                                subs[ksub].unitvector),
+                                2.0f));
       wsum += subweight[ksub][kspk];
     }
     for(size_t ksub = 0; ksub < subs.size(); ++ksub) {
@@ -608,7 +609,7 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
   if(delaycomp.size() != size())
     throw TASCAR::ErrMsg("Invalid delay compensation array");
   for(uint32_t k = 0; k < size(); ++k) {
-    float sgain(operator[](k).spkgain * operator[](k).gain);
+    float sgain((float)(operator[](k).spkgain) * (float)(operator[](k).gain));
     for(uint32_t f = 0; f < output[k].n; ++f) {
       output[k].d[f] = sgain * delaycomp[k](output[k].d[f]);
     }

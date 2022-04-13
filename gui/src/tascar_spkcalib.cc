@@ -299,14 +299,16 @@ void spkcalib_t::manage_act_grp_save()
       if(recspk) {
         for(uint32_t k = 0; k < recspk->spkpos.size(); ++k) {
           char lc[1024];
-          sprintf(lc, "%1.1f ", 20 * log10(recspk->spkpos[k].gain));
+          sprintf(lc, "%1.1f(%1.1f) ", 20 * log10(recspk->spkpos[k].gain),
+                  session->levelsfrg[k]);
           gainstr += lc;
         }
         if(!recspk->spkpos.subs.empty())
           gainstr += "subs: ";
         for(uint32_t k = 0; k < recspk->spkpos.subs.size(); ++k) {
           char lc[1024];
-          sprintf(lc, "%1.1f ", 20 * log10(recspk->spkpos.subs[k].gain));
+          sprintf(lc, "%1.1f(%1.1f) ", 20 * log10(recspk->spkpos.subs[k].gain),
+                  session->sublevelsfrg[k]);
           gainstr += lc;
         }
       }
