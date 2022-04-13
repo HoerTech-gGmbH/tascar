@@ -301,7 +301,7 @@ void calibsession_t::get_levels(double prewait)
   scenes.back()->source_objects[0]->set_mute(true);
   // unmute subwoofer source:
   scenes.back()->source_objects[1]->set_mute(false);
-  get_levels_(spkarray->subs, *(scenes.back()->source_objects[0]), prewait,
+  get_levels_(spkarray->subs, *(scenes.back()->source_objects[1]), prewait,
               jackrec, subrecbuf, allports, (float)subduration,
               TASCAR::levelmeter::Z, (float)subfmin_, (float)subfmax_,
               sublevels, sublevelsfrg, "sub");
@@ -461,7 +461,7 @@ double calibsession_t::get_caliblevel() const
   if(!scenes.empty())
     if(!scenes.back()->receivermod_objects.empty()) {
       return 20.0 *
-             log10(scenes.back()->receivermod_objects.back()->caliblevel * 5e4);
+             log10(scenes.back()->receivermod_objects[1]->caliblevel * 5e4);
     }
   return 20.0 * log10(5e4);
 }
@@ -470,8 +470,7 @@ double calibsession_t::get_diffusegain() const
 {
   if(!scenes.empty())
     if(!scenes.back()->receivermod_objects.empty())
-      return 20.0 *
-             log10(scenes.back()->receivermod_objects.back()->diffusegain);
+      return 20.0 * log10(scenes.back()->receivermod_objects[1]->diffusegain);
   return 0;
 }
 
@@ -481,8 +480,12 @@ void calibsession_t::inc_caliblevel(double dl)
   delta += dl;
   double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
   if(!scenes.empty())
-    for(auto recobj : scenes.back()->receivermod_objects)
-      recobj->caliblevel = (float)newlevel_pa;
+    for(auto recobj : scenes.back()->receivermod_objects) {
+      TASCAR::receivermod_base_speaker_t* recspk(
+          dynamic_cast<TASCAR::receivermod_base_speaker_t*>(recobj->libdata));
+      if(recspk)
+        recobj->caliblevel = (float)newlevel_pa;
+    }
 }
 
 void calibsession_t::inc_diffusegain(double dl)
@@ -491,8 +494,12 @@ void calibsession_t::inc_diffusegain(double dl)
   delta_diff += dl;
   double gain(pow(10.0, 0.05 * (startdiffgain + delta_diff)));
   if(!scenes.empty())
-    for(auto recobj : scenes.back()->receivermod_objects)
-      recobj->diffusegain = (float)gain;
+    for(auto recobj : scenes.back()->receivermod_objects) {
+      TASCAR::receivermod_base_speaker_t* recspk(
+          dynamic_cast<TASCAR::receivermod_base_speaker_t*>(recobj->libdata));
+      if(recspk)
+        recobj->diffusegain = (float)gain;
+    }
 }
 
 /*
