@@ -625,7 +625,7 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
     if(err < 0.01f)
       k = numiter;
   }
-  optimpar2fltsettings(par, fs, true);
+  optimpar2fltsettings(par, fs, false);
   return dbresponse(vF, fs);
 }
 

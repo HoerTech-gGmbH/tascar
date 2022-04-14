@@ -56,8 +56,10 @@ namespace TASCAR {
     size_t get_num_channels() const { return get_num_bb() + get_num_sub(); };
     double get_measurement_duration() const
     {
-      return duration * (double)get_num_bb() +
-             subduration * (double)get_num_sub();
+      return duration * (double)get_num_bb() *
+                 (1.0 + (double)(max_fcomp_bb > 0u)) +
+             subduration * (double)get_num_sub() *
+                 (1.0 + (double)(max_fcomp_sub > 0u));
     };
 
   private:
@@ -74,9 +76,11 @@ namespace TASCAR {
     spk_array_diff_render_t* spkarray;
     std::vector<float> levels;
     std::vector<float> sublevels;
+
   public:
     std::vector<float> levelsfrg; // frequency-dependent level range (max-min)
-    std::vector<float> sublevelsfrg; // frequency-dependent level range (max-min)
+    std::vector<float>
+        sublevelsfrg; // frequency-dependent level range (max-min)
   private:
     std::vector<std::string> refport_; ///< list of measurement microphone ports
     double duration;
@@ -94,6 +98,20 @@ namespace TASCAR {
     std::vector<TASCAR::wave_t> subrecbuf;
     TASCAR::wave_t teststim_bb;
     TASCAR::wave_t teststim_sub;
+
+  public:
+    uint32_t max_fcomp_bb =
+        0u; ///< maximum number of biquad stages for frequency compensation
+    uint32_t max_fcomp_sub = 0u;
+
+  private:
+    std::vector<float> vF;
+    std::vector<std::vector<float>> vGains;
+    std::vector<float> vFsub;
+    std::vector<std::vector<float>> vGainsSub;
+    uint32_t fcomp_bb =
+        0u; ///< final number of biquad stages for frequency compensation
+    uint32_t fcomp_sub = 0u;
   };
 
 } // namespace TASCAR
