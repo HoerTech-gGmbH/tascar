@@ -43,14 +43,14 @@ namespace TASCAR {
     bool levels_complete() const { return levelsrecorded; };
     size_t get_num_bb() const
     {
-      if(spkarray)
-        return spkarray->size();
+      if(spk_file)
+        return spk_file->size();
       return 0u;
     };
     size_t get_num_sub() const
     {
-      if(spkarray)
-        return spkarray->subs.size();
+      if(spk_file)
+        return spk_file->subs.size();
       return 0u;
     };
     size_t get_num_channels() const { return get_num_bb() + get_num_sub(); };
@@ -73,7 +73,11 @@ namespace TASCAR {
     double delta;
     double delta_diff;
     std::string spkname;
-    spk_array_diff_render_t* spkarray;
+    spk_array_diff_render_t* spk_file = NULL;
+    TASCAR::Scene::receiver_obj_t* rec_nsp = NULL;
+    TASCAR::Scene::receiver_obj_t* rec_spec = NULL;
+    TASCAR::receivermod_base_speaker_t* spk_nsp = NULL;
+    TASCAR::receivermod_base_speaker_t* spk_spec = NULL;
     std::vector<float> levels;
     std::vector<float> sublevels;
 

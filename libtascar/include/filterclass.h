@@ -399,6 +399,7 @@ namespace TASCAR {
         f.clear();
     };
     float optim_error_fun(const std::vector<float>& par);
+    std::string to_string() const;
 
   private:
     void optimpar2fltsettings(const std::vector<float>& par, float fs,
@@ -411,6 +412,10 @@ namespace TASCAR {
     std::vector<float> optim_f;
     std::vector<float> optim_g;
     std::vector<float> optim_gmeas;
+    // filter parameter:
+    std::vector<float> flt_f;
+    std::vector<float> flt_g;
+    std::vector<float> flt_q;
   };
 
 } // namespace TASCAR

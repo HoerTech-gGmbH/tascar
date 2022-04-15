@@ -25,6 +25,7 @@
 #include "errorhandling.h"
 #include "optim.h"
 #include <string.h>
+#include "tscconfig.h"
 
 const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0f, 1.0f);
@@ -526,11 +527,17 @@ void TASCAR::multiband_pareq_t::optimpar2fltsettings(
   g0 = powf(10.0f, 0.05f * par[0]);
   if(dump)
     std::cout << "  g0 = " << par[0] << " dB\n";
+  flt_f.resize(flt.size());
+  flt_g.resize(flt.size());
+  flt_q.resize(flt.size());
   for(size_t k = 0; k < flt.size(); ++k) {
     float f =
         (atanf(par[3 * k + 1]) / TASCAR_PIf + 0.5f) * (fmax - fmin) + fmin;
     float q = atanf(par[3 * k + 2]) / TASCAR_PIf + 0.5f;
     flt[k].set_pareq(f, fs, par[3 * k + 2], q);
+    flt_f[k] = f;
+    flt_g[k] = par[3 * k + 2];
+    flt_q[k] = q;
     if(dump)
       std::cout << "  " << f << " Hz: g=" << par[3 * k + 2] << " dB q=" << q
                 << std::endl;
@@ -604,9 +611,10 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
   std::vector<float> step(3 * flt.size() + 1, 0.1f);
   par.resize(3 * flt.size() + 1);
   for(size_t k = 0; k < flt.size(); ++k) {
-    float frel = 2.0f * fmin *
-                 powf(0.25f * fmax / fmin,
-                      (float)k / ((float)std::max((size_t)2u, flt.size()) - 1.0f));
+    float frel =
+        2.0f * fmin *
+        powf(0.25f * fmax / fmin,
+             (float)k / ((float)std::max((size_t)2u, flt.size()) - 1.0f));
     par[3 * k + 1] = tanf(TASCAR_PIf * ((frel - fmin) / (fmax - fmin) - 0.5f));
     par[3 * k + 2] = 0.0f;
     par[3 * k + 3] = 0.5f;
@@ -645,6 +653,15 @@ void TASCAR::multiband_pareq_t::dbresponse(std::vector<float>& og,
   og.resize(0);
   for(auto f : vF)
     og.push_back(20.0f * log10f(std::abs(response(f * TASCAR_2PIf / fs))));
+}
+
+std::string TASCAR::multiband_pareq_t::to_string() const
+{
+  std::string retv;
+  retv += "\ng0=" + TASCAR::to_string(g0) + ";\nf=[" +
+          TASCAR::to_string(flt_f) + "];\ng=[" + TASCAR::to_string(flt_g) +
+          "];\nq=[" + TASCAR::to_string(flt_q) + ";\n";
+  return retv;
 }
 
 /*

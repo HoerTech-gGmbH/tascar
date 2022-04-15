@@ -254,8 +254,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="input_purpose">number</property>
-                        <property name="climb_rate">1</property>
-                        <property name="snap_to_ticks">True</property>
                         <property name="numeric">True</property>
                       </object>
                       <packing>

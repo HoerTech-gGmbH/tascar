@@ -83,6 +83,10 @@ protected:
   void on_level_entered();
   void on_level_diff_entered();
   bool on_timeout();
+  void on_bb_flt_order_changed();
+  void on_sub_flt_order_changed();
+  void on_bb_flt_chk_changed();
+  void on_sub_flt_chk_changed();
   sigc::connection con_timeout;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupSave;
@@ -98,6 +102,10 @@ protected:
   Gtk::Entry* levelentry_diff;
   Gtk::ProgressBar* rec_progress;
   Gtk::Box* box_h;
+  Gtk::CheckButton* chk_f_bb;
+  Gtk::CheckButton* chk_f_sub;
+  Gtk::SpinButton* flt_order_bb;
+  Gtk::SpinButton* flt_order_sub;
   calibsession_t* session;
   double reflevel;
   double noiseperiod;
@@ -135,6 +143,42 @@ bool spkcalib_t::on_timeout()
     guimeter[k]->invalidate_win();
   }
   return true;
+}
+
+void spkcalib_t::on_bb_flt_order_changed()
+{
+  if(session) {
+    session->max_fcomp_bb = atoi(flt_order_bb->get_text().c_str());
+    chk_f_bb->set_active(session->max_fcomp_bb > 0u);
+  }
+}
+
+void spkcalib_t::on_sub_flt_order_changed()
+{
+  if(session) {
+    session->max_fcomp_sub = atoi(flt_order_sub->get_text().c_str());
+    chk_f_sub->set_active(session->max_fcomp_sub > 0u);
+  }
+}
+
+void spkcalib_t::on_bb_flt_chk_changed()
+{
+  if(session) {
+    if(chk_f_bb->get_active())
+      session->max_fcomp_bb = atoi(flt_order_sub->get_text().c_str());
+    else
+      session->max_fcomp_bb = 0u;
+  }
+}
+
+void spkcalib_t::on_sub_flt_chk_changed()
+{
+  if(session) {
+    if(chk_f_sub->get_active())
+      session->max_fcomp_sub = atoi(flt_order_sub->get_text().c_str());
+    else
+      session->max_fcomp_sub = 0u;
+  }
 }
 
 #define GET_WIDGET(x)                                                          \
@@ -245,12 +289,30 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(levelentry_diff);
   GET_WIDGET(rec_progress);
   GET_WIDGET(box_h);
+  GET_WIDGET(chk_f_bb);
+  GET_WIDGET(chk_f_sub);
+  GET_WIDGET(flt_order_bb);
+  GET_WIDGET(flt_order_sub);
   levelentry->signal_activate().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_level_entered));
   levelentry_diff->signal_activate().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   con_timeout = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_timeout), 250);
+  flt_order_bb->set_increments(1, 1);
+  flt_order_bb->set_range(0, 10);
+  flt_order_bb->signal_value_changed().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_bb_flt_order_changed));
+  flt_order_sub->set_increments(1, 1);
+  flt_order_sub->set_range(0, 10);
+  flt_order_sub->signal_value_changed().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_sub_flt_order_changed));
+  /*
+chk_f_bb->signal_toggled().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_bb_flt_chk_changed));
+  chk_f_sub->signal_toggled().connect(
+  sigc::mem_fun(*this, &spkcalib_t::on_sub_flt_chk_changed));
+  */
   for(uint32_t k = 0; k < guimeter.size(); ++k) {
     box_h->add(*guimeter[k]);
   }
@@ -620,8 +682,16 @@ void spkcalib_t::update_display()
     sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
             session->get_caliblevel(), session->get_diffusegain());
     text_caliblevel->set_text(ctmp);
+    chk_f_bb->set_active(session->max_fcomp_bb > 0u);
+    chk_f_sub->set_active(session->max_fcomp_sub > 0u);
+    flt_order_bb->set_text(std::to_string(session->max_fcomp_bb));
+    flt_order_sub->set_text(std::to_string(session->max_fcomp_sub));
   } else {
     text_caliblevel->set_text("no layout file loaded.");
+    chk_f_bb->set_active(false);
+    chk_f_sub->set_active(false);
+    flt_order_bb->set_text("");
+    flt_order_sub->set_text("");
   }
   std::string portlist;
   for(auto it = refport.begin(); it != refport.end(); ++it)
