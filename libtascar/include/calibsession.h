@@ -11,7 +11,7 @@ namespace TASCAR {
     calibsession_t(const std::string& fname, double reflevel,
                    const std::vector<std::string>& refport, double duration_,
                    double fmin, double fmax, double subduration_,
-                   double subfmin, double subfmax);
+                   double subfmin, double subfmax, float bpo, float subbpo);
     ~calibsession_t();
     double get_caliblevel() const;
     double get_diffusegain() const;
@@ -80,6 +80,8 @@ namespace TASCAR {
     TASCAR::receivermod_base_speaker_t* spk_spec = NULL;
     std::vector<float> levels;
     std::vector<float> sublevels;
+    float bpo;
+    float subbpo;
 
   public:
     std::vector<float> levelsfrg; // frequency-dependent level range (max-min)

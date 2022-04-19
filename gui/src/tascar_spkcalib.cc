@@ -111,9 +111,11 @@ protected:
   double noiseperiod;
   double fmin;
   double fmax;
+  double bpo;
   double noiseperiodsub;
   double fminsub;
   double fmaxsub;
+  double bposub;
   double prewait;
   std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
@@ -204,9 +206,11 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       noiseperiod(TASCAR::config("tascar.spkcalib.noiseperiod", 2.0)),
       fmin(TASCAR::config("tascar.spkcalib.fmin", 62.5)),
       fmax(TASCAR::config("tascar.spkcalib.fmax", 4000.0)),
+      bpo(TASCAR::config("tascar.spkcalib.bpo", 3.0)),
       noiseperiodsub(TASCAR::config("tascar.spkcalib.noiseperiodsub", 8.0)),
       fminsub(TASCAR::config("tascar.spkcalib.fminsub", 31.25)),
       fmaxsub(TASCAR::config("tascar.spkcalib.fmaxsub", 62.5)),
+      bposub(TASCAR::config("tascar.spkcalib.bposub", 3.0)),
       prewait(TASCAR::config("tascar.spkcalib.prewait", 0.5)),
       refport(str2vecstr(
           TASCAR::config("tascar.spkcalib.inputport", "system:capture_1"))),
@@ -744,7 +748,8 @@ void spkcalib_t::load(const std::string& fname)
   if(fname.empty())
     throw TASCAR::ErrMsg("Empty file name.");
   session = new calibsession_t(fname, reflevel, refport, noiseperiod, fmin,
-                               fmax, noiseperiodsub, fminsub, fmaxsub);
+                               fmax, noiseperiodsub, fminsub, fmaxsub,
+                               (float)bpo, (float)bposub);
   session->start();
   update_display();
 }
