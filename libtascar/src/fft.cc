@@ -110,8 +110,8 @@ void TASCAR::minphase_t::operator()(TASCAR::spec_t& s)
 }
 
 void TASCAR::get_bandlevels(const TASCAR::wave_t& w, float cfmin, float cfmax,
-                            float fs, float bpo, std::vector<float>& vF,
-                            std::vector<float>& vL)
+                            float fs, float bpo, float overlap,
+                            std::vector<float>& vF, std::vector<float>& vL)
 {
   size_t numbands = (size_t)(floor(bpo * log2f(cfmax / cfmin))) + 1;
   bpo = (float)(numbands - 1) / log2f(cfmax / cfmin);
@@ -124,8 +124,8 @@ void TASCAR::get_bandlevels(const TASCAR::wave_t& w, float cfmin, float cfmax,
   TASCAR::fft_t fft(w.n);
   fft.execute(w);
   for(auto f : vF) {
-    float f1 = f * powf(2.0f, -0.5f / bpo);
-    float f2 = f * powf(2.0f, 0.5f / bpo);
+    float f1 = f * powf(2.0f, -(0.5f + overlap) / bpo);
+    float f2 = f * powf(2.0f, (0.5f + overlap) / bpo);
     uint32_t idx1 = std::min((uint32_t)((float)w.n * f1 / fs), fft.s.n_);
     uint32_t idx2 = std::min((uint32_t)((float)w.n * f2 / fs), fft.s.n_);
     float l = 0.0f;

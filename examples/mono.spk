@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<layout>
+  <speaker az="0" connect="system:playback_1"/>
+</layout>

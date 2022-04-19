@@ -11,7 +11,8 @@ namespace TASCAR {
     calibsession_t(const std::string& fname, double reflevel,
                    const std::vector<std::string>& refport, double duration_,
                    double fmin, double fmax, double subduration_,
-                   double subfmin, double subfmax, float bpo, float subbpo);
+                   double subfmin, double subfmax, float bpo, float subbpo,
+                   float bandoverlap, float bandoverlapsub);
     ~calibsession_t();
     double get_caliblevel() const;
     double get_diffusegain() const;
@@ -59,7 +60,9 @@ namespace TASCAR {
       return duration * (double)get_num_bb() *
                  (1.0 + (double)(max_fcomp_bb > 0u)) +
              subduration * (double)get_num_sub() *
-                 (1.0 + (double)(max_fcomp_sub > 0u));
+                 (1.0 + (double)(max_fcomp_sub > 0u)) +
+             0.2f * (float)max_fcomp_bb * (double)get_num_bb() +
+             0.2f * (float)max_fcomp_sub * (double)get_num_sub();
     };
 
   private:
@@ -82,6 +85,8 @@ namespace TASCAR {
     std::vector<float> sublevels;
     float bpo;
     float subbpo;
+    float bandoverlap;
+    float bandoverlapsub;
 
   public:
     std::vector<float> levelsfrg; // frequency-dependent level range (max-min)

@@ -1,9 +1,9 @@
 /**
  * @file   fft.h
  * @author Giso Grimm
- * 
+ *
  * @brief  Wrapper class for FFTW
- */ 
+ */
 /* License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
@@ -68,7 +68,7 @@ namespace TASCAR {
        The result is stored in the public member fft::w.
      */
     void ifft();
-    
+
     /**
        \brief Perform a waveform to spectrum (real-to-complex) transformation
 
@@ -118,12 +118,13 @@ namespace TASCAR {
      @param cfmax Highest center frequency in Hz.
      @param fs Sampling rate in Hz.
      @param bpo Nominal bands per octave.
+     @param overlap Relative overlap of bands.
      @retval vF Final center frequencies in Hz.
      @retval vL Levels in dB SPL.
    */
   void get_bandlevels(const TASCAR::wave_t& w, float cfmin, float cfmax,
-                      float fs, float bpo, std::vector<float>& vF,
-                      std::vector<float>& vL);
+                      float fs, float bpo, float overlap,
+                      std::vector<float>& vF, std::vector<float>& vL);
 
 } // namespace TASCAR
 

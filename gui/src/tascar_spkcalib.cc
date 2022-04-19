@@ -19,11 +19,10 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "spkcalib_glade.h"
+
 #include "calibsession.h"
 #include "gui_elements.h"
-//#include "jackiowav.h"
-#include "spkcalib_glade.h"
-//#include "tascar.h"
 #include <ctime>
 #include <gtkmm.h>
 #include <gtkmm/main.h>
@@ -31,8 +30,6 @@
 #include <iostream>
 #include <stdint.h>
 #include <thread>
-
-//#include "session.h"
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
@@ -112,10 +109,12 @@ protected:
   double fmin;
   double fmax;
   double bpo;
+  double bandoverlap;
   double noiseperiodsub;
   double fminsub;
   double fmaxsub;
   double bposub;
+  double bandoverlapsub;
   double prewait;
   std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
@@ -207,10 +206,12 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       fmin(TASCAR::config("tascar.spkcalib.fmin", 62.5)),
       fmax(TASCAR::config("tascar.spkcalib.fmax", 4000.0)),
       bpo(TASCAR::config("tascar.spkcalib.bpo", 3.0)),
+      bandoverlap(TASCAR::config("tascar.spkcalib.bandoverlap", 1.0)),
       noiseperiodsub(TASCAR::config("tascar.spkcalib.noiseperiodsub", 8.0)),
       fminsub(TASCAR::config("tascar.spkcalib.fminsub", 31.25)),
       fmaxsub(TASCAR::config("tascar.spkcalib.fmaxsub", 62.5)),
       bposub(TASCAR::config("tascar.spkcalib.bposub", 3.0)),
+      bandoverlapsub(TASCAR::config("tascar.spkcalib.bandoverlapsub", 1.0)),
       prewait(TASCAR::config("tascar.spkcalib.prewait", 0.5)),
       refport(str2vecstr(
           TASCAR::config("tascar.spkcalib.inputport", "system:capture_1"))),
@@ -224,7 +225,6 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
     inwave.push_back(new TASCAR::wave_t(get_fragsize()));
     guimeter.push_back(new TSCGUI::splmeter_t());
     guimeter.back()->set_mode(TSCGUI::dameter_t::rmspeak);
-    // guimeter.back()->set_min_and_range( reflevel-20.0, 30.0 );
     guimeter.back()->set_min_and_range((float)miccalibdb - 40.0f, 40.0f);
   }
   jackc_t::activate();
@@ -311,12 +311,6 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   flt_order_sub->set_range(0, 10);
   flt_order_sub->signal_value_changed().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_sub_flt_order_changed));
-  /*
-chk_f_bb->signal_toggled().connect(
-      sigc::mem_fun(*this, &spkcalib_t::on_bb_flt_chk_changed));
-  chk_f_sub->signal_toggled().connect(
-  sigc::mem_fun(*this, &spkcalib_t::on_sub_flt_chk_changed));
-  */
   for(uint32_t k = 0; k < guimeter.size(); ++k) {
     box_h->add(*guimeter[k]);
   }
@@ -409,8 +403,6 @@ void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
     double t = tic.toc();
     t /= sleepsec;
     rec_progress->set_fraction(std::min(1.0, t));
-    // while(gtk_events_pending())
-    //  gtk_main_iteration();
     while(Gtk::Main::events_pending())
       Gtk::Main::iteration(false);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -431,13 +423,7 @@ void spkcalib_t::on_reclevels()
       remove_action_group("close");
       levelentry->set_sensitive(false);
       levelentry_diff->set_sensitive(false);
-      // session->get_levels(rec_progress, prewait);
       bool bquitthread = false;
-      // std::thread guiupdater(guiupdate, rec_progress,
-      //                       session->get_measurement_duration() +
-      //                       prewait * (double)session->get_num_channels(),
-      //                       &bquitthread);
-      // getlevels(TASCAR::calibsession_t* session,double prewait,&bquitthread);
       std::thread guiupdater(getlevels, session, prewait, &bquitthread);
       guiupdate(rec_progress,
                 session->get_measurement_duration() +
@@ -749,7 +735,8 @@ void spkcalib_t::load(const std::string& fname)
     throw TASCAR::ErrMsg("Empty file name.");
   session = new calibsession_t(fname, reflevel, refport, noiseperiod, fmin,
                                fmax, noiseperiodsub, fminsub, fmaxsub,
-                               (float)bpo, (float)bposub);
+                               (float)bpo, (float)bposub, (float)bandoverlap,
+                               (float)bandoverlapsub);
   session->start();
   update_display();
 }
