@@ -115,7 +115,7 @@ void multibeam_t::get_diff_gain(float* gm)
     diag_gain += gain[k] * dgain;
     // compensate for selectivity:
     float selgain = 1.0f - expf(-1.0f / (selectivity[k] * selectivity[k]));
-    selgain *= (1.0f - dgain) * 2.0f / TASCAR_PIf;
+    selgain *= (1.0f - dgain) * 0.5674f;
     float pgainw = gain[k] * selgain;
     float pgainy = (float)vsteer[k].y * pgainw;
     float pgainz = (float)vsteer[k].z * pgainw;

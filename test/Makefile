@@ -151,7 +151,7 @@ test_snd%: test_snd%.tsc expected_snd%.wav
 	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
 	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_snd$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
-	@rm -f test_snd$*.wav
+#	@rm -f test_snd$*.wav
 
 test_pos%: test_pos%.tsc expected_pos%.wav
 	@echo "Position test: $<"
@@ -299,6 +299,7 @@ test_snd_vbap3d_speakermatch: RMSTOL=1e-6
 test_snd_sndfile: TOL=3e-7
 test_snd_reverb: TOL=1e-5
 test_snd_reverb: RMSTOL=1e-6
+test_snd_maskplugin_multibeam: RMSTOL=1e-6
 test_snd_maskplugin_multibeam: TOL=1e-5
 test_snd_maskplugin_multibeam1: TOL=1e-5
 test_snd_maskplugin_fig8: TOL=1e-5
