@@ -98,7 +98,7 @@ float multibeam_t::get_gain(const pos_t& pos)
   float pgain = 0.0f;
   for(size_t k = 0; k < numbeams; ++k) {
     float ang =
-        std::min(selectivity[k] * acosf(dot_prod(rp, vsteer[k])), TASCAR_PIf);
+        std::min(selectivity[k] * acosf(dot_prodf(rp, vsteer[k])), TASCAR_PIf);
     pgain += gain[k] * (0.5f + 0.5f * cosf(ang));
   }
   pgain = std::min(maxgain, mingain + (1.0f - mingain) * pgain);
@@ -111,12 +111,15 @@ void multibeam_t::get_diff_gain(float* gm)
   memset(gm, 0, sizeof(float) * 16);
   float diag_gain = mingain;
   for(size_t k = 0; k < numbeams; ++k) {
-    float selgain = std::min(selectivity[k], 1.0f);
-    diag_gain += gain[k] * (1.0f - selgain);
+    float dgain = (1.0f - std::min(selectivity[k], 1.0f));
+    diag_gain += gain[k] * dgain;
+    // compensate for selectivity:
+    float selgain = 1.0f - expf(-1.0f / (selectivity[k] * selectivity[k]));
+    selgain *= (1.0f - dgain) * 2.0f / TASCAR_PIf;
     float pgainw = gain[k] * selgain;
-    float pgainy = vsteer[k].y * pgainw;
-    float pgainz = vsteer[k].z * pgainw;
-    float pgainx = vsteer[k].x * pgainw;
+    float pgainy = (float)vsteer[k].y * pgainw;
+    float pgainz = (float)vsteer[k].z * pgainw;
+    float pgainx = (float)vsteer[k].x * pgainw;
     float gains[4] = {1.0f, (float)(vsteer[k].y), (float)(vsteer[k].z),
                       (float)(vsteer[k].x)};
     size_t kgain = 0;
