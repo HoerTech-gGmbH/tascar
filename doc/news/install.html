@@ -77,6 +77,10 @@ sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ bionic univers
       <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
 sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ xenial universe'
       </code></pre>
+      <p>In Raspbian Bullseye:</p>
+      <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo tee /etc/apt/trusted.gpg.d/openmha-packaging.asc
+echo "deb [arch=armhf] http://apt.hoertech.de bullseye universe" | sudo tee /etc/apt/sources.list.d/apt-hoertech.list
+      </code></pre>
       <p>In Raspbian Buster:</p>
       <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo apt-key add
 (echo "";echo "deb [arch=armhf] http://apt.hoertech.de bionic universe")|sudo tee -a /etc/apt/sources.list
