@@ -65,7 +65,9 @@ jackstatus_t::jackstatus_t(const sensorplugin_cfg_t& cfg)
   GET_ATTRIBUTE_(warnload);
   GET_ATTRIBUTE_(criticalload);
   GET_ATTRIBUTE_(maxxrunfreq);
-  GET_ATTRIBUTE(oncritical,"","system command to be executed when critical threshold is reached");
+  GET_ATTRIBUTE(
+      oncritical, "",
+      "system command to be executed when critical threshold is reached");
   srv = std::thread(&jackstatus_t::service, this);
   prio = (jack_client_max_real_time_priority(jc));
   DEBUG(prio);
@@ -133,9 +135,8 @@ void jackstatus_t::service()
   }
 }
 
-int jackstatus_t::process(jack_nframes_t nframes,
-                          const std::vector<float*>& inBuffer,
-                          const std::vector<float*>& outBuffer)
+int jackstatus_t::process(jack_nframes_t, const std::vector<float*>&,
+                          const std::vector<float*>&)
 {
   alive();
   return 0;

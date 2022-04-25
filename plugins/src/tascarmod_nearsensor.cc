@@ -89,7 +89,7 @@ nearsensor_t::~nearsensor_t()
   lo_address_free(target);
 }
 
-void nearsensor_t::update(uint32_t tp_frame, bool tp_rolling)
+void nearsensor_t::update(uint32_t , bool )
 {
   uint32_t hitcnt(0);
   if( parentobj.obj ){

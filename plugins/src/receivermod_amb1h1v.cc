@@ -77,7 +77,7 @@ amb1h1v_t::amb1h1v_t(tsccfg::node_t xmlsrc) : TASCAR::receivermod_base_t(xmlsrc)
   wgaindiff = wgain / MIN3DB;
 }
 
-void amb1h1v_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+void amb1h1v_t::add_pointsource(const TASCAR::pos_t& prel, double,
                                 const TASCAR::wave_t& chunk,
                                 std::vector<TASCAR::wave_t>& output,
                                 receivermod_base_t::data_t* sd)
@@ -113,7 +113,7 @@ void amb1h1v_t::add_pointsource(const TASCAR::pos_t& prel, double width,
 
 void amb1h1v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
                                         std::vector<TASCAR::wave_t>& output,
-                                        receivermod_base_t::data_t* sd)
+                                        receivermod_base_t::data_t*)
 {
   if(acn) {
     for(unsigned int i = 0; i < chunk.size(); i++) {
@@ -133,7 +133,7 @@ void amb1h1v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
 }
 
 TASCAR::receivermod_base_t::data_t*
-amb1h1v_t::create_state_data(double srate, uint32_t fragsize) const
+amb1h1v_t::create_state_data(double, uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

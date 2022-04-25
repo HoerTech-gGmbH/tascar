@@ -59,7 +59,7 @@ oscjacktime_t::~oscjacktime_t()
   lo_address_free(target);
 }
 
-void oscjacktime_t::update(uint32_t tp_frame, bool tp_rolling)
+void oscjacktime_t::update(uint32_t tp_frame, bool )
 {
   if( skipcnt == 0 ){
     lo_send(target,path.c_str(),"f",tp_frame*t_sample);

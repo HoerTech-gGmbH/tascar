@@ -156,7 +156,7 @@ hoa2d_t::data_t::~data_t()
 {
 }
 
-void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& , receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   float az(-prel.azim());
@@ -224,7 +224,7 @@ void hoa2d_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_t::postproc(output);  
 }
 
-void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& , receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   std::complex<float> rot_p(std::exp(i*diffup_rot));
@@ -264,7 +264,7 @@ void hoa2d_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vect
   }
 }
 
-TASCAR::receivermod_base_t::data_t* hoa2d_t::create_state_data(double srate,uint32_t n_fragment) const
+TASCAR::receivermod_base_t::data_t* hoa2d_t::create_state_data(double ,uint32_t n_fragment) const
 {
   return new data_t(n_fragment,order,f_sample, shape, filterperiod );
 }

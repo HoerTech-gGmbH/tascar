@@ -228,7 +228,7 @@ rec_itu51_t::rec_itu51_t(tsccfg::node_t xmlsrc)
   See receivermod_base_t::add_pointsource() in file receivermod.h for details.
 */
 void rec_itu51_t::add_pointsource( const TASCAR::pos_t& prel,
-                                  double width,
+                                  double ,
                                   const TASCAR::wave_t& chunk,
                                   std::vector<TASCAR::wave_t>& output,
                                   receivermod_base_t::data_t* sd)
@@ -268,12 +268,12 @@ void rec_itu51_t::add_pointsource( const TASCAR::pos_t& prel,
   output[3] += chunk;
 }
 
-TASCAR::receivermod_base_t::data_t* rec_itu51_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t* rec_itu51_t::create_state_data(double ,uint32_t ) const
 {
   return new data_t(spkpos.size());
 }
 
-void rec_itu51_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void rec_itu51_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& , receivermod_base_t::data_t*)
 {
   float* o_l(render_buffer[0]->d);
   float* o_r(render_buffer[1]->d);

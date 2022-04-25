@@ -88,7 +88,7 @@ bool cardioidmod_t::read_source(TASCAR::pos_t& prel,
 }
 
 TASCAR::sourcemod_base_t::data_t*
-cardioidmod_t::create_state_data(double srate, uint32_t fragsize) const
+cardioidmod_t::create_state_data(double , uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

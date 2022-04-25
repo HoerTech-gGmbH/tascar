@@ -112,11 +112,12 @@ OSC_t::OSC_t(const char* hostname, const char* port, uint16_t maxchannel)
   argv = lo_message_get_argv(msg);
 }
 
-void OSC_t::send(uint8_t universe, const std::vector<uint16_t>& data)
+void OSC_t::send(uint8_t, const std::vector<uint16_t>& data)
 {
-  for(uint32_t k=0;k<std::min((uint32_t)(data.size()),(uint32_t)argc);++k)
+  for(uint32_t k = 0; k < std::min((uint32_t)(data.size()), (uint32_t)argc);
+      ++k)
     argv[k]->i = data[k];
-  lo_send_message( target, "/dmx", msg );
+  lo_send_message(target, "/dmx", msg);
 }
 
 /*

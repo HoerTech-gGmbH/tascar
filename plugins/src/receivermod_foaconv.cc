@@ -56,8 +56,8 @@ public:
                        const TASCAR::wave_t& chunk,
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
-  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
-                               std::vector<TASCAR::wave_t>& output,
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& ,
+                               std::vector<TASCAR::wave_t>& ,
                                receivermod_base_t::data_t*){};
   void configure();
   receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
@@ -159,16 +159,16 @@ void foaconv_t::postproc(std::vector<TASCAR::wave_t>& output)
   rec_out->clear();
 }
 
-TASCAR::receivermod_base_t::data_t* foaconv_t::create_state_data(double srate,
-                                                           uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t* foaconv_t::create_state_data(double ,
+                                                           uint32_t ) const
 {
   return new data_t();
 }
 
-void foaconv_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+void foaconv_t::add_pointsource(const TASCAR::pos_t& , double ,
                                 const TASCAR::wave_t& chunk,
-                                std::vector<TASCAR::wave_t>& output,
-                                receivermod_base_t::data_t* sd)
+                                std::vector<TASCAR::wave_t>& ,
+                                receivermod_base_t::data_t* )
 {
   *rec_out += chunk;
 }

@@ -52,7 +52,7 @@ namespace TASCAR {
     const std::string& get_name() const { return name; };
     const std::string& get_modname() const { return modname; };
     virtual Gtk::Widget& get_gtkframe() { return *((Gtk::Widget*)this); };
-    virtual void add_variables(TASCAR::osc_server_t* srv){};
+    virtual void add_variables(TASCAR::osc_server_t*){};
     virtual std::vector<sensormsg_t> get_critical();
     virtual std::vector<sensormsg_t> get_warnings();
     virtual bool get_alive()

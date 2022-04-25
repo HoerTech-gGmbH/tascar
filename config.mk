@@ -4,8 +4,9 @@ VERSION=0.224.0
 ARCH=$(shell uname -m)
 
 CXXFLAGS = -Wall -Wextra -Wdeprecated-declarations -std=c++17 -pthread	\
--ggdb -fno-finite-math-only -Wconversion
-# -Werror 
+-ggdb -fno-finite-math-only
+# -Wconversion
+# -Werror
 
 ifeq ($(OS),Windows_NT)
   DLLEXT=.dll

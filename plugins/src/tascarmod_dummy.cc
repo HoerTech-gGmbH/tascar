@@ -23,18 +23,19 @@
 
 class dummy_t : public TASCAR::actor_module_t {
 public:
-  dummy_t( const TASCAR::module_cfg_t& cfg );
+  dummy_t(const TASCAR::module_cfg_t& cfg);
   ~dummy_t();
   void update(uint32_t frame, bool running);
-  void configure( );
+  void configure();
   void release();
+
 private:
   bool checkprepare;
   bool localprep;
 };
 
-dummy_t::dummy_t( const TASCAR::module_cfg_t& cfg )
-  : actor_module_t( cfg ),checkprepare(false),localprep(false)
+dummy_t::dummy_t(const TASCAR::module_cfg_t& cfg)
+    : actor_module_t(cfg), checkprepare(false), localprep(false)
 {
   GET_ATTRIBUTE_BOOL_(checkprepare);
   DEBUG(1);
@@ -48,10 +49,10 @@ dummy_t::dummy_t( const TASCAR::module_cfg_t& cfg )
 void dummy_t::release()
 {
   DEBUG(localprep);
-  if( checkprepare ){
-    if( !localprep )
+  if(checkprepare) {
+    if(!localprep)
       throw TASCAR::ErrMsg("not prepared (local)");
-    if( !is_prepared() )
+    if(!is_prepared())
       throw TASCAR::ErrMsg("not prepared (base)");
   }
   localprep = false;
@@ -59,12 +60,12 @@ void dummy_t::release()
   DEBUG(localprep);
 }
 
-void dummy_t::configure( )
+void dummy_t::configure()
 {
-  if( checkprepare ){
-    if( localprep )
+  if(checkprepare) {
+    if(localprep)
       throw TASCAR::ErrMsg("prepared (local)");
-    if( is_prepared() )
+    if(is_prepared())
       throw TASCAR::ErrMsg("prepared (base)");
   }
   localprep = true;
@@ -79,21 +80,21 @@ void dummy_t::configure( )
 
 dummy_t::~dummy_t()
 {
-  if( checkprepare ){
-    if( localprep )
+  if(checkprepare) {
+    if(localprep)
       std::cerr << "prepared (local)" << std::endl;
-    if( is_prepared() )
+    if(is_prepared())
       std::cerr << "prepared (base)" << std::endl;
   }
   DEBUG(1);
 }
 
-void dummy_t::update(uint32_t frame,bool running)
+void dummy_t::update(uint32_t, bool)
 {
-  if( checkprepare ){
-    if( !localprep )
+  if(checkprepare) {
+    if(!localprep)
       throw TASCAR::ErrMsg("not prepared (local)");
-    if( !is_prepared() )
+    if(!is_prepared())
       throw TASCAR::ErrMsg("not prepared (base)");
   }
   DEBUG(localprep);

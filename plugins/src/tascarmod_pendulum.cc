@@ -52,7 +52,7 @@ pendulum_t::~pendulum_t()
 {
 }
 
-void pendulum_t::update(uint32_t frame,bool running)
+void pendulum_t::update(uint32_t frame,bool )
 {
   double time((double)frame*t_sample);
   double rx(amplitude*DEG2RAD);

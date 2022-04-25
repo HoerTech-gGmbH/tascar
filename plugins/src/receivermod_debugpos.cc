@@ -29,8 +29,8 @@ public:
   void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
   void configure();
   void postproc(std::vector<TASCAR::wave_t>& output);
-  receivermod_base_t::data_t* create_state_data(double srate,
-                                                uint32_t fragsize) const { return NULL;};
+  receivermod_base_t::data_t* create_state_data(double ,
+                                                uint32_t ) const { return NULL;};
 private:
   uint32_t sources;
   uint32_t target_channel;
@@ -47,14 +47,14 @@ debugpos_t::debugpos_t(tsccfg::node_t xmlsrc)
 
 // will be called only once per cycle, *after* all primary/image
 // sources were rendered:
-void debugpos_t::postproc(std::vector<TASCAR::wave_t>& output)
+void debugpos_t::postproc(std::vector<TASCAR::wave_t>& )
 {
   target_channel = 0;
 }
 
 // will be called for every point source (primary or image) in each
 // cycle:
-void debugpos_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void debugpos_t::add_pointsource(const TASCAR::pos_t& prel, double , const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
 {
   //TASCAR::pos_t prel_norm(prel.normal());
   //prel_norm.x <- cosine of relative direction of arrival
@@ -69,7 +69,7 @@ void debugpos_t::add_pointsource(const TASCAR::pos_t& prel, double width, const 
   ++target_channel;
 }
 
-void debugpos_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void debugpos_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& , std::vector<TASCAR::wave_t>& , receivermod_base_t::data_t*)
 {
 }
 

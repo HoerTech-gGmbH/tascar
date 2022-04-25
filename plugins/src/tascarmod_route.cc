@@ -126,8 +126,8 @@ void routemod_t::validate_attributes(std::string& msg) const
   plugins.validate_attributes(msg);
 }
 
-int osc_routemod_mute(const char* path, const char* types, lo_arg** argv,
-                      int argc, lo_message msg, void* user_data)
+int osc_routemod_mute(const char* , const char* types, lo_arg** argv,
+                      int argc, lo_message , void* user_data)
 {
   routemod_t* h((routemod_t*)user_data);
   if(h && (argc == 1) && (types[0] == 'i')) {
@@ -137,8 +137,8 @@ int osc_routemod_mute(const char* path, const char* types, lo_arg** argv,
   return 1;
 }
 
-int osc_setfade(const char* path, const char* types, lo_arg** argv, int argc,
-                lo_message msg, void* user_data)
+int osc_setfade(const char* , const char* types, lo_arg** argv, int argc,
+                lo_message , void* user_data)
 {
   fader_t* h((fader_t*)user_data);
   if(h && (argc == 2) && (types[0] == 'f') && (types[1] == 'f')) {

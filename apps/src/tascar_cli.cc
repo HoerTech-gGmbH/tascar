@@ -48,7 +48,7 @@
 
 static bool b_quit;
 
-static void sighandler(int sig)
+static void sighandler(int)
 {
   b_quit = true;
   fclose(stdin);

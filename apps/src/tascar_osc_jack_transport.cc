@@ -34,9 +34,9 @@
 #include "osc_helper.h"
 #include "tascar.h"
 #include <getopt.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 
 static bool b_quit;
 
@@ -60,8 +60,8 @@ namespace TASCAR {
 
 namespace OSC {
 
-  int _locate(const char* path, const char* types, lo_arg** argv, int argc,
-              lo_message msg, void* user_data)
+  int _locate(const char*, const char* types, lo_arg** argv, int argc,
+              lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((TASCAR::osc_jt_t*)user_data)->tp_locate(argv[0]->f);
@@ -70,8 +70,8 @@ namespace OSC {
     return 1;
   }
 
-  int _locatei(const char* path, const char* types, lo_arg** argv, int argc,
-               lo_message msg, void* user_data)
+  int _locatei(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'i')) {
       ((TASCAR::osc_jt_t*)user_data)->tp_locate((uint32_t)(argv[0]->i));
@@ -80,8 +80,8 @@ namespace OSC {
     return 1;
   }
 
-  int _stop(const char* path, const char* types, lo_arg** argv, int argc,
-            lo_message msg, void* user_data)
+  int _stop(const char*, const char*, lo_arg**, int argc, lo_message,
+            void* user_data)
   {
     if(argc == 0) {
       ((TASCAR::osc_jt_t*)user_data)->tp_stop();
@@ -90,8 +90,8 @@ namespace OSC {
     return 1;
   }
 
-  int _start(const char* path, const char* types, lo_arg** argv, int argc,
-             lo_message msg, void* user_data)
+  int _start(const char*, const char*, lo_arg**, int argc, lo_message,
+             void* user_data)
   {
     if(argc == 0) {
       ((TASCAR::osc_jt_t*)user_data)->tp_start();
@@ -100,8 +100,7 @@ namespace OSC {
     return 1;
   }
 
-  int _quit(const char* path, const char* types, lo_arg** argv, int argc,
-            lo_message msg, void* user_data)
+  int _quit(const char*, const char*, lo_arg**, int, lo_message, void*)
   {
     b_quit = true;
     return 0;
@@ -132,17 +131,17 @@ void TASCAR::osc_jt_t::run()
   osc_server_t::deactivate();
 }
 
-int TASCAR::osc_jt_t::process(jack_nframes_t nframes,
-                              const std::vector<float*>& inBuffer,
-                              const std::vector<float*>& outBuffer,
-                              uint32_t tp_frame, bool tp_rolling)
+int TASCAR::osc_jt_t::process(jack_nframes_t ,
+                              const std::vector<float*>& ,
+                              const std::vector<float*>& ,
+                              uint32_t tp_frame, bool )
 {
   if(loop_frame && (tp_frame >= loop_frame))
     tp_locate(0u);
   return 0;
 }
 
-static void sighandler(int sig)
+static void sighandler(int )
 {
   b_quit = true;
 }
