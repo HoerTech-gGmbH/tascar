@@ -6,6 +6,24 @@
 
 namespace TASCAR {
 
+  /**
+     @brief Parameters for loudspeaker equalization and calibration.
+   */
+  class calibparam_t {
+  public:
+    calibparam_t(bool issub = false);
+    void factory_reset(bool issub);
+    void read_defaults(bool issub);
+    void read_xml(const tsccfg::node_t& layoutnode, bool issub);
+    float fmin = 62.5f;          ///< Lower limit of frequency in Hz.
+    float fmax = 4000.0f;        ///< Upper limit of frequency in Hz.
+    float duration = 1.0f;       ///< Stimulus duration in s.
+    float bandsperoctave = 3.0f; ///< Bands per octave in frequency dependent
+                                 ///< level analysis.
+    float bandoverlap =
+        2.0f; ///< Overlap of analysis filterbank in filter bands.
+  };
+
   class calibsession_t : public TASCAR::session_t {
   public:
     calibsession_t(const std::string& fname, double reflevel,

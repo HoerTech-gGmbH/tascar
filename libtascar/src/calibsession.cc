@@ -56,6 +56,62 @@ std::vector<std::string> string_token(std::string s,
   return rv;
 }
 
+calibparam_t::calibparam_t(bool issub)
+{
+  factory_reset(issub);
+}
+
+void calibparam_t::factory_reset(bool issub)
+{
+  if(issub) {
+    fmin = 31.25f;
+    fmax = 62.5f;
+    duration = 4.0f;
+    bandsperoctave = 3.0f;
+    bandoverlap = 2.0f;
+  } else {
+    fmin = 62.5f;
+    fmax = 4000.0f;
+    duration = 1.0f;
+    bandsperoctave = 3.0f;
+    bandoverlap = 2.0f;
+  }
+}
+
+#define READ_DEF(x) x = (float)TASCAR::config(path + "." #x, x)
+
+void calibparam_t::read_defaults(bool issub)
+{
+  factory_reset(issub);
+  std::string path = "tascar.spkcalib.speaker";
+  if(issub)
+    path = "tascar.spkcalib.sub";
+  READ_DEF(fmin);
+  READ_DEF(fmax);
+  READ_DEF(duration);
+  READ_DEF(bandsperoctave);
+  READ_DEF(bandoverlap);
+}
+
+void calibparam_t::read_xml(const tsccfg::node_t& layoutnode, bool issub)
+{
+  TASCAR::xml_element_t xml(layoutnode);
+  tsccfg::node_t spkcalibnode;
+  if(issub)
+    spkcalibnode = xml.find_or_add_child("subcalibconfig");
+  else
+    spkcalibnode = xml.find_or_add_child("speakercalibconfig");
+  TASCAR::xml_element_t e(spkcalibnode);
+  e.GET_ATTRIBUTE(fmin, "Hz", "Lower frequency limit of calibration.");
+  e.GET_ATTRIBUTE(fmax, "Hz", "Upper frequency limit of calibration.");
+  e.GET_ATTRIBUTE(duration, "s", "Stimulus duration.");
+  e.GET_ATTRIBUTE(bandsperoctave, "bpo",
+                  "Bands per octave in filterbank for level equalization.");
+  e.GET_ATTRIBUTE(
+      bandoverlap, "bands",
+      "Overlap in frequency bands in filterbank for level equalization.");
+}
+
 calibsession_t::calibsession_t(const std::string& fname, double reflevel,
                                const std::vector<std::string>& refport,
                                double duration_, double fmin, double fmax,
