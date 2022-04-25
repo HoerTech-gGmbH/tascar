@@ -1129,6 +1129,43 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
         cr->set_dash(dash, 0);
       }
     }
+    if(obj->maskplug && (obj->maskplug->drawradius > 0.0f)) {
+      pos_t x(p);
+      cr->save();
+      cr->set_line_width(0.1 * msize);
+      cr->set_source_rgba(0.0, 0.0, 0.0, 0.3);
+      for(uint32_t k = 0; k < 73; k++) {
+        x = p;
+        x.x += obj->maskplug->drawradius * cos(TASCAR_2PI * k / 72.0);
+        x.y += obj->maskplug->drawradius * sin(TASCAR_2PI * k / 72.0);
+        x = view(x);
+        if(k == 0)
+          cr->move_to(x.x, -x.y);
+        else
+          cr->line_to(x.x, -x.y);
+      }
+      cr->stroke();
+      cr->set_line_width(msize);
+      cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.3);
+      pos_t psteer;
+      for(uint32_t k = 0; k < 73; k++) {
+        psteer.x = cos(TASCAR_2PI * k / 72.0);
+        psteer.y = sin(TASCAR_2PI * k / 72.0);
+        psteer.z = 0.0;
+        double gain = obj->maskplug->get_gain(psteer);
+        psteer *= o;
+        x = p;
+        x.x += obj->maskplug->drawradius * gain * psteer.x;
+        x.y += obj->maskplug->drawradius * gain * psteer.y;
+        x = view(x);
+        if(k == 0)
+          cr->move_to(x.x, -x.y);
+        else
+          cr->line_to(x.x, -x.y);
+      }
+      cr->stroke();
+      cr->restore();
+    }
     if(obj->delaycomp > 0) {
       cr->save();
       double dr(obj->delaycomp * scene_->c);
