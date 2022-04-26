@@ -25,7 +25,7 @@ endif
 ifeq "$(ARCH)" "x86_64"
   CXXFLAGS += -msse -msse2 -mfpmath=sse
   ifneq "$(UNAME_S)" "Darwin"
-    # CXXFLAGS += -ffast-math
+    CXXFLAGS += -ffast-math
   endif
 endif
 
