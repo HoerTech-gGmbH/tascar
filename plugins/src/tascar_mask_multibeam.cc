@@ -18,6 +18,7 @@
  */
 
 #include "maskplugin.h"
+#include <mutex>
 
 using namespace TASCAR;
 
@@ -36,6 +37,7 @@ private:
   float maxgain = 1.0f;
 
   std::vector<pos_t> vsteer;
+  std::mutex steermtx;
 
 public:
   std::vector<float> gain;
@@ -87,8 +89,11 @@ void multibeam_t::add_variables(TASCAR::osc_server_t* srv)
 
 void multibeam_t::update_steer()
 {
-  for(size_t k = 0u; k < numbeams; ++k)
-    vsteer[k].set_sphere(1.0, DEG2RAD * az[k], DEG2RAD * el[k]);
+  if(steermtx.try_lock()) {
+    for(size_t k = 0u; k < numbeams; ++k)
+      vsteer[k].set_sphere(1.0, DEG2RAD * az[k], DEG2RAD * el[k]);
+    steermtx.unlock();
+  }
 }
 
 float multibeam_t::get_gain(const pos_t& pos)
