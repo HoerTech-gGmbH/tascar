@@ -17,7 +17,7 @@ The toolbox depends on the following libraries:
 - libltc
 - gtkmm-2.4 or gtkmm-3.0
 - libxml++-2.6
-- liblsl-dev or lsl-liblsl
+- liblsl
 - libfftw3-dev
 - libfftw3-single3
 - libfftw3-double3
@@ -44,7 +44,7 @@ On archlinux, these tools may be needed:
 pacman -Syu git make gcc pkg-config libxml++2.6 jack2 liblo libsndfile fftw gsl eigen gtkmm3 boost libltc xxd gtksourceviewmm webkit2gtk libsamplerate
 ````
 
-debian packages of lsl-liblsl can be found at 
+debian packages of liblsl can be found at 
 [https://github.com/sccn/liblsl/releases](https://github.com/sccn/liblsl/releases).
 
 For installation of binary debian packages of TASCAR, please see [http://news.tascar.org/](http://news.tascar.org/).
