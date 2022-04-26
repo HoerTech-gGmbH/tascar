@@ -23,7 +23,10 @@ endif
 
 
 ifeq "$(ARCH)" "x86_64"
-CXXFLAGS += -msse -msse2 -mfpmath=sse -ffast-math
+  CXXFLAGS += -msse -msse2 -mfpmath=sse
+  ifneq "$(UNAME_S)" "Darwin"
+    # CXXFLAGS += -ffast-math
+  endif
 endif
 
 CPPFLAGS = -std=c++17
