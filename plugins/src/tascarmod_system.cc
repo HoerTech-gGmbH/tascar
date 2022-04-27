@@ -150,8 +150,8 @@ private:
   std::mutex atcmdmtx;
 };
 
-int system_t::osc_trigger(const char* path, const char* types, lo_arg** argv,
-                          int argc, lo_message msg, void* user_data)
+int system_t::osc_trigger(const char* , const char* types, lo_arg** argv,
+                          int argc, lo_message , void* user_data)
 {
   system_t* data(reinterpret_cast<system_t*>(user_data));
   if(data && (argc == 1) && (types[0] == 'i'))
@@ -161,8 +161,8 @@ int system_t::osc_trigger(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int system_t::osc_atcmd_add(const char* path, const char* types, lo_arg** argv,
-                            int argc, lo_message msg, void* user_data)
+int system_t::osc_atcmd_add(const char* , const char* types, lo_arg** argv,
+                            int argc, lo_message , void* user_data)
 {
   system_t* data(reinterpret_cast<system_t*>(user_data));
   if(data && (argc == 2) && (types[0] == 'f') && (types[1] == 's'))
@@ -170,8 +170,8 @@ int system_t::osc_atcmd_add(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int system_t::osc_atcmd_clear(const char* path, const char* types,
-                              lo_arg** argv, int argc, lo_message msg,
+int system_t::osc_atcmd_clear(const char* , const char* ,
+                              lo_arg** , int argc, lo_message ,
                               void* user_data)
 {
   system_t* data(reinterpret_cast<system_t*>(user_data));

@@ -180,7 +180,7 @@ ortf_t::ortf_t(tsccfg::node_t xmlsrc)
   dir_r.rot_z(-0.5 * angle);
 }
 
-void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
+void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double,
                              const TASCAR::wave_t& chunk,
                              std::vector<TASCAR::wave_t>& output,
                              receivermod_base_t::data_t* sd)
@@ -257,7 +257,7 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width,
 }
 
 void ortf_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
-                                     std::vector<TASCAR::wave_t>& output,
+                                     std::vector<TASCAR::wave_t>&,
                                      receivermod_base_t::data_t*)
 {
   float* o_l(diffuse_render_buffer[0]->d);

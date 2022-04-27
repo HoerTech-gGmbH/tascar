@@ -81,7 +81,7 @@ void rec_wfs_t::add_variables( TASCAR::osc_server_t* srv )
   See receivermod_base_t::add_pointsource() in file receivermod.h for details.
 */
 void rec_wfs_t::add_pointsource( const TASCAR::pos_t& prel,
-                                  double width,
+                                  double ,
                                   const TASCAR::wave_t& chunk,
                                   std::vector<TASCAR::wave_t>& output,
                                   receivermod_base_t::data_t* sd)
@@ -131,7 +131,7 @@ void rec_wfs_t::add_pointsource( const TASCAR::pos_t& prel,
   }
 }
 
-TASCAR::receivermod_base_t::data_t* rec_wfs_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t* rec_wfs_t::create_state_data(double srate,uint32_t ) const
 {
   return new data_t(spkpos.size(), srate, 2.0*spkpos.get_rmax(), c );
 }

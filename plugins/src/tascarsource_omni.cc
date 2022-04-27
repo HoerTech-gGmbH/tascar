@@ -24,8 +24,8 @@
 class omni_t : public TASCAR::sourcemod_base_t {
 public:
   omni_t(tsccfg::node_t xmlsrc);
-  sourcemod_base_t::data_t* create_state_data(double srate,
-                                              uint32_t fragsize) const
+  sourcemod_base_t::data_t* create_state_data(double ,
+                                              uint32_t ) const
   {
     return NULL;
   };

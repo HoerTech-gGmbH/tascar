@@ -68,7 +68,7 @@ door_t::data_t::data_t()
 {
 }
 
-TASCAR::sourcemod_base_t::data_t* door_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::sourcemod_base_t::data_t* door_t::create_state_data(double ,uint32_t ) const
 {
   return new data_t();
 }

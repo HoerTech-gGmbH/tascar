@@ -60,9 +60,6 @@ TEST(delayline_t, get_dist_sinc)
   delay.push(0.0f);
   delay.push(0.0f);
   delay.push(0.0f);
-  for(float d = 0.0f; d < 9.0f; d += 0.25f)
-    std::cout << "ASSERT_NEAR(" << delay.get_dist(d) << ",delay.get_dist(" << d
-              << ",1e-7);\n";
   ASSERT_NEAR(0.0f, delay.get_dist(0), 1e-7);
   ASSERT_NEAR(0.127324, delay.get_dist(0.5), 1e-6);
   ASSERT_NEAR(0.100035, delay.get_dist(0.75), 1e-6);

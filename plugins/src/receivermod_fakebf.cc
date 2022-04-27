@@ -84,7 +84,7 @@ ortf_t::ortf_t(tsccfg::node_t xmlsrc)
   dir_r.rot_z(-0.5*angle);
 }
 
-void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double , const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   TASCAR::pos_t prel_norm(prel.normal());

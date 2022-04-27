@@ -4,8 +4,9 @@ VERSION=0.224.0
 ARCH=$(shell uname -m)
 
 CXXFLAGS = -Wall -Wextra -Wdeprecated-declarations -std=c++17 -pthread	\
--ggdb -fno-finite-math-only -Wconversion
-# -Werror 
+-ggdb -fno-finite-math-only
+# -Wconversion
+# -Werror
 
 ifeq ($(OS),Windows_NT)
   DLLEXT=.dll
@@ -22,7 +23,10 @@ endif
 
 
 ifeq "$(ARCH)" "x86_64"
-CXXFLAGS += -msse -msse2 -mfpmath=sse -ffast-math
+  CXXFLAGS += -msse -msse2 -mfpmath=sse
+  ifneq "$(UNAME_S)" "Darwin"
+    CXXFLAGS += -ffast-math
+  endif
 endif
 
 CPPFLAGS = -std=c++17

@@ -24,8 +24,8 @@
 
 #include "errorhandling.h"
 #include "optim.h"
-#include <string.h>
 #include "tscconfig.h"
+#include <string.h>
 
 const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0f, 1.0f);
@@ -533,14 +533,14 @@ void TASCAR::multiband_pareq_t::optimpar2fltsettings(
   for(size_t k = 0; k < flt.size(); ++k) {
     float f =
         (atanf(par[3 * k + 1]) / TASCAR_PIf + 0.5f) * (fmax - fmin) + fmin;
-    float q = atanf(par[3 * k + 2]) / TASCAR_PIf + 0.5f;
-    flt[k].set_pareq(f, fs, par[3 * k + 2], q);
+    float g = par[3 * k + 2];
+    float q = atanf(par[3 * k + 3]) / TASCAR_PIf + 0.5f;
+    flt[k].set_pareq(f, fs, g, q);
     flt_f[k] = f;
-    flt_g[k] = par[3 * k + 2];
+    flt_g[k] = g;
     flt_q[k] = q;
     if(dump)
-      std::cout << "  " << f << " Hz: g=" << par[3 * k + 2] << " dB q=" << q
-                << std::endl;
+      std::cout << "  " << f << " Hz: g=" << g << " dB q=" << q << std::endl;
   }
 }
 
@@ -658,9 +658,9 @@ void TASCAR::multiband_pareq_t::dbresponse(std::vector<float>& og,
 std::string TASCAR::multiband_pareq_t::to_string() const
 {
   std::string retv;
-  retv += "\ng0=" + TASCAR::to_string(g0) + ";\nf=[" +
+  retv += "g0=" + TASCAR::to_string(g0) + ";\nf=[" +
           TASCAR::to_string(flt_f) + "];\ng=[" + TASCAR::to_string(flt_g) +
-          "];\nq=[" + TASCAR::to_string(flt_q) + ";\n";
+          "];\nq=[" + TASCAR::to_string(flt_q) + "];\n";
   return retv;
 }
 

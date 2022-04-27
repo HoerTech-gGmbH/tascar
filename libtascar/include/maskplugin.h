@@ -54,6 +54,7 @@ namespace TASCAR {
     virtual void get_diff_gain(float* gm) = 0;
     virtual void add_variables(TASCAR::osc_server_t*){};
     const std::string& get_modname() const { return modname; };
+    float drawradius = 0.0f;
 
   protected:
     std::string modname;

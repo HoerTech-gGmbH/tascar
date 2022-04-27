@@ -125,8 +125,8 @@ namespace HoS {
 
 namespace OSC {
 
-  int _sendphi(const char* path, const char* types, lo_arg** argv, int argc,
-               lo_message msg, void* user_data)
+  int _sendphi(const char* , const char* types, lo_arg** argv, int argc,
+               lo_message , void* user_data)
   {
     if((argc == 1) && (types[0] == 's')) {
       ((HoS::parameter_t*)user_data)->send_phi(&(argv[0]->s));
@@ -135,8 +135,8 @@ namespace OSC {
     return 1;
   }
 
-  int _locate(const char* path, const char* types, lo_arg** argv, int argc,
-              lo_message msg, void* user_data)
+  int _locate(const char* , const char* types, lo_arg** argv, int argc,
+              lo_message , void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->locate0(argv[0]->f);
@@ -145,8 +145,8 @@ namespace OSC {
     return 1;
   }
 
-  int _stopat(const char* path, const char* types, lo_arg** argv, int argc,
-              lo_message msg, void* user_data)
+  int _stopat(const char* , const char* types, lo_arg** argv, int argc,
+              lo_message , void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->set_stopat(DEG2RAD * (argv[0]->f));
@@ -155,8 +155,8 @@ namespace OSC {
     return 1;
   }
 
-  int _applyat(const char* path, const char* types, lo_arg** argv, int argc,
-               lo_message msg, void* user_data)
+  int _applyat(const char* , const char* types, lo_arg** argv, int argc,
+               lo_message , void* user_data)
   {
     if((argc == 2) && (types[0] == 'f') && (types[1] == 'f')) {
       ((HoS::parameter_t*)user_data)
@@ -166,8 +166,8 @@ namespace OSC {
     return 1;
   }
 
-  int _apply(const char* path, const char* types, lo_arg** argv, int argc,
-             lo_message msg, void* user_data)
+  int _apply(const char* , const char* types, lo_arg** argv, int argc,
+             lo_message , void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->apply(argv[0]->f);
@@ -176,8 +176,8 @@ namespace OSC {
     return 1;
   }
 
-  int _az(const char* path, const char* types, lo_arg** argv, int argc,
-          lo_message msg, void* user_data)
+  int _az(const char* , const char* types, lo_arg** argv, int argc,
+          lo_message , void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->az(argv[0]->f);
@@ -363,7 +363,7 @@ void epicycles_t::configure()
   f_update = f_sample / (double)n_fragment;
 }
 
-void epicycles_t::update(uint32_t frame, bool running)
+void epicycles_t::update(uint32_t , bool running)
 {
   if(b_home) {
     par_osc.phi0 = home;

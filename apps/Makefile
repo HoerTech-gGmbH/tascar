@@ -24,7 +24,8 @@ ifeq ($(UNAME_S),Linux)
 endif
 endif
 
-TEST_FILES = test_ngon test_sinc
+TEST_FILES =
+#test_ngon test_sinc
 
 BINFILES += $(TEST_FILES)
 

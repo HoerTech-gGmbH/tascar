@@ -42,6 +42,8 @@ function tascar_spk_getdistance( layoutfile, varargin )
   sHelp.z2el = 'convert z attribute into el?';
   sCfg.z0 = 0;
   sHelp.z0 = 'z offset in m';
+  sCfg.peak = 0.1;
+  sHelp.peak = 'peaklevel (linear) of sweeps';
   sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
   if isempty(sCfg)
     return;
@@ -69,7 +71,7 @@ function tascar_spk_getdistance( layoutfile, varargin )
     ir = tascar_ir_measure( 'output', connect, ...
 			    'input', sCfg.input, ...
 			    'len', len,...
-			    'gain',0.1,...
+			    'gain',sCfg.peak,...
 			    'nrep',2);
     ir = filter(B,A,ir);
     mIR(:,k) = ir;

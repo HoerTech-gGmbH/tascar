@@ -31,6 +31,9 @@ maskplugin_base_t::maskplugin_base_t(const maskplugin_cfg_t& cfg)
     : xml_element_t(cfg.xmlsrc), licensed_component_t(typeid(*this).name()),
       modname(cfg.modname)
 {
+  GET_ATTRIBUTE(
+      drawradius, "m",
+      "Draw mask plugin with this radius in TASCAR GUI, 0 for no drawing.");
 }
 
 maskplugin_base_t::~maskplugin_base_t() {}

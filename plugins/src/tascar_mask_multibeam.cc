@@ -18,6 +18,7 @@
  */
 
 #include "maskplugin.h"
+#include <mutex>
 
 using namespace TASCAR;
 
@@ -29,13 +30,10 @@ public:
   void add_variables(TASCAR::osc_server_t* srv);
 
 private:
-  void update_steer();
   void resize_val();
   uint32_t numbeams = 1u;
   float mingain = 0.0f;
   float maxgain = 1.0f;
-
-  std::vector<pos_t> vsteer;
 
 public:
   std::vector<float> gain;
@@ -71,8 +69,6 @@ multibeam_t::multibeam_t(const maskplugin_cfg_t& cfg) : maskplugin_base_t(cfg)
   GET_ATTRIBUTE(selectivity, "1/pi",
                 "Selectivity, 0 = omni, 1 = cardioid (6 dB threshold)");
   resize_val();
-  vsteer.resize(numbeams);
-  update_steer();
 }
 
 void multibeam_t::add_variables(TASCAR::osc_server_t* srv)
@@ -85,20 +81,15 @@ void multibeam_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float_db("/maxgain", &maxgain);
 }
 
-void multibeam_t::update_steer()
-{
-  for(size_t k = 0u; k < numbeams; ++k)
-    vsteer[k].set_sphere(1.0, DEG2RAD * az[k], DEG2RAD * el[k]);
-}
-
 float multibeam_t::get_gain(const pos_t& pos)
 {
-  update_steer();
   TASCAR::pos_t rp(pos.normal());
   float pgain = 0.0f;
   for(size_t k = 0; k < numbeams; ++k) {
+    TASCAR::pos_t psteer;
+    psteer.set_sphere(1.0, DEG2RAD * az[k], DEG2RAD * el[k]);
     float ang =
-        std::min(selectivity[k] * acosf(dot_prodf(rp, vsteer[k])), TASCAR_PIf);
+        std::min(selectivity[k] * acosf(dot_prodf(rp, psteer)), TASCAR_PIf);
     pgain += gain[k] * (0.5f + 0.5f * cosf(ang));
   }
   pgain = std::min(maxgain, mingain + (1.0f - mingain) * pgain);
@@ -107,21 +98,22 @@ float multibeam_t::get_gain(const pos_t& pos)
 
 void multibeam_t::get_diff_gain(float* gm)
 {
-  update_steer();
   memset(gm, 0, sizeof(float) * 16);
   float diag_gain = mingain;
   for(size_t k = 0; k < numbeams; ++k) {
+    TASCAR::pos_t psteer;
+    psteer.set_sphere(1.0, DEG2RAD * az[k], DEG2RAD * el[k]);
     float dgain = (1.0f - std::min(selectivity[k], 1.0f));
     diag_gain += gain[k] * dgain;
     // compensate for selectivity:
     float selgain = 1.0f - expf(-1.0f / (selectivity[k] * selectivity[k]));
     selgain *= (1.0f - dgain) * 0.5674f;
     float pgainw = gain[k] * selgain;
-    float pgainy = (float)vsteer[k].y * pgainw;
-    float pgainz = (float)vsteer[k].z * pgainw;
-    float pgainx = (float)vsteer[k].x * pgainw;
-    float gains[4] = {1.0f, (float)(vsteer[k].y), (float)(vsteer[k].z),
-                      (float)(vsteer[k].x)};
+    float pgainy = (float)psteer.y * pgainw;
+    float pgainz = (float)psteer.z * pgainw;
+    float pgainx = (float)psteer.x * pgainw;
+    float gains[4] = {1.0f, (float)(psteer.y), (float)(psteer.z),
+                      (float)(psteer.x)};
     size_t kgain = 0;
     for(size_t r = 0; r < 16; r += 4) {
       float gain = gains[kgain];

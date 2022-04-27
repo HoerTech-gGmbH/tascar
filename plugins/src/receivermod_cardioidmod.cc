@@ -57,7 +57,7 @@ cardioidmod_t::cardioidmod_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(fmin,"Hz","Cutoff frequency for 180 degrees sounds");
 }
 
-void cardioidmod_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& input, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void cardioidmod_t::add_pointsource(const TASCAR::pos_t& prel, double , const TASCAR::wave_t& input, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   TASCAR::pos_t prel_norm(prel.normal());
@@ -81,7 +81,7 @@ void cardioidmod_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std
   output[0] += chunk.w();
 }
 
-TASCAR::receivermod_base_t::data_t* cardioidmod_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t* cardioidmod_t::create_state_data(double ,uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

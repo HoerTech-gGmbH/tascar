@@ -75,7 +75,7 @@ ltcgen_t::~ltcgen_t()
   ltc_encoder_free( encoder );
 }
 
-int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut,uint32_t tp_frame, bool tp_rolling)
+int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>& , const std::vector<float*>& sOut,uint32_t tp_frame, bool tp_rolling)
 {
   float smult = pow(10, volume/20.0)/(90.0);
   if( tp_frame != lastframe + n){

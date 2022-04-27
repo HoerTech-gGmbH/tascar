@@ -42,8 +42,8 @@ private:
   double sampledorientation;
 };
 
-int motionpath_t::osc_go(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+int motionpath_t::osc_go(const char* , const char* types, lo_arg** argv,
+                         int argc, lo_message , void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 'f') && (types[1] == 'f'))
     ((motionpath_t*)user_data)->go(argv[0]->f, argv[1]->f);
@@ -113,7 +113,7 @@ motionpath_t::motionpath_t(const TASCAR::module_cfg_t& cfg)
 
 motionpath_t::~motionpath_t() {}
 
-void motionpath_t::update(uint32_t tp_frame, bool tp_rolling)
+void motionpath_t::update(uint32_t tp_frame, bool )
 {
   if(!active)
     return;

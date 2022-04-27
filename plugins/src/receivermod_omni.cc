@@ -25,24 +25,33 @@
 class omni_t : public TASCAR::receivermod_base_t {
 public:
   omni_t(tsccfg::node_t xmlsrc);
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
+  void add_pointsource(const TASCAR::pos_t& prel, double width,
+                       const TASCAR::wave_t& chunk,
+                       std::vector<TASCAR::wave_t>& output,
+                       receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                               std::vector<TASCAR::wave_t>& output,
+                               receivermod_base_t::data_t*);
   void configure() { n_channels = 1; };
-  receivermod_base_t::data_t* create_state_data(double srate,
-                                                uint32_t fragsize) const { return NULL;};
+  receivermod_base_t::data_t* create_state_data(double, uint32_t) const
+  {
+    return NULL;
+  };
 };
 
-omni_t::omni_t(tsccfg::node_t xmlsrc)
-  : TASCAR::receivermod_base_t(xmlsrc)
-{
-}
+omni_t::omni_t(tsccfg::node_t xmlsrc) : TASCAR::receivermod_base_t(xmlsrc) {}
 
-void omni_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void omni_t::add_pointsource(const TASCAR::pos_t&, double,
+                             const TASCAR::wave_t& chunk,
+                             std::vector<TASCAR::wave_t>& output,
+                             receivermod_base_t::data_t*)
 {
   output[0] += chunk;
 }
 
-void omni_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*)
+void omni_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                                     std::vector<TASCAR::wave_t>& output,
+                                     receivermod_base_t::data_t*)
 {
   output[0] += chunk.w();
 }

@@ -66,7 +66,7 @@ bool generic1storder_t::read_source(TASCAR::pos_t& prel, const std::vector<TASCA
   return false;
 }
 
-TASCAR::sourcemod_base_t::data_t* generic1storder_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::sourcemod_base_t::data_t* generic1storder_t::create_state_data(double ,uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }

@@ -91,7 +91,7 @@ pos2osc_t::~pos2osc_t()
   lo_address_free(target);
 }
 
-void pos2osc_t::update(uint32_t tp_frame, bool tp_rolling)
+void pos2osc_t::update(uint32_t , bool tp_rolling)
 {
   if(trigger && ((!triggered && (tp_rolling || (!transport))) || triggered)) {
     if(skipcnt)

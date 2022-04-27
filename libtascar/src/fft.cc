@@ -124,13 +124,30 @@ void TASCAR::get_bandlevels(const TASCAR::wave_t& w, float cfmin, float cfmax,
   TASCAR::fft_t fft(w.n);
   fft.execute(w);
   for(auto f : vF) {
+    float f1e = f * powf(2.0f, -0.5f / bpo);
+    float f2e = f * powf(2.0f, 0.5f / bpo);
     float f1 = f * powf(2.0f, -(0.5f + overlap) / bpo);
     float f2 = f * powf(2.0f, (0.5f + overlap) / bpo);
+    uint32_t idx1e = std::min((uint32_t)((float)w.n * f1e / fs), fft.s.n_);
+    uint32_t idx2e = std::min((uint32_t)((float)w.n * f2e / fs), fft.s.n_);
     uint32_t idx1 = std::min((uint32_t)((float)w.n * f1 / fs), fft.s.n_);
     uint32_t idx2 = std::min((uint32_t)((float)w.n * f2 / fs), fft.s.n_);
     float l = 0.0f;
-    for(uint32_t k = idx1; k < idx2; ++k) {
+    // lower overlap area from f1 to f1e:
+    for(uint32_t k = idx1; k < idx1e; ++k) {
+      float w = (0.5f - 0.5f * cosf((float)(k - idx1) / (float)(idx1e - idx1) *
+                                    TASCAR_PIf));
+      l += std::abs(fft.s[k]) * std::abs(fft.s[k]) * w * w;
+    }
+    // central area from f1e to f2e:
+    for(uint32_t k = idx1e; k < idx2e; ++k) {
       l += std::abs(fft.s[k]) * std::abs(fft.s[k]);
+    }
+    // upper overlap area from f2e to f2:
+    for(uint32_t k = idx2e; k < idx2; ++k) {
+      float w = (0.5f + 0.5f * cosf((float)(k - idx2e) / (float)(idx2 - idx2e) *
+                                    TASCAR_PIf));
+      l += std::abs(fft.s[k]) * std::abs(fft.s[k]) * w * w;
     }
     // scale to Pa^2, factor 2 due to positive frequencies only:
     l *= 5e4f * 5e4f * 2.0f;

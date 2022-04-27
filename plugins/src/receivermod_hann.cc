@@ -27,7 +27,7 @@ class rec_hann_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    data_t(uint32_t chunksize,uint32_t channels);
+    data_t(uint32_t chunksize, uint32_t channels);
     virtual ~data_t();
     // ambisonic weights:
     float* wp;
@@ -43,14 +43,19 @@ public:
     double dt;
   };
   rec_hann_t(tsccfg::node_t xmlsrc);
-  virtual ~rec_hann_t() {};
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
+  virtual ~rec_hann_t(){};
+  void add_pointsource(const TASCAR::pos_t& prel, double width,
+                       const TASCAR::wave_t& chunk,
+                       std::vector<TASCAR::wave_t>& output,
+                       receivermod_base_t::data_t*);
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
+
 private:
   double wexp;
 };
 
-rec_hann_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
+rec_hann_t::data_t::data_t(uint32_t chunksize, uint32_t channels)
 {
   wp = new float[channels];
   dwp = new float[channels];
@@ -62,59 +67,64 @@ rec_hann_t::data_t::data_t(uint32_t chunksize,uint32_t channels)
   dy = new float[channels];
   z = new float[channels];
   dz = new float[channels];
-  for(uint32_t k=0;k<channels;k++)
-    wp[k] = dwp[k] = w[k] = dw[k] = x[k] = dx[k] = y[k] = dy[k] = z[k] = dz[k] = 0;
-  dt = 1.0/std::max(1.0,(double)chunksize);
+  for(uint32_t k = 0; k < channels; k++)
+    wp[k] = dwp[k] = w[k] = dw[k] = x[k] = dx[k] = y[k] = dy[k] = z[k] = dz[k] =
+        0;
+  dt = 1.0 / std::max(1.0, (double)chunksize);
 }
 
 rec_hann_t::data_t::~data_t()
 {
-  delete [] wp;
-  delete [] dwp;
-  delete [] w;
-  delete [] dw;
-  delete [] x;
-  delete [] dx;
-  delete [] y;
-  delete [] dy;
-  delete [] z;
-  delete [] dz;
+  delete[] wp;
+  delete[] dwp;
+  delete[] w;
+  delete[] dw;
+  delete[] x;
+  delete[] dx;
+  delete[] y;
+  delete[] dy;
+  delete[] z;
+  delete[] dz;
 }
 
 rec_hann_t::rec_hann_t(tsccfg::node_t xmlsrc)
-  : TASCAR::receivermod_base_speaker_t(xmlsrc),
-    //spkpos(xmlsrc),
-    wexp(0.5)
+    : TASCAR::receivermod_base_speaker_t(xmlsrc),
+      // spkpos(xmlsrc),
+      wexp(0.5)
 {
-  GET_ATTRIBUTE(wexp,"","window exponent $\\gamma$");
+  GET_ATTRIBUTE(wexp, "", "window exponent $\\gamma$");
   typeidattr.push_back("wexp");
 }
 
-void rec_hann_t::add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t* sd)
+void rec_hann_t::add_pointsource(const TASCAR::pos_t& prel, double,
+                                 const TASCAR::wave_t& chunk,
+                                 std::vector<TASCAR::wave_t>& output,
+                                 receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
   double az_src(prel.azim());
   uint32_t channels(output.size());
-  for(unsigned int k=0;k<channels;k++){
-    double az(0.5*channels*fabs(spkpos[k].get_rel_azim(az_src)));
+  for(unsigned int k = 0; k < channels; k++) {
+    double az(0.5 * channels * fabs(spkpos[k].get_rel_azim(az_src)));
     double w = 0;
-    if( az<TASCAR_PI ){
-      w = 0.5+0.5*cos(az);
-      if( wexp != 1.0 )
-        w = pow(w,wexp);
+    if(az < TASCAR_PI) {
+      w = 0.5 + 0.5 * cos(az);
+      if(wexp != 1.0)
+        w = pow(w, wexp);
     }
-    d->dwp[k] = (w - d->wp[k])*d->dt;
+    d->dwp[k] = (w - d->wp[k]) * d->dt;
   }
-  for( unsigned int i=0;i<chunk.size();i++){
-    for( unsigned int k=0;k<output.size();k++){
+  for(unsigned int i = 0; i < chunk.size(); i++) {
+    for(unsigned int k = 0; k < output.size(); k++) {
       output[k][i] += (d->wp[k] += d->dwp[k]) * chunk[i];
     }
   }
 }
 
-TASCAR::receivermod_base_t::data_t* rec_hann_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t*
+rec_hann_t::create_state_data(double, uint32_t fragsize) const
 {
-  return new data_t(fragsize,spkpos.size());
+  return new data_t(fragsize, spkpos.size());
 }
 
 REGISTER_RECEIVERMOD(rec_hann_t);

@@ -37,45 +37,48 @@ public:
     float* dwp;
   };
   rec_vbap_t(tsccfg::node_t xmlsrc);
-  virtual ~rec_vbap_t() {};
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
+  virtual ~rec_vbap_t(){};
+  void add_pointsource(const TASCAR::pos_t& prel, double width,
+                       const TASCAR::wave_t& chunk,
+                       std::vector<TASCAR::wave_t>& output,
+                       receivermod_base_t::data_t*);
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
+
 private:
   TASCAR::vbap3d_t vbap;
 };
 
-rec_vbap_t::data_t::data_t( uint32_t channels )
+rec_vbap_t::data_t::data_t(uint32_t channels)
 {
   wp = new float[channels];
   dwp = new float[channels];
-  for(uint32_t k=0;k<channels;++k)
+  for(uint32_t k = 0; k < channels; ++k)
     wp[k] = dwp[k] = 0;
 }
 
 rec_vbap_t::data_t::~data_t()
 {
-  delete [] wp;
-  delete [] dwp;
+  delete[] wp;
+  delete[] dwp;
 }
 
 rec_vbap_t::rec_vbap_t(tsccfg::node_t xmlsrc)
-  : TASCAR::receivermod_base_speaker_t(xmlsrc),
-  vbap(spkpos.get_positions())
+    : TASCAR::receivermod_base_speaker_t(xmlsrc), vbap(spkpos.get_positions())
 {
 }
 
 /*
   See receivermod_base_t::add_pointsource() in file receivermod.h for details.
 */
-void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
-                                  double width,
-                                  const TASCAR::wave_t& chunk,
-                                  std::vector<TASCAR::wave_t>& output,
-                                  receivermod_base_t::data_t* sd)
+void rec_vbap_t::add_pointsource(const TASCAR::pos_t& prel, double,
+                                 const TASCAR::wave_t& chunk,
+                                 std::vector<TASCAR::wave_t>& output,
+                                 receivermod_base_t::data_t* sd)
 {
   // N is the number of loudspeakers:
   uint32_t N(vbap.numchannels);
-  if( N > output.size() ){
+  if(N > output.size()) {
     DEBUG(N);
     DEBUG(output.size());
     throw TASCAR::ErrMsg("Invalid number of channels");
@@ -83,17 +86,17 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
 
   // d is the internal state variable for this specific
   // receiver-source-pair:
-  data_t* d((data_t*)sd);//it creates the variable d
+  data_t* d((data_t*)sd); // it creates the variable d
 
-  vbap.encode( prel.normal(), d->dwp );
+  vbap.encode(prel.normal(), d->dwp);
 
-  for(unsigned int k=0;k<N;k++)
-    d->dwp[k] = (d->dwp[k] - d->wp[k])*t_inc;
+  for(unsigned int k = 0; k < N; k++)
+    d->dwp[k] = (d->dwp[k] - d->wp[k]) * t_inc;
   // i is time (in samples):
-  for( unsigned int i=0;i<chunk.size();i++){
+  for(unsigned int i = 0; i < chunk.size(); i++) {
     // k is output channel number:
-    for( unsigned int k=0;k<N;k++){
-      //output in each louspeaker k at sample i:
+    for(unsigned int k = 0; k < N; k++) {
+      // output in each louspeaker k at sample i:
       output[k][i] += (d->wp[k] += d->dwp[k]) * chunk[i];
       // This += is because we sum up all the sources for which we
       // call this func
@@ -101,7 +104,8 @@ void rec_vbap_t::add_pointsource( const TASCAR::pos_t& prel,
   }
 }
 
-TASCAR::receivermod_base_t::data_t* rec_vbap_t::create_state_data(double srate,uint32_t fragsize) const
+TASCAR::receivermod_base_t::data_t*
+rec_vbap_t::create_state_data(double, uint32_t) const
 {
   return new data_t(spkpos.size());
 }

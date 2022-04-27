@@ -61,6 +61,10 @@
       </article>
       
       <h2>Installation</h2><br/>
+      <p>In Ubuntu 22.04 (jammy):</p>
+      <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo tee /etc/apt/trusted.gpg.d/openmha-packaging.asc
+sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de jammy universe'
+      </code></pre>
       <p>In Ubuntu 20.04 (focal):</p>
       <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
 sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ focal universe'
@@ -72,6 +76,10 @@ sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ bionic univers
       <p>In Ubuntu 16.04 (xenial):</p>
       <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
 sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ xenial universe'
+      </code></pre>
+      <p>In Raspbian Bullseye:</p>
+      <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo tee /etc/apt/trusted.gpg.d/openmha-packaging.asc
+echo "deb [arch=armhf] http://apt.hoertech.de bullseye universe" | sudo tee /etc/apt/sources.list.d/apt-hoertech.list
       </code></pre>
       <p>In Raspbian Buster:</p>
       <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo apt-key add
