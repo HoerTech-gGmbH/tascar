@@ -351,6 +351,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     TASCAR::multiband_pareq_t eq;
     std::cout << "numflt = " << numflt << ";\n";
     eq.optim_response((size_t)numflt, vF, vLmean, (float)jackrec.get_srate());
+    std::cout << eq.to_string();
     spk.eq = eq;
     spk.eqfreq = vF;
     spk.eqgain = vLmean;
