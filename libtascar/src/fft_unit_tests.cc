@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include "fft.h"
+#include "tscconfig.h"
 
 TEST(fft_t, fftifft)
 {
@@ -179,6 +180,36 @@ TEST(get_bandlevels, bandlevels2)
     ASSERT_NEAR(vL[0], -25.0f, 12.0f);
     ASSERT_NEAR(vL[1], 91.0f, 0.1f);
     ASSERT_NEAR(vL[2], -20.0f, 12.0f);
+  }
+}
+
+TEST(get_bandlevels, bandlevelsoverlap)
+{
+  float fs = 8000.0f;
+  float f0 = 200.0f;
+  TASCAR::wave_t w((uint32_t)fs);
+  for(size_t k = 0; k < w.n; ++k)
+    w.d[k] = sinf((float)k / fs * TASCAR_2PIf * f0);
+  ASSERT_NEAR(w.spldb(), 91.0f, 0.1f);
+  std::vector<float> vF;
+  std::vector<float> vL;
+  // calculate band levels with 6 bands per octave and 4 bands overlap:
+  TASCAR::get_bandlevels(w, 100.0f, 400.0f, fs, 6.0f, 4.0f, vF, vL);
+  ASSERT_EQ(vL.size(), 13u);
+  if(vL.size() == 13u) {
+    ASSERT_NEAR(vL[0], -20.0f, 12.0f);
+    ASSERT_NEAR(vL[1], -20.0f, 12.0f);
+    ASSERT_NEAR(vL[2], 64.6f, 2.0f);
+    ASSERT_NEAR(vL[3], 82.5f, 1.0f);
+    ASSERT_NEAR(vL[4], 88.6f, 0.5f);
+    ASSERT_NEAR(vL[5], 90.7f, 0.2f);
+    ASSERT_NEAR(vL[6], 91.0f, 0.2f);
+    ASSERT_NEAR(vL[7], 90.5f, 0.2f);
+    ASSERT_NEAR(vL[8], 86.9f, 0.5f);
+    ASSERT_NEAR(vL[9], 78.6f, 1.0f);
+    ASSERT_NEAR(vL[10], 60.1f, 2.0f);
+    ASSERT_NEAR(vL[11], -20.0f, 12.0f);
+    ASSERT_NEAR(vL[12], -20.0f, 12.0f);
   }
 }
 
