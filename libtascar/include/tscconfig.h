@@ -416,6 +416,7 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
 #define SET_ATTRIBUTE_BOOL(x) set_attribute_bool(#x, x)
 #define GET_ATTRIBUTE_BITS(x, i) get_attribute_bits(#x, x, i)
 #define GET_ATTRIBUTE_BITS_(x) get_attribute_bits(#x, x, "undocumented")
+#define SET_ATTRIBUTE(x) set_attribute(#x, x)
 
 #endif
 

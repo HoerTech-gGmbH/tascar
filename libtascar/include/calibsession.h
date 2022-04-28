@@ -12,9 +12,10 @@ namespace TASCAR {
   class calibparam_t {
   public:
     calibparam_t(bool issub = false);
-    void factory_reset(bool issub);
-    void read_defaults(bool issub);
-    void read_xml(const tsccfg::node_t& layoutnode, bool issub);
+    void factory_reset();
+    void read_defaults();
+    void read_xml(const tsccfg::node_t& layoutnode);
+    void save_xml(const tsccfg::node_t& layoutnode);
     float fmin = 62.5f;          ///< Lower limit of frequency in Hz.
     float fmax = 4000.0f;        ///< Upper limit of frequency in Hz.
     float duration = 1.0f;       ///< Stimulus duration in s.
@@ -22,6 +23,8 @@ namespace TASCAR {
                                  ///< level analysis.
     float bandoverlap =
         2.0f; ///< Overlap of analysis filterbank in filter bands.
+  private:
+    bool issub = false;
   };
 
   class calibsession_t : public TASCAR::session_t {
@@ -75,9 +78,9 @@ namespace TASCAR {
     size_t get_num_channels() const { return get_num_bb() + get_num_sub(); };
     double get_measurement_duration() const
     {
-      return duration * (double)get_num_bb() *
+      return par_speaker.duration * (double)get_num_bb() *
                  (1.0 + (double)(max_fcomp_bb > 0u)) +
-             subduration * (double)get_num_sub() *
+             par_sub.duration * (double)get_num_sub() *
                  (1.0 + (double)(max_fcomp_sub > 0u)) +
              0.2f * (float)max_fcomp_bb * (double)get_num_bb() +
              0.2f * (float)max_fcomp_sub * (double)get_num_sub();
@@ -101,10 +104,10 @@ namespace TASCAR {
     TASCAR::receivermod_base_speaker_t* spk_spec = NULL;
     std::vector<float> levels;
     std::vector<float> sublevels;
-    float bpo;
-    float subbpo;
-    float bandoverlap;
-    float bandoverlapsub;
+    //float bpo;
+    //float subbpo;
+    //float bandoverlap;
+    //float bandoverlapsub;
 
   public:
     std::vector<float> levelsfrg; // frequency-dependent level range (max-min)
@@ -112,15 +115,17 @@ namespace TASCAR {
         sublevelsfrg; // frequency-dependent level range (max-min)
   private:
     std::vector<std::string> refport_; ///< list of measurement microphone ports
-    double duration;
-    double subduration;
+    calibparam_t par_speaker;
+    calibparam_t par_sub;
+    //double duration;
+    //double subduration;
     float lmin;
     float lmax;
     float lmean;
-    float fmin_;
-    float fmax_;
-    float subfmin_;
-    float subfmax_;
+    //float fmin_;
+    //float fmax_;
+    //float subfmin_;
+    //float subfmax_;
     std::string calibfor;
     jackrec2wave_t jackrec;
     std::vector<TASCAR::wave_t> bbrecbuf;

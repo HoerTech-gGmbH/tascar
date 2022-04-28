@@ -56,12 +56,12 @@ std::vector<std::string> string_token(std::string s,
   return rv;
 }
 
-calibparam_t::calibparam_t(bool issub)
+calibparam_t::calibparam_t(bool issub_) : issub(issub_)
 {
-  factory_reset(issub);
+  factory_reset();
 }
 
-void calibparam_t::factory_reset(bool issub)
+void calibparam_t::factory_reset()
 {
   if(issub) {
     fmin = 31.25f;
@@ -80,9 +80,9 @@ void calibparam_t::factory_reset(bool issub)
 
 #define READ_DEF(x) x = (float)TASCAR::config(path + "." #x, x)
 
-void calibparam_t::read_defaults(bool issub)
+void calibparam_t::read_defaults()
 {
-  factory_reset(issub);
+  factory_reset();
   std::string path = "tascar.spkcalib.speaker";
   if(issub)
     path = "tascar.spkcalib.sub";
@@ -93,7 +93,7 @@ void calibparam_t::read_defaults(bool issub)
   READ_DEF(bandoverlap);
 }
 
-void calibparam_t::read_xml(const tsccfg::node_t& layoutnode, bool issub)
+void calibparam_t::read_xml(const tsccfg::node_t& layoutnode)
 {
   TASCAR::xml_element_t xml(layoutnode);
   tsccfg::node_t spkcalibnode;
@@ -112,26 +112,37 @@ void calibparam_t::read_xml(const tsccfg::node_t& layoutnode, bool issub)
       "Overlap in frequency bands in filterbank for level equalization.");
 }
 
+void calibparam_t::save_xml(const tsccfg::node_t& layoutnode)
+{
+  TASCAR::xml_element_t xml(layoutnode);
+  tsccfg::node_t spkcalibnode;
+  if(issub)
+    spkcalibnode = xml.find_or_add_child("subcalibconfig");
+  else
+    spkcalibnode = xml.find_or_add_child("speakercalibconfig");
+  TASCAR::xml_element_t e(spkcalibnode);
+  e.SET_ATTRIBUTE(fmin);
+  e.SET_ATTRIBUTE(fmax);
+  e.SET_ATTRIBUTE(duration);
+  e.SET_ATTRIBUTE(bandsperoctave);
+  e.SET_ATTRIBUTE(bandoverlap);
+}
+
 calibsession_t::calibsession_t(const std::string& fname, double reflevel,
-                               const std::vector<std::string>& refport,
-                               double duration_, double fmin, double fmax,
-                               double subduration_, double subfmin,
-                               double subfmax, float bpo_, float subbpo_,
-                               float bandoverlap_, float bandoverlapsub_)
+                               const std::vector<std::string>& refport, double,
+                               double, double, double, double, double, float,
+                               float, float, float)
     : session_t("<?xml version=\"1.0\"?><session srv_port=\"none\"/>",
                 LOAD_STRING, ""),
       gainmodified(false), levelsrecorded(false), calibrated(false),
       calibrated_diff(false), startlevel(0), startdiffgain(0), delta(0),
-      delta_diff(0), spkname(fname), spk_file(NULL), bpo(bpo_), subbpo(subbpo_),
-      bandoverlap(bandoverlap_), bandoverlapsub(bandoverlapsub_),
-      refport_(refport), duration(duration_), subduration(subduration_),
-      lmin(0), lmax(0), lmean(0), fmin_((float)fmin), fmax_((float)fmax),
-      subfmin_((float)subfmin), subfmax_((float)subfmax),
-      calibfor(get_calibfor(fname)), jackrec(refport_.size() + 1, "spkcalibrec")
+      delta_diff(0), spkname(fname), spk_file(NULL), refport_(refport), lmin(0),
+      lmax(0), lmean(0), calibfor(get_calibfor(fname)),
+      jackrec(refport_.size() + 1, "spkcalibrec")
 {
   for(size_t ich = 0; ich < refport_.size() + 1; ++ich) {
-    bbrecbuf.push_back((uint32_t)(jackrec.get_srate() * duration));
-    subrecbuf.push_back((uint32_t)(jackrec.get_srate() * subduration));
+    bbrecbuf.push_back((uint32_t)(jackrec.get_srate() * par_speaker.duration));
+    subrecbuf.push_back((uint32_t)(jackrec.get_srate() * par_sub.duration));
   }
   if(calibfor.empty())
     calibfor = "type:nsp";
@@ -149,8 +160,8 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   xml_element_t e_pink(e_plugs.add_child("pink"));
   e_pink.set_attribute("level", TASCAR::to_string(reflevel));
   e_pink.set_attribute("period", TASCAR::to_string(duration));
-  e_pink.set_attribute("fmin", TASCAR::to_string(fmin));
-  e_pink.set_attribute("fmax", TASCAR::to_string(fmax));
+  e_pink.set_attribute("fmin", TASCAR::to_string(par_speaker.fmin));
+  e_pink.set_attribute("fmax", TASCAR::to_string(par_speaker.fmax));
   // add a point source for subwoofer stimulus, muted for now:
   xml_element_t e_subsrc(e_scene.add_child("source"));
   e_subsrc.set_attribute("name", "srcsub");
@@ -160,9 +171,9 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   // add pink noise generator:
   xml_element_t e_subpink(e_subplugs.add_child("pink"));
   e_subpink.set_attribute("level", TASCAR::to_string(reflevel));
-  e_subpink.set_attribute("period", TASCAR::to_string(subduration));
-  e_subpink.set_attribute("fmin", TASCAR::to_string(subfmin));
-  e_subpink.set_attribute("fmax", TASCAR::to_string(subfmax));
+  e_subpink.set_attribute("period", TASCAR::to_string(par_sub.duration));
+  e_subpink.set_attribute("fmin", TASCAR::to_string(par_sub.fmin));
+  e_subpink.set_attribute("fmax", TASCAR::to_string(par_sub.fmax));
   // receiver 1 is always nsp, for speaker level differences:
   xml_element_t e_rcvr(e_scene.add_child("receiver"));
   e_rcvr.set_attribute("type", "nsp");
@@ -191,9 +202,9 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   xml_element_t e_plugs_diff(e_diff.add_child("plugins"));
   xml_element_t e_pink_diff(e_plugs_diff.add_child("pink"));
   e_pink_diff.set_attribute("level", TASCAR::to_string(reflevel));
-  e_pink_diff.set_attribute("period", TASCAR::to_string(duration));
-  e_pink_diff.set_attribute("fmin", TASCAR::to_string(fmin));
-  e_pink_diff.set_attribute("fmax", TASCAR::to_string(fmax));
+  e_pink_diff.set_attribute("period", TASCAR::to_string(par_speaker.duration));
+  e_pink_diff.set_attribute("fmin", TASCAR::to_string(par_speaker.fmin));
+  e_pink_diff.set_attribute("fmax", TASCAR::to_string(par_speaker.fmax));
   // extra routes:
   xml_element_t e_mods(root.add_child("modules"));
   xml_element_t e_route_pink(e_mods.add_child("route"));
@@ -202,18 +213,19 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   xml_element_t e_route_pink_plugs(e_route_pink.add_child("plugins"));
   xml_element_t e_route_pink_pink(e_route_pink_plugs.add_child("pink"));
   e_route_pink_pink.set_attribute("level", "50");
-  e_route_pink_pink.set_attribute("period", TASCAR::to_string(duration));
-  e_route_pink_pink.set_attribute("fmin", TASCAR::to_string(fmin));
-  e_route_pink_pink.set_attribute("fmax", TASCAR::to_string(fmax));
+  e_route_pink_pink.set_attribute("period",
+                                  TASCAR::to_string(par_speaker.duration));
+  e_route_pink_pink.set_attribute("fmin", TASCAR::to_string(par_speaker.fmin));
+  e_route_pink_pink.set_attribute("fmax", TASCAR::to_string(par_speaker.fmax));
   xml_element_t e_route_sub(e_mods.add_child("route"));
   e_route_sub.set_attribute("name", "sub");
   e_route_sub.set_attribute("channels", "1");
   xml_element_t e_route_sub_plugs(e_route_sub.add_child("plugins"));
   xml_element_t e_route_sub_pink(e_route_sub_plugs.add_child("pink"));
   e_route_sub_pink.set_attribute("level", "50");
-  e_route_sub_pink.set_attribute("period", TASCAR::to_string(subduration));
-  e_route_sub_pink.set_attribute("fmin", TASCAR::to_string(subfmin));
-  e_route_sub_pink.set_attribute("fmax", TASCAR::to_string(subfmax));
+  e_route_sub_pink.set_attribute("period", TASCAR::to_string(par_sub.duration));
+  e_route_sub_pink.set_attribute("fmin", TASCAR::to_string(par_sub.fmin));
+  e_route_sub_pink.set_attribute("fmax", TASCAR::to_string(par_sub.fmax));
   // end of scene creation.
   // doc->write_to_file_formatted("temp.cfg");
   add_scene(e_scene.e);
@@ -278,10 +290,9 @@ void calibsession_t::reset_levels()
 void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                  double prewait, jackrec2wave_t& jackrec,
                  const std::vector<TASCAR::wave_t>& recbuf,
-                 const std::vector<std::string>& ports, float duration,
-                 levelmeter::weight_t weight, float fmin, float fmax,
-                 std::vector<float>& levels, std::vector<float>& levelrange,
-                 float bpo, float bandoverlap)
+                 const std::vector<std::string>& ports,
+                 levelmeter::weight_t weight, const calibparam_t& calibpar,
+                 std::vector<float>& levels, std::vector<float>& levelrange)
 {
   levels.clear();
   levelrange.clear();
@@ -295,8 +306,8 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     // record measurement signal:
     jackrec.rec(recbuf, ports);
     //
-    TASCAR::levelmeter_t levelmeter((float)jackrec.get_srate(), duration,
-                                    weight);
+    TASCAR::levelmeter_t levelmeter((float)jackrec.get_srate(),
+                                    calibpar.duration, weight);
     // calc average across input channels:
     float lev_sqr = 0.0f;
     std::vector<float> vLmean;
@@ -305,8 +316,9 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       auto& wav = recbuf[ch];
       levelmeter.update(wav);
       lev_sqr += levelmeter.ms();
-      TASCAR::get_bandlevels(wav, fmin, fmax, (float)jackrec.get_srate(), bpo,
-                             bandoverlap, vF, vL);
+      TASCAR::get_bandlevels(
+          wav, calibpar.fmin, calibpar.fmax, (float)jackrec.get_srate(),
+          calibpar.bandsperoctave, calibpar.bandoverlap, vF, vL);
       for(auto& l : vL)
         l = powf(10.0f, 0.1f * l);
       if(vLmean.empty())
@@ -327,9 +339,9 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     std::cout << "set(gca,'XScale','log','XLim',[min(vF),max(vF)]);legend({'"
                  "post','pre'});\n";
     levelmeter.update(recbuf.back());
-    TASCAR::get_bandlevels(recbuf.back(), fmin, fmax,
-                           (float)jackrec.get_srate(), bpo, bandoverlap, vF,
-                           vLref);
+    TASCAR::get_bandlevels(recbuf.back(), calibpar.fmin, calibpar.fmax,
+                           (float)jackrec.get_srate(), calibpar.bandsperoctave,
+                           calibpar.bandoverlap, vF, vLref);
     lev_sqr /= (float)recbuf.size();
     lev_sqr = 10.0f * log10f(lev_sqr);
     levels.push_back(lev_sqr);
@@ -348,10 +360,10 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
 uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                     double prewait, jackrec2wave_t& jackrec,
                     const std::vector<TASCAR::wave_t>& recbuf,
-                    const std::vector<std::string>& ports, float fmin,
-                    float fmax, uint32_t eqstages, std::vector<float>& vF,
-                    std::vector<std::vector<float>>& vGain, float bpo,
-                    float bandoverlap)
+                    const std::vector<std::string>& ports,
+                    const calibparam_t& calibpar, uint32_t eqstages,
+                    std::vector<float>& vF,
+                    std::vector<std::vector<float>>& vGain)
 {
   if(eqstages == 0u)
     return 0u;
@@ -373,8 +385,9 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     std::vector<float> vLref;
     for(size_t ch = 0u; ch < ports.size() - 1u; ++ch) {
       auto& wav = recbuf[ch];
-      TASCAR::get_bandlevels(wav, fmin, fmax, (float)jackrec.get_srate(), bpo,
-                             bandoverlap, vF, vL);
+      TASCAR::get_bandlevels(
+          wav, calibpar.fmin, calibpar.fmax, (float)jackrec.get_srate(),
+          calibpar.bandsperoctave, calibpar.bandoverlap, vF, vL);
       for(auto& l : vL)
         l = powf(10.0f, 0.1f * l);
       if(vLmean.empty())
@@ -390,9 +403,9 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     }
     std::cout << "\n\nvF = [" << TASCAR::to_string(vF) << "];\n";
     std::cout << "vLmeas1 = [" << TASCAR::to_string(vLmean) << "];\n";
-    TASCAR::get_bandlevels(recbuf.back(), fmin, fmax,
-                           (float)jackrec.get_srate(), bpo, bandoverlap, vF,
-                           vLref);
+    TASCAR::get_bandlevels(recbuf.back(), calibpar.fmin, calibpar.fmax,
+                           (float)jackrec.get_srate(), calibpar.bandsperoctave,
+                           calibpar.bandoverlap, vF, vLref);
     std::cout << "vLref = [" << TASCAR::to_string(vLref) << "];\n";
     for(size_t ch = 0; ch < std::min(vLmean.size(), vLref.size()); ++ch)
       vLmean[ch] = vLref[ch] - vLmean[ch];
@@ -430,15 +443,13 @@ void calibsession_t::get_levels(double prewait)
   // unmute the NSP receiver:
   rec_spec->set_mute(true);
   rec_nsp->set_mute(false);
-  fcomp_bb =
-      get_fresp_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), prewait,
-                 jackrec, bbrecbuf, allports, (float)fmin_, (float)fmax_,
-                 max_fcomp_bb, vF, vGains, bpo, bandoverlap);
+  fcomp_bb = get_fresp_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]),
+                        prewait, jackrec, bbrecbuf, allports, par_speaker,
+                        max_fcomp_bb, vF, vGains);
   // measure levels of all broadband speakers:
   get_levels_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), prewait,
-              jackrec, bbrecbuf, allports, (float)duration,
-              TASCAR::levelmeter::C, (float)fmin_, (float)fmax_, levels,
-              levelsfrg, bpo, bandoverlap);
+              jackrec, bbrecbuf, allports, TASCAR::levelmeter::C, par_speaker,
+              levels, levelsfrg);
   //
   // subwoofer:
   //
@@ -449,12 +460,10 @@ void calibsession_t::get_levels(double prewait)
     scenes.back()->source_objects[1]->set_mute(false);
     fcomp_sub = get_fresp_(
         spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]), prewait,
-        jackrec, subrecbuf, allports, (float)subfmin_, (float)subfmax_,
-        max_fcomp_sub, vFsub, vGainsSub, subbpo, bandoverlapsub);
+        jackrec, subrecbuf, allports, par_sub, max_fcomp_sub, vFsub, vGainsSub);
     get_levels_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
-                prewait, jackrec, subrecbuf, allports, (float)subduration,
-                TASCAR::levelmeter::Z, (float)subfmin_, (float)subfmax_,
-                sublevels, sublevelsfrg, subbpo, bandoverlapsub);
+                prewait, jackrec, subrecbuf, allports, TASCAR::levelmeter::Z,
+                par_sub, sublevels, sublevelsfrg);
   }
   // mute source and reset position:
   for(auto src : scenes.back()->source_objects) {
