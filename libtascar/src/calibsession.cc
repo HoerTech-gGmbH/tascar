@@ -244,10 +244,10 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   if(scenes[0]->receivermod_objects.size() != 3)
     throw TASCAR::ErrMsg("Programming error: not exactly three receivers.");
   scenes.back()->source_objects[0]->dlocation = pos_t(1, 0, 0);
-  for(const auto& spk : *spk_file)
-    max_fcomp_bb = std::max(max_fcomp_bb, spk.eqstages);
-  for(const auto& spk : spk_file->subs)
-    max_fcomp_sub = std::max(max_fcomp_sub, spk.eqstages);
+  // for(const auto& spk : *spk_file)
+  //  max_fcomp_bb = std::max(max_fcomp_bb, spk.eqstages);
+  // for(const auto& spk : spk_file->subs)
+  //  max_fcomp_sub = std::max(max_fcomp_sub, spk.eqstages);
   rec_nsp = scenes.back()->receivermod_objects[0];
   spk_nsp = dynamic_cast<TASCAR::receivermod_base_speaker_t*>(rec_nsp->libdata);
   if(!spk_nsp)
@@ -361,11 +361,10 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                     double prewait, jackrec2wave_t& jackrec,
                     const std::vector<TASCAR::wave_t>& recbuf,
                     const std::vector<std::string>& ports,
-                    const calibparam_t& calibpar, uint32_t eqstages,
-                    std::vector<float>& vF,
+                    const calibparam_t& calibpar, std::vector<float>& vF,
                     std::vector<std::vector<float>>& vGain)
 {
-  if(eqstages == 0u)
+  if(calibpar.max_eqstages == 0u)
     return 0u;
   vF.clear();
   vGain.clear();
@@ -416,7 +415,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       l -= vl_max;
     vGain.push_back(vLmean);
     if(numflt == 0)
-      numflt = std::min(((uint32_t)vF.size() - 1u) / 3u, eqstages);
+      numflt = std::min(((uint32_t)vF.size() - 1u) / 3u, calibpar.max_eqstages);
     TASCAR::multiband_pareq_t eq;
     std::cout << "numflt = " << numflt << ";\n";
     eq.optim_response((size_t)numflt, vF, vLmean, (float)jackrec.get_srate());
@@ -443,9 +442,9 @@ void calibsession_t::get_levels(double prewait)
   // unmute the NSP receiver:
   rec_spec->set_mute(true);
   rec_nsp->set_mute(false);
-  fcomp_bb = get_fresp_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]),
-                        prewait, jackrec, bbrecbuf, allports, par_speaker,
-                        max_fcomp_bb, vF, vGains);
+  fcomp_bb =
+      get_fresp_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), prewait,
+                 jackrec, bbrecbuf, allports, par_speaker, vF, vGains);
   // measure levels of all broadband speakers:
   get_levels_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), prewait,
               jackrec, bbrecbuf, allports, TASCAR::levelmeter::C, par_speaker,
@@ -460,7 +459,7 @@ void calibsession_t::get_levels(double prewait)
     scenes.back()->source_objects[1]->set_mute(false);
     fcomp_sub = get_fresp_(
         spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]), prewait,
-        jackrec, subrecbuf, allports, par_sub, max_fcomp_sub, vFsub, vGainsSub);
+        jackrec, subrecbuf, allports, par_sub, vFsub, vGainsSub);
     get_levels_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
                 prewait, jackrec, subrecbuf, allports, TASCAR::levelmeter::Z,
                 par_sub, sublevels, sublevelsfrg);

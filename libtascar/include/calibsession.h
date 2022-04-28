@@ -23,6 +23,8 @@ namespace TASCAR {
                                  ///< level analysis.
     float bandoverlap =
         2.0f; ///< Overlap of analysis filterbank in filter bands.
+    uint32_t max_eqstages =
+        0u; ///< maximum number of biquad stages for frequency compensation
   private:
     bool issub = false;
   };
@@ -79,12 +81,16 @@ namespace TASCAR {
     double get_measurement_duration() const
     {
       return par_speaker.duration * (double)get_num_bb() *
-                 (1.0 + (double)(max_fcomp_bb > 0u)) +
+                 (1.0 + (double)(par_speaker.max_eqstages > 0u)) +
              par_sub.duration * (double)get_num_sub() *
-                 (1.0 + (double)(max_fcomp_sub > 0u)) +
-             0.2f * (float)max_fcomp_bb * (double)get_num_bb() +
-             0.2f * (float)max_fcomp_sub * (double)get_num_sub();
+                 (1.0 + (double)(par_sub.max_eqstages > 0u)) +
+             0.2f * (float)par_speaker.max_eqstages * (double)get_num_bb() +
+             0.2f * (float)par_sub.max_eqstages * (double)get_num_sub();
     };
+    void param_factory_reset();
+    void param_read_defaults();
+    void param_read_xml();
+    void param_save_xml();
 
   private:
     bool gainmodified;
@@ -104,41 +110,25 @@ namespace TASCAR {
     TASCAR::receivermod_base_speaker_t* spk_spec = NULL;
     std::vector<float> levels;
     std::vector<float> sublevels;
-    //float bpo;
-    //float subbpo;
-    //float bandoverlap;
-    //float bandoverlapsub;
 
   public:
     std::vector<float> levelsfrg; // frequency-dependent level range (max-min)
     std::vector<float>
         sublevelsfrg; // frequency-dependent level range (max-min)
-  private:
-    std::vector<std::string> refport_; ///< list of measurement microphone ports
     calibparam_t par_speaker;
     calibparam_t par_sub;
-    //double duration;
-    //double subduration;
+
+  private:
+    std::vector<std::string> refport_; ///< list of measurement microphone ports
     float lmin;
     float lmax;
     float lmean;
-    //float fmin_;
-    //float fmax_;
-    //float subfmin_;
-    //float subfmax_;
     std::string calibfor;
     jackrec2wave_t jackrec;
     std::vector<TASCAR::wave_t> bbrecbuf;
     std::vector<TASCAR::wave_t> subrecbuf;
     TASCAR::wave_t teststim_bb;
     TASCAR::wave_t teststim_sub;
-
-  public:
-    uint32_t max_fcomp_bb =
-        0u; ///< maximum number of biquad stages for frequency compensation
-    uint32_t max_fcomp_sub = 0u;
-
-  private:
     std::vector<float> vF;
     std::vector<std::vector<float>> vGains;
     std::vector<float> vFsub;
