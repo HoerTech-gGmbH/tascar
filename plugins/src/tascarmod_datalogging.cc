@@ -226,6 +226,7 @@ private:
   sigc::connection connection_timeout;
   bool ignore_first_;
   size_t plotdata_cnt;
+  uint32_t timeout_cnt = 0u;
 };
 
 var_base_t::var_base_t(tsccfg::node_t xmlsrc) : TASCAR::xml_element_t(xmlsrc) {}
@@ -286,7 +287,7 @@ std::string lslvar_t::get_xml()
   return inlet->info().as_xml();
 }
 
-lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double lsltimeout)
+lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
     : var_base_t(xmlsrc), delta(lsl::local_clock())
 {
   GET_ATTRIBUTE(predicate, "",
@@ -406,7 +407,7 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
     lslvars.push_back(new lslvar_t(sne, lsltimeout));
 }
 
-void dlog_vars_t::update(uint32_t frame, bool running)
+void dlog_vars_t::update(uint32_t, bool running)
 {
   is_rolling = running || (!usetransport);
   if(jc_) {
@@ -474,6 +475,7 @@ void recorder_t::clear()
   plot_messages.clear();
   pthread_mutex_unlock(&plotdatalock);
   plotdata_cnt = 0;
+  timeout_cnt = 0u;
 }
 
 recorder_t::~recorder_t()
@@ -586,13 +588,11 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       Gtk::Allocation allocation = get_allocation();
       const int width = allocation.get_width();
       const int height = allocation.get_height();
-      // double ratio = (double)width/(double)height;
       cr->save();
       cr->set_source_rgb(1.0, 1.0, 1.0);
       cr->paint();
       cr->restore();
       cr->save();
-      // cr->scale((double)width/30.0,(double)height);
       cr->translate(width, 0);
       cr->set_line_width(1);
       // data plot:
@@ -721,6 +721,16 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         }
       }
       cr->restore();
+      // draw green or red circle in left upper corner:
+      cr->save();
+      if(timeout_cnt > 0u)
+        cr->set_source_rgb(0, 0.5, 0);
+      else
+        cr->set_source_rgb(0.5, 0, 0);
+      cr->move_to(30.0, 30.0);
+      cr->arc(30.0, 30.0, 20.0, 0.0, TASCAR_2PI);
+      cr->fill();
+      cr->restore();
     }
     pthread_mutex_unlock(&drawlock);
   }
@@ -729,6 +739,8 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 bool recorder_t::on_timeout()
 {
+  if(timeout_cnt)
+    --timeout_cnt;
   Glib::RefPtr<Gdk::Window> win = get_window();
   if(win) {
     Gdk::Rectangle r(0, 0, get_allocation().get_width(),
@@ -740,6 +752,7 @@ bool recorder_t::on_timeout()
 
 void recorder_t::store_sample(uint32_t n, double* data)
 {
+  timeout_cnt = 10u;
   // todo: increase efficiency, add multi-frame addition
   if(n != size_)
     throw TASCAR::ErrMsg("Invalid size (recorder_t::store)");
@@ -757,6 +770,7 @@ void recorder_t::store_sample(uint32_t n, double* data)
 
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 {
+  timeout_cnt = 10u;
   if(is_rec_ && is_roll_) {
     std::lock_guard<std::mutex> lock(dlock);
     xmessages.emplace_back(t1, t2, msg);
@@ -973,7 +987,7 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   }
   draw_grid->show_all();
   showdc->set_active(displaydc);
-  lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data,this);
+  lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data, this);
 }
 
 void datalogging_t::poll_lsl_data()
@@ -985,25 +999,23 @@ void datalogging_t::poll_lsl_data()
   }
 }
 
-int datalogging_t::osc_session_start(const char* path, const char* types,
-                                     lo_arg** argv, int argc, lo_message msg,
-                                     void* user_data)
+int datalogging_t::osc_session_start(const char*, const char*, lo_arg**, int,
+                                     lo_message, void* user_data)
 {
   ((datalogging_t*)user_data)->osc_start.emit();
   return 0;
 }
 
-int datalogging_t::osc_session_stop(const char* path, const char* types,
-                                    lo_arg** argv, int argc, lo_message msg,
-                                    void* user_data)
+int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
+                                    lo_message, void* user_data)
 {
   ((datalogging_t*)user_data)->osc_stop.emit();
   return 0;
 }
 
-int datalogging_t::osc_session_set_trialid(const char* path, const char* types,
-                                           lo_arg** argv, int argc,
-                                           lo_message msg, void* user_data)
+int datalogging_t::osc_session_set_trialid(const char*, const char*,
+                                           lo_arg** argv, int, lo_message,
+                                           void* user_data)
 {
   ((datalogging_t*)user_data)->osc_trialid = std::string(&(argv[0]->s));
   ((datalogging_t*)user_data)->osc_set_trialid.emit();
@@ -1073,7 +1085,7 @@ bool datalogging_t::on_100ms()
 }
 
 int oscvar_t::osc_receive_sample(const char* path, const char* types,
-                                 lo_arg** argv, int argc, lo_message msg,
+                                 lo_arg** argv, int argc, lo_message,
                                  void* user_data)
 {
   double data[argc + 1];
@@ -1095,7 +1107,7 @@ int oscvar_t::osc_receive_sample(const char* path, const char* types,
   return 0;
 }
 
-void oscvar_t::osc_receive_sample(const char* path, uint32_t size, double* data)
+void oscvar_t::osc_receive_sample(const char*, uint32_t size, double* data)
 {
   if(datarecorder) {
     data[0] = datarecorder->get_session_time();
@@ -1103,15 +1115,14 @@ void oscvar_t::osc_receive_sample(const char* path, uint32_t size, double* data)
   }
 }
 
-int oscsvar_t::osc_receive_sample(const char* path, const char* types,
-                                  lo_arg** argv, int argc, lo_message msg,
-                                  void* user_data)
+int oscsvar_t::osc_receive_sample(const char* path, const char*, lo_arg** argv,
+                                  int, lo_message, void* user_data)
 {
   ((oscsvar_t*)user_data)->osc_receive_sample(path, &(argv[0]->s));
   return 0;
 }
 
-void oscsvar_t::osc_receive_sample(const char* path, const char* msg)
+void oscsvar_t::osc_receive_sample(const char*, const char* msg)
 {
   if(datarecorder) {
     datarecorder->store_msg(datarecorder->get_session_time(), 0, msg);
