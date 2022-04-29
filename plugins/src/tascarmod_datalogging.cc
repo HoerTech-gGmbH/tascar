@@ -702,23 +702,25 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         }
       }
       cr->stroke();
-      // y-grid & scale:
-      double ystep(pow(10.0, floor(log10(0.5 * drange))));
-      if(std::isfinite(dmax) && std::isfinite(dmin) && std::isfinite(ystep) &&
-         isfinite(dscale)) {
-        double ddmin(ystep * round(dmin / ystep));
-        if(std::isfinite(dmax) && std::isfinite(ddmin) &&
-           std::isfinite(ystep) && (dmax > ddmin)) {
-          uint8_t ky(0);
-          for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
-            ++ky;
-            double v(height - (dy - dmin) * dscale);
-            cr->move_to(-width, v);
-            cr->line_to(-width * (1.0 - 0.01), v);
-            char ctmp[1024];
-            sprintf(ctmp, "%g", dy);
-            cr->show_text(ctmp);
-            cr->stroke();
+      if(!b_textdata) {
+        // y-grid & scale:
+        double ystep(pow(10.0, floor(log10(0.5 * drange))));
+        if(std::isfinite(dmax) && std::isfinite(dmin) && std::isfinite(ystep) &&
+           isfinite(dscale)) {
+          double ddmin(ystep * round(dmin / ystep));
+          if(std::isfinite(dmax) && std::isfinite(ddmin) &&
+             std::isfinite(ystep) && (dmax > ddmin)) {
+            uint8_t ky(0);
+            for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
+              ++ky;
+              double v(height - (dy - dmin) * dscale);
+              cr->move_to(-width, v);
+              cr->line_to(-width * (1.0 - 0.01), v);
+              char ctmp[1024];
+              sprintf(ctmp, "%g", dy);
+              cr->show_text(ctmp);
+              cr->stroke();
+            }
           }
         }
       }
@@ -803,14 +805,12 @@ void lslvar_t::poll_data()
   // char* strb(str_buffer.data());
   while(t != 0) {
     if(chfmt == lsl::cf_string) {
-      std::vector<std::string> sample;
-      t = inlet->pull_sample(sample, 0.0);
+      std::string sample;
+      t = inlet->pull_sample(&sample, 1u, 0.0);
       if((t != 0) && datarecorder) {
         datarecorder->set_textdata();
-        for(const auto& msg : sample) {
-          datarecorder->store_msg(t - delta + stream_delta_start,
-                                  t + stream_delta_start, msg);
-        }
+        datarecorder->store_msg(t - delta + stream_delta_start,
+                                t + stream_delta_start, sample);
       }
     } else {
       try {

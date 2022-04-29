@@ -286,7 +286,7 @@ bool glabsensors_t::on_100ms()
       b_alive = true;
     std::vector<sensormsg_t> vmsg(psens->get_critical());
     for(auto& msg : vmsg) {
-      outlet_critical.push_sample({msg.msg});
+      outlet_critical.push_sample(&msg.msg);
       msg.msg = "[" + psens->get_fullname() + "] " + msg.msg;
       if(msg_critical.empty())
         msg_critical.push_back(msg);
@@ -300,7 +300,7 @@ bool glabsensors_t::on_100ms()
     if(!b_alive) {
       std::string lmsg("[" + psens->get_fullname() +
                        "] Sensor module is not alive.");
-      outlet_critical.push_sample({lmsg});
+      outlet_critical.push_sample(&lmsg);
       if((!msg_critical.empty()) && (msg_critical.back().msg == lmsg))
         msg_critical.back().count++;
       else
@@ -308,7 +308,7 @@ bool glabsensors_t::on_100ms()
     }
     vmsg = psens->get_warnings();
     for(auto& msg : vmsg) {
-      outlet_warnings.push_sample({msg.msg});
+      outlet_warnings.push_sample(&msg.msg);
       msg.msg = "[" + psens->get_fullname() + "] " + msg.msg;
       if(msg_warnings.empty())
         msg_warnings.push_back(msg);
