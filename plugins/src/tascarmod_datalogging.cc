@@ -723,13 +723,22 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->restore();
       // draw green or red circle in left upper corner:
       cr->save();
-      if(timeout_cnt > 0u)
-        cr->set_source_rgb(0, 0.5, 0);
-      else
-        cr->set_source_rgb(0.5, 0, 0);
-      cr->move_to(30.0, 30.0);
-      cr->arc(30.0, 30.0, 20.0, 0.0, TASCAR_2PI);
-      cr->fill();
+      if(timeout_cnt > 0u){
+        cr->set_source_rgb(0, 0.7, 0);
+        cr->move_to(40.0, 30.0);
+        cr->arc(40.0, 30.0, 15.0, 0.0, TASCAR_2PI);
+        cr->fill();
+      }else{
+        cr->set_source_rgb(0.7, 0, 0);
+        cr->move_to(40.0, 30.0);
+        cr->arc(40.0, 30.0, 15.0, 0.0, TASCAR_2PI);
+        cr->fill();
+        cr->set_source_rgb(1.0, 1.0, 1.0);
+        cr->set_line_width(5);
+        cr->move_to(30.0, 30.0);
+        cr->line_to(50.0, 30.0);
+        cr->stroke();
+      }
       cr->restore();
     }
     pthread_mutex_unlock(&drawlock);
