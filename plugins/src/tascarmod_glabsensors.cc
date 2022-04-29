@@ -300,6 +300,7 @@ bool glabsensors_t::on_100ms()
     if(!b_alive) {
       std::string lmsg("[" + psens->get_fullname() +
                        "] Sensor module is not alive.");
+      outlet_critical.push_sample({lmsg});
       if((!msg_critical.empty()) && (msg_critical.back().msg == lmsg))
         msg_critical.back().count++;
       else
