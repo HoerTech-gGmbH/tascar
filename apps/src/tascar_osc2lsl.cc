@@ -110,7 +110,9 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
           break;
         }
         case 's': {
-          sop->push_sample({std::string(&(argv[0]->s))});
+          std::string str(&(argv[0]->s));
+          sop->push_sample(&str);
+          //sop->push_sample({std::string(&(argv[0]->s))});
           break;
         }
         }
