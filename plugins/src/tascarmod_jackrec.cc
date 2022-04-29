@@ -358,6 +358,9 @@ void jackrec_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_method("/listfiles", "", &jackrec_t::listfiles, this);
   srv->add_method("/rmfile", "s", &jackrec_t::rmfile, this);
   srv->add_string("/tag", &tag);
+  srv->add_bool("/usetransport", &usetransport,
+                "Control wether to use jack transport during recording when "
+                "started next");
   srv->set_prefix(prefix_);
 }
 
