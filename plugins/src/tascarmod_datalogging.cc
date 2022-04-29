@@ -315,7 +315,9 @@ lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
     size = results[0].channel_count() + 1;
     name = results[0].name();
     inlet = new lsl::stream_inlet(results[0]);
-    std::cerr << "created LSL inlet for predicate " << predicate << std::endl;
+    std::cerr << "created LSL inlet for predicate " << predicate << " ("
+              << results[0].channel_count() << " channels, fmt " << chfmt << ")"
+              << std::endl;
     std::cerr << "measuring LSL time correction: ";
     get_stream_delta_start();
     std::cerr << stream_delta_start << " s\n";
@@ -723,12 +725,12 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->restore();
       // draw green or red circle in left upper corner:
       cr->save();
-      if(timeout_cnt > 0u){
+      if(timeout_cnt > 0u) {
         cr->set_source_rgb(0, 0.7, 0);
         cr->move_to(40.0, 30.0);
         cr->arc(40.0, 30.0, 15.0, 0.0, TASCAR_2PI);
         cr->fill();
-      }else{
+      } else {
         cr->set_source_rgb(0.7, 0, 0);
         cr->move_to(40.0, 30.0);
         cr->arc(40.0, 30.0, 15.0, 0.0, TASCAR_2PI);
@@ -805,9 +807,9 @@ void lslvar_t::poll_data()
       t = inlet->pull_sample(sample, 0.0);
       if((t != 0) && datarecorder) {
         datarecorder->set_textdata();
-        for(auto it = sample.begin(); it != sample.end(); ++it) {
+        for(const auto& msg : sample) {
           datarecorder->store_msg(t - delta + stream_delta_start,
-                                  t + stream_delta_start, *it);
+                                  t + stream_delta_start, msg);
         }
       }
     } else {
