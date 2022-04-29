@@ -235,10 +235,10 @@ void jackio_t::set_transport_start(double start_, bool wait)
 jackrec_async_t::jackrec_async_t(const std::string& ofname,
                                  const std::vector<std::string>& ports,
                                  const std::string& jackname, double buflen,
-                                 int format)
+                                 int format, bool usetransport_)
     : jackc_transport_t(jackname), rectime(0), xrun(0), werror(0), sf_out(NULL),
       rb(NULL), run_service(true), tscale(1), recframes(0),
-      channels(ports.size())
+      channels(ports.size()), usetransport(usetransport_)
 {
   if(!channels)
     throw TASCAR::ErrMsg("No sources selected.");
@@ -262,7 +262,8 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   }
   if(buflen < 2.0)
     buflen = 2.0;
-  rb = jack_ringbuffer_create((size_t)(buflen * get_srate() * (double)channels * (double)(sizeof(float))));
+  rb = jack_ringbuffer_create((size_t)(buflen * get_srate() * (double)channels *
+                                       (double)(sizeof(float))));
   buf = new float[channels * get_fragsize()];
   rlen = channels * get_srate();
   rbuf = new float[rlen];
@@ -313,8 +314,11 @@ void jackrec_async_t::service()
 
 int jackrec_async_t::process(jack_nframes_t nframes,
                              const std::vector<float*>& inBuffer,
-                             const std::vector<float*>&, uint32_t, bool)
+                             const std::vector<float*>&, uint32_t,
+                             bool b_rolling)
 {
+  if(usetransport && (!b_rolling))
+    return 0;
   size_t ch(inBuffer.size());
   for(size_t k = 0; k < nframes; ++k)
     for(size_t c = 0; c < ch; ++c)
@@ -328,8 +332,7 @@ int jackrec_async_t::process(jack_nframes_t nframes,
   return 0;
 }
 
-jackrec2wave_t::jackrec2wave_t(size_t channels,
-                               const std::string& jackname)
+jackrec2wave_t::jackrec2wave_t(size_t channels, const std::string& jackname)
     : jackc_t(jackname)
 {
   isrecording = false;

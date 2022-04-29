@@ -37,13 +37,13 @@
 #include "audiochunks.h"
 #include "errorhandling.h"
 #include "jackclient.h"
+#include <atomic>
 #include <jack/ringbuffer.h>
 #include <sndfile.h>
 #include <stdlib.h>
 #include <string.h>
 #include <thread>
 #include <unistd.h>
-#include <atomic>
 
 /**
    \ingroup apptascar
@@ -117,7 +117,8 @@ public:
                   const std::vector<std::string>& ports,
                   const std::string& jackname = "jackrec", double buflen = 10,
                   int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 |
-                               SF_ENDIAN_FILE);
+                               SF_ENDIAN_FILE,
+                  bool usetransport = false);
   ~jackrec_async_t();
   double rectime;
   size_t xrun;
@@ -140,14 +141,15 @@ private:
   double tscale;
   size_t recframes;
   size_t channels;
+  bool usetransport;
 };
 
 class jackrec2wave_t : public jackc_t {
 public:
-  jackrec2wave_t(size_t channels,
-                 const std::string& jackname = "jackrec");
+  jackrec2wave_t(size_t channels, const std::string& jackname = "jackrec");
   ~jackrec2wave_t();
-  void rec(const std::vector<TASCAR::wave_t>& w,const std::vector<std::string>& ports);
+  void rec(const std::vector<TASCAR::wave_t>& w,
+           const std::vector<std::string>& ports);
 
 private:
   int process(jack_nframes_t n, const std::vector<float*>& s_in,

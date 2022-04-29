@@ -31,8 +31,8 @@
 #endif
 
 #define OSC_VOID(x)                                                            \
-  static int x(const char* path, const char* types, lo_arg** argv, int argc,   \
-               lo_message msg, void* user_data)                                \
+  static int x(const char*, const char*, lo_arg**, int, lo_message,            \
+               void* user_data)                                                \
   {                                                                            \
     ((jackrec_t*)user_data)->x();                                              \
     return 0;                                                                  \
@@ -40,8 +40,8 @@
   void x()
 
 #define OSC_STRING(x)                                                          \
-  static int x(const char* path, const char* types, lo_arg** argv, int argc,   \
-               lo_message msg, void* user_data)                                \
+  static int x(const char*, const char*, lo_arg** argv, int, lo_message,       \
+               void* user_data)                                                \
   {                                                                            \
     ((jackrec_t*)user_data)->x(&(argv[0]->s));                                 \
     return 0;                                                                  \
@@ -69,6 +69,7 @@ private:
   std::string path;
   std::string pattern;
   int format;
+  bool usetransport = false;
   // OSC variables:
   std::string ofname;
   std::vector<std::string> ports;
@@ -100,6 +101,7 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
     path += "/";
   GET_ATTRIBUTE(pattern, "", "search pattern");
   GET_ATTRIBUTE(prefix, "", "file prefix");
+  GET_ATTRIBUTE_BOOL(usetransport, "Record only when transport is rolling");
   int ifileformat(0);
   std::string fileformat("WAV");
   GET_ATTRIBUTE_(fileformat);
@@ -263,7 +265,8 @@ void jackrec_t::start()
       strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", timeinfo);
       ofname_ = path + prefix + tag + std::string(buffer) + extension;
     }
-    jr = new jackrec_async_t(ofname_, ports, name, buflen, format);
+    jr =
+        new jackrec_async_t(ofname_, ports, name, buflen, format, usetransport);
     if(lo_addr)
       lo_send(lo_addr, (oscprefix + "/start").c_str(), "");
   }
