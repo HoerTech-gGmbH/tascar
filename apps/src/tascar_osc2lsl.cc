@@ -18,8 +18,8 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "errorhandling.h"
 #include "cli.h"
+#include "errorhandling.h"
 #include <atomic>
 #include <getopt.h>
 #include <iostream>
@@ -39,7 +39,7 @@ typedef std::map<std::string, lsl::stream_outlet*> stream_map_t;
 bool timestamp(false);
 
 static int send_something(const char* path, const char* types, lo_arg** argv,
-                          int argc, lo_message msg, void* user_data)
+                          int argc, lo_message, void* user_data)
 {
   if(argc > timestamp) {
     bool all_same(true);
@@ -110,7 +110,7 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
           break;
         }
         case 's': {
-          sop->push_sample(&(argv[0]->s));
+          sop->push_sample({std::string(&(argv[0]->s))});
           break;
         }
         }

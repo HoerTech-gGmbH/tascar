@@ -782,10 +782,10 @@ void recorder_t::store_sample(uint32_t n, double* data)
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 {
   timeout_cnt = 10u;
+  b_textdata = true;
   if(is_rec_ && is_roll_) {
     std::lock_guard<std::mutex> lock(dlock);
     xmessages.emplace_back(t1, t2, msg);
-    b_textdata = true;
     if(pthread_mutex_trylock(&plotdatalock) == 0) {
       plot_messages = xmessages;
       pthread_mutex_unlock(&plotdatalock);
