@@ -20,6 +20,7 @@
  */
 
 #include "audioplugin.h"
+#include "errorhandling.h"
 #include "speakerarray.h"
 
 /*
@@ -51,12 +52,21 @@ ap_spkcalib_t::ap_spkcalib_t(const TASCAR::audioplugin_cfg_t& cfg)
 
 void ap_spkcalib_t::configure()
 {
-  n_channels = spk.num_output_channels();
+  if(n_channels != spk.num_output_channels())
+    throw TASCAR::ErrMsg(std::string("Speaker layout has ") +
+                         std::to_string(spk.num_output_channels()) +
+                         " channels (" + std::to_string(spk.size()) +
+                         " main speaker, " + std::to_string(spk.subs.size()) +
+                         " subwoofer, " + std::to_string(spk.conv_channels) +
+                         " convolution channels), but plugin has " +
+                         std::to_string(n_channels) + " channels.");
+  TASCAR::audioplugin_base_t::configure();
   spk.prepare(cfg());
 }
 
 void ap_spkcalib_t::release()
 {
+  TASCAR::audioplugin_base_t::release();
   spk.release();
 }
 
