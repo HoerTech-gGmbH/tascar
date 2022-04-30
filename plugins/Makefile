@@ -27,7 +27,7 @@ AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
   level2osc const noise loopmachine pos2osc gain sndfileasync		\
-  addchannel tubesim
+  addchannel tubesim spkcalib
 
 MASKPLUGINS = fig8 multibeam
 

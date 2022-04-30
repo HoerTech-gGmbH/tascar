@@ -39,6 +39,7 @@
 	  <speechactivity/>
 	  <spksim/>
 	  <tubesim/>
+          <spkcalib><layout><speaker/></layout></spkcalib>
 	</plugins>
       </sound>
       <sound type="cardioidmod"/>
