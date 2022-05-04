@@ -333,6 +333,11 @@ TASCAR::tictoc_t::tictoc_t()
   gettimeofday(&tv1, &tz);
 }
 
+void TASCAR::tictoc_t::tic()
+{
+  gettimeofday(&tv1, &tz);
+}
+
 double TASCAR::tictoc_t::toc()
 {
   gettimeofday(&tv2, &tz);

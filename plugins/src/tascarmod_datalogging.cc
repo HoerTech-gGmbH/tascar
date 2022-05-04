@@ -73,7 +73,8 @@ public:
   void get_stream_delta_start();
   void get_stream_delta_end();
   std::string get_xml();
-  lsl::stream_inlet* inlet = NULL;
+  bool has_inlet();
+  lsl::stream_info get_info();
   double stream_delta_start = 0.0;
   double stream_delta_end = 0.0;
   std::string name;
@@ -81,11 +82,14 @@ public:
 
 private:
   double get_stream_delta();
+  lsl::stream_inlet* inlet = NULL;
   std::string predicate;
   double delta;
   bool time_correction_failed = false;
   double tctimeout = 2.0;
   lsl::channel_format_t chfmt = lsl::cf_undefined;
+  std::mutex inletlock;
+  TASCAR::tictoc_t ts;
 };
 
 /**
@@ -280,8 +284,25 @@ std::string datestr()
   return ctmp;
 }
 
+bool lslvar_t::has_inlet()
+{
+  std::lock_guard<std::mutex> lock(inletlock);
+  if( inlet )
+    return true;
+  return false;
+}
+
+lsl::stream_info lslvar_t::get_info()
+{
+  std::lock_guard<std::mutex> lock(inletlock);
+  if( inlet )
+    return inlet->info();
+  return lsl::stream_info("null","none");
+}
+
 std::string lslvar_t::get_xml()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return "";
   return inlet->info().as_xml();
@@ -336,6 +357,7 @@ void lslvar_t::get_stream_delta_end()
 
 double lslvar_t::get_stream_delta()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return 0.0;
   double stream_delta(0);
@@ -352,6 +374,7 @@ double lslvar_t::get_stream_delta()
 
 lslvar_t::~lslvar_t()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(inlet)
     delete inlet;
 }
@@ -797,11 +820,13 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 
 void lslvar_t::poll_data()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return;
   double recorder_buffer[size + 1];
   double* data_buffer(&(recorder_buffer[2]));
   double t(1);
+  bool has_data = false;
   // char* strb(str_buffer.data());
   while(t != 0) {
     if(chfmt == lsl::cf_string) {
@@ -811,6 +836,7 @@ void lslvar_t::poll_data()
         datarecorder->set_textdata();
         datarecorder->store_msg(t - delta + stream_delta_start,
                                 t + stream_delta_start, sample);
+        has_data = true;
       }
     } else {
       try {
@@ -819,6 +845,7 @@ void lslvar_t::poll_data()
           recorder_buffer[0] = t - delta + stream_delta_start;
           recorder_buffer[1] = t + stream_delta_start;
           datarecorder->store_sample(size + 1, recorder_buffer);
+          has_data = true;
         }
       }
       catch(const std::exception& e) {
@@ -826,6 +853,8 @@ void lslvar_t::poll_data()
       }
     }
   }
+  if( has_data )
+    ts.tic();
 }
 
 /**
@@ -1474,21 +1503,21 @@ void datalogging_t::save_matcell(const std::string& filename)
         throw TASCAR::ErrMsg("Unable to create variable \"" + name + "\".");
       Mat_VarSetStructFieldByName(matDataStruct, "name", 0, mStr);
       // test if this is an LSL variable, if yes, provide some header
-      // information: here would come some header information...
+      // information
       for(auto var : lslvars)
-        if(var->is_linked_with(recorder[k]) && var->inlet) {
+        if(var->is_linked_with(recorder[k]) && var->has_inlet()) {
           mat_add_char_field(matDataStruct, "lsl_name",
-                             var->inlet->info().name());
+                             var->get_info().name());
           mat_add_char_field(matDataStruct, "lsl_type",
-                             var->inlet->info().type());
+                             var->get_info().type());
           mat_add_double_field(matDataStruct, "lsl_srate",
-                               var->inlet->info().nominal_srate());
+                               var->get_info().nominal_srate());
           mat_add_char_field(matDataStruct, "lsl_source_id",
-                             var->inlet->info().source_id());
+                             var->get_info().source_id());
           mat_add_char_field(matDataStruct, "lsl_hostname",
-                             var->inlet->info().hostname());
+                             var->get_info().hostname());
           mat_add_double_field(matDataStruct, "lsl_protocolversion",
-                               var->inlet->info().version());
+                               var->get_info().version());
           mat_add_double_field(matDataStruct, "lsl_libraryversion",
                                lsl::library_version());
           mat_add_double_field(matDataStruct, "stream_delta_start",

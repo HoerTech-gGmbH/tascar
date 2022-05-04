@@ -98,6 +98,7 @@ namespace TASCAR {
   class tictoc_t {
   public:
     tictoc_t();
+    void tic();
     double toc();
 
   private:
