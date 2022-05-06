@@ -238,7 +238,7 @@ glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
   win->set_keep_above(ontop);
   win->set_size_request(w, h);
   win->set_title("Gesture Lab sensors - " + session->name);
-  for(auto sne : tsccfg::node_get_children(e) )
+  for(auto sne : tsccfg::node_get_children(e))
     sensors.push_back(new sensorplugin_t(sensorplugin_cfg_t(sne)));
   connection_timeout = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &glabsensors_t::on_100ms), 100);
@@ -280,45 +280,43 @@ bool glabsensors_t::on_100ms()
   blink--;
   if(startphase)
     startphase--;
-  for(std::vector<sensorplugin_t*>::iterator it = sensors.begin();
-      it != sensors.end(); ++it) {
-    bool b_alive((*it)->test_alive());
+  for(auto psens : sensors) {
+    bool b_alive(psens->test_alive());
     if(startphase)
       b_alive = true;
-    std::vector<sensormsg_t> msg((*it)->get_critical());
-    for(std::vector<sensormsg_t>::iterator im = msg.begin(); im != msg.end();
-        ++im) {
-      outlet_critical.push_sample(&(im->msg));
-      im->msg = "[" + (*it)->get_fullname() + "] " + im->msg;
+    std::vector<sensormsg_t> vmsg(psens->get_critical());
+    for(auto& msg : vmsg) {
+      outlet_critical.push_sample(&msg.msg);
+      msg.msg = "[" + psens->get_fullname() + "] " + msg.msg;
       if(msg_critical.empty())
-        msg_critical.push_back(*im);
+        msg_critical.push_back(msg);
       else {
-        if(msg_critical.back().msg == im->msg)
-          msg_critical.back().count += im->count;
+        if(msg_critical.back().msg == msg.msg)
+          msg_critical.back().count += msg.count;
         else
-          msg_critical.push_back(*im);
+          msg_critical.push_back(msg);
       }
     }
     if(!b_alive) {
-      std::string lmsg("[" + (*it)->get_fullname() +
+      std::string lmsg("[" + psens->get_fullname() +
                        "] Sensor module is not alive.");
+      outlet_critical.push_sample(&lmsg);
       if((!msg_critical.empty()) && (msg_critical.back().msg == lmsg))
         msg_critical.back().count++;
       else
         msg_critical.push_back(sensormsg_t(lmsg));
     }
-    msg = (*it)->get_warnings();
-    for(std::vector<sensormsg_t>::iterator im = msg.begin(); im != msg.end();
-        ++im) {
-      outlet_warnings.push_sample(&(im->msg));
-      im->msg = "[" + (*it)->get_fullname() + "] " + im->msg;
+    vmsg = psens->get_warnings();
+    for(auto& msg : vmsg) {
+      outlet_warnings.push_sample(&msg.msg);
+      msg.msg = "[" + psens->get_fullname() + "] " + msg.msg;
       if(msg_warnings.empty())
-        msg_warnings.push_back(*im);
+        msg_warnings.push_back(msg);
       else {
-        if(msg_warnings.back().msg == im->msg)
-          msg_warnings.back().count += im->count;
+        if(msg_warnings.back().msg == msg.msg)
+          msg_warnings.back().count += msg.count;
         else
-          msg_warnings.push_back(*im);
+          msg_warnings.push_back(msg);
       }
     }
   }

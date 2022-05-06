@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene/>
+  <modules>
+    <route name="spkcalib" channels="2" connect_out="system:playback_[12]">
+      <plugins>
+        <spkcalib layout="stereo.spk"/>
+      </plugins>
+    </route>
+    <route name="spkuncalib" channels="2" connect_out="system:playback_[12]" mute="true">
+      <plugins>
+        <spkcalib layout="stereo_uncalib.spk"/>
+      </plugins>
+    </route>
+  </modules>
+</session>

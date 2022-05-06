@@ -73,7 +73,8 @@ public:
   void get_stream_delta_start();
   void get_stream_delta_end();
   std::string get_xml();
-  lsl::stream_inlet* inlet = NULL;
+  bool has_inlet();
+  lsl::stream_info get_info();
   double stream_delta_start = 0.0;
   double stream_delta_end = 0.0;
   std::string name;
@@ -81,11 +82,14 @@ public:
 
 private:
   double get_stream_delta();
+  lsl::stream_inlet* inlet = NULL;
   std::string predicate;
   double delta;
   bool time_correction_failed = false;
   double tctimeout = 2.0;
   lsl::channel_format_t chfmt = lsl::cf_undefined;
+  std::mutex inletlock;
+  TASCAR::tictoc_t ts;
 };
 
 /**
@@ -226,6 +230,7 @@ private:
   sigc::connection connection_timeout;
   bool ignore_first_;
   size_t plotdata_cnt;
+  uint32_t timeout_cnt = 0u;
 };
 
 var_base_t::var_base_t(tsccfg::node_t xmlsrc) : TASCAR::xml_element_t(xmlsrc) {}
@@ -279,14 +284,31 @@ std::string datestr()
   return ctmp;
 }
 
+bool lslvar_t::has_inlet()
+{
+  std::lock_guard<std::mutex> lock(inletlock);
+  if( inlet )
+    return true;
+  return false;
+}
+
+lsl::stream_info lslvar_t::get_info()
+{
+  std::lock_guard<std::mutex> lock(inletlock);
+  if( inlet )
+    return inlet->info();
+  return lsl::stream_info("null","none");
+}
+
 std::string lslvar_t::get_xml()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return "";
   return inlet->info().as_xml();
 }
 
-lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double lsltimeout)
+lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
     : var_base_t(xmlsrc), delta(lsl::local_clock())
 {
   GET_ATTRIBUTE(predicate, "",
@@ -314,7 +336,9 @@ lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double lsltimeout)
     size = results[0].channel_count() + 1;
     name = results[0].name();
     inlet = new lsl::stream_inlet(results[0]);
-    std::cerr << "created LSL inlet for predicate " << predicate << std::endl;
+    std::cerr << "created LSL inlet for predicate " << predicate << " ("
+              << results[0].channel_count() << " channels, fmt " << chfmt << ")"
+              << std::endl;
     std::cerr << "measuring LSL time correction: ";
     get_stream_delta_start();
     std::cerr << stream_delta_start << " s\n";
@@ -333,6 +357,7 @@ void lslvar_t::get_stream_delta_end()
 
 double lslvar_t::get_stream_delta()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return 0.0;
   double stream_delta(0);
@@ -349,6 +374,7 @@ double lslvar_t::get_stream_delta()
 
 lslvar_t::~lslvar_t()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(inlet)
     delete inlet;
 }
@@ -406,7 +432,7 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
     lslvars.push_back(new lslvar_t(sne, lsltimeout));
 }
 
-void dlog_vars_t::update(uint32_t frame, bool running)
+void dlog_vars_t::update(uint32_t, bool running)
 {
   is_rolling = running || (!usetransport);
   if(jc_) {
@@ -474,6 +500,7 @@ void recorder_t::clear()
   plot_messages.clear();
   pthread_mutex_unlock(&plotdatalock);
   plotdata_cnt = 0;
+  timeout_cnt = 0u;
 }
 
 recorder_t::~recorder_t()
@@ -586,13 +613,11 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       Gtk::Allocation allocation = get_allocation();
       const int width = allocation.get_width();
       const int height = allocation.get_height();
-      // double ratio = (double)width/(double)height;
       cr->save();
       cr->set_source_rgb(1.0, 1.0, 1.0);
       cr->paint();
       cr->restore();
       cr->save();
-      // cr->scale((double)width/30.0,(double)height);
       cr->translate(width, 0);
       cr->set_line_width(1);
       // data plot:
@@ -700,25 +725,46 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         }
       }
       cr->stroke();
-      // y-grid & scale:
-      double ystep(pow(10.0, floor(log10(0.5 * drange))));
-      if(std::isfinite(dmax) && std::isfinite(dmin) && std::isfinite(ystep) &&
-         isfinite(dscale)) {
-        double ddmin(ystep * round(dmin / ystep));
-        if(std::isfinite(dmax) && std::isfinite(ddmin) &&
-           std::isfinite(ystep) && (dmax > ddmin)) {
-          uint8_t ky(0);
-          for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
-            ++ky;
-            double v(height - (dy - dmin) * dscale);
-            cr->move_to(-width, v);
-            cr->line_to(-width * (1.0 - 0.01), v);
-            char ctmp[1024];
-            sprintf(ctmp, "%g", dy);
-            cr->show_text(ctmp);
-            cr->stroke();
+      if(!b_textdata) {
+        // y-grid & scale:
+        double ystep(pow(10.0, floor(log10(0.5 * drange))));
+        if(std::isfinite(dmax) && std::isfinite(dmin) && std::isfinite(ystep) &&
+           isfinite(dscale)) {
+          double ddmin(ystep * round(dmin / ystep));
+          if(std::isfinite(dmax) && std::isfinite(ddmin) &&
+             std::isfinite(ystep) && (dmax > ddmin)) {
+            uint8_t ky(0);
+            for(double dy = ddmin; (dy < dmax) && (ky < 20); dy += ystep) {
+              ++ky;
+              double v(height - (dy - dmin) * dscale);
+              cr->move_to(-width, v);
+              cr->line_to(-width * (1.0 - 0.01), v);
+              char ctmp[1024];
+              sprintf(ctmp, "%g", dy);
+              cr->show_text(ctmp);
+              cr->stroke();
+            }
           }
         }
+      }
+      cr->restore();
+      // draw green or red circle in left upper corner:
+      cr->save();
+      if(timeout_cnt > 0u) {
+        cr->set_source_rgb(0, 0.7, 0);
+        cr->move_to(40.0, 30.0);
+        cr->arc(40.0, 30.0, 15.0, 0.0, TASCAR_2PI);
+        cr->fill();
+      } else {
+        cr->set_source_rgb(0.7, 0, 0);
+        cr->move_to(40.0, 30.0);
+        cr->arc(40.0, 30.0, 15.0, 0.0, TASCAR_2PI);
+        cr->fill();
+        cr->set_source_rgb(1.0, 1.0, 1.0);
+        cr->set_line_width(5);
+        cr->move_to(30.0, 30.0);
+        cr->line_to(50.0, 30.0);
+        cr->stroke();
       }
       cr->restore();
     }
@@ -729,6 +775,8 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 bool recorder_t::on_timeout()
 {
+  if(timeout_cnt)
+    --timeout_cnt;
   Glib::RefPtr<Gdk::Window> win = get_window();
   if(win) {
     Gdk::Rectangle r(0, 0, get_allocation().get_width(),
@@ -740,6 +788,7 @@ bool recorder_t::on_timeout()
 
 void recorder_t::store_sample(uint32_t n, double* data)
 {
+  timeout_cnt = 10u;
   // todo: increase efficiency, add multi-frame addition
   if(n != size_)
     throw TASCAR::ErrMsg("Invalid size (recorder_t::store)");
@@ -757,10 +806,11 @@ void recorder_t::store_sample(uint32_t n, double* data)
 
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 {
+  timeout_cnt = 10u;
+  b_textdata = true;
   if(is_rec_ && is_roll_) {
     std::lock_guard<std::mutex> lock(dlock);
     xmessages.emplace_back(t1, t2, msg);
-    b_textdata = true;
     if(pthread_mutex_trylock(&plotdatalock) == 0) {
       plot_messages = xmessages;
       pthread_mutex_unlock(&plotdatalock);
@@ -770,22 +820,23 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 
 void lslvar_t::poll_data()
 {
+  std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return;
   double recorder_buffer[size + 1];
   double* data_buffer(&(recorder_buffer[2]));
   double t(1);
+  bool has_data = false;
   // char* strb(str_buffer.data());
   while(t != 0) {
     if(chfmt == lsl::cf_string) {
-      std::vector<std::string> sample;
-      t = inlet->pull_sample(sample, 0.0);
+      std::string sample;
+      t = inlet->pull_sample(&sample, 1u, 0.0);
       if((t != 0) && datarecorder) {
         datarecorder->set_textdata();
-        for(auto it = sample.begin(); it != sample.end(); ++it) {
-          datarecorder->store_msg(t - delta + stream_delta_start,
-                                  t + stream_delta_start, *it);
-        }
+        datarecorder->store_msg(t - delta + stream_delta_start,
+                                t + stream_delta_start, sample);
+        has_data = true;
       }
     } else {
       try {
@@ -794,6 +845,7 @@ void lslvar_t::poll_data()
           recorder_buffer[0] = t - delta + stream_delta_start;
           recorder_buffer[1] = t + stream_delta_start;
           datarecorder->store_sample(size + 1, recorder_buffer);
+          has_data = true;
         }
       }
       catch(const std::exception& e) {
@@ -801,6 +853,8 @@ void lslvar_t::poll_data()
       }
     }
   }
+  if( has_data )
+    ts.tic();
 }
 
 /**
@@ -973,7 +1027,7 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   }
   draw_grid->show_all();
   showdc->set_active(displaydc);
-  lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data,this);
+  lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data, this);
 }
 
 void datalogging_t::poll_lsl_data()
@@ -985,25 +1039,23 @@ void datalogging_t::poll_lsl_data()
   }
 }
 
-int datalogging_t::osc_session_start(const char* path, const char* types,
-                                     lo_arg** argv, int argc, lo_message msg,
-                                     void* user_data)
+int datalogging_t::osc_session_start(const char*, const char*, lo_arg**, int,
+                                     lo_message, void* user_data)
 {
   ((datalogging_t*)user_data)->osc_start.emit();
   return 0;
 }
 
-int datalogging_t::osc_session_stop(const char* path, const char* types,
-                                    lo_arg** argv, int argc, lo_message msg,
-                                    void* user_data)
+int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
+                                    lo_message, void* user_data)
 {
   ((datalogging_t*)user_data)->osc_stop.emit();
   return 0;
 }
 
-int datalogging_t::osc_session_set_trialid(const char* path, const char* types,
-                                           lo_arg** argv, int argc,
-                                           lo_message msg, void* user_data)
+int datalogging_t::osc_session_set_trialid(const char*, const char*,
+                                           lo_arg** argv, int, lo_message,
+                                           void* user_data)
 {
   ((datalogging_t*)user_data)->osc_trialid = std::string(&(argv[0]->s));
   ((datalogging_t*)user_data)->osc_set_trialid.emit();
@@ -1073,7 +1125,7 @@ bool datalogging_t::on_100ms()
 }
 
 int oscvar_t::osc_receive_sample(const char* path, const char* types,
-                                 lo_arg** argv, int argc, lo_message msg,
+                                 lo_arg** argv, int argc, lo_message,
                                  void* user_data)
 {
   double data[argc + 1];
@@ -1095,7 +1147,7 @@ int oscvar_t::osc_receive_sample(const char* path, const char* types,
   return 0;
 }
 
-void oscvar_t::osc_receive_sample(const char* path, uint32_t size, double* data)
+void oscvar_t::osc_receive_sample(const char*, uint32_t size, double* data)
 {
   if(datarecorder) {
     data[0] = datarecorder->get_session_time();
@@ -1103,15 +1155,14 @@ void oscvar_t::osc_receive_sample(const char* path, uint32_t size, double* data)
   }
 }
 
-int oscsvar_t::osc_receive_sample(const char* path, const char* types,
-                                  lo_arg** argv, int argc, lo_message msg,
-                                  void* user_data)
+int oscsvar_t::osc_receive_sample(const char* path, const char*, lo_arg** argv,
+                                  int, lo_message, void* user_data)
 {
   ((oscsvar_t*)user_data)->osc_receive_sample(path, &(argv[0]->s));
   return 0;
 }
 
-void oscsvar_t::osc_receive_sample(const char* path, const char* msg)
+void oscsvar_t::osc_receive_sample(const char*, const char* msg)
 {
   if(datarecorder) {
     datarecorder->store_msg(datarecorder->get_session_time(), 0, msg);
@@ -1452,21 +1503,21 @@ void datalogging_t::save_matcell(const std::string& filename)
         throw TASCAR::ErrMsg("Unable to create variable \"" + name + "\".");
       Mat_VarSetStructFieldByName(matDataStruct, "name", 0, mStr);
       // test if this is an LSL variable, if yes, provide some header
-      // information: here would come some header information...
+      // information
       for(auto var : lslvars)
-        if(var->is_linked_with(recorder[k]) && var->inlet) {
+        if(var->is_linked_with(recorder[k]) && var->has_inlet()) {
           mat_add_char_field(matDataStruct, "lsl_name",
-                             var->inlet->info().name());
+                             var->get_info().name());
           mat_add_char_field(matDataStruct, "lsl_type",
-                             var->inlet->info().type());
+                             var->get_info().type());
           mat_add_double_field(matDataStruct, "lsl_srate",
-                               var->inlet->info().nominal_srate());
+                               var->get_info().nominal_srate());
           mat_add_char_field(matDataStruct, "lsl_source_id",
-                             var->inlet->info().source_id());
+                             var->get_info().source_id());
           mat_add_char_field(matDataStruct, "lsl_hostname",
-                             var->inlet->info().hostname());
+                             var->get_info().hostname());
           mat_add_double_field(matDataStruct, "lsl_protocolversion",
-                               var->inlet->info().version());
+                               var->get_info().version());
           mat_add_double_field(matDataStruct, "lsl_libraryversion",
                                lsl::library_version());
           mat_add_double_field(matDataStruct, "stream_delta_start",

@@ -22,6 +22,7 @@
 
 #include "filterclass.h"
 #include <complex>
+#include "tscconfig.h"
 
 TEST(filter_t, constructor)
 {
@@ -486,27 +487,28 @@ TEST(multiband_pareq_t, responseoptim)
                           2.79876f,    2.4401f,    2.06435f,   1.72954f,
                           1.45555f,    1.23594f,   1.04929f};
   std::vector<float> gmeas = eq.optim_response(6, f, g, fs);
-  // for(size_t k = 0; k < gmeas.size(); ++k)
-  //  std::cout << gmeas[k]-g[k] << "\n";
-  ASSERT_NEAR(gmeas[0], 0.221956f, 0.4f);
-  ASSERT_NEAR(gmeas[1], 0.266738f, 0.4f);
-  ASSERT_NEAR(gmeas[2], 0.271461f, 0.4f);
-  ASSERT_NEAR(gmeas[3], 0.1926f, 0.4f);
-  ASSERT_NEAR(gmeas[4], 0.00667759f, 0.4f);
-  ASSERT_NEAR(gmeas[5], -0.173332f, 0.4f);
-  ASSERT_NEAR(gmeas[6], 0.0248456f, 0.4f);
-  ASSERT_NEAR(gmeas[7], 0.84333f, 0.4f);
-  ASSERT_NEAR(gmeas[8], 1.88679f, 0.4f);
-  ASSERT_NEAR(gmeas[9], 2.67132f, 0.4f);
-  ASSERT_NEAR(gmeas[10], 3.03919f, 0.4f);
-  ASSERT_NEAR(gmeas[11], 3.041f, 0.4f);
-  ASSERT_NEAR(gmeas[12], 2.79876f, 0.4f);
-  ASSERT_NEAR(gmeas[13], 2.4401f, 0.4f);
-  ASSERT_NEAR(gmeas[14], 2.06435f, 0.4f);
-  ASSERT_NEAR(gmeas[15], 1.72954f, 0.4f);
-  ASSERT_NEAR(gmeas[16], 1.45555f, 0.4f);
-  ASSERT_NEAR(gmeas[17], 1.23594f, 0.4f);
-  ASSERT_NEAR(gmeas[18], 1.04929f, 0.4f);
+  //  for(size_t k = 0; k < gmeas.size(); ++k)
+  //    std::cout << gmeas[k]-g[k] << "\n";
+  //  std::cout << TASCAR::to_string(gmeas) << std::endl;
+  ASSERT_NEAR(gmeas[0], 0.365156f, 0.5f);
+  ASSERT_NEAR(gmeas[1], 0.208671f, 0.5f);
+  ASSERT_NEAR(gmeas[2], 0.00160515f, 0.5f);
+  ASSERT_NEAR(gmeas[3], -0.154365f, 0.5f);
+  ASSERT_NEAR(gmeas[4], -0.154342f, 0.5f);
+  ASSERT_NEAR(gmeas[5], 0.0435356f, 0.5f);
+  ASSERT_NEAR(gmeas[6], 0.424508f, 0.5f);
+  ASSERT_NEAR(gmeas[7], 0.979241f, 0.5f);
+  ASSERT_NEAR(gmeas[8], 1.68132f, 0.5f);
+  ASSERT_NEAR(gmeas[9], 2.39932f, 0.5f);
+  ASSERT_NEAR(gmeas[10], 2.90098f, 0.5f);
+  ASSERT_NEAR(gmeas[11], 3.0195f, 0.5f);
+  ASSERT_NEAR(gmeas[12], 2.80379f, 0.5f);
+  ASSERT_NEAR(gmeas[13], 2.43202f, 0.5f);
+  ASSERT_NEAR(gmeas[14], 2.04437f, 0.5f);
+  ASSERT_NEAR(gmeas[15], 1.70262f, 0.5f);
+  ASSERT_NEAR(gmeas[16], 1.42086f, 0.5f);
+  ASSERT_NEAR(gmeas[17], 1.18439f, 0.5f);
+  ASSERT_NEAR(gmeas[18], 0.953375f, 0.5f);
 }
 
 // Local Variables:
