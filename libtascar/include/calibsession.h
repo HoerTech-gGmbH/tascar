@@ -16,9 +16,12 @@ namespace TASCAR {
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode);
-    float fmin = 62.5f;          ///< Lower limit of frequency in Hz.
-    float fmax = 4000.0f;        ///< Upper limit of frequency in Hz.
-    float duration = 1.0f;       ///< Stimulus duration in s.
+    float fmin = 62.5f;    ///< Lower limit of frequency in Hz.
+    float fmax = 4000.0f;  ///< Upper limit of frequency in Hz.
+    float duration = 1.0f; ///< Stimulus duration in s.
+    float prewait =
+        0.125f; ///< Time between stimulus onset and measurement start in s.
+    float reflevel = 70.0f;      ///< reference level for calibration.
     float bandsperoctave = 3.0f; ///< Bands per octave in frequency dependent
                                  ///< level analysis.
     float bandoverlap =
@@ -29,13 +32,19 @@ namespace TASCAR {
     bool issub = false;
   };
 
+  /**
+     @brief Dedicated TASCAR session for calibration of speaker layout files.
+
+     Creating an instance of this class will create a jack based TASCAR session
+     suitable for calibration. The speaker layout parameters can be changed
+     interactively, and the calibrated layout file can be saved.
+   */
   class calibsession_t : public TASCAR::session_t {
   public:
-    calibsession_t(const std::string& fname, double reflevel,
-                   const std::vector<std::string>& refport, double duration_,
-                   double fmin, double fmax, double subduration_,
-                   double subfmin, double subfmax, float bpo, float subbpo,
-                   float bandoverlap, float bandoverlapsub);
+    calibsession_t(const std::string& fname,
+                   const std::vector<std::string>& refport,
+                   const calibparam_t& par_speaker,
+                   const calibparam_t& par_sub);
     ~calibsession_t();
     double get_caliblevel() const;
     double get_diffusegain() const;
@@ -48,7 +57,7 @@ namespace TASCAR {
        @param prewait Waiting time between activation and repositioning of sound
        sources and measurement phase
      */
-    void get_levels(double prewait);
+    void get_levels();
     void reset_levels();
     void saveas(const std::string& fname);
     void save();
@@ -80,17 +89,18 @@ namespace TASCAR {
     size_t get_num_channels() const { return get_num_bb() + get_num_sub(); };
     double get_measurement_duration() const
     {
-      return par_speaker.duration * (double)get_num_bb() *
+      return (par_speaker.duration + par_speaker.prewait) *
+                 (double)get_num_bb() *
                  (1.0 + (double)(par_speaker.max_eqstages > 0u)) +
-             par_sub.duration * (double)get_num_sub() *
+             (par_sub.duration + par_sub.prewait) * (double)get_num_sub() *
                  (1.0 + (double)(par_sub.max_eqstages > 0u)) +
              0.2f * (float)par_speaker.max_eqstages * (double)get_num_bb() +
              0.2f * (float)par_sub.max_eqstages * (double)get_num_sub();
     };
-    void param_factory_reset();
-    void param_read_defaults();
-    void param_read_xml();
-    void param_save_xml();
+    // void param_factory_reset();
+    // void param_read_defaults();
+    // void param_read_xml();
+    // void param_save_xml();
 
   private:
     bool gainmodified;
@@ -115,10 +125,10 @@ namespace TASCAR {
     std::vector<float> levelsfrg; // frequency-dependent level range (max-min)
     std::vector<float>
         sublevelsfrg; // frequency-dependent level range (max-min)
-    calibparam_t par_speaker;
-    calibparam_t par_sub;
 
   private:
+    calibparam_t par_speaker;
+    calibparam_t par_sub;
     std::vector<std::string> refport_; ///< list of measurement microphone ports
     float lmin;
     float lmax;

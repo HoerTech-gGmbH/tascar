@@ -80,10 +80,6 @@ protected:
   void on_level_entered();
   void on_level_diff_entered();
   bool on_timeout();
-  void on_bb_flt_order_changed();
-  void on_sub_flt_order_changed();
-  void on_bb_flt_chk_changed();
-  void on_sub_flt_chk_changed();
   sigc::connection con_timeout;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupSave;
@@ -104,18 +100,8 @@ protected:
   Gtk::SpinButton* flt_order_bb;
   Gtk::SpinButton* flt_order_sub;
   calibsession_t* session;
-  double reflevel;
-  double noiseperiod;
-  double fmin;
-  double fmax;
-  double bpo;
-  double bandoverlap;
-  double noiseperiodsub;
-  double fminsub;
-  double fmaxsub;
-  double bposub;
-  double bandoverlapsub;
-  double prewait;
+  calibparam_t par_speaker;
+  calibparam_t par_sub;
   std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
   std::vector<TASCAR::wave_t*> inwave;
@@ -140,46 +126,10 @@ int spkcalib_t::process(jack_nframes_t nframes,
 bool spkcalib_t::on_timeout()
 {
   for(uint32_t k = 0; k < guimeter.size(); ++k) {
-    guimeter[k]->update_levelmeter(*(rmsmeter[k]), (float)reflevel);
+    guimeter[k]->update_levelmeter(*(rmsmeter[k]), par_speaker.reflevel);
     guimeter[k]->invalidate_win();
   }
   return true;
-}
-
-void spkcalib_t::on_bb_flt_order_changed()
-{
-  if(session) {
-    session->max_fcomp_bb = atoi(flt_order_bb->get_text().c_str());
-    chk_f_bb->set_active(session->max_fcomp_bb > 0u);
-  }
-}
-
-void spkcalib_t::on_sub_flt_order_changed()
-{
-  if(session) {
-    session->max_fcomp_sub = atoi(flt_order_sub->get_text().c_str());
-    chk_f_sub->set_active(session->max_fcomp_sub > 0u);
-  }
-}
-
-void spkcalib_t::on_bb_flt_chk_changed()
-{
-  if(session) {
-    if(chk_f_bb->get_active())
-      session->max_fcomp_bb = atoi(flt_order_sub->get_text().c_str());
-    else
-      session->max_fcomp_bb = 0u;
-  }
-}
-
-void spkcalib_t::on_sub_flt_chk_changed()
-{
-  if(session) {
-    if(chk_f_sub->get_active())
-      session->max_fcomp_sub = atoi(flt_order_sub->get_text().c_str());
-    else
-      session->max_fcomp_sub = 0u;
-  }
 }
 
 #define GET_WIDGET(x)                                                          \
@@ -201,18 +151,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
     : Gtk::Window(cobject), jackc_t("tascar_spkcalib_levels"),
       m_refBuilder(refGlade), text_instruction(NULL),
       text_instruction_diff(NULL), text_caliblevel(NULL), session(NULL),
-      reflevel(TASCAR::config("tascar.spkcalib.reflevel", 80.0)),
-      noiseperiod(TASCAR::config("tascar.spkcalib.noiseperiod", 2.0)),
-      fmin(TASCAR::config("tascar.spkcalib.fmin", 62.5)),
-      fmax(TASCAR::config("tascar.spkcalib.fmax", 4000.0)),
-      bpo(TASCAR::config("tascar.spkcalib.bpo", 3.0)),
-      bandoverlap(TASCAR::config("tascar.spkcalib.bandoverlap", 1.0)),
-      noiseperiodsub(TASCAR::config("tascar.spkcalib.noiseperiodsub", 8.0)),
-      fminsub(TASCAR::config("tascar.spkcalib.fminsub", 31.25)),
-      fmaxsub(TASCAR::config("tascar.spkcalib.fmaxsub", 62.5)),
-      bposub(TASCAR::config("tascar.spkcalib.bposub", 3.0)),
-      bandoverlapsub(TASCAR::config("tascar.spkcalib.bandoverlapsub", 1.0)),
-      prewait(TASCAR::config("tascar.spkcalib.prewait", 0.5)),
+      par_speaker(), par_sub(true),
       refport(str2vecstr(
           TASCAR::config("tascar.spkcalib.inputport", "system:capture_1"))),
       miccalibdb(TASCAR::config("tascar.spkcalib.miccalib", 0.0)),
@@ -220,8 +159,9 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
 {
   for(uint32_t k = 0; k < refport.size(); ++k) {
     add_input_port(std::string("in.") + TASCAR::to_string(k + 1));
-    rmsmeter.push_back(new TASCAR::levelmeter_t(
-        (float)get_srate(), (float)noiseperiod, TASCAR::levelmeter::C));
+    rmsmeter.push_back(new TASCAR::levelmeter_t((float)get_srate(),
+                                                (float)par_speaker.duration,
+                                                TASCAR::levelmeter::C));
     inwave.push_back(new TASCAR::wave_t(get_fragsize()));
     guimeter.push_back(new TSCGUI::splmeter_t());
     guimeter.back()->set_mode(TSCGUI::dameter_t::rmspeak);
@@ -305,12 +245,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       sigc::mem_fun(*this, &spkcalib_t::on_timeout), 250);
   flt_order_bb->set_increments(1, 1);
   flt_order_bb->set_range(0, 10);
-  flt_order_bb->signal_value_changed().connect(
-      sigc::mem_fun(*this, &spkcalib_t::on_bb_flt_order_changed));
   flt_order_sub->set_increments(1, 1);
   flt_order_sub->set_range(0, 10);
-  flt_order_sub->signal_value_changed().connect(
-      sigc::mem_fun(*this, &spkcalib_t::on_sub_flt_order_changed));
   for(uint32_t k = 0; k < guimeter.size(); ++k) {
     box_h->add(*guimeter[k]);
   }
@@ -321,10 +257,10 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
 void spkcalib_t::on_level_entered()
 {
   try {
-    double newlevel(reflevel);
+    double newlevel(par_speaker.reflevel);
     std::string slevel(levelentry->get_text());
     newlevel = atof(slevel.c_str());
-    levelinc(reflevel - newlevel);
+    levelinc(par_speaker.reflevel - newlevel);
   }
   catch(const std::exception& e) {
     error_message(e.what());
@@ -334,10 +270,10 @@ void spkcalib_t::on_level_entered()
 void spkcalib_t::on_level_diff_entered()
 {
   try {
-    double newlevel(reflevel);
+    double newlevel(par_speaker.reflevel);
     std::string slevel(levelentry_diff->get_text());
     newlevel = atof(slevel.c_str());
-    inc_diffusegain(reflevel - newlevel);
+    inc_diffusegain(par_speaker.reflevel - newlevel);
   }
   catch(const std::exception& e) {
     error_message(e.what());
@@ -409,9 +345,9 @@ void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
   }
 }
 
-void getlevels(TASCAR::calibsession_t* session, double prewait, bool* pbquit)
+void getlevels(TASCAR::calibsession_t* session, bool* pbquit)
 {
-  session->get_levels(prewait);
+  session->get_levels();
   *pbquit = true;
 }
 
@@ -424,10 +360,8 @@ void spkcalib_t::on_reclevels()
       levelentry->set_sensitive(false);
       levelentry_diff->set_sensitive(false);
       bool bquitthread = false;
-      std::thread guiupdater(getlevels, session, prewait, &bquitthread);
-      guiupdate(rec_progress,
-                session->get_measurement_duration() +
-                    prewait * (double)session->get_num_channels(),
+      std::thread guiupdater(getlevels, session, &bquitthread);
+      guiupdate(rec_progress, session->get_measurement_duration(),
                 &bquitthread);
 
       if(guiupdater.joinable())
@@ -672,10 +606,10 @@ void spkcalib_t::update_display()
     sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
             session->get_caliblevel(), session->get_diffusegain());
     text_caliblevel->set_text(ctmp);
-    chk_f_bb->set_active(session->max_fcomp_bb > 0u);
-    chk_f_sub->set_active(session->max_fcomp_sub > 0u);
-    flt_order_bb->set_text(std::to_string(session->max_fcomp_bb));
-    flt_order_sub->set_text(std::to_string(session->max_fcomp_sub));
+    // chk_f_bb->set_active(session->max_fcomp_bb > 0u);
+    // chk_f_sub->set_active(session->max_fcomp_sub > 0u);
+    // flt_order_bb->set_text(std::to_string(session->max_fcomp_bb));
+    // flt_order_sub->set_text(std::to_string(session->max_fcomp_sub));
   } else {
     text_caliblevel->set_text("no layout file loaded.");
     chk_f_bb->set_active(false);
@@ -700,7 +634,7 @@ void spkcalib_t::update_display()
           "2. Adjust the playback level to %1.1f dB using the inc/dec buttons. "
           "Alternatively, enter the measured level in the field below. Use Z "
           "or C weighting.\n a) Point source:",
-          reflevel);
+          par_speaker.reflevel);
   text_instruction->set_text(ctmp);
   text_instruction_diff->set_text(" b) Diffuse sound field:");
   if(get_warnings().size()) {
@@ -733,10 +667,7 @@ void spkcalib_t::load(const std::string& fname)
   cleanup();
   if(fname.empty())
     throw TASCAR::ErrMsg("Empty file name.");
-  session = new calibsession_t(fname, reflevel, refport, noiseperiod, fmin,
-                               fmax, noiseperiodsub, fminsub, fmaxsub,
-                               (float)bpo, (float)bposub, (float)bandoverlap,
-                               (float)bandoverlapsub);
+  session = new calibsession_t(fname, refport, par_speaker, par_sub);
   session->start();
   update_display();
 }

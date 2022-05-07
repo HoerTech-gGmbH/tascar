@@ -67,12 +67,16 @@ void calibparam_t::factory_reset()
     fmin = 31.25f;
     fmax = 62.5f;
     duration = 4.0f;
+    prewait = 0.125f;
+    reflevel = 70.0f;
     bandsperoctave = 3.0f;
     bandoverlap = 2.0f;
   } else {
     fmin = 62.5f;
     fmax = 4000.0f;
     duration = 1.0f;
+    prewait = 0.125;
+    reflevel = 70.0f;
     bandsperoctave = 3.0f;
     bandoverlap = 2.0f;
   }
@@ -83,12 +87,14 @@ void calibparam_t::factory_reset()
 void calibparam_t::read_defaults()
 {
   factory_reset();
-  std::string path = "tascar.spkcalib.speaker";
+  std::string path = "tascar.spkcalib";
   if(issub)
     path = "tascar.spkcalib.sub";
   READ_DEF(fmin);
   READ_DEF(fmax);
   READ_DEF(duration);
+  READ_DEF(prewait);
+  READ_DEF(reflevel);
   READ_DEF(bandsperoctave);
   READ_DEF(bandoverlap);
 }
@@ -105,6 +111,9 @@ void calibparam_t::read_xml(const tsccfg::node_t& layoutnode)
   e.GET_ATTRIBUTE(fmin, "Hz", "Lower frequency limit of calibration.");
   e.GET_ATTRIBUTE(fmax, "Hz", "Upper frequency limit of calibration.");
   e.GET_ATTRIBUTE(duration, "s", "Stimulus duration.");
+  e.GET_ATTRIBUTE(prewait, "s",
+                  "Time between stimulus onset and measurement start.");
+  e.GET_ATTRIBUTE(reflevel, "dB", "Reference level.");
   e.GET_ATTRIBUTE(bandsperoctave, "bpo",
                   "Bands per octave in filterbank for level equalization.");
   e.GET_ATTRIBUTE(
@@ -124,21 +133,33 @@ void calibparam_t::save_xml(const tsccfg::node_t& layoutnode)
   e.SET_ATTRIBUTE(fmin);
   e.SET_ATTRIBUTE(fmax);
   e.SET_ATTRIBUTE(duration);
+  e.SET_ATTRIBUTE(prewait);
+  e.SET_ATTRIBUTE(reflevel);
   e.SET_ATTRIBUTE(bandsperoctave);
   e.SET_ATTRIBUTE(bandoverlap);
 }
 
-calibsession_t::calibsession_t(const std::string& fname, double reflevel,
-                               const std::vector<std::string>& refport, double,
-                               double, double, double, double, double, float,
-                               float, float, float)
+void add_stimulus_plugin(xml_element_t node, const calibparam_t& par)
+{
+  xml_element_t e_plugs(node.find_or_add_child("plugins"));
+  xml_element_t e_pink(e_plugs.add_child("pink"));
+  e_pink.set_attribute("level", TASCAR::to_string(par.reflevel));
+  e_pink.set_attribute("period", TASCAR::to_string(par.duration));
+  e_pink.set_attribute("fmin", TASCAR::to_string(par.fmin));
+  e_pink.set_attribute("fmax", TASCAR::to_string(par.fmax));
+}
+
+calibsession_t::calibsession_t(const std::string& fname,
+                               const std::vector<std::string>& refport,
+                               const calibparam_t& par_speaker_,
+                               const calibparam_t& par_sub_)
     : session_t("<?xml version=\"1.0\"?><session srv_port=\"none\"/>",
                 LOAD_STRING, ""),
       gainmodified(false), levelsrecorded(false), calibrated(false),
       calibrated_diff(false), startlevel(0), startdiffgain(0), delta(0),
-      delta_diff(0), spkname(fname), spk_file(NULL), refport_(refport), lmin(0),
-      lmax(0), lmean(0), calibfor(get_calibfor(fname)),
-      jackrec(refport_.size() + 1, "spkcalibrec")
+      delta_diff(0), spkname(fname), spk_file(NULL), par_speaker(par_speaker_),
+      par_sub(par_sub_), refport_(refport), lmin(0), lmax(0), lmean(0),
+      calibfor(get_calibfor(fname)), jackrec(refport_.size() + 1, "spkcalibrec")
 {
   for(size_t ich = 0; ich < refport_.size() + 1; ++ich) {
     bbrecbuf.push_back((uint32_t)(jackrec.get_srate() * par_speaker.duration));
@@ -154,26 +175,13 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   // add a point source for broadband stimulus, muted for now:
   xml_element_t e_src(e_scene.add_child("source"));
   e_src.set_attribute("mute", "true");
-  xml_element_t e_snd(e_src.add_child("sound"));
-  xml_element_t e_plugs(e_snd.add_child("plugins"));
   // add pink noise generator:
-  xml_element_t e_pink(e_plugs.add_child("pink"));
-  e_pink.set_attribute("level", TASCAR::to_string(reflevel));
-  e_pink.set_attribute("period", TASCAR::to_string(duration));
-  e_pink.set_attribute("fmin", TASCAR::to_string(par_speaker.fmin));
-  e_pink.set_attribute("fmax", TASCAR::to_string(par_speaker.fmax));
+  add_stimulus_plugin(e_src.add_child("sound"), par_speaker);
   // add a point source for subwoofer stimulus, muted for now:
   xml_element_t e_subsrc(e_scene.add_child("source"));
   e_subsrc.set_attribute("name", "srcsub");
   e_subsrc.set_attribute("mute", "true");
-  xml_element_t e_subsnd(e_subsrc.add_child("sound"));
-  xml_element_t e_subplugs(e_subsnd.add_child("plugins"));
-  // add pink noise generator:
-  xml_element_t e_subpink(e_subplugs.add_child("pink"));
-  e_subpink.set_attribute("level", TASCAR::to_string(reflevel));
-  e_subpink.set_attribute("period", TASCAR::to_string(par_sub.duration));
-  e_subpink.set_attribute("fmin", TASCAR::to_string(par_sub.fmin));
-  e_subpink.set_attribute("fmax", TASCAR::to_string(par_sub.fmax));
+  add_stimulus_plugin(e_subsrc.add_child("sound"), par_sub);
   // receiver 1 is always nsp, for speaker level differences:
   xml_element_t e_rcvr(e_scene.add_child("receiver"));
   e_rcvr.set_attribute("type", "nsp");
@@ -199,33 +207,17 @@ calibsession_t::calibsession_t(const std::string& fname, double reflevel,
   // add diffuse source for diffuse gain calibration:
   xml_element_t e_diff(e_scene.add_child("diffuse"));
   e_diff.set_attribute("mute", "true");
-  xml_element_t e_plugs_diff(e_diff.add_child("plugins"));
-  xml_element_t e_pink_diff(e_plugs_diff.add_child("pink"));
-  e_pink_diff.set_attribute("level", TASCAR::to_string(reflevel));
-  e_pink_diff.set_attribute("period", TASCAR::to_string(par_speaker.duration));
-  e_pink_diff.set_attribute("fmin", TASCAR::to_string(par_speaker.fmin));
-  e_pink_diff.set_attribute("fmax", TASCAR::to_string(par_speaker.fmax));
+  add_stimulus_plugin(e_diff, par_speaker);
   // extra routes:
   xml_element_t e_mods(root.add_child("modules"));
   xml_element_t e_route_pink(e_mods.add_child("route"));
   e_route_pink.set_attribute("name", "pink");
   e_route_pink.set_attribute("channels", "1");
-  xml_element_t e_route_pink_plugs(e_route_pink.add_child("plugins"));
-  xml_element_t e_route_pink_pink(e_route_pink_plugs.add_child("pink"));
-  e_route_pink_pink.set_attribute("level", "50");
-  e_route_pink_pink.set_attribute("period",
-                                  TASCAR::to_string(par_speaker.duration));
-  e_route_pink_pink.set_attribute("fmin", TASCAR::to_string(par_speaker.fmin));
-  e_route_pink_pink.set_attribute("fmax", TASCAR::to_string(par_speaker.fmax));
+  add_stimulus_plugin(e_route_pink, par_speaker);
   xml_element_t e_route_sub(e_mods.add_child("route"));
   e_route_sub.set_attribute("name", "sub");
   e_route_sub.set_attribute("channels", "1");
-  xml_element_t e_route_sub_plugs(e_route_sub.add_child("plugins"));
-  xml_element_t e_route_sub_pink(e_route_sub_plugs.add_child("pink"));
-  e_route_sub_pink.set_attribute("level", "50");
-  e_route_sub_pink.set_attribute("period", TASCAR::to_string(par_sub.duration));
-  e_route_sub_pink.set_attribute("fmin", TASCAR::to_string(par_sub.fmin));
-  e_route_sub_pink.set_attribute("fmax", TASCAR::to_string(par_sub.fmax));
+  add_stimulus_plugin(e_route_sub, par_sub);
   // end of scene creation.
   // doc->write_to_file_formatted("temp.cfg");
   add_scene(e_scene.e);
@@ -288,7 +280,7 @@ void calibsession_t::reset_levels()
 }
 
 void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
-                 double prewait, jackrec2wave_t& jackrec,
+                 jackrec2wave_t& jackrec,
                  const std::vector<TASCAR::wave_t>& recbuf,
                  const std::vector<std::string>& ports,
                  levelmeter::weight_t weight, const calibparam_t& calibpar,
@@ -302,7 +294,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
   for(auto& spk : spks) {
     // move source to speaker position:
     src.dlocation = spk.unitvector;
-    usleep((unsigned int)(1e6 * prewait));
+    usleep((unsigned int)(1e6f * calibpar.prewait));
     // record measurement signal:
     jackrec.rec(recbuf, ports);
     //
@@ -358,7 +350,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
 }
 
 uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
-                    double prewait, jackrec2wave_t& jackrec,
+                    jackrec2wave_t& jackrec,
                     const std::vector<TASCAR::wave_t>& recbuf,
                     const std::vector<std::string>& ports,
                     const calibparam_t& calibpar, std::vector<float>& vF,
@@ -376,7 +368,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     spk.eqstages = 0u;
     // move source to speaker position:
     src.dlocation = spk.unitvector;
-    usleep((unsigned int)(1e6 * prewait));
+    usleep((unsigned int)(1e6f * calibpar.prewait));
     // record measurement signal:
     jackrec.rec(recbuf, ports);
     // calc average across input channels:
@@ -428,7 +420,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
   return numflt;
 }
 
-void calibsession_t::get_levels(double prewait)
+void calibsession_t::get_levels()
 {
   //
   // first broadband speakers:
@@ -442,13 +434,12 @@ void calibsession_t::get_levels(double prewait)
   // unmute the NSP receiver:
   rec_spec->set_mute(true);
   rec_nsp->set_mute(false);
-  fcomp_bb =
-      get_fresp_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), prewait,
-                 jackrec, bbrecbuf, allports, par_speaker, vF, vGains);
+  fcomp_bb = get_fresp_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]),
+                        jackrec, bbrecbuf, allports, par_speaker, vF, vGains);
   // measure levels of all broadband speakers:
-  get_levels_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), prewait,
-              jackrec, bbrecbuf, allports, TASCAR::levelmeter::C, par_speaker,
-              levels, levelsfrg);
+  get_levels_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), jackrec,
+              bbrecbuf, allports, TASCAR::levelmeter::C, par_speaker, levels,
+              levelsfrg);
   //
   // subwoofer:
   //
@@ -457,12 +448,12 @@ void calibsession_t::get_levels(double prewait)
     scenes.back()->source_objects[0]->set_mute(true);
     // unmute subwoofer source:
     scenes.back()->source_objects[1]->set_mute(false);
-    fcomp_sub = get_fresp_(
-        spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]), prewait,
-        jackrec, subrecbuf, allports, par_sub, vFsub, vGainsSub);
+    fcomp_sub =
+        get_fresp_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
+                   jackrec, subrecbuf, allports, par_sub, vFsub, vGainsSub);
     get_levels_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
-                prewait, jackrec, subrecbuf, allports, TASCAR::levelmeter::Z,
-                par_sub, sublevels, sublevelsfrg);
+                jackrec, subrecbuf, allports, TASCAR::levelmeter::Z, par_sub,
+                sublevels, sublevelsfrg);
   }
   // mute source and reset position:
   for(auto src : scenes.back()->source_objects) {
@@ -544,9 +535,9 @@ void calibsession_t::saveas(const std::string& fname)
     throw TASCAR::ErrMsg(
         "Invalid file type, expected root node type \"layout\", got \"" +
         doc.root.get_element_name() + "\".");
-  TASCAR::xml_element_t elem(doc.root);
-  elem.set_attribute("caliblevel", TASCAR::to_string(get_caliblevel()));
-  elem.set_attribute("diffusegain", TASCAR::to_string(get_diffusegain()));
+  TASCAR::xml_element_t elayout(doc.root);
+  elayout.set_attribute("caliblevel", TASCAR::to_string(get_caliblevel()));
+  elayout.set_attribute("diffusegain", TASCAR::to_string(get_diffusegain()));
   // update gains:
   TASCAR::spk_array_diff_render_t array(doc.root(), true);
   size_t k = 0;
@@ -580,14 +571,16 @@ void calibsession_t::saveas(const std::string& fname)
     }
     ++k;
   }
-  size_t checksum = get_spklayout_checksum(elem);
-  elem.set_attribute("checksum", (uint64_t)checksum);
+  size_t checksum = get_spklayout_checksum(elayout);
+  elayout.set_attribute("checksum", (uint64_t)checksum);
   char ctmp[1024];
   memset(ctmp, 0, 1024);
   std::time_t t(std::time(nullptr));
   std::strftime(ctmp, 1023, "%Y-%m-%d %H:%M:%S", std::localtime(&t));
   doc.root.set_attribute("calibdate", ctmp);
   doc.root.set_attribute("calibfor", calibfor);
+  par_speaker.save_xml(doc.root());
+  par_sub.save_xml(doc.root());
   doc.save(fname);
   gainmodified = false;
   levelsrecorded = false;
