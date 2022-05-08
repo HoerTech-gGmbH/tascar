@@ -56,12 +56,12 @@ std::vector<std::string> string_token(std::string s,
   return rv;
 }
 
-calibparam_t::calibparam_t(bool issub_) : issub(issub_)
+spk_eq_param_t::spk_eq_param_t(bool issub_) : issub(issub_)
 {
   factory_reset();
 }
 
-void calibparam_t::factory_reset()
+void spk_eq_param_t::factory_reset()
 {
   if(issub) {
     fmin = 31.25f;
@@ -84,7 +84,7 @@ void calibparam_t::factory_reset()
 
 #define READ_DEF(x) x = (float)TASCAR::config(path + "." #x, x)
 
-void calibparam_t::read_defaults()
+void spk_eq_param_t::read_defaults()
 {
   factory_reset();
   std::string path = "tascar.spkcalib";
@@ -99,7 +99,7 @@ void calibparam_t::read_defaults()
   READ_DEF(bandoverlap);
 }
 
-void calibparam_t::read_xml(const tsccfg::node_t& layoutnode)
+void spk_eq_param_t::read_xml(const tsccfg::node_t& layoutnode)
 {
   TASCAR::xml_element_t xml(layoutnode);
   tsccfg::node_t spkcalibnode;
@@ -121,7 +121,7 @@ void calibparam_t::read_xml(const tsccfg::node_t& layoutnode)
       "Overlap in frequency bands in filterbank for level equalization.");
 }
 
-void calibparam_t::save_xml(const tsccfg::node_t& layoutnode)
+void spk_eq_param_t::save_xml(const tsccfg::node_t& layoutnode)
 {
   TASCAR::xml_element_t xml(layoutnode);
   tsccfg::node_t spkcalibnode;
@@ -139,7 +139,7 @@ void calibparam_t::save_xml(const tsccfg::node_t& layoutnode)
   e.SET_ATTRIBUTE(bandoverlap);
 }
 
-void add_stimulus_plugin(xml_element_t node, const calibparam_t& par)
+void add_stimulus_plugin(xml_element_t node, const spk_eq_param_t& par)
 {
   xml_element_t e_plugs(node.find_or_add_child("plugins"));
   xml_element_t e_pink(e_plugs.add_child("pink"));
@@ -151,8 +151,8 @@ void add_stimulus_plugin(xml_element_t node, const calibparam_t& par)
 
 calibsession_t::calibsession_t(const std::string& fname,
                                const std::vector<std::string>& refport,
-                               const calibparam_t& par_speaker_,
-                               const calibparam_t& par_sub_)
+                               const spk_eq_param_t& par_speaker_,
+                               const spk_eq_param_t& par_sub_)
     : session_t("<?xml version=\"1.0\"?><session srv_port=\"none\"/>",
                 LOAD_STRING, ""),
       gainmodified(false), levelsrecorded(false), calibrated(false),
@@ -283,7 +283,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                  jackrec2wave_t& jackrec,
                  const std::vector<TASCAR::wave_t>& recbuf,
                  const std::vector<std::string>& ports,
-                 levelmeter::weight_t weight, const calibparam_t& calibpar,
+                 levelmeter::weight_t weight, const spk_eq_param_t& calibpar,
                  std::vector<float>& levels, std::vector<float>& levelrange)
 {
   levels.clear();
@@ -353,7 +353,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                     jackrec2wave_t& jackrec,
                     const std::vector<TASCAR::wave_t>& recbuf,
                     const std::vector<std::string>& ports,
-                    const calibparam_t& calibpar, std::vector<float>& vF,
+                    const spk_eq_param_t& calibpar, std::vector<float>& vF,
                     std::vector<std::vector<float>>& vGain)
 {
   if(calibpar.max_eqstages == 0u)

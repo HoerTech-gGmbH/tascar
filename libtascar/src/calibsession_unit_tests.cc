@@ -23,12 +23,12 @@
 
 TEST(calibparam, readxml)
 {
-  TASCAR::calibparam_t par;
+  TASCAR::spk_eq_param_t par;
   ASSERT_NEAR(par.fmin, 62.5f, 1e-9f);
   TASCAR::xml_doc_t doc("<layout><speakercalibconfig fmin=\"80\"/></layout>",
                         TASCAR::xml_doc_t::LOAD_STRING);
   const tsccfg::node_t& rnode(doc.root());
-  TASCAR::calibparam_t par2(true);
+  TASCAR::spk_eq_param_t par2(true);
   par2.read_xml(rnode);
   ASSERT_NEAR(par2.fmin, 31.25f, 1e-9f);
   par.read_xml(rnode);
@@ -37,14 +37,14 @@ TEST(calibparam, readxml)
 
 TEST(calibparam, savexml)
 {
-  TASCAR::calibparam_t par;
+  TASCAR::spk_eq_param_t par;
   ASSERT_NEAR(par.fmin, 62.5f, 1e-9f);
   TASCAR::xml_doc_t doc("<layout></layout>", TASCAR::xml_doc_t::LOAD_STRING);
   const tsccfg::node_t& rnode(doc.root());
   par.fmin = 123;
   par.save_xml(rnode);
   std::string xmlcfg(doc.save_to_string());
-  TASCAR::calibparam_t par2;
+  TASCAR::spk_eq_param_t par2;
   ASSERT_NEAR(par2.fmin, 62.5f, 1e-9f);
   TASCAR::xml_doc_t doc2(xmlcfg, TASCAR::xml_doc_t::LOAD_STRING);
   par2.read_xml(rnode);

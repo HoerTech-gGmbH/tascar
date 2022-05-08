@@ -100,8 +100,8 @@ protected:
   Gtk::SpinButton* flt_order_bb;
   Gtk::SpinButton* flt_order_sub;
   calibsession_t* session;
-  calibparam_t par_speaker;
-  calibparam_t par_sub;
+  spk_eq_param_t par_speaker;
+  spk_eq_param_t par_sub;
   std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
   std::vector<TASCAR::wave_t*> inwave;

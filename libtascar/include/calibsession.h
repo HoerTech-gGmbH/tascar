@@ -9,9 +9,9 @@ namespace TASCAR {
   /**
      @brief Parameters for loudspeaker equalization and calibration.
    */
-  class calibparam_t {
+  class spk_eq_param_t {
   public:
-    calibparam_t(bool issub = false);
+    spk_eq_param_t(bool issub = false);
     void factory_reset();
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
@@ -32,6 +32,19 @@ namespace TASCAR {
     bool issub = false;
   };
 
+  class calib_cfg_t {
+  public:
+    calib_cfg_t();
+    void factory_reset();
+    void read_defaults();
+    void read_xml(const tsccfg::node_t& layoutnode);
+    void save_xml(const tsccfg::node_t& layoutnode);
+    spk_eq_param_t par_speaker;
+    spk_eq_param_t par_sub;
+    std::vector<std::string> refport;
+    std::vector<float> miccalib;
+  };
+
   /**
      @brief Dedicated TASCAR session for calibration of speaker layout files.
 
@@ -43,8 +56,8 @@ namespace TASCAR {
   public:
     calibsession_t(const std::string& fname,
                    const std::vector<std::string>& refport,
-                   const calibparam_t& par_speaker,
-                   const calibparam_t& par_sub);
+                   const spk_eq_param_t& par_speaker,
+                   const spk_eq_param_t& par_sub);
     ~calibsession_t();
     double get_caliblevel() const;
     double get_diffusegain() const;
@@ -127,8 +140,8 @@ namespace TASCAR {
         sublevelsfrg; // frequency-dependent level range (max-min)
 
   private:
-    calibparam_t par_speaker;
-    calibparam_t par_sub;
+    spk_eq_param_t par_speaker;
+    spk_eq_param_t par_sub;
     std::vector<std::string> refport_; ///< list of measurement microphone ports
     float lmin;
     float lmax;
@@ -146,6 +159,48 @@ namespace TASCAR {
     uint32_t fcomp_bb =
         0u; ///< final number of biquad stages for frequency compensation
     uint32_t fcomp_sub = 0u;
+  };
+
+  class spkcalibrator_t {
+  public:
+    spkcalibrator_t();
+    void set_filename(const std::string&);
+    std::string get_filename() const;
+    /**
+       @brief Call this function after a file was selected.
+     */
+    void step1_file_selected();
+    /**
+       @brief Call this function after the configuration was revised.
+    */
+    void step2_config_revised();
+    /**
+       @brief Call this function after the calibration was initialized.
+
+       Part of the initialization is the coarse adjustment of the levels.
+     */
+    void step3_calib_initialized();
+    /**
+       @brief Call this function after the speakers were equalized.
+
+       Equalization can be either broadband only, or frequency
+       compensated and broadband equalized.
+     */
+    void step4_speaker_equalized();
+    /**
+       @brief Call this function after the level of the first speaker
+       and the diffuse level were adjusted.
+     */
+    void step5_levels_adjusted();
+    /**
+       @brief Call this function after a final revision of the calibration.
+
+       This function will save the speaker layout file.
+     */
+    void step6_calibration_revised();
+
+  private:
+    uint32_t currentstep;
   };
 
 } // namespace TASCAR
