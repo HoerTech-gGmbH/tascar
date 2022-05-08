@@ -98,6 +98,8 @@ namespace TASCAR {
   double db2lin(const double& x);
   float lin2db(const float& x);
   double lin2db(const double& x);
+  float dbspl2lin(const float& x);
+  float lin2dbspl(const float& x);
 
   namespace levelmeter {
     enum weight_t { Z, bandpass, C, A };
@@ -279,11 +281,13 @@ namespace TASCAR {
    * A quoted string can include spaces. Single and double quotes are
    * accepted. Quotes (of other type) within quotes are passed trough.
    */
-  std::vector<std::string> str2vecstr(const std::string& s, const std::string& delim = " \t");
+  std::vector<std::string> str2vecstr(const std::string& s,
+                                      const std::string& delim = " \t");
   std::string vecstr2str(const std::vector<std::string>& s);
   std::vector<double> str2vecdouble(const std::string& s);
   std::vector<float> str2vecfloat(const std::string& s);
-  std::vector<int32_t> str2vecint(const std::string& s, const std::string& delim = " \t");
+  std::vector<int32_t> str2vecint(const std::string& s,
+                                  const std::string& delim = " \t");
 
   class xml_doc_t {
   public:

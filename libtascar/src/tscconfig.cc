@@ -2333,6 +2333,16 @@ double TASCAR::lin2db(const double& x)
   return 20.0 * log10(x);
 }
 
+float TASCAR::dbspl2lin(const float& x)
+{
+  return 2e-5f * powf(10.0f, 0.05f * x);
+}
+
+float TASCAR::lin2dbspl(const float& x)
+{
+  return 20.0f * log10f(x / 2e-5f);
+}
+
 TASCAR::cfg_node_desc_t::cfg_node_desc_t() {}
 TASCAR::cfg_node_desc_t::~cfg_node_desc_t() {}
 
