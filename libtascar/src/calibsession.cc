@@ -139,6 +139,46 @@ void spk_eq_param_t::save_xml(const tsccfg::node_t& layoutnode)
   e.SET_ATTRIBUTE(bandoverlap);
 }
 
+calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true)
+{
+  read_defaults();
+}
+
+void calib_cfg_t::factory_reset()
+{
+  par_speaker.factory_reset();
+  par_sub.factory_reset();
+  refport.clear();
+  miccalib.clear();
+  initcal = true;
+}
+
+void calib_cfg_t::read_defaults()
+{
+  factory_reset();
+  par_speaker.read_defaults();
+  par_sub.read_defaults();
+  refport = str2vecstr(
+      TASCAR::config("tascar.spkcalib.inputport", "system:capture_1"));
+  miccalib = str2vecfloat(
+      TASCAR::config("tascar.spkcalib.miccalib",
+                     TASCAR::to_string(std::vector<float>({0.0f}))));
+  for(auto& c : miccalib)
+    c = TASCAR::dbspl2lin(c);
+}
+
+void calib_cfg_t::read_xml(const tsccfg::node_t& layoutnode)
+{
+  par_speaker.read_xml(layoutnode);
+  par_sub.read_xml(layoutnode);
+}
+
+void calib_cfg_t::save_xml(const tsccfg::node_t& layoutnode)
+{
+  par_speaker.save_xml(layoutnode);
+  par_sub.save_xml(layoutnode);
+}
+
 void add_stimulus_plugin(xml_element_t node, const spk_eq_param_t& par)
 {
   xml_element_t e_plugs(node.find_or_add_child("plugins"));
@@ -661,6 +701,112 @@ void calibsession_t::inc_diffusegain(double dl)
   double gain(pow(10.0, 0.05 * (startdiffgain + delta_diff)));
   rec_nsp->diffusegain = (float)gain;
   rec_spec->diffusegain = (float)gain;
+}
+
+spkcalibrator_t::spkcalibrator_t() {}
+
+void spkcalibrator_t::set_filename(const std::string& name)
+{
+  if(currentstep != 0u)
+    throw TASCAR::ErrMsg("It is not possible to change the name of the layout "
+                         "file while the calibration is running.");
+  filename = name;
+}
+
+void spkcalibrator_t::step1_file_selected()
+{
+  while(currentstep > 0u)
+    go_back();
+  if(filename.empty())
+    throw TASCAR::ErrMsg("No file selected. Please select a valid file.");
+  // open layout file, read calib parameters:
+  p_layout_doc = new xml_doc_t(filename, TASCAR::xml_doc_t::LOAD_FILE);
+  try {
+    p_layout = new spk_array_diff_render_t(p_layout_doc->root(), true);
+  }
+  catch(...) {
+    delete p_layout_doc;
+    throw;
+  }
+  // end
+  currentstep = 1u;
+}
+
+void spkcalibrator_t::step2_config_revised()
+{
+  while(currentstep > 1u)
+    go_back();
+  if(currentstep != 1u)
+    throw TASCAR::ErrMsg("Please select a layout file first.");
+  // create calib session:
+  // end
+  currentstep = 2u;
+}
+
+void spkcalibrator_t::step3_calib_initialized()
+{
+  while(currentstep > 2u)
+    go_back();
+  if(currentstep != 2u)
+    throw TASCAR::ErrMsg("Please revise your configuration first.");
+  // prepare speaker equalization if needed:
+  // end
+  currentstep = 3u;
+}
+
+void spkcalibrator_t::step4_speaker_equalized()
+{
+  while(currentstep > 3u)
+    go_back();
+  if(currentstep != 3u)
+    throw TASCAR::ErrMsg("Please ensure your calibration is initialized.");
+  // prepare level adjustment:
+  // end
+  currentstep = 4u;
+}
+
+void spkcalibrator_t::step5_levels_adjusted()
+{
+  while(currentstep > 4u)
+    go_back();
+  if(currentstep != 4u)
+    throw TASCAR::ErrMsg(
+        "Please equalize the speakers before adjusting the levels.");
+  // save data:
+  // end
+  currentstep = 5u;
+}
+
+void spkcalibrator_t::go_back()
+{
+  switch(currentstep) {
+  case 0u:
+    return;
+  case 1u:
+    if(p_layout)
+      delete p_layout;
+    p_layout = NULL;
+    if(p_layout_doc)
+      delete p_layout_doc;
+    p_layout_doc = NULL;
+    break;
+  case 2u:
+    if(p_session)
+      delete p_session;
+    p_session = NULL;
+    break;
+  }
+  --currentstep;
+}
+
+spkcalibrator_t::~spkcalibrator_t()
+{
+  if(p_layout)
+    delete p_layout;
+  if(p_layout_doc)
+    delete p_layout_doc;
+  if(p_session)
+    delete p_session;
 }
 
 /*

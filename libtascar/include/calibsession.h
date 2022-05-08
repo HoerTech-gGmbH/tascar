@@ -32,6 +32,9 @@ namespace TASCAR {
     bool issub = false;
   };
 
+  /**
+     @brief Calibration parameters
+   */
   class calib_cfg_t {
   public:
     calib_cfg_t();
@@ -39,10 +42,13 @@ namespace TASCAR {
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode);
-    spk_eq_param_t par_speaker;
-    spk_eq_param_t par_sub;
-    std::vector<std::string> refport;
-    std::vector<float> miccalib;
+    spk_eq_param_t par_speaker; ///< Broadband speaker calibration parameters
+    spk_eq_param_t par_sub;     ///< Subwoofer calibration parameters
+    std::vector<std::string> refport; ///< Jack port name to which measurement
+                                      ///< microphones are connected
+    std::vector<float>
+        miccalib;        ///< Calibration values of reference microphones
+    bool initcal = true; ///< Initial calibration (or re-calibration if false)
   };
 
   /**
@@ -164,8 +170,9 @@ namespace TASCAR {
   class spkcalibrator_t {
   public:
     spkcalibrator_t();
+    ~spkcalibrator_t();
     void set_filename(const std::string&);
-    std::string get_filename() const;
+    std::string get_filename() const { return filename; };
     /**
        @brief Call this function after a file was selected.
      */
@@ -192,15 +199,17 @@ namespace TASCAR {
        and the diffuse level were adjusted.
      */
     void step5_levels_adjusted();
-    /**
-       @brief Call this function after a final revision of the calibration.
 
-       This function will save the speaker layout file.
-     */
-    void step6_calibration_revised();
+    void go_back();
+
+    calib_cfg_t cfg;
 
   private:
-    uint32_t currentstep;
+    std::string filename;
+    uint32_t currentstep = 0u;
+    calibsession_t* p_session = NULL;
+    xml_doc_t* p_layout_doc = NULL;
+    spk_array_diff_render_t* p_layout = NULL;
   };
 
 } // namespace TASCAR
