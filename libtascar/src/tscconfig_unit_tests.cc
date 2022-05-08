@@ -213,28 +213,66 @@ TEST(xml_doc_t, failfromemptystring)
   catch(const std::exception& e) {
     success = false;
     std::string msg(e.what());
+    // std::cout << e.what() << std::endl;
     EXPECT_NE(std::string::npos, msg.find("pars"));
     EXPECT_NE(std::string::npos, msg.find("string"));
-    EXPECT_NE(std::string::npos, msg.find("root node"));
-    std::cout << e.what() << std::endl;
+    EXPECT_NE(std::string::npos, msg.find("structure"));
   }
   EXPECT_EQ(false, success);
 }
 
-TEST(strrep,strrep)
+TEST(xml_doc_t, failfrommissingclose)
 {
-  EXPECT_EQ("abc",TASCAR::strrep("xxxabcxxx","xxx",""));
-  EXPECT_EQ("xxxxxx",TASCAR::strrep("xxxabcxxx","abc",""));
-  EXPECT_EQ("111abc111",TASCAR::strrep("xxxabcxxx","x","1"));
-  EXPECT_EQ("xxxa12345xxx",TASCAR::strrep("xxxabcxxx","bc","12345"));
+  bool success(true);
+  try {
+    TASCAR::xml_doc_t doc(
+        "<session>\n<scene>\n<source>\n</scene>\n</session>\n",
+        TASCAR::xml_doc_t::LOAD_STRING);
+  }
+  catch(const std::exception& e) {
+    success = false;
+    std::string msg(e.what());
+    // std::cout << e.what() << std::endl;
+    // EXPECT_NE(std::string::npos, msg.find("pars"));
+    // EXPECT_NE(std::string::npos, msg.find("string"));
+    EXPECT_NE(std::string::npos, msg.find("line 4"));
+  }
+  EXPECT_EQ(false, success);
 }
 
-TEST(tostring,levelmeter)
+TEST(xml_doc_t, failfromclosewithoutopen)
 {
-  EXPECT_EQ("Z",TASCAR::to_string(TASCAR::levelmeter::Z));
-  EXPECT_EQ("A",TASCAR::to_string(TASCAR::levelmeter::A));
-  EXPECT_EQ("C",TASCAR::to_string(TASCAR::levelmeter::C));
-  EXPECT_EQ("bandpass",TASCAR::to_string(TASCAR::levelmeter::bandpass));
+  bool success(true);
+  try {
+    TASCAR::xml_doc_t doc(
+        "<session>\n<scene>\n</source>\n</scene>\n</session>\n",
+        TASCAR::xml_doc_t::LOAD_STRING);
+  }
+  catch(const std::exception& e) {
+    success = false;
+    std::string msg(e.what());
+    // std::cout << e.what() << std::endl;
+    // EXPECT_NE(std::string::npos, msg.find("pars"));
+    // EXPECT_NE(std::string::npos, msg.find("string"));
+    EXPECT_NE(std::string::npos, msg.find("line 3"));
+  }
+  EXPECT_EQ(false, success);
+}
+
+TEST(strrep, strrep)
+{
+  EXPECT_EQ("abc", TASCAR::strrep("xxxabcxxx", "xxx", ""));
+  EXPECT_EQ("xxxxxx", TASCAR::strrep("xxxabcxxx", "abc", ""));
+  EXPECT_EQ("111abc111", TASCAR::strrep("xxxabcxxx", "x", "1"));
+  EXPECT_EQ("xxxa12345xxx", TASCAR::strrep("xxxabcxxx", "bc", "12345"));
+}
+
+TEST(tostring, levelmeter)
+{
+  EXPECT_EQ("Z", TASCAR::to_string(TASCAR::levelmeter::Z));
+  EXPECT_EQ("A", TASCAR::to_string(TASCAR::levelmeter::A));
+  EXPECT_EQ("C", TASCAR::to_string(TASCAR::levelmeter::C));
+  EXPECT_EQ("bandpass", TASCAR::to_string(TASCAR::levelmeter::bandpass));
 }
 
 TEST(strcnv, str2vecstr)
@@ -271,7 +309,7 @@ TEST(strcnv, str2vecstr)
   EXPECT_EQ(std::vector<std::string>({"abc", "def \"x y\" g"}),
             TASCAR::str2vecstr("abc 'def \"x y\" g'"));
   EXPECT_EQ(std::vector<std::string>({"abc", "def \"x y\" g"}),
-            TASCAR::str2vecstr("abc |'def \"x y\" g'"," |"));
+            TASCAR::str2vecstr("abc |'def \"x y\" g'", " |"));
 }
 
 TEST(strcnv, vecstr2str)

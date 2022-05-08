@@ -41,6 +41,8 @@ namespace tsccfg {
 #include <xercesc/framework/LocalFileFormatTarget.hpp>
 #include <xercesc/framework/StdOutFormatTarget.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/util/XMLUni.hpp>
 
 #include <xercesc/framework/MemBufFormatTarget.hpp>
@@ -279,11 +281,13 @@ namespace TASCAR {
    * A quoted string can include spaces. Single and double quotes are
    * accepted. Quotes (of other type) within quotes are passed trough.
    */
-  std::vector<std::string> str2vecstr(const std::string& s, const std::string& delim = " \t");
+  std::vector<std::string> str2vecstr(const std::string& s,
+                                      const std::string& delim = " \t");
   std::string vecstr2str(const std::vector<std::string>& s);
   std::vector<double> str2vecdouble(const std::string& s);
   std::vector<float> str2vecfloat(const std::string& s);
-  std::vector<int32_t> str2vecint(const std::string& s, const std::string& delim = " \t");
+  std::vector<int32_t> str2vecint(const std::string& s,
+                                  const std::string& delim = " \t");
 
   class xml_doc_t {
   public:
@@ -308,6 +312,18 @@ namespace TASCAR {
 #endif
   private:
     tsccfg::node_t get_root_node();
+#ifdef USEXERCESXML
+    class tscerrorhandler_t : public xercesc::ErrorHandler {
+    public:
+      tscerrorhandler_t(){};
+      virtual ~tscerrorhandler_t(){};
+      virtual void warning(const xercesc::SAXParseException& exc);
+      virtual void error(const xercesc::SAXParseException& exc);
+      virtual void fatalError(const xercesc::SAXParseException& exc);
+      virtual void resetErrors(){};
+    };
+    tscerrorhandler_t errh;
+#endif
   };
 
   void generate_plugin_documentation_tables(bool latex);
