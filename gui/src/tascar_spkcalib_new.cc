@@ -82,12 +82,14 @@ protected:
   void on_level_entered();
   void on_level_diff_entered();
   bool on_timeout();
+  void update_gtkentry_from_value(const std::string& name,float val);
   sigc::connection con_timeout;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupSave;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupClose;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupCalib;
   Gtk::Box* step1_select_layout;
+  Gtk::Box* step2_calib_params;
   Gtk::Label* label_filename1;
   Gtk::Label* label_spklist;
   Gtk::Label* label_levels;
@@ -104,10 +106,10 @@ protected:
   Gtk::CheckButton* chk_f_sub;
   Gtk::SpinButton* flt_order_bb;
   Gtk::SpinButton* flt_order_sub;
-  //calibsession_t* session;
-  //spk_eq_param_t par_speaker;
-  //spk_eq_param_t par_sub;
-  //std::vector<std::string> refport;
+  // calibsession_t* session;
+  // spk_eq_param_t par_speaker;
+  // spk_eq_param_t par_sub;
+  // std::vector<std::string> refport;
   std::vector<TASCAR::levelmeter_t*> rmsmeter;
   std::vector<TASCAR::wave_t*> inwave;
   std::vector<TSCGUI::splmeter_t*> guimeter;
@@ -115,6 +117,14 @@ protected:
   double miccalib;
   spkcalibrator_t spkcalib;
 };
+
+void spkcalib_t::update_gtkentry_from_value(const std::string& name,float val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if( entry )
+    entry->set_text(TASCAR::to_string(val));
+}
 
 int spkcalib_t::process(jack_nframes_t nframes,
                         const std::vector<float*>& inBuffer,
@@ -225,6 +235,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       "dec_diff_05", sigc::mem_fun(*this, &spkcalib_t::on_dec_diff_05));
   // insert_action_group("calib",refActionGroupCalib);
   GET_WIDGET(step1_select_layout);
+  GET_WIDGET(step2_calib_params);
   GET_WIDGET(label_filename1);
   GET_WIDGET(label_spklist);
   GET_WIDGET(label_levels);
@@ -481,11 +492,30 @@ void spkcalib_t::on_inc_diff_10()
   inc_diffusegain(10);
 }
 
+#define UPDATE_GTKENTRY_FROM_VALUE(spkset,var) update_gtkentry_from_value(#spkset "_" #var,spkcalib.cfg.spkset.var)
+
 void spkcalib_t::on_assistant_next(Gtk::Widget* page)
 {
   switch(get_current_page()) {
   case 1:
     spkcalib.step1_file_selected();
+    // now update all fields:
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,fmin);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,fmax);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,duration);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,prewait);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,reflevel);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,bandsperoctave);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,bandoverlap);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,max_eqstages);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,fmin);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,fmax);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,duration);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,prewait);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,reflevel);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,bandsperoctave);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,bandoverlap);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub,max_eqstages);
     break;
   case 2:
     spkcalib.step2_config_revised();
