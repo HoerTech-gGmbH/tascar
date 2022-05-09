@@ -711,22 +711,32 @@ void spkcalibrator_t::set_filename(const std::string& name)
     throw TASCAR::ErrMsg("It is not possible to change the name of the layout "
                          "file while the calibration is running.");
   filename = name;
+  if(p_layout)
+    delete p_layout;
+  p_layout = NULL;
+  if(p_layout_doc)
+    delete p_layout_doc;
+  p_layout_doc = NULL;
+  // open layout file, read calib parameters:
+  p_layout_doc = new xml_doc_t(filename, TASCAR::xml_doc_t::LOAD_FILE);
+  try {
+    p_layout = new spk_array_diff_render_t(p_layout_doc->root(), true);
+    cfg.read_xml(p_layout_doc->root());
+  }
+  catch(...) {
+    delete p_layout_doc;
+    throw;
+  }
 }
 
 void spkcalibrator_t::step1_file_selected()
 {
   while(currentstep > 0u)
     go_back();
-  if(filename.empty())
-    throw TASCAR::ErrMsg("No file selected. Please select a valid file.");
-  // open layout file, read calib parameters:
-  p_layout_doc = new xml_doc_t(filename, TASCAR::xml_doc_t::LOAD_FILE);
-  try {
-    p_layout = new spk_array_diff_render_t(p_layout_doc->root(), true);
-  }
-  catch(...) {
-    delete p_layout_doc;
-    throw;
+  if(filename.empty() || (!p_layout)){
+    DEBUG(filename);
+    DEBUG(p_layout);
+    throw TASCAR::ErrMsg("No layout file selected. Please select a valid speaker layout file.");
   }
   // end
   currentstep = 1u;
@@ -782,14 +792,6 @@ void spkcalibrator_t::go_back()
   switch(currentstep) {
   case 0u:
     return;
-  case 1u:
-    if(p_layout)
-      delete p_layout;
-    p_layout = NULL;
-    if(p_layout_doc)
-      delete p_layout_doc;
-    p_layout_doc = NULL;
-    break;
   case 2u:
     if(p_session)
       delete p_session;
@@ -807,6 +809,13 @@ spkcalibrator_t::~spkcalibrator_t()
     delete p_layout_doc;
   if(p_session)
     delete p_session;
+}
+
+std::string spkcalibrator_t::get_speaker_desc() const
+{
+  if( p_layout )
+    return p_layout->to_string();
+  return "";
 }
 
 /*

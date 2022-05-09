@@ -173,6 +173,7 @@ namespace TASCAR {
     ~spkcalibrator_t();
     void set_filename(const std::string&);
     std::string get_filename() const { return filename; };
+    std::string get_speaker_desc() const;
     /**
        @brief Call this function after a file was selected.
      */

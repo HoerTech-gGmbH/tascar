@@ -652,6 +652,28 @@ std::string spk_array_diff_render_t::get_label(size_t ch) const
   return "";
 }
 
+std::string spk_array_diff_render_t::to_string() const
+{
+  std::string s(calibfor);
+  if( s.size() )
+    s+="\n";
+  size_t cnt = 1;
+  for(const auto& spk : *this) {
+    s += "spk " + std::to_string(cnt) + " (" + spk.print_sphere() + ") " +
+         spk.label + "\n";
+    ++cnt;
+  }
+  cnt = 1;
+  for(const auto& spk : subs) {
+    s += "sub " + std::to_string(cnt) + " (" + spk.print_sphere() + ") " +
+         spk.label + "\n";
+    ++cnt;
+  }
+  if( s.size() )
+    s.erase(s.size()-1);
+  return s;
+}
+
 /*
  * Local Variables:
  * mode: c++
