@@ -733,10 +733,11 @@ void spkcalibrator_t::step1_file_selected()
 {
   while(currentstep > 0u)
     go_back();
-  if(filename.empty() || (!p_layout)){
+  if(filename.empty() || (!p_layout)) {
     DEBUG(filename);
     DEBUG(p_layout);
-    throw TASCAR::ErrMsg("No layout file selected. Please select a valid speaker layout file.");
+    throw TASCAR::ErrMsg(
+        "No layout file selected. Please select a valid speaker layout file.");
   }
   // end
   currentstep = 1u;
@@ -791,7 +792,15 @@ void spkcalibrator_t::go_back()
 {
   switch(currentstep) {
   case 0u:
+    if(p_session)
+      delete p_session;
+    p_session = NULL;
     return;
+  case 1u:
+    if(p_session)
+      delete p_session;
+    p_session = NULL;
+    break;
   case 2u:
     if(p_session)
       delete p_session;
@@ -813,7 +822,7 @@ spkcalibrator_t::~spkcalibrator_t()
 
 std::string spkcalibrator_t::get_speaker_desc() const
 {
-  if( p_layout )
+  if(p_layout)
     return p_layout->to_string();
   return "";
 }

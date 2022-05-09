@@ -82,7 +82,17 @@ protected:
   void on_level_entered();
   void on_level_diff_entered();
   bool on_timeout();
-  void update_gtkentry_from_value(const std::string& name,float val);
+  void update_gtkentry_from_value(const std::string& name, float val);
+  void update_gtkentry_from_value(const std::string& name,
+                                  const std::vector<std::string>& val);
+  void update_gtkentry_from_value_dbspl(const std::string& name,
+                                        const std::vector<float>& val);
+  void update_value_from_gtkentry(const std::string& name, float& val);
+  void update_value_dbspl_from_gtkentry(const std::string& name,
+                                        std::vector<float>& val);
+  void update_value_from_gtkentry(const std::string& name,
+                                  std::vector<std::string>& val);
+  void update_value_from_gtkentry(const std::string& name, uint32_t& val);
   sigc::connection con_timeout;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupSave;
@@ -118,12 +128,89 @@ protected:
   spkcalibrator_t spkcalib;
 };
 
-void spkcalib_t::update_gtkentry_from_value(const std::string& name,float val)
+void spkcalib_t::update_gtkentry_from_value(const std::string& name, float val)
 {
   Gtk::Entry* entry = NULL;
   m_refBuilder->get_widget(name, entry);
-  if( entry )
+  if(entry)
     entry->set_text(TASCAR::to_string(val));
+}
+
+void spkcalib_t::update_gtkentry_from_value(const std::string& name,
+                                            const std::vector<std::string>& val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry)
+    entry->set_text(TASCAR::vecstr2str(val));
+}
+
+void spkcalib_t::update_gtkentry_from_value_dbspl(const std::string& name,
+                                                  const std::vector<float>& val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry)
+    entry->set_text(TASCAR::to_string_dbspl(val));
+}
+
+void spkcalib_t::update_value_from_gtkentry(const std::string& name, float& val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry) {
+    std::string attv = entry->get_text();
+    char* c;
+    float tmpv(strtof(attv.c_str(), &c));
+    if(c != attv.c_str())
+      val = tmpv;
+    entry->set_text(TASCAR::to_string(val));
+  }
+}
+
+void spkcalib_t::update_value_dbspl_from_gtkentry(const std::string& name,
+                                                  std::vector<float>& val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry) {
+    std::vector<float> nval;
+    auto sval = TASCAR::str2vecstr(entry->get_text());
+    for(const auto& attv : sval) {
+      char* c;
+      float tmpv(strtof(attv.c_str(), &c));
+      if(c != attv.c_str())
+        nval.push_back(TASCAR::dbspl2lin(tmpv));
+    }
+    val = nval;
+    entry->set_text(TASCAR::to_string_dbspl(val));
+  }
+}
+
+void spkcalib_t::update_value_from_gtkentry(const std::string& name,
+                                            std::vector<std::string>& val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry) {
+    val = TASCAR::str2vecstr(entry->get_text());
+    entry->set_text(TASCAR::vecstr2str(val));
+  }
+}
+
+void spkcalib_t::update_value_from_gtkentry(const std::string& name,
+                                            uint32_t& val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry) {
+    std::string attv = entry->get_text();
+    char* c;
+    float tmpv(strtof(attv.c_str(), &c));
+    if(c != attv.c_str())
+      val = tmpv;
+    entry->set_text(std::to_string(val));
+  }
 }
 
 int spkcalib_t::process(jack_nframes_t nframes,
@@ -168,7 +255,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       m_refBuilder(refGlade), text_instruction(NULL),
       text_instruction_diff(NULL), text_caliblevel(NULL)
 {
-  //for(uint32_t k = 0; k < refport.size(); ++k) {
+  // for(uint32_t k = 0; k < refport.size(); ++k) {
   //  add_input_port(std::string("in.") + TASCAR::to_string(k + 1));
   //  rmsmeter.push_back(new TASCAR::levelmeter_t((float)get_srate(),
   //                                              (float)par_speaker.duration,
@@ -178,8 +265,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   //  guimeter.back()->set_mode(TSCGUI::dameter_t::rmspeak);
   //  guimeter.back()->set_min_and_range((float)miccalibdb - 40.0f, 40.0f);
   //}
-  //jackc_t::activate();
-  //for(uint32_t k = 0; k < refport.size(); ++k)
+  // jackc_t::activate();
+  // for(uint32_t k = 0; k < refport.size(); ++k)
   //  connect_in(k, refport[k], true);
   // Create actions for menus and toolbars:
   refActionGroupMain = Gio::SimpleActionGroup::create();
@@ -253,8 +340,10 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(flt_order_bb);
   GET_WIDGET(flt_order_sub);
   signal_cancel().connect(sigc::mem_fun(*this, &spkcalib_t::on_quit));
-  signal_prepare().connect(sigc::mem_fun(*this, &spkcalib_t::on_assistant_next));
-  //signal_escape().connect(sigc::mem_fun(*this, &spkcalib_t::on_assistant_back));
+  signal_prepare().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_assistant_next));
+  // signal_escape().connect(sigc::mem_fun(*this,
+  // &spkcalib_t::on_assistant_back));
   levelentry_diff->signal_activate().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   con_timeout = Glib::signal_timeout().connect(
@@ -298,54 +387,56 @@ void spkcalib_t::on_level_diff_entered()
 
 void spkcalib_t::manage_act_grp_save()
 {
-//  if(session && session->complete())
-//    insert_action_group("save", refActionGroupSave);
-//  else
-//    remove_action_group("save");
-//  if(session) {
-//    std::string gainstr;
-//    if(!session->scenes.back()->receivermod_objects.empty()) {
-//      TASCAR::receivermod_base_speaker_t* recspk(
-//          dynamic_cast<TASCAR::receivermod_base_speaker_t*>(
-//              session->scenes.back()->receivermod_objects[1]->libdata));
-//      if(recspk) {
-//        for(uint32_t k = 0; k < recspk->spkpos.size(); ++k) {
-//          char lc[1024];
-//          sprintf(lc, "%1.1f(%1.1f) ", 20 * log10(recspk->spkpos[k].gain),
-//                  session->levelsfrg[k]);
-//          gainstr += lc;
-//        }
-//        if(!recspk->spkpos.subs.empty())
-//          gainstr += "subs: ";
-//        for(uint32_t k = 0; k < recspk->spkpos.subs.size(); ++k) {
-//          char lc[1024];
-//          sprintf(lc, "%1.1f(%1.1f) ", 20 * log10(recspk->spkpos.subs[k].gain),
-//                  session->sublevelsfrg[k]);
-//          gainstr += lc;
-//        }
-//      }
-//    }
-//    label_gains->set_text(gainstr);
-//  } else {
-//    label_gains->set_text("");
-//  }
-//  if(session && session->levels_complete()) {
-//    char ctmp[1024];
-//    sprintf(ctmp, "Mean level: %1.1f dB FS (range: %1.1f dB)",
-//            session->get_lmean(), session->get_lmax() - session->get_lmin());
-//    text_levelresults->set_text(ctmp);
-//  } else {
-//    text_levelresults->set_text("");
-//  }
-//  if(session) {
-//    std::string smodified("");
-//    if(session->modified())
-//      smodified = " (modified)";
-//    set_title(std::string("TASCAR speaker calibration [") +
-//              Glib::filename_display_basename(session->name()) +
-//              std::string("]") + smodified);
-//  } else
-//    set_title("TASCAR speaker calibration");
+  //  if(session && session->complete())
+  //    insert_action_group("save", refActionGroupSave);
+  //  else
+  //    remove_action_group("save");
+  //  if(session) {
+  //    std::string gainstr;
+  //    if(!session->scenes.back()->receivermod_objects.empty()) {
+  //      TASCAR::receivermod_base_speaker_t* recspk(
+  //          dynamic_cast<TASCAR::receivermod_base_speaker_t*>(
+  //              session->scenes.back()->receivermod_objects[1]->libdata));
+  //      if(recspk) {
+  //        for(uint32_t k = 0; k < recspk->spkpos.size(); ++k) {
+  //          char lc[1024];
+  //          sprintf(lc, "%1.1f(%1.1f) ", 20 * log10(recspk->spkpos[k].gain),
+  //                  session->levelsfrg[k]);
+  //          gainstr += lc;
+  //        }
+  //        if(!recspk->spkpos.subs.empty())
+  //          gainstr += "subs: ";
+  //        for(uint32_t k = 0; k < recspk->spkpos.subs.size(); ++k) {
+  //          char lc[1024];
+  //          sprintf(lc, "%1.1f(%1.1f) ", 20 *
+  //          log10(recspk->spkpos.subs[k].gain),
+  //                  session->sublevelsfrg[k]);
+  //          gainstr += lc;
+  //        }
+  //      }
+  //    }
+  //    label_gains->set_text(gainstr);
+  //  } else {
+  //    label_gains->set_text("");
+  //  }
+  //  if(session && session->levels_complete()) {
+  //    char ctmp[1024];
+  //    sprintf(ctmp, "Mean level: %1.1f dB FS (range: %1.1f dB)",
+  //            session->get_lmean(), session->get_lmax() -
+  //            session->get_lmin());
+  //    text_levelresults->set_text(ctmp);
+  //  } else {
+  //    text_levelresults->set_text("");
+  //  }
+  //  if(session) {
+  //    std::string smodified("");
+  //    if(session->modified())
+  //      smodified = " (modified)";
+  //    set_title(std::string("TASCAR speaker calibration [") +
+  //              Glib::filename_display_basename(session->name()) +
+  //              std::string("]") + smodified);
+  //  } else
+  //    set_title("TASCAR speaker calibration");
 }
 
 void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
@@ -370,7 +461,7 @@ void getlevels(TASCAR::calibsession_t* session, bool* pbquit)
 void spkcalib_t::on_reclevels()
 {
   try {
-    //if(session) {
+    // if(session) {
     //  remove_action_group("calib");
     //  remove_action_group("close");
     //  levelentry->set_sensitive(false);
@@ -397,7 +488,7 @@ void spkcalib_t::on_reclevels()
 void spkcalib_t::on_resetlevels()
 {
   try {
-    //if(session)
+    // if(session)
     //  session->reset_levels();
     manage_act_grp_save();
   }
@@ -408,14 +499,14 @@ void spkcalib_t::on_resetlevels()
 
 void spkcalib_t::on_play()
 {
-  //if(session)
+  // if(session)
   //  session->set_active(true);
   manage_act_grp_save();
 }
 
 void spkcalib_t::on_stop()
 {
-  //if(session)
+  // if(session)
   //  session->set_active(false);
 }
 
@@ -451,14 +542,14 @@ void spkcalib_t::on_inc_10()
 
 void spkcalib_t::on_play_diff()
 {
-  //if(session)
+  // if(session)
   //  session->set_active_diff(true);
   manage_act_grp_save();
 }
 
 void spkcalib_t::on_stop_diff()
 {
-  //if(session)
+  // if(session)
   //  session->set_active_diff(false);
 }
 
@@ -492,32 +583,58 @@ void spkcalib_t::on_inc_diff_10()
   inc_diffusegain(10);
 }
 
-#define UPDATE_GTKENTRY_FROM_VALUE(spkset,var) update_gtkentry_from_value(#spkset "_" #var,spkcalib.cfg.spkset.var)
+#define UPDATE_GTKENTRY_FROM_VALUE(spkset, var)                                \
+  update_gtkentry_from_value(#spkset "_" #var, spkcalib.cfg.spkset.var)
+#define UPDATE_VALUE_FROM_GTKENTRY(spkset, var)                                \
+  update_value_from_gtkentry(#spkset "_" #var, spkcalib.cfg.spkset.var)
 
 void spkcalib_t::on_assistant_next(Gtk::Widget* page)
 {
   switch(get_current_page()) {
+  case 0:
+    spkcalib.go_back();
+    break;
   case 1:
     spkcalib.step1_file_selected();
     // now update all fields:
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,fmin);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,fmax);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,duration);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,prewait);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,reflevel);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,bandsperoctave);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,bandoverlap);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker,max_eqstages);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,fmin);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,fmax);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,duration);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,prewait);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,reflevel);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,bandsperoctave);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,bandoverlap);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub,max_eqstages);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmin);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmax);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, duration);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, prewait);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, reflevel);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, bandsperoctave);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, bandoverlap);
+    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, max_eqstages);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, fmin);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, fmax);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, duration);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, prewait);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, reflevel);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, bandsperoctave);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, bandoverlap);
+    UPDATE_GTKENTRY_FROM_VALUE(par_sub, max_eqstages);
+    update_gtkentry_from_value("entry_refport", spkcalib.cfg.refport);
+    update_gtkentry_from_value_dbspl("entry_miccalibdb", spkcalib.cfg.miccalib);
     break;
   case 2:
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmin);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmax);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, duration);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, prewait);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, reflevel);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, bandsperoctave);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, bandoverlap);
+    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, max_eqstages);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, fmin);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, fmax);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, duration);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, prewait);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, reflevel);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, bandsperoctave);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, bandoverlap);
+    UPDATE_VALUE_FROM_GTKENTRY(par_sub, max_eqstages);
+    update_value_from_gtkentry("entry_refport", spkcalib.cfg.refport);
+    update_value_dbspl_from_gtkentry("entry_miccalibdb", spkcalib.cfg.miccalib);
     spkcalib.step2_config_revised();
     break;
   case 3:
@@ -585,14 +702,14 @@ void spkcalib_t::on_close()
 
 void spkcalib_t::levelinc(double d)
 {
-  //if(session)
+  // if(session)
   //  session->inc_caliblevel(-d);
   update_display();
 }
 
 void spkcalib_t::inc_diffusegain(double d)
 {
-  //if(session)
+  // if(session)
   //  session->inc_diffusegain(d);
   update_display();
 }
@@ -600,7 +717,7 @@ void spkcalib_t::inc_diffusegain(double d)
 void spkcalib_t::on_save()
 {
   try {
-    //if(session)
+    // if(session)
     //  session->save();
     update_display();
   }
@@ -611,7 +728,7 @@ void spkcalib_t::on_save()
 
 void spkcalib_t::on_saveas()
 {
-  //if(session) {
+  // if(session) {
   //  Gtk::FileChooserDialog dialog("Please choose a file",
   //                                Gtk::FILE_CHOOSER_ACTION_SAVE);
   //  dialog.set_transient_for(*this);
@@ -664,7 +781,7 @@ void spkcalib_t::update_display()
   rec_progress->set_fraction(0);
   label_filename1->set_text(spkcalib.get_filename());
   label_spklist->set_text(spkcalib.get_speaker_desc());
-  //if(session) {
+  // if(session) {
   //  char ctmp[1024];
   //  sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
   //          session->get_caliblevel(), session->get_diffusegain());
@@ -681,26 +798,25 @@ void spkcalib_t::update_display()
   //  flt_order_sub->set_text("");
   //}
   std::string portlist;
-  //for(auto it = refport.begin(); it != refport.end(); ++it)
+  // for(auto it = refport.begin(); it != refport.end(); ++it)
   //  portlist += *it + " ";
-  //if(portlist.size())
+  // if(portlist.size())
   //  portlist.erase(portlist.size() - 1, 1);
-  //char ctmp[1024];
-  //sprintf(
+  // char ctmp[1024];
+  // sprintf(
   //    ctmp,
   //    "1. Relative loudspeaker gains:\nPlace a measurement microphone at the "
   //    "listening position and connect to port%s \"%s\". A pink noise will be "
   //    "played from the loudspeaker positions. Press record to start.",
   //    (refport.size() > 1) ? "s" : "", portlist.c_str());
-  //label_levels->set_text(ctmp);
-  //sprintf(ctmp,
-  //        "2. Adjust the playback level to %1.1f dB using the inc/dec buttons. "
-  //        "Alternatively, enter the measured level in the field below. Use Z "
-  //        "or C weighting.\n a) Point source:",
-  //        par_speaker.reflevel);
-  //text_instruction->set_text(ctmp);
-  //text_instruction_diff->set_text(" b) Diffuse sound field:");
-  //if(get_warnings().size()) {
+  // label_levels->set_text(ctmp);
+  // sprintf(ctmp,
+  //        "2. Adjust the playback level to %1.1f dB using the inc/dec buttons.
+  //        " "Alternatively, enter the measured level in the field below. Use Z
+  //        " "or C weighting.\n a) Point source:", par_speaker.reflevel);
+  // text_instruction->set_text(ctmp);
+  // text_instruction_diff->set_text(" b) Diffuse sound field:");
+  // if(get_warnings().size()) {
   //  Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
   //  std::string msg;
   //  for(auto warn : get_warnings())
@@ -709,8 +825,8 @@ void spkcalib_t::update_display()
   //  dialog.run();
   //  get_warnings().clear();
   //}
-  //manage_act_grp_save();
-  //if(session) {
+  // manage_act_grp_save();
+  // if(session) {
   //  insert_action_group("calib", refActionGroupCalib);
   //  insert_action_group("close", refActionGroupClose);
   //  levelentry->set_sensitive(true);
@@ -731,13 +847,13 @@ void spkcalib_t::load(const std::string& fname)
   if(fname.empty())
     throw TASCAR::ErrMsg("Empty file name.");
   spkcalib.set_filename(fname);
-  set_page_complete(*step1_select_layout,true);
+  set_page_complete(*step1_select_layout, true);
   update_display();
 }
 
 void spkcalib_t::cleanup()
 {
-  //if(session) {
+  // if(session) {
   //  session->stop();
   //  delete session;
   //  session = NULL;
