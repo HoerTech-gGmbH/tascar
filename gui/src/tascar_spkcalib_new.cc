@@ -593,9 +593,11 @@ void spkcalib_t::on_assistant_next(Gtk::Widget* page)
   switch(get_current_page()) {
   case 0:
     spkcalib.go_back();
+    remove_action_group("calib");
     break;
   case 1:
     spkcalib.step1_file_selected();
+    remove_action_group("calib");
     // now update all fields:
     UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmin);
     UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmax);
@@ -636,6 +638,13 @@ void spkcalib_t::on_assistant_next(Gtk::Widget* page)
     update_value_from_gtkentry("entry_refport", spkcalib.cfg.refport);
     update_value_dbspl_from_gtkentry("entry_miccalibdb", spkcalib.cfg.miccalib);
     spkcalib.step2_config_revised();
+    insert_action_group("calib", refActionGroupCalib);
+    //  insert_action_group("close", refActionGroupClose);
+    //  levelentry->set_sensitive(true);
+    //  levelentry_diff->set_sensitive(true);
+    //} else {
+    //  remove_action_group("calib");
+    //  remove_action_group("close");
     break;
   case 3:
     spkcalib.step3_calib_initialized();

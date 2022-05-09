@@ -224,11 +224,12 @@ calibsession_t::calibsession_t(const std::string& fname,
   add_stimulus_plugin(e_subsrc.add_child("sound"), par_sub);
   // receiver 1 is always nsp, for speaker level differences:
   xml_element_t e_rcvr(e_scene.add_child("receiver"));
+  e_rcvr.set_attribute("name", "rec_nsp");
   e_rcvr.set_attribute("type", "nsp");
   e_rcvr.set_attribute("layout", fname);
   // receiver 2 is specific to the layout, for overall calibration:
   xml_element_t e_rcvr2(e_scene.add_child("receiver"));
-  e_rcvr2.set_attribute("name", "out2");
+  e_rcvr2.set_attribute("name", "rec_spec");
   e_rcvr2.set_attribute("mute", "true");
   e_rcvr2.set_attribute("layout", fname);
   // receiver 3 is omni, for reference signal:
@@ -297,6 +298,7 @@ calibsession_t::calibsession_t(const std::string& fname,
     for(auto& spk : recspk->spkpos.subs)
       spk.eqstages = 0;
   }
+  start();
 }
 
 calibsession_t::~calibsession_t()
@@ -750,6 +752,11 @@ void spkcalibrator_t::step2_config_revised()
   if(currentstep != 1u)
     throw TASCAR::ErrMsg("Please select a layout file first.");
   // create calib session:
+  if(p_session)
+    delete p_session;
+  p_session = NULL;
+  p_session =
+      new calibsession_t(filename, cfg.refport, cfg.par_speaker, cfg.par_sub);
   // end
   currentstep = 2u;
 }
