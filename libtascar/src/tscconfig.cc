@@ -630,6 +630,14 @@ std::string TASCAR::to_string_db(const std::vector<float>& value)
   return TASCAR::to_string(tmp);
 }
 
+std::string TASCAR::to_string_dbspl(const std::vector<float>& value)
+{
+  std::vector<float> tmp(value);
+  for(auto& x : tmp)
+    x = TASCAR::lin2dbspl(x);
+  return TASCAR::to_string(tmp);
+}
+
 std::string TASCAR::to_string_dbspl(float value)
 {
   char ctmp[1024];

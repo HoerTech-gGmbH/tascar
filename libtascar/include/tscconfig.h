@@ -128,6 +128,7 @@ namespace TASCAR {
   std::string to_string_dbspl(double value);
   std::string to_string_db(float value);
   std::string to_string_db(const std::vector<float>& value);
+  std::string to_string_dbspl(const std::vector<float>& value);
   std::string to_string_dbspl(float value);
   std::string to_string_bool(bool value);
 
