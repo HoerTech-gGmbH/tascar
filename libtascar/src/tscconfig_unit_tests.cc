@@ -213,10 +213,48 @@ TEST(xml_doc_t, failfromemptystring)
   catch(const std::exception& e) {
     success = false;
     std::string msg(e.what());
+    // std::cout << e.what() << std::endl;
     EXPECT_NE(std::string::npos, msg.find("pars"));
     EXPECT_NE(std::string::npos, msg.find("string"));
-    EXPECT_NE(std::string::npos, msg.find("root node"));
-    std::cout << e.what() << std::endl;
+    EXPECT_NE(std::string::npos, msg.find("structure"));
+  }
+  EXPECT_EQ(false, success);
+}
+
+TEST(xml_doc_t, failfrommissingclose)
+{
+  bool success(true);
+  try {
+    TASCAR::xml_doc_t doc(
+        "<session>\n<scene>\n<source>\n</scene>\n</session>\n",
+        TASCAR::xml_doc_t::LOAD_STRING);
+  }
+  catch(const std::exception& e) {
+    success = false;
+    std::string msg(e.what());
+    // std::cout << e.what() << std::endl;
+    // EXPECT_NE(std::string::npos, msg.find("pars"));
+    // EXPECT_NE(std::string::npos, msg.find("string"));
+    EXPECT_NE(std::string::npos, msg.find("line 4"));
+  }
+  EXPECT_EQ(false, success);
+}
+
+TEST(xml_doc_t, failfromclosewithoutopen)
+{
+  bool success(true);
+  try {
+    TASCAR::xml_doc_t doc(
+        "<session>\n<scene>\n</source>\n</scene>\n</session>\n",
+        TASCAR::xml_doc_t::LOAD_STRING);
+  }
+  catch(const std::exception& e) {
+    success = false;
+    std::string msg(e.what());
+    // std::cout << e.what() << std::endl;
+    // EXPECT_NE(std::string::npos, msg.find("pars"));
+    // EXPECT_NE(std::string::npos, msg.find("string"));
+    EXPECT_NE(std::string::npos, msg.find("line 3"));
   }
   EXPECT_EQ(false, success);
 }

@@ -2056,19 +2056,25 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
   domp.setDoNamespaces(false);
   domp.setDoSchema(false);
   domp.setLoadExternalDTD(false);
-  switch(t) {
-  case LOAD_FILE:
-    msg = "parsing file \"" + filename_or_data + "\"";
-    domp.parse(filename_or_data.c_str());
-    break;
-  case LOAD_STRING:
-    msg = "parsing string of " + std::to_string(filename_or_data.size()) +
-          " characters";
-    xercesc::MemBufInputSource myxml_buf((XMLByte*)(filename_or_data.c_str()),
-                                         filename_or_data.size(),
-                                         "xml_doc_t(in memory)");
-    domp.parse(myxml_buf);
-    break;
+  domp.setErrorHandler(&errh);
+  try {
+    switch(t) {
+    case LOAD_FILE:
+      msg = "parsing file \"" + filename_or_data + "\"";
+      domp.parse(filename_or_data.c_str());
+      break;
+    case LOAD_STRING:
+      msg = "parsing string of " + std::to_string(filename_or_data.size()) +
+            " characters";
+      xercesc::MemBufInputSource myxml_buf((XMLByte*)(filename_or_data.c_str()),
+                                           filename_or_data.size(),
+                                           "xml_doc_t(in memory)");
+      domp.parse(myxml_buf);
+      break;
+    }
+  }
+  catch(const std::exception& e) {
+    throw TASCAR::ErrMsg("While " + msg + ": " + e.what());
   }
   doc = domp.getDocument();
   if(!doc)
@@ -2077,6 +2083,34 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
     throw TASCAR::ErrMsg("The document has no root node (" + msg + ").");
   root = get_root_node();
 }
+
+void TASCAR::xml_doc_t::tscerrorhandler_t::warning(
+    const xercesc::SAXParseException& exc)
+{
+  add_warning(std::string("XML parser warning (line ") +
+              std::to_string(exc.getLineNumber()) + ", column " +
+              std::to_string(exc.getColumnNumber()) +
+              "): " + wstr2str(exc.getMessage()));
+}
+
+void TASCAR::xml_doc_t::tscerrorhandler_t::error(
+    const xercesc::SAXParseException& exc)
+{
+  throw TASCAR::ErrMsg(std::string("XML parser error (line ") +
+                       std::to_string(exc.getLineNumber()) + ", column " +
+                       std::to_string(exc.getColumnNumber()) +
+                       "): " + wstr2str(exc.getMessage()));
+}
+
+void TASCAR::xml_doc_t::tscerrorhandler_t::fatalError(
+    const xercesc::SAXParseException& exc)
+{
+  throw TASCAR::ErrMsg(std::string("XML parser error (line ") +
+                       std::to_string(exc.getLineNumber()) + ", column " +
+                       std::to_string(exc.getColumnNumber()) +
+                       "): " + wstr2str(exc.getMessage()));
+}
+
 #else
 TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
     : doc(NULL), freedoc(false)
@@ -2100,6 +2134,7 @@ TASCAR::xml_doc_t::xml_doc_t(const std::string& filename_or_data, load_type_t t)
   if(!root)
     throw TASCAR::ErrMsg("The document has no root node (" + msg + ").");
 }
+
 #endif
 
 #ifdef USEPUGIXML
