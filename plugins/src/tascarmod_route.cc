@@ -270,7 +270,7 @@ int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
     tp.object_time_seconds = (double)tp_frame / (double)srate;
     bool active(is_active(0));
     for(uint32_t ch = 0; ch < std::min(sIn.size(), sIn_tsc.size()); ++ch) {
-      sIn_tsc[ch].copy(sIn[ch], n, 1.0f / caliblevel_in[ch]);
+      sIn_tsc[ch].copy(sIn[ch], n, caliblevel_in[ch]);
     }
     if(active) {
       plugins.process_plugins(sIn_tsc, nullpos, nullrot, tp);

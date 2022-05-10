@@ -34,19 +34,18 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
-class spkcalib_t : public Gtk::Assistant, public jackc_t {
+class spkcalib_t : public Gtk::Assistant {
 public:
   spkcalib_t(BaseObjectType* cobject,
              const Glib::RefPtr<Gtk::Builder>& refGlade);
   virtual ~spkcalib_t();
   void load(const std::string& fname);
   void cleanup();
-  void levelinc(double d);
-  void inc_diffusegain(double d);
+  void levelinc(float d);
+  void inc_diffusegain(float d);
   void update_display();
-  virtual int process(jack_nframes_t nframes,
-                      const std::vector<float*>& inBuffer,
-                      const std::vector<float*>& outBuffer);
+  void configure_meters();
+  void clear_meters();
 
 private:
   void manage_act_grp_save();
@@ -83,6 +82,7 @@ protected:
   void on_level_diff_entered();
   bool on_timeout();
   void update_gtkentry_from_value(const std::string& name, float val);
+  void update_gtkcheckbox_from_value(const std::string& name, bool val);
   void update_gtkentry_from_value(const std::string& name,
                                   const std::vector<std::string>& val);
   void update_gtkentry_from_value_dbspl(const std::string& name,
@@ -93,6 +93,7 @@ protected:
   void update_value_from_gtkentry(const std::string& name,
                                   std::vector<std::string>& val);
   void update_value_from_gtkentry(const std::string& name, uint32_t& val);
+  void update_value_from_gtkcheckbox(const std::string& name, bool& val);
   sigc::connection con_timeout;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain;
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupSave;
@@ -100,6 +101,8 @@ protected:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupCalib;
   Gtk::Box* step1_select_layout;
   Gtk::Box* step2_calib_params;
+  Gtk::Box* step3_initcalib;
+  Gtk::Box* box_step4_validate;
   Gtk::Label* label_filename1;
   Gtk::Label* label_spklist;
   Gtk::Label* label_levels;
@@ -108,24 +111,28 @@ protected:
   Gtk::Label* text_instruction;
   Gtk::Label* text_instruction_diff;
   Gtk::Label* text_caliblevel;
+  Gtk::Label* lab_step3_caliblevel;
+  Gtk::Label* lab_step3_info;
   Gtk::Entry* levelentry;
   Gtk::Entry* levelentry_diff;
   Gtk::ProgressBar* rec_progress;
-  Gtk::Box* box_h;
-  Gtk::CheckButton* chk_f_bb;
-  Gtk::CheckButton* chk_f_sub;
-  Gtk::SpinButton* flt_order_bb;
-  Gtk::SpinButton* flt_order_sub;
+  // Gtk::Box* meterbox;
+  // Gtk::CheckButton* chk_f_bb;
+  // Gtk::CheckButton* chk_f_sub;
+  // Gtk::SpinButton* flt_order_bb;
+  // Gtk::SpinButton* flt_order_sub;
   // calibsession_t* session;
   // spk_eq_param_t par_speaker;
   // spk_eq_param_t par_sub;
   // std::vector<std::string> refport;
-  std::vector<TASCAR::levelmeter_t*> rmsmeter;
-  std::vector<TASCAR::wave_t*> inwave;
+  // std::vector<TASCAR::levelmeter_t*> rmsmeter;
+  // std::vector<TASCAR::wave_t*> inwave;
+  std::mutex guimeter_mutex;
   std::vector<TSCGUI::splmeter_t*> guimeter;
-  double miccalibdb;
-  double miccalib;
+  // double miccalibdb;
+  // double miccalib;
   spkcalibrator_t spkcalib;
+  int prev_page = 0;
 };
 
 void spkcalib_t::update_gtkentry_from_value(const std::string& name, float val)
@@ -134,6 +141,15 @@ void spkcalib_t::update_gtkentry_from_value(const std::string& name, float val)
   m_refBuilder->get_widget(name, entry);
   if(entry)
     entry->set_text(TASCAR::to_string(val));
+}
+
+void spkcalib_t::update_gtkcheckbox_from_value(const std::string& name,
+                                               bool val)
+{
+  Gtk::CheckButton* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry)
+    entry->set_active(val);
 }
 
 void spkcalib_t::update_gtkentry_from_value(const std::string& name,
@@ -213,29 +229,28 @@ void spkcalib_t::update_value_from_gtkentry(const std::string& name,
   }
 }
 
-int spkcalib_t::process(jack_nframes_t nframes,
-                        const std::vector<float*>& inBuffer,
-                        const std::vector<float*>&)
+void spkcalib_t::update_value_from_gtkcheckbox(const std::string& name,
+                                               bool& val)
 {
-  for(uint32_t k = 0; k < std::min(inBuffer.size(), rmsmeter.size()); ++k) {
-    if(rmsmeter[k]) {
-      inwave[k]->copy(inBuffer[k], nframes, (float)miccalib);
-      rmsmeter[k]->update(*(inwave[k]));
-    }
-  }
-  return 0;
+  Gtk::CheckButton* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry)
+    val = entry->get_active();
 }
 
 bool spkcalib_t::on_timeout()
 {
+  std::lock_guard<std::mutex> lock(guimeter_mutex);
   for(uint32_t k = 0; k < guimeter.size(); ++k) {
-    guimeter[k]->update_levelmeter(*(rmsmeter[k]), 70.0f);
+    guimeter[k]->update_levelmeter(spkcalib.get_meter(k),
+                                   spkcalib.cfg.par_speaker.reflevel);
     guimeter[k]->invalidate_win();
   }
   return true;
 }
 
 #define GET_WIDGET(x)                                                          \
+  x = NULL;                                                                    \
   m_refBuilder->get_widget(#x, x);                                             \
   if(!x)                                                                       \
   throw TASCAR::ErrMsg(std::string("No widget \"") + #x +                      \
@@ -249,10 +264,45 @@ void error_message(const std::string& msg)
   dialog.run();
 }
 
+void spkcalib_t::clear_meters()
+{
+  std::lock_guard<std::mutex> lock(guimeter_mutex);
+  auto page = get_nth_page(get_current_page());
+  Gtk::Box* meterbox = dynamic_cast<Gtk::Box*>(page);
+  for(auto& pmeter : guimeter) {
+    if(meterbox)
+      meterbox->remove(*pmeter);
+    delete pmeter;
+  }
+  guimeter.clear();
+}
+
+void spkcalib_t::configure_meters()
+{
+  std::lock_guard<std::mutex> lock(guimeter_mutex);
+  auto page = get_nth_page(get_current_page());
+  Gtk::Box* meterbox = dynamic_cast<Gtk::Box*>(page);
+  for(auto& pmeter : guimeter) {
+    if(meterbox)
+      meterbox->remove(*pmeter);
+    delete pmeter;
+  }
+  guimeter.clear();
+  for(uint32_t k = 0; k < spkcalib.cfg.refport.size(); ++k) {
+    auto pmeter = new TSCGUI::splmeter_t();
+    guimeter.push_back(pmeter);
+    pmeter->set_mode(TSCGUI::dameter_t::rmspeak);
+    pmeter->set_min_and_range(spkcalib.cfg.par_speaker.reflevel - 30.0f, 40.0f);
+    if(meterbox) {
+      meterbox->add(*pmeter);
+      meterbox->show_all();
+    }
+  }
+}
+
 spkcalib_t::spkcalib_t(BaseObjectType* cobject,
                        const Glib::RefPtr<Gtk::Builder>& refGlade)
-    : Gtk::Assistant(cobject), jackc_t("tascar_spkcalib_levels"),
-      m_refBuilder(refGlade), text_instruction(NULL),
+    : Gtk::Assistant(cobject), m_refBuilder(refGlade), text_instruction(NULL),
       text_instruction_diff(NULL), text_caliblevel(NULL)
 {
   // for(uint32_t k = 0; k < refport.size(); ++k) {
@@ -323,6 +373,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   // insert_action_group("calib",refActionGroupCalib);
   GET_WIDGET(step1_select_layout);
   GET_WIDGET(step2_calib_params);
+  GET_WIDGET(step3_initcalib);
+  GET_WIDGET(box_step4_validate);
   GET_WIDGET(label_filename1);
   GET_WIDGET(label_spklist);
   GET_WIDGET(label_levels);
@@ -331,30 +383,19 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(text_instruction_diff);
   GET_WIDGET(text_instruction);
   GET_WIDGET(text_caliblevel);
+  GET_WIDGET(lab_step3_caliblevel);
+  GET_WIDGET(lab_step3_info);
   GET_WIDGET(levelentry);
   GET_WIDGET(levelentry_diff);
   GET_WIDGET(rec_progress);
-  GET_WIDGET(box_h);
-  GET_WIDGET(chk_f_bb);
-  GET_WIDGET(chk_f_sub);
-  GET_WIDGET(flt_order_bb);
-  GET_WIDGET(flt_order_sub);
+  // GET_WIDGET(meterbox);
   signal_cancel().connect(sigc::mem_fun(*this, &spkcalib_t::on_quit));
   signal_prepare().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_assistant_next));
-  // signal_escape().connect(sigc::mem_fun(*this,
-  // &spkcalib_t::on_assistant_back));
   levelentry_diff->signal_activate().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   con_timeout = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_timeout), 250);
-  flt_order_bb->set_increments(1, 1);
-  flt_order_bb->set_range(0, 10);
-  flt_order_sub->set_increments(1, 1);
-  flt_order_sub->set_range(0, 10);
-  for(uint32_t k = 0; k < guimeter.size(); ++k) {
-    box_h->add(*guimeter[k]);
-  }
   update_display();
   show_all();
 }
@@ -362,7 +403,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
 void spkcalib_t::on_level_entered()
 {
   try {
-    double newlevel(spkcalib.cfg.par_speaker.reflevel);
+    float newlevel(spkcalib.cfg.par_speaker.reflevel);
     std::string slevel(levelentry->get_text());
     newlevel = atof(slevel.c_str());
     levelinc(spkcalib.cfg.par_speaker.reflevel - newlevel);
@@ -375,7 +416,7 @@ void spkcalib_t::on_level_entered()
 void spkcalib_t::on_level_diff_entered()
 {
   try {
-    double newlevel(spkcalib.cfg.par_speaker.reflevel);
+    float newlevel(spkcalib.cfg.par_speaker.reflevel);
     std::string slevel(levelentry_diff->get_text());
     newlevel = atof(slevel.c_str());
     inc_diffusegain(spkcalib.cfg.par_speaker.reflevel - newlevel);
@@ -442,9 +483,9 @@ void spkcalib_t::manage_act_grp_save()
 void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
 {
   TASCAR::tictoc_t tic;
-  while(!(*pbquit)) {
-    double t = tic.toc();
-    t /= sleepsec;
+  double t = 0.0;
+  while((!(*pbquit)) && (t<=1.0)) {
+    t = tic.toc()/sleepsec;
     rec_progress->set_fraction(std::min(1.0, t));
     while(Gtk::Main::events_pending())
       Gtk::Main::iteration(false);
@@ -462,18 +503,18 @@ void spkcalib_t::on_reclevels()
 {
   try {
     // if(session) {
-    //  remove_action_group("calib");
+    remove_action_group("calib");
     //  remove_action_group("close");
     //  levelentry->set_sensitive(false);
     //  levelentry_diff->set_sensitive(false);
-    //  bool bquitthread = false;
-    //  std::thread guiupdater(getlevels, session, &bquitthread);
-    //  guiupdate(rec_progress, session->get_measurement_duration(),
-    //            &bquitthread);
+    bool bquitthread = false;
+    //std::thread guiupdater(getlevels, session, &bquitthread);
+    guiupdate(rec_progress, spkcalib.get_measurement_duration(),
+              &bquitthread);
     //
     //  if(guiupdater.joinable())
     //    guiupdater.join();
-    //  insert_action_group("calib", refActionGroupCalib);
+    insert_action_group("calib", refActionGroupCalib);
     //  insert_action_group("close", refActionGroupClose);
     //  levelentry->set_sensitive(true);
     //  levelentry_diff->set_sensitive(true);
@@ -499,15 +540,14 @@ void spkcalib_t::on_resetlevels()
 
 void spkcalib_t::on_play()
 {
-  // if(session)
-  //  session->set_active(true);
+  spkcalib.set_active_pointsource(true);
   manage_act_grp_save();
+  set_page_complete(*step3_initcalib, true);
 }
 
 void spkcalib_t::on_stop()
 {
-  // if(session)
-  //  session->set_active(false);
+  spkcalib.set_active_pointsource(false);
 }
 
 void spkcalib_t::on_dec_10()
@@ -544,6 +584,7 @@ void spkcalib_t::on_play_diff()
 {
   // if(session)
   //  session->set_active_diff(true);
+  spkcalib.set_active_diffuse(true);
   manage_act_grp_save();
 }
 
@@ -551,6 +592,7 @@ void spkcalib_t::on_stop_diff()
 {
   // if(session)
   //  session->set_active_diff(false);
+  spkcalib.set_active_diffuse(false);
 }
 
 void spkcalib_t::on_dec_diff_10()
@@ -588,12 +630,14 @@ void spkcalib_t::on_inc_diff_10()
 #define UPDATE_VALUE_FROM_GTKENTRY(spkset, var)                                \
   update_value_from_gtkentry(#spkset "_" #var, spkcalib.cfg.spkset.var)
 
-void spkcalib_t::on_assistant_next(Gtk::Widget* page)
+void spkcalib_t::on_assistant_next(Gtk::Widget*)
 {
-  switch(get_current_page()) {
+  auto current_page = get_current_page();
+  switch(current_page) {
   case 0:
     spkcalib.go_back();
     remove_action_group("calib");
+    clear_meters();
     break;
   case 1:
     spkcalib.step1_file_selected();
@@ -617,6 +661,8 @@ void spkcalib_t::on_assistant_next(Gtk::Widget* page)
     UPDATE_GTKENTRY_FROM_VALUE(par_sub, max_eqstages);
     update_gtkentry_from_value("entry_refport", spkcalib.cfg.refport);
     update_gtkentry_from_value_dbspl("entry_miccalibdb", spkcalib.cfg.miccalib);
+    update_gtkcheckbox_from_value("checkbox_initcal", spkcalib.cfg.initcal);
+    clear_meters();
     break;
   case 2:
     UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmin);
@@ -637,25 +683,41 @@ void spkcalib_t::on_assistant_next(Gtk::Widget* page)
     UPDATE_VALUE_FROM_GTKENTRY(par_sub, max_eqstages);
     update_value_from_gtkentry("entry_refport", spkcalib.cfg.refport);
     update_value_dbspl_from_gtkentry("entry_miccalibdb", spkcalib.cfg.miccalib);
+    update_value_from_gtkcheckbox("checkbox_initcal", spkcalib.cfg.initcal);
     spkcalib.step2_config_revised();
     insert_action_group("calib", refActionGroupCalib);
-    //  insert_action_group("close", refActionGroupClose);
-    //  levelentry->set_sensitive(true);
-    //  levelentry_diff->set_sensitive(true);
-    //} else {
-    //  remove_action_group("calib");
-    //  remove_action_group("close");
+    spkcalib.set_active_pointsource(false);
+    spkcalib.set_active_diffuse(false);
+    if(!spkcalib.cfg.initcal) {
+      // skip initcal page
+      if(prev_page < current_page) {
+        next_page();
+        spkcalib.step3_calib_initialized();
+      } else {
+        previous_page();
+        spkcalib.step1_file_selected();
+      }
+    } else {
+      configure_meters();
+      if(prev_page < current_page)
+        spkcalib.set_caliblevel(140);
+      update_display();
+    }
     break;
   case 3:
     spkcalib.step3_calib_initialized();
+    spkcalib.set_active_pointsource(false);
+    spkcalib.set_active_diffuse(false);
     break;
   case 4:
     spkcalib.step4_speaker_equalized();
+    configure_meters();
     break;
   case 5:
     spkcalib.step5_levels_adjusted();
     break;
   }
+  prev_page = current_page;
 }
 
 void spkcalib_t::on_assistant_back()
@@ -709,17 +771,16 @@ void spkcalib_t::on_close()
   update_display();
 }
 
-void spkcalib_t::levelinc(double d)
+void spkcalib_t::levelinc(float d)
 {
-  // if(session)
-  //  session->inc_caliblevel(-d);
+  spkcalib.inc_caliblevel(-d);
   update_display();
 }
 
-void spkcalib_t::inc_diffusegain(double d)
+void spkcalib_t::inc_diffusegain(float d)
 {
   // if(session)
-  //  session->inc_diffusegain(d);
+  spkcalib.inc_diffusegain(d);
   update_display();
 }
 
@@ -777,12 +838,12 @@ spkcalib_t::~spkcalib_t()
 {
   con_timeout.disconnect();
   cleanup();
-  for(auto it = rmsmeter.begin(); it != rmsmeter.end(); ++it)
-    delete *it;
-  for(auto it = inwave.begin(); it != inwave.end(); ++it)
-    delete *it;
-  for(auto it = guimeter.begin(); it != guimeter.end(); ++it)
-    delete *it;
+  // for(auto it = rmsmeter.begin(); it != rmsmeter.end(); ++it)
+  //  delete *it;
+  // for(auto it = inwave.begin(); it != inwave.end(); ++it)
+  //  delete *it;
+  for(auto& pmeter : guimeter)
+    delete pmeter;
 }
 
 void spkcalib_t::update_display()
@@ -791,10 +852,15 @@ void spkcalib_t::update_display()
   label_filename1->set_text(spkcalib.get_filename());
   label_spklist->set_text(spkcalib.get_speaker_desc());
   // if(session) {
-  //  char ctmp[1024];
-  //  sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
-  //          session->get_caliblevel(), session->get_diffusegain());
-  //  text_caliblevel->set_text(ctmp);
+  char ctmp[1024];
+  sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
+          spkcalib.get_caliblevel(), spkcalib.get_diffusegain());
+  lab_step3_caliblevel->set_text(ctmp);
+  lab_step3_info->set_text(
+      std::string("Adjust the signal level with the buttons below\n"
+                  "until it reaches approximately ") +
+      TASCAR::to_string(spkcalib.cfg.par_speaker.reflevel) +
+      std::string(" dB SPL (C-weighted)."));
   //  // chk_f_bb->set_active(session->max_fcomp_bb > 0u);
   //  // chk_f_sub->set_active(session->max_fcomp_sub > 0u);
   //  // flt_order_bb->set_text(std::to_string(session->max_fcomp_bb));
@@ -862,11 +928,6 @@ void spkcalib_t::load(const std::string& fname)
 
 void spkcalib_t::cleanup()
 {
-  // if(session) {
-  //  session->stop();
-  //  delete session;
-  //  session = NULL;
-  //}
   update_display();
 }
 

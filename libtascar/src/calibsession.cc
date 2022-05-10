@@ -171,6 +171,7 @@ void calib_cfg_t::read_xml(const tsccfg::node_t& layoutnode)
 {
   par_speaker.read_xml(layoutnode);
   par_sub.read_xml(layoutnode);
+  initcal = tsccfg::node_get_attribute_value(layoutnode,"calibdate").empty();
 }
 
 void calib_cfg_t::save_xml(const tsccfg::node_t& layoutnode) const
@@ -308,6 +309,14 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
       spk.eqstages = 0;
   }
   start();
+
+  for(auto& pmod : modules) {
+    TASCAR::Scene::route_t* rp(
+        dynamic_cast<TASCAR::Scene::route_t*>(pmod->libdata));
+    if(rp && (rp->get_name() == "levels")) {
+      levelroute = rp;
+    }
+  }
 }
 
 calibsession_t::~calibsession_t()
@@ -361,7 +370,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     std::vector<float> vLref;
     for(size_t ch = 0u; ch < ports.size() - 1u; ++ch) {
       auto& wav = recbuf[ch];
-      float calgain = 1.0f / miccalib[ch];
+      float calgain = miccalib[ch];
       float* wav_begin = wav.d;
       float* wav_end = wav_begin + wav.n;
       for(float* pv = wav_begin; pv < wav_end; ++pv)
@@ -440,7 +449,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     std::vector<float> vLref;
     for(size_t ch = 0u; ch < ports.size() - 1u; ++ch) {
       auto& wav = recbuf[ch];
-      float calgain = 1.0f / miccalib[ch];
+      float calgain = miccalib[ch];
       float* wav_begin = wav.d;
       float* wav_end = wav_begin + wav.n;
       for(float* pv = wav_begin; pv < wav_end; ++pv)
@@ -715,7 +724,7 @@ double calibsession_t::get_diffusegain() const
   return 20.0 * log10(rec_spec->diffusegain);
 }
 
-void calibsession_t::inc_caliblevel(double dl)
+void calibsession_t::inc_caliblevel(float dl)
 {
   gainmodified = true;
   delta += dl;
@@ -724,7 +733,16 @@ void calibsession_t::inc_caliblevel(double dl)
   rec_spec->caliblevel = (float)newlevel_pa;
 }
 
-void calibsession_t::inc_diffusegain(double dl)
+void calibsession_t::set_caliblevel(float dl)
+{
+  gainmodified = true;
+  delta = dl-startlevel;
+  double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
+  rec_nsp->caliblevel = (float)newlevel_pa;
+  rec_spec->caliblevel = (float)newlevel_pa;
+}
+
+void calibsession_t::inc_diffusegain(float dl)
 {
   gainmodified = true;
   delta_diff += dl;
@@ -733,7 +751,9 @@ void calibsession_t::inc_diffusegain(double dl)
   rec_spec->diffusegain = (float)gain;
 }
 
-spkcalibrator_t::spkcalibrator_t() {}
+spkcalibrator_t::spkcalibrator_t() : fallbackmeter(8000.0, 0.1, levelmeter::Z)
+{
+}
 
 void spkcalibrator_t::set_filename(const std::string& name)
 {
@@ -764,11 +784,10 @@ void spkcalibrator_t::step1_file_selected()
   while(currentstep > 0u)
     go_back();
   if(filename.empty() || (!p_layout)) {
-    DEBUG(filename);
-    DEBUG(p_layout);
     throw TASCAR::ErrMsg(
         "No layout file selected. Please select a valid speaker layout file.");
   }
+  // update initcalib flag:
   // end
   currentstep = 1u;
 }
@@ -859,6 +878,14 @@ std::string spkcalibrator_t::get_speaker_desc() const
   if(p_layout)
     return p_layout->to_string();
   return "";
+}
+
+const TASCAR::levelmeter_t& spkcalibrator_t::get_meter(uint32_t k) const
+{
+  if(p_session && p_session->levelroute &&
+     (p_session->levelroute->metercnt() > k))
+    return p_session->levelroute->get_meter(k);
+  return fallbackmeter;
 }
 
 /*

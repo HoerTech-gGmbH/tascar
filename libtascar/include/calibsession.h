@@ -60,13 +60,13 @@ namespace TASCAR {
    */
   class calibsession_t : public TASCAR::session_t {
   public:
-    calibsession_t(const std::string& fname,
-                   const calib_cfg_t& cfg);
+    calibsession_t(const std::string& fname, const calib_cfg_t& cfg);
     ~calibsession_t();
     double get_caliblevel() const;
     double get_diffusegain() const;
-    void inc_caliblevel(double dl);
-    void inc_diffusegain(double dl);
+    void set_caliblevel(float level);
+    void inc_caliblevel(float dl);
+    void inc_diffusegain(float dl);
     void set_active(bool b);
     void set_active_diff(bool b);
     /**
@@ -109,9 +109,11 @@ namespace TASCAR {
       return (cfg_.par_speaker.duration + cfg_.par_speaker.prewait) *
                  (double)get_num_bb() *
                  (1.0 + (double)(cfg_.par_speaker.max_eqstages > 0u)) +
-             (cfg_.par_sub.duration + cfg_.par_sub.prewait) * (double)get_num_sub() *
+             (cfg_.par_sub.duration + cfg_.par_sub.prewait) *
+                 (double)get_num_sub() *
                  (1.0 + (double)(cfg_.par_sub.max_eqstages > 0u)) +
-             0.2f * (float)cfg_.par_speaker.max_eqstages * (double)get_num_bb() +
+             0.2f * (float)cfg_.par_speaker.max_eqstages *
+                 (double)get_num_bb() +
              0.2f * (float)cfg_.par_sub.max_eqstages * (double)get_num_sub();
     };
     // void param_factory_reset();
@@ -143,11 +145,14 @@ namespace TASCAR {
     std::vector<float>
         sublevelsfrg; // frequency-dependent level range (max-min)
 
+    TASCAR::Scene::route_t* levelroute = NULL;
+
   private:
     const calib_cfg_t cfg_;
-    //spk_eq_param_t par_speaker;
-    //spk_eq_param_t par_sub;
-    //std::vector<std::string> refport_; ///< list of measurement microphone ports
+    // spk_eq_param_t par_speaker;
+    // spk_eq_param_t par_sub;
+    // std::vector<std::string> refport_; ///< list of measurement microphone
+    // ports
     float lmin;
     float lmax;
     float lmean;
@@ -204,12 +209,62 @@ namespace TASCAR {
 
     calib_cfg_t cfg;
 
+    const TASCAR::levelmeter_t& get_meter(uint32_t k) const;
+
+    void set_active_pointsource(bool act)
+    {
+      if(p_session)
+        p_session->set_active(act);
+    };
+
+    void set_active_diffuse(bool act)
+    {
+      if(p_session)
+        p_session->set_active_diff(act);
+    };
+
+    void inc_diffusegain(float d)
+    {
+      if(p_session)
+        p_session->inc_diffusegain(d);
+    };
+
+    void inc_caliblevel(float d)
+    {
+      if(p_session)
+        p_session->inc_caliblevel(d);
+    };
+    void set_caliblevel(float d)
+    {
+      if(p_session)
+        p_session->set_caliblevel(d);
+    };
+    double get_caliblevel() const
+    {
+      if(p_session)
+        return p_session->get_caliblevel();
+      return 0;
+    };
+    double get_diffusegain() const
+    {
+      if(p_session)
+        return p_session->get_diffusegain();
+      return 0;
+    };
+    double get_measurement_duration() const
+    {
+      if(p_session)
+        return p_session->get_measurement_duration();
+      return 0;
+    };
+
   private:
     std::string filename;
     uint32_t currentstep = 0u;
     calibsession_t* p_session = NULL;
     xml_doc_t* p_layout_doc = NULL;
     spk_array_diff_render_t* p_layout = NULL;
+    TASCAR::levelmeter_t fallbackmeter;
   };
 
 } // namespace TASCAR
