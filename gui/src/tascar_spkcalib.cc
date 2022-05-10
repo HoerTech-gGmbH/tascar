@@ -102,6 +102,8 @@ protected:
   Gtk::Box* step1_select_layout;
   Gtk::Box* step2_calib_params;
   Gtk::Box* step3_initcalib;
+  Gtk::Box* step4_speaker_equal;
+  Gtk::Box* step5_adjust_levels;
   Gtk::Box* box_step4_validate;
   Gtk::Label* label_filename1;
   Gtk::Label* label_spklist;
@@ -113,6 +115,7 @@ protected:
   Gtk::Label* text_caliblevel;
   Gtk::Label* lab_step3_caliblevel;
   Gtk::Label* lab_step3_info;
+  Gtk::Label* lab_step5_caliblevel;
   Gtk::Entry* levelentry;
   Gtk::Entry* levelentry_diff;
   Gtk::ProgressBar* rec_progress;
@@ -374,6 +377,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(step1_select_layout);
   GET_WIDGET(step2_calib_params);
   GET_WIDGET(step3_initcalib);
+  GET_WIDGET(step4_speaker_equal);
+  GET_WIDGET(step5_adjust_levels);
   GET_WIDGET(box_step4_validate);
   GET_WIDGET(label_filename1);
   GET_WIDGET(label_spklist);
@@ -384,6 +389,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(text_instruction);
   GET_WIDGET(text_caliblevel);
   GET_WIDGET(lab_step3_caliblevel);
+  GET_WIDGET(lab_step5_caliblevel);
   GET_WIDGET(lab_step3_info);
   GET_WIDGET(levelentry);
   GET_WIDGET(levelentry_diff);
@@ -484,8 +490,8 @@ void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
 {
   TASCAR::tictoc_t tic;
   double t = 0.0;
-  while((!(*pbquit)) && (t<=1.0)) {
-    t = tic.toc()/sleepsec;
+  while((!(*pbquit)) && (t <= 1.0)) {
+    t = tic.toc() / sleepsec;
     rec_progress->set_fraction(std::min(1.0, t));
     while(Gtk::Main::events_pending())
       Gtk::Main::iteration(false);
@@ -493,32 +499,23 @@ void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
   }
 }
 
-void getlevels(TASCAR::calibsession_t* session, bool* pbquit)
+void getlevels(TASCAR::spkcalibrator_t* cal, bool* pbquit)
 {
-  session->get_levels();
+  cal->get_levels();
   *pbquit = true;
 }
 
 void spkcalib_t::on_reclevels()
 {
   try {
-    // if(session) {
     remove_action_group("calib");
-    //  remove_action_group("close");
-    //  levelentry->set_sensitive(false);
-    //  levelentry_diff->set_sensitive(false);
     bool bquitthread = false;
-    //std::thread guiupdater(getlevels, session, &bquitthread);
-    guiupdate(rec_progress, spkcalib.get_measurement_duration(),
-              &bquitthread);
-    //
-    //  if(guiupdater.joinable())
-    //    guiupdater.join();
+    std::thread guiupdater(getlevels, &spkcalib, &bquitthread);
+    guiupdate(rec_progress, spkcalib.get_measurement_duration(), &bquitthread);
+    if(guiupdater.joinable())
+      guiupdater.join();
     insert_action_group("calib", refActionGroupCalib);
-    //  insert_action_group("close", refActionGroupClose);
-    //  levelentry->set_sensitive(true);
-    //  levelentry_diff->set_sensitive(true);
-    //}
+    set_page_complete(*step4_speaker_equal, true);
     manage_act_grp_save();
   }
   catch(const std::exception& e) {
@@ -529,8 +526,7 @@ void spkcalib_t::on_reclevels()
 void spkcalib_t::on_resetlevels()
 {
   try {
-    // if(session)
-    //  session->reset_levels();
+    spkcalib.reset_levels();
     manage_act_grp_save();
   }
   catch(const std::exception& e) {
@@ -856,6 +852,7 @@ void spkcalib_t::update_display()
   sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
           spkcalib.get_caliblevel(), spkcalib.get_diffusegain());
   lab_step3_caliblevel->set_text(ctmp);
+  lab_step5_caliblevel->set_text(ctmp);
   lab_step3_info->set_text(
       std::string("Adjust the signal level with the buttons below\n"
                   "until it reaches approximately ") +
@@ -885,21 +882,23 @@ void spkcalib_t::update_display()
   //    "played from the loudspeaker positions. Press record to start.",
   //    (refport.size() > 1) ? "s" : "", portlist.c_str());
   // label_levels->set_text(ctmp);
-  // sprintf(ctmp,
-  //        "2. Adjust the playback level to %1.1f dB using the inc/dec buttons.
-  //        " "Alternatively, enter the measured level in the field below. Use Z
-  //        " "or C weighting.\n a) Point source:", par_speaker.reflevel);
-  // text_instruction->set_text(ctmp);
-  // text_instruction_diff->set_text(" b) Diffuse sound field:");
-  // if(get_warnings().size()) {
-  //  Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
-  //  std::string msg;
-  //  for(auto warn : get_warnings())
-  //    msg += warn + "\n";
-  //  dialog.set_secondary_text(msg);
-  //  dialog.run();
-  //  get_warnings().clear();
-  //}
+  sprintf(
+      ctmp,
+      "2. Adjust the playback level to %1.1f dB using the inc/dec buttons.\n"
+      "Alternatively, enter the measured level in the field below.\n"
+      "Use Z or C weighting.\n a) Point source:",
+      spkcalib.cfg.par_speaker.reflevel);
+  text_instruction->set_text(ctmp);
+  text_instruction_diff->set_text(" b) Diffuse sound field:");
+  if(get_warnings().size()) {
+    Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
+    std::string msg;
+    for(auto warn : get_warnings())
+      msg += warn + "\n";
+    dialog.set_secondary_text(msg);
+    dialog.run();
+    get_warnings().clear();
+  }
   // manage_act_grp_save();
   // if(session) {
   //  insert_action_group("calib", refActionGroupCalib);

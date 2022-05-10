@@ -257,6 +257,16 @@ namespace TASCAR {
         return p_session->get_measurement_duration();
       return 0;
     };
+    void get_levels()
+    {
+      if(p_session)
+        p_session->get_levels();
+    };
+    void reset_levels()
+    {
+      if(p_session)
+        p_session->reset_levels();
+    };
 
   private:
     std::string filename;
