@@ -90,7 +90,7 @@ namespace TASCAR {
     double get_lmin() const { return lmin; };
     double get_lmax() const { return lmax; };
     double get_lmean() const { return lmean; };
-    bool levels_complete() const { return levelsrecorded; };
+    bool complete_spk_equal() const { return levelsrecorded; };
     size_t get_num_bb() const
     {
       if(spk_file)
@@ -266,6 +266,23 @@ namespace TASCAR {
     {
       if(p_session)
         p_session->reset_levels();
+    };
+    bool complete_spk_equal() const
+    {
+      if(p_session)
+        return p_session->complete_spk_equal();
+      return false;
+    };
+    bool complete() const
+    {
+      if(p_session)
+        return p_session->complete();
+      return false;
+    };
+    void save()
+    {
+      if(p_session)
+        p_session->save();
     };
 
   private:

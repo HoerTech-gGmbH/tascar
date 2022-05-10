@@ -119,6 +119,8 @@ void spk_eq_param_t::read_xml(const tsccfg::node_t& layoutnode)
   e.GET_ATTRIBUTE(
       bandoverlap, "bands",
       "Overlap in frequency bands in filterbank for level equalization.");
+  e.GET_ATTRIBUTE(max_eqstages, "",
+                  "Number of filter stages for frequency compensation.");
 }
 
 void spk_eq_param_t::save_xml(const tsccfg::node_t& layoutnode) const
@@ -137,6 +139,7 @@ void spk_eq_param_t::save_xml(const tsccfg::node_t& layoutnode) const
   e.SET_ATTRIBUTE(reflevel);
   e.SET_ATTRIBUTE(bandsperoctave);
   e.SET_ATTRIBUTE(bandoverlap);
+  e.SET_ATTRIBUTE(max_eqstages);
 }
 
 calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true)
@@ -171,7 +174,7 @@ void calib_cfg_t::read_xml(const tsccfg::node_t& layoutnode)
 {
   par_speaker.read_xml(layoutnode);
   par_sub.read_xml(layoutnode);
-  initcal = tsccfg::node_get_attribute_value(layoutnode,"calibdate").empty();
+  initcal = tsccfg::node_get_attribute_value(layoutnode, "calibdate").empty();
 }
 
 void calib_cfg_t::save_xml(const tsccfg::node_t& layoutnode) const
@@ -736,7 +739,7 @@ void calibsession_t::inc_caliblevel(float dl)
 void calibsession_t::set_caliblevel(float dl)
 {
   gainmodified = true;
-  delta = dl-startlevel;
+  delta = dl - startlevel;
   double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
   rec_nsp->caliblevel = (float)newlevel_pa;
   rec_spec->caliblevel = (float)newlevel_pa;

@@ -77,7 +77,7 @@ protected:
   void on_saveas();
   void on_quit();
   void on_assistant_next(Gtk::Widget* page);
-  void on_assistant_back();
+  void on_assistant_final();
   void on_level_entered();
   void on_level_diff_entered();
   bool on_timeout();
@@ -104,9 +104,11 @@ protected:
   Gtk::Box* step3_initcalib;
   Gtk::Box* step4_speaker_equal;
   Gtk::Box* step5_adjust_levels;
+  Gtk::Box* step6_review_save;
   Gtk::Box* box_step4_validate;
   Gtk::Label* label_filename1;
   Gtk::Label* label_spklist;
+  Gtk::Label* label_spklist1;
   Gtk::Label* label_levels;
   Gtk::Label* label_gains;
   Gtk::Label* text_levelresults;
@@ -379,9 +381,11 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(step3_initcalib);
   GET_WIDGET(step4_speaker_equal);
   GET_WIDGET(step5_adjust_levels);
+  GET_WIDGET(step6_review_save);
   GET_WIDGET(box_step4_validate);
   GET_WIDGET(label_filename1);
   GET_WIDGET(label_spklist);
+  GET_WIDGET(label_spklist1);
   GET_WIDGET(label_levels);
   GET_WIDGET(label_gains);
   GET_WIDGET(text_levelresults);
@@ -398,6 +402,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   signal_cancel().connect(sigc::mem_fun(*this, &spkcalib_t::on_quit));
   signal_prepare().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_assistant_next));
+  signal_apply().connect(sigc::mem_fun(*this, &spkcalib_t::on_assistant_final));
   levelentry_diff->signal_activate().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   con_timeout = Glib::signal_timeout().connect(
@@ -434,6 +439,9 @@ void spkcalib_t::on_level_diff_entered()
 
 void spkcalib_t::manage_act_grp_save()
 {
+  set_page_complete(*step4_speaker_equal, spkcalib.complete_spk_equal());
+  set_page_complete(*step5_adjust_levels, spkcalib.complete());
+  set_page_complete(*step6_review_save, spkcalib.complete());
   //  if(session && session->complete())
   //    insert_action_group("save", refActionGroupSave);
   //  else
@@ -515,7 +523,6 @@ void spkcalib_t::on_reclevels()
     if(guiupdater.joinable())
       guiupdater.join();
     insert_action_group("calib", refActionGroupCalib);
-    set_page_complete(*step4_speaker_equal, true);
     manage_act_grp_save();
   }
   catch(const std::exception& e) {
@@ -708,6 +715,7 @@ void spkcalib_t::on_assistant_next(Gtk::Widget*)
   case 4:
     spkcalib.step4_speaker_equalized();
     configure_meters();
+    update_display();
     break;
   case 5:
     spkcalib.step5_levels_adjusted();
@@ -716,9 +724,10 @@ void spkcalib_t::on_assistant_next(Gtk::Widget*)
   prev_page = current_page;
 }
 
-void spkcalib_t::on_assistant_back()
+void spkcalib_t::on_assistant_final()
 {
-  DEBUG("back");
+  spkcalib.save();
+  hide();
 }
 
 void spkcalib_t::on_quit()
@@ -847,6 +856,7 @@ void spkcalib_t::update_display()
   rec_progress->set_fraction(0);
   label_filename1->set_text(spkcalib.get_filename());
   label_spklist->set_text(spkcalib.get_speaker_desc());
+  label_spklist1->set_text(spkcalib.get_speaker_desc());
   // if(session) {
   char ctmp[1024];
   sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
@@ -858,30 +868,16 @@ void spkcalib_t::update_display()
                   "until it reaches approximately ") +
       TASCAR::to_string(spkcalib.cfg.par_speaker.reflevel) +
       std::string(" dB SPL (C-weighted)."));
-  //  // chk_f_bb->set_active(session->max_fcomp_bb > 0u);
-  //  // chk_f_sub->set_active(session->max_fcomp_sub > 0u);
-  //  // flt_order_bb->set_text(std::to_string(session->max_fcomp_bb));
-  //  // flt_order_sub->set_text(std::to_string(session->max_fcomp_sub));
-  //} else {
-  //  text_caliblevel->set_text("no layout file loaded.");
-  //  chk_f_bb->set_active(false);
-  //  chk_f_sub->set_active(false);
-  //  flt_order_bb->set_text("");
-  //  flt_order_sub->set_text("");
-  //}
-  std::string portlist;
-  // for(auto it = refport.begin(); it != refport.end(); ++it)
-  //  portlist += *it + " ";
-  // if(portlist.size())
-  //  portlist.erase(portlist.size() - 1, 1);
-  // char ctmp[1024];
-  // sprintf(
-  //    ctmp,
-  //    "1. Relative loudspeaker gains:\nPlace a measurement microphone at the "
-  //    "listening position and connect to port%s \"%s\". A pink noise will be "
-  //    "played from the loudspeaker positions. Press record to start.",
-  //    (refport.size() > 1) ? "s" : "", portlist.c_str());
-  // label_levels->set_text(ctmp);
+  std::string portlist = TASCAR::vecstr2str(spkcalib.cfg.refport);
+  const bool plural = spkcalib.cfg.refport.size() > 1;
+  sprintf(
+      ctmp,
+      "Place %s at the "
+      "listening position%s\nand connect to port%s \"%s\".\nA pink noise will be "
+      "played from the\nloudspeaker positions. Press record to start.",
+      plural ? "measurement microphones" : "a measurement microphone",
+      plural ? "s" : "", plural ? "s" : "", portlist.c_str());
+  label_levels->set_text(ctmp);
   sprintf(
       ctmp,
       "2. Adjust the playback level to %1.1f dB using the inc/dec buttons.\n"
@@ -890,29 +886,16 @@ void spkcalib_t::update_display()
       spkcalib.cfg.par_speaker.reflevel);
   text_instruction->set_text(ctmp);
   text_instruction_diff->set_text(" b) Diffuse sound field:");
-  if(get_warnings().size()) {
-    Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
-    std::string msg;
-    for(auto warn : get_warnings())
-      msg += warn + "\n";
-    dialog.set_secondary_text(msg);
-    dialog.run();
-    get_warnings().clear();
-  }
-  // manage_act_grp_save();
-  // if(session) {
-  //  insert_action_group("calib", refActionGroupCalib);
-  //  insert_action_group("close", refActionGroupClose);
-  //  levelentry->set_sensitive(true);
-  //  levelentry_diff->set_sensitive(true);
-  //} else {
-  //  remove_action_group("calib");
-  //  remove_action_group("close");
-  //  levelentry->set_text("");
-  //  levelentry_diff->set_text("");
-  //  levelentry->set_sensitive(false);
-  //  levelentry_diff->set_sensitive(false);
+  //if(get_warnings().size()) {
+  //  Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
+  //  std::string msg;
+  //  for(auto warn : get_warnings())
+  //    msg += warn + "\n";
+  //  dialog.set_secondary_text(msg);
+  //  dialog.run();
+  //  get_warnings().clear();
   //}
+  DEBUG(get_current_page());
 }
 
 void spkcalib_t::load(const std::string& fname)
