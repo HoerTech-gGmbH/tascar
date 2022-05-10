@@ -9,7 +9,7 @@ TASCARVERSION_MINOR = $(shell echo $(TASCARVERSION)|sed -e 's/[^\.]*\.//1' -e 's
 
 CXXFLAGS += -DTASCARVERSION_MAJOR=$(TASCARVERSION_MAJOR) -DTASCARVERSION_MINOR=$(TASCARVERSION_MINOR) -DTASCARVERSION=\"$(TASCARVERSION)\"
 
-BINFILES = build/tascar build/tascar_spkcalib build/tascar_spkcalib_new
+BINFILES = build/tascar build/tascar_spkcalib
 OBJECTS = build/scene_manager.o build/tascar_mainwindow.o
 
 ifeq "$(DEBUG)" "yes"
@@ -85,7 +85,6 @@ build/%_glade.h: src/%.glade build/.directory
 build/tascar: build/tascar_glade.h
 
 build/tascar_spkcalib.o: build/spkcalib_glade.h
-build/tascar_spkcalib_new.o: build/spkcalib_glade.h
 
 build/tascar_mainwindow.o: src/tascar_xy.xpm src/tascar_xz.xpm src/tascar_yz.xpm src/tascar_xyz.xpm src/tascar_mainwindow.h
 

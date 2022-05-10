@@ -221,20 +221,20 @@ TEST(xml_doc_t, failfromemptystring)
   EXPECT_EQ(false, success);
 }
 
-TEST(strrep,strrep)
+TEST(strrep, strrep)
 {
-  EXPECT_EQ("abc",TASCAR::strrep("xxxabcxxx","xxx",""));
-  EXPECT_EQ("xxxxxx",TASCAR::strrep("xxxabcxxx","abc",""));
-  EXPECT_EQ("111abc111",TASCAR::strrep("xxxabcxxx","x","1"));
-  EXPECT_EQ("xxxa12345xxx",TASCAR::strrep("xxxabcxxx","bc","12345"));
+  EXPECT_EQ("abc", TASCAR::strrep("xxxabcxxx", "xxx", ""));
+  EXPECT_EQ("xxxxxx", TASCAR::strrep("xxxabcxxx", "abc", ""));
+  EXPECT_EQ("111abc111", TASCAR::strrep("xxxabcxxx", "x", "1"));
+  EXPECT_EQ("xxxa12345xxx", TASCAR::strrep("xxxabcxxx", "bc", "12345"));
 }
 
-TEST(tostring,levelmeter)
+TEST(tostring, levelmeter)
 {
-  EXPECT_EQ("Z",TASCAR::to_string(TASCAR::levelmeter::Z));
-  EXPECT_EQ("A",TASCAR::to_string(TASCAR::levelmeter::A));
-  EXPECT_EQ("C",TASCAR::to_string(TASCAR::levelmeter::C));
-  EXPECT_EQ("bandpass",TASCAR::to_string(TASCAR::levelmeter::bandpass));
+  EXPECT_EQ("Z", TASCAR::to_string(TASCAR::levelmeter::Z));
+  EXPECT_EQ("A", TASCAR::to_string(TASCAR::levelmeter::A));
+  EXPECT_EQ("C", TASCAR::to_string(TASCAR::levelmeter::C));
+  EXPECT_EQ("bandpass", TASCAR::to_string(TASCAR::levelmeter::bandpass));
 }
 
 TEST(strcnv, str2vecstr)
@@ -271,7 +271,7 @@ TEST(strcnv, str2vecstr)
   EXPECT_EQ(std::vector<std::string>({"abc", "def \"x y\" g"}),
             TASCAR::str2vecstr("abc 'def \"x y\" g'"));
   EXPECT_EQ(std::vector<std::string>({"abc", "def \"x y\" g"}),
-            TASCAR::str2vecstr("abc |'def \"x y\" g'"," |"));
+            TASCAR::str2vecstr("abc |'def \"x y\" g'", " |"));
 }
 
 TEST(strcnv, vecstr2str)
@@ -293,6 +293,23 @@ TEST(strcnv, str2vecint)
             TASCAR::str2vecint("1,-2, 3,1", ","));
   EXPECT_EQ(std::vector<int32_t>({1, 3, 1}),
             TASCAR::str2vecint("1 -2,3,1", ","));
+}
+
+TEST(xmlelement, vecdbspl)
+{
+  TASCAR::xml_doc_t doc("<session val=\"93.9794 100\"/>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  std::vector<float> val;
+  TASCAR::xml_element_t xml(doc.root());
+  xml.GET_ATTRIBUTE_DBSPL(val, "");
+  EXPECT_EQ(2u, val.size());
+  if(val.size() == 2u) {
+    ASSERT_NEAR(1.0f, val[0], 1e-5f);
+    ASSERT_NEAR(2.0f, val[1], 1e-5f);
+  }
+  val = {2.0f, 0.2f};
+  xml.SET_ATTRIBUTE_DBSPL(val);
+  EXPECT_EQ("100 80", tsccfg::node_get_attribute_value(xml.e,"val"));
 }
 
 // Local Variables:

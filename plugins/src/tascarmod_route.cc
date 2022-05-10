@@ -109,6 +109,7 @@ private:
   std::vector<std::string> connect_out;
   double levelmeter_tc;
   TASCAR::levelmeter::weight_t levelmeter_weight;
+  std::vector<float> caliblevel_in;
   TASCAR::plugin_processor_t plugins;
   TASCAR::pos_t nullpos;
   TASCAR::zyx_euler_t nullrot;
@@ -126,8 +127,8 @@ void routemod_t::validate_attributes(std::string& msg) const
   plugins.validate_attributes(msg);
 }
 
-int osc_routemod_mute(const char* , const char* types, lo_arg** argv,
-                      int argc, lo_message , void* user_data)
+int osc_routemod_mute(const char*, const char* types, lo_arg** argv, int argc,
+                      lo_message, void* user_data)
 {
   routemod_t* h((routemod_t*)user_data);
   if(h && (argc == 1) && (types[0] == 'i')) {
@@ -137,8 +138,8 @@ int osc_routemod_mute(const char* , const char* types, lo_arg** argv,
   return 1;
 }
 
-int osc_setfade(const char* , const char* types, lo_arg** argv, int argc,
-                lo_message , void* user_data)
+int osc_setfade(const char*, const char* types, lo_arg** argv, int argc,
+                lo_message, void* user_data)
 {
   fader_t* h((fader_t*)user_data);
   if(h && (argc == 2) && (types[0] == 'f') && (types[1] == 'f')) {
@@ -156,11 +157,15 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
       plugins(TASCAR::module_base_t::e, get_name(), ""), bypass(true)
 {
   pthread_mutex_init(&mtx_, NULL);
-  TASCAR::module_base_t::GET_ATTRIBUTE_(channels);
+  TASCAR::module_base_t::GET_ATTRIBUTE(channels, "", "Number of channels");
   TASCAR::module_base_t::GET_ATTRIBUTE_(connect_out);
-  TASCAR::module_base_t::get_attribute("lingain", gain,"","linear gain");
-  TASCAR::module_base_t::GET_ATTRIBUTE_(levelmeter_tc);
-  TASCAR::module_base_t::GET_ATTRIBUTE_NOUNIT(levelmeter_weight,"level meter weighting");
+  TASCAR::module_base_t::get_attribute("lingain", gain, "", "linear gain");
+  TASCAR::module_base_t::GET_ATTRIBUTE(levelmeter_tc, "s",
+                                       "Leq level metering time constant");
+  TASCAR::module_base_t::GET_ATTRIBUTE_NOUNIT(levelmeter_weight,
+                                              "level meter weighting");
+  TASCAR::module_base_t::GET_ATTRIBUTE_DBSPL(caliblevel_in,
+                                             "Input calibration levels");
   session->add_float_db("/" + get_name() + "/gain", &gain);
   session->add_float("/" + get_name() + "/lingain", &gain);
   session->add_method("/" + get_name() + "/mute", "i", osc_routemod_mute, this);
@@ -175,6 +180,11 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
     add_output_port(ctmp);
     addmeter(get_srate());
   }
+  for(auto c = caliblevel_in.size(); c < channels; ++c)
+    caliblevel_in.push_back(1.0f);
+  caliblevel_in.resize(channels);
+  session->add_vector_float_dbspl("/" + get_name() + "/caliblevel_in",
+                                  &caliblevel_in);
   std::string pref(session->get_prefix());
   session->set_prefix("/" + get_name());
   plugins.add_variables(session);
@@ -260,9 +270,9 @@ int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
     tp.object_time_seconds = (double)tp_frame / (double)srate;
     bool active(is_active(0));
     for(uint32_t ch = 0; ch < std::min(sIn.size(), sIn_tsc.size()); ++ch) {
-      sIn_tsc[ch].copy(sIn[ch], n);
+      sIn_tsc[ch].copy(sIn[ch], n, 1.0f / caliblevel_in[ch]);
     }
-    if(active){
+    if(active) {
       plugins.process_plugins(sIn_tsc, nullpos, nullrot, tp);
       fader.apply_gain(sIn_tsc);
     }

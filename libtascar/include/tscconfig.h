@@ -203,6 +203,8 @@ namespace TASCAR {
                              const std::string& info);
     void get_attribute_dbspl(const std::string& name, float& value,
                              const std::string& info);
+    void get_attribute_dbspl(const std::string& name, std::vector<float>& value,
+                             const std::string& info);
     void get_attribute_db(const std::string& name, float& value,
                           const std::string& info);
     void get_attribute_db(const std::string& name, std::vector<float>& value,
@@ -237,6 +239,8 @@ namespace TASCAR {
     void set_attribute_db(const std::string& name,
                           const std::vector<float>& value);
     void set_attribute_dbspl(const std::string& name, double value);
+    void set_attribute_dbspl(const std::string& name,
+                             const std::vector<float>& value);
     void set_attribute(const std::string& name, const std::string& value);
     void set_attribute(const std::string& name, double value);
     void set_attribute_deg(const std::string& name, double value);
@@ -346,6 +350,9 @@ void get_attribute_value_db_float(const tsccfg::node_t& elem,
 void get_attribute_value_db_float_vec(const tsccfg::node_t& elem,
                                       const std::string& name,
                                       std::vector<float>& value);
+void get_attribute_value_dbspl_float_vec(const tsccfg::node_t& elem,
+                                         const std::string& name,
+                                         std::vector<float>& value);
 void get_attribute_value_deg(const tsccfg::node_t& elem,
                              const std::string& name, double& value);
 void get_attribute_value_deg(const tsccfg::node_t& elem,
@@ -395,6 +402,8 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<std::string>& value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<double>& value);
+void set_attribute_value_dbspl(tsccfg::node_t& elem, const std::string& name,
+                               const std::vector<float>& value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<float>& value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,

@@ -15,7 +15,7 @@ namespace TASCAR {
     void factory_reset();
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
-    void save_xml(const tsccfg::node_t& layoutnode);
+    void save_xml(const tsccfg::node_t& layoutnode) const;
     float fmin = 62.5f;    ///< Lower limit of frequency in Hz.
     float fmax = 4000.0f;  ///< Upper limit of frequency in Hz.
     float duration = 1.0f; ///< Stimulus duration in s.
@@ -41,7 +41,7 @@ namespace TASCAR {
     void factory_reset();
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
-    void save_xml(const tsccfg::node_t& layoutnode);
+    void save_xml(const tsccfg::node_t& layoutnode) const;
     spk_eq_param_t par_speaker; ///< Broadband speaker calibration parameters
     spk_eq_param_t par_sub;     ///< Subwoofer calibration parameters
     std::vector<std::string> refport; ///< Jack port name to which measurement
@@ -61,9 +61,7 @@ namespace TASCAR {
   class calibsession_t : public TASCAR::session_t {
   public:
     calibsession_t(const std::string& fname,
-                   const std::vector<std::string>& refport,
-                   const spk_eq_param_t& par_speaker,
-                   const spk_eq_param_t& par_sub);
+                   const calib_cfg_t& cfg);
     ~calibsession_t();
     double get_caliblevel() const;
     double get_diffusegain() const;
@@ -108,13 +106,13 @@ namespace TASCAR {
     size_t get_num_channels() const { return get_num_bb() + get_num_sub(); };
     double get_measurement_duration() const
     {
-      return (par_speaker.duration + par_speaker.prewait) *
+      return (cfg_.par_speaker.duration + cfg_.par_speaker.prewait) *
                  (double)get_num_bb() *
-                 (1.0 + (double)(par_speaker.max_eqstages > 0u)) +
-             (par_sub.duration + par_sub.prewait) * (double)get_num_sub() *
-                 (1.0 + (double)(par_sub.max_eqstages > 0u)) +
-             0.2f * (float)par_speaker.max_eqstages * (double)get_num_bb() +
-             0.2f * (float)par_sub.max_eqstages * (double)get_num_sub();
+                 (1.0 + (double)(cfg_.par_speaker.max_eqstages > 0u)) +
+             (cfg_.par_sub.duration + cfg_.par_sub.prewait) * (double)get_num_sub() *
+                 (1.0 + (double)(cfg_.par_sub.max_eqstages > 0u)) +
+             0.2f * (float)cfg_.par_speaker.max_eqstages * (double)get_num_bb() +
+             0.2f * (float)cfg_.par_sub.max_eqstages * (double)get_num_sub();
     };
     // void param_factory_reset();
     // void param_read_defaults();
@@ -146,9 +144,10 @@ namespace TASCAR {
         sublevelsfrg; // frequency-dependent level range (max-min)
 
   private:
-    spk_eq_param_t par_speaker;
-    spk_eq_param_t par_sub;
-    std::vector<std::string> refport_; ///< list of measurement microphone ports
+    const calib_cfg_t cfg_;
+    //spk_eq_param_t par_speaker;
+    //spk_eq_param_t par_sub;
+    //std::vector<std::string> refport_; ///< list of measurement microphone ports
     float lmin;
     float lmax;
     float lmean;
