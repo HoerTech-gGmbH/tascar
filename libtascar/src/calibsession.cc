@@ -697,6 +697,7 @@ void calibsession_t::set_active(bool b)
     rec_nsp->set_mute(true);
     rec_spec->set_mute(false);
   }
+  isactive_pointsource = b;
 }
 
 void calibsession_t::set_active_diff(bool b)
@@ -715,6 +716,7 @@ void calibsession_t::set_active_diff(bool b)
     rec_nsp->set_mute(true);
     rec_spec->set_mute(false);
   }
+  isactive_diffuse = b;
 }
 
 double calibsession_t::get_caliblevel() const
@@ -729,29 +731,66 @@ double calibsession_t::get_diffusegain() const
 
 void calibsession_t::inc_caliblevel(float dl)
 {
-  gainmodified = true;
-  delta += dl;
-  double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
-  rec_nsp->caliblevel = (float)newlevel_pa;
-  rec_spec->caliblevel = (float)newlevel_pa;
+  if(startlevel + delta + dl < cfg_.par_speaker.reflevel + 15.0f)
+    throw TASCAR::ErrMsg(std::string("Decreasing the calibration level to ") +
+                         TASCAR::to_string(startlevel + delta + dl) +
+                         " dB SPL would result in clipping.");
+  if((dl < 0.0f) && !isactive_pointsource)
+    throw TASCAR::ErrMsg("Please activate source before increasing the level.");
+  if((dl >= 0.0f) || isactive_pointsource) {
+    gainmodified = true;
+    delta += dl;
+    double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
+    rec_nsp->caliblevel = (float)newlevel_pa;
+    rec_spec->caliblevel = (float)newlevel_pa;
+    spk_spec->spkpos.caliblevel = (float)newlevel_pa;
+  }
 }
 
 void calibsession_t::set_caliblevel(float dl)
 {
+  if(dl < cfg_.par_speaker.reflevel + 15.0f)
+    throw TASCAR::ErrMsg(std::string("Decreasing the calibration level to ") +
+                         TASCAR::to_string(dl) +
+                         " dB SPL would result in clipping.");
   gainmodified = true;
   delta = dl - startlevel;
   double newlevel_pa(2e-5 * pow(10.0, 0.05 * (startlevel + delta)));
   rec_nsp->caliblevel = (float)newlevel_pa;
   rec_spec->caliblevel = (float)newlevel_pa;
+  spk_spec->spkpos.caliblevel = (float)newlevel_pa;
+}
+
+void calibsession_t::set_diffusegain(float g)
+{
+  gainmodified = true;
+  delta_diff = g - startdiffgain;
+  float gain(powf(10.0f, 0.05f * (startdiffgain + delta_diff)));
+  rec_nsp->diffusegain = (float)gain;
+  rec_spec->diffusegain = (float)gain;
+  spk_spec->spkpos.diffusegain = (float)gain;
 }
 
 void calibsession_t::inc_diffusegain(float dl)
 {
-  gainmodified = true;
-  delta_diff += dl;
-  double gain(pow(10.0, 0.05 * (startdiffgain + delta_diff)));
-  rec_nsp->diffusegain = (float)gain;
-  rec_spec->diffusegain = (float)gain;
+  if((dl > 0.0f) && !isactive_diffuse)
+    throw TASCAR::ErrMsg(
+        "Please activate diffuse field before increasing the gain.");
+  if((dl <= 0.0f) || isactive_diffuse) {
+    gainmodified = true;
+    delta_diff += dl;
+    double gain(pow(10.0, 0.05 * (startdiffgain + delta_diff)));
+    rec_nsp->diffusegain = (float)gain;
+    rec_spec->diffusegain = (float)gain;
+    spk_spec->spkpos.diffusegain = (float)gain;
+  }
+}
+
+const spk_array_diff_render_t& calibsession_t::get_current_layout() const
+{
+  if(!spk_spec)
+    throw TASCAR::ErrMsg("No layout loaded");
+  return spk_spec->spkpos;
 }
 
 spkcalibrator_t::spkcalibrator_t() : fallbackmeter(8000.0, 0.1, levelmeter::Z)
@@ -876,10 +915,17 @@ spkcalibrator_t::~spkcalibrator_t()
     delete p_session;
 }
 
-std::string spkcalibrator_t::get_speaker_desc() const
+std::string spkcalibrator_t::get_orig_speaker_desc() const
 {
   if(p_layout)
     return p_layout->to_string();
+  return "";
+}
+
+std::string spkcalibrator_t::get_current_speaker_desc() const
+{
+  if(p_session)
+    return p_session->get_current_layout().to_string();
   return "";
 }
 

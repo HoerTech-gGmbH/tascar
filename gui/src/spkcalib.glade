@@ -654,7 +654,7 @@ until it reaches approximately XX dB SPL (C-weighted).</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="levelentry1">
+                  <object class="GtkEntry" id="levelentry_init">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="input_purpose">number</property>
@@ -1335,7 +1335,7 @@ press finish to save changes and close.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkLabel" id="label_spklist1">
+                  <object class="GtkLabel" id="label_spklist_final">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">[speaker list]</property>

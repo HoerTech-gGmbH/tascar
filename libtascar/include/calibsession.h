@@ -65,6 +65,7 @@ namespace TASCAR {
     double get_caliblevel() const;
     double get_diffusegain() const;
     void set_caliblevel(float level);
+    void set_diffusegain(float gain);
     void inc_caliblevel(float dl);
     void inc_diffusegain(float dl);
     void set_active(bool b);
@@ -120,6 +121,7 @@ namespace TASCAR {
     // void param_read_defaults();
     // void param_read_xml();
     // void param_save_xml();
+    const spk_array_diff_render_t& get_current_layout() const;
 
   private:
     bool gainmodified;
@@ -169,6 +171,8 @@ namespace TASCAR {
     uint32_t fcomp_bb =
         0u; ///< final number of biquad stages for frequency compensation
     uint32_t fcomp_sub = 0u;
+    bool isactive_pointsource = false;
+    bool isactive_diffuse = false;
   };
 
   class spkcalibrator_t {
@@ -177,7 +181,8 @@ namespace TASCAR {
     ~spkcalibrator_t();
     void set_filename(const std::string&);
     std::string get_filename() const { return filename; };
-    std::string get_speaker_desc() const;
+    std::string get_orig_speaker_desc() const;
+    std::string get_current_speaker_desc() const;
     /**
        @brief Call this function after a file was selected.
      */
@@ -238,6 +243,11 @@ namespace TASCAR {
     {
       if(p_session)
         p_session->set_caliblevel(d);
+    };
+    void set_diffusegain(float g)
+    {
+      if(p_session)
+        p_session->set_diffusegain(g);
     };
     double get_caliblevel() const
     {

@@ -34,6 +34,14 @@
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
+void error_message(const std::string& msg)
+{
+  std::cerr << "Error: " << msg << std::endl;
+  Gtk::MessageDialog dialog("Error", false, Gtk::MESSAGE_ERROR);
+  dialog.set_secondary_text(msg);
+  dialog.run();
+}
+
 class spkcalib_t : public Gtk::Assistant {
 public:
   spkcalib_t(BaseObjectType* cobject,
@@ -79,6 +87,7 @@ protected:
   void on_assistant_next(Gtk::Widget* page);
   void on_assistant_final();
   void on_level_entered();
+  void on_level_init_entered();
   void on_level_diff_entered();
   bool on_timeout();
   void update_gtkentry_from_value(const std::string& name, float val);
@@ -108,7 +117,7 @@ protected:
   Gtk::Box* box_step4_validate;
   Gtk::Label* label_filename1;
   Gtk::Label* label_spklist;
-  Gtk::Label* label_spklist1;
+  Gtk::Label* label_spklist_final;
   Gtk::Label* label_levels;
   Gtk::Label* label_gains;
   Gtk::Label* text_levelresults;
@@ -118,6 +127,7 @@ protected:
   Gtk::Label* lab_step3_caliblevel;
   Gtk::Label* lab_step3_info;
   Gtk::Label* lab_step5_caliblevel;
+  Gtk::Entry* levelentry_init;
   Gtk::Entry* levelentry;
   Gtk::Entry* levelentry_diff;
   Gtk::ProgressBar* rec_progress;
@@ -261,14 +271,6 @@ bool spkcalib_t::on_timeout()
   throw TASCAR::ErrMsg(std::string("No widget \"") + #x +                      \
                        std::string("\" in builder."))
 
-void error_message(const std::string& msg)
-{
-  std::cerr << "Error: " << msg << std::endl;
-  Gtk::MessageDialog dialog("Error", false, Gtk::MESSAGE_ERROR);
-  dialog.set_secondary_text(msg);
-  dialog.run();
-}
-
 void spkcalib_t::clear_meters()
 {
   std::lock_guard<std::mutex> lock(guimeter_mutex);
@@ -385,7 +387,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(box_step4_validate);
   GET_WIDGET(label_filename1);
   GET_WIDGET(label_spklist);
-  GET_WIDGET(label_spklist1);
+  GET_WIDGET(label_spklist_final);
   GET_WIDGET(label_levels);
   GET_WIDGET(label_gains);
   GET_WIDGET(text_levelresults);
@@ -395,6 +397,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(lab_step3_caliblevel);
   GET_WIDGET(lab_step5_caliblevel);
   GET_WIDGET(lab_step3_info);
+  GET_WIDGET(levelentry_init);
   GET_WIDGET(levelentry);
   GET_WIDGET(levelentry_diff);
   GET_WIDGET(rec_progress);
@@ -403,12 +406,31 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   signal_prepare().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_assistant_next));
   signal_apply().connect(sigc::mem_fun(*this, &spkcalib_t::on_assistant_final));
-  levelentry_diff->signal_activate().connect(
-      sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   con_timeout = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_timeout), 250);
+  levelentry->signal_activate().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_level_entered));
+  levelentry_init->signal_activate().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_level_init_entered));
+  levelentry_diff->signal_activate().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_level_diff_entered));
   update_display();
   show_all();
+}
+
+void spkcalib_t::on_level_init_entered()
+{
+  try {
+    float newlevel(spkcalib.cfg.par_speaker.reflevel);
+    std::string slevel(levelentry_init->get_text());
+    newlevel = atof(slevel.c_str());
+    spkcalib.set_caliblevel(spkcalib.get_caliblevel() + newlevel -
+                            spkcalib.cfg.par_speaker.reflevel);
+    update_display();
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_level_entered()
@@ -417,7 +439,9 @@ void spkcalib_t::on_level_entered()
     float newlevel(spkcalib.cfg.par_speaker.reflevel);
     std::string slevel(levelentry->get_text());
     newlevel = atof(slevel.c_str());
-    levelinc(spkcalib.cfg.par_speaker.reflevel - newlevel);
+    spkcalib.set_caliblevel(spkcalib.get_caliblevel() + newlevel -
+                            spkcalib.cfg.par_speaker.reflevel);
+    update_display();
   }
   catch(const std::exception& e) {
     error_message(e.what());
@@ -430,7 +454,10 @@ void spkcalib_t::on_level_diff_entered()
     float newlevel(spkcalib.cfg.par_speaker.reflevel);
     std::string slevel(levelentry_diff->get_text());
     newlevel = atof(slevel.c_str());
-    inc_diffusegain(spkcalib.cfg.par_speaker.reflevel - newlevel);
+    spkcalib.set_diffusegain(spkcalib.get_diffusegain() - newlevel +
+                             spkcalib.cfg.par_speaker.reflevel);
+    update_display();
+    // inc_diffusegain(spkcalib.cfg.par_speaker.reflevel - newlevel);
   }
   catch(const std::exception& e) {
     error_message(e.what());
@@ -442,56 +469,6 @@ void spkcalib_t::manage_act_grp_save()
   set_page_complete(*step4_speaker_equal, spkcalib.complete_spk_equal());
   set_page_complete(*step5_adjust_levels, spkcalib.complete());
   set_page_complete(*step6_review_save, spkcalib.complete());
-  //  if(session && session->complete())
-  //    insert_action_group("save", refActionGroupSave);
-  //  else
-  //    remove_action_group("save");
-  //  if(session) {
-  //    std::string gainstr;
-  //    if(!session->scenes.back()->receivermod_objects.empty()) {
-  //      TASCAR::receivermod_base_speaker_t* recspk(
-  //          dynamic_cast<TASCAR::receivermod_base_speaker_t*>(
-  //              session->scenes.back()->receivermod_objects[1]->libdata));
-  //      if(recspk) {
-  //        for(uint32_t k = 0; k < recspk->spkpos.size(); ++k) {
-  //          char lc[1024];
-  //          sprintf(lc, "%1.1f(%1.1f) ", 20 * log10(recspk->spkpos[k].gain),
-  //                  session->levelsfrg[k]);
-  //          gainstr += lc;
-  //        }
-  //        if(!recspk->spkpos.subs.empty())
-  //          gainstr += "subs: ";
-  //        for(uint32_t k = 0; k < recspk->spkpos.subs.size(); ++k) {
-  //          char lc[1024];
-  //          sprintf(lc, "%1.1f(%1.1f) ", 20 *
-  //          log10(recspk->spkpos.subs[k].gain),
-  //                  session->sublevelsfrg[k]);
-  //          gainstr += lc;
-  //        }
-  //      }
-  //    }
-  //    label_gains->set_text(gainstr);
-  //  } else {
-  //    label_gains->set_text("");
-  //  }
-  //  if(session && session->levels_complete()) {
-  //    char ctmp[1024];
-  //    sprintf(ctmp, "Mean level: %1.1f dB FS (range: %1.1f dB)",
-  //            session->get_lmean(), session->get_lmax() -
-  //            session->get_lmin());
-  //    text_levelresults->set_text(ctmp);
-  //  } else {
-  //    text_levelresults->set_text("");
-  //  }
-  //  if(session) {
-  //    std::string smodified("");
-  //    if(session->modified())
-  //      smodified = " (modified)";
-  //    set_title(std::string("TASCAR speaker calibration [") +
-  //              Glib::filename_display_basename(session->name()) +
-  //              std::string("]") + smodified);
-  //  } else
-  //    set_title("TASCAR speaker calibration");
 }
 
 void guiupdate(Gtk::ProgressBar* rec_progress, double sleepsec, bool* pbquit)
@@ -543,89 +520,169 @@ void spkcalib_t::on_resetlevels()
 
 void spkcalib_t::on_play()
 {
-  spkcalib.set_active_pointsource(true);
-  manage_act_grp_save();
-  set_page_complete(*step3_initcalib, true);
+  try {
+    spkcalib.set_active_pointsource(true);
+    manage_act_grp_save();
+    set_page_complete(*step3_initcalib, true);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_stop()
 {
-  spkcalib.set_active_pointsource(false);
+  try {
+    spkcalib.set_active_pointsource(false);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_dec_10()
 {
-  levelinc(-10);
+  try {
+    levelinc(-10);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_dec_2()
 {
-  levelinc(-2);
+  try {
+    levelinc(-2);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_dec_05()
 {
-  levelinc(-0.5);
+  try {
+    levelinc(-0.5);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_inc_05()
 {
-  levelinc(0.5);
+  try {
+    levelinc(0.5);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_inc_2()
 {
-  levelinc(2);
+  try {
+    levelinc(2);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_inc_10()
 {
-  levelinc(10);
+  try {
+    levelinc(10);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_play_diff()
 {
-  // if(session)
-  //  session->set_active_diff(true);
-  spkcalib.set_active_diffuse(true);
-  manage_act_grp_save();
+  try {
+    // if(session)
+    //  session->set_active_diff(true);
+    spkcalib.set_active_diffuse(true);
+    manage_act_grp_save();
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_stop_diff()
 {
-  // if(session)
-  //  session->set_active_diff(false);
-  spkcalib.set_active_diffuse(false);
+  try {
+    // if(session)
+    //  session->set_active_diff(false);
+    spkcalib.set_active_diffuse(false);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_dec_diff_10()
 {
-  inc_diffusegain(-10);
+  try {
+    inc_diffusegain(-10);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_dec_diff_2()
 {
-  inc_diffusegain(-2);
+  try {
+    inc_diffusegain(-2);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_dec_diff_05()
 {
-  inc_diffusegain(-0.5);
+  try {
+    inc_diffusegain(-0.5);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_inc_diff_05()
 {
-  inc_diffusegain(0.5);
+  try {
+    inc_diffusegain(0.5);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_inc_diff_2()
 {
-  inc_diffusegain(2);
+  try {
+    inc_diffusegain(2);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_inc_diff_10()
 {
-  inc_diffusegain(10);
+  try {
+    inc_diffusegain(10);
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 #define UPDATE_GTKENTRY_FROM_VALUE(spkset, var)                                \
@@ -635,99 +692,111 @@ void spkcalib_t::on_inc_diff_10()
 
 void spkcalib_t::on_assistant_next(Gtk::Widget*)
 {
-  auto current_page = get_current_page();
-  switch(current_page) {
-  case 0:
-    spkcalib.go_back();
-    remove_action_group("calib");
-    clear_meters();
-    break;
-  case 1:
-    spkcalib.step1_file_selected();
-    remove_action_group("calib");
-    // now update all fields:
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmin);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmax);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, duration);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, prewait);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, reflevel);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, bandsperoctave);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, bandoverlap);
-    UPDATE_GTKENTRY_FROM_VALUE(par_speaker, max_eqstages);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, fmin);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, fmax);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, duration);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, prewait);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, reflevel);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, bandsperoctave);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, bandoverlap);
-    UPDATE_GTKENTRY_FROM_VALUE(par_sub, max_eqstages);
-    update_gtkentry_from_value("entry_refport", spkcalib.cfg.refport);
-    update_gtkentry_from_value_dbspl("entry_miccalibdb", spkcalib.cfg.miccalib);
-    update_gtkcheckbox_from_value("checkbox_initcal", spkcalib.cfg.initcal);
-    clear_meters();
-    break;
-  case 2:
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmin);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmax);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, duration);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, prewait);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, reflevel);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, bandsperoctave);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, bandoverlap);
-    UPDATE_VALUE_FROM_GTKENTRY(par_speaker, max_eqstages);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, fmin);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, fmax);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, duration);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, prewait);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, reflevel);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, bandsperoctave);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, bandoverlap);
-    UPDATE_VALUE_FROM_GTKENTRY(par_sub, max_eqstages);
-    update_value_from_gtkentry("entry_refport", spkcalib.cfg.refport);
-    update_value_dbspl_from_gtkentry("entry_miccalibdb", spkcalib.cfg.miccalib);
-    update_value_from_gtkcheckbox("checkbox_initcal", spkcalib.cfg.initcal);
-    spkcalib.step2_config_revised();
-    insert_action_group("calib", refActionGroupCalib);
-    spkcalib.set_active_pointsource(false);
-    spkcalib.set_active_diffuse(false);
-    if(!spkcalib.cfg.initcal) {
-      // skip initcal page
-      if(prev_page < current_page) {
-        next_page();
-        spkcalib.step3_calib_initialized();
+  try {
+    auto current_page = get_current_page();
+    switch(current_page) {
+    case 0:
+      spkcalib.go_back();
+      remove_action_group("calib");
+      clear_meters();
+      break;
+    case 1:
+      spkcalib.step1_file_selected();
+      remove_action_group("calib");
+      // now update all fields:
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmin);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, fmax);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, duration);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, prewait);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, reflevel);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, bandsperoctave);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, bandoverlap);
+      UPDATE_GTKENTRY_FROM_VALUE(par_speaker, max_eqstages);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, fmin);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, fmax);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, duration);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, prewait);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, reflevel);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, bandsperoctave);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, bandoverlap);
+      UPDATE_GTKENTRY_FROM_VALUE(par_sub, max_eqstages);
+      update_gtkentry_from_value("entry_refport", spkcalib.cfg.refport);
+      update_gtkentry_from_value_dbspl("entry_miccalibdb",
+                                       spkcalib.cfg.miccalib);
+      update_gtkcheckbox_from_value("checkbox_initcal", spkcalib.cfg.initcal);
+      clear_meters();
+      break;
+    case 2:
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmin);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, fmax);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, duration);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, prewait);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, reflevel);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, bandsperoctave);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, bandoverlap);
+      UPDATE_VALUE_FROM_GTKENTRY(par_speaker, max_eqstages);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, fmin);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, fmax);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, duration);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, prewait);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, reflevel);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, bandsperoctave);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, bandoverlap);
+      UPDATE_VALUE_FROM_GTKENTRY(par_sub, max_eqstages);
+      update_value_from_gtkentry("entry_refport", spkcalib.cfg.refport);
+      update_value_dbspl_from_gtkentry("entry_miccalibdb",
+                                       spkcalib.cfg.miccalib);
+      update_value_from_gtkcheckbox("checkbox_initcal", spkcalib.cfg.initcal);
+      spkcalib.step2_config_revised();
+      insert_action_group("calib", refActionGroupCalib);
+      spkcalib.set_active_pointsource(false);
+      spkcalib.set_active_diffuse(false);
+      if(!spkcalib.cfg.initcal) {
+        // skip initcal page
+        if(prev_page < current_page) {
+          next_page();
+          spkcalib.step3_calib_initialized();
+        } else {
+          previous_page();
+          spkcalib.step1_file_selected();
+        }
       } else {
-        previous_page();
-        spkcalib.step1_file_selected();
+        configure_meters();
+        if(prev_page < current_page)
+          spkcalib.set_caliblevel(140);
+        update_display();
       }
-    } else {
+      break;
+    case 3:
+      spkcalib.step3_calib_initialized();
+      spkcalib.set_active_pointsource(false);
+      spkcalib.set_active_diffuse(false);
+      break;
+    case 4:
+      spkcalib.step4_speaker_equalized();
       configure_meters();
-      if(prev_page < current_page)
-        spkcalib.set_caliblevel(140);
       update_display();
+      break;
+    case 5:
+      spkcalib.step5_levels_adjusted();
+      break;
     }
-    break;
-  case 3:
-    spkcalib.step3_calib_initialized();
-    spkcalib.set_active_pointsource(false);
-    spkcalib.set_active_diffuse(false);
-    break;
-  case 4:
-    spkcalib.step4_speaker_equalized();
-    configure_meters();
-    update_display();
-    break;
-  case 5:
-    spkcalib.step5_levels_adjusted();
-    break;
+    prev_page = current_page;
   }
-  prev_page = current_page;
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_assistant_final()
 {
-  spkcalib.save();
-  hide();
+  try {
+    spkcalib.save();
+    hide();
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::on_quit()
@@ -855,8 +924,8 @@ void spkcalib_t::update_display()
 {
   rec_progress->set_fraction(0);
   label_filename1->set_text(spkcalib.get_filename());
-  label_spklist->set_text(spkcalib.get_speaker_desc());
-  label_spklist1->set_text(spkcalib.get_speaker_desc());
+  label_spklist->set_text(spkcalib.get_orig_speaker_desc());
+  label_spklist_final->set_text(spkcalib.get_current_speaker_desc());
   // if(session) {
   char ctmp[1024];
   sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
@@ -870,13 +939,13 @@ void spkcalib_t::update_display()
       std::string(" dB SPL (C-weighted)."));
   std::string portlist = TASCAR::vecstr2str(spkcalib.cfg.refport);
   const bool plural = spkcalib.cfg.refport.size() > 1;
-  sprintf(
-      ctmp,
-      "Place %s at the "
-      "listening position%s\nand connect to port%s \"%s\".\nA pink noise will be "
-      "played from the\nloudspeaker positions. Press record to start.",
-      plural ? "measurement microphones" : "a measurement microphone",
-      plural ? "s" : "", plural ? "s" : "", portlist.c_str());
+  sprintf(ctmp,
+          "Place %s at the "
+          "listening position%s\nand connect to port%s \"%s\".\nA pink noise "
+          "will be "
+          "played from the\nloudspeaker positions. Press record to start.",
+          plural ? "measurement microphones" : "a measurement microphone",
+          plural ? "s" : "", plural ? "s" : "", portlist.c_str());
   label_levels->set_text(ctmp);
   sprintf(
       ctmp,
@@ -886,7 +955,7 @@ void spkcalib_t::update_display()
       spkcalib.cfg.par_speaker.reflevel);
   text_instruction->set_text(ctmp);
   text_instruction_diff->set_text(" b) Diffuse sound field:");
-  //if(get_warnings().size()) {
+  // if(get_warnings().size()) {
   //  Gtk::MessageDialog dialog(*this, "Warning", false, Gtk::MESSAGE_WARNING);
   //  std::string msg;
   //  for(auto warn : get_warnings())
@@ -895,17 +964,24 @@ void spkcalib_t::update_display()
   //  dialog.run();
   //  get_warnings().clear();
   //}
-  DEBUG(get_current_page());
+  levelentry->set_text("");
+  levelentry_init->set_text("");
+  levelentry_diff->set_text("");
 }
 
 void spkcalib_t::load(const std::string& fname)
 {
-  cleanup();
-  if(fname.empty())
-    throw TASCAR::ErrMsg("Empty file name.");
-  spkcalib.set_filename(fname);
-  set_page_complete(*step1_select_layout, true);
-  update_display();
+  try {
+    cleanup();
+    if(fname.empty())
+      throw TASCAR::ErrMsg("Empty file name.");
+    spkcalib.set_filename(fname);
+    set_page_complete(*step1_select_layout, true);
+    update_display();
+  }
+  catch(const std::exception& e) {
+    error_message(e.what());
+  }
 }
 
 void spkcalib_t::cleanup()
