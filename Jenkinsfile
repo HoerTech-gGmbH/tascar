@@ -32,7 +32,7 @@ def tascar_build_steps(stage_name) {
            " build/tascar_system.dll build/tascarreceiver_hoa2d.dll" +
            " build/tascarreceiver_hrtf.dll build/tascarreceiver_nsp.dll" +
            " build/tascarreceiver_omni.dll build/tascar_hrirconv.dll" +
-           " build/tascarreceiver_foaconv.dll")
+           " build/tascarreceiver_foaconv.dll build/tascar_route.dll")
         sh "mkdir -p TASCAR"
         // Collect all compiled artifacts
         sh "cp -v */build/[lt]*.{dll,exe} TASCAR"
