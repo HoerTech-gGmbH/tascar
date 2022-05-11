@@ -22,7 +22,7 @@ namespace TASCAR {
     float duration = 1.0f; ///< Stimulus duration in s.
     float prewait =
         0.125f; ///< Time between stimulus onset and measurement start in s.
-    float reflevel = 70.0f;      ///< reference level for calibration.
+    float reflevel = 80.0f;      ///< reference level for calibration.
     float bandsperoctave = 3.0f; ///< Bands per octave in frequency dependent
                                  ///< level analysis.
     float bandoverlap =
@@ -119,10 +119,6 @@ namespace TASCAR {
                  (double)get_num_bb() +
              0.2f * (float)cfg_.par_sub.max_eqstages * (double)get_num_sub();
     };
-    // void param_factory_reset();
-    // void param_read_defaults();
-    // void param_read_xml();
-    // void param_save_xml();
     const spk_array_diff_render_t& get_current_layout() const;
 
   private:
@@ -296,6 +292,11 @@ namespace TASCAR {
       if(p_session)
         p_session->save();
     };
+    void cfg_load_from_layout()
+    {
+      if(p_layout_doc)
+        cfg.read_xml(p_layout_doc->root());
+    }
 
   private:
     std::string filename;

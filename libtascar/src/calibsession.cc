@@ -68,7 +68,7 @@ void spk_eq_param_t::factory_reset()
     fmax = 62.5f;
     duration = 4.0f;
     prewait = 0.125f;
-    reflevel = 70.0f;
+    reflevel = 80.0f;
     bandsperoctave = 3.0f;
     bandoverlap = 2.0f;
   } else {
@@ -76,7 +76,7 @@ void spk_eq_param_t::factory_reset()
     fmax = 4000.0f;
     duration = 1.0f;
     prewait = 0.125;
-    reflevel = 70.0f;
+    reflevel = 80.0f;
     bandsperoctave = 3.0f;
     bandoverlap = 2.0f;
   }
@@ -211,6 +211,8 @@ void calib_cfg_t::validate() const
 {
   par_speaker.validate();
   par_sub.validate();
+  if( refport.empty() )
+    throw TASCAR::ErrMsg("At least one measurement microphone connection is required for calibration");
 }
 
 void calib_cfg_t::factory_reset()
@@ -469,7 +471,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                            (float)jackrec.get_srate(), calibpar.bandsperoctave,
                            calibpar.bandoverlap, vF, vLref);
     lev_sqr /= (float)recbuf.size();
-    lev_sqr = 10.0f * log10f(lev_sqr);
+    lev_sqr = 10.0f * log10f(lev_sqr) - calibpar.reflevel;
     levels.push_back(lev_sqr);
     for(size_t ch = 0; ch < std::min(vLmean.size(), vLref.size()); ++ch)
       vLmean[ch] = vLref[ch] - vLmean[ch];
