@@ -42,6 +42,84 @@ void error_message(const std::string& msg)
   dialog.run();
 }
 
+class spkeq_display_t : public spkeq_report_t, public Gtk::DrawingArea {
+public:
+  spkeq_display_t(const spkeq_report_t& src);
+  void invalidate_win() { queue_draw(); }
+
+private:
+  virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+  float getx(float f, float width);
+  float gety(float g, float height);
+  float fmin;
+  float fmax;
+  float gmin;
+  float gmax;
+};
+
+spkeq_display_t::spkeq_display_t(const spkeq_report_t& src)
+  : spkeq_report_t(src)
+{
+  if(vF.size() != vG_precalib.size())
+    throw TASCAR::ErrMsg("dimensions of vF and vG_precalib differ");
+  if(vF.empty()) {
+    fmin = 50.0f;
+    fmax = 22050.0f;
+    gmin = -10.0f;
+    gmax = 0.0f;
+  } else {
+    fmin = fmax = vF[0];
+    gmin = gmax = vG_precalib[0];
+    for(const auto& g : vG_precalib) {
+      gmin = std::min(gmin, g);
+      gmax = std::max(gmax, g);
+    }
+    for(const auto& g : vG_postcalib) {
+      gmin = std::min(gmin, g);
+      gmax = std::max(gmax, g);
+    }
+    for(const auto& f : vF) {
+      fmin = std::min(fmin, f);
+      fmax = std::max(fmax, f);
+    }
+    fmin *= 0.5f;
+    fmax *= 2.0f;
+  }
+  set_size_request(300, 120);
+}
+
+float spkeq_display_t::getx(float f, float width)
+{
+  return log2f(f / fmin) * log2f(fmin / fmax) * width;
+}
+
+float spkeq_display_t::gety(float g, float height)
+{
+  return (g - gmin) / (gmax - gmin) * height;
+}
+
+bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+{
+  Gtk::Allocation allocation(get_allocation());
+  const int width(allocation.get_width());
+  const int height(allocation.get_height());
+  cr->save();
+  cr->set_source_rgb(1, 1, 1);
+  cr->paint();
+  cr->set_source_rgb(0, 0, 0);
+  cr->move_to(10, 20);
+  cr->set_font_size(12);
+  cr->show_text(label.c_str());
+  if(vF.size()) {
+    cr->move_to(getx(vF[0], width), gety(vG_precalib[0], height));
+    for(size_t ch = 1u; ch < vF.size(); ++ch)
+      cr->line_to(getx(vF[0], width), gety(vG_precalib[0], height));
+    cr->stroke();
+  }
+  cr->restore();
+  return true;
+}
+
 class spkcalib_t : public Gtk::Assistant {
 public:
   spkcalib_t(BaseObjectType* cobject,
@@ -59,6 +137,8 @@ private:
   void manage_act_grp_save();
   void par2gui();
   void gui2par();
+  void clear_equal_gui();
+  void update_equal_gui();
 
 protected:
   Glib::RefPtr<Gtk::Builder> m_refBuilder;
@@ -155,7 +235,24 @@ protected:
   spkcalibrator_t spkcalib;
   int prev_page = 0;
   bool file_selected = false;
+  std::vector<spkeq_display_t> spkequal_disp;
 };
+
+void spkcalib_t::clear_equal_gui()
+{
+  spkequal_disp.clear();
+}
+
+void spkcalib_t::update_equal_gui()
+{
+  auto report = spkcalib.get_speaker_report();
+  for( auto& spkrep : report )
+    spkequal_disp.push_back(spkrep);
+  for(auto& disp : spkequal_disp) {
+    box_step4_validate->add(disp);
+  }
+  box_step4_validate->show_all();
+}
 
 void spkcalib_t::update_gtkentry_from_value(const std::string& name, float val)
 {
@@ -497,12 +594,14 @@ void spkcalib_t::on_reclevels()
 {
   try {
     remove_action_group("calib");
+    clear_equal_gui();
     bool bquitthread = false;
     std::thread guiupdater(getlevels, &spkcalib, &bquitthread);
     guiupdate(rec_progress, spkcalib.get_measurement_duration(), &bquitthread);
     if(guiupdater.joinable())
       guiupdater.join();
     insert_action_group("calib", refActionGroupCalib);
+    update_equal_gui();
     manage_act_grp_save();
   }
   catch(const std::exception& e) {
@@ -514,6 +613,7 @@ void spkcalib_t::on_resetlevels()
 {
   try {
     spkcalib.reset_levels();
+    clear_equal_gui();
     manage_act_grp_save();
   }
   catch(const std::exception& e) {

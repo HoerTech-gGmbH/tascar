@@ -174,32 +174,46 @@ void spk_eq_param_t::validate() const
     throw TASCAR::ErrMsg(
         std::string("duration needs to be above zero (current value: ") +
         TASCAR::to_string(duration) + " s).");
-  if(!(prewait>0.0f))
+  if(!(prewait > 0.0f))
     throw TASCAR::ErrMsg(
         std::string("prewait needs to be above zero (current value: ") +
         TASCAR::to_string(prewait) + " s).");
-  if(!(reflevel<85.0f))
+  if(!(reflevel < 85.0f))
     throw TASCAR::ErrMsg(
         std::string("reflevel needs to be below 85 dB SPL (current value: ") +
         TASCAR::to_string(reflevel) + " dB SPL).");
-  if(!(reflevel>0.0f))
+  if(!(reflevel > 0.0f))
     throw TASCAR::ErrMsg(
         std::string("reflevel needs to be above 0 dB SPL (current value: ") +
         TASCAR::to_string(reflevel) + " dB SPL).");
-  if(!(bandsperoctave>0.0f))
+  if(!(bandsperoctave > 0.0f))
     throw TASCAR::ErrMsg(
         std::string("bandsperoctave needs to be above 0 (current value: ") +
         TASCAR::to_string(bandsperoctave) + ").");
-  if(!(bandoverlap>=0.0f))
+  if(!(bandoverlap >= 0.0f))
     throw TASCAR::ErrMsg(
         std::string("bandoverlap cannot be negative (current value: ") +
         TASCAR::to_string(bandoverlap) + ").");
-  //std::max(0.0f,log2f(fmax/fmin)*bandsperoctave/3.0f-1.0f)
-  //if(max_eqstages > )
+  // std::max(0.0f,log2f(fmax/fmin)*bandsperoctave/3.0f-1.0f)
+  // if(max_eqstages > )
   //  throw TASCAR::ErrMsg(
   //      std::string("bandoverlap cannot be negative (current value: ") +
   //      TASCAR::to_string(bandoverlap) + ").");
-  //e.SET_ATTRIBUTE(max_eqstages);
+  // e.SET_ATTRIBUTE(max_eqstages);
+}
+
+spkeq_report_t::spkeq_report_t(std::string label, const std::vector<float>& vF,
+                               const std::vector<float>& vG_precalib,
+                               const std::vector<float>& vG_postcalib,
+                               float gain_db)
+    : label(label), vF(vF), vG_precalib(vG_precalib),
+      vG_postcalib(vG_postcalib), gain_db(gain_db)
+{
+  DEBUG(label);
+  DEBUG(TASCAR::to_string(vF));
+  DEBUG(TASCAR::to_string(vG_precalib));
+  DEBUG(TASCAR::to_string(vG_postcalib));
+  DEBUG(gain_db);
 }
 
 calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true)
@@ -211,8 +225,9 @@ void calib_cfg_t::validate() const
 {
   par_speaker.validate();
   par_sub.validate();
-  if( refport.empty() )
-    throw TASCAR::ErrMsg("At least one measurement microphone connection is required for calibration");
+  if(refport.empty())
+    throw TASCAR::ErrMsg("At least one measurement microphone connection is "
+                         "required for calibration");
 }
 
 void calib_cfg_t::factory_reset()
@@ -567,6 +582,7 @@ uint32_t get_fresp_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
 
 void calibsession_t::get_levels()
 {
+  spkeq_report.clear();
   //
   // first broadband speakers:
   //
@@ -586,6 +602,11 @@ void calibsession_t::get_levels()
   get_levels_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), jackrec,
               bbrecbuf, cfg_.miccalib, allports, TASCAR::levelmeter::C,
               cfg_.par_speaker, levels, levelsfrg);
+  for(size_t ch = 0u; ch < spk_nsp->spkpos.size(); ++ch) {
+    spkeq_report.push_back(
+        spkeq_report_t(std::string("spk") + std::to_string(ch + 1), vF,
+                       {}, {}, levels[ch]));
+  }
   //
   // subwoofer:
   //

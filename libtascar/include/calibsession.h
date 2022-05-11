@@ -53,6 +53,18 @@ namespace TASCAR {
     bool initcal = true; ///< Initial calibration (or re-calibration if false)
   };
 
+  class spkeq_report_t {
+  public:
+    spkeq_report_t(std::string label, const std::vector<float>& vF,
+                   const std::vector<float>& vG_precalib,
+                   const std::vector<float>& vG_postcalib, float gain_db);
+    std::string label;
+    std::vector<float> vF;
+    std::vector<float> vG_precalib;
+    std::vector<float> vG_postcalib;
+    float gain_db;
+  };
+
   /**
      @brief Dedicated TASCAR session for calibration of speaker layout files.
 
@@ -171,6 +183,9 @@ namespace TASCAR {
     uint32_t fcomp_sub = 0u;
     bool isactive_pointsource = false;
     bool isactive_diffuse = false;
+
+  public:
+    std::vector<spkeq_report_t> spkeq_report;
   };
 
   class spkcalibrator_t {
@@ -181,6 +196,12 @@ namespace TASCAR {
     std::string get_filename() const { return filename; };
     std::string get_orig_speaker_desc() const;
     std::string get_current_speaker_desc() const;
+    std::vector<spkeq_report_t> get_speaker_report() const
+    {
+      if(p_session)
+        return p_session->spkeq_report;
+      return {};
+    };
     /**
        @brief Call this function after a file was selected.
      */
