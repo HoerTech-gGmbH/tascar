@@ -785,6 +785,7 @@ void spkcalib_t::on_assistant_next(Gtk::Widget*)
   }
   catch(const std::exception& e) {
     error_message(e.what());
+    previous_page();
   }
 }
 

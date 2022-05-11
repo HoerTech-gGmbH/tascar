@@ -16,6 +16,7 @@ namespace TASCAR {
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode) const;
+    void validate() const;
     float fmin = 62.5f;    ///< Lower limit of frequency in Hz.
     float fmax = 4000.0f;  ///< Upper limit of frequency in Hz.
     float duration = 1.0f; ///< Stimulus duration in s.
@@ -42,6 +43,7 @@ namespace TASCAR {
     void read_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode) const;
+    void validate() const;
     spk_eq_param_t par_speaker; ///< Broadband speaker calibration parameters
     spk_eq_param_t par_sub;     ///< Subwoofer calibration parameters
     std::vector<std::string> refport; ///< Jack port name to which measurement

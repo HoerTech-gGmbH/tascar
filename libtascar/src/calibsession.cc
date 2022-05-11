@@ -97,6 +97,14 @@ void spk_eq_param_t::read_defaults()
   READ_DEF(reflevel);
   READ_DEF(bandsperoctave);
   READ_DEF(bandoverlap);
+  try {
+    validate();
+  }
+  catch(const std::exception& e) {
+    throw TASCAR::ErrMsg(
+        std::string("While reading ") + (issub ? "subwoofer" : "speaker") +
+        " parameters from global configuration file:\n" + e.what());
+  }
 }
 
 void spk_eq_param_t::read_xml(const tsccfg::node_t& layoutnode)
@@ -121,10 +129,19 @@ void spk_eq_param_t::read_xml(const tsccfg::node_t& layoutnode)
       "Overlap in frequency bands in filterbank for level equalization.");
   e.GET_ATTRIBUTE(max_eqstages, "",
                   "Number of filter stages for frequency compensation.");
+  try {
+    validate();
+  }
+  catch(const std::exception& e) {
+    throw TASCAR::ErrMsg(std::string("While reading ") +
+                         (issub ? "subwoofer" : "speaker") +
+                         " parameters from XML file:\n" + e.what());
+  }
 }
 
 void spk_eq_param_t::save_xml(const tsccfg::node_t& layoutnode) const
 {
+  validate();
   TASCAR::xml_element_t xml(layoutnode);
   tsccfg::node_t spkcalibnode;
   if(issub)
@@ -142,9 +159,58 @@ void spk_eq_param_t::save_xml(const tsccfg::node_t& layoutnode) const
   e.SET_ATTRIBUTE(max_eqstages);
 }
 
+void spk_eq_param_t::validate() const
+{
+  if(!(fmin > 0.0f))
+    throw TASCAR::ErrMsg(
+        std::string("fmin needs to be above zero (current value: ") +
+        TASCAR::to_string(fmin) + " Hz).");
+  if(!(fmax > fmin))
+    throw TASCAR::ErrMsg(
+        std::string("fmax needs to be larger than fmin (fmin=") +
+        TASCAR::to_string(fmin) + " Hz, fmax=" + TASCAR::to_string(fmax) +
+        " Hz).");
+  if(!(duration > 0.0f))
+    throw TASCAR::ErrMsg(
+        std::string("duration needs to be above zero (current value: ") +
+        TASCAR::to_string(duration) + " s).");
+  if(!(prewait>0.0f))
+    throw TASCAR::ErrMsg(
+        std::string("prewait needs to be above zero (current value: ") +
+        TASCAR::to_string(prewait) + " s).");
+  if(!(reflevel<85.0f))
+    throw TASCAR::ErrMsg(
+        std::string("reflevel needs to be below 85 dB SPL (current value: ") +
+        TASCAR::to_string(reflevel) + " dB SPL).");
+  if(!(reflevel>0.0f))
+    throw TASCAR::ErrMsg(
+        std::string("reflevel needs to be above 0 dB SPL (current value: ") +
+        TASCAR::to_string(reflevel) + " dB SPL).");
+  if(!(bandsperoctave>0.0f))
+    throw TASCAR::ErrMsg(
+        std::string("bandsperoctave needs to be above 0 (current value: ") +
+        TASCAR::to_string(bandsperoctave) + ").");
+  if(!(bandoverlap>=0.0f))
+    throw TASCAR::ErrMsg(
+        std::string("bandoverlap cannot be negative (current value: ") +
+        TASCAR::to_string(bandoverlap) + ").");
+  //std::max(0.0f,log2f(fmax/fmin)*bandsperoctave/3.0f-1.0f)
+  //if(max_eqstages > )
+  //  throw TASCAR::ErrMsg(
+  //      std::string("bandoverlap cannot be negative (current value: ") +
+  //      TASCAR::to_string(bandoverlap) + ").");
+  //e.SET_ATTRIBUTE(max_eqstages);
+}
+
 calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true)
 {
   read_defaults();
+}
+
+void calib_cfg_t::validate() const
+{
+  par_speaker.validate();
+  par_sub.validate();
 }
 
 void calib_cfg_t::factory_reset()
@@ -202,12 +268,7 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
       lmax(0), lmean(0), calibfor(get_calibfor(fname)),
       jackrec(cfg_.refport.size() + 1, "spkcalibrec")
 {
-  for(size_t ich = 0; ich < cfg_.refport.size() + 1; ++ich) {
-    bbrecbuf.push_back(
-        (uint32_t)(jackrec.get_srate() * cfg_.par_speaker.duration));
-    subrecbuf.push_back(
-        (uint32_t)(jackrec.get_srate() * cfg_.par_sub.duration));
-  }
+  cfg.validate();
   if(calibfor.empty())
     calibfor = "type:nsp";
   // create a new session, no OSC port:
@@ -290,10 +351,6 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
   if(scenes[0]->receivermod_objects.size() != 3)
     throw TASCAR::ErrMsg("Programming error: not exactly three receivers.");
   scenes.back()->source_objects[0]->dlocation = pos_t(1, 0, 0);
-  // for(const auto& spk : *spk_file)
-  //  max_fcomp_bb = std::max(max_fcomp_bb, spk.eqstages);
-  // for(const auto& spk : spk_file->subs)
-  //  max_fcomp_sub = std::max(max_fcomp_sub, spk.eqstages);
   rec_nsp = scenes.back()->receivermod_objects[0];
   spk_nsp = dynamic_cast<TASCAR::receivermod_base_speaker_t*>(rec_nsp->libdata);
   if(!spk_nsp)
@@ -311,8 +368,13 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
     for(auto& spk : recspk->spkpos.subs)
       spk.eqstages = 0;
   }
+  for(size_t ich = 0; ich < cfg_.refport.size() + 1; ++ich) {
+    bbrecbuf.push_back(
+        (uint32_t)(jackrec.get_srate() * cfg_.par_speaker.duration));
+    subrecbuf.push_back(
+        (uint32_t)(jackrec.get_srate() * cfg_.par_sub.duration));
+  }
   start();
-
   for(auto& pmod : modules) {
     TASCAR::Scene::route_t* rp(
         dynamic_cast<TASCAR::Scene::route_t*>(pmod->libdata));
