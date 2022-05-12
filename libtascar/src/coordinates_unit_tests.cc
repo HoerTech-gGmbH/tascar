@@ -533,6 +533,16 @@ TEST(median, median)
   ASSERT_EQ(7.0, TASCAR::median(data.begin(), data.end()));
 }
 
+TEST(pos, print)
+{
+  TASCAR::pos_t p(1.5, 0, 0);
+  ASSERT_EQ("1.5, 0, 0", p.print_sphere());
+  ASSERT_EQ("1.5, 0, 0", p.print_cart());
+  TASCAR::pos_t p1(0, 1.5, 0);
+  ASSERT_EQ("1.5, 90, 0", p1.print_sphere());
+  ASSERT_EQ("0, 1.5, 0", p1.print_cart());
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

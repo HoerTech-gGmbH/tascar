@@ -145,6 +145,7 @@ namespace TASCAR {
     void configure();
     virtual void release();
     void clear_states();
+    std::string to_string() const;
     size_t num_input_channels() const { return size(); };
     size_t num_output_channels() const
     {

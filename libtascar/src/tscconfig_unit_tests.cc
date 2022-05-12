@@ -333,6 +333,23 @@ TEST(strcnv, str2vecint)
             TASCAR::str2vecint("1 -2,3,1", ","));
 }
 
+TEST(xmlelement, vecdbspl)
+{
+  TASCAR::xml_doc_t doc("<session val=\"93.9794 100\"/>",
+                        TASCAR::xml_doc_t::LOAD_STRING);
+  std::vector<float> val;
+  TASCAR::xml_element_t xml(doc.root());
+  xml.GET_ATTRIBUTE_DBSPL(val, "");
+  EXPECT_EQ(2u, val.size());
+  if(val.size() == 2u) {
+    ASSERT_NEAR(1.0f, val[0], 1e-5f);
+    ASSERT_NEAR(2.0f, val[1], 1e-5f);
+  }
+  val = {2.0f, 0.2f};
+  xml.SET_ATTRIBUTE_DBSPL(val);
+  EXPECT_EQ("100 80", tsccfg::node_get_attribute_value(xml.e,"val"));
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
