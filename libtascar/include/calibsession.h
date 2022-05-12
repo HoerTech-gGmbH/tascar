@@ -29,8 +29,7 @@ namespace TASCAR {
         2.0f; ///< Overlap of analysis filterbank in filter bands.
     uint32_t max_eqstages =
         0u; ///< maximum number of biquad stages for frequency compensation
-  private:
-    bool issub = false;
+    const bool issub = false;
   };
 
   /**
@@ -55,6 +54,7 @@ namespace TASCAR {
 
   class spkeq_report_t {
   public:
+    spkeq_report_t();
     spkeq_report_t(std::string label, const std::vector<float>& vF,
                    const std::vector<float>& vG_precalib,
                    const std::vector<float>& vG_postcalib, float gain_db);
@@ -62,7 +62,7 @@ namespace TASCAR {
     std::vector<float> vF;
     std::vector<float> vG_precalib;
     std::vector<float> vG_postcalib;
-    float gain_db;
+    float gain_db = 0.0f;
   };
 
   /**
@@ -178,9 +178,6 @@ namespace TASCAR {
     std::vector<std::vector<float>> vGains;
     std::vector<float> vFsub;
     std::vector<std::vector<float>> vGainsSub;
-    uint32_t fcomp_bb =
-        0u; ///< final number of biquad stages for frequency compensation
-    uint32_t fcomp_sub = 0u;
     bool isactive_pointsource = false;
     bool isactive_diffuse = false;
 

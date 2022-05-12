@@ -51,51 +51,49 @@ private:
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
   float getx(float f, float width);
   float gety(float g, float height);
-  float fmin;
-  float fmax;
-  float gmin;
-  float gmax;
+  float fmin = 50.0f;
+  float fmax = 22050.0f;
+  float gmin = 0.0f;
+  float gmax = 0.0f;
 };
 
 spkeq_display_t::spkeq_display_t(const spkeq_report_t& src)
-  : spkeq_report_t(src)
+    : spkeq_report_t(src)
 {
-  if(vF.size() != vG_precalib.size())
-    throw TASCAR::ErrMsg("dimensions of vF and vG_precalib differ");
-  if(vF.empty()) {
-    fmin = 50.0f;
-    fmax = 22050.0f;
-    gmin = -10.0f;
-    gmax = 0.0f;
-  } else {
+  if(vF.size()) {
     fmin = fmax = vF[0];
-    gmin = gmax = vG_precalib[0];
-    for(const auto& g : vG_precalib) {
-      gmin = std::min(gmin, g);
-      gmax = std::max(gmax, g);
-    }
-    for(const auto& g : vG_postcalib) {
-      gmin = std::min(gmin, g);
-      gmax = std::max(gmax, g);
-    }
     for(const auto& f : vF) {
       fmin = std::min(fmin, f);
       fmax = std::max(fmax, f);
     }
-    fmin *= 0.5f;
-    fmax *= 2.0f;
+    fmin *= sqrtf(0.5f);
+    fmax *= sqrtf(2.0f);
   }
+  if(vG_precalib.size()) {
+    for(const auto& g : vG_precalib) {
+      gmin = std::min(gmin, g);
+      gmax = std::max(gmax, g);
+    }
+  }
+  if(vG_postcalib.size()) {
+    for(const auto& g : vG_postcalib) {
+      gmin = std::min(gmin, g);
+      gmax = std::max(gmax, g);
+    }
+  }
+  gmin -= 1.0f;
+  gmax += 1.0f;
   set_size_request(300, 120);
 }
 
 float spkeq_display_t::getx(float f, float width)
 {
-  return log2f(f / fmin) * log2f(fmin / fmax) * width;
+  return 5 + log2f(f / fmin) / log2f(fmax / fmin) * (width - 10);
 }
 
 float spkeq_display_t::gety(float g, float height)
 {
-  return (g - gmin) / (gmax - gmin) * height;
+  return height - (g - gmin) / (gmax - gmin) * (height - 20) - 1;
 }
 
 bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
@@ -107,14 +105,67 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->set_source_rgb(1, 1, 1);
   cr->paint();
   cr->set_source_rgb(0, 0, 0);
-  cr->move_to(10, 20);
+  cr->set_line_width(1);
+  cr->move_to(getx(fmin, width), gety(gmin, height));
+  cr->line_to(getx(fmin, width), gety(gmax, height));
+  cr->line_to(getx(fmax, width), gety(gmax, height));
+  cr->line_to(getx(fmax, width), gety(gmin, height));
+  cr->line_to(getx(fmin, width), gety(gmin, height));
+  cr->stroke();
+  cr->set_source_rgb(0.7, 0.7, 0.7);
+  cr->set_font_size(10);
+  bool first = true;
+  float dlg = roundf(3.0f * log2f(fmax / fmin) / 8.0f) / 3.0f;
+  float lgfmax = log2f(fmax);
+  for(float lgf = -6.0f; lgf <= lgfmax; lgf += dlg) {
+    float f = 1000.0f * powf(2.0f, lgf);
+    if(f >= fmin) {
+      cr->move_to(getx(f, width), gety(gmin, height));
+      cr->line_to(getx(f, width), gety(gmax, height));
+      cr->stroke();
+      cr->move_to(getx(f, width) + 2, gety(gmin, height) - 2);
+      std::string txt = TASCAR::to_string(f);
+      if(first)
+        txt += " Hz";
+      first = false;
+      cr->show_text(txt.c_str());
+    }
+  }
+  first = true;
+  for(float g = 5 * floorf(gmax / 5.0f); g >= gmin; g -= 5.0f) {
+    cr->move_to(getx(fmin, width), gety(g, height));
+    cr->line_to(getx(fmax, width), gety(g, height));
+    cr->stroke();
+    cr->move_to(getx(fmin, width) + 2, gety(g, height) - 2);
+    std::string txt = TASCAR::to_string(g);
+    if(first)
+      txt += " dB";
+    first = false;
+    cr->show_text(txt.c_str());
+  }
+  cr->set_source_rgb(0, 0, 0);
+  cr->move_to(5, 15);
   cr->set_font_size(12);
   cr->show_text(label.c_str());
   if(vF.size()) {
-    cr->move_to(getx(vF[0], width), gety(vG_precalib[0], height));
-    for(size_t ch = 1u; ch < vF.size(); ++ch)
-      cr->line_to(getx(vF[0], width), gety(vG_precalib[0], height));
-    cr->stroke();
+    if(vG_precalib.size()) {
+      cr->save();
+      cr->set_source_rgb(0.6, 0.2, 0.2);
+      cr->set_line_width(2);
+      cr->move_to(getx(vF[0], width), gety(vG_precalib[0], height));
+      for(size_t ch = 1u; ch < vF.size(); ++ch)
+        cr->line_to(getx(vF[ch], width), gety(vG_precalib[ch], height));
+      cr->stroke();
+    }
+    if(vG_postcalib.size()) {
+      cr->set_source_rgb(0, 0, 0);
+      cr->set_line_width(2);
+      cr->move_to(getx(vF[0], width), gety(vG_postcalib[0], height));
+      for(size_t ch = 1u; ch < vF.size(); ++ch)
+        cr->line_to(getx(vF[ch], width), gety(vG_postcalib[ch], height));
+      cr->stroke();
+    }
+    cr->restore();
   }
   cr->restore();
   return true;
@@ -246,7 +297,7 @@ void spkcalib_t::clear_equal_gui()
 void spkcalib_t::update_equal_gui()
 {
   auto report = spkcalib.get_speaker_report();
-  for( auto& spkrep : report )
+  for(auto& spkrep : report)
     spkequal_disp.push_back(spkrep);
   for(auto& disp : spkequal_disp) {
     box_step4_validate->add(disp);
