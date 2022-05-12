@@ -1382,7 +1382,7 @@ until it reaches approximately XX dB SPL (C-weighted).</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Please review the speaker layout and
-press finish to save changes and close.</property>
+press "Apply" to save changes and close.</property>
             <property name="xalign">0</property>
           </object>
           <packing>

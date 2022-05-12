@@ -112,14 +112,15 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->line_to(getx(fmax, width), gety(gmin, height));
   cr->line_to(getx(fmin, width), gety(gmin, height));
   cr->stroke();
-  cr->set_source_rgb(0.7, 0.7, 0.7);
   cr->set_font_size(10);
   bool first = true;
   float dlg = roundf(3.0f * log2f(fmax / fmin) / 8.0f) / 3.0f;
   float lgfmax = log2f(fmax);
   for(float lgf = -6.0f; lgf <= lgfmax; lgf += dlg) {
     float f = 1000.0f * powf(2.0f, lgf);
+    f = 0.25f * roundf(4.0f * f);
     if(f >= fmin) {
+      cr->set_source_rgb(0.7, 0.7, 0.7);
       cr->move_to(getx(f, width), gety(gmin, height));
       cr->line_to(getx(f, width), gety(gmax, height));
       cr->stroke();
@@ -128,11 +129,13 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       if(first)
         txt += " Hz";
       first = false;
+      cr->set_source_rgb(0.5, 0.5, 0.5);
       cr->show_text(txt.c_str());
     }
   }
   first = true;
   for(float g = 5 * floorf(gmax / 5.0f); g >= gmin; g -= 5.0f) {
+    cr->set_source_rgb(0.7, 0.7, 0.7);
     cr->move_to(getx(fmin, width), gety(g, height));
     cr->line_to(getx(fmax, width), gety(g, height));
     cr->stroke();
@@ -141,25 +144,30 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     if(first)
       txt += " dB";
     first = false;
+    cr->set_source_rgb(0.5, 0.5, 0.5);
     cr->show_text(txt.c_str());
   }
   cr->set_source_rgb(0, 0, 0);
-  cr->move_to(5, 15);
   cr->set_font_size(12);
+  cr->move_to(5, 15);
   cr->show_text(label.c_str());
+  char ctmp[1024];
+  sprintf(ctmp, "g = %1.1f dB", gain_db);
+  cr->move_to(125, 15);
+  cr->show_text(ctmp);
   if(vF.size()) {
+    cr->save();
     if(vG_precalib.size()) {
-      cr->save();
-      cr->set_source_rgb(0.6, 0.2, 0.2);
-      cr->set_line_width(2);
+      cr->set_source_rgb(0.5, 0.5, 0.5);
+      cr->set_line_width(1.5);
       cr->move_to(getx(vF[0], width), gety(vG_precalib[0], height));
       for(size_t ch = 1u; ch < vF.size(); ++ch)
         cr->line_to(getx(vF[ch], width), gety(vG_precalib[ch], height));
       cr->stroke();
     }
     if(vG_postcalib.size()) {
-      cr->set_source_rgb(0, 0, 0);
-      cr->set_line_width(2);
+      cr->set_source_rgb(0.6, 0.2, 0.2);
+      cr->set_line_width(3);
       cr->move_to(getx(vF[0], width), gety(vG_postcalib[0], height));
       for(size_t ch = 1u; ch < vF.size(); ++ch)
         cr->line_to(getx(vF[ch], width), gety(vG_postcalib[ch], height));

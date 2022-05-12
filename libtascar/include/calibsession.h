@@ -174,10 +174,10 @@ namespace TASCAR {
     std::vector<TASCAR::wave_t> subrecbuf;
     TASCAR::wave_t teststim_bb;
     TASCAR::wave_t teststim_sub;
-    std::vector<float> vF;
-    std::vector<std::vector<float>> vGains;
-    std::vector<float> vFsub;
-    std::vector<std::vector<float>> vGainsSub;
+    //std::vector<float> vF;
+    //std::vector<std::vector<float>> vGains;
+    //std::vector<float> vFsub;
+    //std::vector<std::vector<float>> vGainsSub;
     bool isactive_pointsource = false;
     bool isactive_diffuse = false;
 

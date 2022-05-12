@@ -69,7 +69,7 @@ void spk_eq_param_t::factory_reset()
     duration = 4.0f;
     prewait = 0.125f;
     reflevel = 80.0f;
-    bandsperoctave = 3.0f;
+    bandsperoctave = 8.0f;
     bandoverlap = 2.0f;
   } else {
     fmin = 62.5f;
@@ -360,8 +360,8 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
   spk_file = new spk_array_diff_render_t(e_rcvr.e, false);
   levels = std::vector<float>(spk_file->size(), 0.0);
   sublevels = std::vector<float>(spk_file->subs.size(), 0.0);
-  //levelsfrg = std::vector<float>(spk_file->size(), 0.0);
-  //sublevelsfrg = std::vector<float>(spk_file->subs.size(), 0.0);
+  // levelsfrg = std::vector<float>(spk_file->size(), 0.0);
+  // sublevelsfrg = std::vector<float>(spk_file->subs.size(), 0.0);
   // validate scene:
   if(scenes.empty())
     throw TASCAR::ErrMsg("Programming error: no scene");
@@ -494,17 +494,18 @@ void get_speaker_equalization(
     l -= vl_max;
 }
 
-
 void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
-            jackrec2wave_t& jackrec, const std::vector<TASCAR::wave_t>& recbuf,
-            const std::vector<float>& miccalib,
-            const std::vector<std::string>& ports, levelmeter::weight_t weight,
-            const spk_eq_param_t& calibpar, std::vector<float>& levels,
-            std::vector<spkeq_report_t>& reports)
+                 jackrec2wave_t& jackrec,
+                 const std::vector<TASCAR::wave_t>& recbuf,
+                 const std::vector<float>& miccalib,
+                 const std::vector<std::string>& ports,
+                 levelmeter::weight_t weight, const spk_eq_param_t& calibpar,
+                 std::vector<float>& levels,
+                 std::vector<spkeq_report_t>& reports)
 {
-  //std::vector<spkeq_report_t> reports;
+  // std::vector<spkeq_report_t> reports;
   levels.clear();
-  //levelrange.clear();
+  // levelrange.clear();
   std::vector<float> vF;
   std::vector<float> levels_tmp;
   std::vector<float> vG;
@@ -537,11 +538,11 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     }
     get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports, weight,
                              calibpar, levels, vF, vG);
-    report.label = calibpar.issub?"sub":"spk";
+    report.label = calibpar.issub ? "sub" : "spk";
     report.label += std::to_string(c);
-    if( spk.label.size() )
+    if(spk.label.size())
       report.label += " " + spk.label;
-    //report.label += " " + TASCAR::to_string(levels.back()) + " dB";
+    // report.label += " " + TASCAR::to_string(levels.back()) + " dB";
     report.vF = vF;
     report.vG_postcalib = vG;
     for(auto& g : report.vG_postcalib)
@@ -552,10 +553,10 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       vl_min = std::min(vl_min, l);
       vl_max = std::max(vl_max, l);
     }
-    //levelrange.push_back(vl_max - vl_min);
+    // levelrange.push_back(vl_max - vl_min);
     reports.push_back(report);
   }
-  //return reports;
+  // return reports;
 }
 
 void calibsession_t::get_levels()
@@ -584,7 +585,7 @@ void calibsession_t::get_levels()
     scenes.back()->source_objects[0]->set_mute(true);
     // unmute subwoofer source:
     scenes.back()->source_objects[1]->set_mute(false);
-    //fcomp_sub = get_fresp_(
+    // fcomp_sub = get_fresp_(
     //    spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]), jackrec,
     //    subrecbuf, cfg_.miccalib, allports, cfg_.par_sub, vFsub, vGainsSub);
     get_levels_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
@@ -622,6 +623,11 @@ void calibsession_t::get_levels()
     for(uint32_t k = 0; k < sublevels.size(); ++k)
       recspk->spkpos.subs[k].gain /= lmax;
   }
+  for(uint32_t k = 0; k < levels.size(); ++k)
+    spkeq_report[k].gain_db = TASCAR::lin2db(spk_nsp->spkpos[k].gain);
+  for(uint32_t k = 0; k < sublevels.size(); ++k)
+    spkeq_report[k + levels.size()].gain_db =
+        TASCAR::lin2db(spk_nsp->spkpos.subs[k].gain);
   levelsrecorded = true;
 }
 
@@ -651,9 +657,11 @@ void calibsession_t::saveas(const std::string& fname)
     auto& tscspk = spk_spec->spkpos[std::min(k, spk_spec->spkpos.size() - 1)];
     espk.set_attribute("gain", TASCAR::to_string(20 * log10(tscspk.gain)));
     espk.set_attribute("eqstages", std::to_string(spk_nsp->spkpos[k].eqstages));
-    if((spk_nsp->spkpos[k].eqstages > 0) && (k < vGains.size())) {
-      espk.set_attribute("eqfreq", TASCAR::to_string(vF));
-      espk.set_attribute("eqgain", TASCAR::to_string(vGains[k]));
+    if(spk_nsp->spkpos[k].eqstages > 0) {
+      espk.set_attribute("eqfreq",
+                         TASCAR::to_string(spk_nsp->spkpos[k].eqfreq));
+      espk.set_attribute("eqgain",
+                         TASCAR::to_string(spk_nsp->spkpos[k].eqgain));
     } else {
       espk.set_attribute("eqfreq", "");
       espk.set_attribute("eqgain", "");
@@ -666,10 +674,13 @@ void calibsession_t::saveas(const std::string& fname)
     auto& tscspk =
         spk_spec->spkpos.subs[std::min(k, spk_spec->spkpos.subs.size() - 1)];
     espk.set_attribute("gain", TASCAR::to_string(20 * log10(tscspk.gain)));
-    espk.set_attribute("eqstages", std::to_string(spk_nsp->spkpos.subs[k].eqstages));
-    if((spk_nsp->spkpos.subs[k].eqstages > 0) && (k < vGainsSub.size())) {
-      espk.set_attribute("eqfreq", TASCAR::to_string(vFsub));
-      espk.set_attribute("eqgain", TASCAR::to_string(vGainsSub[k]));
+    espk.set_attribute("eqstages",
+                       std::to_string(spk_nsp->spkpos.subs[k].eqstages));
+    if(spk_nsp->spkpos.subs[k].eqstages > 0) {
+      espk.set_attribute("eqfreq",
+                         TASCAR::to_string(spk_nsp->spkpos.subs[k].eqfreq));
+      espk.set_attribute("eqgain",
+                         TASCAR::to_string(spk_nsp->spkpos.subs[k].eqgain));
     } else {
       espk.set_attribute("eqfreq", "");
       espk.set_attribute("eqgain", "");
