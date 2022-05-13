@@ -71,6 +71,7 @@ void spk_eq_param_t::factory_reset()
     reflevel = 80.0f;
     bandsperoctave = 8.0f;
     bandoverlap = 2.0f;
+    max_eqstages = 0u;
   } else {
     fmin = 62.5f;
     fmax = 4000.0f;
@@ -79,10 +80,11 @@ void spk_eq_param_t::factory_reset()
     reflevel = 80.0f;
     bandsperoctave = 3.0f;
     bandoverlap = 2.0f;
+    max_eqstages = 0u;
   }
 }
 
-#define READ_DEF(x) x = (float)TASCAR::config(path + "." #x, x)
+#define READ_DEF(x) x = TASCAR::config(path + "." #x, x)
 
 void spk_eq_param_t::read_defaults()
 {
@@ -97,6 +99,7 @@ void spk_eq_param_t::read_defaults()
   READ_DEF(reflevel);
   READ_DEF(bandsperoctave);
   READ_DEF(bandoverlap);
+  READ_DEF(max_eqstages);
   try {
     validate();
   }
@@ -255,10 +258,45 @@ void calib_cfg_t::read_defaults()
     c = TASCAR::dbspl2lin(c);
 }
 
+#define WRITE_DEF(x)                                                           \
+  TASCAR::config_forceoverwrite(path + "." #x, TASCAR::to_string(x))
+
+void spk_eq_param_t::write_defaults()
+{
+  std::string path = "tascar.spkcalib";
+  if(issub)
+    path = "tascar.spkcalib.sub";
+  WRITE_DEF(fmin);
+  WRITE_DEF(fmax);
+  WRITE_DEF(duration);
+  WRITE_DEF(prewait);
+  WRITE_DEF(reflevel);
+  WRITE_DEF(bandsperoctave);
+  WRITE_DEF(bandoverlap);
+  WRITE_DEF(max_eqstages);
+}
+
+void calib_cfg_t::save_defaults()
+{
+  par_speaker.write_defaults();
+  par_sub.write_defaults();
+  std::string path = "tascar.spkcalib";
+  std::vector<std::string> keys = {"tascar.spkcalib.inputport",
+                                   "tascar.spkcalib.miccalib",
+                                   "tascar.spkcalib.fc"};
+  for(auto key : {"fmin", "fmax", "duration", "prewait", "reflevel",
+                  "bandsperoctave", "bandoverlap", "max_eqstages"}) {
+    keys.push_back(std::string("tascar.spkcalib.") + key);
+    keys.push_back(std::string("tascar.spkcalib.sub.") + key);
+  }
+  config_save_keys(keys);
+}
+
 void calib_cfg_t::read_xml(const tsccfg::node_t& layoutnode)
 {
   par_speaker.read_xml(layoutnode);
   par_sub.read_xml(layoutnode);
+  TASCAR::xml_element_t e(layoutnode);
   initcal = tsccfg::node_get_attribute_value(layoutnode, "calibdate").empty();
 }
 
@@ -503,9 +541,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                  std::vector<float>& levels,
                  std::vector<spkeq_report_t>& reports)
 {
-  // std::vector<spkeq_report_t> reports;
   levels.clear();
-  // levelrange.clear();
   std::vector<float> vF;
   std::vector<float> levels_tmp;
   std::vector<float> vG;
@@ -585,9 +621,6 @@ void calibsession_t::get_levels()
     scenes.back()->source_objects[0]->set_mute(true);
     // unmute subwoofer source:
     scenes.back()->source_objects[1]->set_mute(false);
-    // fcomp_sub = get_fresp_(
-    //    spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]), jackrec,
-    //    subrecbuf, cfg_.miccalib, allports, cfg_.par_sub, vFsub, vGainsSub);
     get_levels_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
                 jackrec, subrecbuf, cfg_.miccalib, allports,
                 TASCAR::levelmeter::Z, cfg_.par_sub, sublevels, spkeq_report);

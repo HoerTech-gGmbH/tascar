@@ -214,6 +214,12 @@ protected:
     spkcalib.cfg.read_defaults();
     par2gui();
   }
+  void on_par_save_user_config()
+  {
+    gui2par();
+    spkcalib.cfg.save_defaults();
+    par2gui();
+  }
   void on_par_from_layout()
   {
     spkcalib.cfg_load_from_layout();
@@ -246,6 +252,7 @@ protected:
   void on_level_diff_entered();
   bool on_timeout();
   void update_gtkentry_from_value(const std::string& name, float val);
+  void update_gtkentry_set_editable(const std::string& name, bool val);
   void update_gtkcheckbox_from_value(const std::string& name, bool val);
   void update_gtkentry_from_value(const std::string& name,
                                   const std::vector<std::string>& val);
@@ -288,6 +295,7 @@ protected:
   Gtk::ProgressBar* rec_progress = NULL;
   Gtk::Button* butpar_factory_reset = NULL;
   Gtk::Button* butpar_load_user_config = NULL;
+  Gtk::Button* butpar_save_user_config = NULL;
   Gtk::Button* butpar_load_from_xml = NULL;
   std::mutex guimeter_mutex;
   std::vector<TSCGUI::splmeter_t*> guimeter;
@@ -319,6 +327,14 @@ void spkcalib_t::update_gtkentry_from_value(const std::string& name, float val)
   m_refBuilder->get_widget(name, entry);
   if(entry)
     entry->set_text(TASCAR::to_string(val));
+}
+
+void spkcalib_t::update_gtkentry_set_editable(const std::string& name, bool val)
+{
+  Gtk::Entry* entry = NULL;
+  m_refBuilder->get_widget(name, entry);
+  if(entry)
+    entry->set_editable(val);
 }
 
 void spkcalib_t::update_gtkcheckbox_from_value(const std::string& name,
@@ -552,6 +568,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   GET_WIDGET(rec_progress);
   GET_WIDGET(butpar_factory_reset);
   GET_WIDGET(butpar_load_user_config);
+  GET_WIDGET(butpar_save_user_config);
   GET_WIDGET(butpar_load_from_xml);
 
   // GET_WIDGET(meterbox);
@@ -571,6 +588,8 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       sigc::mem_fun(*this, &spkcalib_t::on_par_factory_reset));
   butpar_load_user_config->signal_clicked().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_par_user_config));
+  butpar_save_user_config->signal_clicked().connect(
+      sigc::mem_fun(*this, &spkcalib_t::on_par_save_user_config));
   butpar_load_from_xml->signal_clicked().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_par_from_layout));
   update_display();
@@ -874,6 +893,8 @@ void spkcalib_t::par2gui()
   update_gtkentry_from_value("entry_refport", spkcalib.cfg.refport);
   update_gtkentry_from_value_dbspl("entry_miccalibdb", spkcalib.cfg.miccalib);
   update_gtkcheckbox_from_value("checkbox_initcal", spkcalib.cfg.initcal);
+  bool has_sub = spkcalib.has_sub();
+  //update_gtkentry_set_editable("par_sub_fmin",has_sub);
 }
 
 void spkcalib_t::gui2par()

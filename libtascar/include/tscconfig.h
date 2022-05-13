@@ -168,6 +168,7 @@ namespace TASCAR {
   double config(const std::string&, double);
   std::string config(const std::string&, const std::string&);
   void config_forceoverwrite(const std::string&, const std::string&);
+  void config_save_keys(const std::vector<std::string>&);
 
   void set_libdir(const std::string&);
   const std::string& get_libdir();

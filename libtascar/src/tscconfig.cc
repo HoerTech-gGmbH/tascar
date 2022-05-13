@@ -83,10 +83,13 @@ namespace TASCAR {
     double operator()(const std::string&, double) const;
     std::string operator()(const std::string&, const std::string&) const;
     void forceoverwrite(const std::string&, const std::string&);
+    void writeconfig(const std::vector<std::string>& keys);
 
   private:
     void readconfig(const std::string& fname);
     void readconfig(const std::string& prefix, tsccfg::node_t& e);
+    void setxmlconfig(const std::string& key, tsccfg::node_t& e,
+                      const std::string& val);
     std::map<std::string, std::string> cfg;
   };
 
@@ -104,6 +107,11 @@ double TASCAR::config(const std::string& v, double d)
 std::string TASCAR::config(const std::string& v, const std::string& d)
 {
   return TASCAR::config_(v, d);
+}
+
+void TASCAR::config_save_keys(const std::vector<std::string>& keys)
+{
+  TASCAR::config_.writeconfig(keys);
 }
 
 void TASCAR::config_forceoverwrite(const std::string& v, const std::string& d)
@@ -661,6 +669,7 @@ std::string localgetenv(const std::string& env)
 
 TASCAR::globalconfig_t::globalconfig_t()
 {
+  setlocale(LC_ALL, "C");
   readconfig("/etc/tascar/defaults.xml");
   readconfig("${HOME}/.tascardefaults.xml");
 }
@@ -676,6 +685,51 @@ void TASCAR::globalconfig_t::readconfig(const std::string& fname)
     }
   }
   catch(const std::exception& e) {
+  }
+}
+
+void TASCAR::globalconfig_t::setxmlconfig(const std::string& key,
+                                          tsccfg::node_t& e,
+                                          const std::string& val)
+{
+  TASCAR::xml_element_t exml(e);
+  if(std::string::npos == key.find(".")) {
+    auto subnode = exml.find_or_add_child(key);
+    tsccfg::node_set_attribute(subnode, "data", val);
+  } else {
+    auto dotpos = key.find(".");
+    std::string prefix = key.substr(0, dotpos);
+    std::string subkey = key.substr(dotpos + 1);
+    if(prefix == tsccfg::node_get_name(e))
+      setxmlconfig(subkey, e, val);
+    else {
+      auto subnode = exml.find_or_add_child(prefix);
+      setxmlconfig(subkey, subnode, val);
+    }
+  }
+}
+
+void TASCAR::globalconfig_t::writeconfig(const std::vector<std::string>& keys)
+{
+  std::string lfname(TASCAR::env_expand("${HOME}/.tascardefaults.xml"));
+  auto xml_mode = xml_doc_t::LOAD_FILE;
+  if(!file_exists_ov(lfname)) {
+    lfname = "<tascar/>";
+    xml_mode = xml_doc_t::LOAD_STRING;
+  }
+  xml_doc_t doc(lfname, xml_mode);
+  for(auto key : keys) {
+    auto e(cfg.find(key));
+    if(e != cfg.end()) {
+      setxmlconfig(key, doc.root(), cfg[key]);
+    }
+  }
+  // save...
+  lfname = TASCAR::env_expand("${HOME}/.tascardefaults.xml");
+  try {
+    doc.save(lfname);
+  }
+  catch(...) {
   }
 }
 
@@ -786,6 +840,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& prefix,
 double TASCAR::globalconfig_t::operator()(const std::string& key,
                                           double def) const
 {
+  setlocale(LC_ALL,"C");
   if(localgetenv("TASCARSHOWGLOBAL").size())
     std::cout << key << " (" << def;
   auto e(cfg.find(key));

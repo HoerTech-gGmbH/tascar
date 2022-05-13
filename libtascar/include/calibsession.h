@@ -14,6 +14,7 @@ namespace TASCAR {
     spk_eq_param_t(bool issub = false);
     void factory_reset();
     void read_defaults();
+    void write_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode) const;
     void validate() const;
@@ -40,6 +41,7 @@ namespace TASCAR {
     calib_cfg_t();
     void factory_reset();
     void read_defaults();
+    void save_defaults();
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode) const;
     void validate() const;
@@ -174,10 +176,10 @@ namespace TASCAR {
     std::vector<TASCAR::wave_t> subrecbuf;
     TASCAR::wave_t teststim_bb;
     TASCAR::wave_t teststim_sub;
-    //std::vector<float> vF;
-    //std::vector<std::vector<float>> vGains;
-    //std::vector<float> vFsub;
-    //std::vector<std::vector<float>> vGainsSub;
+    // std::vector<float> vF;
+    // std::vector<std::vector<float>> vGains;
+    // std::vector<float> vFsub;
+    // std::vector<std::vector<float>> vGainsSub;
     bool isactive_pointsource = false;
     bool isactive_diffuse = false;
 
@@ -314,6 +316,12 @@ namespace TASCAR {
     {
       if(p_layout_doc)
         cfg.read_xml(p_layout_doc->root());
+    }
+    bool has_sub() const
+    {
+      if(p_layout)
+        return p_layout->subs.size() > 0u;
+      return false;
     }
 
   private:
