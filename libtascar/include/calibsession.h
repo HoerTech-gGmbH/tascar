@@ -45,6 +45,7 @@ namespace TASCAR {
     void read_xml(const tsccfg::node_t& layoutnode);
     void save_xml(const tsccfg::node_t& layoutnode) const;
     void validate() const;
+    void set_has_sub(bool h) { has_sub = h; };
     spk_eq_param_t par_speaker; ///< Broadband speaker calibration parameters
     spk_eq_param_t par_sub;     ///< Subwoofer calibration parameters
     std::vector<std::string> refport; ///< Jack port name to which measurement
@@ -52,6 +53,8 @@ namespace TASCAR {
     std::vector<float>
         miccalib;        ///< Calibration values of reference microphones
     bool initcal = true; ///< Initial calibration (or re-calibration if false)
+  private:
+    bool has_sub = false;
   };
 
   class spkeq_report_t {

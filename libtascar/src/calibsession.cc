@@ -221,7 +221,7 @@ spkeq_report_t::spkeq_report_t(std::string label, const std::vector<float>& vF,
   DEBUG(gain_db);
 }
 
-calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true)
+calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true), has_sub(true)
 {
   read_defaults();
 }
@@ -229,7 +229,8 @@ calib_cfg_t::calib_cfg_t() : par_speaker(), par_sub(true)
 void calib_cfg_t::validate() const
 {
   par_speaker.validate();
-  par_sub.validate();
+  if(has_sub)
+    par_sub.validate();
   if(refport.empty())
     throw TASCAR::ErrMsg("At least one measurement microphone connection is "
                          "required for calibration");
@@ -279,7 +280,8 @@ void spk_eq_param_t::write_defaults()
 void calib_cfg_t::save_defaults()
 {
   par_speaker.write_defaults();
-  par_sub.write_defaults();
+  if(has_sub)
+    par_sub.write_defaults();
   std::string path = "tascar.spkcalib";
   std::vector<std::string> keys = {"tascar.spkcalib.inputport",
                                    "tascar.spkcalib.miccalib",
@@ -287,7 +289,8 @@ void calib_cfg_t::save_defaults()
   for(auto key : {"fmin", "fmax", "duration", "prewait", "reflevel",
                   "bandsperoctave", "bandoverlap", "max_eqstages"}) {
     keys.push_back(std::string("tascar.spkcalib.") + key);
-    keys.push_back(std::string("tascar.spkcalib.sub.") + key);
+    if(has_sub)
+      keys.push_back(std::string("tascar.spkcalib.sub.") + key);
   }
   config_save_keys(keys);
 }
@@ -295,7 +298,8 @@ void calib_cfg_t::save_defaults()
 void calib_cfg_t::read_xml(const tsccfg::node_t& layoutnode)
 {
   par_speaker.read_xml(layoutnode);
-  par_sub.read_xml(layoutnode);
+  if(has_sub)
+    par_sub.read_xml(layoutnode);
   TASCAR::xml_element_t e(layoutnode);
   initcal = tsccfg::node_get_attribute_value(layoutnode, "calibdate").empty();
 }
@@ -303,7 +307,8 @@ void calib_cfg_t::read_xml(const tsccfg::node_t& layoutnode)
 void calib_cfg_t::save_xml(const tsccfg::node_t& layoutnode) const
 {
   par_speaker.save_xml(layoutnode);
-  par_sub.save_xml(layoutnode);
+  if(has_sub)
+    par_sub.save_xml(layoutnode);
 }
 
 void add_stimulus_plugin(xml_element_t node, const spk_eq_param_t& par)
@@ -880,6 +885,7 @@ void spkcalibrator_t::set_filename(const std::string& name)
   p_layout_doc = new xml_doc_t(filename, TASCAR::xml_doc_t::LOAD_FILE);
   try {
     p_layout = new spk_array_diff_render_t(p_layout_doc->root(), true);
+    cfg.set_has_sub(has_sub());
     cfg.read_xml(p_layout_doc->root());
   }
   catch(...) {

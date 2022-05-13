@@ -114,9 +114,10 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->stroke();
   cr->set_font_size(10);
   bool first = true;
-  float dlg = roundf(3.0f * log2f(fmax / fmin) / 8.0f) / 3.0f;
+  float dlg = std::min(1.0f, roundf(3.0f * log2f(fmax / fmin) / 8.0f) / 3.0f);
+  float liml = ceil(6.0f / dlg) * dlg;
   float lgfmax = log2f(fmax);
-  for(float lgf = -6.0f; lgf <= lgfmax; lgf += dlg) {
+  for(float lgf = -liml; lgf <= lgfmax; lgf += dlg) {
     float f = 1000.0f * powf(2.0f, lgf);
     f = 0.25f * roundf(4.0f * f);
     if(f >= fmin) {
@@ -252,7 +253,7 @@ protected:
   void on_level_diff_entered();
   bool on_timeout();
   void update_gtkentry_from_value(const std::string& name, float val);
-  void update_gtkentry_set_editable(const std::string& name, bool val);
+  void update_gtkentry_set_sensitive(const std::string& name, bool val);
   void update_gtkcheckbox_from_value(const std::string& name, bool val);
   void update_gtkentry_from_value(const std::string& name,
                                   const std::vector<std::string>& val);
@@ -329,12 +330,13 @@ void spkcalib_t::update_gtkentry_from_value(const std::string& name, float val)
     entry->set_text(TASCAR::to_string(val));
 }
 
-void spkcalib_t::update_gtkentry_set_editable(const std::string& name, bool val)
+void spkcalib_t::update_gtkentry_set_sensitive(const std::string& name,
+                                               bool val)
 {
   Gtk::Entry* entry = NULL;
   m_refBuilder->get_widget(name, entry);
   if(entry)
-    entry->set_editable(val);
+    entry->set_sensitive(val);
 }
 
 void spkcalib_t::update_gtkcheckbox_from_value(const std::string& name,
@@ -894,7 +896,14 @@ void spkcalib_t::par2gui()
   update_gtkentry_from_value_dbspl("entry_miccalibdb", spkcalib.cfg.miccalib);
   update_gtkcheckbox_from_value("checkbox_initcal", spkcalib.cfg.initcal);
   bool has_sub = spkcalib.has_sub();
-  //update_gtkentry_set_editable("par_sub_fmin",has_sub);
+  update_gtkentry_set_sensitive("par_sub_fmin", has_sub);
+  update_gtkentry_set_sensitive("par_sub_fmax", has_sub);
+  update_gtkentry_set_sensitive("par_sub_duration", has_sub);
+  update_gtkentry_set_sensitive("par_sub_prewait", has_sub);
+  update_gtkentry_set_sensitive("par_sub_reflevel", has_sub);
+  update_gtkentry_set_sensitive("par_sub_bandsperoctave", has_sub);
+  update_gtkentry_set_sensitive("par_sub_bandoverlap", has_sub);
+  update_gtkentry_set_sensitive("par_sub_max_eqstages", has_sub);
 }
 
 void spkcalib_t::gui2par()
