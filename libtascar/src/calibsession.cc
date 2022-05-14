@@ -571,7 +571,13 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       uint32_t numflt =
           std::min(((uint32_t)vF.size() - 1u) / 3u, calibpar.max_eqstages);
       TASCAR::multiband_pareq_t eq;
-      eq.optim_response((size_t)numflt, vF, vG, (float)jackrec.get_srate());
+      float maxq = std::max(1.0f, (float)vF.size()) /
+                   log2f(calibpar.fmax / calibpar.fmin);
+      eq.optim_response((size_t)numflt, maxq, vF, vG,
+                        (float)jackrec.get_srate());
+      report.eq_f = eq.get_f();
+      report.eq_g = eq.get_g();
+      report.eq_q = eq.get_q();
       spk.eq = eq;
       spk.eqfreq = vF;
       spk.eqgain = vG;

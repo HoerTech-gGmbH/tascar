@@ -534,7 +534,7 @@ void TASCAR::multiband_pareq_t::optimpar2fltsettings(
     float f =
         (atanf(par[3 * k + 1]) / TASCAR_PIf + 0.5f) * (fmax - fmin) + fmin;
     float g = par[3 * k + 2];
-    float q = atanf(par[3 * k + 3]) / TASCAR_PIf + 0.5f;
+    float q = optim_maxq * (atanf(par[3 * k + 3]) / TASCAR_PIf + 0.5f);
     flt[k].set_pareq(f, fs, g, q);
     flt_f[k] = f;
     flt_g[k] = g;
@@ -564,8 +564,8 @@ float TASCAR::multiband_pareq_t::optim_error_fun(const std::vector<float>& par)
 }
 
 std::vector<float> TASCAR::multiband_pareq_t::optim_response(
-    size_t numflt, const std::vector<float>& vF, const std::vector<float>& vG,
-    float fs)
+    size_t numflt, float maxq, const std::vector<float>& vF,
+    const std::vector<float>& vG, float fs)
 {
   if(numflt < 1)
     throw TASCAR::ErrMsg(
@@ -601,8 +601,26 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
   fmin *= 0.5f;
   fmax *= 2.0f;
   optim_fs = fs;
+  optim_maxq = maxq;
   optim_f = vF;
   optim_g = vG;
+  // find frequencies of min and max gain:
+  float f_gmin = fmin;
+  float f_gmax = fmin;
+  float gmin = vG[0];
+  float gmax = vG[0];
+  for(size_t k = 0; k < vF.size(); ++k) {
+    float g = vG[k];
+    float f = vF[k];
+    if(g > gmax) {
+      gmax = g;
+      f_gmax = f;
+    }
+    if(g < gmin) {
+      gmin = g;
+      f_gmin = f;
+    }
+  }
   float glogmean = 0.0f;
   for(auto glog : vG)
     glogmean += glog;
@@ -611,12 +629,23 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
   std::vector<float> step(3 * flt.size() + 1, 0.1f);
   par.resize(3 * flt.size() + 1);
   for(size_t k = 0; k < flt.size(); ++k) {
-    float frel =
-        2.0f * fmin *
-        powf(0.25f * fmax / fmin,
-             (float)k / ((float)std::max((size_t)2u, flt.size()) - 1.0f));
+    float grel = 0.0f;
+    float frel = 1.0f;
+    if(k > 1)
+      frel = 2.0f * fmin *
+             powf(0.25f * fmax / fmin,
+                  (float)(k - 2) /
+                      ((float)std::max((size_t)2u, (flt.size() - 2)) - 1.0f));
+    if(k == 0) {
+      frel = f_gmin;
+      grel = gmin;
+    }
+    if(k == 1) {
+      frel = f_gmax;
+      grel = gmax;
+    }
     par[3 * k + 1] = tanf(TASCAR_PIf * ((frel - fmin) / (fmax - fmin) - 0.5f));
-    par[3 * k + 2] = 0.0f;
+    par[3 * k + 2] = grel;
     par[3 * k + 3] = 0.5f;
   }
   optimpar2fltsettings(par, fs);
@@ -658,9 +687,9 @@ void TASCAR::multiband_pareq_t::dbresponse(std::vector<float>& og,
 std::string TASCAR::multiband_pareq_t::to_string() const
 {
   std::string retv;
-  retv += "g0=" + TASCAR::to_string(g0) + ";\nf=[" +
-          TASCAR::to_string(flt_f) + "];\ng=[" + TASCAR::to_string(flt_g) +
-          "];\nq=[" + TASCAR::to_string(flt_q) + "];\n";
+  retv += "g0=" + TASCAR::to_string(g0) + ";\nf=[" + TASCAR::to_string(flt_f) +
+          "];\ng=[" + TASCAR::to_string(flt_g) + "];\nq=[" +
+          TASCAR::to_string(flt_q) + "];\n";
   return retv;
 }
 

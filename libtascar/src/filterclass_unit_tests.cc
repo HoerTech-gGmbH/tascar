@@ -21,8 +21,8 @@
 #include <gtest/gtest.h>
 
 #include "filterclass.h"
-#include <complex>
 #include "tscconfig.h"
+#include <complex>
 
 TEST(filter_t, constructor)
 {
@@ -486,7 +486,7 @@ TEST(multiband_pareq_t, responseoptim)
                           1.88679f,    2.67132f,   3.03919f,   3.041f,
                           2.79876f,    2.4401f,    2.06435f,   1.72954f,
                           1.45555f,    1.23594f,   1.04929f};
-  std::vector<float> gmeas = eq.optim_response(6, f, g, fs);
+  std::vector<float> gmeas = eq.optim_response(6, 1.0f, f, g, fs);
   //  for(size_t k = 0; k < gmeas.size(); ++k)
   //    std::cout << gmeas[k]-g[k] << "\n";
   //  std::cout << TASCAR::to_string(gmeas) << std::endl;

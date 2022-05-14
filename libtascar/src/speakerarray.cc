@@ -282,9 +282,21 @@ void spk_array_t::configure()
       spk.comp = new TASCAR::overlap_save_t(n_fragment + 1, n_fragment);
       spk.comp->set_irs(spk.compB, false);
     }
-    if(spk.eqstages > 0)
-      spk.eq.optim_response(spk.eqstages, spk.eqfreq, spk.eqgain,
+    if(spk.eqstages > 0) {
+      float fmin = 1.0f;
+      float fmax = 1.0f;
+      if(spk.eqfreq.size()) {
+        fmin = fmax = spk.eqfreq[0];
+        for(const auto& f : spk.eqfreq) {
+          fmin = std::min(fmin, f);
+          fmax = std::max(fmax, f);
+        }
+      }
+      float maxq =
+          std::max(1.0f, (float)spk.eqfreq.size()) / log2f(fmax / fmin);
+      spk.eq.optim_response(spk.eqstages, maxq, spk.eqfreq, spk.eqgain,
                             (float)f_sample);
+    }
   }
 }
 

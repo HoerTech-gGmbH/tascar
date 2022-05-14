@@ -148,6 +148,23 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->set_source_rgb(0.5, 0.5, 0.5);
     cr->show_text(txt.c_str());
   }
+  cr->set_source_rgb(0, 0.3, 0.8);
+  for(size_t k = 0;
+      k < std::min(eq_f.size(), std::min(eq_g.size(), eq_q.size())); ++k) {
+    auto f = eq_f[k];
+    auto g = eq_g[k];
+    auto q = eq_q[k];
+    cr->move_to(getx(f, width), gety(gmin, height));
+    cr->line_to(getx(f, width), gety(gmax, height));
+    cr->stroke();
+    char ctmp[1024];
+    sprintf(ctmp, "g=%1.1fdB", g);
+    cr->move_to(getx(f, width) + 2, gety(gmax, height) + 10);
+    cr->show_text(ctmp);
+    sprintf(ctmp, "q=%1.1f", q);
+    cr->move_to(getx(f, width) + 2, gety(gmax, height) + 22);
+    cr->show_text(ctmp);
+  }
   cr->set_source_rgb(0, 0, 0);
   cr->set_font_size(12);
   cr->move_to(5, 15);

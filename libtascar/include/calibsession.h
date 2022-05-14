@@ -68,6 +68,9 @@ namespace TASCAR {
     std::vector<float> vG_precalib;
     std::vector<float> vG_postcalib;
     float gain_db = 0.0f;
+    std::vector<float> eq_f;
+    std::vector<float> eq_g;
+    std::vector<float> eq_q;
   };
 
   /**

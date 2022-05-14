@@ -349,6 +349,7 @@ namespace TASCAR {
        @brief Optimize coefficients to match given response
 
        @param numflt Number of filters to be used
+       @param maxq Maximum Q value to be used
        @param vF Frequencies at which a gain value is provided.
        @param vG Gain values in dB.
        @param fs Sampling rate in Hz.
@@ -356,7 +357,7 @@ namespace TASCAR {
 
        vF.size() and vG.size() must be equal and at least 3*numflt+1.
      */
-    std::vector<float> optim_response(size_t numflt,
+    std::vector<float> optim_response(size_t numflt, float maxq,
                                       const std::vector<float>& vF,
                                       const std::vector<float>& vG, float fs);
     /**
@@ -400,6 +401,9 @@ namespace TASCAR {
     };
     float optim_error_fun(const std::vector<float>& par);
     std::string to_string() const;
+    std::vector<float> get_f() const { return flt_f; };
+    std::vector<float> get_q() const { return flt_q; };
+    std::vector<float> get_g() const { return flt_g; };
 
   private:
     void optimpar2fltsettings(const std::vector<float>& par, float fs,
@@ -409,6 +413,7 @@ namespace TASCAR {
     float fmin = 0.0f;
     float fmax = 1.0f;
     float optim_fs = 1.0f;
+    float optim_maxq = 1.0f;
     std::vector<float> optim_f;
     std::vector<float> optim_g;
     std::vector<float> optim_gmeas;
