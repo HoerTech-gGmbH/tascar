@@ -31,7 +31,7 @@ namespace TASCAR {
   class spec_t {
   public:
     /**
-       \param n Number of frequency bins, from 0 to Nyquist frequency 
+       \param n Number of frequency bins, from 0 to Nyquist frequency
        (n=floor(fftlen/2)+1)
      */
     spec_t(uint32_t n);
@@ -49,13 +49,16 @@ namespace TASCAR {
     void conj();
     void clear();
     void add_scaled(const spec_t& o, float gain);
-    inline std::complex<float> & operator[](uint32_t k){return b[k];};
-    inline const std::complex<float> & operator[](uint32_t k) const{return b[k];};
-    inline uint32_t size() const {return n_;};
+    inline std::complex<float>& operator[](uint32_t k) { return b[k]; };
+    inline const std::complex<float>& operator[](uint32_t k) const
+    {
+      return b[k];
+    };
+    inline uint32_t size() const { return n_; };
     uint32_t n_;
-    std::complex<float> * b;
+    std::complex<float>* b;
   };
-}
+} // namespace TASCAR
 
 std::ostream& operator<<(std::ostream& out, const TASCAR::wave_t& p);
 std::ostream& operator<<(std::ostream& out, const TASCAR::spec_t& p);

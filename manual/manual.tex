@@ -1651,7 +1651,7 @@ In that case, the input level meters of \tascar{} should show the same
 values as the output level meters of the speech test.
 
 For a calibration of speaker layouts, it is recommended to use the
-tool ``tascar\_spkcalib''.
+tool ``tascar\_spkcalib'' (see section \ref{sec:spkcalib}).
 
 To measure the sound pressure level in a virtual acoustic environment,
 one can place an omni-directional microphone at the position of the main
@@ -1674,7 +1674,7 @@ The \tascar{} level meters support three different frequency
 weightings: ``Z'' or unweighted mode, ``C'' weighting (62.5~Hz to
 4~kHz) and a ``bandpass'' weighting (500~Hz to 4~kHz).
 
-\subsection{Calibrating speaker layouts with {\tt tascar\_spkcalib}}
+\subsection{Calibrating speaker layouts with {\tt tascar\_spkcalib}}\label{sec:spkcalib}
 
 All loudspeaker-based rendering methods (e.g., those depending on a
 loudspeaker layout file) should result in identical levels at the
@@ -1682,96 +1682,55 @@ listening positions for virtual sound sources from the directions of
 the speakers (the levels of interpolated virtual sources may differ
 due to differences in the rendering method).
 %
-The broadband calibration of loudspeaker layouts consists of three
-steps: a) calibrate gain differences between loudspeakers b) calibrate
-the reference level for point source rendering, and c) calibrate the
-gain correction for diffuse sound field rendering.
-%
-The tool \verb!tascar_spkcalib! can be used to perform these steps.
 
-The levels are calibrated using the ``nsp'' rendering method. When
-using ``hoa2d'' or ``neukom\_basic'' receiver types, the level
-differences were tested to be below 0.25~dB. When using ``vbap'' or
-``wfs'', the level differences are tested to be below 2.5~dB.
+The calibration of loudspeaker arrays consists of three steps: a) calibration of the differences between the loudspeakers (with optional spectral correction), b) calibration of the reference level for the reproduction of point sources and c) calibration of the gain correction for the reproduction of diffuse sound fields. The calibration assistant \verb!tascar_spkcalib! guides you step by step through this calibration process.
+
+If the wizard is started without specifying a layout file, a page for selecting a layout opens first. In the next step the calibration parameters can be revised (see Figure \ref{fig:spkcalib1}). ``fmin'' and ``fmax'' determine the frequency range of the calibration stimulus. Within the given frequency range a $1/f$ characteristic is used. ``duration'' defines the duration of the level measurement, ``prewait'' the waiting time between switching on the test stimulus and starting the level measurement. The target level is specified in the ``reference level'' field. The other fields refer to the frequency response correction: ``bands per octave'' defines the frequency resolution of the analysis filter bank. ``overlap in bands'' designates a spectral smoothing over adjacent frequency bands, e.g. to minimize the influence of notches. ``max number of filter stages'' is the maximum number of equalizer stages, where each stage is realized by a biquad filter.
+
+If the box ``initial calibration'' is selected, then first the operating point is determined interactively before the calibration process is started (see Figure \ref{fig:spkcalib2}).
+
+At least one measurement microphone is required for the calibration (if several measurement microphones are used, then the intensities are averaged over all microphones). The inputs to which the measurement microphones are connected as well as their calibration levels can be specified in the lower area of the window.
+
+When the calibration is complete, the layout-specific parameters are saved in the layout file. However, all values can also be saved as default values, these are then stored in the file \verb!.tascardefaults.xml! in the home directory.
+
 
 \begin{figure}[htb]
     \centering
-    \fbox{\includegraphics[width=0.7\textwidth]{tascarspkcalib.png}}
-    \caption{Loudspeaker calibration window.}
-    \label{fig:spkcalib}
+    \fbox{\includegraphics[width=0.7\textwidth]{calibwizard1.png}}
+    \caption{Revision of calibration parameters in the calibration assistant.}
+    \label{fig:spkcalib1}
 \end{figure}
 
-To (re-)calibrate a loudspeaker layout file, open it with
-\verb!tascar_spkcalib!, e.g., by double-clicking it in the file
-explorer.
-%
-The application has four control areas (see Fig.\ \ref{fig:spkcalib}):
-the menu and toolbar at the top of the application window can be used
-to open, save and close loudspeaker layout files.
-%
-Below is the area for measurement of gain differences between
-loudspeakers, followed by an area for measurement of the reference
-level for point source rendering.
-%
-At the bottom of the window the area for calibration of the diffuse
-rendering gain can be found.
 
-The microphone signal can be also used for level metering, if calibrated correctly.
-%
-The calibration value can be configured via the global configuration
-variable \verb!tascar.spkcalib.miccalib! (see Section
-\ref{sec:globalconfig}).
-%
-Please make sure to properly calibrate before using it, and after any
-changes in the chain from microphone to AD converter.
+\begin{figure}[htb]
+    \centering
+    \fbox{\includegraphics[width=0.7\textwidth]{calibwizard2.png}}
+    \caption{Interactive adjustment of the operation point.}
+    \label{fig:spkcalib2}
+\end{figure}
 
-\subsubsection{Calibrating a loudspeaker array for the first time}
+In the next step, the differences between the loudspeakers can be equalized (see Figure \ref{fig:spkcalib3}). If spectral equalization is activated, in the first step the frequency response is measured using an analysis filter bank. Then, the broad band level at the measurement microphone is measured for each loudspaker. Differences between loudspeakers will be equalized.
 
-The default calibration level in TASCAR is 94~dB SPL. The default test
-tone level is 80~dB SPL. If the actual calibration level is far above
-the default value, then pressing the ``play'' button will result in
-excessive sound levels. Therefore it is recommended to decrease the
-sound level by pressing the ``-10 dB'' button several times. Then
-press ``play'', and increase the level using the ``+10 dB'', ``+2 dB''
-and ``+0.5 dB'' buttons until the level reaches approximately
-80~dB. Then press the stop button. From here, follow the instructions
-for a re-calibration.
+In the display, the resulting loudspeaker gain is shown (e.g., \verb!g = 0.0 dB!). Furthermore, the recording level \verb!Lmic! and the recording coherence between the test signal and the recorded signal \verb!c! are shown, for each microphone. Recording levels below -50~dB FS can indicate problems with the microphone, e.g., missing phantom power or wrong input channel. Coherence values below 0.75 can be an indication for poor signal-to-noise ratio. If these values are critical for only a single loudspeaker, it is likely that one speaker channel is not connected or distorted.
 
-\subsubsection{Re-calibration of a loudspeaker array}
 
-For re-calibration of a loudspeaker array, you will need a measurement
-microphone (omni-directional characteristics, flat frequency response
-from 60 to 4000 Hz), and a sound level meter with Z or C
-weighting. The calibration test tone is a pink noise in the frequency
-range from 62~Hz to 4~kHz. Connect the microphone to the port
-\verb!system:capture_1! (or change the setting
-\verb!tascar.spkcalib.inputport! to the jack port name of your
-microphone, see Section \ref{sec:globalconfig} for details), and place
-it at the listening position. Now press ``Record'' to start a
-recording of levels. The sound will be played from the directions of
-the loudspeakers. After the recording is completed, the mean recording
-level and its range are displayed next to the ``Record'' button. If
-the recording level is very low (below -50 dB), then verify the
-connection and configuration of your microphone. Also the level range
-should not exceed 20 dB, otherwise inspect the connections of the
-loudspeakers.
+\begin{figure}[htb]
+    \centering
+    \fbox{\includegraphics[width=0.7\textwidth]{calibwizard3.png}}
+    \caption{Equalization of speakers, with spectral correction. The center frequencies of the equalizer stages are indicated with blue markers. The thin gray line indicates the frequency response without spectral correction, the thick red line with spectral correction.}
+    \label{fig:spkcalib3}
+\end{figure}
 
-In the next step, play the test tone as a point source using the
-``play'' button in the point source section. Enter the sound pressure
-level measured at the listening position into the level entry field in
-the window, or use the decrement and increment buttons to adjust the
-playback level. When finished with this step, press the ``Stop''
-button.
+In the actual calibration step (Figure \ref{fig:spkcalib4}) the playback level of a stimulus can be adjusted until the desired reference level is reached. For level metering either a level meter or the connected measurement microphone (if calibrated) can be used. For the point source calibration, the stimulus is played via the first loudspeaker. The diffuse sound field calibration activates all speakers.
 
-Now, repeat the same procedure, but with a diffuse test sound, by
-pressing the ``Play'' button in the diffuse calibration area. Enter
-the level reading in the appropriate field, or adjust the level using
-the increment/decrement buttons.
+\begin{figure}[htb]
+    \centering
+    \fbox{\includegraphics[width=0.7\textwidth]{calibwizard4.png}}
+    \caption{Adjustment of the point source level and the diffuse sound field reproduction gain.}
+    \label{fig:spkcalib4}
+\end{figure}
 
-If all steps are completed, press the ``Save'' or ``Save as'' button
-at the top of the window. The changes are stored into the loudspeaker
-file. It is recommended to review the calibration and gain values
-using an editor.
+In the final step, the calibration can be revised and saved to the layout file.
 
 
 \clearpage

@@ -31,9 +31,41 @@
 #include "calibsession.h"
 #include "fft.h"
 #include "jackiowav.h"
+#include <fstream>
 #include <unistd.h>
 
 using namespace TASCAR;
+
+float get_coherence(const TASCAR::wave_t& w1, const TASCAR::wave_t& w2,
+                    float fmin, float fmax, float fs)
+{
+  if(w1.n != w2.n)
+    return 0.0f;
+  TASCAR::fft_t fft1(w1.n);
+  TASCAR::fft_t fft2(w2.n);
+  fft1.execute(w1);
+  fft2.execute(w2);
+  float xy = 0.0f;
+  float xx = 0.0f;
+  float yy = 0.0f;
+  size_t b_min = std::min((float)fft1.s.n_, fmin / fs * w1.n);
+  size_t b_max = std::min((float)fft1.s.n_, fmax / fs * w1.n);
+  TASCAR::spec_t XY(fft1.s.n_);
+  TASCAR::spec_t XX(fft1.s.n_);
+  TASCAR::spec_t YY(fft1.s.n_);
+  for(size_t k = b_min; k < b_max; ++k) {
+    XY.b[k] = fft1.s.b[k] * std::conj(fft2.s.b[k]);
+    XX.b[k] = fft1.s.b[k] * std::conj(fft1.s.b[k]);
+    YY.b[k] = fft2.s.b[k] * std::conj(fft2.s.b[k]);
+  }
+  fft1.execute(XY);
+  xy = fft1.w.ms();
+  fft1.execute(XX);
+  xx = fft1.w.ms();
+  fft1.execute(YY);
+  yy = fft1.w.ms();
+  return xy / sqrtf(xx * yy);
+}
 
 std::string get_calibfor(const std::string& fname)
 {
@@ -234,6 +266,9 @@ void calib_cfg_t::validate() const
   if(refport.empty())
     throw TASCAR::ErrMsg("At least one measurement microphone connection is "
                          "required for calibration");
+  if(refport.size() != miccalib.size())
+    throw TASCAR::ErrMsg("For each connected measurement microphone a "
+                         "calibration value is required.");
 }
 
 void calib_cfg_t::factory_reset()
@@ -283,6 +318,10 @@ void calib_cfg_t::save_defaults()
   if(has_sub)
     par_sub.write_defaults();
   std::string path = "tascar.spkcalib";
+  TASCAR::config_forceoverwrite(path + ".inputport",
+                                TASCAR::vecstr2str(refport));
+  TASCAR::config_forceoverwrite(path + ".miccalib",
+                                TASCAR::to_string_dbspl(miccalib));
   std::vector<std::string> keys = {"tascar.spkcalib.inputport",
                                    "tascar.spkcalib.miccalib",
                                    "tascar.spkcalib.fc"};
@@ -472,7 +511,7 @@ void get_speaker_equalization(
     const std::vector<float>& miccalib, const std::vector<std::string>& ports,
     levelmeter::weight_t weight, const spk_eq_param_t& calibpar,
     std::vector<float>& levels, std::vector<float>& vF, std::vector<float>& vG,
-    std::vector<float>& level_fs)
+    std::vector<float>& level_fs, std::vector<float>* vcoh)
 {
   vF.clear();
   vG.clear();
@@ -497,6 +536,9 @@ void get_speaker_equalization(
   for(size_t ch = 0u; ch < ports.size() - 1u; ++ch) {
     // calculated calibrated input levels:
     auto& wav = recbuf[ch];
+    if(vcoh)
+      vcoh->push_back(get_coherence(wav, recbuf.back(), calibpar.fmin,
+                                    calibpar.fmax, jackrec.get_srate()));
     level_fs.push_back(10.0f * log10f(wav.ms()));
     float calgain = miccalib[ch];
     float* wav_begin = wav.d;
@@ -547,7 +589,8 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
                  const std::vector<std::string>& ports,
                  levelmeter::weight_t weight, const spk_eq_param_t& calibpar,
                  std::vector<float>& levels,
-                 std::vector<spkeq_report_t>& reports)
+                 std::vector<spkeq_report_t>& reports,
+                 std::vector<float>* vcoh = NULL)
 {
   levels.clear();
   std::vector<float> vF;
@@ -567,7 +610,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       // move source to speaker position:
       get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports,
                                weight, calibpar, levels_tmp, vF, vG,
-                               report.level_db_re_fs);
+                               report.level_db_re_fs, vcoh);
       report.vF = vF;
       report.vG_precalib = vG;
       for(auto& g : report.vG_precalib)
@@ -588,7 +631,8 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       spk.eqstages = numflt;
     }
     get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports, weight,
-                             calibpar, levels, vF, vG, report.level_db_re_fs);
+                             calibpar, levels, vF, vG, report.level_db_re_fs,
+                             &report.coh);
     report.label = calibpar.issub ? "sub" : "spk";
     report.label += std::to_string(c);
     if(spk.label.size())

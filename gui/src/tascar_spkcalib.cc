@@ -23,6 +23,7 @@
 
 #include "calibsession.h"
 #include "gui_elements.h"
+#include <cairomm/fontface.h>
 #include <ctime>
 #include <gtkmm.h>
 #include <gtkmm/main.h>
@@ -94,6 +95,16 @@ float spkeq_display_t::getx(float f, float width)
 float spkeq_display_t::gety(float g, float height)
 {
   return height - (g - gmin) / (gmax - gmin) * (height - 20) - 1;
+}
+
+float get_min(const std::vector<float>& v)
+{
+  if(v.empty())
+    return 0.0f;
+  float lm = v[0];
+  for(auto x : v)
+    lm = std::min(x, lm);
+  return lm;
 }
 
 bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
@@ -171,13 +182,31 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->show_text(label.c_str());
   char ctmp[1024];
   sprintf(ctmp, "g = %1.1f dB", gain_db);
-  cr->move_to(105, 15);
+  cr->move_to(100, 15);
   cr->show_text(ctmp);
+  // mic levels:
+  cr->save();
+  if(get_min(level_db_re_fs) < -50.0f) {
+    cr->set_source_rgb(0.8, 0, 0);
+    cr->select_font_face("", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
+  }
   cr->move_to(205, 15);
   std::string s =
-      std::string("miclevel = ") + TASCAR::to_string(level_db_re_fs, "%1.1f");
+      std::string("Lmic=") + TASCAR::to_string(level_db_re_fs, "%1.1f");
   s += " dB FS";
   cr->show_text(s.c_str());
+  cr->restore();
+  // coherence
+  cr->save();
+  if(get_min(coh) < 0.75f) {
+    cr->set_source_rgb(0.8, 0, 0);
+    cr->select_font_face("", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
+  }
+  cr->move_to(405, 15);
+  s = std::string("c=") + TASCAR::to_string(coh, "%1.1f");
+  cr->show_text(s.c_str());
+  cr->restore();
+  //
   if(vF.size()) {
     cr->save();
     if(vG_precalib.size()) {
