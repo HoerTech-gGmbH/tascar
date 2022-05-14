@@ -471,10 +471,12 @@ void get_speaker_equalization(
     jackrec2wave_t& jackrec, const std::vector<TASCAR::wave_t>& recbuf,
     const std::vector<float>& miccalib, const std::vector<std::string>& ports,
     levelmeter::weight_t weight, const spk_eq_param_t& calibpar,
-    std::vector<float>& levels, std::vector<float>& vF, std::vector<float>& vG)
+    std::vector<float>& levels, std::vector<float>& vF, std::vector<float>& vG,
+    std::vector<float>& level_fs)
 {
   vF.clear();
   vG.clear();
+  level_fs.clear();
   // move source to speaker position:
   src.dlocation = spk.unitvector;
   usleep((unsigned int)(1e6f * calibpar.prewait));
@@ -495,6 +497,7 @@ void get_speaker_equalization(
   for(size_t ch = 0u; ch < ports.size() - 1u; ++ch) {
     // calculated calibrated input levels:
     auto& wav = recbuf[ch];
+    level_fs.push_back(10.0f * log10f(wav.ms()));
     float calgain = miccalib[ch];
     float* wav_begin = wav.d;
     float* wav_end = wav_begin + wav.n;
@@ -563,7 +566,8 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       spk.eqstages = 0u;
       // move source to speaker position:
       get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports,
-                               weight, calibpar, levels_tmp, vF, vG);
+                               weight, calibpar, levels_tmp, vF, vG,
+                               report.level_db_re_fs);
       report.vF = vF;
       report.vG_precalib = vG;
       for(auto& g : report.vG_precalib)
@@ -584,7 +588,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       spk.eqstages = numflt;
     }
     get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports, weight,
-                             calibpar, levels, vF, vG);
+                             calibpar, levels, vF, vG, report.level_db_re_fs);
     report.label = calibpar.issub ? "sub" : "spk";
     report.label += std::to_string(c);
     if(spk.label.size())

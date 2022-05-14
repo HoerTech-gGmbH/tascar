@@ -530,17 +530,17 @@ std::string TASCAR::to_string(const TASCAR::levelmeter::weight_t& value)
   return "";
 }
 
-std::string TASCAR::to_string(double x)
+std::string TASCAR::to_string(double x, const char* fmt)
 {
   char ctmp[1024];
-  sprintf(ctmp, "%g", x);
+  sprintf(ctmp, fmt, x);
   return ctmp;
 }
 
-std::string TASCAR::to_string(float x)
+std::string TASCAR::to_string(float x, const char* fmt)
 {
   char ctmp[1024];
-  sprintf(ctmp, "%g", x);
+  sprintf(ctmp, fmt, x);
   return ctmp;
 }
 
@@ -573,28 +573,24 @@ std::string TASCAR::to_string(const std::vector<int>& value)
   return s.str();
 }
 
-std::string TASCAR::to_string(const std::vector<double>& value)
+std::string TASCAR::to_string(const std::vector<double>& value, const char* fmt)
 {
-  std::stringstream s;
-  for(std::vector<double>::const_iterator i_vert = value.begin();
-      i_vert != value.end(); ++i_vert) {
-    if(i_vert != value.begin())
-      s << " ";
-    s << *i_vert;
-  }
-  return s.str();
+  std::string s;
+  for(auto v : value)
+    s += TASCAR::to_string(v, fmt) + " ";
+  if(s.size())
+    s.erase(s.size() - 1);
+  return s;
 }
 
-std::string TASCAR::to_string(const std::vector<float>& value)
+std::string TASCAR::to_string(const std::vector<float>& value, const char* fmt)
 {
-  std::stringstream s;
-  for(std::vector<float>::const_iterator i_vert = value.begin();
-      i_vert != value.end(); ++i_vert) {
-    if(i_vert != value.begin())
-      s << " ";
-    s << *i_vert;
-  }
-  return s.str();
+  std::string s;
+  for(auto v : value)
+    s += TASCAR::to_string(v, fmt) + " ";
+  if(s.size())
+    s.erase(s.size() - 1);
+  return s;
 }
 
 std::string TASCAR::days_to_string(double x)
@@ -840,7 +836,7 @@ void TASCAR::globalconfig_t::readconfig(const std::string& prefix,
 double TASCAR::globalconfig_t::operator()(const std::string& key,
                                           double def) const
 {
-  setlocale(LC_ALL,"C");
+  setlocale(LC_ALL, "C");
   if(localgetenv("TASCARSHOWGLOBAL").size())
     std::cout << key << " (" << def;
   auto e(cfg.find(key));

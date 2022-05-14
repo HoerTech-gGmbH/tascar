@@ -71,6 +71,7 @@ namespace TASCAR {
     std::vector<float> eq_f;
     std::vector<float> eq_g;
     std::vector<float> eq_q;
+    std::vector<float> level_db_re_fs;
   };
 
   /**

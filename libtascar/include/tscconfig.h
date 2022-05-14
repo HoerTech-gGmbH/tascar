@@ -113,8 +113,8 @@ namespace TASCAR {
   std::string strrep(std::string s, const std::string& pat,
                      const std::string& rep);
 
-  std::string to_string(double x);
-  std::string to_string(float x);
+  std::string to_string(double x, const char* fmt = "%g");
+  std::string to_string(float x, const char* fmt = "%g");
   std::string to_string(uint32_t x);
   std::string to_string(int32_t x);
   std::string to_string(const TASCAR::pos_t& x);
@@ -122,8 +122,8 @@ namespace TASCAR {
   std::string to_string_deg(const TASCAR::zyx_euler_t& x);
   std::string to_string(const TASCAR::levelmeter::weight_t& value);
   std::string to_string(const std::vector<int>& value);
-  std::string to_string(const std::vector<double>& value);
-  std::string to_string(const std::vector<float>& value);
+  std::string to_string(const std::vector<double>& value, const char* fmt = "%g");
+  std::string to_string(const std::vector<float>& value, const char* fmt = "%g");
   std::string to_string(const std::vector<TASCAR::pos_t>& value);
   std::string to_string_bits(uint32_t value);
   std::string to_string_db(double value);

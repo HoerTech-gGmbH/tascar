@@ -171,8 +171,13 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->show_text(label.c_str());
   char ctmp[1024];
   sprintf(ctmp, "g = %1.1f dB", gain_db);
-  cr->move_to(125, 15);
+  cr->move_to(105, 15);
   cr->show_text(ctmp);
+  cr->move_to(205, 15);
+  std::string s =
+      std::string("miclevel = ") + TASCAR::to_string(level_db_re_fs, "%1.1f");
+  s += " dB FS";
+  cr->show_text(s.c_str());
   if(vF.size()) {
     cr->save();
     if(vG_precalib.size()) {
