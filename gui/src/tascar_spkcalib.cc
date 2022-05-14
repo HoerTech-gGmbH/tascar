@@ -203,7 +203,7 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->select_font_face("", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
   }
   cr->move_to(405, 15);
-  s = std::string("c=") + TASCAR::to_string(coh, "%1.1f");
+  s = std::string("c=") + TASCAR::to_string(coh, "%1.2f");
   cr->show_text(s.c_str());
   cr->restore();
   //
@@ -732,6 +732,7 @@ void spkcalib_t::on_reclevels()
     if(guiupdater.joinable())
       guiupdater.join();
     insert_action_group("calib", refActionGroupCalib);
+    rec_progress->set_fraction(1.0);
     update_equal_gui();
     manage_act_grp_save();
   }

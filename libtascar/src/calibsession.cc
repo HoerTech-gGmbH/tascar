@@ -621,7 +621,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       float maxq = std::max(1.0f, (float)vF.size()) /
                    log2f(calibpar.fmax / calibpar.fmin);
       eq.optim_response((size_t)numflt, maxq, vF, vG,
-                        (float)jackrec.get_srate());
+                        (float)jackrec.get_srate(), 2000u);
       report.eq_f = eq.get_f();
       report.eq_g = eq.get_g();
       report.eq_q = eq.get_q();

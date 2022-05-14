@@ -565,7 +565,7 @@ float TASCAR::multiband_pareq_t::optim_error_fun(const std::vector<float>& par)
 
 std::vector<float> TASCAR::multiband_pareq_t::optim_response(
     size_t numflt, float maxq, const std::vector<float>& vF,
-    const std::vector<float>& vG, float fs)
+    const std::vector<float>& vG, float fs, size_t numiter)
 {
   if(numflt < 1)
     throw TASCAR::ErrMsg(
@@ -651,7 +651,6 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
   optimpar2fltsettings(par, fs);
   float err = 10000000.0f;
   float eps = 1.0f;
-  size_t numiter = 1000;
   for(size_t k = 0; k < numiter; ++k) {
     float nerr = downhill_iterate(eps, par, mbeqerrfun, this, step);
     if(nerr > err)
