@@ -161,6 +161,7 @@
 "plugins/build/tascarreceiver_omni.so","usr/lib/"
 "plugins/build/tascarreceiver_ortf.so","usr/lib/"
 "plugins/build/tascarreceiver_simplefdn.so","usr/lib/"
+"plugins/build/tascarreceiver_stereo.so","usr/lib/"
 "plugins/build/tascarreceiver_vbap.so","usr/lib/"
 "plugins/build/tascarreceiver_vbap3d.so","usr/lib/"
 "plugins/build/tascarreceiver_vmic.so","usr/lib/"

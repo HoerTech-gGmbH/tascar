@@ -87,8 +87,9 @@ rec_vbap_t::data_t::~data_t()
 rec_vbap_t::rec_vbap_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc)
 {
-  if(spkpos.size() < 2)
-    throw TASCAR::ErrMsg("At least two loudspeakers are required for 2D-VBAP.");
+  if(spkpos.size() < 3)
+    throw TASCAR::ErrMsg(
+        "At least three loudspeakers are required for 2D-VBAP.");
   std::vector<TASCAR::pos_t> hull;
   for(uint32_t k = 0; k < spkpos.size(); ++k) {
     if(fabs(spkpos[k].z) > EPS)
@@ -128,6 +129,13 @@ rec_vbap_t::rec_vbap_t(tsccfg::node_t xmlsrc)
     sim.l22 = det_speaker * l11;
     simplices.push_back(sim);
   }
+  TASCAR::ngon_t poly;
+  poly.nonrt_set(spklist);
+  bool is_outside = false;
+  poly.nearest(TASCAR::pos_t(), &is_outside);
+  if(is_outside)
+    throw TASCAR::ErrMsg(
+        "The layout is not covering the origin. Please add more speakers.");
 }
 
 /*
