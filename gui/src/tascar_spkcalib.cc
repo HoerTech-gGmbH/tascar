@@ -1007,8 +1007,10 @@ void spkcalib_t::on_assistant_next(Gtk::Widget*)
         // skip initcal page
         if(prev_page < current_page) {
           next_page();
+          current_page = get_current_page();
         } else {
           previous_page();
+          current_page = get_current_page();
         }
       } else {
         configure_meters();

@@ -90,7 +90,8 @@ namespace TASCAR {
                       public audiostates_t {
   public:
     spk_array_t(tsccfg::node_t, bool use_parent_xml,
-                const std::string& elementname_ = "speaker", bool allow_empty = false);
+                const std::string& elementname_ = "speaker",
+                bool allow_empty = false);
     ~spk_array_t();
 
   private:
@@ -151,6 +152,14 @@ namespace TASCAR {
     {
       return size() + subs.size() + conv_channels;
     };
+    /**
+     * @brief Enable or disable subwoofer output
+     */
+    void set_enable_subs(bool enable) { enable_subs = enable; };
+    /**
+     * @brief Enable or disable broadband output
+     */
+    void set_enable_speaker(bool enable) { enable_bb = enable; };
     std::string get_label(size_t ch) const;
     /**
      * @brief Apply calibration, delay compensation, subwoofer
@@ -208,6 +217,8 @@ namespace TASCAR {
     bool convprecalib = true;
     std::vector<std::vector<TASCAR::partitioned_conv_t*>> vvp_convolver;
     std::vector<std::string> convlabels;
+    bool enable_subs = true;
+    bool enable_bb = true;
   };
 } // namespace TASCAR
 

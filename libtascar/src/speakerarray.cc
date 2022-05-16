@@ -605,6 +605,14 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
       flt_allp[k].filter(output[k]);
     }
   }
+  if( !enable_subs ){
+    for(size_t ksub = 0; ksub < subs.size(); ++ksub)
+      output[ksub + size()].clear();
+  }
+  if( !enable_bb ){
+    for(size_t kbb = 0; kbb < size(); ++kbb)
+      output[kbb].clear();
+  }
   // convolution
   if(use_conv && convprecalib) {
     size_t choffset(size() + subs.size());

@@ -669,9 +669,11 @@ void calibsession_t::get_levels()
   // unmute the NSP receiver:
   rec_spec->set_mute(true);
   rec_nsp->set_mute(false);
+  spk_nsp->spkpos.set_enable_subs(false);
   get_levels_(spk_nsp->spkpos, *(scenes.back()->source_objects[0]), jackrec,
               bbrecbuf, cfg_.miccalib, allports, TASCAR::levelmeter::C,
               cfg_.par_speaker, levels, spkeq_report);
+  spk_nsp->spkpos.set_enable_subs(true);
   //
   // subwoofer:
   //
@@ -680,9 +682,11 @@ void calibsession_t::get_levels()
     scenes.back()->source_objects[0]->set_mute(true);
     // unmute subwoofer source:
     scenes.back()->source_objects[1]->set_mute(false);
+    spk_nsp->spkpos.set_enable_speaker(false);
     get_levels_(spk_nsp->spkpos.subs, *(scenes.back()->source_objects[1]),
                 jackrec, subrecbuf, cfg_.miccalib, allports,
                 TASCAR::levelmeter::Z, cfg_.par_sub, sublevels, spkeq_report);
+    spk_nsp->spkpos.set_enable_speaker(true);
   }
   // mute source and reset position:
   for(auto src : scenes.back()->source_objects) {
