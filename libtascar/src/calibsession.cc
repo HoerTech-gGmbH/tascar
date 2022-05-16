@@ -510,6 +510,17 @@ void calibsession_t::reset_levels()
   }
 }
 
+float getmedian(std::vector<float> vec)
+{
+  size_t size = vec.size();
+  if(size == 0)
+    return 0.0f;
+  sort(vec.begin(), vec.end());
+  if(size % 2 == 0)
+    return 0.5f * (vec[size / 2 - 1] + vec[size / 2]);
+  return vec[size / 2];
+}
+
 void get_speaker_equalization(
     const spk_descriptor_t& spk, TASCAR::Scene::src_object_t& src,
     jackrec2wave_t& jackrec, const std::vector<TASCAR::wave_t>& recbuf,
@@ -580,22 +591,14 @@ void get_speaker_equalization(
                          calibpar.bandoverlap, vF, vLref);
   for(size_t ch = 0; ch < std::min(vLmean.size(), vLref.size()); ++ch)
     vG.push_back(vLref[ch] - vLmean[ch]);
-  auto vl_max = vG.back();
-  for(const auto& l : vG)
-    vl_max = std::max(vl_max, l);
-  for(auto& l : vG)
-    l -= vl_max;
-}
-
-float getmedian(std::vector<float> vec)
-{
-  size_t size = vec.size();
-  if(size == 0)
-    return 0.0f;
-  sort(vec.begin(), vec.end());
-  if(size % 2 == 0)
-    return 0.5f * (vec[size / 2 - 1] + vec[size / 2]);
-  return vec[size / 2];
+  // auto vl_max = vG.back();
+  // for(const auto& l : vG)
+  //  vl_max = std::max(vl_max, l);
+  // for(auto& l : vG)
+  //  l -= vl_max;
+  auto med = getmedian(vG);
+  for(auto& g : vG)
+    g -= med;
 }
 
 void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
@@ -631,9 +634,9 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       report.vG_precalib = vG;
       for(auto& g : report.vG_precalib)
         g *= -1.0f;
-      auto med = getmedian(report.vG_precalib);
-      for(auto& g : report.vG_precalib)
-        g -= med;
+      //auto med = getmedian(report.vG_precalib);
+      //for(auto& g : report.vG_precalib)
+      //  g -= med;
       uint32_t numflt =
           std::min(((uint32_t)vF.size() - 1u) / 3u, calibpar.max_eqstages);
       TASCAR::multiband_pareq_t eq;
@@ -661,9 +664,9 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     report.vG_postcalib = vG;
     for(auto& g : report.vG_postcalib)
       g *= -1.0f;
-    auto med = getmedian(report.vG_postcalib);
-    for(auto& g : report.vG_postcalib)
-      g -= med;
+    //auto med = getmedian(report.vG_postcalib);
+    //for(auto& g : report.vG_postcalib)
+    //  g -= med;
     auto vl_min = vG.back();
     auto vl_max = vG.back();
     for(const auto& l : vG) {
