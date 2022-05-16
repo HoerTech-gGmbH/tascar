@@ -401,6 +401,11 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
   xml_element_t e_rcvr3(e_scene.add_child("receiver"));
   e_rcvr3.set_attribute("type", "omni");
   e_rcvr3.set_attribute("name", "ref");
+  xml_element_t e_rcvr3plug(e_rcvr3.add_child("plugins"));
+  xml_element_t e_rcvr3delay(e_rcvr3plug.add_child("delay"));
+  e_rcvr3delay.set_attribute(
+      "delay",
+      TASCAR::to_string(2.0f * jackrec.get_fragsize() / jackrec.get_srate()));
   std::vector<std::string> receivertypeattr(string_token(calibfor, ","));
   for(auto typeattr : receivertypeattr) {
     std::vector<std::string> pair(string_token(typeattr, ":"));
