@@ -146,7 +146,12 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     }
   }
   first = true;
-  for(float g = 5 * floorf(gmax / 5.0f); g >= gmin; g -= 5.0f) {
+  float gainstep = 5.0f;
+  if(gmax - gmin < 15.0f)
+    gainstep = 2.0f;
+  if(gmax - gmin < 8.0f)
+    gainstep = 1.0f;
+  for(float g = gainstep * floorf(gmax / gainstep); g >= gmin; g -= gainstep) {
     cr->set_source_rgb(0.7, 0.7, 0.7);
     cr->move_to(getx(fmin, width), gety(g, height));
     cr->line_to(getx(fmax, width), gety(g, height));
