@@ -1014,8 +1014,7 @@ void spkcalib_t::on_assistant_next(Gtk::Widget*)
         }
       } else {
         configure_meters();
-        if(prev_page < current_page)
-          spkcalib.set_caliblevel(140);
+        spkcalib.set_caliblevel(140);
         update_display();
       }
       break;
