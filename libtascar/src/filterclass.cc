@@ -598,8 +598,8 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
     fmin = std::min(f, fmin);
     fmax = std::max(f, fmax);
   }
-  fmin *= 0.5f;
-  fmax *= 2.0f;
+  // fmin *= 0.5f;
+  // fmax *= 2.0f;
   optim_fs = fs;
   optim_maxq = maxq;
   optim_f = vF;
