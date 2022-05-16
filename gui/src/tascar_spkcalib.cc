@@ -56,6 +56,7 @@ private:
   float fmax = 22050.0f;
   float gmin = 0.0f;
   float gmax = 0.0f;
+  float gainstep = 5.0f;
 };
 
 spkeq_display_t::spkeq_display_t(const spkeq_report_t& src)
@@ -82,8 +83,14 @@ spkeq_display_t::spkeq_display_t(const spkeq_report_t& src)
       gmax = std::max(gmax, g);
     }
   }
-  gmin -= 1.0f;
-  gmax += 1.0f;
+  gmin -= 0.5f;
+  gmax += 0.5f;
+  if(gmax - gmin < 15.0f)
+    gainstep = 2.0f;
+  if(gmax - gmin < 8.0f)
+    gainstep = 1.0f;
+  gmin = gainstep * floor(gmin / gainstep);
+  gmax = gainstep * ceil(gmax / gainstep);
   set_size_request(300, 120);
 }
 
@@ -146,11 +153,6 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     }
   }
   first = true;
-  float gainstep = 5.0f;
-  if(gmax - gmin < 15.0f)
-    gainstep = 2.0f;
-  if(gmax - gmin < 8.0f)
-    gainstep = 1.0f;
   for(float g = gainstep * floorf(gmax / gainstep); g >= gmin; g -= gainstep) {
     cr->set_source_rgb(0.7, 0.7, 0.7);
     cr->move_to(getx(fmin, width), gety(g, height));
