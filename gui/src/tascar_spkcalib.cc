@@ -153,7 +153,7 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     }
   }
   first = true;
-  for(float g = gainstep * floorf(gmax / gainstep); g >= gmin; g -= gainstep) {
+  for(float g = gmax - gainstep; g >= gmin; g -= gainstep) {
     cr->set_source_rgb(0.7, 0.7, 0.7);
     cr->move_to(getx(fmin, width), gety(g, height));
     cr->line_to(getx(fmax, width), gety(g, height));
@@ -348,6 +348,7 @@ protected:
   Gtk::Label* lab_step3_caliblevel = NULL;
   Gtk::Label* lab_step3_info = NULL;
   Gtk::Label* lab_step5_caliblevel = NULL;
+  Gtk::Label* lab_results_equal = NULL;
   Gtk::Entry* levelentry_init = NULL;
   Gtk::Entry* levelentry = NULL;
   Gtk::Entry* levelentry_diff = NULL;
@@ -366,17 +367,46 @@ protected:
 
 void spkcalib_t::clear_equal_gui()
 {
+  lab_results_equal->set_text("");
   spkequal_disp.clear();
+}
+
+bool any_below(const std::vector<float>& data, float threshold)
+{
+  for(auto v : data)
+    if(v < threshold)
+      return true;
+  return false;
 }
 
 void spkcalib_t::update_equal_gui()
 {
+  std::vector<std::string> lowlevlist;
+  std::vector<std::string> lowcohlist;
   auto report = spkcalib.get_speaker_report();
   for(auto& spkrep : report)
     spkequal_disp.push_back(spkrep);
   for(auto& disp : spkequal_disp) {
     box_step4_validate->add(disp);
+    if(any_below(disp.level_db_re_fs, -50.0f))
+      lowlevlist.push_back(disp.label);
+    if(any_below(disp.coh, 0.75f))
+      lowcohlist.push_back(disp.label);
   }
+  std::string results;
+  if(lowlevlist.size()) {
+    results += "Microphone levels of ";
+    results += TASCAR::vecstr2str(lowlevlist);
+    results += " are below -50 dB FS. Please check your microphone and "
+               "loudspeaker connections. ";
+  }
+  if(lowcohlist.size()) {
+    results += "Coherence of ";
+    results += TASCAR::vecstr2str(lowcohlist);
+    results +=
+        " is below 0.75. Please check your microphone and the noise level. ";
+  }
+  lab_results_equal->set_text(results);
   box_step4_validate->show_all();
 }
 
@@ -621,6 +651,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
   // GET_WIDGET(text_caliblevel);
   GET_WIDGET(lab_step3_caliblevel);
   GET_WIDGET(lab_step5_caliblevel);
+  GET_WIDGET(lab_results_equal);
   GET_WIDGET(lab_step3_info);
   GET_WIDGET(levelentry_init);
   GET_WIDGET(levelentry);
@@ -652,6 +683,7 @@ spkcalib_t::spkcalib_t(BaseObjectType* cobject,
       sigc::mem_fun(*this, &spkcalib_t::on_par_save_user_config));
   butpar_load_from_xml->signal_clicked().connect(
       sigc::mem_fun(*this, &spkcalib_t::on_par_from_layout));
+  lab_results_equal->set_text("");
   update_display();
   show_all();
 }

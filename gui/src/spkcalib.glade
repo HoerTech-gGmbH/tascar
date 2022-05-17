@@ -933,6 +933,21 @@ until it reaches approximately XX dB SPL (C-weighted).</property>
           </packing>
         </child>
         <child>
+          <object class="GtkLabel" id="lab_results_equal">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">label</property>
+            <property name="wrap">True</property>
+            <property name="width_chars">60</property>
+            <property name="xalign">0</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkScrolledWindow">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -963,7 +978,7 @@ until it reaches approximately XX dB SPL (C-weighted).</property>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>
