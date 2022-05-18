@@ -84,6 +84,7 @@ private:
   double get_stream_delta();
   lsl::stream_inlet* inlet = NULL;
   std::string predicate;
+  bool autoresync = false;
   double delta;
   bool time_correction_failed = false;
   double tctimeout = 2.0;
@@ -205,6 +206,7 @@ public:
     return xmessages;
   };
   double get_session_time() const;
+  uint32_t timeout_cnt = 10u;
 
 private:
   void get_valuerange(const std::vector<double>& data, uint32_t channels,
@@ -230,7 +232,6 @@ private:
   sigc::connection connection_timeout;
   bool ignore_first_;
   size_t plotdata_cnt;
-  uint32_t timeout_cnt = 0u;
 };
 
 var_base_t::var_base_t(tsccfg::node_t xmlsrc) : TASCAR::xml_element_t(xmlsrc) {}
@@ -287,7 +288,7 @@ std::string datestr()
 bool lslvar_t::has_inlet()
 {
   std::lock_guard<std::mutex> lock(inletlock);
-  if( inlet )
+  if(inlet)
     return true;
   return false;
 }
@@ -295,9 +296,9 @@ bool lslvar_t::has_inlet()
 lsl::stream_info lslvar_t::get_info()
 {
   std::lock_guard<std::mutex> lock(inletlock);
-  if( inlet )
+  if(inlet)
     return inlet->info();
-  return lsl::stream_info("null","none");
+  return lsl::stream_info("null", "none");
 }
 
 std::string lslvar_t::get_xml()
@@ -319,6 +320,8 @@ lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
   bool required(true);
   GET_ATTRIBUTE_BOOL(required, "Require this stream. If true, then loading "
                                "will fail if stream is not available.");
+  GET_ATTRIBUTE_BOOL(autoresync,
+                     "Resynchronize when no data arrives from inlet.");
   std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
   if(results.empty()) {
     if(required)
@@ -500,7 +503,7 @@ void recorder_t::clear()
   plot_messages.clear();
   pthread_mutex_unlock(&plotdatalock);
   plotdata_cnt = 0;
-  timeout_cnt = 0u;
+  timeout_cnt = 10u;
 }
 
 recorder_t::~recorder_t()
@@ -823,6 +826,25 @@ void lslvar_t::poll_data()
   std::lock_guard<std::mutex> lock(inletlock);
   if(!inlet)
     return;
+  if(autoresync && datarecorder && (datarecorder->timeout_cnt == 0)) {
+    // we need to resynchronize:
+    std::cerr << "looks like inlet is not sending data, try to re-sync\n";
+    std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
+    if(!results.empty()) {
+      chfmt = results[0].channel_format();
+      size = results[0].channel_count() + 1;
+      name = results[0].name();
+      if(inlet)
+        delete inlet;
+      inlet = new lsl::stream_inlet(results[0]);
+      std::cerr << "created LSL inlet for predicate " << predicate << " ("
+                << results[0].channel_count() << " channels, fmt " << chfmt
+                << ")" << std::endl;
+      std::cerr << "measuring LSL time correction: ";
+      get_stream_delta_start();
+      std::cerr << stream_delta_start << " s\n";
+    }
+  }
   double recorder_buffer[size + 1];
   double* data_buffer(&(recorder_buffer[2]));
   double t(1);
@@ -853,7 +875,7 @@ void lslvar_t::poll_data()
       }
     }
   }
-  if( has_data )
+  if(has_data)
     ts.tic();
 }
 
@@ -1506,10 +1528,8 @@ void datalogging_t::save_matcell(const std::string& filename)
       // information
       for(auto var : lslvars)
         if(var->is_linked_with(recorder[k]) && var->has_inlet()) {
-          mat_add_char_field(matDataStruct, "lsl_name",
-                             var->get_info().name());
-          mat_add_char_field(matDataStruct, "lsl_type",
-                             var->get_info().type());
+          mat_add_char_field(matDataStruct, "lsl_name", var->get_info().name());
+          mat_add_char_field(matDataStruct, "lsl_type", var->get_info().type());
           mat_add_double_field(matDataStruct, "lsl_srate",
                                var->get_info().nominal_srate());
           mat_add_char_field(matDataStruct, "lsl_source_id",
