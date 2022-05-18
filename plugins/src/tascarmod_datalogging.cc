@@ -90,8 +90,6 @@ private:
   lsl::channel_format_t chfmt = lsl::cf_undefined;
   std::mutex inletlock;
   TASCAR::tictoc_t ts;
-  std::vector<std::vector<double>> chunkdata;
-  std::vector<double> chunktimestamps;
 };
 
 /**
@@ -842,22 +840,11 @@ void lslvar_t::poll_data()
       }
     } else {
       try {
-        auto got_data = inlet->pull_chunk(chunkdata, chunktimestamps);
-        // t = inlet->pull_sample(data_buffer, size - 1, 0.0);
-        // if((t != 0) && datarecorder) {
-        if(got_data && datarecorder) {
-          if(chunkdata.size() != chunktimestamps.size())
-            throw TASCARProgErr("Invalid size");
-          for(size_t ksmp = 0; ksmp < chunkdata.size(); ++ksmp) {
-            if(chunkdata[ksmp].size() + 1 != size)
-              throw TASCARProgErr("Invalid dimension");
-            t = chunktimestamps[ksmp];
-            memmove(data_buffer, chunkdata[ksmp].data(),
-                    sizeof(data_buffer[0]) * chunkdata[ksmp].size());
-            recorder_buffer[0] = t - delta + stream_delta_start;
-            recorder_buffer[1] = t + stream_delta_start;
-            datarecorder->store_sample(size + 1, recorder_buffer);
-          }
+        t = inlet->pull_sample(data_buffer, size - 1, 0.0);
+        if((t != 0) && datarecorder) {
+          recorder_buffer[0] = t - delta + stream_delta_start;
+          recorder_buffer[1] = t + stream_delta_start;
+          datarecorder->store_sample(size + 1, recorder_buffer);
           has_data = true;
         }
       }
@@ -866,7 +853,7 @@ void lslvar_t::poll_data()
       }
     }
   }
-  if(has_data)
+  if( has_data )
     ts.tic();
 }
 
