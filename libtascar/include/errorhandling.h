@@ -39,6 +39,8 @@ namespace TASCAR {
 
 }
 
+#define TASCARProgErr(x) TASCAR::ErrMsg(std::string(__FILE__)+":"+std::to_string(__LINE__)+" Programming error: "+#x)
+
 #endif
 
 /*
