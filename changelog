@@ -1,6 +1,11 @@
+0.225:
+       - Complete refactoring of loudspeaker calibration, with spectral correction
+       - Improvement of datalogging (indicator for stopped streams)
+       - Correction of LSL string message receiver in datalogging
+       - minor bugfixes and improvements
 0.224:
        - Complete redesign of subprocess spawning
-       - Bugfixes in data logging for larg amount of data
+       - Bugfixes in data logging for large amount of data
        - Add method to discover OSC variables and current values
        - Output channel map for offline-rendering (thanks to A. Moore)
        - many minor bugfixes and improvements, e.g., macOS build
