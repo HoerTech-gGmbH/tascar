@@ -141,6 +141,7 @@ public:
   ~dlog_vars_t();
   virtual void update(uint32_t frame, bool running);
   void set_jack_client(jack_client_t* jc) { jc_ = jc; };
+  void validate_attributes(std::string& msg) const;
 
 protected:
   std::string multicast;
@@ -158,6 +159,17 @@ protected:
   jack_client_t* jc_ = NULL;
   std::atomic_bool is_rolling = false;
 };
+
+void dlog_vars_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::module_base_t::validate_attributes(msg);
+  for( auto pvar : oscvars )
+    pvar->validate_attributes(msg);
+  for( auto pvar : oscsvars )
+    pvar->validate_attributes(msg);
+  for( auto pvar : lslvars )
+    pvar->validate_attributes(msg);
+}
 
 class label_t {
 public:
