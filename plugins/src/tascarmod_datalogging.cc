@@ -84,7 +84,6 @@ private:
   double get_stream_delta();
   lsl::stream_inlet* inlet = NULL;
   std::string predicate;
-  bool autoresync = false;
   double delta;
   bool time_correction_failed = false;
   double tctimeout = 2.0;
@@ -324,8 +323,6 @@ lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
   bool required(true);
   GET_ATTRIBUTE_BOOL(required, "Require this stream. If true, then loading "
                                "will fail if stream is not available.");
-  GET_ATTRIBUTE_BOOL(autoresync,
-                     "Resynchronize when no data arrives from inlet.");
   std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
   if(results.empty()) {
     if(required)
@@ -831,30 +828,6 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 void lslvar_t::poll_data()
 {
   std::lock_guard<std::mutex> lock(inletlock);
-  if(autoresync && datarecorder && (datarecorder->timeout_cnt == 0)) {
-    // we need to resynchronize:
-    std::cerr << "looks like inlet " << predicate
-              << " is not sending data, try to re-sync\n";
-    std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
-    if(!results.empty()) {
-      chfmt = results[0].channel_format();
-      size = results[0].channel_count() + 1;
-      name = results[0].name();
-      if(inlet)
-        delete inlet;
-      inlet = new lsl::stream_inlet(results[0]);
-      std::cerr << "created LSL inlet for predicate " << predicate << " ("
-                << results[0].channel_count() << " channels, fmt " << chfmt
-                << ")" << std::endl;
-      std::cerr << "measuring LSL time correction: ";
-      get_stream_delta_start();
-      std::cerr << stream_delta_start << " s\n";
-    } else {
-      std::cerr << "No LSL stream " << predicate
-                << " found, retrying in 20 ms.\n";
-      usleep(20000);
-    }
-  }
   if(!inlet)
     return;
   double recorder_buffer[size + 1];
