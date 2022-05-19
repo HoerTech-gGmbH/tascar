@@ -91,6 +91,10 @@ private:
   lsl::channel_format_t chfmt = lsl::cf_undefined;
   std::mutex inletlock;
   TASCAR::tictoc_t ts;
+  std::thread srv;
+  void poll_lsl_data();
+  std::thread lsl_poll_service;
+  std::atomic_bool run_lsl_poll_service = true;
 };
 
 /**
@@ -346,6 +350,7 @@ lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
     get_stream_delta_start();
     std::cerr << stream_delta_start << " s\n";
   }
+  srv = std::thread(&lslvar_t::poll_lsl_data, this);
 }
 
 void lslvar_t::get_stream_delta_start()
@@ -377,7 +382,9 @@ double lslvar_t::get_stream_delta()
 
 lslvar_t::~lslvar_t()
 {
-  std::lock_guard<std::mutex> lock(inletlock);
+  run_lsl_poll_service = false;
+  if(lsl_poll_service.joinable())
+    lsl_poll_service.join();
   if(inlet)
     delete inlet;
 }
@@ -824,11 +831,10 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 void lslvar_t::poll_data()
 {
   std::lock_guard<std::mutex> lock(inletlock);
-  if(!inlet)
-    return;
   if(autoresync && datarecorder && (datarecorder->timeout_cnt == 0)) {
     // we need to resynchronize:
-    std::cerr << "looks like inlet is not sending data, try to re-sync\n";
+    std::cerr << "looks like inlet " << predicate
+              << " is not sending data, try to re-sync\n";
     std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
     if(!results.empty()) {
       chfmt = results[0].channel_format();
@@ -843,8 +849,14 @@ void lslvar_t::poll_data()
       std::cerr << "measuring LSL time correction: ";
       get_stream_delta_start();
       std::cerr << stream_delta_start << " s\n";
+    } else {
+      std::cerr << "No LSL stream " << predicate
+                << " found, retrying in 20 ms.\n";
+      usleep(20000);
     }
   }
+  if(!inlet)
+    return;
   double recorder_buffer[size + 1];
   double* data_buffer(&(recorder_buffer[2]));
   double t(1);
@@ -909,7 +921,7 @@ public:
                                      void* user_data);
 
 private:
-  void poll_lsl_data();
+  // void poll_lsl_data();
   std::vector<recorder_t*> recorder;
   std::atomic_bool is_recording = false;
   // pthread_mutex_t record_mtx;
@@ -933,8 +945,6 @@ private:
   double audio_sample_period_;
   uint32_t fragsize;
   double srate;
-  std::thread lsl_poll_service;
-  std::atomic_bool run_lsl_poll_service = true;
 };
 
 #define GET_WIDGET(x)                                                          \
@@ -1049,14 +1059,13 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   }
   draw_grid->show_all();
   showdc->set_active(displaydc);
-  lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data, this);
+  // lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data, this);
 }
 
-void datalogging_t::poll_lsl_data()
+void lslvar_t::poll_lsl_data()
 {
   while(run_lsl_poll_service) {
-    for(auto var : lslvars)
-      var->poll_data();
+    poll_data();
     usleep(1000);
   }
 }
@@ -1199,9 +1208,6 @@ datalogging_t::~datalogging_t()
   catch(const std::exception& e) {
     std::cerr << "Warning: " << e.what() << "\n";
   }
-  run_lsl_poll_service = false;
-  if(lsl_poll_service.joinable())
-    lsl_poll_service.join();
   connection_timeout.disconnect();
   TASCAR::osc_server_t::deactivate();
   for(uint32_t k = 0; k < recorder.size(); k++)
