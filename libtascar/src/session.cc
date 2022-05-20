@@ -91,6 +91,12 @@
    \verbatim
    sudo make install
    \endverbatim
+   After a TASCAR update, a recompilation is required:
+   \verbatim
+   make clean
+   make
+   sudo make install
+   \endverbatim
 
    \note All external modules should use SI units for signals and variables.
 

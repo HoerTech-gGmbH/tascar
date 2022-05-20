@@ -19,8 +19,6 @@ ifeq ($(UNAME_S),Darwin)
 	CMD_LD=
 endif
 
-
-
 all: $(MODULES)
 
 apps plugins gui: libtascar
@@ -45,6 +43,7 @@ clean:
 test: apps plugins
 	$(MAKE) -j 1 -C test
 	$(MAKE) -C examples
+	$(MAKE) -C devkit -f Makefile.fromrepo
 
 testjack: apps plugins
 	$(MAKE) -j 1 -C test jack

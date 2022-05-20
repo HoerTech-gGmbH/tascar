@@ -18,14 +18,17 @@ TESTFILES = $(shell find ./test/ -name "*.tsc")
 all: build modules
 
 # include compiler configuration to ensure ABI compatibility:
-include /usr/share/tascar/config.mk
+include ../config.mk
 
 # include TASCAR specific make rules:
-include /usr/share/tascar/rules.mk
+include ../rules.mk
 
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
+
+CXXFLAGS += -I../libtascar/ -I../libtascar/build/
 CXXFLAGS += -Wno-unused-parameter
+LDFLAGS += -L../libtascar/build/
 
 LDLIBS += -ltascar
 

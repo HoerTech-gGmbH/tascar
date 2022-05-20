@@ -9,38 +9,39 @@
  */
 class noise_t : public TASCAR::audioplugin_base_t {
 public:
-  noise_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
+  noise_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   virtual ~noise_t();
+
 private:
   double a;
 };
 
 // default constructor, called while loading the plugin
-noise_t::noise_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    a(0.001)
+noise_t::noise_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), a(0.001)
 {
   // register variable for XML access:
-  GET_ATTRIBUTE_DBSPL(a);
+  GET_ATTRIBUTE_DBSPL(a, "amplitude");
 }
 
-noise_t::~noise_t()
-{
-}
+noise_t::~noise_t() {}
 
-void noise_t::add_variables( TASCAR::osc_server_t* srv )
+void noise_t::add_variables(TASCAR::osc_server_t* srv)
 {
   // register variables for interactive OSC access:
-  srv->add_double_dbspl("/a",&a);
+  srv->add_double_dbspl("/a", &a);
 }
 
-void noise_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp)
+void noise_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                         const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o,
+                         const TASCAR::transport_t& tp)
 {
   // implement the algrithm:
-  for(uint32_t k=0;k<chunk[0].n;++k)
-    chunk[0].d[k] += 2.0*a*(TASCAR::drand()-0.5);
+  for(uint32_t k = 0; k < chunk[0].n; ++k)
+    chunk[0].d[k] += 2.0 * a * (TASCAR::drand() - 0.5);
 }
 
 // create the plugin interface:

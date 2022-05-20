@@ -26,44 +26,46 @@
  */
 class rotate_t : public TASCAR::actor_module_t {
 public:
-  rotate_t( const TASCAR::module_cfg_t& cfg );
+  rotate_t(const TASCAR::module_cfg_t& cfg);
   virtual ~rotate_t();
-  void update(uint32_t tp_frame,bool running);
+  void update(uint32_t tp_frame, bool running);
+
 private:
   //
   // Declare your module parameters here. Access via XML file and OSC
   // can be set up in the contructor.
-  // 
-  double w; // angular velocity, internally in radians per second
+  //
+  double w;  // angular velocity, internally in radians per second
   double t0; // time offset, to calibrate starting position
-  double r; // radius
+  double r;  // radius
 };
 
-rotate_t::rotate_t( const TASCAR::module_cfg_t& cfg )
-  : actor_module_t( cfg, true ), // initialize base class, fail if no
-				 // matching object was found
-    //
-    // Default values of module parameters:
-    //
-    w(10.0*DEG2RAD), // default value 10 deg/second
-    t0(0.0), // start at zero
-    r(1.0) // in one meter distance
+rotate_t::rotate_t(const TASCAR::module_cfg_t& cfg)
+    : actor_module_t(cfg, true), // initialize base class, fail if no
+                                 // matching object was found
+      //
+      // Default values of module parameters:
+      //
+      w(10.0 * DEG2RAD), // default value 10 deg/second
+      t0(0.0),           // start at zero
+      r(1.0)             // in one meter distance
 {
   //
   // Register module parameters for access via XML file:
   //
-  actor_module_t::GET_ATTRIBUTE_DEG(w); // convert degrees to radians
-  actor_module_t::GET_ATTRIBUTE(t0);
-  actor_module_t::GET_ATTRIBUTE(r);
+  actor_module_t::GET_ATTRIBUTE_DEG(
+      w, "angular velocity"); // convert degrees to radians
+  actor_module_t::GET_ATTRIBUTE(t0, "s", "start time of trajectory");
+  actor_module_t::GET_ATTRIBUTE(r, "m", "radius of trajectory");
   //
   // Provide also access via the OSC interface:
   // 'actor' is the list of patters provided in the XML configuration
   // (warning: it may contain asterix or other symbols)
   //
-  for( auto act : actor ){
-    session->add_double_degree(act+"/w",&w);
-    session->add_double(act+"/t0",&t0);
-    session->add_double(act+"/r",&r);
+  for(auto act : actor) {
+    session->add_double_degree(act + "/w", &w);
+    session->add_double(act + "/t0", &t0);
+    session->add_double(act + "/r", &r);
   }
 }
 
@@ -71,19 +73,17 @@ rotate_t::rotate_t( const TASCAR::module_cfg_t& cfg )
 // Main function for geometry update. Implement your motion
 // trajectories here.
 //
-void rotate_t::update(uint32_t tp_frame,bool running)
+void rotate_t::update(uint32_t tp_frame, bool running)
 {
   // convert time in samples into a rotation phase:
-  double tptime(tp_frame*t_sample);
+  double tptime(tp_frame * t_sample);
   tptime -= t0;
   tptime *= w;
   // update delta transform of objects:
-  set_location(TASCAR::pos_t(r*cos(tptime),r*sin(tptime),0.0));
+  set_location(TASCAR::pos_t(r * cos(tptime), r * sin(tptime), 0.0));
 }
 
-rotate_t::~rotate_t()
-{
-}
+rotate_t::~rotate_t() {}
 
 REGISTER_MODULE(rotate_t);
 
@@ -94,4 +94,3 @@ REGISTER_MODULE(rotate_t);
  * compile-command: "make -C .."
  * End:
  */
-
