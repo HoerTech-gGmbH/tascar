@@ -86,6 +86,25 @@ call_for_each_csv_line "$CSV" "cp --preserve=links" debian/
 # All files in the distribution should be readable by everyone
 chmod -R a+r debian
 
+(
+    cd debian/
+    mkdir debian
+    touch debian/control
+    SHLIBBINS="$(find ./usr/lib/ -type f -print||true) $(find ./usr/bin/ -type f -print||true)"
+    dpkg-shlibdeps --ignore-missing-info ${SHLIBBINS} || true
+    rm -f debian/control
+    test -e debian/substvars && mv debian/substvars DEBIAN/
+    touch DEBIAN/substvars
+    sed -i -e 's/shlibs:Depends/shlibsDepends/1' -e 's/=\(.*\)/=\"\1\"/1' DEBIAN/substvars
+)
+
+. debian/DEBIAN/substvars
+
+export shlibsDepends
+
+echo ${shlibsDepends}
+
+
 #
 ## Discover information for this distribution
 #

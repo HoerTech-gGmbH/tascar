@@ -1,1 +1,1 @@
-libgsl23 | libgsl2 | libgsl25, libsamplerate0, libasound2, libsndfile1, libstdc++6, liblo7, jackd, libfftw3-single3, libfftw3-double3, libxerces-c3.2, hoertech-openmha-keyring
+jackd, hoertech-openmha-keyring, ${shlibsDepends}
