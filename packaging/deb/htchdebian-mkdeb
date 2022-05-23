@@ -91,7 +91,7 @@ chmod -R a+r debian
     mkdir debian
     touch debian/control
     SHLIBBINS="$(find ./usr/lib/ -type f -print||true) $(find ./usr/bin/ -type f -print||true)"
-    dpkg-shlibdeps --ignore-missing-info ${SHLIBBINS} || true
+    dpkg-shlibdeps -l../libtascar/build/ --ignore-missing-info ${SHLIBBINS} || true
     rm -f debian/control
     test -e debian/substvars && mv debian/substvars DEBIAN/
     touch DEBIAN/substvars
