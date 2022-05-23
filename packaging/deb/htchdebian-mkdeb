@@ -15,6 +15,8 @@ VERSION="$2"
 # from the uname command.
 ARCH="$3"
 
+colldir=debian-$(basename "$CSV" .csv)
+
 # test version command line parameter is there
 if test -z "${VERSION}"; then
     echo "Usage: htchdebian-mkdeb file.csv VERSION [ARCH]"
@@ -36,11 +38,11 @@ PACKAGEBASE=`echo "${CSV}"|sed -e 's/\.csv//1'`
 
 # The debian package is built in subdirectory debian of the CWD.
 # Remove residues of previous package builds.
-rm -Rf debian
+rm -Rf "$colldir"
 
 # The directory that stores some control files that we generate for
 # the packing.
-mkdir -p debian/DEBIAN
+mkdir -p "$colldir"/DEBIAN
 
 # a bash function that ignores its first parameter and calls mkdir -p
 # with the second parameter
@@ -78,16 +80,16 @@ call_for_each_csv_line() {
 }
 
 # create target directory structure:
-call_for_each_csv_line "$CSV" mkdir_p_2nd debian/
+call_for_each_csv_line "$CSV" mkdir_p_2nd "$colldir"/
 
 # copy files:
-call_for_each_csv_line "$CSV" "cp --preserve=links" debian/
+call_for_each_csv_line "$CSV" "cp --preserve=links" "$colldir"/
 
 # All files in the distribution should be readable by everyone
-chmod -R a+r debian
+chmod -R a+r "$colldir"
 
 (
-    cd debian/
+    cd "$colldir"/
     mkdir debian
     touch debian/control
     SHLIBBINS="$(find ./usr/lib/ -type f -print||true) $(find ./usr/bin/ -type f -print||true)"
@@ -98,7 +100,7 @@ chmod -R a+r debian
     sed -i -e 's/shlibs:Depends/shlibsDepends/1' -e 's/=\(.*\)/=\"\1\"/1' DEBIAN/substvars
 )
 
-. debian/DEBIAN/substvars
+. "$colldir"/DEBIAN/substvars
 
 export shlibsDepends
 
@@ -111,17 +113,16 @@ echo ${shlibsDepends}
 distname="${PACKAGE}"
 version="${VERSION}"
 if test -z "${ARCH}"; then
-    ARCH=$(uname -m | sed -e s/i686/i386/ -e s/x86_64/amd64/ -e s/armv7l/armhf/)
+    ARCH=$(dpkg-architecture --query DEB_BUILD_ARCH)
     echo "Architecture ${ARCH} detected."
 fi
 packagename=$(echo "$distname" | sed -e "s/_/-/g")
-#packageversion="$version"-$(date +%Y%m%d)
 packageversion="$version"
 deb_depends="Depends: "`cat "${PACKAGEBASE}.dep"|envsubst|sed -e "s/(VERSION)/(=${VERSION})/g"`
 deb_provides="Provides: ${PACKAGE}"
-inst_size=`du debian|tail -1|sed -e 's/\([0-9]*\).*/\1/1'`
+inst_size=`du "$colldir"|tail -1|sed -e 's/\([0-9]*\).*/\1/1'`
 
-cat <<EndOfControl | sed -e '/^[[:alnum:]]*:[[:blank:]]*$/ d'> debian/DEBIAN/control
+cat <<EndOfControl | sed -e '/^[[:alnum:]]*:[[:blank:]]*$/ d'> "$colldir"/DEBIAN/control
 Package: $packagename
 Version: $packageversion
 Priority: optional
@@ -130,19 +131,19 @@ $deb_depends
 $deb_provides
 Installed-Size: $inst_size
 EndOfControl
-cat "${PACKAGEBASE}.control" >> debian/DEBIAN/control
+cat "${PACKAGEBASE}.control" >> "$colldir"/DEBIAN/control
 
-test -e "${PACKAGEBASE}.conffiles" && cat "${PACKAGEBASE}.conffiles" > debian/DEBIAN/conffiles
+test -e "${PACKAGEBASE}.conffiles" && cat "${PACKAGEBASE}.conffiles" > "$colldir"/DEBIAN/conffiles
 # create pre/post-install and pre/post-rm scripts:
 for scr in preinst postinst prerm postrm; do
-    test -e "${PACKAGEBASE}.${scr}" && (cat "${PACKAGEBASE}.${scr}" > debian/DEBIAN/${scr} && chmod a+x debian/DEBIAN/${scr})
+    test -e "${PACKAGEBASE}.${scr}" && (cat "${PACKAGEBASE}.${scr}" > "$colldir"/DEBIAN/${scr} && chmod a+x "$colldir"/DEBIAN/${scr})
 done
 
 fakeroot=/usr/bin/fakeroot
 test -x $fakeroot || fakeroot=""
-$fakeroot dpkg-deb -Zxz --build debian
-mv debian.deb "$packagename"_"$packageversion"_"${ARCH}".deb
-rm -Rf debian
+$fakeroot dpkg-deb -Zxz --build "$colldir"
+mv "$colldir".deb "$packagename"_"$packageversion"_"${ARCH}".deb
+rm -Rf "$colldir"
 
 # Local Variables:
 # mode: shell-script
