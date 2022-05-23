@@ -23,6 +23,8 @@ include ../config.mk
 # include TASCAR specific make rules:
 include ../rules.mk
 
+EXTERNALS=xerces-c
+
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
