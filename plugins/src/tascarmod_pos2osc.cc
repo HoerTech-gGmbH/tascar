@@ -44,7 +44,7 @@ private:
   bool sendsounds;
   bool addparentname;
   lo_address target;
-  std::vector<TASCAR::named_object_t> obj;
+  std::vector<TASCAR::named_object_t> objects;
 };
 
 pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
@@ -56,9 +56,9 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_(pattern);
   GET_ATTRIBUTE_(ttl);
   GET_ATTRIBUTE_(mode);
-  GET_ATTRIBUTE_BOOL_(transport);
+  GET_ATTRIBUTE_BOOL(transport, "Send only while transport is rolling");
   GET_ATTRIBUTE_(avatar);
-  GET_ATTRIBUTE_(lookatlen);
+  GET_ATTRIBUTE(lookatlen, "s", "Duration of look-at animation");
   GET_ATTRIBUTE_BOOL_(triggered);
   GET_ATTRIBUTE_BOOL_(ignoreorientation);
   GET_ATTRIBUTE_BOOL_(sendsounds);
@@ -72,16 +72,20 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   if(!target)
     throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
   lo_address_set_ttl(target, ttl);
-  obj = session->find_objects(pattern);
-  if(!obj.size())
+  objects = session->find_objects(pattern);
+  if(!objects.size())
     throw TASCAR::ErrMsg("No target objects found (target pattern: \"" +
                          pattern + "\").");
+  std::string path("/pos2osc");
+  if(avatar.size())
+    path += "/" + avatar;
   if(mode == 4) {
-    cfg.session->add_bool_true("/pos2osc/" + avatar + "/trigger", &trigger);
-    cfg.session->add_bool("/pos2osc/" + avatar + "/active", &trigger);
-    cfg.session->add_bool("/pos2osc/" + avatar + "/triggered", &triggered);
-    cfg.session->add_double("/pos2osc/" + avatar + "/lookatlen", &lookatlen);
+    cfg.session->add_bool_true(path + "/trigger", &trigger);
+    cfg.session->add_bool(path + "/active", &trigger);
+    cfg.session->add_bool(path + "/triggered", &triggered);
+    cfg.session->add_double(path + "/lookatlen", &lookatlen);
   }
+  cfg.session->add_uint(path + "/mode", &mode);
   if(triggered)
     trigger = false;
 }
@@ -91,49 +95,50 @@ pos2osc_t::~pos2osc_t()
   lo_address_free(target);
 }
 
-void pos2osc_t::update(uint32_t , bool tp_rolling)
+void pos2osc_t::update(uint32_t, bool tp_rolling)
 {
   if(trigger && ((!triggered && (tp_rolling || (!transport))) || triggered)) {
     if(skipcnt)
       skipcnt--;
     else {
       skipcnt = skip;
-      for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
-          it != obj.end(); ++it) {
+      // for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
+      // it != obj.end(); ++it) {
+      for(auto& obj : objects) {
         // copy position from parent object:
-        const TASCAR::pos_t& p(it->obj->c6dof.position);
-        TASCAR::zyx_euler_t o(it->obj->c6dof.orientation);
+        const TASCAR::pos_t& p(obj.obj->c6dof.position);
+        TASCAR::zyx_euler_t o(obj.obj->c6dof.orientation);
         if(ignoreorientation)
-          o = it->obj->c6dof_nodelta.orientation;
+          o = obj.obj->c6dof_nodelta.orientation;
         std::string path;
         switch(mode) {
         case 0:
-          path = it->name + "/pos";
+          path = obj.name + "/pos";
           lo_send(target, path.c_str(), "fff", p.x, p.y, p.z);
-          path = it->name + "/rot";
+          path = obj.name + "/rot";
           lo_send(target, path.c_str(), "fff", RAD2DEG * o.z, RAD2DEG * o.y,
                   RAD2DEG * o.x);
           break;
         case 1:
-          path = it->name + "/pos";
+          path = obj.name + "/pos";
           lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z, RAD2DEG * o.z,
                   RAD2DEG * o.y, RAD2DEG * o.x);
           break;
         case 2:
           path = "/tascarpos";
-          lo_send(target, path.c_str(), "sffffff", it->name.c_str(), p.x, p.y,
+          lo_send(target, path.c_str(), "sffffff", obj.name.c_str(), p.x, p.y,
                   p.z, RAD2DEG * o.z, RAD2DEG * o.y, RAD2DEG * o.x);
           break;
         case 3:
           path = "/tascarpos";
-          lo_send(target, path.c_str(), "sffffff", it->obj->get_name().c_str(),
+          lo_send(target, path.c_str(), "sffffff", obj.obj->get_name().c_str(),
                   p.x, p.y, p.z, RAD2DEG * o.z, RAD2DEG * o.y, RAD2DEG * o.x);
           if(sendsounds) {
             TASCAR::Scene::src_object_t* src(
-                dynamic_cast<TASCAR::Scene::src_object_t*>(it->obj));
+                dynamic_cast<TASCAR::Scene::src_object_t*>(obj.obj));
             if(src) {
-              std::string parentname(it->obj->get_name());
-              for(auto isnd : src->sound) {
+              std::string parentname(obj.obj->get_name());
+              for(const auto& isnd : src->sound) {
                 std::string soundname;
                 if(addparentname)
                   soundname = parentname + "." + isnd->get_name();
@@ -159,6 +164,12 @@ void pos2osc_t::update(uint32_t , bool tp_rolling)
         case 5:
           path = "/" + avatar;
           lo_send(target, path.c_str(), "f", RAD2DEG * o.z);
+          break;
+        case 6:
+          path = "/" + obj.obj->get_name();
+          lo_send(target, path.c_str(), "sfff", "/headGaze",
+                  obj.obj->dorientation.y, obj.obj->dorientation.z,
+                  obj.obj->dorientation.x);
           break;
         }
       }

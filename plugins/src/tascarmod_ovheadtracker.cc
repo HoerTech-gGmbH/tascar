@@ -65,6 +65,7 @@ private:
   bool apply_rot = true;
   bool send_only_quaternion = false;
   double autoref = 0.0;
+  double smooth = 0.0;
   // run-time variables:
   lo_address target = NULL;
   lo_address rottarget = NULL;
@@ -85,6 +86,7 @@ private:
   std::vector<lo_arg**> vargv;
   // level meter paths:
   std::vector<std::string> vpath;
+  TASCAR::quaternion_t qstate;
 };
 
 void ovheadtracker_t::configure()
@@ -150,6 +152,7 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(autoref, "",
                 "Filter coefficient for estimating reference orientation from "
                 "average direction, or zero for no auto-referencing");
+  GET_ATTRIBUTE(smooth, "", "Filter coefficient for smoothing of quaternions");
   GET_ATTRIBUTE(axes, "", "Order of axes, or -1 to not use axis");
   GET_ATTRIBUTE(
       accscale, "",
@@ -203,6 +206,8 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_double(p + "/autoref", &autoref, "[0,1[",
                   "Filter coefficient for estimating reference orientation "
                   "from average direction, or zero for no auto-referencing");
+  srv->add_double(p + "/smooth", &smooth, "[0,1[",
+                  "Filter coefficient for smoothing quaternions");
   srv->add_bool(p + "/apply_loc", &apply_loc,
                 "Apply translation based on accelerometer (not implemented)");
   srv->add_bool(p + "/apply_rot", &apply_rot,
@@ -228,6 +233,7 @@ void ovheadtracker_t::service()
     try {
       TASCAR::serialport_t dev;
       dev.open(devices[devidx].c_str(), B115200, 0, 1);
+      first = true;
       while(run_service) {
         std::string l(dev.readline(1024, 10));
         if(l.size()) {
@@ -320,12 +326,20 @@ void ovheadtracker_t::service()
             q.y = std::stod(l, &sz);
             l = l.substr(sz + 1);
             q.z = std::stod(l, &sz);
+            if(smooth > 0.0) {
+              if( first )
+                qstate = q;
+              qstate = qstate.scale(1.0 - smooth);
+              qstate += q.scale(smooth);
+              qstate = qstate.scale(1.0 / qstate.norm());
+              q = qstate;
+            }
+
             if(bcalib)
               qref = q.inverse();
             if(autoref > 0) {
               if(first) {
                 qref = q.inverse();
-                first = false;
               } else {
                 qref = qref.scale(1.0 - autoref);
                 qref += q.inverse().scale(autoref);
@@ -390,6 +404,7 @@ void ovheadtracker_t::service()
             //  std::cout << l << std::endl;
             //} break;
           }
+          first = false;
         }
       }
     }
@@ -410,7 +425,7 @@ ovheadtracker_t::~ovheadtracker_t()
     lo_address_free(target);
 }
 
-void ovheadtracker_t::update(uint32_t tp_frame, bool tp_rolling)
+void ovheadtracker_t::update(uint32_t, bool)
 {
   if(apply_loc)
     set_location(p0);
