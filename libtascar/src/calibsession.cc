@@ -358,6 +358,7 @@ void add_stimulus_plugin(xml_element_t node, const spk_eq_param_t& par)
   e_pink.set_attribute("period", TASCAR::to_string(par.duration));
   e_pink.set_attribute("fmin", TASCAR::to_string(par.fmin));
   e_pink.set_attribute("fmax", TASCAR::to_string(par.fmax));
+  e_pink.set_attribute("alpha", "1");
 }
 
 calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)

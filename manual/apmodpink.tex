@@ -1,4 +1,9 @@
-Add a (band limited) pink noise to the input signal.
+Add a (band limited) frequency-dependent noise to the input
+signal. The power spectral density $P$ is
+\begin{equation}
+P(f) \propto \frac{1}{f^\alpha}
+\end{equation}
+in the interval $f_{min} \le f \le f_{max}$, and zero otherwise.
 
 \input{tabpink.tex}
 
