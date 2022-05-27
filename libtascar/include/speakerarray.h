@@ -203,12 +203,14 @@ namespace TASCAR {
     std::string calibfor;
     bool has_calibfor;
     bool use_subs;
-    // highpass filters for cross-overs, broad band speakers:
-    std::vector<TASCAR::biquad_t> flt_hp;
+    // highpass filters for cross-overs, broad band speakers (24 dB/Oct):
+    std::vector<TASCAR::biquadf_t> flt_hp1;
+    std::vector<TASCAR::biquadf_t> flt_hp2;
+    // lowpass filters for subwoofer (24 dB/Oct):
+    std::vector<TASCAR::biquadf_t> flt_lowp1;
+    std::vector<TASCAR::biquadf_t> flt_lowp2;
     // allpass filters for transition phase matching, broad band speakers:
-    std::vector<TASCAR::biquad_t> flt_allp;
-    // lowpass filters for subwoofer:
-    std::vector<TASCAR::biquad_t> flt_lowp;
+    //std::vector<TASCAR::biquad_t> flt_allp;
     std::vector<std::vector<float>> subweight;
     std::vector<std::string>
         convolution_ir; //< file name of impulse response for convolution

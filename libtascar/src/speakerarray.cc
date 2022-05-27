@@ -345,24 +345,29 @@ void spk_array_diff_render_t::configure()
   diffuse_render_buffer = NULL;
   diffuse_render_buffer = new TASCAR::wave_t(n_fragment);
   if(use_subs) {
-    const double fscale(sqrt(0.5));
-    flt_hp.resize(size());
-    flt_allp.resize(size());
-    flt_lowp.resize(subs.size());
+    // const double fscale(sqrt(0.5));
+    flt_hp1.resize(size());
+    flt_lowp1.resize(subs.size());
+    flt_hp2.resize(size());
+    flt_lowp2.resize(subs.size());
     // configure high pass filter:
-    for(auto& flt : flt_hp)
-      flt.set_highpass(fscale * fcsub, f_sample);
+    for(auto& flt : flt_hp1)
+      flt.set_butterworth(fcsub, f_sample, true);
+    for(auto& flt : flt_hp2)
+      flt.set_butterworth(fcsub, f_sample, true);
     // configure low pass filter:
-    for(auto& flt : flt_lowp)
-      flt.set_lowpass(fscale * fcsub, f_sample, true);
-    // configure all pass filter:
-    const double f0(0.125 * fscale * fcsub / f_sample * TASCAR_2PI);
-    biquad_t fallp;
-    const double r(1.01);
-    fallp.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
-    const double g(std::abs(fallp.response(TASCAR_PI)));
-    for(auto& flt : flt_allp)
-      flt.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
+    for(auto& flt : flt_lowp1)
+      flt.set_butterworth(fcsub, f_sample);
+    for(auto& flt : flt_lowp2)
+      flt.set_butterworth(fcsub, f_sample);
+    //// configure all pass filter:
+    // const double f0(0.125 * fscale * fcsub / f_sample * TASCAR_2PI);
+    // biquad_t fallp;
+    // const double r(1.01);
+    // fallp.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
+    // const double g(std::abs(fallp.response(TASCAR_PI)));
+    // for(auto& flt : flt_allp)
+    //  flt.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   }
   use_conv = false;
   for(const auto& conv : convolution_ir)
@@ -561,11 +566,13 @@ std::vector<TASCAR::pos_t> spk_array_t::get_positions() const
 void spk_array_diff_render_t::clear_states()
 {
   // reset all subwoofer filters:
-  for(auto& flt : flt_lowp)
+  for(auto& flt : flt_lowp1)
     flt.clear();
-  for(auto& flt : flt_hp)
+  for(auto& flt : flt_lowp2)
     flt.clear();
-  for(auto& flt : flt_allp)
+  for(auto& flt : flt_hp1)
+    flt.clear();
+  for(auto& flt : flt_hp2)
     flt.clear();
   for(auto& flt : decorrflt)
     flt.clear();
@@ -595,21 +602,33 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
         output[ksub + size()].add(output[kbroadband],
                                   subweight[ksub][kbroadband]);
     }
-    // now apply lp-filters to subs:
-    for(size_t k = 0; k < subs.size(); ++k) {
-      flt_lowp[k].filter(output[k + size()]);
+    if(enable_bb) {
+      // if broadband speakers disabled, then do not apply lowpass
+      // filters to avoid compensation of lowpass during calibration.
+
+      // now apply lp-filters to subs:
+      for(size_t k = 0; k < subs.size(); ++k) {
+        flt_lowp1[k].filter(output[k + size()]);
+        flt_lowp2[k].filter(output[k + size()]);
+      }
     }
-    // then apply hp and allp filters to broad band speakers:
-    for(size_t k = 0; k < size(); ++k) {
-      flt_hp[k].filter(output[k]);
-      flt_allp[k].filter(output[k]);
+    if(enable_subs) {
+      // if subwoofer are configured but not enabled, then do not
+      // apply highpass filters to avoid compensation of highpass
+      // during calibration.
+
+      // apply hp filters to broad band speakers:
+      for(size_t k = 0; k < size(); ++k) {
+        flt_hp1[k].filter(output[k]);
+        flt_hp2[k].filter(output[k]);
+      }
     }
   }
-  if( !enable_subs ){
+  if(!enable_subs) {
     for(size_t ksub = 0; ksub < subs.size(); ++ksub)
       output[ksub + size()].clear();
   }
-  if( !enable_bb ){
+  if(!enable_bb) {
     for(size_t kbb = 0; kbb < size(); ++kbb)
       output[kbb].clear();
   }
