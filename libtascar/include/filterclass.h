@@ -187,8 +187,6 @@ namespace TASCAR {
       b1_ = b1;
       b2_ = b2;
     };
-    void set_highpass(double fc, double fs, bool phaseinvert = false);
-    void set_lowpass(double fc, double fs, bool phaseinvert = false);
     void set_pareq(double f, double fs, double gain, double q);
     inline double filter(double in)
     {
@@ -243,8 +241,6 @@ namespace TASCAR {
        @param Set coefficiens to second order butterworth filter
      */
     void set_butterworth(float f, float fs, bool highpass = false);
-    void set_highpass(float fc, float fs, bool phaseinvert = false);
-    void set_lowpass(float fc, float fs, bool phaseinvert = false);
     void set_pareq(float f, float fs, float gain, float q);
     inline float filter(float in)
     {

@@ -409,25 +409,6 @@ void TASCAR::bandpassf_t::set_range(float f1, float f2)
              f1 / fs_ * TASCAR_2PIf);
 }
 
-void TASCAR::biquad_t::set_highpass(double fc, double fs, bool phaseinvert)
-{
-  set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
-  double g(std::abs(response(TASCAR_PI)));
-  if(phaseinvert)
-    g *= -1.0;
-  set_gzp(1.0 / g, 1.0, 0.0, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
-}
-
-void TASCAR::biquad_t::set_lowpass(double fc, double fs, bool phaseinvert)
-{
-  set_gzp(1.0, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs), fc / fs * TASCAR_2PI);
-  double g(std::abs(response(0.0)));
-  if(phaseinvert)
-    g *= -1.0;
-  set_gzp(1.0 / g, 1.0, TASCAR_PI, pow(10.0, -2.0 * fc / fs),
-          fc / fs * TASCAR_2PI);
-}
-
 void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
 {
   // bilinear transformation
@@ -534,28 +515,6 @@ void TASCAR::biquadf_t::set_butterworth(float f, float fs, bool highpass)
   else
     set_coefficients(-std::real(poles[0] + poles[1]),
                      std::real(poles[0] * poles[1]), gain, 2.0f * gain, gain);
-}
-
-void TASCAR::biquadf_t::set_highpass(float fc, float fs, bool phaseinvert)
-{
-  set_gzp(1.0f, 1.0f, 0.0f, powf(10.0f, -2.0f * fc / fs),
-          fc / fs * TASCAR_2PIf);
-  float g(std::abs(response(TASCAR_PIf)));
-  if(phaseinvert)
-    g *= -1.0f;
-  set_gzp(1.0f / g, 1.0f, 0.0f, powf(10.0f, -2.0f * fc / fs),
-          fc / fs * TASCAR_2PIf);
-}
-
-void TASCAR::biquadf_t::set_lowpass(float fc, float fs, bool phaseinvert)
-{
-  set_gzp(1.0, 1.0, TASCAR_PIf, powf(10.0f, -2.0f * fc / fs),
-          fc / fs * TASCAR_2PIf);
-  float g(std::abs(response(0.0f)));
-  if(phaseinvert)
-    g *= -1.0f;
-  set_gzp(1.0f / g, 1.0f, TASCAR_PIf, powf(10.0f, -2.0f * fc / fs),
-          fc / fs * TASCAR_2PIf);
 }
 
 void TASCAR::biquadf_t::set_pareq(float f, float fs, float gain, float q)

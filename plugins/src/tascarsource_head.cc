@@ -67,8 +67,8 @@ bool srchead_t::read_source(TASCAR::pos_t& prel,
                             sourcemod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
-  d->flt.set_highpass(fc, f_sample);
-  d->flto.set_lowpass(fc, f_sample);
+  d->flt.set_butterworth(fc, f_sample, true);
+  d->flto.set_butterworth(fc, f_sample);
   TASCAR::pos_t prel_norm(prel.normal());
   // calculate panning parameters (as incremental values):
   float w = 0.5 - 0.5 * prel_norm.x;
@@ -77,7 +77,7 @@ bool srchead_t::read_source(TASCAR::pos_t& prel,
   uint32_t N(output.size());
   for(uint32_t k = 0; k < N; ++k) {
     float v = input[0][k];
-    output[k] = d->flto.filter(v) + 0.25*d->w * d->flt.filter(v);
+    output[k] = d->flto.filter(v) + 0.25 * d->w * d->flt.filter(v);
     d->w += dw;
   }
   d->w = w;
