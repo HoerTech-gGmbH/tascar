@@ -249,6 +249,7 @@ void TASCAR::biquadf_t::set_gzp(float g, float zero_r, float zero_phi,
   b2_ = g * zero_r * zero_r;
 }
 
+// pre-warping of frequency
 double fd2fa(double fs, double fd)
 {
   return 2.0 * fs * tan(fd / (2.0 * fs));
@@ -447,6 +448,58 @@ void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
                      2.0 * (1.0 - t_sq) * inv_a0,
                      (t_sq + 1.0 - g * Bc) * inv_a0);
   }
+}
+
+void bilinear(std::vector<std::complex<double>>& poles, double& gain)
+{
+  std::complex<double> prod_poles = 1.0;
+  for( const auto& p : poles )
+    prod_poles *= (1.0 - p);
+  gain = std::real(gain / prod_poles);
+  for( auto& p : poles )
+    p = (1.0+p)/(1.0-p);
+}
+
+void sftrans(std::vector<std::complex<double>>& poles, double& gain, double wc,
+             bool highpass)
+{
+  DEBUG(wc);
+  DEBUG(highpass);
+  for( auto p : poles )
+    DEBUG(p);
+  DEBUG(gain);
+  DEBUG(wc);
+  if(highpass) {
+    std::complex<double> prod_poles = 1.0;
+    for(const auto& p : poles)
+      prod_poles *= -p;
+    DEBUG(prod_poles);
+    gain *= std::real(1.0 / prod_poles);
+    for(auto& p : poles)
+      p = wc / p;
+  } else {
+    DEBUG(1.0 / wc);
+    DEBUG(pow(1.0 / wc, -(double)poles.size()));
+    gain *= pow(1.0 / wc, -(double)poles.size());
+    for(auto& p : poles)
+      p = wc * p;
+  }
+  for( auto p : poles )
+    DEBUG(p);
+  DEBUG(gain);
+  DEBUG(wc);
+}
+
+void TASCAR::biquad_t::set_butterworth(double f, double fs, bool highpass)
+{
+  double wc = tan(TASCAR_PI2 * f / fs);
+  std::vector<std::complex<double>> poles = {std::exp(i * TASCAR_PI * 0.75),
+                                             std::exp(i * TASCAR_PI * 1.25)};
+  double gain = 1.0;
+  sftrans(poles, gain, wc, highpass);
+  bilinear(poles, gain);
+  set_coefficients(-std::real(poles[0] + poles[1]),
+                   std::real(poles[0] * poles[1]), gain, 2.0 * gain, gain);
 }
 
 void TASCAR::biquadf_t::set_highpass(float fc, float fs, bool phaseinvert)

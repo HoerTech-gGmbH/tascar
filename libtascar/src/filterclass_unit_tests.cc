@@ -345,6 +345,23 @@ TEST(biquad_t, analog)
   ASSERT_NEAR(1.315124989e-10, b.get_b2(), 1e-5);
 }
 
+TEST(biquad, butterworthlow)
+{
+  TASCAR::biquad_t b;
+  b.set_butterworth(80.0, 44100.0);
+  ASSERT_NEAR(3.221897217e-05, b.get_b0(), 1e-9);
+  ASSERT_NEAR(6.443794434e-05, b.get_b1(), 1e-9);
+  ASSERT_NEAR(3.221897217e-05, b.get_b2(), 1e-9);
+  ASSERT_NEAR(-1.983881042, b.get_a1(), 1e-5);
+  ASSERT_NEAR(0.9840099175, b.get_a2(), 1e-5);
+  b.set_butterworth(8000.0, 44100.0);
+  ASSERT_NEAR(0.1772450255, b.get_b0(), 1e-6);
+  ASSERT_NEAR(0.3544900511, b.get_b1(), 1e-6);
+  ASSERT_NEAR(0.1772450255, b.get_b2(), 1e-6);
+  ASSERT_NEAR(-0.5087175281, b.get_a1(), 1e-5);
+  ASSERT_NEAR(0.2176976303, b.get_a2(), 1e-5);
+}
+
 TEST(biquadf_t, pareq)
 {
   TASCAR::biquadf_t b;

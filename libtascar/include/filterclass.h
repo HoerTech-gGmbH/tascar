@@ -161,9 +161,24 @@ namespace TASCAR {
     biquad_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0){};
     void set_gzp(double g, double zero_r, double zero_phi, double pole_r,
                  double pole_phi);
+    /**
+       @brief Set coefficients from s-domain transfer function by
+       means of a bilinear transformation.
+
+       @param g Gain of the s-domain transfer function
+       @param z1 First zero of the s-domain transfer function
+       @param z2 Second zero of the s-domain transfer function
+       @param p1 First pole of the s-domain transfer function
+       @param p2 Second pole of the s-domain transfer function
+       @param fs Sampling rate
+     */
     void set_analog(double g, double z1, double z2, double p1, double p2,
                     double fs);
     void set_analog_poles(double g, double p1, double p2, double fs);
+    /**
+       @param Set coefficiens to second order butterworth low pass filter
+     */
+    void set_butterworth( double f, double fs, bool highpass = false );
     void set_coefficients(double a1, double a2, double b0, double b1, double b2)
     {
       a1_ = a1;
@@ -172,7 +187,6 @@ namespace TASCAR {
       b1_ = b1;
       b2_ = b2;
     };
-    // void set_analog( double g, double f_pole, double fs );
     void set_highpass(double fc, double fs, bool phaseinvert = false);
     void set_lowpass(double fc, double fs, bool phaseinvert = false);
     void set_pareq(double f, double fs, double gain, double q);
