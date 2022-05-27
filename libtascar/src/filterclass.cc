@@ -460,46 +460,80 @@ void bilinear(std::vector<std::complex<double>>& poles, double& gain)
     p = (1.0+p)/(1.0-p);
 }
 
+void bilinearf(std::vector<std::complex<float>>& poles, float& gain)
+{
+  std::complex<float> prod_poles = 1.0;
+  for(const auto& p : poles)
+    prod_poles *= (1.0f - p);
+  gain = std::real(gain / prod_poles);
+  for(auto& p : poles)
+    p = (1.0f + p) / (1.0f - p);
+}
+
 void sftrans(std::vector<std::complex<double>>& poles, double& gain, double wc,
              bool highpass)
 {
-  DEBUG(wc);
-  DEBUG(highpass);
-  for( auto p : poles )
-    DEBUG(p);
-  DEBUG(gain);
-  DEBUG(wc);
   if(highpass) {
     std::complex<double> prod_poles = 1.0;
     for(const auto& p : poles)
       prod_poles *= -p;
-    DEBUG(prod_poles);
     gain *= std::real(1.0 / prod_poles);
     for(auto& p : poles)
       p = wc / p;
   } else {
-    DEBUG(1.0 / wc);
-    DEBUG(pow(1.0 / wc, -(double)poles.size()));
     gain *= pow(1.0 / wc, -(double)poles.size());
     for(auto& p : poles)
       p = wc * p;
   }
-  for( auto p : poles )
-    DEBUG(p);
-  DEBUG(gain);
-  DEBUG(wc);
+}
+
+void sftransf(std::vector<std::complex<float>>& poles, float& gain, float wc,
+              bool highpass)
+{
+  if(highpass) {
+    std::complex<float> prod_poles = 1.0f;
+    for(const auto& p : poles)
+      prod_poles *= -p;
+    gain *= std::real(1.0f / prod_poles);
+    for(auto& p : poles)
+      p = wc / p;
+  } else {
+    gain *= powf(1.0f / wc, -(float)poles.size());
+    for(auto& p : poles)
+      p = wc * p;
+  }
 }
 
 void TASCAR::biquad_t::set_butterworth(double f, double fs, bool highpass)
 {
-  double wc = tan(TASCAR_PI2 * f / fs);
+  double wc = tan(TASCAR_PI2 * f / (0.5 * fs));
   std::vector<std::complex<double>> poles = {std::exp(i * TASCAR_PI * 0.75),
                                              std::exp(i * TASCAR_PI * 1.25)};
   double gain = 1.0;
   sftrans(poles, gain, wc, highpass);
   bilinear(poles, gain);
-  set_coefficients(-std::real(poles[0] + poles[1]),
-                   std::real(poles[0] * poles[1]), gain, 2.0 * gain, gain);
+  if(highpass)
+    set_coefficients(-std::real(poles[0] + poles[1]),
+                     std::real(poles[0] * poles[1]), gain, -2.0 * gain, gain);
+  else
+    set_coefficients(-std::real(poles[0] + poles[1]),
+                     std::real(poles[0] * poles[1]), gain, 2.0 * gain, gain);
+}
+
+void TASCAR::biquadf_t::set_butterworth(float f, float fs, bool highpass)
+{
+  float wc = tanf(TASCAR_PI2f * f / (0.5f * fs));
+  std::vector<std::complex<float>> poles = {std::exp(i_f * TASCAR_PIf * 0.75f),
+                                            std::exp(i_f * TASCAR_PIf * 1.25f)};
+  float gain = 1.0f;
+  sftransf(poles, gain, wc, highpass);
+  bilinearf(poles, gain);
+  if(highpass)
+    set_coefficients(-std::real(poles[0] + poles[1]),
+                     std::real(poles[0] * poles[1]), gain, -2.0f * gain, gain);
+  else
+    set_coefficients(-std::real(poles[0] + poles[1]),
+                     std::real(poles[0] * poles[1]), gain, 2.0f * gain, gain);
 }
 
 void TASCAR::biquadf_t::set_highpass(float fc, float fs, bool phaseinvert)

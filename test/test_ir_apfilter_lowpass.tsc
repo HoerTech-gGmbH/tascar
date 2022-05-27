@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <source>
+      <sound delayline="false" airabsorption="false" gainmodel="1" x="1">
+        <plugins>
+          <filter mode="lowpass" fc="80"/>
+          <filter mode="lowpass" fc="80"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver/>
+  </scene>
+</session>

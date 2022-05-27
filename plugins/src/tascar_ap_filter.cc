@@ -103,10 +103,10 @@ void biquadplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   for(size_t k = 0; k < chunk.size(); ++k) {
     switch(ftype) {
     case lowpass:
-      bp[k]->set_lowpass(fc, (float)f_sample);
+      bp[k]->set_butterworth(fc, (float)f_sample);
       break;
     case highpass:
-      bp[k]->set_highpass(fc, (float)f_sample);
+      bp[k]->set_butterworth(fc, (float)f_sample, true);
       break;
     case equalizer:
       bp[k]->set_pareq(fc, (float)f_sample, gain, Q);

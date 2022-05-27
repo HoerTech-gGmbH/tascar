@@ -37,7 +37,8 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4			\
 	test_snd_diffuse_rec17deg test_snd_maskplugin_fig8									\
 	test_snd_maskplugin_multibeam test_snd_maskplugin_multibeam1				\
 	test_snd_diffuse_inphase test_snd_diffuse_basic											\
-	test_snd_diffuse_maxre test_snd_maskplugin_multibeam_diff
+	test_snd_diffuse_maxre test_snd_maskplugin_multibeam_diff						\
+	test_ir_apfilter_highpass test_ir_apfilter_lowpass
 
 #test_ir_simplefdn_optimt60
 

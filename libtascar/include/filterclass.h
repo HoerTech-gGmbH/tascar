@@ -176,9 +176,9 @@ namespace TASCAR {
                     double fs);
     void set_analog_poles(double g, double p1, double p2, double fs);
     /**
-       @param Set coefficiens to second order butterworth low pass filter
+       @param Set coefficiens to second order butterworth filter
      */
-    void set_butterworth( double f, double fs, bool highpass = false );
+    void set_butterworth(double f, double fs, bool highpass = false);
     void set_coefficients(double a1, double a2, double b0, double b1, double b2)
     {
       a1_ = a1;
@@ -239,7 +239,10 @@ namespace TASCAR {
       b1_ = b1;
       b2_ = b2;
     };
-    // void set_analog( float g, float f_pole, float fs );
+    /**
+       @param Set coefficiens to second order butterworth filter
+     */
+    void set_butterworth(float f, float fs, bool highpass = false);
     void set_highpass(float fc, float fs, bool phaseinvert = false);
     void set_lowpass(float fc, float fs, bool phaseinvert = false);
     void set_pareq(float f, float fs, float gain, float q);
