@@ -32,17 +32,17 @@
 #include "jackclient.h"
 #include <iostream>
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
-  try{
+  try {
     jackc_portless_t jc("tascar_jackpar");
     std::cout << jc.get_fragsize() << " " << jc.get_srate() << "\n";
   }
-  catch( const std::exception& msg ){
+  catch(const std::exception& msg) {
     std::cerr << "Error: " << msg.what() << std::endl;
     return 1;
   }
-  catch( const char* msg ){
+  catch(const char* msg) {
     std::cerr << "Error: " << msg << std::endl;
     return 1;
   }

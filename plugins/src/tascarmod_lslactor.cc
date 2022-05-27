@@ -120,12 +120,12 @@ lslactor_t::~lslactor_t()
     delete inlet;
 }
 
-void lslactor_t::update(uint32_t tp_frame,bool tp_rolling)
+void lslactor_t::update(uint32_t, bool)
 {
-  if( incremental )
-    add_transformation( transform, local );
+  if(incremental)
+    add_transformation(transform, local);
   else
-    set_transformation( transform, local );
+    set_transformation(transform, local);
 }
 
 REGISTER_MODULE(lslactor_t);

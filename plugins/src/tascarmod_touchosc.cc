@@ -231,12 +231,12 @@ void connection_t::uploadsession(TASCAR::session_t* session)
     lo_send(target, cfader, "f", -30.0f);
     lo_send(target, clevel, "f", 0.0f);
     sprintf(cfader, "/touchosc/fader%d/color", k + 1);
-    if( htmlcolors )
+    if(htmlcolors)
       lo_send(target, cfader, "s", "#000000");
     else
       lo_send(target, cfader, "s", "brown");
     sprintf(clabel, "/touchosc/label%d/color", k + 1);
-    if( htmlcolors )
+    if(htmlcolors)
       lo_send(target, cfader, "s", "#000000");
     else
       lo_send(target, cfader, "s", "brown");
@@ -317,16 +317,17 @@ void connection_t::setvaluesession(TASCAR::session_t* session, uint32_t channel,
     if(channel < session->scenes[scene]->sounds.size())
       session->scenes[scene]->sounds[channel]->set_gain_db(val);
     else if(channel < session->scenes[scene]->sounds.size() +
-            session->scenes[scene]->receivermod_objects.size())
+                          session->scenes[scene]->receivermod_objects.size())
       session->scenes[scene]
-        ->receivermod_objects[channel - session->scenes[scene]->sounds.size()]
-        ->set_gain_db(val);
+          ->receivermod_objects[channel - session->scenes[scene]->sounds.size()]
+          ->set_gain_db(val);
     else if(channel < session->scenes[scene]->sounds.size() +
-            session->scenes[scene]->receivermod_objects.size() +
-            session->scenes[scene]->diffuse_reverbs.size())
+                          session->scenes[scene]->receivermod_objects.size() +
+                          session->scenes[scene]->diffuse_reverbs.size())
       session->scenes[scene]
-        ->diffuse_reverbs[channel - session->scenes[scene]->sounds.size() - session->scenes[scene]->receivermod_objects.size()]
-        ->set_gain_db(val);
+          ->diffuse_reverbs[channel - session->scenes[scene]->sounds.size() -
+                            session->scenes[scene]->receivermod_objects.size()]
+          ->set_gain_db(val);
     else {
       char cfader[1024];
       sprintf(cfader, "/touchosc/fader%d", channel + 1);
@@ -370,8 +371,8 @@ private:
   pthread_mutex_t mtx;
 };
 
-int touchosc_t::osc_connect(const char* path, const char* types, lo_arg** argv,
-                            int argc, lo_message msg, void* user_data)
+int touchosc_t::osc_connect(const char*, const char*, lo_arg** argv, int,
+                            lo_message msg, void* user_data)
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t* h((touchosc_t*)user_data);
@@ -379,8 +380,8 @@ int touchosc_t::osc_connect(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int touchosc_t::osc_setfader(const char* path, const char* types, lo_arg** argv,
-                             int argc, lo_message msg, void* user_data)
+int touchosc_t::osc_setfader(const char*, const char*, lo_arg** argv, int,
+                             lo_message msg, void* user_data)
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t::chref_t* h((touchosc_t::chref_t*)user_data);
@@ -388,8 +389,8 @@ int touchosc_t::osc_setfader(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int touchosc_t::osc_sceneinc(const char* path, const char* types, lo_arg** argv,
-                             int argc, lo_message msg, void* user_data)
+int touchosc_t::osc_sceneinc(const char*, const char*, lo_arg** argv, int,
+                             lo_message msg, void* user_data)
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t* h((touchosc_t*)user_data);
@@ -398,8 +399,8 @@ int touchosc_t::osc_sceneinc(const char* path, const char* types, lo_arg** argv,
   return 0;
 }
 
-int touchosc_t::osc_scenedec(const char* path, const char* types, lo_arg** argv,
-                             int argc, lo_message msg, void* user_data)
+int touchosc_t::osc_scenedec(const char*, const char*, lo_arg** argv, int,
+                             lo_message msg, void* user_data)
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t* h((touchosc_t*)user_data);
@@ -493,8 +494,8 @@ void touchosc_t::service()
               connections.begin();
           it != connections.end(); ++it)
         if(it->second)
-          it->second->updatesession(session, cnt==0 );
-      if( cnt )
+          it->second->updatesession(session, cnt == 0);
+      if(cnt)
         --cnt;
       else
         cnt = 20;

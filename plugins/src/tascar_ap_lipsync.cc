@@ -161,9 +161,12 @@ lipsync_t::~lipsync_t()
   lo_address_free(lo_addr);
 }
 
-void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                           const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
+                           const TASCAR::transport_t& tp)
 {
-  // Following web api doc: https://webaudio.github.io/web-audio-api/#fft-windowing-and-smoothing-over-time
+  // Following web api doc:
+  // https://webaudio.github.io/web-audio-api/#fft-windowing-and-smoothing-over-time
   // Blackman window
   // FFT
   // Smooth over time
@@ -173,25 +176,27 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   double vmax(-1e20);
   uint32_t num_bins(stft->s.n_);
   // calculate smooth st-PSD:
-  double smoothing_c1(exp(-1.0/(smoothing*f_fragment)));
-  double smoothing_c2(1.0-smoothing_c1);
-  for(uint32_t i=0; i<num_bins; ++i){
+  double smoothing_c1(exp(-1.0 / (smoothing * f_fragment)));
+  double smoothing_c2(1.0 - smoothing_c1);
+  for(uint32_t i = 0; i < num_bins; ++i) {
     // smoothing:
     sSmoothedMag[i] *= smoothing_c1;
-    sSmoothedMag[i] += smoothing_c2*std::abs(stft->s.b[i]);
-    vmin = std::min(vmin,sSmoothedMag[i]);
-    vmax = std::max(vmax,sSmoothedMag[i]);
+    sSmoothedMag[i] += smoothing_c2 * std::abs(stft->s.b[i]);
+    vmin = std::min(vmin, sSmoothedMag[i]);
+    vmax = std::max(vmax, sSmoothedMag[i]);
   }
   float energy[numFormants];
-  for (uint32_t k=0;k<numFormants;++k){
+  for(uint32_t k = 0; k < numFormants; ++k) {
     // Sum of freq values inside bin
     energy[k] = 0;
     // Sum intensity:
-    for (uint32_t i = formantEdges[k]; i < formantEdges[k+1]; ++i)
-      energy[k] += sSmoothedMag[i]*sSmoothedMag[i];
+    for(uint32_t i = formantEdges[k]; i < formantEdges[k + 1]; ++i)
+      energy[k] += sSmoothedMag[i] * sSmoothedMag[i];
     // Divide by number of sumples
-    energy[k] /= (float)(formantEdges[k+1]-formantEdges[k]);
-    energy[k] = std::max(0.0,(10*log10f(energy[k] + 1e-6) - maxspeechlevel)/dynamicrange + 1.0f - threshold);
+    energy[k] /= (float)(formantEdges[k + 1] - formantEdges[k]);
+    energy[k] = std::max(0.0, (10 * log10f(energy[k] + 1e-6) - maxspeechlevel) /
+                                      dynamicrange +
+                                  1.0f - threshold);
   }
 
   // Lipsync - Blend shape values
@@ -200,28 +205,27 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   // Kiss blend shape
   // When there is energy in the 3 and 4 bin, blend shape is 0
   float kissBS = 0;
-  value = (0.5 - energy[2])*2;
-  if (energy[1]<0.2)
-    value *= energy[1]*5.0;
+  value = (0.5 - energy[2]) * 2;
+  if(energy[1] < 0.2)
+    value *= energy[1] * 5.0;
   value *= scale.x;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
   make_friendly_number(value);
   kissBS = value;
-  
+
   // Jaw blend shape
   float jawB = 0;
-  value = energy[1]*0.8 - energy[3]*0.8;
+  value = energy[1] * 0.8 - energy[3] * 0.8;
   value *= scale.y;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
   make_friendly_number(value);
   jawB = value;
 
-  
   // Lips closed blend shape
   float lipsclosedBS = 0;
-  value = energy[3]*3;
+  value = energy[3] * 3;
   value *= scale.z;
   value = value > 1.0 ? 1.0 : value; // Clip
   value = value < 0.0 ? 0.0 : value; // Clip
@@ -229,28 +233,28 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos
   lipsclosedBS = value;
 
   bool lactive(active);
-  if( (send_mode == transport) && (tp.rolling == false) )
+  if((send_mode == transport) && (tp.rolling == false))
     lactive = false;
-  if( lactive ){
+  if(lactive) {
     // if "onchange" mode then send max "onchangecount" equal messages:
-    if( (send_mode == onchange) && 
-        (kissBS == prev_kissBS) && 
-        (jawB == prev_jawB) &&       
-        (lipsclosedBS == prev_lipsclosedBS) ){
-      if( onchangecounter )
+    if((send_mode == onchange) && (kissBS == prev_kissBS) &&
+       (jawB == prev_jawB) && (lipsclosedBS == prev_lipsclosedBS)) {
+      if(onchangecounter)
         onchangecounter--;
-    }else{
+    } else {
       onchangecounter = onchangecount;
     }
-    if( (send_mode != onchange) || (onchangecounter > 0) ){
+    if((send_mode != onchange) || (onchangecounter > 0)) {
       // send lipsync values to osc target:
-      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB, lipsclosedBS );
-      if( !energypath.empty() )
-        lo_send( lo_addr, energypath.c_str(), "fffff", energy[1], energy[2], energy[3], 20*log10(vmin + 1e-6), 20*log10(vmax + 1e-6) );
+      lo_send(lo_addr, path_.c_str(), "sfff", "/lipsync", kissBS, jawB,
+              lipsclosedBS);
+      if(!energypath.empty())
+        lo_send(lo_addr, energypath.c_str(), "fffff", energy[1], energy[2],
+                energy[3], 20 * log10(vmin + 1e-6), 20 * log10(vmax + 1e-6));
     }
-  }else{
-    if( was_active )
-      lo_send( lo_addr, path_.c_str(), "sfff", "/lipsync", 0, 0, 0 );
+  } else {
+    if(was_active)
+      lo_send(lo_addr, path_.c_str(), "sfff", "/lipsync", 0, 0, 0);
   }
   was_active = lactive;
   prev_kissBS = kissBS;

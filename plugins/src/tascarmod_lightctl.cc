@@ -25,8 +25,8 @@
 
 #include "dmxdriver.h"
 
-#include <unistd.h>
 #include <cmath>
+#include <unistd.h>
 
 const std::complex<double> i(0.0, 1.0);
 
@@ -61,8 +61,8 @@ method_t uint2method(uint32_t m)
   }
 }
 
-int osc_set_hsv(const char* path, const char* types, lo_arg** argv, int argc,
-                lo_message msg, void* user_data)
+int osc_set_hsv(const char*, const char*, lo_arg** argv, int argc, lo_message,
+                void* user_data)
 {
   if(user_data) {
     std::vector<float>* data((std::vector<float>*)user_data);
@@ -139,8 +139,8 @@ private:
   std::vector<float> ddmx;
 };
 
-static int osc_setmethod(const char* path, const char* types, lo_arg** argv,
-                         int argc, lo_message msg, void* user_data)
+static int osc_setmethod(const char*, const char*, lo_arg** argv, int,
+                         lo_message, void* user_data)
 {
   method_t* m((method_t*)user_data);
   *m = uint2method(argv[0]->i);
@@ -348,7 +348,7 @@ void lightscene_t::read_calib(size_t k, tsccfg::node_t src)
   }
 }
 
-void lightscene_t::update(uint32_t frame, bool running, double t_fragment)
+void lightscene_t::update(uint32_t, bool, double t_fragment)
 {
   for(std::vector<lobj_t>::iterator it = objval.begin(); it != objval.end();
       ++it)

@@ -97,43 +97,53 @@ lookatme_t::~lookatme_t()
   lo_address_free(lo_addr);
 }
 
-void lookatme_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void lookatme_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                            const TASCAR::pos_t& pos,
+                            const TASCAR::zyx_euler_t&,
+                            const TASCAR::transport_t&)
 {
-  rms = lpc1*rms + (1.0-lpc1)*chunk[0].rms();
-  if( !levelpath.empty() )
-    lo_send( lo_addr, levelpath.c_str(), "f",  20*log10(rms) );
-  if(rms > threshold ){
-    if(!waslooking ){
+  rms = lpc1 * rms + (1.0 - lpc1) * chunk[0].rms();
+  if(!levelpath.empty())
+    lo_send(lo_addr, levelpath.c_str(), "f", 20 * log10(rms));
+  if(rms > threshold) {
+    if(!waslooking) {
       // send lookatme values to osc target:
-      if( active ){
-        if( !pos_onset.is_null() ){
-          for(std::vector<std::string>::iterator s=paths.begin();s!=paths.end();++s)
-            lo_send( lo_addr, s->c_str(), "sffff", "/lookAt", pos_onset.x, pos_onset.y, pos_onset.z, fadelen );
-        }else{
-          for(std::vector<std::string>::iterator s=paths.begin();s!=paths.end();++s)
-            lo_send( lo_addr, s->c_str(), "sffff", "/lookAt", pos.x, pos.y, pos.z, fadelen );
+      if(active) {
+        if(!pos_onset.is_null()) {
+          for(std::vector<std::string>::iterator s = paths.begin();
+              s != paths.end(); ++s)
+            lo_send(lo_addr, s->c_str(), "sffff", "/lookAt", pos_onset.x,
+                    pos_onset.y, pos_onset.z, fadelen);
+        } else {
+          for(std::vector<std::string>::iterator s = paths.begin();
+              s != paths.end(); ++s)
+            lo_send(lo_addr, s->c_str(), "sffff", "/lookAt", pos.x, pos.y,
+                    pos.z, fadelen);
         }
-        if( !animation.empty() )
-          lo_send( lo_addr, self_.c_str(), "ss", "/animation", animation.c_str() );
+        if(!animation.empty())
+          lo_send(lo_addr, self_.c_str(), "ss", "/animation",
+                  animation.c_str());
       }
-      if( !thresholdpath.empty() )
-        lo_send( lo_addr, thresholdpath.c_str(), "f", 1.0f );
-      if( discordantLS )
-        lo_send( lo_addr, self_.c_str(), "sf", "/discordantLS", 1.0 );
+      if(!thresholdpath.empty())
+        lo_send(lo_addr, thresholdpath.c_str(), "f", 1.0f);
+      if(discordantLS)
+        lo_send(lo_addr, self_.c_str(), "sf", "/discordantLS", 1.0);
       waslooking = true;
     }
-  }else{
-    if( waslooking ){
-      if( active ){
-        if( !pos_offset.is_null() ){
-          for(std::vector<std::string>::iterator s=paths.begin();s!=paths.end();++s)
-            lo_send( lo_addr, s->c_str(), "sffff", "/lookAt", pos_offset.x, pos_offset.y, pos_offset.z, fadelen );
+  } else {
+    if(waslooking) {
+      if(active) {
+        if(!pos_offset.is_null()) {
+          for(std::vector<std::string>::iterator s = paths.begin();
+              s != paths.end(); ++s)
+            lo_send(lo_addr, s->c_str(), "sffff", "/lookAt", pos_offset.x,
+                    pos_offset.y, pos_offset.z, fadelen);
         }
       }
-      if( !thresholdpath.empty() )
-        lo_send( lo_addr, thresholdpath.c_str(), "f", 0.0f );
-      //if( discordantLS )
-      lo_send( lo_addr, self_.c_str(), "sf", "/discordantLS", 0.0 );
+      if(!thresholdpath.empty())
+        lo_send(lo_addr, thresholdpath.c_str(), "f", 0.0f);
+      // if( discordantLS )
+      lo_send(lo_addr, self_.c_str(), "sf", "/discordantLS", 0.0);
     }
     // below threshold, release:
     waslooking = false;

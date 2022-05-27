@@ -47,9 +47,9 @@ locmod_t::locmod_t( const TASCAR::module_cfg_t& cfg )
   session->add_double(TASCAR::vecstr2str(actor)+"/t0",&t0);
 }
 
-void locmod_t::update(uint32_t tp_frame,bool running)
+void locmod_t::update(uint32_t tp_frame, bool)
 {
-  double tptime(tp_frame*t_sample);
+  double tptime(tp_frame * t_sample);
   tptime -= t0;
   TASCAR::pos_t r(v);
   r *= tptime;

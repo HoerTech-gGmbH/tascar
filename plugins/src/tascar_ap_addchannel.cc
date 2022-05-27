@@ -29,9 +29,10 @@ public:
   bool first;
 };
 
-void addchannel_t::ap_process( std::vector<wave_t>& chunk, const pos_t& pos, const TASCAR::zyx_euler_t&, const transport_t& tp)
+void addchannel_t::ap_process(std::vector<wave_t>& chunk, const pos_t&,
+                              const TASCAR::zyx_euler_t&, const transport_t&)
 {
-  if( first )
+  if(first)
     DEBUG(chunk.size());
   first = false;
 }

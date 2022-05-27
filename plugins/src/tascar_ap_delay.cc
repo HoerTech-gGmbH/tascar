@@ -72,7 +72,7 @@ delay_t::~delay_t() {}
 
 void delay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                          const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
-                         const TASCAR::transport_t& tp)
+                         const TASCAR::transport_t&)
 {
   // first iterate over samples:
   for(uint32_t k = 0; k < chunk[0].n; ++k) {

@@ -69,9 +69,9 @@ fail_t::~fail_t()
 {
 }
 
-void fail_t::update(uint32_t frame,bool running)
+void fail_t::update(uint32_t, bool)
 {
-  if( failupdate )
+  if(failupdate)
     throw TASCAR::ErrMsg("update.");
 }
 

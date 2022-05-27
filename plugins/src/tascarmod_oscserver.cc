@@ -33,8 +33,8 @@ private:
   TASCAR::osc_server_t* srv;
 };
 
-int osc_recv_(const char* path, const char* types, lo_arg** argv, int argc,
-              lo_message msg, void* user_data)
+int osc_recv_(const char* path, const char*, lo_arg**, int, lo_message msg,
+              void* user_data)
 {
   return ((oscserver_t*)user_data)->osc_recv(path, msg);
 }

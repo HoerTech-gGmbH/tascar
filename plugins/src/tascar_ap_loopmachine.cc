@@ -89,9 +89,8 @@ void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
 loopmachine_t::~loopmachine_t() {}
 
 void loopmachine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
-                               const TASCAR::pos_t& pos,
-                               const TASCAR::zyx_euler_t&,
-                               const TASCAR::transport_t& tp)
+                               const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
+                               const TASCAR::transport_t&)
 {
   if(chunk.size() == 0)
     return;

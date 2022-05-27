@@ -118,14 +118,16 @@ gate_t::~gate_t()
 {
 }
 
-void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& p0, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                        const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
+                        const TASCAR::transport_t&)
 {
-  double c1rms(exp(-1.0/(taurms*f_sample)));
-  double c2rms(1.0-c1rms);
-  double c1track(exp(-1.0/(tautrack*f_sample)));
-  double c2track(1.0-c1track);
-  double lthreshold(threshold*threshold);
-  for( uint32_t ch=0;ch<n_channels;++ch ){
+  double c1rms(exp(-1.0 / (taurms * f_sample)));
+  double c2rms(1.0 - c1rms);
+  double c1track(exp(-1.0 / (tautrack * f_sample)));
+  double c2track(1.0 - c1track);
+  double lthreshold(threshold * threshold);
+  for(uint32_t ch = 0; ch < n_channels; ++ch) {
     float* paudio(chunk[ch].d);
     double& lminr(lmin[ch]);
     double& lmaxr(lmax[ch]);
@@ -134,35 +136,35 @@ void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t&
     uint32_t& kfadeoutr(kfadeout[ch]);
     uint32_t& kholdr(khold[ch]);
     uint32_t n(n_fragment);
-    while( n-- ){
-      lr = lr*c1rms + (*paudio * *paudio)*c2rms;
-      if( lr > lminr )
-        lminr = lminr*c1track + lr*c2track;
+    while(n--) {
+      lr = lr * c1rms + (*paudio * *paudio) * c2rms;
+      if(lr > lminr)
+        lminr = lminr * c1track + lr * c2track;
       else
         lminr = lr;
-      if( lr < lmaxr )
-        lmaxr = lmaxr*c1track + lr*c2track;
+      if(lr < lmaxr)
+        lmaxr = lmaxr * c1track + lr * c2track;
       else
         lmaxr = lr;
-      if( (lr-lminr) > lthreshold*(lmaxr-lminr) ){
-        if( !(kfadeoutr || kholdr) )
+      if((lr - lminr) > lthreshold * (lmaxr - lminr)) {
+        if(!(kfadeoutr || kholdr))
           // fade in only at onset
           kfadeinr = ifadein;
         kfadeoutr = ifadeout;
         kholdr = ihold;
       }
-      if( !bypass ){
-        if( kfadeinr ){
+      if(!bypass) {
+        if(kfadeinr) {
           kfadeinr--;
           *paudio *= pfadein[kfadeinr];
-        }else{
-          if( kholdr )
+        } else {
+          if(kholdr)
             kholdr--;
-          else{
-            if( kfadeoutr ){
+          else {
+            if(kfadeoutr) {
               kfadeoutr--;
               *paudio *= pfadeout[kfadeoutr];
-            }else{
+            } else {
               *paudio = 0.0f;
             }
           }
@@ -171,9 +173,9 @@ void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t&
       ++paudio;
     } // of while()
   }
-  //DEBUG(lmin[0]);
-  //DEBUG(lmax[0]);
-  //DEBUG(l[0]);
+  // DEBUG(lmin[0]);
+  // DEBUG(lmax[0]);
+  // DEBUG(l[0]);
 }
 
 REGISTER_AUDIOPLUGIN(gate_t);

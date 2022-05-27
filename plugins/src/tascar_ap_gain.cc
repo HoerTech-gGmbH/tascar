@@ -47,13 +47,15 @@ gainramp_t::~gainramp_t()
 {
 }
 
-void gainramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void gainramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                            const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
+                            const TASCAR::transport_t&)
 {
-  if( !chunk.empty() ){
+  if(!chunk.empty()) {
     uint32_t nch(chunk.size());
     uint32_t N(chunk[0].n);
-    for(uint32_t k=0;k<N;++k)
-      for(uint32_t ch=0;ch<nch;++ch)
+    for(uint32_t k = 0; k < N; ++k)
+      for(uint32_t ch = 0; ch < nch; ++ch)
         chunk[ch].d[k] *= gain;
   }
 }

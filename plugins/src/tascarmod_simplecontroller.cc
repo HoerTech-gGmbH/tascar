@@ -156,20 +156,21 @@ void simplecontroller_t::configure()
   vscale = n_fragment/f_sample;
 }
 
-void simplecontroller_t::update(uint32_t frame, bool running)
+void simplecontroller_t::update(uint32_t, bool)
 {
   TASCAR::zyx_euler_t r(rotvel);
   r *= vscale;
   add_orientation(r);
-  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
+  for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
+      it != obj.end(); ++it) {
     TASCAR::pos_t v(velocity);
     v *= vscale;
-    v *= TASCAR::zyx_euler_t(it->obj->dorientation.z,0,0);
+    v *= TASCAR::zyx_euler_t(it->obj->dorientation.z, 0, 0);
     it->obj->dlocation += v;
-    if( maxnorm > 0 ){
+    if(maxnorm > 0) {
       double dnorm(it->obj->dlocation.norm());
-      if( dnorm > maxnorm )
-	it->obj->dlocation *= maxnorm/dnorm;
+      if(dnorm > maxnorm)
+        it->obj->dlocation *= maxnorm / dnorm;
     }
   }
 }

@@ -98,16 +98,16 @@ levels2osc_t::~levels2osc_t()
   lo_address_free(target);
 }
 
-void levels2osc_t::update(uint32_t tp_frame, bool tp_rolling)
+void levels2osc_t::update(uint32_t, bool)
 {
-  uint32_t k=0;
-  for( auto it=routes.begin();it!=routes.end();++it){
+  uint32_t k = 0;
+  for(auto it = routes.begin(); it != routes.end(); ++it) {
     const std::vector<float>& leveldata((*it)->readmeter());
     voutlet[k]->push_sample(leveldata);
     uint32_t n(leveldata.size());
-    for(uint32_t km=0;km<n;++km)
+    for(uint32_t km = 0; km < n; ++km)
       vargv[k][km]->f = leveldata[km];
-    lo_send_message( target, vpath[k].c_str(), vmsg[k] );
+    lo_send_message(target, vpath[k].c_str(), vmsg[k]);
     ++k;
   }
 }

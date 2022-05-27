@@ -75,27 +75,29 @@ level_meter_t::~level_meter_t()
   lo_address_free(lo_addr);
 }
 
-int level_meter_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer)
+int level_meter_t::process(jack_nframes_t nframes,
+                           const std::vector<float*>& inBuffer,
+                           const std::vector<float*>&)
 {
   // calculate RMS value of all input channels within one block:
   float l(0);
   uint32_t num_channels(inBuffer.size());
-  for(uint32_t ch=0;ch<num_channels;++ch)
-    for(uint32_t k=0;k<nframes;++k){
+  for(uint32_t ch = 0; ch < num_channels; ++ch)
+    for(uint32_t k = 0; k < nframes; ++k) {
       float tmp(inBuffer[ch][k]);
-      l+=tmp*tmp;
+      l += tmp * tmp;
     }
-  l /= (float)(num_channels*nframes);
+  l /= (float)(num_channels * nframes);
   l = sqrtf(l);
   // send RMS value (linear scale) to osc target:
-  lo_send( lo_addr, "/l", "f", l );
+  lo_send(lo_addr, "/l", "f", l);
   return 0;
 }
 
 // graceful exit the program:
 static bool b_quit;
 
-static void sighandler(int sig)
+static void sighandler(int)
 {
   b_quit = true;
   fclose(stdin);

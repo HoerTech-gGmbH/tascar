@@ -93,35 +93,38 @@ speechactivity_t::~speechactivity_t()
 {
 }
 
-void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
+void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                                  const TASCAR::pos_t&,
+                                  const TASCAR::zyx_euler_t&,
+                                  const TASCAR::transport_t&)
 {
-  TASCAR_ASSERT(chunk.size()==intensity.size());
-  const double lpc1(exp(-TASCAR_2PI/(tauenv*f_fragment)));
-  const double lpc2(pow(2.0,-1.0/(tauonset*f_fragment)));
-  const float v2threshold(threshold*threshold);
+  TASCAR_ASSERT(chunk.size() == intensity.size());
+  const double lpc1(exp(-TASCAR_2PI / (tauenv * f_fragment)));
+  const double lpc2(pow(2.0, -1.0 / (tauonset * f_fragment)));
+  const float v2threshold(threshold * threshold);
   bool transition(false);
-  for(uint32_t ch=0;ch<chunk.size();++ch){
+  for(uint32_t ch = 0; ch < chunk.size(); ++ch) {
     // first get signal intensity:
-    intensity[ch] = (1.0-lpc1)*chunk[ch].ms() + lpc1*intensity[ch];
+    intensity[ch] = (1.0 - lpc1) * chunk[ch].ms() + lpc1 * intensity[ch];
     // speech activity is given if the intensity is above the given
     // threshold:
-    active[ch] = (intensity[ch]>v2threshold);
+    active[ch] = (intensity[ch] > v2threshold);
     // calculate low-pass filtered temporal derivative of activity, to
     // get the onsets:
-    dactive[ch] = (active[ch]-prevactive[ch]) + lpc2*dactive[ch];
+    dactive[ch] = (active[ch] - prevactive[ch]) + lpc2 * dactive[ch];
     prevactive[ch] = active[ch];
-    onset[ch] = (dactive[ch] > 0.5)*active[ch] + active[ch];
-    if( onset[ch] != oldonset[ch] )
+    onset[ch] = (dactive[ch] > 0.5) * active[ch] + active[ch];
+    if(onset[ch] != oldonset[ch])
       transition = true;
     oldonset[ch] = onset[ch];
   }
-  if( (!transitionsonly) || transition ){
-    for(uint32_t ch=0;ch<chunk.size();++ch){
+  if((!transitionsonly) || transition) {
+    for(uint32_t ch = 0; ch < chunk.size(); ++ch) {
       char ctmp[1024];
-      sprintf(ctmp,"%s%d",path.c_str(),ch);
-      lo_send( lo_addr, ctmp, "i", onset[ch] );
+      sprintf(ctmp, "%s%d", path.c_str(), ch);
+      lo_send(lo_addr, ctmp, "i", onset[ch]);
     }
-    lsl_outlet->push_sample( onset );
+    lsl_outlet->push_sample(onset);
   }
 }
 

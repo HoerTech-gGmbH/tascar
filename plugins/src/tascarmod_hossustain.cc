@@ -87,9 +87,10 @@ protected:
   float deltaw;
   float currentw;
   uint32_t fcut_int;
-}; 
+};
 
-int sustain_t::osc_apply(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int sustain_t::osc_apply(const char*, const char*, lo_arg** argv, int,
+                         lo_message, void* user_data)
 {
   ((sustain_t*)user_data)->set_apply(argv[0]->f);
   return 0;

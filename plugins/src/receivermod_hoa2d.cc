@@ -226,7 +226,7 @@ hoa2d_t::data_t::~data_t() {}
 
 void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double width,
                               const TASCAR::wave_t& chunk,
-                              std::vector<TASCAR::wave_t>& output,
+                              std::vector<TASCAR::wave_t>&,
                               receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);

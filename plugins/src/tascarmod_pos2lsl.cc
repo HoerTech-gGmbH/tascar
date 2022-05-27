@@ -66,20 +66,20 @@ pos2lsl_t::~pos2lsl_t()
     delete voutlet[k];
 }
 
-void pos2lsl_t::update(uint32_t tp_frame, bool tp_rolling)
+void pos2lsl_t::update(uint32_t, bool tp_rolling)
 {
-  if( tp_rolling || (!transport) ){
+  if(tp_rolling || (!transport)) {
     uint32_t kobj(0);
-    for(auto it=obj.begin();it!=obj.end();++it){
+    for(auto it = obj.begin(); it != obj.end(); ++it) {
       const TASCAR::pos_t& p(it->obj->c6dof.position);
       const TASCAR::zyx_euler_t& o(it->obj->c6dof.orientation);
-      //it->obj->get_6dof(p,o);
+      // it->obj->get_6dof(p,o);
       data[0] = p.x;
       data[1] = p.y;
       data[2] = p.z;
-      data[3] = RAD2DEG*o.z;
-      data[4] = RAD2DEG*o.y;
-      data[5] = RAD2DEG*o.x;
+      data[3] = RAD2DEG * o.z;
+      data[4] = RAD2DEG * o.y;
+      data[5] = RAD2DEG * o.x;
       voutlet[kobj]->push_sample(data);
       ++kobj;
     }

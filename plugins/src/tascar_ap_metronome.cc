@@ -23,8 +23,8 @@
 #include "audioplugin.h"
 #include "filterclass.h"
 
-static int osc_set_message(const char* path, const char* types, lo_arg** argv,
-                           int argc, lo_message msg, void* user_data)
+static int osc_set_message(const char*, const char*, lo_arg**, int,
+                           lo_message msg, void* user_data)
 {
   if(user_data) {
     TASCAR::msg_t* tmsg((TASCAR::msg_t*)user_data);
@@ -78,17 +78,17 @@ metronome_t::metronome_t(const TASCAR::audioplugin_cfg_t& cfg)
       ao_(0.001), period(0), dispatchin(0), srv_(NULL),
       msg(find_or_add_child("msg"))
 {
-  GET_ATTRIBUTE_BOOL(changeonone,"Apply OSC parameter changes on next bar");
-  GET_ATTRIBUTE(bpm,"","Beats per minute");
-  GET_ATTRIBUTE(bpb,"","Beats per bar");
-  GET_ATTRIBUTE_DBSPL(a1,"Amplitude of first beat");
-  GET_ATTRIBUTE_DBSPL(ao,"Amplitude of other beats");
-  GET_ATTRIBUTE_BOOL(sync,"Use object time synchronization");
-  GET_ATTRIBUTE(fres1,"Hz","Resonance frequency of first beat");
-  GET_ATTRIBUTE(freso,"Hz","Resonance frequency of other beats");
-  GET_ATTRIBUTE(q1,"","Filter resonance of first beat");
-  GET_ATTRIBUTE(qo,"","Filter resonance of other beats");
-  GET_ATTRIBUTE_BOOL(bypass,"Load in bypass mode");
+  GET_ATTRIBUTE_BOOL(changeonone, "Apply OSC parameter changes on next bar");
+  GET_ATTRIBUTE(bpm, "", "Beats per minute");
+  GET_ATTRIBUTE(bpb, "", "Beats per bar");
+  GET_ATTRIBUTE_DBSPL(a1, "Amplitude of first beat");
+  GET_ATTRIBUTE_DBSPL(ao, "Amplitude of other beats");
+  GET_ATTRIBUTE_BOOL(sync, "Use object time synchronization");
+  GET_ATTRIBUTE(fres1, "Hz", "Resonance frequency of first beat");
+  GET_ATTRIBUTE(freso, "Hz", "Resonance frequency of other beats");
+  GET_ATTRIBUTE(q1, "", "Filter resonance of first beat");
+  GET_ATTRIBUTE(qo, "", "Filter resonance of other beats");
+  GET_ATTRIBUTE_BOOL(bypass, "Load in bypass mode");
 }
 
 void metronome_t::configure()
@@ -137,8 +137,7 @@ void metronome_t::update_par()
 }
 
 void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
-                             const TASCAR::pos_t& pos,
-                             const TASCAR::zyx_euler_t&,
+                             const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
                              const TASCAR::transport_t& tp)
 {
   // apply parameters:

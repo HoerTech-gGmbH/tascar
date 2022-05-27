@@ -118,10 +118,10 @@ bool tracegui_t::on_timeout()
   return true;
 }
 
-void tracegui_t::update(uint32_t frame, bool running)
+void tracegui_t::update(uint32_t, bool)
 {
-  if( pthread_mutex_trylock(&drawlock) == 0 ){
-    for(uint32_t k=0;k<obj.size();++k){
+  if(pthread_mutex_trylock(&drawlock) == 0) {
+    for(uint32_t k = 0; k < obj.size(); ++k) {
       trace[k][pos] = obj[k].obj->get_location();
     }
     pthread_mutex_unlock(&drawlock);

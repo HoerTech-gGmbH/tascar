@@ -65,29 +65,32 @@ private:
   TASCAR::c6dof_t transform;
 };
 
-int qualisys_tracker_t::qtmres(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg)
+int qualisys_tracker_t::qtmres(const char*, const char*, lo_arg**, int,
+                               lo_message)
 {
   return 0;
 }
 
-int qualisys_tracker_t::qtmxml(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg)
+int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg**, int,
+                               lo_message)
 {
-  lo_send(qtmtarget,"/qtm","sss", "StreamFrames", "AllFrames", "6DEuler" );
+  lo_send(qtmtarget, "/qtm", "sss", "StreamFrames", "AllFrames", "6DEuler");
   return 0;
 }
 
-int qualisys_tracker_t::qtm6d(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg)
+int qualisys_tracker_t::qtm6d(const char* path, const char*, lo_arg** argv, int,
+                              lo_message)
 {
-  if( strncmp(path,"/qtm/6d_euler/",14) == 0 ){
+  if(strncmp(path, "/qtm/6d_euler/", 14) == 0) {
     std::lock_guard<std::mutex> lock(mtx);
     std::string sentrigid(&(path[14]));
-    if( rigid == sentrigid ){
-      transform.position.x = 0.001*influence[0]*(argv[0]->f);
-      transform.position.y = 0.001*influence[1]*(argv[1]->f);
-      transform.position.z = 0.001*influence[2]*(argv[2]->f);
-      transform.orientation.z = DEG2RAD*influence[3]*(argv[3]->f);
-      transform.orientation.y = DEG2RAD*influence[4]*(argv[4]->f);
-      transform.orientation.x = DEG2RAD*influence[5]*(argv[5]->f);
+    if(rigid == sentrigid) {
+      transform.position.x = 0.001 * influence[0] * (argv[0]->f);
+      transform.position.y = 0.001 * influence[1] * (argv[1]->f);
+      transform.position.z = 0.001 * influence[2] * (argv[2]->f);
+      transform.orientation.z = DEG2RAD * influence[3] * (argv[3]->f);
+      transform.orientation.y = DEG2RAD * influence[4] * (argv[4]->f);
+      transform.orientation.x = DEG2RAD * influence[5] * (argv[5]->f);
     }
   }
   return 0;
@@ -114,14 +117,13 @@ qualisys_tracker_t::qualisys_tracker_t( const TASCAR::module_cfg_t& cfg )
   add_variables( session );
 }
 
-void qualisys_tracker_t::update(uint32_t tp_frame,bool tp_rolling)
+void qualisys_tracker_t::update(uint32_t, bool)
 {
-  if( incremental )
-    add_transformation( transform, local );
+  if(incremental)
+    add_transformation(transform, local);
   else
-    set_transformation( transform, local );
+    set_transformation(transform, local);
 }
-
 
 void qualisys_tracker_t::configure()
 {

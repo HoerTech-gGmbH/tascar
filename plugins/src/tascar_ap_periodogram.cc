@@ -124,35 +124,40 @@ periodogram_t::~periodogram_t()
 {
 }
 
-void periodogram_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void periodogram_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                               const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
+                               const TASCAR::transport_t&)
 {
   uint32_t N(chunk[0].size());
-  lpc1 = exp(-1.0/(tau*f_sample));
-  lpc11 = 1.0-lpc1;
-  for( uint32_t band=0;band<nbands;++band){
-    for(uint32_t k=0;k<N;++k){
+  lpc1 = exp(-1.0 / (tau * f_sample));
+  lpc11 = 1.0 - lpc1;
+  for(uint32_t band = 0; band < nbands; ++band) {
+    for(uint32_t k = 0; k < N; ++k) {
       float v2(bp[band]->filter(chunk[0][k]));
-      if( envelope ){
+      if(envelope) {
         v2 *= v2;
-        env[band] = lpc1*env[band] + lpc11*v2;
+        env[band] = lpc1 * env[band] + lpc11 * v2;
         v2 = sqrtf(env[band]);
       }
-      for( uint32_t ch=0;ch<nperiods;++ch){
-        out[ch+nperiods*band] = coeff*out[ch+nperiods*band] + (1.0-coeff)*delays[ch*nbands + band](v2);
-        //lo_send( lo_addr, path.c_str(), "ssffff", "/hitAt", this_side, pos.x, pos.y, pos.z, sqrt(ons) );
+      for(uint32_t ch = 0; ch < nperiods; ++ch) {
+        out[ch + nperiods * band] =
+            coeff * out[ch + nperiods * band] +
+            (1.0 - coeff) * delays[ch * nbands + band](v2);
+        // lo_send( lo_addr, path.c_str(), "ssffff", "/hitAt", this_side, pos.x,
+        // pos.y, pos.z, sqrt(ons) );
       }
     }
   }
-  for( uint32_t band=0;band<nbands;++band){
+  for(uint32_t band = 0; band < nbands; ++band) {
     double rms(0.0);
-    for( uint32_t ch=0;ch<nperiods;++ch)
-      rms += out[ch+nperiods*band]*out[ch+nperiods*band];
+    for(uint32_t ch = 0; ch < nperiods; ++ch)
+      rms += out[ch + nperiods * band] * out[ch + nperiods * band];
     rms = sqrt(rms);
-    if( rms > 0 )
-      for( uint32_t ch=0;ch<nperiods;++ch)
-        out_send[ch+nperiods*band] = out[ch+nperiods*band]/rms;
+    if(rms > 0)
+      for(uint32_t ch = 0; ch < nperiods; ++ch)
+        out_send[ch + nperiods * band] = out[ch + nperiods * band] / rms;
   }
-  lsl_outlet->push_sample( out_send );
+  lsl_outlet->push_sample(out_send);
 }
 
 REGISTER_AUDIOPLUGIN(periodogram_t);

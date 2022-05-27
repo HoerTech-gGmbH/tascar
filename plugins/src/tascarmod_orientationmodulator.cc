@@ -45,11 +45,11 @@ ormod_t::ormod_t( const TASCAR::module_cfg_t& cfg )
   session->add_double(TASCAR::vecstr2str(actor)+"/p0",&p0);
 }
 
-void ormod_t::update(uint32_t frame, bool running)
+void ormod_t::update(uint32_t frame, bool)
 {
-  double tptime((double)frame*t_sample);
+  double tptime((double)frame * t_sample);
   TASCAR::zyx_euler_t r;
-  r.z = m*DEG2RAD*cos(tptime*TASCAR_2PI*f+p0*DEG2RAD);
+  r.z = m * DEG2RAD * cos(tptime * TASCAR_2PI * f + p0 * DEG2RAD);
   set_orientation(r);
 }
 

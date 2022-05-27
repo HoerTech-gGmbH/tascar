@@ -80,18 +80,16 @@ private:
   lo_arg** oscmsgargv;
 };
 
-int geopresets_t::osc_setpreset(const char* path, const char* types,
-                                lo_arg** argv, int argc, lo_message msg,
-                                void* user_data)
+int geopresets_t::osc_setpreset(const char*, const char* types, lo_arg** argv,
+                                int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 's'))
     ((geopresets_t*)user_data)->setpreset(&(argv[0]->s));
   return 0;
 }
 
-int geopresets_t::osc_addposition(const char* path, const char* types,
-                                  lo_arg** argv, int argc, lo_message msg,
-                                  void* user_data)
+int geopresets_t::osc_addposition(const char*, const char* types, lo_arg** argv,
+                                  int argc, lo_message, void* user_data)
 {
   if(user_data && (argc == 4) && (types[0] == 's') && (types[1] == 'f') &&
      (types[2] == 'f') && (types[3] == 'f'))
@@ -131,8 +129,8 @@ void geopresets_t::addposition(const std::string& s, const TASCAR::pos_t& pos)
   mtx.unlock();
 }
 
-int geopresets_t::osc_addorientation(const char* path, const char* types,
-                                     lo_arg** argv, int argc, lo_message msg,
+int geopresets_t::osc_addorientation(const char*, const char* types,
+                                     lo_arg** argv, int argc, lo_message,
                                      void* user_data)
 {
   if(user_data && (argc == 4) && (types[0] == 's') && (types[1] == 'f') &&
@@ -281,7 +279,7 @@ geopresets_t::~geopresets_t()
   lo_message_free(msg);
 }
 
-void geopresets_t::update(uint32_t tp_frame, bool tp_rolling)
+void geopresets_t::update(uint32_t, bool)
 {
   if(!enable)
     return;

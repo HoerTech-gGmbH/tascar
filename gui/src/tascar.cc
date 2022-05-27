@@ -30,7 +30,7 @@ using namespace TASCAR::Scene;
 
 tascar_window_t* win(NULL);
 
-static void sighandler(int sig)
+static void sighandler(int)
 {
   if(win)
     win->hide();

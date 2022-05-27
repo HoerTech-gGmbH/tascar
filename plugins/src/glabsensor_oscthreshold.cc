@@ -54,8 +54,8 @@ private:
   std::mutex colmtx;
 };
 
-int osc_update(const char* path, const char* types, lo_arg** argv, int argc,
-               lo_message msg, void* user_data)
+int osc_update(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     ((oscthreshold_t*)user_data)->update(argv[0]->f);

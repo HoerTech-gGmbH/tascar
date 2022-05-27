@@ -119,19 +119,23 @@ void ap_sndfile_async_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_bool( "/mute", &mute );
 }
 
-void ap_sndfile_async_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp)
+void ap_sndfile_async_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                                    const TASCAR::pos_t&,
+                                    const TASCAR::zyx_euler_t&,
+                                    const TASCAR::transport_t& tp)
 {
-  if( transport )
+  if(transport)
     ltp = tp;
-  else{
+  else {
     ltp.object_time_samples += chunk[0].n;
     ltp.rolling = true;
   }
-  if( (!mute) && (tp.rolling || (!transport)) ){
+  if((!mute) && (tp.rolling || (!transport))) {
     float* dp[chunk.size()];
-    for(uint32_t ch=0;ch<chunk.size();ch++)
+    for(uint32_t ch = 0; ch < chunk.size(); ch++)
       dp[ch] = chunk[ch].d;
-    sndf->request_data( ltp.object_time_samples, n_fragment*ltp.rolling, chunk.size(), dp );
+    sndf->request_data(ltp.object_time_samples, n_fragment * ltp.rolling,
+                       chunk.size(), dp);
   }
 }
 

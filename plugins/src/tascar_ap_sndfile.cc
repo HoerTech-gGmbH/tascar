@@ -21,15 +21,16 @@
  */
 
 #include "audioplugin.h"
-#include "levelmeter.h"
 #include "errorhandling.h"
+#include "levelmeter.h"
 #include <fstream>
-#include <thread>
 #include <mutex>
+#include <thread>
 
 class ap_sndfile_cfg_t : public TASCAR::audioplugin_base_t {
 public:
-  ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg );
+  ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg);
+
 protected:
   std::string name;
   uint32_t channel;
@@ -49,53 +50,53 @@ protected:
   std::string channelorder;
 };
 
-ap_sndfile_cfg_t::ap_sndfile_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    channel(0),
-    start(0),
-    position(0),
-    length(0),
-    loop(1),
-    resample(false),
-    levelmode("rms"),
-    weighting(TASCAR::levelmeter::Z),
-    level(0),
-    triggered(false),
-    transport(true),
-    mute(false)
+ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), channel(0), start(0), position(0), length(0),
+      loop(1), resample(false), levelmode("rms"),
+      weighting(TASCAR::levelmeter::Z), level(0), triggered(false),
+      transport(true), mute(false)
 {
-  GET_ATTRIBUTE(name,"","Sound file name");
-  GET_ATTRIBUTE(channel,"","First sound file channel to be used, zero-base");
-  GET_ATTRIBUTE(start,"s","Start position within the file");
-  GET_ATTRIBUTE(position,"s","Start position within the scene");
-  GET_ATTRIBUTE(length,"s","length of sound sample, or 0 to use whole file length");
-  GET_ATTRIBUTE(loop,"","loop count or 0 for infinite looping");
-  GET_ATTRIBUTE_BOOL(resample,"Allow resampling to current session sample rate");
-  GET_ATTRIBUTE(levelmode,"","level mode, ``rms'', ``peak'' or ``calib''");
-  GET_ATTRIBUTE_NOUNIT(weighting,"level weighting for RMS mode");
-  GET_ATTRIBUTE_DB(level,"level, meaning depends on \\attr{levelmode}");
-  GET_ATTRIBUTE_BOOL(triggered,"Play OSC triggered samples, ignore position and loop");
-  GET_ATTRIBUTE_BOOL(transport,"Use session time base");
-  GET_ATTRIBUTE_BOOL(mute,"Load muted");
-  GET_ATTRIBUTE(channelorder,"","Channel order in case of First Order Ambisonics recordings, ``FuMa'', ``ACN'' or ``none''");
-  if( start < 0 )
+  GET_ATTRIBUTE(name, "", "Sound file name");
+  GET_ATTRIBUTE(channel, "", "First sound file channel to be used, zero-base");
+  GET_ATTRIBUTE(start, "s", "Start position within the file");
+  GET_ATTRIBUTE(position, "s", "Start position within the scene");
+  GET_ATTRIBUTE(length, "s",
+                "length of sound sample, or 0 to use whole file length");
+  GET_ATTRIBUTE(loop, "", "loop count or 0 for infinite looping");
+  GET_ATTRIBUTE_BOOL(resample,
+                     "Allow resampling to current session sample rate");
+  GET_ATTRIBUTE(levelmode, "", "level mode, ``rms'', ``peak'' or ``calib''");
+  GET_ATTRIBUTE_NOUNIT(weighting, "level weighting for RMS mode");
+  GET_ATTRIBUTE_DB(level, "level, meaning depends on \\attr{levelmode}");
+  GET_ATTRIBUTE_BOOL(triggered,
+                     "Play OSC triggered samples, ignore position and loop");
+  GET_ATTRIBUTE_BOOL(transport, "Use session time base");
+  GET_ATTRIBUTE_BOOL(mute, "Load muted");
+  GET_ATTRIBUTE(channelorder, "",
+                "Channel order in case of First Order Ambisonics recordings, "
+                "``FuMa'', ``ACN'' or ``none''");
+  if(start < 0)
     throw TASCAR::ErrMsg("file start time must be positive.");
 }
 
-class ap_sndfile_t : public ap_sndfile_cfg_t  {
+class ap_sndfile_t : public ap_sndfile_cfg_t {
 public:
-  ap_sndfile_t( const TASCAR::audioplugin_cfg_t& cfg );
+  ap_sndfile_t(const TASCAR::audioplugin_cfg_t& cfg);
   ~ap_sndfile_t();
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
-  void add_licenses( licensehandler_t* session );
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
+  void add_licenses(licensehandler_t* session);
   void load_file();
   void unload_file();
   void configure();
   void release();
+
 private:
-  static int osc_loadfile(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data);
-  void osc_loadfile(const std::string& fname, const std::string& lmode, float level);
+  static int osc_loadfile(const char* path, const char* types, lo_arg** argv,
+                          int argc, lo_message msg, void* user_data);
+  void osc_loadfile(const std::string& fname, const std::string& lmode,
+                    float level);
   uint32_t triggeredloop;
   TASCAR::transport_t ltp;
   std::vector<TASCAR::sndfile_t*> sndf;
@@ -222,21 +223,22 @@ void ap_sndfile_t::unload_file()
   mtx.unlock();
 }
 
-ap_sndfile_t::~ap_sndfile_t()
+ap_sndfile_t::~ap_sndfile_t() {}
+
+void ap_sndfile_t::add_licenses(licensehandler_t* session)
 {
+  audioplugin_base_t::add_licenses(session);
+  if(name.size())
+    session->add_license(license, attribution,
+                         TASCAR::tscbasename(TASCAR::env_expand(name)));
 }
 
-void ap_sndfile_t::add_licenses( licensehandler_t* session )
+int ap_sndfile_t::osc_loadfile(const char*, const char*, lo_arg** argv, int,
+                               lo_message, void* user_data)
 {
-  audioplugin_base_t::add_licenses( session );
-  if( name.size() )
-  session->add_license( license, attribution, TASCAR::tscbasename(TASCAR::env_expand(name)) );
-}
-
-int ap_sndfile_t::osc_loadfile(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
-{
-  if( user_data  )
-    ((ap_sndfile_t*)user_data)->osc_loadfile(&(argv[0]->s),&(argv[1]->s),argv[2]->f);
+  if(user_data)
+    ((ap_sndfile_t*)user_data)
+        ->osc_loadfile(&(argv[0]->s), &(argv[1]->s), argv[2]->f);
   return 0;
 }
 
@@ -257,20 +259,19 @@ void ap_sndfile_t::osc_loadfile(const std::string& fname,
   }
 }
 
-void ap_sndfile_t::add_variables( TASCAR::osc_server_t* srv )
+void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  if( triggered )
-    srv->add_uint( "/loop", &triggeredloop );
+  if(triggered)
+    srv->add_uint("/loop", &triggeredloop);
   else
-    srv->add_uint( "/loop", &loop );
-  srv->add_bool( "/mute", &mute );
-  srv->add_method("/loadfile","ssf",&osc_loadfile,this);
+    srv->add_uint("/loop", &loop);
+  srv->add_bool("/mute", &mute);
+  srv->add_method("/loadfile", "ssf", &osc_loadfile, this);
   srv->add_double("/position", &position);
 }
 
 void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
-                              const TASCAR::pos_t& pos,
-                              const TASCAR::zyx_euler_t&,
+                              const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
                               const TASCAR::transport_t& tp)
 {
   if(mtx.try_lock()) {

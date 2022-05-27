@@ -53,26 +53,28 @@ hannenv_t::~hannenv_t()
 {
 }
 
-void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                           const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
+                           const TASCAR::transport_t& tp)
 {
   const double t1(ramp1);
-  const double t2(t1+steady);
-  const double t3(t2+ramp2);
-  const double p1(TASCAR_PI/ramp1);
-  const double p2(TASCAR_PI/ramp2);
-  double t(tp.object_time_seconds-t0);
+  const double t2(t1 + steady);
+  const double t3(t2 + ramp2);
+  const double p1(TASCAR_PI / ramp1);
+  const double p2(TASCAR_PI / ramp2);
+  double t(tp.object_time_seconds - t0);
   double dt(t_sample);
-  if( !tp.rolling )
+  if(!tp.rolling)
     dt = 0;
-  for(uint32_t k=0;k<chunk[0].n;++k){
-    t = fmod( t, period );
-    if( t <= 0 )
+  for(uint32_t k = 0; k < chunk[0].n; ++k) {
+    t = fmod(t, period);
+    if(t <= 0)
       chunk[0].d[k] = 0.0;
-    else if( t < t1 )
-      chunk[0].d[k] *= 0.5*(1.0-cos(p1*t));
-    else if( t > t2 ){
-      if( t < t3 )
-        chunk[0].d[k] *= 0.5*(1.0+cos(p2*(t-t2)));
+    else if(t < t1)
+      chunk[0].d[k] *= 0.5 * (1.0 - cos(p1 * t));
+    else if(t > t2) {
+      if(t < t3)
+        chunk[0].d[k] *= 0.5 * (1.0 + cos(p2 * (t - t2)));
       else
         chunk[0].d[k] = 0;
     }

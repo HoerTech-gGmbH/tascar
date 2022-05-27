@@ -98,14 +98,10 @@ public:
 };
 
 grainloop_t::grainloop_t(const grainloop_t& src)
-  : num_filled(0),
-    num_next(0),
-    fill_next(0),
-    nbins_(src.nbins_),
-    ngrains_(src.ngrains_),
-    f(src.f)
+    : std::vector<TASCAR::spec_t*>(), num_filled(0), num_next(0), fill_next(0),
+      nbins_(src.nbins_), ngrains_(src.ngrains_), f(src.f)
 {
-  for( uint32_t k=0;k<ngrains_;++k)
+  for(uint32_t k = 0; k < ngrains_; ++k)
     push_back(new TASCAR::spec_t(nbins_));
 }
 
@@ -227,7 +223,8 @@ granularsynth_t::granularsynth_t( const TASCAR::module_cfg_t& cfg )
   activate();
 }
 
-int granularsynth_t::osc_apply(const char *path, const char *types, lo_arg **argv, int argc, lo_message msg, void *user_data)
+int granularsynth_t::osc_apply(const char*, const char*, lo_arg** argv, int,
+                               lo_message, void* user_data)
 {
   ((granularsynth_t*)user_data)->set_apply(argv[0]->f);
   return 0;

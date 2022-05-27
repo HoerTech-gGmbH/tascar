@@ -59,16 +59,19 @@ void feedbackdelay_t::add_variables( TASCAR::osc_server_t* srv )
   srv->add_double("/feedback",&feedback);
 }
 
-void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp)
+void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
+                                 const TASCAR::pos_t&,
+                                 const TASCAR::zyx_euler_t&,
+                                 const TASCAR::transport_t&)
 {
   // sample delay; subtract 1 to account for order of read/write:
-  double d(f_sample/f-1.0);
+  double d(f_sample / f - 1.0);
   // operate only on first channel:
   float* vsigbegin(chunk[0].d);
-  float* vsigend(vsigbegin+chunk[0].n);
-  for(float* v=vsigbegin;v!=vsigend;++v){
+  float* vsigend(vsigbegin + chunk[0].n);
+  for(float* v = vsigbegin; v != vsigend; ++v) {
     float v_out(dl->get(d));
-    dl->push(v_out*feedback + *v);
+    dl->push(v_out * feedback + *v);
     *v = v_out;
   }
 }

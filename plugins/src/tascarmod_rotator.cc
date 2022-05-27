@@ -61,25 +61,31 @@ ormod_t::ormod_t( const TASCAR::module_cfg_t& cfg )
   session->add_double(TASCAR::vecstr2str(actor)+"/phi1",&phi1);
 }
 
-void ormod_t::update(uint32_t tp_frame,bool running)
+void ormod_t::update(uint32_t tp_frame, bool)
 {
-  double tptime(tp_frame*t_sample);
+  double tptime(tp_frame * t_sample);
   TASCAR::zyx_euler_t r;
-  switch( mode ){
+  switch(mode) {
   case linear:
-    r.z = DEG2RAD*(tptime-t0)*w;
+    r.z = DEG2RAD * (tptime - t0) * w;
     break;
   case sigmoid:
-    r.z = DEG2RAD*(phi0+(phi1-phi0)/(1.0+exp(-TASCAR_2PI*(tptime-0.5*(t0+t1))/(t1-t0))));
+    r.z =
+        DEG2RAD *
+        (phi0 +
+         (phi1 - phi0) /
+             (1.0 + exp(-TASCAR_2PI * (tptime - 0.5 * (t0 + t1)) / (t1 - t0))));
     break;
   case cosine:
-    tptime = std::max(t0,std::min(t1,tptime));
-    r.z = DEG2RAD*(phi0+(phi1-phi0)*(0.5-0.5*cos(TASCAR_PI*(tptime-t0)/(t1-t0))));
+    tptime = std::max(t0, std::min(t1, tptime));
+    r.z = DEG2RAD *
+          (phi0 + (phi1 - phi0) *
+                      (0.5 - 0.5 * cos(TASCAR_PI * (tptime - t0) / (t1 - t0))));
     break;
   case free:
-    r.z = w*DEG2RAD*t_fragment;
+    r.z = w * DEG2RAD * t_fragment;
   }
-  if( mode != free )
+  if(mode != free)
     set_orientation(r);
   else
     add_orientation(r);

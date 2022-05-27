@@ -33,9 +33,9 @@ class controller_t : public TASCAR::service_t {
 public:
   controller_t();
   virtual ~controller_t();
-  virtual void axis(uint32_t a, double value){};
-  virtual void button(uint32_t b, bool value){};
-  virtual void timeout() {};
+  virtual void axis(uint32_t, double){};
+  virtual void button(uint32_t, bool){};
+  virtual void timeout(){};
 };
 
 controller_t::controller_t()
@@ -293,7 +293,7 @@ void joystick_t::configure( )
   vscale = (double)n_fragment/(double)f_sample;
 }
 
-void joystick_t::update(uint32_t tp_frame,bool running)
+void joystick_t::update(uint32_t, bool)
 {
   x.update();
   y.update();
@@ -302,16 +302,17 @@ void joystick_t::update(uint32_t tp_frame,bool running)
   TASCAR::zyx_euler_t r(rotvel);
   r *= vscale;
   add_orientation(r);
-  for(std::vector<TASCAR::named_object_t>::iterator it=obj.begin();it!=obj.end();++it){
+  for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
+      it != obj.end(); ++it) {
     it->obj->dorientation.y = d_tilt;
     TASCAR::pos_t v(velocity);
     v *= vscale;
-    v *= TASCAR::zyx_euler_t(it->obj->dorientation.z,0,0);
+    v *= TASCAR::zyx_euler_t(it->obj->dorientation.z, 0, 0);
     it->obj->dlocation += v;
-    if( maxnorm > 0 ){
+    if(maxnorm > 0) {
       double dnorm(it->obj->dlocation.norm());
-      if( dnorm > maxnorm )
-	it->obj->dlocation *= maxnorm/dnorm;
+      if(dnorm > maxnorm)
+        it->obj->dlocation *= maxnorm / dnorm;
     }
   }
 }
