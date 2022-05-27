@@ -295,6 +295,7 @@ test_ir_partconvrev: IRLEN=44100
 test_ir_partconvrev_offset: IRLEN=44100
 test_ir_temp: IRLEN=441000
 test_ir_volumetric: TOL=1e-5
+test_ir_sub: TOL=1e-6
 test_snd_vbap3d_speakermatch: TOL=1e-5
 test_snd_vbap3d_speakermatch: RMSTOL=1e-6
 test_snd_sndfile: TOL=3e-7
