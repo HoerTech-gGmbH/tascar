@@ -54,7 +54,7 @@ oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
   target = lo_address_new_from_url(url.c_str());
   if(!target)
     throw TASCAR::ErrMsg("Unable to create OSC target client \"" + url + "\".");
-  session->add_method(path, NULL, &(oscrelay_t::osc_recv), this);
+  session->add_method(path, NULL, &oscrelay_t::osc_recv, this);
 }
 
 oscrelay_t::~oscrelay_t()

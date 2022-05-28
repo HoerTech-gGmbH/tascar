@@ -18,7 +18,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
   hossustain rotator orientationmodulator locationmodulator		\
   locationvelocity granularsynth fail waitforjackport sleep jackrec	\
-  oscserver
+  oscserver oscrelay
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
   transportgui lightcolorpicker
@@ -35,7 +35,7 @@ ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
   TASCARMODS += lightctl midicc2osc midictl joystick qualisystracker	\
-  oscrelay ovheadtracker
+  ovheadtracker
 endif
 endif
 
