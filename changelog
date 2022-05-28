@@ -1,3 +1,4 @@
+0.226: Correct crossover filters in subwoofer bass management, improvement of head tracking
 0.225.1: packaging for Ubuntu 22.04, fix of development kit
 0.225:
        - Complete refactoring of loudspeaker calibration, with spectral correction
