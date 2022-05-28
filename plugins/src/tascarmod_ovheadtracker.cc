@@ -26,6 +26,8 @@
 
 #include "serialport.h"
 
+const std::complex<double> i = {0.0, 1.0};
+
 class ovheadtracker_t : public TASCAR::actor_module_t,
                         protected TASCAR::service_t {
 public:
@@ -55,6 +57,10 @@ private:
   // tilt OSC path:
   std::string tiltpath = "/tilt";
   std::vector<float> tiltmap = {0.0f, 0.0f, 180.0f, 180.0f};
+  // use only z-rotation for referencing:
+  bool autoref_zonly = false;
+  // combine quaternion with gyroscope for increased resolution:
+  bool combinegyr = true;
   uint32_t ttl;
   std::string calib0path;
   std::string calib1path;
@@ -152,7 +158,12 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(autoref, "",
                 "Filter coefficient for estimating reference orientation from "
                 "average direction, or zero for no auto-referencing");
+  GET_ATTRIBUTE_BOOL(autoref_zonly,
+                     "Compensate z-rotation only, requires sensor alignment");
   GET_ATTRIBUTE(smooth, "", "Filter coefficient for smoothing of quaternions");
+  GET_ATTRIBUTE_BOOL(combinegyr,
+                     "Combine quaternions with gyroscope based second estimate "
+                     "for increased resolution of pose estimation.");
   GET_ATTRIBUTE(axes, "", "Order of axes, or -1 to not use axis");
   GET_ATTRIBUTE(
       accscale, "",
@@ -214,6 +225,47 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
                 "Apply rotation based on gyroscope and accelerometer");
 }
 
+/**
+ * @brief Read numbers from string, starting at second character
+ * @param l String to read data from (will be modified)
+ * @param data Data vector, already containing sufficient space
+ * @param num_elements Number of elements to read
+ */
+void parse_devstring(std::string& l, std::vector<double>& data,
+                     size_t num_elements)
+{
+  l = l.substr(1);
+  std::string::size_type sz;
+  for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
+    data[k] = std::stod(l, &sz);
+    if(sz < l.size())
+      l = l.substr(sz + 1);
+  }
+  for(size_t k = num_elements; k < data.size(); ++k)
+    data[k] = 0.0;
+}
+
+/**
+ * @brief Read quaternion from string, starting at second character
+ * @param l String to read data from (will be modified)
+ * @param q Quaterion
+ */
+void parse_devstring(std::string& l, TASCAR::quaternion_t& q)
+{
+  l = l.substr(1);
+  std::string::size_type sz;
+  q.w = std::stod(l, &sz);
+  if(sz < l.size())
+    l = l.substr(sz + 1);
+  q.x = std::stod(l, &sz);
+  if(sz < l.size())
+    l = l.substr(sz + 1);
+  q.y = std::stod(l, &sz);
+  if(sz < l.size())
+    l = l.substr(sz + 1);
+  q.z = std::stod(l, &sz);
+}
+
 void ovheadtracker_t::service()
 {
   uint32_t devidx(0);
@@ -227,6 +279,8 @@ void ovheadtracker_t::service()
   std::vector<double> data(4, 0.0);
   std::vector<double> data2(7, 0.0);
   std::string p;
+  TASCAR::zyx_euler_t rotgyr;
+  TASCAR::zyx_euler_t rotgyrmean;
   if(name.size())
     p = "/" + name;
   while(run_service) {
@@ -239,28 +293,16 @@ void ovheadtracker_t::service()
         if(l.size()) {
           switch(l[0]) {
           case 'A': {
-            l = l.substr(1);
-            std::string::size_type sz;
-            data[0] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data[1] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data[2] = std::stod(l);
-            data[3] = 0.0;
+            // acceleration
+            parse_devstring(l, data, 3);
             if(target && (!send_only_quaternion))
               lo_send(target, (p + "/acc").c_str(), "fff",
                       data[axes[0]] / accscale, data[axes[1]] / accscale,
                       data[axes[2]] / accscale);
           } break;
           case 'W': {
-            l = l.substr(1);
-            std::string::size_type sz;
-            data[0] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data[1] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data[2] = std::stod(l);
-            data[3] = 0.0;
+            // world acceleration
+            parse_devstring(l, data, 3);
             if(target && (!send_only_quaternion)) {
               TASCAR::pos_t wacc(data[axes[0]], data[axes[1]], data[axes[2]]);
               wacc *= 1.0 / accscale;
@@ -272,21 +314,8 @@ void ovheadtracker_t::service()
             }
           } break;
           case 'R': {
-            l = l.substr(1);
-            std::string::size_type sz;
-            data2[0] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[1] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[2] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[3] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[4] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[5] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[6] = std::stod(l);
+            // raw sensor values
+            parse_devstring(l, data2, 7);
             if(target && (!send_only_quaternion)) {
               lo_send(target, (p + "/raw").c_str(), "fffffff", data2[0],
                       data2[1], data2[2], data2[3], data2[4], data2[5],
@@ -298,61 +327,58 @@ void ovheadtracker_t::service()
             }
           } break;
           case 'O': {
-            l = l.substr(1);
-            std::string::size_type sz;
-            data2[0] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[1] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[2] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[3] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[4] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data2[5] = std::stod(l, &sz);
+            // offset estimate
+            parse_devstring(l, data2, 6);
             if(target && (!send_only_quaternion))
               lo_send(target, (p + "/offs").c_str(), "ffffff", data2[0],
                       data2[1], data2[2], data2[3], data2[4], data2[5]);
           } break;
           case 'Q': {
-            l = l.substr(1);
-            std::string::size_type sz;
+            // quaternion processed by DMP on the MPU6050 board:
             TASCAR::quaternion_t q;
-            q.w = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            q.x = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            q.y = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            q.z = std::stod(l, &sz);
+            parse_devstring(l, q);
+            TASCAR::quaternion_t qraw = q;
             if(smooth > 0.0) {
-              if( first )
-                qstate = q;
+              // first order low pass filter of quaterion, 'smooth' is
+              // the non-recursive filter coefficient:
               qstate = qstate.scale(1.0 - smooth);
               qstate += q.scale(smooth);
-              qstate = qstate.scale(1.0 / qstate.norm());
-              q = qstate;
+              // qstate = qstate.scale(1.0 / qstate.norm());
+              q = qstate.scale(1.0 / qstate.norm());
             }
-
+            // calculate reference orientation:
             if(bcalib)
               qref = q.inverse();
             if(autoref > 0) {
               if(first) {
-                qref = q.inverse();
+                qref = qraw.inverse();
+                first = false;
               } else {
                 qref = qref.scale(1.0 - autoref);
-                qref += q.inverse().scale(autoref);
-                qref = qref.scale(1.0 / qref.norm());
+                qref += qraw.inverse().scale(autoref);
+                // qref = qref.scale(1.0 / qref.norm());
               }
             }
-            q *= qref;
+            if((smooth > 0) && combinegyr) {
+              TASCAR::quaternion_t qhp;
+              qhp.set_euler(rotgyr);
+              q *= qhp;
+            }
+            if(!autoref_zonly)
+              q *= qref;
+            // store Euler orientation for processing in TASCAR:
             o0 = q.to_euler();
+            if(autoref_zonly) {
+              auto euref = qref.to_euler();
+              o0.z = std::arg(std::exp(i * (o0.z + euref.z)));
+            }
+            // send Quaternion for data logging or remote processing
             if(target) {
               lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x,
                       q.y, q.z);
             }
             if(tilttarget) {
+              // calculate tilt in any direction, for effect control:
               TASCAR::pos_t pz(0.0f, 0.0f, 1.0f);
               q.rotate(pz);
               float f = RAD2DEGf * acosf(pz.z);
@@ -369,24 +395,34 @@ void ovheadtracker_t::service()
                 prevtilt = f;
               }
             }
-            if(rottarget)
+            if(rottarget) {
+              // send Euler orientation for data logging or remote processing:
               lo_send(rottarget, rotpath.c_str(), "fff", RAD2DEG * o0.z,
                       RAD2DEG * o0.y, RAD2DEG * o0.x);
+            }
           } break;
           case 'G': {
-            l = l.substr(1);
-            std::string::size_type sz;
-            data[0] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data[1] = std::stod(l, &sz);
-            l = l.substr(sz + 1);
-            data[2] = std::stod(l);
-            data[3] = 0.0;
-            if(target && (!send_only_quaternion))
+            // gyroscope data (axis rotation):
+            parse_devstring(l, data, 3);
+            rotgyr.z = DEG2RAD * data[2];
+            rotgyr.y = DEG2RAD * data[1];
+            rotgyr.x = DEG2RAD * data[0];
+            if(smooth > 0) {
+              rotgyrmean *= (1.0 - smooth);
+              TASCAR::zyx_euler_t scaledrotgyr = rotgyr;
+              scaledrotgyr *= smooth;
+              rotgyrmean += scaledrotgyr;
+              rotgyr -= rotgyrmean;
+            }
+            if(target && (!send_only_quaternion)) {
               lo_send(target, (p + "/axrot").c_str(), "fff", data[axes[0]],
                       data[axes[1]], data[axes[2]]);
+              lo_send(target, (p + "/axrothp").c_str(), "fff", rotgyr.z,
+                      rotgyr.y, rotgyr.x);
+            }
           } break;
           case 'C': {
+            // calibration mode:
             if((l.size() > 1)) {
               if((l[1] == '1') && calib1path.size()) {
                 bcalib = true;
@@ -404,8 +440,7 @@ void ovheadtracker_t::service()
             //  std::cout << l << std::endl;
             //} break;
           }
-          first = false;
-        }
+        } // end if(l.size())
       }
     }
     catch(const std::exception& e) {

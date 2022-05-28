@@ -21,11 +21,15 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{autoref} & Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing (double) & 0\\
 \hline
+\indattr{autoref\_zonly} & Compensate z-rotation only, requires sensor alignment (bool) & false\\
+\hline
 \indattr{axes} & Order of axes, or -1 to not use axis (int32 array) & 0 1 2\\
 \hline
 \indattr{calib0path} & OSC-Path to which a trigger is sent on start of calibration path (string) & /calib0\\
 \hline
 \indattr{calib1path} & OSC-Path to which a trigger is sent on end of calibration path (string) & /calib1\\
+\hline
+\indattr{combinegyr} & Combine quaternions with gyroscope based second estimate for increased resolution of pose estimation. (bool) & true\\
 \hline
 \indattr{devices} & List of serial port device candidates (string array) & {\tiny /dev/ttyUSB0 /dev/ttyUSB1 /dev/ttyUSB2}\\
 \hline
@@ -40,6 +44,8 @@ name & description (type, unit) & def.\\
 \indattr{roturl} & OSC target URL for rotation data (string) & \\
 \hline
 \indattr{send\_only\_quaternion} & Send only quaternion data instead of raw sensor data (bool) & false\\
+\hline
+\indattr{smooth} & Filter coefficient for smoothing of quaternions (double) & 0\\
 \hline
 \indattr{tiltmap} & tilt mapping, [in1 out1 in2 out2] (float array) & 0 0 180 180\\
 \hline
