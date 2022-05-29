@@ -81,7 +81,8 @@ private:
   TASCAR::zyx_euler_t o0;
   bool bcalib;
   TASCAR::quaternion_t qref;
-  bool first;
+  bool first_sample_autoref = true;
+  bool first_sample_smooth = true;
   // level logging:
   std::thread srv_level;
   std::atomic_bool run_service_level;
@@ -124,7 +125,8 @@ void ovheadtracker_t::configure()
     vpath.push_back(std::string("/") + name + std::string("/") +
                     route->get_name());
   }
-  first = true;
+  first_sample_autoref = true;
+  first_sample_smooth = true;
   srv_level = std::thread(&ovheadtracker_t::service_level, this);
 }
 
@@ -140,7 +142,7 @@ ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
       devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
       calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
       accscale(16384 / 9.81), gyrscale(16.4), target(NULL), rottarget(NULL),
-      bcalib(false), qref(1, 0, 0, 0), first(true), run_service_level(true)
+      bcalib(false), qref(1, 0, 0, 0), run_service_level(true)
 {
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
   GET_ATTRIBUTE(devices, "", "List of serial port device candidates");
@@ -287,7 +289,8 @@ void ovheadtracker_t::service()
     try {
       TASCAR::serialport_t dev;
       dev.open(devices[devidx].c_str(), B115200, 0, 1);
-      first = true;
+      first_sample_autoref = true;
+      first_sample_smooth = true;
       while(run_service) {
         std::string l(dev.readline(1024, 10));
         if(l.size()) {
@@ -339,20 +342,25 @@ void ovheadtracker_t::service()
             parse_devstring(l, q);
             TASCAR::quaternion_t qraw = q;
             if(smooth > 0.0) {
-              // first order low pass filter of quaterion, 'smooth' is
-              // the non-recursive filter coefficient:
-              qstate = qstate.scale(1.0 - smooth);
-              qstate += q.scale(smooth);
-              // qstate = qstate.scale(1.0 / qstate.norm());
-              q = qstate.scale(1.0 / qstate.norm());
+              if(first_sample_smooth) {
+                qstate = q;
+                first_sample_smooth = false;
+              } else {
+                // first order low pass filter of quaterion, 'smooth' is
+                // the non-recursive filter coefficient:
+                qstate = qstate.scale(1.0 - smooth);
+                qstate += q.scale(smooth);
+                // qstate = qstate.scale(1.0 / qstate.norm());
+                q = qstate.scale(1.0 / qstate.norm());
+              }
             }
             // calculate reference orientation:
             if(bcalib)
               qref = q.inverse();
             if(autoref > 0) {
-              if(first) {
+              if(first_sample_autoref) {
                 qref = qraw.inverse();
-                first = false;
+                first_sample_autoref = false;
               } else {
                 qref = qref.scale(1.0 - autoref);
                 qref += qraw.inverse().scale(autoref);
