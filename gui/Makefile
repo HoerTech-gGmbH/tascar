@@ -82,6 +82,9 @@ build/%_glade.h: src/%.glade build/.directory
 	echo "std::string ui_"$*"((const char*)"$*"_glade,(size_t)"$*"_glade_len);" >> $@
 	rm -f $*_glade
 
+build/%.res.c: src/%.res
+	(cd src && glib-compile-resources --generate-source --target=../$@ ../$<)
+
 build/tascar: build/tascar_glade.h
 
 build/tascar_spkcalib.o: build/spkcalib_glade.h

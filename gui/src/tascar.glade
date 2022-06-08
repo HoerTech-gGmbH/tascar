@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
   <object class="GtkAboutDialog" id="aboutdialog">
@@ -15,7 +15,7 @@
     <property name="documenters">Joanna Luberadzka</property>
     <property name="logo_icon_name"/>
     <property name="license_type">gpl-3-0</property>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child internal-child="vbox">
@@ -93,7 +93,7 @@
     <property name="default_width">1600</property>
     <property name="default_height">900</property>
     <property name="icon">usr/share/icons/hicolor/48x48/apps/tascarpro.png</property>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child>
@@ -785,14 +785,14 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="orientation">vertical</property>
-                    <property name="toolbar_style">icons</property>
+                    <property name="toolbar_style">both</property>
                     <property name="icon_size">2</property>
                     <child>
                       <object class="GtkToolButton" id="view_zoom_in">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.zoom_in</property>
-                        <property name="label" translatable="yes">Zoom in</property>
+                        <property name="label" translatable="yes">zoom in</property>
                         <property name="stock_id">gtk-zoom-in</property>
                       </object>
                       <packing>
@@ -805,7 +805,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.zoom_out</property>
-                        <property name="label" translatable="yes">Zoom out</property>
+                        <property name="label" translatable="yes">zoom out</property>
                         <property name="stock_id">gtk-zoom-out</property>
                       </object>
                       <packing>
@@ -818,7 +818,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_xy</property>
-                        <property name="label">XY</property>
+                        <property name="label">2d xy</property>
                         <property name="icon_widget">image_xy</property>
                       </object>
                       <packing>
@@ -831,7 +831,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_xz</property>
-                        <property name="label">XZ</property>
+                        <property name="label">2d xz</property>
                         <property name="icon_widget">image_xz</property>
                       </object>
                       <packing>
@@ -844,7 +844,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_yz</property>
-                        <property name="label">YZ</property>
+                        <property name="label">2d yz</property>
                         <property name="icon_widget">image_yz</property>
                       </object>
                       <packing>
@@ -857,7 +857,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_xyz</property>
-                        <property name="label">XYZ</property>
+                        <property name="label">3d ortho</property>
                         <property name="icon_widget">image_xyz</property>
                       </object>
                       <packing>
@@ -870,7 +870,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_rotz</property>
-                        <property name="label">rotz</property>
+                        <property name="label">rotate ccw</property>
                         <property name="stock_id">gtk-go-back</property>
                       </object>
                       <packing>
@@ -883,7 +883,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_rotzcw</property>
-                        <property name="label">rotz cw</property>
+                        <property name="label">rotate cw</property>
                         <property name="stock_id">gtk-go-forward</property>
                       </object>
                       <packing>
@@ -896,7 +896,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">view.viewport_setref</property>
-                        <property name="label">0</property>
+                        <property name="label">reset</property>
                         <property name="stock_id">gtk-home</property>
                       </object>
                       <packing>
@@ -1346,7 +1346,7 @@
     <property name="skip_taskbar_hint">True</property>
     <property name="decorated">False</property>
     <property name="gravity">center</property>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child>
