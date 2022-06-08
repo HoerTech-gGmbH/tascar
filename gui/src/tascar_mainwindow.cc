@@ -28,7 +28,6 @@
 #include "logo.xpm"
 #include "pdfexport.h"
 #include <fstream>
-#include <curl/curl.h>
 
 #define GET_WIDGET(x) m_refBuilder->get_widget(#x,x);if( !x ) throw TASCAR::ErrMsg(std::string("No widget \"")+ #x + std::string("\" in builder."))
 

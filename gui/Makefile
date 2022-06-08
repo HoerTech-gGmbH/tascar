@@ -88,7 +88,6 @@ build/tascar_spkcalib.o: build/spkcalib_glade.h
 
 build/tascar_mainwindow.o: src/tascar_xy.xpm src/tascar_xz.xpm src/tascar_yz.xpm src/tascar_xyz.xpm src/tascar_mainwindow.h
 
-build/tascar build/tascar_mainwindow.o: EXTERNALS += libcurl
 build/tascar build/tascar_mainwindow.o: CXXFLAGS += -Wno-deprecated-declarations
 
 #build/tascar_%.xpm:
