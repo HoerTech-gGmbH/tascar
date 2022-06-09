@@ -82,14 +82,19 @@ build/%_glade.h: src/%.glade build/.directory
 	echo "std::string ui_"$*"((const char*)"$*"_glade,(size_t)"$*"_glade_len);" >> $@
 	rm -f $*_glade
 
+ALLSVG := $(wildcard src/*.svg)
+
+build/tascar.res.c: $(ALLSVG)
+
 build/%.res.c: src/%.res
 	(cd src && glib-compile-resources --generate-source --target=../$@ ../$<)
 
+build/tascar_mainwindow.o: build/tascar.res.c
 build/tascar: build/tascar_glade.h
 
 build/tascar_spkcalib.o: build/spkcalib_glade.h
 
-build/tascar_mainwindow.o: src/tascar_xy.xpm src/tascar_xz.xpm src/tascar_yz.xpm src/tascar_xyz.xpm src/tascar_mainwindow.h
+build/tascar_mainwindow.o: src/tascar_mainwindow.h
 
 build/tascar build/tascar_mainwindow.o: CXXFLAGS += -Wno-deprecated-declarations
 

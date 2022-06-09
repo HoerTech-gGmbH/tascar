@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="32"
+   height="32"
+   viewBox="0 0 32 32"
+   version="1.1"
+   id="view_xy">
+  <defs
+     id="defs2">
+    <marker
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend"
+       style="overflow:visible">
+      <path
+         id="path4758"
+         style="fill:#0000b4;fill-opacity:1;fill-rule:evenodd;stroke:#0000b4;stroke-width:0.3pt;stroke-opacity:1"
+         d="M 1,0 -4,-2 -2,0 -4,2 Z"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
+    <marker
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="arrowx"
+       style="overflow:visible">
+      <path
+         id="arrow1"
+         d="M 1,0 -4,-2 -2,0 -4,2 Z"
+         style="fill:#00b400;fill-opacity:1;fill-rule:evenodd;stroke:#00b400;stroke-width:0.3pt;stroke-opacity:1"
+         />
+    </marker>
+    <marker
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="arrowy"
+       style="overflow:visible">
+      <path
+         id="arrow2"
+         d="M 1,0 -4,-2 -1,0 -4,2 Z"
+         style="fill:#b40000;fill-opacity:1;fill-rule:evenodd;stroke:#b40000;stroke-width:0.3pt;stroke-opacity:1"
+         />
+    </marker>
+  </defs>
+  <g
+     id="layer1">
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#00b400;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#arrowx)"
+       d="M 6,32 V 4"
+       id="path4747" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#b40000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#arrowy)"
+       d="M 0,26 H 28"
+       id="path4747-2" />
+    <circle
+       style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#0000b4;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path5180"
+       cx="6"
+       cy="26"
+       r="4" />
+  </g>
+</svg>

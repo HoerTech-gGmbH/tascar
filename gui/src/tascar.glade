@@ -74,18 +74,22 @@
   <object class="GtkImage" id="image_xy">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_xy.svg</property>
   </object>
   <object class="GtkImage" id="image_xyz">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_xyz.svg</property>
   </object>
   <object class="GtkImage" id="image_xz">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_xz.svg</property>
   </object>
   <object class="GtkImage" id="image_yz">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_yz.svg</property>
   </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="can_focus">False</property>
@@ -555,12 +559,14 @@
               <object class="GtkToolbar" id="toolbar_file">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="toolbar_style">both</property>
+                <property name="show_arrow">False</property>
                 <child>
                   <object class="GtkToolButton" id="tool_scene_new">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">main.scene_new</property>
-                    <property name="label" translatable="yes">New</property>
+                    <property name="label" translatable="yes">new</property>
                     <property name="stock_id">gtk-new</property>
                   </object>
                   <packing>
@@ -573,7 +579,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">main.scene_open</property>
-                    <property name="label" translatable="yes">Open</property>
+                    <property name="label" translatable="yes">open</property>
                     <property name="stock_id">gtk-open</property>
                   </object>
                   <packing>
@@ -586,7 +592,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">main.scene_reload</property>
-                    <property name="label" translatable="yes">toolbutton1</property>
+                    <property name="label" translatable="yes">reload</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-revert-to-saved</property>
                   </object>
@@ -600,7 +606,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">main.scene_close</property>
-                    <property name="label" translatable="yes">Close</property>
+                    <property name="label" translatable="yes">close</property>
                     <property name="stock_id">gtk-close</property>
                   </object>
                   <packing>
@@ -608,6 +614,9 @@
                     <property name="homogeneous">True</property>
                   </packing>
                 </child>
+                <style>
+                  <class name="toolbar"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -652,12 +661,14 @@
               <object class="GtkToolbar" id="toolbar_transport">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="toolbar_style">both</property>
+                <property name="show_arrow">False</property>
                 <child>
                   <object class="GtkToolButton" id="transport_play1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">transport.play</property>
-                    <property name="label" translatable="yes">Play</property>
+                    <property name="label" translatable="yes">play</property>
                     <property name="stock_id">gtk-media-play</property>
                   </object>
                   <packing>
@@ -670,7 +681,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">transport.stop</property>
-                    <property name="label" translatable="yes">Stop</property>
+                    <property name="label" translatable="yes">stop</property>
                     <property name="stock_id">gtk-media-stop</property>
                   </object>
                   <packing>
@@ -683,7 +694,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">transport.rewind</property>
-                    <property name="label" translatable="yes">Rewind</property>
+                    <property name="label" translatable="yes">-10 s</property>
                     <property name="stock_id">gtk-media-rewind</property>
                   </object>
                   <packing>
@@ -696,7 +707,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">transport.forward</property>
-                    <property name="label" translatable="yes">Forward</property>
+                    <property name="label" translatable="yes">+10 s</property>
                     <property name="stock_id">gtk-media-forward</property>
                   </object>
                   <packing>
@@ -709,7 +720,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">transport.previous</property>
-                    <property name="label" translatable="yes">Previous</property>
+                    <property name="label" translatable="yes">previous</property>
                     <property name="stock_id">gtk-media-previous</property>
                   </object>
                   <packing>
@@ -722,7 +733,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="action_name">transport.next</property>
-                    <property name="label" translatable="yes">Next</property>
+                    <property name="label" translatable="yes">next</property>
                     <property name="stock_id">gtk-media-next</property>
                   </object>
                   <packing>
@@ -730,6 +741,9 @@
                     <property name="homogeneous">True</property>
                   </packing>
                 </child>
+                <style>
+                  <class name="toolbar"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -781,133 +795,161 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkToolbar" id="toolbar_view">
+                  <object class="GtkFrame">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="orientation">vertical</property>
-                    <property name="toolbar_style">both</property>
-                    <property name="icon_size">2</property>
+                    <property name="label_xalign">0</property>
+                    <property name="shadow_type">etched-out</property>
                     <child>
-                      <object class="GtkToolButton" id="view_zoom_in">
+                      <object class="GtkAlignment">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="action_name">view.zoom_in</property>
-                        <property name="label" translatable="yes">zoom in</property>
-                        <property name="stock_id">gtk-zoom-in</property>
+                        <property name="left_padding">5</property>
+                        <property name="right_padding">5</property>
+                        <child>
+                          <object class="GtkToolbar" id="toolbar_view">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <property name="toolbar_style">both</property>
+                            <property name="icon_size">2</property>
+                            <child>
+                              <object class="GtkToolButton" id="view_zoom_in">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.zoom_in</property>
+                                <property name="label" translatable="yes">zoom in</property>
+                                <property name="stock_id">gtk-zoom-in</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_zoom_out">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.zoom_out</property>
+                                <property name="label" translatable="yes">zoom out</property>
+                                <property name="stock_id">gtk-zoom-out</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_xy">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_xy</property>
+                                <property name="label">2d xy</property>
+                                <property name="icon_widget">image_xy</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_xz">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_xz</property>
+                                <property name="label">2d xz</property>
+                                <property name="icon_widget">image_xz</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_yz">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_yz</property>
+                                <property name="label">2d yz</property>
+                                <property name="icon_widget">image_yz</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_xyz">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_xyz</property>
+                                <property name="label">3d ortho</property>
+                                <property name="icon_widget">image_xyz</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_rotz">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_rotz</property>
+                                <property name="label">rotate ccw</property>
+                                <property name="stock_id">gtk-go-back</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_rotzcw">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_rotzcw</property>
+                                <property name="label">rotate cw</property>
+                                <property name="stock_id">gtk-go-forward</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="view_viewport_setref">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="action_name">view.viewport_setref</property>
+                                <property name="label">reset</property>
+                                <property name="stock_id">gtk-home</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="toolbar"/>
+                            </style>
+                          </object>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
                     </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_zoom_out">
+                    <child type="label">
+                      <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="action_name">view.zoom_out</property>
-                        <property name="label" translatable="yes">zoom out</property>
-                        <property name="stock_id">gtk-zoom-out</property>
+                        <property name="margin_left">3</property>
+                        <property name="margin_right">3</property>
+                        <property name="label" translatable="yes">view</property>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_xy">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_xy</property>
-                        <property name="label">2d xy</property>
-                        <property name="icon_widget">image_xy</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_xz">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_xz</property>
-                        <property name="label">2d xz</property>
-                        <property name="icon_widget">image_xz</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_yz">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_yz</property>
-                        <property name="label">2d yz</property>
-                        <property name="icon_widget">image_yz</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_xyz">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_xyz</property>
-                        <property name="label">3d ortho</property>
-                        <property name="icon_widget">image_xyz</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_rotz">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_rotz</property>
-                        <property name="label">rotate ccw</property>
-                        <property name="stock_id">gtk-go-back</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_rotzcw">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_rotzcw</property>
-                        <property name="label">rotate cw</property>
-                        <property name="stock_id">gtk-go-forward</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="view_viewport_setref">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">view.viewport_setref</property>
-                        <property name="label">reset</property>
-                        <property name="stock_id">gtk-home</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
                     </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">False</property>
+                    <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
