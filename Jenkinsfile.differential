@@ -62,7 +62,7 @@ def tascar_build_steps(stage_name) {
 }
 
 pipeline {
-    agent {label "arcanist"}
+    agent {label "pipeline"}
     options {
         buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
     }
