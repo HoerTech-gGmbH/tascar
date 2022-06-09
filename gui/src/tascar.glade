@@ -71,6 +71,16 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-open</property>
   </object>
+  <object class="GtkImage" id="image_rot_ccw">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_rotccw.svg</property>
+  </object>
+  <object class="GtkImage" id="image_rot_cw">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_rotcw.svg</property>
+  </object>
   <object class="GtkImage" id="image_xy">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -90,6 +100,16 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="resource">/tascar/view_yz.svg</property>
+  </object>
+  <object class="GtkImage" id="image_zoom_in">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_zoom_in.svg</property>
+  </object>
+  <object class="GtkImage" id="image_zoom_out">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="resource">/tascar/view_zoom_out.svg</property>
   </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="can_focus">False</property>
@@ -119,17 +139,6 @@
                   <object class="GtkMenu" id="menu_file">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkImageMenuItem" id="scene_new">
-                        <property name="label">gtk-new</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="action_name">main.scene_new</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                        <accelerator key="n" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
                     <child>
                       <object class="GtkImageMenuItem" id="scene_open">
                         <property name="label">gtk-open</property>
@@ -164,7 +173,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">main.scene_reload</property>
-                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="r" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
@@ -562,22 +570,10 @@
                 <property name="toolbar_style">both</property>
                 <property name="show_arrow">False</property>
                 <child>
-                  <object class="GtkToolButton" id="tool_scene_new">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="action_name">main.scene_new</property>
-                    <property name="label" translatable="yes">new</property>
-                    <property name="stock_id">gtk-new</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkToolButton" id="tool_scene_open">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Open a session, or replace current session by another one.</property>
                     <property name="action_name">main.scene_open</property>
                     <property name="label" translatable="yes">open</property>
                     <property name="stock_id">gtk-open</property>
@@ -591,6 +587,7 @@
                   <object class="GtkToolButton" id="tool_scene_reload">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Reload current session.</property>
                     <property name="action_name">main.scene_reload</property>
                     <property name="label" translatable="yes">reload</property>
                     <property name="use_underline">True</property>
@@ -605,6 +602,7 @@
                   <object class="GtkToolButton" id="tool_scene_close">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Close current session.</property>
                     <property name="action_name">main.scene_close</property>
                     <property name="label" translatable="yes">close</property>
                     <property name="stock_id">gtk-close</property>
@@ -667,6 +665,7 @@
                   <object class="GtkToolButton" id="transport_play1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Start timeline transport.</property>
                     <property name="action_name">transport.play</property>
                     <property name="label" translatable="yes">play</property>
                     <property name="stock_id">gtk-media-play</property>
@@ -680,6 +679,7 @@
                   <object class="GtkToolButton" id="transport_stop1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Stop timeline transport.</property>
                     <property name="action_name">transport.stop</property>
                     <property name="label" translatable="yes">stop</property>
                     <property name="stock_id">gtk-media-stop</property>
@@ -693,6 +693,7 @@
                   <object class="GtkToolButton" id="transport_rewind1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Decrease playhead position by 10 seconds.</property>
                     <property name="action_name">transport.rewind</property>
                     <property name="label" translatable="yes">-10 s</property>
                     <property name="stock_id">gtk-media-rewind</property>
@@ -706,6 +707,7 @@
                   <object class="GtkToolButton" id="transport_forward1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Increase playhead position by 10 seconds.</property>
                     <property name="action_name">transport.forward</property>
                     <property name="label" translatable="yes">+10 s</property>
                     <property name="stock_id">gtk-media-forward</property>
@@ -719,8 +721,9 @@
                   <object class="GtkToolButton" id="transport_previous1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Move playhead to previous marker.</property>
                     <property name="action_name">transport.previous</property>
-                    <property name="label" translatable="yes">previous</property>
+                    <property name="label" translatable="yes">prev.</property>
                     <property name="stock_id">gtk-media-previous</property>
                   </object>
                   <packing>
@@ -732,6 +735,7 @@
                   <object class="GtkToolButton" id="transport_next1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Move playhead to next marker.</property>
                     <property name="action_name">transport.next</property>
                     <property name="label" translatable="yes">next</property>
                     <property name="stock_id">gtk-media-next</property>
@@ -798,14 +802,16 @@
                   <object class="GtkFrame">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label_xalign">0</property>
+                    <property name="valign">start</property>
+                    <property name="margin_left">4</property>
+                    <property name="margin_right">4</property>
+                    <property name="margin_bottom">4</property>
+                    <property name="label_xalign">0.5</property>
                     <property name="shadow_type">etched-out</property>
                     <child>
                       <object class="GtkAlignment">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="left_padding">5</property>
-                        <property name="right_padding">5</property>
                         <child>
                           <object class="GtkToolbar" id="toolbar_view">
                             <property name="visible">True</property>
@@ -819,7 +825,7 @@
                                 <property name="can_focus">False</property>
                                 <property name="action_name">view.zoom_in</property>
                                 <property name="label" translatable="yes">zoom in</property>
-                                <property name="stock_id">gtk-zoom-in</property>
+                                <property name="icon_widget">image_zoom_in</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -832,7 +838,7 @@
                                 <property name="can_focus">False</property>
                                 <property name="action_name">view.zoom_out</property>
                                 <property name="label" translatable="yes">zoom out</property>
-                                <property name="stock_id">gtk-zoom-out</property>
+                                <property name="icon_widget">image_zoom_out</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -897,7 +903,7 @@
                                 <property name="can_focus">False</property>
                                 <property name="action_name">view.viewport_rotz</property>
                                 <property name="label">rotate ccw</property>
-                                <property name="stock_id">gtk-go-back</property>
+                                <property name="icon_widget">image_rot_ccw</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -910,7 +916,7 @@
                                 <property name="can_focus">False</property>
                                 <property name="action_name">view.viewport_rotzcw</property>
                                 <property name="label">rotate cw</property>
-                                <property name="stock_id">gtk-go-forward</property>
+                                <property name="icon_widget">image_rot_cw</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -921,6 +927,8 @@
                               <object class="GtkToolButton" id="view_viewport_setref">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="visible_horizontal">False</property>
+                                <property name="visible_vertical">False</property>
                                 <property name="action_name">view.viewport_setref</property>
                                 <property name="label">reset</property>
                                 <property name="stock_id">gtk-home</property>
