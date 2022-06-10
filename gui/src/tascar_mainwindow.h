@@ -91,6 +91,8 @@ protected:
   void on_menu_help_bugreport();
   void on_menu_help_about();
 
+  void on_show_warnings_clicked();
+
   void set_scale(double s){draw.view.set_scale( s );};
   bool on_map_scroll(GdkEventScroll* e);
   bool on_map_clicked(GdkEventButton* e);
@@ -107,9 +109,6 @@ protected:
 
   TSCGUI::scene_draw_t draw;
 
-  //Child widgets:
-  //Gtk::VPaned vbox;
-  //Gtk::Box m_Box;
   pthread_mutex_t mtx_draw;
 
   std::string srv_addr_;
@@ -122,11 +121,9 @@ protected:
 
   Gtk::Notebook* notebook;
   Gtk::DrawingArea* scene_map;
-  //Gtk::EventBox* scene_map_events;
   Gtk::Statusbar* statusbar_main;
   Gtk::Scale* timeline;
   Gtk::TextView* text_warnings;
-  //Gtk::TextView* text_source;
   Gtk::ScrolledWindow* scrolled_window_source;
   Gsv::View source_view;
   Glib::RefPtr<Gsv::LanguageManager> language_manager;
@@ -149,7 +146,7 @@ protected:
   Gtk::Label* lab_authors;
   Gtk::Label* lab_sessionname;
   TSCGUI::source_ctl_t* active_source_ctl;
-  Gtk::Label* lab_warnings;
+  Gtk::Button* but_warnings;
 
   bool blink;
 

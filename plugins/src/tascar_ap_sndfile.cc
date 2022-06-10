@@ -164,10 +164,10 @@ void ap_sndfile_t::load_file()
             delete th;
           }
         } else {
-          std::string msg("The sample rate of the sound file " + name +
-                          " differs from the audio system sample rate: ");
+          std::string msg("The sample rate of the sound file \"" + name +
+                          "\" differs from the session sample rate:\n");
           char ctmp[1024];
-          sprintf(ctmp, "file has %d Hz, expected %g Hz", sndf[0]->get_srate(),
+          sprintf(ctmp, "  file has %d Hz, expected %g Hz", sndf[0]->get_srate(),
                   f_sample);
           msg += ctmp;
           TASCAR::add_warning(msg, e);

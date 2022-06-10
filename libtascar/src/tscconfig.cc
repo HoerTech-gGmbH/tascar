@@ -863,7 +863,7 @@ std::string TASCAR::globalconfig_t::operator()(const std::string& key,
 
 void TASCAR::add_warning(std::string msg, const tsccfg::node_t& e)
 {
-  add_warning(msg + " (" + tsccfg::node_get_path(e) + ")");
+  add_warning(msg + "\n  (" + tsccfg::node_get_path(e) + ")");
 }
 
 void TASCAR::add_warning(std::string msg)

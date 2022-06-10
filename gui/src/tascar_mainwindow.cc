@@ -23,10 +23,6 @@
 #include "tascar_mainwindow.h"
 #include "logo.xpm"
 #include "pdfexport.h"
-//#include "tascar_xy.xpm"
-//#include "tascar_xyz.xpm"
-//#include "tascar_xz.xpm"
-//#include "tascar_yz.xpm"
 #include <fstream>
 #include "tascar.res.c"
 
@@ -102,36 +98,20 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   GET_WIDGET(session_splash);
   GET_WIDGET(lab_authors);
   GET_WIDGET(lab_sessionname);
-  GET_WIDGET(lab_warnings);
+  GET_WIDGET(but_warnings);
   active_selector->signal_changed().connect(
       sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
   active_track->signal_toggled().connect(
       sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
   scene_active->signal_toggled().connect(
       sigc::mem_fun(*this, &tascar_window_t::on_scene_active_changed));
-  //Gtk::Image* image_xy(NULL);
-  //m_refBuilder->get_widget("image_xy", image_xy);
-  //if(image_xy)
-  //  image_xy->set(Gdk::Pixbuf::create_from_xpm_data(tascar_xy));
-  //Gtk::Image* image_xz(NULL);
-  //m_refBuilder->get_widget("image_xz", image_xz);
-  //if(image_xz)
-  //  image_xz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_xz));
-  //Gtk::Image* image_yz(NULL);
-  //m_refBuilder->get_widget("image_yz", image_yz);
-  //if(image_yz)
-  //  image_yz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_yz));
-  //Gtk::Image* image_xyz(NULL);
-  //m_refBuilder->get_widget("image_xyz", image_xyz);
-  //if(image_xyz)
-  //  image_xyz->set(Gdk::Pixbuf::create_from_xpm_data(tascar_xyz));
+  but_warnings->signal_clicked().connect(
+      sigc::mem_fun(*this, &tascar_window_t::on_show_warnings_clicked));
   Gtk::Image* image_splashlogo(NULL);
   m_refBuilder->get_widget("image_splashlogo", image_splashlogo);
   if(image_splashlogo)
     image_splashlogo->set(Gdk::Pixbuf::create_from_xpm_data(logo));
-  // GET_WIDGET(menu_osc_vars);
   GET_WIDGET(text_warnings);
-  // GET_WIDGET(text_source);
   GET_WIDGET(scrolled_window_source);
   scrolled_window_source->add(source_view);
   source_view.set_show_line_numbers();
@@ -139,7 +119,6 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   source_view.show();
   source_buffer = source_view.get_source_buffer();
   source_buffer->set_language(language_manager->get_language("xml"));
-  // DEBUG(language_manager->get_language("xml"));
   source_buffer->set_highlight_syntax();
   GET_WIDGET(legal_view);
   GET_WIDGET(osc_vars);
@@ -382,17 +361,22 @@ bool tascar_window_t::on_timeout_blink()
     bool has_warnings(text_warnings->get_buffer()->size());
     Gdk::RGBA col;
     if(has_warnings)
-      lab_warnings->set_text("!");
+      but_warnings->set_label("!");
     else
-      lab_warnings->set_text("");
+      but_warnings->set_label("");
     if(has_warnings && blink)
       col.set_rgba(1, 0.5, 0, 1);
     else
       col.set_rgba(0.92, 0.92, 0.92, 1);
-    lab_warnings->override_background_color(col);
+    but_warnings->override_background_color(col);
     pthread_mutex_unlock(&mtx_draw);
   }
   return true;
+}
+
+void tascar_window_t::on_show_warnings_clicked()
+{
+  notebook->set_current_page(5);
 }
 
 tascar_window_t::~tascar_window_t()
@@ -675,10 +659,6 @@ void tascar_window_t::reset_gui()
     }
     int32_t mainwin_width(1600);
     int32_t mainwin_height(900);
-    // if( session->scenes.empty() ){
-    //  mainwin_width = 400;
-    //  mainwin_height = 60;
-    //}
     int32_t mainwin_x(0);
     int32_t mainwin_y(0);
     get_position(mainwin_x, mainwin_y);
@@ -869,8 +849,6 @@ void tascar_window_t::on_menu_file_exportcsvsounds()
           ofs << "\"Name\",\"PosX\",\"PosY\",\"PosZ\"\n";
           for(uint32_t kscene = 0; kscene < session->scenes.size(); kscene++) {
             ofs << "\"" << session->scenes[kscene]->name << "\", , , \n";
-            // std::vector<TASCAR::Scene::sound_t*>
-            // obj(session->scenes[kscene]->linearize_sounds());
             for(std::vector<TASCAR::Scene::sound_t*>::iterator iam =
                     session->scenes[kscene]->sounds.begin();
                 iam != session->scenes[kscene]->sounds.end(); ++iam) {
@@ -1167,16 +1145,36 @@ void tascar_window_t::on_menu_view_viewport_yz()
 void tascar_window_t::on_menu_view_show_warnings()
 {
   if(session_mutex.try_lock()) {
-    std::string v;
+    bool has_warning = false;
+    auto ptextbuffer = text_warnings->get_buffer();
+    ptextbuffer->erase(ptextbuffer->begin(), ptextbuffer->end());
     for(auto warn : get_warnings()) {
-      v += "Warning: " + warn + "\n";
+      has_warning = true;
+      ptextbuffer->insert_markup(
+          ptextbuffer->end(), "<span font_weight=\"bold\">Warning:</span>\n  ");
+      ptextbuffer->insert(ptextbuffer->end(), warn + "\n");
     }
+    if(has_warning)
+      ptextbuffer->insert(ptextbuffer->end(), "\n");
     if(session) {
-      v += session->show_unknown();
+      std::string v = session->show_unknown();
+      if(v.size()) {
+        ptextbuffer->insert_markup(ptextbuffer->end(),
+                                   "<span font_weight=\"bold\">Missing license "
+                                   "information:</span>\n  ");
+        ptextbuffer->insert(ptextbuffer->end(), v + "\n\n");
+      }
+      v.clear();
       session->validate_attributes(v);
+      if(v.size()) {
+        ptextbuffer->insert_markup(
+            ptextbuffer->end(),
+            "<span font_weight=\"bold\">Malformed session file:</span>\n  ");
+        ptextbuffer->insert(ptextbuffer->end(), v + "\n");
+        has_warning = true;
+      }
     }
-    text_warnings->get_buffer()->set_text(v);
-    if(!v.empty())
+    if(has_warning)
       notebook->set_current_page(5);
     session_mutex.unlock();
   }

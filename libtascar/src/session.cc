@@ -389,12 +389,12 @@ TASCAR::session_core_t::~session_core_t()
 }
 
 void assert_jackpar(const std::string& what, double expected, double found,
-                    bool warn)
+                    bool warn, const std::string& unit = "")
 {
   if((expected > 0) && (expected != found)) {
     std::string msg("Invalid " + what + " (expected " +
-                    TASCAR::to_string(expected) + ", jack has " +
-                    TASCAR::to_string(found) + ")");
+                    TASCAR::to_string(expected) + unit + ", jack has " +
+                    TASCAR::to_string(found) + unit + ")");
     if(warn)
       TASCAR::add_warning(msg);
     else
@@ -409,9 +409,9 @@ TASCAR::session_t::session_t()
                    TASCAR::config("tascar.osc.list", 0)),
       period_time(1.0 / (double)srate), started_(false)
 {
-  assert_jackpar("sampling rate", requiresrate, srate, false);
+  assert_jackpar("sampling rate", requiresrate, srate, false, " Hz");
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
-  assert_jackpar("sampling rate", warnsrate, srate, true);
+  assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
   assert_jackpar("fragment size", warnfragsize, fragsize, true);
   pthread_mutex_init(&mtx, NULL);
   read_xml();
@@ -437,9 +437,9 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
                    TASCAR::config("tascar.osc.list", 0)),
       period_time(1.0 / (double)srate), started_(false)
 {
-  assert_jackpar("sampling rate", requiresrate, srate, false);
+  assert_jackpar("sampling rate", requiresrate, srate, false, " Hz");
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
-  assert_jackpar("sampling rate", warnsrate, srate, true);
+  assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
   assert_jackpar("fragment size", warnfragsize, fragsize, true);
   pthread_mutex_init(&mtx, NULL);
   // parse XML:

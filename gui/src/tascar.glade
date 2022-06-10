@@ -173,6 +173,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="action_name">main.scene_reload</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="r" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
@@ -623,39 +624,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkSeparator" id="separator3">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparator" id="separator2">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparator" id="separator1">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">3</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkToolbar" id="toolbar_transport">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -752,18 +720,20 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">4</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
               <object class="GtkComboBoxText" id="scene_selector">
+                <property name="width_request">120</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="valign">center</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">5</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -777,7 +747,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">6</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
@@ -995,7 +965,6 @@
                         <property name="can_focus">False</property>
                         <property name="margin_top">3</property>
                         <property name="margin_bottom">3</property>
-                        <property name="label" translatable="yes">label</property>
                         <property name="xalign">0</property>
                       </object>
                       <packing>
@@ -1040,7 +1009,6 @@
                       <object class="GtkLabel" id="active_label_sourceline">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">label</property>
                         <property name="xalign">0</property>
                       </object>
                       <packing>
@@ -1277,6 +1245,8 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="editable">False</property>
+                    <property name="left_margin">2</property>
+                    <property name="right_margin">2</property>
                     <property name="accepts_tab">False</property>
                   </object>
                 </child>
@@ -1368,10 +1338,16 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="lab_warnings">
+              <object class="GtkButton" id="but_warnings">
                 <property name="width_request">40</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="tooltip_text" translatable="yes">show warnings</property>
+                <property name="relief">none</property>
+                <style>
+                  <class name="warnbutton"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>

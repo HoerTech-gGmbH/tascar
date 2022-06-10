@@ -85,16 +85,20 @@ ap_sndfile_async_t::ap_sndfile_async_t( const TASCAR::audioplugin_cfg_t& cfg )
 void ap_sndfile_async_t::configure()
 {
   TASCAR::audioplugin_base_t::configure();
-  if( n_channels < 1 )
+  if(n_channels < 1)
     throw TASCAR::ErrMsg("At least one channel required.");
-  sndf = new TASCAR::async_sndfile_t( n_channels, TASCAR::config("tascar.sndfile.bufferlength", 1<<18), n_fragment );
-  sndf->open( name, channel, position*f_sample, caliblevel, loop );
-  if( sndf->get_srate() != f_sample ){
-    std::string msg("The sample rate of the sound file "+name+" differs from the audio system sample rate: ");
+  sndf = new TASCAR::async_sndfile_t(
+      n_channels, TASCAR::config("tascar.sndfile.bufferlength", 1 << 18),
+      n_fragment);
+  sndf->open(name, channel, position * f_sample, caliblevel, loop);
+  if(sndf->get_srate() != f_sample) {
+    std::string msg("The sample rate of the sound file \"" + name +
+                    "\" differs from the session sample rate:\n");
     char ctmp[1024];
-    sprintf(ctmp,"file has %d Hz, expected %g Hz",sndf->get_srate(),f_sample);
-    msg+=ctmp;
-    TASCAR::add_warning(msg,e);
+    sprintf(ctmp, "  file has %d Hz, expected %g Hz", sndf->get_srate(),
+            f_sample);
+    msg += ctmp;
+    TASCAR::add_warning(msg, e);
   }
 }
 
