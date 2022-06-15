@@ -24,27 +24,27 @@
 
 class feedbackdelay_t : public TASCAR::audioplugin_base_t {
 public:
-  feedbackdelay_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
+  feedbackdelay_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   ~feedbackdelay_t();
+
 private:
-  uint64_t maxdelay;
-  double f;
-  double feedback;
+  uint64_t maxdelay = 44100;
+  float f = 1000.0f;
+  float feedback = 0.5f;
+  float directgain = 0.0f;
   TASCAR::varidelay_t* dl;
 };
 
-feedbackdelay_t::feedbackdelay_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    maxdelay(44100),
-    f(1000),
-    feedback(0.5),
-    dl(NULL)
+feedbackdelay_t::feedbackdelay_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), dl(NULL)
 {
-  GET_ATTRIBUTE(maxdelay,"samples","Maximum delay line length");
-  GET_ATTRIBUTE(f,"Hz","Resonance frequency");
-  GET_ATTRIBUTE(feedback,"","Linear feedback gain");
+  GET_ATTRIBUTE(maxdelay, "samples", "Maximum delay line length");
+  GET_ATTRIBUTE(f, "Hz", "Resonance frequency");
+  GET_ATTRIBUTE(feedback, "", "Linear feedback gain");
+  GET_ATTRIBUTE(directgain, "", "Linear gain of direct sound");
   dl = new TASCAR::varidelay_t(maxdelay, 1.0, 1.0, 0, 1);
 }
 
@@ -53,10 +53,11 @@ feedbackdelay_t::~feedbackdelay_t()
   delete dl;
 }
 
-void feedbackdelay_t::add_variables( TASCAR::osc_server_t* srv )
+void feedbackdelay_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_double("/f",&f);
-  srv->add_double("/feedback",&feedback);
+  srv->add_float("/f", &f);
+  srv->add_float("/feedback", &feedback);
+  srv->add_float("/directgain", &directgain);
 }
 
 void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
