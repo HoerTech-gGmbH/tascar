@@ -58,7 +58,7 @@ private:
   std::string tiltpath = "/tilt";
   std::vector<float> tiltmap = {0.0f, 0.0f, 180.0f, 180.0f};
   // use only z-rotation for referencing:
-  bool autoref_zonly = false;
+  bool autoref_zonly = true;
   // combine quaternion with gyroscope for increased resolution:
   bool combinegyr = true;
   uint32_t ttl;
@@ -70,8 +70,8 @@ private:
   bool apply_loc = false;
   bool apply_rot = true;
   bool send_only_quaternion = false;
-  double autoref = 0.0;
-  double smooth = 0.0;
+  double autoref = 0.00001;
+  double smooth = 0.1;
   // run-time variables:
   lo_address target = NULL;
   lo_address rottarget = NULL;
@@ -225,6 +225,8 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
                 "Apply translation based on accelerometer (not implemented)");
   srv->add_bool(p + "/apply_rot", &apply_rot,
                 "Apply rotation based on gyroscope and accelerometer");
+  srv->add_bool_true(p + "/reset", &first_sample_autoref,
+                "Reset auto-referencing state");
 }
 
 /**
