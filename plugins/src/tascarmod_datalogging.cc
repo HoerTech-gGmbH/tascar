@@ -90,7 +90,6 @@ private:
   lsl::channel_format_t chfmt = lsl::cf_undefined;
   std::mutex inletlock;
   TASCAR::tictoc_t ts;
-  std::thread srv;
   void poll_lsl_data();
   std::thread lsl_poll_service;
   std::atomic_bool run_lsl_poll_service = true;
@@ -359,7 +358,7 @@ lslvar_t::lslvar_t(tsccfg::node_t xmlsrc, double) // lsltimeout
     get_stream_delta_start();
     std::cerr << stream_delta_start << " s\n";
   }
-  srv = std::thread(&lslvar_t::poll_lsl_data, this);
+  lsl_poll_service = std::thread(&lslvar_t::poll_lsl_data, this);
 }
 
 void lslvar_t::get_stream_delta_start()
@@ -441,14 +440,6 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
   if((fileformat != "txt") && (fileformat != "mat") &&
      (fileformat != "matcell"))
     throw TASCAR::ErrMsg("Invalid file format \"" + fileformat + "\".");
-  for(auto sne : tsccfg::node_get_children(e, "variable"))
-    oscvars.push_back(new oscvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e, "osc"))
-    oscvars.push_back(new oscvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e, "oscs"))
-    oscsvars.push_back(new oscsvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e, "lsl"))
-    lslvars.push_back(new lslvar_t(sne, lsltimeout));
 }
 
 void dlog_vars_t::update(uint32_t, bool running)
@@ -465,10 +456,6 @@ void dlog_vars_t::update(uint32_t, bool running)
 
 dlog_vars_t::~dlog_vars_t()
 {
-  for(auto var : lslvars)
-    delete var;
-  for(auto var : oscsvars)
-    delete var;
 }
 
 std::string nice_name(std::string s, std::string extend = "")
@@ -904,6 +891,8 @@ public:
   static int osc_session_set_trialid(const char* path, const char* types,
                                      lo_arg** argv, int argc, lo_message msg,
                                      void* user_data);
+  void configure();
+  void release();
 
 private:
   // void poll_lsl_data();
@@ -955,33 +944,6 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
                   this);
   osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this);
   set_jack_client(session->jc);
-  // first, add all regular OSC variables:
-  for(auto var : oscvars) {
-    recorder.push_back(new recorder_t(var->size + 1, var->path, is_recording,
-                                      is_rolling, session->jc, session->srate,
-                                      var->ignorefirst));
-    var->set_recorder(recorder.back());
-    osc->add_method(var->path, var->get_fmt().c_str(),
-                    &oscvar_t::osc_receive_sample, var);
-  }
-  // second, add all string OSC variables:
-  for(auto var : oscsvars) {
-    recorder.push_back(new recorder_t(2, var->path, is_recording, is_rolling,
-                                      session->jc, session->srate, false));
-    var->set_recorder(recorder.back());
-    osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
-  }
-  // finally, add all LSL variables:
-  for(auto var : lslvars) {
-    recorder.push_back(new recorder_t(var->size + 1, var->name, is_recording,
-                                      is_rolling, session->jc, session->srate,
-                                      true));
-    var->set_recorder(recorder.back());
-  }
-  // update display of DC:
-  for(auto rec : recorder)
-    rec->set_displaydc(displaydc);
-  //
   TASCAR::osc_server_t::activate();
   refBuilder = Gtk::Builder::create_from_string(ui_datalogging);
   GET_WIDGET(win);
@@ -1025,6 +987,60 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   osc_set_trialid.connect(
       sigc::mem_fun(*this, &datalogging_t::on_osc_set_trialid));
   win->insert_action_group("datalog", refActionGroupMain);
+}
+
+datalogging_t::~datalogging_t()
+{
+  // pthread_mutex_destroy(&record_mtx);
+  delete win;
+  delete trialid;
+  delete datelabel;
+  delete jacktime;
+  delete draw_grid;
+  delete rec_label;
+}
+
+void datalogging_t::configure()
+{
+  TASCAR::module_base_t::configure();
+  for(auto sne : tsccfg::node_get_children(e, "variable"))
+    oscvars.push_back(new oscvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e, "osc"))
+    oscvars.push_back(new oscvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e, "oscs"))
+    oscsvars.push_back(new oscsvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e, "lsl"))
+    lslvars.push_back(new lslvar_t(sne, lsltimeout));
+  TASCAR::osc_server_t* osc(this);
+  if(port.empty())
+    osc = session;
+  // first, add all regular OSC variables:
+  for(auto var : oscvars) {
+    recorder.push_back(new recorder_t(var->size + 1, var->path, is_recording,
+                                      is_rolling, session->jc, session->srate,
+                                      var->ignorefirst));
+    var->set_recorder(recorder.back());
+    osc->add_method(var->path, var->get_fmt().c_str(),
+                    &oscvar_t::osc_receive_sample, var);
+  }
+  // second, add all string OSC variables:
+  for(auto var : oscsvars) {
+    recorder.push_back(new recorder_t(2, var->path, is_recording, is_rolling,
+                                      session->jc, session->srate, false));
+    var->set_recorder(recorder.back());
+    osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
+  }
+  // finally, add all LSL variables:
+  for(auto var : lslvars) {
+    recorder.push_back(new recorder_t(var->size + 1, var->name, is_recording,
+                                      is_rolling, session->jc, session->srate,
+                                      true));
+    var->set_recorder(recorder.back());
+  }
+  // update display of DC:
+  for(auto rec : recorder)
+    rec->set_displaydc(displaydc);
+  //
   connection_timeout = Glib::signal_timeout().connect(
       sigc::mem_fun(*this, &datalogging_t::on_100ms), 100);
   uint32_t num_cols(ceil(sqrt(recorder.size())));
@@ -1044,7 +1060,27 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   }
   draw_grid->show_all();
   showdc->set_active(displaydc);
-  // lsl_poll_service = std::thread(&datalogging_t::poll_lsl_data, this);
+}
+
+void datalogging_t::release()
+{
+  try {
+    stop_trial();
+  }
+  catch(const std::exception& e) {
+    std::cerr << "Warning: " << e.what() << "\n";
+  }
+  connection_timeout.disconnect();
+  TASCAR::osc_server_t::deactivate();
+  for(uint32_t k = 0; k < recorder.size(); k++)
+    delete recorder[k];
+  for(auto var : lslvars)
+    delete var;
+  for(auto var : oscsvars)
+    delete var;
+  lslvars.clear();
+  oscvars.clear();
+  TASCAR::module_base_t::release();
 }
 
 void lslvar_t::poll_lsl_data()
@@ -1183,27 +1219,6 @@ void oscsvar_t::osc_receive_sample(const char*, const char* msg)
   if(datarecorder) {
     datarecorder->store_msg(datarecorder->get_session_time(), 0, msg);
   }
-}
-
-datalogging_t::~datalogging_t()
-{
-  try {
-    stop_trial();
-  }
-  catch(const std::exception& e) {
-    std::cerr << "Warning: " << e.what() << "\n";
-  }
-  connection_timeout.disconnect();
-  TASCAR::osc_server_t::deactivate();
-  for(uint32_t k = 0; k < recorder.size(); k++)
-    delete recorder[k];
-  // pthread_mutex_destroy(&record_mtx);
-  delete win;
-  delete trialid;
-  delete datelabel;
-  delete jacktime;
-  delete draw_grid;
-  delete rec_label;
 }
 
 void datalogging_t::start_trial(const std::string& name)
