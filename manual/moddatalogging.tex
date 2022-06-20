@@ -1,15 +1,9 @@
-The data logging module allows logging of OSC messages and LSL streams
-together with the \tascar{} timeline.
+The data logging module allows logging OSC messages and LSL data streams
+together with the timeline of \tascar{}.
 %
-Both OSC and LSL are protocols commonly used to send information
-between devices, such as motion capture devices or bioamplifiers.
-%
-For example, you can collect data from such sensors that are used
-during an experiment.
-%
-If the sensor sends data to the computer either in OSC or LSL
-protocol, you can record this data using the \elem{datalogging}
-module:
+Application examples are external sensors such as motion capture or
+bio-physical sensors such as EEG, but also control data, e.g., send from
+measurement applications.
 
 Example:
 \begin{lstlisting}[numbers=none]
@@ -22,32 +16,31 @@ Example:
 </datalogging>
 \end{lstlisting}
 
-To record the data sent by a device as a series of OSC messages, we
-have to specify the path to the OSC variable associated with the
-sensor:
+To record the data sent by a device as a series of OSC messages, the
+message path \attr{path} and dimension \attr{size} must be specified:
 %
 \begin{lstlisting}[numbers=none]
   <osc path="/sensor1/pos" size="3"/>
 \end{lstlisting}
 %
-The \attr{size} attribute refers to the dimension of the OSC variable.
-%
-The attribute \attr{ignorefirst} can be used to hide the first channel
+The \attr{ignorefirst} attribute can be used to hide the first channel
 in the display, which can be useful if the first channel contains time
-values or other control data.
+values or other control data. This will not affect the recording of the
+data.
 
-To record the data sent by a device as an LSL stream, we need to
-specify the name of the LSL stream associated with the sensor:
+To record the data sent by a device as an LSL stream, the LSL stream
+must be selected. This is done via the attribute \attr{predicate}:
 \begin{lstlisting}[numbers=none]
   <lsl predicate="name='EEGamp'" tctimeout="2"/>
 \end{lstlisting}
-The attribute \attr{tctimeout} is the maximal time used to measure the
-time correction values between sender and receiver. The
-attribute \attr{required} can be set to ``false'', to allow for
-starting \tascar{} without requiring all LSL streams to be
-available. The stream will not be recovered later during the session.
+The \attr{tctimeout} attribute is the maximum time used to measure the
+time correction values between sender and receiver. The \attr{required}
+attribute can be set to ``false'' to allow \tascar{} to start without
+requiring all LSL streams to be available. The stream will then not be
+restored later during the session.
 
-Text data (e.g., trigger messages) can be recorded from LSL, or from osc with the \elem{oscs} element:
+Text data (e.g., trigger messages) can be recorded from LSL, or from osc
+with the \elem{oscs} element:
 \begin{lstlisting}[numbers=none]
   <oscs path="/msg"/>
 \end{lstlisting}
@@ -68,6 +61,8 @@ name & description (type, unit) & def.\\
 \indattr{displaydc} & Display DC components (bool) & true\\
 \hline
 \indattr{fileformat} & File format, can be either ``mat'', ``matcell'' or ``txt'' (string) & matcell\\
+\hline
+\indattr{headless} & Use without GUI (bool) & false\\
 \hline
 \indattr{lsltimeout} & Number of seconds to scan for LSL streams (double, s) & 10\\
 \hline
@@ -102,6 +97,28 @@ used. Here the data is stored in a cell array, with one entry for each
 variable. Each entry contains a structure, with a \attr{name} field,
 a \attr{data} field and for LSL variables some additional stream
 information.
+
+\subsubsection*{OSC control}
+
+Data recording can be started and stopped via OSC messages by sending a
+message to \verb!/session_start! and \verb!/session_end!
+respectively. The trial ID can be set via \verb!/session_trialid!; a new
+trial ID will be used at the next \verb!/session_start! event.
+
+The output directory can be set with \verb!/session_outputdir!. This is
+possible up to the \verb!/session_stop! event.
+
+\subsubsection*{Timeline control and data logging}
+
+With the default settings the datalogging will start the timeline
+transport from zero upon \verb!/session_start!, and will stop the
+transport upon \verb!/session_stop!. This can be changed by setting the
+attribute \attr{controltransport="false"}. In that case the transport
+will not be started or stopped upon any \verb!/session_start!
+or \verb!/session_stop! event.
+
+To record data only while the transport is rolling, the
+attribute \attr{usetransport="true"} can be used.
 
 \subsubsection*{Data logging, session time and lab streaming layer}
 

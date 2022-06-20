@@ -152,6 +152,7 @@ protected:
   bool controltransport = true;
   bool usetransport = false;
   double lsltimeout = 10.0;
+  bool headless = false;
   oscvarlist_t oscvars;
   oscsvarlist_t oscsvars;
   lslvarlist_t lslvars;
@@ -162,11 +163,11 @@ protected:
 void dlog_vars_t::validate_attributes(std::string& msg) const
 {
   TASCAR::module_base_t::validate_attributes(msg);
-  for( auto pvar : oscvars )
+  for(auto pvar : oscvars)
     pvar->validate_attributes(msg);
-  for( auto pvar : oscsvars )
+  for(auto pvar : oscsvars)
     pvar->validate_attributes(msg);
-  for( auto pvar : lslvars )
+  for(auto pvar : lslvars)
     pvar->validate_attributes(msg);
 }
 
@@ -435,6 +436,7 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
   GET_ATTRIBUTE_BOOL(controltransport,
                      "Control transport with recording session control");
   GET_ATTRIBUTE_BOOL(usetransport, "Record only while transport is rolling");
+  GET_ATTRIBUTE_BOOL(headless, "Use without GUI");
   if(fileformat.size() == 0)
     fileformat = "matcell";
   if((fileformat != "txt") && (fileformat != "mat") &&
@@ -454,9 +456,7 @@ void dlog_vars_t::update(uint32_t, bool running)
   }
 }
 
-dlog_vars_t::~dlog_vars_t()
-{
-}
+dlog_vars_t::~dlog_vars_t() {}
 
 std::string nice_name(std::string s, std::string extend = "")
 {
@@ -903,14 +903,14 @@ private:
   std::string filename;
   // GUI:
   Glib::RefPtr<Gtk::Builder> refBuilder;
-  Gtk::Window* win;
-  Gtk::Entry* trialid;
-  Gtk::Label* datelabel;
-  Gtk::Label* jacktime;
-  Gtk::Grid* draw_grid;
-  Gtk::Label* rec_label;
-  Gtk::Entry* outputdirentry;
-  Gtk::CheckButton* showdc;
+  Gtk::Window* win = NULL;
+  Gtk::Entry* trialid = NULL;
+  Gtk::Label* datelabel = NULL;
+  Gtk::Label* jacktime = NULL;
+  Gtk::Grid* draw_grid = NULL;
+  Gtk::Label* rec_label = NULL;
+  Gtk::Entry* outputdirentry = NULL;
+  Gtk::CheckButton* showdc = NULL;
   sigc::connection connection_timeout;
   Glib::Dispatcher osc_start;
   Glib::Dispatcher osc_stop;
@@ -943,61 +943,67 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   osc->add_method("/session_start", "", &datalogging_t::osc_session_start,
                   this);
   osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this);
+  osc->add_string("/sesson_outputdir", &outputdir);
   set_jack_client(session->jc);
   TASCAR::osc_server_t::activate();
-  refBuilder = Gtk::Builder::create_from_string(ui_datalogging);
-  GET_WIDGET(win);
-  GET_WIDGET(trialid);
-  GET_WIDGET(datelabel);
-  GET_WIDGET(jacktime);
-  GET_WIDGET(draw_grid);
-  GET_WIDGET(rec_label);
-  GET_WIDGET(outputdirentry);
-  GET_WIDGET(showdc);
-  rec_label->set_text("");
+  if(!headless) {
+    refBuilder = Gtk::Builder::create_from_string(ui_datalogging);
+    GET_WIDGET(win);
+    GET_WIDGET(trialid);
+    GET_WIDGET(datelabel);
+    GET_WIDGET(jacktime);
+    GET_WIDGET(draw_grid);
+    GET_WIDGET(rec_label);
+    GET_WIDGET(outputdirentry);
+    GET_WIDGET(showdc);
+    rec_label->set_text("");
+  }
   outputdir = TASCAR::env_expand(outputdir);
-  outputdirentry->set_text(outputdir);
-  win->set_title("tascar datalogging - " + session->name);
-  int32_t dlogwin_x(0);
-  int32_t dlogwin_y(0);
-  int32_t dlogwin_width(300);
-  int32_t dlogwin_height(300);
-  win->get_size(dlogwin_width, dlogwin_height);
-  win->get_position(dlogwin_x, dlogwin_y);
-  get_attribute_value(e, "w", dlogwin_width);
-  get_attribute_value(e, "h", dlogwin_height);
-  get_attribute_value(e, "x", dlogwin_x);
-  get_attribute_value(e, "y", dlogwin_y);
-  win->resize(dlogwin_width, dlogwin_height);
-  win->move(dlogwin_x, dlogwin_y);
-  win->resize(dlogwin_width, dlogwin_height);
-  win->move(dlogwin_x, dlogwin_y);
-  win->show();
-  // Create actions for menus and toolbars:
-  Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain =
-      Gio::SimpleActionGroup::create();
-  refActionGroupMain->add_action(
-      "start", sigc::mem_fun(*this, &datalogging_t::on_ui_start));
-  refActionGroupMain->add_action(
-      "stop", sigc::mem_fun(*this, &datalogging_t::on_ui_stop));
-  refActionGroupMain->add_action(
-      "showdc", sigc::mem_fun(*this, &datalogging_t::on_ui_showdc));
+  if(!headless) {
+    outputdirentry->set_text(outputdir);
+    win->set_title("tascar datalogging - " + session->name);
+    int32_t dlogwin_x(0);
+    int32_t dlogwin_y(0);
+    int32_t dlogwin_width(300);
+    int32_t dlogwin_height(300);
+    win->get_size(dlogwin_width, dlogwin_height);
+    win->get_position(dlogwin_x, dlogwin_y);
+    get_attribute_value(e, "w", dlogwin_width);
+    get_attribute_value(e, "h", dlogwin_height);
+    get_attribute_value(e, "x", dlogwin_x);
+    get_attribute_value(e, "y", dlogwin_y);
+    win->resize(dlogwin_width, dlogwin_height);
+    win->move(dlogwin_x, dlogwin_y);
+    win->resize(dlogwin_width, dlogwin_height);
+    win->move(dlogwin_x, dlogwin_y);
+    win->show();
+    // Create actions for menus and toolbars:
+    Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain =
+        Gio::SimpleActionGroup::create();
+    refActionGroupMain->add_action(
+        "start", sigc::mem_fun(*this, &datalogging_t::on_ui_start));
+    refActionGroupMain->add_action(
+        "stop", sigc::mem_fun(*this, &datalogging_t::on_ui_stop));
+    refActionGroupMain->add_action(
+        "showdc", sigc::mem_fun(*this, &datalogging_t::on_ui_showdc));
+    win->insert_action_group("datalog", refActionGroupMain);
+  }
   osc_start.connect(sigc::mem_fun(*this, &datalogging_t::on_ui_start));
   osc_stop.connect(sigc::mem_fun(*this, &datalogging_t::on_ui_stop));
   osc_set_trialid.connect(
       sigc::mem_fun(*this, &datalogging_t::on_osc_set_trialid));
-  win->insert_action_group("datalog", refActionGroupMain);
 }
 
 datalogging_t::~datalogging_t()
 {
-  // pthread_mutex_destroy(&record_mtx);
-  delete win;
-  delete trialid;
-  delete datelabel;
-  delete jacktime;
-  delete draw_grid;
-  delete rec_label;
+  if(!headless) {
+    delete win;
+    delete trialid;
+    delete datelabel;
+    delete jacktime;
+    delete draw_grid;
+    delete rec_label;
+  }
 }
 
 void datalogging_t::configure()
@@ -1037,29 +1043,31 @@ void datalogging_t::configure()
                                       true));
     var->set_recorder(recorder.back());
   }
-  // update display of DC:
-  for(auto rec : recorder)
-    rec->set_displaydc(displaydc);
-  //
-  connection_timeout = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &datalogging_t::on_100ms), 100);
-  uint32_t num_cols(ceil(sqrt(recorder.size())));
-  uint32_t num_rows(ceil(recorder.size() / std::max(1u, num_cols)));
-  for(uint32_t k = 0; k < num_cols; k++)
-    draw_grid->insert_column(0);
-  for(uint32_t k = 0; k < num_rows; k++)
-    draw_grid->insert_row(0);
-  for(uint32_t k = 0; k < recorder.size(); k++) {
-    uint32_t kc(k % num_cols);
-    uint32_t kr(k / num_cols);
-    Gtk::Box* box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
-    draw_grid->attach(*box, kc, kr, 1, 1);
-    Gtk::Label* label = new Gtk::Label(recorder[k]->get_name());
-    box->pack_start(*label, Gtk::PACK_SHRINK);
-    box->pack_start(*(recorder[k]));
+  if(!headless) {
+    // update display of DC:
+    for(auto rec : recorder)
+      rec->set_displaydc(displaydc);
+    //
+    connection_timeout = Glib::signal_timeout().connect(
+        sigc::mem_fun(*this, &datalogging_t::on_100ms), 100);
+    uint32_t num_cols(ceil(sqrt(recorder.size())));
+    uint32_t num_rows(ceil(recorder.size() / std::max(1u, num_cols)));
+    for(uint32_t k = 0; k < num_cols; k++)
+      draw_grid->insert_column(0);
+    for(uint32_t k = 0; k < num_rows; k++)
+      draw_grid->insert_row(0);
+    for(uint32_t k = 0; k < recorder.size(); k++) {
+      uint32_t kc(k % num_cols);
+      uint32_t kr(k / num_cols);
+      Gtk::Box* box = new Gtk::Box(Gtk::ORIENTATION_VERTICAL);
+      draw_grid->attach(*box, kc, kr, 1, 1);
+      Gtk::Label* label = new Gtk::Label(recorder[k]->get_name());
+      box->pack_start(*label, Gtk::PACK_SHRINK);
+      box->pack_start(*(recorder[k]));
+    }
+    draw_grid->show_all();
+    showdc->set_active(displaydc);
   }
-  draw_grid->show_all();
-  showdc->set_active(displaydc);
 }
 
 void datalogging_t::release()
@@ -1116,7 +1124,8 @@ int datalogging_t::osc_session_set_trialid(const char*, const char*,
 
 void datalogging_t::on_osc_set_trialid()
 {
-  trialid->set_text(osc_trialid);
+  if(!headless)
+    trialid->set_text(osc_trialid);
 }
 
 void datalogging_t::on_ui_showdc()
@@ -1130,24 +1139,35 @@ void datalogging_t::on_ui_showdc()
 void datalogging_t::on_ui_start()
 {
   try {
-    std::string trialidtext(trialid->get_text());
+    std::string trialidtext;
+    if(headless)
+      trialidtext = osc_trialid;
+    else
+      trialidtext = trialid->get_text();
     if(trialidtext.empty()) {
       trialidtext = "unnamed";
-      trialid->set_text(trialidtext);
+      if(!headless)
+        trialid->set_text(trialidtext);
     }
     std::string datestr_(datestr());
-    datelabel->set_text(datestr_);
+    if(!headless)
+      datelabel->set_text(datestr_);
     // throw TASCAR::ErrMsg("Empty trial ID string.");
     trialidtext += "_" + datestr_;
-    win->set_title("tascar datalogging - " + session->name + " [" +
-                   trialidtext + "]");
+    if(!headless)
+      win->set_title("tascar datalogging - " + session->name + " [" +
+                     trialidtext + "]");
     start_trial(trialidtext);
-    rec_label->set_text(" REC ");
+    if(!headless)
+      rec_label->set_text(" REC ");
   }
   catch(const std::exception& e) {
     std::string tmp(e.what());
     tmp += " (start)";
-    error_message(tmp);
+    if(headless)
+      std::cerr << "Error: " << tmp << std::endl;
+    else
+      error_message(tmp);
   }
 }
 
@@ -1155,24 +1175,31 @@ void datalogging_t::on_ui_stop()
 {
   try {
     stop_trial();
-    rec_label->set_text("");
-    win->set_title("tascar datalogging - " + session->name);
+    if(!headless) {
+      rec_label->set_text("");
+      win->set_title("tascar datalogging - " + session->name);
+    }
   }
   catch(const std::exception& e) {
     std::string tmp(e.what());
     tmp += " (stop)";
-    error_message(tmp);
+    if(headless)
+      std::cerr << "Error: " << tmp << std::endl;
+    else
+      error_message(tmp);
   }
 }
 
 bool datalogging_t::on_100ms()
 {
-  // update labels:
-  if(!b_recording)
-    datelabel->set_text(datestr());
-  char ctmp[1024];
-  sprintf(ctmp, "%1.1f s", session->tp_get_time());
-  jacktime->set_text(ctmp);
+  if(!headless) {
+    // update labels:
+    if(!b_recording)
+      datelabel->set_text(datestr());
+    char ctmp[1024];
+    sprintf(ctmp, "%1.1f s", session->tp_get_time());
+    jacktime->set_text(ctmp);
+  }
   return true;
 }
 
@@ -1256,7 +1283,8 @@ void datalogging_t::stop_trial()
   for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it) {
     (*it)->get_stream_delta_end();
   }
-  outputdir = outputdirentry->get_text();
+  if(!headless)
+    outputdir = outputdirentry->get_text();
   if(!outputdir.empty()) {
     if(outputdir[outputdir.size() - 1] != '/')
       outputdir = outputdir + "/";
