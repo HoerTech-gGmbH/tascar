@@ -46,8 +46,8 @@ uninstall:
 
 clean:
 	rm -Rf *~ src/*~ build
-	find -name "*.jvalid" -exec rm -f \{\} \;
-	find -name "*.validated" -exec rm -f \{\} \;
+	find . -name "*.jvalid" -exec rm -f \{\} \;
+	find . -name "*.validated" -exec rm -f \{\} \;
 
 $(PREFIX)/lib/%: build/%
 	cp $< $@

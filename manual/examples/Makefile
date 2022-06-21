@@ -1,4 +1,4 @@
-EXAMPLES = $(shell find -name "*.tsc")
+EXAMPLES = $(shell find . -name "*.tsc")
 
 LIBPATH=$(shell pwd)/../../libtascar/build/
 PLUGPATH=$(shell pwd)/../../plugins/build/
