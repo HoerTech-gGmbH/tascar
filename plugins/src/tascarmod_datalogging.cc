@@ -180,14 +180,119 @@ public:
   std::string msg;
 };
 
+class data_draw_t : public Gtk::DrawingArea {
+public:
+  data_draw_t(bool ignore_first, size_t num_channels)
+      : num_channels(num_channels), ignore_first_(ignore_first),
+        vdc(num_channels, 0.0)
+  {
+    connection_timeout = Glib::signal_timeout().connect(
+        sigc::mem_fun(*this, &data_draw_t::on_timeout), 200);
+  };
+  virtual ~data_draw_t() { connection_timeout.disconnect(); };
+  virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+  void clear();
+  void set_time(double ntime) { time = ntime; };
+  bool on_timeout();
+  void store_sample(uint32_t nch, double* data);
+  void store_msg(double t1, double t2, const std::string& msg);
+
+private:
+  void get_valuerange(const std::vector<double>& data, uint32_t channels,
+                      uint32_t firstchannel, uint32_t n1, uint32_t n2,
+                      double& dmin, double& dmax);
+  std::mutex drawlock;
+  std::mutex plotdatalock;
+  std::vector<double> plotdata_;
+  std::vector<label_t> plot_messages;
+  bool b_textdata = false;
+  std::atomic<double> time;
+  size_t num_channels = 1u;
+  bool ignore_first_ = false;
+  bool displaydc_ = true;
+  std::vector<double> vdc;
+  uint32_t timeout_cnt = 10u;
+  sigc::connection connection_timeout;
+};
+
+void data_draw_t::store_sample(uint32_t n, double* data)
+{
+  if(plotdatalock.try_lock()) {
+    timeout_cnt = 10u;
+    b_textdata = false;
+    // todo: increase efficiency, add multi-frame addition
+    for(uint32_t k = 0; k < n; k++)
+      plotdata_.push_back(data[k]);
+    plotdatalock.unlock();
+  }
+}
+
+void data_draw_t::store_msg(double t1, double t2, const std::string& msg)
+{
+  if(plotdatalock.try_lock()) {
+    timeout_cnt = 10u;
+    b_textdata = false;
+    plot_messages.emplace_back(t1, t2, msg);
+    plotdatalock.unlock();
+  }
+}
+
+void data_draw_t::get_valuerange(const std::vector<double>& data,
+                                 uint32_t channels, uint32_t firstchannel,
+                                 uint32_t n1, uint32_t n2, double& dmin,
+                                 double& dmax)
+{
+  dmin = HUGE_VAL;
+  dmax = -HUGE_VAL;
+  for(uint32_t dim = firstchannel; dim < channels; dim++) {
+    vdc[dim] = 0;
+    if(!displaydc_) {
+      uint32_t cnt(0);
+      for(uint32_t k = n1; k < n2; k++) {
+        double v(data[dim + k * channels]);
+        if((v != HUGE_VAL) && (v != -HUGE_VAL)) {
+          vdc[dim] += v;
+          cnt++;
+        }
+      }
+      if(cnt)
+        vdc[dim] /= (double)cnt;
+    }
+    for(uint32_t k = n1; k < n2; k++) {
+      double v(data[dim + k * channels]);
+      if((v != HUGE_VAL) && (v != -HUGE_VAL)) {
+        dmin = std::min(dmin, v - vdc[dim]);
+        dmax = std::max(dmax, v - vdc[dim]);
+      }
+    }
+  }
+  if(dmax == dmin) {
+    dmin -= 1.0;
+    dmax += 1.0;
+  }
+  if(!(dmax > dmin)) {
+    dmin = 1.0;
+    dmax = 1.0;
+  }
+}
+
+void data_draw_t::clear()
+{
+  std::lock_guard<std::mutex> lock(plotdatalock);
+  plotdata_.clear();
+  plot_messages.clear();
+  b_textdata = false;
+  timeout_cnt = 10u;
+}
+
 /**
  * @brief Data recorder for one variable
  */
-class recorder_t : public Gtk::DrawingArea {
+class recorder_t {
 public:
   recorder_t(uint32_t size, const std::string& name, std::atomic_bool& is_rec,
              std::atomic_bool& is_roll, jack_client_t* jc, double srate,
-             bool ignore_first);
+             bool ignore_first, bool headless);
   virtual ~recorder_t();
   /**
    * @brief Store a single data sample (can be multi-channel)
@@ -210,8 +315,6 @@ public:
   uint32_t get_size() const { return size_; };
   const std::string& get_name() const { return name_; };
   void clear();
-  virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
-  bool on_timeout();
   void set_displaydc(bool displaydc) { displaydc_ = displaydc; };
   void set_textdata() { b_textdata = true; };
   bool is_textdata() const { return b_textdata; };
@@ -221,30 +324,21 @@ public:
     return xmessages;
   };
   double get_session_time() const;
-  uint32_t timeout_cnt = 10u;
+  data_draw_t* drawer = NULL;
 
 private:
-  void get_valuerange(const std::vector<double>& data, uint32_t channels,
-                      uint32_t firstchannel, uint32_t n1, uint32_t n2,
-                      double& dmin, double& dmax);
   std::mutex dlock;
   bool displaydc_;
   uint32_t size_;
   bool b_textdata;
   std::vector<double> xdata_;
-  std::vector<double> plotdata_;
-  std::vector<double> vdc;
   std::vector<label_t> xmessages;
-  std::vector<label_t> plot_messages;
   std::string name_;
   std::atomic_bool& is_rec_;
   std::atomic_bool& is_roll_;
   // pthread_mutex_t& record_mtx_;
   jack_client_t* jc_;
   double audio_sample_period_;
-  pthread_mutex_t drawlock;
-  pthread_mutex_t plotdatalock;
-  sigc::connection connection_timeout;
   bool ignore_first_;
   size_t plotdata_cnt;
 };
@@ -479,16 +573,17 @@ std::string nice_name(std::string s, std::string extend = "")
 
 recorder_t::recorder_t(uint32_t size, const std::string& name,
                        std::atomic_bool& is_rec, std::atomic_bool& is_roll,
-                       jack_client_t* jc, double srate, bool ignore_first)
-    : displaydc_(true), size_(size), b_textdata(false), vdc(size_, 0),
-      name_(name), is_rec_(is_rec), is_roll_(is_roll), jc_(jc),
+                       jack_client_t* jc, double srate, bool ignore_first,
+                       bool headless)
+    : displaydc_(true), size_(size), b_textdata(false), name_(name),
+      is_rec_(is_rec), is_roll_(is_roll), jc_(jc),
       audio_sample_period_(1.0 / srate), ignore_first_(ignore_first),
       plotdata_cnt(0)
 {
-  pthread_mutex_init(&drawlock, NULL);
-  pthread_mutex_init(&plotdatalock, NULL);
-  connection_timeout = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &recorder_t::on_timeout), 200);
+  if(!headless)
+    drawer = new data_draw_t(ignore_first, size);
+  // pthread_mutex_init(&drawlock, NULL);
+  // pthread_mutex_init(&plotdatalock, NULL);
 }
 
 double recorder_t::get_session_time() const
@@ -501,18 +596,17 @@ void recorder_t::clear()
   std::lock_guard<std::mutex> lock(dlock);
   xdata_.clear();
   xmessages.clear();
-  pthread_mutex_lock(&plotdatalock);
-  plotdata_.clear();
-  plot_messages.clear();
-  pthread_mutex_unlock(&plotdatalock);
+  if( drawer )
+    drawer->clear();
+  // pthread_mutex_lock(&plotdatalock);
+  // plotdata_.clear();
+  // plot_messages.clear();
+  // pthread_mutex_unlock(&plotdatalock);
   plotdata_cnt = 0;
-  timeout_cnt = 10u;
+  // timeout_cnt = 10u;
 }
 
-recorder_t::~recorder_t()
-{
-  connection_timeout.disconnect();
-}
+recorder_t::~recorder_t() {}
 
 double sqr(double x)
 {
@@ -541,45 +635,6 @@ void find_timeinterval(const std::vector<double>& data, uint32_t channels,
   ++n2;
   for(n1 = n2 - 1; (n1 > 0) && (data[n1 * channels] >= t1); --n1)
     ;
-}
-
-void recorder_t::get_valuerange(const std::vector<double>& data,
-                                uint32_t channels, uint32_t firstchannel,
-                                uint32_t n1, uint32_t n2, double& dmin,
-                                double& dmax)
-{
-  dmin = HUGE_VAL;
-  dmax = -HUGE_VAL;
-  for(uint32_t dim = firstchannel; dim < channels; dim++) {
-    vdc[dim] = 0;
-    if(!displaydc_) {
-      uint32_t cnt(0);
-      for(uint32_t k = n1; k < n2; k++) {
-        double v(data[dim + k * channels]);
-        if((v != HUGE_VAL) && (v != -HUGE_VAL)) {
-          vdc[dim] += v;
-          cnt++;
-        }
-      }
-      if(cnt)
-        vdc[dim] /= (double)cnt;
-    }
-    for(uint32_t k = n1; k < n2; k++) {
-      double v(data[dim + k * channels]);
-      if((v != HUGE_VAL) && (v != -HUGE_VAL)) {
-        dmin = std::min(dmin, v - vdc[dim]);
-        dmax = std::max(dmax, v - vdc[dim]);
-      }
-    }
-  }
-  if(dmax == dmin) {
-    dmin -= 1.0;
-    dmax += 1.0;
-  }
-  if(!(dmax > dmin)) {
-    dmin = 1.0;
-    dmax = 1.0;
-  }
 }
 
 TASCAR::Scene::rgb_color_t set_hsv(float h, float s, float v)
@@ -611,9 +666,9 @@ TASCAR::Scene::rgb_color_t set_hsv(float h, float s, float v)
   return rgb_d;
 }
 
-bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-  if(pthread_mutex_trylock(&drawlock) == 0) {
+  if(drawlock.try_lock()) {
     Glib::RefPtr<Gdk::Window> window = get_window();
     if(window) {
       Gtk::Allocation allocation = get_allocation();
@@ -627,8 +682,8 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       cr->translate(width, 0);
       cr->set_line_width(1);
       // data plot:
-      pthread_mutex_lock(&plotdatalock);
-      double ltime(0);
+      plotdatalock.lock();
+      double ltime = time;
       double drange(2);
       double dscale(1);
       double dmin(-1);
@@ -636,7 +691,7 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       if(b_textdata) {
         drange = dmax - dmin;
         dscale = height / drange;
-        ltime = audio_sample_period_ * jack_get_current_transport_frame(jc_);
+        // ltime = audio_sample_period_ * jack_get_current_transport_frame(jc_);
         for(auto it = plot_messages.begin(); it != plot_messages.end(); ++it) {
           if((it->t1 >= ltime - 30) && (it->t1 <= ltime)) {
             double t((it->t1 - ltime) * width / 30.0);
@@ -658,30 +713,30 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         }
       } else {
         // N is number of (multi-dimensional) samples:
-        uint32_t N(plotdata_.size() / size_);
+        uint32_t N(plotdata_.size() / num_channels);
         if(N > 1) {
           //        double tmax(0);
           uint32_t n1(0);
           uint32_t n2(0);
-          ltime = plotdata_[(N - 1) * size_];
-          find_timeinterval(plotdata_, size_, ltime - 30, ltime, n1, n2);
-          get_valuerange(plotdata_, size_, 1 + ignore_first_, n1, n2, dmin,
-                         dmax);
+          ltime = plotdata_[(N - 1) * num_channels];
+          find_timeinterval(plotdata_, num_channels, ltime - 30, ltime, n1, n2);
+          get_valuerange(plotdata_, num_channels, 1 + ignore_first_, n1, n2,
+                         dmin, dmax);
           uint32_t stepsize((n2 - n1) / 2048);
           ++stepsize;
           drange = dmax - dmin;
           dscale = height / drange;
-          for(uint32_t dim = 1 + ignore_first_; dim < size_; ++dim) {
+          for(uint32_t dim = 1 + ignore_first_; dim < num_channels; ++dim) {
             cr->save();
-            double size_norm(1.0 / (size_ - 1.0 - ignore_first_));
+            double size_norm(1.0 / (num_channels - 1.0 - ignore_first_));
             TASCAR::Scene::rgb_color_t rgb(set_hsv(
                 (dim - 1.0 - ignore_first_) * size_norm * 360, 0.8, 0.7));
             cr->set_source_rgb(rgb.r, rgb.g, rgb.b);
             bool first(true);
             // limit number of lines:
             for(uint32_t k = n1; k < n2; k += stepsize) {
-              double t(plotdata_[k * size_] - ltime);
-              double v(plotdata_[dim + k * size_]);
+              double t(plotdata_[k * num_channels] - ltime);
+              double v(plotdata_[dim + k * num_channels]);
               if(finite(v)) {
                 if(!displaydc_)
                   v -= vdc[dim];
@@ -702,7 +757,7 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
           }
         }
       }
-      pthread_mutex_unlock(&plotdatalock);
+      plotdatalock.unlock();
       // draw scale:
       cr->set_source_rgb(0, 0, 0);
       cr->move_to(-width, 0);
@@ -774,12 +829,12 @@ bool recorder_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
       }
       cr->restore();
     }
-    pthread_mutex_unlock(&drawlock);
+    drawlock.unlock();
   }
   return true;
 }
 
-bool recorder_t::on_timeout()
+bool data_draw_t::on_timeout()
 {
   if(timeout_cnt)
     --timeout_cnt;
@@ -794,7 +849,6 @@ bool recorder_t::on_timeout()
 
 void recorder_t::store_sample(uint32_t n, double* data)
 {
-  timeout_cnt = 10u;
   // todo: increase efficiency, add multi-frame addition
   if(n != size_)
     throw TASCAR::ErrMsg("Invalid size (recorder_t::store)");
@@ -802,25 +856,18 @@ void recorder_t::store_sample(uint32_t n, double* data)
     std::lock_guard<std::mutex> lock(dlock);
     for(uint32_t k = 0; k < n; k++)
       xdata_.push_back(data[k]);
-    if(pthread_mutex_trylock(&plotdatalock) == 0) {
-      for(uint32_t k = 0; k < n; k++)
-        plotdata_.push_back(data[k]);
-      pthread_mutex_unlock(&plotdatalock);
-    }
+    if( drawer )
+      drawer->store_sample(n, data);
   }
 }
 
 void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 {
-  timeout_cnt = 10u;
-  b_textdata = true;
   if(is_rec_ && is_roll_) {
     std::lock_guard<std::mutex> lock(dlock);
     xmessages.emplace_back(t1, t2, msg);
-    if(pthread_mutex_trylock(&plotdatalock) == 0) {
-      plot_messages = xmessages;
-      pthread_mutex_unlock(&plotdatalock);
-    }
+    if( drawer )
+      drawer->store_msg(t1, t2, msg);
   }
 }
 
@@ -1024,7 +1071,7 @@ void datalogging_t::configure()
   for(auto var : oscvars) {
     recorder.push_back(new recorder_t(var->size + 1, var->path, is_recording,
                                       is_rolling, session->jc, session->srate,
-                                      var->ignorefirst));
+                                      var->ignorefirst, headless));
     var->set_recorder(recorder.back());
     osc->add_method(var->path, var->get_fmt().c_str(),
                     &oscvar_t::osc_receive_sample, var);
@@ -1032,7 +1079,7 @@ void datalogging_t::configure()
   // second, add all string OSC variables:
   for(auto var : oscsvars) {
     recorder.push_back(new recorder_t(2, var->path, is_recording, is_rolling,
-                                      session->jc, session->srate, false));
+                                      session->jc, session->srate, false, headless));
     var->set_recorder(recorder.back());
     osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
   }
@@ -1040,7 +1087,7 @@ void datalogging_t::configure()
   for(auto var : lslvars) {
     recorder.push_back(new recorder_t(var->size + 1, var->name, is_recording,
                                       is_rolling, session->jc, session->srate,
-                                      true));
+                                      true,headless));
     var->set_recorder(recorder.back());
   }
   if(!headless) {
@@ -1063,7 +1110,7 @@ void datalogging_t::configure()
       draw_grid->attach(*box, kc, kr, 1, 1);
       Gtk::Label* label = new Gtk::Label(recorder[k]->get_name());
       box->pack_start(*label, Gtk::PACK_SHRINK);
-      box->pack_start(*(recorder[k]));
+      box->pack_start(*(recorder[k]->drawer));
     }
     draw_grid->show_all();
     showdc->set_active(displaydc);
