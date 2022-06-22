@@ -197,6 +197,7 @@ public:
   void store_sample(uint32_t nch, double* data);
   void store_msg(double t1, double t2, const std::string& msg);
   void set_displaydc(bool displaydc) { displaydc_ = displaydc; };
+  void set_alive() { timeout_cnt = 10u; };
 
 private:
   void get_valuerange(const std::vector<double>& data, uint32_t channels,
@@ -857,6 +858,9 @@ void recorder_t::store_sample(uint32_t n, double* data)
       xdata_.push_back(data[k]);
     if(drawer)
       drawer->store_sample(n, data);
+  } else {
+    if(drawer)
+      drawer->set_alive();
   }
 }
 
@@ -867,6 +871,9 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
     xmessages.emplace_back(t1, t2, msg);
     if(drawer)
       drawer->store_msg(t1, t2, msg);
+  } else {
+    if(drawer)
+      drawer->set_alive();
   }
 }
 
@@ -1094,7 +1101,7 @@ void datalogging_t::configure()
   if(!headless) {
     // update display of DC:
     for(auto rec : recorder)
-      if( rec->drawer )
+      if(rec->drawer)
         rec->drawer->set_displaydc(displaydc);
     //
     connection_timeout = Glib::signal_timeout().connect(
