@@ -196,6 +196,7 @@ public:
   bool on_timeout();
   void store_sample(uint32_t nch, double* data);
   void store_msg(double t1, double t2, const std::string& msg);
+  void set_displaydc(bool displaydc) { displaydc_ = displaydc; };
 
 private:
   void get_valuerange(const std::vector<double>& data, uint32_t channels,
@@ -315,7 +316,6 @@ public:
   uint32_t get_size() const { return size_; };
   const std::string& get_name() const { return name_; };
   void clear();
-  void set_displaydc(bool displaydc) { displaydc_ = displaydc; };
   void set_textdata() { b_textdata = true; };
   bool is_textdata() const { return b_textdata; };
   std::vector<label_t> get_textdata()
@@ -328,7 +328,7 @@ public:
 
 private:
   std::mutex dlock;
-  bool displaydc_;
+  // bool displaydc_;
   uint32_t size_;
   bool b_textdata;
   std::vector<double> xdata_;
@@ -575,10 +575,9 @@ recorder_t::recorder_t(uint32_t size, const std::string& name,
                        std::atomic_bool& is_rec, std::atomic_bool& is_roll,
                        jack_client_t* jc, double srate, bool ignore_first,
                        bool headless)
-    : displaydc_(true), size_(size), b_textdata(false), name_(name),
-      is_rec_(is_rec), is_roll_(is_roll), jc_(jc),
-      audio_sample_period_(1.0 / srate), ignore_first_(ignore_first),
-      plotdata_cnt(0)
+    : size_(size), b_textdata(false), name_(name), is_rec_(is_rec),
+      is_roll_(is_roll), jc_(jc), audio_sample_period_(1.0 / srate),
+      ignore_first_(ignore_first), plotdata_cnt(0)
 {
   if(!headless)
     drawer = new data_draw_t(ignore_first, size);
@@ -1095,7 +1094,8 @@ void datalogging_t::configure()
   if(!headless) {
     // update display of DC:
     for(auto rec : recorder)
-      rec->set_displaydc(displaydc);
+      if( rec->drawer )
+        rec->drawer->set_displaydc(displaydc);
     //
     connection_timeout = Glib::signal_timeout().connect(
         sigc::mem_fun(*this, &datalogging_t::on_100ms), 100);
@@ -1186,9 +1186,9 @@ void datalogging_t::on_osc_set_trialid()
 void datalogging_t::on_ui_showdc()
 {
   displaydc = showdc->get_active();
-  for(std::vector<recorder_t*>::iterator it = recorder.begin();
-      it != recorder.end(); ++it)
-    (*it)->set_displaydc(displaydc);
+  for(auto rec : recorder)
+    if(rec->drawer)
+      rec->drawer->set_displaydc(displaydc);
 }
 
 void datalogging_t::on_ui_start()
