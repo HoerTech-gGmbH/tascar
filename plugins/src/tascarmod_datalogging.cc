@@ -596,7 +596,7 @@ void recorder_t::clear()
   std::lock_guard<std::mutex> lock(dlock);
   xdata_.clear();
   xmessages.clear();
-  if( drawer )
+  if(drawer)
     drawer->clear();
   // pthread_mutex_lock(&plotdatalock);
   // plotdata_.clear();
@@ -856,7 +856,7 @@ void recorder_t::store_sample(uint32_t n, double* data)
     std::lock_guard<std::mutex> lock(dlock);
     for(uint32_t k = 0; k < n; k++)
       xdata_.push_back(data[k]);
-    if( drawer )
+    if(drawer)
       drawer->store_sample(n, data);
   }
 }
@@ -866,7 +866,7 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
   if(is_rec_ && is_roll_) {
     std::lock_guard<std::mutex> lock(dlock);
     xmessages.emplace_back(t1, t2, msg);
-    if( drawer )
+    if(drawer)
       drawer->store_msg(t1, t2, msg);
   }
 }
@@ -929,6 +929,7 @@ public:
   void on_ui_start();
   void on_ui_stop();
   bool on_100ms();
+  bool is_headless() const { return headless; };
   static int osc_session_start(const char* path, const char* types,
                                lo_arg** argv, int argc, lo_message msg,
                                void* user_data);
@@ -1079,7 +1080,8 @@ void datalogging_t::configure()
   // second, add all string OSC variables:
   for(auto var : oscsvars) {
     recorder.push_back(new recorder_t(2, var->path, is_recording, is_rolling,
-                                      session->jc, session->srate, false, headless));
+                                      session->jc, session->srate, false,
+                                      headless));
     var->set_recorder(recorder.back());
     osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
   }
@@ -1087,7 +1089,7 @@ void datalogging_t::configure()
   for(auto var : lslvars) {
     recorder.push_back(new recorder_t(var->size + 1, var->name, is_recording,
                                       is_rolling, session->jc, session->srate,
-                                      true,headless));
+                                      true, headless));
     var->set_recorder(recorder.back());
   }
   if(!headless) {
@@ -1149,14 +1151,20 @@ void lslvar_t::poll_lsl_data()
 int datalogging_t::osc_session_start(const char*, const char*, lo_arg**, int,
                                      lo_message, void* user_data)
 {
-  ((datalogging_t*)user_data)->osc_start.emit();
+  if(((datalogging_t*)user_data)->is_headless())
+    ((datalogging_t*)user_data)->on_ui_start();
+  else
+    ((datalogging_t*)user_data)->osc_start.emit();
   return 0;
 }
 
 int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
                                     lo_message, void* user_data)
 {
-  ((datalogging_t*)user_data)->osc_stop.emit();
+  if(((datalogging_t*)user_data)->is_headless())
+    ((datalogging_t*)user_data)->on_ui_stop();
+  else
+    ((datalogging_t*)user_data)->osc_stop.emit();
   return 0;
 }
 
