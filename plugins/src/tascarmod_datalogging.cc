@@ -138,7 +138,6 @@ class dlog_vars_t : public TASCAR::module_base_t {
 public:
   dlog_vars_t(const TASCAR::module_cfg_t& cfg);
   ~dlog_vars_t();
-  virtual void update(uint32_t frame, bool running);
   void set_jack_client(jack_client_t* jc) { jc_ = jc; };
   void validate_attributes(std::string& msg) const;
 
@@ -233,7 +232,7 @@ void data_draw_t::store_msg(double t1, double t2, const std::string& msg)
 {
   if(plotdatalock.try_lock()) {
     timeout_cnt = 10u;
-    b_textdata = false;
+    b_textdata = true;
     plot_messages.emplace_back(t1, t2, msg);
     plotdatalock.unlock();
   }
@@ -539,18 +538,6 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
     throw TASCAR::ErrMsg("Invalid file format \"" + fileformat + "\".");
 }
 
-void dlog_vars_t::update(uint32_t, bool running)
-{
-  is_rolling = running || (!usetransport);
-  if(jc_) {
-    double delta(jack_get_current_transport_frame(jc_) * t_sample);
-    delta -= lsl::local_clock();
-    delta *= -1;
-    for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it)
-      (*it)->set_delta(delta);
-  }
-}
-
 dlog_vars_t::~dlog_vars_t() {}
 
 std::string nice_name(std::string s, std::string extend = "")
@@ -596,6 +583,7 @@ void recorder_t::clear()
   std::lock_guard<std::mutex> lock(dlock);
   xdata_.clear();
   xmessages.clear();
+  b_textdata = false;
   if(drawer)
     drawer->clear();
   // pthread_mutex_lock(&plotdatalock);
@@ -692,9 +680,11 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         drange = dmax - dmin;
         dscale = height / drange;
         // ltime = audio_sample_period_ * jack_get_current_transport_frame(jc_);
-        for(auto it = plot_messages.begin(); it != plot_messages.end(); ++it) {
-          if((it->t1 >= ltime - 30) && (it->t1 <= ltime)) {
-            double t((it->t1 - ltime) * width / 30.0);
+        for(const auto& msg : plot_messages) {
+          // for(auto it = plot_messages.begin(); it != plot_messages.end();
+          // ++it) {
+          if((msg.t1 >= ltime - 30) && (msg.t1 <= ltime)) {
+            double t((msg.t1 - ltime) * width / 30.0);
             double v(height - (-0.8 - dmin) * dscale);
             double v2(height - (-0.85 - dmin) * dscale);
             double v1(height);
@@ -706,7 +696,7 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
             cr->move_to(t, v);
             cr->save();
             cr->rotate(-TASCAR_PI2);
-            cr->show_text(it->msg);
+            cr->show_text(msg.msg);
             cr->restore();
             cr->restore();
           }
@@ -868,6 +858,7 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
 {
   if(is_rec_ && is_roll_) {
     std::lock_guard<std::mutex> lock(dlock);
+    b_textdata = true;
     xmessages.emplace_back(t1, t2, msg);
     if(drawer)
       drawer->store_msg(t1, t2, msg);
@@ -924,6 +915,7 @@ class datalogging_t : public dlog_vars_t, public TASCAR::osc_server_t {
 public:
   datalogging_t(const TASCAR::module_cfg_t& cfg);
   ~datalogging_t();
+  virtual void update(uint32_t frame, bool running);
   void start_trial(const std::string& name);
   void stop_trial();
   void save_text(const std::string& filename);
@@ -983,12 +975,9 @@ private:
 
 datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
     : dlog_vars_t(cfg), TASCAR::osc_server_t(multicast, port, srv_proto),
-      // jackc_portless_t(jacknamer(session->name,"datalog.")),
       b_recording(false), audio_sample_period_(1.0 / cfg.session->srate),
       fragsize(cfg.session->fragsize), srate(cfg.session->srate)
 {
-  // pthread_mutex_init(&record_mtx, NULL);
-  // pthread_mutex_lock(&record_mtx);
   TASCAR::osc_server_t* osc(this);
   if(port.empty())
     osc = session;
@@ -997,7 +986,7 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   osc->add_method("/session_start", "", &datalogging_t::osc_session_start,
                   this);
   osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this);
-  osc->add_string("/sesson_outputdir", &outputdir);
+  osc->add_string("/session_outputdir", &outputdir);
   set_jack_client(session->jc);
   TASCAR::osc_server_t::activate();
   if(!headless) {
@@ -1479,6 +1468,21 @@ void mat_add_char_field(matvar_t* s, const std::string& name,
 {
   Mat_VarAddStructField(s, name.c_str());
   mat_set_char_field(s, name, str, 0);
+}
+
+void datalogging_t::update(uint32_t, bool running)
+{
+  is_rolling = running || (!usetransport);
+  if(jc_) {
+    // ltime = audio_sample_period_ * jack_get_current_transport_frame(jc_);
+    double time = jack_get_current_transport_frame(jc_) * t_sample;
+    double delta = lsl::local_clock() - time;
+    for(auto plslvar : lslvars)
+      plslvar->set_delta(delta);
+    for(auto prec : recorder)
+      if(prec->drawer)
+        prec->drawer->set_time(time);
+  }
 }
 
 void datalogging_t::save_session_related_meta_data(mat_t* matfp,
