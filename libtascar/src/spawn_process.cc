@@ -35,6 +35,8 @@ TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
     runservice = true;
     launcherthread = std::thread(&spawn_process_t::launcher, this);
   }
+  mtx.lock();
+  mtx.unlock();
 }
 
 void TASCAR::spawn_process_t::launcher()
@@ -44,7 +46,9 @@ void TASCAR::spawn_process_t::launcher()
     first = false;
     int wstatus = 0;
     running = true;
+    mtx.lock();
     pid = TASCAR::system(command_.c_str(), useshell_);
+    mtx.unlock();
     waitpid(pid, &wstatus, 0);
     if(runservice) {
       if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0))

@@ -30,6 +30,7 @@
 
 #include <string>
 #include <thread>
+#include <mutex>
 
 namespace TASCAR {
   /**
@@ -50,6 +51,7 @@ namespace TASCAR {
     bool useshell_;
     bool relaunch_;
     bool running = false;
+    std::mutex mtx;
   };
 } // namespace TASCAR
 
