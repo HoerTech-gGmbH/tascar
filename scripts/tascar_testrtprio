@@ -1,3 +1,3 @@
 #!/bin/bash
-cat /proc/interrupts
+cat /proc/interrupts | grep -e '^[[:blank:]]*[0-9][0-9]*:'
 ps -eo rtprio,class,%cpu,args --sort=rtprio,class,-pri H|sed -e '/[[:blank:]]*- / d'

@@ -431,33 +431,77 @@ In this case you should use TCP transport.
 
 \subsection{Optimization of the operating system for audio processing}
 
-Configure real-time scheduling: grant permissions to acquire real-time
-priority, and to lock memory in RAM, to users in group 'audio' (edit
-{\tt /etc/security/limits.conf} as root):
-
+In multi-user desktop systems, it is important to assign real-time priority to the signal processing threads of audio software. To set up real-time scheduling on the system, users in the 'audio' group must be granted permission to acquire real-time priority and lock memory in RAM. To do this, edit the {\tt /etc/security/limits.conf} file with superuser privileges:
 \begin{verbatim}
 sudo gedit /etc/security/limits.conf
 \end{verbatim}
 
-\begin{verbatim}
+Add these two lines if they are not already present:
+\begin{lstlisting}[numbers=none]
 @audio - rtprio	 99
 @audio - memlock unlimited
-\end{verbatim}
+\end{lstlisting}
 
-Add desired user of tascar (in this example, this user is named 'tascar')
-to group 'audio':
+Now add the desired user of \tascar{} to the 'audio' group (in this example this user is called 'tascar'):
 \begin{verbatim}
 sudo adduser tascar audio
 \end{verbatim}
-Log out and log in again (no re-boot required).
+Log out and log in again (typically, no re-boot is required).
 
 
-After every login, deactivate CPU frequency scaling in BIOS, or switch
-to maximum performance manually, e.\,g., with
+CPU frequency scaling can cause dropouts in audio signal processing when switching between different processor clock speeds. Therefore, disable CPU frequency scaling in the BIOS, or manually switch the CPU to maximum performance after each login, e.\,g., with
 \begin{verbatim}
 for c in {0..11}; do cpufreq-selector -c $c -g performance; done
 \end{verbatim}
 or with the \tascar{} provided wrapper \verb!tascar_cpufreq!.
+
+If you are aiming for low-latency processing, you should further optimize your system by installing a low-latency kernel and an IRQ priority management tool:
+\begin{verbatim}
+sudo apt install linux-lowlatency rtirq-init
+\end{verbatim}
+
+When you start Jack, you should choose a realtime priority that is slightly lower than the priority of the interrupt handler of the selected sound card. This can be checked with the \verb!tascar_testrtprio!  tool in the console. A sample output may look like the following:
+\begin{lstlisting}[numbers=none]
+       CPU0   CPU1   CPU2    CPU3       
+   0:    13      0      0       0   IO-APIC    2-edge      timer
+   8:     0      0      0       1   IO-APIC    8-edge      rtc0
+   9:     0      0      0       0   IO-APIC    9-fasteoi   acpi
+  16:     0      0      0       0   IO-APIC   16-fasteoi   i801_smbus
+  18:     0      0      0      54   IO-APIC   18-fasteoi   snd_hdsp
+ 127:     0      0      0  593043   PCI-MSI 327680-edge    xhci_hcd
+ 128: 19074      0      0       0   PCI-MSI 376832-edge    ahci[0000:00:17.0]
+ 129:     0    342      0 2002167   PCI-MSI 4194304-edge   enp8s0
+ 130:     0     41      0       0   PCI-MSI 360448-edge    mei_me
+ 131:     0      0      0       0   PCI-MSI 2097152-edge   rtl_pci
+ 132:     0      0      0       0   PCI-MSI 514048-edge    snd_hda_intel:card3
+ 133:     0 297116     98       0   PCI-MSI 524288-edge    nvidia
+RTPRIO CLS %CPU COMMAND
+     5 RR   0.0 /usr/bin/pulseaudio --daemonize=no --log-target=journal
+    50 FF   0.0 [idle_inject/0]
+    50 FF   0.0 [idle_inject/1]
+    50 FF   0.0 [idle_inject/2]
+    50 FF   0.0 [idle_inject/3]
+    50 FF   0.0 [irq/9-acpi]
+    50 FF   0.0 [watchdogd]
+    50 FF   0.0 [irq/8-rtc0]
+    50 FF   0.0 [irq/16-i801_smb]
+    50 FF   0.0 [irq/128-ahci[00]
+    50 FF   0.0 [irq/130-mei_me]
+    50 FF   0.0 [irq/131-rtl_pci]
+    50 FF   0.1 [irq/133-nvidia]
+    50 FF   0.2 [irq/133-s-nvidi]
+    70 FF   0.1 [irq/127-xhci_hc]
+    80 FF   0.0 [irq/132-snd_hda]
+    85 FF   2.0 /usr/bin/jackd --sync -P85 -p4096 -m -dalsa -dhw:hdsp -r44100 -p64 -n2
+    90 FF   0.0 [irq/18-snd_hdsp]
+    99 FF   0.0 [migration/0]
+    99 FF   0.0 [migration/1]
+    99 FF   0.0 [migration/2]
+    99 FF   0.0 [migration/3]
+    99 RR   0.0 /usr/libexec/rtkit-daemon
+\end{lstlisting}
+
+Here you can see that the interrupt handler \verb!irq/18-snd_hdsp! runs with a priority of 90, while the real-time thread of \verb!jackd! has been configured to run with a priority of 85. This prevents the signal processing thread from interrupting communication between the sound card and the operating system. All other devices connected to this computer will run with a lower priority.
 
 \subsection{Overwriting application default values}\label{sec:globalconfig}
 
@@ -481,14 +525,15 @@ TASCARSHOWGLOBAL=yes tascar_spkcalib
 \end{verbatim}
 %
 An example application configuration file can look like this:
-\begin{verbatim}
+\begin{lstlisting}[numbers=none]
+<?xml version="1.0"?>
 <tascar>
   <spkcalib>
     <inputport data="system:capture_29"/>
     <reflevel data="80"/>
   </spkcalib>
 </tascar>
-\end{verbatim}
+\end{lstlisting}
 %
 This will translate into these variables:
 \begin{verbatim}
