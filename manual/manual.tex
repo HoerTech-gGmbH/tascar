@@ -449,12 +449,6 @@ sudo adduser tascar audio
 Log out and log in again (typically, no re-boot is required).
 
 
-CPU frequency scaling can cause dropouts in audio signal processing when switching between different processor clock speeds. Therefore, disable CPU frequency scaling in the BIOS, or manually switch the CPU to maximum performance after each login, e.\,g., with
-\begin{verbatim}
-for c in {0..11}; do cpufreq-selector -c $c -g performance; done
-\end{verbatim}
-or with the \tascar{} provided wrapper \verb!tascar_cpufreq!.
-
 If you are aiming for low-latency processing, you should further optimize your system by installing a low-latency kernel and an IRQ priority management tool:
 \begin{verbatim}
 sudo apt install linux-lowlatency rtirq-init
@@ -502,6 +496,17 @@ RTPRIO CLS %CPU COMMAND
 \end{lstlisting}
 
 Here you can see that the interrupt handler \verb!irq/18-snd_hdsp! runs with a priority of 90, while the real-time thread of \verb!jackd! has been configured to run with a priority of 85. This prevents the signal processing thread from interrupting communication between the sound card and the operating system. All other devices connected to this computer will run with a lower priority.
+
+\subsubsection*{CPU frequency scaling}
+
+CPU frequency scaling can cause dropouts in audio signal processing when switching between different processor clock speeds. Therefore, disable CPU frequency scaling in the BIOS, or manually switch the CPU to maximum performance after each login, e.\,g., with
+\begin{verbatim}
+for c in {0..11}; do cpufreq-selector -c $c -g performance; done
+\end{verbatim}
+or with the \tascar{} provided wrapper \verb!tascar_cpufreq!. If this doesn't work please use the CPU frequency scaling indicators of your desktop manager, or with
+\begin{verbatim}
+echo "performance" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+\end{verbatim}
 
 \subsection{Overwriting application default values}\label{sec:globalconfig}
 
