@@ -54,6 +54,7 @@ def tascar_build_steps(stage_name) {
         sh "cp -r /mingw64/share/glib-2.0/schemas TASCAR/share/glib-2.0"
         sh "cp -r /mingw64/lib/gdk-pixbuf-2.0 TASCAR/lib"
         sh "cp /mingw64/bin/gdbus.exe TASCAR"
+        sh "cp /mingw64/bin/broadwayd.exe TASCAR"
         sh "cp artwork/*.png TASCAR"
         // Now create the zip file from everything inside the TASCAR dir
         sh 'zip -r TASCAR-$(grep ^VERSION= config.mk | cut -d= -f2)-windows.zip TASCAR'

@@ -111,6 +111,7 @@ cp -r /mingw64/share/icons/Adwaita TASCAR/share/icons
 cp -r /mingw64/share/glib-2.0/schemas TASCAR/share/glib-2.0
 cp -r /mingw64/lib/gdk-pixbuf-2.0 TASCAR/lib
 cp /mingw64/bin/gdbus.exe TASCAR
+cp /mingw64/bin/broadwayd.exe TASCAR
 
 # Add TASCAR icons
 cp artwork/*.png TASCAR
