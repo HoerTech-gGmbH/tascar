@@ -150,8 +150,8 @@ private:
   std::mutex atcmdmtx;
 };
 
-int system_t::osc_trigger(const char* , const char* types, lo_arg** argv,
-                          int argc, lo_message , void* user_data)
+int system_t::osc_trigger(const char*, const char* types, lo_arg** argv,
+                          int argc, lo_message, void* user_data)
 {
   system_t* data(reinterpret_cast<system_t*>(user_data));
   if(data && (argc == 1) && (types[0] == 'i'))
@@ -161,8 +161,8 @@ int system_t::osc_trigger(const char* , const char* types, lo_arg** argv,
   return 0;
 }
 
-int system_t::osc_atcmd_add(const char* , const char* types, lo_arg** argv,
-                            int argc, lo_message , void* user_data)
+int system_t::osc_atcmd_add(const char*, const char* types, lo_arg** argv,
+                            int argc, lo_message, void* user_data)
 {
   system_t* data(reinterpret_cast<system_t*>(user_data));
   if(data && (argc == 2) && (types[0] == 'f') && (types[1] == 's'))
@@ -170,9 +170,8 @@ int system_t::osc_atcmd_add(const char* , const char* types, lo_arg** argv,
   return 0;
 }
 
-int system_t::osc_atcmd_clear(const char* , const char* ,
-                              lo_arg** , int argc, lo_message ,
-                              void* user_data)
+int system_t::osc_atcmd_clear(const char*, const char*, lo_arg**, int argc,
+                              lo_message, void* user_data)
 {
   system_t* data(reinterpret_cast<system_t*>(user_data));
   if(data && (argc == 0))
@@ -327,9 +326,11 @@ void system_t::atcmdadd(double t, const std::string& cmd)
 
 system_t::~system_t()
 {
+#ifndef _WIN32
   // do not restart processes from now on:
-  if( proc )
+  if(proc)
     proc->set_relaunch(false);
+#endif
   // optionally use onunload, e.g., to kill lost subprocesses:
   if(!onunload.empty()) {
     int err(system(onunload.c_str()));
