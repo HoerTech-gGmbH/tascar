@@ -73,6 +73,11 @@ TASCAR::spawn_process_t::~spawn_process_t()
     launcherthread.join();
 }
 
+void TASCAR::spawn_process_t::set_relaunch(bool relaunch)
+{
+  relaunch_ = relaunch;
+}
+
 /*
  * Local Variables:
  * mode: c++

@@ -41,6 +41,7 @@ namespace TASCAR {
     spawn_process_t(const std::string& command, bool useshell = true,
                     bool relaunch = false);
     ~spawn_process_t();
+    void set_relaunch(bool relaunch);
 
   private:
     void launcher();

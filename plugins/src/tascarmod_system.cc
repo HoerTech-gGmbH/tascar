@@ -327,6 +327,16 @@ void system_t::atcmdadd(double t, const std::string& cmd)
 
 system_t::~system_t()
 {
+  // do not restart processes from now on:
+  if( proc )
+    proc->set_relaunch(false);
+  // optionally use onunload, e.g., to kill lost subprocesses:
+  if(!onunload.empty()) {
+    int err(system(onunload.c_str()));
+    if(err != 0)
+      std::cerr << "subprocess returned " << err << std::endl;
+  }
+  // now end all other threads:
   run_service = false;
   srv.join();
 #ifndef _WIN32
@@ -338,11 +348,6 @@ system_t::~system_t()
     fclose(h_atcmd);
   if(h_triggered)
     fclose(h_triggered);
-  if(!onunload.empty()) {
-    int err(system(onunload.c_str()));
-    if(err != 0)
-      std::cerr << "subprocess returned " << err << std::endl;
-  }
 }
 
 void system_t::service()
