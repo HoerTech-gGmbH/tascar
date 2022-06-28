@@ -327,9 +327,11 @@ void system_t::atcmdadd(double t, const std::string& cmd)
 
 system_t::~system_t()
 {
+#ifndef _WIN32
   // do not restart processes from now on:
   if( proc )
     proc->set_relaunch(false);
+#endif
   // optionally use onunload, e.g., to kill lost subprocesses:
   if(!onunload.empty()) {
     int err(system(onunload.c_str()));
