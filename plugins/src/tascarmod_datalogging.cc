@@ -52,6 +52,7 @@ class recorder_t;
 class var_base_t : public TASCAR::xml_element_t {
 public:
   var_base_t(tsccfg::node_t);
+  virtual ~var_base_t(){};
   void set_recorder(recorder_t* rec);
   std::string get_name() const;
   size_t get_size() const;
@@ -101,6 +102,7 @@ private:
 class oscsvar_t : public var_base_t {
 public:
   oscsvar_t(tsccfg::node_t xmlsrc);
+  virtual ~oscsvar_t(){};
   static int osc_receive_sample(const char* path, const char* types,
                                 lo_arg** argv, int argc, lo_message msg,
                                 void* user_data);
@@ -117,6 +119,7 @@ private:
 class oscvar_t : public var_base_t {
 public:
   oscvar_t(tsccfg::node_t xmlsrc);
+  virtual ~oscvar_t(){};
   std::string get_fmt();
   static int osc_receive_sample(const char* path, const char* types,
                                 lo_arg** argv, int argc, lo_message msg,
@@ -188,7 +191,14 @@ public:
     connection_timeout = Glib::signal_timeout().connect(
         sigc::mem_fun(*this, &data_draw_t::on_timeout), 200);
   };
-  virtual ~data_draw_t() { connection_timeout.disconnect(); };
+  virtual ~data_draw_t()
+  {
+    connection_timeout.disconnect();
+    drawlock.lock();
+    drawlock.unlock();
+    plotdatalock.lock();
+    plotdatalock.unlock();
+  };
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
   void clear();
   void set_time(double ntime) { time = ntime; };
@@ -594,7 +604,11 @@ void recorder_t::clear()
   // timeout_cnt = 10u;
 }
 
-recorder_t::~recorder_t() {}
+recorder_t::~recorder_t()
+{
+  if(drawer)
+    delete drawer;
+}
 
 double sqr(double x)
 {
@@ -1039,6 +1053,14 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
 
 datalogging_t::~datalogging_t()
 {
+  for(auto pvar : oscvars)
+    delete pvar;
+  for(auto pvar : oscsvars)
+    delete pvar;
+  for(auto pvar : lslvars)
+    delete pvar;
+  for(auto prec : recorder)
+    delete prec;
   if(!headless) {
     delete win;
     delete trialid;
@@ -1125,13 +1147,17 @@ void datalogging_t::release()
   }
   connection_timeout.disconnect();
   TASCAR::osc_server_t::deactivate();
-  for(uint32_t k = 0; k < recorder.size(); k++)
-    delete recorder[k];
+  for(auto prec : recorder)
+    delete prec;
   for(auto var : lslvars)
     delete var;
   for(auto var : oscsvars)
     delete var;
+  for(auto var : oscvars)
+    delete var;
+  recorder.clear();
   lslvars.clear();
+  oscsvars.clear();
   oscvars.clear();
   TASCAR::module_base_t::release();
 }
@@ -1169,7 +1195,8 @@ int datalogging_t::osc_session_set_trialid(const char*, const char*,
                                            void* user_data)
 {
   ((datalogging_t*)user_data)->osc_trialid = std::string(&(argv[0]->s));
-  ((datalogging_t*)user_data)->osc_set_trialid.emit();
+  if(!((datalogging_t*)user_data)->is_headless())
+    ((datalogging_t*)user_data)->osc_set_trialid.emit();
   return 0;
 }
 
