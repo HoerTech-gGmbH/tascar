@@ -43,6 +43,7 @@ private:
   bool trigger;
   bool sendsounds;
   bool addparentname;
+  float oscale = 1.0f;
   lo_address target;
   std::vector<TASCAR::named_object_t> objects;
 };
@@ -64,6 +65,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL_(sendsounds);
   GET_ATTRIBUTE_BOOL_(addparentname);
   GET_ATTRIBUTE_(skip);
+  GET_ATTRIBUTE(oscale, "", "Scaling factor for orientations");
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   if(pattern.empty())
@@ -116,23 +118,26 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
           path = obj.name + "/pos";
           lo_send(target, path.c_str(), "fff", p.x, p.y, p.z);
           path = obj.name + "/rot";
-          lo_send(target, path.c_str(), "fff", RAD2DEG * o.z, RAD2DEG * o.y,
-                  RAD2DEG * o.x);
+          lo_send(target, path.c_str(), "fff", RAD2DEG * o.z * oscale,
+                  RAD2DEG * o.y * oscale, RAD2DEG * o.x * oscale);
           break;
         case 1:
           path = obj.name + "/pos";
-          lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z, RAD2DEG * o.z,
-                  RAD2DEG * o.y, RAD2DEG * o.x);
+          lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z,
+                  RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                  RAD2DEG * o.x * oscale);
           break;
         case 2:
           path = "/tascarpos";
           lo_send(target, path.c_str(), "sffffff", obj.name.c_str(), p.x, p.y,
-                  p.z, RAD2DEG * o.z, RAD2DEG * o.y, RAD2DEG * o.x);
+                  p.z, RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                  RAD2DEG * o.x * oscale);
           break;
         case 3:
           path = "/tascarpos";
           lo_send(target, path.c_str(), "sffffff", obj.obj->get_name().c_str(),
-                  p.x, p.y, p.z, RAD2DEG * o.z, RAD2DEG * o.y, RAD2DEG * o.x);
+                  p.x, p.y, p.z, RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                  RAD2DEG * o.x * oscale);
           if(sendsounds) {
             TASCAR::Scene::src_object_t* src(
                 dynamic_cast<TASCAR::Scene::src_object_t*>(obj.obj));
@@ -146,9 +151,9 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
                   soundname = isnd->get_name();
                 lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
                         isnd->position.x, isnd->position.y, isnd->position.z,
-                        RAD2DEG * isnd->orientation.z,
-                        RAD2DEG * isnd->orientation.y,
-                        RAD2DEG * isnd->orientation.x);
+                        RAD2DEG * isnd->orientation.z * oscale,
+                        RAD2DEG * isnd->orientation.y * oscale,
+                        RAD2DEG * isnd->orientation.x * oscale);
               }
             }
           }
@@ -163,18 +168,19 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
           break;
         case 5:
           path = "/" + avatar;
-          lo_send(target, path.c_str(), "f", RAD2DEG * o.z);
+          lo_send(target, path.c_str(), "f", RAD2DEG * o.z * oscale);
           break;
         case 6:
           path = "/" + obj.obj->get_name();
           lo_send(target, path.c_str(), "sfff", "/headGaze",
-                  obj.obj->dorientation.y, obj.obj->dorientation.z,
-                  obj.obj->dorientation.x);
+                  obj.obj->dorientation.y * oscale,
+                  obj.obj->dorientation.z * oscale,
+                  obj.obj->dorientation.x * oscale);
           break;
         case 7:
           path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", "/headGaze",
-                  o.y, o.z, o.x);
+          lo_send(target, path.c_str(), "sfff", "/headGaze", o.y * oscale,
+                  o.z * oscale, o.x * oscale);
           break;
         }
       }
