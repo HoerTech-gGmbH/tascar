@@ -60,7 +60,7 @@ function h = tascar_ctl_load( sessionfile, usegui )
   if usegui
     s_tascar = 'tascar';
   else
-    s_tascar = 'tascar_cli -s';
+    s_tascar = 'tascar_cli';
   end
   h = struct();
   sCmd = sprintf('LD_LIBRARY_PATH="" %s %s 2>%s.err >%s.out & echo $! > %s.pid',s_tascar,sessionfile,sessionfile,sessionfile,sessionfile);

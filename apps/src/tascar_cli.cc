@@ -68,13 +68,13 @@ int main(int argc, char** argv)
     bool showlicense(false);
     bool use_range(false);
     bool validate(false);
-    bool nostdin(false);
-    const char* options = "hj:o:r:lvs";
+    bool showvariables(false);
+    const char* options = "hj:o:r:lva";
     struct option long_options[] = {
-        {"help", 0, 0, 'h'},     {"jackname", 1, 0, 'j'},
-        {"output", 1, 0, 'o'},   {"range", 1, 0, 'r'},
-        {"licenses", 0, 0, 'l'}, {"validate", 0, 0, 'v'},
-        {"nostdin", 0, 0, 's'},  {0, 0, 0, 0}};
+        {"help", 0, 0, 'h'},      {"jackname", 1, 0, 'j'},
+        {"output", 1, 0, 'o'},    {"range", 1, 0, 'r'},
+        {"licenses", 0, 0, 'l'},  {"validate", 0, 0, 'v'},
+        {"variables", 0, 0, 'a'}, {0, 0, 0, 0}};
     int opt(0);
     int option_index(0);
     while((opt = getopt_long(argc, argv, options, long_options,
@@ -92,15 +92,15 @@ int main(int argc, char** argv)
       case 'l':
         showlicense = true;
         break;
+      case 'a':
+        showvariables = true;
+        break;
       case 'v':
         validate = true;
         break;
       case 'r':
         range = optarg;
         use_range = true;
-        break;
-      case 's':
-        nostdin = true;
         break;
       }
     }
@@ -111,6 +111,10 @@ int main(int argc, char** argv)
       return -1;
     }
     TASCAR::session_t session(cfgfile, TASCAR::xml_doc_t::LOAD_FILE, cfgfile);
+    session.add_bool_true("/tascar/quit", &b_quit);
+    std::thread closestdinthread;
+    if(showvariables)
+      std::cout << session.list_variables();
     if(validate) {
       session.start();
       sleep(1);
@@ -138,9 +142,9 @@ int main(int argc, char** argv)
         std::cout << session.ranges[k]->name << std::endl;
       return 0;
     }
-    if(output.empty())
-      session.run(b_quit, !nostdin);
-    else {
+    if(output.empty()) {
+      session.run(b_quit, false);
+    } else {
       double t_start(0);
       double t_dur(session.get_duration());
       bool range_found(false);

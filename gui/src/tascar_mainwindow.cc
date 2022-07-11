@@ -496,6 +496,7 @@ void tascar_window_t::load(const std::string& fname)
   sessionquit = false;
   if(session) {
     session->add_bool_true("/tascargui/quit", &sessionquit);
+    session->add_bool_true("/tascar/quit", &sessionquit);
   }
   reset_gui();
 }
@@ -950,8 +951,10 @@ void tascar_window_t::on_menu_file_reload()
     get_warnings().clear();
     scene_load(tascar_filename);
     sessionquit = false;
-    if(session)
+    if(session){
       session->add_bool_true("/tascargui/quit", &sessionquit);
+      session->add_bool_true("/tascar/quit", &sessionquit);
+    }
     reset_gui();
   }
   catch(const std::exception& e) {
@@ -987,8 +990,10 @@ void tascar_window_t::on_menu_file_open()
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
-      if(session)
+      if(session){
         session->add_bool_true("/tascargui/quit", &sessionquit);
+        session->add_bool_true("/tascar/quit", &sessionquit);
+      }
       reset_gui();
     }
     catch(const std::exception& e) {
@@ -1026,8 +1031,10 @@ void tascar_window_t::on_menu_file_open_example()
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
-      if(session)
+      if(session){
         session->add_bool_true("/tascargui/quit", &sessionquit);
+        session->add_bool_true("/tascar/quit", &sessionquit);
+      }
       reset_gui();
     }
     catch(const std::exception& e) {
