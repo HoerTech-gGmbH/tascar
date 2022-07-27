@@ -29,7 +29,7 @@ pacman -S --needed msys/git mingw64/mingw-w64-x86_64-gcc msys/make tar \
   mingw64/mingw-w64-x86_64-boost openbsd-netcat mingw-w64-x86_64-libsndfile \
   mingw-w64-x86_64-portaudio mingw64/mingw-w64-x86_64-nsis \
   mingw-w64-x86_64-eigen3 msys/wget msys/unzip msys/zip dos2unix \
-  mingw64/mingw-w64-x86_64-curl
+  mingw64/mingw-w64-x86_64-curl mingw64/mingw-w64-x86_64-cppcheck
 
 # openMHA and TASCAR can make use of liblsl, install a MinGW version:
 wget https://github.com/HoerTech-gGmbH/liblsl/releases/download/v1.14.0-htch/liblsl-1.14.0-MinGW64.zip
@@ -39,7 +39,7 @@ rm liblsl-1.14.0-MinGW64.zip
 # Internally we use arcanist for code reviews.
 if ! test -d arcanist; then
     git clone https://github.com/phacility/arcanist.git
-    wget  https://windows.php.net/downloads/releases/php-7.3.32-nts-Win32-VC15-x64.zip
+    wget  https://windows.php.net/downloads/releases/archives/php-7.3.33-nts-Win32-VC15-x64.zip
     mkdir -p /c/php
     unzip -d /c/php php-7.3.32-nts-Win32-VC15-x64.zip
     rm php-7.3.32-nts-Win32-VC15-x64.zip
