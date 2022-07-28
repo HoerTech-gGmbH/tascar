@@ -18,6 +18,7 @@
  */
 
 #include "jackclient.h"
+#include "jackiowav.h"
 #include "ola.h"
 #include "session.h"
 
@@ -28,6 +29,9 @@ public:
   std::vector<std::string> micports = {"system:capture_1"};
   std::vector<std::string> loudspeakerports = {"system:playback_1",
                                                "system:playback_2"};
+  size_t irlen = 44100;
+  size_t nrep = 2;
+  float level = 60;
 };
 
 fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
@@ -35,6 +39,10 @@ fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
   GET_ATTRIBUTE(name, "", "Client name, used for jack and IR file name");
   GET_ATTRIBUTE(micports, "", "Microphone ports");
   GET_ATTRIBUTE(loudspeakerports, "", "Loudspeaker ports");
+  GET_ATTRIBUTE(irlen, "samples",
+                "Length of impulse response during measurement");
+  GET_ATTRIBUTE(level,"dB SPL","Playback level");
+  GET_ATTRIBUTE(nrep,"","Number of measurement repetitions");
 }
 
 class fbc_mod_t : public fbc_var_t {
@@ -46,13 +54,37 @@ public:
 };
 
 fbc_mod_t::fbc_mod_t(const TASCAR::module_cfg_t& cfg) : fbc_var_t(cfg) {}
-void fbc_mod_t::configure() {}
+
+void fbc_mod_t::configure()
+{
+  perform_measurement();
+}
+
 fbc_mod_t::~fbc_mod_t() {}
 
 void fbc_mod_t::perform_measurement()
 {
   // create jack client with number of micports inputs and one output:
-  
+  std::vector<TASCAR::wave_t> isig = {TASCAR::wave_t(irlen * (nrep + 1))};
+  TASCAR::fft_t fft(irlen);
+  const std::complex<float> If = {0.0f, 1.0f};
+  for(size_t k = 0; k < fft.s.n_; k++)
+    fft.s[k] = std::exp(-If * TASCAR_2PIf * (float)irlen *
+                        std::pow((float)k / (float)(fft.s.n_), 2.0f)) *
+               1.0f / sqrtf(irlen);
+  fft.ifft();
+  fft.w *= TASCAR::db2lin(level - fft.w.spldb());
+  for(size_t k = 0; k < nrep + 1; ++k)
+    isig[0].append(fft.w);
+  std::vector<TASCAR::wave_t> osig;
+  for(size_t ch = 0; ch < micports.size(); ++ch)
+    osig.push_back(TASCAR::wave_t(irlen * (nrep + 1)));
+  for(auto& port : loudspeakerports) {
+    std::vector<std::string> ports = {port};
+    ports.insert(ports.end(), micports.begin(), micports.end());
+    jackio_t jio(isig, osig, ports, name, 0, false);
+    jio.run();
+  }
 }
 
 REGISTER_MODULE(fbc_mod_t);

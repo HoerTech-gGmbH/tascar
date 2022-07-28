@@ -175,8 +175,6 @@ jackio_t::~jackio_t()
     for(size_t f = 0; f < osig_[ch].n; ++f)
       osig_[ch].d[f] = buf_out[ch + sf_inf_out.channels * f];
   }
-  if(osig_.size() > 0) {
-  }
   log("deallocating memory");
   if(buf_in)
     delete[] buf_in;
