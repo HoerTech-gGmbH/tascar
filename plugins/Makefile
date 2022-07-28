@@ -18,7 +18,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
   hossustain rotator orientationmodulator locationmodulator		\
   locationvelocity granularsynth fail waitforjackport sleep jackrec	\
-  oscserver oscrelay
+  oscserver oscrelay fbc
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
   transportgui lightcolorpicker
