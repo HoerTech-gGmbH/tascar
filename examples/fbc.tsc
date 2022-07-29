@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<session>
+<session license="CC0">
   <scene/>
   <modules>
-    <fbc nrep="8" filterlen="513" level="70"/>
+    <fbc/>
   </modules>
 </session>
