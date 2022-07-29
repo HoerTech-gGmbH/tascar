@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2018 Giso Grimm
  * Copyright (C) 2021 Giso Grimm
+ * Copyright (C) 2022 Giso Grimm
  */
 /**
    \file jackiowav.h
@@ -33,7 +34,6 @@
 #ifndef JACKIOWAV_H
 #define JACKIOWAV_H
 
-//#include "tascar.h"
 #include "audiochunks.h"
 #include "errorhandling.h"
 #include "jackclient.h"
@@ -52,17 +52,29 @@ class jackio_t : public jackc_transport_t {
 public:
   /**
      \param ifname Input file name
+
      \param ofname Output file name
-     \param ports Output and Input ports (the first N ports are assumed to be
-     output ports, N = number of channels in input file) \param jackname Jack
-     client name \param freewheel Optionally use freewheeling mode \param
-     autoconnect Automatically connect to hardware ports. \param verbose Show
-     more infos on console.
+
+     \param ports Output and Input ports (the first N ports are
+     assumed to be output ports, N = number of channels in input file)
+
+     \param jackname Jack client name
+
+     \param freewheel Optionally use freewheeling mode
+
+     \param autoconnect Automatically connect to hardware ports.
+
+     \param verbose Show more infos on console.
   */
   jackio_t(const std::string& ifname, const std::string& ofname,
            const std::vector<std::string>& ports,
            const std::string& jackname = "jackio", int freewheel = 0,
            int autoconnect = 0, bool verbose = false);
+  jackio_t(const std::vector<TASCAR::wave_t>& isig,
+           std::vector<TASCAR::wave_t>& osig,
+           const std::vector<std::string>& ports,
+           const std::string& jackname = "jackio", int freewheel = 0,
+           bool verbose = false);
   jackio_t(double duration, const std::string& ofname,
            const std::vector<std::string>& ports,
            const std::string& jackname = "jackio", int freewheel = 0,
@@ -75,26 +87,28 @@ public:
   void run();
 
 private:
-  SNDFILE* sf_in;
-  SNDFILE* sf_out;
+  SNDFILE* sf_in = NULL;
+  SNDFILE* sf_out = NULL;
   SF_INFO sf_inf_in;
   SF_INFO sf_inf_out;
 
 public:
-  float* buf_in;  //< input buffer, i.e., samples are read from this buffer
-                  // during playback. Interleaved channel order.
-  float* buf_out; //< outout buffer, i.e., samples are stored in this buffer
-                  // during recording. Interleaved channel order.
+  float* buf_in =
+      NULL; //< input buffer, i.e., samples are read from this buffer
+            // during playback. Interleaved channel order.
+  float* buf_out =
+      NULL; //< outout buffer, i.e., samples are stored in this buffer
+            // during recording. Interleaved channel order.
 private:
-  unsigned int pos;
-  bool b_quit;
-  bool start;
-  bool freewheel_;
-  bool use_transport;
-  uint32_t startframe;
+  unsigned int pos = 0u;
+  bool b_quit = false;
+  bool start = false;
+  bool freewheel_ = false;
+  bool use_transport = false;
+  uint32_t startframe = 0u;
 
 public:
-  uint32_t nframes_total;
+  uint32_t nframes_total = 1u;
 
 private:
   std::vector<std::string> p;
@@ -102,13 +116,17 @@ private:
               const std::vector<float*>& outBuffer, uint32_t tp_frame,
               bool tp_rolling);
   void log(const std::string& msg);
-  bool b_cb;
-  bool b_verbose;
-  bool wait_;
+  bool b_cb = false;
+  bool b_verbose = true;
+  bool wait_ = false;
 
 public:
-  float cpuload;
-  uint32_t xruns;
+  float cpuload = 0.0f;
+  uint32_t xruns = 0u;
+
+private:
+  std::vector<TASCAR::wave_t> osig__ = {};
+  std::vector<TASCAR::wave_t>& osig_ = osig__;
 };
 
 class jackrec_async_t : public jackc_transport_t {

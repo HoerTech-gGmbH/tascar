@@ -88,11 +88,9 @@ jackio_t::jackio_t(double duration, const std::string& ofname,
                    const std::vector<std::string>& ports,
                    const std::string& jackname, int freewheel, int autoconnect,
                    bool verbose)
-    : jackc_transport_t(jackname), sf_in(NULL), sf_out(NULL), buf_in(NULL),
-      buf_out(NULL), pos(0), b_quit(false), start(false), freewheel_(freewheel),
-      use_transport(false), startframe(0),
+    : jackc_transport_t(jackname), freewheel_(freewheel),
       nframes_total(std::max(1u, uint32_t(get_srate() * duration))), p(ports),
-      b_cb(false), b_verbose(verbose), wait_(false), cpuload(0), xruns(0)
+      b_verbose(verbose)
 {
   memset(&sf_inf_in, 0, sizeof(sf_inf_in));
   memset(&sf_inf_out, 0, sizeof(sf_inf_out));
@@ -123,6 +121,45 @@ jackio_t::jackio_t(double duration, const std::string& ofname,
   }
 }
 
+jackio_t::jackio_t(const std::vector<TASCAR::wave_t>& isig,
+                   std::vector<TASCAR::wave_t>& osig,
+                   const std::vector<std::string>& ports,
+                   const std::string& jackname, int freewheel, bool verbose)
+    : jackc_transport_t(jackname), freewheel_(freewheel), p(ports),
+      b_verbose(verbose), osig_(osig)
+{
+  for(const auto& sig : isig)
+    nframes_total = std::max(nframes_total, sig.n);
+  for(const auto& sig : osig)
+    nframes_total = std::max(nframes_total, sig.n);
+  memset(&sf_inf_in, 0, sizeof(sf_inf_in));
+  memset(&sf_inf_out, 0, sizeof(sf_inf_out));
+  sf_inf_in.samplerate = get_srate();
+  sf_inf_in.channels = isig.size();
+  sf_inf_out.samplerate = get_srate();
+  sf_inf_out.channels = osig.size();
+  buf_in = new float[std::max((size_t)1u, isig.size() * nframes_total)];
+  memset(buf_in, 0, sizeof(float) * isig.size() * nframes_total);
+  buf_out = new float[std::max((size_t)1u, osig.size() * nframes_total)];
+  memset(buf_out, 0, sizeof(float) * osig.size() * nframes_total);
+  log("reading input file into memory");
+  for(size_t k = 0; k < osig.size(); ++k) {
+    char c_tmp[1024];
+    sprintf(c_tmp, "in_%lu", k + 1);
+    log("adding input port " + std::string(c_tmp));
+    add_input_port(c_tmp);
+  }
+  for(size_t ch = 0; ch < isig.size(); ++ch) {
+    char c_tmp[1024];
+    sprintf(c_tmp, "out_%lu", ch + 1);
+    log("adding output port " + std::string(c_tmp));
+    add_output_port(c_tmp);
+    // copy input signal:
+    for(size_t f = 0; f < isig[ch].n; ++f)
+      buf_in[ch + sf_inf_in.channels * f] = isig[ch].d[f];
+  }
+}
+
 jackio_t::~jackio_t()
 {
   log("cleaning up file handles");
@@ -130,7 +167,6 @@ jackio_t::~jackio_t()
     sf_close(sf_in);
   }
   if(sf_out) {
-    sf_writef_float(sf_out, buf_out, nframes_total);
     sf_close(sf_out);
   }
   log("deallocating memory");
@@ -223,6 +259,13 @@ void jackio_t::run()
   }
   log("deactivating jack client");
   deactivate();
+  if(sf_out)
+    sf_writef_float(sf_out, buf_out, nframes_total);
+  // if osig_ is not empty, copy signal to osig_:
+  for(size_t ch = 0; ch < osig_.size(); ++ch) {
+    for(size_t f = 0; f < osig_[ch].n; ++f)
+      osig_[ch].d[f] = buf_out[ch + sf_inf_out.channels * f];
+  }
 }
 
 void jackio_t::set_transport_start(double start_, bool wait)

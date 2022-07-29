@@ -573,6 +573,17 @@ std::string TASCAR::to_string(const std::vector<int>& value)
   return s.str();
 }
 
+std::string TASCAR::to_string(const std::vector<uint32_t>& value)
+{
+  std::stringstream s;
+  for(auto i_vert = value.begin(); i_vert != value.end(); ++i_vert) {
+    if(i_vert != value.begin())
+      s << " ";
+    s << *i_vert;
+  }
+  return s.str();
+}
+
 std::string TASCAR::to_string(const std::vector<double>& value, const char* fmt)
 {
   std::string s;

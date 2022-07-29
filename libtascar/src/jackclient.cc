@@ -190,7 +190,7 @@ void jackc_portless_t::deactivate()
  */
 void jackc_portless_t::connect(const std::string& src, const std::string& dest,
                                bool bwarn, bool allowoutputsource,
-                               bool connectmulti)
+                               bool connectmulti, bool allowinputdest)
 {
   if(shutdown)
     throw TASCAR::ErrMsg("Jack server has shut down");
@@ -202,7 +202,8 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest,
       for(uint32_t c = 0; c < std::max(ports_src.size(), ports_dest.size());
           ++c) {
         connect(ports_src[c % ports_src.size()],
-                ports_dest[c % ports_dest.size()], bwarn, allowoutputsource);
+                ports_dest[c % ports_dest.size()], bwarn, allowoutputsource,
+                false, allowinputdest);
       }
     } else {
       if(bwarn)
@@ -215,6 +216,7 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest,
     //
   } else {
     jack_port_t* srcport(jack_port_by_name(jc, src.c_str()));
+    jack_port_t* destport(jack_port_by_name(jc, dest.c_str()));
     if(allowoutputsource && srcport &&
        (jack_port_flags(srcport) & JackPortIsInput)) {
       const char** cons(jack_port_get_all_connections(jc, srcport));
@@ -234,13 +236,33 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest,
         jack_free(ocons);
       }
     } else {
-      if(jack_connect(jc, src.c_str(), dest.c_str()) != 0) {
-        errmsg = std::string("unable to connect port '") + src + "' to '" +
-                 dest + "'.";
-        if(bwarn)
-          TASCAR::add_warning(errmsg);
-        else
-          throw TASCAR::ErrMsg(errmsg.c_str());
+      if(allowinputdest && destport &&
+         (jack_port_flags(destport) & JackPortIsOutput)) {
+        const char** cons(jack_port_get_all_connections(jc, destport));
+        const char** ocons(cons);
+        if(cons) {
+          while(*cons) {
+            if(jack_connect(jc, src.c_str(), *cons) != 0) {
+              errmsg = std::string("unable to connect port '") + src +
+                       "' to '" + std::string(*cons) + "'.";
+              if(bwarn)
+                TASCAR::add_warning(errmsg);
+              else
+                throw TASCAR::ErrMsg(errmsg.c_str());
+            }
+            ++cons;
+          }
+          jack_free(ocons);
+        }
+      } else {
+        if(jack_connect(jc, src.c_str(), dest.c_str()) != 0) {
+          errmsg = std::string("unable to connect port '") + src + "' to '" +
+                   dest + "'.";
+          if(bwarn)
+            TASCAR::add_warning(errmsg);
+          else
+            throw TASCAR::ErrMsg(errmsg.c_str());
+        }
       }
     }
   }
@@ -360,14 +382,15 @@ void jackc_t::connect_in(unsigned int port, const std::string& pname,
 }
 
 void jackc_t::connect_out(unsigned int port, const std::string& pname,
-                          bool bwarn)
+                          bool bwarn, bool allowinputdest)
 {
   if(outPort.size() <= port) {
     DEBUG(port);
     DEBUG(outPort.size());
     throw TASCAR::ErrMsg("Output port number not available (connect_out).");
   }
-  connect(jack_port_name(outPort[port]), pname, bwarn, false, true);
+  connect(jack_port_name(outPort[port]), pname, bwarn, false, true,
+          allowinputdest);
 }
 
 int jackc_t::disconnect_in(unsigned int port)
