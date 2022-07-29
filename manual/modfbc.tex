@@ -1,0 +1,35 @@
+The {\em fbc} module provides non-adaptive feedback cancellation. As a non-adaptive method it provides two phases: during the measurement phase a test signal is played back through the loudspeaker output ports \attr{loudspeakerports}, and the response is recorded via the microphone input ports \attr{micports}. In the filter phase, the output signals are filtered with the phase-inverted corresponding responses, and the signal is added to the microphone signal.
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:fbc}
+Attributes of element {\bf fbc}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{autoreconnect} & Automatically re-connect ports after jack port change (bool) & false\\
+\hline
+\indattr{filterlen} & Minimal length of filters (uint32, samples) & 65\\
+\hline
+\indattr{level} & Playback level (float, dB SPL) & 70\\
+\hline
+\indattr{loudspeakerports} & Loudspeaker ports (string array) & {\tiny system:playback\_1 system:playback\_2}\\
+\hline
+\indattr{maxdist} & Maximum distance between microphone and loudspeaker (float, m) & 2\\
+\hline
+\indattr{measureatstart} & Perform a measurement when the plugin is loaded (bool) & false\\
+\hline
+\indattr{micports} & Microphone ports (string array) & system:capture\_1\\
+\hline
+\indattr{name} & Client name, used for jack and IR file name (string) & fbc\\
+\hline
+\indattr{nrep} & Number of measurement repetitions (uint32) & 16\\
+\hline
+\indattr{premax} & Time before to maximum to add to filter (uint32, samples) & 8\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

@@ -129,6 +129,7 @@
 "plugins/build/tascar_oscrelay.so","usr/lib/"
 "plugins/build/tascar_oscserver.so","usr/lib/"
 "plugins/build/tascar_ovheadtracker.so","usr/lib/"
+"plugins/build/tascar_fbc.so","usr/lib/"
 "plugins/build/tascar_pendulum.so","usr/lib/"
 "plugins/build/tascar_pos2lsl.so","usr/lib/"
 "plugins/build/tascar_pos2osc.so","usr/lib/"

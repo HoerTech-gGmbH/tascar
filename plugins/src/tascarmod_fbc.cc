@@ -36,6 +36,8 @@ public:
   float level = 70;
   uint32_t filterlen = 65;
   uint32_t premax = 8;
+  bool measureatstart = false;
+  bool autoreconnect = false;
 };
 
 fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
@@ -49,6 +51,10 @@ fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
   GET_ATTRIBUTE(nrep, "", "Number of measurement repetitions");
   GET_ATTRIBUTE(filterlen, "samples", "Minimal length of filters");
   GET_ATTRIBUTE(premax, "samples", "Time before to maximum to add to filter");
+  GET_ATTRIBUTE_BOOL(measureatstart,
+                     "Perform a measurement when the plugin is loaded");
+  GET_ATTRIBUTE_BOOL(autoreconnect,
+                     "Automatically re-connect ports after jack port change");
 }
 
 class fbc_mod_t : public fbc_var_t, public jackc_t {
@@ -75,12 +81,20 @@ public:
     ((fbc_mod_t*)user_data)->ports_connect();
     return 0;
   }
+  static void jack_port_connect_cb(jack_port_id_t a, jack_port_id_t b,
+                                   int connect, void* arg);
+  void jack_port_connect_cb();
 
 private:
+  void port_service();
+  bool run_port_service = true;
+  std::thread port_thread;
   std::mutex lock;
   std::vector<TASCAR::overlap_save_t*> filters;
   std::vector<TASCAR::static_delay_t*> delays;
   TASCAR::wave_t* tmp_wav = NULL;
+  std::atomic_bool connecting_ports = false;
+  std::atomic_bool reconnect = false;
 };
 
 fbc_mod_t::fbc_mod_t(const TASCAR::module_cfg_t& cfg)
@@ -90,8 +104,23 @@ fbc_mod_t::fbc_mod_t(const TASCAR::module_cfg_t& cfg)
     add_output_port("out." + std::to_string(ch));
   for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
     add_input_port("in." + std::to_string(ch));
+  jack_set_port_connect_callback(jc, &fbc_mod_t::jack_port_connect_cb, this);
   activate();
   add_variables(session);
+  if(autoreconnect)
+    port_thread = std::thread(&fbc_mod_t::port_service, this);
+}
+
+void fbc_mod_t::jack_port_connect_cb(jack_port_id_t, jack_port_id_t, int,
+                                     void* arg)
+{
+  ((fbc_mod_t*)arg)->jack_port_connect_cb();
+}
+
+void fbc_mod_t::jack_port_connect_cb()
+{
+  if(!connecting_ports)
+    reconnect = true;
 }
 
 void fbc_mod_t::add_variables(TASCAR::osc_server_t* srv)
@@ -105,11 +134,16 @@ void fbc_mod_t::add_variables(TASCAR::osc_server_t* srv)
 
 void fbc_mod_t::ports_connect()
 {
-
+  connecting_ports = true;
+  for(size_t ch = 0; ch < micports.size(); ++ch)
+    disconnect_out(ch);
+  for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
+    disconnect_in(ch);
   for(size_t ch = 0; ch < micports.size(); ++ch)
     connect_out(ch, micports[ch], true, true);
   for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
     connect_in(ch, loudspeakerports[ch], true, true);
+  connecting_ports = false;
 }
 
 void fbc_mod_t::configure()
@@ -117,13 +151,32 @@ void fbc_mod_t::configure()
   if(tmp_wav)
     delete tmp_wav;
   tmp_wav = new TASCAR::wave_t(n_fragment);
-  // ir_measure();
+  if(measureatstart)
+    ir_measure();
   ir_update();
   ports_connect();
 }
 
+void fbc_mod_t::port_service()
+{
+  size_t pcnt = 100;
+  while(run_port_service) {
+    usleep(10000);
+    if(reconnect) {
+      if(pcnt)
+        pcnt--;
+      else {
+        pcnt = 100;
+        reconnect = false;
+        ports_connect();
+      }
+    }
+  }
+}
+
 fbc_mod_t::~fbc_mod_t()
 {
+  run_port_service = false;
   deactivate();
   // clear all filters and delays:
   for(auto& obj : filters)
@@ -134,6 +187,8 @@ fbc_mod_t::~fbc_mod_t()
   delays.clear();
   if(tmp_wav)
     delete tmp_wav;
+  if(port_thread.joinable())
+    port_thread.join();
 }
 
 uint32_t get_idxmaxabs(const TASCAR::wave_t& w)
@@ -165,35 +220,45 @@ void fbc_mod_t::ir_update()
   auto filterlen_final = fftlen - n_fragment + 1;
   // load recorded IR:
   float fs = 0;
-  auto all_ir = TASCAR::audioread(TASCAR::env_expand(path + name + ".wav"), fs);
-  if(fs != f_sample)
-    TASCAR::add_warning("Invalid sampling rate of impulse response (expected " +
-                        TASCAR::to_string(f_sample) + " Hz, got " +
-                        TASCAR::to_string(fs) + " Hz).");
-  // find maxima and measurement quality:
-  std::vector<uint32_t> idxmax;
-  std::vector<float> aratio;
-  size_t ch = 0;
-  TASCAR::wave_t filterir(filterlen_final);
-  for(const auto& ir : all_ir) {
-    idxmax.push_back(get_idxmaxabs(ir));
-    float r = 0.0f;
-    for(uint32_t k = 0; k <= idxmax.back(); ++k)
-      r += ir.d[k] * ir.d[k];
-    r = sqrtf(r);
-    aratio.push_back(fabsf(ir.d[idxmax.back()]) / r);
-    if(aratio.back() < 0.5)
+  try {
+    auto all_ir =
+        TASCAR::audioread(TASCAR::env_expand(path + name + ".wav"), fs);
+    if(fs != f_sample)
       TASCAR::add_warning(
-          "fbc: Poor IR measurement quality in channel " + std::to_string(ch) +
-          TASCAR::to_string(100.0f * aratio.back(), " (%1.0f%%)"));
-    ++ch;
-    uint32_t predelay = std::max(idxmax.back(), premax) - premax;
-    delays.push_back(new TASCAR::static_delay_t(predelay));
-    filterir.clear();
-    for(uint32_t k = 0; k < filterir.n; ++k)
-      filterir.d[k] = -ir.d[k + predelay];
-    filters.push_back(new TASCAR::overlap_save_t(filterlen_final, n_fragment));
-    filters.back()->set_irs(filterir);
+          "Invalid sampling rate of impulse response (expected " +
+          TASCAR::to_string(f_sample) + " Hz, got " + TASCAR::to_string(fs) +
+          " Hz).");
+    // find maxima and measurement quality:
+    std::vector<uint32_t> idxmax;
+    std::vector<float> aratio;
+    size_t ch = 0;
+    TASCAR::wave_t filterir(filterlen_final);
+    for(const auto& ir : all_ir) {
+      idxmax.push_back(get_idxmaxabs(ir));
+      float r = 0.0f;
+      for(uint32_t k = 0; k <= idxmax.back(); ++k)
+        r += ir.d[k] * ir.d[k];
+      r = sqrtf(r);
+      aratio.push_back(fabsf(ir.d[idxmax.back()]) / r);
+      if(aratio.back() < 0.5)
+        TASCAR::add_warning(
+            "fbc: Poor IR measurement quality in channel " +
+            std::to_string(ch) +
+            TASCAR::to_string(100.0f * aratio.back(), " (%1.0f%%)"));
+      ++ch;
+      uint32_t predelay = std::max(idxmax.back(), premax) - premax;
+      delays.push_back(new TASCAR::static_delay_t(predelay));
+      filterir.clear();
+      for(uint32_t k = 0; k < filterir.n; ++k)
+        filterir.d[k] = -ir.d[k + predelay];
+      filters.push_back(
+          new TASCAR::overlap_save_t(filterlen_final, n_fragment));
+      filters.back()->set_irs(filterir);
+    }
+  }
+  catch(const std::exception& ex) {
+    TASCAR::add_warning(std::string("In plugin fbc (") +
+                        tsccfg::node_get_path(e) + "): " + ex.what());
   }
 }
 
