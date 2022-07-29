@@ -100,10 +100,10 @@ TEST(biquadf_t, unitgain)
   EXPECT_EQ(0.0f, b.get_b2());
   EXPECT_EQ(0.0f, b.get_a1());
   EXPECT_EQ(0.0f, b.get_a2());
-  ASSERT_NEAR(1.0f, std::abs(b.response(0.0f * TASCAR_2PIf)), 1e-9f);
-  ASSERT_NEAR(1.0f, std::abs(b.response(0.25f * TASCAR_2PIf)), 1e-9f);
-  ASSERT_NEAR(1.0f, std::abs(b.response(0.5f * TASCAR_2PIf)), 1e-9f);
-  ASSERT_NEAR(1.0f, std::abs(b.response(0.75f * TASCAR_2PIf)), 1e-9f);
+  ASSERT_NEAR(1.0f, std::abs(b.response(0.0f * TASCAR_2PIf)), 1e-7f);
+  ASSERT_NEAR(1.0f, std::abs(b.response(0.25f * TASCAR_2PIf)), 1e-7f);
+  ASSERT_NEAR(1.0f, std::abs(b.response(0.5f * TASCAR_2PIf)), 1e-7f);
+  ASSERT_NEAR(1.0f, std::abs(b.response(0.75f * TASCAR_2PIf)), 1e-7f);
   ASSERT_NEAR(1.0f, b.filter(1.0f), 1e-9f);
   ASSERT_NEAR(1.0f, b.filter(1.0f), 1e-9f);
   ASSERT_NEAR(1.0f, b.filter(1.0f), 1e-9f);
@@ -136,10 +136,10 @@ TEST(biquadf_t, fresp)
 {
   TASCAR::biquadf_t b;
   b.set_gzp(1.0f, 1.0f, 0.0f, 0.5f, 0.5f * TASCAR_2PIf);
-  ASSERT_NEAR(0.0f, std::abs(b.response(0.0f * TASCAR_2PIf)), 1e-9f);
-  ASSERT_NEAR(0.25f, std::abs(b.response_a(0.5f * TASCAR_2PIf)), 1e-9f);
-  ASSERT_NEAR(4.0f, std::abs(b.response_b(0.5f * TASCAR_2PIf)), 1e-9f);
-  ASSERT_NEAR(16.0f, std::abs(b.response(0.5f * TASCAR_2PIf)), 1e-9f);
+  ASSERT_NEAR(0.0f, std::abs(b.response(0.0f * TASCAR_2PIf)), 1e-7f);
+  ASSERT_NEAR(0.25f, std::abs(b.response_a(0.5f * TASCAR_2PIf)), 1e-7f);
+  ASSERT_NEAR(4.0f, std::abs(b.response_b(0.5f * TASCAR_2PIf)), 1e-7f);
+  ASSERT_NEAR(16.0f, std::abs(b.response(0.5f * TASCAR_2PIf)), 1e-7f);
   ASSERT_NEAR(1.0f, b.filter(1.0f), 1e-9f);
   ASSERT_NEAR(-2.0f, b.filter(1.0f), 1e-9f);
   ASSERT_NEAR(1.75f, b.filter(1.0f), 1e-9f);
