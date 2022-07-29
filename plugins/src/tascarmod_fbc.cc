@@ -32,10 +32,10 @@ public:
   std::vector<std::string> loudspeakerports = {"system:playback_1",
                                                "system:playback_2"};
   float maxdist = 2.0f;
-  size_t nrep = 16;
+  uint32_t nrep = 16;
   float level = 70;
-  size_t filterlen = 65;
-  size_t premax = 8;
+  uint32_t filterlen = 65;
+  uint32_t premax = 8;
 };
 
 fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
@@ -187,7 +187,7 @@ void fbc_mod_t::ir_update()
           "fbc: Poor IR measurement quality in channel " + std::to_string(ch) +
           TASCAR::to_string(100.0f * aratio.back(), " (%1.0f%%)"));
     ++ch;
-    uint32_t predelay = std::max((size_t)(idxmax.back()), premax) - premax;
+    uint32_t predelay = std::max(idxmax.back(), premax) - premax;
     delays.push_back(new TASCAR::static_delay_t(predelay));
     filterir.clear();
     for(uint32_t k = 0; k < filterir.n; ++k)
