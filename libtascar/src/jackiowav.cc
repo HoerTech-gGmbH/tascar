@@ -167,13 +167,7 @@ jackio_t::~jackio_t()
     sf_close(sf_in);
   }
   if(sf_out) {
-    sf_writef_float(sf_out, buf_out, nframes_total);
     sf_close(sf_out);
-  }
-  // if osig_ is not empty, copy signal to osig_:
-  for(size_t ch = 0; ch < osig_.size(); ++ch) {
-    for(size_t f = 0; f < osig_[ch].n; ++f)
-      osig_[ch].d[f] = buf_out[ch + sf_inf_out.channels * f];
   }
   log("deallocating memory");
   if(buf_in)
@@ -265,6 +259,13 @@ void jackio_t::run()
   }
   log("deactivating jack client");
   deactivate();
+  if(sf_out)
+    sf_writef_float(sf_out, buf_out, nframes_total);
+  // if osig_ is not empty, copy signal to osig_:
+  for(size_t ch = 0; ch < osig_.size(); ++ch) {
+    for(size_t f = 0; f < osig_[ch].n; ++f)
+      osig_[ch].d[f] = buf_out[ch + sf_inf_out.channels * f];
+  }
 }
 
 void jackio_t::set_transport_start(double start_, bool wait)
