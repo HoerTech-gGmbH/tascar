@@ -50,7 +50,8 @@ public:
   int get_fragsize() { return fragsize; };
   void connect(const std::string& src, const std::string& dest,
                bool btry = false, bool allowoutputsource = false,
-               bool connectmulti = false, bool allowinputdest = false);
+               bool connectmulti = false, bool allowinputdest = false,
+               bool noconnecttoself = false);
   uint32_t get_xruns() const { return xruns; };
   double get_xrun_latency() const { return xrun_latency; };
   float get_cpu_load() const { return jack_cpu_load(jc); };
@@ -86,9 +87,11 @@ public:
   virtual void add_input_port(const std::string& name);
   virtual void add_output_port(const std::string& name);
   void connect_in(unsigned int port, const std::string& pname,
-                  bool btry = false, bool allowoutputsource = false);
+                  bool btry = false, bool allowoutputsource = false,
+                  bool noconnecttoself = false);
   void connect_out(unsigned int port, const std::string& pname,
-                   bool btry = false, bool allowinputdest = false);
+                   bool btry = false, bool allowinputdest = false,
+                   bool noconnecttoself = false);
   int disconnect_in(unsigned int port);
   int disconnect_out(unsigned int port);
   size_t get_num_input_ports() const { return inPort.size(); };

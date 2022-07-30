@@ -105,15 +105,21 @@ echoc_mod_t::echoc_mod_t(const TASCAR::module_cfg_t& cfg)
     add_output_port("out." + std::to_string(ch));
   for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
     add_input_port("in." + std::to_string(ch));
-  jack_set_port_connect_callback(jc, &echoc_mod_t::jack_port_connect_cb, this);
+  for(size_t ch = 0; ch < micports.size(); ++ch)
+    add_input_port("adapt." + std::to_string(ch));
   activate();
+  for(size_t ch = 0; ch < micports.size(); ++ch)
+    connect_in(ch + loudspeakerports.size(), micports[ch], true, false);
   add_variables(session);
-  if(autoreconnect)
+  if(autoreconnect) {
     port_thread = std::thread(&echoc_mod_t::port_service, this);
+    jack_set_port_connect_callback(jc, &echoc_mod_t::jack_port_connect_cb,
+                                   this);
+  }
 }
 
 void echoc_mod_t::jack_port_connect_cb(jack_port_id_t, jack_port_id_t, int,
-                                     void* arg)
+                                       void* arg)
 {
   ((echoc_mod_t*)arg)->jack_port_connect_cb();
 }
@@ -141,9 +147,9 @@ void echoc_mod_t::ports_connect()
   for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
     disconnect_in(ch);
   for(size_t ch = 0; ch < micports.size(); ++ch)
-    connect_out(ch, micports[ch], true, true);
+    connect_out(ch, micports[ch], true, true, true);
   for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
-    connect_in(ch, loudspeakerports[ch], true, true);
+    connect_in(ch, loudspeakerports[ch], true, true, true);
   connecting_ports = false;
 }
 
@@ -321,23 +327,27 @@ void echoc_mod_t::ir_measure()
 }
 
 int echoc_mod_t::process(jack_nframes_t nframes,
-                       const std::vector<float*>& inBuffer,
-                       const std::vector<float*>& outBuffer)
+                         const std::vector<float*>& inBuffer,
+                         const std::vector<float*>& outBuffer)
 {
   for(auto pOut : outBuffer)
     memset(pOut, 0, sizeof(float) * nframes);
   if(lock.try_lock()) {
     size_t idx = 0;
-    for(auto pIn : inBuffer)
-      for(auto pOut : outBuffer) {
-        if(idx < filters.size()) {
-          for(uint32_t k = 0; k < nframes; ++k)
-            tmp_wav->d[k] = delays[idx]->operator()(pIn[k]);
-          TASCAR::wave_t wout(nframes, pOut);
-          filters[idx]->process(*tmp_wav, wout);
+    uint32_t cin = 0;
+    for(auto pIn : inBuffer) {
+      if(cin < loudspeakerports.size()) {
+        for(auto pOut : outBuffer) {
+          if(idx < filters.size()) {
+            for(uint32_t k = 0; k < nframes; ++k)
+              tmp_wav->d[k] = delays[idx]->operator()(pIn[k]);
+            TASCAR::wave_t wout(nframes, pOut);
+            filters[idx]->process(*tmp_wav, wout);
+          }
+          ++idx;
         }
-        ++idx;
       }
+    }
     lock.unlock();
   }
   return 0;
