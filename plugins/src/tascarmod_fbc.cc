@@ -95,6 +95,7 @@ private:
   TASCAR::wave_t* tmp_wav = NULL;
   std::atomic_bool connecting_ports = false;
   std::atomic_bool reconnect = false;
+  std::atomic_bool measuring = false;
 };
 
 fbc_mod_t::fbc_mod_t(const TASCAR::module_cfg_t& cfg)
@@ -162,13 +163,15 @@ void fbc_mod_t::port_service()
   size_t pcnt = 100;
   while(run_port_service) {
     usleep(10000);
-    if(reconnect) {
-      if(pcnt)
-        pcnt--;
-      else {
-        pcnt = 100;
-        reconnect = false;
-        ports_connect();
+    if(!measuring) {
+      if(reconnect) {
+        if(pcnt)
+          pcnt--;
+        else {
+          pcnt = 100;
+          reconnect = false;
+          ports_connect();
+        }
       }
     }
   }
@@ -264,6 +267,7 @@ void fbc_mod_t::ir_update()
 
 void fbc_mod_t::ir_measure()
 {
+  measuring = true;
   std::lock_guard<std::mutex> lockguard(lock);
   // IR length magic:
   // 10 ms for AD/DA and aliasing filters
@@ -313,6 +317,7 @@ void fbc_mod_t::ir_measure()
   }
   TASCAR::audiowrite(TASCAR::env_expand(path + name + ".wav"), all_ir, fs,
                      SF_FORMAT_WAV | SF_FORMAT_FLOAT | SF_ENDIAN_FILE);
+  measuring = false;
 }
 
 int fbc_mod_t::process(jack_nframes_t nframes,
