@@ -103,7 +103,7 @@
     <route/>
     <ovheadtracker/>
     <hoafdnrot/>
-    <fbc measureatstart="true"/>
+    <echoc measureatstart="true"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

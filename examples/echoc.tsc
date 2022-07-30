@@ -2,6 +2,6 @@
 <session license="CC0">
   <scene/>
   <modules>
-    <fbc autoreconnect="true"/>
+    <echoc autoreconnect="true"/>
   </modules>
 </session>

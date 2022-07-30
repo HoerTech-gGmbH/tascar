@@ -23,10 +23,10 @@
 #include "ola.h"
 #include "session.h"
 
-class fbc_var_t : public TASCAR::module_base_t {
+class echoc_var_t : public TASCAR::module_base_t {
 public:
-  fbc_var_t(const TASCAR::module_cfg_t& cfg);
-  std::string name = "fbc";
+  echoc_var_t(const TASCAR::module_cfg_t& cfg);
+  std::string name = "echoc";
   std::string path = "";
   std::vector<std::string> micports = {"system:capture_1"};
   std::vector<std::string> loudspeakerports = {"system:playback_1",
@@ -40,7 +40,7 @@ public:
   bool autoreconnect = false;
 };
 
-fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
+echoc_var_t::echoc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
 {
   GET_ATTRIBUTE(name, "", "Client name, used for jack and IR file name");
   GET_ATTRIBUTE(micports, "", "Microphone ports");
@@ -57,28 +57,28 @@ fbc_var_t::fbc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
                      "Automatically re-connect ports after jack port change");
 }
 
-class fbc_mod_t : public fbc_var_t, public jackc_t {
+class echoc_mod_t : public echoc_var_t, public jackc_t {
 public:
-  fbc_mod_t(const TASCAR::module_cfg_t& cfg);
+  echoc_mod_t(const TASCAR::module_cfg_t& cfg);
   void configure();
   void ir_measure();
   void ir_update();
   void ports_connect();
-  virtual ~fbc_mod_t();
+  virtual ~echoc_mod_t();
   int process(jack_nframes_t nframes, const std::vector<float*>& inBuffer,
               const std::vector<float*>& outBuffer);
   void add_variables(TASCAR::osc_server_t* srv);
   static int osc_measure(const char*, const char*, lo_arg**, int, lo_message,
                          void* user_data)
   {
-    ((fbc_mod_t*)user_data)->ir_measure();
-    ((fbc_mod_t*)user_data)->ir_update();
+    ((echoc_mod_t*)user_data)->ir_measure();
+    ((echoc_mod_t*)user_data)->ir_update();
     return 0;
   }
   static int osc_connect(const char*, const char*, lo_arg**, int, lo_message,
                          void* user_data)
   {
-    ((fbc_mod_t*)user_data)->ports_connect();
+    ((echoc_mod_t*)user_data)->ports_connect();
     return 0;
   }
   static void jack_port_connect_cb(jack_port_id_t a, jack_port_id_t b,
@@ -98,42 +98,42 @@ private:
   std::atomic_bool measuring = false;
 };
 
-fbc_mod_t::fbc_mod_t(const TASCAR::module_cfg_t& cfg)
-    : fbc_var_t(cfg), jackc_t(name)
+echoc_mod_t::echoc_mod_t(const TASCAR::module_cfg_t& cfg)
+    : echoc_var_t(cfg), jackc_t(name)
 {
   for(size_t ch = 0; ch < micports.size(); ++ch)
     add_output_port("out." + std::to_string(ch));
   for(size_t ch = 0; ch < loudspeakerports.size(); ++ch)
     add_input_port("in." + std::to_string(ch));
-  jack_set_port_connect_callback(jc, &fbc_mod_t::jack_port_connect_cb, this);
+  jack_set_port_connect_callback(jc, &echoc_mod_t::jack_port_connect_cb, this);
   activate();
   add_variables(session);
   if(autoreconnect)
-    port_thread = std::thread(&fbc_mod_t::port_service, this);
+    port_thread = std::thread(&echoc_mod_t::port_service, this);
 }
 
-void fbc_mod_t::jack_port_connect_cb(jack_port_id_t, jack_port_id_t, int,
+void echoc_mod_t::jack_port_connect_cb(jack_port_id_t, jack_port_id_t, int,
                                      void* arg)
 {
-  ((fbc_mod_t*)arg)->jack_port_connect_cb();
+  ((echoc_mod_t*)arg)->jack_port_connect_cb();
 }
 
-void fbc_mod_t::jack_port_connect_cb()
+void echoc_mod_t::jack_port_connect_cb()
 {
   if(!connecting_ports)
     reconnect = true;
 }
 
-void fbc_mod_t::add_variables(TASCAR::osc_server_t* srv)
+void echoc_mod_t::add_variables(TASCAR::osc_server_t* srv)
 {
   std::string prefix_(srv->get_prefix());
   srv->set_prefix(std::string("/") + name);
-  srv->add_method("/measure", "", &fbc_mod_t::osc_measure, this);
-  srv->add_method("/connect", "", &fbc_mod_t::osc_connect, this);
+  srv->add_method("/measure", "", &echoc_mod_t::osc_measure, this);
+  srv->add_method("/connect", "", &echoc_mod_t::osc_connect, this);
   srv->set_prefix(prefix_);
 }
 
-void fbc_mod_t::ports_connect()
+void echoc_mod_t::ports_connect()
 {
   connecting_ports = true;
   for(size_t ch = 0; ch < micports.size(); ++ch)
@@ -147,7 +147,7 @@ void fbc_mod_t::ports_connect()
   connecting_ports = false;
 }
 
-void fbc_mod_t::configure()
+void echoc_mod_t::configure()
 {
   if(tmp_wav)
     delete tmp_wav;
@@ -158,7 +158,7 @@ void fbc_mod_t::configure()
   ports_connect();
 }
 
-void fbc_mod_t::port_service()
+void echoc_mod_t::port_service()
 {
   size_t pcnt = 100;
   while(run_port_service) {
@@ -177,7 +177,7 @@ void fbc_mod_t::port_service()
   }
 }
 
-fbc_mod_t::~fbc_mod_t()
+echoc_mod_t::~echoc_mod_t()
 {
   run_port_service = false;
   deactivate();
@@ -207,7 +207,7 @@ uint32_t get_idxmaxabs(const TASCAR::wave_t& w)
   return imax;
 }
 
-void fbc_mod_t::ir_update()
+void echoc_mod_t::ir_update()
 {
   std::lock_guard<std::mutex> lockguard(lock);
   // clear all filters and delays:
@@ -245,7 +245,7 @@ void fbc_mod_t::ir_update()
       aratio.push_back(fabsf(ir.d[idxmax.back()]) / r);
       if(aratio.back() < 0.5)
         TASCAR::add_warning(
-            "fbc: Poor IR measurement quality in channel " +
+            "echoc: Poor IR measurement quality in channel " +
             std::to_string(ch) +
             TASCAR::to_string(100.0f * aratio.back(), " (%1.0f%%)"));
       ++ch;
@@ -260,12 +260,12 @@ void fbc_mod_t::ir_update()
     }
   }
   catch(const std::exception& ex) {
-    TASCAR::add_warning(std::string("In plugin fbc (") +
+    TASCAR::add_warning(std::string("In plugin echoc (") +
                         tsccfg::node_get_path(e) + "): " + ex.what());
   }
 }
 
-void fbc_mod_t::ir_measure()
+void echoc_mod_t::ir_measure()
 {
   measuring = true;
   std::lock_guard<std::mutex> lockguard(lock);
@@ -320,7 +320,7 @@ void fbc_mod_t::ir_measure()
   measuring = false;
 }
 
-int fbc_mod_t::process(jack_nframes_t nframes,
+int echoc_mod_t::process(jack_nframes_t nframes,
                        const std::vector<float*>& inBuffer,
                        const std::vector<float*>& outBuffer)
 {
@@ -343,7 +343,7 @@ int fbc_mod_t::process(jack_nframes_t nframes,
   return 0;
 }
 
-REGISTER_MODULE(fbc_mod_t);
+REGISTER_MODULE(echoc_mod_t);
 
 /*
  * Local Variables:
