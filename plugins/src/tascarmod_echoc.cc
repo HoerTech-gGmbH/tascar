@@ -107,14 +107,16 @@ echoc_mod_t::echoc_mod_t(const TASCAR::module_cfg_t& cfg)
     add_input_port("in." + std::to_string(ch));
   for(size_t ch = 0; ch < micports.size(); ++ch)
     add_input_port("adapt." + std::to_string(ch));
+  if(autoreconnect) {
+    jack_set_port_connect_callback(jc, &echoc_mod_t::jack_port_connect_cb,
+                                   this);
+  }
   activate();
   for(size_t ch = 0; ch < micports.size(); ++ch)
     connect_in(ch + loudspeakerports.size(), micports[ch], true, false);
   add_variables(session);
   if(autoreconnect) {
     port_thread = std::thread(&echoc_mod_t::port_service, this);
-    jack_set_port_connect_callback(jc, &echoc_mod_t::jack_port_connect_cb,
-                                   this);
   }
 }
 
@@ -162,6 +164,7 @@ void echoc_mod_t::configure()
     ir_measure();
   ir_update();
   ports_connect();
+  reconnect = true;
 }
 
 void echoc_mod_t::port_service()
@@ -177,6 +180,7 @@ void echoc_mod_t::port_service()
           pcnt = 100;
           reconnect = false;
           ports_connect();
+          // std::cerr << "reconnecting\n";
         }
       }
     }
@@ -337,6 +341,8 @@ int echoc_mod_t::process(jack_nframes_t nframes,
     uint32_t cin = 0;
     for(auto pIn : inBuffer) {
       if(cin < loudspeakerports.size()) {
+        // input port, not a filter update port.
+        // std::cerr << "*";
         for(auto pOut : outBuffer) {
           if(idx < filters.size()) {
             for(uint32_t k = 0; k < nframes; ++k)
@@ -347,6 +353,7 @@ int echoc_mod_t::process(jack_nframes_t nframes,
           ++idx;
         }
       }
+      ++cin;
     }
     lock.unlock();
   }

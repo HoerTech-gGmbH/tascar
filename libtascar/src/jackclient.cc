@@ -242,6 +242,9 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest,
               else
                 throw TASCAR::ErrMsg(errmsg.c_str());
             }
+            //}else{
+            //  std::cerr << "not connecting " << *cons << " to " << dest <<
+            //  std::endl;
           }
           ++cons;
         }
@@ -264,6 +267,9 @@ void jackc_portless_t::connect(const std::string& src, const std::string& dest,
                 else
                   throw TASCAR::ErrMsg(errmsg.c_str());
               }
+              //}else{
+              //  std::cerr << "not connecting " << src << " to " << *cons <<
+              //  std::endl;
             }
             ++cons;
           }
