@@ -38,6 +38,7 @@ public:
   uint32_t premax = 8;
   bool measureatstart = false;
   bool autoreconnect = false;
+  bool bypass = false;
 };
 
 echoc_var_t::echoc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
@@ -55,6 +56,7 @@ echoc_var_t::echoc_var_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
                      "Perform a measurement when the plugin is loaded");
   GET_ATTRIBUTE_BOOL(autoreconnect,
                      "Automatically re-connect ports after jack port change");
+  GET_ATTRIBUTE_BOOL(bypass, "Bypass filter stage");
 }
 
 class echoc_mod_t : public echoc_var_t, public jackc_t {
@@ -138,6 +140,7 @@ void echoc_mod_t::add_variables(TASCAR::osc_server_t* srv)
   srv->set_prefix(std::string("/") + name);
   srv->add_method("/measure", "", &echoc_mod_t::osc_measure, this);
   srv->add_method("/connect", "", &echoc_mod_t::osc_connect, this);
+  srv->add_bool("/bypass", &bypass);
   srv->set_prefix(prefix_);
 }
 
@@ -336,26 +339,28 @@ int echoc_mod_t::process(jack_nframes_t nframes,
 {
   for(auto pOut : outBuffer)
     memset(pOut, 0, sizeof(float) * nframes);
-  if(lock.try_lock()) {
-    size_t idx = 0;
-    uint32_t cin = 0;
-    for(auto pIn : inBuffer) {
-      if(cin < loudspeakerports.size()) {
-        // input port, not a filter update port.
-        // std::cerr << "*";
-        for(auto pOut : outBuffer) {
-          if(idx < filters.size()) {
-            for(uint32_t k = 0; k < nframes; ++k)
-              tmp_wav->d[k] = delays[idx]->operator()(pIn[k]);
-            TASCAR::wave_t wout(nframes, pOut);
-            filters[idx]->process(*tmp_wav, wout);
+  if(!bypass) {
+    if(lock.try_lock()) {
+      size_t idx = 0;
+      uint32_t cin = 0;
+      for(auto pIn : inBuffer) {
+        if(cin < loudspeakerports.size()) {
+          // input port, not a filter update port.
+          // std::cerr << "*";
+          for(auto pOut : outBuffer) {
+            if(idx < filters.size()) {
+              for(uint32_t k = 0; k < nframes; ++k)
+                tmp_wav->d[k] = delays[idx]->operator()(pIn[k]);
+              TASCAR::wave_t wout(nframes, pOut);
+              filters[idx]->process(*tmp_wav, wout);
+            }
+            ++idx;
           }
-          ++idx;
         }
+        ++cin;
       }
-      ++cin;
+      lock.unlock();
     }
-    lock.unlock();
   }
   return 0;
 }

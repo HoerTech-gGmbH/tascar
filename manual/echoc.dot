@@ -1,89 +1,87 @@
-digraph {
+digraph
+{
 
   labelsep = "0.1";
 
-  rankdir="LR";
+  rankdir = "LR";
 
+  subgraph cluster_fbpath
   {
-    //rank = "min";
-    mic [label="microphone\nA/D conv."];
-  
-  }
 
-  {
-    //rank = "max";
-    spk [label="D/A conv.\nloudspeaker"];
-  }
+    graph[pencolor = "#ffd697", label = "feedback path", fillcolor = "#ffd697",
+          style = "filled"];
 
-  {
-    rank = "same";
+    mic[label = "microphone\nA/D conv."];
 
-    micinp [shape="point",color="#458b74"];
-
-    other [shape="box",label="other\nclients"];
-
-    add [shape="circle",width="0.2",fixedsize="true",label="+"];
-
+    spk[label = "D/A conv.\nloudspeaker"];
   }
 
   {
     rank = "same";
 
-    spkout [shape="point",color="#458b74"];
+    micinp[shape = "point", color = "#458b74"];
 
-    spksrc [shape="box",label="sound\nsource"];
-    
-  }
+    add[shape = "circle", width = "0.2", fixedsize = "true", label = "+"];
 
-  subgraph cluster_filter {
-    graph [style="dashed",label="filter"];
-    node [shape="box"];
-    delay [label="delay"];
-    filter [label="filter\n-H'"];
-    estim [label="estimator\nH'", style="filled", fillcolor="#c0c0c0", color="#707070", fontcolor="#707070"];
-
-  }
-
-  subgraph cluster_meas {
-    graph [style="dashed",label="measurement"];
-    node [shape="box"];
-    meassig [label="test\nsignal"];
-    irmeas [label="IR-\nmeasurement"];
+    other[shape = "box", label = "other\nclients"];
   }
 
   {
-    edge [style="invisible",dir="none"];
-    spkout -> meassig;
-    irmeas -> micinp;
+    rank = "same";
+
+    spkout[shape = "point", color = "#458b74"];
+
+    spksrc[shape = "box", label = "sound\nsource"];
+  }
+
+  subgraph cluster_filter
+  {
+    graph[style = "dashed", label = "filter"];
+    node[shape = "box"];
+    delay[label = "delay"];
+    filter[label = "filter\n-H'"];
+    estim[label = "estimator\nH'", style = "filled", fillcolor = "#c0c0c0",
+          color = "#707070", fontcolor = "#707070"];
+  }
+
+  subgraph cluster_meas
+  {
+    graph[style = "dashed", label = "measurement"];
+    node[shape = "box"];
+    meassig[label = "test\nsignal"];
+    irmeas[label = "IR-\nmeasurement"];
+  }
+
+  {
+    edge[style = "invisible", dir = "none"];
+    spkout->meassig;
+    irmeas->micinp;
   }
 
   {
     // audio:
-    edge [color="#458b74"];
-    mic -> micinp -> add;
-    add -> other;
-    spksrc -> spkout;
-    spkout -> spk;
-    spkout -> delay -> filter -> add;
-    meassig -> spk;
-    mic -> irmeas;
-    meassig -> irmeas;
-    delay -> estim;
-    estim -> micinp [dir="back"];
+    edge[color = "#458b74"];
+    mic->micinp->add;
+    add->other;
+    spksrc->spkout;
+    spkout->spk;
+    spkout->delay->filter->add;
+    meassig->spk;
+    mic->irmeas;
+    meassig->irmeas;
+    delay->estim;
+    estim->micinp[dir = "back"];
 
-    spk -> mic [label=" H ", penwidth="4"];
-
+    spk->mic[label = " H ", penwidth = "4"];
   }
 
   {
     // control data:
-    edge [color="#cd3333",style="dashed"];
-    irmeas -> delay;
-    irmeas -> filter;
-    estim -> filter;
-
+    edge[color = "#cd3333", style = "dashed"];
+    irmeas->delay;
+    irmeas->filter;
+    estim->filter;
   }
-
 }
 
 /*

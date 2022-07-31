@@ -2,6 +2,8 @@ The {\em echoc} module provides echo cancellation. As a non-adaptive method, it 
 
 Please note that no feedback jack connections are possible for the echo cancellation to work, because feedback connections cause an additional delay which results in a mismatch of the cancellation signal. This also means that a graph from the microphone to the loudspeaker (e.g., self monitoring) is not possible for the echo cancellation to work. Future versions may compensate for this extra delay.
 
+The filter is implemented in frequency domain as overlap-save algorithm.
+
 \begin{figure}[htb]
     \centering
     \fbox{\includegraphics[width=\textwidth]{echoc.pdf}}
@@ -22,6 +24,8 @@ name & description (type, unit) & def.\\
 \hline
 \hline
 \indattr{autoreconnect} & Automatically re-connect ports after jack port change (bool) & false\\
+\hline
+\indattr{bypass} & Bypass filter stage (bool) & false\\
 \hline
 \indattr{filterlen} & Minimal length of filters (uint32, samples) & 65\\
 \hline
