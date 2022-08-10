@@ -18,6 +18,7 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "errorhandling.h"
 #include "glabsensorplugin.h"
 #include <lsl_cpp.h>
 #include <mutex>
@@ -35,23 +36,30 @@ double gettime()
 
 class rigid_t {
 public:
-  rigid_t(const std::string& name, double freq);
+  rigid_t(const std::string& name, double freq, lo_address datatarget_,
+          std::string dataprefix_);
   ~rigid_t();
   void process(double x, double y, double z, double rz, double ry, double rx);
 
 private:
   lsl::stream_info lsl_info;
   lsl::stream_outlet lsl_stream;
+  std::string name;
+  lo_address datatarget = NULL;
+  std::string dataprefix;
 
 public:
   std::vector<double> c6dof;
   double last_call;
 };
 
-rigid_t::rigid_t(const std::string& name, double freq)
-    : lsl_info(name, "MoCap", 6, freq, lsl::cf_float32,
-               std::string("qtm_") + name),
-      lsl_stream(lsl_info), c6dof(6, 0.0), last_call(gettime() - 24.0 * 3600.0)
+rigid_t::rigid_t(const std::string& name_, double freq, lo_address datatarget_,
+                 std::string dataprefix_)
+    : lsl_info(name_, "MoCap", 6, freq, lsl::cf_float32,
+               std::string("qtm_") + name_),
+      lsl_stream(lsl_info), name(name_), datatarget(datatarget_),
+      dataprefix(dataprefix_), c6dof(6, 0.0),
+      last_call(gettime() - 24.0 * 3600.0)
 {
 }
 
@@ -70,6 +78,10 @@ void rigid_t::process(double x, double y, double z, double rz, double ry,
   c6dof[4] = DEG2RAD * ry;
   c6dof[5] = DEG2RAD * rx;
   lsl_stream.push_sample(c6dof);
+  if(datatarget) {
+    lo_send(datatarget, (dataprefix + "/" + name).c_str(), "ffffff", x, y, z,
+            rz, ry, rx);
+  }
   last_call = gettime();
 }
 
@@ -97,12 +109,15 @@ public:
   OSCHANDLER(qualisys_tracker_t, qtm6d);
 
 private:
-  std::string qtmurl;
-  double timeout;
-  lo_address qtmtarget;
+  std::string qtmurl = "osc.udp://localhost:22225/";
+  std::string dataurl = "";
+  std::string dataprefix = "";
+  double timeout = 1.0;
+  lo_address qtmtarget = NULL;
+  lo_address datatarget = NULL;
   std::mutex mtx;
-  int32_t srv_port;
-  double nominal_freq;
+  int32_t srv_port = 0;
+  double nominal_freq = 1.0;
   std::map<std::string, rigid_t*> rigids;
   double last_prepared;
 };
@@ -133,7 +148,7 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
         if(rigids.find(name) != rigids.end())
           TASCAR::add_warning("Rigid " + name +
                               " was allocated more than once.");
-        rigids[name] = new rigid_t(name, nominal_freq);
+        rigids[name] = new rigid_t(name, nominal_freq, datatarget, dataprefix);
       }
     }
   }
@@ -157,12 +172,22 @@ int qualisys_tracker_t::qtm6d(const char* path, const char*, lo_arg** argv, int,
 }
 
 qualisys_tracker_t::qualisys_tracker_t(const sensorplugin_cfg_t& cfg)
-    : sensorplugin_drawing_t(cfg), qtmurl("osc.udp://localhost:22225"),
-      timeout(1.0), srv_port(0), nominal_freq(1), last_prepared(gettime())
+    : sensorplugin_drawing_t(cfg), last_prepared(gettime())
 {
-  GET_ATTRIBUTE_(qtmurl);
-  GET_ATTRIBUTE_(timeout);
+  GET_ATTRIBUTE(qtmurl, "", "Qualisys Track Manager URL of USC interface");
+  GET_ATTRIBUTE(timeout, "s", "Timeout");
+  GET_ATTRIBUTE(dataurl, "",
+                "OSC URL where data is sent to (or empty for no OSC sending)");
+  GET_ATTRIBUTE(dataprefix, "",
+                "OSC path prefix, will be followed by slash + rigid names");
   qtmtarget = lo_address_new_from_url(qtmurl.c_str());
+  if(!qtmtarget)
+    throw TASCAR::ErrMsg("Invalid QTM URL");
+  if(!dataurl.empty()) {
+    datatarget = lo_address_new_from_url(dataurl.c_str());
+    if(!datatarget)
+      throw TASCAR::ErrMsg("Invalid data OSC URL \"" + dataurl + "\".");
+  }
 }
 
 void qualisys_tracker_t::prepare()
