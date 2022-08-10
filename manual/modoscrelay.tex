@@ -1,6 +1,21 @@
 Relay OSC messages, e.g., for distribution of motion sensors.
 
-\begin{tscattributes}
-  \indattr{url} & Target OSC url (default: ``osc.udp://localhost:9000/'')\\
-  \indattr{path} & Path filter (default: ``'', matching any path)\\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:oscrelay}
+Attributes of element {\bf oscrelay}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9000/}\\
+\hline
+\indattr{path} & Path filter, or empty to match any path (string) & \\
+\hline
+\indattr{newpath} & Replace incoming path with this path, or empty for no replacement (string) & \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
