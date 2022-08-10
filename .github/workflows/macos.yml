@@ -16,6 +16,6 @@ jobs:
     - name: fetchall
       run: git fetch --tags --all
     - name: dependencies
-      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c
+      run: brew install pkgconfig libxml2 glibmm libxml++ jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c jpeg
     - name: make
       run: mkdir build && cd build && cmake -B . -S ../ && make
