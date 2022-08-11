@@ -523,15 +523,23 @@ osc_server_t::osc_server_t(const std::string& multicast,
   liblo_errflag = false;
   if(port.size() && (port != "none")) {
     if(multicast.size()) {
-      lost = lo_server_thread_new_multicast(multicast.c_str(), port.c_str(),
-                                            err_handler);
+      if(port == "auto")
+        lost = lo_server_thread_new_multicast(multicast.c_str(), NULL,
+                                              err_handler);
+      else
+        lost = lo_server_thread_new_multicast(multicast.c_str(), port.c_str(),
+                                              err_handler);
       // if( verbose )
       // std::cerr << "listening on multicast address \"osc.udp://" << multicast
       // << ":"<<port << "/\"" << std::endl;
       initialized = true;
     } else {
-      lost = lo_server_thread_new_with_proto(port.c_str(), string2proto(proto),
-                                             err_handler);
+      if(port == "auto")
+        lost = lo_server_thread_new_with_proto(NULL, string2proto(proto),
+                                               err_handler);
+      else
+        lost = lo_server_thread_new_with_proto(
+            port.c_str(), string2proto(proto), err_handler);
       // if( verbose )
       // std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" <<
       // std::endl;

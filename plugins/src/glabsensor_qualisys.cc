@@ -20,9 +20,11 @@
 
 #include "errorhandling.h"
 #include "glabsensorplugin.h"
+#include <atomic>
 #include <lsl_cpp.h>
 #include <mutex>
 #include <sys/time.h>
+#include <thread>
 
 using namespace TASCAR;
 
@@ -104,11 +106,13 @@ public:
             double height);
   void prepare();
   void release();
+  void srv_prepare();
   OSCHANDLER(qualisys_tracker_t, qtmres);
   OSCHANDLER(qualisys_tracker_t, qtmxml);
   OSCHANDLER(qualisys_tracker_t, qtm6d);
 
 private:
+  TASCAR::osc_server_t oscserver;
   std::string qtmurl = "osc.udp://localhost:22225/";
   std::string dataurl = "";
   std::string dataprefix = "";
@@ -120,6 +124,8 @@ private:
   double nominal_freq = 1.0;
   std::map<std::string, rigid_t*> rigids;
   double last_prepared;
+  std::atomic_bool run_preparethread = true;
+  std::thread preparethread;
 };
 
 int qualisys_tracker_t::qtmres(const char*, const char*, lo_arg**, int,
@@ -166,14 +172,19 @@ int qualisys_tracker_t::qtm6d(const char* path, const char*, lo_arg** argv, int,
       alive();
       it->second->process(argv[0]->f, argv[1]->f, argv[2]->f, argv[3]->f,
                           argv[4]->f, argv[5]->f);
+      // return zero to indicate that this message was processed successfully
+      return 0;
     }
   }
-  return 0;
+  // return non-zero to allow further processing
+  return 1;
 }
 
 qualisys_tracker_t::qualisys_tracker_t(const sensorplugin_cfg_t& cfg)
-    : sensorplugin_drawing_t(cfg), last_prepared(gettime())
+    : sensorplugin_drawing_t(cfg), oscserver("", "auto", "UDP"),
+      last_prepared(gettime())
 {
+  oscserver.activate();
   GET_ATTRIBUTE(qtmurl, "", "Qualisys Track Manager URL of USC interface");
   GET_ATTRIBUTE(timeout, "s", "Timeout");
   GET_ATTRIBUTE(dataurl, "",
@@ -187,6 +198,25 @@ qualisys_tracker_t::qualisys_tracker_t(const sensorplugin_cfg_t& cfg)
     datatarget = lo_address_new_from_url(dataurl.c_str());
     if(!datatarget)
       throw TASCAR::ErrMsg("Invalid data OSC URL \"" + dataurl + "\".");
+  }
+  preparethread = std::thread(&qualisys_tracker_t::srv_prepare, this);
+}
+
+void qualisys_tracker_t::srv_prepare()
+{
+  while(run_preparethread) {
+    bool any_visible(false);
+    if(mtx.try_lock()) {
+      for(auto& rigid : rigids) {
+        if(gettime() - rigid.second->last_call < timeout)
+          any_visible = true;
+      }
+      mtx.unlock();
+    }
+    if((!any_visible) && (gettime() - last_prepared > 5.0)) {
+      prepare();
+    }
+    usleep(10000);
   }
 }
 
@@ -212,11 +242,16 @@ void qualisys_tracker_t::release()
 
 qualisys_tracker_t::~qualisys_tracker_t()
 {
+  run_preparethread = false;
+  if(preparethread.joinable())
+    preparethread.join();
   lo_address_free(qtmtarget);
+  oscserver.deactivate();
 }
 
 void qualisys_tracker_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv = &oscserver;
   srv_port = srv->get_srv_port();
   srv->set_prefix("");
   srv->add_method("/qtm/cmd_res", "s", &qtmres, this);
@@ -228,44 +263,46 @@ void qualisys_tracker_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
                               double width, double height)
 {
   double y(0.05);
-  bool any_visible(false);
   {
-    std::lock_guard<std::mutex> lock(mtx);
-    for(auto it = rigids.begin(); it != rigids.end(); ++it) {
-      y += 0.15;
-      cr->move_to(0.05 * width, y * height);
-      cr->show_text(it->first);
-      cr->stroke();
-      if(gettime() - it->second->last_call < timeout) {
-        any_visible = true;
-        cr->move_to(0.23 * width, y * height);
-        char ctmp[256];
-        sprintf(ctmp, "%7.3f %7.3f %7.3f m %7.1f %7.1f %7.1f deg",
-                it->second->c6dof[0], it->second->c6dof[1],
-                it->second->c6dof[2], it->second->c6dof[3] * RAD2DEG,
-                it->second->c6dof[4] * RAD2DEG, it->second->c6dof[5] * RAD2DEG);
-        cr->show_text(ctmp);
+    // std::lock_guard<std::mutex> lock(mtx);
+    if(mtx.try_lock()) {
+      // any_visible = false;
+      for(auto it = rigids.begin(); it != rigids.end(); ++it) {
+        y += 0.15;
+        cr->move_to(0.05 * width, y * height);
+        cr->show_text(it->first);
         cr->stroke();
-        // rotation:
-        cr->save();
-        cr->set_line_width(1);
-        for(uint32_t c = 0; c < 3; ++c) {
-          double lx((0.8 + 0.05 * c) * width);
-          double ly((y - 0.04) * height);
-          double r(0.055 * height);
-          cr->arc(lx, ly, r, 0, TASCAR_2PI);
+        if(gettime() - it->second->last_call < timeout) {
+          // any_visible = true;
+          cr->move_to(0.23 * width, y * height);
+          char ctmp[256];
+          sprintf(ctmp, "%7.3f %7.3f %7.3f m %7.1f %7.1f %7.1f deg",
+                  it->second->c6dof[0], it->second->c6dof[1],
+                  it->second->c6dof[2], it->second->c6dof[3] * RAD2DEG,
+                  it->second->c6dof[4] * RAD2DEG,
+                  it->second->c6dof[5] * RAD2DEG);
+          cr->show_text(ctmp);
           cr->stroke();
-          double lrot(DEG2RAD * it->second->c6dof[3 + c]);
-          cr->move_to(lx, ly);
-          cr->line_to(lx + r * cos(lrot), ly + r * sin(lrot));
-          cr->stroke();
+          // rotation:
+          cr->save();
+          cr->set_line_width(1);
+          for(uint32_t c = 0; c < 3; ++c) {
+            double lx((0.8 + 0.05 * c) * width);
+            double ly((y - 0.04) * height);
+            double r(0.055 * height);
+            cr->arc(lx, ly, r, 0, TASCAR_2PI);
+            cr->stroke();
+            double lrot(DEG2RAD * it->second->c6dof[3 + c]);
+            cr->move_to(lx, ly);
+            cr->line_to(lx + r * cos(lrot), ly + r * sin(lrot));
+            cr->stroke();
+          }
+          cr->restore();
         }
-        cr->restore();
       }
+      mtx.unlock();
     }
   }
-  if((!any_visible) && (gettime() - last_prepared > 5.0))
-    prepare();
 }
 
 REGISTER_SENSORPLUGIN(qualisys_tracker_t);
