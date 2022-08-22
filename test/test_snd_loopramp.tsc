@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1" gainmodel="1" delayline="false">
+        <plugins>
+          <sndfile name="ramp.wav" loopcrosslen="0.5" level="93.979" levelmode="calib" loop="0"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="omni"/>
+  </scene>
+</session>

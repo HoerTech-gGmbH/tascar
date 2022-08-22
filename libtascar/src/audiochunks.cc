@@ -309,7 +309,8 @@ void amb1wave_t::add_panned(pos_t p, const wave_t& v, float g)
   z_.add(v, g * p.z);
 }
 
-SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate, int channels, int format)
+SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate, int channels,
+                                               int format)
 {
   SF_INFO inf;
   memset(&inf, 0, sizeof(inf));
@@ -321,7 +322,7 @@ SF_INFO sndfile_handle_t::sf_info_configurator(int samplerate, int channels, int
 
 sndfile_handle_t::sndfile_handle_t(const std::string& fname, int samplerate,
                                    int channels, int format)
-  : sf_inf(sf_info_configurator(samplerate, channels, format)),
+    : sf_inf(sf_info_configurator(samplerate, channels, format)),
       sfile(sf_open(TASCAR::env_expand(fname).c_str(), SFM_WRITE, &sf_inf))
 {
   if(!sfile)
@@ -511,6 +512,21 @@ void wave_t::resample(double ratio)
   rmsscale = 1.0f / (float)n;
 }
 
+void wave_t::make_loopable(uint32_t fadelen, float crossexp)
+{
+  if(2 * fadelen > n)
+    throw TASCAR::ErrMsg(
+        "Cannot make loopable sound sample: Fadelen needs to "
+        "be less or equal than half of the number of samples (fadelen: " +
+        std::to_string(fadelen) + ", n: " + std::to_string(n) + ").");
+  for(uint32_t k = 0; k < fadelen; ++k) {
+    float w = 0.5f + 0.5f * cosf((float)k / (float)fadelen * TASCAR_PIf);
+    w = powf(w, crossexp);
+    d[k] = (1.0f - w) * d[k] + w * d[n - fadelen + k];
+  }
+  n -= fadelen;
+}
+
 amb1rotator_t::amb1rotator_t(uint32_t chunksize)
     : amb1wave_t(chunksize), wxx(1), wxy(0), wxz(0), wyx(0), wyy(1), wyz(0),
       wzx(0), wzy(0), wzz(1), dt(1.0 / (double)chunksize)
@@ -688,6 +704,12 @@ void sndfile_t::resample(double ratio)
   wave_t::resample(ratio);
   sf_inf.frames *= ratio;
   sf_inf.samplerate *= ratio;
+}
+
+void sndfile_t::make_loopable(uint32_t fadelen, float crossexp)
+{
+  wave_t::make_loopable(fadelen, crossexp);
+  sf_inf.frames -= fadelen;
 }
 
 void TASCAR::audiowrite(const std::string& name,

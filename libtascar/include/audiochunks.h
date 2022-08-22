@@ -69,6 +69,12 @@ namespace TASCAR {
     float maxabsdb() const;
     void append(const wave_t& src);
     virtual void resample(double ratio);
+    /**
+       @brief Make loopable sound by applying cross-fade and shortening sound.
+       @param fadelen Fade length in samples; must be less than available number
+       of samples.
+     */
+    virtual void make_loopable(uint32_t fadelen, float crossexp);
     inline void append_sample(float src)
     {
       d[append_pos] = src;
@@ -139,7 +145,8 @@ namespace TASCAR {
   class sndfile_handle_t {
   public:
     sndfile_handle_t(const std::string& fname);
-    sndfile_handle_t(const std::string& fname, int samplerate, int channels, int format = SF_FORMAT_WAV | SF_FORMAT_FLOAT);
+    sndfile_handle_t(const std::string& fname, int samplerate, int channels,
+                     int format = SF_FORMAT_WAV | SF_FORMAT_FLOAT);
     ~sndfile_handle_t();
     sndfile_handle_t(const sndfile_handle_t&) = delete;
     uint32_t get_channels() const { return sf_inf.channels; };
@@ -147,7 +154,9 @@ namespace TASCAR {
     uint32_t get_srate() const { return sf_inf.samplerate; };
     uint32_t readf_float(float* buf, uint32_t frames);
     uint32_t writef_float(float* buf, uint32_t frames);
-    static SF_INFO sf_info_configurator(int samplerate, int channels, int format = SF_FORMAT_WAV | SF_FORMAT_FLOAT);
+    static SF_INFO sf_info_configurator(int samplerate, int channels,
+                                        int format = SF_FORMAT_WAV |
+                                                     SF_FORMAT_FLOAT);
 
   protected:
     SF_INFO sf_inf;
@@ -178,6 +187,7 @@ namespace TASCAR {
               double length = 0);
     void set_position(double position);
     void resample(double ratio);
+    void make_loopable(uint32_t fadelen, float crossexp);
   };
 
   void audiowrite(const std::string& name, const std::vector<TASCAR::wave_t>& y,
@@ -185,7 +195,7 @@ namespace TASCAR {
                   int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16 |
                                SF_ENDIAN_FILE);
 
-  std::vector<TASCAR::wave_t> audioread(const std::string& name,float& fs);
+  std::vector<TASCAR::wave_t> audioread(const std::string& name, float& fs);
 
 } // namespace TASCAR
 

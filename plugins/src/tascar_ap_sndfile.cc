@@ -38,6 +38,8 @@ protected:
   double position;
   double length;
   uint32_t loop;
+  float loopcrosslen = 0.0f;
+  float loopcrossexp = 1.0f;
   bool resample;
   std::string levelmode;
   TASCAR::levelmeter::weight_t weighting;
@@ -63,6 +65,9 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(length, "s",
                 "length of sound sample, or 0 to use whole file length");
   GET_ATTRIBUTE(loop, "", "loop count or 0 for infinite looping");
+  GET_ATTRIBUTE(loopcrosslen, "s", "duration of crossfade for seamless loop");
+  GET_ATTRIBUTE(loopcrossexp, "",
+                "exponent of von-Hann crossfade for seamless loop");
   GET_ATTRIBUTE_BOOL(resample,
                      "Allow resampling to current session sample rate");
   GET_ATTRIBUTE(levelmode, "", "level mode, ``rms'', ``peak'' or ``calib''");
@@ -167,8 +172,8 @@ void ap_sndfile_t::load_file()
           std::string msg("The sample rate of the sound file \"" + name +
                           "\" differs from the session sample rate:\n");
           char ctmp[1024];
-          sprintf(ctmp, "  file has %d Hz, expected %g Hz", sndf[0]->get_srate(),
-                  f_sample);
+          sprintf(ctmp, "  file has %d Hz, expected %g Hz",
+                  sndf[0]->get_srate(), f_sample);
           msg += ctmp;
           TASCAR::add_warning(msg, e);
         }
@@ -198,6 +203,11 @@ void ap_sndfile_t::load_file()
           sf->set_loop(loop);
         }
         *(sf) *= gain;
+      }
+    }
+    if(loopcrosslen > 0) {
+      for(auto sf : sndf) {
+        sf->make_loopable(loopcrosslen * sf->get_srate(), loopcrossexp);
       }
     }
   }
