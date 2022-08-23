@@ -63,9 +63,13 @@ rigid_t::rigid_t(const std::string& name_, double freq, lo_address datatarget_,
       dataprefix(dataprefix_), c6dof(6, 0.0),
       last_call(gettime() - 24.0 * 3600.0)
 {
+  std::cerr << "added rigid " << name << std::endl;
 }
 
-rigid_t::~rigid_t() {}
+rigid_t::~rigid_t()
+{
+  std::cerr << "removed rigid " << name << std::endl;
+}
 
 void rigid_t::process(double x, double y, double z, double rz, double ry,
                       double rx)
@@ -151,6 +155,7 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
     for(auto body : tsccfg::node_get_children(the6d, "Body")) {
       for(auto bname : tsccfg::node_get_children(body, "Name")) {
         std::string name(tsccfg::node_get_text(bname));
+        std::lock_guard<std::mutex> lock(mtx);
         if(rigids.find(name) != rigids.end())
           TASCAR::add_warning("Rigid " + name +
                               " was allocated more than once.");
@@ -222,11 +227,13 @@ void qualisys_tracker_t::srv_prepare()
 
 void qualisys_tracker_t::prepare()
 {
-  std::lock_guard<std::mutex> lock(mtx);
-  last_prepared = gettime();
-  for(auto it = rigids.begin(); it != rigids.end(); ++it)
-    delete it->second;
-  rigids.clear();
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    last_prepared = gettime();
+    for(auto it = rigids.begin(); it != rigids.end(); ++it)
+      delete it->second;
+    rigids.clear();
+  }
   lo_send(qtmtarget, "/qtm", "si", "Connect", srv_port);
   lo_send(qtmtarget, "/qtm", "ss", "GetParameters", "All");
 }
