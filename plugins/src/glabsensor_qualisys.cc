@@ -212,9 +212,9 @@ void qualisys_tracker_t::srv_prepare()
           any_visible = true;
       }
       mtx.unlock();
-    }
-    if((!any_visible) && (gettime() - last_prepared > 5.0)) {
-      prepare();
+      if((!any_visible) && (gettime() - last_prepared > 5.0)) {
+        prepare();
+      }
     }
     usleep(10000);
   }
