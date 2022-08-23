@@ -63,12 +63,12 @@ rigid_t::rigid_t(const std::string& name_, double freq, lo_address datatarget_,
       dataprefix(dataprefix_), c6dof(6, 0.0),
       last_call(gettime() - 24.0 * 3600.0)
 {
-  std::cerr << "added rigid " << name << std::endl;
+  std::cerr << "Qualisys: added rigid " << name << std::endl;
 }
 
 rigid_t::~rigid_t()
 {
-  std::cerr << "removed rigid " << name << std::endl;
+  std::cerr << "Qualisys: removed rigid " << name << std::endl;
 }
 
 void rigid_t::process(double x, double y, double z, double rz, double ry,
@@ -141,6 +141,7 @@ int qualisys_tracker_t::qtmres(const char*, const char*, lo_arg**, int,
 int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
                                lo_message)
 {
+  std::cerr << "Qualisys: receiving configuration" << std::endl;
   TASCAR::xml_doc_t qtmcfg(&(argv[0]->s), TASCAR::xml_doc_t::LOAD_STRING);
   TASCAR::xml_element_t root(qtmcfg.root);
   nominal_freq = 1.0;
@@ -212,7 +213,7 @@ void qualisys_tracker_t::srv_prepare()
   while(run_preparethread) {
     bool any_visible(false);
     if(mtx.try_lock()) {
-      for(auto& rigid : rigids) {
+      for(auto rigid : rigids) {
         if(gettime() - rigid.second->last_call < timeout)
           any_visible = true;
       }
@@ -234,17 +235,21 @@ void qualisys_tracker_t::prepare()
       delete it->second;
     rigids.clear();
   }
+  std::cerr << "Qualisys: sending connection request" << std::endl;
   lo_send(qtmtarget, "/qtm", "si", "Connect", srv_port);
   lo_send(qtmtarget, "/qtm", "ss", "GetParameters", "All");
 }
 
 void qualisys_tracker_t::release()
 {
-  std::lock_guard<std::mutex> lock(mtx);
+  std::cerr << "Qualisys: sending disconnection request" << std::endl;
   lo_send(qtmtarget, "/qtm", "s", "Disconnect");
-  for(auto it = rigids.begin(); it != rigids.end(); ++it)
-    delete it->second;
-  rigids.clear();
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    for(auto it = rigids.begin(); it != rigids.end(); ++it)
+      delete it->second;
+    rigids.clear();
+  }
 }
 
 qualisys_tracker_t::~qualisys_tracker_t()
