@@ -29,6 +29,7 @@ public:
   void update(uint32_t frame, bool running);
 
 private:
+  std::string name = "pos2osc";
   std::string url;
   std::string pattern;
   uint32_t mode;
@@ -46,6 +47,7 @@ private:
   float oscale = 1.0f;
   lo_address target;
   std::vector<TASCAR::named_object_t> objects;
+  bool bypass = false;
 };
 
 pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
@@ -53,6 +55,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
       lookatlen(1.0), triggered(false), ignoreorientation(false), trigger(true),
       sendsounds(false), addparentname(false)
 {
+  GET_ATTRIBUTE(name, "", "Default name used in OSC variables");
   GET_ATTRIBUTE_(url);
   GET_ATTRIBUTE_(pattern);
   GET_ATTRIBUTE_(ttl);
@@ -78,7 +81,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   if(!objects.size())
     throw TASCAR::ErrMsg("No target objects found (target pattern: \"" +
                          pattern + "\").");
-  std::string path("/pos2osc");
+  std::string path = std::string("/") + name;
   if(avatar.size())
     path += "/" + avatar;
   if(mode == 4) {
@@ -88,6 +91,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
     cfg.session->add_double(path + "/lookatlen", &lookatlen);
   }
   cfg.session->add_uint(path + "/mode", &mode);
+  cfg.session->add_bool(path + "/bypass", &bypass);
   if(triggered)
     trigger = false;
 }
@@ -99,6 +103,8 @@ pos2osc_t::~pos2osc_t()
 
 void pos2osc_t::update(uint32_t, bool tp_rolling)
 {
+  if(bypass)
+    return;
   if(trigger && ((!triggered && (tp_rolling || (!transport))) || triggered)) {
     if(skipcnt)
       skipcnt--;

@@ -11,6 +11,7 @@ In the example above all objects, whose name starts with \verb!cg_! will send ge
 The Euler-angles are sent in degrees, Cartesian coordinates in meter. 
 
 \begin{tscattributes}
+\indattr{name}              & Default name used in OSC variables (default: ``pos2osc'')                            \\
 \indattr{url}               & Target URL (default: osc.udp://localhost:9999/)                                      \\
 \indattr{pattern}           & Pattern of \tascar{} object names (default: /*/*). See actor modules for details.    \\
 \indattr{ttl}               & Time to live of OSC multicast messages                                               \\
