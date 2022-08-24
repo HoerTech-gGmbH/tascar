@@ -130,6 +130,7 @@ private:
   double last_prepared;
   std::atomic_bool run_preparethread = true;
   std::thread preparethread;
+  std::atomic_bool isprepared = false;
 };
 
 int qualisys_tracker_t::qtmres(const char*, const char*, lo_arg**, int,
@@ -229,6 +230,8 @@ void qualisys_tracker_t::srv_prepare()
 
 void qualisys_tracker_t::prepare()
 {
+  if( isprepared )
+    release();
   {
     std::lock_guard<std::mutex> lock(mtx);
     last_prepared = gettime();
@@ -239,10 +242,12 @@ void qualisys_tracker_t::prepare()
   std::cerr << "Qualisys: sending connection request" << std::endl;
   lo_send(qtmtarget, "/qtm", "si", "Connect", srv_port);
   lo_send(qtmtarget, "/qtm", "ss", "GetParameters", "All");
+  isprepared = true;
 }
 
 void qualisys_tracker_t::release()
 {
+  isprepared = false;
   std::cerr << "Qualisys: sending disconnection request" << std::endl;
   lo_send(qtmtarget, "/qtm", "s", "Disconnect");
   {
