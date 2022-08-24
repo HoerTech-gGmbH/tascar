@@ -508,62 +508,52 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
   return 0;
 }
 
-receiver_t::receiver_t( tsccfg::node_t xmlsrc, const std::string& name, bool is_reverb_ )
-  : receivermod_t(xmlsrc),
-    licensed_component_t(typeid(*this).name()),
-    avgdist(0),
-    render_point(true),
-    render_diffuse(true),
-    render_image(true),
-    ismmin(0),
-    ismmax(2147483647),
-    layers(0xffffffff),
-    use_global_mask(true),
-    diffusegain(1.0),
-    has_diffusegain(false),
-    falloff(-1.0),
-    delaycomp(0.0),
-    recdelaycomp(0.0),
-    layerfadelen(1.0),
-    muteonstop(false),
-    active(true),
-    boundingbox(find_or_add_child("boundingbox")),
-    gain_zero(false),
-    external_gain(1.0),
-    is_reverb(is_reverb_),
-    x_gain(1.0),
-    next_gain(1.0),
-    fade_timer(0),
-    fade_rate(1),
-    next_fade_gain(1),
-    previous_fade_gain(1),
-    prelim_next_fade_gain(1),
-    prelim_previous_fade_gain(1),
-    fade_gain(1),
-    starttime_samples(0),
-    plugins(xmlsrc, name, "" )
+receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
+                       bool is_reverb_)
+    : receivermod_t(xmlsrc), licensed_component_t(typeid(*this).name()),
+      avgdist(0), render_point(true), render_diffuse(true), render_image(true),
+      ismmin(0), ismmax(2147483647), layers(0xffffffff), use_global_mask(true),
+      diffusegain(1.0), has_diffusegain(false), falloff(-1.0), delaycomp(0.0),
+      recdelaycomp(0.0), layerfadelen(1.0), muteonstop(false), active(true),
+      boundingbox(find_or_add_child("boundingbox")), gain_zero(false),
+      external_gain(1.0), is_reverb(is_reverb_), x_gain(1.0), next_gain(1.0),
+      fade_timer(0), fade_rate(1), next_fade_gain(1), previous_fade_gain(1),
+      prelim_next_fade_gain(1), prelim_previous_fade_gain(1), fade_gain(1),
+      starttime_samples(0), plugins(xmlsrc, name, "")
 {
-  GET_ATTRIBUTE(volumetric,"m","volume in which receiver does not apply distance based gain model");
-  GET_ATTRIBUTE(avgdist,"m","Average distance which is assumed inside receiver boxes, or 0 to use $(\\frac18 V)^{1/3}$");
-  if( !is_reverb ){
-    get_attribute_bool("point",render_point,"","render point sources");
-    get_attribute_bool("diffuse",render_diffuse,"","render diffuse sources");
+  GET_ATTRIBUTE(
+      volumetric, "m",
+      "volume in which receiver does not apply distance based gain model");
+  GET_ATTRIBUTE(avgdist, "m",
+                "Average distance which is assumed inside receiver boxes, or 0 "
+                "to use $(\\frac18 V)^{1/3}$");
+  if(!is_reverb) {
+    get_attribute_bool("point", render_point, "", "render point sources");
+    get_attribute_bool("diffuse", render_diffuse, "", "render diffuse sources");
   }
-  get_attribute_bool("image",render_image,"","render image sources");
-  get_attribute_bool("globalmask",use_global_mask,"","use global mask");
-  if( !is_reverb ){
+  get_attribute_bool("image", render_image, "", "render image sources");
+  get_attribute_bool("globalmask", use_global_mask, "", "use global mask");
+  if(!is_reverb) {
     has_diffusegain = has_attribute("diffusegain");
-    GET_ATTRIBUTE_DB(diffusegain,"gain of diffuse sources");
+    GET_ATTRIBUTE_DB(diffusegain, "gain of diffuse sources");
   }
-  GET_ATTRIBUTE(ismmin,"","minimal ISM order to render");
-  GET_ATTRIBUTE(ismmax,"","maximal ISM order to render");
-  GET_ATTRIBUTE_BITS(layers,"render layers");
-  GET_ATTRIBUTE(falloff,"m","Length of von-Hann ramp at volume boundaries, or -1 for normal distance model");
-  GET_ATTRIBUTE(delaycomp,"s","subtract this value from delay in delay lines");
-  GET_ATTRIBUTE(layerfadelen,"s","duration of fades between layers");
-  GET_ATTRIBUTE_BOOL(muteonstop,"mute when transport stopped to prevent playback of sounds from delaylines and reverb");
-  if( avgdist <= 0 )
-    avgdist = 0.5f*powf(volumetric.boxvolumef(),0.33333f);
+  GET_ATTRIBUTE(fade_gain, "", "linear fade gain");
+  next_fade_gain = previous_fade_gain = prelim_next_fade_gain =
+      prelim_previous_fade_gain = fade_gain;
+  GET_ATTRIBUTE(ismmin, "", "minimal ISM order to render");
+  GET_ATTRIBUTE(ismmax, "", "maximal ISM order to render");
+  GET_ATTRIBUTE_BITS(layers, "render layers");
+  GET_ATTRIBUTE(falloff, "m",
+                "Length of von-Hann ramp at volume boundaries, or -1 for "
+                "normal distance model");
+  GET_ATTRIBUTE(delaycomp, "s",
+                "subtract this value from delay in delay lines");
+  GET_ATTRIBUTE(layerfadelen, "s", "duration of fades between layers");
+  GET_ATTRIBUTE_BOOL(muteonstop,
+                     "mute when transport stopped to prevent playback of "
+                     "sounds from delaylines and reverb");
+  if(avgdist <= 0)
+    avgdist = 0.5f * powf(volumetric.boxvolumef(), 0.33333f);
   // check for mask plugins:
   for(auto& sne : tsccfg::node_get_children(xmlsrc)) {
     std::string node_name = tsccfg::node_get_name(sne);
