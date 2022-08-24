@@ -164,6 +164,7 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
       }
     }
   }
+  std::cerr << "Qualisys: requesting stream start" << std::endl;
   lo_send(qtmtarget, "/qtm", "sss", "StreamFrames", "AllFrames", "6DEuler");
   return 0;
 }
@@ -222,7 +223,7 @@ void qualisys_tracker_t::srv_prepare()
         prepare();
       }
     }
-    usleep(10000);
+    usleep(50000);
   }
 }
 
