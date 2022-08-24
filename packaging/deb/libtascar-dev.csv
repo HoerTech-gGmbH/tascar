@@ -1,5 +1,5 @@
-"COPYING","usr/share/doc/libtascar"
-"COPYING","usr/share/tascar/examples/plugins/"
+"LICENSE","usr/share/doc/libtascar"
+"LICENSE","usr/share/tascar/examples/plugins/"
 "config.mk","usr/share/tascar/"
 "devkit/test/*.tsc","usr/share/tascar/examples/plugins"
 "devkit/Makefile","usr/share/tascar/examples/plugins"
