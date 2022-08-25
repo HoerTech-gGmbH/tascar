@@ -39,13 +39,13 @@ double gettime()
 class rigid_t {
 public:
   rigid_t(const std::string& name, double freq, lo_address datatarget_,
-          std::string dataprefix_);
+          std::string dataprefix_, bool use_lsl);
   ~rigid_t();
   void process(double x, double y, double z, double rz, double ry, double rx);
 
 private:
-  lsl::stream_info lsl_info;
-  lsl::stream_outlet lsl_stream;
+  lsl::stream_info* lsl_info = NULL;
+  lsl::stream_outlet* lsl_stream = NULL;
   std::string name;
   lo_address datatarget = NULL;
   std::string dataprefix;
@@ -56,13 +56,18 @@ public:
 };
 
 rigid_t::rigid_t(const std::string& name_, double freq, lo_address datatarget_,
-                 std::string dataprefix_)
-    : lsl_info(name_, "MoCap", 6, freq, lsl::cf_float32,
-               std::string("qtm_") + name_),
-      lsl_stream(lsl_info), name(name_), datatarget(datatarget_),
+                 std::string dataprefix_, bool use_lsl)
+    : name(name_), datatarget(datatarget_),
       dataprefix(dataprefix_), c6dof(6, 0.0),
       last_call(gettime() - 24.0 * 3600.0)
 {
+  if( use_lsl ){
+    lsl_info = new lsl::stream_info(name_, "MoCap", 6, freq, lsl::cf_float32,
+                                    std::string("qtm_") + name_);
+    if( !lsl_info )
+      throw TASCAR::ErrMsg("Unable to create LSL output stream info");
+    lsl_stream = new lsl::stream_outlet(*lsl_info);
+  }
   std::cerr << "Qualisys: added rigid " << name << std::endl;
 }
 
@@ -83,7 +88,8 @@ void rigid_t::process(double x, double y, double z, double rz, double ry,
   c6dof[3] = DEG2RAD * rz;
   c6dof[4] = DEG2RAD * ry;
   c6dof[5] = DEG2RAD * rx;
-  lsl_stream.push_sample(c6dof);
+  if( lsl_stream )
+    lsl_stream->push_sample(c6dof);
   if(datatarget) {
     lo_send(datatarget, (dataprefix + "/" + name).c_str(), "ffffff", x, y, z,
             rz, ry, rx);
@@ -131,6 +137,7 @@ private:
   std::atomic_bool run_preparethread = true;
   std::thread preparethread;
   std::atomic_bool isprepared = false;
+  bool uselsl = true;
 };
 
 int qualisys_tracker_t::qtmres(const char*, const char*, lo_arg**, int,
@@ -161,7 +168,7 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
         if(rigids.find(name) != rigids.end())
           TASCAR::add_warning("Rigid " + name +
                               " was allocated more than once.");
-        rigids[name] = new rigid_t(name, nominal_freq, datatarget, dataprefix);
+        rigids[name] = new rigid_t(name, nominal_freq, datatarget, dataprefix, uselsl);
       }
     }
   }
@@ -199,6 +206,7 @@ qualisys_tracker_t::qualisys_tracker_t(const sensorplugin_cfg_t& cfg)
                 "OSC URL where data is sent to (or empty for no OSC sending)");
   GET_ATTRIBUTE(dataprefix, "",
                 "OSC path prefix, will be followed by slash + rigid names");
+  GET_ATTRIBUTE_BOOL(uselsl, "Create LSL output stream");
   qtmtarget = lo_address_new_from_url(qtmurl.c_str());
   if(!qtmtarget)
     throw TASCAR::ErrMsg("Invalid QTM URL");

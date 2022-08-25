@@ -104,6 +104,9 @@
     <ovheadtracker/>
     <hoafdnrot/>
     <echoc measureatstart="true"/>
+    <glabsensors>
+      <qualisys/>
+    </glabsensors>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

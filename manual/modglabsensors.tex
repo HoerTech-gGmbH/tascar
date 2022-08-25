@@ -116,12 +116,29 @@ Manager}\index{qualisys}\index{QTM}\index{glabsensor (qualisys)} is an
 interface between the OSC interface of the commercial QTM software by
 Qualisys and \tascar{}. It creates an LSL stream and optional OSC
 output for each rigid object tracked by QTM. The attributes are:
-\begin{tscattributes}
-\attr{qtmurl}     & Qualisys Track Manager URL of USC interface (default: {\tiny osc.udp://localhost:22225/}) \\
-\attr{timeout}    & Timeout in seconds (default: 1)                                                           \\
-\attr{dataurl}    & OSC URL where data is sent to (or empty for no OSC sending, default)                      \\
-\attr{dataprefix} & OSC path prefix, will be followed by slash + rigid names (default: ``'')                  \\
-\end{tscattributes}
+
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:qualisys}
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{dataprefix} & OSC path prefix, will be followed by slash + rigid names (string) & \\
+\hline
+\indattr{dataurl} & OSC URL where data is sent to (or empty for no OSC sending) (string) & \\
+\hline
+\indattr{qtmurl} & Qualisys Track Manager URL of USC interface (string) & {\tiny osc.udp://localhost:22225/}\\
+\hline
+\indattr{timeout} & Timeout (double, s) & 1\\
+\hline
+\indattr{uselsl} & Create LSL output stream (bool) & true\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
 
 
 The {\bf smiley} sensor is used for testing and learning only. It has no configurable attributes.
