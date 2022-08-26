@@ -188,6 +188,13 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
           lo_send(target, path.c_str(), "sfff", "/headGaze", o.y * oscale,
                   o.z * oscale, o.x * oscale);
           break;
+        case 8:
+          path = "/" + obj.obj->get_name();
+          lo_send(target, path.c_str(), "fff",
+                  RAD2DEG * obj.obj->dorientation.y * oscale,
+                  RAD2DEG * obj.obj->dorientation.z * oscale,
+                  RAD2DEG * obj.obj->dorientation.x * oscale);
+          break;
         }
       }
     }
