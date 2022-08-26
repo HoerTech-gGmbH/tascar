@@ -177,19 +177,28 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
           lo_send(target, path.c_str(), "f", RAD2DEG * o.z * oscale);
           break;
         case 6:
-          path = "/" + obj.obj->get_name();
+          if(avatar.size())
+            path = "/" + avatar;
+          else
+            path = "/" + obj.obj->get_name();
           lo_send(target, path.c_str(), "sfff", "/headGaze",
                   obj.obj->dorientation.y * oscale,
                   obj.obj->dorientation.z * oscale,
                   obj.obj->dorientation.x * oscale);
           break;
         case 7:
-          path = "/" + obj.obj->get_name();
+          if(avatar.size())
+            path = "/" + avatar;
+          else
+            path = "/" + obj.obj->get_name();
           lo_send(target, path.c_str(), "sfff", "/headGaze", o.y * oscale,
                   o.z * oscale, o.x * oscale);
           break;
         case 8:
-          path = "/" + obj.obj->get_name();
+          if(avatar.size())
+            path = "/" + avatar;
+          else
+            path = "/" + obj.obj->get_name();
           lo_send(target, path.c_str(), "fff",
                   RAD2DEG * obj.obj->dorientation.y * oscale,
                   RAD2DEG * obj.obj->dorientation.z * oscale,
