@@ -200,8 +200,8 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
           else
             path = "/" + obj.obj->get_name();
           lo_send(target, path.c_str(), "fff",
-                  RAD2DEG * obj.obj->dorientation.y * oscale,
                   RAD2DEG * obj.obj->dorientation.z * oscale,
+                  RAD2DEG * obj.obj->dorientation.y * oscale,
                   RAD2DEG * obj.obj->dorientation.x * oscale);
           break;
         }
