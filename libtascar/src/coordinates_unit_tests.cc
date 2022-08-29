@@ -543,6 +543,45 @@ TEST(pos, print)
   ASSERT_EQ("0, 1.5, 0", p1.print_cart());
 }
 
+TEST(pos, euler)
+{
+  TASCAR::pos_t p(1, 0, 0);
+  TASCAR::zyx_euler_t eul;
+  eul.set_from_pos(p);
+  ASSERT_NEAR(0.0, eul.z, 1e-7);
+  ASSERT_NEAR(0.0, eul.y, 1e-7);
+  ASSERT_NEAR(0.0, eul.x, 1e-7);
+  p *= TASCAR::zyx_euler_t(0.3, 0.0, 0);
+  eul.set_from_pos(p);
+  ASSERT_NEAR(0.3, eul.z, 1e-7);
+  ASSERT_NEAR(0.0, eul.y, 1e-7);
+  ASSERT_NEAR(0.0, eul.x, 1e-7);
+  p = TASCAR::pos_t(1, 0, 0);
+  p *= TASCAR::zyx_euler_t(0.0, 0.2, 0);
+  eul.set_from_pos(p);
+  ASSERT_NEAR(0.0, eul.z, 1e-7);
+  ASSERT_NEAR(0.2, eul.y, 1e-7);
+  ASSERT_NEAR(0.0, eul.x, 1e-7);
+  p = TASCAR::pos_t(1, 0, 0);
+  p *= TASCAR::zyx_euler_t(0.3, 0.2, 0);
+  eul.set_from_pos(p);
+  ASSERT_NEAR(0.3, eul.z, 1e-7);
+  ASSERT_NEAR(0.2, eul.y, 1e-7);
+  ASSERT_NEAR(0.0, eul.x, 1e-7);
+  p = TASCAR::pos_t(1, 0, 0);
+  p *= TASCAR::zyx_euler_t(3.1, 0, 0);
+  eul.set_from_pos(p);
+  ASSERT_NEAR(0.041592653, eul.z, 1e-7);
+  ASSERT_NEAR(TASCAR_PI, fabs(eul.y), 1e-7);
+  ASSERT_NEAR(0.0, eul.x, 1e-7);
+  p = TASCAR::pos_t(1, 0, 0);
+  p *= TASCAR::zyx_euler_t(-0.6, 0, 0);
+  eul.set_from_pos(p);
+  ASSERT_NEAR(-0.6, eul.y, 1e-7);
+  ASSERT_NEAR(0.0, eul.z, 1e-7);
+  ASSERT_NEAR(0.0, eul.x, 1e-7);
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

@@ -412,6 +412,15 @@ namespace TASCAR {
     std::string print(const std::string& delim = ", ");
     zyx_euler_t(double z_, double y_, double x_) : z(z_), y(y_), x(x_){};
     zyx_euler_t() : z(0), y(0), x(0){};
+    /// Return Euler transformation from position vector
+    inline void set_from_pos(TASCAR::pos_t pos)
+    {
+      x = 0.0;
+      y = -atan2(pos.z, pos.x);
+      pos.rot_y(-y);
+      z = atan2(pos.y, pos.x);
+    };
+
     /// rotation around z-axis in radians
     double z;
     /// rotation around y-axis in radians
@@ -419,6 +428,11 @@ namespace TASCAR {
     /// rotation around x-axis in radians
     double x;
   };
+
+  inline bool operator!=(const TASCAR::pos_t& p1, const TASCAR::pos_t& p2)
+  {
+    return (p1.x != p2.x) || (p1.y != p2.y) || (p1.z != p2.z);
+  }
 
   inline TASCAR::zyx_euler_t& operator*=(TASCAR::zyx_euler_t& self,
                                          const double& scale)

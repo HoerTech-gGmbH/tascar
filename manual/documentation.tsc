@@ -107,6 +107,7 @@
     <glabsensors>
       <qualisys/>
     </glabsensors>
+    <snapangle srcobj="/*/nav" candidates="/*/in"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
