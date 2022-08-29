@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene guiscale="10">
+    <source name="ctrl">
+      <position>0 0 0 0</position>
+      <orientation>0 45 0 0</orientation>
+    </source>
+    <source name="client1">
+      <position>0 2 1 0</position>
+      <orientation>0 45 0 0</orientation>
+    </source>
+    <source name="client2">
+      <position>0 2 -1 0</position>
+      <orientation>0 0 0 0</orientation>
+    </source>
+    <source name="cand1">
+      <position>0 1 1 0</position>
+    </source>
+    <source name="cand2">
+      <position>0 1 -1 0</position>
+    </source>
+    <source name="cand3">
+      <position>0 -1 0 0</position>
+    </source>
+  </scene>
+  <modules>
+    <snapangle actor="/*/client*" candidates="/*/cand*" srcobj="/*/ctrl"/>
+    <simplecontroller actor="/*/ctrl"/>
+  </modules>
+</session>
