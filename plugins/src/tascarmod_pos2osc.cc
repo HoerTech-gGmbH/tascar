@@ -48,6 +48,7 @@ private:
   lo_address target;
   std::vector<TASCAR::named_object_t> objects;
   bool bypass = false;
+  std::string orientationname = "/headGaze";
 };
 
 pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
@@ -69,6 +70,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL_(addparentname);
   GET_ATTRIBUTE_(skip);
   GET_ATTRIBUTE(oscale, "", "Scaling factor for orientations");
+  GET_ATTRIBUTE(orientationname, "", "Name for orientation variables");
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   if(pattern.empty())
@@ -181,7 +183,7 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
             path = "/" + avatar;
           else
             path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", "/headGaze",
+          lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
                   obj.obj->dorientation.y * oscale,
                   obj.obj->dorientation.z * oscale,
                   obj.obj->dorientation.x * oscale);
@@ -191,8 +193,8 @@ void pos2osc_t::update(uint32_t, bool tp_rolling)
             path = "/" + avatar;
           else
             path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", "/headGaze", o.y * oscale,
-                  o.z * oscale, o.x * oscale);
+          lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
+                  o.y * oscale, o.z * oscale, o.x * oscale);
           break;
         case 8:
           if(avatar.size())
