@@ -24,7 +24,7 @@
     </source>
   </scene>
   <modules>
-    <snapangle actor="/*/client*" candidates="/*/cand*" srcobj="/*/ctrl"/>
+    <snapangle actor="/*/client*" candidates="/*/cand1 /*/cand2" srcobj="/*/ctrl"/>
     <simplecontroller actor="/*/ctrl"/>
   </modules>
 </session>

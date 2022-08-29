@@ -31,7 +31,7 @@ public:
 private:
   std::string name = "snapangle";
   std::string srcobj;
-  std::string candidates;
+  std::vector<std::string> candidates;
   std::vector<TASCAR::named_object_t> obj_source;
   std::vector<TASCAR::named_object_t> obj_candidates;
   bool bypass = false;
@@ -52,7 +52,7 @@ snapangle_t::snapangle_t(const TASCAR::module_cfg_t& cfg)
   obj_candidates = session->find_objects(candidates);
   if(!obj_candidates.size())
     throw TASCAR::ErrMsg("No target candidate objects found (candidates=\"" +
-                         candidates + "\").");
+                         TASCAR::vecstr2str(candidates) + "\").");
   std::string path = std::string("/") + name;
   cfg.session->add_bool(path + "/bypass", &bypass);
 }

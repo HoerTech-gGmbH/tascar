@@ -159,6 +159,8 @@ namespace TASCAR {
     uint32_t get_total_diffuse_sound_fields() const;
     std::vector<TASCAR::named_object_t>
     find_objects(const std::string& pattern);
+    std::vector<TASCAR::named_object_t>
+    find_objects(const std::vector<std::string>& pattern);
     std::vector<TASCAR::Scene::audio_port_t*>
     find_audio_ports(const std::vector<std::string>& pattern);
     std::vector<TASCAR::scene_render_rt_t*> scenes;

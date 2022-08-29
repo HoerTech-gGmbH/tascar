@@ -845,6 +845,24 @@ TASCAR::session_t::find_objects(const std::string& pattern)
   return retv;
 }
 
+std::vector<TASCAR::named_object_t>
+TASCAR::session_t::find_objects(const std::vector<std::string>& vpattern)
+{
+  std::vector<TASCAR::named_object_t> retv;
+  for(const auto& pattern : vpattern) {
+    for(auto scene : scenes) {
+      std::vector<TASCAR::Scene::object_t*> objs(scene->get_objects());
+      std::string base("/" + scene->name + "/");
+      for(auto obj : objs) {
+        std::string name(base + obj->get_name());
+        if(TASCAR::fnmatch(pattern.c_str(), name.c_str(), true) == 0)
+          retv.push_back(TASCAR::named_object_t(obj, name));
+      }
+    }
+  }
+  return retv;
+}
+
 std::vector<TASCAR::Scene::audio_port_t*>
 TASCAR::session_t::find_audio_ports(const std::vector<std::string>& pattern)
 {
@@ -904,11 +922,7 @@ TASCAR::actor_module_t::actor_module_t(const TASCAR::module_cfg_t& cfg,
     : module_base_t(cfg)
 {
   GET_ATTRIBUTE(actor, "", "pattern to match actor objects");
-  for(auto& act : actor) {
-    std::vector<TASCAR::named_object_t> lobj = session->find_objects(act);
-    for(auto& o : lobj)
-      obj.push_back(o);
-  }
+  obj = session->find_objects(actor);
   if(fail_on_empty && obj.empty())
     throw TASCAR::ErrMsg("No object matches actor pattern \"" +
                          vecstr2str(actor) + "\".");
