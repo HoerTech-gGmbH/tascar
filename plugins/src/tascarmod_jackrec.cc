@@ -64,26 +64,26 @@ public:
 
 private:
   // configuration variables:
-  std::string name;
-  double buflen = {10.0};
-  std::string path;
-  std::string pattern;
-  int format;
+  std::string name = "jackrec";
+  double buflen = 10.0;
+  std::string path = "";
+  std::string pattern = "rec*.wav";
+  int format = 0;
   bool usetransport = false;
   // OSC variables:
   std::string ofname;
   std::vector<std::string> ports;
   // internal members:
   std::string oscprefix;
-  jackrec_async_t* jr;
+  jackrec_async_t* jr = NULL;
   std::mutex mtx;
-  lo_address lo_addr;
+  lo_address lo_addr = NULL;
   void service();
   std::thread srv;
-  bool run_service;
-  std::string extension = {".wav"};
-  std::string prefix = {"rec"};
-  std::string tag = {""};
+  bool run_service = true;
+  std::string extension = ".wav";
+  std::string prefix = "rec";
+  std::string tag = "";
 };
 
 jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
@@ -92,7 +92,7 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
 {
   std::string url;
   // get configuration variables:
-  GET_ATTRIBUTE_(name);
+  GET_ATTRIBUTE(name, "", "Name used for OSC prefix and jack");
   GET_ATTRIBUTE(buflen, "s", "audio buffer length");
   GET_ATTRIBUTE(url, "", "URL of OSC controller interface");
   GET_ATTRIBUTE(path, "", "File path where to store and search for files");
@@ -102,9 +102,10 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(pattern, "", "search pattern");
   GET_ATTRIBUTE(prefix, "", "file prefix");
   GET_ATTRIBUTE_BOOL(usetransport, "Record only when transport is rolling");
+  GET_ATTRIBUTE(ports, "", "List of ports to record");
   int ifileformat(0);
   std::string fileformat("WAV");
-  GET_ATTRIBUTE_(fileformat);
+  GET_ATTRIBUTE(fileformat, "", "File format");
   std::string validformats;
 #define ADD_FILEFORMAT(x, y)                                                   \
   if(fileformat == #x) {                                                       \
@@ -137,12 +138,13 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
   ADD_FILEFORMAT(OGG, ".ogg");
   ADD_FILEFORMAT(MPC2K, ".mpc2k");
   ADD_FILEFORMAT(RF64, ".rf64");
+  GET_ATTRIBUTE(fileformat, validformats, "File format");
   if(ifileformat == 0)
     throw TASCAR::ErrMsg("Invalid file format \"" + fileformat +
                          "\". Valid formats are:" + validformats);
   validformats = "";
   std::string sampleformat("PCM_16");
-  GET_ATTRIBUTE_(sampleformat);
+  GET_ATTRIBUTE(sampleformat, "", "Audio sample format");
   int isampleformat(0);
 #define ADD_SAMPLEFORMAT(x)                                                    \
   if(sampleformat == #x)                                                       \
@@ -171,6 +173,7 @@ jackrec_t::jackrec_t(const TASCAR::module_cfg_t& cfg)
   ADD_SAMPLEFORMAT(DPCM_8);
   ADD_SAMPLEFORMAT(DPCM_16);
   ADD_SAMPLEFORMAT(VORBIS);
+  GET_ATTRIBUTE(sampleformat, validformats, "Audio sample format");
   if(isampleformat == 0)
     throw TASCAR::ErrMsg("Invalid sample format \"" + sampleformat +
                          "\". Valid formats are:" + validformats);

@@ -93,6 +93,7 @@
     <obstacle name="obstacle"/>
   </scene>
   <modules>
+    <jackrec/>
     <datalogging/>
     <oscrelay/>
     <oscjacktime/>

@@ -283,7 +283,7 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
         fh << "\\indattr{" << tolatex(attr.first) << "} & "
            << tolatex(attr.second.info) << " (" << tolatex(attr.second.type);
         if(!attr.second.unit.empty())
-          fh << ", " << attr.second.unit;
+          fh << ", " << tolatex(attr.second.unit);
         fh << ") ";
         std::string sdef(tolatex(attr.second.defaultval));
         if(sdef.size() > 24)

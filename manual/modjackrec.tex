@@ -2,16 +2,49 @@ OSC controlled audio recorder
 
 
 List of configuration variables:
-\begin{tscattributes}
-  \attr{name}         & jack client name (jackrec)                                                \\
-  \attr{buflen}       & recording buffer in seconds (10)                                          \\
-  \attr{url}          & OSC url where response messages are sent                                  \\
-  \attr{path}         & File path where to store and search for files                             \\
-  \attr{pattern}      & File pattern of files to show in list (``rec*.wav'')                      \\
-  \attr{fileformat}   & File format (``WAV'')                                                     \\
-  \attr{sampleformat} & Sample format (``PCM\_S16'')                                              \\
-  \attr{prefix}       & file prefix, may contain path delimiters if path already exists (``rec'') \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:jackrec}
+Attributes of element {\bf jackrec}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name                   & description (type, unit)                               & def.     \\
+\hline
+\hline
+\indattr{name}         & Name used for OSC prefix and jack (string)             & jackrec  \\
+\hline
+\indattr{buflen}       & audio buffer length (double, s)                        & 10       \\
+\hline
+\indattr{url}          & URL of OSC controller interface (string)               &          \\
+\hline
+\indattr{path}         & File path where to store and search for files (string) &          \\
+\hline
+\indattr{pattern}      & search pattern (string)                                & rec*.wav \\
+\hline
+\indattr{fileformat} & File format (string,  WAV AIFF AU RAW PAF SVX NIST VOC IRCAM W64 MAT4 MAT5 PVF XI HTK SDS AVR WAVEX SD2 FLAC CAF WVE OGG MPC2K RF64) & WAV\\
+\hline
+\indattr{sampleformat} & Audio sample format (string,  PCM\_S8 PCM\_16 PCM\_24 PCM\_32 PCM\_U8 FLOAT DOUBLE ULAW ALAW IMA\_ADPCM MS\_ADPCM GSM610 VOX\_ADPCM G721\_32 G723\_24 G723\_40 DWVW\_12 DWVW\_16 DWVW\_24 DWVW\_N DPCM\_8 DPCM\_16 VORBIS) & PCM\_16\\
+\hline
+\indattr{prefix}       & file prefix (string)                                   & rec      \\
+\hline
+\indattr{usetransport} & Record only when transport is rolling (bool)           & false    \\
+\hline
+\indattr{ports}        & List of ports to record (string array)                 &          \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+%\begin{tscattributes}
+%  \attr{name}         & jack client name (jackrec)                                                \\
+%  \attr{buflen}       & recording buffer in seconds (10)                                          \\
+%  \attr{url}          & OSC url where response messages are sent                                  \\
+%  \attr{path}         & File path where to store and search for files                             \\
+%  \attr{pattern}      & File pattern of files to show in list (``rec*.wav'')                      \\
+%  \attr{fileformat}   & File format (``WAV'')                                                     \\
+%  \attr{sampleformat} & Sample format (``PCM\_S16'')                                              \\
+%  \attr{prefix}       & file prefix, may contain path delimiters if path already exists (``rec'') \\
+%\end{tscattributes}
 
 Here is an example of the communication protocol:
 
