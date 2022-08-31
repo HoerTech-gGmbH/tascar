@@ -31,7 +31,7 @@ public:
 private:
   std::string name = "pos2osc";
   std::string url;
-  std::string pattern;
+  std::vector<std::string> pattern = {"/*/*"};
   uint32_t mode;
   uint32_t ttl;
   bool transport;
@@ -73,8 +73,6 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(orientationname, "", "Name for orientation variables");
   if(url.empty())
     url = "osc.udp://localhost:9999/";
-  if(pattern.empty())
-    pattern = "/*/*";
   target = lo_address_new_from_url(url.c_str());
   if(!target)
     throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
@@ -82,7 +80,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   objects = session->find_objects(pattern);
   if(!objects.size())
     throw TASCAR::ErrMsg("No target objects found (target pattern: \"" +
-                         pattern + "\").");
+                         TASCAR::vecstr2str(pattern) + "\").");
   std::string path = std::string("/") + name;
   if(avatar.size())
     path += "/" + avatar;
