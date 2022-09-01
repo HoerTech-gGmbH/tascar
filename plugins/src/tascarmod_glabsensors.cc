@@ -202,6 +202,8 @@ private:
   lsl::stream_info info_warnings;
   lsl::stream_outlet outlet_warnings;
   uint32_t startphase;
+  lo_address osc_critical = NULL;
+  lo_address osc_warning = NULL;
 };
 
 #define GET_WIDGET(x)                                                          \
@@ -226,6 +228,22 @@ glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
   GET_ATTRIBUTE_(w);
   GET_ATTRIBUTE_(h);
   GET_ATTRIBUTE_BOOL_(ontop);
+  std::string url_critical;
+  GET_ATTRIBUTE(url_critical, "", "OSC URL to send critical messages to");
+  if(!url_critical.empty()) {
+    osc_critical = lo_address_new_from_url(url_critical.c_str());
+    if(!osc_critical)
+      TASCAR::ErrMsg("Invalid OSC URL for critical messages (" + url_critical +
+                     ").");
+  }
+  std::string url_warning;
+  GET_ATTRIBUTE(url_warning, "", "OSC URL to send warning messages to");
+  if(!url_critical.empty()) {
+    osc_warning = lo_address_new_from_url(url_warning.c_str());
+    if(!osc_warning)
+      TASCAR::ErrMsg("Invalid OSC URL for warning messages (" + url_warning +
+                     ").");
+  }
   GET_WIDGET(win);
   GET_WIDGET(sensorcontainer);
   GET_WIDGET(labmsg_critical);
@@ -287,6 +305,8 @@ bool glabsensors_t::on_100ms()
     std::vector<sensormsg_t> vmsg(psens->get_critical());
     for(auto& msg : vmsg) {
       outlet_critical.push_sample(&msg.msg);
+      if(osc_critical)
+        lo_send(osc_critical, "/glabsensors/critical", "s", msg.msg.c_str());
       msg.msg = "[" + psens->get_fullname() + "] " + msg.msg;
       if(msg_critical.empty())
         msg_critical.push_back(msg);
@@ -301,6 +321,8 @@ bool glabsensors_t::on_100ms()
       std::string lmsg("[" + psens->get_fullname() +
                        "] Sensor module is not alive.");
       outlet_critical.push_sample(&lmsg);
+      if(osc_critical)
+        lo_send(osc_critical, "/glabsensors/critical", "s", lmsg.c_str());
       if((!msg_critical.empty()) && (msg_critical.back().msg == lmsg))
         msg_critical.back().count++;
       else
@@ -309,6 +331,8 @@ bool glabsensors_t::on_100ms()
     vmsg = psens->get_warnings();
     for(auto& msg : vmsg) {
       outlet_warnings.push_sample(&msg.msg);
+      if(osc_warning)
+        lo_send(osc_warning, "/glabsensors/warning", "s", msg.msg.c_str());
       msg.msg = "[" + psens->get_fullname() + "] " + msg.msg;
       if(msg_warnings.empty())
         msg_warnings.push_back(msg);
