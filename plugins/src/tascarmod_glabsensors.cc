@@ -223,11 +223,11 @@ glabsensors_t::glabsensors_t(const module_cfg_t& cfg)
       outlet_warnings(info_warnings), startphase(100)
 {
   refBuilder = Gtk::Builder::create_from_string(ui_glabsensors);
-  GET_ATTRIBUTE_(x);
-  GET_ATTRIBUTE_(y);
-  GET_ATTRIBUTE_(w);
-  GET_ATTRIBUTE_(h);
-  GET_ATTRIBUTE_BOOL_(ontop);
+  GET_ATTRIBUTE(x, "px", "Screen x position");
+  GET_ATTRIBUTE(y, "px", "Screen y position");
+  GET_ATTRIBUTE(w, "px", "Window width");
+  GET_ATTRIBUTE(h, "px", "Window height");
+  GET_ATTRIBUTE_BOOL(ontop, "Keep window on top of other windows");
   std::string url_critical;
   GET_ATTRIBUTE(url_critical, "", "OSC URL to send critical messages to");
   if(!url_critical.empty()) {
