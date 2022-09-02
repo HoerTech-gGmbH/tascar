@@ -1,13 +1,18 @@
 \index{level meter}
 
 \begin{tscattributes}
-\indattr{pattern} & Level source port name                 \\
-\indattr{url}     & Target OSC url                         \\
-\indattr{ttl}     & Time to live of OSC multicast messages \\
+\indattr{pattern}      & Source port names                                     \\
+\indattr{noisepattern} & Source port names for noise signals, to calculate SNR \\
+\indattr{url}          & Target OSC URL                                        \\
+\indattr{ttl}          & Time to live of OSC multicast messages                \\
 \end{tscattributes}
 
 This module reads the level meters of the specified ports and sends
 their values as OSC data and LSL streams.
 %
-A potential application is data logging of levels.
+If \attr{pattern} and \attr{noisepattern} match the same number of
+ports and each port has the same number of audio channels, then the
+SNR is calculated and transmitted instead of levels.
+%
+A potential application is data logging of levels or SNRs.
 

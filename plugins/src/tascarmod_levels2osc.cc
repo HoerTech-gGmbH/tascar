@@ -25,90 +25,143 @@
 
 class levels2osc_t : public TASCAR::module_base_t {
 public:
-  levels2osc_t( const TASCAR::module_cfg_t& cfg );
+  levels2osc_t(const TASCAR::module_cfg_t& cfg);
   ~levels2osc_t();
-  virtual void configure( );
+  virtual void configure();
   void update(uint32_t frame, bool running);
+
 private:
-  std::string url;
+  std::string url = "osc.udp://localhost:9999/";
   std::vector<std::string> pattern;
+  std::vector<std::string> noisepattern;
   uint32_t ttl;
   lo_address target;
-  //std::vector<TASCAR::named_object_t> obj;
   std::vector<TASCAR::Scene::audio_port_t*> ports;
+  std::vector<TASCAR::Scene::audio_port_t*> noiseports;
   std::vector<TASCAR::Scene::route_t*> routes;
+  std::vector<TASCAR::Scene::route_t*> noiseroutes;
   std::vector<lo_message> vmsg;
   std::vector<lo_arg**> vargv;
   std::vector<std::string> vpath;
   std::vector<lsl::stream_outlet*> voutlet;
+  bool calcsnr = false;
 };
 
-levels2osc_t::levels2osc_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    ttl(1)
+levels2osc_t::levels2osc_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), ttl(1)
 {
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(pattern);
-  GET_ATTRIBUTE_(ttl);
-  if( url.empty() )
-    url = "osc.udp://localhost:9999/";
-  //if( pattern.empty() )
-  //  pattern = "/*/*";
+  GET_ATTRIBUTE(url, "", "Target OSC URL");
+  GET_ATTRIBUTE(pattern, "", "Source port names");
+  GET_ATTRIBUTE(noisepattern, "",
+                "Source port names for noise signals, to calculate SNR");
+  GET_ATTRIBUTE(ttl, "", "Time to live of OSC multicast messages");
   target = lo_address_new_from_url(url.c_str());
-  if( !target )
-    throw TASCAR::ErrMsg("Unable to create target adress \""+url+"\".");
-  lo_address_set_ttl(target,ttl);
-  //obj = session->find_objects(pattern);
-  //if( !obj.size() )
-  //  throw TASCAR::ErrMsg("No target objects found (target pattern: \""+pattern+"\").");
+  if(!target)
+    throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
+  lo_address_set_ttl(target, ttl);
 }
 
-void levels2osc_t::configure( )
+void levels2osc_t::configure()
 {
-  module_base_t::configure( );
+  module_base_t::configure();
   ports.clear();
   routes.clear();
-  if( session )
-    ports = session->find_audio_ports( pattern );
-  for( auto it=ports.begin();it!=ports.end();++it){
-    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(*it));
-    if( !r ){
-      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(*it));
-      if( s )
+  noiseports.clear();
+  noiseroutes.clear();
+  if(session) {
+    ports = session->find_audio_ports(pattern);
+    noiseports = session->find_audio_ports(noisepattern);
+  }
+  for(auto port : ports) {
+    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(port));
+    if(!r) {
+      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(port));
+      if(s)
         r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
     }
-    routes.push_back(r);
+    if(r)
+      routes.push_back(r);
   }
-  for( auto it=routes.begin();it!=routes.end();++it){
-    vmsg.push_back(lo_message_new());
-    for(uint32_t k=0;k<(*it)->metercnt();++k)
-      lo_message_add_float(vmsg.back(),0);
-    vargv.push_back(lo_message_get_argv(vmsg.back()));
-    vpath.push_back(std::string("/level/")+(*it)->get_name());
-    voutlet.push_back(new lsl::stream_outlet(lsl::stream_info((*it)->get_name(),"level",(*it)->metercnt(),f_fragment)));
+  for(auto port : noiseports) {
+    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(port));
+    if(!r) {
+      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(port));
+      if(s)
+        r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
+    }
+    if(r)
+      noiseroutes.push_back(r);
+  }
+  calcsnr = (noiseroutes.size() == routes.size()) && (routes.size() > 0);
+  if(calcsnr)
+    for(size_t kr = 0; kr < routes.size(); ++kr)
+      if(routes[kr]->metercnt() != noiseroutes[kr]->metercnt()) {
+        calcsnr = false;
+        TASCAR::add_warning(
+            "Not calculating SNR because " + routes[kr]->get_name() + " has " +
+            std::to_string(routes[kr]->metercnt()) + " channels, but " +
+            noiseroutes[kr]->get_name() + " has " +
+            std::to_string(noiseroutes[kr]->metercnt()) + ".");
+      }
+  if(calcsnr) {
+    for(size_t kr = 0; kr < routes.size(); ++kr) {
+      vmsg.push_back(lo_message_new());
+      for(uint32_t k = 0; k < routes[kr]->metercnt(); ++k)
+        lo_message_add_float(vmsg.back(), 0);
+      vargv.push_back(lo_message_get_argv(vmsg.back()));
+      vpath.push_back(std::string("/snr/") + routes[kr]->get_name() + "_" +
+                      noiseroutes[kr]->get_name());
+      voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(
+          routes[kr]->get_name() + "_" + noiseroutes[kr]->get_name(), "snr",
+          routes[kr]->metercnt(), f_fragment)));
+    }
+  } else {
+    for(auto it = routes.begin(); it != routes.end(); ++it) {
+      vmsg.push_back(lo_message_new());
+      for(uint32_t k = 0; k < (*it)->metercnt(); ++k)
+        lo_message_add_float(vmsg.back(), 0);
+      vargv.push_back(lo_message_get_argv(vmsg.back()));
+      vpath.push_back(std::string("/level/") + (*it)->get_name());
+      voutlet.push_back(new lsl::stream_outlet(lsl::stream_info(
+          (*it)->get_name(), "level", (*it)->metercnt(), f_fragment)));
+    }
   }
 }
 
 levels2osc_t::~levels2osc_t()
 {
-  for(uint32_t k=0;k<vmsg.size();++k)
+  for(uint32_t k = 0; k < vmsg.size(); ++k)
     lo_message_free(vmsg[k]);
-  for(uint32_t k=0;k<voutlet.size();++k)
+  for(uint32_t k = 0; k < voutlet.size(); ++k)
     delete voutlet[k];
   lo_address_free(target);
 }
 
 void levels2osc_t::update(uint32_t, bool)
 {
-  uint32_t k = 0;
-  for(auto it = routes.begin(); it != routes.end(); ++it) {
-    const std::vector<float>& leveldata((*it)->readmeter());
-    voutlet[k]->push_sample(leveldata);
-    uint32_t n(leveldata.size());
-    for(uint32_t km = 0; km < n; ++km)
-      vargv[k][km]->f = leveldata[km];
-    lo_send_message(target, vpath[k].c_str(), vmsg[k]);
-    ++k;
+  if(calcsnr) {
+    for(size_t kr = 0; kr < routes.size(); ++kr) {
+      std::vector<float> leveldata(routes[kr]->readmeter());
+      const std::vector<float>& noiseleveldata(noiseroutes[kr]->readmeter());
+      for(size_t ch=0;ch< std::min(leveldata.size(),noiseleveldata.size());++ch)
+        leveldata[ch] -= noiseleveldata[ch];
+      voutlet[kr]->push_sample(leveldata);
+      uint32_t n(leveldata.size());
+      for(uint32_t km = 0; km < n; ++km)
+        vargv[kr][km]->f = leveldata[km];
+      lo_send_message(target, vpath[kr].c_str(), vmsg[kr]);
+    }
+  } else {
+    uint32_t k = 0;
+    for(auto it = routes.begin(); it != routes.end(); ++it) {
+      const std::vector<float>& leveldata((*it)->readmeter());
+      voutlet[k]->push_sample(leveldata);
+      uint32_t n(leveldata.size());
+      for(uint32_t km = 0; km < n; ++km)
+        vargv[k][km]->f = leveldata[km];
+      lo_send_message(target, vpath[k].c_str(), vmsg[k]);
+      ++k;
+    }
   }
 }
 
