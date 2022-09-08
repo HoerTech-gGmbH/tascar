@@ -94,6 +94,7 @@ private:
   // level meter paths:
   std::vector<std::string> vpath;
   TASCAR::quaternion_t qstate;
+  TASCAR::tictoc_t tictoc;
 };
 
 void ovheadtracker_t::configure()
@@ -291,6 +292,7 @@ void ovheadtracker_t::service()
     try {
       TASCAR::serialport_t dev;
       dev.open(devices[devidx].c_str(), B115200, 0, 1);
+      tictoc.tic();
       first_sample_autoref = true;
       first_sample_smooth = true;
       while(run_service) {
@@ -386,6 +388,7 @@ void ovheadtracker_t::service()
             if(target) {
               lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x,
                       q.y, q.z);
+              lo_send(target, (p+"/alive").c_str(), "f", tictoc.toc() );
             }
             if(tilttarget) {
               // calculate tilt in any direction, for effect control:

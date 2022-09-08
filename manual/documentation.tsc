@@ -107,6 +107,7 @@
     <echoc measureatstart="true"/>
     <glabsensors>
       <qualisys/>
+      <emergency/>
     </glabsensors>
     <snapangle srcobj="/*/nav" candidates="/*/in"/>
   </modules>

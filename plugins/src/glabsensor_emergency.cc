@@ -43,16 +43,17 @@ public:
 
 private:
   void service();
-  double uptime;
+  double uptime = 0.0;
   std::thread srv;
-  bool run_service;
+  bool run_service = true;
   double ltime;
-  bool active;
-  bool prev_active;
-  double timeout;
+  bool active = true;
+  bool prev_active = true;
+  double timeout = 1.0;
   std::string on_timeout;
   std::string on_alive;
-  double startlock;
+  double startlock = 5.0;
+  std::string path = "/noemergency";
 };
 
 int osc_update(const char*, const char* types, lo_arg** argv, int argc,
@@ -64,14 +65,15 @@ int osc_update(const char*, const char* types, lo_arg** argv, int argc,
 }
 
 emergencybutton_t::emergencybutton_t(const sensorplugin_cfg_t& cfg)
-    : sensorplugin_drawing_t(cfg), uptime(0.0), run_service(true),
-      ltime(gettime()), active(true), prev_active(true), timeout(1),
-      startlock(5)
+    : sensorplugin_drawing_t(cfg), ltime(gettime())
 {
-  GET_ATTRIBUTE_(timeout);
-  GET_ATTRIBUTE_(startlock);
-  GET_ATTRIBUTE_(on_timeout);
-  GET_ATTRIBUTE_(on_alive);
+  GET_ATTRIBUTE(timeout, "s", "Timeout after which an emergency is detected");
+  GET_ATTRIBUTE(startlock, "s",
+                "Lock detecting at start for this amount of time");
+  GET_ATTRIBUTE(on_timeout, "", "Command to be executed on timeout");
+  GET_ATTRIBUTE(on_alive, "",
+                "Command to be executed when sensor is alive again");
+  GET_ATTRIBUTE(path, "", "OSC path on which messages are arriving");
   srv = std::thread(&emergencybutton_t::service, this);
 }
 
@@ -108,7 +110,7 @@ void emergencybutton_t::service()
 void emergencybutton_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->set_prefix("");
-  srv->add_method("/noemergency", "f", &osc_update, this);
+  srv->add_method(path, "f", &osc_update, this);
 }
 
 void emergencybutton_t::update(double t)

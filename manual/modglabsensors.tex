@@ -111,12 +111,39 @@ The LSL output stream contains one channel.
 
 The {\bf emergency} sensor reacts on continuous OSC messages on path {\tt /noemergency}, and
 executes a command when no OSC message arrives within a given timeout.
-\begin{tscattributes}
-\indattr{timeout}     & Timeout in seconds after which the command will be executed.            \\
-\indattr{startlock}   & Time to wait before activation, in seconds.                             \\
-\indattr{on\_timeout} & System command to be executed upon a timeout event.                     \\
-\indattr{on\_alive}   & System command to be executed if the incoming messages are active again \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:emergency}
+Attributes of element {\bf emergency}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{alivetimeout} & Timeout after which the sensor is seen as not alive (double, s) & 1\\
+\hline
+\indattr{name} & Module name (string) & emergency\\
+\hline
+\indattr{on\_alive} & Command to be executed when sensor is alive again (string) & \\
+\hline
+\indattr{on\_timeout} & Command to be executed on timeout (string) & \\
+\hline
+\indattr{path} & OSC path on which messages are arriving (string) & /noemergency\\
+\hline
+\indattr{startlock} & Lock detecting at start for this amount of time (double, s) & 5\\
+\hline
+\indattr{timeout} & Timeout after which an emergency is detected (double, s) & 1\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+%\begin{tscattributes}
+%\indattr{timeout}     & Timeout in seconds after which the command will be executed.            \\
+%\indattr{startlock}   & Time to wait before activation, in seconds.                             \\
+%\indattr{on\_timeout} & System command to be executed upon a timeout event.                     \\
+%\indattr{on\_alive}   & System command to be executed if the incoming messages are active again \\
+%\end{tscattributes}
 
 \label{sec:espheadtracker}For the custom-made ESP-based combined head tracking and EOG
 amplifier of the Gesture Lab, the module {\bf espheadtracker} was
