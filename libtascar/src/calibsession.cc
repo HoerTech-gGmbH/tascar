@@ -505,9 +505,11 @@ void calibsession_t::reset_levels()
     r = 0.0f;
   for(auto recspk : {spk_nsp, spk_spec}) {
     for(uint32_t k = 0; k < levels.size(); ++k)
-      recspk->spkpos[k].gain = 1.0;
+      if(recspk->spkpos[k].calibrate)
+        recspk->spkpos[k].gain = 1.0;
     for(uint32_t k = 0; k < sublevels.size(); ++k)
-      recspk->spkpos.subs[k].gain = 1.0;
+      if(recspk->spkpos.subs[k].calibrate)
+        recspk->spkpos.subs[k].gain = 1.0;
   }
 }
 
@@ -522,6 +524,9 @@ float getmedian(std::vector<float> vec)
   return vec[size / 2];
 }
 
+/**
+ * @brief Record calibration of one single speaker.
+ */
 void get_speaker_equalization(
     const spk_descriptor_t& spk, TASCAR::Scene::src_object_t& src,
     jackrec2wave_t& jackrec, const std::vector<TASCAR::wave_t>& recbuf,
@@ -624,7 +629,7 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
   for(auto& spk : spks) {
     ++c;
     spkeq_report_t report;
-    if(calibpar.max_eqstages > 0u) {
+    if(spk.calibrate && (calibpar.max_eqstages > 0u)) {
       // deactivate frequency correction:
       spk.eqstages = 0u;
       // move source to speaker position:
@@ -635,8 +640,8 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       report.vG_precalib = vG;
       for(auto& g : report.vG_precalib)
         g *= -1.0f;
-      //auto med = getmedian(report.vG_precalib);
-      //for(auto& g : report.vG_precalib)
+      // auto med = getmedian(report.vG_precalib);
+      // for(auto& g : report.vG_precalib)
       //  g -= med;
       uint32_t numflt =
           std::min(((uint32_t)vF.size() - 1u) / 3u, calibpar.max_eqstages);
@@ -653,9 +658,11 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       spk.eqgain = vG;
       spk.eqstages = numflt;
     }
-    get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports, weight,
-                             calibpar, levels, vF, vG, report.level_db_re_fs,
-                             &report.coh);
+    if(spk.calibrate) {
+      get_speaker_equalization(spk, src, jackrec, recbuf, miccalib, ports,
+                               weight, calibpar, levels, vF, vG,
+                               report.level_db_re_fs, &report.coh);
+    }
     report.label = calibpar.issub ? "sub" : "spk";
     report.label += std::to_string(c);
     if(spk.label.size())
@@ -665,17 +672,18 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
     report.vG_postcalib = vG;
     for(auto& g : report.vG_postcalib)
       g *= -1.0f;
-    //auto med = getmedian(report.vG_postcalib);
-    //for(auto& g : report.vG_postcalib)
+    // auto med = getmedian(report.vG_postcalib);
+    // for(auto& g : report.vG_postcalib)
     //  g -= med;
-    auto vl_min = vG.back();
-    auto vl_max = vG.back();
-    for(const auto& l : vG) {
-      vl_min = std::min(vl_min, l);
-      vl_max = std::max(vl_max, l);
-    }
+    // auto vl_min = vG.back();
+    // auto vl_max = vG.back();
+    // for(const auto& l : vG) {
+    //  vl_min = std::min(vl_min, l);
+    //  vl_max = std::max(vl_max, l);
+    //}
     // levelrange.push_back(vl_max - vl_min);
-    reports.push_back(report);
+    if(spk.calibrate)
+      reports.push_back(report);
   }
   // return reports;
 }

@@ -230,6 +230,7 @@ spk_descriptor_t::spk_descriptor_t(tsccfg::node_t xmlsrc)
       "Number of biquad-stages in IIR frequency correction (0 = disable)");
   GET_ATTRIBUTE(eqfreq, "Hz", "Frequencies for IIR filter design");
   GET_ATTRIBUTE(eqgain, "dB", "Gains for IIR filter design");
+  GET_ATTRIBUTE_BOOL(calibrate, "Use this loudspeaker during calibration");
   set_sphere(r, az, el);
   unitvector = normal();
   update_foa_decoder(1.0f, 1.0);
@@ -241,7 +242,8 @@ spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
       compB(src.compB), gain(src.gain), unitvector(src.unitvector),
       spkgain(src.spkgain), dr(src.dr), d_w(src.d_w), d_x(src.d_x),
       d_y(src.d_y), d_z(src.d_z), densityweight(src.densityweight), comp(NULL),
-      eqfreq(src.eqfreq), eqgain(src.eqgain), eqstages(src.eqstages)
+      eqfreq(src.eqfreq), eqgain(src.eqgain), eqstages(src.eqstages),
+      calibrate(src.calibrate)
 {
 }
 
@@ -463,6 +465,7 @@ uint32_t TASCAR::get_spklayout_checksum(const xml_element_t& e)
   attributes.push_back("eqfreq");
   attributes.push_back("eqgain");
   attributes.push_back("connect");
+  attributes.push_back("calibrate");
   auto checksum = e.hash(attributes, true);
   return checksum;
 }
@@ -705,14 +708,14 @@ std::string spk_array_diff_render_t::to_string() const
   for(const auto& spk : *this) {
     s += "- spk " + std::to_string(cnt) + " (" + spk.print_sphere() +
          ") g=" + TASCAR::to_string(TASCAR::lin2db(spk.gain)) + " dB " +
-         spk.label + "\n";
+         +(spk.calibrate ? "" : "(no calib)") + spk.label + "\n";
     ++cnt;
   }
   cnt = 1;
   for(const auto& spk : subs) {
     s += "- sub " + std::to_string(cnt) + " (" + spk.print_sphere() +
          ") g=" + TASCAR::to_string(TASCAR::lin2db(spk.gain)) + " dB " +
-         spk.label + "\n";
+         +(spk.calibrate ? "" : "(no calib)") + spk.label + "\n";
     ++cnt;
   }
   if(s.size())

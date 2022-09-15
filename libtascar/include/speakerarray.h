@@ -68,6 +68,7 @@ namespace TASCAR {
     std::vector<float> eqfreq;
     std::vector<float> eqgain;
     uint32_t eqstages = 0u;
+    bool calibrate = true;
   };
 
   class spk_array_cfg_t : public xml_element_t {
