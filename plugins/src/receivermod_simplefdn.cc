@@ -389,10 +389,10 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
     TASCAR::quaternion_t q;
     q.set_rotation(0.5f * daz * (float)(tap & 1) - 0.5f * daz,
                    TASCAR::posf_t(0, 1, 0));
-    rotation[tap] *= q;
+    rotation[tap].rmul(q);
     q.set_rotation(0.125f * daz * (float)(tap % 3) - 0.25f * daz,
                    TASCAR::posf_t(1, 0, 0));
-    rotation[tap] *= q;
+    rotation[tap].rmul(q);
   }
   // set feedback matrix:
   if(fdnorder_ > 1) {

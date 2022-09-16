@@ -553,6 +553,17 @@ bool operator==(const TASCAR::quickhull_t::simplex_t& s1,
   return (s1.c1 == s2.c1) && (s1.c2 == s2.c2) && (s1.c3 == s2.c3);
 }
 
+std::string TASCAR::to_string(const rotmat_t& m)
+{
+  std::string s =
+      "\n[" + to_string(m.m11, "%1.4g") + " " + to_string(m.m12, "%1.4g") +
+      " " + to_string(m.m13, "%1.4g") + "]\n[" + to_string(m.m21, "%1.4g") +
+      " " + to_string(m.m22, "%1.4g") + " " + to_string(m.m23, "%1.4g") +
+      "]\n[" + to_string(m.m31, "%1.4g") + " " + to_string(m.m32, "%1.4g") +
+      " " + to_string(m.m33, "%1.4g") + "]\n";
+  return s;
+}
+
 /*
  * Local Variables:
  * mode: c++
