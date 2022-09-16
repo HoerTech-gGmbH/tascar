@@ -373,15 +373,15 @@ void ovheadtracker_t::service()
             }
             if((smooth > 0) && combinegyr) {
               TASCAR::quaternion_t qhp;
-              qhp.set_euler_xyz(rotgyr);
+              qhp.set_euler_zyx(rotgyr);
               q.rmul(qhp);
             }
             if(!autoref_zonly)
               q.rmul(qref);
             // store Euler orientation for processing in TASCAR:
-            o0 = q.to_euler_xyz();
+            o0 = q.to_euler_zyx();
             if(autoref_zonly) {
-              auto euref = qref.to_euler_xyz();
+              auto euref = qref.to_euler_zyx();
               o0.z = std::arg(std::exp(i * (o0.z + euref.z)));
             }
             // send Quaternion for data logging or remote processing
