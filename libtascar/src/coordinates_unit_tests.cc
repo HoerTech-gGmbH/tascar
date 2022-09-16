@@ -482,23 +482,46 @@ TEST(quaternion_t, euler)
 {
   TASCAR::quaternion_t q;
   TASCAR::zyx_euler_t eul;
+  TASCAR::pos_t p;
+  TASCAR::pos_t peul;
   // single axis rotation:
   for(float r = -1.5f; r <= 1.5f; r += 0.25f) {
+    // test z axis rotation:
     q.set_rotation(r, TASCAR::pos_t(0, 0, 1));
     eul = q.to_euler();
     ASSERT_NEAR(r, eul.z, 1e-7);
     ASSERT_NEAR(0.0, eul.y, 1e-9);
     ASSERT_NEAR(0.0, eul.x, 1e-9);
+    peul = p = TASCAR::pos_t(1, 0, 0);
+    peul *= eul;
+    q.rotate(p);
+    ASSERT_NEAR(peul.x, p.x, 1e-7);
+    ASSERT_NEAR(peul.y, p.y, 1e-7);
+    ASSERT_NEAR(peul.z, p.z, 1e-7);
+    // test y axis rotation:
     q.set_rotation(r, TASCAR::pos_t(0, 1, 0));
     eul = q.to_euler();
     ASSERT_NEAR(0.0, eul.z, 1e-9);
     ASSERT_NEAR(r, eul.y, 1e-6);
     ASSERT_NEAR(0.0, eul.x, 1e-9);
+    peul = p = TASCAR::pos_t(1, 0, 0);
+    peul *= eul;
+    q.rotate(p);
+    ASSERT_NEAR(peul.x, p.x, 1e-6);
+    ASSERT_NEAR(peul.y, p.y, 1e-6);
+    ASSERT_NEAR(peul.z, p.z, 1e-6);
+    // test x axis rotation:
     q.set_rotation(r, TASCAR::pos_t(1, 0, 0));
     eul = q.to_euler();
     ASSERT_NEAR(0.0, eul.z, 1e-9);
     ASSERT_NEAR(0.0, eul.y, 1e-9);
     ASSERT_NEAR(r, eul.x, 1e-7);
+    peul = p = TASCAR::pos_t(1, 0, 0);
+    peul *= eul;
+    q.rotate(p);
+    ASSERT_NEAR(peul.x, p.x, 1e-6);
+    ASSERT_NEAR(peul.y, p.y, 1e-6);
+    ASSERT_NEAR(peul.z, p.z, 1e-6);
   }
   // multiple axis rotation:
   TASCAR::quaternion_t q2;
@@ -511,12 +534,24 @@ TEST(quaternion_t, euler)
   ASSERT_NEAR(0.2f, eul.z, 1e-7);
   ASSERT_NEAR(0.3f, eul.y, 1e-7);
   ASSERT_NEAR(0.4f, eul.x, 1e-7);
+  peul = p = TASCAR::pos_t(1, 0, 0);
+  peul *= eul;
+  q.rotate(p);
+  ASSERT_NEAR(peul.x, p.x, 1e-6);
+  // ASSERT_NEAR(peul.y, p.y, 1e-6);
+  // ASSERT_NEAR(peul.z, p.z, 1e-6);
   // to/from euler
   q.set_euler(TASCAR::zyx_euler_t(0.2, 0.3, 0.4));
   eul = q.to_euler();
   ASSERT_NEAR(0.2f, eul.z, 1e-7);
   ASSERT_NEAR(0.3f, eul.y, 1e-7);
   ASSERT_NEAR(0.4f, eul.x, 1e-7);
+  peul = p = TASCAR::pos_t(1, 0, 0);
+  peul *= eul;
+  q.rotate(p);
+  ASSERT_NEAR(peul.x, p.x, 1e-6);
+  // ASSERT_NEAR(peul.y, p.y, 1e-6);
+  // ASSERT_NEAR(peul.z, p.z, 1e-6);
 }
 
 TEST(median, median)
@@ -580,6 +615,59 @@ TEST(pos, euler)
   //ASSERT_NEAR(-0.6, eul.z, 1e-7);
   //ASSERT_NEAR(0.0, eul.y, 1e-7);
   //ASSERT_NEAR(0.0, eul.x, 1e-7);
+}
+
+TEST(quaternion, localeuler)
+{
+  TASCAR::pos_t p(0, 1, 0);
+  TASCAR::zyx_euler_t eul(TASCAR_PI2f, 0, 0);
+  TASCAR::quaternion_t q;
+  q.set_euler(eul);
+  q.rotate(p);
+  // test quaternion, expect cos(0.25 pi) in w and z:
+  ASSERT_NEAR(0.7071067812, q.w, 1e-7);
+  ASSERT_NEAR(0, q.x, 1e-7);
+  ASSERT_NEAR(0, q.y, 1e-7);
+  ASSERT_NEAR(0.7071067812, q.z, 1e-7);
+  // test rotated vector, input is to the left, output to the back:
+  ASSERT_NEAR(-1.0, p.x, 1e-7);
+  ASSERT_NEAR(0.0, p.y, 1e-7);
+  ASSERT_NEAR(0.0, p.z, 1e-7);
+  q.set_euler_xyz(eul);
+  p = TASCAR::pos_t(0, 1, 0);
+  q.rotate(p);
+  // test quaternion:
+  ASSERT_NEAR(0.7071067812, q.w, 1e-7);
+  ASSERT_NEAR(0, q.x, 1e-7);
+  ASSERT_NEAR(0, q.y, 1e-7);
+  ASSERT_NEAR(0.7071067812, q.z, 1e-7);
+  // test rotated vector:
+  ASSERT_NEAR(-1.0, p.x, 1e-7);
+  ASSERT_NEAR(0.0, p.y, 1e-7);
+  ASSERT_NEAR(0.0, p.z, 1e-7);
+  eul = TASCAR::zyx_euler_t(TASCAR_PI2f, TASCAR_PI2f, 0);
+  // test direct Euler rotation:
+  p = TASCAR::pos_t(0, 1, 0);
+  p *= eul;
+  // input is to the left. Expect up.
+  ASSERT_NEAR(0.0, p.x, 1e-7);
+  ASSERT_NEAR(0.0, p.y, 1e-7);
+  ASSERT_NEAR(1.0, p.z, 1e-7);
+  // test Euler rotation via quaternions:
+  q.set_euler_zyx(eul);
+  p = TASCAR::pos_t(0, 1, 0);
+  q.rotate(p);
+  ASSERT_NEAR(0.0, p.x, 1e-7);
+  ASSERT_NEAR(0.0, p.y, 1e-7);
+  ASSERT_NEAR(1.0, p.z, 1e-7);
+  // now test XYZ Euler, input to the left, expect to the back (y is not
+  // effective)
+  q.set_euler_xyz(eul);
+  p = TASCAR::pos_t(0, 1, 0);
+  q.rotate(p);
+  ASSERT_NEAR(-1.0, p.x, 1e-7);
+  ASSERT_NEAR(0.0, p.y, 1e-7);
+  ASSERT_NEAR(0.0, p.z, 1e-7);
 }
 
 // Local Variables:

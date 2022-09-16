@@ -829,6 +829,24 @@ namespace TASCAR {
       y = cr * sp * cy + sr * cp * sy;
       z = cr * cp * sy - sr * sp * cy;
     };
+    inline void set_euler_zyx(const zyx_euler_t& eul)
+    {
+      set_rotation(eul.x, TASCAR::posf_t(1.0f, 0.0f, 0.0f));
+      quaternion_t q;
+      q.set_rotation(eul.y, TASCAR::posf_t(0.0f, 1.0f, 0.0f));
+      operator*=(q);
+      q.set_rotation(eul.z, TASCAR::posf_t(0.0f, 0.0f, 1.0f));
+      operator*=(q);
+    };
+    inline void set_euler_xyz(const zyx_euler_t& eul)
+    {
+      set_rotation(eul.z, TASCAR::posf_t(0.0f, 0.0f, 1.0f));
+      quaternion_t q;
+      q.set_rotation(eul.y, TASCAR::posf_t(0.0f, 1.0f, 0.0f));
+      operator*=(q);
+      q.set_rotation(eul.x, TASCAR::posf_t(1.0f, 0.0f, 0.0f));
+      operator*=(q);
+    };
     inline quaternion_t inverse() const
     {
       return conjugate().scale(1.0f / norm());

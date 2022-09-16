@@ -159,15 +159,26 @@ TASCAR::dynobject_t::dynobject_t(tsccfg::node_t xmlsrc)
 
 void TASCAR::dynobject_t::geometry_update(double time)
 {
+  // at the end of this function, c_6dof_ is the final position and
+  // orientation of this object.
   c6dof_prev = c6dof_;
+  // the interpolation time is the 'object time':
   double ltime(time - starttime);
+  // get interpolated position from trajectory:
   c6dof_.position = location.interp(ltime);
+  // temporary position, used for navigation mesh:
   TASCAR::pos_t ptmp(c6dof_.position);
+  // store trajectory in case some methods need position without delta
+  // position:
   c6dof_nodelta_.position = c6dof_.position;
+  // add delta position:
   c6dof_.position += dlocation;
+  // next step is the orientation:
   if(sampledorientation == 0)
+    // interpolated orientation from orientation table:
     c6dof_.orientation = orientation.interp(ltime);
   else {
+    // alternatively, extract orientation from position trajectory:
     double tp(location.get_time(location.get_dist(ltime) - sampledorientation));
     TASCAR::pos_t pdt(c6dof_.position);
     pdt -= location.interp(tp);
@@ -177,13 +188,17 @@ void TASCAR::dynobject_t::geometry_update(double time)
     c6dof_.orientation.y = pdt.elev();
     c6dof_.orientation.x = 0.0;
   }
+  // store orientation without delta orientation:
   c6dof_nodelta_.orientation = c6dof_.orientation;
+  // add delta orientation (here: addition of Euler angles!):
   c6dof_.orientation += dorientation;
   if(navmesh) {
+    // the object is restricted to a navigation mesh:
     navmesh->update_pos(c6dof_.position);
     dlocation = c6dof_.position;
     dlocation -= ptmp;
   }
+  // add local position offset:
   ptmp = localpos;
   ptmp *= c6dof_.orientation;
   c6dof_.position += ptmp;
