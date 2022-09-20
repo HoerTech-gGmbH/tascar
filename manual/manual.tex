@@ -1389,34 +1389,21 @@ definitions.
 
 \subsection{Adding diffuse reverberation: {\tt <reverb .../>}}\label{sec:reverbelem}
 
-Diffuse reverberation can be added with the \elem{reverb} element. The
-reverb plugin type is provided with the \attr{type} attribute, which
-can be any of the types listed below.
+To generate diffuse reverberation in TASCAR, signal components from the image source model must be transferred to the diffuse sound field model. There are two options for this: Either external reverberation generators can be used, which receive their input signals via JACK and also reproduce the reverberation signal in Ambisonics format via JACK. For this, a \elem{receiver} must be used to transmit from the image source model to the external reverberation module, and a diffuse sound field (\elem{diffuse}) must be used to transmit from the external reverberation module to TASCAR.  Another option is to use the TASCAR internal reverberation generators. In this method, the \elem{reverb} element combines both the receiver and the diffuse sound field into a single object. The type of the reverb plugin is specified with the \attr{type} attribute, which can be any of the types listed below. Diffuse sources do not contribute to diffuse reverberation.
 
-Under the hood, the \elem{reverb} element combines a dedicated
-receiver with a diffuse sound field. Therefore, most common attributes
-of receivers (see \ref{sec:receiver}) can be used here as well.
-%
-To create diffuse reverberation with external convolution or
-algorithmic reverb tools connected via jack, you may use a receiver
-plugin, set the \attr{volumetric} attribute, and add a diffuse sound
-field using the same position, orientation and dimension as the
-volumetric receiver.
+Both methods have in common that the receiver does not follow the normal distance laws, but renders all sources within a given volume with equal gains and delays. This is achieved by the attribute \attr{volumetric}; this attribute defines the shoebox-shaped volume in which sound sources contribute to the reverberation.
 
-A very basic FDN and a partitioned convolution module are provided as
-part of \tascar{}. An example of diffuse reverberation using the
-``simplefdn'' plugin looks like this:
+Under the hood, the \elem{reverb} element combines a dedicated receiver with a diffuse sound field. Therefore, most common attributes of receivers (see \ref{sec:receiver}) can be used here as well.  To create diffuse reverberation with external convolution or algorithmic reverb tools connected via jack, you may use a receiver plugin, set the \attr{volumetric} attribute, and add a diffuse sound field using the same position, orientation and dimension as the volumetric receiver.
+
+A very basic FDN and a partitioned convolution module are provided as part of \tascar{}. An example of diffuse reverberation using the ``simplefdn'' plugin looks like this:
 %
 \tscexample[linerange={35-37},firstnumber=35]{example_diffreverbnew}
 %
-The attribute ``volumetric'' defines the shoe-box shaped volume in
-which sound sources are rendered. Diffuse sources do not contribute to
-diffuse reverberation.
+The attribute ``volumetric'' defines the shoe-box shaped volume in which sound sources are rendered.
 
-Reverb receivers have the attribute \attr{layers}, which defines the
-layers in which the receiver receives sound, and \attr{outputlayers},
-which defines the layers in which the diffuse sound field is
-reproduced.
+Reverb receivers have the attribute \attr{layers}, which defines the layers in which the receiver receives sound, and \attr{outputlayers}, which defines the layers in which the diffuse sound field is reproduced.
+
+\input{tabreverb.tex}
 
 \input{secrecreverb.tex}
 

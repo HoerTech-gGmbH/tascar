@@ -139,123 +139,133 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
 {
   if(src_->active)
     update_position();
-  if(receiver_->render_point && receiver_->active && src_->active &&
-     (!receiver_->gain_zero) && (src_->ismmin <= ismorder) &&
-     (ismorder <= src_->ismmax) && (receiver_->ismmin <= ismorder) &&
-     (ismorder <= receiver_->ismmax) && ((!reflector) || reflector->active) &&
-     ((receiver_->layers & src_->layers) || (layergain > 0))) {
-    bool layeractive(receiver_->layers & src_->layers);
-    if(visible) {
-      pos_t prel;
-      float nextdistance(0.0);
-      float nextgain(1.0);
-      // calculate relative geometry between source and receiver:
-      float srcgainmod(1.0);
-      // update effective position/calculate ISM geometry:
-      position = get_effective_position(receiver_->position, srcgainmod);
-      // read audio from source, update radation position:
-      pos_t prelsrc(receiver_->position);
-      prelsrc -= src_->position;
-      prelsrc /= src_->orientation;
-      if(receiver_->volumetric.has_volume()) {
-        if(src_->read_source_diffuse(prelsrc, src_->inchannels, audio,
-                                     source_data)) {
-          prelsrc *= src_->orientation;
-          prelsrc -= receiver_->position;
-          prelsrc *= -1.0;
-          position = prelsrc;
-        }
-      } else {
-        if(src_->read_source(prelsrc, src_->inchannels, audio, source_data)) {
-          prelsrc *= src_->orientation;
-          prelsrc -= receiver_->position;
-          prelsrc *= -1.0;
-          position = prelsrc;
-        }
-      }
-      // calculate obstacles:
-      for(uint32_t kobj = 0; kobj != obstacles_.size(); ++kobj) {
-        obstacle_t* p_obj(obstacles_[kobj]);
-        if(p_obj->active) {
-          // apply diffraction model:
-          if(p_obj->b_inner)
-            p_obj->process(position, receiver_->position, audio, c_, fs_,
-                           vstate[kobj], p_obj->transmission);
-          else
-            position = p_obj->process(position, receiver_->position, audio, c_,
-                                      fs_, vstate[kobj], p_obj->transmission);
-        }
-      }
-      // end obstacles
-      receiver_->update_refpoint(primary->position, position, prel,
-                                 nextdistance, nextgain, ismorder > 0,
-                                 src_->gainmodel);
-      if(nextdistance > src_->maxdist)
-        return 0;
-      nextgain *= srcgainmod;
-      nextgain *= receiver_->external_gain;
-      if(receiver_->maskplug)
-        nextgain *= receiver_->maskplug->get_gain(prel);
-      float next_air_absorption(expf(-nextdistance * dscale));
-      float new_distance_with_delaycomp =
-          std::max(0.0f, nextdistance - c_ * (receiver_->delaycomp +
-                                              receiver_->recdelaycomp));
-      float ddistance = (new_distance_with_delaycomp - distance) * dt;
-      float dgain((nextgain - gain) * dt);
-      float dairabsorption((next_air_absorption - air_absorption) * dt);
-      apply_reflectionfilter(audio);
-      if(receiver_->muteonstop && (!tp.rolling)) {
-        gain = 0.0;
-        dgain = 0.0;
-      }
-      for(uint32_t k = 0; k < chunksize; ++k) {
-        float& current_sample(audio[k]);
-        distance += ddistance;
-        gain += dgain;
-        // calculate layer fade gain:
-        if(layeractive) {
-          if(layergain < 1.0)
-            layergain += dlayergain;
-        } else {
-          if(layergain > 0.0)
-            layergain -= dlayergain;
-        }
-        if(src_->delayline)
-          current_sample = layergain * gain *
-                           delayline.get_dist_push(distance, current_sample);
-        else
-          current_sample = layergain * gain * current_sample;
-        if(src_->airabsorption) {
-          float c1(air_absorption += dairabsorption);
-          float c2(1.0f - c1);
-          // apply air absorption:
-          c1 *= current_sample;
-          airabsorption_state = c2 * airabsorption_state + c1;
-          make_friendly_number(airabsorption_state);
-          current_sample = airabsorption_state;
-        }
-      }
-      distance = new_distance_with_delaycomp;
-      gain = nextgain;
-      air_absorption = next_air_absorption;
-      if(((gain != 0) || (dgain != 0))) {
-        if(src_->minlevel > 0) {
-          if(audio.rms() <= src_->minlevel)
+  if((!receiver_->gain_zero) && receiver_->active && src_->active &&
+     ((!reflector) || reflector->active)) {
+    // render only if source, receiver and in case of image source the reflector
+    // is active
+    if(receiver_->render_point && (src_->ismmin <= ismorder) &&
+       (ismorder <= src_->ismmax) && (receiver_->ismmin <= ismorder) &&
+       (ismorder <= receiver_->ismmax)) {
+      // render only if image source order is in defined range
+      if(((receiver_->layers & src_->layers) || (layergain > 0))) {
+        // render only if layers are matching
+        bool layeractive(receiver_->layers & src_->layers);
+        if(visible) {
+          pos_t prel;
+          float nextdistance(0.0);
+          float nextgain(1.0);
+          // calculate relative geometry between source and receiver:
+          float srcgainmod(1.0);
+          // update effective position/calculate ISM geometry:
+          position = get_effective_position(receiver_->position, srcgainmod);
+          // read audio from source, update radation position:
+          pos_t prelsrc(receiver_->position);
+          prelsrc -= src_->position;
+          prelsrc /= src_->orientation;
+          if(receiver_->volumetric.has_volume()) {
+            if(src_->read_source_diffuse(prelsrc, src_->inchannels, audio,
+                                         source_data)) {
+              prelsrc *= src_->orientation;
+              prelsrc -= receiver_->position;
+              prelsrc *= -1.0;
+              position = prelsrc;
+            }
+          } else {
+            if(src_->read_source(prelsrc, src_->inchannels, audio,
+                                 source_data)) {
+              prelsrc *= src_->orientation;
+              prelsrc -= receiver_->position;
+              prelsrc *= -1.0;
+              position = prelsrc;
+            }
+          }
+          // calculate obstacles:
+          for(uint32_t kobj = 0; kobj != obstacles_.size(); ++kobj) {
+            obstacle_t* p_obj(obstacles_[kobj]);
+            if(p_obj->active) {
+              // apply diffraction model:
+              if(p_obj->b_inner)
+                p_obj->process(position, receiver_->position, audio, c_, fs_,
+                               vstate[kobj], p_obj->transmission);
+              else
+                position =
+                    p_obj->process(position, receiver_->position, audio, c_,
+                                   fs_, vstate[kobj], p_obj->transmission);
+            }
+          }
+          // end obstacles
+          receiver_->update_refpoint(primary->position, position, prel,
+                                     nextdistance, nextgain, ismorder > 0,
+                                     src_->gainmodel);
+          if(nextdistance > src_->maxdist)
             return 0;
-        }
-        // add scattering:
-        float scattering(0.0);
-        if(reflector)
-          scattering = reflector->scattering;
-        // add to receiver:
-        receiver_->add_pointsource_with_scattering(
-            prel,
-            std::min(TASCAR_PI2f, 0.25f * TASCAR_PIf * src_->size /
-                                      std::max(0.01f, nextdistance)),
-            scattering, audio, receiver_data);
-        return 1;
-      }
-    } // of visible
+          nextgain *= srcgainmod;
+          nextgain *= receiver_->external_gain;
+          if(receiver_->maskplug)
+            nextgain *= receiver_->maskplug->get_gain(prel);
+          float next_air_absorption(expf(-nextdistance * dscale));
+          float new_distance_with_delaycomp =
+              std::max(0.0f, nextdistance - c_ * (receiver_->delaycomp +
+                                                  receiver_->recdelaycomp));
+          float ddistance = (new_distance_with_delaycomp - distance) * dt;
+          float dgain((nextgain - gain) * dt);
+          float dairabsorption((next_air_absorption - air_absorption) * dt);
+          apply_reflectionfilter(audio);
+          if(receiver_->muteonstop && (!tp.rolling)) {
+            gain = 0.0;
+            dgain = 0.0;
+          }
+          for(uint32_t k = 0; k < chunksize; ++k) {
+            float& current_sample(audio[k]);
+            distance += ddistance;
+            gain += dgain;
+            // calculate layer fade gain:
+            if(layeractive) {
+              if(layergain < 1.0)
+                layergain += dlayergain;
+            } else {
+              if(layergain > 0.0)
+                layergain -= dlayergain;
+            }
+            if(src_->delayline)
+              current_sample =
+                  layergain * gain *
+                  delayline.get_dist_push(distance, current_sample);
+            else
+              current_sample = layergain * gain * current_sample;
+            if(src_->airabsorption) {
+              float c1(air_absorption += dairabsorption);
+              float c2(1.0f - c1);
+              // apply air absorption:
+              c1 *= current_sample;
+              airabsorption_state = c2 * airabsorption_state + c1;
+              make_friendly_number(airabsorption_state);
+              current_sample = airabsorption_state;
+            }
+          }
+          distance = new_distance_with_delaycomp;
+          gain = nextgain;
+          air_absorption = next_air_absorption;
+          if(((gain != 0) || (dgain != 0))) {
+            if(src_->minlevel > 0) {
+              if(audio.rms() <= src_->minlevel)
+                return 0;
+            }
+            // add scattering:
+            float scattering(0.0);
+            if(reflector)
+              scattering = reflector->scattering;
+            // add to receiver:
+            receiver_->add_pointsource_with_scattering(
+                prel,
+                std::min(TASCAR_PI2f, 0.25f * TASCAR_PIf * src_->size /
+                                          std::max(0.01f, nextdistance)),
+                scattering, audio, receiver_data);
+            return 1;
+          }
+        } // of visible
+      }   // of layers check
+    }     // of ISM order check
   } else {
     delayline.add_chunk(audio);
   }

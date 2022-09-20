@@ -217,18 +217,18 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
   std::map<std::string, std::set<std::string>> parentchildren;
   make_common(parentchildren, attribute_list, categories["receiver"],
               "receiver");
-  make_common(parentchildren, attribute_list, categories["reverb"], "receiver");
+  make_common(parentchildren, attribute_list, categories["reverb"], "reverb");
   make_common(parentchildren, attribute_list, categories["sound"], "sound");
   make_common(parentchildren, attribute_list,
               {"receiver", "source", "diffuse", "facegroup", "face",
-               "boundingbox", "obstacle", "mask"},
+               "boundingbox", "obstacle", "mask", "reverb"},
               "objects");
   make_common(parentchildren, attribute_list,
               {"receiver", "source", "diffuse", "facegroup", "face", "mask",
-               "obstacle"},
+               "obstacle", "reverb"},
               "routes");
-  make_common(parentchildren, attribute_list, {"receiver", "sound", "diffuse"},
-              "ports");
+  make_common(parentchildren, attribute_list,
+              {"receiver", "sound", "diffuse"}, "ports");
   make_common(parentchildren, attribute_list,
               {"receiverhann", "receiverhoa3d", "receiverhoa2d",
                "receivervbap3d", "receivervbap", "receivernsp", "receiverwfs"},
