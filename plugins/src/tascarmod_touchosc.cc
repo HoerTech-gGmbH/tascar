@@ -147,7 +147,7 @@ void connection_t::uploadsession(TASCAR::session_t* session)
           l = 0.0f;
         levels[ch] = l;
         lo_send(target, cfader, "f", v);
-        lo_send(target, clabel, "s", it->get_parent_name().c_str());
+        lo_send(target, clabel, "s", it->get_fullname().c_str());
         lo_send(target, clevel, "f", l);
         std::string col;
         if(!htmlcolors)
