@@ -52,11 +52,13 @@ void TASCAR::spawn_process_t::launcher()
     waitpid(pid, &wstatus, 0);
     if(runservice) {
       if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0))
-        std::cerr << "Process " << pid << " returned with exit status " << WEXITSTATUS(wstatus)
+        std::cerr << "Process " << pid << " returned with exit status "
+                  << WEXITSTATUS(wstatus) << ": \"" << command_ << "\""
                   << std::endl;
       if(WIFSIGNALED(wstatus))
         std::cerr << "Process " << pid << " terminated with signal "
-                  << WTERMSIG(wstatus) << std::endl;
+                  << WTERMSIG(wstatus) << ": \"" << command_ << "\""
+                  << std::endl;
     }
     pid = 0;
     running = false;
