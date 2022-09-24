@@ -163,6 +163,8 @@ namespace TASCAR {
     find_objects(const std::vector<std::string>& pattern);
     std::vector<TASCAR::Scene::audio_port_t*>
     find_audio_ports(const std::vector<std::string>& pattern);
+    std::vector<TASCAR::Scene::audio_port_t*>
+    find_route_ports(const std::vector<std::string>& pattern);
     std::vector<TASCAR::scene_render_rt_t*> scenes;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;

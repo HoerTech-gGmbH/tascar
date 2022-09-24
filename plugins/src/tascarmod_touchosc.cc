@@ -92,9 +92,14 @@ class connection_t {
 public:
   connection_t(const std::string& host, uint32_t port, uint32_t channels,
                bool htmlcolors_);
-  void uploadsession(TASCAR::session_t* session);
-  void updatesession(TASCAR::session_t* session, bool force);
-  void setvaluesession(TASCAR::session_t* session, uint32_t channel, float val);
+  void uploadsession(TASCAR::session_t* session,
+                     std::vector<TASCAR::Scene::audio_port_t*>& routeports);
+  void updatesession(TASCAR::session_t* session,
+                     std::vector<TASCAR::Scene::audio_port_t*>& routeports,
+                     bool force);
+  void setvaluesession(TASCAR::session_t* session,
+                       std::vector<TASCAR::Scene::audio_port_t*>& routeports,
+                       uint32_t channel, float val);
   ~connection_t();
   uint32_t scene;
 
@@ -126,7 +131,9 @@ connection_t::~connection_t()
   lo_address_free(target);
 }
 
-void connection_t::uploadsession(TASCAR::session_t* session)
+void connection_t::uploadsession(
+    TASCAR::session_t* session,
+    std::vector<TASCAR::Scene::audio_port_t*>& routeports)
 {
   uint32_t ch(0);
   if(scene < session->scenes.size()) {
@@ -220,6 +227,37 @@ void connection_t::uploadsession(TASCAR::session_t* session)
       }
     }
   }
+  // now add routes:
+  for(auto rp : routeports) {
+    if(ch < channels) {
+      auto scenerp = dynamic_cast<TASCAR::Scene::route_t*>(rp);
+      if(scenerp) {
+        char cfader[1024];
+        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        char clabel[1024];
+        sprintf(clabel, "/touchosc/label%d", ch + 1);
+        char clevel[1024];
+        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        float v(rp->get_gain_db());
+        vals[ch] = v;
+        float l(scenerp->read_meter_max());
+        if(!(l > 0.0f))
+          l = 0.0f;
+        levels[ch] = l;
+        lo_send(target, cfader, "f", v);
+        lo_send(target, clabel, "s", scenerp->get_name().c_str());
+        lo_send(target, clevel, "f", l);
+        std::string col("#777777");
+        if(!htmlcolors)
+          col = col2colname(col);
+        sprintf(clabel, "/touchosc/label%d/color", ch + 1);
+        lo_send(target, clabel, "s", col.c_str());
+        sprintf(cfader, "/touchosc/fader%d/color", ch + 1);
+        lo_send(target, cfader, "s", col.c_str());
+        ++ch;
+      }
+    }
+  }
   for(uint32_t k = ch; k < channels; ++k) {
     char cfader[1024];
     sprintf(cfader, "/touchosc/fader%d", k + 1);
@@ -243,7 +281,9 @@ void connection_t::uploadsession(TASCAR::session_t* session)
   }
 }
 
-void connection_t::updatesession(TASCAR::session_t* session, bool force)
+void connection_t::updatesession(
+    TASCAR::session_t* session,
+    std::vector<TASCAR::Scene::audio_port_t*>& routeports, bool force)
 {
   uint32_t ch(0);
   if(scene < session->scenes.size()) {
@@ -308,33 +348,88 @@ void connection_t::updatesession(TASCAR::session_t* session, bool force)
       }
     }
   }
-}
-
-void connection_t::setvaluesession(TASCAR::session_t* session, uint32_t channel,
-                                   float val)
-{
-  if(scene < session->scenes.size()) {
-    if(channel < session->scenes[scene]->sounds.size())
-      session->scenes[scene]->sounds[channel]->set_gain_db(val);
-    else if(channel < session->scenes[scene]->sounds.size() +
-                          session->scenes[scene]->receivermod_objects.size())
-      session->scenes[scene]
-          ->receivermod_objects[channel - session->scenes[scene]->sounds.size()]
-          ->set_gain_db(val);
-    else if(channel < session->scenes[scene]->sounds.size() +
-                          session->scenes[scene]->receivermod_objects.size() +
-                          session->scenes[scene]->diffuse_reverbs.size())
-      session->scenes[scene]
-          ->diffuse_reverbs[channel - session->scenes[scene]->sounds.size() -
-                            session->scenes[scene]->receivermod_objects.size()]
-          ->set_gain_db(val);
-    else {
-      char cfader[1024];
-      sprintf(cfader, "/touchosc/fader%d", channel + 1);
-      lo_send(target, cfader, "f", -30.0f);
+  // now add routes:
+  for(auto rp : routeports) {
+    if(ch < channels) {
+      auto scenerp = dynamic_cast<TASCAR::Scene::route_t*>(rp);
+      if(scenerp) {
+        char cfader[1024];
+        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        char clevel[1024];
+        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        float v(rp->get_gain_db());
+        if(force || (vals[ch] != v))
+          lo_send(target, cfader, "f", v);
+        vals[ch] = v;
+        float l(scenerp->read_meter_max());
+        if(!(l > 0.0f))
+          l = 0.0f;
+        if(force || (fabsf(levels[ch] - l) > 0.1)) {
+          lo_send(target, clevel, "f", l);
+          levels[ch] = l;
+        }
+        ++ch;
+      }
     }
   }
+}
+
+void connection_t::setvaluesession(
+    TASCAR::session_t* session,
+    std::vector<TASCAR::Scene::audio_port_t*>& routeports, uint32_t channel,
+    float val)
+{
+  if(channel >= channels)
+    return;
   vals[channel] = val;
+  uint32_t ch(0);
+  if(scene < session->scenes.size()) {
+    for(auto it : session->scenes[scene]->sounds) {
+      if(ch < channels) {
+        if(ch == channel) {
+          it->set_gain_db(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+    for(auto it : session->scenes[scene]->receivermod_objects) {
+      if(ch < channels) {
+        if(ch == channel) {
+          it->set_gain_db(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+    for(auto it : session->scenes[scene]->diffuse_reverbs) {
+      if(ch < channels) {
+        if(ch == channel) {
+          it->set_gain_db(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+  }
+  // now add routes:
+  for(auto rp : routeports) {
+    if(ch < channels) {
+      auto scenerp = dynamic_cast<TASCAR::Scene::route_t*>(rp);
+      if(scenerp) {
+        if(ch == channel) {
+          rp->set_gain_db(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+  }
+  if(ch < channels) {
+    char cfader[1024];
+    sprintf(cfader, "/touchosc/fader%d", channel + 1);
+    lo_send(target, cfader, "f", -30.0f);
+  }
 }
 
 class touchosc_t : public TASCAR::module_base_t, TASCAR::service_t {
@@ -362,13 +457,14 @@ public:
 private:
   uint32_t port;
   bool htmlcolors;
-  std::vector<TASCAR::named_object_t> obj;
+  // std::vector<TASCAR::named_object_t> obj;
   std::vector<lo_message> vmsg;
   std::vector<lo_arg**> vargv;
   std::vector<std::string> vpath;
   std::map<std::string, connection_t*> connections;
   std::vector<chref_t> chrefs;
   pthread_mutex_t mtx;
+  std::vector<TASCAR::Scene::audio_port_t*> routeports;
 };
 
 int touchosc_t::osc_connect(const char*, const char*, lo_arg** argv, int,
@@ -421,7 +517,7 @@ void touchosc_t::setscene(const std::string& host, int32_t dscene)
            ((int32_t)(it->second->scene) + dscene <
             (int32_t)(session->scenes.size()))) {
           it->second->scene += dscene;
-          it->second->uploadsession(session);
+          it->second->uploadsession(session, routeports);
         }
       }
     }
@@ -435,7 +531,7 @@ void touchosc_t::setfader(const std::string& host, uint32_t channel, float val)
     std::map<std::string, connection_t*>::iterator it;
     if((it = connections.find(host)) != connections.end()) {
       if(it->second)
-        it->second->setvaluesession(session, channel, val);
+        it->second->setvaluesession(session, routeports, channel, val);
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -455,8 +551,9 @@ void touchosc_t::connect(const std::string& host, uint32_t channels)
       it->second = NULL;
     }
     connection_t* con(new connection_t(host, port, channels, htmlcolors));
+    routeports = session->find_route_ports({"/*"});
     connections[host] = con;
-    con->uploadsession(session);
+    con->uploadsession(session, routeports);
     pthread_mutex_unlock(&mtx);
   }
 }
@@ -494,7 +591,7 @@ void touchosc_t::service()
               connections.begin();
           it != connections.end(); ++it)
         if(it->second)
-          it->second->updatesession(session, cnt == 0);
+          it->second->updatesession(session, routeports, cnt == 0);
       if(cnt)
         --cnt;
       else

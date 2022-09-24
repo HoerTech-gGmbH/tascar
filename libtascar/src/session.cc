@@ -917,6 +917,31 @@ TASCAR::session_t::find_audio_ports(const std::vector<std::string>& pattern)
   return retv;
 }
 
+std::vector<TASCAR::Scene::audio_port_t*>
+TASCAR::session_t::find_route_ports(const std::vector<std::string>& pattern)
+{
+  std::vector<TASCAR::Scene::audio_port_t*> all_ports;
+  // now test for all modules which implement audio_port_t:
+  for(auto mod : modules) {
+    TASCAR::Scene::audio_port_t* p_ap(
+        dynamic_cast<TASCAR::Scene::audio_port_t*>(mod->libdata));
+    if(p_ap)
+      all_ports.push_back(p_ap);
+  }
+  std::vector<TASCAR::Scene::audio_port_t*> retv;
+  // first, iterate over all pattern elements:
+  for(const auto& pat : pattern) {
+    for(auto p_ap : all_ports) {
+      // check if name is matching:
+      std::string name(p_ap->get_ctlname());
+      if((TASCAR::fnmatch(pat.c_str(), name.c_str(), true) == 0) ||
+         (pat == "*"))
+        retv.push_back(p_ap);
+    }
+  }
+  return retv;
+}
+
 TASCAR::actor_module_t::actor_module_t(const TASCAR::module_cfg_t& cfg,
                                        bool fail_on_empty)
     : module_base_t(cfg)
