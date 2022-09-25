@@ -21,7 +21,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   oscserver oscrelay echoc snapangle
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
-  transportgui lightcolorpicker
+  transportgui lightcolorpicker datalogging
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
@@ -51,9 +51,10 @@ endif
 
 
 ifeq "$(HAS_LSL)" "yes"
+CXXFLAGS += -DHAS_LSL
 TASCARMODS += lsljacktime lslactor levels2osc pos2lsl
 AUDIOPLUGINS += speechactivity periodogram
-TASCARMODSGUI += datalogging glabsensors waitforlslstream
+TASCARMODSGUI += glabsensors waitforlslstream
 GLABSENSORS += smiley eog emergency espheadtracker midicc	\
   qualisys jackstatus serial oscthreshold
 endif
@@ -127,7 +128,10 @@ build/$(PLUGINPREFIX)tascar_ap_lipsync_paper$(DLLEXT): LDLIBS+=-lfftw3f
 build/$(PLUGINPREFIX)tascar_ap_openmha$(DLLEXT): LDLIBS+=-lopenmha
 build/$(PLUGINPREFIX)tascar_ap_periodogram$(DLLEXT): LDLIBS+=-llsl
 build/$(PLUGINPREFIX)tascar_ap_speechactivity$(DLLEXT): LDLIBS+=-llsl
-build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -lmatio -llsl
+build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -lmatio
+ifeq "$(HAS_LSL)" "yes"
+build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -llsl
+endif
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): build/datalogging_glade.h
 build/$(PLUGINPREFIX)tascar_hossustain$(DLLEXT): EXTERNALS += fftw3f
 build/$(PLUGINPREFIX)tascar_lightctl$(DLLEXT) build/$(PLUGINPREFIX)tascar_ovheadtracker$(DLLEXT): LDLIBS+=$(TASCARDMXLIB)

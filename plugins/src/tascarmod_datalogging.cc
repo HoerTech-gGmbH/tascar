@@ -33,7 +33,9 @@
 #include <gtkmm.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/window.h>
+#ifdef HAS_LSL
 #include <lsl_cpp.h>
+#endif
 #include <matio.h>
 #include <mutex>
 #include <sys/stat.h>
@@ -61,6 +63,8 @@ public:
 protected:
   recorder_t* datarecorder = NULL;
 };
+
+#ifdef HAS_LSL
 
 /**
  * @brief Receiver of LSL variable
@@ -95,6 +99,8 @@ private:
   std::thread lsl_poll_service;
   std::atomic_bool run_lsl_poll_service = true;
 };
+
+#endif
 
 /**
  * @brief Receiver of OSC string variable (format "s")
@@ -135,7 +141,9 @@ private:
 
 typedef std::vector<oscvar_t*> oscvarlist_t;
 typedef std::vector<oscsvar_t*> oscsvarlist_t;
+#ifdef HAS_LSL
 typedef std::vector<lslvar_t*> lslvarlist_t;
+#endif
 
 class dlog_vars_t : public TASCAR::module_base_t {
 public:
@@ -153,11 +161,15 @@ protected:
   bool displaydc = true;
   bool controltransport = true;
   bool usetransport = false;
+#ifdef HAS_LSL
   double lsltimeout = 10.0;
+#endif
   bool headless = false;
   oscvarlist_t oscvars;
   oscsvarlist_t oscsvars;
+#ifdef HAS_LSL
   lslvarlist_t lslvars;
+#endif
   jack_client_t* jc_ = NULL;
   std::atomic_bool is_rolling = false;
 };
@@ -169,8 +181,10 @@ void dlog_vars_t::validate_attributes(std::string& msg) const
     pvar->validate_attributes(msg);
   for(auto pvar : oscsvars)
     pvar->validate_attributes(msg);
+#ifdef HAS_LSL
   for(auto pvar : lslvars)
     pvar->validate_attributes(msg);
+#endif
 }
 
 class label_t {
@@ -349,7 +363,7 @@ private:
   // pthread_mutex_t& record_mtx_;
   jack_client_t* jc_;
   double audio_sample_period_;
-  bool ignore_first_;
+  //bool ignore_first_;
   size_t plotdata_cnt;
 };
 
@@ -404,6 +418,7 @@ std::string datestr()
   return ctmp;
 }
 
+#ifdef HAS_LSL
 bool lslvar_t::has_inlet()
 {
   std::lock_guard<std::mutex> lock(inletlock);
@@ -506,6 +521,7 @@ void lslvar_t::set_delta(double deltatime)
 {
   delta = deltatime;
 }
+#endif
 
 oscsvar_t::oscsvar_t(tsccfg::node_t xmlsrc) : var_base_t(xmlsrc)
 {
@@ -535,7 +551,9 @@ dlog_vars_t::dlog_vars_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
   GET_ATTRIBUTE(fileformat, "",
                 "File format, can be either ``mat'', ``matcell'' or ``txt''");
   GET_ATTRIBUTE(outputdir, "", "Data output directory");
+#ifdef HAS_LSL
   GET_ATTRIBUTE(lsltimeout, "s", "Number of seconds to scan for LSL streams");
+#endif
   GET_ATTRIBUTE_BOOL(displaydc, "Display DC components");
   GET_ATTRIBUTE_BOOL(controltransport,
                      "Control transport with recording session control");
@@ -575,7 +593,8 @@ recorder_t::recorder_t(uint32_t size, const std::string& name,
                        bool headless)
     : size_(size), b_textdata(false), name_(name), is_rec_(is_rec),
       is_roll_(is_roll), jc_(jc), audio_sample_period_(1.0 / srate),
-      ignore_first_(ignore_first), plotdata_cnt(0)
+      //ignore_first_(ignore_first),
+      plotdata_cnt(0)
 {
   if(!headless)
     drawer = new data_draw_t(ignore_first, size);
@@ -741,7 +760,7 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
             for(uint32_t k = n1; k < n2; k += stepsize) {
               double t(plotdata_[k * num_channels] - ltime);
               double v(plotdata_[dim + k * num_channels]);
-              if(finite(v)) {
+              if(std::isfinite(v)) {
                 if(!displaydc_)
                   v -= vdc[dim];
                 if(v != HUGE_VAL) {
@@ -882,6 +901,7 @@ void recorder_t::store_msg(double t1, double t2, const std::string& msg)
   }
 }
 
+#ifdef HAS_LSL
 void lslvar_t::poll_data()
 {
   std::lock_guard<std::mutex> lock(inletlock);
@@ -920,6 +940,7 @@ void lslvar_t::poll_data()
   if(has_data)
     ts.tic();
 }
+#endif
 
 /**
  * @brief Plugin interface
@@ -976,7 +997,7 @@ private:
   Glib::Dispatcher osc_stop;
   Glib::Dispatcher osc_set_trialid;
   std::string osc_trialid;
-  double audio_sample_period_;
+  //double audio_sample_period_;
   uint32_t fragsize;
   double srate;
 };
@@ -989,7 +1010,7 @@ private:
 
 datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
     : dlog_vars_t(cfg), TASCAR::osc_server_t(multicast, port, srv_proto),
-      b_recording(false), audio_sample_period_(1.0 / cfg.session->srate),
+      b_recording(false), //audio_sample_period_(1.0 / cfg.session->srate),
       fragsize(cfg.session->fragsize), srate(cfg.session->srate)
 {
   TASCAR::osc_server_t* osc(this);
@@ -1057,8 +1078,10 @@ datalogging_t::~datalogging_t()
     delete pvar;
   for(auto pvar : oscsvars)
     delete pvar;
+#ifdef HAS_LSL
   for(auto pvar : lslvars)
     delete pvar;
+#endif
   for(auto prec : recorder)
     delete prec;
   if(!headless) {
@@ -1080,8 +1103,10 @@ void datalogging_t::configure()
     oscvars.push_back(new oscvar_t(sne));
   for(auto sne : tsccfg::node_get_children(e, "oscs"))
     oscsvars.push_back(new oscsvar_t(sne));
+#ifdef HAS_LSL
   for(auto sne : tsccfg::node_get_children(e, "lsl"))
     lslvars.push_back(new lslvar_t(sne, lsltimeout));
+#endif
   TASCAR::osc_server_t* osc(this);
   if(port.empty())
     osc = session;
@@ -1102,6 +1127,7 @@ void datalogging_t::configure()
     var->set_recorder(recorder.back());
     osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
   }
+#ifdef HAS_LSL
   // finally, add all LSL variables:
   for(auto var : lslvars) {
     recorder.push_back(new recorder_t(var->size + 1, var->name, is_recording,
@@ -1109,6 +1135,7 @@ void datalogging_t::configure()
                                       true, headless));
     var->set_recorder(recorder.back());
   }
+#endif
   if(!headless) {
     // update display of DC:
     for(auto rec : recorder)
@@ -1149,19 +1176,22 @@ void datalogging_t::release()
   TASCAR::osc_server_t::deactivate();
   for(auto prec : recorder)
     delete prec;
+#ifdef HAS_LSL
   for(auto var : lslvars)
     delete var;
+  lslvars.clear();
+#endif
   for(auto var : oscsvars)
     delete var;
   for(auto var : oscvars)
     delete var;
   recorder.clear();
-  lslvars.clear();
   oscsvars.clear();
   oscvars.clear();
   TASCAR::module_base_t::release();
 }
 
+#ifdef HAS_LSL
 void lslvar_t::poll_lsl_data()
 {
   while(run_lsl_poll_service) {
@@ -1169,6 +1199,7 @@ void lslvar_t::poll_lsl_data()
     usleep(1000);
   }
 }
+#endif
 
 int datalogging_t::osc_session_start(const char*, const char*, lo_arg**, int,
                                      lo_message, void* user_data)
@@ -1341,9 +1372,11 @@ void datalogging_t::start_trial(const std::string& name)
   for(uint32_t k = 0; k < recorder.size(); k++)
     recorder[k]->clear();
   // lsl re-sync:
+#ifdef HAS_LSL
   for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it) {
     (*it)->get_stream_delta_start();
   }
+#endif
   filename = name;
   b_recording = true;
   // pthread_mutex_unlock(&record_mtx);
@@ -1357,10 +1390,12 @@ void datalogging_t::stop_trial()
   is_recording = false;
   if(controltransport)
     session->tp_stop();
+#ifdef HAS_LSL
   // lsl re-sync:
   for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it) {
     (*it)->get_stream_delta_end();
   }
+#endif
   if(!headless)
     outputdir = outputdirentry->get_text();
   if(!outputdir.empty()) {
@@ -1422,12 +1457,14 @@ void datalogging_t::save_text(const std::string& filename)
       }
     }
   }
+#ifdef HAS_LSL
   for(auto var : lslvars) {
     ofs << "# " << var->get_name()
         << "_stream_delta_start: " << var->stream_delta_start << "\n";
     ofs << "# " << var->get_name()
         << "_stream_delta_end: " << var->stream_delta_end << "\n";
   }
+#endif
 }
 
 void mat_add_strvar(mat_t* matfb, const std::string& name,
@@ -1503,9 +1540,11 @@ void datalogging_t::update(uint32_t, bool running)
   if(jc_) {
     // ltime = audio_sample_period_ * jack_get_current_transport_frame(jc_);
     double time = jack_get_current_transport_frame(jc_) * t_sample;
+#ifdef HAS_LSL
     double delta = lsl::local_clock() - time;
     for(auto plslvar : lslvars)
       plslvar->set_delta(delta);
+#endif
     for(auto prec : recorder)
       if(prec->drawer)
         prec->drawer->set_time(time);
@@ -1577,6 +1616,7 @@ void datalogging_t::save_mat(const std::string& filename)
       Mat_VarWrite(matfp, mvar, MAT_COMPRESSION_NONE);
       Mat_VarFree(mvar);
     }
+#ifdef HAS_LSL
     // add LSL variable meta data:
     for(auto var : lslvars) {
       mat_add_double(matfp, var->get_name() + "_stream_delta_start",
@@ -1585,6 +1625,7 @@ void datalogging_t::save_mat(const std::string& filename)
                      var->stream_delta_end);
       mat_add_strvar(matfp, var->get_name() + "_info", var->get_xml().c_str());
     }
+#endif
   }
   catch(...) {
     // close mat file, to have as much written as possible.
@@ -1651,6 +1692,7 @@ void datalogging_t::save_matcell(const std::string& filename)
       if(mStr == NULL)
         throw TASCAR::ErrMsg("Unable to create variable \"" + name + "\".");
       Mat_VarSetStructFieldByName(matDataStruct, "name", 0, mStr);
+#ifdef HAS_LSL
       // test if this is an LSL variable, if yes, provide some header
       // information
       for(auto var : lslvars)
@@ -1673,6 +1715,7 @@ void datalogging_t::save_matcell(const std::string& filename)
                                var->stream_delta_end);
           mat_add_char_field(matDataStruct, "lsl_info", var->get_xml());
         }
+#endif
       // here add var to cell array!
       Mat_VarSetCell(cell_array, k, matDataStruct);
       matvar_t* mStrName(
