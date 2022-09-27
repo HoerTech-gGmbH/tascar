@@ -124,6 +124,7 @@ void ap_sndfile_t::load_file()
 {
   mtx.lock();
   sndf.clear();
+  ltp = TASCAR::transport_t();
   try {
     if(n_channels < 1)
       throw TASCAR::ErrMsg("At least one channel required.");
