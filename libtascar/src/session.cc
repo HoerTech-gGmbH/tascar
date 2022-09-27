@@ -424,6 +424,7 @@ TASCAR::session_t::session_t()
       tp_start();
   }
   catch(...) {
+    jackc_transport_t::deactivate();
     unload_modules();
     throw;
   }
@@ -453,6 +454,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
       tp_start();
   }
   catch(...) {
+    jackc_transport_t::deactivate();
     unload_modules();
     throw;
   }
