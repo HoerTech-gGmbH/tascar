@@ -23,7 +23,7 @@
 #endif
 #include <sys/ioctl.h>
 
-void term_setbaud( int fd, int baud )
+void term_setbaud(int fd, int baud)
 {
 #ifdef ISLINUX
   struct termios2 to;
@@ -33,5 +33,9 @@ void term_setbaud( int fd, int baud )
   to.c_ispeed = baud;
   to.c_ospeed = baud;
   ioctl(fd, TCSETS2, &to);
+#endif
+#ifdef ISMACOS
+  speed_t speed = baud;
+  ioctl(fd, IOSSIOSPEED, &speed);
 #endif
 }
