@@ -21,6 +21,10 @@
 #ifdef ISLINUX
 #include <asm/termbits.h>
 #endif
+#ifdef ISMACOS
+#include  <termios.h>
+#include  <IOKit/serial/ioss.h>
+#endif
 #include <sys/ioctl.h>
 
 void term_setbaud(int fd, int baud)
