@@ -99,8 +99,8 @@ lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib
 symlink: build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
 else
 # probably on MacOS
-lib:   $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascargui.0.dylib
-symlink: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascargui.dylib
+lib:   $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascargui.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
+symlink: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascargui.dylib build/lib$(PLUGINPREFIX)tascardmx.dylib
 endif
 endif
 
@@ -126,6 +126,9 @@ build/lib$(PLUGINPREFIX)tascar.0.dylib: $(BUILD_OBJECTS)
 build/lib$(PLUGINPREFIX)tascargui.0.dylib: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui.0.dylib: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib
 	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascargui.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+
+build/lib$(PLUGINPREFIX)tascardmx.0.dylib: $(BUILD_DMXOBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib
+	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascardmx.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll

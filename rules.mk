@@ -25,15 +25,17 @@ $(BUILD_DIR)/unit-test-runner: CPPFLAGS += -I../libtascar/src -I../libtascar/bui
 $(BUILD_DIR)/unit-test-runner: LDFLAGS += -L../libtascar/build 
 
 ifeq ($(OS),Windows_NT)
+  CXXFLAGS += -DISWINDOWS
   LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dll
 else
   LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.so
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
+  CXXFLAGS += -DISLINUX
   BINFILES += tascar_hdspmixer
 endif
 ifeq ($(UNAME_S),Darwin)
-  CXXFLAGS += -I/opt/homebrew/include
+  CXXFLAGS += -I/opt/homebrew/include -DISMACOS
   CPPFLAGS += -I/opt/homebrew/include
   LDFLAGS += -L/opt/homebrew/lib
 endif

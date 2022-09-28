@@ -18,11 +18,14 @@
  */
 
 #include "termsetbaud.h"
+#ifdef ISLINUX
 #include <asm/termbits.h>
+#endif
 #include <sys/ioctl.h>
 
 void term_setbaud( int fd, int baud )
 {
+#ifdef ISLINUX
   struct termios2 to;
   ioctl(fd, TCGETS2, &to);
   to.c_cflag &= ~CBAUD;
@@ -30,4 +33,5 @@ void term_setbaud( int fd, int baud )
   to.c_ispeed = baud;
   to.c_ospeed = baud;
   ioctl(fd, TCSETS2, &to);
+#endif
 }
