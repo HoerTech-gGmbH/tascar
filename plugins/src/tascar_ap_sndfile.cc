@@ -73,8 +73,8 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(levelmode, "", "level mode, ``rms'', ``peak'' or ``calib''");
   GET_ATTRIBUTE_NOUNIT(weighting, "level weighting for RMS mode");
   GET_ATTRIBUTE_DB(level, "level, meaning depends on \\attr{levelmode}");
-  GET_ATTRIBUTE_BOOL(triggered,
-                     "Play OSC triggered samples, ignore position and loop");
+  GET_ATTRIBUTE_BOOL(triggered, "Use OSC variable `/loop' to trigger playback "
+                                "(ignores attributes `position' and `loop')");
   GET_ATTRIBUTE_BOOL(transport, "Use session time base");
   GET_ATTRIBUTE_BOOL(mute, "Load muted");
   GET_ATTRIBUTE(channelorder, "",
@@ -102,6 +102,10 @@ private:
                           int argc, lo_message msg, void* user_data);
   void osc_loadfile(const std::string& fname, const std::string& lmode,
                     float level);
+  static int osc_loadfile_simple(const char* path, const char* types,
+                                 lo_arg** argv, int argc, lo_message msg,
+                                 void* user_data);
+  void osc_loadfile_simple(const std::string& fname);
   uint32_t triggeredloop;
   TASCAR::transport_t ltp;
   std::vector<TASCAR::sndfile_t*> sndf;
@@ -270,6 +274,28 @@ void ap_sndfile_t::osc_loadfile(const std::string& fname,
   }
 }
 
+int ap_sndfile_t::osc_loadfile_simple(const char*, const char*, lo_arg** argv,
+                                      int, lo_message, void* user_data)
+{
+  if(user_data)
+    ((ap_sndfile_t*)user_data)->osc_loadfile_simple(&(argv[0]->s));
+  return 0;
+}
+
+void ap_sndfile_t::osc_loadfile_simple(const std::string& fname)
+{
+  mtx.lock();
+  name = fname;
+  mtx.unlock();
+  try {
+    unload_file();
+    load_file();
+  }
+  catch(const std::exception& e) {
+    TASCAR::add_warning(std::string("Error while loading file: ") + e.what());
+  }
+}
+
 void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
 {
   if(triggered)
@@ -278,6 +304,7 @@ void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
     srv->add_uint("/loop", &loop);
   srv->add_bool("/mute", &mute);
   srv->add_method("/loadfile", "ssf", &osc_loadfile, this);
+  srv->add_method("/loadfile", "s", &osc_loadfile_simple, this);
   srv->add_double("/position", &position);
 }
 

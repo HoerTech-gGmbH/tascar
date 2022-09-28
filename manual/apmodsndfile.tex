@@ -1,22 +1,19 @@
-With the 'sndfile' plugin it is possible to play back the content of a
-sound file at a given time, or triggered via OSC messages.
+The 'sndfile' plugin reads sound files and adds their content to the audio signal. Playback can be controlled by the session timeline, triggered by OSC messages, or independent of both. The libsndfile library (\url{http://www.mega-nerd.com/libsndfile/}) is used internally, so all file and sample formats supported by this library are also supported by this plugin.
 
 \input{tabsndfile.tex}
 
 \paragraph{Multi-channel sound files}
 %
-If the plugin receives multiple channels (e.g., when used in a
-receiver or a diffuse sound field), all channels starting at channel
-number \attr{channel} will be returned. If the file does not contain a
-sufficient number of channels, silence will be returned for all
-channels not available in the sound file.
+If the plugin receives multiple channels (e.g., when used in a receiver, a diffuse sound field or a multichannel route), all channels starting with the channel number \attr{channel} are returned. If the file does not contain a sufficient number of channels, silence is returned for all channels not available in the sound file.
+
+If the number of plugin channels (not sound file channels) is four, and the attribute \attr{channelorder} is not ``none'', a First Order Ambisonics sound file with SN3D normalization is assumed. In that case, the \attr{channelorder} should be set to the correct channel order.
 
 \paragraph{Calibration of levels}
 %
 In the level mode ``rms'', the RMS value of the first used channel
 will be used for adjusting the level, i.e., all channels will be
 scaled with the same value such that the first channel has the
-level \attr{level}.
+RMS level \attr{level}.
 \begin{itemize}
 \item Level mode ``rms'' scales the signal so the RMS of the first channel corresponds to \attr{level}.
 
@@ -24,15 +21,13 @@ level \attr{level}.
 
 \item Level mode ``calib'' scales the signal by \attr{level} minus 93.979~dB.
 \end{itemize}
-93.979~dB corresponds internally to a full-scale signal.
+Internally, the signal is measured in Pascal. Therefore, a signal with an RMS value of 1 corresponds to a sound pressure level of 93.979~dB.
+
+Please note that currently the calibration level and the gain of input ports also affects the calibration of the plugins. This is going to change in the future.
 
 \paragraph{Temporal alignment}
 %
-All times are defined relative to the object time of the parent object
-of the sound file plugin. In most cases this is equivalent to the
-session time, however, it may be changed with the \attr{start}
-attribute of the objects in scenes. If the parent object is not within
-a scene (e.g., a 'route' module), the session time is used.
+All times are defined relative to the object time of the sound file plugin's parent object. In most cases this is equivalent to the session time, however, it can be changed with the \attr{start} attribute of the objects in scenes. If the parent object is not within a scene (e.g., a 'route' module), the session time is used.
 
 See also Figure \ref{fig:ap_sndfile} for more details on the time and position conventions.
 
@@ -66,13 +61,15 @@ List of OSC variables:
 
 \begin{tabularx}{\textwidth}{llX}
 \hline
-name            & format & description                                     \\
+name            & format & description                                                                                             \\
 \hline
-{\tt /loop}     & i      & Loop count, 0 for infitie loop                  \\
-{\tt /position} & f      & Position in scene in seconds                    \\
-{\tt /loadfile} & ssf    & Load file with level mode and level (see above) \\
-{\tt /mute}     & i      & Mute state                                      \\
+{\tt /loop}     & i      & In normal mode: Loop count, 0 for infitie loop.                                                         \\
+                &        & In ``triggered'' mode: Trigger of playback, number defines number of repetitions, 0 will stop playback. \\
+{\tt /position} & f      & Position in scene in seconds                                                                            \\
+{\tt /loadfile} & s      & Load file with pre-configured level mode and level                                                      \\
+{\tt /loadfile} & ssf    & Load file with level mode and level (see above)                                                         \\
+{\tt /mute}     & i      & Mute state                                                                                              \\
 \hline
 \end{tabularx}
 
-\verb!/position! and \verb!loop! will affect the file which is loaded next. It will not affect the current file.
+\verb!/position! and \verb!/loop! will affect the file which is loaded next. It will not affect the current file.
