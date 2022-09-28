@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <lightctl driver="opendmxusb" rawsrvpath="/dmx" rawsrvchannels="4"/>
+  </modules>
+</session>

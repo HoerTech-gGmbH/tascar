@@ -240,13 +240,15 @@ lightscene_t::lightscene_t(const TASCAR::module_cfg_t& cfg)
       fixtures(e, false, "fixture"), channels(3), master(1), mixmax(false),
       parent_(NULL, ""), usecalib(true), sendsquared(false)
 {
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(objects);
-  GET_ATTRIBUTE_(parent);
-  GET_ATTRIBUTE_(channels);
+  GET_ATTRIBUTE(name, "", "Scene name");
+  GET_ATTRIBUTE(objects, "", "Pattern of objects to track");
+  GET_ATTRIBUTE(parent, "",
+                "Name of parent object for relative position measurement");
+  GET_ATTRIBUTE(channels, "", "Number of DMX channels per fixture");
   GET_ATTRIBUTE_(master);
-  GET_ATTRIBUTE_BOOL_(usecalib);
-  GET_ATTRIBUTE_BOOL_(sendsquared);
+  GET_ATTRIBUTE_BOOL(usecalib, "Use calibrated values instead of raw values");
+  GET_ATTRIBUTE_BOOL(sendsquared,
+                     "Send squared values for smoother intensity fades");
   GET_ATTRIBUTE_BOOL_(mixmax);
   std::string method;
   method_t method_(nearest);
@@ -538,6 +540,15 @@ private:
   // derived params:
   std::vector<lightscene_t*> lightscenes;
   DMX::driver_t* driver_;
+  // optional raw OSC receiver:
+  TASCAR::osc_server_t* rawsrv = NULL;
+  std::string rawsrvhost;
+  std::string rawsrvport;
+  std::string rawsrvproto = "UDP";
+  std::string rawsrvpath;
+  uint32_t rawsrvchannels = 0;
+  bool rawsrvallocated = false;
+  std::vector<float> rawdata;
 };
 
 lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
@@ -548,10 +559,10 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
     lcfg.xmlsrc = scene;
     lightscenes.push_back(new lightscene_t(lcfg));
   }
-  GET_ATTRIBUTE_(fps);
-  GET_ATTRIBUTE_(universe);
-  GET_ATTRIBUTE_(priority);
-  GET_ATTRIBUTE_(driver);
+  GET_ATTRIBUTE(fps, "Hz", "Frames per second");
+  GET_ATTRIBUTE(universe, "", "DMX universe");
+  // GET_ATTRIBUTE_(priority);
+  GET_ATTRIBUTE(driver, "", "Driver name");
   if(driver == "artnetdmx") {
     std::string hostname;
     std::string port;
@@ -585,31 +596,54 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
       port = "9000";
     uint32_t maxchannels(512);
     GET_ATTRIBUTE_(maxchannels);
-    driver_ = new DMX::OSC_t(hostname.c_str(), port.c_str(), maxchannels);
+    std::string path = "/dmx";
+    GET_ATTRIBUTE_(path);
+    driver_ = new DMX::OSC_t(hostname.c_str(), port.c_str(), maxchannels, path);
   } else {
     throw TASCAR::ErrMsg(
         "Unknown DMX driver type \"" + driver +
         "\" (must be \"artnetdmx\", \"osc\" or \"opendmxusb\").");
   }
-  add_variables(session);
-  start_service();
   GET_ATTRIBUTE_(hue_warp_x);
   GET_ATTRIBUTE_(hue_warp_y);
   GET_ATTRIBUTE_DEG_(hue_warp_rot);
+  // additional OSC server for raw receiver:
+  GET_ATTRIBUTE(rawsrvpath, "",
+                "Path for raw DMX OSC server, empty for no raw DMX OSC server");
+  GET_ATTRIBUTE(rawsrvhost, "", "multicast address for raw DX OSC server");
+  GET_ATTRIBUTE(
+      rawsrvport, "",
+      "Port of raw DMX OSC server, or empty to use session OSC server");
+  GET_ATTRIBUTE(rawsrvproto, "", "Protocol of raw DMX oSC server");
+  GET_ATTRIBUTE(rawsrvchannels, "", "Number of channels to receive as RAW DMX");
+  if((rawsrvpath.size() > 0) && (rawsrvchannels > 0)) {
+    // use raw DMX OSC server.
+    rawdata = std::vector<float>(rawsrvchannels, 0.0f);
+    if(!rawsrvport.empty()) {
+      rawsrv = new TASCAR::osc_server_t(rawsrvhost, rawsrvport, rawsrvproto);
+      rawsrv->activate();
+      rawsrvallocated = true;
+    } else {
+      rawsrv = session;
+    }
+    rawsrv->add_vector_float(rawsrvpath, &rawdata, "[0,255]", "Raw DMX values");
+  }
+  //
+  add_variables(session);
+  start_service();
 }
 
 void lightctl_t::validate_attributes(std::string& msg) const
 {
   TASCAR::module_base_t::validate_attributes(msg);
-  for(auto it = lightscenes.begin(); it != lightscenes.end(); ++it)
-    (*it)->validate_attributes(msg);
+  for(auto scene : lightscenes)
+    scene->validate_attributes(msg);
 }
 
 void lightctl_t::update(uint32_t frame, bool running)
 {
-  for(std::vector<lightscene_t*>::iterator it = lightscenes.begin();
-      it != lightscenes.end(); ++it)
-    (*it)->update(frame, running, t_fragment);
+  for(auto scene : lightscenes)
+    scene->update(frame, running, t_fragment);
 }
 
 void lightctl_t::add_variables(TASCAR::osc_server_t* srv)
@@ -634,6 +668,8 @@ lightctl_t::~lightctl_t()
     delete(*it);
   if(driver_)
     delete driver_;
+  if( rawsrvallocated )
+    delete rawsrv;
 }
 
 void lightctl_t::service()
@@ -643,12 +679,17 @@ void lightctl_t::service()
   localdata.resize(512);
   usleep(1000);
   while(run_service) {
-    for(uint32_t k = 0; k < localdata.size(); ++k)
-      localdata[k] = 0;
-    for(uint32_t kscene = 0; kscene < lightscenes.size(); ++kscene)
-      for(uint32_t k = 0; k < lightscenes[kscene]->dmxaddr.size(); ++k)
-        localdata[lightscenes[kscene]->dmxaddr[k]] =
-            std::min((uint16_t)255, lightscenes[kscene]->dmxdata[k]);
+    // clear DMX values:
+    for(auto& d : localdata)
+      d = 0;
+    if(rawsrv) {
+      for(size_t k = 0; k < std::min(localdata.size(), rawdata.size()); ++k)
+        localdata[k] = (uint16_t)(std::min(255.0f, std::max(0.0f, rawdata[k])));
+    }
+    for(auto scene : lightscenes)
+      for(uint32_t k = 0; k < scene->dmxaddr.size(); ++k)
+        localdata[scene->dmxaddr[k]] =
+            std::min((uint16_t)255, scene->dmxdata[k]);
     if(driver_)
       driver_->send(universe, localdata);
     usleep(waitusec);
