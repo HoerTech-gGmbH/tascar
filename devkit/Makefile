@@ -52,6 +52,8 @@ clean:
 $(PREFIX)/lib/%: build/%
 	cp $< $@
 
+build/tascar_ap_openmha.so: LDLIBS+=-lopenmha
+
 build/%.so: src/%.cc
 	$(CXX) -shared -fpic -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
