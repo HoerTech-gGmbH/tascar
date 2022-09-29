@@ -20,7 +20,6 @@
 
 #include "errorhandling.h"
 #include "session.h"
-#include "timedisplay_glade.h"
 #include <gdkmm/event.h>
 #include <gtkmm.h>
 #include <gtkmm/window.h>
@@ -39,6 +38,7 @@ private:
   Gtk::ColorChooserDialog c;
   sigc::connection con;
   lo_message msg_hsvt;
+  Gdk::RGBA prevcol;
 };
 
 colorpick_t::colorpick_t(const TASCAR::module_cfg_t& cfg)
@@ -53,6 +53,7 @@ colorpick_t::colorpick_t(const TASCAR::module_cfg_t& cfg)
       sigc::mem_fun(*this, &colorpick_t::on_timeout), 100);
   c.show();
   Gdk::RGBA col(color);
+  prevcol = col;
   c.set_rgba(col);
   lo_message_add_float(msg_hsvt, 0.0f);
   lo_message_add_float(msg_hsvt, 0.0f);
@@ -106,11 +107,14 @@ void rgb2hsv(float r, float g, float b, float& h, float& s, float& v)
 bool colorpick_t::on_timeout()
 {
   Gdk::RGBA col(c.get_rgba());
-  lo_arg** arg(lo_message_get_argv(msg_hsvt));
-  rgb2hsv(col.get_red(), col.get_green(), col.get_blue(), arg[0]->f, arg[1]->f,
-          arg[2]->f);
-  if(session) {
-    session->dispatch_data_message(path.c_str(), msg_hsvt);
+  if(col != prevcol) {
+    prevcol = col;
+    lo_arg** arg(lo_message_get_argv(msg_hsvt));
+    rgb2hsv(col.get_red(), col.get_green(), col.get_blue(), arg[0]->f,
+            arg[1]->f, arg[2]->f);
+    if(session) {
+      session->dispatch_data_message(path.c_str(), msg_hsvt);
+    }
   }
   return true;
 }
