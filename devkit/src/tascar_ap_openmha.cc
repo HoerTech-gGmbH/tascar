@@ -4,6 +4,7 @@
  * Copyright (c) 2018 Giso Grimm
  * Copyright (c) 2020 Giso Grimm
  * Copyright (c) 2021 Giso Grimm
+ * Copyright (c) 2022 Giso Grimm
  */
 /*
  * TASCAR is free software: you can redistribute it and/or modify
@@ -19,14 +20,14 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "audioplugin.h"
-#include "coordinates.h"
-#include "errorhandling.h"
 #include <openmha/mha_algo_comm.hh>
 #include <openmha/mhapluginloader.h>
+#include <tascar/audioplugin.h>
+#include <tascar/coordinates.h>
+#include <tascar/errorhandling.h>
 
 class openmha_t : public TASCAR::audioplugin_base_t,
-                  public MHAKernel::algo_comm_class_t {
+                  public MHA_AC::algo_comm_class_t {
 public:
   openmha_t(const TASCAR::audioplugin_cfg_t& cfg);
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
@@ -52,9 +53,8 @@ openmha_t::openmha_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg),
       plugin(tsccfg::node_get_attribute_value(e, "plugin")),
       config(tsccfg::node_get_attribute_value(e, "config")),
-      mhaplug(get_c_handle(), plugin), sIn(NULL),
-      acpos(get_c_handle(), "pos", 3, 1, true),
-      acrot(get_c_handle(), "rot", 3, 1, true)
+      mhaplug(*this, plugin), sIn(NULL), acpos(*this, "pos", 3, 1, true),
+      acrot(*this, "rot", 3, 1, true)
 {
   GET_ATTRIBUTE(plugin, "", "Plugin name");
   GET_ATTRIBUTE(config, "", "Configuration command handed to openmha");

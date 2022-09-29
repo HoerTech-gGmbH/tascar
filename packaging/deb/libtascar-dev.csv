@@ -13,3 +13,4 @@
 "check_for_lsl","usr/share/tascar/"
 "check_for_opencv2","usr/share/tascar/"
 "check_for_openmha","usr/share/tascar/"
+"check_for_webkit","usr/share/tascar/"
