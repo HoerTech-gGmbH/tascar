@@ -1,3 +1,4 @@
+0.227.1: Bugfix release: Timeline-independet playback of sound files in sndfile plugin works now also with OSC interface
 0.227: Improvement of datalogging, GUI and documentation, many minor improvements and some bugfixes
 0.226: Correct crossover filters in subwoofer bass management, improvement of head tracking
 0.225.1: packaging for Ubuntu 22.04, fix of development kit
