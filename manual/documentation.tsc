@@ -110,6 +110,7 @@
       <emergency/>
     </glabsensors>
     <snapangle srcobj="/*/nav" candidates="/*/in"/>
+    <lightctl driver="osc"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

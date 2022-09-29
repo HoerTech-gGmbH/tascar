@@ -1,15 +1,95 @@
 \index{light control}\index{DMX}\index{artnetDMX}\index{Entec openDMX}
 
 The module has these attributes:
-\begin{tscattributes}
-\indattr{fps}         & frames per second                                                     \\
-\indattr{universe}    & destination universe                                                  \\
-\indattr{driver}      & driver (``artnetdmx'', ``opendmxusb'', or ``osc'')                    \\
-\indattr{hostname}    & artnetDMX/OSC destination hostname (default: ``localhost'')           \\
-\indattr{port}        & artnetDMX/OSC destination port; default: 6454 (artnetDMX), 9000 (OSC) \\
-\indattr{device}      & openDMX USB serial device name (``/dev/ttyUSB0O'')                    \\
-\indattr{maxchannels} & Maximum number of channels for OSC driver (512)                       \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:lightctl}
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name                     & description (type, unit)                                                & def. \\
+\hline
+\hline
+\indattr{fps}            & Frames per second (double, Hz)                                          & 30   \\
+\hline
+\indattr{universe}       & DMX universe (uint32)                                                   & 0    \\
+\hline
+\indattr{driver}         & Driver name (string, ``artnetdmx'', ``opendmxusb'', or ``osc'')         &      \\
+\hline
+\indattr{hue\_warp\_rot} & Hue warping rotation (double, deg)                                      & 0    \\
+\hline
+\indattr{hue\_warp\_x}   & Hue warping x offset (double)                                           & 0    \\
+\hline
+\indattr{hue\_warp\_y}   & Hue warping y offset (double)                                           & 0    \\
+\hline
+\indattr{rawsrvchannels} & Number of channels to receive as RAW DMX (uint32)                       & 0    \\
+\hline
+\indattr{rawsrvhost}     & multicast address for raw DX OSC server (string)                        &      \\
+\hline
+\indattr{rawsrvpath}     & Path for raw DMX OSC server, empty for no raw DMX OSC server (string)   &      \\
+\hline
+\indattr{rawsrvport}     & Port of raw DMX OSC server, or empty to use session OSC server (string) &      \\
+\hline
+\indattr{rawsrvproto}    & Protocol of raw DMX OSC server (string)                                 & UDP  \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+Additional attributes of ``artnetdmx'' driver:
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:lightctl}
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name               & description (type, unit)                   & def.      \\
+\hline
+\hline
+\indattr{hostname} & Hostname of ArtnetDMX receiver (string)    & localhost \\
+\hline
+\indattr{port}     & Port number of ArtnetDMX receiver (uint32) & 6454      \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:lightctl}
+Additional attributes of ``opendmxusb'' driver
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name             & description (type, unit) & def.         \\
+\hline
+\hline
+\indattr{device} & Device name              & /dev/ttyUSB0 \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:lightctl}
+Additional attributes of ``osc'' driver
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name                  & description (type, unit)                        & def.      \\
+\hline
+\hline
+\indattr{hostname}    & Hostname of OSC destination (string)            & localhost \\
+\hline
+\indattr{port}        & Port number of OSC destination (uint32)         & 9000      \\
+\hline
+\indattr{path}        & Destination path (string)                       & /dmx      \\
+\hline
+\indattr{maxchannels} & Maximum number of channels to transmit (uint32) & 512       \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
 
 One or more \elem{lightscene} elements can be defined, with these
 attributes:

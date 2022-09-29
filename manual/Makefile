@@ -171,4 +171,4 @@ cli_%.tex: ../apps/build/tascar_% Makefile
 
 
 modtabs:
-	(export LD_LIBRARY_PATH="../libtascar/build/:../plugins/build/";export TASCARGENDOC="true";../gui/build/tascar documentation.tsc)
+	jackd -d dummy & PID=$$!; sleep 1;(export LD_LIBRARY_PATH="../libtascar/build/:../plugins/build/";export TASCARGENDOC="true";../gui/build/tascar documentation.tsc);kill -9 $$PID

@@ -562,7 +562,7 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(fps, "Hz", "Frames per second");
   GET_ATTRIBUTE(universe, "", "DMX universe");
   // GET_ATTRIBUTE_(priority);
-  GET_ATTRIBUTE(driver, "", "Driver name");
+  GET_ATTRIBUTE(driver, "``artnetdmx'', ``opendmxusb'', or ``osc''", "Driver name");
   if(driver == "artnetdmx") {
     std::string hostname;
     std::string port;
@@ -586,27 +586,28 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
       TASCAR::add_warning("Unable to open DMX USB driver " + device + ".");
     }
   } else if(driver == "osc") {
-    std::string hostname;
-    std::string port;
-    GET_ATTRIBUTE_(hostname);
-    if(hostname.empty())
-      hostname = "localhost";
-    GET_ATTRIBUTE_(port);
-    if(port.empty())
-      port = "9000";
-    uint32_t maxchannels(512);
-    GET_ATTRIBUTE_(maxchannels);
+    std::string hostname = "localhost";
+    uint32_t port = 9000;
+    GET_ATTRIBUTE(hostname, "",
+                  "Hostname of OSC destination (``osc'' driver only)");
+    GET_ATTRIBUTE(port, "",
+                  "Port number of OSC destination (``osc'' driver only)");
+    uint32_t maxchannels = 512;
+    GET_ATTRIBUTE(
+        maxchannels, "",
+        "Maximum number of channels to transmit (``osc'' driver only)");
     std::string path = "/dmx";
-    GET_ATTRIBUTE_(path);
-    driver_ = new DMX::OSC_t(hostname.c_str(), port.c_str(), maxchannels, path);
+    GET_ATTRIBUTE(path, "", "Destination path (``osc'' driver only)");
+    driver_ = new DMX::OSC_t(hostname.c_str(), std::to_string(port).c_str(),
+                             maxchannels, path);
   } else {
     throw TASCAR::ErrMsg(
         "Unknown DMX driver type \"" + driver +
         "\" (must be \"artnetdmx\", \"osc\" or \"opendmxusb\").");
   }
-  GET_ATTRIBUTE_(hue_warp_x);
-  GET_ATTRIBUTE_(hue_warp_y);
-  GET_ATTRIBUTE_DEG_(hue_warp_rot);
+  GET_ATTRIBUTE(hue_warp_x, "", "Hue warping x offset");
+  GET_ATTRIBUTE(hue_warp_y, "", "Hue warping y offset");
+  GET_ATTRIBUTE_DEG(hue_warp_rot, "Hue warping rotation");
   // additional OSC server for raw receiver:
   GET_ATTRIBUTE(rawsrvpath, "",
                 "Path for raw DMX OSC server, empty for no raw DMX OSC server");
@@ -614,7 +615,7 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(
       rawsrvport, "",
       "Port of raw DMX OSC server, or empty to use session OSC server");
-  GET_ATTRIBUTE(rawsrvproto, "", "Protocol of raw DMX oSC server");
+  GET_ATTRIBUTE(rawsrvproto, "", "Protocol of raw DMX OSC server");
   GET_ATTRIBUTE(rawsrvchannels, "", "Number of channels to receive as RAW DMX");
   if((rawsrvpath.size() > 0) && (rawsrvchannels > 0)) {
     // use raw DMX OSC server.
@@ -668,7 +669,7 @@ lightctl_t::~lightctl_t()
     delete(*it);
   if(driver_)
     delete driver_;
-  if( rawsrvallocated )
+  if(rawsrvallocated)
     delete rawsrv;
 }
 
