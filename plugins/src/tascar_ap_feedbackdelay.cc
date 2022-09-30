@@ -34,7 +34,8 @@ private:
   uint64_t maxdelay = 44100;
   float f = 1000.0f;
   float feedback = 0.5f;
-  float directgain = 0.0f;
+  float wet = 1.0f;
+  float dry = 1.0f;
   TASCAR::varidelay_t* dl;
 };
 
@@ -44,7 +45,8 @@ feedbackdelay_t::feedbackdelay_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(maxdelay, "samples", "Maximum delay line length");
   GET_ATTRIBUTE(f, "Hz", "Resonance frequency");
   GET_ATTRIBUTE(feedback, "", "Linear feedback gain");
-  GET_ATTRIBUTE(directgain, "", "Linear gain of direct sound");
+  GET_ATTRIBUTE(wet, "", "Linear gain of input to delayline");
+  GET_ATTRIBUTE(dry, "", "Linear gain of direct input");
   dl = new TASCAR::varidelay_t(maxdelay, 1.0, 1.0, 0, 1);
 }
 
@@ -57,7 +59,8 @@ void feedbackdelay_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->add_float("/f", &f);
   srv->add_float("/feedback", &feedback);
-  srv->add_float("/directgain", &directgain);
+  srv->add_float("/wet", &wet);
+  srv->add_float("/dry", &dry);
 }
 
 void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
@@ -72,8 +75,8 @@ void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   float* vsigend(vsigbegin + chunk[0].n);
   for(float* v = vsigbegin; v != vsigend; ++v) {
     float v_out(dl->get(d));
-    dl->push(v_out * feedback + *v);
-    *v = v_out;
+    dl->push((v_out + wet * *v) * feedback);
+    *v = dry * *v + v_out;
   }
 }
 
