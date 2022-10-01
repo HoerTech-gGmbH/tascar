@@ -86,6 +86,7 @@
 "plugins/build/tascar_ap_dummy.so","usr/lib/"
 "plugins/build/tascar_ap_feedbackdelay.so","usr/lib/"
 "plugins/build/tascar_ap_filter.so","usr/lib/"
+"plugins/build/tascar_ap_flanger.so","usr/lib/"
 "plugins/build/tascar_ap_gain.so","usr/lib/"
 "plugins/build/tascar_ap_gainramp.so","usr/lib/"
 "plugins/build/tascar_ap_gate.so","usr/lib/"
