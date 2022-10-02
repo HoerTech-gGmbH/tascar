@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene guiscale="6">
+    <source>
+      <sound gainmodel="1" airabsorption="false" delayline="false">
+        <plugins>
+          <const a="1"/>
+        </plugins>
+      </sound>
+      <position>0 0 0 0
+      1 1 0 0
+      </position>
+    </source>
+    <receiver type="hoa2d_fuma_hos" rho0="0.5" rhoc="0.25" order="0"/>
+  </scene>
+</session>
