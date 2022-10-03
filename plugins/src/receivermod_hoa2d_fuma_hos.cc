@@ -139,7 +139,7 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double,
   float* v_centre = output[output.size() - 1].d;
   for(float* vp = chunk.d; vp != vpend; ++vp) {
     d->w_centre += dw_centre;
-    *v_centre = d->w_centre * *vp;
+    *v_centre += d->w_centre * *vp;
     //*vp *= (1.0f - d->w_centre);
     d->gauge += d->dgauge;
     float w_gauge = d->gauge * (1.0f - d->w_centre);
