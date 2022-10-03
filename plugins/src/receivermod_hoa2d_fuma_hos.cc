@@ -121,7 +121,7 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double,
   data_t* d((data_t*)sd);
   float az(-prel.azim());
   float rho(prel.norm());
-  float w_centre = std::max(0.0f, std::min(1.0f, -(rho - rhoc) / rhoc));
+  float w_centre = std::max(0.0f, -(rho - rhoc) / rhoc);
   float dw_centre = (w_centre - d->w_centre) * (float)t_inc;
   float normd(rho / rho0);
   std::complex<float> ciazp(std::exp(i_f * az));
