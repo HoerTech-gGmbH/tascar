@@ -60,6 +60,7 @@ oscactor_t::oscactor_t(const TASCAR::module_cfg_t& cfg) : actor_module_t(cfg)
   if(!valid)
     throw TASCAR::ErrMsg("No channel has a non-zero influence.");
   data = std::vector<float>(inputchannels, 0.0f);
+  session->add_vector_float(path.c_str(),&data);
 }
 
 oscactor_t::~oscactor_t() {}
