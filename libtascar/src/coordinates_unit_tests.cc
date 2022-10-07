@@ -443,6 +443,18 @@ TEST(pos_t,subdivide_mesh)
   EXPECT_EQ( 92u, mesh.size() );
   mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
   EXPECT_EQ( 272u, mesh.size() );
+  mesh = TASCAR::generate_icosahedron();
+  EXPECT_EQ( 12u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  EXPECT_EQ( 32u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  EXPECT_EQ( 92u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  EXPECT_EQ( 272u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  EXPECT_EQ( 812u, mesh.size() );
+  mesh = TASCAR::subdivide_and_normalize_mesh( mesh, 1 );
+  EXPECT_EQ( 2432u, mesh.size() );
 }
 
 TEST(median, median)

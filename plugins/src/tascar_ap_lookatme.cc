@@ -81,7 +81,8 @@ lookatme_t::lookatme_t( const TASCAR::audioplugin_cfg_t& cfg )
 void lookatme_t::add_variables( TASCAR::osc_server_t* srv )
 {
   srv->add_bool("/active",&active);    
-  srv->add_bool("/discordantLS",&discordantLS);    
+  srv->add_bool("/discordantLS",&discordantLS);
+  srv->add_double_dbspl("/threshold",&threshold);
 }
 
 void lookatme_t::configure()
