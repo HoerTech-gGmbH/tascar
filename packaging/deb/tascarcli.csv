@@ -127,6 +127,7 @@
 "plugins/build/tascar_midictl.so","usr/lib/"
 "plugins/build/tascar_motionpath.so","usr/lib/"
 "plugins/build/tascar_nearsensor.so","usr/lib/"
+"plugins/build/tascar_oscactor.so","usr/lib/"
 "plugins/build/tascar_oscevents.so","usr/lib/"
 "plugins/build/tascar_oscjacktime.so","usr/lib/"
 "plugins/build/tascar_oscrelay.so","usr/lib/"
