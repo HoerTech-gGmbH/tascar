@@ -1,0 +1,13 @@
+Control position from an OSC stream
+
+The translation is assumed to be in meters, the rotation is ZYX-Euler
+angles in radians.
+
+\begin{tscattributes}
+  \indattr{path}          & OSC path                                                                             \\
+  \indattr{inputchannels} & Number of channels in OSC variable                                                   \\
+  \indattr{channels}      & LSL channels, for the six translation channels (x,y,z,rotz,roty,rotx), -1 for unused \\
+  \indattr{influence}     & Weights of channels                                                                  \\
+  \indattr{local}         & Use local (true) or global translation                                               \\
+  \indattr{incremental}   & Use incremental changes                                                              \\
+\end{tscattributes}
