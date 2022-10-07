@@ -104,7 +104,7 @@ void lookatme_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
 {
   rms = lpc1 * rms + (1.0 - lpc1) * chunk[0].rms();
   if(!levelpath.empty())
-    lo_send(lo_addr, levelpath.c_str(), "f", 20 * log10(rms));
+    lo_send(lo_addr, levelpath.c_str(), "f", TASCAR::lin2dbspl(rms));
   if(rms > threshold) {
     if(!waslooking) {
       // send lookatme values to osc target:
