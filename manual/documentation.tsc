@@ -112,6 +112,7 @@
     </glabsensors>
     <snapangle srcobj="/*/nav" candidates="/*/in"/>
     <lightctl driver="osc"/>
+    <hossustain/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
