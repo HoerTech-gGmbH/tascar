@@ -75,6 +75,10 @@ void flanger_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   float* vsigend(vsigbegin + chunk[0].n);
   for(float* v = vsigbegin; v != vsigend; ++v) {
     phase *= dphase;
+    if( TASCAR::is_denormal(std::real(phase)) ){
+      DEBUG(std::real(phase));
+      phase = 1.0f;
+    }
     float delay_s = dmin + (0.5f + 0.5f * std::real(phase)) * (dmax - dmin);
     // sample delay; subtract 1 to account for order of read/write:
     double d = std::max(0.0, f_sample * delay_s);

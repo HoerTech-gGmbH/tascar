@@ -37,7 +37,8 @@ public:
     if(x < 0.0f)
       x = 0.0f;
     x *= sqrtf(x);
-    x /= x + saturation;
+    if(-x != saturation)
+      x /= x + saturation;
     return x;
   }
 
@@ -82,9 +83,12 @@ void tubesim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     return;
   float oshift = tubeval(0.0f);
   for(auto& aud : chunk)
-    for(uint32_t k = 0; k < aud.n; ++k)
+    for(uint32_t k = 0; k < aud.n; ++k) {
       aud.d[k] = wet * (tubeval(aud.d[k] * pregain) - oshift) * postgain +
                  (1.0f - wet) * aud.d[k];
+      if(TASCAR::is_denormal(aud.d[k]))
+        aud.d[k] = 0.0f;
+    }
 }
 
 REGISTER_AUDIOPLUGIN(tubesim_t);

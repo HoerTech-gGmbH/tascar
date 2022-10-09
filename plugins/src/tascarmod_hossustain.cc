@@ -121,8 +121,14 @@ int sustain_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
       Lin += env_c2 * w_in[k] * w_in[k];
       Lout *= env_c1;
       Lout += env_c2 * w_out[k] * w_out[k];
+      if( TASCAR::is_denormal( Lin ) )
+        Lin = 0.0;
+      if( TASCAR::is_denormal( Lout ) )
+        Lout = 0.0;
       if(Lout > 0)
         w_out[k] *= sqrt(Lin / Lout);
+      if( TASCAR::is_denormal( w_out[k] ) )
+        w_out[k] = 0.0f;
     }
   }
   for(uint32_t k = 0; k < w_in.size(); ++k) {

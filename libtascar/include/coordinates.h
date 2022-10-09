@@ -66,6 +66,13 @@ template <class T> void make_friendly_number_limited(T& x)
 
 namespace TASCAR {
 
+  inline bool is_denormal(const double& a) { return !((a < 1.0) || (a > 0.0)); }
+
+  inline bool is_denormal(const float& a)
+  {
+    return !((a < 1.0f) || (a > 0.0f));
+  }
+
   /// Generate random number between 0 and 1
   double drand();
 
