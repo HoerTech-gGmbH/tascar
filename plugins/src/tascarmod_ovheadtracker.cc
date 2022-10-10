@@ -227,7 +227,7 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool(p + "/apply_rot", &apply_rot,
                 "Apply rotation based on gyroscope and accelerometer");
   srv->add_bool_true(p + "/reset", &first_sample_autoref,
-                "Reset auto-referencing state");
+                     "Reset auto-referencing state");
 }
 
 /**
@@ -295,6 +295,7 @@ void ovheadtracker_t::service()
       tictoc.tic();
       first_sample_autoref = true;
       first_sample_smooth = true;
+      bool firstgyrsmooth = true;
       while(run_service) {
         std::string l(dev.readline(1024, 10));
         if(l.size()) {
@@ -376,19 +377,27 @@ void ovheadtracker_t::service()
               qhp.set_euler_zyx(rotgyr);
               q.rmul(qhp);
             }
-            if(!autoref_zonly)
-              q.rmul(qref);
+            if(!autoref_zonly) {
+              q.lmul(qref);
+            } else {
+              auto euref = qref.to_euler_zyx();
+              euref.y = euref.x = 0.0;
+              TASCAR::quaternion_t qrefz;
+              qrefz.set_euler_zyx(euref);
+              q.lmul(qrefz);
+              // o0.z = std::arg(std::exp(i * (o0.z + euref.z)));
+            }
             // store Euler orientation for processing in TASCAR:
             o0 = q.to_euler_zyx();
-            if(autoref_zonly) {
-              auto euref = qref.to_euler_zyx();
-              o0.z = std::arg(std::exp(i * (o0.z + euref.z)));
-            }
+            // if(autoref_zonly) {
+            //  auto euref = qref.to_euler_zyx();
+            //  o0.z = std::arg(std::exp(i * (o0.z + euref.z)));
+            //}
             // send Quaternion for data logging or remote processing
             if(target) {
               lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x,
                       q.y, q.z);
-              lo_send(target, (p+"/alive").c_str(), "f", tictoc.toc() );
+              lo_send(target, (p + "/alive").c_str(), "f", tictoc.toc());
             }
             if(tilttarget) {
               // calculate tilt in any direction, for effect control:
@@ -421,10 +430,15 @@ void ovheadtracker_t::service()
             rotgyr.y = DEG2RAD * data[1];
             rotgyr.x = DEG2RAD * data[0];
             if(smooth > 0) {
-              rotgyrmean *= (1.0 - smooth);
-              TASCAR::zyx_euler_t scaledrotgyr = rotgyr;
-              scaledrotgyr *= smooth;
-              rotgyrmean += scaledrotgyr;
+              if(firstgyrsmooth) {
+                rotgyrmean = rotgyr;
+                firstgyrsmooth = false;
+              } else {
+                rotgyrmean *= (1.0 - smooth);
+                TASCAR::zyx_euler_t scaledrotgyr = rotgyr;
+                scaledrotgyr *= smooth;
+                rotgyrmean += scaledrotgyr;
+              }
               rotgyr -= rotgyrmean;
             }
             if(target && (!send_only_quaternion)) {
