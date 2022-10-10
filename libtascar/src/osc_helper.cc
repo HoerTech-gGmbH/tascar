@@ -70,7 +70,7 @@ int osc_set_bool_true(const char*, const char*, lo_arg**, int, lo_message,
 {
   if(user_data)
     *(bool*)(user_data) = true;
-  return 0;
+  return 1;
 }
 
 int osc_set_bool_false(const char*, const char*, lo_arg**, int, lo_message,
@@ -78,7 +78,7 @@ int osc_set_bool_false(const char*, const char*, lo_arg**, int, lo_message,
 {
   if(user_data)
     *(bool*)(user_data) = false;
-  return 0;
+  return 1;
 }
 
 int osc_set_float(const char*, const char* types, lo_arg** argv, int argc,
@@ -86,7 +86,7 @@ int osc_set_float(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = argv[0]->f;
-  return 0;
+  return 1;
 }
 
 std::string str_get_float(void* data)
@@ -107,7 +107,7 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_float_db(const char*, const char* types, lo_arg** argv, int argc,
@@ -115,7 +115,7 @@ int osc_set_float_db(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = powf(10.0f, 0.05 * argv[0]->f);
-  return 0;
+  return 1;
 }
 
 int osc_get_float_db(const char* path, const char* types, lo_arg** argv,
@@ -132,7 +132,7 @@ int osc_get_float_db(const char* path, const char* types, lo_arg** argv,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 std::string str_get_float_db(void* data)
@@ -145,7 +145,7 @@ int osc_set_float_dbspl(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = powf(10.0f, 0.05 * argv[0]->f) * 2e-5f;
-  return 0;
+  return 1;
 }
 
 std::string str_get_float_dbspl(void* data)
@@ -167,7 +167,7 @@ int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_vector_float(const char*, const char*, lo_arg** argv, int argc,
@@ -179,7 +179,7 @@ int osc_set_vector_float(const char*, const char*, lo_arg** argv, int argc,
       for(int k = 0; k < argc; ++k)
         (*data)[k] = argv[k]->f;
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_vector_float_dbspl(const char*, const char*, lo_arg** argv,
@@ -191,7 +191,7 @@ int osc_set_vector_float_dbspl(const char*, const char*, lo_arg** argv,
       for(int k = 0; k < argc; ++k)
         (*data)[k] = powf(10.0f, 0.05f * argv[k]->f) * 2e-5f;
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_vector_float_db(const char*, const char*, lo_arg** argv, int argc,
@@ -203,7 +203,7 @@ int osc_set_vector_float_db(const char*, const char*, lo_arg** argv, int argc,
       for(int k = 0; k < argc; ++k)
         (*data)[k] = powf(10.0f, 0.05f * argv[k]->f);
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_vector_double(const char*, const char*, lo_arg** argv, int argc,
@@ -215,7 +215,7 @@ int osc_set_vector_double(const char*, const char*, lo_arg** argv, int argc,
       for(int k = 0; k < argc; ++k)
         (*data)[k] = argv[k]->f;
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_double_db(const char*, const char* types, lo_arg** argv, int argc,
@@ -223,7 +223,7 @@ int osc_set_double_db(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = pow(10.0, 0.05 * argv[0]->f);
-  return 0;
+  return 1;
 }
 
 std::string str_get_double_db(void* data)
@@ -245,7 +245,7 @@ int osc_get_double_db(const char* path, const char* types, lo_arg** argv,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 std::string str_get_double_dbspl(void* data)
@@ -258,7 +258,7 @@ int osc_set_double_dbspl(const char*, const char* types, lo_arg** argv,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = pow(10.0, 0.05 * argv[0]->f) * 2e-5;
-  return 0;
+  return 1;
 }
 
 int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
@@ -275,7 +275,7 @@ int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_float_degree(const char*, const char* types, lo_arg** argv,
@@ -283,7 +283,7 @@ int osc_set_float_degree(const char*, const char* types, lo_arg** argv,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(float*)(user_data) = DEG2RADf * argv[0]->f;
-  return 0;
+  return 1;
 }
 
 std::string str_get_float_degree(void* data)
@@ -305,7 +305,7 @@ int osc_get_float_degree(const char* path, const char* types, lo_arg** argv,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_double_degree(const char*, const char* types, lo_arg** argv,
@@ -313,7 +313,7 @@ int osc_set_double_degree(const char*, const char* types, lo_arg** argv,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = DEG2RAD * argv[0]->f;
-  return 0;
+  return 1;
 }
 
 std::string str_get_double_degree(void* data)
@@ -335,7 +335,7 @@ int osc_get_double_degree(const char* path, const char* types, lo_arg** argv,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_double(const char*, const char* types, lo_arg** argv, int argc,
@@ -343,7 +343,7 @@ int osc_set_double(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'f'))
     *(double*)(user_data) = argv[0]->f;
-  return 0;
+  return 1;
 }
 
 std::string str_get_double(void* data)
@@ -365,7 +365,7 @@ int osc_get_double(const char* path, const char* types, lo_arg** argv, int argc,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_int32(const char*, const char* types, lo_arg** argv, int argc,
@@ -373,7 +373,7 @@ int osc_set_int32(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'i'))
     *(int32_t*)(user_data) = argv[0]->i;
-  return 0;
+  return 1;
 }
 
 int osc_get_int32(const char* path, const char* types, lo_arg** argv, int argc,
@@ -390,7 +390,7 @@ int osc_get_int32(const char* path, const char* types, lo_arg** argv, int argc,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_uint32(const char*, const char* types, lo_arg** argv, int argc,
@@ -398,7 +398,7 @@ int osc_set_uint32(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'i'))
     *(uint32_t*)(user_data) = (uint32_t)(argv[0]->i);
-  return 0;
+  return 1;
 }
 
 std::string str_get_uint(void* data)
@@ -430,7 +430,7 @@ int osc_get_uint32(const char* path, const char* types, lo_arg** argv, int argc,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_bool(const char*, const char* types, lo_arg** argv, int argc,
@@ -438,7 +438,7 @@ int osc_set_bool(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 'i'))
     *(bool*)(user_data) = (argv[0]->i != 0);
-  return 0;
+  return 1;
 }
 
 std::string str_get_bool(void* data)
@@ -459,7 +459,7 @@ int osc_get_bool(const char* path, const char* types, lo_arg** argv, int argc,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_set_string(const char*, const char* types, lo_arg** argv, int argc,
@@ -467,7 +467,7 @@ int osc_set_string(const char*, const char* types, lo_arg** argv, int argc,
 {
   if(user_data && (argc == 1) && (types[0] == 's'))
     *(std::string*)(user_data) = &(argv[0]->s);
-  return 0;
+  return 1;
 }
 
 int osc_get_string(const char* path, const char* types, lo_arg** argv, int argc,
@@ -484,7 +484,7 @@ int osc_get_string(const char* path, const char* types, lo_arg** argv, int argc,
       lo_address_free(target);
     }
   }
-  return 0;
+  return 1;
 }
 
 int osc_send_variables(const char*, const char* types, lo_arg** argv, int argc,
@@ -499,7 +499,7 @@ int osc_send_variables(const char*, const char* types, lo_arg** argv, int argc,
     osc_server_t* srv(reinterpret_cast<osc_server_t*>(user_data));
     srv->send_variable_list(&(argv[0]->s), &(argv[1]->s), &(argv[2]->s));
   }
-  return 0;
+  return 1;
 }
 
 int string2proto(const std::string& proto)
