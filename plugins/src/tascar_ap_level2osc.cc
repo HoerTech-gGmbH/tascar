@@ -21,7 +21,14 @@
 
 #include "audioplugin.h"
 #include "errorhandling.h"
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <lo/lo.h>
+#include <mutex>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 enum levelmode_t { dbspl, rms, max };
 
@@ -35,6 +42,7 @@ public:
   ~level2osc_t();
 
 private:
+  bool threaded = false;
   bool sendwhilestopped = false;
   uint32_t skip = 0;
   std::string url = "osc.udp://localhost:9999/";
@@ -45,6 +53,12 @@ private:
   uint32_t skipcnt = 0;
   lo_message msg;
   lo_arg** oscmsgargv;
+  std::thread thread;
+  std::atomic_bool run_thread = true;
+  void sendthread();
+  std::mutex mtx;
+  std::condition_variable cond;
+  std::atomic_bool has_data = false;
 };
 
 level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -54,6 +68,7 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(skip, "", "Skip frames");
   GET_ATTRIBUTE(url, "", "Target URL");
   GET_ATTRIBUTE(path, "", "Target path");
+  GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data");
   std::string mode("dbspl");
   GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
   if(mode == "dbspl")
@@ -65,6 +80,20 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
   else
     throw TASCAR::ErrMsg("Invalid level mode: " + mode);
   lo_addr = lo_address_new_from_url(url.c_str());
+  if(threaded)
+    thread = std::thread(&level2osc_t::sendthread, this);
+}
+
+void level2osc_t::sendthread()
+{
+  std::unique_lock<std::mutex> lk(mtx);
+  while(run_thread) {
+    cond.wait_for(lk, 100ms);
+    if(has_data) {
+      lo_send_message(lo_addr, path.c_str(), msg);
+      has_data = false;
+    }
+  }
 }
 
 void level2osc_t::configure()
@@ -88,6 +117,8 @@ void level2osc_t::release()
 level2osc_t::~level2osc_t()
 {
   lo_address_free(lo_addr);
+  run_thread = false;
+  thread.join();
 }
 
 void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
@@ -103,23 +134,47 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     if(skipcnt) {
       skipcnt--;
     } else {
-      // pack data:
-      oscmsgargv[0]->f = tp.object_time_seconds;
-      for(uint32_t ch = 0; ch < n_channels; ++ch) {
-        switch(imode) {
-        case dbspl:
-          oscmsgargv[ch + 1]->f = chunk[ch].spldb();
-          break;
-        case rms:
-          oscmsgargv[ch + 1]->f = chunk[ch].rms();
-          break;
-        case max:
-          oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
-          break;
+      if(threaded) {
+        // data will be sent in extra thread:
+        if(mtx.try_lock()) {
+          // pack data:
+          oscmsgargv[0]->f = tp.object_time_seconds;
+          for(uint32_t ch = 0; ch < n_channels; ++ch) {
+            switch(imode) {
+            case dbspl:
+              oscmsgargv[ch + 1]->f = chunk[ch].spldb();
+              break;
+            case rms:
+              oscmsgargv[ch + 1]->f = chunk[ch].rms();
+              break;
+            case max:
+              oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
+              break;
+            }
+          }
+          has_data = true;
+          mtx.unlock();
+          cond.notify_one();
         }
+      } else {
+        // pack data:
+        oscmsgargv[0]->f = tp.object_time_seconds;
+        for(uint32_t ch = 0; ch < n_channels; ++ch) {
+          switch(imode) {
+          case dbspl:
+            oscmsgargv[ch + 1]->f = chunk[ch].spldb();
+            break;
+          case rms:
+            oscmsgargv[ch + 1]->f = chunk[ch].rms();
+            break;
+          case max:
+            oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
+            break;
+          }
+        }
+        // send message:
+        lo_send_message(lo_addr, path.c_str(), msg);
       }
-      // send message:
-      lo_send_message(lo_addr, path.c_str(), msg);
       skipcnt = skip;
     }
   }
