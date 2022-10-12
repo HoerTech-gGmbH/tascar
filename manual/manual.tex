@@ -1615,6 +1615,27 @@ they are processed before the sound is handed to the acoustic
 model. For receivers, audio plugins are processed after the post
 processing function of the render format.
 
+To profile the plugin performance, it is possible to set the attribute \attr{profilingpath} to an OSC path that can be recorded using the datalogging plugin. The \attr{size} attribute of the OSC variable in the datalogging must match the number of plugins:
+\begin{lstlisting}[numbers=none]
+<?xml version="1.0"?>
+<session>
+  <modules>
+    <route profilingpath="/prof">
+      <plugins>
+        <sine/>
+        <pink/>
+        <filter/>
+        <level2osc/>
+      </plugins>
+    </route>
+    <datalogging>
+      <osc path="/prof" size="4"/>
+    </datalogging>
+  </modules>
+</session>
+\end{lstlisting}
+
+
 \input{secapmodules.tex}
 
 \clearpage

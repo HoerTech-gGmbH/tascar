@@ -324,35 +324,6 @@ void TASCAR::render_core_t::process(uint32_t nframes,
   }
 }
 
-TASCAR::tictoc_t::tictoc_t()
-{
-  memset(&tv1, 0, sizeof(timeval));
-  memset(&tv2, 0, sizeof(timeval));
-  memset(&tz, 0, sizeof(timezone));
-  t = 0;
-  gettimeofday(&tv1, &tz);
-}
-
-void TASCAR::tictoc_t::tic()
-{
-  gettimeofday(&tv1, &tz);
-}
-
-double TASCAR::tictoc_t::toc()
-{
-  gettimeofday(&tv2, &tz);
-  tv2.tv_sec -= tv1.tv_sec;
-  if(tv2.tv_usec >= tv1.tv_usec)
-    tv2.tv_usec -= tv1.tv_usec;
-  else {
-    tv2.tv_sec--;
-    tv2.tv_usec += 1000000;
-    tv2.tv_usec -= tv1.tv_usec;
-  }
-  t = (float)(tv2.tv_sec) + 0.000001 * (float)(tv2.tv_usec);
-  return t;
-}
-
 /*
  * Local Variables:
  * mode: c++

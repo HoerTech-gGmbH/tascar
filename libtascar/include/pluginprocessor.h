@@ -43,7 +43,14 @@ namespace TASCAR {
     void add_licenses(licensehandler_t*);
 
   protected:
+    TASCAR::tictoc_t tictoc;
+    bool use_profiler = false;
+    std::string profilingpath = "";
     std::vector<TASCAR::audioplugin_t*> plugins;
+  private:
+    lo_message msg;
+    lo_arg** oscmsgargv;
+    TASCAR::osc_server_t* oscsrv = NULL;
   };
 
 } // namespace TASCAR

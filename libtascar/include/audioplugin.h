@@ -31,8 +31,22 @@
 #include "tascarplugin.h"
 #include "licensehandler.h"
 #include "osc_helper.h"
+#include <sys/time.h>
 
 namespace TASCAR {
+
+  class tictoc_t {
+  public:
+    tictoc_t();
+    void tic();
+    double toc();
+
+  private:
+    struct timeval tv1;
+    struct timeval tv2;
+    struct timezone tz;
+    double t;
+  };
 
   class audioplugin_cfg_t {
   public:

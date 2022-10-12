@@ -22,7 +22,6 @@
 
 #include "async_file.h"
 #include "tascar.h"
-#include <sys/time.h>
 
 namespace TASCAR {
 
@@ -93,19 +92,6 @@ namespace TASCAR {
     bool is_prepared;
     TASCAR::amb1wave_t* ambbuf;
     render_profiler_t load_cycle;
-  };
-
-  class tictoc_t {
-  public:
-    tictoc_t();
-    void tic();
-    double toc();
-
-  private:
-    struct timeval tv1;
-    struct timeval tv2;
-    struct timezone tz;
-    double t;
   };
 
 } // namespace TASCAR

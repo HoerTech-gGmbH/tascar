@@ -23,24 +23,34 @@
 
 using namespace TASCAR;
 
-plugin_processor_t::plugin_processor_t( tsccfg::node_t xmlsrc, const std::string& name, const std::string& parentname )
-  : xml_element_t( xmlsrc ), licensed_component_t(typeid(*this).name())
+plugin_processor_t::plugin_processor_t(tsccfg::node_t xmlsrc,
+                                       const std::string& name,
+                                       const std::string& parentname)
+    : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name())
 {
+  GET_ATTRIBUTE(profilingpath, "",
+                "OSC path to dispatch profiling information to");
+  use_profiler = profilingpath.size() > 0;
   tsccfg::node_t se_plugs(find_or_add_child("plugins"));
-  for(auto& sne : tsccfg::node_get_children(se_plugs))
-    plugins.push_back(new TASCAR::audioplugin_t( audioplugin_cfg_t(sne,name,parentname)));
+  msg = lo_message_new();
+  for(auto& sne : tsccfg::node_get_children(se_plugs)) {
+    plugins.push_back(
+        new TASCAR::audioplugin_t(audioplugin_cfg_t(sne, name, parentname)));
+    lo_message_add_double(msg, 0.0);
+  }
+  oscmsgargv = lo_message_get_argv(msg);
 }
 
 void plugin_processor_t::configure()
 {
-  try{
-    for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-      (*p)->prepare( cfg() );
+  try {
+    for(auto p : plugins)
+      p->prepare(cfg());
   }
-  catch( ... ){
-    for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-      if( (*p)->is_prepared() )
-				(*p)->release();
+  catch(...) {
+    for(auto p : plugins)
+      if(p->is_prepared())
+        p->release();
     throw;
   }
 }
@@ -51,48 +61,60 @@ void plugin_processor_t::post_prepare()
     p->post_prepare();
 }
 
-void plugin_processor_t::add_licenses( licensehandler_t* lh )
+void plugin_processor_t::add_licenses(licensehandler_t* lh)
 {
-  licensed_component_t::add_licenses( lh );
-  for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->add_licenses( lh );
+  licensed_component_t::add_licenses(lh);
+  for(auto p : plugins)
+    p->add_licenses(lh);
 }
 
 void plugin_processor_t::release()
 {
   audiostates_t::release();
-  for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    if( (*p)->is_prepared() )
-      (*p)->release();
+  for(auto p : plugins)
+    if(p->is_prepared())
+      p->release();
 }
 
 plugin_processor_t::~plugin_processor_t()
 {
-  for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    delete (*p);
+  for(auto p : plugins)
+    delete p;
 }
 
 void plugin_processor_t::validate_attributes(std::string& msg) const
 {
-  for( auto p=plugins.begin(); p!=plugins.end(); ++p)
-    (*p)->validate_attributes(msg);
+  for(auto p : plugins)
+    p->validate_attributes(msg);
 }
 
-void plugin_processor_t::process_plugins( std::vector<wave_t>& s, const pos_t& pos, const zyx_euler_t& o, const transport_t& tp )
+void plugin_processor_t::process_plugins(std::vector<wave_t>& s,
+                                         const pos_t& pos, const zyx_euler_t& o,
+                                         const transport_t& tp)
 {
-  for( auto p=plugins.begin(); p!= plugins.end(); ++p)
-    (*p)->ap_process( s, pos, o, tp );
+  size_t k = 0;
+  if(use_profiler)
+    tictoc.tic();
+  for(auto p : plugins) {
+    p->ap_process(s, pos, o, tp);
+    if(use_profiler)
+      oscmsgargv[k]->d = tictoc.toc();
+    ++k;
+  }
+  if(use_profiler && oscsrv)
+    oscsrv->dispatch_data_message(profilingpath.c_str(), msg);
 }
 
-void plugin_processor_t::add_variables( TASCAR::osc_server_t* srv )
+void plugin_processor_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  oscsrv = srv;
   std::string oldpref(srv->get_prefix());
-  uint32_t k=0;
-  for( auto p=plugins.begin(); p!=plugins.end(); ++p){
+  uint32_t k = 0;
+  for(auto p : plugins) {
     char ctmp[1024];
-    sprintf(ctmp,"ap%u",k);
-    srv->set_prefix(oldpref+"/"+ctmp+"/"+(*p)->get_modname());
-    (*p)->add_variables( srv );
+    sprintf(ctmp, "ap%u", k);
+    srv->set_prefix(oldpref + "/" + ctmp + "/" + p->get_modname());
+    p->add_variables(srv);
     ++k;
   }
   srv->set_prefix(oldpref);
