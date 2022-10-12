@@ -363,7 +363,7 @@ private:
   // pthread_mutex_t& record_mtx_;
   jack_client_t* jc_;
   double audio_sample_period_;
-  //bool ignore_first_;
+  // bool ignore_first_;
   size_t plotdata_cnt;
 };
 
@@ -593,7 +593,7 @@ recorder_t::recorder_t(uint32_t size, const std::string& name,
                        bool headless)
     : size_(size), b_textdata(false), name_(name), is_rec_(is_rec),
       is_roll_(is_roll), jc_(jc), audio_sample_period_(1.0 / srate),
-      //ignore_first_(ignore_first),
+      // ignore_first_(ignore_first),
       plotdata_cnt(0)
 {
   if(!headless)
@@ -997,7 +997,7 @@ private:
   Glib::Dispatcher osc_stop;
   Glib::Dispatcher osc_set_trialid;
   std::string osc_trialid;
-  //double audio_sample_period_;
+  // double audio_sample_period_;
   uint32_t fragsize;
   double srate;
 };
@@ -1010,7 +1010,7 @@ private:
 
 datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
     : dlog_vars_t(cfg), TASCAR::osc_server_t(multicast, port, srv_proto),
-      b_recording(false), //audio_sample_period_(1.0 / cfg.session->srate),
+      b_recording(false), // audio_sample_period_(1.0 / cfg.session->srate),
       fragsize(cfg.session->fragsize), srate(cfg.session->srate)
 {
   TASCAR::osc_server_t* osc(this);
@@ -1371,7 +1371,7 @@ void datalogging_t::start_trial(const std::string& name)
   }
   for(uint32_t k = 0; k < recorder.size(); k++)
     recorder[k]->clear();
-  // lsl re-sync:
+    // lsl re-sync:
 #ifdef HAS_LSL
   for(lslvarlist_t::iterator it = lslvars.begin(); it != lslvars.end(); ++it) {
     (*it)->get_stream_delta_start();
@@ -1565,13 +1565,15 @@ void datalogging_t::save_session_related_meta_data(mat_t* matfp,
   mat_add_double(matfp, "srate", srate);
 }
 
-matvar_t* create_message_struct(const std::vector<label_t>& msg)
+matvar_t* create_message_struct(const std::vector<label_t>& msg,
+                                const std::string& name)
 {
   size_t dims[2];
   dims[0] = msg.size();
   dims[1] = 1;
   const char* fieldnames[3] = {"t_tascar", "t_lsl", "message"};
-  matvar_t* matDataStruct(Mat_VarCreateStruct(NULL, 2, dims, fieldnames, 3));
+  matvar_t* matDataStruct(
+      Mat_VarCreateStruct(name.c_str(), 2, dims, fieldnames, 3));
   if(matDataStruct == NULL)
     throw TASCAR::ErrMsg("Unable to create message variable.");
   for(uint32_t c = 0; c < msg.size(); ++c) {
@@ -1600,7 +1602,7 @@ void datalogging_t::save_mat(const std::string& filename)
       std::string name(nice_name(recorder[k]->get_name()));
       matvar_t* mvar(NULL);
       if(recorder[k]->is_textdata()) {
-        mvar = create_message_struct(recorder[k]->get_textdata());
+        mvar = create_message_struct(recorder[k]->get_textdata(), name);
       } else {
         std::vector<double> data(recorder[k]->get_data());
         uint32_t N(recorder[k]->get_size());
@@ -1671,7 +1673,7 @@ void datalogging_t::save_matcell(const std::string& filename)
         throw TASCAR::ErrMsg("Unable to create variable \"" + name + "\".");
       matvar_t* mData(NULL);
       if(recorder[k]->is_textdata()) {
-        mData = create_message_struct(recorder[k]->get_textdata());
+        mData = create_message_struct(recorder[k]->get_textdata(), name);
       } else {
         std::vector<double> data(recorder[k]->get_data());
         uint32_t N(recorder[k]->get_size());
