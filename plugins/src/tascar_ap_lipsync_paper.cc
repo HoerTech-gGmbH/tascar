@@ -28,8 +28,15 @@
 #include "audioplugin.h"
 #include "errorhandling.h"
 #include "stft.h"
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <lo/lo.h>
+#include <mutex>
 #include <string.h>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 class lipsync_t : public TASCAR::audioplugin_base_t {
 public:
@@ -43,41 +50,54 @@ public:
 
 private:
   // configuration variables:
-  double smoothing;
-  std::string url;
-  TASCAR::pos_t scale;
-  double vocalTract;
-  double threshold;
-  double maxspeechlevel;
-  double dynamicrange;
+  bool threaded = true;
+  double smoothing = 0.04;
+  std::string url = "osc.udp://localhost:9999/";
+  TASCAR::pos_t scale = TASCAR::pos_t(1, 1, 1);
+  double vocalTract = 1.0;
+  double threshold = 0.5;
+  double maxspeechlevel = 48;
+  double dynamicrange = 165;
   std::string energypath;
   // internal variables:
   lo_address lo_addr;
   std::string path_;
-  TASCAR::stft_t* stft;
-  double* sSmoothedMag;
+  TASCAR::stft_t* stft = NULL;
+  double* sSmoothedMag = NULL;
   // float freqBins [5];
-  uint32_t* formantEdges;
-  uint32_t numFormants;
-  bool active;
-  bool was_active;
-  enum { always, transport, onchange } send_mode;
-  float prev_kissBS;
-  float prev_jawB;
-  float prev_lipsclosedBS;
-  uint32_t onchangecount;
-  uint32_t onchangecounter;
-  std::string strmsg;
+  uint32_t* formantEdges = NULL;
+  uint32_t numFormants = 4;
+  bool active = true;
+  bool was_active = true;
+  enum { always, transport, onchange } send_mode = always;
+  float prev_kissBS = HUGE_VAL;
+  float prev_jawB = HUGE_VAL;
+  float prev_lipsclosedBS = HUGE_VAL;
+  uint32_t onchangecount = 3;
+  uint32_t onchangecounter = 0;
+  std::string strmsg = "/lipsync";
+  // OSC messages:
+  lo_message msg_blendshapes;
+  lo_message msg_energy;
+  std::atomic_bool has_msg_blendshapes = false;
+  std::atomic_bool has_msg_energy = false;
+  float* p_kissBS = NULL;
+  float* p_jawB = NULL;
+  float* p_lipsclosedBS = NULL;
+  float* p_E1 = NULL;
+  float* p_E2 = NULL;
+  float* p_E3 = NULL;
+  float* p_E4 = NULL;
+  float* p_E5 = NULL;
+  std::mutex mtx;
+  std::thread thread;
+  std::atomic_bool run_thread = true;
+  void sendthread();
+  std::condition_variable cond;
 };
 
 lipsync_t::lipsync_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : audioplugin_base_t(cfg), smoothing(0.04),
-      url("osc.udp://localhost:9999/"), scale(1, 1, 1), vocalTract(1.0),
-      threshold(0.5), maxspeechlevel(48), dynamicrange(165),
-      path_(std::string("/") + cfg.parentname), numFormants(4), active(true),
-      was_active(true), send_mode(always), prev_kissBS(HUGE_VAL),
-      prev_jawB(HUGE_VAL), prev_lipsclosedBS(HUGE_VAL), onchangecount(3),
-      onchangecounter(0), strmsg("/lipsync")
+    : audioplugin_base_t(cfg), path_(std::string("/") + cfg.parentname)
 {
   GET_ATTRIBUTE(smoothing, "s", "Smoothing time constant");
   GET_ATTRIBUTE(url, "", "Target OSC URL");
@@ -91,6 +111,7 @@ lipsync_t::lipsync_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(energypath, "",
                 "OSC destination for sending format energies, or empty for no "
                 "energy messages");
+  GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data");
   std::string path;
   GET_ATTRIBUTE(
       path, "",
@@ -119,6 +140,55 @@ lipsync_t::lipsync_t(const TASCAR::audioplugin_cfg_t& cfg)
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());
+  msg_blendshapes = lo_message_new();
+  if(strmsg.empty()) {
+    lo_message_add_float(msg_blendshapes, 0.0f);
+    lo_message_add_float(msg_blendshapes, 0.0f);
+    lo_message_add_float(msg_blendshapes, 0.0f);
+    auto oscmsgargv = lo_message_get_argv(msg_blendshapes);
+    p_kissBS = &(oscmsgargv[0]->f);
+    p_jawB = &(oscmsgargv[1]->f);
+    p_lipsclosedBS = &(oscmsgargv[2]->f);
+  } else {
+    lo_message_add_string(msg_blendshapes, strmsg.c_str());
+    lo_message_add_float(msg_blendshapes, 0.0f);
+    lo_message_add_float(msg_blendshapes, 0.0f);
+    lo_message_add_float(msg_blendshapes, 0.0f);
+    auto oscmsgargv = lo_message_get_argv(msg_blendshapes);
+    p_kissBS = &(oscmsgargv[1]->f);
+    p_jawB = &(oscmsgargv[2]->f);
+    p_lipsclosedBS = &(oscmsgargv[3]->f);
+  }
+  msg_energy = lo_message_new();
+  lo_message_add_float(msg_energy, 0.0f);
+  lo_message_add_float(msg_energy, 0.0f);
+  lo_message_add_float(msg_energy, 0.0f);
+  lo_message_add_float(msg_energy, 0.0f);
+  lo_message_add_float(msg_energy, 0.0f);
+  auto oscmsgargv = lo_message_get_argv(msg_energy);
+  p_E1 = &(oscmsgargv[0]->f);
+  p_E2 = &(oscmsgargv[1]->f);
+  p_E3 = &(oscmsgargv[2]->f);
+  p_E4 = &(oscmsgargv[3]->f);
+  p_E5 = &(oscmsgargv[4]->f);
+  if(threaded)
+    thread = std::thread(&lipsync_t::sendthread, this);
+}
+
+void lipsync_t::sendthread()
+{
+  std::unique_lock<std::mutex> lk(mtx);
+  while(run_thread) {
+    cond.wait_for(lk, 100ms);
+    if(has_msg_blendshapes) {
+      lo_send_message(lo_addr, path_.c_str(), msg_blendshapes);
+      has_msg_blendshapes = false;
+    }
+    if(has_msg_energy) {
+      lo_send_message(lo_addr, energypath.c_str(), msg_energy);
+      has_msg_energy = false;
+    }
+  }
 }
 
 void lipsync_t::add_variables(TASCAR::osc_server_t* srv)
@@ -166,7 +236,12 @@ void lipsync_t::release()
 
 lipsync_t::~lipsync_t()
 {
+  run_thread = false;
+  if(threaded)
+    thread.join();
   lo_address_free(lo_addr);
+  lo_message_free(msg_blendshapes);
+  lo_message_free(msg_energy);
 }
 
 void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
@@ -259,34 +334,59 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   bool lactive(active);
   if((send_mode == transport) && (tp.rolling == false))
     lactive = false;
-  if(lactive) {
-    // if "onchange" mode then send max "onchangecount" equal messages:
-    if((send_mode == onchange) && (kissBS == prev_kissBS) &&
-       (jawB == prev_jawB) && (lipsclosedBS == prev_lipsclosedBS)) {
-      if(onchangecounter)
-        onchangecounter--;
+
+  // handle sending of data, forward data to sender thread:
+  if(mtx.try_lock()) {
+    if(lactive) {
+      // if "onchange" mode then send max "onchangecount" equal messages:
+      if((send_mode == onchange) && (kissBS == prev_kissBS) &&
+         (jawB == prev_jawB) && (lipsclosedBS == prev_lipsclosedBS)) {
+        if(onchangecounter)
+          onchangecounter--;
+      } else {
+        onchangecounter = onchangecount;
+      }
+      if((send_mode != onchange) || (onchangecounter > 0)) {
+        // send lipsync values to osc target:
+        *p_kissBS = kissBS;
+        *p_jawB = jawB;
+        *p_lipsclosedBS = lipsclosedBS;
+        has_msg_blendshapes = true;
+        if(!energypath.empty()) {
+          *p_E1 = energy[1];
+          *p_E2 = energy[2];
+          *p_E3 = energy[3];
+          *p_E4 = 20.0f * log10f(vmin + 1e-6f);
+          *p_E5 = 20.0f * log10f(vmax + 1e-6f);
+          has_msg_energy = true;
+        }
+      }
     } else {
-      onchangecounter = onchangecount;
+      if(was_active) {
+        *p_kissBS = 0.0f;
+        *p_jawB = 0.0f;
+        *p_lipsclosedBS = 0.0f;
+        has_msg_blendshapes = true;
+      }
     }
-    if((send_mode != onchange) || (onchangecounter > 0)) {
-      // send lipsync values to osc target:
-      if(strmsg.size())
-        lo_send(lo_addr, path_.c_str(), "sfff", strmsg.c_str(), kissBS, jawB,
-                lipsclosedBS);
-      else
-        lo_send(lo_addr, path_.c_str(), "fff", kissBS, jawB, lipsclosedBS);
-      if(!energypath.empty())
-        lo_send(lo_addr, energypath.c_str(), "fffff", energy[1], energy[2],
-                energy[3], 20 * log10(vmin + 1e-6), 20 * log10(vmax + 1e-6));
-    }
-  } else {
-    if(was_active)
-      lo_send(lo_addr, path_.c_str(), "sfff", "/lipsync", 0.0f, 0.0f, 0.0f);
+    was_active = lactive;
+    prev_kissBS = kissBS;
+    prev_jawB = jawB;
+    prev_lipsclosedBS = lipsclosedBS;
+    mtx.unlock();
   }
-  was_active = lactive;
-  prev_kissBS = kissBS;
-  prev_jawB = jawB;
-  prev_lipsclosedBS = lipsclosedBS;
+  if(threaded) {
+    cond.notify_one();
+  } else {
+    if(has_msg_blendshapes) {
+      lo_send_message(lo_addr, path_.c_str(), msg_blendshapes);
+      has_msg_blendshapes = false;
+    }
+    if(has_msg_energy) {
+      lo_send_message(lo_addr, energypath.c_str(), msg_energy);
+      has_msg_energy = false;
+    }
+  }
 }
 
 REGISTER_AUDIOPLUGIN(lipsync_t);

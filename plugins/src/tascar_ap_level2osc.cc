@@ -42,7 +42,7 @@ public:
   ~level2osc_t();
 
 private:
-  bool threaded = false;
+  bool threaded = true;
   bool sendwhilestopped = false;
   uint32_t skip = 0;
   std::string url = "osc.udp://localhost:9999/";
