@@ -431,6 +431,13 @@ TASCAR::session_t::session_t()
     throw;
   }
   profilermsgargv = lo_message_get_argv(profilermsg);
+  if( use_profiler ){
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << modules.size() << "\"/>" << std::endl;
+    std::cout << "csModules = { ";
+    for(auto mod : modules)
+      std::cout << "'" << mod->modulename() << "' ";
+    std::cout << "};" << std::endl;
+  }
 }
 
 TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
@@ -464,6 +471,13 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
     throw;
   }
   profilermsgargv = lo_message_get_argv(profilermsg);
+  if( use_profiler ){
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << modules.size() << "\"/>" << std::endl;
+    std::cout << "csModules = { ";
+    for(auto mod : modules)
+      std::cout << "'" << mod->modulename() << "' ";
+    std::cout << "};" << std::endl;
+  }
 }
 
 void TASCAR::session_t::read_xml()
