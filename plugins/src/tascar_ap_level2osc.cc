@@ -135,29 +135,8 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     if(skipcnt) {
       skipcnt--;
     } else {
-      if(threaded) {
-        // data will be sent in extra thread:
-        if(mtx.try_lock()) {
-          // pack data:
-          oscmsgargv[0]->f = tp.object_time_seconds;
-          for(uint32_t ch = 0; ch < n_channels; ++ch) {
-            switch(imode) {
-            case dbspl:
-              oscmsgargv[ch + 1]->f = chunk[ch].spldb();
-              break;
-            case rms:
-              oscmsgargv[ch + 1]->f = chunk[ch].rms();
-              break;
-            case max:
-              oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
-              break;
-            }
-          }
-          has_data = true;
-          mtx.unlock();
-          cond.notify_one();
-        }
-      } else {
+      // data will be sent in extra thread:
+      if(mtx.try_lock()) {
         // pack data:
         oscmsgargv[0]->f = tp.object_time_seconds;
         for(uint32_t ch = 0; ch < n_channels; ++ch) {
@@ -173,8 +152,12 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
             break;
           }
         }
-        // send message:
-        lo_send_message(lo_addr, path.c_str(), msg);
+        has_data = true;
+        mtx.unlock();
+        if(threaded)
+          cond.notify_one();
+        else
+          lo_send_message(lo_addr, path.c_str(), msg);
       }
       skipcnt = skip;
     }
