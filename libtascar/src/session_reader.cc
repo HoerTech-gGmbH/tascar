@@ -88,8 +88,7 @@ TASCAR::tsc_reader_t::~tsc_reader_t() {}
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
     : xml_doc_t(filename_or_data, t),
-      licensed_component_t(typeid(*this).name()),
-      file_name("")
+      licensed_component_t(typeid(*this).name()), file_name("")
 {
   if(t == LOAD_FILE)
     file_name = filename_or_data;
@@ -123,6 +122,9 @@ void TASCAR::tsc_reader_t::read_xml()
   root.GET_ATTRIBUTE(license, "", "license type");
   root.GET_ATTRIBUTE(attribution, "", "attribution of license, if applicable");
   add_license(license, attribution, "session file");
+  root.GET_ATTRIBUTE(profilingpath, "",
+                     "OSC path to dispatch module profiling information to");
+  use_profiler = profilingpath.size() > 0;
   for(auto& sne : root.get_children()) {
     if(tsccfg::node_get_name(sne) == "scene")
       add_scene(sne);

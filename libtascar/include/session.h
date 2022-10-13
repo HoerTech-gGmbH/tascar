@@ -202,6 +202,9 @@ namespace TASCAR {
     std::map<std::string, TASCAR::Scene::src_object_t*> sourcemap;
     std::map<std::string, TASCAR::Scene::receiver_obj_t*> receivermap;
     //
+    TASCAR::tictoc_t tictoc;
+    lo_message profilermsg;
+    lo_arg** profilermsgargv;
   };
 
   /// Control 'actors' in a scene

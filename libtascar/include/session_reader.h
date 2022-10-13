@@ -49,6 +49,8 @@ namespace TASCAR {
     std::string session_path;
     std::string license;
     std::string attribution;
+    bool use_profiler = false;
+    std::string profilingpath = "";
   };
 
 } // namespace TASCAR

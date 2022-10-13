@@ -413,6 +413,7 @@ TASCAR::session_t::session_t()
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
   assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
   assert_jackpar("fragment size", warnfragsize, fragsize, true);
+  profilermsg = lo_message_new();
   pthread_mutex_init(&mtx, NULL);
   read_xml();
   try {
@@ -426,8 +427,10 @@ TASCAR::session_t::session_t()
   catch(...) {
     jackc_transport_t::deactivate();
     unload_modules();
+    lo_message_free(profilermsg);
     throw;
   }
+  profilermsgargv = lo_message_get_argv(profilermsg);
 }
 
 TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
@@ -442,6 +445,7 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
   assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
   assert_jackpar("fragment size", warnfragsize, fragsize, true);
+  profilermsg = lo_message_new();
   pthread_mutex_init(&mtx, NULL);
   // parse XML:
   read_xml();
@@ -456,8 +460,10 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
   catch(...) {
     jackc_transport_t::deactivate();
     unload_modules();
+    lo_message_free(profilermsg);
     throw;
   }
+  profilermsgargv = lo_message_get_argv(profilermsg);
 }
 
 void TASCAR::session_t::read_xml()
@@ -541,6 +547,7 @@ TASCAR::session_t::~session_t()
   pthread_mutex_trylock(&mtx);
   pthread_mutex_unlock(&mtx);
   pthread_mutex_destroy(&mtx);
+  lo_message_free(profilermsg);
 }
 
 std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
@@ -667,6 +674,7 @@ void TASCAR::session_t::add_module(tsccfg::node_t src)
   if(!src)
     src = root.add_child("module");
   modules.push_back(new TASCAR::module_t(TASCAR::module_cfg_t(src, this)));
+  lo_message_add_double(profilermsg, 0.0);
 }
 
 void TASCAR::session_t::start()
@@ -726,10 +734,23 @@ int TASCAR::session_t::process(jack_nframes_t, const std::vector<float*>&,
   uint32_t next_tp_frame(tp_frame);
   if(tp_rolling)
     next_tp_frame += fragsize;
-  if(started_)
-    for(std::vector<TASCAR::module_t*>::iterator imod = modules.begin();
-        imod != modules.end(); ++imod)
-      (*imod)->update(next_tp_frame, tp_rolling);
+  if(started_) {
+    double t_prev = 0.0;
+    size_t k = 0;
+    if(use_profiler)
+      tictoc.tic();
+    for(auto mod : modules) {
+      mod->update(next_tp_frame, tp_rolling);
+      if(use_profiler) {
+        auto tloc = tictoc.toc();
+        profilermsgargv[k]->d = tloc - t_prev;
+        t_prev = tloc;
+      }
+      ++k;
+    }
+    if(use_profiler)
+      dispatch_data_message(profilingpath.c_str(), profilermsg);
+  }
   if((duration > 0) && (t >= duration)) {
     if(loop)
       tp_locate(0u);

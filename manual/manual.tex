@@ -719,6 +719,17 @@ Relative file names are relative to the directory containing the root
 % startup, or they should be relative to the file containing the
 % respective <include> element.
 
+The performance of all loaded modules\index{profiler} can be measured
+by setting the attribute \attr{profilingpath} to an OSC path, which
+can be added to the datalogging module, see Example
+\ref{tsc:example_profiling}. In that case, the profiling variable
+contains the time used by the modules in each processing cycles. The
+\attr{size} attribute of the OSC variable in the data logging needs to
+match the total number of modules loaded in a session (multiple
+\elem{modules} sections will be merged).
+
+\tscexample{example_profiling}
+
 \subsection{The {\tt <scene>...</scene>} element}\label{sec:scene}\index{scene}
 
 \input{tabscene.tex}
@@ -1615,26 +1626,14 @@ they are processed before the sound is handed to the acoustic
 model. For receivers, audio plugins are processed after the post
 processing function of the render format.
 
-To profile the plugin performance, it is possible to set the attribute \attr{profilingpath} to an OSC path that can be recorded using the datalogging plugin. The \attr{size} attribute of the OSC variable in the datalogging must match the number of plugins:
-\begin{lstlisting}[numbers=none]
-<?xml version="1.0"?>
-<session>
-  <modules>
-    <route>
-      <plugins profilingpath="/prof">
-        <sine/>
-        <pink/>
-        <filter/>
-        <level2osc/>
-      </plugins>
-    </route>
-    <datalogging>
-      <osc path="/prof" size="4"/>
-    </datalogging>
-  </modules>
-</session>
-\end{lstlisting}
-The data contains the time spent in each processing cycle in seconds, for each plugin. Please note that the clock granularity is one microsecond on Linux machines.
+To profile the plugin performance\index{profiler}, it is possible to
+set the attribute \attr{profilingpath} to an OSC path that can be
+recorded using the datalogging plugin. The \attr{size} attribute of
+the OSC variable in the datalogging must match the number of plugins,
+see Example \ref{tsc:example_profiling} in the \elem{session} section.
+The data contains the time spent in each processing cycle in seconds,
+for each plugin. Please note that the clock granularity is one
+microsecond on Linux machines.
 
 
 \input{secapmodules.tex}
