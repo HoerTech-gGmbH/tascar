@@ -26,15 +26,14 @@ using namespace TASCAR;
 plugin_processor_t::plugin_processor_t(tsccfg::node_t xmlsrc,
                                        const std::string& name,
                                        const std::string& parentname)
-    : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name())
+    : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name()),
+      eplug(find_or_add_child("plugins"))
 {
-  tsccfg::node_t se_plugs(find_or_add_child("plugins"));
-  TASCAR::xml_element_t e_plugs(se_plugs);
-  e_plugs.GET_ATTRIBUTE(profilingpath, "",
-                         "OSC path to dispatch profiling information to");
+  eplug.GET_ATTRIBUTE(profilingpath, "",
+                      "OSC path to dispatch profiling information to");
   use_profiler = profilingpath.size() > 0;
   msg = lo_message_new();
-  for(auto& sne : tsccfg::node_get_children(se_plugs)) {
+  for(auto& sne : eplug.get_children()) {
     plugins.push_back(
         new TASCAR::audioplugin_t(audioplugin_cfg_t(sne, name, parentname)));
     lo_message_add_double(msg, 0.0);
@@ -85,6 +84,7 @@ plugin_processor_t::~plugin_processor_t()
 
 void plugin_processor_t::validate_attributes(std::string& msg) const
 {
+  eplug.validate_attributes(msg);
   for(auto p : plugins)
     p->validate_attributes(msg);
 }
@@ -99,9 +99,9 @@ void plugin_processor_t::process_plugins(std::vector<wave_t>& s,
     tictoc.tic();
   for(auto p : plugins) {
     p->ap_process(s, pos, o, tp);
-    if(use_profiler){
+    if(use_profiler) {
       auto t = tictoc.toc();
-      oscmsgargv[k]->d = t-t_prev;
+      oscmsgargv[k]->d = t - t_prev;
       t_prev = t;
     }
     ++k;

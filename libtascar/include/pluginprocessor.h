@@ -43,6 +43,7 @@ namespace TASCAR {
     void add_licenses(licensehandler_t*);
 
   protected:
+    xml_element_t eplug;
     TASCAR::tictoc_t tictoc;
     bool use_profiler = false;
     std::string profilingpath = "";
