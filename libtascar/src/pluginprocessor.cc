@@ -28,10 +28,11 @@ plugin_processor_t::plugin_processor_t(tsccfg::node_t xmlsrc,
                                        const std::string& parentname)
     : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name())
 {
-  GET_ATTRIBUTE(profilingpath, "",
-                "OSC path to dispatch profiling information to");
-  use_profiler = profilingpath.size() > 0;
   tsccfg::node_t se_plugs(find_or_add_child("plugins"));
+  TASCAR::xml_element_t e_plugs(se_plugs);
+  e_plugs.GET_ATTRIBUTE(profilingpath, "",
+                         "OSC path to dispatch profiling information to");
+  use_profiler = profilingpath.size() > 0;
   msg = lo_message_new();
   for(auto& sne : tsccfg::node_get_children(se_plugs)) {
     plugins.push_back(
