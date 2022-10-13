@@ -118,7 +118,8 @@ level2osc_t::~level2osc_t()
 {
   lo_address_free(lo_addr);
   run_thread = false;
-  thread.join();
+  if(threaded)
+    thread.join();
 }
 
 void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
