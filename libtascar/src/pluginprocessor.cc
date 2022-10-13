@@ -92,13 +92,17 @@ void plugin_processor_t::process_plugins(std::vector<wave_t>& s,
                                          const pos_t& pos, const zyx_euler_t& o,
                                          const transport_t& tp)
 {
+  double t_prev = 0.0;
   size_t k = 0;
   if(use_profiler)
     tictoc.tic();
   for(auto p : plugins) {
     p->ap_process(s, pos, o, tp);
-    if(use_profiler)
-      oscmsgargv[k]->d = tictoc.toc();
+    if(use_profiler){
+      auto t = tictoc.toc();
+      oscmsgargv[k]->d = t-t_prev;
+      t_prev = t;
+    }
     ++k;
   }
   if(use_profiler && oscsrv)
