@@ -71,10 +71,15 @@ oscjacktime_t::oscjacktime_t(const TASCAR::module_cfg_t& cfg)
   lo_message_add_float(msg, 0.0f);
   auto oscmsgargv = lo_message_get_argv(msg);
   p_time = &(oscmsgargv[0]->f);
+  if(threaded)
+    thread = std::thread(&oscjacktime_t::sendthread, this);
 }
 
 oscjacktime_t::~oscjacktime_t()
 {
+  run_thread = false;
+  if(threaded)
+    thread.join();
   lo_address_free(target);
   lo_message_free(msg);
 }
