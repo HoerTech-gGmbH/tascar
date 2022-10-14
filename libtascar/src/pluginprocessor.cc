@@ -39,6 +39,13 @@ plugin_processor_t::plugin_processor_t(tsccfg::node_t xmlsrc,
     lo_message_add_double(msg, 0.0);
   }
   oscmsgargv = lo_message_get_argv(msg);
+  if( use_profiler ){
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << plugins.size() << "\"/>" << std::endl;
+    std::cout << "csPlugins = { ";
+    for(auto mod : plugins)
+      std::cout << "'" << mod->get_modname() << "' ";
+    std::cout << "};" << std::endl;
+  }
 }
 
 void plugin_processor_t::configure()
