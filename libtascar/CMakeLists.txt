@@ -26,6 +26,7 @@ endif(APPLE)
 file(GLOB LIB_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/licensehandler.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tictoctimer.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audiostates.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/coordinates.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/audiochunks.cc
