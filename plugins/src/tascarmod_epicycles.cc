@@ -46,10 +46,11 @@ namespace HoS {
   public:
     par_t();
     void mix_static(float g, const par_t& p1, const par_t& p2);
-    void assign_static(const par_t& p1);
+    //void assign_static(const par_t& p1);
     void mix_dynamic(float g, const par_t& p1, const par_t& p2);
     void assign_dynamic(const par_t& p1);
     float phi0;     // starting phase
+    float incphi0;  // phi increment
     float random;   // random component
     float f;        // main rotation frequency
     float r;        // main radius
@@ -114,7 +115,7 @@ namespace HoS {
     float lastphi;
     float phi;
     float phi_epi;
-    double home;
+    float home;
     bool b_home;
     pthread_mutex_t mtx;
 
@@ -197,13 +198,13 @@ void HoS::par_t::mix_static(float g, const par_t& p1, const par_t& p2)
                       g1 * std::exp(i_f * p2.phi0_epi));
 }
 
-void HoS::par_t::assign_static(const par_t& p1)
-{
-#define MIX_(x) x = p1.x;
-  MIX_(phi0);
-  MIX_(phi0_epi);
-#undef MIX_
-}
+//void HoS::par_t::assign_static(const par_t& p1)
+//{
+//#define MIX_(x) x = p1.x;
+//  MIX_(phi0);
+//  MIX_(phi0_epi);
+//#undef MIX_
+//}
 
 void HoS::par_t::mix_dynamic(float g, const par_t& p1, const par_t& p2)
 {
@@ -254,6 +255,7 @@ void HoS::parameter_t::locate0(float time)
       locate_gain = 0;
     }
     t_locate = 1 + time;
+    par_osc.phi0 += par_osc.incphi0;
     par_previous.phi0 = phi;
     par_previous.phi0_epi = phi_epi;
     par_current.phi0 = phi;
@@ -288,13 +290,14 @@ HoS::parameter_t::parameter_t(tsccfg::node_t e, TASCAR::osc_server_t* o)
   if(lo_addr)
     lo_address_set_ttl(lo_addr, 1);
   o->add_bool_true(path + "/gohome", &b_home);
-  o->add_double(path + "/home", &home);
+  o->add_float_degree(path + "/home", &home);
 #define REGISTER_FLOAT_VAR(x) o->add_float(path + "/" + #x, &(par_osc.x))
 #define REGISTER_FLOAT_VAR_DEGREE(x)                                           \
   o->add_float_degree(path + "/" + #x, &(par_osc.x))
 #define REGISTER_CALLBACK(x, fmt)                                              \
   o->add_method(path + "/" + #x, fmt, OSC::_##x, this)
   REGISTER_FLOAT_VAR_DEGREE(phi0);
+  REGISTER_FLOAT_VAR_DEGREE(incphi0);
   REGISTER_FLOAT_VAR(random);
   REGISTER_FLOAT_VAR(f);
   REGISTER_FLOAT_VAR(r);
