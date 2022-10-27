@@ -7,23 +7,27 @@
   <modules>
     <route>
       <plugins profilingpath="/prof">
+        <timestamp path="/ts1"/>
         <sine/>
         <pink/>
         <filter/>
         <level2osc threaded="true" url="osc.udp://localhost:9877/"/>
         <lipsync_paper threaded="true" path="/lipsyncp" energypath="/energyp" strmsg="" url="osc.udp://localhost:9877/"/>
         <lipsync threaded="true" path="/lipsync" energypath="/energy" strmsg="" url="osc.udp://localhost:9877/"/>
+        <timestamp path="/ts2"/>
       </plugins>
     </route>
     <pos2osc pattern="/*/*"/>
     <datalogging>
-      <osc path="/prof" size="6"/>
+      <osc path="/prof" size="8"/>
       <osc path="/level" size="2" ignorefirst="true"/>
       <osc path="/lipsyncp" size="3"/>
       <osc path="/lipsync" size="3"/>
       <osc path="/energyp" size="5"/>
       <osc path="/energy" size="5"/>
       <osc path="/profmod" size="3"/>
+      <osc path="/ts1" size="1"/>
+      <osc path="/ts2" size="1"/>
     </datalogging>
   </modules>
 </session>
