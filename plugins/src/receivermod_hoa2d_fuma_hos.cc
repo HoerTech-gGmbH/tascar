@@ -56,6 +56,7 @@ public:
   void configure();
   // re-order HOA signals:
   void postproc(std::vector<TASCAR::wave_t>& output);
+  void add_variables(TASCAR::osc_server_t* srv);
 
 private:
   uint32_t nbins = 0;
@@ -76,6 +77,14 @@ hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
 }
 
 hoa2d_t::~hoa2d_t() {}
+
+void hoa2d_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  TASCAR::receivermod_base_t::add_variables(srv);
+  srv->add_float("/rho0", &rho0,"[0,2]","Reference radius in m");
+  srv->add_float("/rhoc", &rhoc,"[0,2]","Centre radius in m");
+}
+
 
 void hoa2d_t::configure()
 {
