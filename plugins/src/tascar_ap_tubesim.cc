@@ -31,6 +31,13 @@ public:
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables(TASCAR::osc_server_t* srv);
   ~tubesim_t();
+  void wetfade_fun(float newwet, float duration)
+  {
+    wetfade = wet;
+    uint32_t wftimer = f_sample * duration;
+    dwetfade = (newwet - wetfade) / wftimer;
+    wetfade_timer = wftimer;
+  }
   inline float tubeval(float x)
   {
     x += offset;
@@ -41,6 +48,13 @@ public:
       x /= x + saturation;
     return x;
   }
+  static int osc_wetfade(const char*, const char* fmt, lo_arg** argv, int,
+                         lo_message, void* user_data)
+  {
+    if((fmt[0] == 'f') && (fmt[1] == 'f'))
+      ((tubesim_t*)user_data)->wetfade_fun(argv[0]->f, argv[1]->f);
+    return 0;
+  }
 
 private:
   float pregain = 1.0f;
@@ -49,6 +63,9 @@ private:
   float postgain = 1.0f;
   bool bypass = false;
   float wet = 1.0f;
+  float wetfade = 1.0f;
+  float dwetfade = 0.0f;
+  uint32_t wetfade_timer = 0u;
 };
 
 tubesim_t::tubesim_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -71,6 +88,7 @@ void tubesim_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float("/offset", &offset, "[0,1]", "Input offset");
   srv->add_bool("/bypass", &bypass);
   srv->add_float("/wet", &wet, "[0,1]");
+  srv->add_method("/wet", "ff", &tubesim_t::osc_wetfade, this);
 }
 
 tubesim_t::~tubesim_t() {}
@@ -82,13 +100,23 @@ void tubesim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   if(bypass)
     return;
   float oshift = tubeval(0.0f);
-  for(auto& aud : chunk)
-    for(uint32_t k = 0; k < aud.n; ++k) {
-      aud.d[k] = wet * (tubeval(aud.d[k] * pregain) - oshift) * postgain +
-                 (1.0f - wet) * aud.d[k];
-      if(TASCAR::is_denormal(aud.d[k]))
-        aud.d[k] = 0.0f;
+  auto channels = chunk.size();
+  if(channels) {
+    auto numframes = chunk[0].n;
+    for(uint32_t k = 0; k < numframes; ++k) {
+      if(wetfade_timer) {
+        wetfade += dwetfade;
+        wet = wetfade;
+        --wetfade_timer;
+      }
+      for(auto& aud : chunk) {
+        aud.d[k] = wet * (tubeval(aud.d[k] * pregain) - oshift) * postgain +
+                   (1.0f - wet) * aud.d[k];
+        if(TASCAR::is_denormal(aud.d[k]))
+          aud.d[k] = 0.0f;
+      }
     }
+  }
 }
 
 REGISTER_AUDIOPLUGIN(tubesim_t);

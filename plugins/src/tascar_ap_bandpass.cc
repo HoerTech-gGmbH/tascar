@@ -32,15 +32,49 @@ public:
   void release();
   void add_variables(TASCAR::osc_server_t* srv);
   ~bandpassplugin_t();
+  static int osc_fminfade(const char*, const char* fmt, lo_arg** argv, int,
+                          lo_message, void* user_data)
+  {
+    if((fmt[0] == 'f') && (fmt[1] == 'f'))
+      ((bandpassplugin_t*)user_data)->fminfade(argv[0]->f, argv[1]->f);
+    return 0;
+  }
+  static int osc_fmaxfade(const char*, const char* fmt, lo_arg** argv, int,
+                          lo_message, void* user_data)
+  {
+    if((fmt[0] == 'f') && (fmt[1] == 'f'))
+      ((bandpassplugin_t*)user_data)->fmaxfade(argv[0]->f, argv[1]->f);
+    return 0;
+  }
+  void fminfade(float newval, float duration)
+  {
+    fmin_fade = fmin;
+    uint32_t wtimer = f_fragment * duration;
+    dfmin_fade = (newval - fmin_fade) / wtimer;
+    fmin_timer = wtimer;
+  }
+  void fmaxfade(float newval, float duration)
+  {
+    fmax_fade = fmax;
+    uint32_t wtimer = f_fragment * duration;
+    dfmax_fade = (newval - fmax_fade) / wtimer;
+    fmax_timer = wtimer;
+  }
 
 private:
-  float fmin;
-  float fmax;
+  float fmin = 100.0f;
+  float fmax = 20000.0f;
+  float fmin_fade = 100.0f;
+  float fmax_fade = 20000.0f;
+  uint32_t fmin_timer = 0u;
+  uint32_t fmax_timer = 0u;
+  float dfmin_fade = 0.0f;
+  float dfmax_fade = 0.0f;
   std::vector<TASCAR::bandpassf_t*> bp;
 };
 
 bandpassplugin_t::bandpassplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : audioplugin_base_t(cfg), fmin(100.0), fmax(20000.0)
+    : audioplugin_base_t(cfg)
 {
   GET_ATTRIBUTE(fmin, "Hz", "Minimum frequency");
   GET_ATTRIBUTE(fmax, "Hz", "Maximum frequency");
@@ -50,6 +84,8 @@ void bandpassplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->add_float("/fmin", &fmin, "]0,20000]", "Lower cutoff frequency in Hz");
   srv->add_float("/fmax", &fmax, "]0,20000]", "Upper cutoff frequency in Hz");
+  srv->add_method("/fmin", "ff", &bandpassplugin_t::osc_fminfade, this);
+  srv->add_method("/fmax", "ff", &bandpassplugin_t::osc_fmaxfade, this);
 }
 
 void bandpassplugin_t::configure()
@@ -74,6 +110,16 @@ void bandpassplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                                   const TASCAR::zyx_euler_t&,
                                   const TASCAR::transport_t&)
 {
+  if(fmin_timer) {
+    fmin_fade += dfmin_fade;
+    fmin = fmin_fade;
+    --fmin_timer;
+  }
+  if(fmax_timer) {
+    fmax_fade += dfmax_fade;
+    fmax = fmax_fade;
+    --fmax_timer;
+  }
   for(size_t k = 0; k < chunk.size(); ++k) {
     bp[k]->set_range(fmin, fmax);
     bp[k]->filter(chunk[k]);
