@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene/>
+  <modules>
+    <route channels="1" name="bl">
+      <plugins>
+        <burglatticelpc n="256"/>
+      </plugins>
+    </route>
+  </modules>
+  <connect src="bl:out.0" dest="system:playback_1"/>
+  <connect src="bl:out.0" dest="system:playback_2"/>
+  <!--
+  <connect src="PulseAudio JACK Sink:front-left" dest="bl:in.0" />
+  <connect src="PulseAudio JACK Sink:front-right" dest="bl:in.0" />
+  -->
+  <connect src="jaaa:out_1" dest="bl:in.0" />
+</session>
