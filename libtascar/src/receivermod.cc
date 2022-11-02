@@ -328,8 +328,8 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
       rV /= norm_V;
     err.abs_rV_error += pow(1.0 - rV.norm(), 2.0);
     err.abs_rE_error += pow(1.0 - rE.norm(), 2.0);
-    err.angular_rV_error += acos(std::min(1.0,std::max(-1.0,dot_prod(rV, pos))));
-    err.angular_rE_error += acos(std::min(1.0,std::max(-1.0,dot_prod(rE, pos))));
+    err.angular_rV_error += acos(std::min(1.0,std::max(-1.0,dot_prod(rV.normal(), pos))));
+    err.angular_rE_error += acos(std::min(1.0,std::max(-1.0,dot_prod(rE.normal(), pos))));
     err.azim_rV_error += acos(cos(rV.azim() - pos.azim()));
     err.azim_rE_error += acos(cos(rE.azim() - pos.azim()));
     err.elev_rV_error += acos(cos(rV.elev() - pos.elev()));
