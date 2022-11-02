@@ -23,8 +23,14 @@
 #include "errorhandling.h"
 #include "filterclass.h"
 
+// see also:
 // Schnell, K. (2008). Time-varying Burg method for speech
 // analysis. 2008 16th European Signal Processing Conference, 1–5.
+
+// This code implements a whitening algorithm using a lattice filter
+// and the Burg-method. This implementation assumes stationary
+// signals, but is calculating the estimate function using sliding
+// averages, and thus can adapt to changing signals implicitely.
 
 class burg_lattice_section_t {
 public:
