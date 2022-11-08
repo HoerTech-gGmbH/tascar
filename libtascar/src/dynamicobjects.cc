@@ -180,7 +180,7 @@ void TASCAR::dynobject_t::geometry_update(double time)
   else {
     // alternatively, extract orientation from position trajectory:
     double tp(location.get_time(location.get_dist(ltime) - sampledorientation));
-    TASCAR::pos_t pdt(c6dof_.position);
+    TASCAR::pos_t pdt(c6dof_nodelta_.position);
     pdt -= location.interp(tp);
     if(sampledorientation < 0)
       pdt *= -1.0;
