@@ -28,6 +28,28 @@
 
 using namespace TASCAR;
 
+void test_iflag(std::string& str, int flag)
+{
+#define TESTFLAG(x, y)                                                         \
+  if(x & y)                                                                    \
+  str += std::string(#y) + std::string(" ")
+  TESTFLAG(flag, IGNBRK);
+  TESTFLAG(flag, BRKINT);
+  TESTFLAG(flag, IGNPAR);
+  TESTFLAG(flag, PARMRK);
+  TESTFLAG(flag, INPCK);
+  TESTFLAG(flag, ISTRIP);
+  TESTFLAG(flag, INLCR);
+  TESTFLAG(flag, IGNCR);
+  TESTFLAG(flag, ICRNL);
+  TESTFLAG(flag, IUCLC);
+  TESTFLAG(flag, IXON);
+  TESTFLAG(flag, IXANY);
+  TESTFLAG(flag, IXOFF);
+  TESTFLAG(flag, IMAXBEL);
+  TESTFLAG(flag, IUTF8);
+}
+
 serialport_t::serialport_t() : fd(-1) {}
 
 serialport_t::~serialport_t()
@@ -75,11 +97,15 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
     cfsetospeed(&tty, speed);
     cfsetispeed(&tty, speed);
   }
+  std::string sflag = "";
+  test_iflag(sflag, tty.c_iflag);
+  DEBUG(sflag);
   tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; // 8-bit chars
   // disable IGNBRK for mismatched speed tests; otherwise receive break
   // as \000 chars
   tty.c_iflag &= ~IGNBRK; // disable break processing
   tty.c_iflag |= BRKINT;  // enable break processing
+  tty.c_iflag |= ICRNL;
   tty.c_lflag = 0;        // no signaling chars, no echo,
   // no canonical processing
   tty.c_oflag = 0; // no remapping, no delays
@@ -101,6 +127,9 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   DEBUG(tty.c_iflag);
   DEBUG(tty.c_oflag);
   DEBUG(tty.c_lflag);
+  sflag = "";
+  test_iflag(sflag, tty.c_iflag);
+  DEBUG(sflag);
   if(tcsetattr(fd, TCSANOW, &tty) != 0)
     throw TASCAR::ErrMsg("error from tcsetattr");
   int flags;
