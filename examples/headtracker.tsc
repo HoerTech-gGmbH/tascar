@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene name="scene">
+    <receiver name="out"/>
+  </scene>
+  <modules>
+    <ovheadtracker actor="/scene/out"/>
+  </modules>
+</session>

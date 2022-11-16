@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include "termsetbaud.h"
+#include "defs.h"
 
 using namespace TASCAR;
 
@@ -45,7 +46,11 @@ bool serialport_t::isopen()
 
 int serialport_t::open( const char* dev, int speed, int parity, int stopbits, bool xbaud )
 {
+#ifdef ISMACOS
+  fd = ::open( dev, O_RDWR | O_NOCTTY | O_NDELAY );
+#else
   fd = ::open( dev, O_RDWR | O_NOCTTY | O_SYNC );
+#endif
   if( fd < 0 )
     throw TASCAR::ErrMsg(std::string("Unable to open device ")+dev);
   set_interface_attribs( speed, parity, stopbits, xbaud );
@@ -59,6 +64,9 @@ void serialport_t::set_interface_attribs( int speed, int parity, int stopbits, b
   memset (&tty, 0, sizeof tty);
   if (tcgetattr(fd, &tty) != 0)
     throw TASCAR::ErrMsg("Error from tcgetattr");
+  DEBUG(tty.c_iflag);
+  DEBUG(tty.c_oflag);
+  DEBUG(tty.c_lflag);
   if( !xbaud ){
     cfsetospeed (&tty, speed);
     cfsetispeed (&tty, speed);
@@ -71,6 +79,10 @@ void serialport_t::set_interface_attribs( int speed, int parity, int stopbits, b
   tty.c_lflag = 0;                // no signaling chars, no echo,
   // no canonical processing
   tty.c_oflag = 0;                // no remapping, no delays
+#ifdef ISMACOS
+  tty.c_oflag &= ~OPOST;
+  tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
+#endif
   tty.c_cc[VMIN]  = 0;            // read doesn't block
   tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
   tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff flow ctrl
@@ -85,7 +97,8 @@ void serialport_t::set_interface_attribs( int speed, int parity, int stopbits, b
   if (tcsetattr (fd, TCSANOW, &tty) != 0)
     throw TASCAR::ErrMsg("error from tcsetattr");
   int flags; 
-  ioctl(fd,TIOCMGET, &flags); 
+  ioctl(fd,TIOCMGET, &flags);
+  DEBUG(flags);
   flags &= ~TIOCM_RTS; 
   flags &= ~(TIOCM_RTS|TIOCM_DTR);
   ioctl(fd,TIOCMSET, &flags); 
