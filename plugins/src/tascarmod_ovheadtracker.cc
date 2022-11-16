@@ -245,13 +245,23 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
 void parse_devstring(std::string& l, std::vector<double>& data,
                      size_t num_elements)
 {
-  l = l.substr(1);
-  std::string::size_type sz;
-  for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
-    data[k] = std::stod(l, &sz);
-    if(sz < l.size())
-      l = l.substr(sz + 1);
+  size_t cnt = 0;
+  auto odata = data;
+  try{
+    l = l.substr(1);
+    std::string::size_type sz;
+    for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
+      data[k] = std::stod(l, &sz);
+      ++cnt;
+      if(sz < l.size())
+        l = l.substr(sz + 1);
+    }
   }
+  catch(...){
+    data = odata;
+ }
+  if( cnt != num_elements )
+    data = odata;
   for(size_t k = num_elements; k < data.size(); ++k)
     data[k] = 0.0;
 }
@@ -263,18 +273,28 @@ void parse_devstring(std::string& l, std::vector<double>& data,
  */
 void parse_devstring(std::string& l, TASCAR::quaternion_t& q)
 {
-  l = l.substr(1);
-  std::string::size_type sz;
-  q.w = std::stod(l, &sz);
-  if(sz < l.size())
+  bool ok = false;
+  auto oq = q;
+  try{
+    l = l.substr(1);
+    std::string::size_type sz;
+    q.w = std::stod(l, &sz);
+    if(sz < l.size())
+      l = l.substr(sz + 1);
+    q.x = std::stod(l, &sz);
+    if(sz < l.size())
+      l = l.substr(sz + 1);
+    q.y = std::stod(l, &sz);
+    if(sz < l.size())
     l = l.substr(sz + 1);
-  q.x = std::stod(l, &sz);
-  if(sz < l.size())
-    l = l.substr(sz + 1);
-  q.y = std::stod(l, &sz);
-  if(sz < l.size())
-    l = l.substr(sz + 1);
-  q.z = std::stod(l, &sz);
+    q.z = std::stod(l, &sz);
+    ok = true;
+  }
+  catch(...){
+    q = oq;
+  }
+  if( !ok)
+    q = oq;
 }
 
 void ovheadtracker_t::service()
