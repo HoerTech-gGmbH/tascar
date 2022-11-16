@@ -26,7 +26,7 @@
 
 #include "serialport.h"
 
-//const std::complex<double> i = {0.0, 1.0};
+// const std::complex<double> i = {0.0, 1.0};
 
 class ovheadtracker_t : public TASCAR::actor_module_t,
                         protected TASCAR::service_t {
@@ -46,9 +46,12 @@ private:
   // configuration variables:
   std::string name;
 #ifdef ISMACOS
-  std::vector<std::string> devices = {"/dev/tty.usbserial-0001", "/dev/tty.usbserial-0002", "/dev/tty.usbserial-0003"};
+  std::vector<std::string> devices = {"/dev/tty.usbserial-0001",
+                                      "/dev/tty.usbserial-0002",
+                                      "/dev/tty.usbserial-0003"};
 #else
-  std::vector<std::string> devices = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"};
+  std::vector<std::string> devices = {"/dev/ttyUSB0", "/dev/ttyUSB1",
+                                      "/dev/ttyUSB2"};
 #endif
   // data logging OSC url:
   std::string url;
@@ -143,11 +146,10 @@ void ovheadtracker_t::release()
 }
 
 ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
-    : actor_module_t(cfg), name("ovheadtracker"),
-      ttl(1),
-      calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
-      accscale(16384 / 9.81), gyrscale(16.4), target(NULL), rottarget(NULL),
-      bcalib(false), qref(1, 0, 0, 0), run_service_level(true)
+    : actor_module_t(cfg), name("ovheadtracker"), ttl(1), calib0path("/calib0"),
+      calib1path("/calib1"), axes({0, 1, 2}), accscale(16384 / 9.81),
+      gyrscale(16.4), target(NULL), rottarget(NULL), bcalib(false),
+      qref(1, 0, 0, 0), run_service_level(true)
 {
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
   GET_ATTRIBUTE(devices, "", "List of serial port device candidates");
@@ -303,7 +305,7 @@ void ovheadtracker_t::service()
       while(run_service) {
         std::string l(dev.readline(1024, 10));
         if(l.size()) {
-          DEBUG(l);
+          //std::cout << l << std::endl;
           switch(l[0]) {
           case 'A': {
             // acceleration
