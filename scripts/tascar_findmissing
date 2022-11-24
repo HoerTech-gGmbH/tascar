@@ -1,0 +1,18 @@
+#!/bin/sh
+if test -z "$1"; then
+    echo "Usage: tascar_findmissing <sessionfile> <srcpath>"
+    return
+fi
+if test -z "$2"; then
+    echo "Usage: tascar_findmissing <sessionfile> <srcpath>"
+    return
+fi
+MISSING=$(tascar_listsrc -m $1)
+sessiondir=$(dirname $1)
+for f in ${MISSING}; do
+    echo $f
+    missingdir=$(dirname $f)
+    missingbase=$(basename $f)
+    mkdir -p "${sessiondir}/${missingdir}"
+    find "$2" -name "${missingbase}" -exec cp \{\} \{\}.license "${sessiondir}/${missingdir}" \;
+done
