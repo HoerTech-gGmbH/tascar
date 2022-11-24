@@ -456,6 +456,35 @@ TEST(multiband_pareq_t, responseoptim)
   ASSERT_NEAR(gmeas[18], 0.953375f, 0.5f);
 }
 
+TEST(rflt2alpha, vals)
+{
+  std::vector<float> vfreq = {125.0f,  250.0f,  500.0f,
+                              1000.0f, 2000.0f, 4000.0f};
+  auto alpha = TASCAR::rflt2alpha(0.7709f, 0.21f, 44100.0f, vfreq);
+  ASSERT_EQ(6u, alpha.size());
+  if(alpha.size() == 6) {
+    ASSERT_NEAR(0.0525, alpha[0], 1e-4f);
+    ASSERT_NEAR(0.0525, alpha[1], 1e-4f);
+    ASSERT_NEAR(0.0528, alpha[2], 1e-4f);
+    ASSERT_NEAR(0.0537, alpha[3], 1e-4f);
+    ASSERT_NEAR(0.0573, alpha[4], 1e-4f);
+    ASSERT_NEAR(0.0713, alpha[5], 1e-4f);
+  }
+}
+
+TEST(alpha2rflt, vals)
+{
+  std::vector<float> vfreq = {125.0f,  250.0f,  500.0f,
+                              1000.0f, 2000.0f, 4000.0f};
+  std::vector<float> alpha = {0.0400f, 0.0400f, 0.0700f,
+                              0.0600f, 0.0600f, 0.0700f};
+  float reflectivity = 1.0f;
+  float damping = 0.5f;
+  TASCAR::alpha2rflt(reflectivity, damping, alpha, vfreq, 44100.0f);
+  ASSERT_NEAR(0.7709, reflectivity, 1e-4f);
+  ASSERT_NEAR(0.21, damping, 1e-4f);
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

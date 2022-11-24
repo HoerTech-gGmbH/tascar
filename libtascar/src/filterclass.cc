@@ -738,6 +738,80 @@ std::string TASCAR::multiband_pareq_t::to_string() const
   return retv;
 }
 
+std::vector<float> TASCAR::rflt2alpha(float reflectivity, float damping,
+                                      float fs, const std::vector<float>& freq)
+{
+  std::vector<float> retv;
+  reflectivity = std::max(std::min(reflectivity, 1.0f), EPSf);
+  damping = std::max(std::min(damping, 1.0f - EPSf), -1.0f + EPSf);
+  for(auto f : freq) {
+    auto cw = std::exp(-i_f * TASCAR_2PIf * f / fs);
+    auto H = std::abs(reflectivity * (1.0f - damping) / (1.0f - damping * cw));
+    auto alpha = std::pow(1 - H, 2.0f);
+    retv.push_back(alpha);
+  }
+  return retv;
+}
+
+struct optimpar_t {
+  std::vector<float> alpha;
+  std::vector<float> freq;
+  float fs;
+};
+
+float absorptionerror(const std::vector<float>& vPar, void* data)
+{
+  optimpar_t* pOpt = (optimpar_t*)data;
+  auto d = exp(-vPar[0] * vPar[0]);
+  auto r = exp(-vPar[1] * vPar[1]);
+  // auto r = cosf(TASCAR_PIf * vPar[1]);
+  std::cout << "[" << r << " " << d << "]\n";
+  auto alphatest = TASCAR::rflt2alpha(r, d, pOpt->fs, pOpt->freq);
+  float e = 0.0f;
+  for(size_t k = 0; k < std::min(alphatest.size(), pOpt->alpha.size()); ++k) {
+    auto a2 = (pOpt->alpha[k] - alphatest[k]);
+    a2 *= a2;
+    e += a2;
+  }
+  e /= pOpt->alpha.size();
+  if((d > 1.0f) || (d < 0.0f))
+    e = 1e6f;
+  return e;
+}
+
+void TASCAR::alpha2rflt(float& reflectivity, float& damping,
+                        const std::vector<float>& alpha,
+                        const std::vector<float>& freq, float fs,
+                        uint32_t numiter)
+{
+  optimpar_t optpar = {alpha, freq, fs};
+  std::vector<float> par = {0.5f, 0.5f};
+  std::vector<float> step = {0.1f, 0.1f};
+  float err = 10000000.0f;
+  float mu = 100.0f;
+  for(size_t k = 0; k < numiter; ++k) {
+    float nerr = downhill_iterate(mu, par, absorptionerror, &optpar, step);
+    if(nerr > err)
+      mu *= 0.5f;
+    // if(fabsf(nerr / err - 1.0f) < 1e-7f) {
+    //  DEBUG(fabsf(nerr / err - 1.0f));
+    //  k = numiter;
+    //}
+    err = nerr;
+    if(err < 0.0001f)
+      k = numiter;
+    damping = exp(-par[0] * par[0]);
+    reflectivity = exp(-par[1] * par[1]);
+    // reflectivity = cosf(TASCAR_PIf * par[1]);
+    std::cout << mu << " " << nerr << " " << reflectivity << " " << damping
+              << std::endl;
+  }
+  damping = exp(-par[0] * par[0]);
+  reflectivity = exp(-par[1] * par[1]);
+  // reflectivity = cosf(TASCAR_PIf * par[1]);
+  DEBUG(numiter);
+}
+
 /*
  * Local Variables:
  * mode: c++
