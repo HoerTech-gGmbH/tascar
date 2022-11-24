@@ -803,7 +803,7 @@ void TASCAR::alpha2rflt(float& reflectivity, float& damping,
     damping = exp(-par[0] * par[0]);
     reflectivity = exp(-par[1] * par[1]);
     // reflectivity = cosf(TASCAR_PIf * par[1]);
-    std::cout << mu << " " << nerr << " " << reflectivity << " " << damping
+    std::cout << k << " " << mu << " " << nerr << " " << reflectivity << " " << damping
               << std::endl;
   }
   damping = exp(-par[0] * par[0]);
