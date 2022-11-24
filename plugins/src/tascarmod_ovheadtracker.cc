@@ -26,7 +26,7 @@
 
 #include "serialport.h"
 
-const std::complex<double> i = {0.0, 1.0};
+// const std::complex<double> i = {0.0, 1.0};
 
 class ovheadtracker_t : public TASCAR::actor_module_t,
                         protected TASCAR::service_t {
@@ -45,7 +45,14 @@ protected:
 private:
   // configuration variables:
   std::string name;
-  std::vector<std::string> devices;
+#ifdef ISMACOS
+  std::vector<std::string> devices = {"/dev/tty.usbserial-0001",
+                                      "/dev/tty.usbserial-0002",
+                                      "/dev/tty.usbserial-0003"};
+#else
+  std::vector<std::string> devices = {"/dev/ttyUSB0", "/dev/ttyUSB1",
+                                      "/dev/ttyUSB2"};
+#endif
   // data logging OSC url:
   std::string url;
   // rotation OSC url:
@@ -139,11 +146,10 @@ void ovheadtracker_t::release()
 }
 
 ovheadtracker_t::ovheadtracker_t(const TASCAR::module_cfg_t& cfg)
-    : actor_module_t(cfg), name("ovheadtracker"),
-      devices({"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"}), ttl(1),
-      calib0path("/calib0"), calib1path("/calib1"), axes({0, 1, 2}),
-      accscale(16384 / 9.81), gyrscale(16.4), target(NULL), rottarget(NULL),
-      bcalib(false), qref(1, 0, 0, 0), run_service_level(true)
+    : actor_module_t(cfg), name("ovheadtracker"), ttl(1), calib0path("/calib0"),
+      calib1path("/calib1"), axes({0, 1, 2}), accscale(16384 / 9.81),
+      gyrscale(16.4), target(NULL), rottarget(NULL), bcalib(false),
+      qref(1, 0, 0, 0), run_service_level(true)
 {
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
   GET_ATTRIBUTE(devices, "", "List of serial port device candidates");
@@ -239,13 +245,23 @@ void ovheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
 void parse_devstring(std::string& l, std::vector<double>& data,
                      size_t num_elements)
 {
-  l = l.substr(1);
-  std::string::size_type sz;
-  for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
-    data[k] = std::stod(l, &sz);
-    if(sz < l.size())
-      l = l.substr(sz + 1);
+  size_t cnt = 0;
+  auto odata = data;
+  try{
+    l = l.substr(1);
+    std::string::size_type sz;
+    for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
+      data[k] = std::stod(l, &sz);
+      ++cnt;
+      if(sz < l.size())
+        l = l.substr(sz + 1);
+    }
   }
+  catch(...){
+    data = odata;
+ }
+  if( cnt != num_elements )
+    data = odata;
   for(size_t k = num_elements; k < data.size(); ++k)
     data[k] = 0.0;
 }
@@ -257,18 +273,28 @@ void parse_devstring(std::string& l, std::vector<double>& data,
  */
 void parse_devstring(std::string& l, TASCAR::quaternion_t& q)
 {
-  l = l.substr(1);
-  std::string::size_type sz;
-  q.w = std::stod(l, &sz);
-  if(sz < l.size())
+  bool ok = false;
+  auto oq = q;
+  try{
+    l = l.substr(1);
+    std::string::size_type sz;
+    q.w = std::stod(l, &sz);
+    if(sz < l.size())
+      l = l.substr(sz + 1);
+    q.x = std::stod(l, &sz);
+    if(sz < l.size())
+      l = l.substr(sz + 1);
+    q.y = std::stod(l, &sz);
+    if(sz < l.size())
     l = l.substr(sz + 1);
-  q.x = std::stod(l, &sz);
-  if(sz < l.size())
-    l = l.substr(sz + 1);
-  q.y = std::stod(l, &sz);
-  if(sz < l.size())
-    l = l.substr(sz + 1);
-  q.z = std::stod(l, &sz);
+    q.z = std::stod(l, &sz);
+    ok = true;
+  }
+  catch(...){
+    q = oq;
+  }
+  if( !ok)
+    q = oq;
 }
 
 void ovheadtracker_t::service()
@@ -299,6 +325,7 @@ void ovheadtracker_t::service()
       while(run_service) {
         std::string l(dev.readline(1024, 10));
         if(l.size()) {
+          //std::cout << l << std::endl;
           switch(l[0]) {
           case 'A': {
             // acceleration
