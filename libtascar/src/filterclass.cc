@@ -434,11 +434,11 @@ void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
 void bilinear(std::vector<std::complex<double>>& poles, double& gain)
 {
   std::complex<double> prod_poles = 1.0;
-  for( const auto& p : poles )
+  for(const auto& p : poles)
     prod_poles *= (1.0 - p);
   gain = std::real(gain / prod_poles);
-  for( auto& p : poles )
-    p = (1.0+p)/(1.0-p);
+  for(auto& p : poles)
+    p = (1.0 + p) / (1.0 - p);
 }
 
 void bilinearf(std::vector<std::complex<float>>& poles, float& gain)
@@ -611,7 +611,8 @@ float TASCAR::multiband_pareq_t::optim_error_fun(const std::vector<float>& par)
 
 std::vector<float> TASCAR::multiband_pareq_t::optim_response(
     size_t numflt, float maxq, const std::vector<float>& vF,
-    const std::vector<float>& vG, float fs, size_t numiter)
+    const std::vector<float>& vG, float fs, size_t numiter,
+    bool use_nelder_mead)
 {
   if(numflt < 1)
     throw TASCAR::ErrMsg(
@@ -695,17 +696,21 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
     par[3 * k + 3] = 0.5f;
   }
   optimpar2fltsettings(par, fs);
-  float err = 10000000.0f;
-  float eps = 1.0f;
-  for(size_t k = 0; k < numiter; ++k) {
-    float nerr = downhill_iterate(eps, par, mbeqerrfun, this, step);
-    if(nerr > err)
-      eps *= 0.5f;
-    if(fabsf(nerr / err - 1.0f) < 1e-7f)
-      k = numiter;
-    err = nerr;
-    if(err < 0.01f)
-      k = numiter;
+  if(use_nelder_mead) {
+    TASCAR::nelmin(par, mbeqerrfun, par, 0.1f, step, 2, numiter, this);
+  } else {
+    float err = 10000000.0f;
+    float eps = 1.0f;
+    for(size_t k = 0; k < numiter; ++k) {
+      float nerr = downhill_iterate(eps, par, mbeqerrfun, this, step);
+      if(nerr > err)
+        eps *= 0.5f;
+      if(fabsf(nerr / err - 1.0f) < 1e-7f)
+        k = numiter;
+      err = nerr;
+      if(err < 0.01f)
+        k = numiter;
+    }
   }
   optimpar2fltsettings(par, fs, false);
   return dbresponse(vF, fs);

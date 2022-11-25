@@ -374,7 +374,8 @@ namespace TASCAR {
     std::vector<float> optim_response(size_t numflt, float maxq,
                                       const std::vector<float>& vF,
                                       const std::vector<float>& vG, float fs,
-                                      size_t numiter = 1000);
+                                      size_t numiter = 1000,
+                                      bool use_nelder_mead = true);
     /**
        @brief Return gain response in dB
        @param f Frequencies in Hz
