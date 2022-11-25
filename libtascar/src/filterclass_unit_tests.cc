@@ -485,7 +485,7 @@ TEST(alpha2rflt, vals)
   // int err =
   TASCAR::alpha2rflt(reflectivity, damping, alpha, vfreq, 44100.0f);
   ASSERT_NEAR(0.7709, reflectivity, 1e-4f);
-  ASSERT_NEAR(0.21, damping, 1e-4f);
+  ASSERT_NEAR(0.21, damping, 2e-3f);
   // ASSERT_EQ(0, err);
 }
 
