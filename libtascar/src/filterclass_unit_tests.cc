@@ -482,10 +482,11 @@ TEST(alpha2rflt, vals)
                               0.0600f, 0.0600f, 0.0700f};
   float reflectivity = 1.0f;
   float damping = 0.5f;
-  int err = TASCAR::alpha2rflt(reflectivity, damping, alpha, vfreq, 44100.0f);
-  ASSERT_EQ(0, err);
+  // int err =
+  TASCAR::alpha2rflt(reflectivity, damping, alpha, vfreq, 44100.0f);
   ASSERT_NEAR(0.7709, reflectivity, 1e-4f);
   ASSERT_NEAR(0.21, damping, 1e-4f);
+  // ASSERT_EQ(0, err);
 }
 
 // Local Variables:
