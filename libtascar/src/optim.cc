@@ -4,6 +4,8 @@
  * Copyright (c) 2011 John Burkardt, R ONeill
  * Copyright (c) 2022 Giso Grimm
  *
+ * Original Matlab code published under LGPL:
+ *
  * https://people.sc.fsu.edu/~burkardt/m_src/asa047/nelmin.m
  */
 /*
@@ -20,13 +22,14 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nelmin.h"
+#include "optim.h"
 #include "defs.h"
 
 int TASCAR::nelmin(std::vector<float>& xmin,
-                   float (*fn)(const std::vector<float>&),
+                   float (*fn)(const std::vector<float>&, void*),
                    std::vector<float> start, float reqmin,
-                   const std::vector<float>& step, size_t konvge, size_t kcount)
+                   const std::vector<float>& step, size_t konvge, size_t kcount,
+                   void* data)
 {
   auto n = start.size();
   size_t icount = 0u;
@@ -69,7 +72,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
     for(size_t i = 0; i < n; ++i)
       p[i][nn - 1] = start[i];
 
-    y[nn - 1] = fn(start);
+    y[nn - 1] = fn(start, data);
     ++icount;
 
     for(size_t j = 0; j < n; ++j) {
@@ -77,7 +80,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
       start[j] += step[j] * del;
       for(size_t i = 0; i < n; ++i)
         p[i][j] = start[i];
-      y[j] = fn(start);
+      y[j] = fn(start, data);
       ++icount;
       start[j] = x;
     }
@@ -134,7 +137,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
       p2star.resize(n);
       for(size_t i = 0; i < n; ++i)
         pstar[i] = pbar[i] + rcoeff * (pbar[i] - p[i][ihi]);
-      float ystar = fn(pstar);
+      float ystar = fn(pstar, data);
       ++icount;
       //
       //  Successful reflection, so extension.
@@ -144,7 +147,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
         for(size_t i = 0; i < n; ++i)
           p2star[i] = pbar[i] + ecoeff * (pstar[i] - pbar[i]);
 
-        float y2star = fn(p2star);
+        float y2star = fn(p2star, data);
         ++icount;
         //
         //  Check extension.
@@ -186,7 +189,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
           for(size_t i = 0; i < n; ++i)
             p2star[i] = pbar[i] + ccoeff * (p[i][ihi] - pbar[i]);
 
-          float y2star = fn(p2star);
+          float y2star = fn(p2star, data);
           ++icount;
           //
           //  Contract the whole simplex.
@@ -198,7 +201,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
                 p[i][j] = (p[i][j] + p[i][ilo]) * 0.5;
                 xmin[i] = p[i][j];
               }
-              y[j] = fn(xmin);
+              y[j] = fn(xmin, data);
               ++icount;
             }
 
@@ -231,7 +234,7 @@ int TASCAR::nelmin(std::vector<float>& xmin,
           for(size_t i = 0; i < n; ++i)
             p2star[i] = pbar[i] + ccoeff * (pstar[i] - pbar[i]);
 
-          float y2star = fn(p2star);
+          float y2star = fn(p2star, data);
           ++icount;
           //
           //  Retain reflection?
@@ -301,14 +304,14 @@ int TASCAR::nelmin(std::vector<float>& xmin,
     for(size_t i = 0; i < n; ++i) {
       del = step[i] * eps;
       xmin[i] += del;
-      float z = fn(xmin);
+      float z = fn(xmin, data);
       ++icount;
       if(z < ynewlo) {
         ifault = 2;
         break;
       }
       xmin[i] -= 2 * del;
-      z = fn(xmin);
+      z = fn(xmin, data);
       ++icount;
       if(z < ynewlo) {
         ifault = 2;

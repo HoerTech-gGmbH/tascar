@@ -19,10 +19,10 @@
 
 #include <gtest/gtest.h>
 
+#include "optim.h"
 #include <math.h>
-#include "nelmin.h"
 
-float errfun(const std::vector<float>& x)
+float errfun(const std::vector<float>& x, void*)
 {
   float v = 0;
   for(auto xx : x)
@@ -33,7 +33,8 @@ float errfun(const std::vector<float>& x)
 TEST(nelmin, conv)
 {
   std::vector<float> xmin;
-  int err = TASCAR::nelmin(xmin, errfun, {0.0f}, 0.001f, {0.01f}, 1, 1000);
+  int err =
+      TASCAR::nelmin(xmin, errfun, {0.0f}, 0.001f, {0.01f}, 1, 1000, NULL);
   EXPECT_EQ(0, err);
   EXPECT_EQ(1u, xmin.size());
   if(xmin.size() == 1) {

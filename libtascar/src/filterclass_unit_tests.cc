@@ -474,18 +474,19 @@ TEST(rflt2alpha, vals)
   }
 }
 
-//TEST(alpha2rflt, vals)
-//{
-//  std::vector<float> vfreq = {125.0f,  250.0f,  500.0f,
-//                              1000.0f, 2000.0f, 4000.0f};
-//  std::vector<float> alpha = {0.0400f, 0.0400f, 0.0700f,
-//                              0.0600f, 0.0600f, 0.0700f};
-//  float reflectivity = 1.0f;
-//  float damping = 0.5f;
-//  TASCAR::alpha2rflt(reflectivity, damping, alpha, vfreq, 44100.0f);
-//  ASSERT_NEAR(0.7709, reflectivity, 1e-4f);
-//  ASSERT_NEAR(0.21, damping, 1e-4f);
-//}
+TEST(alpha2rflt, vals)
+{
+  std::vector<float> vfreq = {125.0f,  250.0f,  500.0f,
+                              1000.0f, 2000.0f, 4000.0f};
+  std::vector<float> alpha = {0.0400f, 0.0400f, 0.0700f,
+                              0.0600f, 0.0600f, 0.0700f};
+  float reflectivity = 1.0f;
+  float damping = 0.5f;
+  int err = TASCAR::alpha2rflt(reflectivity, damping, alpha, vfreq, 44100.0f);
+  ASSERT_EQ(0, err);
+  ASSERT_NEAR(0.7709, reflectivity, 1e-4f);
+  ASSERT_NEAR(0.21, damping, 1e-4f);
+}
 
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"

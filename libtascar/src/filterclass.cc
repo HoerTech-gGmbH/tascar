@@ -764,8 +764,6 @@ float absorptionerror(const std::vector<float>& vPar, void* data)
   optimpar_t* pOpt = (optimpar_t*)data;
   auto d = exp(-vPar[0] * vPar[0]);
   auto r = exp(-vPar[1] * vPar[1]);
-  // auto r = cosf(TASCAR_PIf * vPar[1]);
-  std::cout << "[" << r << " " << d << "]\n";
   auto alphatest = TASCAR::rflt2alpha(r, d, pOpt->fs, pOpt->freq);
   float e = 0.0f;
   for(size_t k = 0; k < std::min(alphatest.size(), pOpt->alpha.size()); ++k) {
@@ -779,37 +777,19 @@ float absorptionerror(const std::vector<float>& vPar, void* data)
   return e;
 }
 
-void TASCAR::alpha2rflt(float& reflectivity, float& damping,
-                        const std::vector<float>& alpha,
-                        const std::vector<float>& freq, float fs,
-                        uint32_t numiter)
+int TASCAR::alpha2rflt(float& reflectivity, float& damping,
+                       const std::vector<float>& alpha,
+                       const std::vector<float>& freq, float fs,
+                       uint32_t numiter)
 {
   optimpar_t optpar = {alpha, freq, fs};
   std::vector<float> par = {0.5f, 0.5f};
   std::vector<float> step = {0.1f, 0.1f};
-  float err = 10000000.0f;
-  float mu = 100.0f;
-  for(size_t k = 0; k < numiter; ++k) {
-    float nerr = downhill_iterate(mu, par, absorptionerror, &optpar, step);
-    if(nerr > err)
-      mu *= 0.5f;
-    // if(fabsf(nerr / err - 1.0f) < 1e-7f) {
-    //  DEBUG(fabsf(nerr / err - 1.0f));
-    //  k = numiter;
-    //}
-    err = nerr;
-    if(err < 0.0001f)
-      k = numiter;
-    damping = exp(-par[0] * par[0]);
-    reflectivity = exp(-par[1] * par[1]);
-    // reflectivity = cosf(TASCAR_PIf * par[1]);
-    std::cout << k << " " << mu << " " << nerr << " " << reflectivity << " " << damping
-              << std::endl;
-  }
+  int err = TASCAR::nelmin(par, absorptionerror, par, 0.01f, step, 2, numiter,
+                           &optpar);
   damping = exp(-par[0] * par[0]);
   reflectivity = exp(-par[1] * par[1]);
-  // reflectivity = cosf(TASCAR_PIf * par[1]);
-  DEBUG(numiter);
+  return err;
 }
 
 /*
