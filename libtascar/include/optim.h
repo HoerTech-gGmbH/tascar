@@ -1,6 +1,7 @@
 #ifndef OPTIM_H
 #define OPTIM_H
 
+#include <stdlib.h>
 #include <vector>
 
 /**
