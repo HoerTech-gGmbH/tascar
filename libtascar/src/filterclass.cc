@@ -793,7 +793,7 @@ int TASCAR::alpha2rflt(float& reflectivity, float& damping,
   optimpar_t optpar = {alpha, freq, fs};
   std::vector<float> par = {0.5f, 0.5f};
   std::vector<float> step = {0.1f, 0.1f};
-  int err = TASCAR::nelmin(par, absorptionerror, par, 0.01f, step, 2, numiter,
+  int err = TASCAR::nelmin(par, absorptionerror, par, 0.02f, step, 2, numiter,
                            &optpar);
   damping = exp(-par[0] * par[0]);
   reflectivity = exp(-par[1] * par[1]);

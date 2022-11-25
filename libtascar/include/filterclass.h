@@ -444,7 +444,7 @@ namespace TASCAR {
   int alpha2rflt(float& reflectivity, float& damping,
                  const std::vector<float>& alpha,
                  const std::vector<float>& freq, float fs,
-                 uint32_t numiter = 1000u);
+                 uint32_t numiter = 2000u);
 
 } // namespace TASCAR
 
