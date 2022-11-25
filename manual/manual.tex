@@ -737,7 +737,7 @@ match the total number of modules loaded in a session (multiple
 \begin{tscelements}
 \refelem{source}, \refelem{receiver},
 \refelem{diffuse}, \refelem{face}, \refelem{facegroup},
-\refelem{obstacle}, \elem{description}
+\refelem{obstacle}, \elem{description}, \refelem{material}
 \end{tscelements}
 
 \elem{scene} is a top-level element of a \tascar{} scene
@@ -1443,6 +1443,36 @@ The \elem{facegroup} element creates a group of polygon reflectors,
 with common reflection properties.
 
 \input{tabfacegroup.tex}
+
+Reflection properties can be defined either by explicitely setting the
+reflection filter coefficients \attr{damping} and \attr{reflectivity},
+or by selecting a material, previously defined within in the scene
+using the \elem{material} element:
+
+\input{tabmaterial.tex}
+
+Some basic material definitions are built into TASCAR, see Table \ref{tab:materials}.
+
+\begin{table}[htb]
+
+  \caption{Absorption coefficients of built-in material definitions.}\label{tab:materials}
+  
+  {\small
+    \centerline{\begin{tabular}{lcccccc}
+        \hline
+        name                 & 125~Hz & 250~Hz & 500~Hz & 1~kHz & 2~kHz & 4~kHz \\
+        \hline
+        parquet              & 0.04   & 0.04   & 0.07   & 0.06  & 0.06  & 0.07  \\
+        window               & 0.35   & 0.25   & 0.18   & 0.12  & 0.07  & 0.04  \\
+        concrete             & 0.36   & 0.44   & 0.31   & 0.29  & 0.39  & 0.25  \\
+        acoustic\_tiles      & 0.05   & 0.22   & 0.52   & 0.56  & 0.45  & 0.32  \\
+        plaster\_smooth      & 0.013  & 0.015  & 0.02   & 0.03  & 0.04  & 0.05  \\
+        carpet\_on\_concrete & 0.02   & 0.06   & 0.14   & 0.37  & 0.60  & 0.65  \\
+        metal\_8mm           & 0.50   & 0.35   & 0.15   & 0.05  & 0.05  & 0.00  \\
+        \hline
+    \end{tabular}}
+  }
+\end{table}
 
 Element \elem{facegroup} behaves also as an object, since it also has
 a position and orientation in space.

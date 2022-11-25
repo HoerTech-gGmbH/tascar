@@ -35,7 +35,24 @@ namespace TASCAR {
    */
   namespace Scene {
 
-    class route_t : public xml_element_t { //, public audiostates_t
+    class material_t : public xml_element_t {
+    public:
+      material_t(tsccfg::node_t);
+      material_t();
+      material_t(const std::string& name, const std::vector<float>& f,
+                 const std::vector<float>& alpha);
+      ~material_t();
+      void update_coeff(float fs);
+      void validate();
+      std::string name = "plaster";
+      std::vector<float> f = {125.0f,  250.0f,  500.0f,
+                              1000.0f, 2000.0f, 4000.0f};
+      std::vector<float> alpha = {0.013f, 0.015f, 0.02f, 0.03f, 0.04f, 0.05};
+      float reflectivity = 1.0f;
+      float damping = 0.0f;
+    };
+
+    class route_t : public xml_element_t {
     public:
       route_t(tsccfg::node_t);
       ~route_t();
@@ -140,18 +157,18 @@ namespace TASCAR {
       std::vector<TASCAR::pos_t> vertices;
     };
 
-    class face_group_t : public object_t {
+    class face_group_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
     public:
       face_group_t(tsccfg::node_t xmlsrc);
       virtual ~face_group_t();
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
-      float reflectivity;
-      float damping;
+      //float reflectivity;
+      //float damping;
       std::string importraw;
-      bool edgereflection;
-      float scattering;
+      //bool edgereflection;
+      //float scattering;
       TASCAR::pos_t shoebox;
       TASCAR::pos_t shoeboxwalls;
     };
@@ -445,6 +462,7 @@ namespace TASCAR {
          \callergraph
       */
       void process_active(double t);
+      std::map<std::string, TASCAR::Scene::material_t> materials;
       std::vector<sound_t*> sounds;
       std::map<std::string, sound_t*> soundmap;
       sound_t& sound_by_id(const std::string& id);

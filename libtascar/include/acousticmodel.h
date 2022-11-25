@@ -308,11 +308,13 @@ namespace TASCAR {
     public:
       reflector_t();
       void apply_reflectionfilter(TASCAR::wave_t& audio, double& lpstate) const;
+      void read_xml(TASCAR::xml_element_t& e);
       bool active;
       float reflectivity;
       float damping;
       bool edgereflection;
       float scattering;
+      std::string material;
     };
 
     /**

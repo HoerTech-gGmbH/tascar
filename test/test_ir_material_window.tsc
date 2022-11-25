@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <receiver/>
+    <facegroup shoebox="2 3 4" material="window"/>
+  </scene>
+</session>

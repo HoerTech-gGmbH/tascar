@@ -286,6 +286,17 @@ reflector_t::reflector_t()
 {
 }
 
+void reflector_t::read_xml(TASCAR::xml_element_t& e)
+{
+  e.GET_ATTRIBUTE(reflectivity, "", "Reflectivity coefficient");
+  e.GET_ATTRIBUTE(damping, "", "Damping coefficient");
+  e.GET_ATTRIBUTE(material, "", "Material name, or empty to use coefficients");
+  e.GET_ATTRIBUTE_BOOL(
+      edgereflection,
+      "Apply edge reflection in case of not directly visible image source");
+  e.GET_ATTRIBUTE(scattering, "", "Relative amount of scattering");
+}
+
 void reflector_t::apply_reflectionfilter( TASCAR::wave_t& audio, double& lpstate ) const
 {
   double c1(reflectivity * (1.0-damping));

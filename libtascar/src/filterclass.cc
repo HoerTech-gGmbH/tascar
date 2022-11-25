@@ -782,6 +782,14 @@ int TASCAR::alpha2rflt(float& reflectivity, float& damping,
                        const std::vector<float>& freq, float fs,
                        uint32_t numiter)
 {
+  if(alpha.empty())
+    throw TASCAR::ErrMsg(
+        "Invalid alpha coefficients in reflection filter (empty)");
+  if(alpha.size() != freq.size())
+    throw TASCAR::ErrMsg(
+        "Different number of alpha coefficients and frequencies: alpha has " +
+        std::to_string(alpha.size()) + " coefficients, freq has " +
+        std::to_string(freq.size()) + " entries.");
   optimpar_t optpar = {alpha, freq, fs};
   std::vector<float> par = {0.5f, 0.5f};
   std::vector<float> step = {0.1f, 0.1f};

@@ -23,6 +23,7 @@
 #include "scene.h"
 #include "amb33defs.h"
 #include "errorhandling.h"
+#include "filterclass.h"
 #include "tascar_os.h"
 #include <algorithm>
 #include <fstream>
@@ -43,9 +44,10 @@ using namespace TASCAR::Scene;
 object_t::object_t(tsccfg::node_t src)
     : dynobject_t(src), route_t(src), endtime(0)
 {
-  dynobject_t::get_attribute("end", endtime,"s","end of render activity, or 0 to render always");
+  dynobject_t::get_attribute("end", endtime, "s",
+                             "end of render activity, or 0 to render always");
   std::string scol;
-  dynobject_t::get_attribute("color", scol,"","html color string");
+  dynobject_t::get_attribute("color", scol, "", "html color string");
   color = rgb_color_t(scol);
 }
 
@@ -63,9 +65,10 @@ diff_snd_field_obj_t::diff_snd_field_obj_t(tsccfg::node_t xmlsrc)
       licensed_component_t(typeid(*this).name()), size(1, 1, 1), falloff(1.0),
       layers(0xffffffff), source(NULL)
 {
-  dynobject_t::GET_ATTRIBUTE(size,"m","size in which sound field is rendered.");
-  dynobject_t::GET_ATTRIBUTE(falloff,"m","falloff ramp length at boundaries");
-  dynobject_t::GET_ATTRIBUTE_BITS(layers,"render layers");
+  dynobject_t::GET_ATTRIBUTE(size, "m",
+                             "size in which sound field is rendered.");
+  dynobject_t::GET_ATTRIBUTE(falloff, "m", "falloff ramp length at boundaries");
+  dynobject_t::GET_ATTRIBUTE_BITS(layers, "render layers");
 }
 
 void diff_snd_field_obj_t::add_licenses(licensehandler_t* lh)
@@ -262,6 +265,36 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
     GET_ATTRIBUTE(c, "m/s", "speed of sound");
     GET_ATTRIBUTE_BOOL(active, "render scene");
     description = tsccfg::node_get_text(e, "description");
+    for(auto mat :
+        {material_t("parquet",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {
+                        0.04f,
+                        0.04f,
+                        0.07f,
+                        0.06f,
+                        0.06f,
+                        0.07f,
+                    }),
+         material_t("window",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {0.35f, 0.25f, 0.18f, 0.12f, 0.07f, 0.04f}),
+         material_t("concrete",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {0.36f, 0.44f, 0.31f, 0.29f, 0.39f, 0.25f}),
+         material_t("acoustic_tiles",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {0.05f, 0.22f, 0.52f, 0.56f, 0.45f, 0.32f}),
+         material_t("plaster",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {0.013f, 0.015f, 0.02f, 0.03f, 0.04f, 0.05f}),
+         material_t("carpet_on_concrete",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {0.02f, 0.06f, 0.14f, 0.37f, 0.60f, 0.65f}),
+         material_t("metal_8mm",
+                    {125.0f, 250.0f, 500.0f, 1000.0f, 2000.0f, 4000.0f},
+                    {0.50f, 0.35f, 0.15f, 0.05f, 0.05f, 0.00f})})
+      materials[mat.name] = mat;
     for(auto& sne : tsccfg::node_get_children(e)) {
       TASCAR::Scene::object_t* obj(NULL);
       // parse nodes:
@@ -289,6 +322,9 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
       } else if(tsccfg::node_get_name(sne) == "reverb") {
         diffuse_reverbs.push_back(new diffuse_reverb_t(sne));
         obj = diffuse_reverbs.back();
+      } else if(tsccfg::node_get_name(sne) == "material") {
+        material_t mat(sne);
+        materials[mat.name] = mat;
       } else if(tsccfg::node_get_name(sne) != "include")
         add_warning("Unrecognized xml element \"" + tsccfg::node_get_name(sne) +
                         "\".",
@@ -306,7 +342,8 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
         const std::string id(sound->get_id());
         auto mapsnd(soundmap.find(id));
         if(mapsnd != soundmap.end()) {
-          throw TASCAR::ErrMsg("The sound id \"" + id + "\" of source object \"" +
+          throw TASCAR::ErrMsg("The sound id \"" + id +
+                               "\" of source object \"" +
                                source_object->get_name() +
                                "\" is not unique (already used by source \"" +
                                soundmap[id]->get_parent_name() + "\").");
@@ -321,11 +358,10 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
     if(objs.size())
       guitrackobject = objs[0];
   }
-  catch(...)
-    {
-      clean_children();
-      throw;
-    }
+  catch(...) {
+    clean_children();
+    throw;
+  }
 }
 
 sound_t& scene_t::sound_by_id(const std::string& id)
@@ -347,7 +383,7 @@ void scene_t::configure_meter(float tc, TASCAR::levelmeter::weight_t w)
 
 void scene_t::clean_children()
 {
-  for(auto& obj : get_objects() )
+  for(auto& obj : get_objects())
     delete obj;
 }
 
@@ -451,7 +487,8 @@ receiver_obj_t::receiver_obj_t(tsccfg::node_t xmlsrc, bool is_reverb_)
                                 ", receiver \"" + get_name() + "\").",
                             xmlsrc);
     }
-    bool checkcalibfor(TASCAR::config("tascar.spkcalib.checktypeid", true) > 0.0);
+    bool checkcalibfor(TASCAR::config("tascar.spkcalib.checktypeid", true) >
+                       0.0);
     if(checkcalibfor)
       if(spk->spkpos.has_calibfor) {
         std::string spktypeid(spk->get_spktypeid());
@@ -505,7 +542,8 @@ void receiver_obj_t::process_active(double t, uint32_t anysolo)
 
 src_object_t* scene_t::add_source()
 {
-  source_objects.push_back(new src_object_t(tsccfg::node_add_child(e,"source")));
+  source_objects.push_back(
+      new src_object_t(tsccfg::node_add_child(e, "source")));
   return source_objects.back();
 }
 
@@ -552,6 +590,31 @@ void scene_t::configure()
                          "\")");
   all_objects = get_objects();
   try {
+    // update reflectors with material entry:
+    // first, get list of used materials:
+    std::set<std::string> used_materials;
+    for(auto r : face_objects)
+      if(!r->material.empty())
+        used_materials.insert(r->material);
+    for(auto r : facegroups)
+      if(!r->material.empty())
+        used_materials.insert(r->material);
+    for(auto mat : used_materials)
+      if(materials.find(mat) == materials.end())
+        throw TASCAR::ErrMsg("Material \"" + mat + "\" is not defined.");
+    for(auto mat : used_materials)
+      materials[mat].update_coeff(f_sample);
+    for(auto r : face_objects)
+      if(!r->material.empty()) {
+        r->reflectivity = materials[r->material].reflectivity;
+        r->damping = materials[r->material].damping;
+      }
+    for(auto r : facegroups)
+      if(!r->material.empty()) {
+        r->reflectivity = materials[r->material].reflectivity;
+        r->damping = materials[r->material].damping;
+      }
+    // prepare all objects:
     for(auto it = all_objects.begin(); it != all_objects.end(); ++it) {
       // prepare all objects which are derived from audiostates:
       audiostates_t* p_as(dynamic_cast<audiostates_t*>(*it));
@@ -716,10 +779,10 @@ route_t::route_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid()), mute(false), solo(false),
       meter_tc(2), meter_weight(TASCAR::levelmeter::Z), targetlevel(0)
 {
-  GET_ATTRIBUTE(name,"","route name");
-  GET_ATTRIBUTE(id,"","route id");
-  GET_ATTRIBUTE_BOOL(mute,"mute flag of route");
-  GET_ATTRIBUTE_BOOL(solo,"solo flag of route");
+  GET_ATTRIBUTE(name, "", "route name");
+  GET_ATTRIBUTE(id, "", "route id");
+  GET_ATTRIBUTE_BOOL(mute, "mute flag of route");
+  GET_ATTRIBUTE_BOOL(solo, "solo flag of route");
 }
 
 void route_t::set_solo(bool b, uint32_t& anysolo)
@@ -749,13 +812,11 @@ bool object_t::is_active(uint32_t anysolo, double t)
 face_object_t::face_object_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), width(1.0), height(1.0)
 {
-  dynobject_t::GET_ATTRIBUTE(width,"m","Width of reflector");
-  dynobject_t::GET_ATTRIBUTE(height,"m","Height of reflector");
-  dynobject_t::GET_ATTRIBUTE(reflectivity,"","Reflectivity coefficient");
-  dynobject_t::GET_ATTRIBUTE(damping,"","Damping coefficient");
-  dynobject_t::GET_ATTRIBUTE(vertices,"m", "List of Cartesian coordinates to define polygon surface");
-  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"Apply edge reflection in case of not directly visible image source");
-  dynobject_t::GET_ATTRIBUTE(scattering,"","Relative amount of scattering");
+  dynobject_t::GET_ATTRIBUTE(width, "m", "Width of reflector");
+  dynobject_t::GET_ATTRIBUTE(height, "m", "Height of reflector");
+  reflector_t::read_xml(*(dynobject_t*)this);
+  dynobject_t::GET_ATTRIBUTE(
+      vertices, "m", "List of Cartesian coordinates to define polygon surface");
   if(vertices.size() > 2)
     nonrt_set(vertices);
   else
@@ -774,12 +835,12 @@ audio_port_t::audio_port_t(tsccfg::node_t xmlsrc, bool is_input_)
     : xml_element_t(xmlsrc), ctlname(""), port_index(0), is_input(is_input_),
       gain(1), caliblevel(1.0)
 {
-  GET_ATTRIBUTE(connect,"","jack port connection");
-  GET_ATTRIBUTE_DB(gain,"port gain");
+  GET_ATTRIBUTE(connect, "", "jack port connection");
+  GET_ATTRIBUTE_DB(gain, "port gain");
   has_caliblevel = has_attribute("caliblevel");
-  GET_ATTRIBUTE_DBSPL(caliblevel,"calibration level");
+  GET_ATTRIBUTE_DBSPL(caliblevel, "calibration level");
   bool inv(false);
-  GET_ATTRIBUTE_BOOL(inv,"phase invert");
+  GET_ATTRIBUTE_BOOL(inv, "phase invert");
   set_inv(inv);
 }
 
@@ -871,18 +932,20 @@ void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
     (*it)->dynobject_t::validate_attributes(msg);
   for(auto it = diffuse_reverbs.begin(); it != diffuse_reverbs.end(); ++it)
     (*it)->dynobject_t::validate_attributes(msg);
+  for(auto& mat : materials)
+    if(mat.second.e)
+      mat.second.validate_attributes(msg);
 }
 
 face_group_t::face_group_t(tsccfg::node_t xmlsrc)
-    : object_t(xmlsrc), reflectivity(1.0), damping(0.0), edgereflection(true),
-      scattering(0)
+    : object_t(xmlsrc)
 {
-  dynobject_t::GET_ATTRIBUTE(reflectivity,"","Reflectivity coefficient");
-  dynobject_t::GET_ATTRIBUTE(damping,"","Damping coefficient");
-  dynobject_t::GET_ATTRIBUTE(importraw,"","File name of raw file containing list of polygon surfaces");
-  dynobject_t::GET_ATTRIBUTE_BOOL(edgereflection,"Apply edge reflection in case of not directly visible image source");
-  dynobject_t::GET_ATTRIBUTE(scattering,"","Relative amount of scattering");
-  dynobject_t::GET_ATTRIBUTE(shoebox,"m","Generate a shoebox room of these dimensions");
+  reflector_t::read_xml(*(dynobject_t*)this);
+  dynobject_t::GET_ATTRIBUTE(
+      importraw, "",
+      "File name of raw file containing list of polygon surfaces");
+  dynobject_t::GET_ATTRIBUTE(shoebox, "m",
+                             "Generate a shoebox room of these dimensions");
   if(!shoebox.is_null()) {
     TASCAR::pos_t sb(shoebox);
     sb *= 0.5;
@@ -938,7 +1001,8 @@ face_group_t::face_group_t(tsccfg::node_t xmlsrc)
     p_reflector->nonrt_set(verts);
     reflectors.push_back(p_reflector);
   }
-  dynobject_t::GET_ATTRIBUTE(shoeboxwalls,"m","generate shoebox room without floor and ceiling");
+  dynobject_t::GET_ATTRIBUTE(shoeboxwalls, "m",
+                             "generate shoebox room without floor and ceiling");
   if(!shoeboxwalls.is_null()) {
     TASCAR::pos_t sb(shoeboxwalls);
     sb *= 0.5;
@@ -1116,12 +1180,12 @@ void obstacle_group_t::process_active(double t, uint32_t anysolo)
 sound_name_t::sound_name_t(tsccfg::node_t xmlsrc, src_object_t* parent_)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid())
 {
-  GET_ATTRIBUTE(name,"","name of sound vertex");
+  GET_ATTRIBUTE(name, "", "name of sound vertex");
   if(parent_ && name.empty())
     name = parent_->next_sound_name();
   if(name.empty())
     throw TASCAR::ErrMsg("Invalid (empty) sound name.");
-  GET_ATTRIBUTE(id,"","id of sound vertex");
+  GET_ATTRIBUTE(id, "", "id of sound vertex");
   if(parent_)
     parentname = parent_->get_name();
 }
@@ -1141,25 +1205,33 @@ sound_t::sound_t(tsccfg::node_t xmlsrc, src_object_t* parent_)
     double az(0.0);
     double el(0.0);
     double r(1.0);
-    source_t::GET_ATTRIBUTE_DEG(az,"azimuth relatve to parent");
-    source_t::GET_ATTRIBUTE_DEG(el,"elevation relative to parent");
-    source_t::GET_ATTRIBUTE(r,"m","distance from parent origin");
+    source_t::GET_ATTRIBUTE_DEG(az, "azimuth relatve to parent");
+    source_t::GET_ATTRIBUTE_DEG(el, "elevation relative to parent");
+    source_t::GET_ATTRIBUTE(r, "m", "distance from parent origin");
     local_position.set_sphere(r, az, el);
   } else {
-    source_t::get_attribute("x", local_position.x,"m","position relative to parent");
-    source_t::get_attribute("y", local_position.y,"m","position relative to parent");
-    source_t::get_attribute("z", local_position.z,"m","position relative to parent");
+    source_t::get_attribute("x", local_position.x, "m",
+                            "position relative to parent");
+    source_t::get_attribute("y", local_position.y, "m",
+                            "position relative to parent");
+    source_t::get_attribute("z", local_position.z, "m",
+                            "position relative to parent");
   }
-  source_t::get_attribute_deg("rz", local_orientation.z,"Euler orientation (Z) relative to parent");
-  source_t::get_attribute_deg("ry", local_orientation.y,"Euler orientation (Y) relative to parent");
-  source_t::get_attribute_deg("rx", local_orientation.x,"Euler orientation (X) relative to parent");
-  source_t::get_attribute("d", chaindist,"m","distance to next sound along trajectory, or 0 for normal mode");
+  source_t::get_attribute_deg("rz", local_orientation.z,
+                              "Euler orientation (Z) relative to parent");
+  source_t::get_attribute_deg("ry", local_orientation.y,
+                              "Euler orientation (Y) relative to parent");
+  source_t::get_attribute_deg("rx", local_orientation.x,
+                              "Euler orientation (X) relative to parent");
+  source_t::get_attribute(
+      "d", chaindist, "m",
+      "distance to next sound along trajectory, or 0 for normal mode");
   // parse plugins:
-  for( auto sne : tsccfg::node_get_children(source_t::e) ){
+  for(auto sne : tsccfg::node_get_children(source_t::e)) {
     if(tsccfg::node_get_name(sne) != "plugins") {
       // add_warning:
       TASCAR::add_warning("Ignoring entry \"" + tsccfg::node_get_name(sne) +
-                          "\" in sound \"" + get_fullname() + "\".",
+                              "\" in sound \"" + get_fullname() + "\".",
                           sne);
     }
   }
@@ -1236,18 +1308,18 @@ diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(tsccfg::node_t e)
   TASCAR::pos_t volumetric(3, 4, 5);
   bool diffuse(false);
   double falloff(1.0);
-  el.GET_ATTRIBUTE(name,"","diffuse reverb name");
-  el.GET_ATTRIBUTE(type,"","diffuse reverb type");
-  el.GET_ATTRIBUTE(volumetric,"m","size of diffuse reverberation");
-  el.GET_ATTRIBUTE_BOOL(diffuse,"render diffuse input sound fields");
-  el.GET_ATTRIBUTE(falloff,"m","ramp length at boundaries");
+  el.GET_ATTRIBUTE(name, "", "diffuse reverb name");
+  el.GET_ATTRIBUTE(type, "", "diffuse reverb type");
+  el.GET_ATTRIBUTE(volumetric, "m", "size of diffuse reverberation");
+  el.GET_ATTRIBUTE_BOOL(diffuse, "render diffuse input sound fields");
+  el.GET_ATTRIBUTE(falloff, "m", "ramp length at boundaries");
 }
 
 diffuse_reverb_t::diffuse_reverb_t(tsccfg::node_t e)
     : diffuse_reverb_defaults_t(e), TASCAR::Scene::receiver_obj_t(e, true),
       outputlayers(0xffffffff), source(NULL)
 {
-  dynobject_t::GET_ATTRIBUTE_BITS(outputlayers,"output layers");
+  dynobject_t::GET_ATTRIBUTE_BITS(outputlayers, "output layers");
 }
 
 diffuse_reverb_t::~diffuse_reverb_t()
@@ -1316,6 +1388,46 @@ void diffuse_reverb_t::add_licenses(licensehandler_t* lh)
   receiver_obj_t::add_licenses(lh);
   if(source)
     source->add_licenses(lh);
+}
+
+material_t::material_t()
+{
+  validate();
+}
+material_t::material_t(tsccfg::node_t e) : TASCAR::xml_element_t(e)
+{
+  GET_ATTRIBUTE(name, "", "Name of material");
+  GET_ATTRIBUTE(f, "Hz", "Frequencies at which alpha is provided");
+  GET_ATTRIBUTE(alpha, "", "Absorption coefficients");
+  validate();
+}
+
+material_t::material_t(const std::string& name, const std::vector<float>& f,
+                       const std::vector<float>& alpha)
+    : name(name), f(f), alpha(alpha)
+{
+  validate();
+}
+
+void material_t::validate()
+{
+  if(alpha.empty())
+    throw TASCAR::ErrMsg(
+        "Invalid alpha coefficients in material definition (empty)");
+  if(alpha.size() != f.size())
+    throw TASCAR::ErrMsg(
+        "Different number of alpha coefficients and frequencies: alpha has " +
+        std::to_string(alpha.size()) + " coefficients, freq has " +
+        std::to_string(f.size()) + " entries.");
+  if(name.empty())
+    throw TASCAR::ErrMsg("No name of material provided");
+}
+
+material_t::~material_t() {}
+
+void material_t::update_coeff(float fs)
+{
+  TASCAR::alpha2rflt(reflectivity, damping, alpha, f, fs, 1000);
 }
 
 /*

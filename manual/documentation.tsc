@@ -3,6 +3,7 @@
   <include/>
   <mainwindow/>
   <scene>
+    <material/>
     <mask name="mask"/>
     <source name="nav">
       <navmesh/>
