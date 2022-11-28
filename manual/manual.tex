@@ -1420,6 +1420,10 @@ Reverb receivers have the attribute \attr{layers}, which defines the layers in w
 
 \subsection{Reflectors: {\tt <face .../>} and {\tt <facegroup .../>} elements}\label{sec:face}\label{sec:facegroup}\index{face}\index{facegroup}
 
+TASCAR uses a geometric image source model. Primary sound sources can be mirrored at reflectors if they meet the visibility criteria: The primary sound source must be in the direction of the face normal of the reflector, and the closest point between the plane defined by the reflector and the sound source must be within the surface boundary, or edge diffraction must be enabled for the reflectors.
+
+The audio signal from the image sound source is a filtered copy of the signal from the primary sound source. The reflection filters are determined by the material properties, and can be specified either in terms of filter coefficients or as a material definition with frequency-dependent absorption coefficients, see below.
+
 The \elem{face} element defines a single reflecting surface.
 
 \input{tabface.tex}
@@ -1466,7 +1470,7 @@ Some basic material definitions are built into TASCAR, see Table \ref{tab:materi
         window               & 0.35   & 0.25   & 0.18   & 0.12  & 0.07  & 0.04  \\
         concrete             & 0.36   & 0.44   & 0.31   & 0.29  & 0.39  & 0.25  \\
         acoustic\_tiles      & 0.05   & 0.22   & 0.52   & 0.56  & 0.45  & 0.32  \\
-        plaster\_smooth      & 0.013  & 0.015  & 0.02   & 0.03  & 0.04  & 0.05  \\
+        plaster              & 0.013  & 0.015  & 0.02   & 0.03  & 0.04  & 0.05  \\
         carpet\_on\_concrete & 0.02   & 0.06   & 0.14   & 0.37  & 0.60  & 0.65  \\
         metal\_8mm           & 0.50   & 0.35   & 0.15   & 0.05  & 0.05  & 0.00  \\
         \hline
