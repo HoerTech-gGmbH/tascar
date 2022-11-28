@@ -1,3 +1,6 @@
+0.228:
+       - Allow to use material names instead of reflection filter coefficients
+       - In speaker calibration filter optimization, use more robust Nelder-Mead algorithm instead of steepest ascent
 0.227.1: Bugfix release: Timeline-independet playback of sound files in sndfile plugin works now also with OSC interface
 0.227: Improvement of datalogging, GUI and documentation, many minor improvements and some bugfixes
 0.226: Correct crossover filters in subwoofer bass management, improvement of head tracking
