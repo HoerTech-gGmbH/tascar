@@ -78,6 +78,8 @@ void ap_spkcalib_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
 {
   // implement the algrithm:
   spk.postproc(chunk);
+  for( auto& ch : chunk )
+    ch *= 1.0f/(float)spk.caliblevel;
 }
 
 // create the plugin interface:

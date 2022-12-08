@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- 
+basic test: sound propagation, 1m
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1">
+        <plugins>
+          <spkcalib layout="1ch_cal_104.spk"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="omni"/>
+  </scene>
+</session>
