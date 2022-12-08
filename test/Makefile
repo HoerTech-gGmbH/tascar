@@ -44,7 +44,7 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd_diffuse_maxre test_snd_maskplugin_multibeam_diff	\
 	test_ir_apfilter_highpass test_ir_apfilter_lowpass		\
 	test_snd_hoa2d_fuma_hos test_ir_material_carpet			\
-	test_ir_material_window
+	test_ir_material_window test_ir1_spkcalib
 
 #test_ir_simplefdn_optimt60
 

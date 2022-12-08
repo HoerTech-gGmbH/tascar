@@ -125,6 +125,42 @@ TEST(sinctable_t, getval_sinc)
   ASSERT_NEAR(0.63662, s(0.5), 1e-5);
 }
 
+TEST(staticdelay,delay)
+{
+  TASCAR::static_delay_t d0(0);
+  TASCAR::wave_t w(4);
+  w.d[0] = 1.0f;
+  d0(w);
+  EXPECT_EQ(1.0f,w.d[0]);
+  EXPECT_EQ(0.0f,w.d[1]);
+  EXPECT_EQ(0.0f,w.d[2]);
+  EXPECT_EQ(0.0f,w.d[3]);
+  TASCAR::static_delay_t d1(1);
+  w.clear();
+  w.d[0] = 1.0f;
+  d1(w);
+  EXPECT_EQ(0.0f,w.d[0]);
+  EXPECT_EQ(1.0f,w.d[1]);
+  EXPECT_EQ(0.0f,w.d[2]);
+  EXPECT_EQ(0.0f,w.d[3]);
+  TASCAR::static_delay_t d2(2);
+  w.clear();
+  w.d[0] = 1.0f;
+  d2(w);
+  EXPECT_EQ(0.0f,w.d[0]);
+  EXPECT_EQ(0.0f,w.d[1]);
+  EXPECT_EQ(1.0f,w.d[2]);
+  EXPECT_EQ(0.0f,w.d[3]);
+  TASCAR::static_delay_t d3(3);
+  w.clear();
+  w.d[0] = 1.0f;
+  d3(w);
+  EXPECT_EQ(0.0f,w.d[0]);
+  EXPECT_EQ(0.0f,w.d[1]);
+  EXPECT_EQ(0.0f,w.d[2]);
+  EXPECT_EQ(1.0f,w.d[3]);
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix

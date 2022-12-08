@@ -652,9 +652,11 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
     throw TASCAR::ErrMsg("Invalid delay compensation array");
   for(uint32_t k = 0; k < size(); ++k) {
     float sgain((float)(operator[](k).spkgain) * (float)(operator[](k).gain));
-    for(uint32_t f = 0; f < output[k].n; ++f) {
-      output[k].d[f] = sgain * delaycomp[k](output[k].d[f]);
-    }
+    //for(uint32_t f = 0; f < output[k].n; ++f) {
+    //  output[k].d[f] = sgain * delaycomp[k](output[k].d[f]);
+    //}
+    delaycomp[k](output[k]);
+    output[k]*= sgain;
     if(operator[](k).comp)
       operator[](k).comp->process(output[k], output[k], false);
     if(operator[](k).eqstages)

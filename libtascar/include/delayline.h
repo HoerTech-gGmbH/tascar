@@ -68,7 +68,8 @@ namespace TASCAR {
        \param order Sinc interpolation order
        \param oversampling Oversampling factor
     */
-    varidelay_t(uint32_t maxdelay, double fs, double c, uint32_t order, uint32_t oversampling);
+    varidelay_t(uint32_t maxdelay, double fs, double c, uint32_t order,
+                uint32_t oversampling);
     /// Copy constructor
     varidelay_t(const varidelay_t& src);
     ~varidelay_t();
@@ -76,32 +77,35 @@ namespace TASCAR {
        \brief Add a new input value to delay line
        \param x Input value
     */
-    inline void push(float x){
+    inline void push(float x)
+    {
       pos++;
-      if( pos>=dmax)
+      if(pos >= dmax)
         pos = 0;
       dline[pos] = x;
     };
- 
+
     /**
        \brief Return value based on spatial distance between input and output
        \param dist Distance
     */
-    inline float get_dist(float dist){
-      if( sinc.O )
-        return get_sinc(dist2sample*dist);
+    inline float get_dist(float dist)
+    {
+      if(sinc.O)
+        return get_sinc(dist2sample * dist);
       else
-        return get((uint32_t)(dist2sample*dist));
+        return get((uint32_t)(dist2sample * dist));
     };
-    inline float get_dist_push(float dist,float x){
+    inline float get_dist_push(float dist, float x)
+    {
       pos++;
-      if( pos>=dmax)
+      if(pos >= dmax)
         pos = 0;
       dline[pos] = x;
-      if( sinc.O )
-        return get_sinc(dist2sample*dist);
+      if(sinc.O)
+        return get_sinc(dist2sample * dist);
       else
-        return get((uint32_t)(dist2sample*dist));
+        return get((uint32_t)(dist2sample * dist));
     };
 
     void add_chunk(const TASCAR::wave_t& x);
@@ -109,10 +113,11 @@ namespace TASCAR {
        \brief Return value of a specific delay
        \param delay delay in samples
     */
-    inline float get(uint32_t delay) const {
-      delay = std::min(delay,dmax-1);
-      uint32_t npos = pos+dmax-delay;
-      while( npos >= dmax )
+    inline float get(uint32_t delay) const
+    {
+      delay = std::min(delay, dmax - 1);
+      uint32_t npos = pos + dmax - delay;
+      while(npos >= dmax)
         npos -= dmax;
       return dline[npos];
     };
@@ -120,14 +125,17 @@ namespace TASCAR {
        \brief Return value of a specific delay
        \param delay delay in samples
     */
-    inline float get_sinc(float delay) const{
+    inline float get_sinc(float delay) const
+    {
       float integerdelay(roundf(delay));
-      float subsampledelay(delay-integerdelay);
+      float subsampledelay(delay - integerdelay);
       float rv(0.0f);
-      for(int32_t order=-sinc.O;order<=(int32_t)(sinc.O);order++)
-        rv += sinc((float)order-subsampledelay)*get((uint32_t)(std::max(0,(int32_t)integerdelay+order)));
+      for(int32_t order = -sinc.O; order <= (int32_t)(sinc.O); order++)
+        rv += sinc((float)order - subsampledelay) *
+              get((uint32_t)(std::max(0, (int32_t)integerdelay + order)));
       return rv;
     };
+
   private:
     float* dline;
     uint32_t dmax;
@@ -140,24 +148,41 @@ namespace TASCAR {
   class static_delay_t : public TASCAR::wave_t {
   public:
     static_delay_t(uint32_t d);
-    inline float operator()(float x){
+    inline float operator()(float x)
+    {
+      if(is_zero)
+        return x;
       float tmp(d[pos]);
       d[pos] = x;
-      if( !pos )
+      if(!pos)
         pos = n;
-      if( n )
+      if(n)
         --pos;
       return tmp;
     };
+    inline void operator()(TASCAR::wave_t& x)
+    {
+      if(is_zero)
+        return;
+      for(uint32_t k = 0; k < x.n; ++k) {
+        float tmp(d[pos]);
+        d[pos] = x.d[k];
+        if(!pos)
+          pos = n;
+        if(n)
+          --pos;
+        x.d[k] = tmp;
+      }
+    };
+
   private:
-    uint32_t pos;
+    uint32_t pos = 0u;
+    bool is_zero = false;
   };
 
-}
+} // namespace TASCAR
 
 #endif
-
-
 
 /*
  * Local Variables:
