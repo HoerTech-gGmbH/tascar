@@ -513,6 +513,24 @@ void calibsession_t::reset_levels()
   }
 }
 
+void calibsession_t::enable_spkcorr_spec(bool b)
+{
+  for(uint32_t k = 0; k < levels.size(); ++k)
+    if(b) {
+      spk_spec->spkpos[k].eq = spk_nsp->spkpos[k].eq;
+      spk_spec->spkpos[k].eqstages = spk_nsp->spkpos[k].eqstages;
+    } else {
+      spk_spec->spkpos[k].eqstages = 0u;
+    }
+  for(uint32_t k = 0; k < sublevels.size(); ++k)
+    if(b) {
+      spk_spec->spkpos.subs[k].eq = spk_nsp->spkpos.subs[k].eq;
+      spk_spec->spkpos.subs[k].eqstages = spk_nsp->spkpos.subs[k].eqstages;
+    } else {
+      spk_spec->spkpos.subs[k].eqstages = 0u;
+    }
+}
+
 float getmedian(std::vector<float> vec)
 {
   size_t size = vec.size();
@@ -645,15 +663,13 @@ void get_levels_(spk_array_t& spks, TASCAR::Scene::src_object_t& src,
       //  g -= med;
       uint32_t numflt =
           std::min(((uint32_t)vF.size() - 1u) / 3u, calibpar.max_eqstages);
-      TASCAR::multiband_pareq_t eq;
       float maxq = std::max(1.0f, (float)vF.size()) /
                    log2f(calibpar.fmax / calibpar.fmin);
-      eq.optim_response((size_t)numflt, maxq, vF, vG,
-                        (float)jackrec.get_srate(), 2000u);
-      report.eq_f = eq.get_f();
-      report.eq_g = eq.get_g();
-      report.eq_q = eq.get_q();
-      spk.eq = eq;
+      spk.eq.optim_response((size_t)numflt, maxq, vF, vG,
+                            (float)jackrec.get_srate(), 2000u);
+      report.eq_f = spk.eq.get_f();
+      report.eq_g = spk.eq.get_g();
+      report.eq_q = spk.eq.get_q();
       spk.eqfreq = vF;
       spk.eqgain = vG;
       spk.eqstages = numflt;
@@ -1021,6 +1037,8 @@ void spkcalibrator_t::step3_calib_initialized()
   if(currentstep != 2u)
     throw TASCAR::ErrMsg("Please revise your configuration first.");
   // prepare speaker equalization if needed:
+  if(p_session)
+    p_session->enable_spkcorr_spec(false);
   // end
   currentstep = 3u;
 }
@@ -1032,6 +1050,8 @@ void spkcalibrator_t::step4_speaker_equalized()
   if(currentstep != 3u)
     throw TASCAR::ErrMsg("Please ensure your calibration is initialized.");
   // prepare level adjustment:
+  if(p_session)
+    p_session->enable_spkcorr_spec(true);
   // end
   currentstep = 4u;
 }

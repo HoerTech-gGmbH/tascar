@@ -142,6 +142,7 @@ namespace TASCAR {
              0.2f * (float)cfg_.par_sub.max_eqstages * (double)get_num_sub();
     };
     const spk_array_diff_render_t& get_current_layout() const;
+    void enable_spkcorr_spec(bool b);
 
   private:
     bool gainmodified;
