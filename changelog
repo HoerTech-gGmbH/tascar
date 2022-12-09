@@ -1,3 +1,7 @@
+0.228.1: Bugfix of loudspeaker calibration wizard: When
+         frequency-dependent speaker correction was active, the
+         broadband calibration is now measured with active speaker
+         correction.
 0.228:
        - Allow to use material names instead of reflection filter coefficients
        - In speaker calibration filter optimization, use more robust Nelder-Mead algorithm instead of steepest ascent
