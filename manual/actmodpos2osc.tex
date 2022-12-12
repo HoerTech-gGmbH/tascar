@@ -10,31 +10,88 @@ In the example above all objects, whose name starts with \verb!cg_! will send ge
 %
 The Euler-angles are sent in degrees, Cartesian coordinates in meter. 
 
-\begin{tscattributes}
-\indattr{name}              & Default name used in OSC variables (default: ``pos2osc'')                            \\
-\indattr{url}               & Target URL (default: osc.udp://localhost:9999/)                                      \\
-\indattr{pattern}           & Pattern of \tascar{} object names (default: /*/*). See actor modules for details.    \\
-\indattr{ttl}               & Time to live of OSC multicast messages                                               \\
-\indattr{mode}              & Message mode (default: 0)                                                            \\
-                            & 0 : send to /scene/name/pos (x,y,z) and /scene/name/rot (Euler-Z,Euler-Y,Euler-X)    \\
-                            & 1 : send to /scene/name/pos (x,y,z,Euler-Z,Euler-Y,Euler-X)                          \\
-                            & 2 : send to /tascarpos (/scene/name,x,y,z,Euler-Z,Euler-Y,Euler-X)                   \\
-                            & 3 : send to /tascarpos (name,x,y,z,Euler-Z,Euler-Y,Euler-X)                          \\
-                            & 4 : send to /avatar /lookAt x,y,z,lookatlen                                          \\
-                            & 5 : send to /avatar Euler-Z                                                          \\
-                            & 6 : send to /avatar <orientationname> Euler-Y, Euler-Z, Euler-X (delta orientation only)     \\
-                            & 7 : send to /avatar <orientationname> Euler-Y, Euler-Z, Euler-X                              \\
-                            & 8 : send to /avatar Euler-Y, Euler-Z, Euler-X (delta orientation only, degree)     \\
-                            & 9 : send to /avatar <orientationname> Euler-X, Euler-Y, Euler-Z (delta orientation only)     \\
-                            & 9 : send to /avatar <orientationname> Euler-Y, Euler-X, Euler-Z (delta orientation only)     \\
-\indattr{transport}         & Send data only while transport is rolling (default: true)                            \\
-\indattr{triggered}         & Send data only upon OSC trigger (default: false)                                     \\
-\indattr{avatar}            & Avatar name (mode 4 only)                                                            \\
-\indattr{lookatlen}         & Animation length (mode 4 only)                                                       \\
-\indattr{ignoreorientation} & Ignore delta-orientation of source (send zeros)                                      \\
-\indattr{skip}              & Skip frames (default: 0)                                                             \\
-\indattr{sendsounds}        & Send also position of sound vertices (default: false)                                \\
-\indattr{addparentname}     & When sending sound vertex positions, add parent name to vertex name (default: false) \\
-\indattr{oscale}            & Scaling factor for orientations (default: 1.0)                                       \\
-\end{tscattributes}
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:pos2osc}
+Attributes of element {\bf pos2osc}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name                        & description (type, unit)                                                                   & def.                              \\
+\hline
+\hline
+\indattr{name}              & Default name used in OSC variables (string)                                                & pos2osc                           \\
+\hline
+\indattr{pattern}           & Pattern of TASCAR object names; see actor module documentation for details. (string array) & /*/*                              \\
+\hline
+\indattr{url}               & Target URL (string)                                                                        & {\tiny osc.udp://localhost:9999/} \\
+\hline
+\indattr{ttl}               & Time to live of OSC multicast messages (uint32)                                            & 1                                 \\
+\hline
+\indattr{mode}              & Message format mode (uint32)                                                               & 0                                 \\
+                            & 0 : send to /scene/name/pos (x,y,z) and /scene/name/rot (Euler-Z,Euler-Y,Euler-X)                                              \\
+                            & 1 : send to /scene/name/pos (x,y,z,Euler-Z,Euler-Y,Euler-X)                                                                    \\
+                            & 2 : send to /tascarpos (/scene/name,x,y,z,Euler-Z,Euler-Y,Euler-X)                                                             \\
+                            & 3 : send to /tascarpos (name,x,y,z,Euler-Z,Euler-Y,Euler-X)                                                                    \\
+                            & 4 : send to /avatar /lookAt x,y,z,lookatlen                                                                                    \\
+                            & 5 : send to /avatar Euler-Z                                                                                                    \\
+                            & 6 : send to /avatar <orientationname> Euler-Y, Euler-Z, Euler-X (delta orientation only)                                       \\
+                            & 7 : send to /avatar <orientationname> Euler-Y, Euler-Z, Euler-X                                                                \\
+                            & 8 : send to /avatar Euler-Y, Euler-Z, Euler-X (delta orientation only, degree)                                                 \\
+                            & 9 : send to /avatar <orientationname> Euler-X, Euler-Y, Euler-Z (delta orientation only)                                       \\
+                            & 11 : send to /avatar/<objname> x, y, z, Euler-Z, Euler-Y, Euler-X                                                              \\
+\hline
+\indattr{addparentname}     & When sending sound vertex positions, add parent name to vertex name (bool)                 & false                             \\
+\hline
+\indattr{avatar}            & Name of object to be controlled (for control of game engines) (string)                     &                                   \\
+\hline
+\indattr{ignoreorientation} & Ignore delta-orientation of source, send zeros instead (bool)                              & false                             \\
+\hline
+\indattr{lookatlen}         & Duration of look-at animation (for control of game engines) (double, s)                    & 1                                 \\
+\hline
+\indattr{orientationname}   & Name for orientation variables (string)                                                    & /headGaze                         \\
+\hline
+\indattr{oscale}            & Scaling factor for orientations (float)                                                    & 1                                 \\
+\hline
+\indattr{sendsounds}        & Send also position of sound vertices (bool)                                                & false                             \\
+\hline
+\indattr{skip}              & Skip frames to reduce network traffic (uint32)                                             & 0                                 \\
+\hline
+\indattr{threaded}          & Use additional thread for sending data to avoid blocking of real-time audio thread (bool)  & true                              \\
+\hline
+\indattr{transport}         & Send only while transport is rolling (bool)                                                & true                              \\
+\hline
+\indattr{triggered}         & Send data only when triggered via OSC (bool)                                               & false                             \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+%\begin{tscattributes}
+%\indattr{name}              & Default name used in OSC variables (default: ``pos2osc'')                            \\
+%\indattr{url}               & Target URL (default: osc.udp://localhost:9999/)                                      \\
+%\indattr{pattern}           & Pattern of \tascar{} object names (default: /*/*). See actor modules for details.    \\
+%\indattr{ttl}               & Time to live of OSC multicast messages                                               \\
+%\indattr{mode}              & Message mode (default: 0)                                                            \\
+%                            & 0 : send to /scene/name/pos (x,y,z) and /scene/name/rot (Euler-Z,Euler-Y,Euler-X)    \\
+%                            & 1 : send to /scene/name/pos (x,y,z,Euler-Z,Euler-Y,Euler-X)                          \\
+%                            & 2 : send to /tascarpos (/scene/name,x,y,z,Euler-Z,Euler-Y,Euler-X)                   \\
+%                            & 3 : send to /tascarpos (name,x,y,z,Euler-Z,Euler-Y,Euler-X)                          \\
+%                            & 4 : send to /avatar /lookAt x,y,z,lookatlen                                          \\
+%                            & 5 : send to /avatar Euler-Z                                                          \\
+%                            & 6 : send to /avatar <orientationname> Euler-Y, Euler-Z, Euler-X (delta orientation only)     \\
+%                            & 7 : send to /avatar <orientationname> Euler-Y, Euler-Z, Euler-X                              \\
+%                            & 8 : send to /avatar Euler-Y, Euler-Z, Euler-X (delta orientation only, degree)     \\
+%                            & 9 : send to /avatar <orientationname> Euler-X, Euler-Y, Euler-Z (delta orientation only)     \\
+%                            & 9 : send to /avatar <orientationname> Euler-Y, Euler-X, Euler-Z (delta orientation only)     \\
+%\indattr{transport}         & Send data only while transport is rolling (default: true)                            \\
+%\indattr{triggered}         & Send data only upon OSC trigger (default: false)                                     \\
+%\indattr{avatar}            & Avatar name (mode 4 only)                                                            \\
+%\indattr{lookatlen}         & Animation length (mode 4 only)                                                       \\
+%\indattr{ignoreorientation} & Ignore delta-orientation of source (send zeros)                                      \\
+%\indattr{skip}              & Skip frames (default: 0)                                                             \\
+%\indattr{sendsounds}        & Send also position of sound vertices (default: false)                                \\
+%\indattr{addparentname}     & When sending sound vertex positions, add parent name to vertex name (default: false) \\
+%\indattr{oscale}            & Scaling factor for orientations (default: 1.0)                                       \\
+%\end{tscattributes}
 

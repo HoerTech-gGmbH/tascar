@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <session license="CC0">
   <include/>
   <mainwindow/>
@@ -12,37 +12,41 @@
       <position/>
       <orientation/>
       <sound>
-	<plugins>
-	  <bandpass/>
-	  <const/>
-	  <delay/>
-	  <feedbackdelay/>
-	  <filter/>
-	  <flanger/>
-	  <gain/>
-	  <gainramp/>
-	  <gate/>
-	  <hannenv/>
-	  <identity/>
-	  <level2osc/>
-	  <lipsync/>
-	  <lipsync_paper/>
-	  <lookatme/>
-	  <loopmachine/>
-	  <metronome/>
-	  <noise/>
-	  <onsetdetector/>
-	  <!--<openmha plugin="identity" config=""/>-->
-	  <pink/>
-	  <pulse/>
-	  <sine/>
-	  <sndfile license="CC0" name="../examples/footsteps.wav"/>
-	  <sndfileasync license="CC0" name="../examples/footsteps.wav"/>
-	  <speechactivity/>
-	  <spksim/>
-	  <tubesim/>
-          <spkcalib><layout><speaker/></layout></spkcalib>
-	</plugins>
+        <plugins>
+          <bandpass/>
+          <const/>
+          <delay/>
+          <feedbackdelay/>
+          <filter/>
+          <flanger/>
+          <gain/>
+          <gainramp/>
+          <gate/>
+          <hannenv/>
+          <identity/>
+          <level2osc/>
+          <lipsync/>
+          <lipsync_paper/>
+          <lookatme/>
+          <loopmachine/>
+          <metronome/>
+          <noise/>
+          <onsetdetector/>
+          <!--<openmha plugin="identity" config=""/>-->
+          <pink/>
+          <pulse/>
+          <sine/>
+          <sndfile license="CC0" name="../examples/footsteps.wav"/>
+          <sndfileasync license="CC0" name="../examples/footsteps.wav"/>
+          <speechactivity/>
+          <spksim/>
+          <tubesim/>
+          <spkcalib>
+            <layout>
+              <speaker/>
+            </layout>
+          </spkcalib>
+        </plugins>
       </sound>
       <sound type="cardioidmod"/>
       <sound type="door"/>
@@ -72,8 +76,8 @@
     <receiver type="vmic" name="vmic"/>
     <receiver type="micarray" name="micarray">
       <mic>
-	<filter type="equalizer" Q="1" omega_end="4000" omega_st="2000" theta_end="10" gain_st="1" gain_end="0"/>
-	<filter type="highshelf" theta_st="30" beta="1" omega="4000" alpha_st="10" alpha_m="30"/>
+        <filter type="equalizer" Q="1" omega_end="4000" omega_st="2000" theta_end="10" gain_st="1" gain_end="0"/>
+        <filter type="highshelf" theta_st="30" beta="1" omega="4000" alpha_st="10" alpha_m="30"/>
       </mic>
     </receiver>
     <!-- speaker based -->
@@ -104,7 +108,7 @@
     <epicycles/>
     <midicc2osc controllers="0/1"/>
     <route/>
-    <ovheadtracker/>
+    <!--<ovheadtracker/>-->
     <hoafdnrot/>
     <echoc measureatstart="true"/>
     <glabsensors>
@@ -114,6 +118,7 @@
     <snapangle srcobj="/*/nav" candidates="/*/in"/>
     <lightctl driver="osc"/>
     <hossustain/>
+    <pos2osc pattern="/*/*"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

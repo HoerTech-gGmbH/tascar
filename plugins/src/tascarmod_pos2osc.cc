@@ -40,7 +40,7 @@ public:
 
 private:
   std::string name = "pos2osc";
-  std::string url;
+  std::string url = "osc.udp://localhost:9999/";
   std::vector<std::string> pattern = {"/*/*"};
   uint32_t mode;
   uint32_t ttl;
@@ -74,21 +74,30 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
       sendsounds(false), addparentname(false)
 {
   GET_ATTRIBUTE(name, "", "Default name used in OSC variables");
-  GET_ATTRIBUTE_(url);
-  GET_ATTRIBUTE_(pattern);
-  GET_ATTRIBUTE_(ttl);
-  GET_ATTRIBUTE_(mode);
+  GET_ATTRIBUTE(url, "", "Target URL");
+  GET_ATTRIBUTE(pattern, "",
+                "Pattern of TASCAR object names; see actor module "
+                "documentation for details.");
+  GET_ATTRIBUTE(ttl, "", "Time to live of OSC multicast messages");
+  GET_ATTRIBUTE(mode, "", "Message format mode");
   GET_ATTRIBUTE_BOOL(transport, "Send only while transport is rolling");
-  GET_ATTRIBUTE_(avatar);
-  GET_ATTRIBUTE(lookatlen, "s", "Duration of look-at animation");
-  GET_ATTRIBUTE_BOOL_(triggered);
-  GET_ATTRIBUTE_BOOL_(ignoreorientation);
-  GET_ATTRIBUTE_BOOL_(sendsounds);
-  GET_ATTRIBUTE_BOOL_(addparentname);
-  GET_ATTRIBUTE_(skip);
+  GET_ATTRIBUTE(
+      avatar, "",
+      "Name of object to be controlled (for control of game engines)");
+  GET_ATTRIBUTE(lookatlen, "s",
+                "Duration of look-at animation (for control of game engines)");
+  GET_ATTRIBUTE_BOOL(triggered, "Send data only when triggered via OSC");
+  GET_ATTRIBUTE_BOOL(ignoreorientation,
+                     "Ignore delta-orientation of source, send zeros instead");
+  GET_ATTRIBUTE_BOOL(sendsounds, "Send also position of sound vertices");
+  GET_ATTRIBUTE_BOOL(
+      addparentname,
+      "When sending sound vertex positions, add parent name to vertex name");
+  GET_ATTRIBUTE(skip, "", "Skip frames to reduce network traffic");
   GET_ATTRIBUTE(oscale, "", "Scaling factor for orientations");
   GET_ATTRIBUTE(orientationname, "", "Name for orientation variables");
-  GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data");
+  GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data to "
+                               "avoid blocking of real-time audio thread");
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   target = lo_address_new_from_url(url.c_str());
@@ -285,6 +294,12 @@ void pos2osc_t::update_local()
                 obj.obj->dorientation.y * oscale,
                 obj.obj->dorientation.x * oscale,
                 obj.obj->dorientation.z * oscale);
+        break;
+      case 11:
+        path = "/" + avatar + "/" + obj.obj->get_name();
+        lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z,
+                RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                RAD2DEG * o.x * oscale);
         break;
       }
     }
