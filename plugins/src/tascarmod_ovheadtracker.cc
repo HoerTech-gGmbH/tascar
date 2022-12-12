@@ -26,8 +26,6 @@
 
 #include "serialport.h"
 
-// const std::complex<double> i = {0.0, 1.0};
-
 class ovheadtracker_t : public TASCAR::actor_module_t,
                         protected TASCAR::service_t {
 public:
@@ -247,7 +245,7 @@ void parse_devstring(std::string& l, std::vector<double>& data,
 {
   size_t cnt = 0;
   auto odata = data;
-  try{
+  try {
     l = l.substr(1);
     std::string::size_type sz;
     for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
@@ -257,10 +255,10 @@ void parse_devstring(std::string& l, std::vector<double>& data,
         l = l.substr(sz + 1);
     }
   }
-  catch(...){
+  catch(...) {
     data = odata;
- }
-  if( cnt != num_elements )
+  }
+  if(cnt != num_elements)
     data = odata;
   for(size_t k = num_elements; k < data.size(); ++k)
     data[k] = 0.0;
@@ -275,7 +273,7 @@ void parse_devstring(std::string& l, TASCAR::quaternion_t& q)
 {
   bool ok = false;
   auto oq = q;
-  try{
+  try {
     l = l.substr(1);
     std::string::size_type sz;
     q.w = std::stod(l, &sz);
@@ -286,14 +284,14 @@ void parse_devstring(std::string& l, TASCAR::quaternion_t& q)
       l = l.substr(sz + 1);
     q.y = std::stod(l, &sz);
     if(sz < l.size())
-    l = l.substr(sz + 1);
+      l = l.substr(sz + 1);
     q.z = std::stod(l, &sz);
     ok = true;
   }
-  catch(...){
+  catch(...) {
     q = oq;
   }
-  if( !ok)
+  if(!ok)
     q = oq;
 }
 
@@ -325,7 +323,7 @@ void ovheadtracker_t::service()
       while(run_service) {
         std::string l(dev.readline(1024, 10));
         if(l.size()) {
-          //std::cout << l << std::endl;
+          // std::cout << l << std::endl;
           switch(l[0]) {
           case 'A': {
             // acceleration

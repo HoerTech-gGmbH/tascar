@@ -45,7 +45,6 @@ std::string test_iflag(int flag)
   TESTFLAG(flag, INLCR);
   TESTFLAG(flag, IGNCR);
   TESTFLAG(flag, ICRNL);
-  //TESTFLAG(flag, IUCLC);
   TESTFLAG(flag, IXON);
   TESTFLAG(flag, IXANY);
   TESTFLAG(flag, IXOFF);
@@ -60,7 +59,6 @@ std::string test_lflag(int flag)
   str += "\n";
   TESTFLAG(flag, ISIG);
   TESTFLAG(flag, ICANON);
-  //TESTFLAG(flag, XCASE);
   TESTFLAG(flag, ECHO);
   TESTFLAG(flag, ECHOE);
   TESTFLAG(flag, ECHOK);
@@ -78,7 +76,7 @@ std::string test_lflag(int flag)
 }
 
 #define TESTBAUD(flag, y)                                                      \
-  if((flag & 0x100F) == y)                                                      \
+  if((flag & 0x100F) == y)                                                     \
   str += std::string(#y) + std::string(" ")
 
 std::string test_cflag(int flag)
@@ -104,31 +102,12 @@ std::string test_cflag(int flag)
   TESTBAUD(flag, B38400);
   TESTBAUD(flag, B115200);
   TESTBAUD(flag, B230400);
-  //TESTBAUD(flag, B460800);
-  //TESTBAUD(flag, B500000);
-  //TESTBAUD(flag, B576000);
-  //TESTBAUD(flag, B921600);
-  //TESTBAUD(flag, B1000000);
-  //TESTBAUD(flag, B1152000);
-  //TESTBAUD(flag, B1500000);
-  //TESTBAUD(flag, B2000000);
-  //TESTBAUD(flag, B2500000);
-  //TESTBAUD(flag, B3000000);
-  //TESTBAUD(flag, B3500000);
-  //TESTBAUD(flag, B4000000);
-  // TESTFLAG(flag, CSIZE);
-  // TESTFLAG(flag, CS5);
-  // TESTFLAG(flag, CS6);
-  // TESTFLAG(flag, CS7);
-  // TESTFLAG(flag, CS8);
   TESTFLAG(flag, CSTOPB);
   TESTFLAG(flag, CREAD);
   TESTFLAG(flag, PARENB);
   TESTFLAG(flag, PARODD);
   TESTFLAG(flag, HUPCL);
   TESTFLAG(flag, CLOCAL);
-
-  //TESTFLAG(flag, CMSPAR);
   TESTFLAG(flag, CRTSCTS);
   return str;
 }
@@ -150,7 +129,7 @@ int serialport_t::open(const char* dev, int speed, int parity, int stopbits,
                        bool xbaud)
 {
 #ifdef ISMACOS
-  fd = ::open(dev, O_RDWR | O_NOCTTY | O_NDELAY| O_SYNC );
+  fd = ::open(dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
 #else
   fd = ::open(dev, O_RDWR | O_NOCTTY | O_SYNC);
 #endif
@@ -196,16 +175,16 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   if(stopbits == 2)
     tty.c_cflag |= CSTOPB;
   tty.c_cflag &= ~CRTSCTS;
-  DEBUG(test_iflag(tty.c_iflag));
-  DEBUG(test_lflag(tty.c_lflag));
-  DEBUG(test_cflag(tty.c_cflag));
+  // DEBUG(test_iflag(tty.c_iflag));
+  // DEBUG(test_lflag(tty.c_lflag));
+  // DEBUG(test_cflag(tty.c_cflag));
   if(tcsetattr(fd, TCSANOW, &tty) != 0)
     throw TASCAR::ErrMsg("error from tcsetattr");
   int flags;
   ioctl(fd, TIOCMGET, &flags);
   flags &= ~TIOCM_RTS;
   flags &= ~(TIOCM_RTS | TIOCM_DTR);
-  DEBUG(flags);
+  // DEBUG(flags);
   ioctl(fd, TIOCMSET, &flags);
   if(xbaud)
     term_setbaud(fd, speed);
