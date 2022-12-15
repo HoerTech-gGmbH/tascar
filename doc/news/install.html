@@ -60,34 +60,44 @@
 
       </article>
       
-      <h2>Installation</h2><br/>
+      <h2>Installation on Ubuntu/Debian Linux</h2><br/>
       <p>In Ubuntu 22.04 (jammy):</p>
       <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo tee /etc/apt/trusted.gpg.d/openmha-packaging.asc
-sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de jammy universe'
-      </code></pre>
+sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de jammy universe'</code></pre>
       <p>In Ubuntu 20.04 (focal):</p>
       <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
-sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ focal universe'
-      </code></pre>
+sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ focal universe'</code></pre>
       <p>In Ubuntu 18.04 (bionic):</p>
       <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
-sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ bionic universe'
-      </code></pre>
+sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ bionic universe'</code></pre>
       <p>In Ubuntu 16.04 (xenial):</p>
       <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7D6CDF547DA4ABD
-sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ xenial universe'
-      </code></pre>
+sudo apt-add-repository 'deb [arch=amd64] http://apt.hoertech.de/ xenial universe'</code></pre>
       <p>In Raspbian Bullseye:</p>
       <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo tee /etc/apt/trusted.gpg.d/openmha-packaging.asc
-echo "deb [arch=armhf] http://apt.hoertech.de bullseye universe" | sudo tee /etc/apt/sources.list.d/apt-hoertech.list
-      </code></pre>
+echo "deb [arch=armhf] http://apt.hoertech.de bullseye universe" | sudo tee /etc/apt/sources.list.d/apt-hoertech.list</code></pre>
       <p>In Raspbian Buster:</p>
       <pre><code>wget -qO- http://apt.hoertech.de/openmha-packaging.pub | sudo apt-key add
-(echo "";echo "deb [arch=armhf] http://apt.hoertech.de bionic universe")|sudo tee -a /etc/apt/sources.list
-      </code></pre>
+(echo "";echo "deb [arch=armhf] http://apt.hoertech.de bionic universe")|sudo tee -a /etc/apt/sources.list</code></pre>
       <p>In all systems, use
 	<pre><code>sudo apt-get update
 sudo apt-get install tascarpro</code></pre> for installation.</p>
+
+      <h2>Installation on MacOS</h2><br/>
+      <p>For MacOS, currently no pre-compiled binary packages are available. However, it can be compiled from sources.</p>
+      <p>If not yet installed, then download and install 'homebrew':
+        <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/gisogrimm/ov-client/development/packaging/Darwin/install_dependencies.sh)"</code></pre>
+        Now install all dependencies:
+        <pre><code>brew install pkgconfig glibmm jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3 coreutils adwaita-icon-theme jpeg libmatio</code></pre>
+        Finally, compile the code:
+        <pre><code>make -j 8</code></pre>
+        Now TASCAR can be started from the local directory, using the
+        wrapper script:
+        <pre><code>./tascar.sh</code></pre> Alternatively, it is
+        possible to install it in the system with:
+        <pre><code>make install</code></pre>
+      </p>
+
 
       <h2>Starting TASCAR</h2><br/>
       <p>To start TASCAR, first configure and start your jack server. Then, in a terminal, type
@@ -102,7 +112,7 @@ sudo apt-get install tascarpro</code></pre> for installation.</p>
 	doi:<a href="https://doi.org/10.3813/AAA.919337">10.3813/AAA.919337</a> </p>
 
       <footer>
-	<a class="footer" href="http://www.tascar.org"><p>TASCAR 2020</p></a>
+	<a class="footer" href="http://www.tascar.org"><p>TASCAR 2022</p></a>
       </footer>
 
     </main>
