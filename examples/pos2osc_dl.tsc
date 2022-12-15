@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene>
+    <source name="in">
+      <position>0 0 0 0 10 10 0 0</position>
+    </source>
+  </scene>
+  <modules>
+    <pos2osc url="osc.udp://localhost:9999/" pattern="/scene/in" avatar="pos" mode="11"/>
+    <pos2osc url="osc.udp://localhost:9877/" pattern="/scene/in" avatar="pos" mode="11"/>
+    <datalogging>
+      <osc path="/pos/in" size="6"/>
+    </datalogging>
+  </modules>
+</session>
