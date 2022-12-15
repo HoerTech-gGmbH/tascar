@@ -6,8 +6,8 @@
     </source>
   </scene>
   <modules>
-    <pos2osc url="osc.udp://localhost:9999/" pattern="/scene/in" avatar="pos" mode="11"/>
-    <pos2osc url="osc.udp://localhost:9877/" pattern="/scene/in" avatar="pos" mode="11"/>
+    <pos2osc name="1" url="osc.udp://localhost:9999/" pattern="/scene/in" avatar="pos" mode="11"/>
+    <pos2osc name="2" url="osc.udp://localhost:9877/" pattern="/scene/in" avatar="pos" mode="11"/>
     <datalogging>
       <osc path="/pos/in" size="6"/>
     </datalogging>

@@ -112,13 +112,15 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   if(avatar.size())
     path += "/" + avatar;
   if(mode == 4) {
-    cfg.session->add_bool_true(path + "/trigger", &trigger);
     cfg.session->add_bool(path + "/active", &trigger);
-    cfg.session->add_bool(path + "/triggered", &triggered);
     cfg.session->add_double(path + "/lookatlen", &lookatlen);
+    cfg.session->add_bool(path + "/triggered", &triggered);
   }
   cfg.session->add_uint(path + "/mode", &mode);
   cfg.session->add_bool(path + "/bypass", &bypass);
+  if(triggered) {
+    cfg.session->add_bool_true(path + "/trigger", &trigger);
+  }
   if(triggered)
     trigger = false;
 }
