@@ -2,8 +2,9 @@ function r = tascar_ratingtool( varargin )
 % ratingtool - interface for mushra-like rating axes
 %
 % Usage:
-% r = ratingtool( Nitions, sCfg.item, csLabel, sCompleted, cbSelect
-% )
+% r = tascar_ratingtool()
+% r = tascar_ratingtool('param','value')
+% tascar_ratingtool('help')
 %
 % 7/2019 Giso Grimm
 
@@ -23,9 +24,9 @@ function r = tascar_ratingtool( varargin )
 		    ' input parameter is the stimulus number, second the' ...
 		    ' user data.']';
   sCfg.oncompleted = @donothing;
-  sHelp.oncompleted = ['Callback to be called when completed. First' ...
-		    ' input parameter is the result, second the' ...
-		    ' user data.'];
+  sHelp.oncompleted = ['Callback to be called when the rating was' ...
+                       ' completed. First input parameter is the result,'...
+                       ' second the user data.'];
   sCfg.userdata = [];
   sHelp.userdata = 'Data to be passed as second parameter to callbacks';
   sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
