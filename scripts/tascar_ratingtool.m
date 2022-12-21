@@ -27,8 +27,14 @@ function r = tascar_ratingtool( varargin )
   sHelp.oncompleted = ['Callback to be called when the rating was' ...
                        ' completed. First input parameter is the result,'...
                        ' second the user data.'];
+  sCfg.onshow = @donothing;
+  sHelp.onshow = 'Callback to be called when the window is shown on screen';
   sCfg.userdata = [];
   sHelp.userdata = 'Data to be passed as second parameter to callbacks';
+  sCfg.windowname = 'TASCAR rating tool';
+  sHelp.windowname = 'Name of window';
+  sCfg.figurehandle = [];
+  sHelp.figurehandle = 'Figure handle, or empty to create own window';
   sCfg = tascar_parse_keyval( sCfg, sHelp, varargin{:} );
   if isempty(sCfg)
     return;
@@ -42,8 +48,16 @@ function r = tascar_ratingtool( varargin )
   ssize = get(0,'ScreenSize');
   ssize = round(min(ssize(3:4))*[1.2,0.8]);
   ssize = [round(0.05*ssize),ssize];
-  fh = figure('Units','pixels','Position',ssize,'MenuBar','none',...
-	      'Name','TASCAR rating tool',...
+  if isempty(sCfg.figurehandle) || ~ishandle(sCfg.figurehandle)
+    fh = figure;
+    close_fig = true;
+  else
+    fh = sCfg.figurehandle;
+    close_fig = false;
+    delete(findobj(fh,'-not','type','figure'));
+  end
+  set(fh,'Units','pixels','Position',ssize,'MenuBar','none',...
+	      'Name',sCfg.windowname,...
 	      'NumberTitle','off');
   vAx = [];
   vButton = [];
@@ -66,6 +80,7 @@ function r = tascar_ratingtool( varargin )
     axes_set_active( vAx(k), false )
   end
   drawnow();
+  sCfg.onshow( sCfg );
 
   set(vAx,'Xlim',[0,1.1]);
 
@@ -107,7 +122,11 @@ function r = tascar_ratingtool( varargin )
 
   if ishandle(fh)
     sUserData = get(fh,'UserData');
-    delete(fh);
+    if close_fig
+      delete(fh);
+    else
+      delete(findobj(fh,'-not','type','figure'));
+    end
   end
   r = sUserData.results;
 
