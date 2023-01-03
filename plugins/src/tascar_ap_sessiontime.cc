@@ -51,11 +51,16 @@ void sessiontime_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                                const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,
                                const TASCAR::transport_t& tp)
 {
-  // implement the algrithm:
+  float dt = 0.0f;
+  float inct = 0.0f;
+  if( tp.rolling )
+    inct = t_sample;
   size_t channels(std::min(chunk.size(), a.size()));
   for(size_t ch = 0; ch < channels; ++ch)
-    for(uint32_t k = 0; k < chunk[ch].n; ++k)
-      chunk[ch].d[k] = tp.session_time_seconds;
+    for(uint32_t k = 0; k < chunk[ch].n; ++k){
+      chunk[ch].d[k] = tp.session_time_seconds + dt;
+      dt += inct;
+    }
 }
 
 // create the plugin interface:
