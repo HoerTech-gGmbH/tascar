@@ -773,6 +773,7 @@ void receiver_t::apply_gain()
 void receiver_t::set_fade(float targetgain, float duration, float start)
 {
   fade_timer = 0;
+  duration = std::max((float)t_sample, duration);
   if(start < 0)
     fade_startsample = FADE_START_NOW;
   else
