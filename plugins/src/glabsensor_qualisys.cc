@@ -73,6 +73,10 @@ rigid_t::rigid_t(const std::string& name_, double freq, lo_address datatarget_,
 
 rigid_t::~rigid_t()
 {
+  if( lsl_stream )
+    delete lsl_stream;
+  if( lsl_info )
+    delete lsl_info;
   std::cerr << "Qualisys: removed rigid " << name << std::endl;
 }
 
