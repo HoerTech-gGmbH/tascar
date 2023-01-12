@@ -45,7 +45,6 @@ public:
   void process(double x, double y, double z, double rz, double ry, double rx);
 
 private:
-  // lsl::stream_info* lsl_info = NULL;
   lsl::stream_outlet* lsl_stream = NULL;
   std::string name;
   lo_address datatarget = NULL;
@@ -163,14 +162,6 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
       nominal_freq = atof(sfreq.c_str());
     }
   }
-  // auto subn(root.get_children("General"));
-  // if(subn.size()) {
-  //   TASCAR::xml_element_t general(subn[0]);
-  //   general.get_attribute("Frequency", nominal_freq, "Hz",
-  //                         "Nominal sensor sampling rate");
-  // }
-  //  nominal_freq =
-  //  tsccfg::node_xpath_to_number(root.e,"/*/General/Frequency");
   for(auto the6d : tsccfg::node_get_children(root.e, "The_6D")) {
     for(auto body : tsccfg::node_get_children(the6d, "Body")) {
       for(auto bname : tsccfg::node_get_children(body, "Name")) {
