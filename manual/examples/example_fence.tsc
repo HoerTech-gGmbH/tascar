@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <receiver type="hrtf"/>
+    <source name="warn">
+      <sound>
+        <plugins>
+          <sndfile name="sounds/warn.wav" level="60" resample="true" transport="false"/>
+          <fence alpha="3"/>
+        </plugins>
+      </sound>
+    </source>
+  </scene>
+  <modules>
+    <simplecontroller actor="/scene/warn"/>
+  </modules>
+  <connect src="render.scene:out_[lr]" dest="system:playback_[12]"/>
+</session>
