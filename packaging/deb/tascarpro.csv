@@ -16,6 +16,8 @@
 "manual/examples/sounds/pan.wav.license","usr/share/tascar/examples/sounds/"
 "manual/examples/sounds/pink.wav","usr/share/tascar/examples/sounds/"
 "manual/examples/sounds/pink.wav.license","usr/share/tascar/examples/sounds/"
+"manual/examples/sounds/warn.wav","usr/share/tascar/examples/sounds/"
+"manual/examples/sounds/warn.wav.license","usr/share/tascar/examples/sounds/"
 "manual/manual.pdf","usr/share/doc/tascar/"
 "packaging/deb/spkcalib.desktop","usr/share/applications/"
 "packaging/deb/tascarpro.desktop","usr/share/applications/"

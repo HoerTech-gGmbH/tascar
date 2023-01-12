@@ -17,6 +17,7 @@
           <const/>
           <delay/>
           <feedbackdelay/>
+          <fence/>
           <filter/>
           <flanger/>
           <gain/>
