@@ -156,14 +156,21 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
   std::cerr << "Qualisys: receiving configuration" << std::endl;
   TASCAR::xml_doc_t qtmcfg(&(argv[0]->s), TASCAR::xml_doc_t::LOAD_STRING);
   TASCAR::xml_element_t root(qtmcfg.root);
-  nominal_freq = 1.0;
-  auto subn(root.get_children("General"));
-  if(subn.size()) {
-    TASCAR::xml_element_t general(subn[0]);
-    general.get_attribute("Frequency", nominal_freq, "Hz",
-                          "Nominal sensor sampling rate");
+  nominal_freq = 0.0;
+  for(auto general : tsccfg::node_get_children(root.e, "General")) {
+    for(auto freq : tsccfg::node_get_children(general, "Frequency")) {
+      std::string sfreq = tsccfg::node_get_text(freq);
+      nominal_freq = atof(sfreq.c_str());
+    }
   }
-  // nominal_freq = tsccfg::node_xpath_to_number(root.e,"/*/General/Frequency");
+  // auto subn(root.get_children("General"));
+  // if(subn.size()) {
+  //   TASCAR::xml_element_t general(subn[0]);
+  //   general.get_attribute("Frequency", nominal_freq, "Hz",
+  //                         "Nominal sensor sampling rate");
+  // }
+  //  nominal_freq =
+  //  tsccfg::node_xpath_to_number(root.e,"/*/General/Frequency");
   for(auto the6d : tsccfg::node_get_children(root.e, "The_6D")) {
     for(auto body : tsccfg::node_get_children(the6d, "Body")) {
       for(auto bname : tsccfg::node_get_children(body, "Name")) {
