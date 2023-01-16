@@ -31,7 +31,7 @@ AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   addchannel tubesim spkcalib sessiontime flanger timestamp		\
   burglatticelpc fence
 
-MASKPLUGINS = fig8 multibeam
+MASKPLUGINS = fig8 multibeam sampledgain
 
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
