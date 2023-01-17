@@ -34,6 +34,7 @@ private:
   uint32_t numbeams = 1u;
   float mingain = 0.0f;
   float maxgain = 1.0f;
+  bool bypass = false;
 
 public:
   std::vector<float> gain;
@@ -79,10 +80,13 @@ void multibeam_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_vector_float("/el", &el);
   srv->add_float_db("/mingain", &mingain);
   srv->add_float_db("/maxgain", &maxgain);
+  srv->add_bool("/bypass", &bypass);
 }
 
 float multibeam_t::get_gain(const pos_t& pos)
 {
+  if( bypass )
+    return 1.0f;
   TASCAR::pos_t rp(pos.normal());
   float pgain = 0.0f;
   for(size_t k = 0; k < numbeams; ++k) {
@@ -98,6 +102,8 @@ float multibeam_t::get_gain(const pos_t& pos)
 
 void multibeam_t::get_diff_gain(float* gm)
 {
+  if( bypass )
+    return;
   memset(gm, 0, sizeof(float) * 16);
   float diag_gain = mingain;
   for(size_t k = 0; k < numbeams; ++k) {

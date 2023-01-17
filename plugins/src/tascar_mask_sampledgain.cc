@@ -33,6 +33,7 @@ private:
   void resize_val();
   uint32_t numsamples = 1u;
   std::vector<TASCAR::pos_t> samples;
+  bool bypass = false;
 
 public:
   std::vector<float> az;
@@ -74,10 +75,13 @@ void sampledgain_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->add_vector_float_db("/gain", &gain);
   srv->add_vector_float("/lingain", &gain);
+  srv->add_bool("/bypass", &bypass);
 }
 
 float sampledgain_t::get_gain(const pos_t& pos)
 {
+  if( bypass )
+    return 1.0f;
   if(numsamples == 0)
     return 1.0f;
   TASCAR::pos_t rp(pos.normal());
@@ -95,6 +99,8 @@ float sampledgain_t::get_gain(const pos_t& pos)
 
 void sampledgain_t::get_diff_gain(float* gm)
 {
+  if( bypass )
+    return;
   memset(gm, 0, sizeof(float) * 16);
   float diag_gain = 0.0f;
   for(auto g : gain)
