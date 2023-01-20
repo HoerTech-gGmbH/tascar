@@ -47,6 +47,7 @@
               <speaker/>
             </layout>
           </spkcalib>
+          <transportramp/>
         </plugins>
       </sound>
       <sound type="cardioidmod"/>

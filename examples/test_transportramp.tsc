@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <source>
+      <sound x="1">
+        <plugins>
+          <sine a="70" f="1000"/>
+          <transportramp startduration="1" endduration="0.3"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="hrtf"/>
+  </scene>
+  <connect src="render.scene:out_[lr]" dest="system:playback_[12]"/>
+</session>

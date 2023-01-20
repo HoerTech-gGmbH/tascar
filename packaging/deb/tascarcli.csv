@@ -113,6 +113,7 @@
 "plugins/build/tascar_ap_spkcalib.so","usr/lib/"
 "plugins/build/tascar_ap_spksim.so","usr/lib/"
 "plugins/build/tascar_ap_timestamp.so","usr/lib/"
+"plugins/build/tascar_ap_transportramp.so","usr/lib/"
 "plugins/build/tascar_ap_tubesim.so","usr/lib/"
 "plugins/build/tascar_dirgain.so","usr/lib/"
 "plugins/build/tascar_echoc.so","usr/lib/"

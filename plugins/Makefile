@@ -29,7 +29,7 @@ AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
   level2osc const noise loopmachine pos2osc gain sndfileasync		\
   addchannel tubesim spkcalib sessiontime flanger timestamp		\
-  burglatticelpc fence
+  burglatticelpc fence transportramp
 
 MASKPLUGINS = fig8 multibeam sampledgain
 

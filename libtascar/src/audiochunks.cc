@@ -512,6 +512,21 @@ void wave_t::resample(double ratio)
   rmsscale = 1.0f / (float)n;
 }
 
+void wave_t::resize(uint32_t chunksize)
+{
+  if(chunksize == n)
+    return;
+  float* d_new(new float[std::max(1u, chunksize)]);
+  memset(d_new, 0, sizeof(float) * std::max(1u, chunksize));
+  // clean-up and re-assign:
+  if(own_pointer)
+    delete[] d;
+  d = d_new;
+  n = chunksize;
+  own_pointer = true;
+  rmsscale = 1.0f / (float)n;
+}
+
 void wave_t::make_loopable(uint32_t fadelen, float crossexp)
 {
   if(2 * fadelen > n)

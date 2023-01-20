@@ -68,6 +68,7 @@ namespace TASCAR {
     float spldb() const;
     float maxabsdb() const;
     void append(const wave_t& src);
+    void resize(uint32_t chunksize);
     virtual void resample(double ratio);
     /**
        @brief Make loopable sound by applying cross-fade and shortening sound.
