@@ -143,6 +143,8 @@ test_ir%: test_ir%.tsc expected_ir%.wav
 	@$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 	@rm -f test_ir$*.wav
 
+#	@$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 || (echo "$(<):2: Rendering failed"; false)
+
 test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 	@echo "Input-output processing test: $<"
 	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
@@ -309,6 +311,7 @@ test_ir_apfilter_highpass: TOL=1e-6
 test_ir_apfilter_lowpass: TOL=1e-6
 test_snd_vbap3d_speakermatch: TOL=1e-5
 test_snd_vbap3d_speakermatch: RMSTOL=1e-6
+test_snd_spkcorr0: TOL=1e-6
 test_snd_sndfile: TOL=3e-7
 test_snd_reverb: TOL=1e-5
 test_snd_reverb: RMSTOL=1e-6

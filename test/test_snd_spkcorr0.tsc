@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- 
+basic test: sound propagation, 1m
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1" delayline="false" airabsorption="false">
+        <plugins>
+          <sine f="10" a="94"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="nsp" layout="1ch_fir_0.spk"/>
+  </scene>
+</session>
