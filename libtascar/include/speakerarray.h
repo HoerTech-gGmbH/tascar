@@ -62,7 +62,7 @@ namespace TASCAR {
     float densityweight;
     // frequency response correction:
     // FIR filter:
-    TASCAR::overlap_save_t* comp;
+    TASCAR::partitioned_conv_t* comp;
     // IIR filter:
     TASCAR::multiband_pareq_t eq;
     std::vector<float> eqfreq;

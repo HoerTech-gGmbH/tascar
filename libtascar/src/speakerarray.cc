@@ -281,8 +281,8 @@ void spk_array_t::configure()
   // speaker correction filter:
   for(auto& spk : *this) {
     if(spk.compB.size() > 0) {
-      spk.comp = new TASCAR::overlap_save_t(n_fragment + 1, n_fragment);
-      spk.comp->set_irs(spk.compB, false);
+      spk.comp = new TASCAR::partitioned_conv_t(n_fragment + 1, n_fragment);
+      spk.comp->set_irs(spk.compB);
     }
     if(spk.eqstages > 0) {
       float fmin = 1.0f;
@@ -652,11 +652,11 @@ void spk_array_diff_render_t::postproc(std::vector<wave_t>& output)
     throw TASCAR::ErrMsg("Invalid delay compensation array");
   for(uint32_t k = 0; k < size(); ++k) {
     float sgain((float)(operator[](k).spkgain) * (float)(operator[](k).gain));
-    //for(uint32_t f = 0; f < output[k].n; ++f) {
+    // for(uint32_t f = 0; f < output[k].n; ++f) {
     //  output[k].d[f] = sgain * delaycomp[k](output[k].d[f]);
     //}
     delaycomp[k](output[k]);
-    output[k]*= sgain;
+    output[k] *= sgain;
     if(operator[](k).comp)
       operator[](k).comp->process(output[k], output[k], false);
     if(operator[](k).eqstages)
