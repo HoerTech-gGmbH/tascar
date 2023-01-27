@@ -5,7 +5,7 @@
       <sound x="1">
         <plugins>
           <sine a="70" f="1000"/>
-          <transportramp startduration="1" endduration="0.3"/>
+          <transportramp startduration="1" endduration="0.3" precalc="false"/>
         </plugins>
       </sound>
     </source>

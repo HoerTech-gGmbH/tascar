@@ -25,9 +25,10 @@
 class transportramp_t : public TASCAR::audioplugin_base_t {
 public:
   transportramp_t(const TASCAR::audioplugin_cfg_t& cfg);
+  ~transportramp_t();
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  ~transportramp_t();
+  void add_variables(TASCAR::osc_server_t* srv);
   void configure();
 
 private:
@@ -38,9 +39,11 @@ private:
   TASCAR::transport_t tpprev;
   float gain = 0.0f;
   uint32_t rampcount = 0;
+  uint32_t ramplen = 1u;
   TASCAR::wave_t startramp = TASCAR::wave_t(1);
   TASCAR::wave_t endramp = TASCAR::wave_t(1);
   TASCAR::wave_t* ramp = &startramp;
+  bool precalc = true;
 };
 
 transportramp_t::transportramp_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -52,14 +55,27 @@ transportramp_t::transportramp_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(endduration, "s",
                 "Duration of ramp when transport is switched from ``rolling'' "
                 "to ``stopped''");
+  GET_ATTRIBUTE_BOOL(precalc,
+                     "Operation mode, to switch between precalculated and "
+                     "online-generated ramps");
 }
 
 transportramp_t::~transportramp_t() {}
 
+void transportramp_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  if(!precalc) {
+    srv->add_float("/startduration", &startduration, "]0,10]",
+                   "Ramp duration for stopped-to-rolling transition in s");
+    srv->add_float("/endduration", &endduration, "]0,10]",
+                   "Ramp duration for rolling-to-stopped transition in s");
+  }
+}
+
 void transportramp_t::configure()
 {
-  // create start ramp - starting with 1 because the iterator is going from end
-  // to beginning:
+  // create start ramp - starting with 1 because the iterator is going from
+  // end to beginning:
   startramp.resize(
       std::max(1u, (uint32_t)(f_sample * std::max(0.0f, startduration))));
   for(uint32_t k = 0; k < startramp.n; ++k)
@@ -79,24 +95,34 @@ void transportramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   if(tp.rolling != tpprev.rolling) {
     startgain = gain;
     if(tp.rolling) {
-      rampcount = startramp.n - 1u;
+      ramplen = (uint32_t)std::max(1.0, startduration * f_sample);
+      if(precalc)
+        rampcount = startramp.n - 1u;
+      else
+        rampcount = ramplen - 1u;
       endgain = 1.0f;
       ramp = &startramp;
     } else {
-      rampcount = endramp.n - 1u;
+      ramplen = (uint32_t)std::max(1.0, endduration * f_sample);
+      if(precalc)
+        rampcount = endramp.n - 1u;
+      else
+        rampcount = ramplen - 1u;
       endgain = 0.0f;
       ramp = &endramp;
     }
   }
-  //if(tp.session_time_samples !=
-  //   tpprev.session_time_samples + tpprev.rolling * n_fragment) {
-  //}
   tpprev = tp;
   if(!chunk.empty()) {
     uint32_t nch(chunk.size());
     uint32_t N(chunk[0].n);
     for(uint32_t k = 0; k < N; ++k) {
-      gain = (endgain - startgain) * ramp->d[rampcount] + startgain;
+      if(precalc)
+        gain = (endgain - startgain) * ramp->d[rampcount] + startgain;
+      else
+        gain = (endgain - startgain) *
+                   (0.5f + 0.5f * cosf(rampcount * TASCAR_PIf / ramplen)) +
+               startgain;
       if(rampcount)
         rampcount--;
       for(uint32_t ch = 0; ch < nch; ++ch)
