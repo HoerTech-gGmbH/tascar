@@ -38,7 +38,6 @@ TEST(overlap_save_t, filter)
   ASSERT_NEAR( 0.0f, d[3], 1e-7f );
 }
 
-
 TEST(partitioned_conv_t, filter)
 {
 	TASCAR::partitioned_conv_t ola(50,4);
@@ -67,6 +66,43 @@ TEST(partitioned_conv_t, filter)
   ASSERT_NEAR( 0.0f, d[0], 1e-9f );
   ASSERT_NEAR( 0.5f, d[1], 1e-9f );
   ASSERT_NEAR( 0.5f, d[2], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[3], 1e-7f );
+}
+
+TEST(partitioned_conv_t, filterlong)
+{
+	TASCAR::partitioned_conv_t ola(50,4);
+  EXPECT_EQ(13u,ola.get_partitions());
+  TASCAR::wave_t irs(14);
+  irs[1] = 0.5;
+  irs[2] = 0.5;
+  irs[12] = 0.5;
+  irs[13] = 0.5;
+  ola.set_irs( irs );
+  TASCAR::wave_t d(4);
+  d[0] = 1.0;
+  ola.process( d, d, false );
+  ASSERT_NEAR( 0.0f, d[0], 1e-9f );
+  ASSERT_NEAR( 0.5f, d[1], 1e-9f );
+  ASSERT_NEAR( 0.5f, d[2], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[3], 1e-7f );
+  d.clear();
+  ola.process( d, d, false );
+  ASSERT_NEAR( 0.0f, d[0], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[1], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[2], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[3], 1e-7f );
+  d.clear();
+  ola.process( d, d, false );
+  ASSERT_NEAR( 0.0f, d[0], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[1], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[2], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[3], 1e-7f );
+  d.clear();
+  ola.process( d, d, false );
+  ASSERT_NEAR( 0.5f, d[0], 1e-9f );
+  ASSERT_NEAR( 0.5f, d[1], 1e-9f );
+  ASSERT_NEAR( 0.0f, d[2], 1e-9f );
   ASSERT_NEAR( 0.0f, d[3], 1e-7f );
 }
 

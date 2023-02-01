@@ -1,3 +1,4 @@
+0.229.1: Correct speaker correction filter length
 0.229: Added transportramp plugin, bugfixes in FIR speaker correction and LSL handling in Qualisys interface
 0.228.3: Bugfix and documentation of Matlab/Octave tools
 0.228.2: Add additional mode to pos2osc

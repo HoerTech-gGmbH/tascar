@@ -281,8 +281,8 @@ void spk_array_t::configure()
   // speaker correction filter:
   for(auto& spk : *this) {
     if(spk.compB.size() > 0) {
-      spk.comp = new TASCAR::partitioned_conv_t(n_fragment + 1, n_fragment);
-      spk.comp->set_irs(spk.compB);
+      spk.comp = new TASCAR::partitioned_conv_t(spk.compB.size(), n_fragment);
+      spk.comp->set_irs(TASCAR::wave_t(spk.compB));
     }
     if(spk.eqstages > 0) {
       float fmin = 1.0f;
