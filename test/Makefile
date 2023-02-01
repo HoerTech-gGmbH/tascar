@@ -319,6 +319,7 @@ test_snd_vbap3d_speakermatch: TOL=1e-5
 test_snd_vbap3d_speakermatch: RMSTOL=1e-6
 test_snd_spkcorr0: TOL=1e-6
 test_snd_spkcorr70: TOL=1e-6
+test_snd_spkcorr_long: TOL=1e-6
 test_snd_nospkcorr: TOL=1e-6
 test_snd_sndfile: TOL=3e-7
 test_snd_reverb: TOL=1e-5
