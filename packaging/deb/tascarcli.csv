@@ -81,6 +81,7 @@
 "examples/tutorial7_music_light/tutorial7.tsc","usr/share/tascar/tutorial7_music_light/"
 "examples/tutorial7_music_light/tutorial7light.tsc","usr/share/tascar/tutorial7_music_light/"
 "examples/tutorial7_music_light/w13.raw","usr/share/tascar/tutorial7_music_light/"
+"plugins/build/tascar_ap_allpass.so","usr/lib/"
 "plugins/build/tascar_ap_bandpass.so","usr/lib/"
 "plugins/build/tascar_ap_const.so","usr/lib/"
 "plugins/build/tascar_ap_delay.so","usr/lib/"

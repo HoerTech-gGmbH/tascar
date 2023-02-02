@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1" airabsorption="false" delayline="false"/>
+    </source>
+    <receiver type="omni">
+      <plugins>
+        <allpass/>
+      </plugins>
+    </receiver>
+  </scene>
+</session>

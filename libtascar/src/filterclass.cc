@@ -485,6 +485,12 @@ void sftransf(std::vector<std::complex<float>>& poles, float& gain, float wc,
   }
 }
 
+void TASCAR::biquad_t::set_allpass(double eta1, double eta2)
+{
+  double g = eta2;
+  set_coefficients(eta1, eta2, g, eta1, 1.0);
+}
+
 void TASCAR::biquad_t::set_butterworth(double f, double fs, bool highpass)
 {
   double wc = tan(TASCAR_PI2 * f / (0.5 * fs));

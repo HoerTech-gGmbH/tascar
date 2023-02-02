@@ -30,6 +30,7 @@ public:
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void add_variables(TASCAR::osc_server_t* srv);
+  void configure();
   ~spksim_t();
 
 private:
@@ -41,9 +42,9 @@ private:
   float wet = 1.0f;
   double b1;
   double b2;
-  double statex;
-  double statey1;
-  double statey2;
+  TASCAR::wave_t statex;
+  TASCAR::wave_t statey1;
+  TASCAR::wave_t statey2;
 };
 
 spksim_t::spksim_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -56,6 +57,13 @@ spksim_t::spksim_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(gain, "dB", "Post-gain $g$");
   GET_ATTRIBUTE_BOOL(bypass, "Bypass plugin");
   GET_ATTRIBUTE(wet, "", "Wet (1) - dry (0) mixture gain");
+}
+
+void spksim_t::configure()
+{
+  statex.resize(n_channels);
+  statey1.resize(n_channels);
+  statey2.resize(n_channels);
 }
 
 void spksim_t::add_variables(TASCAR::osc_server_t* srv)
@@ -76,7 +84,6 @@ void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
 {
   if(bypass)
     return;
-  TASCAR::wave_t& aud(chunk[0]);
   const double farg(TASCAR_2PI * fres / f_sample);
   b1 = 2.0 * q * cos(farg);
   b2 = -q * q;
@@ -84,18 +91,21 @@ void spksim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   std::complex<double> z0(q * std::exp(-i * farg));
   double a1((1.0 - q) * (std::abs(z - z0)));
   double og(pow(10.0, 0.05 * gain));
-  for(uint32_t k = 0; k < aud.n; ++k) {
-    // input resonance filter:
-    make_friendly_number_limited(aud.d[k]);
-    double y(a1 * aud.d[k] + b1 * statey1 + b2 * statey2);
-    make_friendly_number_limited(y);
-    statey2 = statey1;
-    statey1 = y;
-    // non-linearity:
-    y *= scale / (scale + fabs(y));
-    // air coupling to velocity:
-    aud.d[k] = wet * og * (y - statex) + (1.0f - wet) * aud.d[k];
-    statex = y;
+  for(size_t ch = 0; ch < chunk.size(); ++ch) {
+    TASCAR::wave_t& aud(chunk[0]);
+    for(uint32_t k = 0; k < aud.n; ++k) {
+      // input resonance filter:
+      make_friendly_number_limited(aud.d[k]);
+      double y(a1 * aud.d[k] + b1 * statey1.d[ch] + b2 * statey2.d[ch]);
+      make_friendly_number_limited(y);
+      statey2.d[ch] = statey1.d[ch];
+      statey1.d[ch] = y;
+      // non-linearity:
+      y *= scale / (scale + fabs(y));
+      // air coupling to velocity:
+      aud.d[k] = wet * og * (y - statex.d[ch]) + (1.0f - wet) * aud.d[k];
+      statex.d[ch] = y;
+    }
   }
 }
 
