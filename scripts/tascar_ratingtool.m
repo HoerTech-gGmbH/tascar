@@ -14,6 +14,8 @@ function r = tascar_ratingtool( varargin )
   sHelp.item = 'Question to be displayed';
   sCfg.label = {'white','','sky blue','','deep blue'};
   sHelp.label = 'Cell array with categories to be displayed';
+  sCfg.labelcb = {[],[],[],[],[]};
+  sHelp.labelcb = 'Cell array with function handles for each label';
   sCfg.completed = 'Ok';
   sHelp.completed = 'Label on the completed button';
   sCfg.tmin = 4;
@@ -41,9 +43,14 @@ function r = tascar_ratingtool( varargin )
   end
 
   csLabel = sCfg.label;
+  csLabelCb = sCfg.labelcb;
   csLabelEmpty = csLabel;
   for k=1:numel(csLabelEmpty)
     csLabelEmpty{k} = '';
+  end
+  csLabelEmptyCb = csLabelCb;
+  for k=1:numel(csLabelEmptyCb)
+    csLabelEmptyCb{k} = [];
   end
   ssize = get(0,'ScreenSize');
   ssize = round(min(ssize(3:4))*[1.2,0.8]);
@@ -65,7 +72,7 @@ function r = tascar_ratingtool( varargin )
   for k=1:sCfg.n
 
     % Bewertung der Stimuli
-    vAx(k) = gui_rating_axes( csLabelEmpty, ...
+    vAx(k) = gui_rating_axes( csLabelEmpty, csLabelEmptyCb, ...
 			      'Position',[(k+0.1)/(sCfg.n+3), ...
 		    0.2,0.8/(sCfg.n+3),0.7]);
 
@@ -85,8 +92,9 @@ function r = tascar_ratingtool( varargin )
   set(vAx,'Xlim',[0,1.1]);
 
   % Rating labels:
-  ax_labels = gui_rating_axes( csLabel, 'Position', [(sCfg.n+1.1)/(sCfg.n+3), ...
-		    0.2,1.8/(sCfg.n+3),0.7],'FontSize',20);
+  ax_labels = gui_rating_axes( csLabel, csLabelCb, ...
+                               'Position', [(sCfg.n+1.1)/(sCfg.n+3), ...
+		                                        0.2,1.8/(sCfg.n+3),0.7],'FontSize',20);
 
   axes_set_active(ax_labels,false);
   set(ax_labels,'XLim',[-1,20]);
@@ -153,7 +161,7 @@ function select_button( varargin )
   end
   sUserData.cfg.onselect( kButton, sUserData.cfg.userdata );
 
-function ax = gui_rating_axes( csLabel, varargin )
+function ax = gui_rating_axes( csLabel, csLabelCb, varargin )
   ylim = [0,length(csLabel)-1];
   dq = 0.03*diff(ylim);
   ax = axes('Visible','on','NextPlot','ReplaceChildren',...
@@ -171,14 +179,24 @@ function ax = gui_rating_axes( csLabel, varargin )
   for k=1:length(csLabel)
     %y = (k)/(length(csLabel)+1)*diff(ylim);
     y = (k-1)/(length(csLabel)-1)*diff(ylim);
+    if( (k<=numel(csLabelCb)) && (~isempty(csLabelCb{k})) )
+      pax = getpixelposition(ax);
+      uicontrol('Units','pixel','style','PushButton','String',csLabel{k},...
+                'HorizontalAlignment','left',...
+                'Position',[pax(1)+0.15*pax(3),pax(2)+0.03*(pax(4)-0.4*pax(4)/length(csLabel))+0.94*(pax(4)-0.4*pax(4)/length(csLabel))*y/diff(ylim),...
+                            0.8*pax(3),0.4*pax(4)/length(csLabel)],...
+	              'Fontsize',fontsize,'Fontweight','bold',...
+               'Callback',csLabelCb{k});
+    else
     vhsel(end+1) = ...
-	text(1.4,y,csLabel{k},'HorizontalAlignment','left',...
-	     'VerticalAlignment','middle',...
-	     'Fontsize',fontsize,'Fontweight','bold');
+	      text(1.4,y,csLabel{k},'HorizontalAlignment','left',...
+	           'VerticalAlignment','middle',...
+	           'Fontsize',fontsize,'Fontweight','bold');
+    end
     if (y < ylim(2)) && (y > ylim(1))
       vhsel(end+1) = ...
-	  plot([0.05 1],[y y],'-','Color',0.6*ones(1,3),'linewidth', ...
-	       2);
+	        plot([0.05 1],[y y],'-','Color',0.6*ones(1,3),'linewidth', ...
+	             2);
     end
     for kmin=1:3
       y = (k-1+kmin/4)/(length(csLabel)-1)*diff(ylim);
