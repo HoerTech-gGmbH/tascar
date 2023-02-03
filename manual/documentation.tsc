@@ -15,6 +15,7 @@
         <plugins>
           <bandpass/>
           <const/>
+          <allpass/>
           <delay/>
           <feedbackdelay/>
           <fence/>
