@@ -34,8 +34,8 @@ public:
   ~allpass_t();
 
 private:
-  double eta1 = 0.5;
-  double eta2 = 0.75;
+  double r = 0.9;
+  double f = 1000.0;
   uint32_t nstages = 3;
   bool bypass = false;
   std::vector<std::vector<TASCAR::biquad_t>> filters;
@@ -44,8 +44,8 @@ private:
 allpass_t::allpass_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg)
 {
-  GET_ATTRIBUTE(eta1, "", "Allpass coefficient");
-  GET_ATTRIBUTE(eta2, "", "Allpass coefficient");
+  GET_ATTRIBUTE(r, "", "Allpass pole radius");
+  GET_ATTRIBUTE(f, "Hz", "Phase jump frequency");
   GET_ATTRIBUTE(nstages, "", "Number of biquad-stages");
   GET_ATTRIBUTE_BOOL(bypass, "Bypass plugin");
 }
@@ -61,8 +61,8 @@ void allpass_t::configure()
   filters.resize(n_channels);
   for(auto& vf : filters) {
     vf.resize(nstages);
-    for(auto& f : vf)
-      f.set_allpass(eta1, eta2);
+    for(auto& flt : vf)
+      flt.set_allpass(r, TASCAR_2PI * f / f_sample);
   }
 }
 

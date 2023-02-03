@@ -175,7 +175,7 @@ namespace TASCAR {
     void set_analog(double g, double z1, double z2, double p1, double p2,
                     double fs);
     void set_analog_poles(double g, double p1, double p2, double fs);
-    void set_allpass(double eta1, double eta2);
+    void set_allpass(double r, double phi);
     /**
        @param Set coefficiens to second order butterworth filter
      */

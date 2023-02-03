@@ -6,7 +6,7 @@
     </source>
     <receiver type="omni">
       <plugins>
-        <allpass nstages="18" eta1="0.687" eta2="0.9339"/>
+        <allpass nstages="18" r="0.687" f="1200"/>
       </plugins>
     </receiver>
   </scene>

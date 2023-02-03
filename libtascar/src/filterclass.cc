@@ -239,6 +239,15 @@ void TASCAR::biquad_t::set_gzp(double g, double zero_r, double zero_phi,
   b2_ = g * zero_r * zero_r;
 }
 
+void TASCAR::biquad_t::set_allpass(double r, double phi)
+{
+  a1_ = -2.0 * r * cos(phi);
+  a2_ = r * r;
+  b0_ = a2_;
+  b1_ = a1_;
+  b2_ = 1.0;
+}
+
 void TASCAR::biquadf_t::set_gzp(float g, float zero_r, float zero_phi,
                                 float pole_r, float pole_phi)
 {
@@ -483,12 +492,6 @@ void sftransf(std::vector<std::complex<float>>& poles, float& gain, float wc,
     for(auto& p : poles)
       p = wc * p;
   }
-}
-
-void TASCAR::biquad_t::set_allpass(double eta1, double eta2)
-{
-  double g = eta2;
-  set_coefficients(eta1, eta2, g, eta1, 1.0);
 }
 
 void TASCAR::biquad_t::set_butterworth(double f, double fs, bool highpass)
