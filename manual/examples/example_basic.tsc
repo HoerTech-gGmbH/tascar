@@ -9,7 +9,7 @@
       <position>0 0.61 -1.23 2.1</position>
       <sound>
         <plugins>
-          <sndfile name="sounds/clock.wav" loop="0" level="60"/>
+          <sndfile name="sounds/clock.wav" loop="0" level="60" resample="true"/>
         </plugins>
       </sound>
     </source>
@@ -17,7 +17,7 @@
       <position>0 0.9 1.03 0.87</position>
       <sound>
         <plugins>
-          <sndfile name="sounds/pan.wav" loop="0" level="85"/>
+          <sndfile name="sounds/pan.wav" loop="0" level="85" resample="true"/>
         </plugins>
       </sound>
     </source>

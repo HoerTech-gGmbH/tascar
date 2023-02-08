@@ -40,6 +40,8 @@ protected:
   uint32_t loop;
   float loopcrosslen = 0.0f;
   float loopcrossexp = 1.0f;
+  float rampstart = 0.0f;
+  float rampend = 0.0f;
   bool resample;
   std::string levelmode;
   TASCAR::levelmeter::weight_t weighting;
@@ -68,6 +70,8 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(loopcrosslen, "s", "duration of crossfade for seamless loop");
   GET_ATTRIBUTE(loopcrossexp, "",
                 "exponent of von-Hann crossfade for seamless loop");
+  GET_ATTRIBUTE(rampstart, "s", "von-Hann ramp duration at start of sound");
+  GET_ATTRIBUTE(rampend, "s", "von-Hann ramp duration at end of sound");
   GET_ATTRIBUTE_BOOL(resample,
                      "Allow resampling to current session sample rate");
   GET_ATTRIBUTE(levelmode, "", "level mode, ``rms'', ``peak'' or ``calib''");
@@ -129,6 +133,8 @@ void ap_sndfile_t::load_file()
   mtx.lock();
   sndf.clear();
   ltp = TASCAR::transport_t();
+  rampstart = std::max(0.0f, rampstart);
+  rampend = std::max(0.0f, rampend);
   try {
     if(n_channels < 1)
       throw TASCAR::ErrMsg("At least one channel required.");
@@ -210,9 +216,30 @@ void ap_sndfile_t::load_file()
         *(sf) *= gain;
       }
     }
-    if(loopcrosslen > 0) {
+    if(loopcrosslen > 0.0f) {
       for(auto sf : sndf) {
         sf->make_loopable(loopcrosslen * sf->get_srate(), loopcrossexp);
+      }
+    }
+    for(auto sf : sndf) {
+      if(rampstart + rampend > sf->n * t_sample)
+        TASCAR::add_warning(
+            "The sum of the ramp durations is longer than the sound file " +
+            name + ".");
+    }
+    if(rampstart > 0.0f) {
+      for(auto sf : sndf) {
+        for(uint32_t k = 0;
+            k < std::min((uint32_t)(f_sample * rampstart), sf->n); ++k)
+          sf->d[k] *= 0.5f - 0.5f * cosf(k * t_sample / rampstart * TASCAR_PIf);
+      }
+    }
+    if(rampend > 0.0f) {
+      for(auto sf : sndf) {
+        for(uint32_t k = 0; k < std::min((uint32_t)(f_sample * rampend), sf->n);
+            ++k)
+          sf->d[sf->n - k] *=
+              0.5f - 0.5f * cosf(k * t_sample / rampend * TASCAR_PIf);
       }
     }
   }
@@ -306,6 +333,10 @@ void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_method("/loadfile", "ssf", &osc_loadfile, this);
   srv->add_method("/loadfile", "s", &osc_loadfile_simple, this);
   srv->add_double("/position", &position);
+  srv->add_float("/rampstart", &rampstart, "[0,10]",
+                 "Ramp duration in s at start of sound");
+  srv->add_float("/rampend", &rampend, "[0,10]",
+                 "Ramp duration in s at end of sound");
 }
 
 void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
