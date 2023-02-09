@@ -238,7 +238,7 @@ void ap_sndfile_t::load_file()
       for(auto sf : sndf) {
         for(uint32_t k = 0; k < std::min((uint32_t)(f_sample * rampend), sf->n);
             ++k)
-          sf->d[sf->n - k] *=
+          sf->d[sf->n - 1 - k] *=
               0.5f - 0.5f * cosf(k * t_sample / rampend * TASCAR_PIf);
       }
     }

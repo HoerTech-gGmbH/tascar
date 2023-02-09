@@ -87,6 +87,7 @@ plugin_processor_t::~plugin_processor_t()
 {
   for(auto p : plugins)
     delete p;
+  lo_message_free( msg );
 }
 
 void plugin_processor_t::validate_attributes(std::string& msg) const
