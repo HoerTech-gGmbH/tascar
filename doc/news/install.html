@@ -80,20 +80,23 @@ echo "deb [arch=armhf] http://apt.hoertech.de bullseye universe" | sudo tee /etc
 	<pre><code>sudo apt-get update
 sudo apt-get install tascarpro</code></pre> for installation.</p>
 
-      <h2>Installation on MacOS</h2><br/>
+      <h2>Installation on macOS</h2><br/>
       <p>For MacOS, currently no pre-compiled binary packages are available. However, it can be compiled from sources.</p>
-      <p>If not yet installed, then download and install 'homebrew':
-        <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/gisogrimm/ov-client/development/packaging/Darwin/install_dependencies.sh)"</code></pre>
-        Now install all dependencies:
+      <p>If not yet installed, then download and install 'homebrew' (<a href="https://brew.sh/">https://brew.sh/</a>).
+        Then install all dependencies with:
         <pre><code>brew install pkgconfig glibmm jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3 coreutils adwaita-icon-theme jpeg libmatio</code></pre>
-        Finally, compile the code:
-        <pre><code>make -j 8</code></pre>
+        The next step is to download the code:
+        <pre><code>git clone https://github.com/gisogrimm/tascar</code></pre>
+        Finally, change to the tascar directory and compile the code:
+        <pre><code>cd tascar
+make -j 8</code></pre>
         Now TASCAR can be started from the local directory, using the
         wrapper script:
         <pre><code>./tascar.sh</code></pre> Alternatively, it is
         possible to install it in the system with:
-        <pre><code>make install</code></pre>
+        <pre><code>sudo make install</code></pre>
       </p>
+      <p>Jack can be installed either from <a href="https://jackaudio.org/">https://jackaudio.org/</a> or from brew. If you use the version from jackaudio.org, then please uninstall the brew version to avoid library incompatibilities.</p>
 
 
       <h2>Starting TASCAR</h2><br/>
