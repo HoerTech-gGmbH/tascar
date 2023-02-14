@@ -35,8 +35,8 @@
 #include <atomic>
 #include <lo/lo.h>
 #include <string>
-#include <vector>
 #include <thread>
+#include <vector>
 
 typedef std::string(strcnvrt_t)(void*);
 
@@ -285,8 +285,8 @@ namespace TASCAR {
     bool isactive;
     bool verbose;
     std::map<std::string, data_element_t> datamap;
-    std::atomic<bool> cancelscript = false;
-    std::atomic<bool> scriptrunning = false;
+    std::atomic<bool> cancelscript;
+    std::atomic<bool> scriptrunning;
     std::thread scriptthread;
   };
 

@@ -521,6 +521,8 @@ osc_server_t::osc_server_t(const std::string& multicast,
     : osc_srv_addr(multicast), osc_srv_port(port), initialized(false),
       isactive(false), verbose(verbose_)
 {
+  cancelscript = false;
+  scriptrunning = false;
   lost = NULL;
   liblo_errflag = false;
   if(port.size() && (port != "none")) {
