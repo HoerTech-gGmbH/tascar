@@ -48,6 +48,7 @@ protected:
   void on_menu_file_open();
   void on_menu_file_open_example();
   void on_menu_file_reload();
+  void on_menu_file_runscript();
   void on_menu_file_exportcsv();
   void on_menu_file_exportcsvsounds();
   void on_menu_file_exportpdf();

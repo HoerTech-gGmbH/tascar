@@ -137,6 +137,9 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
       "scene_reload",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_reload));
   refActionGroupMain->add_action(
+      "file_runscript",
+      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_runscript));
+  refActionGroupMain->add_action(
       "export_csv",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsv));
   refActionGroupMain->add_action(
@@ -959,6 +962,40 @@ void tascar_window_t::on_menu_file_reload()
   }
   catch(const std::exception& e) {
     error_message(e.what());
+  }
+}
+
+void tascar_window_t::on_menu_file_runscript()
+{
+  Gtk::FileChooserDialog dialog("Please choose a file",
+                                Gtk::FILE_CHOOSER_ACTION_OPEN);
+  dialog.set_transient_for(*this);
+  // Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+  // Add filters, so that only certain file types can be selected:
+  Glib::RefPtr<Gtk::FileFilter> filter_tascar = Gtk::FileFilter::create();
+  filter_tascar->set_name("tascar OSC script files");
+  filter_tascar->add_pattern("*.tosc");
+  dialog.add_filter(filter_tascar);
+  Glib::RefPtr<Gtk::FileFilter> filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any files");
+  filter_any->add_pattern("*");
+  dialog.add_filter(filter_any);
+  // Show the dialog and wait for a user response:
+  int result = dialog.run();
+  // Handle the response:
+  if(result == Gtk::RESPONSE_OK) {
+    // Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    try {
+      if(session){
+        session->read_script_async({filename});
+      }
+    }
+    catch(const std::exception& e) {
+      error_message(e.what());
+    }
   }
 }
 

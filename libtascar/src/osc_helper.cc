@@ -945,64 +945,74 @@ void osc_server_t::read_script(const std::vector<std::string>& filenames)
     cancelscript = false;
     tictoc_t tictoc;
     char rbuf[0x4000];
-    for(const auto& filename : filenames) {
-      FILE* fh = fopen((scriptpath + filename).c_str(), "r");
-      if(!fh) {
-        TASCAR::add_warning("Cannot open file \"" + scriptpath + filename +
-                            "\".");
-        scriptrunning = false;
-        return;
-      }
-      while(!feof(fh)) {
-        memset(rbuf, 0, 0x4000);
-        if(cancelscript) {
-          fclose(fh);
+    for(auto filename : filenames) {
+      if(!filename.empty()) {
+        if(!scriptpath.empty()) {
+          if(filename[0] != '/') {
+            if(scriptpath[scriptpath.size() - 1] != '/')
+              filename = scriptpath + "/" + filename;
+            else
+              filename = scriptpath + filename;
+          }
+        }
+        FILE* fh = fopen((scriptpath + filename).c_str(), "r");
+        if(!fh) {
+          TASCAR::add_warning("Cannot open file \"" + scriptpath + filename +
+                              "\".");
           scriptrunning = false;
           return;
         }
-        char* s = fgets(rbuf, 0x4000 - 1, fh);
-        if(s) {
-          rbuf[0x4000 - 1] = 0;
-          if(rbuf[0] == '#')
-            rbuf[0] = 0;
-          if(strlen(rbuf))
-            if(rbuf[strlen(rbuf) - 1] == 10)
-              rbuf[strlen(rbuf) - 1] = 0;
-          if(strlen(rbuf)) {
-            if(rbuf[0] == ',') {
-              double val(0.0f);
-              sscanf(&rbuf[1], "%lg", &val);
-              tictoc.tic();
-              while(tictoc.toc() < val) {
-                if(cancelscript) {
-                  fclose(fh);
-                  scriptrunning = false;
-                  return;
-                }
-                usleep(10);
-              }
-            } else {
-              std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
-              if(args.size()) {
-                auto msg(lo_message_new());
-                for(size_t n = 1; n < args.size(); ++n) {
-                  char* p(NULL);
-                  float val(strtof(args[n].c_str(), &p));
-                  if(*p) {
-                    lo_message_add_string(msg, args[n].c_str());
-                  } else {
-                    lo_message_add_float(msg, val);
+        while(!feof(fh)) {
+          memset(rbuf, 0, 0x4000);
+          if(cancelscript) {
+            fclose(fh);
+            scriptrunning = false;
+            return;
+          }
+          char* s = fgets(rbuf, 0x4000 - 1, fh);
+          if(s) {
+            rbuf[0x4000 - 1] = 0;
+            if(rbuf[0] == '#')
+              rbuf[0] = 0;
+            if(strlen(rbuf))
+              if(rbuf[strlen(rbuf) - 1] == 10)
+                rbuf[strlen(rbuf) - 1] = 0;
+            if(strlen(rbuf)) {
+              if(rbuf[0] == ',') {
+                double val(0.0f);
+                sscanf(&rbuf[1], "%lg", &val);
+                tictoc.tic();
+                while(tictoc.toc() < val) {
+                  if(cancelscript) {
+                    fclose(fh);
+                    scriptrunning = false;
+                    return;
                   }
+                  usleep(10);
                 }
-                dispatch_data_message(args[0].c_str(), msg);
-                lo_message_free(msg);
+              } else {
+                std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
+                if(args.size()) {
+                  auto msg(lo_message_new());
+                  for(size_t n = 1; n < args.size(); ++n) {
+                    char* p(NULL);
+                    float val(strtof(args[n].c_str(), &p));
+                    if(*p) {
+                      lo_message_add_string(msg, args[n].c_str());
+                    } else {
+                      lo_message_add_float(msg, val);
+                    }
+                  }
+                  dispatch_data_message(args[0].c_str(), msg);
+                  lo_message_free(msg);
+                }
               }
             }
+            // fprintf(stderr,"-%s-%s-%g-\n",rbuf,addr,val);
           }
-          // fprintf(stderr,"-%s-%s-%g-\n",rbuf,addr,val);
         }
+        fclose(fh);
       }
-      fclose(fh);
     }
     scriptrunning = false;
   }

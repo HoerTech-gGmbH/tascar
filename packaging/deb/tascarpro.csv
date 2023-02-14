@@ -4,6 +4,7 @@
 "etc/mailcap/tascar","usr/lib/mime/packages/"
 "gui/build/tascar","usr/bin/"
 "gui/build/tascar_spkcalib","usr/bin/"
+"manual/examples/*.tosc","usr/share/tascar/examples/"
 "manual/examples/decoder/hrir.conf","usr/share/tascar/examples/decoder/"
 "manual/examples/decoder/hrir.wav","usr/share/tascar/examples/decoder/"
 "manual/examples/decoder/octagon-3h0v.ambdec","usr/share/tascar/examples/decoder/"

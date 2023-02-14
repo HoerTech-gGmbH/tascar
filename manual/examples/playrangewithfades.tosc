@@ -1,0 +1,29 @@
+# this is an example OSC script to play a range with 1s ramps at start
+# and end. The range should start at time 2.5s and end at 9s.
+
+# first, stop transport
+/transport/stop
+
+# now, fade to zero as soon as possible:
+/*/out/fade 0 0
+
+# wait a bit (100ms) to ensure the fade is applied:
+,0.1
+
+# requested timed ramp to gain 1 at 2.5s:
+/*/out/fade 1 1 2.5
+
+# play range:
+/transport/playrange 2.5 9
+
+# wait a bit to ensure the ramp is over:
+,1.1
+
+# request a timed ramp to gain zero at 8s:
+/*/out/fade 0 1 8
+
+# wait for 6s (transport will be stopped by then):
+,6
+
+# reset fade to 1:
+/*/out/fade 1 0
