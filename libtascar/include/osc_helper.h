@@ -32,9 +32,11 @@
 #if defined(_WIN32) && !defined(WIN32)
 #define WIN32 _WIN32 // liblo needs WIN32 defined in order to detect Windows
 #endif
+#include <atomic>
 #include <lo/lo.h>
 #include <string>
 #include <vector>
+#include <thread>
 
 typedef std::string(strcnvrt_t)(void*);
 
@@ -263,6 +265,12 @@ namespace TASCAR {
      */
     std::string get_vars_as_json(std::string prefix = "",
                                  bool asstring = true) const;
+    /**
+       @brief Read a script file with OSC messages
+     */
+    void read_script(const std::vector<std::string>& filename);
+    void read_script_async(const std::vector<std::string>& filename);
+    std::string scriptpath = "";
 
   private:
     std::string get_vars_as_json_rg(
@@ -277,6 +285,9 @@ namespace TASCAR {
     bool isactive;
     bool verbose;
     std::map<std::string, data_element_t> datamap;
+    std::atomic<bool> cancelscript = false;
+    std::atomic<bool> scriptrunning = false;
+    std::thread scriptthread;
   };
 
   class msg_t : public TASCAR::xml_element_t {

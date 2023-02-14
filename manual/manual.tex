@@ -278,8 +278,8 @@ the elements of the menu bar on the left side:
 \keyb{Alt}+\keyb{3} & XML source    \\
 \keyb{Alt}+\keyb{4} & OSC variables \\
 \keyb{Alt}+\keyb{5} & Licenses      \\
-\keyb{Alt}+\keyb{6} & Warnings     \\
-\keyb{Alt}+\keyb{7} & News     \\
+\keyb{Alt}+\keyb{6} & Warnings      \\
+\keyb{Alt}+\keyb{7} & News          \\
 \hline
 \end{tabular}
 
@@ -309,7 +309,7 @@ Opening the top menu bar elements:
 \keyb{Alt}+\keyb{F} & File      \\
 \keyb{Alt}+\keyb{T} & Transport \\
 \keyb{Alt}+\keyb{V} & View      \\
-\keyb{Alt}+\keyb{H} & Help     \\
+\keyb{Alt}+\keyb{H} & Help      \\
 \hline
 \end{tabular}
 }
@@ -337,12 +337,12 @@ Controlling the transport of a \tascar{} scene:
 
 \begin{tabular}{|ll|}
   \hline
-\keyb{Space}        & Play                             \\
-\keyb{Ctrl}+\keyb{Space} & Stop                             \\
-\keyb{Page Up}      & Rewind                           \\
-\keyb{Page Down}    & Forward                          \\
-\keyb{Home}         & Previous                         \\
-\keyb{End}          & Next                             \\
+\keyb{Space}             & Play     \\
+\keyb{Ctrl}+\keyb{Space} & Stop     \\
+\keyb{Page Up}           & Rewind   \\
+\keyb{Page Down}         & Forward  \\
+\keyb{Home}              & Previous \\
+\keyb{End}               & Next     \\
   \hline
 \end{tabular}
 
@@ -372,35 +372,11 @@ There is also an option to track the selected object in the scene map.
 
 \subsection{Network remote control via OSC}
 
-For remote control of most options, the Open Sound Control (OSC)
-protocol can be used.
-%
-\tascar{} supports UDP and TCP transport.
-%
-If more than one transport layer or multiple ports are required, the
-module ``oscserver'' (see Section \ref{sec:oscserver}) can be used.
-%
-A MATLAB/GNU Octave tool for remote control is available, see section
-\ref{sec:sendosc} for more details.
+Most options can be controlled remotely using the Open Sound Control (OSC) protocol. An OSC message consists of one or more numeric values or strings. Each message can be sent to an OSC path on an OSC server. \tascar{} supports UDP and TCP transport layers to receive OSC messages. If more than one transport layer or multiple ports are required, the ``oscserver'' module can be used (see section \ref{sec:oscserver}). A MATLAB/GNU Octave remote control tool is available, see section \ref{sec:sendosc} for more details.
 
-A list of OSC variables with their type, and in some cases also with
-documentation, typical value range and current value, can be read
-using special variable \verb!/sendvarsto!.
-%
-This OSC variable takes three string parameters: The first is a valid OSC URL, e.g., \verb!osc.udp://localhost:9000/!.
-%
-The variable list will be sent to this address.
-%
-The second parameter is an OSC path to which the variable list will be
-sent, e.g., \verb!/getvar!.
-%
-The third parameter, which is optional, is a prefix.
-%
-If specified, only variables starting with this prefix will be
-reported.
+A list of OSC variables with their type and, in some cases, documentation, typical range and current value can be read using the special variable \verb!/sendvarsto!  This OSC variable takes three string parameters: The first is a valid OSC URL, e.g. \verb!osc.udp://localhost:9000/!.  The variable list is sent to this address.  The second parameter is an OSC path to send the variable list to, e.g. \verb!/getvar!.  The third parameter, which is optional, is a prefix.  If specified, only variables starting with that prefix will be reported.
 
-When a message to \verb!/sendvarsto! arrives, first an empty message
-is sent to \verb!<path>/begin!.
+When a message to \verb!/sendvarsto! arrives, first an empty message is sent to \verb!<path>/begin!.
 %
 This is followed by multiple messages of format \verb!ssiss!, one
 message per matching OSC variable.
@@ -427,6 +403,8 @@ Please note that in some cases the maximum transmission unit of UDP
 messages is not sufficient to transmit all data.
 %
 In this case you should use TCP transport.
+
+OSC variables can also be read from a file. In this case, every non-empty line not starting with \verb!#! or \verb!.! is interpreted as an OSC message. The first element of a space-separated list of words or numbers is the path, all other elements are converted to numeric floats if possible, otherwise they are sent as strings. If a line starts with a comma, the number after the comma is interpreted as the time in seconds to wait before processing the next line. Lines starting with \verb!#! or empty lines are ignored.
 
 
 \subsection{Optimization of the operating system for audio processing}

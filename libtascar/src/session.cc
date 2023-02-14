@@ -409,6 +409,7 @@ TASCAR::session_t::session_t()
                    TASCAR::config("tascar.osc.list", 0)),
       period_time(1.0 / (double)srate), started_(false)
 {
+  GET_ATTRIBUTE(scriptpath, "", "Path for executing OSC scripts");
   assert_jackpar("sampling rate", requiresrate, srate, false, " Hz");
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
   assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
@@ -431,8 +432,9 @@ TASCAR::session_t::session_t()
     throw;
   }
   profilermsgargv = lo_message_get_argv(profilermsg);
-  if( use_profiler ){
-    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << modules.size() << "\"/>" << std::endl;
+  if(use_profiler) {
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\""
+              << modules.size() << "\"/>" << std::endl;
     std::cout << "csModules = { ";
     for(auto mod : modules)
       std::cout << "'" << mod->modulename() << "' ";
@@ -471,8 +473,9 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
     throw;
   }
   profilermsgargv = lo_message_get_argv(profilermsg);
-  if( use_profiler ){
-    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << modules.size() << "\"/>" << std::endl;
+  if(use_profiler) {
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\""
+              << modules.size() << "\"/>" << std::endl;
     std::cout << "csModules = { ";
     for(auto mod : modules)
       std::cout << "'" << mod->modulename() << "' ";
@@ -1135,6 +1138,16 @@ namespace OSCSession {
     return 0;
   }
 
+  int _runscript(const char*, const char* types, lo_arg** argv, int argc,
+                 lo_message, void* user_data)
+  {
+    if(user_data && (argc == 1) && (types[0] == 's')) {
+      TASCAR::session_t* srv(reinterpret_cast<TASCAR::session_t*>(user_data));
+      srv->read_script_async(TASCAR::str2vecstr(&(argv[0]->s)));
+    }
+    return 0;
+  }
+
 } // namespace OSCSession
 
 void TASCAR::session_t::add_transport_methods()
@@ -1151,6 +1164,8 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/stop", "", OSCSession::_stop, this);
   osc_server_t::add_method("/transport/unload", "", OSCSession::_unload_modules,
                            this);
+  osc_server_t::add_method("/runscript", "s", OSCSession::_runscript, this);
+  osc_server_t::add_string("/scriptpath", &scriptpath);
 }
 
 void TASCAR::session_t::send_xml(const std::string& url,

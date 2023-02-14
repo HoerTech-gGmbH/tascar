@@ -26,8 +26,10 @@
 #include "osc_helper.h"
 #include "defs.h"
 #include "errorhandling.h"
+#include "tictoctimer.h"
 #include <map>
 #include <math.h>
+#include <unistd.h>
 
 using namespace TASCAR;
 
@@ -579,6 +581,11 @@ int osc_server_t::dispatch_data_message(const char* path, lo_message m)
 
 osc_server_t::~osc_server_t()
 {
+  cancelscript = true;
+  while(scriptrunning)
+    usleep(10);
+  if(scriptthread.joinable())
+    scriptthread.join();
   if(isactive)
     deactivate();
   if(initialized)
@@ -922,6 +929,93 @@ std::string osc_server_t::get_vars_as_json(std::string prefix,
 {
   auto it = datamap.begin();
   return get_vars_as_json_rg(prefix, it, datamap.end(), asstring);
+}
+
+void osc_server_t::read_script(const std::vector<std::string>& filenames)
+{
+  try {
+    if(filenames.empty())
+      return;
+    cancelscript = true;
+    while(scriptrunning)
+      usleep(10);
+    scriptrunning = true;
+    cancelscript = false;
+    tictoc_t tictoc;
+    char rbuf[0x4000];
+    for(const auto& filename : filenames) {
+      FILE* fh = fopen((scriptpath + filename).c_str(), "r");
+      if(!fh) {
+        TASCAR::add_warning("Cannot open file \"" + scriptpath + filename +
+                            "\".");
+        scriptrunning = false;
+        return;
+      }
+      while(!feof(fh)) {
+        memset(rbuf, 0, 0x4000);
+        if(cancelscript) {
+          fclose(fh);
+          scriptrunning = false;
+          return;
+        }
+        char* s = fgets(rbuf, 0x4000 - 1, fh);
+        if(s) {
+          rbuf[0x4000 - 1] = 0;
+          if(rbuf[0] == '#')
+            rbuf[0] = 0;
+          if(strlen(rbuf))
+            if(rbuf[strlen(rbuf) - 1] == 10)
+              rbuf[strlen(rbuf) - 1] = 0;
+          if(strlen(rbuf)) {
+            if(rbuf[0] == ',') {
+              double val(0.0f);
+              sscanf(&rbuf[1], "%lg", &val);
+              tictoc.tic();
+              while(tictoc.toc() < val) {
+                if(cancelscript) {
+                  fclose(fh);
+                  scriptrunning = false;
+                  return;
+                }
+                usleep(10);
+              }
+            } else {
+              std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
+              if(args.size()) {
+                auto msg(lo_message_new());
+                for(size_t n = 1; n < args.size(); ++n) {
+                  char* p(NULL);
+                  float val(strtof(args[n].c_str(), &p));
+                  if(*p) {
+                    lo_message_add_string(msg, args[n].c_str());
+                  } else {
+                    lo_message_add_float(msg, val);
+                  }
+                }
+                dispatch_data_message(args[0].c_str(), msg);
+                lo_message_free(msg);
+              }
+            }
+          }
+          // fprintf(stderr,"-%s-%s-%g-\n",rbuf,addr,val);
+        }
+      }
+      fclose(fh);
+    }
+    scriptrunning = false;
+  }
+  catch(...) {
+    scriptrunning = false;
+    throw;
+  }
+}
+
+void osc_server_t::read_script_async(const std::vector<std::string>& filenames)
+{
+  cancelscript = true;
+  if(scriptthread.joinable())
+    scriptthread.join();
+  scriptthread = std::thread(&osc_server_t::read_script, this, filenames);
 }
 
 /*
