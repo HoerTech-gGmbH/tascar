@@ -73,20 +73,28 @@ void TASCAR::midi_ctl_t::connect_output(int src_client,int src_port)
   snd_seq_subscribe_port(seq, subs);
 }
 
-void TASCAR::midi_ctl_t::service(){
+void TASCAR::midi_ctl_t::service()
+{
   snd_seq_drop_input(seq);
   snd_seq_drop_input_buffer(seq);
   snd_seq_drop_output(seq);
   snd_seq_drop_output_buffer(seq);
-  snd_seq_event_t *ev;
-  while( run_service ){
-    //while( snd_seq_event_input_pending(seq,0) ){
-    while( snd_seq_event_input(seq, &ev) >= 0 ){
-      if( ev->type == SND_SEQ_EVENT_CONTROLLER ){
-	emit_event(ev->data.control.channel,ev->data.control.param, ev->data.control.value);
+  snd_seq_event_t* ev;
+  while(run_service) {
+    // while( snd_seq_event_input_pending(seq,0) ){
+    while(snd_seq_event_input(seq, &ev) >= 0) {
+      if(ev->type == SND_SEQ_EVENT_CONTROLLER) {
+        emit_event(ev->data.control.channel, ev->data.control.param,
+                   ev->data.control.value);
+      }
+      if((ev->type == SND_SEQ_EVENT_NOTE) ||
+         (ev->type == SND_SEQ_EVENT_NOTEON) ||
+         (ev->type == SND_SEQ_EVENT_NOTEOFF)) {
+        emit_event_note(ev->data.note.channel, ev->data.note.note,
+                        ev->data.note.velocity);
       }
     }
-    usleep(50);
+    usleep(10);
   }
 }
 

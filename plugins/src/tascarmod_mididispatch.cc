@@ -20,193 +20,328 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "session.h"
 #include "alsamidicc.h"
+#include "session.h"
 #include <thread>
 
-class midictl_vars_t : public TASCAR::module_base_t
-{
+class m_msg_t {
 public:
-  midictl_vars_t( const TASCAR::module_cfg_t& cfg );
-protected:
-  bool dumpmsg;
-  std::string name;
-  std::string connect;
-  std::vector<std::string> controllers;
-  std::vector<std::string> pattern;
-  double min;
-  double max;
+  enum mode_t { mtrigger, mfloat };
+  m_msg_t();
+  m_msg_t(const m_msg_t&);
+  m_msg_t& operator=(const m_msg_t&);
+  ~m_msg_t();
+  void parse(TASCAR::xml_element_t& e);
+  void set_floataction(const std::string& path, float vmin, float vmax);
+  void set_triggeraction(const std::string& path, float vmin, float vmax);
+  void append_data(const std::string&);
+  void updatemsg(TASCAR::osc_server_t* srv, int val);
+  std::string path;
+  lo_message msg = NULL;
+  float min = 0.0f;
+  float max = 127.0f;
+
+private:
+  mode_t bmode = mtrigger;
+  void set_mode(mode_t m);
 };
 
-midictl_vars_t::midictl_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    dumpmsg(false),
-    min(0),
-    max(1)
+m_msg_t::m_msg_t()
 {
-  GET_ATTRIBUTE_BOOL_(dumpmsg);
-  GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(connect);
-  GET_ATTRIBUTE_(controllers);
-  GET_ATTRIBUTE_(pattern);
-  GET_ATTRIBUTE_(min);
-  GET_ATTRIBUTE_(max);
+  msg = lo_message_new();
 }
 
-class midictl_t : public midictl_vars_t,
-                  public TASCAR::midi_ctl_t
+m_msg_t::~m_msg_t()
 {
-public:
-  midictl_t( const TASCAR::module_cfg_t& cfg );
-  ~midictl_t();
-  void configure();
-  void release();
-  virtual void emit_event(int channel, int param, int value);
-private:
-  void send_service();
-  std::vector<uint16_t> controllers_;
-  std::vector<uint8_t> values;
-  std::vector<TASCAR::Scene::audio_port_t*> ports;
-  std::vector<TASCAR::Scene::route_t*> routes;
-  std::thread srv;
-  bool run_service;
-  bool upload;
-};
+  lo_message_free(msg);
+}
 
-midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
-  : midictl_vars_t( cfg ),
-    TASCAR::midi_ctl_t( name ),
-  run_service(true),
-  upload(false)
+m_msg_t::m_msg_t(const m_msg_t& src)
 {
-  for(uint32_t k=0;k<controllers.size();++k){
-    size_t cpos(controllers[k].find("/"));
-    if( cpos != std::string::npos ){
-      uint32_t channel(atoi(controllers[k].substr(0,cpos).c_str()));
-      uint32_t param(atoi(controllers[k].substr(cpos+1,controllers[k].size()-cpos-1).c_str()));
-      controllers_.push_back(256*channel+param);
-      values.push_back(255);
-    }else{
-      throw TASCAR::ErrMsg("Invalid controller name "+controllers[k]);
+  lo_message_free(msg);
+  msg = lo_message_clone(src.msg);
+  bmode = src.bmode;
+  path = src.path;
+  min = src.min;
+  max = src.max;
+}
+
+m_msg_t& m_msg_t::operator=(const m_msg_t& src)
+{
+  lo_message_free(msg);
+  msg = lo_message_clone(src.msg);
+  bmode = src.bmode;
+  path = src.path;
+  min = src.min;
+  max = src.max;
+  return *this;
+}
+
+void m_msg_t::parse(TASCAR::xml_element_t& e)
+{
+  std::string mode = "trigger";
+  e.GET_ATTRIBUTE(mode, "", "message mode, float|trigger");
+  bmode = mtrigger;
+  if(mode == "float")
+    bmode = mfloat;
+  if(mode == "trigger")
+    bmode = mtrigger;
+  set_mode(bmode);
+  e.GET_ATTRIBUTE(path, "", "OSC path");
+  e.GET_ATTRIBUTE(min, "", "lower bound");
+  e.GET_ATTRIBUTE(max, "", "upper bound");
+  for(auto& sne : tsccfg::node_get_children(e.e, "f")) {
+    TASCAR::xml_element_t tsne(sne);
+    double v(0);
+    tsne.GET_ATTRIBUTE(v, "", "float value");
+    lo_message_add_float(msg, v);
+  }
+  for(auto& sne : tsccfg::node_get_children(e.e, "i")) {
+    TASCAR::xml_element_t tsne(sne);
+    int32_t v(0);
+    tsne.GET_ATTRIBUTE(v, "", "int value");
+    lo_message_add_int32(msg, v);
+  }
+  for(auto& sne : tsccfg::node_get_children(e.e, "s")) {
+    TASCAR::xml_element_t tsne(sne);
+    std::string v("");
+    tsne.GET_ATTRIBUTE(v, "", "string value");
+    lo_message_add_string(msg, v.c_str());
+  }
+}
+
+void m_msg_t::set_mode(mode_t bm)
+{
+  lo_message_free(msg);
+  msg = lo_message_new();
+  bmode = bm;
+  if(bmode == mfloat)
+    lo_message_add_float(msg, 1.0f);
+}
+
+void m_msg_t::set_floataction(const std::string& path_, float vmin, float vmax)
+{
+  set_mode(mfloat);
+  path = path_;
+  min = vmin;
+  max = vmax;
+}
+
+void m_msg_t::set_triggeraction(const std::string& path_, float vmin,
+                                float vmax)
+{
+  set_mode(mtrigger);
+  path = path_;
+  min = vmin;
+  max = vmax;
+}
+
+void m_msg_t::append_data(const std::string& d)
+{
+  std::vector<std::string> data = TASCAR::str2vecstr(d);
+  for(const auto& s : data) {
+    char* p(NULL);
+    float val(strtof(s.c_str(), &p));
+    if(*p) {
+      lo_message_add_string(msg, s.c_str());
+    } else {
+      lo_message_add_float(msg, val);
     }
   }
-  if( controllers_.size() == 0 )
-    throw TASCAR::ErrMsg("No controllers defined.");
-  if( !connect.empty() ){
+}
+
+void m_msg_t::updatemsg(TASCAR::osc_server_t* srv, int val)
+{
+  switch(bmode) {
+  case mtrigger:
+    if(((float)val >= min) && ((float)val <= max))
+      srv->dispatch_data_message(path.c_str(), msg);
+    break;
+  case mfloat:
+    auto oscmsgargv = lo_message_get_argv(msg);
+    oscmsgargv[0]->f = (float)val / 127.0f * (max - min) + min;
+    srv->dispatch_data_message(path.c_str(), msg);
+    break;
+  }
+}
+
+class mididispatch_vars_t : public TASCAR::module_base_t {
+public:
+  mididispatch_vars_t(const TASCAR::module_cfg_t& cfg);
+
+protected:
+  bool dumpmsg = true;
+  std::string name = "mididispatch";
+  std::string connect;
+};
+
+mididispatch_vars_t::mididispatch_vars_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg)
+{
+  GET_ATTRIBUTE_BOOL(dumpmsg, "Dump all unrecognized messages to console");
+  GET_ATTRIBUTE(name, "", "ALSA MIDI name");
+  GET_ATTRIBUTE(connect, "", "ALSA device name to connect to");
+  if(name.empty())
+    throw TASCAR::ErrMsg("Invalid (empty) ALSA MIDI name");
+}
+
+class mididispatch_t : public mididispatch_vars_t, public TASCAR::midi_ctl_t {
+public:
+  mididispatch_t(const TASCAR::module_cfg_t& cfg);
+  ~mididispatch_t();
+  void configure();
+  void release();
+  void add_variables(TASCAR::osc_server_t* srv);
+  virtual void emit_event(int channel, int param, int value);
+  static int osc_sendcc(const char*, const char*, lo_arg** argv, int,
+                        lo_message, void* user_data)
+  {
+    ((mididispatch_t*)user_data)->send_midi(argv[0]->i, argv[1]->i, argv[2]->i);
+    return 0;
+  }
+  void add_cc_floataction(uint8_t channel, uint8_t param,
+                          const std::string& path, float min, float max,
+                          const std::string& xpar);
+  static int osc_cc_floataction(const char*, const char*, lo_arg** argv,
+                                int argc, lo_message, void* user_data)
+  {
+    if(argc == 6)
+      ((mididispatch_t*)user_data)
+          ->add_cc_floataction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                               argv[3]->f, argv[4]->f, &(argv[5]->s));
+    if(argc == 5)
+      ((mididispatch_t*)user_data)
+          ->add_cc_floataction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                               argv[3]->f, argv[4]->f, "");
+    return 0;
+  }
+  void add_cc_triggeraction(uint8_t channel, uint8_t param,
+                            const std::string& path, float min, float max,
+                            const std::string& xpar);
+  static int osc_cc_triggeraction(const char*, const char*, lo_arg** argv,
+                                  int argc, lo_message, void* user_data)
+  {
+    if(argc == 6)
+      ((mididispatch_t*)user_data)
+          ->add_cc_triggeraction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                                 argv[3]->i, argv[4]->i, &(argv[5]->s));
+    if(argc == 5)
+      ((mididispatch_t*)user_data)
+          ->add_cc_triggeraction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                                 argv[3]->i, argv[4]->i, "");
+    return 0;
+  }
+  void remove_cc_action(uint8_t channel, uint8_t param);
+  static int osc_cc_remove(const char*, const char*, lo_arg** argv, int,
+                           lo_message, void* user_data)
+  {
+    ((mididispatch_t*)user_data)->remove_cc_action(argv[0]->i, argv[1]->i);
+    return 0;
+  }
+
+private:
+  std::vector<std::pair<uint16_t, m_msg_t>> ccmsg;
+};
+
+mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
+    : mididispatch_vars_t(cfg), TASCAR::midi_ctl_t(name)
+{
+  for(auto sne : tsccfg::node_get_children(e, "ccmsg")) {
+    m_msg_t action;
+    TASCAR::xml_element_t xml(sne);
+    action.parse(xml);
+    uint32_t channel = 0;
+    uint32_t param = 0;
+    xml.GET_ATTRIBUTE(channel, "", "MIDI channel");
+    xml.GET_ATTRIBUTE(param, "", "MIDI CC parameter");
+    ccmsg.push_back(
+        std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
+  }
+  if(!connect.empty()) {
     connect_input(connect);
     connect_output(connect);
   }
-  session->add_bool_true(std::string("/")+name+"/upload",&upload);
-  srv = std::thread(&midictl_t::send_service,this);
+  add_variables(session);
 }
 
-void midictl_t::configure()
+void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  ports.clear();
-  routes.clear();
-  if( session )
-    ports = session->find_audio_ports( pattern );
-  for(auto it=ports.begin();it!=ports.end();++it){
-    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(*it));
-    if( !r ){
-      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(*it));
-      if( s )
-        r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
-    }
-    routes.push_back(r);
+  std::string prefix_(srv->get_prefix());
+  srv->set_prefix(std::string("/") + name);
+  srv->add_method("/sendcc", "iii", &mididispatch_t::osc_sendcc, this);
+  srv->add_method("/add/cc/float", "iisffs",
+                  &mididispatch_t::osc_cc_floataction, this);
+  srv->add_method("/add/cc/float", "iisff", &mididispatch_t::osc_cc_floataction,
+                  this);
+  srv->add_method("/add/cc/trigger", "iisiis",
+                  &mididispatch_t::osc_cc_triggeraction, this);
+  srv->add_method("/add/cc/trigger", "iisii",
+                  &mididispatch_t::osc_cc_triggeraction, this);
+  srv->add_method("/del/cc", "ii", &mididispatch_t::osc_cc_remove, this);
+  srv->set_prefix(prefix_);
+}
+
+void mididispatch_t::remove_cc_action(uint8_t channel, uint8_t param)
+{
+  for(auto it = ccmsg.begin(); it != ccmsg.end();) {
+    if(it->first == 256 * channel + param)
+      it = ccmsg.erase(it);
+    else
+      ++it;
   }
+}
+
+void mididispatch_t::add_cc_floataction(uint8_t channel, uint8_t param,
+                                        const std::string& path, float min,
+                                        float max, const std::string& xpar)
+{
+  m_msg_t action;
+  action.set_floataction(path, min, max);
+  action.append_data(xpar);
+  ccmsg.push_back(std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
+}
+
+void mididispatch_t::add_cc_triggeraction(uint8_t channel, uint8_t param,
+                                          const std::string& path, float min,
+                                          float max, const std::string& xpar)
+{
+  m_msg_t action;
+  action.set_triggeraction(path, min, max);
+  action.append_data(xpar);
+  ccmsg.push_back(std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
+}
+
+void mididispatch_t::configure()
+{
   start_service();
 }
 
-void midictl_t::release()
+void mididispatch_t::release()
 {
   stop_service();
   TASCAR::module_base_t::release();
 }
 
-midictl_t::~midictl_t()
-{
-  run_service = false;
-  srv.join();
-}
+mididispatch_t::~mididispatch_t() {}
 
-void midictl_t::send_service()
+void mididispatch_t::emit_event(int channel, int param, int value)
 {
-  while( run_service ){
-    // wait for 100 ms:
-    for( uint32_t k=0;k<100;++k)
-      if( run_service )
-        usleep( 1000 );
-    if( run_service ){
-      for( uint32_t k=0;k<ports.size();++k){
-        // gain:
-        if( k < controllers_.size() ){
-          float g(ports[k]->get_gain_db());
-          g -= min;
-          g *= 127/(max-min);
-          g = std::max(0.0f,std::min(127.0f,g));
-          uint8_t v(g);
-          if( (v != values[k]) || upload ){
-            values[k] = v;
-            int channel(controllers_[k] >> 8);
-            int param(controllers_[k] & 0xff);
-            send_midi( channel, param, v );
-          }
-        }
-        // mute:
-        uint32_t k1=k+ports.size();
-        if( routes[k] && (k1 < controllers_.size()) ){
-          uint8_t v(127*routes[k]->get_mute());
-          if( (v != values[k1]) || upload ){
-            values[k1] = v;
-            int channel(controllers_[k1] >> 8);
-            int param(controllers_[k1] & 0xff);
-            send_midi( channel, param, v );
-          }
-        }
-      }
-      upload = false;
-    }
-  }
-  for( uint32_t k=0;k<controllers_.size();++k){
-    int channel(controllers_[k] >> 8);
-    int param(controllers_[k] & 0xff);
-    send_midi( channel, param, 0 );
-  }
-}
-
-void midictl_t::emit_event(int channel, int param, int value)
-{
-  uint32_t ctl(256*channel+param);
+  uint16_t ctl(256 * channel + param);
   bool known = false;
-  //for(uint32_t k=0;k<controllers_.size();++k){
-  //  if( controllers_[k] == ctl ){
-  //    if( k<ports.size() ){
-  //      values[k] = value;
-  //      ports[k]->set_gain_db( min+value*(max-min)/127 );
-  //    }else{
-  //      uint32_t k1(k-ports.size());
-  //      if( k1 < routes.size() ){
-  //        if( routes[k1] ){
-  //          values[k] = value;
-  //          routes[k1]->set_mute( value > 0 );
-  //        }
-  //      }
-  //    }
-  //    known = true;
-  //  }
-  //}
-  if( (!known) && dumpmsg ){
+  for(auto& m : ccmsg)
+    if(m.first == ctl) {
+      m.second.updatemsg(session, value);
+      known = true;
+    }
+  if((!known) && dumpmsg) {
     char ctmp[256];
-    snprintf(ctmp,256,"%d/%d: %d",channel,param,value);
+    snprintf(ctmp, 256, "%d/%d: %d", channel, param, value);
     ctmp[255] = 0;
     std::cout << ctmp << std::endl;
-  }else{
-    //
   }
 }
 
-REGISTER_MODULE(midictl_t);
+REGISTER_MODULE(mididispatch_t);
 
 /*
  * Local Variables:
