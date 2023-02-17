@@ -193,10 +193,18 @@ public:
   void release();
   void add_variables(TASCAR::osc_server_t* srv);
   virtual void emit_event(int channel, int param, int value);
+  virtual void emit_event_note(int channel, int pitch, int velocity);
   static int osc_sendcc(const char*, const char*, lo_arg** argv, int,
                         lo_message, void* user_data)
   {
     ((mididispatch_t*)user_data)->send_midi(argv[0]->i, argv[1]->i, argv[2]->i);
+    return 0;
+  }
+  static int osc_sendnote(const char*, const char*, lo_arg** argv, int,
+                          lo_message, void* user_data)
+  {
+    ((mididispatch_t*)user_data)
+        ->send_midi_note(argv[0]->i, argv[1]->i, argv[2]->i);
     return 0;
   }
   void add_cc_floataction(uint8_t channel, uint8_t param,
@@ -215,6 +223,22 @@ public:
                                argv[3]->f, argv[4]->f, "");
     return 0;
   }
+  void add_note_floataction(uint8_t channel, uint8_t param,
+                            const std::string& path, float min, float max,
+                            const std::string& xpar);
+  static int osc_note_floataction(const char*, const char*, lo_arg** argv,
+                                  int argc, lo_message, void* user_data)
+  {
+    if(argc == 6)
+      ((mididispatch_t*)user_data)
+          ->add_note_floataction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                                 argv[3]->f, argv[4]->f, &(argv[5]->s));
+    if(argc == 5)
+      ((mididispatch_t*)user_data)
+          ->add_note_floataction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                                 argv[3]->f, argv[4]->f, "");
+    return 0;
+  }
   void add_cc_triggeraction(uint8_t channel, uint8_t param,
                             const std::string& path, float min, float max,
                             const std::string& xpar);
@@ -231,16 +255,48 @@ public:
                                  argv[3]->i, argv[4]->i, "");
     return 0;
   }
+  void add_note_triggeraction(uint8_t channel, uint8_t param,
+                              const std::string& path, float min, float max,
+                              const std::string& xpar);
+  static int osc_note_triggeraction(const char*, const char*, lo_arg** argv,
+                                    int argc, lo_message, void* user_data)
+  {
+    if(argc == 6)
+      ((mididispatch_t*)user_data)
+          ->add_note_triggeraction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                                   argv[3]->i, argv[4]->i, &(argv[5]->s));
+    if(argc == 5)
+      ((mididispatch_t*)user_data)
+          ->add_note_triggeraction(argv[0]->i, argv[1]->i, &(argv[2]->s),
+                                   argv[3]->i, argv[4]->i, "");
+    return 0;
+  }
   void remove_cc_action(uint8_t channel, uint8_t param);
-  static int osc_cc_remove(const char*, const char*, lo_arg** argv, int,
+  void remove_all_cc_action();
+  static int osc_cc_remove(const char*, const char*, lo_arg** argv, int argc,
                            lo_message, void* user_data)
   {
-    ((mididispatch_t*)user_data)->remove_cc_action(argv[0]->i, argv[1]->i);
+    if(argc == 2)
+      ((mididispatch_t*)user_data)->remove_cc_action(argv[0]->i, argv[1]->i);
+    else
+      ((mididispatch_t*)user_data)->remove_all_cc_action();
+    return 0;
+  }
+  void remove_note_action(uint8_t channel, uint8_t param);
+  void remove_all_note_action();
+  static int osc_note_remove(const char*, const char*, lo_arg** argv, int argc,
+                             lo_message, void* user_data)
+  {
+    if(argc == 2)
+      ((mididispatch_t*)user_data)->remove_note_action(argv[0]->i, argv[1]->i);
+    else
+      ((mididispatch_t*)user_data)->remove_all_note_action();
     return 0;
   }
 
 private:
   std::vector<std::pair<uint16_t, m_msg_t>> ccmsg;
+  std::vector<std::pair<uint16_t, m_msg_t>> notemsg;
 };
 
 mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
@@ -257,6 +313,17 @@ mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
     ccmsg.push_back(
         std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
   }
+  for(auto sne : tsccfg::node_get_children(e, "notemsg")) {
+    m_msg_t action;
+    TASCAR::xml_element_t xml(sne);
+    action.parse(xml);
+    uint32_t channel = 0;
+    uint32_t note = 0;
+    xml.GET_ATTRIBUTE(channel, "", "MIDI channel");
+    xml.GET_ATTRIBUTE(note, "", "MIDI note");
+    notemsg.push_back(
+        std::pair<uint16_t, m_msg_t>(256 * channel + note, action));
+  }
   if(!connect.empty()) {
     connect_input(connect);
     connect_output(connect);
@@ -268,7 +335,8 @@ void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
 {
   std::string prefix_(srv->get_prefix());
   srv->set_prefix(std::string("/") + name);
-  srv->add_method("/sendcc", "iii", &mididispatch_t::osc_sendcc, this);
+  srv->add_method("/send/cc", "iii", &mididispatch_t::osc_sendcc, this);
+  srv->add_method("/send/note", "iii", &mididispatch_t::osc_sendnote, this);
   srv->add_method("/add/cc/float", "iisffs",
                   &mididispatch_t::osc_cc_floataction, this);
   srv->add_method("/add/cc/float", "iisff", &mididispatch_t::osc_cc_floataction,
@@ -278,6 +346,17 @@ void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_method("/add/cc/trigger", "iisii",
                   &mididispatch_t::osc_cc_triggeraction, this);
   srv->add_method("/del/cc", "ii", &mididispatch_t::osc_cc_remove, this);
+  srv->add_method("/del/cc/all", "", &mididispatch_t::osc_cc_remove, this);
+  srv->add_method("/add/note/float", "iisffs",
+                  &mididispatch_t::osc_note_floataction, this);
+  srv->add_method("/add/note/float", "iisff",
+                  &mididispatch_t::osc_note_floataction, this);
+  srv->add_method("/add/note/trigger", "iisiis",
+                  &mididispatch_t::osc_note_triggeraction, this);
+  srv->add_method("/add/note/trigger", "iisii",
+                  &mididispatch_t::osc_note_triggeraction, this);
+  srv->add_method("/del/note", "ii", &mididispatch_t::osc_note_remove, this);
+  srv->add_method("/del/note/all", "", &mididispatch_t::osc_note_remove, this);
   srv->set_prefix(prefix_);
 }
 
@@ -289,6 +368,11 @@ void mididispatch_t::remove_cc_action(uint8_t channel, uint8_t param)
     else
       ++it;
   }
+}
+
+void mididispatch_t::remove_all_cc_action()
+{
+  ccmsg.clear();
 }
 
 void mididispatch_t::add_cc_floataction(uint8_t channel, uint8_t param,
@@ -309,6 +393,43 @@ void mididispatch_t::add_cc_triggeraction(uint8_t channel, uint8_t param,
   action.set_triggeraction(path, min, max);
   action.append_data(xpar);
   ccmsg.push_back(std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
+}
+
+void mididispatch_t::remove_note_action(uint8_t channel, uint8_t param)
+{
+  for(auto it = notemsg.begin(); it != notemsg.end();) {
+    if(it->first == 256 * channel + param)
+      it = notemsg.erase(it);
+    else
+      ++it;
+  }
+}
+
+void mididispatch_t::remove_all_note_action()
+{
+  notemsg.clear();
+}
+
+void mididispatch_t::add_note_floataction(uint8_t channel, uint8_t param,
+                                          const std::string& path, float min,
+                                          float max, const std::string& xpar)
+{
+  m_msg_t action;
+  action.set_floataction(path, min, max);
+  action.append_data(xpar);
+  notemsg.push_back(
+      std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
+}
+
+void mididispatch_t::add_note_triggeraction(uint8_t channel, uint8_t param,
+                                            const std::string& path, float min,
+                                            float max, const std::string& xpar)
+{
+  m_msg_t action;
+  action.set_triggeraction(path, min, max);
+  action.append_data(xpar);
+  notemsg.push_back(
+      std::pair<uint16_t, m_msg_t>(256 * channel + param, action));
 }
 
 void mididispatch_t::configure()
@@ -336,6 +457,23 @@ void mididispatch_t::emit_event(int channel, int param, int value)
   if((!known) && dumpmsg) {
     char ctmp[256];
     snprintf(ctmp, 256, "%d/%d: %d", channel, param, value);
+    ctmp[255] = 0;
+    std::cout << ctmp << std::endl;
+  }
+}
+
+void mididispatch_t::emit_event_note(int channel, int pitch, int velocity)
+{
+  uint16_t ctl(256 * channel + pitch);
+  bool known = false;
+  for(auto& m : notemsg)
+    if(m.first == ctl) {
+      m.second.updatemsg(session, velocity);
+      known = true;
+    }
+  if((!known) && dumpmsg) {
+    char ctmp[256];
+    snprintf(ctmp, 256, "Note %d/%d: %d", channel, pitch, velocity);
     ctmp[255] = 0;
     std::cout << ctmp << std::endl;
   }

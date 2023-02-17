@@ -119,6 +119,22 @@ void TASCAR::midi_ctl_t::send_midi(int channel, int param, int value)
   snd_seq_sync_output_queue(seq);
 }
 
+void TASCAR::midi_ctl_t::send_midi_note(int channel, int param, int value)
+{
+  snd_seq_event_t ev;
+  snd_seq_ev_clear(&ev);
+  snd_seq_ev_set_source(&ev, port_out.port);
+  snd_seq_ev_set_subs(&ev);
+  snd_seq_ev_set_direct( &ev );
+  ev.type = SND_SEQ_EVENT_NOTEON;
+  ev.data.note.channel = (unsigned char)(channel);
+  ev.data.note.note = (unsigned char)(param);
+  ev.data.note.velocity = (unsigned char)(value);
+  snd_seq_event_output_direct(seq, &ev);
+  snd_seq_drain_output(seq);
+  snd_seq_sync_output_queue(seq);
+}
+
 void TASCAR::midi_ctl_t::connect_input(const std::string& src)
 {
   snd_seq_addr_t sender;

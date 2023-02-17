@@ -62,6 +62,13 @@ namespace TASCAR {
        \param value MIDI value
     */
     void send_midi(int channel, int param, int value);
+    /**
+       \brief Send a NoteOn event to output
+       \param channel MIDI channel number
+       \param pitch Pitch of note
+       \param velocity Note velocity
+    */
+    void send_midi_note(int channel, int pitch, int velocity);
 
   protected:
     void service();
