@@ -33,7 +33,9 @@
 #define WIN32 _WIN32 // liblo needs WIN32 defined in order to detect Windows
 #endif
 #include <atomic>
+#include <condition_variable>
 #include <lo/lo.h>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -273,6 +275,7 @@ namespace TASCAR {
     std::string scriptpath = "";
 
   private:
+    void scriptthread_fun();
     std::string get_vars_as_json_rg(
         std::string prefix,
         std::map<std::string, data_element_t>::const_iterator& ibegin,
@@ -285,9 +288,14 @@ namespace TASCAR {
     bool isactive;
     bool verbose;
     std::map<std::string, data_element_t> datamap;
+    std::atomic<bool> runscriptthread;
     std::atomic<bool> cancelscript;
-    std::atomic<bool> scriptrunning;
     std::thread scriptthread;
+    std::mutex mtxscript;
+    std::mutex mtxscriptnames;
+    std::vector<std::string> nextscripts;
+    std::condition_variable cond_var_script;
+    std::mutex mtxdispatch;
   };
 
   class msg_t : public TASCAR::xml_element_t {

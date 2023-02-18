@@ -521,8 +521,9 @@ osc_server_t::osc_server_t(const std::string& multicast,
     : osc_srv_addr(multicast), osc_srv_port(port), initialized(false),
       isactive(false), verbose(verbose_)
 {
+  runscriptthread = true;
   cancelscript = false;
-  scriptrunning = false;
+  scriptthread = std::thread(&osc_server_t::scriptthread_fun, this);
   lost = NULL;
   liblo_errflag = false;
   if(port.size() && (port != "none")) {
@@ -533,9 +534,6 @@ osc_server_t::osc_server_t(const std::string& multicast,
       else
         lost = lo_server_thread_new_multicast(multicast.c_str(), port.c_str(),
                                               err_handler);
-      // if( verbose )
-      // std::cerr << "listening on multicast address \"osc.udp://" << multicast
-      // << ":"<<port << "/\"" << std::endl;
       initialized = true;
     } else {
       if(port == "auto")
@@ -544,9 +542,6 @@ osc_server_t::osc_server_t(const std::string& multicast,
       else
         lost = lo_server_thread_new_with_proto(
             port.c_str(), string2proto(proto), err_handler);
-      // if( verbose )
-      // std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" <<
-      // std::endl;
       initialized = true;
     }
     if((!lost) || liblo_errflag)
@@ -568,6 +563,7 @@ osc_server_t::osc_server_t(const std::string& multicast,
 
 int osc_server_t::dispatch_data(void* data, size_t size)
 {
+  std::lock_guard<std::mutex> lk{mtxdispatch};
   lo_server srv(lo_server_thread_get_server(lost));
   return lo_server_dispatch_data(srv, data, size);
 }
@@ -577,15 +573,21 @@ int osc_server_t::dispatch_data_message(const char* path, lo_message m)
   if(!isactive)
     return 0;
   size_t len(lo_message_length(m, path));
-  char data[len + 1];
-  return dispatch_data(lo_message_serialise(m, path, data, NULL), len);
+  char data[len + 256];
+  size_t sdatasize = 0;
+  char* sdata = (char*)lo_message_serialise(m, path, data, &sdatasize);
+  return dispatch_data(sdata, sdatasize);
 }
 
 osc_server_t::~osc_server_t()
 {
-  cancelscript = true;
-  while(scriptrunning)
-    usleep(10);
+  // first stop all running scripts:
+  runscriptthread = false;
+  {
+    std::lock_guard<std::mutex> lk{mtxscriptnames};
+    nextscripts.clear();
+  }
+  cond_var_script.notify_one();
   if(scriptthread.joinable())
     scriptthread.join();
   if(isactive)
@@ -935,99 +937,100 @@ std::string osc_server_t::get_vars_as_json(std::string prefix,
 
 void osc_server_t::read_script(const std::vector<std::string>& filenames)
 {
-  try {
-    if(filenames.empty())
-      return;
-    cancelscript = true;
-    while(scriptrunning)
-      usleep(10);
-    scriptrunning = true;
-    cancelscript = false;
-    tictoc_t tictoc;
-    char rbuf[0x4000];
-    for(auto filename : filenames) {
-      if(!filename.empty()) {
-        if(!scriptpath.empty()) {
-          if(filename[0] != '/') {
-            if(scriptpath[scriptpath.size() - 1] != '/')
-              filename = scriptpath + "/" + filename;
-            else
-              filename = scriptpath + filename;
-          }
+  cancelscript = true;
+  std::lock_guard<std::mutex> lk(mtxscript);
+  if(filenames.empty())
+    return;
+  cancelscript = false;
+  tictoc_t tictoc;
+  char rbuf[0x4000];
+  for(auto filename : filenames) {
+    if(!filename.empty()) {
+      if(!scriptpath.empty()) {
+        if(filename[0] != '/') {
+          if(scriptpath[scriptpath.size() - 1] != '/')
+            filename = scriptpath + "/" + filename;
+          else
+            filename = scriptpath + filename;
         }
-        FILE* fh = fopen((scriptpath + filename).c_str(), "r");
-        if(!fh) {
-          TASCAR::add_warning("Cannot open file \"" + scriptpath + filename +
-                              "\".");
-          scriptrunning = false;
+      }
+      FILE* fh = fopen((scriptpath + filename).c_str(), "r");
+      if(!fh) {
+        TASCAR::add_warning("Cannot open file \"" + scriptpath + filename +
+                            "\".");
+        return;
+      }
+      while(!feof(fh)) {
+        memset(rbuf, 0, 0x4000);
+        if(cancelscript) {
+          fclose(fh);
           return;
         }
-        while(!feof(fh)) {
-          memset(rbuf, 0, 0x4000);
-          if(cancelscript) {
-            fclose(fh);
-            scriptrunning = false;
-            return;
-          }
-          char* s = fgets(rbuf, 0x4000 - 1, fh);
-          if(s) {
-            rbuf[0x4000 - 1] = 0;
-            if(rbuf[0] == '#')
-              rbuf[0] = 0;
-            if(strlen(rbuf))
-              if(rbuf[strlen(rbuf) - 1] == 10)
-                rbuf[strlen(rbuf) - 1] = 0;
-            if(strlen(rbuf)) {
-              if(rbuf[0] == ',') {
-                double val(0.0f);
-                sscanf(&rbuf[1], "%lg", &val);
-                tictoc.tic();
-                while(tictoc.toc() < val) {
-                  if(cancelscript) {
-                    fclose(fh);
-                    scriptrunning = false;
-                    return;
-                  }
-                  usleep(10);
+        char* s = fgets(rbuf, 0x4000 - 1, fh);
+        if(s) {
+          rbuf[0x4000 - 1] = 0;
+          if(rbuf[0] == '#')
+            rbuf[0] = 0;
+          if(strlen(rbuf))
+            if(rbuf[strlen(rbuf) - 1] == 10)
+              rbuf[strlen(rbuf) - 1] = 0;
+          if(strlen(rbuf)) {
+            if(rbuf[0] == ',') {
+              double val(0.0f);
+              sscanf(&rbuf[1], "%lg", &val);
+              tictoc.tic();
+              while(tictoc.toc() < val) {
+                if(cancelscript) {
+                  fclose(fh);
+                  return;
                 }
-              } else {
-                std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
-                if(args.size()) {
-                  auto msg(lo_message_new());
-                  for(size_t n = 1; n < args.size(); ++n) {
-                    char* p(NULL);
-                    float val(strtof(args[n].c_str(), &p));
-                    if(*p) {
-                      lo_message_add_string(msg, args[n].c_str());
-                    } else {
-                      lo_message_add_float(msg, val);
-                    }
+                usleep(10);
+              }
+            } else {
+              std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
+              if(args.size()) {
+                auto msg(lo_message_new());
+                for(size_t n = 1; n < args.size(); ++n) {
+                  char* p(NULL);
+                  float val(strtof(args[n].c_str(), &p));
+                  if(*p) {
+                    lo_message_add_string(msg, args[n].c_str());
+                  } else {
+                    lo_message_add_float(msg, val);
                   }
-                  dispatch_data_message(args[0].c_str(), msg);
-                  lo_message_free(msg);
                 }
+                dispatch_data_message(args[0].c_str(), msg);
+                lo_message_free(msg);
               }
             }
-            // fprintf(stderr,"-%s-%s-%g-\n",rbuf,addr,val);
           }
         }
-        fclose(fh);
       }
+      fclose(fh);
     }
-    scriptrunning = false;
   }
-  catch(...) {
-    scriptrunning = false;
-    throw;
+}
+
+void osc_server_t::scriptthread_fun()
+{
+  while(runscriptthread) {
+    std::unique_lock<std::mutex> lock{mtxscriptnames};
+    cond_var_script.wait(lock);
+    auto scripts = nextscripts;
+    nextscripts.clear();
+    lock.unlock();
+    if(runscriptthread && scripts.size())
+      read_script(scripts);
   }
 }
 
 void osc_server_t::read_script_async(const std::vector<std::string>& filenames)
 {
-  cancelscript = true;
-  if(scriptthread.joinable())
-    scriptthread.join();
-  scriptthread = std::thread(&osc_server_t::read_script, this, filenames);
+  {
+    std::lock_guard<std::mutex> lk{mtxscriptnames};
+    nextscripts = filenames;
+  }
+  cond_var_script.notify_one();
 }
 
 /*
