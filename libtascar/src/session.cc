@@ -410,6 +410,8 @@ TASCAR::session_t::session_t()
       period_time(1.0 / (double)srate), started_(false)
 {
   GET_ATTRIBUTE(scriptpath, "", "Path for executing OSC scripts");
+  GET_ATTRIBUTE(initoscscript, "",
+                "OSC scripts to run when session is loaded.");
   assert_jackpar("sampling rate", requiresrate, srate, false, " Hz");
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
   assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
@@ -741,6 +743,8 @@ void TASCAR::session_t::start()
     }
     (*ipl)->add_licenses(this);
   }
+  if(initoscscript.size())
+    read_script_async(initoscscript);
 }
 
 int TASCAR::session_t::process(jack_nframes_t, const std::vector<float*>&,

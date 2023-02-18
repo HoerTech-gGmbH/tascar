@@ -406,7 +406,7 @@ In this case you should use TCP transport.
 
 OSC variables can also be read from a file. In this case, every non-empty line not starting with \verb!#! or \verb!.! is interpreted as an OSC message. The first element of a space-separated list of words or numbers is the path, all other elements are converted to numeric floats if possible, otherwise they are sent as strings. If a line starts with a comma, the number after the comma is interpreted as the time in seconds to wait before processing the next line. Lines starting with \verb!#! or empty lines are ignored. If a space-separated list of filenames (optionally quoted to include filenames with spaces) is specified instead of a single filename, all specified files are processed in sequence. Starting a script while other scripts are still being processed will abort the execution of other scripts.
 
-If the filename does not start with an absolute path, the session attribute \attr{scriptpath} is used as a prefix. The default file ending for \tascar{} OSC scripts is \verb!.tosc!.
+If the filename does not start with an absolute path, the session attribute \attr{scriptpath} is used as a prefix. The default file ending for \tascar{} OSC scripts is \verb!.tosc!. With the session attribute \attr{initoscscript}, an OSC script can be specified which will be run after loading a session.
 
 \subsection{Optimization of the operating system for audio processing}
 
