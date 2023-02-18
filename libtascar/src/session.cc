@@ -409,10 +409,6 @@ TASCAR::session_t::session_t()
                    TASCAR::config("tascar.osc.list", 0)),
       period_time(1.0 / (double)srate), started_(false)
 {
-  GET_ATTRIBUTE(scriptpath, "", "Path for executing OSC scripts");
-  GET_ATTRIBUTE(scriptext, "", "Extension appended to OSC script names");
-  GET_ATTRIBUTE(initoscscript, "",
-                "OSC scripts to run when session is loaded.");
   assert_jackpar("sampling rate", requiresrate, srate, false, " Hz");
   assert_jackpar("fragment size", requirefragsize, fragsize, false);
   assert_jackpar("sampling rate", warnsrate, srate, true, " Hz");
@@ -490,6 +486,10 @@ void TASCAR::session_t::read_xml()
 {
   try {
     TASCAR::tsc_reader_t::read_xml();
+    GET_ATTRIBUTE(scriptpath, "", "Path for executing OSC scripts");
+    GET_ATTRIBUTE(scriptext, "", "Extension appended to OSC script names");
+    GET_ATTRIBUTE(initoscscript, "",
+                  "OSC scripts to run when session is loaded.");
   }
   catch(...) {
     if(lock_vars()) {
