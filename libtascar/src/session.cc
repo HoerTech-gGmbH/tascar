@@ -410,6 +410,7 @@ TASCAR::session_t::session_t()
       period_time(1.0 / (double)srate), started_(false)
 {
   GET_ATTRIBUTE(scriptpath, "", "Path for executing OSC scripts");
+  GET_ATTRIBUTE(scriptext, "", "Extension appended to OSC script names");
   GET_ATTRIBUTE(initoscscript, "",
                 "OSC scripts to run when session is loaded.");
   assert_jackpar("sampling rate", requiresrate, srate, false, " Hz");

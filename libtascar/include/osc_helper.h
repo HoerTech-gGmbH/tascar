@@ -273,6 +273,7 @@ namespace TASCAR {
     void read_script(const std::vector<std::string>& filename);
     void read_script_async(const std::vector<std::string>& filename);
     std::string scriptpath = "";
+    std::string scriptext = "";
 
   private:
     void scriptthread_fun();

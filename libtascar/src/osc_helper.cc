@@ -954,10 +954,10 @@ void osc_server_t::read_script(const std::vector<std::string>& filenames)
             filename = scriptpath + filename;
         }
       }
-      FILE* fh = fopen((scriptpath + filename).c_str(), "r");
+      FILE* fh = fopen((scriptpath + filename + scriptext).c_str(), "r");
       if(!fh) {
         TASCAR::add_warning("Cannot open file \"" + scriptpath + filename +
-                            "\".");
+                            scriptext + "\".");
         return;
       }
       while(!feof(fh)) {
