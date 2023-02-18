@@ -563,7 +563,7 @@ osc_server_t::osc_server_t(const std::string& multicast,
 
 int osc_server_t::dispatch_data(void* data, size_t size)
 {
-  std::lock_guard<std::mutex> lk{mtxdispatch};
+  //std::lock_guard<std::mutex> lk{mtxdispatch};
   lo_server srv(lo_server_thread_get_server(lost));
   return lo_server_dispatch_data(srv, data, size);
 }

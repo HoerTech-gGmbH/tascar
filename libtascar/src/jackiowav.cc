@@ -310,21 +310,22 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   buf = new float[channels * get_fragsize()];
   rlen = channels * get_srate();
   rbuf = new float[rlen];
+  tscale = 1.0 / get_srate();
+  srv = std::thread(&jackrec_async_t::service, this);
   activate();
   k = 0;
   for(auto& p : ports) {
     connect_in(k, p, true, true);
     ++k;
   }
-  tscale = 1.0 / get_srate();
-  srv = std::thread(&jackrec_async_t::service, this);
 }
 
 jackrec_async_t::~jackrec_async_t()
 {
   deactivate();
   run_service = false;
-  srv.join();
+  if( srv.joinable() )
+    srv.join();
   if(sf_out) {
     sf_close(sf_out);
   }

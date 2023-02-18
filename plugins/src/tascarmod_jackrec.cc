@@ -194,10 +194,13 @@ jackrec_t::~jackrec_t()
   if(lo_addr)
     lo_send(lo_addr, (oscprefix + "/stop").c_str(), "");
   run_service = false;
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    if(jr)
+      delete jr;
+    jr = NULL;
+  }
   srv.join();
-  std::lock_guard<std::mutex> lock(mtx);
-  if(jr)
-    delete jr;
   if(lo_addr)
     lo_address_free(lo_addr);
 }
@@ -254,6 +257,8 @@ void jackrec_t::rmfile(const std::string& file)
 
 void jackrec_t::start()
 {
+  TASCAR::tictoc_t tictoc;
+  tictoc.tic();
   std::lock_guard<std::mutex> lock(mtx);
   if(jr)
     delete jr;

@@ -297,6 +297,7 @@ public:
 private:
   std::vector<std::pair<uint16_t, m_msg_t>> ccmsg;
   std::vector<std::pair<uint16_t, m_msg_t>> notemsg;
+  std::mutex mtxdispatch;
 };
 
 mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
@@ -451,6 +452,7 @@ void mididispatch_t::emit_event(int channel, int param, int value)
   bool known = false;
   for(auto& m : ccmsg)
     if(m.first == ctl) {
+      std::lock_guard<std::mutex> lock{mtxdispatch};
       m.second.updatemsg(session, value);
       known = true;
     }
@@ -468,6 +470,7 @@ void mididispatch_t::emit_event_note(int channel, int pitch, int velocity)
   bool known = false;
   for(auto& m : notemsg)
     if(m.first == ctl) {
+      std::lock_guard<std::mutex> lock{mtxdispatch};
       m.second.updatemsg(session, velocity);
       known = true;
     }
