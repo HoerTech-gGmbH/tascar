@@ -173,6 +173,7 @@ namespace TASCAR {
     void add_chunk(int32_t chunk_time, int32_t start_time, float gain,
                    wave_t& chunk);
     void add_chunk_looped(float gain, wave_t& chunk);
+    void restart() { looped_t = 0; };
 
   private:
     uint32_t looped_t;

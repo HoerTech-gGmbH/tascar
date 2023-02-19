@@ -39,6 +39,7 @@ private:
   bool clear;
   bool record;
   float gain;
+  uint32_t loopcnt = 0;
   TASCAR::looped_wave_t* loop;
   TASCAR::wave_t* ramp;
   size_t rec_counter;
@@ -58,6 +59,7 @@ loopmachine_t::loopmachine_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(ramplen, "s", "Ramp length");
   GET_ATTRIBUTE_DB(gain, "Playback gain");
   GET_ATTRIBUTE_BOOL(bypass, "Start in bypass mode");
+  GET_ATTRIBUTE(loopcnt, "", "Number of repeats, 0 = infinite");
 }
 
 void loopmachine_t::configure()
@@ -84,6 +86,7 @@ void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/bypass", &bypass);
   srv->add_float("/gain", &gain);
   srv->add_float_db("/gaindb", &gain);
+  srv->add_uint("/loopcnt", &loopcnt);
 }
 
 loopmachine_t::~loopmachine_t() {}
@@ -100,6 +103,8 @@ void loopmachine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     ramp_counter = ramp->n;
     t_rec_counter = 0;
     t_ramp_counter = 0;
+    loop->set_loop(loopcnt);
+    loop->restart();
   }
   if(clear) {
     clear = false;
@@ -118,7 +123,7 @@ void loopmachine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
       ++t_ramp_counter;
     }
   }
-  if(bypass) {
+  if(bypass || (rec_counter > 0)) {
     loop->add_chunk_looped(0.0f, chunk[0]);
   } else {
     loop->add_chunk_looped(gain, chunk[0]);
