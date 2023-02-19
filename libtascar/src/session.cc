@@ -1066,8 +1066,9 @@ namespace OSCSession {
     if((argc == 1) && (types[0] == 'f')) {
       double cur_time(std::max(
           0.0, std::min(((TASCAR::session_t*)user_data)->duration,
-                        ((TASCAR::session_t*)user_data)->tp_get_time())));
-      ((TASCAR::session_t*)user_data)->tp_locate(cur_time + argv[0]->f);
+                        ((TASCAR::session_t*)user_data)->tp_get_time() +
+                            argv[0]->f)));
+      ((TASCAR::session_t*)user_data)->tp_locate(cur_time);
       return 0;
     }
     return 1;
