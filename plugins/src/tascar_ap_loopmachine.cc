@@ -78,7 +78,8 @@ void loopmachine_t::configure()
     throw TASCAR::ErrMsg("Invalid delay compensation time: " +
                          TASCAR::to_string(delaycomp));
   audioplugin_base_t::configure();
-  loop = new TASCAR::looped_wave_t(f_sample * durationbeats / bpm * 60.0);
+  uint32_t period = (60 * (int64_t)f_sample) / (int64_t)bpm;
+  loop = new TASCAR::looped_wave_t(durationbeats * period);
   loop->set_loop(0);
   ramp = new TASCAR::wave_t(f_sample * ramplen);
   for(size_t k = 0; k < ramp->n; ++k)

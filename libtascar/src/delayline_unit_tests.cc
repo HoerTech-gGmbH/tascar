@@ -159,6 +159,20 @@ TEST(staticdelay,delay)
   EXPECT_EQ(0.0f,w.d[1]);
   EXPECT_EQ(0.0f,w.d[2]);
   EXPECT_EQ(1.0f,w.d[3]);
+  TASCAR::static_delay_t d4(7);
+  w.clear();
+  w.d[0] = 1.0f;
+  d4(w);
+  EXPECT_EQ(0.0f,w.d[0]);
+  EXPECT_EQ(0.0f,w.d[1]);
+  EXPECT_EQ(0.0f,w.d[2]);
+  EXPECT_EQ(0.0f,w.d[3]);
+  w.clear();
+  d4(w);
+  EXPECT_EQ(0.0f,w.d[0]);
+  EXPECT_EQ(0.0f,w.d[1]);
+  EXPECT_EQ(0.0f,w.d[2]);
+  EXPECT_EQ(1.0f,w.d[3]);
 }
 
 // Local Variables:
