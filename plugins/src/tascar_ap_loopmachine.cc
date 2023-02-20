@@ -20,6 +20,8 @@
  */
 
 #include "audioplugin.h"
+#include "delayline.h"
+#include "errorhandling.h"
 
 class loopmachine_t : public TASCAR::audioplugin_base_t {
 public:
@@ -39,6 +41,7 @@ private:
   bool clear;
   bool record;
   float gain;
+  double delaycomp = 0.0;
   uint32_t loopcnt = 0;
   TASCAR::looped_wave_t* loop;
   TASCAR::wave_t* ramp;
@@ -46,6 +49,8 @@ private:
   size_t ramp_counter;
   size_t t_rec_counter;
   size_t t_ramp_counter;
+  TASCAR::static_delay_t* delay;
+  TASCAR::wave_t* delayed;
 };
 
 loopmachine_t::loopmachine_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -60,16 +65,26 @@ loopmachine_t::loopmachine_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE_DB(gain, "Playback gain");
   GET_ATTRIBUTE_BOOL(bypass, "Start in bypass mode");
   GET_ATTRIBUTE(loopcnt, "", "Number of repeats, 0 = infinite");
+  GET_ATTRIBUTE(delaycomp, "s", "Delay compensation");
 }
 
 void loopmachine_t::configure()
 {
+  if(n_channels != 1)
+    TASCAR::add_warning("loopmachine will process only the first channel");
+  if(n_channels == 0)
+    throw TASCAR::ErrMsg("loopmachine requires at least one audio channel");
+  if(delaycomp < 0)
+    throw TASCAR::ErrMsg("Invalid delay compensation time: " +
+                         TASCAR::to_string(delaycomp));
   audioplugin_base_t::configure();
   loop = new TASCAR::looped_wave_t(f_sample * durationbeats / bpm * 60.0);
   loop->set_loop(0);
   ramp = new TASCAR::wave_t(f_sample * ramplen);
   for(size_t k = 0; k < ramp->n; ++k)
     ramp->d[k] = 0.5f + 0.5f * cosf(k * t_sample * TASCAR_PI / ramplen);
+  delay = new TASCAR::static_delay_t(f_sample * delaycomp);
+  delayed = new TASCAR::wave_t(n_fragment);
 }
 
 void loopmachine_t::release()
@@ -77,6 +92,8 @@ void loopmachine_t::release()
   audioplugin_base_t::release();
   delete loop;
   delete ramp;
+  delete delay;
+  delete delayed;
 }
 
 void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
@@ -110,15 +127,17 @@ void loopmachine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     clear = false;
     loop->clear();
   }
+  delayed->copy(chunk[0]);
+  delay->operator()(*delayed);
   for(size_t k = 0; k < n_fragment; ++k) {
     if(rec_counter) {
-      loop->d[t_rec_counter] = chunk[0].d[k];
+      loop->d[t_rec_counter] = delayed->d[k];
       if(t_rec_counter < ramp->n)
         loop->d[t_rec_counter] *= 1.0f - ramp->d[t_rec_counter];
       --rec_counter;
       ++t_rec_counter;
     } else if(ramp_counter) {
-      loop->d[t_ramp_counter] += (ramp->d[t_ramp_counter] * chunk[0].d[k]);
+      loop->d[t_ramp_counter] += (ramp->d[t_ramp_counter] * delayed->d[k]);
       --ramp_counter;
       ++t_ramp_counter;
     }
