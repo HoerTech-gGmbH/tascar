@@ -185,8 +185,11 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         if(dispatchin) {
           // count down "dispatchin". If zero, then dispatch message.
           --dispatchin;
-          if((!dispatchin) && srv_)
-            srv_->dispatch_data_message(msg.path.c_str(), msg.msg);
+          if( dispatchin > (1<<16) )
+            dispatchin = 0u;
+          else
+            if((!dispatchin) && srv_)
+              srv_->dispatch_data_message(msg.path.c_str(), msg.msg);
         }
         if(changeonone)
           update_par();
