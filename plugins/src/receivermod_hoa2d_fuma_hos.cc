@@ -128,6 +128,9 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double,
                               receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
+  auto pnorm = prel.normal();
+  pnorm.z = 0.0;
+  float gain_xy = pnorm.norm();
   float az(-prel.azim());
   float rho(prel.norm());
   float w_centre = std::max(0.0f, -(rho - rhoc) / rhoc);
@@ -155,10 +158,19 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double,
     float gaugea = (1.0f - d->gauge);
     std::complex<float>* pwp(d->enc_w.b);
     std::complex<float>* pdwp(d->enc_dw.b);
-    for(uint32_t ko = 0; ko <= order; ++ko) {
+    {
       *pwp += *pdwp;
       *encp += *pwp * (*vp) * w_gauge;
       *encpa += *pwp * (*vp) * gaugea;
+      ++encp;
+      ++encpa;
+      ++pwp;
+      ++pdwp;
+    }
+    for(uint32_t ko = 1; ko <= order; ++ko) {
+      *pwp += *pdwp;
+      *encp += *pwp * (*vp) * w_gauge * gain_xy;
+      *encpa += *pwp * (*vp) * gaugea * gain_xy;
       ++encp;
       ++encpa;
       ++pwp;
