@@ -475,8 +475,8 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
   float theta_r = acosf(dot_prodf(par.dir_r, prel_norm));
 
   // warping for better grip on small angles
-  theta_l = theta_l * (1.0f - 0.5f * cosf(sqrt(theta_l * TASCAR_PIf))) / 1.5f;
-  theta_r = theta_r * (1.0f - 0.5f * cosf(sqrt(theta_r * TASCAR_PIf))) / 1.5f;
+  theta_l = theta_l * (1.0f - 0.5f * cosf(sqrtf(theta_l * TASCAR_PIf))) / 1.5f;
+  theta_r = theta_r * (1.0f - 0.5f * cosf(sqrtf(theta_r * TASCAR_PIf))) / 1.5f;
 
   // time delay in meter (panning parameters: target_tau is reached at end of
   // the block)
