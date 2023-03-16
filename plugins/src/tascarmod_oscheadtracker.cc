@@ -23,8 +23,6 @@
 #include <chrono>
 #include <thread>
 
-// const std::complex<double> i = {0.0, 1.0};
-
 class oscheadtracker_t : public TASCAR::actor_module_t {
 public:
   oscheadtracker_t(const TASCAR::module_cfg_t& cfg);
@@ -51,22 +49,25 @@ private:
   void disconnect();
   void connectservice();
 
+  // data logging OSC url:
+  std::string url;
+  // rotation OSC url:
+  std::string roturl;
+  // rotation OSC path:
+  std::string rotpath;
   // configuration variables:
   std::string name;
   // use only z-rotation for referencing:
   bool autoref_zonly = true;
   // combine quaternion with gyroscope for increased resolution:
   bool combinegyr = true;
+  // time-to-live for multicast messages, if using multicast targets:
   uint32_t ttl;
-  std::vector<int32_t> axes;
-  double accscale;
-  double gyrscale;
   bool apply_loc = false;
   bool apply_rot = true;
   double autoref = 0.00001;
   double smooth = 0.1;
   // run-time variables:
-  float prevtilt = 0;
   TASCAR::pos_t p0;
   TASCAR::zyx_euler_t o0;
   bool bcalib;
@@ -79,11 +80,17 @@ private:
   // arrives:
   TASCAR::tictoc_t tictoc;
   // target address of head tracker, 192.168.100.1:9999 as defined in firmware:
-  lo_address target;
+  lo_address headtrackertarget = NULL;
   // additional thread which monitors the connection and re-connects in case of
   // no incoming data
   std::thread connectsrv;
   std::atomic<bool> run_service;
+  // target address for data logging:
+  lo_address target = NULL;
+  // target address for remote rotation:
+  lo_address rottarget = NULL;
+  // shortcut for name prefix:
+  std::string p;
 };
 
 void oscheadtracker_t::configure()
@@ -96,13 +103,13 @@ void oscheadtracker_t::configure()
 
 void oscheadtracker_t::connect()
 {
-  lo_send(target, "/connect", "is", session->get_srv_port(),
+  lo_send(headtrackertarget, "/connect", "is", session->get_srv_port(),
           std::string("/" + name + "/quatrot").c_str());
 }
 
 void oscheadtracker_t::disconnect()
 {
-  lo_send(target, "/connect", "");
+  lo_send(headtrackertarget, "/disconnect", "");
 }
 
 void oscheadtracker_t::release()
@@ -111,11 +118,15 @@ void oscheadtracker_t::release()
 }
 
 oscheadtracker_t::oscheadtracker_t(const TASCAR::module_cfg_t& cfg)
-    : actor_module_t(cfg), name("oscheadtracker"), ttl(1), axes({0, 1, 2}),
-      accscale(16384 / 9.81), gyrscale(16.4), bcalib(false), qref(1, 0, 0, 0),
-      target(lo_address_new("192.168.100.1", "9999"))
+    : actor_module_t(cfg), name("oscheadtracker"), ttl(1), // axes({0, 1, 2}),
+      bcalib(false), qref(1, 0, 0, 0),
+      headtrackertarget(lo_address_new("192.168.100.1", "9999"))
 {
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
+  GET_ATTRIBUTE(url, "",
+                "Target URL for OSC data logging, or empty for no datalogging");
+  GET_ATTRIBUTE(roturl, "", "OSC target URL for rotation data");
+  GET_ATTRIBUTE(rotpath, "", "OSC target path for rotation data");
   GET_ATTRIBUTE(ttl, "", "Time-to-live of OSC multicast data");
   GET_ATTRIBUTE(autoref, "",
                 "Filter coefficient for estimating reference orientation from "
@@ -126,21 +137,30 @@ oscheadtracker_t::oscheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(combinegyr,
                      "Combine quaternions with gyroscope based second estimate "
                      "for increased resolution of pose estimation.");
-  GET_ATTRIBUTE(axes, "", "Order of axes, or -1 to not use axis");
-  GET_ATTRIBUTE(
-      accscale, "",
-      "Scaling factor of accelerometer, default value scales to $m/s^2$");
-  GET_ATTRIBUTE(gyrscale, "",
-                "Scaling factor of gyroscope, default value scales to deg/s");
   GET_ATTRIBUTE_BOOL(
       apply_loc, "Apply translation based on accelerometer (not implemented)");
   GET_ATTRIBUTE_BOOL(apply_rot,
                      "Apply rotation based on gyroscope and accelerometer");
+  if(url.size()) {
+    target = lo_address_new_from_url(url.c_str());
+    if(!target)
+      throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
+    lo_address_set_ttl(target, ttl);
+  }
+  if((roturl.size() > 0) && (rotpath.size() > 0)) {
+    rottarget = lo_address_new_from_url(roturl.c_str());
+    if(!rottarget)
+      throw TASCAR::ErrMsg("Unable to create target adress \"" + roturl +
+                           "\".");
+    lo_address_set_ttl(rottarget, ttl);
+  }
   add_variables(session);
   tictoc.tic();
   connect();
   run_service = true;
   connectsrv = std::thread(&oscheadtracker_t::connectservice, this);
+  if(name.size())
+    p = "/" + name;
 }
 
 void oscheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
@@ -228,6 +248,15 @@ void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rx,
   }
   // store Euler orientation for processing in TASCAR:
   o0 = q.to_euler_zyx();
+  if(target) {
+    lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x, q.y, q.z);
+    lo_send(target, (p + "/alive").c_str(), "f", tictoc.toc());
+  }
+  if(rottarget) {
+    // send Euler orientation for data logging or remote processing:
+    lo_send(rottarget, rotpath.c_str(), "fff", RAD2DEG * o0.z, RAD2DEG * o0.y,
+            RAD2DEG * o0.x);
+  }
 }
 
 oscheadtracker_t::~oscheadtracker_t()

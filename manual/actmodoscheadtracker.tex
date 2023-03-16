@@ -12,8 +12,6 @@ Attributes of element {\bf oscheadtracker}\nopagebreak
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{accscale} & Scaling factor of accelerometer, default value scales to $m/s^2$ (double) & 1670.13\\
-\hline
 \indattr{actor} & pattern to match actor objects (string array) & \\
 \hline
 \indattr{apply\_loc} & Apply translation based on accelerometer (not implemented) (bool) & false\\
@@ -24,17 +22,19 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{autoref\_zonly} & Compensate z-rotation only, requires sensor alignment (bool) & true\\
 \hline
-\indattr{axes} & Order of axes, or -1 to not use axis (int32 array) & 0 1 2\\
-\hline
 \indattr{combinegyr} & Combine quaternions with gyroscope based second estimate for increased resolution of pose estimation. (bool) & true\\
 \hline
-\indattr{gyrscale} & Scaling factor of gyroscope, default value scales to deg/s (double) & 16.4\\
-\hline
 \indattr{name} & Prefix in OSC control variables (string) & oscheadtracker\\
+\hline
+\indattr{rotpath} & OSC target path for rotation data (string) & \\
+\hline
+\indattr{roturl} & OSC target URL for rotation data (string) & \\
 \hline
 \indattr{smooth} & Filter coefficient for smoothing of quaternions (double) & 0.1\\
 \hline
 \indattr{ttl} & Time-to-live of OSC multicast data (uint32) & 1\\
+\hline
+\indattr{url} & Target URL for OSC data logging, or empty for no datalogging (string) & \\
 \hline
 \end{tabularx}
 }
