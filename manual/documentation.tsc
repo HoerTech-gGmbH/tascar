@@ -112,6 +112,7 @@
     <midicc2osc controllers="0/1"/>
     <route/>
     <!--<ovheadtracker/>-->
+    <oscheadtracker/>
     <hoafdnrot/>
     <echoc measureatstart="true"/>
     <glabsensors>

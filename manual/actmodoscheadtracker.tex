@@ -1,0 +1,41 @@
+Headtracking module for MPU6050 with WiFi module, using OSC
+communication. To use this headtracker, connect to the WiFi provided
+by the headtracker.
+
+\begin{snugshade}
+{\footnotesize
+\label{attrtab:oscheadtracker}
+Attributes of element {\bf oscheadtracker}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{accscale} & Scaling factor of accelerometer, default value scales to $m/s^2$ (double) & 1670.13\\
+\hline
+\indattr{actor} & pattern to match actor objects (string array) & \\
+\hline
+\indattr{apply\_loc} & Apply translation based on accelerometer (not implemented) (bool) & false\\
+\hline
+\indattr{apply\_rot} & Apply rotation based on gyroscope and accelerometer (bool) & true\\
+\hline
+\indattr{autoref} & Filter coefficient for estimating reference orientation from average direction, or zero for no auto-referencing (double) & 1e-05\\
+\hline
+\indattr{autoref\_zonly} & Compensate z-rotation only, requires sensor alignment (bool) & true\\
+\hline
+\indattr{axes} & Order of axes, or -1 to not use axis (int32 array) & 0 1 2\\
+\hline
+\indattr{combinegyr} & Combine quaternions with gyroscope based second estimate for increased resolution of pose estimation. (bool) & true\\
+\hline
+\indattr{gyrscale} & Scaling factor of gyroscope, default value scales to deg/s (double) & 16.4\\
+\hline
+\indattr{name} & Prefix in OSC control variables (string) & oscheadtracker\\
+\hline
+\indattr{smooth} & Filter coefficient for smoothing of quaternions (double) & 0.1\\
+\hline
+\indattr{ttl} & Time-to-live of OSC multicast data (uint32) & 1\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
