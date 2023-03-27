@@ -93,6 +93,8 @@ private:
   lo_address rottarget = NULL;
   // shortcut for name prefix:
   std::string p;
+  // state variable of mean rotation:
+  TASCAR::zyx_euler_t rotgyrmean;
 };
 
 void oscheadtracker_t::configure()
@@ -197,7 +199,6 @@ void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rx,
 {
   tictoc.tic();
   TASCAR::zyx_euler_t rotgyr;
-  TASCAR::zyx_euler_t rotgyrmean;
   rotgyr.z = rz * DEG2RAD;
   rotgyr.y = ry * DEG2RAD;
   rotgyr.x = rx * DEG2RAD;
