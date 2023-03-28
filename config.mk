@@ -42,15 +42,15 @@ FULLVERSION=$(VERSION).$(COMMIT_SINCE_RELEASE)-$(COMMITHASH)$(GITMODIFIED)
 mkfile_name := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_path := $(subst $(notdir $(mkfile_name)),,$(mkfile_name))
 
-HAS_LSL=$(shell $(mkfile_path)/check_for_lsl)
+HAS_LSL:=$(shell $(mkfile_path)/check_for_lsl)
 
-HAS_OPENMHA=$(shell $(mkfile_path)/check_for_openmha)
+HAS_OPENMHA:=$(shell $(mkfile_path)/check_for_openmha)
 
-HAS_OPENCV2=$(shell $(mkfile_path)/check_for_opencv2)
+HAS_OPENCV2:=$(shell $(mkfile_path)/check_for_opencv2)
 
-HAS_OPENCV4=$(shell $(mkfile_path)/check_for_opencv4)
+HAS_OPENCV4:=$(shell $(mkfile_path)/check_for_opencv4)
 
-HAS_WEBKIT=$(shell $(mkfile_path)/check_for_webkit)
+HAS_WEBKIT:=$(shell $(mkfile_path)/check_for_webkit)
 
 BUILD_DIR = build
 SOURCE_DIR = src
