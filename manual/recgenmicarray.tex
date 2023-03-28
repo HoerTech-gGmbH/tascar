@@ -108,21 +108,26 @@ respect to the parent microphone.
 
 \input{tabmic.tex}
 
-An example of a binaural microphone array can be found below:
-\begin{lstlisting}[numbers=none]
-<receiver type="micarray" name="out" caliblevel="94">
-  <position>0 12.6 -16.441478 1.2</position>
-  <orientation>0 3 0 0</orientation>
+An example of a binaural microphone array is shown below. Note that
+the first microphone definition (line 2) serves only as a reference
+microphone whose signal is discarded. On each side of the head, one
+microphone is selected as the reference of a local microphone array
+(lines 3 and 8), which uses a spherical head model and head shadow
+filters. The other microphones (lines 5, 6, 10 and 11) are calculated
+relative to the left and right reference microphones, using only a
+free field delay for the relative transfer function.
+\begin{lstlisting}
+<receiver type="micarray" name="out">
   <mic delay="freefield" position="0 0 0">
-    <mic name="left middle" delay="sphere" sincorder="1" position="0.0000 0.0830 0.0000">
+    <mic name="left middle" delay="sphere" sincorder="1" position="0.0 0.083 0.0">
       <filter type="highshelf" axis="-0.14 0.95 0.29" theta_st="0.59" beta="0.98" omega="2725.0" alpha_st="1.53" alpha_m="0.07"/>
-      <mic name="left front" delay="freefield" sincorder="1" position="0.0076 0.0830 0.0000"/>
-      <mic name="left rear" delay="freefield" sincorder="1" position="-0.0073 0.0830 0.0000"/>
+      <mic name="left front" delay="freefield" sincorder="1" position="0.0076 0.083 0.0"/>
+      <mic name="left rear" delay="freefield" sincorder="1" position="-0.0073 0.083 0.0"/>
     </mic>
-    <mic name="right middle" delay="sphere" sincorder="1" position="0.0000 -0.0830 0.0000">
+    <mic name="right middle" delay="sphere" sincorder="1" position="0.0 -0.083 0.0">
       <filter type="highshelf" axis="-0.14 -0.95 0.29" theta_st="0.59" beta="0.98" omega="2725.0" alpha_st="1.53" alpha_m="0.07"/>
-      <mic name="right front" delay="freefield" sincorder="1" position="0.0076 -0.0830 0.0000"/>
-      <mic name="right rear" delay="freefield" sincorder="1" position="-0.0073 -0.0830 0.0000"/>
+      <mic name="right front" delay="freefield" sincorder="1" position="0.0076 -0.083 0.0"/>
+      <mic name="right rear" delay="freefield" sincorder="1" position="-0.0073 -0.083 0.0"/>
     </mic>
   </mic>
 </receiver>
