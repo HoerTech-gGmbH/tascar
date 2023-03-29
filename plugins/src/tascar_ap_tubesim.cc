@@ -36,6 +36,7 @@ public:
     wetfade = wet;
     uint32_t wftimer = f_sample * duration;
     dwetfade = (newwet - wetfade) / wftimer;
+    targetwet = newwet;
     wetfade_timer = wftimer;
   }
   inline float tubeval(float x)
@@ -64,6 +65,7 @@ private:
   bool bypass = false;
   float wet = 1.0f;
   float wetfade = 1.0f;
+  float targetwet = 1.0f;
   float dwetfade = 0.0f;
   uint32_t wetfade_timer = 0u;
 };
@@ -108,6 +110,9 @@ void tubesim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         wetfade += dwetfade;
         wet = wetfade;
         --wetfade_timer;
+        if( !wetfade_timer ){
+          wet = targetwet;
+        }
       }
       for(auto& aud : chunk) {
         aud.d[k] = wet * (tubeval(aud.d[k] * pregain) - oshift) * postgain +
