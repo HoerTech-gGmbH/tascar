@@ -330,6 +330,8 @@ test_snd_maskplugin_multibeam1: TOL=1e-5
 test_snd_maskplugin_fig8: TOL=1e-5
 test_snd_loopramp: TOL=3e-5
 test_snd_loopramp: RMSTOL=3e-5
+test_snd_hoa2d_fuma_hos: TOL=1e-4
+test_snd_hoa2d_fuma_hos: RMSTOL=1e-4
 
 %.octave: %.m
 	octave --no-gui --eval $*
