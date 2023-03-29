@@ -1014,13 +1014,17 @@ void osc_server_t::read_script(const std::vector<std::string>& filenames)
 void osc_server_t::scriptthread_fun()
 {
   while(runscriptthread) {
-    std::unique_lock<std::mutex> lock{mtxscriptnames};
-    cond_var_script.wait(lock);
-    auto scripts = nextscripts;
-    nextscripts.clear();
-    lock.unlock();
-    if(runscriptthread && scripts.size())
+    std::vector<std::string> scripts;
+    {
+      std::unique_lock<std::mutex> lock{mtxscriptnames};
+      cond_var_script.wait(lock);
+      scripts = nextscripts;
+      nextscripts.clear();
+      lock.unlock();
+    }
+    if(runscriptthread && scripts.size()) {
       read_script(scripts);
+    }
   }
 }
 
