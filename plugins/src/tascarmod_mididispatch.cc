@@ -326,8 +326,8 @@ mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
         std::pair<uint16_t, m_msg_t>(256 * channel + note, action));
   }
   if(!connect.empty()) {
-    connect_input(connect);
-    connect_output(connect);
+    connect_input(connect, true);
+    connect_output(connect, true);
   }
   add_variables(session);
 }

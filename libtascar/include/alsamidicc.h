@@ -48,13 +48,13 @@ namespace TASCAR {
        \param port Source port
     */
     void connect_input(int client, int port);
-    void connect_input(const std::string& name);
+    void connect_input(const std::string& name, bool warn_on_fail = false);
     /**
        \param client Destination client
        \param port Destination port
     */
     void connect_output(int client, int port);
-    void connect_output(const std::string& name);
+    void connect_output(const std::string& name, bool warn_on_fail = false);
     /**
        \brief Send a CC event to output
        \param channel MIDI channel number
@@ -86,7 +86,7 @@ namespace TASCAR {
     // output/feedback port:
     snd_seq_addr_t port_out;
   };
-}
+} // namespace TASCAR
 
 #endif
 

@@ -20,14 +20,14 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "session.h"
 #include "alsamidicc.h"
+#include "session.h"
 #include <thread>
 
-class midictl_vars_t : public TASCAR::module_base_t
-{
+class midictl_vars_t : public TASCAR::module_base_t {
 public:
-  midictl_vars_t( const TASCAR::module_cfg_t& cfg );
+  midictl_vars_t(const TASCAR::module_cfg_t& cfg);
+
 protected:
   bool dumpmsg;
   std::string name;
@@ -38,11 +38,8 @@ protected:
   double max;
 };
 
-midictl_vars_t::midictl_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    dumpmsg(false),
-    min(0),
-    max(1)
+midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), dumpmsg(false), min(0), max(1)
 {
   GET_ATTRIBUTE_BOOL_(dumpmsg);
   GET_ATTRIBUTE_(name);
@@ -53,15 +50,14 @@ midictl_vars_t::midictl_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE_(max);
 }
 
-class midictl_t : public midictl_vars_t,
-                  public TASCAR::midi_ctl_t
-{
+class midictl_t : public midictl_vars_t, public TASCAR::midi_ctl_t {
 public:
-  midictl_t( const TASCAR::module_cfg_t& cfg );
+  midictl_t(const TASCAR::module_cfg_t& cfg);
   ~midictl_t();
   void configure();
   void release();
   virtual void emit_event(int channel, int param, int value);
+
 private:
   void send_service();
   std::vector<uint16_t> controllers_;
@@ -73,44 +69,45 @@ private:
   bool upload;
 };
 
-midictl_t::midictl_t( const TASCAR::module_cfg_t& cfg )
-  : midictl_vars_t( cfg ),
-    TASCAR::midi_ctl_t( name ),
-  run_service(true),
-  upload(false)
+midictl_t::midictl_t(const TASCAR::module_cfg_t& cfg)
+    : midictl_vars_t(cfg), TASCAR::midi_ctl_t(name), run_service(true),
+      upload(false)
 {
-  for(uint32_t k=0;k<controllers.size();++k){
+  for(uint32_t k = 0; k < controllers.size(); ++k) {
     size_t cpos(controllers[k].find("/"));
-    if( cpos != std::string::npos ){
-      uint32_t channel(atoi(controllers[k].substr(0,cpos).c_str()));
-      uint32_t param(atoi(controllers[k].substr(cpos+1,controllers[k].size()-cpos-1).c_str()));
-      controllers_.push_back(256*channel+param);
+    if(cpos != std::string::npos) {
+      uint32_t channel(atoi(controllers[k].substr(0, cpos).c_str()));
+      uint32_t param(
+          atoi(controllers[k]
+                   .substr(cpos + 1, controllers[k].size() - cpos - 1)
+                   .c_str()));
+      controllers_.push_back(256 * channel + param);
       values.push_back(255);
-    }else{
-      throw TASCAR::ErrMsg("Invalid controller name "+controllers[k]);
+    } else {
+      throw TASCAR::ErrMsg("Invalid controller name " + controllers[k]);
     }
   }
-  if( controllers_.size() == 0 )
+  if(controllers_.size() == 0)
     throw TASCAR::ErrMsg("No controllers defined.");
-  if( !connect.empty() ){
-    connect_input(connect);
-    connect_output(connect);
+  if(!connect.empty()) {
+    connect_input(connect, true);
+    connect_output(connect, true);
   }
-  session->add_bool_true(std::string("/")+name+"/upload",&upload);
-  srv = std::thread(&midictl_t::send_service,this);
+  session->add_bool_true(std::string("/") + name + "/upload", &upload);
+  srv = std::thread(&midictl_t::send_service, this);
 }
 
 void midictl_t::configure()
 {
   ports.clear();
   routes.clear();
-  if( session )
-    ports = session->find_audio_ports( pattern );
-  for(auto it=ports.begin();it!=ports.end();++it){
+  if(session)
+    ports = session->find_audio_ports(pattern);
+  for(auto it = ports.begin(); it != ports.end(); ++it) {
     TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(*it));
-    if( !r ){
+    if(!r) {
       TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(*it));
-      if( s )
+      if(s)
         r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
     }
     routes.push_back(r);
@@ -132,76 +129,76 @@ midictl_t::~midictl_t()
 
 void midictl_t::send_service()
 {
-  while( run_service ){
+  while(run_service) {
     // wait for 100 ms:
-    for( uint32_t k=0;k<100;++k)
-      if( run_service )
-        usleep( 1000 );
-    if( run_service ){
-      for( uint32_t k=0;k<ports.size();++k){
+    for(uint32_t k = 0; k < 100; ++k)
+      if(run_service)
+        usleep(1000);
+    if(run_service) {
+      for(uint32_t k = 0; k < ports.size(); ++k) {
         // gain:
-        if( k < controllers_.size() ){
+        if(k < controllers_.size()) {
           float g(ports[k]->get_gain_db());
           g -= min;
-          g *= 127/(max-min);
-          g = std::max(0.0f,std::min(127.0f,g));
+          g *= 127 / (max - min);
+          g = std::max(0.0f, std::min(127.0f, g));
           uint8_t v(g);
-          if( (v != values[k]) || upload ){
+          if((v != values[k]) || upload) {
             values[k] = v;
             int channel(controllers_[k] >> 8);
             int param(controllers_[k] & 0xff);
-            send_midi( channel, param, v );
+            send_midi(channel, param, v);
           }
         }
         // mute:
-        uint32_t k1=k+ports.size();
-        if( routes[k] && (k1 < controllers_.size()) ){
-          uint8_t v(127*routes[k]->get_mute());
-          if( (v != values[k1]) || upload ){
+        uint32_t k1 = k + ports.size();
+        if(routes[k] && (k1 < controllers_.size())) {
+          uint8_t v(127 * routes[k]->get_mute());
+          if((v != values[k1]) || upload) {
             values[k1] = v;
             int channel(controllers_[k1] >> 8);
             int param(controllers_[k1] & 0xff);
-            send_midi( channel, param, v );
+            send_midi(channel, param, v);
           }
         }
       }
       upload = false;
     }
   }
-  for( uint32_t k=0;k<controllers_.size();++k){
+  for(uint32_t k = 0; k < controllers_.size(); ++k) {
     int channel(controllers_[k] >> 8);
     int param(controllers_[k] & 0xff);
-    send_midi( channel, param, 0 );
+    send_midi(channel, param, 0);
   }
 }
 
 void midictl_t::emit_event(int channel, int param, int value)
 {
-  uint32_t ctl(256*channel+param);
+  uint32_t ctl(256 * channel + param);
   bool known = false;
-  for(uint32_t k=0;k<controllers_.size();++k){
-    if( controllers_[k] == ctl ){
-      if( k<ports.size() ){
+  for(uint32_t k = 0; k < controllers_.size(); ++k) {
+    if(controllers_[k] == ctl) {
+      if(k < ports.size()) {
         values[k] = value;
-        ports[k]->set_gain_db( min+value*(max-min)/127 );
-      }else{
-        uint32_t k1(k-ports.size());
-        if( k1 < routes.size() ){
-          if( routes[k1] ){
+        ports[k]->set_gain_db(min + value * (max - min) / 127);
+      } else {
+        uint32_t k1(k - ports.size());
+        if(k1 < routes.size()) {
+          if(routes[k1]) {
             values[k] = value;
-            routes[k1]->set_mute( value > 0 );
+            routes[k1]->set_mute(value > 0);
           }
         }
       }
       known = true;
     }
   }
-  if( (!known) && dumpmsg ){
+  if((!known) && dumpmsg) {
     char ctmp[256];
-    snprintf(ctmp,256,"%d/%d: %d",channel,param,value);
+    snprintf(ctmp, 256, "%d/%d: %d", channel, param, value);
     ctmp[255] = 0;
     std::cout << ctmp << std::endl;
-  }else{
+  } else {
     //
   }
 }
