@@ -204,7 +204,7 @@ private:
   std::string name;
   TASCAR::spk_array_t fixtures;
   uint32_t channels;
-  std::string objects;
+  std::vector<std::string> objects;
   std::string parent;
   float master;
   std::string method;
