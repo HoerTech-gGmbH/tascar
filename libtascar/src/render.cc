@@ -244,7 +244,9 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     /*
      * Geometry processing:
      */
+    valid_geometry = false;
     geometry_update(tp.session_time_seconds);
+    valid_geometry = true;
     process_active(tp.session_time_seconds);
     load_cycle.t_geo = tic.toc();
     /*

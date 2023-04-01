@@ -238,7 +238,7 @@ void lightscene_t::validate_attributes(std::string& msg) const
 lightscene_t::lightscene_t(const TASCAR::module_cfg_t& cfg)
     : xml_element_t(cfg.xmlsrc), session(cfg.session), name("lightscene"),
       fixtures(e, false, "fixture"), channels(3), master(1), mixmax(false),
-      parent_(NULL, ""), usecalib(true), sendsquared(false)
+      parent_(NULL, "", NULL), usecalib(true), sendsquared(false)
 {
   GET_ATTRIBUTE(name, "", "Scene name");
   GET_ATTRIBUTE(objects, "", "Pattern of objects to track");
@@ -562,7 +562,8 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(fps, "Hz", "Frames per second");
   GET_ATTRIBUTE(universe, "", "DMX universe");
   // GET_ATTRIBUTE_(priority);
-  GET_ATTRIBUTE(driver, "``artnetdmx'', ``opendmxusb'', or ``osc''", "Driver name");
+  GET_ATTRIBUTE(driver, "``artnetdmx'', ``opendmxusb'', or ``osc''",
+                "Driver name");
   if(driver == "artnetdmx") {
     std::string hostname;
     std::string port;

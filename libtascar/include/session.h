@@ -93,10 +93,12 @@ namespace TASCAR {
 
   class named_object_t {
   public:
-    named_object_t(TASCAR::Scene::object_t* o, const std::string& n)
-        : obj(o), name(n){};
-    TASCAR::Scene::object_t* obj; //< pointer to object
-    std::string name;             //< name of object
+    named_object_t(TASCAR::Scene::object_t* o, const std::string& n,
+                   TASCAR::Scene::scene_t* s)
+        : obj(o), name(n), scene(s){};
+    TASCAR::Scene::object_t* obj;         //< pointer to object
+    std::string name;                     //< name of object
+    TASCAR::Scene::scene_t* scene = NULL; //< scene containing this object;
   };
 
   class session_oscvars_t : public TASCAR::xml_element_t {

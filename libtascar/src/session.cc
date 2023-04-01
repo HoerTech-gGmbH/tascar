@@ -884,7 +884,7 @@ TASCAR::session_t::find_objects(const std::string& pattern)
         it != objs.end(); ++it) {
       std::string name(base + (*it)->get_name());
       if(TASCAR::fnmatch(pattern.c_str(), name.c_str(), true) == 0)
-        retv.push_back(TASCAR::named_object_t(*it, name));
+        retv.push_back(TASCAR::named_object_t(*it, name, *sit));
     }
   }
   return retv;
@@ -901,7 +901,7 @@ TASCAR::session_t::find_objects(const std::vector<std::string>& vpattern)
       for(auto obj : objs) {
         std::string name(base + obj->get_name());
         if(TASCAR::fnmatch(pattern.c_str(), name.c_str(), true) == 0)
-          retv.push_back(TASCAR::named_object_t(obj, name));
+          retv.push_back(TASCAR::named_object_t(obj, name, scene));
       }
     }
   }
