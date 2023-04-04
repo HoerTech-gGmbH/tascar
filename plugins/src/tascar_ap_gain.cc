@@ -66,8 +66,18 @@ int osc_set_fade(const char*, const char* types, lo_arg** argv, int argc,
 gainramp_t::gainramp_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg), gain(1.0)
 {
+  bool has_gain = has_attribute("gain");
   GET_ATTRIBUTE_DB(gain, "gain");
-  GET_ATTRIBUTE(gain, "", "lingain");
+  bool has_lingain = has_attribute("lingain");
+  float lingain = 1.0f;
+  GET_ATTRIBUTE(lingain, "", "lingain");
+  if(has_lingain) {
+    gain = lingain;
+    if(has_gain) {
+      TASCAR::add_warning("gain plugin was configured with \"gain\" and "
+                          "\"lingain\" attribute, using \"lingain\".");
+    }
+  }
 }
 
 void gainramp_t::set_fade(float targetgain, float duration, float start)
