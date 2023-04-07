@@ -582,8 +582,12 @@ void jackc_db_t::add_input_port(const std::string& name)
 {
   if(inner_is_larger) {
     // allocate buffer:
-    for(uint32_t k = 0; k < 2; k++)
-      dbinBuffer[k].push_back(new float[inner_fragsize]);
+    for(uint32_t k = 0; k < 2; k++){
+      auto buf = new float[inner_fragsize];
+      for(uint32_t k=0;k<inner_fragsize;++k)
+        buf[k] = 0.0f;
+      dbinBuffer[k].push_back(buf);
+    }
   } else {
     for(uint32_t k = 0; k < 2; k++)
       dbinBuffer[k].push_back(NULL);
@@ -595,8 +599,12 @@ void jackc_db_t::add_output_port(const std::string& name)
 {
   if(inner_is_larger) {
     // allocate buffer:
-    for(uint32_t k = 0; k < 2; k++)
-      dboutBuffer[k].push_back(new float[inner_fragsize]);
+    for(uint32_t k = 0; k < 2; k++){
+      auto buf = new float[inner_fragsize];
+      for(uint32_t k=0;k<inner_fragsize;++k)
+        buf[k] = 0.0f;
+      dboutBuffer[k].push_back(buf);
+    }
   } else {
     for(uint32_t k = 0; k < 2; k++)
       dboutBuffer[k].push_back(NULL);

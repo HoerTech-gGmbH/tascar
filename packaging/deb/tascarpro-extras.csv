@@ -1,5 +1,6 @@
 "plugins/build/tascar_ap_periodogram.so","usr/lib/"
 "plugins/build/tascar_hossustain.so","usr/lib/"
+"plugins/build/tascar_tonalenhancement.so","usr/lib/"
 "plugins/build/tascar_granularsynth.so","usr/lib/"
 "plugins/build/tascar_mpu6050track.so","usr/lib/"
 "plugins/build/tascarreceiver_hoa2d_fuma_hos.so","usr/lib/"

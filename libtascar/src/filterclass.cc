@@ -814,6 +814,103 @@ int TASCAR::alpha2rflt(float& reflectivity, float& damping,
   return err;
 }
 
+TASCAR::o1flt_lowpass_t::o1flt_lowpass_t(const std::vector<float>& tau,
+                                         float fs, float startval)
+    : TASCAR::o1_ar_filter_t(tau.size(), fs)
+{
+  for(unsigned int k = 0; k < tau.size(); k++) {
+    d[k] = startval;
+    set_tau(k, tau[k]);
+  }
+}
+
+/**
+   \brief Constructor of low pass filter, sets sampling rate and time constants
+
+   \param tau Vector of time constants
+   \param fs Sampling rate
+   \param startval Initial internal state value
+*/
+TASCAR::o1flt_lowpass_t::o1flt_lowpass_t(const std::vector<float>& tau,
+                                         float fs,
+                                         const std::vector<float>& startval)
+    : TASCAR::o1_ar_filter_t(tau.size(), fs)
+{
+  if(tau.size() != startval.size())
+    throw ErrMsg(
+        "o1flt_lowpass_t: Size of tau vector and initial state vector not equal"
+        "(got " +
+        std::to_string(tau.size()) + " and " + std::to_string(startval.size()) +
+        ")");
+  for(unsigned int k = 0; k < tau.size(); k++) {
+    set_tau(k, tau[k]);
+  }
+  std::copy(std::begin(startval), std::end(startval), d);
+}
+
+void TASCAR::o1flt_lowpass_t::set_tau(unsigned int k, float tau)
+{
+  set_tau_attack(k, tau);
+  set_tau_release(k, tau);
+}
+
+void TASCAR::o1flt_lowpass_t::set_tau(float tau)
+{
+  for(unsigned int k = 0; k < n; k++)
+    set_tau(k, tau);
+}
+
+template <class elem_type>
+std::vector<elem_type> dupvec_chk(std::vector<elem_type> vec, unsigned n)
+{
+  if(vec.size() == 1)
+    vec.resize(n, vec[vec.size() - 1]);
+  if(vec.size() != n)
+    throw TASCAR::ErrMsg("Invalid vector length (expected 1 or " + std::to_string(n) +
+                 ", got " + std::to_string(vec.size()) + ").");
+  return vec;
+}
+
+TASCAR::o1_ar_filter_t::o1_ar_filter_t(unsigned int channels, float fs_,
+                                       std::vector<float> tau_a,
+                                       std::vector<float> tau_r)
+    : TASCAR::wave_t(channels), c1_a(channels), c2_a(channels), c1_r(channels),
+      c2_r(channels), fs(fs_)
+{
+  if(fs < 0)
+    throw ErrMsg("Invalid (negative) sampling rate");
+  tau_a = dupvec_chk(tau_a, channels);
+  tau_r = dupvec_chk(tau_r, channels);
+  for(unsigned int k = 0; k < channels; k++) {
+    d[k] = 0.0f;
+    set_tau_attack(k, tau_a[k]);
+    set_tau_release(k, tau_r[k]);
+  }
+}
+
+void o1_lp_coeffs(const float tau, const float fs, float& c1, float& c2)
+{
+  if((tau > 0) && (fs > 0))
+    c1 = exp(-1.0 / (tau * fs));
+  else
+    c1 = 0;
+  c2 = 1.0 - c1;
+}
+
+void TASCAR::o1_ar_filter_t::set_tau_attack(unsigned int ch, float tau)
+{
+  if(ch >= n)
+    throw ErrMsg("The filter channel is out of range.");
+  o1_lp_coeffs(tau, fs, c1_a[ch], c2_a[ch]);
+}
+
+void TASCAR::o1_ar_filter_t::set_tau_release(unsigned int ch, float tau)
+{
+  if(ch >= n)
+    throw ErrMsg("The filter channel is out of range.");
+  o1_lp_coeffs(tau, fs, c1_r[ch], c2_r[ch]);
+}
+
 /*
  * Local Variables:
  * mode: c++
