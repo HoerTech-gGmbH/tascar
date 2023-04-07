@@ -173,6 +173,10 @@ protected:
   bool dumpmsg = true;
   std::string name = "mididispatch";
   std::string connect;
+  std::string copyurl = "";
+  std::string copynotepath = "/note";
+  std::string copyccpath = "/cc";
+  bool oscinput = false;
 };
 
 mididispatch_vars_t::mididispatch_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -183,6 +187,10 @@ mididispatch_vars_t::mididispatch_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(connect, "", "ALSA device name to connect to");
   if(name.empty())
     throw TASCAR::ErrMsg("Invalid (empty) ALSA MIDI name");
+  GET_ATTRIBUTE(copyurl, "", "OSC URL to copy outgoing MIDI messages to.");
+  GET_ATTRIBUTE(copynotepath, "", "OSC path for copied note events");
+  GET_ATTRIBUTE(copyccpath, "", "OSC path for copied CC events");
+  GET_ATTRIBUTE_BOOL(oscinput, "Create additional OSC inputs");
 }
 
 class mididispatch_t : public mididispatch_vars_t, public TASCAR::midi_ctl_t {
@@ -194,17 +202,44 @@ public:
   void add_variables(TASCAR::osc_server_t* srv);
   virtual void emit_event(int channel, int param, int value);
   virtual void emit_event_note(int channel, int pitch, int velocity);
+  void send_midi_(int channel, int param, int value)
+  {
+    send_midi(channel, param, value);
+    if(copytarget)
+      lo_send(copytarget, copyccpath.c_str(), "iii", channel, param, value);
+  }
+  void send_midi_note_(int channel, int param, int value)
+  {
+    send_midi_note(channel, param, value);
+    if(copytarget)
+      lo_send(copytarget, copynotepath.c_str(), "iii", channel, param, value);
+  }
   static int osc_sendcc(const char*, const char*, lo_arg** argv, int,
                         lo_message, void* user_data)
   {
-    ((mididispatch_t*)user_data)->send_midi(argv[0]->i, argv[1]->i, argv[2]->i);
+    ((mididispatch_t*)user_data)
+        ->send_midi_(argv[0]->i, argv[1]->i, argv[2]->i);
     return 0;
   }
   static int osc_sendnote(const char*, const char*, lo_arg** argv, int,
                           lo_message, void* user_data)
   {
     ((mididispatch_t*)user_data)
-        ->send_midi_note(argv[0]->i, argv[1]->i, argv[2]->i);
+        ->send_midi_note_(argv[0]->i, argv[1]->i, argv[2]->i);
+    return 0;
+  }
+  static int osc_rec_cc(const char*, const char*, lo_arg** argv, int,
+                        lo_message, void* user_data)
+  {
+    ((mididispatch_t*)user_data)
+        ->emit_event(argv[0]->i, argv[1]->i, argv[2]->i);
+    return 0;
+  }
+  static int osc_rec_note(const char*, const char*, lo_arg** argv, int,
+                          lo_message, void* user_data)
+  {
+    ((mididispatch_t*)user_data)
+        ->emit_event_note(argv[0]->i, argv[1]->i, argv[2]->i);
     return 0;
   }
   void add_cc_floataction(uint8_t channel, uint8_t param,
@@ -298,6 +333,7 @@ private:
   std::vector<std::pair<uint16_t, m_msg_t>> ccmsg;
   std::vector<std::pair<uint16_t, m_msg_t>> notemsg;
   std::mutex mtxdispatch;
+  lo_address copytarget = NULL;
 };
 
 mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
@@ -329,6 +365,8 @@ mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
     connect_input(connect, true);
     connect_output(connect, true);
   }
+  if(!copyurl.empty())
+    copytarget = lo_address_new_from_url(copyurl.c_str());
   add_variables(session);
 }
 
@@ -358,6 +396,10 @@ void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
                   &mididispatch_t::osc_note_triggeraction, this);
   srv->add_method("/del/note", "ii", &mididispatch_t::osc_note_remove, this);
   srv->add_method("/del/note/all", "", &mididispatch_t::osc_note_remove, this);
+  if(oscinput) {
+    srv->add_method("/rec/note", "iii", &mididispatch_t::osc_rec_note, this);
+    srv->add_method("/rec/cc", "iii", &mididispatch_t::osc_rec_cc, this);
+  }
   srv->set_prefix(prefix_);
 }
 
@@ -444,7 +486,11 @@ void mididispatch_t::release()
   TASCAR::module_base_t::release();
 }
 
-mididispatch_t::~mididispatch_t() {}
+mididispatch_t::~mididispatch_t()
+{
+  if(copytarget)
+    lo_address_free(copytarget);
+}
 
 void mididispatch_t::emit_event(int channel, int param, int value)
 {
