@@ -31,6 +31,7 @@ public:
 
 protected:
   std::string id = "tonalenhance";
+  std::string oscprefix = "";
   float tau_envelope = 1.0f;
   float tau_std = 0.013f;
   float wet = 1.0f;
@@ -45,8 +46,7 @@ tonalenhance_vars_t::tonalenhance_vars_t(const TASCAR::module_cfg_t& cfg)
     : TASCAR::module_base_t(cfg)
 {
   GET_ATTRIBUTE(id, "", "ID used for jack and OSC");
-  if(id.empty())
-    id = "tonalenhance";
+  GET_ATTRIBUTE(oscprefix, "", "Prefix used in OSC");
   GET_ATTRIBUTE(tau_envelope, "s", "Envelope tracking time constant");
   GET_ATTRIBUTE(tau_std, "s", "Stability time constant");
   GET_ATTRIBUTE(wet, "", "Wet-dry ratio");
@@ -111,7 +111,7 @@ int tonalenhance_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
   TASCAR::wave_t w_out(n, vOut[0]);
   if(!delayenvelope) {
     float env_c1(0);
-    if(tau_envelope > 0){
+    if(tau_envelope > 0) {
       env_c1 = exp(-1.0 / (tau_envelope * (double)srate));
     }
     double env_c2(1.0 - env_c1);
@@ -121,10 +121,10 @@ int tonalenhance_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
       Lin += env_c2 * w_in[k] * w_in[k];
       Lout *= env_c1;
       Lout += env_c2 * w_out[k] * w_out[k];
-      if(TASCAR::is_denormal(Lin)){
+      if(TASCAR::is_denormal(Lin)) {
         Lin = 0.0;
       }
-      if(TASCAR::is_denormal(Lout)){
+      if(TASCAR::is_denormal(Lout)) {
         Lout = 0.0;
       }
       if(Lout > 0.0)
@@ -208,20 +208,21 @@ tonalenhance_t::tonalenhance_t(const TASCAR::module_cfg_t& cfg)
       mean_lp(std::vector<float>(ola.s.size(), tau_std), srate / wlen),
       std_lp(std::vector<float>(ola.s.size(), tau_std), srate / wlen)
 {
-  for( uint32_t k=0;k<prev.size();++k)
+  for(uint32_t k = 0; k < prev.size(); ++k)
     prev[k] = 0.0f;
   add_input_port("in");
   add_output_port("out");
-  session->add_float("/c/" + id + "/tonalenhance/tau_env", &tau_envelope);
-  session->add_float("/c/" + id + "/tonalenhance/tau_std", &tau_std);
-  session->add_double_db("/c/" + id + "/tonalenhance/gain", &gain);
-  session->add_float("/c/" + id + "/tonalenhance/wet", &wet);
-  session->add_float("/c/" + id + "/tonalenhance/sigma0", &sigma0, "[0,22000]",
+  session->add_float("/" + oscprefix + id + "/tau_env", &tau_envelope);
+  session->add_float("/" + oscprefix + id + "/tau_std", &tau_std);
+  session->add_double_db("/" + oscprefix + id + "/gain", &gain);
+  session->add_float("/" + oscprefix + id + "/wet", &wet);
+  session->add_float("/" + oscprefix + id + "/sigma0", &sigma0, "[0,22000]",
                      "Frequency variance in Hz");
-  session->add_bool("/c/" + id + "/tonalenhance/inverse", &inverse);
-  session->add_method("/c/" + id + "/tonalenhance/wetapply", "f",
+  session->add_bool("/" + oscprefix + id + "/inverse", &inverse);
+  session->add_method("/" + oscprefix + id + "/wetapply", "f",
                       &tonalenhance_t::osc_apply, this);
-  session->add_bool("/c/" + id + "/tonalenhance/delayenvelope", &delayenvelope);
+  session->add_bool("/" + oscprefix + id + "/tonalenhance/delayenvelope",
+                    &delayenvelope);
   fsppi = srate / (TASCAR_2PIf * wlen);
   set_apply(0);
   activate();

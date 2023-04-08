@@ -34,6 +34,7 @@ public:
 
 protected:
   std::string id = "sustain";
+  std::string oscprefix = "";
   float tau_sustain = 20.0f;
   float tau_envelope = 1.0f;
   float bass = 0.0f;
@@ -49,8 +50,7 @@ sustain_vars_t::sustain_vars_t(const TASCAR::module_cfg_t& cfg)
     : TASCAR::module_base_t(cfg)
 {
   GET_ATTRIBUTE(id, "", "ID used for jack and OSC");
-  if(id.empty())
-    id = "sustain";
+  GET_ATTRIBUTE(oscprefix, "", "Prefix used in OSC");
   GET_ATTRIBUTE(tau_sustain, "s", "Clustering time constant");
   GET_ATTRIBUTE(tau_envelope, "s", "Envelope tracking time constant");
   GET_ATTRIBUTE(wet, "", "Wet-dry ratio");
@@ -121,13 +121,13 @@ int sustain_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
       Lin += env_c2 * w_in[k] * w_in[k];
       Lout *= env_c1;
       Lout += env_c2 * w_out[k] * w_out[k];
-      if( TASCAR::is_denormal( Lin ) )
+      if(TASCAR::is_denormal(Lin))
         Lin = 0.0;
-      if( TASCAR::is_denormal( Lout ) )
+      if(TASCAR::is_denormal(Lout))
         Lout = 0.0;
       if(Lout > 0)
         w_out[k] *= sqrt(Lin / Lout);
-      if( TASCAR::is_denormal( w_out[k] ) )
+      if(TASCAR::is_denormal(w_out[k]))
         w_out[k] = 0.0f;
     }
   }
@@ -195,16 +195,16 @@ sustain_t::sustain_t(const TASCAR::module_cfg_t& cfg)
 {
   add_input_port("in");
   add_output_port("out");
-  session->add_float("/c/" + id + "/sustain/tau_sus", &tau_sustain);
-  session->add_float("/c/" + id + "/sustain/tau_env", &tau_envelope);
-  session->add_float("/c/" + id + "/sustain/bass", &bass);
-  session->add_float("/c/" + id + "/sustain/bassratio", &bassratio);
-  session->add_float("/c/" + id + "/sustain/fcut", &fcut);
-  session->add_double_db("/c/" + id + "/sustain/gain", &gain);
-  session->add_float("/c/" + id + "/sustain/wet", &wet);
-  session->add_method("/c/" + id + "/sustain/wetapply", "f",
+  session->add_float("/" + oscprefix + id + "/tau_sus", &tau_sustain);
+  session->add_float("/" + oscprefix + id + "/tau_env", &tau_envelope);
+  session->add_float("/" + oscprefix + id + "/bass", &bass);
+  session->add_float("/" + oscprefix + id + "/bassratio", &bassratio);
+  session->add_float("/" + oscprefix + id + "/fcut", &fcut);
+  session->add_double_db("/" + oscprefix + id + "/gain", &gain);
+  session->add_float("/" + oscprefix + id + "/wet", &wet);
+  session->add_method("/" + oscprefix + id + "/wetapply", "f",
                       &sustain_t::osc_apply, this);
-  session->add_bool("/c/" + id + "/sustain/delayenvelope", &delayenvelope);
+  session->add_bool("/" + oscprefix + id + "/delayenvelope", &delayenvelope);
   activate();
 }
 
