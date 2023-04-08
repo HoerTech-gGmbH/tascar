@@ -32,14 +32,14 @@ public:
 protected:
   std::string id = "tonalenhance";
   std::string oscprefix = "";
-  float tau_envelope = 1.0f;
-  float tau_std = 0.013f;
+  float tau_envelope = 4.0f;
+  float tau_std = 0.4f;
   float wet = 1.0f;
   uint32_t wlen = 256;
   double gain = 1.0;
-  bool delayenvelope = false;
-  float sigma0 = 10.0f;
-  bool inverse = false;
+  bool delayenvelope = true;
+  float sigma0 = 4.0f;
+  bool inverse = true;
 };
 
 tonalenhance_vars_t::tonalenhance_vars_t(const TASCAR::module_cfg_t& cfg)
