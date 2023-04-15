@@ -100,10 +100,12 @@ void ap_sndfile_async_t::configure()
     msg += ctmp;
     TASCAR::add_warning(msg, e);
   }
+  sndf->start_service();
 }
 
 void ap_sndfile_async_t::release(  )
 {
+  sndf->stop_service();
   TASCAR::audioplugin_base_t::release();
   delete sndf;
 }
@@ -134,13 +136,12 @@ void ap_sndfile_async_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     ltp.object_time_samples += chunk[0].n;
     ltp.rolling = true;
   }
-  if((!mute) && (tp.rolling || (!transport))) {
-    float* dp[chunk.size()];
-    for(uint32_t ch = 0; ch < chunk.size(); ch++)
-      dp[ch] = chunk[ch].d;
-    sndf->request_data(ltp.object_time_samples, n_fragment * ltp.rolling,
-                       chunk.size(), dp);
-  }
+  float* dp[chunk.size()];
+  for(uint32_t ch = 0; ch < chunk.size(); ch++)
+    dp[ch] = chunk[ch].d;
+  sndf->request_data(ltp.object_time_samples,
+                     n_fragment * ((!mute) && (tp.rolling || (!transport))),
+                     chunk.size(), dp);
 }
 
 REGISTER_AUDIOPLUGIN(ap_sndfile_async_t);
