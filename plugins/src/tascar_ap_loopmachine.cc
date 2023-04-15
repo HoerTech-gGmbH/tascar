@@ -34,38 +34,36 @@ public:
   ~loopmachine_t();
 
 private:
-  double bpm;
-  double durationbeats;
-  double ramplen;
-  bool bypass;
-  bool clear;
-  bool record;
-  float gain;
+  bool muteinput = false;
+  double bpm = 120.0;
+  double durationbeats = 4.0;
+  double ramplen = 0.01;
+  bool bypass = false;
+  bool clear = false;
+  bool record = false;
+  float gain = 1.0f;
   double delaycomp = 0.0;
-  //uint32_t loopcnt = 0;
-  TASCAR::looped_wave_t* loop;
-  TASCAR::wave_t* ramp;
-  size_t rec_counter;
-  size_t ramp_counter;
-  size_t t_rec_counter;
-  size_t t_ramp_counter;
-  TASCAR::static_delay_t* delay;
-  TASCAR::wave_t* delayed;
+  // uint32_t loopcnt = 0;
+  TASCAR::looped_wave_t* loop = NULL;
+  TASCAR::wave_t* ramp = NULL;
+  size_t rec_counter = 0;
+  size_t ramp_counter = 0;
+  size_t t_rec_counter = 0;
+  size_t t_ramp_counter = 0;
+  TASCAR::static_delay_t* delay = NULL;
+  TASCAR::wave_t* delayed = NULL;
 };
 
 loopmachine_t::loopmachine_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : audioplugin_base_t(cfg), bpm(120), durationbeats(4), ramplen(0.01),
-      bypass(false), clear(false), record(false), gain(1.0f), loop(NULL),
-      ramp(NULL), rec_counter(0), ramp_counter(0), t_rec_counter(0),
-      t_ramp_counter(0)
+    : audioplugin_base_t(cfg)
 {
   GET_ATTRIBUTE(bpm, "", "Beats per minute");
   GET_ATTRIBUTE(durationbeats, "beats", "Record duration");
   GET_ATTRIBUTE(ramplen, "s", "Ramp length");
   GET_ATTRIBUTE_DB(gain, "Playback gain");
   GET_ATTRIBUTE_BOOL(bypass, "Start in bypass mode");
-  //GET_ATTRIBUTE(loopcnt, "", "Number of repeats, 0 = infinite");
   GET_ATTRIBUTE(delaycomp, "s", "Delay compensation");
+  GET_ATTRIBUTE_BOOL(muteinput, "Mute input while not recording");
 }
 
 void loopmachine_t::configure()
@@ -104,7 +102,8 @@ void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/bypass", &bypass);
   srv->add_float("/gain", &gain);
   srv->add_float_db("/gaindb", &gain);
-  //srv->add_uint("/loopcnt", &loopcnt);
+  srv->add_bool("/muteinput", &muteinput);
+  // srv->add_uint("/loopcnt", &loopcnt);
 }
 
 loopmachine_t::~loopmachine_t() {}
@@ -115,20 +114,21 @@ void loopmachine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
 {
   if(chunk.size() == 0)
     return;
+  auto& chunk_ = chunk[0];
   if(record) {
     record = false;
     rec_counter = loop->n;
     ramp_counter = ramp->n;
     t_rec_counter = 0;
     t_ramp_counter = 0;
-    //loop->set_loop(loopcnt);
+    // loop->set_loop(loopcnt);
     loop->restart();
   }
   if(clear) {
     clear = false;
     loop->clear();
   }
-  delayed->copy(chunk[0]);
+  delayed->copy(chunk_);
   delay->operator()(*delayed);
   for(size_t k = 0; k < n_fragment; ++k) {
     if(rec_counter) {
@@ -137,16 +137,20 @@ void loopmachine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         loop->d[t_rec_counter] *= 1.0f - ramp->d[t_rec_counter];
       --rec_counter;
       ++t_rec_counter;
-    } else if(ramp_counter) {
-      loop->d[t_ramp_counter] += (ramp->d[t_ramp_counter] * delayed->d[k]);
-      --ramp_counter;
-      ++t_ramp_counter;
+    } else {
+      if(muteinput)
+        chunk_.d[k] = 0.0f;
+      if(ramp_counter) {
+        loop->d[t_ramp_counter] += (ramp->d[t_ramp_counter] * delayed->d[k]);
+        --ramp_counter;
+        ++t_ramp_counter;
+      }
     }
   }
   if(bypass || (rec_counter > 0)) {
-    loop->add_chunk_looped(0.0f, chunk[0]);
+    loop->add_chunk_looped(0.0f, chunk_);
   } else {
-    loop->add_chunk_looped(gain, chunk[0]);
+    loop->add_chunk_looped(gain, chunk_);
   }
 }
 
