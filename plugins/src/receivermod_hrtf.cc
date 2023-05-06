@@ -444,6 +444,7 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   TASCAR::receivermod_base_t::add_variables(srv);
   srv->add_bool("/hrtf/decorr", &decorr);
   srv->add_float("/hrtf/angle", &par.angle);
+  srv->add_float("/hrtf/radius", &par.radius);
   srv->add_float("/hrtf/thetamin", &par.thetamin);
   srv->add_float("/hrtf/omega", &par.omega);
   srv->add_float("/hrtf/alphamin", &par.alphamin);
