@@ -208,10 +208,23 @@ namespace TASCAR {
                                            receivermod_base_t::data_t*);
       void add_diffuse_sound_field_rec(const amb1wave_t& chunk,
                                        receivermod_base_t::data_t*);
+      /**
+       * @brief Calculate parameters for panning, delayline and air absorption
+       * @param psrc_physical Position of physical (primary) sound source
+       * @param psrc_virtual Position of image source, or physical position if
+       * primary source
+       * @retval prel Position relative to receiver
+       * @retval distance Distance for air absorption
+       * @retval traveltime Travel time for delay lines, in meter
+       * @retval gain Gain from distance law
+       * @param b_img Flag to indicate if the source is an image source (true)
+       * or a primary source (false)
+       * @param gainmodel Type of gain model, e.g., 1/r
+       */
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
-                           float& distance, float& gain, bool b_img,
-                           gainmodel_t gainmodel);
+                           float& distance, float& traveltime_in_m, float& gain,
+                           bool b_img, gainmodel_t gainmodel);
       void set_next_gain(float gain);
       void set_fade(float targetgain, float duration, float start = -1);
       void apply_gain();
