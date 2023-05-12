@@ -539,15 +539,11 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
 receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
                        bool is_reverb_)
     : receivermod_t(xmlsrc), licensed_component_t(typeid(*this).name()),
-      avgdist(0), render_point(true), render_diffuse(true), render_image(true),
-      ismmin(0), ismmax(2147483647), layers(0xffffffff), use_global_mask(true),
-      diffusegain(1.0), has_diffusegain(false), falloff(-1.0), delaycomp(0.0),
-      recdelaycomp(0.0), layerfadelen(1.0), muteonstop(false), active(true),
-      boundingbox(find_or_add_child("boundingbox")), gain_zero(false),
-      external_gain(1.0), is_reverb(is_reverb_), x_gain(1.0), next_gain(1.0),
-      fade_timer(0), fade_rate(1), next_fade_gain(1), previous_fade_gain(1),
-      prelim_next_fade_gain(1), prelim_previous_fade_gain(1), fade_gain(1),
-      starttime_samples(0), plugins(xmlsrc, name, "")
+      boundingbox(find_or_add_child("boundingbox")), is_reverb(is_reverb_),
+      x_gain(1.0), next_gain(1.0), fade_timer(0), fade_rate(1),
+      next_fade_gain(1), previous_fade_gain(1), prelim_next_fade_gain(1),
+      prelim_previous_fade_gain(1), fade_gain(1), starttime_samples(0),
+      plugins(xmlsrc, name, "")
 {
   GET_ATTRIBUTE(
       volumetric, "m",
@@ -580,6 +576,16 @@ receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
   GET_ATTRIBUTE_BOOL(muteonstop,
                      "mute when transport stopped to prevent playback of "
                      "sounds from delaylines and reverb");
+  // proxy:
+  GET_ATTRIBUTE(proxy_position, "m", "Proxy position");
+  GET_ATTRIBUTE_BOOL(proxy_is_relative, "Proxy is relative to receiver (true) "
+                                        "or in absolute coordinates (false)");
+  GET_ATTRIBUTE_BOOL(proxy_delay, "Use proxy position for delay");
+  GET_ATTRIBUTE_BOOL(proxy_airabsorption,
+                     "Use proxy position for air absorption");
+  GET_ATTRIBUTE_BOOL(proxy_gain, "Use proxy position for gain");
+  GET_ATTRIBUTE_BOOL(proxy_direction, "Use proxy position for direction");
+  // end proxy
   if(avgdist <= 0)
     avgdist = 0.5f * powf(volumetric.boxvolumef(), 0.33333f);
   // check for mask plugins:
@@ -753,6 +759,22 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
     // path then something is wrong, do not render.
     if(b_img && (physical_dist > distance)) {
       gain = 0.0;
+    }
+    if(proxy_delay || proxy_airabsorption || proxy_gain || proxy_direction) {
+      auto proxy_prel = proxy_position;
+      if(!proxy_is_relative) {
+        proxy_prel -= position;
+        proxy_prel /= orientation;
+      }
+      auto proxy_distance = proxy_prel.normf();
+      if(proxy_delay)
+        traveltime_in_m = proxy_distance;
+      if(proxy_airabsorption)
+        distance = proxy_distance;
+      if(proxy_gain && (gainmodel == GAIN_INVR))
+        gain = 1.0f / std::max(0.1f, proxy_distance);
+      if(proxy_direction)
+        prel = proxy_prel;
     }
   }
   make_friendly_number(gain);
@@ -950,6 +972,16 @@ void receiver_t::add_variables(TASCAR::osc_server_t* srv)
     maskplug->add_variables(srv);
     srv->set_prefix(oldpref);
   }
+  srv->add_pos("/proxy/position", &proxy_position, "", "Proxy position in m");
+  srv->add_bool("/proxy/is_relative", &proxy_is_relative,
+                "Proxy is relative to receiver (true) or in absolute "
+                "coordinates (false)");
+  srv->add_bool("/proxy/delay", &proxy_delay, "Use proxy position for delay");
+  srv->add_bool("/proxy/airabsorption", &proxy_airabsorption,
+                "Use proxy position for air absorption");
+  srv->add_bool("/proxy/gain", &proxy_gain, "Use proxy position for gain");
+  srv->add_bool("/proxy/direction", &proxy_direction,
+                "Use proxy position for direction");
 }
 
 soundpath_t::soundpath_t(const source_t* src, const soundpath_t* parent_,

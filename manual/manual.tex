@@ -1148,19 +1148,8 @@ For level metering, the RMS level of the w-channel is taken.
 
 \subsection{The {\tt <receiver .../>} element}\label{sec:receiver}\index{receiver}
 
-A receiver\index{receiver} object can be imagined as a virtual
-microphone\index{virtual microphone}\index{microphone}, which captures
-the sound in the virtual space, and serves as an output of the virtual
-acoustic environment.
-%
-The choice of the receiver type depends on the playback system and the
-desired rendering method.
-%
-It captures the signal of all sound sources in the scene and computes
-these signals according to its type.
-%
-We can route the output signals to playback system, e.g., loudspeakers
-or headphones.
+A receiver\index{receiver} object can be thought of as a virtual microphone\index{virtual microphone}\index{microphone} that captures sound in virtual space and serves as the output of the virtual acoustic environment. The choice of the receiver type depends on the playback system and the desired rendering method. It captures the signal of all sound sources in the scene and computes them according to their type. The output signals of a receiver are sent to the playback system, e.g. speakers or headphones.
+
 
 \input{tabreceiver.tex}
 
@@ -1261,13 +1250,11 @@ commands:
 \begin{verbatim}
 /<scene>/<name>/fade <gain> <duration> [ <starttime> ]
 \end{verbatim}
-Here \verb!gain! is the linear target gain, \verb!duration! is the
-length of the fade, and the optional third parameter \verb!starttime!
-  is the start time, at which the fade is applied. If the current time
-  is later than \verb!starttime! then the fade is applied
-  immediately. The fade is always calculated using a raised cosine
-  ramp. A new fade event will overwrite any currently ongoing or
-  scheduled fade events.
+Here \verb!gain! is the linear target gain, \verb!duration! is the length of the fade, and the optional third parameter \verb!starttime!  is the start time, at which the fade is applied. If the current time is later than \verb!starttime! then the fade is applied immediately. The fade is always calculated using a raised cosine ramp. A new fade event will overwrite any currently ongoing or scheduled fade events.
+
+\paragraph{Proxy position}
+
+Receivers can replace the source position with a proxy position. The properties of air absorption, delay, gain, and direction can be replaced separately. Proxy position and property selection can be controlled in the XML file or via OSC.
 
 \subsection{Receiver types}\index{receiver type}
 

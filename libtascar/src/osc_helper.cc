@@ -91,12 +91,48 @@ int osc_set_float(const char*, const char* types, lo_arg** argv, int argc,
   return 1;
 }
 
+int osc_set_pos(const char*, const char* types, lo_arg** argv, int argc,
+                lo_message, void* user_data)
+{
+  if(user_data && (argc == 3) && (types[0] == 'f') && (types[1] == 'f') &&
+     (types[2] == 'f')){
+    TASCAR::pos_t* p = (TASCAR::pos_t*)(user_data);
+    p->x = argv[0]->f;
+    p->y = argv[1]->f;
+    p->z = argv[2]->f;
+  }
+  return 1;
+}
+
 std::string str_get_float(void* data)
 {
   return TASCAR::to_string(*(float*)(data));
 }
 
+std::string str_get_pos(void* data)
+{
+  return TASCAR::to_string(*(TASCAR::pos_t*)(data));
+}
+
 int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
+                  lo_message, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      TASCAR::pos_t* p = (TASCAR::pos_t*)(user_data);
+      lo_send(target, &(argv[1]->s), "sfff", npath.c_str(), (float)(p->x),
+              (float)(p->y), (float)(p->z));
+      lo_address_free(target);
+    }
+  }
+  return 1;
+}
+
+int osc_get_pos(const char* path, const char* types, lo_arg** argv, int argc,
                   lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
@@ -563,7 +599,7 @@ osc_server_t::osc_server_t(const std::string& multicast,
 
 int osc_server_t::dispatch_data(void* data, size_t size)
 {
-  //std::lock_guard<std::mutex> lk{mtxdispatch};
+  // std::lock_guard<std::mutex> lk{mtxdispatch};
   lo_server srv(lo_server_thread_get_server(lost));
   return lo_server_dispatch_data(srv, data, size);
 }
@@ -652,6 +688,15 @@ void osc_server_t::add_double(const std::string& path, double* data,
   add_method(path + "/get", "ss", osc_get_double, data, false);
   datamap[prefix + path] =
       data_element_t(prefix + path, data, str_get_double, "double");
+}
+
+void osc_server_t::add_pos(const std::string& path, TASCAR::pos_t* data,
+                           const std::string& range, const std::string& comment)
+{
+  add_method(path, "fff", osc_set_pos, data, true, true, range, comment);
+  add_method(path + "/get", "ss", osc_get_pos, data, false);
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_pos, "pos");
 }
 
 void osc_server_t::add_float_db(const std::string& path, float* data,

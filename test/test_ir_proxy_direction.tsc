@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <receiver type="nsp" proxy_position="0 10 0" proxy_direction="true">
+      <layout>
+        <speaker az="0"/>
+        <speaker az="90"/>
+        <speaker az="180"/>
+        <speaker az="270"/>
+      </layout>
+    </receiver>
+  </scene>
+</session>

@@ -242,6 +242,9 @@ namespace TASCAR {
                   const std::string& comment = "");
     void add_string(const std::string& path, std::string* data,
                     const std::string& comment = "");
+    void add_pos(const std::string& path, TASCAR::pos_t* data,
+                 const std::string& range = "",
+                 const std::string& comment = "");
     void activate();
     void deactivate();
     std::string list_variables() const;

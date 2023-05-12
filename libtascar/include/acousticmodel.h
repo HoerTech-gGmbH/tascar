@@ -236,30 +236,36 @@ namespace TASCAR {
       void add_licenses(licensehandler_t*);
       // configuration/control variables:
       TASCAR::pos_t volumetric;
-      float avgdist;
-      bool render_point;
-      bool render_diffuse;
-      bool render_image;
-      uint32_t ismmin;
-      uint32_t ismmax;
-      uint32_t layers;
-      bool use_global_mask;
-      float diffusegain;
-      bool has_diffusegain;
-      float falloff;
-      float delaycomp;
-      float recdelaycomp;
-      float layerfadelen;
-      bool muteonstop;
+      float avgdist = 0.0f;
+      bool render_point = true;
+      bool render_diffuse = true;
+      bool render_image = true;
+      uint32_t ismmin = 0;
+      uint32_t ismmax = 2147483647;
+      uint32_t layers = 0xffffffff;
+      bool use_global_mask = true;
+      float diffusegain = 1.0f;
+      bool has_diffusegain = false;
+      float falloff = -1.0f;
+      float delaycomp = 0.0f;
+      float recdelaycomp = 0.0f;
+      float layerfadelen = 1.0f;
+      bool muteonstop = false;
+      TASCAR::pos_t proxy_position;
+      bool proxy_is_relative = false;
+      bool proxy_delay = false;
+      bool proxy_airabsorption = false;
+      bool proxy_gain = false;
+      bool proxy_direction = false;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       std::vector<wave_t*> outchannelsp;
       TASCAR::amb1wave_t* scatterbuffer;
       receivermod_base_t::data_t* scatter_handle;
-      bool active;
+      bool active = true;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
-      bool gain_zero;
-      float external_gain;
+      bool gain_zero = false;
+      float external_gain = 1.0f;
       const bool is_reverb;
 
     private:
