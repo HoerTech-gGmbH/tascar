@@ -701,10 +701,9 @@ void TASCAR::session_t::start()
 {
   started_ = true;
   try {
-    for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl = scenes.begin();
-        ipl != scenes.end(); ++ipl) {
-      (*ipl)->start();
-      (*ipl)->add_child_methods(this);
+    for(auto scene : scenes){
+      scene->start();
+      scene->add_child_methods(this);
     }
   }
   catch(...) {

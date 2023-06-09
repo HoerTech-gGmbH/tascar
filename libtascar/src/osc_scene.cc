@@ -316,7 +316,8 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,
   srv->set_prefix(ctlname);
   srv->add_method("/gain", "f", osc_set_receiver_gain, s);
   srv->add_method("/lingain", "f", osc_set_receiver_lingain, s);
-  srv->add_float_db("/diffusegain", &(s->diffusegain),"[-30,30]","relative gain of diffuse sound field model");
+  srv->add_float_db("/diffusegain", &(s->diffusegain), "[-30,30]",
+                    "relative gain of diffuse sound field model");
   srv->add_method("/fade", "ff", osc_set_receiver_fade, s);
   srv->add_method("/fade", "fff", osc_set_receiver_fade, s);
   srv->add_uint("/ismmin", &(s->ismmin));
@@ -358,7 +359,7 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
   }
 }
 
-osc_scene_t::osc_scene_t(tsccfg::node_t, TASCAR::Scene::scene_t* scene_)
+osc_scene_t::osc_scene_t(tsccfg::node_t, TASCAR::render_core_t* scene_)
     : scene(scene_)
 {
   if(!scene)

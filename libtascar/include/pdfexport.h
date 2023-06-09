@@ -3,7 +3,7 @@
  * @author Giso Grimm
  * @ingroup GUI
  * @brief  PDF export class
- */ 
+ */
 /* License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
@@ -33,7 +33,8 @@ namespace TASCAR {
   /// Export TASCAR scene to PDF
   class pdfexport_t {
   public:
-    pdfexport_t(TASCAR::session_t* s,const std::string& fname, bool acmodel);
+    pdfexport_t(TASCAR::session_t* s, const std::string& fname, bool acmodel);
+
   private:
     void draw(TSCGUI::scene_draw_t::viewt_t persp);
     void draw_views(TASCAR::scene_render_rt_t* s);
@@ -48,7 +49,16 @@ namespace TASCAR {
     Cairo::RefPtr<Cairo::PdfSurface> surface;
   };
 
-}
+  std::string
+  export_svg(TASCAR::session_t* s, double width_in_points,
+             double height_in_points,
+             TSCGUI::scene_draw_t::viewt_t persp = TSCGUI::scene_draw_t::xy);
+
+  std::string
+  export_svg(TASCAR::render_core_t* s, double width_in_points,
+             double height_in_points,
+             TSCGUI::scene_draw_t::viewt_t persp = TSCGUI::scene_draw_t::xy);
+} // namespace TASCAR
 
 #endif
 

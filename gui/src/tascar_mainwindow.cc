@@ -23,8 +23,8 @@
 #include "tascar_mainwindow.h"
 #include "logo.xpm"
 #include "pdfexport.h"
-#include <fstream>
 #include "tascar.res.c"
+#include <fstream>
 
 #define GET_WIDGET(x)                                                          \
   m_refBuilder->get_widget(#x, x);                                             \
@@ -145,6 +145,9 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   refActionGroupMain->add_action(
       "export_csvsounds",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsvsounds));
+  refActionGroupMain->add_action(
+      "export_svg",
+      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportsvg));
   refActionGroupMain->add_action(
       "export_pdf",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportpdf));
@@ -870,6 +873,46 @@ void tascar_window_t::on_menu_file_exportcsvsounds()
   }
 }
 
+void tascar_window_t::on_menu_file_exportsvg()
+{
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if(session) {
+    Gtk::FileChooserDialog dialog("Please choose a destination",
+                                  Gtk::FILE_CHOOSER_ACTION_SAVE);
+    dialog.set_transient_for(*this);
+    // Add response buttons the the dialog:
+    dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+    // Add filters, so that only certain file types can be selected:
+    Glib::RefPtr<Gtk::FileFilter> filter_tascar = Gtk::FileFilter::create();
+    filter_tascar->set_name("SVG files");
+    filter_tascar->add_pattern("*.svg");
+    dialog.add_filter(filter_tascar);
+    Glib::RefPtr<Gtk::FileFilter> filter_any = Gtk::FileFilter::create();
+    filter_any->set_name("Any files");
+    filter_any->add_pattern("*");
+    dialog.add_filter(filter_any);
+    // Show the dialog and wait for a user response:
+    int result = dialog.run();
+    // Handle the response:
+    if(result == Gtk::RESPONSE_OK) {
+      // Notice that this is a std::string, not a Glib::ustring.
+      std::string filename = dialog.get_filename();
+      if(filename.find(".svg") == std::string::npos)
+        filename += ".svg";
+      if(filename.size() > 0) {
+        try {
+          std::ofstream ofstr(filename);
+          ofstr << TASCAR::export_svg(session, 400, 400);
+        }
+        catch(const std::exception& e) {
+          error_message(e.what());
+        }
+      }
+    }
+  }
+}
+
 void tascar_window_t::on_menu_file_exportpdf()
 {
   std::lock_guard<std::mutex> lock(session_mutex);
@@ -954,7 +997,7 @@ void tascar_window_t::on_menu_file_reload()
     get_warnings().clear();
     scene_load(tascar_filename);
     sessionquit = false;
-    if(session){
+    if(session) {
       session->add_bool_true("/tascargui/quit", &sessionquit);
       session->add_bool_true("/tascar/quit", &sessionquit);
     }
@@ -989,7 +1032,7 @@ void tascar_window_t::on_menu_file_runscript()
     // Notice that this is a std::string, not a Glib::ustring.
     std::string filename = dialog.get_filename();
     try {
-      if(session){
+      if(session) {
         session->read_script_async({filename});
       }
     }
@@ -1027,7 +1070,7 @@ void tascar_window_t::on_menu_file_open()
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
-      if(session){
+      if(session) {
         session->add_bool_true("/tascargui/quit", &sessionquit);
         session->add_bool_true("/tascar/quit", &sessionquit);
       }
@@ -1068,7 +1111,7 @@ void tascar_window_t::on_menu_file_open_example()
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
-      if(session){
+      if(session) {
         session->add_bool_true("/tascargui/quit", &sessionquit);
         session->add_bool_true("/tascar/quit", &sessionquit);
       }

@@ -53,6 +53,7 @@ protected:
   void on_menu_file_exportcsvsounds();
   void on_menu_file_exportpdf();
   void on_menu_file_exportacmodel();
+  void on_menu_file_exportsvg();
   void on_menu_file_close();
   void on_menu_file_quit();
 

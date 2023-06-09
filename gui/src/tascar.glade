@@ -73,6 +73,12 @@
     <property name="can-focus">False</property>
     <property name="stock">gtk-execute</property>
   </object>
+  <object class="GtkImage" id="image7">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="stock">gtk-save-as</property>
+    <property name="icon_size">5</property>
+  </object>
   <object class="GtkImage" id="image_rot_ccw">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -207,7 +213,7 @@
                         <property name="can-focus">False</property>
                         <property name="action-name">main.export_csv</property>
                         <property name="use-underline">True</property>
-                        <property name="image">image1</property>
+                        <property name="image">image7</property>
                         <property name="use-stock">False</property>
                       </object>
                     </child>
@@ -219,6 +225,17 @@
                         <property name="action-name">main.export_csvsounds</property>
                         <property name="use-underline">True</property>
                         <property name="image">image4</property>
+                        <property name="use-stock">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="export_svg">
+                        <property name="label" translatable="yes">Export map as SVG</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="action-name">main.export_svg</property>
+                        <property name="use-underline">False</property>
+                        <property name="image">image2</property>
                         <property name="use-stock">False</property>
                       </object>
                     </child>

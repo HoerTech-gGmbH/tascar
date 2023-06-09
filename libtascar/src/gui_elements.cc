@@ -678,7 +678,6 @@ void scene_draw_t::set_scene( TASCAR::render_core_t* scene )
   pthread_mutex_unlock( &mtx );
 }
 
-
 void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 {
   selection = o;
