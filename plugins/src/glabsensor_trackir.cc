@@ -1084,7 +1084,8 @@ void trackir_drawer_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
       // highlight all markers, which were used for solving:
       cr->set_source_rgba(0, 0.8, 0, 0.5);
       for(uint32_t k = 0; k < plot.imagePoints.size(); ++k) {
-        cr->arc(plot.imagePoints[k].x, -plot.imagePoints[k].y, 12, 0, TASCAR_2PI);
+        cr->arc(plot.imagePoints[k].x, -plot.imagePoints[k].y, 12, 0,
+                TASCAR_2PI);
         cr->stroke();
       }
       cr->set_source_rgb(0, 0, 0);
@@ -1093,7 +1094,8 @@ void trackir_drawer_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
           k < std::min(plot.imagePoints.size(), plot.crownIndex.size()); ++k) {
         cr->move_to(plot.imagePoints[k].x + 10, -plot.imagePoints[k].y + 10);
         char ctmp[32];
-        sprintf(ctmp, "%d", plot.crownIndex[k] + 1);
+        ctmp[31] = 0;
+        snprintf(ctmp, 31, "%d", plot.crownIndex[k] + 1);
         cr->show_text(ctmp);
         cr->stroke();
       }

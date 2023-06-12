@@ -327,11 +327,12 @@ void espheadtracker_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
     cr->stroke();
     cr->move_to(0.3 * width, y * height);
     char ctmp[256];
-    sprintf(ctmp, "%1.2f deg. C", it->second->get_temp());
+    ctmp[255] = 0;
+    snprintf(ctmp, 255, "%1.2f deg. C", it->second->get_temp());
     cr->show_text(ctmp);
     cr->stroke();
     cr->move_to(0.55 * width, y * height);
-    sprintf(ctmp, "%1.2f mV", 1000.0 * it->second->get_eog());
+    snprintf(ctmp, 255, "%1.2f mV", 1000.0 * it->second->get_eog());
     cr->show_text(ctmp);
     cr->stroke();
     // rotation:

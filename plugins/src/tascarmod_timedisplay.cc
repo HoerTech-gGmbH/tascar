@@ -95,7 +95,7 @@ timedisplay_t::timedisplay_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_(h);
   timedisplaywindow->move(x, y);
   timedisplaywindow->resize(w, h);
-  sprintf(cfmt, "%%1.%df s", digits);
+  snprintf(cfmt, 1023, "%%1.%df s", digits);
 }
 
 timedisplay_t::~timedisplay_t()
@@ -108,6 +108,7 @@ timedisplay_t::~timedisplay_t()
 bool timedisplay_t::on_timeout()
 {
   char ctmp[1024];
+  ctmp[1023] = 0;
   double ltime(session->tp_get_time());
   if(tset.empty()) {
     if(remaining)
@@ -131,10 +132,10 @@ bool timedisplay_t::on_timeout()
     double minutes = floor(ltime / 60 - 60 * hours);
     double secs = floor(ltime - 60 * minutes - 3600 * hours);
     double frames = floor((ltime - secs - 60 * minutes - 3600 * hours) * fps);
-    sprintf(ctmp, "%s%02.0f:%02.0f:%02.0f:%02.0f", (sign ? "-" : ""), hours,
+    snprintf(ctmp, 1023, "%s%02.0f:%02.0f:%02.0f:%02.0f", (sign ? "-" : ""), hours,
             minutes, secs, frames);
   } else {
-    sprintf(ctmp, cfmt, ltime);
+    snprintf(ctmp, 1023, cfmt, ltime);
   }
   if(ltime < threshold)
     label->override_color(col_threshold);

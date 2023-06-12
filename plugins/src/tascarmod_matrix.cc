@@ -98,19 +98,21 @@ matrix_t::matrix_t(const TASCAR::module_cfg_t& cfg)
   }
   for(uint32_t k = 0; k < inputs.size(); ++k) {
     char ctmp[1024];
+    ctmp[1023] = 0;
     if(inputs[k].label.empty())
-      sprintf(ctmp, "in.%d", k);
+      snprintf(ctmp, 1023, "in.%d", k);
     else
-      sprintf(ctmp, "%s", inputs[k].label.c_str());
+      snprintf(ctmp, 1023, "%s", inputs[k].label.c_str());
     add_input_port(ctmp);
   }
   for(uint32_t k = 0; k < outputs.num_output_channels(); ++k) {
     std::string label(outputs.get_label(k));
     char ctmp[1024];
+    ctmp[1023] = 0;
     if(label.empty())
-      sprintf(ctmp, "out.%d", k);
+      snprintf(ctmp, 1023, "out.%d", k);
     else
-      sprintf(ctmp, "%s", label.c_str());
+      snprintf(ctmp, 1023, "%s", label.c_str());
     add_output_port(ctmp);
   }
 }
@@ -151,7 +153,7 @@ void matrix_t::configure()
 int matrix_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
                       const std::vector<float*>& sOut)
 {
-  if( !configured )
+  if(!configured)
     return 0;
   for(uint32_t ko = 0; ko < sOut.size(); ++ko) {
     audio_out[ko].use_external_buffer(n, sOut[ko]);

@@ -803,7 +803,8 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
           cr->line_to(x, (double)height * (1 - dx));
           if((int)t % 5 == 0) {
             char ctmp[1024];
-            sprintf(ctmp, "%d", (int)t);
+            ctmp[1023] = 0;
+            snprintf(ctmp, 1023, "%d", (int)t);
             cr->show_text(ctmp);
           }
         }
@@ -824,7 +825,8 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
               cr->move_to(-width, v);
               cr->line_to(-width * (1.0 - 0.01), v);
               char ctmp[1024];
-              sprintf(ctmp, "%g", dy);
+              ctmp[1023] = 0;
+              snprintf(ctmp, 1023, "%g", dy);
               cr->show_text(ctmp);
               cr->stroke();
             }
@@ -1306,7 +1308,8 @@ bool datalogging_t::on_100ms()
     if(!b_recording)
       datelabel->set_text(datestr());
     char ctmp[1024];
-    sprintf(ctmp, "%1.1f s", session->tp_get_time());
+    ctmp[1023] = 0;
+    snprintf(ctmp, 1023, "%1.1f s", session->tp_get_time());
     jacktime->set_text(ctmp);
   }
   return true;

@@ -27,20 +27,9 @@
 using namespace TSCGUI;
 
 dameter_t::dameter_t()
-  : narrow(false),
-    narrowleg(false),
-    v_rms(0),
-    v_peak(0),
-    q30(0),
-    q50(0),
-    q65(0),
-    q95(0),
-    q99(0),
-    vmin(30),
-    range(70),
-    targetlevel(0),
-    weight(TASCAR::levelmeter::Z),
-    active(true)
+    : narrow(false), narrowleg(false), v_rms(0), v_peak(0), q30(0), q50(0),
+      q65(0), q95(0), q99(0), vmin(30), range(70), targetlevel(0),
+      weight(TASCAR::levelmeter::Z), active(true)
 {
 }
 
@@ -49,10 +38,11 @@ void dameter_t::invalidate_win()
   queue_draw();
 }
 
-void line_at(const Cairo::RefPtr<Cairo::Context>& cr, float y, float x0, float x1)
+void line_at(const Cairo::RefPtr<Cairo::Context>& cr, float y, float x0,
+             float x1)
 {
-  cr->move_to(x0,y);
-  cr->line_to(x1,y);
+  cr->move_to(x0, y);
+  cr->line_to(x1, y);
   cr->stroke();
 }
 
@@ -60,121 +50,123 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   Gtk::Allocation allocation(get_allocation());
   const int width(allocation.get_width());
-  int width_bar(0.5*width);
-  if( narrow ){
-    if( narrowleg )
+  int width_bar(0.5 * width);
+  if(narrow) {
+    if(narrowleg)
       width_bar = 0;
     else
       width_bar = width;
   }
   const int height(allocation.get_height());
   int label_h(20);
-  if( narrow )
+  if(narrow)
     label_h = 0;
-  if( !active ){
-    cr->set_source_rgb( 0.7, 0.7, 0.7 );
+  if(!active) {
+    cr->set_source_rgb(0.7, 0.7, 0.7);
     cr->paint();
     return true;
   }
   cr->save();
-  float yscale((height-label_h)/range);
-  cr->translate(0,height);
-  cr->scale( 1.0, -yscale );
-  cr->translate(0,-vmin);
-  switch( mode ){
+  float yscale((height - label_h) / range);
+  cr->translate(0, height);
+  cr->scale(1.0, -yscale);
+  cr->translate(0, -vmin);
+  switch(mode) {
   case rmspeak:
   case rms:
   case peak:
-    cr->set_source_rgb( 0, 0, 0 );
+    cr->set_source_rgb(0, 0, 0);
     break;
   case percentile:
-    cr->set_source_rgb( 0.8, 0.8, 0.8 );
+    cr->set_source_rgb(0.8, 0.8, 0.8);
     break;
   }
   cr->paint();
-  switch( mode ){
+  switch(mode) {
   case rmspeak:
   case rms:
-    cr->set_source_rgb( 0.25, 0.7, 0.25 );
-    cr->rectangle(0,vmin,width_bar,v_rms-vmin);
+    cr->set_source_rgb(0.25, 0.7, 0.25);
+    cr->rectangle(0, vmin, width_bar, v_rms - vmin);
     cr->fill();
     break;
   case peak:
     break;
   case percentile:
-    cr->set_source_rgb( 0.6, 0.6, 0.6 );
-    cr->rectangle(0,vmin,width_bar,q30-vmin);
+    cr->set_source_rgb(0.6, 0.6, 0.6);
+    cr->rectangle(0, vmin, width_bar, q30 - vmin);
     cr->fill();
-    cr->set_source_rgb( 0.0, 1.0, 119.0/255.0 );
-    cr->rectangle(0,q30,width_bar,q50-q30);
+    cr->set_source_rgb(0.0, 1.0, 119.0 / 255.0);
+    cr->rectangle(0, q30, width_bar, q50 - q30);
     cr->fill();
-    cr->set_source_rgb( 0.0, 187.0/255.0, 153.0/255.0 );
-    cr->rectangle(0,q50,width_bar,q65-q50);
+    cr->set_source_rgb(0.0, 187.0 / 255.0, 153.0 / 255.0);
+    cr->rectangle(0, q50, width_bar, q65 - q50);
     cr->fill();
-    cr->set_source_rgb( 0.0, 119.0/255.0, 187.0/255.0 );
-    cr->rectangle(0,q65,width_bar,q95-q65);
+    cr->set_source_rgb(0.0, 119.0 / 255.0, 187.0 / 255.0);
+    cr->rectangle(0, q65, width_bar, q95 - q65);
     cr->fill();
-    cr->set_source_rgb( 0.0, 51.0/255.0, 221.0/255.0 );
-    cr->rectangle(0,q95,width_bar,q99-q95);
+    cr->set_source_rgb(0.0, 51.0 / 255.0, 221.0 / 255.0);
+    cr->rectangle(0, q95, width_bar, q99 - q95);
     cr->fill();
-    cr->set_line_width(2/yscale);
-    cr->set_source_rgb( 0.3, 0.3, 0.3 );
-    line_at(cr,q30,0,width_bar);
-    cr->set_source_rgb( 0.0, 0.5, 0.5*119.0/255.0 );
-    line_at(cr,q50,0,width_bar);
-    cr->set_source_rgb( 0.0, 0.5*187.0/255.0, 0.5*153.0/255.0 );
-    line_at(cr,q65,0,width_bar);
-    cr->set_source_rgb( 0.0, 0.5*119.0/255.0, 0.5*187.0/255.0 );
-    line_at(cr,q95,0,width_bar);
-    cr->set_source_rgb( 0.0, 0.5*51.0/255.0, 0.5*221.0/255.0 );
-    line_at(cr,q99,0,width_bar);
+    cr->set_line_width(2 / yscale);
+    cr->set_source_rgb(0.3, 0.3, 0.3);
+    line_at(cr, q30, 0, width_bar);
+    cr->set_source_rgb(0.0, 0.5, 0.5 * 119.0 / 255.0);
+    line_at(cr, q50, 0, width_bar);
+    cr->set_source_rgb(0.0, 0.5 * 187.0 / 255.0, 0.5 * 153.0 / 255.0);
+    line_at(cr, q65, 0, width_bar);
+    cr->set_source_rgb(0.0, 0.5 * 119.0 / 255.0, 0.5 * 187.0 / 255.0);
+    line_at(cr, q95, 0, width_bar);
+    cr->set_source_rgb(0.0, 0.5 * 51.0 / 255.0, 0.5 * 221.0 / 255.0);
+    line_at(cr, q99, 0, width_bar);
     break;
   }
-  switch( mode ){
+  switch(mode) {
   case rmspeak:
   case peak:
     cr->set_line_width(1.0);
-    cr->set_source_rgb( 1.0, 0.9, 0 );
-    cr->move_to(0,v_peak);
-    cr->line_to(width_bar,v_peak);
+    cr->set_source_rgb(1.0, 0.9, 0);
+    cr->move_to(0, v_peak);
+    cr->line_to(width_bar, v_peak);
     cr->stroke();
     break;
   default:
     break;
   }
-  if( (!narrow) || narrowleg ){
+  if((!narrow) || narrowleg) {
     // draw scale:
-    cr->set_line_width(1/yscale);
+    cr->set_line_width(1 / yscale);
     float divider(10.0f);
-    if( range < 50.0f )
+    if(range < 50.0f)
       divider = 5.0f;
-    if( range < 30.0f )
+    if(range < 30.0f)
       divider = 2.0f;
-    for(int32_t k=ceil((vmin+1e-7)/divider);k<=floor((vmin+range-1e-7)/divider);++k){
-      switch( mode ){
+    for(int32_t k = ceil((vmin + 1e-7) / divider);
+        k <= floor((vmin + range - 1e-7) / divider); ++k) {
+      switch(mode) {
       case rmspeak:
       case rms:
       case peak:
-        cr->set_source_rgb( 0.25, 0.7, 0.25 );
+        cr->set_source_rgb(0.25, 0.7, 0.25);
         break;
       case percentile:
-        cr->set_source_rgb( 0.4, 0.4, 0.4 );
+        cr->set_source_rgb(0.4, 0.4, 0.4);
         break;
       }
-      line_at(cr,divider*k,width_bar,width);
+      line_at(cr, divider * k, width_bar, width);
       cr->save();
-      cr->move_to(1.04*width_bar,divider*k+1/yscale);
-      cr->scale(1.0,-1.0/yscale);
+      cr->move_to(1.04 * width_bar, divider * k + 1 / yscale);
+      cr->scale(1.0, -1.0 / yscale);
       char ctmp[256];
-      sprintf(ctmp,"%1.0f",divider*k);
-      switch( mode ){
+      ctmp[255] = 0;
+      snprintf(ctmp, 255, "%1.0f", divider * k);
+      switch(mode) {
       case rmspeak:
       case rms:
       case peak:
-        cr->set_source_rgb( 0.45, 1, 0.35 );
+        cr->set_source_rgb(0.45, 1, 0.35);
         break;
       case percentile:
-        cr->set_source_rgb( 0, 0, 0 );
+        cr->set_source_rgb(0, 0, 0);
         break;
       }
       cr->show_text(ctmp);
@@ -182,31 +174,32 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     }
   }
   cr->set_line_width(1);
-  cr->set_source_rgba( 1, 0, 0, 0.7 );
-  line_at(cr,targetlevel,width_bar,width);
+  cr->set_source_rgba(1, 0, 0, 0.7);
+  line_at(cr, targetlevel, width_bar, width);
   cr->restore();
-  if( (!narrow) || narrowleg ){
+  if((!narrow) || narrowleg) {
     // write level meter weight:
     std::string lmweight(TASCAR::to_string(weight));
     cr->save();
-    cr->move_to(0.02*width,label_h+16);
-    cr->set_source_rgb( 0.225, 0.5, 0.175 );
-    cr->scale( 1.2, 1.2 );
+    cr->move_to(0.02 * width, label_h + 16);
+    cr->set_source_rgb(0.225, 0.5, 0.175);
+    cr->scale(1.2, 1.2);
     cr->show_text(lmweight.c_str());
     cr->restore();
   }
-  if( !narrow ){
+  if(!narrow) {
     // print level:
     cr->save();
-    cr->set_source_rgb( 1, 1, 1 );
-    cr->rectangle(0,0,width,20);
+    cr->set_source_rgb(1, 1, 1);
+    cr->rectangle(0, 0, width, 20);
     cr->fill();
     {
       char ctmp[256];
-      sprintf(ctmp,"%1.1f",v_rms);
-      cr->set_source_rgb( 0, 0, 0 );
-      cr->move_to( 0.1*width, 0.8*label_h );
-      cr->scale( 1.2, 1.2 );
+      ctmp[255] = 0;
+      snprintf(ctmp, 255, "%1.1f", v_rms);
+      cr->set_source_rgb(0, 0, 0);
+      cr->move_to(0.1 * width, 0.8 * label_h);
+      cr->scale(1.2, 1.2);
       cr->show_text(ctmp);
     }
     cr->restore();
@@ -214,38 +207,36 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   return true;
 }
 
-playertimeline_t::playertimeline_t()
-{
-}
+playertimeline_t::playertimeline_t() {}
 
 splmeter_t::splmeter_t()
 {
-  dameter.signal_draw().connect( sigc::mem_fun(*this,&splmeter_t::on_draw) );
+  dameter.signal_draw().connect(sigc::mem_fun(*this, &splmeter_t::on_draw));
   add(dameter);
-  dameter.set_size_request( 32, 320 );
+  dameter.set_size_request(32, 320);
 }
 
-void splmeter_t::set_weight( TASCAR::levelmeter::weight_t w )
+void splmeter_t::set_weight(TASCAR::levelmeter::weight_t w)
 {
   dameter.weight = w;
 }
 
-void splmeter_t::set_active( bool a )
+void splmeter_t::set_active(bool a)
 {
   dameter.active = a;
 }
 
-void splmeter_t::set_narrow( bool narrow, bool leg )
+void splmeter_t::set_narrow(bool narrow, bool leg)
 {
   dameter.narrow = narrow;
   dameter.narrowleg = leg;
-  if( narrow ){
-    if( leg )
-      dameter.set_size_request( 16, 320 );
+  if(narrow) {
+    if(leg)
+      dameter.set_size_request(16, 320);
     else
-      dameter.set_size_request( 6, 320 );
-  }else
-    dameter.set_size_request( 32, 320 );
+      dameter.set_size_request(6, 320);
+  } else
+    dameter.set_size_request(32, 320);
 }
 
 void splmeter_t::invalidate_win()
@@ -253,55 +244,54 @@ void splmeter_t::invalidate_win()
   dameter.invalidate_win();
 }
 
-void splmeter_t::set_mode( dameter_t::mode_t mode )
+void splmeter_t::set_mode(dameter_t::mode_t mode)
 {
   dameter.mode = mode;
 }
 
-void splmeter_t::set_min_and_range( float vmin, float range )
+void splmeter_t::set_min_and_range(float vmin, float range)
 {
   dameter.vmin = vmin;
   dameter.range = range;
 }
 
-void splmeter_t::update_levelmeter( const TASCAR::levelmeter_t& lm, float targetlevel )
+void splmeter_t::update_levelmeter(const TASCAR::levelmeter_t& lm,
+                                   float targetlevel)
 {
   dameter.weight = lm.get_weight();
   dameter.targetlevel = targetlevel;
-  lm.get_rms_and_peak( dameter.v_rms, dameter.v_peak );
-  switch( dameter.mode ){
+  lm.get_rms_and_peak(dameter.v_rms, dameter.v_peak);
+  switch(dameter.mode) {
   case dameter_t::rmspeak:
   case dameter_t::rms:
   case dameter_t::peak:
     break;
   case dameter_t::percentile:
-    lm.get_percentile_levels( dameter.q30, dameter.q50, dameter.q65, dameter.q95, dameter.q99 );
+    lm.get_percentile_levels(dameter.q30, dameter.q50, dameter.q65, dameter.q95,
+                             dameter.q99);
     break;
   }
 }
 
 GainScale_t::GainScale_t()
-  : Gtk::Scale(Gtk::ORIENTATION_VERTICAL),
-    ap_(NULL),
-    vmin(-30),
-    vmax(10)
+    : Gtk::Scale(Gtk::ORIENTATION_VERTICAL), ap_(NULL), vmin(-30), vmax(10)
 {
   set_draw_value(false);
   set_has_origin(true);
-  set_range(vmin,vmax);
+  set_range(vmin, vmax);
   set_inverted(true);
-  set_increments(1,1);
+  set_increments(1, 1);
 }
 
 void GainScale_t::on_value_changed()
 {
-  if( ap_ )
-    ap_->set_gain_db( get_value() );
+  if(ap_)
+    ap_->set_gain_db(get_value());
 }
 
-void GainScale_t::set_inv( bool inv)
+void GainScale_t::set_inv(bool inv)
 {
-  if( ap_ ){
+  if(ap_) {
     ap_->set_inv(inv);
   }
 }
@@ -309,13 +299,13 @@ void GainScale_t::set_inv( bool inv)
 float GainScale_t::update(bool& inv)
 {
   double v(0);
-  if( ap_ ){
+  if(ap_) {
     inv = ap_->get_inv();
     v = ap_->get_gain_db();
-    if( (v < vmin) || (v > vmax) ){
-      vmin = std::min(vmin,v);
-      vmax = std::max(vmax,v);
-      set_range(vmin,vmax);
+    if((v < vmin) || (v > vmax)) {
+      vmin = std::min(vmin, v);
+      vmax = std::max(vmax, v);
+      set_range(vmin, vmax);
     }
     set_value(v);
   }
@@ -329,19 +319,22 @@ void GainScale_t::set_src(TASCAR::Scene::audio_port_t* ap)
 
 gainctl_t::gainctl_t()
 {
-  val.set_has_frame( false );
-  val.set_max_length( 10 );
-  val.set_width_chars( 4 );
-  val.set_size_request( 32, -1 );
-  scale.set_size_request( -1, 280 );
+  val.set_has_frame(false);
+  val.set_max_length(10);
+  val.set_width_chars(4);
+  val.set_size_request(32, -1);
+  scale.set_size_request(-1, 280);
   polarity.set_label("ø");
   add(box);
-  box.pack_start(polarity,Gtk::PACK_SHRINK);
-  box.pack_start(val,Gtk::PACK_SHRINK);
+  box.pack_start(polarity, Gtk::PACK_SHRINK);
+  box.pack_start(val, Gtk::PACK_SHRINK);
   box.add(scale);
-  scale.signal_value_changed().connect(sigc::mem_fun(*this,&gainctl_t::on_scale_changed));
-  val.signal_activate().connect(sigc::mem_fun(*this,&gainctl_t::on_text_changed));
-  polarity.signal_toggled().connect(sigc::mem_fun(*this,&gainctl_t::on_inv_changed));
+  scale.signal_value_changed().connect(
+      sigc::mem_fun(*this, &gainctl_t::on_scale_changed));
+  val.signal_activate().connect(
+      sigc::mem_fun(*this, &gainctl_t::on_text_changed));
+  polarity.signal_toggled().connect(
+      sigc::mem_fun(*this, &gainctl_t::on_inv_changed));
 }
 
 void gainctl_t::update()
@@ -360,8 +353,9 @@ void gainctl_t::set_src(TASCAR::Scene::audio_port_t* ap)
 void gainctl_t::on_scale_changed()
 {
   char ctmp[256];
+  ctmp[255] = 0;
   float v(scale.get_value());
-  sprintf(ctmp,"%1.1f",v);
+  snprintf(ctmp, 255, "%1.1f", v);
   val.set_text(ctmp);
 }
 
@@ -376,17 +370,18 @@ void gainctl_t::on_text_changed()
   std::string txt(val.get_text());
   char* endp(NULL);
   float v(0);
-  v = strtof(txt.c_str(),&endp);
-  if( endp != txt.c_str() ){
+  v = strtof(txt.c_str(), &endp);
+  if(endp != txt.c_str()) {
     scale.set_value(v);
   }
 }
 
-bool scene_draw_t::draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p2)
+bool scene_draw_t::draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1,
+                             pos_t p2)
 {
-  if( !(p1.has_infinity() || p2.has_infinity()) ){
-    cr->move_to(p1.x,-p1.y);
-    cr->line_to(p2.x,-p2.y);
+  if(!(p1.has_infinity() || p2.has_infinity())) {
+    cr->move_to(p1.x, -p1.y);
+    cr->line_to(p2.x, -p2.y);
     return true;
   }
   return false;
@@ -394,124 +389,131 @@ bool scene_draw_t::draw_edge(Cairo::RefPtr<Cairo::Context> cr, pos_t p1, pos_t p
 
 source_ctl_t::~source_ctl_t()
 {
-  for(uint32_t k=0;k<meters.size();k++)
+  for(uint32_t k = 0; k < meters.size(); k++)
     delete meters[k];
-  for(uint32_t k=0;k<gainctl.size();k++)
+  for(uint32_t k = 0; k < gainctl.size(); k++)
     delete gainctl[k];
 }
 
-source_ctl_t::source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
-  : mute("M"),solo("S"),client_addr_(client_addr),name_(r->get_name()),scene_(s),route_(r),use_osc(true)
+source_ctl_t::source_ctl_t(lo_address client_addr, TASCAR::Scene::scene_t* s,
+                           TASCAR::Scene::route_t* r)
+    : mute("M"), solo("S"), client_addr_(client_addr), name_(r->get_name()),
+      scene_(s), route_(r), use_osc(true)
 {
   setup();
 }
 
 source_ctl_t::source_ctl_t(TASCAR::Scene::scene_t* s, TASCAR::Scene::route_t* r)
-  : mute("M"),solo("S"),name_(r->get_name()),scene_(s),route_(r),use_osc(false)
+    : mute("M"), solo("S"), name_(r->get_name()), scene_(s), route_(r),
+      use_osc(false)
 {
   setup();
 }
 
 void source_ctl_t::setup()
 {
-  uint32_t maxchannels(TASCAR::config("tascar.gui.leveldisplay.maxchannels",2));
-  ebox.add( box );
+  uint32_t maxchannels(
+      TASCAR::config("tascar.gui.leveldisplay.maxchannels", 2));
+  ebox.add(box);
   label.set_text(route_->get_name());
-  if( dynamic_cast<TASCAR::Scene::face_object_t*>(route_))
+  if(dynamic_cast<TASCAR::Scene::face_object_t*>(route_))
     tlabel.set_text("face");
-  else if( dynamic_cast<TASCAR::Scene::face_group_t*>(route_))
+  else if(dynamic_cast<TASCAR::Scene::face_group_t*>(route_))
     tlabel.set_text("fgrp");
-  else if( dynamic_cast<TASCAR::Scene::obstacle_group_t*>(route_))
+  else if(dynamic_cast<TASCAR::Scene::obstacle_group_t*>(route_))
     tlabel.set_text("obstacle");
-  else if( dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
+  else if(dynamic_cast<TASCAR::Scene::src_object_t*>(route_))
     tlabel.set_text("src");
-  else if( dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(route_))
+  else if(dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(route_))
     tlabel.set_text("dif");
-  else if( dynamic_cast<TASCAR::Scene::diffuse_reverb_t*>(route_))
+  else if(dynamic_cast<TASCAR::Scene::diffuse_reverb_t*>(route_))
     tlabel.set_text("rvrb");
-  else if( dynamic_cast<TASCAR::Scene::receiver_obj_t*>(route_))
+  else if(dynamic_cast<TASCAR::Scene::receiver_obj_t*>(route_))
     tlabel.set_text("rcvr");
-  else 
+  else
     tlabel.set_text("route");
-  TASCAR::Scene::audio_port_t* ap(dynamic_cast<TASCAR::Scene::audio_port_t*>(route_));
-  if( ap ){
+  TASCAR::Scene::audio_port_t* ap(
+      dynamic_cast<TASCAR::Scene::audio_port_t*>(route_));
+  if(ap) {
     gainctl.push_back(new gainctl_t());
-    gainctl.back()->set_src( ap );
+    gainctl.back()->set_src(ap);
     meterbox.add(*(gainctl.back()));
-  }else{
-    TASCAR::Scene::src_object_t* so(dynamic_cast<TASCAR::Scene::src_object_t*>(route_));
-    if( so ){
-      for( uint32_t k=0;k<so->sound.size();++k){
+  } else {
+    TASCAR::Scene::src_object_t* so(
+        dynamic_cast<TASCAR::Scene::src_object_t*>(route_));
+    if(so) {
+      for(uint32_t k = 0; k < so->sound.size(); ++k) {
         gainctl.push_back(new gainctl_t());
-        gainctl.back()->set_src( so->sound[k] );
+        gainctl.back()->set_src(so->sound[k]);
         meterbox.add(*(gainctl.back()));
       }
     }
   }
-  box.pack_start( tlabel, Gtk::PACK_SHRINK );
-  box.pack_start( label, Gtk::PACK_SHRINK );//EXPAND_PADDING );
-  msbox.pack_start( mute, Gtk::PACK_EXPAND_WIDGET );
-  msbox.pack_start( solo, Gtk::PACK_EXPAND_WIDGET );
-  box.pack_start( msbox, Gtk::PACK_SHRINK );
+  box.pack_start(tlabel, Gtk::PACK_SHRINK);
+  box.pack_start(label, Gtk::PACK_SHRINK); // EXPAND_PADDING );
+  msbox.pack_start(mute, Gtk::PACK_EXPAND_WIDGET);
+  msbox.pack_start(solo, Gtk::PACK_EXPAND_WIDGET);
+  box.pack_start(msbox, Gtk::PACK_SHRINK);
   mute.set_active(route_->get_mute());
   solo.set_active(route_->get_solo());
 #ifdef GTKMM30
   Gdk::RGBA col_yellow("f4e83a");
-  col_yellow.set_rgba(244.0/256,232.0/256,58.0/256,0.5);
+  col_yellow.set_rgba(244.0 / 256, 232.0 / 256, 58.0 / 256, 0.5);
   Gdk::RGBA col;
-  if( TASCAR::Scene::object_t* o=dynamic_cast<TASCAR::Scene::object_t*>(route_) ){
+  if(TASCAR::Scene::object_t* o =
+         dynamic_cast<TASCAR::Scene::object_t*>(route_)) {
     TASCAR::Scene::rgb_color_t c(o->color);
-    col.set_rgba(c.r,c.g,c.b,0.3);
+    col.set_rgba(c.r, c.g, c.b, 0.3);
     ebox.override_background_color(col);
   }
 #else
   Gdk::Color col;
-  col.set_rgb(244*256,232*256,58*256);
-  mute.modify_bg(Gtk::STATE_ACTIVE,col);
-  mute.modify_bg(Gtk::STATE_PRELIGHT,col);
-  mute.modify_bg(Gtk::STATE_SELECTED,col);
-  col.set_rgb(244*256,30*256,30*256);
-  solo.modify_bg(Gtk::STATE_ACTIVE,col);
-  solo.modify_bg(Gtk::STATE_PRELIGHT,col);
-  if( object_t* o=dynamic_cast<object_t*>(r) ){
+  col.set_rgb(244 * 256, 232 * 256, 58 * 256);
+  mute.modify_bg(Gtk::STATE_ACTIVE, col);
+  mute.modify_bg(Gtk::STATE_PRELIGHT, col);
+  mute.modify_bg(Gtk::STATE_SELECTED, col);
+  col.set_rgb(244 * 256, 30 * 256, 30 * 256);
+  solo.modify_bg(Gtk::STATE_ACTIVE, col);
+  solo.modify_bg(Gtk::STATE_PRELIGHT, col);
+  if(object_t* o = dynamic_cast<object_t*>(r)) {
     rgb_color_t c(o->color);
-    col.set_rgb_p(0.5+0.3*c.r,0.5+0.3*c.g,0.5+0.3*c.b);
-    ebox.modify_bg(Gtk::STATE_NORMAL,col);
+    col.set_rgb_p(0.5 + 0.3 * c.r, 0.5 + 0.3 * c.g, 0.5 + 0.3 * c.b);
+    ebox.modify_bg(Gtk::STATE_NORMAL, col);
   }
 #endif
   frame.add(ebox);
-  pack_start( frame, Gtk::PACK_SHRINK );
-  pack_start( meterbox, Gtk::PACK_SHRINK );
-  pack_start( playertimeline, Gtk::PACK_EXPAND_WIDGET );
-  for(uint32_t k=0;k<route_->metercnt();k++){
+  pack_start(frame, Gtk::PACK_SHRINK);
+  pack_start(meterbox, Gtk::PACK_SHRINK);
+  pack_start(playertimeline, Gtk::PACK_EXPAND_WIDGET);
+  for(uint32_t k = 0; k < route_->metercnt(); k++) {
     meters.push_back(new splmeter_t());
     meterbox.add(*(meters.back()));
-    if( route_->metercnt() > maxchannels )
-      meters.back()->set_narrow(true, false );
+    if(route_->metercnt() > maxchannels)
+      meters.back()->set_narrow(true, false);
   }
-  if( route_->metercnt() > maxchannels ){
+  if(route_->metercnt() > maxchannels) {
     meters.push_back(new splmeter_t());
     meterbox.add(*(meters.back()));
-    meters.back()->set_narrow(true, true );
+    meters.back()->set_narrow(true, true);
   }
-  mute.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_mute));
-  solo.signal_clicked().connect(sigc::mem_fun(*this,&source_ctl_t::on_solo));
+  mute.signal_clicked().connect(sigc::mem_fun(*this, &source_ctl_t::on_mute));
+  solo.signal_clicked().connect(sigc::mem_fun(*this, &source_ctl_t::on_solo));
 }
 
 void source_ctl_t::update()
 {
   // update level meters:
-  for(uint32_t k=0;k<route_->metercnt();k++){
-    meters[k]->update_levelmeter( route_->get_meter(k), route_->targetlevel );
-    if( scene_)
-      meters[k]->set_active( scene_->active );
+  for(uint32_t k = 0; k < route_->metercnt(); k++) {
+    meters[k]->update_levelmeter(route_->get_meter(k), route_->targetlevel);
+    if(scene_)
+      meters[k]->set_active(scene_->active);
     else
-      meters[k]->set_active( true );
+      meters[k]->set_active(true);
   }
-  if( route_->metercnt() < meters.size() )
-    meters.back()->set_weight( route_->get_meter(0).get_weight() );
+  if(route_->metercnt() < meters.size())
+    meters.back()->set_weight(route_->get_meter(0).get_weight());
   // update gain controllers:
-  for(uint32_t k=0;k<gainctl.size();k++)
+  for(uint32_t k = 0; k < gainctl.size(); k++)
     gainctl[k]->update();
   // update mute/solo controls:
   mute.set_active(route_->get_mute());
@@ -520,51 +522,53 @@ void source_ctl_t::update()
 
 void source_ctl_t::invalidate_win()
 {
-  for(uint32_t k=0;k<meters.size();k++)
+  for(uint32_t k = 0; k < meters.size(); k++)
     meters[k]->invalidate_win();
 }
 
 void source_ctl_t::on_mute()
 {
   bool m(mute.get_active());
-  if( use_osc ){
-    std::string path("/"+scene_->name+"/"+name_+"/mute");
-    lo_send(client_addr_,path.c_str(),"i",m);
-  }else{
+  if(use_osc) {
+    std::string path("/" + scene_->name + "/" + name_ + "/mute");
+    lo_send(client_addr_, path.c_str(), "i", m);
+  } else {
     route_->set_mute(m);
   }
 }
 
-void source_ctl_t::set_levelmeter_mode( dameter_t::mode_t mode )
+void source_ctl_t::set_levelmeter_mode(dameter_t::mode_t mode)
 {
-  for(std::vector<splmeter_t*>::iterator it=meters.begin();it!=meters.end();++it)
-    (*it)->set_mode( mode );
+  for(std::vector<splmeter_t*>::iterator it = meters.begin();
+      it != meters.end(); ++it)
+    (*it)->set_mode(mode);
 }
 
-void source_ctl_t::set_levelmeter_weight( TASCAR::levelmeter::weight_t w )
+void source_ctl_t::set_levelmeter_weight(TASCAR::levelmeter::weight_t w)
 {
-  route_->set_meterweight( w );
+  route_->set_meterweight(w);
 }
 
-void source_ctl_t::set_levelmeter_range( float vmin, float range )
+void source_ctl_t::set_levelmeter_range(float vmin, float range)
 {
-  for(std::vector<splmeter_t*>::iterator it=meters.begin();it!=meters.end();++it)
-    (*it)->set_min_and_range( vmin, range );
+  for(std::vector<splmeter_t*>::iterator it = meters.begin();
+      it != meters.end(); ++it)
+    (*it)->set_min_and_range(vmin, range);
 }
 
 void source_ctl_t::on_solo()
 {
   bool m(solo.get_active());
-  if( use_osc ){
-    std::string path("/"+scene_->name+"/"+name_+"/solo");
-    lo_send(client_addr_,path.c_str(),"i",m);
-  }else{
-    route_->set_solo(m,scene_->anysolo);
+  if(use_osc) {
+    std::string path("/" + scene_->name + "/" + name_ + "/solo");
+    lo_send(client_addr_, path.c_str(), "i", m);
+  } else {
+    route_->set_solo(m, scene_->anysolo);
   }
 }
 
 source_panel_t::source_panel_t(lo_address client_addr)
-  : client_addr_(client_addr),use_osc(true)
+    : client_addr_(client_addr), use_osc(true)
 {
   add(box);
 }
@@ -578,104 +582,108 @@ source_panel_t::source_panel_t(BaseObjectType* cobject,
 
 void source_panel_t::update()
 {
-  for( unsigned int k=0;k<vbuttons.size();k++){
+  for(unsigned int k = 0; k < vbuttons.size(); k++) {
     vbuttons[k]->update();
   }
 }
 
 void source_panel_t::invalidate_win()
 {
-  for( unsigned int k=0;k<vbuttons.size();k++){
+  for(unsigned int k = 0; k < vbuttons.size(); k++) {
     vbuttons[k]->invalidate_win();
   }
 }
 
-void source_panel_t::set_scene( TASCAR::Scene::scene_t* s, TASCAR::session_t* session )
+void source_panel_t::set_scene(TASCAR::Scene::scene_t* s,
+                               TASCAR::session_t* session)
 {
-  for( unsigned int k=0;k<vbuttons.size();k++){
+  for(unsigned int k = 0; k < vbuttons.size(); k++) {
     box.remove(*(vbuttons[k]));
     delete vbuttons[k];
   }
   vbuttons.clear();
-  if( s ){
-    //std::vector<TASCAR::Scene::object_t*> obj(s->get_objects());
-    for(std::vector<TASCAR::Scene::object_t*>::iterator it=s->all_objects.begin();it!=s->all_objects.end();++it){
-      if( use_osc )
-        vbuttons.push_back(new source_ctl_t(client_addr_,s,*it));
+  if(s) {
+    // std::vector<TASCAR::Scene::object_t*> obj(s->get_objects());
+    for(std::vector<TASCAR::Scene::object_t*>::iterator it =
+            s->all_objects.begin();
+        it != s->all_objects.end(); ++it) {
+      if(use_osc)
+        vbuttons.push_back(new source_ctl_t(client_addr_, s, *it));
       else
-        vbuttons.push_back(new source_ctl_t(s,*it));
+        vbuttons.push_back(new source_ctl_t(s, *it));
     }
   }
-  if( session ){
-    for(std::vector<TASCAR::module_t*>::iterator it=session->modules.begin();
-        it!= session->modules.end();++it){
-      TASCAR::Scene::route_t* rp(dynamic_cast<TASCAR::Scene::route_t*>((*it)->libdata));
-      if( rp ){
-        if( use_osc )
-          vbuttons.push_back(new source_ctl_t(client_addr_,s,rp));
+  if(session) {
+    for(std::vector<TASCAR::module_t*>::iterator it = session->modules.begin();
+        it != session->modules.end(); ++it) {
+      TASCAR::Scene::route_t* rp(
+          dynamic_cast<TASCAR::Scene::route_t*>((*it)->libdata));
+      if(rp) {
+        if(use_osc)
+          vbuttons.push_back(new source_ctl_t(client_addr_, s, rp));
         else
-          vbuttons.push_back(new source_ctl_t(s,rp));
+          vbuttons.push_back(new source_ctl_t(s, rp));
       }
     }
-  }    
+  }
 
-  for( unsigned int k=0;k<vbuttons.size();k++){
+  for(unsigned int k = 0; k < vbuttons.size(); k++) {
     box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
   }
   show_all();
 }
 
-#define TEST_MODE(x) if( mode==#x ) lmode = dameter_t::x
-void source_panel_t::set_levelmeter_mode( const std::string& mode )
+#define TEST_MODE(x)                                                           \
+  if(mode == #x)                                                               \
+  lmode = dameter_t::x
+void source_panel_t::set_levelmeter_mode(const std::string& mode)
 {
   lmode = dameter_t::rmspeak;
   TEST_MODE(peak);
   TEST_MODE(rms);
   TEST_MODE(percentile);
-  for(std::vector<source_ctl_t*>::iterator it=vbuttons.begin();it!=vbuttons.end();++it)
-    (*it)->set_levelmeter_mode( lmode );
+  for(std::vector<source_ctl_t*>::iterator it = vbuttons.begin();
+      it != vbuttons.end(); ++it)
+    (*it)->set_levelmeter_mode(lmode);
 }
 
-void source_panel_t::set_levelmeter_range( float vmin, float range )
+void source_panel_t::set_levelmeter_range(float vmin, float range)
 {
-  for(std::vector<source_ctl_t*>::iterator it=vbuttons.begin();it!=vbuttons.end();++it)
-    (*it)->set_levelmeter_range( vmin, range );
+  for(std::vector<source_ctl_t*>::iterator it = vbuttons.begin();
+      it != vbuttons.end(); ++it)
+    (*it)->set_levelmeter_range(vmin, range);
 }
 
-void source_panel_t::set_levelmeter_weight( TASCAR::levelmeter::weight_t w )
+void source_panel_t::set_levelmeter_weight(TASCAR::levelmeter::weight_t w)
 {
-  for(std::vector<source_ctl_t*>::iterator it=vbuttons.begin();it!=vbuttons.end();++it)
-    (*it)->set_levelmeter_weight( w );
+  for(std::vector<source_ctl_t*>::iterator it = vbuttons.begin();
+      it != vbuttons.end(); ++it)
+    (*it)->set_levelmeter_weight(w);
 }
 
 scene_draw_t::scene_draw_t()
-  : scene_(NULL),
-    time(0),
-    selection(NULL),
-    markersize(0.02),
-    blink(false),
-    b_print_labels(true),
-    b_acoustic_model(false)
+    : scene_(NULL), time(0), selection(NULL), markersize(0.02), blink(false),
+      b_print_labels(true), b_acoustic_model(false)
 {
-  pthread_mutex_init( &mtx, NULL );
+  pthread_mutex_init(&mtx, NULL);
 }
 
 scene_draw_t::~scene_draw_t()
 {
-  pthread_mutex_trylock( &mtx );
-  pthread_mutex_unlock( &mtx );
-  pthread_mutex_destroy( &mtx );
+  pthread_mutex_trylock(&mtx);
+  pthread_mutex_unlock(&mtx);
+  pthread_mutex_destroy(&mtx);
 }
 
-void scene_draw_t::set_scene( TASCAR::render_core_t* scene )
+void scene_draw_t::set_scene(TASCAR::render_core_t* scene)
 {
-  pthread_mutex_lock( &mtx );
+  pthread_mutex_lock(&mtx);
   scene_ = scene;
-  if( scene_ )
+  if(scene_)
     view.set_ref(scene_->guicenter);
   else
     view.set_ref(TASCAR::pos_t());
-  pthread_mutex_unlock( &mtx );
+  pthread_mutex_unlock(&mtx);
 }
 
 void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
@@ -685,38 +693,38 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 
 void scene_draw_t::set_viewport(const viewt_t& viewt)
 {
-  if( pthread_mutex_lock( &mtx ) == 0 ){
-    if( scene_ ){
+  if(pthread_mutex_lock(&mtx) == 0) {
+    if(scene_) {
       view.set_ref(scene_->guicenter);
     }
-    switch( viewt ){
-    case xy :
+    switch(viewt) {
+    case xy:
       view.set_perspective(false);
       view.set_euler(zyx_euler_t());
       break;
-    case xz :
+    case xz:
       view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0,0,-TASCAR_PI2));
+      view.set_euler(zyx_euler_t(0, 0, -TASCAR_PI2));
       break;
-    case yz :
+    case yz:
       view.set_perspective(false);
-      view.set_euler(zyx_euler_t(TASCAR_PI2,0,-TASCAR_PI2));
+      view.set_euler(zyx_euler_t(TASCAR_PI2, 0, -TASCAR_PI2));
       break;
-    case xyz :
+    case xyz:
       view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0.1*TASCAR_PI,0,-0.45*TASCAR_PI));
+      view.set_euler(zyx_euler_t(0.1 * TASCAR_PI, 0, -0.45 * TASCAR_PI));
       break;
-    case p :
+    case p:
       view.set_perspective(true);
-      if( scene_ ){
-        if( scene_->receivermod_objects.size() ){
+      if(scene_) {
+        if(scene_->receivermod_objects.size()) {
           view.set_ref(scene_->receivermod_objects[0]->get_location());
           view.set_euler(scene_->receivermod_objects[0]->get_orientation());
         }
       }
       break;
     }
-    pthread_mutex_unlock( &mtx );
+    pthread_mutex_unlock(&mtx);
   }
 }
 
@@ -724,98 +732,106 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
 {
   // draw acoustic model:
   cr->save();
-  cr->set_source_rgb(0,0,0);
-  cr->set_line_width( 0.2*markersize );
-  for(std::vector<TASCAR::Acousticmodel::receiver_graph_t*>::iterator irc=scene_->world->receivergraphs.begin();
-      irc!=scene_->world->receivergraphs.end();++irc)
-    for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam=(*irc)->acoustic_model.begin();
-        iam != (*irc)->acoustic_model.end();++iam){
-    if( (*iam)->receiver_->volumetric.is_null() && (*iam)->src_->active && 
-        (*iam)->receiver_->active && 
-        ((*iam)->src_->ismmin <= (*iam)->ismorder) && 
-        ((*iam)->src_->ismmax >= (*iam)->ismorder) &&
-        ((*iam)->receiver_->ismmin <= (*iam)->ismorder) && 
-        ((*iam)->receiver_->ismmax >= (*iam)->ismorder) ){
-      pos_t psrc(view((*iam)->position));
-      pos_t prec(view((*iam)->receiver_->position));
-      cr->save();
-      float gain_color(std::min(1.0f,std::max(0.0f,(*iam)->get_gain())));
-      if( gain_color < EPS )
-        // sources with zero gain but active are shown in red:
-        cr->set_source_rgba(1, 0, 0, 0.5 );
-      else
-        // regular sources are gray:
-        cr->set_source_rgba( 0,0,0,0.1+0.9*gain_color);
-      // mark sources as circle with cross:
-      cr->arc(psrc.x, -psrc.y, markersize, 0, TASCAR_2PI );
-      cr->move_to(psrc.x-0.7*markersize,-psrc.y+0.7*markersize);
-      cr->line_to(psrc.x+0.7*markersize,-psrc.y-0.7*markersize);
-      cr->move_to(psrc.x-0.7*markersize,-psrc.y-0.7*markersize);
-      cr->line_to(psrc.x+0.7*markersize,-psrc.y+0.7*markersize);
-      cr->stroke();
-      // draw source traces:
-      if( gain_color > EPS ){
-        cr->set_source_rgba( 0,0.6,0,0.1+0.9*gain_color);
-        draw_edge(cr,psrc,prec);
-        cr->stroke();
-      }
-      // image source or primary source:
-      if( (*iam)->ismorder > 0 ){
-        // image source:
+  cr->set_source_rgb(0, 0, 0);
+  cr->set_line_width(0.2 * markersize);
+  for(std::vector<TASCAR::Acousticmodel::receiver_graph_t*>::iterator irc =
+          scene_->world->receivergraphs.begin();
+      irc != scene_->world->receivergraphs.end(); ++irc)
+    for(std::vector<TASCAR::Acousticmodel::acoustic_model_t*>::iterator iam =
+            (*irc)->acoustic_model.begin();
+        iam != (*irc)->acoustic_model.end(); ++iam) {
+      if((*iam)->receiver_->volumetric.is_null() && (*iam)->src_->active &&
+         (*iam)->receiver_->active &&
+         ((*iam)->src_->ismmin <= (*iam)->ismorder) &&
+         ((*iam)->src_->ismmax >= (*iam)->ismorder) &&
+         ((*iam)->receiver_->ismmin <= (*iam)->ismorder) &&
+         ((*iam)->receiver_->ismmax >= (*iam)->ismorder)) {
+        pos_t psrc(view((*iam)->position));
+        pos_t prec(view((*iam)->receiver_->position));
         cr->save();
-        char ctmp[1000];
-        sprintf(ctmp,"%u",(*iam)->ismorder);
-        if( gain_color < EPS )
+        float gain_color(std::min(1.0f, std::max(0.0f, (*iam)->get_gain())));
+        if(gain_color < EPS)
           // sources with zero gain but active are shown in red:
-          cr->set_source_rgba(1, 0, 0, 0.5 );
+          cr->set_source_rgba(1, 0, 0, 0.5);
         else
           // regular sources are gray:
-          cr->set_source_rgba( 0,0,0,0.1+0.9*gain_color );
-        cr->move_to( psrc.x+1.2*markersize, -psrc.y );
-        cr->show_text( ctmp );
+          cr->set_source_rgba(0, 0, 0, 0.1 + 0.9 * gain_color);
+        // mark sources as circle with cross:
+        cr->arc(psrc.x, -psrc.y, markersize, 0, TASCAR_2PI);
+        cr->move_to(psrc.x - 0.7 * markersize, -psrc.y + 0.7 * markersize);
+        cr->line_to(psrc.x + 0.7 * markersize, -psrc.y - 0.7 * markersize);
+        cr->move_to(psrc.x - 0.7 * markersize, -psrc.y - 0.7 * markersize);
+        cr->line_to(psrc.x + 0.7 * markersize, -psrc.y + 0.7 * markersize);
         cr->stroke();
+        // draw source traces:
+        if(gain_color > EPS) {
+          cr->set_source_rgba(0, 0.6, 0, 0.1 + 0.9 * gain_color);
+          draw_edge(cr, psrc, prec);
+          cr->stroke();
+        }
+        // image source or primary source:
+        if((*iam)->ismorder > 0) {
+          // image source:
+          cr->save();
+          char ctmp[1024];
+          ctmp[1023] = 0;
+          snprintf(ctmp, 1023, "%u", (*iam)->ismorder);
+          if(gain_color < EPS)
+            // sources with zero gain but active are shown in red:
+            cr->set_source_rgba(1, 0, 0, 0.5);
+          else
+            // regular sources are gray:
+            cr->set_source_rgba(0, 0, 0, 0.1 + 0.9 * gain_color);
+          cr->move_to(psrc.x + 1.2 * markersize, -psrc.y);
+          cr->show_text(ctmp);
+          cr->stroke();
+          cr->restore();
+        } else {
+          // primary source:
+          cr->arc(psrc.x, -psrc.y, markersize, 0, TASCAR_2PI);
+          cr->fill();
+        }
         cr->restore();
-      }else{
-        // primary source:
-        cr->arc(psrc.x, -psrc.y, markersize, 0, TASCAR_2PI );
-        cr->fill();
       }
-      cr->restore();
     }
-  }
   cr->restore();
 }
 
 void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
 {
-  if( pthread_mutex_lock( &mtx ) == 0 ){
-    if( scene_ ){
-      if( scene_->guitrackobject )
+  if(pthread_mutex_lock(&mtx) == 0) {
+    if(scene_) {
+      if(scene_->guitrackobject)
         view.set_ref(scene_->guitrackobject->c6dof.position);
-      //std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
-      for(uint32_t k=0;k<scene_->all_objects.size();k++)
-        draw_object(scene_->all_objects[k],cr );
-      if( b_acoustic_model && scene_->world ){
+      // std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
+      for(uint32_t k = 0; k < scene_->all_objects.size(); k++)
+        draw_object(scene_->all_objects[k], cr);
+      if(b_acoustic_model && scene_->world) {
         draw_acousticmodel(cr);
       }
     }
-    pthread_mutex_unlock( &mtx );
+    pthread_mutex_unlock(&mtx);
   }
 }
 
-void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr)
+void scene_draw_t::draw_object(TASCAR::Scene::object_t* obj,
+                               Cairo::RefPtr<Cairo::Context> cr)
 {
-  if( !b_acoustic_model )
-    draw_track(obj,cr,markersize);
-  if( !b_acoustic_model )
-    draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj),cr,markersize);
-  draw_receiver_object(dynamic_cast<TASCAR::Scene::receiver_obj_t*>(obj),cr,markersize);
-  //draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
-  draw_room_src(dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(obj),cr,markersize);
-  draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj),cr,markersize);
-  draw_facegroup(dynamic_cast<TASCAR::Scene::face_group_t*>(obj),cr,markersize);
-  draw_obstaclegroup(dynamic_cast<TASCAR::Scene::obstacle_group_t*>(obj),cr,markersize);
-  draw_mask(dynamic_cast<TASCAR::Scene::mask_object_t*>(obj),cr,markersize);
+  if(!b_acoustic_model)
+    draw_track(obj, cr, markersize);
+  if(!b_acoustic_model)
+    draw_src(dynamic_cast<TASCAR::Scene::src_object_t*>(obj), cr, markersize);
+  draw_receiver_object(dynamic_cast<TASCAR::Scene::receiver_obj_t*>(obj), cr,
+                       markersize);
+  // draw_door_src(dynamic_cast<TASCAR::Scene::src_door_t*>(obj),cr,markersize);
+  draw_room_src(dynamic_cast<TASCAR::Scene::diff_snd_field_obj_t*>(obj), cr,
+                markersize);
+  draw_face(dynamic_cast<TASCAR::Scene::face_object_t*>(obj), cr, markersize);
+  draw_facegroup(dynamic_cast<TASCAR::Scene::face_group_t*>(obj), cr,
+                 markersize);
+  draw_obstaclegroup(dynamic_cast<TASCAR::Scene::obstacle_group_t*>(obj), cr,
+                     markersize);
+  draw_mask(dynamic_cast<TASCAR::Scene::mask_object_t*>(obj), cr, markersize);
 }
 
 void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f,
@@ -848,135 +864,142 @@ void scene_draw_t::ngon_draw_normal(TASCAR::ngon_t* f,
   }
 }
 
-void scene_draw_t::ngon_draw(TASCAR::ngon_t* f, Cairo::RefPtr<Cairo::Context> cr,bool fill, bool area)
+void scene_draw_t::ngon_draw(TASCAR::ngon_t* f,
+                             Cairo::RefPtr<Cairo::Context> cr, bool fill,
+                             bool area)
 {
-  if( f ){
+  if(f) {
     std::vector<pos_t> roomnodes(f->get_verts());
     pos_t center;
-    for(unsigned int k=0;k<roomnodes.size();k++){
+    for(unsigned int k = 0; k < roomnodes.size(); k++) {
       center += roomnodes[k];
       roomnodes[k] = view(roomnodes[k]);
     }
-    center *= 1.0/roomnodes.size();
+    center *= 1.0 / roomnodes.size();
     center = view(center);
     cr->save();
     bool no_inf(true);
-    for(unsigned int k=0;k<roomnodes.size()-1;k++){
-      if( !draw_edge(cr,roomnodes[k],roomnodes[k+1]) )
+    for(unsigned int k = 0; k < roomnodes.size() - 1; k++) {
+      if(!draw_edge(cr, roomnodes[k], roomnodes[k + 1]))
         no_inf = false;
     }
-    draw_edge(cr,roomnodes.back(),roomnodes[0]);
+    draw_edge(cr, roomnodes.back(), roomnodes[0]);
     cr->stroke();
-    if( fill & (no_inf) ){
-      cr->move_to(roomnodes[0].x, -roomnodes[0].y );
-      for(unsigned int k=1;k<roomnodes.size();k++)
-        cr->line_to( roomnodes[k].x, -roomnodes[k].y );
+    if(fill & (no_inf)) {
+      cr->move_to(roomnodes[0].x, -roomnodes[0].y);
+      for(unsigned int k = 1; k < roomnodes.size(); k++)
+        cr->line_to(roomnodes[k].x, -roomnodes[k].y);
       cr->fill();
     }
-    if( area ){
-      char ctmp[1000];
-      sprintf(ctmp,"%g m^2 (%g m)",f->get_area(),f->get_aperture());
-      cr->move_to( center.x, -center.y );
-      cr->show_text( ctmp );
+    if(area) {
+      char ctmp[1024];
+      ctmp[1023] = 0;
+      snprintf(ctmp, 1023, "%g m^2 (%g m)", f->get_area(), f->get_aperture());
+      cr->move_to(center.x, -center.y);
+      cr->show_text(ctmp);
       cr->stroke();
     }
     cr->restore();
   }
 }
 
-void scene_draw_t::draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient, TASCAR::pos_t size,Cairo::RefPtr<Cairo::Context> cr)
+void scene_draw_t::draw_cube(TASCAR::pos_t pos, TASCAR::zyx_euler_t orient,
+                             TASCAR::pos_t size,
+                             Cairo::RefPtr<Cairo::Context> cr)
 {
-  std::vector<pos_t> roomnodes(8,pos_t());
-  roomnodes[0].x -= 0.5*size.x;
-  roomnodes[1].x += 0.5*size.x;
-  roomnodes[2].x += 0.5*size.x;
-  roomnodes[3].x -= 0.5*size.x;
-  roomnodes[4].x -= 0.5*size.x;
-  roomnodes[5].x += 0.5*size.x;
-  roomnodes[6].x += 0.5*size.x;
-  roomnodes[7].x -= 0.5*size.x;
-  roomnodes[0].y -= 0.5*size.y;
-  roomnodes[1].y -= 0.5*size.y;
-  roomnodes[2].y += 0.5*size.y;
-  roomnodes[3].y += 0.5*size.y;
-  roomnodes[4].y -= 0.5*size.y;
-  roomnodes[5].y -= 0.5*size.y;
-  roomnodes[6].y += 0.5*size.y;
-  roomnodes[7].y += 0.5*size.y;
-  roomnodes[0].z -= 0.5*size.z;
-  roomnodes[1].z -= 0.5*size.z;
-  roomnodes[2].z -= 0.5*size.z;
-  roomnodes[3].z -= 0.5*size.z;
-  roomnodes[4].z += 0.5*size.z;
-  roomnodes[5].z += 0.5*size.z;
-  roomnodes[6].z += 0.5*size.z;
-  roomnodes[7].z += 0.5*size.z;
-  for(unsigned int k=0;k<8;k++)
+  std::vector<pos_t> roomnodes(8, pos_t());
+  roomnodes[0].x -= 0.5 * size.x;
+  roomnodes[1].x += 0.5 * size.x;
+  roomnodes[2].x += 0.5 * size.x;
+  roomnodes[3].x -= 0.5 * size.x;
+  roomnodes[4].x -= 0.5 * size.x;
+  roomnodes[5].x += 0.5 * size.x;
+  roomnodes[6].x += 0.5 * size.x;
+  roomnodes[7].x -= 0.5 * size.x;
+  roomnodes[0].y -= 0.5 * size.y;
+  roomnodes[1].y -= 0.5 * size.y;
+  roomnodes[2].y += 0.5 * size.y;
+  roomnodes[3].y += 0.5 * size.y;
+  roomnodes[4].y -= 0.5 * size.y;
+  roomnodes[5].y -= 0.5 * size.y;
+  roomnodes[6].y += 0.5 * size.y;
+  roomnodes[7].y += 0.5 * size.y;
+  roomnodes[0].z -= 0.5 * size.z;
+  roomnodes[1].z -= 0.5 * size.z;
+  roomnodes[2].z -= 0.5 * size.z;
+  roomnodes[3].z -= 0.5 * size.z;
+  roomnodes[4].z += 0.5 * size.z;
+  roomnodes[5].z += 0.5 * size.z;
+  roomnodes[6].z += 0.5 * size.z;
+  roomnodes[7].z += 0.5 * size.z;
+  for(unsigned int k = 0; k < 8; k++)
     roomnodes[k] *= orient;
-  for(unsigned int k=0;k<8;k++)
+  for(unsigned int k = 0; k < 8; k++)
     roomnodes[k] += pos;
-  for(unsigned int k=0;k<8;k++)
+  for(unsigned int k = 0; k < 8; k++)
     roomnodes[k] = view(roomnodes[k]);
   cr->save();
-  draw_edge(cr,roomnodes[0],roomnodes[1]);
-  draw_edge(cr,roomnodes[1],roomnodes[2]);
-  draw_edge(cr,roomnodes[2],roomnodes[3]);
-  draw_edge(cr,roomnodes[3],roomnodes[0]);
-  draw_edge(cr,roomnodes[4],roomnodes[5]);
-  draw_edge(cr,roomnodes[5],roomnodes[6]);
-  draw_edge(cr,roomnodes[6],roomnodes[7]);
-  draw_edge(cr,roomnodes[7],roomnodes[4]);
-  for(unsigned int k=0;k<4;k++){
-    draw_edge(cr,roomnodes[k],roomnodes[k+4]);
+  draw_edge(cr, roomnodes[0], roomnodes[1]);
+  draw_edge(cr, roomnodes[1], roomnodes[2]);
+  draw_edge(cr, roomnodes[2], roomnodes[3]);
+  draw_edge(cr, roomnodes[3], roomnodes[0]);
+  draw_edge(cr, roomnodes[4], roomnodes[5]);
+  draw_edge(cr, roomnodes[5], roomnodes[6]);
+  draw_edge(cr, roomnodes[6], roomnodes[7]);
+  draw_edge(cr, roomnodes[7], roomnodes[4]);
+  for(unsigned int k = 0; k < 4; k++) {
+    draw_edge(cr, roomnodes[k], roomnodes[k + 4]);
   }
   cr->stroke();
   cr->restore();
-  
 }
 
-void scene_draw_t::draw_track(TASCAR::Scene::object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_track(TASCAR::Scene::object_t* obj,
+                              Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  if( obj && obj->isactive(time)){
+  if(obj && obj->isactive(time)) {
     bool solo(obj->get_solo());
     pos_t p0;
     cr->save();
-    if( solo && blink ){
-      cr->set_source_rgba(1,0,0,0.5);
-      cr->set_line_width( 1.2*msize );
-      for( TASCAR::track_t::const_iterator it=obj->location.begin();it!=obj->location.end();++it){
+    if(solo && blink) {
+      cr->set_source_rgba(1, 0, 0, 0.5);
+      cr->set_line_width(1.2 * msize);
+      for(TASCAR::track_t::const_iterator it = obj->location.begin();
+          it != obj->location.end(); ++it) {
         pos_t p(view(it->second));
-        if( it != obj->location.begin() )
-          draw_edge( cr, p0,p );
+        if(it != obj->location.begin())
+          draw_edge(cr, p0, p);
         p0 = p;
       }
       cr->stroke();
     }
-    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b );
-    if( solo && blink )
-      cr->set_line_width( 0.3*msize );
+    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b);
+    if(solo && blink)
+      cr->set_line_width(0.3 * msize);
     else
-      cr->set_line_width( 0.1*msize );
-    for( TASCAR::track_t::const_iterator it=obj->location.begin();it!=obj->location.end();++it){
+      cr->set_line_width(0.1 * msize);
+    for(TASCAR::track_t::const_iterator it = obj->location.begin();
+        it != obj->location.end(); ++it) {
       pos_t p(view(it->second));
-      if( it != obj->location.begin() )
-        draw_edge( cr, p0,p );
+      if(it != obj->location.begin())
+        draw_edge(cr, p0, p);
       p0 = p;
     }
     cr->stroke();
     // draw origin and local position:
     p0 = obj->c6dof_nodelta.position;
-    p0 = view( p0 );
+    p0 = view(p0);
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-    if( !p0.has_infinity() ){
-      cr->arc(p0.x, -p0.y, 0.8*msize, 0, TASCAR_2PI );
+    if(!p0.has_infinity()) {
+      cr->arc(p0.x, -p0.y, 0.8 * msize, 0, TASCAR_2PI);
       cr->fill();
     }
     std::vector<double> dash(2);
     dash[0] = msize;
     dash[1] = msize;
-    cr->set_dash(dash,0);
-    pos_t p1( view( obj->c6dof.position) );
-    draw_edge( cr, p0, p1 );
+    cr->set_dash(dash, 0);
+    pos_t p1(view(obj->c6dof.position));
+    draw_edge(cr, p0, p1);
     cr->stroke();
     cr->restore();
   }
@@ -1320,38 +1343,39 @@ void scene_draw_t::draw_receiver_object(TASCAR::Scene::receiver_obj_t* obj,
   }
 }
 
-void scene_draw_t::draw_room_src(TASCAR::Scene::diff_snd_field_obj_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_room_src(TASCAR::Scene::diff_snd_field_obj_t* obj,
+                                 Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  if( obj ){
+  if(obj) {
     bool solo(obj->get_solo());
     pos_t p(obj->get_location());
     zyx_euler_t o(obj->get_orientation());
     cr->save();
-    if( obj == selection ){
-      cr->set_line_width( 2*msize );
+    if(obj == selection) {
+      cr->set_line_width(2 * msize);
       cr->set_source_rgba(1, 0.7, 0, 0.5);
-      draw_cube(p,o,obj->size,cr);
+      draw_cube(p, o, obj->size, cr);
     }
-    if( solo && blink )
-      cr->set_line_width( 0.6*msize );
+    if(solo && blink)
+      cr->set_line_width(0.6 * msize);
     else
-      cr->set_line_width( 0.1*msize );
-    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b );
-    draw_cube(p,o,obj->size,cr);
+      cr->set_line_width(0.1 * msize);
+    cr->set_source_rgb(obj->color.r, obj->color.g, obj->color.b);
+    draw_cube(p, o, obj->size, cr);
     std::vector<double> dash(2);
     dash[0] = msize;
     dash[1] = msize;
-    cr->set_dash(dash,0);
-    pos_t falloff(obj->falloff,obj->falloff,obj->falloff);
+    cr->set_dash(dash, 0);
+    pos_t falloff(obj->falloff, obj->falloff, obj->falloff);
     falloff *= 2.0;
     falloff += obj->size;
-    draw_cube(p,o,falloff,cr);
+    draw_cube(p, o, falloff, cr);
     p = view(p);
-    if( b_print_labels ){
-      cr->set_source_rgb(0, 0, 0 );
-      if( p.z != std::numeric_limits<double>::infinity()){
-        cr->move_to( p.x, -p.y );
-        cr->show_text( obj->get_name().c_str() );
+    if(b_print_labels) {
+      cr->set_source_rgb(0, 0, 0);
+      if(p.z != std::numeric_limits<double>::infinity()) {
+        cr->move_to(p.x, -p.y);
+        cr->show_text(obj->get_name().c_str());
         cr->stroke();
       }
     }
@@ -1578,35 +1602,42 @@ void scene_draw_t::draw_obstaclegroup(TASCAR::Scene::obstacle_group_t* face,
   }
 }
 
-void scene_draw_t::draw_mask(TASCAR::Scene::mask_object_t* obj,Cairo::RefPtr<Cairo::Context> cr, double msize)
+void scene_draw_t::draw_mask(TASCAR::Scene::mask_object_t* obj,
+                             Cairo::RefPtr<Cairo::Context> cr, double msize)
 {
-  if( obj ){
-    if( view.get_perspective() )
+  if(obj) {
+    if(view.get_perspective())
       return;
     msize *= 1.5;
     cr->save();
-    cr->set_line_width( 0.2*msize );
+    cr->set_line_width(0.2 * msize);
     cr->set_source_rgba(obj->color.r, obj->color.g, obj->color.b, 0.6);
-    if( obj->mask_inner ){
-      draw_cube(obj->center,obj->shoebox_t::orientation,obj->xmlsize+pos_t(2*obj->xmlfalloff,2*obj->xmlfalloff,2*obj->xmlfalloff),cr);
+    if(obj->mask_inner) {
+      draw_cube(obj->center, obj->shoebox_t::orientation,
+                obj->xmlsize + pos_t(2 * obj->xmlfalloff, 2 * obj->xmlfalloff,
+                                     2 * obj->xmlfalloff),
+                cr);
       std::vector<double> dash(2);
       dash[0] = msize;
       dash[1] = msize;
-      cr->set_dash(dash,0);
-      draw_cube(obj->center,obj->shoebox_t::orientation,obj->xmlsize,cr);
+      cr->set_dash(dash, 0);
+      draw_cube(obj->center, obj->shoebox_t::orientation, obj->xmlsize, cr);
       dash[0] = 1.0;
       dash[1] = 0.0;
-      cr->set_dash(dash,0);
-    }else{
-      draw_cube(obj->center,obj->shoebox_t::orientation,obj->xmlsize,cr);
+      cr->set_dash(dash, 0);
+    } else {
+      draw_cube(obj->center, obj->shoebox_t::orientation, obj->xmlsize, cr);
       std::vector<double> dash(2);
       dash[0] = msize;
       dash[1] = msize;
-      cr->set_dash(dash,0);
-      draw_cube(obj->center,obj->shoebox_t::orientation,obj->xmlsize+pos_t(2*obj->xmlfalloff,2*obj->xmlfalloff,2*obj->xmlfalloff),cr);
+      cr->set_dash(dash, 0);
+      draw_cube(obj->center, obj->shoebox_t::orientation,
+                obj->xmlsize + pos_t(2 * obj->xmlfalloff, 2 * obj->xmlfalloff,
+                                     2 * obj->xmlfalloff),
+                cr);
       dash[0] = 1.0;
       dash[1] = 0.0;
-      cr->set_dash(dash,0);
+      cr->set_dash(dash, 0);
     }
     cr->restore();
   }

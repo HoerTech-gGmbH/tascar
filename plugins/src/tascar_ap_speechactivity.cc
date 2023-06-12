@@ -20,17 +20,19 @@
  */
 
 #include "audioplugin.h"
+#include "errorhandling.h"
 #include <lo/lo.h>
 #include <lsl_cpp.h>
-#include "errorhandling.h"
 
 class speechactivity_t : public TASCAR::audioplugin_base_t {
 public:
-  speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
+  speechactivity_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void configure();
   void release();
   ~speechactivity_t();
+
 private:
   lo_address lo_addr;
   lsl::stream_outlet* lsl_outlet;
@@ -48,22 +50,18 @@ private:
   std::vector<int32_t> oldonset;
 };
 
-speechactivity_t::speechactivity_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    tauenv(1),
-    tauonset(1),
-    threshold(0.0056234),
-    url("osc.udp://localhost:9999/"),
-    path( "/"+get_fullname() ),
-    transitionsonly(false)
+speechactivity_t::speechactivity_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), tauenv(1), tauonset(1), threshold(0.0056234),
+      url("osc.udp://localhost:9999/"), path("/" + get_fullname()),
+      transitionsonly(false)
 {
-  GET_ATTRIBUTE(tauenv,"s","Envelope tracking time constant");
-  GET_ATTRIBUTE(tauonset,"s","Onset detection time constant");
-  GET_ATTRIBUTE_DBSPL(threshold,"Envelope threshold");
-  GET_ATTRIBUTE(url,"","OSC destination URL");
-  GET_ATTRIBUTE(path,"","OSC destination path");
-  GET_ATTRIBUTE_BOOL(transitionsonly,"Send only when a transition occurs");
-  if( url.empty() )
+  GET_ATTRIBUTE(tauenv, "s", "Envelope tracking time constant");
+  GET_ATTRIBUTE(tauonset, "s", "Onset detection time constant");
+  GET_ATTRIBUTE_DBSPL(threshold, "Envelope threshold");
+  GET_ATTRIBUTE(url, "", "OSC destination URL");
+  GET_ATTRIBUTE(path, "", "OSC destination path");
+  GET_ATTRIBUTE_BOOL(transitionsonly, "Send only when a transition occurs");
+  if(url.empty())
     url = "osc.udp://localhost:9999/";
 }
 
@@ -89,9 +87,7 @@ void speechactivity_t::release()
   lo_address_free(lo_addr);
 }
 
-speechactivity_t::~speechactivity_t()
-{
-}
+speechactivity_t::~speechactivity_t() {}
 
 void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                                   const TASCAR::pos_t&,
@@ -121,7 +117,8 @@ void speechactivity_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   if((!transitionsonly) || transition) {
     for(uint32_t ch = 0; ch < chunk.size(); ++ch) {
       char ctmp[1024];
-      sprintf(ctmp, "%s%d", path.c_str(), ch);
+      ctmp[1023] = 0;
+      snprintf(ctmp, 1023, "%s%d", path.c_str(), ch);
       lo_send(lo_addr, ctmp, "i", onset[ch]);
     }
     lsl_outlet->push_sample(onset);

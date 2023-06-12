@@ -81,10 +81,9 @@ hoa2d_t::~hoa2d_t() {}
 void hoa2d_t::add_variables(TASCAR::osc_server_t* srv)
 {
   TASCAR::receivermod_base_t::add_variables(srv);
-  srv->add_float("/rho0", &rho0,"[0,2]","Reference radius in m");
-  srv->add_float("/rhoc", &rhoc,"[0,2]","Centre radius in m");
+  srv->add_float("/rho0", &rho0, "[0,2]", "Reference radius in m");
+  srv->add_float("/rhoc", &rhoc, "[0,2]", "Centre radius in m");
 }
-
 
 void hoa2d_t::configure()
 {
@@ -98,6 +97,7 @@ void hoa2d_t::configure()
   for(uint32_t kch = 0; kch < n_channels; ++kch) {
     uint32_t ch = kch;
     char ctmp[1024];
+    ctmp[1023] = 0;
     char ctmpa[2];
     ctmpa[1] = 0;
     ctmpa[0] = 0;
@@ -107,7 +107,7 @@ void hoa2d_t::configure()
     }
     uint32_t o((ch + 1) / 2);
     int32_t s(o * (2 * ((ch + 1) % 2) - 1));
-    sprintf(ctmp, ".%s%d_%d", ctmpa, o, s);
+    snprintf(ctmp, 1023, ".%s%d_%d", ctmpa, o, s);
     labels.push_back(ctmp);
   }
   // add extra centre speaker channel:
@@ -131,7 +131,7 @@ void hoa2d_t::add_pointsource(const TASCAR::pos_t& prel, double,
   auto pnorm = prel.normal();
   pnorm.z = 0.0;
   float gain_xy = pnorm.norm();
-  float gain_z = (1.0f-gain_xy) * sqrtf(order) + gain_xy;
+  float gain_z = (1.0f - gain_xy) * sqrtf(order) + gain_xy;
   float az(-prel.azim());
   float rho(prel.norm());
   float w_centre = std::max(0.0f, -(rho - rhoc) / rhoc);

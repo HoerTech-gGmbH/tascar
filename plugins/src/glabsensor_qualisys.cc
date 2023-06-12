@@ -308,11 +308,12 @@ void qualisys_tracker_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
           // any_visible = true;
           cr->move_to(0.23 * width, y * height);
           char ctmp[256];
-          sprintf(ctmp, "%7.3f %7.3f %7.3f m %7.1f %7.1f %7.1f deg",
-                  it->second->c6dof[0], it->second->c6dof[1],
-                  it->second->c6dof[2], it->second->c6dof[3] * RAD2DEG,
-                  it->second->c6dof[4] * RAD2DEG,
-                  it->second->c6dof[5] * RAD2DEG);
+          ctmp[255] = 0;
+          snprintf(ctmp, 255, "%7.3f %7.3f %7.3f m %7.1f %7.1f %7.1f deg",
+                   it->second->c6dof[0], it->second->c6dof[1],
+                   it->second->c6dof[2], it->second->c6dof[3] * RAD2DEG,
+                   it->second->c6dof[4] * RAD2DEG,
+                   it->second->c6dof[5] * RAD2DEG);
           cr->show_text(ctmp);
           cr->stroke();
           // rotation:

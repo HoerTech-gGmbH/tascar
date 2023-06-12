@@ -32,7 +32,8 @@ static std::string async_file_error("");
 std::string num2str(float num)
 {
   char c_str[64];
-  sprintf(c_str, "%g", num);
+  c_str[63] = 0;
+  snprintf(c_str, 63, "%g", num);
   return c_str;
 }
 

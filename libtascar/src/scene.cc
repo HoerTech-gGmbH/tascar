@@ -187,11 +187,12 @@ std::string src_object_t::next_sound_name() const
       it != sound.end(); ++it)
     names.insert((*it)->get_name());
   char ctmp[1024];
+  ctmp[1023] = 0;
   uint32_t n(0);
-  sprintf(ctmp, "%u", n);
+  snprintf(ctmp, 1023, "%u", n);
   while(names.find(ctmp) != names.end()) {
     ++n;
-    sprintf(ctmp, "%u", n);
+    snprintf(ctmp, 1023, "%u", n);
   }
   return ctmp;
 }
@@ -692,10 +693,11 @@ rgb_color_t::rgb_color_t(const std::string& webc) : r(0), g(0), b(0)
 std::string rgb_color_t::str()
 {
   char ctmp[64];
+  ctmp[63] = 0;
   unsigned int c(((unsigned int)(round(r * 255.0)) << 16) +
                  ((unsigned int)(round(g * 255.0)) << 8) +
                  ((unsigned int)(round(b * 255.0))));
-  sprintf(ctmp, "#%06x", c);
+  snprintf(ctmp, 63, "#%06x", c);
   return ctmp;
 }
 
@@ -937,8 +939,7 @@ void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
       mat.second.validate_attributes(msg);
 }
 
-face_group_t::face_group_t(tsccfg::node_t xmlsrc)
-    : object_t(xmlsrc)
+face_group_t::face_group_t(tsccfg::node_t xmlsrc) : object_t(xmlsrc)
 {
   reflector_t::read_xml(*(dynobject_t*)this);
   dynobject_t::GET_ATTRIBUTE(

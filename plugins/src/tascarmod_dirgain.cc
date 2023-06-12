@@ -18,16 +18,17 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "session.h"
 #include "jackclient.h"
+#include "session.h"
 #include <string.h>
 
 #define SQRT12 0.70710678118654757274f
 
 class dirgain_vars_t : public TASCAR::module_base_t {
 public:
-  dirgain_vars_t( const TASCAR::module_cfg_t& cfg );
+  dirgain_vars_t(const TASCAR::module_cfg_t& cfg);
   ~dirgain_vars_t();
+
 protected:
   std::string id;
   uint32_t channels;
@@ -38,14 +39,9 @@ protected:
   bool active;
 };
 
-dirgain_vars_t::dirgain_vars_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    channels(1),
-    az(0.0),
-    az0(0.0),
-    f6db(1000.0),
-    fmin(60),
-    active(true)
+dirgain_vars_t::dirgain_vars_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), channels(1), az(0.0), az0(0.0), f6db(1000.0),
+      fmin(60), active(true)
 {
   GET_ATTRIBUTE_(id);
   GET_ATTRIBUTE_(channels);
@@ -56,15 +52,15 @@ dirgain_vars_t::dirgain_vars_t( const TASCAR::module_cfg_t& cfg )
   GET_ATTRIBUTE_BOOL_(active);
 }
 
-dirgain_vars_t::~dirgain_vars_t()
-{
-}
+dirgain_vars_t::~dirgain_vars_t() {}
 
 class dirgain_t : public dirgain_vars_t, public jackc_t {
 public:
-  dirgain_t( const TASCAR::module_cfg_t& cfg );
+  dirgain_t(const TASCAR::module_cfg_t& cfg);
   ~dirgain_t();
-  virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&);
+  virtual int process(jack_nframes_t, const std::vector<float*>&,
+                      const std::vector<float*>&);
+
 private:
   std::vector<float> w_;
   std::vector<float> state_;
@@ -72,24 +68,22 @@ private:
   float kazscale;
 };
 
-dirgain_t::dirgain_t( const TASCAR::module_cfg_t& cfg )
-  : dirgain_vars_t( cfg ),
-    jackc_t(id),
-    w_(channels,0.0f),
-    state_(channels,0.0f),
-    dt(1.0/get_fragsize()),
-    kazscale(TASCAR_2PI/channels)
+dirgain_t::dirgain_t(const TASCAR::module_cfg_t& cfg)
+    : dirgain_vars_t(cfg), jackc_t(id), w_(channels, 0.0f),
+      state_(channels, 0.0f), dt(1.0 / get_fragsize()),
+      kazscale(TASCAR_2PI / channels)
 {
-  session->add_double_degree("/"+id+"/az",&az);
-  session->add_double_degree("/"+id+"/az0",&az0);
-  session->add_double("/"+id+"/f6db",&f6db);
-  session->add_double("/"+id+"/fmin",&fmin);
-  session->add_bool("/"+id+"/active",&(dirgain_vars_t::active));
-  for(uint32_t k=0;k<channels;++k){
+  session->add_double_degree("/" + id + "/az", &az);
+  session->add_double_degree("/" + id + "/az0", &az0);
+  session->add_double("/" + id + "/f6db", &f6db);
+  session->add_double("/" + id + "/fmin", &fmin);
+  session->add_bool("/" + id + "/active", &(dirgain_vars_t::active));
+  for(uint32_t k = 0; k < channels; ++k) {
     char ctmp[1024];
-    sprintf(ctmp,"in.%d",k);
+    ctmp[1023] = 0;
+    snprintf(ctmp, 1023, "in.%d", k);
     add_input_port(ctmp);
-    sprintf(ctmp,"out.%d",k);
+    snprintf(ctmp, 1023, "out.%d", k);
     add_output_port(ctmp);
   }
   activate();
@@ -100,26 +94,28 @@ dirgain_t::~dirgain_t()
   deactivate();
 }
 
-int dirgain_t::process(jack_nframes_t n, const std::vector<float*>& sIn, const std::vector<float*>& sOut)
+int dirgain_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
+                       const std::vector<float*>& sOut)
 {
-  if( dirgain_vars_t::active ){
-    double wpow(log(exp(-TASCAR_PI*f6db/srate))/log(0.5));
-    double wmin(exp(-TASCAR_PI*fmin/srate));
-    for(uint32_t ch=0;ch<channels;++ch){
-      double w(pow(0.5-0.5*cos(az-az0-ch*kazscale),wpow));
-      if( w > wmin )
+  if(dirgain_vars_t::active) {
+    double wpow(log(exp(-TASCAR_PI * f6db / srate)) / log(0.5));
+    double wmin(exp(-TASCAR_PI * fmin / srate));
+    for(uint32_t ch = 0; ch < channels; ++ch) {
+      double w(pow(0.5 - 0.5 * cos(az - az0 - ch * kazscale), wpow));
+      if(w > wmin)
         w = wmin;
-      if( !(w > EPSf) )
+      if(!(w > EPSf))
         w = EPSf;
-      float dw((w - w_[ch])*dt);
-      for(uint32_t k=0;k<n;++k){
-        sOut[ch][k] = (state_[ch] = (sIn[ch][k]*(1.0f-w_[ch]) + state_[ch]*w_[ch]));
+      float dw((w - w_[ch]) * dt);
+      for(uint32_t k = 0; k < n; ++k) {
+        sOut[ch][k] =
+            (state_[ch] = (sIn[ch][k] * (1.0f - w_[ch]) + state_[ch] * w_[ch]));
         w_[ch] += dw;
       }
     }
-  }else{
-    for(uint32_t ch=0;ch<channels;++ch){
-      memcpy( sOut[ch], sIn[ch], n*sizeof(float) );
+  } else {
+    for(uint32_t ch = 0; ch < channels; ++ch) {
+      memcpy(sOut[ch], sIn[ch], n * sizeof(float));
     }
   }
   return 0;
@@ -135,4 +131,3 @@ REGISTER_MODULE(dirgain_t);
  * compile-command: "make -C .."
  * End:
  */
-

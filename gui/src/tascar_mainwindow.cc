@@ -303,40 +303,41 @@ bool tascar_window_t::on_timeout_statusbar()
   if(session_mutex.try_lock()) {
     if(pthread_mutex_trylock(&mtx_draw) == 0) {
       char cmp[1024];
+      cmp[1023] = 0;
       if(session && session->is_running()) {
         if((session->scenes.size() > selected_scene) &&
            (session->scenes[selected_scene]->scene_t::active)) {
           TASCAR::scene_render_rt_t* scene(session->scenes[selected_scene]);
           TASCAR::render_profiler_t prof(scene->loadaverage);
           prof.normalize(prof.t_postproc);
-          sprintf(cmp,
-                  "scenes: %zu  point sources: %d/%d  diffuse sound fields: "
-                  "%d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: "
-                  "%1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: "
-                  "%1.1f%%  postproc: %1.1f%%)",
-                  session->scenes.size(), session->get_active_pointsources(),
-                  session->get_total_pointsources(),
-                  session->get_active_diffuse_sound_fields(),
-                  session->get_total_diffuse_sound_fields(),
-                  scene->get_cpu_load(), scene->name.c_str(),
-                  100.0 * scene->loadaverage.t_postproc, 100.0 * prof.t_init,
-                  100.0 * (prof.t_geo - prof.t_init),
-                  100.0 * (prof.t_preproc - prof.t_geo),
-                  100.0 * (prof.t_acoustics - prof.t_preproc),
-                  100.0 * (prof.t_postproc - prof.t_acoustics));
+          snprintf(cmp, 1023,
+                   "scenes: %zu  point sources: %d/%d  diffuse sound fields: "
+                   "%d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: "
+                   "%1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: "
+                   "%1.1f%%  postproc: %1.1f%%)",
+                   session->scenes.size(), session->get_active_pointsources(),
+                   session->get_total_pointsources(),
+                   session->get_active_diffuse_sound_fields(),
+                   session->get_total_diffuse_sound_fields(),
+                   scene->get_cpu_load(), scene->name.c_str(),
+                   100.0 * scene->loadaverage.t_postproc, 100.0 * prof.t_init,
+                   100.0 * (prof.t_geo - prof.t_init),
+                   100.0 * (prof.t_preproc - prof.t_geo),
+                   100.0 * (prof.t_acoustics - prof.t_preproc),
+                   100.0 * (prof.t_postproc - prof.t_acoustics));
         } else {
-          sprintf(cmp,
-                  "scenes: %ld  point sources: %d/%d  diffuse sound fields: "
-                  "%d/%d",
-                  (long int)(session->scenes.size()),
-                  session->get_active_pointsources(),
-                  session->get_total_pointsources(),
-                  session->get_active_diffuse_sound_fields(),
-                  session->get_total_diffuse_sound_fields());
+          snprintf(cmp, 1023,
+                   "scenes: %ld  point sources: %d/%d  diffuse sound fields: "
+                   "%d/%d",
+                   (long int)(session->scenes.size()),
+                   session->get_active_pointsources(),
+                   session->get_total_pointsources(),
+                   session->get_active_diffuse_sound_fields(),
+                   session->get_total_diffuse_sound_fields());
         }
         sessionloaded = true;
       } else {
-        sprintf(cmp, "No session loaded.");
+        snprintf(cmp, 1023, "No session loaded.");
         if(sessionloaded)
           reset_gui();
         sessionloaded = false;
@@ -446,10 +447,10 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           cr->move_to(p_o.x, -p_o.y);
           char ctmp[1024];
           if(scale >= 1000)
-            sprintf(ctmp, "%2.5g km (%2.5g)", 0.001 * scale,
-                    2 * draw.view.scale);
+            snprintf(ctmp, 1023, "%2.5g km (%2.5g)", 0.001 * scale,
+                     2 * draw.view.scale);
           else
-            sprintf(ctmp, "%2.5g m (%2.5g)", scale, 2 * draw.view.scale);
+            snprintf(ctmp, 1023, "%2.5g m (%2.5g)", scale, 2 * draw.view.scale);
           cr->set_source_rgb(0, 0, 0);
           cr->show_text(ctmp);
           cr->set_source_rgb(1, 0, 0);

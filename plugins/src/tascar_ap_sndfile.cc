@@ -183,8 +183,9 @@ void ap_sndfile_t::load_file()
           std::string msg("The sample rate of the sound file \"" + name +
                           "\" differs from the session sample rate:\n");
           char ctmp[1024];
-          sprintf(ctmp, "  file has %d Hz, expected %g Hz",
-                  sndf[0]->get_srate(), f_sample);
+          ctmp[1023] = 0;
+          snprintf(ctmp, 1023, "  file has %d Hz, expected %g Hz",
+                   sndf[0]->get_srate(), f_sample);
           msg += ctmp;
           TASCAR::add_warning(msg, e);
         }

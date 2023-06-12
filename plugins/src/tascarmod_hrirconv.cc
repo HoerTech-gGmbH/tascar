@@ -21,9 +21,9 @@
  */
 
 #include "jackclient.h"
+#include "ola.h"
 #include "session.h"
 #include <string.h>
-#include "ola.h"
 
 class channel_entry_t {
 public:
@@ -35,48 +35,61 @@ public:
 
 class hrirconv_t : public jackc_t {
 public:
-  hrirconv_t(uint32_t inchannels,uint32_t outchannels,const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e);
+  hrirconv_t(uint32_t inchannels, uint32_t outchannels,
+             const std::vector<channel_entry_t>& matrix,
+             const std::string& jackname, TASCAR::xml_element_t& e);
   virtual ~hrirconv_t();
-  int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
+  int process(jack_nframes_t nframes, const std::vector<float*>& inBuffer,
+              const std::vector<float*>& outBuffer);
+
 private:
   std::vector<TASCAR::partitioned_conv_t*> cnv;
   std::vector<channel_entry_t> matrix_;
 };
 
-hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels, const std::vector<channel_entry_t>& matrix,const std::string& jackname, TASCAR::xml_element_t& e)
-  : jackc_t(jackname),matrix_(matrix)
+hrirconv_t::hrirconv_t(uint32_t inchannels, uint32_t outchannels,
+                       const std::vector<channel_entry_t>& matrix,
+                       const std::string& jackname, TASCAR::xml_element_t& e)
+    : jackc_t(jackname), matrix_(matrix)
 {
-  for(std::vector<channel_entry_t>::iterator mit=matrix_.begin();mit!=matrix_.end();++mit){
-    if( mit->inchannel >= inchannels ){
+  for(std::vector<channel_entry_t>::iterator mit = matrix_.begin();
+      mit != matrix_.end(); ++mit) {
+    if(mit->inchannel >= inchannels) {
       DEBUG(mit->inchannel);
       DEBUG(inchannels);
       throw TASCAR::ErrMsg("Invalid input channel number.");
     }
-    if( mit->outchannel >= outchannels ){
+    if(mit->outchannel >= outchannels) {
       DEBUG(mit->outchannel);
       DEBUG(outchannels);
       throw TASCAR::ErrMsg("Invalid output channel number.");
     }
   }
-  for(std::vector<channel_entry_t>::iterator mit=matrix_.begin();mit!=matrix_.end();++mit){
-    TASCAR::sndfile_t sndf(mit->filename,mit->filechannel);
-    if( sndf.get_srate() != (uint32_t)get_srate() ){
+  for(std::vector<channel_entry_t>::iterator mit = matrix_.begin();
+      mit != matrix_.end(); ++mit) {
+    TASCAR::sndfile_t sndf(mit->filename, mit->filechannel);
+    if(sndf.get_srate() != (uint32_t)get_srate()) {
       std::ostringstream msg;
-      msg << "Warning: The sample rate of file \"" << mit->filename << "\" (" << sndf.get_srate() << ") differs from system sample rate (" << get_srate() << ").";
-      TASCAR::add_warning(msg.str(),e.e);
+      msg << "Warning: The sample rate of file \"" << mit->filename << "\" ("
+          << sndf.get_srate() << ") differs from system sample rate ("
+          << get_srate() << ").";
+      TASCAR::add_warning(msg.str(), e.e);
     }
-    TASCAR::partitioned_conv_t* pcnv(new TASCAR::partitioned_conv_t(sndf.get_frames(),get_fragsize()));
+    TASCAR::partitioned_conv_t* pcnv(
+        new TASCAR::partitioned_conv_t(sndf.get_frames(), get_fragsize()));
     pcnv->set_irs(sndf);
     cnv.push_back(pcnv);
   }
-  for( uint32_t k=0;k<inchannels;k++){
+  for(uint32_t k = 0; k < inchannels; k++) {
     char ctmp[256];
-    sprintf(ctmp,"in_%d",k);
+    ctmp[255] = 0;
+    snprintf(ctmp, 255, "in_%d", k);
     add_input_port(ctmp);
   }
-  for( uint32_t k=0;k<outchannels;k++){
+  for(uint32_t k = 0; k < outchannels; k++) {
     char ctmp[256];
-    sprintf(ctmp,"out_%d",k);
+    ctmp[255] = 0;
+    snprintf(ctmp, 255, "out_%d", k);
     add_output_port(ctmp);
   }
   activate();
@@ -85,37 +98,38 @@ hrirconv_t::hrirconv_t(uint32_t inchannels,uint32_t outchannels, const std::vect
 hrirconv_t::~hrirconv_t()
 {
   deactivate();
-  for(auto it=cnv.begin();it!=cnv.end();++it)
+  for(auto it = cnv.begin(); it != cnv.end(); ++it)
     delete *it;
 }
 
-
-int hrirconv_t::process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer)
+int hrirconv_t::process(jack_nframes_t nframes,
+                        const std::vector<float*>& inBuffer,
+                        const std::vector<float*>& outBuffer)
 {
   uint32_t Nout(outBuffer.size());
-  for(uint32_t kOut=0;kOut<Nout;kOut++)
-    memset(outBuffer[kOut],0,sizeof(float)*nframes);
-  for(uint32_t k=0;k<cnv.size();k++){
-    if( matrix_[k].inchannel >= inBuffer.size()){
+  for(uint32_t kOut = 0; kOut < Nout; kOut++)
+    memset(outBuffer[kOut], 0, sizeof(float) * nframes);
+  for(uint32_t k = 0; k < cnv.size(); k++) {
+    if(matrix_[k].inchannel >= inBuffer.size()) {
       DEBUG(k);
       DEBUG(matrix_[k].inchannel);
       DEBUG(inBuffer.size());
     }
-    if( matrix_[k].outchannel >= outBuffer.size()){
+    if(matrix_[k].outchannel >= outBuffer.size()) {
       DEBUG(k);
       DEBUG(matrix_[k].outchannel);
       DEBUG(outBuffer.size());
     }
-    TASCAR::wave_t w_in(nframes,inBuffer[matrix_[k].inchannel]);
-    TASCAR::wave_t w_out(nframes,outBuffer[matrix_[k].outchannel]);
-    cnv[k]->process(w_in,w_out);
+    TASCAR::wave_t w_in(nframes, inBuffer[matrix_[k].inchannel]);
+    TASCAR::wave_t w_out(nframes, outBuffer[matrix_[k].outchannel]);
+    cnv[k]->process(w_in, w_out);
   }
   return 0;
 }
 
 class hrirconv_var_t : public TASCAR::module_base_t {
 public:
-  hrirconv_var_t( const TASCAR::module_cfg_t& cfg );
+  hrirconv_var_t(const TASCAR::module_cfg_t& cfg);
   std::string id;
   uint32_t inchannels;
   uint32_t outchannels;
@@ -125,39 +139,38 @@ public:
   std::vector<channel_entry_t> matrix;
 };
 
-hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    inchannels(0),outchannels(0),autoconnect(false)
+hrirconv_var_t::hrirconv_var_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), inchannels(0), outchannels(0), autoconnect(false)
 {
   GET_ATTRIBUTE_(id);
-  if( id.empty() )
+  if(id.empty())
     id = "hrirconv";
   GET_ATTRIBUTE_(inchannels);
   GET_ATTRIBUTE_(outchannels);
-  get_attribute_bool("autoconnect",autoconnect, "", "undocumented");
+  get_attribute_bool("autoconnect", autoconnect, "", "undocumented");
   GET_ATTRIBUTE_(connect);
   GET_ATTRIBUTE_(hrirfile);
-  if( inchannels == 0 )
+  if(inchannels == 0)
     throw TASCAR::ErrMsg("At least one input channel required");
-  if( outchannels == 0 )
+  if(outchannels == 0)
     throw TASCAR::ErrMsg("At least one output channel required");
-  if( hrirfile.empty() ){
-    for(auto entry : tsccfg::node_get_children(e,"entry")){
+  if(hrirfile.empty()) {
+    for(auto entry : tsccfg::node_get_children(e, "entry")) {
       channel_entry_t che;
-      get_attribute_value(entry,"in",che.inchannel);
-      get_attribute_value(entry,"out",che.outchannel);
-      get_attribute_value(entry,"file",che.filename);
-      get_attribute_value(entry,"channel",che.filechannel);
+      get_attribute_value(entry, "in", che.inchannel);
+      get_attribute_value(entry, "out", che.outchannel);
+      get_attribute_value(entry, "file", che.filename);
+      get_attribute_value(entry, "channel", che.filechannel);
       matrix.push_back(che);
     }
-  }else{
-    for(uint32_t kin=0;kin<inchannels;++kin){
-      for(uint32_t kout=0;kout<outchannels;++kout){
+  } else {
+    for(uint32_t kin = 0; kin < inchannels; ++kin) {
+      for(uint32_t kout = 0; kout < outchannels; ++kout) {
         channel_entry_t che;
         che.inchannel = kin;
         che.outchannel = kout;
         che.filename = hrirfile;
-        che.filechannel = kout + outchannels*kin;
+        che.filechannel = kout + outchannels * kin;
         matrix.push_back(che);
       }
     }
@@ -166,46 +179,48 @@ hrirconv_var_t::hrirconv_var_t( const TASCAR::module_cfg_t& cfg )
 
 class hrirconv_mod_t : public hrirconv_var_t, public hrirconv_t {
 public:
-  hrirconv_mod_t( const TASCAR::module_cfg_t& cfg );
-  void configure( );
+  hrirconv_mod_t(const TASCAR::module_cfg_t& cfg);
+  void configure();
   virtual ~hrirconv_mod_t();
 };
 
-
-hrirconv_mod_t::hrirconv_mod_t( const TASCAR::module_cfg_t& cfg )
-  : hrirconv_var_t( cfg ),
-    hrirconv_t(inchannels,outchannels,matrix, id, *this )
+hrirconv_mod_t::hrirconv_mod_t(const TASCAR::module_cfg_t& cfg)
+    : hrirconv_var_t(cfg),
+      hrirconv_t(inchannels, outchannels, matrix, id, *this)
 {
 }
 
-void hrirconv_mod_t::configure( )
+void hrirconv_mod_t::configure()
 {
-  module_base_t::configure(  );
-  if( autoconnect ){
-    for(std::vector<TASCAR::scene_render_rt_t*>::iterator iscenes=session->scenes.begin();
-        iscenes != session->scenes.end();
-        ++iscenes){
-      for(std::vector<TASCAR::Scene::receiver_obj_t*>::iterator irec=(*iscenes)->receivermod_objects.begin();
-          irec!=(*iscenes)->receivermod_objects.end(); ++irec){
-        std::string prefix("render."+(*iscenes)->name+":");
-        if((*irec)->n_channels == inchannels){
-          for(uint32_t ch=0;ch<inchannels;ch++){
-            std::string pn(prefix+(*irec)->get_name()+(*irec)->labels[ch]);
-            connect_in(ch,pn,true);
+  module_base_t::configure();
+  if(autoconnect) {
+    for(std::vector<TASCAR::scene_render_rt_t*>::iterator iscenes =
+            session->scenes.begin();
+        iscenes != session->scenes.end(); ++iscenes) {
+      for(std::vector<TASCAR::Scene::receiver_obj_t*>::iterator irec =
+              (*iscenes)->receivermod_objects.begin();
+          irec != (*iscenes)->receivermod_objects.end(); ++irec) {
+        std::string prefix("render." + (*iscenes)->name + ":");
+        if((*irec)->n_channels == inchannels) {
+          for(uint32_t ch = 0; ch < inchannels; ch++) {
+            std::string pn(prefix + (*irec)->get_name() + (*irec)->labels[ch]);
+            connect_in(ch, pn, true);
           }
         }
       }
     }
-  }else{
+  } else {
     // use connect variable:
-    if( ! hrirconv_var_t::connect.empty() ){
-      std::vector<std::string> ports(get_port_names_regexp( TASCAR::env_expand(hrirconv_var_t::connect) ) );
+    if(!hrirconv_var_t::connect.empty()) {
+      std::vector<std::string> ports(
+          get_port_names_regexp(TASCAR::env_expand(hrirconv_var_t::connect)));
       uint32_t ip(0);
-      if( ports.empty() )
-        TASCAR::add_warning("No port \""+hrirconv_var_t::connect+"\" found.");
-      for( auto it=ports.begin();it!=ports.end();++it){
-        if( ip < get_num_input_ports() ){
-          connect_in( ip, *it, true, true );
+      if(ports.empty())
+        TASCAR::add_warning("No port \"" + hrirconv_var_t::connect +
+                            "\" found.");
+      for(auto it = ports.begin(); it != ports.end(); ++it) {
+        if(ip < get_num_input_ports()) {
+          connect_in(ip, *it, true, true);
           ++ip;
         }
       }
@@ -213,9 +228,7 @@ void hrirconv_mod_t::configure( )
   }
 }
 
-hrirconv_mod_t::~hrirconv_mod_t()
-{
-}
+hrirconv_mod_t::~hrirconv_mod_t() {}
 
 REGISTER_MODULE(hrirconv_mod_t);
 

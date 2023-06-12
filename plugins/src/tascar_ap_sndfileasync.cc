@@ -18,21 +18,22 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "audioplugin.h"
-#include "levelmeter.h"
-#include "errorhandling.h"
-#include <fstream>
 #include "async_file.h"
+#include "audioplugin.h"
+#include "errorhandling.h"
+#include "levelmeter.h"
+#include <fstream>
 
 class ap_sndfile_async_cfg_t : public TASCAR::audioplugin_base_t {
 public:
-  ap_sndfile_async_cfg_t( const TASCAR::audioplugin_cfg_t& cfg );
+  ap_sndfile_async_cfg_t(const TASCAR::audioplugin_cfg_t& cfg);
+
 protected:
   std::string name;
   uint32_t channel;
-  //double start;
+  // double start;
   double position;
-  //double length;
+  // double length;
   double caliblevel;
   uint32_t loop;
   bool transport;
@@ -41,45 +42,44 @@ protected:
   std::string attribution;
 };
 
-ap_sndfile_async_cfg_t::ap_sndfile_async_cfg_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    channel(0),
-    //start(0),
-    position(0),
-    //length(0),
-    caliblevel(1),
-    loop(1),
-    transport(true),
-    mute(false)
+ap_sndfile_async_cfg_t::ap_sndfile_async_cfg_t(
+    const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), channel(0),
+      // start(0),
+      position(0),
+      // length(0),
+      caliblevel(1), loop(1), transport(true), mute(false)
 {
-  GET_ATTRIBUTE_DBSPL(caliblevel,"Calibration level");
+  GET_ATTRIBUTE_DBSPL(caliblevel, "Calibration level");
 
-  GET_ATTRIBUTE(name,"","Sound file name");
-  GET_ATTRIBUTE(channel,"","First sound file channel to be used, zero-base");
-  GET_ATTRIBUTE(position,"s","Start position within the scene");
-  GET_ATTRIBUTE(loop,"","loop count or 0 for infinite looping");
-  GET_ATTRIBUTE_BOOL(transport,"Use session time base");
-  GET_ATTRIBUTE_BOOL(mute,"Load muted");
+  GET_ATTRIBUTE(name, "", "Sound file name");
+  GET_ATTRIBUTE(channel, "", "First sound file channel to be used, zero-base");
+  GET_ATTRIBUTE(position, "s", "Start position within the scene");
+  GET_ATTRIBUTE(loop, "", "loop count or 0 for infinite looping");
+  GET_ATTRIBUTE_BOOL(transport, "Use session time base");
+  GET_ATTRIBUTE_BOOL(mute, "Load muted");
 }
 
-class ap_sndfile_async_t : public ap_sndfile_async_cfg_t  {
+class ap_sndfile_async_t : public ap_sndfile_async_cfg_t {
 public:
-  ap_sndfile_async_t( const TASCAR::audioplugin_cfg_t& cfg );
+  ap_sndfile_async_t(const TASCAR::audioplugin_cfg_t& cfg);
   ~ap_sndfile_async_t();
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& , const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
-  void add_licenses( licensehandler_t* session );
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
+  void add_licenses(licensehandler_t* session);
   void configure();
   void release();
+
 private:
   TASCAR::transport_t ltp;
   TASCAR::async_sndfile_t* sndf;
 };
 
-ap_sndfile_async_t::ap_sndfile_async_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : ap_sndfile_async_cfg_t( cfg )
+ap_sndfile_async_t::ap_sndfile_async_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : ap_sndfile_async_cfg_t(cfg)
 {
-  get_license_info( e, name, license, attribution );
+  get_license_info(e, name, license, attribution);
 }
 
 void ap_sndfile_async_t::configure()
@@ -95,34 +95,34 @@ void ap_sndfile_async_t::configure()
     std::string msg("The sample rate of the sound file \"" + name +
                     "\" differs from the session sample rate:\n");
     char ctmp[1024];
-    sprintf(ctmp, "  file has %d Hz, expected %g Hz", sndf->get_srate(),
-            f_sample);
+    ctmp[1023] = 0;
+    snprintf(ctmp, 1023, "  file has %d Hz, expected %g Hz", sndf->get_srate(),
+             f_sample);
     msg += ctmp;
     TASCAR::add_warning(msg, e);
   }
   sndf->start_service();
 }
 
-void ap_sndfile_async_t::release(  )
+void ap_sndfile_async_t::release()
 {
   sndf->stop_service();
   TASCAR::audioplugin_base_t::release();
   delete sndf;
 }
 
-ap_sndfile_async_t::~ap_sndfile_async_t()
+ap_sndfile_async_t::~ap_sndfile_async_t() {}
+
+void ap_sndfile_async_t::add_licenses(licensehandler_t* session)
 {
+  audioplugin_base_t::add_licenses(session);
+  session->add_license(license, attribution,
+                       TASCAR::tscbasename(TASCAR::env_expand(name)));
 }
 
-void ap_sndfile_async_t::add_licenses( licensehandler_t* session )
+void ap_sndfile_async_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  audioplugin_base_t::add_licenses( session );
-  session->add_license( license, attribution, TASCAR::tscbasename(TASCAR::env_expand(name)) );
-}
-
-void ap_sndfile_async_t::add_variables( TASCAR::osc_server_t* srv )
-{
-  srv->add_bool( "/mute", &mute );
+  srv->add_bool("/mute", &mute);
 }
 
 void ap_sndfile_async_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

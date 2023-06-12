@@ -94,7 +94,8 @@ void scan_source(xmlpp::Element* src)
         if(!gain.empty())
           dgain = atof(gain.c_str());
         char ctmp[1024];
-        sprintf(ctmp, "%g", dgain - 20.0 * log10(2e-5));
+        ctmp[1023] = 0;
+        snprintf(ctmp, 1023, "%g", dgain - 20.0 * log10(2e-5));
         ne_child->set_attribute("level", ctmp);
         // e_child->remove_attribute("gain");
         // starttime to position conversion:
@@ -102,7 +103,7 @@ void scan_source(xmlpp::Element* src)
         double dstart(0);
         if(!startt.empty()) {
           dstart = atof(startt.c_str());
-          sprintf(ctmp, "%g", -dstart);
+          snprintf(ctmp, 1023, "%g", -dstart);
           ne_child->set_attribute("position", ctmp);
         }
         ne_child->remove_attribute("starttime");

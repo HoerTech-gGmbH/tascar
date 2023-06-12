@@ -117,30 +117,31 @@ void TASCAR::pdfexport_t::draw(scene_draw_t::viewt_t persp)
   // cr->stroke();
   cr->set_font_size(10);
   char ctmp[1024];
+  ctmp[1023] = 0;
   switch(persp) {
   case scene_draw_t::xy:
-    sprintf(ctmp, "top ortho");
+    snprintf(ctmp, 1023, "top ortho");
     break;
   case scene_draw_t::xz:
-    sprintf(ctmp, "front ortho");
+    snprintf(ctmp, 1023, "front ortho");
     break;
   case scene_draw_t::yz:
-    sprintf(ctmp, "left ortho");
+    snprintf(ctmp, 1023, "left ortho");
     break;
   case scene_draw_t::xyz:
-    sprintf(ctmp, "xyz");
+    snprintf(ctmp, 1023, "xyz");
     break;
   case scene_draw_t::p:
-    sprintf(ctmp, "perspective");
+    snprintf(ctmp, 1023, "perspective");
     break;
   }
   cr->move_to(bx + 12, by + 36);
   cr->show_text(ctmp);
   if(persp == scene_draw_t::p)
-    sprintf(ctmp, "fov %g°", drawer.view.get_fov());
+    snprintf(ctmp, 1023, "fov %g°", drawer.view.get_fov());
   else
-    sprintf(ctmp, "scale 1:%g",
-            drawer.view.get_scale() / (wscale / 72 * 0.0254));
+    snprintf(ctmp, 1023, "scale 1:%g",
+             drawer.view.get_scale() / (wscale / 72 * 0.0254));
   cr->move_to(bx + 12, by + 48);
   cr->show_text(ctmp);
   surface->show_page();

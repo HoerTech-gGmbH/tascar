@@ -512,7 +512,8 @@ void lightscene_t::add_variables(TASCAR::osc_server_t* srv)
     std::string label(labels[k]);
     if(label.empty()) {
       char ctmp[256];
-      sprintf(ctmp, "fixture%d", k);
+      ctmp[255] = 0;
+      snprintf(ctmp, 255, "fixture%d", k);
       label = ctmp;
     }
     label = "/" + label + "/";
