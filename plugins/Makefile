@@ -98,6 +98,7 @@ TASCARVERSION=$(FULLVERSION)
 
 TASCARLIB = -ltascar
 TASCARDMXLIB = -ltascardmx
+TASCARGUILIB = -ltascargui
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
@@ -121,7 +122,8 @@ clean:
 .PHONY : doc
 
 $(TASCARMODDLLSGUI): EXTERNALS += gtkmm-3.0
-$(TASCARMODDLLSGUI): CXXFLAGS+=-I./build
+$(TASCARMODDLLSGUI): CXXFLAGS += -I./build
+$(TASCARMODDLLSGUI): LDLIBS += $(TASCARGUILIB)
 
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): EXTERNALS += gtkmm-3.0
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): LDLIBS += -llsl
