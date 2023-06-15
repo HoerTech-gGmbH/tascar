@@ -548,6 +548,8 @@ receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
   GET_ATTRIBUTE(
       volumetric, "m",
       "volume in which receiver does not apply distance based gain model");
+  GET_ATTRIBUTE_BOOL(volumetricgainwithdistance,
+                     "For volumetric receivers, increase gain with distance");
   GET_ATTRIBUTE(avgdist, "m",
                 "Average distance which is assumed inside receiver boxes, or 0 "
                 "to use $(\\frac18 V)^{1/3}$");
@@ -736,6 +738,8 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
         break;
       }
     }
+    if(volumetricgainwithdistance)
+      gain *= d;
   } else {
     /*
      * The receiver uses a normal acoustic model. Relative direction

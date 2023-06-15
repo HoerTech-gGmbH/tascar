@@ -236,6 +236,7 @@ namespace TASCAR {
       void add_licenses(licensehandler_t*);
       // configuration/control variables:
       TASCAR::pos_t volumetric;
+      bool volumetricgainwithdistance = false;
       float avgdist = 0.0f;
       bool render_point = true;
       bool render_diffuse = true;
