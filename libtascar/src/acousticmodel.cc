@@ -739,7 +739,7 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
       }
     }
     if(volumetricgainwithdistance)
-      gain *= d;
+      gain *= distance;
   } else {
     /*
      * The receiver uses a normal acoustic model. Relative direction
