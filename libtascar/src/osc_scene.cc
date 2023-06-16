@@ -279,13 +279,15 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   s->set_ctlname(ctlname);
   srv->add_method("/gain", "f", osc_set_sound_gain, s);
   srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s);
-  srv->add_float_dbspl("/caliblevel", &(s->caliblevel));
+  srv->add_float_dbspl("/caliblevel", &(s->caliblevel), "",
+                       "calibration level in dB");
   srv->add_uint("/ismmin", &(s->ismmin));
   srv->add_uint("/ismmax", &(s->ismmax));
   srv->add_uint("/layers", &(s->layers));
-  srv->add_float("/size", &(s->size));
+  srv->add_float("/size", &(s->size), "", "Object size in meter");
   s->plugins.add_variables(srv);
-  srv->add_method("/pos", "fff", osc_set_sound_position, s);
+  srv->add_pos("/pos", &(s->local_position), "",
+               "local position of sound vertex in meters");
   srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
   srv->add_method("/zeuler", "f", osc_set_sound_orientation, s);
   srv->set_prefix(oldpref);

@@ -95,7 +95,7 @@ int osc_set_pos(const char*, const char* types, lo_arg** argv, int argc,
                 lo_message, void* user_data)
 {
   if(user_data && (argc == 3) && (types[0] == 'f') && (types[1] == 'f') &&
-     (types[2] == 'f')){
+     (types[2] == 'f')) {
     TASCAR::pos_t* p = (TASCAR::pos_t*)(user_data);
     p->x = argv[0]->f;
     p->y = argv[1]->f;
@@ -133,7 +133,7 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
 }
 
 int osc_get_pos(const char* path, const char* types, lo_arg** argv, int argc,
-                  lo_message, void* user_data)
+                lo_message, void* user_data)
 {
   if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
     lo_address target = lo_address_new_from_url(&(argv[0]->s));
@@ -141,7 +141,9 @@ int osc_get_pos(const char* path, const char* types, lo_arg** argv, int argc,
       std::string npath(path);
       if(npath.size() > 4)
         npath = npath.substr(0, npath.size() - 4);
-      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *(float*)(user_data));
+      TASCAR::pos_t* pos = (TASCAR::pos_t*)(user_data);
+      lo_send(target, &(argv[1]->s), "sfff", npath.c_str(), pos->x, pos->y,
+              pos->z);
       lo_address_free(target);
     }
   }
