@@ -123,9 +123,8 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
       std::string npath(path);
       if(npath.size() > 4)
         npath = npath.substr(0, npath.size() - 4);
-      TASCAR::pos_t* p = (TASCAR::pos_t*)(user_data);
-      lo_send(target, &(argv[1]->s), "sfff", npath.c_str(), (float)(p->x),
-              (float)(p->y), (float)(p->z));
+      float* p = (float*)(user_data);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *p );
       lo_address_free(target);
     }
   }
