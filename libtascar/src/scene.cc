@@ -49,6 +49,7 @@ object_t::object_t(tsccfg::node_t src)
   std::string scol;
   dynobject_t::get_attribute("color", scol, "", "html color string");
   color = rgb_color_t(scol);
+  dynobject_t::GET_ATTRIBUTE(scale, "", "scale of local coordinates");
 }
 
 bool object_t::isactive(double time) const
@@ -1245,6 +1246,7 @@ void sound_t::geometry_update(double t)
   pos_t rp(local_position);
   orientation = local_orientation;
   if(parent) {
+    rp *= parent->scale;
     rp *= parent->c6dof.orientation;
     if(chaindist != 0) {
       double tp(t - parent->starttime);

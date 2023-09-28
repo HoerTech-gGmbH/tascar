@@ -230,6 +230,8 @@ void osc_scene_t::add_object_methods(TASCAR::osc_server_t* srv,
                   osc_set_object_position, o);
   srv->add_method("/" + scene->name + "/" + o->get_name() + "/zyxeuler", "fff",
                   osc_set_object_orientation, o);
+  srv->add_float("/" + scene->name + "/" + o->get_name() + "/scale",
+                 &(o->scale), "object scale");
 }
 
 void osc_scene_t::add_face_object_methods(TASCAR::osc_server_t* srv,

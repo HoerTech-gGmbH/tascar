@@ -135,6 +135,7 @@ namespace TASCAR {
       bool is_active(uint32_t anysolo, double t);
       rgb_color_t color;
       double endtime;
+      float scale = 1.0f;
     };
 
     class face_object_t : public object_t,
