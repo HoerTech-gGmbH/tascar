@@ -113,7 +113,7 @@ pipeline {
     }
     post {
         failure {
-            mail to: 'grimm@hz-ol.de,herzke@hz-ol.de',
+            mail to: 'grimm@hz-ol.de,g.grimm@uni-oldenburg.de,herzke@hz-ol.de',
             subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
             body: "Something is wrong with ${env.BUILD_URL} ($GIT_URL)"
         }
