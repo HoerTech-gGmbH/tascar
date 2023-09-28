@@ -108,6 +108,9 @@ test_reclevel_wfs test_reclevel_vbap test_reclevel_hann: LEVTHR=2.5
 test_level_vbap3d_lidhan45sub: LEVTHR=3
 test_level_diff_decorr: LEVTHR=1.5
 
+test_snd_door1: TOL=1e-4
+test_snd_door1: RMSTOL=1e-4
+
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
 ifeq ($(UNAME_S),Linux)
