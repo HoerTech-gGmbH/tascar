@@ -111,6 +111,9 @@ test_level_diff_decorr: LEVTHR=1.5
 test_snd_door1: TOL=1e-4
 test_snd_door1: RMSTOL=1e-4
 
+test_snd_door2: TOL=1e-5
+test_snd_door2: RMSTOL=1e-5
+
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
 ifeq ($(UNAME_S),Linux)
