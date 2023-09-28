@@ -113,6 +113,10 @@ test_snd_door1: RMSTOL=1e-4
 
 test_snd_door2: TOL=1e-5
 test_snd_door2: RMSTOL=1e-5
+test_snd_door3: TOL=1e-5
+test_snd_door3: RMSTOL=1e-5
+test_snd_door4: TOL=1e-5
+test_snd_door4: RMSTOL=1e-5
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
