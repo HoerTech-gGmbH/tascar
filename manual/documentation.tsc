@@ -110,6 +110,14 @@
     <waitforjackport/>
     <epicycles/>
     <midicc2osc controllers="0/1"/>
+    <mididispatch>
+      <ccmsg>
+      <f/><i/><s/>
+      </ccmsg>
+      <motemsg>
+      <f/><i/><s/>
+      </motemsg>
+    </mididispatch>
     <route/>
     <!--<ovheadtracker/>-->
     <oscheadtracker/>
