@@ -154,6 +154,7 @@ namespace TASCAR {
     double startdiffgain;
     double delta;
     double delta_diff;
+    double previous_delta_diff = 0.0;
     std::string spkname;
     spk_array_diff_render_t* spk_file = NULL;
     TASCAR::Scene::receiver_obj_t* rec_nsp = NULL;

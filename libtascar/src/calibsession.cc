@@ -943,6 +943,18 @@ void calibsession_t::set_caliblevel(float dl)
 
 void calibsession_t::set_diffusegain(float g)
 {
+  if(g > 50.0f)
+    throw TASCAR::ErrMsg(
+        std::string("Setting a diffuse gain of ") + TASCAR::to_string(g) +
+        " dB is not possible. If you are sure you need such extreme diffuse "
+        "gains, please edit your speaker layout manually.");
+  previous_delta_diff = delta_diff;
+  if(g - startdiffgain - previous_delta_diff > 20.0)
+    throw TASCAR::ErrMsg(
+        std::string(
+            "This operation would lead to an increase of diffuse gain by ") +
+        TASCAR::to_string(g - startdiffgain - previous_delta_diff) +
+        " dB. Please increase gain in smaller steps.");
   gainmodified = true;
   delta_diff = g - startdiffgain;
   float gain(powf(10.0f, 0.05f * (startdiffgain + delta_diff)));
@@ -958,6 +970,7 @@ void calibsession_t::inc_diffusegain(float dl)
         "Please activate diffuse field before increasing the gain.");
   if((dl <= 0.0f) || isactive_diffuse) {
     gainmodified = true;
+    previous_delta_diff = delta_diff;
     delta_diff += dl;
     double gain(pow(10.0, 0.05 * (startdiffgain + delta_diff)));
     rec_nsp->diffusegain = (float)gain;
