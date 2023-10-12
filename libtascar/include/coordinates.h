@@ -66,7 +66,10 @@ template <class T> void make_friendly_number_limited(T& x)
 
 namespace TASCAR {
 
-  inline bool is_denormal(const double& a) { return !((a < 1.0) || (a > 0.0)); }
+  inline bool is_denormal(const double& a)
+  {
+    return !((a < 1.0) || (a > 0.0));
+  }
 
   inline bool is_denormal(const float& a)
   {
@@ -900,15 +903,15 @@ namespace TASCAR {
       q.set_rotation(eul.z, TASCAR::posf_t(0.0f, 0.0f, 1.0f));
       rmul(q);
     };
-    //inline void set_euler_xyz(const zyx_euler_t& eul)
+    // inline void set_euler_xyz(const zyx_euler_t& eul)
     //{
-    //  set_rotation(eul.z, TASCAR::posf_t(0.0f, 0.0f, 1.0f));
-    //  quaternion_t q;
-    //  q.set_rotation(eul.y, TASCAR::posf_t(0.0f, 1.0f, 0.0f));
-    //  rmul(q);
-    //  q.set_rotation(eul.x, TASCAR::posf_t(1.0f, 0.0f, 0.0f));
-    //  rmul(q);
-    //};
+    //   set_rotation(eul.z, TASCAR::posf_t(0.0f, 0.0f, 1.0f));
+    //   quaternion_t q;
+    //   q.set_rotation(eul.y, TASCAR::posf_t(0.0f, 1.0f, 0.0f));
+    //   rmul(q);
+    //   q.set_rotation(eul.x, TASCAR::posf_t(1.0f, 0.0f, 0.0f));
+    //   rmul(q);
+    // };
     inline quaternion_t inverse() const
     {
       return conjugate().scale(1.0f / norm());
@@ -1025,6 +1028,8 @@ namespace TASCAR {
     }
   }
 
+  void vector_get_mean_std(const std::vector<double>& v, double& mean,
+                           double& stdev);
 } // namespace TASCAR
 
 std::ostream& operator<<(std::ostream& out, const TASCAR::pos_t& p);

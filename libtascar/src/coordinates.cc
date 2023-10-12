@@ -33,6 +33,7 @@
 #include "errorhandling.h"
 #include "tscconfig.h"
 #include <fstream>
+#include <numeric>
 #include <sstream>
 #include <stdlib.h>
 #include <string.h>
@@ -562,6 +563,26 @@ std::string TASCAR::to_string(const rotmat_t& m)
       "]\n[" + to_string(m.m31, "%1.4g") + " " + to_string(m.m32, "%1.4g") +
       " " + to_string(m.m33, "%1.4g") + "]\n";
   return s;
+}
+
+void TASCAR::vector_get_mean_std(const std::vector<double>& v, double& mean,
+                                 double& stdev)
+{
+  mean = std::numeric_limits<double>::quiet_NaN();
+  stdev = std::numeric_limits<double>::quiet_NaN();
+  if( v.size() == 0 )
+    return;
+  DEBUG(mean);
+  double sum = std::accumulate(v.begin(), v.end(), 0.0);
+  mean = sum / v.size();
+  if( v.size() == 1 )
+    return;
+  std::vector<double> diff(v.size());
+  std::transform(v.begin(), v.end(), diff.begin(),
+                 [mean](double x) { return x - mean; });
+  double sq_sum =
+      std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+  stdev = std::sqrt(sq_sum / (v.size() - 1));
 }
 
 /*

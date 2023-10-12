@@ -39,7 +39,7 @@ TASCAR::receivermod_t::receivermod_t(tsccfg::node_t cfg)
   libname = PLUGINPREFIX + libname;
 #endif
   libname += receivertype + TASCAR::dynamic_lib_extension();
-  lib = dlopen((TASCAR::get_libdir()+libname).c_str(), RTLD_NOW);
+  lib = dlopen((TASCAR::get_libdir() + libname).c_str(), RTLD_NOW);
   if(!lib)
     throw TASCAR::ErrMsg("Unable to open receiver module \"" + receivertype +
                          "\": " + dlerror());
@@ -118,7 +118,8 @@ TASCAR::receivermod_t::create_state_data(double srate, uint32_t fragsize) const
 }
 
 TASCAR::receivermod_base_t::data_t*
-TASCAR::receivermod_t::create_diffuse_state_data(double srate, uint32_t fragsize) const
+TASCAR::receivermod_t::create_diffuse_state_data(double srate,
+                                                 uint32_t fragsize) const
 {
   return libdata->create_diffuse_state_data(srate, fragsize);
 }
@@ -291,6 +292,7 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   std::vector<double> vaz_rE;
   std::vector<double> vel_rV;
   std::vector<double> vel_rE;
+  std::vector<double> vang_rV;
   for(auto pos : srcpos) {
     pos.normalize();
     for(size_t ch = 0; ch < output.size(); ++ch)
@@ -302,7 +304,8 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
     add_pointsource(pos, 0.0, ones, output, sd);
     postproc(output);
     for(size_t outch(0); outch < spkpos.size(); ++outch)
-      output[outch] *= 1.0f / ((float)spkpos[outch].gain * (float)spkpos[outch].spkgain);
+      output[outch] *=
+          1.0f / ((float)spkpos[outch].gain * (float)spkpos[outch].spkgain);
     spkpos.clear_states();
     TASCAR::pos_t rE;
     TASCAR::pos_t rV;
@@ -328,8 +331,12 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
       rV /= norm_V;
     err.abs_rV_error += pow(1.0 - rV.norm(), 2.0);
     err.abs_rE_error += pow(1.0 - rE.norm(), 2.0);
-    err.angular_rV_error += acos(std::min(1.0,std::max(-1.0,dot_prod(rV.normal(), pos))));
-    err.angular_rE_error += acos(std::min(1.0,std::max(-1.0,dot_prod(rE.normal(), pos))));
+    err.angular_rV_error +=
+        acos(std::min(1.0, std::max(-1.0, dot_prod(rV.normal(), pos))));
+    vang_rV.push_back(
+        acos(std::min(1.0, std::max(-1.0, dot_prod(rV.normal(), pos)))));
+    err.angular_rE_error +=
+        acos(std::min(1.0, std::max(-1.0, dot_prod(rE.normal(), pos))));
     err.azim_rV_error += acos(cos(rV.azim() - pos.azim()));
     err.azim_rE_error += acos(cos(rE.azim() - pos.azim()));
     err.elev_rV_error += acos(cos(rV.elev() - pos.elev()));
@@ -346,6 +353,11 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   err.abs_rV_error = sqrt(err.abs_rV_error / srcpos.size());
   err.abs_rE_error = sqrt(err.abs_rE_error / srcpos.size());
   err.angular_rV_error = (err.angular_rV_error / srcpos.size());
+  DEBUG(err.angular_rV_error);
+  double m, s;
+  vector_get_mean_std(vang_rV, m, s);
+  DEBUG(m);
+  DEBUG(s);
   err.angular_rE_error = (err.angular_rE_error / srcpos.size());
   err.azim_rV_error /= srcpos.size();
   err.azim_rE_error /= srcpos.size();
