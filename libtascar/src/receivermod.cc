@@ -190,7 +190,7 @@ std::string spatial_error_t::to_string(const std::string& label,
          ".abs_el_rV = " + TASCAR::to_string(RAD2DEG * abs_elev_rV_error) +
          ";\n" + "e." + label +
          ".abs_el_rE = " + TASCAR::to_string(RAD2DEG * abs_elev_rE_error) +
-         ";\n";
+         ";\n" + "e." + label + ".N = " + std::to_string(N) + ";\n";
 }
 
 TASCAR::receivermod_base_speaker_t::receivermod_base_speaker_t(
@@ -381,6 +381,7 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   err.q75_azim_rE_error = TASCAR::median(vaz_rE.begin(), vaz_rE.end(), 0.75);
   err.q75_elev_rV_error = TASCAR::median(vel_rV.begin(), vel_rV.end(), 0.75);
   err.q75_elev_rE_error = TASCAR::median(vel_rE.begin(), vel_rE.end(), 0.75);
+  err.N = srcpos.size();
   return err;
 }
 
