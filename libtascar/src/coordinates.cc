@@ -570,12 +570,11 @@ void TASCAR::vector_get_mean_std(const std::vector<double>& v, double& mean,
 {
   mean = std::numeric_limits<double>::quiet_NaN();
   stdev = std::numeric_limits<double>::quiet_NaN();
-  if( v.size() == 0 )
+  if(v.size() == 0)
     return;
-  DEBUG(mean);
   double sum = std::accumulate(v.begin(), v.end(), 0.0);
   mean = sum / v.size();
-  if( v.size() == 1 )
+  if(v.size() == 1)
     return;
   std::vector<double> diff(v.size());
   std::transform(v.begin(), v.end(), diff.begin(),

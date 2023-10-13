@@ -147,6 +147,10 @@ std::string spatial_error_t::to_string(const std::string& label,
          "e." + label +
          ".ang_rE = " + TASCAR::to_string(RAD2DEG * angular_rE_error) + ";\n" +
          "e." + label +
+         ".ang_rV_std = " + TASCAR::to_string(RAD2DEG * angular_rV_error_std) +
+         ";\n" + "e." + label +
+         ".ang_rE_std = " + TASCAR::to_string(RAD2DEG * angular_rE_error_std) +
+         ";\n" + "e." + label +
          ".az_rV = " + TASCAR::to_string(RAD2DEG * azim_rV_error) + ";\n" +
          "e." + label +
          ".az_rE = " + TASCAR::to_string(RAD2DEG * azim_rE_error) + ";\n" +
@@ -293,6 +297,7 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   std::vector<double> vel_rV;
   std::vector<double> vel_rE;
   std::vector<double> vang_rV;
+  std::vector<double> vang_rE;
   for(auto pos : srcpos) {
     pos.normalize();
     for(size_t ch = 0; ch < output.size(); ++ch)
@@ -331,12 +336,14 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
       rV /= norm_V;
     err.abs_rV_error += pow(1.0 - rV.norm(), 2.0);
     err.abs_rE_error += pow(1.0 - rE.norm(), 2.0);
-    err.angular_rV_error +=
-        acos(std::min(1.0, std::max(-1.0, dot_prod(rV.normal(), pos))));
+    // err.angular_rV_error +=
+    //  acos(std::min(1.0, std::max(-1.0, dot_prod(rV.normal(), pos))));
     vang_rV.push_back(
         acos(std::min(1.0, std::max(-1.0, dot_prod(rV.normal(), pos)))));
-    err.angular_rE_error +=
-        acos(std::min(1.0, std::max(-1.0, dot_prod(rE.normal(), pos))));
+    // err.angular_rE_error +=
+    //    acos(std::min(1.0, std::max(-1.0, dot_prod(rE.normal(), pos))));
+    vang_rE.push_back(
+        acos(std::min(1.0, std::max(-1.0, dot_prod(rE.normal(), pos)))));
     err.azim_rV_error += acos(cos(rV.azim() - pos.azim()));
     err.azim_rE_error += acos(cos(rE.azim() - pos.azim()));
     err.elev_rV_error += acos(cos(rV.elev() - pos.elev()));
@@ -352,13 +359,8 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
   }
   err.abs_rV_error = sqrt(err.abs_rV_error / srcpos.size());
   err.abs_rE_error = sqrt(err.abs_rE_error / srcpos.size());
-  err.angular_rV_error = (err.angular_rV_error / srcpos.size());
-  DEBUG(err.angular_rV_error);
-  double m, s;
-  vector_get_mean_std(vang_rV, m, s);
-  DEBUG(m);
-  DEBUG(s);
-  err.angular_rE_error = (err.angular_rE_error / srcpos.size());
+  vector_get_mean_std(vang_rV, err.angular_rV_error, err.angular_rV_error_std);
+  vector_get_mean_std(vang_rE, err.angular_rE_error, err.angular_rE_error_std);
   err.azim_rV_error /= srcpos.size();
   err.azim_rE_error /= srcpos.size();
   err.elev_rV_error /= srcpos.size();

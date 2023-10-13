@@ -100,6 +100,8 @@ namespace TASCAR {
     double abs_rV_error = 0.0;
     double angular_rE_error = 0.0;
     double angular_rV_error = 0.0;
+    double angular_rE_error_std = 0.0;
+    double angular_rV_error_std = 0.0;
     double azim_rE_error = 0.0;
     double azim_rV_error = 0.0;
     double elev_rE_error = 0.0;

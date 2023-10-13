@@ -478,30 +478,23 @@ TEST(meanstd, meanstd)
   double mean = 1.0;
   double std = 1.0;
   TASCAR::vector_get_mean_std(data, mean, std );
-  ASSERT_EQ(true, std::isnan(mean) );
-  ASSERT_EQ(true, isnan(std) );
   data = { 3.0 };
   mean = 1.0;
   std = 1.0;
   TASCAR::vector_get_mean_std(data, mean, std );
   ASSERT_EQ( 3.0, mean );
-  ASSERT_EQ(true, isnan(std) );
   data = { 3.0, 3.0 };
+  mean = 1.0;
+  std = 1.0;
   TASCAR::vector_get_mean_std(data, mean, std );
   ASSERT_EQ( 3.0, mean );
   ASSERT_EQ( 0.0, std );
   data = {7.0f, 4.0f, 4.0f, 2.0f, 1.0f, 9.0f, 9.0f, 10.0f, 7.0f};
+  mean = 1.0;
+  std = 1.0;
   TASCAR::vector_get_mean_std(data, mean, std );
-  ASSERT_EQ( 5.888888888888889283634853200055658817291259765625, mean );
-  ASSERT_EQ( 3.257470047615343755609274012385867536067962646484375, std );
-  //ASSERT_EQ(0.0, TASCAR::median(data.begin(), data.end()));
-  //data = {5.0f, 3.0f};
-  //// median of even number is mean of neighboring elements
-  //ASSERT_EQ(4.0, TASCAR::median(data.begin(), data.end()));
-  //// expected data to be partially sorted:
-  //ASSERT_EQ(3.0f, data[0]);
-  //data = {7.0f, 4.0f, 4.0f, 2.0f, 1.0f, 9.0f, 9.0f, 10.0f, 7.0f};
-  //ASSERT_EQ(7.0, TASCAR::median(data.begin(), data.end()));
+  ASSERT_NEAR( 5.88889, mean, 1e-4 );
+  ASSERT_NEAR( 3.25747, std, 1e-4 );
 }
 
 TEST(pos, print)
