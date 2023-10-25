@@ -24,6 +24,10 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{combinegyr} & Combine quaternions with gyroscope based second estimate for increased resolution of pose estimation. (bool) & true\\
 \hline
+\indattr{connectwlan} & connect to sensor to external WLAN (bool) & false\\
+\hline
+\indattr{eogpath} & OSC target path for EOG data, or empty for no EOG (string) & \\
+\hline
 \indattr{name} & Prefix in OSC control variables (string) & oscheadtracker\\
 \hline
 \indattr{rotpath} & OSC target path for rotation data (string) & \\
@@ -32,9 +36,15 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{smooth} & Filter coefficient for smoothing of quaternions (double) & 0.1\\
 \hline
+\indattr{targetip} & target IP address when using external WLAN (string) & \\
+\hline
 \indattr{ttl} & Time-to-live of OSC multicast data (uint32) & 1\\
 \hline
 \indattr{url} & Target URL for OSC data logging, or empty for no datalogging (string) & \\
+\hline
+\indattr{wlanpass} & passphrase of external WLAN (string) & \\
+\hline
+\indattr{wlanssid} & SSID of external WLAN (string) & \\
 \hline
 \end{tabularx}
 }

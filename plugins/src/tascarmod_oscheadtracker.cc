@@ -65,6 +65,15 @@ private:
   bool combinegyr = true;
   // time-to-live for multicast messages, if using multicast targets:
   uint32_t ttl;
+  // connect to sensor to external WLAN:
+  bool connectwlan = false;
+  // SSID of external WLAN:
+  std::string wlanssid;
+  // password of external WLAN:
+  std::string wlanpass;
+  // target IP address when using external WLAN:
+  std::string targetip;
+
   bool apply_loc = false;
   bool apply_rot = true;
   double autoref = 0.00001;
@@ -107,11 +116,16 @@ void oscheadtracker_t::configure()
 
 void oscheadtracker_t::connect()
 {
-  lo_send(headtrackertarget, "/connect", "is", session->get_srv_port(),
-          std::string("/" + name + "/quatrot").c_str());
-  if(!eogpath.empty()) {
-    lo_send(headtrackertarget, "/eog/connect", "is", session->get_srv_port(),
-            eogpath.c_str());
+  if(connectwlan) {
+    lo_send(headtrackertarget, "/wlan/connect", "sssi", wlanssid.c_str(),
+            wlanpass.c_str(), targetip.c_str(), session->get_srv_port());
+  } else {
+    lo_send(headtrackertarget, "/connect", "is", session->get_srv_port(),
+            std::string("/" + name + "/quatrot").c_str());
+    if(!eogpath.empty()) {
+      lo_send(headtrackertarget, "/eog/connect", "is", session->get_srv_port(),
+              eogpath.c_str());
+    }
   }
 }
 
@@ -153,6 +167,13 @@ oscheadtracker_t::oscheadtracker_t(const TASCAR::module_cfg_t& cfg)
       apply_loc, "Apply translation based on accelerometer (not implemented)");
   GET_ATTRIBUTE_BOOL(apply_rot,
                      "Apply rotation based on gyroscope and accelerometer");
+  GET_ATTRIBUTE_BOOL(connectwlan, "connect to sensor to external WLAN");
+  GET_ATTRIBUTE(wlanssid, "", "SSID of external WLAN");
+  GET_ATTRIBUTE(wlanpass, "", "passphrase of external WLAN");
+  GET_ATTRIBUTE(targetip, "", "target IP address when using external WLAN");
+  if(connectwlan && (wlanssid.size() == 0))
+    throw TASCAR::ErrMsg(
+        "If sensor is to be connected to WLAN, the SSID must be provided");
   if(url.size()) {
     target = lo_address_new_from_url(url.c_str());
     if(!target)
