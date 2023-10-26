@@ -282,6 +282,8 @@ void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rx,
   o0 = q.to_euler_zyx();
   if(target) {
     lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x, q.y, q.z);
+    auto euler_xyz = q.to_euler_xyz();
+    lo_send(target, (p + "/xyzeuler").c_str(), "fff", euler_xyz.x, euler_xyz.y, euler_xyz.z);
     lo_send(target, (p + "/alive").c_str(), "f", tictoc.toc());
   }
   if(rottarget) {
