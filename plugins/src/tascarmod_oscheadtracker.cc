@@ -57,6 +57,8 @@ private:
   std::string rotpath;
   // EOG path:
   std::string eogpath;
+  // raw path:
+  std::string rawpath;
   // configuration variables:
   std::string name;
   // use only z-rotation for referencing:
@@ -126,6 +128,10 @@ void oscheadtracker_t::connect()
       lo_send(headtrackertarget, "/eog/connect", "is", session->get_srv_port(),
               eogpath.c_str());
     }
+    if(!rawpath.empty()) {
+      lo_send(headtrackertarget, "/raw/connect", "is", session->get_srv_port(),
+              rawpath.c_str());
+    }
   }
 }
 
@@ -134,6 +140,8 @@ void oscheadtracker_t::disconnect()
   lo_send(headtrackertarget, "/disconnect", "");
   if(!eogpath.empty())
     lo_send(headtrackertarget, "/eog/disconnect", "");
+  if(!rawpath.empty())
+    lo_send(headtrackertarget, "/raw/disconnect", "");
 }
 
 void oscheadtracker_t::release()
@@ -153,6 +161,8 @@ oscheadtracker_t::oscheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(rotpath, "", "OSC target path for rotation data");
   GET_ATTRIBUTE(eogpath, "",
                 "OSC target path for EOG data, or empty for no EOG");
+  GET_ATTRIBUTE(rawpath, "",
+                "OSC target path for raw data, or empty for no raw data");
   GET_ATTRIBUTE(ttl, "", "Time-to-live of OSC multicast data");
   GET_ATTRIBUTE(autoref, "",
                 "Filter coefficient for estimating reference orientation from "
