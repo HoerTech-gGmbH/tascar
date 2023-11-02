@@ -158,7 +158,8 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
 {
   pthread_mutex_init(&mtx_, NULL);
   TASCAR::module_base_t::GET_ATTRIBUTE(channels, "", "Number of channels");
-  TASCAR::module_base_t::GET_ATTRIBUTE_(connect_out);
+  TASCAR::module_base_t::GET_ATTRIBUTE(
+      connect_out, "", "Regular expressions of output port names");
   TASCAR::module_base_t::get_attribute("lingain", gain, "", "linear gain");
   TASCAR::module_base_t::GET_ATTRIBUTE(levelmeter_tc, "s",
                                        "Leq level metering time constant");

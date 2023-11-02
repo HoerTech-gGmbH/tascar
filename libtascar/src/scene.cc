@@ -782,10 +782,10 @@ route_t::route_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), id(TASCAR::get_tuid()), mute(false), solo(false),
       meter_tc(2), meter_weight(TASCAR::levelmeter::Z), targetlevel(0)
 {
-  GET_ATTRIBUTE(name, "", "route name");
-  GET_ATTRIBUTE(id, "", "route id");
-  GET_ATTRIBUTE_BOOL(mute, "mute flag of route");
-  GET_ATTRIBUTE_BOOL(solo, "solo flag of route");
+  GET_ATTRIBUTE(name, "", "Route name");
+  GET_ATTRIBUTE(id, "", "Unique route id, empty to autogenerate");
+  GET_ATTRIBUTE_BOOL(mute, "Mute flag of route");
+  GET_ATTRIBUTE_BOOL(solo, "Solo flag of route");
 }
 
 void route_t::set_solo(bool b, uint32_t& anysolo)
@@ -838,7 +838,8 @@ audio_port_t::audio_port_t(tsccfg::node_t xmlsrc, bool is_input_)
     : xml_element_t(xmlsrc), ctlname(""), port_index(0), is_input(is_input_),
       gain(1), caliblevel(1.0)
 {
-  GET_ATTRIBUTE(connect, "", "jack port connection");
+  GET_ATTRIBUTE(connect, "",
+                "Regular expressions of port names for connections");
   GET_ATTRIBUTE_DB(gain, "port gain");
   has_caliblevel = has_attribute("caliblevel");
   GET_ATTRIBUTE_DBSPL(caliblevel, "calibration level");
