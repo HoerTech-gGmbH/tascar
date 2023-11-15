@@ -32,21 +32,18 @@ const std::complex<float> i_f(0.0f, 1.0f);
 /**
  * A First Order Ambisonics audio sample
  */
-class foa_sample_t {
+class foa_sample_t : public TASCAR::posf_t {
 public:
-  foa_sample_t() : w(0), x(0), y(0), z(0){};
+  foa_sample_t() : w(0) { set_zero(); };
   foa_sample_t(float w_, float x_, float y_, float z_)
-      : w(w_), x(x_), y(y_), z(z_){};
-  float w;
-  float x;
-  float y;
-  float z;
-  void clear()
+      : posf_t(x_, y_, z_), w(w_){};
+  float w = 0.0f;
+  void set_zero()
   {
-    w = 0.0;
-    x = 0.0;
-    y = 0.0;
-    z = 0.0;
+    w = 0.0f;
+    x = 0.0f;
+    y = 0.0f;
+    z = 0.0f;
   };
   inline foa_sample_t& operator+=(const foa_sample_t& b)
   {
@@ -101,105 +98,105 @@ inline foa_sample_t operator+(foa_sample_t a, const foa_sample_t& b)
 /**
  * Two-dimensional container for foa_sample_t
  */
-class foa_sample_matrix_2d_t {
-public:
-  foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2);
-  ~foa_sample_matrix_2d_t();
-  inline foa_sample_t& elem(uint32_t p1, uint32_t p2)
-  {
-    return data[p1 * s2 + p2];
-  };
-  inline const foa_sample_t& elem(uint32_t p1, uint32_t p2) const
-  {
-    return data[p1 * s2 + p2];
-  };
-  inline foa_sample_t& elem00x(uint32_t p2) { return data[p2]; };
-  inline const foa_sample_t& elem00x(uint32_t p2) const { return data[p2]; };
-  inline void clear()
-  {
-    uint32_t l(s1 * s2);
-    for(uint32_t k = 0; k < l; ++k)
-      data[k].clear();
-  };
+// class foa_sample_matrix_2d_t {
+// public:
+//   foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2);
+//   ~foa_sample_matrix_2d_t();
+//   inline foa_sample_t& elem(uint32_t p1, uint32_t p2)
+//   {
+//     return data[p1 * s2 + p2];
+//   };
+//   inline const foa_sample_t& elem(uint32_t p1, uint32_t p2) const
+//   {
+//     return data[p1 * s2 + p2];
+//   };
+//   inline void clear()
+//   {
+//     uint32_t l(s1 * s2);
+//     for(uint32_t k = 0; k < l; ++k)
+//       data[k].clear();
+//   };
+//
+// protected:
+//   uint32_t s1;
+//   uint32_t s2;
+//   foa_sample_t* data;
+// };
 
-protected:
-  uint32_t s1;
-  uint32_t s2;
-  foa_sample_t* data;
-};
+// class foa_sample_array_1d_t {
+// public:
+//   foa_sample_array_1d_t(uint32_t d1);
+//   ~foa_sample_array_1d_t();
+//   inline foa_sample_t& elem(uint32_t p1) { return data[p1]; };
+//   inline const foa_sample_t& elem(uint32_t p1) const { return data[p1]; };
+//   inline void clear()
+//   {
+//     for(uint32_t k = 0; k < s1; ++k)
+//       data[k].clear();
+//   };
+//
+// protected:
+//   uint32_t s1;
+//   foa_sample_t* data;
+// };
 
-class foa_sample_array_1d_t {
-public:
-  foa_sample_array_1d_t(uint32_t d1);
-  ~foa_sample_array_1d_t();
-  inline foa_sample_t& elem(uint32_t p1) { return data[p1]; };
-  inline const foa_sample_t& elem(uint32_t p1) const { return data[p1]; };
-  inline void clear()
-  {
-    for(uint32_t k = 0; k < s1; ++k)
-      data[k].clear();
-  };
+// foa_sample_matrix_2d_t::foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2)
+//     : s1(d1), s2(d2), data(new foa_sample_t[s1 * s2])
+//{
+//   clear();
+// }
+//
+// foa_sample_matrix_2d_t::~foa_sample_matrix_2d_t()
+//{
+//   delete[] data;
+// }
 
-protected:
-  uint32_t s1;
-  foa_sample_t* data;
-};
-
-foa_sample_matrix_2d_t::foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2)
-    : s1(d1), s2(d2), data(new foa_sample_t[s1 * s2])
-{
-  clear();
-}
-
-foa_sample_matrix_2d_t::~foa_sample_matrix_2d_t()
-{
-  delete[] data;
-}
-
-foa_sample_array_1d_t::foa_sample_array_1d_t(uint32_t d1)
-    : s1(d1), data(new foa_sample_t[s1])
-{
-  clear();
-}
-
-foa_sample_array_1d_t::~foa_sample_array_1d_t()
-{
-  delete[] data;
-}
+// foa_sample_array_1d_t::foa_sample_array_1d_t(uint32_t d1)
+//     : s1(d1), data(new foa_sample_t[s1])
+//{
+//   clear();
+// }
+//
+// foa_sample_array_1d_t::~foa_sample_array_1d_t()
+//{
+//   delete[] data;
+// }
 
 // y[n] = -g x[n] + x[n-1] + g y[n-1]
 class reflectionfilter_t {
 public:
-  reflectionfilter_t(uint32_t d1);
-  inline void filter(foa_sample_t& x, uint32_t p1)
+  reflectionfilter_t();
+  inline void filter(foa_sample_t& x)
   {
     x *= B1;
-    x -= A2 * sy.elem(p1);
-    sy.elem(p1) = x;
+    x -= A2 * sy;
+    sy = x;
     // all pass section:
-    foa_sample_t tmp(eta[p1] * x + sapx.elem(p1));
-    sapx.elem(p1) = x;
-    x = tmp - eta[p1] * sapy.elem(p1);
-    sapy.elem(p1) = x;
+    foa_sample_t tmp(eta * x + sapx);
+    sapx = x;
+    x = tmp - eta * sapy;
+    sapy = x;
   };
   void set_lp(float g, float c);
+  void set_eta(float e) { eta = e; };
 
 protected:
-  float B1; ///< non-recursive filter coefficient for all channels
-  float A2; ///< recursive filter coefficient for all channels
-  std::vector<float>
-      eta; ///< phase coefficient of allpass filters for each channel
-  foa_sample_array_1d_t sy;   ///< output state buffer
-  foa_sample_array_1d_t sapx; ///< input state variable of allpass filter
-  foa_sample_array_1d_t sapy; ///< output state variable of allpass filter
+  float B1 = 0.0f;   ///< non-recursive filter coefficient for all channels
+  float A2 = 0.0f;   ///< recursive filter coefficient for all channels
+  float eta = 0.0f;  ///< phase coefficient of allpass filters for each channel
+  foa_sample_t sy;   ///< output state buffer
+  foa_sample_t sapx; ///< input state variable of allpass filter
+  foa_sample_t sapy; ///< output state variable of allpass filter
 };
 
-reflectionfilter_t::reflectionfilter_t(uint32_t d1)
-    : B1(0), A2(0), sy(d1), sapx(d1), sapy(d1)
+reflectionfilter_t::reflectionfilter_t()
 {
-  eta.resize(d1);
-  for(uint32_t k = 0; k < d1; ++k)
-    eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
+  sy.set_zero();
+  sapx.set_zero();
+  sapy.set_zero();
+  //  eta.resize(d1);
+  //  for(uint32_t k = 0; k < d1; ++k)
+  //    eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
 }
 
 /**
@@ -211,13 +208,45 @@ reflectionfilter_t::reflectionfilter_t(uint32_t d1)
  */
 void reflectionfilter_t::set_lp(float g, float c)
 {
-  sy.clear();
-  sapx.clear();
-  sapy.clear();
+  sy.set_zero();
+  sapx.set_zero();
+  sapy.set_zero();
   float c2(1.0f - c);
   B1 = g * c2;
   A2 = -c;
 }
+
+class fdnpath_t {
+public:
+  fdnpath_t()
+  {
+    init(1);
+    set_zero();
+  };
+  void init(uint32_t maxdelay)
+  {
+    delayline.resize(maxdelay);
+    set_zero();
+  };
+  void update_par(uint32_t delay_, float eta, float g, float c);
+  void set_zero()
+  {
+    for(auto& dl : delayline)
+      dl.set_zero();
+    dlout.set_zero();
+  }
+  // delay line:
+  std::vector<foa_sample_t> delayline;
+  // reflection filter:
+  reflectionfilter_t reflection;
+  TASCAR::quaternion_t rotation;
+  // delayline output for reflection filters:
+  foa_sample_t dlout;
+  // delays:
+  uint32_t delay = 0u;
+  // delayline pointer:
+  uint32_t pos = 0u;
+};
 
 class fdn_t {
 public:
@@ -228,34 +257,37 @@ public:
   void setpar_t60(float az, float daz, float t, float dt, float t60,
                   float damping, bool fixcirculantmat);
   void set_logdelays(bool ld) { logdelays_ = ld; };
-  void clear()
+  void set_zero()
   {
-    delayline.clear();
-    outval.clear();
+    for(auto& path : fdnpath)
+      path.set_zero();
   };
   void get_ir(TASCAR::wave_t& w, bool b_prefilt);
 
 private:
-  bool logdelays_;
-  uint32_t fdnorder_;
-  uint32_t maxdelay_;
+  bool logdelays_ = true;
+  uint32_t fdnorder_ = 5u;
+  uint32_t maxdelay_ = 8u;
   // delayline:
-  foa_sample_matrix_2d_t delayline;
+  // foa_sample_matrix_2d_t delayline;
   // feedback matrix:
   std::vector<float> feedbackmat;
   // reflection filter:
-  reflectionfilter_t reflection;
-  reflectionfilter_t prefilt;
+  // std::vector<reflectionfilter_t> reflection;
+  reflectionfilter_t prefilt0;
+  reflectionfilter_t prefilt1;
+  // FDN path:
+  std::vector<fdnpath_t> fdnpath;
   // rotation:
-  std::vector<TASCAR::quaternion_t> rotation;
+  // std::vector<TASCAR::quaternion_t> rotation;
   // delayline output for reflection filters:
-  foa_sample_array_1d_t dlout;
+  // std::vector<foa_sample_t> dlout;
   // delays:
-  uint32_t* delay;
+  // uint32_t* delay;
   // delayline pointer:
-  uint32_t* pos;
+  // uint32_t* pos;
   // gain calculation method:
-  gainmethod_t gainmethod;
+  gainmethod_t gainmethod = original;
 
 public:
   // input FOA sample:
@@ -267,59 +299,67 @@ public:
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
              gainmethod_t gm)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
-      delayline(fdnorder_, maxdelay_), feedbackmat(fdnorder_ * fdnorder_),
-      reflection(fdnorder), prefilt(2), rotation(fdnorder), dlout(fdnorder_),
-      delay(new uint32_t[fdnorder_]), pos(new uint32_t[fdnorder_]),
-      gainmethod(gm)
+      feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm)
 {
-  memset(delay, 0, sizeof(uint32_t) * fdnorder_);
-  memset(pos, 0, sizeof(uint32_t) * fdnorder_);
+  for(auto& v : feedbackmat)
+    v = 0.0f;
+  prefilt0.set_eta(0.0f);
+  prefilt1.set_eta(0.87f);
+  fdnpath.resize(fdnorder);
+  for(size_t k = 0; k < fdnpath.size(); ++k) {
+    fdnpath[k].init(maxdelay);
+    // fdnpath[k].set_eta(0.87f * (float)k / ((float)fdnorder - 1.0f));
+    //     eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
+  }
+  inval.set_zero();
+  outval.set_zero();
 }
 
 fdn_t::~fdn_t()
 {
-  delete[] delay;
-  delete[] pos;
+  // delete[] delay;
+  // delete[] pos;
 }
 
 void fdn_t::process(bool b_prefilt)
 {
   if(b_prefilt) {
-    prefilt.filter(inval, 0);
-    prefilt.filter(inval, 1);
+    prefilt0.filter(inval);
+    prefilt1.filter(inval);
   }
-  outval.clear();
+  outval.set_zero();
   // get output values from delayline, apply reflection filters and rotation:
-  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
-    foa_sample_t tmp(delayline.elem(tap, pos[tap]));
-    reflection.filter(tmp, tap);
-    TASCAR::posf_t p(tmp.x, tmp.y, tmp.z);
-    rotation[tap].rotate(p);
-    tmp.x = p.x;
-    tmp.y = p.y;
-    tmp.z = p.z;
-    dlout.elem(tap) = tmp;
+  for(auto& path : fdnpath) {
+    foa_sample_t tmp(path.delayline[path.pos]);
+    path.reflection.filter(tmp);
+    path.rotation.rotate(tmp);
+    path.dlout = tmp;
     outval += tmp;
   }
   // put rotated+attenuated value to delayline, add input:
-  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+  uint32_t tap = 0;
+  for(auto& path : fdnpath) {
+    ++tap;
     // first put input into delayline:
-    delayline.elem(tap, pos[tap]) = inval;
+    path.delayline[path.pos] = inval;
     // now add feedback signal:
-    for(uint32_t otap = 0; otap < fdnorder_; ++otap)
-      delayline.elem(tap, pos[tap]) +=
-          dlout.elem(otap) * feedbackmat[fdnorder_ * tap + otap];
+    uint32_t otap = 0;
+    for(auto& opath : fdnpath) {
+      ++otap;
+      path.delayline[path.pos] +=
+          opath.dlout * feedbackmat[fdnorder_ * tap + otap];
+    }
     // iterate delayline:
-    if(!pos[tap])
-      pos[tap] = delay[tap];
-    if(pos[tap])
-      --pos[tap];
+    if(!path.pos)
+      path.pos = path.delay;
+    if(path.pos)
+      --path.pos;
   }
 }
 
 void fdn_t::get_ir(TASCAR::wave_t& ir, bool b_prefilt)
 {
-  clear();
+  set_zero();
   inval.w = 1.0f;
   inval.x = 1.0f;
   inval.y = 0.0f;
@@ -328,7 +368,7 @@ void fdn_t::get_ir(TASCAR::wave_t& ir, bool b_prefilt)
     process(b_prefilt);
     ir.d[k] = outval.w;
   }
-  clear();
+  set_zero();
 }
 
 /**
@@ -344,7 +384,8 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
                        float damping, bool fixcirculantmat)
 {
   // set delays:
-  delayline.clear();
+  // delayline.clear();
+  set_zero();
   float t_mean(0);
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
     float t_(t_min);
@@ -361,8 +402,11 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
                          powf((float)tap / ((float)fdnorder_ - 1.0f), 0.5f);
     }
     uint32_t d((uint32_t)std::max(0.0f, t_));
-    delay[tap] = std::max(2u, std::min(maxdelay_ - 1u, d));
-    t_mean += (float)delay[tap];
+    fdnpath[tap].delay = std::max(2u, std::min(maxdelay_ - 1u, d));
+    fdnpath[tap].reflection.set_eta(0.87f * (float)tap /
+                                    ((float)fdnorder_ - 1.0f));
+    // eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
+    t_mean += (float)(fdnpath[tap].delay);
   }
   t_mean /= (float)std::max(1u, fdnorder_);
   float g(0.0f);
@@ -377,22 +421,23 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
     g = powf(10.0f, -3.0f * t_mean / t60);
     break;
   }
-  // set reflection filters:
-  reflection.set_lp(g, damping);
-  prefilt.set_lp(g, damping);
+  prefilt0.set_lp(g, damping);
+  prefilt1.set_lp(g, damping);
   // set rotation:
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+    // set reflection filters:
+    fdnpath[tap].reflection.set_lp(g, damping);
     float laz(az);
     if(fdnorder_ > 1)
       laz = az - daz + 2.0f * daz * (float)tap / (float)fdnorder_;
-    rotation[tap].set_rotation(laz, TASCAR::posf_t(0, 0, 1));
+    fdnpath[tap].rotation.set_rotation(laz, TASCAR::posf_t(0, 0, 1));
     TASCAR::quaternion_t q;
     q.set_rotation(0.5f * daz * (float)(tap & 1) - 0.5f * daz,
                    TASCAR::posf_t(0, 1, 0));
-    rotation[tap].rmul(q);
+    fdnpath[tap].rotation.rmul(q);
     q.set_rotation(0.125f * daz * (float)(tap % 3) - 0.25f * daz,
                    TASCAR::posf_t(1, 0, 0));
-    rotation[tap].rmul(q);
+    fdnpath[tap].rotation.rmul(q);
   }
   // set feedback matrix:
   if(fdnorder_ > 1) {

@@ -205,14 +205,6 @@ float wave_t::ms() const
   return rv;
 }
 
-float wave_t::maxabs() const
-{
-  float rv(0.0f);
-  for(uint32_t k = 0; k < size(); ++k)
-    rv = std::max(rv, fabsf(d[k]));
-  return rv;
-}
-
 float wave_t::spldb() const
 {
   return 10.0f * log10f(ms()) - SPLREFf;
