@@ -95,73 +95,6 @@ inline foa_sample_t operator+(foa_sample_t a, const foa_sample_t& b)
   return a;
 }
 
-/**
- * Two-dimensional container for foa_sample_t
- */
-// class foa_sample_matrix_2d_t {
-// public:
-//   foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2);
-//   ~foa_sample_matrix_2d_t();
-//   inline foa_sample_t& elem(uint32_t p1, uint32_t p2)
-//   {
-//     return data[p1 * s2 + p2];
-//   };
-//   inline const foa_sample_t& elem(uint32_t p1, uint32_t p2) const
-//   {
-//     return data[p1 * s2 + p2];
-//   };
-//   inline void clear()
-//   {
-//     uint32_t l(s1 * s2);
-//     for(uint32_t k = 0; k < l; ++k)
-//       data[k].clear();
-//   };
-//
-// protected:
-//   uint32_t s1;
-//   uint32_t s2;
-//   foa_sample_t* data;
-// };
-
-// class foa_sample_array_1d_t {
-// public:
-//   foa_sample_array_1d_t(uint32_t d1);
-//   ~foa_sample_array_1d_t();
-//   inline foa_sample_t& elem(uint32_t p1) { return data[p1]; };
-//   inline const foa_sample_t& elem(uint32_t p1) const { return data[p1]; };
-//   inline void clear()
-//   {
-//     for(uint32_t k = 0; k < s1; ++k)
-//       data[k].clear();
-//   };
-//
-// protected:
-//   uint32_t s1;
-//   foa_sample_t* data;
-// };
-
-// foa_sample_matrix_2d_t::foa_sample_matrix_2d_t(uint32_t d1, uint32_t d2)
-//     : s1(d1), s2(d2), data(new foa_sample_t[s1 * s2])
-//{
-//   clear();
-// }
-//
-// foa_sample_matrix_2d_t::~foa_sample_matrix_2d_t()
-//{
-//   delete[] data;
-// }
-
-// foa_sample_array_1d_t::foa_sample_array_1d_t(uint32_t d1)
-//     : s1(d1), data(new foa_sample_t[s1])
-//{
-//   clear();
-// }
-//
-// foa_sample_array_1d_t::~foa_sample_array_1d_t()
-//{
-//   delete[] data;
-// }
-
 // y[n] = -g x[n] + x[n-1] + g y[n-1]
 class reflectionfilter_t {
 public:
@@ -194,9 +127,6 @@ reflectionfilter_t::reflectionfilter_t()
   sy.set_zero();
   sapx.set_zero();
   sapy.set_zero();
-  //  eta.resize(d1);
-  //  for(uint32_t k = 0; k < d1; ++k)
-  //    eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
 }
 
 /**
@@ -252,7 +182,7 @@ class fdn_t {
 public:
   enum gainmethod_t { original, mean, schroeder };
   fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm);
-  ~fdn_t();
+  ~fdn_t(){};
   inline void process(bool b_prefilt);
   void setpar_t60(float az, float daz, float t, float dt, float t60,
                   float damping, bool fixcirculantmat);
@@ -278,14 +208,6 @@ private:
   reflectionfilter_t prefilt1;
   // FDN path:
   std::vector<fdnpath_t> fdnpath;
-  // rotation:
-  // std::vector<TASCAR::quaternion_t> rotation;
-  // delayline output for reflection filters:
-  // std::vector<foa_sample_t> dlout;
-  // delays:
-  // uint32_t* delay;
-  // delayline pointer:
-  // uint32_t* pos;
   // gain calculation method:
   gainmethod_t gainmethod = original;
 
@@ -308,17 +230,9 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
   fdnpath.resize(fdnorder);
   for(size_t k = 0; k < fdnpath.size(); ++k) {
     fdnpath[k].init(maxdelay);
-    // fdnpath[k].set_eta(0.87f * (float)k / ((float)fdnorder - 1.0f));
-    //     eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
   }
   inval.set_zero();
   outval.set_zero();
-}
-
-fdn_t::~fdn_t()
-{
-  // delete[] delay;
-  // delete[] pos;
 }
 
 void fdn_t::process(bool b_prefilt)
