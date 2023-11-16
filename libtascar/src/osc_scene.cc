@@ -117,17 +117,6 @@ int osc_set_object_orientation(const char*, const char* types, lo_arg** argv,
   return 1;
 }
 
-int osc_route_mute(const char*, const char* types, lo_arg** argv, int argc,
-                   lo_message, void* user_data)
-{
-  route_solo_p_t* h((route_solo_p_t*)user_data);
-  if(h && (argc == 1) && (types[0] == 'i')) {
-    h->route->set_mute(argv[0]->i);
-    return 0;
-  }
-  return 1;
-}
-
 int osc_route_solo(const char*, const char* types, lo_arg** argv, int argc,
                    lo_message, void* user_data)
 {
@@ -263,8 +252,8 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,
   rs->route = o;
   rs->anysolo = &(scene->anysolo);
   vprs.push_back(rs);
-  srv->add_method("/" + scene->name + "/" + o->get_name() + "/mute", "i",
-                  osc_route_mute, rs);
+  srv->add_bool("/" + scene->name + "/" + o->get_name() + "/mute", &(o->mute),
+                "mute flag, 1 = muted, 0 = unmuted");
   srv->add_method("/" + scene->name + "/" + o->get_name() + "/solo", "i",
                   osc_route_solo, rs);
   srv->add_float("/" + scene->name + "/" + o->get_name() + "/targetlevel",

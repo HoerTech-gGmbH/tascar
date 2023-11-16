@@ -102,7 +102,11 @@ namespace TASCAR {
     private:
       std::string name;
       std::string id;
+
+    public:
       bool mute;
+
+    private:
       bool solo;
       float meter_tc;
       TASCAR::levelmeter::weight_t meter_weight;
@@ -158,18 +162,15 @@ namespace TASCAR {
       std::vector<TASCAR::pos_t> vertices;
     };
 
-    class face_group_t : public object_t, public TASCAR::Acousticmodel::reflector_t {
+    class face_group_t : public object_t,
+                         public TASCAR::Acousticmodel::reflector_t {
     public:
       face_group_t(tsccfg::node_t xmlsrc);
       virtual ~face_group_t();
       void geometry_update(double t);
       void process_active(double t, uint32_t anysolo);
       std::vector<TASCAR::Acousticmodel::reflector_t*> reflectors;
-      //float reflectivity;
-      //float damping;
       std::string importraw;
-      //bool edgereflection;
-      //float scattering;
       TASCAR::pos_t shoebox;
       TASCAR::pos_t shoeboxwalls;
     };
