@@ -339,21 +339,21 @@ void fdn_t::process(bool b_prefilt)
   // put rotated+attenuated value to delayline, add input:
   uint32_t tap = 0;
   for(auto& path : fdnpath) {
-    ++tap;
     // first put input into delayline:
     path.delayline[path.pos] = inval;
     // now add feedback signal:
     uint32_t otap = 0;
     for(auto& opath : fdnpath) {
-      ++otap;
       path.delayline[path.pos] +=
           opath.dlout * feedbackmat[fdnorder_ * tap + otap];
+      ++otap;
     }
     // iterate delayline:
     if(!path.pos)
       path.pos = path.delay;
     if(path.pos)
       --path.pos;
+    ++tap;
   }
 }
 
