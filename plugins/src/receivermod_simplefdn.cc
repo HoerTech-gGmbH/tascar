@@ -182,7 +182,7 @@ class fdn_t {
 public:
   enum gainmethod_t { original, mean, schroeder };
   fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm,
-        bool feedback_);
+        bool feedback_, float lowcut);
   ~fdn_t(){};
   inline void process(foa_sample_t& x, bool b_prefilt);
   void setpar_t60(float az, float daz, float t, float dt, float t60,
@@ -212,6 +212,12 @@ private:
   gainmethod_t gainmethod = original;
   // use feedback matrix:
   bool feedback = true;
+  //
+  TASCAR::biquadf_t lowcut_w;
+  TASCAR::biquadf_t lowcut_x;
+  TASCAR::biquadf_t lowcut_y;
+  TASCAR::biquadf_t lowcut_z;
+  bool use_lowcut = false;
 
 public:
   // input FOA sample:
@@ -221,7 +227,7 @@ public:
 };
 
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
-             gainmethod_t gm, bool feedback_)
+             gainmethod_t gm, bool feedback_, float lowcutf_norm)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
       feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm), feedback(feedback_)
 {
@@ -233,12 +239,25 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
   for(size_t k = 0; k < fdnpath.size(); ++k) {
     fdnpath[k].init(maxdelay);
   }
+  if(lowcutf_norm > 0) {
+    use_lowcut = true;
+    lowcut_w.set_butterworth(lowcutf_norm, 1.0f, true);
+    lowcut_x.set_butterworth(lowcutf_norm, 1.0f, true);
+    lowcut_y.set_butterworth(lowcutf_norm, 1.0f, true);
+    lowcut_z.set_butterworth(lowcutf_norm, 1.0f, true);
+  }
   // inval.set_zero();
   // outval.set_zero();
 }
 
 void fdn_t::process(foa_sample_t& x, bool b_prefilt)
 {
+  if(use_lowcut) {
+    x.w = lowcut_w.filter(x.w);
+    x.x = lowcut_x.filter(x.x);
+    x.y = lowcut_y.filter(x.y);
+    x.z = lowcut_z.filter(x.z);
+  }
   if(b_prefilt) {
     prefilt0.filter(x);
     prefilt1.filter(x);
@@ -276,25 +295,26 @@ void fdn_t::process(foa_sample_t& x, bool b_prefilt)
   } else {
     foa_sample_t outval;
     // get output values from delayline, apply reflection filters and rotation:
+    uint32_t tap = 0;
     for(auto& path : fdnpath) {
       foa_sample_t tmp(path.delayline[path.pos]);
+      tmp *= feedbackmat[fdnorder_ * tap];
       path.reflection.filter(tmp);
       path.rotation.rotate(tmp);
       path.dlout = tmp;
       outval += tmp;
+      ++tap;
     }
     // put rotated+attenuated value to delayline, add input:
-    uint32_t tap = 0;
     for(auto& path : fdnpath) {
       // first put input into delayline:
       path.delayline[path.pos] = x;
-      x *= -1.0f;
+      // x *= -1.0f;
       // iterate delayline:
       if(!path.pos)
         path.pos = path.delay;
       if(path.pos)
         --path.pos;
-      ++tap;
     }
     x = outval;
   }
@@ -421,6 +441,7 @@ public:
   std::vector<float> vcf;
   std::vector<float> vt60;
   uint32_t numiter = 100;
+  float lowcut = 0;
 };
 
 simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
@@ -461,6 +482,7 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
     throw TASCAR::ErrMsg(
         "Invalid gain method \"" + gainmethod +
         "\". Possible values are original, mean or schroeder.");
+  GET_ATTRIBUTE(lowcut, "Hz", "low cut off frequency, or zero for no low cut");
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}
@@ -612,14 +634,14 @@ void simplefdn_t::configure()
   n_channels = AMB11ACN::idx::channels;
   if(feedback_delay_network)
     delete feedback_delay_network;
-  feedback_delay_network =
-      new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, true);
+  feedback_delay_network = new fdn_t(fdnorder, (uint32_t)f_sample, logdelays,
+                                     gm, true, lowcut / f_sample);
   for(auto& pff : feedforward_delay_network)
     delete pff;
   feedforward_delay_network.clear();
   for(uint32_t k = 0; k < forwardstages; ++k)
-    feedforward_delay_network.push_back(
-        new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, false));
+    feedforward_delay_network.push_back(new fdn_t(
+        fdnorder, (uint32_t)f_sample, logdelays, gm, false, lowcut / f_sample));
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
