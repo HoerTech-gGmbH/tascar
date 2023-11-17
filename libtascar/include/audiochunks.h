@@ -64,7 +64,13 @@ namespace TASCAR {
                             float gain = 1.0);
     float ms() const;
     float rms() const;
-    float maxabs() const;
+    inline float maxabs() const
+    {
+      float rv = 0.0f;
+      for(uint32_t k = 0; k < n; ++k)
+        rv = std::max(rv, fabsf(d[k]));
+      return rv;
+    };
     float spldb() const;
     float maxabsdb() const;
     void append(const wave_t& src);
