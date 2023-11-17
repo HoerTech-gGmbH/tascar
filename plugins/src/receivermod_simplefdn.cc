@@ -181,9 +181,10 @@ public:
 class fdn_t {
 public:
   enum gainmethod_t { original, mean, schroeder };
-  fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm);
+  fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm,
+        bool feedback_);
   ~fdn_t(){};
-  inline void process(bool b_prefilt);
+  inline void process(foa_sample_t& x, bool b_prefilt);
   void setpar_t60(float az, float daz, float t, float dt, float t60,
                   float damping, bool fixcirculantmat);
   void set_logdelays(bool ld) { logdelays_ = ld; };
@@ -192,7 +193,6 @@ public:
     for(auto& path : fdnpath)
       path.set_zero();
   };
-  void get_ir(TASCAR::wave_t& w, bool b_prefilt);
 
 private:
   bool logdelays_ = true;
@@ -210,18 +210,20 @@ private:
   std::vector<fdnpath_t> fdnpath;
   // gain calculation method:
   gainmethod_t gainmethod = original;
+  // use feedback matrix:
+  bool feedback = true;
 
 public:
   // input FOA sample:
-  foa_sample_t inval;
+  // foa_sample_t inval;
   // output FOA sample:
-  foa_sample_t outval;
+  // foa_sample_t outval;
 };
 
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
-             gainmethod_t gm)
+             gainmethod_t gm, bool feedback_)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
-      feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm)
+      feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm), feedback(feedback_)
 {
   for(auto& v : feedbackmat)
     v = 0.0f;
@@ -231,58 +233,71 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
   for(size_t k = 0; k < fdnpath.size(); ++k) {
     fdnpath[k].init(maxdelay);
   }
-  inval.set_zero();
-  outval.set_zero();
+  // inval.set_zero();
+  // outval.set_zero();
 }
 
-void fdn_t::process(bool b_prefilt)
+void fdn_t::process(foa_sample_t& x, bool b_prefilt)
 {
   if(b_prefilt) {
-    prefilt0.filter(inval);
-    prefilt1.filter(inval);
+    prefilt0.filter(x);
+    prefilt1.filter(x);
   }
-  outval.set_zero();
-  // get output values from delayline, apply reflection filters and rotation:
-  for(auto& path : fdnpath) {
-    foa_sample_t tmp(path.delayline[path.pos]);
-    path.reflection.filter(tmp);
-    path.rotation.rotate(tmp);
-    path.dlout = tmp;
-    outval += tmp;
-  }
-  // put rotated+attenuated value to delayline, add input:
-  uint32_t tap = 0;
-  for(auto& path : fdnpath) {
-    // first put input into delayline:
-    path.delayline[path.pos] = inval;
-    // now add feedback signal:
-    uint32_t otap = 0;
-    for(auto& opath : fdnpath) {
-      path.delayline[path.pos] +=
-          opath.dlout * feedbackmat[fdnorder_ * tap + otap];
-      ++otap;
+  if(feedback) {
+    foa_sample_t outval;
+    // get output values from delayline, apply reflection filters and rotation:
+    for(auto& path : fdnpath) {
+      foa_sample_t tmp(path.delayline[path.pos]);
+      path.reflection.filter(tmp);
+      path.rotation.rotate(tmp);
+      path.dlout = tmp;
+      outval += tmp;
     }
-    // iterate delayline:
-    if(!path.pos)
-      path.pos = path.delay;
-    if(path.pos)
-      --path.pos;
-    ++tap;
+    // put rotated+attenuated value to delayline, add input:
+    uint32_t tap = 0;
+    for(auto& path : fdnpath) {
+      // first put input into delayline:
+      path.delayline[path.pos] = x;
+      // now add feedback signal:
+      uint32_t otap = 0;
+      for(auto& opath : fdnpath) {
+        path.delayline[path.pos] +=
+            opath.dlout * feedbackmat[fdnorder_ * tap + otap];
+        ++otap;
+      }
+      // iterate delayline:
+      if(!path.pos)
+        path.pos = path.delay;
+      if(path.pos)
+        --path.pos;
+      ++tap;
+    }
+    x = outval;
+  } else {
+    foa_sample_t outval;
+    // get output values from delayline, apply reflection filters and rotation:
+    for(auto& path : fdnpath) {
+      foa_sample_t tmp(path.delayline[path.pos]);
+      path.reflection.filter(tmp);
+      path.rotation.rotate(tmp);
+      path.dlout = tmp;
+      outval += tmp;
+    }
+    // put rotated+attenuated value to delayline, add input:
+    uint32_t tap = 0;
+    for(auto& path : fdnpath) {
+      // first put input into delayline:
+      path.delayline[path.pos] = x;
+      x *= -1.0f;
+      // iterate delayline:
+      if(!path.pos)
+        path.pos = path.delay;
+      if(path.pos)
+        --path.pos;
+      ++tap;
+    }
+    x = outval;
   }
-}
-
-void fdn_t::get_ir(TASCAR::wave_t& ir, bool b_prefilt)
-{
-  set_zero();
-  inval.w = 1.0f;
-  inval.x = 1.0f;
-  inval.y = 0.0f;
-  inval.z = 0.0f;
-  for(size_t k = 0u; k < ir.n; ++k) {
-    process(b_prefilt);
-    ir.d[k] = outval.w;
-  }
-  set_zero();
 }
 
 /**
@@ -321,6 +336,16 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
                                     ((float)fdnorder_ - 1.0f));
     // eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
     t_mean += (float)(fdnpath[tap].delay);
+  }
+  // if feed forward model, then truncate delays:
+  if(!feedback) {
+    auto d_min = maxdelay_;
+    for(auto& path : fdnpath)
+      d_min = std::min(d_min, path.delay);
+    if(d_min > 2u)
+      d_min -= 2u;
+    for(auto& path : fdnpath)
+      path.delay -= d_min;
   }
   t_mean /= (float)std::max(1u, fdnorder_);
   float g(0.0f);
@@ -386,6 +411,7 @@ public:
   float t60 = 0.0;
   float damping = 0.3f;
   bool prefilt = true;
+  uint32_t forwardstages = 0;
   bool logdelays = true;
   float absorption = 0.6f;
   float c = 340.0f;
@@ -408,6 +434,7 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
                 "tilt of T60");
   GET_ATTRIBUTE_BOOL(prefilt,
                      "Apply additional filter before inserting audio into FDN");
+  GET_ATTRIBUTE(forwardstages, "", "Number of feed forward stages");
   GET_ATTRIBUTE(absorption, "", "Absorption used in Sabine's equation");
   GET_ATTRIBUTE(c, "m/s", "Speed of sound");
   GET_ATTRIBUTE(volumetric, "m", "Dimension of room x y z");
@@ -462,8 +489,9 @@ public:
   void update_par();
   void setlogdelays(bool ld);
   void configure();
-  void optim_param();
+  // void optim_param();
   void release();
+  void get_ir(TASCAR::wave_t& w);
   receivermod_base_t::data_t* create_state_data(double srate,
                                                 uint32_t fragsize) const;
   virtual void add_variables(TASCAR::osc_server_t* srv);
@@ -483,13 +511,14 @@ public:
   float slopeerr(const std::vector<float>& param);
 
 private:
-  fdn_t* fdn;
-  TASCAR::amb1wave_t* foa_out;
+  fdn_t* feedback_delay_network = NULL;
+  std::vector<fdn_t*> feedforward_delay_network;
+  TASCAR::amb1wave_t* foa_out = NULL;
   pthread_mutex_t mtx;
-  float wgain;
-  float distcorr;
-  TASCAR::wave_t* ir_bb;
-  TASCAR::wave_t* ir_band;
+  float wgain = MIN3DB;
+  float distcorr = 1.0f;
+  TASCAR::wave_t* ir_bb = NULL;
+  TASCAR::wave_t* ir_band = NULL;
 };
 
 int simplefdn_t::osc_fixcirculantmat(const char*, const char* types,
@@ -520,9 +549,7 @@ int simplefdn_t::osc_set_dim_damp_absorption(const char*, const char* types,
   return 0;
 }
 
-simplefdn_t::simplefdn_t(tsccfg::node_t cfg)
-    : simplefdn_vars_t(cfg), fdn(NULL), foa_out(NULL), wgain(MIN3DB),
-      distcorr(1.0)
+simplefdn_t::simplefdn_t(tsccfg::node_t cfg) : simplefdn_vars_t(cfg)
 {
   if(t60 <= 0.0)
     t60 =
@@ -583,9 +610,16 @@ void simplefdn_t::configure()
 {
   receivermod_base_t::configure();
   n_channels = AMB11ACN::idx::channels;
-  if(fdn)
-    delete fdn;
-  fdn = new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm);
+  if(feedback_delay_network)
+    delete feedback_delay_network;
+  feedback_delay_network =
+      new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, true);
+  for(auto& pff : feedforward_delay_network)
+    delete pff;
+  feedforward_delay_network.clear();
+  for(uint32_t k = 0; k < forwardstages; ++k)
+    feedforward_delay_network.push_back(
+        new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, false));
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
@@ -666,8 +700,10 @@ void simplefdn_t::add_variables(TASCAR::osc_server_t* srv)
 
 simplefdn_t::~simplefdn_t()
 {
-  if(fdn)
-    delete fdn;
+  if(feedback_delay_network)
+    delete feedback_delay_network;
+  for(auto& pff : feedforward_delay_network)
+    delete pff;
   if(foa_out)
     delete foa_out;
   pthread_mutex_destroy(&mtx);
@@ -688,12 +724,17 @@ void simplefdn_t::update_par()
     if(t60 <= 0.0)
       t60 = 0.161f * volumetric.boxvolumef() /
             (absorption * volumetric.boxareaf());
-    if(fdn) {
+    if(feedback_delay_network) {
       float wscale(TASCAR_2PIf * tmin);
-      fdn->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
-                      (float)f_sample * tmax, (float)f_sample * t60,
-                      std::max(0.0f, std::min(0.999f, damping)),
-                      fixcirculantmat);
+      feedback_delay_network->setpar_t60(
+          wscale * w, wscale * dw, (float)f_sample * tmin,
+          (float)f_sample * tmax, (float)f_sample * t60,
+          std::max(0.0f, std::min(0.999f, damping)), fixcirculantmat);
+      for(auto& pff : feedforward_delay_network)
+        pff->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
+                        (float)f_sample * tmax, (float)f_sample * t60,
+                        std::max(0.0f, std::min(0.999f, damping)),
+                        fixcirculantmat);
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -702,8 +743,10 @@ void simplefdn_t::update_par()
 void simplefdn_t::setlogdelays(bool ld)
 {
   if(pthread_mutex_lock(&mtx) == 0) {
-    if(fdn) {
-      fdn->set_logdelays(ld);
+    if(feedback_delay_network) {
+      feedback_delay_network->set_logdelays(ld);
+      for(auto& pff : feedforward_delay_network)
+        pff->set_logdelays(ld);
       float tmin(std::min((float)volumetric.x,
                           std::min((float)volumetric.y, (float)volumetric.z)) /
                  c);
@@ -714,10 +757,15 @@ void simplefdn_t::setlogdelays(bool ld)
         t60 = 0.161f * volumetric.boxvolumef() /
               (absorption * volumetric.boxareaf());
       float wscale(TASCAR_2PIf * tmin);
-      fdn->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
-                      (float)f_sample * tmax, (float)f_sample * t60,
-                      std::max(0.0f, std::min(0.999f, damping)),
-                      fixcirculantmat);
+      feedback_delay_network->setpar_t60(
+          wscale * w, wscale * dw, (float)f_sample * tmin,
+          (float)f_sample * tmax, (float)f_sample * t60,
+          std::max(0.0f, std::min(0.999f, damping)), fixcirculantmat);
+      for(auto& pff : feedforward_delay_network)
+        pff->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
+                        (float)f_sample * tmax, (float)f_sample * t60,
+                        std::max(0.0f, std::min(0.999f, damping)),
+                        fixcirculantmat);
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -728,17 +776,18 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
   // correct for volumetric gain:
   if(pthread_mutex_trylock(&mtx) == 0) {
     *foa_out *= distcorr;
-    if(fdn) {
+    if(feedback_delay_network) {
       for(uint32_t t = 0; t < n_fragment; ++t) {
-        fdn->inval.w = foa_out->w()[t];
-        fdn->inval.x = foa_out->x()[t];
-        fdn->inval.y = foa_out->y()[t];
-        fdn->inval.z = foa_out->z()[t];
-        fdn->process(prefilt);
-        output[AMB11ACN::idx::w][t] += fdn->outval.w;
-        output[AMB11ACN::idx::x][t] += fdn->outval.x;
-        output[AMB11ACN::idx::y][t] += fdn->outval.y;
-        output[AMB11ACN::idx::z][t] += fdn->outval.z;
+        foa_sample_t inval(foa_out->w()[t], foa_out->x()[t], foa_out->y()[t],
+                           foa_out->z()[t]);
+        for(auto& pff : feedforward_delay_network)
+          pff->process(inval, prefilt);
+        feedback_delay_network->process(inval, prefilt);
+
+        output[AMB11ACN::idx::w][t] += inval.w;
+        output[AMB11ACN::idx::x][t] += inval.x;
+        output[AMB11ACN::idx::y][t] += inval.y;
+        output[AMB11ACN::idx::z][t] += inval.z;
       }
     }
     foa_out->clear();
@@ -779,9 +828,9 @@ float ir_get_t60(TASCAR::wave_t& ir, float fs)
 void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
 {
   if(pthread_mutex_trylock(&mtx) == 0) {
-    if(fdn) {
+    if(feedback_delay_network) {
       t60.clear();
-      fdn->get_ir(*ir_bb, prefilt);
+      get_ir(*ir_bb);
       TASCAR::bandpass_t bp(176.78f, 353.55f, f_sample);
       for(auto f : cf) {
         bp.set_range(f * sqrtf(0.5f), f * sqrtf(2.0f));
@@ -800,12 +849,41 @@ void simplefdn_t::get_t60(const std::vector<float>& cf, std::vector<float>& t60)
   }
 }
 
+void simplefdn_t::get_ir(TASCAR::wave_t& ir)
+{
+  if(feedback_delay_network) {
+    for(auto& pff : feedforward_delay_network)
+      pff->set_zero();
+    feedback_delay_network->set_zero();
+    foa_sample_t inval;
+    inval.w = 1.0f;
+    inval.x = 1.0f;
+    inval.y = 0.0f;
+    inval.z = 0.0f;
+    for(size_t k = 0u; k < ir.n; ++k) {
+      for(auto& pff : feedforward_delay_network)
+        pff->process(inval, prefilt);
+      feedback_delay_network->process(inval, prefilt);
+      ir.d[k] = inval.w;
+      inval.set_zero();
+    }
+    for(auto& pff : feedforward_delay_network)
+      pff->set_zero();
+    feedback_delay_network->set_zero();
+  }
+}
+
 TASCAR::receivermod_base_t::data_t*
 simplefdn_t::create_state_data(double, uint32_t fragsize) const
 {
   return new data_t(fragsize);
 }
 
+/**
+ * @brief add input signal to ambisonics signal container
+ *
+ * Use panning, using source direction
+ */
 void simplefdn_t::add_pointsource(const TASCAR::pos_t& prel, double,
                                   const TASCAR::wave_t& chunk,
                                   std::vector<TASCAR::wave_t>&,

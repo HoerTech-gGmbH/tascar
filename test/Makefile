@@ -315,7 +315,7 @@ jackconnect_%: test_connect%.tsc
 
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: TOL=4e-4
 test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert test_snd_hoa3d_pinv_hor test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert test_snd_hoa3d_pinv_vert: RMSTOL=1e-4
-test_ir_simplefdn test_ir_simplefdn_gain test_ir_simplefdn_optimt60: IRLEN=44100
+test_ir_simplefdn test_ir_simplefdn_gain test_ir_simplefdn_optimt60 test_ir_simplefdn_feedforward: IRLEN=44100
 test_ir_reverb: IRLEN=44100
 test_ir_partconvrev: IRLEN=44100
 test_ir_partconvrev_offset: IRLEN=44100
