@@ -18,8 +18,9 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd_sourcedir_generic_cardioid test_ir_wfs			\
 	test_ir_wfs_noplanewave test_level_hoa2d_basic			\
 	test_level_hoa2d_maxre test_ir_reverb test_ir_simplefdn		\
-	test_ir_simplefdn_gain test_snd_vbap3d_speakermatch		\
-	test_ir_volumetric test_pos_obstacle test_pos_obstacle_inner	\
+	test_ir_simplefdn_gain test_ir_simplefdn_feedforward		\
+	test_snd_vbap3d_speakermatch test_ir_volumetric			\
+	test_pos_obstacle test_pos_obstacle_inner			\
 	test_level_absorption test_ir_hrtf_0deg test_ir_hrtf_45deg	\
 	test_ir_hrtf_75deg test_ir_hrtf_90deg test_ir_hrtf_105deg	\
 	test_ir_hrtf_135deg test_ir_hrtf_180deg test_ir_hrtf_225deg	\
