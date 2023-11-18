@@ -182,11 +182,11 @@ class fdn_t {
 public:
   enum gainmethod_t { original, mean, schroeder };
   fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm,
-        bool feedback_, float lowcut);
+        bool feedback_);
   ~fdn_t(){};
-  inline void process(foa_sample_t& x, bool b_prefilt);
+  inline void process(const std::vector<fdnpath_t>& src);
   void setpar_t60(float az, float daz, float t, float dt, float t60,
-                  float damping, bool fixcirculantmat);
+                  float damping, bool fixcirculantmat, bool truncate_forward);
   void set_logdelays(bool ld) { logdelays_ = ld; };
   void set_zero()
   {
@@ -194,16 +194,13 @@ public:
       path.set_zero();
   };
 
-private:
+  // private:
   bool logdelays_ = true;
   uint32_t fdnorder_ = 5u;
   uint32_t maxdelay_ = 8u;
-  // delayline:
-  // foa_sample_matrix_2d_t delayline;
   // feedback matrix:
   std::vector<float> feedbackmat;
   // reflection filter:
-  // std::vector<reflectionfilter_t> reflection;
   reflectionfilter_t prefilt0;
   reflectionfilter_t prefilt1;
   // FDN path:
@@ -213,21 +210,14 @@ private:
   // use feedback matrix:
   bool feedback = true;
   //
-  TASCAR::biquadf_t lowcut_w;
-  TASCAR::biquadf_t lowcut_x;
-  TASCAR::biquadf_t lowcut_y;
-  TASCAR::biquadf_t lowcut_z;
-  bool use_lowcut = false;
 
 public:
-  // input FOA sample:
-  // foa_sample_t inval;
   // output FOA sample:
-  // foa_sample_t outval;
+  foa_sample_t outval;
 };
 
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
-             gainmethod_t gm, bool feedback_, float lowcutf_norm)
+             gainmethod_t gm, bool feedback_)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
       feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm), feedback(feedback_)
 {
@@ -239,31 +229,14 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
   for(size_t k = 0; k < fdnpath.size(); ++k) {
     fdnpath[k].init(maxdelay);
   }
-  if(lowcutf_norm > 0) {
-    use_lowcut = true;
-    lowcut_w.set_butterworth(lowcutf_norm, 1.0f, true);
-    lowcut_x.set_butterworth(lowcutf_norm, 1.0f, true);
-    lowcut_y.set_butterworth(lowcutf_norm, 1.0f, true);
-    lowcut_z.set_butterworth(lowcutf_norm, 1.0f, true);
-  }
   // inval.set_zero();
-  // outval.set_zero();
+  outval.set_zero();
 }
 
-void fdn_t::process(foa_sample_t& x, bool b_prefilt)
+void fdn_t::process(const std::vector<fdnpath_t>& src)
 {
-  if(use_lowcut) {
-    x.w = lowcut_w.filter(x.w);
-    x.x = lowcut_x.filter(x.x);
-    x.y = lowcut_y.filter(x.y);
-    x.z = lowcut_z.filter(x.z);
-  }
-  if(b_prefilt) {
-    prefilt0.filter(x);
-    prefilt1.filter(x);
-  }
+  outval.set_zero();
   if(feedback) {
-    foa_sample_t outval;
     // get output values from delayline, apply reflection filters and rotation:
     for(auto& path : fdnpath) {
       foa_sample_t tmp(path.delayline[path.pos]);
@@ -276,12 +249,13 @@ void fdn_t::process(foa_sample_t& x, bool b_prefilt)
     uint32_t tap = 0;
     for(auto& path : fdnpath) {
       // first put input into delayline:
-      path.delayline[path.pos] = x;
+      path.delayline[path.pos].set_zero();
       // now add feedback signal:
       uint32_t otap = 0;
       for(auto& opath : fdnpath) {
-        path.delayline[path.pos] +=
-            opath.dlout * feedbackmat[fdnorder_ * tap + otap];
+        foa_sample_t tmp = opath.dlout;
+        tmp += src[otap].dlout;
+        path.delayline[path.pos] += tmp * feedbackmat[fdnorder_ * tap + otap];
         ++otap;
       }
       // iterate delayline:
@@ -291,32 +265,35 @@ void fdn_t::process(foa_sample_t& x, bool b_prefilt)
         --path.pos;
       ++tap;
     }
-    x = outval;
   } else {
-    foa_sample_t outval;
+    // put rotated+attenuated value to delayline, add input:
+    {
+      uint32_t tap = 0;
+      for(auto& path : fdnpath) {
+        foa_sample_t tmp;
+        uint32_t otap = 0;
+        for(auto& opath : src) {
+          tmp += opath.dlout * feedbackmat[fdnorder_ * tap + otap];
+          ++otap;
+        }
+        // first put input into delayline:
+        path.delayline[path.pos] = tmp;
+        // iterate delayline:
+        if(!path.pos)
+          path.pos = path.delay;
+        if(path.pos)
+          --path.pos;
+        ++tap;
+      }
+    }
     // get output values from delayline, apply reflection filters and rotation:
-    uint32_t tap = 0;
     for(auto& path : fdnpath) {
       foa_sample_t tmp(path.delayline[path.pos]);
-      tmp *= feedbackmat[fdnorder_ * tap];
       path.reflection.filter(tmp);
       path.rotation.rotate(tmp);
       path.dlout = tmp;
       outval += tmp;
-      ++tap;
     }
-    // put rotated+attenuated value to delayline, add input:
-    for(auto& path : fdnpath) {
-      // first put input into delayline:
-      path.delayline[path.pos] = x;
-      // x *= -1.0f;
-      // iterate delayline:
-      if(!path.pos)
-        path.pos = path.delay;
-      if(path.pos)
-        --path.pos;
-    }
-    x = outval;
   }
 }
 
@@ -330,10 +307,10 @@ void fdn_t::process(foa_sample_t& x, bool b_prefilt)
    \param damping Damping
 */
 void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
-                       float damping, bool fixcirculantmat)
+                       float damping, bool fixcirculantmat,
+                       bool truncate_forward)
 {
   // set delays:
-  // delayline.clear();
   set_zero();
   float t_mean(0);
   for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
@@ -359,13 +336,18 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
   }
   // if feed forward model, then truncate delays:
   if(!feedback) {
-    auto d_min = maxdelay_;
-    for(auto& path : fdnpath)
-      d_min = std::min(d_min, path.delay);
-    if(d_min > 2u)
-      d_min -= 2u;
-    for(auto& path : fdnpath)
-      path.delay -= d_min;
+    if(truncate_forward) {
+      auto d_min = maxdelay_;
+      for(auto& path : fdnpath)
+        d_min = std::min(d_min, path.delay);
+      if(d_min > 2u)
+        d_min -= 2u;
+      for(auto& path : fdnpath)
+        path.delay -= d_min;
+    } else {
+      for(auto& path : fdnpath)
+        path.delay++;
+    }
   }
   t_mean /= (float)std::max(1u, fdnorder_);
   float g(0.0f);
@@ -442,6 +424,12 @@ public:
   std::vector<float> vt60;
   uint32_t numiter = 100;
   float lowcut = 0;
+  TASCAR::biquadf_t lowcut_w;
+  TASCAR::biquadf_t lowcut_x;
+  TASCAR::biquadf_t lowcut_y;
+  TASCAR::biquadf_t lowcut_z;
+  bool use_lowcut = false;
+  bool truncate_forward = false;
 };
 
 simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
@@ -483,6 +471,7 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
         "Invalid gain method \"" + gainmethod +
         "\". Possible values are original, mean or schroeder.");
   GET_ATTRIBUTE(lowcut, "Hz", "low cut off frequency, or zero for no low cut");
+  GET_ATTRIBUTE_BOOL(truncate_forward, "Truncate delays of feed forward path");
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}
@@ -500,6 +489,7 @@ public:
   };
   simplefdn_t(tsccfg::node_t xmlsrc);
   ~simplefdn_t();
+  inline void fdnfilter(foa_sample_t& x);
   void postproc(std::vector<TASCAR::wave_t>& output);
   void add_pointsource(const TASCAR::pos_t& prel, double width,
                        const TASCAR::wave_t& chunk,
@@ -527,13 +517,14 @@ public:
      @brief Get T60 at octave bands around provided center frequencies
      @param cf list of center frequencies in Hz
      @retval t60 T60 in seconds
-   */
+  */
   void get_t60(const std::vector<float>& cf, std::vector<float>& t60);
   float t60err(const std::vector<float>& param);
   float slopeerr(const std::vector<float>& param);
 
 private:
   fdn_t* feedback_delay_network = NULL;
+  std::vector<fdnpath_t> srcpath;
   std::vector<fdn_t*> feedforward_delay_network;
   TASCAR::amb1wave_t* foa_out = NULL;
   pthread_mutex_t mtx;
@@ -632,16 +623,26 @@ void simplefdn_t::configure()
 {
   receivermod_base_t::configure();
   n_channels = AMB11ACN::idx::channels;
+  if(lowcut > 0) {
+    use_lowcut = true;
+    lowcut_w.set_butterworth(lowcut, f_sample, true);
+    lowcut_x.set_butterworth(lowcut, f_sample, true);
+    lowcut_y.set_butterworth(lowcut, f_sample, true);
+    lowcut_z.set_butterworth(lowcut, f_sample, true);
+  } else {
+    use_lowcut = false;
+  }
   if(feedback_delay_network)
     delete feedback_delay_network;
-  feedback_delay_network = new fdn_t(fdnorder, (uint32_t)f_sample, logdelays,
-                                     gm, true, lowcut / f_sample);
+  srcpath.resize(fdnorder);
+  feedback_delay_network =
+      new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, true);
   for(auto& pff : feedforward_delay_network)
     delete pff;
   feedforward_delay_network.clear();
   for(uint32_t k = 0; k < forwardstages; ++k)
-    feedforward_delay_network.push_back(new fdn_t(
-        fdnorder, (uint32_t)f_sample, logdelays, gm, false, lowcut / f_sample));
+    feedforward_delay_network.push_back(
+        new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, false));
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
@@ -751,12 +752,13 @@ void simplefdn_t::update_par()
       feedback_delay_network->setpar_t60(
           wscale * w, wscale * dw, (float)f_sample * tmin,
           (float)f_sample * tmax, (float)f_sample * t60,
-          std::max(0.0f, std::min(0.999f, damping)), fixcirculantmat);
+          std::max(0.0f, std::min(0.999f, damping)), fixcirculantmat,
+          truncate_forward);
       for(auto& pff : feedforward_delay_network)
         pff->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
                         (float)f_sample * tmax, (float)f_sample * t60,
                         std::max(0.0f, std::min(0.999f, damping)),
-                        fixcirculantmat);
+                        fixcirculantmat, truncate_forward);
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -782,12 +784,13 @@ void simplefdn_t::setlogdelays(bool ld)
       feedback_delay_network->setpar_t60(
           wscale * w, wscale * dw, (float)f_sample * tmin,
           (float)f_sample * tmax, (float)f_sample * t60,
-          std::max(0.0f, std::min(0.999f, damping)), fixcirculantmat);
+          std::max(0.0f, std::min(0.999f, damping)), fixcirculantmat,
+          truncate_forward);
       for(auto& pff : feedforward_delay_network)
         pff->setpar_t60(wscale * w, wscale * dw, (float)f_sample * tmin,
                         (float)f_sample * tmax, (float)f_sample * t60,
                         std::max(0.0f, std::min(0.999f, damping)),
-                        fixcirculantmat);
+                        fixcirculantmat, truncate_forward);
     }
     pthread_mutex_unlock(&mtx);
   }
@@ -799,22 +802,44 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
   if(pthread_mutex_trylock(&mtx) == 0) {
     *foa_out *= distcorr;
     if(feedback_delay_network) {
+      if(use_lowcut) {
+        lowcut_w.filter(foa_out->w());
+        lowcut_x.filter(foa_out->x());
+        lowcut_y.filter(foa_out->y());
+        lowcut_z.filter(foa_out->z());
+      }
       for(uint32_t t = 0; t < n_fragment; ++t) {
-        foa_sample_t inval(foa_out->w()[t], foa_out->x()[t], foa_out->y()[t],
-                           foa_out->z()[t]);
-        for(auto& pff : feedforward_delay_network)
-          pff->process(inval, prefilt);
-        feedback_delay_network->process(inval, prefilt);
+        foa_sample_t x(foa_out->w()[t], foa_out->x()[t], foa_out->y()[t],
+                       foa_out->z()[t]);
+        fdnfilter(x);
 
-        output[AMB11ACN::idx::w][t] += inval.w;
-        output[AMB11ACN::idx::x][t] += inval.x;
-        output[AMB11ACN::idx::y][t] += inval.y;
-        output[AMB11ACN::idx::z][t] += inval.z;
+        output[AMB11ACN::idx::w][t] += feedback_delay_network->outval.w;
+        output[AMB11ACN::idx::x][t] += feedback_delay_network->outval.x;
+        output[AMB11ACN::idx::y][t] += feedback_delay_network->outval.y;
+        output[AMB11ACN::idx::z][t] += feedback_delay_network->outval.z;
       }
     }
     foa_out->clear();
     pthread_mutex_unlock(&mtx);
   }
+}
+
+void simplefdn_t::fdnfilter(foa_sample_t& x)
+{
+  if(prefilt) {
+    feedback_delay_network->prefilt0.filter(x);
+    feedback_delay_network->prefilt1.filter(x);
+  }
+  auto psrc = &srcpath;
+  for(auto& path : srcpath)
+    path.dlout = x;
+  for(auto& pff : feedforward_delay_network) {
+    pff->process(*psrc);
+    psrc = &(pff->fdnpath);
+    // feedback_delay_network->outval = pff->outval;//XXX//
+  }
+  feedback_delay_network->process(*psrc);
+  x = feedback_delay_network->outval;
 }
 
 float ir_get_t60(TASCAR::wave_t& ir, float fs)
@@ -883,9 +908,7 @@ void simplefdn_t::get_ir(TASCAR::wave_t& ir)
     inval.y = 0.0f;
     inval.z = 0.0f;
     for(size_t k = 0u; k < ir.n; ++k) {
-      for(auto& pff : feedforward_delay_network)
-        pff->process(inval, prefilt);
-      feedback_delay_network->process(inval, prefilt);
+      fdnfilter(inval);
       ir.d[k] = inval.w;
       inval.set_zero();
     }
