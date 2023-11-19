@@ -71,6 +71,30 @@ public:
   };
 };
 
+inline foa_sample_t operator*(foa_sample_t self, float d)
+{
+  self *= d;
+  return self;
+};
+
+inline foa_sample_t operator*(float d, foa_sample_t self)
+{
+  self *= d;
+  return self;
+};
+
+inline foa_sample_t operator-(foa_sample_t a, const foa_sample_t& b)
+{
+  a -= b;
+  return a;
+}
+
+inline foa_sample_t operator+(foa_sample_t a, const foa_sample_t& b)
+{
+  a += b;
+  return a;
+}
+
 // y[n] = -g x[n] + x[n-1] + g y[n-1]
 class reflectionfilter_t {
 public:
@@ -78,17 +102,12 @@ public:
   inline void filter(foa_sample_t& x)
   {
     x *= B1;
-    sy *= A2;
-    x -= sy;
+    x -= A2 * sy;
     sy = x;
     // all pass section:
-    tmpx = x;
-    tmpx *= eta;
-    tmpx += sapx;
+    foa_sample_t tmp(eta * x + sapx);
     sapx = x;
-    sapy *= eta;
-    x = tmpx;
-    x -= sapy;
+    x = tmp - eta * sapy;
     sapy = x;
   };
   void set_lp(float g, float c);
@@ -101,7 +120,6 @@ protected:
   foa_sample_t sy;   ///< output state buffer
   foa_sample_t sapx; ///< input state variable of allpass filter
   foa_sample_t sapy; ///< output state variable of allpass filter
-  foa_sample_t tmpx;
 };
 
 reflectionfilter_t::reflectionfilter_t()
@@ -191,6 +209,7 @@ public:
   gainmethod_t gainmethod = original;
   // use feedback matrix:
   bool feedback = true;
+  //
 
 public:
   // output FOA sample:
@@ -210,6 +229,7 @@ fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
   for(size_t k = 0; k < fdnpath.size(); ++k) {
     fdnpath[k].init(maxdelay);
   }
+  // inval.set_zero();
   outval.set_zero();
 }
 
@@ -227,17 +247,15 @@ void fdn_t::process(const std::vector<fdnpath_t>& src)
     }
     // put rotated+attenuated value to delayline, add input:
     uint32_t tap = 0;
-    foa_sample_t tmpo;
     for(auto& path : fdnpath) {
       // first put input into delayline:
       path.delayline[path.pos].set_zero();
       // now add feedback signal:
       uint32_t otap = 0;
       for(auto& opath : fdnpath) {
-        tmpo = opath.dlout;
-        tmpo += src[otap].dlout;
-        tmpo *= feedbackmat[fdnorder_ * tap + otap];
-        path.delayline[path.pos] += tmpo;
+        foa_sample_t tmp = opath.dlout;
+        tmp += src[otap].dlout;
+        path.delayline[path.pos] += tmp * feedbackmat[fdnorder_ * tap + otap];
         ++otap;
       }
       // iterate delayline:
@@ -251,14 +269,11 @@ void fdn_t::process(const std::vector<fdnpath_t>& src)
     // put rotated+attenuated value to delayline, add input:
     {
       uint32_t tap = 0;
-      foa_sample_t tmpo;
       for(auto& path : fdnpath) {
         foa_sample_t tmp;
         uint32_t otap = 0;
         for(auto& opath : src) {
-          tmpo = opath.dlout;
-          tmpo *= feedbackmat[fdnorder_ * tap + otap];
-          tmp += tmpo;
+          tmp += opath.dlout * feedbackmat[fdnorder_ * tap + otap];
           ++otap;
         }
         // first put input into delayline:
