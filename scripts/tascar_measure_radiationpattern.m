@@ -11,7 +11,7 @@ n_sound = tascar_xml_add_element(n_doc, n_src, 'sound',[],...
                                  'fmin','500');
 % receiver:
 N = 72;
-vaz = arg(exp(i*(2*pi*([1:N]-1)/N + pi)));
+vaz = angle(exp(i*(2*pi*([1:N]-1)/N + pi)));
 for n=1:N
     az = vaz(n);
     n_rec = tascar_xml_add_element(n_doc,n_scene,'receiver',[],...

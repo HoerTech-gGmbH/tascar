@@ -8,7 +8,7 @@ n_src = tascar_xml_add_element(n_doc, n_scene, 'source');
 n_sound = tascar_xml_add_element(n_doc, n_src, 'sound',[],'x','1');
 % receiver:
 N = 72;
-vaz = arg(exp(i*(2*pi*([1:N]-1)/N + pi)));
+vaz = angle(exp(i*(2*pi*([1:N]-1)/N + pi)));
 type = 'ortf';
 %type = 'modortf';
 %type = 'hrtf';
