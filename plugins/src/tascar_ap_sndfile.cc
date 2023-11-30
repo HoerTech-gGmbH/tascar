@@ -333,7 +333,11 @@ void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/mute", &mute);
   srv->add_method("/loadfile", "ssf", &osc_loadfile, this);
   srv->add_method("/loadfile", "s", &osc_loadfile_simple, this);
-  srv->add_double("/position", &position);
+  srv->add_double(
+      "/start", &start, "",
+      "number of seconds to cut at the beginning of the sound file");
+  srv->add_double("/position", &position, "",
+                  "temporal position relative to object time, in seconds");
   srv->add_float("/rampstart", &rampstart, "[0,10]",
                  "Ramp duration in s at start of sound");
   srv->add_float("/rampend", &rampend, "[0,10]",
