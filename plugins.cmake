@@ -47,7 +47,7 @@ if (NOT TASCARMODS)
             #levels2osc
             #lightctl
             locationmodulator
-            locationvelocity
+            linearmovement
             #lslactor
             #lsljacktime
             #ltcgen

@@ -7,7 +7,9 @@ function vRes = tascar_optim_reverbsettings( s_session, ir_ref, fs_ref, fs2, IRl
 %
 % Method 1: Specify session and impulse response:
 % - s_session: name of TASCAR session file
-% - ir_ref: reference impulse response. Number of channels must match number of channels of receiver
+% - ir_ref: reference impulse response. The number of channels in
+%           the impulse response must match the number of channels
+%           of the receiver in the TASCAR scene
 % - fs_ref: sampling rate in Hz of reference impulse response
 %
 % Method 2: Specify session and T60 in octave bands 250-500, 500-1k, 1k-2k, 2k-4k Hz
@@ -20,7 +22,7 @@ function vRes = tascar_optim_reverbsettings( s_session, ir_ref, fs_ref, fs2, IRl
 % optimization criterion:
 % T60 in four bands (250-500,500-1000,1000-2000,2000-4000), DRR
 %
-% Method:
+% Approach:
 % 1. At 10 dB gain, find optimal absorption and damping based on T60 error using an interative grid search
 % 2. Find optimal gain based on DRR error, using a grid search
 % 3. Refine gain using fminsearch and DRR error
@@ -107,9 +109,10 @@ end
 
 function vFeat = get_t60_features( ir, fs )
   vFeat = [];
-  for band=1:4
-    vF = 125*2.^(band+[0:1]);
-    [B,A] = butter(1,vF/(0.5*fs));
+  %for band=1:4
+  for band=1:floor(log2(0.5*fs/125))
+    vF = 125*2.^(band+[0:1]-0.5);
+    [B,A] = butter(2,vF/(0.5*fs));
     irf = filter(B,A,ir);
     t60late = t60(irf,fs,-20,-15,-0.2,2000);
     vFeat(end+1) = 40*log10(mean(t60late));

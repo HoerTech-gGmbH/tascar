@@ -27,7 +27,7 @@
 "plugins/build/tascar_joystick.so","usr/lib/"
 "plugins/build/tascar_lightcolorpicker.so","usr/lib/"
 "plugins/build/tascar_locationmodulator.so","usr/lib/"
-"plugins/build/tascar_locationvelocity.so","usr/lib/"
+"plugins/build/tascar_linearmovement.so","usr/lib/"
 "plugins/build/tascar_lslactor.so","usr/lib/"
 "plugins/build/tascar_orientationmodulator.so","usr/lib/"
 "plugins/build/tascar_rotator.so","usr/lib/"

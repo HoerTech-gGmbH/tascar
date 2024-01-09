@@ -131,6 +131,7 @@
     <lightctl driver="osc"/>
     <hossustain/>
     <pos2osc pattern="/*/*"/>
+    <linearmovement actor="/scene/in"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
