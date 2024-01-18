@@ -85,6 +85,7 @@ void locmod_t::update(uint32_t tp_frame, bool)
     r *= tptime;
     r += p0;
     set_location(r);
+    mtx.unlock();
   }
 }
 
