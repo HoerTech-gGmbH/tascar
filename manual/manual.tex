@@ -1138,7 +1138,7 @@ diffuse sound field can be found below:
 %
 \tscexample[linerange={5-9},firstnumber=5]{example_diffuse}
 
-Internally, TASCAR uses FuMa normalization and ACN channel sequence
+Internally, \tascar{} uses FuMa normalization and ACN channel sequence
 (``wyzx'').
 %
 At most places, the Ambisonics channel sequence and normalization can be configured.
@@ -1200,17 +1200,7 @@ Eq.\ \ref{eq:foarot}, page \pageref{eq:foarot}). $\mathbf{f}_l$ is the
 first order Ambisonics signal of the $l$-th diffuse sound field; $L$ is the
 number of all diffuse sound fields, including diffuse reverberation inputs.
 
-For all speaker based receiver types, $D$ is a first order Ambisonics
-decoder matrix, with optional speaker density compensation and
-decorrelation filters. To achieve a $\max rE$-decoder, set the
-attribute \indattr{xyzgain} to 0.707 for regular horizontal speaker
-layouts and to 0.577 for regular 3D speaker layouts.  For Ambisonics
-based receiver types, $D$ is a diagonal matrix.
-%
-By default, the decoded output of the first order Ambisonics rendering
-is de-correlated using FIR all-pass filters to achieve diffuse sound
-fields and avoid coloration artifacts (see \indattr{decorr} and
-\indattr{decorr\_length} for details).
+For all speaker based receiver types, $D$ is a first order Ambisonics decoder matrix, with optional speaker density compensation and decorrelation filters. To get a $\max rE$-decoder, set the \indattr{xyzgain} attribute to 0.707 for regular horizontal speaker layouts and to 0.577 for regular 3D speaker layouts.  For Ambisonics based receiver types, $D$ is a diagonal matrix.  By default, the decoded output of the first order Ambisonics rendering is de-correlated using FIR all-pass filters to achieve diffuse sound fields and avoid coloration artifacts (see \indattr{decorr} and \indattr{decorr\_length} for details).
 
 Figure \ref{fig:renderer} presents the typical connections in \tascar{}
 and may help to visualize the role of the receiver.
@@ -1222,20 +1212,7 @@ and may help to visualize the role of the receiver.
   \label{fig:renderer}
 \end{figure}
 
-If the \attr{volumetric}\index{volumetric rendering}\label{sec:volumetric}
-attribute defines a non-zero volume, then all sources within the
-receiver volume box are rendered with the same gain (volumetric
-rendering).
-%
-An average distance of $(\frac18 V)^{1/3}$ with the volume $V$ is
-assumed, or if \attr{avgdist} is provided, then the provided value is
-taken.
-%
-Outside the box either a von-Hann ramp is applied (\attr{falloff}
-$>0$), or the standard distance model is applied.
-%
-With volumetric receiver settings, the delay will depend on the
-relative distance between the receiver origin and the source position.
+If the \attr{volumetric}\index{volumetric rendering}\label{sec:volumetric} attribute defines a non-zero volume, then all sources within the receiver volume box will be rendered with the same gain (volumetric rendering).  An average distance of $(\frac18 V)^{1/3}$ with volume $V$ is assumed, or if \attr{avgdist} is given, the given value is used.  Outside the box, either a von-Hann ramp is applied (\attr{falloff} $>0$), or the standard distance model is applied.  With volumetric receiver settings, the delay depends on the relative distance between the receiver origin and the source position.
 
 %Example:
 %
@@ -1258,23 +1235,13 @@ Receivers can replace the source position with a proxy position. The properties 
 
 \subsection{Receiver types}\index{receiver type}
 
-
-
-There are following types of receivers (see Table \ref{tab:receivers} for an overview):
+The following types of generic receivers (see Table \ref{tab:receivers} for an overview) can be used in \tascar{}:
 
 \input{secrecgeneric.tex}
 
 \subsection{Speaker-based receiver types}\label{sec:speaker}\index{speaker}
 
-There are also speaker-based decoding methods (VBAP, ambisonics
-panning and nearest-speaker panning) which require the specification
-of loudspeakers - together with the receiver type, we define a set of
-virtual loudspeakers located relative to the position of this
-receiver.
-%
-Information about the number of loudspeakers and their location is then
-exploited to produce appropriate receiver output channels.
-%
+In addition to the generic receiver types, there are also speaker-based decoding methods (VBAP, Ambisonics Panning and Nearest Speaker Panning). These require the specification of the loudspeaker layout, i.e. their positions and, optionally, calibration data.
 
 \begin{figure}[htb]
   \begin{subfigure}[t]{0.25\textwidth}
@@ -1304,36 +1271,25 @@ exploited to produce appropriate receiver output channels.
   \label{fig:repromethods}
 \end{figure}
 
-The speaker layout of speaker based receiver types can be defined in a
-separate layout file specified in the \attr{layout} attribute, in a
-list of \elem{speaker} elements within the receiver definition.
+The speaker layout of speaker-based receiver types can be defined in a separate layout file specified in the \attr{layout} attribute, in a list of \elem{speaker} elements within the receiver definition.
 
 \input{tabspeaker.tex}
 
-In addition to regular broadband speakers, a number of subwoofers\index{subwoofer} can
-be defined, using \elem{sub} elements with the same attributes as in
-the \elem{speaker} element. If subwoofers are defined, an IIR
-crossover filter is applied to all signals. Subwoofer signals are
-spatially mapped from the broadband speaker positions to the subwoofer
-positions, using a modified DBAP \citep{Lossius2009} method.
+In addition to regular broadband loudspeakers, a number of subwoofers\index{subwoofer} can be defined using \elem{sub} elements with the same attributes as in the \elem{speaker} element. When subwoofers are defined, an IIR crossover filter is applied to all signals. The subwoofer signals are spatially mapped from the broadband speaker positions to the subwoofer positions using a modified DBAP \citep{Lossius2009} method.
 
-To activate FIR speaker correction filter, provide the FIR filter
-coefficients in the \attr{compB} attribute. Please note that filter
-coefficients are specific to the sampling rate, and not automatically
-recalculated upon sampling rate changes. The maximal length of the
-correction filter is the audio fragment size plus one.
+To enable the FIR loudspeaker correction filter, provide the FIR filter coefficients in the \attr{compB} attribute. Note that the filter coefficients are sample rate specific and are not automatically recalculated when the sample rate is changed. The maximum length of the correction filter is the size of the audio fragment plus one.
 
 The top-level element of a layout file, \elem{layout}, can be configured with these attributes:
 
 \input{tablayout.tex}
 %
-Changing any of these attributes (except for \attr{calibdate}) might
-affect the output calibration and requires re-calibration.
+Changing any of these attributes (except \attr{calibdate}) may affect the output calibration and require re-calibration.
 
-If the caliblevel is provided in the receiver element and the layout
-file, then a warning is issued and the value from the layout file is
-used. If a calibration date is provided and the calibration is older
-than 30 days, a warning is displayed.
+If the caliblevel is provided in the receiver element and in the layout file, a warning is issued and the value from the layout file is used. If a calibration date is provided and the calibration is older than 30 days, a warning is displayed.
+
+A simple example of a speaker layout file is shown in Example \ref{spk:nsp}.
+
+\spkexample{nsp}
 
 Attributes common to all loudspeaker-based layouts are:
 

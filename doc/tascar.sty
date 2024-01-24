@@ -776,6 +776,7 @@ belowskip=\smallskipamount,
 \renewcommand{\lstlistingname}{Example}
 \renewcommand{\lstlistlistingname}{Examples}
 
+\newcommand{\spkexample}[2][]{\lstinputlisting[language=tsc,caption={\lstname},label=spk:#2,#1]{examples/#2.spk}}
 \newcommand{\tscexample}[2][]{\lstinputlisting[language=tsc,caption={\lstname},label=tsc:#2,#1]{examples/#2.tsc}}
 \newcommand{\tscexampleext}[2][]{\lstinputlisting[language=tsc,caption={\lstname},label=tsc:#2,#1]{examples/#2}}
 \newcommand{\tscexamplepriv}[2][]{\lstinputlisting[language=tsc,caption={},nolol,#1]{examples/#2.tsc}}
