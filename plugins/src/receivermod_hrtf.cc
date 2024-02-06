@@ -107,6 +107,7 @@ public:
   float Q_notch; // inverse Q factor of the parametric equalizer
   bool diffuse_hrtf;           // apply hrtf model also to diffuse rendering
   uint32_t prewarpingmode = 0; // Azimuth prewarping mode
+  std::vector<float> gaincorr = { 1.0f, 1.0f }; // channel-wise gain correction
 };
 
 hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
@@ -171,6 +172,10 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(
       prewarpingmode, "",
       "Azimuth pre-warping mode, 0 = original, 1 = none, 2 = corrected");
+  GET_ATTRIBUTE_DB(gaincorr, "channel-wise gain correction");
+  if(gaincorr.size() != 2) {
+    throw TASCAR::ErrMsg("gaincorr requires two entries");
+  }
 }
 
 class hrtf_t : public TASCAR::receivermod_base_t {
@@ -435,6 +440,7 @@ void hrtf_t::postproc(std::vector<TASCAR::wave_t>& output)
     else
       output[ch] += *(diffuse_render_buffer[ch]);
     diffuse_render_buffer[ch]->clear();
+    output[ch] *= par.gaincorr[ch];
   }
 }
 
@@ -462,6 +468,8 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/hrtf/diffuse_hrtf", &par.diffuse_hrtf);
   srv->add_uint("/hrtf/prewarpingmode", &par.prewarpingmode, "[0,1,2]",
                 "pre-warping mode, 0 = original, 1 = none, 2 = corrected");
+  srv->add_vector_float_db("/hrtf/gaincorr", &par.gaincorr, "",
+                           "channel-wise gain correction");
 }
 
 hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
