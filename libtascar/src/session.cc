@@ -701,7 +701,7 @@ void TASCAR::session_t::start()
 {
   started_ = true;
   try {
-    for(auto scene : scenes){
+    for(auto scene : scenes) {
       scene->start();
       scene->add_child_methods(this);
     }
@@ -753,8 +753,10 @@ int TASCAR::session_t::process(jack_nframes_t, const std::vector<float*>&,
 {
   double t(period_time * (double)tp_frame);
   uint32_t next_tp_frame(tp_frame);
-  if(tp_rolling)
+  if(tp_rolling) {
     next_tp_frame += fragsize;
+    timed_messages_process(t, period_time * (double)next_tp_frame);
+  }
   if(started_) {
     double t_prev = 0.0;
     size_t k = 0;

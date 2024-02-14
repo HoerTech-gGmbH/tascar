@@ -124,7 +124,7 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
       if(npath.size() > 4)
         npath = npath.substr(0, npath.size() - 4);
       float* p = (float*)(user_data);
-      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *p );
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *p);
       lo_address_free(target);
     }
   }
@@ -541,6 +541,26 @@ int osc_send_variables(const char*, const char* types, lo_arg** argv, int argc,
   return 1;
 }
 
+int osc_tm_add(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 'f') && (types[1] == 's')) {
+    osc_server_t* srv(reinterpret_cast<osc_server_t*>(user_data));
+    srv->timed_message_add(argv[0]->f, &(argv[1]->s));
+  }
+  return 1;
+}
+
+int osc_tm_clear(const char*, const char*, lo_arg**, int argc, lo_message,
+                 void* user_data)
+{
+  if(user_data && (argc == 0)) {
+    osc_server_t* srv(reinterpret_cast<osc_server_t*>(user_data));
+    srv->timed_messages_clear();
+  }
+  return 1;
+}
+
 int string2proto(const std::string& proto)
 {
   if(proto == "UDP")
@@ -596,6 +616,8 @@ osc_server_t::osc_server_t(const std::string& multicast,
   }
   add_method("/sendvarsto", "ss", osc_send_variables, this);
   add_method("/sendvarsto", "sss", osc_send_variables, this);
+  add_method("/timedmessages/add", "fs", osc_tm_add, this);
+  add_method("/timedmessages/clear", "", osc_tm_clear, this);
 }
 
 int osc_server_t::dispatch_data(void* data, size_t size)
@@ -908,10 +930,10 @@ void osc_server_t::send_variable_list(const std::string& url,
   lo_address_free(target);
 }
 
-TASCAR::msg_t::msg_t(tsccfg::node_t e)
-    : TASCAR::xml_element_t(e), msg(lo_message_new())
+TASCAR::msg_t::msg_t(tsccfg::node_t e) : msg(lo_message_new())
 {
-  GET_ATTRIBUTE(path, "", "OSC path name");
+  TASCAR::xml_element_t elem(e);
+  elem.GET_ATTRIBUTE(path, "", "OSC path name");
   for(auto& sne : tsccfg::node_get_children(e, "f")) {
     TASCAR::xml_element_t tsne(sne);
     double v(0);
@@ -930,6 +952,28 @@ TASCAR::msg_t::msg_t(tsccfg::node_t e)
     tsne.GET_ATTRIBUTE(v, "", "string value");
     lo_message_add_string(msg, v.c_str());
   }
+}
+
+msg_t::msg_t(const std::string& src)
+{
+  msg = lo_message_new();
+  std::vector<std::string> args(TASCAR::str2vecstr(src));
+  if(args.size()) {
+    path = args[0];
+    for(size_t n = 1; n < args.size(); ++n) {
+      char* p(NULL);
+      float val(strtof(args[n].c_str(), &p));
+      if(*p) {
+        lo_message_add_string(msg, args[n].c_str());
+      } else {
+        lo_message_add_float(msg, val);
+      }
+    }
+  }
+}
+
+msg_t::msg_t(const msg_t& src) : path(src.path), msg(lo_message_clone(src.msg))
+{
 }
 
 TASCAR::msg_t::~msg_t()
@@ -1035,18 +1079,28 @@ void osc_server_t::read_script(const std::vector<std::string>& filenames)
             } else {
               std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
               if(args.size()) {
-                auto msg(lo_message_new());
-                for(size_t n = 1; n < args.size(); ++n) {
+                if(args[0].size() && (args[0][0] == '@')) {
+                  auto stime = args[0];
+                  stime.erase(stime.begin());
+                  args.erase(args.begin());
                   char* p(NULL);
-                  float val(strtof(args[n].c_str(), &p));
-                  if(*p) {
-                    lo_message_add_string(msg, args[n].c_str());
-                  } else {
-                    lo_message_add_float(msg, val);
+                  double ftime(strtod(stime.c_str(), &p));
+                  if(!*p)
+                    timed_message_add(ftime, TASCAR::vecstr2str(args));
+                } else {
+                  auto msg(lo_message_new());
+                  for(size_t n = 1; n < args.size(); ++n) {
+                    char* p(NULL);
+                    float val(strtof(args[n].c_str(), &p));
+                    if(*p) {
+                      lo_message_add_string(msg, args[n].c_str());
+                    } else {
+                      lo_message_add_float(msg, val);
+                    }
                   }
+                  dispatch_data_message(args[0].c_str(), msg);
+                  lo_message_free(msg);
                 }
-                dispatch_data_message(args[0].c_str(), msg);
-                lo_message_free(msg);
               }
             }
           }
@@ -1081,6 +1135,30 @@ void osc_server_t::read_script_async(const std::vector<std::string>& filenames)
     nextscripts = filenames;
   }
   cond_var_script.notify_one();
+}
+
+void osc_server_t::timed_messages_process(double tstart, double tend)
+{
+  if(mtxtimedmessages.try_lock()) {
+    for(const auto& vmsg : timed_messages)
+      if((tstart <= vmsg.first) && (vmsg.first < tend))
+        for(const auto& msg : vmsg.second) {
+          dispatch_data_message(msg.path.c_str(), msg.msg);
+        }
+    mtxtimedmessages.unlock();
+  }
+}
+
+void osc_server_t::timed_messages_clear()
+{
+  std::lock_guard<std::mutex> lk{mtxtimedmessages};
+  timed_messages.clear();
+}
+
+void osc_server_t::timed_message_add(double time, const std::string& msgtext)
+{
+  std::lock_guard<std::mutex> lk{mtxtimedmessages};
+  timed_messages[time].push_back(msg_t(msgtext));
 }
 
 /*

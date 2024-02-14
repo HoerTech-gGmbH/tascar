@@ -44,6 +44,18 @@ typedef std::string(strcnvrt_t)(void*);
 
 namespace TASCAR {
 
+  class msg_t {
+  public:
+    msg_t(tsccfg::node_t);
+    msg_t(const std::string&);
+    msg_t(const msg_t&);
+    ~msg_t();
+    std::string path;
+    lo_message msg;
+
+  private:
+  };
+
   /// OSC server
   class osc_server_t {
   public:
@@ -277,6 +289,13 @@ namespace TASCAR {
     void read_script_async(const std::vector<std::string>& filename);
     std::string scriptpath = "";
     std::string scriptext = "";
+    /**
+       @brief Dispatch all messages from the time interval tstart (included) to
+       tend (excluded).
+     */
+    void timed_messages_process(double tstart, double tend);
+    void timed_messages_clear();
+    void timed_message_add(double time, const std::string& msgtext);
 
   private:
     void scriptthread_fun();
@@ -300,17 +319,8 @@ namespace TASCAR {
     std::vector<std::string> nextscripts;
     std::condition_variable cond_var_script;
     std::mutex mtxdispatch;
-  };
-
-  class msg_t : public TASCAR::xml_element_t {
-  public:
-    msg_t(tsccfg::node_t);
-    ~msg_t();
-    std::string path;
-    lo_message msg;
-
-  private:
-    msg_t(const msg_t&);
+    std::map<double, std::vector<msg_t>> timed_messages;
+    std::mutex mtxtimedmessages;
   };
 
 }; // namespace TASCAR
