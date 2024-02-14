@@ -104,6 +104,9 @@ public:
   void setvaluesession(TASCAR::session_t* session,
                        std::vector<TASCAR::Scene::audio_port_t*>& routeports,
                        uint32_t channel, float val);
+  void setmutesession(TASCAR::session_t* session,
+                       std::vector<TASCAR::Scene::audio_port_t*>& routeports,
+                       uint32_t channel, bool val);
   ~connection_t();
   uint32_t scene;
 
@@ -113,6 +116,7 @@ private:
   uint32_t channels;
   std::vector<float> vals;
   std::vector<float> levels;
+  std::vector<bool> mutestates;
   bool htmlcolors;
 };
 
@@ -122,6 +126,7 @@ connection_t::connection_t(const std::string& host, uint32_t port,
 {
   vals.resize(channels);
   levels.resize(channels);
+  mutestates.resize(channels);
   char ctmp[32];
   SNPRINTF(ctmp,32,"%d", port);
   target = lo_address_new(host.c_str(), ctmp);
@@ -151,6 +156,8 @@ void connection_t::uploadsession(
         SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(it->get_gain_db());
         vals[ch] = v;
         float l(it->read_meter());
@@ -160,6 +167,8 @@ void connection_t::uploadsession(
         lo_send(target, cfader, "f", v);
         lo_send(target, clabel, "s", it->get_fullname().c_str());
         lo_send(target, clevel, "f", l);
+        if( it->parent )
+          lo_send(target, cmute, "i", it->parent->get_mute());
         std::string col;
         if(!htmlcolors)
           col = col2colname(it->get_color());
@@ -180,6 +189,8 @@ void connection_t::uploadsession(
         SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(it->get_gain_db());
         vals[ch] = v;
         float l(it->read_meter_max());
@@ -189,15 +200,16 @@ void connection_t::uploadsession(
         lo_send(target, cfader, "f", v);
         lo_send(target, clabel, "s", it->get_name().c_str());
         lo_send(target, clevel, "f", l);
+        lo_send(target, cmute, "i", it->get_mute());
         std::string col;
         if(!htmlcolors)
           col = col2colname(it->color);
         else
           col = it->color.str();
-        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
-        lo_send(target, clabel, "s", col.c_str());
         SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", ch + 1);
         lo_send(target, cfader, "s", col.c_str());
+        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
+        lo_send(target, clabel, "s", col.c_str());
         ++ch;
       }
     }
@@ -209,6 +221,8 @@ void connection_t::uploadsession(
         SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(it->get_gain_db());
         vals[ch] = v;
         float l(it->read_meter_max());
@@ -218,15 +232,16 @@ void connection_t::uploadsession(
         lo_send(target, cfader, "f", v);
         lo_send(target, clabel, "s", it->get_name().c_str());
         lo_send(target, clevel, "f", l);
+        lo_send(target, cmute, "i", it->get_mute());
         std::string col;
         if(!htmlcolors)
           col = col2colname(it->color);
         else
           col = it->color.str();
-        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
-        lo_send(target, clabel, "s", col.c_str());
         SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", ch + 1);
         lo_send(target, cfader, "s", col.c_str());
+        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
+        lo_send(target, clabel, "s", col.c_str());
         ++ch;
       }
     }
@@ -242,6 +257,8 @@ void connection_t::uploadsession(
         SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(rp->get_gain_db());
         vals[ch] = v;
         float l(scenerp->read_meter_max());
@@ -251,6 +268,7 @@ void connection_t::uploadsession(
         lo_send(target, cfader, "f", v);
         lo_send(target, clabel, "s", scenerp->get_name().c_str());
         lo_send(target, clevel, "f", l);
+        lo_send(target, cmute, "i", scenerp->get_mute());
         std::string col("#777777");
         if(!htmlcolors)
           col = col2colname(col);
@@ -297,6 +315,8 @@ void connection_t::updatesession(
         SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(it->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -308,6 +328,13 @@ void connection_t::updatesession(
           lo_send(target, clevel, "f", l);
           levels[ch] = l;
         }
+        bool vb = false;
+        if( it->parent )
+          vb = it->parent->get_mute();
+        if(force || (mutestates[ch] != vb)){
+          lo_send(target, cmute, "i", vb);
+        }
+        mutestates[ch] = vb;
         ++ch;
       }
     }
@@ -317,6 +344,8 @@ void connection_t::updatesession(
         SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(it->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -328,6 +357,12 @@ void connection_t::updatesession(
           lo_send(target, clevel, "f", l);
           levels[ch] = l;
         }
+        bool vb = false;
+        vb = it->get_mute();
+        if(force || (mutestates[ch] != vb)){
+          lo_send(target, cmute, "i", vb);
+        }
+        mutestates[ch] = vb;
         ++ch;
       }
     }
@@ -337,6 +372,8 @@ void connection_t::updatesession(
         SNPRINTF(cfader, 1024, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1024, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(it->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -348,6 +385,12 @@ void connection_t::updatesession(
           lo_send(target, clevel, "f", l);
           levels[ch] = l;
         }
+        bool vb = false;
+        vb = it->get_mute();
+        if(force || (mutestates[ch] != vb)){
+          lo_send(target, cmute, "i", vb);
+        }
+        mutestates[ch] = vb;
         ++ch;
       }
     }
@@ -361,6 +404,8 @@ void connection_t::updatesession(
         SNPRINTF(cfader, 1024, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
         SNPRINTF(clevel, 1024, "/touchosc/level%d", ch + 1);
+        char cmute[1024];
+        SNPRINTF(cmute, 1023, "/touchosc/mute%d", ch + 1);
         float v(rp->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -372,6 +417,12 @@ void connection_t::updatesession(
           lo_send(target, clevel, "f", l);
           levels[ch] = l;
         }
+        bool vb = false;
+        vb = scenerp->get_mute();
+        if(force || (mutestates[ch] != vb)){
+          lo_send(target, cmute, "i", vb);
+        }
+        mutestates[ch] = vb;
         ++ch;
       }
     }
@@ -436,6 +487,60 @@ void connection_t::setvaluesession(
   }
 }
 
+void connection_t::setmutesession(
+    TASCAR::session_t* session,
+    std::vector<TASCAR::Scene::audio_port_t*>& routeports, uint32_t channel,
+    bool val)
+{
+  if(channel >= channels)
+    return;
+  mutestates[channel] = val;
+  uint32_t ch(0);
+  if(scene < session->scenes.size()) {
+    for(auto it : session->scenes[scene]->sounds) {
+      if(ch < channels) {
+        if(ch == channel) {
+          if( it->parent )
+            it->parent->set_mute(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+    for(auto it : session->scenes[scene]->receivermod_objects) {
+      if(ch < channels) {
+        if(ch == channel) {
+          it->set_mute(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+    for(auto it : session->scenes[scene]->diffuse_reverbs) {
+      if(ch < channels) {
+        if(ch == channel) {
+          it->set_mute(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+  }
+  // now add routes:
+  for(auto rp : routeports) {
+    if(ch < channels) {
+      auto scenerp = dynamic_cast<TASCAR::Scene::route_t*>(rp);
+      if(scenerp) {
+        if(ch == channel) {
+          scenerp->set_mute(val);
+          return;
+        }
+        ++ch;
+      }
+    }
+  }
+}
+
 class touchosc_t : public TASCAR::module_base_t, TASCAR::service_t {
 public:
   class chref_t {
@@ -449,12 +554,15 @@ public:
                          int argc, lo_message msg, void* user_data);
   static int osc_setfader(const char* path, const char* types, lo_arg** argv,
                           int argc, lo_message msg, void* user_data);
+  static int osc_setmute(const char* path, const char* types, lo_arg** argv,
+                          int argc, lo_message msg, void* user_data);
   static int osc_sceneinc(const char* path, const char* types, lo_arg** argv,
                           int argc, lo_message msg, void* user_data);
   static int osc_scenedec(const char* path, const char* types, lo_arg** argv,
                           int argc, lo_message msg, void* user_data);
   void connect(const std::string& host, uint32_t channels);
   void setfader(const std::string& host, uint32_t channel, float val);
+  void setmute(const std::string& host, uint32_t channel, bool val);
   void setscene(const std::string& host, int32_t dscene);
   void service();
 
@@ -486,6 +594,15 @@ int touchosc_t::osc_setfader(const char*, const char*, lo_arg** argv, int,
   lo_address src(lo_message_get_source(msg));
   touchosc_t::chref_t* h((touchosc_t::chref_t*)user_data);
   h->t->setfader(lo_address_get_hostname(src), h->c, argv[0]->f);
+  return 0;
+}
+
+int touchosc_t::osc_setmute(const char*, const char*, lo_arg** argv, int,
+                             lo_message msg, void* user_data)
+{
+  lo_address src(lo_message_get_source(msg));
+  touchosc_t::chref_t* h((touchosc_t::chref_t*)user_data);
+  h->t->setmute(lo_address_get_hostname(src), h->c, (argv[0]->i != 0));
   return 0;
 }
 
@@ -541,6 +658,18 @@ void touchosc_t::setfader(const std::string& host, uint32_t channel, float val)
   }
 }
 
+void touchosc_t::setmute(const std::string& host, uint32_t channel, bool val)
+{
+  if(pthread_mutex_lock(&mtx) == 0) {
+    std::map<std::string, connection_t*>::iterator it;
+    if((it = connections.find(host)) != connections.end()) {
+      if(it->second)
+        it->second->setmutesession(session, routeports, channel, val);
+    }
+    pthread_mutex_unlock(&mtx);
+  }
+}
+
 void touchosc_t::connect(const std::string& host, uint32_t channels)
 {
   if(channels == 0)
@@ -581,6 +710,8 @@ touchosc_t::touchosc_t(const TASCAR::module_cfg_t& cfg)
     char ctmp[1024];
     SNPRINTF(ctmp, 1024, "/touchosc/fader%d", it->c + 1);
     session->add_method(ctmp, "f", &touchosc_t::osc_setfader, &(*it));
+    SNPRINTF(ctmp, 1024, "/touchosc/mute%d", it->c + 1);
+    session->add_method(ctmp, "i", &touchosc_t::osc_setmute, &(*it));
   }
   start_service();
 }
