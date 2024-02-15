@@ -1244,21 +1244,46 @@ sound_t::~sound_t() {}
 
 void sound_t::geometry_update(double t)
 {
-  pos_t rp(local_position);
   orientation = local_orientation;
-  if(parent) {
-    rp *= parent->scale;
-    rp *= parent->c6dof.orientation;
-    if(chaindist != 0) {
-      double tp(t - parent->starttime);
-      tp = parent->location.get_time(parent->location.get_dist(tp) - chaindist);
-      rp += parent->location.interp(tp);
-    } else {
-      rp += parent->c6dof.position;
-    }
+  if(parent)
     orientation += parent->c6dof.orientation;
+  if(global_position != position) {
+    // this can only happen if global_position was changed
+    // externally. Now we need to update local_position based on the
+    // parent position and orientation:
+    position = global_position;
+    local_position = position;
+    if(parent) {
+      if(chaindist != 0) {
+        double tp(t - parent->starttime);
+        tp = parent->location.get_time(parent->location.get_dist(tp) -
+                                       chaindist);
+        local_position -= parent->location.interp(tp);
+      } else {
+        local_position -= parent->c6dof.position;
+      }
+      local_position /= parent->c6dof.orientation;
+      local_position *= 1.0 / parent->scale;
+    }
+  } else {
+    // update vertex position and orientation from local_orientation
+    // and parent geometry variables:
+    pos_t rp(local_position);
+    if(parent) {
+      rp *= parent->scale;
+      rp *= parent->c6dof.orientation;
+      if(chaindist != 0) {
+        double tp(t - parent->starttime);
+        tp = parent->location.get_time(parent->location.get_dist(tp) -
+                                       chaindist);
+        rp += parent->location.interp(tp);
+      } else {
+        rp += parent->c6dof.position;
+      }
+    }
+    position = rp;
   }
-  position = rp;
+  global_position = position;
 }
 
 void sound_t::process_plugins(const TASCAR::transport_t& tp)

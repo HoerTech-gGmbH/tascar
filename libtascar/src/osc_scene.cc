@@ -279,6 +279,8 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   s->plugins.add_variables(srv);
   srv->add_pos("/pos", &(s->local_position), "",
                "local position of sound vertex in meters");
+  srv->add_pos("/globalpos", &(s->global_position), "",
+               "global position of sound vertex in meters");
   srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
   srv->add_method("/zeuler", "f", osc_set_sound_orientation, s);
   srv->set_prefix(oldpref);

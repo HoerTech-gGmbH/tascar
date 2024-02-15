@@ -311,6 +311,7 @@ namespace TASCAR {
 
       pos_t local_position;
       zyx_euler_t local_orientation;
+      pos_t global_position;
 
     private:
       double chaindist;
