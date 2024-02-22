@@ -1148,7 +1148,7 @@ For level metering, the RMS level of the w-channel is taken.
 
 \subsection{The {\tt <receiver .../>} element}\label{sec:receiver}\index{receiver}
 
-A receiver\index{receiver} object can be thought of as a virtual microphone\index{virtual microphone}\index{microphone} that captures sound in virtual space and serves as the output of the virtual acoustic environment. The choice of the receiver type depends on the playback system and the desired rendering method. It captures the signal of all sound sources in the scene and computes them according to their type. The output signals of a receiver are sent to the playback system, e.g. speakers or headphones.
+A receiver\index{receiver} object can be thought of as a virtual microphone\index{virtual microphone}\index{microphone} that captures sound in virtual space and serves as the output of the virtual acoustic environment. The choice of the receiver type depends on the playback system and the desired rendering method. It captures the signal of all sound sources in the scene and computes them according to their type. The output signals of a receiver are sent to the playback system, e.g. loudspeakers or headphones.
 
 
 \input{tabreceiver.tex}
@@ -1200,7 +1200,7 @@ Eq.\ \ref{eq:foarot}, page \pageref{eq:foarot}). $\mathbf{f}_l$ is the
 first order Ambisonics signal of the $l$-th diffuse sound field; $L$ is the
 number of all diffuse sound fields, including diffuse reverberation inputs.
 
-For all speaker based receiver types, $D$ is a first order Ambisonics decoder matrix, with optional speaker density compensation and decorrelation filters. To get a $\max rE$-decoder, set the \indattr{xyzgain} attribute to 0.707 for regular horizontal speaker layouts and to 0.577 for regular 3D speaker layouts.  For Ambisonics based receiver types, $D$ is a diagonal matrix.  By default, the decoded output of the first order Ambisonics rendering is de-correlated using FIR all-pass filters to achieve diffuse sound fields and avoid coloration artifacts (see \indattr{decorr} and \indattr{decorr\_length} for details).
+For all loudspeaker-based receiver types, $D$ is a first order Ambisonics decoder matrix, with optional loudspeaker density compensation and decorrelation filters. To get a $\max rE$-decoder, set the \indattr{xyzgain} attribute to 0.707 for regular horizontal loudspeaker layouts and to 0.577 for regular 3D loudspeaker layouts.  For Ambisonics based receiver types, $D$ is a diagonal matrix.  By default, the decoded output of the first order Ambisonics rendering is de-correlated using FIR all-pass filters to achieve diffuse sound fields and avoid coloration artifacts (see \indattr{decorr} and \indattr{decorr\_length} for details).
 
 Figure \ref{fig:renderer} presents the typical connections in \tascar{}
 and may help to visualize the role of the receiver.
@@ -1239,9 +1239,9 @@ The following types of generic receivers (see Table \ref{tab:receivers} for an o
 
 \input{secrecgeneric.tex}
 
-\subsection{Speaker-based receiver types}\label{sec:speaker}\index{speaker}
+\subsection{Loudspeaker-based receiver types}\label{sec:speaker}\index{loudspeaker}
 
-In addition to the generic receiver types, there are also speaker-based decoding methods (VBAP, Ambisonics Panning and Nearest Speaker Panning). These require the specification of the loudspeaker layout, i.e. their positions and, optionally, calibration data.
+In addition to the generic receiver types, there are also loudspeaker-based decoding methods (VBAP, Ambisonics Panning and Nearest Speaker Panning). These require the specification of the loudspeaker layout, i.e. their positions and, optionally, calibration data.
 
 \begin{figure}[htb]
   \begin{subfigure}[t]{0.25\textwidth}
@@ -1271,11 +1271,11 @@ In addition to the generic receiver types, there are also speaker-based decoding
   \label{fig:repromethods}
 \end{figure}
 
-The speaker layout of speaker-based receiver types can be defined in a separate layout file specified in the \attr{layout} attribute, in a list of \elem{speaker} elements within the receiver definition.
+The loudspeaker layout of loudspeaker-based receiver types can be defined in a separate layout file specified in the \attr{layout} attribute, or in a list of \elem{speaker} elements within the receiver definition. Each of the \elem{speaker} entries has the following attributes:
 
 \input{tabspeaker.tex}
 
-In addition to regular broadband loudspeakers, a number of subwoofers\index{subwoofer} can be defined using \elem{sub} elements with the same attributes as in the \elem{speaker} element. When subwoofers are defined, an IIR crossover filter is applied to all signals. The subwoofer signals are spatially mapped from the broadband speaker positions to the subwoofer positions using a modified DBAP \citep{Lossius2009} method.
+In addition to regular broadband loudspeakers, a number of subwoofers\index{subwoofer} can be defined using \elem{sub} elements with the same attributes as in the \elem{speaker} element. When subwoofers are defined, an IIR crossover filter with 24~dB/octave is applied to all signals. The subwoofer signals are spatially mapped from the broadband loudspeaker positions to the subwoofer positions using a modified DBAP \citep{Lossius2009} method.
 
 To enable the FIR loudspeaker correction filter, provide the FIR filter coefficients in the \attr{compB} attribute. Note that the filter coefficients are sample rate specific and are not automatically recalculated when the sample rate is changed. The maximum length of the correction filter is the size of the audio fragment plus one.
 
@@ -1287,7 +1287,9 @@ Changing any of these attributes (except \attr{calibdate}) may affect the output
 
 If the caliblevel is provided in the receiver element and in the layout file, a warning is issued and the value from the layout file is used. If a calibration date is provided and the calibration is older than 30 days, a warning is displayed.
 
-A simple example of a speaker layout file is shown in Example \ref{spk:nsp}.
+As the calibration values may depend on the rendering method and its parameters, the \attr{calibfor} attribute must be set to the correct value for the session file in which the loudspeaker layout is used. These values can be queried using the command line tool \verb!tascar_getcalibfor! which prints out the correct value for each loudspeaker-based receiver type used in a session file.
+
+A simple example of a loudspeaker layout file is shown in Example \ref{spk:nsp}.
 
 \spkexample{nsp}
 
@@ -1295,7 +1297,7 @@ Attributes common to all loudspeaker-based layouts are:
 
 \input{tabspeakerbased.tex}
 
-With all speaker-based receiver types it is possible to specify an
+With all loudspeaker-based receiver types it is possible to specify an
 impulse response for convolution for each loudspeaker channel
 (attribute \attr{conv} of element \elem{speaker} in the layout
 definition).
@@ -1308,7 +1310,7 @@ The output of the convolution will be provided in additional output
 channels; use the attribute \attr{convlabels} to set the names of
 those channels.
 %
-The convolution can be applied before or after speaker gain and delay
+The convolution can be applied before or after loudspeaker gain and delay
 compensation.
 %
 Currently, this method will not work in layouts with subwoofer
@@ -1660,7 +1662,7 @@ the same value should be used for the \tascar{} input \attr{caliblevel}.
 In that case, the input level meters of \tascar{} should show the same
 values as the output level meters of the speech test.
 
-For a calibration of speaker layouts, it is recommended to use the
+For a calibration of loudspeaker layouts, it is recommended to use the
 tool ``tascar\_spkcalib'' (see section \ref{sec:spkcalib}).
 
 To measure the sound pressure level in a virtual acoustic environment,
@@ -1684,13 +1686,9 @@ The \tascar{} level meters support three different frequency
 weightings: ``Z'' or unweighted mode, ``C'' weighting (62.5~Hz to
 4~kHz) and a ``bandpass'' weighting (500~Hz to 4~kHz).
 
-\subsection{Calibrating speaker layouts with {\tt tascar\_spkcalib}}\label{sec:spkcalib}
+\subsection{Calibrating loudspeaker layouts with {\tt tascar\_spkcalib}}\label{sec:spkcalib}
 
-All loudspeaker-based rendering methods (e.g., those depending on a
-loudspeaker layout file) should result in identical levels at the
-listening positions for virtual sound sources from the directions of
-the speakers (the levels of interpolated virtual sources may differ
-due to differences in the rendering method).
+All loudspeaker-based rendering methods (e.g., those depending on a loudspeaker layout file) should result in identical levels at the listening positions for virtual sound sources from the directions of the loudspeakers (the levels of interpolated virtual sources may differ due to differences in the rendering method).
 %
 
 The calibration of loudspeaker arrays consists of three steps: a) calibration of the differences between the loudspeakers (with optional spectral correction), b) calibration of the reference level for the reproduction of point sources and c) calibration of the gain correction for the reproduction of diffuse sound fields. The calibration assistant \verb!tascar_spkcalib! guides you step by step through this calibration process.
@@ -1721,17 +1719,17 @@ When the calibration is complete, the layout-specific parameters are saved in th
 
 In the next step, the differences between the loudspeakers can be equalized (see Figure \ref{fig:spkcalib3}). If spectral equalization is activated, in the first step the frequency response is measured using an analysis filter bank. Then, the broad band level at the measurement microphone is measured for each loudspaker. Differences between loudspeakers will be equalized.
 
-In the display, the resulting loudspeaker gain is shown (e.g., \verb!g = 0.0 dB!). Furthermore, the recording level \verb!Lmic! and the recording coherence between the test signal and the recorded signal \verb!c! are shown, for each microphone. Recording levels below -50~dB FS can indicate problems with the microphone, e.g., missing phantom power or wrong input channel. Coherence values below 0.75 can be an indication for poor signal-to-noise ratio. If these values are critical for only a single loudspeaker, it is likely that one speaker channel is not connected or distorted.
+In the display, the resulting loudspeaker gain is shown (e.g., \verb!g = 0.0 dB!). Furthermore, the recording level \verb!Lmic! and the recording coherence between the test signal and the recorded signal \verb!c! are shown, for each microphone. Recording levels below -50~dB FS can indicate problems with the microphone, e.g., missing phantom power or wrong input channel. Coherence values below 0.75 can be an indication for poor signal-to-noise ratio. If these values are critical for only a single loudspeaker, it is likely that one loudspeaker channel is not connected or distorted.
 
 
 \begin{figure}[htb]
     \centering
     \fbox{\includegraphics[width=0.7\textwidth]{calibwizard3.png}}
-    \caption{Equalization of speakers, with spectral correction. The center frequencies of the equalizer stages are indicated with blue markers. The thin gray line indicates the frequency response without spectral correction, the thick red line with spectral correction.}
+    \caption{Equalization of loudspeakers, with spectral correction. The center frequencies of the equalizer stages are indicated with blue markers. The thin gray line indicates the frequency response without spectral correction, the thick red line with spectral correction.}
     \label{fig:spkcalib3}
 \end{figure}
 
-In the actual calibration step (Figure \ref{fig:spkcalib4}) the playback level of a stimulus can be adjusted until the desired reference level is reached. For level metering either a level meter or the connected measurement microphone (if calibrated) can be used. For the point source calibration, the stimulus is played via the first loudspeaker. The diffuse sound field calibration activates all speakers.
+In the actual calibration step (Figure \ref{fig:spkcalib4}) the playback level of a stimulus can be adjusted until the desired reference level is reached. For level metering either a level meter or the connected measurement microphone (if calibrated) can be used. For the point source calibration, the stimulus is played via the first loudspeaker. The diffuse sound field calibration activates all loudspeakers.
 
 \begin{figure}[htb]
     \centering
@@ -1787,7 +1785,7 @@ format.
 User can write such a file on his own or create it using MATLAB/GNU Octave
 function \verb!generate_scene!.
 %
-This function can generate a simple scene with one speaker based
+This function can generate a simple scene with one loudspeaker-based
 receiver, N sources distributed on a circle around the receiver and K
 virtual loudspeakers, also equally distributed on a circle around the
 receiver.

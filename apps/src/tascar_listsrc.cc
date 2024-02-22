@@ -35,7 +35,8 @@ using namespace TASCAR;
 void usage(struct option* opt)
 {
   std::cout << "Usage:\n\ntascar_listsrc sessionfile "
-               "[options]\n\nOptions:\n\n";
+               "[options]\n\nList external source files (sound files, trajectories, reflectors etc)."
+               "\n\nOptions:\n\n";
   while(opt->name) {
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg ? "#" : "")
               << "\n  --" << opt->name << (opt->has_arg ? "=#" : "") << "\n\n";

@@ -11,7 +11,7 @@ BINFILES = tascar_cli tascar_showlicenses tascar_validatetsc					\
   tascar_levelmeter tascar_jackpar tascar_renderfile tascar_renderir	\
   tascar_gpx2csv tascar_version tascar_test_compare_sndfile						\
   tascar_test_compare_level_sum tascar_lsjackp tascar_sendosc					\
-  tascar_listsrc
+  tascar_listsrc tascar_getcalibfor
 
 ifeq "$(HAS_LSL)" "yes"
 BINFILES += tascar_osc2lsl
