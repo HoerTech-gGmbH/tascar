@@ -21,6 +21,7 @@
 
 #include "audioplugin.h"
 #include "errorhandling.h"
+#include "filterclass.h"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -47,6 +48,8 @@ private:
   uint32_t skip = 0;
   std::string url = "osc.udp://localhost:9999/";
   std::string path = "/level";
+  std::vector<float> f = {250.0f, 500.0f, 1000.0f, 2000.0f};
+  float bandwidth = 1; // in octaves
   // derived variables:
   levelmode_t imode = dbspl;
   lo_address lo_addr;
@@ -60,6 +63,9 @@ private:
   std::condition_variable cond;
   std::atomic_bool has_data = false;
   std::vector<TASCAR::wave_t> filterbankout;
+  std::vector<TASCAR::bandpass_t> bp1;
+  std::vector<TASCAR::bandpass_t> bp2;
+  size_t n_bands;
 };
 
 level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -80,6 +86,13 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
     imode = max;
   else
     throw TASCAR::ErrMsg("Invalid level mode: " + mode);
+  GET_ATTRIBUTE(f, "Hz", "Center frequencies");
+  if(f.size() == 0)
+    throw TASCAR::ErrMsg("Invalid number of frequency bands");
+  n_bands = f.size();
+  GET_ATTRIBUTE(bandwidth, "octaves", "band width");
+  if(!(bandwidth > 0.0f))
+    throw TASCAR::ErrMsg("Invalid bandwidth, needs to be a positive number.");
   lo_addr = lo_address_new_from_url(url.c_str());
   if(threaded)
     thread = std::thread(&level2osc_t::sendthread, this);
@@ -104,13 +117,22 @@ void level2osc_t::configure()
   // time:
   lo_message_add_float(msg, 0);
   // levels:
-  for(uint32_t k = 0; k < n_channels; ++k)
+  for(uint32_t k = 0; k < n_channels * n_bands; ++k)
     lo_message_add_float(msg, 0);
   oscmsgargv = lo_message_get_argv(msg);
-  size_t n_bands = 2;
-  filterbankout.resize(n_channels*n_bands);
-  for(auto& w : filterbankout )
+  filterbankout.resize(n_channels * n_bands);
+  for(auto& w : filterbankout)
     w.resize(n_fragment);
+  bp1.resize(n_channels * n_bands);
+  bp2.resize(n_channels * n_bands);
+  float f_inc = pow(2.0, 0.5 * bandwidth);
+  for(size_t k = 0; k < n_bands; ++k) {
+    float fc = f[k];
+    for(size_t c = 0; c < n_channels; ++c) {
+      bp1[k + n_bands * c].set_range(fc / f_inc, fc * f_inc, f_sample);
+      bp2[k + n_bands * c].set_range(fc / f_inc, fc * f_inc, f_sample);
+    }
+  }
 }
 
 void level2osc_t::release()
@@ -121,10 +143,10 @@ void level2osc_t::release()
 
 level2osc_t::~level2osc_t()
 {
-  lo_address_free(lo_addr);
   run_thread = false;
   if(threaded)
     thread.join();
+  lo_address_free(lo_addr);
 }
 
 void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
@@ -136,6 +158,14 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         "Programming error (invalid channel number, expected " +
         TASCAR::to_string(n_channels) + ", got " +
         std::to_string(chunk.size()) + ").");
+  // update filters:
+  for(size_t k = 0; k < n_bands; ++k) {
+    for(size_t c = 0; c < n_channels; ++c) {
+      filterbankout[k + n_bands * c].copy(chunk[c]);
+      bp1[k + n_bands * c].filter(filterbankout[k + n_bands * c]);
+      bp2[k + n_bands * c].filter(filterbankout[k + n_bands * c]);
+    }
+  }
   if(tp.rolling || sendwhilestopped) {
     if(skipcnt) {
       skipcnt--;
@@ -144,16 +174,16 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
       if(mtx.try_lock()) {
         // pack data:
         oscmsgargv[0]->f = tp.object_time_seconds;
-        for(uint32_t ch = 0; ch < n_channels; ++ch) {
+        for(uint32_t ch = 0; ch < n_channels * n_bands; ++ch) {
           switch(imode) {
           case dbspl:
-            oscmsgargv[ch + 1]->f = chunk[ch].spldb();
+            oscmsgargv[ch + 1]->f = filterbankout[ch].spldb();
             break;
           case rms:
-            oscmsgargv[ch + 1]->f = chunk[ch].rms();
+            oscmsgargv[ch + 1]->f = filterbankout[ch].rms();
             break;
           case max:
-            oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
+            oscmsgargv[ch + 1]->f = filterbankout[ch].maxabs();
             break;
           }
         }

@@ -43,6 +43,7 @@
           <speechactivity/>
           <spksim/>
           <tubesim/>
+          <bandlevel2osc/>
           <spkcalib>
             <layout>
               <speaker/>

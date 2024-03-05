@@ -278,8 +278,10 @@ namespace TASCAR {
 
   class bandpass_t {
   public:
+    bandpass_t();
     bandpass_t(double f1, double f2, double fs);
     void set_range(double f1, double f2);
+    void set_range(double f1, double f2, double fs);
     inline double filter(double in) { return b2.filter(b1.filter(in)); };
     inline void filter(wave_t& w)
     {

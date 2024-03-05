@@ -1,0 +1,8 @@
+Send band levels via OSC.
+
+\input{tabbandlevel2osc.tex}
+
+If $N$ is the number of channels and $B$ the number of frequency
+bands, the OSC message will contain $N*B+1$ floating point values. The
+first value contains the object time in seconds, the other floats
+contain the RMS level within the current audio block in dB SPL.

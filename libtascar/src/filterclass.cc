@@ -388,6 +388,17 @@ TASCAR::bandpass_t::bandpass_t(double f1, double f2, double fs) : fs_(fs)
   set_range(f1, f2);
 }
 
+TASCAR::bandpass_t::bandpass_t()
+{
+  set_range(0.5, 1, 2);
+}
+
+void TASCAR::bandpass_t::set_range(double f1, double f2, double fs)
+{
+  fs_ = fs;
+  set_range(f1, f2);
+}
+
 void TASCAR::bandpass_t::set_range(double f1, double f2)
 {
   b1.set_gzp(1.0, 1.0, 0.0, pow(10.0, -2.0 * f1 / fs_), f1 / fs_ * TASCAR_2PI);
