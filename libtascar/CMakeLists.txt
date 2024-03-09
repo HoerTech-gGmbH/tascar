@@ -69,6 +69,7 @@ set(LIB_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/tascar_os.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/spawn_process.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/optim.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/fdn.cc
         )
 if (Linux)
     list(APPEND LIB_HEADER
