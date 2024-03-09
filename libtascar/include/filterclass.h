@@ -231,6 +231,7 @@ namespace TASCAR {
                  float pole_phi);
     void set_analog(float g, float z1, float z2, float p1, float p2, float fs);
     void set_analog_poles(float g, float p1, float p2, float fs);
+    void set_allpass(float r, float phi);
     void set_coefficients(float a1, float a2, float b0, float b1, float b2)
     {
       a1_ = a1;

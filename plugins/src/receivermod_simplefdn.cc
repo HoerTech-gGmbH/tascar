@@ -464,7 +464,6 @@ void simplefdn_t::fdnfilter(TASCAR::foa_sample_t& x)
   for(auto& pff : feedforward_delay_network) {
     pff->process(*psrc);
     psrc = &(pff->fdnpath);
-    // feedback_delay_network->outval = pff->outval;//XXX//
   }
   feedback_delay_network->process(*psrc);
   x = feedback_delay_network->outval;

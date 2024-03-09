@@ -248,6 +248,15 @@ void TASCAR::biquad_t::set_allpass(double r, double phi)
   b2_ = 1.0;
 }
 
+void TASCAR::biquadf_t::set_allpass(float r, float phi)
+{
+  a1_ = -2.0f * r * cos(phi);
+  a2_ = r * r;
+  b0_ = a2_;
+  b1_ = a1_;
+  b2_ = 1.0f;
+}
+
 void TASCAR::biquadf_t::set_gzp(float g, float zero_r, float zero_phi,
                                 float pole_r, float pole_phi)
 {

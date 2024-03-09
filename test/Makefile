@@ -52,6 +52,7 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 	test_snd_nospkcorr test_snd_spkcorr_long
 
 #test_ir_simplefdn_optimt60
+#test_ir_scatter_reflections 
 
 TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d \
 	test_fail_duplicatenames test_fail_duplicatescenenames \

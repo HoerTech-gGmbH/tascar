@@ -587,6 +587,12 @@ receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
                      "Use proxy position for air absorption");
   GET_ATTRIBUTE_BOOL(proxy_gain, "Use proxy position for gain");
   GET_ATTRIBUTE_BOOL(proxy_direction, "Use proxy position for direction");
+  // scattering:
+  GET_ATTRIBUTE(scatterreflections, "",
+                "Number of reflections created by scattering filter");
+  GET_ATTRIBUTE(scatterstructuresize, "m", "size of scatter structure");
+  GET_ATTRIBUTE(scatterdamping, "", "damping of scatter reflection filter");
+
   // end proxy
   if(avgdist <= 0)
     avgdist = 0.5f * powf(volumetric.boxvolumef(), 0.33333f);
@@ -607,8 +613,43 @@ void receiver_t::configure()
 {
   receivermod_t::configure();
   update();
+  // initialize scatterbuffer filter parameters:
   scatterbuffer = new amb1wave_t(n_fragment);
   scatter_handle = create_diffuse_state_data(f_sample, n_fragment);
+  scatterfilterpath.resize(scatterreflections);
+  if(scatterreflections > 0) {
+    scatterfilter = new TASCAR::fdn_t(scatterreflections, (uint32_t)f_sample,
+                                      true, TASCAR::fdn_t::mean, false);
+    scatterfilter->setpar_t60(
+        0.0f, TASCAR_2PIf * 0.125f,
+        f_sample * (0.1f * scatterstructuresize / 340.0f),
+        f_sample * (scatterstructuresize / 340.0f), f_sample,
+        std::max(0.0f, std::min(0.999f, scatterdamping)), true, false);
+    scatterallpass_w.resize(scatterreflections);
+    scatterallpass_x.resize(scatterreflections);
+    scatterallpass_y.resize(scatterreflections);
+    scatterallpass_z.resize(scatterreflections);
+    size_t k = 1;
+    for(auto& flt : scatterallpass_x) {
+      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      ++k;
+    }
+    k = 1;
+    for(auto& flt : scatterallpass_y) {
+      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      ++k;
+    }
+    k = 1;
+    for(auto& flt : scatterallpass_z) {
+      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      ++k;
+    }
+    k = 1;
+    for(auto& flt : scatterallpass_w) {
+      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      ++k;
+    }
+  }
   for(uint32_t k = 0; k < n_channels; k++) {
     outchannelsp.push_back(new wave_t(n_fragment));
     outchannels.push_back(wave_t(*(outchannelsp.back())));
@@ -641,6 +682,9 @@ void receiver_t::release()
   if(scatter_handle)
     delete scatter_handle;
   outchannelsp.clear();
+  if(scatterfilter)
+    delete scatterfilter;
+  scatterfilter = nullptr;
 }
 
 receiver_t::~receiver_t()
@@ -681,6 +725,28 @@ void receiver_t::add_pointsource_with_scattering(
 void receiver_t::postproc(std::vector<wave_t>& output)
 {
   // apply scatter buffer diffusion:
+  if(scatterfilter) {
+    for(size_t k = 0; k < n_fragment; ++k) {
+      TASCAR::foa_sample_t x(scatterbuffer->w()[k], scatterbuffer->x()[k],
+                             scatterbuffer->y()[k], scatterbuffer->z()[k]);
+      size_t kflt = 0;
+      for(auto& path : scatterfilterpath) {
+        path.dlout.w = scatterallpass_w[kflt].filter(x.w);
+        path.dlout.x = scatterallpass_x[kflt].filter(x.x);
+        path.dlout.y = scatterallpass_y[kflt].filter(x.y);
+        path.dlout.z = scatterallpass_z[kflt].filter(x.z);
+        //path.dlout = x;
+        ++kflt;
+      }
+      scatterfilter->process(scatterfilterpath);
+      scatterbuffer->w()[k] = scatterfilter->outval.w;
+      scatterbuffer->x()[k] = scatterfilter->outval.x;
+      scatterbuffer->y()[k] = scatterfilter->outval.y;
+      scatterbuffer->z()[k] = scatterfilter->outval.z;
+      //, scatterbuffer->x()[k],
+      // scatterbuffer->y()[k], scatterbuffer->z()[k]
+    }
+  }
   // add scatter buffer to diffuse sound field:
   add_diffuse_sound_field_rec(*scatterbuffer, scatter_handle);
   // perform post processing of base class:

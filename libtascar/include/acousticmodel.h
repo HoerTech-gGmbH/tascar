@@ -30,11 +30,13 @@
 #define ACOUSTICMODEL_H
 
 #include "dynamicobjects.h"
+#include "fdn.h"
 #include "levelmeter.h"
 #include "maskplugin.h"
 #include "pluginprocessor.h"
 #include "receivermod.h"
 #include "sourcemod.h"
+
 /*
 
   new delayline concept:
@@ -252,6 +254,11 @@ namespace TASCAR {
       float recdelaycomp = 0.0f;
       float layerfadelen = 1.0f;
       bool muteonstop = false;
+      // scatter filter parameters:
+      uint32_t scatterreflections = 0;
+      float scatterstructuresize = 1;
+      float scatterdamping = 0.0;
+      // proxy parameters:
       TASCAR::pos_t proxy_position;
       bool proxy_is_relative = false;
       bool proxy_delay = false;
@@ -289,6 +296,13 @@ namespace TASCAR {
       float fade_gain;
       // start sample of next fade, or FADE_START_NOW
       uint64_t fade_startsample;
+      // feed forward path with rotation and all-pass filters for scattering:
+      TASCAR::fdn_t* scatterfilter = nullptr;
+      std::vector<fdnpath_t> scatterfilterpath;
+      std::vector<TASCAR::biquadf_t> scatterallpass_w;
+      std::vector<TASCAR::biquadf_t> scatterallpass_x;
+      std::vector<TASCAR::biquadf_t> scatterallpass_y;
+      std::vector<TASCAR::biquadf_t> scatterallpass_z;
 
     protected:
       TASCAR::transport_t ltp;
