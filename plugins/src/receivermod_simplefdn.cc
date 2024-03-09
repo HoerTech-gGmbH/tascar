@@ -47,7 +47,7 @@ public:
   float c = 340.0f;
   bool fixcirculantmat = false;
   TASCAR::pos_t volumetric;
-  fdn_t::gainmethod_t gm;
+  TASCAR::fdn_t::gainmethod_t gm;
   std::vector<float> vcf;
   std::vector<float> vt60;
   uint32_t numiter = 100;
@@ -89,11 +89,11 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(gainmethod, "original mean schroeder",
                 "Gain calculation method");
   if(gainmethod == "original")
-    gm = fdn_t::original;
+    gm = TASCAR::fdn_t::original;
   else if(gainmethod == "mean")
-    gm = fdn_t::mean;
+    gm = TASCAR::fdn_t::mean;
   else if(gainmethod == "schroeder")
-    gm = fdn_t::schroeder;
+    gm = TASCAR::fdn_t::schroeder;
   else
     throw TASCAR::ErrMsg(
         "Invalid gain method \"" + gainmethod +
@@ -117,7 +117,7 @@ public:
   };
   simplefdn_t(tsccfg::node_t xmlsrc);
   ~simplefdn_t();
-  inline void fdnfilter(foa_sample_t& x);
+  inline void fdnfilter(TASCAR::foa_sample_t& x);
   void postproc(std::vector<TASCAR::wave_t>& output);
   void add_pointsource(const TASCAR::pos_t& prel, double width,
                        const TASCAR::wave_t& chunk,
@@ -151,9 +151,9 @@ public:
   float slopeerr(const std::vector<float>& param);
 
 private:
-  fdn_t* feedback_delay_network = NULL;
-  std::vector<fdnpath_t> srcpath;
-  std::vector<fdn_t*> feedforward_delay_network;
+  TASCAR::fdn_t* feedback_delay_network = NULL;
+  std::vector<TASCAR::fdnpath_t> srcpath;
+  std::vector<TASCAR::fdn_t*> feedforward_delay_network;
   TASCAR::amb1wave_t* foa_out = NULL;
   pthread_mutex_t mtx;
   float wgain = MIN3DB;
@@ -264,13 +264,13 @@ void simplefdn_t::configure()
     delete feedback_delay_network;
   srcpath.resize(fdnorder);
   feedback_delay_network =
-      new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, true);
+      new TASCAR::fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, true);
   for(auto& pff : feedforward_delay_network)
     delete pff;
   feedforward_delay_network.clear();
   for(uint32_t k = 0; k < forwardstages; ++k)
     feedforward_delay_network.push_back(
-        new fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, false));
+        new TASCAR::fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, false));
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
@@ -437,8 +437,8 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
         lowcut_z.filter(foa_out->z());
       }
       for(uint32_t t = 0; t < n_fragment; ++t) {
-        foa_sample_t x(foa_out->w()[t], foa_out->x()[t], foa_out->y()[t],
-                       foa_out->z()[t]);
+        TASCAR::foa_sample_t x(foa_out->w()[t], foa_out->x()[t],
+                               foa_out->y()[t], foa_out->z()[t]);
         fdnfilter(x);
 
         output[AMB11ACN::idx::w][t] += feedback_delay_network->outval.w;
@@ -452,7 +452,7 @@ void simplefdn_t::postproc(std::vector<TASCAR::wave_t>& output)
   }
 }
 
-void simplefdn_t::fdnfilter(foa_sample_t& x)
+void simplefdn_t::fdnfilter(TASCAR::foa_sample_t& x)
 {
   if(prefilt) {
     feedback_delay_network->prefilt0.filter(x);
@@ -530,7 +530,7 @@ void simplefdn_t::get_ir(TASCAR::wave_t& ir)
     for(auto& pff : feedforward_delay_network)
       pff->set_zero();
     feedback_delay_network->set_zero();
-    foa_sample_t inval;
+    TASCAR::foa_sample_t inval;
     inval.w = 1.0f;
     inval.x = 1.0f;
     inval.y = 0.0f;

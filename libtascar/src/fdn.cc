@@ -19,7 +19,21 @@
 
 #include "fdn.h"
 
+using namespace TASCAR;
+
 const std::complex<float> i_f(0.0f, 1.0f);
+
+fdnpath_t::fdnpath_t()
+{
+  init(1);
+  set_zero();
+};
+
+void fdnpath_t::init(uint32_t maxdelay)
+{
+  delayline.resize(maxdelay);
+  set_zero();
+};
 
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
              gainmethod_t gm, bool feedback_)
