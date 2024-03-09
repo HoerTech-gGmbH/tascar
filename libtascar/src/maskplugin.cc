@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2018 Giso Grimm
  * Copyright (c) 2019 Giso Grimm
- * Copyright (c) 2020 Giso Grimm, Tobias Hegemann
+ * Copyright (c) 2020 Giso Grimm
  * Copyright (c) 2021 Giso Grimm
  */
 /*

@@ -3,7 +3,6 @@
  *
  * Copyright (c) 2018 Giso Grimm
  * Copyright (c) 2020 Giso Grimm
- * Copyright (c) 2021 Tobias Hegemann
  */
 /*
  * TASCAR is free software: you can redistribute it and/or modify
