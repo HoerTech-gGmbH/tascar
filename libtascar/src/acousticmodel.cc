@@ -680,8 +680,12 @@ void receiver_t::add_pointsource_with_scattering(
  */
 void receiver_t::postproc(std::vector<wave_t>& output)
 {
+  // apply scatter buffer diffusion:
+  // add scatter buffer to diffuse sound field:
   add_diffuse_sound_field_rec(*scatterbuffer, scatter_handle);
+  // perform post processing of base class:
   receivermod_t::postproc(output);
+  // process any audio plugins of receiver:
   plugins.process_plugins(output, position, orientation, ltp);
 }
 
