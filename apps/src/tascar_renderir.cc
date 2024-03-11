@@ -22,6 +22,7 @@
 #include "tascar_os.h"
 #include <boost/program_options.hpp>
 #include <stdlib.h>
+#include <unistd.h>
 
 namespace po = boost::program_options;
 
