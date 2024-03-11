@@ -19,14 +19,12 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "cli.h"
 #include "irrender.h"
 #include "tascar_os.h"
-#include <boost/program_options.hpp>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
-namespace po = boost::program_options;
 
 int main(int argc, char** argv)
 {
@@ -34,15 +32,66 @@ int main(int argc, char** argv)
   try {
 #endif
 
-    po::options_description desc(
-        "tascar_renderfile [ options ] sessionfile\n\n"
-        "Render a TASCAR session into a sound file.\n\n"
-        "Allowed options:");
-    po::positional_options_description pd;
-    pd.add("sessionfile", 1);
-    desc.add_options()("help,h", "produce help message");
-    desc.add_options()("sessionfile", po::value<std::string>(),
-                       "TASCAR session file name.");
+    // TSC configuration file:
+    std::string tscfile;
+    // Scene name (or empty to use first scene in session file):
+    std::string scene;
+    // input file name (pointing to an existing sound file):
+    std::string in_fname;
+    // output sound file name, will be created/overwritten:
+    std::string out_fname;
+    // start time of simulation:
+    double starttime = 0.0;
+    // sampling rate in case of no input file:
+    double srate = 44100;
+    // duration in case in no input file:
+    double duration = 0;
+    // flag to increment time on each cycle:
+    bool dynamic = true;
+    // fragment size, or -1 to use only a single fragment:
+    uint32_t fragsize = -1;
+    // minimum ISM order:
+    uint32_t ism_min = 0;
+    // maximum ISM order:
+    uint32_t ism_max = -1;
+    // print statistics
+    bool b_verbose = false;
+    // update channel map:
+    std::string schmap;
+    // parse options:
+    const char* options = "hi:s:";
+    struct option long_options[] = {{"help", 0, 0, 'h'},
+                                    {"inputfile", 1, 0, 'i'},
+                                    {"outputfile", 1, 0, 'o'},
+                                    {"scene", 1, 0, 's'},
+                                    {0, 0, 0, 0}};
+    int opt(0);
+    int option_index(0);
+    while((opt = getopt_long(argc, argv, options, long_options,
+                             &option_index)) != -1) {
+      switch(opt) {
+      case 'h':
+        TASCAR::app_usage(
+            "tascar_renderfile", long_options, "sessionfile",
+            "Render a TASCAR session into a sound file.\n\nThe channel map is "
+            "a list of output channels (zero-base), or empty to use all.\n"
+            "Example: -m 0-5,8,12");
+        return 0;
+      case 'i':
+        in_fname = optarg;
+        break;
+      case 'o':
+        out_fname = optarg;
+        break;
+      }
+    }
+    if(optind < argc)
+      tscfile = argv[optind++];
+    if(url.size() == 0) {
+      TASCAR::app_usage("tascar_renderfile", long_options, "sessionfile",
+                        "Render a TASCAR session into a sound file.\n\n");
+      return 1;
+    }
     desc.add_options()("scene", po::value<std::string>(),
                        "Scene name, or empty to select first scene.");
     desc.add_options()("inputfile,i", po::value<std::string>(),

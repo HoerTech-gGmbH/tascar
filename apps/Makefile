@@ -75,8 +75,8 @@ build/tascar_pdf build/tascar_pdf.o: EXTERNALS += $(GTKEXT)
 build/tascar_pdf build/tascar_pdf.o: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
 build/tascar_lslsl build/tascar_lsljacktime build/tascar_osc2lsl: LDLIBS+=-llsl
-build/tascar_renderfile: LDLIBS += -lboost_program_options
-build/tascar_renderir: LDLIBS += -lboost_program_options
+#build/tascar_renderfile: LDLIBS += -lboost_program_options
+#build/tascar_renderir: LDLIBS += -lboost_program_options
 
 ifeq "$(COVERAGE)" "yes"
 LDLIBS += -lgcov -lgmock_main
