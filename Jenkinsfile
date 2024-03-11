@@ -14,6 +14,7 @@ def tascar_build_steps(stage_name) {
     sh "git fetch --tags https://github.com/HoerTech-gGmbH/tascar"
 
     if (system != "windows") {
+        sh "make -j 4 all googletest"
         // Autodetect libs/compiler on Unix
         sh "make pack"
         // Store debian packets for later retrieval by the repository manager
@@ -23,13 +24,15 @@ def tascar_build_steps(stage_name) {
         // Compile subset of TASCAR on Windows
         sh "make -j 4 libtascar googletest"
         sh "make -j 4 -C libtascar unit-tests"
-        sh "make -C apps build/tascar_cli"
+        sh "make -C apps build/tascar_cli build/tascar_renderir tascar_getcalibfor tascar_jackio tascar_jackpar tascar_version"
         sh "make -j 4 -C gui build/tascar_spkcalib build/tascar"
         sh "make -C plugins build/.directory"
         sh("make -C plugins -j 4 build/tascarsource_omni.dll" +
+           " build/tascar_ap_filter.dll build/tascar_ap_gain.dll" +
            " build/tascar_ap_pink.dll build/tascar_ap_sndfile.dll" +
            " build/tascar_ap_spksim.dll build/tascar_oscjacktime.dll" + 
            " build/tascar_system.dll build/tascarreceiver_hoa2d.dll" +
+           " build/tascar_simplecontroller.dll build/tascarreceiver_hoa3d.dll" +
            " build/tascarreceiver_hrtf.dll build/tascarreceiver_nsp.dll" +
            " build/tascarreceiver_omni.dll build/tascar_hrirconv.dll" +
            " build/tascarreceiver_foaconv.dll build/tascar_route.dll")
