@@ -20,6 +20,7 @@
  */
 
 #include "irrender.h"
+#include "tascar_os.h"
 #include <boost/program_options.hpp>
 #include <stdlib.h>
 #include <time.h>
@@ -48,9 +49,10 @@ int main(int argc, char** argv)
                        "Input sound file (if empty, silence is assumed).");
     desc.add_options()("outputfile,o", po::value<std::string>(),
                        "Output sound file.");
-    desc.add_options()("channelmap,m", po::value<std::string>()->default_value(""),
-                       "List of output channels (zero-base), or empty to use all.\n"
-                       "Example: -m 0-5,8,12");
+    desc.add_options()(
+        "channelmap,m", po::value<std::string>()->default_value(""),
+        "List of output channels (zero-base), or empty to use all.\n"
+        "Example: -m 0-5,8,12");
     desc.add_options()(
         "starttime,t", po::value<double>()->default_value(0),
         "Start time in session corresponding to first output sample.");
@@ -129,7 +131,7 @@ int main(int argc, char** argv)
           chmap.push_back(vrg[0]);
         else if((vrg.size() == 2) && (vrg[0] >= 0) && (vrg[1] >= vrg[0])) {
           for(auto k = vrg[0]; k <= vrg[1]; ++k)
-            if( k >= 0 )
+            if(k >= 0)
               chmap.push_back(k);
         } else {
           throw TASCAR::ErrMsg("Invalid channel range \"" + str + "\".");
@@ -150,7 +152,7 @@ int main(int argc, char** argv)
       out_fname = current_path + out_fname;
     }
     TASCAR::wav_render_t r(tscfile, scene, b_verbose);
-    r.set_channelmap( chmap );
+    r.set_channelmap(chmap);
     if(ism_max != (uint32_t)(-1))
       r.set_ism_order_range(ism_min, ism_max);
     if(in_fname.empty()) {

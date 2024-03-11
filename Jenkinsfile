@@ -51,7 +51,9 @@ def tascar_build_steps(stage_name) {
         sh "cp /mingw64/bin/broadwayd.exe TASCAR"
         sh "cp artwork/*.png TASCAR"
         // Now create the zip file from everything inside the TASCAR dir
-        sh 'zip -r TASCAR-$(grep ^VERSION= config.mk | cut -d= -f2)-windows.zip TASCAR'
+        //sh 'zip -r TASCAR-$(grep ^VERSION= config.mk | cut -d= -f2)-windows.zip TASCAR'
+        sh 'zip -r TASCAR-$(grep TASCARVER libtascar/build/tascarver.h | cut -d\'"\' -f2)-windows.zip TASCAR'
+        grep TASCARVER libtascar/build/tascarver.h | cut -d'"' -f2
         archiveArtifacts 'TASCAR-*-windows.zip'
     }
 }
