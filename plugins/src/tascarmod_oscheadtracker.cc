@@ -23,8 +23,6 @@
 #include <chrono>
 #include <thread>
 
-// const std::complex<double> i = {0.0, 1.0};
-
 class oscheadtracker_t : public TASCAR::actor_module_t {
 public:
   oscheadtracker_t(const TASCAR::module_cfg_t& cfg);
@@ -36,32 +34,42 @@ public:
   static int osc_update(const char*, const char*, lo_arg** argv, int argc,
                         lo_message, void* user_data)
   {
-    if(user_data && (argc == 7))
+    if(user_data && (argc == 8))
+      // first data element is time, discarded for now
       ((oscheadtracker_t*)user_data)
-          ->update(argv[0]->f, argv[1]->f, argv[2]->f, argv[3]->f, argv[4]->f,
-                   argv[5]->f, argv[6]->f);
+          ->update(argv[1]->f, argv[2]->f, argv[3]->f, argv[4]->f, argv[5]->f,
+                   argv[6]->f, argv[7]->f);
     return 0;
   }
   void update(float qw, float qx, float qy, float qz, float rz, float ry,
               float rx);
 
 private:
+  void connect();
+  void disconnect();
+  void connectservice();
+
+  // data logging OSC url:
+  std::string url;
+  // rotation OSC url:
+  std::string roturl;
+  // rotation OSC path:
+  std::string rotpath;
+  // EOG path:
+  std::string eogpath;
   // configuration variables:
   std::string name;
   // use only z-rotation for referencing:
   bool autoref_zonly = true;
   // combine quaternion with gyroscope for increased resolution:
   bool combinegyr = true;
+  // time-to-live for multicast messages, if using multicast targets:
   uint32_t ttl;
-  std::vector<int32_t> axes;
-  double accscale;
-  double gyrscale;
   bool apply_loc = false;
   bool apply_rot = true;
   double autoref = 0.00001;
   double smooth = 0.1;
   // run-time variables:
-  float prevtilt = 0;
   TASCAR::pos_t p0;
   TASCAR::zyx_euler_t o0;
   bool bcalib;
@@ -69,8 +77,24 @@ private:
   bool first_sample_autoref = true;
   bool first_sample_smooth = true;
   TASCAR::quaternion_t qstate;
-  // TASCAR::tictoc_t tictoc;
   bool firstgyrsmooth = true;
+  // measure time since last callback, for reconnection attempts if no data
+  // arrives:
+  TASCAR::tictoc_t tictoc;
+  // target address of head tracker, 192.168.100.1:9999 as defined in firmware:
+  lo_address headtrackertarget = NULL;
+  // additional thread which monitors the connection and re-connects in case of
+  // no incoming data
+  std::thread connectsrv;
+  std::atomic<bool> run_service;
+  // target address for data logging:
+  lo_address target = NULL;
+  // target address for remote rotation:
+  lo_address rottarget = NULL;
+  // shortcut for name prefix:
+  std::string p;
+  // state variable of mean rotation:
+  TASCAR::zyx_euler_t rotgyrmean;
 };
 
 void oscheadtracker_t::configure()
@@ -81,16 +105,40 @@ void oscheadtracker_t::configure()
   firstgyrsmooth = true;
 }
 
+void oscheadtracker_t::connect()
+{
+  lo_send(headtrackertarget, "/connect", "is", session->get_srv_port(),
+          std::string("/" + name + "/quatrot").c_str());
+  if(!eogpath.empty()) {
+    lo_send(headtrackertarget, "/eog/connect", "is", session->get_srv_port(),
+            eogpath.c_str());
+  }
+}
+
+void oscheadtracker_t::disconnect()
+{
+  lo_send(headtrackertarget, "/disconnect", "");
+  if(!eogpath.empty())
+    lo_send(headtrackertarget, "/eog/disconnect", "");
+}
+
 void oscheadtracker_t::release()
 {
   TASCAR::actor_module_t::release();
 }
 
 oscheadtracker_t::oscheadtracker_t(const TASCAR::module_cfg_t& cfg)
-    : actor_module_t(cfg), name("ovheadtracker"), ttl(1), axes({0, 1, 2}),
-      accscale(16384 / 9.81), gyrscale(16.4), bcalib(false), qref(1, 0, 0, 0)
+    : actor_module_t(cfg), name("oscheadtracker"), ttl(1), // axes({0, 1, 2}),
+      bcalib(false), qref(1, 0, 0, 0),
+      headtrackertarget(lo_address_new("192.168.100.1", "9999"))
 {
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
+  GET_ATTRIBUTE(url, "",
+                "Target URL for OSC data logging, or empty for no datalogging");
+  GET_ATTRIBUTE(roturl, "", "OSC target URL for rotation data");
+  GET_ATTRIBUTE(rotpath, "", "OSC target path for rotation data");
+  GET_ATTRIBUTE(eogpath, "",
+                "OSC target path for EOG data, or empty for no EOG");
   GET_ATTRIBUTE(ttl, "", "Time-to-live of OSC multicast data");
   GET_ATTRIBUTE(autoref, "",
                 "Filter coefficient for estimating reference orientation from "
@@ -101,17 +149,30 @@ oscheadtracker_t::oscheadtracker_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(combinegyr,
                      "Combine quaternions with gyroscope based second estimate "
                      "for increased resolution of pose estimation.");
-  GET_ATTRIBUTE(axes, "", "Order of axes, or -1 to not use axis");
-  GET_ATTRIBUTE(
-      accscale, "",
-      "Scaling factor of accelerometer, default value scales to $m/s^2$");
-  GET_ATTRIBUTE(gyrscale, "",
-                "Scaling factor of gyroscope, default value scales to deg/s");
   GET_ATTRIBUTE_BOOL(
       apply_loc, "Apply translation based on accelerometer (not implemented)");
   GET_ATTRIBUTE_BOOL(apply_rot,
                      "Apply rotation based on gyroscope and accelerometer");
+  if(url.size()) {
+    target = lo_address_new_from_url(url.c_str());
+    if(!target)
+      throw TASCAR::ErrMsg("Unable to create target adress \"" + url + "\".");
+    lo_address_set_ttl(target, ttl);
+  }
+  if((roturl.size() > 0) && (rotpath.size() > 0)) {
+    rottarget = lo_address_new_from_url(roturl.c_str());
+    if(!rottarget)
+      throw TASCAR::ErrMsg("Unable to create target adress \"" + roturl +
+                           "\".");
+    lo_address_set_ttl(rottarget, ttl);
+  }
   add_variables(session);
+  tictoc.tic();
+  connect();
+  run_service = true;
+  connectsrv = std::thread(&oscheadtracker_t::connectservice, this);
+  if(name.size())
+    p = "/" + name;
 }
 
 void oscheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
@@ -130,78 +191,17 @@ void oscheadtracker_t::add_variables(TASCAR::osc_server_t* srv)
                 "Apply rotation based on gyroscope and accelerometer");
   srv->add_bool_true(p + "/reset", &first_sample_autoref,
                      "Reset auto-referencing state");
-  srv->add_method(p + "/quatrot", "fffffff", &osc_update, this);
+  srv->add_method(p + "/quatrot", "dfffffff", &osc_update, this);
 }
 
-/**
- * @brief Read numbers from string, starting at second character
- * @param l String to read data from (will be modified)
- * @param data Data vector, already containing sufficient space
- * @param num_elements Number of elements to read
- */
-void parse_devstring(std::string& l, std::vector<double>& data,
-                     size_t num_elements)
+void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rx,
+                              float ry, float rz)
 {
-  size_t cnt = 0;
-  auto odata = data;
-  try {
-    l = l.substr(1);
-    std::string::size_type sz;
-    for(size_t k = 0; k < std::min(data.size(), num_elements); ++k) {
-      data[k] = std::stod(l, &sz);
-      ++cnt;
-      if(sz < l.size())
-        l = l.substr(sz + 1);
-    }
-  }
-  catch(...) {
-    data = odata;
-  }
-  if(cnt != num_elements)
-    data = odata;
-  for(size_t k = num_elements; k < data.size(); ++k)
-    data[k] = 0.0;
-}
-
-/**
- * @brief Read quaternion from string, starting at second character
- * @param l String to read data from (will be modified)
- * @param q Quaterion
- */
-void parse_devstring(std::string& l, TASCAR::quaternion_t& q)
-{
-  bool ok = false;
-  auto oq = q;
-  try {
-    l = l.substr(1);
-    std::string::size_type sz;
-    q.w = std::stod(l, &sz);
-    if(sz < l.size())
-      l = l.substr(sz + 1);
-    q.x = std::stod(l, &sz);
-    if(sz < l.size())
-      l = l.substr(sz + 1);
-    q.y = std::stod(l, &sz);
-    if(sz < l.size())
-      l = l.substr(sz + 1);
-    q.z = std::stod(l, &sz);
-    ok = true;
-  }
-  catch(...) {
-    q = oq;
-  }
-  if(!ok)
-    q = oq;
-}
-
-void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rz,
-                              float ry, float rx)
-{
+  tictoc.tic();
   TASCAR::zyx_euler_t rotgyr;
-  TASCAR::zyx_euler_t rotgyrmean;
-  rotgyr.z = rz;
-  rotgyr.y = ry;
-  rotgyr.x = rx;
+  rotgyr.z = rz * DEG2RAD;
+  rotgyr.y = ry * DEG2RAD;
+  rotgyr.x = rx * DEG2RAD;
   if(smooth > 0) {
     if(firstgyrsmooth) {
       rotgyrmean = rotgyr;
@@ -259,9 +259,43 @@ void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rz,
   }
   // store Euler orientation for processing in TASCAR:
   o0 = q.to_euler_zyx();
+  if(target) {
+    lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x, q.y, q.z);
+    lo_send(target, (p + "/alive").c_str(), "f", tictoc.toc());
+  }
+  if(rottarget) {
+    // send Euler orientation for data logging or remote processing:
+    lo_send(rottarget, rotpath.c_str(), "fff", RAD2DEG * o0.z, RAD2DEG * o0.y,
+            RAD2DEG * o0.x);
+  }
 }
 
-oscheadtracker_t::~oscheadtracker_t() {}
+oscheadtracker_t::~oscheadtracker_t()
+{
+  run_service = false;
+  if(connectsrv.joinable())
+    connectsrv.join();
+  disconnect();
+}
+
+void oscheadtracker_t::connectservice()
+{
+  size_t cnt = 0;
+  while(run_service) {
+    if(tictoc.toc() > 1) {
+      if(cnt)
+        --cnt;
+      else {
+        // set counter to 1000, to wait for 1 second between reconnection
+        // attempts:
+        cnt = 1000;
+        connect();
+      }
+    }
+    // wait for 1 millisecond:
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+}
 
 void oscheadtracker_t::update(uint32_t, bool)
 {

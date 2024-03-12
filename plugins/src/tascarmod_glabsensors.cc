@@ -280,11 +280,13 @@ std::string msglist2str(const std::vector<sensormsg_t>& msg)
   std::string r;
   for(std::vector<sensormsg_t>::const_iterator it = msg.begin();
       it != msg.end(); ++it) {
-    char ctmp[1000];
+    char ctmp[1024];
+    ctmp[1023] = 0;
     if(it->count == 1)
-      sprintf(ctmp, "%s\n", it->msg.c_str());
+      snprintf(ctmp, 1023, "%s\n", it->msg.c_str());
     else
-      sprintf(ctmp, "%s (repeated %d times)\n", it->msg.c_str(), it->count);
+      snprintf(ctmp, 1023, "%s (repeated %d times)\n", it->msg.c_str(),
+               it->count);
     r = ctmp + r;
   }
   return r;

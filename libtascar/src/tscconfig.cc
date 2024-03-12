@@ -227,8 +227,8 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
               {"receiver", "source", "diffuse", "facegroup", "face", "mask",
                "obstacle", "reverb"},
               "routes");
-  make_common(parentchildren, attribute_list,
-              {"receiver", "sound", "diffuse"}, "ports");
+  make_common(parentchildren, attribute_list, {"receiver", "sound", "diffuse"},
+              "ports");
   make_common(parentchildren, attribute_list,
               {"receiverhann", "receiverhoa3d", "receiverhoa2d",
                "receivervbap3d", "receivervbap", "receivernsp", "receiverwfs"},
@@ -533,14 +533,16 @@ std::string TASCAR::to_string(const TASCAR::levelmeter::weight_t& value)
 std::string TASCAR::to_string(double x, const char* fmt)
 {
   char ctmp[1024];
-  sprintf(ctmp, fmt, x);
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, fmt, x);
   return ctmp;
 }
 
 std::string TASCAR::to_string(float x, const char* fmt)
 {
   char ctmp[1024];
-  sprintf(ctmp, fmt, x);
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, fmt, x);
   return ctmp;
 }
 
@@ -609,31 +611,35 @@ std::string TASCAR::days_to_string(double x)
   int d(floor(x));
   int h(floor(24 * (x - d)));
   char ctmp[1024];
+  ctmp[1023] = 0;
   if(d == 1)
-    sprintf(ctmp, "1 day %d hours", h);
+    snprintf(ctmp, 1023, "1 day %d hours", h);
   else
-    sprintf(ctmp, "%d days %d hours", d, h);
+    snprintf(ctmp, 1023, "%d days %d hours", d, h);
   return ctmp;
 }
 
 std::string TASCAR::to_string_db(double value)
 {
   char ctmp[1024];
-  sprintf(ctmp, "%g", 20.0 * log10(value));
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%g", 20.0 * log10(value));
   return ctmp;
 }
 
 std::string TASCAR::to_string_dbspl(double value)
 {
   char ctmp[1024];
-  sprintf(ctmp, "%g", 20.0 * log10(value / 2e-5));
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%g", 20.0 * log10(value / 2e-5));
   return ctmp;
 }
 
 std::string TASCAR::to_string_db(float value)
 {
   char ctmp[1024];
-  sprintf(ctmp, "%g", 20.0f * log10f(value));
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%g", 20.0f * log10f(value));
   return ctmp;
 }
 
@@ -656,7 +662,8 @@ std::string TASCAR::to_string_dbspl(const std::vector<float>& value)
 std::string TASCAR::to_string_dbspl(float value)
 {
   char ctmp[1024];
-  sprintf(ctmp, "%g", 20.0f * log10f(value / 2e-5f));
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%g", 20.0f * log10f(value / 2e-5f));
   return ctmp;
 }
 
@@ -1500,7 +1507,8 @@ void set_attribute_int32(tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   char ctmp[1024];
-  sprintf(ctmp, "%d", value);
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%d", value);
   tsccfg::node_set_attribute(elem, name, ctmp);
 }
 
@@ -1533,7 +1541,8 @@ void set_attribute_double(tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   char ctmp[1024];
-  sprintf(ctmp, "%1.12g", value);
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%1.12g", value);
   tsccfg::node_set_attribute(elem, name, ctmp);
 }
 
@@ -1542,7 +1551,8 @@ void set_attribute_db(tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   char ctmp[1024];
-  sprintf(ctmp, "%1.12g", 20.0 * log10(value));
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%1.12g", 20.0 * log10(value));
   tsccfg::node_set_attribute(elem, name, ctmp);
 }
 
@@ -1561,7 +1571,8 @@ void set_attribute_dbspl(tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   char ctmp[1024];
-  sprintf(ctmp, "%1.12g", 20.0 * log10(value / 2e-5));
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%1.12g", 20.0 * log10(value / 2e-5));
   tsccfg::node_set_attribute(elem, name, ctmp);
 }
 
@@ -1577,8 +1588,9 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   char ctmp[1024];
-  sprintf(ctmp, "%1.12g %1.12g %1.12g", value.z * RAD2DEG, value.y * RAD2DEG,
-          value.x * RAD2DEG);
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "%1.12g %1.12g %1.12g", value.z * RAD2DEG,
+           value.y * RAD2DEG, value.x * RAD2DEG);
   tsccfg::node_set_attribute(elem, name, ctmp);
 }
 

@@ -279,13 +279,15 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   s->set_ctlname(ctlname);
   srv->add_method("/gain", "f", osc_set_sound_gain, s);
   srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s);
-  srv->add_float_dbspl("/caliblevel", &(s->caliblevel));
+  srv->add_float_dbspl("/caliblevel", &(s->caliblevel), "",
+                       "calibration level in dB");
   srv->add_uint("/ismmin", &(s->ismmin));
   srv->add_uint("/ismmax", &(s->ismmax));
   srv->add_uint("/layers", &(s->layers));
-  srv->add_float("/size", &(s->size));
+  srv->add_float("/size", &(s->size), "", "Object size in meter");
   s->plugins.add_variables(srv);
-  srv->add_method("/pos", "fff", osc_set_sound_position, s);
+  srv->add_pos("/pos", &(s->local_position), "",
+               "local position of sound vertex in meters");
   srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
   srv->add_method("/zeuler", "f", osc_set_sound_orientation, s);
   srv->set_prefix(oldpref);
@@ -316,7 +318,8 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,
   srv->set_prefix(ctlname);
   srv->add_method("/gain", "f", osc_set_receiver_gain, s);
   srv->add_method("/lingain", "f", osc_set_receiver_lingain, s);
-  srv->add_float_db("/diffusegain", &(s->diffusegain),"[-30,30]","relative gain of diffuse sound field model");
+  srv->add_float_db("/diffusegain", &(s->diffusegain), "[-30,30]",
+                    "relative gain of diffuse sound field model");
   srv->add_method("/fade", "ff", osc_set_receiver_fade, s);
   srv->add_method("/fade", "fff", osc_set_receiver_fade, s);
   srv->add_uint("/ismmin", &(s->ismmin));
@@ -358,7 +361,7 @@ void osc_scene_t::add_child_methods(TASCAR::osc_server_t* srv)
   }
 }
 
-osc_scene_t::osc_scene_t(tsccfg::node_t, TASCAR::Scene::scene_t* scene_)
+osc_scene_t::osc_scene_t(tsccfg::node_t, TASCAR::render_core_t* scene_)
     : scene(scene_)
 {
   if(!scene)

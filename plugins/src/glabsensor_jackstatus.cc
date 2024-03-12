@@ -94,9 +94,10 @@ void jackstatus_t::service()
     float load(get_cpu_load());
     if((load > warnload) || (load > criticalload)) {
       char ctmp[1024];
+      ctmp[1023] = 0;
       if(load > criticalload) {
-        sprintf(ctmp, "jack load is above %1.3g%% (%1.3g%%).", criticalload,
-                load);
+        snprintf(ctmp, 1023, "jack load is above %1.3g%% (%1.3g%%).",
+                 criticalload, load);
         add_critical(ctmp);
         if(!oncritical.empty()) {
           int rv(system(oncritical.c_str()));
@@ -104,7 +105,8 @@ void jackstatus_t::service()
             add_warning("oncritical command failed.");
         }
       } else if(load > warnload) {
-        sprintf(ctmp, "jack load is above %1.3g%% (%1.3g%%).", warnload, load);
+        snprintf(ctmp, 1023, "jack load is above %1.3g%% (%1.3g%%).", warnload,
+                 load);
         add_warning(ctmp);
       }
       // DEBUG(load);
@@ -120,8 +122,9 @@ void jackstatus_t::service()
         f_xrun += (1.0 - c1) * cnt / (t - t_prev);
         if(f_xrun > maxxrunfreq) {
           char ctmp[1024];
-          sprintf(ctmp, "Average xrun frequency is above %1.3g Hz (%1.3g Hz)",
-                  maxxrunfreq, f_xrun);
+          snprintf(ctmp, 1023,
+                   "Average xrun frequency is above %1.3g Hz (%1.3g Hz)",
+                   maxxrunfreq, f_xrun);
           add_critical(ctmp);
           if(!oncritical.empty()) {
             int rv(system(oncritical.c_str()));

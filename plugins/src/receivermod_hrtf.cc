@@ -105,7 +105,8 @@ public:
   float maxgain; // gain applied at 90 degr elev (0 dB gain at startangle_notch
                  // and linear increase)
   float Q_notch; // inverse Q factor of the parametric equalizer
-  bool diffuse_hrtf; // apply hrtf model also to diffuse rendering
+  bool diffuse_hrtf;           // apply hrtf model also to diffuse rendering
+  uint32_t prewarpingmode = 0; // Azimuth prewarping mode
 };
 
 hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
@@ -167,6 +168,9 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
   dir_r.rot_z(-angle);
   GET_ATTRIBUTE_BOOL(diffuse_hrtf,
                      "apply hrtf model also to diffuse rendering");
+  GET_ATTRIBUTE(
+      prewarpingmode, "",
+      "Azimuth pre-warping mode, 0 = original, 1 = none, 2 = corrected");
 }
 
 class hrtf_t : public TASCAR::receivermod_base_t {
@@ -183,7 +187,7 @@ public:
       out_l = bqelev_l.filter(bqazim_l.filter(out_l));
       out_r = bqelev_r.filter(bqazim_r.filter(out_r));
     }
-    void set_param(const TASCAR::pos_t& prel_norm);
+    void set_param(const TASCAR::pos_t& prel_norm, uint32_t prewarpingmode);
     float fs;
     float dt;
     const hrtf_param_t& par;
@@ -371,12 +375,12 @@ hrtf_t::diffuse_data_t::diffuse_data_t(float srate, uint32_t chunksize,
       yp(srate, chunksize, par_plugin), ym(srate, chunksize, par_plugin),
       zp(srate, chunksize, par_plugin), zm(srate, chunksize, par_plugin)
 {
-  xp.set_param(TASCAR::pos_t(1, 0, 0));
-  xm.set_param(TASCAR::pos_t(-1, 0, 0));
-  yp.set_param(TASCAR::pos_t(0, 1, 0));
-  ym.set_param(TASCAR::pos_t(0, -1, 0));
-  zp.set_param(TASCAR::pos_t(0, 0, 1));
-  zm.set_param(TASCAR::pos_t(0, 0, -1));
+  xp.set_param(TASCAR::pos_t(1, 0, 0), 0);
+  xm.set_param(TASCAR::pos_t(-1, 0, 0), 0);
+  yp.set_param(TASCAR::pos_t(0, 1, 0), 0);
+  ym.set_param(TASCAR::pos_t(0, -1, 0), 0);
+  zp.set_param(TASCAR::pos_t(0, 0, 1), 0);
+  zm.set_param(TASCAR::pos_t(0, 0, -1), 0);
 }
 
 void hrtf_t::configure()
@@ -440,6 +444,7 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   TASCAR::receivermod_base_t::add_variables(srv);
   srv->add_bool("/hrtf/decorr", &decorr);
   srv->add_float("/hrtf/angle", &par.angle);
+  srv->add_float("/hrtf/radius", &par.radius);
   srv->add_float("/hrtf/thetamin", &par.thetamin);
   srv->add_float("/hrtf/omega", &par.omega);
   srv->add_float("/hrtf/alphamin", &par.alphamin);
@@ -455,6 +460,8 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float("/hrtf/maxgain", &par.maxgain);
   srv->add_float("/hrtf/Q_notch", &par.Q_notch);
   srv->add_bool("/hrtf/diffuse_hrtf", &par.diffuse_hrtf);
+  srv->add_uint("/hrtf/prewarpingmode", &par.prewarpingmode, "[0,1,2]",
+                "pre-warping mode, 0 = original, 1 = none, 2 = corrected");
 }
 
 hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
@@ -465,7 +472,8 @@ hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE_BOOL(decorr, "Flag to use decorrelation of diffuse sounds");
 }
 
-void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
+void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm,
+                               uint32_t prewarpingmode)
 {
   // angle with respect to front (range [0, pi])
   float theta_front = acosf(dot_prodf(prel_norm, par.dir_front));
@@ -474,9 +482,19 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm)
   // angle with respect to right ear (range [0, pi])
   float theta_r = acosf(dot_prodf(par.dir_r, prel_norm));
 
-  // warping for better grip on small angles
-  theta_l = theta_l * (1.0f - 0.5f * cosf(sqrt(theta_l * TASCAR_PIf))) / 1.5f;
-  theta_r = theta_r * (1.0f - 0.5f * cosf(sqrt(theta_r * TASCAR_PIf))) / 1.5f;
+  switch(prewarpingmode) {
+  case 0: // original
+    // warping for better grip on small angles
+    theta_l *= (1.0f - 0.5f * cosf(sqrtf(theta_l * TASCAR_PIf))) / 1.5f;
+    theta_r *= (1.0f - 0.5f * cosf(sqrtf(theta_r * TASCAR_PIf))) / 1.5f;
+    break;
+
+  case 2: // corrected
+    // warping for better grip on small angles
+    theta_l /= (1.0f - 0.5f * cosf(sqrtf(theta_l * TASCAR_PIf))) / 1.5f;
+    theta_r /= (1.0f - 0.5f * cosf(sqrtf(theta_r * TASCAR_PIf))) / 1.5f;
+    break;
+  }
 
   // time delay in meter (panning parameters: target_tau is reached at end of
   // the block)
@@ -494,7 +512,7 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double,
                              receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
-  d->set_param(prel.normal());
+  d->set_param(prel.normal(), par.prewarpingmode);
   // calculate delta tau for each panning step
   float dtau_l((d->target_tau_l - d->tau_l) * d->dt);
   float dtau_r((d->target_tau_r - d->tau_r) * d->dt);

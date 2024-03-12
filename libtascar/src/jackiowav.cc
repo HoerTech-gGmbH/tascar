@@ -47,7 +47,8 @@ jackio_t::jackio_t(const std::string& ifname, const std::string& ofname,
     p.clear();
     for(int ch = 0; ch < sf_inf_in.channels; ch++) {
       char ctmp[100];
-      sprintf(ctmp, "system:playback_%d", ch + 1);
+      ctmp[99] = 0;
+      snprintf(ctmp, 99, "system:playback_%d", ch + 1);
       p.push_back(ctmp);
     }
     p.push_back("system:capture_1");
@@ -61,8 +62,9 @@ jackio_t::jackio_t(const std::string& ifname, const std::string& ofname,
     }
   }
   char c_tmp[1024];
+  c_tmp[1023] = 0;
   nframes_total = (uint32_t)sf_inf_in.frames;
-  sprintf(c_tmp, "%u", nframes_total);
+  snprintf(c_tmp, 1023, "%u", nframes_total);
   log("allocating memory for " + std::string(c_tmp) + " audio frames");
   buf_in =
       new float[std::max((sf_count_t)1, sf_inf_in.channels * sf_inf_in.frames)];
@@ -73,12 +75,12 @@ jackio_t::jackio_t(const std::string& ifname, const std::string& ofname,
   log("reading input file into memory");
   sf_readf_float(sf_in, buf_in, sf_inf_in.frames);
   for(unsigned int k = 0; k < (unsigned int)sf_inf_out.channels; k++) {
-    sprintf(c_tmp, "in_%u", k + 1);
+    snprintf(c_tmp, 1023, "in_%u", k + 1);
     log("adding input port " + std::string(c_tmp));
     add_input_port(c_tmp);
   }
   for(unsigned int k = 0; k < (unsigned int)sf_inf_in.channels; k++) {
-    sprintf(c_tmp, "out_%u", k + 1);
+    snprintf(c_tmp, 1023, "out_%u", k + 1);
     log("adding output port " + std::string(c_tmp));
     add_output_port(c_tmp);
   }
@@ -110,12 +112,13 @@ jackio_t::jackio_t(double duration, const std::string& ofname,
     }
   }
   char c_tmp[1024];
-  sprintf(c_tmp, "%u", nframes_total);
+  c_tmp[1023] = 0;
+  snprintf(c_tmp, 1023, "%u", nframes_total);
   log("allocating memory for " + std::string(c_tmp) + " audio frames");
   buf_out = new float[sf_inf_out.channels * nframes_total];
   memset(buf_out, 0, sizeof(float) * sf_inf_out.channels * nframes_total);
   for(unsigned int k = 0; k < (unsigned int)sf_inf_out.channels; k++) {
-    sprintf(c_tmp, "in_%u", k + 1);
+    snprintf(c_tmp, 1023, "in_%u", k + 1);
     log("add input port " + std::string(c_tmp));
     add_input_port(c_tmp);
   }
@@ -145,13 +148,15 @@ jackio_t::jackio_t(const std::vector<TASCAR::wave_t>& isig,
   log("reading input file into memory");
   for(size_t k = 0; k < osig.size(); ++k) {
     char c_tmp[1024];
-    sprintf(c_tmp, "in_%lu", k + 1);
+    c_tmp[1023] = 0;
+    snprintf(c_tmp, 1023, "in_%lu", k + 1);
     log("adding input port " + std::string(c_tmp));
     add_input_port(c_tmp);
   }
   for(size_t ch = 0; ch < isig.size(); ++ch) {
     char c_tmp[1024];
-    sprintf(c_tmp, "out_%lu", ch + 1);
+    c_tmp[1023] = 0;
+    snprintf(c_tmp, 1023, "out_%lu", ch + 1);
     log("adding output port " + std::string(c_tmp));
     add_output_port(c_tmp);
     // copy input signal:
@@ -298,9 +303,10 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   }
   unsigned int k(0);
   char c_tmp[1024];
+  c_tmp[1023] = 0;
   for(auto p : ports) {
     ++k;
-    sprintf(c_tmp, "in_%u", k);
+    snprintf(c_tmp, 1023, "in_%u", k);
     add_input_port(c_tmp);
   }
   if(buflen < 2.0)
@@ -310,21 +316,22 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
   buf = new float[channels * get_fragsize()];
   rlen = channels * get_srate();
   rbuf = new float[rlen];
+  tscale = 1.0 / get_srate();
+  srv = std::thread(&jackrec_async_t::service, this);
   activate();
   k = 0;
   for(auto& p : ports) {
     connect_in(k, p, true, true);
     ++k;
   }
-  tscale = 1.0 / get_srate();
-  srv = std::thread(&jackrec_async_t::service, this);
 }
 
 jackrec_async_t::~jackrec_async_t()
 {
   deactivate();
   run_service = false;
-  srv.join();
+  if(srv.joinable())
+    srv.join();
   if(sf_out) {
     sf_close(sf_out);
   }

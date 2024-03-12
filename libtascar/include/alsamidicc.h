@@ -33,11 +33,10 @@
 
 namespace TASCAR {
 
-
   /**
      \brief Simple MIDI controller base class
   */
-  class midi_ctl_t : public TASCAR::service_t  {
+  class midi_ctl_t : public TASCAR::service_t {
   public:
     /**
        \param cname Client name
@@ -48,14 +47,14 @@ namespace TASCAR {
        \param client Source client
        \param port Source port
     */
-    void connect_input(int client,int port);
-    void connect_input( const std::string& name);
+    void connect_input(int client, int port);
+    void connect_input(const std::string& name, bool warn_on_fail = false);
     /**
        \param client Destination client
        \param port Destination port
     */
-    void connect_output(int client,int port);
-    void connect_output( const std::string& name);
+    void connect_output(int client, int port);
+    void connect_output(const std::string& name, bool warn_on_fail = false);
     /**
        \brief Send a CC event to output
        \param channel MIDI channel number
@@ -63,12 +62,22 @@ namespace TASCAR {
        \param value MIDI value
     */
     void send_midi(int channel, int param, int value);
+    /**
+       \brief Send a NoteOn event to output
+       \param channel MIDI channel number
+       \param pitch Pitch of note
+       \param velocity Note velocity
+    */
+    void send_midi_note(int channel, int pitch, int velocity);
+
   protected:
     void service();
     /**
        \brief Callback to be called for incoming MIDI events
     */
     virtual void emit_event(int channel, int param, int value) = 0;
+    virtual void emit_event_note(int, int, int){};
+
   private:
     // MIDI sequencer:
     snd_seq_t* seq;
@@ -77,8 +86,7 @@ namespace TASCAR {
     // output/feedback port:
     snd_seq_addr_t port_out;
   };
-
-}
+} // namespace TASCAR
 
 #endif
 

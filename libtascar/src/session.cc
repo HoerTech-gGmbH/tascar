@@ -431,8 +431,9 @@ TASCAR::session_t::session_t()
     throw;
   }
   profilermsgargv = lo_message_get_argv(profilermsg);
-  if( use_profiler ){
-    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << modules.size() << "\"/>" << std::endl;
+  if(use_profiler) {
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\""
+              << modules.size() << "\"/>" << std::endl;
     std::cout << "csModules = { ";
     for(auto mod : modules)
       std::cout << "'" << mod->modulename() << "' ";
@@ -471,8 +472,9 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
     throw;
   }
   profilermsgargv = lo_message_get_argv(profilermsg);
-  if( use_profiler ){
-    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << modules.size() << "\"/>" << std::endl;
+  if(use_profiler) {
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\""
+              << modules.size() << "\"/>" << std::endl;
     std::cout << "csModules = { ";
     for(auto mod : modules)
       std::cout << "'" << mod->modulename() << "' ";
@@ -484,6 +486,10 @@ void TASCAR::session_t::read_xml()
 {
   try {
     TASCAR::tsc_reader_t::read_xml();
+    GET_ATTRIBUTE(scriptpath, "", "Path for executing OSC scripts");
+    GET_ATTRIBUTE(scriptext, "", "Extension appended to OSC script names");
+    GET_ATTRIBUTE(initoscscript, "",
+                  "OSC scripts to run when session is loaded.");
   }
   catch(...) {
     if(lock_vars()) {
@@ -695,10 +701,9 @@ void TASCAR::session_t::start()
 {
   started_ = true;
   try {
-    for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl = scenes.begin();
-        ipl != scenes.end(); ++ipl) {
-      (*ipl)->start();
-      (*ipl)->add_child_methods(this);
+    for(auto scene : scenes){
+      scene->start();
+      scene->add_child_methods(this);
     }
   }
   catch(...) {
@@ -738,6 +743,8 @@ void TASCAR::session_t::start()
     }
     (*ipl)->add_licenses(this);
   }
+  if(initoscscript.size())
+    read_script_async(initoscscript);
 }
 
 int TASCAR::session_t::process(jack_nframes_t, const std::vector<float*>&,
@@ -876,7 +883,7 @@ TASCAR::session_t::find_objects(const std::string& pattern)
         it != objs.end(); ++it) {
       std::string name(base + (*it)->get_name());
       if(TASCAR::fnmatch(pattern.c_str(), name.c_str(), true) == 0)
-        retv.push_back(TASCAR::named_object_t(*it, name));
+        retv.push_back(TASCAR::named_object_t(*it, name, *sit));
     }
   }
   return retv;
@@ -893,7 +900,7 @@ TASCAR::session_t::find_objects(const std::vector<std::string>& vpattern)
       for(auto obj : objs) {
         std::string name(base + obj->get_name());
         if(TASCAR::fnmatch(pattern.c_str(), name.c_str(), true) == 0)
-          retv.push_back(TASCAR::named_object_t(obj, name));
+          retv.push_back(TASCAR::named_object_t(obj, name, scene));
       }
     }
   }
@@ -1058,8 +1065,9 @@ namespace OSCSession {
     if((argc == 1) && (types[0] == 'f')) {
       double cur_time(std::max(
           0.0, std::min(((TASCAR::session_t*)user_data)->duration,
-                        ((TASCAR::session_t*)user_data)->tp_get_time())));
-      ((TASCAR::session_t*)user_data)->tp_locate(cur_time + argv[0]->f);
+                        ((TASCAR::session_t*)user_data)->tp_get_time() +
+                            argv[0]->f)));
+      ((TASCAR::session_t*)user_data)->tp_locate(cur_time);
       return 0;
     }
     return 1;
@@ -1135,6 +1143,16 @@ namespace OSCSession {
     return 0;
   }
 
+  int _runscript(const char*, const char* types, lo_arg** argv, int argc,
+                 lo_message, void* user_data)
+  {
+    if(user_data && (argc == 1) && (types[0] == 's')) {
+      TASCAR::session_t* srv(reinterpret_cast<TASCAR::session_t*>(user_data));
+      srv->read_script_async(TASCAR::str2vecstr(&(argv[0]->s)));
+    }
+    return 0;
+  }
+
 } // namespace OSCSession
 
 void TASCAR::session_t::add_transport_methods()
@@ -1151,6 +1169,8 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/stop", "", OSCSession::_stop, this);
   osc_server_t::add_method("/transport/unload", "", OSCSession::_unload_modules,
                            this);
+  osc_server_t::add_method("/runscript", "s", OSCSession::_runscript, this);
+  osc_server_t::add_string("/scriptpath", &scriptpath);
 }
 
 void TASCAR::session_t::send_xml(const std::string& url,

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <receiver/>
+  </scene>
+  <modules>
+    <oscheadtracker actor="/*/out"/>
+  </modules>
+</session>

@@ -24,10 +24,11 @@
 
 class lslactor_t : public TASCAR::actor_module_t {
 public:
-  lslactor_t( const TASCAR::module_cfg_t& cfg );
+  lslactor_t(const TASCAR::module_cfg_t& cfg);
   ~lslactor_t();
   void update(uint32_t frame, bool running);
   void service();
+
 private:
   std::string predicate;
   std::vector<int32_t> channels;
@@ -40,74 +41,76 @@ private:
   bool incremental;
 };
 
-lslactor_t::lslactor_t( const TASCAR::module_cfg_t& cfg )
-  : actor_module_t( cfg ),
-    inlet(NULL),
-    run_service(true),
-    local(false),
-    incremental(false)
+lslactor_t::lslactor_t(const TASCAR::module_cfg_t& cfg)
+    : actor_module_t(cfg), inlet(NULL), run_service(true), local(false),
+      incremental(false)
 {
   GET_ATTRIBUTE_(predicate);
   GET_ATTRIBUTE_(channels);
   GET_ATTRIBUTE_(influence);
   GET_ATTRIBUTE_BOOL_(local);
   GET_ATTRIBUTE_BOOL_(incremental);
-  if( channels.empty() )
+  if(channels.empty())
     throw TASCAR::ErrMsg("No channels selected.");
-  if( channels.size() > 6 )
+  if(channels.size() > 6)
     throw TASCAR::ErrMsg("More than 6 channels selected.");
-  for(uint32_t k=channels.size();k<6;++k)
+  for(uint32_t k = channels.size(); k < 6; ++k)
     channels.push_back(-1);
   influence.resize(channels.size());
   bool valid(false);
-  for(uint32_t k=0;k<channels.size();++k)
-    if( (channels[k]>-1) && (influence[k]!=0) )
+  for(uint32_t k = 0; k < channels.size(); ++k)
+    if((channels[k] > -1) && (influence[k] != 0))
       valid = true;
-  if( !valid )
+  if(!valid)
     throw TASCAR::ErrMsg("No channel has a non-zero influence.");
-  srv = std::thread(&lslactor_t::service,this);
+  srv = std::thread(&lslactor_t::service, this);
 }
 
 void lslactor_t::service()
 {
   inlet = NULL;
-  while( (!inlet) && run_service ){
-    std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate,1,1));
-    if( results.empty() )
-      TASCAR::add_warning("No matching LSL stream found ("+predicate+").");
-    else{
+  while((!inlet) && run_service) {
+    std::vector<lsl::stream_info> results(lsl::resolve_stream(predicate, 1, 1));
+    if(results.empty())
+      TASCAR::add_warning("No matching LSL stream found (" + predicate + ").");
+    else {
       lsl::channel_format_t cf(results[0].channel_format());
-      if( !((cf == lsl::cf_float32) || (cf == lsl::cf_double64)) )
-        TASCAR::add_warning("The LSL stream \""+predicate+"\" has no floating point data.");
-      else{
+      if(!((cf == lsl::cf_float32) || (cf == lsl::cf_double64)))
+        TASCAR::add_warning("The LSL stream \"" + predicate +
+                            "\" has no floating point data.");
+      else {
         int32_t streamchannels(results[0].channel_count());
-        for(uint32_t k=0;k<channels.size();++k)
-          if( (channels[k] > -1) && (channels[k]>=streamchannels) ){
+        for(uint32_t k = 0; k < channels.size(); ++k)
+          if((channels[k] > -1) && (channels[k] >= streamchannels)) {
             char ctmp[1024];
-            sprintf(ctmp,"The %dth entry of channel vector requires channel %d, but the LSL stream \"%s\" has only %d channels.",k,channels[k],predicate.c_str(),streamchannels);
+            ctmp[1023] = 0;
+            snprintf(ctmp, 1023,
+                     "The %dth entry of channel vector requires channel %d, "
+                     "but the LSL stream \"%s\" has only %d channels.",
+                     k, channels[k], predicate.c_str(), streamchannels);
             TASCAR::add_warning(ctmp);
-          }else{
+          } else {
             inlet = new lsl::stream_inlet(results[0]);
           }
       }
     }
   }
   std::vector<double> sample;
-  while( run_service && inlet){
-    double t(inlet->pull_sample( sample, 0.1 ));
-    if( t != 0 ){
-      if( channels[0] > -1 )
-        transform.position.x = sample[channels[0]]*influence[0];
-      if( channels[1] > -1 )
-        transform.position.y = sample[channels[1]]*influence[1];
-      if( channels[2] > -1 )
-        transform.position.z = sample[channels[2]]*influence[2];
-      if( channels[3] > -1 )
-        transform.orientation.z = sample[channels[3]]*influence[3];
-      if( channels[4] > -1 )
-        transform.orientation.y = sample[channels[4]]*influence[4];
-      if( channels[5] > -1 )
-        transform.orientation.x = sample[channels[5]]*influence[5];
+  while(run_service && inlet) {
+    double t(inlet->pull_sample(sample, 0.1));
+    if(t != 0) {
+      if(channels[0] > -1)
+        transform.position.x = sample[channels[0]] * influence[0];
+      if(channels[1] > -1)
+        transform.position.y = sample[channels[1]] * influence[1];
+      if(channels[2] > -1)
+        transform.position.z = sample[channels[2]] * influence[2];
+      if(channels[3] > -1)
+        transform.orientation.z = sample[channels[3]] * influence[3];
+      if(channels[4] > -1)
+        transform.orientation.y = sample[channels[4]] * influence[4];
+      if(channels[5] > -1)
+        transform.orientation.x = sample[channels[5]] * influence[5];
     }
   }
 }
@@ -116,7 +119,7 @@ lslactor_t::~lslactor_t()
 {
   run_service = false;
   srv.join();
-  if( inlet )
+  if(inlet)
     delete inlet;
 }
 

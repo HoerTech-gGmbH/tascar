@@ -48,10 +48,12 @@ protected:
   void on_menu_file_open();
   void on_menu_file_open_example();
   void on_menu_file_reload();
+  void on_menu_file_runscript();
   void on_menu_file_exportcsv();
   void on_menu_file_exportcsvsounds();
   void on_menu_file_exportpdf();
   void on_menu_file_exportacmodel();
+  void on_menu_file_exportsvg();
   void on_menu_file_close();
   void on_menu_file_quit();
 

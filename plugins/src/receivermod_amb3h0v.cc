@@ -108,8 +108,9 @@ void amb3h0v_t::configure()
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
     char ctmp[32];
-    sprintf(ctmp, ".%g%c", floor((double)(ch + 1) * 0.5),
-            AMB30::channelorder[ch]);
+    ctmp[31] = 0;
+    snprintf(ctmp, 31, ".%g%c", floor((double)(ch + 1) * 0.5),
+             AMB30::channelorder[ch]);
     labels.push_back(ctmp);
   }
 }

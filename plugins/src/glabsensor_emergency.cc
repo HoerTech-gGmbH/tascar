@@ -125,7 +125,8 @@ void emergencybutton_t::draw(const Cairo::RefPtr<Cairo::Context>& cr,
                              double width, double height)
 {
   char ctmp[256];
-  sprintf(ctmp, "%1.1f", uptime);
+  ctmp[255] = 0;
+  snprintf(ctmp, 255, "%1.1f", uptime);
   cr->move_to(0.1 * width, 0.5 * height);
   cr->show_text(ctmp);
   cr->stroke();

@@ -29,6 +29,7 @@
 #define FILTERCLASS_H
 
 #include "audiochunks.h"
+#include "errorhandling.h"
 #include <complex>
 #include <vector>
 
@@ -175,6 +176,7 @@ namespace TASCAR {
     void set_analog(double g, double z1, double z2, double p1, double p2,
                     double fs);
     void set_analog_poles(double g, double p1, double p2, double fs);
+    void set_allpass(double r, double phi);
     /**
        @param Set coefficiens to second order butterworth filter
      */
@@ -446,6 +448,83 @@ namespace TASCAR {
                  const std::vector<float>& alpha,
                  const std::vector<float>& freq, float fs,
                  uint32_t numiter = 2000u);
+
+  /**
+   \brief First order attack-release lowpass filter
+
+   This filter is the base of first order lowpass filter, maximum
+   tracker and minimum tracker.
+*/
+  class o1_ar_filter_t : public TASCAR::wave_t {
+  public:
+    /**
+       \brief Constructor, setting all taus to zero.
+
+       The filter state can be accessed through the member
+       functions of TASCAR::wave_t.
+
+       \param channels Number of independent filters
+       \param fs Sampling rate (optional, default = 1)
+       \param tau_a Attack time constants (optional, default = 0)
+       \param tau_r Release time constants (optional, default = 0)
+    */
+    o1_ar_filter_t(unsigned int channels, float fs = 1.0f,
+                   std::vector<float> tau_a = std::vector<float>(1, 0.0f),
+                   std::vector<float> tau_r = std::vector<float>(1, 0.0f));
+    /**
+       \brief Set the attack time constant
+       \param ch Channel number
+       \param tau Time constant
+    */
+    void set_tau_attack(unsigned int ch, float tau);
+    /**
+       \brief Set the release time constant
+       \param ch Channel number
+       \param tau Time constant
+    */
+    void set_tau_release(unsigned int ch, float tau);
+    /**
+        \brief Apply filter to value x, using state channel ch
+        \param ch Cannel number
+        \param x Input value
+        \return Output value
+    */
+    inline float operator()(unsigned int ch, float x)
+    {
+      if(ch >= n)
+        throw TASCAR::ErrMsg("The filter channel is out of range (got " +
+                             std::to_string(ch) + ", " + std::to_string(n) +
+                             " channels).");
+      if(x >= d[ch])
+        d[ch] = c1_a[ch] * d[ch] + c2_a[ch] * x;
+      else
+        d[ch] = c1_r[ch] * d[ch] + c2_r[ch] * x;
+      make_friendly_number(d[ch]);
+      return d[ch];
+    };
+
+  protected:
+    TASCAR::wave_t c1_a;
+    TASCAR::wave_t c2_a;
+    TASCAR::wave_t c1_r;
+    TASCAR::wave_t c2_r;
+    float fs;
+  };
+
+  /**
+     \brief First order low pass filter
+  */
+  class o1flt_lowpass_t : public o1_ar_filter_t {
+  public:
+    o1flt_lowpass_t(const std::vector<float>&, float, float = 0);
+    o1flt_lowpass_t(const std::vector<float>& tau, float fs,
+                    const std::vector<float>& startval);
+    void set_tau(unsigned int ch,
+                 float tau); //!< change the time constant in one channel
+    void set_tau(float tau); //!< set time constant in all channels to tau
+    float get_c1(unsigned int ch) const { return c1_a.d[ch]; };
+    float get_last_output(unsigned int ch) const { return d[ch]; }
+  };
 
 } // namespace TASCAR
 

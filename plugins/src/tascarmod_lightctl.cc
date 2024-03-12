@@ -204,7 +204,7 @@ private:
   std::string name;
   TASCAR::spk_array_t fixtures;
   uint32_t channels;
-  std::string objects;
+  std::vector<std::string> objects;
   std::string parent;
   float master;
   std::string method;
@@ -238,7 +238,7 @@ void lightscene_t::validate_attributes(std::string& msg) const
 lightscene_t::lightscene_t(const TASCAR::module_cfg_t& cfg)
     : xml_element_t(cfg.xmlsrc), session(cfg.session), name("lightscene"),
       fixtures(e, false, "fixture"), channels(3), master(1), mixmax(false),
-      parent_(NULL, ""), usecalib(true), sendsquared(false)
+      parent_(NULL, "", NULL), usecalib(true), sendsquared(false)
 {
   GET_ATTRIBUTE(name, "", "Scene name");
   GET_ATTRIBUTE(objects, "", "Pattern of objects to track");
@@ -512,7 +512,8 @@ void lightscene_t::add_variables(TASCAR::osc_server_t* srv)
     std::string label(labels[k]);
     if(label.empty()) {
       char ctmp[256];
-      sprintf(ctmp, "fixture%d", k);
+      ctmp[255] = 0;
+      snprintf(ctmp, 255, "fixture%d", k);
       label = ctmp;
     }
     label = "/" + label + "/";
@@ -562,7 +563,8 @@ lightctl_t::lightctl_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(fps, "Hz", "Frames per second");
   GET_ATTRIBUTE(universe, "", "DMX universe");
   // GET_ATTRIBUTE_(priority);
-  GET_ATTRIBUTE(driver, "``artnetdmx'', ``opendmxusb'', or ``osc''", "Driver name");
+  GET_ATTRIBUTE(driver, "``artnetdmx'', ``opendmxusb'', or ``osc''",
+                "Driver name");
   if(driver == "artnetdmx") {
     std::string hostname;
     std::string port;

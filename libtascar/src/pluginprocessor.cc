@@ -39,8 +39,9 @@ plugin_processor_t::plugin_processor_t(tsccfg::node_t xmlsrc,
     lo_message_add_double(msg, 0.0);
   }
   oscmsgargv = lo_message_get_argv(msg);
-  if( use_profiler ){
-    std::cout << "<osc path=\"" << profilingpath << "\" size=\"" << plugins.size() << "\"/>" << std::endl;
+  if(use_profiler) {
+    std::cout << "<osc path=\"" << profilingpath << "\" size=\""
+              << plugins.size() << "\"/>" << std::endl;
     std::cout << "csPlugins = { ";
     for(auto mod : plugins)
       std::cout << "'" << mod->get_modname() << "' ";
@@ -87,6 +88,7 @@ plugin_processor_t::~plugin_processor_t()
 {
   for(auto p : plugins)
     delete p;
+  lo_message_free(msg);
 }
 
 void plugin_processor_t::validate_attributes(std::string& msg) const
@@ -124,7 +126,8 @@ void plugin_processor_t::add_variables(TASCAR::osc_server_t* srv)
   uint32_t k = 0;
   for(auto p : plugins) {
     char ctmp[1024];
-    sprintf(ctmp, "ap%u", k);
+    ctmp[1023] = 0;
+    snprintf(ctmp, 1023, "ap%u", k);
     srv->set_prefix(oldpref + "/" + ctmp + "/" + p->get_modname());
     p->add_variables(srv);
     ++k;

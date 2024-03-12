@@ -32,8 +32,12 @@
 #if defined(_WIN32) && !defined(WIN32)
 #define WIN32 _WIN32 // liblo needs WIN32 defined in order to detect Windows
 #endif
+#include <atomic>
+#include <condition_variable>
 #include <lo/lo.h>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 typedef std::string(strcnvrt_t)(void*);
@@ -238,6 +242,9 @@ namespace TASCAR {
                   const std::string& comment = "");
     void add_string(const std::string& path, std::string* data,
                     const std::string& comment = "");
+    void add_pos(const std::string& path, TASCAR::pos_t* data,
+                 const std::string& range = "",
+                 const std::string& comment = "");
     void activate();
     void deactivate();
     std::string list_variables() const;
@@ -263,8 +270,16 @@ namespace TASCAR {
      */
     std::string get_vars_as_json(std::string prefix = "",
                                  bool asstring = true) const;
+    /**
+       @brief Read a script file with OSC messages
+     */
+    void read_script(const std::vector<std::string>& filename);
+    void read_script_async(const std::vector<std::string>& filename);
+    std::string scriptpath = "";
+    std::string scriptext = "";
 
   private:
+    void scriptthread_fun();
     std::string get_vars_as_json_rg(
         std::string prefix,
         std::map<std::string, data_element_t>::const_iterator& ibegin,
@@ -277,6 +292,14 @@ namespace TASCAR {
     bool isactive;
     bool verbose;
     std::map<std::string, data_element_t> datamap;
+    std::atomic<bool> runscriptthread;
+    std::atomic<bool> cancelscript;
+    std::thread scriptthread;
+    std::mutex mtxscript;
+    std::mutex mtxscriptnames;
+    std::vector<std::string> nextscripts;
+    std::condition_variable cond_var_script;
+    std::mutex mtxdispatch;
   };
 
   class msg_t : public TASCAR::xml_element_t {

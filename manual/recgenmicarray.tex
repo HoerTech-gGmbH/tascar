@@ -7,15 +7,19 @@ freefield). A filter model can be defined by setting a single or multiple filter
 models. Multiple filter models are applied in a cascade. If no filter model is set,
 the transfer functions corresponds to a pure delay component.
 
+At the top level, only a single microphone can be added, typically
+representing the origin. This signal may need to be discarded later.
+
 Two filter types are implemented:
 
 i) A High-Shelf Filter (\indattr{highshelf})
 
-The spatial design of this filter is an adopted version of the Spherical Head Model by
-\citet{BrownDuda}. As proposed by Brown and Duda, a first order high-shelf is created
-by the single pole-zero pair $s_p=-2\omega$ and $s_z=\frac{-2\omega}{\alpha(\theta)}$. 
-However, the design function $\alpha(\theta)$ is adopted and additional parameters are
-added to allow for a higher variability of the filter design.
+The spatial design of this filter is an adapted version of the
+Spherical Head Model by \citet{BrownDuda}. As proposed by Brown and
+Duda, a first order high-shelf is created by the single pole-zero pair
+$s_p=-2\omega$ and $s_z=\frac{-2\omega}{\alpha(\theta)}$.  However,
+the design function $\alpha(\theta)$ is adopted and additional
+parameters are added to allow more flexibility in the filter design.
 Adaptation of the design function results in the following:
 \begin{align}
 \alpha(\theta)= \left(\cfrac{{\color{black!30!blue}\alpha_{st}}}{2} +
@@ -104,3 +108,27 @@ respect to the parent microphone.
 
 \input{tabmic.tex}
 
+An example of a binaural microphone array is shown below. Note that
+the first microphone definition (line 2) serves only as a reference
+microphone whose signal is discarded. On each side of the head, one
+microphone is selected as the reference of a local microphone array
+(lines 3 and 8), which uses a spherical head model and head shadow
+filters. The other microphones (lines 5, 6, 10 and 11) are calculated
+relative to the left and right reference microphones, using only a
+free field delay for the relative transfer function.
+\begin{lstlisting}
+<receiver type="micarray" name="out">
+  <mic delay="freefield" position="0 0 0">
+    <mic name="left middle" delay="sphere" sincorder="1" position="0.0 0.083 0.0">
+      <filter type="highshelf" axis="-0.14 0.95 0.29" theta_st="0.59" beta="0.98" omega="2725.0" alpha_st="1.53" alpha_m="0.07"/>
+      <mic name="left front" delay="freefield" sincorder="1" position="0.0076 0.083 0.0"/>
+      <mic name="left rear" delay="freefield" sincorder="1" position="-0.0073 0.083 0.0"/>
+    </mic>
+    <mic name="right middle" delay="sphere" sincorder="1" position="0.0 -0.083 0.0">
+      <filter type="highshelf" axis="-0.14 -0.95 0.29" theta_st="0.59" beta="0.98" omega="2725.0" alpha_st="1.53" alpha_m="0.07"/>
+      <mic name="right front" delay="freefield" sincorder="1" position="0.0076 -0.083 0.0"/>
+      <mic name="right rear" delay="freefield" sincorder="1" position="-0.0073 -0.083 0.0"/>
+    </mic>
+  </mic>
+</receiver>
+\end{lstlisting}

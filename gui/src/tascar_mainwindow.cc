@@ -23,8 +23,8 @@
 #include "tascar_mainwindow.h"
 #include "logo.xpm"
 #include "pdfexport.h"
-#include <fstream>
 #include "tascar.res.c"
+#include <fstream>
 
 #define GET_WIDGET(x)                                                          \
   m_refBuilder->get_widget(#x, x);                                             \
@@ -137,11 +137,17 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
       "scene_reload",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_reload));
   refActionGroupMain->add_action(
+      "file_runscript",
+      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_runscript));
+  refActionGroupMain->add_action(
       "export_csv",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsv));
   refActionGroupMain->add_action(
       "export_csvsounds",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsvsounds));
+  refActionGroupMain->add_action(
+      "export_svg",
+      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportsvg));
   refActionGroupMain->add_action(
       "export_pdf",
       sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportpdf));
@@ -297,40 +303,41 @@ bool tascar_window_t::on_timeout_statusbar()
   if(session_mutex.try_lock()) {
     if(pthread_mutex_trylock(&mtx_draw) == 0) {
       char cmp[1024];
+      cmp[1023] = 0;
       if(session && session->is_running()) {
         if((session->scenes.size() > selected_scene) &&
            (session->scenes[selected_scene]->scene_t::active)) {
           TASCAR::scene_render_rt_t* scene(session->scenes[selected_scene]);
           TASCAR::render_profiler_t prof(scene->loadaverage);
           prof.normalize(prof.t_postproc);
-          sprintf(cmp,
-                  "scenes: %zu  point sources: %d/%d  diffuse sound fields: "
-                  "%d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: "
-                  "%1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: "
-                  "%1.1f%%  postproc: %1.1f%%)",
-                  session->scenes.size(), session->get_active_pointsources(),
-                  session->get_total_pointsources(),
-                  session->get_active_diffuse_sound_fields(),
-                  session->get_total_diffuse_sound_fields(),
-                  scene->get_cpu_load(), scene->name.c_str(),
-                  100.0 * scene->loadaverage.t_postproc, 100.0 * prof.t_init,
-                  100.0 * (prof.t_geo - prof.t_init),
-                  100.0 * (prof.t_preproc - prof.t_geo),
-                  100.0 * (prof.t_acoustics - prof.t_preproc),
-                  100.0 * (prof.t_postproc - prof.t_acoustics));
+          snprintf(cmp, 1023,
+                   "scenes: %zu  point sources: %d/%d  diffuse sound fields: "
+                   "%d/%d | jack: %1.1f%% (scene \"%s\" load: %1.1f%% init: "
+                   "%1.1f%%  geo: %1.1f%%  preproc: %1.1f%%  acoustic: "
+                   "%1.1f%%  postproc: %1.1f%%)",
+                   session->scenes.size(), session->get_active_pointsources(),
+                   session->get_total_pointsources(),
+                   session->get_active_diffuse_sound_fields(),
+                   session->get_total_diffuse_sound_fields(),
+                   scene->get_cpu_load(), scene->name.c_str(),
+                   100.0 * scene->loadaverage.t_postproc, 100.0 * prof.t_init,
+                   100.0 * (prof.t_geo - prof.t_init),
+                   100.0 * (prof.t_preproc - prof.t_geo),
+                   100.0 * (prof.t_acoustics - prof.t_preproc),
+                   100.0 * (prof.t_postproc - prof.t_acoustics));
         } else {
-          sprintf(cmp,
-                  "scenes: %ld  point sources: %d/%d  diffuse sound fields: "
-                  "%d/%d",
-                  (long int)(session->scenes.size()),
-                  session->get_active_pointsources(),
-                  session->get_total_pointsources(),
-                  session->get_active_diffuse_sound_fields(),
-                  session->get_total_diffuse_sound_fields());
+          snprintf(cmp, 1023,
+                   "scenes: %ld  point sources: %d/%d  diffuse sound fields: "
+                   "%d/%d",
+                   (long int)(session->scenes.size()),
+                   session->get_active_pointsources(),
+                   session->get_total_pointsources(),
+                   session->get_active_diffuse_sound_fields(),
+                   session->get_total_diffuse_sound_fields());
         }
         sessionloaded = true;
       } else {
-        sprintf(cmp, "No session loaded.");
+        snprintf(cmp, 1023, "No session loaded.");
         if(sessionloaded)
           reset_gui();
         sessionloaded = false;
@@ -440,10 +447,10 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           cr->move_to(p_o.x, -p_o.y);
           char ctmp[1024];
           if(scale >= 1000)
-            sprintf(ctmp, "%2.5g km (%2.5g)", 0.001 * scale,
-                    2 * draw.view.scale);
+            snprintf(ctmp, 1023, "%2.5g km (%2.5g)", 0.001 * scale,
+                     2 * draw.view.scale);
           else
-            sprintf(ctmp, "%2.5g m (%2.5g)", scale, 2 * draw.view.scale);
+            snprintf(ctmp, 1023, "%2.5g m (%2.5g)", scale, 2 * draw.view.scale);
           cr->set_source_rgb(0, 0, 0);
           cr->show_text(ctmp);
           cr->set_source_rgb(1, 0, 0);
@@ -867,6 +874,46 @@ void tascar_window_t::on_menu_file_exportcsvsounds()
   }
 }
 
+void tascar_window_t::on_menu_file_exportsvg()
+{
+  std::lock_guard<std::mutex> lock(session_mutex);
+  if(session) {
+    Gtk::FileChooserDialog dialog("Please choose a destination",
+                                  Gtk::FILE_CHOOSER_ACTION_SAVE);
+    dialog.set_transient_for(*this);
+    // Add response buttons the the dialog:
+    dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+    // Add filters, so that only certain file types can be selected:
+    Glib::RefPtr<Gtk::FileFilter> filter_tascar = Gtk::FileFilter::create();
+    filter_tascar->set_name("SVG files");
+    filter_tascar->add_pattern("*.svg");
+    dialog.add_filter(filter_tascar);
+    Glib::RefPtr<Gtk::FileFilter> filter_any = Gtk::FileFilter::create();
+    filter_any->set_name("Any files");
+    filter_any->add_pattern("*");
+    dialog.add_filter(filter_any);
+    // Show the dialog and wait for a user response:
+    int result = dialog.run();
+    // Handle the response:
+    if(result == Gtk::RESPONSE_OK) {
+      // Notice that this is a std::string, not a Glib::ustring.
+      std::string filename = dialog.get_filename();
+      if(filename.find(".svg") == std::string::npos)
+        filename += ".svg";
+      if(filename.size() > 0) {
+        try {
+          std::ofstream ofstr(filename);
+          ofstr << TASCAR::export_svg(session, 400, 400);
+        }
+        catch(const std::exception& e) {
+          error_message(e.what());
+        }
+      }
+    }
+  }
+}
+
 void tascar_window_t::on_menu_file_exportpdf()
 {
   std::lock_guard<std::mutex> lock(session_mutex);
@@ -951,7 +998,7 @@ void tascar_window_t::on_menu_file_reload()
     get_warnings().clear();
     scene_load(tascar_filename);
     sessionquit = false;
-    if(session){
+    if(session) {
       session->add_bool_true("/tascargui/quit", &sessionquit);
       session->add_bool_true("/tascar/quit", &sessionquit);
     }
@@ -959,6 +1006,40 @@ void tascar_window_t::on_menu_file_reload()
   }
   catch(const std::exception& e) {
     error_message(e.what());
+  }
+}
+
+void tascar_window_t::on_menu_file_runscript()
+{
+  Gtk::FileChooserDialog dialog("Please choose a file",
+                                Gtk::FILE_CHOOSER_ACTION_OPEN);
+  dialog.set_transient_for(*this);
+  // Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+  // Add filters, so that only certain file types can be selected:
+  Glib::RefPtr<Gtk::FileFilter> filter_tascar = Gtk::FileFilter::create();
+  filter_tascar->set_name("tascar OSC script files");
+  filter_tascar->add_pattern("*.tosc");
+  dialog.add_filter(filter_tascar);
+  Glib::RefPtr<Gtk::FileFilter> filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("Any files");
+  filter_any->add_pattern("*");
+  dialog.add_filter(filter_any);
+  // Show the dialog and wait for a user response:
+  int result = dialog.run();
+  // Handle the response:
+  if(result == Gtk::RESPONSE_OK) {
+    // Notice that this is a std::string, not a Glib::ustring.
+    std::string filename = dialog.get_filename();
+    try {
+      if(session) {
+        session->read_script_async({filename});
+      }
+    }
+    catch(const std::exception& e) {
+      error_message(e.what());
+    }
   }
 }
 
@@ -990,7 +1071,7 @@ void tascar_window_t::on_menu_file_open()
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
-      if(session){
+      if(session) {
         session->add_bool_true("/tascargui/quit", &sessionquit);
         session->add_bool_true("/tascar/quit", &sessionquit);
       }
@@ -1031,7 +1112,7 @@ void tascar_window_t::on_menu_file_open_example()
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
-      if(session){
+      if(session) {
         session->add_bool_true("/tascargui/quit", &sessionquit);
         session->add_bool_true("/tascar/quit", &sessionquit);
       }

@@ -23,6 +23,10 @@
 #include "session.h"
 #include <unistd.h>
 
+#define SNPRINTF(s, n, fmt, val)                                               \
+  s[n - 1] = 0;                                                                \
+  snprintf(s, n, fmt, val)
+
 void operator*=(TASCAR::Scene::rgb_color_t& self, double s)
 {
   self.r *= s;
@@ -119,7 +123,7 @@ connection_t::connection_t(const std::string& host, uint32_t port,
   vals.resize(channels);
   levels.resize(channels);
   char ctmp[32];
-  sprintf(ctmp, "%d", port);
+  SNPRINTF(ctmp,32,"%d", port);
   target = lo_address_new(host.c_str(), ctmp);
   if(!target)
     throw TASCAR::ErrMsg("Unable to create target adress \"" + host + "\".");
@@ -142,11 +146,11 @@ void connection_t::uploadsession(
     for(auto it : session->scenes[scene]->sounds) {
       if(ch < channels) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clabel[1024];
-        sprintf(clabel, "/touchosc/label%d", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
         float v(it->get_gain_db());
         vals[ch] = v;
         float l(it->read_meter());
@@ -161,9 +165,9 @@ void connection_t::uploadsession(
           col = col2colname(it->get_color());
         else
           col = it->get_color().str();
-        sprintf(cfader, "/touchosc/fader%d/color", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", ch + 1);
         lo_send(target, cfader, "s", col.c_str());
-        sprintf(clabel, "/touchosc/label%d/color", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
         lo_send(target, clabel, "s", col.c_str());
         ++ch;
       }
@@ -171,11 +175,11 @@ void connection_t::uploadsession(
     for(auto it : session->scenes[scene]->receivermod_objects) {
       if(ch < channels) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clabel[1024];
-        sprintf(clabel, "/touchosc/label%d", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
         float v(it->get_gain_db());
         vals[ch] = v;
         float l(it->read_meter_max());
@@ -190,9 +194,9 @@ void connection_t::uploadsession(
           col = col2colname(it->color);
         else
           col = it->color.str();
-        sprintf(clabel, "/touchosc/label%d/color", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
         lo_send(target, clabel, "s", col.c_str());
-        sprintf(cfader, "/touchosc/fader%d/color", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", ch + 1);
         lo_send(target, cfader, "s", col.c_str());
         ++ch;
       }
@@ -200,11 +204,11 @@ void connection_t::uploadsession(
     for(auto it : session->scenes[scene]->diffuse_reverbs) {
       if(ch < channels) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clabel[1024];
-        sprintf(clabel, "/touchosc/label%d", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
         float v(it->get_gain_db());
         vals[ch] = v;
         float l(it->read_meter_max());
@@ -219,9 +223,9 @@ void connection_t::uploadsession(
           col = col2colname(it->color);
         else
           col = it->color.str();
-        sprintf(clabel, "/touchosc/label%d/color", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
         lo_send(target, clabel, "s", col.c_str());
-        sprintf(cfader, "/touchosc/fader%d/color", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", ch + 1);
         lo_send(target, cfader, "s", col.c_str());
         ++ch;
       }
@@ -233,11 +237,11 @@ void connection_t::uploadsession(
       auto scenerp = dynamic_cast<TASCAR::Scene::route_t*>(rp);
       if(scenerp) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clabel[1024];
-        sprintf(clabel, "/touchosc/label%d", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
         float v(rp->get_gain_db());
         vals[ch] = v;
         float l(scenerp->read_meter_max());
@@ -250,9 +254,9 @@ void connection_t::uploadsession(
         std::string col("#777777");
         if(!htmlcolors)
           col = col2colname(col);
-        sprintf(clabel, "/touchosc/label%d/color", ch + 1);
+        SNPRINTF(clabel, 1023, "/touchosc/label%d/color", ch + 1);
         lo_send(target, clabel, "s", col.c_str());
-        sprintf(cfader, "/touchosc/fader%d/color", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", ch + 1);
         lo_send(target, cfader, "s", col.c_str());
         ++ch;
       }
@@ -260,20 +264,20 @@ void connection_t::uploadsession(
   }
   for(uint32_t k = ch; k < channels; ++k) {
     char cfader[1024];
-    sprintf(cfader, "/touchosc/fader%d", k + 1);
+    SNPRINTF(cfader, 1023, "/touchosc/fader%d", k + 1);
     char clabel[1024];
-    sprintf(clabel, "/touchosc/label%d", k + 1);
+    SNPRINTF(clabel, 1023, "/touchosc/label%d", k + 1);
     char clevel[1024];
-    sprintf(clevel, "/touchosc/level%d", k + 1);
+    SNPRINTF(clevel, 1023, "/touchosc/level%d", k + 1);
     lo_send(target, clabel, "s", "");
     lo_send(target, cfader, "f", -30.0f);
     lo_send(target, clevel, "f", 0.0f);
-    sprintf(cfader, "/touchosc/fader%d/color", k + 1);
+    SNPRINTF(cfader, 1023, "/touchosc/fader%d/color", k + 1);
     if(htmlcolors)
       lo_send(target, cfader, "s", "#000000");
     else
       lo_send(target, cfader, "s", "brown");
-    sprintf(clabel, "/touchosc/label%d/color", k + 1);
+    SNPRINTF(clabel, 1023, "/touchosc/label%d/color", k + 1);
     if(htmlcolors)
       lo_send(target, cfader, "s", "#000000");
     else
@@ -290,9 +294,9 @@ void connection_t::updatesession(
     for(auto it : session->scenes[scene]->sounds) {
       if(ch < channels) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
         float v(it->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -310,9 +314,9 @@ void connection_t::updatesession(
     for(auto it : session->scenes[scene]->receivermod_objects) {
       if(ch < channels) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1023, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1023, "/touchosc/level%d", ch + 1);
         float v(it->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -330,9 +334,9 @@ void connection_t::updatesession(
     for(auto it : session->scenes[scene]->diffuse_reverbs) {
       if(ch < channels) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1024, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1024, "/touchosc/level%d", ch + 1);
         float v(it->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -354,9 +358,9 @@ void connection_t::updatesession(
       auto scenerp = dynamic_cast<TASCAR::Scene::route_t*>(rp);
       if(scenerp) {
         char cfader[1024];
-        sprintf(cfader, "/touchosc/fader%d", ch + 1);
+        SNPRINTF(cfader, 1024, "/touchosc/fader%d", ch + 1);
         char clevel[1024];
-        sprintf(clevel, "/touchosc/level%d", ch + 1);
+        SNPRINTF(clevel, 1024, "/touchosc/level%d", ch + 1);
         float v(rp->get_gain_db());
         if(force || (vals[ch] != v))
           lo_send(target, cfader, "f", v);
@@ -427,7 +431,7 @@ void connection_t::setvaluesession(
   }
   if(ch < channels) {
     char cfader[1024];
-    sprintf(cfader, "/touchosc/fader%d", channel + 1);
+    SNPRINTF(cfader, 1024, "/touchosc/fader%d", channel + 1);
     lo_send(target, cfader, "f", -30.0f);
   }
 }
@@ -575,7 +579,7 @@ touchosc_t::touchosc_t(const TASCAR::module_cfg_t& cfg)
     it->t = this;
     it->c = it - chrefs.begin();
     char ctmp[1024];
-    sprintf(ctmp, "/touchosc/fader%d", it->c + 1);
+    SNPRINTF(ctmp, 1024, "/touchosc/fader%d", it->c + 1);
     session->add_method(ctmp, "f", &touchosc_t::osc_setfader, &(*it));
   }
   start_service();

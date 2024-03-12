@@ -225,35 +225,36 @@ void App::pdf_export_t::draw(TSCGUI::scene_draw_t::viewt_t persp)
   cr->stroke();
   cr->set_font_size(10);
   char ctmp[1024];
+  ctmp[1023] = 0;
   switch(persp) {
   case TSCGUI::scene_draw_t::xy:
-    sprintf(ctmp, "top ortho");
+    snprintf(ctmp, 1023, "top ortho");
     break;
   case TSCGUI::scene_draw_t::xz:
-    sprintf(ctmp, "front ortho");
+    snprintf(ctmp, 1023, "front ortho");
     break;
   case TSCGUI::scene_draw_t::yz:
-    sprintf(ctmp, "left ortho");
+    snprintf(ctmp, 1023, "left ortho");
     break;
   case TSCGUI::scene_draw_t::p:
-    sprintf(ctmp, "perspective");
+    snprintf(ctmp, 1023, "perspective");
     break;
   case TSCGUI::scene_draw_t::xyz:
-    sprintf(ctmp, "xyz");
+    snprintf(ctmp, 1023, "xyz");
     break;
   }
   cr->move_to(bx + 12, by + 36);
   cr->show_text(ctmp);
   cr->stroke();
   if(persp == TSCGUI::scene_draw_t::p)
-    sprintf(ctmp, "fov %g°", drawer.view.get_fov());
+    snprintf(ctmp, 1023, "fov %g°", drawer.view.get_fov());
   else
-    sprintf(ctmp, "scale 1:%g",
+    snprintf(ctmp, 1023, "scale 1:%g",
             drawer.view.get_scale() / (wscale / 72 * 0.0254));
   cr->move_to(bx + 12, by + 48);
   cr->show_text(ctmp);
   cr->stroke();
-  sprintf(ctmp, "time %g s", time);
+  snprintf(ctmp, 1023, "time %g s", time);
   cr->move_to(bx + 12, by + 60);
   cr->show_text(ctmp);
   cr->stroke();

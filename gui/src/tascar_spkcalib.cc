@@ -176,10 +176,11 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->line_to(getx(f, width), gety(gmax, height));
     cr->stroke();
     char ctmp[1024];
-    sprintf(ctmp, "g=%1.1fdB", g);
+    ctmp[1023] = 0;
+    snprintf(ctmp, 1023, "g=%1.1fdB", g);
     cr->move_to(getx(f, width) + 2, gety(gmax, height) + 10);
     cr->show_text(ctmp);
-    sprintf(ctmp, "q=%1.1f", q);
+    snprintf(ctmp, 1023, "q=%1.1f", q);
     cr->move_to(getx(f, width) + 2, gety(gmax, height) + 22);
     cr->show_text(ctmp);
   }
@@ -188,7 +189,8 @@ bool spkeq_display_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->move_to(5, 15);
   cr->show_text(label.c_str());
   char ctmp[1024];
-  sprintf(ctmp, "g = %1.1f dB", gain_db);
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "g = %1.1f dB", gain_db);
   cr->move_to(100, 15);
   cr->show_text(ctmp);
   // mic levels:
@@ -1181,8 +1183,9 @@ void spkcalib_t::update_display()
   label_spklist_final->set_text(spkcalib.get_current_speaker_desc());
   // if(session) {
   char ctmp[1024];
-  sprintf(ctmp, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
-          spkcalib.get_caliblevel(), spkcalib.get_diffusegain());
+  ctmp[1023] = 0;
+  snprintf(ctmp, 1023, "caliblevel: %1.1f dB diffusegain: %1.1f dB",
+           spkcalib.get_caliblevel(), spkcalib.get_diffusegain());
   lab_step3_caliblevel->set_text(ctmp);
   lab_step5_caliblevel->set_text(ctmp);
   lab_step3_info->set_text(
@@ -1192,16 +1195,16 @@ void spkcalib_t::update_display()
       std::string(" dB SPL (C-weighted)."));
   std::string portlist = TASCAR::vecstr2str(spkcalib.cfg.refport);
   const bool plural = spkcalib.cfg.refport.size() > 1;
-  sprintf(ctmp,
-          "Place %s at the "
-          "listening position%s\nand connect to port%s \"%s\".\nA pink noise "
-          "will be "
-          "played from the\nloudspeaker positions. Press record to start.",
-          plural ? "measurement microphones" : "a measurement microphone",
-          plural ? "s" : "", plural ? "s" : "", portlist.c_str());
+  snprintf(ctmp, 1023,
+           "Place %s at the "
+           "listening position%s\nand connect to port%s \"%s\".\nA pink noise "
+           "will be "
+           "played from the\nloudspeaker positions. Press record to start.",
+           plural ? "measurement microphones" : "a measurement microphone",
+           plural ? "s" : "", plural ? "s" : "", portlist.c_str());
   label_levels->set_text(ctmp);
-  sprintf(
-      ctmp,
+  snprintf(
+      ctmp, 1023,
       "2. Adjust the playback level to %1.1f dB using the inc/dec buttons.\n"
       "Alternatively, enter the measured level in the field below.\n"
       "Use Z or C weighting.\n a) Point source:",

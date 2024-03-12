@@ -50,6 +50,7 @@ public:
   {
     fmin_fade = fmin;
     uint32_t wtimer = f_fragment * duration;
+    fmin_final = newval;
     dfmin_fade = (newval - fmin_fade) / wtimer;
     fmin_timer = wtimer;
   }
@@ -57,6 +58,7 @@ public:
   {
     fmax_fade = fmax;
     uint32_t wtimer = f_fragment * duration;
+    fmax_final = newval;
     dfmax_fade = (newval - fmax_fade) / wtimer;
     fmax_timer = wtimer;
   }
@@ -66,6 +68,8 @@ private:
   float fmax = 20000.0f;
   float fmin_fade = 100.0f;
   float fmax_fade = 20000.0f;
+  float fmin_final = 100.0f;
+  float fmax_final = 20000.0f;
   uint32_t fmin_timer = 0u;
   uint32_t fmax_timer = 0u;
   float dfmin_fade = 0.0f;
@@ -114,11 +118,15 @@ void bandpassplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     fmin_fade += dfmin_fade;
     fmin = fmin_fade;
     --fmin_timer;
+    if( !fmin_timer )
+      fmin = fmin_final;
   }
   if(fmax_timer) {
     fmax_fade += dfmax_fade;
     fmax = fmax_fade;
     --fmax_timer;
+    if( !fmax_timer )
+      fmax = fmax_final;
   }
   for(size_t k = 0; k < chunk.size(); ++k) {
     bp[k]->set_range(fmin, fmax);

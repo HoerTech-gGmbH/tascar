@@ -13,30 +13,30 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
 
 SOURCES = omni cardioidmod door generic1storder farsrc head
 
-TASCARMODS = system pos2osc sampler pendulum epicycles motionpath			\
-  foa2hoadiff route oscevents oscjacktime ltcgen nearsensor dirgain		\
-  dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv			\
-  hossustain rotator orientationmodulator locationmodulator						\
-  locationvelocity granularsynth fail waitforjackport sleep jackrec		\
+TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
+  foa2hoadiff route oscevents oscjacktime ltcgen nearsensor dirgain	\
+  dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
+  hossustain rotator orientationmodulator locationmodulator		\
+  locationvelocity granularsynth fail waitforjackport sleep jackrec	\
   oscserver oscrelay echoc snapangle lightctl oscactor ovheadtracker	\
-  oscheadtracker
+  oscheadtracker tonalenhancement
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
-  transportgui lightcolorpicker datalogging
+  transportgui lightcolorpicker datalogging sendsvg
 
 AUDIOPLUGINS = delay dummy gate hannenv identity lipsync		\
   lipsync_paper lookatme metronome onsetdetector sine sndfile spksim	\
   gainramp pulse pink dumplevels feedbackdelay bandpass filter		\
   level2osc const noise loopmachine pos2osc gain sndfileasync		\
   addchannel tubesim spkcalib sessiontime flanger timestamp		\
-  burglatticelpc fence transportramp
+  burglatticelpc fence transportramp allpass
 
 MASKPLUGINS = fig8 multibeam sampledgain
 
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-  TASCARMODS += midicc2osc midictl joystick qualisystracker	\
+  TASCARMODS += midicc2osc midictl mididispatch joystick qualisystracker	\
 #  ovheadtracker
 endif
 endif
@@ -98,6 +98,7 @@ TASCARVERSION=$(FULLVERSION)
 
 TASCARLIB = -ltascar
 TASCARDMXLIB = -ltascardmx
+TASCARGUILIB = -ltascargui
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF)
 # add libtascar/src for main headers, and libtascar/build for version number:
@@ -121,7 +122,8 @@ clean:
 .PHONY : doc
 
 $(TASCARMODDLLSGUI): EXTERNALS += gtkmm-3.0
-$(TASCARMODDLLSGUI): CXXFLAGS+=-I./build
+$(TASCARMODDLLSGUI): CXXFLAGS += -I./build
+$(TASCARMODDLLSGUI): LDLIBS += $(TASCARGUILIB)
 
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): EXTERNALS += gtkmm-3.0
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): LDLIBS += -llsl

@@ -29,20 +29,20 @@ namespace TASCAR {
 
   class module_cfg_t {
   public:
-    module_cfg_t(tsccfg::node_t xmlsrc, TASCAR::session_t* session_ );
+    module_cfg_t(tsccfg::node_t xmlsrc, TASCAR::session_t* session_);
     TASCAR::session_t* session;
     tsccfg::node_t xmlsrc;
   };
 
-  class module_base_t : public xml_element_t, public audiostates_t,
-                        public licensed_component_t  {
+  class module_base_t : public xml_element_t,
+                        public audiostates_t,
+                        public licensed_component_t {
   public:
-    module_base_t( const module_cfg_t& cfg );
+    module_base_t(const module_cfg_t& cfg);
     virtual ~module_base_t();
     /**
-       \brief Update geometry etc on each processing cycle in the session processing thread.
-       \callgraph
-       \callergraph
+       \brief Update geometry etc on each processing cycle in the session
+       processing thread. \callgraph \callergraph
 
        This method will be called after scene geometry update and
        before acoustic model update and audio rendering.
@@ -50,24 +50,27 @@ namespace TASCAR {
        \param frame Transport time (in samples).
        \param running Transport running (true) or stopped (false).
      */
-    virtual void update(uint32_t frame,bool running);
+    virtual void update(uint32_t frame, bool running);
+
   protected:
     TASCAR::session_t* session;
   };
 
   class module_t : public module_base_t {
   public:
-    module_t( const TASCAR::module_cfg_t& cfg );
+    module_t(const TASCAR::module_cfg_t& cfg);
     virtual ~module_t();
     void configure();
     void post_prepare();
     void release();
-    void update(uint32_t frame,bool running);
+    void update(uint32_t frame, bool running);
     virtual void validate_attributes(std::string&) const;
     const std::string& modulename() const { return name; };
+
   private:
     std::string name;
     void* lib;
+
   public:
     TASCAR::module_base_t* libdata;
   };
@@ -90,14 +93,17 @@ namespace TASCAR {
 
   class named_object_t {
   public:
-    named_object_t(TASCAR::Scene::object_t* o,const std::string& n) : obj(o),name(n){};
-    TASCAR::Scene::object_t* obj; //< pointer to object
-    std::string name; //< name of object
+    named_object_t(TASCAR::Scene::object_t* o, const std::string& n,
+                   TASCAR::Scene::scene_t* s)
+        : obj(o), name(n), scene(s){};
+    TASCAR::Scene::object_t* obj;         //< pointer to object
+    std::string name;                     //< name of object
+    TASCAR::Scene::scene_t* scene = NULL; //< scene containing this object;
   };
 
   class session_oscvars_t : public TASCAR::xml_element_t {
   public:
-    session_oscvars_t( tsccfg::node_t src );
+    session_oscvars_t(tsccfg::node_t src);
     std::string name;
     std::string srv_port;
     std::string srv_addr;
@@ -109,7 +115,8 @@ namespace TASCAR {
   public:
     session_core_t();
     virtual ~session_core_t();
-    session_core_t(const std::string& filename_or_data,load_type_t t,const std::string& path);
+    session_core_t(const std::string& filename_or_data, load_type_t t,
+                   const std::string& path);
     // configuration variables:
     double duration;
     bool loop;
@@ -125,6 +132,7 @@ namespace TASCAR {
     int32_t warnfragsize;
     std::string initcmd;
     double initcmdsleep;
+
   private:
     void start_initcmd();
     FILE* h_pipe_initcmd;
@@ -205,23 +213,26 @@ namespace TASCAR {
     TASCAR::tictoc_t tictoc;
     lo_message profilermsg;
     lo_arg** profilermsgargv;
+    std::vector<std::string> initoscscript;
   };
 
   /// Control 'actors' in a scene
   class actor_module_t : public module_base_t {
   public:
-    actor_module_t( const TASCAR::module_cfg_t& cfg, bool fail_on_empty=false );
+    actor_module_t(const TASCAR::module_cfg_t& cfg, bool fail_on_empty = false);
     virtual ~actor_module_t();
     /**@brief Set delta location of all actors
        @param l new delta location
-       @param b_local Apply in local coordinates (true) or in global coordinates (false)
+       @param b_local Apply in local coordinates (true) or in global coordinates
+       (false)
      */
-    void set_location(const TASCAR::pos_t& l, bool b_local = false );
-    void set_orientation(const TASCAR::zyx_euler_t& o );
-    void set_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
-    void add_location(const TASCAR::pos_t& l, bool b_local );
-    void add_orientation(const TASCAR::zyx_euler_t& o );
-    void add_transformation( const TASCAR::c6dof_t& tf, bool b_local = false );
+    void set_location(const TASCAR::pos_t& l, bool b_local = false);
+    void set_orientation(const TASCAR::zyx_euler_t& o);
+    void set_transformation(const TASCAR::c6dof_t& tf, bool b_local = false);
+    void add_location(const TASCAR::pos_t& l, bool b_local);
+    void add_orientation(const TASCAR::zyx_euler_t& o);
+    void add_transformation(const TASCAR::c6dof_t& tf, bool b_local = false);
+
   protected:
     /**
        \brief Actor name pattern
@@ -233,9 +244,9 @@ namespace TASCAR {
     std::vector<TASCAR::named_object_t> obj;
   };
 
-}
+} // namespace TASCAR
 
-#define REGISTER_MODULE(x) TASCAR_PLUGIN( module_base_t, const module_cfg_t&, x )
+#define REGISTER_MODULE(x) TASCAR_PLUGIN(module_base_t, const module_cfg_t&, x)
 
 #endif
 

@@ -209,10 +209,23 @@ namespace TASCAR {
                                            receivermod_base_t::data_t*);
       void add_diffuse_sound_field_rec(const amb1wave_t& chunk,
                                        receivermod_base_t::data_t*);
+      /**
+       * @brief Calculate parameters for panning, delayline and air absorption
+       * @param psrc_physical Position of physical (primary) sound source
+       * @param psrc_virtual Position of image source, or physical position if
+       * primary source
+       * @retval prel Position relative to receiver
+       * @retval distance Distance for air absorption
+       * @retval traveltime Travel time for delay lines, in meter
+       * @retval gain Gain from distance law
+       * @param b_img Flag to indicate if the source is an image source (true)
+       * or a primary source (false)
+       * @param gainmodel Type of gain model, e.g., 1/r
+       */
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
-                           float& distance, float& gain, bool b_img,
-                           gainmodel_t gainmodel, float& nearfieldlimit);
+                           float& distance, float& traveltime_in_m, float& gain,
+                           bool b_img, gainmodel_t gainmodel, float& nearfieldlimit);
       void set_next_gain(float gain);
       void set_fade(float targetgain, float duration, float start = -1);
       void apply_gain();
@@ -224,30 +237,37 @@ namespace TASCAR {
       void add_licenses(licensehandler_t*);
       // configuration/control variables:
       TASCAR::pos_t volumetric;
-      float avgdist;
-      bool render_point;
-      bool render_diffuse;
-      bool render_image;
-      uint32_t ismmin;
-      uint32_t ismmax;
-      uint32_t layers;
-      bool use_global_mask;
-      float diffusegain;
-      bool has_diffusegain;
-      float falloff;
-      float delaycomp;
-      float recdelaycomp;
-      float layerfadelen;
-      bool muteonstop;
+      bool volumetricgainwithdistance = false;
+      float avgdist = 0.0f;
+      bool render_point = true;
+      bool render_diffuse = true;
+      bool render_image = true;
+      uint32_t ismmin = 0;
+      uint32_t ismmax = 2147483647;
+      uint32_t layers = 0xffffffff;
+      bool use_global_mask = true;
+      float diffusegain = 1.0f;
+      bool has_diffusegain = false;
+      float falloff = -1.0f;
+      float delaycomp = 0.0f;
+      float recdelaycomp = 0.0f;
+      float layerfadelen = 1.0f;
+      bool muteonstop = false;
+      TASCAR::pos_t proxy_position;
+      bool proxy_is_relative = false;
+      bool proxy_delay = false;
+      bool proxy_airabsorption = false;
+      bool proxy_gain = false;
+      bool proxy_direction = false;
       // derived / internal / updated variables:
       std::vector<wave_t> outchannels;
       std::vector<wave_t*> outchannelsp;
       TASCAR::amb1wave_t* scatterbuffer;
       receivermod_base_t::data_t* scatter_handle;
-      bool active;
+      bool active = true;
       TASCAR::Acousticmodel::boundingbox_t boundingbox;
-      bool gain_zero;
-      float external_gain;
+      bool gain_zero = false;
+      float external_gain = 1.0f;
       const bool is_reverb;
 
     private:

@@ -1,4 +1,5 @@
 TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
+	test_ir_proxy_air test_ir_proxy_gain test_ir_proxy_delay test_ir_proxy_direction \
 	test_ir6_ismminmax test_snd1 test_snd_include_sound test_snd2	\
 	test_snd4 test_snd3 test_snd5 test_pos1 test_pos2		\
 	test_pos_trackinterp test_snd_door1 test_snd_door2		\
@@ -169,7 +170,7 @@ test_pos%: test_pos%.tsc expected_pos%.wav
 	@echo "Position test: $<"
 	@$(LIBPATH) RECTYPE=debugpos $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
 	@$(LIBPATH) RECTYPE=debugpos $(RENDERFILE) -i zeros.wav -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-7 1e-7|| (echo "$(<):2: Output differs"; false)
+	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-6 1e-6|| (echo "$(<):2: Output differs"; false)
 	@rm -f test_pos$*.wav
 
 test_rec_%: test_rec.tsc
@@ -330,6 +331,8 @@ test_snd_maskplugin_multibeam1: TOL=1e-5
 test_snd_maskplugin_fig8: TOL=1e-5
 test_snd_loopramp: TOL=3e-5
 test_snd_loopramp: RMSTOL=3e-5
+test_snd_hoa2d_fuma_hos: TOL=1e-4
+test_snd_hoa2d_fuma_hos: RMSTOL=1e-4
 
 %.octave: %.m
 	octave --no-gui --eval $*

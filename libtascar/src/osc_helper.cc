@@ -26,8 +26,10 @@
 #include "osc_helper.h"
 #include "defs.h"
 #include "errorhandling.h"
+#include "tictoctimer.h"
 #include <map>
 #include <math.h>
+#include <unistd.h>
 
 using namespace TASCAR;
 
@@ -89,9 +91,27 @@ int osc_set_float(const char*, const char* types, lo_arg** argv, int argc,
   return 1;
 }
 
+int osc_set_pos(const char*, const char* types, lo_arg** argv, int argc,
+                lo_message, void* user_data)
+{
+  if(user_data && (argc == 3) && (types[0] == 'f') && (types[1] == 'f') &&
+     (types[2] == 'f')) {
+    TASCAR::pos_t* p = (TASCAR::pos_t*)(user_data);
+    p->x = argv[0]->f;
+    p->y = argv[1]->f;
+    p->z = argv[2]->f;
+  }
+  return 1;
+}
+
 std::string str_get_float(void* data)
 {
   return TASCAR::to_string(*(float*)(data));
+}
+
+std::string str_get_pos(void* data)
+{
+  return TASCAR::to_string(*(TASCAR::pos_t*)(data));
 }
 
 int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
@@ -103,7 +123,26 @@ int osc_get_float(const char* path, const char* types, lo_arg** argv, int argc,
       std::string npath(path);
       if(npath.size() > 4)
         npath = npath.substr(0, npath.size() - 4);
-      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *(float*)(user_data));
+      float* p = (float*)(user_data);
+      lo_send(target, &(argv[1]->s), "sf", npath.c_str(), *p );
+      lo_address_free(target);
+    }
+  }
+  return 1;
+}
+
+int osc_get_pos(const char* path, const char* types, lo_arg** argv, int argc,
+                lo_message, void* user_data)
+{
+  if(user_data && (argc == 2) && (types[0] == 's') && (types[1] == 's')) {
+    lo_address target = lo_address_new_from_url(&(argv[0]->s));
+    if(target) {
+      std::string npath(path);
+      if(npath.size() > 4)
+        npath = npath.substr(0, npath.size() - 4);
+      TASCAR::pos_t* pos = (TASCAR::pos_t*)(user_data);
+      lo_send(target, &(argv[1]->s), "sfff", npath.c_str(), pos->x, pos->y,
+              pos->z);
       lo_address_free(target);
     }
   }
@@ -519,6 +558,9 @@ osc_server_t::osc_server_t(const std::string& multicast,
     : osc_srv_addr(multicast), osc_srv_port(port), initialized(false),
       isactive(false), verbose(verbose_)
 {
+  runscriptthread = true;
+  cancelscript = false;
+  scriptthread = std::thread(&osc_server_t::scriptthread_fun, this);
   lost = NULL;
   liblo_errflag = false;
   if(port.size() && (port != "none")) {
@@ -529,9 +571,6 @@ osc_server_t::osc_server_t(const std::string& multicast,
       else
         lost = lo_server_thread_new_multicast(multicast.c_str(), port.c_str(),
                                               err_handler);
-      // if( verbose )
-      // std::cerr << "listening on multicast address \"osc.udp://" << multicast
-      // << ":"<<port << "/\"" << std::endl;
       initialized = true;
     } else {
       if(port == "auto")
@@ -540,9 +579,6 @@ osc_server_t::osc_server_t(const std::string& multicast,
       else
         lost = lo_server_thread_new_with_proto(
             port.c_str(), string2proto(proto), err_handler);
-      // if( verbose )
-      // std::cerr << "listening on \"osc.udp://localhost:"<<port << "/\"" <<
-      // std::endl;
       initialized = true;
     }
     if((!lost) || liblo_errflag)
@@ -564,6 +600,7 @@ osc_server_t::osc_server_t(const std::string& multicast,
 
 int osc_server_t::dispatch_data(void* data, size_t size)
 {
+  // std::lock_guard<std::mutex> lk{mtxdispatch};
   lo_server srv(lo_server_thread_get_server(lost));
   return lo_server_dispatch_data(srv, data, size);
 }
@@ -573,12 +610,23 @@ int osc_server_t::dispatch_data_message(const char* path, lo_message m)
   if(!isactive)
     return 0;
   size_t len(lo_message_length(m, path));
-  char data[len + 1];
-  return dispatch_data(lo_message_serialise(m, path, data, NULL), len);
+  char data[len + 256];
+  size_t sdatasize = 0;
+  char* sdata = (char*)lo_message_serialise(m, path, data, &sdatasize);
+  return dispatch_data(sdata, sdatasize);
 }
 
 osc_server_t::~osc_server_t()
 {
+  // first stop all running scripts:
+  runscriptthread = false;
+  {
+    std::lock_guard<std::mutex> lk{mtxscriptnames};
+    nextscripts.clear();
+  }
+  cond_var_script.notify_one();
+  if(scriptthread.joinable())
+    scriptthread.join();
   if(isactive)
     deactivate();
   if(initialized)
@@ -641,6 +689,15 @@ void osc_server_t::add_double(const std::string& path, double* data,
   add_method(path + "/get", "ss", osc_get_double, data, false);
   datamap[prefix + path] =
       data_element_t(prefix + path, data, str_get_double, "double");
+}
+
+void osc_server_t::add_pos(const std::string& path, TASCAR::pos_t* data,
+                           const std::string& range, const std::string& comment)
+{
+  add_method(path, "fff", osc_set_pos, data, true, true, range, comment);
+  add_method(path + "/get", "ss", osc_get_pos, data, false);
+  datamap[prefix + path] =
+      data_element_t(prefix + path, data, str_get_pos, "pos");
 }
 
 void osc_server_t::add_float_db(const std::string& path, float* data,
@@ -922,6 +979,108 @@ std::string osc_server_t::get_vars_as_json(std::string prefix,
 {
   auto it = datamap.begin();
   return get_vars_as_json_rg(prefix, it, datamap.end(), asstring);
+}
+
+void osc_server_t::read_script(const std::vector<std::string>& filenames)
+{
+  cancelscript = true;
+  std::lock_guard<std::mutex> lk(mtxscript);
+  if(filenames.empty())
+    return;
+  cancelscript = false;
+  tictoc_t tictoc;
+  char rbuf[0x4000];
+  for(auto filename : filenames) {
+    if(!filename.empty()) {
+      if(!scriptpath.empty()) {
+        if(filename[0] != '/') {
+          if(scriptpath[scriptpath.size() - 1] != '/')
+            filename = scriptpath + "/" + filename;
+          else
+            filename = scriptpath + filename;
+        }
+      }
+      FILE* fh = fopen((filename + scriptext).c_str(), "r");
+      if(!fh) {
+        TASCAR::add_warning("Cannot open file \"" + filename + scriptext +
+                            "\".");
+        return;
+      }
+      while(!feof(fh)) {
+        memset(rbuf, 0, 0x4000);
+        if(cancelscript) {
+          fclose(fh);
+          return;
+        }
+        char* s = fgets(rbuf, 0x4000 - 1, fh);
+        if(s) {
+          rbuf[0x4000 - 1] = 0;
+          if(rbuf[0] == '#')
+            rbuf[0] = 0;
+          if(strlen(rbuf))
+            if(rbuf[strlen(rbuf) - 1] == 10)
+              rbuf[strlen(rbuf) - 1] = 0;
+          if(strlen(rbuf)) {
+            if(rbuf[0] == ',') {
+              double val(0.0f);
+              sscanf(&rbuf[1], "%lg", &val);
+              tictoc.tic();
+              while(tictoc.toc() < val) {
+                if(cancelscript) {
+                  fclose(fh);
+                  return;
+                }
+                usleep(10);
+              }
+            } else {
+              std::vector<std::string> args(TASCAR::str2vecstr(rbuf));
+              if(args.size()) {
+                auto msg(lo_message_new());
+                for(size_t n = 1; n < args.size(); ++n) {
+                  char* p(NULL);
+                  float val(strtof(args[n].c_str(), &p));
+                  if(*p) {
+                    lo_message_add_string(msg, args[n].c_str());
+                  } else {
+                    lo_message_add_float(msg, val);
+                  }
+                }
+                dispatch_data_message(args[0].c_str(), msg);
+                lo_message_free(msg);
+              }
+            }
+          }
+        }
+      }
+      fclose(fh);
+    }
+  }
+}
+
+void osc_server_t::scriptthread_fun()
+{
+  while(runscriptthread) {
+    std::vector<std::string> scripts;
+    {
+      std::unique_lock<std::mutex> lock{mtxscriptnames};
+      cond_var_script.wait(lock);
+      scripts = nextscripts;
+      nextscripts.clear();
+      lock.unlock();
+    }
+    if(runscriptthread && scripts.size()) {
+      read_script(scripts);
+    }
+  }
+}
+
+void osc_server_t::read_script_async(const std::vector<std::string>& filenames)
+{
+  {
+    std::lock_guard<std::mutex> lk{mtxscriptnames};
+    nextscripts = filenames;
+  }
+  cond_var_script.notify_one();
 }
 
 /*

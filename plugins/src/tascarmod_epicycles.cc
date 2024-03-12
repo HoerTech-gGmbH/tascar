@@ -46,7 +46,7 @@ namespace HoS {
   public:
     par_t();
     void mix_static(float g, const par_t& p1, const par_t& p2);
-    //void assign_static(const par_t& p1);
+    // void assign_static(const par_t& p1);
     void mix_dynamic(float g, const par_t& p1, const par_t& p2);
     void assign_dynamic(const par_t& p1);
     float phi0;     // starting phase
@@ -95,6 +95,9 @@ namespace HoS {
     float applyat;
     float applyat_time;
     bool b_applyat;
+    float incbpm = 0.0;
+    float incbpmphi = 0.0;
+    uint32_t tcnt = 0u;
     // ellipse parameters:
     float e2;
     float r2;
@@ -126,8 +129,8 @@ namespace HoS {
 
 namespace OSC {
 
-  int _sendphi(const char* , const char* types, lo_arg** argv, int argc,
-               lo_message , void* user_data)
+  int _sendphi(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 's')) {
       ((HoS::parameter_t*)user_data)->send_phi(&(argv[0]->s));
@@ -136,8 +139,8 @@ namespace OSC {
     return 1;
   }
 
-  int _locate(const char* , const char* types, lo_arg** argv, int argc,
-              lo_message , void* user_data)
+  int _locate(const char*, const char* types, lo_arg** argv, int argc,
+              lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->locate0(argv[0]->f);
@@ -146,8 +149,8 @@ namespace OSC {
     return 1;
   }
 
-  int _stopat(const char* , const char* types, lo_arg** argv, int argc,
-              lo_message , void* user_data)
+  int _stopat(const char*, const char* types, lo_arg** argv, int argc,
+              lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->set_stopat(DEG2RAD * (argv[0]->f));
@@ -156,8 +159,8 @@ namespace OSC {
     return 1;
   }
 
-  int _applyat(const char* , const char* types, lo_arg** argv, int argc,
-               lo_message , void* user_data)
+  int _applyat(const char*, const char* types, lo_arg** argv, int argc,
+               lo_message, void* user_data)
   {
     if((argc == 2) && (types[0] == 'f') && (types[1] == 'f')) {
       ((HoS::parameter_t*)user_data)
@@ -167,8 +170,8 @@ namespace OSC {
     return 1;
   }
 
-  int _apply(const char* , const char* types, lo_arg** argv, int argc,
-             lo_message , void* user_data)
+  int _apply(const char*, const char* types, lo_arg** argv, int argc,
+             lo_message, void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->apply(argv[0]->f);
@@ -177,8 +180,8 @@ namespace OSC {
     return 1;
   }
 
-  int _az(const char* , const char* types, lo_arg** argv, int argc,
-          lo_message , void* user_data)
+  int _az(const char*, const char* types, lo_arg** argv, int argc, lo_message,
+          void* user_data)
   {
     if((argc == 1) && (types[0] == 'f')) {
       ((HoS::parameter_t*)user_data)->az(argv[0]->f);
@@ -198,7 +201,7 @@ void HoS::par_t::mix_static(float g, const par_t& p1, const par_t& p2)
                       g1 * std::exp(i_f * p2.phi0_epi));
 }
 
-//void HoS::par_t::assign_static(const par_t& p1)
+// void HoS::par_t::assign_static(const par_t& p1)
 //{
 //#define MIX_(x) x = p1.x;
 //  MIX_(phi0);
@@ -314,6 +317,9 @@ HoS::parameter_t::parameter_t(tsccfg::node_t e, TASCAR::osc_server_t* o)
   REGISTER_CALLBACK(az, "f");
 #undef REGISTER_FLOAT_VAR
 #undef REGISTER_CALLBACK
+  o->add_uint(path + "/tcnt", &tcnt);
+  o->add_float(path + "/incbpm", &incbpm);
+  o->add_float_degree(path + "/incbpmphi", &incbpmphi);
 }
 
 HoS::parameter_t::~parameter_t() {}
@@ -366,7 +372,7 @@ void epicycles_t::configure()
   f_update = f_sample / (double)n_fragment;
 }
 
-void epicycles_t::update(uint32_t , bool running)
+void epicycles_t::update(uint32_t, bool running)
 {
   if(b_home) {
     par_osc.phi0 = home;
@@ -417,6 +423,17 @@ void epicycles_t::update(uint32_t , bool running)
     r *= par_current.random;
     w_epi += r * n_fragment / 64.0;
     // panning parameters:
+    if(incbpm > 0) {
+      for(uint32_t k = 0; k < n_fragment; ++k) {
+        if(!tcnt) {
+          tcnt = (60 * (int64_t)f_sample) / (int64_t)incbpm;
+          // tcnt = 60.0 * f_sample / incbpm;
+          phi += incbpmphi;
+        }
+        if(tcnt)
+          tcnt--;
+      }
+    }
     // get ellipse in polar coordinates:
     float rho = r2 * (1.0f - e2) /
                 (1.0f - par_current.e * cosf(phi - par_current.theta));

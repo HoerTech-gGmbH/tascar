@@ -174,9 +174,10 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
   set_ctlname("/" + get_name());
   for(uint32_t k = 0; k < channels; ++k) {
     char ctmp[1024];
-    sprintf(ctmp, "in.%d", k);
+    ctmp[1023] = 0;
+    snprintf(ctmp, 1023, "in.%d", k);
     add_input_port(ctmp);
-    sprintf(ctmp, "out.%d", k);
+    snprintf(ctmp, 1023, "out.%d", k);
     add_output_port(ctmp);
     addmeter(get_srate());
   }

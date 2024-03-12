@@ -23,8 +23,8 @@
 #include "receivermod.h"
 
 #include "fft.h"
-#include <limits>
 #include "optim.h"
+#include <limits>
 
 const std::complex<double> i_d(0.0, 1.0);
 const std::complex<float> i_f(0.0f, 1.0f);
@@ -633,7 +633,8 @@ void simplefdn_t::configure()
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
     char ctmp[32];
-    sprintf(ctmp, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
+    ctmp[31] = 0;
+    snprintf(ctmp, 31, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
     labels.push_back(ctmp);
   }
   // prepare impulse response container for T60 measurements:

@@ -20,9 +20,9 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "receivermod.h"
 #include "amb33defs.h"
 #include "errorhandling.h"
+#include "receivermod.h"
 
 class amb1h1v_t : public TASCAR::receivermod_base_t {
 public:
@@ -36,21 +36,26 @@ public:
     double dt;
   };
   amb1h1v_t(tsccfg::node_t xmlsrc);
-  void add_pointsource(const TASCAR::pos_t& prel, double width, const TASCAR::wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk, std::vector<TASCAR::wave_t>& output, receivermod_base_t::data_t*);
-  receivermod_base_t::data_t* create_state_data(double srate,uint32_t fragsize) const;
+  void add_pointsource(const TASCAR::pos_t& prel, double width,
+                       const TASCAR::wave_t& chunk,
+                       std::vector<TASCAR::wave_t>& output,
+                       receivermod_base_t::data_t*);
+  void add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,
+                               std::vector<TASCAR::wave_t>& output,
+                               receivermod_base_t::data_t*);
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   void configure();
   float wgain;
   float wgaindiff;
   bool acn = true;
 };
 
-
 amb1h1v_t::data_t::data_t(uint32_t chunksize)
 {
-  for(uint32_t k=0;k<AMB11ACN::idx::channels;k++)
+  for(uint32_t k = 0; k < AMB11ACN::idx::channels; k++)
     _w[k] = w_current[k] = dw[k] = 0;
-  dt = 1.0/std::max(1.0,(double)chunksize);
+  dt = 1.0 / std::max(1.0, (double)chunksize);
 }
 
 amb1h1v_t::amb1h1v_t(tsccfg::node_t xmlsrc) : TASCAR::receivermod_base_t(xmlsrc)
@@ -145,10 +150,11 @@ void amb1h1v_t::configure()
   labels.clear();
   for(uint32_t ch = 0; ch < n_channels; ++ch) {
     char ctmp[32];
+    ctmp[31] = 0;
     if(acn)
-      sprintf(ctmp, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
+      snprintf(ctmp, 31, ".%d%c", (ch > 0), AMB11ACN::channelorder[ch]);
     else
-      sprintf(ctmp, ".%d%c", (ch > 0), AMB11FuMa::channelorder[ch]);
+      snprintf(ctmp, 31, ".%d%c", (ch > 0), AMB11FuMa::channelorder[ch]);
     labels.push_back(ctmp);
   }
 }

@@ -32,13 +32,13 @@ TASCAR::render_profiler_t::render_profiler_t()
   t_acoustics = 0.0;
   t_postproc = 0.0;
   t_copy = 0.0;
-  set_tau( 1.0, 1.0 );
+  set_tau(1.0, 1.0);
 }
 
 void TASCAR::render_profiler_t::normalize(double t_total)
 {
-  if( t_total > 0 ){
-    double tinv(1.0/t_total);
+  if(t_total > 0) {
+    double tinv(1.0 / t_total);
     t_init *= tinv;
     t_geo *= tinv;
     t_preproc *= tinv;
@@ -48,56 +48,53 @@ void TASCAR::render_profiler_t::normalize(double t_total)
   }
 }
 
-void TASCAR::render_profiler_t::update( const render_profiler_t& src )
+void TASCAR::render_profiler_t::update(const render_profiler_t& src)
 {
-    t_init *= A1;
-    t_geo *= A1;
-    t_preproc *= A1;
-    t_acoustics *= A1;
-    t_postproc *= A1;
-    t_copy *= A1;
-    t_init += B0*src.t_init;
-    t_geo += B0*src.t_geo;
-    t_preproc += B0*src.t_preproc;
-    t_acoustics += B0*src.t_acoustics;
-    t_postproc += B0*src.t_postproc;
-    t_copy += B0*src.t_copy;
+  t_init *= A1;
+  t_geo *= A1;
+  t_preproc *= A1;
+  t_acoustics *= A1;
+  t_postproc *= A1;
+  t_copy *= A1;
+  t_init += B0 * src.t_init;
+  t_geo += B0 * src.t_geo;
+  t_preproc += B0 * src.t_preproc;
+  t_acoustics += B0 * src.t_acoustics;
+  t_postproc += B0 * src.t_postproc;
+  t_copy += B0 * src.t_copy;
 }
 
-void TASCAR::render_profiler_t::set_tau( double t, double fs )
+void TASCAR::render_profiler_t::set_tau(double t, double fs)
 {
-  A1 = exp(-1.0/(t*fs));
-  B0 = 1.0-A1;
+  A1 = exp(-1.0 / (t * fs));
+  B0 = 1.0 - A1;
 }
-
 
 using namespace TASCAR;
 using namespace TASCAR::Scene;
 
 TASCAR::render_core_t::render_core_t(tsccfg::node_t xmlsrc)
-  : scene_t(xmlsrc),
-    world(NULL),
-    active_pointsources(0),
-    active_diffuse_sound_fields(0),
-    total_pointsources(0),
-    total_diffuse_sound_fields(0),
-    is_prepared(false)//,
-    //pcnt(0)
+    : scene_t(xmlsrc), world(NULL), active_pointsources(0),
+      active_diffuse_sound_fields(0), total_pointsources(0),
+      total_diffuse_sound_fields(0), is_prepared(false) //,
+                                                        // pcnt(0)
 {
-  pthread_mutex_init( &mtx_world, NULL );
+  pthread_mutex_init(&mtx_world, NULL);
 }
 
 TASCAR::render_core_t::~render_core_t()
 {
-  //if( is_prepared )
-  //release();
-  pthread_mutex_destroy( &mtx_world );
+  // if( is_prepared )
+  // release();
+  pthread_mutex_destroy(&mtx_world);
 }
 
-void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_max )
+void TASCAR::render_core_t::set_ism_order_range(uint32_t ism_min,
+                                                uint32_t ism_max)
 {
   ismorder = ism_max;
-  for(std::vector<receiver_obj_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
+  for(std::vector<receiver_obj_t*>::iterator it = receivermod_objects.begin();
+      it != receivermod_objects.end(); ++it) {
     (*it)->ismmin = ism_min;
     (*it)->ismmax = ism_max;
   }
@@ -105,9 +102,9 @@ void TASCAR::render_core_t::set_ism_order_range( uint32_t ism_min, uint32_t ism_
 
 void TASCAR::render_core_t::configure()
 {
-  if( pthread_mutex_lock( &mtx_world ) != 0 )
+  if(pthread_mutex_lock(&mtx_world) != 0)
     throw TASCAR::ErrMsg("Unable to lock process.");
-  try{
+  try {
     scene_t::configure();
     audioports.clear();
     audioports_in.clear();
@@ -116,76 +113,92 @@ void TASCAR::render_core_t::configure()
     input_ports.clear();
     output_ports.clear();
     sources.clear();
-    for(std::vector<sound_t*>::iterator it=sounds.begin();it!=sounds.end();++it){
+    for(std::vector<sound_t*>::iterator it = sounds.begin(); it != sounds.end();
+        ++it) {
       TASCAR::Acousticmodel::source_t* source(*it);
       sources.push_back(source);
       (*it)->set_port_index(input_ports.size());
-      for(uint32_t ch=0;ch<source->n_channels;ch++){
-        input_ports.push_back((*it)->get_parent_name()+"."+(*it)->get_name()+source->labels[ch]);
+      for(uint32_t ch = 0; ch < source->n_channels; ch++) {
+        input_ports.push_back((*it)->get_parent_name() + "." +
+                              (*it)->get_name() + source->labels[ch]);
       }
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
-    for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it){
+    for(std::vector<diff_snd_field_obj_t*>::iterator it =
+            diff_snd_field_objects.begin();
+        it != diff_snd_field_objects.end(); ++it) {
       diffuse_sound_fields.push_back((*it)->get_source());
       audioports.push_back(*it);
       audioports_in.push_back(*it);
     }
-    for(std::vector<diff_snd_field_obj_t*>::iterator it=diff_snd_field_objects.begin();it!=diff_snd_field_objects.end();++it){
+    for(std::vector<diff_snd_field_obj_t*>::iterator it =
+            diff_snd_field_objects.begin();
+        it != diff_snd_field_objects.end(); ++it) {
       (*it)->set_port_index(input_ports.size());
-      for(uint32_t ch=0;ch<4;ch++){
+      for(uint32_t ch = 0; ch < 4; ch++) {
         char ctmp[32];
+        ctmp[31] = 0;
         const char* stmp("wxyz");
-        sprintf(ctmp,".%d%c",(ch>0),stmp[ch]);
-        input_ports.push_back((*it)->get_name()+ctmp);
+        snprintf(ctmp, 31, ".%d%c", (ch > 0), stmp[ch]);
+        input_ports.push_back((*it)->get_name() + ctmp);
       }
     }
     receivers.clear();
-    for(std::vector<receiver_obj_t*>::iterator it=receivermod_objects.begin();it!=receivermod_objects.end();++it){
+    for(std::vector<receiver_obj_t*>::iterator it = receivermod_objects.begin();
+        it != receivermod_objects.end(); ++it) {
       TASCAR::Acousticmodel::receiver_t* receiver(*it);
       receivers.push_back(receiver);
       (*it)->set_port_index(output_ports.size());
-      for(uint32_t ch=0;ch<receiver->n_channels;ch++){
-        output_ports.push_back((*it)->get_name()+receiver->labels[ch]);
+      for(uint32_t ch = 0; ch < receiver->n_channels; ch++) {
+        output_ports.push_back((*it)->get_name() + receiver->labels[ch]);
       }
       audioports.push_back(*it);
       audioports_out.push_back(*it);
     }
     reflectors.clear();
-    for(std::vector<face_object_t*>::iterator it=face_objects.begin();it!=face_objects.end();++it){
+    for(std::vector<face_object_t*>::iterator it = face_objects.begin();
+        it != face_objects.end(); ++it) {
       reflectors.push_back(*it);
     }
-    for(std::vector<face_group_t*>::iterator it=facegroups.begin();it!=facegroups.end();++it){
-      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator rit=(*it)->reflectors.begin();
-          rit !=(*it)->reflectors.end();++rit)
+    for(std::vector<face_group_t*>::iterator it = facegroups.begin();
+        it != facegroups.end(); ++it) {
+      for(std::vector<TASCAR::Acousticmodel::reflector_t*>::iterator rit =
+              (*it)->reflectors.begin();
+          rit != (*it)->reflectors.end(); ++rit)
         reflectors.push_back(*rit);
     }
     obstacles.clear();
-    for(std::vector<obstacle_group_t*>::iterator it=obstaclegroups.begin();it!=obstaclegroups.end();++it){
-      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator rit=(*it)->obstacles.begin();
-          rit !=(*it)->obstacles.end();++rit)
+    for(std::vector<obstacle_group_t*>::iterator it = obstaclegroups.begin();
+        it != obstaclegroups.end(); ++it) {
+      for(std::vector<TASCAR::Acousticmodel::obstacle_t*>::iterator rit =
+              (*it)->obstacles.begin();
+          rit != (*it)->obstacles.end(); ++rit)
         obstacles.push_back(*rit);
     }
     pmasks.clear();
-    for(std::vector<mask_object_t*>::iterator it=mask_objects.begin();it!=mask_objects.end();++it){
+    for(std::vector<mask_object_t*>::iterator it = mask_objects.begin();
+        it != mask_objects.end(); ++it) {
       pmasks.push_back(*it);
     }
-    for( auto it=diffuse_reverbs.begin();it!=diffuse_reverbs.end();++it){
+    for(auto it = diffuse_reverbs.begin(); it != diffuse_reverbs.end(); ++it) {
       TASCAR::Acousticmodel::receiver_t* receiver(*it);
       receivers.push_back(receiver);
       diffuse_sound_fields.push_back((*it)->get_source());
     }
     // create the world, before first process callback is called:
-    world = new Acousticmodel::world_t( c, f_sample, n_fragment, sources, diffuse_sound_fields,reflectors,obstacles,receivers,pmasks,ismorder);
+    world = new Acousticmodel::world_t(c, f_sample, n_fragment, sources,
+                                       diffuse_sound_fields, reflectors,
+                                       obstacles, receivers, pmasks, ismorder);
     total_pointsources = world->get_total_pointsource();
     total_diffuse_sound_fields = world->get_total_diffuse_sound_field();
-    ambbuf = new TASCAR::amb1wave_t( n_fragment );
-    loadaverage.set_tau( 1.0, f_fragment );
+    ambbuf = new TASCAR::amb1wave_t(n_fragment);
+    loadaverage.set_tau(1.0, f_fragment);
     is_prepared = true;
-    pthread_mutex_unlock( &mtx_world );
+    pthread_mutex_unlock(&mtx_world);
   }
-  catch( ... ){
-    pthread_mutex_unlock( &mtx_world );
+  catch(...) {
+    pthread_mutex_unlock(&mtx_world);
     throw;
   }
 }
@@ -193,22 +206,22 @@ void TASCAR::render_core_t::configure()
 void TASCAR::render_core_t::release()
 {
   scene_t::release();
-  if( pthread_mutex_lock( &mtx_world ) != 0 )
+  if(pthread_mutex_lock(&mtx_world) != 0)
     throw TASCAR::ErrMsg("Unable to lock process.");
-  if( world )
+  if(world)
     delete world;
   world = NULL;
   is_prepared = false;
   delete ambbuf;
-  pthread_mutex_unlock( &mtx_world );
+  pthread_mutex_unlock(&mtx_world);
 }
 
 double gettime()
 {
   struct timeval tv;
-  memset(&tv,0,sizeof(timeval));
-  gettimeofday(&tv, NULL );
-  return (double)(tv.tv_sec) + 0.000001*tv.tv_usec;
+  memset(&tv, 0, sizeof(timeval));
+  gettimeofday(&tv, NULL);
+  return (double)(tv.tv_sec) + 0.000001 * tv.tv_usec;
 }
 
 void TASCAR::render_core_t::process(uint32_t nframes,
@@ -244,7 +257,9 @@ void TASCAR::render_core_t::process(uint32_t nframes,
     /*
      * Geometry processing:
      */
+    valid_geometry = false;
     geometry_update(tp.session_time_seconds);
+    valid_geometry = true;
     process_active(tp.session_time_seconds);
     load_cycle.t_geo = tic.toc();
     /*
