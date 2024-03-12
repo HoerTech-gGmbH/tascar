@@ -121,7 +121,7 @@ digraph ap {
 
 	rcvpoint [label="receiver\n(point sources)"];
 	rcvdiff [label="receiver\n(diffuse sound fields)"];
-	rcvreverb [label="room receiver\n(point sources)"];
+	rcvreverb [label="reverb\n(point sources)"];
 	diffreverb;
 
 	i1 -> preprocdiff -> diff;
@@ -131,6 +131,8 @@ digraph ap {
 
 	prisrc -> rcvpoint;
 	imgsrc -> rcvpoint;
+
+  imgsrc -> diff [label="scattering"];
 
 	prisrc -> rcvreverb;
 	imgsrc -> rcvreverb;
