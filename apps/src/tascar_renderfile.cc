@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     // input file name (pointing to an existing sound file):
     std::string in_fname;
     // output sound file name, will be created/overwritten:
-    std::string out_fname;
+    std::string outputfile;
     // start time of simulation:
     double starttime = 0.0;
     // sampling rate in case of no input file:
@@ -59,118 +59,86 @@ int main(int argc, char** argv)
     // update channel map:
     std::string schmap;
     // parse options:
-    const char* options = "hi:s:";
-    struct option long_options[] = {{"help", 0, 0, 'h'},
-                                    {"inputfile", 1, 0, 'i'},
-                                    {"outputfile", 1, 0, 'o'},
-                                    {"scene", 1, 0, 's'},
-                                    {0, 0, 0, 0}};
+    const char* options = "hi:o:s:m:t:r:u:f:v";
+    struct option long_options[] = {
+        {"help", 0, 0, 'h'},       {"inputfile", 1, 0, 'i'},
+        {"outputfile", 1, 0, 'o'}, {"scene", 1, 0, 's'},
+        {"channelmap", 1, 0, 'm'}, {"starttime", 1, 0, 't'},
+        {"srate", 1, 0, 'r'},      {"durartion", 1, 0, 'u'},
+        {"fragsize", 1, 0, 'f'},   {"static", 0, 0, 'c'},
+        {"ismmin", 1, 0, '1'},     {"ismmax", 1, 0, '2'},
+        {"verbose", 0, 0, 'v'},    {0, 0, 0, 0}};
+    std::map<std::string, std::string> helpmap;
+    helpmap["srate"] = "Sample rate in Hz. If input file is provided, then its "
+                       "sample rate is used instead";
+    helpmap["ismmin"] = "Minimum order of image source model.";
+    helpmap["ismmax"] = "Maximum order of image source model, or -1 to use "
+                        "value from scene definition.";
+    helpmap["verbose"] = "Increase verbosity.";
+    helpmap["scene"] =
+        "Scene name (or empty to use first scene in session file).";
+    helpmap["channelmap"] =
+        "List of output channels (zero-base), or empty to use all.\n"
+        "Example: -m 0-5,8,12";
     int opt(0);
     int option_index(0);
     while((opt = getopt_long(argc, argv, options, long_options,
                              &option_index)) != -1) {
       switch(opt) {
       case 'h':
-        TASCAR::app_usage(
-            "tascar_renderfile", long_options, "sessionfile",
-            "Render a TASCAR session into a sound file.\n\nThe channel map is "
-            "a list of output channels (zero-base), or empty to use all.\n"
-            "Example: -m 0-5,8,12");
+        TASCAR::app_usage("tascar_renderfile", long_options, "sessionfile",
+                          "Render a TASCAR session into a sound file.\n\n",
+                          helpmap);
         return 0;
       case 'i':
         in_fname = optarg;
         break;
+      case 's':
+        scene = optarg;
+        break;
       case 'o':
-        out_fname = optarg;
+        outputfile = optarg;
+        break;
+      case 'u':
+        duration = atof(optarg);
+        break;
+      case 't':
+        starttime = atof(optarg);
+        break;
+      case 'r':
+        srate = atof(optarg);
+        break;
+      case 'c':
+        dynamic = false;
+        break;
+      case 'f':
+        fragsize = atoi(optarg);
+        break;
+      case '1':
+        ism_min = atoi(optarg);
+        break;
+      case '2':
+        ism_max = atoi(optarg);
+        break;
+      case 'v':
+        b_verbose = true;
+        break;
+      case 'm':
+        schmap = optarg;
         break;
       }
     }
     if(optind < argc)
       tscfile = argv[optind++];
-    if(url.size() == 0) {
+    if(!tscfile.size()) {
       TASCAR::app_usage("tascar_renderfile", long_options, "sessionfile",
-                        "Render a TASCAR session into a sound file.\n\n");
+                        "Render a TASCAR session into a sound file.\n\n",
+                        helpmap);
       return 1;
     }
-    desc.add_options()("scene", po::value<std::string>(),
-                       "Scene name, or empty to select first scene.");
-    desc.add_options()("inputfile,i", po::value<std::string>(),
-                       "Input sound file (if empty, silence is assumed).");
-    desc.add_options()("outputfile,o", po::value<std::string>(),
-                       "Output sound file.");
-    desc.add_options()(
-        "channelmap,m", po::value<std::string>()->default_value(""),
-        "List of output channels (zero-base), or empty to use all.\n"
-        "Example: -m 0-5,8,12");
-    desc.add_options()(
-        "starttime,t", po::value<double>()->default_value(0),
-        "Start time in session corresponding to first output sample.");
-    desc.add_options()("srate,r", po::value<double>()->default_value(44100),
-                       "Sampling rate in Hz. If input file is provided, the "
-                       "sampling rate of the input file is used.");
-    desc.add_options()("duration,u", po::value<double>()->default_value(0),
-                       "Output duration in s, if no input file is provided. If "
-                       "0 then the session duration minus start time is used.");
-    desc.add_options()("fragsize,f", po::value<int>()->default_value(-1),
-                       "Fragment size, or -1 to use only a single fragment of "
-                       "whole duration.");
-    desc.add_options()("static", "render scene statically at the given time "
-                                 "without updating the geometry");
-    desc.add_options()("dynamic,d", "render scene dynamically (now default "
-                                    "anyway, for backward compatibility)");
-    desc.add_options()("ismmin", po::value<int>()->default_value(0),
-                       "Minimum order of image source model.");
-    desc.add_options()("ismmax", po::value<int>()->default_value(-1),
-                       "Maximum order of image source model, or -1 to use "
-                       "value from scene definition.");
-    desc.add_options()("verbose", "Increase verbosity.");
-    po::variables_map vm;
-    po::store(
-        po::command_line_parser(argc, argv).options(desc).positional(pd).run(),
-        vm);
-    po::notify(vm);
-
-    if(vm.count("help") || (argc <= 1)) {
-      std::cout << desc << "\n";
-      return 0;
-    }
-    if(!vm.count("outputfile"))
+    if(!outputfile.size())
       throw "The option --outputfile is required but missing";
-    if(!vm.count("sessionfile"))
-      throw "The option --sessionfile is required but missing";
-
-    // TSC configuration file:
-    std::string tscfile(vm["sessionfile"].as<std::string>());
-    // Scene name (or empty to use first scene in session file):
-    std::string scene;
-    if(vm.count("scene"))
-      scene = vm["scene"].as<std::string>();
-    // input file name (pointing to an existing sound file):
-    std::string in_fname;
-    if(vm.count("inputfile"))
-      in_fname = vm["inputfile"].as<std::string>();
-    // output sound file name, will be created/overwritten:
-    std::string out_fname(vm["outputfile"].as<std::string>());
-    // start time of simulation:
-    double starttime(vm["starttime"].as<double>());
-    // sampling rate in case of no input file:
-    double srate(vm["srate"].as<double>());
-    // duration in case in no input file:
-    double duration(vm["duration"].as<double>());
-    // flag to increment time on each cycle:
-    bool dynamic(vm.count("static") == 0);
-    if(vm.count("dynamic") > 0)
-      dynamic = true;
-    // fragment size, or -1 to use only a single fragment:
-    uint32_t fragsize(vm["fragsize"].as<int>());
-    // minimum ISM order:
-    uint32_t ism_min(vm["ismmin"].as<int>());
-    // maximum ISM order:
-    uint32_t ism_max(vm["ismmax"].as<int>());
-    // print statistics
-    bool b_verbose(vm.count("verbose"));
     // update channel map:
-    std::string schmap(vm["channelmap"].as<std::string>());
     std::vector<size_t> chmap;
     if(!schmap.empty()) {
       auto vschmap = TASCAR::str2vecstr(schmap, ", \t");
@@ -189,7 +157,7 @@ int main(int argc, char** argv)
     }
     if(tscfile.empty())
       throw TASCAR::ErrMsg("Empty session file name.");
-    if(out_fname.empty())
+    if(outputfile.empty())
       throw TASCAR::ErrMsg("Empty output sound file name");
     if(b_verbose) {
       std::cout << "Creating renderer for " << tscfile << std::endl;
@@ -197,8 +165,8 @@ int main(int argc, char** argv)
     char c_respath[PATH_MAX];
     std::string current_path = getcwd(c_respath, PATH_MAX);
     current_path += "/";
-    if(out_fname[0] != '/') {
-      out_fname = current_path + out_fname;
+    if(outputfile[0] != '/') {
+      outputfile = current_path + outputfile;
     }
     TASCAR::wav_render_t r(tscfile, scene, b_verbose);
     r.set_channelmap(chmap);
@@ -208,9 +176,9 @@ int main(int argc, char** argv)
       if(duration <= 0)
         duration = r.duration - starttime;
       fragsize = std::min(fragsize, (uint32_t)(srate * duration));
-      r.render(fragsize, srate, duration, out_fname, starttime, dynamic);
+      r.render(fragsize, srate, duration, outputfile, starttime, dynamic);
     } else
-      r.render(fragsize, in_fname, out_fname, starttime, dynamic);
+      r.render(fragsize, in_fname, outputfile, starttime, dynamic);
     if(b_verbose) {
       std::cout << (double)(r.t1 - r.t0) / CLOCKS_PER_SEC << std::endl;
       std::cout << (double)(r.t2 - r.t1) / CLOCKS_PER_SEC << std::endl;

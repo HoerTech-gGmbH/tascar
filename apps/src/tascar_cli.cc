@@ -75,13 +75,18 @@ int main(int argc, char** argv)
         {"output", 1, 0, 'o'},    {"range", 1, 0, 'r'},
         {"licenses", 0, 0, 'l'},  {"validate", 0, 0, 'v'},
         {"variables", 0, 0, 'a'}, {0, 0, 0, 0}};
+    std::map<std::string, std::string> helpmap;
+    helpmap["output"] = "Output sound file name.";
+    helpmap["licenses"] = "Show licenses";
+    helpmap["variables"] = "Show variables";
     int opt(0);
     int option_index(0);
     while((opt = getopt_long(argc, argv, options, long_options,
                              &option_index)) != -1) {
       switch(opt) {
       case 'h':
-        TASCAR::app_usage("tascar_cli", long_options, "configfile");
+        TASCAR::app_usage("tascar_cli", long_options, "configfile", "",
+                          helpmap);
         return 0;
       case 'j':
         jackname = optarg;
@@ -107,7 +112,7 @@ int main(int argc, char** argv)
     if(optind < argc)
       cfgfile = argv[optind++];
     if(cfgfile.size() == 0) {
-      TASCAR::app_usage("tascar_cli", long_options, "configfile");
+      TASCAR::app_usage("tascar_cli", long_options, "sessionfile", "", helpmap);
       return -1;
     }
     TASCAR::session_t session(cfgfile, TASCAR::xml_doc_t::LOAD_FILE, cfgfile);

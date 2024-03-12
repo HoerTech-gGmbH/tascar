@@ -18,105 +18,111 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "cli.h"
 #include "irrender.h"
 #include "tascar_os.h"
-//#include <boost/program_options.hpp>
 #include <stdlib.h>
 #include <unistd.h>
-
-namespace po = boost::program_options;
 
 int main(int argc, char** argv)
 {
 #ifndef TSCDEBUG
   try {
 #endif
-    po::options_description desc(
-        "tascar_renderir [ options ] sessionfile\n\n"
-        "Render an impulse response of a TASCAR session.\n\n"
-        "Allowed options:");
-    po::positional_options_description pd;
-    pd.add("sessionfile", 1);
-    //{"help", 0, 0, 'h'},
-    desc.add_options()("help,h", "produce help message");
-    desc.add_options()("sessionfile", po::value<std::string>(),
-                       "TASCAR session file name.");
-    //{"scene", 1, 0, 's'},
-    desc.add_options()("scene,s", po::value<std::string>(),
-                       "Scene name, or empty to select first scene.");
-    //{"outputfile", 1, 0, 'o'},
-    desc.add_options()("outputfile,o", po::value<std::string>(),
-                       "Output sound file.");
-    //{"starttime", 1, 0, 't'},
-    desc.add_options()(
-        "starttime,t", po::value<double>()->default_value(0),
-        "Start time in session corresponding to first output sample.");
-    //{"srate", 1, 0, 'f'},
-    desc.add_options()("srate,f", po::value<double>()->default_value(44100),
-                       "Sampling rate in Hz. If input file is provided, the "
-                       "sampling rate of the input file is used.");
-    //{"irlength", 1, 0, 'l'},
-    desc.add_options()("irslength,l", po::value<int>()->default_value(44100),
-                       "Impulse response length in samples");
-    //{"ismmin", 1, 0, '0'},
-    desc.add_options()("ismmin,0", po::value<int>()->default_value(0),
-                       "Minimum order of image source model.");
-    //{"ismmax", 1, 0, '1'},
-    desc.add_options()("ismmax,1", po::value<int>()->default_value(-1),
-                       "Maximum order of image source model, or -1 to use "
-                       "value from scene definition.");
-    //{"inchannel", 1, 0, 'i'},
-    desc.add_options()(
-        "inchannel,i", po::value<int>()->default_value(0),
+    std::string tscfile;
+    std::string out_fname;
+    double starttime(0);
+    uint32_t irlen(44100);
+    double fs(44100);
+    uint32_t ism_min(0);
+    uint32_t ism_max(-1);
+    bool b_verbose(false);
+    uint32_t inchannel(0);
+    std::string scene;
+    std::string schmap;
+    const char* options = "hs:o:t:l:f:0:1:4vi:";
+    struct option long_options[] = {{"help", 0, 0, 'h'},
+                                    {"scene", 1, 0, 's'},
+                                    {"outputfile", 1, 0, 'o'},
+                                    {"starttime", 1, 0, 't'},
+                                    {"irlength", 1, 0, 'l'},
+                                    {"srate", 1, 0, 'f'},
+                                    {"ismmin", 1, 0, '0'},
+                                    {"ismmax", 1, 0, '1'},
+                                    {"inchannel", 1, 0, 'i'},
+                                    {"verbose", 0, 0, 'v'},
+                                    {0, 0, 0, 0}};
+    std::map<std::string, std::string> helpmap;
+    helpmap["scene"] = "Scene name, or empty to select first scene.";
+    helpmap["outputfile"] = "Output sound file.";
+    helpmap["starttime"] =
+        "Start time in session corresponding to first output sample.";
+    helpmap["srate"] = "Sampling rate in Hz. If input file is provided, the "
+                       "sampling rate of the input file is used.";
+    helpmap["irslength"] = "Impulse response length in samples";
+    helpmap["ismmin"] = "Minimum order of image source model.";
+    helpmap["ismmax"] = "Maximum order of image source model, or -1 to use "
+                        "value from scene definition.";
+    helpmap["inchannel"] =
         "Input channel number. This defines from which sound vertex the IR is "
         "measured. Sound vertices are numbered in the order of their "
-        "appearance in the session file, starting with zero.");
-    desc.add_options()(
-        "channelmap,m", po::value<std::string>()->default_value(""),
+        "appearance in the session file, starting with zero.";
+    helpmap["channelmap"] =
         "List of output channels (zero-base), or empty to use all.\n"
-        "Example: -m 0-5,8,12");
-    //{"verbose", 0, 0, 'v'},
-    desc.add_options()("verbose", "Increase verbosity.");
-    po::variables_map vm;
-    po::store(
-        po::command_line_parser(argc, argv).options(desc).positional(pd).run(),
-        vm);
-    po::notify(vm);
-
-    if(vm.count("help") || (argc <= 1)) {
-      std::cout << desc << "\n";
-      return 0;
+        "Example: -m 0-5,8,12";
+    int opt(0);
+    int option_index(0);
+    while((opt = getopt_long(argc, argv, options, long_options,
+                             &option_index)) != -1) {
+      switch(opt) {
+      case 'h':
+        TASCAR::app_usage("tascar_renderir", long_options, "sessionfile",
+                          "Render an impulse response of a TASCAR session.",
+                          helpmap);
+        return 0;
+      case 's':
+        scene = optarg;
+        break;
+      case 'o':
+        out_fname = optarg;
+        break;
+      case 't':
+        starttime = atof(optarg);
+        break;
+      case 'l':
+        irlen = atoi(optarg);
+        break;
+      case 'f':
+        fs = atof(optarg);
+        break;
+      case 'i':
+        inchannel = atoi(optarg);
+        break;
+      case '0':
+        ism_min = atoi(optarg);
+        break;
+      case '1':
+        ism_max = atoi(optarg);
+        break;
+      case 'v':
+        b_verbose = true;
+        break;
+      case 'm':
+        schmap = optarg;
+        break;
+      }
     }
-    if(!vm.count("outputfile"))
+    if(optind < argc)
+      tscfile = argv[optind++];
+    if(!tscfile.size()) {
+      TASCAR::app_usage("tascar_renderir", long_options, "sessionfile",
+                        "Render an impulse response of a TASCAR session.",
+                        helpmap);
+      return 1;
+    }
+    if(!out_fname.size())
       throw "The option --outputfile is required but missing";
-    if(!vm.count("sessionfile"))
-      throw "The option --sessionfile is required but missing";
 
-    // TSC configuration file:
-    std::string tscfile(vm["sessionfile"].as<std::string>());
-    // Scene name (or empty to use first scene in session file):
-    std::string scene;
-    if(vm.count("scene"))
-      scene = vm["scene"].as<std::string>();
-    // output sound file name, will be created/overwritten:
-    std::string out_fname(vm["outputfile"].as<std::string>());
-    // start time of simulation:
-    // double starttime(0);
-    double starttime(vm["starttime"].as<double>());
-    // IR length:
-    uint32_t irlen(vm["irslength"].as<int>());
-    // sampling rate
-    double fs(vm["srate"].as<double>());
-    // minimum ISM order:
-    uint32_t ism_min(vm["ismmin"].as<int>());
-    // maximum ISM order:
-    uint32_t ism_max(vm["ismmax"].as<int>());
-    // print statistics
-    bool b_verbose(vm.count("verbose"));
-    // input channel number:
-    uint32_t inchannel(vm["inchannel"].as<int>());
-    // update channel map:
-    std::string schmap(vm["channelmap"].as<std::string>());
     std::vector<size_t> chmap;
     if(!schmap.empty()) {
       auto vschmap = TASCAR::str2vecstr(schmap, ", \t");

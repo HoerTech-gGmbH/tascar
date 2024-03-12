@@ -1,10 +1,10 @@
 /**
  * @file   cli.h
  * @author Giso Grimm
- * 
+ *
  * @brief  Command line interface helper functions
  */
-/* 
+/*
  * License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
@@ -27,12 +27,16 @@
 #ifndef CLI_H
 #define CLI_H
 
-#include <string>
 #include <getopt.h>
+#include <map>
+#include <string>
 
 namespace TASCAR {
 
-  void app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg="", const std::string& help="" );
+  void app_usage(const std::string& app_name, struct option* opt,
+                 const std::string& app_arg = "", const std::string& help = "",
+                 std::map<std::string, std::string> helpmap =
+                     std::map<std::string, std::string>());
 
 }
 

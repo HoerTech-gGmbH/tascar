@@ -21,20 +21,25 @@
 #include "cli.h"
 #include <iostream>
 #if CMAKE
-    #include "tascarver.h"
+#include "tascarver.h"
 #else
-    #include "../build/tascarver.h"
+#include "../build/tascarver.h"
 #endif
 
-void TASCAR::app_usage(const std::string& app_name,struct option * opt,const std::string& app_arg, const std::string& help)
+void TASCAR::app_usage(const std::string& app_name, struct option* opt,
+                       const std::string& app_arg, const std::string& help,
+                       std::map<std::string, std::string> helpmap)
 {
   std::cout << "Usage:\n\n" << app_name << " [options] " << app_arg << "\n\n";
-  if( !help.empty() )
+  if(!help.empty())
     std::cout << help << "\n\n";
   std::cout << "Options:\n\n";
-  while( opt->name ){
-    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
-      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
+  while(opt->name) {
+    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg ? "#" : "")
+              << "\n  --" << opt->name << (opt->has_arg ? "=#" : "") << "\n";
+    if(helpmap[opt->name].size())
+      std::cout << helpmap[opt->name] << "\n";
+    std::cout << "\n";
     opt++;
   }
   std::cout << std::endl << "(version: " << TASCARVER << ")" << std::endl;

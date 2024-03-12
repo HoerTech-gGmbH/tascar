@@ -32,7 +32,7 @@ secrecgeneric.tex secrecspeaker.tex secrecreverb.tex secmaskmodules.tex
 FIGURES = filestructure.pdf creator.pdf
 #ap_sndfile.pdf
 
-ALLAPPS = $(sort $(subst .mk,,$(wildcard ../apps/build/tascar_*)))
+ALLAPPS = $(sort $(subst .o,,$(subst .mk,,$(wildcard ../apps/build/tascar_*))))
 
 NOHELPAPPS = jackpar lsljacktime sendosc compare_level_sum	\
 	test_compare_sndfile tscupdate test_compare_level_sum
@@ -168,7 +168,7 @@ clihelp.tex: $(patsubst %,cli_%.tex,$(ALLAPPNAMES)) Makefile
 
 
 cli_%.tex: ../apps/build/tascar_% Makefile
-	(echo ''; echo '\begin{lstlisting}[numbers=none]'; LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ $< -h;echo '\end{lstlisting}') > $@
+	(echo ''; echo '\begin{lstlisting}[numbers=none]'; LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ $< -h && echo '\end{lstlisting}') > $@
 
 
 modtabs:

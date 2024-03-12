@@ -1,8 +1,8 @@
-This command line tool is used for rendering the impulse response of a
-\tascar{} scene. Typical usage example:
+This command line tool is used to render the impulse response of a \tascar{} scene. A typical usage example might be
+
 \begin{lstlisting}[numbers=none]
   tascar_renderir -o output_file.wav -f 44100 -1 2 tascar_scene.tsc
 \end{lstlisting}
-The impulse response will be stored in
-\verb!output_file.wav!. \verb!44100! is the sampling rate and \verb!2!
-is the highest rendered image source order.
+
+Here the impulse response is saved in \verb!output_file.wav! with a sampling rate of 44100 Hz and up to 2nd order image source model.
+
