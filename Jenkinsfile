@@ -37,7 +37,7 @@ def tascar_build_steps(stage_name) {
            " build/tascarreceiver_omni.dll build/tascar_hrirconv.dll" +
            " build/tascarreceiver_foaconv.dll build/tascar_route.dll" +
            " build/tascarreceiver_amb1h0v.dll build/tascarreceiver_amb1h1v.dll" +
-           " build/tascarreceiver_amb3h0v.dll tascarreceiver_amb3h3v.dll" +
+           " build/tascarreceiver_amb3h0v.dll build/tascarreceiver_amb3h3v.dll" +
            " build/tascarreceiver_hoa3d.dll build/tascarreceiver_vbap3d.dll" +
            " build/tascarreceiver_vbap.dll" )
         sh "mkdir -p TASCAR"
