@@ -24,7 +24,7 @@ def tascar_build_steps(stage_name) {
         // Compile subset of TASCAR on Windows
         sh "make -j 4 libtascar googletest"
         sh "make -j 4 -C libtascar unit-tests"
-        sh "make -C apps build/tascar_cli build/tascar_renderir tascar_getcalibfor tascar_jackio tascar_jackpar tascar_version"
+        sh "make -C apps build/tascar_cli build/tascar_renderir build/tascar_getcalibfor build/tascar_jackio build/tascar_jackpar build/tascar_version"
         sh "make -j 4 -C gui build/tascar_spkcalib build/tascar"
         sh "make -C plugins build/.directory"
         sh("make -C plugins -j 4 build/tascarsource_omni.dll" +
