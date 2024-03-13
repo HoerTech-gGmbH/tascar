@@ -30,6 +30,7 @@
 
 #include <atomic>
 #include <jack/jack.h>
+#include <pthread.h>
 #include <string>
 #include <vector>
 

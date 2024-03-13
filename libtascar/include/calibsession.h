@@ -101,8 +101,8 @@ namespace TASCAR {
      */
     void get_levels();
     void reset_levels();
-    void saveas(const std::string& fname);
-    void save();
+    void file_saveas(const std::string& fname);
+    void file_save();
     bool complete() const
     {
       return levelsrecorded && calibrated && calibrated_diff;
@@ -320,7 +320,7 @@ namespace TASCAR {
     void save()
     {
       if(p_session)
-        p_session->save();
+        p_session->file_save();
     };
     void cfg_load_from_layout()
     {

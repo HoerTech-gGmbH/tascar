@@ -777,7 +777,7 @@ void calibsession_t::get_levels()
   levelsrecorded = true;
 }
 
-void calibsession_t::saveas(const std::string& fname)
+void calibsession_t::file_saveas(const std::string& fname)
 {
   // convert levels into gains:
   std::vector<double> gains;
@@ -850,9 +850,9 @@ void calibsession_t::saveas(const std::string& fname)
   calibrated_diff = false;
 }
 
-void calibsession_t::save()
+void calibsession_t::file_save()
 {
-  saveas(spkname);
+  file_saveas(spkname);
 }
 
 void calibsession_t::set_active(bool b)

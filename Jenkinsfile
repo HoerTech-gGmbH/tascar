@@ -24,7 +24,7 @@ def tascar_build_steps(stage_name) {
         // Compile subset of TASCAR on Windows
         sh "make -j 4 libtascar googletest"
         sh "make -j 4 -C libtascar unit-tests"
-        sh "make -C apps build/tascar_cli build/tascar_renderir tascar_getcalibfor tascar_jackio tascar_jackpar tascar_version"
+        sh "make -C apps build/tascar_cli build/tascar_renderir build/tascar_getcalibfor build/tascar_jackio build/tascar_jackpar build/tascar_version"
         sh "make -j 4 -C gui build/tascar_spkcalib build/tascar"
         sh "make -C plugins build/.directory"
         sh("make -C plugins -j 4 build/tascarsource_omni.dll" +
@@ -37,7 +37,7 @@ def tascar_build_steps(stage_name) {
            " build/tascarreceiver_omni.dll build/tascar_hrirconv.dll" +
            " build/tascarreceiver_foaconv.dll build/tascar_route.dll" +
            " build/tascarreceiver_amb1h0v.dll build/tascarreceiver_amb1h1v.dll" +
-           " build/tascarreceiver_amb3h0v.dll tascarreceiver_amb3h3v.dll" +
+           " build/tascarreceiver_amb3h0v.dll build/tascarreceiver_amb3h3v.dll" +
            " build/tascarreceiver_hoa3d.dll build/tascarreceiver_vbap3d.dll" +
            " build/tascarreceiver_vbap.dll" )
         sh "mkdir -p TASCAR"
