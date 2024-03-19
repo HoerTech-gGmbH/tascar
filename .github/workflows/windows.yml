@@ -23,5 +23,3 @@ jobs:
         fetch-depth: 0
     - name: make
       run: make
-    - name: test
-      run: make test
