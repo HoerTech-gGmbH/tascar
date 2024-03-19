@@ -14,7 +14,7 @@ RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann	\
 SOURCES = omni cardioidmod door generic1storder farsrc head
 
 TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
-  foa2hoadiff route oscevents oscjacktime ltcgen nearsensor dirgain	\
+  foa2hoadiff route oscevents oscjacktime nearsensor dirgain	\
   dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
   hossustain rotator orientationmodulator locationmodulator		\
   linearmovement granularsynth fail waitforjackport sleep jackrec	\
@@ -36,7 +36,11 @@ MASKPLUGINS = fig8 multibeam sampledgain
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-  TASCARMODS += midicc2osc midictl mididispatch joystick qualisystracker	\
+  TASCARMODS += midicc2osc midictl mididispatch joystick qualisystracker ltcgen	\
+#  ovheadtracker
+endif
+ifeq ($(UNAME_S),Darwin)
+  TASCARMODS += ltcgen	\
 #  ovheadtracker
 endif
 endif
