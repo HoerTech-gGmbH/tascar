@@ -319,7 +319,7 @@ std::vector<std::string> jackrec_t::scan_dir()
   HANDLE hFind;
   hFind = FindFirstFile((path + pattern).c_str(), &FindFileData);
   if(hFind == INVALID_HANDLE_VALUE)
-    return;
+    return res;
   do {
     res.push_back(FindFileData.cFileName);
   } while(FindNextFile(hFind, &FindFileData) != 0);
