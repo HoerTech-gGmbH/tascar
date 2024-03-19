@@ -17,8 +17,7 @@ jobs:
       with:
         msystem: UCRT64
         update: true
-        install: git mingw-w64-ucrt-x86_64-gcc make mingw-w64-ucrt-x86_64-pkgconf
-        install: mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-jack2 mingw-w64-ucrt-x86_64-liblo mingw-w64-ucrt-x86_64-libsndfile mingw-w64-ucrt-x86_64-gtkmm3 mingw-w64-ucrt-x86_64-gsl mingw-w64-ucrt-x86_64-fftw mingw-w64-ucrt-x86_64-libsamplerate mingw-w64-ucrt-x86_64-xerces-c mingw-w64-ucrt-x86_64-gtksourceviewmm3
+        install: git mingw-w64-ucrt-x86_64-gcc make mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-jack2 mingw-w64-ucrt-x86_64-liblo mingw-w64-ucrt-x86_64-libsndfile mingw-w64-ucrt-x86_64-gtkmm3 mingw-w64-ucrt-x86_64-gsl mingw-w64-ucrt-x86_64-fftw mingw-w64-ucrt-x86_64-libsamplerate mingw-w64-ucrt-x86_64-xerces-c mingw-w64-ucrt-x86_64-gtksourceviewmm3
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
