@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: UCRT64
         update: true
-        install: git mingw-w64-x86_64-gcc
+        install: git mingw-w64-ucrt-x86_64-gcc mingw-w64-make mingw-w64-eigen3
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
