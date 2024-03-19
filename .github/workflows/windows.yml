@@ -1,0 +1,23 @@
+name: Windows/MSYS2 make
+
+on:
+  push:
+    branches: [ feature/msys2 ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: msys2/setup-msys2@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: make
+      run: make
+    - name: test
+      run: make test
