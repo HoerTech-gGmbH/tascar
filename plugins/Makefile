@@ -18,7 +18,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   dummy matrix hoafdnrot mpu6050track touchosc savegains hrirconv	\
   hossustain rotator orientationmodulator locationmodulator		\
   linearmovement granularsynth fail waitforjackport sleep jackrec	\
-  oscserver oscrelay echoc snapangle lightctl oscactor ovheadtracker	\
+  oscserver oscrelay echoc snapangle oscactor	\
   oscheadtracker tonalenhancement
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
@@ -36,7 +36,7 @@ MASKPLUGINS = fig8 multibeam sampledgain
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-  TASCARMODS += midicc2osc midictl mididispatch joystick qualisystracker ltcgen	\
+  TASCARMODS += midicc2osc midictl mididispatch joystick qualisystracker ltcgen lightctl ovheadtracker\
 #  ovheadtracker
 endif
 ifeq ($(UNAME_S),Darwin)
