@@ -592,7 +592,7 @@ receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
                 "Number of reflections created by scattering filter");
   GET_ATTRIBUTE(scatterstructuresize, "m", "size of scatter structure");
   GET_ATTRIBUTE(scatterdamping, "", "damping of scatter reflection filter");
-
+  GET_ATTRIBUTE_DEG(scatterspread,"Spatial spread of scattering");
   // end proxy
   if(avgdist <= 0)
     avgdist = 0.5f * powf(volumetric.boxvolumef(), 0.33333f);
@@ -620,18 +620,17 @@ void receiver_t::configure()
   if(scatterreflections > 0) {
     scatterfilter = new TASCAR::fdn_t(scatterreflections, (uint32_t)f_sample,
                                       true, TASCAR::fdn_t::mean, false);
-    scatterfilter->setpar_t60(
-        0.0f, TASCAR_2PIf * 0.125f,
-        f_sample * (0.1f * scatterstructuresize / 340.0f),
+    scatterfilter->set_scatterpar(
+        scatterspread, f_sample * (0.1f * scatterstructuresize / 340.0f),
         f_sample * (scatterstructuresize / 340.0f), f_sample,
-        std::max(0.0f, std::min(0.999f, scatterdamping)), true, false);
+        std::max(0.0f, std::min(0.999f, scatterdamping)));
     scatterallpass_w.resize(scatterreflections);
     scatterallpass_x.resize(scatterreflections);
     scatterallpass_y.resize(scatterreflections);
     scatterallpass_z.resize(scatterreflections);
     size_t k = 1;
     for(auto& flt : scatterallpass_x) {
-      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.89f, TASCAR_2PI * 0.25 * k / scatterreflections);
       ++k;
     }
     k = 1;
@@ -641,12 +640,12 @@ void receiver_t::configure()
     }
     k = 1;
     for(auto& flt : scatterallpass_z) {
-      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.905f, TASCAR_2PI * 0.25 * k / scatterreflections);
       ++k;
     }
     k = 1;
     for(auto& flt : scatterallpass_w) {
-      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.91f, TASCAR_2PI * 0.25 * k / scatterreflections);
       ++k;
     }
   }

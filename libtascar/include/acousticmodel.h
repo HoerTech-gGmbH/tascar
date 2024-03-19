@@ -256,6 +256,7 @@ namespace TASCAR {
       bool muteonstop = false;
       // scatter filter parameters:
       uint32_t scatterreflections = 0;
+      float scatterspread = TASCAR_PIf * 0.125;
       float scatterstructuresize = 1;
       float scatterdamping = 0.0;
       // proxy parameters:

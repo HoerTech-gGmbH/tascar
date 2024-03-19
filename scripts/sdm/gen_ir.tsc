@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <session>
   <scene>
-    <receiver type="amb1h1v" scatterreflections="5" channelorder="FuMa"/>
+    <receiver type="amb1h1v" scatterreflections="4" scatterspread="20" channelorder="FuMa"/>
     <source>
       <position>0 2 0 0</position>
       <sound/>
     </source>
     <facegroup name="walls" shoebox="7 6 3" scattering="0.1" mute="true"/>
-    <face name="w1" height="3" width="3" dorientation="0 0 0" dlocation="-2 -1 -1"/>
+    <face name="w1" height="3" width="3" dorientation="0 0 0" dlocation="-2 -1 -1" scattering="0.5"/>
+    <reverb type="simplefdn" volumetric="7 6 3" forwardstages="1"/>
   </scene>
 </session>

@@ -1470,6 +1470,9 @@ source is in the direction of the face normal.
 Polygons meshes are flattened by a projection on a plane which is
 orthogonal to the polygon normal vector.
 
+\subsubsection{Scattering}
+
+\tascar{} contains a very simple scattering model. For each reflector the amount of scattering can be controlled using the \attr{scattering} attribute. This is added to the diffuse sound field model path. By default, the spatial dispersion of the scattering is reproduced by the receiver's decorrelation stage, if enabled. Optionally, the scattering can be rendered explicitly using additional virtual sound sources added to the diffuse sound field model. This can be enabled in each receiver by setting the attribute \attr{scatterreflections} to a number greater than zero. Reasonable values with a reasonable trade-off between computational effort and spatial dispersion are 4 to 8.
 
 \subsection{Obstacles: {\tt <obstacle .../>} element}\index{obstacle}\label{sec:obstacle}
 

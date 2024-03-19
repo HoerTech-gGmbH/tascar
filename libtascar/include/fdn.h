@@ -215,6 +215,7 @@ namespace TASCAR {
     };
     void setpar_t60(float az, float daz, float t, float dt, float t60,
                     float damping, bool fixcirculantmat, bool truncate_forward);
+    void set_scatterpar(float daz, float t, float dt, float t60, float damping);
     void set_logdelays(bool ld) { logdelays_ = ld; };
     void set_zero()
     {
