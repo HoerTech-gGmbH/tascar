@@ -23,3 +23,9 @@ jobs:
         fetch-depth: 0
     - name: make
       run: make
+    - name: packaging
+      run: make packwin
+    - uses: actions/upload-artifact@v2
+      with:
+        name: windows
+        path: packaging/win/*.zip

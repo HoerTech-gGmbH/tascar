@@ -78,6 +78,9 @@ docexamples:
 pack: $(MODULES) $(DOCMODULES) docexamples unit-tests test
 	$(MAKE) -C packaging/deb
 
+packwin:
+	$(MAKE) -C packaging/win
+
 releasepack: checkversiontagged checkmodified $(MODULES) $(DOCMODULES) docexamples unit-tests test
 	$(MAKE) -C packaging/deb
 
