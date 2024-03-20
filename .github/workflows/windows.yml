@@ -21,10 +21,12 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: make
+    - name: build
       run: make
     - name: packaging
       run: make packwin
+    - name: checkgit
+      run: git status
     - uses: actions/upload-artifact@v4
       with:
         name: windows
