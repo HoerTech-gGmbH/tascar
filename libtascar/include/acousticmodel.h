@@ -175,6 +175,7 @@ namespace TASCAR {
       uint32_t layers;
       float maxdist;
       float minlevel;
+      float nearfieldlimit;
       uint32_t sincorder;
       gainmodel_t gainmodel;
       bool airabsorption;
@@ -226,7 +227,7 @@ namespace TASCAR {
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
                            float& distance, float& traveltime_in_m, float& gain,
-                           bool b_img, gainmodel_t gainmodel);
+                           bool b_img, gainmodel_t gainmodel, float& nearfieldlimit);
       void set_next_gain(float gain);
       void set_fade(float targetgain, float duration, float start = -1);
       void apply_gain();

@@ -106,7 +106,8 @@ acoustic_model_t::acoustic_model_t(float c, float fs, uint32_t chunksize,
   pos_t prel;
   float traveltime_in_m = 0;
   receiver_->update_refpoint(src_->position, src_->position, prel, distance,
-                             traveltime_in_m, gain, false, src_->gainmodel);
+                             traveltime_in_m, gain, false, src_->gainmodel,
+                             src_->nearfieldlimit);
   gain = 1.0;
   vstate.resize(obstacles_.size());
   if(receiver_->layers & src_->layers)
@@ -183,7 +184,8 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           float nexttraveltime_in_m = 0.0f;
           receiver_->update_refpoint(primary->position, position, prel,
                                      nextdistance, nexttraveltime_in_m,
-                                     nextgain, ismorder > 0, src_->gainmodel);
+                                     nextgain, ismorder > 0, src_->gainmodel,
+                                     src_->nearfieldlimit);
           if(nextdistance > src_->maxdist)
             return 0;
           nextgain *= srcgainmod;
@@ -478,9 +480,10 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(float fs, uint32_t chunksize,
   pos_t prel;
   float d = 1.0f;
   float gain = 1.0f;
+  float nflimit(0.1);
   float traveltime_in_m = 1.0f;
   receiver_->update_refpoint(src_->center, src_->center, prel, d,
-                             traveltime_in_m, gain, false, GAIN_INVR);
+                             traveltime_in_m, gain, false, GAIN_INVR, nflimit);
 }
 
 diffuse_acoustic_model_t::~diffuse_acoustic_model_t()
@@ -497,10 +500,12 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
   pos_t prel;
   float d = 0.0f;
   float nextgain = 1.0f;
+  float nflimit(0.1);
   float nexttraveltime_in_m = 1.0f;
   // calculate relative geometry between source and receiver:
   receiver_->update_refpoint(src_->center, src_->center, prel, d,
-                             nexttraveltime_in_m, nextgain, false, GAIN_INVR);
+                             nexttraveltime_in_m, nextgain, false, GAIN_INVR,
+                             nflimit);
   shoebox_t box(*src_);
   // box.size = src_->size;
   box.center = pos_t();
@@ -777,7 +782,8 @@ void receiver_t::add_diffuse_sound_field_rec(const amb1wave_t& chunk,
 void receiver_t::update_refpoint(const pos_t& psrc_physical,
                                  const pos_t& psrc_virtual, pos_t& prel,
                                  float& distance, float& traveltime_in_m,
-                                 float& gain, bool b_img, gainmodel_t gainmodel)
+                                 float& gain, bool b_img, gainmodel_t gainmodel,
+                                 float& nearfieldlimit)
 {
   if(volumetric.has_volume()) {
     /*
@@ -796,7 +802,7 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
     float d(box.nextpoint(prel).normf());
     if(falloff > 0)
       gain = (0.5f + 0.5f * cosf(TASCAR_PIf * std::min(1.0f, d / falloff))) /
-             std::max(0.1f, avgdist);
+             std::max(nearfieldlimit, avgdist);
     else {
       switch(gainmodel) {
       case GAIN_INVR:
@@ -821,7 +827,7 @@ void receiver_t::update_refpoint(const pos_t& psrc_physical,
     traveltime_in_m = distance;
     switch(gainmodel) {
     case GAIN_INVR:
-      gain = 1.0f / std::max(0.1f, distance);
+      gain = 1.0f / std::max(nearfieldlimit, distance);
       break;
     case GAIN_UNITY:
       gain = 1.0f;
@@ -973,8 +979,8 @@ source_t::source_t(tsccfg::node_t xmlsrc, const std::string& name,
                    const std::string& parentname)
     : sourcemod_t(xmlsrc), licensed_component_t(typeid(*this).name()),
       ismmin(0), ismmax(2147483647), layers(0xffffffff), maxdist(3700),
-      minlevel(0), sincorder(0), gainmodel(GAIN_INVR), airabsorption(true),
-      delayline(true), size(0), active(true),
+      minlevel(0), nearfieldlimit(0.1), sincorder(0), gainmodel(GAIN_INVR),
+      airabsorption(true), delayline(true), size(0), active(true),
       // is_prepared(false),
       plugins(xmlsrc, name, parentname)
 {
@@ -983,6 +989,8 @@ source_t::source_t(tsccfg::node_t xmlsrc, const std::string& name,
       "physical size of sound source (effect depends on rendering method)");
   GET_ATTRIBUTE(maxdist, "m", "maximum distance to be used in delay lines");
   GET_ATTRIBUTE_DBSPL(minlevel, "Level threshold for rendering");
+  GET_ATTRIBUTE(nearfieldlimit, "m",
+                "distance arond 1/r source where the gain is constant");
   GET_ATTRIBUTE_BOOL(airabsorption, "apply air absorption filter");
   GET_ATTRIBUTE_BOOL(delayline, "use delayline");
   std::string gr("1/r");
