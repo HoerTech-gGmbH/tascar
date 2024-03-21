@@ -9,7 +9,7 @@ endif
 
 all:
 	rm -Rf tascar;\
-	mkdir -p tascar/{scripts,share/icons,tascar/share/glib-2.0,tascar/lib};\
+	mkdir -p tascar/{scripts,share/icons,share/glib-2.0,lib};\
 	rm -f tascar-$(PACKVERSION).zip;\
 	cp -v ../../*/build/[lt]*.{dll,exe} tascar/;\
 	cp -r ../../scripts/*.m tascar/scripts/;\
