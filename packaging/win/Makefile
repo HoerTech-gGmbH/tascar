@@ -13,16 +13,16 @@ all:
 	rm -f tascar-$(PACKVERSION).zip;\
 	cp -v ../../*/build/[lt]*.{dll,exe} tascar/;\
 	cp -r ../../scripts/*.m tascar/scripts/;\
-	cp -r /d/*/*/*/*/share/icons/Adwaita tascar/share/icons/;\
-	cp -r /d/*/*/*/*/share/glib-2.0/schemas tascar/share/glib-2.0/;\
-	cp -r /d/*/*/*/*/lib/gdk-pixbuf-2.0 tascar/lib/;\
-	cp /d/*/*/*/*/bin/gdbus.exe tascar/;\
-	cp /d/*/*/*/*/bin/broadwayd.exe tascar/;\
+	cp -r /ucrt64/share/icons/Adwaita tascar/share/icons/;\
+	cp -r /ucrt64/share/glib-2.0/schemas tascar/share/glib-2.0/;\
+	cp -r /ucrt64/lib/gdk-pixbuf-2.0 tascar/lib/;\
+	cp /ucrt64/bin/gdbus.exe tascar/;\
+	cp /ucrt64/bin/broadwayd.exe tascar/;\
 	(cd tascar; cp -v $$(cygcheck ./* ./lib/gdk-pixbuf-2.0/*/*.dll | grep msys64 | sort -bu) .;mkdir -p share/{icons,glib-2.0} lib); \
 	cp ../../artwork/*.png tascar/;\
 	(cd tascar; glib-compile-schemas share/glib-2.0/schemas);\
 	zip -r tascar-$(PACKVERSION).zip tascar/; \
-	(cd tascar; find /d/ -name "Adwaita*"; find /d/ -name "glib-2.0"; find /d/ -name "schemas";echo "---";ls /d/*/*/*/*/share/glib-2.0/schemas;echo "---";ls /;echo $$MINGW_MOUNT_POINT;echo "packaging completed.";)
+	(cd tascar; find /d/ -name "Adwaita*"; find /d/ -name "glib-2.0"; find /d/ -name "hicolor"; find /d/ -name "librsvg-2-2.dll";echo "---";echo "---";ls /ucrt64/;echo "packaging completed.";)
 
 
 ver:
