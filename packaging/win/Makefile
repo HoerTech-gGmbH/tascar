@@ -21,7 +21,7 @@ all:
 	(cd tascar; cp -v $$(cygcheck ./* ./lib/gdk-pixbuf-2.0/*/*.dll | grep msys64 | sort -bu) .;mkdir -p share/{icons,glib-2.0} lib); \
 	cp ../../artwork/*.png tascar;\
 	zip -r tascar-$(PACKVERSION).zip tascar; \
-	(cd tascar; cygcheck ./*; find /d/ -name "Adwaita*"; find /d/ -name "glib-2.0"; find /d/ -name "schemas";echo "";)
+	(cd tascar; find /d/ -name "Adwaita*"; find /d/ -name "glib-2.0"; find /d/ -name "schemas";echo $${MINGW_MOUNT_POINT};echo "";)
 
 
 ver:
