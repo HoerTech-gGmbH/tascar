@@ -16,7 +16,7 @@ $(patsubst %,%-subdir-unit-tests,$(SUBDIRS)):
 	$(MAKE) -C $(@:-subdir-unit-tests=) unit-tests
 
 execute-unit-tests: $(BUILD_DIR)/unit-test-runner
-	if [ -x $< ]; then LD_LIBRARY_PATH=./build:./libtascar/build $<; fi
+	pwd;if [ -x $< ]; then LD_LIBRARY_PATH=./build:../libtascar/build DYLD_LIBRARY_PATH=./build:../libtascar/build $<; fi
 
 unit_tests_test_files = $(wildcard $(SOURCE_DIR)/*_unit_tests.cc)
 
@@ -28,13 +28,14 @@ ifeq ($(OS),Windows_NT)
   CXXFLAGS += -DISWINDOWS
   LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dll
 else
-  LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.so
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
+  LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.so
   CXXFLAGS += -DISLINUX
   BINFILES += tascar_hdspmixer
 endif
 ifeq ($(UNAME_S),Darwin)
+  LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dylib
   CXXFLAGS += -I/opt/homebrew/include -DISMACOS
   CPPFLAGS += -I/opt/homebrew/include
   LDFLAGS += -L/opt/homebrew/lib
