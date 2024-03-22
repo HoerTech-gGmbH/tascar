@@ -1,3 +1,10 @@
+0.231:
+       - preliminary windows build
+       - scheduled OSC messages
+       - improved scattering model
+       - improvement of FDN based reverberation
+       - band-level measurement plugin
+       - many bugfixes and minor improvements
 0.230: New plugins, many minor bug fixes, improvement of OSC handling, SVG map export via OSC, and minor improvements
 0.229.2: Correct speaker correction filter length
 0.229: Added transportramp plugin, bugfixes in FIR speaker correction and LSL handling in Qualisys interface
