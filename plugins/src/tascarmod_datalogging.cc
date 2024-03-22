@@ -36,6 +36,7 @@
 #ifdef HAS_LSL
 #include <lsl_cpp.h>
 #endif
+#include <chrono>
 #include <matio.h>
 #include <mutex>
 #include <sys/stat.h>
@@ -1198,7 +1199,7 @@ void lslvar_t::poll_lsl_data()
 {
   while(run_lsl_poll_service) {
     poll_data();
-    usleep(1000);
+    std::this_thread::sleep_for(std::chrono::microseconds(1000));
   }
 }
 #endif
@@ -1369,8 +1370,10 @@ void datalogging_t::start_trial(const std::string& name)
     session->tp_stop();
     session->tp_locate(0u);
     uint32_t timeout(1000);
-    while(timeout && (session->tp_get_time() > 0))
-      usleep(1000);
+    while(timeout && (session->tp_get_time() > 0)){
+      std::this_thread::sleep_for(std::chrono::microseconds(1000));
+      timeout--;
+    }
   }
   for(uint32_t k = 0; k < recorder.size(); k++)
     recorder[k]->clear();

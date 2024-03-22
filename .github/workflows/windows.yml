@@ -1,0 +1,37 @@
+name: Windows/MSYS2 make
+
+on:
+  push:
+    branches: [ master, development, feature/msys2 ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: git vim zip mingw-w64-ucrt-x86_64-gcc make mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-jack2 mingw-w64-ucrt-x86_64-liblo mingw-w64-ucrt-x86_64-libsndfile mingw-w64-ucrt-x86_64-gtkmm3 mingw-w64-ucrt-x86_64-gsl mingw-w64-ucrt-x86_64-fftw mingw-w64-ucrt-x86_64-libsamplerate mingw-w64-ucrt-x86_64-xerces-c mingw-w64-ucrt-x86_64-gtksourceviewmm3 mingw-w64-ucrt-x86_64-dlfcn mingw-w64-ucrt-x86_64-matio mingw-w64-ucrt-x86_64-adwaita-icon-theme
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: lineendings
+      run: git config --global core.autocrlf true
+    - name: build
+      run: make
+    - name: test
+      run: make unit-tests
+    - name: packaging
+      run: make packwin
+    - name: checkgit
+      run: git status
+    - uses: actions/upload-artifact@v4
+      with:
+        name: windows
+        path: packaging/win/*.zip
