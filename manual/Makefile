@@ -44,7 +44,7 @@ version.tex:
 	echo $(FULLVERSION) > $@
 
 autodoc.txt: documentation.tsc $(wildcard ../*/build/*)
-	rm -f tab*.tex;LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ ../apps/build/tascar_validatetsc -l -g $< > $@
+	rm -f tab*.tex;LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ DYLD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ ../apps/build/tascar_validatetsc -l -g $< > $@
 #&& cat $@ || (cat $@; false)
 
 checkusetab: autodoc.txt
@@ -168,7 +168,7 @@ clihelp.tex: $(patsubst %,cli_%.tex,$(ALLAPPNAMES)) Makefile
 
 
 cli_%.tex: ../apps/build/tascar_% Makefile
-	(echo ''; echo '\begin{lstlisting}[numbers=none]'; LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ $< -h && echo '\end{lstlisting}') > $@
+	(echo ''; echo '\begin{lstlisting}[numbers=none]'; LD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ DYLD_LIBRARY_PATH=../libtascar/build/:../plugins/build/ $< -h && echo '\end{lstlisting}') > $@
 
 
 modtabs:
