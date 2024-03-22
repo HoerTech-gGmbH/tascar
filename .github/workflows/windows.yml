@@ -2,7 +2,7 @@ name: Windows/MSYS2 make
 
 on:
   push:
-    branches: [ feature/msys2 ]
+    branches: [ master, development, feature/msys2 ]
 
 jobs:
   build:
@@ -25,6 +25,8 @@ jobs:
       run: git config --global core.autocrlf true
     - name: build
       run: make
+    - name: test
+      run: make unit-tests
     - name: packaging
       run: make packwin
     - name: checkgit

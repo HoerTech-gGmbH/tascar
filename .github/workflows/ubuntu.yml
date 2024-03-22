@@ -2,7 +2,7 @@ name: Ubuntu make
 
 on:
   push:
-    branches: [ master, development, automation ]
+    branches: [ master, development, feature/msys2 ]
   pull_request:
     branches: [ master ]
 
@@ -29,3 +29,5 @@ jobs:
       with:
         name: debian
         path: packaging/deb/tascar/*/*.deb
+        name: manual
+        path: manual/manual.pdf
