@@ -20,11 +20,11 @@ endif
 all: $(EXAMPLES:.tsc=.validated)
 
 %.validated: %.tsc $(BINPATH)tascar_validatetsc $(LIBPATH)libtascar.$(DLLEXT)
-	@LD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) $(BINPATH)tascar_validatetsc $< || (echo "$(<):1:";false)
+	@LD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) DYLD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) $(BINPATH)tascar_validatetsc $< || (echo "$(<):1:";false)
 	echo ok > $@
 
 %.jvalid: %.tsc $(BINPATH)tascar_cli $(LIBPATH)libtascar.$(DLLEXT)
-	@LD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) $(BINPATH)tascar_cli -v $<  || (echo "$(<):1:";false)
+	@LD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) DYLD_LIBRARY_PATH=$(LIBPATH):$(PLUGPATH) $(BINPATH)tascar_cli -v $<  || (echo "$(<):1:";false)
 	echo ok > $@
 
 jackvalid:
