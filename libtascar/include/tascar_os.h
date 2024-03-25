@@ -19,8 +19,8 @@
  */
 #ifndef TASCAR_OS_H
 #define TASCAR_OS_H
-#include <time.h>
 #include <sys/types.h>
+#include <time.h>
 
 namespace TASCAR {
   /// @brief Convert a string representation of time to a time tm structure.
@@ -77,10 +77,10 @@ namespace TASCAR {
   pid_t system(const char* command, bool shell);
 
   /// @brief Try to terminate a subprocess
-  void terminate_process( pid_t pid);
+  void terminate_process(pid_t pid);
 
 #ifdef _WIN32
-  void wait_for_process( pid_t pid );
+  void wait_for_process(pid_t pid);
 #endif
 
 } // namespace TASCAR

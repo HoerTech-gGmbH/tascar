@@ -30,6 +30,7 @@
 #endif
 #include "tscconfig.h"
 #include <unistd.h>
+#include <signal.h>
 
 namespace TASCAR {
   const char* strptime(const char* s, const char* f, struct tm* tm)
@@ -69,7 +70,7 @@ namespace TASCAR {
       return -1;
     }
     if(fnm_pathname && std::count(pattern, pattern + len_p, '/') !=
-       std::count(string, string + len_s, '/')) {
+                           std::count(string, string + len_s, '/')) {
       // The check for same number of literal forward slashes may
       // or may not be sufficient to mimick fnmatch behaviour in
       // FNM_PATHNAME mode when combined with PathMatchSpecA.
@@ -101,7 +102,7 @@ namespace TASCAR {
   }
 
 #ifdef _WIN32
-  std::map<pid_t,PROCESS_INFORMATION> pidmap;
+  std::map<pid_t, PROCESS_INFORMATION> pidmap;
 #endif
 
   pid_t system(const char* command, bool shell)
@@ -132,44 +133,44 @@ namespace TASCAR {
       } else {
         execl("/bin/sh", "sh", "-c", command, NULL);
       }
-    _exit(1);
+      _exit(1);
     }
 #else
     // windows:
     STARTUPINFO startup_info;
     PROCESS_INFORMATION process_info;
     std::string cmd = command;
-    if( shell )
-      cmd = "cmd /c "+cmd;
-    ZeroMemory( &startup_info, sizeof(startup_info) );
+    if(shell)
+      cmd = "cmd /c " + cmd;
+    ZeroMemory(&startup_info, sizeof(startup_info));
     startup_info.cb = sizeof(startup_info);
-    ZeroMemory( &process_info, sizeof(process_info) );
-    if( CreateProcess( NULL, const_cast<char *>(command), NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info ) ){
+    ZeroMemory(&process_info, sizeof(process_info));
+    if(CreateProcess(NULL, const_cast<char*>(command), NULL, NULL, FALSE, 0,
+                     NULL, NULL, &startup_info, &process_info)) {
       pid = 1;
       bool found = false;
-      do{
-      for(const auto& pide : pidmap )
-        if( pide.first == pid )
-          found = true;
-      if( found )
-        ++pid;
-      }
-      while( found );
+      do {
+        for(const auto& pide : pidmap)
+          if(pide.first == pid)
+            found = true;
+        if(found)
+          ++pid;
+      } while(found);
       pidmap[pid] = process_info;
     }
 #endif
     return pid;
   }
 
-  void terminate_process( pid_t pid )
+  void terminate_process(pid_t pid)
   {
 #ifndef _WIN32
-  if(pid != 0) {
-    killpg(pid, SIGTERM);
-  }
+    if(pid != 0) {
+      killpg(pid, SIGTERM);
+    }
 #else
-    if( auto pide = pidmap.find( pid ) != pidmap.end() ){
-      TerminateProcess(pidmap[pid].hProcess,0);
+    if(auto pide = pidmap.find(pid) != pidmap.end()) {
+      TerminateProcess(pidmap[pid].hProcess, 0);
       CloseHandle(pidmap[pid].hProcess);
       CloseHandle(pidmap[pid].hThread);
       pidmap.erase(pide);
@@ -178,9 +179,9 @@ namespace TASCAR {
   }
 
 #ifdef _WIN32
-  void wait_for_process( pid_t pid )
+  void wait_for_process(pid_t pid)
   {
-    if( pidmap.find( pid ) != pidmap.end() ){
+    if(pidmap.find(pid) != pidmap.end()) {
       WaitForSingleObject(pidmap[pid].hProcess, INFINITE);
     }
   }

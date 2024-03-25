@@ -28,9 +28,9 @@
 #ifndef SPAWN_PROCESS_H
 #define SPAWN_PROCESS_H
 
+#include <mutex>
 #include <string>
 #include <thread>
-#include <mutex>
 
 namespace TASCAR {
   /**

@@ -62,7 +62,7 @@ void TASCAR::spawn_process_t::launcher()
                   << std::endl;
     }
 #else
-    wait_for_process( pid );
+    wait_for_process(pid);
 #endif
     pid = 0;
     running = false;
@@ -72,7 +72,7 @@ void TASCAR::spawn_process_t::launcher()
 TASCAR::spawn_process_t::~spawn_process_t()
 {
   runservice = false;
-  terminate_process(pid);  
+  terminate_process(pid);
   if(launcherthread.joinable())
     launcherthread.join();
 }
