@@ -44,11 +44,12 @@ void TASCAR::spawn_process_t::launcher()
   bool first = true;
   while(runservice && (first || relaunch_)) {
     first = false;
-    int wstatus = 0;
     running = true;
     mtx.lock();
     pid = TASCAR::system(command_.c_str(), useshell_);
     mtx.unlock();
+#ifndef _WIN32
+    int wstatus = 0;
     waitpid(pid, &wstatus, 0);
     if(runservice) {
       if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0))
@@ -60,6 +61,9 @@ void TASCAR::spawn_process_t::launcher()
                   << WTERMSIG(wstatus) << ": \"" << command_ << "\""
                   << std::endl;
     }
+#else
+    wait_for_process( pid );
+#endif
     pid = 0;
     running = false;
   }
@@ -68,9 +72,7 @@ void TASCAR::spawn_process_t::launcher()
 TASCAR::spawn_process_t::~spawn_process_t()
 {
   runservice = false;
-  if(pid != 0) {
-    killpg(pid, SIGTERM);
-  }
+  terminate_process(pid);  
   if(launcherthread.joinable())
     launcherthread.join();
 }

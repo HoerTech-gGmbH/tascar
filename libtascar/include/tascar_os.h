@@ -76,6 +76,13 @@ namespace TASCAR {
   /// @return Process ID
   pid_t system(const char* command, bool shell);
 
+  /// @brief Try to terminate a subprocess
+  void terminate_process( pid_t pid);
+
+#ifdef _WIN32
+  void wait_for_process( pid_t pid );
+#endif
+
 } // namespace TASCAR
 
 #endif

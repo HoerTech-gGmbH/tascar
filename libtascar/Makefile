@@ -21,12 +21,12 @@ OBJECTS = licensehandler.o audiostates.o coordinates.o audiochunks.o	\
   ringbuffer.o sampler.o jackiowav.o cli.o irrender.o jackrender.o	\
   audioplugin.o maskplugin.o levelmeter.o serviceclass.o		\
   speakerarray.o spectrum.o fft.o stft.o ola.o vbap3d.o hoa.o		\
-  tascar_os.o calibsession.o optim.o fdn.o
+  tascar_os.o calibsession.o optim.o fdn.o spawn_process.o
 # pugixml.o
 
 ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
-OBJECTS += spawn_process.o
+#OBJECTS += spawn_process.o
 ifeq ($(UNAME_S),Linux)
   OBJECTS +=  alsamidicc.o
 endif

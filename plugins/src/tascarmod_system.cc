@@ -21,12 +21,7 @@
  */
 
 #include "session.h"
-#ifndef _WIN32
 #include "spawn_process.h"
-#else
-#include "tascar_os.h"
-#include <thread>
-#endif
 #include <mutex>
 #include <unistd.h>
 
@@ -138,10 +133,8 @@ private:
   std::string timedprefix;
   FILE* h_atcmd = NULL;
   FILE* h_triggered = NULL;
-#ifndef _WIN32
   TASCAR::spawn_process_t* proc = NULL;
   std::vector<TASCAR::spawn_process_t*> atprocs;
-#endif
   fifo_t fifo;
   std::vector<at_cmd_t*> atcmds;
   std::thread srv;
@@ -235,13 +228,8 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
     atcmds.push_back(new at_cmd_t(sne));
   atcmdmtx.unlock();
   if(!command.empty()) {
-#ifdef _WIN32
-    throw TASCAR::ErrMsg(
-        "Spawning sub-processes on Windows is not yet implemented: " + command);
-#else
     proc = new TASCAR::spawn_process_t(TASCAR::env_expand(command), !noshell,
                                        relaunch);
-#endif
   }
   if(atcmds.size() || allowoscmod) {
     h_atcmd = popen("/bin/bash -s", "w");
@@ -309,11 +297,9 @@ void system_t::atcmdclear()
   for(auto cmd : atcmds)
     delete cmd;
   atcmds.clear();
-#ifndef _WIN32
   for(auto proc : atprocs)
     delete proc;
   atprocs.clear();
-#endif
   atcmdmtx.unlock();
 }
 
@@ -326,11 +312,9 @@ void system_t::atcmdadd(double t, const std::string& cmd)
 
 system_t::~system_t()
 {
-#ifndef _WIN32
   // do not restart processes from now on:
   if(proc)
     proc->set_relaunch(false);
-#endif
   // optionally use onunload, e.g., to kill lost subprocesses:
   if(!onunload.empty()) {
     int err(system(onunload.c_str()));
@@ -340,10 +324,8 @@ system_t::~system_t()
   // now end all other threads:
   run_service = false;
   srv.join();
-#ifndef _WIN32
   if(proc)
     delete proc;
-#endif
   atcmdclear();
   if(h_atcmd)
     fclose(h_atcmd);
@@ -353,7 +335,6 @@ system_t::~system_t()
 
 void system_t::service()
 {
-#ifndef _WIN32
   while(run_service) {
     usleep(500);
     if(fifo.can_read()) {
@@ -376,7 +357,6 @@ void system_t::service()
       }
     }
   }
-#endif
 }
 
 REGISTER_MODULE(system_t);

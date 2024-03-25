@@ -138,10 +138,25 @@ namespace TASCAR {
     // windows:
     STARTUPINFO startup_info;
     PROCESS_INFORMATION process_info;
-    ZeroMemory( &si, sizeof(si) );
-    si.cb = sizeof(si);
-    ZeroMemory( &pi, sizeof(pi) );
-    auto status = CreateProcess( NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info );
+    std::string cmd = command;
+    if( shell )
+      cmd = "cmd /c "+cmd;
+    ZeroMemory( &startup_info, sizeof(startup_info) );
+    startup_info.cb = sizeof(startup_info);
+    ZeroMemory( &process_info, sizeof(process_info) );
+    if( CreateProcess( NULL, const_cast<char *>(command), NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info ) ){
+      pid = 1;
+      bool found = false;
+      do{
+      for(const auto& pide : pidmap )
+        if( pide.first == pid )
+          found = true;
+      if( found )
+        ++pid;
+      }
+      while( found );
+      pidmap[pid] = process_info;
+    }
 #endif
     return pid;
   }
@@ -149,10 +164,27 @@ namespace TASCAR {
   void terminate_process( pid_t pid )
   {
 #ifndef _WIN32
+  if(pid != 0) {
+    killpg(pid, SIGTERM);
+  }
 #else
+    if( auto pide = pidmap.find( pid ) != pidmap.end() ){
+      TerminateProcess(pidmap[pid].hProcess,0);
+      CloseHandle(pidmap[pid].hProcess);
+      CloseHandle(pidmap[pid].hThread);
+      pidmap.erase(pide);
+    }
 #endif
   }
 
+#ifdef _WIN32
+  void wait_for_process( pid_t pid )
+  {
+    if( pidmap.find( pid ) != pidmap.end() ){
+      WaitForSingleObject(pidmap[pid].hProcess, INFINITE);
+    }
+  }
+#endif
 
 } // namespace TASCAR
 
