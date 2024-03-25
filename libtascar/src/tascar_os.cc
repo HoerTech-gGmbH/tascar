@@ -100,6 +100,10 @@ namespace TASCAR {
 #endif
   }
 
+#ifdef _WIN32
+  std::map<pid_t,PROCESS_INFORMATION> pidmap;
+#endif
+
   pid_t system(const char* command, bool shell)
   {
     pid_t pid = -1;
@@ -130,9 +134,25 @@ namespace TASCAR {
       }
     _exit(1);
     }
+#else
+    // windows:
+    STARTUPINFO startup_info;
+    PROCESS_INFORMATION process_info;
+    ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );
+    auto status = CreateProcess( NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info );
 #endif
     return pid;
   }
+
+  void terminate_process( pid_t pid )
+  {
+#ifndef _WIN32
+#else
+#endif
+  }
+
 
 } // namespace TASCAR
 
