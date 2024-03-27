@@ -152,6 +152,7 @@ namespace TASCAR {
       pid = 1;
       bool found = false;
       do {
+        found = false;
         for(const auto& pide : pidmap)
           if(pide.first == pid)
             found = true;
