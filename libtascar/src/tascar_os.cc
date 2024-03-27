@@ -192,8 +192,12 @@ namespace TASCAR {
   {
     if(pidmap.find(pid) != pidmap.end()) {
       DEBUG("starting to wait for process");
+      DEBUG(pid);
+      DEBUG(pidmap[pid].hProcess);
       WaitForSingleObject(pidmap[pid].hProcess, INFINITE);
       DEBUG("process ended");
+      DEBUG(pid);
+      DEBUG(pidmap[pid].hProcess);
     }
   }
 #endif
