@@ -147,6 +147,8 @@ namespace TASCAR {
     ZeroMemory(&process_info, sizeof(process_info));
     if(CreateProcess(NULL, const_cast<char*>(command), NULL, NULL, FALSE, 0,
                      NULL, NULL, &startup_info, &process_info)) {
+      DEBUG("Process started");
+      DEBUG(command);
       pid = 1;
       bool found = false;
       do {
@@ -157,6 +159,11 @@ namespace TASCAR {
           ++pid;
       } while(found);
       pidmap[pid] = process_info;
+      DEBUG(pid);
+      DEBUG(process_info.dwProcessId);
+    }else{
+      DEBUG("Pailed to start process");
+      DEBUG(command);
     }
 #endif
     return pid;
@@ -169,7 +176,9 @@ namespace TASCAR {
       killpg(pid, SIGTERM);
     }
 #else
+    DEBUG(pid);
     if(auto pide = pidmap.find(pid) != pidmap.end()) {
+      DEBUG(pidmap[pid].dwProcessId);
       TerminateProcess(pidmap[pid].hProcess, 0);
       CloseHandle(pidmap[pid].hProcess);
       CloseHandle(pidmap[pid].hThread);
@@ -182,7 +191,9 @@ namespace TASCAR {
   void wait_for_process(pid_t pid)
   {
     if(pidmap.find(pid) != pidmap.end()) {
+      DEBUG("starting to wait for process");
       WaitForSingleObject(pidmap[pid].hProcess, INFINITE);
+      DEBUG("process ended");
     }
   }
 #endif
