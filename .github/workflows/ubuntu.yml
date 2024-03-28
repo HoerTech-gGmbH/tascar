@@ -27,9 +27,9 @@ jobs:
       run: make pack
     - uses: actions/upload-artifact@v4
       with:
-        name: debian
+        name: tascar-debian
         path: packaging/deb/tascar/*/*.deb
     - uses: actions/upload-artifact@v4
       with:
-        name: manual
+        name: tascar-manual
         path: manual/manual.pdf
