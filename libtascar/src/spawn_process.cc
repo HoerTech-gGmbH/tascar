@@ -31,7 +31,7 @@ TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
                                          bool useshell, bool relaunch)
     : command_(command), useshell_(useshell), relaunch_(relaunch)
 {
-#ifdef _WIN
+#ifdef _WIN32
   DEBUG(command_);
   DEBUG(useshell_);
   DEBUG(relaunch_);
@@ -42,7 +42,7 @@ TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
   }
   mtx.lock();
   mtx.unlock();
-#ifdef _WIN
+#ifdef _WIN32
   DEBUG(command_);
   DEBUG(useshell_);
   DEBUG(relaunch_);
@@ -81,7 +81,7 @@ void TASCAR::spawn_process_t::launcher()
 
 TASCAR::spawn_process_t::~spawn_process_t()
 {
-#ifdef _WIN
+#ifdef _WIN32
   DEBUG(command_);
   DEBUG(useshell_);
   DEBUG(relaunch_);
@@ -91,7 +91,7 @@ TASCAR::spawn_process_t::~spawn_process_t()
   terminate_process(pid);
   if(launcherthread.joinable())
     launcherthread.join();
-#ifdef _WIN
+#ifdef _WIN32
   DEBUG(command_);
   DEBUG(useshell_);
   DEBUG(relaunch_);
