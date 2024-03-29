@@ -31,12 +31,22 @@ TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
                                          bool useshell, bool relaunch)
     : command_(command), useshell_(useshell), relaunch_(relaunch)
 {
+#ifdef _WIN
+  DEBUG(command_);
+  DEBUG(useshell_);
+  DEBUG(relaunch_);
+#endif
   if(!command.empty()) {
     runservice = true;
     launcherthread = std::thread(&spawn_process_t::launcher, this);
   }
   mtx.lock();
   mtx.unlock();
+#ifdef _WIN
+  DEBUG(command_);
+  DEBUG(useshell_);
+  DEBUG(relaunch_);
+#endif
 }
 
 void TASCAR::spawn_process_t::launcher()
@@ -71,10 +81,21 @@ void TASCAR::spawn_process_t::launcher()
 
 TASCAR::spawn_process_t::~spawn_process_t()
 {
+#ifdef _WIN
+  DEBUG(command_);
+  DEBUG(useshell_);
+  DEBUG(relaunch_);
+  DEBUG(pid);
+#endif
   runservice = false;
   terminate_process(pid);
   if(launcherthread.joinable())
     launcherthread.join();
+#ifdef _WIN
+  DEBUG(command_);
+  DEBUG(useshell_);
+  DEBUG(relaunch_);
+#endif
 }
 
 void TASCAR::spawn_process_t::set_relaunch(bool relaunch)
