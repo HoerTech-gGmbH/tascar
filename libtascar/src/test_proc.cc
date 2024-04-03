@@ -7,17 +7,23 @@ void touch(const char* fname)
   if( fh )
     fclose(fh);
   else
-    fprintf(stderr,"Unable to create file \"%s\".",fname);
+    fprintf(stderr,"Unable to create file \"%s\".\n",fname);
 }
 
 
-int main(int,char**)
+int main(int argc,char** argv)
 {
-  remove("test_proc_started");
-  remove("test_proc_ended");
-  touch("test_proc_started");
+  char s_start[1024];
+  s_start[1023] = 0;
+  snprintf(s_start, 1023, "test_proc%s_started", (argc>1)?(argv[1]):(""));
+  char s_end[1024];
+  s_end[1023] = 0;
+  snprintf(s_end, 1023, "test_proc%s_ended", (argc>1)?(argv[1]):(""));
+  remove(s_start);
+  remove(s_end);
+  touch(s_start);
   sleep(3);
-  touch("test_proc_ended");
+  touch(s_end);
   return 0;
 }
 

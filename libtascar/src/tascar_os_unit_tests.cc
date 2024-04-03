@@ -173,6 +173,39 @@ TEST(tascar_os,terminateprocess)
   EXPECT_FALSE(tascarfexists("test_proc_ended"));
 }
 
+TEST(tascar_os,system2)
+{
+  pid_t pid1 = -1;
+  pid_t pid2 = -1;
+  pid1 = TASCAR::system("./build/test_proc _1", false);
+  EXPECT_TRUE((pid1 != -1));
+  pid2 = TASCAR::system("./build/test_proc _2", false);
+  EXPECT_TRUE((pid2 != -1));
+  sleep(1);
+  TASCAR::terminate_process(pid1);
+  TASCAR::terminate_process(pid2);
+  EXPECT_TRUE(tascarfexists("test_proc_1_started"));
+  EXPECT_FALSE(tascarfexists("test_proc_1_ended"));
+  EXPECT_TRUE(tascarfexists("test_proc_2_started"));
+  EXPECT_FALSE(tascarfexists("test_proc_2_ended"));
+  sleep(4);
+  EXPECT_FALSE(tascarfexists("test_proc_1_ended"));
+  EXPECT_FALSE(tascarfexists("test_proc_2_ended"));
+}
+
+TEST(tascar_os,systemshell)
+{
+  pid_t pid = -1;
+  pid = TASCAR::system("./build/test_proc _shell", true);
+  EXPECT_TRUE((pid != -1));
+  sleep(1);
+  EXPECT_TRUE(tascarfexists("test_proc_shell_started"));
+  EXPECT_FALSE(tascarfexists("test_proc_shell_ended"));
+  sleep(4);
+  EXPECT_TRUE(tascarfexists("test_proc_shell_ended"));
+}
+
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
