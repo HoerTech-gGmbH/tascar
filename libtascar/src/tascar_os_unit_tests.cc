@@ -22,9 +22,8 @@
 
 #include "tascar_os.h"
 
-#include <unistd.h>
 #include <stdio.h>
-
+#include <unistd.h>
 
 TEST(tascar_os, strptime)
 {
@@ -137,18 +136,17 @@ TEST(tascar_os, realpath)
 #endif
 }
 
-bool tascarfexists( const char* fname)
+bool tascarfexists(const char* fname)
 {
-  FILE* fh = fopen(fname,"r");
-  if( fh ){
+  FILE* fh = fopen(fname, "r");
+  if(fh) {
     fclose(fh);
     return true;
   }
   return false;
 }
 
-
-TEST(tascar_os,system)
+TEST(tascar_os, system)
 {
   pid_t pid = -1;
   pid = TASCAR::system("./build/test_proc", false);
@@ -160,7 +158,7 @@ TEST(tascar_os,system)
   EXPECT_TRUE(tascarfexists("test_proc_ended"));
 }
 
-TEST(tascar_os,terminateprocess)
+TEST(tascar_os, terminateprocess)
 {
   pid_t pid = -1;
   pid = TASCAR::system("./build/test_proc", false);
@@ -173,7 +171,7 @@ TEST(tascar_os,terminateprocess)
   EXPECT_FALSE(tascarfexists("test_proc_ended"));
 }
 
-TEST(tascar_os,system2)
+TEST(tascar_os, system2)
 {
   pid_t pid1 = -1;
   pid_t pid2 = -1;
@@ -181,6 +179,7 @@ TEST(tascar_os,system2)
   EXPECT_TRUE((pid1 != -1));
   pid2 = TASCAR::system("./build/test_proc _2", false);
   EXPECT_TRUE((pid2 != -1));
+  EXPECT_NE(pid1, pid2);
   sleep(1);
   TASCAR::terminate_process(pid1);
   TASCAR::terminate_process(pid2);
@@ -193,7 +192,7 @@ TEST(tascar_os,system2)
   EXPECT_FALSE(tascarfexists("test_proc_2_ended"));
 }
 
-TEST(tascar_os,systemshell)
+TEST(tascar_os, systemshell)
 {
   pid_t pid = -1;
   pid = TASCAR::system("./build/test_proc _shell", true);
@@ -204,7 +203,6 @@ TEST(tascar_os,systemshell)
   sleep(4);
   EXPECT_TRUE(tascarfexists("test_proc_shell_ended"));
 }
-
 
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
