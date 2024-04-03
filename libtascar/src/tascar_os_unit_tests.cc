@@ -2,6 +2,7 @@
  * This file is part of the TASCAR software, see <http://tascar.org/>
  *
  * Copyright (c) 2021 Hörzentrum Oldenburg
+ * Copyright (c) 2024 Giso Grimm
  */
 /*
  * TASCAR is free software: you can redistribute it and/or modify
@@ -20,6 +21,10 @@
 #include <gtest/gtest.h>
 
 #include "tascar_os.h"
+
+#include <unistd.h>
+#include <stdio.h>
+
 
 TEST(tascar_os, strptime)
 {
@@ -130,6 +135,42 @@ TEST(tascar_os, realpath)
   // On Unix, the realpath will start with a slash
   EXPECT_EQ('/', buf[0]);
 #endif
+}
+
+bool tascarfexists( const char* fname)
+{
+  FILE* fh = fopen(fname,"r");
+  if( fh ){
+    fclose(fh);
+    return true;
+  }
+  return false;
+}
+
+
+TEST(tascar_os,system)
+{
+  pid_t pid = -1;
+  pid = TASCAR::system("./build/test_proc", false);
+  EXPECT_TRUE((pid != -1));
+  sleep(1);
+  EXPECT_TRUE(tascarfexists("test_proc_started"));
+  EXPECT_FALSE(tascarfexists("test_proc_ended"));
+  sleep(4);
+  EXPECT_TRUE(tascarfexists("test_proc_ended"));
+}
+
+TEST(tascar_os,terminateprocess)
+{
+  pid_t pid = -1;
+  pid = TASCAR::system("./build/test_proc", false);
+  EXPECT_TRUE((pid != -1));
+  sleep(1);
+  TASCAR::terminate_process(pid);
+  EXPECT_TRUE(tascarfexists("test_proc_started"));
+  EXPECT_FALSE(tascarfexists("test_proc_ended"));
+  sleep(4);
+  EXPECT_FALSE(tascarfexists("test_proc_ended"));
 }
 
 // Local Variables:

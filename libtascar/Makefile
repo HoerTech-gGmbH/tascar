@@ -1,4 +1,4 @@
-all: build ver lib symlink
+all: build ver lib symlink testbin
 
 include ../config.mk
 include ../rules.mk
@@ -138,6 +138,13 @@ clean:
 	rm -Rf *~ src/*~ build doc/html
 
 .PHONY : doc test gui
+
+testbin: build/test_proc
+
+build/test_proc: build/.directory
+
+build/test_%: src/test_%.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
 
 doc:
 	cd doc && sed -e 's/PROJECT.NUMBER.*=.*/&'`cat ../version`'/1' doxygen.cfg > .temp.cfg && doxygen .temp.cfg

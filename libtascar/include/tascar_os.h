@@ -1,6 +1,7 @@
 /* License (GPL)
  *
  * Copyright (C) 2021 Hörzentrum Oldenburg
+ * Copyright (C) 2024 Giso Grimm
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -69,10 +70,8 @@ namespace TASCAR {
   const char* realpath(const char* path, char* resolved_path);
 
   /// @brief Spawn a subprocess and return its process ID
-  /// This function is not implemented for Windows.
   /// @param command Command to be executed
   /// @param shell Launch command using a shell (true) or directly
-  /// @param relaunch Relaunch the command when subprocess ended
   /// @return Process ID
   pid_t system(const char* command, bool shell);
 
