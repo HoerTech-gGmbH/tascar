@@ -152,6 +152,7 @@
 "plugins/build/tascar_sleep.so","usr/lib/"
 "plugins/build/tascar_snapangle.so","usr/lib/"
 "plugins/build/tascar_system.so","usr/lib/"
+"plugins/build/tascar_systime.so","usr/lib/"
 "plugins/build/tascar_touchosc.so","usr/lib/"
 "plugins/build/tascar_waitforjackport.so","usr/lib/"
 "plugins/build/tascarreceiver_amb1h0v.so","usr/lib/"
