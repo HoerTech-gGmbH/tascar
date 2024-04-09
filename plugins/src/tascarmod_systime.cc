@@ -72,6 +72,7 @@ tascar_systime_t::~tascar_systime_t()
 
 void tascar_systime_t::update(uint32_t, bool)
 {
+#ifndef _WIN32
   gettimeofday(&tv, &tz);
   struct tm* caltime = localtime(&(tv.tv_sec));
   *p_year = caltime->tm_year;
@@ -81,6 +82,17 @@ void tascar_systime_t::update(uint32_t, bool)
   *p_min = caltime->tm_min;
   *p_sec = caltime->tm_sec;
   *p_sec += 0.000001 * tv.tv_usec;
+#else
+  SYSTEMTIME caltime;
+  GetLocalTime(&caltime);
+  *p_year = caltime->wYear;
+  *p_month = caltime->wMonth;
+  *p_day = caltime->wDay;
+  *p_hour = caltime->wHour;
+  *p_min = caltime->wMinute;
+  *p_sec = caltime->wSecond;
+  *p_sec += 0.001 * caltime->wMilliseconds;
+#endif
   session->dispatch_data_message(path.c_str(), msg);
 }
 
