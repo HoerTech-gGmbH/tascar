@@ -41,7 +41,6 @@ private:
   double* p_sec;
   struct timeval tv;
   struct timezone tz;
-  struct tm caltime;
 };
 
 tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
@@ -74,13 +73,13 @@ tascar_systime_t::~tascar_systime_t()
 void tascar_systime_t::update(uint32_t, bool)
 {
   gettimeofday(&tv, &tz);
-  localtime_r(&(tv.tv_sec), &caltime);
-  *p_year = caltime.tm_year;
-  *p_month = caltime.tm_mon;
-  *p_day = caltime.tm_mday;
-  *p_hour = caltime.tm_hour;
-  *p_min = caltime.tm_min;
-  *p_sec = caltime.tm_sec;
+  struct tm* caltime = localtime(&(tv.tv_sec));
+  *p_year = caltime->tm_year;
+  *p_month = caltime->tm_mon;
+  *p_day = caltime->tm_mday;
+  *p_hour = caltime->tm_hour;
+  *p_min = caltime->tm_min;
+  *p_sec = caltime->tm_sec;
   *p_sec += 0.000001 * tv.tv_usec;
   session->dispatch_data_message(path.c_str(), msg);
 }
