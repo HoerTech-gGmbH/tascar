@@ -170,11 +170,13 @@ hoa2d_t::hoa2d_t(tsccfg::node_t xmlsrc)
 void hoa2d_t::add_variables(TASCAR::osc_server_t* srv)
 {
   TASCAR::receivermod_base_speaker_t::add_variables(srv);
+  srv->set_variable_owner("receivermod_hoa2d");
   // srv->add_double( "/wgain", &wgain );
   srv->add_bool("/diffup", &diffup);
   srv->add_double_degree("/diffup_rot", &diffup_rot);
   srv->add_double("/diffup_delay", &diffup_delay);
   srv->add_uint("/diffup_maxorder", &diffup_maxorder);
+  srv->unset_variable_owner();
 }
 
 hoa2d_t::~hoa2d_t() {}

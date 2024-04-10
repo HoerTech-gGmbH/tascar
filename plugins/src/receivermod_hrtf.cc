@@ -107,7 +107,7 @@ public:
   float Q_notch; // inverse Q factor of the parametric equalizer
   bool diffuse_hrtf;           // apply hrtf model also to diffuse rendering
   uint32_t prewarpingmode = 0; // Azimuth prewarping mode
-  std::vector<float> gaincorr = { 1.0f, 1.0f }; // channel-wise gain correction
+  std::vector<float> gaincorr = {1.0f, 1.0f}; // channel-wise gain correction
 };
 
 hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
@@ -448,6 +448,8 @@ void hrtf_t::postproc(std::vector<TASCAR::wave_t>& output)
 void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
 {
   TASCAR::receivermod_base_t::add_variables(srv);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/hrtf/decorr", &decorr);
   srv->add_float("/hrtf/angle", &par.angle);
   srv->add_float("/hrtf/radius", &par.radius);
@@ -470,6 +472,7 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
                 "pre-warping mode, 0 = original, 1 = none, 2 = corrected");
   srv->add_vector_float_db("/hrtf/gaincorr", &par.gaincorr, "",
                            "channel-wise gain correction");
+  srv->unset_variable_owner();
 }
 
 hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)

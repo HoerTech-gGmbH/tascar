@@ -476,9 +476,9 @@ float micarray_t::get_delay_comp() const
   // maximal possible delay due to sphere delay model
 }
 
-void micarray_t::add_variables(TASCAR::osc_server_t* ) {}
+void micarray_t::add_variables(TASCAR::osc_server_t*) {}
 
-void micarray_t::add_pointsource(const TASCAR::pos_t& prel, double ,
+void micarray_t::add_pointsource(const TASCAR::pos_t& prel, double,
                                  const TASCAR::wave_t& chunk,
                                  std::vector<TASCAR::wave_t>& output,
                                  receivermod_base_t::data_t* sd)
@@ -508,7 +508,7 @@ void micarray_t::configure()
 }
 
 TASCAR::receivermod_base_t::data_t*
-micarray_t::create_state_data(double , uint32_t ) const
+micarray_t::create_state_data(double, uint32_t) const
 {
   if(!is_prepared())
     throw TASCAR::ErrMsg(std::string(__FILE__) + ":" +

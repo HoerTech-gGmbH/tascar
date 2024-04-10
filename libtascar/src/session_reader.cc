@@ -163,8 +163,10 @@ void TASCAR::tsc_reader_t::read_xml()
     if(tsccfg::node_get_name(sne) == "module")
       add_module(sne);
   }
-  if(localgetenv("TASCARGENDOC").size())
+  if(localgetenv("TASCARGENDOC").size()) {
+    generate_documentation = true;
     generate_plugin_documentation_tables(true);
+  }
 }
 
 const std::string& TASCAR::tsc_reader_t::get_session_path() const

@@ -52,7 +52,10 @@ allpass_t::allpass_t(const TASCAR::audioplugin_cfg_t& cfg)
 
 void allpass_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/bypass", &bypass);
+  srv->unset_variable_owner();
 }
 
 void allpass_t::configure()

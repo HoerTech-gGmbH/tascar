@@ -152,10 +152,13 @@ void ortf_t::postproc(std::vector<TASCAR::wave_t>& output)
 void ortf_t::add_variables(TASCAR::osc_server_t* srv)
 {
   TASCAR::receivermod_base_t::add_variables(srv);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/ortf/decorr", &decorr);
   srv->add_double("/ortf/distance", &distance);
   srv->add_double("/ortf/angle", &angle);
   srv->add_double("/ortf/scale", &scale);
+  srv->unset_variable_owner();
 }
 
 ortf_t::ortf_t(tsccfg::node_t xmlsrc)

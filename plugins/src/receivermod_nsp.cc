@@ -97,7 +97,10 @@ nsp_t::nsp_t(tsccfg::node_t xmlsrc)
 void nsp_t::add_variables(TASCAR::osc_server_t* srv)
 {
   TASCAR::receivermod_base_speaker_t::add_variables(srv);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/useall", &useall);
+  srv->unset_variable_owner();
 }
 
 void nsp_t::add_pointsource(const TASCAR::pos_t& prel, double,

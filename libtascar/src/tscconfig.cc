@@ -174,7 +174,7 @@ void make_common(std::map<std::string, std::set<std::string>>& parentchildren,
   }
 }
 
-std::string tolatex(std::string s)
+std::string TASCAR::to_latex(std::string s)
 {
   s = TASCAR::strrep(s, "_", "\\_");
   return s;
@@ -246,10 +246,10 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
       fh << "\\label{attrtab:" << elem.first << "}\n";
       fh << "Attributes of ";
       if(elem.second.type.empty())
-        fh << "element {\\bf " << tolatex(elem.first) + "}";
+        fh << "element {\\bf " << TASCAR::to_latex(elem.first) + "}";
       else
-        fh << tolatex(elem.second.elem) << " element {\\bf "
-           << tolatex(elem.second.type) + "}";
+        fh << TASCAR::to_latex(elem.second.elem) << " element {\\bf "
+           << TASCAR::to_latex(elem.second.type) + "}";
       if(!parentchildren[elem.first].empty()) {
         fh << " (";
         size_t k(0);
@@ -259,8 +259,8 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
           std::string xchild(child);
           if(attribute_list[child].type.size())
             xchild = attribute_list[child].type;
-          fh << "{\\hyperref[attrtab:" << child << "]{" << tolatex(xchild)
-             << "}}";
+          fh << "{\\hyperref[attrtab:" << child << "]{"
+             << TASCAR::to_latex(xchild) << "}}";
           ++k;
         }
         fh << ")";
@@ -269,7 +269,7 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
         fh << ", inheriting from";
         for(auto parent : elem.second.parents)
           fh << " \\hyperref[attrtab:" << parent << "]{{\\bf "
-             << tolatex(parent) << "}}";
+             << TASCAR::to_latex(parent) << "}}";
       }
       fh << "\\nopagebreak\n\n";
       fh << "\\begin{tabularx}{\\textwidth}{lXl}\n";
@@ -280,12 +280,13 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
         //  \indattr{name} & type & def & unit & Name of session (default:
         //  ``tascar'')
         fh << "\\hline\n";
-        fh << "\\indattr{" << tolatex(attr.first) << "} & "
-           << tolatex(attr.second.info) << " (" << tolatex(attr.second.type);
+        fh << "\\indattr{" << TASCAR::to_latex(attr.first) << "} & "
+           << TASCAR::to_latex(attr.second.info) << " ("
+           << TASCAR::to_latex(attr.second.type);
         if(!attr.second.unit.empty())
-          fh << ", " << tolatex(attr.second.unit);
+          fh << ", " << TASCAR::to_latex(attr.second.unit);
         fh << ") ";
-        std::string sdef(tolatex(attr.second.defaultval));
+        std::string sdef(TASCAR::to_latex(attr.second.defaultval));
         if(sdef.size() > 24)
           sdef = "{\\tiny " + sdef + "}";
         fh << "& " << sdef << "\\\\" << std::endl;
@@ -414,6 +415,8 @@ std::string TASCAR::strrep(std::string s, const std::string& pat,
 {
   std::string out_string("");
   std::string::size_type len = pat.size();
+  if(len == 0)
+    return s;
   std::string::size_type pos;
   while((pos = s.find(pat)) < s.size()) {
     out_string += s.substr(0, pos);
@@ -1832,12 +1835,13 @@ std::vector<std::string> TASCAR::str2vecstr(const std::string& s,
   return value;
 }
 
-std::string TASCAR::vecstr2str(const std::vector<std::string>& s)
+std::string TASCAR::vecstr2str(const std::vector<std::string>& s,
+                               const std::string& delim)
 {
   std::string rv;
   for(auto it = s.begin(); it != s.end(); ++it) {
     if(it != s.begin())
-      rv += " ";
+      rv += delim;
     if(it->find(' ') != std::string::npos)
       rv += "'" + *it + "'";
     else

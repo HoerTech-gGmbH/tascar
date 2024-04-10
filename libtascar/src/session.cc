@@ -743,6 +743,8 @@ void TASCAR::session_t::start()
     }
     (*ipl)->add_licenses(this);
   }
+  if(generate_documentation)
+    generate_osc_documentation_files();
   if(initoscscript.size())
     read_script_async(initoscscript);
 }

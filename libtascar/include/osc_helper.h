@@ -297,6 +297,11 @@ namespace TASCAR {
     void timed_messages_clear();
     void timed_message_add(double time, const std::string& msgtext);
 
+    void set_variable_owner(const std::string& owner);
+    void unset_variable_owner();
+
+    void generate_osc_documentation_files();
+
   private:
     void scriptthread_fun();
     std::string get_vars_as_json_rg(
@@ -321,6 +326,8 @@ namespace TASCAR {
     std::mutex mtxdispatch;
     std::map<double, std::vector<msg_t>> timed_messages;
     std::mutex mtxtimedmessages;
+    std::map<std::string, std::vector<std::string>> owned_vars;
+    std::string varowner;
   };
 
 }; // namespace TASCAR

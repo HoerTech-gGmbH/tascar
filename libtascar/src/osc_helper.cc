@@ -27,6 +27,7 @@
 #include "defs.h"
 #include "errorhandling.h"
 #include "tictoctimer.h"
+#include <fstream>
 #include <map>
 #include <math.h>
 #include <unistd.h>
@@ -689,6 +690,11 @@ void osc_server_t::add_method(const std::string& path, const char* typespec,
       d.rangehint = rangehint;
       d.comment = comment;
       variables.push_back(d);
+      if(!varowner.empty())
+        owned_vars[varowner].push_back(d.path + d.typespec);
+      else {
+        owned_vars["undocumented"].push_back(d.path + d.typespec);
+      }
     }
   }
 }
@@ -1159,6 +1165,61 @@ void osc_server_t::timed_message_add(double time, const std::string& msgtext)
 {
   std::lock_guard<std::mutex> lk{mtxtimedmessages};
   timed_messages[time].push_back(msg_t(msgtext));
+}
+
+void osc_server_t::set_variable_owner(const std::string& owner)
+{
+  varowner = owner;
+}
+
+void osc_server_t::unset_variable_owner()
+{
+  varowner = "";
+}
+
+void osc_server_t::generate_osc_documentation_files()
+{
+  auto vmap = get_variable_map();
+  for(const auto& owner : owned_vars) {
+    DEBUG(owner.first);
+    std::vector<std::string> fullpath;
+    bool first = true;
+    size_t kmax = fullpath.size();
+    for(const auto& varpath : owner.second) {
+      std::vector<std::string> fullpath_local =
+          str2vecstr(vmap[varpath].path, "/");
+      if(first) {
+        fullpath = fullpath_local;
+        kmax = fullpath.size();
+      }
+      for(size_t k = 0; k < std::min(kmax, fullpath_local.size()); ++k)
+        if(fullpath[k] != fullpath_local[k])
+          kmax = k;
+      fullpath.erase(fullpath.begin() + kmax, fullpath.end());
+      kmax = fullpath.size();
+      first = false;
+    }
+    std::string pat = TASCAR::vecstr2str(fullpath, "/");
+    if(owner.second.size() < 2)
+      pat = "";
+    std::ofstream ofh("oscdoc_" + owner.first + ".tex");
+    ofh << "\\begin{snugshade}\n{\\footnotesize\n";
+    ofh << "\\label{osctab:" << TASCAR::strrep(owner.first, "_", "") << "}\n";
+    ofh << "OSC variables:\n";
+    ofh << "\\nopagebreak\n\n";
+    ofh << "\\begin{tabularx}{\\textwidth}{llllX}\n";
+    ofh << "\\hline\n";
+    ofh << "path & fmt. & range & r. & description\\\\\n\\hline\n";
+    for(const auto& varpath : owner.second) {
+      ofh << TASCAR::to_latex(TASCAR::strrep(vmap[varpath].path, pat, "..."))
+          << " & " << vmap[varpath].typespec << " & "
+          << TASCAR::to_latex(vmap[varpath].rangehint) << " & "
+          << (vmap[varpath].readable ? "yes" : "no") << " & "
+          << vmap[varpath].comment << "\\\\" << std::endl;
+    }
+    ofh << "\\hline\n\\end{tabularx}\n";
+    ofh << "}\n\\end{snugshade}\n";
+  }
 }
 
 /*

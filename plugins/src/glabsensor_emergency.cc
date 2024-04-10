@@ -109,8 +109,10 @@ void emergencybutton_t::service()
 
 void emergencybutton_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner("glabsensor_emergency");
   srv->set_prefix("");
   srv->add_method(path, "f", &osc_update, this);
+  srv->unset_variable_owner();
 }
 
 void emergencybutton_t::update(double t)

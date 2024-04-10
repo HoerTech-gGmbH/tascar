@@ -86,10 +86,13 @@ bandpassplugin_t::bandpassplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
 
 void bandpassplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/fmin", &fmin, "]0,20000]", "Lower cutoff frequency in Hz");
   srv->add_float("/fmax", &fmax, "]0,20000]", "Upper cutoff frequency in Hz");
   srv->add_method("/fmin", "ff", &bandpassplugin_t::osc_fminfade, this);
   srv->add_method("/fmax", "ff", &bandpassplugin_t::osc_fmaxfade, this);
+  srv->unset_variable_owner();
 }
 
 void bandpassplugin_t::configure()
@@ -118,14 +121,14 @@ void bandpassplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
     fmin_fade += dfmin_fade;
     fmin = fmin_fade;
     --fmin_timer;
-    if( !fmin_timer )
+    if(!fmin_timer)
       fmin = fmin_final;
   }
   if(fmax_timer) {
     fmax_fade += dfmax_fade;
     fmax = fmax_fade;
     --fmax_timer;
-    if( !fmax_timer )
+    if(!fmax_timer)
       fmax = fmax_final;
   }
   for(size_t k = 0; k < chunk.size(); ++k) {
