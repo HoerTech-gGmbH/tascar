@@ -133,6 +133,8 @@
     <hossustain/>
     <pos2osc pattern="/*/*"/>
     <linearmovement actor="/scene/in"/>
+    <systime/>
+    <system command="ls"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
