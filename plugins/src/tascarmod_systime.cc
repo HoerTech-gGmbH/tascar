@@ -39,8 +39,10 @@ private:
   double* p_hour;
   double* p_min;
   double* p_sec;
+#ifndef _WIN32
   struct timeval tv;
   struct timezone tz;
+#endif
 };
 
 tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
@@ -61,8 +63,10 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
   p_hour = &(argv[3]->d);
   p_min = &(argv[4]->d);
   p_sec = &(argv[5]->d);
+#ifndef _WIN32
   memset(&tv, 0, sizeof(timeval));
   memset(&tz, 0, sizeof(timezone));
+#endif
 }
 
 tascar_systime_t::~tascar_systime_t()
@@ -85,13 +89,13 @@ void tascar_systime_t::update(uint32_t, bool)
 #else
   SYSTEMTIME caltime;
   GetLocalTime(&caltime);
-  *p_year = caltime->wYear;
-  *p_month = caltime->wMonth;
-  *p_day = caltime->wDay;
-  *p_hour = caltime->wHour;
-  *p_min = caltime->wMinute;
-  *p_sec = caltime->wSecond;
-  *p_sec += 0.001 * caltime->wMilliseconds;
+  *p_year = caltime.wYear;
+  *p_month = caltime.wMonth;
+  *p_day = caltime.wDay;
+  *p_hour = caltime.wHour;
+  *p_min = caltime.wMinute;
+  *p_sec = caltime.wSecond;
+  *p_sec += 0.001 * caltime.wMilliseconds;
 #endif
   session->dispatch_data_message(path.c_str(), msg);
 }
