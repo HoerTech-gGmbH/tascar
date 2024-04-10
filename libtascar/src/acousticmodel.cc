@@ -597,7 +597,7 @@ receiver_t::receiver_t(tsccfg::node_t xmlsrc, const std::string& name,
                 "Number of reflections created by scattering filter");
   GET_ATTRIBUTE(scatterstructuresize, "m", "size of scatter structure");
   GET_ATTRIBUTE(scatterdamping, "", "damping of scatter reflection filter");
-  GET_ATTRIBUTE_DEG(scatterspread,"Spatial spread of scattering");
+  GET_ATTRIBUTE_DEG(scatterspread, "Spatial spread of scattering");
   // end proxy
   if(avgdist <= 0)
     avgdist = 0.5f * powf(volumetric.boxvolumef(), 0.33333f);
@@ -739,7 +739,7 @@ void receiver_t::postproc(std::vector<wave_t>& output)
         path.dlout.x = scatterallpass_x[kflt].filter(x.x);
         path.dlout.y = scatterallpass_y[kflt].filter(x.y);
         path.dlout.z = scatterallpass_z[kflt].filter(x.z);
-        //path.dlout = x;
+        // path.dlout = x;
         ++kflt;
       }
       scatterfilter->process(scatterfilterpath);
@@ -1053,6 +1053,14 @@ void receiver_t::add_variables(TASCAR::osc_server_t* srv)
     maskplug->add_variables(srv);
     srv->set_prefix(oldpref);
   }
+  srv->set_variable_owner("receiver_t");
+  // uint32_t scatterreflections = 0;
+  srv->add_float_degree("/scatterspread", &scatterspread,
+                        "Spatial spread of scattering");
+  srv->add_float("/scatterstructuresize", &scatterstructuresize, "[0,10]",
+                 "size of scatter structure in m");
+  srv->add_float("/scatterdamping", &scatterdamping, "[0,1]",
+                 "damping of scatter reflection filter");
   srv->add_pos("/proxy/position", &proxy_position, "", "Proxy position in m");
   srv->add_bool("/proxy/is_relative", &proxy_is_relative,
                 "Proxy is relative to receiver (true) or in absolute "
@@ -1063,6 +1071,7 @@ void receiver_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/proxy/gain", &proxy_gain, "Use proxy position for gain");
   srv->add_bool("/proxy/direction", &proxy_direction,
                 "Use proxy position for direction");
+  srv->unset_variable_owner();
 }
 
 soundpath_t::soundpath_t(const source_t* src, const soundpath_t* parent_,

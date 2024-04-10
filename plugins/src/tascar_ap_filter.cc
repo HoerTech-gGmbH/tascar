@@ -70,12 +70,15 @@ biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
 
 void biquadplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/fc", &fc, "]0,20000]", "Cutoff frequency in Hz");
   if(ftype == biquadplugin_t::equalizer) {
     srv->add_float("/gain", &gain, "[-30,30]", "Gain in dB");
     srv->add_float("/q", &Q, "]0,1[", "Q-factor of resonance filter");
   }
   // srv->add_bool("/highpass",&highpass);
+  srv->unset_variable_owner();
 }
 
 void biquadplugin_t::configure()

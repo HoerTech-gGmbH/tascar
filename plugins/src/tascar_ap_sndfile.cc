@@ -326,6 +326,8 @@ void ap_sndfile_t::osc_loadfile_simple(const std::string& fname)
 
 void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   if(triggered)
     srv->add_uint("/loop", &triggeredloop);
   else
@@ -342,6 +344,7 @@ void ap_sndfile_t::add_variables(TASCAR::osc_server_t* srv)
                  "Ramp duration in s at start of sound");
   srv->add_float("/rampend", &rampend, "[0,10]",
                  "Ramp duration in s at end of sound");
+  srv->unset_variable_owner();
 }
 
 void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

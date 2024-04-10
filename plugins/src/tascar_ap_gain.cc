@@ -96,9 +96,12 @@ void gainramp_t::set_fade(float targetgain, float duration, float start)
 
 void gainramp_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float_db("/gain", &gain);
   srv->add_float("/lingain", &gain);
   srv->add_method("/fade", "ff", osc_set_fade, this);
+  srv->unset_variable_owner();
 }
 
 gainramp_t::~gainramp_t() {}

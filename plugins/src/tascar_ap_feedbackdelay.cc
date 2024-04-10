@@ -57,10 +57,13 @@ feedbackdelay_t::~feedbackdelay_t()
 
 void feedbackdelay_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/f", &f, "]0,8000]", "Resonance frequency");
   srv->add_float("/feedback", &feedback, "]-1,1[", "Linear feedback gain");
   srv->add_float("/wet", &wet, "[0,1]", "Linear gain of input to delayline");
   srv->add_float("/dry", &dry, "[0,1]", "Linear gain of direct input");
+  srv->unset_variable_owner();
 }
 
 void feedbackdelay_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

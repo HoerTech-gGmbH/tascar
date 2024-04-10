@@ -105,6 +105,8 @@ void metronome_t::release()
 void metronome_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv_ = srv;
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/changeonone", &changeonone);
   srv->add_double("/bpm", &bpm);
   srv->add_uint("/bpb", &bpb);
@@ -119,6 +121,7 @@ void metronome_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_uint("/dispatchin", &dispatchin);
   srv->add_method("/dispatchmsg", NULL, &osc_set_message, &msg);
   srv->add_string("/dispatchpath", &(msg.path));
+  srv->unset_variable_owner();
 }
 
 metronome_t::~metronome_t() {}
@@ -185,11 +188,10 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         if(dispatchin) {
           // count down "dispatchin". If zero, then dispatch message.
           --dispatchin;
-          if( dispatchin > (1<<16) )
+          if(dispatchin > (1 << 16))
             dispatchin = 0u;
-          else
-            if((!dispatchin) && srv_)
-              srv_->dispatch_data_message(msg.path.c_str(), msg.msg);
+          else if((!dispatchin) && srv_)
+            srv_->dispatch_data_message(msg.path.c_str(), msg.msg);
         }
         if(changeonone)
           update_par();

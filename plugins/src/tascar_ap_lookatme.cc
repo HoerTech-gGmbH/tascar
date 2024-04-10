@@ -24,11 +24,13 @@
 
 class lookatme_t : public TASCAR::audioplugin_base_t {
 public:
-  lookatme_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  lookatme_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void configure();
-  void add_variables( TASCAR::osc_server_t* srv );
+  void add_variables(TASCAR::osc_server_t* srv);
   ~lookatme_t();
+
 private:
   lo_address lo_addr;
   double tau;
@@ -50,45 +52,45 @@ private:
   bool discordantLS;
 };
 
-lookatme_t::lookatme_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    tau(1),
-    fadelen(1),
-    threshold(0.01),
-    url("osc.udp://localhost:9999/"),
-    self_(cfg.parentname),
-    lpc1(0.0),
-    rms(0.0),
-    waslooking(false),
-    active(true),
-    discordantLS(false)
+lookatme_t::lookatme_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), tau(1), fadelen(1), threshold(0.01),
+      url("osc.udp://localhost:9999/"), self_(cfg.parentname), lpc1(0.0),
+      rms(0.0), waslooking(false), active(true), discordantLS(false)
 {
-  GET_ATTRIBUTE(tau,"s","Time constant of level estimation");
-  GET_ATTRIBUTE(fadelen,"s","Motion duration after threshold");
-  GET_ATTRIBUTE_DBSPL(threshold,"Level threshold");
-  GET_ATTRIBUTE(url,"","Target OSC URL");
-  GET_ATTRIBUTE(paths,"","Space-separated list of target paths");
-  GET_ATTRIBUTE(animation,"","Animation name (or empty for no animation)");
-  GET_ATTRIBUTE(thresholdpath,"","Destination path of threshold criterion (or empty)");
-  GET_ATTRIBUTE(levelpath,"","Destination path of level logging (or empty)");
-  GET_ATTRIBUTE(pos_onset,"m","Position to look at on onset (or empty to look at vertex position)");
-  GET_ATTRIBUTE(pos_offset,"m","Position to look at on offset (or empty for no change of look direction)");
-  if( url.empty() )
+  GET_ATTRIBUTE(tau, "s", "Time constant of level estimation");
+  GET_ATTRIBUTE(fadelen, "s", "Motion duration after threshold");
+  GET_ATTRIBUTE_DBSPL(threshold, "Level threshold");
+  GET_ATTRIBUTE(url, "", "Target OSC URL");
+  GET_ATTRIBUTE(paths, "", "Space-separated list of target paths");
+  GET_ATTRIBUTE(animation, "", "Animation name (or empty for no animation)");
+  GET_ATTRIBUTE(thresholdpath, "",
+                "Destination path of threshold criterion (or empty)");
+  GET_ATTRIBUTE(levelpath, "", "Destination path of level logging (or empty)");
+  GET_ATTRIBUTE(
+      pos_onset, "m",
+      "Position to look at on onset (or empty to look at vertex position)");
+  GET_ATTRIBUTE(pos_offset, "m",
+                "Position to look at on offset (or empty for no change of look "
+                "direction)");
+  if(url.empty())
     url = "osc.udp://localhost:9999/";
   lo_addr = lo_address_new_from_url(url.c_str());
 }
 
-void lookatme_t::add_variables( TASCAR::osc_server_t* srv )
+void lookatme_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_bool("/active",&active);    
-  srv->add_bool("/discordantLS",&discordantLS);
-  srv->add_double_dbspl("/threshold",&threshold);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_bool("/active", &active);
+  srv->add_bool("/discordantLS", &discordantLS);
+  srv->add_double_dbspl("/threshold", &threshold);
+  srv->unset_variable_owner();
 }
 
 void lookatme_t::configure()
 {
   audioplugin_base_t::configure();
-  lpc1 = exp(-1.0/(tau*f_fragment));
+  lpc1 = exp(-1.0 / (tau * f_fragment));
   rms = 0;
   waslooking = false;
 }

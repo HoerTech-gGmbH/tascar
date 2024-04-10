@@ -24,37 +24,37 @@
 
 class gainramp_t : public TASCAR::audioplugin_base_t {
 public:
-  gainramp_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
+  gainramp_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   ~gainramp_t();
+
 private:
   double gain;
   double slope;
   double maxgain;
 };
 
-gainramp_t::gainramp_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    gain(1.0),
-    slope(0.0),
-    maxgain(1.0)
+gainramp_t::gainramp_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), gain(1.0), slope(0.0), maxgain(1.0)
 {
-  GET_ATTRIBUTE_DB(gain,"Set current gain");
-  GET_ATTRIBUTE_DB(slope,"Set gain slope in dB/s");
-  GET_ATTRIBUTE_DB(maxgain,"Set maximal gain");
+  GET_ATTRIBUTE_DB(gain, "Set current gain");
+  GET_ATTRIBUTE_DB(slope, "Set gain slope in dB/s");
+  GET_ATTRIBUTE_DB(maxgain, "Set maximal gain");
 }
 
-void gainramp_t::add_variables( TASCAR::osc_server_t* srv )
+void gainramp_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_double_db("/gain",&gain);
-  srv->add_double_db("/slope",&slope);
-  srv->add_double_db("/maxgain",&maxgain);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_double_db("/gain", &gain);
+  srv->add_double_db("/slope", &slope);
+  srv->add_double_db("/maxgain", &maxgain);
+  srv->unset_variable_owner();
 }
 
-gainramp_t::~gainramp_t()
-{
-}
+gainramp_t::~gainramp_t() {}
 
 void gainramp_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                             const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,

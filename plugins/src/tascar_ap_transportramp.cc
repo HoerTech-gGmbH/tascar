@@ -64,12 +64,15 @@ transportramp_t::~transportramp_t() {}
 
 void transportramp_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   if(!precalc) {
     srv->add_float("/startduration", &startduration, "]0,10]",
                    "Ramp duration for stopped-to-rolling transition in s");
     srv->add_float("/endduration", &endduration, "]0,10]",
                    "Ramp duration for rolling-to-stopped transition in s");
   }
+  srv->unset_variable_owner();
 }
 
 void transportramp_t::configure()

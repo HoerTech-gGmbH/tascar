@@ -68,12 +68,15 @@ void spksim_t::configure()
 
 void spksim_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_double("/fres", &fres, "[1,10000]", "Resonance frequency in Hz");
   srv->add_double("/scale", &scale);
   srv->add_double("/q", &q, "]0,1[", "q-factor of the resonance filter");
   srv->add_double("/gain", &gain, "[-40,40]", "Post-gain in dB");
   srv->add_bool("/bypass", &bypass);
   srv->add_float("/wet", &wet, "[0,1]");
+  srv->unset_variable_owner();
 }
 
 spksim_t::~spksim_t() {}

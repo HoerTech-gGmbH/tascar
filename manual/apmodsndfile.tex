@@ -2,6 +2,7 @@ The 'sndfile' plugin reads sound files and adds their content to the audio signa
 
 \input{tabsndfile.tex}
 
+
 \paragraph{Multi-channel sound files}
 %
 If the plugin receives multiple channels (e.g., when used in a receiver, a diffuse sound field or a multichannel route), all channels starting with the channel number \attr{channel} are returned. If the file does not contain a sufficient number of channels, silence is returned for all channels not available in the sound file.
@@ -75,5 +76,8 @@ name            & format & description                                          
 {\tt /mute}     & i      & Mute state                                                                                              \\
 \hline
 \end{tabularx}
+
+\input{oscdoc_tascar_ap_sndfile.tex}
+
 
 \verb!/position! and \verb!/loop! will affect the file which is loaded next. It will not affect the current file.

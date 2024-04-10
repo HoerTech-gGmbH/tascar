@@ -62,6 +62,7 @@ namespace TASCAR {
     class descriptor_t {
     public:
       std::string path;
+      std::string relpath;
       std::string typespec;
       bool readable;
       std::string rangehint;
@@ -326,7 +327,7 @@ namespace TASCAR {
     std::mutex mtxdispatch;
     std::map<double, std::vector<msg_t>> timed_messages;
     std::mutex mtxtimedmessages;
-    std::map<std::string, std::vector<std::string>> owned_vars;
+    std::map<std::string, std::map<std::string,descriptor_t>> owned_vars;
     std::string varowner;
   };
 

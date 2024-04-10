@@ -83,6 +83,8 @@ tubesim_t::tubesim_t(const TASCAR::audioplugin_cfg_t& cfg)
 
 void tubesim_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float_db("/pregain", &pregain, "[-10,50]", "Input gain in dB");
   srv->add_float_db("/postgain", &postgain, "[-50,10]", "Output gain in dB");
   srv->add_float_db("/saturation", &saturation, "[-40,0]",
@@ -91,6 +93,7 @@ void tubesim_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/bypass", &bypass);
   srv->add_float("/wet", &wet, "[0,1]");
   srv->add_method("/wet", "ff", &tubesim_t::osc_wetfade, this);
+  srv->unset_variable_owner();
 }
 
 tubesim_t::~tubesim_t() {}
@@ -110,7 +113,7 @@ void tubesim_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         wetfade += dwetfade;
         wet = wetfade;
         --wetfade_timer;
-        if( !wetfade_timer ){
+        if(!wetfade_timer) {
           wet = targetwet;
         }
       }

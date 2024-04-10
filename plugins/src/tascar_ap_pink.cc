@@ -127,9 +127,12 @@ pink_t::~pink_t() {}
 
 void pink_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_double_dbspl("/level", &level);
   srv->add_bool("/use_transport", &use_transport);
   srv->add_bool("/mute", &mute);
+  srv->unset_variable_owner();
 }
 
 void pink_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

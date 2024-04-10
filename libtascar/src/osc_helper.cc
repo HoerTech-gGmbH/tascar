@@ -681,6 +681,7 @@ void osc_server_t::add_method(const std::string& path, const char* typespec,
       lo_server_thread_add_method(lost, sPath.c_str(), typespec, h, user_data);
     if(visible) {
       descriptor_t d;
+      d.relpath = path;
       d.path = sPath;
       if(typespec)
         d.typespec = typespec;
@@ -691,9 +692,9 @@ void osc_server_t::add_method(const std::string& path, const char* typespec,
       d.comment = comment;
       variables.push_back(d);
       if(!varowner.empty())
-        owned_vars[varowner].push_back(d.path + d.typespec);
+        owned_vars[varowner][path + d.typespec] = d;
       else {
-        owned_vars["undocumented"].push_back(d.path + d.typespec);
+        owned_vars["undocumented"][path + d.typespec] = d;
       }
     }
   }
@@ -1179,7 +1180,7 @@ void osc_server_t::unset_variable_owner()
 
 void osc_server_t::generate_osc_documentation_files()
 {
-  auto vmap = get_variable_map();
+  // auto vmap = get_variable_map();
   for(const auto& owner : owned_vars) {
     DEBUG(owner.first);
     std::vector<std::string> fullpath;
@@ -1187,7 +1188,7 @@ void osc_server_t::generate_osc_documentation_files()
     size_t kmax = fullpath.size();
     for(const auto& varpath : owner.second) {
       std::vector<std::string> fullpath_local =
-          str2vecstr(vmap[varpath].path, "/");
+          str2vecstr(varpath.second.relpath, "/");
       if(first) {
         fullpath = fullpath_local;
         kmax = fullpath.size();
@@ -1200,10 +1201,21 @@ void osc_server_t::generate_osc_documentation_files()
       first = false;
     }
     std::string pat = TASCAR::vecstr2str(fullpath, "/");
+    std::string rep = "...";
+    std::string pref = "";
     if(owner.second.size() < 2)
       pat = "";
+    if((pat.size() == 0) && (fullpath.size() == 1)) {
+      pat = "/";
+      rep = "/.../";
+    }
+    if(fullpath.size() == 0) {
+      pat = "";
+      pref = "/...";
+    }
     std::ofstream ofh("oscdoc_" + owner.first + ".tex");
-    ofh << "\\begin{snugshade}\n{\\footnotesize\n";
+    ofh << "\\definecolor{shadecolor}{RGB}{236,236,255}\\begin{snugshade}\n{"
+           "\\footnotesize\n";
     ofh << "\\label{osctab:" << TASCAR::strrep(owner.first, "_", "") << "}\n";
     ofh << "OSC variables:\n";
     ofh << "\\nopagebreak\n\n";
@@ -1211,11 +1223,12 @@ void osc_server_t::generate_osc_documentation_files()
     ofh << "\\hline\n";
     ofh << "path & fmt. & range & r. & description\\\\\n\\hline\n";
     for(const auto& varpath : owner.second) {
-      ofh << TASCAR::to_latex(TASCAR::strrep(vmap[varpath].path, pat, "..."))
-          << " & " << vmap[varpath].typespec << " & "
-          << TASCAR::to_latex(vmap[varpath].rangehint) << " & "
-          << (vmap[varpath].readable ? "yes" : "no") << " & "
-          << vmap[varpath].comment << "\\\\" << std::endl;
+      ofh << TASCAR::to_latex(pref +
+                              TASCAR::strrep(varpath.second.relpath, pat, rep))
+          << " & " << varpath.second.typespec << " & "
+          << TASCAR::to_latex(varpath.second.rangehint) << " & "
+          << (varpath.second.readable ? "yes" : "no") << " & "
+          << varpath.second.comment << "\\\\" << std::endl;
     }
     ofh << "\\hline\n\\end{tabularx}\n";
     ofh << "}\n\\end{snugshade}\n";

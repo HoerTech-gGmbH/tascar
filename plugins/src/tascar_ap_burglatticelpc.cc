@@ -91,8 +91,11 @@ bllpc_t::bllpc_t(const TASCAR::audioplugin_cfg_t& cfg) : audioplugin_base_t(cfg)
 
 void bllpc_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/coeff", &coeff);
   srv->add_bool("/outerr", &outerr);
+  srv->unset_variable_owner();
 }
 
 void bllpc_t::configure()

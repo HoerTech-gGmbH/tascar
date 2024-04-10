@@ -97,6 +97,8 @@ void loopmachine_t::release()
 
 void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool_true("/clear", &clear);
   srv->add_bool_true("/record", &record);
   srv->add_bool("/bypass", &bypass);
@@ -104,6 +106,7 @@ void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float_db("/gaindb", &gain);
   srv->add_bool("/muteinput", &muteinput);
   // srv->add_uint("/loopcnt", &loopcnt);
+  srv->unset_variable_owner();
 }
 
 loopmachine_t::~loopmachine_t() {}

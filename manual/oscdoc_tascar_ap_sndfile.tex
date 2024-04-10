@@ -1,0 +1,22 @@
+\definecolor{shadecolor}{RGB}{236,236,255}\begin{snugshade}
+{\footnotesize
+\label{osctab:tascarapsndfile}
+OSC variables:
+\nopagebreak
+
+\begin{tabularx}{\textwidth}{llllX}
+\hline
+path & fmt. & range & r. & description\\
+\hline
+/.../loadfile & s &  & no & \\
+/.../loadfile & ssf &  & no & \\
+/.../loop & i &  & yes & \\
+/.../mute & i & bool & yes & \\
+/.../position & f &  & yes & temporal position relative to object time, in seconds\\
+/.../rampend & f & [0,10] & yes & Ramp duration in s at end of sound\\
+/.../rampstart & f & [0,10] & yes & Ramp duration in s at start of sound\\
+/.../start & f &  & yes & number of seconds to cut at the beginning of the sound file\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

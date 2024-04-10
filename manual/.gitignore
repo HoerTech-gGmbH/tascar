@@ -37,3 +37,4 @@ tab*.tex
 autodoc.txt
 cli_*.tex
 clihelp.tex
+oscdoc_undocumented.tex

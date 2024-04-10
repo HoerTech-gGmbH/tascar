@@ -23,13 +23,15 @@
 
 class gate_t : public TASCAR::audioplugin_base_t {
 public:
-  gate_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  gate_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
   void configure();
   void release();
-  void add_variables( TASCAR::osc_server_t* srv );
+  void add_variables(TASCAR::osc_server_t* srv);
   ~gate_t();
-private: 
+
+private:
   double tautrack;
   double taurms;
   double threshold;
@@ -41,7 +43,7 @@ private:
   uint32_t ifadein;
   uint32_t ifadeout;
   float* pfadein;
-  float *pfadeout;
+  float* pfadeout;
   std::vector<uint32_t> khold;
   std::vector<uint32_t> kfadein;
   std::vector<uint32_t> kfadeout;
@@ -50,57 +52,51 @@ private:
   std::vector<double> l;
 };
 
-gate_t::gate_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    tautrack(30),
-    taurms(0.005),
-    threshold(0.125),
-    holdlen(0.125),
-    fadeinlen(0.01),
-    fadeoutlen(0.125),
-    bypass(true),
-    ihold(0),
-    ifadein(0),
-    ifadeout(0),
-    pfadein(NULL),
-    pfadeout(NULL)
+gate_t::gate_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), tautrack(30), taurms(0.005), threshold(0.125),
+      holdlen(0.125), fadeinlen(0.01), fadeoutlen(0.125), bypass(true),
+      ihold(0), ifadein(0), ifadeout(0), pfadein(NULL), pfadeout(NULL)
 {
-  GET_ATTRIBUTE(tautrack,"s","Min/max tracking time constant");
-  GET_ATTRIBUTE(taurms,"s","RMS level estimation time constant");
-  GET_ATTRIBUTE(threshold,"","Threshold value between 0 and 1");
-  GET_ATTRIBUTE(holdlen,"s","Time to keep output after level decay below threshold");
-  GET_ATTRIBUTE(fadeinlen,"s","Duration of von-Hann fade in");
-  GET_ATTRIBUTE(fadeoutlen,"s","Duration of von-Hann fade out");
-  GET_ATTRIBUTE_BOOL(bypass,"Start in bypass mode");
+  GET_ATTRIBUTE(tautrack, "s", "Min/max tracking time constant");
+  GET_ATTRIBUTE(taurms, "s", "RMS level estimation time constant");
+  GET_ATTRIBUTE(threshold, "", "Threshold value between 0 and 1");
+  GET_ATTRIBUTE(holdlen, "s",
+                "Time to keep output after level decay below threshold");
+  GET_ATTRIBUTE(fadeinlen, "s", "Duration of von-Hann fade in");
+  GET_ATTRIBUTE(fadeoutlen, "s", "Duration of von-Hann fade out");
+  GET_ATTRIBUTE_BOOL(bypass, "Start in bypass mode");
 }
 
-void gate_t::add_variables( TASCAR::osc_server_t* srv )
+void gate_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_double("/tautrack",&tautrack);
-  srv->add_double("/taurms",&taurms);
-  srv->add_double("/threshold",&threshold);
-  srv->add_bool("/bypass",&bypass);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_double("/tautrack", &tautrack);
+  srv->add_double("/taurms", &taurms);
+  srv->add_double("/threshold", &threshold);
+  srv->add_bool("/bypass", &bypass);
+  srv->unset_variable_owner();
 }
 
 void gate_t::configure()
 {
   audioplugin_base_t::configure();
-  ifadein = std::max(1.0,f_sample*fadeinlen);
-  ifadeout = std::max(1.0,f_sample*fadeoutlen);
+  ifadein = std::max(1.0, f_sample * fadeinlen);
+  ifadeout = std::max(1.0, f_sample * fadeoutlen);
   pfadein = new float[ifadein];
   pfadeout = new float[ifadeout];
-  for(uint32_t k=0;k<ifadein;++k)
-    pfadein[k] = 0.5+0.5*cos(TASCAR_PI*k/ifadein);
-  for(uint32_t k=0;k<ifadeout;++k)
-    pfadeout[k] = 0.5-0.5*cos(TASCAR_PI*k/ifadeout);
-  ihold = f_sample*holdlen;
-  lmin.resize( n_channels );
-  lmax.resize( n_channels );
-  l.resize( n_channels );
-  kfadein.resize( n_channels );
-  kfadeout.resize( n_channels );
-  khold.resize( n_channels );
-  for( uint32_t k=0;k<n_channels;++k){
+  for(uint32_t k = 0; k < ifadein; ++k)
+    pfadein[k] = 0.5 + 0.5 * cos(TASCAR_PI * k / ifadein);
+  for(uint32_t k = 0; k < ifadeout; ++k)
+    pfadeout[k] = 0.5 - 0.5 * cos(TASCAR_PI * k / ifadeout);
+  ihold = f_sample * holdlen;
+  lmin.resize(n_channels);
+  lmax.resize(n_channels);
+  l.resize(n_channels);
+  kfadein.resize(n_channels);
+  kfadeout.resize(n_channels);
+  khold.resize(n_channels);
+  for(uint32_t k = 0; k < n_channels; ++k) {
     kfadein[k] = 0;
     kfadeout[k] = 0;
     khold[k] = 0;
@@ -110,13 +106,11 @@ void gate_t::configure()
 void gate_t::release()
 {
   audioplugin_base_t::release();
-  delete [] pfadein;
-  delete [] pfadeout;
+  delete[] pfadein;
+  delete[] pfadeout;
 }
 
-gate_t::~gate_t()
-{
-}
+gate_t::~gate_t() {}
 
 void gate_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                         const TASCAR::pos_t&, const TASCAR::zyx_euler_t&,

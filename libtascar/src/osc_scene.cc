@@ -252,12 +252,15 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,
   rs->route = o;
   rs->anysolo = &(scene->anysolo);
   vprs.push_back(rs);
-  srv->add_bool("/" + scene->name + "/" + o->get_name() + "/mute", &(o->mute),
-                "mute flag, 1 = muted, 0 = unmuted");
-  srv->add_method("/" + scene->name + "/" + o->get_name() + "/solo", "i",
-                  osc_route_solo, rs);
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/targetlevel",
-                 &o->targetlevel);
+  std::string oldpref(srv->get_prefix());
+  std::string ctlname = "/" + scene->name + "/" + o->get_name();
+  srv->set_prefix(ctlname);
+  srv->set_variable_owner("route_t");
+  srv->add_bool("/mute", &(o->mute), "mute flag, 1 = muted, 0 = unmuted");
+  srv->add_method("/solo", "i", osc_route_solo, rs);
+  srv->add_float("/targetlevel", &o->targetlevel);
+  srv->set_prefix(oldpref);
+  srv->unset_variable_owner();
 }
 
 void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
@@ -268,6 +271,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
                       s->get_name());
   srv->set_prefix(ctlname);
   s->set_ctlname(ctlname);
+  srv->set_variable_owner("sound_t");
   srv->add_method("/gain", "f", osc_set_sound_gain, s);
   srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s);
   srv->add_float_dbspl("/caliblevel", &(s->caliblevel), "",
@@ -284,6 +288,7 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
   srv->add_method("/zeuler", "f", osc_set_sound_orientation, s);
   srv->set_prefix(oldpref);
+  srv->unset_variable_owner();
 }
 
 void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,
@@ -309,6 +314,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,
   s->set_ctlname(ctlname);
   std::string oldpref(srv->get_prefix());
   srv->set_prefix(ctlname);
+  srv->set_variable_owner("receiver_t");
   srv->add_method("/gain", "f", osc_set_receiver_gain, s);
   srv->add_method("/lingain", "f", osc_set_receiver_lingain, s);
   srv->add_float_db("/diffusegain", &(s->diffusegain), "[-30,30]",
@@ -319,6 +325,7 @@ void osc_scene_t::add_receiver_methods(TASCAR::osc_server_t* srv,
   srv->add_uint("/ismmax", &(s->ismmax));
   srv->add_uint("/layers", &(s->layers));
   srv->add_float_dbspl("/caliblevel", &(s->caliblevel));
+  srv->unset_variable_owner();
   s->add_variables(srv);
   srv->set_prefix(oldpref);
 }

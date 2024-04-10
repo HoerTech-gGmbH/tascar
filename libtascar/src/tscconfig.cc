@@ -242,7 +242,7 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
                        fname + "."
                 << std::endl;
       std::ofstream fh(fname);
-      fh << "\\begin{snugshade}\n{\\footnotesize\n";
+      fh << "\\definecolor{shadecolor}{RGB}{255,230,204}\\begin{snugshade}\n{\\footnotesize\n";
       fh << "\\label{attrtab:" << elem.first << "}\n";
       fh << "Attributes of ";
       if(elem.second.type.empty())

@@ -53,7 +53,10 @@ const_val_t::~const_val_t() {}
 void const_val_t::add_variables(TASCAR::osc_server_t* srv)
 {
   // register variables for interactive OSC access:
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_vector_float_dbspl("/a", &a);
+  srv->unset_variable_owner();
 }
 
 void const_val_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

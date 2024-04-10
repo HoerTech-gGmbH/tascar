@@ -24,17 +24,18 @@
 
 class dummy_t : public TASCAR::audioplugin_base_t {
 public:
-  dummy_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void configure( );
+  dummy_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void configure();
   void release();
-  void add_variables( TASCAR::osc_server_t* srv );
+  void add_variables(TASCAR::osc_server_t* srv);
   ~dummy_t();
+
 private:
 };
 
-dummy_t::dummy_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg )
+dummy_t::dummy_t(const TASCAR::audioplugin_cfg_t& cfg) : audioplugin_base_t(cfg)
 {
   DEBUG("--constructor--");
   DEBUG(f_sample);
@@ -47,7 +48,7 @@ dummy_t::dummy_t( const TASCAR::audioplugin_cfg_t& cfg )
   DEBUG(modname);
 }
 
-void dummy_t::add_variables( TASCAR::osc_server_t* srv )
+void dummy_t::add_variables(TASCAR::osc_server_t* srv)
 {
   DEBUG(srv);
 }

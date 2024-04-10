@@ -28,64 +28,60 @@
 using namespace TASCAR;
 
 transport_t::transport_t()
-  : session_time_samples(0), session_time_seconds(0), 
-    object_time_samples(0), object_time_seconds(0), rolling(false)
+    : session_time_samples(0), session_time_seconds(0), object_time_samples(0),
+      object_time_seconds(0), rolling(false)
 {
 }
 
-audioplugin_base_t::audioplugin_base_t( const audioplugin_cfg_t& cfg )
-  : xml_element_t(cfg.xmlsrc),
-    licensed_component_t(typeid(*this).name()),
-    name(cfg.name),
-    parentname(cfg.parentname),
-    modname(cfg.modname)
+audioplugin_base_t::audioplugin_base_t(const audioplugin_cfg_t& cfg)
+    : xml_element_t(cfg.xmlsrc), licensed_component_t(typeid(*this).name()),
+      name(cfg.name), parentname(cfg.parentname), modname(cfg.modname)
 {
 }
 
-audioplugin_base_t::~audioplugin_base_t()
-{
-}
+audioplugin_base_t::~audioplugin_base_t() {}
 
-TASCAR_RESOLVER( audioplugin_base_t, const audioplugin_cfg_t& )
+TASCAR_RESOLVER(audioplugin_base_t, const audioplugin_cfg_t&)
 
-
-TASCAR::audioplugin_t::audioplugin_t( const audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg ),
-    lib(NULL),
-    libdata(NULL)
+TASCAR::audioplugin_t::audioplugin_t(const audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg), lib(NULL), libdata(NULL)
 {
   plugintype = tsccfg::node_get_name(e);
-  if( plugintype == "plugin" )
-    get_attribute("type",plugintype,"","plugin type");
+  if(plugintype == "plugin")
+    get_attribute("type", plugintype, "", "plugin type");
   std::string libname("tascar_ap_");
-  #ifdef PLUGINPREFIX
+#ifdef PLUGINPREFIX
   libname = PLUGINPREFIX + libname;
-  #endif
+#endif
   libname += plugintype + TASCAR::dynamic_lib_extension();
   modname = plugintype;
   audioplugin_cfg_t lcfg(cfg);
   lcfg.modname = modname;
-  lib = dlopen((TASCAR::get_libdir()+libname).c_str(), RTLD_NOW );
-  if( !lib )
-    throw TASCAR::ErrMsg("Unable to open module \""+plugintype+"\": "+dlerror());
-  try{
-    audioplugin_base_t_resolver( &libdata, lcfg, lib, libname );
+  lib = dlopen((TASCAR::get_libdir() + libname).c_str(), RTLD_NOW);
+  if(!lib)
+    throw TASCAR::ErrMsg("Unable to open module \"" + plugintype +
+                         "\": " + dlerror());
+  try {
+    audioplugin_base_t_resolver(&libdata, lcfg, lib, libname);
   }
-  catch( ... ){
+  catch(...) {
     dlclose(lib);
     throw;
   }
 }
 
-void TASCAR::audioplugin_t::ap_process( std::vector<wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t& o, const TASCAR::transport_t& tp )
+void TASCAR::audioplugin_t::ap_process(std::vector<wave_t>& chunk,
+                                       const TASCAR::pos_t& pos,
+                                       const TASCAR::zyx_euler_t& o,
+                                       const TASCAR::transport_t& tp)
 {
-  libdata->ap_process( chunk, pos, o, tp );
+  libdata->ap_process(chunk, pos, o, tp);
 }
 
 void TASCAR::audioplugin_t::configure()
 {
   audioplugin_base_t::configure();
-  libdata->prepare( cfg() );
+  libdata->prepare(cfg());
 }
 
 void TASCAR::audioplugin_t::post_prepare()
@@ -102,13 +98,13 @@ void TASCAR::audioplugin_t::release()
 
 void TASCAR::audioplugin_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  libdata->add_variables( srv );
+  libdata->add_variables(srv);
 }
 
-void TASCAR::audioplugin_t::add_licenses( licensehandler_t* session )
+void TASCAR::audioplugin_t::add_licenses(licensehandler_t* session)
 {
-  audioplugin_base_t::add_licenses( session );
-  libdata->add_licenses( session );
+  audioplugin_base_t::add_licenses(session);
+  libdata->add_licenses(session);
 }
 
 TASCAR::audioplugin_t::~audioplugin_t()

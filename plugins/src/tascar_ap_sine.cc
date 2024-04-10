@@ -46,8 +46,11 @@ sine_t::~sine_t() {}
 
 void sine_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_double("/f", &f, "]0,20000]", "Frequency in Hz");
   srv->add_double_dbspl("/a", &a, "[0,100]", "Amplitude in dB SPL");
+  srv->unset_variable_owner();
 }
 
 void sine_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

@@ -193,12 +193,15 @@ void lipsync_t::sendthread()
 
 void lipsync_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_double("/smoothing", &smoothing);
   srv->add_double("/vocalTract", &vocalTract);
   srv->add_double("/threshold", &threshold);
   srv->add_double("/maxspeechlevel", &maxspeechlevel);
   srv->add_double("/dynamicrange", &dynamicrange);
   srv->add_bool("/active", &active);
+  srv->unset_variable_owner();
 }
 
 void lipsync_t::configure()

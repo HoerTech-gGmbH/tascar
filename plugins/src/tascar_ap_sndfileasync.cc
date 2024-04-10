@@ -122,7 +122,10 @@ void ap_sndfile_async_t::add_licenses(licensehandler_t* session)
 
 void ap_sndfile_async_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/mute", &mute);
+  srv->unset_variable_owner();
 }
 
 void ap_sndfile_async_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

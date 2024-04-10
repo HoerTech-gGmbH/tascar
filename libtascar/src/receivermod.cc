@@ -221,8 +221,10 @@ void TASCAR::receivermod_base_speaker_t::add_variables(
     TASCAR::osc_server_t* srv)
 {
   receivermod_base_t::add_variables(srv);
+  srv->set_variable_owner("receivermod_base_speaker");
   srv->add_bool("/decorr", &(spkpos.decorr));
   srv->add_bool("/densitycorr", &(spkpos.densitycorr));
+  srv->unset_variable_owner();
 }
 
 void TASCAR::receivermod_base_speaker_t::validate_attributes(

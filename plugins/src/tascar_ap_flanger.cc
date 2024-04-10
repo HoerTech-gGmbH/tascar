@@ -64,11 +64,14 @@ flanger_t::~flanger_t()
 
 void flanger_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/wet", &wet, "[0,1]", "Linear gain of input to delayline");
   srv->add_float("/modf", &modf, "[0,100]", "Modulation frequency");
   srv->add_float("/dmin", &dmin, "[0,1]", "Lower bound of delay, in s");
   srv->add_float("/dmax", &dmax, "[0,1]", "Upper bound of delay, in s");
   srv->add_float("/feedback", &feedback, "[0,0.999]", "Feedback");
+  srv->unset_variable_owner();
 }
 
 void flanger_t::ap_process(std::vector<TASCAR::wave_t>& chunk,

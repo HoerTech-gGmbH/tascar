@@ -1,0 +1,32 @@
+\definecolor{shadecolor}{RGB}{236,236,255}\begin{snugshade}
+{\footnotesize
+\label{osctab:receivert}
+OSC variables:
+\nopagebreak
+
+\begin{tabularx}{\textwidth}{llllX}
+\hline
+path & fmt. & range & r. & description\\
+\hline
+/.../caliblevel & f & [0,120] & yes & \\
+/.../diffusegain & f & [-30,30] & yes & relative gain of diffuse sound field model\\
+/.../fade & ff &  & no & \\
+/.../fade & fff &  & no & \\
+/.../gain & f &  & no & \\
+/.../ismmax & i &  & yes & \\
+/.../ismmin & i &  & yes & \\
+/.../layers & i &  & yes & \\
+/.../lingain & f &  & no & \\
+/.../proxy/airabsorption & i & bool & yes & Use proxy position for air absorption\\
+/.../proxy/delay & i & bool & yes & Use proxy position for delay\\
+/.../proxy/direction & i & bool & yes & Use proxy position for direction\\
+/.../proxy/gain & i & bool & yes & Use proxy position for gain\\
+/.../proxy/is\_relative & i & bool & yes & Proxy is relative to receiver (true) or in absolute coordinates (false)\\
+/.../proxy/position & fff &  & yes & Proxy position in m\\
+/.../scatterdamping & f & [0,1] & yes & damping of scatter reflection filter\\
+/.../scatterspread & f & Spatial spread of scattering & yes & \\
+/.../scatterstructuresize & f & [0,10] & yes & size of scatter structure in m\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

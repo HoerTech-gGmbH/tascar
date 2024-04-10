@@ -23,43 +23,47 @@
 
 class apfence_t : public TASCAR::audioplugin_base_t {
 public:
-  apfence_t( const TASCAR::audioplugin_cfg_t& cfg );
-  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos, const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
-  void add_variables( TASCAR::osc_server_t* srv );
+  apfence_t(const TASCAR::audioplugin_cfg_t& cfg);
+  void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
+                  const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   ~apfence_t();
+
 private:
   TASCAR::pos_t origin;
   float r = 1.0f;
-  //double gain;
+  // double gain;
   float alpha = 1.0f;
   float range = 0.1f;
 };
 
-apfence_t::apfence_t( const TASCAR::audioplugin_cfg_t& cfg )
-  : audioplugin_base_t( cfg )
+apfence_t::apfence_t(const TASCAR::audioplugin_cfg_t& cfg)
+    : audioplugin_base_t(cfg)
 {
-  GET_ATTRIBUTE(origin,"m","origin");
-  GET_ATTRIBUTE(r,"m","r");
-  GET_ATTRIBUTE(alpha,"","alpha");
-  GET_ATTRIBUTE(range,"m","range");
+  GET_ATTRIBUTE(origin, "m", "origin");
+  GET_ATTRIBUTE(r, "m", "r");
+  GET_ATTRIBUTE(alpha, "", "alpha");
+  GET_ATTRIBUTE(range, "m", "range");
 }
 
-void apfence_t::add_variables( TASCAR::osc_server_t* srv )
+void apfence_t::add_variables(TASCAR::osc_server_t* srv)
 {
-  srv->add_float("/r",&r);
-  srv->add_float("/alpha",&alpha);
-  srv->add_float("/range",&range);
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_float("/r", &r);
+  srv->add_float("/alpha", &alpha);
+  srv->add_float("/range", &range);
+  srv->unset_variable_owner();
 }
 
-apfence_t::~apfence_t()
-{
-}
+apfence_t::~apfence_t() {}
 
 void apfence_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
-                            const TASCAR::pos_t& p, const TASCAR::zyx_euler_t&,
-                            const TASCAR::transport_t&)
+                           const TASCAR::pos_t& p, const TASCAR::zyx_euler_t&,
+                           const TASCAR::transport_t&)
 {
-  float gain = powf(std::max(0.0f,TASCAR::distancef(p,origin)-r)/range,alpha);
+  float gain =
+      powf(std::max(0.0f, TASCAR::distancef(p, origin) - r) / range, alpha);
   if(!chunk.empty()) {
     uint32_t nch(chunk.size());
     uint32_t N(chunk[0].n);
