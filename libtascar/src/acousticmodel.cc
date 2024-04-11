@@ -1055,7 +1055,7 @@ void receiver_t::add_variables(TASCAR::osc_server_t* srv)
   }
   srv->set_variable_owner("receiver_t");
   // uint32_t scatterreflections = 0;
-  srv->add_float_degree("/scatterspread", &scatterspread,
+  srv->add_float_degree("/scatterspread", &scatterspread, "",
                         "Spatial spread of scattering");
   srv->add_float("/scatterstructuresize", &scatterstructuresize, "[0,10]",
                  "size of scatter structure in m");

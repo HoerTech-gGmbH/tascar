@@ -1,6 +1,6 @@
 \definecolor{shadecolor}{RGB}{236,236,255}\begin{snugshade}
 {\footnotesize
-\label{osctab:tascarapsndfileasync}
+\label{osctab:tascarmoddatalogging}
 OSC variables:
 \nopagebreak
 
@@ -8,7 +8,10 @@ OSC variables:
 \hline
 path & fmt. & range & r. & description\\
 \hline
-\attr{/.../mute} & i & bool & yes & \\
+\attr{/.../session\_outputdir} & s & string & yes & \\
+\attr{/.../session\_start} &  &  & no & \\
+\attr{/.../session\_stop} &  &  & no & \\
+\attr{/.../session\_trialid} & s &  & no & \\
 \hline
 \end{tabularx}
 }

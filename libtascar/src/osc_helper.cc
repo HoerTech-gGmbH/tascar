@@ -615,10 +615,12 @@ osc_server_t::osc_server_t(const std::string& multicast,
     if(verbose)
       std::cerr << "listening on \"" << osc_srv_url << "\"" << std::endl;
   }
+  set_variable_owner("session_t");
   add_method("/sendvarsto", "ss", osc_send_variables, this);
   add_method("/sendvarsto", "sss", osc_send_variables, this);
   add_method("/timedmessages/add", "fs", osc_tm_add, this);
   add_method("/timedmessages/clear", "", osc_tm_clear, this);
+  unset_variable_owner();
 }
 
 int osc_server_t::dispatch_data(void* data, size_t size)
@@ -1223,15 +1225,16 @@ void osc_server_t::generate_osc_documentation_files()
     ofh << "\\hline\n";
     ofh << "path & fmt. & range & r. & description\\\\\n\\hline\n";
     for(const auto& varpath : owner.second) {
-      ofh << TASCAR::to_latex(pref +
+      ofh << "\\attr{"
+          << TASCAR::to_latex(pref +
                               TASCAR::strrep(varpath.second.relpath, pat, rep))
-          << " & " << varpath.second.typespec << " & "
+          << "} & " << varpath.second.typespec << " & "
           << TASCAR::to_latex(varpath.second.rangehint) << " & "
           << (varpath.second.readable ? "yes" : "no") << " & "
           << varpath.second.comment << "\\\\" << std::endl;
     }
     ofh << "\\hline\n\\end{tabularx}\n";
-    ofh << "}\n\\end{snugshade}\n";
+    ofh << "}\n\\end{snugshade}\n\\definecolor{shadecolor}{RGB}{255,230,204}\n";
   }
 }
 

@@ -1019,12 +1019,15 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   TASCAR::osc_server_t* osc(this);
   if(port.empty())
     osc = session;
+  osc->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   osc->add_method("/session_trialid", "s",
                   &datalogging_t::osc_session_set_trialid, this);
   osc->add_method("/session_start", "", &datalogging_t::osc_session_start,
                   this);
   osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this);
   osc->add_string("/session_outputdir", &outputdir);
+  osc->unset_variable_owner();
   set_jack_client(session->jc);
   TASCAR::osc_server_t::activate();
   if(!headless) {

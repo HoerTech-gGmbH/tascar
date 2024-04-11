@@ -1,6 +1,6 @@
 \definecolor{shadecolor}{RGB}{236,236,255}\begin{snugshade}
 {\footnotesize
-\label{osctab:tascarapsndfileasync}
+\label{osctab:facet}
 OSC variables:
 \nopagebreak
 
@@ -8,7 +8,9 @@ OSC variables:
 \hline
 path & fmt. & range & r. & description\\
 \hline
-\attr{/.../mute} & i & bool & yes & \\
+\attr{/.../damping} & f & [0,1[ & yes & Damping coefficient\\
+\attr{/.../reflectivity} & f & [0,1] & yes & Reflectivity of object\\
+\attr{/.../scattering} & f & [0,1] & yes & Scattering coefficient\\
 \hline
 \end{tabularx}
 }

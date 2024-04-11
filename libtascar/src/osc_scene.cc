@@ -213,36 +213,51 @@ int osc_set_receiver_fade(const char*, const char* types, lo_arg** argv,
 void osc_scene_t::add_object_methods(TASCAR::osc_server_t* srv,
                                      TASCAR::Scene::object_t* o)
 {
-  srv->add_method("/" + scene->name + "/" + o->get_name() + "/pos", "fff",
-                  osc_set_object_position, o);
-  srv->add_method("/" + scene->name + "/" + o->get_name() + "/pos", "ffffff",
-                  osc_set_object_position, o);
-  srv->add_method("/" + scene->name + "/" + o->get_name() + "/zyxeuler", "fff",
-                  osc_set_object_orientation, o);
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/scale",
-                 &(o->scale), "object scale");
+  std::string oldpref(srv->get_prefix());
+  std::string ctlname = "/" + scene->name + "/" + o->get_name();
+  srv->set_prefix(ctlname);
+  srv->set_variable_owner("object_t");
+  srv->add_method("/pos", "fff", osc_set_object_position, o, true, false, "",
+                  "XYZ Translation in m");
+  srv->add_method("/pos", "ffffff", osc_set_object_position, o, true, false, "",
+                  "XYZ Translation in m and ZYX Euler angles in degree");
+  srv->add_method("/zyxeuler", "fff", osc_set_object_orientation, o, true,
+                  false, "", "ZYX Euler angles in degree");
+  srv->add_float("/scale", &(o->scale), "", "object scale");
+  srv->set_prefix(oldpref);
+  srv->unset_variable_owner();
 }
 
 void osc_scene_t::add_face_object_methods(TASCAR::osc_server_t* srv,
                                           TASCAR::Scene::face_object_t* o)
 {
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/reflectivity",
-                 &(o->reflectivity), "[0,1]", "Reflectivity of object");
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/damping",
-                 &(o->damping), "[0,1[", "Damping coefficient");
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/scattering",
-                 &(o->scattering), "[0,1]", "Scattering coefficient");
+  std::string oldpref(srv->get_prefix());
+  std::string ctlname = "/" + scene->name + "/" + o->get_name();
+  srv->set_prefix(ctlname);
+  srv->set_variable_owner("face_t");
+  srv->add_float("/reflectivity", &(o->reflectivity), "[0,1]",
+                 "Reflectivity of object");
+  srv->add_float("/damping", &(o->damping), "[0,1[", "Damping coefficient");
+  srv->add_float("/scattering", &(o->scattering), "[0,1]",
+                 "Scattering coefficient");
+  srv->set_prefix(oldpref);
+  srv->unset_variable_owner();
 }
 
 void osc_scene_t::add_face_group_methods(TASCAR::osc_server_t* srv,
                                          TASCAR::Scene::face_group_t* o)
 {
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/reflectivity",
-                 &(o->reflectivity), "[0,1]", "Reflectivity of object");
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/damping",
-                 &(o->damping), "[0,1[", "Damping coefficient");
-  srv->add_float("/" + scene->name + "/" + o->get_name() + "/scattering",
-                 &(o->scattering), "[0,1]", "Scattering coefficient");
+  std::string oldpref(srv->get_prefix());
+  std::string ctlname = "/" + scene->name + "/" + o->get_name();
+  srv->set_prefix(ctlname);
+  srv->set_variable_owner("face_t");
+  srv->add_float("/reflectivity", &(o->reflectivity), "[0,1]",
+                 "Reflectivity of object");
+  srv->add_float("/damping", &(o->damping), "[0,1[", "Damping coefficient");
+  srv->add_float("/scattering", &(o->scattering), "[0,1]",
+                 "Scattering coefficient");
+  srv->set_prefix(oldpref);
+  srv->unset_variable_owner();
 }
 
 void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,
@@ -258,7 +273,8 @@ void osc_scene_t::add_route_methods(TASCAR::osc_server_t* srv,
   srv->set_variable_owner("route_t");
   srv->add_bool("/mute", &(o->mute), "mute flag, 1 = muted, 0 = unmuted");
   srv->add_method("/solo", "i", osc_route_solo, rs);
-  srv->add_float("/targetlevel", &o->targetlevel);
+  srv->add_float("/targetlevel", &o->targetlevel, "dB",
+                 "Indicator position in level meter display");
   srv->set_prefix(oldpref);
   srv->unset_variable_owner();
 }

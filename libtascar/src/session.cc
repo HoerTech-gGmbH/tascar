@@ -1161,6 +1161,7 @@ namespace OSCSession {
 
 void TASCAR::session_t::add_transport_methods()
 {
+  osc_server_t::set_variable_owner("session_t");
   osc_server_t::add_method("/sendxmlto", "ss", OSCSession::_osc_send_xml, this);
   osc_server_t::add_method("/transport/locate", "f", OSCSession::_locate, this);
   osc_server_t::add_method("/transport/locatei", "i", OSCSession::_locatei,
@@ -1173,8 +1174,11 @@ void TASCAR::session_t::add_transport_methods()
   osc_server_t::add_method("/transport/stop", "", OSCSession::_stop, this);
   osc_server_t::add_method("/transport/unload", "", OSCSession::_unload_modules,
                            this);
-  osc_server_t::add_method("/runscript", "s", OSCSession::_runscript, this);
+  osc_server_t::add_method("/runscript", "s", OSCSession::_runscript, this,
+                           true, false, "string",
+                           "Name of OSC script file to be loaded.");
   osc_server_t::add_string("/scriptpath", &scriptpath);
+  osc_server_t::unset_variable_owner();
 }
 
 void TASCAR::session_t::send_xml(const std::string& url,
