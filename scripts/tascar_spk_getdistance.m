@@ -1,9 +1,13 @@
 function tascar_spk_getdistance( layoutfile, varargin )
 % tascar_spk_getdistance
 %
+% Usage:
+%
 % tascar_spk_getdistance( layoutfile [, key, value ] )
 %
 % layoutfile: tascar speaker layout file
+%
+% To see a list of optional keys type 'tascar_spk_getdistance help'.
 %
 % Meansure loudspeaker distance to measurement microphone. Optionally
 % estimate elevation angle from distance and vertical loudspeaker
@@ -15,6 +19,7 @@ function tascar_spk_getdistance( layoutfile, varargin )
 
   if (nargin < 1)
     varargin = {'help'};
+    help('tascar_spk_getdistance')
   else
     if (nargin < 2)
       if strcmp(layoutfile,'help')
@@ -55,7 +60,11 @@ function tascar_spk_getdistance( layoutfile, varargin )
   vDistFile = zeros(numel(elem_spk),1);
   vDistMeas = zeros(numel(elem_spk),1);
   for k=1:numel(elem_spk)
-    vDistFile(k) = get_attr_num( elem_spk{k}, 'r', 1 );
+    d = get_attr_num( elem_spk{k}, 'r', 1 );
+    if isempty(d)
+      d = 1;
+    end
+    vDistFile(k) = d;
   end
   len = 2^ceil(log2((4*max(vDistFile)/sCfg.c+0.1)*fs + 4*fragsize));
 
@@ -68,7 +77,7 @@ function tascar_spk_getdistance( layoutfile, varargin )
     az = get_attr_num( elem_spk{k}, 'az', 0 );
     el = get_attr_num( elem_spk{k}, 'el', 0 );
     r = get_attr_num( elem_spk{k}, 'r', 1 );
-    ir = tascar_ir_measure( 'output', connect, ...
+    ir = tascar_ir_measure( 'output', char(connect), ...
 			    'input', sCfg.input, ...
 			    'len', len,...
 			    'gain',sCfg.peak,...
