@@ -8,20 +8,20 @@ OSC variables:
 \hline
 path & fmt. & range & r. & description\\
 \hline
-\attr{/.../runscript} & s & string & no & Name of OSC script file to be loaded.\\
-\attr{/.../scriptpath} & s & string & yes & \\
-\attr{/.../sendvarsto} & ss &  & no & \\
-\attr{/.../sendvarsto} & sss &  & no & \\
-\attr{/.../sendxmlto} & ss &  & no & \\
-\attr{/.../timedmessages/add} & fs &  & no & \\
-\attr{/.../timedmessages/clear} &  &  & no & \\
-\attr{/.../transport/addtime} & f &  & no & \\
-\attr{/.../transport/locate} & f &  & no & \\
-\attr{/.../transport/locatei} & i &  & no & \\
-\attr{/.../transport/playrange} & ff &  & no & \\
-\attr{/.../transport/start} &  &  & no & \\
-\attr{/.../transport/stop} &  &  & no & \\
-\attr{/.../transport/unload} &  &  & no & \\
+\attr{/runscript} & s & string & no & Name of OSC script file to be loaded.\\
+\attr{/scriptpath} & s & string & yes & \\
+\attr{/sendvarsto} & ss &  & no & \\
+\attr{/sendvarsto} & sss &  & no & \\
+\attr{/sendxmlto} & ss &  & no & Send session file XML code to an OSC server. First parameter is the URL, the second is the path.\\
+\attr{/timedmessages/add} & fs &  & no & \\
+\attr{/timedmessages/clear} &  &  & no & \\
+\attr{/transport/addtime} & f &  & no & Move the current transport position by the given number of seconds.\\
+\attr{/transport/locate} & f &  & no & Locate the transport to the given second.\\
+\attr{/transport/locatei} & i &  & no & Locate the transport to the given audio sample.\\
+\attr{/transport/playrange} & ff &  & no & Play the session in the given time interval.\\
+\attr{/transport/start} &  &  & no & Start the playback of the session from the current position\\
+\attr{/transport/stop} &  &  & no & Stop the playback of the session\\
+\attr{/transport/unload} &  &  & no & Unload the scene\\
 \hline
 \end{tabularx}
 }

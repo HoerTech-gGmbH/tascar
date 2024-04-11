@@ -1022,11 +1022,14 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   osc->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   osc->add_method("/session_trialid", "s",
-                  &datalogging_t::osc_session_set_trialid, this);
-  osc->add_method("/session_start", "", &datalogging_t::osc_session_start,
-                  this);
-  osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this);
-  osc->add_string("/session_outputdir", &outputdir);
+                  &datalogging_t::osc_session_set_trialid, this, true, false,
+                  "string", "Set the new trial ID");
+  osc->add_method("/session_start", "", &datalogging_t::osc_session_start, this,
+                  true, false, "", "Start the recording of a session");
+  osc->add_method("/session_stop", "", &datalogging_t::osc_session_stop, this,
+                  true, false, "",
+                  "Stop the recording of a session and save data to the file");
+  osc->add_string("/session_outputdir", &outputdir, "Set the output directory");
   osc->unset_variable_owner();
   set_jack_client(session->jc);
   TASCAR::osc_server_t::activate();
@@ -1373,7 +1376,7 @@ void datalogging_t::start_trial(const std::string& name)
     session->tp_stop();
     session->tp_locate(0u);
     uint32_t timeout(1000);
-    while(timeout && (session->tp_get_time() > 0)){
+    while(timeout && (session->tp_get_time() > 0)) {
       std::this_thread::sleep_for(std::chrono::microseconds(1000));
       timeout--;
     }

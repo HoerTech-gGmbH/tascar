@@ -1162,18 +1162,29 @@ namespace OSCSession {
 void TASCAR::session_t::add_transport_methods()
 {
   osc_server_t::set_variable_owner("session_t");
-  osc_server_t::add_method("/sendxmlto", "ss", OSCSession::_osc_send_xml, this);
-  osc_server_t::add_method("/transport/locate", "f", OSCSession::_locate, this);
+  osc_server_t::add_method("/sendxmlto", "ss", OSCSession::_osc_send_xml, this,
+                           true, false, "",
+                           "Send session file XML code to an OSC server. First "
+                           "parameter is the URL, the second is the path.");
+  osc_server_t::add_method("/transport/locate", "f", OSCSession::_locate, this,
+                           true, false, "",
+                           "Locate the transport to the given second.");
   osc_server_t::add_method("/transport/locatei", "i", OSCSession::_locatei,
-                           this);
-  osc_server_t::add_method("/transport/addtime", "f", OSCSession::_addtime,
-                           this);
-  osc_server_t::add_method("/transport/start", "", OSCSession::_start, this);
+                           this, true, false, "",
+                           "Locate the transport to the given audio sample.");
+  osc_server_t::add_method(
+      "/transport/addtime", "f", OSCSession::_addtime, this, true, false, "",
+      "Move the current transport position by the given number of seconds.");
+  osc_server_t::add_method(
+      "/transport/start", "", OSCSession::_start, this, true, false, "",
+      "Start the playback of the session from the current position");
   osc_server_t::add_method("/transport/playrange", "ff", OSCSession::_playrange,
-                           this);
-  osc_server_t::add_method("/transport/stop", "", OSCSession::_stop, this);
+                           this, true, false, "",
+                           "Play the session in the given time interval.");
+  osc_server_t::add_method("/transport/stop", "", OSCSession::_stop, this, true,
+                           false, "", "Stop the playback of the session");
   osc_server_t::add_method("/transport/unload", "", OSCSession::_unload_modules,
-                           this);
+                           this, true, false, "", "Unload the scene");
   osc_server_t::add_method("/runscript", "s", OSCSession::_runscript, this,
                            true, false, "string",
                            "Name of OSC script file to be loaded.");

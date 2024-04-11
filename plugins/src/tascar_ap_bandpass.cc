@@ -90,8 +90,14 @@ void bandpassplugin_t::add_variables(TASCAR::osc_server_t* srv)
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/fmin", &fmin, "]0,20000]", "Lower cutoff frequency in Hz");
   srv->add_float("/fmax", &fmax, "]0,20000]", "Upper cutoff frequency in Hz");
-  srv->add_method("/fmin", "ff", &bandpassplugin_t::osc_fminfade, this);
-  srv->add_method("/fmax", "ff", &bandpassplugin_t::osc_fmaxfade, this);
+  srv->add_method("/fmin", "ff", &bandpassplugin_t::osc_fminfade, this, true,
+                  false, "",
+                  "Fade the lower cutoff frequency, first parameter is new "
+                  "frequency in Hz, second parameter is fade duration in s");
+  srv->add_method("/fmax", "ff", &bandpassplugin_t::osc_fmaxfade, this, true,
+                  false, "",
+                  "Fade the upper cutoff frequency, first parameter is new "
+                  "frequency in Hz, second parameter is fade duration in s");
   srv->unset_variable_owner();
 }
 

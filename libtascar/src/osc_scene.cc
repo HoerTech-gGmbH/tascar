@@ -288,21 +288,29 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   srv->set_prefix(ctlname);
   s->set_ctlname(ctlname);
   srv->set_variable_owner("sound_t");
-  srv->add_method("/gain", "f", osc_set_sound_gain, s);
-  srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s);
+  srv->add_method("/gain", "f", osc_set_sound_gain, s, true, false, "",
+                  "Gain in dB");
+  srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s, true, false, "",
+                  "Linear gain");
   srv->add_float_dbspl("/caliblevel", &(s->caliblevel), "",
                        "calibration level in dB");
-  srv->add_uint("/ismmin", &(s->ismmin));
-  srv->add_uint("/ismmax", &(s->ismmax));
-  srv->add_uint("/layers", &(s->layers));
+  srv->add_uint("/ismmin", &(s->ismmin), "",
+                "Minimal Image Source Model order");
+  srv->add_uint("/ismmax", &(s->ismmax), "",
+                "Maximal Image Source Model order");
+  srv->add_uint("/layers", &(s->layers), "",
+                "Number representing the layers. Each layer is represented by "
+                "a bit, i.e., for layers 1+3 use 10");
   srv->add_float("/size", &(s->size), "", "Object size in meter");
   s->plugins.add_variables(srv);
   srv->add_pos("/pos", &(s->local_position), "",
                "local position of sound vertex in meters");
   srv->add_pos("/globalpos", &(s->global_position), "",
                "global position of sound vertex in meters");
-  srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s);
-  srv->add_method("/zeuler", "f", osc_set_sound_orientation, s);
+  srv->add_method("/zyxeuler", "fff", osc_set_sound_orientation, s, true, false,
+                  "", "ZYX orientation of the sound vertex, in degree");
+  srv->add_method("/zeuler", "f", osc_set_sound_orientation, s, true, false, "",
+                  "Z orientation of the sound vertex, in degree");
   srv->set_prefix(oldpref);
   srv->unset_variable_owner();
 }

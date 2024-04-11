@@ -64,7 +64,7 @@ private:
   bool broadband = false;
   double f6db;
   double fmin;
-  double scale;
+  double attscale;
   uint32_t sincorder;
   uint32_t sincsampling = 64;
   double c;
@@ -154,24 +154,27 @@ void ortf_t::add_variables(TASCAR::osc_server_t* srv)
   TASCAR::receivermod_base_t::add_variables(srv);
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
-  srv->add_bool("/ortf/decorr", &decorr);
-  srv->add_double("/ortf/distance", &distance);
-  srv->add_double("/ortf/angle", &angle);
-  srv->add_double("/ortf/scale", &scale);
+  srv->add_bool("/ortf/decorr", &decorr,
+                "Flag to use decorrelatin of diffuse sounds");
+  srv->add_double("/ortf/distance", &distance, "", "Microphone distance, in m");
+  srv->add_double("/ortf/angle", &angle, "",
+                  "Angular distance between microphone axes, in degree");
+  srv->add_double("/ortf/attscale", &attscale, "",
+                  "Scaling factor for cosine attenuation function");
   srv->unset_variable_owner();
 }
 
 ortf_t::ortf_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_t(xmlsrc), distance(0.17), angle(110 * DEG2RAD),
-      f6db(3000), fmin(800), scale(1.0), sincorder(0), c(340), dir_l(1, 0, 0),
-      dir_r(1, 0, 0), dir_itd(0, 1, 0), wpow(1), wmin(EPS), decorr_length(0.05),
-      decorr(false)
+      f6db(3000), fmin(800), attscale(1.0), sincorder(0), c(340),
+      dir_l(1, 0, 0), dir_r(1, 0, 0), dir_itd(0, 1, 0), wpow(1), wmin(EPS),
+      decorr_length(0.05), decorr(false)
 {
   GET_ATTRIBUTE(distance, "m", "Microphone distance");
   GET_ATTRIBUTE_DEG(angle, "Angular distance between microphone axes");
   GET_ATTRIBUTE(f6db, "Hz", "6 dB cutoff frequency for 90 degrees");
   GET_ATTRIBUTE(fmin, "Hz", "Cutoff frequency for 180 degrees sounds");
-  GET_ATTRIBUTE(scale, "", "Scaling factor for cosine attenuation function");
+  GET_ATTRIBUTE(attscale, "", "Scaling factor for cosine attenuation function");
   GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of ITD delay line");
   GET_ATTRIBUTE(sincsampling, "",
                 "Sinc table sampling of ITD delay line, or 0 for no table.");
@@ -218,10 +221,12 @@ void ortf_t::add_pointsource(const TASCAR::pos_t& prel, double,
   } else {
     // calculate panning parameters (as incremental values; target_XX is
     // the value reached at end of block):
-    double target_wl(pow(
-        std::max(0.0, 0.5 - 0.5 * scale * dot_prod(prel_norm, dir_l)), wpow));
-    double target_wr(pow(
-        std::max(0.0, 0.5 - 0.5 * scale * dot_prod(prel_norm, dir_r)), wpow));
+    double target_wl(
+        pow(std::max(0.0, 0.5 - 0.5 * attscale * dot_prod(prel_norm, dir_l)),
+            wpow));
+    double target_wr(
+        pow(std::max(0.0, 0.5 - 0.5 * attscale * dot_prod(prel_norm, dir_r)),
+            wpow));
     if(target_wl > wmin)
       target_wl = wmin;
     if(target_wr > wmin)

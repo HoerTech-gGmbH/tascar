@@ -99,12 +99,12 @@ void loopmachine_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
-  srv->add_bool_true("/clear", &clear);
-  srv->add_bool_true("/record", &record);
-  srv->add_bool("/bypass", &bypass);
-  srv->add_float("/gain", &gain);
-  srv->add_float_db("/gaindb", &gain);
-  srv->add_bool("/muteinput", &muteinput);
+  srv->add_bool_true("/clear", &clear, "clear current recording");
+  srv->add_bool_true("/record", &record, "start recording");
+  srv->add_bool("/bypass", &bypass, "bypass, 0 means loop is added to output");
+  srv->add_float("/gain", &gain, "", "linear gain applied to loop");
+  srv->add_float_db("/gaindb", &gain, "", "dB gain applied to loop");
+  srv->add_bool("/muteinput", &muteinput, "mute the input (play only loop)");
   // srv->add_uint("/loopcnt", &loopcnt);
   srv->unset_variable_owner();
 }

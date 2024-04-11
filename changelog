@@ -1,3 +1,4 @@
+0.231.1: Improve windows build, systematic documentation of OSC variables
 0.231:
        - preliminary windows build
        - scheduled OSC messages

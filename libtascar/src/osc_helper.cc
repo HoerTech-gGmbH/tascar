@@ -1188,7 +1188,10 @@ void osc_server_t::generate_osc_documentation_files()
     std::vector<std::string> fullpath;
     bool first = true;
     size_t kmax = fullpath.size();
+    bool path_is_relpath = true;
     for(const auto& varpath : owner.second) {
+      if(varpath.second.relpath != varpath.second.path)
+        path_is_relpath = false;
       std::vector<std::string> fullpath_local =
           str2vecstr(varpath.second.relpath, "/");
       if(first) {
@@ -1215,6 +1218,8 @@ void osc_server_t::generate_osc_documentation_files()
       pat = "";
       pref = "/...";
     }
+    if(path_is_relpath)
+      pref = "";
     std::ofstream ofh("oscdoc_" + owner.first + ".tex");
     ofh << "\\definecolor{shadecolor}{RGB}{236,236,255}\\begin{snugshade}\n{"
            "\\footnotesize\n";

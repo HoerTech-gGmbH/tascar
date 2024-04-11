@@ -52,15 +52,20 @@ locmod_t::locmod_t(const TASCAR::module_cfg_t& cfg)
   actor_module_t::GET_ATTRIBUTE(v, "m/s", "velocity vector");
   actor_module_t::GET_ATTRIBUTE(p0, "m", "start position at time t0");
   actor_module_t::GET_ATTRIBUTE(t0, "s", "start time t0");
-  session->add_double(TASCAR::vecstr2str(actor) + "/v/x", &v.x, "velocity in x-direction in m/s");
-  session->add_double(TASCAR::vecstr2str(actor) + "/v/y", &v.y, "velocity in y-direction in m/s");
-  session->add_double(TASCAR::vecstr2str(actor) + "/v/z", &v.z, "velocity in z-direction in m/s");
-  session->add_double(TASCAR::vecstr2str(actor) + "/p0/x", &p0.x, "start x-position at time t0 in m");
-  session->add_double(TASCAR::vecstr2str(actor) + "/p0/y", &p0.y, "start y-position at time t0 in m");
-  session->add_double(TASCAR::vecstr2str(actor) + "/p0/z", &p0.z, "start z-position at time t0 in m");
-  session->add_double(TASCAR::vecstr2str(actor) + "/t0", &t0, "reference session time in s");
-  session->add_method(TASCAR::vecstr2str(actor) + "/vpt", "ddddddd",
-                      &osc_update, this);
+  std::string oldpref(session->get_prefix());
+  session->set_prefix(TASCAR::vecstr2str(actor));
+  session->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  session->add_double("/v/x", &v.x, "velocity in x-direction in m/s");
+  session->add_double("/v/y", &v.y, "velocity in y-direction in m/s");
+  session->add_double("/v/z", &v.z, "velocity in z-direction in m/s");
+  session->add_double("/p0/x", &p0.x, "start x-position at time t0 in m");
+  session->add_double("/p0/y", &p0.y, "start y-position at time t0 in m");
+  session->add_double("/p0/z", &p0.z, "start z-position at time t0 in m");
+  session->add_double("/t0", &t0, "reference session time in s");
+  session->add_method("/vpt", "ddddddd", &osc_update, this);
+  session->unset_variable_owner();
+  session->set_prefix(oldpref);
 }
 
 void locmod_t::osc_set_vpt(double vx, double vy, double vz, double x, double y,

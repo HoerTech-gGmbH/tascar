@@ -8,12 +8,12 @@ OSC variables:
 \hline
 path & fmt. & range & r. & description\\
 \hline
-\attr{/.../bypass} & i & bool & yes & \\
-\attr{/.../clear} &  &  & no & \\
-\attr{/.../gaindb} & f & [-40,10] & yes & \\
-\attr{/.../gain} & f &  & yes & \\
-\attr{/.../muteinput} & i & bool & yes & \\
-\attr{/.../record} &  &  & no & \\
+\attr{/.../bypass} & i & bool & yes & bypass, 0 means loop is added to output\\
+\attr{/.../clear} &  &  & no & clear current recording\\
+\attr{/.../gaindb} & f &  & yes & dB gain applied to loop\\
+\attr{/.../gain} & f &  & yes & linear gain applied to loop\\
+\attr{/.../muteinput} & i & bool & yes & mute the input (play only loop)\\
+\attr{/.../record} &  &  & no & start recording\\
 \hline
 \end{tabularx}
 }

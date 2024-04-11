@@ -292,6 +292,8 @@ HoS::parameter_t::parameter_t(tsccfg::node_t e, TASCAR::osc_server_t* o)
   pthread_mutex_init(&mtx, NULL);
   if(lo_addr)
     lo_address_set_ttl(lo_addr, 1);
+  o->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   o->add_bool_true(path + "/gohome", &b_home);
   o->add_float_degree(path + "/home", &home);
 #define REGISTER_FLOAT_VAR(x) o->add_float(path + "/" + #x, &(par_osc.x))
@@ -320,6 +322,7 @@ HoS::parameter_t::parameter_t(tsccfg::node_t e, TASCAR::osc_server_t* o)
   o->add_uint(path + "/tcnt", &tcnt);
   o->add_float(path + "/incbpm", &incbpm);
   o->add_float_degree(path + "/incbpmphi", &incbpmphi);
+  o->unset_variable_owner();
 }
 
 HoS::parameter_t::~parameter_t() {}

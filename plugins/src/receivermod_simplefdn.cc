@@ -346,9 +346,13 @@ void simplefdn_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
-  srv->add_method("/fixcirculantmat", "i", &osc_fixcirculantmat, this);
-  srv->add_method("/dim_damp_absorption", "fffff", &osc_set_dim_damp_absorption,
-                  this);
+  srv->add_method("/fixcirculantmat", "i", &osc_fixcirculantmat, this, true,
+                  false, "bool",
+                  "Fix a neglegible bug in the feedback matrix design");
+  srv->add_method(
+      "/dim_damp_absorption", "fffff", &osc_set_dim_damp_absorption, this, true,
+      false, "",
+      "Set dimension (x,y,z in m), damping and absorption coefficient");
   srv->unset_variable_owner();
 }
 
