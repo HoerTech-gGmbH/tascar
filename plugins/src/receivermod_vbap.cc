@@ -130,7 +130,8 @@ rec_vbap_t::rec_vbap_t(tsccfg::node_t xmlsrc)
     simplices.push_back(sim);
   }
   TASCAR::ngon_t poly;
-  poly.nonrt_set(spklist);
+  //poly.nonrt_set(spklist);
+  poly.nonrt_set(hull);
   bool is_outside = false;
   poly.nearest(TASCAR::pos_t(), &is_outside);
   if(is_outside)
