@@ -1,3 +1,4 @@
+0.231.2: Fix bug in VBAP receiver (invalid error message when speakers were not ordered)
 0.231.1: Improve windows build, systematic documentation of OSC variables
 0.231:
        - preliminary windows build
