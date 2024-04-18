@@ -490,7 +490,7 @@ namespace TASCAR {
       void add_licenses(licensehandler_t* session);
       void validate_attributes(std::string& msg) const;
       bool active;
-      std::atomic_bool valid_geometry;
+      std::mutex mtx_geometry;
 
     private:
       void clean_children();

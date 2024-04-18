@@ -186,12 +186,13 @@ void pos2osc_t::update_local()
     // for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
     // it != obj.end(); ++it) {
     for(auto& obj : objects) {
-      if(((!threaded) || (obj.scene->valid_geometry))) {
+      if(obj.scene->mtx_geometry.try_lock()) {
         // copy position from parent object:
         TASCAR::pos_t p(obj.obj->c6dof.position);
         TASCAR::zyx_euler_t o(obj.obj->c6dof.orientation);
         if(ignoreorientation)
           o = obj.obj->c6dof_nodelta.orientation;
+        obj.scene->mtx_geometry.unlock();
         std::string path;
         switch(mode) {
         case 0:
@@ -229,11 +230,14 @@ void pos2osc_t::update_local()
                   soundname = parentname + "." + isnd->get_name();
                 else
                   soundname = isnd->get_name();
-                lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
-                        isnd->position.x, isnd->position.y, isnd->position.z,
-                        RAD2DEG * isnd->orientation.z * oscale,
-                        RAD2DEG * isnd->orientation.y * oscale,
-                        RAD2DEG * isnd->orientation.x * oscale);
+                if(obj.scene->mtx_geometry.try_lock()) {
+                  auto ipos = isnd->position;
+                  auto iori = isnd->orientation;
+                  obj.scene->mtx_geometry.unlock();
+                  lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
+                          ipos.x, ipos.y, ipos.z, RAD2DEG * iori.z * oscale,
+                          RAD2DEG * iori.y * oscale, RAD2DEG * iori.x * oscale);
+                }
               }
             }
           }

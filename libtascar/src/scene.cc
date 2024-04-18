@@ -256,7 +256,7 @@ scene_t::scene_t(tsccfg::node_t xmlsrc)
     : xml_element_t(xmlsrc), licensed_component_t(typeid(*this).name()),
       description(""), name("scene"), id(TASCAR::get_tuid()), c(340.0),
       ismorder(1), guiscale(200), guitrackobject(NULL), anysolo(0),
-      scene_path(""), active(true), valid_geometry(true)
+      scene_path(""), active(true)
 {
   try {
     GET_ATTRIBUTE(name, "", "scene name");
