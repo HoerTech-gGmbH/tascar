@@ -408,6 +408,8 @@ OSC variables can also be read from a file. In this case, every non-empty line n
 
 If the filename does not start with an absolute path, the session attribute \attr{scriptpath} is used as a prefix. The default file ending for \tascar{} OSC scripts is \verb!.tosc!. With the session attribute \attr{initoscscript}, an OSC script can be specified which will be run after loading a session.
 
+You cannot use \verb!/runscript! to read nested OSC script files. Instead, write a line of \verb!<filename! into the script file at the position where the nested file \verb!filename! is to be read. \attr{scriptpath} and \attr{scriptext} will be prefixed and appended to the filename. Make sure there are no leading or trailing spaces in the line starting with \verb!<!.
+
 \subsection{Optimization of the operating system for audio processing}
 
 In multi-user desktop systems, it is important to assign real-time priority to the signal processing threads of audio software. To set up real-time scheduling on the system, users in the 'audio' group must be granted permission to acquire real-time priority and lock memory in RAM. To do this, edit the {\tt /etc/security/limits.conf} file with superuser privileges:

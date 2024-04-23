@@ -286,8 +286,9 @@ namespace TASCAR {
     /**
        @brief Read a script file with OSC messages
      */
-    void read_script(const std::vector<std::string>& filename);
-    void read_script_async(const std::vector<std::string>& filename);
+    void read_script_one(std::string filename);
+    void read_script(const std::vector<std::string>& filenames);
+    void read_script_async(const std::vector<std::string>& filenames);
     std::string scriptpath = "";
     std::string scriptext = "";
     /**
@@ -327,7 +328,7 @@ namespace TASCAR {
     std::mutex mtxdispatch;
     std::map<double, std::vector<msg_t>> timed_messages;
     std::mutex mtxtimedmessages;
-    std::map<std::string, std::map<std::string,descriptor_t>> owned_vars;
+    std::map<std::string, std::map<std::string, descriptor_t>> owned_vars;
     std::string varowner;
   };
 

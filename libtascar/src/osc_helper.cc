@@ -1034,46 +1034,48 @@ std::string osc_server_t::get_vars_as_json(std::string prefix,
   return get_vars_as_json_rg(prefix, it, datamap.end(), asstring);
 }
 
-void osc_server_t::read_script(const std::vector<std::string>& filenames)
+void osc_server_t::read_script_one(std::string filename)
 {
-  cancelscript = true;
-  std::lock_guard<std::mutex> lk(mtxscript);
-  if(filenames.empty())
-    return;
-  cancelscript = false;
+  std::string called_filename = filename;
   tictoc_t tictoc;
   char rbuf[0x4000];
-  for(auto filename : filenames) {
-    if(!filename.empty()) {
-      if(!scriptpath.empty()) {
-        if(filename[0] != '/') {
-          if(scriptpath[scriptpath.size() - 1] != '/')
-            filename = scriptpath + "/" + filename;
-          else
-            filename = scriptpath + filename;
-        }
+  if(!filename.empty()) {
+    if(!scriptpath.empty()) {
+      if(filename[0] != '/') {
+        if(scriptpath[scriptpath.size() - 1] != '/')
+          filename = scriptpath + "/" + filename;
+        else
+          filename = scriptpath + filename;
       }
-      FILE* fh = fopen((filename + scriptext).c_str(), "r");
-      if(!fh) {
-        TASCAR::add_warning("Cannot open file \"" + filename + scriptext +
-                            "\".");
+    }
+    FILE* fh = fopen((filename + scriptext).c_str(), "r");
+    if(!fh) {
+      TASCAR::add_warning("Cannot open file \"" + filename + scriptext + "\".");
+      return;
+    }
+    while(!feof(fh)) {
+      memset(rbuf, 0, 0x4000);
+      if(cancelscript) {
+        fclose(fh);
         return;
       }
-      while(!feof(fh)) {
-        memset(rbuf, 0, 0x4000);
-        if(cancelscript) {
-          fclose(fh);
-          return;
-        }
-        char* s = fgets(rbuf, 0x4000 - 1, fh);
-        if(s) {
-          rbuf[0x4000 - 1] = 0;
-          if(rbuf[0] == '#')
-            rbuf[0] = 0;
-          if(strlen(rbuf))
-            if(rbuf[strlen(rbuf) - 1] == 10)
-              rbuf[strlen(rbuf) - 1] = 0;
-          if(strlen(rbuf)) {
+      char* s = fgets(rbuf, 0x4000 - 1, fh);
+      if(s) {
+        rbuf[0x4000 - 1] = 0;
+        if(rbuf[0] == '#')
+          rbuf[0] = 0;
+        if(strlen(rbuf))
+          if(rbuf[strlen(rbuf) - 1] == 10)
+            rbuf[strlen(rbuf) - 1] = 0;
+        if(strlen(rbuf)) {
+          if(rbuf[0] == '<') {
+            std::string newfname(&rbuf[1]);
+            if(newfname != called_filename)
+              read_script_one(newfname);
+            else
+              TASCAR::add_warning("Not calling tosc script \"" + newfname +
+                                  "\" recursively.");
+          } else {
             if(rbuf[0] == ',') {
               double val(0.0f);
               sscanf(&rbuf[1], "%lg", &val);
@@ -1115,8 +1117,20 @@ void osc_server_t::read_script(const std::vector<std::string>& filenames)
           }
         }
       }
-      fclose(fh);
     }
+    fclose(fh);
+  }
+}
+
+void osc_server_t::read_script(const std::vector<std::string>& filenames)
+{
+  cancelscript = true;
+  std::lock_guard<std::mutex> lk(mtxscript);
+  if(filenames.empty())
+    return;
+  cancelscript = false;
+  for(auto filename : filenames) {
+    read_script_one(filename);
   }
 }
 
