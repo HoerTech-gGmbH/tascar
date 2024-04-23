@@ -1000,15 +1000,27 @@ void tascar_window_t::on_menu_file_exportacmodel()
 void tascar_window_t::on_menu_file_reload()
 {
   try {
+    DEBUG(1);
     get_warnings().clear();
     numlastwarnings = 0;
+    DEBUG(1);
+    scene_destroy();
+    DEBUG(1);
+    reset_gui();
+    DEBUG(1);
+    // wait?
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    DEBUG(1);
     scene_load(tascar_filename);
+    DEBUG(1);
     sessionquit = false;
     if(session) {
       session->add_bool_true("/tascargui/quit", &sessionquit);
       session->add_bool_true("/tascar/quit", &sessionquit);
     }
+    DEBUG(1);
     reset_gui();
+    DEBUG(1);
   }
   catch(const std::exception& e) {
     error_message(e.what());
