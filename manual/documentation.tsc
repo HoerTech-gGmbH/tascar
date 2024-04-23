@@ -135,6 +135,7 @@
     <linearmovement actor="/scene/in"/>
     <systime/>
     <system command="ls"/>
+    <timedisplay/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

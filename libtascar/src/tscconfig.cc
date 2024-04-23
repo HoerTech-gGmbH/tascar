@@ -177,6 +177,7 @@ void make_common(std::map<std::string, std::set<std::string>>& parentchildren,
 std::string TASCAR::to_latex(std::string s)
 {
   s = TASCAR::strrep(s, "_", "\\_");
+  s = TASCAR::strrep(s, "#", "\\#");
   return s;
 }
 

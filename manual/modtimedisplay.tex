@@ -1,10 +1,49 @@
 Create a window with a time display.
 
-\begin{tscattributes}
-\indattr{times}     & List of marker times, or empty to use session time                            \\
-\indattr{remaining} & Show remaining time until marker (true) or time since marker (false, default) \\
-\indattr{fontscale} & Font scale (default: 1)                                                       \\
-\indattr{threshold} & Change color to red if displayed time is below this value (default: 0)        \\
-\indattr{x}, \indattr{y}, \indattr{w}, \indattr{h} & Position and size of window\\
-\end{tscattributes}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:timedisplay}
+Attributes of element {\bf timedisplay}\nopagebreak
 
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{colbg} & background color (string, html color) & \#ffffff\\
+\hline
+\indattr{colneg} & font color for negative times (string, html color) & \#cc1a1a\\
+\hline
+\indattr{colpos} & font color for positive times (string, html color) & \#000000\\
+\hline
+\indattr{digits} & Number of decimals (uint32) & 1\\
+\hline
+\indattr{fontscale} & font scale (double) & 1\\
+\hline
+\indattr{fps} & Display update rate (not granted) (double, Hz) & 10\\
+\hline
+\indattr{prefix} & OSC variable prefix (string) & /timedisplay\\
+\hline
+\indattr{remaining} & show remaining time (bool) & false\\
+\hline
+\indattr{showtc} & Show time code (bool) & false\\
+\hline
+\indattr{threshold} & Change color to red if displayed time is below this value (double, s) & 0\\
+\hline
+\indattr{times} & List of time thresholds (double array, s) & \\
+\hline
+\indattr{w} & window width (int32, px) & 148\\
+\hline
+\indattr{h} & window height (int32, px) & 17\\
+\hline
+\indattr{x} & window x position (int32, px) & 26\\
+\hline
+\indattr{y} & window y position (int32, px) & 23\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+It is possible to set a timer using OSC the variable:
+
+\input{oscdoc_tascarmod_timedisplay.tex}

@@ -19,6 +19,7 @@
  */
 
 #include "errorhandling.h"
+#include "scene.h"
 #include "session.h"
 #include "timedisplay_glade.h"
 #include <gdkmm/event.h>
@@ -39,8 +40,10 @@ public:
   timedisplay_t(const TASCAR::module_cfg_t& cfg);
   ~timedisplay_t();
   bool on_timeout();
+  void settime(double nt);
 
 private:
+  // configuration variables:
   std::set<double> tset;
   bool remaining = false;
   bool showtc = false;
@@ -48,28 +51,43 @@ private:
   double threshold = 0.0;
   double fps = 10.0;
   uint32_t digits = 1;
+  std::string prefix = "/timedisplay";
+  // internal variables:
+  double deltatime = 0.0;
   Glib::RefPtr<Gtk::Builder> refBuilder;
   Gtk::Window* timedisplaywindow;
   Gtk::Label* label;
   sigc::connection connection_timeout;
   Gdk::RGBA col_threshold;
   Gdk::RGBA col_normal;
+  Gdk::RGBA col_back;
   char cfmt[1024];
+  TASCAR::Scene::rgb_color_t colbg_ = TASCAR::Scene::rgb_color_t("#ffffff");
+  TASCAR::Scene::rgb_color_t colpos_ = TASCAR::Scene::rgb_color_t("#000000");
+  TASCAR::Scene::rgb_color_t colneg_ = TASCAR::Scene::rgb_color_t("#cc1a1a");
 };
+
+int osc_settime(const char*, const char*, lo_arg** argv, int argc, lo_message,
+                void* user_data)
+{
+  if(user_data && (argc == 1))
+    ((timedisplay_t*)user_data)->settime(argv[0]->d);
+  return 0;
+}
 
 timedisplay_t::timedisplay_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg)
 {
-  col_threshold.set_rgba(0.8, 0.1, 0.1, 1);
-  col_normal.set_rgba(0, 0, 0, 1);
   std::vector<double> times;
   GET_ATTRIBUTE(times, "s", "List of time thresholds");
   GET_ATTRIBUTE_BOOL(remaining, "show remaining time");
   GET_ATTRIBUTE(fontscale, "", "font scale");
-  GET_ATTRIBUTE_(threshold);
+  GET_ATTRIBUTE(threshold, "s",
+                "Change color to red if displayed time is below this value");
   GET_ATTRIBUTE(fps, "Hz", "Display update rate (not granted)");
   GET_ATTRIBUTE(digits, "", "Number of decimals");
   GET_ATTRIBUTE_BOOL(showtc, "Show time code");
+  GET_ATTRIBUTE(prefix, "", "OSC variable prefix");
   for(uint32_t k = 0; k < times.size(); ++k)
     tset.insert(times[k]);
   // activate();
@@ -89,13 +107,32 @@ timedisplay_t::timedisplay_t(const TASCAR::module_cfg_t& cfg)
   int h(1);
   timedisplaywindow->get_position(x, y);
   timedisplaywindow->get_size(w, h);
-  GET_ATTRIBUTE_(x);
-  GET_ATTRIBUTE_(y);
-  GET_ATTRIBUTE_(w);
-  GET_ATTRIBUTE_(h);
+  GET_ATTRIBUTE(x, "px", "window x position");
+  GET_ATTRIBUTE(y, "px", "window y position");
+  GET_ATTRIBUTE(w, "px", "window width");
+  GET_ATTRIBUTE(h, "px", "window height");
+  std::string colbg = colbg_.str();
+  GET_ATTRIBUTE(colbg, "html color", "background color");
+  colbg_ = TASCAR::Scene::rgb_color_t(colbg);
+  std::string colpos = colpos_.str();
+  GET_ATTRIBUTE(colpos, "html color", "font color for positive times");
+  colpos_ = TASCAR::Scene::rgb_color_t(colpos);
+  std::string colneg = colneg_.str();
+  GET_ATTRIBUTE(colneg, "html color", "font color for negative times");
+  colneg_ = TASCAR::Scene::rgb_color_t(colneg);
+  col_threshold.set_rgba(colneg_.r, colneg_.g, colneg_.b, 1);
+  col_normal.set_rgba(colpos_.r, colpos_.g, colpos_.b, 1);
+  col_back.set_rgba(colbg_.r, colbg_.g, colbg_.b, 1);
   timedisplaywindow->move(x, y);
   timedisplaywindow->resize(w, h);
   snprintf(cfmt, 1023, "%%1.%df s", digits);
+  std::string oldpref(session->get_prefix());
+  session->set_prefix(prefix);
+  session->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  session->add_method("/time", "d", &osc_settime, this);
+  session->unset_variable_owner();
+  session->set_prefix(oldpref);
 }
 
 timedisplay_t::~timedisplay_t()
@@ -105,12 +142,19 @@ timedisplay_t::~timedisplay_t()
   delete label;
 }
 
+void timedisplay_t::settime(double nt)
+{
+  deltatime = session->tp_get_time() + nt;
+}
+
 bool timedisplay_t::on_timeout()
 {
   char ctmp[1024];
   ctmp[1023] = 0;
   double ltime(session->tp_get_time());
   if(tset.empty()) {
+    if(deltatime > 0)
+      ltime = deltatime - ltime;
     if(remaining)
       ltime = session->duration - ltime;
   } else {
@@ -132,8 +176,8 @@ bool timedisplay_t::on_timeout()
     double minutes = floor(ltime / 60 - 60 * hours);
     double secs = floor(ltime - 60 * minutes - 3600 * hours);
     double frames = floor((ltime - secs - 60 * minutes - 3600 * hours) * fps);
-    snprintf(ctmp, 1023, "%s%02.0f:%02.0f:%02.0f:%02.0f", (sign ? "-" : ""), hours,
-            minutes, secs, frames);
+    snprintf(ctmp, 1023, "%s%02.0f:%02.0f:%02.0f:%02.0f", (sign ? "-" : ""),
+             hours, minutes, secs, frames);
   } else {
     snprintf(ctmp, 1023, cfmt, ltime);
   }
@@ -141,6 +185,7 @@ bool timedisplay_t::on_timeout()
     label->override_color(col_threshold);
   else
     label->override_color(col_normal);
+  label->override_background_color(col_back);
   label->set_text(ctmp);
   return true;
 }
