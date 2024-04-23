@@ -165,6 +165,8 @@ protected:
   Gtk::Widget* news_viewpp;
 #endif
   uint32_t splash_timeout;
+
+  size_t numlastwarnings = 0;
 };
 
 #endif

@@ -84,6 +84,7 @@ namespace TASCAR {
     std::string operator()(const std::string&, const std::string&) const;
     void forceoverwrite(const std::string&, const std::string&);
     void writeconfig(const std::vector<std::string>& keys);
+    ~globalconfig_t();
 
   private:
     void readconfig(const std::string& fname);
@@ -243,7 +244,8 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
                        fname + "."
                 << std::endl;
       std::ofstream fh(fname);
-      fh << "\\definecolor{shadecolor}{RGB}{255,230,204}\\begin{snugshade}\n{\\footnotesize\n";
+      fh << "\\definecolor{shadecolor}{RGB}{255,230,204}\\begin{snugshade}\n{"
+            "\\footnotesize\n";
       fh << "\\label{attrtab:" << elem.first << "}\n";
       fh << "Attributes of ";
       if(elem.second.type.empty())
@@ -691,6 +693,8 @@ TASCAR::globalconfig_t::globalconfig_t()
   readconfig("/etc/tascar/defaults.xml");
   readconfig("${HOME}/.tascardefaults.xml");
 }
+
+TASCAR::globalconfig_t::~globalconfig_t() {}
 
 void TASCAR::globalconfig_t::readconfig(const std::string& fname)
 {

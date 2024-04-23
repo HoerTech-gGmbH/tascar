@@ -365,6 +365,10 @@ bool tascar_window_t::on_timeout_blink()
     else
       blink = true;
     draw.set_blink(blink);
+    if(TASCAR::get_warnings().size() > numlastwarnings) {
+      numlastwarnings = TASCAR::get_warnings().size();
+      on_menu_view_show_warnings();
+    }
     bool has_warnings(text_warnings->get_buffer()->size());
     Gdk::RGBA col;
     if(has_warnings)
@@ -498,6 +502,7 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
 void tascar_window_t::load(const std::string& fname)
 {
   get_warnings().clear();
+  numlastwarnings = 0;
   scene_load(fname);
   tascar_filename = fname;
   sessionquit = false;
@@ -748,7 +753,7 @@ void tascar_window_t::on_menu_file_close()
 {
   try {
     scene_destroy();
-    get_warnings().clear();
+    // get_warnings().clear();
 #if defined(WEBKIT2GTK30) || defined(WEBKIT2GTK40)
     webkit_web_view_try_close(news_view);
 #endif
@@ -996,6 +1001,7 @@ void tascar_window_t::on_menu_file_reload()
 {
   try {
     get_warnings().clear();
+    numlastwarnings = 0;
     scene_load(tascar_filename);
     sessionquit = false;
     if(session) {
@@ -1068,6 +1074,7 @@ void tascar_window_t::on_menu_file_open()
     std::string filename = dialog.get_filename();
     try {
       get_warnings().clear();
+      numlastwarnings = 0;
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
@@ -1109,6 +1116,7 @@ void tascar_window_t::on_menu_file_open_example()
     std::string filename = dialog.get_filename();
     try {
       get_warnings().clear();
+      numlastwarnings = 0;
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
