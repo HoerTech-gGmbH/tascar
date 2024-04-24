@@ -103,8 +103,13 @@
     <obstacle name="obstacle"/>
   </scene>
   <modules>
+    <system command="tascar_lsljacktime"/>
     <jackrec/>
-    <datalogging/>
+    <datalogging>
+      <osc/>
+      <oscs/>
+      <lsl predicate="name='TASCARtime'"/>
+    </datalogging>
     <oscrelay/>
     <oscjacktime/>
     <waitforlslstream/>
@@ -134,7 +139,6 @@
     <pos2osc pattern="/*/*"/>
     <linearmovement actor="/scene/in"/>
     <systime/>
-    <system command="ls"/>
     <timedisplay/>
     <lsl2osc/>
   </modules>

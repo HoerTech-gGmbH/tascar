@@ -80,6 +80,68 @@ name & description (type, unit) & def.\\
 }
 \end{snugshade}
 
+%%% osc
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:osc}
+Attributes of element {\bf osc}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{ignorefirst} & Ignore first value in visualization. (bool) & false\\
+\hline
+\indattr{path} & OSC path name, expecting messages with 'd' format (usedouble=true) or 'f' format. (string) & \\
+\hline
+\indattr{size} & Numer of double/float values per sample. (uint32) & 1\\
+\hline
+\indattr{usedouble} & Use double precision OSC variable instead of single precision. (bool) & true\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+%%% oscs
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:oscs}
+Attributes of element {\bf oscs}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{path} & OSC path name, expecting messages with 's' format (string) & \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+%%% lsl
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:lsl}
+Attributes of element {\bf lsl}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{predicate} & LSL stream resolving predicate, e.g., "name='EEG'" (string) & \\
+\hline
+\indattr{required} & Require this stream. If true, then loading will fail if stream is not available. (bool) & true\\
+\hline
+\indattr{tctimeout} & Time correction timeout (double, s) & 2\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+
 The window size and position of the datalogging GUI can be controlled
 with the attributes \attr{x}, \attr{y}, \attr{w} and \attr{h}.
 %

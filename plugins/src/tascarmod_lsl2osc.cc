@@ -45,7 +45,6 @@ void lsl2osc_t::scanthread(const std::string& name)
         if(infos.size() > 1)
           TASCAR::add_warning("More than one LSL stream with name \"" + name +
                               "\" sound. Using the first match.");
-        DEBUG(infos.size());
         auto cfmt = infos[0].channel_format();
         if(!((cfmt == lsl::cf_float32) || (cfmt == lsl::cf_double64))) {
           TASCAR::add_warning(
@@ -68,17 +67,21 @@ void lsl2osc_t::scanthread(const std::string& name)
         auto inlet = lsl::stream_inlet(infos[0]);
         std::vector<double> sample;
         while(runthreads) {
+          for(auto& s : sample)
+            s = 0.0;
           // get LSL sample, store time:
           msgd[0]->d = inlet.pull_sample(sample, 0.1);
-          size_t ch = 1;
-          for(auto s : sample) {
-            msgd[ch]->d = s;
-            ++ch;
+          if(msgd[0]->d > 0.0) {
+            size_t ch = 1;
+            for(auto s : sample) {
+              msgd[ch]->d = s;
+              ++ch;
+            }
+            if(loaddr)
+              lo_send_message(loaddr, oscpath.c_str(), msg);
+            else
+              session->dispatch_data_message(oscpath.c_str(), msg);
           }
-          if(loaddr)
-            lo_send_message(loaddr, oscpath.c_str(), msg);
-          else
-            session->dispatch_data_message(oscpath.c_str(), msg);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
       }

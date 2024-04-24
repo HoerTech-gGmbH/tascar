@@ -134,7 +134,7 @@ public:
   std::string path;
   uint32_t size = 1u;
   bool ignorefirst = false;
-  bool usedouble = false;
+  bool usedouble = true;
 
 private:
   void osc_receive_sample(const char* path, uint32_t size, double* data);
@@ -526,15 +526,19 @@ void lslvar_t::set_delta(double deltatime)
 
 oscsvar_t::oscsvar_t(tsccfg::node_t xmlsrc) : var_base_t(xmlsrc)
 {
-  GET_ATTRIBUTE_(path);
+  GET_ATTRIBUTE(path, "", "OSC path name, expecting messages with 's' format");
 }
 
 oscvar_t::oscvar_t(tsccfg::node_t xmlsrc) : var_base_t(xmlsrc)
 {
-  GET_ATTRIBUTE_(path);
-  GET_ATTRIBUTE_(size);
-  GET_ATTRIBUTE_BOOL_(ignorefirst);
-  GET_ATTRIBUTE_BOOL_(usedouble);
+  GET_ATTRIBUTE(path, "",
+                "OSC path name, expecting messages with 'd' format "
+                "(usedouble=true) or 'f' format.");
+  GET_ATTRIBUTE(size, "", "Numer of double/float values per sample.");
+  GET_ATTRIBUTE_BOOL(ignorefirst, "Ignore first value in visualization.");
+  GET_ATTRIBUTE_BOOL(
+      usedouble,
+      "Use double precision OSC variable instead of single precision.");
 }
 
 std::string oscvar_t::get_fmt()
@@ -1079,6 +1083,16 @@ datalogging_t::datalogging_t(const TASCAR::module_cfg_t& cfg)
   osc_stop.connect(sigc::mem_fun(*this, &datalogging_t::on_ui_stop));
   osc_set_trialid.connect(
       sigc::mem_fun(*this, &datalogging_t::on_osc_set_trialid));
+  for(auto sne : tsccfg::node_get_children(e, "variable"))
+    oscvars.push_back(new oscvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e, "osc"))
+    oscvars.push_back(new oscvar_t(sne));
+  for(auto sne : tsccfg::node_get_children(e, "oscs"))
+    oscsvars.push_back(new oscsvar_t(sne));
+#ifdef HAS_LSL
+  for(auto sne : tsccfg::node_get_children(e, "lsl"))
+    lslvars.push_back(new lslvar_t(sne, lsltimeout));
+#endif
 }
 
 datalogging_t::~datalogging_t()
@@ -1106,16 +1120,6 @@ datalogging_t::~datalogging_t()
 void datalogging_t::configure()
 {
   TASCAR::module_base_t::configure();
-  for(auto sne : tsccfg::node_get_children(e, "variable"))
-    oscvars.push_back(new oscvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e, "osc"))
-    oscvars.push_back(new oscvar_t(sne));
-  for(auto sne : tsccfg::node_get_children(e, "oscs"))
-    oscsvars.push_back(new oscsvar_t(sne));
-#ifdef HAS_LSL
-  for(auto sne : tsccfg::node_get_children(e, "lsl"))
-    lslvars.push_back(new lslvar_t(sne, lsltimeout));
-#endif
   TASCAR::osc_server_t* osc(this);
   if(port.empty())
     osc = session;
