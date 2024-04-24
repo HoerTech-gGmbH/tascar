@@ -136,6 +136,7 @@
     <systime/>
     <system command="ls"/>
     <timedisplay/>
+    <lsl2osc/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

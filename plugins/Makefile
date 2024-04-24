@@ -60,7 +60,7 @@ ifeq "$(HAS_LSL)" "yes"
 CXXFLAGS += -DHAS_LSL
 TASCARMODS += lsljacktime lslactor levels2osc pos2lsl
 AUDIOPLUGINS += speechactivity periodogram
-TASCARMODSGUI += glabsensors waitforlslstream
+TASCARMODSGUI += glabsensors waitforlslstream lsl2osc
 GLABSENSORS += smiley eog emergency espheadtracker midicc	\
   qualisys jackstatus serial oscthreshold
 endif
@@ -136,6 +136,7 @@ build/$(PLUGINPREFIX)tascar_ap_lipsync_paper$(DLLEXT): LDLIBS+=-lfftw3f
 build/$(PLUGINPREFIX)tascar_ap_openmha$(DLLEXT): LDLIBS+=-lopenmha
 build/$(PLUGINPREFIX)tascar_ap_periodogram$(DLLEXT): LDLIBS+=-llsl
 build/$(PLUGINPREFIX)tascar_ap_speechactivity$(DLLEXT): LDLIBS+=-llsl
+build/$(PLUGINPREFIX)tascar_lsl2osc$(DLLEXT): LDLIBS+=-llsl
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -lmatio
 ifeq "$(HAS_LSL)" "yes"
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -llsl
