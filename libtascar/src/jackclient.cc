@@ -38,6 +38,7 @@ static std::string errmsg("");
 jackc_portless_t::jackc_portless_t(const std::string& clientname)
     : srate(0), active(false), xruns(0), xrun_latency(0), shutdown(false)
 {
+  mtx_active.lock();
   jack_status_t jstat;
   // jack_options_t opt(JackUseExactName |JackNoStartServer);
   if((int)(clientname.size() + 1) > jack_client_name_size())
@@ -158,10 +159,12 @@ void jackc_portless_t::activate()
     throw TASCAR::ErrMsg("Jack server has shut down");
   jack_activate(jc);
   active = true;
+  mtx_active.unlock();
 }
 
 void jackc_portless_t::deactivate()
 {
+  mtx_active.lock();
   if(shutdown)
     return;
   if(active)
@@ -320,11 +323,16 @@ int jackc_t::process_(jack_nframes_t nframes)
 {
   if(!active)
     return 0;
-  for(unsigned int k = 0; k < inBuffer.size(); k++)
-    inBuffer[k] = (float*)(jack_port_get_buffer(inPort[k], nframes));
-  for(unsigned int k = 0; k < outBuffer.size(); k++)
-    outBuffer[k] = (float*)(jack_port_get_buffer(outPort[k], nframes));
-  return process(nframes, inBuffer, outBuffer);
+  if(mtx_active.try_lock()) {
+    for(unsigned int k = 0; k < inBuffer.size(); k++)
+      inBuffer[k] = (float*)(jack_port_get_buffer(inPort[k], nframes));
+    for(unsigned int k = 0; k < outBuffer.size(); k++)
+      outBuffer[k] = (float*)(jack_port_get_buffer(outPort[k], nframes));
+    int retv = process(nframes, inBuffer, outBuffer);
+    mtx_active.unlock();
+    return retv;
+  }
+  return 0;
 }
 
 void jackc_t::add_input_port(const std::string& name)
@@ -582,9 +590,9 @@ void jackc_db_t::add_input_port(const std::string& name)
 {
   if(inner_is_larger) {
     // allocate buffer:
-    for(uint32_t k = 0; k < 2; k++){
+    for(uint32_t k = 0; k < 2; k++) {
       auto buf = new float[inner_fragsize];
-      for(uint32_t k=0;k<inner_fragsize;++k)
+      for(uint32_t k = 0; k < inner_fragsize; ++k)
         buf[k] = 0.0f;
       dbinBuffer[k].push_back(buf);
     }
@@ -599,9 +607,9 @@ void jackc_db_t::add_output_port(const std::string& name)
 {
   if(inner_is_larger) {
     // allocate buffer:
-    for(uint32_t k = 0; k < 2; k++){
+    for(uint32_t k = 0; k < 2; k++) {
       auto buf = new float[inner_fragsize];
-      for(uint32_t k=0;k<inner_fragsize;++k)
+      for(uint32_t k = 0; k < inner_fragsize; ++k)
         buf[k] = 0.0f;
       dboutBuffer[k].push_back(buf);
     }

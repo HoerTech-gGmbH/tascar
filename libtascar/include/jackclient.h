@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <string>
 #include <vector>
+#include <mutex>
 
 class jackc_portless_t {
 public:
@@ -75,6 +76,7 @@ public:
   uint32_t xruns;
   double xrun_latency;
   std::atomic_bool shutdown;
+  std::mutex mtx_active;
 };
 
 /**
