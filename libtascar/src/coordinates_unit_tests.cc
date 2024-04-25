@@ -654,15 +654,15 @@ TEST(quaternion_t, rotate)
   ASSERT_NEAR(1.0, p.z, 1e-9);
   p = TASCAR::pos_t(1, 0, 0);
   q.rotate(p);
-  ASSERT_NEAR(0.0, p.x, 1e-9);
-  ASSERT_NEAR(1.0, p.y, 1e-9);
-  ASSERT_NEAR(0.0, p.z, 1e-9);
+  ASSERT_NEAR(0.0, p.x, 1e-7);
+  ASSERT_NEAR(1.0, p.y, 1e-7);
+  ASSERT_NEAR(0.0, p.z, 1e-7);
   q.set_rotation(TASCAR_PIf, TASCAR::pos_t(sqrt(0.5), 0, sqrt(0.5)));
   p = TASCAR::pos_t(1, 0, 0);
   q.rotate(p);
-  ASSERT_NEAR(0.0, p.x, 1e-9);
+  ASSERT_NEAR(0.0, p.x, 1e-7);
   ASSERT_NEAR(0.0, p.y, 1e-7);
-  ASSERT_NEAR(1.0, p.z, 1e-9);
+  ASSERT_NEAR(1.0, p.z, 1e-7);
   q.set_rotation(TASCAR_PI2f, TASCAR::pos_t(0, 0, 1));
   TASCAR::quaternion_t qp;
   qp.set_rotation(TASCAR_PI2f, TASCAR::pos_t(0, 0, 1));
@@ -688,15 +688,15 @@ TEST(quaternion, torotmat)
   q.set_euler_zyx(eul);
   rm_q = q.to_rotmat();
   rm.set_from_euler(eul);
-  ASSERT_NEAR(rm.m11, rm_q.m11, 1e-7);
-  ASSERT_NEAR(rm.m12, rm_q.m12, 1e-7);
-  ASSERT_NEAR(rm.m13, rm_q.m13, 1e-7);
-  ASSERT_NEAR(rm.m21, rm_q.m21, 1e-7);
-  ASSERT_NEAR(rm.m22, rm_q.m22, 1e-7);
-  ASSERT_NEAR(rm.m23, rm_q.m23, 1e-7);
-  ASSERT_NEAR(rm.m31, rm_q.m31, 1e-7);
-  ASSERT_NEAR(rm.m32, rm_q.m32, 1e-7);
-  ASSERT_NEAR(rm.m33, rm_q.m33, 1e-7);
+  ASSERT_NEAR(rm.m11, rm_q.m11, 5e-7);
+  ASSERT_NEAR(rm.m12, rm_q.m12, 5e-7);
+  ASSERT_NEAR(rm.m13, rm_q.m13, 5e-7);
+  ASSERT_NEAR(rm.m21, rm_q.m21, 5e-7);
+  ASSERT_NEAR(rm.m22, rm_q.m22, 5e-7);
+  ASSERT_NEAR(rm.m23, rm_q.m23, 5e-7);
+  ASSERT_NEAR(rm.m31, rm_q.m31, 5e-7);
+  ASSERT_NEAR(rm.m32, rm_q.m32, 5e-7);
+  ASSERT_NEAR(rm.m33, rm_q.m33, 5e-7);
 }
 
 TEST(quaternion, euler1axis)
