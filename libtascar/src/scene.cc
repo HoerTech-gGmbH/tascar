@@ -596,7 +596,7 @@ void scene_t::configure()
   // configure parents:
   for(auto po : all_objects)
     for(auto pp : all_objects)
-      if(po->parent == pp->get_name()) {
+      if((po->parent.size() > 0) && (po->parent == pp->get_name())) {
         try {
           po->set_parent(pp);
         }
