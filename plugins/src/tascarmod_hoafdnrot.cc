@@ -438,7 +438,7 @@ hoafdnrot_t::hoafdnrot_t(const TASCAR::module_cfg_t& cfg)
     add_output_port(ctmp);
   }
   session->add_method("/" + id + "/par", "ffffff", &hoafdnrot_t::osc_setpar,
-                      this);
+                      this, "", "az, daz, t, dt, g, damping");
   session->add_float("/" + id + "/dry", &dry, "[0,1]", "Amount of dry signal");
   session->add_float("/" + id + "/wet", &wet, "[0,1]", "Amount of wet signal");
   session->add_bool("/" + id + "/prefilt", &prefilt);
