@@ -396,9 +396,11 @@ scene_t::~scene_t()
 
 void scene_t::geometry_update(double t)
 {
-  for(std::vector<object_t*>::iterator it = all_objects.begin();
-      it != all_objects.end(); ++it)
-    (*it)->geometry_update(t);
+  for(auto pobj : all_objects)
+    pobj->geometry_update(t);
+  // for(std::vector<object_t*>::iterator it = all_objects.begin();
+  //    it != all_objects.end(); ++it)
+  //  (*it)->geometry_update(t);
 }
 
 void scene_t::process_active(double t)
@@ -591,6 +593,25 @@ void scene_t::configure()
     throw TASCAR::ErrMsg("Colons in scene name are not supported (\"" + name +
                          "\")");
   all_objects = get_objects();
+  // configure parents:
+  for(auto po : all_objects)
+    for(auto pp : all_objects)
+      if(po->parent == pp->get_name()) {
+        try {
+          po->set_parent(pp);
+        }
+        catch(const std::exception& e) {
+          std::string msg = e.what();
+          throw TASCAR::ErrMsg(msg + " (object \"" + po->parent +
+                               "\", scene \"" + name + "\").");
+        }
+      }
+  // sort all objects to start with those who have most descendants, to get
+  // correct position updates for children.
+  std::sort(all_objects.begin(), all_objects.end(),
+            [](dynobject_t* a, dynobject_t* b) {
+              return a->get_num_descendants() > b->get_num_descendants();
+            });
   try {
     // update reflectors with material entry:
     // first, get list of used materials:

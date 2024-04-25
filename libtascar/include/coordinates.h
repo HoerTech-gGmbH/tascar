@@ -419,7 +419,7 @@ namespace TASCAR {
   /// ZYX Euler angles
   class zyx_euler_t {
   public:
-    std::string print(const std::string& delim = ", ");
+    std::string print(const std::string& delim = ", ") const;
     zyx_euler_t(double z_, double y_, double x_) : z(z_), y(y_), x(x_){};
     zyx_euler_t() : z(0), y(0), x(0){};
     /// Return Euler transformation from position vector

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <!-- expect: 1 2 3 -->
+    <source name="o1" dlocation="1 2 3" dorientation="90 0 0"><sound/></source>
+    <!-- expect: 1 3 3 -->
+    <source name="o2" parent="o1" dlocation="1 0 0"><sound/></source>
+    <!-- expect: 0 2 3 -->
+    <source name="o3" parent="o1" dlocation="0 1 0" dorientation="-90 0 0"><sound/></source>
+    <!-- expect: 0 2 4 -->
+    <source name="o4" parent="o3" dlocation="0 0 1"><sound/></source>
+    <!-- expect: 0 2 4 -->
+    <source name="o5" parent="o4"><sound/></source>
+    <receiver type="debugpos" sources="5"/>
+  </scene>
+</session>

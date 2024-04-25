@@ -108,6 +108,7 @@ TASCAR::dynobject_t::dynobject_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(localpos, "m", "local position");
   GET_ATTRIBUTE(dlocation, "m", "delta location");
   GET_ATTRIBUTE_NOUNIT(dorientation, "delta orientation");
+  GET_ATTRIBUTE(parent, "", "Name of parent object from same scene");
   for(auto& sne : tsccfg::node_get_children(e)) {
     if(tsccfg::node_get_name(sne) == "position") {
       xml_location = sne;
@@ -202,6 +203,11 @@ void TASCAR::dynobject_t::geometry_update(double time)
   ptmp = localpos;
   ptmp *= c6dof_.orientation;
   c6dof_.position += ptmp;
+  if(oparent) {
+    c6dof_.position *= oparent->c6dof.orientation;
+    c6dof_.position += oparent->c6dof.position;
+    c6dof_.orientation += oparent->c6dof.orientation;
+  }
 }
 
 TASCAR::pos_t TASCAR::dynobject_t::get_location() const
@@ -735,7 +741,7 @@ void track_t::write_xml(tsccfg::node_t a)
     tsccfg::node_set_attribute(a, "interpolation", "spherical");
     break;
   }
-  tsccfg::node_set_text(a,print_cart(" "));
+  tsccfg::node_set_text(a, print_cart(" "));
 }
 
 void track_t::read_xml(tsccfg::node_t a)
@@ -867,7 +873,7 @@ zyx_euler_t euler_track_t::interp(double x) const
 
 void euler_track_t::write_xml(tsccfg::node_t a)
 {
-  tsccfg::node_set_text(a,print(" "));
+  tsccfg::node_set_text(a, print(" "));
 }
 
 void euler_track_t::read_xml(tsccfg::node_t a)
@@ -944,7 +950,7 @@ std::string euler_track_t::print(const std::string& delim)
   return tmp.str();
 }
 
-std::string zyx_euler_t::print(const std::string& delim)
+std::string zyx_euler_t::print(const std::string& delim) const
 {
   std::ostringstream tmp("");
   tmp.precision(12);
@@ -971,6 +977,32 @@ void track_t::fill_gaps(double dt)
   }
   *this = nt;
   prepare();
+}
+
+void dynobject_t::set_parent(dynobject_t* p)
+{
+  if(p == this)
+    throw TASCAR::ErrMsg("Cannot set parent to self.");
+  // if(p->oparent)
+  //  throw TASCAR::ErrMsg("Higher order parenting is currently not
+  //  supported.");
+  if(p) {
+    oparent = p;
+    bool found = false;
+    for(auto pp : p->children)
+      if(pp == this)
+        found = true;
+    if(!found)
+      p->children.push_back(this);
+  }
+}
+
+size_t dynobject_t::get_num_descendants() const
+{
+  size_t ret = children.size();
+  for(auto ch : children)
+    ret += ch->get_num_descendants();
+  return ret;
 }
 
 /*

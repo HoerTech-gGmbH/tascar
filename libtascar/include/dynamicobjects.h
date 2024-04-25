@@ -178,7 +178,6 @@ namespace TASCAR {
   */
   pos_t xml_get_trkpt(tsccfg::node_t pt, time_t& tme);
 
-
   /**
      \ingroup tascar
      \brief List of Euler rotations connected with a time line.
@@ -205,6 +204,8 @@ namespace TASCAR {
     zyx_euler_t get_orientation() const;
     void get_6dof(pos_t&, zyx_euler_t&) const;
     void get_6dof_prev(pos_t&, zyx_euler_t&) const;
+    void set_parent(dynobject_t* p);
+    size_t get_num_descendants() const;
     double starttime;
     double sampledorientation;
     track_t location;
@@ -213,6 +214,9 @@ namespace TASCAR {
     zyx_euler_t dorientation;
     const c6dof_t& c6dof;
     const c6dof_t& c6dof_nodelta;
+    std::string parent;
+    dynobject_t* oparent = NULL;
+    std::vector<dynobject_t*> children;
 
   private:
     dynobject_t(const dynobject_t&);
