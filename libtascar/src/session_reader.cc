@@ -68,7 +68,7 @@ void add_includes(tsccfg::node_t e, const std::string& parentdoc,
                         TASCAR::tscbasename(idocname));
         add_includes(idoc.root(), idocname, lh);
         for(auto& isne : idoc.root.get_children())
-          tsccfg::node_import_node(e, isne);
+          tsccfg::node_import_node_before(e, isne, sne);
         tsccfg::node_remove_child(e, sne);
       }
     } else {

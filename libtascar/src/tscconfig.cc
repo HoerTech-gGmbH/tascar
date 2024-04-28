@@ -2347,6 +2347,18 @@ void tsccfg::node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src)
 #endif
 }
 
+void tsccfg::node_import_node_before(tsccfg::node_t& node, const tsccfg::node_t& src, const tsccfg::node_t& before)
+{
+#ifdef USEPUGIXML
+  node.append_copy(src);
+#elif defined(USEXERCESXML)
+  auto impnode(node->getOwnerDocument()->importNode(src, true));
+  node->insertBefore(impnode,before);
+#else
+  node->import_node(src);
+#endif
+}
+
 std::string tsccfg::node_get_attribute_value(const tsccfg::node_t& node,
                                              const std::string& name)
 {

@@ -87,6 +87,7 @@ namespace tsccfg {
   std::string node_get_text(tsccfg::node_t& n, const std::string& child = "");
   void node_set_text(tsccfg::node_t& n, const std::string& text);
   void node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src);
+  void node_import_node_before(tsccfg::node_t& node, const tsccfg::node_t& src, const tsccfg::node_t& before);
 
   // double node_xpath_to_number(tsccfg::node_t&,const std::string& path);
 
