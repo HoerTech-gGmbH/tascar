@@ -1,3 +1,9 @@
+0.232.0:
+       - add parenting feature to objects
+       - fix bug in nested XML files
+       - fix bug in nested TOCS files
+       - fix segmentation fault on unload
+       - improve pos2osc reliability
 0.231.2: Fix bug in VBAP receiver (invalid error message when speakers were not ordered)
 0.231.1: Improve windows build, systematic documentation of OSC variables
 0.231:
