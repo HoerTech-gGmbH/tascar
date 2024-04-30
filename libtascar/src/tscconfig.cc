@@ -1330,6 +1330,22 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
     set_attribute(name, value);
 }
 
+void TASCAR::xml_element_t::get_attribute(
+    const std::string& name, std::vector<TASCAR::levelmeter::weight_t>& value,
+    const std::string& info)
+{
+  TASCAR_ASSERT(e);
+  std::vector<std::string> svalue;
+  for(const auto& v : value)
+    svalue.push_back(TASCAR::to_string(v));
+  node_register_attr(e, name, TASCAR::vecstr2str(svalue), "", info,
+                     "f-weight array");
+  if(has_attribute(name))
+    get_attribute_value(e, name, value);
+  else
+    set_attribute(name, value);
+}
+
 void TASCAR::xml_element_t::set_attribute_bool(const std::string& name,
                                                bool value)
 {
@@ -1464,6 +1480,14 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,
 
 void TASCAR::xml_element_t::set_attribute(
     const std::string& name, const TASCAR::levelmeter::weight_t& value)
+{
+  TASCAR_ASSERT(e);
+  set_attribute_value(e, name, value);
+}
+
+void TASCAR::xml_element_t::set_attribute(
+    const std::string& name,
+    const std::vector<TASCAR::levelmeter::weight_t>& value)
 {
   TASCAR_ASSERT(e);
   set_attribute_value(e, name, value);
@@ -1607,6 +1631,16 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
 {
   TASCAR_ASSERT(elem);
   tsccfg::node_set_attribute(elem, name, TASCAR::to_string(value));
+}
+
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
+                         const std::vector<TASCAR::levelmeter::weight_t>& value)
+{
+  TASCAR_ASSERT(elem);
+  std::vector<std::string> tmp;
+  for(const auto& v : value)
+    tmp.push_back(TASCAR::to_string(v));
+  tsccfg::node_set_attribute(elem, name, TASCAR::vecstr2str(tmp));
 }
 
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
@@ -1874,6 +1908,32 @@ void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
     throw TASCAR::ErrMsg(std::string("Unsupported weight type \"") + svalue +
                          std::string("\" for attribute \"") + name +
                          std::string("\"."));
+}
+
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+                         std::vector<TASCAR::levelmeter::weight_t>& value)
+{
+  TASCAR_ASSERT(elem);
+  std::vector<std::string> svalue(
+      TASCAR::str2vecstr(tsccfg::node_get_attribute_value(elem, name)));
+  if(svalue.size() == 0)
+    return;
+  std::vector<TASCAR::levelmeter::weight_t> tmpvalue;
+  for(const auto& s : svalue) {
+    if(s == "Z")
+      tmpvalue.push_back(TASCAR::levelmeter::Z);
+    else if(s == "C")
+      tmpvalue.push_back(TASCAR::levelmeter::C);
+    else if(s == "A")
+      tmpvalue.push_back(TASCAR::levelmeter::A);
+    else if(s == "bandpass")
+      tmpvalue.push_back(TASCAR::levelmeter::bandpass);
+    else
+      throw TASCAR::ErrMsg(std::string("Unsupported weight type \"") + s +
+                           std::string("\" for attribute \"") + name +
+                           std::string("\"."));
+  }
+  value = tmpvalue;
 }
 
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
@@ -2347,13 +2407,15 @@ void tsccfg::node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src)
 #endif
 }
 
-void tsccfg::node_import_node_before(tsccfg::node_t& node, const tsccfg::node_t& src, const tsccfg::node_t& before)
+void tsccfg::node_import_node_before(tsccfg::node_t& node,
+                                     const tsccfg::node_t& src,
+                                     const tsccfg::node_t& before)
 {
 #ifdef USEPUGIXML
   node.append_copy(src);
 #elif defined(USEXERCESXML)
   auto impnode(node->getOwnerDocument()->importNode(src, true));
-  node->insertBefore(impnode,before);
+  node->insertBefore(impnode, before);
 #else
   node->import_node(src);
 #endif

@@ -87,7 +87,8 @@ namespace tsccfg {
   std::string node_get_text(tsccfg::node_t& n, const std::string& child = "");
   void node_set_text(tsccfg::node_t& n, const std::string& text);
   void node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src);
-  void node_import_node_before(tsccfg::node_t& node, const tsccfg::node_t& src, const tsccfg::node_t& before);
+  void node_import_node_before(tsccfg::node_t& node, const tsccfg::node_t& src,
+                               const tsccfg::node_t& before);
 
   // double node_xpath_to_number(tsccfg::node_t&,const std::string& path);
 
@@ -228,6 +229,9 @@ namespace TASCAR {
                        TASCAR::levelmeter::weight_t& value,
                        const std::string& info);
     void get_attribute(const std::string& name,
+                       std::vector<TASCAR::levelmeter::weight_t>& value,
+                       const std::string& info);
+    void get_attribute(const std::string& name,
                        std::vector<TASCAR::pos_t>& value,
                        const std::string& unit, const std::string& info);
     void get_attribute(const std::string& name, std::vector<std::string>& value,
@@ -261,6 +265,8 @@ namespace TASCAR {
                        const TASCAR::zyx_euler_t& value);
     void set_attribute(const std::string& name,
                        const TASCAR::levelmeter::weight_t& value);
+    void set_attribute(const std::string& name,
+                       const std::vector<TASCAR::levelmeter::weight_t>& value);
     void set_attribute(const std::string& name,
                        const std::vector<TASCAR::pos_t>& value);
     void set_attribute(const std::string& name,
@@ -395,6 +401,8 @@ void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<int32_t>& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::levelmeter::weight_t& value);
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+                         std::vector<TASCAR::levelmeter::weight_t>& value);
 
 void set_attribute_bool(tsccfg::node_t& elem, const std::string& name,
                         bool value);
@@ -432,6 +440,9 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const std::vector<int32_t>& value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::levelmeter::weight_t& value);
+void set_attribute_value(
+    tsccfg::node_t& elem, const std::string& name,
+    const std::vector<TASCAR::levelmeter::weight_t>& value);
 
 #define GET_ATTRIBUTE(x, u, i) get_attribute(#x, x, u, i)
 #define GET_ATTRIBUTE_(x) get_attribute(#x, x, "", "undocumented")

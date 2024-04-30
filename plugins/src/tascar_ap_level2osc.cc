@@ -21,6 +21,7 @@
 
 #include "audioplugin.h"
 #include "errorhandling.h"
+#include "levelmeter.h"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -45,6 +46,8 @@ private:
   bool threaded = true;
   bool sendwhilestopped = false;
   uint32_t skip = 0;
+  float tau = 0;
+  std::vector<TASCAR::levelmeter::weight_t> weights;
   std::string url = "osc.udp://localhost:9999/";
   std::string path = "/level";
   // derived variables:
@@ -59,16 +62,23 @@ private:
   std::mutex mtx;
   std::condition_variable cond;
   std::atomic_bool has_data = false;
+  std::vector<TASCAR::levelmeter_t> sigcopy;
+  double currenttime = 0;
 };
 
 level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg)
 {
+  weights.push_back(TASCAR::levelmeter::Z);
   GET_ATTRIBUTE_BOOL(sendwhilestopped, "Send also when transport is stopped");
   GET_ATTRIBUTE(skip, "", "Skip frames");
+  GET_ATTRIBUTE_NOUNIT(weights, "Level meter weights");
+  if(weights.size() == 0)
+    throw TASCAR::ErrMsg("At least one frequency weight is required.");
   GET_ATTRIBUTE(url, "", "Target URL");
   GET_ATTRIBUTE(path, "", "Target path");
   GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data");
+  GET_ATTRIBUTE(tau, "s", "Leq duration, or 0 to use block size");
   std::string mode("dbspl");
   GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
   if(mode == "dbspl")
@@ -90,6 +100,21 @@ void level2osc_t::sendthread()
   while(run_thread) {
     cond.wait_for(lk, 100ms);
     if(has_data) {
+      // pack data:
+      oscmsgargv[0]->f = currenttime;
+      for(size_t ch = 0; ch < sigcopy.size(); ++ch) {
+        switch(imode) {
+        case dbspl:
+          oscmsgargv[ch + 1]->f = sigcopy[ch].spldb();
+          break;
+        case rms:
+          oscmsgargv[ch + 1]->f = sigcopy[ch].rms();
+          break;
+        case max:
+          oscmsgargv[ch + 1]->f = sigcopy[ch].maxabs();
+          break;
+        }
+      }
       lo_send_message(lo_addr, path.c_str(), msg);
       has_data = false;
     }
@@ -99,18 +124,27 @@ void level2osc_t::sendthread()
 void level2osc_t::configure()
 {
   audioplugin_base_t::configure();
+  sigcopy.clear();
   msg = lo_message_new();
   // time:
   lo_message_add_float(msg, 0);
+  float tau_ = tau;
+  if(tau_ == 0)
+    tau_ = t_fragment;
   // levels:
-  for(uint32_t k = 0; k < n_channels; ++k)
-    lo_message_add_float(msg, 0);
+  for(size_t kweight = 0; kweight < weights.size(); ++kweight)
+    for(uint32_t k = 0; k < n_channels; ++k) {
+      lo_message_add_float(msg, 0);
+      sigcopy.push_back(TASCAR::levelmeter_t(f_sample, tau_, weights[kweight]));
+      // sigcopy.back().set_weight(weights[kweight]);
+    }
   oscmsgargv = lo_message_get_argv(msg);
 }
 
 void level2osc_t::release()
 {
   lo_message_free(msg);
+  sigcopy.clear();
   audioplugin_base_t::release();
 }
 
@@ -131,27 +165,16 @@ void level2osc_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         "Programming error (invalid channel number, expected " +
         TASCAR::to_string(n_channels) + ", got " +
         std::to_string(chunk.size()) + ").");
+  for(size_t kweight = 0; kweight < weights.size(); ++kweight)
+    for(uint32_t k = 0; k < n_channels; ++k)
+      sigcopy[kweight * n_channels + k].update(chunk[k]);
   if(tp.rolling || sendwhilestopped) {
     if(skipcnt) {
       skipcnt--;
     } else {
       // data will be sent in extra thread:
       if(mtx.try_lock()) {
-        // pack data:
-        oscmsgargv[0]->f = tp.object_time_seconds;
-        for(uint32_t ch = 0; ch < n_channels; ++ch) {
-          switch(imode) {
-          case dbspl:
-            oscmsgargv[ch + 1]->f = chunk[ch].spldb();
-            break;
-          case rms:
-            oscmsgargv[ch + 1]->f = chunk[ch].rms();
-            break;
-          case max:
-            oscmsgargv[ch + 1]->f = chunk[ch].maxabs();
-            break;
-          }
-        }
+        currenttime = tp.object_time_seconds;
         has_data = true;
         mtx.unlock();
         if(threaded)

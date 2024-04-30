@@ -11,7 +11,7 @@
         <sine/>
         <pink/>
         <filter/>
-        <level2osc threaded="true" url="osc.udp://localhost:9877/"/>
+        <level2osc weights="Z A C" tau="1" threaded="true" url="osc.udp://localhost:9877/"/>
         <lipsync_paper threaded="true" path="/lipsyncp" energypath="/energyp" strmsg="" url="osc.udp://localhost:9877/"/>
         <lipsync threaded="true" path="/lipsync" energypath="/energy" strmsg="" url="osc.udp://localhost:9877/"/>
         <timestamp path="/ts2"/>
@@ -20,7 +20,7 @@
     <pos2osc pattern="/*/*"/>
     <datalogging>
       <osc path="/prof" size="8"/>
-      <osc path="/level" size="2" ignorefirst="true"/>
+      <osc path="/level" size="4" ignorefirst="true"/>
       <osc path="/lipsyncp" size="3"/>
       <osc path="/lipsync" size="3"/>
       <osc path="/energyp" size="5"/>
