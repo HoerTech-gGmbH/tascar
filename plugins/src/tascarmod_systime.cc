@@ -51,7 +51,11 @@ private:
 tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
     : TASCAR::module_base_t(cfg)
 {
-  GET_ATTRIBUTE(path, "", "OSC path where time stamps are dispatched");
+  GET_ATTRIBUTE(path, "",
+                "OSC path where time stamps (calendar) are dispatched");
+  GET_ATTRIBUTE(
+      secpath, "",
+      "OSC path where time stamps (seconds since midnight) are dispatched");
   msg = lo_message_new();
   if(!msg)
     throw TASCAR::ErrMsg("Unable to allocate OSC message");
