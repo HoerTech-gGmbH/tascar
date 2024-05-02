@@ -32,13 +32,16 @@ public:
 
 private:
   std::string path = "/systime";
+  std::string secpath = "/seconds";
   lo_message msg;
+  lo_message msgsec;
   double* p_year;
   double* p_month;
   double* p_day;
   double* p_hour;
   double* p_min;
   double* p_sec;
+  double* p_daysec;
 #ifndef _WIN32
   struct timeval tv;
   struct timezone tz;
@@ -50,12 +53,18 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
 {
   GET_ATTRIBUTE(path, "", "OSC path where time stamps are dispatched");
   msg = lo_message_new();
+  if(!msg)
+    throw TASCAR::ErrMsg("Unable to allocate OSC message");
+  msgsec = lo_message_new();
+  if(!msgsec)
+    throw TASCAR::ErrMsg("Unable to allocate OSC message");
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
+  lo_message_add_double(msgsec, 0.0);
   auto argv = lo_message_get_argv(msg);
   p_year = &(argv[0]->d);
   p_month = &(argv[1]->d);
@@ -63,6 +72,8 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
   p_hour = &(argv[3]->d);
   p_min = &(argv[4]->d);
   p_sec = &(argv[5]->d);
+  argv = lo_message_get_argv(msgsec);
+  p_daysec = &(argv[0]->d);
 #ifndef _WIN32
   memset(&tv, 0, sizeof(timeval));
   memset(&tz, 0, sizeof(timezone));
@@ -79,8 +90,8 @@ void tascar_systime_t::update(uint32_t, bool)
 #ifndef _WIN32
   gettimeofday(&tv, &tz);
   struct tm* caltime = localtime(&(tv.tv_sec));
-  *p_year = caltime->tm_year;
-  *p_month = caltime->tm_mon;
+  *p_year = caltime->tm_year + 1900;
+  *p_month = caltime->tm_mon + 1;
   *p_day = caltime->tm_mday;
   *p_hour = caltime->tm_hour;
   *p_min = caltime->tm_min;
@@ -97,7 +108,11 @@ void tascar_systime_t::update(uint32_t, bool)
   *p_sec = caltime.wSecond;
   *p_sec += 0.001 * caltime.wMilliseconds;
 #endif
-  session->dispatch_data_message(path.c_str(), msg);
+  *p_daysec = *p_sec + 60 * *p_min + 3600 * *p_hour;
+  if(!path.empty())
+    session->dispatch_data_message(path.c_str(), msg);
+  if(!secpath.empty())
+    session->dispatch_data_message(secpath.c_str(), msgsec);
 }
 
 REGISTER_MODULE(tascar_systime_t);
