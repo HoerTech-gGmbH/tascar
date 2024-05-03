@@ -33,6 +33,7 @@ public:
 private:
   std::string path = "/systime";
   std::string secpath = "/seconds";
+  bool sendsessiontime = true;
   lo_message msg;
   lo_message msgsec;
   double* p_year;
@@ -42,6 +43,9 @@ private:
   double* p_min;
   double* p_sec;
   double* p_daysec;
+  double sessiontimetmp;
+  double* p_sessiontime1 = &sessiontimetmp;
+  double* p_sessiontime2 = &sessiontimetmp;
 #ifndef _WIN32
   struct timeval tv;
   struct timezone tz;
@@ -56,12 +60,17 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(
       secpath, "",
       "OSC path where time stamps (seconds since midnight) are dispatched");
+  GET_ATTRIBUTE_BOOL(sendsessiontime, "Send session time in first data field");
   msg = lo_message_new();
   if(!msg)
     throw TASCAR::ErrMsg("Unable to allocate OSC message");
   msgsec = lo_message_new();
   if(!msgsec)
     throw TASCAR::ErrMsg("Unable to allocate OSC message");
+  if(sendsessiontime) {
+    lo_message_add_double(msg, 0.0);
+    lo_message_add_double(msgsec, 0.0);
+  }
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msg, 0.0);
@@ -70,14 +79,19 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
   lo_message_add_double(msg, 0.0);
   lo_message_add_double(msgsec, 0.0);
   auto argv = lo_message_get_argv(msg);
-  p_year = &(argv[0]->d);
-  p_month = &(argv[1]->d);
-  p_day = &(argv[2]->d);
-  p_hour = &(argv[3]->d);
-  p_min = &(argv[4]->d);
-  p_sec = &(argv[5]->d);
+  p_year = &(argv[0 + (int)sendsessiontime]->d);
+  p_month = &(argv[1 + (int)sendsessiontime]->d);
+  p_day = &(argv[2 + (int)sendsessiontime]->d);
+  p_hour = &(argv[3 + (int)sendsessiontime]->d);
+  p_min = &(argv[4 + (int)sendsessiontime]->d);
+  p_sec = &(argv[5 + (int)sendsessiontime]->d);
+  if(sendsessiontime)
+    p_sessiontime1 = &(argv[0]->d);
   argv = lo_message_get_argv(msgsec);
-  p_daysec = &(argv[0]->d);
+  p_daysec = &(argv[0 + (int)sendsessiontime]->d);
+  if(sendsessiontime)
+    p_sessiontime2 = &(argv[0]->d);
+
 #ifndef _WIN32
   memset(&tv, 0, sizeof(timeval));
   memset(&tz, 0, sizeof(timezone));
@@ -89,8 +103,10 @@ tascar_systime_t::~tascar_systime_t()
   lo_message_free(msg);
 }
 
-void tascar_systime_t::update(uint32_t, bool)
+void tascar_systime_t::update(uint32_t tp_frame, bool)
 {
+  double tptime = tp_frame * t_sample;
+  *p_sessiontime1 = *p_sessiontime2 = tptime;
 #ifndef _WIN32
   gettimeofday(&tv, &tz);
   struct tm* caltime = localtime(&(tv.tv_sec));
