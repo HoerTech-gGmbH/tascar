@@ -291,6 +291,7 @@ namespace TASCAR {
     void read_script_async(const std::vector<std::string>& filenames);
     std::string scriptpath = "";
     std::string scriptext = "";
+    bool scriptcancel = false;
     /**
        @brief Dispatch all messages from the time interval tstart (included) to
        tend (excluded).

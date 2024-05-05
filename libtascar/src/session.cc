@@ -490,27 +490,30 @@ void TASCAR::session_t::read_xml()
     GET_ATTRIBUTE(scriptext, "", "Extension appended to OSC script names");
     GET_ATTRIBUTE(initoscscript, "",
                   "OSC scripts to run when session is loaded.");
+    GET_ATTRIBUTE_BOOL(scriptcancel,
+                       "Cancel current OSC script when a new one is loaded "
+                       "(true), or append (false).");
   }
   catch(...) {
     if(lock_vars()) {
       std::vector<TASCAR::module_t*> lmodules(modules);
       modules.clear();
-      for(std::vector<TASCAR::module_t*>::iterator it = lmodules.begin();
-          it != lmodules.end(); ++it)
-        if((*it)->is_prepared())
-          (*it)->release();
-      for(std::vector<TASCAR::module_t*>::iterator it = lmodules.begin();
-          it != lmodules.end(); ++it)
-        delete(*it);
-      for(std::vector<TASCAR::scene_render_rt_t*>::iterator it = scenes.begin();
-          it != scenes.end(); ++it)
-        delete(*it);
-      for(std::vector<TASCAR::range_t*>::iterator it = ranges.begin();
-          it != ranges.end(); ++it)
-        delete(*it);
-      for(std::vector<TASCAR::connection_t*>::iterator it = connections.begin();
-          it != connections.end(); ++it)
-        delete(*it);
+      // release all prepared modules:
+      for(auto& mod : lmodules)
+        if(mod->is_prepared())
+          mod->release();
+      // delete loaded modules:
+      for(auto& mod : lmodules)
+        delete mod;
+      // delete scenes:
+      for(auto& scene : scenes)
+        delete scene;
+      // delete ranges:
+      for(auto& range : ranges)
+        delete range;
+      // delete connections:
+      for(auto& con : connections)
+        delete con;
       unlock_vars();
     }
     throw;
@@ -573,10 +576,8 @@ TASCAR::session_t::~session_t()
 std::vector<std::string> TASCAR::session_t::get_render_output_ports() const
 {
   std::vector<std::string> ports;
-  for(std::vector<TASCAR::scene_render_rt_t*>::const_iterator it =
-          scenes.begin();
-      it != scenes.end(); ++it) {
-    std::vector<std::string> pports((*it)->get_output_ports());
+  for(auto& scene : scenes) {
+    std::vector<std::string> pports = scene->get_output_ports();
     ports.insert(ports.end(), pports.begin(), pports.end());
   }
   return ports;
@@ -788,9 +789,8 @@ int TASCAR::session_t::process(jack_nframes_t, const std::vector<float*>&,
 void TASCAR::session_t::stop()
 {
   started_ = false;
-  for(std::vector<TASCAR::scene_render_rt_t*>::iterator ipl = scenes.begin();
-      ipl != scenes.end(); ++ipl)
-    (*ipl)->stop();
+  for(auto& scene : scenes)
+    scene->stop();
 }
 
 void TASCAR::session_t::run(bool& b_quit, bool use_stdin)

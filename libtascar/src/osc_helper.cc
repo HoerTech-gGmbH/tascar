@@ -1140,19 +1140,29 @@ void osc_server_t::scriptthread_fun()
     std::vector<std::string> scripts;
     {
       std::unique_lock<std::mutex> lock{mtxscriptnames};
-      cond_var_script.wait(lock);
+      bool needtowait = true;
+      if(nextscripts.size() > 0) {
+        needtowait = false;
+      }
+      if(needtowait) {
+        cond_var_script.wait(lock);
+      }
       scripts = nextscripts;
       nextscripts.clear();
       lock.unlock();
     }
     if(runscriptthread && scripts.size()) {
+      cancelscript = false;
       read_script(scripts);
+      cancelscript = false;
     }
   }
 }
 
 void osc_server_t::read_script_async(const std::vector<std::string>& filenames)
 {
+  if(scriptcancel)
+    cancelscript = true;
   {
     std::lock_guard<std::mutex> lk{mtxscriptnames};
     nextscripts = filenames;
@@ -1198,7 +1208,6 @@ void osc_server_t::generate_osc_documentation_files()
 {
   // auto vmap = get_variable_map();
   for(const auto& owner : owned_vars) {
-    DEBUG(owner.first);
     std::vector<std::string> fullpath;
     bool first = true;
     size_t kmax = fullpath.size();
