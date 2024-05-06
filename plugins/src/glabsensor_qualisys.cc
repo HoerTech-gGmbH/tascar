@@ -132,6 +132,7 @@ private:
   lo_address qtmtarget = NULL;
   lo_address datatarget = NULL;
   std::mutex mtx;
+  std::mutex mtxtarget;
   int32_t srv_port = 0;
   double nominal_freq = 1.0;
   std::map<std::string, rigid_t*> rigids;
@@ -152,6 +153,7 @@ int qualisys_tracker_t::qtmres(const char*, const char*, lo_arg**, int,
 int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
                                lo_message)
 {
+  std::lock_guard<std::mutex> lock(mtxtarget);
   std::cerr << "Qualisys: receiving configuration" << std::endl;
   TASCAR::xml_doc_t qtmcfg(&(argv[0]->s), TASCAR::xml_doc_t::LOAD_STRING);
   TASCAR::xml_element_t root(qtmcfg.root);
@@ -210,6 +212,7 @@ qualisys_tracker_t::qualisys_tracker_t(const sensorplugin_cfg_t& cfg)
   GET_ATTRIBUTE(dataprefix, "",
                 "OSC path prefix, will be followed by slash + rigid names");
   GET_ATTRIBUTE_BOOL(uselsl, "Create LSL output stream");
+  std::lock_guard<std::mutex> lock(mtxtarget);
   qtmtarget = lo_address_new_from_url(qtmurl.c_str());
   if(!qtmtarget)
     throw TASCAR::ErrMsg("Invalid QTM URL");
@@ -251,6 +254,7 @@ void qualisys_tracker_t::prepare()
     rigids.clear();
   }
   std::cerr << "Qualisys: sending connection request" << std::endl;
+  std::lock_guard<std::mutex> lock(mtxtarget);
   lo_send(qtmtarget, "/qtm", "si", "Connect", srv_port);
   lo_send(qtmtarget, "/qtm", "ss", "GetParameters", "All");
   isprepared = true;
@@ -260,6 +264,7 @@ void qualisys_tracker_t::release()
 {
   isprepared = false;
   std::cerr << "Qualisys: sending disconnection request" << std::endl;
+  std::lock_guard<std::mutex> lock(mtxtarget);
   lo_send(qtmtarget, "/qtm", "s", "Disconnect");
   {
     std::lock_guard<std::mutex> lock(mtx);
@@ -271,14 +276,23 @@ void qualisys_tracker_t::release()
 
 qualisys_tracker_t::~qualisys_tracker_t()
 {
+  oscserver.deactivate();
   run_preparethread = false;
   if(preparethread.joinable())
     preparethread.join();
-  lo_address_free(qtmtarget);
-  oscserver.deactivate();
   for(auto& lsl : lslmap)
     if(lsl.second)
       delete lsl.second;
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    for(auto it = rigids.begin(); it != rigids.end(); ++it)
+      delete it->second;
+    rigids.clear();
+  }
+  {
+    std::lock_guard<std::mutex> lock(mtxtarget);
+    lo_address_free(qtmtarget);
+  }
 }
 
 void qualisys_tracker_t::add_variables(TASCAR::osc_server_t* srv)
