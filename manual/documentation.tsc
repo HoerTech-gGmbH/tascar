@@ -141,6 +141,7 @@
     <systime/>
     <timedisplay/>
     <lsl2osc/>
+    <granularsynth/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
