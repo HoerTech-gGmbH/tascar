@@ -1,6 +1,6 @@
 Relay OSC messages, e.g., for distribution of motion sensors.
 
-\begin{snugshade}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
 {\footnotesize
 \label{attrtab:oscrelay}
 Attributes of element {\bf oscrelay}\nopagebreak
@@ -10,11 +10,17 @@ Attributes of element {\bf oscrelay}\nopagebreak
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9000/}\\
+\indattr{newpath} & Replace incoming path with this path, or empty for no replacement (string) & \\
 \hline
 \indattr{path} & Path filter, or empty to match any path (string) & \\
 \hline
-\indattr{newpath} & Replace incoming path with this path, or empty for no replacement (string) & \\
+\indattr{retval} & Return value: 0 = handle messages also locally, non-0 = do not handle locally (int32) & 1\\
+\hline
+\indattr{startswith} & Forward only messags which start with this path (string) & \\
+\hline
+\indattr{trimstart} & Trim startswith part of the path before forwarding (bool) & false\\
+\hline
+\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9000/}\\
 \hline
 \end{tabularx}
 }

@@ -33,6 +33,7 @@ private:
   std::string url;
   std::string newpath;
   std::string startswith;
+  bool trimstart = false;
   lo_address target;
   int retval = 1;
 };
@@ -45,13 +46,19 @@ int oscrelay_t::osc_recv(const char* path, const char*, lo_arg**, int,
 
 int oscrelay_t::osc_recv(const char* lpath, lo_message msg)
 {
-  if(startswith.size() && (strcmp(lpath, startswith.c_str()) != 0))
+  bool start_matched = startswith.size() &&
+                       (strlen(lpath) >= startswith.size()) &&
+                       (strcmp(lpath, startswith.c_str()) == 0);
+  if(startswith.size() && (!start_matched))
     return retval;
   if(newpath.size()) {
     lo_send_message(target, newpath.c_str(), msg);
     return retval;
   }
-  lo_send_message(target, lpath, msg);
+  const char* trimmedpath = lpath;
+  if(start_matched)
+    trimmedpath = lpath + startswith.size();
+  lo_send_message(target, trimmedpath, msg);
   return retval;
 }
 
@@ -66,6 +73,8 @@ oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
       "Replace incoming path with this path, or empty for no replacement");
   GET_ATTRIBUTE(startswith, "",
                 "Forward only messags which start with this path");
+  GET_ATTRIBUTE_BOOL(trimstart,
+                     "Trim startswith part of the path before forwarding");
   GET_ATTRIBUTE(retval, "",
                 "Return value: 0 = handle messages also locally, non-0 = do "
                 "not handle locally");
