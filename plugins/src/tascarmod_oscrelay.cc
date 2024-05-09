@@ -46,9 +46,9 @@ int oscrelay_t::osc_recv(const char* path, const char*, lo_arg**, int,
 
 int oscrelay_t::osc_recv(const char* lpath, lo_message msg)
 {
-  bool start_matched = startswith.size() &&
-                       (strlen(lpath) >= startswith.size()) &&
-                       (strcmp(lpath, startswith.c_str()) == 0);
+  bool start_matched =
+      (startswith.size() > 0) && (strlen(lpath) >= startswith.size()) &&
+      (strncmp(lpath, startswith.c_str(), startswith.size()) == 0);
   if(startswith.size() && (!start_matched))
     return retval;
   if(newpath.size()) {
