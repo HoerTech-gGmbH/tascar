@@ -178,7 +178,8 @@ int qualisys_tracker_t::qtmxml(const char*, const char*, lo_arg** argv, int,
     }
   }
   std::cerr << "Qualisys: requesting stream start" << std::endl;
-  lo_send(qtmtarget, "/qtm", "sss", "StreamFrames", "AllFrames", "6DEuler");
+  if(qtmtarget)
+    lo_send(qtmtarget, "/qtm", "sss", "StreamFrames", "AllFrames", "6DEuler");
   return 0;
 }
 
@@ -255,8 +256,10 @@ void qualisys_tracker_t::prepare()
   }
   std::cerr << "Qualisys: sending connection request" << std::endl;
   std::lock_guard<std::mutex> lock(mtxtarget);
-  lo_send(qtmtarget, "/qtm", "si", "Connect", srv_port);
-  lo_send(qtmtarget, "/qtm", "ss", "GetParameters", "All");
+  if(qtmtarget) {
+    lo_send(qtmtarget, "/qtm", "si", "Connect", srv_port);
+    lo_send(qtmtarget, "/qtm", "ss", "GetParameters", "All");
+  }
   isprepared = true;
 }
 
@@ -265,7 +268,8 @@ void qualisys_tracker_t::release()
   isprepared = false;
   std::cerr << "Qualisys: sending disconnection request" << std::endl;
   std::lock_guard<std::mutex> lock(mtxtarget);
-  lo_send(qtmtarget, "/qtm", "s", "Disconnect");
+  if(qtmtarget)
+    lo_send(qtmtarget, "/qtm", "s", "Disconnect");
   {
     std::lock_guard<std::mutex> lock(mtx);
     for(auto it = rigids.begin(); it != rigids.end(); ++it)
@@ -276,10 +280,10 @@ void qualisys_tracker_t::release()
 
 qualisys_tracker_t::~qualisys_tracker_t()
 {
-  oscserver.deactivate();
   run_preparethread = false;
   if(preparethread.joinable())
     preparethread.join();
+  oscserver.deactivate();
   for(auto& lsl : lslmap)
     if(lsl.second)
       delete lsl.second;
@@ -292,6 +296,7 @@ qualisys_tracker_t::~qualisys_tracker_t()
   {
     std::lock_guard<std::mutex> lock(mtxtarget);
     lo_address_free(qtmtarget);
+    qtmtarget = NULL;
   }
 }
 
