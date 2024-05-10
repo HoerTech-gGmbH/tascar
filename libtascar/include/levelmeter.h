@@ -20,8 +20,8 @@
 #ifndef LEVELMETER_H
 #define LEVELMETER_H
 
-#include "tscconfig.h"
 #include "filterclass.h"
+#include "tscconfig.h"
 
 namespace TASCAR {
 
@@ -35,7 +35,7 @@ namespace TASCAR {
      \ingroup levels
    */
   class levelmeter_t : public TASCAR::wave_t {
-    public:
+  public:
     /**
        \param fs Audio sampling rate in Hz
        \param tc Time constant in seconds
@@ -46,7 +46,7 @@ namespace TASCAR {
        Change meter weighting during runtime
      */
     void set_weight(levelmeter::weight_t weight);
-    levelmeter::weight_t get_weight() const { return w;};
+    levelmeter::weight_t get_weight() const { return w; };
     /**
        \brief Add audio samples to level meter container
        \param src Audio samples
@@ -57,11 +57,14 @@ namespace TASCAR {
        \retval rms RMS value in dB SPL
        \retval peak Peak value in dB
      */
-    void get_rms_and_peak( float& rms, float& peak ) const;
+    void get_rms_and_peak(float& rms, float& peak) const;
     /**
-       \brief Return percentile levels, similar to ISMADHA standard for hearing aids analysis.
+       \brief Return percentile levels, similar to ISMADHA standard for hearing
+       aids analysis.
      */
-    void get_percentile_levels( float& q30, float& q50, float& q65, float& g95, float& q99 ) const;
+    void get_percentile_levels(float& q30, float& q50, float& q65, float& g95,
+                               float& q99) const;
+
   private:
     TASCAR::levelmeter::weight_t w;
     uint32_t segment_length;
@@ -72,12 +75,16 @@ namespace TASCAR {
     uint32_t i65;
     uint32_t i95;
     uint32_t i99;
+
+  public:
     bandpass_t bp;
+
+  private:
     bandpass_t bp_C;
     aweighting_t flt_A;
   };
 
-}
+} // namespace TASCAR
 
 #endif
 

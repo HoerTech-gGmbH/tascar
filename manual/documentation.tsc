@@ -50,6 +50,7 @@
             </layout>
           </spkcalib>
           <transportramp/>
+          <level2hsv/>
         </plugins>
       </sound>
       <sound type="cardioidmod"/>
