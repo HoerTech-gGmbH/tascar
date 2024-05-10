@@ -36,6 +36,7 @@ public:
   level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg);
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   void configure();
   void release();
   ~level2hsv_t();
@@ -50,6 +51,7 @@ private:
   TASCAR::levelmeter::weight_t weight = TASCAR::levelmeter::Z;
   std::vector<float> frange = {62.5f, 4000.0f};
   std::vector<float> lrange = {40.0f, 90.0f};
+  bool active = true;
   // float value = 0;
   // derived variables:
   levelmode_t imode = dbspl;
@@ -76,6 +78,7 @@ level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(tau, "s", "Leq duration, or 0 to use block size");
   GET_ATTRIBUTE(hue, "degree", "Hue component (0-360)");
   GET_ATTRIBUTE(saturation, "", "Saturation component (0-1)");
+  GET_ATTRIBUTE_BOOL(active, "start activated");
   std::string mode("dbspl");
   GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
   if(mode == "dbspl")
@@ -105,6 +108,16 @@ level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
   auto oscmsgargv = lo_message_get_argv(msg);
   p_value = &(oscmsgargv[2]->f);
   thread = std::thread(&level2hsv_t::sendthread, this);
+}
+
+void level2hsv_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_bool("/active", &active);
+  srv->add_float("/hue", &hue, "", "Hue component (0-360 degree)");
+  srv->add_float("/saturation", &saturation, "", "Saturation component (0-1)");
+  srv->unset_variable_owner();
 }
 
 void level2hsv_t::sendthread()
