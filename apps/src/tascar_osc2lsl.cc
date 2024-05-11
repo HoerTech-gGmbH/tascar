@@ -21,6 +21,7 @@
 #include "cli.h"
 #include "errorhandling.h"
 #include <atomic>
+#include <cstdint>
 #include <getopt.h>
 #include <iostream>
 #include <lo/lo.h>
