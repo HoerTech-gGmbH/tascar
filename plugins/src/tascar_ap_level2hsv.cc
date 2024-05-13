@@ -117,6 +117,7 @@ void level2hsv_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/active", &active);
   srv->add_float("/hue", &hue, "", "Hue component (0-360 degree)");
   srv->add_float("/saturation", &saturation, "", "Saturation component (0-1)");
+  srv->add_vector_float("/lrange", &lrange, "", "Level range in dB");
   srv->unset_variable_owner();
 }
 
