@@ -28,6 +28,7 @@ public:
   void update(uint32_t frame, bool running);
 
 private:
+  std::string prefix = "";
   std::string path;
   uint32_t inputchannels = 6;
   std::vector<int32_t> channels;
@@ -40,6 +41,7 @@ private:
 
 oscactor_t::oscactor_t(const TASCAR::module_cfg_t& cfg) : actor_module_t(cfg)
 {
+  GET_ATTRIBUTE(prefix, "", "OSC prefix for influence variable");
   GET_ATTRIBUTE(path, "", "OSC path");
   GET_ATTRIBUTE(inputchannels, "", "Number of OSC channels");
   GET_ATTRIBUTE(channels, "", "Which channels to use");
@@ -66,7 +68,7 @@ oscactor_t::oscactor_t(const TASCAR::module_cfg_t& cfg) : actor_module_t(cfg)
   session->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   session->add_vector_float(path.c_str(), &data, "", "OSC data variable");
-  std::string ipath = path;
+  std::string ipath = prefix + path;
   ipath += "/influence";
   session->add_vector_float(
       ipath.c_str(), &influence, "",
