@@ -52,6 +52,7 @@ namespace TASCAR {
     bool use_profiler = false;
     std::string profilingpath = "";
     bool generate_documentation = false;
+    std::string orig_path = "";
   };
 
 } // namespace TASCAR

@@ -36,6 +36,10 @@ TASCAR::tsc_reader_t::tsc_reader_t()
     : xml_doc_t("<session/>", LOAD_STRING),
       licensed_component_t(typeid(*this).name()), file_name("")
 {
+  {
+    char c_respath[PATH_MAX];
+    orig_path = getcwd(c_respath, PATH_MAX);
+  }
   // avoid problems with number format in xml file:
   setlocale(LC_ALL, "C");
   char* c_respath(getcwd(NULL, 0));
@@ -83,13 +87,20 @@ const std::string& showstring(const std::string& s)
   return s;
 }
 
-TASCAR::tsc_reader_t::~tsc_reader_t() {}
+TASCAR::tsc_reader_t::~tsc_reader_t()
+{
+  chdir(orig_path.c_str());
+}
 
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,
                                    load_type_t t, const std::string& path)
     : xml_doc_t(filename_or_data, t),
       licensed_component_t(typeid(*this).name()), file_name("")
 {
+  {
+    char c_respath[PATH_MAX];
+    orig_path = getcwd(c_respath, PATH_MAX);
+  }
   if(t == LOAD_FILE)
     file_name = filename_or_data;
   else
