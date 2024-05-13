@@ -28,8 +28,10 @@
 #include "tascar.h"
 
 TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
-                                         bool useshell, bool relaunch)
-    : command_(command), useshell_(useshell), relaunch_(relaunch)
+                                         bool useshell, bool relaunch,
+                                         double relaunchwait)
+    : command_(command), useshell_(useshell), relaunch_(relaunch),
+      relaunchwait_(relaunchwait)
 {
 #ifdef _WIN32
   DEBUG(command_);
@@ -76,6 +78,11 @@ void TASCAR::spawn_process_t::launcher()
 #endif
     pid = 0;
     running = false;
+    if(relaunch_ && (relaunchwait_ > 0)) {
+      tictoc_t tictoc;
+      while(runservice && (tictoc.toc() < relaunchwait_))
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
   }
 }
 

@@ -218,6 +218,9 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(noshell, "do not use shell to spawn subprocess");
   GET_ATTRIBUTE_BOOL(relaunch,
                      "relaunch process if ended before session unload");
+  double relaunchwait = 0.0;
+  GET_ATTRIBUTE(relaunchwait, "s",
+                "Time to wait before relaunching subprocess");
   GET_ATTRIBUTE_BOOL(allowoscmod,
                      "allow modifications of timed commands via OSC");
   GET_ATTRIBUTE(timedprefix, "", "Prefix for timed commands added via OSC");
@@ -229,7 +232,7 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   atcmdmtx.unlock();
   if(!command.empty()) {
     proc = new TASCAR::spawn_process_t(TASCAR::env_expand(command), !noshell,
-                                       relaunch);
+                                       relaunch, relaunchwait);
   }
   if(atcmds.size() || allowoscmod) {
     h_atcmd = popen("/bin/bash -s", "w");

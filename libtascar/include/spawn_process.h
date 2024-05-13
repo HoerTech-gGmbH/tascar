@@ -39,7 +39,7 @@ namespace TASCAR {
   class spawn_process_t {
   public:
     spawn_process_t(const std::string& command, bool useshell = true,
-                    bool relaunch = false);
+                    bool relaunch = false, double relaunchwait = 0.0);
     ~spawn_process_t();
     void set_relaunch(bool relaunch);
 
@@ -49,8 +49,9 @@ namespace TASCAR {
     pid_t pid = 0;
     bool runservice = true;
     std::string command_;
-    bool useshell_;
-    bool relaunch_;
+    bool useshell_ = false;
+    bool relaunch_ = false;
+    double relaunchwait_ = 0.0;
     bool running = false;
     std::mutex mtx;
   };

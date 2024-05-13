@@ -1,6 +1,6 @@
 Start system processes, e.g., to load helper programs, external decoders or video render tools.
 
-\begin{snugshade}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
 {\footnotesize
 \label{attrtab:system}
 Attributes of element {\bf system}\nopagebreak
@@ -21,6 +21,8 @@ name & description (type, unit) & def.\\
 \indattr{onunload} & command to be executed when unloading session (string) & \\
 \hline
 \indattr{relaunch} & relaunch process if ended before session unload (bool) & false\\
+\hline
+\indattr{relaunchwait} & Time to wait before relaunching subprocess (double, s) & 0\\
 \hline
 \indattr{sleep} & wait after starting the command before continuing to load session (double, s) & 0\\
 \hline
