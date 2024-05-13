@@ -3,11 +3,34 @@ Control position from an OSC stream
 The translation is assumed to be in meters, the rotation is ZYX-Euler
 angles in radians.
 
-\begin{tscattributes}
-  \indattr{path}          & OSC path                                                                             \\
-  \indattr{inputchannels} & Number of channels in OSC variable                                                   \\
-  \indattr{channels}      & LSL channels, for the six translation channels (x,y,z,rotz,roty,rotx), -1 for unused \\
-  \indattr{influence}     & Weights of channels                                                                  \\
-  \indattr{local}         & Use local (true) or global translation                                               \\
-  \indattr{incremental}   & Use incremental changes                                                              \\
-\end{tscattributes}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:oscactor}
+Attributes of element {\bf oscactor}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{actor} & pattern to match actor objects (string array) & \\
+\hline
+\indattr{channels} & Which channels to use (int32 array) & \\
+\hline
+\indattr{incremental} & Add transformation to current delta transformation, e.g., when used together with other motion controllers (bool) & false\\
+\hline
+\indattr{influence} & Influence of OSC values on the selected movement channels (float array) & \\
+\hline
+\indattr{inputchannels} & Number of OSC channels (uint32) & 6\\
+\hline
+\indattr{local} & Use transformations in local coordinates (bool) & false\\
+\hline
+\indattr{path} & OSC path (string) & \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+The influence can be controlled during run-time:
+
+\input{oscdoc_tascarmod_oscactor.tex}

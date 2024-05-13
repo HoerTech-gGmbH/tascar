@@ -135,7 +135,11 @@
       <emergency/>
     </glabsensors>
     <snapangle srcobj="/*/nav" candidates="/*/in"/>
-    <lightctl driver="osc"/>
+    <lightctl driver="osc">
+      <lightscene>
+        <layout><fixture/></layout>
+      </lightscene>
+    </lightctl>
     <hossustain/>
     <pos2osc pattern="/*/*"/>
     <linearmovement actor="/scene/in"/>
@@ -143,6 +147,7 @@
     <timedisplay/>
     <lsl2osc/>
     <granularsynth/>
+    <oscactor path="/path" channels="1 2 3" influence="1 1 1"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

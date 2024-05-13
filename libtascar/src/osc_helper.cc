@@ -1221,6 +1221,9 @@ void osc_server_t::generate_osc_documentation_files()
         fullpath = fullpath_local;
         kmax = fullpath.size();
       }
+      kmax = std::min(kmax, fullpath_local.size());
+      if(fullpath_local.size() == 1)
+        kmax = 0;
       for(size_t k = 0; k < std::min(kmax, fullpath_local.size()); ++k)
         if(fullpath[k] != fullpath_local[k])
           kmax = k;

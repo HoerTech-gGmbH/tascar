@@ -31,7 +31,7 @@ private:
   std::string path;
   uint32_t inputchannels = 6;
   std::vector<int32_t> channels;
-  std::vector<double> influence;
+  std::vector<float> influence;
   std::vector<float> data;
   TASCAR::c6dof_t transform;
   bool local = false;
@@ -43,9 +43,12 @@ oscactor_t::oscactor_t(const TASCAR::module_cfg_t& cfg) : actor_module_t(cfg)
   GET_ATTRIBUTE(path, "", "OSC path");
   GET_ATTRIBUTE(inputchannels, "", "Number of OSC channels");
   GET_ATTRIBUTE(channels, "", "Which channels to use");
-  GET_ATTRIBUTE_(influence);
-  GET_ATTRIBUTE_BOOL_(local);
-  GET_ATTRIBUTE_BOOL_(incremental);
+  GET_ATTRIBUTE(influence, "",
+                "Influence of OSC values on the selected movement channels");
+  GET_ATTRIBUTE_BOOL(local, "Use transformations in local coordinates");
+  GET_ATTRIBUTE_BOOL(incremental,
+                     "Add transformation to current delta transformation, "
+                     "e.g., when used together with other motion controllers");
   if(channels.empty())
     throw TASCAR::ErrMsg("No channels selected.");
   if(channels.size() > 6)
@@ -60,7 +63,15 @@ oscactor_t::oscactor_t(const TASCAR::module_cfg_t& cfg) : actor_module_t(cfg)
   if(!valid)
     throw TASCAR::ErrMsg("No channel has a non-zero influence.");
   data = std::vector<float>(inputchannels, 0.0f);
-  session->add_vector_float(path.c_str(),&data);
+  session->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  session->add_vector_float(path.c_str(), &data, "", "OSC data variable");
+  std::string ipath = path;
+  ipath += "/influence";
+  session->add_vector_float(
+      ipath.c_str(), &influence, "",
+      "Influence of OSC values on the selected movement channels");
+  session->unset_variable_owner();
 }
 
 oscactor_t::~oscactor_t() {}

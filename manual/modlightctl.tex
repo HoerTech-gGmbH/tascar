@@ -93,30 +93,87 @@ name                  & description (type, unit)                        & def.  
 
 One or more \elem{lightscene} elements can be defined, with these
 attributes:
-\begin{tscattributes}
-\indattr{name}        & lightscene name                                                               \\
-\indattr{objects}     & Tracking source object name pattern                                           \\
-\indattr{parent}      & light center parent object name                                               \\
-\indattr{channels}    & number of channels per fixture                                                \\
-\indattr{master}      & Master control                                                                \\
-\indattr{usecalib}    & Use calibrated (true, default) or raw (false) DMX values                      \\
-\indattr{sendsquared} & Send squared values (default: false)                                          \\
-\indattr{method}      & Rendering method (nearest, raisedcosine, sawleft, sawright, rect)             \\
-\indattr{mixmax}      & mix light based on maximum between fixture and object values (default: false) \\
-\indattr{objval}      & Starting object color values.                                                 \\
-\indattr{objw}        & Starting object width values.                                                 \\
-\indattr{layout}      & fixture layout file name (optional)                                           \\
-\end{tscattributes}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:lightscene}
+Attributes of element {\bf lightscene}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{channels} & Number of DMX channels per fixture (uint32) & 3\\
+\hline
+\indattr{layout} & name of speaker layout file (string) & \\
+\hline
+\indattr{master} & undocumented (float) & 1\\
+\hline
+\indattr{method} & undocumented (string) & \\
+\hline
+\indattr{mixmax} & undocumented (bool) & false\\
+\hline
+\indattr{name} & Scene name (string) & lightscene\\
+\hline
+\indattr{objects} & Pattern of objects to track (string array) & \\
+\hline
+\indattr{objval} & DMX value of objects (float array) & \\
+\hline
+\indattr{objw} & weight of objects (float array) & \\
+\hline
+\indattr{parent} & Name of parent object for relative position measurement (string) & \\
+\hline
+\indattr{sendsquared} & Send squared values for smoother intensity fades (bool) & false\\
+\hline
+\indattr{usecalib} & Use calibrated values instead of raw values (bool) & true\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+%%
+%%\begin{tscattributes}
+%%\indattr{name}        & lightscene name                                                               \\
+%%\indattr{objects}     & Tracking source object name pattern                                           \\
+%%\indattr{parent}      & light center parent object name                                               \\
+%%\indattr{channels}    & number of channels per fixture                                                \\
+%%\indattr{master}      & Master control                                                                \\
+%%\indattr{usecalib}    & Use calibrated (true, default) or raw (false) DMX values                      \\
+%%\indattr{sendsquared} & Send squared values (default: false)                                          \\
+%%\indattr{method}      & Rendering method (nearest, raisedcosine, sawleft, sawright, rect)             \\
+%%\indattr{mixmax}      & mix light based on maximum between fixture and object values (default: false) \\
+%%\indattr{objval}      & Starting object color values.                                                 \\
+%%\indattr{objw}        & Starting object width values.                                                 \\
+%%\indattr{layout}      & fixture layout file name (optional)                                           \\
+%%\end{tscattributes}
 
 Fixtures are defined using the \indattr{fixture} element within the
 \indattr{fixtures} element.
 %
 Syntax is the same as for speaker layout definitions, with these
 additional attributes for each element:
-\begin{tscattributes}
-\indattr{addr}   & DMX start address      \\
-\indattr{dmxval} & fixture DMX base value \\
-\end{tscattributes}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:fixture}
+Attributes of element {\bf fixture}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{addr} & start address (uint32) & 1\\
+\hline
+\indattr{az} & Azimuth (double, deg) & 0\\
+\hline
+\indattr{el} & Elevation (double, deg) & 0\\
+\hline
+\indattr{label} & fixture label (string) & \\
+\hline
+\indattr{dmxval} & start DMX value (int32 array) & \\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
 For each fixture, sub-elements in the form \attr{<calib channel="0"
   in="255" out="127"/>} can be provided, to calibrate the input-output
 function of the lamps. The attributes \attr{in} needs to be larger
