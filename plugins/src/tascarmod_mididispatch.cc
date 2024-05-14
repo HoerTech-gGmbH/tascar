@@ -24,6 +24,16 @@
 #include "session.h"
 #include <thread>
 
+class lpaction_t {
+public:
+  lpaction_t(){};
+  float min = 0.0f;
+  float max = 127.0f;
+  uint8_t val_on = 0;
+  uint8_t val_off = 0;
+  std::string param = "";
+};
+
 class m_msg_t {
 public:
   enum mode_t { mtrigger, mfloat };
@@ -53,12 +63,14 @@ m_msg_t::m_msg_t()
 
 m_msg_t::~m_msg_t()
 {
-  lo_message_free(msg);
+  if(msg)
+    lo_message_free(msg);
 }
 
 m_msg_t::m_msg_t(const m_msg_t& src)
 {
-  lo_message_free(msg);
+  if(msg)
+    lo_message_free(msg);
   msg = lo_message_clone(src.msg);
   bmode = src.bmode;
   path = src.path;
@@ -68,7 +80,8 @@ m_msg_t::m_msg_t(const m_msg_t& src)
 
 m_msg_t& m_msg_t::operator=(const m_msg_t& src)
 {
-  lo_message_free(msg);
+  if(msg)
+    lo_message_free(msg);
   msg = lo_message_clone(src.msg);
   bmode = src.bmode;
   path = src.path;
@@ -112,7 +125,8 @@ void m_msg_t::parse(TASCAR::xml_element_t& e)
 
 void m_msg_t::set_mode(mode_t bm)
 {
-  lo_message_free(msg);
+  if(msg)
+    lo_message_free(msg);
   msg = lo_message_new();
   bmode = bm;
   if(bmode == mfloat)
@@ -328,12 +342,51 @@ public:
       ((mididispatch_t*)user_data)->remove_all_note_action();
     return 0;
   }
+  void add_launchpad_action(uint8_t event, float min, float max,
+                            uint8_t val_off, uint8_t val_on, std::string param);
+  static int osc_add_launchpad_action(const char*, const char*, lo_arg** argv,
+                                      int argc, lo_message, void* user_data)
+  {
+    if(argc == 6)
+      ((mididispatch_t*)user_data)
+          ->add_launchpad_action(argv[0]->i, argv[1]->f, argv[2]->f, argv[3]->i,
+                                 argv[4]->i, &(argv[5]->s));
+    return 0;
+  }
+  void remove_launchpad_action(uint8_t event);
+  static int osc_remove_launchpad_action(const char*, const char*,
+                                         lo_arg** argv, int argc, lo_message,
+                                         void* user_data)
+  {
+    if(argc == 1)
+      ((mididispatch_t*)user_data)->remove_launchpad_action(argv[0]->i);
+    return 0;
+  }
+  void select_launchpad_action(const std::string& param);
+  static int osc_select_launchpad_action(const char*, const char*,
+                                         lo_arg** argv, int argc, lo_message,
+                                         void* user_data)
+  {
+    if(argc == 1)
+      ((mididispatch_t*)user_data)->select_launchpad_action(&(argv[0]->s));
+    return 0;
+  }
+  void select_launchpad_action(uint8_t event);
+  void clear_launchpad_action();
+  static int osc_clear_launchpad_action(const char*, const char*, lo_arg**,
+                                        int argc, lo_message, void* user_data)
+  {
+    if(argc == 0)
+      ((mididispatch_t*)user_data)->clear_launchpad_action();
+    return 0;
+  }
 
 private:
   std::vector<std::pair<uint16_t, m_msg_t>> ccmsg;
   std::vector<std::pair<uint16_t, m_msg_t>> notemsg;
   std::mutex mtxdispatch;
   lo_address copytarget = NULL;
+  std::map<uint8_t, lpaction_t> lpactmap;
 };
 
 mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
@@ -372,6 +425,8 @@ mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
 
 void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   std::string prefix_(srv->get_prefix());
   srv->set_prefix(std::string("/") + name);
   srv->add_method("/send/cc", "iii", &mididispatch_t::osc_sendcc, this);
@@ -400,7 +455,103 @@ void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
     srv->add_method("/rec/note", "iii", &mididispatch_t::osc_rec_note, this);
     srv->add_method("/rec/cc", "iii", &mididispatch_t::osc_rec_cc, this);
   }
+  srv->add_method("/add/launchpadaction", "iffiis",
+                  &mididispatch_t::osc_add_launchpad_action, this, false, "",
+                  "event min max val_off val_on script");
+  srv->add_method("/del/launchpadaction", "i",
+                  &mididispatch_t::osc_remove_launchpad_action, this);
+  srv->add_method("/select/launchpadaction", "s",
+                  &mididispatch_t::osc_select_launchpad_action, this);
+  srv->add_method("/clear/launchpadaction", "",
+                  &mididispatch_t::osc_clear_launchpad_action, this);
   srv->set_prefix(prefix_);
+  srv->unset_variable_owner();
+}
+
+void mididispatch_t::add_launchpad_action(uint8_t event, float min, float max,
+                                          uint8_t val_off, uint8_t val_on,
+                                          std::string param)
+{
+  lpaction_t lpact;
+  lpact.min = min;
+  lpact.max = max;
+  lpact.val_on = val_on;
+  lpact.val_off = val_off;
+  lpact.param = param;
+  lpactmap[event] = lpact;
+  uint8_t x = (event / 10);
+  uint8_t y = (event % 10);
+  bool iscc = (x > 8) || (y > 8);
+  if(iscc) {
+    remove_cc_action(0, event);
+    add_cc_triggeraction(0, event, "/runscript", min, max, param);
+  } else {
+    remove_note_action(0, event);
+    add_note_triggeraction(0, event, "/runscript", min, max, param);
+  }
+}
+
+void mididispatch_t::remove_launchpad_action(uint8_t event)
+{
+  auto idx = lpactmap.find(event);
+  if(idx != lpactmap.end())
+    lpactmap.erase(idx);
+  uint8_t x = (event / 10);
+  uint8_t y = (event % 10);
+  bool iscc = (x > 8) || (y > 8);
+  if(iscc)
+    remove_cc_action(0, event);
+  else
+    remove_note_action(0, event);
+}
+
+void mididispatch_t::select_launchpad_action(uint8_t event)
+{
+  for(auto lpact : lpactmap) {
+    uint8_t x = (lpact.first / 10);
+    uint8_t y = (lpact.first % 10);
+    bool iscc = (x > 8) || (y > 8);
+    uint8_t val = lpact.second.val_off;
+    if(lpact.first == event)
+      val = lpact.second.val_on;
+    if(iscc)
+      send_midi_(0, lpact.first, val);
+    else
+      send_midi_note_(0, lpact.first, val);
+  }
+}
+
+void mididispatch_t::select_launchpad_action(const std::string& param)
+{
+  for(auto lpact : lpactmap) {
+    uint8_t x = (lpact.first / 10);
+    uint8_t y = (lpact.first % 10);
+    bool iscc = (x > 8) || (y > 8);
+    uint8_t val = lpact.second.val_off;
+    if(lpact.second.param == param)
+      val = lpact.second.val_on;
+    if(iscc)
+      send_midi_(0, lpact.first, val);
+    else
+      send_midi_note_(0, lpact.first, val);
+  }
+}
+
+void mididispatch_t::clear_launchpad_action()
+{
+  for(uint8_t x = 1; x < 10; ++x)
+    for(uint8_t y = 1; y < 10; ++y) {
+      uint8_t event = 10 * x + y;
+      bool iscc = (x > 8) || (y > 8);
+      if(iscc) {
+        send_midi_(0, event, 0);
+        remove_cc_action(0, event);
+      } else {
+        send_midi_note_(0, event, 0);
+        remove_note_action(0, event);
+      }
+    }
+  lpactmap.clear();
 }
 
 void mididispatch_t::remove_cc_action(uint8_t channel, uint8_t param)
@@ -498,6 +649,8 @@ void mididispatch_t::emit_event(int channel, int param, int value)
   bool known = false;
   for(auto& m : ccmsg)
     if(m.first == ctl) {
+      if((channel == 0) && (lpactmap.size() > 0))
+        select_launchpad_action(param);
       std::lock_guard<std::mutex> lock{mtxdispatch};
       m.second.updatemsg(session, value);
       known = true;
@@ -516,6 +669,8 @@ void mididispatch_t::emit_event_note(int channel, int pitch, int velocity)
   bool known = false;
   for(auto& m : notemsg)
     if(m.first == ctl) {
+      if((channel == 0) && (lpactmap.size() > 0))
+        select_launchpad_action(pitch);
       std::lock_guard<std::mutex> lock{mtxdispatch};
       m.second.updatemsg(session, velocity);
       known = true;
