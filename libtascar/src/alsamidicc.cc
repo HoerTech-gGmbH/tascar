@@ -77,17 +77,17 @@ void TASCAR::midi_ctl_t::service()
   snd_seq_drop_input_buffer(seq);
   snd_seq_drop_output(seq);
   snd_seq_drop_output_buffer(seq);
-  snd_seq_event_t* ev;
+  snd_seq_event_t* ev = NULL;
   while(run_service) {
     // while( snd_seq_event_input_pending(seq,0) ){
     while(snd_seq_event_input(seq, &ev) >= 0) {
-      if(ev->type == SND_SEQ_EVENT_CONTROLLER) {
+      if(ev && (ev->type == SND_SEQ_EVENT_CONTROLLER)) {
         emit_event(ev->data.control.channel, ev->data.control.param,
                    ev->data.control.value);
       }
-      if((ev->type == SND_SEQ_EVENT_NOTE) ||
-         (ev->type == SND_SEQ_EVENT_NOTEON) ||
-         (ev->type == SND_SEQ_EVENT_NOTEOFF)) {
+      if(ev && ((ev->type == SND_SEQ_EVENT_NOTE) ||
+                (ev->type == SND_SEQ_EVENT_NOTEON) ||
+                (ev->type == SND_SEQ_EVENT_NOTEOFF))) {
         emit_event_note(ev->data.note.channel, ev->data.note.note,
                         ev->data.note.velocity);
       }
@@ -104,6 +104,7 @@ TASCAR::midi_ctl_t::~midi_ctl_t()
 void TASCAR::midi_ctl_t::send_midi(int channel, int param, int value)
 {
   snd_seq_event_t ev;
+  memset(&ev, 0, sizeof(ev));
   snd_seq_ev_clear(&ev);
   snd_seq_ev_set_source(&ev, port_out.port);
   snd_seq_ev_set_subs(&ev);
@@ -120,6 +121,7 @@ void TASCAR::midi_ctl_t::send_midi(int channel, int param, int value)
 void TASCAR::midi_ctl_t::send_midi_note(int channel, int param, int value)
 {
   snd_seq_event_t ev;
+  memset(&ev, 0, sizeof(ev));
   snd_seq_ev_clear(&ev);
   snd_seq_ev_set_source(&ev, port_out.port);
   snd_seq_ev_set_subs(&ev);
@@ -137,6 +139,7 @@ void TASCAR::midi_ctl_t::connect_input(const std::string& src,
                                        bool warn_on_fail)
 {
   snd_seq_addr_t sender;
+  memset(&sender, 0, sizeof(sender));
   if(snd_seq_parse_address(seq, &sender, src.c_str()) == 0)
     connect_input(sender.client, sender.port);
   else {
@@ -151,6 +154,7 @@ void TASCAR::midi_ctl_t::connect_output(const std::string& src,
                                         bool warn_on_fail)
 {
   snd_seq_addr_t sender;
+  memset(&sender, 0, sizeof(sender));
   if(snd_seq_parse_address(seq, &sender, src.c_str()) == 0)
     connect_output(sender.client, sender.port);
   else {
