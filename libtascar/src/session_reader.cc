@@ -89,7 +89,10 @@ const std::string& showstring(const std::string& s)
 
 TASCAR::tsc_reader_t::~tsc_reader_t()
 {
-  chdir(orig_path.c_str());
+  auto result = chdir(orig_path.c_str());
+  if(result != 0)
+    TASCAR::add_warning("Unable to change to directory \"" + orig_path + "\"." +
+                        strerror(errno));
 }
 
 TASCAR::tsc_reader_t::tsc_reader_t(const std::string& filename_or_data,

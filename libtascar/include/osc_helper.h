@@ -8,6 +8,7 @@
 /* License (GPL)
  *
  * Copyright (C) 2018  Giso Grimm
+ * Copyright (C) 2024  Giso Grimm
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -315,9 +316,9 @@ namespace TASCAR {
     std::string osc_srv_url;
     std::string prefix;
     lo_server_thread lost;
-    bool initialized;
-    bool isactive;
-    bool verbose;
+    std::atomic_bool initialized = false;
+    std::atomic_bool isactive = false;
+    bool verbose = false;
     std::map<std::string, data_element_t> datamap;
     std::atomic<bool> runscriptthread;
     std::atomic<bool> cancelscript;

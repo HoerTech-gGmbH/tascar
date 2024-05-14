@@ -576,8 +576,7 @@ int string2proto(const std::string& proto)
 osc_server_t::osc_server_t(const std::string& multicast,
                            const std::string& port, const std::string& proto,
                            bool verbose_)
-    : osc_srv_addr(multicast), osc_srv_port(port), initialized(false),
-      isactive(false), verbose(verbose_)
+    : osc_srv_addr(multicast), osc_srv_port(port), verbose(verbose_)
 {
   runscriptthread = true;
   cancelscript = false;
@@ -625,6 +624,8 @@ osc_server_t::osc_server_t(const std::string& multicast,
 
 int osc_server_t::dispatch_data(void* data, size_t size)
 {
+  if(!isactive)
+    return 0;
   // std::lock_guard<std::mutex> lk{mtxdispatch};
   lo_server srv(lo_server_thread_get_server(lost));
   return lo_server_dispatch_data(srv, data, size);
@@ -890,8 +891,8 @@ void osc_server_t::activate()
 void osc_server_t::deactivate()
 {
   if(initialized) {
-    lo_server_thread_stop(lost);
     isactive = false;
+    lo_server_thread_stop(lost);
     if(verbose)
       std::cerr << "server inactive\n";
   }

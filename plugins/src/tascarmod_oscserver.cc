@@ -48,9 +48,10 @@ oscserver_t::oscserver_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), srv_addr(""), srv_port("9877"), srv_proto("TCP"),
       srv(NULL)
 {
-  GET_ATTRIBUTE_(srv_addr);
-  GET_ATTRIBUTE_(srv_port);
-  GET_ATTRIBUTE_(srv_proto);
+  GET_ATTRIBUTE(srv_addr, "",
+                "Server address (network device, multicast address)");
+  GET_ATTRIBUTE(srv_port, "", "Port number");
+  GET_ATTRIBUTE(srv_proto, "", "Server protocol (UDP or TCP)");
   srv = new TASCAR::osc_server_t(srv_addr, srv_port, srv_proto);
   srv->add_method("", NULL, osc_recv_, this);
   srv->activate();
