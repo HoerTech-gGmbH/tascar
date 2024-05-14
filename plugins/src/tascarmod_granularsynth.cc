@@ -186,17 +186,17 @@ granularsynth_t::granularsynth_t(const TASCAR::module_cfg_t& cfg)
   std::set<double> vf;
   // convert semitone pitches to frequencies in Hz, and store unique
   // list of frequencies:
-  for(auto it = pitches.begin(); it != pitches.end(); ++it) {
-    vfreqs.push_back(f0 * pow(2.0, (*it) / 12.0));
+  for(auto pitch : pitches) {
+    vfreqs.push_back(f0 * pow(2.0, pitch / 12.0));
     vf.insert(vfreqs.back());
   }
   // for each frequency, allocate a grainloop:
-  for(auto it = vf.begin(); it != vf.end(); ++it)
-    grains.push_back(grainloop_t(*it, ola1.s.n_, numgrains));
+  for(auto f : vf)
+    grains.push_back(grainloop_t(f, ola1.s.n_, numgrains));
   // calculate start times from durations:
   uint64_t t(0);
-  for(auto it = durations.begin(); it != durations.end(); ++it) {
-    idurations.push_back(srate * (*it) / (bpm / 60.0));
+  for(auto dur : durations) {
+    idurations.push_back(srate * dur / (bpm / 60.0));
     startingtimes.push_back(t);
     t += idurations.back();
   }
@@ -289,14 +289,14 @@ int granularsynth_t::inner_process(jack_nframes_t n,
   // if inactive, do only time update, and return zeros:
   if(!active_) {
     tprev = t;
-    for(auto it = vOut.begin(); it != vOut.end(); ++it)
-      memset((*it), 0, sizeof(float) * n);
+    for(auto oBuf : vOut)
+      memset(oBuf, 0, sizeof(float) * n);
     return 0;
   }
   // optionally, reset grains:
   if(reset) {
-    for(auto it = grains.begin(); it != grains.end(); ++it)
-      it->reset();
+    for(auto& grain : grains)
+      grain.reset();
     reset = false;
   }
   // create delayed input signal:
@@ -330,9 +330,9 @@ int granularsynth_t::inner_process(jack_nframes_t n,
   // phase modification, e.g., convert to minimum phase stimulus:
   minphase(ola1.s);
   // add grains to grain store if features are matching:
-  for(auto it = grains.begin(); it != grains.end(); ++it)
-    if(fabs(12.0 * log2(freq_max / (it->f))) < 0.5) {
-      it->add(ola1.s);
+  for(auto& grain : grains)
+    if(fabs(12.0 * log2(freq_max / grain.f)) < 0.5) {
+      grain.add(ola1.s);
     }
   // prepare for output:
   ola1.s.clear();
@@ -343,14 +343,14 @@ int granularsynth_t::inner_process(jack_nframes_t n,
     uint64_t tstart(startingtimes[k]);
     if(((t >= tstart) && ((tprev < tstart) || (tprev > t))) &&
        (vrandom < ponset))
-      for(auto it = grains.begin(); it != grains.end(); ++it)
-        if(vfreqs[k] == it->f) {
-          it->play(ola1.s, gain);
+      for(auto& grain : grains)
+        if(vfreqs[k] == grain.f) {
+          grain.play(ola1.s, gain);
         }
     if((t >= tstart) && (t < tstart + idurations[k]) && (vrandom < psustain))
-      for(auto it = grains.begin(); it != grains.end(); ++it)
-        if(vfreqs[k] == it->f) {
-          it->play(ola1.s, gain);
+      for(auto& grain : grains)
+        if(vfreqs[k] == grain.f) {
+          grain.play(ola1.s, gain);
         }
   }
   // convert back to time domain:
