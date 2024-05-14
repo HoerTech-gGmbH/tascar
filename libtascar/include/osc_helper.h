@@ -316,8 +316,8 @@ namespace TASCAR {
     std::string osc_srv_url;
     std::string prefix;
     lo_server_thread lost;
-    std::atomic_bool initialized = false;
-    std::atomic_bool isactive = false;
+    std::atomic_bool initialized;
+    std::atomic_bool isactive;
     bool verbose = false;
     std::map<std::string, data_element_t> datamap;
     std::atomic<bool> runscriptthread;

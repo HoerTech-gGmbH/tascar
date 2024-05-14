@@ -578,6 +578,8 @@ osc_server_t::osc_server_t(const std::string& multicast,
                            bool verbose_)
     : osc_srv_addr(multicast), osc_srv_port(port), verbose(verbose_)
 {
+  initialized = false;
+  isactive = false;
   runscriptthread = true;
   cancelscript = false;
   scriptthread = std::thread(&osc_server_t::scriptthread_fun, this);
