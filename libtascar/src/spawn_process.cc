@@ -62,7 +62,13 @@ void TASCAR::spawn_process_t::launcher()
     mtx.unlock();
 #ifndef _WIN32
     int wstatus = 0;
-    waitpid(pid, &wstatus, 0);
+    bool stillrunning = true;
+    while(runservice && stillrunning) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      int opid = waitpid(pid, &wstatus, WNOHANG);
+      if(opid != 0)
+        stillrunning = false;
+    }
     if(runservice) {
       if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0))
         std::cerr << "Process " << pid << " returned with exit status "
