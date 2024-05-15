@@ -19,6 +19,7 @@
 
 #include "spawn_process.h"
 #include "tascar_os.h"
+#include "tscconfig.h"
 #include <iostream>
 #include <signal.h>
 #include <unistd.h>
@@ -70,14 +71,19 @@ void TASCAR::spawn_process_t::launcher()
         stillrunning = false;
     }
     if(runservice) {
-      if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0))
-        std::cerr << "Process " << pid << " returned with exit status "
-                  << WEXITSTATUS(wstatus) << ": \"" << command_ << "\""
-                  << std::endl;
-      if(WIFSIGNALED(wstatus))
-        std::cerr << "Process " << pid << " terminated with signal "
-                  << WTERMSIG(wstatus) << ": \"" << command_ << "\""
-                  << std::endl;
+      if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0)) {
+        TASCAR::add_warning("Process " + TASCAR::to_string(pid) +
+                            " returned with exit status " +
+                            TASCAR::to_string(WEXITSTATUS(wstatus)) + ": \"" +
+                            command_ + "\"" +
+                            (relaunch_ ? (" Relaunching.") : ("")));
+      }
+      if(WIFSIGNALED(wstatus)) {
+        TASCAR::add_warning(
+            "Process " + TASCAR::to_string(pid) + " terminated with signal " +
+            TASCAR::to_string(WTERMSIG(wstatus)) + ": \"" + command_ + "\"" +
+            (relaunch_ ? (" Relaunching.") : ("")));
+      }
     }
 #else
     wait_for_process(pid);
