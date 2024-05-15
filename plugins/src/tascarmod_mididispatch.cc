@@ -29,8 +29,8 @@ public:
   lpaction_t(){};
   float min = 0.0f;
   float max = 127.0f;
-  uint8_t val_on = 0;
-  uint8_t val_off = 0;
+  uint16_t val_on = 0;
+  uint16_t val_off = 0;
   std::string param = "";
 };
 
@@ -343,7 +343,8 @@ public:
     return 0;
   }
   void add_launchpad_action(uint8_t event, float min, float max,
-                            uint8_t val_off, uint8_t val_on, std::string param);
+                            uint16_t val_off, uint16_t val_on,
+                            std::string param);
   static int osc_add_launchpad_action(const char*, const char*, lo_arg** argv,
                                       int argc, lo_message, void* user_data)
   {
@@ -387,6 +388,7 @@ private:
   std::mutex mtxdispatch;
   lo_address copytarget = NULL;
   std::map<uint8_t, lpaction_t> lpactmap;
+  std::mutex mtxlpactmap;
 };
 
 mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
@@ -469,7 +471,7 @@ void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
 }
 
 void mididispatch_t::add_launchpad_action(uint8_t event, float min, float max,
-                                          uint8_t val_off, uint8_t val_on,
+                                          uint16_t val_off, uint16_t val_on,
                                           std::string param)
 {
   lpaction_t lpact;
@@ -478,7 +480,10 @@ void mididispatch_t::add_launchpad_action(uint8_t event, float min, float max,
   lpact.val_on = val_on;
   lpact.val_off = val_off;
   lpact.param = param;
-  lpactmap[event] = lpact;
+  {
+    std::lock_guard<std::mutex> lock(mtxlpactmap);
+    lpactmap[event] = lpact;
+  }
   uint8_t x = (event / 10);
   uint8_t y = (event % 10);
   bool iscc = (x > 8) || (y > 8);
@@ -493,9 +498,12 @@ void mididispatch_t::add_launchpad_action(uint8_t event, float min, float max,
 
 void mididispatch_t::remove_launchpad_action(uint8_t event)
 {
-  auto idx = lpactmap.find(event);
-  if(idx != lpactmap.end())
-    lpactmap.erase(idx);
+  {
+    std::lock_guard<std::mutex> lock(mtxlpactmap);
+    auto idx = lpactmap.find(event);
+    if(idx != lpactmap.end())
+      lpactmap.erase(idx);
+  }
   uint8_t x = (event / 10);
   uint8_t y = (event % 10);
   bool iscc = (x > 8) || (y > 8);
@@ -507,33 +515,39 @@ void mididispatch_t::remove_launchpad_action(uint8_t event)
 
 void mididispatch_t::select_launchpad_action(uint8_t event)
 {
+  std::lock_guard<std::mutex> lock(mtxlpactmap);
   for(auto lpact : lpactmap) {
     uint8_t x = (lpact.first / 10);
     uint8_t y = (lpact.first % 10);
     bool iscc = (x > 8) || (y > 8);
-    uint8_t val = lpact.second.val_off;
+    uint16_t val = lpact.second.val_off;
     if(lpact.first == event)
       val = lpact.second.val_on;
+    int16_t ch = val / 500;
+    val = val % 500;
     if(iscc)
-      send_midi_(0, lpact.first, val);
+      send_midi_(ch, lpact.first, val);
     else
-      send_midi_note_(0, lpact.first, val);
+      send_midi_note_(ch, lpact.first, val);
   }
 }
 
 void mididispatch_t::select_launchpad_action(const std::string& param)
 {
+  std::lock_guard<std::mutex> lock(mtxlpactmap);
   for(auto lpact : lpactmap) {
     uint8_t x = (lpact.first / 10);
     uint8_t y = (lpact.first % 10);
     bool iscc = (x > 8) || (y > 8);
-    uint8_t val = lpact.second.val_off;
+    uint16_t val = lpact.second.val_off;
     if(lpact.second.param == param)
       val = lpact.second.val_on;
+    int16_t ch = val / 500;
+    val = val % 500;
     if(iscc)
-      send_midi_(0, lpact.first, val);
+      send_midi_(ch, lpact.first, val);
     else
-      send_midi_note_(0, lpact.first, val);
+      send_midi_note_(ch, lpact.first, val);
   }
 }
 
@@ -551,7 +565,10 @@ void mididispatch_t::clear_launchpad_action()
         remove_note_action(0, event);
       }
     }
-  lpactmap.clear();
+  {
+    std::lock_guard<std::mutex> lock(mtxlpactmap);
+    lpactmap.clear();
+  }
 }
 
 void mididispatch_t::remove_cc_action(uint8_t channel, uint8_t param)
@@ -651,7 +668,7 @@ void mididispatch_t::emit_event(int channel, int param, int value)
     if(m.first == ctl) {
       if((channel == 0) && (lpactmap.size() > 0))
         select_launchpad_action(param);
-      std::lock_guard<std::mutex> lock{mtxdispatch};
+      std::lock_guard<std::mutex> lock(mtxdispatch);
       m.second.updatemsg(session, value);
       known = true;
     }
@@ -671,7 +688,7 @@ void mididispatch_t::emit_event_note(int channel, int pitch, int velocity)
     if(m.first == ctl) {
       if((channel == 0) && (lpactmap.size() > 0))
         select_launchpad_action(pitch);
-      std::lock_guard<std::mutex> lock{mtxdispatch};
+      std::lock_guard<std::mutex> lock(mtxdispatch);
       m.second.updatemsg(session, velocity);
       known = true;
     }
