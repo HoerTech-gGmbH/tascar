@@ -57,9 +57,11 @@ private:
   lo_message msg;
   lo_arg** oscmsgargv;
   std::thread thread;
-  std::atomic_bool run_thread = true;
+  std::atomic_bool run_thread;
+  std::atomic_bool is_prepared;
   void sendthread();
   std::mutex mtx;
+  std::mutex mtxmsg;
   std::condition_variable cond;
   std::atomic_bool has_data = false;
   std::vector<TASCAR::levelmeter_t> sigcopy;
@@ -69,6 +71,8 @@ private:
 level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg)
 {
+  run_thread = true;
+  is_prepared = false;
   weights.push_back(TASCAR::levelmeter::Z);
   GET_ATTRIBUTE_BOOL(sendwhilestopped, "Send also when transport is stopped");
   GET_ATTRIBUTE(skip, "", "Skip frames");
@@ -100,22 +104,25 @@ void level2osc_t::sendthread()
   while(run_thread) {
     cond.wait_for(lk, 100ms);
     if(has_data) {
-      // pack data:
-      oscmsgargv[0]->f = currenttime;
-      for(size_t ch = 0; ch < sigcopy.size(); ++ch) {
-        switch(imode) {
-        case dbspl:
-          oscmsgargv[ch + 1]->f = sigcopy[ch].spldb();
-          break;
-        case rms:
-          oscmsgargv[ch + 1]->f = sigcopy[ch].rms();
-          break;
-        case max:
-          oscmsgargv[ch + 1]->f = sigcopy[ch].maxabs();
-          break;
+      std::lock_guard<std::mutex> lock(mtxmsg);
+      if(is_prepared) {
+        // pack data:
+        oscmsgargv[0]->f = currenttime;
+        for(size_t ch = 0; ch < sigcopy.size(); ++ch) {
+          switch(imode) {
+          case dbspl:
+            oscmsgargv[ch + 1]->f = sigcopy[ch].spldb();
+            break;
+          case rms:
+            oscmsgargv[ch + 1]->f = sigcopy[ch].rms();
+            break;
+          case max:
+            oscmsgargv[ch + 1]->f = sigcopy[ch].maxabs();
+            break;
+          }
         }
+        lo_send_message(lo_addr, path.c_str(), msg);
       }
-      lo_send_message(lo_addr, path.c_str(), msg);
       has_data = false;
     }
   }
@@ -124,6 +131,7 @@ void level2osc_t::sendthread()
 void level2osc_t::configure()
 {
   audioplugin_base_t::configure();
+  std::lock_guard<std::mutex> lock(mtxmsg);
   sigcopy.clear();
   msg = lo_message_new();
   // time:
@@ -139,10 +147,13 @@ void level2osc_t::configure()
       // sigcopy.back().set_weight(weights[kweight]);
     }
   oscmsgargv = lo_message_get_argv(msg);
+  is_prepared = true;
 }
 
 void level2osc_t::release()
 {
+  std::lock_guard<std::mutex> lock(mtxmsg);
+  is_prepared = false;
   lo_message_free(msg);
   sigcopy.clear();
   audioplugin_base_t::release();
