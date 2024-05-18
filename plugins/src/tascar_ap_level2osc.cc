@@ -4,6 +4,7 @@
  * Copyright (c) 2019 Giso Grimm
  * Copyright (c) 2020 Giso Grimm
  * Copyright (c) 2021 Giso Grimm
+ * Copyright (c) 2024 Giso Grimm
  */
 /*
  * TASCAR is free software: you can redistribute it and/or modify
@@ -38,6 +39,7 @@ public:
   level2osc_t(const TASCAR::audioplugin_cfg_t& cfg);
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
+  void add_variables(TASCAR::osc_server_t* srv);
   void configure();
   void release();
   ~level2osc_t();
@@ -66,6 +68,7 @@ private:
   std::atomic_bool has_data = false;
   std::vector<TASCAR::levelmeter_t> sigcopy;
   double currenttime = 0;
+  double firstpar = -1;
 };
 
 level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -83,6 +86,8 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(path, "", "Target path");
   GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data");
   GET_ATTRIBUTE(tau, "s", "Leq duration, or 0 to use block size");
+  GET_ATTRIBUTE(firstpar, "",
+                "First parameter, or -1 to use current session time.");
   std::string mode("dbspl");
   GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
   if(mode == "dbspl")
@@ -98,6 +103,14 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
     thread = std::thread(&level2osc_t::sendthread, this);
 }
 
+void level2osc_t::add_variables(TASCAR::osc_server_t* srv)
+{
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_double("/firstpar", &firstpar);
+  srv->unset_variable_owner();
+}
+
 void level2osc_t::sendthread()
 {
   std::unique_lock<std::mutex> lk(mtx);
@@ -107,7 +120,10 @@ void level2osc_t::sendthread()
       std::lock_guard<std::mutex> lock(mtxmsg);
       if(is_prepared) {
         // pack data:
-        oscmsgargv[0]->f = currenttime;
+        if(firstpar == -1)
+          oscmsgargv[0]->f = currenttime;
+        else
+          oscmsgargv[0]->f = firstpar;
         for(size_t ch = 0; ch < sigcopy.size(); ++ch) {
           switch(imode) {
           case dbspl:
