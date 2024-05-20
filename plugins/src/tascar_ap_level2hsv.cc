@@ -67,6 +67,8 @@ private:
   TASCAR::levelmeter_t* lmeter = NULL;
   double currenttime = 0;
   float* p_value = NULL;
+  float* p_sat = NULL;
+  float* p_hue = NULL;
 };
 
 level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -107,6 +109,8 @@ level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
   lo_message_add_float(msg, 0.01);
   auto oscmsgargv = lo_message_get_argv(msg);
   p_value = &(oscmsgargv[2]->f);
+  p_hue = &(oscmsgargv[0]->f);
+  p_sat = &(oscmsgargv[1]->f);
   thread = std::thread(&level2hsv_t::sendthread, this);
 }
 
@@ -142,7 +146,10 @@ void level2hsv_t::sendthread()
       l = std::min(1.0f,
                    std::max(0.0f, (l - lrange[0]) / (lrange[1] - lrange[0])));
       *p_value = l;
-      lo_send_message(lo_addr, path.c_str(), msg);
+      *p_hue = hue;
+      *p_sat = saturation;
+      if(active)
+        lo_send_message(lo_addr, path.c_str(), msg);
       has_data = false;
     }
   }
