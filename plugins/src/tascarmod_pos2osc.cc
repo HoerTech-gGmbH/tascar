@@ -308,6 +308,12 @@ void pos2osc_t::update_local()
                   RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
                   RAD2DEG * o.x * oscale);
           break;
+        case 12:
+          path = "/" + avatar;
+          TASCAR::pos_t p(0, 0, 1);
+          p *= o;
+          lo_send(target, path.c_str(), "f", (float)(1.0 - p.z));
+          break;
         }
       }
     }
