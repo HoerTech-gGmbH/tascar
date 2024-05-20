@@ -19,9 +19,20 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "audioplugin.h"
+#include "errorhandling.h"
+#include "levelmeter.h"
 #include "ola.h"
 #include "session.h"
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <lo/lo.h>
+#include <mutex>
 #include <stdlib.h>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 class granularsynth_vars_t : public TASCAR::module_base_t {
 public:
@@ -31,6 +42,8 @@ public:
 protected:
   std::string id = "granularsynth";
   std::string prefix = "/c/";
+  std::string url;
+  std::string path = "/grainstorefill";
   float wet = 1.0;
   uint32_t wlen = 8192;
   double f0 = 415;
@@ -43,8 +56,12 @@ protected:
   double psustain = 0.0;
   bool active_ = true;
   bool bypass_ = false;
+  uint32_t fillthreshold = 5;
+  bool oscactive = false;
   std::vector<double> pitches;
   std::vector<double> durations;
+  float hue = 0;
+  float saturation = 1;
 };
 
 granularsynth_vars_t::granularsynth_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -66,6 +83,13 @@ granularsynth_vars_t::granularsynth_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_DB(gain, "Gain");
   get_attribute_bool("active", active_, "", "active");
   get_attribute_bool("bypass", bypass_, "", "bypass");
+  GET_ATTRIBUTE(url, "", "Grainstore fill URL");
+  GET_ATTRIBUTE(path, "", "Grainstore fill path");
+  GET_ATTRIBUTE(fillthreshold, "",
+                "Minimum number of grains per frequency in fill counter");
+  GET_ATTRIBUTE_BOOL(oscactive, "Activate OSC sending on start");
+  GET_ATTRIBUTE(hue, "degree", "Hue component (0-360)");
+  GET_ATTRIBUTE(saturation, "", "Saturation component (0-1)");
 }
 
 class grainloop_t : public std::vector<TASCAR::spec_t*> {
@@ -73,6 +97,7 @@ public:
   grainloop_t(double f0, uint32_t nbins, uint32_t ngrains);
   grainloop_t(const grainloop_t& src);
   ~grainloop_t();
+  size_t get_num_filled() const { return num_filled; };
   void add(const TASCAR::spec_t& s);
   void play(TASCAR::spec_t& s, double gain);
   void reset()
@@ -169,6 +194,18 @@ protected:
   std::vector<double> vfreqs;
   uint64_t tprev;
   bool reset;
+  lo_address target = NULL;
+  float* p_value = NULL;
+  float* p_sat = NULL;
+  float* p_hue = NULL;
+  lo_message msg;
+  std::mutex mtx;
+  std::condition_variable cond;
+  std::atomic_bool has_data = false;
+  std::thread thread;
+  std::atomic_bool run_thread = true;
+  void sendthread();
+  float fill = 0.0f;
 };
 
 granularsynth_t::granularsynth_t(const TASCAR::module_cfg_t& cfg)
@@ -216,7 +253,20 @@ granularsynth_t::granularsynth_t(const TASCAR::module_cfg_t& cfg)
   session->add_bool_true(prefix + id + "/reset", &reset);
   session->add_bool(prefix + id + "/active", &active_);
   session->add_bool(prefix + id + "/bypass", &bypass_);
+  session->add_bool(prefix + id + "/oscactive", &oscactive);
   session->unset_variable_owner();
+  if(url.size())
+    target = lo_address_new_from_url(url.c_str());
+  msg = lo_message_new();
+  lo_message_add_float(msg, hue);
+  lo_message_add_float(msg, saturation);
+  lo_message_add_float(msg, 0);
+  lo_message_add_float(msg, 0.01);
+  auto oscmsgargv = lo_message_get_argv(msg);
+  p_value = &(oscmsgargv[2]->f);
+  p_hue = &(oscmsgargv[0]->f);
+  p_sat = &(oscmsgargv[1]->f);
+  thread = std::thread(&granularsynth_t::sendthread, this);
   // activate service:
   set_apply(0.01f);
   activate();
@@ -357,12 +407,45 @@ int granularsynth_t::inner_process(jack_nframes_t n,
   ola1.ifft(w_out);
   // w_out.clear();
   tprev = t;
+  // send fill state:
+  if(target && oscactive) {
+    if(mtx.try_lock()) {
+      fill = 0.0f;
+      for(auto& grain : grains)
+        fill += (grain.get_num_filled() > fillthreshold);
+      fill *= 1.0 / grains.size();
+      has_data = true;
+      mtx.unlock();
+      cond.notify_one();
+    }
+  }
   return 0;
+}
+
+void granularsynth_t::sendthread()
+{
+  std::unique_lock<std::mutex> lk(mtx);
+  while(run_thread) {
+    cond.wait_for(lk, 100ms);
+    if(has_data) {
+      *p_value = fill;
+      *p_hue = hue;
+      *p_sat = saturation;
+      if(active)
+        lo_send_message(target, path.c_str(), msg);
+      has_data = false;
+    }
+  }
 }
 
 granularsynth_t::~granularsynth_t()
 {
   deactivate();
+  run_thread = false;
+  thread.join();
+  if(target)
+    lo_address_free(target);
+  lo_message_free(msg);
 }
 
 REGISTER_MODULE(granularsynth_t);
