@@ -74,6 +74,7 @@ private:
   uint32_t fmax_timer = 0u;
   float dfmin_fade = 0.0f;
   float dfmax_fade = 0.0f;
+  bool bypass = false;
   std::vector<TASCAR::bandpassf_t*> bp;
 };
 
@@ -82,6 +83,7 @@ bandpassplugin_t::bandpassplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
 {
   GET_ATTRIBUTE(fmin, "Hz", "Minimum frequency");
   GET_ATTRIBUTE(fmax, "Hz", "Maximum frequency");
+  GET_ATTRIBUTE_BOOL(bypass, "bypass plugin");
 }
 
 void bandpassplugin_t::add_variables(TASCAR::osc_server_t* srv)
@@ -98,6 +100,7 @@ void bandpassplugin_t::add_variables(TASCAR::osc_server_t* srv)
                   false, "",
                   "Fade the upper cutoff frequency, first parameter is new "
                   "frequency in Hz, second parameter is fade duration in s");
+  srv->add_bool("/bypass", &bypass);
   srv->unset_variable_owner();
 }
 
@@ -123,6 +126,8 @@ void bandpassplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                                   const TASCAR::zyx_euler_t&,
                                   const TASCAR::transport_t&)
 {
+  if(bypass)
+    return;
   if(fmin_timer) {
     fmin_fade += dfmin_fade;
     fmin = fmin_fade;
