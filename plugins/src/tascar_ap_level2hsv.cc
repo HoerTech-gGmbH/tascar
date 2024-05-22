@@ -45,9 +45,10 @@ private:
   uint32_t skip = 0;
   float tau = 0;
   std::string url = "osc.udp://localhost:9999/";
-  std::string path = "/hsv";
+  std::vector<std::string> path = {"/hsv"};
   float hue = 0;
   float saturation = 1;
+  double decay = 0.0;
   TASCAR::levelmeter::weight_t weight = TASCAR::levelmeter::Z;
   std::vector<float> frange = {62.5f, 4000.0f};
   std::vector<float> lrange = {40.0f, 90.0f};
@@ -69,6 +70,7 @@ private:
   float* p_value = NULL;
   float* p_sat = NULL;
   float* p_hue = NULL;
+  double lstate = 0.0;
 };
 
 level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -81,6 +83,7 @@ level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(hue, "degree", "Hue component (0-360)");
   GET_ATTRIBUTE(saturation, "", "Saturation component (0-1)");
   GET_ATTRIBUTE_BOOL(active, "start activated");
+  GET_ATTRIBUTE(decay, "", "decay filter coefficient");
   std::string mode("dbspl");
   GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
   if(mode == "dbspl")
@@ -122,6 +125,7 @@ void level2hsv_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float("/hue", &hue, "", "Hue component (0-360 degree)");
   srv->add_float("/saturation", &saturation, "", "Saturation component (0-1)");
   srv->add_vector_float("/lrange", &lrange, "", "Level range in dB");
+  srv->add_double("/decay", &decay, "[0,1[", "decay coeficient");
   srv->unset_variable_owner();
 }
 
@@ -145,11 +149,16 @@ void level2hsv_t::sendthread()
       }
       l = std::min(1.0f,
                    std::max(0.0f, (l - lrange[0]) / (lrange[1] - lrange[0])));
-      *p_value = l;
+      if(l > lstate)
+        lstate = l;
+      else
+        lstate *= decay;
+      *p_value = lstate;
       *p_hue = hue;
       *p_sat = saturation;
       if(active)
-        lo_send_message(lo_addr, path.c_str(), msg);
+        for(auto& p : path)
+          lo_send_message(lo_addr, p.c_str(), msg);
       has_data = false;
     }
   }
