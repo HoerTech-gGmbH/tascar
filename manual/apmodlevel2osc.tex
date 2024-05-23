@@ -2,7 +2,6 @@ Send levels via OSC.
 
 \input{tablevel2osc.tex}
 
-If $N$ is the number of channels, the OSC message will contain $N+1$
-floating point values. The first float contains the object time in
-seconds, the other floats contain the RMS level within the current
-audio block in dB SPL.
+The number of channels, denoted by $N$, and the number of frequency weights, represented by $W$, determine the number of floating-point values contained in the OSC message. The first of these values represents the object time in seconds, while the remaining values indicate the RMS level within the current audio block in dB SPL.
+
+\input{oscdoc_tascar_ap_level2osc.tex}
