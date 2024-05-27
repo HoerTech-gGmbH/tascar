@@ -22,91 +22,117 @@
 #include "session.h"
 #include <ltc.h>
 #include <string.h>
+#include <sys/time.h>
 
 class ltcgen_t : public TASCAR::module_base_t, public jackc_transport_t {
 public:
-  ltcgen_t( const TASCAR::module_cfg_t& cfg );
+  ltcgen_t(const TASCAR::module_cfg_t& cfg);
   virtual ~ltcgen_t();
-  virtual int process(jack_nframes_t, const std::vector<float*>&, const std::vector<float*>&,uint32_t tp_frame, bool tp_rolling);
+  virtual int process(jack_nframes_t, const std::vector<float*>&,
+                      const std::vector<float*>&, uint32_t tp_frame,
+                      bool tp_rolling);
+
 private:
-  double fpsnum;
-  double fpsden;
-  double volume;
+  double fpsnum = 25;
+  double fpsden = 1;
+  double volume = -18;
+  double addtime = 0.0;
+  bool usewallclock = false;
   std::vector<std::string> connect;
-  LTCEncoder* encoder;
-  ltcsnd_sample_t* enc_buf;
+  LTCEncoder* encoder = NULL;
+  ltcsnd_sample_t* enc_buf = NULL;
   //
-  uint32_t encoded_data;
-  uint32_t byteCnt;
+  uint32_t encoded_data = 0;
+  uint32_t byteCnt = 0;
   ltcsnd_sample_t* enc_buf_;
-  uint32_t lastframe;
+  uint32_t lastframe = -1;
+#ifndef _WIN32
+  struct timeval tv;
+  struct timezone tz;
+#endif
 };
 
-ltcgen_t::ltcgen_t( const TASCAR::module_cfg_t& cfg )
-  : module_base_t( cfg ),
-    jackc_transport_t("ltc."+session->name),
-    fpsnum(25),
-    fpsden(1),
-    volume(-18),
-    encoder(NULL),
-    enc_buf(NULL),
-    encoded_data(0),
-    byteCnt(0),
-    enc_buf_(enc_buf),
-    lastframe(-1)
+ltcgen_t::ltcgen_t(const TASCAR::module_cfg_t& cfg)
+    : module_base_t(cfg), jackc_transport_t("ltc." + session->name),
+      enc_buf_(enc_buf)
 {
-  GET_ATTRIBUTE_(fpsnum);
-  GET_ATTRIBUTE_(fpsden);
-  GET_ATTRIBUTE_(volume);
-  GET_ATTRIBUTE_(connect);
-  encoder = ltc_encoder_create(get_srate(),
-                               fpsnum/fpsden, LTC_TV_625_50, 0);
+  GET_ATTRIBUTE(fpsnum, "", "Frames per second, numerator");
+  GET_ATTRIBUTE(fpsden, "", "Frames per second, denominator");
+  GET_ATTRIBUTE(volume, "dB re FS", "Signal volume");
+  GET_ATTRIBUTE(connect, "", "Space-separated list of output port connections");
+  GET_ATTRIBUTE(addtime, "s", "Add time, e.g., for time zone compensation");
+  GET_ATTRIBUTE_BOOL(usewallclock,
+                     "Use wallclock time instead of session time");
+  encoder = ltc_encoder_create(get_srate(), fpsnum / fpsden, LTC_TV_625_50, 0);
   enc_buf = new ltcsnd_sample_t[ltc_encoder_get_buffersize(encoder)];
-  memset(enc_buf,0,ltc_encoder_get_buffersize(encoder)*sizeof(ltcsnd_sample_t));
+  memset(enc_buf, 0,
+         ltc_encoder_get_buffersize(encoder) * sizeof(ltcsnd_sample_t));
   add_output_port("ltc");
   activate();
-  for(std::vector<std::string>::const_iterator it=connect.begin();it!=connect.end();++it)
-    jackc_transport_t::connect(get_client_name()+":ltc",*it,true);
+  for(std::vector<std::string>::const_iterator it = connect.begin();
+      it != connect.end(); ++it)
+    jackc_transport_t::connect(get_client_name() + ":ltc", *it, true);
 }
 
 ltcgen_t::~ltcgen_t()
 {
   deactivate();
-  ltc_encoder_free( encoder );
+  ltc_encoder_free(encoder);
 }
 
-int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>& , const std::vector<float*>& sOut,uint32_t tp_frame, bool tp_rolling)
+int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>&,
+                      const std::vector<float*>& sOut, uint32_t tp_frame,
+                      bool tp_rolling)
 {
-  float smult = pow(10, volume/20.0)/(90.0);
-  if( tp_frame != lastframe + n){
-    double sec(tp_frame*t_sample);
+  float smult = pow(10, volume / 20.0) / (90.0);
+  if(tp_frame != lastframe + n) {
+    double sec(tp_frame * t_sample);
+    if(usewallclock) {
+#ifndef _WIN32
+      gettimeofday(&tv, &tz);
+      struct tm* caltime = localtime(&(tv.tv_sec));
+      double p_hour = caltime->tm_hour;
+      double p_min = caltime->tm_min;
+      double p_sec = caltime->tm_sec;
+      p_sec += 0.000001 * tv.tv_usec;
+#else
+      SYSTEMTIME caltime;
+      GetLocalTime(&caltime);
+      double p_hour = caltime.wHour;
+      double p_min = caltime.wMinute;
+      double p_sec = caltime.wSecond;
+      p_sec += 0.001 * caltime.wMilliseconds;
+#endif
+      sec = p_sec + 60 * p_min + 3600 * p_hour;
+    }
+    sec += addtime;
     SMPTETimecode st;
-    memset(st.timezone,0,6);
+    memset(st.timezone, 0, 6);
     st.years = 0;
     st.months = 0;
     st.days = 0;
-    st.hours = (int)floor(sec/3600.0);
-    st.mins  = (int)floor((sec-3600.0*floor(sec/3600.0))/60.0);
-    st.secs  = (int)floor(sec)%60;
-    st.frame = (int)floor((sec-floor(sec))*(double)fpsnum/(double)fpsden);
+    st.hours = (int)floor(sec / 3600.0);
+    st.mins = (int)floor((sec - 3600.0 * floor(sec / 3600.0)) / 60.0);
+    st.secs = (int)floor(sec) % 60;
+    st.frame = (int)floor((sec - floor(sec)) * (double)fpsnum / (double)fpsden);
     ltc_encoder_set_timecode(encoder, &st);
   }
   lastframe = tp_frame;
-  if( sOut.size() ){
-    for( uint32_t k=0;k<n;++k){
-      if( !encoded_data ){
-        if( byteCnt >= 10 ){
+  if(sOut.size()) {
+    for(uint32_t k = 0; k < n; ++k) {
+      if(!encoded_data) {
+        if(byteCnt >= 10) {
           byteCnt = 0;
-          if( tp_rolling )
+          if(tp_rolling)
             ltc_encoder_inc_timecode(encoder);
         }
-	ltc_encoder_encode_byte(encoder, byteCnt, 1.0);
+        ltc_encoder_encode_byte(encoder, byteCnt, 1.0);
         byteCnt++;
         encoded_data = ltc_encoder_get_buffer(encoder, enc_buf);
         enc_buf_ = enc_buf;
       }
-      if( encoded_data ){
-        sOut[0][k] = smult*((float)(*enc_buf_) - 128.0f);
+      if(encoded_data) {
+        sOut[0][k] = smult * ((float)(*enc_buf_) - 128.0f);
         ++enc_buf_;
         --encoded_data;
       }
@@ -115,9 +141,7 @@ int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>& , const std::
   return 0;
 }
 
-
 REGISTER_MODULE(ltcgen_t);
-
 
 /*
  * Local Variables:
@@ -127,4 +151,3 @@ REGISTER_MODULE(ltcgen_t);
  * compile-command: "make -C .."
  * End:
  */
-

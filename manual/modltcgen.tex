@@ -1,9 +1,27 @@
-LTC generator module.
+A Linear Time Code (LTC) generator module encodes either session time or wall clock time into LTC code, such as for synchronizing cameras. A jack port is provided through which the signal is transmitted.
 
-\begin{tscattributes}
-\indattr{fpsnum} & Frames per second, numerator (default: 25)\\
-\indattr{fpsden} & Frames per second, denominator (default: 1)\\
-\indattr{volume} & Signal volume in dB FS (default: -18)\\
-\indattr{connect} & Space-separated list of output port connections\\
-\end{tscattributes}
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:ltcgen}
+Attributes of element {\bf ltcgen}\nopagebreak
 
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{addtime} & Add time, e.g., for time zone compensation (double, s) & 0\\
+\hline
+\indattr{connect} & Space-separated list of output port connections (string array) & \\
+\hline
+\indattr{fpsden} & Frames per second, denominator (double) & 1\\
+\hline
+\indattr{fpsnum} & Frames per second, numerator (double) & 25\\
+\hline
+\indattr{usewallclock} & Use wallclock time instead of session time (bool) & false\\
+\hline
+\indattr{volume} & Signal volume (double, dB re FS) & -18\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

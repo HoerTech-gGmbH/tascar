@@ -148,6 +148,7 @@
     <lsl2osc/>
     <granularsynth/>
     <oscactor path="/path" channels="1 2 3" influence="1 1 1"/>
+    <ltcgen/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
