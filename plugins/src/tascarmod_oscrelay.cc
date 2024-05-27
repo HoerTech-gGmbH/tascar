@@ -56,7 +56,7 @@ int oscrelay_t::osc_recv(const char* lpath, lo_message msg)
     return retval;
   }
   const char* trimmedpath = lpath;
-  if(start_matched)
+  if(start_matched && trimstart)
     trimmedpath = lpath + startswith.size();
   lo_send_message(target, trimmedpath, msg);
   return retval;
