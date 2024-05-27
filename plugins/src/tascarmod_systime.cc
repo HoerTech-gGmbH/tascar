@@ -34,6 +34,7 @@ private:
   std::string path = "/systime";
   std::string secpath = "/seconds";
   bool sendsessiontime = true;
+  double addtime = 0.0;
   lo_message msg;
   lo_message msgsec;
   double* p_year;
@@ -61,6 +62,9 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
       secpath, "",
       "OSC path where time stamps (seconds since midnight) are dispatched");
   GET_ATTRIBUTE_BOOL(sendsessiontime, "Send session time in first data field");
+  GET_ATTRIBUTE(
+      addtime, "s",
+      "Add time to seconds since midnight, e.g., for time zone compensation");
   msg = lo_message_new();
   if(!msg)
     throw TASCAR::ErrMsg("Unable to allocate OSC message");
@@ -128,7 +132,7 @@ void tascar_systime_t::update(uint32_t tp_frame, bool)
   *p_sec = caltime.wSecond;
   *p_sec += 0.001 * caltime.wMilliseconds;
 #endif
-  *p_daysec = *p_sec + 60 * *p_min + 3600 * *p_hour;
+  *p_daysec = *p_sec + 60 * *p_min + 3600 * *p_hour + addtime;
   if(!path.empty())
     session->dispatch_data_message(path.c_str(), msg);
   if(!secpath.empty())
