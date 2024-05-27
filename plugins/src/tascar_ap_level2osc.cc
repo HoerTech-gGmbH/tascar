@@ -50,6 +50,7 @@ private:
   uint32_t skip = 0;
   float tau = 0;
   std::vector<TASCAR::levelmeter::weight_t> weights;
+  std::vector<float> frange = {62.5f, 4000.0f};
   std::string url = "osc.udp://localhost:9999/";
   std::string path = "/level";
   // derived variables:
@@ -82,6 +83,10 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE_NOUNIT(weights, "Level meter weights");
   if(weights.size() == 0)
     throw TASCAR::ErrMsg("At least one frequency weight is required.");
+  GET_ATTRIBUTE(frange, "Hz", "Frequency range in bandpass mode");
+  if(frange.size() != 2)
+    throw TASCAR::ErrMsg(
+        "Frequency range requires exactly two entries (min max)");
   GET_ATTRIBUTE(url, "", "Target URL");
   GET_ATTRIBUTE(path, "", "Target path");
   GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data");
@@ -161,6 +166,8 @@ void level2osc_t::configure()
       lo_message_add_float(msg, 0);
       sigcopy.push_back(TASCAR::levelmeter_t(f_sample, tau_, weights[kweight]));
       // sigcopy.back().set_weight(weights[kweight]);
+      if(weights[kweight] == TASCAR::levelmeter::bandpass)
+        sigcopy.back().bp.set_range(frange[0], frange[1]);
     }
   oscmsgargv = lo_message_get_argv(msg);
   is_prepared = true;
