@@ -1,4 +1,4 @@
-Convert LSL streams into OSC messages.
+Convert LSL streams into OSC messages. Each variable will contain the LSL time stamp in the first entry, followed by all stream channels. This means that if the LSL stream contains $N$ channels, then the OSC variable will contain $N+1$ double entries. Only LSL streams with 32 or 64 Bit floating point data are supported. Both types will be forwarded as 64 Bit floating points.
 
 \definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
 {\footnotesize
