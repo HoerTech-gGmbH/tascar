@@ -324,10 +324,7 @@ void osc_scene_t::add_diffuse_methods(TASCAR::osc_server_t* srv,
   srv->add_method("/lingain", "f", osc_set_diffuse_gain_lin, s);
   srv->add_float_dbspl("/caliblevel", &(s->caliblevel));
   srv->add_uint("/layers", &(s->layers));
-  if(s->get_source())
-    s->get_source()->plugins.add_variables(srv);
-  else
-    throw TASCAR::ErrMsg("implementation error");
+  s->plugins.add_variables(srv);
   srv->set_prefix(oldpref);
 }
 

@@ -38,7 +38,7 @@ float mask_t::gain(const pos_t& p)
 }
 
 diffuse_t::diffuse_t(tsccfg::node_t cfg, uint32_t chunksize,
-                     TASCAR::levelmeter_t& rmslevel_, const std::string& name,
+                     TASCAR::levelmeter_t& rmslevel_, const std::string& ,
                      plugin_processor_t& plugins_)
     : xml_element_t(cfg), licensed_component_t(typeid(*this).name()),
       audio(chunksize), falloff(1.0), active(true), layers(0xffffffff),

@@ -267,6 +267,7 @@ namespace TASCAR {
 
     private:
       TASCAR::Acousticmodel::diffuse_t* source;
+    public:
       plugin_processor_t plugins;
     };
 
@@ -425,6 +426,7 @@ namespace TASCAR {
     private:
       uint32_t outputlayers;
       TASCAR::Acousticmodel::diffuse_t* source;
+    public:
       plugin_processor_t plugins;
     };
 
