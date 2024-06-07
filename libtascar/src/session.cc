@@ -1206,20 +1206,14 @@ void TASCAR::session_t::send_xml(const std::string& url,
 void TASCAR::session_t::validate_attributes(std::string& msg) const
 {
   root.validate_attributes(msg);
-  for(std::vector<TASCAR::scene_render_rt_t*>::const_iterator it =
-          scenes.begin();
-      it != scenes.end(); ++it)
-    (*it)->validate_attributes(msg);
-  for(std::vector<TASCAR::range_t*>::const_iterator it = ranges.begin();
-      it != ranges.end(); ++it)
-    (*it)->validate_attributes(msg);
-  for(std::vector<TASCAR::connection_t*>::const_iterator it =
-          connections.begin();
-      it != connections.end(); ++it)
-    (*it)->validate_attributes(msg);
-  for(std::vector<TASCAR::module_t*>::const_iterator it = modules.begin();
-      it != modules.end(); ++it)
-    (*it)->validate_attributes(msg);
+  for(auto pscene : scenes)
+    pscene->validate_attributes(msg);
+  for(auto prange : ranges)
+    prange->validate_attributes(msg);
+  for(auto pcon : connections)
+    pcon->validate_attributes(msg);
+  for(auto pmod : modules)
+    pmod->validate_attributes(msg);
 }
 
 /*

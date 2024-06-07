@@ -121,7 +121,8 @@ namespace TASCAR {
                       public licensed_component_t {
     public:
       diffuse_t(tsccfg::node_t cfg, uint32_t chunksize,
-                TASCAR::levelmeter_t& rmslevel_, const std::string& name);
+                TASCAR::levelmeter_t& rmslevel_, const std::string& name,
+                plugin_processor_t& plugins_);
       virtual ~diffuse_t(){};
       virtual void preprocess(const TASCAR::transport_t& tp);
       void configure();
@@ -134,8 +135,8 @@ namespace TASCAR {
       uint32_t layers;
       TASCAR::levelmeter_t& rmslevel;
 
-    public:
-      plugin_processor_t plugins;
+    private:
+      plugin_processor_t& plugins;
     };
 
     class boundingbox_t : public dynobject_t {
@@ -227,7 +228,8 @@ namespace TASCAR {
       void update_refpoint(const pos_t& psrc_physical,
                            const pos_t& psrc_virtual, pos_t& prel,
                            float& distance, float& traveltime_in_m, float& gain,
-                           bool b_img, gainmodel_t gainmodel, float& nearfieldlimit);
+                           bool b_img, gainmodel_t gainmodel,
+                           float& nearfieldlimit);
       void set_next_gain(float gain);
       void set_fade(float targetgain, float duration, float start = -1);
       void apply_gain();

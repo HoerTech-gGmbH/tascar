@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <scene>
+    <diffuse>
+      <plugins>
+        <sndfile xnormalization="SN3D"/>
+      </plugins>
+    </diffuse>
+    <receiver/>
+  </scene>
+</session>

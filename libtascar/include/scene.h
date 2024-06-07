@@ -248,6 +248,7 @@ namespace TASCAR {
       void configure();
       void post_prepare();
       void release();
+      void validate_attributes(std::string& msg) const;
       /**
          \callgraph
          \callergraph
@@ -266,6 +267,7 @@ namespace TASCAR {
 
     private:
       TASCAR::Acousticmodel::diffuse_t* source;
+      plugin_processor_t plugins;
     };
 
     class sound_name_t : private xml_element_t {
@@ -418,10 +420,12 @@ namespace TASCAR {
       void process_active(double t, uint32_t anysolo);
       TASCAR::Acousticmodel::diffuse_t* get_source() { return source; };
       void add_licenses(licensehandler_t*);
+      void validate_attributes(std::string& msg) const;
 
     private:
       uint32_t outputlayers;
       TASCAR::Acousticmodel::diffuse_t* source;
+      plugin_processor_t plugins;
     };
 
     /**

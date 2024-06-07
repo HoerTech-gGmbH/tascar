@@ -64,7 +64,7 @@ bool object_t::isactive(double time) const
 diff_snd_field_obj_t::diff_snd_field_obj_t(tsccfg::node_t xmlsrc)
     : object_t(xmlsrc), audio_port_t(xmlsrc, true),
       licensed_component_t(typeid(*this).name()), size(1, 1, 1), falloff(1.0),
-      layers(0xffffffff), source(NULL)
+      layers(0xffffffff), source(NULL), plugins(xmlsrc, get_name(), "")
 {
   dynobject_t::GET_ATTRIBUTE(size, "m",
                              "size in which sound field is rendered.");
@@ -101,8 +101,8 @@ void diff_snd_field_obj_t::configure()
     delete source;
   reset_meters();
   addmeter((float)f_sample);
-  source = new TASCAR::Acousticmodel::diffuse_t(dynobject_t::e, n_fragment,
-                                                *(rmsmeter[0]), get_name());
+  source = new TASCAR::Acousticmodel::diffuse_t(
+      dynobject_t::e, n_fragment, *(rmsmeter[0]), get_name(), plugins);
   source->size = size;
   source->falloff = 1.0f / std::max(falloff, 1.0e-10f);
   source->prepare(cfg());
@@ -111,6 +111,12 @@ void diff_snd_field_obj_t::configure()
 void diff_snd_field_obj_t::post_prepare()
 {
   source->post_prepare();
+}
+
+void diff_snd_field_obj_t::validate_attributes(std::string& msg) const
+{
+  dynobject_t::validate_attributes(msg);
+  plugins.validate_attributes(msg);
 }
 
 audio_port_t::~audio_port_t() {}
@@ -201,9 +207,8 @@ std::string src_object_t::next_sound_name() const
 void src_object_t::validate_attributes(std::string& msg) const
 {
   dynobject_t::validate_attributes(msg);
-  for(std::vector<sound_t*>::const_iterator it = sound.begin();
-      it != sound.end(); ++it)
-    (*it)->validate_attributes(msg);
+  for(auto psound : sound)
+    psound->validate_attributes(msg);
 }
 
 void src_object_t::geometry_update(double t)
@@ -931,32 +936,22 @@ TASCAR::Scene::scene_t::find_object(const std::string& pattern)
 void TASCAR::Scene::scene_t::validate_attributes(std::string& msg) const
 {
   xml_element_t::validate_attributes(msg);
-  for(std::vector<src_object_t*>::const_iterator it = source_objects.begin();
-      it != source_objects.end(); ++it)
-    (*it)->validate_attributes(msg);
-  for(std::vector<diff_snd_field_obj_t*>::const_iterator it =
-          diff_snd_field_objects.begin();
-      it != diff_snd_field_objects.end(); ++it)
-    (*it)->dynobject_t::validate_attributes(msg);
-  for(std::vector<face_object_t*>::const_iterator it = face_objects.begin();
-      it != face_objects.end(); ++it)
-    (*it)->dynobject_t::validate_attributes(msg);
-  for(std::vector<face_group_t*>::const_iterator it = facegroups.begin();
-      it != facegroups.end(); ++it)
-    (*it)->dynobject_t::validate_attributes(msg);
-  for(std::vector<obstacle_group_t*>::const_iterator it =
-          obstaclegroups.begin();
-      it != obstaclegroups.end(); ++it)
-    (*it)->dynobject_t::validate_attributes(msg);
-  for(std::vector<receiver_obj_t*>::const_iterator it =
-          receivermod_objects.begin();
-      it != receivermod_objects.end(); ++it)
-    (*it)->validate_attributes(msg);
-  for(std::vector<mask_object_t*>::const_iterator it = mask_objects.begin();
-      it != mask_objects.end(); ++it)
-    (*it)->dynobject_t::validate_attributes(msg);
-  for(auto it = diffuse_reverbs.begin(); it != diffuse_reverbs.end(); ++it)
-    (*it)->dynobject_t::validate_attributes(msg);
+  for(auto p : source_objects)
+    p->validate_attributes(msg);
+  for(auto p : diff_snd_field_objects)
+    p->validate_attributes(msg);
+  for(auto p : face_objects)
+    p->dynobject_t::validate_attributes(msg);
+  for(auto p : facegroups)
+    p->dynobject_t::validate_attributes(msg);
+  for(auto p : obstaclegroups)
+    p->dynobject_t::validate_attributes(msg);
+  for(auto p : receivermod_objects)
+    p->validate_attributes(msg);
+  for(auto p : mask_objects)
+    p->dynobject_t::validate_attributes(msg);
+  for(auto p : diffuse_reverbs)
+    p->dynobject_t::validate_attributes(msg);
   for(auto& mat : materials)
     if(mat.second.e)
       mat.second.validate_attributes(msg);
@@ -1367,7 +1362,7 @@ diffuse_reverb_defaults_t::diffuse_reverb_defaults_t(tsccfg::node_t e)
 
 diffuse_reverb_t::diffuse_reverb_t(tsccfg::node_t e)
     : diffuse_reverb_defaults_t(e), TASCAR::Scene::receiver_obj_t(e, true),
-      outputlayers(0xffffffff), source(NULL)
+      outputlayers(0xffffffff), source(NULL), plugins(e, get_name(), "")
 {
   dynobject_t::GET_ATTRIBUTE_BITS(outputlayers, "output layers");
 }
@@ -1376,6 +1371,12 @@ diffuse_reverb_t::~diffuse_reverb_t()
 {
   if(source)
     delete source;
+}
+
+void diffuse_reverb_t::validate_attributes(std::string& msg) const
+{
+  dynobject_t::validate_attributes(msg);
+  plugins.validate_attributes(msg);
 }
 
 void diffuse_reverb_t::configure()
@@ -1390,8 +1391,8 @@ void diffuse_reverb_t::configure()
     delete source;
   source = NULL;
   addmeter(f_sample);
-  source = new TASCAR::Acousticmodel::diffuse_t(dynobject_t::e, n_fragment,
-                                                *(rmsmeter.back()), get_name());
+  source = new TASCAR::Acousticmodel::diffuse_t(
+      dynobject_t::e, n_fragment, *(rmsmeter.back()), get_name(), plugins);
   source->size = volumetric;
   source->falloff = 1.0f / std::max(falloff, 1.0e-10f);
   source->prepare(cfg());

@@ -54,11 +54,11 @@ TESTS = test_snd_pink_diffuse test_ir1 test_ir2 test_ir3 test_ir4	\
 #test_ir_simplefdn_optimt60
 #test_ir_scatter_reflections 
 
-TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d \
-	test_fail_duplicatenames test_fail_duplicatescenenames \
-	test_fail_ir_micarray test_fail_hoa2d_nonflat \
-	test_fail_hoa2d_irregular test_fail_invalidmaskplugin \
-	test_fail_material_invattr
+TEST_FAIL = test_fail_vbap3d_flat test_notfail_vbap3d_3d				\
+	test_fail_duplicatenames test_fail_duplicatescenenames				\
+	test_fail_ir_micarray test_fail_hoa2d_nonflat									\
+	test_fail_hoa2d_irregular test_fail_invalidmaskplugin					\
+	test_fail_material_invattr test_validate_fail_sndfile_invattr
 
 TEST_JACK = jack_routeplugin test_unload_on_error \
 	jackfail_connectfail jack_connect jack_hoafdnrot \
@@ -217,6 +217,9 @@ test_notfail_%: notfail_%.tsc
 	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_fail.wav $< || (echo "$(<):2: Failed."; false)
 	@rm -f test_fail.wav
 
+test_validate_fail_%: fail_%.tsc
+	@echo "Validation failure test: $< ($*)"
+	@(! $(LIBPATH) $(VALIDATE) $< ) || (echo "$(<):2: Did not fail"; false)
 
 # debugging rules:
 
