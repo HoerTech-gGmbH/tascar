@@ -52,6 +52,7 @@ protected:
   std::string license;
   std::string attribution;
   std::string channelorder;
+  std::string normalization = "FuMa";
 };
 
 ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -81,9 +82,11 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
                                 "(ignores attributes `position' and `loop')");
   GET_ATTRIBUTE_BOOL(transport, "Use session time base");
   GET_ATTRIBUTE_BOOL(mute, "Load muted");
-  GET_ATTRIBUTE(channelorder, "",
-                "Channel order in case of First Order Ambisonics recordings, "
+  GET_ATTRIBUTE(channelorder, "FuMa|ACN|none",
+                "Channel order in case of First Order Ambisonics files, "
                 "``FuMa'', ``ACN'' or ``none''");
+  GET_ATTRIBUTE(normalization, "FuMa|SN3D",
+                "Normalization in case of First Order Ambisonics files.");
   if(start < 0)
     throw TASCAR::ErrMsg("file start time must be positive.");
 }
@@ -160,6 +163,11 @@ void ap_sndfile_t::load_file()
         } else
           throw TASCAR::ErrMsg("Invalid channel order: \"" + channelorder +
                                "\"");
+        if(normalization == "SN3D")
+          *(sndf[0]) *= sqrtf(0.5f);
+        else if(normalization != "FuMa")
+          throw TASCAR::ErrMsg("Invalid normalization: \"" + normalization +
+                               "\". Must be \"FuMa\" or \"SN3D\".");
       } else {
         for(uint32_t ch = 0; ch < n_channels; ++ch) {
           sndf.push_back(
