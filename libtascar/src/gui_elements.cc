@@ -325,7 +325,11 @@ gainctl_t::gainctl_t()
   val.set_size_request(32, -1);
   scale.set_size_request(-1, 280);
   polarity.set_label("ø");
+  mute.set_label("m");
+  polarity.get_style_context()->add_class("smallbutton");
+  mute.get_style_context()->add_class("smallbutton");
   add(box);
+  box.pack_start(mute, Gtk::PACK_SHRINK);
   box.pack_start(polarity, Gtk::PACK_SHRINK);
   box.pack_start(val, Gtk::PACK_SHRINK);
   box.add(scale);
@@ -335,6 +339,9 @@ gainctl_t::gainctl_t()
       sigc::mem_fun(*this, &gainctl_t::on_text_changed));
   polarity.signal_toggled().connect(
       sigc::mem_fun(*this, &gainctl_t::on_inv_changed));
+  mute.signal_toggled().connect(
+      sigc::mem_fun(*this, &gainctl_t::on_mute_changed));
+  mute.hide();
 }
 
 void gainctl_t::update()
@@ -342,6 +349,18 @@ void gainctl_t::update()
   bool inv(false);
   scale.update(inv);
   polarity.set_active(inv);
+  if(pbmute)
+    mute.set_active(*pbmute);
+  if(pbmute)
+    mute.show();
+  else
+    mute.hide();
+}
+
+void gainctl_t::set_mute(bool* m)
+{
+  pbmute = m;
+  update();
 }
 
 void gainctl_t::set_src(TASCAR::Scene::audio_port_t* ap)
@@ -363,6 +382,13 @@ void gainctl_t::on_inv_changed()
 {
   bool inv(polarity.get_active());
   scale.set_inv(inv);
+}
+
+void gainctl_t::on_mute_changed()
+{
+  bool m = mute.get_active();
+  if(pbmute)
+    *pbmute = m;
 }
 
 void gainctl_t::on_text_changed()
@@ -445,6 +471,7 @@ void source_ctl_t::setup()
       for(uint32_t k = 0; k < so->sound.size(); ++k) {
         gainctl.push_back(new gainctl_t());
         gainctl.back()->set_src(so->sound[k]);
+        gainctl.back()->set_mute(&(so->sound[k]->b_mute));
         meterbox.add(*(gainctl.back()));
       }
     }
@@ -603,14 +630,11 @@ void source_panel_t::set_scene(TASCAR::Scene::scene_t* s,
   }
   vbuttons.clear();
   if(s) {
-    // std::vector<TASCAR::Scene::object_t*> obj(s->get_objects());
-    for(std::vector<TASCAR::Scene::object_t*>::iterator it =
-            s->all_objects.begin();
-        it != s->all_objects.end(); ++it) {
+    for(auto& obj : s->all_objects) {
       if(use_osc)
-        vbuttons.push_back(new source_ctl_t(client_addr_, s, *it));
+        vbuttons.push_back(new source_ctl_t(client_addr_, s, obj));
       else
-        vbuttons.push_back(new source_ctl_t(s, *it));
+        vbuttons.push_back(new source_ctl_t(s, obj));
     }
   }
   if(session) {
@@ -626,7 +650,6 @@ void source_panel_t::set_scene(TASCAR::Scene::scene_t* s,
       }
     }
   }
-
   for(unsigned int k = 0; k < vbuttons.size(); k++) {
     box.pack_start(*(vbuttons[k]), Gtk::PACK_SHRINK);
   }

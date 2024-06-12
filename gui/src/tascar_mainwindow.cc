@@ -26,11 +26,11 @@
 #include "tascar.res.c"
 #include <fstream>
 
-#define GET_WIDGET(x)                                                          \
-  m_refBuilder->get_widget(#x, x);                                             \
-  if(!x)                                                                       \
-  throw TASCAR::ErrMsg(std::string("No widget \"") + #x +                      \
-                       std::string("\" in builder."))
+#define GET_WIDGET(x)                                       \
+  m_refBuilder->get_widget(#x, x);                          \
+  if(!x)                                                    \
+    throw TASCAR::ErrMsg(std::string("No widget \"") + #x + \
+                         std::string("\" in builder."))
 
 void error_message(const std::string& msg)
 {
@@ -42,12 +42,12 @@ void error_message(const std::string& msg)
 
 tascar_window_t::tascar_window_t(BaseObjectType* cobject,
                                  const Glib::RefPtr<Gtk::Builder>& refGlade)
-    : Gtk::Window(cobject), m_refBuilder(refGlade), scene_map(NULL),
-      statusbar_main(NULL), timeline(NULL), scene_selector(NULL),
-      selected_scene(0), scene_active(NULL), active_selector(NULL),
-      active_object(NULL), active_label_sourceline(NULL), active_mixer(NULL),
-      active_source_ctl(NULL), blink(false), sessionloaded(false),
-      sessionquit(false), splash_timeout(0)
+  : Gtk::Window(cobject), m_refBuilder(refGlade), scene_map(NULL),
+    statusbar_main(NULL), timeline(NULL), scene_selector(NULL),
+    selected_scene(0), scene_active(NULL), active_selector(NULL),
+    active_object(NULL), active_label_sourceline(NULL), active_mixer(NULL),
+    active_source_ctl(NULL), blink(false), sessionloaded(false),
+    sessionquit(false), splash_timeout(0)
 {
   Gsv::init();
   language_manager = Gsv::LanguageManager::create();
@@ -56,19 +56,19 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   if(!scene_map)
     throw TASCAR::ErrMsg("No drawing area widget");
   con_draw = scene_map->signal_draw().connect(
-      sigc::mem_fun(*this, &tascar_window_t::draw_scene), false);
+                                              sigc::mem_fun(*this, &tascar_window_t::draw_scene), false);
   con_timeout = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_timeout), 100);
+                                               sigc::mem_fun(*this, &tascar_window_t::on_timeout), 100);
   con_timeout_blink = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_timeout_blink), 600);
+                                                     sigc::mem_fun(*this, &tascar_window_t::on_timeout_blink), 600);
   con_timeout_statusbar = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_timeout_statusbar), 100);
+                                                         sigc::mem_fun(*this, &tascar_window_t::on_timeout_statusbar), 100);
   scene_map->add_events(Gdk::SCROLL_MASK);
   scene_map->add_events(Gdk::BUTTON_PRESS_MASK);
   scene_map->signal_scroll_event().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_map_scroll));
+                                           sigc::mem_fun(*this, &tascar_window_t::on_map_scroll));
   scene_map->signal_button_press_event().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_map_clicked));
+                                                 sigc::mem_fun(*this, &tascar_window_t::on_map_clicked));
   m_refBuilder->get_widget("StatusbarMain", statusbar_main);
   if(!statusbar_main)
     throw TASCAR::ErrMsg("No main status bar");
@@ -76,7 +76,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   if(!timeline)
     throw TASCAR::ErrMsg("No time line");
   timeline->signal_value_changed().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_time_changed));
+                                           sigc::mem_fun(*this, &tascar_window_t::on_time_changed));
   m_refBuilder->get_widget_derived("RouteButtons", source_panel);
   if(!source_panel)
     throw TASCAR::ErrMsg("No source panel");
@@ -86,7 +86,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
     aboutdialog->set_logo(Gdk::Pixbuf::create_from_xpm_data(logo));
   GET_WIDGET(scene_selector);
   scene_selector->signal_changed().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_scene_selector_changed));
+                                           sigc::mem_fun(*this, &tascar_window_t::on_scene_selector_changed));
   GET_WIDGET(notebook);
   GET_WIDGET(scene_active);
   GET_WIDGET(active_selector);
@@ -100,13 +100,13 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   GET_WIDGET(lab_sessionname);
   GET_WIDGET(but_warnings);
   active_selector->signal_changed().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
+                                            sigc::mem_fun(*this, &tascar_window_t::on_active_selector_changed));
   active_track->signal_toggled().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
+                                         sigc::mem_fun(*this, &tascar_window_t::on_active_track_changed));
   scene_active->signal_toggled().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_scene_active_changed));
+                                         sigc::mem_fun(*this, &tascar_window_t::on_scene_active_changed));
   but_warnings->signal_clicked().connect(
-      sigc::mem_fun(*this, &tascar_window_t::on_show_warnings_clicked));
+                                         sigc::mem_fun(*this, &tascar_window_t::on_show_warnings_clicked));
   Gtk::Image* image_splashlogo(NULL);
   m_refBuilder->get_widget("image_splashlogo", image_splashlogo);
   if(image_splashlogo)
@@ -125,119 +125,119 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   GET_WIDGET(text_srv_url);
   // Create actions for menus and toolbars:
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupMain =
-      Gio::SimpleActionGroup::create();
+    Gio::SimpleActionGroup::create();
   refActionGroupMain->add_action(
-      "scene_new", sigc::mem_fun(*this, &tascar_window_t::on_menu_file_new));
+                                 "scene_new", sigc::mem_fun(*this, &tascar_window_t::on_menu_file_new));
   refActionGroupMain->add_action(
-      "scene_open", sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open));
+                                 "scene_open", sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open));
   refActionGroupMain->add_action(
-      "scene_open_example",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open_example));
+                                 "scene_open_example",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_open_example));
   refActionGroupMain->add_action(
-      "scene_reload",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_reload));
+                                 "scene_reload",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_reload));
   refActionGroupMain->add_action(
-      "file_runscript",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_runscript));
+                                 "file_runscript",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_runscript));
   refActionGroupMain->add_action(
-      "export_csv",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsv));
+                                 "export_csv",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsv));
   refActionGroupMain->add_action(
-      "export_csvsounds",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsvsounds));
+                                 "export_csvsounds",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportcsvsounds));
   refActionGroupMain->add_action(
-      "export_svg",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportsvg));
+                                 "export_svg",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportsvg));
   refActionGroupMain->add_action(
-      "export_pdf",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportpdf));
+                                 "export_pdf",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportpdf));
   refActionGroupMain->add_action(
-      "export_acmodel",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportacmodel));
+                                 "export_acmodel",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_exportacmodel));
   refActionGroupMain->add_action(
-      "scene_close",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_file_close));
+                                 "scene_close",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_file_close));
   refActionGroupMain->add_action(
-      "quit", sigc::mem_fun(*this, &tascar_window_t::on_menu_file_quit));
+                                 "quit", sigc::mem_fun(*this, &tascar_window_t::on_menu_file_quit));
   refActionGroupMain->add_action(
-      "help_bugreport",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_help_bugreport));
+                                 "help_bugreport",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_help_bugreport));
   refActionGroupMain->add_action(
-      "help_manual",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_help_manual));
+                                 "help_manual",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_help_manual));
   refActionGroupMain->add_action(
-      "help_about", sigc::mem_fun(*this, &tascar_window_t::on_menu_help_about));
+                                 "help_about", sigc::mem_fun(*this, &tascar_window_t::on_menu_help_about));
   insert_action_group("main", refActionGroupMain);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupView =
-      Gio::SimpleActionGroup::create();
+    Gio::SimpleActionGroup::create();
   refActionGroupView->add_action(
-      "zoom_in", sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_in));
+                                 "zoom_in", sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_in));
   refActionGroupView->add_action(
-      "zoom_out",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_out));
+                                 "zoom_out",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_zoom_out));
   refActionGroupView->add_action(
-      "viewport_xy",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xy));
+                                 "viewport_xy",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xy));
   refActionGroupView->add_action(
-      "viewport_xz",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xz));
+                                 "viewport_xz",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xz));
   refActionGroupView->add_action(
-      "viewport_yz",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_yz));
+                                 "viewport_yz",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_yz));
   refActionGroupView->add_action(
-      "viewport_xyz",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xyz));
+                                 "viewport_xyz",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_xyz));
   refActionGroupView->add_action(
-      "viewport_rotz",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_rotz));
+                                 "viewport_rotz",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_rotz));
   refActionGroupView->add_action(
-      "viewport_rotzcw",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_rotzcw));
+                                 "viewport_rotzcw",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_rotzcw));
   refActionGroupView->add_action(
-      "viewport_setref",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_setref));
+                                 "viewport_setref",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_viewport_setref));
   refActionGroupView->add_action(
-      "meter_rmspeak",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rmspeak));
+                                 "meter_rmspeak",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rmspeak));
   refActionGroupView->add_action(
-      "meter_rms",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rms));
+                                 "meter_rms",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_rms));
   refActionGroupView->add_action(
-      "meter_peak",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_peak));
+                                 "meter_peak",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_peak));
   refActionGroupView->add_action(
-      "meter_percentile",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_percentile));
+                                 "meter_percentile",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meter_percentile));
   refActionGroupView->add_action(
-      "meterw_z",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_z));
+                                 "meterw_z",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_z));
   refActionGroupView->add_action(
-      "meterw_c",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_c));
+                                 "meterw_c",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_c));
   refActionGroupView->add_action(
-      "meterw_a",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_a));
+                                 "meterw_a",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_a));
   refActionGroupView->add_action(
-      "meterw_bandpass",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_bandpass));
+                                 "meterw_bandpass",
+                                 sigc::mem_fun(*this, &tascar_window_t::on_menu_view_meterw_bandpass));
   insert_action_group("view", refActionGroupView);
   Glib::RefPtr<Gio::SimpleActionGroup> refActionGroupTransport =
-      Gio::SimpleActionGroup::create();
+    Gio::SimpleActionGroup::create();
   refActionGroupTransport->add_action(
-      "play", sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_play));
+                                      "play", sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_play));
   refActionGroupTransport->add_action(
-      "stop", sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_stop));
+                                      "stop", sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_stop));
   refActionGroupTransport->add_action(
-      "rewind",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_rewind));
+                                      "rewind",
+                                      sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_rewind));
   refActionGroupTransport->add_action(
-      "forward",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_forward));
+                                      "forward",
+                                      sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_forward));
   refActionGroupTransport->add_action(
-      "previous",
-      sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_previous));
+                                      "previous",
+                                      sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_previous));
   refActionGroupTransport->add_action(
-      "next", sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_next));
+                                      "next", sigc::mem_fun(*this, &tascar_window_t::on_menu_transport_next));
   insert_action_group("transport", refActionGroupTransport);
 #if defined(WEBKIT2GTK30) || defined(WEBKIT2GTK40)
   news_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -250,14 +250,24 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   if(load_news)
     webkit_web_view_load_uri(news_view, url.c_str());
 #endif
-  auto css = Gtk::CssProvider::create();
-  if(css->load_from_data(".toolbar {font-size: 70%;}")) {
-    auto screen = Gdk::Screen::get_default();
-    auto ctx = get_style_context();
-    ctx->add_provider_for_screen(screen, css,
-                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  }
   notebook->show_all();
+  auto css = Gtk::CssProvider::create();
+  std::string s_css =
+    ".toolbar {font-size: 70%;} button:checked "
+    "{background-image:image(yellow);} .smallbutton "
+    "{padding:0px;margin:0px;font-size:70%;min-height: 14px;}";
+  s_css = TASCAR::config("tascar.gui.css", s_css);
+  try {
+    if(css->load_from_data(s_css)) {
+      auto screen = Gdk::Screen::get_default();
+      auto ctx = get_style_context();
+      ctx->add_provider_for_screen(screen, css,
+                                   GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
+  }
+  catch(const Gtk::CssProviderError& e) {
+    TASCAR::add_warning("css error: " + e.what());
+  }
 }
 
 bool tascar_window_t::on_timeout()
@@ -274,7 +284,7 @@ bool tascar_window_t::on_timeout()
           if(session->scenes[selected_scene]->scene_t::active !=
              scene_active->get_active())
             scene_active->set_active(
-                session->scenes[selected_scene]->scene_t::active);
+                                     session->scenes[selected_scene]->scene_t::active);
         Glib::RefPtr<Gdk::Window> win = scene_map->get_window();
         if(win) {
           Gdk::Rectangle r(0, 0, scene_map->get_allocation().get_width(),
@@ -435,9 +445,9 @@ bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
           p_o /= wscale;
           p_o = draw.view.inverse(p_o);
           float scale(std::min(
-              pow(10.0, ceil(log10(0.1 * draw.view.scale))),
-              std::min(2.0 * pow(10.0, ceil(log10(0.05 * draw.view.scale))),
-                       5.0 * pow(10.0, ceil(log10(0.02 * draw.view.scale))))));
+                               pow(10.0, ceil(log10(0.1 * draw.view.scale))),
+                               std::min(2.0 * pow(10.0, ceil(log10(0.05 * draw.view.scale))),
+                                        5.0 * pow(10.0, ceil(log10(0.02 * draw.view.scale))))));
           TASCAR::pos_t p_x(scale, 0, 0);
           TASCAR::pos_t p_y(0, scale, 0);
           TASCAR::pos_t p_z(0, 0, scale);
@@ -533,7 +543,7 @@ void tascar_window_t::on_scene_active_changed()
   if(session_mutex.try_lock()) {
     if(session && (session->scenes.size() > selected_scene))
       session->scenes[selected_scene]->scene_t::active =
-          scene_active->get_active();
+        scene_active->get_active();
     session_mutex.unlock();
   }
 }
@@ -548,7 +558,7 @@ void tascar_window_t::on_active_selector_changed()
         active_object = NULL;
       else {
         std::vector<TASCAR::Scene::object_t*> match(
-            session->scenes[selected_scene]->find_object(sc));
+                                                    session->scenes[selected_scene]->find_object(sc));
         if(match.size())
           active_object = match[0];
         else
@@ -609,7 +619,7 @@ void tascar_window_t::update_selection_info()
     disp.erase(disp.begin(), disp.begin() + p);
     active_source_display->get_buffer()->set_text(disp);
     active_source_ctl = new TSCGUI::source_ctl_t(
-        session->scenes[selected_scene], active_object);
+                                                 session->scenes[selected_scene], active_object);
     active_mixer->add(*active_source_ctl);
     active_mixer->show_all();
     active_source_ctl->set_levelmeter_mode(source_panel->lmode);
@@ -633,7 +643,7 @@ void tascar_window_t::update_object_list()
   draw.select_object(NULL);
   if(session && (session->scenes.size() > selected_scene)) {
     for(std::vector<TASCAR::Scene::object_t*>::const_iterator it =
-            session->scenes[selected_scene]->all_objects.begin();
+          session->scenes[selected_scene]->all_objects.begin();
         it != session->scenes[selected_scene]->all_objects.end(); ++it)
       active_selector->append((*it)->get_name());
   }
@@ -667,7 +677,7 @@ void tascar_window_t::reset_gui()
       lab_authors->set_text(session->get_authors());
       lab_sessionname->set_text(session->name);
       splash_timeout =
-          10.0 * TASCAR::config("tascar.gui.sessionsplashtimeout", 5.0);
+        10.0 * TASCAR::config("tascar.gui.sessionsplashtimeout", 5.0);
       session_splash->show();
     }
     int32_t mainwin_width(1600);
@@ -676,7 +686,7 @@ void tascar_window_t::reset_gui()
     int32_t mainwin_y(0);
     get_position(mainwin_x, mainwin_y);
     TASCAR::xml_element_t mainwin(
-        session->root.find_or_add_child("mainwindow"));
+                                  session->root.find_or_add_child("mainwindow"));
     mainwin.get_attribute("w", mainwin_width, "px", "main window width");
     mainwin.get_attribute("h", mainwin_height, "px", "main window height");
     mainwin.get_attribute("x", mainwin_x, "px", "main window x position");
@@ -695,7 +705,7 @@ void tascar_window_t::reset_gui()
       timeline->add_mark(session->ranges[k]->end, Gtk::POS_BOTTOM, "");
     }
     for(std::vector<TASCAR::scene_render_rt_t*>::iterator it =
-            session->scenes.begin();
+          session->scenes.begin();
         it != session->scenes.end(); ++it)
       scene_selector->append((*it)->name);
     selected_scene = 0;
@@ -706,7 +716,7 @@ void tascar_window_t::reset_gui()
       if(session->scenes[selected_scene]->scene_t::active !=
          scene_active->get_active())
         scene_active->set_active(
-            session->scenes[selected_scene]->scene_t::active);
+                                 session->scenes[selected_scene]->scene_t::active);
   }
   if(session) {
     set_title("tascar - " + session->name + " [" +
@@ -806,11 +816,11 @@ void tascar_window_t::on_menu_file_exportcsv()
         try {
           std::ofstream ofs(filename.c_str());
           ofs << "\"Name\",\"PosX\",\"PosY\",\"PosZ\",\"EulerZ\",\"EulerY\","
-                 "\"EulerX\"\n";
+            "\"EulerX\"\n";
           for(uint32_t kscene = 0; kscene < session->scenes.size(); kscene++) {
             ofs << "\"" << session->scenes[kscene]->name << "\", , , , , , \n";
             std::vector<TASCAR::Scene::object_t*> obj(
-                session->scenes[kscene]->get_objects());
+                                                      session->scenes[kscene]->get_objects());
             for(uint32_t k = 0; k < obj.size(); k++) {
               TASCAR::pos_t p;
               TASCAR::zyx_euler_t o;
@@ -862,12 +872,10 @@ void tascar_window_t::on_menu_file_exportcsvsounds()
           ofs << "\"Name\",\"PosX\",\"PosY\",\"PosZ\"\n";
           for(uint32_t kscene = 0; kscene < session->scenes.size(); kscene++) {
             ofs << "\"" << session->scenes[kscene]->name << "\", , , \n";
-            for(std::vector<TASCAR::Scene::sound_t*>::iterator iam =
-                    session->scenes[kscene]->sounds.begin();
-                iam != session->scenes[kscene]->sounds.end(); ++iam) {
-              TASCAR::pos_t p((*iam)->position);
-              ofs << "\"" << (*iam)->get_fullname() << "\"," << p.x << ","
-                  << p.y << "," << p.z << "\n";
+            for(auto am : session->scenes[kscene]->sounds) {
+              TASCAR::pos_t p(am->position);
+              ofs << "\"" << am->get_fullname() << "\"," << p.x << "," << p.y
+                  << "," << p.z << "\n";
             }
           }
         }
@@ -1251,7 +1259,7 @@ void tascar_window_t::on_menu_view_show_warnings()
     for(auto warn : get_warnings()) {
       has_warning = true;
       ptextbuffer->insert_markup(
-          ptextbuffer->end(), "<span font_weight=\"bold\">Warning:</span>\n  ");
+                                 ptextbuffer->end(), "<span font_weight=\"bold\">Warning:</span>\n  ");
       ptextbuffer->insert(ptextbuffer->end(), warn + "\n");
     }
     if(has_warning)
@@ -1268,8 +1276,8 @@ void tascar_window_t::on_menu_view_show_warnings()
       session->validate_attributes(v);
       if(v.size()) {
         ptextbuffer->insert_markup(
-            ptextbuffer->end(),
-            "<span font_weight=\"bold\">Malformed session file:</span>\n  ");
+                                   ptextbuffer->end(),
+                                   "<span font_weight=\"bold\">Malformed session file:</span>\n  ");
         ptextbuffer->insert(ptextbuffer->end(), v + "\n");
         has_warning = true;
       }
@@ -1317,7 +1325,7 @@ bool tascar_window_t::on_map_clicked(GdkEventButton* e)
           double dmin(DBL_MAX);
           TASCAR::Scene::object_t* obj_nearest(NULL);
           for(std::vector<TASCAR::Scene::object_t*>::iterator it =
-                  session->scenes[selected_scene]->all_objects.begin();
+                session->scenes[selected_scene]->all_objects.begin();
               it != session->scenes[selected_scene]->all_objects.end(); ++it) {
             TASCAR::pos_t opos(draw.view((*it)->c6dof.position));
             opos.z = 0;
