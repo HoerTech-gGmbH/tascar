@@ -95,7 +95,7 @@ std::string col2colname(TASCAR::Scene::rgb_color_t col)
 class connection_t {
 public:
   connection_t(const std::string& host, uint32_t port, uint32_t channels,
-               bool htmlcolors_);
+               bool htmlcolors_, bool mutesounds_);
   void uploadsession(TASCAR::session_t* session,
                      std::vector<TASCAR::Scene::audio_port_t*>& routeports);
   void updatesession(TASCAR::session_t* session,
@@ -105,8 +105,8 @@ public:
                        std::vector<TASCAR::Scene::audio_port_t*>& routeports,
                        uint32_t channel, float val);
   void setmutesession(TASCAR::session_t* session,
-                       std::vector<TASCAR::Scene::audio_port_t*>& routeports,
-                       uint32_t channel, bool val);
+                      std::vector<TASCAR::Scene::audio_port_t*>& routeports,
+                      uint32_t channel, bool val);
   ~connection_t();
   uint32_t scene;
 
@@ -118,17 +118,20 @@ private:
   std::vector<float> levels;
   std::vector<bool> mutestates;
   bool htmlcolors;
+  bool mutesounds;
 };
 
 connection_t::connection_t(const std::string& host, uint32_t port,
-                           uint32_t channels_, bool htmlcolors_)
-    : scene(0), channels(channels_), htmlcolors(htmlcolors_)
+                           uint32_t channels_, bool htmlcolors_,
+                           bool mutesounds_)
+    : scene(0), channels(channels_), htmlcolors(htmlcolors_),
+      mutesounds(mutesounds_)
 {
   vals.resize(channels);
   levels.resize(channels);
   mutestates.resize(channels);
   char ctmp[32];
-  SNPRINTF(ctmp,32,"%d", port);
+  SNPRINTF(ctmp, 32, "%d", port);
   target = lo_address_new(host.c_str(), ctmp);
   if(!target)
     throw TASCAR::ErrMsg("Unable to create target adress \"" + host + "\".");
@@ -167,8 +170,12 @@ void connection_t::uploadsession(
         lo_send(target, cfader, "f", v);
         lo_send(target, clabel, "s", it->get_fullname().c_str());
         lo_send(target, clevel, "f", l);
-        if( it->parent )
-          lo_send(target, cmute, "i", it->parent->get_mute());
+        if(mutesounds) {
+          lo_send(target, cmute, "i", it->get_mute());
+        } else {
+          if(it->parent)
+            lo_send(target, cmute, "i", it->parent->get_mute());
+        }
         std::string col;
         if(!htmlcolors)
           col = col2colname(it->get_color());
@@ -329,9 +336,13 @@ void connection_t::updatesession(
           levels[ch] = l;
         }
         bool vb = false;
-        if( it->parent )
-          vb = it->parent->get_mute();
-        if(force || (mutestates[ch] != vb)){
+        if(mutesounds) {
+          vb = it->get_mute();
+        } else {
+          if(it->parent)
+            vb = it->parent->get_mute();
+        }
+        if(force || (mutestates[ch] != vb)) {
           lo_send(target, cmute, "i", vb);
         }
         mutestates[ch] = vb;
@@ -359,7 +370,7 @@ void connection_t::updatesession(
         }
         bool vb = false;
         vb = it->get_mute();
-        if(force || (mutestates[ch] != vb)){
+        if(force || (mutestates[ch] != vb)) {
           lo_send(target, cmute, "i", vb);
         }
         mutestates[ch] = vb;
@@ -387,7 +398,7 @@ void connection_t::updatesession(
         }
         bool vb = false;
         vb = it->get_mute();
-        if(force || (mutestates[ch] != vb)){
+        if(force || (mutestates[ch] != vb)) {
           lo_send(target, cmute, "i", vb);
         }
         mutestates[ch] = vb;
@@ -419,7 +430,7 @@ void connection_t::updatesession(
         }
         bool vb = false;
         vb = scenerp->get_mute();
-        if(force || (mutestates[ch] != vb)){
+        if(force || (mutestates[ch] != vb)) {
           lo_send(target, cmute, "i", vb);
         }
         mutestates[ch] = vb;
@@ -500,8 +511,12 @@ void connection_t::setmutesession(
     for(auto it : session->scenes[scene]->sounds) {
       if(ch < channels) {
         if(ch == channel) {
-          if( it->parent )
-            it->parent->set_mute(val);
+          if(mutesounds) {
+            it->set_mute(val);
+          } else {
+            if(it->parent)
+              it->parent->set_mute(val);
+          }
           return;
         }
         ++ch;
@@ -555,7 +570,7 @@ public:
   static int osc_setfader(const char* path, const char* types, lo_arg** argv,
                           int argc, lo_message msg, void* user_data);
   static int osc_setmute(const char* path, const char* types, lo_arg** argv,
-                          int argc, lo_message msg, void* user_data);
+                         int argc, lo_message msg, void* user_data);
   static int osc_sceneinc(const char* path, const char* types, lo_arg** argv,
                           int argc, lo_message msg, void* user_data);
   static int osc_scenedec(const char* path, const char* types, lo_arg** argv,
@@ -569,6 +584,7 @@ public:
 private:
   uint32_t port;
   bool htmlcolors;
+  bool mutesounds = true;
   // std::vector<TASCAR::named_object_t> obj;
   std::vector<lo_message> vmsg;
   std::vector<lo_arg**> vargv;
@@ -598,7 +614,7 @@ int touchosc_t::osc_setfader(const char*, const char*, lo_arg** argv, int,
 }
 
 int touchosc_t::osc_setmute(const char*, const char*, lo_arg** argv, int,
-                             lo_message msg, void* user_data)
+                            lo_message msg, void* user_data)
 {
   lo_address src(lo_message_get_source(msg));
   touchosc_t::chref_t* h((touchosc_t::chref_t*)user_data);
@@ -683,7 +699,8 @@ void touchosc_t::connect(const std::string& host, uint32_t channels)
         delete it->second;
       it->second = NULL;
     }
-    connection_t* con(new connection_t(host, port, channels, htmlcolors));
+    connection_t* con(
+        new connection_t(host, port, channels, htmlcolors, mutesounds));
     routeports = session->find_route_ports({"/*"});
     connections[host] = con;
     con->uploadsession(session, routeports);
@@ -694,8 +711,11 @@ void touchosc_t::connect(const std::string& host, uint32_t channels)
 touchosc_t::touchosc_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), port(9000), htmlcolors(false)
 {
-  GET_ATTRIBUTE_(port);
-  GET_ATTRIBUTE_BOOL_(htmlcolors);
+  GET_ATTRIBUTE(port, "", "Port number of OSC device");
+  GET_ATTRIBUTE_BOOL(htmlcolors,
+                     "User HTML colors instead of touchosc default colors");
+  GET_ATTRIBUTE_BOOL(mutesounds,
+                     "Mute individual sounds instead of parent source");
   pthread_mutex_init(&mtx, NULL);
   session->add_method("/touchosc/connect", "i", &touchosc_t::osc_connect, this);
   session->add_method("/touchosc/incscene", "f", &touchosc_t::osc_sceneinc,

@@ -267,6 +267,7 @@ namespace TASCAR {
 
     private:
       TASCAR::Acousticmodel::diffuse_t* source;
+
     public:
       plugin_processor_t plugins;
     };
@@ -308,6 +309,8 @@ namespace TASCAR {
       void add_meter(TASCAR::levelmeter_t*);
       float read_meter();
       void validate_attributes(std::string& msg) const;
+      void set_mute(bool m) { b_mute = m; };
+      bool get_mute() const { return b_mute; };
 
     public:
       src_object_t* parent;
@@ -315,10 +318,11 @@ namespace TASCAR {
       pos_t local_position;
       zyx_euler_t local_orientation;
       pos_t global_position;
+      bool b_mute = false;
 
     private:
       double chaindist;
-      double gain_;
+      float gain_;
       std::vector<TASCAR::levelmeter_t*> meter;
     };
 
@@ -426,6 +430,7 @@ namespace TASCAR {
     private:
       uint32_t outputlayers;
       TASCAR::Acousticmodel::diffuse_t* source;
+
     public:
       plugin_processor_t plugins;
     };

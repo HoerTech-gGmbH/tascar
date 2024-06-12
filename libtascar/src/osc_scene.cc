@@ -302,6 +302,8 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
                 "Number representing the layers. Each layer is represented by "
                 "a bit, i.e., for layers 1+3 use 10");
   srv->add_float("/size", &(s->size), "", "Object size in meter");
+  srv->add_bool("/mute", &(s->b_mute),
+                "Mute state of individual sound, independent of parent");
   s->plugins.add_variables(srv);
   srv->add_pos("/pos", &(s->local_position), "",
                "local position of sound vertex in meters");

@@ -1326,13 +1326,17 @@ void sound_t::add_meter(TASCAR::levelmeter_t* m)
 
 void sound_t::apply_gain()
 {
-  double dg((get_gain() - gain_) * t_inc);
+  float newgain = get_gain();
+  if( b_mute )
+    newgain = 0.0f;
+  float dg((newgain - gain_) * t_inc);
   uint32_t channels(inchannels.size());
   for(uint32_t k = 0; k < inchannels[0].n; ++k) {
     gain_ += dg;
     for(uint32_t c = 0; c < channels; ++c)
       inchannels[c].d[k] *= gain_;
   }
+  gain_ = newgain;
   for(uint32_t k = 0; k < n_channels; ++k)
     meter[k]->update(inchannels[k]);
 }

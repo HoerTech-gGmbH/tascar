@@ -36,18 +36,23 @@ protected:
   std::vector<std::string> pattern;
   double min;
   double max;
+  bool mutesounds = true;
 };
 
 midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), dumpmsg(false), min(0), max(1)
 {
-  GET_ATTRIBUTE_BOOL_(dumpmsg);
+  GET_ATTRIBUTE_BOOL(dumpmsg, "Show unused messages in concole");
   GET_ATTRIBUTE_(name);
-  GET_ATTRIBUTE_(connect);
-  GET_ATTRIBUTE_(controllers);
-  GET_ATTRIBUTE_(pattern);
+  GET_ATTRIBUTE(connect, "", "ALSA midi port connection, e.g., BCF2000:0");
+  GET_ATTRIBUTE(
+      controllers, "",
+      "MIDI CC controllers in form channel/param, both starting at zero");
+  GET_ATTRIBUTE(pattern, "", "TASCAR controllers");
   GET_ATTRIBUTE_(min);
   GET_ATTRIBUTE_(max);
+  GET_ATTRIBUTE_BOOL(mutesounds,
+                     "Mute individual sounds instead of parent sources");
 }
 
 class midictl_t : public midictl_vars_t, public TASCAR::midi_ctl_t {
@@ -64,6 +69,7 @@ private:
   std::vector<uint8_t> values;
   std::vector<TASCAR::Scene::audio_port_t*> ports;
   std::vector<TASCAR::Scene::route_t*> routes;
+  std::vector<TASCAR::Scene::sound_t*> sounds;
   std::thread srv;
   bool run_service;
   bool upload;
@@ -101,16 +107,19 @@ void midictl_t::configure()
 {
   ports.clear();
   routes.clear();
+  sounds.clear();
   if(session)
     ports = session->find_audio_ports(pattern);
-  for(auto it = ports.begin(); it != ports.end(); ++it) {
-    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(*it));
+  for(auto& it : ports) {
+    TASCAR::Scene::route_t* r(dynamic_cast<TASCAR::Scene::route_t*>(it));
+    TASCAR::Scene::sound_t* s = NULL;
     if(!r) {
-      TASCAR::Scene::sound_t* s(dynamic_cast<TASCAR::Scene::sound_t*>(*it));
+      s = dynamic_cast<TASCAR::Scene::sound_t*>(it);
       if(s)
         r = dynamic_cast<TASCAR::Scene::route_t*>(s->parent);
     }
     routes.push_back(r);
+    sounds.push_back(s);
   }
   start_service();
 }
@@ -152,8 +161,14 @@ void midictl_t::send_service()
         }
         // mute:
         uint32_t k1 = k + ports.size();
-        if(routes[k] && (k1 < controllers_.size())) {
-          uint8_t v(127 * routes[k]->get_mute());
+        if((k1 < controllers_.size())) {
+          uint8_t v = 0;
+          if(mutesounds && sounds[k]) {
+            v = 127 * sounds[k]->get_mute();
+          } else {
+            if(routes[k])
+              v = 127 * routes[k]->get_mute();
+          }
           if((v != values[k1]) || upload) {
             values[k1] = v;
             int channel(controllers_[k1] >> 8);
@@ -184,9 +199,14 @@ void midictl_t::emit_event(int channel, int param, int value)
       } else {
         uint32_t k1(k - ports.size());
         if(k1 < routes.size()) {
-          if(routes[k1]) {
+          if(mutesounds && sounds[k1]) {
             values[k] = value;
-            routes[k1]->set_mute(value > 0);
+            sounds[k1]->set_mute(value > 0);
+          } else {
+            if(routes[k1]) {
+              values[k] = value;
+              routes[k1]->set_mute(value > 0);
+            }
           }
         }
       }
