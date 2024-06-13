@@ -71,29 +71,50 @@ pipeline {
         stage("build") {
             parallel {
                 stage(                        "jammy && x86_64 && tascardev") {
-                    agent {label              "jammy && x86_64 && tascardev"}
+                    agent {
+                        docker {
+                            image "hoertech/docker-buildenv:tascar_x86_64-linux-gcc-11"
+                            label "docker_x86_64"
+                            alwaysPull true
+                            args "-v /home/u:/home/u --hostname docker"
+                        }
+                    }
                     steps {tascar_build_steps("jammy && x86_64 && tascardev")}
                 }
                 stage(                        "focal && x86_64 && tascardev") {
-                    agent {label              "focal && x86_64 && tascardev"}
+                    agent {
+                        docker {
+                            image "hoertech/docker-buildenv:tascar_x86_64-linux-gcc-9"
+                            label "docker_x86_64"
+                            alwaysPull true
+                            args "-v /home/u:/home/u --hostname docker"
+                        }
+                    }
                     steps {tascar_build_steps("focal && x86_64 && tascardev")}
                 }
                 stage(                        "bionic && x86_64 && tascardev") {
-                    agent {label              "bionic && x86_64 && tascardev"}
+                    agent {
+                        docker {
+                            image "hoertech/docker-buildenv:tascar_x86_64-linux-gcc-7"
+                            label "docker_x86_64"
+                            alwaysPull true
+                            args "-v /home/u:/home/u --hostname docker"
+                        }
+                    }
                     steps {tascar_build_steps("bionic && x86_64 && tascardev")}
                 }
-                stage(                        "bullseye && armv7 && tascardev") {
-                    agent {label              "bullseye && armv7 && tascardev"}
-                    steps {tascar_build_steps("bullseye && armv7 && tascardev")}
-                }
+                //stage(                        "bullseye && armv7 && tascardev") {
+                //    agent {label              "bullseye && armv7 && tascardev"}
+                //    steps {tascar_build_steps("bullseye && armv7 && tascardev")}
+                //}
                 //stage(                        "bullseye && aarch64 && tascardev") {
                 //    agent {label              "bullseye && aarch64 && tascardev"}
                 //    steps {tascar_build_steps("bullseye && aarch64 && tascardev")}
                 //}
-                stage(                        "bionic && armv7 && tascardev") {
-                    agent {label              "bionic && armv7 && tascardev"}
-                    steps {tascar_build_steps("bionic && armv7 && tascardev")}
-                }
+                //stage(                        "bionic && armv7 && tascardev") {
+                //    agent {label              "bionic && armv7 && tascardev"}
+                //    steps {tascar_build_steps("bionic && armv7 && tascardev")}
+                //}
                 stage(                        "windows && x86_64 && tascardev") {
                     agent {label              "windows && x86_64 && tascardev"}
                     steps {tascar_build_steps("windows && x86_64 && tascardev")}
@@ -109,9 +130,9 @@ pipeline {
                 unstash "x86_64_jammy"
                 unstash "x86_64_focal"
                 unstash "x86_64_bionic"
-                unstash "armv7_bullseye"
+                //unstash "armv7_bullseye"
                 //unstash "aarch64_bullseye"
-                unstash "armv7_bionic"
+                //unstash "armv7_bionic"
 
                 // Copies the new debs to the stash of existing debs,
                 sh "make -f hoertechstorage.mk storage"
