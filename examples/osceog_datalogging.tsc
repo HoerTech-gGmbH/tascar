@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<session>
+<session license="CC0">
   <scene/>
   <modules>
     <osceog srate="860" eogpath="/eog"/>
