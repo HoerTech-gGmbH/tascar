@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session>
+  <scene/>
+  <modules>
+    <osceog srate="860" eogpath="/eog"/>
+    <datalogging>
+      <osc path="/eog" size="3" ignorefirst="true"/>
+    </datalogging>
+  </modules>
+</session>
