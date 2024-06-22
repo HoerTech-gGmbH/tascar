@@ -33,6 +33,17 @@ TASCAR::wav_render_t::wav_render_t(const std::string& tscname,
       verbose_(verbose), t0(clock()), t1(clock()), t2(clock())
 {
   read_xml();
+  std::string name;
+  std::string srv_port;
+  std::string srv_addr;
+  std::string srv_proto;
+  std::string starturl;
+  root.GET_ATTRIBUTE(srv_port, "", "OSC port number");
+  root.GET_ATTRIBUTE(srv_addr, "",
+                     "OSC multicast address in case of UDP transport");
+  root.GET_ATTRIBUTE(srv_proto, "", "OSC protocol, UDP or TCP");
+  root.GET_ATTRIBUTE(name, "", "session name");
+  root.GET_ATTRIBUTE(starturl, "", "URL of start page for display");
   if(!pscene)
     throw TASCAR::ErrMsg("Scene " + scene + " not found.");
 }
@@ -45,11 +56,12 @@ TASCAR::wav_render_t::~wav_render_t()
 
 void TASCAR::wav_render_t::add_scene(tsccfg::node_t sne)
 {
-  if((!pscene) &&
-     (scene.empty() || (tsccfg::node_get_attribute_value(sne,"name") == scene))) {
+  if((!pscene) && (scene.empty() ||
+                   (tsccfg::node_get_attribute_value(sne, "name") == scene))) {
     pscene = new render_core_t(sne);
   } else {
-    if(pscene && (pscene->name == tsccfg::node_get_attribute_value(sne,"name")))
+    if(pscene &&
+       (pscene->name == tsccfg::node_get_attribute_value(sne, "name")))
       throw TASCAR::ErrMsg("A scene of name \"" + pscene->name +
                            "\" already exists in the session.");
   }
@@ -341,11 +353,11 @@ void TASCAR::wav_render_t::render_ir(uint32_t len, double fs,
 void TASCAR::wav_render_t::validate_attributes(std::string& msg) const
 {
   root.validate_attributes(msg);
-  if( pscene )
+  if(pscene)
     pscene->validate_attributes(msg);
 }
 
-void TASCAR::wav_render_t::set_channelmap( const std::vector<size_t>& channels )
+void TASCAR::wav_render_t::set_channelmap(const std::vector<size_t>& channels)
 {
   ochannels = channels;
 }
