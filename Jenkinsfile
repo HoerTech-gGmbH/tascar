@@ -70,6 +70,17 @@ pipeline {
     stages {
         stage("build") {
             parallel {
+                stage(                        "noble && x86_64 && tascardev") {
+                    agent {
+                        docker {
+                            image "hoertech/docker-buildenv:tascar_x86_64-linux-gcc-13"
+                            label "docker_x86_64"
+                            alwaysPull true
+                            args "-v /home/u:/home/u --hostname docker"
+                        }
+                    }
+                    steps {tascar_build_steps("noble && x86_64 && tascardev")}
+                }
                 stage(                        "jammy && x86_64 && tascardev") {
                     agent {
                         docker {
@@ -127,6 +138,7 @@ pipeline {
             when { anyOf { branch 'master'; branch 'development' } }
             steps {
                 // receive all deb packages from tascarpro build
+                unstash "x86_64_noble"
                 unstash "x86_64_jammy"
                 unstash "x86_64_focal"
                 unstash "x86_64_bionic"
