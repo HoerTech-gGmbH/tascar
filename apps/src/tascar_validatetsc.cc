@@ -179,6 +179,8 @@ int main(int argc, char** argv)
       usage(long_options);
       return -1;
     }
+    if(verbose)
+      std::cout << "validating scene " << tscfile << std::endl;
     App::show_licenses_t c(tscfile);
     std::string v(c.show_unknown());
     if(v.size() && get_warnings().size())
