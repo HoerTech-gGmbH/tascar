@@ -66,7 +66,6 @@ TEST_JACK = jack_routeplugin test_unload_on_error \
 
 TEST_SND=$(wildcard test_snd*.tsc)
 
-
 RECEIVERS = omni nsp amb3h0v amb3h3v amb1h0v amb1h1v cardioid hann \
   vbap hoa2d ortf intensityvector vmic chmap hoa2d_fuma cardioidmod \
   debugpos hoa2d_fuma_hos wfs hrtf micarray
@@ -87,6 +86,9 @@ ifeq ($(UNAME_S),Darwin)
 LIBVAR=DYLD_LIBRARY_PATH
 endif
 LIBPATH=$(LIBVAR)=../libtascar/build/:../plugins/build/
+ifeq ($(OS),Windows_NT)
+LIBPATH=LIBPATH="${LIBPATH}../libtascar/build/;../plugins/build/;"
+endif
 VALIDATE=../apps/build/tascar_validatetsc -v
 RENDERIR=../apps/build/tascar_renderir
 RENDERFILE=../apps/build/tascar_renderfile
