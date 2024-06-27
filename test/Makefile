@@ -178,9 +178,9 @@ test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 
 test_snd%: test_snd%.tsc expected_snd%.wav
 	@echo "Generation test: $<"
-	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_snd$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
+	$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	$(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_snd$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 #	@rm -f test_snd$*.wav
 
 test_pos%: test_pos%.tsc expected_pos%.wav
