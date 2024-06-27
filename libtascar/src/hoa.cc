@@ -166,20 +166,20 @@ void decoder_t::create_allrad(uint32_t order,
   HOA::encoder_t enc;
   enc.set_order(order);
   std::vector<float> B(amb_channels, 0.0f);
-  float tg(0);
-  size_t tn(0);
-  for(auto it = virtual_spkpos.begin(); it != virtual_spkpos.end(); ++it) {
-    enc(it->azim(), it->elev(), B);
+  float tg(0.0f);
+  size_t tn(0u);
+  for(const auto& vspk : virtual_spkpos) {
+    enc(vspk.azim(), vspk.elev(), B);
     std::vector<float> outsig(out_channels, 0.0f);
     operator()(B, outsig);
-    float g(0);
+    float g(0.0f);
     for(uint32_t ch = 0; ch < out_channels; ++ch)
       g += outsig[ch];
     tg += g;
     ++tn;
   }
-  tg /= tn;
-  tg = 1 / tg;
+  tg /= (float)tn;
+  tg = 1.0f / tg;
   for(uint32_t k = 0; k < amb_channels * out_channels; ++k)
     dec[k] *= tg;
   method = allrad;
