@@ -40,7 +40,8 @@ public:
                        std::vector<TASCAR::wave_t>& output,
                        receivermod_base_t::data_t*);
   void postproc(std::vector<TASCAR::wave_t>& output);
-  receivermod_base_t::data_t* create_state_data(double srate, uint32_t fragsize) const;
+  receivermod_base_t::data_t* create_state_data(double srate,
+                                                uint32_t fragsize) const;
   int32_t order;
   std::string method;
   std::string dectype;
@@ -52,6 +53,7 @@ public:
   std::vector<float> deltaB;
   std::vector<TASCAR::wave_t> amb_sig;
   double decwarnthreshold;
+  bool allowallrad = false;
 };
 
 void hoa3d_dec_t::configure()
@@ -69,13 +71,25 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc), order(3), method("pinv"),
       dectype("maxre"), savedec(false), decwarnthreshold(8.0)
 {
-  GET_ATTRIBUTE(order,"","Ambisonics order");
-  GET_ATTRIBUTE(method,"","Decoder generation method, ``pinv'' or ``allrad''");
-  GET_ATTRIBUTE(dectype,"","Decoder type, ``basic'', ``maxre'' or ``inphase''");
-  GET_ATTRIBUTE_BOOL(savedec,"Save Octave/Matlab script for decoder matrix debugging");
-  GET_ATTRIBUTE(decwarnthreshold,"","Warning threshold for decoder matrix abs/rms ratio");
+  GET_ATTRIBUTE_BOOL(allowallrad, "All to use AllRAD decoder despite current "
+                                  "inconsistency across OS and compiler");
+  GET_ATTRIBUTE(order, "", "Ambisonics order");
+  GET_ATTRIBUTE(method, "",
+                "Decoder generation method, ``pinv'' or ``allrad''");
+  GET_ATTRIBUTE(dectype, "",
+                "Decoder type, ``basic'', ``maxre'' or ``inphase''");
+  GET_ATTRIBUTE_BOOL(savedec,
+                     "Save Octave/Matlab script for decoder matrix debugging");
+  GET_ATTRIBUTE(decwarnthreshold, "",
+                "Warning threshold for decoder matrix abs/rms ratio");
   if(order < 0)
     throw TASCAR::ErrMsg("Negative order is not possible.");
+  if(!allowallrad && (method == "allrad"))
+    throw TASCAR::ErrMsg(
+        "The AllRAD method creates inconsistent results on different operating "
+        "systems and is therefore "
+        "currently not recommended to use. If you really want to use it, set "
+        "\"allowallrad\" to \"true\".");
   encode.set_order(order);
   channels = (order + 1) * (order + 1);
   B = std::vector<float>(channels, 0.0f);
@@ -115,9 +129,9 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
 
 hoa3d_dec_t::~hoa3d_dec_t() {}
 
-void hoa3d_dec_t::add_pointsource(const TASCAR::pos_t& prel, double ,
+void hoa3d_dec_t::add_pointsource(const TASCAR::pos_t& prel, double,
                                   const TASCAR::wave_t& chunk,
-                                  std::vector<TASCAR::wave_t>& ,
+                                  std::vector<TASCAR::wave_t>&,
                                   receivermod_base_t::data_t* sd)
 {
   data_t* state(dynamic_cast<data_t*>(sd));
@@ -143,8 +157,8 @@ void hoa3d_dec_t::postproc(std::vector<TASCAR::wave_t>& output)
   TASCAR::receivermod_base_speaker_t::postproc(output);
 }
 
-TASCAR::receivermod_base_t::data_t* hoa3d_dec_t::create_state_data(double ,
-                                                             uint32_t ) const
+TASCAR::receivermod_base_t::data_t*
+hoa3d_dec_t::create_state_data(double, uint32_t) const
 {
   return new data_t(channels);
 }
