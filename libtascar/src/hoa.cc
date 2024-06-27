@@ -186,8 +186,18 @@ void decoder_t::create_allrad(uint32_t order,
   tg /= (float)tn;
   DEBUG(tg);
   tg = 1.0f / tg;
-  for(uint32_t k = 0; k < amb_channels * out_channels; ++k)
+  float decsum = 0.0f;
+  float decsum2 = 0.0f;
+  for(uint32_t k = 0; k < amb_channels * out_channels; ++k) {
     dec[k] *= tg;
+    decsum += fabsf(dec[k]);
+    decsum2 += dec[k] * dec[k];
+  }
+  decsum /= (float)(amb_channels * out_channels);
+  decsum2 /= (float)(amb_channels * out_channels);
+  decsum2 = sqrtf(decsum2);
+  DEBUG(decsum);
+  DEBUG(decsum2);
   method = allrad;
 }
 
