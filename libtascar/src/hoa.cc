@@ -137,6 +137,8 @@ float decoder_t::rms() const
 void decoder_t::create_allrad(uint32_t order,
                               const std::vector<TASCAR::pos_t>& spkpos)
 {
+  DEBUG(order);
+  DEBUG(spkpos.size());
   if(dec)
     delete[] dec;
   M = order;
@@ -147,8 +149,10 @@ void decoder_t::create_allrad(uint32_t order,
   dec = new float[amb_channels * out_channels];
   memset(dec, 0, sizeof(float) * amb_channels * out_channels);
   std::vector<TASCAR::pos_t> virtual_spkpos(TASCAR::generate_icosahedron());
+  DEBUG(virtual_spkpos.size());
   while(virtual_spkpos.size() < 3 * amb_channels)
     virtual_spkpos = subdivide_and_normalize_mesh(virtual_spkpos, 1);
+  DEBUG(virtual_spkpos.size());
   // Computation of an ambisonics decoder matrix Hdecoder_virtual for
   // the virtual array of loudspeakers
   HOA::decoder_t Hdecoder_virtual;
@@ -178,7 +182,9 @@ void decoder_t::create_allrad(uint32_t order,
     tg += g;
     ++tn;
   }
+  DEBUG(tn);
   tg /= (float)tn;
+  DEBUG(tg);
   tg = 1.0f / tg;
   for(uint32_t k = 0; k < amb_channels * out_channels; ++k)
     dec[k] *= tg;
