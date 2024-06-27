@@ -52,7 +52,7 @@ namespace TASCAR {
   public:
     const float* weights;
 
-  private:
+    //private:
     class simplex_t {
     public:
       simplex_t() : c1(-1), c2(-1), c3(-1){};
@@ -85,9 +85,6 @@ namespace TASCAR {
       double l31;
       double l32;
       double l33;
-      // double g1;
-      // double g2;
-      // double g3;
     };
     std::vector<simplex_t> simplices;
   };

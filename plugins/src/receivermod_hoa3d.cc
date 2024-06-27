@@ -31,6 +31,8 @@ public:
     data_t(uint32_t order);
     // ambisonic weights:
     std::vector<float> B;
+    std::vector<float> newB;
+    std::vector<float> deltaB;
   };
   hoa3d_dec_t(tsccfg::node_t xmlsrc);
   ~hoa3d_dec_t();
@@ -49,8 +51,6 @@ public:
   uint32_t channels;
   HOA::encoder_t encode;
   HOA::decoder_t decode;
-  std::vector<float> B;
-  std::vector<float> deltaB;
   std::vector<TASCAR::wave_t> amb_sig;
   double decwarnthreshold;
   bool allowallrad = false;
@@ -58,6 +58,8 @@ public:
 
 void hoa3d_dec_t::configure()
 {
+  DEBUG(channels);
+  DEBUG(spkpos.size());
   TASCAR::receivermod_base_speaker_t::configure();
   amb_sig = std::vector<TASCAR::wave_t>(channels, TASCAR::wave_t(n_fragment));
 }
@@ -65,6 +67,8 @@ void hoa3d_dec_t::configure()
 hoa3d_dec_t::data_t::data_t(uint32_t channels)
 {
   B = std::vector<float>(channels, 0.0f);
+  newB = std::vector<float>(channels, 0.0f);
+  deltaB = std::vector<float>(channels, 0.0f);
 }
 
 hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
@@ -92,8 +96,6 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
         "\"allowallrad\" to \"true\".");
   encode.set_order(order);
   channels = (order + 1) * (order + 1);
-  B = std::vector<float>(channels, 0.0f);
-  deltaB = std::vector<float>(channels, 0.0f);
   if(method == "pinv")
     decode.create_pinv(order, spkpos.get_positions());
   else if(method == "allrad")
@@ -139,14 +141,14 @@ void hoa3d_dec_t::add_pointsource(const TASCAR::pos_t& prel, double,
     throw TASCAR::ErrMsg("Invalid data type.");
   float az = prel.azim();
   float el = prel.elev();
-  encode(az, el, B);
+  encode(az, el, state->newB);
   for(uint32_t index = 0; index < channels; ++index)
-    deltaB[index] = (B[index] - state->B[index]) * t_inc;
+    state->deltaB[index] = (state->newB[index] - state->B[index]) * t_inc;
   for(uint32_t t = 0; t < chunk.size(); ++t)
     for(uint32_t index = 0; index < channels; ++index)
-      amb_sig[index][t] += (state->B[index] += deltaB[index]) * chunk[t];
+      amb_sig[index][t] += (state->B[index] += state->deltaB[index]) * chunk[t];
   for(uint32_t index = 0; index < channels; ++index)
-    state->B[index] = B[index];
+    state->B[index] = state->newB[index];
 }
 
 void hoa3d_dec_t::postproc(std::vector<TASCAR::wave_t>& output)

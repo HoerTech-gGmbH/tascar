@@ -159,6 +159,12 @@ void decoder_t::create_allrad(uint32_t order,
   Hdecoder_virtual.create_pinv(M, virtual_spkpos);
   // computation of VBAP gains for each virtual speaker
   TASCAR::vbap3d_t vbap(spkpos);
+  DEBUG(vbap.simplices.size());
+  for(size_t k = 0; k < vbap.simplices.size(); ++k) {
+    std::cerr << "  simplex " << k << ": " << vbap.simplices[k].c1 << " "
+              << vbap.simplices[k].c2 << " " << vbap.simplices[k].c3
+              << std::endl;
+  }
   for(uint32_t acn = 0; acn < amb_channels; ++acn)
     for(uint32_t vspk = 0; vspk < virtual_spkpos.size(); ++vspk) {
       vbap.encode(virtual_spkpos[vspk]);
