@@ -44,29 +44,26 @@ private:
   TASCAR::pos_t axis;
   filtertype_t filtertype;
   // high-shelf parameters
-  double theta_st;
-  double beta;
-  double omega;
-  double alpha_st;
-  double alpha_m;
+  double theta_st = std::numeric_limits<double>::quiet_NaN();
+  double beta = std::numeric_limits<double>::quiet_NaN();
+  double omega = std::numeric_limits<double>::quiet_NaN();
+  double alpha_st = std::numeric_limits<double>::quiet_NaN();
+  double alpha_m = std::numeric_limits<double>::quiet_NaN();
   // equalizer parameters
-  double theta_end;
-  double gain_st;
-  double gain_end;
-  double omega_st;
-  double omega_end;
-  double Q;
+  double theta_end = std::numeric_limits<double>::quiet_NaN();
+  double gain_st = std::numeric_limits<double>::quiet_NaN();
+  double gain_end = std::numeric_limits<double>::quiet_NaN();
+  double omega_st = std::numeric_limits<double>::quiet_NaN();
+  double omega_end = std::numeric_limits<double>::quiet_NaN();
+  double Q = std::numeric_limits<double>::quiet_NaN();
 };
 
 #define CHECKNAN(x)                                                            \
-  if(!(x < HUGE_VAL))                                                          \
+  if(!(x < std::numeric_limits<double>::max()))                                \
   throw TASCAR::ErrMsg("No value for \"" #x "\" was given.")
 
 filter_model_t::filter_model_t(tsccfg::node_t xmlsrc)
-    : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0), theta_st(HUGE_VAL),
-      beta(HUGE_VAL), omega(HUGE_VAL), alpha_st(HUGE_VAL), alpha_m(HUGE_VAL),
-      theta_end(HUGE_VAL), gain_st(HUGE_VAL), gain_end(HUGE_VAL),
-      omega_st(HUGE_VAL), omega_end(HUGE_VAL), Q(HUGE_VAL)
+    : TASCAR::xml_element_t(xmlsrc), axis(0, 0, 0)
 {
   GET_ATTRIBUTE(axis, "",
                 "orientation axis for filter parameter "

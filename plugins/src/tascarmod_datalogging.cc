@@ -268,15 +268,16 @@ void data_draw_t::get_valuerange(const std::vector<double>& data,
                                  uint32_t n1, uint32_t n2, double& dmin,
                                  double& dmax)
 {
-  dmin = HUGE_VAL;
-  dmax = -HUGE_VAL;
+  dmin = std::numeric_limits<double>::max();
+  dmax = std::numeric_limits<double>::lowest();
   for(uint32_t dim = firstchannel; dim < channels; dim++) {
     vdc[dim] = 0;
     if(!displaydc_) {
       uint32_t cnt(0);
       for(uint32_t k = n1; k < n2; k++) {
         double v(data[dim + k * channels]);
-        if((v != HUGE_VAL) && (v != -HUGE_VAL)) {
+        if((v > std::numeric_limits<double>::lowest()) &&
+           (v < std::numeric_limits<double>::max())) {
           vdc[dim] += v;
           cnt++;
         }
@@ -286,7 +287,8 @@ void data_draw_t::get_valuerange(const std::vector<double>& data,
     }
     for(uint32_t k = n1; k < n2; k++) {
       double v(data[dim + k * channels]);
-      if((v != HUGE_VAL) && (v != -HUGE_VAL)) {
+      if((v > std::numeric_limits<double>::lowest()) &&
+         (v < std::numeric_limits<double>::max())) {
         dmin = std::min(dmin, v - vdc[dim]);
         dmax = std::max(dmax, v - vdc[dim]);
       }
@@ -760,7 +762,7 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
             TASCAR::Scene::rgb_color_t rgb(set_hsv(
                 (dim - 1.0 - ignore_first_) * size_norm * 360, 0.8, 0.7));
             cr->set_source_rgb(rgb.r, rgb.g, rgb.b);
-            bool first(true);
+            bool restart_line(true);
             // limit number of lines:
             for(uint32_t k = n1; k < n2; k += stepsize) {
               double t(plotdata_[k * num_channels] - ltime);
@@ -768,15 +770,18 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
               if(std::isfinite(v)) {
                 if(!displaydc_)
                   v -= vdc[dim];
-                if(v != HUGE_VAL) {
+                if((v > std::numeric_limits<double>::lowest()) &&
+                   (v < std::numeric_limits<double>::max())) {
                   t *= width / 30.0;
                   v = height - (v - dmin) * dscale;
                   //++nlines;
-                  if(first) {
+                  if(restart_line) {
                     cr->move_to(t, v);
-                    first = false;
+                    restart_line = false;
                   } else
                     cr->line_to(t, v);
+                } else {
+                  restart_line = true;
                 }
               }
             }

@@ -787,7 +787,7 @@ const std::vector<float>& route_t::readmeter()
 
 float route_t::read_meter_max()
 {
-  float rv(-HUGE_VAL);
+  float rv(std::numeric_limits<float>::lowest());
   for(uint32_t k = 0; k < rmsmeter.size(); k++) {
     float l(rmsmeter[k]->spldb());
     if(!(l < rv))
@@ -801,7 +801,7 @@ float sound_t::read_meter()
   if(meter.size() > 0)
     if(meter[0])
       return meter[0]->spldb();
-  return -HUGE_VAL;
+  return std::numeric_limits<float>::lowest();
 }
 
 route_t::route_t(tsccfg::node_t xmlsrc)
@@ -1327,7 +1327,7 @@ void sound_t::add_meter(TASCAR::levelmeter_t* m)
 void sound_t::apply_gain()
 {
   float newgain = get_gain();
-  if( b_mute )
+  if(b_mute)
     newgain = 0.0f;
   float dg((newgain - gain_) * t_inc);
   uint32_t channels(inchannels.size());
