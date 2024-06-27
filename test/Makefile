@@ -85,9 +85,9 @@ LIBVAR=LD_LIBRARY_PATH
 ifeq ($(UNAME_S),Darwin)
 LIBVAR=DYLD_LIBRARY_PATH
 endif
-LIBPATH=$(LIBVAR)=../libtascar/build/:../plugins/build/
+MLIBPATH=$(LIBVAR)=../libtascar/build/:../plugins/build/
 ifeq ($(OS),Windows_NT)
-LIBPATH=LIBPATH="${LIBPATH}../libtascar/build/;../plugins/build/;"
+MLIBPATH=LIBPATH="${LIBPATH}../libtascar/build/;../plugins/build/;"
 endif
 VALIDATE=../apps/build/tascar_validatetsc -v
 RENDERIR=../apps/build/tascar_renderir
@@ -161,134 +161,134 @@ db: $(TEST:test=db_test)  $(TEST_REC:test=db_test)
 
 test_ir%: test_ir%.tsc expected_ir%.wav
 	@echo "Impulse response test: $<"
-	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
+	@$(MLIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(MLIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 	@rm -f test_ir$*.wav
 
-#	@$(LIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 || (echo "$(<):2: Rendering failed"; false)
+#	@$(MLIBPATH) $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 || (echo "$(<):2: Rendering failed"; false)
 
 test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
 	@echo "Input-output processing test: $<"
-	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) $(RENDERFILE) -i input_wav$*.wav -f 64 -o test_wav$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
+	@$(MLIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(MLIBPATH) $(RENDERFILE) -i input_wav$*.wav -f 64 -o test_wav$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 	@rm -f test_wav$*.wav
 
 test_snd%: test_snd%.tsc expected_snd%.wav
 	@echo "Generation test: $<"
-	$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	$(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_snd$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
+	$(MLIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	$(MLIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_snd$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	$(MLIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 #	@rm -f test_snd$*.wav
 
 test_pos%: test_pos%.tsc expected_pos%.wav
 	@echo "Position test: $<"
-	@$(LIBPATH) RECTYPE=debugpos $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) RECTYPE=debugpos $(RENDERFILE) -i zeros.wav -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-6 1e-6|| (echo "$(<):2: Output differs"; false)
+	@$(MLIBPATH) RECTYPE=debugpos $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(MLIBPATH) RECTYPE=debugpos $(RENDERFILE) -i zeros.wav -f 64 -o test_pos$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) $(COMPARE) expected_pos$*.wav test_pos$*.wav 1e-6 1e-6|| (echo "$(<):2: Output differs"; false)
 	@rm -f test_pos$*.wav
 
 test_rec_%: test_rec.tsc
 	@echo "Receiver test: $< ($*)"
-	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -f 64 -o test_rec_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -f 64 -o test_rec_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
 	@rm -f test_rec_$*.wav
 
 test_reclevel_%: test_level.tsc
 	@echo "Receiver level test: $< ($*)"
-	@$(LIBPATH) RECEIVER=$* CHANNELS=8 $(RENDERFILE) -i zeros.wav -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (8ch)"; false)
-	@$(LIBPATH) RECEIVER=$* CHANNELS=36 $(RENDERFILE) -i zeros.wav -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (36ch)"; false)
+	@$(MLIBPATH) RECEIVER=$* CHANNELS=8 $(RENDERFILE) -i zeros.wav -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (8ch)"; false)
+	@$(MLIBPATH) RECEIVER=$* CHANNELS=36 $(RENDERFILE) -i zeros.wav -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs (36ch)"; false)
 	@rm -f test_level_$*.wav
 
 test_level_%: test_level_%.tsc
 	@echo "Level test: $< ($*)"
-	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
-	@$(LIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
-	@$(LIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs"; false)
+	@$(MLIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(MLIBPATH) RECEIVER=$* $(RENDERFILE) -i zeros.wav -f 64 -o test_level_$*.wav $< || (echo "$(<):2: Rendering failed"; false)
+	@$(MLIBPATH) $(COMPLEV) 70 test_level_$*.wav $(LEVTHR) || (echo "$(<):2: Level differs"; false)
 	@rm -f test_level_$*.wav
 
 
 test_fail_%: fail_%.tsc
 	@echo "Failure test: $< ($*)"
-	@(! $(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_fail.wav $< ) || (echo "$(<):2: Did not fail"; false)
+	@(! $(MLIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_fail.wav $< ) || (echo "$(<):2: Did not fail"; false)
 	@rm -f test_fail.wav
 
 test_notfail_%: notfail_%.tsc
 	@echo "No failure test: $< ($*)"
-	@$(LIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_fail.wav $< || (echo "$(<):2: Failed."; false)
+	@$(MLIBPATH) $(RENDERFILE) -i zeros.wav -f 64 -o test_fail.wav $< || (echo "$(<):2: Failed."; false)
 	@rm -f test_fail.wav
 
 test_validate_fail_%: fail_%.tsc
 	@echo "Validation failure test: $< ($*)"
-	@(! $(LIBPATH) $(VALIDATE) $< ) || (echo "$(<):2: Did not fail"; false)
+	@(! $(MLIBPATH) $(VALIDATE) $< ) || (echo "$(<):2: Did not fail"; false)
 
 # debugging rules:
 
 db_test_wav%: test_wav%.tsc input_wav%.wav expected_wav%.wav
-	$(LIBPATH) $(VALIDATE) $< 
+	$(MLIBPATH) $(VALIDATE) $< 
 	echo run -i input_wav$*.wav -f 64 -o test_wav$*.wav $< > gdbcmd
-	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
-	$(LIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
+	$(MLIBPATH) gdb $(RENDERFILE) -x gdbcmd
+	$(MLIBPATH) $(COMPARE) expected_wav$*.wav test_wav$*.wav 2e-8
 	rm -f test_wav$*.wav
 
 db_test_level_%: test_level_%.tsc
 	@echo "Level test: $< ($*)"
 	echo run -i zeros.wav -f 64 -o test_level_$*.wav $< > gdbcmd
-	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
+	$(MLIBPATH) gdb $(RENDERFILE) -x gdbcmd
 	@rm -f test_level_$*.wav
 
 db_test_rec_%: test_rec.tsc
 	echo run -i zeros.wav -f 64 -o test_rec_$*.wav $< > gdbcmd
-	$(LIBPATH) RECEIVER=$* gdb $(RENDERIR) -x gdbcmd
+	$(MLIBPATH) RECEIVER=$* gdb $(RENDERIR) -x gdbcmd
 	rm -f test_rec_$*.wav
 
 db_test_ir%: test_ir%.tsc expected_ir%.wav
 	echo run -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100 > gdbcmd
-	$(LIBPATH) gdb $(RENDERIR) -x gdbcmd
-	$(LIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav 1e-9 1e-9
+	$(MLIBPATH) gdb $(RENDERIR) -x gdbcmd
+	$(MLIBPATH) $(COMPARE) expected_ir$*.wav test_ir$*.wav 1e-9 1e-9
 	rm -f test_ir$*.wav
 
 db_test_snd%: test_snd%.tsc expected_snd%.wav
 	echo run -i zeros.wav -o test_snd$*.wav -f 64 $< > gdbcmd
-	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
-	$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav 1e-9 1e-9
+	$(MLIBPATH) gdb $(RENDERFILE) -x gdbcmd
+	$(MLIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav 1e-9 1e-9
 	rm -f test_snd$*.wav
 
 db_test_pos%: test_pos%.tsc expected_pos%.wav
 	echo run -i zeros.wav -o test_pos$*.wav -f 64 $< > gdbcmd
-	$(LIBPATH) gdb $(RENDERFILE) -x gdbcmd
-	$(LIBPATH) ../build/compare_posfile expected_pos$*.wav test_pos$*.wav 1e-9 1e-9
+	$(MLIBPATH) gdb $(RENDERFILE) -x gdbcmd
+	$(MLIBPATH) ../build/compare_posfile expected_pos$*.wav test_pos$*.wav 1e-9 1e-9
 	rm -f test_pos$*.wav
 
 leak_test_snd%: test_snd%.tsc expected_snd%.wav
-	$(LIBPATH) valgrind --leak-check=full $(RENDERFILE) -i zeros.wav -o test_snd$*.wav -f 64 $<
-	$(LIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav 1e-9 1e-9
+	$(MLIBPATH) valgrind --leak-check=full $(RENDERFILE) -i zeros.wav -o test_snd$*.wav -f 64 $<
+	$(MLIBPATH) $(COMPARE) expected_snd$*.wav test_snd$*.wav 1e-9 1e-9
 	rm -f test_snd$*.wav
 
 leak_test_pos%: test_pos%.tsc expected_pos%.wav
-	$(LIBPATH) valgrind --leak-check=full $(RENDERIR) -i zeros.wav -o test_pos$*.wav -f 64 $<
-	$(LIBPATH) ../build/compare_posfile expected_pos$*.wav test_pos$*.wav 1e-9
+	$(MLIBPATH) valgrind --leak-check=full $(RENDERIR) -i zeros.wav -o test_pos$*.wav -f 64 $<
+	$(MLIBPATH) ../build/compare_posfile expected_pos$*.wav test_pos$*.wav 1e-9
 	rm -f test_pos$*.wav
 
 leak_%: %.tsc
-	$(LIBPATH) valgrind --leak-check=full  --show-leak-kinds=all $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+	$(MLIBPATH) valgrind --leak-check=full  --show-leak-kinds=all $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 valgrind_%: %.tsc
-	$(LIBPATH) valgrind  $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+	$(MLIBPATH) valgrind  $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 
 all_init: $(patsubst %,init_%,$(TESTS))
 
 init_%: %.tsc
-	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+	$(MLIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 init_test_ir%: test_ir%.tsc
-	$(LIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100
+	$(MLIBPATH) valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERIR) -o test_ir$*.wav $< -t 1 -l $(IRLEN) -f 44100
 
 init_test_pos%: test_pos%.tsc
-	$(LIBPATH) RECTYPE=debugpos valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
+	$(MLIBPATH) RECTYPE=debugpos valgrind --error-exitcode=1 --leak-check=no --undef-value-errors=yes --track-origins=yes $(RENDERFILE) -i zeros.wav -o $*.wav -f 64 $<
 
 clean:
 	rm -f *~ test*.wav gdbcmd
@@ -296,7 +296,7 @@ clean:
 test_unload_on_error: test_unload_on_error.tsc
 	@sleep 1
 	rm -f test_unload_on_error.loaded test_unload_on_error.unloaded
-	jackd -d dummy & PID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) $< ; kill -9 $$PID
+	jackd -d dummy & PID=$$!; sleep 1;$(MLIBPATH) $(TASCARCLI) $< ; kill -9 $$PID
 	test -e test_unload_on_error.loaded || (echo "load failed."; false)
 	rm -f test_unload_on_error.loaded
 	test -e test_unload_on_error.unloaded || (echo "unload failed."; false)
@@ -304,20 +304,20 @@ test_unload_on_error: test_unload_on_error.tsc
 	@sleep 1
 
 jack_%: test_%.tsc input_%.wav expected_%.wav
-	@$(LIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
+	@$(MLIBPATH) $(VALIDATE) $< || (echo "$(<):2: Validation failed"; false)
 	@sleep 1
-	@jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;echo "input: " `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'`;echo "output: " `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'` ; $(LIBPATH) $(JACKIO) -s 0 input_$*.wav -o test_$*.wav `$(LIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'` `$(LIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'`; kill -9 $$JACKPID $$TSCPID; true
-	@$(LIBPATH) $(COMPARE) expected_$*.wav test_$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
+	@jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(MLIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;echo "input: " `$(MLIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'`;echo "output: " `$(MLIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'` ; $(MLIBPATH) $(JACKIO) -s 0 input_$*.wav -o test_$*.wav `$(MLIBPATH) $(JACKLSP) -si|grep -v -e '.*:sync_in'` `$(MLIBPATH) $(JACKLSP) -so|grep -v -e '.*:sync_out'`; kill -9 $$JACKPID $$TSCPID; true
+	@$(MLIBPATH) $(COMPARE) expected_$*.wav test_$*.wav $(TOL) $(RMSTOL) || (echo "$(<):2: Output differs"; false)
 	@sleep 1
 
 jackfail_%: test_%.tsc
 	@sleep 1
-	TSCRET=ok; jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;ps $$TSCPID > /dev/null || TSCRET=fail; kill -9 $$JACKPID $$TSCPID; test $$TSCRET = fail || (echo "$(<):2: Did not fail."; false)
+	TSCRET=ok; jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(MLIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;ps $$TSCPID > /dev/null || TSCRET=fail; kill -9 $$JACKPID $$TSCPID; test $$TSCRET = fail || (echo "$(<):2: Did not fail."; false)
 	@sleep 1
 
 jackconnect_%: test_connect%.tsc
 	@sleep 1
-	TSCRET=ok; jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(LIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;ps $$TSCPID > /dev/null || TSCRET=fail; kill -9 $$JACKPID $$TSCPID 2>/dev/null ; test $$TSCRET = ok || (echo "$(<):2: Connection failed."; false)
+	TSCRET=ok; jackd -d dummy -r 44100 -p 1024 & JACKPID=$$!; sleep 1;$(MLIBPATH) $(TASCARCLI) -s $< & TSCPID=$$!; sleep 1;ps $$TSCPID > /dev/null || TSCRET=fail; kill -9 $$JACKPID $$TSCPID 2>/dev/null ; test $$TSCRET = ok || (echo "$(<):2: Connection failed."; false)
 	@sleep 1
 
 
