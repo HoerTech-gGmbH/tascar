@@ -46,7 +46,7 @@ namespace App {
     void add_range(tsccfg::node_t);
     void add_connection(tsccfg::node_t);
 
-  private:
+  public:
     std::vector<TASCAR::render_core_t*> scenes;
     std::vector<TASCAR::range_t*> ranges;
     std::vector<TASCAR::connection_t*> connections;
@@ -144,15 +144,17 @@ int main(int argc, char** argv)
 {
   try {
     std::string tscfile("");
-    const char* options = "hgl";
+    const char* options = "hglv";
     struct option long_options[] = {{"help", 0, 0, 'h'},
                                     {"gendoc", 0, 0, 'g'},
                                     {"latex", 0, 0, 'l'},
+                                    {"verbose", 0, 0, 'v'},
                                     {0, 0, 0, 0}};
     int opt(0);
     int option_index(0);
     bool gendoc(false);
     bool latex(false);
+    bool verbose(false);
     while((opt = getopt_long(argc, argv, options, long_options,
                              &option_index)) != -1) {
       switch(opt) {
@@ -162,6 +164,9 @@ int main(int argc, char** argv)
         break;
       case 'g':
         gendoc = true;
+        break;
+      case 'v':
+        verbose = true;
         break;
       case 'l':
         latex = true;
@@ -187,6 +192,9 @@ int main(int argc, char** argv)
     std::cout << v << std::endl;
     if(!v.empty())
       return 1;
+    if(verbose)
+      std::cout << "Validation of \"" << tscfile << "\" was successful ("
+                << c.scenes.size() << " scenes)" << std::endl;
   }
   catch(const std::exception& e) {
     std::cerr << "Error: " << e.what() << std::endl;

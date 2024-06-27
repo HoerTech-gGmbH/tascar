@@ -18,6 +18,6 @@ jobs:
     - name: dependencies
       run: brew install pkgconfig glibmm jack liblo libsndfile gtkmm3 eigen boost gsl fftw libsamplerate xerces-c libltc gtksourceviewmm3 coreutils adwaita-icon-theme jpeg libmatio
     - name: make
-      run: make
+      run: make -j 4
     - name: test
       run: make unit-tests test

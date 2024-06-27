@@ -24,7 +24,7 @@ jobs:
     - name: lineendings
       run: git config --global core.autocrlf true
     - name: build
-      run: make
+      run: make -j 4
     - name: unittest
       run: make unit-tests
     - name: regressiontest

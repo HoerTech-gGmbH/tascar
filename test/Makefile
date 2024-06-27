@@ -87,7 +87,7 @@ ifeq ($(UNAME_S),Darwin)
 LIBVAR=DYLD_LIBRARY_PATH
 endif
 LIBPATH=$(LIBVAR)=../libtascar/build/:../plugins/build/
-VALIDATE=../apps/build/tascar_validatetsc
+VALIDATE=../apps/build/tascar_validatetsc -v
 RENDERIR=../apps/build/tascar_renderir
 RENDERFILE=../apps/build/tascar_renderfile
 TASCARCLI=../apps/build/tascar_cli
