@@ -111,7 +111,7 @@ all: prepare $(TESTS) hoa3d $(TEST_FAIL) testrec testlev
 
 ifeq ($(OS),Windows_NT)
 prepare:
-	cp ../libtascar/build/*.dll ../plugins/build/*.dll ../aps/build/
+	cp ../libtascar/build/*.dll ../plugins/build/*.dll ../apps/build/
 else
 prepare:
 endif
