@@ -79,9 +79,10 @@ LEVTHR=0.25
 IRLEN = 4000
 
 UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Linux)
 LIBVAR=LD_LIBRARY_PATH
-endif
+#ifeq ($(UNAME_S),Linux)
+#LIBVAR=LD_LIBRARY_PATH
+#endif
 ifeq ($(UNAME_S),Darwin)
 LIBVAR=DYLD_LIBRARY_PATH
 endif
