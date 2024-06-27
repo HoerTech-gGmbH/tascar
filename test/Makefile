@@ -87,7 +87,8 @@ LIBVAR=DYLD_LIBRARY_PATH
 endif
 MLIBPATH=$(LIBVAR)=../libtascar/build/:../plugins/build/
 ifeq ($(OS),Windows_NT)
-MLIBPATH=LIBPATH="${LIBPATH}../libtascar/build/;../plugins/build/;"
+MLIBPATH=
+#LIBPATH="${LIBPATH}../libtascar/build/;../plugins/build/;"
 endif
 VALIDATE=../apps/build/tascar_validatetsc -v
 RENDERIR=../apps/build/tascar_renderir
@@ -106,7 +107,14 @@ FAILING_TESTS = test_ir5
 TOL = 3e-7
 RMSTOL = 3e-7
 
-all: $(TESTS) hoa3d $(TEST_FAIL) testrec testlev
+all: prepare $(TESTS) hoa3d $(TEST_FAIL) testrec testlev
+
+ifeq ($(OS),Windows_NT)
+prepare:
+	cp ../libtascar/build/*.dll ../plugins/build/*.dll ../aps/build/
+else
+prepare:
+endif
 
 jack: $(TEST_JACK)
 
