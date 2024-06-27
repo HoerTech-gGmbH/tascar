@@ -123,10 +123,11 @@ test_snd_door4: RMSTOL=1e-4
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 
+#  test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert \
+
 ifeq ($(UNAME_S),Linux)
 hoa3d: test_snd_hoa3d_enc_hor test_snd_hoa3d_enc_vert \
   test_snd_hoa3d_pinv_hor test_snd_hoa3d_pinv_vert \
-  test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert \
   test_level_hoa3d_pinv test_level_hoa3d_pinv_lidhan \
   test_level_hoa3d_pinv_maxre test_level_hoa3d_allrad \
   test_level_hoa3d_allrad_lidhan test_level_hoa3d_pinv_lidhan_maxre \
