@@ -114,14 +114,14 @@ pipeline {
                     }
                     steps {tascar_build_steps("bionic && x86_64 && tascardev")}
                 }
-                //stage(                        "bullseye && armv7 && tascardev") {
-                //    agent {label              "bullseye && armv7 && tascardev"}
-                //    steps {tascar_build_steps("bullseye && armv7 && tascardev")}
-                //}
-                //stage(                        "bullseye && aarch64 && tascardev") {
-                //    agent {label              "bullseye && aarch64 && tascardev"}
-                //    steps {tascar_build_steps("bullseye && aarch64 && tascardev")}
-                //}
+                stage(                        "bullseye && armv7 && tascardev") {
+                    agent {label              "bullseye && armv7 && tascardev"}
+                    steps {tascar_build_steps("bullseye && armv7 && tascardev")}
+                }
+                stage(                        "bullseye && aarch64 && tascardev") {
+                    agent {label              "bullseye && aarch64 && tascardev"}
+                    steps {tascar_build_steps("bullseye && aarch64 && tascardev")}
+                }
                 //stage(                        "bionic && armv7 && tascardev") {
                 //    agent {label              "bionic && armv7 && tascardev"}
                 //    steps {tascar_build_steps("bionic && armv7 && tascardev")}
@@ -142,8 +142,8 @@ pipeline {
                 unstash "x86_64_jammy"
                 unstash "x86_64_focal"
                 unstash "x86_64_bionic"
-                //unstash "armv7_bullseye"
-                //unstash "aarch64_bullseye"
+                unstash "armv7_bullseye"
+                unstash "aarch64_bullseye"
                 //unstash "armv7_bionic"
 
                 // Copies the new debs to the stash of existing debs,
