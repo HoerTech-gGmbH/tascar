@@ -442,8 +442,37 @@ TASCAR::quickhull_t::quickhull_t(const std::vector<pos_t>& vertices)
     sim.c1 = indexBuffer[khull];
     sim.c2 = indexBuffer[khull + 1];
     sim.c3 = indexBuffer[khull + 2];
+    if((sim.c2 < sim.c1) && (sim.c2 < sim.c3)) {
+      // c2 is smallest, turn backwards:
+      simplex_t sim2;
+      sim2.c1 = sim.c2;
+      sim2.c2 = sim.c3;
+      sim2.c3 = sim.c1;
+      sim = sim2;
+    } else {
+      if((sim.c3 < sim.c1) && (sim.c3 < sim.c2)) {
+        // c3 is smallest, turn forward:
+        simplex_t sim2;
+        sim2.c1 = sim.c3;
+        sim2.c2 = sim.c1;
+        sim2.c3 = sim.c2;
+        sim = sim2;
+      }
+    }
     faces.push_back(sim);
   }
+  std::sort(faces.begin(), faces.end(), [](simplex_t a, simplex_t b) {
+    if(a.c1 < b.c1)
+      return true;
+    if(a.c1 == b.c1) {
+      if(a.c2 < b.c2)
+        return true;
+      if(a.c2 == b.c2)
+        if(a.c3 < b.c3)
+          return true;
+    }
+    return false;
+  });
 }
 
 std::vector<pos_t> TASCAR::subdivide_and_normalize_mesh(std::vector<pos_t> mesh,

@@ -845,15 +845,21 @@ TEST(convhull, vertexorder)
     std::cout << "-- th --\n";
     for(auto f : hull.faces)
       std::cout << f.c1 << " " << f.c2 << " " << f.c3 << std::endl;
-    ASSERT_EQ(1u, hull.faces[0].c1);
-    ASSERT_EQ(0u, hull.faces[0].c2);
-    ASSERT_EQ(2u, hull.faces[0].c3);
-    ASSERT_EQ(2u, hull.faces[1].c1);
-    ASSERT_EQ(0u, hull.faces[1].c2);
-    ASSERT_EQ(3u, hull.faces[1].c3);
+    // for(size_t k = 0; k < hull.faces.size(); ++k) {
+    //  auto f = hull.faces[k];
+    //  std::cout << "ASSERT_EQ(" << f.c1 << "u,hull.faces[" << k << "].c1);\n";
+    //  std::cout << "ASSERT_EQ(" << f.c2 << "u,hull.faces[" << k << "].c2);\n";
+    //  std::cout << "ASSERT_EQ(" << f.c3 << "u,hull.faces[" << k << "].c3);\n";
+    //}
+    ASSERT_EQ(0u, hull.faces[0].c1);
+    ASSERT_EQ(1u, hull.faces[0].c2);
+    ASSERT_EQ(3u, hull.faces[0].c3);
+    ASSERT_EQ(0u, hull.faces[1].c1);
+    ASSERT_EQ(2u, hull.faces[1].c2);
+    ASSERT_EQ(1u, hull.faces[1].c3);
     ASSERT_EQ(0u, hull.faces[2].c1);
-    ASSERT_EQ(1u, hull.faces[2].c2);
-    ASSERT_EQ(3u, hull.faces[2].c3);
+    ASSERT_EQ(3u, hull.faces[2].c2);
+    ASSERT_EQ(2u, hull.faces[2].c3);
     ASSERT_EQ(1u, hull.faces[3].c1);
     ASSERT_EQ(2u, hull.faces[3].c2);
     ASSERT_EQ(3u, hull.faces[3].c3);
@@ -871,46 +877,45 @@ TEST(convhull, vertexorder)
   {
     auto hull = TASCAR::quickhull_t(hex);
     ASSERT_EQ(10u, hull.faces.size());
+    //for(size_t k = 0; k < hull.faces.size(); ++k) {
+    //  auto f = hull.faces[k];
+    //  std::cout << "ASSERT_EQ(" << f.c1 << "u,hull.faces[" << k << "].c1);\n";
+    //  std::cout << "ASSERT_EQ(" << f.c2 << "u,hull.faces[" << k << "].c2);\n";
+    //  std::cout << "ASSERT_EQ(" << f.c3 << "u,hull.faces[" << k << "].c3);\n";
+    //}
     std::cout << "-- hex --\n";
     for(auto f : hull.faces)
       std::cout << f.c1 << " " << f.c2 << " " << f.c3 << std::endl;
-    ASSERT_EQ(3u, hull.faces[0].c1);
+    ASSERT_EQ(0u, hull.faces[0].c1);
     ASSERT_EQ(1u, hull.faces[0].c2);
-    ASSERT_EQ(2u, hull.faces[0].c3);
-    ASSERT_EQ(1u, hull.faces[1].c1);
-    ASSERT_EQ(6u, hull.faces[1].c2);
-    ASSERT_EQ(2u, hull.faces[1].c3);
-    ASSERT_EQ(6u, hull.faces[2].c1);
-    ASSERT_EQ(3u, hull.faces[2].c2);
-    ASSERT_EQ(2u, hull.faces[2].c3);
-    ASSERT_EQ(3u, hull.faces[3].c1);
+    ASSERT_EQ(3u, hull.faces[0].c3);
+    ASSERT_EQ(0u, hull.faces[1].c1);
+    ASSERT_EQ(3u, hull.faces[1].c2);
+    ASSERT_EQ(5u, hull.faces[1].c3);
+    ASSERT_EQ(0u, hull.faces[2].c1);
+    ASSERT_EQ(5u, hull.faces[2].c2);
+    ASSERT_EQ(6u, hull.faces[2].c3);
+    ASSERT_EQ(0u, hull.faces[3].c1);
     ASSERT_EQ(6u, hull.faces[3].c2);
-    ASSERT_EQ(4u, hull.faces[3].c3);
-    ASSERT_EQ(6u, hull.faces[4].c1);
-    ASSERT_EQ(5u, hull.faces[4].c2);
-    ASSERT_EQ(4u, hull.faces[4].c3);
-    ASSERT_EQ(5u, hull.faces[5].c1);
-    ASSERT_EQ(3u, hull.faces[5].c2);
-    ASSERT_EQ(4u, hull.faces[5].c3);
-    ASSERT_EQ(0u, hull.faces[6].c1);
-    ASSERT_EQ(3u, hull.faces[6].c2);
-    ASSERT_EQ(5u, hull.faces[6].c3);
-    ASSERT_EQ(6u, hull.faces[7].c1);
-    ASSERT_EQ(0u, hull.faces[7].c2);
+    ASSERT_EQ(1u, hull.faces[3].c3);
+    ASSERT_EQ(1u, hull.faces[4].c1);
+    ASSERT_EQ(2u, hull.faces[4].c2);
+    ASSERT_EQ(3u, hull.faces[4].c3);
+    ASSERT_EQ(1u, hull.faces[5].c1);
+    ASSERT_EQ(6u, hull.faces[5].c2);
+    ASSERT_EQ(2u, hull.faces[5].c3);
+    ASSERT_EQ(2u, hull.faces[6].c1);
+    ASSERT_EQ(6u, hull.faces[6].c2);
+    ASSERT_EQ(3u, hull.faces[6].c3);
+    ASSERT_EQ(3u, hull.faces[7].c1);
+    ASSERT_EQ(4u, hull.faces[7].c2);
     ASSERT_EQ(5u, hull.faces[7].c3);
-    ASSERT_EQ(0u, hull.faces[8].c1);
+    ASSERT_EQ(3u, hull.faces[8].c1);
     ASSERT_EQ(6u, hull.faces[8].c2);
-    ASSERT_EQ(1u, hull.faces[8].c3);
-    ASSERT_EQ(3u, hull.faces[9].c1);
-    ASSERT_EQ(0u, hull.faces[9].c2);
-    ASSERT_EQ(1u, hull.faces[9].c3);
-    //    for(size_t k = 0; k < hull.faces.size(); ++k) {
-    //      auto f = hull.faces[k];
-    //      std::cout << "ASSERT_EQ(" << f.c1 << "u,hull.faces[" << k <<
-    //      "].c1);\n"; std::cout << "ASSERT_EQ(" << f.c2 << "u,hull.faces[" <<
-    //      k << "].c2);\n"; std::cout << "ASSERT_EQ(" << f.c3 <<
-    //      "u,hull.faces[" << k << "].c3);\n";
-    //    }
+    ASSERT_EQ(4u, hull.faces[8].c3);
+    ASSERT_EQ(4u, hull.faces[9].c1);
+    ASSERT_EQ(6u, hull.faces[9].c2);
+    ASSERT_EQ(5u, hull.faces[9].c3);
   }
 }
 
