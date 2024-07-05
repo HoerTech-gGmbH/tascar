@@ -831,6 +831,89 @@ TEST(quaternion, localeuler)
   ASSERT_NEAR(0.0, p.z, 1e-7);
 }
 
+TEST(convhull, vertexorder)
+{
+  std::vector<TASCAR::pos_t> th;
+  th.push_back(TASCAR::pos_t(1.0, 0.0, -sqrt(0.5)));
+  th.push_back(TASCAR::pos_t(-1.0, 0.0, -sqrt(0.5)));
+  th.push_back(TASCAR::pos_t(0.0, 1.0, sqrt(0.5)));
+  th.push_back(TASCAR::pos_t(0.0, -1.0, sqrt(0.5)));
+  ASSERT_EQ(4u, th.size());
+  {
+    auto hull = TASCAR::quickhull_t(th);
+    ASSERT_EQ(4u, hull.faces.size());
+    std::cout << "-- th --\n";
+    for(auto f : hull.faces)
+      std::cout << f.c1 << " " << f.c2 << " " << f.c3 << std::endl;
+    ASSERT_EQ(1u, hull.faces[0].c1);
+    ASSERT_EQ(0u, hull.faces[0].c2);
+    ASSERT_EQ(2u, hull.faces[0].c3);
+    ASSERT_EQ(2u, hull.faces[1].c1);
+    ASSERT_EQ(0u, hull.faces[1].c2);
+    ASSERT_EQ(3u, hull.faces[1].c3);
+    ASSERT_EQ(0u, hull.faces[2].c1);
+    ASSERT_EQ(1u, hull.faces[2].c2);
+    ASSERT_EQ(3u, hull.faces[2].c3);
+    ASSERT_EQ(1u, hull.faces[3].c1);
+    ASSERT_EQ(2u, hull.faces[3].c2);
+    ASSERT_EQ(3u, hull.faces[3].c3);
+  }
+  std::vector<TASCAR::pos_t> hex;
+  TASCAR::pos_t pos;
+  for(uint32_t k = 0; k < 6; ++k) {
+    double az = k * TASCAR_PI / 3.0;
+    pos.set_sphere(1.0, az, -TASCAR_PI / 4.0);
+    hex.push_back(pos);
+  }
+  pos.set_sphere(1.0, 0.0, TASCAR_PI / 2.0);
+  hex.push_back(pos);
+  ASSERT_EQ(7u, hex.size());
+  {
+    auto hull = TASCAR::quickhull_t(hex);
+    ASSERT_EQ(10u, hull.faces.size());
+    std::cout << "-- hex --\n";
+    for(auto f : hull.faces)
+      std::cout << f.c1 << " " << f.c2 << " " << f.c3 << std::endl;
+    ASSERT_EQ(3u, hull.faces[0].c1);
+    ASSERT_EQ(1u, hull.faces[0].c2);
+    ASSERT_EQ(2u, hull.faces[0].c3);
+    ASSERT_EQ(1u, hull.faces[1].c1);
+    ASSERT_EQ(6u, hull.faces[1].c2);
+    ASSERT_EQ(2u, hull.faces[1].c3);
+    ASSERT_EQ(6u, hull.faces[2].c1);
+    ASSERT_EQ(3u, hull.faces[2].c2);
+    ASSERT_EQ(2u, hull.faces[2].c3);
+    ASSERT_EQ(3u, hull.faces[3].c1);
+    ASSERT_EQ(6u, hull.faces[3].c2);
+    ASSERT_EQ(4u, hull.faces[3].c3);
+    ASSERT_EQ(6u, hull.faces[4].c1);
+    ASSERT_EQ(5u, hull.faces[4].c2);
+    ASSERT_EQ(4u, hull.faces[4].c3);
+    ASSERT_EQ(5u, hull.faces[5].c1);
+    ASSERT_EQ(3u, hull.faces[5].c2);
+    ASSERT_EQ(4u, hull.faces[5].c3);
+    ASSERT_EQ(0u, hull.faces[6].c1);
+    ASSERT_EQ(3u, hull.faces[6].c2);
+    ASSERT_EQ(5u, hull.faces[6].c3);
+    ASSERT_EQ(6u, hull.faces[7].c1);
+    ASSERT_EQ(0u, hull.faces[7].c2);
+    ASSERT_EQ(5u, hull.faces[7].c3);
+    ASSERT_EQ(0u, hull.faces[8].c1);
+    ASSERT_EQ(6u, hull.faces[8].c2);
+    ASSERT_EQ(1u, hull.faces[8].c3);
+    ASSERT_EQ(3u, hull.faces[9].c1);
+    ASSERT_EQ(0u, hull.faces[9].c2);
+    ASSERT_EQ(1u, hull.faces[9].c3);
+    //    for(size_t k = 0; k < hull.faces.size(); ++k) {
+    //      auto f = hull.faces[k];
+    //      std::cout << "ASSERT_EQ(" << f.c1 << "u,hull.faces[" << k <<
+    //      "].c1);\n"; std::cout << "ASSERT_EQ(" << f.c2 << "u,hull.faces[" <<
+    //      k << "].c2);\n"; std::cout << "ASSERT_EQ(" << f.c3 <<
+    //      "u,hull.faces[" << k << "].c3);\n";
+    //    }
+  }
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
