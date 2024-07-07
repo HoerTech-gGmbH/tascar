@@ -96,9 +96,11 @@ else
 ifeq ($(UNAME_S),Linux)
 
 lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
-	ldconfig -niv build
 
-symlink: build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
+#ldconfig -niv build
+
+symlink:
+#build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
 else
 # probably on MacOS
 lib:   $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascargui.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
@@ -109,17 +111,23 @@ endif
 endif
 
 build/lib$(PLUGINPREFIX)tascar.so.%: $(BUILD_OBJECTS)
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
-	rm -f build/lib$(PLUGINPREFIX)tascar.so
+	rm -f build/lib$(PLUGINPREFIX)tascar.so* && \
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS} && \
+	ln -s lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascar.so && \
+	ln -s lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascar.so.$(SOVERSION)
 
 build/lib$(PLUGINPREFIX)tascargui.so.%: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui.so.%: $(BUILD_GUIOBJECTS)
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
-	rm -f build/lib$(PLUGINPREFIX)tascargui.so
+	rm -f build/lib$(PLUGINPREFIX)tascargui.so* && \
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS} && \
+	ln -s lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so && \
+	ln -s lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION)
 
 build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS)
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
-	rm -f build/lib$(PLUGINPREFIX)tascardmx.so
+	rm -f build/lib$(PLUGINPREFIX)tascardmx.so* && \
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS} && \
+	ln -s lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so && \
+	ln -s lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION)
 
 build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll: $(BUILD_OBJECTS)
 	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
