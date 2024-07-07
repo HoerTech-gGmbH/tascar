@@ -94,13 +94,17 @@ lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll build/li
 symlink: build/lib$(PLUGINPREFIX)tascar.dll build/lib$(PLUGINPREFIX)tascargui.dll
 else
 ifeq ($(UNAME_S),Linux)
+
 lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
-	ldconfig -n build
+	ldconfig -niv build
+
 symlink: build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
 else
 # probably on MacOS
 lib:   $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascargui.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
+
 symlink: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascargui.dylib build/lib$(PLUGINPREFIX)tascardmx.dylib
+
 endif
 endif
 
