@@ -79,10 +79,16 @@ void TASCAR::spawn_process_t::launcher()
                             (relaunch_ ? (" Relaunching.") : ("")));
       }
       if(WIFSIGNALED(wstatus)) {
+        auto termsig_ = WTERMSIG(wstatus);
+        std::string termsigname;
+        auto termsigname_c = strsignal(termsig_);
+        if(termsigname_c)
+          termsigname =
+              std::string(" (") + std::string(termsigname_c) + std::string(")");
         TASCAR::add_warning(
             "Process " + TASCAR::to_string(pid) + " terminated with signal " +
-            TASCAR::to_string(WTERMSIG(wstatus)) + ": \"" + command_ + "\"" +
-            (relaunch_ ? (" Relaunching.") : ("")));
+            TASCAR::to_string(termsig_) + termsigname + ": \"" + command_ +
+            "\"" + (relaunch_ ? (" Relaunching.") : ("")));
       }
     }
 #else
