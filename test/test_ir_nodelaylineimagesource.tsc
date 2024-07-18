@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <!--
+
+      test without delay line
+
+      Sound without delayline should also disable delay line of image
+      source. Primary sound source is one meter from receiver, image
+      source is 2 meters, therefore expect amplitide of 1.5 at first
+      sample and zero everywhere else.
+
+  -->
+  <scene guiscale="2" guitracking="out">
+    <source>
+      <sound x="1" delayline="false" airabsorption="false"/>
+    </source>
+    <receiver/>
+    <face name="wall" width="1" height="1" dlocation="-0.5 -0.5 -0.5"/>
+  </scene>
+</session>
