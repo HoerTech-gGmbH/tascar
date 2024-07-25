@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <mysofa.h>
 #include <random>
 #include <string.h>
 
@@ -362,23 +363,25 @@ void spk_array_diff_render_t::configure()
       flt.set_butterworth(fcsub, f_sample);
     for(auto& flt : flt_lowp2)
       flt.set_butterworth(fcsub, f_sample);
-    //// configure all pass filter:
-    // const double f0(0.125 * fscale * fcsub / f_sample * TASCAR_2PI);
-    // biquad_t fallp;
-    // const double r(1.01);
-    // fallp.set_gzp(1.0, 1, -f0, 1.0 / r, f0);
-    // const double g(std::abs(fallp.response(TASCAR_PI)));
-    // for(auto& flt : flt_allp)
-    //  flt.set_gzp(1.0 / g, 1, -f0, 1.0 / r, f0);
   }
-  use_conv = false;
-  for(const auto& conv : convolution_ir)
-    use_conv |= !conv.empty();
+  // clear convolver:
   for(auto& vp_convolver : vvp_convolver)
     for(auto& p_convolver : vp_convolver)
       delete p_convolver;
   vvp_convolver.clear();
-  if(use_conv) {
+  use_conv = false;
+  // test for sofa file:
+  bool use_sofa = !sofa_file.empty();
+  // test for channel-wise convolution files:
+  bool use_channel_wise_conv = false;
+  for(const auto& conv : convolution_ir)
+    use_channel_wise_conv |= !conv.empty();
+  if(use_channel_wise_conv && use_sofa)
+    throw TASCAR::ErrMsg("It is not possible to use mixture of SOFA files and "
+                         "channel-wise convolution files.");
+  if(use_channel_wise_conv) {
+    use_conv = true;
+    // use channel-wise convolution files:
     size_t k(0);
     for(const auto& conv : convolution_ir) {
       if(conv.empty())
@@ -421,6 +424,47 @@ void spk_array_diff_render_t::configure()
       vvp_convolver.push_back(vp_convolver);
       ++k;
     }
+  }
+  // use SOFA convolution file:
+  if(use_sofa) {
+    use_conv = true;
+    conv_channels = 2;
+    int filter_length = 0;
+    int err = 0;
+    struct MYSOFA_EASY* hrtf = NULL;
+    hrtf = mysofa_open(sofa_file.c_str(), f_sample, &filter_length, &err);
+    if(hrtf == NULL)
+      throw TASCAR::ErrMsg("Loading sofa file " + sofa_file +
+                           " failed with error " + TASCAR::to_string(err));
+    ;
+    std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
+    // iterate over all speakers:
+    for(size_t ch = 0u; ch < n_channels; ++ch) {
+      TASCAR::wave_t leftIR(filter_length); // [-1. till 1]
+      TASCAR::wave_t rightIR(filter_length);
+      float leftDelay = 0.0f;  // unit is sec.
+      float rightDelay = 0.0f; // unit is sec.
+      TASCAR::pos_t pos = operator[](ch);
+      mysofa_getfilter_float(hrtf, pos.x, pos.y, pos.z, leftIR.d, rightIR.d,
+                             &leftDelay, &rightDelay);
+      std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
+      {
+        TASCAR::partitioned_conv_t* pcnv(
+            new TASCAR::partitioned_conv_t(filter_length, n_fragment));
+        pcnv->set_irs(leftIR);
+        pcnv->set_delay(leftDelay);
+        vp_convolver.push_back(pcnv);
+      }
+      {
+        TASCAR::partitioned_conv_t* pcnv(
+            new TASCAR::partitioned_conv_t(filter_length, n_fragment));
+        pcnv->set_irs(rightIR);
+        pcnv->set_delay(rightDelay);
+        vp_convolver.push_back(pcnv);
+      }
+      vvp_convolver.push_back(vp_convolver);
+    }
+    mysofa_close(hrtf);
   }
   n_channels += (uint32_t)conv_channels;
 }
@@ -504,6 +548,7 @@ spk_array_diff_render_t::spk_array_diff_render_t(
       "In diffuse rendering, correct gains locally for loudspeaker density");
   elayout.GET_ATTRIBUTE(
       fcsub, "Hz", "Cross-over frequency, used only if subwoofers are defined");
+  elayout.GET_ATTRIBUTE(sofa_file, "", "SOFA convolution file");
   has_caliblevel = elayout.has_attribute("caliblevel");
   elayout.GET_ATTRIBUTE_DBSPL(caliblevel, "Calibration level");
   has_diffusegain = elayout.has_attribute("diffusegain");

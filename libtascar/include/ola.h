@@ -20,7 +20,9 @@
 #ifndef OLA_H
 #define OLA_H
 
+#include "delayline.h"
 #include "stft.h"
+#include <mutex>
 
 namespace TASCAR {
 
@@ -41,11 +43,15 @@ namespace TASCAR {
        - 0.5 = symmetric zero padding
        - 1 = zero padding only at beginning
 
-       \param postwnd Synthesis window type of whole chunk, including analysis window and zero padded parts.
+       \param postwnd Synthesis window type of whole chunk, including analysis
+       window and zero padded parts.
      */
-    ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize, windowtype_t wnd, windowtype_t zerownd,double wndpos,windowtype_t postwnd=WND_RECT);
+    ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize,
+          windowtype_t wnd, windowtype_t zerownd, double wndpos,
+          windowtype_t postwnd = WND_RECT);
     void ifft(wave_t& wOut);
     void clear();
+
   private:
     wave_t zwnd1;
     wave_t zwnd2;
@@ -67,12 +73,12 @@ namespace TASCAR {
        \brief Constructor
 
        The FFT length is irslen+chunksize-1.
-       
+
        \param irslen Maximal impulse response length.
        \param chunksize Size of audio chunks in process call.
      */
-    overlap_save_t(uint32_t irslen,uint32_t chunksize);
-    
+    overlap_save_t(uint32_t irslen, uint32_t chunksize);
+
     /**
        \brief Set filter coefficients.
 
@@ -80,10 +86,11 @@ namespace TASCAR {
        \note This method is not thread safe.
 
        \param h Filter coefficients
-       \param check Test if length matches the IRS length provided in constructor. Set to false to allow for shorter impulse responses.
+       \param check Test if length matches the IRS length provided in
+       constructor. Set to false to allow for shorter impulse responses.
      */
-    void set_irs(const TASCAR::wave_t& h,bool check=true);
-    
+    void set_irs(const TASCAR::wave_t& h, bool check = true);
+
     /**
        \brief Set filter transfer function.
 
@@ -94,14 +101,16 @@ namespace TASCAR {
        must match the FFT length of the filter.
      */
     void set_spec(const TASCAR::spec_t& H);
-    
+
     /**
        \brief Filter one chunk of audio data.
        \param inchunk Input audio signal
        \retval outchunk Reference to output audio signal container
        \param add Add to buffer (true) or replace buffer (false)
      */
-    void process(const TASCAR::wave_t& inchunk,TASCAR::wave_t& outchunk,bool add=true);
+    void process(const TASCAR::wave_t& inchunk, TASCAR::wave_t& outchunk,
+                 bool add = true);
+
   private:
     uint32_t irslen_;
     TASCAR::spec_t H_long;
@@ -127,19 +136,28 @@ namespace TASCAR {
        \retval outchunk Reference to output audio signal container
        \param add Add to buffer (true) or replace buffer (false)
      */
-    void process(const TASCAR::wave_t& inchunk,TASCAR::wave_t& outchunk,bool add=true);
+    void process(const TASCAR::wave_t& inchunk, TASCAR::wave_t& outchunk,
+                 bool add = true);
     uint32_t get_partitions() const { return partitions; };
-    TASCAR::overlap_save_t* get_overlapsave(uint32_t p) { return partition[p]; };
+    TASCAR::overlap_save_t* get_overlapsave(uint32_t p)
+    {
+      return partition[p];
+    };
+    void set_delay(uint32_t delay_samples);
+
   private:
     uint32_t fragsize;
     uint32_t partitions;
+    uint32_t delay = 0u;
     TASCAR::wave_t inbuffer_;
+    TASCAR::static_delay_t* delaybuffer_ = NULL;
     std::vector<TASCAR::overlap_save_t*> partition;
     std::vector<TASCAR::wave_t*> inbuffer;
     uint32_t partition_index;
+    std::mutex delaymtx;
   };
 
-}
+} // namespace TASCAR
 
 #endif
 /*

@@ -192,6 +192,8 @@ namespace TASCAR {
     double decorr_length;
     bool decorr;
     bool densitycorr;
+    // SOFA binaural convolution:
+    std::string sofa_file;
     // cross-over frequency for subwoofer, if subwoofers are defined:
     double fcsub;
     double caliblevel;
