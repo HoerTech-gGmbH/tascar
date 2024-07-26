@@ -25,4 +25,4 @@ googletest/WORKSPACE:
 	(cd googletest && git checkout 31eb5e9b873af4b509be2f77616113007fa0de9d)
 
 libmysofa:
-	cd libmysofa-1.3.2/build && cmake .. && $(MAKE)
+	(cd libmysofa-1.3.2/build && cmake .. && ls && $(MAKE) )

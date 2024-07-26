@@ -63,7 +63,7 @@ endif
 CXXFLAGS += $(GTKDEF) $(LTRDEF) $(TSCCXXFLAGS)
 
 SOFAINC=-I../external_libs/libmysofa-1.3.2/src/hrtf
-SOFALIB=../external_libs/libmysofa-1.3.2/build/src/libmysofa.a
+SOFALIB=../external_libs/libmysofa-1.3.2/build/src/libmysofa.a -lz
 
 CXXFLAGS += -fpic -I./build -I./include $(SOFAINC)
 CPPFLAGS += -I./build -I./include $(SOFAINC)
