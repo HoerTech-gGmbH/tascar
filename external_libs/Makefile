@@ -7,6 +7,7 @@ include ../rules.mk
 
 clean:
 	rm -Rf googlemock googletest $(BUILD_DIR)
+	git clean -xfd
 
 googlemock: $(BUILD_DIR)/googlemock.is_installed
 
