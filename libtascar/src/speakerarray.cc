@@ -82,6 +82,17 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
   clear();
+  uint32_t addring = 0u;
+  elayout.GET_ATTRIBUTE(addring, "", "Add this number of speakers on a ring");
+  if(addring > 0) {
+    auto speaker = tsccfg::node_get_children(elayout.e);
+    if(speaker.empty())
+      for(uint32_t ch = 0; ch < addring; ++ch) {
+        tsccfg::node_t espk = tsccfg::node_add_child(elayout.e, elementname);
+        tsccfg::node_set_attribute(
+            espk, "az", TASCAR::to_string((float)ch * 360.0f / (float)addring));
+      }
+  }
   for(auto& sn : tsccfg::node_get_children(e_layout, elementname))
     emplace_back(sn);
   elayout.GET_ATTRIBUTE(xyzgain, "", "XYZ-gain for FOA decoding");
@@ -434,8 +445,8 @@ void spk_array_diff_render_t::configure()
     struct MYSOFA_EASY* hrtf = NULL;
     hrtf = mysofa_open(sofa_file.c_str(), f_sample, &filter_length, &err);
     if(hrtf == NULL)
-      throw TASCAR::ErrMsg("Loading sofa file " + sofa_file +
-                           " failed with error " + TASCAR::to_string(err));
+      throw TASCAR::ErrMsg("Loading sofa file \"" + sofa_file +
+                           "\" failed with error " + TASCAR::to_string(err));
     ;
     std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
     // iterate over all speakers:
@@ -452,14 +463,14 @@ void spk_array_diff_render_t::configure()
         TASCAR::partitioned_conv_t* pcnv(
             new TASCAR::partitioned_conv_t(filter_length, n_fragment));
         pcnv->set_irs(leftIR);
-        pcnv->set_delay(leftDelay);
+        pcnv->set_delay(leftDelay * f_sample);
         vp_convolver.push_back(pcnv);
       }
       {
         TASCAR::partitioned_conv_t* pcnv(
             new TASCAR::partitioned_conv_t(filter_length, n_fragment));
         pcnv->set_irs(rightIR);
-        pcnv->set_delay(rightDelay);
+        pcnv->set_delay(rightDelay * f_sample);
         vp_convolver.push_back(pcnv);
       }
       vvp_convolver.push_back(vp_convolver);

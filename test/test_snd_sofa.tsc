@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<session license="CC0">
+  <!-- test HRIR convolution with SOFA files -->
+  <scene>
+    <source>
+      <orientation>0 0 0 0 1 360 0 0</orientation>
+      <sound x="1" airabsorption="false">
+        <plugins>
+          <sine a="1" f="100"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="hoa2d">
+      <layout addring="16" sofa_file="MIT_KEMAR_normal_pinna.sofa"/>
+    </receiver>
+  </scene>
+</session>

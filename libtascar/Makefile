@@ -62,8 +62,11 @@ endif
 
 CXXFLAGS += $(GTKDEF) $(LTRDEF) $(TSCCXXFLAGS)
 
-CXXFLAGS += -fpic -I./build -I./include
-CPPFLAGS += -I./build -I./include
+SOFAINC=-I../external_libs/libmysofa-1.3.2/src/hrtf
+SOFALIB=../external_libs/libmysofa-1.3.2/build/src/libmysofa.a
+
+CXXFLAGS += -fpic -I./build -I./include $(SOFAINC)
+CPPFLAGS += -I./build -I./include $(SOFAINC)
 #-L./ 
 EXTERNALS = jack liblo sndfile fftw3f gsl eigen3 samplerate xerces-c
 
@@ -82,7 +85,7 @@ $(BUILD_GUIOBJECTS): EXTERNALS += gtkmm-3.0
 LDLIBS += `pkg-config --libs $(EXTERNALS)`
 CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 
-LDLIBS += -ldl
+LDLIBS += -ldl $(SOFALIB)
 LDFLAGS += -L./
 
 ver:
