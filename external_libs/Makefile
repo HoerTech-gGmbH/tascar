@@ -23,3 +23,6 @@ $(BUILD_DIR)/googlemock.is_installed: googletest/WORKSPACE \
 googletest/WORKSPACE:
 	git clone https://github.com/google/googletest
 	(cd googletest && git checkout 31eb5e9b873af4b509be2f77616113007fa0de9d)
+
+libmysofa:
+	cd libmysofa-1.3.2/build && cmake .. && $(MAKE)

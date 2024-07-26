@@ -48,6 +48,11 @@ test: apps plugins
 testjack: apps plugins
 	$(MAKE) -j 1 -C test jack
 
+libmysofa:
+	$(MAKE) -C external_libs libmysofa
+
+libtascar: libmysofa
+
 googletest:
 	$(MAKE) -C external_libs googlemock
 
