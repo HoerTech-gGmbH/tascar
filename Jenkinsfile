@@ -22,6 +22,7 @@ def tascar_build_steps(stage_name) {
         archiveArtifacts 'packaging/deb/tascar/**'
     } else {
         // Compile subset of TASCAR on Windows
+        sh "pacman -Ss libmysofa"
         sh "make -j 4 libtascar googletest"
         sh "make -j 4 -C libtascar unit-tests"
         sh "make -C apps build/tascar_cli build/tascar_renderir build/tascar_getcalibfor build/tascar_jackio build/tascar_jackpar build/tascar_version"
