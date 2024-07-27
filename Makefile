@@ -1,7 +1,7 @@
 PREFIX=/usr/local
 LIBDIR=$(PREFIX)/lib
 BINDIR=$(PREFIX)/bin
-INCDIR=$(PREFIX)/include
+INCDIR=$(PREFIX)/include/tascar
 DESTDIR=
 
 MODULES = libtascar apps plugins gui
@@ -110,3 +110,6 @@ cleancov:
 	find . -name "*.gcda" -exec rm -f \{\} \;
 	rm -Rf coverage
 	rm -f coverage.info
+
+homebrew:
+	$(MAKE) -C packaging/homebrew install
