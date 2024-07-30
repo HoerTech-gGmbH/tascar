@@ -66,7 +66,8 @@ pacman -S --needed mingw64/mingw-w64-x86_64-gtksourceviewmm3 \
           mingw64/mingw-w64-x86_64-gsl mingw64/mingw-w64-x86_64-libxml++2.6 \
           mingw64/mingw-w64-x86_64-fftw mingw64/mingw-w64-x86_64-pkgconf \
           mingw64/mingw-w64-x86_64-xerces-c mingw64/mingw-w64-x86_64-dlfcn \
-          mingw64/mingw-w64-x86_64-libsamplerate 
+          mingw64/mingw-w64-x86_64-libsamplerate \
+          mingw64/mingw-w64-x86_64-libmysofa
 echo  >/MinGW64/lib/pkgconfig/jack.pc 'prefix=/mingw64'
 echo >>/MinGW64/lib/pkgconfig/jack.pc 'exec_prefix=${prefix}'
 echo >>/MinGW64/lib/pkgconfig/jack.pc 'libdir=${exec_prefix}/lib'
