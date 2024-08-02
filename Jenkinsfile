@@ -141,7 +141,7 @@ pipeline {
                 unstash "x86_64_noble"
                 unstash "x86_64_jammy"
                 unstash "x86_64_focal"
-                unstash "x86_64_bionic"
+                //unstash "x86_64_bionic"
                 //unstash "armv7_bullseye"
                 //unstash "aarch64_bullseye"
                 //unstash "armv7_bionic"
