@@ -103,17 +103,17 @@ pipeline {
                     }
                     steps {tascar_build_steps("focal && x86_64 && tascardev")}
                 }
-                stage(                        "bionic && x86_64 && tascardev") {
-                    agent {
-                        docker {
-                            image "hoertech/docker-buildenv:tascar_x86_64-linux-gcc-7"
-                            label "docker_x86_64"
-                            alwaysPull true
-                            args "-v /home/u:/home/u --hostname docker"
-                        }
-                    }
-                    steps {tascar_build_steps("bionic && x86_64 && tascardev")}
-                }
+                //stage(                        "bionic && x86_64 && tascardev") {
+                //    agent {
+                //        docker {
+                //            image "hoertech/docker-buildenv:tascar_x86_64-linux-gcc-7"
+                //            label "docker_x86_64"
+                //            alwaysPull true
+                //            args "-v /home/u:/home/u --hostname docker"
+                //        }
+                //    }
+                //    steps {tascar_build_steps("bionic && x86_64 && tascardev")}
+                //}
                 //stage(                        "bullseye && armv7 && tascardev") {
                 //    agent {label              "bullseye && armv7 && tascardev"}
                 //    steps {tascar_build_steps("bullseye && armv7 && tascardev")}
