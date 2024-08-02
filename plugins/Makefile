@@ -62,8 +62,13 @@ CXXFLAGS += -DHAS_LSL
 TASCARMODS += lsljacktime lslactor levels2osc pos2lsl
 AUDIOPLUGINS += speechactivity periodogram
 TASCARMODSGUI += glabsensors waitforlslstream lsl2osc
-GLABSENSORS += smiley eog emergency espheadtracker midicc	\
-  qualisys jackstatus serial oscthreshold
+GLABSENSORS += smiley eog emergency espheadtracker	\
+  qualisys jackstatus
+
+ifeq ($(UNAME_S),Linux)
+GLABSENSORS += midicc serial oscthreshold
+endif
+
 endif
 
 ifeq "$(HAS_OPENMHA)" "yes"
@@ -184,7 +189,7 @@ build/$(PLUGINPREFIX)tascar_ap_%$(DLLEXT): src/tascar_ap_%.cc
 build/$(PLUGINPREFIX)tascar_mask_%$(DLLEXT): src/tascar_mask_%.cc
 	$(CXX) -shared -o $@ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
-build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): src/glabsensor_%.cc build/glabsensorplugin.o src/glabsensorplugin.h
+build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): src/glabsensor_%.cc build/glabsensorplugin.o
 	$(CXX) -shared -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 build/%_glade.h: src/%.glade
