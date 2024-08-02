@@ -22,8 +22,6 @@
 #include "audioplugin.h"
 #include "filterclass.h"
 
-const std::complex<double> i(0.0, 1.0);
-
 class allpass_t : public TASCAR::audioplugin_base_t {
 public:
   allpass_t(const TASCAR::audioplugin_cfg_t& cfg);

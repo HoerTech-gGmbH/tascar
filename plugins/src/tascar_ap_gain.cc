@@ -33,8 +33,6 @@ public:
 
 private:
   float gain = 1.0f;
-  // target gain:
-  float next_gain = 1.0f;
   // fade timer, is > 0 during fade:
   int32_t fade_timer = 0;
   // time constant for fade:

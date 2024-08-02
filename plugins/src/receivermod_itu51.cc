@@ -240,13 +240,11 @@ void rec_itu51_t::add_pointsource(const TASCAR::pos_t& prel, double,
 
   for(unsigned int k = 0; k < N; k++)
     d->dwp[k] = -d->wp[k] * t_inc;
-  uint32_t k = 0;
   for(auto it = simplices.begin(); it != simplices.end(); ++it) {
     if(it->get_gain(psrc_normal)) {
       d->dwp[it->c1] = (it->g1 - d->wp[it->c1]) * t_inc;
       d->dwp[it->c2] = (it->g2 - d->wp[it->c2]) * t_inc;
     }
-    ++k;
   }
   // i is time (in samples):
   for(unsigned int i = 0; i < chunk.size(); i++) {

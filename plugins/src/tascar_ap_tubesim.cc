@@ -22,8 +22,6 @@
 #include "audioplugin.h"
 #include <complex>
 
-const std::complex<double> i(0.0, 1.0);
-
 class tubesim_t : public TASCAR::audioplugin_base_t {
 public:
   tubesim_t(const TASCAR::audioplugin_cfg_t& cfg);

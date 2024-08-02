@@ -33,7 +33,6 @@ int TASCAR::nelmin(std::vector<float>& xmin,
 {
   auto n = start.size();
   size_t icount = 0u;
-  size_t numres = 0u;
 
   float ccoeff = 0.5f;
   float ecoeff = 2.0f;
@@ -330,7 +329,6 @@ int TASCAR::nelmin(std::vector<float>& xmin,
       start[i] = xmin[i];
 
     del = eps;
-    ++numres;
   }
   return 0;
 }

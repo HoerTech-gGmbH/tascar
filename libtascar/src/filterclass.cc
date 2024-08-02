@@ -697,10 +697,6 @@ std::vector<float> TASCAR::multiband_pareq_t::optim_response(
       f_gmin = f;
     }
   }
-  float glogmean = 0.0f;
-  for(auto glog : vG)
-    glogmean += glog;
-  glogmean /= (float)vG.size();
   std::vector<float> par;
   std::vector<float> step(3 * flt.size() + 1, 0.1f);
   par.resize(3 * flt.size() + 1);

@@ -72,7 +72,6 @@ Florian Denk and Birger Kollmeier. The hearpiece database of
 #include "receivermod.h"
 #include <random>
 
-const std::complex<double> i(0.0, 1.0);
 const std::complex<float> i_f(0.0f, 1.0f);
 
 class hrtf_param_t : public TASCAR::xml_element_t {

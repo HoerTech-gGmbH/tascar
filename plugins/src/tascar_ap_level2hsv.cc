@@ -66,7 +66,6 @@ private:
   std::condition_variable cond;
   std::atomic_bool has_data = false;
   TASCAR::levelmeter_t* lmeter = NULL;
-  double currenttime = 0;
   float* p_value = NULL;
   float* p_sat = NULL;
   float* p_hue = NULL;

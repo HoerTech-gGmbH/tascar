@@ -148,7 +148,6 @@ namespace TASCAR {
   private:
     uint32_t fragsize;
     uint32_t partitions;
-    uint32_t delay = 0u;
     TASCAR::wave_t inbuffer_;
     TASCAR::static_delay_t* delaybuffer_ = NULL;
     std::vector<TASCAR::overlap_save_t*> partition;

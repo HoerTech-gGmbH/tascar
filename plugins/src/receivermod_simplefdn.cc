@@ -27,9 +27,6 @@
 #include "optim.h"
 #include <limits>
 
-const std::complex<double> i_d(0.0, 1.0);
-const std::complex<float> i_f(0.0f, 1.0f);
-
 class simplefdn_vars_t : public TASCAR::receivermod_base_t {
 public:
   simplefdn_vars_t(tsccfg::node_t xmlsrc);

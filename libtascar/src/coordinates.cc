@@ -500,7 +500,6 @@ bool operator==(const TASCAR::quickhull_t& h1, const TASCAR::quickhull_t& h2)
   if(h1.faces.size() != h2.faces.size())
     return false;
   // see if all faces are also available in other mesh:
-  uint32_t k = 0;
   for(auto it = h1.faces.begin(); it != h1.faces.end(); ++it) {
     bool found(false);
     for(auto it2 = h2.faces.begin(); it2 != h2.faces.end(); ++it2)
@@ -509,7 +508,6 @@ bool operator==(const TASCAR::quickhull_t& h1, const TASCAR::quickhull_t& h2)
     if(!found) {
       return false;
     }
-    ++k;
   }
   return true;
 }
