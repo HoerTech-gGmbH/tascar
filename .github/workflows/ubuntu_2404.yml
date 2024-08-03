@@ -2,9 +2,12 @@ name: Ubuntu 24.04 make
 
 on:
   push:
-    branches: [ master, development, feature/msys2 ]
+    branches: [ master, development ]
   pull_request:
     branches: [ master ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -33,3 +36,20 @@ jobs:
       with:
         name: tascar-manual
         path: manual/manual.pdf
+
+    - name: Checkout Wiki
+      uses: actions/checkout@v4
+      with:
+        repository: ${{github.repository}}.wiki
+        path: ${{github.repository}}.wiki
+
+    - name: Push manual to wiki
+        run: |
+          set -e
+          cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
+          mkdir -p ${{github.ref}}
+          cp manual/manual.pdf ${{github.ref}}/
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add  ${{github.ref}}
+          git diff-index --quiet HEAD || git commit -m "action: wiki sync" && git push
