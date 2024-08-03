@@ -28,11 +28,13 @@ jobs:
       run: make -j 4
     - name: packaging
       run: make pack
-    - uses: actions/upload-artifact@v4
+    - name: Upload debian packages to artifacts
+      uses: actions/upload-artifact@v4
       with:
         name: tascar-debian
         path: packaging/deb/tascar/*/*.deb
-    - uses: actions/upload-artifact@v4
+    - name: Upload manual to artifacts
+      uses: actions/upload-artifact@v4
       with:
         name: tascar-manual
         path: manual/manual.pdf
@@ -47,9 +49,9 @@ jobs:
       run: |
         set -e
         cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
-        mkdir -p ${{github.ref}}
-        cp manual/manual.pdf ${{github.ref}}/
+        mkdir -p ${{github.ref_name}}
+        cp ../manual/manual.pdf ${{github.ref_name}}/
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add  ${{github.ref}}
+        git add ${{github.ref_name}}
         git diff-index --quiet HEAD || git commit -m "action: wiki sync" && git push
