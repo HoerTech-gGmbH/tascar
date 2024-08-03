@@ -15,7 +15,6 @@ build:
 	rm -rf homebrew-build-dir
 	mkdir homebrew-build-dir
 	$(MAKE) -C "$(REPO)" "DESTDIR=$$(realpath homebrew-build-dir)" install
-	rm -f "homebrew-build-dir/$(PREFIX)/bin/thismha.sh"
 	chmod 755 "homebrew-build-dir/$(PREFIX)/bin/"*
 	chmod 755 "homebrew-build-dir/$(PREFIX)/lib/"*
 
@@ -32,7 +31,8 @@ examples: build
 	mkdir -p "$(DESTDIR)$(PREFIX)/share/tascar/examples/sounds"
 	mkdir -p "$(DESTDIR)$(PREFIX)/share/tascar/examples/decoder"
 	cp -r "$(REPO)/manual/examples/"example_*.tsc "$(DESTDIR)$(PREFIX)/share/tascar/examples"
-	cp -r "$(REPO)/manual/examples/"*.wav* "$(DESTDIR)$(PREFIX)/share/tascar/examples/sounds"
+	cp -r "$(REPO)/manual/examples/"*.wav* "$(DESTDIR)$(PREFIX)/share/tascar/examples"
+	cp -r "$(REPO)/manual/examples/sounds/"*.wav* "$(DESTDIR)$(PREFIX)/share/tascar/examples/sounds"
 
 matlab: build
 	mkdir -p "$(DESTDIR)$(PREFIX)/share/tascar/matlab"

@@ -29,8 +29,9 @@
 #include <fnmatch.h>
 #endif
 #include "tscconfig.h"
-#include <unistd.h>
+#include <dlfcn.h>
 #include <signal.h>
+#include <unistd.h>
 
 namespace TASCAR {
   const char* strptime(const char* s, const char* f, struct tm* tm)
@@ -162,7 +163,7 @@ namespace TASCAR {
       pidmap[pid] = process_info;
       DEBUG(pid);
       DEBUG(process_info.dwProcessId);
-    }else{
+    } else {
       DEBUG("Pailed to start process");
       DEBUG(command);
     }
@@ -202,6 +203,20 @@ namespace TASCAR {
     }
   }
 #endif
+
+  void* dlopen(const char* filename, int flags)
+  {
+    auto lib = ::dlopen(filename, flags);
+    if(!lib) {
+      auto homebrewprefix = localgetenv("HOMEBREW_PREFIX");
+      if(homebrewprefix.size()) {
+        homebrewprefix += "/lib/";
+        homebrewprefix += filename;
+        lib = ::dlopen(homebrewprefix.c_str(), flags);
+      }
+    }
+    return lib;
+  }
 
 } // namespace TASCAR
 

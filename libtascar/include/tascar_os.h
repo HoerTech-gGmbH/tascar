@@ -82,6 +82,11 @@ namespace TASCAR {
   void wait_for_process(pid_t pid);
 #endif
 
+  /// @brief Open a dynamic library, but check also for
+  /// ${HOMEBREW_PREFIX}/lib before failing completely.
+  /// See manpage of dlopen for details.
+  void* dlopen(const char* filename, int flags);
+
 } // namespace TASCAR
 
 #endif
