@@ -44,12 +44,12 @@ jobs:
         path: ${{github.repository}}.wiki
 
     - name: Push manual to wiki
-        run: |
-          set -e
-          cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
-          mkdir -p ${{github.ref}}
-          cp manual/manual.pdf ${{github.ref}}/
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add  ${{github.ref}}
-          git diff-index --quiet HEAD || git commit -m "action: wiki sync" && git push
+      run: |
+        set -e
+        cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
+        mkdir -p ${{github.ref}}
+        cp manual/manual.pdf ${{github.ref}}/
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add  ${{github.ref}}
+        git diff-index --quiet HEAD || git commit -m "action: wiki sync" && git push
