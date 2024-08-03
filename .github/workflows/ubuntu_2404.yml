@@ -51,7 +51,6 @@ jobs:
         cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
         mkdir -p ${{github.ref_name}}
         ls $GITHUB_WORKSPACE/
-        ls $GITHUB_WORKSPACE/${{github.repository}}
         cp $GITHUB_WORKSPACE/manual/manual.pdf ${{github.ref_name}}/
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
