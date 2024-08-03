@@ -50,7 +50,7 @@ jobs:
         set -e
         cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
         mkdir -p ${{github.ref_name}}
-        cp ../manual/manual.pdf ${{github.ref_name}}/
+        cp ../${{github.repository}}/manual/manual.pdf ${{github.ref_name}}/
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add ${{github.ref_name}}
