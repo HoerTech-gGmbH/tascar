@@ -22,17 +22,7 @@
 
 #include "coordinates.h"
 
-//#define USEPUGIXML
 #define USEXERCESXML
-
-#ifdef USEPUGIXML
-
-#include <pugixml.hpp>
-
-namespace tsccfg {
-  typedef pugi::xml_node node_t;
-}
-#elif defined(USEXERCESXML)
 
 #include <xercesc/util/PlatformUtils.hpp>
 
@@ -53,44 +43,131 @@ namespace tsccfg {
   typedef xercesc::DOMElement* node_t;
 }
 
-#else // not using pigixml
-
-#include <libxml++/libxml++.h>
-
-namespace tsccfg {
-  typedef xmlpp::Element* node_t;
-}
-
-#endif // xml library
-
 namespace tsccfg {
 
-  std::vector<tsccfg::node_t> node_get_children(tsccfg::node_t&,
+  /**
+   * @brief Retrieve children of the node.
+   * @param n Node to get the children from.
+   * @param name Name to filter the children. Default is empty.
+   * @return Vector of node children.
+   */
+  std::vector<tsccfg::node_t> node_get_children(tsccfg::node_t& n,
                                                 const std::string& name = "");
+
+  /**
+   * @brief Retrieve children of the node (const version).
+   * @param n Node to get the children from.
+   * @param name Name to filter the children. Default is empty.
+   * @return Vector of constant node children.
+   */
   const std::vector<tsccfg::node_t>
-  node_get_children(const tsccfg::node_t&, const std::string& name = "");
-  tsccfg::node_t node_add_child(tsccfg::node_t&, const std::string&);
+  node_get_children(const tsccfg::node_t& n, const std::string& name = "");
+
+  /**
+   * @brief Add child node.
+   * @param parent Parent node to which the child is added.
+   * @param name Name of the new child node.
+   * @return Newest node child added.
+   */
+  tsccfg::node_t node_add_child(tsccfg::node_t& parent,
+                                const std::string& name);
+
+  /**
+   * @brief Remove child from the parent node.
+   * @param parent Parent node from which the child is removed.
+   * @param child Child node to be removed.
+   */
   void node_remove_child(tsccfg::node_t& parent, tsccfg::node_t child);
 
-  std::string node_get_attribute_value(const tsccfg::node_t&,
+  /**
+   * @brief Retrieve attribute value from the node.
+   * @param e Node to get the attribute value from.
+   * @param n Name of the attribute.
+   * @return String of attribute value.
+   */
+  std::string node_get_attribute_value(const tsccfg::node_t& e,
                                        const std::string& n);
-  std::string node_get_name(const tsccfg::node_t&);
-  void node_set_name(const tsccfg::node_t&, const std::string&);
-  std::string node_get_path(const tsccfg::node_t&);
-  void node_set_attribute(tsccfg::node_t&, const std::string& n,
+
+  /**
+   * @brief Retrieve name of the node.
+   * @param e Node to get the name from.
+   * @return Name of the node as string.
+   */
+  std::string node_get_name(const tsccfg::node_t& e);
+
+  /**
+   * @brief Set name of the node.
+   * @param e Node to set the name on.
+   * @param name New name of the node.
+   */
+  void node_set_name(const tsccfg::node_t& e, const std::string& name);
+
+  /**
+   * @brief Retrieve path of the node.
+   * @param e Node to get the path from.
+   * @return String of node path.
+   */
+  std::string node_get_path(const tsccfg::node_t& e);
+
+  /**
+   * @brief Set attribute of the node.
+   * @param e Node to set the attribute on.
+   * @param n Name of the attribute.
+   * @param v Value of the attribute.
+   */
+  void node_set_attribute(tsccfg::node_t& e, const std::string& n,
                           const std::string& v);
+
+  /**
+   * @brief Check if node has the specified attribute.
+   * @param e Node to check the attribute from.
+   * @param name Name of the attribute.
+   * @return Boolean indicating if attribute exists.
+   */
   bool node_has_attribute(const tsccfg::node_t& e, const std::string& name);
+
+  /**
+   * @brief Get and register attribute.
+   * @param e Node to get the attribute and register.
+   * @param name Name of the attribute.
+   * @param value Value of the attribute.
+   * @param info Additional attribute registration information.
+   */
   void node_get_and_register_attribute(tsccfg::node_t& e,
                                        const std::string& name,
                                        std::string& value,
                                        const std::string& info);
+
+  /**
+   * @brief Retrieve text from the node.
+   * @param n Node to get the text from.
+   * @param child Optional child name filter (default is empty).
+   * @return Node or node child text as string.
+   */
   std::string node_get_text(tsccfg::node_t& n, const std::string& child = "");
+
+  /**
+   * @brief Set text of the node.
+   * @param n Node to set the text on.
+   * @param text Text to be set to the node.
+   */
   void node_set_text(tsccfg::node_t& n, const std::string& text);
+
+  /**
+   * @brief Import node.
+   * @param node Node where the source is imported.
+   * @param src Source node to be imported.
+   */
   void node_import_node(tsccfg::node_t& node, const tsccfg::node_t& src);
+
+  /**
+   * @brief Import node before another node.
+   * @param node Node where the source is imported.
+   * @param src Source node to be imported.
+   * @param before Node where the source node is placed before.
+   */
   void node_import_node_before(tsccfg::node_t& node, const tsccfg::node_t& src,
                                const tsccfg::node_t& before);
-
-  // double node_xpath_to_number(tsccfg::node_t&,const std::string& path);
 
 } // namespace tsccfg
 
@@ -318,20 +395,11 @@ namespace TASCAR {
     virtual void save(const std::string& filename);
     std::string save_to_string();
     TASCAR::xml_element_t root;
-#ifdef USEPUGIXML
-    pugi::xml_document doc;
-#elif defined(USEXERCESXML)
     xercesc::XercesDOMParser domp;
     xercesc::DOMDocument* doc;
-#else
-    xmlpp::DomParser domp;
-    xmlpp::Document* doc;
 
-    bool freedoc;
-#endif
   private:
     tsccfg::node_t get_root_node();
-#ifdef USEXERCESXML
     class tscerrorhandler_t : public xercesc::ErrorHandler {
     public:
       tscerrorhandler_t(){};
@@ -342,7 +410,6 @@ namespace TASCAR {
       virtual void resetErrors(){};
     };
     tscerrorhandler_t errh;
-#endif
   };
 
   void generate_plugin_documentation_tables(bool latex);
