@@ -26,6 +26,9 @@
 #include "tascar.res.c"
 #include <fstream>
 
+#undef WEBKIT2GTK30
+#undef WEBKIT2GTK40
+
 #define GET_WIDGET(x)                                                          \
   m_refBuilder->get_widget(#x, x);                                             \
   if(!x)                                                                       \
@@ -249,6 +252,8 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   bool load_news(TASCAR::config("tascar.gui.newspage", true));
   if(load_news)
     webkit_web_view_load_uri(news_view, url.c_str());
+#else
+  notebook->remove_page(-1);
 #endif
   notebook->show_all();
   auto css = Gtk::CssProvider::create();
@@ -513,6 +518,8 @@ void tascar_window_t::load(const std::string& fname)
 {
   get_warnings().clear();
   numlastwarnings = 0;
+  while(Gtk::Main::events_pending())
+    Gtk::Main::iteration(false);
   scene_load(fname);
   tascar_filename = fname;
   sessionquit = false;
@@ -723,7 +730,7 @@ void tascar_window_t::reset_gui()
               Glib::filename_display_basename(tascar_filename) + "]");
   } else {
     set_title("tascar");
-    resize(200, 60);
+    //resize(200, 60);
   }
   update_object_list();
   if(session && (session->scenes.size() > selected_scene)) {
@@ -750,8 +757,11 @@ void tascar_window_t::reset_gui()
                              TASCAR::env_expand(session->starturl).c_str());
     notebook->set_current_page(6);
   }
-  webkit_web_view_reload_bypass_cache(news_view);
+  if(session)
+    webkit_web_view_reload_bypass_cache(news_view);
 #endif
+  while(Gtk::Main::events_pending())
+    Gtk::Main::iteration(false);
 }
 
 void tascar_window_t::on_menu_file_quit()
@@ -763,6 +773,7 @@ void tascar_window_t::on_menu_file_close()
 {
   try {
     scene_destroy();
+    resize(200, 60);
     // get_warnings().clear();
 #if defined(WEBKIT2GTK30) || defined(WEBKIT2GTK40)
     webkit_web_view_try_close(news_view);
@@ -1013,6 +1024,8 @@ void tascar_window_t::on_menu_file_reload()
     scene_destroy();
     reset_gui();
     // wait?
+    while(Gtk::Main::events_pending())
+      Gtk::Main::iteration(false);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     scene_load(tascar_filename);
     sessionquit = false;
@@ -1087,6 +1100,8 @@ void tascar_window_t::on_menu_file_open()
     try {
       get_warnings().clear();
       numlastwarnings = 0;
+      while(Gtk::Main::events_pending())
+        Gtk::Main::iteration(false);
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;
@@ -1133,6 +1148,8 @@ void tascar_window_t::on_menu_file_open_example()
     try {
       get_warnings().clear();
       numlastwarnings = 0;
+      while(Gtk::Main::events_pending())
+        Gtk::Main::iteration(false);
       scene_load(filename);
       tascar_filename = filename;
       sessionquit = false;

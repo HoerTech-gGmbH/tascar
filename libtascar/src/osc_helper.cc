@@ -65,7 +65,14 @@ TASCAR::osc_server_t::data_element_t::data_element_t(const std::string& p,
 void err_handler(int num, const char* msg, const char* where)
 {
   liblo_errflag = true;
-  std::cout << "liblo error " << num << ": " << msg << "\n(" << where << ")\n";
+  std::string smsg;
+  if(msg)
+    smsg = msg;
+  std::string swhere = "null";
+  if(where)
+    swhere = where;
+  std::cout << "liblo error " << num << ": " << smsg << "\n(" << swhere
+            << ")\n";
 }
 
 int osc_set_bool_true(const char*, const char*, lo_arg**, int, lo_message,
@@ -603,9 +610,10 @@ osc_server_t::osc_server_t(const std::string& multicast,
             port.c_str(), string2proto(proto), err_handler);
       initialized = true;
     }
-    if((!lost) || liblo_errflag)
+    if((!lost) || liblo_errflag) {
       throw ErrMsg("liblo error (srv_addr: \"" + multicast + "\" srv_port: \"" +
                    port + "\" " + proto + ").");
+    }
   }
   if(lost) {
     char* ctmp(lo_server_thread_get_url(lost));
@@ -655,10 +663,12 @@ osc_server_t::~osc_server_t()
   cond_var_script.notify_one();
   if(scriptthread.joinable())
     scriptthread.join();
-  if(isactive)
+  if(isactive) {
     deactivate();
-  if(initialized)
+  }
+  if(initialized) {
     lo_server_thread_free(lost);
+  }
 }
 
 void osc_server_t::set_prefix(const std::string& prefix_)
@@ -883,8 +893,11 @@ void osc_server_t::add_string(const std::string& path, std::string* data,
 void osc_server_t::activate()
 {
   if(initialized) {
-    lo_server_thread_start(lost);
-    isactive = true;
+    int result = lo_server_thread_start(lost);
+    if(result < 0)
+      std::cerr << "lo_server_thread_start failed\n";
+    else
+      isactive = true;
     if(verbose)
       std::cerr << "server active\n";
   }
@@ -894,7 +907,9 @@ void osc_server_t::deactivate()
 {
   if(initialized) {
     isactive = false;
-    lo_server_thread_stop(lost);
+    int result = lo_server_thread_stop(lost);
+    if(result < 0)
+      std::cerr << "lo_server_thread_stop failed\n";
     if(verbose)
       std::cerr << "server inactive\n";
   }
