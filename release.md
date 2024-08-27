@@ -20,4 +20,8 @@ On branch development:
 
 - switch back to development branch
 
-- create release on github
+- create release on github, both repos
+
+- create a brew release
+
+- update release on zenodo
