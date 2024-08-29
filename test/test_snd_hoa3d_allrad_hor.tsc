@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <session license="CC0">
   <scene guiscale="4">
-    <receiver type="hoa3d" order="5" method="allrad" dectype="basic" delaycomp="1" layout="lidhan_3d.spk" allowallrad="true"/>
+    <receiver type="hoa3d" order="5" method="allrad" dectype="basic" delaycomp="1" layout="lidhan_3d.spk"/>
     <source>
       <orientation>0 0 0 0
       1 360 0 0</orientation>

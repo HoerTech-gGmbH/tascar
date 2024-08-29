@@ -53,7 +53,6 @@ public:
   HOA::decoder_t decode;
   std::vector<TASCAR::wave_t> amb_sig;
   double decwarnthreshold;
-  bool allowallrad = false;
 };
 
 void hoa3d_dec_t::configure()
@@ -75,8 +74,6 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
     : TASCAR::receivermod_base_speaker_t(xmlsrc), order(3), method("pinv"),
       dectype("maxre"), savedec(false), decwarnthreshold(8.0)
 {
-  GET_ATTRIBUTE_BOOL(allowallrad, "All to use AllRAD decoder despite current "
-                                  "inconsistency across OS and compiler");
   GET_ATTRIBUTE(order, "", "Ambisonics order");
   GET_ATTRIBUTE(method, "",
                 "Decoder generation method, ``pinv'' or ``allrad''");
@@ -88,12 +85,6 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
                 "Warning threshold for decoder matrix abs/rms ratio");
   if(order < 0)
     throw TASCAR::ErrMsg("Negative order is not possible.");
-  if(!allowallrad && (method == "allrad"))
-    throw TASCAR::ErrMsg(
-        "The AllRAD method creates inconsistent results on different operating "
-        "systems and is therefore "
-        "currently not recommended to use. If you really want to use it, set "
-        "\"allowallrad\" to \"true\".");
   encode.set_order(order);
   channels = (order + 1) * (order + 1);
   if(method == "pinv")
