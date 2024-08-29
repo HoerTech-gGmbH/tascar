@@ -518,6 +518,8 @@ void tascar_window_t::load(const std::string& fname)
 {
   get_warnings().clear();
   numlastwarnings = 0;
+  statusbar_main->remove_all_messages();
+  statusbar_main->push("loading session...");
   while(Gtk::Main::events_pending())
     Gtk::Main::iteration(false);
   scene_load(fname);
@@ -1024,6 +1026,8 @@ void tascar_window_t::on_menu_file_reload()
     scene_destroy();
     reset_gui();
     // wait?
+    statusbar_main->remove_all_messages();
+    statusbar_main->push("loading session...");
     while(Gtk::Main::events_pending())
       Gtk::Main::iteration(false);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -1100,6 +1104,8 @@ void tascar_window_t::on_menu_file_open()
     try {
       get_warnings().clear();
       numlastwarnings = 0;
+      statusbar_main->remove_all_messages();
+      statusbar_main->push("loading session...");
       while(Gtk::Main::events_pending())
         Gtk::Main::iteration(false);
       scene_load(filename);
@@ -1148,6 +1154,8 @@ void tascar_window_t::on_menu_file_open_example()
     try {
       get_warnings().clear();
       numlastwarnings = 0;
+      statusbar_main->remove_all_messages();
+      statusbar_main->push("loading session...");
       while(Gtk::Main::events_pending())
         Gtk::Main::iteration(false);
       scene_load(filename);
