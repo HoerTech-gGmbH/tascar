@@ -137,8 +137,6 @@ float decoder_t::rms() const
 void decoder_t::create_allrad(uint32_t order,
                               const std::vector<TASCAR::pos_t>& spkpos)
 {
-  DEBUG(order);
-  DEBUG(spkpos.size());
   if(dec)
     delete[] dec;
   M = order;
@@ -149,17 +147,14 @@ void decoder_t::create_allrad(uint32_t order,
   dec = new float[amb_channels * out_channels];
   memset(dec, 0, sizeof(float) * amb_channels * out_channels);
   std::vector<TASCAR::pos_t> virtual_spkpos(TASCAR::generate_icosahedron());
-  DEBUG(virtual_spkpos.size());
   while(virtual_spkpos.size() < 3 * amb_channels)
     virtual_spkpos = subdivide_and_normalize_mesh(virtual_spkpos, 1);
-  DEBUG(virtual_spkpos.size());
   // Computation of an ambisonics decoder matrix Hdecoder_virtual for
   // the virtual array of loudspeakers
   HOA::decoder_t Hdecoder_virtual;
   Hdecoder_virtual.create_pinv(M, virtual_spkpos);
   // computation of VBAP gains for each virtual speaker
   TASCAR::vbap3d_t vbap(spkpos);
-  DEBUG(vbap.simplices.size());
   for(size_t k = 0; k < vbap.simplices.size(); ++k) {
     std::cerr << "  simplex " << k << ": " << vbap.simplices[k].c1 << " "
               << vbap.simplices[k].c2 << " " << vbap.simplices[k].c3
@@ -188,9 +183,7 @@ void decoder_t::create_allrad(uint32_t order,
     tg += g;
     ++tn;
   }
-  DEBUG(tn);
   tg /= (float)tn;
-  DEBUG(tg);
   tg = 1.0f / tg;
   float decsum = 0.0f;
   float decsum2 = 0.0f;
@@ -202,8 +195,6 @@ void decoder_t::create_allrad(uint32_t order,
   decsum /= (float)(amb_channels * out_channels);
   decsum2 /= (float)(amb_channels * out_channels);
   decsum2 = sqrtf(decsum2);
-  DEBUG(decsum);
-  DEBUG(decsum2);
   method = allrad;
 }
 
