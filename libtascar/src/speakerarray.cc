@@ -82,16 +82,40 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
       xyzgain(1.0), elementname(elementname_), mean_rotation(0)
 {
   clear();
-  uint32_t addring = 0u;
-  elayout.GET_ATTRIBUTE(addring, "", "Add this number of speakers on a ring");
-  if(addring > 0) {
-    auto speaker = tsccfg::node_get_children(elayout.e);
-    if(speaker.empty())
-      for(uint32_t ch = 0; ch < addring; ++ch) {
-        tsccfg::node_t espk = tsccfg::node_add_child(elayout.e, elementname);
-        tsccfg::node_set_attribute(
-            espk, "az", TASCAR::to_string((float)ch * 360.0f / (float)addring));
+  {
+    uint32_t addring = 0u;
+    elayout.GET_ATTRIBUTE(
+        addring, "", "Create a circular layout with this number of speakers");
+    if(addring > 0) {
+      auto speaker = tsccfg::node_get_children(elayout.e);
+      if(speaker.empty())
+        for(uint32_t ch = 0; ch < addring; ++ch) {
+          tsccfg::node_t espk = tsccfg::node_add_child(elayout.e, elementname);
+          tsccfg::node_set_attribute(
+              espk, "az",
+              TASCAR::to_string((float)ch * 360.0f / (float)addring));
+        }
+    }
+  }
+  {
+    uint32_t addsphere = 0u;
+    elayout.GET_ATTRIBUTE(addsphere, "",
+                          "Create a spherical layout with at least this number "
+                          "of speakers by barycentric subdivision");
+    if(addsphere > 0) {
+      auto speaker = tsccfg::node_get_children(elayout.e);
+      if(speaker.empty()) {
+        auto sphere = TASCAR::generate_icosahedron();
+        while(sphere.size() < addsphere)
+          sphere = subdivide_and_normalize_mesh(sphere, 1);
+        for(const auto& spk : sphere) {
+
+          tsccfg::node_t espk = tsccfg::node_add_child(elayout.e, elementname);
+          tsccfg::node_set_attribute(espk, "az", TASCAR::to_string(spk.azim()));
+          tsccfg::node_set_attribute(espk, "el", TASCAR::to_string(spk.elev()));
+        }
       }
+    }
   }
   for(auto& sn : tsccfg::node_get_children(e_layout, elementname))
     emplace_back(sn);
