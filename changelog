@@ -1,3 +1,4 @@
+0.233.0: fix reload problems, brew release and minor improvements
 0.232.2: add unit-testing for convex hull algorithm, add new plugins and minor features
 0.232.1: add frequency weighting and time constant to level2osc plugin
 0.232.0:

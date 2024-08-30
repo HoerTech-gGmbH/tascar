@@ -8,8 +8,6 @@ On branch development:
 
 - increment version number in `config.mk`, edit `changelog`
 
-- edit doc/news/index.html
-
 - commit changes to git (do not push)
 
 - create release tag: `make releasetag`
@@ -25,3 +23,5 @@ On branch development:
 - create a brew release
 
 - update release on zenodo
+
+- edit news page of tascarwww repository
