@@ -22,12 +22,11 @@
 
 class ormod_t : public TASCAR::actor_module_t {
 public:
-  enum {
-    linear, sigmoid, cosine, free
-  };
-  ormod_t( const TASCAR::module_cfg_t& cfg );
+  enum { linear, sigmoid, cosine, free };
+  ormod_t(const TASCAR::module_cfg_t& cfg);
   virtual ~ormod_t();
-  void update(uint32_t tp_frame,bool running);
+  void update(uint32_t tp_frame, bool running);
+
 private:
   // RT configuration:
   uint32_t mode;
@@ -38,27 +37,29 @@ private:
   double phi1;
 };
 
-ormod_t::ormod_t( const TASCAR::module_cfg_t& cfg )
-  : actor_module_t( cfg,true),
-    mode(linear),
-    w(10.0),
-    t0(0.0),
-    t1(1.0),
-    phi0(-90.0),
-    phi1(90.0)
+ormod_t::ormod_t(const TASCAR::module_cfg_t& cfg)
+    : actor_module_t(cfg, true), mode(linear), w(10.0), t0(0.0), t1(1.0),
+      phi0(-90.0), phi1(90.0)
 {
-  actor_module_t::GET_ATTRIBUTE_(mode);
-  actor_module_t::GET_ATTRIBUTE_(w);
-  actor_module_t::GET_ATTRIBUTE_(t0);
-  actor_module_t::GET_ATTRIBUTE_(t1);
-  actor_module_t::GET_ATTRIBUTE_(phi0);
-  actor_module_t::GET_ATTRIBUTE_(phi1);
-  session->add_uint(TASCAR::vecstr2str(actor)+"/mode",&mode);
-  session->add_double(TASCAR::vecstr2str(actor)+"/w",&w);
-  session->add_double(TASCAR::vecstr2str(actor)+"/t0",&t0);
-  session->add_double(TASCAR::vecstr2str(actor)+"/t1",&t1);
-  session->add_double(TASCAR::vecstr2str(actor)+"/phi0",&phi0);
-  session->add_double(TASCAR::vecstr2str(actor)+"/phi1",&phi1);
+  actor_module_t::GET_ATTRIBUTE(mode, "0|1|2|3", "Operation mode");
+  actor_module_t::GET_ATTRIBUTE(w, "deg/s", "Angular velocity");
+  actor_module_t::GET_ATTRIBUTE(t0, "s", "Start time");
+  actor_module_t::GET_ATTRIBUTE(t1, "s", "End time (sigmoid/cosine movement)");
+  actor_module_t::GET_ATTRIBUTE(phi0, "deg",
+                                "Start angle (sigmoid/cosine movement)");
+  actor_module_t::GET_ATTRIBUTE(phi1, "deg",
+                                "End angle (sigmoid/cosine movement)");
+  session->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  session->add_uint(TASCAR::vecstr2str(actor) + "/mode", &mode, "",
+                    "Operation mode");
+  session->add_double(TASCAR::vecstr2str(actor) + "/w", &w, "",
+                      "Angular velocity in deg/s");
+  session->add_double(TASCAR::vecstr2str(actor) + "/t0", &t0);
+  session->add_double(TASCAR::vecstr2str(actor) + "/t1", &t1);
+  session->add_double(TASCAR::vecstr2str(actor) + "/phi0", &phi0);
+  session->add_double(TASCAR::vecstr2str(actor) + "/phi1", &phi1);
+  session->unset_variable_owner();
 }
 
 void ormod_t::update(uint32_t tp_frame, bool)
@@ -91,9 +92,7 @@ void ormod_t::update(uint32_t tp_frame, bool)
     add_orientation(r);
 }
 
-ormod_t::~ormod_t()
-{
-}
+ormod_t::~ormod_t() {}
 
 REGISTER_MODULE(ormod_t);
 
@@ -104,4 +103,3 @@ REGISTER_MODULE(ormod_t);
  * compile-command: "make -C .."
  * End:
  */
-

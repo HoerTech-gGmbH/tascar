@@ -295,9 +295,11 @@ namespace TASCAR {
     void get_attribute_db(const std::string& name, std::vector<float>& value,
                           const std::string& info);
     void get_attribute_deg(const std::string& name, double& value,
-                           const std::string& info);
+                           const std::string& info,
+                           const std::string& unit = "deg");
     void get_attribute_deg(const std::string& name, float& value,
-                           const std::string& info);
+                           const std::string& info,
+                           const std::string& unit = "deg");
     void get_attribute(const std::string& name, TASCAR::pos_t& value,
                        const std::string& unit, const std::string& info);
     void get_attribute(const std::string& name, TASCAR::zyx_euler_t& value,
@@ -523,6 +525,7 @@ void set_attribute_value(
 #define GET_ATTRIBUTE_DBSPL_(x) get_attribute_dbspl(#x, x, "undocumented")
 #define SET_ATTRIBUTE_DBSPL(x) set_attribute_dbspl(#x, x)
 #define GET_ATTRIBUTE_DEG(x, i) get_attribute_deg(#x, x, i)
+#define GET_ATTRIBUTE_DEGU(x, i, unit) get_attribute_deg(#x, x, i, unit)
 #define GET_ATTRIBUTE_DEG_(x) get_attribute_deg(#x, x, "undocumented")
 #define SET_ATTRIBUTE_DEG(x) set_attribute_deg(#x, x)
 #define GET_ATTRIBUTE_BOOL(x, i) get_attribute_bool(#x, x, "", i)

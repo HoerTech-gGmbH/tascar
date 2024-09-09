@@ -144,6 +144,8 @@
     <hossustain/>
     <pos2osc pattern="/*/*"/>
     <linearmovement actor="/scene/in"/>
+    <simplecontroller actor="/scene/in"/>
+    <rotator actor="/scene/in"/>
     <systime/>
     <timedisplay/>
     <lsl2osc/>

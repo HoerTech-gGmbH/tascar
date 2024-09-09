@@ -1,14 +1,40 @@
 This module creates a minimal graphical user interface for mouse and
 keyboard motion control of objects within a \tascar{} scene. The
 recognized attributes are:
-\begin{tscattributes}
-\indattr{maxnorm} & Maximum distance of object from origin, or zero
-for no limit.\\
-\indattr{vx} & Velocity in x direction (default: 2m/s)\\
-\indattr{vy} & Velocity in y direction (default: 1m/s)\\
-\indattr{vz} & Velocity in z direction (default: 1m/s)\\
-\indattr{vr} & Angular velocity (default: 45deg/s)\\
-\end{tscattributes}
+%\begin{tscattributes}
+%\indattr{maxnorm} & Maximum distance of object from origin, or zero
+%for no limit.\\
+%\indattr{vx} & Velocity in x direction (default: 2m/s)\\
+%\indattr{vy} & Velocity in y direction (default: 1m/s)\\
+%\indattr{vz} & Velocity in z direction (default: 1m/s)\\
+%\indattr{vr} & Angular velocity (default: 45deg/s)\\
+%\end{tscattributes}
+
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:simplecontroller}
+Attributes of element {\bf simplecontroller}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{actor} & pattern to match actor objects (string array) & \\
+\hline
+\indattr{maxnorm} & Maximum distance of object from origin, or zero for no limit. (double, m) & 0\\
+\hline
+\indattr{vr} & Angular velocity (double, deg/s) & 90\\
+\hline
+\indattr{vx} & Velocity in x direction (double, m/s) & 1\\
+\hline
+\indattr{vy} & Velocity in y direction (double, m/s) & 1\\
+\hline
+\indattr{vz} & Velocity in y direction (double, m/s) & 1\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
 
 Example:
 \begin{lstlisting}[numbers=none]

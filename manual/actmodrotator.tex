@@ -3,6 +3,36 @@ around the $z$-axis. Four modes are supported, {\em linear}
 (\attr{mode="0"}, default), {\em sigmoid} (\attr{mode="1"}), {\em
   cosine} (\attr{mode="2"}), and {\em free} (\attr{mode="3"}).
 
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:rotator}
+Attributes of element {\bf rotator}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{actor} & pattern to match actor objects (string array) & \\
+\hline
+\indattr{mode} & Operation mode (uint32, 0|1|2|3) & 0\\
+\hline
+\indattr{phi0} & Start angle (sigmoid/cosine movement) (double, deg) & -90\\
+\hline
+\indattr{phi1} & End angle (sigmoid/cosine movement) (double, deg) & 90\\
+\hline
+\indattr{t0} & Starting time (double, s) & 0\\
+\hline
+\indattr{t1} & End time (sigmoid/cosine movement) (double, s) & 1\\
+\hline
+\indattr{w} & Angular velocity (double, deg/s) & 10\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+
+\input{oscdoc_tascarmod_rotator.tex}
+
 Examples:
 
 \paragraph{Linear rotation}

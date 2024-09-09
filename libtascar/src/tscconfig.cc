@@ -1084,10 +1084,11 @@ void TASCAR::xml_element_t::get_attribute_db(const std::string& name,
 
 void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
                                               double& value,
-                                              const std::string& info)
+                                              const std::string& info,
+                                              const std::string& unit)
 {
   TASCAR_ASSERT(e);
-  node_register_attr(e, name, TASCAR::to_string(value * RAD2DEG), "deg", info,
+  node_register_attr(e, name, TASCAR::to_string(value * RAD2DEG), unit, info,
                      "double");
   if(has_attribute(name))
     get_attribute_value_deg(e, name, value);
@@ -1097,10 +1098,11 @@ void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
 
 void TASCAR::xml_element_t::get_attribute_deg(const std::string& name,
                                               float& value,
-                                              const std::string& info)
+                                              const std::string& info,
+                                              const std::string& unit)
 {
   TASCAR_ASSERT(e);
-  node_register_attr(e, name, TASCAR::to_string(value * RAD2DEGf), "deg", info,
+  node_register_attr(e, name, TASCAR::to_string(value * RAD2DEGf), unit, info,
                      "float");
   if(has_attribute(name))
     get_attribute_value_deg(e, name, value);
