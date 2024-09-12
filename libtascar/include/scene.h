@@ -194,6 +194,7 @@ namespace TASCAR {
       std::string importraw;
       bool ishole;
       float aperture;
+      uint32_t layers;
     };
 
     class src_object_t;

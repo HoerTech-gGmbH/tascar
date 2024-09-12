@@ -1133,6 +1133,7 @@ obstacle_group_t::obstacle_group_t(tsccfg::node_t xmlsrc)
   dynobject_t::GET_ATTRIBUTE(aperture, "m",
                              "Override aperture of airy disk calculation, zero "
                              "for calculation from area");
+  dynobject_t::GET_ATTRIBUTE_BITS(layers, "render layers");
   if(!importraw.empty()) {
     std::ifstream rawmesh(TASCAR::env_expand(importraw).c_str());
     if(!rawmesh.good())

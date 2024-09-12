@@ -333,6 +333,7 @@ namespace TASCAR {
       obstacle_t();
       bool active;
       float transmission;
+      uint32_t layers;
     };
 
     /**
@@ -353,6 +354,7 @@ namespace TASCAR {
       bool edgereflection;
       float scattering;
       std::string material;
+      uint32_t layers;
     };
 
     /**
