@@ -138,7 +138,12 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       // render only if image source order is in defined range
       if(((receiver_->layers & src_->layers) || (layergain > 0))) {
         // render only if layers are matching
-        bool layeractive(receiver_->layers & src_->layers);
+        bool layeractive(0);
+        if(!reflector)
+          layeractive = (receiver_->layers & src_->layers);
+        else {
+          layeractive = (receiver_->layers & src_->layers & reflector->layers);
+        }
         if(visible) {
           pos_t prel;
           float nextdistance(0.0);
