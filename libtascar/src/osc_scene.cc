@@ -240,6 +240,7 @@ void osc_scene_t::add_face_object_methods(TASCAR::osc_server_t* srv,
   srv->add_float("/damping", &(o->damping), "[0,1[", "Damping coefficient");
   srv->add_float("/scattering", &(o->scattering), "[0,1]",
                  "Scattering coefficient");
+  srv->add_uint("/layers", &(o->layers));
   srv->set_prefix(oldpref);
   srv->unset_variable_owner();
 }
@@ -256,6 +257,7 @@ void osc_scene_t::add_face_group_methods(TASCAR::osc_server_t* srv,
   srv->add_float("/damping", &(o->damping), "[0,1[", "Damping coefficient");
   srv->add_float("/scattering", &(o->scattering), "[0,1]",
                  "Scattering coefficient");
+  srv->add_uint("/layers", &(o->layers));
   srv->set_prefix(oldpref);
   srv->unset_variable_owner();
 }
