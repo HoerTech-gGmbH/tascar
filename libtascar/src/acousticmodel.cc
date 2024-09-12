@@ -268,7 +268,7 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
   return 0;
 }
 
-obstacle_t::obstacle_t() : active(true), layers(0xffffffff) {}
+obstacle_t::obstacle_t() : active(true) {}
 
 reflector_t::reflector_t()
     : active(true), reflectivity(1.0), damping(0.0), edgereflection(true),

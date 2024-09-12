@@ -333,7 +333,6 @@ namespace TASCAR {
       obstacle_t();
       bool active;
       float transmission;
-      uint32_t layers;
     };
 
     /**
