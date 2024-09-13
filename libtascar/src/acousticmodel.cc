@@ -38,7 +38,7 @@ float mask_t::gain(const pos_t& p)
 }
 
 diffuse_t::diffuse_t(tsccfg::node_t cfg, uint32_t chunksize,
-                     TASCAR::levelmeter_t& rmslevel_, const std::string& ,
+                     TASCAR::levelmeter_t& rmslevel_, const std::string&,
                      plugin_processor_t& plugins_)
     : xml_element_t(cfg), licensed_component_t(typeid(*this).name()),
       audio(chunksize), falloff(1.0), active(true), layers(0xffffffff),
@@ -138,7 +138,12 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
       // render only if image source order is in defined range
       if(((receiver_->layers & src_->layers) || (layergain > 0))) {
         // render only if layers are matching
-        bool layeractive(receiver_->layers & src_->layers);
+        bool layeractive(0);
+        if(!reflector)
+          layeractive = (receiver_->layers & src_->layers);
+        else {
+          layeractive = (receiver_->layers & src_->layers & reflector->layers);
+        }
         if(visible) {
           pos_t prel;
           float nextdistance(0.0);
@@ -255,8 +260,8 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
             return 1;
           }
         } // of visible
-      }   // of layers check
-    }     // of ISM order check
+      } // of layers check
+    } // of ISM order check
   } else {
     delayline.add_chunk(audio);
   }
@@ -267,7 +272,7 @@ obstacle_t::obstacle_t() : active(true) {}
 
 reflector_t::reflector_t()
     : active(true), reflectivity(1.0), damping(0.0), edgereflection(true),
-      scattering(0)
+      scattering(0), layers(0xffffffff)
 {
 }
 
@@ -280,6 +285,7 @@ void reflector_t::read_xml(TASCAR::xml_element_t& e)
       edgereflection,
       "Apply edge reflection in case of not directly visible image source");
   e.GET_ATTRIBUTE(scattering, "", "Relative amount of scattering");
+  e.GET_ATTRIBUTE_BITS(layers, "render layers");
 }
 
 void reflector_t::apply_reflectionfilter(TASCAR::wave_t& audio,

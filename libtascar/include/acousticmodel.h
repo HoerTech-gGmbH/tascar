@@ -353,6 +353,7 @@ namespace TASCAR {
       bool edgereflection;
       float scattering;
       std::string material;
+      uint32_t layers;
     };
 
     /**

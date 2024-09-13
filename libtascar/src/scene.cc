@@ -1109,6 +1109,7 @@ void face_group_t::geometry_update(double t)
     (*it)->damping = damping;
     (*it)->edgereflection = edgereflection;
     (*it)->scattering = scattering;
+    (*it)->layers = layers;
   }
 }
 
