@@ -214,6 +214,19 @@ namespace TASCAR {
     void add_vector_double(const std::string& path, std::vector<double>* data,
                            const std::string& range = "",
                            const std::string& comment = "");
+    /** \brief Register a vector of int32 variable for OSC access
+
+        The dimension of the vector specifies the length of the
+        message. Sending a message of different size will not have any
+        effect, i.e., the callback handler will not change the size of
+        the data.
+
+        \param path OSC path
+        \param data Pointer to data
+     */
+    void add_vector_int(const std::string& path, std::vector<int32_t>* data,
+                        const std::string& range = "",
+                        const std::string& comment = "");
     /** \brief Register a vector of floats variable for OSC access as dB SPL
 
         The dimension of the vector specifies the length of the

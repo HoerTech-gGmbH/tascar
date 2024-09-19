@@ -46,37 +46,34 @@ public:
 
 private:
   void update_par();
-  bool changeonone;
-  double bpm;
-  uint32_t bpb;
-  double a1;
-  double ao;
-  double fres1;
-  double freso;
-  double q1;
-  double qo;
-  bool sync;
-  bool bypass;
-  bool bypass_;
-  int64_t t;
-  int64_t beat;
+  bool changeonone = false;
+  double bpm = 120;
+  std::vector<int32_t> bpb = {4}; //< beats per bar, for at least one bar
+  double a1 = 0.002;
+  double ao = 0.001;
+  double fres1 = 1000;
+  double freso = 600;
+  double q1 = 0.997;
+  double qo = 0.997;
+  bool sync = false;
+  bool bypass = false;
+  bool bypass_ = false;
+  int64_t t = 0;
+  int64_t beat = 0;
+  int64_t bar = 0;
   TASCAR::resonance_filter_t f1;
   TASCAR::resonance_filter_t fo;
-  uint32_t bpb_;
-  double a1_;
-  double ao_;
-  int64_t period;
-  uint32_t dispatchin;
-  TASCAR::osc_server_t* srv_;
+  std::vector<int32_t> bpb_ = {4};
+  double a1_ = 0.002;
+  double ao_ = 0.001;
+  int64_t period = 0; //< number of audio samples per beat
+  uint32_t dispatchin = 0;
+  TASCAR::osc_server_t* srv_ = NULL;
   TASCAR::msg_t msg;
 };
 
 metronome_t::metronome_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : audioplugin_base_t(cfg), changeonone(false), bpm(120), bpb(4), a1(0.002),
-      ao(0.001), fres1(1000), freso(600), q1(0.997), qo(0.997), sync(false),
-      bypass(false), bypass_(false), t(0), beat(0), bpb_(4), a1_(0.002),
-      ao_(0.001), period(0), dispatchin(0), srv_(NULL),
-      msg(find_or_add_child("msg"))
+    : audioplugin_base_t(cfg), msg(find_or_add_child("msg"))
 {
   GET_ATTRIBUTE_BOOL(changeonone, "Apply OSC parameter changes on next bar");
   GET_ATTRIBUTE(bpm, "", "Beats per minute");
@@ -89,6 +86,11 @@ metronome_t::metronome_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(q1, "", "Filter resonance of first beat");
   GET_ATTRIBUTE(qo, "", "Filter resonance of other beats");
   GET_ATTRIBUTE_BOOL(bypass, "Load in bypass mode");
+  if(bpb.empty())
+    throw TASCAR::ErrMsg("At least one bar needs to be specified (bpb).");
+  for(auto b : bpb)
+    if(b < 1)
+      throw TASCAR::ErrMsg("A bar needs to contain at least one beat.");
 }
 
 void metronome_t::configure()
@@ -109,7 +111,7 @@ void metronome_t::add_variables(TASCAR::osc_server_t* srv)
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/changeonone", &changeonone);
   srv->add_double("/bpm", &bpm);
-  srv->add_uint("/bpb", &bpb);
+  srv->add_vector_int("/bpb", &bpb);
   srv->add_double_dbspl("/a1", &a1);
   srv->add_double_dbspl("/ao", &ao);
   srv->add_bool("/sync", &sync);
@@ -162,18 +164,26 @@ void metronome_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
       ldiv_t tmp(ldiv(t, period));
       t = tmp.rem;
       beat = tmp.quot;
-      if(bpb_ > 0) {
-        tmp = ldiv(beat, bpb_);
+      if(bpb_[bar] > 0) {
+        tmp = ldiv(beat, bpb_[bar]);
         beat = tmp.rem;
-      } else
+      } else {
         beat = 0;
+        ++bar;
+        if(bar >= (int64_t)(bpb_.size()))
+          bar = 0;
+      }
     } else {
       // free-run mode, in
       if(t >= period) {
         t = 0;
         ++beat;
-        if(beat >= bpb_)
+        if(beat >= bpb_[bar]) {
           beat = 0;
+          ++bar;
+          if(bar >= (int64_t)(bpb_.size()))
+            bar = 0;
+        }
       }
     }
     if(t || (sync && !tp.rolling)) {

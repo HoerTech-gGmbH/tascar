@@ -265,6 +265,18 @@ int osc_set_vector_double(const char*, const char*, lo_arg** argv, int argc,
   return 1;
 }
 
+int osc_set_vector_int(const char*, const char*, lo_arg** argv, int argc,
+                       lo_message, void* user_data)
+{
+  if(user_data) {
+    std::vector<int32_t>* data((std::vector<int32_t>*)user_data);
+    if(argc == (int)(data->size()))
+      for(int k = 0; k < argc; ++k)
+        (*data)[k] = argv[k]->i;
+  }
+  return 1;
+}
+
 int osc_set_double_db(const char*, const char* types, lo_arg** argv, int argc,
                       lo_message, void* user_data)
 {
@@ -798,6 +810,15 @@ void osc_server_t::add_vector_double(const std::string& path,
 {
   add_method(path, std::string(data->size(), 'f').c_str(),
              osc_set_vector_double, data, true, false, range, comment);
+}
+
+void osc_server_t::add_vector_int(const std::string& path,
+                                  std::vector<int32_t>* data,
+                                  const std::string& range,
+                                  const std::string& comment)
+{
+  add_method(path, std::string(data->size(), 'i').c_str(), osc_set_vector_int,
+             data, true, false, range, comment);
 }
 
 void osc_server_t::add_double_db(const std::string& path, double* data,
