@@ -1139,8 +1139,7 @@ void tascar_window_t::on_menu_file_open_example()
   DEBUG(buffer);
   if(res > 0) {
     std::string binpath(buffer);
-    TASCAR::strrep(binpath, "tascar.exe", "examples");
-    examplepath = binpath;
+    examplepath = TASCAR::strrep(binpath, "tascar.exe", "examples");
   }
   DEBUG(examplepath);
 #endif
