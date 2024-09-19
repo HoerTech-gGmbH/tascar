@@ -22,6 +22,10 @@ all:
 	cp /ucrt64/bin/librsvg-2-2.dll tascar/;\
 	(cd tascar; cp -v $$(cygcheck ./* ./lib/gdk-pixbuf-2.0/*/*.dll | grep msys64 | sort -bu) .;mkdir -p share/{icons,glib-2.0} lib); \
 	cp ../../artwork/*.png tascar/;\
+	mkdir -p "tascar/examples/sounds";\
+	cp -r "../../manual/examples/"example_*.tsc "tascar/examples";\
+	cp -r "../../manual/examples/"*.wav* "tascar/examples";\
+	cp -r "../../manual/examples/sounds/"*.wav* "tascar/examples/sounds";\
 	(cd tascar; glib-compile-schemas share/glib-2.0/schemas);\
 	zip -r tascar-$(PACKVERSION).zip tascar/;
 

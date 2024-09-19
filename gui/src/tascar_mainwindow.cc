@@ -1131,6 +1131,15 @@ void tascar_window_t::on_menu_file_open_example()
   auto homebrewprefix = localgetenv("HOMEBREW_PREFIX");
   if(homebrewprefix.size())
     examplepath = homebrewprefix + "/share/tascar/examples/";
+#ifdef _WIN32
+  wchar_t buffer[MAX_PATH];
+  auto res = GetModuleFileName(NULL, buffer, MAX_PATH);
+  if(res > 0) {
+    std::string binpath(buffer);
+    TASCAR::strrep(binpath, "tascar.exe", "examples");
+    examplepath = binpath;
+  }
+#endif
   dialog.set_current_folder(examplepath);
   dialog.set_transient_for(*this);
   // Add response buttons the the dialog:
