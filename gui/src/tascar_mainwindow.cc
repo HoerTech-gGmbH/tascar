@@ -1135,7 +1135,8 @@ void tascar_window_t::on_menu_file_open_example()
   wchar_t buffer[MAX_PATH];
   auto res = GetModuleFileName(NULL, buffer, MAX_PATH);
   if(res > 0) {
-    std::string binpath(buffer);
+    std::wstring ws(buffer);
+    std::string binpath(ws.begin(), ws.end());
     TASCAR::strrep(binpath, "tascar.exe", "examples");
     examplepath = binpath;
   }
