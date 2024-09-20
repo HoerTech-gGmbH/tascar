@@ -24,6 +24,7 @@
 #include "logo.xpm"
 #include "pdfexport.h"
 #include "tascar.res.c"
+#include "tascar_os.h"
 #include <fstream>
 
 #undef WEBKIT2GTK30
@@ -273,6 +274,14 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
   catch(const Gtk::CssProviderError& e) {
     TASCAR::add_warning("css error: " + e.what());
   }
+  // optionally test for running jack server and start qjackctl:
+  bool checkforjack = TASCAR::config("tascar.gui.checkforjack", 1);
+  if(checkforjack) {
+    bool jack_is_running = test_for_jack_server();
+    if(!jack_is_running) {
+      jackpid = TASCAR::system("qjackctl", false);
+    }
+  }
 }
 
 bool tascar_window_t::on_timeout()
@@ -420,6 +429,9 @@ tascar_window_t::~tascar_window_t()
   pthread_mutex_trylock(&mtx_draw);
   pthread_mutex_unlock(&mtx_draw);
   pthread_mutex_destroy(&mtx_draw);
+  if(jackpid > 0) {
+    terminate_process(jackpid);
+  }
 }
 
 bool tascar_window_t::draw_scene(const Cairo::RefPtr<Cairo::Context>& cr)
@@ -732,7 +744,7 @@ void tascar_window_t::reset_gui()
               Glib::filename_display_basename(tascar_filename) + "]");
   } else {
     set_title("tascar");
-    //resize(200, 60);
+    // resize(200, 60);
   }
   update_object_list();
   if(session && (session->scenes.size() > selected_scene)) {

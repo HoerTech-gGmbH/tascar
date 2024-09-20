@@ -657,6 +657,19 @@ int jackc_db_t::process(jack_nframes_t, const std::vector<float*>& inBuffer,
   return rv;
 }
 
+bool test_for_jack_server()
+{
+  bool isrunning = true;
+  try {
+    jackc_portless_t jc("test_for_jack_server");
+    jc.activate();
+  }
+  catch(...) {
+    isrunning = false;
+  }
+  return isrunning;
+}
+
 /*
  * Local Variables:
  * mode: c++

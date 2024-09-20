@@ -30,10 +30,10 @@
 
 #include <atomic>
 #include <jack/jack.h>
+#include <mutex>
 #include <pthread.h>
 #include <string>
 #include <vector>
-#include <mutex>
 
 class jackc_portless_t {
 public:
@@ -179,6 +179,8 @@ protected:
 private:
   double stop_at_time;
 };
+
+bool test_for_jack_server();
 
 #endif
 

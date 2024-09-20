@@ -20,30 +20,31 @@
 #ifndef TASCAR_MAINWINDOW_H
 #define TASCAR_MAINWINDOW_H
 
+#include "gui_elements.h"
+#include "scene_manager.h"
+#include "viewport.h"
 #include <gtkmm.h>
 #include <gtkmm/main.h>
 #include <gtkmm/window.h>
-#include "scene_manager.h"
-#include "viewport.h"
-#include "gui_elements.h"
 #include <gtksourceview/gtksource.h>
 #include <gtksourceviewmm.h>
 
-#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
+#if defined(WEBKIT2GTK30) || defined(WEBKIT2GTK40)
 #include <webkit2/webkit2.h>
 #endif
 
 void error_message(const std::string& msg);
 
-class tascar_window_t : public scene_manager_t, public Gtk::Window
-{
+class tascar_window_t : public scene_manager_t, public Gtk::Window {
 public:
-  tascar_window_t(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade);
+  tascar_window_t(BaseObjectType* cobject,
+                  const Glib::RefPtr<Gtk::Builder>& refGlade);
   virtual ~tascar_window_t();
   void load(const std::string& fname);
+
 protected:
   Glib::RefPtr<Gtk::Builder> m_refBuilder;
-  //Signal handlers:
+  // Signal handlers:
   void on_menu_file_new();
   void on_menu_file_open();
   void on_menu_file_open_example();
@@ -95,7 +96,7 @@ protected:
 
   void on_show_warnings_clicked();
 
-  void set_scale(double s){draw.view.set_scale( s );};
+  void set_scale(double s) { draw.view.set_scale(s); };
   bool on_map_scroll(GdkEventScroll* e);
   bool on_map_clicked(GdkEventButton* e);
 
@@ -159,14 +160,15 @@ protected:
 
   bool sessionloaded;
   bool sessionquit;
-#if defined (WEBKIT2GTK30) || defined(WEBKIT2GTK40)
-  WebKitWebView *news_view;
+#if defined(WEBKIT2GTK30) || defined(WEBKIT2GTK40)
+  WebKitWebView* news_view;
   Gtk::Box* news_box;
   Gtk::Widget* news_viewpp;
 #endif
   uint32_t splash_timeout;
 
   size_t numlastwarnings = 0;
+  pid_t jackpid = 0;
 };
 
 #endif
