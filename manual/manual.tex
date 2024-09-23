@@ -184,40 +184,53 @@ Table \ref{tab:instdir} provides a list of the most important installation direc
 \end{tabular}
 \medskip
 \hrule
-\caption{List of relevant \tascar{} directories\index{directories}.}\label{tab:instdir}
+\caption{List of relevant \tascar{} directories on Linux installations\index{directories}.}\label{tab:instdir}
 \end{table}
 
 After successful installation of the packages,
 \tascar{} is available as the command \verb!tascar! or from the main
 applications menu, in the ``sounds and video'' section.
 
-\tascar{} is heavily relying on the jack audio connection kit
-(\url{http://jackaudio.org}). It is required to start jack before
-loading a session into \tascar{}. Jack port names in \tascar{} are
-treated as POSIX regular expressions \citep{posixregexp}. If the
-\verb!^! or \verb!$! anchors are not present at the beginning or end
-of an expression, they are added at beginning and end of expression to
-achieve proper full name matching. Please note that some characters
-like \verb!.[?()! (and some more) have special meaning as regular
-expression and need to be quoted for correct matching.
+TASCAR relies heavily on the jack audio connection kit
+(\url{http://jackaudio.org}). It is necessary to start jack before
+loading a session into TASCAR. TASCAR will attempt to start
+\verb!qjackctl! if the jack server is not running. This behaviour can
+be disabled by adding an entry to the GUI section of the configuration
+file (see Section \ref{sec:globalconfig} for details):
+\begin{lstlisting}[numbers=none]
+<tascar>
+  <gui>
+    <checkforjack data="0"/>
+  </gui>
+  ...
+</tascar>
+\end{lstlisting}
 
-When using \tascar{} with jackd1, the memory locking may fail,
-resulting in killing the \tascar{} process. If you observe this
-behavior, either start jack without memory locking (using the
-\verb!-m! flag), or use jackd2 instead.
+Jack port names in TASCAR are treated as POSIX regular expressions
+\citep{posixregexp}. If the \verb!^! or \verb!$! anchors are not
+present at the beginning or end of an expression, they will be added
+at the beginning and end of the expression to achieve proper full name
+matching. Please note that some characters such as \verb!.[?()! (and a
+few others) have special meaning as regular expressions and must be
+quoted for a correct match.
 
-An acoustic environment can be loaded using either the command line by
-providing the file name, or via the file menu in the main window. If
-loading of a session file fails for some reason, it might be helpful
-to start it at the command line to see additional information.
+When using TASCAR with jackd1, memory locking may fail, resulting in
+the TASCAR process being killed. If you see this behaviour, either run
+jack without memory locking (using the \verb!-m! flag), or use jackd2
+instead.
 
-\tascar{} uses SI units unless specified otherwise. Developers of new
+An acoustic environment can be loaded either from the command line by
+specifying the filename, or from the File menu in the main window. If
+loading a session file fails for some reason, it may be helpful to run
+it from the command line to see additional information.
+
+TASCAR uses SI units unless otherwise specified. Developers of new
 plugins are encouraged to use SI units for all internal and
 configuration variables.
 
 \subsection{Keyboard shortcuts in the main window}
 
-The \tascar{} GUI can be controlled using keyboard shortcuts.
+The TASCAR GUI can be controlled using keyboard shortcuts.
 
 \parbox{\columnwidth}{
 
