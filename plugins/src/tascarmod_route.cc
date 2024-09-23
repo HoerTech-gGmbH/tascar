@@ -149,11 +149,21 @@ int osc_setfade(const char*, const char* types, lo_arg** argv, int argc,
   return 1;
 }
 
+const std::string& fail_on_empty_name(const std::string& name,
+                                      const tsccfg::node_t& e)
+{
+  if(name.empty())
+    throw TASCAR::ErrMsg("The route name is empty (" +
+                         tsccfg::node_get_path(e) + ")");
+  return name;
+}
+
 routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), TASCAR::Scene::route_t(TASCAR::module_base_t::e),
-      jackc_transport_t(get_name()), TASCAR::Scene::audio_port_t(
-                                         TASCAR::module_base_t::e, false),
-      channels(1), levelmeter_tc(2.0), levelmeter_weight(TASCAR::levelmeter::Z),
+      jackc_transport_t(
+          fail_on_empty_name(get_name(), TASCAR::module_base_t::e)),
+      TASCAR::Scene::audio_port_t(TASCAR::module_base_t::e, false), channels(1),
+      levelmeter_tc(2.0), levelmeter_weight(TASCAR::levelmeter::Z),
       plugins(TASCAR::module_base_t::e, get_name(), ""), bypass(true)
 {
   pthread_mutex_init(&mtx_, NULL);

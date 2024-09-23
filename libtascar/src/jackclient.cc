@@ -29,16 +29,28 @@
 #include "tscconfig.h"
 #include <jack/thread.h>
 #include <regex.h>
+#include <set>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
 static std::string errmsg("");
 
+static void jack_report_error(const char* msg)
+{
+  std::cerr << msg << std::endl;
+  if( errmsg.size() )
+    errmsg += "\n";
+  errmsg += msg;
+}
+
 jackc_portless_t::jackc_portless_t(const std::string& clientname)
-    : srate(0), active(false), xruns(0), xrun_latency(0), shutdown(false)
+    : srate(0), active(false), xruns(0), xrun_latency(0), shutdown(false),
+      clientname_(clientname)
 {
   mtx_active.lock();
+  errmsg = "";
+  jack_set_error_function(&jack_report_error);
   jack_status_t jstat;
   // jack_options_t opt(JackUseExactName |JackNoStartServer);
   if((int)(clientname.size() + 1) > jack_client_name_size())
@@ -68,6 +80,8 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
       err += "Unable to access shared memory. ";
     if(jstat & JackVersionError)
       err += "Client's protocol version does not match. ";
+    if( errmsg.size() )
+      err += "\n" + errmsg;
     throw TASCAR::ErrMsg(err);
   }
   srate = jack_get_sample_rate(jc);
@@ -108,6 +122,39 @@ void assert_valid_regexp(const std::string& exp)
   if(regcomp(&reg, exp.c_str(), REG_EXTENDED | REG_NOSUB) != 0)
     throw TASCAR::ErrMsg("Invalid regular expression \"" + exp + "\".");
   regfree(&reg);
+}
+
+std::vector<std::string> jackc_portless_t::get_all_port_names(int flags) const
+{
+  std::vector<std::string> ports;
+  const char** pp_ports(
+      jack_get_ports(jc, NULL, JACK_DEFAULT_AUDIO_TYPE, flags));
+  if(pp_ports) {
+    const char** p(pp_ports);
+    while(*p) {
+      ports.push_back(*p);
+      ++p;
+    }
+    jack_free(pp_ports);
+  }
+  return ports;
+}
+
+std::vector<std::string> jackc_portless_t::get_all_client_names(int flags) const
+{
+  std::vector<std::string> ports = get_all_port_names(flags);
+  std::set<std::string> clients_set;
+  for(const auto& p : ports) {
+    auto cp = p.find(":");
+    if(cp == std::string::npos)
+      clients_set.insert(p);
+    else
+      clients_set.insert(p.substr(0, cp));
+  }
+  std::vector<std::string> clients;
+  for(const auto& c : clients_set)
+    clients.push_back(c);
+  return clients;
 }
 
 std::vector<std::string> get_port_names_regexp(jack_client_t* jc,

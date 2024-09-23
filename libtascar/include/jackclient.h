@@ -62,6 +62,8 @@ public:
   std::vector<std::string>
   get_port_names_regexp(const std::vector<std::string>& names,
                         int flags = 0) const;
+  std::vector<std::string> get_all_port_names(int flags = 0) const;
+  std::vector<std::string> get_all_client_names(int flags = 0) const;
 
 private:
   static int xrun_callback(void* arg);
@@ -77,6 +79,7 @@ public:
   double xrun_latency;
   std::atomic_bool shutdown;
   std::mutex mtx_active;
+  std::string clientname_;
 };
 
 /**
