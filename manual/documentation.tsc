@@ -33,7 +33,7 @@
           <loopmachine/>
           <metronome/>
           <noise/>
-          <simplesynth/>
+          <!--<simplesynth/>-->
           <onsetdetector/>
           <!--<openmha plugin="identity" config=""/>-->
           <pink/>
