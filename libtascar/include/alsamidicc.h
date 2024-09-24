@@ -30,6 +30,7 @@
 #include <alsa/asoundlib.h>
 #include <alsa/seq_event.h>
 #include <string>
+#include <vector>
 
 namespace TASCAR {
 
@@ -69,6 +70,21 @@ namespace TASCAR {
        \param velocity Note velocity
     */
     void send_midi_note(int channel, int pitch, int velocity);
+    /**
+       \brief Get current number of clients
+    */
+    int get_cur_clients();
+    /**
+       \brief Get maximum number of clients
+    */
+    int get_max_clients();
+    /**
+       \brief Get number of ports of client
+    */
+    int client_get_num_ports(int client);
+    std::vector<int> client_get_ports(int client, unsigned int cap = 0);
+    std::vector<int> get_client_ids();
+    int get_client_id();
 
   protected:
     void service();

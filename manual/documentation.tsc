@@ -33,6 +33,7 @@
           <loopmachine/>
           <metronome/>
           <noise/>
+          <simplesynth/>
           <onsetdetector/>
           <!--<openmha plugin="identity" config=""/>-->
           <pink/>
@@ -125,7 +126,7 @@
       <f/><i/><s/>
       </motemsg>
     </mididispatch>
-    <route/>
+    <route name="route"/>
     <!--<ovheadtracker/>-->
     <oscheadtracker/>
     <osceog srate="860" eogpath="/eog"/>

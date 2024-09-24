@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <route name="synth" channels="1" connect_out="system:playback_[12]">
+      <plugins>
+        <simplesynth autoconnect="true"/>
+      </plugins>
+    </route>
+  </modules>
+</session>

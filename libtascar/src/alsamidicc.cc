@@ -89,7 +89,9 @@ void TASCAR::midi_ctl_t::service()
                 (ev->type == SND_SEQ_EVENT_NOTEON) ||
                 (ev->type == SND_SEQ_EVENT_NOTEOFF))) {
         emit_event_note(ev->data.note.channel, ev->data.note.note,
-                        ev->data.note.velocity);
+                        ((ev->type == SND_SEQ_EVENT_NOTEOFF)
+                             ? 0
+                             : (ev->data.note.velocity)));
       }
     }
     usleep(10);
@@ -163,6 +165,109 @@ void TASCAR::midi_ctl_t::connect_output(const std::string& src,
     else
       throw TASCAR::ErrMsg("Invalid MIDI address " + src);
   }
+}
+
+int TASCAR::midi_ctl_t::get_max_clients()
+{
+  int clients = 0;
+  snd_seq_system_info_t* info;
+  int err = snd_seq_system_info_malloc(&info);
+  if(err == 0) {
+    int err = snd_seq_system_info(seq, info);
+    if(err == 0)
+      clients = snd_seq_system_info_get_clients(info);
+    snd_seq_system_info_free(info);
+  }
+  return clients;
+}
+
+int TASCAR::midi_ctl_t::get_cur_clients()
+{
+  int clients = 0;
+  snd_seq_system_info_t* info;
+  int err = snd_seq_system_info_malloc(&info);
+  if(err == 0) {
+    int err = snd_seq_system_info(seq, info);
+    if(err == 0)
+      clients = snd_seq_system_info_get_cur_clients(info);
+    snd_seq_system_info_free(info);
+  }
+  return clients;
+}
+
+int TASCAR::midi_ctl_t::client_get_num_ports(int client)
+{
+  int numports = 0;
+  snd_seq_client_info_t* info;
+  int err = 0;
+  err = snd_seq_client_info_malloc(&info);
+  if(err == 0) {
+    err = snd_seq_get_any_client_info(seq, client, info);
+    if(err == 0) {
+      numports = snd_seq_client_info_get_num_ports(info);
+    }
+  }
+  return numports;
+}
+
+std::vector<int> TASCAR::midi_ctl_t::get_client_ids()
+{
+  std::vector<int> clients;
+  snd_seq_client_info_t* info;
+  int err = 0;
+  err = snd_seq_client_info_malloc(&info);
+  if(err == 0) {
+    err = snd_seq_get_any_client_info(seq, 0, info);
+    if(err == 0) {
+      clients.push_back(0);
+      while(snd_seq_query_next_client(seq, info) == 0) {
+        clients.push_back(snd_seq_client_info_get_client(info));
+      }
+    }
+  }
+  return clients;
+}
+
+std::vector<int> TASCAR::midi_ctl_t::client_get_ports(int client,
+                                                      unsigned int cap)
+{
+  std::vector<int> ports;
+  if(client_get_num_ports(client) > 0) {
+    snd_seq_port_info_t* info;
+    int err = 0;
+    err = snd_seq_port_info_malloc(&info);
+    if(err == 0) {
+      err = snd_seq_get_any_port_info(seq, client, 0, info);
+      if(err == 0) {
+        unsigned int pcap = 0;
+        pcap = snd_seq_port_info_get_capability(info);
+        if((cap == 0) || (cap & pcap))
+          ports.push_back(0);
+        while(snd_seq_query_next_port(seq, info) == 0) {
+          int port = snd_seq_port_info_get_port(info);
+          pcap = snd_seq_port_info_get_capability(info);
+          if((cap == 0) || (cap & pcap))
+            ports.push_back(port);
+        }
+      }
+    }
+  }
+  return ports;
+}
+
+int TASCAR::midi_ctl_t::get_client_id()
+{
+  int client = 0;
+  snd_seq_client_info_t* info;
+  int err = 0;
+  err = snd_seq_client_info_malloc(&info);
+  if(err == 0) {
+    err = snd_seq_get_client_info(seq, info);
+    if(err == 0) {
+      client = snd_seq_client_info_get_client(info);
+    }
+  }
+  return client;
 }
 
 /*
