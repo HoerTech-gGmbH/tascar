@@ -4,7 +4,7 @@ VERSION=0.233.0
 ARCH=$(shell uname -m)
 
 CXXFLAGS = -Wall -Wextra -Wdeprecated-declarations -Wno-psabi -std=c++17 -pthread	\
--ggdb -fno-finite-math-only
+-ggdb -fno-finite-math-only -Wno-psabi
 # -Wconversion
 # -Werror
 

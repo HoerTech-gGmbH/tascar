@@ -149,14 +149,14 @@ jackio_t::jackio_t(const std::vector<TASCAR::wave_t>& isig,
   for(size_t k = 0; k < osig.size(); ++k) {
     char c_tmp[1024];
     c_tmp[1023] = 0;
-    snprintf(c_tmp, 1023, "in_%lu", k + 1);
+    snprintf(c_tmp, 1023, "in_%lu", (long unsigned int)k + (long unsigned int)1);
     log("adding input port " + std::string(c_tmp));
     add_input_port(c_tmp);
   }
   for(size_t ch = 0; ch < isig.size(); ++ch) {
     char c_tmp[1024];
     c_tmp[1023] = 0;
-    snprintf(c_tmp, 1023, "out_%lu", ch + 1);
+    snprintf(c_tmp, 1023, "out_%lu", (long unsigned int)ch + (long unsigned int)1);
     log("adding output port " + std::string(c_tmp));
     add_output_port(c_tmp);
     // copy input signal:
