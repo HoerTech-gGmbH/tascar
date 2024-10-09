@@ -60,7 +60,7 @@ endif
 
 ifeq "$(HAS_LSL)" "yes"
 CXXFLAGS += -DHAS_LSL
-TASCARMODS += lsljacktime lslactor levels2osc pos2lsl
+TASCARMODS += lsljacktime lslactor levels2osc pos2lsl osc2lsl
 AUDIOPLUGINS += speechactivity periodogram
 TASCARMODSGUI += glabsensors waitforlslstream lsl2osc
 GLABSENSORS += smiley eog emergency espheadtracker	\
@@ -151,7 +151,7 @@ endif
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): build/datalogging_glade.h
 build/$(PLUGINPREFIX)tascar_hossustain$(DLLEXT): EXTERNALS += fftw3f
 build/$(PLUGINPREFIX)tascar_lightctl$(DLLEXT) build/$(PLUGINPREFIX)tascar_ovheadtracker$(DLLEXT): LDLIBS+=$(TASCARDMXLIB)
-build/$(PLUGINPREFIX)tascar_lsljacktime$(DLLEXT) build/$(PLUGINPREFIX)tascar_pos2lsl$(DLLEXT) build/$(PLUGINPREFIX)tascar_levels2osc$(DLLEXT) build/$(PLUGINPREFIX)tascar_lslactor$(DLLEXT): LDLIBS+=-llsl
+build/$(PLUGINPREFIX)tascar_lsljacktime$(DLLEXT) build/$(PLUGINPREFIX)tascar_pos2lsl$(DLLEXT) build/$(PLUGINPREFIX)tascar_levels2osc$(DLLEXT) build/$(PLUGINPREFIX)tascar_lslactor$(DLLEXT) build/$(PLUGINPREFIX)tascar_osc2lsl$(DLLEXT): LDLIBS+=-llsl
 build/$(PLUGINPREFIX)tascar_ltcgen$(DLLEXT): EXTERNALS+=ltc
 build/$(PLUGINPREFIX)tascar_simplecontroller$(DLLEXT): build/simplecontroller_glade.h
 build/$(PLUGINPREFIX)tascar_timedisplay$(DLLEXT): build/timedisplay_glade.h

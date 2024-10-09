@@ -1,0 +1,29 @@
+Convert OSC messages into an LSL stream.
+
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:osc2lsl}
+Attributes of element {\bf osc2lsl}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{first\_row\_is\_timestamp} & Use data of first row as LSL time stamp (bool) & false\\
+\hline
+\indattr{lslname} & LSL name (string) & osc2lsl\\
+\hline
+\indattr{lsltype} & LSL type (string) & osc2lsl\\
+\hline
+\indattr{path} & OSC path name (string) & /osc2lsl\\
+\hline
+\indattr{retval} & OSC return value: 0 = handle messages also locally, non-0 = mark message as handled, do not handle locally (int32) & 1\\
+\hline
+\indattr{size} & Dimension of variable (uint32) & 1\\
+\hline
+\indattr{source\_id} & LSL source ID (string) & osc2lsl29\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
