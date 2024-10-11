@@ -34,11 +34,6 @@ TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
     : command_(command), useshell_(useshell), relaunch_(relaunch),
       relaunchwait_(relaunchwait)
 {
-#ifdef _WIN32
-  DEBUG(command_);
-  DEBUG(useshell_);
-  DEBUG(relaunch_);
-#endif
   if(!command.empty()) {
     TASCAR::console_log("creating launcher for \"" + command + "\"" +
                         (useshell ? " shell" : "") +
@@ -48,11 +43,6 @@ TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
   }
   mtx.lock();
   mtx.unlock();
-#ifdef _WIN32
-  DEBUG(command_);
-  DEBUG(useshell_);
-  DEBUG(relaunch_);
-#endif
 }
 
 void TASCAR::spawn_process_t::launcher()
@@ -113,23 +103,12 @@ void TASCAR::spawn_process_t::launcher()
 
 TASCAR::spawn_process_t::~spawn_process_t()
 {
-#ifdef _WIN32
-  DEBUG(command_);
-  DEBUG(useshell_);
-  DEBUG(relaunch_);
-  DEBUG(pid);
-#endif
   runservice = false;
   terminate_process(pid);
   if(launcherthread.joinable())
     launcherthread.join();
-  if( command_.size() )
+  if(command_.size())
     console_log("launcher for command \"" + command_ + "\" ended");
-#ifdef _WIN32
-  DEBUG(command_);
-  DEBUG(useshell_);
-  DEBUG(relaunch_);
-#endif
 }
 
 void TASCAR::spawn_process_t::set_relaunch(bool relaunch)
