@@ -220,6 +220,8 @@ namespace TASCAR {
 
   void add_warning(std::string msg);
   void add_warning(std::string msg, const tsccfg::node_t& e);
+  void console_log_show(bool show);
+  void console_log(const std::string& msg);
 
   std::string tscbasename(const std::string& s);
 

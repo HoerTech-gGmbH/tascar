@@ -19,9 +19,11 @@
 
 #include "tscconfig.h"
 #include "errorhandling.h"
+#include "tictoctimer.h"
 #include <atomic>
 #include <fstream>
 #include <functional>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <stdio.h>
@@ -95,7 +97,42 @@ namespace TASCAR {
   static std::vector<std::string> warnings;
   static globalconfig_t config_;
   static std::atomic_size_t maxid(0);
+
+  class console_log_t {
+  public:
+    class log_entry_t {
+    public:
+      log_entry_t(double t, const std::string& msg) : t(t), msg(msg){};
+      double t = 0.0;
+      const std::string msg;
+    };
+    void log(const std::string& msg)
+    {
+      std::lock_guard<std::mutex> lk{mtx};
+      double t = tictoc.toc();
+      logs.push_back(log_entry_t(t, msg));
+      if( showlog )
+        std::fprintf(stderr,"%8.3f %s\n",t,msg.c_str());
+    };
+    bool showlog = false;
+  private:
+    TASCAR::tictoc_t tictoc;
+    std::vector<log_entry_t> logs;
+    std::mutex mtx;
+  };
+
+  static console_log_t log;
 } // namespace TASCAR
+
+void TASCAR::console_log(const std::string& msg)
+{
+  TASCAR::log.log(msg);
+}
+
+void TASCAR::console_log_show(bool show)
+{
+  TASCAR::log.showlog = show;
+}
 
 double TASCAR::config(const std::string& v, double d)
 {

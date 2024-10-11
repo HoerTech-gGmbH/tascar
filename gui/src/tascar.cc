@@ -38,6 +38,7 @@ static void sighandler(int)
 
 int main(int argc, char** argv)
 {
+  TASCAR::console_log_show(true);
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
