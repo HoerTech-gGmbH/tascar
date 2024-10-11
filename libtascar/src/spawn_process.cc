@@ -54,7 +54,7 @@ void TASCAR::spawn_process_t::launcher()
     mtx.lock();
     pid = TASCAR::system(command_.c_str(), useshell_);
     mtx.unlock();
-    console_log("started process " + TASCAR::to_string(pid) + " (" + command_ +
+    console_log("started process " + TASCAR::to_string((uint32_t)pid) + " (" + command_ +
                 ")");
 #ifndef _WIN32
     int wstatus = 0;
@@ -67,7 +67,7 @@ void TASCAR::spawn_process_t::launcher()
     }
     if(runservice) {
       if(WIFEXITED(wstatus) && (WEXITSTATUS(wstatus) != 0)) {
-        TASCAR::add_warning("Process " + TASCAR::to_string(pid) +
+        TASCAR::add_warning("Process " + TASCAR::to_string((uint32_t)pid) +
                             " returned with exit status " +
                             TASCAR::to_string(WEXITSTATUS(wstatus)) + ": \"" +
                             command_ + "\"" +
@@ -81,7 +81,7 @@ void TASCAR::spawn_process_t::launcher()
           termsigname =
               std::string(" (") + std::string(termsigname_c) + std::string(")");
         TASCAR::add_warning(
-            "Process " + TASCAR::to_string(pid) + " terminated with signal " +
+            "Process " + TASCAR::to_string((uint32_t)pid) + " terminated with signal " +
             TASCAR::to_string(termsig_) + termsigname + ": \"" + command_ +
             "\"" + (relaunch_ ? (" Relaunching.") : ("")));
       }
@@ -89,7 +89,7 @@ void TASCAR::spawn_process_t::launcher()
 #else
     wait_for_process(pid);
 #endif
-    console_log("stopped process " + TASCAR::to_string(pid) + " (" + command_ +
+    console_log("stopped process " + TASCAR::to_string((uint32_t)pid) + " (" + command_ +
                 ")");
     pid = 0;
     running = false;
