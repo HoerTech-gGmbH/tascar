@@ -48,7 +48,6 @@ private:
   uint32_t lastframe = -1;
 #ifndef _WIN32
   struct timeval tv;
-  struct timezone tz;
 #endif
 };
 
@@ -89,7 +88,7 @@ int ltcgen_t::process(jack_nframes_t n, const std::vector<float*>&,
     double sec(tp_frame * t_sample);
     if(usewallclock) {
 #ifndef _WIN32
-      gettimeofday(&tv, &tz);
+      gettimeofday(&tv, NULL);
       struct tm* caltime = localtime(&(tv.tv_sec));
       double p_hour = caltime->tm_hour;
       double p_min = caltime->tm_min;

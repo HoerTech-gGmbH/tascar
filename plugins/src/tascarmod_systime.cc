@@ -49,7 +49,6 @@ private:
   double* p_sessiontime2 = &sessiontimetmp;
 #ifndef _WIN32
   struct timeval tv;
-  struct timezone tz;
 #endif
 };
 
@@ -98,7 +97,6 @@ tascar_systime_t::tascar_systime_t(const TASCAR::module_cfg_t& cfg)
 
 #ifndef _WIN32
   memset(&tv, 0, sizeof(timeval));
-  memset(&tz, 0, sizeof(timezone));
 #endif
 }
 
@@ -112,7 +110,7 @@ void tascar_systime_t::update(uint32_t tp_frame, bool)
   double tptime = tp_frame * t_sample;
   *p_sessiontime1 = *p_sessiontime2 = tptime;
 #ifndef _WIN32
-  gettimeofday(&tv, &tz);
+  gettimeofday(&tv, NULL);
   struct tm* caltime = localtime(&(tv.tv_sec));
   *p_year = caltime->tm_year + 1900;
   *p_month = caltime->tm_mon + 1;
