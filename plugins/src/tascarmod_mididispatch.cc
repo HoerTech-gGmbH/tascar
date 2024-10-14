@@ -216,6 +216,8 @@ public:
   void add_variables(TASCAR::osc_server_t* srv);
   virtual void emit_event(int channel, int param, int value);
   virtual void emit_event_note(int channel, int pitch, int velocity);
+  virtual void emit_event_mmc(uint8_t deviceid, uint8_t cmd);
+  void validate_attributes(std::string& msg) const;
   void send_midi_(int channel, int param, int value)
   {
     send_midi(channel, param, value);
@@ -385,11 +387,29 @@ public:
 private:
   std::vector<std::pair<uint16_t, m_msg_t>> ccmsg;
   std::vector<std::pair<uint16_t, m_msg_t>> notemsg;
+  std::vector<std::pair<uint16_t, m_msg_t>> mmcmsg;
   std::mutex mtxdispatch;
   lo_address copytarget = NULL;
   std::map<uint8_t, lpaction_t> lpactmap;
   std::mutex mtxlpactmap;
 };
+
+void mididispatch_t::validate_attributes(std::string& msg) const
+{
+  TASCAR::xml_element_t::validate_attributes(msg);
+  for(auto sne : tsccfg::node_get_children(e, "ccmsg")) {
+    TASCAR::xml_element_t xml(sne);
+    xml.validate_attributes(msg);
+  }
+  for(auto sne : tsccfg::node_get_children(e, "notemsg")) {
+    TASCAR::xml_element_t xml(sne);
+    xml.validate_attributes(msg);
+  }
+  for(auto sne : tsccfg::node_get_children(e, "mmcmsg")) {
+    TASCAR::xml_element_t xml(sne);
+    xml.validate_attributes(msg);
+  }
+}
 
 mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
     : mididispatch_vars_t(cfg), TASCAR::midi_ctl_t(name)
@@ -415,6 +435,17 @@ mididispatch_t::mididispatch_t(const TASCAR::module_cfg_t& cfg)
     xml.GET_ATTRIBUTE(note, "", "MIDI note");
     notemsg.push_back(
         std::pair<uint16_t, m_msg_t>(256 * channel + note, action));
+  }
+  for(auto sne : tsccfg::node_get_children(e, "mmcmsg")) {
+    m_msg_t action;
+    TASCAR::xml_element_t xml(sne);
+    action.parse(xml);
+    uint32_t deviceid = 127;
+    uint32_t command = 1;
+    xml.GET_ATTRIBUTE(deviceid, "", "MMC device ID");
+    xml.GET_ATTRIBUTE(command, "", "MMC command");
+    mmcmsg.push_back(
+        std::pair<uint16_t, m_msg_t>(256 * deviceid + command, action));
   }
   if(!connect.empty()) {
     connect_input(connect, true);
@@ -695,6 +726,27 @@ void mididispatch_t::emit_event_note(int channel, int pitch, int velocity)
   if((!known) && dumpmsg) {
     char ctmp[256];
     snprintf(ctmp, 256, "Note %d/%d: %d", channel, pitch, velocity);
+    ctmp[255] = 0;
+    std::cout << ctmp << std::endl;
+  }
+}
+
+void mididispatch_t::emit_event_mmc(uint8_t deviceid, uint8_t cmd)
+{
+  // uint16_t ctl(channel + param);
+  bool known = false;
+  for(auto& m : mmcmsg) {
+    bool same_device = ((m.first >> 8) == deviceid);
+    bool any_device = (((m.first >> 8) == 127) || (deviceid == 127));
+    if((same_device || any_device) && ((m.first & 0xff) == cmd)) {
+      std::lock_guard<std::mutex> lock(mtxdispatch);
+      m.second.updatemsg(session, 0);
+      known = true;
+    }
+  }
+  if((!known) && dumpmsg) {
+    char ctmp[256];
+    snprintf(ctmp, 256, "MMC device-ID %0x command %0x", deviceid, cmd);
     ctmp[255] = 0;
     std::cout << ctmp << std::endl;
   }

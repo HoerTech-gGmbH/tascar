@@ -81,17 +81,32 @@ void TASCAR::midi_ctl_t::service()
   while(run_service) {
     // while( snd_seq_event_input_pending(seq,0) ){
     while(snd_seq_event_input(seq, &ev) >= 0) {
-      if(ev && (ev->type == SND_SEQ_EVENT_CONTROLLER)) {
-        emit_event(ev->data.control.channel, ev->data.control.param,
-                   ev->data.control.value);
-      }
-      if(ev && ((ev->type == SND_SEQ_EVENT_NOTE) ||
-                (ev->type == SND_SEQ_EVENT_NOTEON) ||
-                (ev->type == SND_SEQ_EVENT_NOTEOFF))) {
-        emit_event_note(ev->data.note.channel, ev->data.note.note,
-                        ((ev->type == SND_SEQ_EVENT_NOTEOFF)
-                             ? 0
-                             : (ev->data.note.velocity)));
+      if(ev) {
+        switch(ev->type) {
+        case SND_SEQ_EVENT_CONTROLLER:
+          // if(ev && (ev->type == SND_SEQ_EVENT_CONTROLLER)) {
+          emit_event(ev->data.control.channel, ev->data.control.param,
+                     ev->data.control.value);
+          break;
+          //}
+        case SND_SEQ_EVENT_NOTE:
+        case SND_SEQ_EVENT_NOTEON:
+        case SND_SEQ_EVENT_NOTEOFF:
+          // if(ev && ((ev->type == SND_SEQ_EVENT_NOTE) ||
+          //        (ev->type == SND_SEQ_EVENT_NOTEON) ||
+          //        (ev->type == SND_SEQ_EVENT_NOTEOFF))) {
+          emit_event_note(ev->data.note.channel, ev->data.note.note,
+                          ((ev->type == SND_SEQ_EVENT_NOTEOFF)
+                               ? 0
+                               : (ev->data.note.velocity)));
+          break;
+        case SND_SEQ_EVENT_SYSEX:
+          uint8_t* buf((uint8_t*)(ev->data.ext.ptr));
+          if((ev->data.ext.len == 6) && (buf[0] == 0xf0) && (buf[1] == 0x7f) &&
+             (buf[3] == 0x06) && (buf[5] == 0xf7))
+            emit_event_mmc(buf[2], buf[4]);
+          break;
+        }
       }
     }
     usleep(10);
