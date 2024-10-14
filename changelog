@@ -1,3 +1,11 @@
+0.233.1:
+       - add layer property for faces/facegroups (fholzm)
+       - improve search paths on Windows
+       - multi-measure metronome settings
+       - improved error reporting in jack
+       - add simple MIDI synth
+       - add OSC2LSL converter plugin
+       - add support for MMC messages in mididispatch
 0.233.0: fix reload problems, brew release and minor improvements
 0.232.2: add unit-testing for convex hull algorithm, add new plugins and minor features
 0.232.1: add frequency weighting and time constant to level2osc plugin
