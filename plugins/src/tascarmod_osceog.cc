@@ -72,6 +72,7 @@ private:
 
 void osceog_t::connect()
 {
+  lo_send(headtrackertarget, "/eog/srate", "i", srate);
   if(connectwlan) {
     lo_send(headtrackertarget, "/wlan/connect", "sssi", wlanssid.c_str(),
             wlanpass.c_str(), targetip.c_str(), session->get_srv_port());
@@ -79,7 +80,6 @@ void osceog_t::connect()
     lo_send(headtrackertarget, "/eog/connect", "is", session->get_srv_port(),
             eogpath.c_str());
   }
-  lo_send(headtrackertarget, "/eog/srate", "i", srate);
 }
 
 void osceog_t::disconnect()
