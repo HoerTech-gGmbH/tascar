@@ -453,8 +453,13 @@ calibsession_t::calibsession_t(const std::string& fname, const calib_cfg_t& cfg)
   // validate scene:
   if(scenes.empty())
     throw TASCAR::ErrMsg("Programming error: no scene");
-  if(scenes[0]->source_objects.size() != 2)
+  if(scenes[0]->source_objects.size() != 2) {
+    DEBUG(scenes.size());
+    for(const auto& scene : scenes) {
+      DEBUG(scene->source_objects.size());
+    }
     throw TASCAR::ErrMsg("Programming error: not exactly two sources.");
+  }
   if(scenes[0]->receivermod_objects.size() != 3)
     throw TASCAR::ErrMsg("Programming error: not exactly three receivers.");
   scenes.back()->source_objects[0]->dlocation = pos_t(1, 0, 0);

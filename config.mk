@@ -1,5 +1,5 @@
 # variables:
-VERSION=0.233.1
+VERSION=0.233.2
 
 ARCH=$(shell uname -m)
 

@@ -1,3 +1,4 @@
+0.233.2: bugfix of tascar_spkcalib
 0.233.1:
        - add layer property for faces/facegroups (fholzm)
        - improve search paths on Windows

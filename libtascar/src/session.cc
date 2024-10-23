@@ -416,9 +416,6 @@ TASCAR::session_t::session_t()
   profilermsg = lo_message_new();
   pthread_mutex_init(&mtx, NULL);
   read_xml();
-  if(scenes.empty()) {
-    add_scene(NULL);
-  }
   try {
     add_output_port("sync_out");
     jackc_transport_t::activate();
@@ -460,9 +457,6 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
   pthread_mutex_init(&mtx, NULL);
   // parse XML:
   read_xml();
-  if(scenes.empty()) {
-    add_scene(NULL);
-  }
   try {
     add_output_port("sync_out");
     jackc_transport_t::activate();
@@ -706,6 +700,8 @@ void TASCAR::session_t::add_module(tsccfg::node_t src)
 
 void TASCAR::session_t::start()
 {
+  if(scenes.empty())
+    add_scene(NULL);
   started_ = true;
   try {
     for(auto scene : scenes) {
