@@ -210,8 +210,11 @@ namespace TASCAR {
     if(!lib) {
       auto homebrewprefix = localgetenv("HOMEBREW_PREFIX");
       if(homebrewprefix.size()) {
+        DEBUG(homebrewprefix);
         homebrewprefix += "/lib/";
+        DEBUG(homebrewprefix);
         homebrewprefix += filename;
+        DEBUG(homebrewprefix);
         lib = ::dlopen(homebrewprefix.c_str(), flags);
       }
     }
