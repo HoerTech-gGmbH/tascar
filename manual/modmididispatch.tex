@@ -1,4 +1,4 @@
-This plugins can dispatch OSC messages upon MIDI events (CC or note events). Event handlers can be registered via OSC or in the XML configuration, using the \elem{ccmsg} or \elem{notemsg} elements. Multiple event handlers for the same event can be registered. In that case all event handlers will be called. Event handler can be removed via OSC. The communication is bi-directional; MIDI events can be emitted by sending an OSC message to \verb!/mididispatch/send/cc! or  \verb!/mididispatch/send/note!.
+This plugins can dispatch OSC messages upon MIDI events (CC or note events). Event handlers can be registered via OSC or in the XML configuration, using the \elem{ccmsg} or \elem{notemsg} elements (see below). Parameters to the message can be added using the \elem{f v="1.234"},  \elem{i v="1"} or  \elem{s v="string"} sub-elements. Multiple event handlers for the same event can be registered. In that case all event handlers will be called. Event handler can be removed via OSC. The communication is bi-directional; MIDI events can be emitted by sending an OSC message to \verb!/mididispatch/send/cc! or  \verb!/mididispatch/send/note!.
 
 \begin{snugshade}
 {\footnotesize
@@ -80,5 +80,15 @@ name & description (type, unit) & def.\\
 \end{tabularx}
 }
 \end{snugshade}
+
+An example configuration can look like this:
+
+\begin{lstlisting}
+<modules>
+  <mididispatch connect="US-2x2:US-2x2 MIDI 1" dumpmsg="true">
+    <notemsg channel="0" note="0" path="/runscript"><s v="note0"/></notemsg>
+  </mididispatch>
+</modules>
+\end{lstlisting}
 
 \input{oscdoc_tascarmod_mididispatch.tex}
