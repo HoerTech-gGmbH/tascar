@@ -275,7 +275,7 @@ tascar_window_t::tascar_window_t(BaseObjectType* cobject,
     TASCAR::add_warning("css error: " + e.what());
   }
   // optionally test for running jack server and start qjackctl:
-  bool checkforjack = TASCAR::config("tascar.gui.checkforjack", 1);
+  bool checkforjack = TASCAR::config("tascar.gui.checkforjack", 0);
   if(checkforjack) {
     bool jack_is_running = test_for_jack_server();
     if(!jack_is_running) {
