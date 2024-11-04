@@ -62,7 +62,24 @@ ltcgen_t::ltcgen_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(addtime, "s", "Add time, e.g., for time zone compensation");
   GET_ATTRIBUTE_BOOL(usewallclock,
                      "Use wallclock time instead of session time");
-  encoder = ltc_encoder_create(get_srate(), fpsnum / fpsden, LTC_TV_625_50, 0);
+  LTC_TV_STANDARD ltc_tv_standard = LTC_TV_625_50;
+  switch((int32_t)(fpsnum / fpsden + 0.5)) {
+  case 30:
+    ltc_tv_standard = LTC_TV_525_60;
+    break;
+  case 25:
+    ltc_tv_standard = LTC_TV_625_50;
+    break;
+  case 24:
+    ltc_tv_standard = LTC_TV_FILM_24;
+    break;
+  default:
+    TASCAR::add_warning("Non-standard LTC frame rate: " +
+                        TASCAR::to_string(fpsnum) + "/" +
+                        TASCAR::to_string(fpsden) + " fps");
+  }
+  encoder =
+      ltc_encoder_create(get_srate(), fpsnum / fpsden, ltc_tv_standard, 0);
   enc_buf = new ltcsnd_sample_t[ltc_encoder_get_buffersize(encoder)];
   memset(enc_buf, 0,
          ltc_encoder_get_buffersize(encoder) * sizeof(ltcsnd_sample_t));
