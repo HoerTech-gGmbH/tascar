@@ -21,6 +21,7 @@
 #define FDN_H
 
 #include "coordinates.h"
+#include "filterclass.h"
 #include "fft.h"
 
 namespace TASCAR {
@@ -116,6 +117,34 @@ namespace TASCAR {
     foa_sample_t sy;  ///< output state buffer
     foa_sample_t sapx; ///< input state variable of allpass filter
     foa_sample_t sapy; ///< output state variable of allpass filter
+  };
+
+  // y[n] = -g x[n] + x[n-1] + g y[n-1]
+  class reflectionfilter_biquadallpass_t {
+  public:
+    reflectionfilter_biquadallpass_t();
+    inline void filter(foa_sample_t& x)
+    {
+      x *= B1;
+      x -= A2 * sy;
+      sy = x;
+      // all pass section:
+      x.w = ap_w.filter(x.w);
+      x.y = ap_y.filter(x.y);
+      x.z = ap_z.filter(x.z);
+      x.x = ap_x.filter(x.x);
+    };
+    void set_lp(float g, float c);
+    void set_allpass(float rw, float ry, float rz, float rx, float phase);
+
+  protected:
+    float B1 = 0.0f; ///< non-recursive filter coefficient for all channels
+    float A2 = 0.0f; ///< recursive filter coefficient for all channels
+    TASCAR::biquadf_t ap_w;
+    TASCAR::biquadf_t ap_y;
+    TASCAR::biquadf_t ap_z;
+    TASCAR::biquadf_t ap_x;
+    foa_sample_t sy; ///< output state buffer
   };
 
   class fdnpath_t {

@@ -262,6 +262,28 @@ void reflectionfilter_t::set_lp(float g, float c)
   A2 = -c;
 }
 
+reflectionfilter_biquadallpass_t::reflectionfilter_biquadallpass_t()
+{
+  sy.set_zero();
+}
+
+void reflectionfilter_biquadallpass_t::set_lp(float g, float c)
+{
+  sy.set_zero();
+  float c2(1.0f - c);
+  B1 = g * c2;
+  A2 = -c;
+}
+
+void reflectionfilter_biquadallpass_t::set_allpass(float rw, float ry, float rz,
+                                                   float rx, float phase)
+{
+  ap_w.set_allpass(rw, phase);
+  ap_y.set_allpass(ry, phase);
+  ap_z.set_allpass(rz, phase);
+  ap_x.set_allpass(rx, phase);
+}
+
 /*
  * Local Variables:
  * mode: c++
