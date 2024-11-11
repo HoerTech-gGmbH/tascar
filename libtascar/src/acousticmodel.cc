@@ -750,7 +750,7 @@ void receiver_t::postproc(std::vector<wave_t>& output)
         // path.dlout = x;
         ++kflt;
       }
-      scatterfilter->process(scatterfilterpath);
+      scatterfilter->process(scatterfilterpath,false);
       scatterbuffer->w()[k] = scatterfilter->outval.w;
       scatterbuffer->x()[k] = scatterfilter->outval.x;
       scatterbuffer->y()[k] = scatterfilter->outval.y;

@@ -21,7 +21,6 @@
 #define FDN_H
 
 #include "coordinates.h"
-#include "filterclass.h"
 #include "fft.h"
 #include "filterclass.h"
 
@@ -97,19 +96,27 @@ namespace TASCAR {
   class reflectionfilter_t {
   public:
     reflectionfilter_t();
-    inline void filter(foa_sample_t& x)
+    inline void filter(foa_sample_t& x, bool use_biquad)
     {
       x *= B1;
       x -= A2 * sy;
       sy = x;
       // all pass section:
-      foa_sample_t tmp(eta * x + sapx);
-      sapx = x;
-      x = tmp - eta * sapy;
-      sapy = x;
+      if(use_biquad) {
+        x.w = ap_w.filter(x.w);
+        x.y = ap_y.filter(x.y);
+        x.z = ap_z.filter(x.z);
+        x.x = ap_x.filter(x.x);
+      } else {
+        foa_sample_t tmp(eta * x + sapx);
+        sapx = x;
+        x = tmp - eta * sapy;
+        sapy = x;
+      }
     };
     void set_lp(float g, float c);
-    void set_eta(float e) { eta = e; };
+    void set_allpass(float eta, float rw, float ry, float rz, float rx,
+                     float phase);
 
   protected:
     float B1 = 0.0f;  ///< non-recursive filter coefficient for all channels
@@ -118,34 +125,10 @@ namespace TASCAR {
     foa_sample_t sy;  ///< output state buffer
     foa_sample_t sapx; ///< input state variable of allpass filter
     foa_sample_t sapy; ///< output state variable of allpass filter
-  };
-
-  // y[n] = -g x[n] + x[n-1] + g y[n-1]
-  class reflectionfilter_biquadallpass_t {
-  public:
-    reflectionfilter_biquadallpass_t();
-    inline void filter(foa_sample_t& x)
-    {
-      x *= B1;
-      x -= A2 * sy;
-      sy = x;
-      // all pass section:
-      x.w = ap_w.filter(x.w);
-      x.y = ap_y.filter(x.y);
-      x.z = ap_z.filter(x.z);
-      x.x = ap_x.filter(x.x);
-    };
-    void set_lp(float g, float c);
-    void set_allpass(float rw, float ry, float rz, float rx, float phase);
-
-  protected:
-    float B1 = 0.0f; ///< non-recursive filter coefficient for all channels
-    float A2 = 0.0f; ///< recursive filter coefficient for all channels
     TASCAR::biquadf_t ap_w;
     TASCAR::biquadf_t ap_y;
     TASCAR::biquadf_t ap_z;
     TASCAR::biquadf_t ap_x;
-    foa_sample_t sy; ///< output state buffer
   };
 
   class fdnpath_t {
@@ -171,28 +154,32 @@ namespace TASCAR {
     uint32_t pos = 0u;
   };
 
-  class fdnpath_biquadallpass_t {
-  public:
-    fdnpath_biquadallpass_t();
-    void init(uint32_t maxdelay);
-    void set_zero()
-    {
-      for(auto& dl : delayline)
-        dl.set_zero();
-      dlout.set_zero();
-    }
-    // delay line:
-    std::vector<foa_sample_t> delayline;
-    // reflection filter:
-    reflectionfilter_biquadallpass_t reflection;
-    TASCAR::quaternion_t rotation;
-    // delayline output for reflection filters:
-    foa_sample_t dlout;
-    // delays:
-    uint32_t delay = 0u;
-    // delayline pointer:
-    uint32_t pos = 0u;
-  };
+  //class fdn_base_t {
+  //public:
+  //  enum gainmethod_t { original, mean, schroeder };
+  //  fdn_base_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
+  //             gainmethod_t gm, bool feedback_);
+  //  virtual ~fdn_base_t(){};
+  //  virtual void setpar_t60(float az, float daz, float t, float dt, float t60,
+  //                          float damping, bool fixcirculantmat,
+  //                          bool truncate_forward) = 0;
+  //  virtual void set_scatterpar(float daz, float t, float dt, float t60,
+  //                              float damping) = 0;
+  //  virtual void set_logdelays(bool ld) { logdelays_ = ld; };
+  //  virtual void set_zero() = 0;
+  //  virtual void prefilt() = 0;
+  //  bool logdelays_ = true;
+  //  uint32_t fdnorder_ = 5u;
+  //  uint32_t maxdelay_ = 8u;
+  //  // feedback matrix:
+  //  std::vector<float> feedbackmat;
+  //  // gain calculation method:
+  //  gainmethod_t gainmethod = original;
+  //  // use feedback matrix:
+  //  bool feedback = true;
+  //  // output FOA sample:
+  //  foa_sample_t outval;
+  //};
 
   class fdn_t {
   public:
@@ -200,7 +187,8 @@ namespace TASCAR {
     fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm,
           bool feedback_);
     ~fdn_t(){};
-    inline void process(std::vector<fdnpath_t>& src)
+    void set_logdelays(bool ld) { logdelays_ = ld; };
+    inline void process(std::vector<fdnpath_t>& src, bool use_biquad)
     {
       outval.set_zero();
       if(feedback) {
@@ -208,7 +196,7 @@ namespace TASCAR {
         // rotation:
         for(auto& path : fdnpath) {
           foa_sample_t tmp(path.delayline[path.pos]);
-          path.reflection.filter(tmp);
+          path.reflection.filter(tmp, use_biquad);
           path.rotation.rotate(tmp);
           path.dlout = tmp;
           outval += tmp;
@@ -259,7 +247,7 @@ namespace TASCAR {
         // rotation:
         for(auto& path : fdnpath) {
           foa_sample_t tmp(path.delayline[path.pos]);
-          path.reflection.filter(tmp);
+          path.reflection.filter(tmp, use_biquad);
           path.rotation.rotate(tmp);
           path.dlout = tmp;
           outval += tmp;
@@ -269,137 +257,28 @@ namespace TASCAR {
     void setpar_t60(float az, float daz, float t, float dt, float t60,
                     float damping, bool fixcirculantmat, bool truncate_forward);
     void set_scatterpar(float daz, float t, float dt, float t60, float damping);
-    void set_logdelays(bool ld) { logdelays_ = ld; };
     void set_zero()
     {
       for(auto& path : fdnpath)
         path.set_zero();
     };
 
-    // private:
     bool logdelays_ = true;
     uint32_t fdnorder_ = 5u;
     uint32_t maxdelay_ = 8u;
     // feedback matrix:
     std::vector<float> feedbackmat;
+    // gain calculation method:
+    gainmethod_t gainmethod = original;
+    // use feedback matrix:
+    bool feedback = true;
+    // output FOA sample:
+    foa_sample_t outval;
     // reflection filter:
     reflectionfilter_t prefilt0;
     reflectionfilter_t prefilt1;
     // FDN path:
     std::vector<fdnpath_t> fdnpath;
-    // gain calculation method:
-    gainmethod_t gainmethod = original;
-    // use feedback matrix:
-    bool feedback = true;
-    //
-
-  public:
-    // output FOA sample:
-    foa_sample_t outval;
-  };
-
-  class fdn_biquadallpass_t {
-  public:
-    enum gainmethod_t { original, mean, schroeder };
-    fdn_biquadallpass_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
-                        gainmethod_t gm, bool feedback_);
-    ~fdn_biquadallpass_t(){};
-    inline void process(std::vector<fdnpath_t>& src)
-    {
-      outval.set_zero();
-      if(feedback) {
-        // get output values from delayline, apply reflection filters and
-        // rotation:
-        for(auto& path : fdnpath) {
-          foa_sample_t tmp(path.delayline[path.pos]);
-          path.reflection.filter(tmp);
-          path.rotation.rotate(tmp);
-          path.dlout = tmp;
-          outval += tmp;
-        }
-        // put rotated+attenuated value to delayline, add input:
-        uint32_t tap = 0;
-        for(auto& path : fdnpath) {
-          // first put input into delayline:
-          path.delayline[path.pos].set_zero();
-          // now add feedback signal:
-          uint32_t otap = 0;
-          for(auto& opath : fdnpath) {
-            foa_sample_t tmp = opath.dlout;
-            tmp += src[otap].dlout;
-            path.delayline[path.pos] +=
-                tmp * feedbackmat[fdnorder_ * tap + otap];
-            ++otap;
-          }
-          // iterate delayline:
-          if(!path.pos)
-            path.pos = path.delay;
-          if(path.pos)
-            --path.pos;
-          ++tap;
-        }
-      } else {
-        // put rotated+attenuated value to delayline, add input:
-        {
-          uint32_t tap = 0;
-          for(auto& path : fdnpath) {
-            foa_sample_t tmp;
-            uint32_t otap = 0;
-            for(auto& opath : src) {
-              tmp += opath.dlout * feedbackmat[fdnorder_ * tap + otap];
-              ++otap;
-            }
-            // first put input into delayline:
-            path.delayline[path.pos] = tmp;
-            // iterate delayline:
-            if(!path.pos)
-              path.pos = path.delay;
-            if(path.pos)
-              --path.pos;
-            ++tap;
-          }
-        }
-        // get output values from delayline, apply reflection filters and
-        // rotation:
-        for(auto& path : fdnpath) {
-          foa_sample_t tmp(path.delayline[path.pos]);
-          path.reflection.filter(tmp);
-          path.rotation.rotate(tmp);
-          path.dlout = tmp;
-          outval += tmp;
-        }
-      }
-    };
-    void setpar_t60(float az, float daz, float t, float dt, float t60,
-                    float damping, bool fixcirculantmat, bool truncate_forward);
-    void set_scatterpar(float daz, float t, float dt, float t60, float damping);
-    void set_logdelays(bool ld) { logdelays_ = ld; };
-    void set_zero()
-    {
-      for(auto& path : fdnpath)
-        path.set_zero();
-    };
-
-    // private:
-    bool logdelays_ = true;
-    uint32_t fdnorder_ = 5u;
-    uint32_t maxdelay_ = 8u;
-    // feedback matrix:
-    std::vector<float> feedbackmat;
-    // reflection filter:
-    reflectionfilter_biquadallpass_t prefilt0;
-    reflectionfilter_biquadallpass_t prefilt1;
-    // FDN path:
-    std::vector<fdnpath_biquadallpass_t> fdnpath;
-    // gain calculation method:
-    gainmethod_t gainmethod = original;
-    // use feedback matrix:
-    bool feedback = true;
-    //
-
-  public:
-    // output FOA sample:
-    foa_sample_t outval;
   };
 
 } // namespace TASCAR
