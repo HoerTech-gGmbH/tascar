@@ -185,7 +185,7 @@ namespace TASCAR {
   public:
     enum gainmethod_t { original, mean, schroeder };
     fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays, gainmethod_t gm,
-          bool feedback_);
+          bool feedback_, std::vector<float> rallpass);
     ~fdn_t(){};
     void set_logdelays(bool ld) { logdelays_ = ld; };
     inline void process(std::vector<fdnpath_t>& src, bool use_biquad)
@@ -196,8 +196,8 @@ namespace TASCAR {
         // rotation:
         for(auto& path : fdnpath) {
           foa_sample_t tmp(path.delayline[path.pos]);
-          path.reflection.filter(tmp, use_biquad);
           path.rotation.rotate(tmp);
+          path.reflection.filter(tmp, use_biquad);
           path.dlout = tmp;
           outval += tmp;
         }
@@ -247,8 +247,8 @@ namespace TASCAR {
         // rotation:
         for(auto& path : fdnpath) {
           foa_sample_t tmp(path.delayline[path.pos]);
-          path.reflection.filter(tmp, use_biquad);
           path.rotation.rotate(tmp);
+          path.reflection.filter(tmp, use_biquad);
           path.dlout = tmp;
           outval += tmp;
         }
@@ -279,6 +279,8 @@ namespace TASCAR {
     reflectionfilter_t prefilt1;
     // FDN path:
     std::vector<fdnpath_t> fdnpath;
+    // allpass filter radius, requires four entries:
+    std::vector<float> rallpass;
   };
 
 } // namespace TASCAR

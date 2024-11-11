@@ -56,6 +56,7 @@ public:
   bool use_lowcut = false;
   bool truncate_forward = false;
   bool use_biquad_allpass = false;
+  std::vector<float> rallpass = {0.96f, 0.95f, 0.951f, 0.93f};
 };
 
 simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
@@ -101,6 +102,12 @@ simplefdn_vars_t::simplefdn_vars_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE_BOOL(
       use_biquad_allpass,
       "Use biquad allpass filters instead of first order filters");
+  GET_ATTRIBUTE(rallpass, "[0,1]",
+                "Allpass filter radius vector (requires four entries)");
+  if(rallpass.size() != 4u)
+    throw TASCAR::ErrMsg(
+        "Allpass filter radius vector requires four entries, received " +
+        std::to_string(rallpass.size()));
 }
 
 simplefdn_vars_t::~simplefdn_vars_t() {}
@@ -264,14 +271,14 @@ void simplefdn_t::configure()
   if(feedback_delay_network)
     delete feedback_delay_network;
   srcpath.resize(fdnorder);
-  feedback_delay_network =
-      new TASCAR::fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, true);
+  feedback_delay_network = new TASCAR::fdn_t(fdnorder, (uint32_t)f_sample,
+                                             logdelays, gm, true, rallpass);
   for(auto& pff : feedforward_delay_network)
     delete pff;
   feedforward_delay_network.clear();
   for(uint32_t k = 0; k < forwardstages; ++k)
-    feedforward_delay_network.push_back(
-        new TASCAR::fdn_t(fdnorder, (uint32_t)f_sample, logdelays, gm, false));
+    feedforward_delay_network.push_back(new TASCAR::fdn_t(
+        fdnorder, (uint32_t)f_sample, logdelays, gm, false, rallpass));
   if(foa_out)
     delete foa_out;
   foa_out = new TASCAR::amb1wave_t(n_fragment);
