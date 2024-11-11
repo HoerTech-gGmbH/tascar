@@ -238,6 +238,215 @@ void fdn_t::set_scatterpar(float daz, float t_min, float t_max, float t60,
   }
 }
 
+fdn_biquadallpass_t::fdn_biquadallpass_t(uint32_t fdnorder, uint32_t maxdelay,
+                                         bool logdelays, gainmethod_t gm,
+                                         bool feedback_)
+    : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
+      feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm), feedback(feedback_)
+{
+  for(auto& v : feedbackmat)
+    v = 0.0f;
+  prefilt0.set_allpass(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+  prefilt1.set_allpass(0.87f, 0.87f, 0.87f, 0.87f, 0.25f * TASCAR_PIf);
+  fdnpath.resize(fdnorder);
+  for(size_t k = 0; k < fdnpath.size(); ++k) {
+    fdnpath[k].init(maxdelay);
+  }
+  // inval.set_zero();
+  outval.set_zero();
+}
+
+/**
+   \brief Set parameters of FDN
+   \param az Average rotation in radians per reflection
+   \param daz Spread of rotation in radians per reflection
+   \param t Average/maximum delay in samples
+   \param dt Spread of delay in samples
+   \param g Gain
+   \param damping Damping
+*/
+void fdn_biquadallpass_t::setpar_t60(float az, float daz, float t_min,
+                                     float t_max, float t60, float damping,
+                                     bool fixcirculantmat,
+                                     bool truncate_forward)
+{
+  // set delays:
+  set_zero();
+  float t_mean(0);
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+    float t_(t_min);
+    if(logdelays_) {
+      // logarithmic distribution:
+      if(fdnorder_ > 1)
+        t_ =
+            t_min * powf(t_max / t_min, (float)tap / ((float)fdnorder_ - 1.0f));
+      ;
+    } else {
+      // squareroot distribution:
+      if(fdnorder_ > 1)
+        t_ = t_min + (t_max - t_min) *
+                         powf((float)tap / ((float)fdnorder_ - 1.0f), 0.5f);
+    }
+    uint32_t d((uint32_t)std::max(0.0f, t_));
+    fdnpath[tap].delay = std::max(2u, std::min(maxdelay_ - 1u, d));
+    fdnpath[tap].reflection.set_allpass(
+        0.87f, 0.88f, 0.89f, 0.9f,
+        TASCAR_PIf * (0.001f + 0.25f * (float)tap / ((float)fdnorder_ - 1.0f)));
+    // eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
+    t_mean += (float)(fdnpath[tap].delay);
+  }
+  // if feed forward model, then truncate delays:
+  if(!feedback) {
+    if(truncate_forward) {
+      auto d_min = maxdelay_;
+      for(auto& path : fdnpath)
+        d_min = std::min(d_min, path.delay);
+      if(d_min > 2u)
+        d_min -= 2u;
+      for(auto& path : fdnpath)
+        path.delay -= d_min;
+    } else {
+      for(auto& path : fdnpath)
+        path.delay++;
+    }
+  }
+  t_mean /= (float)std::max(1u, fdnorder_);
+  float g(0.0f);
+  switch(gainmethod) {
+  case fdn_t::original:
+    g = expf(-4.2f * t_min / t60);
+    break;
+  case fdn_t::mean:
+    g = expf(-4.2f * t_mean / t60);
+    break;
+  case fdn_t::schroeder:
+    g = powf(10.0f, -3.0f * t_mean / t60);
+    break;
+  }
+  prefilt0.set_lp(g, damping);
+  prefilt1.set_lp(g, damping);
+  // set rotation:
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+    // set reflection filters:
+    fdnpath[tap].reflection.set_lp(g, damping);
+    float laz(az);
+    if(fdnorder_ > 1)
+      laz = az - daz + 2.0f * daz * (float)tap / (float)fdnorder_;
+    fdnpath[tap].rotation.set_rotation(laz, TASCAR::posf_t(0, 0, 1));
+    TASCAR::quaternion_t q;
+    q.set_rotation(0.5f * daz * (float)(tap & 1) - 0.5f * daz,
+                   TASCAR::posf_t(0, 1, 0));
+    fdnpath[tap].rotation.rmul(q);
+    q.set_rotation(0.125f * daz * (float)(tap % 3) - 0.25f * daz,
+                   TASCAR::posf_t(1, 0, 0));
+    fdnpath[tap].rotation.rmul(q);
+  }
+  // set feedback matrix:
+  if(fdnorder_ > 1) {
+    TASCAR::fft_t fft(fdnorder_);
+    TASCAR::spec_t eigenv(fdnorder_ / 2 + 1);
+    for(uint32_t k = 0; k < eigenv.n_; ++k)
+      eigenv[k] = std::exp(i_f * TASCAR_2PIf *
+                           powf((float)k / (0.5f * (float)fdnorder_), 2.0f));
+    ;
+    fft.execute(eigenv);
+    for(uint32_t itap = 0; itap < fdnorder_; ++itap)
+      for(uint32_t otap = 0; otap < fdnorder_; ++otap)
+        if(fixcirculantmat)
+          feedbackmat[fdnorder_ * itap + otap] =
+              fft.w[(otap + fdnorder_ - itap) % fdnorder_];
+        else
+          feedbackmat[fdnorder_ * itap + otap] =
+              fft.w[(otap + itap) % fdnorder_];
+  } else {
+    feedbackmat[0] = 1.0;
+  }
+}
+
+void fdn_biquadallpass_t::set_scatterpar(float daz, float t_min, float t_max,
+                                         float t60, float damping)
+{
+  // set delays:
+  set_zero();
+  float t_mean(0);
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+    float t_(t_min);
+    if(logdelays_) {
+      // logarithmic distribution:
+      if(fdnorder_ > 1)
+        t_ =
+            t_min * powf(t_max / t_min, (float)tap / ((float)fdnorder_ - 1.0f));
+      ;
+    } else {
+      // squareroot distribution:
+      if(fdnorder_ > 1)
+        t_ = t_min + (t_max - t_min) *
+                         powf((float)tap / ((float)fdnorder_ - 1.0f), 0.5f);
+    }
+    uint32_t d((uint32_t)std::max(0.0f, t_));
+    fdnpath[tap].delay = std::max(2u, std::min(maxdelay_ - 1u, d));
+    fdnpath[tap].reflection.set_allpass(
+        0.87f, 0.88f, 0.89f, 0.9f,
+        TASCAR_PIf * (0.001f + 0.25f * (float)tap / ((float)fdnorder_ - 1.0f)));
+    // fdnpath[tap].reflection.set_eta(0.87f * (float)tap /
+    //                              ((float)fdnorder_ - 1.0f));
+    // eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
+    t_mean += (float)(fdnpath[tap].delay);
+  }
+  // if feed forward model, then truncate delays:
+  if(!feedback) {
+    for(auto& path : fdnpath)
+      path.delay++;
+  }
+  t_mean /= (float)std::max(1u, fdnorder_);
+  float g(0.0f);
+  switch(gainmethod) {
+  case fdn_t::original:
+    g = expf(-4.2f * t_min / t60);
+    break;
+  case fdn_t::mean:
+    g = expf(-4.2f * t_mean / t60);
+    break;
+  case fdn_t::schroeder:
+    g = powf(10.0f, -3.0f * t_mean / t60);
+    break;
+  }
+  prefilt0.set_lp(g, damping);
+  prefilt1.set_lp(g, damping);
+  // set rotation:
+  for(uint32_t tap = 0; tap < fdnorder_; ++tap) {
+    // set reflection filters:
+    fdnpath[tap].reflection.set_lp(g, damping);
+    float laz = 0.0f;
+    if(fdnorder_ > 1)
+      laz = -daz + 2.0f * daz * (float)tap / (float)(fdnorder_ - 1);
+    fdnpath[tap].rotation.set_rotation(laz, TASCAR::posf_t(0, 0, 1));
+    TASCAR::quaternion_t q;
+    q.set_rotation(0.5f * daz * (float)(tap & 1) - 0.5f * daz,
+                   TASCAR::posf_t(0, 1, 0));
+    fdnpath[tap].rotation.rmul(q);
+    q.set_rotation(0.125f * daz * (float)(tap % 3) - 0.25f * daz,
+                   TASCAR::posf_t(1, 0, 0));
+    fdnpath[tap].rotation.rmul(q);
+  }
+  // set feedback matrix:
+  if(fdnorder_ > 1) {
+    TASCAR::fft_t fft(fdnorder_);
+    TASCAR::spec_t eigenv(fdnorder_ / 2 + 1);
+    for(uint32_t k = 0; k < eigenv.n_; ++k)
+      eigenv[k] = std::exp(i_f * TASCAR_2PIf *
+                           powf((float)k / (0.5f * (float)fdnorder_), 2.0f));
+    ;
+    fft.execute(eigenv);
+    for(uint32_t itap = 0; itap < fdnorder_; ++itap)
+      for(uint32_t otap = 0; otap < fdnorder_; ++otap)
+        feedbackmat[fdnorder_ * itap + otap] =
+            fft.w[(otap + fdnorder_ - itap) % fdnorder_];
+  } else {
+    feedbackmat[0] = 1.0;
+  }
+}
+
 reflectionfilter_t::reflectionfilter_t()
 {
   sy.set_zero();
@@ -260,6 +469,28 @@ void reflectionfilter_t::set_lp(float g, float c)
   float c2(1.0f - c);
   B1 = g * c2;
   A2 = -c;
+}
+
+reflectionfilter_biquadallpass_t::reflectionfilter_biquadallpass_t()
+{
+  sy.set_zero();
+}
+
+void reflectionfilter_biquadallpass_t::set_lp(float g, float c)
+{
+  sy.set_zero();
+  float c2(1.0f - c);
+  B1 = g * c2;
+  A2 = -c;
+}
+
+void reflectionfilter_biquadallpass_t::set_allpass(float rw, float ry, float rz,
+                                                   float rx, float phase)
+{
+  ap_w.set_allpass(rw, phase);
+  ap_y.set_allpass(ry, phase);
+  ap_z.set_allpass(rz, phase);
+  ap_x.set_allpass(rx, phase);
 }
 
 /*
