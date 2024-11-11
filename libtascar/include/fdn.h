@@ -21,6 +21,7 @@
 #define FDN_H
 
 #include "coordinates.h"
+#include "filterclass.h"
 #include "fft.h"
 #include "filterclass.h"
 
