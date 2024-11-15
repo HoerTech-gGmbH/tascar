@@ -79,7 +79,7 @@ spk_array_cfg_t::~spk_array_cfg_t()
 spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
                          const std::string& elementname_, bool allow_empty)
     : spk_array_cfg_t(e, use_parent_xml), elayout(e_layout), rmax(0), rmin(0),
-      xyzgain(1.0), elementname(elementname_), mean_rotation(0)
+      elementname(elementname_), mean_rotation(0)
 {
   clear();
   {
@@ -119,12 +119,23 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
   }
   for(auto& sn : tsccfg::node_get_children(e_layout, elementname))
     emplace_back(sn);
-  elayout.GET_ATTRIBUTE(xyzgain, "", "XYZ-gain for FOA decoding");
   elayout.GET_ATTRIBUTE(name, "", "Name of layout, for documentation only");
   elayout.GET_ATTRIBUTE(onload, "",
                         "system command to be executed when layout is loaded");
   elayout.GET_ATTRIBUTE(
       onunload, "", "system command to be executed when layout is unloaded");
+  std::string diffusedecoder = "maxre";
+  elayout.GET_ATTRIBUTE(diffusedecoder, "basic|maxre|inphase",
+                        "Diffuse-decoder method");
+  if(diffusedecoder == "maxre")
+    diffusedecoder_enum = maxre;
+  else if(diffusedecoder == "basic")
+    diffusedecoder_enum = basic;
+  else if(diffusedecoder == "inphase")
+    diffusedecoder_enum = inphase;
+  else
+    throw TASCAR::ErrMsg("Invalid diffuse decoder type \"" + diffusedecoder +
+                         "\". Valid values are basic, maxre or inphase.");
   //
   if(empty() && (!allow_empty))
     throw TASCAR::ErrMsg("Invalid " + elementname_ + " array (no " +
@@ -141,12 +152,34 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
         rmin = r;
     }
   }
+  bool isflat = true;
   std::complex<double> p_xy(0);
   for(uint32_t k = 0; k < size(); k++) {
+    if(fabsf(operator[](k).unitvector.z) > 1e-6f)
+      isflat = false;
     operator[](k).spkgain *= operator[](k).norm() / rmax;
     operator[](k).dr = rmax - operator[](k).norm();
     p_xy += std::exp(-(double)k * TASCAR_2PI * i / (double)(size())) *
             (operator[](k).unitvector.x + i * operator[](k).unitvector.y);
+  }
+  // calculate xyzgain according to Daniel (2001), table 3.10:
+  double xyzgain = 1.0;
+  switch(diffusedecoder_enum) {
+  case basic:
+    xyzgain = 1.0;
+    break;
+  case maxre:
+    if(isflat)
+      xyzgain = sqrt(0.5);
+    else
+      xyzgain = 0.577;
+    break;
+  case inphase:
+    if(isflat)
+      xyzgain = 0.5;
+    else
+      xyzgain = 1.0/3.0;
+    break;
   }
   mean_rotation = std::arg(p_xy);
   didx.resize(size());

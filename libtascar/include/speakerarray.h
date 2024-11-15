@@ -99,6 +99,7 @@ namespace TASCAR {
     spk_array_t(const spk_array_t&);
 
   public:
+    enum dffusedecoder_t { basic, maxre, inphase };
     double get_rmax() const { return rmax; };
     double get_rmin() const { return rmin; };
     class didx_t {
@@ -116,7 +117,7 @@ namespace TASCAR {
   private:
     double rmax;
     double rmin;
-    float xyzgain;
+    dffusedecoder_t diffusedecoder_enum = maxre;
     std::string onload;
     std::string onunload;
     std::vector<didx_t> didx;
@@ -212,8 +213,6 @@ namespace TASCAR {
     // lowpass filters for subwoofer (24 dB/Oct):
     std::vector<TASCAR::biquadf_t> flt_lowp1;
     std::vector<TASCAR::biquadf_t> flt_lowp2;
-    // allpass filters for transition phase matching, broad band speakers:
-    //std::vector<TASCAR::biquad_t> flt_allp;
     std::vector<std::vector<float>> subweight;
     std::vector<std::string>
         convolution_ir; //< file name of impulse response for convolution

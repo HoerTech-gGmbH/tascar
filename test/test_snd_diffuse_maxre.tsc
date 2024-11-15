@@ -10,7 +10,7 @@
     </diffuse>
     <receiver type="nsp">
       <!-- maxre decoding is achieved with g_m = 0.7071 (Daniel, 2001) -->
-      <layout xyzgain="0.7071" decorr="false">
+      <layout diffusedecoder="maxre" decorr="false">
         <speaker az="0" r="1"/>
       </layout>
     </receiver>

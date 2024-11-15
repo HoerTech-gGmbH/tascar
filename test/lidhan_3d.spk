@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<layout name="glab" xyzgain="0.577" decorr="false">
+<layout name="glab" decorr="false">
 	<speaker az="11.25"/>
 	<speaker az="33.75"/>
 	<speaker az="56.25"/>

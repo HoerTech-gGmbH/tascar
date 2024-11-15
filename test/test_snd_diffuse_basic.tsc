@@ -10,7 +10,7 @@
     </diffuse>
     <receiver type="nsp">
       <!-- basic decoding is achieved with g_m = 1.0 (Daniel, 2001) -->
-      <layout xyzgain="1.0" decorr="false">
+      <layout diffusedecoder="basic" decorr="false">
         <speaker az="0" r="1"/>
       </layout>
     </receiver>

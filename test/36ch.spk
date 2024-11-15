@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<layout xyzgain="0.70710678118654757274" >
+<layout>
   <speaker az="0"/>
   <speaker az="10"/>
   <speaker az="20"/>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<layout xyzgain="0.70710678118654757274" decorr="true" decorr_length="0" densitycorr="false">
+<layout decorr="true" decorr_length="0" densitycorr="false">
   <speaker az="0"/>
   <speaker az="45"/>
   <speaker az="90"/>

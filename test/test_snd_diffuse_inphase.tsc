@@ -10,7 +10,7 @@
     </diffuse>
     <receiver type="nsp">
       <!-- inphase decoding is achieved with g_m = 0.5 (Daniel, 2001) -->
-      <layout xyzgain="0.5" decorr="false">
+      <layout diffusedecoder="inphase" decorr="false">
         <speaker az="0" r="1"/>
       </layout>
     </receiver>
