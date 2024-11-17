@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <reverb type="simplefdn"/>
+    <source name="organ">
+      <sound x="1">
+        <plugins>
+        <simplesynth autoconnect="true" decay="40" decaydamping="0.07" decaynoise="0.1" decayoffset="0.2" detune="-1.25" f0="415" level="80" noiseq="0.3" noiseweight="0.1" onset="0.14" partialweights="1 1 0.316 1 0.282 1 2 0.0891 0.0398 0.0398 0.398" tuning="meantone4"/>
+        </plugins>
+      </sound>
+    </source>
+    <receiver type="hrtf"/>
+  </scene>
+  <connect src="render.scene:out_[lr]" dest="system:playback_[12]"/>
+</session>

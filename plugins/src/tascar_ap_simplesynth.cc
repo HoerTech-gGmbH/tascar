@@ -30,6 +30,8 @@ struct snddevname_t {
   std::string desc;
 };
 
+std::vector<float> pitchcorr = {0.0f};
+
 class tone_t {
 public:
   tone_t(){};
@@ -75,7 +77,11 @@ public:
     for(auto& ph : phase)
       ph = 1.0f;
     amplitudes = partialweights;
-    float f = powf(2.0f, (float)(p - 69) / 12.0f) * f0;
+    auto pitchidx = div(p, (int)(pitchcorr.size()));
+    float pitch_corr_semi =
+        0.01f * pitchcorr[pitchidx.rem] - (float)(pitchidx.rem);
+    float pitch_log_semi = (float)(p - 69) + pitch_corr_semi;
+    float f = powf(2.0f, pitch_log_semi / 12.0f) * f0;
     dphi = std::polar(1.0f, fscale * f);
     dphi_detune = std::polar(1.0f, fscale * detune);
     if(tau > 0)
@@ -193,6 +199,25 @@ simplesynth_t::simplesynth_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(noiseweight, "", "Noise to tone ratio");
   GET_ATTRIBUTE(decaynoise, "s", "Noise decay time");
   GET_ATTRIBUTE(noiseq, "", "Noise resonace filter Q factor");
+  std::string tuning = "equal";
+  GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
+                "Tuning");
+  if(tuning == "equal")
+    pitchcorr = {0.0f};
+  else if(tuning == "werkmeister3")
+    pitchcorr = {0.0f,   96.0f,  204.0f, 300.0f, 396.0f,  504.0f,
+                 600.0f, 702.0f, 792.0f, 900.0f, 1002.0f, 1098.0f};
+  else if(tuning == "meantone4")
+    pitchcorr = {0.0f,   75.5f,  193.0f, 310.5f, 386.0f,  503.5f,
+                 579.0f, 696.5f, 772.0f, 889.5f, 1007.0f, 1082.5f};
+  else if(tuning == "meantone6")
+    pitchcorr = {0.0f,   92.0f,  196.0f, 294.0f, 392.0f, 502.0f,
+                 588.0f, 698.0f, 796.0f, 894.0f, 998.0f, 1090.0f};
+  else if(tuning == "valotti")
+    pitchcorr = {0.0f,   94.0f,  196.0f, 298.0f, 392.0f,  502.0f,
+                 592.0f, 698.0f, 796.0f, 894.0f, 1000.0f, 1090.0f};
+  else
+    throw TASCAR::ErrMsg("Unsupported tuning: \"" + tuning + "\".");
   tones.resize(maxvoices);
   if(!connect.empty()) {
     connect_input(connect, true);
