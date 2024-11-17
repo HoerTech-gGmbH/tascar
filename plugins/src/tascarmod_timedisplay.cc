@@ -96,7 +96,7 @@ timedisplay_t::timedisplay_t(const TASCAR::module_cfg_t& cfg)
   GET_WIDGET(label);
   timedisplaywindow->show();
   connection_timeout = Glib::signal_timeout().connect(
-      sigc::mem_fun(*this, &timedisplay_t::on_timeout), 1000 / fps);
+      sigc::mem_fun(*this, &timedisplay_t::on_timeout), 1000.0 / fps);
   Pango::AttrList attrlist;
   Pango::Attribute fscale(Pango::Attribute::create_attr_scale(fontscale));
   attrlist.insert(fscale);

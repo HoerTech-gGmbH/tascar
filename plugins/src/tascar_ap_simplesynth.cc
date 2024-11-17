@@ -177,6 +177,7 @@ private:
   float decaynoise = 0.5f;
   float noiseweight = 0.0f;
   float noiseq = 0.5f;
+  float gamma = 1.0f;
   std::string connect;
 };
 
@@ -199,6 +200,7 @@ simplesynth_t::simplesynth_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(noiseweight, "", "Noise to tone ratio");
   GET_ATTRIBUTE(decaynoise, "s", "Noise decay time");
   GET_ATTRIBUTE(noiseq, "", "Noise resonace filter Q factor");
+  GET_ATTRIBUTE(gamma, "", "Velocity gamma value");
   std::string tuning = "equal";
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
@@ -255,6 +257,7 @@ void simplesynth_t::add_variables(TASCAR::osc_server_t* srv)
                  "Noise resonance filter Q factor");
   srv->add_float("/decaynoise", &decaynoise, "[0,4]", "Noise decay time in s");
   srv->add_float("/noiseweight", &noiseweight, "[0,1]", "Noise to tone ratio");
+  srv->add_float("/gamma", &gamma, "[0,10]", "Sensitivity curve gamma");
   srv->unset_variable_owner();
 }
 
@@ -278,10 +281,12 @@ void simplesynth_t::emit_event_note(int channel, int pitch, int velocity)
 {
   if(midichannel == channel) {
     if(velocity > 0) {
+      float inputvel = (float)velocity / 127.0f;
+      inputvel = powf(inputvel, gamma);
       tones[nexttone].set_pitch(
-          pitch, (float)velocity / 127.0f * (1.0f - noiseweight), f0, decay,
-          decayoffset, onset * (1.0f - (float)velocity / 127.0f), detune,
-          decaydamping, decaynoise, ((float)velocity / 127.0f) * noiseweight,
+          pitch, inputvel * (1.0f - noiseweight), f0, decay,
+          decayoffset, onset * (1.0f - inputvel), detune,
+          decaydamping, decaynoise, inputvel * noiseweight,
           noiseq);
       ++nexttone;
       if(nexttone >= tones.size())
