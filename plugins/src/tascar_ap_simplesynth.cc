@@ -21,6 +21,8 @@
 
 #include "alsamidicc.h"
 #include "audioplugin.h"
+#include "delayline.h"
+#include "filterclass.h"
 #include <complex>
 
 struct snddevname_t {
@@ -42,18 +44,28 @@ public:
   std::complex<float> dphi = 1.0f;
   std::complex<float> dphi_detune = 1.0f;
   float amplitude = 0.0f;
+  float amplitudenoise = 0.0f;
   int pitch = 0;
   float decay = 0.99f;
   float decaydamping = 0.99f;
   float decayoffset = 0.99f;
+  float decaynoise = 0.99f;
+  float srate_ = 1.0f;
+  uint32_t fbdelay = 1;
+  float feedback = 1.0f;
+  float noisestate = 0.0f;
+  float noisedamp = 0.0f;
+  TASCAR::varidelay_t noiseflt = TASCAR::varidelay_t(10000, 1.0, 1.0, 0, 0);
 
   void set_srate(float srate)
   {
     fscale = TASCAR_2PIf / srate;
     dt = 1.0f / srate;
+    srate_ = srate;
   }
   void set_pitch(int p, float a, float f0, float tau, float tauoff, float onset,
-                 float detune, float taupitch)
+                 float detune, float taupitch, float taunoise, float anoise,
+                 float q)
   {
     if(onset < 1e-4f)
       onset = 1e-4f;
@@ -78,17 +90,35 @@ public:
       decayoffset = exp(-fscale / tauoff);
     else
       decayoffset = 1.0f;
+    if(taunoise > 0)
+      decaynoise = exp(-fscale / taunoise);
+    else
+      decaynoise = 1.0f;
+    noisedamp = exp(-TASCAR_2PIf * fscale * f);
     amplitude = a;
+    amplitudenoise = anoise;
+    fbdelay = uint32_t(srate_ / f);
+    feedback = q;
+    noisestate = 0.0f;
   }
   void unset_pitch(int p)
   {
     if(pitch == p)
       decay = decayoffset;
-    // amplitude = 0.0f;
   }
   void add(float& val)
   {
+    if(amplitudenoise > 1e-8f) {
+      float oval = noiseflt.get(fbdelay);
+      noisestate =
+          noisedamp * noisestate + (1.0f - noisedamp) * TASCAR::frand();
+      noiseflt.push(oval * feedback + amplitudenoise * noisestate);
+      val += oval;
+      amplitudenoise *= decaynoise;
+    } else
+      amplitudenoise = 0.0f;
     if(amplitude > 1e-8f) {
+      //
       float oval = 0.0f;
       std::complex<float> ldphi = dphi;
       float compdecay = 1.0f;
@@ -101,7 +131,7 @@ public:
       }
       amplitude *= decay;
       if(rampt > 0) {
-        oval *= 0.5 + 0.5 * cosf(TASCAR_PIf * rampt * rampdur_1);
+        oval *= 0.5f + 0.5f * cosf(TASCAR_PIf * rampt * rampdur_1);
         rampt -= dt;
       }
       val += oval;
@@ -138,6 +168,9 @@ private:
   float level = 0.06f;
   float detune = 1.0f;
   float decaydamping = 8.0f;
+  float decaynoise = 0.5f;
+  float noiseweight = 0.0f;
+  float noiseq = 0.5f;
   std::string connect;
 };
 
@@ -157,6 +190,9 @@ simplesynth_t::simplesynth_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(autoconnect, "Autoconnect to input ports");
   GET_ATTRIBUTE(connect, "", "ALSA device name to connect to");
   GET_ATTRIBUTE(detune, "Hz", "Detuning frequency in Hz");
+  GET_ATTRIBUTE(noiseweight, "", "Noise to tone ratio");
+  GET_ATTRIBUTE(decaynoise, "s", "Noise decay time");
+  GET_ATTRIBUTE(noiseq, "", "Noise resonace filter Q factor");
   tones.resize(maxvoices);
   if(!connect.empty()) {
     connect_input(connect, true);
@@ -190,6 +226,10 @@ void simplesynth_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float("/f0", &f0, "[100,1000]", "Tuning frequency in Hz");
   srv->add_float("/onset", &onset, "[0,0.2]", "Onset duration in s");
   srv->add_float("/detune", &detune, "[-10,10]", "Detuning in Hz");
+  srv->add_float("/noiseq", &noiseq, "]0,1[",
+                 "Noise resonance filter Q factor");
+  srv->add_float("/decaynoise", &decaynoise, "[0,4]", "Noise decay time in s");
+  srv->add_float("/noiseweight", &noiseweight, "[0,1]", "Noise to tone ratio");
   srv->unset_variable_owner();
 }
 
@@ -214,8 +254,10 @@ void simplesynth_t::emit_event_note(int channel, int pitch, int velocity)
   if(midichannel == channel) {
     if(velocity > 0) {
       tones[nexttone].set_pitch(
-          pitch, velocity / 127.0f, f0, decay, decayoffset,
-          onset * (1.0f - (float)velocity / 127.0f), detune, decaydamping);
+          pitch, (float)velocity / 127.0f * (1.0f - noiseweight), f0, decay,
+          decayoffset, onset * (1.0f - (float)velocity / 127.0f), detune,
+          decaydamping, decaynoise, ((float)velocity / 127.0f) * noiseweight,
+          noiseq);
       ++nexttone;
       if(nexttone >= tones.size())
         nexttone = 0;
@@ -235,7 +277,7 @@ void simplesynth_t::configure()
     for(auto& p : t.phase)
       p = 1.0f;
     t.amplitudes.resize(partialweights.size());
-    t.set_srate(f_sample);
+    t.set_srate((float)f_sample);
     t.N = partialweights.size();
   }
   start_service();

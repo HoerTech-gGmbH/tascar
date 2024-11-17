@@ -48,7 +48,12 @@ using namespace TASCAR;
 
 double TASCAR::drand()
 {
-  return (double)rand() / (double)(RAND_MAX + 1.0);
+  return (double)rand() / ((double)RAND_MAX + 1.0);
+}
+
+float TASCAR::frand()
+{
+  return (float)rand() / ((float)RAND_MAX + 1.0f);
 }
 
 std::string pos_t::print_cart(const std::string& delim) const

@@ -3,6 +3,9 @@ all: build modules
 include ../config.mk
 include ../rules.mk
 
+CXXFLAGS += -Wconversion
+#-Werror
+
 #
 # main targets:
 #
