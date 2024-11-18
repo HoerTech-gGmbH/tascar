@@ -57,6 +57,7 @@ public:
   float feedback = 1.0f;
   float noisestate = 0.0f;
   float noisedamp = 0.0f;
+  float noisemin = 0.0f;
   TASCAR::varidelay_t noiseflt = TASCAR::varidelay_t(10000, 1.0, 1.0, 0, 0);
 
   void set_srate(float srate)
@@ -67,8 +68,9 @@ public:
   }
   void set_pitch(int p, float a, float f0, float tau, float tauoff, float onset,
                  float detune, float taupitch, float taunoise, float anoise,
-                 float q)
+                 float q, float nmin)
   {
+    noisemin = nmin;
     if(onset < 1e-4f)
       onset = 1e-4f;
     pitch = p;
@@ -109,16 +111,19 @@ public:
   }
   void unset_pitch(int p)
   {
-    if(pitch == p)
+    if(pitch == p){
       decay = decayoffset;
+      decaynoise = decayoffset;
+      noisemin = 0.0f;
+    }
   }
   void add(float& val)
   {
-    if(amplitudenoise > 1e-8f) {
+    if((amplitudenoise > 1e-8f)||(amplitude > 1e-8f)) {
       float oval = noiseflt.get(fbdelay);
       noisestate =
           noisedamp * noisestate + (1.0f - noisedamp) * TASCAR::frand();
-      noiseflt.push(oval * feedback + amplitudenoise * noisestate);
+      noiseflt.push(oval * feedback + (amplitudenoise + noisemin) * noisestate);
       val += oval;
       amplitudenoise *= decaynoise;
     } else
@@ -178,6 +183,7 @@ private:
   float noiseweight = 0.0f;
   float noiseq = 0.5f;
   float gamma = 1.0f;
+  float noisemin = 0.0f;
   std::string connect;
 };
 
@@ -201,6 +207,7 @@ simplesynth_t::simplesynth_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(decaynoise, "s", "Noise decay time");
   GET_ATTRIBUTE(noiseq, "", "Noise resonace filter Q factor");
   GET_ATTRIBUTE(gamma, "", "Velocity gamma value");
+  GET_ATTRIBUTE(noisemin, "", "Minimum noise amplitude during sustain");
   std::string tuning = "equal";
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
@@ -258,6 +265,8 @@ void simplesynth_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_float("/decaynoise", &decaynoise, "[0,4]", "Noise decay time in s");
   srv->add_float("/noiseweight", &noiseweight, "[0,1]", "Noise to tone ratio");
   srv->add_float("/gamma", &gamma, "[0,10]", "Sensitivity curve gamma");
+  srv->add_float("/noisemin", &noisemin, "[0,1]",
+                 "Minimum noise amplitude during sustain");
   srv->unset_variable_owner();
 }
 
@@ -283,11 +292,10 @@ void simplesynth_t::emit_event_note(int channel, int pitch, int velocity)
     if(velocity > 0) {
       float inputvel = (float)velocity / 127.0f;
       inputvel = powf(inputvel, gamma);
-      tones[nexttone].set_pitch(
-          pitch, inputvel * (1.0f - noiseweight), f0, decay,
-          decayoffset, onset * (1.0f - inputvel), detune,
-          decaydamping, decaynoise, inputvel * noiseweight,
-          noiseq);
+      tones[nexttone].set_pitch(pitch, inputvel * (1.0f - noiseweight), f0,
+                                decay, decayoffset, onset * (1.0f - inputvel),
+                                detune, decaydamping, decaynoise,
+                                inputvel * noiseweight, noiseq, noisemin);
       ++nexttone;
       if(nexttone >= tones.size())
         nexttone = 0;
