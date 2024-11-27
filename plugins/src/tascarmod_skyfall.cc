@@ -18,7 +18,7 @@
  * 02110-1301, USA.
  */
 
-#include <tascar/session.h>
+#include "session.h"
 
 /*
   The best way to implement an actor module is to derive from the
@@ -35,28 +35,21 @@ private:
   // Declare your module parameters here. Access via XML file and OSC
   // can be set up in the contructor.
   //
-  double gravitation;
-  double deceleration;
-  double vmax; // max fall speed
-  double z0;
-  bool bypass;
-  double wx;
-  double wy;
-  double wz;
-  double friction_fall;
-  double friction_jump;
+  double gravitation = -9.81;
+  double deceleration = 40;
+  double vmax = 40; // max fall speed
+  double z0 = 2;
+  bool bypass = true;
+  double wx = 0;
+  double wy = 11 * DEG2RAD;
+  double wz = 45 * DEG2RAD;
+  double friction_fall = 1;
+  double friction_jump = 0.3;
   std::vector<double> vspeed;
 };
 
 skyfall_t::skyfall_t(const TASCAR::module_cfg_t& cfg)
-    : actor_module_t(cfg, true), // initialize base class, fail if no
-                                 // matching object was found
-      //
-      // Default values of module parameters:
-      //
-      gravitation(-9.81), deceleration(40), vmax(40), z0(2), bypass(true),
-      wx(0), wy(11 * DEG2RAD), wz(45 * DEG2RAD), friction_fall(1),
-      friction_jump(0.3)
+    : actor_module_t(cfg, true)
 {
   std::string prefix("/skyfall");
   //
