@@ -1000,7 +1000,7 @@ TASCAR::actor_module_t::actor_module_t(const TASCAR::module_cfg_t& cfg,
   obj = session->find_objects(actor);
   if(fail_on_empty && obj.empty())
     throw TASCAR::ErrMsg("No object matches actor pattern \"" +
-                         vecstr2str(actor) + "\".");
+                         vecstr2str(actor) + "\" (attribute \"actor\")");
 }
 
 TASCAR::actor_module_t::~actor_module_t() {}
