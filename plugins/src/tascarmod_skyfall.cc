@@ -56,8 +56,8 @@ skyfall_t::skyfall_t(const TASCAR::module_cfg_t& cfg)
   // Register module parameters for access via XML file:
   //
   GET_ATTRIBUTE(prefix, "", "OSC prefix");
-  GET_ATTRIBUTE(gravitation, "m/s^2", "Gravitation constant");
-  GET_ATTRIBUTE(deceleration, "m/s^2", "Deceleration during sprung phase");
+  GET_ATTRIBUTE(gravitation, "m/s$^2$", "Gravitation constant");
+  GET_ATTRIBUTE(deceleration, "m/s$^2$", "Deceleration during sprung phase");
   GET_ATTRIBUTE(vmax, "m/s", "maximum velocity");
   GET_ATTRIBUTE(z0, "m", "starting point");
   GET_ATTRIBUTE_BOOL(bypass, "Bypass plugin");
