@@ -1,9 +1,8 @@
-function s = sd_plotwizzard( s )
-% PLOT_STRUCT_DATA_WIZZARD - Interactively create data plots based
-% on structured data input.
+function s = sd_plotwizard( s )
+% Interactively create data plots based on structured data input.
 %
 % Usage:
-% s = plot_sd_wizzard( s )
+% s = sd_plotwizard( s )
 %
 % s : structure containing the data
 %
@@ -51,57 +50,57 @@ function s = sd_plotwizzard( s )
 	    'HorizontalAlignment','left');
   uicontrol('style','listbox','string',{},...
 	    'Position',[270 200 180 80],'tag','restrictions',...
-	    'Callback',@zz_select_restriction);
+	    'Callback',@select_restriction);
   uicontrol('style','listbox','string',{},...
 	    'Position',[270 110 180 80],'tag','restriction_vals',...
-	    'Callback',@zz_select_restriction_val);
+	    'Callback',@select_restriction_val);
   uicontrol('style','listbox','string',{'mean','median'},...
 	    'Position',[500 500 180 80],'tag','average_model');
   uicontrol('style','PushButton','string','>>',...
-	    'Position',[230 560 30 20],'callback',@zz_add_y_data);
+	    'Position',[230 560 30 20],'callback',@add_y_data);
   uicontrol('style','PushButton','string','<<',...
-	    'Position',[230 530 30 20],'callback',@zz_rm_y_data);
+	    'Position',[230 530 30 20],'callback',@rm_y_data);
   uicontrol('style','PushButton','string','>>',...
-	    'Position',[230 440 30 20],'callback',@zz_add_x_data);
+	    'Position',[230 440 30 20],'callback',@add_x_data);
   uicontrol('style','PushButton','string','<<',...
-	    'Position',[230 410 30 20],'callback',@zz_rm_x_data);
+	    'Position',[230 410 30 20],'callback',@rm_x_data);
   uicontrol('style','PushButton','string','>>',...
-	    'Position',[230 350 30 20],'callback',@zz_add_p_data);
+	    'Position',[230 350 30 20],'callback',@add_p_data);
   uicontrol('style','PushButton','string','<<',...
-	    'Position',[230 320 30 20],'callback',@zz_rm_p_data);
+	    'Position',[230 320 30 20],'callback',@rm_p_data);
   uicontrol('style','PushButton','string','>>',...
-	    'Position',[230 260 30 20],'callback',@zz_add_restriction);
+	    'Position',[230 260 30 20],'callback',@add_restriction);
   uicontrol('style','PushButton','string','<<',...
-	    'Position',[230 230 30 20],'callback',@zz_rm_restriction);
+	    'Position',[230 230 30 20],'callback',@rm_restriction);
   uicontrol('style','PushButton','string','plot',...
-	    'Position',[40 40 130 40],'callback',@zz_plot_this);
+	    'Position',[40 40 130 40],'callback',@plot_this);
   uicontrol('style','PushButton','string','quit',...
 	    'Position',[240 40 130 40],'callback','uiresume(gcf)');
   %% plot style controls:
   uicontrol('style','frame','position',[470 100 260 280],...
 	    'tag','plotpar');
-  zz_create_plotpar_ui( 'fontsize', 1, @zz_validate_positive, 14 );
-  zz_create_plotpar_ui( 'markersize', 2, @zz_validate_positive, 3 );
-  zz_create_plotpar_ui( 'linewidth', 3, @zz_validate_positive, 1 );
-  zz_create_plotpar_ui( 'linestyles', 4, @zz_validate_string_or_cellarray, '''''' );
-  zz_create_plotpar_ui( 'gridfreq', 5, @zz_validate_positive, 1 );
-  zz_create_plotpar_ui( 'firstgrid', 6, @zz_validate_positive, 1 );
-  zz_create_plotpar_ui( 'colors', 7, @zz_validate_string_or_cellarray, '''''' );
-  zz_create_plotpar_ui( 'markers', 8, @zz_validate_string_or_cellarray, '''''' );
+  create_plotpar_ui( 'fontsize', 1, @validate_positive, 14 );
+  create_plotpar_ui( 'markersize', 2, @validate_positive, 3 );
+  create_plotpar_ui( 'linewidth', 3, @validate_positive, 1 );
+  create_plotpar_ui( 'linestyles', 4, @validate_string_or_cellarray, '''''' );
+  create_plotpar_ui( 'gridfreq', 5, @validate_positive, 1 );
+  create_plotpar_ui( 'firstgrid', 6, @validate_positive, 1 );
+  create_plotpar_ui( 'colors', 7, @validate_string_or_cellarray, '''''' );
+  create_plotpar_ui( 'markers', 8, @validate_string_or_cellarray, '''''' );
   if isfield( s, 'datapars' )
-    zz_set_all_datapars( s.datapars, fh );
+    set_all_datapars( s.datapars, fh );
   end
   if isfield( s, 'plotpars' )
-    zz_set_all_plotpar_svals( s.plotpars, fh );
+    set_all_plotpar_svals( s.plotpars, fh );
   end
   uiwait(fh);
   if ishandle(fh)
-    s.datapars = zz_get_data_pars( fh );
+    s.datapars = get_data_pars( fh );
     plotpars = struct;
     for fn={'fontsize','markersize','linewidth','linestyles', ...
 	    'gridfreq','firstgrid','colors','markers'}
       name = fn{:};
-      plotpars = zz_get_plotpar_sval( plotpars, name, fh );
+      plotpars = get_plotpar_sval( plotpars, name, fh );
     end
     s.plotpars = plotpars;
     close(fh);
@@ -110,7 +109,9 @@ function s = sd_plotwizzard( s )
     clear s
   end
   
-function zz_add_y_data(varargin)
+  
+  
+function add_y_data(varargin)
   h_fields = findobj(gcf,'tag','avail_fields_y');
   h_ydata = findobj(gcf,'tag','ydata_selection');
   csfields = get(h_fields,'string');
@@ -124,7 +125,7 @@ function zz_add_y_data(varargin)
     set(h_ydata,'string',csfields,'value',length(csfields));
   end
   
-function zz_rm_y_data(varargin)
+function rm_y_data(varargin)
   h_fields = findobj(gcf,'tag','avail_fields_y');
   h_ydata = findobj(gcf,'tag','ydata_selection');
   csfields = get(h_ydata,'string');
@@ -138,7 +139,7 @@ function zz_rm_y_data(varargin)
     set(h_fields,'string',csfields,'value',length(csfields));
   end
     
-function zz_add_x_data(varargin)
+function add_x_data(varargin)
   h_fields = findobj(gcf,'tag','avail_fields');
   h_xdata = findobj(gcf,'tag','xdata_selection');
   csfields = get(h_fields,'string');
@@ -152,7 +153,7 @@ function zz_add_x_data(varargin)
     end
   end
   
-function zz_rm_x_data(varargin)
+function rm_x_data(varargin)
   h_fields = findobj(gcf,'tag','avail_fields');
   h_xdata = findobj(gcf,'tag','xdata_selection');
   field = get(h_xdata,'string');
@@ -163,7 +164,7 @@ function zz_rm_x_data(varargin)
     set(h_fields,'string',csfields,'value',length(csfields));
   end
   
-function zz_add_p_data(varargin)
+function add_p_data(varargin)
   h_fields = findobj(gcf,'tag','avail_fields');
   h_xdata = findobj(gcf,'tag','pdata_selection');
   csfields = get(h_fields,'string');
@@ -177,7 +178,7 @@ function zz_add_p_data(varargin)
     end
   end
   
-function zz_rm_p_data(varargin)
+function rm_p_data(varargin)
   h_fields = findobj(gcf,'tag','avail_fields');
   h_xdata = findobj(gcf,'tag','pdata_selection');
   field = get(h_xdata,'string');
@@ -188,7 +189,7 @@ function zz_rm_p_data(varargin)
     set(h_fields,'string',csfields,'value',length(csfields));
   end
   
-function zz_add_restriction(varargin)
+function add_restriction(varargin)
   h_fields = findobj(gcf,'tag','avail_fields');
   h_ydata = findobj(gcf,'tag','restrictions');
   csfields = get(h_fields,'string');
@@ -200,10 +201,10 @@ function zz_add_restriction(varargin)
     csfields =  get(h_ydata,'string');
     csfields{end+1} = field;
     set(h_ydata,'string',csfields,'value',length(csfields));
-    zz_select_restriction;
+    select_restriction;
   end
   
-function zz_rm_restriction(varargin)
+function rm_restriction(varargin)
   h_fields = findobj(gcf,'tag','avail_fields');
   h_ydata = findobj(gcf,'tag','restrictions');
   csfields = get(h_ydata,'string');
@@ -215,14 +216,14 @@ function zz_rm_restriction(varargin)
     csfields =  get(h_fields,'string');
     csfields{end+1} = field;
     set(h_fields,'string',csfields,'value',length(csfields));
-    zz_select_restriction;
-    k = zz_get_restriction_idx( field );
+    select_restriction;
+    k = get_restriction_idx( field );
     s = get(gcf,'UserData');
     s.restrictions(k) = [];
     set(gcf,'UserData',s);
   end
   
-function k = zz_get_restriction_idx( sRes )
+function k = get_restriction_idx( sRes )
   s = get(gcf,'UserData');
   kRes = strmatch(sRes,s.fields,'exact');
   if ~isfield(s,'restrictions')
@@ -242,13 +243,13 @@ function k = zz_get_restriction_idx( sRes )
   set(gcf,'UserData',s);
   return
 
-function zz_select_restriction(varargin)
+function select_restriction(varargin)
   h_restr = findobj(gcf,'tag','restrictions');
   h_rval = findobj(gcf,'tag','restriction_vals');
   csRes = get(h_restr,'String');
   if length(csRes)
     kRes = get(h_restr,'Value');
-    kRes = zz_get_restriction_idx( csRes{kRes} );
+    kRes = get_restriction_idx( csRes{kRes} );
     s = get(gcf,'UserData');
     name_res = s.values{s.restrictions{kRes}{1}};
     if isnumeric(name_res)
@@ -264,18 +265,18 @@ function zz_select_restriction(varargin)
     set(h_rval,'String',{},'Value',0);
   end
   
-function zz_select_restriction_val(varargin)
+function select_restriction_val(varargin)
   h_restr = findobj(gcf,'tag','restrictions');
   h_rval = findobj(gcf,'tag','restriction_vals');
   csRes = get(h_restr,'String');
   kRes = get(h_restr,'Value');
-  kRes = zz_get_restriction_idx( csRes{kRes} );
+  kRes = get_restriction_idx( csRes{kRes} );
   s = get(gcf,'UserData');
   val = get(h_rval,'Value');
   s.restrictions{kRes}{2} = val;
   set(gcf,'UserData',s);
   
-function sDataPar = zz_get_data_pars( fh )
+function sDataPar = get_data_pars( fh )
   sDataPar = struct;
   s = get(fh,'UserData');
   if ~isfield(s,'restrictions')
@@ -298,8 +299,9 @@ function sDataPar = zz_get_data_pars( fh )
   sDataPar.par_data = k_pdata;
   sDataPar.restrictions = s.restrictions;
 
-function zz_plot_this(varargin)
-  sDataPar = zz_get_data_pars( gcf )
+
+function plot_this(varargin)
+  sDataPar = get_data_pars( gcf )
   s = get(gcf,'UserData');
   if ~isfield(s,'restrictions')
     s.restrictions = {};
@@ -318,7 +320,7 @@ function zz_plot_this(varargin)
   k_pdata = strmatch(pdata_name,s.fields,'exact');
   s_ydata = sprintf('%d ',k_ydata);
   s_ydata = s_ydata(1:end-1);
-  sPlotPars = zz_get_plot_params( gcf )
+  sPlotPars = get_plot_params( gcf )
   s_restr = '';
   for k=1:length(s.restrictions)
     s_restr = sprintf('%s{%d,%d},',s_restr,s.restrictions{k}{1},s.restrictions{k}{2});
@@ -349,29 +351,29 @@ function zz_plot_this(varargin)
     rethrow(err);
   end
   
-function sPlotPar = zz_get_plot_params( fh )
+function sPlotPar = get_plot_params( fh )
   sPlotPar = struct;
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'fontsize', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'markersize', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'linewidth', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'gridfreq', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'firstgrid', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'colors', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'linestyles', fh );
-  sPlotPar = zz_set_plotpar_field( sPlotPar, 'markers', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'fontsize', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'markersize', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'linewidth', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'gridfreq', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'firstgrid', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'colors', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'linestyles', fh );
+  sPlotPar = set_plotpar_field( sPlotPar, 'markers', fh );
   
-function sPlotParS = zz_get_plotpar_sval( sPlotParS, name, fh )
+function sPlotParS = get_plotpar_sval( sPlotParS, name, fh )
   h = findall(fh,'tag',sprintf('plotpar_%s',name));
   sPlotParS.(name) = get(h,'String');
   
-function zz_set_all_plotpar_svals( sPlotParS, fh )
+function set_all_plotpar_svals( sPlotParS, fh )
   for fn = fieldnames(sPlotParS)'
     name = fn{:};
     h = findall(fh,'tag',sprintf('plotpar_%s',name));
     set(h,'String',sPlotParS.(name));
   end
   
-function sPlotPar = zz_set_plotpar_field( sPlotPar, name, fh )
+function sPlotPar = set_plotpar_field( sPlotPar, name, fh )
   h = findall(fh,'tag',sprintf('plotpar_%s',name));
   s = get(h,'String');
   if ~isempty(s)
@@ -382,7 +384,7 @@ function sPlotPar = zz_set_plotpar_field( sPlotPar, name, fh )
   end
   
   
-function err = zz_validate_string_or_cellarray( bo, varargin )
+function err = validate_string_or_cellarray( bo, varargin )
   s = get(bo, 'String' );
   if isempty( s )
     s = '''''';
@@ -395,7 +397,7 @@ function err = zz_validate_string_or_cellarray( bo, varargin )
   end
   set(bo, 'String', s );
   
-function err = zz_validate_positive( bo, varargin )
+function err = validate_positive( bo, varargin )
   s = get(bo, 'String' );
   v_def = get(bo,'UserData');
   try
@@ -412,7 +414,7 @@ function err = zz_validate_positive( bo, varargin )
   s = num2str(val);
   set(bo, 'String', s );
 
-function zz_create_plotpar_ui( name, idx, validator, default )
+function create_plotpar_ui( name, idx, validator, default )
   pos = get(findall(gcf,'tag','plotpar'),'Position');
   x = pos(1)+10;
   y = pos(2)+pos(4)-10;
@@ -427,7 +429,7 @@ function zz_create_plotpar_ui( name, idx, validator, default )
 		'BackgroundColor',[1 1 1]);
   validator(h);
 
-function zz_set_all_datapars( sPars, fh )
+function set_all_datapars( sPars, fh )
   s = get(fh,'UserData');
   % y axis:
   idx_yavail = 1:length(s.fields);
@@ -452,7 +454,7 @@ function zz_set_all_datapars( sPars, fh )
   end
   set(h_rdata,'String',s.fields(vRestr));
   set(fh,'UserData',s);
-  zz_select_restriction;
+  select_restriction;
   % remove used fields:
   idx_xavail = 1:length(s.fields);
   idx_xavail(find(idx_xavail==sPars.x_data)) = [];
