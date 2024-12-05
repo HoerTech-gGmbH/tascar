@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+    <receiver type="hrtf" name="out" dlocation="0 0 100"/>
+  </scene>
+  <modules>
+    <skyfall actor="/scene/out" z0="12" wx="0" wy="0" wz="0"/>
+    <pos2osc avatar="dl" pattern="/scene/out" url="osc.udp://localhost:9877/" mode="11" transport="false"/>
+    <datalogging>
+      <osc path="/dl/out" size="6"/>
+    </datalogging>
+  </modules>
+</session>
