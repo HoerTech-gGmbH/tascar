@@ -111,7 +111,7 @@ public:
   }
   void unset_pitch(int p)
   {
-    if(pitch == p){
+    if(pitch == p) {
       decay = decayoffset;
       decaynoise = decayoffset;
       noisemin = 0.0f;
@@ -119,7 +119,7 @@ public:
   }
   void add(float& val)
   {
-    if((amplitudenoise > 1e-8f)||(amplitude > 1e-8f)) {
+    if((amplitudenoise > 1e-8f) || (amplitude > 1e-8f)) {
       float oval = noiseflt.get(fbdelay);
       noisestate =
           noisedamp * noisestate + (1.0f - noisedamp) * TASCAR::frand();
@@ -166,7 +166,6 @@ public:
 
 private:
   int midichannel = 0;
-  size_t nexttone = 0;
   float f0 = 440.0;
   uint32_t maxvoices = 8;
   std::vector<float> partialweights = {1.0f,    0.562f,  0.316f, 0.355f,
@@ -292,13 +291,20 @@ void simplesynth_t::emit_event_note(int channel, int pitch, int velocity)
     if(velocity > 0) {
       float inputvel = (float)velocity / 127.0f;
       inputvel = powf(inputvel, gamma);
-      tones[nexttone].set_pitch(pitch, inputvel * (1.0f - noiseweight), f0,
-                                decay, decayoffset, onset * (1.0f - inputvel),
-                                detune, decaydamping, decaynoise,
-                                inputvel * noiseweight, noiseq, noisemin);
-      ++nexttone;
-      if(nexttone >= tones.size())
-        nexttone = 0;
+      // search for tone with lowest amplitude and replace that:
+      size_t kmin = 0;
+      float amp_min = 2.0f;
+      for(size_t k = 0; k < tones.size(); ++k) {
+        float amp_sum = tones[k].amplitudenoise + tones[k].amplitude;
+        if(amp_sum < amp_min) {
+          amp_min = amp_sum;
+          kmin = k;
+        }
+      }
+      tones[kmin].set_pitch(pitch, inputvel * (1.0f - noiseweight), f0, decay,
+                            decayoffset, onset * (1.0f - inputvel), detune,
+                            decaydamping, decaynoise, inputvel * noiseweight,
+                            noiseq, noisemin);
     } else {
       for(auto& t : tones)
         t.unset_pitch(pitch);
