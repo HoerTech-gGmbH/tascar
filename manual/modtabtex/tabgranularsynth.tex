@@ -1,0 +1,57 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:granularsynth}
+Attributes of element {\bf granularsynth}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{active} & active (bool) & true\\
+\hline
+\indattr{bpm} & Tempo (double, bpm) & 120\\
+\hline
+\indattr{bypass} & bypass (bool) & false\\
+\hline
+\indattr{durations} & Durations (double array, beats) & \\
+\hline
+\indattr{f0} & frequency of pitch 0 (double, Hz) & 415\\
+\hline
+\indattr{fillthreshold} & Minimum number of grains per frequency in fill counter (uint32) & 5\\
+\hline
+\indattr{gain} & Gain (double, dB) & 0\\
+\hline
+\indattr{hue} & Hue component (0-360) (float, degree) & 0\\
+\hline
+\indattr{id} & ID used in jack name and OSC path (string) & granularsynth\\
+\hline
+\indattr{loop} & Time when to loop (double, beats) & 64\\
+\hline
+\indattr{numgrains} & Number of grains to keep (uint32) & 100\\
+\hline
+\indattr{oscactive} & Activate OSC sending on start (bool) & false\\
+\hline
+\indattr{path} & Grainstore fill path (string) & /grainstorefill\\
+\hline
+\indattr{pitches} & Pitch numbers (double array, semitones) & \\
+\hline
+\indattr{ponset} & Onset playback probabbility (double) & 1\\
+\hline
+\indattr{prefix} & prefix used in OSC path (string) & /c/\\
+\hline
+\indattr{psustain} & Sustained sound probability (double) & 0\\
+\hline
+\indattr{saturation} & Saturation component (0-1) (float) & 1\\
+\hline
+\indattr{t0} & Melody start time (double, s) & 0\\
+\hline
+\indattr{url} & Grainstore fill URL (string) & \\
+\hline
+\indattr{wet} & Mixing gain (float) & 1\\
+\hline
+\indattr{wlen} & window length (uint32, samples) & 8192\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

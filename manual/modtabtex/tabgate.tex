@@ -1,0 +1,27 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:gate}
+Attributes of element {\bf gate}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{bypass} & Start in bypass mode (bool) & true\\
+\hline
+\indattr{fadeinlen} & Duration of von-Hann fade in (double, s) & 0.01\\
+\hline
+\indattr{fadeoutlen} & Duration of von-Hann fade out (double, s) & 0.125\\
+\hline
+\indattr{holdlen} & Time to keep output after level decay below threshold (double, s) & 0.125\\
+\hline
+\indattr{taurms} & RMS level estimation time constant (double, s) & 0.005\\
+\hline
+\indattr{tautrack} & Min/max tracking time constant (double, s) & 30\\
+\hline
+\indattr{threshold} & Threshold value between 0 and 1 (double) & 0.125\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

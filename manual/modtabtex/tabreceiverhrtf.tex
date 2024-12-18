@@ -1,0 +1,61 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:receiverhrtf}
+Attributes of receiver element {\bf hrtf}, inheriting from \hyperref[attrtab:receiver]{{\bf receiver}}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{Q\_notch} & quality factor of the notch filter (float) & 2.3\\
+\hline
+\indattr{alphamin} & parameter which determines the depth of the high-shelf realizing the SHM (float) & 0.14\\
+\hline
+\indattr{alphamin\_front} & parameter which determines the depth of the second high-shelf (float) & 0.39\\
+\hline
+\indattr{alphamin\_up} & parameter which determines the depth of the second high-shelf (float) & 0.1\\
+\hline
+\indattr{angle} & Position of the ears on the sphere (float, deg) & 90\\
+\hline
+\indattr{c} & Speed of sound (float, m/s) & 340\\
+\hline
+\indattr{decorr} & Flag to use decorrelation of diffuse sounds (bool) & false\\
+\hline
+\indattr{decorr\_length} & Decorrelation length (float, s) & 0.05\\
+\hline
+\indattr{diffuse\_hrtf} & apply hrtf model also to diffuse rendering (bool) & false\\
+\hline
+\indattr{freq\_end} & notch center frequency at [0 0 1] (float, Hz) & 650\\
+\hline
+\indattr{freq\_start} & notch center frequency at \attr{startangle\_notch} (float, Hz) & 1300\\
+\hline
+\indattr{gaincorr} & channel-wise gain correction (float array, dB) & 0 0\\
+\hline
+\indattr{maxgain} & gain applied at [0 0 1] -- gain is 0 dB at \attr{startangle\_notch} and increases linearly (float, dB) & -5.4\\
+\hline
+\indattr{omega} & cut-off frequency of the high-self realizing the SHM (float, Hz) & 3100\\
+\hline
+\indattr{omega\_front} & cut-off frequency of the second high-self (float, Hz) & 11200\\
+\hline
+\indattr{omega\_up} & cut-off frequency of the second high-shelf in Hz (float, Hz) & 2125\\
+\hline
+\indattr{prewarpingmode} & Azimuth pre-warping mode, 0 = original, 1 = none, 2 = corrected (uint32) & 0\\
+\hline
+\indattr{radius} & Radius of sphere modeling the head (float, m) & 0.08\\
+\hline
+\indattr{sincorder} & Sinc interpolation order of ITD delay line (uint32) & 0\\
+\hline
+\indattr{sincsampling} & Sinc table sampling of ITD delay line, or 0 for no table. (uint32) & 64\\
+\hline
+\indattr{startangle\_front} & the second high-shelf, e.g. to model pinna shadow effect, is applied when the angle with respect to front direction [1 0 0] is larger than \attr{startangle\_front} (float, deg) & 0\\
+\hline
+\indattr{startangle\_notch} & notch filter to model concha notch is applied if angle with respect to up direction [0 0 1] is smaller than \attr{startangle\_notch} (float, deg) & 102\\
+\hline
+\indattr{startangle\_up} & the third high-shelf which models the shadow effect of the torso is applied when the angle with respect to up direction [0 0 1] is larger than \attr{startangle\_up} (float, deg) & 135\\
+\hline
+\indattr{thetamin} & angle with respect to the position of the ears at which the maximum depth of the high-shelf realizing the SHM is reached (float, deg) & 160\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

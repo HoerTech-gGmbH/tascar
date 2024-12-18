@@ -1,0 +1,57 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:session}
+Attributes of element {\bf session}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{attribution} & attribution of license, if applicable (string) & \\
+\hline
+\indattr{duration} & session duration (double, s) & 60\\
+\hline
+\indattr{initcmd} & Command to be executed before first connection to jack. Can be used to start jack server. (string) & \\
+\hline
+\indattr{initcmdsleep} & Time to wait for initcmd to start up, in seconds. (double, s) & 0\\
+\hline
+\indattr{levelmeter\_min} & Level meter minimum (double, dB SPL) & 30\\
+\hline
+\indattr{levelmeter\_mode} & Level meter mode (rms, rmspeak, percentile) (string) & \\
+\hline
+\indattr{levelmeter\_range} & Level range of level meters (double, dB) & 70\\
+\hline
+\indattr{levelmeter\_tc} & level meter time constant (double, s) & 2\\
+\hline
+\indattr{levelmeter\_weight} & level meter weighting (f-weight) & Z\\
+\hline
+\indattr{license} & license type (string) & \\
+\hline
+\indattr{loop} & loop session at end (bool) & false\\
+\hline
+\indattr{name} & session name (string) & tascar\\
+\hline
+\indattr{playonload} & start playing when session is loaded (bool) & false\\
+\hline
+\indattr{profilingpath} & OSC path to dispatch module profiling information to (string) & \\
+\hline
+\indattr{requirefragsize} & Session fragment size, stop loading the session if the system fragment size doesn't match (int32) & 0\\
+\hline
+\indattr{requiresrate} & Session sampling rate, stop loading the session if the system sampling rate doesn't match (double, Hz) & 0\\
+\hline
+\indattr{srv\_addr} & OSC multicast address in case of UDP transport (string) & \\
+\hline
+\indattr{srv\_port} & OSC port number (string) & 9877\\
+\hline
+\indattr{srv\_proto} & OSC protocol, UDP or TCP (string) & UDP\\
+\hline
+\indattr{starturl} & URL of start page for display (string) & \\
+\hline
+\indattr{warnfragsize} & Session fragment size, print a warning if the system fragment size doesn't match (int32) & 0\\
+\hline
+\indattr{warnsrate} & Session sampling rate, print a warning if the system sampling rate doesn't match (double, Hz) & 0\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

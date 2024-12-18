@@ -1,0 +1,33 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:level2osc}
+Attributes of element {\bf level2osc}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{firstpar} & First parameter, or -1 to use current session time. (double) & -1\\
+\hline
+\indattr{frange} & Frequency range in bandpass mode (float array, Hz) & 62.5 4000\\
+\hline
+\indattr{mode} & Level mode [dbspl|rms|max] (string) & dbspl\\
+\hline
+\indattr{path} & Target path (string) & /level\\
+\hline
+\indattr{sendwhilestopped} & Send also when transport is stopped (bool) & false\\
+\hline
+\indattr{skip} & Skip frames (uint32) & 0\\
+\hline
+\indattr{tau} & Leq duration, or 0 to use block size (float, s) & 0\\
+\hline
+\indattr{threaded} & Use additional thread for sending data (bool) & true\\
+\hline
+\indattr{url} & Target URL (string) & {\tiny osc.udp://localhost:9999/}\\
+\hline
+\indattr{weights} & Level meter weights (f-weight array) & Z\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

@@ -1,0 +1,29 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:receiverhoa2d}
+Attributes of receiver element {\bf hoa2d}, inheriting from \hyperref[attrtab:receiver]{{\bf receiver}} \hyperref[attrtab:speakerbased]{{\bf speakerbased}}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{diffup} & Use diffuse upsampling similar to \citet{Zotter2014} (bool) & false\\
+\hline
+\indattr{diffup\_delay} & Decorrelation delay (double, s) & 0.01\\
+\hline
+\indattr{diffup\_maxorder} & Maximum order of diffuse sound fields (uint32) & 100\\
+\hline
+\indattr{diffup\_rot} & Decorrelation rotation (double, deg) & 45\\
+\hline
+\indattr{filterperiod} & Filter period for source width encoding (double, s) & 0.005\\
+\hline
+\indattr{filtershape} & De-correlation filter shape for source width encoding, one of ``none'', ``notch'', ``sine'', ``tria'', ``triald'' (string) & none\\
+\hline
+\indattr{maxre} & Use $\max r\_E$ decoder (true) or basic decoder (false) (bool) & false\\
+\hline
+\indattr{order} & Ambisonics order; 0: use maximum possible (uint32) & 0\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

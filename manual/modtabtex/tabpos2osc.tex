@@ -1,0 +1,45 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:pos2osc}
+Attributes of element {\bf pos2osc}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{addparentname} & When sending sound vertex positions, add parent name to vertex name (bool) & false\\
+\hline
+\indattr{avatar} & Name of object to be controlled (for control of game engines) (string) & \\
+\hline
+\indattr{ignoreorientation} & Ignore delta-orientation of source, send zeros instead (bool) & false\\
+\hline
+\indattr{lookatlen} & Duration of look-at animation (for control of game engines) (double, s) & 1\\
+\hline
+\indattr{mode} & Message format mode (uint32) & 0\\
+\hline
+\indattr{name} & Default name used in OSC variables (string) & pos2osc\\
+\hline
+\indattr{orientationname} & Name for orientation variables (string) & /headGaze\\
+\hline
+\indattr{oscale} & Scaling factor for orientations (float) & 1\\
+\hline
+\indattr{pattern} & Pattern of TASCAR object names; see actor module documentation for details. (string array) & /*/*\\
+\hline
+\indattr{sendsounds} & Send also position of sound vertices (bool) & false\\
+\hline
+\indattr{skip} & Skip frames to reduce network traffic (uint32) & 0\\
+\hline
+\indattr{threaded} & Use additional thread for sending data to avoid blocking of real-time audio thread (bool) & true\\
+\hline
+\indattr{transport} & Send only while transport is rolling (bool) & true\\
+\hline
+\indattr{triggered} & Send data only when triggered via OSC (bool) & false\\
+\hline
+\indattr{ttl} & Time to live of OSC multicast messages (uint32) & 1\\
+\hline
+\indattr{url} & Target URL (string) & {\tiny osc.udp://localhost:9999/}\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
