@@ -355,21 +355,34 @@ void jackrec_t::listfiles()
 
 void jackrec_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   std::string prefix_(srv->get_prefix());
   srv->set_prefix(oscprefix);
-  srv->add_string("/name", &ofname);
-  srv->add_method("/start", "", &jackrec_t::start, this);
-  srv->add_method("/stop", "", &jackrec_t::stop, this);
-  srv->add_method("/clear", "", &jackrec_t::clearports, this);
-  srv->add_method("/addport", "s", &jackrec_t::addport, this);
-  srv->add_method("/listports", "", &jackrec_t::listports, this);
-  srv->add_method("/listfiles", "", &jackrec_t::listfiles, this);
-  srv->add_method("/rmfile", "s", &jackrec_t::rmfile, this);
-  srv->add_string("/tag", &tag);
+  srv->add_string("/name", &ofname,
+                  "Output file name, leave empty for automatic file names");
+  srv->add_method(
+      "/start", "", &jackrec_t::start, this, true, false, "",
+      "Start recording (or recording standby when usetransport is set)");
+  srv->add_method("/stop", "", &jackrec_t::stop, this, true, false, "",
+                  "Stop recording and close output file");
+  srv->add_method("/clear", "", &jackrec_t::clearports, this, true, false, "",
+                  "Clear list of ports");
+  srv->add_method("/addport", "s", &jackrec_t::addport, this, true, false, "",
+                  "Add the given port to the list of recorder input ports");
+  srv->add_method("/listports", "", &jackrec_t::listports, this, true, false,
+                  "", "List all available jack ports");
+  srv->add_method(
+      "/listfiles", "", &jackrec_t::listfiles, this, true, false, "",
+      "Send list of sound files (matching pattern provided in XML)");
+  srv->add_method("/rmfile", "s", &jackrec_t::rmfile, this, true, false, "",
+                  "Remove a file on disk");
+  srv->add_string("/tag", &tag, "Set tag of output file");
   srv->add_bool("/usetransport", &usetransport,
                 "Control wether to use jack transport during recording when "
                 "started next");
   srv->set_prefix(prefix_);
+  srv->unset_variable_owner();
 }
 
 REGISTER_MODULE(jackrec_t);

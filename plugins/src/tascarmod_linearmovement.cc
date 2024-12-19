@@ -32,7 +32,7 @@ public:
 private:
   TASCAR::pos_t v;
   TASCAR::pos_t p0;
-  double t0;
+  double t0 = 0.0;
   std::mutex mtx;
 };
 

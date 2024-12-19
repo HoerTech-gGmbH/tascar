@@ -142,6 +142,8 @@
         <layout><fixture/></layout>
       </lightscene>
     </lightctl>
+    <lightcolorpicker/>
+    <!--/light/lightscene/fixture0/hsv-->
     <hossustain/>
     <pos2osc pattern="/*/*"/>
     <linearmovement actor="/scene/in"/>
