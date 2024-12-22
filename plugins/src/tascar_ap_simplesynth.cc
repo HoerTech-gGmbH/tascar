@@ -59,6 +59,7 @@ public:
   float noisedamp = 0.0f;
   float noisemin = 0.0f;
   TASCAR::varidelay_t noiseflt = TASCAR::varidelay_t(10000, 1.0, 1.0, 0, 0);
+  std::complex<float> ldphi = 1.0f;
 
   void set_srate(float srate)
   {
@@ -131,15 +132,16 @@ public:
     if(amplitude > 1e-8f) {
       //
       float oval = 0.0f;
-      std::complex<float> ldphi = dphi;
+      ldphi = dphi;
       float compdecay = 1.0f;
       for(size_t k = 0; k < N; ++k) {
         phase[k] *= ldphi * dphi_detune;
         ldphi *= dphi;
-        oval += amplitude * amplitudes[k] * std::real(phase[k]);
+        oval += amplitudes[k] * std::real(phase[k]);
         amplitudes[k] *= compdecay;
         compdecay *= decaydamping;
       }
+      oval *= amplitude;
       amplitude *= decay;
       if(rampt > 0) {
         oval *= 0.5f + 0.5f * cosf(TASCAR_PIf * rampt * rampdur_1);
