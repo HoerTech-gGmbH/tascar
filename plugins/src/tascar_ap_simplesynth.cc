@@ -118,7 +118,7 @@ public:
       noisemin = 0.0f;
     }
   }
-  void add(float& val)
+  inline void add(float& val)
   {
     if((amplitudenoise > 1e-8f) || (amplitude > 1e-8f)) {
       float oval = noiseflt.get(fbdelay);
@@ -137,8 +137,12 @@ public:
       for(size_t k = 0; k < N; ++k) {
         phase[k] *= ldphi * dphi_detune;
         ldphi *= dphi;
-        oval += amplitudes[k] * std::real(phase[k]);
-        amplitudes[k] *= compdecay;
+        if(amplitudes[k] > 1e-8f) {
+          oval += amplitudes[k] * std::real(phase[k]);
+          amplitudes[k] *= compdecay;
+        } else {
+          amplitudes[k] = 0.0f;
+        }
         compdecay *= decaydamping;
       }
       oval *= amplitude;

@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
 <session license="CC0">
-  <modules>
-    <route name="synth" channels="1" connect_out="system:playback_[12]">
-      <plugins>
-        <simplesynth autoconnect="true"/>
-      </plugins>
-    </route>
-  </modules>
+  <scene>
+    <receiver type="hrtf"/>
+    <source>
+      <sound x="4">
+        <plugins>
+        <simplesynth autoconnect="true" decay="40" decaydamping="0.07" decaynoise="0.1" decayoffset="0.2" detune="-0.75" f0="415" gamma="0.2" level="79.2969" maxvoices="16" noisemin="0.01" noiseq="0.3" noiseweight="0.1" onset="0.14" partialweights="1 1 0.316 1 0.282 1 2 0.0891 0.0398 0.0398 0.398" tuning="meantone4"/>
+        </plugins>
+      </sound>
+    </source>
+    <reverb absorption="0.4" damping="0.65" dw="60" fdnorder="6" forwardstages="1" gain="0" gainmethod="original" id="reverb" image="false" lowcut="125" name="reverb" truncate_forward="true" type="simplefdn" volumetric="35 17 11" volumetricgainwithdistance="true"/>
+  </scene>
+  <connect src="render.scene:out_[lr]" dest="system:playback_[12]"/>
 </session>
