@@ -57,6 +57,7 @@
 "plugins/build/tascar_ap_pulse.so","usr/lib/"
 "plugins/build/tascar_ap_ringmodulator.so","usr/lib/"
 "plugins/build/tascar_ap_sessiontime.so","usr/lib/"
+"plugins/build/tascar_ap_simplesynth.so","usr/lib/"
 "plugins/build/tascar_ap_sine.so","usr/lib/"
 "plugins/build/tascar_ap_sndfile.so","usr/lib/"
 "plugins/build/tascar_ap_sndfileasync.so","usr/lib/"
