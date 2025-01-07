@@ -1236,7 +1236,7 @@ int datalogging_t::osc_session_start(const char*, const char*, lo_arg**, int,
     ((datalogging_t*)user_data)->on_ui_start();
   else
     ((datalogging_t*)user_data)->osc_start.emit();
-  return 0;
+  return 1;
 }
 
 int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
@@ -1246,7 +1246,7 @@ int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
     ((datalogging_t*)user_data)->on_ui_stop();
   else
     ((datalogging_t*)user_data)->osc_stop.emit();
-  return 0;
+  return 1;
 }
 
 int datalogging_t::osc_session_set_trialid(const char*, const char*,
@@ -1256,7 +1256,7 @@ int datalogging_t::osc_session_set_trialid(const char*, const char*,
   ((datalogging_t*)user_data)->osc_trialid = std::string(&(argv[0]->s));
   if(!((datalogging_t*)user_data)->is_headless())
     ((datalogging_t*)user_data)->osc_set_trialid.emit();
-  return 0;
+  return 1;
 }
 
 void datalogging_t::on_osc_set_trialid()
@@ -1361,7 +1361,7 @@ int oscvar_t::osc_receive_sample(const char* path, const char* types,
     }
   }
   ((oscvar_t*)user_data)->osc_receive_sample(path, argc + 1, data);
-  return 0;
+  return 1;
 }
 
 void oscvar_t::osc_receive_sample(const char*, uint32_t size, double* data)
@@ -1380,7 +1380,7 @@ int oscsvar_t::osc_receive_sample(const char* path, const char*, lo_arg** argv,
   else
     ((oscsvar_t*)user_data)
         ->osc_receive_sample(path, argv[0]->d, &(argv[1]->s));
-  return 0;
+  return 1;
 }
 
 void oscsvar_t::osc_receive_sample(const char*, double t, const char* msg)
