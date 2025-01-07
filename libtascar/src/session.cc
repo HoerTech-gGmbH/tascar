@@ -278,6 +278,8 @@ TASCAR::session_core_t::session_core_t()
   root.GET_ATTRIBUTE(duration, "s", "session duration");
   root.GET_ATTRIBUTE_BOOL(loop, "loop session at end");
   root.GET_ATTRIBUTE_BOOL(playonload, "start playing when session is loaded");
+  root.GET_ATTRIBUTE(locateonload, "s",
+                     "if >= 0, locate to this time when session is loaded");
   root.GET_ATTRIBUTE(levelmeter_tc, "s", "level meter time constant");
   root.GET_ATTRIBUTE_NOUNIT(levelmeter_weight, "level meter weighting");
   root.GET_ATTRIBUTE(levelmeter_mode, "",
@@ -421,6 +423,8 @@ TASCAR::session_t::session_t()
     jackc_transport_t::activate();
     add_transport_methods();
     osc_server_t::activate();
+    if(locateonload >= 0.0)
+      tp_locate(locateonload);
     if(playonload)
       tp_start();
   }
@@ -462,6 +466,8 @@ TASCAR::session_t::session_t(const std::string& filename_or_data, load_type_t t,
     jackc_transport_t::activate();
     add_transport_methods();
     osc_server_t::activate();
+    if(locateonload >= 0.0)
+      tp_locate(locateonload);
     if(playonload)
       tp_start();
   }
