@@ -157,6 +157,8 @@
     <ltcgen/>
     <osc2lsl/>
     <skyfall actor="/*/nav"/>
+    <accmovement actor="/*/nav"/>
+    <accrotator actor="/*/nav"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>
