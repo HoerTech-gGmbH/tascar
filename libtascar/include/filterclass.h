@@ -190,6 +190,8 @@ namespace TASCAR {
       b2_ = b2;
     };
     void set_pareq(double f, double fs, double gain, double q);
+    void set_highshelf(double f, double fs, double gain, double s);
+    void set_lowshelf(double f, double fs, double gain, double s);
     inline double filter(double in)
     {
       double out = z1 + b0_ * in;
@@ -245,6 +247,8 @@ namespace TASCAR {
      */
     void set_butterworth(float f, float fs, bool highpass = false);
     void set_pareq(float f, float fs, float gain, float q);
+    void set_highshelf(float f, float fs, float gain, float s);
+    void set_lowshelf(float f, float fs, float gain, float s);
     inline float filter(float in)
     {
       float out = z1 + b0_ * in;
