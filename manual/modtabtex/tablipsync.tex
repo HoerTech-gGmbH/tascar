@@ -1,0 +1,39 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:lipsync}
+Attributes of element {\bf lipsync}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{dynamicrange} & Mapped dynamic range (double, dB) & 165\\
+\hline
+\indattr{energypath} & OSC destination for sending format energies, or empty for no energy messages (string) & \\
+\hline
+\indattr{maxspeechlevel} & Level normalization (double, dB) & 48\\
+\hline
+\indattr{onchangecount} & Maximum number of repetitions of equal messages in ``onchange'' mode (uint32) & 3\\
+\hline
+\indattr{path} & OSC destination of blendshape messages (empty: use parent name) (string) & \\
+\hline
+\indattr{scale} & Scaling factor of blend shapes; 3 values: kiss, jaw, lipsclosed (pos) & 1 1 1\\
+\hline
+\indattr{sendmode} & Sending mode, one of ``always'', ``transport'', or ``onchange'' (string) & always\\
+\hline
+\indattr{smoothing} & Smoothing time constant (double, s) & 0.02\\
+\hline
+\indattr{strmsg} & Message string to be added to OSC messages before blend shapes (string) & /lipsync\\
+\hline
+\indattr{threaded} & Use additional thread for sending data (bool) & true\\
+\hline
+\indattr{threshold} & Noise threshold, range 0-1 (double) & 0.5\\
+\hline
+\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9999/}\\
+\hline
+\indattr{vocalTract} & Vocal tract scaling factor (double) & 1\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

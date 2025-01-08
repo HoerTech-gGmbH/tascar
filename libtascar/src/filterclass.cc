@@ -460,6 +460,37 @@ void TASCAR::biquad_t::set_pareq(double f, double fs, double gain, double q)
   }
 }
 
+void TASCAR::biquad_t::set_highshelf(double f, double fs, double gain, double s)
+{
+  // https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+  double A = pow(10.0, gain / 40.0);
+  double omega0 = TASCAR_2PI * f / fs;
+  double alpha =
+      0.5 * sin(omega0) * sqrt((A + 1.0 / A) * (1.0 / s - 1.0) + 2.0);
+  double a0 = (A + 1.0) - (A - 1.0) * cos(omega0) + 2.0 * sqrt(A) * alpha;
+  double a1 = 2.0 * ((A - 1.0) - (A + 1.0) * cos(omega0));
+  double a2 = (A + 1.0) - (A - 1.0) * cos(omega0) - 2.0 * sqrt(A) * alpha;
+  double b0 = A * ((A + 1.0) + (A - 1.0) * cos(omega0) + 2.0 * sqrt(A) * alpha);
+  double b1 = -2.0 * A * ((A - 1.0) + (A + 1.0) * cos(omega0));
+  double b2 = A * ((A + 1.0) + (A - 1.0) * cos(omega0) - 2.0 * sqrt(A) * alpha);
+  set_coefficients(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0);
+}
+
+void TASCAR::biquad_t::set_lowshelf(double f, double fs, double gain, double s)
+{
+  double A = pow(10.0, gain / 40.0);
+  double omega0 = TASCAR_2PI * f / fs;
+  double alpha =
+      0.5f * sin(omega0) * sqrt((A + 1.0 / A) * (1.0 / s - 1.0) + 2.0);
+  double a0 = (A + 1.0) + (A - 1.0) * cos(omega0) + 2.0 * sqrt(A) * alpha;
+  double a1 = -2.0 * ((A - 1.0) + (A + 1.0) * cos(omega0));
+  double a2 = (A + 1.0) + (A - 1.0) * cos(omega0) - 2.0 * sqrt(A) * alpha;
+  double b0 = A * ((A + 1.0) - (A - 1.0) * cos(omega0) + 2.0 * sqrt(A) * alpha);
+  double b1 = 2.0 * A * ((A - 1.0) - (A + 1.0) * cos(omega0));
+  double b2 = A * ((A + 1.0) - (A - 1.0) * cos(omega0) - 2.0 * sqrt(A) * alpha);
+  set_coefficients(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0);
+}
+
 void bilinear(std::vector<std::complex<double>>& poles, double& gain)
 {
   std::complex<double> prod_poles = 1.0;
@@ -567,6 +598,40 @@ void TASCAR::biquadf_t::set_pareq(float f, float fs, float gain, float q)
                      2.0f * (1.0f - t_sq) * inv_a0,
                      (t_sq + 1.0f - g * Bc) * inv_a0);
   }
+}
+
+void TASCAR::biquadf_t::set_highshelf(float f, float fs, float gain, float s)
+{
+  float A = powf(10.0f, gain / 40.0f);
+  float omega0 = TASCAR_2PIf * f / fs;
+  float alpha =
+      0.5f * sinf(omega0) * sqrtf((A + 1.0f / A) * (1.0f / s - 1.0f) + 2.0f);
+  float a0 = (A + 1.0f) - (A - 1.0f) * cosf(omega0) + 2.0f * sqrtf(A) * alpha;
+  float a1 = 2.0f * ((A - 1.0f) - (A + 1.0f) * cosf(omega0));
+  float a2 = (A + 1.0f) - (A - 1.0f) * cosf(omega0) - 2.0f * sqrtf(A) * alpha;
+  float b0 =
+      A * ((A + 1.0f) + (A - 1.0f) * cosf(omega0) + 2.0f * sqrtf(A) * alpha);
+  float b1 = -2.0f * A * ((A - 1.0f) + (A + 1.0f) * cosf(omega0));
+  float b2 =
+      A * ((A + 1.0f) + (A - 1.0f) * cosf(omega0) - 2.0f * sqrtf(A) * alpha);
+  set_coefficients(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0);
+}
+
+void TASCAR::biquadf_t::set_lowshelf(float f, float fs, float gain, float s)
+{
+  float A = powf(10.0f, gain / 40.0f);
+  float omega0 = TASCAR_2PIf * f / fs;
+  float alpha =
+      0.5f * sinf(omega0) * sqrtf((A + 1.0f / A) * (1.0f / s - 1.0f) + 2.0f);
+  float a0 = (A + 1.0f) + (A - 1.0f) * cosf(omega0) + 2.0f * sqrtf(A) * alpha;
+  float a1 = -2.0f * ((A - 1.0f) + (A + 1.0f) * cosf(omega0));
+  float a2 = (A + 1.0f) + (A - 1.0f) * cosf(omega0) - 2.0f * sqrtf(A) * alpha;
+  float b0 =
+      A * ((A + 1.0f) - (A - 1.0f) * cosf(omega0) + 2.0f * sqrtf(A) * alpha);
+  float b1 = 2.0f * A * ((A - 1.0f) - (A + 1.0f) * cosf(omega0));
+  float b2 =
+      A * ((A + 1.0f) - (A - 1.0f) * cosf(omega0) - 2.0f * sqrtf(A) * alpha);
+  set_coefficients(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0);
 }
 
 TASCAR::aweighting_t::aweighting_t(double fs)
@@ -801,7 +866,7 @@ float absorptionerror(const std::vector<float>& vPar, void* data)
     a2 *= a2;
     e += a2;
   }
-  e /= pOpt->alpha.size();
+  e /= (float)(pOpt->alpha.size());
   if((d > 1.0f) || (d < 0.0f))
     e = 1e6f;
   return e;
@@ -882,8 +947,9 @@ std::vector<elem_type> dupvec_chk(std::vector<elem_type> vec, unsigned n)
   if(vec.size() == 1)
     vec.resize(n, vec[vec.size() - 1]);
   if(vec.size() != n)
-    throw TASCAR::ErrMsg("Invalid vector length (expected 1 or " + std::to_string(n) +
-                 ", got " + std::to_string(vec.size()) + ").");
+    throw TASCAR::ErrMsg("Invalid vector length (expected 1 or " +
+                         std::to_string(n) + ", got " +
+                         std::to_string(vec.size()) + ").");
   return vec;
 }
 
@@ -906,11 +972,11 @@ TASCAR::o1_ar_filter_t::o1_ar_filter_t(unsigned int channels, float fs_,
 
 void o1_lp_coeffs(const float tau, const float fs, float& c1, float& c2)
 {
-  if((tau > 0) && (fs > 0))
-    c1 = exp(-1.0 / (tau * fs));
+  if((tau > 0.0f) && (fs > 0.0f))
+    c1 = expf(-1.0f / (tau * fs));
   else
     c1 = 0;
-  c2 = 1.0 - c1;
+  c2 = 1.0f - c1;
 }
 
 void TASCAR::o1_ar_filter_t::set_tau_attack(unsigned int ch, float tau)

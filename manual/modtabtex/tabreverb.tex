@@ -1,0 +1,73 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:reverb}
+Attributes of element {\bf reverb} ({\hyperref[attrtab:reverbfoaconv]{foaconv}} {\hyperref[attrtab:reverbsimplefdn]{simplefdn}}), inheriting from \hyperref[attrtab:objects]{{\bf objects}} \hyperref[attrtab:routes]{{\bf routes}}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{avgdist} & Average distance which is assumed inside receiver boxes, or 0 to use $(\frac18 V)^{1/3}$ (float, m) & 0\\
+\hline
+\indattr{caliblevel} & calibration level (float, dB SPL) & 93.9794\\
+\hline
+\indattr{connect} & Regular expressions of port names for connections (string array) & \\
+\hline
+\indattr{delaycomp} & subtract this value from delay in delay lines (float, s) & 0\\
+\hline
+\indattr{diffuse} & render diffuse input sound fields (bool) & false\\
+\hline
+\indattr{fade\_gain} & linear fade gain (float) & 1\\
+\hline
+\indattr{falloff} & Length of von-Hann ramp at volume boundaries, or -1 for normal distance model (float, m) & -1\\
+\hline
+\indattr{gain} & port gain (float, dB) & 0\\
+\hline
+\indattr{globalmask} & use global mask (bool) & true\\
+\hline
+\indattr{image} & render image sources (bool) & true\\
+\hline
+\indattr{inv} & phase invert (bool) & false\\
+\hline
+\indattr{ismmax} & maximal ISM order to render (uint32) & 2147483647\\
+\hline
+\indattr{ismmin} & minimal ISM order to render (uint32) & 0\\
+\hline
+\indattr{layerfadelen} & duration of fades between layers (float, s) & 1\\
+\hline
+\indattr{layers} & render layers (bits32) & all\\
+\hline
+\indattr{muteonstop} & mute when transport stopped to prevent playback of sounds from delaylines and reverb (bool) & false\\
+\hline
+\indattr{outputlayers} & output layers (bits32) & all\\
+\hline
+\indattr{proxy\_airabsorption} & Use proxy position for air absorption (bool) & false\\
+\hline
+\indattr{proxy\_delay} & Use proxy position for delay (bool) & false\\
+\hline
+\indattr{proxy\_direction} & Use proxy position for direction (bool) & false\\
+\hline
+\indattr{proxy\_gain} & Use proxy position for gain (bool) & false\\
+\hline
+\indattr{proxy\_is\_relative} & Proxy is relative to receiver (true) or in absolute coordinates (false) (bool) & false\\
+\hline
+\indattr{proxy\_position} & Proxy position (pos, m) & 0 0 0\\
+\hline
+\indattr{scatterdamping} & damping of scatter reflection filter (float) & 0\\
+\hline
+\indattr{scatterreflections} & Number of reflections created by scattering filter (uint32) & 0\\
+\hline
+\indattr{scatterspread} & Spatial spread of scattering (float, deg) & 22.5\\
+\hline
+\indattr{scatterstructuresize} & size of scatter structure (float, m) & 1\\
+\hline
+\indattr{type} & receiver type (string) & omni\\
+\hline
+\indattr{volumetric} & volume in which receiver does not apply distance based gain model (pos, m) & 0 0 0\\
+\hline
+\indattr{volumetricgainwithdistance} & For volumetric receivers, increase gain with distance (bool) & false\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

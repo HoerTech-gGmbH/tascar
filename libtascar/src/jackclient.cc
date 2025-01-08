@@ -39,7 +39,7 @@ static std::string errmsg("");
 static void jack_report_error(const char* msg)
 {
   std::cerr << msg << std::endl;
-  if( errmsg.size() )
+  if(errmsg.size())
     errmsg += "\n";
   errmsg += msg;
 }
@@ -80,7 +80,7 @@ jackc_portless_t::jackc_portless_t(const std::string& clientname)
       err += "Unable to access shared memory. ";
     if(jstat & JackVersionError)
       err += "Client's protocol version does not match. ";
-    if( errmsg.size() )
+    if(errmsg.size())
       err += "\n" + errmsg;
     throw TASCAR::ErrMsg(err);
   }
@@ -606,7 +606,10 @@ jackc_db_t::jackc_db_t(const std::string& clientname, jack_nframes_t infragsize)
     if(0 != jack_client_create_thread(jc, &inner_thread,
                                       std::max(-1, rtprio - 1), (rtprio > 0),
                                       service, this))
-      throw TASCAR::ErrMsg("Unable to create inner processing thread.");
+      throw TASCAR::ErrMsg(
+          "Unable to create inner processing thread with priority " +
+          TASCAR::to_string(std::max(-1, rtprio - 1)) +
+          " - check realtime settings.");
   } else {
     // check for integer ratio:
     ratio = fragsize / inner_fragsize;

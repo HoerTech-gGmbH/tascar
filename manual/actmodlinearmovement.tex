@@ -5,27 +5,7 @@ given in cartesian coordinates, e.g.,
 <locationvelocity actor="/scene/obj" v="1 2 3" p0="0 0 1" t0="2"/>
 \end{lstlisting}
 
-\begin{snugshade}
-{\footnotesize
-\label{attrtab:linearmovement}
-Attributes of element {\bf linearmovement}\nopagebreak
-
-\begin{tabularx}{\textwidth}{lXl}
-\hline
-name & description (type, unit) & def.\\
-\hline
-\hline
-\indattr{actor} & pattern to match actor objects (string array) & \\
-\hline
-\indattr{p0} & start position at time t0 (pos, m) & 0 0 0\\
-\hline
-\indattr{t0} & start time t0 (double, s) & 0\\
-\hline
-\indattr{v} & velocity vector (pos, m/s) & 1 1 0\\
-\hline
-\end{tabularx}
-}
-\end{snugshade}
+\input{modtabtex/tablinearmovement.tex}
 
 All variables can be controlled via OSC; the \attr{actor} attribute is
 used as path prefix. In the example above this would result in these

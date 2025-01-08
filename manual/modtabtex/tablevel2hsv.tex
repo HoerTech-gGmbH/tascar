@@ -1,0 +1,37 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:level2hsv}
+Attributes of element {\bf level2hsv}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{active} & start activated (bool) & true\\
+\hline
+\indattr{decay} & decay filter coefficient (double) & 0\\
+\hline
+\indattr{frange} & Frequency range in bandpass mode (float array, Hz) & 62.5 4000\\
+\hline
+\indattr{hue} & Hue component (0-360) (float, degree) & 0\\
+\hline
+\indattr{lrange} & Level range (float array, dB) & 40 90\\
+\hline
+\indattr{mode} & Level mode [dbspl|rms|max] (string) & dbspl\\
+\hline
+\indattr{path} & Target path (string array) & /hsv\\
+\hline
+\indattr{saturation} & Saturation component (0-1) (float) & 1\\
+\hline
+\indattr{skip} & Skip frames (uint32) & 0\\
+\hline
+\indattr{tau} & Leq duration, or 0 to use block size (float, s) & 0\\
+\hline
+\indattr{url} & Target URL (string) & {\tiny osc.udp://localhost:9999/}\\
+\hline
+\indattr{weight} & Level meter weight (f-weight) & Z\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

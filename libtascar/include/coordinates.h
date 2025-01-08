@@ -66,10 +66,7 @@ template <class T> void make_friendly_number_limited(T& x)
 
 namespace TASCAR {
 
-  inline bool is_denormal(const double& a)
-  {
-    return !((a < 1.0) || (a > 0.0));
-  }
+  inline bool is_denormal(const double& a) { return !((a < 1.0) || (a > 0.0)); }
 
   inline bool is_denormal(const float& a)
   {
@@ -78,6 +75,9 @@ namespace TASCAR {
 
   /// Generate random number between 0 and 1
   double drand();
+
+  /// Generate random number between 0 and 1
+  float frand();
 
   /**
      \brief Linear interpolation table
@@ -896,11 +896,11 @@ namespace TASCAR {
     };
     inline void set_euler_zyx(const zyx_euler_t& eul)
     {
-      set_rotation(eul.x, TASCAR::posf_t(1.0f, 0.0f, 0.0f));
+      set_rotation((float)(eul.x), TASCAR::posf_t(1.0f, 0.0f, 0.0f));
       quaternion_t q;
-      q.set_rotation(eul.y, TASCAR::posf_t(0.0f, 1.0f, 0.0f));
+      q.set_rotation((float)(eul.y), TASCAR::posf_t(0.0f, 1.0f, 0.0f));
       rmul(q);
-      q.set_rotation(eul.z, TASCAR::posf_t(0.0f, 0.0f, 1.0f));
+      q.set_rotation((float)(eul.z), TASCAR::posf_t(0.0f, 0.0f, 1.0f));
       rmul(q);
     };
     // inline void set_euler_xyz(const zyx_euler_t& eul)

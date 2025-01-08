@@ -1,0 +1,39 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:speaker}
+Attributes of element {\bf speaker}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{az} & Azimuth (double, deg) & 0\\
+\hline
+\indattr{calibrate} & Use this loudspeaker during calibration (bool) & true\\
+\hline
+\indattr{compB} & FIR filter coefficients for speaker calibration (double array) & \\
+\hline
+\indattr{connect} & Connection to jack port (string) & \\
+\hline
+\indattr{conv} & Name of impulse response for convolution (string) & \\
+\hline
+\indattr{delay} & Static delay (double, s) & 0\\
+\hline
+\indattr{el} & Elevation (double, deg) & 0\\
+\hline
+\indattr{eqfreq} & Frequencies for IIR filter design (float array, Hz) & \\
+\hline
+\indattr{eqgain} & Gains for IIR filter design (float array, dB) & \\
+\hline
+\indattr{eqstages} & Number of biquad-stages in IIR frequency correction (0 = disable) (uint32) & 0\\
+\hline
+\indattr{gain} & Broadband gain correction (double, dB) & 0\\
+\hline
+\indattr{label} & Additional port label (string) & \\
+\hline
+\indattr{r} & Distance (double, m) & 1\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

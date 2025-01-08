@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<layout>
+<layout diffusedecoder="basic">
   <speaker az="0"/>
   <speaker az="90"/>
   <speaker az="-90"/>

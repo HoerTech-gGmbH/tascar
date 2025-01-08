@@ -114,9 +114,10 @@ public:
                                 lo_arg** argv, int argc, lo_message msg,
                                 void* user_data);
   std::string path;
+  bool ds_format = false;
 
 private:
-  void osc_receive_sample(const char* path, const char* msg);
+  void osc_receive_sample(const char* path, double t, const char* msg);
 };
 
 /**
@@ -224,9 +225,9 @@ public:
   void set_alive() { timeout_cnt = 10u; };
 
 private:
-  void get_valuerange(const std::vector<double>& data, uint32_t channels,
-                      uint32_t firstchannel, uint32_t n1, uint32_t n2,
-                      double& dmin, double& dmax);
+  void get_valuerange(const std::vector<double>& data, size_t channels,
+                      size_t firstchannel, size_t n1, size_t n2, double& dmin,
+                      double& dmax);
   std::mutex drawlock;
   std::mutex plotdatalock;
   std::vector<double> plotdata_;
@@ -264,17 +265,17 @@ void data_draw_t::store_msg(double t1, double t2, const std::string& msg)
 }
 
 void data_draw_t::get_valuerange(const std::vector<double>& data,
-                                 uint32_t channels, uint32_t firstchannel,
-                                 uint32_t n1, uint32_t n2, double& dmin,
+                                 size_t channels, size_t firstchannel,
+                                 size_t n1, size_t n2, double& dmin,
                                  double& dmax)
 {
   dmin = std::numeric_limits<double>::max();
   dmax = std::numeric_limits<double>::lowest();
-  for(uint32_t dim = firstchannel; dim < channels; dim++) {
+  for(size_t dim = firstchannel; dim < channels; dim++) {
     vdc[dim] = 0;
     if(!displaydc_) {
-      uint32_t cnt(0);
-      for(uint32_t k = n1; k < n2; k++) {
+      size_t cnt(0);
+      for(size_t k = n1; k < n2; k++) {
         double v(data[dim + k * channels]);
         if((v > std::numeric_limits<double>::lowest()) &&
            (v < std::numeric_limits<double>::max())) {
@@ -285,7 +286,7 @@ void data_draw_t::get_valuerange(const std::vector<double>& data,
       if(cnt)
         vdc[dim] /= (double)cnt;
     }
-    for(uint32_t k = n1; k < n2; k++) {
+    for(size_t k = n1; k < n2; k++) {
       double v(data[dim + k * channels]);
       if((v > std::numeric_limits<double>::lowest()) &&
          (v < std::numeric_limits<double>::max())) {
@@ -340,7 +341,7 @@ public:
     std::lock_guard<std::mutex> lock(dlock);
     return xdata_;
   };
-  uint32_t get_size() const { return size_; };
+  size_t get_size() const { return size_; };
   const std::string& get_name() const { return name_; };
   void clear();
   void set_textdata() { b_textdata = true; };
@@ -356,7 +357,7 @@ public:
 private:
   std::mutex dlock;
   // bool displaydc_;
-  uint32_t size_;
+  size_t size_;
   bool b_textdata;
   std::vector<double> xdata_;
   std::vector<label_t> xmessages;
@@ -529,6 +530,8 @@ void lslvar_t::set_delta(double deltatime)
 oscsvar_t::oscsvar_t(tsccfg::node_t xmlsrc) : var_base_t(xmlsrc)
 {
   GET_ATTRIBUTE(path, "", "OSC path name, expecting messages with 's' format");
+  GET_ATTRIBUTE_BOOL(
+      ds_format, "Use ds format, i.e., a double in addition to the string.");
 }
 
 oscvar_t::oscvar_t(tsccfg::node_t xmlsrc) : var_base_t(xmlsrc)
@@ -650,10 +653,10 @@ double sqr(double x)
    \retval n1 Start index, included
    \retval n2 End index, excluded
  */
-void find_timeinterval(const std::vector<double>& data, uint32_t channels,
-                       double t1, double t2, uint32_t& n1, uint32_t& n2)
+void find_timeinterval(const std::vector<double>& data, size_t channels,
+                       double t1, double t2, size_t& n1, size_t& n2)
 {
-  uint32_t N(data.size() / channels);
+  size_t N(data.size() / channels);
   n1 = 0;
   n2 = 0;
   if(N == 0)
@@ -743,28 +746,31 @@ bool data_draw_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         }
       } else {
         // N is number of (multi-dimensional) samples:
-        uint32_t N(plotdata_.size() / num_channels);
+        size_t N(plotdata_.size() / num_channels);
         if(N > 1) {
           //        double tmax(0);
-          uint32_t n1(0);
-          uint32_t n2(0);
+          size_t n1(0);
+          size_t n2(0);
           ltime = plotdata_[(N - 1) * num_channels];
           find_timeinterval(plotdata_, num_channels, ltime - 30, ltime, n1, n2);
           get_valuerange(plotdata_, num_channels, 1 + ignore_first_, n1, n2,
                          dmin, dmax);
-          uint32_t stepsize((n2 - n1) / 2048);
+          size_t stepsize((n2 - n1) / 2048);
           ++stepsize;
           drange = dmax - dmin;
           dscale = height / drange;
-          for(uint32_t dim = 1 + ignore_first_; dim < num_channels; ++dim) {
+          for(size_t dim = 1 + ignore_first_; dim < num_channels; ++dim) {
             cr->save();
-            double size_norm(1.0 / (num_channels - 1.0 - ignore_first_));
-            TASCAR::Scene::rgb_color_t rgb(set_hsv(
-                (dim - 1.0 - ignore_first_) * size_norm * 360, 0.8, 0.7));
+            double size_norm(1.0 /
+                             ((double)num_channels - 1.0 - ignore_first_));
+            TASCAR::Scene::rgb_color_t rgb(
+                set_hsv((float)(((double)dim - 1.0 - ignore_first_) *
+                                size_norm * 360.0),
+                        0.8f, 0.7f));
             cr->set_source_rgb(rgb.r, rgb.g, rgb.b);
             bool restart_line(true);
             // limit number of lines:
-            for(uint32_t k = n1; k < n2; k += stepsize) {
+            for(size_t k = n1; k < n2; k += stepsize) {
               double t(plotdata_[k * num_channels] - ltime);
               double v(plotdata_[dim + k * num_channels]);
               if(std::isfinite(v)) {
@@ -1143,7 +1149,10 @@ void datalogging_t::configure()
                                       session->jc, session->srate, false,
                                       headless));
     var->set_recorder(recorder.back());
-    osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
+    if(var->ds_format)
+      osc->add_method(var->path, "ds", &oscsvar_t::osc_receive_sample, var);
+    else
+      osc->add_method(var->path, "s", &oscsvar_t::osc_receive_sample, var);
   }
 #ifdef HAS_LSL
   // finally, add all LSL variables:
@@ -1162,8 +1171,9 @@ void datalogging_t::configure()
     //
     connection_timeout = Glib::signal_timeout().connect(
         sigc::mem_fun(*this, &datalogging_t::on_100ms), 100);
-    uint32_t num_cols(ceil(sqrt(recorder.size())));
-    uint32_t num_rows(ceil(recorder.size() / std::max(1u, num_cols)));
+    uint32_t num_cols((uint32_t)(ceil(sqrt(recorder.size()))));
+    uint32_t num_rows(
+        (uint32_t)(ceil(recorder.size() / std::max(1u, num_cols))));
     for(uint32_t k = 0; k < num_cols; k++)
       draw_grid->insert_column(0);
     for(uint32_t k = 0; k < num_rows; k++)
@@ -1226,7 +1236,7 @@ int datalogging_t::osc_session_start(const char*, const char*, lo_arg**, int,
     ((datalogging_t*)user_data)->on_ui_start();
   else
     ((datalogging_t*)user_data)->osc_start.emit();
-  return 0;
+  return 1;
 }
 
 int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
@@ -1236,7 +1246,7 @@ int datalogging_t::osc_session_stop(const char*, const char*, lo_arg**, int,
     ((datalogging_t*)user_data)->on_ui_stop();
   else
     ((datalogging_t*)user_data)->osc_stop.emit();
-  return 0;
+  return 1;
 }
 
 int datalogging_t::osc_session_set_trialid(const char*, const char*,
@@ -1246,7 +1256,7 @@ int datalogging_t::osc_session_set_trialid(const char*, const char*,
   ((datalogging_t*)user_data)->osc_trialid = std::string(&(argv[0]->s));
   if(!((datalogging_t*)user_data)->is_headless())
     ((datalogging_t*)user_data)->osc_set_trialid.emit();
-  return 0;
+  return 1;
 }
 
 void datalogging_t::on_osc_set_trialid()
@@ -1351,7 +1361,7 @@ int oscvar_t::osc_receive_sample(const char* path, const char* types,
     }
   }
   ((oscvar_t*)user_data)->osc_receive_sample(path, argc + 1, data);
-  return 0;
+  return 1;
 }
 
 void oscvar_t::osc_receive_sample(const char*, uint32_t size, double* data)
@@ -1363,16 +1373,20 @@ void oscvar_t::osc_receive_sample(const char*, uint32_t size, double* data)
 }
 
 int oscsvar_t::osc_receive_sample(const char* path, const char*, lo_arg** argv,
-                                  int, lo_message, void* user_data)
+                                  int argc, lo_message, void* user_data)
 {
-  ((oscsvar_t*)user_data)->osc_receive_sample(path, &(argv[0]->s));
-  return 0;
+  if(argc == 1)
+    ((oscsvar_t*)user_data)->osc_receive_sample(path, 0.0, &(argv[0]->s));
+  else
+    ((oscsvar_t*)user_data)
+        ->osc_receive_sample(path, argv[0]->d, &(argv[1]->s));
+  return 1;
 }
 
-void oscsvar_t::osc_receive_sample(const char*, const char* msg)
+void oscsvar_t::osc_receive_sample(const char*, double t, const char* msg)
 {
   if(datarecorder) {
-    datarecorder->store_msg(datarecorder->get_session_time(), 0, msg);
+    datarecorder->store_msg(datarecorder->get_session_time(), t, msg);
   }
 }
 
@@ -1464,10 +1478,10 @@ void datalogging_t::save_text(const std::string& filename)
         ofs << it->t1 << " " << it->t2 << " \"" << it->msg << "\"\n";
     } else {
       std::vector<double> data(rec->get_data());
-      uint32_t N(rec->get_size());
-      uint32_t M(data.size());
-      uint32_t cnt(N - 1);
-      for(uint32_t l = 0; l < M; l++) {
+      size_t N(rec->get_size());
+      size_t M(data.size());
+      size_t cnt(N - 1);
+      for(size_t l = 0; l < M; l++) {
         ofs << data[l];
         if(cnt--) {
           ofs << " ";
@@ -1626,8 +1640,8 @@ void datalogging_t::save_mat(const std::string& filename)
         mvar = create_message_struct(recorder[k]->get_textdata(), name);
       } else {
         std::vector<double> data(recorder[k]->get_data());
-        uint32_t N(recorder[k]->get_size());
-        uint32_t M(data.size());
+        size_t N(recorder[k]->get_size());
+        size_t M(data.size());
         dims[1] = M / N;
         dims[0] = N;
         double* x(&(data[0]));
@@ -1697,8 +1711,8 @@ void datalogging_t::save_matcell(const std::string& filename)
         mData = create_message_struct(recorder[k]->get_textdata(), name);
       } else {
         std::vector<double> data(recorder[k]->get_data());
-        uint32_t N(recorder[k]->get_size());
-        uint32_t M(data.size());
+        size_t N(recorder[k]->get_size());
+        size_t M(data.size());
         dims[1] = M / N;
         dims[0] = N;
         double* x(&(data[0]));

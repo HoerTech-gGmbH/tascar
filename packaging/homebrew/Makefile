@@ -25,6 +25,7 @@ usr-local-bin: build
 
 usr-local-lib: build
 	mkdir -p "$(DESTDIR)$(PREFIX)/lib"
+	mkdir -p "$(DESTDIR)$(PREFIX)/share/icons/hicolor/48x48/apps/"
 	cp -r "homebrew-build-dir/$(PREFIX)/lib/"* "$(DESTDIR)$(PREFIX)/lib"
 	cp "$(REPO)/artwork/tascarpro.png" "$(DESTDIR)$(PREFIX)/share/icons/hicolor/48x48/apps/"
 	cp "$(REPO)/artwork/tascarspkcalib.png" "$(DESTDIR)$(PREFIX)/share/icons/hicolor/48x48/apps/"

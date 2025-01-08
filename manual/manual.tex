@@ -1181,7 +1181,7 @@ Eq.\ \ref{eq:foarot}, page \pageref{eq:foarot}). $\mathbf{f}_l$ is the
 first order Ambisonics signal of the $l$-th diffuse sound field; $L$ is the
 number of all diffuse sound fields, including diffuse reverberation inputs.
 
-For all loudspeaker-based receiver types, $D$ is a first order Ambisonics decoder matrix, with optional loudspeaker density compensation and decorrelation filters. To get a $\max rE$-decoder, set the \indattr{xyzgain} attribute to 0.707 for regular horizontal loudspeaker layouts and to 0.577 for regular 3D loudspeaker layouts.  For Ambisonics based receiver types, $D$ is a diagonal matrix.  By default, the decoded output of the first order Ambisonics rendering is de-correlated using FIR all-pass filters to achieve diffuse sound fields and avoid coloration artifacts (see \indattr{decorr} and \indattr{decorr\_length} for details).
+For all loudspeaker-based receiver types, $D$ is a first order Ambisonics decoder matrix, with optional loudspeaker density compensation and decorrelation filters. By default, a $\max rE$-decoder is used. The order gain $g_{xyz}$ is set according to Table 3.10 of \citet{Daniel2001}. A loudspeaker layout is assumed to reproduce in 3D when at least one loudspeaker has non-zero elevation. For Ambisonics based receiver types, $D$ is a diagonal matrix.  By default, the decoded output of the first order Ambisonics rendering is de-correlated using FIR all-pass filters to achieve diffuse sound fields and avoid coloration artifacts (see \indattr{decorr} and \indattr{decorr\_length} for details).
 
 Figure \ref{fig:renderer} presents the typical connections in \tascar{}
 and may help to visualize the role of the receiver.

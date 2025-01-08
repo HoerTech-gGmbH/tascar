@@ -260,8 +260,8 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
             return 1;
           }
         } // of visible
-      } // of layers check
-    } // of ISM order check
+      }   // of layers check
+    }     // of ISM order check
   } else {
     delayline.add_chunk(audio);
   }
@@ -631,8 +631,9 @@ void receiver_t::configure()
   scatter_handle = create_diffuse_state_data(f_sample, n_fragment);
   scatterfilterpath.resize(scatterreflections);
   if(scatterreflections > 0) {
-    scatterfilter = new TASCAR::fdn_t(scatterreflections, (uint32_t)f_sample,
-                                      true, TASCAR::fdn_t::mean, false);
+    scatterfilter =
+        new TASCAR::fdn_t(scatterreflections, (uint32_t)f_sample, true,
+                          TASCAR::fdn_t::mean, false, {0.0f, 0.0f, 0.0f, 0.0f});
     scatterfilter->set_scatterpar(
         scatterspread, f_sample * (0.1f * scatterstructuresize / 340.0f),
         f_sample * (scatterstructuresize / 340.0f), f_sample,
@@ -750,7 +751,7 @@ void receiver_t::postproc(std::vector<wave_t>& output)
         // path.dlout = x;
         ++kflt;
       }
-      scatterfilter->process(scatterfilterpath);
+      scatterfilter->process(scatterfilterpath, false);
       scatterbuffer->w()[k] = scatterfilter->outval.w;
       scatterbuffer->x()[k] = scatterfilter->outval.x;
       scatterbuffer->y()[k] = scatterfilter->outval.y;

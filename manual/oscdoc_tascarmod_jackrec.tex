@@ -1,0 +1,25 @@
+\definecolor{shadecolor}{RGB}{236,236,255}\begin{snugshade}
+{\footnotesize
+\label{osctab:tascarmodjackrec}
+OSC variables:
+\nopagebreak
+
+\begin{tabularx}{\textwidth}{llllX}
+\hline
+path & fmt. & range & r. & description\\
+\hline
+\attr{/.../addport} & s &  & no & Add the given port to the list of recorder input ports\\
+\attr{/.../clear} &  &  & no & Clear list of ports\\
+\attr{/.../listfiles} &  &  & no & Send list of sound files (matching pattern provided in XML)\\
+\attr{/.../listports} &  &  & no & List all available jack ports\\
+\attr{/.../name} & s & string & yes & Output file name, leave empty for automatic file names\\
+\attr{/.../rmfile} & s &  & no & Remove a file on disk\\
+\attr{/.../start} &  &  & no & Start recording (or recording standby when usetransport is set)\\
+\attr{/.../stop} &  &  & no & Stop recording and close output file\\
+\attr{/.../tag} & s & string & yes & Set tag of output file\\
+\attr{/.../usetransport} & i & bool & yes & Control wether to use jack transport during recording when started next\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
+\definecolor{shadecolor}{RGB}{255,230,204}

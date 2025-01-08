@@ -25,7 +25,7 @@
 
 class biquadplugin_t : public TASCAR::audioplugin_base_t {
 public:
-  enum filtertype_t { lowpass, highpass, equalizer };
+  enum filtertype_t { lowpass, highpass, equalizer, highshelf, lowshelf };
   biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg);
   void ap_process(std::vector<TASCAR::wave_t>& chunk, const TASCAR::pos_t& pos,
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t& tp);
@@ -52,7 +52,9 @@ biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(highpass,
                      "Highpass filter (true) or lowpass filter (false)");
   std::string mode("lohi");
-  GET_ATTRIBUTE(mode, "", "filter mode: lohi, lowpass, highpass, equalizer");
+  GET_ATTRIBUTE(
+      mode, "",
+      "filter mode: lohi, lowpass, highpass, equalizer, highshelf, lowshelf");
   if(mode == "lohi") {
     if(highpass)
       ftype = biquadplugin_t::highpass;
@@ -64,6 +66,10 @@ biquadplugin_t::biquadplugin_t(const TASCAR::audioplugin_cfg_t& cfg)
     ftype = biquadplugin_t::highpass;
   else if(mode == "equalizer")
     ftype = biquadplugin_t::equalizer;
+  else if(mode == "highshelf")
+    ftype = biquadplugin_t::highshelf;
+  else if(mode == "lowshelf")
+    ftype = biquadplugin_t::lowshelf;
   else
     throw TASCAR::ErrMsg("Invalid mode: " + mode);
 }
@@ -112,6 +118,12 @@ void biquadplugin_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
       break;
     case equalizer:
       bp[k]->set_pareq(fc, (float)f_sample, gain, Q);
+      break;
+    case highshelf:
+      bp[k]->set_highshelf(fc, (float)f_sample, gain, Q);
+      break;
+    case lowshelf:
+      bp[k]->set_lowshelf(fc, (float)f_sample, gain, Q);
       break;
     }
     bp[k]->filter(chunk[k]);

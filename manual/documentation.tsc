@@ -142,6 +142,8 @@
         <layout><fixture/></layout>
       </lightscene>
     </lightctl>
+    <lightcolorpicker/>
+    <!--/light/lightscene/fixture0/hsv-->
     <hossustain/>
     <pos2osc pattern="/*/*"/>
     <linearmovement actor="/scene/in"/>
@@ -154,6 +156,9 @@
     <oscactor path="/path" channels="1 2 3" influence="1 1 1"/>
     <ltcgen/>
     <osc2lsl/>
+    <skyfall actor="/*/nav"/>
+    <accmovement actor="/*/nav"/>
+    <accrotator actor="/*/nav"/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

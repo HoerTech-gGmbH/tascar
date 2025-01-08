@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<layout xyzgain="0.70710678118654757274" diffusegain="6.45">
+<layout diffusegain="6.45">
   <speaker az="0"/>
   <speaker az="90"/>
   <speaker az="180"/>

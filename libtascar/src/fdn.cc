@@ -36,14 +36,20 @@ void fdnpath_t::init(uint32_t maxdelay)
 };
 
 fdn_t::fdn_t(uint32_t fdnorder, uint32_t maxdelay, bool logdelays,
-             gainmethod_t gm, bool feedback_)
+             gainmethod_t gm, bool feedback_, std::vector<float> rallpass_)
     : logdelays_(logdelays), fdnorder_(fdnorder), maxdelay_(maxdelay),
-      feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm), feedback(feedback_)
+      feedbackmat(fdnorder_ * fdnorder_), gainmethod(gm), feedback(feedback_),
+      rallpass(rallpass_)
 {
+  if(rallpass.size() != 4u)
+    throw TASCAR::ErrMsg(
+        "Allpass filter radius vector requires four entries, received " +
+        std::to_string(rallpass.size()));
   for(auto& v : feedbackmat)
     v = 0.0f;
-  prefilt0.set_eta(0.0f);
-  prefilt1.set_eta(0.87f);
+  prefilt0.set_allpass(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+  prefilt1.set_allpass(0.87f, rallpass[0], rallpass[1], rallpass[2],
+                       rallpass[3], 0.25f * TASCAR_PIf);
   fdnpath.resize(fdnorder);
   for(size_t k = 0; k < fdnpath.size(); ++k) {
     fdnpath[k].init(maxdelay);
@@ -84,8 +90,10 @@ void fdn_t::setpar_t60(float az, float daz, float t_min, float t_max, float t60,
     }
     uint32_t d((uint32_t)std::max(0.0f, t_));
     fdnpath[tap].delay = std::max(2u, std::min(maxdelay_ - 1u, d));
-    fdnpath[tap].reflection.set_eta(0.87f * (float)tap /
-                                    ((float)fdnorder_ - 1.0f));
+    fdnpath[tap].reflection.set_allpass(
+        0.87f * (float)tap / ((float)fdnorder_ - 1.0f), rallpass[0],
+        rallpass[1], rallpass[2], rallpass[3],
+        TASCAR_PIf * (0.001f + 0.25f * (float)tap / ((float)fdnorder_ - 1.0f)));
     // eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
     t_mean += (float)(fdnpath[tap].delay);
   }
@@ -179,9 +187,10 @@ void fdn_t::set_scatterpar(float daz, float t_min, float t_max, float t60,
     }
     uint32_t d((uint32_t)std::max(0.0f, t_));
     fdnpath[tap].delay = std::max(2u, std::min(maxdelay_ - 1u, d));
-    fdnpath[tap].reflection.set_eta(0.87f * (float)tap /
-                                    ((float)fdnorder_ - 1.0f));
-    // eta[k] = 0.87f * (float)k / ((float)d1 - 1.0f);
+    fdnpath[tap].reflection.set_allpass(
+        0.87f * (float)tap / ((float)fdnorder_ - 1.0f), rallpass[0],
+        rallpass[1], rallpass[2], rallpass[3],
+        TASCAR_PIf * (0.001f + 0.25f * (float)tap / ((float)fdnorder_ - 1.0f)));
     t_mean += (float)(fdnpath[tap].delay);
   }
   // if feed forward model, then truncate delays:
@@ -262,22 +271,10 @@ void reflectionfilter_t::set_lp(float g, float c)
   A2 = -c;
 }
 
-reflectionfilter_biquadallpass_t::reflectionfilter_biquadallpass_t()
+void reflectionfilter_t::set_allpass(float eta_, float rw, float ry, float rz,
+                                     float rx, float phase)
 {
-  sy.set_zero();
-}
-
-void reflectionfilter_biquadallpass_t::set_lp(float g, float c)
-{
-  sy.set_zero();
-  float c2(1.0f - c);
-  B1 = g * c2;
-  A2 = -c;
-}
-
-void reflectionfilter_biquadallpass_t::set_allpass(float rw, float ry, float rz,
-                                                   float rx, float phase)
-{
+  eta = eta_;
   ap_w.set_allpass(rw, phase);
   ap_y.set_allpass(ry, phase);
   ap_z.set_allpass(rz, phase);

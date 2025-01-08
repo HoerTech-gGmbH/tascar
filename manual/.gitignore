@@ -33,7 +33,7 @@ secrecspeaker.tex
 secmaskmodules.tex
 version.tex
 *.run*
-tab*.tex
+/tab*.tex
 autodoc.txt
 cli_*.tex
 clihelp.tex

@@ -118,20 +118,21 @@ namespace TASCAR {
     session_core_t(const std::string& filename_or_data, load_type_t t,
                    const std::string& path);
     // configuration variables:
-    double duration;
-    bool loop;
-    bool playonload;
-    double levelmeter_tc;
-    TASCAR::levelmeter::weight_t levelmeter_weight;
+    double duration = 60;
+    bool loop = false;
+    bool playonload = false;
+    double locateonload = -1.0;
+    double levelmeter_tc = 2.0;
+    TASCAR::levelmeter::weight_t levelmeter_weight = TASCAR::levelmeter::Z;
     std::string levelmeter_mode;
-    double levelmeter_min;
-    double levelmeter_range;
-    double requiresrate;
-    double warnsrate;
-    int32_t requirefragsize;
-    int32_t warnfragsize;
+    double levelmeter_min = 30.0;
+    double levelmeter_range = 70.0;
+    double requiresrate = 0.0;
+    double warnsrate = 0.0;
+    int32_t requirefragsize = 0;
+    int32_t warnfragsize = 0;
     std::string initcmd;
-    double initcmdsleep;
+    double initcmdsleep = 0.0;
 
   private:
     void start_initcmd();
