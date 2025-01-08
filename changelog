@@ -1,3 +1,10 @@
+0.234:
+       - addition of accelerated movement plugins (Thirsa Huisman)
+       - addition of shelving filter modes in filter audio plugin
+       - improvement of simplefdn
+       - improvement of simplesynth
+       - replace xyzgain attribute by automatic detection of 2D/3D layout
+
 0.233.2: bugfix of tascar_spkcalib
 0.233.1:
        - add layer property for faces/facegroups (fholzm)
