@@ -97,6 +97,8 @@ namespace TASCAR {
     void operator*=(const wave_t& src);
     float* d;
     uint32_t n;
+    float* begin() { return d; };
+    float* end() { return d + n; };
 
   private:
     bool own_pointer;
