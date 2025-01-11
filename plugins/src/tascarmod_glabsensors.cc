@@ -138,7 +138,7 @@ bool sensorplugin_t::test_alive()
 {
   Gdk::RGBA col;
   if(libdata->get_alive()) {
-    alive_cnt = 10 * alivetimeout;
+    alive_cnt = (uint32_t)(10.0 * alivetimeout);
   }
   if(alive_cnt)
     alive_cnt--;

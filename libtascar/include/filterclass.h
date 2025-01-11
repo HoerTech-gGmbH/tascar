@@ -347,6 +347,24 @@ namespace TASCAR {
     biquad_t b3;
   };
 
+  class aweightingf_t {
+  public:
+    aweightingf_t(float fs);
+    inline float filter(float in)
+    {
+      return b3.filter(b2.filter(b1.filter(in)));
+    };
+    inline void filter(wave_t& w)
+    {
+      float* wend(w.d + w.n);
+      for(float* v = w.d; v < wend; ++v)
+        *v = filter((*v));
+    };
+    biquadf_t b1;
+    biquadf_t b2;
+    biquadf_t b3;
+  };
+
   /**
      @brief Multi-band parametric equalizer with filter-design functions
    */

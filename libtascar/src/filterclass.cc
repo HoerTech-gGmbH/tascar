@@ -641,6 +641,13 @@ TASCAR::aweighting_t::aweighting_t(double fs)
   b3.set_analog(1.0, 0.0, 0.0, -129.4, -129.4, fs);
 }
 
+TASCAR::aweightingf_t::aweightingf_t(float fs)
+{
+  b1.set_analog_poles(7.39705e9f, -76655.0f, -76655.0f, fs);
+  b2.set_analog(sqrtf(0.5f), 0.0f, 0.0f, -676.7f, -4636.0f, fs);
+  b3.set_analog(1.0f, 0.0f, 0.0f, -129.4f, -129.4f, fs);
+}
+
 void TASCAR::multiband_pareq_t::set_fgq(const std::vector<float>& f,
                                         const std::vector<float>& g,
                                         const std::vector<float>& q, float fs)
