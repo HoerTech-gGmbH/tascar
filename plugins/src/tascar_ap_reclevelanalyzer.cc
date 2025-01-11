@@ -21,6 +21,12 @@
 #include "errorhandling.h"
 #include "ringbuffer.h"
 #include <algorithm>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 class reclevelanalyzer_t : public TASCAR::audioplugin_base_t {
 public:
@@ -29,17 +35,26 @@ public:
                   const TASCAR::zyx_euler_t&, const TASCAR::transport_t&);
   void add_variables(TASCAR::osc_server_t* srv);
   ~reclevelanalyzer_t();
+  void configure();
+  void release();
 
 private:
+  void updatethread();
   float tau_segment = 0.125;
   float tau_analysis = 30.0;
   float update_interval = 5.0;
 
   TASCAR::ringbuffer_t* rb = NULL;
+  // threads and synchronization:
+  std::thread thread;
+  std::atomic_bool run_thread = true;
+  void sendthread();
+  std::mutex mtx;
+  std::condition_variable cond;
 };
 
 reclevelanalyzer_t::reclevelanalyzer_t(const TASCAR::audioplugin_cfg_t& cfg)
-  : audioplugin_base_t(cfg)
+    : audioplugin_base_t(cfg)
 {
 }
 
@@ -53,6 +68,14 @@ void reclevelanalyzer_t::add_variables(TASCAR::osc_server_t* srv)
   srv->unset_variable_owner();
 }
 
+void reclevelanalyzer_t::configure() {}
+void reclevelanalyzer_t::release()
+{
+  if(rb)
+    delete rb;
+  rb = NULL;
+}
+
 reclevelanalyzer_t::~reclevelanalyzer_t() {}
 
 void reclevelanalyzer_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
@@ -60,13 +83,30 @@ void reclevelanalyzer_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
                                     const TASCAR::zyx_euler_t&,
                                     const TASCAR::transport_t&)
 {
+  if(!rb)
+    return;
   if(!chunk.empty()) {
-    //uint32_t nch(chunk.size());
-    //uint32_t N(chunk[0].n);
-    //std::sort(chunk[0].begin(), chunk[0].end(), std::greater<float>());
-    
+    // uint32_t nch(chunk.size());
+    // uint32_t N(chunk[0].n);
+    // std::sort(chunk[0].begin(), chunk[0].end(), std::greater<float>());
+
     // write to ringbuffer
-    
+  }
+}
+
+void reclevelanalyzer_t::updatethread()
+{
+  uint32_t segment_len = (uint32_t)(std::max(1.0,tau_segment * f_sample));
+  uint32_t num_segments = (uint32_t)(std::max(1.0f,tau_analysis/tau_segment));
+  //float update_interval = 5.0;
+  TASCAR::wave_t segment(segment_len*n_channels);
+  std::unique_lock<std::mutex> lk(mtx);
+  while(run_thread) {
+    cond.wait_for(lk, 100ms);
+    while(rb->read_space() >= segment_len) {
+      rb->read( segment.begin(), segment_len );
+      float peak = segment.maxabs();
+    }
   }
 }
 
