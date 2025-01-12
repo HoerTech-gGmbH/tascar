@@ -16,11 +16,15 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{decaydamping} & Damping tone decay time (float, s) & 8\\
 \hline
+\indattr{decaynoise} & Noise decay time (float, s) & 0.5\\
+\hline
 \indattr{decayoffset} & Tone offset decay time (float, s) & 0.5\\
 \hline
 \indattr{detune} & Detuning frequency in Hz (float, Hz) & 1\\
 \hline
 \indattr{f0} & Tuning frequency (float, Hz) & 440\\
+\hline
+\indattr{gamma} & Velocity gamma value (float) & 1\\
 \hline
 \indattr{level} & Sound level (float, dB SPL) & 69.5424\\
 \hline
@@ -28,9 +32,17 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{midichannel} & MIDI channel (int32) & 0\\
 \hline
+\indattr{noisemin} & Minimum noise amplitude during sustain (float) & 0\\
+\hline
+\indattr{noiseq} & Noise resonace filter Q factor (float) & 0.5\\
+\hline
+\indattr{noiseweight} & Noise to tone ratio (float) & 0\\
+\hline
 \indattr{onset} & Onset time (float, s) & 0.02\\
 \hline
 \indattr{partialweights} & Linear amplitudes of tone components (float array) & {\tiny 1 0.562 0.316 0.355 0.282 0.355 0.2 0.0891 0.0398 0.0398 0.0398}\\
+\hline
+\indattr{tuning} & Tuning (string, equal|werkmeister3|meantone4|meantone6|valotti) & equal\\
 \hline
 \end{tabularx}
 }
