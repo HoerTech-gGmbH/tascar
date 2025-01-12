@@ -36,6 +36,7 @@
           <!--<simplesynth/>-->
           <onsetdetector/>
           <!--<openmha plugin="identity" config=""/>-->
+          <reclevelanalyzer/>
           <pink/>
           <pulse/>
           <sine/>

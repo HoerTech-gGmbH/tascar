@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <scene>
+  </scene>
+  <modules>
+    <route channels="2" name="rla" connect="system:capture_[12]">
+      <plugins>
+        <reclevelanalyzer/>
+      </plugins>
+    </route>
+    <oscrelay path="/reclevelanalyzer" url="osc.udp://localhost:19877"/>
+  </modules>
+</session>

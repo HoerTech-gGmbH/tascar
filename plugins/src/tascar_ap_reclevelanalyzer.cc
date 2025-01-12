@@ -19,6 +19,7 @@
 
 #include "audioplugin.h"
 #include "errorhandling.h"
+#include "filterclass.h"
 #include "ringbuffer.h"
 #include <algorithm>
 #include <chrono>
@@ -43,23 +44,41 @@ private:
   float tau_segment = 0.125;
   float tau_analysis = 30.0;
   float update_interval = 5.0;
+  std::vector<float> p = {0.0f, 0.5f, 0.65f, 0.95f, 1.0f};
+  std::string path = "/reclevelanalyzer";
 
+  //
   TASCAR::ringbuffer_t* rb = NULL;
+  TASCAR::wave_t writebuffer;
+  TASCAR::wave_t readbuffer;
   // threads and synchronization:
   std::thread thread;
   std::atomic_bool run_thread = true;
   void sendthread();
   std::mutex mtx;
   std::condition_variable cond;
+  // OSC server copy:
+  TASCAR::osc_server_t* srv_ = NULL;
 };
 
 reclevelanalyzer_t::reclevelanalyzer_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg)
 {
+  GET_ATTRIBUTE(tau_segment, "s", "Period time of one level segment");
+  GET_ATTRIBUTE(tau_analysis, "s", "Length of analysis window");
+  GET_ATTRIBUTE(
+      update_interval, "s",
+      "Update interval of analysis (each update will analyse full window)");
+  GET_ATTRIBUTE(p, "", "Percentile values");
+  GET_ATTRIBUTE(
+      path, "",
+      "OSC path. It will contain 2*sizeof(p)+1 values, the first is channel, "
+      "then sizeof(p) peak values, then sizeof(p) RMS values.");
 }
 
 void reclevelanalyzer_t::add_variables(TASCAR::osc_server_t* srv)
 {
+  srv_ = srv;
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   // srv->add_float_db("/gain", &gain);
@@ -68,12 +87,25 @@ void reclevelanalyzer_t::add_variables(TASCAR::osc_server_t* srv)
   srv->unset_variable_owner();
 }
 
-void reclevelanalyzer_t::configure() {}
+void reclevelanalyzer_t::configure()
+{
+  audioplugin_base_t::configure();
+  uint32_t ringbuffersize =
+      (uint32_t)(std::max(update_interval, 1.0f) * f_sample);
+  rb = new TASCAR::ringbuffer_t(ringbuffersize, n_channels);
+  writebuffer.resize(n_fragment * n_channels);
+  thread = std::thread(&reclevelanalyzer_t::updatethread, this);
+}
+
 void reclevelanalyzer_t::release()
 {
+  run_thread = false;
+  if(thread.joinable())
+    thread.join();
   if(rb)
     delete rb;
   rb = NULL;
+  audioplugin_base_t::release();
 }
 
 reclevelanalyzer_t::~reclevelanalyzer_t() {}
@@ -85,47 +117,97 @@ void reclevelanalyzer_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
 {
   if(!rb)
     return;
-  if(!chunk.empty()) {
-    // uint32_t nch(chunk.size());
-    // uint32_t N(chunk[0].n);
-    // std::sort(chunk[0].begin(), chunk[0].end(), std::greater<float>());
-
-    // write to ringbuffer
+  if((n_channels > 0) && ((size_t)n_channels == chunk.size())) {
+    uint32_t N = chunk[0].n;
+    for(size_t ch = 0; ch < n_channels; ++ch)
+      chunk[ch].copy_to_stride(writebuffer.d + ch, N, n_channels);
+    if(rb->write_space() >= N) {
+      rb->write(writebuffer.d, N);
+      cond.notify_one();
+    }
   }
 }
 
 void reclevelanalyzer_t::updatethread()
 {
-  uint32_t segment_len = (uint32_t)(std::max(1.0,tau_segment * f_sample));
-  uint32_t num_segments = (uint32_t)(std::max(1.0f,tau_analysis/tau_segment));
-  //float update_interval = 5.0;
-  TASCAR::wave_t segment(segment_len*n_channels);
+  // number of audio samples in one analysis segment:
+  uint32_t segment_len = (uint32_t)(std::max(1.0, tau_segment * f_sample));
+  // number of segments in the analysis window:
+  uint32_t num_segments = std::max(3u, (uint32_t)(tau_analysis / tau_segment));
+  // audio buffer for one channel of a segment:
+  TASCAR::wave_t segment(segment_len);
+  // read buffer for one segment (all channels):
+  TASCAR::wave_t readbuffer(segment_len * n_channels);
+  std::vector<TASCAR::wave_t> v_peaks;
+  std::vector<TASCAR::wave_t> v_ms;
+  TASCAR::wave_t sort_buffer(num_segments);
+  // indices of percentile values:
+  std::vector<uint32_t> idx_percentile;
+  for(const auto& p_ : p)
+    idx_percentile.push_back(uint32_t(p_ * (float)(num_segments - 1u)));
+  v_peaks.resize(n_channels);
+  v_ms.resize(n_channels);
+  for(auto& w : v_peaks)
+    w.resize(num_segments);
+  for(auto& w : v_ms)
+    w.resize(num_segments);
   std::unique_lock<std::mutex> lk(mtx);
+  uint32_t cnt_segment = 0;
+  uint32_t analysis_period =
+      std::max(1u, (uint32_t)(update_interval / tau_segment));
+  // A weighting filters:
+  std::vector<TASCAR::aweighting_t> a_flt(n_channels,
+                                          TASCAR::aweighting_t(f_sample));
+  // OSC message for sending:
+  lo_message msg = lo_message_new();
+  lo_message_add_int32(msg, 0);
+  for(size_t k = 0u; k < p.size(); ++k) {
+    lo_message_add_float(msg, 0.0f);
+    lo_message_add_float(msg, 0.0f);
+  }
+  auto oscmsgargv = lo_message_get_argv(msg);
   while(run_thread) {
     cond.wait_for(lk, 100ms);
     while(rb->read_space() >= segment_len) {
-      rb->read( segment.begin(), segment_len );
-      float peak = segment.maxabs();
+      // process one audio segment:
+      rb->read(readbuffer.begin(), segment_len);
+      for(uint32_t ch = 0; ch < n_channels; ++ch) {
+        segment.copy_stride(readbuffer.d + ch, segment_len, n_channels);
+        // analyse and filter one segment, store to analysis window buffer:
+        float peak = segment.maxabs();
+        v_peaks[ch].append_sample(peak);
+        // now filter...
+        a_flt[ch].filter(segment);
+        v_ms[ch].append_sample(segment.ms());
+      }
+      // increase segment counter and test if analysis is needed:
+      cnt_segment++;
+      if(cnt_segment >= analysis_period) {
+        cnt_segment = 0;
+        for(uint32_t ch = 0; ch < n_channels; ++ch) {
+          oscmsgargv[0]->i = ch;
+          // analyse peak_
+          sort_buffer.copy(v_peaks[ch]);
+          std::sort(sort_buffer.begin(), sort_buffer.end());
+          uint32_t k = 1;
+          for(auto idx : idx_percentile) {
+            oscmsgargv[k]->f = 20.0f * log10f(sort_buffer.d[idx]);
+            ++k;
+          }
+          // analyse ms:
+          sort_buffer.copy(v_ms[ch]);
+          std::sort(sort_buffer.begin(), sort_buffer.end());
+          for(auto idx : idx_percentile) {
+            oscmsgargv[k]->f = 10.0f * log10f(sort_buffer.d[idx]);
+            ++k;
+          }
+          srv_->dispatch_data_message(path.c_str(), msg);
+        }
+      }
     }
   }
+  lo_message_free(msg);
 }
-
-// void updatethread()
-// {
-//   while( runthread && (rb->read_size() > segment) ){
-//     rb->read( segment )
-//     peak = segment->maxabs();
-//     aweight.filter(segment);
-//     append_peak_and_rms;
-//     update_cnt++;
-//     if( update_cnt > num_segments_per_update_interval ){
-//        update_cnt = 0;
-//        copy_peak_and_rms_to_sortbuffer_then_sort;
-//        calc_percentiles;
-//        classify_results;
-//     }
-//   }
-// }
 
 REGISTER_AUDIOPLUGIN(reclevelanalyzer_t);
 

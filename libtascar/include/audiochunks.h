@@ -50,16 +50,86 @@ namespace TASCAR {
     void copy(const wave_t& src, float gain = 1.0);
     void add(const wave_t& src, float gain = 1.0);
     /**
-       @brief Copy samples from float buffer.
-       @param data Float buffer.
-       @param cnt Maximum number to copy (not more than min{cnt,n} samples are
-       copied).
-       @param gain Linear gain.
+     * @brief Copies a specified number of samples from the input data to the
+     * wave, applying a gain factor to each sample.
+     *
+     * This function copies samples from the provided float array `data` into
+     * the internal buffer `d`, multiplying each sample by the specified gain.
+     * If the number of samples to copy is less than the current size of the
+     * wave, the remaining elements in the wave are set to zero.
+     *
+     * @param data Pointer to the input float array containing the samples to
+     * copy.
+     * @param cnt The number of samples to copy from the input data.
+     * @param gain The linear gain factor to apply to each sample during the
+     * copy.
+     *
+     * @return The number of samples actually copied to the wave, which will be
+     *         the minimum of `n` (the size of the internal buffer) and `cnt`.
      */
     uint32_t copy(float* data, uint32_t cnt, float gain = 1.0);
+    /**
+     * @brief Copies a specified number of samples from the wave to the output
+     * data, applying a gain factor to each sample.
+     *
+     * This function copies samples from the internal buffer `d` into the
+     * provided float array `data`, multiplying each sample by the specified
+     * gain. If the number of samples to copy is less than `cnt`, the remaining
+     * elements in the output array are set to zero.
+     *
+     * @param[out] data Pointer to the output float array where the samples will
+     * be copied.
+     * @param[in] cnt The number of samples to copy from the wave.
+     * @param[in] gain The gain factor to apply to each sample during the copy.
+     *
+     * @return The number of samples actually copied to the output array, which
+     * will be the minimum of `n` (the current size of the internal buffer) and
+     * `cnt`.
+     */
     uint32_t copy_to(float* data, uint32_t cnt, float gain = 1.0);
+    /**
+     * @brief Copies a specified number of samples from the input data to the
+     * wave, using a defined stride and applying a gain factor to each sample.
+     *
+     * This function is similar to the `copy()` function, but it allows for
+     * specifying a stride. It copies from the input float array `data` at the
+     * specified stride, applying the given gain factor to each sampled value.
+     * If fewer samples are copied than the current size of the wave, the
+     * remaining elements are set to zero.
+     *
+     * @param data Pointer to the input float array containing the samples to
+     * copy.
+     * @param cnt The number of samples to copy from the input data.
+     * @param stride The number of elements to skip in the input data between
+     * copies.
+     * @param gain The gain factor to apply to each sample during the copy.
+     *
+     * @return The number of samples actually copied to the wave, which will be
+     *         the minimum of `n` (the size of the internal buffer) and `cnt`.
+     */
     uint32_t copy_stride(float* data, uint32_t cnt, uint32_t stride,
                          float gain = 1.0);
+    /**
+     * @brief Copies a specified number of samples from the wave to the output
+     * data, using a defined stride and applying a gain factor to each sample.
+     *
+     * This function is similar to the `copy_to()` function, but it allows for
+     * specifying a stride. It copies from the internal buffer `d` to the output
+     * float array `data` at the specified stride, applying the given gain
+     * factor to each sampled value. If fewer samples are copied than `cnt`, the
+     * remaining elements in the output array are set to zero.
+     *
+     * @param[out] data Pointer to the output float array where the samples will
+     * be copied.
+     * @param[in] cnt The number of samples to copy from the wave.
+     * @param[in] stride The number of elements to skip in the output array
+     * between copies.
+     * @param[in] gain The gain factor to apply to each sample during the copy.
+     *
+     * @return The number of samples actually copied to the output array, which
+     * will be the minimum of `n` (the current size of the internal buffer) and
+     * `cnt`.
+     */
     uint32_t copy_to_stride(float* data, uint32_t cnt, uint32_t stride,
                             float gain = 1.0);
     float ms() const;
