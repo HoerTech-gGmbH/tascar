@@ -103,7 +103,9 @@ namespace TASCAR {
   }
 
 #ifdef _WIN32
+  
   std::map<pid_t, PROCESS_INFORMATION> pidmap;
+  
 #endif
 
   pid_t system(const char* command, bool shell)
@@ -148,8 +150,6 @@ namespace TASCAR {
     ZeroMemory(&process_info, sizeof(process_info));
     if(CreateProcess(NULL, const_cast<char*>(command), NULL, NULL, FALSE, 0,
                      NULL, NULL, &startup_info, &process_info)) {
-      DEBUG("Process started");
-      DEBUG(command);
       pid = 1;
       bool found = false;
       do {
@@ -161,8 +161,6 @@ namespace TASCAR {
           ++pid;
       } while(found);
       pidmap[pid] = process_info;
-      DEBUG(pid);
-      DEBUG(process_info.dwProcessId);
     } else {
       DEBUG("Pailed to start process");
       DEBUG(command);
@@ -178,13 +176,18 @@ namespace TASCAR {
       killpg(pid, SIGTERM);
     }
 #else
-    DEBUG(pid);
     if(auto pide = pidmap.find(pid) != pidmap.end()) {
-      DEBUG(pidmap[pid].dwProcessId);
       TerminateProcess(pidmap[pid].hProcess, 0);
       CloseHandle(pidmap[pid].hProcess);
       CloseHandle(pidmap[pid].hThread);
-      pidmap.erase(pide);
+      pidmap.erase(pid);
+    }else{
+      DEBUG("Unable to stop process "+std::to_string(pid)+": no handle found");
+      DEBUG(pidmap.size());
+      for(auto lpid:pidmap){
+        DEBUG(lpid.first);
+        DEBUG(lpid.second.dwProcessId);
+      }
     }
 #endif
   }
@@ -193,13 +196,7 @@ namespace TASCAR {
   void wait_for_process(pid_t pid)
   {
     if(pidmap.find(pid) != pidmap.end()) {
-      DEBUG("starting to wait for process");
-      DEBUG(pid);
-      DEBUG(pidmap[pid].hProcess);
       WaitForSingleObject(pidmap[pid].hProcess, INFINITE);
-      DEBUG("process ended");
-      DEBUG(pid);
-      DEBUG(pidmap[pid].hProcess);
     }
   }
 #endif
