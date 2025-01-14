@@ -1,4 +1,5 @@
 "apps/build/tascar_cli","usr/bin/"
+"apps/build/tascar_genrandlsl","usr/bin/"
 "apps/build/tascar_getcalibfor","usr/bin/"
 "apps/build/tascar_gpx2csv","usr/bin/"
 "apps/build/tascar_hdspmixer","usr/bin/"
