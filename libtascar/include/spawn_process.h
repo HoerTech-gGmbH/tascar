@@ -39,7 +39,8 @@ namespace TASCAR {
   class spawn_process_t {
   public:
     spawn_process_t(const std::string& command, bool useshell = true,
-                    bool relaunch = false, double relaunchwait = 0.0);
+                    bool relaunch = false, double relaunchwait = 0.0,
+                    bool win_showwindow = false);
     ~spawn_process_t();
     void set_relaunch(bool relaunch);
 
@@ -54,6 +55,7 @@ namespace TASCAR {
     double relaunchwait_ = 0.0;
     bool running = false;
     std::mutex mtx;
+    bool win_showwindow_ = false;
   };
 } // namespace TASCAR
 

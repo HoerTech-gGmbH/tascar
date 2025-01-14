@@ -30,9 +30,10 @@
 
 TASCAR::spawn_process_t::spawn_process_t(const std::string& command,
                                          bool useshell, bool relaunch,
-                                         double relaunchwait)
+                                         double relaunchwait,
+                                         bool win_showwindow)
     : command_(command), useshell_(useshell), relaunch_(relaunch),
-      relaunchwait_(relaunchwait)
+      relaunchwait_(relaunchwait), win_showwindow_(win_showwindow)
 {
   if(!command.empty()) {
     TASCAR::console_log("creating launcher for \"" + command + "\"" +
@@ -52,10 +53,10 @@ void TASCAR::spawn_process_t::launcher()
     first = false;
     running = true;
     mtx.lock();
-    pid = TASCAR::system(command_.c_str(), useshell_);
+    pid = TASCAR::system(command_.c_str(), useshell_, win_showwindow_);
     mtx.unlock();
-    console_log("started process " + TASCAR::to_string((uint32_t)pid) + " (" + command_ +
-                ")");
+    console_log("started process " + TASCAR::to_string((uint32_t)pid) + " (" +
+                command_ + ")");
 #ifndef _WIN32
     int wstatus = 0;
     bool stillrunning = true;
@@ -80,17 +81,18 @@ void TASCAR::spawn_process_t::launcher()
         if(termsigname_c)
           termsigname =
               std::string(" (") + std::string(termsigname_c) + std::string(")");
-        TASCAR::add_warning(
-            "Process " + TASCAR::to_string((uint32_t)pid) + " terminated with signal " +
-            TASCAR::to_string(termsig_) + termsigname + ": \"" + command_ +
-            "\"" + (relaunch_ ? (" Relaunching.") : ("")));
+        TASCAR::add_warning("Process " + TASCAR::to_string((uint32_t)pid) +
+                            " terminated with signal " +
+                            TASCAR::to_string(termsig_) + termsigname + ": \"" +
+                            command_ + "\"" +
+                            (relaunch_ ? (" Relaunching.") : ("")));
       }
     }
 #else
     wait_for_process(pid);
 #endif
-    console_log("stopped process " + TASCAR::to_string((uint32_t)pid) + " (" + command_ +
-                ")");
+    console_log("stopped process " + TASCAR::to_string((uint32_t)pid) + " (" +
+                command_ + ")");
     pid = 0;
     running = false;
     if(relaunch_ && (relaunchwait_ > 0)) {

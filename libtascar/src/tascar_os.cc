@@ -103,12 +103,12 @@ namespace TASCAR {
   }
 
 #ifdef _WIN32
-  
+
   std::map<pid_t, PROCESS_INFORMATION> pidmap;
-  
+
 #endif
 
-  pid_t system(const char* command, bool shell)
+  pid_t system(const char* command, bool shell, bool win_showwindow)
   {
     pid_t pid = -1;
 #ifndef _WIN32 // Windows has no fork.
@@ -143,13 +143,17 @@ namespace TASCAR {
     STARTUPINFO startup_info;
     PROCESS_INFORMATION process_info;
     std::string cmd = command;
+    DWORD dwCreationFlags = 0;
+    if(!win_showwindow)
+      dwCreationFlags |= CREATE_NO_WINDOW;
     if(shell)
       cmd = "cmd /c " + cmd;
     ZeroMemory(&startup_info, sizeof(startup_info));
     startup_info.cb = sizeof(startup_info);
     ZeroMemory(&process_info, sizeof(process_info));
-    if(CreateProcess(NULL, const_cast<char*>(command), NULL, NULL, FALSE, 0,
-                     NULL, NULL, &startup_info, &process_info)) {
+    if(CreateProcess(NULL, const_cast<char*>(command), NULL, NULL, FALSE,
+                     dwCreationFlags, NULL, NULL, &startup_info,
+                     &process_info)) {
       pid = 1;
       bool found = false;
       do {
@@ -181,10 +185,11 @@ namespace TASCAR {
       CloseHandle(pidmap[pid].hProcess);
       CloseHandle(pidmap[pid].hThread);
       pidmap.erase(pid);
-    }else{
-      DEBUG("Unable to stop process "+std::to_string(pid)+": no handle found");
+    } else {
+      DEBUG("Unable to stop process " + std::to_string(pid) +
+            ": no handle found");
       DEBUG(pidmap.size());
-      for(auto lpid:pidmap){
+      for(auto lpid : pidmap) {
         DEBUG(lpid.first);
         DEBUG(lpid.second.dwProcessId);
       }

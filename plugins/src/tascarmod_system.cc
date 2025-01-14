@@ -32,7 +32,7 @@ public:
   void prepare(double f_sample)
   {
     if(!use_frame)
-      frame = time * f_sample;
+      frame = (uint32_t)(time * f_sample);
   };
   double time = 0.0;
   uint32_t frame = 0;
@@ -48,9 +48,9 @@ at_cmd_t::at_cmd_t(tsccfg::node_t xmlsrc) : time(0), frame(0), use_frame(false)
                         xmlsrc);
   if(e.has_attribute("frame"))
     use_frame = true;
-  e.GET_ATTRIBUTE_(time);
-  e.GET_ATTRIBUTE_(frame);
-  e.GET_ATTRIBUTE_(command);
+  e.GET_ATTRIBUTE(time, "s", "Process start time");
+  e.GET_ATTRIBUTE(frame, "1/fs", "Process start frame (overwrites time)");
+  e.GET_ATTRIBUTE(command, "", "Command line");
 }
 
 at_cmd_t::at_cmd_t(uint32_t frame_, const std::string& cmd)
@@ -131,6 +131,7 @@ private:
   bool allowoscmod = false;
   bool timedcmdpipe = true;
   std::string timedprefix;
+  bool win_showwindow = false;
   FILE* h_atcmd = NULL;
   FILE* h_triggered = NULL;
   TASCAR::spawn_process_t* proc = NULL;
@@ -226,13 +227,15 @@ system_t::system_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(timedprefix, "", "Prefix for timed commands added via OSC");
   GET_ATTRIBUTE_BOOL(
       timedcmdpipe, "start timed commands using a pipe (true) or fork (false)");
+  GET_ATTRIBUTE_BOOL(win_showwindow,
+                     "Start sub process in a window (Windows only)");
   atcmdmtx.lock();
   for(auto sne : tsccfg::node_get_children(e, "at"))
     atcmds.push_back(new at_cmd_t(sne));
   atcmdmtx.unlock();
   if(!command.empty()) {
     proc = new TASCAR::spawn_process_t(TASCAR::env_expand(command), !noshell,
-                                       relaunch, relaunchwait);
+                                       relaunch, relaunchwait, win_showwindow);
   }
   if(atcmds.size() || allowoscmod) {
     h_atcmd = popen("/bin/bash -s", "w");
@@ -309,7 +312,7 @@ void system_t::atcmdclear()
 void system_t::atcmdadd(double t, const std::string& cmd)
 {
   atcmdmtx.lock();
-  atcmds.push_back(new at_cmd_t(t * f_sample, timedprefix + cmd));
+  atcmds.push_back(new at_cmd_t((uint32_t)(t * f_sample), timedprefix + cmd));
   atcmdmtx.unlock();
 }
 

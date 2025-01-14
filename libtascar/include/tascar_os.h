@@ -72,8 +72,9 @@ namespace TASCAR {
   /// @brief Spawn a subprocess and return its process ID
   /// @param command Command to be executed
   /// @param shell Launch command using a shell (true) or directly
+  /// @param win_showwindow On MS Windows start process with an own window
   /// @return Process ID
-  pid_t system(const char* command, bool shell);
+  pid_t system(const char* command, bool shell, bool win_showwindow = false);
 
   /// @brief Try to terminate a subprocess
   void terminate_process(pid_t pid);
