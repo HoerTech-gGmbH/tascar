@@ -45,10 +45,12 @@ int main(int argc, char** argv)
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
-  const char* options = "ha:np:t";
-  struct option long_options[] = {{"help", 0, 0, 'h'},      {"add", 1, 0, 'a'},
-                                  {"noauto", 0, 0, 'n'},    {"port", 1, 0, 'p'},
-                                  {"timestamp", 0, 0, 't'}, {0, 0, 0, 0}};
+  const char* options = "hn:c:r:";
+  struct option long_options[] = {{"help", 0, 0, 'h'},
+                                  {"channels", 1, 0, 'c'},
+                                  {"name", 1, 0, 'n'},
+                                  {"rate", 1, 0, 'r'},
+                                  {0, 0, 0, 0}};
   int opt(0);
   int option_index(0);
   std::string name = "tascar_lsl";
