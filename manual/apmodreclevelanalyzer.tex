@@ -1,4 +1,4 @@
-Analyze recording levels and dispatch percentile peak and RMS(A) as internal OSC message.
+This plugin can analyse input levels and send percentile peak levels and A-weighted RMS levels as an internal OSC message. The audio signal is divided into segments of tau_segment duration. The peak level and the A-weighted RMS level are calculated in each segment. All short-term levels within tau_analysis are collected and on each analysis call the levels are sorted to derive percentile levels.
 
 \input{tabreclevelanalyzer.tex}
 

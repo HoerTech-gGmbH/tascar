@@ -40,13 +40,18 @@ public:
   void release();
 
 private:
+  static int osc_trigger(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data);
+  void osc_trigger();
+  void analysis_and_send_data();
+
   void updatethread();
   float tau_segment = 0.125;
   float tau_analysis = 30.0;
   float update_interval = 5.0;
   std::vector<float> p = {0.0f, 0.5f, 0.65f, 0.95f, 1.0f};
   std::string path = "/reclevelanalyzer";
-
+  bool triggered = false;
   //
   TASCAR::ringbuffer_t* rb = NULL;
   TASCAR::wave_t writebuffer;
@@ -56,9 +61,16 @@ private:
   std::atomic_bool run_thread = true;
   void sendthread();
   std::mutex mtx;
+  std::mutex mtxanalysis;
   std::condition_variable cond;
   // OSC server copy:
   TASCAR::osc_server_t* srv_ = NULL;
+  std::atomic_bool can_send = false;
+  lo_message msg = NULL;
+  TASCAR::wave_t sort_buffer;
+  std::vector<TASCAR::wave_t> v_peaks;
+  std::vector<TASCAR::wave_t> v_ms;
+  std::vector<uint32_t> idx_percentile;
 };
 
 reclevelanalyzer_t::reclevelanalyzer_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -74,6 +86,53 @@ reclevelanalyzer_t::reclevelanalyzer_t(const TASCAR::audioplugin_cfg_t& cfg)
       path, "",
       "OSC path. It will contain 2*sizeof(p)+1 values, the first is channel, "
       "then sizeof(p) peak values, then sizeof(p) RMS values.");
+  GET_ATTRIBUTE_BOOL(triggered,
+                     "Update analysis only when triggered via OSC message.");
+}
+
+int reclevelanalyzer_t::osc_trigger(const char*, const char*, lo_arg**, int,
+                                    lo_message, void* h)
+{
+  ((reclevelanalyzer_t*)h)->osc_trigger();
+  return 0;
+}
+
+void reclevelanalyzer_t::osc_trigger()
+{
+  if(triggered)
+    analysis_and_send_data();
+}
+
+void reclevelanalyzer_t::analysis_and_send_data()
+{
+  if(!can_send)
+    return;
+  auto oscmsgargv = lo_message_get_argv(msg);
+  for(uint32_t ch = 0; ch < n_channels; ++ch) {
+    oscmsgargv[0]->i = ch;
+    // analyse peak_
+    {
+      std::lock_guard<std::mutex> lock(mtxanalysis);
+      sort_buffer.copy(v_peaks[ch]);
+    }
+    std::sort(sort_buffer.begin(), sort_buffer.end());
+    uint32_t k = 1;
+    for(auto idx : idx_percentile) {
+      oscmsgargv[k]->f = 20.0f * log10f(sort_buffer.d[idx]);
+      ++k;
+    }
+    // analyse ms:
+    {
+      std::lock_guard<std::mutex> lock(mtxanalysis);
+      sort_buffer.copy(v_ms[ch]);
+    }
+    std::sort(sort_buffer.begin(), sort_buffer.end());
+    for(auto idx : idx_percentile) {
+      oscmsgargv[k]->f = 10.0f * log10f(sort_buffer.d[idx]);
+      ++k;
+    }
+    srv_->dispatch_data_message(path.c_str(), msg);
+  }
 }
 
 void reclevelanalyzer_t::add_variables(TASCAR::osc_server_t* srv)
@@ -81,6 +140,7 @@ void reclevelanalyzer_t::add_variables(TASCAR::osc_server_t* srv)
   srv_ = srv;
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_method("/trigger", "", &osc_trigger, this);
   // srv->add_float_db("/gain", &gain);
   // srv->add_float("/lingain", &gain);
   // srv->add_method("/fade", "ff", osc_set_fade, this);
@@ -138,11 +198,9 @@ void reclevelanalyzer_t::updatethread()
   TASCAR::wave_t segment(segment_len);
   // read buffer for one segment (all channels):
   TASCAR::wave_t readbuffer(segment_len * n_channels);
-  std::vector<TASCAR::wave_t> v_peaks;
-  std::vector<TASCAR::wave_t> v_ms;
-  TASCAR::wave_t sort_buffer(num_segments);
+  sort_buffer.resize(num_segments);
   // indices of percentile values:
-  std::vector<uint32_t> idx_percentile;
+  idx_percentile.clear();
   for(const auto& p_ : p)
     idx_percentile.push_back(uint32_t(p_ * (float)(num_segments - 1u)));
   v_peaks.resize(n_channels);
@@ -159,53 +217,40 @@ void reclevelanalyzer_t::updatethread()
   std::vector<TASCAR::aweighting_t> a_flt(n_channels,
                                           TASCAR::aweighting_t(f_sample));
   // OSC message for sending:
-  lo_message msg = lo_message_new();
+  msg = lo_message_new();
   lo_message_add_int32(msg, 0);
   for(size_t k = 0u; k < p.size(); ++k) {
     lo_message_add_float(msg, 0.0f);
     lo_message_add_float(msg, 0.0f);
   }
-  auto oscmsgargv = lo_message_get_argv(msg);
+  can_send = true;
   while(run_thread) {
     cond.wait_for(lk, 100ms);
     while(rb->read_space() >= segment_len) {
       // process one audio segment:
       rb->read(readbuffer.begin(), segment_len);
-      for(uint32_t ch = 0; ch < n_channels; ++ch) {
-        segment.copy_stride(readbuffer.d + ch, segment_len, n_channels);
-        // analyse and filter one segment, store to analysis window buffer:
-        float peak = segment.maxabs();
-        v_peaks[ch].append_sample(peak);
-        // now filter...
-        a_flt[ch].filter(segment);
-        v_ms[ch].append_sample(segment.ms());
+      {
+        std::lock_guard<std::mutex> lock(mtxanalysis);
+        for(uint32_t ch = 0; ch < n_channels; ++ch) {
+          segment.copy_stride(readbuffer.d + ch, segment_len, n_channels);
+          // analyse and filter one segment, store to analysis window buffer:
+          float peak = segment.maxabs();
+          v_peaks[ch].append_sample(peak);
+          // now filter...
+          a_flt[ch].filter(segment);
+          v_ms[ch].append_sample(segment.ms());
+        }
       }
       // increase segment counter and test if analysis is needed:
       cnt_segment++;
       if(cnt_segment >= analysis_period) {
         cnt_segment = 0;
-        for(uint32_t ch = 0; ch < n_channels; ++ch) {
-          oscmsgargv[0]->i = ch;
-          // analyse peak_
-          sort_buffer.copy(v_peaks[ch]);
-          std::sort(sort_buffer.begin(), sort_buffer.end());
-          uint32_t k = 1;
-          for(auto idx : idx_percentile) {
-            oscmsgargv[k]->f = 20.0f * log10f(sort_buffer.d[idx]);
-            ++k;
-          }
-          // analyse ms:
-          sort_buffer.copy(v_ms[ch]);
-          std::sort(sort_buffer.begin(), sort_buffer.end());
-          for(auto idx : idx_percentile) {
-            oscmsgargv[k]->f = 10.0f * log10f(sort_buffer.d[idx]);
-            ++k;
-          }
-          srv_->dispatch_data_message(path.c_str(), msg);
-        }
+        if(!triggered)
+          analysis_and_send_data();
       }
     }
   }
+  can_send = false;
   lo_message_free(msg);
 }
 
