@@ -202,7 +202,8 @@ void reclevelanalyzer_t::updatethread()
   // indices of percentile values:
   idx_percentile.clear();
   for(const auto& p_ : p)
-    idx_percentile.push_back(uint32_t(p_ * (float)(num_segments - 1u)));
+    idx_percentile.push_back(std::max(
+        0u, std::min(num_segments, uint32_t(p_ * (float)(num_segments - 1u)))));
   v_peaks.resize(n_channels);
   v_ms.resize(n_channels);
   for(auto& w : v_peaks)
