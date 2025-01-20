@@ -1,0 +1,25 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:reclevelanalyzer}
+Attributes of element {\bf reclevelanalyzer}\nopagebreak
+
+\begin{tabularx}{\textwidth}{lXl}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{p} & Percentile values (float array) & 0 0.5 0.65 0.95 1\\
+\hline
+\indattr{path} & OSC path. It will contain 2*sizeof(p)+1 values, the first is channel, then sizeof(p) peak values, then sizeof(p) RMS values. (string) & /reclevelanalyzer\\
+\hline
+\indattr{tau\_analysis} & Length of analysis window (float, s) & 30\\
+\hline
+\indattr{tau\_segment} & Period time of one level segment (float, s) & 0.125\\
+\hline
+\indattr{triggered} & Update analysis only when triggered via OSC message. (bool) & false\\
+\hline
+\indattr{update\_interval} & Update interval of analysis (each update will analyse full window) (float, s) & 5\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}
