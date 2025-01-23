@@ -1322,9 +1322,12 @@ Reverb receivers have the attribute \attr{layers}, which defines the layers in w
 
 \subsection{Reflectors: {\tt <face .../>} and {\tt <facegroup .../>} elements}\label{sec:face}\label{sec:facegroup}\index{face}\index{facegroup}
 
-TASCAR uses a geometric image source model. Primary sound sources can be mirrored at reflectors if they meet the visibility criteria: The primary sound source must be in the direction of the face normal of the reflector, and the closest point between the plane defined by the reflector and the sound source must be within the surface boundary, or edge diffraction must be enabled for the reflectors.
+TASCAR uses a geometric source model to generate early reflections. Sound sources are reflected from surfaces if they meet the visibility criteria: The primary sound source must be in the direction of the face normal of the reflector, and the closest point between the plane defined by the reflector and the sound source must be within the surface boundary, or edge diffraction must be enabled for the reflectors.
 
-The audio signal from the image sound source is a filtered copy of the signal from the primary sound source. The reflection filters are determined by the material properties, and can be specified either in terms of filter coefficients or as a material definition with frequency-dependent absorption coefficients, see below.
+The audio signal from the image sound source is a filtered copy of the signal from the primary sound source. The reflection filters are determined by the material properties and can be specified either as filter parameters or as a material definition with frequency-dependent absorption coefficients, see below. If material definitions are used to define the reflection properties, numerical optimisation is used to find optimal filter parameters for the given sampling rate. The parameters \attr{attenuation} $\delta$ and \attr{reflectivity} $\rho$ are used to define a first order recursive reflection filter\footnote{Unfortunately the Equation (3) in \cite{Grimm2019} containes an error; this is the correct equation.}:
+\begin{equation}
+  y(t) = \delta \, y(t-{f_s^{-1}}) + \rho \, (1-\delta) \, x(t)
+\end{equation}
 
 The \elem{face} element defines a single reflecting surface.
 
@@ -1471,7 +1474,7 @@ rough approximation.
 
 An example configuration file can be found in the file {\tt
   example\_obstacle.tsc}. For an exact definition of the frequency
-response, see Equation 10 in \citet{Grimm2019}. The aperture is
+response, see Equation (10) in \citet{Grimm2019}. The aperture is
 $a=2\sqrt{A/\pi}$, e.g., in case of an obstacle of 1 times 1 meter the
 aperture is 1.1284 meter.
 
