@@ -904,7 +904,7 @@ int TASCAR::alpha2rflt(float& reflectivity, float& damping,
 
 TASCAR::o1flt_lowpass_t::o1flt_lowpass_t(const std::vector<float>& tau,
                                          float fs, float startval)
-    : TASCAR::o1_ar_filter_t(tau.size(), fs)
+    : TASCAR::o1_ar_filter_t((unsigned int)(tau.size()), fs)
 {
   for(unsigned int k = 0; k < tau.size(); k++) {
     d[k] = startval;
@@ -922,7 +922,7 @@ TASCAR::o1flt_lowpass_t::o1flt_lowpass_t(const std::vector<float>& tau,
 TASCAR::o1flt_lowpass_t::o1flt_lowpass_t(const std::vector<float>& tau,
                                          float fs,
                                          const std::vector<float>& startval)
-    : TASCAR::o1_ar_filter_t(tau.size(), fs)
+    : TASCAR::o1_ar_filter_t((unsigned int)(tau.size()), fs)
 {
   if(tau.size() != startval.size())
     throw ErrMsg(

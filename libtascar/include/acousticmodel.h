@@ -345,7 +345,7 @@ namespace TASCAR {
     class reflector_t : public diffractor_t {
     public:
       reflector_t();
-      void apply_reflectionfilter(TASCAR::wave_t& audio, double& lpstate) const;
+      void apply_reflectionfilter(TASCAR::wave_t& audio, float& lpstate) const;
       void read_xml(TASCAR::xml_element_t& e);
       bool active;
       float reflectivity;
@@ -378,7 +378,7 @@ namespace TASCAR {
       const source_t* primary;    ///< Primary source
       const reflector_t* reflector; ///< Reflector, which created new sound path
                                     ///< from parent, or NULL for primary
-      std::vector<double>
+      std::vector<float>
           reflectionfilterstates; ///< Filter states for first-order reflection
                                   ///< filters
       bool visible;

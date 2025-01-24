@@ -208,8 +208,8 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           float dairabsorption((next_air_absorption - air_absorption) * dt);
           apply_reflectionfilter(audio);
           if(receiver_->muteonstop && (!tp.rolling)) {
-            gain = 0.0;
-            dgain = 0.0;
+            gain = 0.0f;
+            dgain = 0.0f;
           }
           for(uint32_t k = 0; k < chunksize; ++k) {
             float& current_sample(audio[k]);
@@ -217,10 +217,10 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
             gain += dgain;
             // calculate layer fade gain:
             if(layeractive) {
-              if(layergain < 1.0)
+              if(layergain < 1.0f)
                 layergain += dlayergain;
             } else {
-              if(layergain > 0.0)
+              if(layergain > 0.0f)
                 layergain -= dlayergain;
             }
             if(src_->delayline)
@@ -242,13 +242,13 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
           distance = new_distance_with_delaycomp;
           gain = nextgain;
           air_absorption = next_air_absorption;
-          if(((gain != 0) || (dgain != 0))) {
-            if(src_->minlevel > 0) {
+          if(((gain != 0.0f) || (dgain != 0.0f))) {
+            if(src_->minlevel > 0.0f) {
               if(audio.rms() <= src_->minlevel)
                 return 0;
             }
             // add scattering:
-            float scattering(0.0);
+            float scattering(0.0f);
             if(reflector)
               scattering = reflector->scattering;
             // add to receiver:
@@ -289,13 +289,13 @@ void reflector_t::read_xml(TASCAR::xml_element_t& e)
 }
 
 void reflector_t::apply_reflectionfilter(TASCAR::wave_t& audio,
-                                         double& lpstate) const
+                                         float& lpstate) const
 {
-  double c1(reflectivity * (1.0 - damping));
+  float c1 = reflectivity * (1.0f - damping);
   float* p_begin(audio.d);
   float* p_end(p_begin + audio.n);
   for(float* pf = p_begin; pf != p_end; ++pf)
-    *pf = (float)(lpstate = lpstate * damping + *pf * c1);
+    *pf = (lpstate = lpstate * damping + *pf * c1);
 }
 
 receiver_graph_t::receiver_graph_t(
@@ -488,7 +488,7 @@ diffuse_acoustic_model_t::diffuse_acoustic_model_t(float fs, uint32_t chunksize,
   pos_t prel;
   float d = 1.0f;
   float gain = 1.0f;
-  float nflimit(0.1);
+  float nflimit = 0.1f;
   float traveltime_in_m = 1.0f;
   receiver_->update_refpoint(src_->center, src_->center, prel, d,
                              traveltime_in_m, gain, false, GAIN_INVR, nflimit);
@@ -508,7 +508,7 @@ uint32_t diffuse_acoustic_model_t::process(const TASCAR::transport_t&)
   pos_t prel;
   float d = 0.0f;
   float nextgain = 1.0f;
-  float nflimit(0.1);
+  float nflimit = 0.1f;
   float nexttraveltime_in_m = 1.0f;
   // calculate relative geometry between source and receiver:
   receiver_->update_refpoint(src_->center, src_->center, prel, d,
@@ -635,8 +635,8 @@ void receiver_t::configure()
         new TASCAR::fdn_t(scatterreflections, (uint32_t)f_sample, true,
                           TASCAR::fdn_t::mean, false, {0.0f, 0.0f, 0.0f, 0.0f});
     scatterfilter->set_scatterpar(
-        scatterspread, f_sample * (0.1f * scatterstructuresize / 340.0f),
-        f_sample * (scatterstructuresize / 340.0f), f_sample,
+        scatterspread, (float)f_sample * (0.1f * scatterstructuresize / 340.0f),
+        (float)f_sample * (scatterstructuresize / 340.0f), (float)f_sample,
         std::max(0.0f, std::min(0.999f, scatterdamping)));
     scatterallpass_w.resize(scatterreflections);
     scatterallpass_x.resize(scatterreflections);
@@ -644,22 +644,26 @@ void receiver_t::configure()
     scatterallpass_z.resize(scatterreflections);
     size_t k = 1;
     for(auto& flt : scatterallpass_x) {
-      flt.set_allpass(0.89f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.89f, TASCAR_2PIf * 0.25f * (float)k /
+                                 (float)scatterreflections);
       ++k;
     }
     k = 1;
     for(auto& flt : scatterallpass_y) {
-      flt.set_allpass(0.9f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.9f, TASCAR_2PIf * 0.25f * (float)k /
+                                (float)scatterreflections);
       ++k;
     }
     k = 1;
     for(auto& flt : scatterallpass_z) {
-      flt.set_allpass(0.905f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.905f, TASCAR_2PIf * 0.25f * (float)k /
+                                  (float)scatterreflections);
       ++k;
     }
     k = 1;
     for(auto& flt : scatterallpass_w) {
-      flt.set_allpass(0.91f, TASCAR_2PI * 0.25 * k / scatterreflections);
+      flt.set_allpass(0.91f, TASCAR_2PIf * 0.25f * (float)k /
+                                 (float)scatterreflections);
       ++k;
     }
   }
@@ -739,7 +743,7 @@ void receiver_t::postproc(std::vector<wave_t>& output)
 {
   // apply scatter buffer diffusion:
   if(scatterfilter) {
-    for(size_t k = 0; k < n_fragment; ++k) {
+    for(uint32_t k = 0; k < n_fragment; ++k) {
       TASCAR::foa_sample_t x(scatterbuffer->w()[k], scatterbuffer->x()[k],
                              scatterbuffer->y()[k], scatterbuffer->z()[k]);
       size_t kflt = 0;
@@ -988,7 +992,7 @@ source_t::source_t(tsccfg::node_t xmlsrc, const std::string& name,
                    const std::string& parentname)
     : sourcemod_t(xmlsrc), licensed_component_t(typeid(*this).name()),
       ismmin(0), ismmax(2147483647), layers(0xffffffff), maxdist(3700),
-      minlevel(0), nearfieldlimit(0.1), sincorder(0), gainmodel(GAIN_INVR),
+      minlevel(0), nearfieldlimit(0.1f), sincorder(0), gainmodel(GAIN_INVR),
       airabsorption(true), delayline(true), size(0), active(true),
       // is_prepared(false),
       plugins(xmlsrc, name, parentname)

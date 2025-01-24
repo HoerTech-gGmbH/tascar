@@ -542,7 +542,7 @@ void TASCAR::vector_get_mean_std(const std::vector<double>& v, double& mean,
   if(v.size() == 0)
     return;
   double sum = std::accumulate(v.begin(), v.end(), 0.0);
-  mean = sum / v.size();
+  mean = sum / (double)(v.size());
   if(v.size() == 1)
     return;
   std::vector<double> diff(v.size());
@@ -550,7 +550,7 @@ void TASCAR::vector_get_mean_std(const std::vector<double>& v, double& mean,
                  [mean](double x) { return x - mean; });
   double sq_sum =
       std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-  stdev = std::sqrt(sq_sum / (v.size() - 1));
+  stdev = std::sqrt(sq_sum / ((double)(v.size()) - 1.0));
 }
 
 /*

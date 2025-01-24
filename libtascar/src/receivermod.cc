@@ -359,18 +359,18 @@ spatial_error_t TASCAR::receivermod_base_speaker_t::get_spatial_error(
     err.abs_elev_rV_error += fabs(rV.elev() - pos.elev());
     err.abs_elev_rE_error += fabs(rE.elev() - pos.elev());
   }
-  err.abs_rV_error = sqrt(err.abs_rV_error / srcpos.size());
-  err.abs_rE_error = sqrt(err.abs_rE_error / srcpos.size());
+  err.abs_rV_error = sqrt(err.abs_rV_error / (double)(srcpos.size()));
+  err.abs_rE_error = sqrt(err.abs_rE_error / (double)(srcpos.size()));
   vector_get_mean_std(vang_rV, err.angular_rV_error, err.angular_rV_error_std);
   vector_get_mean_std(vang_rE, err.angular_rE_error, err.angular_rE_error_std);
-  err.azim_rV_error /= srcpos.size();
-  err.azim_rE_error /= srcpos.size();
-  err.elev_rV_error /= srcpos.size();
-  err.elev_rE_error /= srcpos.size();
-  err.abs_azim_rV_error /= srcpos.size();
-  err.abs_azim_rE_error /= srcpos.size();
-  err.abs_elev_rV_error /= srcpos.size();
-  err.abs_elev_rE_error /= srcpos.size();
+  err.azim_rV_error /= (double)(srcpos.size());
+  err.azim_rE_error /= (double)(srcpos.size());
+  err.elev_rV_error /= (double)(srcpos.size());
+  err.elev_rE_error /= (double)(srcpos.size());
+  err.abs_azim_rV_error /= (double)(srcpos.size());
+  err.abs_azim_rE_error /= (double)(srcpos.size());
+  err.abs_elev_rV_error /= (double)(srcpos.size());
+  err.abs_elev_rE_error /= (double)(srcpos.size());
   err.median_azim_rV_error = TASCAR::median(vaz_rV.begin(), vaz_rV.end());
   err.median_azim_rE_error = TASCAR::median(vaz_rE.begin(), vaz_rE.end());
   err.median_elev_rV_error = TASCAR::median(vel_rV.begin(), vel_rV.end());
@@ -395,7 +395,8 @@ void TASCAR::receivermod_base_speaker_t::post_prepare()
     std::vector<TASCAR::pos_t> ring;
     ring.resize(360);
     for(size_t k = 0; k < ring.size(); ++k)
-      ring[k].set_sphere(1.0, k * TASCAR_2PI / (double)ring.size(), 0.0);
+      ring[k].set_sphere(1.0, (double)k * TASCAR_2PI / (double)ring.size(),
+                         0.0);
     spatial_error_t err = get_spatial_error(ring);
     std::cout << "% spatial error:\n";
     std::cout << "e.layout = '" << spkpos.layout << "';\n";

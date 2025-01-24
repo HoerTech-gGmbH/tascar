@@ -3,6 +3,9 @@ all: build ver lib symlink testbin
 include ../config.mk
 include ../rules.mk
 
+#CXXFLAGS += -Wconversion -Werror
+#-Waddress -Warray-bounds -Wsign-compare -Wuninitialized
+
 #
 # versioning:
 #
