@@ -1061,6 +1061,40 @@ face_group_t::face_group_t(tsccfg::node_t xmlsrc) : object_t(xmlsrc)
     p_reflector->nonrt_set(verts);
     reflectors.push_back(p_reflector);
   }
+  dynobject_t::GET_ATTRIBUTE(shoeboxfloor, "m",
+                             "generate shoebox room with only the floor surface");
+  if(!shoeboxfloor.is_null()) {
+    TASCAR::pos_t sb(shoeboxfloor);
+    sb *= 0.5;
+    std::vector<TASCAR::pos_t> verts;
+    verts.resize(4);
+    TASCAR::Acousticmodel::reflector_t* p_reflector(NULL);
+    // face6:
+    verts[0] = TASCAR::pos_t(-sb.x, -sb.y, -sb.z);
+    verts[1] = TASCAR::pos_t(sb.x, -sb.y, -sb.z);
+    verts[2] = TASCAR::pos_t(sb.x, sb.y, -sb.z);
+    verts[3] = TASCAR::pos_t(-sb.x, sb.y, -sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+  }
+  dynobject_t::GET_ATTRIBUTE(shoeboxceiling, "m",
+                             "generate shoebox room with only the ceiling surface");
+  if(!shoeboxceiling.is_null()) {
+    TASCAR::pos_t sb(shoeboxceiling);
+    sb *= 0.5;
+    std::vector<TASCAR::pos_t> verts;
+    verts.resize(4);
+    TASCAR::Acousticmodel::reflector_t* p_reflector(NULL);
+    // face5:
+    verts[0] = TASCAR::pos_t(-sb.x, -sb.y, sb.z);
+    verts[1] = TASCAR::pos_t(-sb.x, sb.y, sb.z);
+    verts[2] = TASCAR::pos_t(sb.x, sb.y, sb.z);
+    verts[3] = TASCAR::pos_t(sb.x, -sb.y, sb.z);
+    p_reflector = new TASCAR::Acousticmodel::reflector_t();
+    p_reflector->nonrt_set(verts);
+    reflectors.push_back(p_reflector);
+  }
   if(!importraw.empty()) {
     std::ifstream rawmesh(TASCAR::env_expand(importraw).c_str());
     if(!rawmesh.good())

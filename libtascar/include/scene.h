@@ -173,6 +173,8 @@ namespace TASCAR {
       std::string importraw;
       TASCAR::pos_t shoebox;
       TASCAR::pos_t shoeboxwalls;
+      TASCAR::pos_t shoeboxfloor;
+      TASCAR::pos_t shoeboxceiling;
     };
 
     class obstacle_group_t : public object_t {
