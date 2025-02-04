@@ -79,9 +79,13 @@ void biquadplugin_t::add_variables(TASCAR::osc_server_t* srv)
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_float("/fc", &fc, "]0,20000]", "Cutoff frequency in Hz");
-  if(ftype == biquadplugin_t::equalizer) {
+  switch( ftype ){
+  case biquadplugin_t::equalizer:
+  case biquadplugin_t::highshelf:
+  case biquadplugin_t::lowshelf:
     srv->add_float("/gain", &gain, "[-30,30]", "Gain in dB");
-    srv->add_float("/Q", &Q, "]0,10]", "Q-factor of resonance filter");
+    srv->add_float("/Q", &Q, "]0,10]", "Q-factor of resonance or shelf filter");
+    break;
   }
   srv->unset_variable_owner();
 }
