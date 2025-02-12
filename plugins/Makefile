@@ -41,7 +41,7 @@ ifneq ($(OS),Windows_NT)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
   TASCARMODS += midicc2osc midictl mididispatch joystick	\
-    qualisystracker ltcgen lightctl ovheadtracker
+    qualisystracker ltcgen lightctl ovheadtracker serialheadtracker
   AUDIOPLUGINS += simplesynth
 endif
 ifeq ($(UNAME_S),Darwin)
@@ -153,7 +153,7 @@ build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): LDLIBS += -llsl
 endif
 build/$(PLUGINPREFIX)tascar_datalogging$(DLLEXT): build/datalogging_glade.h
 build/$(PLUGINPREFIX)tascar_hossustain$(DLLEXT): EXTERNALS += fftw3f
-build/$(PLUGINPREFIX)tascar_lightctl$(DLLEXT) build/$(PLUGINPREFIX)tascar_ovheadtracker$(DLLEXT): LDLIBS+=$(TASCARDMXLIB)
+build/$(PLUGINPREFIX)tascar_lightctl$(DLLEXT) build/$(PLUGINPREFIX)tascar_ovheadtracker$(DLLEXT) build/$(PLUGINPREFIX)tascar_serialheadtracker$(DLLEXT): LDLIBS+=$(TASCARDMXLIB)
 build/$(PLUGINPREFIX)tascar_lsljacktime$(DLLEXT) build/$(PLUGINPREFIX)tascar_pos2lsl$(DLLEXT) build/$(PLUGINPREFIX)tascar_levels2osc$(DLLEXT) build/$(PLUGINPREFIX)tascar_lslactor$(DLLEXT) build/$(PLUGINPREFIX)tascar_osc2lsl$(DLLEXT): LDLIBS+=-llsl
 build/$(PLUGINPREFIX)tascar_ltcgen$(DLLEXT): EXTERNALS+=ltc
 build/$(PLUGINPREFIX)tascar_simplecontroller$(DLLEXT): build/simplecontroller_glade.h

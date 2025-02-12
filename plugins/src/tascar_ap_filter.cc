@@ -86,6 +86,9 @@ void biquadplugin_t::add_variables(TASCAR::osc_server_t* srv)
     srv->add_float("/gain", &gain, "[-30,30]", "Gain in dB");
     srv->add_float("/Q", &Q, "]0,10]", "Q-factor of resonance or shelf filter");
     break;
+  case biquadplugin_t::lowpass:
+  case biquadplugin_t::highpass:
+    break;
   }
   srv->unset_variable_owner();
 }
