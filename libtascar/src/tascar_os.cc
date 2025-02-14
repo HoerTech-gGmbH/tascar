@@ -112,6 +112,8 @@ namespace TASCAR {
   {
     pid_t pid = -1;
 #ifndef _WIN32 // Windows has no fork.
+    if(win_showwindow) {
+    };
     pid = fork();
     if(pid < 0) {
       return pid;

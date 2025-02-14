@@ -165,9 +165,9 @@ void geopresets_t::setpreset(const std::string& s)
   if(pos_it != osc_positions.end()) {
     // preset is available in OSC positions, iterate through all paths:
     for(auto pair : osc_positions[s]) {
-      oscmsgargv[0]->f = pair.second.x;
-      oscmsgargv[1]->f = pair.second.y;
-      oscmsgargv[2]->f = pair.second.z;
+      oscmsgargv[0]->f = (float)pair.second.x;
+      oscmsgargv[1]->f = (float)pair.second.y;
+      oscmsgargv[2]->f = (float)pair.second.z;
       session->dispatch_data_message(pair.first.c_str(), msg);
     }
   }
@@ -175,9 +175,9 @@ void geopresets_t::setpreset(const std::string& s)
   if(rot_it != osc_orientations.end()) {
     // preset is available in OSC positions, iterate through all paths:
     for(auto pair : osc_orientations[s]) {
-      oscmsgargv[0]->f = pair.second.z;
-      oscmsgargv[1]->f = pair.second.y;
-      oscmsgargv[2]->f = pair.second.x;
+      oscmsgargv[0]->f = (float)pair.second.z;
+      oscmsgargv[1]->f = (float)pair.second.y;
+      oscmsgargv[2]->f = (float)pair.second.x;
       session->dispatch_data_message(pair.first.c_str(), msg);
     }
   }
@@ -319,7 +319,7 @@ void geopresets_t::update(uint32_t, bool)
     phase *= d_phase;
   }
   // raised-cosine weights:
-  float w(0.5 - 0.5 * std::real(phase));
+  float w(0.5f - 0.5f * std::real(phase));
   float w1(1.0f - w);
   // get weighted position:
   current_p.x = w * new_p.x + w1 * old_p.x;

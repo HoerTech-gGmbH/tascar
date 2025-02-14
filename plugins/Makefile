@@ -3,8 +3,7 @@ all: build modules
 include ../config.mk
 include ../rules.mk
 
-CXXFLAGS += -Wconversion
-#-Werror
+#-Wconversion -Werror
 
 #
 # main targets:

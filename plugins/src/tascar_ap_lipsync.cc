@@ -51,20 +51,20 @@ public:
 private:
   // configuration variables:
   bool threaded = true;
-  double smoothing = 0.02;
+  float smoothing = 0.02f;
   std::string url = "osc.udp://localhost:9999/";
-  TASCAR::pos_t scale = TASCAR::pos_t(1, 1, 1);
-  double vocalTract = 1.0;
-  double threshold = 0.5;
-  double maxspeechlevel = 48;
-  double dynamicrange = 165;
+  TASCAR::posf_t scale = TASCAR::posf_t(1, 1, 1);
+  float vocalTract = 1.0f;
+  float threshold = 0.5f;
+  float maxspeechlevel = 48.0f;
+  float dynamicrange = 165.0f;
   std::string energypath;
   // internal variables:
   lo_address lo_addr;
   std::string path_;
   TASCAR::stft_t* stft = NULL;
-  double* sSmoothedMag = NULL;
-  double* sLogMag = NULL;
+  float* sSmoothedMag = NULL;
+  float* sLogMag = NULL;
   uint32_t* formantEdges = NULL;
   uint32_t numFormants = 4;
   bool active = true;
@@ -195,11 +195,11 @@ void lipsync_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
-  srv->add_double("/smoothing", &smoothing);
-  srv->add_double("/vocalTract", &vocalTract);
-  srv->add_double("/threshold", &threshold);
-  srv->add_double("/maxspeechlevel", &maxspeechlevel);
-  srv->add_double("/dynamicrange", &dynamicrange);
+  srv->add_float("/smoothing", &smoothing);
+  srv->add_float("/vocalTract", &vocalTract);
+  srv->add_float("/threshold", &threshold);
+  srv->add_float("/maxspeechlevel", &maxspeechlevel);
+  srv->add_float("/dynamicrange", &dynamicrange);
   srv->add_bool("/active", &active);
   srv->unset_variable_owner();
 }
@@ -212,9 +212,9 @@ void lipsync_t::configure()
                             TASCAR::stft_t::WND_BLACKMAN, 0);
   uint32_t num_bins(stft->s.n_);
   // allocate buffer for processed smoothed log values:
-  sSmoothedMag = new double[num_bins];
+  sSmoothedMag = new float[num_bins];
   memset(sSmoothedMag, 0, num_bins * sizeof(double));
-  sLogMag = new double[num_bins];
+  sLogMag = new float[num_bins];
   memset(sLogMag, 0, num_bins * sizeof(double));
   // Edge frequencies for format energies:
   float freqBins[numFormants + 1];
@@ -228,7 +228,7 @@ void lipsync_t::configure()
   formantEdges = new uint32_t[numFormants + 1];
   for(uint32_t k = 0; k < numFormants + 1; ++k)
     formantEdges[k] = std::min(
-        num_bins, (uint32_t)(round(2 * freqBins[k] * n_fragment / f_sample)));
+                               num_bins, (uint32_t)(round(2 * freqBins[k] * (float)n_fragment / (float)f_sample)));
 }
 
 void lipsync_t::release()
@@ -262,12 +262,12 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   if(!chunk.size())
     return;
   stft->process(chunk[0]);
-  double vmin(1e20);
-  double vmax(-1e20);
+  float vmin(1e20f);
+  float vmax(-1e20f);
   uint32_t num_bins(stft->s.n_);
   // calculate smooth st-PSD:
-  double smoothing_c1(exp(-1.0 / (smoothing * f_fragment)));
-  double smoothing_c2(1.0 - smoothing_c1);
+  float smoothing_c1(expf(-1.0f / (smoothing * (float)f_fragment)));
+  float smoothing_c2(1.0f - smoothing_c1);
   for(uint32_t i = 0; i < num_bins; ++i) {
     // smoothing:
     sSmoothedMag[i] *= smoothing_c1;
@@ -284,7 +284,7 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
       energy[k] += sSmoothedMag[i] * sSmoothedMag[i];
     // Divide by number of sumples
     energy[k] /= (float)(formantEdges[k + 1] - formantEdges[k]);
-    energy[k] = std::max(0.0, (10 * log10f(energy[k] + 1e-6) - maxspeechlevel) /
+    energy[k] = std::max(0.0f, (10.0f * log10f(energy[k] + 1e-6f) - maxspeechlevel) /
                                       dynamicrange +
                                   1.0f - threshold);
   }
@@ -295,12 +295,12 @@ void lipsync_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   // Kiss blend shape
   // When there is energy in the 3 and 4 bin, blend shape is 0
   float kissBS = 0;
-  value = (0.5 - energy[2]) * 2;
-  if(energy[1] < 0.2)
-    value *= energy[1] * 5.0;
+  value = (0.5f - energy[2]) * 2.0f;
+  if(energy[1] < 0.2f)
+    value *= energy[1] * 5.0f;
   value *= scale.x;
-  value = value > 1.0 ? 1.0 : value; // Clip
-  value = value < 0.0 ? 0.0 : value; // Clip
+  value = value > 1.0f ? 1.0f : value; // Clip
+  value = value < 0.0f ? 0.0f : value; // Clip
   make_friendly_number(value);
   kissBS = value;
 

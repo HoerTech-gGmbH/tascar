@@ -33,7 +33,7 @@ public:
     float _w[AMB30::idx::channels];
     float w_current[AMB30::idx::channels];
     float dw[AMB30::idx::channels];
-    double dt;
+    float dt;
   };
   amb3h0v_t(tsccfg::node_t xmlsrc);
   void add_pointsource(const TASCAR::pos_t& prel, double width,
@@ -52,7 +52,7 @@ amb3h0v_t::data_t::data_t(uint32_t chunksize)
 {
   for(uint32_t k = 0; k < AMB30::idx::channels; k++)
     _w[k] = w_current[k] = dw[k] = 0;
-  dt = 1.0 / std::max(1.0, (double)chunksize);
+  dt = 1.0f / std::max(1.0f, (float)chunksize);
 }
 
 amb3h0v_t::amb3h0v_t(tsccfg::node_t xmlsrc) : TASCAR::receivermod_base_t(xmlsrc)
@@ -70,7 +70,7 @@ void amb3h0v_t::add_pointsource(const TASCAR::pos_t& prel, double,
     throw TASCAR::ErrMsg("Fatal error.");
   }
   data_t* d((data_t*)sd);
-  float az = prel.azim();
+  float az = (float)prel.azim();
   float x2, y2;
   // this is more or less taken from AMB plugins by Fons and Joern:
   d->_w[AMB30::idx::w] = MIN3DB;
@@ -89,6 +89,8 @@ void amb3h0v_t::add_pointsource(const TASCAR::pos_t& prel, double,
       output[k][i] += (d->w_current[k] += d->dw[k]) * chunk[i];
     }
   }
+  for(unsigned int k = 0; k < AMB30::idx::channels; k++)
+    d->w_current[k] = d->_w[k];
 }
 
 void amb3h0v_t::add_diffuse_sound_field(const TASCAR::amb1wave_t& chunk,

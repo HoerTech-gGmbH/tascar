@@ -490,6 +490,12 @@ std::string TASCAR::to_string(const TASCAR::pos_t& x)
          TASCAR::to_string(x.z);
 }
 
+std::string TASCAR::to_string(const TASCAR::posf_t& x)
+{
+  return TASCAR::to_string(x.x) + " " + TASCAR::to_string(x.y) + " " +
+         TASCAR::to_string(x.z);
+}
+
 std::string TASCAR::to_string(const std::vector<TASCAR::pos_t>& x)
 {
   size_t k(0);
@@ -1161,6 +1167,19 @@ void TASCAR::xml_element_t::get_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::get_attribute(const std::string& name,
+                                          TASCAR::posf_t& value,
+                                          const std::string& unit,
+                                          const std::string& info)
+{
+  TASCAR_ASSERT(e);
+  node_register_attr(e, name, TASCAR::to_string(value), unit, info, "pos");
+  if(has_attribute(name))
+    get_attribute_value(e, name, value);
+  else
+    set_attribute(name, value);
+}
+
+void TASCAR::xml_element_t::get_attribute(const std::string& name,
                                           TASCAR::zyx_euler_t& value,
                                           const std::string& info)
 {
@@ -1375,6 +1394,13 @@ void TASCAR::xml_element_t::set_attribute(const std::string& name,
 }
 
 void TASCAR::xml_element_t::set_attribute(const std::string& name,
+                                          const TASCAR::posf_t& value)
+{
+  TASCAR_ASSERT(e);
+  set_attribute_value(e, name, value);
+}
+
+void TASCAR::xml_element_t::set_attribute(const std::string& name,
                                           const TASCAR::zyx_euler_t& value)
 {
   TASCAR_ASSERT(e);
@@ -1554,6 +1580,13 @@ void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
 }
 
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
+                         const TASCAR::posf_t& value)
+{
+  TASCAR_ASSERT(elem);
+  tsccfg::node_set_attribute(elem, name, value.print_cart(" "));
+}
+
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::zyx_euler_t& value)
 {
   TASCAR_ASSERT(elem);
@@ -1701,6 +1734,17 @@ void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
   std::string attv(tsccfg::node_get_attribute_value(elem, name));
   TASCAR::pos_t tmpv;
   if(sscanf(attv.c_str(), "%lf%lf%lf", &(tmpv.x), &(tmpv.y), &(tmpv.z)) == 3) {
+    value = tmpv;
+  }
+}
+
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+                         TASCAR::posf_t& value)
+{
+  TASCAR_ASSERT(elem);
+  std::string attv(tsccfg::node_get_attribute_value(elem, name));
+  TASCAR::posf_t tmpv;
+  if(sscanf(attv.c_str(), "%f%f%f", &(tmpv.x), &(tmpv.y), &(tmpv.z)) == 3) {
     value = tmpv;
   }
 }

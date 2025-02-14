@@ -41,7 +41,7 @@ private:
 delay_t::delay_t(const TASCAR::audioplugin_cfg_t& cfg)
     : audioplugin_base_t(cfg), delay({1.0}), pos(0)
 {
-  GET_ATTRIBUTE(delay,"s","Delays in seconds");
+  GET_ATTRIBUTE(delay, "s", "Delays in seconds");
   if(delay.empty())
     delay.push_back(0.0);
 }
@@ -53,7 +53,7 @@ void delay_t::configure()
   for(size_t k = 0; k < n_channels; ++k) {
     if(delay[k % delay.size()] > 0.0)
       dline.push_back(new TASCAR::wave_t(
-          std::max(1.0, f_sample * delay[k % delay.size()])));
+          (uint32_t)(std::max(1.0, f_sample * delay[k % delay.size()]))));
     else
       dline.push_back(NULL);
   }

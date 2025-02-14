@@ -197,6 +197,7 @@ namespace TASCAR {
   std::string to_string(uint32_t x);
   std::string to_string(int32_t x);
   std::string to_string(const TASCAR::pos_t& x);
+  std::string to_string(const TASCAR::posf_t& x);
   std::string to_string(const TASCAR::zyx_euler_t& x);
   std::string to_string_deg(const TASCAR::zyx_euler_t& x);
   std::string to_string(const TASCAR::levelmeter::weight_t& value);
@@ -304,6 +305,8 @@ namespace TASCAR {
                            const std::string& unit = "deg");
     void get_attribute(const std::string& name, TASCAR::pos_t& value,
                        const std::string& unit, const std::string& info);
+    void get_attribute(const std::string& name, TASCAR::posf_t& value,
+                       const std::string& unit, const std::string& info);
     void get_attribute(const std::string& name, TASCAR::zyx_euler_t& value,
                        const std::string& info);
     void get_attribute(const std::string& name,
@@ -342,6 +345,7 @@ namespace TASCAR {
     void set_attribute(const std::string& name, int64_t value);
     void set_attribute(const std::string& name, uint64_t value);
     void set_attribute(const std::string& name, const TASCAR::pos_t& value);
+    void set_attribute(const std::string& name, const TASCAR::posf_t& value);
     void set_attribute(const std::string& name,
                        const TASCAR::zyx_euler_t& value);
     void set_attribute(const std::string& name,
@@ -459,6 +463,8 @@ void get_attribute_value_deg(const tsccfg::node_t& elem,
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::pos_t& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
+                         TASCAR::posf_t& value);
+void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          TASCAR::zyx_euler_t& value);
 void get_attribute_value(const tsccfg::node_t& elem, const std::string& name,
                          std::vector<TASCAR::pos_t>& value);
@@ -495,6 +501,8 @@ void set_attribute_int64(tsccfg::node_t& elem, const std::string& name,
                          int64_t value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::pos_t& value);
+void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
+                         const TASCAR::posf_t& value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,
                          const TASCAR::zyx_euler_t& value);
 void set_attribute_value(tsccfg::node_t& elem, const std::string& name,

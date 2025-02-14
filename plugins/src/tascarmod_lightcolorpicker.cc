@@ -68,7 +68,7 @@ colorpick_t::~colorpick_t()
 
 void rgb2hsv(float r, float g, float b, float& h, float& s, float& v)
 {
-  double min, max, delta;
+  float min, max, delta;
   min = r < g ? r : g;
   min = min < b ? min : b;
   max = r > g ? r : g;
@@ -92,14 +92,14 @@ void rgb2hsv(float r, float g, float b, float& h, float& s, float& v)
   if(r >= max)           // > is bogus, just keeps compilor happy
     h = (g - b) / delta; // between yellow & magenta
   else if(g >= max)
-    h = 2.0 + (b - r) / delta; // between cyan & yellow
+    h = 2.0f + (b - r) / delta; // between cyan & yellow
   else
-    h = 4.0 + (r - g) / delta; // between magenta & cyan
+    h = 4.0f + (r - g) / delta; // between magenta & cyan
 
-  h *= 60.0; // degrees
+  h *= 60.0f; // degrees
 
-  if(h < 0.0)
-    h += 360.0;
+  if(h < 0.0f)
+    h += 360.0f;
 
   return;
 }
@@ -110,8 +110,8 @@ bool colorpick_t::on_timeout()
   if(col != prevcol) {
     prevcol = col;
     lo_arg** arg(lo_message_get_argv(msg_hsvt));
-    rgb2hsv(col.get_red(), col.get_green(), col.get_blue(), arg[0]->f,
-            arg[1]->f, arg[2]->f);
+    rgb2hsv((float)(col.get_red()), (float)(col.get_green()),
+            (float)(col.get_blue()), arg[0]->f, arg[1]->f, arg[2]->f);
     if(session) {
       session->dispatch_data_message(path.c_str(), msg_hsvt);
     }

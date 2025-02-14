@@ -81,15 +81,15 @@ void gate_t::add_variables(TASCAR::osc_server_t* srv)
 void gate_t::configure()
 {
   audioplugin_base_t::configure();
-  ifadein = std::max(1.0, f_sample * fadeinlen);
-  ifadeout = std::max(1.0, f_sample * fadeoutlen);
+  ifadein = (uint32_t)std::max(1.0, f_sample * fadeinlen);
+  ifadeout = (uint32_t)std::max(1.0, f_sample * fadeoutlen);
   pfadein = new float[ifadein];
   pfadeout = new float[ifadeout];
   for(uint32_t k = 0; k < ifadein; ++k)
-    pfadein[k] = 0.5 + 0.5 * cos(TASCAR_PI * k / ifadein);
+    pfadein[k] = 0.5f + 0.5f * cosf(TASCAR_PIf * (float)k / (float)ifadein);
   for(uint32_t k = 0; k < ifadeout; ++k)
-    pfadeout[k] = 0.5 - 0.5 * cos(TASCAR_PI * k / ifadeout);
-  ihold = f_sample * holdlen;
+    pfadeout[k] = 0.5f - 0.5f * cosf(TASCAR_PIf * (float)k / (float)ifadeout);
+  ihold = (uint32_t)(f_sample * holdlen);
   lmin.resize(n_channels);
   lmax.resize(n_channels);
   l.resize(n_channels);

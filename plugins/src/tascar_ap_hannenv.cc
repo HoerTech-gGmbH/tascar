@@ -69,14 +69,14 @@ void hannenv_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
   for(uint32_t k = 0; k < chunk[0].n; ++k) {
     t = fmod(t, period);
     if(t <= 0)
-      chunk[0].d[k] = 0.0;
+      chunk[0].d[k] = 0.0f;
     else if(t < t1)
-      chunk[0].d[k] *= 0.5 * (1.0 - cos(p1 * t));
+      chunk[0].d[k] *= 0.5f * (1.0f - (float)(cos(p1 * t)));
     else if(t > t2) {
       if(t < t3)
-        chunk[0].d[k] *= 0.5 * (1.0 + cos(p2 * (t - t2)));
+        chunk[0].d[k] *= 0.5f * (1.0f + (float)(cos(p2 * (t - t2))));
       else
-        chunk[0].d[k] = 0;
+        chunk[0].d[k] = 0.0f;
     }
     t += dt;
   }

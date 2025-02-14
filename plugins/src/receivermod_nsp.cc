@@ -27,7 +27,7 @@ class nsp_t : public TASCAR::receivermod_base_speaker_t {
 public:
   class data_t : public TASCAR::receivermod_base_t::data_t {
   public:
-    data_t(uint32_t chunksize, uint32_t channels);
+    data_t(uint32_t chunksize, size_t channels);
     virtual ~data_t();
     // point source speaker weights:
     float* point_w;
@@ -41,7 +41,7 @@ public:
     float* diff_dy;
     float* diff_z;
     float* diff_dz;
-    double dt;
+    float dt;
   };
   nsp_t(tsccfg::node_t xmlsrc);
   virtual ~nsp_t(){};
@@ -55,7 +55,7 @@ public:
   bool useall;
 };
 
-nsp_t::data_t::data_t(uint32_t chunksize, uint32_t channels)
+nsp_t::data_t::data_t(uint32_t chunksize, size_t channels)
 {
   point_w = new float[channels];
   point_dw = new float[channels];
@@ -70,7 +70,7 @@ nsp_t::data_t::data_t(uint32_t chunksize, uint32_t channels)
   for(uint32_t k = 0; k < channels; k++)
     point_w[k] = point_dw[k] = diff_w[k] = diff_dw[k] = diff_x[k] = diff_dx[k] =
         diff_y[k] = diff_dy[k] = diff_z[k] = diff_dz[k] = 0;
-  dt = 1.0 / std::max(1.0, (double)chunksize);
+  dt = 1.0f / std::max(1.0f, (float)chunksize);
 }
 
 nsp_t::data_t::~data_t()
@@ -129,6 +129,13 @@ void nsp_t::add_pointsource(const TASCAR::pos_t& prel, double,
       output[k][i] += (d->point_w[k] += d->point_dw[k]) * chunk[i];
     }
   }
+  // set final value:
+  if(useall)
+    for(unsigned int k = 0; k < spkpos.size(); k++)
+      d->point_w[k] = 1.0f;
+  else
+    for(unsigned int k = 0; k < spkpos.size(); k++)
+      d->point_dw[k] = (k == kmin);
 }
 
 TASCAR::receivermod_base_t::data_t*
