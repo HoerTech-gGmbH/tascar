@@ -26,9 +26,11 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{pattern} & Pattern of TASCAR object names; see actor module documentation for details. (string array) & /*/*\\
 \hline
-\indattr{sendsounds} & Send also position of sound vertices (bool) & false\\
+\indattr{sendsounds} & Send also position of sound vertices (modes 2 and 3 only) (bool) & false\\
 \hline
 \indattr{skip} & Skip frames to reduce network traffic (uint32) & 0\\
+\hline
+\indattr{taumin} & Minimum period time between two transmissions. (float, s) & 0\\
 \hline
 \indattr{threaded} & Use additional thread for sending data to avoid blocking of real-time audio thread (bool) & true\\
 \hline
