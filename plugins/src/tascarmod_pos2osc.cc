@@ -42,18 +42,19 @@ private:
   std::string name = "pos2osc";
   std::string url = "osc.udp://localhost:9999/";
   std::vector<std::string> pattern = {"/*/*"};
-  uint32_t mode;
-  uint32_t ttl;
-  bool transport;
-  uint32_t skip;
-  uint32_t skipcnt;
+  uint32_t mode = 0;
+  uint32_t ttl = 1;
+  bool transport = true;
+  uint32_t skip = 0;
+  uint32_t skipcnt = 0;
   std::string avatar;
-  double lookatlen;
-  bool triggered;
-  bool ignoreorientation;
-  bool trigger;
-  bool sendsounds;
-  bool addparentname;
+  double lookatlen = 1.0;
+  bool triggered = false;
+  bool ignoreorientation = false;
+  bool trigger = true;
+  bool sendsounds = false;
+  bool addparentname = false;
+  float taumin = 0.0f;
   float oscale = 1.0f;
   lo_address target;
   std::vector<TASCAR::named_object_t> objects;
@@ -66,12 +67,10 @@ private:
   std::mutex mtx;
   std::condition_variable cond;
   std::atomic_bool has_data = false;
+  TASCAR::tictoc_t tictoc;
 };
 
-pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg), mode(0), ttl(1), transport(true), skip(0), skipcnt(0),
-      lookatlen(1.0), triggered(false), ignoreorientation(false), trigger(true),
-      sendsounds(false), addparentname(false)
+pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
 {
   GET_ATTRIBUTE(name, "", "Default name used in OSC variables");
   GET_ATTRIBUTE(url, "", "Target URL");
@@ -89,7 +88,8 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(triggered, "Send data only when triggered via OSC");
   GET_ATTRIBUTE_BOOL(ignoreorientation,
                      "Ignore delta-orientation of source, send zeros instead");
-  GET_ATTRIBUTE_BOOL(sendsounds, "Send also position of sound vertices");
+  GET_ATTRIBUTE_BOOL(
+      sendsounds, "Send also position of sound vertices (modes 2 and 3 only)");
   GET_ATTRIBUTE_BOOL(
       addparentname,
       "When sending sound vertex positions, add parent name to vertex name");
@@ -98,6 +98,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(orientationname, "", "Name for orientation variables");
   GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data to "
                                "avoid blocking of real-time audio thread");
+  GET_ATTRIBUTE(taumin, "s", "Minimum period time between two transmissions.");
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   target = lo_address_new_from_url(url.c_str());
@@ -136,6 +137,7 @@ void pos2osc_t::configure()
   run_thread = true;
   if(threaded)
     thread = std::thread(&pos2osc_t::sendthread, this);
+  tictoc.tic();
 }
 
 void pos2osc_t::release()
@@ -183,137 +185,166 @@ void pos2osc_t::update_local()
     skipcnt--;
   else {
     skipcnt = skip;
-    // for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
-    // it != obj.end(); ++it) {
-    for(auto& obj : objects) {
-      if(obj.scene->mtx_geometry.try_lock()) {
-        // copy position from parent object:
-        TASCAR::pos_t p(obj.obj->c6dof.position);
-        TASCAR::zyx_euler_t o(obj.obj->c6dof.orientation);
-        if(ignoreorientation)
-          o = obj.obj->c6dof_nodelta.orientation;
-        obj.scene->mtx_geometry.unlock();
-        std::string path;
-        switch(mode) {
-        case 0:
-          path = obj.name + "/pos";
-          lo_send(target, path.c_str(), "fff", p.x, p.y, p.z);
-          path = obj.name + "/rot";
-          lo_send(target, path.c_str(), "fff", RAD2DEG * o.z * oscale,
-                  RAD2DEG * o.y * oscale, RAD2DEG * o.x * oscale);
-          break;
-        case 1:
-          path = obj.name + "/pos";
-          lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z,
-                  RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
-                  RAD2DEG * o.x * oscale);
-          break;
-        case 2:
-          path = "/tascarpos";
-          lo_send(target, path.c_str(), "sffffff", obj.name.c_str(), p.x, p.y,
-                  p.z, RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
-                  RAD2DEG * o.x * oscale);
-          break;
-        case 3:
-          path = "/tascarpos";
-          lo_send(target, path.c_str(), "sffffff", obj.obj->get_name().c_str(),
-                  p.x, p.y, p.z, RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
-                  RAD2DEG * o.x * oscale);
-          if(sendsounds) {
-            TASCAR::Scene::src_object_t* src(
-                dynamic_cast<TASCAR::Scene::src_object_t*>(obj.obj));
-            if(src) {
-              std::string parentname(obj.obj->get_name());
-              for(const auto& isnd : src->sound) {
-                std::string soundname;
-                if(addparentname)
-                  soundname = parentname + "." + isnd->get_name();
-                else
-                  soundname = isnd->get_name();
-                if(obj.scene->mtx_geometry.try_lock()) {
-                  auto ipos = isnd->position;
-                  auto iori = isnd->orientation;
-                  obj.scene->mtx_geometry.unlock();
-                  lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
-                          ipos.x, ipos.y, ipos.z, RAD2DEG * iori.z * oscale,
-                          RAD2DEG * iori.y * oscale, RAD2DEG * iori.x * oscale);
+    if((taumin == 0.0f) || (tictoc.toc() >= taumin)) {
+      if(taumin > 0.0f)
+        tictoc.tic();
+      // for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
+      // it != obj.end(); ++it) {
+      for(auto& obj : objects) {
+        if(obj.scene->mtx_geometry.try_lock()) {
+          // copy position from parent object:
+          TASCAR::pos_t p(obj.obj->c6dof.position);
+          TASCAR::zyx_euler_t o(obj.obj->c6dof.orientation);
+          if(ignoreorientation)
+            o = obj.obj->c6dof_nodelta.orientation;
+          obj.scene->mtx_geometry.unlock();
+          std::string path;
+          switch(mode) {
+          case 0:
+            path = obj.name + "/pos";
+            lo_send(target, path.c_str(), "fff", p.x, p.y, p.z);
+            path = obj.name + "/rot";
+            lo_send(target, path.c_str(), "fff", RAD2DEG * o.z * oscale,
+                    RAD2DEG * o.y * oscale, RAD2DEG * o.x * oscale);
+            break;
+          case 1:
+            path = obj.name + "/pos";
+            lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z,
+                    RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                    RAD2DEG * o.x * oscale);
+            break;
+          case 2:
+            path = "/tascarpos";
+            lo_send(target, path.c_str(), "sffffff", obj.name.c_str(), p.x, p.y,
+                    p.z, RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                    RAD2DEG * o.x * oscale);
+            if(sendsounds) {
+              TASCAR::Scene::src_object_t* src(
+                  dynamic_cast<TASCAR::Scene::src_object_t*>(obj.obj));
+              if(src) {
+                std::string parentname(obj.name);
+                for(const auto& isnd : src->sound) {
+                  std::string soundname;
+                  if(addparentname)
+                    soundname = parentname + "." + isnd->get_name();
+                  else
+                    soundname = isnd->get_name();
+                  if(obj.scene->mtx_geometry.try_lock()) {
+                    auto ipos = isnd->position;
+                    auto iori = isnd->orientation;
+                    obj.scene->mtx_geometry.unlock();
+                    lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
+                            ipos.x, ipos.y, ipos.z, RAD2DEG * iori.z * oscale,
+                            RAD2DEG * iori.y * oscale,
+                            RAD2DEG * iori.x * oscale);
+                  }
                 }
               }
             }
+            break;
+          case 3:
+            path = "/tascarpos";
+            lo_send(target, path.c_str(), "sffffff",
+                    obj.obj->get_name().c_str(), p.x, p.y, p.z,
+                    RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                    RAD2DEG * o.x * oscale);
+            if(sendsounds) {
+              TASCAR::Scene::src_object_t* src(
+                  dynamic_cast<TASCAR::Scene::src_object_t*>(obj.obj));
+              if(src) {
+                std::string parentname(obj.obj->get_name());
+                for(const auto& isnd : src->sound) {
+                  std::string soundname;
+                  if(addparentname)
+                    soundname = parentname + "." + isnd->get_name();
+                  else
+                    soundname = isnd->get_name();
+                  if(obj.scene->mtx_geometry.try_lock()) {
+                    auto ipos = isnd->position;
+                    auto iori = isnd->orientation;
+                    obj.scene->mtx_geometry.unlock();
+                    lo_send(target, path.c_str(), "sffffff", soundname.c_str(),
+                            ipos.x, ipos.y, ipos.z, RAD2DEG * iori.z * oscale,
+                            RAD2DEG * iori.y * oscale,
+                            RAD2DEG * iori.x * oscale);
+                  }
+                }
+              }
+            }
+            break;
+          case 4:
+            path = "/" + avatar;
+            if(lookatlen > 0)
+              lo_send(target, path.c_str(), "sffff", "/lookAt", p.x, p.y, p.z,
+                      lookatlen);
+            else
+              lo_send(target, path.c_str(), "sfff", "/lookAt", p.x, p.y, p.z);
+            break;
+          case 5:
+            path = "/" + avatar;
+            lo_send(target, path.c_str(), "f", RAD2DEG * o.z * oscale);
+            break;
+          case 6:
+            if(avatar.size())
+              path = "/" + avatar;
+            else
+              path = "/" + obj.obj->get_name();
+            lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
+                    obj.obj->dorientation.y * oscale,
+                    obj.obj->dorientation.z * oscale,
+                    obj.obj->dorientation.x * oscale);
+            break;
+          case 7:
+            if(avatar.size())
+              path = "/" + avatar;
+            else
+              path = "/" + obj.obj->get_name();
+            lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
+                    o.y * oscale, o.z * oscale, o.x * oscale);
+            break;
+          case 8:
+            if(avatar.size())
+              path = "/" + avatar;
+            else
+              path = "/" + obj.obj->get_name();
+            lo_send(target, path.c_str(), "fff",
+                    RAD2DEG * obj.obj->dorientation.z * oscale,
+                    RAD2DEG * obj.obj->dorientation.y * oscale,
+                    RAD2DEG * obj.obj->dorientation.x * oscale);
+            break;
+          case 9:
+            if(avatar.size())
+              path = "/" + avatar;
+            else
+              path = "/" + obj.obj->get_name();
+            lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
+                    obj.obj->dorientation.x * oscale,
+                    obj.obj->dorientation.y * oscale,
+                    obj.obj->dorientation.z * oscale);
+            break;
+          case 10:
+            if(avatar.size())
+              path = "/" + avatar;
+            else
+              path = "/" + obj.obj->get_name();
+            lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
+                    obj.obj->dorientation.y * oscale,
+                    obj.obj->dorientation.x * oscale,
+                    obj.obj->dorientation.z * oscale);
+            break;
+          case 11:
+            path = "/" + avatar + "/" + obj.obj->get_name();
+            lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z,
+                    RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
+                    RAD2DEG * o.x * oscale);
+            break;
+          case 12:
+            path = "/" + avatar;
+            TASCAR::pos_t p(0, 0, 1);
+            p *= o;
+            lo_send(target, path.c_str(), "f", (float)(1.0 - p.z));
+            break;
           }
-          break;
-        case 4:
-          path = "/" + avatar;
-          if(lookatlen > 0)
-            lo_send(target, path.c_str(), "sffff", "/lookAt", p.x, p.y, p.z,
-                    lookatlen);
-          else
-            lo_send(target, path.c_str(), "sfff", "/lookAt", p.x, p.y, p.z);
-          break;
-        case 5:
-          path = "/" + avatar;
-          lo_send(target, path.c_str(), "f", RAD2DEG * o.z * oscale);
-          break;
-        case 6:
-          if(avatar.size())
-            path = "/" + avatar;
-          else
-            path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
-                  obj.obj->dorientation.y * oscale,
-                  obj.obj->dorientation.z * oscale,
-                  obj.obj->dorientation.x * oscale);
-          break;
-        case 7:
-          if(avatar.size())
-            path = "/" + avatar;
-          else
-            path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
-                  o.y * oscale, o.z * oscale, o.x * oscale);
-          break;
-        case 8:
-          if(avatar.size())
-            path = "/" + avatar;
-          else
-            path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "fff",
-                  RAD2DEG * obj.obj->dorientation.z * oscale,
-                  RAD2DEG * obj.obj->dorientation.y * oscale,
-                  RAD2DEG * obj.obj->dorientation.x * oscale);
-          break;
-        case 9:
-          if(avatar.size())
-            path = "/" + avatar;
-          else
-            path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
-                  obj.obj->dorientation.x * oscale,
-                  obj.obj->dorientation.y * oscale,
-                  obj.obj->dorientation.z * oscale);
-          break;
-        case 10:
-          if(avatar.size())
-            path = "/" + avatar;
-          else
-            path = "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
-                  obj.obj->dorientation.y * oscale,
-                  obj.obj->dorientation.x * oscale,
-                  obj.obj->dorientation.z * oscale);
-          break;
-        case 11:
-          path = "/" + avatar + "/" + obj.obj->get_name();
-          lo_send(target, path.c_str(), "ffffff", p.x, p.y, p.z,
-                  RAD2DEG * o.z * oscale, RAD2DEG * o.y * oscale,
-                  RAD2DEG * o.x * oscale);
-          break;
-        case 12:
-          path = "/" + avatar;
-          TASCAR::pos_t p(0, 0, 1);
-          p *= o;
-          lo_send(target, path.c_str(), "f", (float)(1.0 - p.z));
-          break;
         }
       }
     }
