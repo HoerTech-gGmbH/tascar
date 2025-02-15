@@ -210,10 +210,11 @@ void serialport_t::close()
 std::string serialport_t::readline(uint32_t maxlen, char delim)
 {
   std::string r;
+  int retval = 0;
   while(isopen() && maxlen) {
     maxlen--;
     char c(0);
-    if(::read(fd, &c, 1) == 1) {
+    if((retval = ::read(fd, &c, 1)) == 1) {
       if(c != delim)
         r += c;
       else

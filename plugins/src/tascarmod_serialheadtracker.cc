@@ -301,11 +301,14 @@ void serial_headtracker_t::service()
   while(run_service) {
     try {
       TASCAR::serialport_t dev;
+      uint64_t readfail = 0;
       dev.open(devices[devidx].c_str(), B115200, 0, 1);
+      dev.set_blocking(false);
       tictoc.tic();
       while(run_service) {
         std::string l(dev.readline(4, 'H'));
         if((l.size() == 3) && (l[0] == 'T') && (l[1] == 'S') && (l[2] == 'C')) {
+        
           auto n = read(dev.fd, &rt32, sizeof(rt32));
           if(n == 4) {
             auto n = read(dev.fd, &qw32, sizeof(qw32));
@@ -331,6 +334,7 @@ void serial_headtracker_t::service()
                           ry = (float)ry32 / (float)(1 << 7);
                           rz = (float)rz32 / (float)(1 << 7);
                           update(qw, qx, qy, qz, rx, ry, rz);
+                          readfail = 0;
                         }
                       }
                     }
@@ -339,11 +343,22 @@ void serial_headtracker_t::service()
               }
             }
           }
+        }else{
+          ++readfail;
+          if( readfail >= 12 ){
+            if( readfail == 12 )
+              TASCAR::add_warning("Resetting serial port");
+            dev.set_interface_attribs(B115200, 0, 1, false);
+            tcflush(dev.fd,TCIOFLUSH);
+            tcflow(dev.fd,TCION);
+          }
+          if( readfail > (1<<16) )
+            throw TASCAR::ErrMsg("Too many read failures - device disconnected?");
         }
       }
     }
     catch(const std::exception& e) {
-      std::cerr << e.what() << std::endl;
+      TASCAR::add_warning(e.what());
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       ++devidx;
       if(devidx >= devices.size())
