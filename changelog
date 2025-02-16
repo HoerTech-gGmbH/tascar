@@ -1,3 +1,9 @@
+0.234.2:
+       - correct orientation of head trackers, apply in local coordinates
+       - correct OSC variables of filter plugin
+       - add random number LSL sender (command line application)
+       - add percentile level analysis plugin
+
 0.234:
        - addition of accelerated movement plugins (Thirsa Huisman)
        - addition of shelving filter modes in filter audio plugin
