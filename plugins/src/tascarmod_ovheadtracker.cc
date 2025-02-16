@@ -515,9 +515,9 @@ ovheadtracker_t::~ovheadtracker_t()
 void ovheadtracker_t::update(uint32_t, bool)
 {
   if(apply_loc)
-    set_location(p0);
+    set_location(p0, true);
   if(apply_rot)
-    set_orientation(o0);
+    set_orientation(o0, true);
 }
 
 void ovheadtracker_t::service_level()

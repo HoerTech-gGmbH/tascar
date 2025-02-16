@@ -1013,53 +1013,62 @@ TASCAR::actor_module_t::~actor_module_t() {}
 
 void TASCAR::actor_module_t::set_location(const TASCAR::pos_t& l, bool b_local)
 {
-  for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
-      it != obj.end(); ++it) {
+  for(auto actor : obj) {
     if(b_local) {
-      TASCAR::zyx_euler_t o(it->obj->get_orientation());
+      TASCAR::zyx_euler_t o(actor.obj->get_orientation());
       TASCAR::pos_t p(l);
       p *= o;
-      it->obj->dlocation = p;
+      actor.obj->dlocation = p;
     } else {
-      it->obj->dlocation = l;
+      actor.obj->dlocation = l;
     }
   }
 }
 
-void TASCAR::actor_module_t::set_orientation(const TASCAR::zyx_euler_t& o)
+void TASCAR::actor_module_t::set_orientation(const TASCAR::zyx_euler_t& o,
+                                             bool b_local)
 {
-  for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
-      it != obj.end(); ++it)
-    it->obj->dorientation = o;
+  for(auto actor : obj) {
+    if(b_local) {
+      TASCAR::quaternion_t q_actor;
+      q_actor.set_euler_zyx(actor.obj->c6dof_nodelta.orientation);
+      TASCAR::quaternion_t q_src;
+      q_src.set_euler_zyx(o);
+      q_actor.rmul(q_src);
+      actor.obj->dorientation = q_actor.to_euler_zyx();
+      // use this workaround to correct for addition of Euler angles:
+      actor.obj->dorientation -= actor.obj->c6dof_nodelta.orientation;
+    } else {
+      actor.obj->dorientation = o;
+    }
+  }
 }
 
 void TASCAR::actor_module_t::set_transformation(const TASCAR::c6dof_t& tf,
                                                 bool b_local)
 {
-  set_orientation(tf.orientation);
+  set_orientation(tf.orientation, b_local);
   set_location(tf.position, b_local);
 }
 
 void TASCAR::actor_module_t::add_location(const TASCAR::pos_t& l, bool b_local)
 {
-  for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
-      it != obj.end(); ++it) {
+  for(auto actor : obj) {
     if(b_local) {
-      TASCAR::zyx_euler_t o(it->obj->get_orientation());
+      TASCAR::zyx_euler_t o(actor.obj->get_orientation());
       TASCAR::pos_t p(l);
       p *= o;
-      it->obj->dlocation += p;
+      actor.obj->dlocation += p;
     } else {
-      it->obj->dlocation += l;
+      actor.obj->dlocation += l;
     }
   }
 }
 
 void TASCAR::actor_module_t::add_orientation(const TASCAR::zyx_euler_t& o)
 {
-  for(std::vector<TASCAR::named_object_t>::iterator it = obj.begin();
-      it != obj.end(); ++it)
-    it->obj->dorientation += o;
+  for(auto actor : obj)
+    actor.obj->dorientation += o;
 }
 
 void TASCAR::actor_module_t::add_transformation(const TASCAR::c6dof_t& tf,

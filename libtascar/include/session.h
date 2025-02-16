@@ -228,7 +228,7 @@ namespace TASCAR {
        (false)
      */
     void set_location(const TASCAR::pos_t& l, bool b_local = false);
-    void set_orientation(const TASCAR::zyx_euler_t& o);
+    void set_orientation(const TASCAR::zyx_euler_t& o, bool b_local = false);
     void set_transformation(const TASCAR::c6dof_t& tf, bool b_local = false);
     void add_location(const TASCAR::pos_t& l, bool b_local);
     void add_orientation(const TASCAR::zyx_euler_t& o);

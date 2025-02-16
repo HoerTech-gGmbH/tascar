@@ -293,7 +293,8 @@ void oscheadtracker_t::update(float qw, float qx, float qy, float qz, float rx,
   if(target) {
     lo_send(target, (p + "/quaternion").c_str(), "ffff", q.w, q.x, q.y, q.z);
     auto euler_xyz = q.to_euler_xyz();
-    lo_send(target, (p + "/xyzeuler").c_str(), "fff", euler_xyz.x, euler_xyz.y, euler_xyz.z);
+    lo_send(target, (p + "/xyzeuler").c_str(), "fff", euler_xyz.x, euler_xyz.y,
+            euler_xyz.z);
     lo_send(target, (p + "/alive").c_str(), "f", tictoc.toc());
   }
   if(rottarget) {
@@ -333,9 +334,9 @@ void oscheadtracker_t::connectservice()
 void oscheadtracker_t::update(uint32_t, bool)
 {
   if(apply_loc)
-    set_location(p0);
+    set_location(p0, true);
   if(apply_rot)
-    set_orientation(o0);
+    set_orientation(o0, true);
 }
 
 REGISTER_MODULE(oscheadtracker_t);

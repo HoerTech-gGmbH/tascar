@@ -273,9 +273,9 @@ serial_headtracker_t::~serial_headtracker_t()
 void serial_headtracker_t::update(uint32_t, bool)
 {
   if(apply_loc)
-    set_location(p0);
+    set_location(p0, true);
   if(apply_rot)
-    set_orientation(o0);
+    set_orientation(o0, true);
 }
 
 void serial_headtracker_t::service()
@@ -308,7 +308,7 @@ void serial_headtracker_t::service()
       while(run_service) {
         std::string l(dev.readline(4, 'H'));
         if((l.size() == 3) && (l[0] == 'T') && (l[1] == 'S') && (l[2] == 'C')) {
-        
+
           auto n = read(dev.fd, &rt32, sizeof(rt32));
           if(n == 4) {
             auto n = read(dev.fd, &qw32, sizeof(qw32));
@@ -343,17 +343,18 @@ void serial_headtracker_t::service()
               }
             }
           }
-        }else{
+        } else {
           ++readfail;
-          if( readfail >= 12 ){
-            if( readfail == 12 )
+          if(readfail >= 12) {
+            if(readfail == 12)
               TASCAR::add_warning("Resetting serial port");
             dev.set_interface_attribs(B115200, 0, 1, false);
-            tcflush(dev.fd,TCIOFLUSH);
-            tcflow(dev.fd,TCION);
+            tcflush(dev.fd, TCIOFLUSH);
+            tcflow(dev.fd, TCION);
           }
-          if( readfail > (1<<16) )
-            throw TASCAR::ErrMsg("Too many read failures - device disconnected?");
+          if(readfail > (1 << 16))
+            throw TASCAR::ErrMsg(
+                "Too many read failures - device disconnected?");
         }
       }
     }
