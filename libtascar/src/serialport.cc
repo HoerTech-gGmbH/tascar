@@ -161,14 +161,13 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   // no canonical processing
   tty.c_oflag = 0; // no remapping, no delays
 #ifdef ISMACOS
-  tty.c_oflag &= ~OPOST;
+  tty.c_oflag &= ~OPOST;                          // disable output processing
   tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
 #endif
   tty.c_cc[VMIN] = 0;                     // read doesn't block
   tty.c_cc[VTIME] = 5;                    // 0.5 seconds read timeout
   tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff flow ctrl
-  tty.c_cflag |= (CLOCAL | CREAD);        // ignore modem controls,
-  // enable reading
+  tty.c_cflag |= (CLOCAL | CREAD);   // ignore modem controls, enable reading
   tty.c_cflag &= ~(PARENB | PARODD); // shut off parity
   tty.c_cflag |= parity;
   tty.c_cflag &= ~CSTOPB;
@@ -180,11 +179,10 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   // DEBUG(test_cflag(tty.c_cflag));
   if(tcsetattr(fd, TCSANOW, &tty) != 0)
     throw TASCAR::ErrMsg("error from tcsetattr");
-  int flags;
+  int flags = 0;
   ioctl(fd, TIOCMGET, &flags);
-  flags &= ~TIOCM_RTS;
-  flags &= ~(TIOCM_RTS | TIOCM_DTR);
-  // DEBUG(flags);
+  flags &= ~TIOCM_RTS; // Clear RTS
+  flags &= ~TIOCM_DTR; // Clear DTR
   ioctl(fd, TIOCMSET, &flags);
   if(xbaud)
     term_setbaud(fd, speed);
