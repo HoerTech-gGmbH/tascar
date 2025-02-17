@@ -24,6 +24,7 @@
 #include <thread>
 
 #include "serialport.h"
+#include <glob.h>
 #include <unistd.h>
 
 #define htonll(x)                                                              \
@@ -49,14 +50,7 @@ public:
 private:
   void service();
 
-#ifdef ISMACOS
-  std::vector<std::string> devices = {"/dev/tty.usbserial-0001",
-                                      "/dev/tty.usbserial-0002",
-                                      "/dev/tty.usbserial-0003"};
-#else
-  std::vector<std::string> devices = {"/dev/ttyUSB0", "/dev/ttyUSB1",
-                                      "/dev/ttyUSB2"};
-#endif
+  std::vector<std::string> devices;
 
   // data logging OSC url:
   std::string url;
@@ -123,6 +117,29 @@ serial_headtracker_t::serial_headtracker_t(const TASCAR::module_cfg_t& cfg)
       bcalib(false), qref(1, 0, 0, 0),
       headtrackertarget(lo_address_new("192.168.100.1", "9999"))
 {
+  std::string pattern;
+#ifdef ISMACOS
+  pattern = "/dev/tty.usbserial-*";
+#else
+  pattern = "/dev/ttyUSB*";
+#endif
+  glob_t g;
+  int err = glob("/dev/tty*", 0, NULL, &g);
+  if(err == 0) {
+    for(size_t c = 0; c < g.gl_pathc; ++c) {
+      devices.push_back(g.gl_pathv[c]);
+    }
+    globfree(&g);
+  }
+  //#ifdef ISMACOS
+  //  devices = {"/dev/tty.usbserial-0001",
+  //                                      "/dev/tty.usbserial-0002",
+  //                                      "/dev/tty.usbserial-0003"}
+  //#else
+  //  std::vector<std::string> devices = {"/dev/ttyUSB0", "/dev/ttyUSB1",
+  //                                      "/dev/ttyUSB2"};
+  //#endif
+  GET_ATTRIBUTE(devices, "", "List of serial port candidates to test");
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
   GET_ATTRIBUTE(url, "",
                 "Target URL for OSC data logging, or empty for no datalogging");
