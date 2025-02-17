@@ -66,6 +66,8 @@ private:
   bool combinegyr = true;
   // time-to-live for multicast messages, if using multicast targets:
   uint32_t ttl;
+  // device pattern:
+  std::string pattern;
 
   bool apply_loc = false;
   bool apply_rot = true;
@@ -117,29 +119,12 @@ serial_headtracker_t::serial_headtracker_t(const TASCAR::module_cfg_t& cfg)
       bcalib(false), qref(1, 0, 0, 0),
       headtrackertarget(lo_address_new("192.168.100.1", "9999"))
 {
-  std::string pattern;
 #ifdef ISMACOS
   pattern = "/dev/tty.usbserial-*";
 #else
   pattern = "/dev/ttyUSB*";
 #endif
-  glob_t g;
-  int err = glob("/dev/tty*", 0, NULL, &g);
-  if(err == 0) {
-    for(size_t c = 0; c < g.gl_pathc; ++c) {
-      devices.push_back(g.gl_pathv[c]);
-    }
-    globfree(&g);
-  }
-  //#ifdef ISMACOS
-  //  devices = {"/dev/tty.usbserial-0001",
-  //                                      "/dev/tty.usbserial-0002",
-  //                                      "/dev/tty.usbserial-0003"}
-  //#else
-  //  std::vector<std::string> devices = {"/dev/ttyUSB0", "/dev/ttyUSB1",
-  //                                      "/dev/ttyUSB2"};
-  //#endif
-  GET_ATTRIBUTE(devices, "", "List of serial port candidates to test");
+  GET_ATTRIBUTE(pattern, "", "Device pattern list");
   GET_ATTRIBUTE(name, "", "Prefix in OSC control variables");
   GET_ATTRIBUTE(url, "",
                 "Target URL for OSC data logging, or empty for no datalogging");
@@ -316,42 +301,58 @@ void serial_headtracker_t::service()
   int32_t rz32 = 0;
   uint32_t devidx(0);
   while(run_service) {
-    try {
-      TASCAR::serialport_t dev;
-      uint64_t readfail = 0;
-      dev.open(devices[devidx].c_str(), B115200, 0, 1);
-      dev.set_blocking(false);
-      tictoc.tic();
-      while(run_service) {
-        std::string l(dev.readline(4, 'H'));
-        if((l.size() == 3) && (l[0] == 'T') && (l[1] == 'S') && (l[2] == 'C')) {
+    glob_t g;
+    devices.clear();
+    int err = glob("/dev/tty*", 0, NULL, &g);
+    if(err == 0) {
+      for(size_t c = 0; c < g.gl_pathc; ++c) {
+        devices.push_back(g.gl_pathv[c]);
+      }
+      globfree(&g);
+    }
+    if(devices.empty()) {
+      TASCAR::add_warning("No serial port devices found matching pattern " +
+                          pattern + ".");
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    } else {
+      try {
+        TASCAR::serialport_t dev;
+        uint64_t readfail = 0;
+        dev.open(devices[devidx].c_str(), B115200, 0, 1);
+        dev.set_blocking(false);
+        tictoc.tic();
+        while(run_service) {
+          std::string l(dev.readline(4, 'H'));
+          if((l.size() == 3) && (l[0] == 'T') && (l[1] == 'S') &&
+             (l[2] == 'C')) {
 
-          auto n = read(dev.fd, &rt32, sizeof(rt32));
-          if(n == 4) {
-            auto n = read(dev.fd, &qw32, sizeof(qw32));
+            auto n = read(dev.fd, &rt32, sizeof(rt32));
             if(n == 4) {
-              auto n = read(dev.fd, &qx32, sizeof(qx32));
+              auto n = read(dev.fd, &qw32, sizeof(qw32));
               if(n == 4) {
-                auto n = read(dev.fd, &qy32, sizeof(qy32));
+                auto n = read(dev.fd, &qx32, sizeof(qx32));
                 if(n == 4) {
-                  auto n = read(dev.fd, &qz32, sizeof(qz32));
+                  auto n = read(dev.fd, &qy32, sizeof(qy32));
                   if(n == 4) {
-                    auto n = read(dev.fd, &rx32, sizeof(rx32));
+                    auto n = read(dev.fd, &qz32, sizeof(qz32));
                     if(n == 4) {
-                      auto n = read(dev.fd, &ry32, sizeof(ry32));
+                      auto n = read(dev.fd, &rx32, sizeof(rx32));
                       if(n == 4) {
-                        auto n = read(dev.fd, &rz32, sizeof(rz32));
+                        auto n = read(dev.fd, &ry32, sizeof(ry32));
                         if(n == 4) {
-                          // rt = 1e-6*rt32;
-                          qw = (float)qw32 / (float)(1 << 16);
-                          qx = (float)qx32 / (float)(1 << 16);
-                          qy = (float)qy32 / (float)(1 << 16);
-                          qz = (float)qz32 / (float)(1 << 16);
-                          rx = (float)rx32 / (float)(1 << 7);
-                          ry = (float)ry32 / (float)(1 << 7);
-                          rz = (float)rz32 / (float)(1 << 7);
-                          update(qw, qx, qy, qz, rx, ry, rz);
-                          readfail = 0;
+                          auto n = read(dev.fd, &rz32, sizeof(rz32));
+                          if(n == 4) {
+                            // rt = 1e-6*rt32;
+                            qw = (float)qw32 / (float)(1 << 16);
+                            qx = (float)qx32 / (float)(1 << 16);
+                            qy = (float)qy32 / (float)(1 << 16);
+                            qz = (float)qz32 / (float)(1 << 16);
+                            rx = (float)rx32 / (float)(1 << 7);
+                            ry = (float)ry32 / (float)(1 << 7);
+                            rz = (float)rz32 / (float)(1 << 7);
+                            update(qw, qx, qy, qz, rx, ry, rz);
+                            readfail = 0;
+                          }
                         }
                       }
                     }
@@ -359,28 +360,28 @@ void serial_headtracker_t::service()
                 }
               }
             }
+          } else {
+            ++readfail;
+            if(readfail >= 12) {
+              if(readfail == 12)
+                TASCAR::add_warning("Resetting serial port");
+              dev.set_interface_attribs(B115200, 0, 1, false);
+              tcflush(dev.fd, TCIOFLUSH);
+              tcflow(dev.fd, TCION);
+            }
+            if(readfail > (1 << 16))
+              throw TASCAR::ErrMsg(
+                  "Too many read failures - device disconnected?");
           }
-        } else {
-          ++readfail;
-          if(readfail >= 12) {
-            if(readfail == 12)
-              TASCAR::add_warning("Resetting serial port");
-            dev.set_interface_attribs(B115200, 0, 1, false);
-            tcflush(dev.fd, TCIOFLUSH);
-            tcflow(dev.fd, TCION);
-          }
-          if(readfail > (1 << 16))
-            throw TASCAR::ErrMsg(
-                "Too many read failures - device disconnected?");
         }
       }
-    }
-    catch(const std::exception& e) {
-      TASCAR::add_warning(e.what());
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      ++devidx;
-      if(devidx >= devices.size())
-        devidx = 0;
+      catch(const std::exception& e) {
+        TASCAR::add_warning(e.what());
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        ++devidx;
+        if(devidx >= devices.size())
+          devidx = 0;
+      }
     }
   }
 }
