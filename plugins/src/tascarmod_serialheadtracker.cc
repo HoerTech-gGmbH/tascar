@@ -303,7 +303,7 @@ void serial_headtracker_t::service()
   while(run_service) {
     glob_t g;
     devices.clear();
-    int err = glob("/dev/tty*", 0, NULL, &g);
+    int err = glob(pattern.c_str(), 0, NULL, &g);
     if(err == 0) {
       for(size_t c = 0; c < g.gl_pathc; ++c) {
         devices.push_back(g.gl_pathv[c]);
@@ -318,6 +318,7 @@ void serial_headtracker_t::service()
       try {
         TASCAR::serialport_t dev;
         uint64_t readfail = 0;
+        TASCAR::console_log("Using device "+devices[devidx]);
         dev.open(devices[devidx].c_str(), B115200, 0, 1);
         dev.set_blocking(false);
         tictoc.tic();
@@ -325,7 +326,6 @@ void serial_headtracker_t::service()
           std::string l(dev.readline(4, 'H'));
           if((l.size() == 3) && (l[0] == 'T') && (l[1] == 'S') &&
              (l[2] == 'C')) {
-
             auto n = read(dev.fd, &rt32, sizeof(rt32));
             if(n == 4) {
               auto n = read(dev.fd, &qw32, sizeof(qw32));
