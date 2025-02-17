@@ -129,7 +129,8 @@ int serialport_t::open(const char* dev, int speed, int parity, int stopbits,
                        bool xbaud)
 {
 #ifdef ISMACOS
-  fd = ::open(dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
+  //fd = ::open(dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
+  fd = ::open(dev, O_RDWR | O_NOCTTY | O_NONBLOCK );
 #else
   fd = ::open(dev, O_RDWR | O_NOCTTY | O_SYNC);
 #endif
@@ -143,6 +144,33 @@ int serialport_t::open(const char* dev, int speed, int parity, int stopbits,
 void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
                                          bool xbaud)
 {
+#ifdef ISMACOS
+  struct termios oldtio, newtio;
+  // Save the current terminal settings
+  if(tcgetattr(fd, &oldtio) < 0)
+    throw TASCAR : ErrMsg("Err (tcgetattr)");
+  // Set the new terminal settings
+  newtio = oldtio;
+  newtio.c_cflag = newtio.c_cflag & ~CSIZE | CS8;    // 8 bits
+  newtio.c_cflag &= ~PARENB;                         // No parity
+  newtio.c_cflag &= ~CSTOPB;                         // 1 stop bit
+  newtio.c_cflag &= ~CRTSCTS;                        // Disable RTS/CTS
+  newtio.c_iflag &= ~(IXON | IXOFF | IXANY);         // Disable XON/XOFF
+  newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Disable canonical mode
+  newtio.c_oflag &= ~OPOST; // Disable output processing
+  newtio.c_cc[VMIN] = 1;    // Read at least one byte
+  newtio.c_cc[VTIME] = 5;   // Wait up to 5 seconds for a byte
+  // Set the baud rate
+  if(!xbaud) {
+    cfsetispeed(&newtio, speed);
+    cfsetospeed(&newtio, speed);
+  }
+  // Apply the new settings
+  if(tcsetattr(fd, TCSANOW, &newtio) < 0)
+    throw TASCAR::ErrMsg("Error (tcsetattr)");
+  if(xbaud)
+    term_setbaud(fd, speed);
+#else
   struct termios tty;
   memset(&tty, 0, sizeof tty);
   if(tcgetattr(fd, &tty) != 0)
@@ -159,11 +187,7 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   tty.c_iflag |= ICRNL;
   tty.c_lflag = 0; // no signaling chars, no echo,
   // no canonical processing
-  tty.c_oflag = 0; // no remapping, no delays
-#ifdef ISMACOS
-  tty.c_oflag &= ~OPOST;                          // disable output processing
-  tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
-#endif
+  tty.c_oflag = 0;                        // no remapping, no delays
   tty.c_cc[VMIN] = 0;                     // read doesn't block
   tty.c_cc[VTIME] = 5;                    // 0.5 seconds read timeout
   tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff flow ctrl
@@ -186,6 +210,7 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   ioctl(fd, TIOCMSET, &flags);
   if(xbaud)
     term_setbaud(fd, speed);
+#endif
 }
 
 void serialport_t::set_blocking(int should_block)
