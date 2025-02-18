@@ -26,10 +26,9 @@
 #include <glob.h>
 #include <unistd.h>
 
+#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <fcntl.h>
-
 
 class serial_headtracker_t : public TASCAR::actor_module_t {
 public:
@@ -277,55 +276,62 @@ void serial_headtracker_t::update(uint32_t, bool)
 
 int open_and_config_serport(const std::string& dev)
 {
-    int fd;
-    struct termios oldtio, newtio;
+  int fd;
+  struct termios oldtio, newtio;
 
-    // Open the serial port
-    fd = open("/dev/tty.usbserial-130", O_RDWR | O_NOCTTY | O_NONBLOCK);
-    if (fd < 0) {
-      throw TASCAR::ErrMsg("Unable to open device: "+dev);
-    }
+  // Open the serial port
+  //#ifdef ISMACOS
+  //  //fd = ::open(dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
+  //  fd = ::open(dev, O_RDWR | O_NOCTTY | O_NONBLOCK );
+  //#else
+  //  fd = ::open(dev, O_RDWR | O_NOCTTY | O_SYNC);
+  //#endif
+  fd = open(dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+  if(fd < 0) {
+    throw TASCAR::ErrMsg("Unable to open device: " + dev);
+  }
 
-    // Save the current terminal settings
-    if (tcgetattr(fd, &oldtio) < 0) {
-        throw TASCAR::ErrMsg("Unable to perform tcgetattr");
-    }
+  // Save the current terminal settings
+  if(tcgetattr(fd, &oldtio) < 0) {
+    throw TASCAR::ErrMsg("Unable to perform tcgetattr");
+  }
 
-    // Set the new terminal settings
-    newtio = oldtio;
-    newtio.c_cflag = (newtio.c_cflag & ~CSIZE) | CS8;     // 8 bits
-    newtio.c_cflag &= ~PARENB;                           // No parity
-    newtio.c_cflag &= ~CSTOPB;                          // 1 stop bit
-    newtio.c_cflag &= ~CRTSCTS;                         // Disable RTS/CTS
-    newtio.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF
-    newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Disable canonical mode
-    newtio.c_oflag &= ~OPOST;                          // Disable output processing
-    newtio.c_cc[VMIN] = 0;                            // Read at least one byte
-    newtio.c_cc[VTIME] = 5;                          // Wait up to 5 seconds for a byte
+  // Set the new terminal settings
+  newtio = oldtio;
+  newtio.c_cflag = (newtio.c_cflag & ~CSIZE) | CS8;  // 8 bits
+  newtio.c_cflag &= ~PARENB;                         // No parity
+  newtio.c_cflag &= ~CSTOPB;                         // 1 stop bit
+  newtio.c_cflag &= ~CRTSCTS;                        // Disable RTS/CTS
+  newtio.c_iflag &= ~(IXON | IXOFF | IXANY);         // Disable XON/XOFF
+  newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Disable canonical mode
+  newtio.c_oflag &= ~OPOST; // Disable output processing
+  newtio.c_cc[VMIN] = 0;    // Read at least one byte
+  newtio.c_cc[VTIME] = 5;   // Wait up to 5 seconds for a byte
 
-    // Set the baud rate
-    cfsetispeed(&newtio, B115200);
-    cfsetospeed(&newtio, B115200);
+  // Set the baud rate
+  cfsetispeed(&newtio, B115200);
+  cfsetospeed(&newtio, B115200);
 
-    // Apply the new settings
-    if (tcsetattr(fd, TCSANOW, &newtio) < 0) {
-        throw TASCAR::ErrMsg("Unable to perform tcsetattr");
-    }
-    return fd;
+  // Apply the new settings
+  if(tcsetattr(fd, TCSANOW, &newtio) < 0) {
+    throw TASCAR::ErrMsg("Unable to perform tcsetattr");
+  }
+  return fd;
 }
 
-size_t read_following( int fd, const std::string& start, char* buff, size_t n, std::atomic<bool>& runcond)
+size_t read_following(int fd, const std::string& start, char* buff, size_t n,
+                      std::atomic<bool>& runcond)
 {
-  size_t failcnt=1000;
+  size_t failcnt = 1000;
   size_t idx_start = 0;
-  while( idx_start < start.size() ){
-    if(!runcond )
+  while(idx_start < start.size()) {
+    if(!runcond)
       return 0;
     char c = 0;
-    if(read(fd,&c,1)==1){
-      if(c==start[idx_start])
+    if(read(fd, &c, 1) == 1) {
+      if(c == start[idx_start])
         ++idx_start;
-    }else{
+    } else {
       --failcnt;
       if(!failcnt)
         return 0;
@@ -333,16 +339,16 @@ size_t read_following( int fd, const std::string& start, char* buff, size_t n, s
     }
   }
   size_t nr = 0;
-  while(n > 0){
+  while(n > 0) {
     if(!runcond)
       return 0;
     char c = 0;
-    if(read(fd,&c,1)==1){
+    if(read(fd, &c, 1) == 1) {
       *buff = c;
       ++buff;
       --n;
       ++nr;
-    }else{
+    } else {
       --failcnt;
       if(!failcnt)
         return 0;
@@ -383,30 +389,41 @@ void serial_headtracker_t::service()
       globfree(&g);
     }
     if(devices.empty()) {
-      TASCAR::add_warning("No serial port devices found matching pattern " +
+      TASCAR::console_log("No serial port devices found matching pattern " +
                           pattern + ".");
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      for(size_t n = 0; n < 40; ++n) {
+        if(!run_service)
+          return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
     } else {
       try {
-        //TASCAR::serialport_t dev;
+        // TASCAR::serialport_t dev;
         uint64_t readfail = 0;
-        TASCAR::console_log("Using device "+devices[devidx]);
-        //dev.open(devices[devidx].c_str(), B115200, 0, 1);
-        //dev.set_blocking(false);
-        int fd = open_and_config_serport( devices[devidx]);
+        TASCAR::console_log("Using device " + devices[devidx]);
+        // dev.open(devices[devidx].c_str(), B115200, 0, 1);
+        // dev.set_blocking(false);
+        int fd = open_and_config_serport(devices[devidx]);
         tictoc.tic();
         while(run_service) {
           char buff[32];
           char* pbuff = buff;
-          if( read_following(fd, "TSCH",buff,32, run_service)==32){
-            memcpy(&rt32,pbuff, 4);pbuff+=4;
-            memcpy(&qw32,pbuff, 4);pbuff+=4;
-            memcpy(&qx32,pbuff, 4);pbuff+=4;
-            memcpy(&qy32,pbuff, 4);pbuff+=4;
-            memcpy(&qz32,pbuff, 4);pbuff+=4;
-            memcpy(&rx32,pbuff, 4);pbuff+=4;
-            memcpy(&ry32,pbuff, 4);pbuff+=4;
-            memcpy(&rz32,pbuff, 4);
+          if(read_following(fd, "TSCH", buff, 32, run_service) == 32) {
+            memcpy(&rt32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&qw32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&qx32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&qy32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&qz32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&rx32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&ry32, pbuff, 4);
+            pbuff += 4;
+            memcpy(&rz32, pbuff, 4);
             // rt = 1e-6*rt32;
             qw = (float)qw32 / (float)(1 << 16);
             qx = (float)qx32 / (float)(1 << 16);
@@ -417,61 +434,12 @@ void serial_headtracker_t::service()
             rz = (float)rz32 / (float)(1 << 7);
             update(qw, qx, qy, qz, rx, ry, rz);
             readfail = 0;
-          }else{
+          } else {
             ++readfail;
             if(readfail > 7)
-              throw TASCAR::ErrMsg("Too many read failures - device disconnected?");
+              throw TASCAR::ErrMsg(
+                  "Too many read failures - device disconnected?");
           }
-          //std::string l(dev.readline(4, 'H'));
-          //if((l.size() == 3) && (l[0] == 'T') && (l[1] == 'S') &&
-          //   (l[2] == 'C')) {
-          //  auto n = read(dev.fd, &rt32, sizeof(rt32));
-          //  if(n == 4) {
-          //    auto n = read(dev.fd, &qw32, sizeof(qw32));
-          //    if(n == 4) {
-          //      auto n = read(dev.fd, &qx32, sizeof(qx32));
-          //      if(n == 4) {
-          //        auto n = read(dev.fd, &qy32, sizeof(qy32));
-          //        if(n == 4) {
-          //          auto n = read(dev.fd, &qz32, sizeof(qz32));
-          //          if(n == 4) {
-          //            auto n = read(dev.fd, &rx32, sizeof(rx32));
-          //            if(n == 4) {
-          //              auto n = read(dev.fd, &ry32, sizeof(ry32));
-          //              if(n == 4) {
-          //                auto n = read(dev.fd, &rz32, sizeof(rz32));
-          //                if(n == 4) {
-          //                  // rt = 1e-6*rt32;
-          //                  qw = (float)qw32 / (float)(1 << 16);
-          //                  qx = (float)qx32 / (float)(1 << 16);
-          //                  qy = (float)qy32 / (float)(1 << 16);
-          //                  qz = (float)qz32 / (float)(1 << 16);
-          //                  rx = (float)rx32 / (float)(1 << 7);
-          //                  ry = (float)ry32 / (float)(1 << 7);
-          //                  rz = (float)rz32 / (float)(1 << 7);
-          //                  update(qw, qx, qy, qz, rx, ry, rz);
-          //                  readfail = 0;
-          //                }
-          //              }
-          //            }
-          //          }
-          //        }
-          //      }
-          //    }
-          //  }
-          //} else {
-          //  ++readfail;
-          //  if(readfail >= 12) {
-          //    if(readfail == 12)
-          //      TASCAR::add_warning("Resetting serial port");
-          //    dev.set_interface_attribs(B115200, 0, 1, false);
-          //    tcflush(dev.fd, TCIOFLUSH);
-          //    tcflow(dev.fd, TCION);
-          //  }
-          //  if(readfail > (1 << 16))
-          //    throw TASCAR::ErrMsg(
-          //        "Too many read failures - device disconnected?");
-          //}
         }
       }
       catch(const std::exception& e) {
