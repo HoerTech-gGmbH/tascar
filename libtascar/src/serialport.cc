@@ -148,7 +148,7 @@ void serialport_t::set_interface_attribs(int speed, int parity, int stopbits,
   struct termios oldtio, newtio;
   // Save the current terminal settings
   if(tcgetattr(fd, &oldtio) < 0)
-    throw TASCAR : ErrMsg("Err (tcgetattr)");
+    throw TASCAR::ErrMsg("Err (tcgetattr)");
   // Set the new terminal settings
   newtio = oldtio;
   newtio.c_cflag = newtio.c_cflag & ~CSIZE | CS8;    // 8 bits
