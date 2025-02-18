@@ -278,6 +278,8 @@ namespace TASCAR {
 
   protected:
     float a1_, a2_, b0_, b1_, b2_;
+
+  public:
     float z1, z2;
   };
 
@@ -482,6 +484,9 @@ namespace TASCAR {
 */
   class o1_ar_filter_t : public TASCAR::wave_t {
   public:
+    o1_ar_filter_t();
+    o1_ar_filter_t(const o1_ar_filter_t&);
+    o1_ar_filter_t& operator=(const o1_ar_filter_t&);
     /**
        \brief Constructor, setting all taus to zero.
 

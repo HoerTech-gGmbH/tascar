@@ -5,7 +5,7 @@
   <modules>
     <route channels="2" name="rla" connect="system:capture_[12]">
       <plugins>
-        <reclevelanalyzer/>
+        <reclevelanalyzer  triggered="true"/>
       </plugins>
     </route>
     <oscrelay path="/reclevelanalyzer" url="osc.udp://localhost:19877"/>

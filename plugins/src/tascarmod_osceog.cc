@@ -27,15 +27,15 @@ class osceog_t : public TASCAR::module_base_t {
 public:
   osceog_t(const TASCAR::module_cfg_t& cfg);
   virtual ~osceog_t();
-  static int osc_update(const char*, const char*, lo_arg**, int argc,
+  static int osc_update(const char*, const char*, lo_arg** argv, int argc,
                         lo_message, void* user_data)
   {
     if(user_data && (argc == 3))
       // first data element is time, discarded for now
-      ((osceog_t*)user_data)->update_eog();
+      ((osceog_t*)user_data)->update_eog(argv[0]->f, argv[1]->f, argv[2]->f);
     return 1;
   }
-  void update_eog();
+  void update_eog(double t, float eog_hor, float eog_vert);
 
 private:
   void connect();
@@ -56,6 +56,17 @@ private:
   std::string targetip;
   // sample rate
   uint32_t srate = 128;
+  // post-filter parameters:
+  std::string pf_path = "";
+  // cut-off frequency in Hz of low-pass filter:
+  float pf_fcut = 20.0f;
+  // minimum tracker time constant in seconds:
+  float pf_tau_min = 2.0f;
+  // maximum tracker time constant in seconds:
+  float pf_tau_max = 10.0f;
+  // minimum blink amplitude in Volt:
+  float pf_a_min = 1e-4f;
+  bool pf_reset = true;
 
   // measure time since last callback, for reconnection attempts if no data
   // arrives:
@@ -68,6 +79,12 @@ private:
   std::atomic<bool> run_service;
   // shortcut for name prefix:
   std::string p;
+
+  // post-filter of EOG:
+  TASCAR::biquadf_t pf_lp;
+  TASCAR::o1_ar_filter_t pf_minmaxtrack;
+  lo_message msg;
+  lo_arg** oscmsgargv;
 };
 
 void osceog_t::connect()
@@ -103,6 +120,27 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   if(connectwlan && (wlanssid.size() == 0))
     throw TASCAR::ErrMsg(
         "If sensor is to be connected to WLAN, the SSID must be provided");
+  // postfilter settings:
+  GET_ATTRIBUTE(
+      pf_path, "",
+      "Path name of filtered eye blink data, or empty for no postfilter.");
+  GET_ATTRIBUTE(pf_fcut, "Hz", "cut-off frequency of low-pass filter");
+  GET_ATTRIBUTE(pf_tau_min, "s", "minimum tracker time constant");
+  GET_ATTRIBUTE(pf_tau_max, "s", "maximum tracker time constant");
+  GET_ATTRIBUTE(pf_a_min, "V", "minimum blink amplitude");
+  // end postfilter settings.
+  // create OSC message for postfiltered data:
+  msg = lo_message_new();
+  lo_message_add_double(msg, 0.0f); // sender time stamp
+  lo_message_add_float(msg, 0.0f);  // filtered blink
+  lo_message_add_float(msg, 0.0f);  // lowpass vertical EOG
+  lo_message_add_float(msg, 0.0f);  // minimum EOG
+  lo_message_add_float(msg, 0.0f);  // maximum EOG
+  oscmsgargv = lo_message_get_argv(msg);
+  pf_lp.set_butterworth(pf_fcut, (float)srate);
+  pf_minmaxtrack = TASCAR::o1_ar_filter_t(2, (float)srate, {pf_tau_min, 0.0f},
+                                          {0.0f, pf_tau_max});
+  //
   tictoc.tic();
   connect();
   run_service = true;
@@ -110,11 +148,30 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   if(name.size())
     p = "/" + name;
   session->add_method(p + eogpath, "dff", &osc_update, this);
+  session->add_bool_true(p + "/reset", &pf_reset, "Reset post filter state");
 }
 
-void osceog_t::update_eog()
+void osceog_t::update_eog(double t, float, float eog_vert)
 {
   tictoc.tic();
+  if(!pf_path.empty()) {
+    if(pf_reset) {
+      for(uint32_t k = 0; k < srate; ++k)
+        pf_lp.filter(eog_vert);
+      pf_minmaxtrack[0] = eog_vert;
+      pf_minmaxtrack[1] = eog_vert + pf_a_min;
+      pf_reset = false;
+    }
+    float eog_lp = pf_lp.filter(eog_vert);
+    float eog_min = pf_minmaxtrack(0, eog_lp);
+    float eog_max = pf_minmaxtrack(1, std::max(eog_min + pf_a_min, eog_lp));
+    oscmsgargv[0]->d = t;
+    oscmsgargv[1]->f = (eog_lp - eog_min) / (eog_max - eog_min);
+    oscmsgargv[2]->f = eog_lp;
+    oscmsgargv[3]->f = eog_min;
+    oscmsgargv[4]->f = eog_max;
+    session->dispatch_data_message(pf_path.c_str(), msg);
+  }
 }
 
 osceog_t::~osceog_t()

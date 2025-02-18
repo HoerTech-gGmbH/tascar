@@ -1000,6 +1000,37 @@ void TASCAR::o1_ar_filter_t::set_tau_release(unsigned int ch, float tau)
   o1_lp_coeffs(tau, fs, c1_r[ch], c2_r[ch]);
 }
 
+TASCAR::o1_ar_filter_t::o1_ar_filter_t()
+  : TASCAR::wave_t(1), c1_a(1), c2_a(1), c1_r(1),
+      c2_r(1), fs(1)
+{
+    d[0] = 0.0f;
+    set_tau_attack(0, 1);
+    set_tau_release(0, 1);
+}
+
+TASCAR::o1_ar_filter_t::o1_ar_filter_t(const o1_ar_filter_t& src)
+  :TASCAR::wave_t(src.n), c1_a(src.c1_a), c2_a(src.c2_a), c1_r(src.c1_r),
+      c2_r(src.c2_r), fs(src.fs)
+{
+}
+
+TASCAR::o1_ar_filter_t& TASCAR::o1_ar_filter_t::operator=(const TASCAR::o1_ar_filter_t& src)
+{
+  resize(src.n);
+  c1_a.resize(src.n);
+  c2_a.resize(src.n);
+  c1_r.resize(src.n);
+  c2_r.resize(src.n);
+  fs = src.fs;
+  c1_a.copy(src.c1_a);
+  c2_a.copy(src.c2_a);
+  c1_r.copy(src.c1_r);
+  c2_r.copy(src.c2_r);
+  fs = src.fs;
+  return *this;
+}
+
 /*
  * Local Variables:
  * mode: c++
