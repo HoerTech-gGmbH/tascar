@@ -316,6 +316,8 @@ int open_and_config_serport(const std::string& dev)
   if(tcsetattr(fd, TCSANOW, &newtio) < 0) {
     throw TASCAR::ErrMsg("Unable to perform tcsetattr");
   }
+  char c=0;
+  write(fd,&c,1);
   return fd;
 }
 
