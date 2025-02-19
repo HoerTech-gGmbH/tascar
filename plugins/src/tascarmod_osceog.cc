@@ -21,7 +21,33 @@
 #include "session.h"
 #include <atomic>
 #include <chrono>
+#include <cmath>
+#include <random>
 #include <thread>
+
+/**
+ * Generates a normally distributed random number with the given mean and
+ * standard deviation.
+ *
+ * @param mean The mean of the normal distribution.
+ * @param stdDev The standard deviation of the normal distribution.
+ * @return A normally distributed random number.
+ */
+double drand_norm(double mean, double std)
+{
+  // Create a random number generator
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<double> dis(0.0, 1.0);
+  // Generate two uniform random numbers
+  double u1 = dis(gen);
+  double u2 = dis(gen);
+  // Apply the Box-Muller transform
+  double r = std::sqrt(-2.0 * std::log(u1));
+  double theta = 2.0 * M_PI * u2;
+  double n = mean + std * r * std::cos(theta);
+  return n;
+}
 
 class osceog_t : public TASCAR::module_base_t {
 public:
@@ -66,7 +92,18 @@ private:
   float pf_tau_max = 10.0f;
   // minimum blink amplitude in Volt:
   float pf_a_min = 1e-4f;
-  bool pf_reset = true;
+  // eye blink animation URL (or empty for no animation messages):
+  std::string pf_anim_url = "";
+  // eye blink animation path:
+  std::string pf_anim_path = "/blink";
+  // eye blink animation character name:
+  std::string pf_anim_character;
+
+  double pf_anim_blink_freq_mu = 0.3;
+  double pf_anim_blink_freq_sigma = 0.2828;
+  double pf_anim_blink_duration = 0.1;
+  // animation mode, 0 = none, 1 = transmitted, 2 = random
+  uint32_t pf_anim_mode = 1;
 
   // measure time since last callback, for reconnection attempts if no data
   // arrives:
@@ -85,6 +122,11 @@ private:
   TASCAR::o1_ar_filter_t pf_minmaxtrack;
   lo_message msg;
   lo_arg** oscmsgargv;
+  // reset tracking filter:
+  bool pf_reset = true;
+  lo_address lo_addr_pf_anim = NULL;
+  double next_tau = 0.0;
+  double next_len = 0.0;
 };
 
 void osceog_t::connect()
@@ -95,7 +137,7 @@ void osceog_t::connect()
             wlanpass.c_str(), targetip.c_str(), session->get_srv_port());
   } else {
     lo_send(headtrackertarget, "/eog/connect", "is", session->get_srv_port(),
-            eogpath.c_str());
+            (p + eogpath).c_str());
   }
 }
 
@@ -112,7 +154,8 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(srate, "Hz",
                 "Sensor sampling rate (8, 16, 32, 64, 128, 250, 475, 860)");
   GET_ATTRIBUTE(eogpath, "",
-                "OSC target path for EOG data, or empty for no EOG");
+                "OSC destination path for EOG data, or empty if no EOG. If "
+                "name is set, it is prefixed with /name.");
   GET_ATTRIBUTE_BOOL(connectwlan, "connect to sensor to external WLAN");
   GET_ATTRIBUTE(wlanssid, "", "SSID of external WLAN");
   GET_ATTRIBUTE(wlanpass, "", "passphrase of external WLAN");
@@ -128,6 +171,22 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(pf_tau_min, "s", "minimum tracker time constant");
   GET_ATTRIBUTE(pf_tau_max, "s", "maximum tracker time constant");
   GET_ATTRIBUTE(pf_a_min, "V", "minimum blink amplitude");
+  GET_ATTRIBUTE(
+      pf_anim_url, "",
+      "Eye blink animation URL, or empty for not sending eye blink animation");
+  GET_ATTRIBUTE(pf_anim_path, "", "Eye blink animation path");
+  GET_ATTRIBUTE(pf_anim_character, "", "Eye blink animation character");
+  GET_ATTRIBUTE(pf_anim_blink_freq_mu, "Hz",
+                "Eye blink animation mean frequency (random mode)");
+  GET_ATTRIBUTE(
+      pf_anim_blink_freq_sigma, "Hz",
+      "Eye blink animation standard deviation of frequency (random mode)");
+  GET_ATTRIBUTE(
+      pf_anim_mode, "",
+      "Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
+  if(pf_anim_mode > 2)
+    throw TASCAR::ErrMsg("Invalid eye blink animation mode \"" +
+                         std::to_string(pf_anim_mode) + "\".");
   // end postfilter settings.
   // create OSC message for postfiltered data:
   msg = lo_message_new();
@@ -140,6 +199,8 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   pf_lp.set_butterworth(pf_fcut, (float)srate);
   pf_minmaxtrack = TASCAR::o1_ar_filter_t(2, (float)srate, {pf_tau_min, 0.0f},
                                           {0.0f, pf_tau_max});
+  if(!pf_anim_url.empty())
+    lo_addr_pf_anim = lo_address_new_from_url(pf_anim_url.c_str());
   //
   tictoc.tic();
   connect();
@@ -149,6 +210,8 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
     p = "/" + name;
   session->add_method(p + eogpath, "dff", &osc_update, this);
   session->add_bool_true(p + "/reset", &pf_reset, "Reset post filter state");
+  session->add_string(p + "/character", &pf_anim_character,
+                      "Eye blink animation character");
 }
 
 void osceog_t::update_eog(double t, float, float eog_vert)
@@ -165,12 +228,25 @@ void osceog_t::update_eog(double t, float, float eog_vert)
     float eog_lp = pf_lp.filter(eog_vert);
     float eog_min = pf_minmaxtrack(0, eog_lp);
     float eog_max = pf_minmaxtrack(1, std::max(eog_min + pf_a_min, eog_lp));
+    float blink = (eog_lp - eog_min) / (eog_max - eog_min);
     oscmsgargv[0]->d = t;
-    oscmsgargv[1]->f = (eog_lp - eog_min) / (eog_max - eog_min);
+    oscmsgargv[1]->f = blink;
     oscmsgargv[2]->f = eog_lp;
     oscmsgargv[3]->f = eog_min;
     oscmsgargv[4]->f = eog_max;
     session->dispatch_data_message(pf_path.c_str(), msg);
+    if(lo_addr_pf_anim) {
+      switch(pf_anim_mode) {
+      case 0:
+        blink = 0.0f;
+        break;
+      case 2:
+        break;
+      }
+
+      lo_send(lo_addr_pf_anim, pf_anim_path.c_str(), "sf",
+              pf_anim_character.c_str(), blink);
+    }
   }
 }
 
