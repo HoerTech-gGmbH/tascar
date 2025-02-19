@@ -44,7 +44,7 @@ double drand_norm(double mean, double std)
   double u2 = dis(gen);
   // Apply the Box-Muller transform
   double r = std::sqrt(-2.0 * std::log(u1));
-  double theta = 2.0 * M_PI * u2;
+  double theta = TASCAR_2PI * u2;
   double n = mean + std * r * std::cos(theta);
   return n;
 }
