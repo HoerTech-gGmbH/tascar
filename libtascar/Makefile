@@ -1,4 +1,5 @@
 all: build ver lib symlink testbin
+cli: build ver libcli symlinkcli testbin
 
 include ../config.mk
 include ../rules.mk
@@ -100,24 +101,31 @@ ver:
 	echo '#define TASCARVER "'$(FULLVERSION)'"' > build/tascarver.h
 
 ifeq ($(OS),Windows_NT)
+#
+# Windows:
+#
 LDLIBS += -lshlwapi -lssp
-lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
-symlink: build/lib$(PLUGINPREFIX)tascar.dll build/lib$(PLUGINPREFIX)tascargui.dll
+libcli:  build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
+symlinkcli: build/lib$(PLUGINPREFIX)tascar.dll
+lib:  libcli build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
+symlink: symlinkcli build/lib$(PLUGINPREFIX)tascargui.dll
 else
 ifeq ($(UNAME_S),Linux)
-
-lib:  $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
-
-#ldconfig -niv build
-
-symlink:
-#build/lib$(PLUGINPREFIX)tascar.so build/lib$(PLUGINPREFIX)tascargui.so build/lib$(PLUGINPREFIX)tascardmx.so
+#
+# Linux:
+#
+libcli:  build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
+symlinkcli:
+lib:  libcli build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION)
+symlink: symlinkcli
 else
+#
 # probably on MacOS
-lib:   $(BUILD_OBJECTS) build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascargui.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
-
-symlink: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascargui.dylib build/lib$(PLUGINPREFIX)tascardmx.dylib
-
+#
+libcli:   build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
+symlinkcli: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascardmx.dylib
+lib:   libcli build/lib$(PLUGINPREFIX)tascargui.0.dylib
+symlink: symlinkcli build/lib$(PLUGINPREFIX)tascargui.dylib
 endif
 endif
 
