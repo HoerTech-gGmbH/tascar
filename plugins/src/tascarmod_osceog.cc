@@ -86,8 +86,10 @@ private:
   std::string pf_path = "";
   // cut-off frequency in Hz of low-pass filter:
   float pf_fcut = 20.0f;
-  // minimum tracker time constant in seconds:
+  // minimum tracker attack time constant in seconds:
   float pf_tau_min = 2.0f;
+  // minimum tracker release time constant in seconds:
+  float pf_tau_min_release = 0.2f;
   // maximum tracker time constant in seconds:
   float pf_tau_max = 10.0f;
   // minimum blink amplitude in Volt:
@@ -168,7 +170,9 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
       pf_path, "",
       "Path name of filtered eye blink data, or empty for no postfilter.");
   GET_ATTRIBUTE(pf_fcut, "Hz", "cut-off frequency of low-pass filter");
-  GET_ATTRIBUTE(pf_tau_min, "s", "minimum tracker time constant");
+  GET_ATTRIBUTE(pf_tau_min, "s", "minimum tracker attack time constant");
+  GET_ATTRIBUTE(pf_tau_min_release, "s",
+                "minimum tracker release time constant");
   GET_ATTRIBUTE(pf_tau_max, "s", "maximum tracker time constant");
   GET_ATTRIBUTE(pf_a_min, "V", "minimum blink amplitude");
   GET_ATTRIBUTE(
@@ -195,10 +199,11 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   lo_message_add_float(msg, 0.0f);  // lowpass vertical EOG
   lo_message_add_float(msg, 0.0f);  // minimum EOG
   lo_message_add_float(msg, 0.0f);  // maximum EOG
+  lo_message_add_float(msg, 0.0f);  // raw vertical EOG
   oscmsgargv = lo_message_get_argv(msg);
   pf_lp.set_butterworth(pf_fcut, (float)srate);
-  pf_minmaxtrack = TASCAR::o1_ar_filter_t(2, (float)srate, {pf_tau_min, 0.0f},
-                                          {0.0f, pf_tau_max});
+  pf_minmaxtrack = TASCAR::o1_ar_filter_t(
+      2, (float)srate, {pf_tau_min, pf_tau_min_release}, {0.0f, pf_tau_max});
   if(!pf_anim_url.empty())
     lo_addr_pf_anim = lo_address_new_from_url(pf_anim_url.c_str());
   //
@@ -228,12 +233,13 @@ void osceog_t::update_eog(double t, float, float eog_vert)
     float eog_lp = pf_lp.filter(eog_vert);
     float eog_min = pf_minmaxtrack(0, eog_lp);
     float eog_max = pf_minmaxtrack(1, std::max(eog_min + pf_a_min, eog_lp));
-    float blink = (eog_lp - eog_min) / (eog_max - eog_min);
+    float blink = std::max(0.0f, (eog_lp - eog_min) / (eog_max - eog_min));
     oscmsgargv[0]->d = t;
     oscmsgargv[1]->f = blink;
     oscmsgargv[2]->f = eog_lp;
     oscmsgargv[3]->f = eog_min;
     oscmsgargv[4]->f = eog_max;
+    oscmsgargv[5]->f = eog_vert;
     session->dispatch_data_message(pf_path.c_str(), msg);
     if(lo_addr_pf_anim) {
       switch(pf_anim_mode) {

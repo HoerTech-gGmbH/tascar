@@ -280,12 +280,6 @@ int open_and_config_serport(const std::string& dev)
   struct termios oldtio, newtio;
 
   // Open the serial port
-  //#ifdef ISMACOS
-  //  //fd = ::open(dev, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC);
-  //  fd = ::open(dev, O_RDWR | O_NOCTTY | O_NONBLOCK );
-  //#else
-  //  fd = ::open(dev, O_RDWR | O_NOCTTY | O_SYNC);
-  //#endif
   fd = open(dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
   if(fd < 0) {
     throw TASCAR::ErrMsg("Unable to open device: " + dev);
@@ -316,8 +310,10 @@ int open_and_config_serport(const std::string& dev)
   if(tcsetattr(fd, TCSANOW, &newtio) < 0) {
     throw TASCAR::ErrMsg("Unable to perform tcsetattr");
   }
-  char c=0;
-  write(fd,&c,1);
+  char c = 0;
+  size_t cnt = write(fd, &c, 1);
+  if(cnt != 1)
+    TASCAR::add_warning("Unable to write 1 Byte to device " + dev);
   return fd;
 }
 
