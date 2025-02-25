@@ -57,8 +57,7 @@ public:
                         lo_message, void* user_data)
   {
     if(user_data && (argc == 3))
-      // first data element is time, discarded for now
-      ((osceog_t*)user_data)->update_eog(argv[0]->f, argv[1]->f, argv[2]->f);
+      ((osceog_t*)user_data)->update_eog(argv[0]->d, argv[1]->f, argv[2]->f);
     return 1;
   }
   void update_eog(double t, float eog_hor, float eog_vert);
@@ -203,7 +202,7 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   oscmsgargv = lo_message_get_argv(msg);
   pf_lp.set_butterworth(pf_fcut, (float)srate);
   pf_minmaxtrack = TASCAR::o1_ar_filter_t(
-      2, (float)srate, {pf_tau_min, pf_tau_min_release}, {0.0f, pf_tau_max});
+      2, (float)srate, {pf_tau_min, 0.0f}, {pf_tau_min_release, pf_tau_max});
   if(!pf_anim_url.empty())
     lo_addr_pf_anim = lo_address_new_from_url(pf_anim_url.c_str());
   //
