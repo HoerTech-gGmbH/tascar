@@ -99,6 +99,7 @@ pos2osc_t::pos2osc_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
   GET_ATTRIBUTE_BOOL(threaded, "Use additional thread for sending data to "
                                "avoid blocking of real-time audio thread");
   GET_ATTRIBUTE(taumin, "s", "Minimum period time between two transmissions.");
+  GET_ATTRIBUTE_BOOL(bypass, "Bypass sending of data");
   if(url.empty())
     url = "osc.udp://localhost:9999/";
   target = lo_address_new_from_url(url.c_str());
