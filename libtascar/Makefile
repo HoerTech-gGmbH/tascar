@@ -1,5 +1,5 @@
-all: build ver lib symlink testbin
-cli: build ver libcli symlinkcli testbin
+all: symlink testbin
+cli: symlinkcli testbin
 
 include ../config.mk
 include ../rules.mk
@@ -97,7 +97,7 @@ CXXFLAGS += `pkg-config --cflags $(EXTERNALS)`
 LDLIBS += -ldl $(SOFALIB)
 LDFLAGS += -L./
 
-ver:
+ver: build
 	echo '#define TASCARVER "'$(FULLVERSION)'"' > build/tascarver.h
 
 ifeq ($(OS),Windows_NT)
@@ -105,27 +105,27 @@ ifeq ($(OS),Windows_NT)
 # Windows:
 #
 LDLIBS += -lshlwapi -lssp
-libcli:  build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
-symlinkcli: build/lib$(PLUGINPREFIX)tascar.dll
-lib:  libcli build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
-symlink: symlinkcli build/lib$(PLUGINPREFIX)tascargui.dll
+libcli:  ver build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
+symlinkcli: libcli build/lib$(PLUGINPREFIX)tascar.dll
+lib:  ver libcli build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
+symlink: lib symlinkcli build/lib$(PLUGINPREFIX)tascargui.dll
 else
 ifeq ($(UNAME_S),Linux)
 #
 # Linux:
 #
-libcli:  build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
-symlinkcli:
-lib:  libcli build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION)
-symlink: symlinkcli
+libcli:  ver build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION)
+symlinkcli: libcli
+lib:  ver libcli build/lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION)
+symlink: lib symlinkcli
 else
 #
 # probably on MacOS
 #
-libcli:   build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
-symlinkcli: build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascardmx.dylib
-lib:   libcli build/lib$(PLUGINPREFIX)tascargui.0.dylib
-symlink: symlinkcli build/lib$(PLUGINPREFIX)tascargui.dylib
+libcli: ver  build/lib$(PLUGINPREFIX)tascar.0.dylib build/lib$(PLUGINPREFIX)tascardmx.0.dylib
+symlinkcli: libcli build/lib$(PLUGINPREFIX)tascar.dylib build/lib$(PLUGINPREFIX)tascardmx.dylib
+lib:  ver libcli build/lib$(PLUGINPREFIX)tascargui.0.dylib
+symlink: lib symlinkcli build/lib$(PLUGINPREFIX)tascargui.dylib
 endif
 endif
 

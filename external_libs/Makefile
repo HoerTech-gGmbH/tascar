@@ -31,9 +31,9 @@ libmysofa:
 else
 
 libmysofa:
-	(cd libmysofa-1.3.2/build && cmake .. && $(MAKE))
+	(mkdir -p build && cd libmysofa-1.3.2/build && cmake .. && $(MAKE))
 
 endif
 
 liblsl:
-	(cd liblsl-1.16.2 && cmake -S . -B build -DCMAKE_INSTALL_PREFIX="../"  -DLSL_BUILD_STATIC=true && cmake --build build -j --config Release --target install)
+	(mkdir -p build && cd liblsl-1.16.2 && cmake -S . -B build -DCMAKE_INSTALL_PREFIX="../build"  -DLSL_BUILD_STATIC=true && cmake --build build -j --config Release --target install)

@@ -71,7 +71,7 @@ build/tascar_hdspmixer build/tascar_hdspmixer.o: EXTERNALS += alsa
 build/tascar_pdf build/tascar_pdf.o: EXTERNALS += $(GTKEXT)
 build/tascar_pdf build/tascar_pdf.o: LDLIBS += -ltascargui `pkg-config --libs $(EXTERNALS)`
 build/tascar_ambdecoder: LDLIBS += `pkg-config --libs gsl`
-build/tascar_lslsl build/tascar_lsljacktime build/tascar_osc2lsl build/tascar_genrandlsl: LDLIBS+=-llsl
+build/tascar_lslsl build/tascar_lsljacktime build/tascar_osc2lsl build/tascar_genrandlsl: LDLIBS+=../external_libs/build/lib/liblsl.a
 #build/tascar_renderfile: LDLIBS += -lboost_program_options
 #build/tascar_renderir: LDLIBS += -lboost_program_options
 

@@ -51,7 +51,13 @@ testjack: apps plugins
 libmysofa:
 	$(MAKE) -C external_libs libmysofa
 
-libtascar: libmysofa
+liblsl:
+	$(MAKE) -C external_libs liblsl
+
+libtascarver:
+	$(MAKE) -C libtascar ver
+
+libtascar: libtascarver libmysofa liblsl
 
 googletest:
 	$(MAKE) -C external_libs googlemock

@@ -1,7 +1,7 @@
 # variables:
 VERSION=0.234.2
 
-ARCH=$(shell uname -m)
+ARCH:=$(shell uname -m)
 
 CXXFLAGS = -Wall -Wextra -Wdeprecated-declarations -Wno-psabi -std=c++17 -pthread	\
 -ggdb -fno-finite-math-only -Wno-psabi
@@ -32,17 +32,18 @@ endif
 CPPFLAGS = -std=c++17
 PREFIX = /usr/local
 
-GITMODIFIED=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
-COMMITHASH=$(shell git log -1 --abbrev=7 --pretty='format:%h')
-LATEST_RELEASETAG=$(shell git tag -l "release*" |tail -1)
-COMMIT_SINCE_RELEASE=$(shell git rev-list --count $(LATEST_RELEASETAG)..)
+GITMODIFIED:=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
+COMMITHASH:=$(shell git log -1 --abbrev=7 --pretty='format:%h')
+LATEST_RELEASETAG:=$(shell git tag -l "release*" |tail -1)
+COMMIT_SINCE_RELEASE:=$(shell git rev-list --count $(LATEST_RELEASETAG)..)
 
 FULLVERSION=$(VERSION).$(COMMIT_SINCE_RELEASE)-$(COMMITHASH)$(GITMODIFIED)
 
 mkfile_name := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_path := $(subst $(notdir $(mkfile_name)),,$(mkfile_name))
 
-HAS_LSL:=$(shell $(mkfile_path)/check_for_lsl)
+#HAS_LSL:=$(shell $(mkfile_path)/check_for_lsl)
+HAS_LSL=yes
 
 HAS_OPENMHA:=$(shell $(mkfile_path)/check_for_openmha)
 
