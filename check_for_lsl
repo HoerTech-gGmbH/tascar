@@ -1,6 +1,7 @@
 #!/bin/bash
-if test `uname -s` = Darwin; then
-   LDFLAGS=-L/opt/homebrew/lib
-fi
-echo 'int main(int,char**){return 0;}'|g++ ${LDFLAGS} -llsl -x c++ - 2>/dev/null && echo yes||echo no
-rm -f a.out
+echo yes
+#if test `uname -s` = Darwin; then
+#   LDFLAGS=-L/opt/homebrew/lib
+#fi
+#echo 'int main(int,char**){return 0;}'|g++ ${LDFLAGS} -llsl -x c++ - 2>/dev/null && echo yes||echo no
+#rm -f a.out

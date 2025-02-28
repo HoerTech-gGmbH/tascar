@@ -64,9 +64,14 @@ ifeq "$(HAS_LSL)" "yes"
 CXXFLAGS += -DHAS_LSL
 TASCARMODS += lsljacktime lslactor levels2osc pos2lsl osc2lsl
 AUDIOPLUGINS += speechactivity periodogram
-TASCARMODSGUI += glabsensors waitforlslstream lsl2osc
+TASCARMODSGUI += waitforlslstream lsl2osc
+
+ifneq ($(OS),Windows_NT)
+# on Windows do not compile glabsensors:
+TASCARMODSGUI += glabsensors
 GLABSENSORS += smiley emergency espheadtracker	\
   qualisys jackstatus
+endif
 
 ifeq ($(UNAME_S),Linux)
 GLABSENSORS += midicc serial oscthreshold eog
