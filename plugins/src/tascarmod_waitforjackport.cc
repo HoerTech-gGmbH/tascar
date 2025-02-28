@@ -53,7 +53,8 @@ wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
     while(k && (!jp)) {
       if(k)
         --k;
-      usleep(10000);
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      //usleep(10000);
       jp = jack_port_by_name(jc, p.c_str());
     }
   }

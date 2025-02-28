@@ -196,7 +196,8 @@ void espheadtracker_t::set_acceleration(lo_message msg, lo_arg** argv)
 void espheadtracker_t::service()
 {
   while(run_service) {
-    usleep(1000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //usleep(1000);
     double ct(gettime());
     for(std::map<std::string, espdevice_t*>::iterator it = devices.begin();
         it != devices.end(); ++it) {

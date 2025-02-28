@@ -414,7 +414,8 @@ void trackir_tracker_t::get_and_process_ltr_markers()
       counter = pose.counter;
     }
   } else {
-    usleep(2000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    //usleep(2000);
   }
 }
 

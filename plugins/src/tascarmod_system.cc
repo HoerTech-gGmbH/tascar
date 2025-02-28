@@ -342,7 +342,8 @@ system_t::~system_t()
 void system_t::service()
 {
   while(run_service) {
-    usleep(500);
+    std::this_thread::sleep_for(std::chrono::microseconds(500));
+    //usleep(500);
     if(fifo.can_read()) {
       uint32_t v(fifo.read());
       std::string cmd;

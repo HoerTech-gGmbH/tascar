@@ -170,7 +170,9 @@ void mod_artnetdmx_t::service()
       //localdata[k] = dmxaddr[k] + std::min((uint16_t)255,dmxdata[k]);
       localdata[dmxaddr[k]] = std::min((uint16_t)255,dmxdata[k]);
     send(universe,localdata);
-    usleep( waitusec );
+    //usleep( waitusec );
+    std::this_thread::sleep_for(std::chrono::microseconds(waitusec));
+
   }
   for(uint32_t k=0;k<localdata.size();++k)
     localdata[k] = 0;

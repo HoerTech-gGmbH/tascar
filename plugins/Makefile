@@ -65,11 +65,11 @@ CXXFLAGS += -DHAS_LSL
 TASCARMODS += lsljacktime lslactor levels2osc pos2lsl osc2lsl
 AUDIOPLUGINS += speechactivity periodogram
 TASCARMODSGUI += glabsensors waitforlslstream lsl2osc
-GLABSENSORS += smiley eog emergency espheadtracker	\
+GLABSENSORS += smiley emergency espheadtracker	\
   qualisys jackstatus
 
 ifeq ($(UNAME_S),Linux)
-GLABSENSORS += midicc serial oscthreshold
+GLABSENSORS += midicc serial oscthreshold eog
 endif
 
 endif

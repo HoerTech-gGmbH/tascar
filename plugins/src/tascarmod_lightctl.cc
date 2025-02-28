@@ -666,7 +666,8 @@ void lightctl_t::add_variables(TASCAR::osc_server_t* srv)
 lightctl_t::~lightctl_t()
 {
   stop_service();
-  usleep(100000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  //usleep(100000);
   for(auto it = lightscenes.begin(); it != lightscenes.end(); ++it)
     delete(*it);
   if(driver_)
@@ -680,7 +681,8 @@ void lightctl_t::service()
   uint32_t waitusec(1000000 / fps);
   std::vector<uint16_t> localdata;
   localdata.resize(512);
-  usleep(1000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  //usleep(1000);
   while(run_service) {
     // clear DMX values:
     for(auto& d : localdata)
@@ -695,7 +697,8 @@ void lightctl_t::service()
             std::min((uint16_t)255, scene->dmxdata[k]);
     if(driver_)
       driver_->send(universe, localdata);
-    usleep(waitusec);
+    std::this_thread::sleep_for(std::chrono::microseconds(waitusec));
+    //usleep(waitusec);
   }
   for(uint32_t k = 0; k < localdata.size(); ++k)
     localdata[k] = 0;

@@ -90,7 +90,8 @@ void jackstatus_t::service()
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp);
   }
   while(run_service) {
-    usleep(500000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //usleep(500000);
     float load(get_cpu_load());
     if((load > warnload) || (load > criticalload)) {
       char ctmp[1024];

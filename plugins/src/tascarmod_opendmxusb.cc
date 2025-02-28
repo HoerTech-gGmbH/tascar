@@ -159,7 +159,8 @@ void mod_opendmxusb_t::service()
   uint32_t waitusec(1000000/fps);
   std::vector<uint16_t> localdata;
   localdata.resize(512);
-  usleep( 1000 );
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  //usleep( 1000 );
   while( run_service ){
     for(uint32_t k=0;k<localdata.size();++k)
       localdata[k] = 0;
@@ -167,7 +168,8 @@ void mod_opendmxusb_t::service()
       //localdata[k] = dmxaddr[k] + std::min((uint16_t)255,dmxdata[k]);
       localdata[dmxaddr[k]] = std::min((uint16_t)255,dmxdata[k]);
     send(universe,localdata);
-    usleep( waitusec );
+    std::this_thread::sleep_for(std::chrono::microseconds(waitusec));
+    //usleep( waitusec );
   }
   for(uint32_t k=0;k<localdata.size();++k)
     localdata[k] = 0;

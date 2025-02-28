@@ -227,7 +227,8 @@ void jackrec_t::service()
         }
       }
     }
-    usleep(200000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    //usleep(200000);
   }
 }
 

@@ -142,7 +142,8 @@ void midictl_t::send_service()
     // wait for 100 ms:
     for(uint32_t k = 0; k < 100; ++k)
       if(run_service)
-        usleep(1000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //usleep(1000);
     if(run_service) {
       for(uint32_t k = 0; k < ports.size(); ++k) {
         // gain:

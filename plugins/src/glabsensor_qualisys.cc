@@ -239,7 +239,8 @@ void qualisys_tracker_t::srv_prepare()
         prepare();
       }
     }
-    usleep(50000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    //usleep(50000);
   }
 }
 

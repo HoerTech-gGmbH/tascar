@@ -174,7 +174,8 @@ void echoc_mod_t::port_service()
 {
   size_t pcnt = 100;
   while(run_port_service) {
-    usleep(10000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //usleep(10000);
     if(!measuring) {
       if(reconnect) {
         if(pcnt)

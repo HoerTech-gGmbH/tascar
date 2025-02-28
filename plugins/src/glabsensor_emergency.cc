@@ -87,7 +87,7 @@ void emergencybutton_t::service()
 {
   ltime = gettime() + startlock;
   while(run_service) {
-    usleep(1000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     if((gettime() - ltime > timeout) && active) {
       active = false;
       if(!on_timeout.empty()) {

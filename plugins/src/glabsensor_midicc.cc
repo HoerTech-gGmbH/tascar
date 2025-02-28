@@ -114,7 +114,8 @@ void midicc_t::send_service()
     // wait for 10 ms:
     for(uint32_t k = 0; k < 10; ++k)
       if(run_service)
-        usleep(1000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //usleep(1000);
     if(run_service) {
       outlet->push_sample(data);
       alive();
