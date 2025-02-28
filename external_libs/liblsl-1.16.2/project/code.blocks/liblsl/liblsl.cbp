@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="liblsl" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option platforms="Unix;" />
+				<Option output="../../../bin/lsl64-debug" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../../../bin" />
+				<Option object_output="../../../output/linux64/objs/debug" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-std=c++11" />
+					<Add option="-g" />
+					<Add option="-DBOOST_ALL_NO_LIB" />
+					<Add option="-DBOOST_THREAD_BUILD_LIB" />
+					<Add option="-DBOOST_ASIO_ENABLE_OLD_SERVICES" />
+					<Add directory="../../../lslboost" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option platforms="Unix;" />
+				<Option output="../../../bin/lsl64" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../../../bin" />
+				<Option object_output="../../../output/linux64/objs/release" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-std=c++11" />
+					<Add option="-w" />
+					<Add option="-DBOOST_ALL_NO_LIB" />
+					<Add option="-DBOOST_THREAD_BUILD_LIB" />
+					<Add option="-DBOOST_ASIO_ENABLE_OLD_SERVICES" />
+					<Add directory="../../../lslboost" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-std=c++0x" />
+			<Add option="-Wall" />
+			<Add option="-fexceptions -fvisibility=hidden -fvisibility-inlines-hidden -fPIC -fpermissive" />
+			<Add option="-DBOOST_ALL_NO_LIB" />
+			<Add option="-DBOOST_THREAD_BUILD_LIB" />
+			<Add option="-DBOOST_ASIO_ENABLE_OLD_SERVICES" />
+			<Add directory="../../../lslboost" />
+		</Compiler>
+		<Linker>
+			<Add option="-pthread -lrt -fvisibility=hidden" />
+			<Add option="-fvisibility-inlines-hidden" />
+			<Add option="-z muldefs" />
+		</Linker>
+		<Unit filename="../../../lslboost/libs/chrono/src/chrono.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/archive_exception.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/basic_archive.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/basic_iarchive.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/basic_iserializer.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/basic_oarchive.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/basic_oserializer.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/basic_serializer_map.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/extended_type_info.cpp" />
+		<Unit filename="../../../lslboost/libs/serialization/src/extended_type_info_typeid.cpp" />
+		<Unit filename="../../../lslboost/libs/system/src/error_code.cpp" />
+		<Unit filename="../../../lslboost/libs/thread/src/pthread/once.cpp" />
+		<Unit filename="../../../lslboost/libs/thread/src/pthread/thread.cpp" />
+		<Unit filename="../../../lslboost/libs/thread/src/tss_null.cpp" />
+		<Unit filename="../../../src/api_config.cpp" />
+		<Unit filename="../../../src/api_config.h" />
+		<Unit filename="../../../src/cancellable_streambuf.h" />
+		<Unit filename="../../../src/cancellation.h" />
+		<Unit filename="../../../src/common.cpp" />
+		<Unit filename="../../../src/common.h" />
+		<Unit filename="../../../src/consumer_queue.cpp" />
+		<Unit filename="../../../src/consumer_queue.h" />
+		<Unit filename="../../../src/data_receiver.cpp" />
+		<Unit filename="../../../src/data_receiver.h" />
+		<Unit filename="../../../src/info_receiver.cpp" />
+		<Unit filename="../../../src/info_receiver.h" />
+		<Unit filename="../../../src/inlet_connection.cpp" />
+		<Unit filename="../../../src/inlet_connection.h" />
+		<Unit filename="../../../src/lsl_continuous_resolver_c.cpp" />
+		<Unit filename="../../../src/lsl_freefuncs_c.cpp" />
+		<Unit filename="../../../src/lsl_inlet_c.cpp" />
+		<Unit filename="../../../src/lsl_outlet_c.cpp" />
+		<Unit filename="../../../src/lsl_streaminfo_c.cpp" />
+		<Unit filename="../../../src/lsl_xml_element_c.cpp" />
+		<Unit filename="../../../src/pugixml/pugiconfig.hpp" />
+		<Unit filename="../../../src/pugixml/pugixml.cpp" />
+		<Unit filename="../../../src/pugixml/pugixml.hpp" />
+		<Unit filename="../../../src/resolve_attempt_udp.cpp" />
+		<Unit filename="../../../src/resolve_attempt_udp.h" />
+		<Unit filename="../../../src/resolver_impl.cpp" />
+		<Unit filename="../../../src/resolver_impl.h" />
+		<Unit filename="../../../src/sample.cpp" />
+		<Unit filename="../../../src/sample.h" />
+		<Unit filename="../../../src/send_buffer.cpp" />
+		<Unit filename="../../../src/send_buffer.h" />
+		<Unit filename="../../../src/socket_utils.cpp" />
+		<Unit filename="../../../src/socket_utils.h" />
+		<Unit filename="../../../src/stream_info_impl.cpp" />
+		<Unit filename="../../../src/stream_info_impl.h" />
+		<Unit filename="../../../src/stream_inlet_impl.h" />
+		<Unit filename="../../../src/stream_outlet_impl.cpp" />
+		<Unit filename="../../../src/stream_outlet_impl.h" />
+		<Unit filename="../../../src/tcp_server.cpp" />
+		<Unit filename="../../../src/tcp_server.h" />
+		<Unit filename="../../../src/time_postprocessor.cpp" />
+		<Unit filename="../../../src/time_postprocessor.h" />
+		<Unit filename="../../../src/time_receiver.cpp" />
+		<Unit filename="../../../src/time_receiver.h" />
+		<Unit filename="../../../src/udp_server.cpp" />
+		<Unit filename="../../../src/udp_server.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,38 @@
+version: 1.14.{build}
+pull_requests:
+  do_not_increment_build_number: true
+shallow_clone: true
+environment:
+  matrix:
+  - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    LSLARCH: Win32
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    LSLARCH: x64
+build_script:
+- cmd: cmake -DCMAKE_INSTALL_PREFIX=install DCMAKE_BUILD_TYPE=Release -Dlslgitrevision=%APPVEYOR_REPO_COMMIT% -Dlslgitbranch=%APPVEYOR_REPO_BRANCH% -S . -B build -T v140,host=x86 -A %LSLARCH%
+- sh: cmake -DCMAKE_INSTALL_PREFIX=install DCMAKE_BUILD_TYPE=Release -Dlslgitrevision=${APPVEYOR_REPO_COMMIT} -Dlslgitbranch=${APPVEYOR_REPO_BRANCH} -S . -B build
+- cmake -DLSL_UNITTESTS=ON -DLSL_BUILD_EXAMPLES=ON build
+- cmd: cmake --build build --config Release -j --target package
+- sh: /usr/bin/time -v cmake --build build -j 3 --target package
+- sh: cmake -DCPACK_DEBIAN_PACKAGE_SHLIBDEPS=ON build
+- cd build
+- sh: sudo dpkg -i *.deb
+- sh: cpack -G DEB
+- sh: ifconfig
+- cmd: testing\Release\lsl_test_internal.exe --wait-for-keypress never
+- cmd: set PATH=Release;%PATH% && testing\Release\lsl_test_exported.exe --wait-for-keypress never
+- sh: sudo route add -net 224.0.0.0 netmask 240.0.0.0 lo
+- sh: testing/lsl_test_internal --wait-for-keypress never
+- sh: testing/lsl_test_exported --wait-for-keypress never
+artifacts:
+- path: 'build/*.zip'
+- path: 'build/*.deb'
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: XzGnVTRjZI2AuQzR5A6qPgZViAAbBVq7/VhM7O8kyTmjIkvUjH1RrwWiFLuinsus
+  force_update: true
+  on:
+    APPVEYOR_REPO_TAG: true
+

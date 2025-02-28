@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="liblsl/liblsl.cbp" />
+		<Project filename="SendData/SendData.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="ReceiveData/ReceiveData.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="GetAllStreams/GetAllStreams.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="GetFullinfo/GetFullinfo.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="GetTimeCorrection/GetTimeCorrection.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="ReceiveDataInChunks/ReceiveDataInChunks.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="ReceiveDataSimple/ReceiveDataSimple.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="ReceiveStringMarkers/ReceiveStringMarkers.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="SendDataInChunks/SendDataInChunks.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="SendDataSimple/SendDataSimple.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="SendStringMarkers/SendStringMarkers.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="SendDataC/SendDataC.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="ReceiveDataC/ReceiveDataC.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+		<Project filename="StressTest/StressTest.cbp">
+			<Depends filename="liblsl/liblsl.cbp" />
+		</Project>
+	</Workspace>
+</CodeBlocks_workspace_file>

@@ -1,0 +1,38 @@
+# Conda build recipe for liblsl
+#
+{% set name = "liblsl" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ GIT_DESCRIBE_TAG | replace('-', '.') }}
+
+source:
+  git_url: ..
+
+build:
+  number: {{ GIT_DESCRIBE_NUMBER }}
+  string: {{ GIT_BUILD_STR }}
+  script:
+  - mkdir build
+  - 'cmake -DLSL_UNIXFOLDERS=1 -DCMAKE_INSTALL_PREFIX:PATH="{{ PREFIX }}" -DCMAKE_INSTALL_RPATH:PATH="{{ PREFIX }}/lib" -S . -B build -G Ninja'
+  - 'cmake --build build -j --target install'
+
+requirements:
+  build:
+    - cmake >=3.12
+    - {{ compiler("cxx") }}
+    - git
+    - ninja
+  host:
+
+tests:
+  commands:
+    - lslver
+
+about:
+  home: https://github.com/sccn/liblsl
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE
+  summary: 'Multi-modal time-synched data transmission over local network'
+
