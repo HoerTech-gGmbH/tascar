@@ -35,5 +35,13 @@ libmysofa:
 
 endif
 
+ifeq ($(UNAME_S),Linux)
+
 liblsl:
-	(mkdir -p build && cd liblsl-1.16.2 && cmake -S . -B build -DCMAKE_INSTALL_PREFIX="../build"  -DLSL_BUILD_STATIC=true && cmake --build build -j --config Release --target install)
+	(mkdir -p build && cd liblsl-1.16.2 && cmake -S . -B build -DCMAKE_INSTALL_PREFIX="../build" -DCMAKE_CXX_FLAGS="-fPIC" -DLSL_BUILD_STATIC=true && cmake --build build -j --config Release --target install)
+
+else
+
+liblsl:
+
+endif

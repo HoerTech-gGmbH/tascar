@@ -10,9 +10,33 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{connectwlan} & connect to sensor to external WLAN (bool) & false\\
 \hline
-\indattr{eogpath} & OSC target path for EOG data, or empty for no EOG (string) & /eog\\
+\indattr{eogpath} & OSC destination path for EOG data, or empty if no EOG. If name is set, it is prefixed with /name. (string) & /eog\\
 \hline
 \indattr{name} & Prefix in OSC control variables (string) & osceog\\
+\hline
+\indattr{pf\_a\_min} & minimum blink amplitude (float, V) & 0.0001\\
+\hline
+\indattr{pf\_anim\_blink\_freq\_mu} & Eye blink animation mean frequency (random mode) (double, Hz) & 0.3\\
+\hline
+\indattr{pf\_anim\_blink\_freq\_sigma} & Eye blink animation standard deviation of frequency (random mode) (double, Hz) & 0.2828\\
+\hline
+\indattr{pf\_anim\_character} & Eye blink animation character (string) & \\
+\hline
+\indattr{pf\_anim\_mode} & Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random (uint32) & 1\\
+\hline
+\indattr{pf\_anim\_path} & Eye blink animation path (string) & /blink\\
+\hline
+\indattr{pf\_anim\_url} & Eye blink animation URL, or empty for not sending eye blink animation (string) & \\
+\hline
+\indattr{pf\_fcut} & cut-off frequency of low-pass filter (float, Hz) & 20\\
+\hline
+\indattr{pf\_path} & Path name of filtered eye blink data, or empty for no postfilter. (string) & \\
+\hline
+\indattr{pf\_tau\_max} & maximum tracker time constant (float, s) & 10\\
+\hline
+\indattr{pf\_tau\_min} & minimum tracker attack time constant (float, s) & 2\\
+\hline
+\indattr{pf\_tau\_min\_release} & minimum tracker release time constant (float, s) & 0.2\\
 \hline
 \indattr{srate} & Sensor sampling rate (8, 16, 32, 64, 128, 250, 475, 860) (uint32, Hz) & 128\\
 \hline

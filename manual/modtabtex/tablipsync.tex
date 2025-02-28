@@ -8,11 +8,11 @@ Attributes of element {\bf lipsync}\nopagebreak
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{dynamicrange} & Mapped dynamic range (double, dB) & 165\\
+\indattr{dynamicrange} & Mapped dynamic range (float, dB) & 165\\
 \hline
 \indattr{energypath} & OSC destination for sending format energies, or empty for no energy messages (string) & \\
 \hline
-\indattr{maxspeechlevel} & Level normalization (double, dB) & 48\\
+\indattr{maxspeechlevel} & Level normalization (float, dB) & 48\\
 \hline
 \indattr{onchangecount} & Maximum number of repetitions of equal messages in ``onchange'' mode (uint32) & 3\\
 \hline
@@ -22,17 +22,17 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{sendmode} & Sending mode, one of ``always'', ``transport'', or ``onchange'' (string) & always\\
 \hline
-\indattr{smoothing} & Smoothing time constant (double, s) & 0.02\\
+\indattr{smoothing} & Smoothing time constant (float, s) & 0.02\\
 \hline
 \indattr{strmsg} & Message string to be added to OSC messages before blend shapes (string) & /lipsync\\
 \hline
 \indattr{threaded} & Use additional thread for sending data (bool) & true\\
 \hline
-\indattr{threshold} & Noise threshold, range 0-1 (double) & 0.5\\
+\indattr{threshold} & Noise threshold, range 0-1 (float) & 0.5\\
 \hline
 \indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9999/}\\
 \hline
-\indattr{vocalTract} & Vocal tract scaling factor (double) & 1\\
+\indattr{vocalTract} & Vocal tract scaling factor (float) & 1\\
 \hline
 \end{tabularx}
 }
