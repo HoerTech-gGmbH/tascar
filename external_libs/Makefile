@@ -42,6 +42,12 @@ liblsl:
 
 else
 
+ifeq ($(OS),Windows_NT)
+liblsl: liblsl-1.16.2-Win_amd64.zip
+	(mkdir -p build && cd build && unzip ../$< )
+else
+
 liblsl:
+endif
 
 endif
