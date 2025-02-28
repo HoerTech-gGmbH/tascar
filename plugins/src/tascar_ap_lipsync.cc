@@ -213,9 +213,9 @@ void lipsync_t::configure()
   uint32_t num_bins(stft->s.n_);
   // allocate buffer for processed smoothed log values:
   sSmoothedMag = new float[num_bins];
-  memset(sSmoothedMag, 0, num_bins * sizeof(double));
+  memset(sSmoothedMag, 0, num_bins * sizeof(float));
   sLogMag = new float[num_bins];
-  memset(sLogMag, 0, num_bins * sizeof(double));
+  memset(sLogMag, 0, num_bins * sizeof(float));
   // Edge frequencies for format energies:
   float freqBins[numFormants + 1];
   if(numFormants + 1 != 5)
