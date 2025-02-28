@@ -44,7 +44,7 @@ else
 
 ifeq ($(OS),Windows_NT)
 liblsl: liblsl-1.16.2-Win_amd64.zip
-	(mkdir -p build && cd build && unzip ../$< )
+	(mkdir -p build && cd build && unzip -o ../$< || true)
 else
 
 liblsl:
