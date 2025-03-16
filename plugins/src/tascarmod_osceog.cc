@@ -126,8 +126,15 @@ private:
   // reset tracking filter:
   bool pf_reset = true;
   lo_address lo_addr_pf_anim = NULL;
+
+  // state variables for randomized animations:
+  TASCAR::tictoc_t timer_rand_anim;
+  // next gap time:
   double next_tau = 0.0;
+  // next blink length:
   double next_len = 0.0;
+
+  TASCAR::o1_ar_filter_t pf_anim_arfilter;
 };
 
 void osceog_t::connect()
@@ -201,8 +208,8 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   lo_message_add_float(msg, 0.0f);  // raw vertical EOG
   oscmsgargv = lo_message_get_argv(msg);
   pf_lp.set_butterworth(pf_fcut, (float)srate);
-  pf_minmaxtrack = TASCAR::o1_ar_filter_t(
-      2, (float)srate, {pf_tau_min, 0.0f}, {pf_tau_min_release, pf_tau_max});
+  pf_minmaxtrack = TASCAR::o1_ar_filter_t(2, (float)srate, {pf_tau_min, 0.0f},
+                                          {pf_tau_min_release, pf_tau_max});
   if(!pf_anim_url.empty())
     lo_addr_pf_anim = lo_address_new_from_url(pf_anim_url.c_str());
   //
@@ -246,6 +253,15 @@ void osceog_t::update_eog(double t, float, float eog_vert)
         blink = 0.0f;
         break;
       case 2:
+        if(timer_rand_anim.toc() > next_tau + next_len) {
+          timer_rand_anim.tic();
+          next_len = pf_anim_blink_duration;
+          double anim_next_freq =
+              drand_norm(pf_anim_blink_freq_mu, pf_anim_blink_freq_sigma);
+
+          next_tau = std::min(next_len, 1.0 / anim_next_freq - next_len);
+        }
+        blink = pf_anim_arfilter(0, (float)(timer_rand_anim.toc() < next_len));
         break;
       }
 
