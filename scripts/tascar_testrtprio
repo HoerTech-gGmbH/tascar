@@ -1,4 +1,5 @@
 #!/bin/bash
 cat /proc/interrupts | grep -e '^[[:blank:]]*[0-9][0-9]*:'
 ps -eo rtprio,class,%cpu,args --sort=rtprio,class,-pri H|sed -e '/[[:blank:]]*- / d'
+uname -a
 cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor|grep -q powersave && echo "At least one CPU is running in powersave mode. For best performance select performance governor."
