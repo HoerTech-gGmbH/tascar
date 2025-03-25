@@ -219,10 +219,14 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   connectsrv = std::thread(&osceog_t::connectservice, this);
   if(name.size())
     p = "/" + name;
+  session->set_variable_owner(
+      TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   session->add_method(p + eogpath, "dff", &osc_update, this);
   session->add_bool_true(p + "/reset", &pf_reset, "Reset post filter state");
   session->add_string(p + "/character", &pf_anim_character,
                       "Eye blink animation character");
+  session->add_uint(p+"/anim_mode",&pf_anim_mode,"[0,2]","Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
+  session->unset_variable_owner();
 }
 
 void osceog_t::update_eog(double t, float, float eog_vert)
@@ -250,9 +254,14 @@ void osceog_t::update_eog(double t, float, float eog_vert)
     if(lo_addr_pf_anim) {
       switch(pf_anim_mode) {
       case 0:
+        // no eye blink animation:
         blink = 0.0f;
         break;
+      case 1:
+        // transmitted eye blinks:
+        break;
       case 2:
+        // random eye blink animation:
         if(timer_rand_anim.toc() > next_tau + next_len) {
           timer_rand_anim.tic();
           next_len = pf_anim_blink_duration;
@@ -264,7 +273,6 @@ void osceog_t::update_eog(double t, float, float eog_vert)
         blink = pf_anim_arfilter(0, (float)(timer_rand_anim.toc() < next_len));
         break;
       }
-
       lo_send(lo_addr_pf_anim, pf_anim_path.c_str(), "sf",
               pf_anim_character.c_str(), blink);
     }
