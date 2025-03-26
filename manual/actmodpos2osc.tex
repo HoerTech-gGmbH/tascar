@@ -15,19 +15,21 @@ The Euler-angles are sent in degrees, Cartesian coordinates in meter.
 The operation modes are:
 
 {\small
-\begin{tabular}{cl}
-mode & send to\dots                                                                 \\
+\begin{tabular}{clll}
+mode & send to\dots                                                          & local? & rot. unit \\
 \hline
-0    & /scene/name/pos (x,y,z) and /scene/name/rot (Euler-Z,Euler-Y,Euler-X)        \\
-1    & /scene/name/pos (x,y,z,Euler-Z,Euler-Y,Euler-X)                              \\
-2    & /tascarpos (/scene/name,x,y,z,Euler-Z,Euler-Y,Euler-X)                       \\
-3    & /tascarpos (name,x,y,z,Euler-Z,Euler-Y,Euler-X)                              \\
-4    & /avatar /lookAt x,y,z,lookatlen                                              \\
-5    & /avatar Euler-Z                                                              \\
-6    & /avatar <orientationname> Euler-Y, Euler-Z, Euler-X (delta orientation only) \\
-7    & /avatar <orientationname> Euler-Y, Euler-Z, Euler-X                          \\
-8    & /avatar Euler-Y, Euler-Z, Euler-X (delta orientation only, degree)           \\
-9    & /avatar <orientationname> Euler-X, Euler-Y, Euler-Z (delta orientation only) \\
-11   & /avatar/<objname> x, y, z, Euler-Z, Euler-Y, Euler-X                         \\
+0    & /scene/name/pos (x,y,z) and /scene/name/rot (Euler-Z,Euler-Y,Euler-X) &        & deg.      \\
+1    & /scene/name/pos (x,y,z,Euler-Z,Euler-Y,Euler-X)                       &        & deg.      \\
+2    & /tascarpos (/scene/name,x,y,z,Euler-Z,Euler-Y,Euler-X)                &        & deg.      \\
+3    & /tascarpos (name,x,y,z,Euler-Z,Euler-Y,Euler-X)                       &        & deg.      \\
+4    & /avatar /lookAt x,y,z,lookatlen                                       &        &           \\
+5    & /avatar Euler-Z                                                       &        & deg.      \\
+6    & /avatar <orientationname> Euler-Y, Euler-Z, Euler-X                   & loc.   & rad       \\
+7    & /avatar <orientationname> Euler-Y, Euler-Z, Euler-X                   &        & rad       \\
+8    & /avatar Euler-Y, Euler-Z, Euler-X                                     & loc.   & deg.      \\
+9    & /avatar <orientationname> Euler-X, Euler-Y, Euler-Z                   & loc.   & rad       \\
+11   & /avatar/<objname> x, y, z, Euler-Z, Euler-Y, Euler-X                  &        & deg.      \\
 \end{tabular}
 }
+
+Here ``local'' means it sends the rotation in the local coordinate system, i.e., as yaw/pitch/roll.

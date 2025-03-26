@@ -196,6 +196,17 @@ void pos2osc_t::update_local()
           // copy position from parent object:
           TASCAR::pos_t p(obj.obj->c6dof.position);
           TASCAR::zyx_euler_t o(obj.obj->c6dof.orientation);
+          TASCAR::zyx_euler_t eul_delta;
+          TASCAR::quaternion_t q_delta;
+          TASCAR::quaternion_t q_nodelta;
+          // update rotation in local coordinate system:
+          eul_delta = obj.obj->dorientation;
+          eul_delta += obj.obj->c6dof_nodelta.orientation;
+          q_delta.set_euler_zyx(eul_delta);
+          q_nodelta.set_euler_zyx(obj.obj->c6dof_nodelta.orientation);
+          q_delta.lmul(q_nodelta.inverse());
+          eul_delta = q_delta.to_euler_xyz();
+          //
           if(ignoreorientation)
             o = obj.obj->c6dof_nodelta.orientation;
           obj.scene->mtx_geometry.unlock();
@@ -291,9 +302,8 @@ void pos2osc_t::update_local()
             else
               path = "/" + obj.obj->get_name();
             lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
-                    obj.obj->dorientation.y * oscale,
-                    obj.obj->dorientation.z * oscale,
-                    obj.obj->dorientation.x * oscale);
+                    eul_delta.y * oscale, eul_delta.z * oscale,
+                    eul_delta.x * oscale);
             break;
           case 7:
             if(avatar.size())
@@ -308,10 +318,9 @@ void pos2osc_t::update_local()
               path = "/" + avatar;
             else
               path = "/" + obj.obj->get_name();
-            lo_send(target, path.c_str(), "fff",
-                    RAD2DEG * obj.obj->dorientation.z * oscale,
-                    RAD2DEG * obj.obj->dorientation.y * oscale,
-                    RAD2DEG * obj.obj->dorientation.x * oscale);
+            lo_send(target, path.c_str(), "fff", RAD2DEG * eul_delta.z * oscale,
+                    RAD2DEG * eul_delta.y * oscale,
+                    RAD2DEG * eul_delta.x * oscale);
             break;
           case 9:
             if(avatar.size())
@@ -319,9 +328,8 @@ void pos2osc_t::update_local()
             else
               path = "/" + obj.obj->get_name();
             lo_send(target, path.c_str(), "sfff", orientationname.c_str(),
-                    obj.obj->dorientation.x * oscale,
-                    obj.obj->dorientation.y * oscale,
-                    obj.obj->dorientation.z * oscale);
+                    eul_delta.x * oscale, eul_delta.y * oscale,
+                    eul_delta.z * oscale);
             break;
           case 10:
             if(avatar.size())

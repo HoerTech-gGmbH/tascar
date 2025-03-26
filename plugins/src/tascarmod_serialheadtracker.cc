@@ -264,6 +264,12 @@ serial_headtracker_t::~serial_headtracker_t()
   if(connectsrv.joinable())
     connectsrv.join();
   // disconnect();
+  if(headtrackertarget)
+    lo_address_free(headtrackertarget);
+  if(target)
+    lo_address_free(target);
+  if(rottarget)
+    lo_address_free(rottarget);
 }
 
 void serial_headtracker_t::update(uint32_t, bool)
@@ -280,7 +286,11 @@ int open_and_config_serport(const std::string& dev)
   struct termios oldtio, newtio;
 
   // Open the serial port
+#ifdef ISMACOS
   fd = open(dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+#else
+  fd = open(dev.c_str(), O_RDWR | O_NOCTTY);
+#endif
   if(fd < 0) {
     throw TASCAR::ErrMsg("Unable to open device: " + dev);
   }
@@ -298,6 +308,14 @@ int open_and_config_serport(const std::string& dev)
   newtio.c_cflag &= ~CRTSCTS;                        // Disable RTS/CTS
   newtio.c_iflag &= ~(IXON | IXOFF | IXANY);         // Disable XON/XOFF
   newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Disable canonical mode
+
+#ifndef ISMACOS
+  newtio.c_iflag &= ~IGNBRK; // disable break processing
+  newtio.c_iflag |= BRKINT;  // enable break processing
+  newtio.c_iflag |= ICRNL;
+  newtio.c_cflag |= (CLOCAL | CREAD); // ignore modem controls, enable reading
+#endif
+
   newtio.c_oflag &= ~OPOST; // Disable output processing
   newtio.c_cc[VMIN] = 0;    // Read at least one byte
   newtio.c_cc[VTIME] = 5;   // Wait up to 5 seconds for a byte
@@ -326,11 +344,13 @@ size_t read_following(int fd, const std::string& start, char* buff, size_t n,
     if(!runcond)
       return 0;
     char c = 0;
-    if(read(fd, &c, 1) == 1) {
+    int err = 0;
+    if((err = read(fd, &c, 1)) == 1) {
       if(c == start[idx_start])
         ++idx_start;
     } else {
-      --failcnt;
+      if(err != 0)
+        --failcnt;
       if(!failcnt)
         return 0;
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -341,13 +361,15 @@ size_t read_following(int fd, const std::string& start, char* buff, size_t n,
     if(!runcond)
       return 0;
     char c = 0;
-    if(read(fd, &c, 1) == 1) {
+    int err = 0;
+    if((err = read(fd, &c, 1)) == 1) {
       *buff = c;
       ++buff;
       --n;
       ++nr;
     } else {
-      --failcnt;
+      if(err != 0)
+        --failcnt;
       if(!failcnt)
         return 0;
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
