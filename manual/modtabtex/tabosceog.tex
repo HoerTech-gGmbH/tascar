@@ -16,9 +16,13 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{pf\_a\_min} & minimum blink amplitude (float, V) & 0.0001\\
 \hline
-\indattr{pf\_anim\_blink\_freq\_mu} & Eye blink animation mean frequency (random mode) (double, Hz) & 0.3\\
+\indattr{pf\_anim\_blink\_duration\_mu} & Eye blink animation mean duration (random mode, log-normal distribution) (double, log(s)) & 0.1\\
 \hline
-\indattr{pf\_anim\_blink\_freq\_sigma} & Eye blink animation standard deviation of frequency (random mode) (double, Hz) & 0.2828\\
+\indattr{pf\_anim\_blink\_duration\_sigma} & Eye blink animation standard deviation of duration (random mode, log-normal distribution) (double, log(s)) & 1\\
+\hline
+\indattr{pf\_anim\_blink\_freq\_mu} & Eye blink animation mean frequency (random mode, normal distibution of frequency) (double, Hz) & 0.3\\
+\hline
+\indattr{pf\_anim\_blink\_freq\_sigma} & Eye blink animation standard deviation of frequency (random mode, normal distribution of frequency) (double, Hz) & 0.2828\\
 \hline
 \indattr{pf\_anim\_character} & Eye blink animation character (string) & \\
 \hline

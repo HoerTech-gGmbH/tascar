@@ -194,12 +194,12 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(pf_anim_path, "", "Eye blink animation path");
   GET_ATTRIBUTE(pf_anim_character, "", "Eye blink animation character");
   GET_ATTRIBUTE(pf_anim_blink_freq_mu, "Hz",
-                "Eye blink animation mean frequency (random mode)");
+                "Eye blink animation mean frequency (random mode, normal distibution of frequency)");
   GET_ATTRIBUTE(
       pf_anim_blink_freq_sigma, "Hz",
-      "Eye blink animation standard deviation of frequency (random mode)");
-  GET_ATTRIBUTE(pf_anim_blink_duration_mu, "s",
-                "Eye blink animation mean duration (random mode)");
+      "Eye blink animation standard deviation of frequency (random mode, normal distribution of frequency)");
+  GET_ATTRIBUTE(pf_anim_blink_duration_mu, "log(s)",
+                "Eye blink animation mean duration (random mode, log-normal distribution)");
   GET_ATTRIBUTE(pf_anim_blink_duration_sigma, "log(s)",
                 "Eye blink animation standard deviation of duration (random "
                 "mode, log-normal distribution)");
