@@ -102,7 +102,9 @@ private:
 
   double pf_anim_blink_freq_mu = 0.3;
   double pf_anim_blink_freq_sigma = 0.2828;
-  double pf_anim_blink_duration = 0.1;
+  double pf_anim_blink_duration_mu = 0.1;
+  double pf_anim_blink_duration_sigma = 1;
+  double pf_anim_blink_duration = 1.0;
   // animation mode, 0 = none, 1 = transmitted, 2 = random
   uint32_t pf_anim_mode = 1;
 
@@ -127,12 +129,17 @@ private:
   bool pf_reset = true;
   lo_address lo_addr_pf_anim = NULL;
 
+  // Create a random number generator
+  std::random_device rd;
+  std::mt19937 gen;
+  std::normal_distribution<double> d_norm;
+  std::lognormal_distribution<double> d_lognorm;
   // state variables for randomized animations:
   TASCAR::tictoc_t timer_rand_anim;
   // next gap time:
-  double next_tau = 0.0;
+  double next_gap_duration = 0.0;
   // next blink length:
-  double next_len = 0.0;
+  double next_blink_duration = 0.0;
 
   TASCAR::o1_ar_filter_t pf_anim_arfilter;
 };
@@ -191,6 +198,11 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(
       pf_anim_blink_freq_sigma, "Hz",
       "Eye blink animation standard deviation of frequency (random mode)");
+  GET_ATTRIBUTE(pf_anim_blink_duration_mu, "s",
+                "Eye blink animation mean duration (random mode)");
+  GET_ATTRIBUTE(pf_anim_blink_duration_sigma, "log(s)",
+                "Eye blink animation standard deviation of duration (random "
+                "mode, log-normal distribution)");
   GET_ATTRIBUTE(
       pf_anim_mode, "",
       "Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
@@ -225,8 +237,15 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   session->add_bool_true(p + "/reset", &pf_reset, "Reset post filter state");
   session->add_string(p + "/character", &pf_anim_character,
                       "Eye blink animation character");
-  session->add_uint(p+"/anim_mode",&pf_anim_mode,"[0,2]","Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
+  session->add_uint(
+      p + "/anim_mode", &pf_anim_mode, "[0,2]",
+      "Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
   session->unset_variable_owner();
+  gen.seed(rd());
+  d_norm = std::normal_distribution<double>(pf_anim_blink_freq_mu,
+                                            pf_anim_blink_freq_sigma);
+  d_lognorm = std::lognormal_distribution<double>(pf_anim_blink_duration_mu,
+                                                  pf_anim_blink_duration_sigma);
 }
 
 void osceog_t::update_eog(double t, float, float eog_vert)
@@ -244,13 +263,6 @@ void osceog_t::update_eog(double t, float, float eog_vert)
     float eog_min = pf_minmaxtrack(0, eog_lp);
     float eog_max = pf_minmaxtrack(1, std::max(eog_min + pf_a_min, eog_lp));
     float blink = std::max(0.0f, (eog_lp - eog_min) / (eog_max - eog_min));
-    oscmsgargv[0]->d = t;
-    oscmsgargv[1]->f = blink;
-    oscmsgargv[2]->f = eog_lp;
-    oscmsgargv[3]->f = eog_min;
-    oscmsgargv[4]->f = eog_max;
-    oscmsgargv[5]->f = eog_vert;
-    session->dispatch_data_message(pf_path.c_str(), msg);
     if(lo_addr_pf_anim) {
       switch(pf_anim_mode) {
       case 0:
@@ -262,20 +274,28 @@ void osceog_t::update_eog(double t, float, float eog_vert)
         break;
       case 2:
         // random eye blink animation:
-        if(timer_rand_anim.toc() > next_tau + next_len) {
+        if(timer_rand_anim.toc() > next_gap_duration + next_blink_duration) {
           timer_rand_anim.tic();
-          next_len = pf_anim_blink_duration;
-          double anim_next_freq =
-              drand_norm(pf_anim_blink_freq_mu, pf_anim_blink_freq_sigma);
-
-          next_tau = std::min(next_len, 1.0 / anim_next_freq - next_len);
+          next_blink_duration = d_lognorm(gen);
+          double anim_next_freq = d_norm(gen);
+          // drand_norm(pf_anim_blink_freq_mu, pf_anim_blink_freq_sigma);
+          next_gap_duration = std::max(
+              next_blink_duration, 1.0 / anim_next_freq - next_blink_duration);
         }
-        blink = pf_anim_arfilter(0, (float)(timer_rand_anim.toc() < next_len));
+        blink = pf_anim_arfilter(
+            0, (float)(timer_rand_anim.toc() < next_blink_duration));
         break;
       }
       lo_send(lo_addr_pf_anim, pf_anim_path.c_str(), "sf",
               pf_anim_character.c_str(), blink);
     }
+    oscmsgargv[0]->d = t;
+    oscmsgargv[1]->f = blink;
+    oscmsgargv[2]->f = eog_lp;
+    oscmsgargv[3]->f = eog_min;
+    oscmsgargv[4]->f = eog_max;
+    oscmsgargv[5]->f = eog_vert;
+    session->dispatch_data_message(pf_path.c_str(), msg);
   }
 }
 
