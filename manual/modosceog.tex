@@ -7,3 +7,4 @@ This module receives data from an open hardware electro-oculography (EOG) sensor
 
 \input{oscdoc_tascarmod_osceog.tex}
 
+In animation mode the duration of each blink $\tau_{d}$ is drawn from a log-normal distribution defined by the variables \attr{pf\_anim\_blink\_duration\_mu} and \attr{pf\_anim\_blink\_duration\_sigma}. The duration is limited to the interval $[0,20\,\textrm{s}]$ seconds The time between two blinks is taken from a normal distribution of blink frequency (\attr{pf\_anim\_blink\_freq\_mu} and \attr{pf\_anim\_blink\_freq\_sigma}) and transformed into a duration. The period time is limited to the interval $[\tau_{d},30\,\textrm{s}]$ to avoid excessively long blink gaps. The rectangular eye blink data is filtered with an attack-release filter with the time constants \attr{pf\_anim\_random\_tau\_attack} and \attr{pf\_anim\_random\_tau\_release}.

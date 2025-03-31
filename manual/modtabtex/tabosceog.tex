@@ -16,9 +16,9 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{pf\_a\_min} & minimum blink amplitude (float, V) & 0.0001\\
 \hline
-\indattr{pf\_anim\_blink\_duration\_mu} & Eye blink animation mean duration (random mode, log-normal distribution) (double, log(s)) & 0.1\\
+\indattr{pf\_anim\_blink\_duration\_mu} & Eye blink animation mean duration (random mode, log-normal distribution) (double, s) & 0.1\\
 \hline
-\indattr{pf\_anim\_blink\_duration\_sigma} & Eye blink animation standard deviation of duration (random mode, log-normal distribution) (double, log(s)) & 1\\
+\indattr{pf\_anim\_blink\_duration\_sigma} & Eye blink animation standard deviation of duration ratio (random mode, log-normal distribution) (double) & 1\\
 \hline
 \indattr{pf\_anim\_blink\_freq\_mu} & Eye blink animation mean frequency (random mode, normal distibution of frequency) (double, Hz) & 0.3\\
 \hline
@@ -29,6 +29,10 @@ name & description (type, unit) & def.\\
 \indattr{pf\_anim\_mode} & Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random (uint32) & 1\\
 \hline
 \indattr{pf\_anim\_path} & Eye blink animation path (string) & /blink\\
+\hline
+\indattr{pf\_anim\_random\_tau\_attack} & Attack time constant in eye blink animation post filter (float, s) & 0.1\\
+\hline
+\indattr{pf\_anim\_random\_tau\_release} & Release time constant in eye blink animation post filter (float, s) & 0.3\\
 \hline
 \indattr{pf\_anim\_url} & Eye blink animation URL, or empty for not sending eye blink animation (string) & \\
 \hline

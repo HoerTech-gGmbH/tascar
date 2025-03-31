@@ -25,30 +25,6 @@
 #include <random>
 #include <thread>
 
-/**
- * Generates a normally distributed random number with the given mean and
- * standard deviation.
- *
- * @param mean The mean of the normal distribution.
- * @param stdDev The standard deviation of the normal distribution.
- * @return A normally distributed random number.
- */
-double drand_norm(double mean, double std)
-{
-  // Create a random number generator
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<double> dis(0.0, 1.0);
-  // Generate two uniform random numbers
-  double u1 = dis(gen);
-  double u2 = dis(gen);
-  // Apply the Box-Muller transform
-  double r = std::sqrt(-2.0 * std::log(u1));
-  double theta = TASCAR_2PI * u2;
-  double n = mean + std * r * std::cos(theta);
-  return n;
-}
-
 class osceog_t : public TASCAR::module_base_t {
 public:
   osceog_t(const TASCAR::module_cfg_t& cfg);
@@ -140,6 +116,8 @@ private:
   double next_gap_duration = 0.0;
   // next blink length:
   double next_blink_duration = 0.0;
+  float pf_anim_random_tau_attack = 0.1;
+  float pf_anim_random_tau_release = 0.3;
 
   TASCAR::o1_ar_filter_t pf_anim_arfilter;
 };
@@ -194,15 +172,22 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(pf_anim_path, "", "Eye blink animation path");
   GET_ATTRIBUTE(pf_anim_character, "", "Eye blink animation character");
   GET_ATTRIBUTE(pf_anim_blink_freq_mu, "Hz",
-                "Eye blink animation mean frequency (random mode, normal distibution of frequency)");
+                "Eye blink animation mean frequency (random mode, normal "
+                "distibution of frequency)");
+  GET_ATTRIBUTE(pf_anim_blink_freq_sigma, "Hz",
+                "Eye blink animation standard deviation of frequency (random "
+                "mode, normal distribution of frequency)");
+  GET_ATTRIBUTE(pf_anim_blink_duration_mu, "s",
+                "Eye blink animation mean duration (random mode, log-normal "
+                "distribution)");
   GET_ATTRIBUTE(
-      pf_anim_blink_freq_sigma, "Hz",
-      "Eye blink animation standard deviation of frequency (random mode, normal distribution of frequency)");
-  GET_ATTRIBUTE(pf_anim_blink_duration_mu, "log(s)",
-                "Eye blink animation mean duration (random mode, log-normal distribution)");
-  GET_ATTRIBUTE(pf_anim_blink_duration_sigma, "log(s)",
-                "Eye blink animation standard deviation of duration (random "
-                "mode, log-normal distribution)");
+      pf_anim_blink_duration_sigma, "",
+      "Eye blink animation standard deviation of duration ratio (random "
+      "mode, log-normal distribution)");
+  GET_ATTRIBUTE(pf_anim_random_tau_attack, "s",
+                "Attack time constant in eye blink animation post filter");
+  GET_ATTRIBUTE(pf_anim_random_tau_release, "s",
+                "Release time constant in eye blink animation post filter");
   GET_ATTRIBUTE(
       pf_anim_mode, "",
       "Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
@@ -244,8 +229,11 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
   gen.seed(rd());
   d_norm = std::normal_distribution<double>(pf_anim_blink_freq_mu,
                                             pf_anim_blink_freq_sigma);
-  d_lognorm = std::lognormal_distribution<double>(pf_anim_blink_duration_mu,
-                                                  pf_anim_blink_duration_sigma);
+  d_lognorm = std::lognormal_distribution<double>(
+      std::log(pf_anim_blink_duration_mu),
+      std::log(pf_anim_blink_duration_sigma));
+  pf_anim_arfilter = TASCAR::o1_ar_filter_t(
+      1, srate, {pf_anim_random_tau_attack}, {pf_anim_random_tau_release});
 }
 
 void osceog_t::update_eog(double t, float, float eog_vert)
@@ -276,12 +264,16 @@ void osceog_t::update_eog(double t, float, float eog_vert)
         // random eye blink animation:
         if(timer_rand_anim.toc() > next_gap_duration + next_blink_duration) {
           timer_rand_anim.tic();
-          next_blink_duration = d_lognorm(gen);
-          double anim_next_freq = d_norm(gen);
-          // drand_norm(pf_anim_blink_freq_mu, pf_anim_blink_freq_sigma);
-          next_gap_duration = std::max(
-              next_blink_duration, 1.0 / anim_next_freq - next_blink_duration);
+          // select next eye blink duration, limit to 2 seconds:
+          next_blink_duration = std::min(2.0, d_lognorm(gen));
+          // select next eye blink frequency:
+          auto anim_next_freq = d_norm(gen);
+          // transform to duration and limit to the interval [1,30] seconds:
+          next_gap_duration = std::min(
+              30.0, std::max(next_blink_duration,
+                             1.0 / anim_next_freq - next_blink_duration));
         }
+        // generate eye blink using attack-release filter of rectangular shape:
         blink = pf_anim_arfilter(
             0, (float)(timer_rand_anim.toc() < next_blink_duration));
         break;
