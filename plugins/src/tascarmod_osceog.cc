@@ -81,6 +81,7 @@ private:
   double pf_anim_blink_duration_mu = 0.1;
   double pf_anim_blink_duration_sigma = 1;
   double pf_anim_blink_duration = 1.0;
+  float pf_anim_random_maxamp = 1.2;
   // animation mode, 0 = none, 1 = transmitted, 2 = random
   uint32_t pf_anim_mode = 1;
 
@@ -188,6 +189,8 @@ osceog_t::osceog_t(const TASCAR::module_cfg_t& cfg)
                 "Attack time constant in eye blink animation post filter");
   GET_ATTRIBUTE(pf_anim_random_tau_release, "s",
                 "Release time constant in eye blink animation post filter");
+  GET_ATTRIBUTE(pf_anim_random_maxamp, "",
+                "Maximum saturation level of eye blink randomization");
   GET_ATTRIBUTE(
       pf_anim_mode, "",
       "Eye blink animation mode, 0 = none, 1 = transmitted, 2 = random");
@@ -274,8 +277,9 @@ void osceog_t::update_eog(double t, float, float eog_vert)
                              1.0 / anim_next_freq - next_blink_duration));
         }
         // generate eye blink using attack-release filter of rectangular shape:
-        blink = pf_anim_arfilter(
-            0, (float)(timer_rand_anim.toc() < next_blink_duration));
+        blink = std::min(1.0f, pf_anim_arfilter(0, pf_anim_random_maxamp *
+                                                       (timer_rand_anim.toc() <
+                                                        next_blink_duration)));
         break;
       }
       lo_send(lo_addr_pf_anim, pf_anim_path.c_str(), "sf",
