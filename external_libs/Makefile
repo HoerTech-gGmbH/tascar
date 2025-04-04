@@ -14,7 +14,7 @@ googlemock: $(BUILD_DIR)/googlemock.is_installed
 $(BUILD_DIR)/googlemock.is_installed: googletest/WORKSPACE \
 	$(BUILD_DIR)/lib/.directory $(BUILD_DIR)/include/.directory
 	echo $(CXXFLAGS)
-	cd googletest && cmake . && $(MAKE)
+	cd googletest && cmake -G "Unix Makefiles" . && $(MAKE)
 	cp -a googletest/googletest/include/gtest $(BUILD_DIR)/include/
 	cp -a googletest/googlemock/include/gmock $(BUILD_DIR)/include/
 	touch $@
