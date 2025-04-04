@@ -1103,8 +1103,13 @@ void osc_server_t::read_script_one(std::string filename)
         rbuf[0x4000 - 1] = 0;
         if(rbuf[0] == '#')
           rbuf[0] = 0;
+        // remove newline characters at end:
         if(strlen(rbuf))
           if(rbuf[strlen(rbuf) - 1] == 10)
+            rbuf[strlen(rbuf) - 1] = 0;
+        // remove carriage returns at end:
+        if(strlen(rbuf))
+          if(rbuf[strlen(rbuf) - 1] == 13)
             rbuf[strlen(rbuf) - 1] = 0;
         if(strlen(rbuf)) {
           if(rbuf[0] == '<') {
