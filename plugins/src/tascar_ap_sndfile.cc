@@ -5,6 +5,7 @@
  * Copyright (c) 2019 Giso Grimm
  * Copyright (c) 2020 Giso Grimm
  * Copyright (c) 2021 Giso Grimm
+ * Copyright (c) 2025 Giso Grimm
  */
 /*
  * TASCAR is free software: you can redistribute it and/or modify
