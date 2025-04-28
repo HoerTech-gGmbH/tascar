@@ -23,9 +23,15 @@
 #include "audioplugin.h"
 #include "errorhandling.h"
 #include "levelmeter.h"
+#include "ringbuffer.h"
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <fstream>
 #include <mutex>
 #include <thread>
+
+using namespace std::chrono_literals;
 
 class ap_sndfile_cfg_t : public TASCAR::audioplugin_base_t {
 public:
@@ -53,6 +59,8 @@ protected:
   std::string attribution;
   std::string channelorder;
   std::string normalization = "FuMa";
+  std::string osctriggerurl;
+  std::string osctriggerpath = "/sndfile/trigger";
 };
 
 ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
@@ -87,6 +95,12 @@ ap_sndfile_cfg_t::ap_sndfile_cfg_t(const TASCAR::audioplugin_cfg_t& cfg)
                 "``FuMa'', ``ACN'' or ``none''");
   GET_ATTRIBUTE(normalization, "FuMa|SN3D",
                 "Normalization in case of First Order Ambisonics files.");
+  GET_ATTRIBUTE(osctriggerurl, "",
+                "Target URL where OSC message of final time stamp of trigger "
+                "events should be sent to.");
+  GET_ATTRIBUTE(osctriggerpath, "",
+                "Target path where OSC message of final time stamp of trigger "
+                "events should be sent to.");
   if(start < 0)
     throw TASCAR::ErrMsg("file start time must be positive.");
 }
@@ -117,12 +131,27 @@ private:
   TASCAR::transport_t ltp;
   std::vector<TASCAR::sndfile_t*> sndf;
   std::mutex mtx;
+  lo_message timestampmsg = NULL;
+  lo_address timestamptarget = NULL;
+  TASCAR::fifo_t<double> fifo;
+  std::condition_variable cond;
+  std::thread thread;
+  std::atomic_bool run_thread = true;
+  void sendthread();
+  double* p_timestamp = NULL;
 };
 
 ap_sndfile_t::ap_sndfile_t(const TASCAR::audioplugin_cfg_t& cfg)
-    : ap_sndfile_cfg_t(cfg), triggeredloop(0)
+    : ap_sndfile_cfg_t(cfg), triggeredloop(0), fifo(1024)
 {
   get_license_info(e, name, license, attribution);
+  timestampmsg = lo_message_new();
+  lo_message_add_double(timestampmsg, 0.0);
+  auto oscmsgargv = lo_message_get_argv(timestampmsg);
+  p_timestamp = &(oscmsgargv[0]->d);
+  if(osctriggerurl.size())
+    timestamptarget = lo_address_new_from_url(osctriggerurl.c_str());
+  thread = std::thread(&ap_sndfile_t::sendthread, this);
 }
 
 void ap_sndfile_t::configure()
@@ -274,7 +303,14 @@ void ap_sndfile_t::unload_file()
   mtx.unlock();
 }
 
-ap_sndfile_t::~ap_sndfile_t() {}
+ap_sndfile_t::~ap_sndfile_t()
+{
+  run_thread = false;
+  thread.join();
+  if(timestamptarget)
+    lo_address_free(timestamptarget);
+  lo_message_free(timestampmsg);
+}
 
 void ap_sndfile_t::add_licenses(licensehandler_t* session)
 {
@@ -365,6 +401,11 @@ void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         ltp = tp;
       if(triggered) {
         if(triggeredloop) {
+          if(timestamptarget && fifo.can_write()) {
+            // asynchronously send OSC message with actual time stamp:
+            fifo.write(ltp.object_time_seconds);
+            cond.notify_one();
+          }
           for(auto sf : sndf) {
             sf->set_iposition(ltp.object_time_samples);
             sf->set_loop(triggeredloop);
@@ -380,6 +421,20 @@ void ap_sndfile_t::ap_process(std::vector<TASCAR::wave_t>& chunk,
         ltp.object_time_samples += chunk[0].n;
     }
     mtx.unlock();
+  }
+}
+
+// thread to send OSC messages with time stamps:
+void ap_sndfile_t::sendthread()
+{
+  std::unique_lock<std::mutex> lk(mtx);
+  while(run_thread) {
+    cond.wait_for(lk, 100ms);
+    while(fifo.can_read()) {
+      *p_timestamp = fifo.read();
+      if(timestamptarget)
+        lo_send_message(timestamptarget, osctriggerpath.c_str(), timestampmsg);
+    }
   }
 }
 
