@@ -27,6 +27,15 @@ end2end_delay = 0;
 t_send = data(2,:);  % Send times are in the second row
 t_rec = data(1,:);   % Receive times are in the first row
 
+% correct sender time stamps coming from ESP-based boards, which may
+% use microseconds converted to a 32 Bit integer and will overflow
+% after 2^32*1e-6 seconds (approximately 4200 seconds):
+dt_send = [0,diff(t_send)];
+t_corr = (dt_send < 1-2^32*1e-6) & (dt_send > -1-2^32*1e-6);
+t_corr = cumsum(t_corr*(2^32*1e-6));
+t_send = t_send+t_corr;
+data(2,:) = t_send;
+
 % Calculate the sampling frequency based on send times
 fs = 1/median(diff(t_send));  % Using median to robustly estimate the sampling rate
 
