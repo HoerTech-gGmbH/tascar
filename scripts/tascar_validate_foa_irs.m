@@ -55,7 +55,7 @@ function [d, az, el, ratio] = tascar_validate_foa_irs(ir, fs)
   idx = irs_firstpeak(ir);
   % Check the standard deviation of the peak
   if c * std(idx) / fs > 0.2
-    error(['The standard deviation of the first peak (', num2str(c * std(idx) / fs), 'm) is larger than a typical microphone diameter']);
+    warning(['The standard deviation of the first peak (', num2str(c * std(idx) / fs), 'm) is larger than a typical microphone diameter']);
   end
   % Round to the nearest sample
   idx = round(median(idx));
@@ -77,7 +77,7 @@ function [d, az, el, ratio] = tascar_validate_foa_irs(ir, fs)
 
   % Check the ratio against the expected value (sqrt(0.5) for FuMa normalization)
   if abs(wxyz_rat_mean - sqrt(0.5)) > 0.05
-    error(['The ratio between w and xyz is ', num2str(wxyz_rat_mean), ', which is not 0.70711 (FuMa normalization)']);
+    warning(['The ratio between w and xyz is ', num2str(wxyz_rat_mean), ', which is not 0.70711 (FuMa normalization)']);
   end
 
   % Estimate element-wise direction of arrival
