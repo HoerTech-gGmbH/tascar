@@ -1,7 +1,7 @@
 # rules:
 
 CXXFLAGS += -I../external_libs/$(BUILD_DIR)/include $(GCCCOVFLAGS)
-LDLIBS += -L../external_libs/$(BUILD_DIR)/lib $(COVLIBS)
+LDLIBS += -L../external_libs/$(BUILD_DIR)/lib64 -L../external_libs/$(BUILD_DIR)/lib $(COVLIBS)
 LDFLAGS += $(LDCOVFLAGS)
 
 build: build/.directory
