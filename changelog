@@ -1,3 +1,9 @@
+0.234.3:
+       - correct serial port head tracker for MacOS
+       - improve EOG sensor
+       - improve packaging of liblsl
+       - optionally send time stamp information when sndfile trigger is sent
+
 0.234.2:
        - correct orientation of head trackers, apply in local coordinates
        - correct OSC variables of filter plugin

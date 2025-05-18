@@ -12,7 +12,7 @@ On branch development:
 
 - create release tag: `make releasetag`
 
-- swich to master branch, merge development
+- swich to master branch, pull, then merge development
 
 - push tags and master to all remotes
 
