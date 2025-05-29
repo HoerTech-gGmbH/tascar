@@ -14,6 +14,7 @@
       <sound>
         <plugins>
           <bandpass/>
+          <pareq4band/>
           <const/>
           <allpass/>
           <delay/>

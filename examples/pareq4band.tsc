@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<session license="CC0">
+  <modules>
+    <route name="eq" channels="3">
+      <plugins>
+        <pareq4ch/>
+      </plugins>
+    </route>
+  </modules>
+</session>
