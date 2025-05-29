@@ -82,23 +82,23 @@ void pareq4band_t::add_variables(TASCAR::osc_server_t* srv)
 {
   srv->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
+  srv->add_bool("/b1ls_act", &b1ls_act, "active");
   srv->add_float("/b1ls_f", &b1ls_f, "[22,560]", "low-shelf frequency in Hz");
+  srv->add_float("/b1ls_g", &b1ls_g, "[-20,20]", "Gain in dB");
+  srv->add_float("/b1ls_q", &b1ls_Q, "[0.1,10]", "Q-factor");
+  srv->add_bool("/b2eq_act", &b2eq_act, "active");
   srv->add_float("/b2eq_f", &b2eq_f, "[150,1500]", "mid1 eq frequency in Hz");
+  srv->add_float("/b2eq_g", &b2eq_g, "[-20,20]", "Gain in dB");
+  srv->add_float("/b2eq_q", &b2eq_Q, "[0.1,10]", "Q-factor");
+  srv->add_bool("/b3eq_act", &b3eq_act, "active");
   srv->add_float("/b3eq_f", &b3eq_f, "[560,5600]", "mid2 eq frequency in Hz");
+  srv->add_float("/b3eq_g", &b3eq_g, "[-20,20]", "Gain in dB");
+  srv->add_float("/b3eq_q", &b3eq_Q, "[0.1,10]", "Q-factor");
+  srv->add_bool("/b4hs_act", &b4hs_act, "active");
   srv->add_float("/b4hs_f", &b4hs_f, "[1500,24000]",
                  "high-shelf frequency in Hz");
-  srv->add_float("/b1ls_g", &b1ls_g, "[-20,20]", "Gain in dB");
-  srv->add_float("/b2eq_g", &b2eq_g, "[-20,20]", "Gain in dB");
-  srv->add_float("/b3eq_g", &b3eq_g, "[-20,20]", "Gain in dB");
   srv->add_float("/b4hs_g", &b4hs_g, "[-20,20]", "Gain in dB");
-  srv->add_float("/b1ls_q", &b1ls_Q, "[0.1,10]", "Q-factor");
-  srv->add_float("/b2eq_q", &b2eq_Q, "[0.1,10]", "Q-factor");
-  srv->add_float("/b3eq_q", &b3eq_Q, "[0.1,10]", "Q-factor");
   srv->add_float("/b4hs_q", &b4hs_Q, "[0.1,10]", "Q-factor");
-  srv->add_bool("/b1ls_act", &b1ls_act, "active");
-  srv->add_bool("/b2eq_act", &b2eq_act, "active");
-  srv->add_bool("/b3eq_act", &b3eq_act, "active");
-  srv->add_bool("/b4hs_act", &b4hs_act, "active");
   srv->unset_variable_owner();
 }
 
