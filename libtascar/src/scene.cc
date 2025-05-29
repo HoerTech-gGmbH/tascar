@@ -1280,6 +1280,7 @@ sound_t::sound_t(tsccfg::node_t xmlsrc, src_object_t* parent_)
   source_t::get_attribute(
       "d", chaindist, "m",
       "distance to next sound along trajectory, or 0 for normal mode");
+  source_t::get_attribute_bool("mute", b_mute, "", "mute state");
   // parse plugins:
   for(auto sne : tsccfg::node_get_children(source_t::e)) {
     if(tsccfg::node_get_name(sne) != "plugins") {
