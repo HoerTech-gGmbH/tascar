@@ -294,10 +294,8 @@ void osc_scene_t::add_sound_methods(TASCAR::osc_server_t* srv,
   srv->set_prefix(ctlname);
   s->set_ctlname(ctlname);
   srv->set_variable_owner("sound_t");
-  srv->add_method("/gain", "f", osc_set_sound_gain, s, true, false, "",
-                  "Gain in dB");
-  srv->add_method("/lingain", "f", osc_set_sound_gain_lin, s, true, false, "",
-                  "Linear gain");
+  srv->add_float("/lingain", &(s->gain), "", "Linear gain");
+  srv->add_float_db("/gain", &(s->gain), "", "Gain in dB");
   srv->add_float_dbspl("/caliblevel", &(s->caliblevel), "",
                        "calibration level in dB");
   srv->add_uint("/ismmin", &(s->ismmin), "",
