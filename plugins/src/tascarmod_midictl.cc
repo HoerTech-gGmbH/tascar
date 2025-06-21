@@ -24,23 +24,34 @@
 #include "session.h"
 #include <thread>
 
+float gain_to_gui(float dbGain)
+{
+  return powf(((dbGain + 200.0f) / 210.0f), 6.0f);
+}
+
+float gui_to_gain(float guiGain)
+{
+  return 210.0f * (powf(guiGain, 1.0f / 6.0f)) - 200.0f;
+}
+
 class midictl_vars_t : public TASCAR::module_base_t {
 public:
   midictl_vars_t(const TASCAR::module_cfg_t& cfg);
 
 protected:
-  bool dumpmsg;
+  bool dumpmsg = false;
   std::string name;
   std::string connect;
   std::vector<std::string> controllers;
   std::vector<std::string> pattern;
-  double min;
-  double max;
+  double min = 0.0;
+  double max = 1.0;
   bool mutesounds = true;
+  bool nonlinscale = false;
 };
 
 midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
-    : module_base_t(cfg), dumpmsg(false), min(0), max(1)
+    : module_base_t(cfg)
 {
   GET_ATTRIBUTE_BOOL(dumpmsg, "Show unused messages in concole");
   GET_ATTRIBUTE_(name);
@@ -49,10 +60,13 @@ midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
       controllers, "",
       "MIDI CC controllers in form channel/param, both starting at zero");
   GET_ATTRIBUTE(pattern, "", "TASCAR controllers");
-  GET_ATTRIBUTE_(min);
-  GET_ATTRIBUTE_(max);
+  GET_ATTRIBUTE(min, "dB", "scale minimum");
+  GET_ATTRIBUTE(max, "dB", "scale maximum");
   GET_ATTRIBUTE_BOOL(mutesounds,
                      "Mute individual sounds instead of parent sources");
+  GET_ATTRIBUTE_BOOL(
+      nonlinscale,
+      "Use non-linear mapping [-200,10] instead linear mapping of min-max");
 }
 
 class midictl_t : public midictl_vars_t, public TASCAR::midi_ctl_t {
@@ -143,15 +157,19 @@ void midictl_t::send_service()
     for(uint32_t k = 0; k < 100; ++k)
       if(run_service)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    //usleep(1000);
+    // usleep(1000);
     if(run_service) {
       for(uint32_t k = 0; k < ports.size(); ++k) {
         // gain:
         if(k < controllers_.size()) {
           float g(ports[k]->get_gain_db());
-          g -= min;
-          g *= 127 / (max - min);
-          g = std::max(0.0f, std::min(127.0f, g));
+          if(nonlinscale) {
+            g = std::max(0.0f, std::min(127.0f, 127.0f * gain_to_gui(g)));
+          } else {
+            g -= min;
+            g *= 127 / (max - min);
+            g = std::max(0.0f, std::min(127.0f, g));
+          }
           uint8_t v(g);
           if((v != values[k]) || upload) {
             values[k] = v;
@@ -196,7 +214,10 @@ void midictl_t::emit_event(int channel, int param, int value)
     if(controllers_[k] == ctl) {
       if(k < ports.size()) {
         values[k] = value;
-        ports[k]->set_gain_db(min + value * (max - min) / 127);
+        if(nonlinscale)
+          ports[k]->set_gain_db(gui_to_gain(value / 127.0f));
+        else
+          ports[k]->set_gain_db(min + value * (max - min) / 127);
       } else {
         uint32_t k1(k - ports.size());
         if(k1 < routes.size()) {
