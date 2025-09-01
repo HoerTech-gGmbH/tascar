@@ -1,4 +1,4 @@
-function [d, t] = tascar_dl_resample( data, name, fs, range, nup )
+function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur )
 % TASCAR_DL_RESAMPLE Resamples TASCAR data from data logging module.
 %    
 %   This function resamples data to a specified sampling frequency, 
@@ -13,6 +13,7 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup )
 %   - fs: New sampling frequency in Hz.
 %   - range: Time range in seconds (default: full range of data).
 %   - nup: Upsampling ratio (default: automatic based on fs and original sampling rate).
+%   - maxgapdur: maximum gap duration for interpolation
 %
 % Outputs:
 %   - d: Resampled data matrix.
@@ -28,9 +29,28 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup )
         data = tascar_dl_getvar(data, name);
     end
 
+    if (nargin < 6) || isempty(maxgapdur)
+        maxgapdur = 0;
+    end
+
     % Calculate original sampling frequency from the time vector
     t_orig = data(1, :);
     fs_orig = 1 ./ median(diff(t_orig));
+
+    % fill gaps with NaN:
+    if maxgapdur > 0
+        data = [data(:,1),data,data(:,end)];
+        data(:,1) = NaN;
+        data(:,end) = NaN;
+        data(1,1) = min(data(1,:))-maxgapdur;
+        data(1,end) = max(data(1,:))+maxgapdur;
+        idx_fill = find(diff(t_orig) > maxgapdur);
+        for k=idx_fill(end:-1:1)
+            data_new = [mean(t_orig(k:(k+1)));NaN([size(data,1)-1,1])];
+            data = [data(:,1:k),data_new,data(:,k+1:end)];
+        end
+    end
+    t_orig = data(1, :);
 
     % Set default time range if not specified
     if (nargin < 4) || isempty(range)
@@ -38,7 +58,7 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup )
     end
 
     % Determine upsampling ratio if not provided
-    if nargin < 5
+    if (nargin < 5) || isempty(nup)
         nup = round(max(16, 2 * fs / fs_orig));
     end
 
