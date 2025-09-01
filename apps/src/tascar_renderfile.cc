@@ -56,18 +56,27 @@ int main(int argc, char** argv)
     uint32_t ism_max = -1;
     // print statistics
     bool b_verbose = false;
+    // treat warnings as errors:
+    bool b_warn_as_error = false;
     // update channel map:
     std::string schmap;
     // parse options:
     const char* options = "hi:o:s:m:t:r:u:f:v";
-    struct option long_options[] = {
-        {"help", 0, 0, 'h'},       {"inputfile", 1, 0, 'i'},
-        {"outputfile", 1, 0, 'o'}, {"scene", 1, 0, 's'},
-        {"channelmap", 1, 0, 'm'}, {"starttime", 1, 0, 't'},
-        {"srate", 1, 0, 'r'},      {"durartion", 1, 0, 'u'},
-        {"fragsize", 1, 0, 'f'},   {"static", 0, 0, 'c'},
-        {"ismmin", 1, 0, '1'},     {"ismmax", 1, 0, '2'},
-        {"verbose", 0, 0, 'v'},    {0, 0, 0, 0}};
+    struct option long_options[] = {{"help", 0, 0, 'h'},
+                                    {"inputfile", 1, 0, 'i'},
+                                    {"outputfile", 1, 0, 'o'},
+                                    {"scene", 1, 0, 's'},
+                                    {"channelmap", 1, 0, 'm'},
+                                    {"starttime", 1, 0, 't'},
+                                    {"srate", 1, 0, 'r'},
+                                    {"durartion", 1, 0, 'u'},
+                                    {"fragsize", 1, 0, 'f'},
+                                    {"static", 0, 0, 'c'},
+                                    {"ismmin", 1, 0, '1'},
+                                    {"ismmax", 1, 0, '2'},
+                                    {"verbose", 0, 0, 'v'},
+                                    {"warnaserror", 0, 0, 'w'},
+                                    {0, 0, 0, 0}};
     std::map<std::string, std::string> helpmap;
     helpmap["srate"] = "Sample rate in Hz. If input file is provided, then its "
                        "sample rate is used instead";
@@ -75,6 +84,7 @@ int main(int argc, char** argv)
     helpmap["ismmax"] = "Maximum order of image source model, or -1 to use "
                         "value from scene definition.";
     helpmap["verbose"] = "Increase verbosity.";
+    helpmap["warnaserror"] = "Treat warnings as errors.";
     helpmap["scene"] =
         "Scene name (or empty to use first scene in session file).";
     helpmap["channelmap"] =
@@ -122,6 +132,9 @@ int main(int argc, char** argv)
         break;
       case 'v':
         b_verbose = true;
+        break;
+      case 'w':
+        b_warn_as_error = true;
         break;
       case 'm':
         schmap = optarg;
@@ -190,8 +203,12 @@ int main(int argc, char** argv)
       v += "Warning: " + warn + "\n";
     }
     r.validate_attributes(v);
-    if(v.size())
-      std::cerr << v << std::endl;
+    if(v.size()) {
+      if(b_warn_as_error)
+        throw TASCAR::ErrMsg(v);
+      else
+        std::cerr << v << std::endl;
+    }
 #ifndef TSCDEBUG
   }
   catch(const std::exception& msg) {
