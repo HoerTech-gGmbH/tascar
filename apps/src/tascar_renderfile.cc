@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     // update channel map:
     std::string schmap;
     // parse options:
-    const char* options = "hi:o:s:m:t:r:u:f:v";
+    const char* options = "hi:o:s:m:t:r:u:f:vw";
     struct option long_options[] = {{"help", 0, 0, 'h'},
                                     {"inputfile", 1, 0, 'i'},
                                     {"outputfile", 1, 0, 'o'},
