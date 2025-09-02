@@ -179,7 +179,7 @@ Table \ref{tab:instdir} provides a list of the most important installation direc
 \begin{tabular}{ll}
 \verb!/usr/share/doc/tascar!      & documentation and user manual   \\
 \verb!/usr/share/tascar/examples! & example files                   \\
-\verb!/usr/share/tascar/matlab!   & tools for MATLAB and GNU Octave \\
+\verb!/usr/share/tascar/matlab!   & tools for GNU Octave and MATLAB \\
 \verb!/usr/share/tascar/python!   & tools for python/blender        \\
 \end{tabular}
 \medskip
@@ -338,7 +338,7 @@ There is also an option to track the selected object in the scene map.
 
 \subsection{Network remote control via OSC}
 
-The majority of options in \tascar{} can be controlled remotely via the Open Sound Control (OSC) protocol. An OSC message comprises one or more numeric values or strings. Each message can be transmitted to an OSC path on an OSC server. \tascar{} supports both UDP and TCP transport layers for the receipt of OSC messages. Should the necessity arise for the utilisation of more than one transport layer or multiple ports, the ``oscserver'' module may be employed (for further details, please refer to section \ref{sec:oscserver}). Additionally, a MATLAB/GNU Octave remote control tool is available (for further details, please refer to section \ref{sec:sendosc}).
+The majority of options in \tascar{} can be controlled remotely via the Open Sound Control (OSC) protocol. An OSC message comprises one or more numeric values or strings. Each message can be transmitted to an OSC path on an OSC server. \tascar{} supports both UDP and TCP transport layers for the receipt of OSC messages. The ``oscserver'' module can be used to combine multiple OSC transport methods or multiple ports (for further details, please refer to section \ref{sec:oscserver}). Additionally, a GNU Octave/MATLAB remote control tool is available (for further details, please refer to section \ref{sec:sendosc}).
 
 A list of OSC variables with their type and, in some cases, documentation, typical range and current value can be read using the special variable \verb!/sendvarsto!  This OSC variable takes three string parameters: The first is a valid OSC URL, e.g. \verb!osc.udp://localhost:9000/!.  The variable list is sent to this address.  The second parameter is an OSC path to send the variable list to, e.g. \verb!/getvar!.  The third parameter, which is optional, is a prefix.  If specified, only variables starting with that prefix will be reported.
 
@@ -562,7 +562,7 @@ Together, they form the outermost building blocks of \tascar{} scenes.
 
 \subsection{The {\tt <session>...</session>} element}\label{sec:session}\index{session}
 
-\elem{session} is the root element of each scene definition file. It
+\elem{session} is the root element of any TASCAR session file. It
 can contain one or more scenes (\refelem{scene}), port connections
 (\elem{connect}), external modules (\elem{modules}) and range
 definitions (\elem{range}).
@@ -1736,9 +1736,9 @@ In the final step, the calibration can be revised and saved to the layout file.
 
 \clearpage
 
-\section{Interfacing from MATLAB and GNU/Octave}
+\section{Interfacing from GNU/Octave and MATLAB}
 
-For the interface between \tascar{} and MATLAB or GNU/Octave a set of
+For the interface between \tascar{} and GNU/Octave or MATLAB a set of
 scripts are provided in \verb!/usr/share/tascar/matlab!.
 %
 There are the following scripts available:
@@ -1746,7 +1746,7 @@ There are the following scripts available:
 \subsection{\tt tascar\_ctl}
 
 This function can be used for some basic actions. For details see
-function help in MATLAB/GNU Octave.
+function help in GNU Octave/MATLAB.
 
 \begin{itemize}
 \item Loading a scene, which already exists:\\
@@ -1767,7 +1767,7 @@ function help in MATLAB/GNU Octave.
 
 %         'load', 'kill', 'createscene', 'transport', 'audioplayercreate'
 
-An example of the usage of this (and other MATLAB/GNU Octave functions) can be
+An example of the usage of this (and other GNU Octave/MATLAB functions) can be
 found in \verb!example_controlTASCAR.m!.
 
 \subsection{\tt generate\_scene}
@@ -1775,7 +1775,7 @@ found in \verb!example_controlTASCAR.m!.
 In \tascar{}, virtual acoustic environments are defined in an xml file
 format.
 %
-User can write such a file on his own or create it using MATLAB/GNU Octave
+User can write such a file on his own or create it using GNU Octave/MATLAB
 function \verb!generate_scene!.
 %
 This function can generate a simple scene with one loudspeaker-based
@@ -1792,7 +1792,7 @@ circle, receiver type, as well as the length of a delay line.
 \subsection{\tt tascar\_jackio}
 
 When we already have an XML file with a virtual environment, we may
-want to start performing some measurements using MATLAB/GNU Octave.
+want to start performing some measurements using GNU Octave/MATLAB.
 %
 The function \verb!tascar_jackio! is used to play and record sound via
 jack (jack audio connection kit).
@@ -1850,7 +1850,7 @@ OSC-messages.
 The parameters (properties) of an object which can be changed by
 sending an OSC message to \tascar{} are called "OSC variables".
 %
-For example, in MATLAB/GNU Octave it can be done by using the provided
+For example, in GNU Octave/MATLAB it can be done by using the provided
 function \verb!send_osc! (for UDP transport) or \verb!send_osc_tcp!
 (for TCP transport).
 
