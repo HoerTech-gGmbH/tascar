@@ -250,7 +250,7 @@ void App::pdf_export_t::draw(TSCGUI::scene_draw_t::viewt_t persp)
     snprintf(ctmp, 1023, "fov %g°", drawer.view.get_fov());
   else
     snprintf(ctmp, 1023, "scale 1:%g",
-            drawer.view.get_scale() / (wscale / 72 * 0.0254));
+             drawer.view.get_scale() / (wscale / 72 * 0.0254));
   cr->move_to(bx + 12, by + 48);
   cr->show_text(ctmp);
   cr->stroke();
@@ -290,6 +290,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'o':
       pdffile = optarg;
       break;

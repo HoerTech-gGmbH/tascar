@@ -75,6 +75,12 @@ int main(int argc, char** argv)
     while((opt = getopt_long(argc, argv, options, long_options,
                              &option_index)) != -1) {
       switch(opt) {
+      case '?':
+        throw TASCAR::ErrMsg("Invalid option.");
+        break;
+      case ':':
+        throw TASCAR::ErrMsg("Missing argument.");
+        break;
       case 'h':
         TASCAR::app_usage("tascar_renderir", long_options, "sessionfile",
                           "Render an impulse response of a TASCAR session.",

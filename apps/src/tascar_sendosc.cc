@@ -30,6 +30,7 @@
 */
 
 #include "cli.h"
+#include "errorhandling.h"
 #include "tscconfig.h"
 #include <chrono>
 #include <iostream>
@@ -51,6 +52,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       TASCAR::app_usage("tascar_sendosc", long_options, "url");
       return 0;
@@ -66,7 +73,7 @@ int main(int argc, char** argv)
     return 1;
   }
   lo_address lo_addr(lo_address_new_from_url(url.c_str()));
-  if( !lo_addr ){
+  if(!lo_addr) {
     std::cerr << "Invalid url " << url << std::endl;
     return 1;
   }

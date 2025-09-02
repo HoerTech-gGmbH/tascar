@@ -38,30 +38,32 @@
 // needed handling user interrupt:
 #include <signal.h>
 
-
 /*
   main definition of level metering class.
 
   This class implements the (virtual) audio processing callback of its
   base class, jackc_t.
  */
-class level_meter_t : public jackc_t 
-{
+class level_meter_t : public jackc_t {
 public:
-  level_meter_t(const std::string& jackname,const std::string& osctarget);
+  level_meter_t(const std::string& jackname, const std::string& osctarget);
   ~level_meter_t();
+
 protected:
-  virtual int process(jack_nframes_t nframes,const std::vector<float*>& inBuffer,const std::vector<float*>& outBuffer);
+  virtual int process(jack_nframes_t nframes,
+                      const std::vector<float*>& inBuffer,
+                      const std::vector<float*>& outBuffer);
+
 private:
   lo_address lo_addr;
 };
 
-level_meter_t::level_meter_t(const std::string& jackname,const std::string& osctarget)
-  : jackc_t(jackname),
-    lo_addr(lo_address_new_from_url(osctarget.c_str()))
+level_meter_t::level_meter_t(const std::string& jackname,
+                             const std::string& osctarget)
+    : jackc_t(jackname), lo_addr(lo_address_new_from_url(osctarget.c_str()))
 {
-  if( !lo_addr )
-    throw TASCAR::ErrMsg("Invalid osc target: "+osctarget);
+  if(!lo_addr)
+    throw TASCAR::ErrMsg("Invalid osc target: " + osctarget);
   // create a jack port:
   add_input_port("in");
   // activate jack client (Start signal processing):
@@ -103,9 +105,9 @@ static void sighandler(int)
   fclose(stdin);
 }
 
-int main(int argc,char** argv)
+int main(int argc, char** argv)
 {
-  try{
+  try {
     b_quit = false;
     signal(SIGABRT, &sighandler);
     signal(SIGTERM, &sighandler);
@@ -113,20 +115,24 @@ int main(int argc,char** argv)
     // parse command line:
     std::string jackname("levelmeter");
     std::string osctarget("osc.udp://localhost:9999/");
-    const char *options = "hj:o:";
-    struct option long_options[] = { 
-      { "help",     0, 0, 'h' },
-      { "jackname", 1, 0, 'j' },
-      { "osctarget", 1, 0, 'o' },
-      { 0, 0, 0, 0 }
-    };
+    const char* options = "hj:o:";
+    struct option long_options[] = {{"help", 0, 0, 'h'},
+                                    {"jackname", 1, 0, 'j'},
+                                    {"osctarget", 1, 0, 'o'},
+                                    {0, 0, 0, 0}};
     int opt(0);
     int option_index(0);
-    while( (opt = getopt_long(argc, argv, options,
-                              long_options, &option_index)) != -1){
-      switch(opt){
+    while((opt = getopt_long(argc, argv, options, long_options,
+                             &option_index)) != -1) {
+      switch(opt) {
+      case '?':
+        throw TASCAR::ErrMsg("Invalid option.");
+        break;
+      case ':':
+        throw TASCAR::ErrMsg("Missing argument.");
+        break;
       case 'h':
-        TASCAR::app_usage("tascar_levelmeter",long_options);
+        TASCAR::app_usage("tascar_levelmeter", long_options);
         return 0;
       case 'j':
         jackname = optarg;
@@ -137,18 +143,18 @@ int main(int argc,char** argv)
       }
     }
     // create instance of level meter:
-    level_meter_t s(jackname,osctarget);
+    level_meter_t s(jackname, osctarget);
     // wait for exit:
-    while(!b_quit){
+    while(!b_quit) {
       sleep(1);
     }
   }
   // report errors properly:
-  catch( const std::exception& msg ){
+  catch(const std::exception& msg) {
     std::cerr << "Error: " << msg.what() << std::endl;
     return 1;
   }
-  catch( const char* msg ){
+  catch(const char* msg) {
     std::cerr << "Error: " << msg << std::endl;
     return 1;
   }
@@ -163,4 +169,3 @@ int main(int argc,char** argv)
  * compile-command: "make -C .."
  * End:
  */
-

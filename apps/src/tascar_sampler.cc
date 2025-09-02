@@ -18,16 +18,16 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "errorhandling.h"
 #include "jackclient.h"
 #include "osc_helper.h"
-#include "errorhandling.h"
-#include <string.h>
+#include "sampler.h"
 #include <fstream>
+#include <getopt.h>
 #include <iostream>
 #include <math.h>
-#include <getopt.h>
+#include <string.h>
 #include <unistd.h>
-#include "sampler.h"
 
 // loop event
 // /sampler/sound/add loopcnt gain
@@ -36,35 +36,41 @@
 
 using namespace TASCAR;
 
-void usage(struct option * opt)
+void usage(struct option* opt)
 {
-  std::cout << "Usage:\n\ntascar_sampler [options] soundfont [ jackname ]\n\nOptions:\n\n";
-  while( opt->name ){
-    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg?"#":"") <<
-      "\n  --" << opt->name << (opt->has_arg?"=#":"") << "\n\n";
+  std::cout << "Usage:\n\ntascar_sampler [options] soundfont [ jackname "
+               "]\n\nOptions:\n\n";
+  while(opt->name) {
+    std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg ? "#" : "")
+              << "\n  --" << opt->name << (opt->has_arg ? "=#" : "") << "\n\n";
     opt++;
   }
-  std::cout << "\nA soundfont is a list of sound file names, one file per line.\n";
+  std::cout
+      << "\nA soundfont is a list of sound file names, one file per line.\n";
 }
 
-int main(int argc,char** argv)
+int main(int argc, char** argv)
 {
   std::string jname("sampler");
   std::string soundfont("");
   std::string srv_addr("239.255.1.7");
   std::string srv_port("9877");
-  const char *options = "a:p:h";
-  struct option long_options[] = { 
-    { "srvaddr",  1, 0, 'a' },
-    { "srvport",  1, 0, 'p' },
-    { "help",       0, 0, 'h' },
-    { 0, 0, 0, 0 }
-  };
+  const char* options = "a:p:h";
+  struct option long_options[] = {{"srvaddr", 1, 0, 'a'},
+                                  {"srvport", 1, 0, 'p'},
+                                  {"help", 0, 0, 'h'},
+                                  {0, 0, 0, 0}};
   int opt(0);
   int option_index(0);
-  while( (opt = getopt_long(argc, argv, options,
-                            long_options, &option_index)) != -1){
-    switch(opt){
+  while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
+        -1) {
+    switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'p':
       srv_port = optarg;
       break;
@@ -76,13 +82,13 @@ int main(int argc,char** argv)
       return 0;
     }
   }
-  if( optind < argc )
+  if(optind < argc)
     soundfont = argv[optind++];
-  if( optind < argc )
+  if(optind < argc)
     jname = argv[optind++];
-  if( soundfont.empty() )
+  if(soundfont.empty())
     throw TASCAR::ErrMsg("soundfont filename is empty.");
-  sampler_t s(jname,srv_addr,srv_port);
+  sampler_t s(jname, srv_addr, srv_port);
   //
   s.open_sounds(soundfont);
   //
@@ -97,4 +103,3 @@ int main(int argc,char** argv)
  * compile-command: "make -C .."
  * End:
  */
-

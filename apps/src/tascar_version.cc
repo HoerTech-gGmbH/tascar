@@ -19,8 +19,8 @@
  */
 
 #include "../build/tascarver.h"
-#include <iostream>
 #include "cli.h"
+#include <iostream>
 
 int main(int argc, char** argv)
 {
@@ -33,7 +33,8 @@ int main(int argc, char** argv)
     switch(opt) {
     case 'h':
       // usage(long_options);
-      TASCAR::app_usage("tascar_version", long_options, "", "Show version information.");
+      TASCAR::app_usage("tascar_version", long_options, "",
+                        "Show version information.");
       return 0;
     }
   }

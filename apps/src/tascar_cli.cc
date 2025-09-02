@@ -88,6 +88,12 @@ int main(int argc, char** argv)
         TASCAR::app_usage("tascar_cli", long_options, "configfile", "",
                           helpmap);
         return 0;
+      case '?':
+        throw TASCAR::ErrMsg("Invalid option.");
+        break;
+      case ':':
+        throw TASCAR::ErrMsg("Missing argument.");
+        break;
       case 'j':
         jackname = optarg;
         break;

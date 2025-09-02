@@ -19,6 +19,7 @@
 
 #include "../build/tascarver.h"
 #include "cli.h"
+#include "errorhandling.h"
 #include <iostream>
 
 int main(int argc, char** argv)
@@ -30,6 +31,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         EOF) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       // usage(long_options);
       TASCAR::app_usage("tascar_sceneskeleton", long_options, "",
@@ -41,7 +48,8 @@ int main(int argc, char** argv)
   std::cout << "<?xml version=\"1.0\"?>\n"
             << "<session license=\"CC0\">\n"
             << "  <!-- generated for version " << TASCARVER << " -->\n"
-            << "  <scene>\n" << "  <!-- create your scene here -->\n"
+            << "  <scene>\n"
+            << "  <!-- create your scene here -->\n"
             << "  <!-- \n"
             << "       <source name=\"in\">\n"
             << "         <sound>\n"

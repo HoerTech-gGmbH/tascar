@@ -26,7 +26,7 @@
 #include "cli.h"
 #include "speakerarray.h"
 #include <fstream>
-//#include "tscconfig.h"
+// #include "tscconfig.h"
 
 int main(int argc, char** argv)
 {
@@ -40,6 +40,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'o':
       objfile = optarg;
       break;

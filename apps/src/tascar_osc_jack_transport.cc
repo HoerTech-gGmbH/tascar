@@ -131,17 +131,16 @@ void TASCAR::osc_jt_t::run()
   osc_server_t::deactivate();
 }
 
-int TASCAR::osc_jt_t::process(jack_nframes_t ,
-                              const std::vector<float*>& ,
-                              const std::vector<float*>& ,
-                              uint32_t tp_frame, bool )
+int TASCAR::osc_jt_t::process(jack_nframes_t, const std::vector<float*>&,
+                              const std::vector<float*>&, uint32_t tp_frame,
+                              bool)
 {
   if(loop_frame && (tp_frame >= loop_frame))
     tp_locate(0u);
   return 0;
 }
 
-static void sighandler(int )
+static void sighandler(int)
 {
   b_quit = true;
 }
@@ -175,6 +174,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       usage(long_options);
       return 0;

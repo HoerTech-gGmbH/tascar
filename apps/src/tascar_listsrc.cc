@@ -23,19 +23,21 @@
 
 */
 
-#include "tscconfig.h"
-#include <unistd.h>
-#include <getopt.h>
-#include <set>
+#include "errorhandling.h"
 #include "tascar_os.h"
+#include "tscconfig.h"
+#include <getopt.h>
 #include <libgen.h>
+#include <set>
+#include <unistd.h>
 
 using namespace TASCAR;
 
 void usage(struct option* opt)
 {
   std::cout << "Usage:\n\ntascar_listsrc sessionfile "
-               "[options]\n\nList external source files (sound files, trajectories, reflectors etc)."
+               "[options]\n\nList external source files (sound files, "
+               "trajectories, reflectors etc)."
                "\n\nOptions:\n\n";
   while(opt->name) {
     std::cout << "  -" << (char)(opt->val) << " " << (opt->has_arg ? "#" : "")
@@ -96,6 +98,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       usage(long_options);
       return 0;

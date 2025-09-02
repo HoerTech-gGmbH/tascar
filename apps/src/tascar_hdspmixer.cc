@@ -120,6 +120,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       TASCAR::app_usage("tascar_hdspmixer", long_options, "",
                         "Simple control of HDSP 9652 matrix mixer.\n\n");

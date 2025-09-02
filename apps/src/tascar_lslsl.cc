@@ -18,10 +18,12 @@
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// gets rid of annoying "deprecated conversion from string constant blah blah" warning
+// gets rid of annoying "deprecated conversion from string constant blah blah"
+// warning
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
 #include "cli.h"
+#include "errorhandling.h"
 #include <iostream>
 #include <lsl_c.h>
 
@@ -34,6 +36,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         EOF) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       // usage(long_options);
       TASCAR::app_usage("tascar_lslsl", long_options, "", "List LSL streams.");

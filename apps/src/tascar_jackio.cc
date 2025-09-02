@@ -77,6 +77,12 @@ int main(int argc, char** argv)
     while((opt = getopt_long(argc, argv, options, long_options,
                              &option_index)) != EOF) {
       switch(opt) {
+      case '?':
+        throw TASCAR::ErrMsg("Invalid option.");
+        break;
+      case ':':
+        throw TASCAR::ErrMsg("Missing argument.");
+        break;
       case 'f':
         freewheel = 1;
         break;

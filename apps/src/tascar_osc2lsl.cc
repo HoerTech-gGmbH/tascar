@@ -113,7 +113,7 @@ static int send_something(const char* path, const char* types, lo_arg** argv,
         case 's': {
           std::string str(&(argv[0]->s));
           sop->push_sample(&str);
-          //sop->push_sample({std::string(&(argv[0]->s))});
+          // sop->push_sample({std::string(&(argv[0]->s))});
           break;
         }
         }
@@ -180,6 +180,12 @@ int main(int argc, char** argv)
   while((opt = getopt_long(argc, argv, options, long_options, &option_index)) !=
         -1) {
     switch(opt) {
+    case '?':
+      throw TASCAR::ErrMsg("Invalid option.");
+      break;
+    case ':':
+      throw TASCAR::ErrMsg("Missing argument.");
+      break;
     case 'h':
       TASCAR::app_usage(
           "osc2lsl", long_options, "",

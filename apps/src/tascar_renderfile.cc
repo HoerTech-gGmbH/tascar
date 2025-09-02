@@ -100,6 +100,12 @@ int main(int argc, char** argv)
                           "Render a TASCAR session into a sound file.\n\n",
                           helpmap);
         return 0;
+      case '?':
+        throw TASCAR::ErrMsg("Invalid option.");
+        break;
+      case ':':
+        throw TASCAR::ErrMsg("Missing argument.");
+        break;
       case 'i':
         in_fname = optarg;
         break;
