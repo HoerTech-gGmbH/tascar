@@ -32,6 +32,10 @@ of room acoustics simulator RAZR (Wendt, 2014; www.razrengine.com)
 in Buttler (2018) to improve left-right, front-back, and
 elevation perception.
 
+To properly model near field effects, a parametric model using gains and
+shelving filters as proposed in Spagnol et al. (2017) has been implemented,
+increasing ILD and boosting low frequencies for close sources.
+
 In order to optimize the values for the filter parameters of the
 original RAZR SHM-Model, the frequency response of the receiver has
 been fitted to measured HRTFs of the KEMAR dummy head (Schwark, 2020)
@@ -47,13 +51,19 @@ C Phillip Brown and Richard O Duda. A structural model for binaural
 
 Torben Wendt, Steven van de Par, and Stephan Ewert. A
   Computationally-Efficient and Perceptually-Plausible Algorithm for
-  Binaural Room Impulse Response Simulation. Jour- nal of the Audio
+  Binaural Room Impulse Response Simulation. Journal of the Audio
   Engineering Society, 62(11):748–766, dec 2014. ISSN 15494950.  doi:
   10.17743/jaes.2014.0042. URL
   http://www.aes.org/e-lib/browse.cfm?elib= 17550.
 
 Olliver Buttler. Optimierung und erweiterung einer effizienten methode
-  zur synthese binau- raler raumimpulsantworten. MSc thesis, 2018.
+  zur synthese binauraler raumimpulsantworten. MSc thesis, 2018.
+
+Simone Spagnol, Erica Tavazzi, and Federico Avanzini. 2017. Distance Rendering
+  and Perception of Nearby Virtual Sound Sources with a Near-Field Filter Model.
+  Applied Acoustics 115: 61–73, jan 2017. ISSN 0003682X.
+  doi: 10.1016/j.apacoust.2016.08.015. URL
+  https://doi.org/10.1016/j.apacoust.2016.08.015.
 
 Fenja Schwark. Data-driven optimization of parameterized head related
   transfer functions for the implementation in a real-time virtual
@@ -107,6 +117,68 @@ public:
   bool diffuse_hrtf;           // apply hrtf model also to diffuse rendering
   uint32_t prewarpingmode = 0; // Azimuth prewarping mode
   std::vector<float> gaincorr = {1.0f, 1.0f}; // channel-wise gain correction
+  bool nf_filter; // Apply shelving filters for near field rendering
+  float nf_range_start = 1.0f; // start distance for near field effect
+  std::vector<float> nf_angles = {
+      0.0f * DEG2RADf,   10.0f * DEG2RADf,  20.0f * DEG2RADf,
+      30.0f * DEG2RADf,  40.0f * DEG2RADf,  50.0f * DEG2RADf,
+      60.0f * DEG2RADf,  70.0f * DEG2RADf,  80.0f * DEG2RADf,
+      90.0f * DEG2RADf,  100.0f * DEG2RADf, 110.0f * DEG2RADf,
+      120.0f * DEG2RADf, 130.0f * DEG2RADf, 140.0f * DEG2RADf,
+      150.0f * DEG2RADf, 160.0f * DEG2RADf, 170.0f * DEG2RADf,
+      180.0f * DEG2RADf};
+  std::vector<float> nf_p11 = {12.97f, 13.19f, 12.13f, 11.19f, 9.91f,
+                               8.328f, 6.493f, 4.455f, 2.274f, 0.018f,
+                               -2.24f, -4.43f, -6.49f, -8.34f, -9.93f,
+                               -11.3f, -12.2f, -12.8f, -13.0f};
+  std::vector<float> nf_p21 = {-9.69f, 234.2f, -11.2f, -9.03f, -7.87f,
+                               -7.42f, -7.31f, -7.28f, -7.29f, -7.48f,
+                               -8.04f, -9.23f, -11.6f, -17.4f, -48.4f,
+                               9.149f, 1.905f, -0.75f, -1.32f};
+  std::vector<float> nf_q11 = {-1.14f, 18.48f, -1.25f, -1.02f, -0.83f,
+                               -0.67f, -0.5f,  -0.32f, -0.11f, -0.13f,
+                               0.395f, 0.699f, 1.084f, 1.757f, 4.764f,
+                               -0.64f, 0.109f, 0.386f, 0.45f};
+  std::vector<float> nf_q21 = {0.219f, -8.5f,  0.346f, 0.336f, 0.379f,
+                               0.421f, 0.423f, 0.382f, 0.314f, 0.24f,
+                               0.177f, 0.132f, 0.113f, 0.142f, 0.462f,
+                               -0.14f, -0.08f, -0.06f, -0.05f};
+  std::vector<float> nf_p12 = {-4.39f, -4.31f, -4.18f, -4.01f, -3.87f,
+                               -4.1f,  -3.87f, -5.02f, -6.72f, -8.69f,
+                               -11.2f, -12.1f, -11.1f, -11.1f, -9.72f,
+                               -8.42f, -7.44f, -6.78f, -6.58f};
+  std::vector<float> nf_p22 = {2.123f, -2.78f, 4.224f, 3.039f, -0.57f,
+                               -34.7f, 3.271f, 0.023f, -8.96f, -58.4f,
+                               11.47f, 8.716f, 21.8f,  1.91f,  -0.04f,
+                               -0.66f, 0.395f, 2.662f, 3.387f};
+  std::vector<float> nf_q12 = {-0.55f, 0.59f,  -1.01f, -0.56f, 0.665f,
+                               11.39f, -1.57f, -0.87f, 0.37f,  5.446f,
+                               -1.13f, -0.63f, -2.01f, 0.15f,  0.243f,
+                               0.147f, -0.18f, -0.67f, -0.84f};
+  std::vector<float> nf_q22 = {-0.06f, -0.17f, -0.02f, -0.32f, -1.13f,
+                               -8.3f,  0.637f, 0.325f, -0.08f, -1.19f,
+                               0.103f, -0.12f, 0.098f, -0.4f,  -0.41f,
+                               -0.34f, -0.18f, 0.05f,  0.131f};
+  std::vector<float> nf_p13 = {0.457f, 0.455f, -0.87f, 0.465f, 0.494f,
+                               0.549f, 0.663f, 0.691f, 3.507f, -27.4f,
+                               6.371f, 7.032f, 7.092f, 7.463f, 7.453f,
+                               8.101f, 8.702f, 8.925f, 9.317f};
+  std::vector<float> nf_p23 = {-0.67f, 0.142f, 3404.0f, -0.91f, -0.67f,
+                               -1.21f, -1.76f, 4.655f,  55.09f, 10336.0f,
+                               1.735f, 40.88f, 23.86f,  102.8f, -6.14f,
+                               -18.1f, -9.05f, -9.03f,  -6.89f};
+  std::vector<float> nf_p33 = {0.174f, -0.11f, -1699.0f, 0.437f, 0.658f,
+                               2.02f,  6.815f, 0.614f,   589.3f, 16818.0f,
+                               -9.39f, -44.1f, -23.6f,   -92.3f, -1.81f,
+                               10.54f, 0.532f, 0.285f,   -2.08f};
+  std::vector<float> nf_q13 = {-1.75f, -0.01f, 7354.0f, -2.18f, -1.2f,
+                               -1.59f, -1.23f, -0.89f,  29.23f, 1945.0f,
+                               -0.06f, 5.635f, 3.308f,  13.88f, -0.88f,
+                               -2.23f, -0.96f, -0.9f,   -0.57f};
+  std::vector<float> nf_q23 = {0.699f, -0.35f, -5350.0f, 1.188f, 0.256f,
+                               0.816f, 1.166f, 0.76f,    59.51f, 1707.0f,
+                               -1.12f, -6.18f, -3.39f,   -12.7f, -0.19f,
+                               1.295f, -0.02f, -0.08f,   -0.4f};
 };
 
 hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
@@ -119,7 +191,7 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
       //    omega_up(c/radius/2),
       alphamin_up(0.1f), startangle_notch(102.0f * DEG2RADf),
       freq_start(1300.0f), freq_end(650.0f), maxgain(-5.4f), Q_notch(2.3f),
-      diffuse_hrtf(false)
+      diffuse_hrtf(false), nf_filter(false)
 {
   GET_ATTRIBUTE(sincorder, "", "Sinc interpolation order of ITD delay line");
   GET_ATTRIBUTE(sincsampling, "",
@@ -174,6 +246,66 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE_DB(gaincorr, "channel-wise gain correction");
   if(gaincorr.size() != 2) {
     throw TASCAR::ErrMsg("gaincorr requires two entries");
+  }
+  GET_ATTRIBUTE_BOOL(nf_filter,
+                     "apply near field filter to model close sources");
+  GET_ATTRIBUTE(nf_range_start, "m",
+                "start distance for near field effect, 1 m is default");
+  GET_ATTRIBUTE(nf_angles, "rad", "angles for near field filter coefficients");
+  if(nf_angles.size() < 2) {
+    throw TASCAR::ErrMsg("nf_angles requires at least two entries");
+  }
+  GET_ATTRIBUTE(nf_p11, "", "p11 coefficient array for near field filter");
+  if(nf_p11.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p11 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_p21, "", "p21 coefficient array for near field filter");
+  if(nf_p21.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p21 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_q11, "", "q11 coefficient array for near field filter");
+  if(nf_q11.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_q11 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_q21, "", "q21 coefficient array for near field filter");
+  if(nf_q21.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_q21 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_p12, "", "p12 coefficient array for near field filter");
+  if(nf_p12.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p12 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_p22, "", "p22 coefficient array for near field filter");
+  if(nf_p22.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p22 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_q12, "", "q12 coefficient array for near field filter");
+  if(nf_q12.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_q12 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_q22, "", "q22 coefficient array for near field filter");
+  if(nf_q22.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_q22 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_p13, "", "p13 coefficient array for near field filter");
+  if(nf_p13.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p13 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_p23, "", "p23 coefficient array for near field filter");
+  if(nf_p23.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p23 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_p33, "", "p33 coefficient array for near field filter");
+  if(nf_p33.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_p33 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_q13, "", "q13 coefficient array for near field filter");
+  if(nf_q13.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_q13 requires as many entries as nf_angles");
+  }
+  GET_ATTRIBUTE(nf_q23, "", "q23 coefficient array for near field filter");
+  if(nf_q23.size() != nf_angles.size()) {
+    throw TASCAR::ErrMsg("nf_q23 requires as many entries as nf_angles");
   }
 }
 
@@ -471,6 +603,10 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
                 "pre-warping mode, 0 = original, 1 = none, 2 = corrected");
   srv->add_vector_float_db("/hrtf/gaincorr", &par.gaincorr, "",
                            "channel-wise gain correction");
+  srv->add_bool("/hrtf/nf_filter", &par.nf_filter,
+                "apply near field filter to model close sources");
+  srv->add_float("/hrtf/nf_range_start", &par.nf_range_start,
+                 "start distance for near field effect, 1 m is default");
   srv->unset_variable_owner();
 }
 
