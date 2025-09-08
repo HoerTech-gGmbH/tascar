@@ -315,7 +315,8 @@ public:
   public:
     data_t(float srate, uint32_t chunksize, const hrtf_param_t& par_plugin);
     void filterdesign(const float theta_left, const float theta_right,
-                      const float theta_front, const float elevation);
+                      const float theta_front, const float elevation,
+                      const TASCAR::pos_t& prel);
     inline void filter(const float& input)
     {
       out_l = (state_l = (dline_l.get_dist_push(tau_l, input)));
@@ -323,7 +324,7 @@ public:
       out_l = bqelev_l.filter(bqazim_l.filter(out_l));
       out_r = bqelev_r.filter(bqazim_r.filter(out_r));
     }
-    void set_param(const TASCAR::pos_t& prel_norm, uint32_t prewarpingmode);
+    void set_param(const TASCAR::pos_t& prel, uint32_t prewarpingmode);
     float fs;
     float dt;
     const hrtf_param_t& par;
@@ -410,7 +411,8 @@ hrtf_t::data_t::data_t(float srate, uint32_t chunksize,
 }
 
 void hrtf_t::data_t::filterdesign(const float theta_l, const float theta_r,
-                                  const float theta_f, const float elevation)
+                                  const float theta_f, const float elevation,
+                                  const TASCAR::pos_t& prel)
 {
   // bqazim_l/r
   // parameter of SHM
@@ -618,9 +620,11 @@ hrtf_t::hrtf_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE_BOOL(decorr, "Flag to use decorrelation of diffuse sounds");
 }
 
-void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm,
+void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel,
                                uint32_t prewarpingmode)
 {
+  // Calculate unit vector between receiver and source
+  const TASCAR::pos_t prel_norm(prel.normal());
   // angle with respect to front (range [0, pi])
   float theta_front = acosf(dot_prodf(prel_norm, par.dir_front));
   // angle with respect to left ear (range [0, pi])
@@ -649,7 +653,7 @@ void hrtf_t::data_t::set_param(const TASCAR::pos_t& prel_norm,
   // calculate delta tau for each panning step
 
   filterdesign(theta_l, theta_r, theta_front,
-               -(prel_norm.elevf() - TASCAR_PI2f));
+               -(prel_norm.elevf() - TASCAR_PI2f), prel);
 }
 
 void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double,
@@ -658,7 +662,7 @@ void hrtf_t::add_pointsource(const TASCAR::pos_t& prel, double,
                              receivermod_base_t::data_t* sd)
 {
   data_t* d((data_t*)sd);
-  d->set_param(prel.normal(), par.prewarpingmode);
+  d->set_param(prel, par.prewarpingmode);
   // calculate delta tau for each panning step
   float dtau_l((d->target_tau_l - d->tau_l) * d->dt);
   float dtau_r((d->target_tau_r - d->tau_r) * d->dt);
