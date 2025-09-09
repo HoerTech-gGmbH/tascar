@@ -326,6 +326,7 @@ public:
       out_l = bqelev_l.filter(bqazim_l.filter(out_l));
       out_r = bqelev_r.filter(bqazim_r.filter(out_r));
 
+      // Apply near field filtering only if desired and required
       if(nf_processing) {
         out_l = bqnf_l.filter(G0_l * out_l);
         out_r = bqnf_r.filter(G0_r * out_r);
@@ -537,6 +538,9 @@ void hrtf_t::data_t::filterdesign(const float theta_l, const float theta_r,
 void hrtf_t::data_t::set_nf_coefficients(const float rho, const float alpha,
                                          float* G0, TASCAR::biquadf_t& bq)
 {
+  // renaming the incidence angle to alpha in this function to be consistent
+  // with paper
+
   // Get nearest two angles for interpolation of coefficients
   uint32_t lower = 0;
   while((lower < par.nf_angles.size() - 1) &&
@@ -574,15 +578,20 @@ void hrtf_t::data_t::set_nf_coefficients(const float rho, const float alpha,
                              (par.nf_angles[upper] - par.nf_angles[lower]);
 
   // Interpolate parameters
-  *G0 = G0_lower + (G0_upper - G0_lower) * alpha_interp;
+  *G0 = powf(10.0f, (G0_lower + (G0_upper - G0_lower) * alpha_interp) / 20.0f);
   const float G_inf = G_inf_lower + (G_inf_upper - G_inf_lower) * alpha_interp;
-  const float fc = fc_lower + (fc_upper - fc_lower) * alpha_interp;
+
+  // Applying also correction for the head radius
+  const float fc =
+      (fc_lower + (fc_upper - fc_lower) * alpha_interp) * par.radius / 0.0875;
 
   // Calculate biquad coefficients
   const float V0 = powf(10.0f, G_inf / 20.0f);
   const float a_c = (V0 * tanf(TASCAR_PIf * fc / fs) - 1.0f) /
                     (V0 * tanf(TASCAR_PIf * fc / fs) + 1.0f);
 
+  // Set biquad coefficients --> In theory only a first order filter is
+  // required, but the quiquad is quite efficient
   bq.set_coefficients(a_c, 0.0f, 1 + (1 * a_c) * (V0 - 1) / 2,
                       a_c - (1 * a_c) * (V0 - 1) / 2, 0.0f);
 }
