@@ -118,7 +118,7 @@ public:
   uint32_t prewarpingmode = 0; // Azimuth prewarping mode
   std::vector<float> gaincorr = {1.0f, 1.0f}; // channel-wise gain correction
   bool nf_filter; // Apply shelving filters for near field rendering
-  float nf_range_start = 3.0f; // start distance for near field effect
+  std::vector<float> nf_range = {0.15f, 3.0f}; // distance for near field effect
   std::vector<float> nf_angles = {
       0.0f * DEG2RADf,   10.0f * DEG2RADf,  20.0f * DEG2RADf,
       30.0f * DEG2RADf,  40.0f * DEG2RADf,  50.0f * DEG2RADf,
@@ -249,8 +249,9 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
   }
   GET_ATTRIBUTE_BOOL(nf_filter,
                      "apply near field filter to model close sources");
-  GET_ATTRIBUTE(nf_range_start, "m",
-                "start distance for near field effect, 3 m is default");
+  GET_ATTRIBUTE(
+      nf_range, "m",
+      "distance for rendering near field effect, 0.15 to 3 m is default");
   GET_ATTRIBUTE(nf_angles, "rad", "angles for near field filter coefficients");
   if(nf_angles.size() < 2) {
     throw TASCAR::ErrMsg("nf_angles requires at least two entries");
@@ -521,11 +522,11 @@ void hrtf_t::data_t::filterdesign(const float theta_l, const float theta_r,
 
   const float par_dist(prel.normf());
   // near field filter
-  if(par.nf_filter && (par_dist < par.nf_range_start) && (par_dist > 0.0f)) {
+  if(par.nf_filter && (par_dist < par.nf_range[1]) && (par_dist > 0.0f)) {
     nf_processing = true;
 
     // Normalized distance
-    const float rho = par_dist / par.radius;
+    const float rho = std::max(par_dist, par.nf_range[0]) / par.radius;
 
     // Update near field filter coefficients
     set_nf_coefficients(rho, theta_l, &G0_l, bqnf_l);
@@ -696,8 +697,9 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
                            "channel-wise gain correction");
   srv->add_bool("/hrtf/nf_filter", &par.nf_filter,
                 "apply near field filter to model close sources");
-  srv->add_float("/hrtf/nf_range_start", &par.nf_range_start,
-                 "start distance for near field effect, 3 m is default");
+  srv->add_vector_float(
+      "/hrtf/nf_range", &par.nf_range,
+      "distance for rendering near field effect, 0.15 to 3 m is default");
   srv->unset_variable_owner();
 }
 
