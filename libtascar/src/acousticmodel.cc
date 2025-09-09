@@ -174,17 +174,20 @@ uint32_t acoustic_model_t::process(const TASCAR::transport_t& tp)
             }
           }
           // calculate obstacles:
-          for(uint32_t kobj = 0; kobj != obstacles_.size(); ++kobj) {
-            obstacle_t* p_obj(obstacles_[kobj]);
-            if(p_obj->active) {
-              // apply diffraction model:
-              if(p_obj->b_inner)
-                p_obj->process(position, receiver_->position, audio, c_, fs_,
-                               vstate[kobj], p_obj->transmission);
-              else
-                position =
-                    p_obj->process(position, receiver_->position, audio, c_,
-                                   fs_, vstate[kobj], p_obj->transmission);
+          if(ismorder == 0) {
+            // direct path only.
+            for(uint32_t kobj = 0; kobj != obstacles_.size(); ++kobj) {
+              obstacle_t* p_obj(obstacles_[kobj]);
+              if(p_obj->active) {
+                // apply diffraction model:
+                if(p_obj->b_inner)
+                  p_obj->process(position, receiver_->position, audio, c_, fs_,
+                                 vstate[kobj], p_obj->transmission);
+                else
+                  position =
+                      p_obj->process(position, receiver_->position, audio, c_,
+                                     fs_, vstate[kobj], p_obj->transmission);
+              }
             }
           }
           // end obstacles

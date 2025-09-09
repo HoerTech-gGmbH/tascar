@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- 
+basic test: sound propagation, 1m
+-->
+<session license="CC-0">
+  <scene>
+    <source>
+      <sound x="1"/>
+    </source>
+    <obstacle  name="thewall" transmission="0.1">
+      <faces>0.01 -0.5 -0.5 0.01 -0.5 0.5 0.01 0.5 0.5 0.01 0.5 -0.5</faces>
+      <position>
+	0 -0.75 0 0
+      </position>
+    </obstacle>
+    <facegroup  name="thewallface" dlocation="0.1 0 0" parent="thewall" dorientation="180 0 0">
+      <faces>0.01 -0.5 -0.5 0.01 -0.5 0.5 0.01 0.5 0.5 0.01 0.5 -0.5</faces>
+    </facegroup>
+    <receiver type="omni"/>
+  </scene>
+</session>
