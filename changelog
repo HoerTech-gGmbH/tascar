@@ -1,3 +1,8 @@
+0.234.4:
+       - render obstacles only in direct sound path
+       - add parametric equalizer plugin
+       - treat invalid command line options as error
+
 0.234.3:
        - correct serial port head tracker for MacOS
        - improve EOG sensor
