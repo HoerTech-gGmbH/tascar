@@ -317,6 +317,8 @@ public:
     void filterdesign(const float theta_left, const float theta_right,
                       const float theta_front, const float elevation,
                       const TASCAR::pos_t& prel);
+    void set_nf_coefficients(const float rho, const float alpha, float* G0,
+                             TASCAR::biquadf_t& bq);
     inline void filter(const float& input)
     {
       out_l = (state_l = (dline_l.get_dist_push(tau_l, input)));
@@ -334,6 +336,8 @@ public:
     TASCAR::biquadf_t bqazim_r;
     TASCAR::biquadf_t bqelev_l;
     TASCAR::biquadf_t bqelev_r;
+    TASCAR::biquadf_t bqnf_l;
+    TASCAR::biquadf_t bqnf_r;
     float out_l;
     float out_r;
     float state_l;
@@ -349,6 +353,8 @@ public:
     float alpha_f;
     float inv_a0_u;
     float alpha_u;
+    float G0_l;
+    float G0_r;
   };
   class diffuse_data_t : public TASCAR::receivermod_base_t::data_t {
   public:
@@ -505,6 +511,70 @@ void hrtf_t::data_t::filterdesign(const float theta_l, const float theta_r,
     bqelev_l.set_coefficients(0.0, 0.0, 1.0, 0.0, 0.0);
     bqelev_r.set_coefficients(0.0, 0.0, 1.0, 0.0, 0.0);
   }
+
+  const float par_dist(prel.normf());
+  // near field filter
+  if(par.nf_filter && (par_dist < par.nf_range_start) && (par_dist > 0.0f)) {
+    // Normalized distance
+    const float rho = par_dist / par.radius;
+
+    // Update near field filter coefficients
+    set_nf_coefficients(rho, theta_l, &G0_l, bqnf_l);
+    set_nf_coefficients(rho, theta_r, &G0_r, bqnf_r);
+  }
+}
+
+void hrtf_t::data_t::set_nf_coefficients(const float rho, const float alpha,
+                                         float* G0, TASCAR::biquadf_t& bq)
+{
+  // Get nearest two angles for interpolation of coefficients
+  uint32_t lower = 0;
+  while((lower < par.nf_angles.size() - 1) &&
+        (alpha > par.nf_angles[lower + 1]))
+    ++lower;
+
+  uint32_t upper = std::min(lower + 1, (uint32_t)(par.nf_angles.size() - 1));
+
+  // Calculate parameters for upper and lower bounds
+  const float rho_squared = rho * rho;
+
+  const float G0_lower =
+      (par.nf_p11[lower] * rho + par.nf_p21[lower]) /
+      (rho_squared + par.nf_q11[lower] * rho + par.nf_q21[lower]);
+  const float G0_upper =
+      (par.nf_p11[upper] * rho + par.nf_p21[upper]) /
+      (rho_squared + par.nf_q11[upper] * rho + par.nf_q21[upper]);
+
+  const float G_inf_lower =
+      (par.nf_p12[lower] * rho + par.nf_p22[lower]) /
+      (rho_squared + par.nf_q12[lower] * rho + par.nf_q22[lower]);
+  const float G_inf_upper =
+      (par.nf_p12[upper] * rho + par.nf_p22[upper]) /
+      (rho_squared + par.nf_q12[upper] * rho + par.nf_q22[upper]);
+
+  const float fc_lower =
+      (par.nf_p13[lower] * rho + par.nf_p23[lower]) /
+      (rho_squared + par.nf_q13[lower] * rho + par.nf_q23[lower]);
+  const float fc_upper =
+      (par.nf_p13[upper] * rho + par.nf_p23[upper]) /
+      (rho_squared + par.nf_q13[upper] * rho + par.nf_q23[upper]);
+
+  // Interpolation factor
+  const float alpha_interp = (alpha - par.nf_angles[lower]) /
+                             (par.nf_angles[upper] - par.nf_angles[lower]);
+
+  // Interpolate parameters
+  *G0 = G0_lower + (G0_upper - G0_lower) * alpha_interp;
+  const float G_inf = G_inf_lower + (G_inf_upper - G_inf_lower) * alpha_interp;
+  const float fc = fc_lower + (fc_upper - fc_lower) * alpha_interp;
+
+  // Calculate biquad coefficients
+  const float V0 = powf(10.0f, G_inf / 20.0f);
+  const float a_c = (V0 * tanf(TASCAR_PIf * fc / fs) - 1.0f) /
+                    (V0 * tanf(TASCAR_PIf * fc / fs) + 1.0f);
+
+  bq.set_coefficients(a_c, 0.0f, 1 + (1 * a_c) * (V0 - 1) / 2,
+                      a_c - (1 * a_c) * (V0 - 1) / 2, 0.0f);
 }
 
 hrtf_t::diffuse_data_t::diffuse_data_t(float srate, uint32_t chunksize,
