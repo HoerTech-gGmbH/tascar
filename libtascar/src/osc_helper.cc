@@ -1298,7 +1298,7 @@ void osc_server_t::generate_osc_documentation_files()
     ofh << "\\nopagebreak\n\n";
     ofh << "\\begin{tabularx}{\\textwidth}{llllX}\n";
     ofh << "\\hline\n";
-    ofh << "path & fmt. & range & r. & description\\\\\n\\hline\n";
+    ofh << "path & fmt. & range & readable & description\\\\\n\\hline\n";
     for(const auto& varpath : owner.second) {
       ofh << "\\attr{"
           << TASCAR::to_latex(pref +
