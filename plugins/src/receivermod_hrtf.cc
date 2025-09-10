@@ -127,6 +127,15 @@ public:
       120.0f * DEG2RADf, 130.0f * DEG2RADf, 140.0f * DEG2RADf,
       150.0f * DEG2RADf, 160.0f * DEG2RADf, 170.0f * DEG2RADf,
       180.0f * DEG2RADf};
+
+  // Near field effects are modelled by adjusting ILD and applying a
+  // shelving-filter. Parameters are modelled, depending on the incidence angle,
+  // using a second order rational function. p are the numerator, q the
+  // denominator coefficients, the last number corresponds to the parameter to
+  // be modelled (1 = DC-gain, 2 = asymptotic gain, 3 = shelving-filter cutoff).
+  // Each element in the vector correpsonds to one angle in nf_angles, linear
+  // interpolation is applied in between the calculated parameters. Default
+  // coefficients are taken from Spagnol et al. (2017)
   std::vector<float> nf_p11 = {12.97f, 13.19f, 12.13f, 11.19f, 9.91f,
                                8.328f, 6.493f, 4.455f, 2.274f, 0.018f,
                                -2.24f, -4.43f, -6.49f, -8.34f, -9.93f,
@@ -256,55 +265,81 @@ hrtf_param_t::hrtf_param_t(tsccfg::node_t xmlsrc)
   if(nf_angles.size() < 2) {
     throw TASCAR::ErrMsg("nf_angles requires at least two entries");
   }
-  GET_ATTRIBUTE(nf_p11, "", "p11 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p11, "",
+                "Numerator coefficient p11 for DC-gain of the near-field "
+                "filter for each angle in nf_angles");
   if(nf_p11.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p11 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_p21, "", "p21 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p21, "",
+                "Numerator coefficient p21 for DC-gain of the near-field "
+                "filter for each angle in nf_angles");
   if(nf_p21.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p21 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_q11, "", "q11 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_q11, "",
+                "Denominator coefficient q11 for DC-gain of the near-field "
+                "filter for each angle in nf_angles");
   if(nf_q11.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_q11 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_q21, "", "q21 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_q21, "",
+                "Denominator coefficient q21 for DC-gain of the near-field "
+                "filter for each angle in nf_angles");
   if(nf_q21.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_q21 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_p12, "", "p12 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p12, "",
+                "Numerator coefficient p12 for asymptotic hf-gain of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_p12.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p12 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_p22, "", "p22 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p22, "",
+                "Numerator coefficient p22 for asymptotic hf-gain of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_p22.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p22 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_q12, "", "q12 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_q12, "",
+                "Denominator coefficient q12 for asymptotic hf-gain of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_q12.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_q12 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_q22, "", "q22 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_q22, "",
+                "Denominator coefficient q22 for asymptotic hf-gain of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_q22.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_q22 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_p13, "", "p13 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p13, "",
+                "Numerator coefficient p13 for the cutoff-frequency of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_p13.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p13 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_p23, "", "p23 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p23, "",
+                "Numerator coefficient p23 for the cutoff-frequency of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_p23.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p23 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_p33, "", "p33 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_p33, "",
+                "Numerator coefficient p33 for the cutoff-frequency of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_p33.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_p33 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_q13, "", "q13 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_q13, "",
+                "Denominator coefficient q13 for the cutoff-frequency of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_q13.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_q13 requires as many entries as nf_angles");
   }
-  GET_ATTRIBUTE(nf_q23, "", "q23 coefficient array for near field filter");
+  GET_ATTRIBUTE(nf_q23, "",
+                "Denominator coefficient q23 for the cutoff-frequency of the "
+                "near-field filter for each angle in nf_angles");
   if(nf_q23.size() != nf_angles.size()) {
     throw TASCAR::ErrMsg("nf_q23 requires as many entries as nf_angles");
   }
@@ -698,7 +733,7 @@ void hrtf_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_bool("/hrtf/nf_filter", &par.nf_filter,
                 "apply near field filter to model close sources");
   srv->add_vector_float(
-      "/hrtf/nf_range", &par.nf_range,
+      "/hrtf/nf_range", &par.nf_range, "",
       "distance for rendering near field effect, 0.15 to 3 m is default");
   srv->unset_variable_owner();
 }
