@@ -32,6 +32,38 @@ name & description (type, unit) & def.\\
 \hline
 \indattr{gaincorr} & channel-wise gain correction (float array, dB) & 0 0\\
 \hline
+\indattr{nf\_angles} & angles for near field filter coefficients (float array, rad) & \\
+\hline
+\indattr{nf\_filter} & apply near field filter to model close sources (bool) & false\\
+\hline
+\indattr{nf\_range} & distance for rendering near field effect (float array, m)& 0.15 3.0\\
+\hline
+\indattr{nf\_p11} & Numerator coefficient p11 for DC-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_p12} & Numerator coefficient p12 for asymptotic hf-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_p13} & Numerator coefficient p13 for the cutoff-frequency of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_p21} & Numerator coefficient p21 for DC-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_p22} & Numerator coefficient p22 for asymptotic hf-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_p23} & Numerator coefficient p23 for the cutoff-frequency of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_p33} & Numerator coefficient p33 for the cutoff-frequency of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_q11} & Denominator coefficient q11 for DC-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_q12} & Denominator coefficient q12 for asymptotic hf-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_q13} & Denominator coefficient q13 for the cutoff-frequency of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_q21} & Denominator coefficient q21 for DC-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_q22} & Denominator coefficient q22 for asymptotic hf-gain of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
+\indattr{nf\_q23} & Denominator coefficient q23 for the cutoff-frequency of the near-field filter for each angle in \indattr{nf\_angles} (float array) & \\
+\hline
 \indattr{maxgain} & gain applied at [0 0 1] -- gain is 0 dB at \attr{startangle\_notch} and increases linearly (float, dB) & -5.4\\
 \hline
 \indattr{omega} & cut-off frequency of the high-self realizing the SHM (float, Hz) & 3100\\

@@ -49,6 +49,13 @@ as well. At \indattr{startangle\_notch} the center frequency is equal to
 direction right above the head. Furthermore, the notch is described by the
 quality factor \indattr{Q\_notch}.
 
+Additionally, a parametric model to render near-field effects \citep{Spagnol2017}
+can be applied by setting \indattr{nf\_filter} to true. It increases interaural
+level differences and adds an additional high-shelf filter, depending on the angle
+and distance of the source. This effect is only applied for distances closer than
+\indattr{nf\_range[1]}. For sources closer than \indattr{nf\_range[0]}, the filters
+are not changed any further to avoid instabilities.
+
 In order to optimize the values for the filter parameters of the
 original RAZR SHM-Model, the frequency response of the receiver has
 been fitted to measured HRTFs of the KEMAR dummy
