@@ -8,6 +8,13 @@ the context of hearing research and hearing aid evaluation.
 For installation of binary packages, please see
 [install.tascar.org](http://install.tascar.org/)
 
+
+## Contributing:
+
+Pull requests are welcome! If you submit pull requests on github,
+please request a merge into the development branch. For feature wishes or bug reports please use the issue tracker on https://github.com/gisogrimm/tascar.
+
+
 ## References:
 
 Grimm, Giso; Luberadzka, Joanna; Hohmann, Volker. A Toolbox for
@@ -65,4 +72,3 @@ make clean cleancov
 make allwithcov
 make coverage
 ````
-
