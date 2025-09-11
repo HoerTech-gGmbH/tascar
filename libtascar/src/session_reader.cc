@@ -140,6 +140,7 @@ void TASCAR::tsc_reader_t::read_xml()
                      "OSC path to dispatch module profiling information to");
   use_profiler = profilingpath.size() > 0;
   for(auto& sne : root.get_children()) {
+    TASCAR::mainloopupdate();
     if(tsccfg::node_get_name(sne) == "scene")
       add_scene(sne);
     else if(tsccfg::node_get_name(sne) == "range")

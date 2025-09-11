@@ -28,17 +28,26 @@ public:
 
 private:
   std::vector<std::string> ports;
-  double timeout;
+  float timeout = 30;
+  float warntimeout = 5;
+};
+
+struct portname_t {
+  jack_port_t* pointer;
+  std::string name;
 };
 
 wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), timeout(30)
 {
   std::string name("waitforjackport");
-  GET_ATTRIBUTE(ports,"","List of port names to wait for");
-  GET_ATTRIBUTE(timeout,"s","Timeout after which execution will not block any longer");
-  GET_ATTRIBUTE(name,"","Name used in jack");
-  for( auto sne : tsccfg::node_get_children(e,"port")){
+  GET_ATTRIBUTE(ports, "", "List of port names to wait for");
+  GET_ATTRIBUTE(timeout, "s",
+                "Timeout after which execution will not block any longer");
+  GET_ATTRIBUTE(warntimeout, "s", "Timeout after which a warning is produced");
+  GET_ATTRIBUTE(name, "", "Name used in jack");
+  warntimeout = std::min(warntimeout, timeout);
+  for(auto sne : tsccfg::node_get_children(e, "port")) {
     ports.push_back(tsccfg::node_get_text(sne, ""));
   }
   jack_status_t jstat;
@@ -46,18 +55,42 @@ wfjp_t::wfjp_t(const TASCAR::module_cfg_t& cfg)
   jack_options_t opt = (jack_options_t)(JackNoStartServer | JackUseExactName);
   jc = jack_client_open(name.c_str(), opt, &jstat);
   if(!jc)
-    throw TASCAR::ErrMsg("Unable to create jack client \""+name+"\".");
-  for(auto p : ports) {
-    uint32_t k(timeout * 100);
-    jack_port_t* jp = NULL;
-    while(k && (!jp)) {
-      if(k)
-        --k;
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      //usleep(10000);
-      jp = jack_port_by_name(jc, p.c_str());
-    }
+    throw TASCAR::ErrMsg("Unable to create jack client \"" + name + "\".");
+  std::vector<portname_t> port_pointer;
+  port_pointer.resize(ports.size());
+  for(size_t k = 0; k < ports.size(); ++k) {
+    port_pointer[k].name = ports[k];
+    port_pointer[k].pointer = NULL;
   }
+  uint32_t k(timeout * 100);
+  uint32_t k_warn((timeout - warntimeout) * 100);
+  bool need_wait = true;
+  while(k && need_wait) {
+    if(k)
+      --k;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    TASCAR::mainloopupdate();
+    bool all_good = true;
+    for(auto& p : port_pointer) {
+      if(!p.pointer) {
+        all_good = false;
+        p.pointer = jack_port_by_name(jc, p.name.c_str());
+        if(!p.pointer) {
+          if(k == k_warn) {
+            TASCAR::add_warning("Port " + p.name + " not found after " +
+                                    TASCAR::to_string(warntimeout) +
+                                    " seconds.",
+                                e);
+          }
+        }
+      }
+    }
+    if(all_good)
+      need_wait = false;
+  }
+  if(need_wait)
+    TASCAR::add_warning(
+        "Giving up after " + TASCAR::to_string(timeout) + " seconds.", e);
   jack_client_close(jc);
 }
 

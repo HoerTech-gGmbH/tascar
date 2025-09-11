@@ -175,6 +175,9 @@ std::string localgetenv(const std::string& env);
 
 namespace TASCAR {
 
+  void mainloopupdate();
+  void set_mainloopupdate(std::function<void()> fun);
+
   float db2lin(const float& x);
   double db2lin(const double& x);
   float lin2db(const float& x);

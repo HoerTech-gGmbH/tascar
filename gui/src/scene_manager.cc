@@ -51,9 +51,12 @@ void scene_manager_t::scene_load(const std::string& fname)
     delete session;
   session = NULL;
   if( fname.size() ){
+    TASCAR::mainloopupdate();
     session = new TASCAR::session_t( fname, TASCAR::xml_doc_t::LOAD_FILE, fname );
+    TASCAR::mainloopupdate();
     try{
       session->start();
+      TASCAR::mainloopupdate();
     }
     catch( ... ){
       delete session;

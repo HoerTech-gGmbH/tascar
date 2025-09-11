@@ -36,6 +36,12 @@ static void sighandler(int)
     win->hide();
 }
 
+void gtkmainloopupdate()
+{
+  while(Gtk::Main::events_pending())
+    Gtk::Main::iteration(false);
+}
+
 int main(int argc, char** argv)
 {
   TASCAR::console_log_show(true);
@@ -53,6 +59,8 @@ int main(int argc, char** argv)
   if(!win)
     throw TASCAR::ErrMsg("No main window");
   win->show();
+  gtkmainloopupdate();
+  TASCAR::set_mainloopupdate(gtkmainloopupdate);
   if(argc > 1) {
     try {
       win->load(argv[1]);

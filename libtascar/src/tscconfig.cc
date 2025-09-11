@@ -2348,6 +2348,21 @@ float TASCAR::lin2dbspl(const float& x)
 TASCAR::cfg_node_desc_t::cfg_node_desc_t() {}
 TASCAR::cfg_node_desc_t::~cfg_node_desc_t() {}
 
+
+void donothing() {}
+
+std::function<void()> mainloopupdate_fun = donothing;
+
+void TASCAR::mainloopupdate()
+{
+  mainloopupdate_fun();
+}
+
+void TASCAR::set_mainloopupdate(std::function<void()> fun)
+{
+  mainloopupdate_fun = fun;
+}
+
 /*
  * Local Variables:
  * mode: c++
