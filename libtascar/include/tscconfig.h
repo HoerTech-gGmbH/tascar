@@ -21,6 +21,7 @@
 #define XMLCONFIG_H
 
 #include "coordinates.h"
+#include <functional>
 
 #define USEXERCESXML
 
