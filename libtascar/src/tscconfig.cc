@@ -309,7 +309,7 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
              << TASCAR::to_latex(parent) << "}}";
       }
       fh << "\\nopagebreak\n\n";
-      fh << "\\begin{tabularx}{\\textwidth}{lXl}\n";
+      fh << "\\begin{tabularx}{\\textwidth}{l>{\\raggedright}XX}\n";
 
       fh << "\\hline\n";
       fh << "name & description (type, unit) & def.\\\\\n\\hline\n";
@@ -317,12 +317,14 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
         //  \indattr{name} & type & def & unit & Name of session (default:
         //  ``tascar'')
         fh << "\\hline\n";
-        fh << "\\indattr{" << TASCAR::to_latex(attr.first) << "} & "
-           << TASCAR::to_latex(attr.second.info) << " ("
-           << TASCAR::to_latex(attr.second.type);
+        auto s_info = TASCAR::to_latex(attr.second.info) + "(" +
+                      TASCAR::to_latex(attr.second.type);
         if(!attr.second.unit.empty())
-          fh << ", " << TASCAR::to_latex(attr.second.unit);
-        fh << ") ";
+          s_info += ", " + TASCAR::to_latex(attr.second.unit);
+        s_info += ") ";
+        // if(s_info.size() > 40)
+        //  s_info = "{\\tiny " + s_info + "}";
+        fh << "\\indattr{" << TASCAR::to_latex(attr.first) << "} & " << s_info;
         std::string sdef(TASCAR::to_latex(attr.second.defaultval));
         if(sdef.size() > 24)
           sdef = "{\\tiny " + sdef + "}";

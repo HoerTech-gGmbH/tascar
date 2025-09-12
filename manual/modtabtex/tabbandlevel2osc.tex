@@ -3,26 +3,26 @@
 \label{attrtab:bandlevel2osc}
 Attributes of element {\bf bandlevel2osc}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{bandwidth} & band width (float, octaves) & 1\\
+\indattr{bandwidth} & band width(float, octaves) & 1\\
 \hline
-\indattr{f} & Center frequencies (float array, Hz) & 250 500 1000 2000\\
+\indattr{f} & Center frequencies(float array, Hz) & 250 500 1000 2000\\
 \hline
-\indattr{mode} & Level mode [dbspl|rms|max] (string) & dbspl\\
+\indattr{mode} & Level mode [dbspl|rms|max](string) & dbspl\\
 \hline
-\indattr{path} & Target path (string) & /level\\
+\indattr{path} & Target path(string) & /level\\
 \hline
-\indattr{sendwhilestopped} & Send also when transport is stopped (bool) & false\\
+\indattr{sendwhilestopped} & Send also when transport is stopped(bool) & false\\
 \hline
-\indattr{skip} & Skip frames (uint32) & 0\\
+\indattr{skip} & Skip frames(uint32) & 0\\
 \hline
-\indattr{threaded} & Use additional thread for sending data (bool) & true\\
+\indattr{threaded} & Use additional thread for sending data(bool) & true\\
 \hline
-\indattr{url} & Target URL (string) & {\tiny osc.udp://localhost:9999/}\\
+\indattr{url} & Target URL(string) & {\tiny osc.udp://localhost:9999/}\\
 \hline
 \end{tabularx}
 }

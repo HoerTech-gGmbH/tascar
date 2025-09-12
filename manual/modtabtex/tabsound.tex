@@ -3,50 +3,52 @@
 \label{attrtab:sound}
 Attributes of element {\bf sound} ({\hyperref[attrtab:soundcardioidmod]{cardioidmod}} {\hyperref[attrtab:sounddoor]{door}} {\hyperref[attrtab:soundfarsrc]{farsrc}} {\hyperref[attrtab:soundgeneric1storder]{generic1storder}} {\hyperref[attrtab:soundomni]{omni}}), inheriting from \hyperref[attrtab:ports]{{\bf ports}}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{airabsorption} & apply air absorption filter (bool) & true\\
+\indattr{airabsorption} & apply air absorption filter(bool) & true\\
 \hline
-\indattr{d} & distance to next sound along trajectory, or 0 for normal mode (double, m) & 0\\
+\indattr{d} & distance to next sound along trajectory, or 0 for normal mode(double, m) & 0\\
 \hline
-\indattr{delayline} & use delayline (bool) & true\\
+\indattr{delayline} & use delayline(bool) & true\\
 \hline
-\indattr{gainmodel} & gain rule, valid gain models: "1/r", "1" (string) & 1/r\\
+\indattr{gainmodel} & gain rule, valid gain models: "1/r", "1"(string) & 1/r\\
 \hline
-\indattr{id} & id of sound vertex (string) & 6\\
+\indattr{id} & id of sound vertex(string) & 6\\
 \hline
-\indattr{ismmax} & maximal ISM order to render (uint32) & 2147483647\\
+\indattr{ismmax} & maximal ISM order to render(uint32) & 2147483647\\
 \hline
-\indattr{ismmin} & minimal ISM order to render (uint32) & 0\\
+\indattr{ismmin} & minimal ISM order to render(uint32) & 0\\
 \hline
-\indattr{maxdist} & maximum distance to be used in delay lines (float, m) & 3700\\
+\indattr{maxdist} & maximum distance to be used in delay lines(float, m) & 3700\\
 \hline
-\indattr{minlevel} & Level threshold for rendering (float, dB SPL) & -inf\\
+\indattr{minlevel} & Level threshold for rendering(float, dB SPL) & -inf\\
 \hline
-\indattr{name} & name of sound vertex (string) & \\
+\indattr{mute} & mute state(bool) & false\\
 \hline
-\indattr{nearfieldlimit} & distance arond 1/r source where the gain is constant (float, m) & 0.1\\
+\indattr{name} & name of sound vertex(string) & \\
 \hline
-\indattr{rx} & Euler orientation (X) relative to parent (double, deg) & 0\\
+\indattr{nearfieldlimit} & distance arond 1/r source where the gain is constant(float, m) & 0.1\\
 \hline
-\indattr{ry} & Euler orientation (Y) relative to parent (double, deg) & 0\\
+\indattr{rx} & Euler orientation (X) relative to parent(double, deg) & 0\\
 \hline
-\indattr{rz} & Euler orientation (Z) relative to parent (double, deg) & 0\\
+\indattr{ry} & Euler orientation (Y) relative to parent(double, deg) & 0\\
 \hline
-\indattr{sincorder} & order of sinc interpolation in delayline (uint32) & 0\\
+\indattr{rz} & Euler orientation (Z) relative to parent(double, deg) & 0\\
 \hline
-\indattr{size} & physical size of sound source (effect depends on rendering method) (float, m) & 0\\
+\indattr{sincorder} & order of sinc interpolation in delayline(uint32) & 0\\
 \hline
-\indattr{type} & source directivity type, e.g., omni, cardioid (string) & omni\\
+\indattr{size} & physical size of sound source (effect depends on rendering method)(float, m) & 0\\
 \hline
-\indattr{x} & position relative to parent (double, m) & 0\\
+\indattr{type} & source directivity type, e.g., omni, cardioid(string) & omni\\
 \hline
-\indattr{y} & position relative to parent (double, m) & 0\\
+\indattr{x} & position relative to parent(double, m) & 0\\
 \hline
-\indattr{z} & position relative to parent (double, m) & 0\\
+\indattr{y} & position relative to parent(double, m) & 0\\
+\hline
+\indattr{z} & position relative to parent(double, m) & 0\\
 \hline
 \end{tabularx}
 }

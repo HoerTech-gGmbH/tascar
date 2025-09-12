@@ -3,44 +3,44 @@
 \label{attrtab:reverbsimplefdn}
 Attributes of reverb element {\bf simplefdn}, inheriting from \hyperref[attrtab:reverb]{{\bf reverb}}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{absorption} & Absorption used in Sabine's equation (float) & 0.6\\
+\indattr{absorption} & Absorption used in Sabine's equation(float) & 0.6\\
 \hline
-\indattr{c} & Speed of sound (float, m/s) & 340\\
+\indattr{c} & Speed of sound(float, m/s) & 340\\
 \hline
-\indattr{damping} & Damping (first order lowpass) coefficient to control spectral tilt of T60 (float) & 0.3\\
+\indattr{damping} & Damping (first order lowpass) coefficient to control spectral tilt of T60(float) & 0.3\\
 \hline
-\indattr{dw} & Spatial spread of rotation (float, rounds/s) & 60\\
+\indattr{dw} & Spatial spread of rotation(float, rounds/s) & 60\\
 \hline
-\indattr{fdnorder} & Order of FDN (number of recursive paths) (uint32) & 5\\
+\indattr{fdnorder} & Order of FDN (number of recursive paths)(uint32) & 5\\
 \hline
-\indattr{fixcirculantmat} & Apply fix to correctly initialize circulant feedback matrix (bool) & false\\
+\indattr{fixcirculantmat} & Apply fix to correctly initialize circulant feedback matrix(bool) & false\\
 \hline
-\indattr{forwardstages} & Number of feed forward stages (uint32) & 0\\
+\indattr{forwardstages} & Number of feed forward stages(uint32) & 0\\
 \hline
-\indattr{gainmethod} & Gain calculation method (string, original mean schroeder) & original\\
+\indattr{gainmethod} & Gain calculation method(string, original mean schroeder) & original\\
 \hline
-\indattr{lowcut} & low cut off frequency, or zero for no low cut (float, Hz) & 0\\
+\indattr{lowcut} & low cut off frequency, or zero for no low cut(float, Hz) & 0\\
 \hline
-\indattr{numiter} & Number of iterations in T60 optimization (uint32) & 100\\
+\indattr{numiter} & Number of iterations in T60 optimization(uint32) & 100\\
 \hline
-\indattr{prefilt} & Apply additional filter before inserting audio into FDN (bool) & true\\
+\indattr{prefilt} & Apply additional filter before inserting audio into FDN(bool) & true\\
 \hline
-\indattr{rallpass} & Allpass filter radius vector (requires four entries) (float array, [0,1]) & 0.96 0.95 0.951 0.93\\
+\indattr{rallpass} & Allpass filter radius vector (requires four entries)(float array, [0,1]) & 0.96 0.95 0.951 0.93\\
 \hline
-\indattr{t60} & T60, or zero to use Sabine's equation (float, s) & 0\\
+\indattr{t60} & T60, or zero to use Sabine's equation(float, s) & 0\\
 \hline
-\indattr{truncate\_forward} & Truncate delays of feed forward path (bool) & false\\
+\indattr{truncate\_forward} & Truncate delays of feed forward path(bool) & false\\
 \hline
-\indattr{use\_biquad\_allpass} & Use biquad allpass filters instead of first order filters (bool) & false\\
+\indattr{use\_biquad\_allpass} & Use biquad allpass filters instead of first order filters(bool) & false\\
 \hline
-\indattr{vcf} & Center frequencies for T60 optimization, or empty for no optimization (float array, Hz) & \\
+\indattr{vcf} & Center frequencies for T60 optimization, or empty for no optimization(float array, Hz) & \\
 \hline
-\indattr{vt60} & T60 at specified center frequencies (float array, s) & \\
+\indattr{vt60} & T60 at specified center frequencies(float array, s) & \\
 \hline
 \end{tabularx}
 }

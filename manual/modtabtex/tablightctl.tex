@@ -3,40 +3,40 @@
 \label{attrtab:lightctl}
 Attributes of element {\bf lightctl}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{driver} & Driver name (string, ``artnetdmx'', ``opendmxusb'', or ``osc'') & \\
+\indattr{driver} & Driver name(string, ``artnetdmx'', ``opendmxusb'', or ``osc'') & \\
 \hline
-\indattr{fps} & Frames per second (double, Hz) & 30\\
+\indattr{fps} & Frames per second(double, Hz) & 30\\
 \hline
-\indattr{hostname} & Hostname of OSC destination (``osc'' driver only) (string) & localhost\\
+\indattr{hostname} & Hostname of OSC destination (``osc'' driver only)(string) & localhost\\
 \hline
-\indattr{hue\_warp\_rot} & Hue warping rotation (double, deg) & 0\\
+\indattr{hue\_warp\_rot} & Hue warping rotation(double, deg) & 0\\
 \hline
-\indattr{hue\_warp\_x} & Hue warping x offset (double) & 0\\
+\indattr{hue\_warp\_x} & Hue warping x offset(double) & 0\\
 \hline
-\indattr{hue\_warp\_y} & Hue warping y offset (double) & 0\\
+\indattr{hue\_warp\_y} & Hue warping y offset(double) & 0\\
 \hline
-\indattr{maxchannels} & Maximum number of channels to transmit (``osc'' driver only) (uint32) & 512\\
+\indattr{maxchannels} & Maximum number of channels to transmit (``osc'' driver only)(uint32) & 512\\
 \hline
-\indattr{path} & Destination path (``osc'' driver only) (string) & /dmx\\
+\indattr{path} & Destination path (``osc'' driver only)(string) & /dmx\\
 \hline
-\indattr{port} & Port number of OSC destination (``osc'' driver only) (uint32) & 9000\\
+\indattr{port} & Port number of OSC destination (``osc'' driver only)(uint32) & 9000\\
 \hline
-\indattr{rawsrvchannels} & Number of channels to receive as RAW DMX (uint32) & 0\\
+\indattr{rawsrvchannels} & Number of channels to receive as RAW DMX(uint32) & 0\\
 \hline
-\indattr{rawsrvhost} & multicast address for raw DX OSC server (string) & \\
+\indattr{rawsrvhost} & multicast address for raw DX OSC server(string) & \\
 \hline
-\indattr{rawsrvpath} & Path for raw DMX OSC server, empty for no raw DMX OSC server (string) & \\
+\indattr{rawsrvpath} & Path for raw DMX OSC server, empty for no raw DMX OSC server(string) & \\
 \hline
-\indattr{rawsrvport} & Port of raw DMX OSC server, or empty to use session OSC server (string) & \\
+\indattr{rawsrvport} & Port of raw DMX OSC server, or empty to use session OSC server(string) & \\
 \hline
-\indattr{rawsrvproto} & Protocol of raw DMX OSC server (string) & UDP\\
+\indattr{rawsrvproto} & Protocol of raw DMX OSC server(string) & UDP\\
 \hline
-\indattr{universe} & DMX universe (uint32) & 0\\
+\indattr{universe} & DMX universe(uint32) & 0\\
 \hline
 \end{tabularx}
 }

@@ -3,24 +3,24 @@
 \label{attrtab:emergency}
 Attributes of element {\bf emergency}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{alivetimeout} & undocumented (double) & 1\\
+\indattr{alivetimeout} & undocumented(double) & 1\\
 \hline
-\indattr{name} & undocumented (string) & emergency\\
+\indattr{name} & undocumented(string) & emergency\\
 \hline
-\indattr{on\_alive} & Command to be executed when sensor is alive again (string) & \\
+\indattr{on\_alive} & Command to be executed when sensor is alive again(string) & \\
 \hline
-\indattr{on\_timeout} & Command to be executed on timeout (string) & \\
+\indattr{on\_timeout} & Command to be executed on timeout(string) & \\
 \hline
-\indattr{path} & OSC path on which messages are arriving (string) & /noemergency\\
+\indattr{path} & OSC path on which messages are arriving(string) & /noemergency\\
 \hline
-\indattr{startlock} & Lock detecting at start for this amount of time (double, s) & 5\\
+\indattr{startlock} & Lock detecting at start for this amount of time(double, s) & 5\\
 \hline
-\indattr{timeout} & Timeout after which an emergency is detected (double, s) & 1\\
+\indattr{timeout} & Timeout after which an emergency is detected(double, s) & 1\\
 \hline
 \end{tabularx}
 }

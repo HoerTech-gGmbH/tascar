@@ -3,22 +3,22 @@
 \label{attrtab:oscrelay}
 Attributes of element {\bf oscrelay}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{newpath} & Replace incoming path with this path, or empty for no replacement (string) & \\
+\indattr{newpath} & Replace incoming path with this path, or empty for no replacement(string) & \\
 \hline
-\indattr{path} & Path filter, or empty to match any path (string) & \\
+\indattr{path} & Path filter, or empty to match any path(string) & \\
 \hline
-\indattr{retval} & Return value: 0 = handle messages also locally, non-0 = do not handle locally (int32) & 1\\
+\indattr{retval} & Return value: 0 = handle messages also locally, non-0 = do not handle locally(int32) & 1\\
 \hline
-\indattr{startswith} & Forward only messags which start with this path (string) & \\
+\indattr{startswith} & Forward only messags which start with this path(string) & \\
 \hline
-\indattr{trimstart} & Trim startswith part of the path before forwarding (bool) & false\\
+\indattr{trimstart} & Trim startswith part of the path before forwarding(bool) & false\\
 \hline
-\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9000/}\\
+\indattr{url} & Target OSC URL(string) & {\tiny osc.udp://localhost:9000/}\\
 \hline
 \end{tabularx}
 }

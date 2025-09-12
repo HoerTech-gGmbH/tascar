@@ -3,46 +3,46 @@
 \label{attrtab:pos2osc}
 Attributes of element {\bf pos2osc}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{addparentname} & When sending sound vertex positions, add parent name to vertex name (bool) & false\\
+\indattr{addparentname} & When sending sound vertex positions, add parent name to vertex name(bool) & false\\
 \hline
-\indattr{avatar} & Name of object to be controlled (for control of game engines) (string) & \\
+\indattr{avatar} & Name of object to be controlled (for control of game engines)(string) & \\
 \hline
-\indattr{bypass} & Bypass sending of data (bool) & false\\
+\indattr{bypass} & Bypass sending of data(bool) & false\\
 \hline
-\indattr{ignoreorientation} & Ignore delta-orientation of source, send zeros instead (bool) & false\\
+\indattr{ignoreorientation} & Ignore delta-orientation of source, send zeros instead(bool) & false\\
 \hline
-\indattr{lookatlen} & Duration of look-at animation (for control of game engines) (double, s) & 1\\
+\indattr{lookatlen} & Duration of look-at animation (for control of game engines)(double, s) & 1\\
 \hline
-\indattr{mode} & Message format mode (uint32) & 0\\
+\indattr{mode} & Message format mode(uint32) & 0\\
 \hline
-\indattr{name} & Default name used in OSC variables (string) & pos2osc\\
+\indattr{name} & Default name used in OSC variables(string) & pos2osc\\
 \hline
-\indattr{orientationname} & Name for orientation variables (string) & /headGaze\\
+\indattr{orientationname} & Name for orientation variables(string) & /headGaze\\
 \hline
-\indattr{oscale} & Scaling factor for orientations (float) & 1\\
+\indattr{oscale} & Scaling factor for orientations(float) & 1\\
 \hline
-\indattr{pattern} & Pattern of TASCAR object names; see actor module documentation for details. (string array) & /*/*\\
+\indattr{pattern} & Pattern of TASCAR object names; see actor module documentation for details.(string array) & /*/*\\
 \hline
-\indattr{sendsounds} & Send also position of sound vertices (modes 2 and 3 only) (bool) & false\\
+\indattr{sendsounds} & Send also position of sound vertices (modes 2 and 3 only)(bool) & false\\
 \hline
-\indattr{skip} & Skip frames to reduce network traffic (uint32) & 0\\
+\indattr{skip} & Skip frames to reduce network traffic(uint32) & 0\\
 \hline
-\indattr{taumin} & Minimum period time between two transmissions. (float, s) & 0\\
+\indattr{taumin} & Minimum period time between two transmissions.(float, s) & 0\\
 \hline
-\indattr{threaded} & Use additional thread for sending data to avoid blocking of real-time audio thread (bool) & true\\
+\indattr{threaded} & Use additional thread for sending data to avoid blocking of real-time audio thread(bool) & true\\
 \hline
-\indattr{transport} & Send only while transport is rolling (bool) & true\\
+\indattr{transport} & Send only while transport is rolling(bool) & true\\
 \hline
-\indattr{triggered} & Send data only when triggered via OSC (bool) & false\\
+\indattr{triggered} & Send data only when triggered via OSC(bool) & false\\
 \hline
-\indattr{ttl} & Time to live of OSC multicast messages (uint32) & 1\\
+\indattr{ttl} & Time to live of OSC multicast messages(uint32) & 1\\
 \hline
-\indattr{url} & Target URL (string) & {\tiny osc.udp://localhost:9999/}\\
+\indattr{url} & Target URL(string) & {\tiny osc.udp://localhost:9999/}\\
 \hline
 \end{tabularx}
 }

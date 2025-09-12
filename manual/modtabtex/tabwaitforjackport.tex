@@ -3,16 +3,18 @@
 \label{attrtab:waitforjackport}
 Attributes of element {\bf waitforjackport}\nopagebreak
 
-\begin{tabularx}{\textwidth}{lXl}
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
 \hline
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{name} & Name used in jack (string) & waitforjackport\\
+\indattr{name} & Name used in jack(string) & waitforjackport\\
 \hline
-\indattr{ports} & List of port names to wait for (string array) & \\
+\indattr{ports} & List of port names to wait for(string array) & \\
 \hline
-\indattr{timeout} & Timeout after which execution will not block any longer (double, s) & 30\\
+\indattr{timeout} & Timeout after which execution will not block any longer(float, s) & 30\\
+\hline
+\indattr{warntimeout} & Timeout after which a warning is produced(float, s) & 5\\
 \hline
 \end{tabularx}
 }
