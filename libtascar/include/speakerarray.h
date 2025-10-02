@@ -68,6 +68,7 @@ namespace TASCAR {
     std::vector<float> eqfreq;
     std::vector<float> eqgain;
     uint32_t eqstages = 0u;
+    uint32_t eqfirlen = 0u;
     bool calibrate = true;
   };
 

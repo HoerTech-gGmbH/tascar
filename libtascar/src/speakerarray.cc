@@ -178,7 +178,7 @@ spk_array_t::spk_array_t(tsccfg::node_t e, bool use_parent_xml,
     if(isflat)
       xyzgain = 0.5;
     else
-      xyzgain = 1.0/3.0;
+      xyzgain = 1.0 / 3.0;
     break;
   }
   mean_rotation = std::arg(p_xy);
@@ -297,6 +297,8 @@ spk_descriptor_t::spk_descriptor_t(tsccfg::node_t xmlsrc)
   GET_ATTRIBUTE(
       eqstages, "",
       "Number of biquad-stages in IIR frequency correction (0 = disable)");
+  GET_ATTRIBUTE(eqfirlen, "",
+                "Length of FIR filters for speaker equalization (0 = disable)");
   GET_ATTRIBUTE(eqfreq, "Hz", "Frequencies for IIR filter design");
   GET_ATTRIBUTE(eqgain, "dB", "Gains for IIR filter design");
   GET_ATTRIBUTE_BOOL(calibrate, "Use this loudspeaker during calibration");
@@ -312,7 +314,7 @@ spk_descriptor_t::spk_descriptor_t(const spk_descriptor_t& src)
       spkgain(src.spkgain), dr(src.dr), d_w(src.d_w), d_x(src.d_x),
       d_y(src.d_y), d_z(src.d_z), densityweight(src.densityweight), comp(NULL),
       eqfreq(src.eqfreq), eqgain(src.eqgain), eqstages(src.eqstages),
-      calibrate(src.calibrate)
+      eqfirlen(src.eqfirlen), calibrate(src.calibrate)
 {
 }
 
@@ -349,9 +351,24 @@ void spk_array_t::configure()
                            ((operator[](k).dr / 340.0) + operator[](k).delay));
   // speaker correction filter:
   for(auto& spk : *this) {
+    if((spk.eqstages > 0) && (spk.eqfirlen > 0))
+      throw TASCAR::ErrMsg(
+          "Only eqstages or eqfirlen can be set (parametric and FIR filters "
+          "cannot be combined for speaker equalization).");
+    if((spk.compB.size() > 0) && (spk.eqfirlen > 0))
+      throw TASCAR::ErrMsg(
+          "Only compB or eqfirlen can be set (using FIR speaker equalization "
+          "would overwrite explicit FIR coefficients).");
+  }
+  for(auto& spk : *this) {
     if(spk.compB.size() > 0) {
       spk.comp = new TASCAR::partitioned_conv_t(spk.compB.size(), n_fragment);
       spk.comp->set_irs(TASCAR::wave_t(spk.compB));
+    }
+    if(spk.eqfirlen > 0) {
+      spk.comp = new TASCAR::partitioned_conv_t(spk.eqfirlen, n_fragment);
+      // set minimum phase filter here:
+      // spk.comp->set_irs(TASCAR::wave_t(spk.compB));
     }
     if(spk.eqstages > 0) {
       float fmin = 1.0f;
@@ -574,6 +591,7 @@ uint32_t TASCAR::get_spklayout_checksum(const xml_element_t& e)
   attributes.push_back("delay");
   attributes.push_back("compB");
   attributes.push_back("eqstages");
+  attributes.push_back("eqfirlen");
   attributes.push_back("eqfreq");
   attributes.push_back("eqgain");
   attributes.push_back("connect");
