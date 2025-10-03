@@ -62,12 +62,13 @@ public:
   ~tuner_vars_t(){};
 
 protected:
-  std::string id = "tuner";   ///< Module ID for JACK and OSC paths
-  std::string prefix = "/c/"; ///< OSC path prefix
-  std::string url;            ///< OSC target URL
-  uint32_t wlen = 2048;       ///< Window length for spectral analysis
-  double f0 = 440;            ///< Reference frequency for pitch 0 (A4)
-  bool oscactive = true;      ///< Enable OSC output
+  std::string id = "tuner"; ///< Module ID for JACK and OSC paths
+  std::string prefix = "/"; ///< OSC path prefix
+  std::string url;          ///< OSC target URL
+  uint32_t wlen = 2048;     ///< Window length for spectral analysis
+  double f0 = 440;          ///< Reference frequency for pitch 0 (A4)
+  bool isactive = false;    ///< Enable analysis.
+  bool oscactive = true;    ///< Enable OSC output
   std::vector<float> pitchcorr = {
       0.0f};                   ///< Pitch correction in cents per semitone
   std::string path = "/tuner"; ///< OSC message path
@@ -158,6 +159,7 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(url, "", "Tuner display URL");
   GET_ATTRIBUTE(path, "", "Tuner display path");
   GET_ATTRIBUTE_BOOL(oscactive, "Activate OSC sending on start");
+  GET_ATTRIBUTE_BOOL(isactive, "Activate analysis on start");
   std::string tuning = "equal";
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
@@ -200,6 +202,7 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   session->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   session->add_bool(prefix + id + "/oscactive", &oscactive);
+  session->add_bool(prefix + id + "/isactive", &isactive);
   session->unset_variable_owner();
   if(url.size())
     target = lo_address_new_from_url(url.c_str());
@@ -223,6 +226,8 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
 int tuner_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
                      const std::vector<float*>& vOut)
 {
+  if(!isactive)
+    return 0;
   jackc_db_t::process(n, vIn, vOut);
   for(size_t ch = 0; ch < vOut.size(); ++ch)
     memset(vOut[ch], 0, n * sizeof(float));
@@ -296,7 +301,7 @@ void tuner_t::sendthread()
       *p_octave = v_octave;
       *p_delta = v_delta;
       *p_good = v_good;
-      if(active)
+      if(isactive)
         lo_send_message(target, path.c_str(), msg);
       has_data = false;
     }
