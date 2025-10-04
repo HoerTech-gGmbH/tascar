@@ -66,13 +66,14 @@ protected:
   std::string prefix = "/"; ///< OSC path prefix
   std::string url;          ///< OSC target URL
   uint32_t wlen = 2048;     ///< Window length for spectral analysis
-  double f0 = 440;          ///< Reference frequency for pitch 0 (A4)
+  float f0 = 440.0f;        ///< Reference frequency for pitch 0 (A4)
   bool isactive = false;    ///< Enable analysis.
   bool oscactive = true;    ///< Enable OSC output
   std::vector<float> pitchcorr = {
-      0.0f};                   ///< Pitch correction in cents per semitone
-  std::string path = "/tuner"; ///< OSC message path
-  float tau = 0.05f;           ///< Time constant for low-pass filters
+      0.0f};                        ///< Pitch correction in cents per semitone
+  std::string path = "/tuner";      ///< OSC message path
+  float tau = 0.05f;                ///< Time constant for low-pass filters
+  std::vector<std::string> connect; ///< Port names of input connection
 };
 
 /**
@@ -160,23 +161,25 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(path, "", "Tuner display path");
   GET_ATTRIBUTE_BOOL(oscactive, "Activate OSC sending on start");
   GET_ATTRIBUTE_BOOL(isactive, "Activate analysis on start");
+  GET_ATTRIBUTE(connect, "", "Port names of input connection");
   std::string tuning = "equal";
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
+  // http://www.instrument-tuner.com/temperaments_de.html
   if(tuning == "equal")
     pitchcorr = {0.0f};
   else if(tuning == "werkmeister3")
-    pitchcorr = {0.0f,   96.0f,  204.0f, 300.0f, 396.0f,  504.0f,
-                 600.0f, 702.0f, 792.0f, 900.0f, 1002.0f, 1098.0f};
+    pitchcorr = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
+                 0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
   else if(tuning == "meantone4")
-    pitchcorr = {0.0f,   75.5f,  193.0f, 310.5f, 386.0f,  503.5f,
-                 579.0f, 696.5f, 772.0f, 889.5f, 1007.0f, 1082.5f};
+    pitchcorr = {10.265f,  -13.686f, 3.422f,   20.53f, -3.421f, 13.686f,
+                 -10.265f, 6.843f,   -17.108f, 0.0f,   17.108f, -6.843f};
   else if(tuning == "meantone6")
-    pitchcorr = {0.0f,   92.0f,  196.0f, 294.0f, 392.0f, 502.0f,
-                 588.0f, 698.0f, 796.0f, 894.0f, 998.0f, 1090.0f};
+    pitchcorr = {6.0f,  -2.0f, 2.0f, 0.0f, -2.0f, 8.0f,
+                 -6.0f, 4.0f,  2.0f, 0.0f, 4.0f,  -4.0f};
   else if(tuning == "valotti")
-    pitchcorr = {0.0f,   94.0f,  196.0f, 298.0f, 392.0f,  502.0f,
-                 592.0f, 698.0f, 796.0f, 894.0f, 1000.0f, 1090.0f};
+    pitchcorr = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
+                 -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
   else
     throw TASCAR::ErrMsg("Unsupported tuning: \"" + tuning + "\".");
 }
@@ -197,12 +200,13 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   std::set<double> vf;
   // create jack ports:
   add_input_port("in");
-  add_output_port("out");
   // register OSC variables:
   session->set_variable_owner(
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
-  session->add_bool(prefix + id + "/oscactive", &oscactive);
-  session->add_bool(prefix + id + "/isactive", &isactive);
+  session->add_bool(prefix + id + "/oscactive", &oscactive,
+                    "control sending of OSC messages");
+  session->add_bool(prefix + id + "/isactive", &isactive, "control analysis");
+  session->add_float(prefix + id + "/f0", &f0, "[100,1000]", "pitch a in Hz");
   session->unset_variable_owner();
   if(url.size())
     target = lo_address_new_from_url(url.c_str());
@@ -221,6 +225,8 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   thread = std::thread(&tuner_t::sendthread, this);
   // activate service:
   activate();
+  for(const auto& c : tuner_vars_t::connect)
+    connect_in(0, c, true);
 }
 
 int tuner_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
@@ -229,8 +235,6 @@ int tuner_t::process(jack_nframes_t n, const std::vector<float*>& vIn,
   if(!isactive)
     return 0;
   jackc_db_t::process(n, vIn, vOut);
-  for(size_t ch = 0; ch < vOut.size(); ++ch)
-    memset(vOut[ch], 0, n * sizeof(float));
   return 0;
 }
 
@@ -272,14 +276,15 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
   if(target && oscactive) {
     if(mtx.try_lock()) {
       v_freq = ifreq_mean;
-      v_note = 12.0f * log2f(freq_max / f0) + 69.0f;
+      v_note = std::min(255.0f,
+                        std::max(0.0f, 12.0f * log2f(freq_max / f0) + 69.0f));
       int i_note = (int)(v_note + 0.5f);
       v_delta = 100.0f * (v_note - i_note);
       auto div_note = div(i_note, 12);
-      v_octave = div_note.quot;
+      v_octave = div_note.quot - 5.0f;
       i_note = div_note.rem;
       auto i_note_corr = i_note % pitchcorr.size();
-      v_delta -= (pitchcorr[i_note_corr] - 100.0f * i_note_corr);
+      v_delta -= pitchcorr[i_note_corr];
       v_good = expf(-ifreq_std);
       v_note = i_note;
       has_data = true;

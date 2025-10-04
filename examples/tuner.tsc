@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <session license="CC0">
   <modules>
-    <tuner id="tuner" url="osc.udp://localhost:9999" tuning="meantone4"/>
+    <tuner id="tuner" url="osc.udp://localhost:9999" tuning="meantone4" connect="system:capture_1 system:capture_2" f0="415"/>
   </modules>
-  <connect src="system:capture_1" dest="tuner:in"/>
 </session>
