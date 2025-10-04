@@ -74,6 +74,8 @@ protected:
   std::string path = "/tuner";      ///< OSC message path
   float tau = 0.05f;                ///< Time constant for low-pass filters
   std::vector<std::string> connect; ///< Port names of input connection
+  float fmin = 40.0f;               ///< Minimal frequency for analysis in Hz
+  float fmax = 4000.0f;             ///< maximal frequency for analysis in Hz
 };
 
 /**
@@ -122,6 +124,13 @@ public:
                             const std::vector<float*>& inBuffer,
                             const std::vector<float*>& outBuffer);
 
+  inline float freq2pitch(float f)
+  {
+    return std::min(255.0f, std::max(0.0f, 12.0f * log2f(f / f0) + 69.0f));
+  };
+
+  inline int freq2pitch_int(float f) { return (int)(freq2pitch(f) + 0.5); };
+
 protected:
   TASCAR::ola_t ola1;           ///< First OLA processor for input signal
   TASCAR::ola_t ola2;           ///< Second OLA processor for delayed input
@@ -148,6 +157,11 @@ protected:
   TASCAR::o1flt_lowpass_t mean_lp;    ///< Low-pass filter for frequency mean
   TASCAR::o1flt_lowpass_t
       std_lp; ///< Low-pass filter for frequency standard deviation
+  std::vector<float> cum_pitches;
+  std::vector<float> cum_intensities;
+  uint32_t bin_min = 0;
+  uint32_t bin_max = 0;
+  std::vector<float> pitch_ratios = {4.0f, 3.0f, 2.0f};
 };
 
 tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -162,6 +176,8 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(oscactive, "Activate OSC sending on start");
   GET_ATTRIBUTE_BOOL(isactive, "Activate analysis on start");
   GET_ATTRIBUTE(connect, "", "Port names of input connection");
+  GET_ATTRIBUTE(fmin, "Hz", "Minimal frequency for analysis");
+  GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
   std::string tuning = "equal";
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
@@ -207,7 +223,8 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
                     "control sending of OSC messages");
   session->add_bool(prefix + id + "/isactive", &isactive, "control analysis");
   session->add_float(prefix + id + "/f0", &f0, "[100,1000]", "pitch a in Hz");
-  session->add_float(prefix + id + "/tau", &tau, "[0,10]", "pitch smoothing TC in s");
+  session->add_float(prefix + id + "/tau", &tau, "[0,10]",
+                     "pitch smoothing TC in s");
   session->unset_variable_owner();
   if(url.size())
     target = lo_address_new_from_url(url.c_str());
@@ -224,6 +241,10 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   p_delta = &(oscmsgargv[3]->f);
   p_good = &(oscmsgargv[4]->f);
   thread = std::thread(&tuner_t::sendthread, this);
+  cum_pitches.resize(256);
+  cum_intensities.resize(256);
+  bin_min = (uint32_t)(fmin / srate * wlen);
+  bin_max = std::min((uint32_t)(wlen / 2), (uint32_t)(fmax / srate * wlen));
   // activate service:
   activate();
   for(const auto& c : tuner_vars_t::connect)
@@ -253,22 +274,48 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
     in_delayed.d[k] = delaystate;
     delaystate = w_in.d[k];
   }
+  // clear pitches and intensities:
+  for(auto& p : cum_pitches)
+    p = 0.0f;
+  for(auto& p : cum_intensities)
+    p = 0.0f;
   // spectral analysis and instantaneous frequency:
   ola1.process(w_in);
   ola2.process(in_delayed);
   // use frequency with highest intensity:
-  double intensity_max(0.0);
-  double freq_max(0.0);
-  for(uint32_t k = 0; k < ola1.s.n_; ++k) {
+  for(uint32_t k = bin_min; k < std::min(ola1.s.n_, bin_max); ++k) {
     std::complex<float> p(ola1.s.b[k] * std::conj(ola2.s.b[k]));
-    float f(std::arg(p));
-    float intensity(std::abs(p));
-    if(intensity > intensity_max) {
-      freq_max = f;
-      intensity_max = intensity;
+    float instfreq = std::arg(p) * f_sample / TASCAR_2PI;
+    float intensity = std::abs(p);
+    int idx_pitch = freq2pitch_int(instfreq);
+    cum_pitches[idx_pitch] += intensity * instfreq;
+    cum_intensities[idx_pitch] += intensity;
+  }
+  for(size_t k = 0; k < cum_pitches.size(); ++k) {
+    if(cum_intensities[k] > 0.0f)
+      cum_pitches[k] /= cum_intensities[k];
+  }
+  for(size_t k = 0; k < cum_pitches.size(); ++k) {
+    for(auto r : pitch_ratios) {
+      float f_new = cum_pitches[k] / r;
+      if(f_new > fmin) {
+        int idx_new = freq2pitch_int(f_new);
+        if(cum_intensities[idx_new] > 0.01 * cum_intensities[k]) {
+          cum_intensities[idx_new] += cum_intensities[k];
+          cum_intensities[k] = 0.0f;
+        }
+      }
     }
   }
-  freq_max *= f_sample / TASCAR_2PI;
+  double intensity_max(0.0);
+  double freq_max(0.0);
+  for(size_t k = 0; k < cum_pitches.size(); ++k) {
+    if(cum_intensities[k] > intensity_max) {
+      freq_max = cum_pitches[k];
+      intensity_max = cum_intensities[k];
+    }
+  }
+  // freq_max *= f_sample / TASCAR_2PI;
   mean_lp.set_tau(tau);
   std_lp.set_tau(tau);
   auto ifreq_mean = mean_lp(0, freq_max);
