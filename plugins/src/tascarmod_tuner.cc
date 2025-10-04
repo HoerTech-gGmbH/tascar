@@ -207,6 +207,7 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
                     "control sending of OSC messages");
   session->add_bool(prefix + id + "/isactive", &isactive, "control analysis");
   session->add_float(prefix + id + "/f0", &f0, "[100,1000]", "pitch a in Hz");
+  session->add_float(prefix + id + "/tau", &tau, "[0,10]", "pitch smoothing TC in s");
   session->unset_variable_owner();
   if(url.size())
     target = lo_address_new_from_url(url.c_str());
@@ -268,6 +269,8 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
     }
   }
   freq_max *= f_sample / TASCAR_2PI;
+  mean_lp.set_tau(tau);
+  std_lp.set_tau(tau);
   auto ifreq_mean = mean_lp(0, freq_max);
   auto ifreq_std = sqrtf(std::max(
       0.0f, std_lp(0, (ifreq_mean - freq_max) * (ifreq_mean - freq_max))));
