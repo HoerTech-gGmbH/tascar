@@ -76,6 +76,7 @@ protected:
   std::vector<std::string> connect; ///< Port names of input connection
   float fmin = 40.0f;               ///< Minimal frequency for analysis in Hz
   float fmax = 4000.0f;             ///< maximal frequency for analysis in Hz
+  std::string tuning = "equal";
 };
 
 /**
@@ -178,7 +179,6 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(connect, "", "Port names of input connection");
   GET_ATTRIBUTE(fmin, "Hz", "Minimal frequency for analysis");
   GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
-  std::string tuning = "equal";
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
   // http://www.instrument-tuner.com/temperaments_de.html
@@ -225,6 +225,7 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   session->add_float(prefix + id + "/f0", &f0, "[100,1000]", "pitch a in Hz");
   session->add_float(prefix + id + "/tau", &tau, "[0,10]",
                      "pitch smoothing TC in s");
+  session->add_string(prefix + id + "/tuning", &tuning, "tuning temperament");
   session->unset_variable_owner();
   if(url.size())
     target = lo_address_new_from_url(url.c_str());
