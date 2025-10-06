@@ -199,14 +199,14 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
                  -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
   else
     throw TASCAR::ErrMsg("Unsupported tuning: \"" + tuning + "\".");
-  jackc_portless_t jc(id+"_");
+  jackc_portless_t jc(id + "_");
   auto fragsize = jc.get_fragsize();
   auto wlen_new = wlen;
-  if(wlen > fragsize)
+  if((int)wlen > fragsize)
     wlen_new = ceil((float)wlen / (float)fragsize) * fragsize;
   else
     wlen_new =
-        (1 << (int)(ceil(log2f((float)wlen / (float)fragsize)))) * fragsize;
+        fragsize * powf(2.0f, ceil(log2f((float)wlen / (float)fragsize)));
   if(wlen_new != wlen)
     TASCAR::add_warning("Window length adjusted from " +
                         TASCAR::to_string(wlen) + " to " +
