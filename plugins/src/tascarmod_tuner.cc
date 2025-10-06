@@ -177,6 +177,7 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE_BOOL(oscactive, "Activate OSC sending on start");
   GET_ATTRIBUTE_BOOL(isactive, "Activate analysis on start");
   GET_ATTRIBUTE(connect, "", "Port names of input connection");
+  GET_ATTRIBUTE(tau, "s", "Frequency estimation time constant");
   GET_ATTRIBUTE(fmin, "Hz", "Minimal frequency for analysis");
   GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
