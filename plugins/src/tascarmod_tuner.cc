@@ -142,7 +142,7 @@ protected:
   float* p_note = NULL;         ///< Pointer to MIDI note value in OSC message
   float* p_octave = NULL;       ///< Pointer to octave value in OSC message
   float* p_delta = NULL;        ///< Pointer to cents deviation in OSC message
-  float* p_good = NULL;         ///< Pointer to confidence value in OSC message
+  float* p_confidence = NULL;   ///< Pointer to confidence value in OSC message
   lo_message msg;               ///< OSC message buffer
   std::mutex mtx;               ///< Mutex for thread-safe data access
   std::condition_variable cond; ///< Condition variable for thread signaling
@@ -154,15 +154,17 @@ protected:
   float v_note = 0.0f;                ///< Current MIDI note estimate
   float v_octave = 0.0f;              ///< Current octave estimate
   float v_delta = 0.0f;               ///< Current cents deviation
-  float v_good = 0.0f;                ///< Current confidence value
+  float v_confidence = 0.0f;          ///< Current confidence value
   TASCAR::o1flt_lowpass_t mean_lp;    ///< Low-pass filter for frequency mean
   TASCAR::o1flt_lowpass_t
       std_lp; ///< Low-pass filter for frequency standard deviation
   std::vector<float> cum_pitches;
-  std::vector<float> cum_intensities;
+  std::vector<float> cum_weights;
+  std::vector<float> cum_vectorstrengths;
   uint32_t bin_min = 0;
   uint32_t bin_max = 0;
   std::vector<float> pitch_ratios = {4.0f, 3.0f, 2.0f};
+  std::vector<std::complex<float>> c_dphase_state;
 };
 
 tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -216,9 +218,6 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
 
 tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
     : tuner_vars_t(cfg), jackc_db_t(id, wlen),
-      // ola_t(uint32_t fftlen, uint32_t wndlen, uint32_t chunksize,
-      // windowtype_t wnd, windowtype_t zerownd,double wndpos,windowtype_t
-      // postwnd=WND_RECT);
       ola1(4 * wlen, 4 * wlen, wlen, TASCAR::stft_t::WND_HANNING,
            TASCAR::stft_t::WND_RECT, 0.5),
       ola2(4 * wlen, 4 * wlen, wlen, TASCAR::stft_t::WND_HANNING,
@@ -227,7 +226,6 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
       std_lp({tau}, srate / wlen)
 
 {
-  std::set<double> vf;
   // create jack ports:
   add_input_port("in");
   // register OSC variables:
@@ -254,12 +252,16 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   p_note = &(oscmsgargv[1]->f);
   p_octave = &(oscmsgargv[2]->f);
   p_delta = &(oscmsgargv[3]->f);
-  p_good = &(oscmsgargv[4]->f);
+  p_confidence = &(oscmsgargv[4]->f);
   thread = std::thread(&tuner_t::sendthread, this);
   cum_pitches.resize(256);
-  cum_intensities.resize(256);
+  cum_weights.resize(256);
+  cum_vectorstrengths.resize(256);
   bin_min = (uint32_t)(fmin / srate * wlen);
   bin_max = std::min((uint32_t)(wlen / 2), (uint32_t)(fmax / srate * wlen));
+  c_dphase_state.resize(ola1.s.n_);
+  for(auto& c : c_dphase_state)
+    c = 0.0f;
   // activate service:
   activate();
   for(const auto& c : tuner_vars_t::connect)
@@ -292,57 +294,75 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
   // clear pitches and intensities:
   for(auto& p : cum_pitches)
     p = 0.0f;
-  for(auto& p : cum_intensities)
+  for(auto& p : cum_weights)
     p = 0.0f;
+  for(auto& p : cum_vectorstrengths)
+    p = 0.0f;
+  // update filters and store filter coefficient:
+  mean_lp.set_tau(tau);
+  std_lp.set_tau(tau);
+  float c1 = mean_lp.get_c1(0);
+  float c2 = 1.0f - c1;
   // spectral analysis and instantaneous frequency:
   ola1.process(w_in);
   ola2.process(in_delayed);
   // use frequency with highest intensity:
   for(uint32_t k = bin_min; k < std::min(ola1.s.n_, bin_max); ++k) {
-    std::complex<float> p(ola1.s.b[k] * std::conj(ola2.s.b[k]));
-    float instfreq = std::arg(p) * f_sample / TASCAR_2PI;
-    float intensity = std::abs(p);
+    // calculate phase increment and intensity:
+    std::complex<float> c_dphase(ola1.s.b[k] * std::conj(ola2.s.b[k]));
+    float intensity = std::abs(c_dphase);
+    if(intensity > 0)
+      c_dphase /= intensity;
+    // low-pass complex phase value to calculate average instantaneous
+    // frequency and vector strength:
+    c_dphase_state[k] *= c1;
+    c_dphase_state[k] += c2 * c_dphase;
+    float vectorstrength = std::abs(c_dphase_state[k]);
+    float instfreq = std::arg(c_dphase_state[k]) * f_sample / TASCAR_2PI;
     int idx_pitch = freq2pitch_int(instfreq);
-    cum_pitches[idx_pitch] += intensity * instfreq;
-    cum_intensities[idx_pitch] += intensity;
+    float weight = intensity * vectorstrength;
+    cum_pitches[idx_pitch] += weight * instfreq;
+    cum_weights[idx_pitch] += weight;
+    cum_vectorstrengths[idx_pitch] += weight * vectorstrength;
   }
   for(size_t k = 0; k < cum_pitches.size(); ++k) {
-    if(cum_intensities[k] > 0.0f)
-      cum_pitches[k] /= cum_intensities[k];
+    if(cum_weights[k] > 0.0f) {
+      cum_pitches[k] /= cum_weights[k];
+      cum_vectorstrengths[k] /= cum_weights[k];
+    }
   }
   for(size_t k = 0; k < cum_pitches.size(); ++k) {
     for(auto r : pitch_ratios) {
       float f_new = cum_pitches[k] / r;
       if(f_new > fmin) {
         int idx_new = freq2pitch_int(f_new);
-        if(cum_intensities[idx_new] > 0.01 * cum_intensities[k]) {
-          cum_intensities[idx_new] += cum_intensities[k];
-          cum_intensities[k] = 0.0f;
+        if(cum_weights[idx_new] > 0.01 * cum_weights[k]) {
+          cum_weights[idx_new] += cum_weights[k];
+          cum_weights[k] = 0.0f;
         }
       }
     }
   }
-  double intensity_max(0.0);
-  double freq_max(0.0);
+  float intensity_max(0.0);
+  float ifreq_max(0.0);
+  float confidence_max(0.0f);
   for(size_t k = 0; k < cum_pitches.size(); ++k) {
-    if(cum_intensities[k] > intensity_max) {
-      freq_max = cum_pitches[k];
-      intensity_max = cum_intensities[k];
+    if(cum_weights[k] > intensity_max) {
+      ifreq_max = cum_pitches[k];
+      intensity_max = cum_weights[k];
+      confidence_max = cum_vectorstrengths[k];
     }
   }
-  // freq_max *= f_sample / TASCAR_2PI;
-  mean_lp.set_tau(tau);
-  std_lp.set_tau(tau);
-  auto ifreq_mean = mean_lp(0, freq_max);
-  auto ifreq_std = sqrtf(std::max(
-      0.0f, std_lp(0, (ifreq_mean - freq_max) * (ifreq_mean - freq_max))));
-  // phase modification, e.g., convert to minimum phase stimulus:
-  // send fill state:
+  // auto ifreq_mean = mean_lp(0, freq_max);
+  // auto ifreq_std = sqrtf(std::max(
+  //   0.0f, std_lp(0, (ifreq_mean - freq_max) * (ifreq_mean - freq_max))));
+  // send frequency and confidence:
   if(target && oscactive) {
     if(mtx.try_lock()) {
-      v_freq = ifreq_mean;
-      v_note = std::min(255.0f,
-                        std::max(0.0f, 12.0f * log2f(freq_max / f0) + 69.0f));
+      // v_freq = ifreq_mean;
+      v_freq = ifreq_max;
+      v_note =
+          std::min(255.0f, std::max(0.0f, 12.0f * log2f(v_freq / f0) + 69.0f));
       int i_note = (int)(v_note + 0.5f);
       v_delta = 100.0f * (v_note - i_note);
       auto div_note = div(i_note, 12);
@@ -350,7 +370,7 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
       i_note = div_note.rem;
       auto i_note_corr = i_note % pitchcorr.size();
       v_delta -= pitchcorr[i_note_corr];
-      v_good = expf(-ifreq_std);
+      v_confidence = confidence_max; // expf(-ifreq_std);
       v_note = i_note;
       has_data = true;
       mtx.unlock();
@@ -370,7 +390,7 @@ void tuner_t::sendthread()
       *p_note = v_note;
       *p_octave = v_octave;
       *p_delta = v_delta;
-      *p_good = v_good;
+      *p_confidence = v_confidence;
       if(isactive)
         lo_send_message(target, path.c_str(), msg);
       has_data = false;
