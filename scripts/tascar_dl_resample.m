@@ -14,7 +14,10 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur, flt
 %   - range: Time range in seconds (default: full range of data).
 %   - nup: Upsampling ratio (default: automatic based on fs and original sampling rate).
 %   - maxgapdur: maximum gap duration for interpolation, or empty.
-%   - fltcomplex: if ~= 0 then apply filter on exp(i*pi*data/fltcomplex) and convert back with fltcomplex/pi*angle(...)
+%   - fltcomplex: if ~= 0 then apply filter on
+%                 exp(i*pi*data/fltcomplex) and convert back with -
+%                 fltcomplex/pi*angle(...). Should be one entry per
+%                 data channel.
 %
 % Outputs:
 %   - d: Resampled data matrix.
@@ -92,8 +95,12 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur, flt
     % Create new time vector for resampling
     t = [range(1) - ((nup - 1) / (nup * fs)) : (1 / (nup * fs)) : range(2)]';
 
-    if fltcomplex ~= 0
-        data(2:end, :) = exp(i*pi/fltcomplex*data(2:end, :));
+    if any(fltcomplex ~= 0)
+        for ch=1:min(numel(fltcomplex),size(data,1)-1)
+            if fltcomplex(ch) ~= 0
+                data(1+ch, :) = exp(i*pi/fltcomplex(ch)*data(1+ch, :));
+            end
+        end
     end
 
     % Perform linear interpolation to resample data
@@ -102,8 +109,12 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur, flt
 
     % Apply low-pass filter to smooth the resampled data
     d = lp(d, 2 * nup);
-    if fltcomplex ~= 0
-        d = fltcomplex*angle(d)/pi;
+    if any(fltcomplex ~= 0)
+        for ch=1:min(numel(fltcomplex),size(data,1)-1)
+            if fltcomplex(ch) ~= 0
+                d(:,ch) = fltcomplex(ch)*angle(d(:,ch))/pi;
+            end
+        end
     end
 
     % Downsample to achieve the desired sampling frequency
