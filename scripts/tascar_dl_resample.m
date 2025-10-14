@@ -1,4 +1,4 @@
-function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur )
+function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur, fltcomplex )
 % TASCAR_DL_RESAMPLE Resamples TASCAR data from data logging module.
 %    
 %   This function resamples data to a specified sampling frequency, 
@@ -13,7 +13,8 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur )
 %   - fs: New sampling frequency in Hz.
 %   - range: Time range in seconds (default: full range of data).
 %   - nup: Upsampling ratio (default: automatic based on fs and original sampling rate).
-%   - maxgapdur: maximum gap duration for interpolation
+%   - maxgapdur: maximum gap duration for interpolation, or empty.
+%   - fltcomplex: if ~= 0 then apply filter on exp(i*pi*data/fltcomplex) and convert back with fltcomplex/pi*angle(...)
 %
 % Outputs:
 %   - d: Resampled data matrix.
@@ -31,6 +32,10 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur )
 
     if (nargin < 6) || isempty(maxgapdur)
         maxgapdur = 0;
+    end
+
+    if (nargin < 7) || isempty(fltcomplex)
+        fltcomplex = 0;
     end
 
     % Calculate original sampling frequency from the time vector
@@ -87,12 +92,19 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur )
     % Create new time vector for resampling
     t = [range(1) - ((nup - 1) / (nup * fs)) : (1 / (nup * fs)) : range(2)]';
 
+    if fltcomplex ~= 0
+        data(2:end, :) = exp(i*pi/fltcomplex*data(2:end, :));
+    end
+
     % Perform linear interpolation to resample data
     d = interp1(data(1, :)', data(2:end, :)', t, ...
                 'linear', 'extrap');
 
     % Apply low-pass filter to smooth the resampled data
     d = lp(d, 2 * nup);
+    if fltcomplex ~= 0
+        d = fltcomplex*angle(d)/pi;
+    end
 
     % Downsample to achieve the desired sampling frequency
     t = t(nup:nup:end, :);
@@ -113,22 +125,14 @@ function d = lp(d, n)
 % Output:
 %   - d: Filtered data.
 
-    ;
-    % Calculate the length of the data
-    len = size(d, 1);
-
-    % Determine the number of points to pad at the end
-    n2 = ceil(n / 2);
-
-    % Pad the data to handle filter transient
-    d(end + [1:n], :) = repmat(d(end, :), [n, 1]);
-
     % Create the filter kernel (moving average)
     B = ones(n, 1) / n;
-
-    % Apply the filter using FFT-based convolution
-    d = fftfilt(B, d);
-
-    % Trim the filtered data to the original length
-    d = d(n2 + [1:len], :);
+    % Handle NaN/Inf values
+    d_in = d;
+    idx = ~isfinite(d);
+    d(idx) = 0;
+    % % Apply the filter
+    d = filtfilt( B, 1, d);
+    % restore NaN/Inf values
+    d(idx) = d_in(idx);
 end
