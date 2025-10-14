@@ -98,13 +98,13 @@ function [d, t] = tascar_dl_resample( data, name, fs, range, nup, maxgapdur, flt
     if any(fltcomplex ~= 0)
         for ch=1:min(numel(fltcomplex),size(data,1)-1)
             if fltcomplex(ch) ~= 0
-                data(1+ch, :) = exp(i*pi/fltcomplex(ch)*data(1+ch, :));
+                data(1+ch, :) = exp(i*pi*data(1+ch, :)/fltcomplex(ch));
             end
         end
     end
 
     % Perform linear interpolation to resample data
-    d = interp1(data(1, :)', data(2:end, :)', t, ...
+    d = interp1(data(1, :).', data(2:end, :).', t, ...
                 'linear', 'extrap');
 
     % Apply low-pass filter to smooth the resampled data
