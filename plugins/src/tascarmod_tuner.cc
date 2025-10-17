@@ -70,13 +70,16 @@ protected:
   bool isactive = false;    ///< Enable analysis.
   bool oscactive = true;    ///< Enable OSC output
   std::vector<float> pitchcorr = {
-      0.0f};                        ///< Pitch correction in cents per semitone
-  std::string path = "/tuner";      ///< OSC message path
+      0.0f};                   ///< Pitch correction in cents per semitone
+  std::string path = "/tuner"; ///< OSC message path
+  std::string path_strobe = "/tuner/strobe"; ///< OSC message path
   float tau = 0.05f;                ///< Time constant for low-pass filters
   std::vector<std::string> connect; ///< Port names of input connection
   float fmin = 40.0f;               ///< Minimal frequency for analysis in Hz
   float fmax = 4000.0f;             ///< maximal frequency for analysis in Hz
   std::string tuning = "equal";
+  float strobeperiods = 4.0f;    ///< Number of periods to display in strobe
+  uint32_t strobebufferlen = 50; ///< Length of strobe buffer
 };
 
 /**
@@ -144,6 +147,7 @@ protected:
   float* p_delta = NULL;        ///< Pointer to cents deviation in OSC message
   float* p_confidence = NULL;   ///< Pointer to confidence value in OSC message
   lo_message msg;               ///< OSC message buffer
+  lo_message msg_strobe;        ///< OSC message buffer
   std::mutex mtx;               ///< Mutex for thread-safe data access
   std::condition_variable cond; ///< Condition variable for thread signaling
   std::atomic_bool has_data = false;  ///< Flag indicating new data is available
@@ -165,6 +169,10 @@ protected:
   uint32_t bin_max = 0;
   std::vector<float> pitch_ratios = {4.0f, 3.0f, 2.0f};
   std::vector<std::complex<float>> c_dphase_state;
+  float currentperiod = 1.0f;
+  float buffertime = 0.0f;
+  TASCAR::wave_t strobebuffer;
+  TASCAR::wave_t strobebuffersend;
 };
 
 tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -175,7 +183,8 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(wlen, "samples", "window length");
   GET_ATTRIBUTE(f0, "Hz", "frequency of pitch 0");
   GET_ATTRIBUTE(url, "", "Tuner display URL");
-  GET_ATTRIBUTE(path, "", "Tuner display path");
+  GET_ATTRIBUTE(path, "", "Tuner note/detune display path");
+  GET_ATTRIBUTE(path_strobe, "", "Tuner strobe display path");
   GET_ATTRIBUTE_BOOL(oscactive, "Activate OSC sending on start");
   GET_ATTRIBUTE_BOOL(isactive, "Activate analysis on start");
   GET_ATTRIBUTE(connect, "", "Port names of input connection");
@@ -223,8 +232,8 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
       ola2(4 * wlen, 4 * wlen, wlen, TASCAR::stft_t::WND_HANNING,
            TASCAR::stft_t::WND_RECT, 0.5),
       delaystate(0.0f), in_delayed(wlen), mean_lp({tau}, srate / wlen),
-      std_lp({tau}, srate / wlen)
-
+      std_lp({tau}, srate / wlen), strobebuffer(strobebufferlen),
+      strobebuffersend(strobebufferlen)
 {
   // create jack ports:
   add_input_port("in");
@@ -241,6 +250,7 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   session->unset_variable_owner();
   if(url.size())
     target = lo_address_new_from_url(url.c_str());
+  // construct pitch message:
   msg = lo_message_new();
   lo_message_add_float(msg, 0.0f);
   lo_message_add_float(msg, 0.0f);
@@ -253,6 +263,11 @@ tuner_t::tuner_t(const TASCAR::module_cfg_t& cfg)
   p_octave = &(oscmsgargv[2]->f);
   p_delta = &(oscmsgargv[3]->f);
   p_confidence = &(oscmsgargv[4]->f);
+  // construct strobe message:
+  msg_strobe = lo_message_new();
+  for(uint32_t k = 0; k < strobebufferlen; ++k)
+    lo_message_add_float(msg_strobe, 0.0f);
+  // create sender thread:
   thread = std::thread(&tuner_t::sendthread, this);
   cum_pitches.resize(256);
   cum_weights.resize(256);
@@ -353,6 +368,21 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
       confidence_max = cum_vectorstrengths[k];
     }
   }
+  // filter extreme values:
+  if((ifreq_max < fmin) || (ifreq_max > fmax)) {
+    ifreq_max = std::min(fmax, std::max(fmin, ifreq_max));
+    confidence_max = 0.0f;
+  }
+  // update strobe buffer:
+  currentperiod = strobeperiods / ifreq_max;
+  for(uint32_t k = 0; k < n; ++k) {
+    buffertime += t_sample;
+    while(buffertime > currentperiod)
+      buffertime -= currentperiod;
+    uint32_t strobebuffer_index = std::min(
+        uint32_t(buffertime * strobebuffer.n / currentperiod), strobebuffer.n);
+    strobebuffer.d[strobebuffer_index] = w_in.d[k];
+  }
   // auto ifreq_mean = mean_lp(0, freq_max);
   // auto ifreq_std = sqrtf(std::max(
   //   0.0f, std_lp(0, (ifreq_mean - freq_max) * (ifreq_mean - freq_max))));
@@ -372,6 +402,7 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
       v_delta -= pitchcorr[i_note_corr];
       v_confidence = confidence_max; // expf(-ifreq_std);
       v_note = i_note;
+      strobebuffersend.copy(strobebuffer);
       has_data = true;
       mtx.unlock();
       cond.notify_one();
@@ -391,8 +422,14 @@ void tuner_t::sendthread()
       *p_octave = v_octave;
       *p_delta = v_delta;
       *p_confidence = v_confidence;
-      if(isactive)
+      if(isactive) {
         lo_send_message(target, path.c_str(), msg);
+        strobebuffersend *= 1.0f / std::max(1e-6f, strobebuffersend.maxabs());
+        auto oscmsgargv = lo_message_get_argv(msg_strobe);
+        for(uint32_t k = 0; k < strobebufferlen; ++k)
+          oscmsgargv[k]->f = strobebuffersend.d[k];
+        lo_send_message(target, path_strobe.c_str(), msg_strobe);
+      }
       has_data = false;
     }
   }
