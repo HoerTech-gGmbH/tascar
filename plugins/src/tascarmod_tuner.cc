@@ -193,6 +193,8 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
+  GET_ATTRIBUTE(strobeperiods,"","Number of periods to display in strobe display");
+  GET_ATTRIBUTE(strobebufferlen,"","Number of samples in strobe buffer");
   // http://www.instrument-tuner.com/temperaments_de.html
   if(tuning == "equal")
     pitchcorr = {0.0f};
@@ -374,7 +376,6 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
     confidence_max = 0.0f;
   }
   // update strobe buffer:
-  currentperiod = strobeperiods / ifreq_max;
   for(uint32_t k = 0; k < n; ++k) {
     buffertime += t_sample;
     while(buffertime > currentperiod)
@@ -395,6 +396,7 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
           std::min(255.0f, std::max(0.0f, 12.0f * log2f(v_freq / f0) + 69.0f));
       int i_note = (int)(v_note + 0.5f);
       v_delta = 100.0f * (v_note - i_note);
+      currentperiod = strobeperiods / (f0*powf(2.0f,(float)(i_note-69)/12.f));
       auto div_note = div(i_note, 12);
       v_octave = div_note.quot - 5.0f;
       i_note = div_note.rem;
