@@ -434,12 +434,15 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
         }
       }
       v_delta = 100.0f * (v_note - i_note);
-      strobe_currentperiod =
-          strobeperiods / (f0 * powf(2.0f, (float)(i_note - 69) / 12.f));
       auto div_note = div(i_note, 12);
       v_octave = div_note.quot - 5.0f;
       i_note = div_note.rem;
       auto i_note_corr = i_note % pitchcorr.size();
+      float f_ref =
+          f0 * powf(2.0f, (float)(i_note + 12 * (v_octave + 5) - 69) / 12.0f +
+                              pitchcorr[i_note_corr] / 1200.0f);
+      f_ref = std::min(fmax, std::max(fmin, f_ref));
+      strobe_currentperiod = strobeperiods / f_ref;
       v_delta -= pitchcorr[i_note_corr];
       v_confidence = confidence_max; // expf(-ifreq_std);
       v_note = i_note;
