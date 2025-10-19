@@ -80,6 +80,7 @@ protected:
   std::string tuning = "equal";
   float strobeperiods = 4.0f;    ///< Number of periods to display in strobe
   uint32_t strobebufferlen = 50; ///< Length of strobe buffer
+  uint32_t keepnote = 5; ///< Number of samples before a new note is accepted
 };
 
 /**
@@ -159,7 +160,9 @@ protected:
   float v_octave = 0.0f;              ///< Current octave estimate
   float v_delta = 0.0f;               ///< Current cents deviation
   float v_confidence = 0.0f;          ///< Current confidence value
-  TASCAR::o1flt_lowpass_t mean_lp;    ///< Low-pass filter for frequency mean
+  int i_note_prev = 0u;
+  uint32_t note_accept_counter = 0u;
+  TASCAR::o1flt_lowpass_t mean_lp; ///< Low-pass filter for frequency mean
   TASCAR::o1flt_lowpass_t
       std_lp; ///< Low-pass filter for frequency standard deviation
   std::vector<float> cum_pitches;
@@ -169,8 +172,12 @@ protected:
   uint32_t bin_max = 0;
   std::vector<float> pitch_ratios = {4.0f, 3.0f, 2.0f};
   std::vector<std::complex<float>> c_dphase_state;
-  float currentperiod = 1.0f;
-  float buffertime = 0.0f;
+  // variables for strobe display:
+  float strobe_currentperiod = 1.0f;
+  float strobe_buffertime = 0.0f;
+  uint32_t strobe_bincount = 0u;
+  float strobe_avg_amplitude = 0.0f;
+  uint32_t strobebuffer_index_prev = 0u;
   TASCAR::wave_t strobebuffer;
   TASCAR::wave_t strobebuffersend;
 };
@@ -193,8 +200,11 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
   GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
                 "Tuning");
-  GET_ATTRIBUTE(strobeperiods,"","Number of periods to display in strobe display");
-  GET_ATTRIBUTE(strobebufferlen,"","Number of samples in strobe buffer");
+  GET_ATTRIBUTE(strobeperiods, "",
+                "Number of periods to display in strobe display");
+  GET_ATTRIBUTE(strobebufferlen, "", "Number of samples in strobe buffer");
+  GET_ATTRIBUTE(keepnote, "",
+                "Number of samples before a new note is accepted");
   // http://www.instrument-tuner.com/temperaments_de.html
   if(tuning == "equal")
     pitchcorr = {0.0f};
@@ -377,12 +387,29 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
   }
   // update strobe buffer:
   for(uint32_t k = 0; k < n; ++k) {
-    buffertime += t_sample;
-    while(buffertime > currentperiod)
-      buffertime -= currentperiod;
+    // increment strobe buffer sample time:
+    strobe_buffertime += t_sample;
+    while(strobe_buffertime > strobe_currentperiod)
+      strobe_buffertime -= strobe_currentperiod;
+    // get index into buffer:
     uint32_t strobebuffer_index = std::min(
-        uint32_t(buffertime * strobebuffer.n / currentperiod), strobebuffer.n);
-    strobebuffer.d[strobebuffer_index] = w_in.d[k];
+        uint32_t(strobe_buffertime * strobebuffer.n / strobe_currentperiod),
+        strobebuffer.n);
+    // collect average amplitude:
+    strobe_avg_amplitude += w_in.d[k];
+    ++strobe_bincount;
+    if(strobebuffer_index_prev != strobebuffer_index) {
+      strobebuffer_index_prev = strobebuffer_index;
+      if(strobe_bincount)
+        strobe_avg_amplitude /= (float)strobe_bincount;
+      if(!std::isfinite(strobebuffer.d[strobebuffer_index]))
+        strobebuffer.d[strobebuffer_index] = 0.0f;
+      else
+        strobebuffer.d[strobebuffer_index] *= 0.5f;
+      strobebuffer.d[strobebuffer_index] += 0.5f * strobe_avg_amplitude;
+      strobe_avg_amplitude = 0.0f;
+      strobe_bincount = 0u;
+    }
   }
   // auto ifreq_mean = mean_lp(0, freq_max);
   // auto ifreq_std = sqrtf(std::max(
@@ -395,8 +422,20 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
       v_note =
           std::min(255.0f, std::max(0.0f, 12.0f * log2f(v_freq / f0) + 69.0f));
       int i_note = (int)(v_note + 0.5f);
+      if(keepnote) {
+        if(i_note != i_note_prev) {
+          if(note_accept_counter) {
+            --note_accept_counter;
+            i_note = i_note_prev;
+          } else {
+            note_accept_counter = keepnote;
+            i_note_prev = i_note;
+          }
+        }
+      }
       v_delta = 100.0f * (v_note - i_note);
-      currentperiod = strobeperiods / (f0*powf(2.0f,(float)(i_note-69)/12.f));
+      strobe_currentperiod =
+          strobeperiods / (f0 * powf(2.0f, (float)(i_note - 69) / 12.f));
       auto div_note = div(i_note, 12);
       v_octave = div_note.quot - 5.0f;
       i_note = div_note.rem;
