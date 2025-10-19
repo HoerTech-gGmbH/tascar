@@ -386,15 +386,17 @@ int tuner_t::inner_process(jack_nframes_t n, const std::vector<float*>& vIn,
     confidence_max = 0.0f;
   }
   // update strobe buffer:
+  float one_over_strobe_currentperiod = 1.0f / strobe_currentperiod;
   for(uint32_t k = 0; k < n; ++k) {
     // increment strobe buffer sample time:
     strobe_buffertime += t_sample;
     while(strobe_buffertime > strobe_currentperiod)
       strobe_buffertime -= strobe_currentperiod;
     // get index into buffer:
-    uint32_t strobebuffer_index = std::min(
-        uint32_t(strobe_buffertime * strobebuffer.n / strobe_currentperiod),
-        strobebuffer.n);
+    uint32_t strobebuffer_index =
+        strobe_buffertime * one_over_strobe_currentperiod * strobebuffer.n;
+    if(strobebuffer_index > strobebuffer.n - 1)
+      strobebuffer_index = strobebuffer.n - 1;
     // collect average amplitude:
     strobe_avg_amplitude += w_in.d[k];
     ++strobe_bincount;
