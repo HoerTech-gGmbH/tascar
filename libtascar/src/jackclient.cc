@@ -34,6 +34,8 @@
 #include <string.h>
 #include <unistd.h>
 
+using namespace std::chrono_literals;
+
 static std::string errmsg("");
 
 static void jack_report_error(const char* msg)
@@ -567,22 +569,23 @@ void* jackc_db_t::service(void* h)
 
 void jackc_db_t::service()
 {
-  pthread_mutex_lock(&mtx_inner_thread);
+  mtx_inner_thread.lock();
+  std::unique_lock<std::mutex> lk(mtx);
   while(!b_exit_thread) {
-    usleep(10);
+    cond.wait_for(lk, 100ms);
     if(active) {
       for(uint32_t kb = 0; kb < 2; kb++) {
-        if(pthread_mutex_trylock(&(mutex[kb])) == 0) {
+        if(mutex_buffer[kb].try_lock()) {
           if(buffer_filled[kb]) {
             inner_process(inner_fragsize, dbinBuffer[kb], dboutBuffer[kb]);
             buffer_filled[kb] = false;
           }
-          pthread_mutex_unlock(&(mutex[kb]));
+          mutex_buffer[kb].unlock();
         }
       }
     }
   }
-  pthread_mutex_unlock(&mtx_inner_thread);
+  mtx_inner_thread.unlock();
 }
 
 jackc_db_t::jackc_db_t(const std::string& clientname, jack_nframes_t infragsize)
@@ -599,10 +602,7 @@ jackc_db_t::jackc_db_t(const std::string& clientname, jack_nframes_t infragsize)
       throw TASCAR::ErrMsg(
           "Inner fragsize is not an integer multiple of fragsize.");
     // create extra thread:
-    pthread_mutex_init(&mtx_inner_thread, NULL);
-    pthread_mutex_init(&mutex[0], NULL);
-    pthread_mutex_init(&mutex[1], NULL);
-    pthread_mutex_lock(&mutex[0]);
+    mutex_buffer[0].lock();
     if(0 != jack_client_create_thread(jc, &inner_thread,
                                       std::max(-1, rtprio - 1), (rtprio > 0),
                                       service, this))
@@ -623,11 +623,11 @@ jackc_db_t::~jackc_db_t()
 {
   b_exit_thread = true;
   if(inner_is_larger) {
-    pthread_mutex_lock(&mtx_inner_thread);
-    pthread_mutex_unlock(&mtx_inner_thread);
-    pthread_mutex_destroy(&mtx_inner_thread);
+    mtx_inner_thread.lock();
+    mtx_inner_thread.unlock();
     for(uint32_t kb = 0; kb < 2; kb++) {
-      pthread_mutex_destroy(&(mutex[kb]));
+      mutex_buffer[kb].try_lock();
+      mutex_buffer[kb].unlock();
       for(uint32_t k = 0; k < dbinBuffer[kb].size(); k++)
         delete[] dbinBuffer[kb][k];
       for(uint32_t k = 0; k < dboutBuffer[kb].size(); k++)
@@ -689,11 +689,17 @@ int jackc_db_t::process(jack_nframes_t, const std::vector<float*>& inBuffer,
     // if buffer is full, lock other buffer and unlock current buffer
     if(inner_pos >= inner_fragsize) {
       uint32_t next_buffer((current_buffer + 1) % 2);
-      pthread_mutex_lock(&(mutex[next_buffer]));
+      // pthread_mutex_lock(&(mutex[next_buffer]));
+      mutex_buffer[next_buffer].lock();
       buffer_filled[current_buffer] = true;
-      pthread_mutex_unlock(&(mutex[current_buffer]));
+      mutex_buffer[current_buffer].unlock();
+      // pthread_mutex_unlock(&(mutex[current_buffer]));
       current_buffer = next_buffer;
       inner_pos = 0;
+      if(mtx.try_lock()) {
+        mtx.unlock();
+        cond.notify_one();
+      }
     }
   } else {
     for(uint32_t kr = 0; kr < ratio; kr++) {

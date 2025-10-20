@@ -29,6 +29,7 @@
 #define JACKCLIENT_H
 
 #include <atomic>
+#include <condition_variable>
 #include <jack/jack.h>
 #include <mutex>
 #include <pthread.h>
@@ -158,12 +159,16 @@ private:
   bool inner_is_larger;
   uint32_t ratio;
   jack_native_thread_t inner_thread;
-  pthread_mutex_t mutex[2];
-  pthread_mutex_t mtx_inner_thread;
+  std::mutex mutex_buffer[2];
+  // pthread_mutex_t mutex[2];
+  std::mutex mtx_inner_thread;
+  // pthread_mutex_t mtx_inner_thread;
   bool buffer_filled[2];
   uint32_t current_buffer;
   bool b_exit_thread;
   uint32_t inner_pos;
+  std::condition_variable cond; ///< Condition variable for thread signaling
+  std::mutex mtx;               ///< Mutex for thread-safe data access
 };
 
 class jackc_transport_t : public jackc_t {
