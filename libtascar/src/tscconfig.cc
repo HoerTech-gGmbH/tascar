@@ -317,7 +317,7 @@ void TASCAR::generate_plugin_documentation_tables(bool latex)
         //  \indattr{name} & type & def & unit & Name of session (default:
         //  ``tascar'')
         fh << "\\hline\n";
-        auto s_info = TASCAR::to_latex(attr.second.info) + "(" +
+        auto s_info = TASCAR::to_latex(attr.second.info) + " (" +
                       TASCAR::to_latex(attr.second.type);
         if(!attr.second.unit.empty())
           s_info += ", " + TASCAR::to_latex(attr.second.unit);

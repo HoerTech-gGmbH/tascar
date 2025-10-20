@@ -53,4 +53,4 @@ function sCfg = tascar_parse_keyval( sCfg, sHelp, varargin )
     end
     sCfg.(field) = varargin{k+1};
   end
-  
+end

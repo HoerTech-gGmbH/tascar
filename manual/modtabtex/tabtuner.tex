@@ -1,0 +1,47 @@
+\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
+{\footnotesize
+\label{attrtab:tuner}
+Attributes of element {\bf tuner}\nopagebreak
+
+\begin{tabularx}{\textwidth}{l>{\raggedright}XX}
+\hline
+name & description (type, unit) & def.\\
+\hline
+\hline
+\indattr{connect} & Port names of input connection(string array) & \\
+\hline
+\indattr{f0} & frequency of pitch 0(float, Hz) & 440\\
+\hline
+\indattr{fmax} & Maximal frequency for analysis(float, Hz) & 4000\\
+\hline
+\indattr{fmin} & Minimal frequency for analysis(float, Hz) & 40\\
+\hline
+\indattr{id} & ID used in jack name and OSC path(string) & tuner\\
+\hline
+\indattr{isactive} & Activate analysis on start(bool) & false\\
+\hline
+\indattr{keepnote} & Number of samples before a new note is accepted(uint32) & 5\\
+\hline
+\indattr{oscactive} & Activate OSC sending on start(bool) & true\\
+\hline
+\indattr{path} & Tuner note/detune display path(string) & /tuner\\
+\hline
+\indattr{path\_strobe} & Tuner strobe display path(string) & /tuner/strobe\\
+\hline
+\indattr{prefix} & prefix used in OSC path(string) & /\\
+\hline
+\indattr{strobebufferlen} & Number of samples in strobe buffer(uint32) & 50\\
+\hline
+\indattr{strobeperiods} & Number of periods to display in strobe display(float) & 4\\
+\hline
+\indattr{tau} & Frequency estimation time constant(float, s) & 0.05\\
+\hline
+\indattr{tuning} & Tuning(string, equal|werckmeister3|meantone4|meantone6|vallotti) & equal\\
+\hline
+\indattr{url} & Tuner display URL(string) & \\
+\hline
+\indattr{wlen} & window length(uint32, samples) & 2048\\
+\hline
+\end{tabularx}
+}
+\end{snugshade}

@@ -162,6 +162,7 @@
     <skyfall actor="/*/nav"/>
     <accmovement actor="/*/nav"/>
     <accrotator actor="/*/nav"/>
+    <tuner/>
   </modules>
   <connect src="a" dest="b"/>
   <range/>

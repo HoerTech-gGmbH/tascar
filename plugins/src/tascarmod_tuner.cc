@@ -198,7 +198,7 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(tau, "s", "Frequency estimation time constant");
   GET_ATTRIBUTE(fmin, "Hz", "Minimal frequency for analysis");
   GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
-  GET_ATTRIBUTE(tuning, "equal|werkmeister3|meantone4|meantone6|valotti",
+  GET_ATTRIBUTE(tuning, "equal|werckmeister3|meantone4|meantone6|vallotti",
                 "Tuning");
   GET_ATTRIBUTE(strobeperiods, "",
                 "Number of periods to display in strobe display");
@@ -211,6 +211,9 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   else if(tuning == "werkmeister3")
     pitchcorr = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
                  0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
+  else if(tuning == "werckmeister3")
+    pitchcorr = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
+                 0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
   else if(tuning == "meantone4")
     pitchcorr = {10.265f,  -13.686f, 3.422f,   20.53f, -3.421f, 13.686f,
                  -10.265f, 6.843f,   -17.108f, 0.0f,   17.108f, -6.843f};
@@ -218,6 +221,9 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
     pitchcorr = {6.0f,  -2.0f, 2.0f, 0.0f, -2.0f, 8.0f,
                  -6.0f, 4.0f,  2.0f, 0.0f, 4.0f,  -4.0f};
   else if(tuning == "valotti")
+    pitchcorr = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
+                 -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
+  else if(tuning == "vallotti")
     pitchcorr = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
                  -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
   else
