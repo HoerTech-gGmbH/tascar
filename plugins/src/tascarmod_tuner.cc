@@ -185,6 +185,31 @@ protected:
 tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
     : TASCAR::module_base_t(cfg)
 {
+  std::map<std::string, std::vector<float>> tuningtable;
+  // http://www.instrument-tuner.com/temperaments_de.html
+  tuningtable["equal"] = {0.0f};
+  tuningtable["werkmeister3"] = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
+                                 0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
+  tuningtable["werckmeister3"] = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
+                                  0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
+  tuningtable["meantone4"] = {10.265f,  -13.686f, 3.422f,   20.53f,
+                              -3.421f,  13.686f,  -10.265f, 6.843f,
+                              -17.108f, 0.0f,     17.108f,  -6.843f};
+  tuningtable["meantone6"] = {6.0f,  -2.0f, 2.0f, 0.0f, -2.0f, 8.0f,
+                              -6.0f, 4.0f,  2.0f, 0.0f, 4.0f,  -4.0f};
+  tuningtable["valotti"] = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
+                            -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
+  tuningtable["vallotti"] = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
+                             -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
+  tuningtable["Bach-Kellner1977"] = {8.211f,  -1.564f, 2.737f,  2.346f,
+                                     -2.737f, 6.256f,  -3.519f, 5.474f,
+                                     0.391f,  0.000f,  4.301f,  -0.782f};
+  tuningtable["Neidhardt-1724-GrosseStadt"] = {5.865f, 1.955f, 1.955f, 3.910f,
+                                               0.000f, 3.910f, 1.955f, 1.955f,
+                                               1.955f, 0.000f, 3.910f, 1.955f};
+  std::vector<std::string> tuningnames;
+  for(const auto tun : tuningtable)
+    tuningnames.push_back(tun.first);
   GET_ATTRIBUTE(id, "", "ID used in jack name and OSC path");
   GET_ATTRIBUTE(prefix, "", "prefix used in OSC path");
   GET_ATTRIBUTE(wlen, "samples", "window length");
@@ -198,36 +223,18 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(tau, "s", "Frequency estimation time constant");
   GET_ATTRIBUTE(fmin, "Hz", "Minimal frequency for analysis");
   GET_ATTRIBUTE(fmax, "Hz", "Maximal frequency for analysis");
-  GET_ATTRIBUTE(tuning, "equal|werckmeister3|meantone4|meantone6|vallotti",
-                "Tuning");
+  GET_ATTRIBUTE(tuning, TASCAR::vecstr2str(tuningnames, " | "),
+                "Tuning temperature");
   GET_ATTRIBUTE(strobeperiods, "",
                 "Number of periods to display in strobe display");
   GET_ATTRIBUTE(strobebufferlen, "", "Number of samples in strobe buffer");
   GET_ATTRIBUTE(keepnote, "",
                 "Number of samples before a new note is accepted");
-  // http://www.instrument-tuner.com/temperaments_de.html
-  if(tuning == "equal")
-    pitchcorr = {0.0f};
-  else if(tuning == "werkmeister3")
-    pitchcorr = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
-                 0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
-  else if(tuning == "werckmeister3")
-    pitchcorr = {0.0f, -3.91f, 3.91f,  0.0f, -3.91f, 3.91f,
-                 0.0f, 1.955f, -7.82f, 0.0f, 1.955f, -1.955f};
-  else if(tuning == "meantone4")
-    pitchcorr = {10.265f,  -13.686f, 3.422f,   20.53f, -3.421f, 13.686f,
-                 -10.265f, 6.843f,   -17.108f, 0.0f,   17.108f, -6.843f};
-  else if(tuning == "meantone6")
-    pitchcorr = {6.0f,  -2.0f, 2.0f, 0.0f, -2.0f, 8.0f,
-                 -6.0f, 4.0f,  2.0f, 0.0f, 4.0f,  -4.0f};
-  else if(tuning == "valotti")
-    pitchcorr = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
-                 -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
-  else if(tuning == "vallotti")
-    pitchcorr = {5.865f,  0.0f,  1.955f, 3.91f, -1.955f, 7.82f,
-                 -1.955f, 3.91f, 1.955f, 0.0f,  5.865f,  -3.91f};
-  else
-    throw TASCAR::ErrMsg("Unsupported tuning: \"" + tuning + "\".");
+  if(tuningtable.find(tuning) == tuningtable.end())
+    throw TASCAR::ErrMsg(
+        "Unsupported tuning: \"" + tuning +
+        "\". Valid tunings are: " + TASCAR::vecstr2str(tuningnames, ", "));
+  pitchcorr = tuningtable[tuning];
   jackc_portless_t jc(id + "_");
   auto fragsize = jc.get_fragsize();
   auto wlen_new = wlen;

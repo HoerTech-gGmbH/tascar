@@ -8,51 +8,51 @@ Attributes of element {\bf sndfile}\nopagebreak
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{attribution} & attribution of license, if applicable(string) & \\
+\indattr{attribution} & attribution of license, if applicable (string) & \\
 \hline
-\indattr{channel} & First sound file channel to be used, zero-base(uint32) & 0\\
+\indattr{channel} & First sound file channel to be used, zero-base (uint32) & 0\\
 \hline
-\indattr{channelorder} & Channel order in case of First Order Ambisonics files, ``FuMa'', ``ACN'' or ``none''(string, FuMa|ACN|none) & \\
+\indattr{channelorder} & Channel order in case of First Order Ambisonics files, ``FuMa'', ``ACN'' or ``none'' (string, FuMa|ACN|none) & \\
 \hline
-\indattr{length} & length of sound sample, or 0 to use whole file length(double, s) & 0\\
+\indattr{length} & length of sound sample, or 0 to use whole file length (double, s) & 0\\
 \hline
-\indattr{level} & level, meaning depends on \attr{levelmode}(double, dB) & -inf\\
+\indattr{level} & level, meaning depends on \attr{levelmode} (double, dB) & -inf\\
 \hline
-\indattr{levelmode} & level mode, ``rms'', ``peak'' or ``calib''(string) & rms\\
+\indattr{levelmode} & level mode, ``rms'', ``peak'' or ``calib'' (string) & rms\\
 \hline
-\indattr{license} & license type(string) & \\
+\indattr{license} & license type (string) & \\
 \hline
-\indattr{loop} & loop count or 0 for infinite looping(uint32) & 1\\
+\indattr{loop} & loop count or 0 for infinite looping (uint32) & 1\\
 \hline
-\indattr{loopcrossexp} & exponent of von-Hann crossfade for seamless loop(float) & 1\\
+\indattr{loopcrossexp} & exponent of von-Hann crossfade for seamless loop (float) & 1\\
 \hline
-\indattr{loopcrosslen} & duration of crossfade for seamless loop(float, s) & 0\\
+\indattr{loopcrosslen} & duration of crossfade for seamless loop (float, s) & 0\\
 \hline
-\indattr{mute} & Load muted(bool) & false\\
+\indattr{mute} & Load muted (bool) & false\\
 \hline
-\indattr{name} & Sound file name(string) & \\
+\indattr{name} & Sound file name (string) & \\
 \hline
-\indattr{normalization} & Normalization in case of First Order Ambisonics files.(string, FuMa|SN3D) & FuMa\\
+\indattr{normalization} & Normalization in case of First Order Ambisonics files. (string, FuMa|SN3D) & FuMa\\
 \hline
-\indattr{osctriggerpath} & Target path where OSC message of final time stamp of trigger events should be sent to.(string) & /sndfile/trigger\\
+\indattr{osctriggerpath} & Target path where OSC message of final time stamp of trigger events should be sent to. (string) & /sndfile/trigger\\
 \hline
-\indattr{osctriggerurl} & Target URL where OSC message of final time stamp of trigger events should be sent to.(string) & \\
+\indattr{osctriggerurl} & Target URL where OSC message of final time stamp of trigger events should be sent to. (string) & \\
 \hline
-\indattr{position} & Start position within the scene(double, s) & 0\\
+\indattr{position} & Start position within the scene (double, s) & 0\\
 \hline
-\indattr{rampend} & von-Hann ramp duration at end of sound(float, s) & 0\\
+\indattr{rampend} & von-Hann ramp duration at end of sound (float, s) & 0\\
 \hline
-\indattr{rampstart} & von-Hann ramp duration at start of sound(float, s) & 0\\
+\indattr{rampstart} & von-Hann ramp duration at start of sound (float, s) & 0\\
 \hline
-\indattr{resample} & Allow resampling to current session sample rate(bool) & false\\
+\indattr{resample} & Allow resampling to current session sample rate (bool) & false\\
 \hline
-\indattr{start} & Start position within the file(double, s) & 0\\
+\indattr{start} & Start position within the file (double, s) & 0\\
 \hline
-\indattr{transport} & Use session time base(bool) & true\\
+\indattr{transport} & Use session time base (bool) & true\\
 \hline
-\indattr{triggered} & Use OSC variable `/loop' to trigger playback (ignores attributes `position' and `loop')(bool) & false\\
+\indattr{triggered} & Use OSC variable `/loop' to trigger playback (ignores attributes `position' and `loop') (bool) & false\\
 \hline
-\indattr{weighting} & level weighting for RMS mode(f-weight) & Z\\
+\indattr{weighting} & level weighting for RMS mode (f-weight) & Z\\
 \hline
 \end{tabularx}
 }
