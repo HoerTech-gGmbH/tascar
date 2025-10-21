@@ -4,7 +4,7 @@
 
 On branch development:
 
-- build, test and package: `make clean; make -j 8 && make pack`
+- build, test and package: `make clean; make -j $(nproc) all googletest && make pack`
 
 - increment version number in `config.mk`, edit `changelog`
 

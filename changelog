@@ -1,3 +1,9 @@
+0.235.0:
+       - add instrument tuner plugin
+       - fix performance overhead in jack double buffer layer
+       - improve Matlab/GNU Octave tools for data logging
+       - merge pull request near-field filters in hrtf plugin
+
 0.234.4:
        - render obstacles only in direct sound path
        - add parametric equalizer plugin
