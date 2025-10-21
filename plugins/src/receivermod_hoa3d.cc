@@ -57,8 +57,6 @@ public:
 
 void hoa3d_dec_t::configure()
 {
-  DEBUG(channels);
-  DEBUG(spkpos.size());
   TASCAR::receivermod_base_speaker_t::configure();
   amb_sig = std::vector<TASCAR::wave_t>(channels, TASCAR::wave_t(n_fragment));
 }
@@ -107,9 +105,11 @@ hoa3d_dec_t::hoa3d_dec_t(tsccfg::node_t xmlsrc)
   typeidattr.push_back("dectype");
   float r;
   if((r = decode.maxabs() / decode.rms()) > decwarnthreshold) {
-    TASCAR::add_warning("The maximum-to-rms ratio of the decoder matrix is " +
-                        TASCAR::to_string(r) +
-                        ".\nThis might mean that the matrix is not optimal.");
+    TASCAR::add_warning(
+        "The maximum-to-rms ratio of the decoder matrix is " +
+            TASCAR::to_string(r) +
+            ".\nThis might mean that the matrix is not optimal.",
+        e);
   }
   if(savedec) {
     std::ofstream ofh(

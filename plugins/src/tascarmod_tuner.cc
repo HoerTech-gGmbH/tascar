@@ -208,7 +208,7 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
                                                0.000f, 3.910f, 1.955f, 1.955f,
                                                1.955f, 0.000f, 3.910f, 1.955f};
   std::vector<std::string> tuningnames;
-  for(const auto tun : tuningtable)
+  for(const auto& tun : tuningtable)
     tuningnames.push_back(tun.first);
   GET_ATTRIBUTE(id, "", "ID used in jack name and OSC path");
   GET_ATTRIBUTE(prefix, "", "prefix used in OSC path");
