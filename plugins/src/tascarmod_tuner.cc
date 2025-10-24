@@ -207,6 +207,12 @@ tuner_vars_t::tuner_vars_t(const TASCAR::module_cfg_t& cfg)
   tuningtable["Neidhardt-1724-GrosseStadt"] = {5.865f, 1.955f, 1.955f, 3.910f,
                                                0.000f, 3.910f, 1.955f, 1.955f,
                                                1.955f, 0.000f, 3.910f, 1.955f};
+  tuningtable["meantone4#"] = {10.265f,  -13.686f, 3.422f,   -20.529f,
+                               -3.421f,  13.686f,  -10.265f, 6.843f,
+                               -17.108f, 0.000f,   -23.951f, -6.843f};
+  tuningtable["meantone4b"] = {10.265f, 27.373f, 3.422f,  20.530f,
+                               -3.421f, 13.686f, 30.794f, 6.843f,
+                               23.951f, 0.000f,  17.108f, -6.843f};
   std::vector<std::string> tuningnames;
   for(const auto& tun : tuningtable)
     tuningnames.push_back(tun.first);
