@@ -1,3 +1,6 @@
+0.235.1:
+       - correct option name in tascar_renderfile
+
 0.235.0:
        - add instrument tuner plugin
        - fix performance overhead in jack double buffer layer

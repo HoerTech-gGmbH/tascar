@@ -31,7 +31,6 @@ int main(int argc, char** argv)
 #ifndef TSCDEBUG
   try {
 #endif
-
     // TSC configuration file:
     std::string tscfile;
     // Scene name (or empty to use first scene in session file):
@@ -63,21 +62,25 @@ int main(int argc, char** argv)
     // parse options:
     const char* options = "hi:o:s:m:t:r:u:f:vw";
     struct option long_options[] = {{"help", 0, 0, 'h'},
+                                    {"channelmap", 1, 0, 'm'},
+                                    {"duration", 1, 0, 'u'},
+                                    {"fragsize", 1, 0, 'f'},
                                     {"inputfile", 1, 0, 'i'},
+                                    {"ismmax", 1, 0, '2'},
+                                    {"ismmin", 1, 0, '1'},
                                     {"outputfile", 1, 0, 'o'},
                                     {"scene", 1, 0, 's'},
-                                    {"channelmap", 1, 0, 'm'},
-                                    {"starttime", 1, 0, 't'},
                                     {"srate", 1, 0, 'r'},
-                                    {"durartion", 1, 0, 'u'},
-                                    {"fragsize", 1, 0, 'f'},
+                                    {"starttime", 1, 0, 't'},
                                     {"static", 0, 0, 'c'},
-                                    {"ismmin", 1, 0, '1'},
-                                    {"ismmax", 1, 0, '2'},
                                     {"verbose", 0, 0, 'v'},
                                     {"warnaserror", 0, 0, 'w'},
                                     {0, 0, 0, 0}};
     std::map<std::string, std::string> helpmap;
+    helpmap["inputfile"] =
+        "Use this file as input to first sound in scene. "
+        "Leave empty for no additional input.\nIf input file is provided, then "
+        "duration and sampling rate are taken from input file.";
     helpmap["srate"] = "Sample rate in Hz. If input file is provided, then its "
                        "sample rate is used instead";
     helpmap["ismmin"] = "Minimum order of image source model.";
@@ -87,9 +90,16 @@ int main(int argc, char** argv)
     helpmap["warnaserror"] = "Treat warnings as errors.";
     helpmap["scene"] =
         "Scene name (or empty to use first scene in session file).";
+    helpmap["static"] = "Do not render spatial dynamics.";
+    helpmap["fragsize"] = "Fragment size in samples. If not provided, then the "
+                          "whole duration will be rendered in a single "
+                          "fragment (which may result in memory limitations).";
     helpmap["channelmap"] =
-        "List of output channels (zero-base), or empty to use all.\n"
-        "Example: -m 0-5,8,12";
+        "List of output channels (zero-base), or empty to use all. Ranges are "
+        "possible, for example -m 0-5,8,12.";
+    helpmap["duration"] =
+        "Set duration in seconds. Uses session definition if unset.";
+    helpmap["starttime"] = "Set start time in seconds.";
     int opt(0);
     int option_index(0);
     while((opt = getopt_long(argc, argv, options, long_options,
@@ -97,7 +107,7 @@ int main(int argc, char** argv)
       switch(opt) {
       case 'h':
         TASCAR::app_usage("tascar_renderfile", long_options, "sessionfile",
-                          "Render a TASCAR session into a sound file.\n\n",
+                          "Render a TASCAR session into a sound file.",
                           helpmap);
         return 0;
       case '?':
