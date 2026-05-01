@@ -23,6 +23,7 @@
 #include "errorhandling.h"
 #include "tscconfig.h"
 #include <algorithm>
+#include <fstream>
 #include <string.h>
 
 TASCAR::spec_t::spec_t(uint32_t n)
@@ -166,7 +167,10 @@ std::vector<float> cubic_spline_interpolate(const std::vector<float>& xin,
   for(size_t i = 0; i < n - 1; ++i) {
     h[i] = xin[i + 1] - xin[i];
     if(h[i] <= 0.0f) {
-      throw std::invalid_argument("xin must be strictly increasing");
+      throw std::invalid_argument(
+          "xin must be strictly increasing (xin[" + std::to_string(i) +
+          "]=" + TASCAR::to_string(xin[i]) + ", xin[" + std::to_string(i + 1) +
+          "]=" + TASCAR::to_string(xin[i + 1]) + ")");
     }
   }
   for(size_t i = 1; i < n - 1; ++i) {
@@ -236,6 +240,14 @@ TASCAR::sampled_spec_to_smooth_spec(float f_sample, uint32_t n_bins,
                          std::to_string((vfreq.size())) + ", vgaindb has " +
                          std::to_string(vgaindb.size()) +
                          " (sampled_spec_to_smooth_spec).");
+  for(size_t k = 1; k < vfreq.size(); ++k) {
+    if(!(vfreq[k] > vfreq[k - 1]))
+      throw TASCAR::ErrMsg(
+          "frequncy vector is not strictly increasing (vfreq[" +
+          std::to_string(k - 1) + "]=" + TASCAR::to_string(vfreq[k - 1]) +
+          ", vfreq[" + std::to_string(k) + "]=" + TASCAR::to_string(vfreq[k]) +
+          ").");
+  }
   std::vector<float> vfreqlog;
   // vfreqlog.push_back(log2f(EPSf));
   vfreqlog.push_back(log2f(vfreq[0]) - 4.0f);
@@ -266,6 +278,15 @@ TASCAR::sampled_spec_to_smooth_spec(float f_sample, uint32_t n_bins,
   for(uint32_t k = 1; k < spectrum.n_; ++k)
     spectrum.b[k] = TASCAR::db2lin(spec_lin[k]);
   spectrum.b[0] = spectrum.b[1];
+  // std::ofstream ofh("debug.m");
+  // ofh << "vf_=[";
+  // for(uint32_t k=0;k<spectrum.n_;++k)
+  //   ofh << (float)k/(float)n_bins*0.5f*f_sample << " ";
+  // ofh << "];\n";
+  // ofh << "vg_=[";
+  // for(uint32_t k=0;k<spectrum.n_;++k)
+  //   ofh << 20.0f*log10f(std::abs(spectrum.b[k])) << " ";
+  // ofh << "];\n";
   return spectrum;
 }
 

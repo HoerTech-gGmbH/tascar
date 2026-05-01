@@ -104,7 +104,7 @@ namespace TASCAR {
   public:
     class log_entry_t {
     public:
-      log_entry_t(double t, const std::string& msg) : t(t), msg(msg){};
+      log_entry_t(double t, const std::string& msg) : t(t), msg(msg) {};
       double t = 0.0;
       const std::string msg;
     };
@@ -1821,12 +1821,34 @@ std::vector<double> TASCAR::str2vecdouble(const std::string& s)
 std::vector<float> TASCAR::str2vecfloat(const std::string& s)
 {
   std::vector<float> value;
-  if(!s.empty()) {
-    std::stringstream ptxt(s);
-    while(ptxt.good()) {
-      float p;
-      ptxt >> p;
+  if(s.empty()) {
+    return value;
+  }
+  std::istringstream ptxt(s);
+  std::string token;
+  // Read token by token (whitespace separated)
+  while(ptxt >> token) {
+    try {
+      // std::stof throws std::invalid_argument if no conversion could be
+      // performed It throws std::out_of_range if the converted value is out of
+      // range
+      size_t pos = 0;
+      float p = std::stof(token, &pos);
+      // Check if the entire token was consumed.
+      // If pos < token.size(), there were trailing garbage characters (e.g.,
+      // "1.2abc").
+      if(pos != token.size()) {
+        throw std::invalid_argument("Invalid characters in number");
+      }
       value.push_back(p);
+    }
+    catch(const std::invalid_argument&) {
+      throw std::invalid_argument("str2vecfloat: Text '" + token +
+                                  "' is not a valid number");
+    }
+    catch(const std::out_of_range&) {
+      throw std::out_of_range("str2vecfloat: Number '" + token +
+                              "' is out of range");
     }
   }
   return value;
