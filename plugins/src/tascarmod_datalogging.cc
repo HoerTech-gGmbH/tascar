@@ -1118,14 +1118,14 @@ datalogging_t::~datalogging_t()
 #endif
   for(auto prec : recorder)
     delete prec;
-  if(!headless) {
-    delete win;
-    delete trialid;
-    delete datelabel;
-    delete jacktime;
-    delete draw_grid;
-    delete rec_label;
-  }
+  // if(!headless) {
+  //   delete win;
+  //   delete trialid;
+  //   delete datelabel;
+  //   delete jacktime;
+  //   delete draw_grid;
+  //   delete rec_label;
+  // }
 }
 
 void datalogging_t::configure()
