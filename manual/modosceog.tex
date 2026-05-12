@@ -8,3 +8,136 @@ This module receives data from an open hardware electro-oculography (EOG) sensor
 \input{oscdoc_tascarmod_osceog.tex}
 
 In animation mode the duration of each blink $\tau_{d}$ is drawn from a log-normal distribution defined by the variables \attr{pf\_anim\_blink\_duration\_mu} and \attr{pf\_anim\_blink\_duration\_sigma}. The duration is limited to the interval $[0,20\,\textrm{s}]$ seconds The time between two blinks is taken from a normal distribution of blink frequency (\attr{pf\_anim\_blink\_freq\_mu} and \attr{pf\_anim\_blink\_freq\_sigma}) and transformed into a duration. The period time is limited to the interval $[\tau_{d},30\,\textrm{s}]$ to avoid excessively long blink gaps. The rectangular eye blink data is filtered with an attack-release filter with the time constants \attr{pf\_anim\_random\_tau\_attack} and \attr{pf\_anim\_random\_tau\_release}.
+
+\subsection*{ESP8266 EOG sensor communication protocol}
+
+This section describes the Open Sound Control (OSC) communication protocol for the Electrooculography (EOG) sensor based on the ESP8266 platform and ADS1115 ADCs. The sensor operates as a WiFi Access Point by default but can be configured to join an existing network. It streams biopotential data via UDP.
+
+
+\subsection*{Network Operation Modes}
+
+{\bf Default Access Point Mode:} By default, the device creates a WiFi Access Point.
+
+\begin{tabular}{|ll|}
+\hline
+{SSID:}       & \texttt{head-<MAC\_LAST\_4\_HEX>} (e.g., \texttt{head-a1b2c3d4}) \\
+{Password:}   & \texttt{headtracker}                                             \\
+{IP Address:} & \texttt{192.168.100.1}                                           \\
+{UDP Port:}   & \texttt{9999}                                                    \\
+\hline
+\end{tabular}
+
+{\bf Station Mode (Client):}
+The device can connect to an external WiFi router using the \texttt{/wlan/connect} command. Once connected, it will send data to the specified remote IP and port.
+
+\subsection*{OSC Communication Protocol}
+
+The device listens for incoming OSC commands on UDP port 9999. The following sections detail the supported commands.
+
+
+
+{\bf Command: /wlan/connect}\\
+Configures the WiFi connection. Can be used to switch between Access Point mode and Station mode, or to configure a remote data destination.
+
+{\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{\#} & \textbf{Type} & \textbf{Description} \\ \hline
+0 & String & SSID of the network to join (Empty string to reset to AP mode) \\ \hline
+1 & String & Password for the network \\ \hline
+2 & String & Remote IP address (destination for EOG data) \\ \hline
+3 & Integer & Remote Port (destination for EOG data) \\ \hline
+\end{tabular}
+}
+
+Behavior: If called with 0 arguments: Resets to default Access Point mode. If called with 4 arguments: Connects to the specified WiFi network and configures the destination for data streaming. Upon successful connection in Station mode, the outgoing OSC address path is automatically updated to \texttt{/<MAC\_LAST\_4\_HEX>/eog}.
+
+
+{\bf Command: /eog/connect}\\
+Configures the destination for EOG data without changing WiFi settings. This is typically used when the device is already in Station mode or to redirect data to a different listener on the current network.
+
+{\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{\#} & \textbf{Type} & \textbf{Description} \\ \hline
+0 & Integer & Remote Port \\ \hline
+1 & String & OSC Address Path (e.g., \texttt{/eog}) \\ \hline
+\end{tabular}
+}
+
+\textbf{Note:} The IP address used is the IP of the last device that sent a command to the sensor (source IP of the incoming UDP packet).
+
+{\bf Command: /eog/disconnect}\\
+Stops the streaming of EOG data. Arguments: None. Effect: Sets the
+remote port to 0, effectively disabling data transmission.
+
+{\bf Command: /eog/srate}\\
+Sets the sampling rate of the ADCs.
+
+{\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{\#} & \textbf{Type} & \textbf{Description} \\ \hline
+0 & Int/Float/Double & Desired sampling rate (Hz) \\ \hline
+\end{tabular}
+}
+
+{\bf Supported Ranges and ADC Settings:}
+The command maps the requested rate to the nearest supported ADS1115 data rate.
+
+{\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Input Range (Hz)} & \textbf{Actual Rate (SPS)} \\ \hline
+$< 16$ & 8 \\ \hline
+$16 - 31$ & 16 \\ \hline
+$32 - 63$ & 32 \\ \hline
+$64 - 127$ & 64 \\ \hline
+$128 - 249$ & 128 \\ \hline
+$250 - 474$ & 250 \\ \hline
+$475 - 859$ & 475 \\ \hline
+$\ge 860$ & 860 \\ \hline
+\end{tabular}
+}
+
+{\bf Command: /eog/urange}\\
+Sets the input voltage range of the ADC.
+
+{\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{\#} & \textbf{Type} & \textbf{Description} \\ \hline
+0 & Float & Maximum voltage range in Volts \\ \hline
+\end{tabular}
+}
+
+{\bf Supported Ranges:}
+The command maps the input value to the closest ADS1115 gain setting.
+
+{\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Input Range (V)} & \textbf{ADC Setting} \\ \hline
+$< 0.257$ & $\pm 0.256V$ \\ \hline
+$0.257 - 0.512$ & $\pm 0.512V$ \\ \hline
+$0.513 - 1.024$ & $\pm 1.024V$ \\ \hline
+\end{tabular}
+}
+
+{\bf Data Streaming:} Once connected via \texttt{/eog/connect}
+or \texttt{/wlan/connect}, the device will stream sensor data.  The
+OSC Address is configurable via \texttt{/eog/connect}, and defaults
+to \texttt{/<MAC\_LAST\_4\_HEX>/eog}. The message contains 3 floats:
+
+{\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{\#} & \textbf{Type} & \textbf{Description} \\ \hline
+0 & Float & Timestamp (seconds) \\ \hline
+1 & Float & Voltage Channel 1 (Volts) \\ \hline
+2 & Float & Voltage Channel 2 (Volts) \\ \hline
+\end{tabular}
+}
+
+{\bf Timing:}
+The device attempts to send data at the interval defined by \texttt{sample\_period} ($1 / \text{srate}$). The timestamp is derived from \texttt{micros()}.
