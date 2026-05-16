@@ -35,7 +35,7 @@
                void* user_data)                                                \
   {                                                                            \
     ((jackrec_t*)user_data)->x();                                              \
-    return 0;                                                                  \
+    return 1;                                                                  \
   };                                                                           \
   void x()
 
@@ -44,7 +44,7 @@
                void* user_data)                                                \
   {                                                                            \
     ((jackrec_t*)user_data)->x(&(argv[0]->s));                                 \
-    return 0;                                                                  \
+    return 1;                                                                  \
   };                                                                           \
   void x(const std::string&)
 
