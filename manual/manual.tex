@@ -57,6 +57,11 @@
 \end{snugshade}
 }
 
+\lstset{belowskip=-2\baselineskip}
+
+\makeatletter
+\preto{\@verbatim}{\topsep=0pt \partopsep=0pt }
+\makeatother
 
 
 \DeclarePairedDelimiterX{\norm}[1]{\lVert}{\rVert}{#1}
@@ -537,7 +542,7 @@ An example application configuration file can look like this:
   </spkcalib>
 </tascar>
 \end{lstlisting}
-%
+
 This will translate into these variables:
 \begin{verbatim}
 tascar.spkcalib.inputport (system:capture_29)

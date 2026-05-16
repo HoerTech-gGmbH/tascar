@@ -39,6 +39,12 @@
 \providecommand{\rmdefault}{phv}
 \providecommand{\bfdefault}{bc}
 
+\RequirePackage{titlesec}
+
+\titleformat*{\section}{\LARGE\bfseries}
+\titleformat*{\subsection}{\Large\bfseries}
+\titleformat*{\subsubsection}{\large\bfseries}
+
 
 % Setup fancy headings
 \pagestyle{fancyplain}
@@ -485,7 +491,7 @@
 \setcounter{tocdepth}{2}
 \renewcommand{\footrulewidth}{0.4pt}
 \renewcommand{\familydefault}{phv}
-\renewcommand{\paragraph}[1]{\par\medskip\penalty-100{\bf #1}\par}
+%\renewcommand{\paragraph}[1]{\par\medskip\penalty-100{\bf #1}\par}
 \pagenumbering{roman}
 \usepackage{optparams}
 \long\def\MHAfigurex[#1][#2][#3]#4#5{\begin{figure}[#3]\centering\includegraphics[width=#2]{#5}\caption[#1]{#4}\label{fig:#5}\end{figure}}
@@ -768,8 +774,8 @@ This General Public License does not permit incorporating your program into prop
   showtabs=false,                  % show tabs within strings adding particular underscores
   stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
   stringstyle=\color{mymauve},     % string literal style
-aboveskip=\smallskipamount,
-belowskip=\smallskipamount,
+  aboveskip=\smallskipamount,
+  belowskip=\smallskipamount,
   tabsize=2,	                   % sets default tabsize to 2 spaces
   title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
 }

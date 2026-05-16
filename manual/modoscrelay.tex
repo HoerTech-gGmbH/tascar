@@ -1,27 +1,49 @@
-Relay OSC messages, e.g., for distribution of motion sensors.
+The \texttt{oscrelay} module acts as a bridge for Open Sound Control
+(OSC) messages. It listens for incoming OSC messages, including
+directly dispatched messages, matching a specific path and forwards
+them to a defined target URL. This module supports path filtering,
+path modification, and message content replacement.
 
-\definecolor{shadecolor}{RGB}{255,230,204}\begin{snugshade}
-{\footnotesize
-\label{attrtab:oscrelay}
-Attributes of element {\bf oscrelay}\nopagebreak
+The module is configured using the following attributes within the XML configuration:
 
-\begin{tabularx}{\textwidth}{lXl}
-\hline
-name & description (type, unit) & def.\\
-\hline
-\hline
-\indattr{newpath} & Replace incoming path with this path, or empty for no replacement (string) & \\
-\hline
-\indattr{path} & Path filter, or empty to match any path (string) & \\
-\hline
-\indattr{retval} & Return value: 0 = handle messages also locally, non-0 = do not handle locally (int32) & 1\\
-\hline
-\indattr{startswith} & Forward only messags which start with this path (string) & \\
-\hline
-\indattr{trimstart} & Trim startswith part of the path before forwarding (bool) & false\\
-\hline
-\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9000/}\\
-\hline
-\end{tabularx}
-}
-\end{snugshade}
+\input{modtabtex/taboscrelay.tex}
+
+\subsubsection*{Message Replacement}
+
+When the \texttt{replacemsg} attribute is enabled, the module forwards a custom message instead of the original data. This custom message is constructed using child elements within the module's XML definition. The following child elements are supported:
+
+\begin{itemize}
+    \item \elem{f v="..."}: Adds a float value to the message.
+    \item \elem{i v="..."}: Adds an integer (int32) value to the message.
+    \item \elem{s v="..."}: Adds a string value to the message.
+\end{itemize}
+
+\subsubsection*{Examples}
+
+{\bf Basic Relay:} Forward all incoming messages to a remote server on
+port 9000:
+\begin{lstlisting}[numbers=none]
+<oscrelay path="/" url="osc.udp://192.168.1.50:9000/" />
+\end{lstlisting}
+
+{\bf Path Filtering and Trimming:} Listen for messages starting
+with \texttt{/sensor/}, remove that prefix, and forward the rest to
+localhost:
+\begin{lstlisting}[numbers=none]
+<oscrelay path="/" 
+          url="osc.udp://localhost:9000/" 
+          startswith="/sensor/" 
+          trimstart="true" />
+\end{lstlisting}
+{Example:} An incoming message \texttt{/sensor/temp} is forwarded as \texttt{/temp}.
+
+
+{\bf Message Replacement:} Replace any incoming message
+on \texttt{/trigger} with a specific integer command:
+\begin{lstlisting}[numbers=none]
+<oscrelay path="/trigger" 
+          url="osc.udp://localhost:9000/" 
+          replacemsg="true">
+    <i v="1" />
+</oscrelay>
+\end{lstlisting}

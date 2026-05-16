@@ -8,17 +8,19 @@ Attributes of element {\bf oscrelay}\nopagebreak
 name & description (type, unit) & def.\\
 \hline
 \hline
-\indattr{newpath} & Replace incoming path with this path, or empty for no replacement (string) & \\
+\indattr{newpath} & Replaces the incoming OSC path with this string before forwarding. If left empty, the original path (or a trimmed version) is used. (string) & \\
 \hline
-\indattr{path} & Path filter, or empty to match any path (string) & \\
+\indattr{path} & Specifies the OSC path to listen for. If left empty, the module will match any incoming path. (string) & \\
 \hline
-\indattr{retval} & Return value: 0 = handle messages also locally, non-0 = do not handle locally (int32) & 1\\
+\indattr{replacemsg} & If set to true, the content of the incoming message is discarded and replaced with a locally defined message (constructed from child nodes). (bool) & false\\
 \hline
-\indattr{startswith} & Forward only messags which start with this path (string) & \\
+\indattr{retval} & Determines how the message is handled by the local system after forwarding: 0 = The message is handled locally by other modules. non-0 = The message is not handled locally (consumed by the relay). (int32) & 1\\
 \hline
-\indattr{trimstart} & Trim startswith part of the path before forwarding (bool) & false\\
+\indattr{startswith} & Defines a path prefix. Only messages whose paths start with this string will be forwarded. If left empty, no prefix filtering is applied. (string) & \\
 \hline
-\indattr{url} & Target OSC URL (string) & {\tiny osc.udp://localhost:9000/}\\
+\indattr{trimstart} & If set to true, the 'startswith' portion of the path is removed before the message is forwarded. (bool) & false\\
+\hline
+\indattr{url} & The destination OSC URL where messages should be forwarded. (string) & {\tiny osc.udp://localhost:9000/}\\
 \hline
 \end{tabularx}
 }

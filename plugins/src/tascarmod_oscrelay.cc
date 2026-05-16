@@ -75,20 +75,31 @@ oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
       target(NULL), newmsg(lo_message_new())
 
 {
-  GET_ATTRIBUTE(path, "", "Path filter, or empty to match any path");
-  GET_ATTRIBUTE(url, "", "Target OSC URL");
+  GET_ATTRIBUTE(path, "",
+                "Specifies the OSC path to listen for. If left empty, the "
+                "module will match any incoming path.");
+  GET_ATTRIBUTE(url, "",
+                "The destination OSC URL where messages should be forwarded.");
   GET_ATTRIBUTE(
       newpath, "",
-      "Replace incoming path with this path, or empty for no replacement");
-  GET_ATTRIBUTE(startswith, "",
-                "Forward only messags which start with this path");
+      "Replaces the incoming OSC path with this string before forwarding. If "
+      "left empty, the original path (or a trimmed version) is used.");
+  GET_ATTRIBUTE(
+      startswith, "",
+      "Defines a path prefix. Only messages whose paths start with this string "
+      "will be forwarded. If left empty, no prefix filtering is applied.");
   GET_ATTRIBUTE_BOOL(trimstart,
-                     "Trim startswith part of the path before forwarding");
+                     "If set to true, the 'startswith' portion of the path is "
+                     "removed before the message is forwarded.");
   GET_ATTRIBUTE_BOOL(replacemsg,
-                     "Replace incoming message by locally defined message");
-  GET_ATTRIBUTE(retval, "",
-                "Return value: 0 = handle messages also locally, non-0 = do "
-                "not handle locally");
+                     "If set to true, the content of the incoming message is "
+                     "discarded and replaced with a locally defined message "
+                     "(constructed from child nodes).");
+  GET_ATTRIBUTE(
+      retval, "",
+      "Determines how the message is handled by the local system after "
+      "forwarding: 0 = The message is handled locally by other modules. non-0 "
+      "= The message is not handled locally (consumed by the relay).");
   target = lo_address_new_from_url(url.c_str());
   if(!target)
     throw TASCAR::ErrMsg("Unable to create OSC target client \"" + url + "\".");
