@@ -34,8 +34,10 @@ private:
   std::string newpath;
   std::string startswith;
   bool trimstart = false;
+  bool replacemsg = false;
   lo_address target;
   int retval = 1;
+  lo_message newmsg = NULL;
 };
 
 int oscrelay_t::osc_recv(const char* path, const char*, lo_arg**, int,
@@ -52,19 +54,26 @@ int oscrelay_t::osc_recv(const char* lpath, lo_message msg)
   if(startswith.size() && (!start_matched))
     return retval;
   if(newpath.size()) {
-    lo_send_message(target, newpath.c_str(), msg);
+    if(replacemsg)
+      lo_send_message(target, newpath.c_str(), newmsg);
+    else
+      lo_send_message(target, newpath.c_str(), msg);
     return retval;
   }
   const char* trimmedpath = lpath;
   if(start_matched && trimstart)
     trimmedpath = lpath + startswith.size();
-  lo_send_message(target, trimmedpath, msg);
+  if(replacemsg)
+    lo_send_message(target, trimmedpath, newmsg);
+  else
+    lo_send_message(target, trimmedpath, msg);
   return retval;
 }
 
 oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
     : module_base_t(cfg), path(""), url("osc.udp://localhost:9000/"),
-      target(NULL)
+      target(NULL), newmsg(lo_message_new())
+
 {
   GET_ATTRIBUTE(path, "", "Path filter, or empty to match any path");
   GET_ATTRIBUTE(url, "", "Target OSC URL");
@@ -75,6 +84,8 @@ oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
                 "Forward only messags which start with this path");
   GET_ATTRIBUTE_BOOL(trimstart,
                      "Trim startswith part of the path before forwarding");
+  GET_ATTRIBUTE_BOOL(replacemsg,
+                     "Replace incoming message by locally defined message");
   GET_ATTRIBUTE(retval, "",
                 "Return value: 0 = handle messages also locally, non-0 = do "
                 "not handle locally");
@@ -82,11 +93,30 @@ oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
   if(!target)
     throw TASCAR::ErrMsg("Unable to create OSC target client \"" + url + "\".");
   session->add_method(path, NULL, &oscrelay_t::osc_recv, this);
+  for(auto& sne : tsccfg::node_get_children(e, "f")) {
+    TASCAR::xml_element_t tsne(sne);
+    double v(0);
+    tsne.GET_ATTRIBUTE(v, "", "float value");
+    lo_message_add_float(newmsg, v);
+  }
+  for(auto& sne : tsccfg::node_get_children(e, "i")) {
+    TASCAR::xml_element_t tsne(sne);
+    int32_t v(0);
+    tsne.GET_ATTRIBUTE(v, "", "int value");
+    lo_message_add_int32(newmsg, v);
+  }
+  for(auto& sne : tsccfg::node_get_children(e, "s")) {
+    TASCAR::xml_element_t tsne(sne);
+    std::string v("");
+    tsne.GET_ATTRIBUTE(v, "", "string value");
+    lo_message_add_string(newmsg, v.c_str());
+  }
 }
 
 oscrelay_t::~oscrelay_t()
 {
   lo_address_free(target);
+  lo_message_free(newmsg);
 }
 
 REGISTER_MODULE(oscrelay_t);
