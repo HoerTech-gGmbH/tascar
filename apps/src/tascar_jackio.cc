@@ -51,6 +51,19 @@ int main(int argc, char** argv)
 {
   try {
     const char* options = "fo:chus:d:vt:wn:";
+    std::map<std::string, std::string> helpmap;
+    helpmap["freewheeling"] =
+        "Enable freewheeling mode (no real-time constraints)";
+    helpmap["output-file"] = "Output sound file name";
+    helpmap["jack-name"] = "Set JACK client name";
+    helpmap["autoconnect"] = "Automatically connect to hardware ports";
+    helpmap["unlink"] = "Unlink/delete input file after processing";
+    helpmap["help"] = "Show this help message";
+    helpmap["start"] = "Start time in seconds for transport";
+    helpmap["wait"] = "Wait for transport to start";
+    helpmap["duration"] = "Duration in seconds for recording (no input file)";
+    helpmap["statistics"] = "File name to store statistics (CPU load, xruns)";
+    helpmap["verbose"] = "Show more information on console";
     struct option long_options[] = {
         {"freewheeling", 0, 0, 'f'}, {"output-file", 1, 0, 'o'},
         {"jack-name", 1, 0, 'n'},    {"autoconnect", 0, 0, 'c'},
@@ -115,8 +128,24 @@ int main(int argc, char** argv)
         break;
       case 'h':
         // usage(long_options);
-        TASCAR::app_usage("tascar_jackio", long_options,
-                          "input.wav [ ports [...]]");
+        TASCAR::app_usage(
+            "tascar_jackio", long_options, "input.wav [ ports [...]]",
+            "Play and record audio files via jack.\n\n"
+            "The transport logic in this code allows synchronization with JACK's\n"
+            "transport system, which is useful for coordinating playback and\n"
+            "recording with other JACK clients or external control.\n\n"
+            "To make the recording/playback wait until transport is started\n"
+            "externally, use the '-w' or '--wait' option when running the\n"
+            "program:\n\n"
+            "   tascar_jackio -w -s 0 input.wav output.wav\n\n"
+            "What happens when you use this option:\n\n"
+            "  - The program will set up all connections and prepare for\n"
+            "    recording/playback\n"
+            "  - It will locate to the start position (specified with -s)\n"
+            "  - It will NOT automatically start transport\n"
+            "  - It will wait until transport is started externally (by another\n"
+            "    JACK client or control application)",
+            helpmap);
         return 0;
       case 'v':
         verbose = true;
