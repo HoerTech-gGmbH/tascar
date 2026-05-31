@@ -8,6 +8,15 @@ USE_SYSTEM_LIBS ?= 0
 
 ARCH:=$(shell uname -m)
 
+# On Windows for ARM, msys2 uname -m wrongly reports x86_64, but uname -s
+# reports something like MINGW64_NT-10.0-26200-ARM64. Override ARCH to
+# arm64 when the output of uname -s ends with ARM64.
+ifeq "x$(ARCH)" "xx86_64"
+  ifneq (,$(findstring ARM64,$(shell uname -s)))
+    ARCH:=arm64
+  endif
+endif
+
 CXXFLAGS += -Wall -Wextra -Wdeprecated-declarations -Wno-psabi -std=c++17 -pthread	\
 -ggdb -fno-finite-math-only -Wno-psabi
 # -Wconversion
