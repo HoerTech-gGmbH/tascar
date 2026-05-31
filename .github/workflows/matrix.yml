@@ -1,0 +1,441 @@
+name: TASCAR Matrix Build
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+env:
+  MINGW_LIBLSL_REF: v1.17.7
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Ubuntu 22.04
+          - name: ubuntu-22.04-x64
+            runs_on: ubuntu-22.04
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: bash
+            arch: amd64
+            prefix: /usr
+            webkit2gtk_version: "4.0"
+
+          # Ubuntu 22.04 ARM64
+          - name: ubuntu-22.04-arm64
+            runs_on: ubuntu-22.04-arm
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: bash
+            arch: arm64
+            prefix: /usr
+            webkit2gtk_version: "4.0"
+
+          # Ubuntu 24.04
+          - name: ubuntu-24.04-x64
+            runs_on: ubuntu-24.04
+            # Only one of the following containers can be non-empty
+            job_container: "" # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: bash
+            arch: amd64
+            prefix: /usr
+            webkit2gtk_version: 4.1
+
+          # Ubuntu 26.04
+          - name: ubuntu-26.04-x64
+            runs_on: ubuntu-latest
+            # Only one of the following containers can be non-empty
+            job_container: ubuntu:26.04 # Job-level docker container
+            step_container: ""          # Step-level docker container
+            shell: bash
+            arch: amd64
+            prefix: /usr
+            webkit2gtk_version: 4.1
+
+          # Ubuntu 26.04 ARM64
+          - name: ubuntu-26.04-arm64
+            runs_on: ubuntu-24.04-arm
+            # Only one of the following containers can be non-empty
+            job_container: ubuntu:26.04 # Job-level docker container
+            step_container: ""          # Step-level docker container
+            shell: bash
+            arch: arm64
+            prefix: /usr
+            webkit2gtk_version: 4.1
+
+          # Ubuntu 26.04 ARMHF
+          - name: ubuntu-26.04-arm32
+            runs_on: ubuntu-24.04-arm
+            # Only one of the following containers can be non-empty
+            job_container: ""              # Job-level docker container
+            step_container: "ubuntu:26.04" # Step-level docker container
+            docker_platform: "linux/arm/v7"
+            uname_m: armv7l
+            shell: bash
+            arch: armhf
+            prefix: /usr
+            webkit2gtk_version: 4.1
+
+          # Windows
+          - name: windows-x64
+            runs_on: windows-latest
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: msys2 {0}
+            arch: x64
+            msystem: UCRT64
+            prefix: /tascar
+
+          # Windows ARM64
+          - name: windows-arm64
+            runs_on: windows-11-arm
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: msys2 {0}
+            arch: arm64
+            msystem: CLANGARM64
+            prefix: /tascar
+
+          # macOS ARM (latest)
+          - name: macos-arm64
+            runs_on: macos-latest
+            # Only one of the following containers can be non-empty
+            job_container: ""  # Job-level docker container
+            step_container: "" # Step-level docker container
+            shell: bash
+            prefix: /opt/homebrew/Cellar/tascar/4.99.0
+            use_bundled_libmysofa: MAY_USE
+
+#          # macOS Intel (latest available Intel image)
+#          - name: macos-x64
+#            runs_on: macos-15-intel
+#            # Only one of the following containers can be non-empty
+#            job_container: ""  # Job-level docker container
+#            step_container: "" # Step-level docker container
+#            shell: bash
+#            prefix: /usr/local/Cellar/tascar/4.99.0
+#            use_bundled_libmysofa: MAY_USE
+
+    runs-on: ${{ matrix.runs_on }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    env:
+      D: ${{ matrix.step_container != '' && 'docker exec build_env' || '' }}
+      DEBIAN_FRONTEND: noninteractive
+      # If any of the following variables is set to DO_NOT_USE, then this tells
+      # the external_libs Makefile not to use the bundles resource. It it is
+      # MAY_USE or has any other value or is undefined, then the bundled
+      # resources are STILL NOT automatically used, but existing decision logic
+      # is still followed.
+      #
+      # In short:
+      # setting to DO_NOT_USE blocks usage, other values keep previous behavior.
+      USE_BUNDLED_LIBMYSOFA: ${{ matrix.use_bundled_libmysofa || 'DO_NOT_USE' }}
+      USE_BUNDLED_LIBLSL: ${{ matrix.use_bundled_liblsl || 'DO_NOT_USE' }}
+
+    # Set container for whole job only if needed
+    container: ${{ matrix.job_container != '' && matrix.job_container || null }}
+
+    steps:
+      - name: Set up step container for Linux ARMHF builds
+        if: matrix.step_container != ''
+        run: |
+          set -eux
+          docker create --name build_env --platform ${{ matrix.docker_platform }} -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --env DEBIAN_FRONTEND=noninteractive ${{ matrix.step_container }} sleep 99999
+          docker start build_env
+          hostarch=$($D uname -m)
+          # Modify uname output for configure scripts
+          $D mv /usr/bin/uname /usr/bin/uname.orig
+          cat <<EOF >uname-wrapper.sh
+          #!/bin/sh
+          /usr/bin/uname.orig "\$@" | sed -e s/$hostarch/${{ matrix.uname_m }}/
+          EOF
+          docker cp uname-wrapper.sh build_env:/usr/bin/uname
+          $D chown root:root /usr/bin/uname
+          $D chmod +x /usr/bin/uname
+          $D ls -l /usr/bin/uname
+          $D cat /usr/bin/uname
+          $D uname -a
+          rm uname-wrapper.sh
+
+      - name: Install sudo for container builds (Linux)
+        if: matrix.job_container != '' || matrix.step_container != ''
+        run: |
+          set -eux
+          $D apt-get update
+          $D apt-get install -y sudo
+
+      # ---------------------------
+      # Linux: Dependencies
+      # ---------------------------
+      - name: Install dependencies (Linux)
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          $D sudo apt-get update
+          $D sudo apt-get install -y \
+                build-essential default-jre doxygen dpkg-dev g++ git \
+                imagemagick jackd2 libboost-all-dev libmysofa-dev cmake \
+                libcairomm-1.0-dev libeigen3-dev libfftw3-dev \
+                libfftw3-double3 libfftw3-single3 libgsl-dev libgtkmm-3.0-dev \
+                libgtksourceviewmm-3.0-dev libjack-jackd2-dev liblo-dev \
+                libltc-dev libmatio-dev libsndfile1-dev \
+                libwebkit2gtk-${{ matrix.webkit2gtk_version }}-dev \
+                libxml++2.6-dev lsb-release make portaudio19-dev ruby-dev \
+                software-properties-common texlive-latex-extra \
+                texlive-latex-recommended vim-common wget libsamplerate0-dev \
+                libxerces-c-dev graphviz libopencv-dev libopencv-calib3d-dev \
+                libcunit1-dev libmosquitto-dev nlohmann-json3-dev
+
+      # ---------------------------
+      # macOS: Dependencies
+      # ---------------------------
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.name, 'macos')
+        run: |
+          set -eux
+          brew install pkgconfig coreutils labstreaminglayer/tap/lsl
+          brew install jack liblo libsndfile eigen boost gsl fftw libsamplerate
+          brew install xerces-c libltc libmatio cunit mosquitto nlohmann-json
+          brew install glibmm gtkmm3 gtksourceviewmm3 adwaita-icon-theme
+          brew install jpeg
+
+      # Clone the repository after git has been installed in the container
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # ---------------------------
+      # Windows: MSYS2 Setup & Dependencies
+      # ---------------------------
+      - name: Setup MSYS2
+        if: startsWith(matrix.name, 'windows')
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            git
+            vim
+            zip
+            unzip
+            make
+          pacboy: >-
+            gcc:p
+            pkgconf:p
+            eigen3:p
+            jack2:p
+            liblo:p
+            libsndfile:p
+            gtkmm3:p
+            gsl:p
+            fftw:p
+            libsamplerate:p
+            xerces-c:p
+            gtksourceviewmm3:p
+            dlfcn:p
+            matio:p
+            adwaita-icon-theme:p
+            cmake:p
+            cunit:p
+            libmysofa:p
+            mosquitto:p
+            nlohmann-json:p
+            boost:p
+            ninja:p
+
+      # ---------------------------
+      # Fix git
+      # ---------------------------
+      - name: Fix git
+        run: |
+          set -eux
+          # Mark workspace as safe for git in containers.
+          $D git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # Fix Windows line endings
+          $D git checkout .
+          # Fix commit counting
+          $D git fetch --unshallow --tags
+
+      # create cache-key component which identifies matrix leg and compiler verion
+      - name: Create cache key component for matrix leg and compiler version
+        id: matrix-compiler
+        run: |
+          set -eux
+          echo -n "cache_key=${{ matrix.name }}-CXX" > cache_key.txt
+          $D bash -c "c++ --version | head -n1 | sed 's/([^)]*)//g' | xargs | awk '{print \$NF}' >> cache_key.txt"
+          cat cache_key.txt >> $GITHUB_OUTPUT
+          rm -f cache_key.txt
+      - name: Echo matrix-compiler cache key component
+        run: |
+          set -eux
+          echo "${{ steps.matrix-compiler.outputs.cache_key }}"
+
+      # ---------------------------
+      # Create Aggregate Ubuntu packages by Ubuntu version
+      # ---------------------------
+      # On Ubuntu, we collect our deb files and possibly some dependencies in
+      # the tascar-packages directory which is zipped for releases with an
+      # Ubuntu-version specific file name. Users then only have to download a
+      # single zip file instead of multiple deb files.
+      # The zip file will also contain non-standard dependencies like liblsl.
+      - name: Create installers directory for Ubuntu
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          $D mkdir -p tascar-packages
+
+      # ---------------------------
+      # Install Liblsl dependency
+      # ---------------------------
+      # On Unbuntu, liblsl may become available through standard apt
+      # repositories in the future. For now, use deb files from a dependencies
+      # repository.
+      - name: Retrieve liblsl from dependencies repository on Ubuntu
+        if: startsWith(matrix.name, 'ubuntu')
+        uses: actions/checkout@v6
+        with:
+          repository: openmha/dependencies
+          ref: main
+          path: deps
+      - name: Install liblsl on ubuntu
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          lts=$(echo ${{ matrix.name }} | cut -d- -f-2)
+          $D sudo apt-get install -y ./deps/liblsl/$lts/*_${{ matrix.arch }}.deb
+          $D cp deps/liblsl/$lts/*_${{ matrix.arch }}.deb tascar-packages/
+
+      # On Windows, liblsl is not available as an msys2 package. Other sources
+      # for precompiled binaries will become imcompatible when msys2 updates
+      # the compilers. Best to compile here with caching to ensure the same
+      # compiler version is used for both liblsl and TASCAR.
+      - name: Restore liblsl build cache on Windows
+        if: startsWith(matrix.name, 'windows')
+        uses: actions/cache@v5
+        id: liblsl-cache
+        with:
+          path: liblsl/install
+          key: liblsl-${{ env.MINGW_LIBLSL_REF }}-${{ steps.matrix-compiler.outputs.cache_key }}
+      - name: Check out liblsl on Windows on cache miss
+        if: startsWith(matrix.name, 'windows') && steps.liblsl-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v6
+        with:
+          repository: sccn/liblsl
+          ref: ${{ env.MINGW_LIBLSL_REF }}
+          path: liblsl
+      - name: Build liblsl on Windows
+        if: startsWith(matrix.name, 'windows') && steps.liblsl-cache.outputs.cache-hit != 'true'
+        run: |
+          set -eux
+          mkdir -p liblsl/build
+          cmake --version
+          cmake -S liblsl -B liblsl/build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX="${PWD}/liblsl/install" \
+                -DLSL_UNITTESTS=ON \
+                -Dlslgitrevision=${{ env.MINGW_LIBLSL_REF }} \
+                -Dlslgitbranch=${{ env.MINGW_LIBLSL_REF }} \
+                -DLSL_OPTIMIZATIONS=OFF \
+                -G Ninja
+          cmake --build liblsl/build --target install --config Release -j --verbose
+      - name: Test liblsl on Windows (skip on ARM)
+        if: matrix.msystem == 'UCRT64'
+        run: |
+          set -eux
+          ${PWD}/liblsl/install/bin/lsl_test_internal --order rand --wait-for-keypress never --durations yes
+          ${PWD}/liblsl/install/bin/lsl_test_exported --wait-for-keypress never --durations yes
+      - name: Copy liblsl files to MSYS2 directories on Windows
+        if: startsWith(matrix.name, 'windows')
+        run: |
+          cp -rnv liblsl/install/* "/${{ matrix.msystem }}"
+
+      # ---------------------------
+      # Build: make
+      # ---------------------------
+      - name: Build
+        run: |
+          set -eux
+          c++ --version || true
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          $D echo make -j"$JOBS"
+          $D make -j"$JOBS"
+
+      # ---------------------------
+      # Build: run tests
+      # ---------------------------
+      - name: Run unit tests
+        run: |
+          set -eux
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          $D make -j"$JOBS" unit-tests
+
+      - name: Run other test
+        if: startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'macos')
+        run: |
+          set -eux
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          $D make -j"$JOBS" test
+
+      # ---------------------------
+      # Build debian packages
+      # ---------------------------
+      - name: Build Debian packages
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          $D make pack -j"$JOBS"
+          $D cp -v packaging/deb/tascar/*/*.deb tascar-packages/
+          zip tascar-$(grep ^VERSION= config.mk | cut -d= -f2)-${{ matrix.name }}.zip tascar-packages/*.deb
+
+      # ---------------------------
+      # Build zip package for Windows installation
+      # ---------------------------
+      - name: Build Windows zip package
+        if: startsWith(matrix.name, 'windows')
+        run: |
+          set -eux
+          make packwin
+          mv packaging/win/tascar-*-windows.zip .
+          newname=$(echo tascar-*-windows.zip | sed -e "s/-windows.zip/-${{ matrix.name }}.zip/")
+          mv tascar-*-windows.zip "$newname"
+
+      # ---------------------------
+      # Upload installers as artifacts and release assets for Linux and Windows
+      # ---------------------------
+      - name: Upload as artifacts
+        uses: actions/upload-artifact@v7
+        if: startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'windows')
+        with:
+          name: tascar-zip-${{ matrix.name }}
+          path: |
+            tascar-*-${{ matrix.name }}.zip
+            version
+      - name: Publish files to release
+        if: github.event_name == 'release' && (startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'windows'))
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            tascar-*-${{ matrix.name }}.zip
+
+      - name: Stop step container
+        if: always() && matrix.step_container != ''
+        run: |
+          docker rm -f build_env || true
+
