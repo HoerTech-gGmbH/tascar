@@ -26,6 +26,7 @@
 #include "fdn.h"
 #include "optim.h"
 #include <limits>
+#include <pthread.h>
 
 class simplefdn_vars_t : public TASCAR::receivermod_base_t {
 public:

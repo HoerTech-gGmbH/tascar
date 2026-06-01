@@ -106,7 +106,7 @@ ifeq ($(OS),Windows_NT)
 #
 # Windows:
 #
-LDLIBS += -lshlwapi -lssp
+LDLIBS += -lshlwapi -lssp -lpthread
 libcli:  ver build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
 symlinkcli: libcli build/lib$(PLUGINPREFIX)tascar.dll
 lib:  ver libcli build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
@@ -151,7 +151,7 @@ build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS) build/lib$(PLUGINPRE
 	ln -s lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION)
 
 build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll: $(BUILD_OBJECTS)
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascar.0.dylib: $(BUILD_OBJECTS)
 	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascar.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
@@ -165,7 +165,7 @@ build/lib$(PLUGINPREFIX)tascardmx.0.dylib: $(BUILD_DMXOBJECTS) build/lib$(PLUGIN
 
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 clean:
 	rm -Rf *~ src/*~ build doc/html

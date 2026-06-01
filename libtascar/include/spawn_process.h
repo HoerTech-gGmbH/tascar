@@ -28,6 +28,7 @@
 #ifndef SPAWN_PROCESS_H
 #define SPAWN_PROCESS_H
 
+#include <tascar_os.h>
 #include <mutex>
 #include <string>
 #include <thread>
