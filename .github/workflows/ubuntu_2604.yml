@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-26.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: fetchall
       run: git fetch --unshallow --tags
     - name: dependencies
@@ -26,23 +26,27 @@ jobs:
     - name: packaging
       run: make pack
     - name: Upload debian packages to artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: tascar-debian
         path: packaging/deb/tascar/*/*.deb
+
     - name: Upload manual to artifacts
-      uses: actions/upload-artifact@v4
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v7
       with:
         name: tascar-manual
         path: manual/manual.pdf
 
     - name: Checkout Wiki
-      uses: actions/checkout@v4
+      if: github.event_name != 'pull_request'
+      uses: actions/checkout@v6
       with:
         repository: ${{github.repository}}.wiki
         path: ${{github.repository}}.wiki
 
     - name: Push manual to wiki
+      if: github.event_name != 'pull_request'
       run: |
         set -e
         cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
