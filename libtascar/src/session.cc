@@ -235,6 +235,11 @@ void TASCAR::module_t::validate_attributes(std::string& msg) const
   libdata->validate_attributes(msg);
 }
 
+std::string TASCAR::module_t::get_state_json()
+{
+  return libdata->get_state_json();
+}
+
 TASCAR::module_t::~module_t()
 {
   delete libdata;

@@ -19,7 +19,7 @@ TASCARMODS = system pos2osc sampler pendulum epicycles motionpath	\
   hossustain rotator orientationmodulator locationmodulator		\
   linearmovement granularsynth fail waitforjackport sleep jackrec	\
   oscserver oscrelay echoc snapangle oscactor oscheadtracker osceog	\
-  tonalenhancement systime skyfall accmovement accrotator tuner
+  tonalenhancement systime skyfall accmovement accrotator tuner osclist
 
 TASCARMODSGUI = tracegui simplecontroller timedisplay geopresets	\
   transportgui lightcolorpicker datalogging sendsvg

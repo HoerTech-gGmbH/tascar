@@ -51,6 +51,7 @@ namespace TASCAR {
        \param running Transport running (true) or stopped (false).
      */
     virtual void update(uint32_t frame, bool running);
+    virtual std::string get_state_json() { return "";};
 
   protected:
     TASCAR::session_t* session;
@@ -64,6 +65,7 @@ namespace TASCAR {
     void post_prepare();
     void release();
     void update(uint32_t frame, bool running);
+    std::string get_state_json();
     virtual void validate_attributes(std::string&) const;
     const std::string& modulename() const { return name; };
 
