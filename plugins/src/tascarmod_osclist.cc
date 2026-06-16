@@ -11,7 +11,7 @@
  *
  * TASCAR is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License, version 3 for more details.
  *
  * You should have received a copy of the GNU General Public License,
@@ -19,6 +19,8 @@
  */
 
 #include "session.h"
+#include "tictoctimer.h"
+#include <thread>
 
 class osclist_t : public TASCAR::module_base_t {
 public:
@@ -30,7 +32,10 @@ public:
   std::string get_state_json();
 
 private:
-  std::map<std::string, uint64_t> list;
+  void service();
+  std::thread srv;
+  std::atomic_bool run_service = true;
+  std::map<std::string, TASCAR::tictoc_t> list;
   std::mutex mtx;
   float timeout = 60.0;
 };
@@ -43,15 +48,16 @@ int osclist_t::osc_recv(const char* path, const char* fmt, lo_arg**, int,
 
 int osclist_t::osc_recv(const char* path, const char* fmt)
 {
-  std::lock_guard<std::mutex> lock(mtx);
   std::string fpath = path;
   fpath += " ,";
   fpath += fmt;
-  if(list.find(fpath) == list.end()) {
-    list[fpath] = 0;
-    std::cout << fpath << std::endl;
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    if(list.find(fpath) == list.end()) {
+      std::cout << fpath << std::endl;
+    }
+    list[fpath].tic();
   }
-  list[fpath] += 1;
   return 0;
 }
 
@@ -59,8 +65,8 @@ std::string osclist_t::get_state_json()
 {
   std::lock_guard<std::mutex> lock(mtx);
   std::string rv = "{";
-  for(const auto& osc : list)
-    rv += "\"" + osc.first + "\":" + std::to_string(osc.second) + ",";
+  for(auto& osc : list)
+    rv += "\"" + osc.first + "\":" + TASCAR::to_string(osc.second.toc()) + ",";
   if(rv[rv.size() - 1] == ',')
     rv.erase(rv.size() - 1);
   rv += "}";
@@ -72,9 +78,36 @@ osclist_t::osclist_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
 {
   GET_ATTRIBUTE(timeout, "s", "timeout after which messages are discarded");
   session->add_method("", NULL, &osclist_t::osc_recv, this);
+  srv = std::thread(&osclist_t::service, this);
 }
 
-osclist_t::~osclist_t() {}
+osclist_t::~osclist_t()
+{
+  run_service = false;
+  srv.join();
+}
+
+void osclist_t::service()
+{
+  uint32_t cnt = 0;
+  while(run_service) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if(cnt == 0) {
+      cnt = 1000;
+      {
+        std::lock_guard<std::mutex> lock(mtx);
+        for(auto it = list.begin(); it != list.end();) {
+          if(it->second.toc() >= timeout)
+            it = list.erase(it);
+          else
+            ++it;
+        }
+      }
+    } else {
+      --cnt;
+    }
+  }
+}
 
 REGISTER_MODULE(osclist_t);
 
