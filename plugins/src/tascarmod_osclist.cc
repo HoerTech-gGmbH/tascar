@@ -32,6 +32,7 @@ public:
 private:
   std::map<std::string, uint64_t> list;
   std::mutex mtx;
+  float timeout = 60.0;
 };
 
 int osclist_t::osc_recv(const char* path, const char* fmt, lo_arg**, int,
@@ -69,6 +70,7 @@ std::string osclist_t::get_state_json()
 osclist_t::osclist_t(const TASCAR::module_cfg_t& cfg) : module_base_t(cfg)
 
 {
+  GET_ATTRIBUTE(timeout, "s", "timeout after which messages are discarded");
   session->add_method("", NULL, &osclist_t::osc_recv, this);
 }
 
