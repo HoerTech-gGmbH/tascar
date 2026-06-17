@@ -58,7 +58,7 @@ int osclist_t::osc_recv(const char* path, const char* fmt)
     }
     list[fpath].tic();
   }
-  return 0;
+  return 1;
 }
 
 std::string osclist_t::get_state_json()

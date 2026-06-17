@@ -98,8 +98,8 @@ oscrelay_t::oscrelay_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(
       retval, "",
       "Determines how the message is handled by the local system after "
-      "forwarding: 0 = The message is handled locally by other modules. non-0 "
-      "= The message is not handled locally (consumed by the relay).");
+      "forwarding: 0: do not pass it on to any other handlers, non-0: pass on "
+      "to other handlers");
   target = lo_address_new_from_url(url.c_str());
   if(!target)
     throw TASCAR::ErrMsg("Unable to create OSC target client \"" + url + "\".");
