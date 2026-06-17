@@ -60,7 +60,7 @@ endif
 
 ifeq "$(HAS_LSL)" "yes"
 CXXFLAGS += -DHAS_LSL
-TASCARMODS += lsljacktime lslactor levels2osc pos2lsl osc2lsl
+TASCARMODS += lsljacktime lslactor levels2osc pos2lsl osc2lsl lsllist
 AUDIOPLUGINS += speechactivity periodogram
 TASCARMODSGUI += waitforlslstream lsl2osc
 
@@ -151,6 +151,7 @@ build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): EXTERNALS += gtkmm-3.0
 
 ifeq "$(HAS_LSL)" "yes"
 build/$(PLUGINPREFIX)glabsensor_%$(DLLEXT): LDLIBS+=$(LSLLIBS)
+build/$(PLUGINPREFIX)tascar_lsllist$(DLLEXT): LDLIBS+=$(LSLLIBS)
 build/$(PLUGINPREFIX)tascar_ap_periodogram$(DLLEXT): LDLIBS+=$(LSLLIBS)
 build/$(PLUGINPREFIX)tascar_ap_speechactivity$(DLLEXT): LDLIBS+=$(LSLLIBS)
 build/$(PLUGINPREFIX)tascar_lsl2osc$(DLLEXT): LDLIBS+=$(LSLLIBS)
