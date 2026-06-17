@@ -103,8 +103,8 @@ void lsllist_t::service()
         std::string info_str = lsl_get_name(buffer[kstream]);
         info_str += " type=" + std::string(lsl_get_type(buffer[kstream]));
         info_str += " fmt=" + fmt;
-        info_str += " channels=" + lsl_get_channel_count(buffer[kstream]);
-        info_str += " fs=" + TASCAR::to_string(lsl_get_nominal_srate(buffer[kstream])) + " Hz";
+        info_str += " channels=" + std::to_string(lsl_get_channel_count(buffer[kstream]));
+        info_str += " fs=" + TASCAR::to_string(lsl_get_nominal_srate(buffer[kstream])) + "Hz";
         info_str += " host=" + std::string(lsl_get_hostname(buffer[kstream]));
         lsl_destroy_streaminfo(buffer[kstream]);
         newlist[src_id] = info_str;
