@@ -230,7 +230,8 @@ void ap_sndfile_t::load_file()
       }
       double gain(1);
       if(levelmode == "rms") {
-        TASCAR::levelmeter_t meter(f_sample, sndf[0]->n / f_sample, weighting);
+        TASCAR::levelmeter_t meter(f_sample, sndf[0]->n / f_sample, weighting,
+                                   true);
         meter.update(*(sndf[0]));
         gain = level * 2e-5 / meter.rms();
       } else if(levelmode == "peak") {

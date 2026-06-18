@@ -13,16 +13,14 @@
  *
  * TASCAR is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License, version 3 for more details.
  *
  * You should have received a copy of the GNU General Public License,
  * Version 3 along with TASCAR. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "jackclient.h"
 #include "pluginprocessor.h"
-#include "scene.h"
 #include "session.h"
 
 #define SQRT12 0.70710678118654757274f
@@ -116,8 +114,9 @@ private:
   TASCAR::pos_t nullpos;
   TASCAR::zyx_euler_t nullrot;
   std::vector<TASCAR::wave_t> sIn_tsc;
+  bool prefaderlevel = false;
   bool bypass;
-  pthread_mutex_t mtx_;
+  std::mutex mtx_;
   fader_t fader;
 };
 
@@ -178,7 +177,6 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
       levelmeter_tc(2.0), levelmeter_weight(TASCAR::levelmeter::Z),
       plugins(TASCAR::module_base_t::e, get_name(), ""), bypass(true)
 {
-  pthread_mutex_init(&mtx_, NULL);
   TASCAR::module_base_t::GET_ATTRIBUTE(channels, "", "Number of channels");
   TASCAR::module_base_t::GET_ATTRIBUTE(
       connect_out, "", "Regular expressions of output port names");
@@ -189,6 +187,8 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
                                               "level meter weighting");
   TASCAR::module_base_t::GET_ATTRIBUTE_DBSPL(caliblevel_in,
                                              "Input calibration levels");
+  TASCAR::module_base_t::GET_ATTRIBUTE_BOOL(prefaderlevel,
+                                            "Use pre-fader level metering");
   session->add_float_db("/" + get_name() + "/gain", &gain);
   session->add_float("/" + get_name() + "/lingain", &gain);
   session->add_method("/" + get_name() + "/mute", "i", osc_routemod_mute, this);
@@ -219,7 +219,7 @@ routemod_t::routemod_t(const TASCAR::module_cfg_t& cfg)
 
 void routemod_t::configure()
 {
-  pthread_mutex_lock(&mtx_);
+  std::lock_guard<std::mutex> lock(mtx_);
   fader.set_fs(f_sample);
   n_channels = channels;
   sIn_tsc.clear();
@@ -259,24 +259,21 @@ void routemod_t::configure()
     }
   }
   bypass = false;
-  pthread_mutex_unlock(&mtx_);
 }
 
 void routemod_t::release()
 {
-  pthread_mutex_lock(&mtx_);
+  std::lock_guard<std::mutex> lock(mtx_);
   bypass = true;
   TASCAR::module_base_t::release();
   // TASCAR::Scene::route_t::release();
   plugins.release();
   sIn_tsc.clear();
-  pthread_mutex_unlock(&mtx_);
 }
 
 routemod_t::~routemod_t()
 {
   deactivate();
-  pthread_mutex_destroy(&mtx_);
 }
 
 int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
@@ -285,7 +282,7 @@ int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
 {
   if(bypass)
     return 0;
-  if(pthread_mutex_trylock(&mtx_) == 0) {
+  if(mtx_.try_lock()) {
     TASCAR::transport_t tp;
     tp.rolling = tp_rolling;
     tp.session_time_samples = tp_frame;
@@ -301,6 +298,8 @@ int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
       fader.apply_gain(sIn_tsc);
     }
     for(uint32_t ch = 0; ch < std::min(sIn.size(), sOut.size()); ++ch) {
+      if(prefaderlevel)
+        rmsmeter[ch]->update(TASCAR::wave_t(n, sOut[ch]));
       if(active) {
         for(uint32_t k = 0; k < n; ++k) {
           sOut[ch][k] = gain * sIn_tsc[ch].d[k];
@@ -308,9 +307,10 @@ int routemod_t::process(jack_nframes_t n, const std::vector<float*>& sIn,
       } else {
         memset(sOut[ch], 0, n * sizeof(float));
       }
-      rmsmeter[ch]->update(TASCAR::wave_t(n, sOut[ch]));
+      if(!prefaderlevel)
+        rmsmeter[ch]->update(TASCAR::wave_t(n, sOut[ch]));
     }
-    pthread_mutex_unlock(&mtx_);
+    mtx_.unlock();
   }
   return 0;
 }

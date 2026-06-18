@@ -37,9 +37,9 @@ namespace TASCAR {
 
     class rgb_color_t {
     public:
-      rgb_color_t(double r_, double g_, double b_) : r(r_), g(g_), b(b_){};
+      rgb_color_t(double r_, double g_, double b_) : r(r_), g(g_), b(b_) {};
       rgb_color_t(const std::string& webc);
-      rgb_color_t() : r(0), g(0), b(0){};
+      rgb_color_t() : r(0), g(0), b(0) {};
       std::string str();
       double r, g, b;
     };
@@ -136,6 +136,7 @@ namespace TASCAR {
     private:
       bool solo;
       float meter_tc;
+      bool use_leq = true;
       TASCAR::levelmeter::weight_t meter_weight;
 
     public:
@@ -152,7 +153,7 @@ namespace TASCAR {
     class object_t : public dynobject_t, public route_t {
     public:
       object_t(tsccfg::node_t);
-      virtual ~object_t(){};
+      virtual ~object_t() {};
       bool isactive(double time) const;
       bool is_active(uint32_t anysolo, double t);
       double endtime;

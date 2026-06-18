@@ -320,10 +320,11 @@ bool tascar_window_t::on_timeout()
       hide();
     // script button:
     Gdk::RGBA col;
-    if( session && (session->scriptrunning != 0) ){
-      but_scripts->set_label(TASCAR::to_string(session->scriptrunning)+" scripts");
+    if(session && (session->scriptrunning != 0)) {
+      but_scripts->set_label(TASCAR::to_string(session->scriptrunning) +
+                             " scripts");
       col.set_rgba(1, 0.4, 0.4, 1);
-    }else{
+    } else {
       but_scripts->set_label("0 scripts");
       col.set_rgba(0.92, 0.92, 0.92, 1);
     }

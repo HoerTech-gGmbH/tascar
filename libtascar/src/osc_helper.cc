@@ -197,7 +197,7 @@ int osc_set_float_dbspl(const char*, const char* types, lo_arg** argv, int argc,
 
 std::string str_get_float_dbspl(void* data)
 {
-  return TASCAR::to_string(20.0f * log10f(*(float*)(data)*5.0e4f));
+  return TASCAR::to_string(20.0f * log10f(*(float*)(data) * 5.0e4f));
 }
 
 int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
@@ -210,7 +210,7 @@ int osc_get_float_dbspl(const char* path, const char* types, lo_arg** argv,
       if(npath.size() > 4)
         npath = npath.substr(0, npath.size() - 4);
       lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
-              20.0f * log10f(*(float*)(user_data)*5.0e4f));
+              20.0f * log10f(*(float*)(user_data) * 5.0e4f));
       lo_address_free(target);
     }
   }
@@ -309,7 +309,7 @@ int osc_get_double_db(const char* path, const char* types, lo_arg** argv,
 
 std::string str_get_double_dbspl(void* data)
 {
-  return TASCAR::to_string(20.0 * log10(*(double*)(data)*5e4));
+  return TASCAR::to_string(20.0 * log10(*(double*)(data) * 5e4));
 }
 
 int osc_set_double_dbspl(const char*, const char* types, lo_arg** argv,
@@ -330,7 +330,7 @@ int osc_get_double_dbspl(const char* path, const char* types, lo_arg** argv,
       if(npath.size() > 4)
         npath = npath.substr(0, npath.size() - 4);
       lo_send(target, &(argv[1]->s), "sf", npath.c_str(),
-              20.0f * log10f(*(double*)(user_data)*5.0e4f));
+              20.0f * log10f(*(double*)(user_data) * 5.0e4f));
       lo_address_free(target);
     }
   }

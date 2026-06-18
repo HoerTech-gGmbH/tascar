@@ -13,7 +13,7 @@
  *
  * TASCAR is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License, version 3 for more details.
  *
  * You should have received a copy of the GNU General Public License,
@@ -67,7 +67,7 @@ bool dameter_t::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     return true;
   }
   cr->save();
-  float yscale((height - label_h) / range);
+  float yscale((height - label_h) / std::max(range, 1.0f));
   cr->translate(0, height);
   cr->scale(1.0, -yscale);
   cr->translate(0, -vmin);
@@ -487,12 +487,12 @@ void source_ctl_t::setup()
   Gdk::RGBA col_yellow("f4e83a");
   col_yellow.set_rgba(244.0 / 256, 232.0 / 256, 58.0 / 256, 0.5);
   Gdk::RGBA col;
-  if(TASCAR::Scene::object_t* o =
-         dynamic_cast<TASCAR::Scene::object_t*>(route_)) {
-    TASCAR::Scene::rgb_color_t c(o->color);
-    col.set_rgba(c.r, c.g, c.b, 0.3);
-    ebox.override_background_color(col);
-  }
+  // if(TASCAR::Scene::object_t* o =
+  //      dynamic_cast<TASCAR::Scene::object_t*>(route_)) {
+  TASCAR::Scene::rgb_color_t c(route_->color);
+  col.set_rgba(c.r, c.g, c.b, 0.3);
+  ebox.override_background_color(col);
+  //}
 #else
   Gdk::Color col;
   col.set_rgb(244 * 256, 232 * 256, 58 * 256);
@@ -502,11 +502,12 @@ void source_ctl_t::setup()
   col.set_rgb(244 * 256, 30 * 256, 30 * 256);
   solo.modify_bg(Gtk::STATE_ACTIVE, col);
   solo.modify_bg(Gtk::STATE_PRELIGHT, col);
-  if(object_t* o = dynamic_cast<object_t*>(r)) {
-    rgb_color_t c(o->color);
-    col.set_rgb_p(0.5 + 0.3 * c.r, 0.5 + 0.3 * c.g, 0.5 + 0.3 * c.b);
-    ebox.modify_bg(Gtk::STATE_NORMAL, col);
-  }
+  // if(TASCAR::Scene::object_t* o = dynamic_cast<TASCAR::Scene::object_t*>(r))
+  // {
+  TASCAR::Scene::rgb_color_t c(route_->color);
+  col.set_rgb_p(0.5 + 0.3 * c.r, 0.5 + 0.3 * c.g, 0.5 + 0.3 * c.b);
+  ebox.modify_bg(Gtk::STATE_NORMAL, col);
+  //}
 #endif
   frame.add(ebox);
   pack_start(frame, Gtk::PACK_SHRINK);
@@ -638,10 +639,9 @@ void source_panel_t::set_scene(TASCAR::Scene::scene_t* s,
     }
   }
   if(session) {
-    for(std::vector<TASCAR::module_t*>::iterator it = session->modules.begin();
-        it != session->modules.end(); ++it) {
+    for(auto mod : session->modules) {
       TASCAR::Scene::route_t* rp(
-          dynamic_cast<TASCAR::Scene::route_t*>((*it)->libdata));
+          dynamic_cast<TASCAR::Scene::route_t*>(mod->libdata));
       if(rp) {
         if(use_osc)
           vbuttons.push_back(new source_ctl_t(client_addr_, s, rp));
@@ -665,9 +665,8 @@ void source_panel_t::set_levelmeter_mode(const std::string& mode)
   TEST_MODE(peak);
   TEST_MODE(rms);
   TEST_MODE(percentile);
-  for(std::vector<source_ctl_t*>::iterator it = vbuttons.begin();
-      it != vbuttons.end(); ++it)
-    (*it)->set_levelmeter_mode(lmode);
+  for(auto button : vbuttons)
+    button->set_levelmeter_mode(lmode);
 }
 
 void source_panel_t::set_levelmeter_range(float vmin, float range)
@@ -688,25 +687,24 @@ scene_draw_t::scene_draw_t()
     : scene_(NULL), time(0), selection(NULL), markersize(0.02), blink(false),
       b_print_labels(true), b_acoustic_model(false)
 {
-  pthread_mutex_init(&mtx, NULL);
 }
 
 scene_draw_t::~scene_draw_t()
 {
-  pthread_mutex_trylock(&mtx);
-  pthread_mutex_unlock(&mtx);
-  pthread_mutex_destroy(&mtx);
+  if(mtx.try_lock())
+    mtx.unlock();
+  else
+    mtx.unlock();
 }
 
 void scene_draw_t::set_scene(TASCAR::render_core_t* scene)
 {
-  pthread_mutex_lock(&mtx);
+  std::lock_guard<std::mutex> lock(mtx);
   scene_ = scene;
   if(scene_)
     view.set_ref(scene_->guicenter);
   else
     view.set_ref(TASCAR::pos_t());
-  pthread_mutex_unlock(&mtx);
 }
 
 void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
@@ -716,38 +714,36 @@ void scene_draw_t::select_object(TASCAR::Scene::object_t* o)
 
 void scene_draw_t::set_viewport(const viewt_t& viewt)
 {
-  if(pthread_mutex_lock(&mtx) == 0) {
+  std::lock_guard<std::mutex> lock(mtx);
+  if(scene_) {
+    view.set_ref(scene_->guicenter);
+  }
+  switch(viewt) {
+  case xy:
+    view.set_perspective(false);
+    view.set_euler(zyx_euler_t());
+    break;
+  case xz:
+    view.set_perspective(false);
+    view.set_euler(zyx_euler_t(0, 0, -TASCAR_PI2));
+    break;
+  case yz:
+    view.set_perspective(false);
+    view.set_euler(zyx_euler_t(TASCAR_PI2, 0, -TASCAR_PI2));
+    break;
+  case xyz:
+    view.set_perspective(false);
+    view.set_euler(zyx_euler_t(0.1 * TASCAR_PI, 0, -0.45 * TASCAR_PI));
+    break;
+  case p:
+    view.set_perspective(true);
     if(scene_) {
-      view.set_ref(scene_->guicenter);
-    }
-    switch(viewt) {
-    case xy:
-      view.set_perspective(false);
-      view.set_euler(zyx_euler_t());
-      break;
-    case xz:
-      view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0, 0, -TASCAR_PI2));
-      break;
-    case yz:
-      view.set_perspective(false);
-      view.set_euler(zyx_euler_t(TASCAR_PI2, 0, -TASCAR_PI2));
-      break;
-    case xyz:
-      view.set_perspective(false);
-      view.set_euler(zyx_euler_t(0.1 * TASCAR_PI, 0, -0.45 * TASCAR_PI));
-      break;
-    case p:
-      view.set_perspective(true);
-      if(scene_) {
-        if(scene_->receivermod_objects.size()) {
-          view.set_ref(scene_->receivermod_objects[0]->get_location());
-          view.set_euler(scene_->receivermod_objects[0]->get_orientation());
-        }
+      if(scene_->receivermod_objects.size()) {
+        view.set_ref(scene_->receivermod_objects[0]->get_location());
+        view.set_euler(scene_->receivermod_objects[0]->get_orientation());
       }
-      break;
     }
-    pthread_mutex_unlock(&mtx);
+    break;
   }
 }
 
@@ -822,18 +818,16 @@ void scene_draw_t::draw_acousticmodel(Cairo::RefPtr<Cairo::Context> cr)
 
 void scene_draw_t::draw(Cairo::RefPtr<Cairo::Context> cr)
 {
-  if(pthread_mutex_lock(&mtx) == 0) {
-    if(scene_) {
-      if(scene_->guitrackobject)
-        view.set_ref(scene_->guitrackobject->c6dof.position);
-      // std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
-      for(uint32_t k = 0; k < scene_->all_objects.size(); k++)
-        draw_object(scene_->all_objects[k], cr);
-      if(b_acoustic_model && scene_->world) {
-        draw_acousticmodel(cr);
-      }
+  std::lock_guard<std::mutex> lock(mtx);
+  if(scene_) {
+    if(scene_->guitrackobject)
+      view.set_ref(scene_->guitrackobject->c6dof.position);
+    // std::vector<TASCAR::Scene::object_t*> objects(scene_->get_objects());
+    for(uint32_t k = 0; k < scene_->all_objects.size(); k++)
+      draw_object(scene_->all_objects[k], cr);
+    if(b_acoustic_model && scene_->world) {
+      draw_acousticmodel(cr);
     }
-    pthread_mutex_unlock(&mtx);
   }
 }
 

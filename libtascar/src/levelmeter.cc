@@ -22,13 +22,14 @@
 #include <algorithm>
 
 TASCAR::levelmeter_t::levelmeter_t(float fs, float tc,
-                                   levelmeter::weight_t weight)
+                                   levelmeter::weight_t weight, bool use_leq)
     : wave_t(fs * tc), w(weight), segment_length(fs * 0.125),
       segment_shift(0.5 * segment_length), num_segments(n / segment_shift - 1),
       i30(0.3 * num_segments), i50(0.5 * num_segments),
       i65(0.65 * num_segments), i95(0.95 * num_segments),
-      i99(0.99 * num_segments), bp(500.0, 4000.0, fs), bp_C(62.5, 4000.0, fs),
-      flt_A(fs)
+      i99(0.99 * num_segments), use_leq_(use_leq), bp(500.0, 4000.0, fs),
+      bp_C(62.5, 4000.0, fs), flt_A(fs), int_lp({tc}, fs),
+      max_lp(1, fs, {0.0f}, {tc})
 {
 }
 
@@ -36,19 +37,51 @@ void TASCAR::levelmeter_t::update(const TASCAR::wave_t& src)
 {
   switch(w) {
   case TASCAR::levelmeter::Z:
-    append(src);
+    if(use_leq_)
+      append(src);
+    else
+      for(uint32_t k = 0; k < src.n; ++k) {
+        float d2 = src.d[k];
+        d2 *= d2;
+        int_ms = int_lp(0, d2);
+        max_val = max_lp(0, d2);
+      }
     break;
   case TASCAR::levelmeter::bandpass:
-    for(uint32_t k = 0; k < src.n; ++k)
-      append_sample(bp.filter(src.d[k]));
+    if(use_leq_)
+      for(uint32_t k = 0; k < src.n; ++k)
+        append_sample(bp.filter(src.d[k]));
+    else
+      for(uint32_t k = 0; k < src.n; ++k) {
+        float d2 = bp.filter(src.d[k]);
+        d2 *= d2;
+        int_ms = int_lp(0, d2);
+        max_val = max_lp(0, d2);
+      }
     break;
   case TASCAR::levelmeter::C:
-    for(uint32_t k = 0; k < src.n; ++k)
-      append_sample(bp_C.filter(src.d[k]));
+    if(use_leq_)
+      for(uint32_t k = 0; k < src.n; ++k)
+        append_sample(bp_C.filter(src.d[k]));
+    else
+      for(uint32_t k = 0; k < src.n; ++k) {
+        float d2 = bp_C.filter(src.d[k]);
+        d2 *= d2;
+        int_ms = int_lp(0, d2);
+        max_val = max_lp(0, d2);
+      }
     break;
   case TASCAR::levelmeter::A:
-    for(uint32_t k = 0; k < src.n; ++k)
-      append_sample(flt_A.filter(src.d[k]));
+    if(use_leq_)
+      for(uint32_t k = 0; k < src.n; ++k)
+        append_sample(flt_A.filter(src.d[k]));
+    else
+      for(uint32_t k = 0; k < src.n; ++k) {
+        float d2 = flt_A.filter(src.d[k]);
+        d2 *= d2;
+        int_ms = int_lp(0, d2);
+        max_val = max_lp(0, d2);
+      }
     break;
   }
 }
@@ -60,8 +93,13 @@ void TASCAR::levelmeter_t::set_weight(levelmeter::weight_t weight)
 
 void TASCAR::levelmeter_t::get_rms_and_peak(float& rms, float& peak) const
 {
-  rms = spldb();
-  peak = maxabsdb();
+  if(use_leq_) {
+    rms = spldb();
+    peak = maxabsdb();
+  } else {
+    rms = 10.0f * log10f(int_ms) - SPLREF;
+    peak = 10.0f * log10f(max_val) - SPLREF;
+  }
 }
 
 void TASCAR::levelmeter_t::get_percentile_levels(float& q30, float& q50,

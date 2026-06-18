@@ -249,7 +249,7 @@ namespace TSCGUI {
     bool b_acoustic_model;
 
   private:
-    pthread_mutex_t mtx;
+    std::mutex mtx;
     // void draw_source_trace(Cairo::RefPtr<Cairo::Context> cr,TASCAR::pos_t
     // rpos,TASCAR::Acousticmodel::source_t*
     // src,TASCAR::Acousticmodel::acoustic_model_t* am);

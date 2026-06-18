@@ -768,7 +768,8 @@ std::string route_t::get_type() const
 
 void route_t::addmeter(float fs)
 {
-  rmsmeter.push_back(new TASCAR::levelmeter_t(fs, meter_tc, meter_weight));
+  rmsmeter.push_back(
+      new TASCAR::levelmeter_t(fs, meter_tc, meter_weight, use_leq));
   meterval.push_back(0);
 }
 
@@ -862,6 +863,8 @@ route_t::route_t(tsccfg::node_t xmlsrc)
 {
   GET_ATTRIBUTE_BOOL(mute, "Mute flag of route");
   GET_ATTRIBUTE_BOOL(solo, "Solo flag of route");
+  GET_ATTRIBUTE_BOOL(
+      use_leq, "Use Leq in level metering (true) or exponential decay (false)");
   std::string scol;
   get_attribute("color", scol, "", "html color string");
   color = rgb_color_t(scol);

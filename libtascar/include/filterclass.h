@@ -158,8 +158,8 @@ namespace TASCAR {
   class biquad_t {
   public:
     biquad_t(double a1, double a2, double b0, double b1, double b2)
-        : a1_(a1), a2_(a2), b0_(b0), b1_(b1), b2_(b2), z1(0.0), z2(0.0){};
-    biquad_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0){};
+        : a1_(a1), a2_(a2), b0_(b0), b1_(b1), b2_(b2), z1(0.0), z2(0.0) {};
+    biquad_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0) {};
     void set_gzp(double g, double zero_r, double zero_phi, double pole_r,
                  double pole_phi);
     /**
@@ -227,8 +227,8 @@ namespace TASCAR {
   class biquadf_t {
   public:
     biquadf_t(float a1, float a2, float b0, float b1, float b2)
-        : a1_(a1), a2_(a2), b0_(b0), b1_(b1), b2_(b2), z1(0.0), z2(0.0){};
-    biquadf_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0){};
+        : a1_(a1), a2_(a2), b0_(b0), b1_(b1), b2_(b2), z1(0.0), z2(0.0) {};
+    biquadf_t() : a1_(0), a2_(0), b0_(1), b1_(0), b2_(0), z1(0.0), z2(0.0) {};
     void set_gzp(float g, float zero_r, float zero_phi, float pole_r,
                  float pole_phi);
     void set_analog(float g, float z1, float z2, float p1, float p2, float fs);
@@ -372,7 +372,7 @@ namespace TASCAR {
    */
   class multiband_pareq_t {
   public:
-    multiband_pareq_t(){};
+    multiband_pareq_t() {};
     size_t size() const { return flt.size(); };
     void resize(size_t s) { flt.resize(s); };
     /**
@@ -546,7 +546,8 @@ namespace TASCAR {
   */
   class o1flt_lowpass_t : public o1_ar_filter_t {
   public:
-    o1flt_lowpass_t(const std::vector<float>&, float, float = 0);
+    o1flt_lowpass_t(const std::vector<float>& tau, float fs,
+                    float startval = 0);
     o1flt_lowpass_t(const std::vector<float>& tau, float fs,
                     const std::vector<float>& startval);
     void set_tau(unsigned int ch,

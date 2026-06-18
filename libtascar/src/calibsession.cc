@@ -601,7 +601,7 @@ void get_speaker_equalization(
   usleep((unsigned int)(1e6f * calibpar.prewait));
   // create level meter:
   TASCAR::levelmeter_t levelmeter((float)jackrec.get_srate(), calibpar.duration,
-                                  weight);
+                                  weight, true);
   // record measurement signal:
   jackrec.rec(recbuf, ports);
   // squared broadband levels for averaging:
@@ -1034,7 +1034,8 @@ const spk_array_diff_render_t& calibsession_t::get_current_layout() const
   return spk_spec->spkpos;
 }
 
-spkcalibrator_t::spkcalibrator_t() : fallbackmeter(8000.0, 0.1, levelmeter::Z)
+spkcalibrator_t::spkcalibrator_t()
+    : fallbackmeter(8000.0, 0.1, levelmeter::Z, true)
 {
 }
 

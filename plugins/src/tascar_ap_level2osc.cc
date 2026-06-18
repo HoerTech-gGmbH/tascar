@@ -49,6 +49,7 @@ private:
   bool sendwhilestopped = false;
   uint32_t skip = 0;
   float tau = 0;
+  bool use_leq = true;
   std::vector<TASCAR::levelmeter::weight_t> weights;
   std::vector<float> frange = {62.5f, 4000.0f};
   std::string url = "osc.udp://localhost:9999/";
@@ -93,6 +94,8 @@ level2osc_t::level2osc_t(const TASCAR::audioplugin_cfg_t& cfg)
   GET_ATTRIBUTE(tau, "s", "Leq duration, or 0 to use block size");
   GET_ATTRIBUTE(firstpar, "",
                 "First parameter, or -1 to use current session time.");
+  GET_ATTRIBUTE_BOOL(
+      use_leq, "Use Leq in level metering (true) or exponential decay (false)");
   std::string mode("dbspl");
   GET_ATTRIBUTE(mode, "", "Level mode [dbspl|rms|max]");
   if(mode == "dbspl")
@@ -164,7 +167,8 @@ void level2osc_t::configure()
   for(size_t kweight = 0; kweight < weights.size(); ++kweight)
     for(uint32_t k = 0; k < n_channels; ++k) {
       lo_message_add_float(msg, 0);
-      sigcopy.push_back(TASCAR::levelmeter_t(f_sample, tau_, weights[kweight]));
+      sigcopy.push_back(
+          TASCAR::levelmeter_t(f_sample, tau_, weights[kweight], use_leq));
       // sigcopy.back().set_weight(weights[kweight]);
       if(weights[kweight] == TASCAR::levelmeter::bandpass)
         sigcopy.back().bp.set_range(frange[0], frange[1]);

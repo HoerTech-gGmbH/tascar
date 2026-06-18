@@ -44,6 +44,7 @@ public:
 private:
   uint32_t skip = 0;
   float tau = 0;
+  bool use_leq = true;
   std::string url = "osc.udp://localhost:9999/";
   std::vector<std::string> path = {"/hsv"};
   float hue = 0;
@@ -99,6 +100,8 @@ level2hsv_t::level2hsv_t(const TASCAR::audioplugin_cfg_t& cfg)
     if(frange.size() != 2)
       throw TASCAR::ErrMsg(
           "Frequency range requires exactly two entries (min max)");
+  GET_ATTRIBUTE_BOOL(
+      use_leq, "Use Leq in level metering (true) or exponential decay (false)");
   GET_ATTRIBUTE(lrange, "dB", "Level range");
   if((lrange.size() != 2) || (lrange[0] == lrange[1]))
     throw TASCAR::ErrMsg(
@@ -122,7 +125,8 @@ void level2hsv_t::add_variables(TASCAR::osc_server_t* srv)
       TASCAR::strrep(TASCAR::tscbasename(__FILE__), ".cc", ""));
   srv->add_bool("/active", &active);
   srv->add_float("/hue", &hue, "[0,360]", "Hue component (0-360 degree)");
-  srv->add_float("/saturation", &saturation, "[0,1]", "Saturation component (0-1)");
+  srv->add_float("/saturation", &saturation, "[0,1]",
+                 "Saturation component (0-1)");
   srv->add_vector_float("/lrange", &lrange, "", "Level range in dB");
   srv->add_double("/decay", &decay, "[0,1[", "decay coeficient");
   srv->unset_variable_owner();
@@ -172,7 +176,7 @@ void level2hsv_t::configure()
   if(lmeter)
     delete lmeter;
   lmeter = NULL;
-  lmeter = new TASCAR::levelmeter_t(f_sample, tau_, weight);
+  lmeter = new TASCAR::levelmeter_t(f_sample, tau_, weight, use_leq);
   if(weight == TASCAR::levelmeter::bandpass)
     lmeter->bp.set_range(frange[0], frange[1]);
 }

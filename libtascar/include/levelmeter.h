@@ -41,7 +41,7 @@ namespace TASCAR {
        \param tc Time constant in seconds
        \param weight Frequency weighting type
      */
-    levelmeter_t(float fs, float tc, levelmeter::weight_t weight);
+    levelmeter_t(float fs, float tc, levelmeter::weight_t weight, bool use_leq);
     /**
        Change meter weighting during runtime
      */
@@ -75,6 +75,7 @@ namespace TASCAR {
     uint32_t i65;
     uint32_t i95;
     uint32_t i99;
+    bool use_leq_ = true;
 
   public:
     bandpass_t bp;
@@ -82,6 +83,10 @@ namespace TASCAR {
   private:
     bandpass_t bp_C;
     aweighting_t flt_A;
+    o1flt_lowpass_t int_lp;
+    o1_ar_filter_t max_lp;
+    float int_ms = 0.0;
+    float max_val = 0.0;
   };
 
 } // namespace TASCAR
