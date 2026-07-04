@@ -13,7 +13,7 @@
  *
  * TASCAR is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License, version 3 for more details.
  *
  * You should have received a copy of the GNU General Public License,
@@ -40,9 +40,12 @@ jackio_t::jackio_t(const std::string& ifname, const std::string& ofname,
                          "\" for reading.");
   sf_inf_out = sf_inf_in;
   sf_inf_out.samplerate = get_srate();
+  // Output channels are total ports minus input channels
   sf_inf_out.channels =
       std::max(0, (int)(p.size()) - (int)(sf_inf_in.channels));
   sf_inf_out.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT | SF_ENDIAN_FILE;
+
+  // Handle autoconnect logic: create default system port names
   if(autoconnect) {
     p.clear();
     for(int ch = 0; ch < sf_inf_in.channels; ch++) {
@@ -53,6 +56,8 @@ jackio_t::jackio_t(const std::string& ifname, const std::string& ofname,
     }
     p.push_back("system:capture_1");
   }
+
+  // Open output file if name is provided
   if(ofname.size()) {
     log("creating output file " + ofname);
     if(!(sf_out = sf_open(ofname.c_str(), SFM_WRITE, &sf_inf_out))) {
@@ -61,19 +66,25 @@ jackio_t::jackio_t(const std::string& ifname, const std::string& ofname,
       throw TASCAR::ErrMsg(errmsg);
     }
   }
+
   char c_tmp[1024];
   c_tmp[1023] = 0;
   nframes_total = (uint32_t)sf_inf_in.frames;
   snprintf(c_tmp, 1023, "%u", nframes_total);
   log("allocating memory for " + std::string(c_tmp) + " audio frames");
+
+  // Allocate buffers: Input (playback) and Output (recording)
   buf_in =
       new float[std::max((sf_count_t)1, sf_inf_in.channels * sf_inf_in.frames)];
   buf_out = new float[std::max((sf_count_t)1,
                                sf_inf_out.channels * sf_inf_in.frames)];
   memset(buf_out, 0, sizeof(float) * sf_inf_out.channels * sf_inf_in.frames);
   memset(buf_in, 0, sizeof(float) * sf_inf_in.channels * sf_inf_in.frames);
+
   log("reading input file into memory");
   sf_readf_float(sf_in, buf_in, sf_inf_in.frames);
+
+  // Create JACK ports
   for(unsigned int k = 0; k < (unsigned int)sf_inf_out.channels; k++) {
     snprintf(c_tmp, 1023, "in_%u", k + 1);
     log("adding input port " + std::string(c_tmp));
@@ -99,10 +110,12 @@ jackio_t::jackio_t(double duration, const std::string& ofname,
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = std::max(1, (int)(p.size()));
   sf_inf_out.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT | SF_ENDIAN_FILE;
+
   if(autoconnect) {
     p.clear();
     p.push_back("system:capture_1");
   }
+
   if(ofname.size()) {
     log("creating output file " + ofname);
     if(!(sf_out = sf_open(ofname.c_str(), SFM_WRITE, &sf_inf_out))) {
@@ -111,12 +124,14 @@ jackio_t::jackio_t(double duration, const std::string& ofname,
       throw TASCAR::ErrMsg(errmsg);
     }
   }
+
   char c_tmp[1024];
   c_tmp[1023] = 0;
   snprintf(c_tmp, 1023, "%u", nframes_total);
   log("allocating memory for " + std::string(c_tmp) + " audio frames");
   buf_out = new float[sf_inf_out.channels * nframes_total];
   memset(buf_out, 0, sizeof(float) * sf_inf_out.channels * nframes_total);
+
   for(unsigned int k = 0; k < (unsigned int)sf_inf_out.channels; k++) {
     snprintf(c_tmp, 1023, "in_%u", k + 1);
     log("add input port " + std::string(c_tmp));
@@ -131,35 +146,42 @@ jackio_t::jackio_t(const std::vector<TASCAR::wave_t>& isig,
     : jackc_transport_t(jackname), freewheel_(freewheel), p(ports),
       b_verbose(verbose), osig_(osig)
 {
+  // Determine total frames based on the longest signal provided
   for(const auto& sig : isig)
     nframes_total = std::max(nframes_total, sig.n);
   for(const auto& sig : osig)
     nframes_total = std::max(nframes_total, sig.n);
+
   memset(&sf_inf_in, 0, sizeof(sf_inf_in));
   memset(&sf_inf_out, 0, sizeof(sf_inf_out));
   sf_inf_in.samplerate = get_srate();
   sf_inf_in.channels = isig.size();
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = osig.size();
+
+  // Allocate buffers based on wave_t sizes
   buf_in = new float[std::max((size_t)1u, isig.size() * nframes_total)];
   memset(buf_in, 0, sizeof(float) * isig.size() * nframes_total);
   buf_out = new float[std::max((size_t)1u, osig.size() * nframes_total)];
   memset(buf_out, 0, sizeof(float) * osig.size() * nframes_total);
+
   log("reading input file into memory");
   for(size_t k = 0; k < osig.size(); ++k) {
     char c_tmp[1024];
     c_tmp[1023] = 0;
-    snprintf(c_tmp, 1023, "in_%lu", (long unsigned int)k + (long unsigned int)1);
+    snprintf(c_tmp, 1023, "in_%lu",
+             (long unsigned int)k + (long unsigned int)1);
     log("adding input port " + std::string(c_tmp));
     add_input_port(c_tmp);
   }
   for(size_t ch = 0; ch < isig.size(); ++ch) {
     char c_tmp[1024];
     c_tmp[1023] = 0;
-    snprintf(c_tmp, 1023, "out_%lu", (long unsigned int)ch + (long unsigned int)1);
+    snprintf(c_tmp, 1023, "out_%lu",
+             (long unsigned int)ch + (long unsigned int)1);
     log("adding output port " + std::string(c_tmp));
     add_output_port(c_tmp);
-    // copy input signal:
+    // Copy input signal from wave_t to interleaved buffer
     for(size_t f = 0; f < isig[ch].n; ++f)
       buf_in[ch + sf_inf_in.channels * f] = isig[ch].d[f];
   }
@@ -192,15 +214,19 @@ int jackio_t::process(jack_nframes_t nframes,
     record &= tp_rolling;
   if(wait_)
     record &= tp_frame >= startframe;
+
   for(unsigned int k = 0; k < nframes; k++) {
     if(record && (pos < nframes_total)) {
+      // Playback: Copy from memory buffer to JACK output ports
       if(buf_in)
         for(unsigned int ch = 0; ch < outBuffer.size(); ch++)
           outBuffer[ch][k] = buf_in[sf_inf_in.channels * pos + ch];
+      // Recording: Copy from JACK input ports to memory buffer
       for(unsigned int ch = 0; ch < inBuffer.size(); ch++)
         buf_out[sf_inf_out.channels * pos + ch] = inBuffer[ch][k];
       pos++;
     } else {
+      // End of file or stopped: silence outputs
       if(pos >= nframes_total)
         b_quit = true;
       for(unsigned int ch = 0; ch < outBuffer.size(); ch++)
@@ -220,40 +246,52 @@ void jackio_t::run()
 {
   log("activating jack client");
   activate();
+
+  // Connect output ports (playback)
   for(unsigned int k = 0; k < (unsigned int)sf_inf_in.channels; k++)
     if(k < p.size()) {
       log("connecting output port to " + p[k]);
       connect_out(k, p[k]);
     }
+  // Connect input ports (recording)
   for(unsigned int k = 0; k < (unsigned int)sf_inf_out.channels; k++)
     if(k + sf_inf_in.channels < p.size()) {
       log("connecting input port to " + p[k + sf_inf_in.channels]);
       connect_in(k, p[k + sf_inf_in.channels], false, true);
     }
+
   if(freewheel_) {
     log("switching to freewheeling mode");
     jack_set_freewheel(jc, 1);
   }
+
   if(use_transport && (!wait_)) {
     log("locating to startframe");
     tp_stop();
     tp_locate(startframe);
   }
+
+  // Wait for the first process cycle to ensure the client is ready
   b_cb = false;
   while(!b_cb) {
     usleep(5000);
   }
   start = true;
+
   if(use_transport && (!wait_)) {
     log("starting transport");
     tp_start();
   }
+
   log("waiting for data to complete");
   while(!b_quit) {
     usleep(5000);
   }
+
+  // Capture performance stats
   cpuload = get_cpu_load();
   xruns = get_xruns();
+
   if(use_transport && (!wait_)) {
     log("stopping transport");
     tp_stop();
@@ -262,11 +300,15 @@ void jackio_t::run()
     log("deactivating freewheeling mode");
     jack_set_freewheel(jc, 0);
   }
+
   log("deactivating jack client");
   deactivate();
+
+  // Write recorded data to disk
   if(sf_out)
     sf_writef_float(sf_out, buf_out, nframes_total);
-  // if osig_ is not empty, copy signal to osig_:
+
+  // If using memory buffers (osig_), copy recorded data back
   for(size_t ch = 0; ch < osig_.size(); ++ch) {
     for(size_t f = 0; f < osig_[ch].n; ++f)
       osig_[ch].d[f] = buf_out[ch + sf_inf_out.channels * f];
@@ -290,10 +332,12 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
 {
   if(!channels)
     throw TASCAR::ErrMsg("No sources selected.");
+
   memset(&sf_inf_out, 0, sizeof(sf_inf_out));
   sf_inf_out.samplerate = get_srate();
   sf_inf_out.channels = (int)(ports.size());
   sf_inf_out.format = format;
+
   if(ofname.size()) {
     if(!(sf_out = sf_open(ofname.c_str(), SFM_WRITE, &sf_inf_out))) {
       std::string errmsg("Unable to open output file \"" + ofname + "\": ");
@@ -301,6 +345,7 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
       throw TASCAR::ErrMsg(errmsg);
     }
   }
+
   unsigned int k(0);
   char c_tmp[1024];
   c_tmp[1023] = 0;
@@ -309,16 +354,28 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
     snprintf(c_tmp, 1023, "in_%u", k);
     add_input_port(c_tmp);
   }
+
+  // Ensure minimum buffer size of 2 seconds
   if(buflen < 2.0)
     buflen = 2.0;
+
+  // Create ring buffer: size = duration * sample_rate * channels *
+  // sizeof(float)
   rb = jack_ringbuffer_create((size_t)(buflen * get_srate() * (double)channels *
                                        (double)(sizeof(float))));
+
+  // Allocate temporary buffer for JACK thread (one fragment size)
   buf = new float[channels * get_fragsize()];
+  // Allocate read buffer for disk thread (1 second worth of audio)
   rlen = channels * get_srate();
   rbuf = new float[rlen];
   tscale = 1.0 / get_srate();
+
+  // Start the disk I/O service thread
   srv = std::thread(&jackrec_async_t::service, this);
+
   activate();
+
   k = 0;
   for(auto& p : ports) {
     connect_in(k, p, true, true);
@@ -329,7 +386,7 @@ jackrec_async_t::jackrec_async_t(const std::string& ofname,
 jackrec_async_t::~jackrec_async_t()
 {
   deactivate();
-  run_service = false;
+  run_service = false; // Signal service thread to stop
   if(srv.joinable())
     srv.join();
   if(sf_out) {
@@ -343,6 +400,7 @@ jackrec_async_t::~jackrec_async_t()
 
 void jackrec_async_t::service()
 {
+  // Service thread loop: reads from ring buffer and writes to disk
   size_t rchunk(rlen * sizeof(float));
   while(run_service) {
     if(jack_ringbuffer_read_space(rb) >= rchunk) {
@@ -354,6 +412,8 @@ void jackrec_async_t::service()
     }
     usleep(100);
   }
+
+  // Drain remaining data in ring buffer before exiting
   size_t rcnt(0);
   do {
     rcnt = jack_ringbuffer_read(rb, (char*)rbuf, rchunk);
@@ -367,16 +427,25 @@ int jackrec_async_t::process(jack_nframes_t nframes,
                              const std::vector<float*>&, uint32_t,
                              bool b_rolling)
 {
+  // Only record if transport is rolling (if enabled)
   if(usetransport && (!b_rolling))
     return 0;
+
   size_t ch(inBuffer.size());
+
+  // Interleave input data into temporary buffer
   for(size_t k = 0; k < nframes; ++k)
     for(size_t c = 0; c < ch; ++c)
       buf[ch * k + c] = inBuffer[c][k];
+
+  // Write interleaved data to ring buffer
   size_t wcnt(ch * nframes * sizeof(float));
   size_t cnt(jack_ringbuffer_write(rb, (const char*)buf, wcnt));
+
+  // Check for buffer overrun
   if(cnt < wcnt)
     ++xrun;
+
   recframes += nframes;
   rectime = (double)recframes * tscale;
   return 0;
@@ -405,8 +474,11 @@ void jackrec2wave_t::rec(const std::vector<TASCAR::wave_t>& w,
   buff = &w;
   appendpos = 0u;
   isrecording = true;
+
+  // Blocking loop: waits until buffers are filled or stopped
   while(isrecording)
     usleep(1000);
+
   buff = NULL;
   for(size_t k = 0; k < ch; ++k)
     disconnect_in((unsigned int)k);
@@ -420,8 +492,8 @@ int jackrec2wave_t::process(jack_nframes_t n, const std::vector<float*>& s_in,
       size_t channels = std::min(buff->size(), s_in.size());
       for(size_t ch = 0; ch < channels; ++ch) {
         const TASCAR::wave_t& w = (*buff)[ch];
-        if(appendpos > w.n) {
-          // buffer is filled.
+        if(appendpos >= w.n) {
+          // Buffer is filled.
           isrecording = false;
           return 0;
         }
