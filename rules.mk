@@ -27,6 +27,8 @@ $(BUILD_DIR)/unit-test-runner: LDFLAGS += -L../libtascar/build
 LSLCFLAGS =
 LSLLIBS = -llsl
 
+LDFLAGS += -L$(realpath ../libtascar/$(BUILD_DIR))
+
 ifeq ($(OS),Windows_NT)
   CXXFLAGS += -DISWINDOWS
   LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dll
