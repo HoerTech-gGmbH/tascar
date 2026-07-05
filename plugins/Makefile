@@ -42,7 +42,7 @@ ifeq ($(UNAME_S),Linux)
   AUDIOPLUGINS += simplesynth
 endif
 ifeq ($(UNAME_S),Darwin)
-  TASCARMODS += ltcgen	 serialheadtracker mididispatch midicc2osc midictl mcuctl
+  TASCARMODS += ltcgen	 serialheadtracker mididispatch midicc2osc midictl mcuctl lightctl
 #  ovheadtracker
 endif
 endif
