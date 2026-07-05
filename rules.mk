@@ -40,7 +40,7 @@ ifeq ($(UNAME_S),Linux)
   BINFILES += tascar_hdspmixer
 endif
 ifeq ($(UNAME_S),Darwin)
-BREWPREFIX := $(shell brew --prefix)
+BREWPREFIX := $(shell brew --prefix||echo /opt/homebrew)
 LIBTASCARDLL=../libtascar/$(BUILD_DIR)/libtascar.dylib
 CXXFLAGS += -I$(BREWPREFIX)/include -DISMACOS
 CPPFLAGS += -I$(BREWPREFIX)/include
