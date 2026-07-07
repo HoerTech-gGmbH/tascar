@@ -14,7 +14,7 @@
  *
  * TASCAR is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License, version 3 for more details.
  *
  * You should have received a copy of the GNU General Public License,
@@ -59,6 +59,7 @@ protected:
   int32_t banksize = 8;
   int32_t minwait = 0;
   bool is_icon = false;
+  bool is_xtouch = false;
 };
 
 midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
@@ -73,6 +74,7 @@ midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
   GET_ATTRIBUTE(banksize, "", "Number of faders per bank");
   GET_ATTRIBUTE(minwait, "ms", "Wait after each MIDI send");
   GET_ATTRIBUTE_BOOL(is_icon, "Is iCON V1-M or compatible?");
+  GET_ATTRIBUTE_BOOL(is_xtouch, "Is Behringer X-Touch or compatible?");
 }
 
 class controllable_t {
@@ -434,6 +436,31 @@ void mcu_ctl_t::send_service()
               msg_sysex_ += uint8_t(col.r * 127);
               msg_sysex_ += uint8_t(col.g * 127);
               msg_sysex_ += uint8_t(col.b * 127);
+            }
+          }
+          msg_sysex_ += 0xf7;
+          send_midi_sysex(msg_sysex_.size(), msg_sysex_.data());
+        }
+        if(is_xtouch) {
+          std::string msg_sysex_;
+          msg_sysex_.resize(6);
+          msg_sysex_[0] = 0xf0;
+          msg_sysex_[1] = 0;
+          msg_sysex_[2] = 0;
+          msg_sysex_[3] = 0x66;
+          msg_sysex_[4] = 0x14;
+          msg_sysex_[5] = 0x72;
+          for(int32_t k = 0; k < (int32_t)controllers.size(); ++k) {
+            if((k - bank_ofs < banksize) && (k >= bank_ofs)) {
+              auto col = controllers[k].get_color();
+              uint8_t colbits = 0;
+              if(col.r > 0.5)
+                colbits |= 1;
+              if(col.g > 0.5)
+                colbits |= 2;
+              if(col.b > 0.5)
+                colbits |= 4;
+              msg_sysex_ += colbits;
             }
           }
           msg_sysex_ += 0xf7;
