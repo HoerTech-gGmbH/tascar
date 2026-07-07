@@ -34,7 +34,7 @@ namespace TASCAR {
 
      \ingroup levels
    */
-  class levelmeter_t : public TASCAR::wave_t {
+  class levelmeter_t : private TASCAR::wave_t {
   public:
     /**
        \param fs Audio sampling rate in Hz
@@ -58,6 +58,11 @@ namespace TASCAR {
        \retval peak Peak value in dB
      */
     void get_rms_and_peak(float& rms, float& peak) const;
+    float get_ms() const;
+    float get_rms() const;
+    float get_rms_db() const;
+    float get_peak_db() const;
+    float get_peak() const;
     /**
        \brief Return percentile levels, similar to ISMADHA standard for hearing
        aids analysis.

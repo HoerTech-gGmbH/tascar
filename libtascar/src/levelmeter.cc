@@ -102,6 +102,41 @@ void TASCAR::levelmeter_t::get_rms_and_peak(float& rms, float& peak) const
   }
 }
 
+float TASCAR::levelmeter_t::get_rms_db() const
+{
+  if(use_leq_)
+    return spldb();
+  return 10.0f * log10f(int_ms) - SPLREF;
+}
+
+float TASCAR::levelmeter_t::get_ms() const
+{
+  if(use_leq_)
+    return ms();
+  return int_ms;
+}
+
+float TASCAR::levelmeter_t::get_rms() const
+{
+  if(use_leq_)
+    return rms();
+  return sqrtf(int_ms);
+}
+
+float TASCAR::levelmeter_t::get_peak_db() const
+{
+  if(use_leq_)
+    return maxabsdb();
+  return 10.0f * log10f(max_val) - SPLREF;
+}
+
+float TASCAR::levelmeter_t::get_peak() const
+{
+  if(use_leq_)
+    return maxabs();
+  return max_val;
+}
+
 void TASCAR::levelmeter_t::get_percentile_levels(float& q30, float& q50,
                                                  float& q65, float& q95,
                                                  float& q99) const

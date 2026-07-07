@@ -627,7 +627,7 @@ void get_speaker_equalization(
       *pv *= calgain;
     // read out level meter based on calibrated inputs:
     levelmeter.update(wav);
-    lev_sqr += levelmeter.ms();
+    lev_sqr += levelmeter.get_ms();
     // get levels in filter bands:
     TASCAR::get_bandlevels(wav, calibpar.fmin, calibpar.fmax,
                            (float)jackrec.get_srate(), calibpar.bandsperoctave,

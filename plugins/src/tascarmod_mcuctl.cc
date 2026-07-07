@@ -77,7 +77,7 @@ midictl_vars_t::midictl_vars_t(const TASCAR::module_cfg_t& cfg)
 
 class controllable_t {
 public:
-  controllable_t(){};
+  controllable_t() {};
   controllable_t(TASCAR::Scene::audio_port_t* p);
   float get_gain_db() const;
   bool get_mute() const;

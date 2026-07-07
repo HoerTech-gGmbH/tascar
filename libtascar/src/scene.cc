@@ -795,7 +795,7 @@ void route_t::configure_meter(float tc, TASCAR::levelmeter::weight_t w)
 const std::vector<float>& route_t::readmeter()
 {
   for(uint32_t k = 0; k < rmsmeter.size(); k++)
-    meterval[k] = rmsmeter[k]->spldb();
+    meterval[k] = rmsmeter[k]->get_rms_db();
   return meterval;
 }
 
@@ -803,7 +803,7 @@ float route_t::read_meter_max()
 {
   float rv(std::numeric_limits<float>::lowest());
   for(uint32_t k = 0; k < rmsmeter.size(); k++) {
-    float l(rmsmeter[k]->spldb());
+    float l = rmsmeter[k]->get_rms_db();
     if(!(l < rv))
       rv = l;
   }
@@ -814,7 +814,7 @@ float route_t::read_meter_maxval()
 {
   float rv(std::numeric_limits<float>::lowest());
   for(uint32_t k = 0; k < rmsmeter.size(); k++) {
-    float l(rmsmeter[k]->maxabsdb());
+    float l(rmsmeter[k]->get_peak_db());
     if(!(l < rv))
       rv = l;
   }
@@ -825,7 +825,7 @@ float sound_t::read_meter()
 {
   if(meter.size() > 0)
     if(meter[0])
-      return meter[0]->spldb();
+      return meter[0]->get_rms_db();
   return std::numeric_limits<float>::lowest();
 }
 
@@ -833,7 +833,7 @@ float sound_t::read_meter_maxval()
 {
   if(meter.size() > 0)
     if(meter[0])
-      return meter[0]->maxabsdb();
+      return meter[0]->get_peak_db();
   return std::numeric_limits<float>::lowest();
 }
 

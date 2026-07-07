@@ -135,13 +135,13 @@ void level2osc_t::sendthread()
         for(size_t ch = 0; ch < sigcopy.size(); ++ch) {
           switch(imode) {
           case dbspl:
-            oscmsgargv[ch + 1]->f = sigcopy[ch].spldb();
+            oscmsgargv[ch + 1]->f = sigcopy[ch].get_rms_db();
             break;
           case rms:
-            oscmsgargv[ch + 1]->f = sigcopy[ch].rms();
+            oscmsgargv[ch + 1]->f = sigcopy[ch].get_rms();
             break;
           case max:
-            oscmsgargv[ch + 1]->f = sigcopy[ch].maxabs();
+            oscmsgargv[ch + 1]->f = sigcopy[ch].get_peak();
             break;
           }
         }

@@ -104,7 +104,7 @@ private:
 // status of the corresponding button.
 class lp_script_t {
 public:
-  lp_script_t(){};
+  lp_script_t() {};
   float min = 0.0f;
   float max = 127.0f;
   uint16_t val_on = 0;  //< LED value after trigger
@@ -543,9 +543,11 @@ void mididispatch_t::add_variables(TASCAR::osc_server_t* srv)
   srv->add_method("/add/cc/float", "iisff", &mididispatch_t::osc_cc_floataction,
                   this);
   srv->add_method("/add/cc/trigger", "iisiis",
-                  &mididispatch_t::osc_cc_triggeraction, this);
+                  &mididispatch_t::osc_cc_triggeraction, this, "",
+                  "channel param path min max msgarg");
   srv->add_method("/add/cc/trigger", "iisii",
-                  &mididispatch_t::osc_cc_triggeraction, this);
+                  &mididispatch_t::osc_cc_triggeraction, this, "",
+                  "channel param path min max");
   srv->add_method("/del/cc", "ii", &mididispatch_t::osc_cc_remove, this);
   srv->add_method("/del/cc/all", "", &mididispatch_t::osc_cc_remove, this);
   srv->add_method("/add/note/float", "iisffs",

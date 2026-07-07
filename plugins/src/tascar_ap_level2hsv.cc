@@ -141,13 +141,13 @@ void level2hsv_t::sendthread()
       float l = 0.0f;
       switch(imode) {
       case dbspl:
-        l = lmeter->spldb();
+        l = lmeter->get_rms_db();
         break;
       case rms:
-        l = lmeter->rms();
+        l = lmeter->get_rms();
         break;
       case max:
-        l = lmeter->maxabsdb();
+        l = lmeter->get_peak_db();
         break;
       }
       l = std::min(1.0f,
