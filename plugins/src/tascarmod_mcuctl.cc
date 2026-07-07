@@ -460,6 +460,8 @@ void mcu_ctl_t::send_service()
                 colbits |= 2;
               if(col.b > 0.5)
                 colbits |= 4;
+              if( colbits == 0 )
+                colbits = 7;
               msg_sysex_ += colbits;
             }
           }
