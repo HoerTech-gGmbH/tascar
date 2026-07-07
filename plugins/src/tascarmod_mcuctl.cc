@@ -460,7 +460,7 @@ void mcu_ctl_t::send_service()
                 colbits |= 2;
               if(col.b > 0.5)
                 colbits |= 4;
-              if( colbits == 0 )
+              if(colbits == 0)
                 colbits = 7;
               msg_sysex_ += colbits;
             }
@@ -483,7 +483,7 @@ void mcu_ctl_t::send_service()
     upload_text(k, 1, "");
     upload_text(k, 3, "");
   }
-  {
+  if(is_icon) {
     // reset colors:
     std::string msg_sysex_;
     msg_sysex_.resize(6);
@@ -498,6 +498,21 @@ void mcu_ctl_t::send_service()
       msg_sysex_ += uint8_t(0);
       msg_sysex_ += uint8_t(0);
     }
+    msg_sysex_ += 0xf7;
+    send_midi_sysex(msg_sysex_.size(), msg_sysex_.data());
+  }
+  if(is_xtouch) {
+    // reset colors:
+    std::string msg_sysex_;
+    msg_sysex_.resize(6);
+    msg_sysex_[0] = 0xf0;
+    msg_sysex_[1] = 0;
+    msg_sysex_[2] = 0;
+    msg_sysex_[3] = 0x66;
+    msg_sysex_[4] = 0x14;
+    msg_sysex_[5] = 0x72;
+    for(int32_t k = 0; k < banksize; ++k)
+      msg_sysex_ += uint8_t(7);
     msg_sysex_ += 0xf7;
     send_midi_sysex(msg_sysex_.size(), msg_sysex_.data());
   }
