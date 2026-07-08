@@ -514,8 +514,9 @@ void spk_array_diff_render_t::configure()
     throw TASCAR::ErrMsg("It is not possible to use mixture of SOFA files and "
                          "channel-wise convolution files.");
   if(use_channel_wise_conv) {
+    // use speaker-channel-wise convolution files:
     use_conv = true;
-    // use channel-wise convolution files:
+    // first check that all speaker channels have the file name specified:
     size_t k(0);
     for(const auto& conv : convolution_ir) {
       if(conv.empty())
@@ -525,17 +526,48 @@ void spk_array_diff_render_t::configure()
       ++k;
     }
     conv_channels = 0u;
+    // now check sampling rate and channel numbers
     k = 0;
     for(const auto& conv : convolution_ir) {
       TASCAR::sndfile_handle_t sfinfo(conv);
-      if(conv_channels == 0u)
-        conv_channels = sfinfo.get_channels();
-      if(sfinfo.get_channels() != conv_channels)
-        throw TASCAR::ErrMsg(
-            "Invalid number of channels in convolution IR for channel " +
-            std::to_string(k) + ": got " +
-            std::to_string(sfinfo.get_channels()) + ", expected " +
-            std::to_string(conv_channels) + ".");
+      if(conv_channels == 0u) {
+        // the impulse response specified for the first
+        // speaker-channel defines the number of convolution channels:
+        if(convolution_chmap[k].size())
+          conv_channels = convolution_chmap[k].size();
+        else
+          conv_channels = sfinfo.get_channels();
+      }
+      // for each speaker channel check that the specified channels
+      // are available and the file is compatible:
+      if(convolution_chmap[k].size()) {
+        // check for total number of channels:
+        if(convolution_chmap[k].size() != conv_channels)
+          throw TASCAR::ErrMsg(
+              "Invalid number of channels in convolution IR for channel " +
+              std::to_string(k) + ": got " +
+              std::to_string(convolution_chmap[k].size()) + ", expected " +
+              std::to_string(conv_channels) + ".");
+        // check that all channels are available in the file:
+        for(auto ch : convolution_chmap[k]) {
+          if(ch < 0)
+            throw TASCAR::ErrMsg(
+                "Invalid (negative) channel number in channel map. (" +
+                tsccfg::node_get_path(operator[](k).e) + ")");
+          if((uint32_t)ch >= sfinfo.get_channels())
+            throw TASCAR::ErrMsg(
+                "Invalid channel number in channel map: " + std::to_string(ch) +
+                " file has " + std::to_string(sfinfo.get_channels()) +
+                " channels. (" + tsccfg::node_get_path(operator[](k).e) + ")");
+        }
+      } else {
+        if(sfinfo.get_channels() != conv_channels)
+          throw TASCAR::ErrMsg(
+              "Invalid number of channels in convolution IR for channel " +
+              std::to_string(k) + ": got " +
+              std::to_string(sfinfo.get_channels()) + ", expected " +
+              std::to_string(conv_channels) + ".");
+      }
       if(sfinfo.get_srate() != f_sample) {
         std::ostringstream msg;
         msg << "Warning: The sample rate of convolution IR file \"" << conv
@@ -545,11 +577,15 @@ void spk_array_diff_render_t::configure()
       }
       ++k;
     }
+    // finally load IRs:
     k = 0;
     for(const auto& conv : convolution_ir) {
       std::vector<TASCAR::partitioned_conv_t*> vp_convolver;
       for(size_t ch = 0u; ch < conv_channels; ++ch) {
-        TASCAR::sndfile_t sndf(conv, (uint32_t)ch);
+        uint32_t ch_file = ch;
+        if(convolution_chmap[k].size() == conv_channels)
+          ch_file = convolution_chmap[k][ch];
+        TASCAR::sndfile_t sndf(conv, ch_file);
         TASCAR::partitioned_conv_t* pcnv(
             new TASCAR::partitioned_conv_t(sndf.get_frames(), n_fragment));
         pcnv->set_irs(sndf);
@@ -659,10 +695,19 @@ spk_array_diff_render_t::spk_array_diff_render_t(
 {
   // get speaker convolution file names:
   convolution_ir.clear();
-  for(auto& spk : *this) {
-    convolution_ir.push_back("");
-    spk.get_attribute("conv", convolution_ir.back(), "",
-                      "Name of impulse response for convolution");
+  convolution_chmap.clear();
+  convolution_chmap.resize(size());
+  {
+    size_t k = 0;
+    for(auto& spk : *this) {
+      convolution_ir.push_back("");
+      spk.get_attribute("conv", convolution_ir.back(), "",
+                        "Name of impulse response for convolution");
+      spk.get_attribute("conv_chmap", convolution_chmap[k], "",
+                        "Convolution IR channel map, zero-base, or empty to "
+                        "use all channels");
+      ++k;
+    }
   }
   // validation of calibration:
   uint64_t checksum(0);
