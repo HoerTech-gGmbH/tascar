@@ -400,6 +400,7 @@ jobs:
         run: |
           set -eux
           JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          JOBS=1
           $D make pack -j"$JOBS"
           $D cp -v packaging/deb/tascar/*/*.deb tascar-packages/
           zip tascar-$(grep ^VERSION= config.mk | cut -d= -f2)-${{ matrix.name }}.zip tascar-packages/*.deb
