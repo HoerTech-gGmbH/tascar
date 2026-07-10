@@ -67,7 +67,7 @@ ifeq ($(OS),Windows_NT)
 SOFAINC =
 SOFALIB = -lmysofa
 else
-ifeq ($(USE_SYSTEM_LIBS),1)
+ifeq ($(USE_BUNDLED_LIBMYSOFA),DO_NOT_USE)
 SOFAINC =
 SOFALIB = -lmysofa -lz
 else

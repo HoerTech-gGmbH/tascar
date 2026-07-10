@@ -5,6 +5,10 @@ VERSION=0.237.1
 # instead of the copies bundled under external_libs/. See the top-level
 # Makefile for the full description.
 USE_SYSTEM_LIBS ?= 0
+ifeq ($(USE_SYSTEM_LIBS),1)
+  USE_BUNDLED_LIBMYSOFA = DO_NOT_USE
+  USE_BUNDLED_LIBLSL = DO_NOT_USE
+endif
 
 ARCH:=$(shell uname -m)
 
