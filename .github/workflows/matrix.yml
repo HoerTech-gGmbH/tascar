@@ -135,7 +135,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
                 build-essential default-jre doxygen dpkg-dev g++ git \
-                imagemagick jackd2 libboost-all-dev libmysofa-dev cmake \
+                imagemagick jackd2 libmysofa-dev cmake \
                 libcairomm-1.0-dev libeigen3-dev libfftw3-dev \
                 libfftw3-double3 libfftw3-single3 libgsl-dev libgtkmm-3.0-dev \
                 libgtksourceviewmm-3.0-dev libjack-jackd2-dev liblo-dev \
@@ -389,12 +389,13 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tascar-manual
+          # Attention: manual.pdf is stored without the directory in the artifact!
           path: manual/manual.pdf
 
       # ---------------------------
       # Upload installers as artifacts for Linux and Windows
       # ---------------------------
-      - name: Upload as artifacts
+      - name: Upload installers as artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'windows')
         with:
@@ -435,6 +436,8 @@ jobs:
     # Only run this job for pushes to branches "master" or "development"
     if: github.event_name == 'push' && (github.ref_name == 'master' || github.ref_name == 'development')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -465,7 +468,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/$WIKI_DIR"
           mkdir -p "$BRANCH_NAME"
           ls "$GITHUB_WORKSPACE/"
-          cp "$GITHUB_WORKSPACE/manual/manual.pdf" "$BRANCH_NAME/"
+          cp "$GITHUB_WORKSPACE/manual.pdf" "$BRANCH_NAME/"
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add "$BRANCH_NAME"
