@@ -23,9 +23,8 @@ jobs:
           # Ubuntu 22.04
           - name: ubuntu-22.04-x64
             runs_on: ubuntu-22.04
-            # Only one of the following containers can be non-empty
-            job_container: ""  # Job-level docker container
-            step_container: "" # Step-level docker container
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: bash
             arch: amd64
             prefix: /usr
@@ -34,9 +33,8 @@ jobs:
           # Ubuntu 22.04 ARM64
           - name: ubuntu-22.04-arm64
             runs_on: ubuntu-22.04-arm
-            # Only one of the following containers can be non-empty
-            job_container: ""  # Job-level docker container
-            step_container: "" # Step-level docker container
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: bash
             arch: arm64
             prefix: /usr
@@ -45,9 +43,8 @@ jobs:
           # Ubuntu 24.04
           - name: ubuntu-24.04-x64
             runs_on: ubuntu-24.04
-            # Only one of the following containers can be non-empty
-            job_container: "" # Job-level docker container
-            step_container: "" # Step-level docker container
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: bash
             arch: amd64
             prefix: /usr
@@ -55,10 +52,9 @@ jobs:
 
           # Ubuntu 26.04
           - name: ubuntu-26.04-x64
-            runs_on: ubuntu-latest
-            # Only one of the following containers can be non-empty
-            job_container: ubuntu:26.04 # Job-level docker container
-            step_container: ""          # Step-level docker container
+            runs_on: ubuntu-26.04
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: bash
             arch: amd64
             prefix: /usr
@@ -66,34 +62,19 @@ jobs:
 
           # Ubuntu 26.04 ARM64
           - name: ubuntu-26.04-arm64
-            runs_on: ubuntu-24.04-arm
-            # Only one of the following containers can be non-empty
-            job_container: ubuntu:26.04 # Job-level docker container
-            step_container: ""          # Step-level docker container
+            runs_on: ubuntu-26.04-arm
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: bash
             arch: arm64
-            prefix: /usr
-            webkit2gtk_version: 4.1
-
-          # Ubuntu 26.04 ARMHF
-          - name: ubuntu-26.04-arm32
-            runs_on: ubuntu-24.04-arm
-            # Only one of the following containers can be non-empty
-            job_container: ""              # Job-level docker container
-            step_container: "ubuntu:26.04" # Step-level docker container
-            docker_platform: "linux/arm/v7"
-            uname_m: armv7l
-            shell: bash
-            arch: armhf
             prefix: /usr
             webkit2gtk_version: 4.1
 
           # Windows
           - name: windows-x64
             runs_on: windows-latest
-            # Only one of the following containers can be non-empty
-            job_container: ""  # Job-level docker container
-            step_container: "" # Step-level docker container
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: msys2 {0}
             arch: x64
             msystem: UCRT64
@@ -102,9 +83,8 @@ jobs:
           # Windows ARM64
           - name: windows-arm64
             runs_on: windows-11-arm
-            # Only one of the following containers can be non-empty
-            job_container: ""  # Job-level docker container
-            step_container: "" # Step-level docker container
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: msys2 {0}
             arch: arm64
             msystem: CLANGARM64
@@ -113,22 +93,11 @@ jobs:
           # macOS ARM (latest)
           - name: macos-arm64
             runs_on: macos-latest
-            # Only one of the following containers can be non-empty
-            job_container: ""  # Job-level docker container
-            step_container: "" # Step-level docker container
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
             shell: bash
             prefix: /opt/homebrew/Cellar/tascar/4.99.0
             use_bundled_libmysofa: MAY_USE
-
-#          # macOS Intel (latest available Intel image)
-#          - name: macos-x64
-#            runs_on: macos-15-intel
-#            # Only one of the following containers can be non-empty
-#            job_container: ""  # Job-level docker container
-#            step_container: "" # Step-level docker container
-#            shell: bash
-#            prefix: /usr/local/Cellar/tascar/4.99.0
-#            use_bundled_libmysofa: MAY_USE
 
     runs-on: ${{ matrix.runs_on }}
     defaults:
@@ -136,7 +105,6 @@ jobs:
         shell: ${{ matrix.shell }}
 
     env:
-      D: ${{ matrix.step_container != '' && 'docker exec build_env' || '' }}
       DEBIAN_FRONTEND: noninteractive
       # If any of the following variables is set to DO_NOT_USE, then this tells
       # the external_libs Makefile not to use the bundles resource. It it is
@@ -153,33 +121,12 @@ jobs:
     container: ${{ matrix.job_container != '' && matrix.job_container || null }}
 
     steps:
-      - name: Set up step container for Linux ARMHF builds
-        if: matrix.step_container != ''
-        run: |
-          set -eux
-          docker create --name build_env --platform ${{ matrix.docker_platform }} -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --env DEBIAN_FRONTEND=noninteractive ${{ matrix.step_container }} sleep 99999
-          docker start build_env
-          hostarch=$($D uname -m)
-          # Modify uname output for configure scripts
-          $D mv /usr/bin/uname /usr/bin/uname.orig
-          cat <<EOF >uname-wrapper.sh
-          #!/bin/sh
-          /usr/bin/uname.orig "\$@" | sed -e s/$hostarch/${{ matrix.uname_m }}/
-          EOF
-          docker cp uname-wrapper.sh build_env:/usr/bin/uname
-          $D chown root:root /usr/bin/uname
-          $D chmod +x /usr/bin/uname
-          $D ls -l /usr/bin/uname
-          $D cat /usr/bin/uname
-          $D uname -a
-          rm uname-wrapper.sh
-
       - name: Install sudo for container builds (Linux)
-        if: matrix.job_container != '' || matrix.step_container != ''
+        if: matrix.job_container != ''
         run: |
           set -eux
-          $D apt-get update
-          $D apt-get install -y sudo
+          apt-get update
+          apt-get install -y sudo
 
       # ---------------------------
       # Linux: Dependencies
@@ -188,8 +135,8 @@ jobs:
         if: startsWith(matrix.name, 'ubuntu')
         run: |
           set -eux
-          $D sudo apt-get update
-          $D sudo apt-get install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
                 build-essential default-jre doxygen dpkg-dev g++ git \
                 imagemagick jackd2 libboost-all-dev libmysofa-dev cmake \
                 libcairomm-1.0-dev libeigen3-dev libfftw3-dev \
@@ -266,11 +213,11 @@ jobs:
         run: |
           set -eux
           # Mark workspace as safe for git in containers.
-          $D git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           # Fix Windows line endings
-          $D git checkout .
+          git checkout .
           # Fix commit counting
-          $D git fetch --unshallow --tags
+          git fetch --unshallow --tags
 
       # create cache-key component which identifies matrix leg and compiler verion
       - name: Create cache key component for matrix leg and compiler version
@@ -278,7 +225,7 @@ jobs:
         run: |
           set -eux
           echo -n "cache_key=${{ matrix.name }}-CXX" > cache_key.txt
-          $D bash -c "c++ --version | head -n1 | sed 's/([^)]*)//g' | xargs | awk '{print \$NF}' >> cache_key.txt"
+          bash -c "c++ --version | head -n1 | sed 's/([^)]*)//g' | xargs | awk '{print \$NF}' >> cache_key.txt"
           cat cache_key.txt >> $GITHUB_OUTPUT
           rm -f cache_key.txt
       - name: Echo matrix-compiler cache key component
@@ -298,7 +245,7 @@ jobs:
         if: startsWith(matrix.name, 'ubuntu')
         run: |
           set -eux
-          $D mkdir -p tascar-packages
+          mkdir -p tascar-packages
 
       # ---------------------------
       # Install Liblsl dependency
@@ -318,8 +265,8 @@ jobs:
         run: |
           set -eux
           lts=$(echo ${{ matrix.name }} | cut -d- -f-2)
-          $D sudo apt-get install -y ./deps/liblsl/$lts/*_${{ matrix.arch }}.deb
-          $D cp deps/liblsl/$lts/*_${{ matrix.arch }}.deb tascar-packages/
+          sudo apt-get install -y ./deps/liblsl/$lts/*_${{ matrix.arch }}.deb
+          cp deps/liblsl/$lts/*_${{ matrix.arch }}.deb tascar-packages/
 
       # On Windows, liblsl is not available as an msys2 package. Other sources
       # for precompiled binaries will become imcompatible when msys2 updates
@@ -373,8 +320,8 @@ jobs:
           set -eux
           c++ --version || true
           JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
-          $D echo make -j"$JOBS"
-          $D make -j"$JOBS"
+          echo make -j"$JOBS"
+          make -j"$JOBS"
 
       # ---------------------------
       # Build: run tests
@@ -383,14 +330,14 @@ jobs:
         run: |
           set -eux
           JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
-          $D make -j"$JOBS" unit-tests
+          make -j"$JOBS" unit-tests
 
       - name: Run other test
         if: startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'macos')
         run: |
           set -eux
           JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
-          $D make -j"$JOBS" test
+          make -j"$JOBS" test
 
       # ---------------------------
       # Build debian packages
@@ -401,8 +348,8 @@ jobs:
           set -eux
           JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
           JOBS=1
-          $D make pack -j"$JOBS"
-          $D cp -v packaging/deb/tascar/*/*.deb tascar-packages/
+          make pack -j"$JOBS"
+          cp -v packaging/deb/tascar/*/*.deb tascar-packages/
           zip tascar-$(grep ^VERSION= config.mk | cut -d= -f2)-${{ matrix.name }}.zip tascar-packages/*.deb
 
       # ---------------------------
@@ -434,9 +381,3 @@ jobs:
         with:
           files: |
             tascar-*-${{ matrix.name }}.zip
-
-      - name: Stop step container
-        if: always() && matrix.step_container != ''
-        run: |
-          docker rm -f build_env || true
-
