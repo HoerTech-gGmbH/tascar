@@ -365,6 +365,36 @@ jobs:
           mv tascar-*-windows.zip "$newname"
 
       # ---------------------------
+      # Upload manual
+      # ---------------------------
+      - name: Upload manual to artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: tascar-manual
+          path: manual/manual.pdf
+
+      - name: Checkout Wiki
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v6
+        with:
+          repository: ${{github.repository}}.wiki
+          path: ${{github.repository}}.wiki
+
+      - name: Push manual to wiki
+        if: github.event_name != 'pull_request'
+        run: |
+          set -e
+          cd $GITHUB_WORKSPACE/${{github.repository}}.wiki
+          mkdir -p ${{github.ref_name}}
+          ls $GITHUB_WORKSPACE/
+          cp $GITHUB_WORKSPACE/manual/manual.pdf ${{github.ref_name}}/
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ${{github.ref_name}}
+          git diff-index --quiet HEAD || git commit -m "action: wiki sync" && git push
+
+      # ---------------------------
       # Upload installers as artifacts and release assets for Linux and Windows
       # ---------------------------
       - name: Upload as artifacts
