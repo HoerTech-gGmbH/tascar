@@ -8,7 +8,7 @@ include ../rules.mk
 # versioning:
 #
 LIBVERSION := $(VERSION)
-SOVERSION := $(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1.\2/1')
+SOVERSION := $(shell echo $(VERSION) | sed 's/\([0-9]*\)\..*/\1/')
 DYLIBCURVERSION := $(shell echo $(VERSION) | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1.\2.\3/1')
 
 #
@@ -67,8 +67,13 @@ ifeq ($(OS),Windows_NT)
 SOFAINC =
 SOFALIB = -lmysofa
 else
+ifeq ($(USE_BUNDLED_LIBMYSOFA),DO_NOT_USE)
+SOFAINC =
+SOFALIB = -lmysofa -lz
+else
 SOFAINC = -I../external_libs/libmysofa-1.3.2/src/hrtf
 SOFALIB = ../external_libs/libmysofa-1.3.2/build/src/libmysofa.a -lz
+endif
 endif
 
 CXXFLAGS += -fpic -I./build -I./include $(SOFAINC)
@@ -101,7 +106,7 @@ ifeq ($(OS),Windows_NT)
 #
 # Windows:
 #
-LDLIBS += -lshlwapi -lssp
+LDLIBS += -lshlwapi -lssp -lpthread
 libcli:  ver build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
 symlinkcli: libcli build/lib$(PLUGINPREFIX)tascar.dll
 lib:  ver libcli build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll
@@ -128,25 +133,25 @@ endif
 
 build/lib$(PLUGINPREFIX)tascar.so.%: $(BUILD_OBJECTS)
 	rm -f build/lib$(PLUGINPREFIX)tascar.so* && \
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS} && \
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $(BUILD_OBJECTS) ${LDFLAGS} ${LDLIBS} && \
 	ln -s lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascar.so && \
 	ln -s lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascar.so.$(SOVERSION)
 
 build/lib$(PLUGINPREFIX)tascargui.so.%: EXTERNALS += gtkmm-3.0
-build/lib$(PLUGINPREFIX)tascargui.so.%: $(BUILD_GUIOBJECTS)
+build/lib$(PLUGINPREFIX)tascargui.so.%: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION)
 	rm -f build/lib$(PLUGINPREFIX)tascargui.so* && \
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS} && \
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) ${LDFLAGS} ${LDLIBS} && \
 	ln -s lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so && \
 	ln -s lib$(PLUGINPREFIX)tascargui.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION)
 
-build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS)
+build/lib$(PLUGINPREFIX)tascardmx.so.%: $(BUILD_DMXOBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION)
 	rm -f build/lib$(PLUGINPREFIX)tascardmx.so* && \
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS} && \
+	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION) -o $@ $(BUILD_DMXOBJECTS) build/lib$(PLUGINPREFIX)tascar.so.$(LIBVERSION) ${LDFLAGS} ${LDLIBS} && \
 	ln -s lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so && \
 	ln -s lib$(PLUGINPREFIX)tascardmx.so.$(LIBVERSION) build/lib$(PLUGINPREFIX)tascardmx.so.$(SOVERSION)
 
 build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll: $(BUILD_OBJECTS)
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascar.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 build/lib$(PLUGINPREFIX)tascar.0.dylib: $(BUILD_OBJECTS)
 	$(CXX) -dynamiclib -install_name lib$(PLUGINPREFIX)tascar.0.dylib -current_version $(DYLIBCURVERSION) -compatibility_version $(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
@@ -160,7 +165,7 @@ build/lib$(PLUGINPREFIX)tascardmx.0.dylib: $(BUILD_DMXOBJECTS) build/lib$(PLUGIN
 
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: EXTERNALS += gtkmm-3.0
 build/lib$(PLUGINPREFIX)tascargui-$(LIBVERSION).dll: $(BUILD_GUIOBJECTS) build/lib$(PLUGINPREFIX)tascar-$(LIBVERSION).dll
-	$(CXX) -shared -Wl,-soname,lib$(PLUGINPREFIX)tascargui.so.$(SOVERSION) -o $@ $^ ${LDFLAGS} ${LDLIBS}
+	$(CXX) -shared -o $@ $^ ${LDFLAGS} ${LDLIBS}
 
 clean:
 	rm -Rf *~ src/*~ build doc/html
@@ -172,23 +177,23 @@ testbin: build/test_proc
 build/test_proc: build/.directory
 
 build/test_%: src/test_%.cc
-	$(CXX) $(CXXFLAGS) $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) -o $@ $(LDLIBS)
 
 doc:
 	cd doc && sed -e 's/PROJECT.NUMBER.*=.*/&'`cat ../version`'/1' doxygen.cfg > .temp.cfg && doxygen .temp.cfg
 	rm -Rf doc/.temp.cfg
 
 build/%.mk: src/%.cc
-	$(CPP) $(CXXFLAGS) -MM -MF $(@:.o=.mk) $<
+	$(CPP) $(CPPFLAGS) $(CXXFLAGS) -MM -MF $(@:.o=.mk) $<
 	printf "build/" > $(@).x
 	cat $@ >> $(@).x
 	mv $(@).x $@
 
 %: %.o
-	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
 build/%.o: src/%.cc include/%.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 build/pugixml.o: ../external_libs/pugixml-1.11.4/src/pugixml.cpp ../external_libs/pugixml-1.11.4/src/pugixml.hpp ../external_libs/pugixml-1.11.4/src/pugiconfig.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

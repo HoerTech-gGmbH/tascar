@@ -133,6 +133,8 @@ test_snd_door3: TOL=1e-4
 test_snd_door3: RMSTOL=1e-4
 test_snd_door4: TOL=1e-4
 test_snd_door4: RMSTOL=1e-4
+test_ir_hrtf_90deg: TOL=5e-7
+test_ir_hrtf_90deg: RMSTOL=5e-7
 
 #test_level_hoa3d_allrad: LEVTHR=2.7
 #  test_snd_hoa3d_allrad_hor test_snd_hoa3d_allrad_vert

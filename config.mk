@@ -1,9 +1,27 @@
 # variables:
 VERSION=0.237.1
 
+# Set to 1 to build against system-provided libmysofa / gtest / gmock
+# instead of the copies bundled under external_libs/. See the top-level
+# Makefile for the full description.
+USE_SYSTEM_LIBS ?= 0
+ifeq ($(USE_SYSTEM_LIBS),1)
+  USE_BUNDLED_LIBMYSOFA = DO_NOT_USE
+  USE_BUNDLED_LIBLSL = DO_NOT_USE
+endif
+
 ARCH:=$(shell uname -m)
 
-CXXFLAGS = -Wall -Wextra -Wdeprecated-declarations -Wno-psabi -std=c++17 -pthread	\
+# On Windows for ARM, msys2 uname -m wrongly reports x86_64, but uname -s
+# reports something like MINGW64_NT-10.0-26200-ARM64. Override ARCH to
+# arm64 when the output of uname -s ends with ARM64.
+ifeq "x$(ARCH)" "xx86_64"
+  ifneq (,$(findstring ARM64,$(shell uname -s)))
+    ARCH:=arm64
+  endif
+endif
+
+CXXFLAGS += -Wall -Wextra -Wdeprecated-declarations -Wno-psabi -std=c++17 -pthread	\
 -ggdb -fno-finite-math-only -Wno-psabi
 # -Wconversion
 # -Werror
@@ -29,15 +47,30 @@ ifeq "$(ARCH)" "x86_64"
   endif
 endif
 
-CPPFLAGS = -std=c++17
-PREFIX = /usr/local
+CPPFLAGS += -std=c++17
+PREFIX ?= /usr/local
 
-GITMODIFIED:=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
-COMMITHASH:=$(shell git log -1 --abbrev=7 --pretty='format:%h')
-LATEST_RELEASETAG:=$(shell git tag -l "release*" |tail -1)
-COMMIT_SINCE_RELEASE:=$(shell git rev-list --count $(LATEST_RELEASETAG)..)
+# Development builds derive FULLVERSION from Git metadata so local builds
+# include the commit count, commit hash and dirty state. Release/package builds
+# from source tarballs may not have a .git directory so allow callers to disable
+# this and use the upstream VERSION directly.
+DERIVE_VERSION_FROM_GIT ?= 1
+ifeq ($(DERIVE_VERSION_FROM_GIT),1)
+  GITMODIFIED:=$(shell test -z "`git status --porcelain -uno`" || echo "-modified")
+  COMMITHASH:=$(shell git log -1 --abbrev=7 --pretty='format:%h')
+  LATEST_RELEASETAG:=$(shell git tag -l "release*" |tail -1)
+  COMMIT_SINCE_RELEASE:=$(shell git rev-list --count $(LATEST_RELEASETAG)..)
+  FULLVERSION=$(VERSION).$(COMMIT_SINCE_RELEASE)-$(COMMITHASH)$(GITMODIFIED)
+else
+  FULLVERSION := $(VERSION)
+endif
 
-FULLVERSION=$(VERSION).$(COMMIT_SINCE_RELEASE)-$(COMMITHASH)$(GITMODIFIED)
+# Bake the plugin search path into libtascar so dlopen() finds plugins
+# installed under $(LIBDIR)/$(PLUGIN_LIB_SUBDIR)/ at runtime. See the top-level
+# Makefile for PLUGIN_LIB_SUBDIR.
+ifneq ($(strip $(PLUGIN_LIB_SUBDIR)),)
+  CXXFLAGS += -DTASCAR_DEFAULT_PLUGINDIR='"$(LIBDIR)/$(PLUGIN_LIB_SUBDIR)/"'
+endif
 
 mkfile_name := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_path := $(subst $(notdir $(mkfile_name)),,$(mkfile_name))

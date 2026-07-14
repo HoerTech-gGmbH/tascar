@@ -23,6 +23,11 @@ googletest/WORKSPACE:
 	git clone https://github.com/google/googletest
 	(cd googletest && git checkout v1.16.0)
 
+# Decide if bundled libmysofa sources are used.
+ifeq ($(USE_BUNDLED_LIBMYSOFA),DO_NOT_USE) # skip libmysofa decision logic
+libmysofa:
+	@echo "Not building bundled libmysofa sources because USE_BUNDLED_LIBMYSOFA is set to DO_NOT_USE."
+else # keep existing decision logic if USE_BUNDLED_LIBMYSOFA undefined or other value
 ifeq ($(OS),Windows_NT)
 
 libmysofa:
@@ -33,7 +38,13 @@ libmysofa:
 	(mkdir -p build && cd libmysofa-1.3.2/build && cmake .. && $(MAKE))
 
 endif
+endif # USE_BUNDLED_LIBMYSOFA
 
+# Decide if bundled liblsl resources are used.
+ifeq ($(USE_BUNDLED_LIBLSL),DO_NOT_USE) # skip liblsl decision logic
+liblsl:
+	@echo "Not building bundled liblsl sources and also not using bundled liblsl binaries because USE_BUNDLED_LIBLSL is set to DO_NOT_USE."
+else # keep existing decision logic if undefined or other value
 ifeq ($(UNAME_S),Linux)
 
 CMAKEVERSION := $(shell cmake --version|head -1|sed -e 's/.*version //')
@@ -47,21 +58,22 @@ ifeq ($(CMAKE_GT_3_12),YES)
 liblsl:
 	(echo $(CMAKEVERSION) OK? $(CMAKE_GT_3_12); cd liblsl-1.16.2 && cmake -S ./ -B build/ -DCMAKE_INSTALL_PREFIX="../build" -DCMAKE_CXX_FLAGS="-fPIC" -DLSL_BUILD_STATIC=true && cmake --build build -j 2 --config Release --target install)
 
-else
+else # CMAKE_GT_3_12 not YES
 
 liblsl:
 	echo "cmake is too old ($(CMAKEVERSION)), let's hope that liblsl is installed from other sources."
 
-endif
+endif # CMAKE_GT_3_12
 
-else
+else # UNAME_S not Linux
 
 ifeq ($(OS),Windows_NT)
 liblsl: liblsl-1.16.2-Win_amd64.zip
 	(mkdir -p build && cd build && unzip -o ../$< || true)
-else
+else # OS not Windows_NT
 
 liblsl:
-endif
+endif # OS
 
-endif
+endif # UNAME_S
+endif # USE_BUNDLED_LIBLSL

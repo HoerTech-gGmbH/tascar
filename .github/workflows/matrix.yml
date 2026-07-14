@@ -1,0 +1,476 @@
+name: TASCAR Matrix Build
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  release:
+    types: [created]
+
+permissions: {}
+
+env:
+  MINGW_LIBLSL_REF: v1.17.7
+  MINGW_LIBLSL_SHA: 64988c6a14b8dc3b3f270ece58eab4f480bfab43
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Ubuntu 22.04
+          - name: ubuntu-22.04-x64
+            runs_on: ubuntu-22.04
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: bash
+            debarch: amd64
+            webkit2gtk_version: "4.0"
+
+          # Ubuntu 22.04 ARM64
+          - name: ubuntu-22.04-arm64
+            runs_on: ubuntu-22.04-arm
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: bash
+            debarch: arm64
+            webkit2gtk_version: "4.0"
+
+          # Ubuntu 24.04
+          - name: ubuntu-24.04-x64
+            runs_on: ubuntu-24.04
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: bash
+            debarch: amd64
+            webkit2gtk_version: "4.1"
+
+          # Ubuntu 26.04
+          - name: ubuntu-26.04-x64
+            runs_on: ubuntu-26.04
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: bash
+            debarch: amd64
+            webkit2gtk_version: "4.1"
+
+          # Ubuntu 26.04 ARM64
+          - name: ubuntu-26.04-arm64
+            runs_on: ubuntu-26.04-arm
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: bash
+            debarch: arm64
+            webkit2gtk_version: "4.1"
+
+          # Windows
+          - name: windows-x64
+            runs_on: windows-latest
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: msys2 {0}
+            debarch: amd64
+            msystem: UCRT64
+
+          # Windows ARM64
+          - name: windows-arm64
+            runs_on: windows-11-arm
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: msys2 {0}
+            arch: arm64
+            msystem: CLANGARM64
+
+          # macOS ARM (latest)
+          - name: macos-arm64
+            runs_on: macos-latest
+            # Container for building for a different OS than the runner's OS.
+            job_container: ""
+            shell: bash
+            use_bundled_libmysofa: MAY_USE
+
+    runs-on: ${{ matrix.runs_on }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      MATRIX_DEBARCH: ${{ matrix.debarch }}
+      MATRIX_MSYSTEM: ${{ matrix.msystem }}
+      MATRIX_NAME: ${{ matrix.name }}
+      # If any of the following variables is set to DO_NOT_USE, then this tells
+      # the external_libs Makefile not to use the bundles resource. It it is
+      # MAY_USE or has any other value or is undefined, then the bundled
+      # resources are STILL NOT automatically used, but existing decision logic
+      # is still followed.
+      #
+      # In short:
+      # setting to DO_NOT_USE blocks usage, other values keep previous behavior.
+      USE_BUNDLED_LIBMYSOFA: ${{ matrix.use_bundled_libmysofa || 'DO_NOT_USE' }}
+      USE_BUNDLED_LIBLSL: ${{ matrix.use_bundled_liblsl || 'DO_NOT_USE' }}
+
+    # Set container for whole job only if needed
+    container: ${{ matrix.job_container != '' && matrix.job_container || null }} # zizmore: ignore[unpinned-images]
+
+    steps:
+      - name: Install sudo for container builds (Linux)
+        if: matrix.job_container != ''
+        run: |
+          set -eux
+          apt-get update
+          apt-get install -y sudo
+
+      # ---------------------------
+      # Linux: Dependencies
+      # ---------------------------
+      - name: Install dependencies (Linux)
+        if: startsWith(matrix.name, 'ubuntu')
+        env:
+          WEBKIT2GTK_VERSION: ${{ matrix.webkit2gtk_version }}
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y \
+                build-essential default-jre doxygen dpkg-dev g++ git \
+                imagemagick jackd2 libmysofa-dev cmake \
+                libcairomm-1.0-dev libeigen3-dev libfftw3-dev \
+                libfftw3-double3 libfftw3-single3 libgsl-dev libgtkmm-3.0-dev \
+                libgtksourceviewmm-3.0-dev libjack-jackd2-dev liblo-dev \
+                libltc-dev libmatio-dev libsndfile1-dev \
+                libwebkit2gtk-"$WEBKIT2GTK_VERSION"-dev \
+                libxml++2.6-dev lsb-release make portaudio19-dev ruby-dev \
+                software-properties-common texlive-latex-extra \
+                texlive-latex-recommended vim-common wget libsamplerate0-dev \
+                libxerces-c-dev graphviz libopencv-dev libopencv-calib3d-dev \
+                libcunit1-dev libmosquitto-dev nlohmann-json3-dev
+
+      # ---------------------------
+      # macOS: Dependencies
+      # ---------------------------
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.name, 'macos')
+        run: |
+          set -eux
+          brew install pkgconfig coreutils labstreaminglayer/tap/lsl
+          brew install jack liblo libsndfile eigen boost gsl fftw libsamplerate
+          brew install xerces-c libltc libmatio cunit mosquitto nlohmann-json
+          brew install glibmm gtkmm3 gtksourceviewmm3 adwaita-icon-theme
+          brew install jpeg
+
+      # Clone the repository after git has been installed in the container
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      # ---------------------------
+      # Windows: MSYS2 Setup & Dependencies
+      # ---------------------------
+      - name: Setup MSYS2
+        if: startsWith(matrix.name, 'windows')
+        uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            git
+            vim
+            zip
+            unzip
+            make
+          pacboy: >-
+            gcc:p
+            pkgconf:p
+            eigen3:p
+            jack2:p
+            liblo:p
+            libsndfile:p
+            gtkmm3:p
+            gsl:p
+            fftw:p
+            libsamplerate:p
+            xerces-c:p
+            gtksourceviewmm3:p
+            dlfcn:p
+            matio:p
+            adwaita-icon-theme:p
+            cmake:p
+            cunit:p
+            libmysofa:p
+            mosquitto:p
+            nlohmann-json:p
+            boost:p
+            ninja:p
+
+      # ---------------------------
+      # Fix git
+      # ---------------------------
+      - name: Fix git
+        run: |
+          set -eux
+          # Mark workspace as safe for git in containers.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # Fix Windows line endings
+          git checkout .
+          # Fix commit counting
+          git fetch --unshallow --tags
+
+      # create cache-key component which identifies matrix leg and compiler verion
+      - name: Create cache key component for matrix leg and compiler version
+        id: matrix-compiler
+        run: |
+          set -eux
+          echo -n "cache_key=$MATRIX_NAME-CXX" > cache_key.txt
+          bash -c "c++ --version | head -n1 | sed 's/([^)]*)//g' | xargs | awk '{print \$NF}' >> cache_key.txt"
+          cat cache_key.txt >> $GITHUB_OUTPUT
+          rm -f cache_key.txt
+      - name: Echo matrix-compiler cache key component
+        env:
+          cache_key: ${{ steps.matrix-compiler.outputs.cache_key }}
+        run: |
+          set -eux
+          echo "cache key: $cache_key"
+
+      # ---------------------------
+      # Create Aggregate Ubuntu packages by Ubuntu version
+      # ---------------------------
+      # On Ubuntu, we collect our deb files and possibly some dependencies in
+      # the tascar-packages directory which is zipped for releases with an
+      # Ubuntu-version specific file name. Users then only have to download a
+      # single zip file instead of multiple deb files.
+      # The zip file will also contain non-standard dependencies like liblsl.
+      - name: Create installers directory for Ubuntu
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          mkdir -p tascar-packages
+
+      # ---------------------------
+      # Install Liblsl dependency
+      # ---------------------------
+      # On Unbuntu, liblsl may become available through standard apt
+      # repositories in the future. For now, use deb files from a dependencies
+      # repository.
+      - name: Retrieve liblsl from dependencies repository on Ubuntu
+        if: startsWith(matrix.name, 'ubuntu')
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          repository: openmha/dependencies
+          ref: main
+          path: deps
+          persist-credentials: false
+      - name: Install liblsl on ubuntu
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          case "$MATRIX_DEBARCH" in
+            amd64|arm64)
+              ;;
+            *)
+              echo "Error: Unexpected MATRIX_DEBARCH value: $MATRIX_DEBARCH" 1>&2
+              exit 1
+              ;;
+          esac
+          lts=$(echo "x-$MATRIX_NAME" | cut -d- -f2-3)
+          if [[ ! "$lts" =~ ^ubuntu-[234][02468]\.04$ ]]; then
+              echo "Error: Unexpected Ubuntu LTS release: $lts in matrix name: $MATRIX_NAME" 1>&2
+              exit 1
+          fi
+          sudo apt-get install -y ./deps/liblsl/"$lts"/*_"$MATRIX_DEBARCH".deb
+          cp deps/liblsl/"$lts"/*_"$MATRIX_DEBARCH".deb tascar-packages/
+
+      # On Windows, liblsl is not available as an msys2 package. Other sources
+      # for precompiled binaries will become imcompatible when msys2 updates
+      # the compilers. Best to compile here with caching to ensure the same
+      # compiler version is used for both liblsl and TASCAR.
+      - name: Restore liblsl build cache on Windows
+        if: startsWith(matrix.name, 'windows') && github.event_name != 'release'
+        # Caching only for Windows, and it is disabled for release builds.
+        # zizmore: ignore[cache-poisoning] but zizmore still lists an error here.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: liblsl-cache
+        with:
+          path: liblsl/install
+          key: liblsl-${{ env.MINGW_LIBLSL_REF }}-${{ steps.matrix-compiler.outputs.cache_key }}
+      - name: Check out liblsl on Windows on cache miss
+        if: startsWith(matrix.name, 'windows') && steps.liblsl-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          repository: sccn/liblsl
+          ref: ${{ env.MINGW_LIBLSL_SHA }}
+          path: liblsl
+          persist-credentials: false
+      - name: Build liblsl on Windows
+        if: startsWith(matrix.name, 'windows') && steps.liblsl-cache.outputs.cache-hit != 'true'
+        run: |
+          set -eux
+          mkdir -p liblsl/build
+          cmake --version
+          cmake -S liblsl -B liblsl/build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX="${PWD}/liblsl/install" \
+                -DLSL_UNITTESTS=ON \
+                -Dlslgitrevision="$MINGW_LIBLSL_REF" \
+                -Dlslgitbranch="$MINGW_LIBLSL_REF" \
+                -DLSL_OPTIMIZATIONS=OFF \
+                -G Ninja
+          cmake --build liblsl/build --target install --config Release -j --verbose
+      - name: Test liblsl on Windows (skip on ARM)
+        if: matrix.msystem == 'UCRT64'
+        run: |
+          set -eux
+          "${PWD}/liblsl/install/bin/lsl_test_internal" --order rand --wait-for-keypress never --durations yes
+          "${PWD}/liblsl/install/bin/lsl_test_exported" --wait-for-keypress never --durations yes
+      - name: Copy liblsl files to MSYS2 directories on Windows
+        if: startsWith(matrix.name, 'windows')
+        run: |
+          cp -rnv liblsl/install/* "/$MATRIX_MSYSTEM"
+
+      # ---------------------------
+      # Build: make
+      # ---------------------------
+      - name: Build
+        run: |
+          set -eux
+          c++ --version || true
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          echo make -j"$JOBS"
+          make -j"$JOBS"
+
+      # ---------------------------
+      # Build: run tests
+      # ---------------------------
+      - name: Run unit tests
+        run: |
+          set -eux
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          make -j"$JOBS" unit-tests
+
+      - name: Run other test
+        if: startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'macos')
+        run: |
+          set -eux
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          make -j"$JOBS" test
+
+      # ---------------------------
+      # Build debian packages
+      # ---------------------------
+      - name: Build Debian packages
+        if: startsWith(matrix.name, 'ubuntu')
+        run: |
+          set -eux
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          JOBS=1
+          make pack -j"$JOBS"
+          cp -v packaging/deb/tascar/*/*.deb tascar-packages/
+          zip tascar-$(grep ^VERSION= config.mk | cut -d= -f2)-"$MATRIX_NAME".zip tascar-packages/*.deb
+
+      # ---------------------------
+      # Build zip package for Windows installation
+      # ---------------------------
+      - name: Build Windows zip package
+        if: startsWith(matrix.name, 'windows')
+        run: |
+          set -eux
+          make packwin
+          mv packaging/win/tascar-*-windows.zip .
+          newname=$(echo tascar-*-windows.zip | sed -e "s/-windows.zip/-$MATRIX_NAME.zip/")
+          mv tascar-*-windows.zip "$newname"
+
+      # ---------------------------
+      # Upload manual as artifact
+      # ---------------------------
+      - name: Upload manual to artifacts
+        if: github.event_name != 'pull_request' && matrix.name == 'ubuntu-26.04-x64'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tascar-manual
+          # Attention: manual.pdf is stored without the directory in the artifact!
+          path: manual/manual.pdf
+
+      # ---------------------------
+      # Upload installers as artifacts for Linux and Windows
+      # ---------------------------
+      - name: Upload installers as artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: startsWith(matrix.name, 'ubuntu') || startsWith(matrix.name, 'windows')
+        with:
+          name: tascar-zip-${{ matrix.name }}
+          path: |
+            tascar-*-${{ matrix.name }}.zip
+
+  release-upload:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download installer artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          merge-multiple: true 
+
+      - name: Publish files to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -eux
+          gh release upload "$RELEASE_TAG" \
+            tascar-*-ubuntu*.zip \
+            tascar-*-windows*.zip \
+            --clobber
+
+  update-manual-in-wiki:
+    needs: build
+    # Only run this job for pushes to branches "master" or "development"
+    if: github.event_name == 'push' && (github.ref_name == 'master' || github.ref_name == 'development')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download manual artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: tascar-manual
+
+      - name: Checkout Wiki
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          repository: ${{github.repository}}.wiki
+          path: ${{github.repository}}.wiki
+          persist-credentials: true
+
+      - name: Push manual to wiki
+        env:
+          WIKI_DIR: ${{github.repository}}.wiki
+          # BRANCH_NAME is the name of the branch in the TASCAR repository that
+          # triggered this workflow, and used as a directory name in the wiki
+          # repository. It does _NOT_ correspond to a branch in the wiki repo.
+          BRANCH_NAME: ${{github.ref_name}}
+        run: |
+          set -e
+          cd "$GITHUB_WORKSPACE/$WIKI_DIR"
+          mkdir -p "$BRANCH_NAME"
+          ls "$GITHUB_WORKSPACE/"
+          cp "$GITHUB_WORKSPACE/manual.pdf" "$BRANCH_NAME/"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add "$BRANCH_NAME"
+          git diff-index --quiet HEAD || git commit -m "action: wiki sync" && git push
+

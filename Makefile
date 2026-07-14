@@ -1,8 +1,25 @@
-PREFIX=/usr/local
-LIBDIR=$(PREFIX)/lib
-BINDIR=$(PREFIX)/bin
-INCDIR=$(PREFIX)/include/tascar
-DESTDIR=
+PREFIX ?= /usr/local
+LIBDIR ?= $(PREFIX)/lib
+BINDIR ?= $(PREFIX)/bin
+INCDIR ?= $(PREFIX)/include/tascar
+DESTDIR ?=
+
+# Set to 1 to build against system-provided libmysofa / gtest / gmock
+# instead of the copies bundled under external_libs/. Distributors that
+# package tascar alongside their own copies of these libraries should
+# enable this; upstream developer builds keep it off so the bundled,
+# version-pinned copies are used.
+USE_SYSTEM_LIBS ?= 0
+
+# Subdirectory of $(LIBDIR) used both as the install destination for
+# plugin .so files and as the search directory passed to dlopen() at
+# runtime. Empty by default - plugins are then installed directly into
+# $(LIBDIR) and resolved via the normal ld.so search path.
+# Distributors (e.g. debian) can override this to keep plugins out of the main
+# library directory, e.g.
+#   make PLUGIN_LIB_SUBDIR=tascar-plugins
+PLUGIN_LIB_SUBDIR ?=
+PLUGIN_INSTALL_DIR = $(DESTDIR)$(LIBDIR)$(if $(strip $(PLUGIN_LIB_SUBDIR)),/$(PLUGIN_LIB_SUBDIR))
 
 # Define modules and documentation modules
 MODULES = libtascar apps plugins gui
@@ -33,14 +50,21 @@ alldoc: all $(DOCMODULES)
 
 # Subdirectory recursion
 .PHONY: $(MODULES) $(DOCMODULES) coverage
+ifeq ($(USE_SYSTEM_LIBS),1)
+$(MODULES) $(DOCMODULES):
+	$(MAKE) -C $@
+else
 $(MODULES:external_libs=) $(DOCMODULES):
 	$(MAKE) -C $@
+endif
 
 clean:
 	for m in $(MODULES) $(DOCMODULES); do $(MAKE) -C $$m clean; done
 	$(MAKE) -C test clean
 	$(MAKE) -C examples clean
+ifneq ($(USE_SYSTEM_LIBS),1)
 	$(MAKE) -C external_libs clean
+endif
 	$(MAKE) -C packaging/deb clean
 	rm -Rf build devkit/Makefile.local devkit/build
 
@@ -54,15 +78,22 @@ test: apps plugins
 testjack: apps plugins
 	$(MAKE) -j 1 -C test jack
 
+libtascarver:
+	$(MAKE) -C libtascar ver
+
+ifeq ($(USE_SYSTEM_LIBS),1)
+libtascar: libtascarver
+
+unit-tests: $(patsubst %,%-subdir-unit-tests,$(MODULES))
+$(patsubst %,%-subdir-unit-tests,$(MODULES)): libtascar
+	$(MAKE) -C $(@:-subdir-unit-tests=) unit-tests
+else
 # External libraries
 libmysofa:
 	$(MAKE) -C external_libs libmysofa
 
 liblsl:
 	$(MAKE) -C external_libs liblsl
-
-libtascarver:
-	$(MAKE) -C libtascar ver
 
 libtascar: libtascarver libmysofa liblsl
 
@@ -73,6 +104,7 @@ googletest:
 unit-tests: $(patsubst %,%-subdir-unit-tests,$(MODULES))
 $(patsubst %,%-subdir-unit-tests,$(MODULES)): libtascar googletest
 	$(MAKE) -C $(@:-subdir-unit-tests=) unit-tests
+endif
 
 # Coverage analysis
 coverage: googletest unit-tests test testjack
@@ -81,10 +113,11 @@ coverage: googletest unit-tests test testjack
 	x-www-browser ./coverage/index.html
 
 install: all
-	$(CMD_INSTALL) -D libtascar/build/libtascar*.$(LIB_EXT) -t $(DESTDIR)$(LIBDIR)
-	$(CMD_INSTALL) -D libtascar/include/*.h -t $(DESTDIR)$(INCDIR)/tascar
-	$(CMD_INSTALL) -D libtascar/build/*.h -t $(DESTDIR)$(INCDIR)/tascar
-	$(CMD_INSTALL) -D plugins/build/*.$(LIB_EXT) -t $(DESTDIR)$(LIBDIR)
+	$(CMD_INSTALL) -d $(DESTDIR)$(LIBDIR)
+	cp -a libtascar/build/libtascar*.$(LIB_EXT)* $(DESTDIR)$(LIBDIR)/
+	$(CMD_INSTALL) -D libtascar/include/*.h -t $(DESTDIR)$(INCDIR)
+	$(CMD_INSTALL) -D libtascar/build/*.h -t $(DESTDIR)$(INCDIR)
+	$(CMD_INSTALL) -D plugins/build/*.$(LIB_EXT) -t $(PLUGIN_INSTALL_DIR)
 	$(CMD_INSTALL) -D apps/build/tascar_* -t $(DESTDIR)$(BINDIR)
 	$(CMD_INSTALL) -D gui/build/tascar -t $(DESTDIR)$(BINDIR)
 	$(CMD_INSTALL) -D gui/build/tascar_spkcalib -t $(DESTDIR)$(BINDIR)
