@@ -1,3 +1,7 @@
+0.238.1:
+       - Improve support for Mackie Control Unit protocol
+       - Add trim, ramp and channel selection options for convolution in speaker layouts
+
 0.237.1:
        - MIDI support on MacOS
        - minimum phase FIR filter can be used for loudspeaker equalization
