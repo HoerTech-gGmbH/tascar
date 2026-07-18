@@ -87,6 +87,18 @@ wave_t::~wave_t()
     delete[] d;
 }
 
+void wave_t::ramp_start(uint32_t ramplen)
+{
+  for(uint32_t k = 0; k < std::min(ramplen, n); ++k)
+    d[k] *= 0.5f - 0.5f * cosf(TASCAR_PIf * (float)k / (float)ramplen);
+}
+
+void wave_t::ramp_end(uint32_t ramplen)
+{
+  for(uint32_t k = 0; k < std::min(ramplen, n); ++k)
+    d[n - 1 - k] *= 0.5f - 0.5f * cosf(TASCAR_PIf * (float)k / (float)ramplen);
+}
+
 void wave_t::use_external_buffer(uint32_t chunksize, float* ptr)
 {
   if(chunksize != n)
@@ -528,6 +540,40 @@ void wave_t::resize(uint32_t chunksize)
     delete[] d;
   d = d_new;
   n = chunksize;
+  own_pointer = true;
+  rmsscale = 1.0f / (float)n;
+}
+
+void wave_t::trim_start(uint32_t len)
+{
+  if(len >= n)
+    throw TASCAR::ErrMsg("Cannot trim " + std::to_string(len) +
+                         " samples from a chunk of " + std::to_string(n) +
+                         " samples length.");
+  float* d_new = new float[n - len];
+  // copy data:
+  memmove(d_new, &(d[len]), (n - len) * sizeof(float));
+  if(own_pointer)
+    delete[] d;
+  d = d_new;
+  n = n - len;
+  own_pointer = true;
+  rmsscale = 1.0f / (float)n;
+}
+
+void wave_t::trim_end(uint32_t len)
+{
+  if(len >= n)
+    throw TASCAR::ErrMsg("Cannot trim " + std::to_string(len) +
+                         " samples from a chunk of " + std::to_string(n) +
+                         " samples length.");
+  float* d_new = new float[n - len];
+  // copy data:
+  memmove(d_new, d, (n - len) * sizeof(float));
+  if(own_pointer)
+    delete[] d;
+  d = d_new;
+  n = n - len;
   own_pointer = true;
   rmsscale = 1.0f / (float)n;
 }

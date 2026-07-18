@@ -588,6 +588,14 @@ void spk_array_diff_render_t::configure()
         TASCAR::sndfile_t sndf(conv, ch_file);
         TASCAR::partitioned_conv_t* pcnv(
             new TASCAR::partitioned_conv_t(sndf.get_frames(), n_fragment));
+        if(convolution_trim_start[k] > 0)
+          sndf.trim_start(convolution_trim_start[k]);
+        if(convolution_trim_end[k] > 0)
+          sndf.trim_end(convolution_trim_end[k]);
+        if(convolution_ramp_start[k] > 0)
+          sndf.ramp_start(convolution_ramp_start[k]);
+        if(convolution_ramp_end[k] > 0)
+          sndf.ramp_end(convolution_ramp_end[k]);
         pcnv->set_irs(sndf);
         vp_convolver.push_back(pcnv);
       }
@@ -697,6 +705,10 @@ spk_array_diff_render_t::spk_array_diff_render_t(
   convolution_ir.clear();
   convolution_chmap.clear();
   convolution_chmap.resize(size());
+  convolution_trim_start = std::vector<int32_t>(size(), 0);
+  convolution_trim_end = std::vector<int32_t>(size(), 0);
+  convolution_ramp_start = std::vector<int32_t>(size(), 0);
+  convolution_ramp_end = std::vector<int32_t>(size(), 0);
   {
     size_t k = 0;
     for(auto& spk : *this) {
@@ -706,6 +718,14 @@ spk_array_diff_render_t::spk_array_diff_render_t(
       spk.get_attribute("conv_chmap", convolution_chmap[k], "",
                         "Convolution IR channel map, zero-base, or empty to "
                         "use all channels");
+      spk.get_attribute("conv_trim_start", convolution_trim_start[k], "samples",
+                        "Trim this number of samples from start of sound file");
+      spk.get_attribute("conv_trim_end", convolution_trim_end[k], "samples",
+                        "Trim this number of samples from end of sound file");
+      spk.get_attribute("conv_ramp_start", convolution_ramp_start[k], "samples",
+                        "Apply raised cosine ramp at start of IR");
+      spk.get_attribute("conv_ramp_end", convolution_ramp_end[k], "samples",
+                        "Apply raised cosine ramp at end of IR");
       ++k;
     }
   }

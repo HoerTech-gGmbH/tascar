@@ -227,6 +227,10 @@ namespace TASCAR {
     std::vector<std::string>
         convolution_ir; //< file name of impulse response for convolution
     std::vector<std::vector<int32_t>> convolution_chmap;
+    std::vector<int32_t> convolution_trim_start;
+    std::vector<int32_t> convolution_trim_end;
+    std::vector<int32_t> convolution_ramp_start;
+    std::vector<int32_t> convolution_ramp_end;
     bool use_conv = false;
     size_t conv_channels = 0;
     bool convprecalib = true;

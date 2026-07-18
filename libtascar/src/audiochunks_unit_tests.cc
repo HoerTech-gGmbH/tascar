@@ -160,6 +160,52 @@ TEST(wave_t, insertatend)
   EXPECT_EQ(7.0f, wlong.d[5]);
 }
 
+TEST(wave_t, trim_start)
+{
+  TASCAR::wave_t w(std::vector<float>({0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f}));
+  w.trim_start(3);
+  EXPECT_EQ(3, w.n);
+  EXPECT_EQ(3.0f, w.d[0]);
+  EXPECT_EQ(4.0f, w.d[1]);
+  EXPECT_EQ(5.0f, w.d[2]);
+}
+
+TEST(wave_t, trim_end)
+{
+  TASCAR::wave_t w(std::vector<float>({0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f}));
+  w.trim_end(3);
+  EXPECT_EQ(3, w.n);
+  EXPECT_EQ(0.0f, w.d[0]);
+  EXPECT_EQ(1.0f, w.d[1]);
+  EXPECT_EQ(2.0f, w.d[2]);
+}
+
+TEST(wave_t, ramp_start)
+{
+  TASCAR::wave_t w(std::vector<float>({1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}));
+  w.ramp_start(3);
+  EXPECT_EQ(6, w.n);
+  EXPECT_EQ(0.0f, w.d[0]);
+  EXPECT_EQ(0.25f, w.d[1]);
+  EXPECT_EQ(0.75f, w.d[2]);
+  EXPECT_EQ(1.0f, w.d[3]);
+  EXPECT_EQ(1.0f, w.d[4]);
+  EXPECT_EQ(1.0f, w.d[5]);
+}
+
+TEST(wave_t, ramp_end)
+{
+  TASCAR::wave_t w(std::vector<float>({1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}));
+  w.ramp_end(3);
+  EXPECT_EQ(6, w.n);
+  EXPECT_EQ(1.0f, w.d[0]);
+  EXPECT_EQ(1.0f, w.d[1]);
+  EXPECT_EQ(1.0f, w.d[2]);
+  EXPECT_EQ(0.75f, w.d[3]);
+  EXPECT_EQ(0.25f, w.d[4]);
+  EXPECT_EQ(0.0f, w.d[5]);
+}
+
 // Local Variables:
 // compile-command: "make -C ../.. unit-tests"
 // coding: utf-8-unix
